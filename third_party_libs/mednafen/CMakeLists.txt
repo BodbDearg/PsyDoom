@@ -112,9 +112,17 @@ set(OTHER_FILES
 add_definitions(-DLSB_FIRST)
 
 # Generate the library
-add_library(${MEDNAFEN_NAME} ${SOURCE_FILES} ${OTHER_FILES})
+add_library(${MEDNAFEN_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
+
+# Dependencies
+target_link_libraries(${MEDNAFEN_TGT_NAME} ${ZLIB_TGT_NAME})
 
 # Setup include dirs
 include_directories(${INCLUDE_PATHS})
-target_include_directories(${MEDNAFEN_NAME} INTERFACE ${EXPORTED_INCLUDE_PATHS})
+target_include_directories(${MEDNAFEN_TGT_NAME} INTERFACE ${EXPORTED_INCLUDE_PATHS})
+
+# Platform and compiler specific settings
+if (COMPILER_MSVC)
+    target_compile_options(${MEDNAFEN_TGT_NAME} PRIVATE /W2)    # More limited set of warnings
+endif()
