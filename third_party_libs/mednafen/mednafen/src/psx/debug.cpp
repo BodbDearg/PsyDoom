@@ -19,6 +19,9 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+// DC: added this missing #ifdef
+#ifdef WANT_DEBUGGER
+
 #include "psx.h"
 #include "timer.h"
 #include "cdc.h"
@@ -727,3 +730,4 @@ bool DBG_Init(void)
 
 }
 
+#endif  // WANT_DEBUGGER
