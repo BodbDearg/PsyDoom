@@ -210,7 +210,12 @@ typedef uint64_t uint64;
   #define NO_INLINE __declspec(noinline)
   #define NO_CLONE
 
-  #define MDFN_FASTCALL __fastcall
+  // DC: fix for x64 - fastcall is not available under that architecture
+  #if defined(__386__) || defined(__i386__) || defined(__i386) || defined(_M_IX86) || defined(_M_I386)
+    #define MDFN_FASTCALL __fastcall
+  #else
+    #define MDFN_FASTCALL
+  #endif
 
   #define MDFN_FORMATSTR(a,b,c)
 

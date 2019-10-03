@@ -22,6 +22,8 @@
 #ifndef __MDFN_PSX_IRQ_H
 #define __MDFN_PSX_IRQ_H
 
+#include <mednafen/types.h>
+
 namespace MDFN_IEN_PSX
 {
 

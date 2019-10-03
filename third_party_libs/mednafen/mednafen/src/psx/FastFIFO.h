@@ -22,6 +22,8 @@
 #ifndef __MDFN_FASTFIFO_H
 #define __MDFN_FASTFIFO_H
 
+#include <mednafen/types.h>
+
 // size should be a power of 2.
 template<typename T, size_t size>
 class FastFIFO
