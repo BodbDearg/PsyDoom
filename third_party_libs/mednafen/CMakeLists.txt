@@ -11,6 +11,30 @@ set(EXPORTED_INCLUDE_PATHS
 )
 
 set(SOURCE_FILES    
+    "${INCLUDE_DIR}/mednafen/endian.h"
+    "${INCLUDE_DIR}/mednafen/error.h"
+    "${INCLUDE_DIR}/mednafen/file.h"
+    "${INCLUDE_DIR}/mednafen/general.h"
+    "${INCLUDE_DIR}/mednafen/git.h"
+    "${INCLUDE_DIR}/mednafen/math_ops.h"
+    "${INCLUDE_DIR}/mednafen/mednafen-driver.h"
+    "${INCLUDE_DIR}/mednafen/mednafen.h"
+    "${INCLUDE_DIR}/mednafen/NativeVFS.h"
+    "${INCLUDE_DIR}/mednafen/settings-common.h"
+    "${INCLUDE_DIR}/mednafen/settings.h"
+    "${INCLUDE_DIR}/mednafen/state-common.h"
+    "${INCLUDE_DIR}/mednafen/state.h"
+    "${INCLUDE_DIR}/mednafen/Stream.h"
+    "${INCLUDE_DIR}/mednafen/string/string.h"
+    "${INCLUDE_DIR}/mednafen/types.h"
+    "${INCLUDE_DIR}/mednafen/video.h"
+    "${INCLUDE_DIR}/mednafen/video/primitives.h"
+    "${INCLUDE_DIR}/mednafen/video/surface.h"
+    "${INCLUDE_DIR}/mednafen/video/text.h"
+    "${INCLUDE_DIR}/mednafen/VirtualFS.h"
+    "${INCLUDE_DIR}/trio/trio.h"
+    "${INCLUDE_DIR}/trio/triodef.h"
+    "${INCLUDE_DIR}/trio/triop.h"
     "${SRC_DIR}/psx/cdc.cpp"
     "${SRC_DIR}/psx/cdc.h"
     "${SRC_DIR}/psx/cpu.cpp"
@@ -71,8 +95,14 @@ set(SOURCE_FILES
 set(OTHER_FILES
 )
 
+# Need to define endianess for mednafen.
+# Assuming a little endian system for now, if we need to support big then this needs to change based on that.
+add_definitions(-DLSB_FIRST)
+
+# Generate the library
 add_library(${MEDNAFEN_NAME} ${SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
+# Setup include dirs
 include_directories(${INCLUDE_PATHS})
 target_include_directories(${MEDNAFEN_NAME} INTERFACE ${EXPORTED_INCLUDE_PATHS})
