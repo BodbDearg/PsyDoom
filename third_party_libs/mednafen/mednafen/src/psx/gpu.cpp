@@ -19,7 +19,10 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#pragma GCC optimize ("unroll-loops")
+// DC: Fix warning with MSVC
+#if !defined(_MSC_VER)
+    #pragma GCC optimize ("unroll-loops")
+#endif
 
 #include "psx.h"
 #include "timer.h"
@@ -1044,8 +1047,12 @@ static INLINE uint32 MDFN_NOWARN_UNUSED ShiftHelper(uint32 val, int shamt, uint3
 }
 #endif
 
-#pragma GCC push_options
-#pragma GCC optimize("no-unroll-loops,no-peel-loops,no-crossjumping")
+// DC: Fix warning with MSVC
+#if !defined(_MSC_VER)
+    #pragma GCC push_options
+    #pragma GCC optimize("no-unroll-loops,no-peel-loops,no-crossjumping")
+#endif
+
 static INLINE void ReorderRGB_Var(uint32 out_Rshift, uint32 out_Gshift, uint32 out_Bshift, bool bpp24, const uint16 *src, uint32 *dest, const int32 dx_start, const int32 dx_end, int32 fb_x)
 {
      if(bpp24)	// 24bpp
@@ -1087,7 +1094,11 @@ static NO_INLINE void ReorderRGB(bool bpp24, const uint16 *src, uint32 *dest, co
 {
  ReorderRGB_Var(out_Rshift, out_Gshift, out_Bshift, bpp24, src, dest, dx_start, dx_end, fb_x);
 }
-#pragma GCC pop_options
+
+// DC: Fix warning with MSVC
+#if !defined(_MSC_VER)
+    #pragma GCC pop_options
+#endif
 
 MDFN_FASTCALL pscpu_timestamp_t GPU_Update(const pscpu_timestamp_t sys_timestamp)
 {
@@ -1262,7 +1273,13 @@ MDFN_FASTCALL pscpu_timestamp_t GPU_Update(const pscpu_timestamp_t sys_timestamp
        DisplayRect->x = drxbo;
        DisplayRect->y = 0;
        DisplayRect->w = 0;
-       DisplayRect->h = VisibleLineCount << (bool)(DisplayMode & 0x20);
+
+       // DC: fixing MSVC warnings
+       #if 1
+        DisplayRect->h = VisibleLineCount << (((DisplayMode & 0x20) != 0) ? 1 : 0);
+       #else
+        DisplayRect->h = VisibleLineCount << (bool)(DisplayMode & 0x20);
+       #endif
 
        // Clear ~0 state.
        LineWidths[0] = 0;
@@ -1342,7 +1359,13 @@ MDFN_FASTCALL pscpu_timestamp_t GPU_Update(const pscpu_timestamp_t sys_timestamp
      int32 fb_x = DisplayFB_XStart * 2;
      int32 dx_start = HorizStart, dx_end = HorizEnd;
 
-     dest_line = ((scanline - FirstVisibleLine) << espec->InterlaceOn) + espec->InterlaceField;
+     // DC: fix MSVC warnings
+     #if 1
+      dest_line = ((scanline - FirstVisibleLine) << (espec->InterlaceOn ? 1 : 0)) + espec->InterlaceField;
+     #else
+      dest_line = ((scanline - FirstVisibleLine) << espec->InterlaceOn) + espec->InterlaceField;
+     #endif
+
      dest = surface->pixels + (drxbo - dmpa) + dest_line * surface->pitch32;
 
      if(dx_end < dx_start)

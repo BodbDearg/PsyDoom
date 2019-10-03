@@ -19,7 +19,10 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#pragma GCC optimize ("unroll-loops")
+// DC: Fix warning with MSVC
+#if !defined(_MSC_VER)
+    #pragma GCC optimize ("unroll-loops")
+#endif
 
 /* TODO:
 	Note to self: Emulating the SPU at more timing accuracy than sample, and emulating the whole SPU RAM write port FIFO thing and hypothetical periodic FIFO commit to

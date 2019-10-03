@@ -19,7 +19,10 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#pragma GCC optimize ("unroll-loops")
+// DC: Fix warning with MSVC
+#if !defined(_MSC_VER)
+    #pragma GCC optimize ("unroll-loops")
+#endif
 
 /*
  MDEC_READ_FIFO(tfr) vs InCounter vs MDEC_DMACanRead() is a bit fragile right now.  Actually, the entire horrible state machine monstrosity is fragile.
@@ -246,7 +249,11 @@ static INLINE int8 Mask9ClampS8(int32 v)
 ////////////////////////
 //
 //
-#pragma GCC push_options
+
+// DC: Fix warning with MSVC
+#if !defined(_MSC_VER)
+    #pragma GCC push_options
+#endif
 
 #if defined(__SSE2__) || (defined(ARCH_X86) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)))
 //
@@ -359,7 +366,12 @@ static NO_INLINE void IDCT(int16 *in_coeff, int8 *out_coeff)
  IDCT_1D_Multi<int16>(in_coeff, tmpbuf);
  IDCT_1D_Multi<int8>(tmpbuf, out_coeff);
 }
-#pragma GCC pop_options
+
+// DC: Fix warning with MSVC
+#if !defined(_MSC_VER)
+    #pragma GCC pop_options
+#endif
+
 //
 //
 ///////////////////////

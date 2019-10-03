@@ -19,7 +19,10 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#pragma GCC optimize ("no-unroll-loops,no-peel-loops")
+// DC: Fix warning with MSVC
+#if !defined(_MSC_VER)
+    #pragma GCC optimize ("no-unroll-loops,no-peel-loops")
+#endif
 
 #ifndef PSXDEV_GTE_TESTING
 #include "psx.h"

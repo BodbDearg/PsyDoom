@@ -19,7 +19,10 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#pragma GCC optimize ("unroll-loops")
+// DC: Fix warning with MSVC
+#if !defined(_MSC_VER)
+    #pragma GCC optimize ("unroll-loops")
+#endif
 
 #include "psx.h"
 #include "timer.h"

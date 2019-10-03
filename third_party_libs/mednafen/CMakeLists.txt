@@ -124,5 +124,5 @@ target_include_directories(${MEDNAFEN_TGT_NAME} INTERFACE ${EXPORTED_INCLUDE_PAT
 
 # Platform and compiler specific settings
 if (COMPILER_MSVC)
-    target_compile_options(${MEDNAFEN_TGT_NAME} PRIVATE /W2)    # More limited set of warnings
+    target_compile_options(${MEDNAFEN_TGT_NAME} PRIVATE /W1)    # Very limited set of warnings
 endif()

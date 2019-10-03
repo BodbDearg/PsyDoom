@@ -219,15 +219,47 @@ static INLINE unsigned MDFN_log2(int64 v) { return MDFN_log2((uint64)v); }
 
 // Rounds up to the nearest power of 2(treats input as unsigned to a degree, but be aware of integer promotion rules).
 // Returns 0 on overflow.
-static INLINE uint64 round_up_pow2(uint32 v) { uint64 tmp = (uint64)1 << MDFN_log2(v); return tmp << (tmp < v); }
-static INLINE uint64 round_up_pow2(uint64 v) { uint64 tmp = (uint64)1 << MDFN_log2(v); return tmp << (tmp < v); }
+
+// DC: Fixing some MSVC warnings with these
+#if 1 
+    static INLINE uint64 round_up_pow2(uint32 v) {
+        uint64 tmp = (uint64)1 << MDFN_log2(v);
+        bool bRound = (tmp < v);
+        return tmp << (bRound ? 1u : 0u);
+    }
+
+    static INLINE uint64 round_up_pow2(uint64 v) {
+        uint64 tmp = (uint64)1 << MDFN_log2(v);
+        bool bRound = (tmp < v);
+        return tmp << (bRound ? 1u : 0u);
+    }
+#else
+    static INLINE uint64 round_up_pow2(uint32 v) { uint64 tmp = (uint64)1 << MDFN_log2(v); return tmp << (tmp < v); }
+    static INLINE uint64 round_up_pow2(uint64 v) { uint64 tmp = (uint64)1 << MDFN_log2(v); return tmp << (tmp < v); }
+#endif
 
 static INLINE uint64 round_up_pow2(int32 v) { return round_up_pow2((uint32)v); }
 static INLINE uint64 round_up_pow2(int64 v) { return round_up_pow2((uint64)v); }
 
-// Rounds to the nearest power of 2(treats input as unsigned to a degree, but be aware of integer promotion rules).
-static INLINE uint64 round_nearest_pow2(uint32 v, bool round_half_up = true) { uint64 tmp = (uint64)1 << MDFN_log2(v); return tmp << (v && (((v - tmp) << 1) >= (tmp + !round_half_up))); }
-static INLINE uint64 round_nearest_pow2(uint64 v, bool round_half_up = true) { uint64 tmp = (uint64)1 << MDFN_log2(v); return tmp << (v && (((v - tmp) << 1) >= (tmp + !round_half_up))); }
+// DC: Fixing some MSVC warnings with these
+#if 1 
+    // Rounds to the nearest power of 2(treats input as unsigned to a degree, but be aware of integer promotion rules).
+    static INLINE uint64 round_nearest_pow2(uint32 v, bool round_half_up = true) { 
+        uint64 tmp = (uint64)1 << MDFN_log2(v);
+        bool bRound = (v && (((v - tmp) << 1) >= (tmp + !round_half_up)));
+        return tmp << (bRound ? 1u : 0u);
+    }
+
+    static INLINE uint64 round_nearest_pow2(uint64 v, bool round_half_up = true) {
+        uint64 tmp = (uint64)1 << MDFN_log2(v);
+        bool bRound = (v && (((v - tmp) << 1) >= (tmp + !round_half_up)));
+        return tmp << (bRound ? 1u : 0u);
+    }
+#else
+    // Rounds to the nearest power of 2(treats input as unsigned to a degree, but be aware of integer promotion rules).
+    static INLINE uint64 round_nearest_pow2(uint32 v, bool round_half_up = true) { uint64 tmp = (uint64)1 << MDFN_log2(v); return tmp << (v && (((v - tmp) << 1) >= (tmp + !round_half_up))); }
+    static INLINE uint64 round_nearest_pow2(uint64 v, bool round_half_up = true) { uint64 tmp = (uint64)1 << MDFN_log2(v); return tmp << (v && (((v - tmp) << 1) >= (tmp + !round_half_up))); }
+#endif
 
 static INLINE uint64 round_nearest_pow2(int32 v, bool round_half_up = true) { return round_nearest_pow2((uint32)v, round_half_up); }
 static INLINE uint64 round_nearest_pow2(int64 v, bool round_half_up = true) { return round_nearest_pow2((uint64)v, round_half_up); }

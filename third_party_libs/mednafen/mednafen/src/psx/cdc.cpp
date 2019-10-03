@@ -24,7 +24,10 @@
 // TODO: Rewrite command processing to use switch() state machine madness, to handle some commands(like 0x0A) whose timing
 //       characteristics cannot be handled well with the current way.  Be sure to test interruptability(with a new command) of the commands, too.
 
-#pragma GCC optimize ("unroll-loops")
+// DC: Fix warning with MSVC
+#if !defined(_MSC_VER)
+    #pragma GCC optimize ("unroll-loops")
+#endif
 
 /*
   Games to test after changing code affecting CD reading and buffering:
