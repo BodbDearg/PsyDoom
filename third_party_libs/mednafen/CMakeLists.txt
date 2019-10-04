@@ -183,7 +183,10 @@ add_library(${MEDNAFEN_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
 # Dependencies
-target_link_libraries(${MEDNAFEN_TGT_NAME} ${ZLIB_TGT_NAME})
+target_link_libraries(${MEDNAFEN_TGT_NAME}
+    ${ZLIB_TGT_NAME}
+    ${LIBSDL_TGT_NAME}
+)
 
 # Setup include dirs
 include_directories(${INCLUDE_PATHS})

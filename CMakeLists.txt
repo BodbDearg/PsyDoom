@@ -21,5 +21,6 @@ set(ZLIB_TGT_NAME       ZLib)
 
 # Adding individual projects and libraries
 add_subdirectory("${PROJECT_SOURCE_DIR}/game")
+add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/libsdl")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/mednafen")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/zlib")
