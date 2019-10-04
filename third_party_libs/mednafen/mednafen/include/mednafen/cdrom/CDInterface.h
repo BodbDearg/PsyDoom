@@ -29,6 +29,9 @@
 namespace Mednafen
 {
 
+// DC: Compile fix
+class VirtualFS;
+
 class CDInterface
 {
  public:

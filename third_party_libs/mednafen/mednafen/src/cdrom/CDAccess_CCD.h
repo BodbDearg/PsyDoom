@@ -19,7 +19,12 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "CDAccess.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/cdrom/CDAccess.h>
+#else
+    #include "CDAccess.h"
+#endif
 
 namespace Mednafen
 {

@@ -1,7 +1,12 @@
 #ifndef __MDFN_VIDEO_DRIVER_H
 #define __MDFN_VIDEO_DRIVER_H
 
-#include "video.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/video.h>
+#else
+    #include "video.h"
+#endif
 
 namespace Mednafen
 {

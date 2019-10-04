@@ -23,7 +23,13 @@
 #define __MDFN_QTRECORD_H
 
 #include <mednafen/FileStream.h>
-#include "resampler/resampler.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/resampler/resampler.h>
+#else
+    #include "resampler/resampler.h"
+#endif
 
 namespace Mednafen
 {

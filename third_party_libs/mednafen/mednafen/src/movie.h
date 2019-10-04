@@ -6,8 +6,14 @@ namespace Mednafen
 class MemoryStream;
 }
 
-#include "movie-driver.h"
-#include "state.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/state.h>
+    #include <mednafen/movie-driver.h>
+#else
+    #include "state.h"
+    #include "movie-driver.h"
+#endif
 
 namespace Mednafen
 {

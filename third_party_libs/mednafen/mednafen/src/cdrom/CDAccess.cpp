@@ -20,7 +20,14 @@
 */
 
 #include <mednafen/mednafen.h>
-#include "CDAccess.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/cdrom/CDAccess.h>
+#else
+    #include "CDAccess.h"
+#endif
+
 #include "CDAccess_Image.h"
 #include "CDAccess_CCD.h"
 

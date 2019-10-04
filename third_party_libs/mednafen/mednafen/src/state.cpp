@@ -15,21 +15,34 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "mednafen.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/mednafen.h>
+#else
+    #include "mednafen.h"
+#endif
 
 #include <map>
-
 #include <mednafen/Time.h>
 
-#include "driver.h"
-#include "general.h"
-#include "state.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/driver.h>
+    #include <mednafen/general.h>
+    #include <mednafen/state.h>
+    #include <mednafen/video.h>
+    #include <mednafen/MemoryStream.h>
+#else
+    #include "driver.h"
+    #include "general.h"
+    #include "state.h"
+    #include "video.h"
+    #include "MemoryStream.h"
+#endif
+
 #include "movie.h"
 #include "netplay.h"
-#include "video.h"
 #include "video/resize.h"
-
-#include "MemoryStream.h"
 #include "compress/GZFileStream.h"
 
 namespace Mednafen

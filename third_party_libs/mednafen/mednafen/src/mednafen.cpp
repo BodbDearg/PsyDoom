@@ -15,7 +15,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "mednafen.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/mednafen.h>
+#else
+    #include "mednafen.h"
+#endif
 
 #include <mednafen/cdrom/CDUtility.h>
 #include <mednafen/cdrom/CDInterface.h>
@@ -37,16 +42,27 @@
 #include <trio/trio.h>
 
 #include "netplay.h"
-#include "netplay-driver.h"
-#include "general.h"
 
-#include "state.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/file.h>
+    #include <mednafen/general.h>
+    #include <mednafen/mempatcher.h>
+    #include <mednafen/netplay-driver.h>
+    #include <mednafen/state.h>
+    #include <mednafen/video.h>
+#else
+    #include "file.h"
+    #include "general.h"
+    #include "mempatcher.h"
+    #include "netplay-driver.h"
+    #include "state.h"
+    #include "video.h"
+#endif
+
 #include "movie.h"
 #include "state_rewind.h"
-#include "video.h"
 #include "video/Deinterlacer.h"
-#include "file.h"
-#include "mempatcher.h"
 #include "tests.h"
 #include "video/tblur.h"
 #include "qtrecord.h"

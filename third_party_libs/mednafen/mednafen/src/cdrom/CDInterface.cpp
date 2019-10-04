@@ -23,7 +23,13 @@
 #include <mednafen/cdrom/CDInterface.h>
 #include "CDInterface_MT.h"
 #include "CDInterface_ST.h"
-#include "CDAccess.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/cdrom/CDAccess.h>
+#else
+    #include "CDAccess.h"
+#endif
 
 namespace Mednafen
 {

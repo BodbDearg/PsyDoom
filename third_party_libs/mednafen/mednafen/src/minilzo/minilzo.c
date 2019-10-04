@@ -3154,7 +3154,13 @@ LZO_COMPILE_TIME_ASSERT_HEADER(sizeof(lzo_int_fast64_t) == sizeof(lzo_uint_fast6
 #endif
 
 #undef LZO_HAVE_CONFIG_H
-#include "_minilzo.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <minilzo/minilzo.h>
+#else
+    #include "_minilzo.h"
+#endif
 
 #if !defined(MINILZO_VERSION) || (MINILZO_VERSION != 0x2090)
 #  error "version mismatch in miniLZO source files"

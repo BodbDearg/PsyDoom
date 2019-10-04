@@ -32,6 +32,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+// DC: Fix for missing stuff on Windows
+#ifndef S_ISDIR
+    #define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
+#endif
+
+#ifndef S_ISREG
+    #define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
+#endif
+
 namespace Mednafen
 {
 

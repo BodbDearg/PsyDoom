@@ -15,16 +15,27 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "mednafen.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/mednafen.h>
+    #include <mednafen/general.h>
+    #include <mednafen/state.h>
+#else
+    #include "mednafen.h"
+    #include "general.h"
+    #include "state.h"
+#endif
 
 #include <map>
 #include <trio/trio.h>
 
-#include "general.h"
-#include "state.h"
-
 #include <mednafen/hash/md5.h>
 #include <mednafen/string/string.h>
+
+// DC: compile fix
+#if 1
+    #include <string>
+#endif
 
 namespace Mednafen
 {

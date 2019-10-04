@@ -122,7 +122,11 @@ static NO_INLINE void TestStackAlign(void)
  //assert(test_array[1] == '0');
 }
 
-static unsigned __stdcall ThreadPivot(void* data) __attribute__((force_align_arg_pointer));
+// DC: Disabled as it was causing a compile error
+#if 0
+    static unsigned __stdcall ThreadPivot(void* data) __attribute__((force_align_arg_pointer));
+#endif
+
 static unsigned __stdcall ThreadPivot(void* data)
 {
  TestStackAlign();

@@ -20,7 +20,13 @@
 */
 
 #include <mednafen/types.h>
-#include "crc.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/hash/crc.h>
+#else
+    #include "crc.h"
+#endif
 
 namespace Mednafen
 {

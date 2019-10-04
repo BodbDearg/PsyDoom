@@ -23,16 +23,27 @@
  TODO: Setting changed callback on override setting loading/clearing.
 */
 
-#include "mednafen.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/FileStream.h>
+    #include <mednafen/mednafen.h>
+    #include <mednafen/MemoryStream.h>
+    #include <mednafen/settings.h>
+    #include <mednafen/settings-driver.h>
+    #include <mednafen/string/escape.h>
+#else
+    #include "FileStream.h"
+    #include "mednafen.h"
+    #include "MemoryStream.h"
+    #include "settings.h"
+    #include "settings-driver.h"
+    #include "string/escape.h"
+#endif
+
 #include <trio/trio.h>
 #include <locale.h>
 #include <map>
-#include "settings.h"
-#include "settings-driver.h"
-#include "string/escape.h"
 #include <mednafen/string/string.h>
-#include "FileStream.h"
-#include "MemoryStream.h"
 
 #include <zlib.h>
 

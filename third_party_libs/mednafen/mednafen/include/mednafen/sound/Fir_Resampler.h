@@ -4,7 +4,13 @@
 #ifndef FIR_RESAMPLER_H
 #define FIR_RESAMPLER_H
 
-#include "fir_blargg_common.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/sound/fir_blargg_common.h>
+#else
+    #include "fir_blargg_common.h"
+#endif
+
 #include <string.h>
 
 class Fir_Resampler_ {

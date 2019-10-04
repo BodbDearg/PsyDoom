@@ -19,8 +19,15 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "mednafen.h"
-#include "error.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/mednafen.h>
+    #include <mednafen/error.h>
+#else
+    #include "mednafen.h"
+    #include "error.h"
+#endif
+
 #include <trio/trio.h>
 
 namespace Mednafen

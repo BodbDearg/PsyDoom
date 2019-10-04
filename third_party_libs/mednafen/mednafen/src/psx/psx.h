@@ -135,5 +135,7 @@ namespace MDFN_IEN_PSX
  extern MultiAccessSizeMem<2048 * 1024, false> MainRAM;
 }
 
+// DC: exposing some stuff 
+extern MDFNGI EmulatedPSX;
 
 #endif

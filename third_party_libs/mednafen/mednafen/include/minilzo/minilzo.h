@@ -49,10 +49,21 @@
 #include <stddef.h>
 
 #ifndef __LZODEFS_H_INCLUDED
-#include "lzodefs.h"
+    // DC: This got moved to workaround issues with no symlinks on Windows
+    #if 1
+        #include <minilzo/lzodefs.h>
+    #else
+        #include "lzodefs.h"
+    #endif
 #endif
 #undef LZO_HAVE_CONFIG_H
-#include "lzoconf.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <minilzo/lzoconf.h>
+#else
+    #include "lzoconf.h"
+#endif
 
 #if !defined(LZO_VERSION) || (LZO_VERSION != MINILZO_VERSION)
 #  error "version mismatch in header files"

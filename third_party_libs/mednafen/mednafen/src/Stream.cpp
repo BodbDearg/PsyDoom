@@ -20,7 +20,13 @@
 */
 
 #include <mednafen/types.h>
-#include "Stream.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/Stream.h>
+#else
+    #include "Stream.h"
+#endif
 
 #include <trio/trio.h>
 

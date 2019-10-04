@@ -16,7 +16,14 @@
  */
 
 #include <mednafen/mednafen.h>
-#include "CDUtility.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/cdrom/CDUtility.h>
+#else
+    #include "CDUtility.h"
+#endif
+
 #include "dvdisaster.h"
 #include "lec.h"
 

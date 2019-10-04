@@ -19,7 +19,12 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "MemoryStream.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/MemoryStream.h>
+#else
+    #include "MemoryStream.h"
+#endif
 
 #ifdef WIN32
  // For mswin_utf8_convert_kludge()

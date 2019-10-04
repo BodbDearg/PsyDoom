@@ -1,8 +1,14 @@
 #ifndef __MDFN_STATE_DRIVER_H
 #define __MDFN_STATE_DRIVER_H
 
-#include "video.h"
-#include "state-common.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/state-common.h>
+    #include <mednafen/video.h>
+#else
+    #include "state-common.h"
+    #include "video.h"
+#endif
 
 namespace Mednafen
 {

@@ -20,7 +20,13 @@
 */
 
 #include <mednafen/mednafen.h>
-#include "sha1.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/hash/sha1.h>
+#else
+    #include "sha1.h"
+#endif
 
 namespace Mednafen
 {

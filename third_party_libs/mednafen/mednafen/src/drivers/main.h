@@ -6,9 +6,13 @@
 #include <mednafen/settings.h>
 #include <mednafen/Time.h>
 #include <mednafen/MThreading.h>
-#include "config.h"
-#include "args.h"
 
+// DC: ingore this
+#if 0
+    #include "config.h"
+#endif
+
+#include "args.h"
 #include <SDL.h>
 #include <SDL_thread.h>
 

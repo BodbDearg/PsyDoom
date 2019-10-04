@@ -10,8 +10,16 @@
 #include <limits.h>
 
 #undef BLARGG_COMMON_H
-// allow blargg_config.h to #include blargg_common.h
-#include "fir_blargg_config.h"
+
+// Allow blargg_config.h to #include blargg_common.h
+//
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/sound/fir_blargg_config.h>
+#else
+    #include "fir_blargg_config.h"
+#endif
+
 #ifndef BLARGG_COMMON_H
 #define BLARGG_COMMON_H
 

@@ -1,6 +1,11 @@
 // Game_Music_Emu 0.5.2. http://www.slack.net/~ant/
 
-#include "Fir_Resampler.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/sound/Fir_Resampler.h>
+#else
+    #include "Fir_Resampler.h"
+#endif
 
 #include <string.h>
 #include <stdlib.h>

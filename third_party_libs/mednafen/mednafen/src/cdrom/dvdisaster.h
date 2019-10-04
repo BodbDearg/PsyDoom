@@ -35,7 +35,12 @@
  *** Everything #includeable is rolled up herein...
  */
 
-#include "../types.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/types.h>
+#else
+    #include "../types.h"
+#endif
 
 #include <ctype.h>
 #include <errno.h>
@@ -48,7 +53,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+
+// DC: Unix header not available on Windows
+#ifdef WIN32
+    #include <mednafen/win32-common.h>
+#else
+    #include <unistd.h>
+#endif
 
 /***
  *** dvdisaster.c

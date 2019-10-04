@@ -24,7 +24,14 @@
 // in this regard.
 
 #include <mednafen/types.h>
-#include "FileStream.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/FileStream.h>
+#else
+    #include "FileStream.h"
+#endif
+
 #include <mednafen/mednafen.h>
 
 #include <trio/trio.h>

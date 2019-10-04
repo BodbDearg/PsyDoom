@@ -1,7 +1,12 @@
 #ifndef __MDFN_SETTINGS_DRIVER_H
 #define __MDFN_SETTINGS_DRIVER_H
 
-#include "settings-common.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/settings-common.h>
+#else
+    #include "settings-common.h"
+#endif
 
 namespace Mednafen
 {

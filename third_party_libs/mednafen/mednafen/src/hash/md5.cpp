@@ -20,7 +20,13 @@
 */
 
 #include <mednafen/types.h>
-#include "md5.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/hash/md5.h>
+#else
+    #include "md5.h"
+#endif
 
 namespace Mednafen
 {

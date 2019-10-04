@@ -26,7 +26,16 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>
+
+// DC: fixes for windows here
+#ifdef WINDOWS
+    #include <io.h>
+    #include <sys/stat.h>
+    #define S_IRUSR _S_IREAD
+    #define S_IWUSR _S_IWRITE
+#else
+    #include <unistd.h>
+#endif
 
 #include <zlib.h>
 
@@ -104,7 +113,7 @@ GZFileStream::GZFileStream(const std::string& path, const MODE mode, const int l
  if(!gzp)
  {
   ErrnoHolder ene(errno);
-
+  
   ::close(tmpfd);
 
   throw MDFN_Error(ene.Errno(), _("Error opening file \"%s\": %s"), path_save.c_str(), (ene.Errno() == 0) ? _("zlib error") : ene.StrError());
