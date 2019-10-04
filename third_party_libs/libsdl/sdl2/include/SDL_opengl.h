@@ -92,7 +92,11 @@
 #  if defined(__MINGW32__) && defined(GL_NO_STDCALL) || defined(UNDER_CE)  /* The generated DLLs by MingW with STDCALL are not compatible with the ones done by Microsoft's compilers */
 #    define GLAPIENTRY 
 #  else
-#    define GLAPIENTRY __stdcall
+#    if _WIN64  /* DC: can't use __stdcall in 64-bit mode! */
+#      define GLAPIENTRY
+#    else
+#      define GLAPIENTRY __stdcall
+#    endif
 #  endif
 #elif defined(__CYGWIN__) && defined(USE_OPENGL32) /* use native windows opengl32 */
 #  define GLAPI extern

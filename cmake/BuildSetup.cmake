@@ -13,6 +13,12 @@ endmacro()
 macro(detect_platform)
     if (WIN32)
         set(PLATFORM_WINDOWS TRUE)
+
+        if ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "Win64")
+            set(PLATFORM_WINDOWS_64 TRUE)
+        else()
+            set(PLATFORM_WINDOWS_32 TRUE)
+        endif()
     elseif (APPLE)    
         set(PLATFORM_MAC TRUE)  # Note: could also be iOS etc. but not targetting those - can just assume Mac...
     elseif (UNIX AND NOT APPLE)

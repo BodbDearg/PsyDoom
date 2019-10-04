@@ -448,8 +448,8 @@ include_directories(${INCLUDE_PATHS})
 target_include_directories(${LIBSDL_TGT_NAME} INTERFACE ${EXPORTED_INCLUDE_PATHS})
 
 if (PLATFORM_WINDOWS)
-    add_definitions(-DSDL_DISABLE_WINDOWS_IME)
-
+    target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC SDL_DISABLE_WINDOWS_IME)
+    
     target_link_libraries(${LIBSDL_TGT_NAME}
         Imm32.lib
         Mincore.lib
