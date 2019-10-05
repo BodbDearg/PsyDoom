@@ -1757,7 +1757,12 @@ static MDFN_COLD void InitCommon(std::vector<CDInterface*> *CDInterfaces, const 
  PSX_Reset(true);
 }
 
+// DC: exposing playstation 'LoadEXE' externally
+#if 1
+MDFN_COLD void LoadEXE(Stream* fp, bool ignore_pcsp)
+#else
 static MDFN_COLD void LoadEXE(Stream* fp, bool ignore_pcsp = false)
+#endif
 {
  uint8 raw_header[0x800];
  uint32 PC;
@@ -2018,7 +2023,12 @@ static MDFN_COLD void LoadCD(std::vector<CDInterface*> *CDInterfaces)
 {
  try
  {
-  InitCommon(CDInterfaces);
+    // DC: set 'WantPIOMem' to true as code will crash elsewhere if it is missing
+    #if 1
+        InitCommon(CDInterfaces, false, true);
+    #else
+        InitCommon(CDInterfaces);
+    #endif
  }
  catch(std::exception &e)
  {

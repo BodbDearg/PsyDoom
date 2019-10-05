@@ -115,6 +115,8 @@ namespace MDFN_IEN_PSX
  uint32 PSX_GetRandU32(uint32 mina, uint32 maxa);
 }
 
+// DC: exposing playstation 'LoadEXE' externally
+MDFN_COLD void LoadEXE(Stream* fp, bool ignore_pcsp = false);
 
 #include "dis.h"
 #include "cpu.h"

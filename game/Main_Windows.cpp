@@ -1,4 +1,5 @@
 ﻿#include <mednafen/cdrom/CDInterface.h>
+#include <mednafen/FileStream.h>
 #include <mednafen/NativeVFS.h>
 #include <mednafen/psx/psx.h>
 #include <mednafen/settings.h>
@@ -72,27 +73,49 @@ int WINAPI wWinMain(
     [[maybe_unused]] LPWSTR lpCmdLine,
     [[maybe_unused]] int nCmdShow
 ) {
+    // Init emulator
     MDFNI_InitializeModules();
     MDFN_MergeSettings(MednafenSettings);
     MDFN_FinalizeSettings();
 
+    // Load the CD
     std::unique_ptr<NativeVFS> nativeVFS(new NativeVFS());
     std::unique_ptr<CDInterface> cd(CDInterface::Open(nativeVFS.get(), "E:\\Darragh\\Desktop\\Doom\\PSX DOOM\\Doom [U] [SLUS-00077]\\Doom.cue", true));
     std::vector<CDInterface*> cds = { cd.get() };
     EmulatedPSX.LoadCD(&cds);
     MDFNGameInfo = &EmulatedPSX;
 
-    MDFN_PixelFormat pixelFormat(MDFN_COLORSPACE_RGB, 16, 8, 0, 24);
-    std::unique_ptr<MDFN_Surface> surface(new MDFN_Surface(nullptr, 640, 480, 320, pixelFormat, true));
-    std::unique_ptr<int32[]> surfaceLineWidths(new int32[480]);
+    // Load the exe
+    FileStream fileStream("E:\\Darragh\\Desktop\\PSX_HACKING\\PSX_DOOM_EXTRACTED\\PSXDOOM\\ABIN\\PSXDOOM.EXE", VirtualFS::MODE_READ);
+    LoadEXE(&fileStream);
 
+    // Setup display surface
+    MDFN_PixelFormat pixelFormat(MDFN_COLORSPACE_RGB, 16, 8, 0, 24);
+    std::unique_ptr<MDFN_Surface> surface(new MDFN_Surface(nullptr, 320, 240, 320, pixelFormat, true));
+    std::memset(surface->pixels, 0, sizeof(uint32) * 320 * 240);
+
+    std::unique_ptr<int32[]> surfaceLineWidths(new int32[240]);
+
+    for (uint32 i = 0; i < 240; ++i) {
+        surfaceLineWidths[i] = 320;
+    }
+
+    // Setup emulation params
     EmulateSpecStruct emuSpec = {};
     emuSpec.surface = surface.get();
     emuSpec.LineWidths = surfaceLineWidths.get();
     emuSpec.VideoFormatChanged = true;
 
+    // Emulate!
     for (uint32 i = 0; i < 40; ++i) {
         EmulatedPSX.Emulate(&emuSpec);
+
+        for (uint32 pix = 0; pix < 320 * 240; ++pix) {
+            if (surface->pixels[pix] != 0)
+                assert(false);
+        }
+
+        emuSpec.VideoFormatChanged = false;
     }
 
     return 0;
