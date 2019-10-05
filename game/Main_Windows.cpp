@@ -80,6 +80,20 @@ int WINAPI wWinMain(
     std::unique_ptr<CDInterface> cd(CDInterface::Open(nativeVFS.get(), "E:\\Darragh\\Desktop\\Doom\\PSX DOOM\\Doom [U] [SLUS-00077]\\Doom.cue", true));
     std::vector<CDInterface*> cds = { cd.get() };
     EmulatedPSX.LoadCD(&cds);
+    MDFNGameInfo = &EmulatedPSX;
+
+    MDFN_PixelFormat pixelFormat(MDFN_COLORSPACE_RGB, 16, 8, 0, 24);
+    std::unique_ptr<MDFN_Surface> surface(new MDFN_Surface(nullptr, 640, 480, 320, pixelFormat, true));
+    std::unique_ptr<int32[]> surfaceLineWidths(new int32[480]);
+
+    EmulateSpecStruct emuSpec = {};
+    emuSpec.surface = surface.get();
+    emuSpec.LineWidths = surfaceLineWidths.get();
+    emuSpec.VideoFormatChanged = true;
+
+    for (uint32 i = 0; i < 40; ++i) {
+        EmulatedPSX.Emulate(&emuSpec);
+    }
 
     return 0;
 }
