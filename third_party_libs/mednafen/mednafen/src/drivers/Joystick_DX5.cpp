@@ -25,7 +25,9 @@
 #include "Joystick_DX5.h"
 
 // DC: Switch to DInput8 as the latest Windows SDK doesn't have version 5
-#if 0
+#if 1
+    #define DIRECTINPUT_VERSION 0x0800
+#else
     #define DIRECTINPUT_VERSION 0x0500
 #endif
 

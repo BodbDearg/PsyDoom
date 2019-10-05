@@ -22,6 +22,9 @@
 #ifndef __MDFN_NATIVEVFS_H
 #define __MDFN_NATIVEVFS_H
 
+// DC: Compile fix
+#include <mednafen/VirtualFS.h>
+
 namespace Mednafen
 {
 
