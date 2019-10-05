@@ -15,11 +15,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "mednafen.h"
-#include <trio/trio.h>
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/mednafen.h>
+    #include <mednafen/video.h>
+    #include <mednafen/player.h>
+#else
+    #include "mednafen.h"
+    #include "video.h"
+    #include "player.h"
+#endif
 
-#include "video.h"
-#include "player.h"
+#include <trio/trio.h>
 
 namespace Mednafen
 {

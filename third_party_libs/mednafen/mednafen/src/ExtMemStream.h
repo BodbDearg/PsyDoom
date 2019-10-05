@@ -22,7 +22,12 @@
 #ifndef __MDFN_EXTMEMSTREAM_H
 #define __MDFN_EXTMEMSTREAM_H
 
-#include "Stream.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/Stream.h>
+#else
+    #include "Stream.h"
+#endif
 
 namespace Mednafen
 {

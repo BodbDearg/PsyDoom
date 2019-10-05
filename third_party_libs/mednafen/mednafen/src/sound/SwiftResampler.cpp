@@ -42,7 +42,14 @@
 
 #include <mednafen/mednafen.h>
 #include "DSPUtility.h"
-#include "SwiftResampler.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/sound/SwiftResampler.h>
+#else
+    #include "SwiftResampler.h"
+#endif
+
 #include <mednafen/cputest/cputest.h>
 
 #if defined(ARCH_POWERPC_ALTIVEC) && defined(HAVE_ALTIVEC_H)

@@ -39,7 +39,12 @@
 /***************************************************************************/
 /* Scale2x C implementation */
 
+// DC: compile fixes for MSVC
+#if 1
+static inline void scale2x_8_def_single(scale2x_uint8* dst, const scale2x_uint8* src0, const scale2x_uint8* src1, const scale2x_uint8* src2, unsigned count)
+#else
 static inline void scale2x_8_def_single(scale2x_uint8* __restrict__ dst, const scale2x_uint8* __restrict__ src0, const scale2x_uint8* __restrict__ src1, const scale2x_uint8* __restrict__ src2, unsigned count)
+#endif
 {
 	assert(count >= 2);
 
@@ -80,7 +85,12 @@ static inline void scale2x_8_def_single(scale2x_uint8* __restrict__ dst, const s
 	dst[1] = src1[0];
 }
 
+// DC: compile fixes for MSVC
+#if 1
+static inline void scale2x_16_def_single(scale2x_uint16* dst, const scale2x_uint16* src0, const scale2x_uint16* src1, const scale2x_uint16* src2, unsigned count)
+#else
 static inline void scale2x_16_def_single(scale2x_uint16* __restrict__ dst, const scale2x_uint16* __restrict__ src0, const scale2x_uint16* __restrict__ src1, const scale2x_uint16* __restrict__ src2, unsigned count)
+#endif
 {
 	assert(count >= 2);
 
@@ -121,7 +131,12 @@ static inline void scale2x_16_def_single(scale2x_uint16* __restrict__ dst, const
 	dst[1] = src1[0];
 }
 
+// DC: compile fixes for MSVC
+#if 1
+static inline void scale2x_32_def_single(scale2x_uint32* dst, const scale2x_uint32* src0, const scale2x_uint32* src1, const scale2x_uint32* src2, unsigned count)
+#else
 static inline void scale2x_32_def_single(scale2x_uint32* __restrict__ dst, const scale2x_uint32* __restrict__ src0, const scale2x_uint32* __restrict__ src1, const scale2x_uint32* __restrict__ src2, unsigned count)
+#endif
 {
 	assert(count >= 2);
 

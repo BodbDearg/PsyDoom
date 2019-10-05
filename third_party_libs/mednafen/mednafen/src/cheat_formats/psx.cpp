@@ -24,7 +24,12 @@
 
 #include <trio/trio.h>
 
-#include "psx.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/cheat_formats/psx.h>
+#else
+    #include "psx.h"
+#endif
 
 namespace Mednafen
 {

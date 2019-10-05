@@ -15,7 +15,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "../sexyal.h"
+ // DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/sexyal/sexyal.h>
+#else
+    #include "../sexyal.h"
+#endif
 
 #include <mednafen/Time.h>
 

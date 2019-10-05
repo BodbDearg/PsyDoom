@@ -22,6 +22,9 @@
 
 #include <mednafen/sexyal/sexyal.h>
 
+// DC: fixing a compile error with non standard variable sized local arrays being used
+#include <memory>
+
 static SexyAL_device* Output = NULL;
 static SexyAL_format format;
 static SexyAL_buffering buffering;
@@ -68,10 +71,17 @@ void Sound_Write(int16 *Buffer, int Count)
 void Sound_WriteSilence(int ms)
 {
  unsigned int frames = (uint64)format.rate * ms / 1000;
- int16 SBuffer[frames * format.channels];
 
- memset(SBuffer, 0, sizeof(SBuffer));
- Output->Write(Output, SBuffer, frames);
+ // DC: fixing a compile error with non standard variable sized local arrays being used
+ #if 1
+    std::unique_ptr<int16[]> SBuffer(new int16[(size_t) frames * format.channels]);
+    memset(SBuffer.get(), 0, frames * format.channels * sizeof(int16));
+    Output->Write(Output, SBuffer.get(), frames);
+ #else
+    int16 SBuffer[frames * format.channels];
+    memset(SBuffer, 0, sizeof(SBuffer));
+    Output->Write(Output, SBuffer, frames);
+ #endif
 }
 
 static std::string sampformat_to_string(const uint32 sampformat)

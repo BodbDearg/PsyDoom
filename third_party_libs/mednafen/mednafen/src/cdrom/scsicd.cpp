@@ -26,7 +26,13 @@
 #include <mednafen/cdrom/CDInterface.h>
 #include <trio/trio.h>
 #include "scsicd.h"
-#include "SimpleFIFO.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/cdrom/SimpleFIFO.h>
+#else
+    #include "SimpleFIFO.h"
+#endif
 
 #if defined(__SSE2__)
 #include <xmmintrin.h>

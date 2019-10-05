@@ -15,8 +15,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "sexyal.h"
-#include "convert.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/sexyal/sexyal.h>
+    #include <mednafen/sexyal/convert.h>
+#else
+    #include "sexyal.h"
+    #include "convert.h"
+#endif
 
 static inline uint32 ConvertRandU32(void)
 {

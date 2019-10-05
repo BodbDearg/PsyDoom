@@ -501,8 +501,15 @@ struct DemoStateTest
   bool alt_arr_i[7];
   float alt_arr_j[7];
   double alt_arr_k[7];
+
+// DC: Compile fixes for MSVC
+#if 1
+ } stt[15];
+};
+#else
  } __attribute__((__packed__)) stt[15];
 } __attribute__((__packed__));
+#endif
 
 static void randomoo(DemoStateTest* ptr, size_t count)
 {

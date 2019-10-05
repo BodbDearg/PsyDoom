@@ -1,7 +1,12 @@
 #ifndef __MDFN_NET_NETWS2_H
 #define __MDFN_NET_NETWS2_H
 
-#include "Net.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/net/Net.h>
+#else
+    #include "Net.h"
+#endif
 
 namespace Net
 {

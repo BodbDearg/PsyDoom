@@ -22,6 +22,9 @@
 #ifndef __MDFN_DRIVERS_MEMDEBUGGER_H
 #define __MDFN_DRIVERS_MEMDEBUGGER_H
 
+// DC: Compile fix
+#ifdef WANT_DEBUGGER
+
 #include <iconv.h>
 
 class MemDebuggerPrompt;
@@ -97,5 +100,7 @@ class MemDebugger
 
  friend class MemDebuggerPrompt;
 };
+
+#endif  // WANT_DEBUGGER
 
 #endif

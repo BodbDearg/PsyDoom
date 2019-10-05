@@ -16,7 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "cputest.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/cputest/cputest.h>
+#else
+    #include "cputest.h"
+#endif
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif

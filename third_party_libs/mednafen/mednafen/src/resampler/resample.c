@@ -92,7 +92,14 @@ static void *speex_realloc (void *ptr, int size) {return realloc(ptr, size);}
 static void speex_free (void *ptr) {free(ptr);}
 
 /* Begin Mednafen modifications */
-#include "resampler.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+    #include <mednafen/resampler/resampler.h>
+#if 1
+#else    
+    #include "resampler.h"
+#endif
+
 /* End Mednafen modifications */
 #include "arch.h"
 #else /* OUTSIDE_SPEEX */

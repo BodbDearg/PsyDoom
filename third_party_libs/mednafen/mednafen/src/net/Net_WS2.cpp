@@ -22,7 +22,11 @@
 #include "Net_WS2.h"
 #include <mednafen/string/string.h>
 
+// DC: Compile fix for MSVC
+#ifndef _MSC_VER
 #include <sys/time.h>
+#endif
+
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <wspiapi.h>

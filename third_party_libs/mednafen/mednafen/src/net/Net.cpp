@@ -21,7 +21,12 @@
 
 #include <mednafen/mednafen.h>
 
-#include "Net.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/net/Net.h>
+#else
+    #include "Net.h"
+#endif
 
 #ifdef HAVE_POSIX_SOCKETS
 #include "Net_POSIX.h"

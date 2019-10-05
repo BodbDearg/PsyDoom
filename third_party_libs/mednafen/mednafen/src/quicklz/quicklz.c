@@ -7,7 +7,12 @@
 // has been acquired (see http://www.quicklz.com/order.html). The commercial license 
 // does not cover derived or ported versions created by third parties under GPL.
 
-#include "quicklz.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/quicklz/quicklz.h>
+#else
+    #include "quicklz.h"
+#endif
 
 int qlz_get_setting(int setting)
 {

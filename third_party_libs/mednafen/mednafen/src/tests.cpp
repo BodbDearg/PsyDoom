@@ -24,9 +24,18 @@
 
 #undef NDEBUG
 
-#include "mednafen.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/mednafen.h>
+    #include <mednafen/tests.h>
+    #include <mednafen/general.h>
+#else
+    #include "mednafen.h"
+    #include "tests.h"
+    #include "general.h"
+#endif
+
 #include "lepacker.h"
-#include "tests.h"
 
 #include <mednafen/hash/md5.h>
 #include <mednafen/hash/sha1.h>
@@ -48,7 +57,6 @@
 #include <math.h>
 
 #include "psx/masmem.h"
-#include "general.h"
 
 #if defined(HAVE_FENV_H)
 #include <fenv.h>
@@ -106,16 +114,42 @@ static_assert(sizeof(void*) >= 4, "unexpected size");
 //static_assert(sizeof(void*) >= sizeof(void (*)(void)), "unexpected size");
 static_assert(sizeof(uintptr_t) >= sizeof(void*), "unexpected size");
 
-static_assert(sizeof(char) == SIZEOF_CHAR, "unexpected size");
-static_assert(sizeof(short) == SIZEOF_SHORT, "unexpected size");
-static_assert(sizeof(int) == SIZEOF_INT, "unexpected size");
-static_assert(sizeof(long) == SIZEOF_LONG, "unexpected size");
-static_assert(sizeof(long long) == SIZEOF_LONG_LONG, "unexpected size");
+// DC: added compile fixes here for the case where these are not defined
+#ifdef SIZEOF_CHAR
+    static_assert(sizeof(char) == SIZEOF_CHAR, "unexpected size");
+#endif
 
-static_assert(sizeof(off_t) == SIZEOF_OFF_T, "unexpected size");
-static_assert(sizeof(ptrdiff_t) == SIZEOF_PTRDIFF_T, "unexpected size");
-static_assert(sizeof(size_t) == SIZEOF_SIZE_T, "unexpected size");
-static_assert(sizeof(void*) == SIZEOF_VOID_P, "unexpected size");
+#ifdef SIZEOF_SHORT
+    static_assert(sizeof(short) == SIZEOF_SHORT, "unexpected size");
+#endif
+
+#ifdef SIZEOF_INT
+    static_assert(sizeof(int) == SIZEOF_INT, "unexpected size");
+#endif
+
+#ifdef SIZEOF_LONG
+    static_assert(sizeof(long) == SIZEOF_LONG, "unexpected size");
+#endif
+
+#ifdef SIZEOF_LONG_LONG
+    static_assert(sizeof(long long) == SIZEOF_LONG_LONG, "unexpected size");
+#endif
+
+#ifdef SIZEOF_OFF_T
+    static_assert(sizeof(off_t) == SIZEOF_OFF_T, "unexpected size");
+#endif
+
+#ifdef SIZEOF_PTRDIFF_T
+    static_assert(sizeof(ptrdiff_t) == SIZEOF_PTRDIFF_T, "unexpected size");
+#endif
+
+#ifdef SIZEOF_SIZE_T
+    static_assert(sizeof(size_t) == SIZEOF_SIZE_T, "unexpected size");
+#endif
+
+#ifdef SIZEOF_VOID_P
+    static_assert(sizeof(void*) == SIZEOF_VOID_P, "unexpected size");
+#endif
 
 // Make sure the "char" type is signed(pass -fsigned-char to gcc).  New code in Mednafen shouldn't be written with the
 // assumption that "char" is signed, but there likely is at least some code that does.

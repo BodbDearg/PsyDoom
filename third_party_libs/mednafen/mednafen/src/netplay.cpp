@@ -15,27 +15,35 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "mednafen.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/mednafen.h>
+    #include <mednafen/netplay-driver.h>
+    #include <mednafen/general.h>
+    #include <mednafen/state.h>
+    #include <mednafen/mempatcher.h>
+    #include <mednafen/MemoryStream.h>
+    #include <mednafen/driver.h>
+#else
+    #include "mednafen.h"
+    #include "netplay-driver.h"
+    #include "general.h"
+    #include "state.h"
+    #include "mempatcher.h"
+    #include "MemoryStream.h"
+    #include "driver.h"
+#endif
 
 #include <zlib.h>
 #include <trio/trio.h>
-
 #include <map>
 
 #include "netplay.h"
-#include "netplay-driver.h"
-#include "general.h"
 #include <mednafen/string/string.h>
-#include "state.h"
 #include "movie.h"
 #include <mednafen/hash/md5.h>
 #include <mednafen/Time.h>
 #include <mednafen/net/Net.h>
-#include "mempatcher.h"
-
-#include "MemoryStream.h"
-
-#include "driver.h"
 
 namespace Mednafen
 {

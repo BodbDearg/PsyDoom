@@ -27,12 +27,14 @@
 
 // DC: These got moved to workaround issues with no symlinks on Windows
 #if 1
+    #include <mednafen/compress/GZFileStream.h>
     #include <mednafen/driver.h>
     #include <mednafen/general.h>
     #include <mednafen/state.h>
     #include <mednafen/video.h>
     #include <mednafen/MemoryStream.h>
 #else
+    #include "compress/GZFileStream.h"
     #include "driver.h"
     #include "general.h"
     #include "state.h"
@@ -43,7 +45,6 @@
 #include "movie.h"
 #include "netplay.h"
 #include "video/resize.h"
-#include "compress/GZFileStream.h"
 
 namespace Mednafen
 {

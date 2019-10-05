@@ -19,6 +19,9 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+// DC: Compile fix
+#ifdef WANT_DEBUGGER
+
 #include "main.h"
 #include <mednafen/FileStream.h>
 
@@ -1897,3 +1900,5 @@ void Debugger_Kill(void)
 	 }
 	}
 }
+
+#endif  // WANT_DEBUGGER

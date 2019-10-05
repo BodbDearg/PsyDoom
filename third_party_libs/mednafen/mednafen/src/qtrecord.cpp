@@ -21,7 +21,14 @@
 
 #include <mednafen/mednafen.h>
 #include <mednafen/Time.h>
-#include "qtrecord.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/qtrecord.h>
+#else
+    #include "qtrecord.h"
+#endif
+
 #include <minilzo/minilzo.h>
 #include "video/png.h"
 

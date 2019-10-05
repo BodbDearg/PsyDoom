@@ -1957,15 +1957,23 @@ static char** MSW_GetArgcArgv(int *argc)
 #endif
 
 
-#ifdef WIN32
+// DC: fixes for MSVC
+// was: #ifdef WIN32
+//
+#if defined(WIN32) && (!defined(_MSC_VER))
 extern "C"
 {
  void __set_app_type(int);
  extern int mingw_app_type;
 }
 
-__attribute__((force_align_arg_pointer))	// Not sure what's going on to cause this to be needed.
+// DC: disable this - causes compile error!
+#if 0
+    __attribute__((force_align_arg_pointer))	// Not sure what's going on to cause this to be needed.
 #endif
+
+#endif
+
 int main(int argc, char *argv[])
 {
 	// SuppressErrorPopups must be set very early.
@@ -1977,7 +1985,10 @@ int main(int argc, char *argv[])
 	 else
 	  SuppressErrorPopups = false;
 
-#ifdef WIN32
+// DC: fixes for MSVC
+// was: #ifdef WIN32
+//
+#if defined(WIN32) && (!defined(_MSC_VER))
 	 // for assert() and abort()
 	 if(SuppressErrorPopups)
 	 {

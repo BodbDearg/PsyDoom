@@ -38,7 +38,13 @@
 #include <mednafen/string/string.h>
 #include <mednafen/MemoryStream.h>
 
-#include "CDAccess.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/cdrom/CDAccess.h>
+#else
+    #include "CDAccess.h"
+#endif
+
 #include "CDAccess_Image.h"
 
 #include "CDAFReader.h"

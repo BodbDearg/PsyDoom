@@ -20,7 +20,13 @@
 */
 
 #include <mednafen/types.h>
-#include "endian.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/endian.h>
+#else
+    #include "endian.h"
+#endif
 
 namespace Mednafen
 {

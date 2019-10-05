@@ -15,19 +15,29 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "mednafen.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/FileStream.h>
+    #include <mednafen/mednafen.h>
+    #include <mednafen/driver.h>
+    #include <mednafen/state.h>
+    #include <mednafen/general.h>
+    #include <mednafen/video.h>
+    #include <mednafen/state.h>
+#else
+    #include "FileStream.h"
+    #include "mednafen.h"
+    #include "driver.h"
+    #include "state.h"
+    #include "general.h"
+    #include "video.h"
+    #include "state.h"
+#endif
 
 #include <trio/trio.h>
 
-#include "driver.h"
-#include "state.h"
-#include "general.h"
-#include "video.h"
 #include "netplay.h"
 #include "movie.h"
-#include "state.h"
-
-#include "FileStream.h"
 
 namespace Mednafen
 {

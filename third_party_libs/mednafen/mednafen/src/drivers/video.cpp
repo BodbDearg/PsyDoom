@@ -45,6 +45,11 @@
 #include "2xSaI.h"
 #endif
 
+// DC: compile fix for windows
+#ifdef WIN32
+    #undef min
+#endif
+
 class SDL_to_MDFN_Surface_Wrapper : public MDFN_Surface
 {
  public:
@@ -773,7 +778,12 @@ void Video_Sync(MDFNGI *gi)
 
    if((dwmdll = LoadLibrary("Dwmapi.dll")) != NULL)
    {
-    HRESULT WINAPI (*p_DwmEnableComposition)(UINT) = (HRESULT WINAPI (*)(UINT))GetProcAddress(dwmdll, "DwmEnableComposition");
+    // DC: Compile fix for MSVC
+    #if 1
+        HRESULT (WINAPI* p_DwmEnableComposition)(UINT) = (HRESULT (WINAPI*)(UINT))GetProcAddress(dwmdll, "DwmEnableComposition");
+    #else
+        HRESULT WINAPI (*p_DwmEnableComposition)(UINT) = (HRESULT WINAPI (*)(UINT))GetProcAddress(dwmdll, "DwmEnableComposition");
+    #endif
 
     if(p_DwmEnableComposition != NULL)
     {
@@ -1409,7 +1419,13 @@ static void SubBlit(const MDFN_Surface *source_surface, const MDFN_Rect &src_rec
 
    if(CurrentScaler)
    {
-    MDFN_Rect boohoo_rect({0, 0, eff_src_rect.w * CurrentScaler->xscale, eff_src_rect.h * CurrentScaler->yscale});
+    // DC: compile fix for MSVC
+    #if 1
+        MDFN_Rect boohoo_rect = MDFN_Rect{ 0, 0, eff_src_rect.w * CurrentScaler->xscale, eff_src_rect.h * CurrentScaler->yscale };
+    #else
+        MDFN_Rect boohoo_rect({0, 0, eff_src_rect.w * CurrentScaler->xscale, eff_src_rect.h * CurrentScaler->yscale});
+    #endif
+
     MDFN_Surface bah_surface(NULL, boohoo_rect.w, boohoo_rect.h, boohoo_rect.w, eff_source_surface->format, false);
     uint8* screen_pixies = (uint8 *)bah_surface.pixels;
     uint32 screen_pitch = bah_surface.pitch32 << 2;

@@ -49,23 +49,25 @@
     #include <mednafen/general.h>
     #include <mednafen/mempatcher.h>
     #include <mednafen/netplay-driver.h>
+    #include <mednafen/qtrecord.h>
     #include <mednafen/state.h>
+    #include <mednafen/tests.h>
     #include <mednafen/video.h>
 #else
     #include "file.h"
     #include "general.h"
     #include "mempatcher.h"
     #include "netplay-driver.h"
+    #include "qtrecord.h"
     #include "state.h"
+    #include "tests.h"
     #include "video.h"
 #endif
 
 #include "movie.h"
 #include "state_rewind.h"
 #include "video/Deinterlacer.h"
-#include "tests.h"
 #include "video/tblur.h"
-#include "qtrecord.h"
 
 namespace Mednafen
 {

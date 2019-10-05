@@ -33,10 +33,18 @@
 
 struct XInputFuncPointers
 {
- void WINAPI (*p_XInputEnable)(BOOL) = nullptr;
- DWORD WINAPI (*p_XInputSetState)(DWORD, XINPUT_VIBRATION*) = nullptr;
- DWORD WINAPI (*p_XInputGetState)(DWORD, XINPUT_STATE*) = nullptr;	// Pointer to XInputGetState or XInputGetStateEx(if available).
- DWORD WINAPI (*p_XInputGetCapabilities)(DWORD, DWORD, XINPUT_CAPABILITIES*) = nullptr;
+    // DC: compile fixes for MSVC
+    #if 1
+        void (WINAPI *p_XInputEnable)(BOOL) = nullptr;
+        DWORD (WINAPI *p_XInputSetState)(DWORD, XINPUT_VIBRATION*) = nullptr;
+        DWORD (WINAPI *p_XInputGetState)(DWORD, XINPUT_STATE*) = nullptr;	// Pointer to XInputGetState or XInputGetStateEx(if available).
+        DWORD (WINAPI *p_XInputGetCapabilities)(DWORD, DWORD, XINPUT_CAPABILITIES*) = nullptr;
+    #else
+        void WINAPI (*p_XInputEnable)(BOOL) = nullptr;
+        DWORD WINAPI (*p_XInputSetState)(DWORD, XINPUT_VIBRATION*) = nullptr;
+        DWORD WINAPI (*p_XInputGetState)(DWORD, XINPUT_STATE*) = nullptr;	// Pointer to XInputGetState or XInputGetStateEx(if available).
+        DWORD WINAPI (*p_XInputGetCapabilities)(DWORD, DWORD, XINPUT_CAPABILITIES*) = nullptr;
+    #endif
 };
 
 class Joystick_XInput : public Joystick

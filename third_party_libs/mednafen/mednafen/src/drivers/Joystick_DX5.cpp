@@ -24,7 +24,11 @@
 #include "Joystick.h"
 #include "Joystick_DX5.h"
 
-#define DIRECTINPUT_VERSION 0x0500
+// DC: Switch to DInput8 as the latest Windows SDK doesn't have version 5
+#if 0
+    #define DIRECTINPUT_VERSION 0x0500
+#endif
+
 #include <windows.h>
 #include <windowsx.h>
 #include <dinput.h>
@@ -274,15 +278,29 @@ class JoystickDriver_DX5 : public JoystickDriver
 static INLINE std::set<uint32> GetXInputVidPid(void)
 {
  HMODULE us32 = NULL;
- UINT WINAPI (*p_GetRawInputDeviceList)(PRAWINPUTDEVICELIST, PUINT, UINT) = NULL;
- UINT WINAPI (*p_GetRawInputDeviceInfo)(HANDLE, UINT, LPVOID, PUINT) = NULL;
+
+ // DC: compile fixes for MSVC
+ #if 1
+    UINT (WINAPI *p_GetRawInputDeviceList)(PRAWINPUTDEVICELIST, PUINT, UINT) = NULL;
+    UINT (WINAPI *p_GetRawInputDeviceInfo)(HANDLE, UINT, LPVOID, PUINT) = NULL;
+ #else
+    UINT WINAPI (*p_GetRawInputDeviceList)(PRAWINPUTDEVICELIST, PUINT, UINT) = NULL;
+    UINT WINAPI (*p_GetRawInputDeviceInfo)(HANDLE, UINT, LPVOID, PUINT) = NULL;
+ #endif
+
  std::set<uint32> exclude_vps;
 
  if((us32 = LoadLibrary("user32.dll")) == NULL)
   return exclude_vps;
 
- p_GetRawInputDeviceList = (UINT WINAPI (*)(PRAWINPUTDEVICELIST, PUINT, UINT))GetProcAddress(us32, "GetRawInputDeviceList");
- p_GetRawInputDeviceInfo = (UINT WINAPI (*)(HANDLE, UINT, LPVOID, PUINT))GetProcAddress(us32, "GetRawInputDeviceInfoA");
+ // DC: compile fixes for MSVC
+ #if 1
+    p_GetRawInputDeviceList = (UINT (WINAPI *)(PRAWINPUTDEVICELIST, PUINT, UINT))GetProcAddress(us32, "GetRawInputDeviceList");
+    p_GetRawInputDeviceInfo = (UINT (WINAPI *)(HANDLE, UINT, LPVOID, PUINT))GetProcAddress(us32, "GetRawInputDeviceInfoA");
+ #else
+    p_GetRawInputDeviceList = (UINT WINAPI (*)(PRAWINPUTDEVICELIST, PUINT, UINT))GetProcAddress(us32, "GetRawInputDeviceList");
+    p_GetRawInputDeviceInfo = (UINT WINAPI (*)(HANDLE, UINT, LPVOID, PUINT))GetProcAddress(us32, "GetRawInputDeviceInfoA");
+ #endif
 
  if(p_GetRawInputDeviceList && p_GetRawInputDeviceInfo)
  {
@@ -338,15 +356,25 @@ struct enum_device_list
  unsigned valid_count;
 };
 
+// DC: Compile fixes for MSVC
+#if 0
 static BOOL CALLBACK GLOB_EnumJoysticksProc(LPCDIDEVICEINSTANCE ddi, LPVOID private_data) __attribute__((force_align_arg_pointer));
+#endif
+
 static BOOL CALLBACK GLOB_EnumJoysticksProc(LPCDIDEVICEINSTANCE ddi, LPVOID private_data)
 {
  enum_device_list *edl = (enum_device_list*)private_data;
 
  //printf("%08x\n", (unsigned int)ddi->guidInstance.Data1);
 
- if((ddi->dwDevType & 0xFF) != DIDEVTYPE_JOYSTICK)
-  return DIENUM_CONTINUE;
+ // DC: Switch to DInput8 as the latest Windows SDK doesn't have version 5
+ #if 1
+     if((ddi->dwDevType & 0xFF) != DI8DEVTYPE_JOYSTICK)
+      return DIENUM_CONTINUE;
+ #else
+     if((ddi->dwDevType & 0xFF) != DIDEVTYPE_JOYSTICK)
+      return DIENUM_CONTINUE;
+ #endif
 
  if(edl->valid_count < edl->max_count)
  {
@@ -364,8 +392,19 @@ JoystickDriver_DX5::JoystickDriver_DX5(bool exclude_xinput) : dii(NULL)
 
  try
  {
-  REQUIRE_DI_CALL( DirectInputCreate(GetModuleHandle(NULL), DIRECTINPUT_VERSION, &dii, NULL) );
-  REQUIRE_DI_CALL( dii->EnumDevices(DIDEVTYPE_JOYSTICK, GLOB_EnumJoysticksProc, &edl, DIEDFL_ATTACHEDONLY) );
+    // DC: Switch to DInput8 as the latest Windows SDK doesn't have version 5
+    #if 1
+        REQUIRE_DI_CALL( DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8A, (void**) &dii, NULL) );
+    #else
+        REQUIRE_DI_CALL( DirectInputCreate(GetModuleHandle(NULL), DIRECTINPUT_VERSION, &dii, NULL) );
+    #endif
+  
+    // DC: Switch to DInput8 as the latest Windows SDK doesn't have version 5
+    #if 1
+        REQUIRE_DI_CALL( dii->EnumDevices(DI8DEVTYPE_JOYSTICK, GLOB_EnumJoysticksProc, &edl, DIEDFL_ATTACHEDONLY) );
+    #else
+        REQUIRE_DI_CALL( dii->EnumDevices(DIDEVTYPE_JOYSTICK, GLOB_EnumJoysticksProc, &edl, DIEDFL_ATTACHEDONLY) );
+    #endif
 
   if(exclude_xinput)
   {

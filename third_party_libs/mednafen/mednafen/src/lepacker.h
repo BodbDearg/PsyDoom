@@ -1,7 +1,12 @@
 #ifndef __MDFN_LEPACKER_H
 #define __MDFN_LEPACKER_H
 
-#include "types.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/types.h>
+#else
+    #include "types.h"
+#endif
 
 /* Little-endian byte packer(and unpacker). */
 

@@ -19,8 +19,14 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#include "mednafen.h"
-#include "memory.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/mednafen.h>
+    #include <mednafen/memory.h>
+#else
+    #include "mednafen.h"
+    #include "memory.h"
+#endif
 
 namespace Mednafen
 {

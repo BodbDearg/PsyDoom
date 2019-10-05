@@ -49,29 +49,37 @@ CDAFReader::~CDAFReader()
 
 CDAFReader *CDAFR_Open(Stream *fp)
 {
- static CDAFReader* (* const OpenFuncs[])(Stream* fp) =
- {
-  CDAFR_MPC_Open,
-  CDAFR_Vorbis_Open,	// Must come before CDAFR_SF_Open
-#ifdef HAVE_LIBSNDFILE
-  CDAFR_SF_Open,
-#endif
- };
+    // DC: Disabling all of this - don't expect it to be used
+    #if 1
+        assert(false);
+        return nullptr;
+    #else
 
- for(auto const& f : OpenFuncs)
- {
-  try
-  {
-   fp->rewind();
-   return f(fp);
-  }
-  catch(int i)
-  {
+    static CDAFReader* (* const OpenFuncs[])(Stream* fp) =
+    {
+        CDAFR_MPC_Open,
+        CDAFR_Vorbis_Open,	// Must come before CDAFR_SF_Open
+        #ifdef HAVE_LIBSNDFILE
+            CDAFR_SF_Open,
+        #endif
+    };
 
-  }
- }
+    for (auto const& f : OpenFuncs)
+    {
+        try
+        {
+            fp->rewind();
+            return f(fp);
+        }
+        catch(int i)
+        {
 
- return(NULL);
+        }
+    }
+
+    return(NULL);
+
+    #endif
 }
 
 }

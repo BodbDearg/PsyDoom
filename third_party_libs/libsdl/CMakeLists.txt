@@ -451,6 +451,7 @@ if (PLATFORM_WINDOWS)
     target_compile_definitions(${LIBSDL_TGT_NAME} PUBLIC SDL_DISABLE_WINDOWS_IME)
     
     target_link_libraries(${LIBSDL_TGT_NAME}
+        DInput8.lib
         Imm32.lib
         Mincore.lib
         User32.lib

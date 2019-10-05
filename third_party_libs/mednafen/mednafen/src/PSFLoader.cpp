@@ -23,15 +23,28 @@
  TODO: Time string parsing convenience functions.
 */
 
-#include "mednafen.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/mednafen.h>
+    #include <mednafen/PSFLoader.h>
+    #include <mednafen/general.h>
+#else
+    #include "mednafen.h"
+    #include "PSFLoader.h"
+    #include "general.h"
+#endif
+
+
 #include <mednafen/FileStream.h>
 #include <mednafen/compress/ZLInflateFilter.h>
-#include "PSFLoader.h"
-#include "general.h"
 #include <mednafen/string/string.h>
 
 #include <trio/trio.h>
-#include <iconv.h>
+
+// DC: Not supporting character encoding conversions
+#if 0
+    #include <iconv.h>
+#endif
 
 #include <zlib.h>
 
@@ -133,6 +146,10 @@ void PSFTags::LoadTags(Stream* fp)
  if(probably_ascii)
   return;
 
+ // DC: Not supporting character encoding conversions
+ #if 1
+    throw;
+ #else
  //
  // Detect possible SJIS encoding, and convert tags.
  //
@@ -181,6 +198,7 @@ void PSFTags::LoadTags(Stream* fp)
   if(possibly_sjis)
    return;
  }
+ #endif
 }
 
 int64 PSFTags::GetTagI(const char *name)

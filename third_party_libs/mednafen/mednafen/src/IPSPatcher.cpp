@@ -18,7 +18,12 @@
 #include <mednafen/mednafen.h>
 #include <mednafen/memory.h>
 
-#include "IPSPatcher.h"
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/IPSPatcher.h>
+#else
+    #include "IPSPatcher.h"
+#endif
 
 namespace Mednafen
 {

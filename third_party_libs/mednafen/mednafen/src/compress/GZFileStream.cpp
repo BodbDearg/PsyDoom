@@ -20,7 +20,13 @@
 */
 
 #include <mednafen/mednafen.h>
-#include "GZFileStream.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/compress/GZFileStream.h>
+#else
+    #include "GZFileStream.h"
+#endif
 
 #include <trio/trio.h>
 #include <sys/types.h>

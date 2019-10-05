@@ -20,7 +20,13 @@
 */
 
 #include <mednafen/mednafen.h>
-#include "surface.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/video/surface.h>
+#else
+    #include "surface.h"
+#endif
 
 namespace Mednafen
 {

@@ -16,7 +16,13 @@
  */
 
 /* Support functions for the emulated system code-side of the debugger. */
-#include "mednafen.h"
+
+// DC: This got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/mednafen.h>
+#else
+    #include "mednafen.h"
+#endif
 
 #ifdef WANT_DEBUGGER
 

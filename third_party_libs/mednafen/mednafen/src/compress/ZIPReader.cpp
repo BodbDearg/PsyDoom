@@ -23,8 +23,15 @@
 // TODO: Stream::clone()
 
 #include <mednafen/mednafen.h>
-#include "ZIPReader.h"
-#include "ZLInflateFilter.h"
+
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/compress/ZIPReader.h>
+    #include <mednafen/compress/ZLInflateFilter.h>
+#else
+    #include "ZIPReader.h"
+    #include "ZLInflateFilter.h"
+#endif
 
 namespace Mednafen
 {

@@ -36,10 +36,12 @@ typedef struct
 
 const font18x18 FontData18x18[]=
 {
-	#ifdef WANT_INTERNAL_CJK
+    // DC: fixing compile error
+    // was: #ifdef WANT_INTERNAL_CJK
+	#if 1
         #include "font18x18ko.h"
 	#else
-
+        
 	#endif
 };
 

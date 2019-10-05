@@ -23,19 +23,29 @@
 #include "opengl.h"
 #include "shader.h"
 
+// DC: compile fix - variable length C array is non standard!
+#include <memory>
+
 void OpenGL_Blitter::ReadPixels(MDFN_Surface *surface, const MDFN_Rect *rect)
 {
- p_glPixelStorei(GL_UNPACK_ROW_LENGTH, surface->pitchinpix);
- p_glReadPixels(rect->x, gl_screen_h - rect->h - rect->y, rect->w, rect->h, PixelFormat, PixelType, surface->pixels);
+    p_glPixelStorei(GL_UNPACK_ROW_LENGTH, surface->pitchinpix);
+    p_glReadPixels(rect->x, gl_screen_h - rect->h - rect->y, rect->w, rect->h, PixelFormat, PixelType, surface->pixels);
 
- for(int y = 0; y < surface->h / 2; y++)
- {
-  uint32 tmp_buffer[surface->w];
+    // DC: compile fix - variable length C array is non standard!
+    std::unique_ptr<uint32[]> tmp_buffer_storage(new uint32[surface->w]);
+    uint32* const tmp_buffer = tmp_buffer_storage.get();
 
-  memcpy(tmp_buffer, &surface->pixels[y * surface->pitchinpix], surface->pitchinpix * sizeof(uint32));
-  memcpy(&surface->pixels[y * surface->pitchinpix], &surface->pixels[(surface->h - 1 - y) * surface->pitchinpix], surface->pitchinpix * sizeof(uint32));
-  memcpy(&surface->pixels[(surface->h - 1 - y) * surface->pitchinpix], tmp_buffer, surface->pitchinpix * sizeof(uint32));
- }
+    for (int y = 0; y < surface->h / 2; y++)
+    {
+        // DC: compile fix - variable length C array is non standard!
+        #if 0
+        uint32 tmp_buffer[surface->w];
+        #endif
+
+        memcpy(tmp_buffer, &surface->pixels[y * surface->pitchinpix], surface->pitchinpix * sizeof(uint32));
+        memcpy(&surface->pixels[y * surface->pitchinpix], &surface->pixels[(surface->h - 1 - y) * surface->pitchinpix], surface->pitchinpix * sizeof(uint32));
+        memcpy(&surface->pixels[(surface->h - 1 - y) * surface->pitchinpix], tmp_buffer, surface->pitchinpix * sizeof(uint32));
+    }
 }
 
 

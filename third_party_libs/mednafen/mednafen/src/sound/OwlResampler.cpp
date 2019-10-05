@@ -20,9 +20,17 @@
 
 #include <mednafen/mednafen.h>
 #include <mednafen/state.h>
-#include "OwlResampler.h"
+
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/cputest/cputest.h>
+    #include <mednafen/sound/OwlResampler.h>
+#else
+    #include "OwlResampler.h"
+    #include "../cputest/cputest.h"
+#endif
+
 #include "DSPUtility.h"
-#include "../cputest/cputest.h"
 
 #if defined(ARCH_POWERPC_ALTIVEC) && defined(HAVE_ALTIVEC_H)
  #include <altivec.h>

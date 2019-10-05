@@ -21,16 +21,24 @@
  TODO: a more permanent, system-agnostic solution to the problem.
 */
 
-#include "mednafen.h"
+// DC: These got moved to workaround issues with no symlinks on Windows
+#if 1
+    #include <mednafen/mednafen.h>
+    #include <mednafen/mempatcher.h>
+    #include <mednafen/general.h>
+    #include <mednafen/FileStream.h>
+    #include <mednafen/MemoryStream.h>
+#else
+    #include "mednafen.h"
+    #include "mempatcher.h"
+    #include "general.h"
+    #include "FileStream.h"
+    #include "MemoryStream.h"
+#endif
 
 #include <trio/trio.h>
-
-#include "general.h"
 #include <mednafen/string/string.h>
 #include <mednafen/hash/md5.h>
-#include "mempatcher.h"
-#include "FileStream.h"
-#include "MemoryStream.h"
 
 namespace Mednafen
 {
