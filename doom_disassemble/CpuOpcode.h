@@ -958,4 +958,8 @@ namespace CpuOpcodeUtils {
     inline constexpr bool isBranchOrJumpOpcode(const CpuOpcode opcode) noexcept {
         return (isBranchOpcode(opcode) || isJumpOpcode(opcode));
     }
+
+    inline constexpr bool isIllegalOpcode(const CpuOpcode opcode) noexcept {
+        return ((uint32_t) opcode >= NUM_CPU_OPCODES);
+    }
 }
