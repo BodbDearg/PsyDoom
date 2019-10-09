@@ -130,8 +130,7 @@ static bool decodeMainOpcode0Ins(CpuInstruction& ins, const uint32_t machineCode
     // -----------------------------------------------------------------------------------------------------------------
 
     // Decode the secondary opcode and some of the most commonly used parameters upfront
-    const uint32_t secondaryOpcode = machineCode26Bit & 0x3Fu;
-
+    const uint32_t secondaryOpcode = machineCode26Bit & 0x3Fu;      // RETRIEVE: ----- ----- ----- ----- CCCCCC
     const uint8_t decodedRegS = (machineCode26Bit >> 21) & 0x1Fu;   // RETRIEVE: SSSSS ----- ----- ----- ------
     const uint8_t decodedRegT = (machineCode26Bit >> 16) & 0x1Fu;   // RETRIEVE: ----- TTTTT ----- ----- ------
     const uint8_t decodedRegD = (machineCode26Bit >> 11) & 0x1Fu;   // RETRIEVE: ----- ----- DDDDD ----- ------
@@ -380,7 +379,60 @@ static bool decodeMainOpcode1Ins(CpuInstruction& ins, const uint32_t machineCode
     // TNEI     SSSSS 01110 IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
 
-    // TODO
+    // Decode the secondary opcode and instruction params.
+    // Assign optimistically to the instruciton for now:
+    const uint32_t secondaryOpcode = (machineCode26Bit >> 16) & 0x1Fu;      // RETRIEVE: ----- CCCCC ----- ----- ------
+    ins.regS = (uint8_t)((machineCode26Bit >> 21) & 0x1Fu);                 // RETRIEVE: SSSSS ----- ----- ----- ------
+    ins.immediateVal = machineCode26Bit & 0xFFFFu;                          // RETRIEVE: ----- ----- IIIII IIIII IIIIII
+
+    switch (secondaryOpcode) {
+        case 0b00000:   // BLTZ     SSSSS 00000 IIIII IIIII IIIIII
+            ins.opcode = CpuOpcode::BLTZ;
+            return true;
+
+        case 0b00001:   // BGEZ     SSSSS 00001 IIIII IIIII IIIIII
+            ins.opcode = CpuOpcode::BGEZ;
+            return true;
+
+        case 0b01000:   // TGEI     SSSSS 01000 IIIII IIIII IIIIII
+            ins.opcode = CpuOpcode::TGEI;
+            return true;
+
+        case 0b01001:   // TGEIU    SSSSS 01001 IIIII IIIII IIIIII
+            ins.opcode = CpuOpcode::TGEIU;
+            return true;
+        
+        case 0b01010:   // TLTI     SSSSS 01010 IIIII IIIII IIIIII
+            ins.opcode = CpuOpcode::TLTI;
+            return true;
+
+        case 0b01011:   // TLTIU    SSSSS 01011 IIIII IIIII IIIIII
+            ins.opcode = CpuOpcode::TLTIU;
+            return true;
+            
+        case 0b01100:   // TEQI     SSSSS 01100 IIIII IIIII IIIIII
+            ins.opcode = CpuOpcode::TEQI;
+            return true;
+
+        case 0b01110:   // TNEI     SSSSS 01110 IIIII IIIII IIIIII
+            ins.opcode = CpuOpcode::TNEI;
+            return true;
+
+        case 0b10000:   // BLTZAL   SSSSS 10000 IIIII IIIII IIIIII
+            ins.opcode = CpuOpcode::BLTZAL;
+            return true;
+
+        case 0b10001:   // BGEZAL   SSSSS 10001 IIIII IIIII IIIIII
+            ins.opcode = CpuOpcode::BGEZAL;
+            return true;
+                
+        // Illegal secondary opcode
+        default: break;
+    }
+
+    // If we get to here then it's because decoding has failed.
+    // Need to clear the instruction also because we assigned optimistically.
+    ins.clear();
     return false;
 }
 
@@ -420,15 +472,16 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
     // Clear all opcode fields before we start
     clear();
 
-    // Get the first 6 most significant bits first since that is the main opcode.
-    // Also remove the top 6 bits from the machine word for the convenience of decoding functions.
-    const uint8_t mainOpcode = (uint8_t)(machineCode >> 26);
-    const uint32_t machineCode26Bit = machineCode & 0x03FFFFFF;
 
-    // Pre-decode some commonly used instruction parameters here once
-    const uint8_t decodedRegS = (machineCode26Bit >> 21) & 0x1Fu;           // RETRIEVE: ------ SSSSS ----- ----- ----- ------
-    const uint8_t decodedRegT = (machineCode26Bit >> 16) & 0x1Fu;           // RETRIEVE: ------ ----- TTTTT ----- ----- ------
-    const uint16_t decodedImm16 = (uint16_t) machineCode26Bit;              // RETRIEVE: ------ ----- ----- IIIII IIIII IIIIII
+
+    // Get the first 6 most significant bits first since that is the main opcode.
+    // Also remove the top 6 bits from the instruction word for later decoding.
+    // Also pre-decode some commonly used instruction parameters here once.
+    const uint8_t mainOpcode = (uint8_t)(machineCode >> 26);                    // RETRIEVE: CCCCCC ----- ----- ----- ----- ------
+    const uint32_t machineCode26Bit = machineCode & 0x03FFFFFF;                 // RETRIEVE: ------ XXXXX XXXXX XXXXX XXXXX XXXXXX
+    const uint8_t decodedRegS = (uint8_t)((machineCode26Bit >> 21) & 0x1Fu);    // RETRIEVE: ------ SSSSS ----- ----- ----- ------
+    const uint8_t decodedRegT = (uint8_t)((machineCode26Bit >> 16) & 0x1Fu);    // RETRIEVE: ------ ----- TTTTT ----- ----- ------
+    const uint16_t decodedImm16 = (uint16_t) machineCode26Bit;                  // RETRIEVE: ------ ----- ----- IIIII IIIII IIIIII
 
     switch (mainOpcode) {
         case 0b000000: return decodeMainOpcode0Ins(*this, machineCode26Bit);
