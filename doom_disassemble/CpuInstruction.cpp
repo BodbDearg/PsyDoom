@@ -89,10 +89,6 @@
 // XORI     001110 SSSSS TTTTT IIIII IIIII IIIIII
 //----------------------------------------------------------------------------------------------------------------------
 
-static uint32_t signExtend16To32Bit(uint16_t val16) noexcept {
-    return (uint32_t)(int32_t)(int16_t) val16;
-}
-
 static bool decodeMainOpcode0Ins(CpuInstruction& ins, const uint32_t machineCode26Bit) noexcept {
     // -----------------------------------------------------------------------------------------------------------------
     // === MAIN OPCODE '0' INSTRUCTIONS (low 26-bits) ===
@@ -133,7 +129,238 @@ static bool decodeMainOpcode0Ins(CpuInstruction& ins, const uint32_t machineCode
     // XOR      SSSSS TTTTT DDDDD ----- 100110
     // -----------------------------------------------------------------------------------------------------------------
 
-    // TODO
+    // Decode the secondary opcode and some of the most commonly used parameters upfront
+    const uint32_t secondaryOpcode = machineCode26Bit & 0x3Fu;
+
+    const uint8_t decodedRegS = (machineCode26Bit >> 21) & 0x1Fu;   // RETRIEVE: SSSSS ----- ----- ----- ------
+    const uint8_t decodedRegT = (machineCode26Bit >> 16) & 0x1Fu;   // RETRIEVE: ----- TTTTT ----- ----- ------
+    const uint8_t decodedRegD = (machineCode26Bit >> 11) & 0x1Fu;   // RETRIEVE: ----- ----- DDDDD ----- ------
+
+    switch (secondaryOpcode) {
+        case 0b000000:  // SLL      ----- TTTTT DDDDD IIIII 000000
+            ins.opcode = CpuOpcode::SLL;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            ins.immediateVal = (machineCode26Bit >> 6) & 0x1Fu;
+            return true;
+
+        case 0b000010:  // SRL      ----- TTTTT DDDDD IIIII 000010
+            ins.opcode = CpuOpcode::SRL;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            ins.immediateVal = (machineCode26Bit >> 6) & 0x1Fu;
+            return true;
+
+        case 0b000011:  // SRA      ----- TTTTT DDDDD IIIII 000011
+            ins.opcode = CpuOpcode::SRA;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            ins.immediateVal = (machineCode26Bit >> 6) & 0x1Fu;
+            return true;
+
+        case 0b000100:  // SLLV     SSSSS TTTTT DDDDD ----- 000100
+            ins.opcode = CpuOpcode::SRL;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b000110:  // SRLV     SSSSS TTTTT DDDDD ----- 000110
+            ins.opcode = CpuOpcode::SRLV;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b000111:  // SRAV     SSSSS TTTTT DDDDD ----- 000111
+            ins.opcode = CpuOpcode::SRAV;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b001000:  // JR       SSSSS ----- ----- ----- 001000
+            ins.opcode = CpuOpcode::JR;
+            ins.regS = decodedRegS;
+            return true;
+
+        case 0b001001:  // JALR     SSSSS ----- DDDDD ----- 001001
+            ins.opcode = CpuOpcode::JR;
+            ins.regS = decodedRegS;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b001100:  // SYSCALL  IIIII IIIII IIIII IIIII 001100
+            ins.opcode = CpuOpcode::SYSCALL;
+            ins.immediateVal = (machineCode26Bit >> 6);
+            return true;
+
+        case 0b001101:  // BREAK    IIIII IIIII IIIII IIIII 001101
+            ins.opcode = CpuOpcode::BREAK;
+            ins.immediateVal = (machineCode26Bit >> 6);
+            return true;
+
+        case 0b010000:  // MFHI     ----- ----- DDDDD ----- 010000
+            ins.opcode = CpuOpcode::MFHI;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b010001:  // MTHI     SSSSS ----- ----- ----- 010001
+            ins.opcode = CpuOpcode::MTHI;
+            ins.regS = decodedRegS;
+            return true;
+
+        case 0b010010:  // MFLO     ----- ----- DDDDD ----- 010010
+            ins.opcode = CpuOpcode::MFLO;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b010011:  // MTLO     SSSSS ----- ----- ----- 010011
+            ins.opcode = CpuOpcode::MTLO;
+            ins.regS = decodedRegS;
+            return true;
+
+        case 0b011000:  // MULT     SSSSS TTTTT ----- ----- 011000
+            ins.opcode = CpuOpcode::MULT;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            return true;
+
+        case 0b011001:  // MULTU    SSSSS TTTTT ----- ----- 011001
+            ins.opcode = CpuOpcode::MULTU;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            return true;
+
+        case 0b011010:  // DIV      SSSSS TTTTT ----- ----- 011010
+            ins.opcode = CpuOpcode::DIV;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            return true;
+
+        case 0b011011:  // DIVU     SSSSS TTTTT ----- ----- 011011
+            ins.opcode = CpuOpcode::DIVU;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            return true;
+
+        case 0b100000:  // ADD      SSSSS TTTTT DDDDD ----- 100000
+            ins.opcode = CpuOpcode::ADD;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b100001:  // ADDU     SSSSS TTTTT DDDDD ----- 100001
+            ins.opcode = CpuOpcode::ADDU;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b100010:  // SUB      SSSSS TTTTT DDDDD ----- 100010
+            ins.opcode = CpuOpcode::SUB;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b100011:  // SUBU     SSSSS TTTTT DDDDD ----- 100011
+            ins.opcode = CpuOpcode::SUBU;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b100100:  // AND      SSSSS TTTTT DDDDD ----- 100100
+            ins.opcode = CpuOpcode::AND;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b100101:  // OR       SSSSS TTTTT DDDDD ----- 100101
+            ins.opcode = CpuOpcode::OR;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b100110:  // XOR      SSSSS TTTTT DDDDD ----- 100110
+            ins.opcode = CpuOpcode::XOR;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b100111:  // NOR      SSSSS TTTTT DDDDD ----- 100111
+            ins.opcode = CpuOpcode::NOR;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b101010:  // SLT      SSSSS TTTTT DDDDD ----- 101010
+            ins.opcode = CpuOpcode::SLT;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b101011:  // SLTU     SSSSS TTTTT DDDDD ----- 101011
+            ins.opcode = CpuOpcode::SLTU;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.regD = decodedRegD;
+            return true;
+
+        case 0b110000:  // TGE      SSSSS TTTTT IIIII IIIII 110000
+            ins.opcode = CpuOpcode::TGE;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.immediateVal = (machineCode26Bit >> 6) & 0x3FFu;
+            return true;
+
+        case 0b110001:  // TGEU     SSSSS TTTTT IIIII IIIII 110001
+            ins.opcode = CpuOpcode::TGEU;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.immediateVal = (machineCode26Bit >> 6) & 0x3FFu;
+            return true;
+
+        case 0b110010:  // TLT      SSSSS TTTTT IIIII IIIII 110010
+            ins.opcode = CpuOpcode::TLT;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.immediateVal = (machineCode26Bit >> 6) & 0x3FFu;
+            return true;
+
+        case 0b110011:  // TLTU     SSSSS TTTTT IIIII IIIII 110011
+            ins.opcode = CpuOpcode::TLTU;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.immediateVal = (machineCode26Bit >> 6) & 0x3FFu;
+            return true;
+
+        case 0b110100:  // TEQ      SSSSS TTTTT IIIII IIIII 110100
+            ins.opcode = CpuOpcode::TEQ;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.immediateVal = (machineCode26Bit >> 6) & 0x3FFu;
+            return true;
+
+        case 0b110110:  // TNE      SSSSS TTTTT IIIII IIIII 110110
+            ins.opcode = CpuOpcode::TNE;
+            ins.regS = decodedRegS;
+            ins.regT = decodedRegT;
+            ins.immediateVal = (machineCode26Bit >> 6) & 0x3FFu;
+            return true;
+
+        // Illegal secondary opcode
+        default: break;
+    }
+
+    // If we get to here then it's because decoding has failed
     return false;
 }
 
