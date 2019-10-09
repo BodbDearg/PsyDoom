@@ -40,7 +40,7 @@ enum class CpuOpcode : uint8_t {
     //          T = S + I
     //      If an OVERFLOW occurs then an EXCEPTION will be raised and the destination register will be UNCHANGED.
     //
-    // Encoding: 001000 SSSSS TTTTT IIIIIIII IIIIIIII
+    // Encoding: 001000 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     ADDI,
     //------------------------------------------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ enum class CpuOpcode : uint8_t {
     //          T = S + I
     //      OVERFLOWS are IGNORED by this particular operation.
     //
-    // Encoding: 001001 SSSSS TTTTT IIIIIIII IIIIIIII
+    // Encoding: 001001 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     ADDIU,
     //------------------------------------------------------------------------------------------------------------------
@@ -71,24 +71,24 @@ enum class CpuOpcode : uint8_t {
     AND,
     //------------------------------------------------------------------------------------------------------------------
     // [AND IMMEDIATE]
-    //      Do a bitwise logical AND of register 'S' with 16-bit value 'I' and store in register 'T', I.E:
+    //      Do a bitwise logical AND of register 'S' with 16-bit constant 'I' and store in register 'T', I.E:
     //          T = S & I
     //
-    // Encoding: 001100 SSSSS TTTTT IIIIIIII IIIIIIII
+    // Encoding: 001100 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     ANDI,
     //------------------------------------------------------------------------------------------------------------------
     // [BRANCH ON EQUAL]
     //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if 'S' == 'T' where 'S', 'T' are registers.
     //
-    // Encoding: 000100 SSSSS TTTTT IIIIIIII IIIIIIII
+    // Encoding: 000100 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     BEQ,
     //------------------------------------------------------------------------------------------------------------------
     // [BRANCH ON GREATER THAN OR EQUAL TO ZERO]
     //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if register 'S' is >= 0.
     //
-    // Encoding: 000001 SSSSS 00001 IIIIIIII IIIIIIII
+    // Encoding: 000001 SSSSS 00001 IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     BGEZ,
     //------------------------------------------------------------------------------------------------------------------
@@ -96,28 +96,28 @@ enum class CpuOpcode : uint8_t {
     //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is >= 0 and 'link'.
     //      The address of the 2nd (note: NOT 1st!) instruction following the branch is saved in register 'RA' (R31).
     //
-    // Encoding: 000001 SSSSS 10001 IIIIIIII IIIIIIII
+    // Encoding: 000001 SSSSS 10001 IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     BGEZAL,
     //------------------------------------------------------------------------------------------------------------------
     // [BRANCH ON GREATER THAN ZERO]
     //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if register 'S' > 0.
     //
-    // Encoding: 000111 SSSSS ----- IIIIIIII IIIIIIII
+    // Encoding: 000111 SSSSS ----- IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     BGTZ,
     //------------------------------------------------------------------------------------------------------------------
     // [BRANCH ON LESS THAN OR EQUAL TO ZERO]
     //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is <= 0.
     //
-    // Encoding: 000110 SSSSS ----- IIIIIIII IIIIIIII
+    // Encoding: 000110 SSSSS ----- IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     BLEZ,
     //------------------------------------------------------------------------------------------------------------------
     // [BRANCH ON LESS THAN ZERO]
     //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is < 0.
     //
-    // Encoding: 000001 SSSSS 00000 IIIIIIII IIIIIIII
+    // Encoding: 000001 SSSSS 00000 IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     BLTZ,
     //------------------------------------------------------------------------------------------------------------------
@@ -125,14 +125,14 @@ enum class CpuOpcode : uint8_t {
     //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is < 0 and 'link'.
     //      The address of the 2nd (note: NOT 1st!) instruction following the branch is saved in register 'RA' (R31).
     //
-    // Encoding: 000001 SSSSS 10000 IIIIIIII IIIIIIII
+    // Encoding: 000001 SSSSS 10000 IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     BLTZAL,
     //------------------------------------------------------------------------------------------------------------------
     // [BRANCH ON NOT EQUAL]
     //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if 'S' != 'T' where 'S', 'T' are registers.
     //
-    // Encoding: 000101 SSSSS TTTTT IIIIIIII IIIIIIII
+    // Encoding: 000101 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     BNE,
     //------------------------------------------------------------------------------------------------------------------
@@ -140,7 +140,7 @@ enum class CpuOpcode : uint8_t {
     //      Triggers a breakpoint exception and transfers control to the exception handler.
     //      The 'I' (Code) field is used in the handling of the exception, as an argument.
     //
-    // Encoding: 000000 IIIIIIII IIIIIIII IIII 001101
+    // Encoding: 000000 IIIII IIIII IIIII IIIII 001101
     //------------------------------------------------------------------------------------------------------------------
     BREAK,
     //------------------------------------------------------------------------------------------------------------------
@@ -148,7 +148,7 @@ enum class CpuOpcode : uint8_t {
     //      Move a value from a coprocessor 2 control register 'S' and save the result in register 'T':
     //          T = COP2_C[S]
     //
-    // Encoding: 010010 00010 TTTTT SSSSS --- ---- ----
+    // Encoding: 010010 00010 TTTTT SSSSS ----- ------
     //------------------------------------------------------------------------------------------------------------------
     CFC2,
     //------------------------------------------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ enum class CpuOpcode : uint8_t {
     //      The immediate parameter 'I' is passed to the coprocessor so signal what type of operation is intended.
     //      To see what this means refer to documentation on GTE operations.
     //
-    // Encoding: 010010 1 IIIIIIII IIIIIIII IIIIIIII I
+    // Encoding: 010010 1IIII IIIII IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     COP2,
     //------------------------------------------------------------------------------------------------------------------
@@ -165,7 +165,7 @@ enum class CpuOpcode : uint8_t {
     //      Move a value from register 'T' and save to coprocessor 2 control register 'S':
     //          COP2_C[S] = T
     //
-    // Encoding: 010010 00110 TTTTT SSSSS --- ---- ----
+    // Encoding: 010010 00110 TTTTT SSSSS ----- ------
     //------------------------------------------------------------------------------------------------------------------
     CTC2,
     //------------------------------------------------------------------------------------------------------------------
@@ -174,7 +174,7 @@ enum class CpuOpcode : uint8_t {
     //      The remainder is stored in special register 'HI'.
     //      If dividing by zero then the result is UNPREDICTABLE but no error occurs.
     //
-    // Encoding: 000000 SSSSS TTTTT -- ---- ---- 011010
+    // Encoding: 000000 SSSSS TTTTT ----- ----- 011010
     //------------------------------------------------------------------------------------------------------------------
     DIV,
     //------------------------------------------------------------------------------------------------------------------
@@ -183,14 +183,14 @@ enum class CpuOpcode : uint8_t {
     //      The remainder is stored in special register 'HI'.
     //      If dividing by zero then the result is UNPREDICTABLE but no error occurs.
     //
-    // Encoding: 000000 SSSSS TTTTT -- ---- ---- 011011
+    // Encoding: 000000 SSSSS TTTTT ----- ----- 011011
     //------------------------------------------------------------------------------------------------------------------
     DIVU,
     //------------------------------------------------------------------------------------------------------------------
     // [JUMP]
     //      Branch to the given program 32-bit WORD index 'I' (note: NOT byte!) within the current 256 MB memory region.
     //
-    // Encoding: 000010 II IIIIIIII IIIIIIII IIIIIIII
+    // Encoding: 000010 IIIII IIIII IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     J,
     //------------------------------------------------------------------------------------------------------------------
@@ -198,7 +198,7 @@ enum class CpuOpcode : uint8_t {
     //      Branch to the given program 32-bit WORD index 'I' (note: NOT byte!) within the current 256 MB memory region.
     //      The address of the 2nd (note: NOT 1st!) instruction following the branch is also saved in register 'RA' (R31).
     //
-    // Encoding: 000011 II IIIIIIII IIIIIIII IIIIIIII
+    // Encoding: 000011 IIIII IIIII IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     JAL,
     //------------------------------------------------------------------------------------------------------------------
@@ -213,43 +213,43 @@ enum class CpuOpcode : uint8_t {
     // [JUMP REGISTER]
     //      Branch to the location specified in register 'S'.
     //
-    // Encoding: 000000 SSSSS -- ---- ---- ----- 001000
+    // Encoding: 000000 SSSSS ----- ----- ----- 001000
     //------------------------------------------------------------------------------------------------------------------
     JR,
     //------------------------------------------------------------------------------------------------------------------
     // [LOAD BYTE]
-    //      Load the contents of the SIGNED byte pointed to by register 'R' plus the 16-bit SIGNED constant offset 
+    //      Load the contents of the SIGNED byte pointed to by register 'S' plus the 16-bit SIGNED constant offset 
     //      'I' and store in register 'T'.
-    //          T = R[I]
+    //          T = S[I]
     //
-    // Encoding: 100000 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 100000 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     LB,
     //------------------------------------------------------------------------------------------------------------------
     // [LOAD BYTE UNSIGNED]
-    //      Load the contents of the UNSIGNED byte pointed to by register 'R' plus the 16-bit SIGNED constant offset 
+    //      Load the contents of the UNSIGNED byte pointed to by register 'S' plus the 16-bit SIGNED constant offset 
     //      'I' and store in register 'T'.
-    //          T = R[I]
+    //          T = S[I]
     //
-    // Encoding: 100100 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 100100 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     LBU,
     //------------------------------------------------------------------------------------------------------------------
     // [LOAD HALF WORD]
-    //      Load the contents of the ALIGNED and SIGNED 16-bit half word pointed to by register 'R' plus the 16-bit
+    //      Load the contents of the ALIGNED and SIGNED 16-bit half word pointed to by register 'S' plus the 16-bit
     //      SIGNED constant offset 'I' and store in register 'T'.
-    //          T = R[I]
+    //          T = S[I]
     //
-    // Encoding: 100001 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 100001 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     LH,
     //------------------------------------------------------------------------------------------------------------------
     // [LOAD HALF WORD]
-    //      Load the contents of the ALIGNED and UNSIGNED 16-bit half word pointed to by register 'R' plus the 16-bit
+    //      Load the contents of the ALIGNED and UNSIGNED 16-bit half word pointed to by register 'S' plus the 16-bit
     //      SIGNED constant offset 'I' and store in register 'T'.
-    //          T = R[I]
+    //          T = S[I]
     //
-    // Encoding: 100101 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 100101 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     LHU,
     //------------------------------------------------------------------------------------------------------------------
@@ -257,36 +257,36 @@ enum class CpuOpcode : uint8_t {
     //      Load the constant 'I' into the MOST SIGNIFICANT bits of register 'T' and zero all other bits.
     //          T = I << 16
     //
-    // Encoding: 001111 ----- TTTTT IIIIIIII IIIIIIII
+    // Encoding: 001111 ----- TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     LUI,
     //------------------------------------------------------------------------------------------------------------------
     // [LOAD WORD]
-    //      Load the contents of the ALIGNED 32-bit word pointed to by register 'R' plus the 16-bit SIGNED constant
+    //      Load the contents of the ALIGNED 32-bit word pointed to by register 'S' plus the 16-bit SIGNED constant
     //      offset 'I' and store in register 'T':
-    //          T = R[I]
+    //          T = S[I]
     //
-    // Encoding: 100011 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 100011 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     LW,
     //------------------------------------------------------------------------------------------------------------------
     // [LOAD WORD TO COPROCESSOR 2]
-    //      Load the contents of the ALIGNED 32-bit word pointed to by register 'R' plus the 16-bit SIGNED constant
+    //      Load the contents of the ALIGNED 32-bit word pointed to by register 'S' plus the 16-bit SIGNED constant
     //      offset 'I' and store in coprocessor 2 register 'T':
-    //          COP2[T] = R[I]
+    //          COP2[T] = S[I]
     //
-    // Encoding: 110010 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 110010 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     LWC2,
     //------------------------------------------------------------------------------------------------------------------
     // [LOAD WORD LEFT]
-    //      Makeup a POTENTIALLY UNALIGNED memory address 'A' by adding the address in register 'R' plus the 16-bit
+    //      Makeup a POTENTIALLY UNALIGNED memory address 'A' by adding the address in register 'S' plus the 16-bit
     //      SIGNED constant offset 'I'. Then forcefully word align 'A' by truncating 2 bits to form address 'AL'.
     //      Replace the MOST SIGNIFICANT bytes in output register 'T' which are in the word pointed to by 'AL' and
     //      which are <= address 'A'. All other bytes remain unchanged.
     //      
     //      Pseudocode:
-    //          A = R + I
+    //          A = S + I
     //          AL = A & FFFFFFFC
     //
     //          switch (A % 4)
@@ -295,27 +295,27 @@ enum class CpuOpcode : uint8_t {
     //              case 2:     T = (T & 000000FF) | (AL[0] << 8)
     //              case 3:     T = (T & 00000000) | (AL[0] << 0)
     //
-    // Encoding: 100010 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 100010 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     LWL,
     //------------------------------------------------------------------------------------------------------------------
     // [LOAD WORD RIGHT]
-    //      Makeup a POTENTIALLY UNALIGNED memory address 'A' by adding the address in register 'R' plus the 16-bit
+    //      Makeup a POTENTIALLY UNALIGNED memory address 'A' by adding the address in register 'S' plus the 16-bit
     //      SIGNED constant offset 'I'. Then forcefully word align 'A' by truncating 2 bits to form address 'AL'.
     //      Replace the LEAST SIGNIFICANT bytes in output register 'T' which are in the word pointed to by 'AL' and
     //      which are >= address 'A'. All other bytes remain unchanged.
     //
     //      Pseudocode:
-    //          A = R + I
+    //          A = S + I
     //          AL = A & FFFFFFFC
     //
     //          switch (A % 4)
-    //              case 0:     T = (T & 00000000) | (B[i] >> 0)
-    //              case 1:     T = (T & FF000000) | (B[i] >> 8)
-    //              case 2:     T = (T & FFFF0000) | (B[i] >> 16)
-    //              case 3:     T = (T & FFFFFF00) | (B[i] >> 24)
+    //              case 0:     T = (T & 00000000) | (AL[0] >> 0)
+    //              case 1:     T = (T & FF000000) | (AL[0] >> 8)
+    //              case 2:     T = (T & FFFF0000) | (AL[0] >> 16)
+    //              case 3:     T = (T & FFFFFF00) | (AL[0] >> 24)
     //
-    // Encoding: 100110 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 100110 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     LWR,
     //------------------------------------------------------------------------------------------------------------------
@@ -323,7 +323,7 @@ enum class CpuOpcode : uint8_t {
     //      Move a value from a coprocessor 0 register 'D' and save the result in register 'T':
     //          T = COP0[D]
     //
-    // Encoding: 010000 00000 TTTTT DDDDD -------- ---
+    // Encoding: 010000 00000 TTTTT DDDDD ----- ------
     //------------------------------------------------------------------------------------------------------------------
     MFC0,
     //------------------------------------------------------------------------------------------------------------------
@@ -331,7 +331,7 @@ enum class CpuOpcode : uint8_t {
     //      Move a value from a coprocessor 2 register 'D' and save the result in register 'T':
     //          T = COP2[D]
     //
-    // Encoding: 010010 00000 TTTTT DDDDD -------- ---
+    // Encoding: 010010 00000 TTTTT DDDDD ----- ------
     //------------------------------------------------------------------------------------------------------------------
     MFC2,
     //------------------------------------------------------------------------------------------------------------------
@@ -342,7 +342,7 @@ enum class CpuOpcode : uint8_t {
     //      IMPORTANT: there are MANY restrictions to when values can be moved TO and FROM this register and what
     //      causes unpredictable behavior. See the MIPS instruction set reference for more details.
     //
-    // Encoding: 000000 -- ---- ---- DDDDD ----- 010000
+    // Encoding: 000000 ----- ----- DDDDD ----- 010000
     //------------------------------------------------------------------------------------------------------------------
     MFHI,
     //------------------------------------------------------------------------------------------------------------------
@@ -353,7 +353,7 @@ enum class CpuOpcode : uint8_t {
     //      IMPORTANT: there are MANY restrictions to when values can be moved TO and FROM this register and what
     //      causes unpredictable behavior. See the MIPS instruction set reference for more details.
     //
-    // Encoding: 000000 -- ---- ---- DDDDD ----- 010010
+    // Encoding: 000000 ----- ----- DDDDD ----- 010010
     //------------------------------------------------------------------------------------------------------------------
     MFLO,
     //------------------------------------------------------------------------------------------------------------------
@@ -361,7 +361,7 @@ enum class CpuOpcode : uint8_t {
     //      Move a value to a coprocessor 0 register 'D' from register 'T':
     //          COP0[D] = T
     //
-    // Encoding: 010000 00100 TTTTT DDDDD -------- ---
+    // Encoding: 010000 00100 TTTTT DDDDD ----- ------
     //------------------------------------------------------------------------------------------------------------------
     MTC0,
     //------------------------------------------------------------------------------------------------------------------
@@ -369,7 +369,7 @@ enum class CpuOpcode : uint8_t {
     //      Move a value to a coprocessor 2 register 'D' from register 'T':
     //          COP2[D] = T
     //
-    // Encoding: 010010 00100 TTTTT DDDDD -------- ---
+    // Encoding: 010010 00100 TTTTT DDDDD ----- ------
     //------------------------------------------------------------------------------------------------------------------
     MTC2,
     //------------------------------------------------------------------------------------------------------------------
@@ -380,7 +380,7 @@ enum class CpuOpcode : uint8_t {
     //      IMPORTANT: there are MANY restrictions to when values can be moved TO and FROM this register and what
     //      causes unpredictable behavior. See the MIPS instruction set reference for more details.
     //
-    // Encoding: 000000 SSSSS --- ---- ---- ---- 010001
+    // Encoding: 000000 SSSSS ----- ----- ----- 010001
     //------------------------------------------------------------------------------------------------------------------
     MTHI,
     //------------------------------------------------------------------------------------------------------------------
@@ -391,7 +391,7 @@ enum class CpuOpcode : uint8_t {
     //      IMPORTANT: there are MANY restrictions to when values can be moved TO and FROM this register and what
     //      causes unpredictable behavior. See the MIPS instruction set reference for more details.
     //
-    // Encoding: 000000 SSSSS --- ---- ---- ---- 010011
+    // Encoding: 000000 SSSSS ----- ----- ----- 010011
     //------------------------------------------------------------------------------------------------------------------
     MTLO,
     //------------------------------------------------------------------------------------------------------------------
@@ -400,7 +400,7 @@ enum class CpuOpcode : uint8_t {
     //      The low 32-bits of the result is stored in 'LO' and the high 32-bits stored in 'HI':
     //          HI, LO = S * T
     //
-    // Encoding: 000000 SSSSS TTTTT -- ---- ---- 011000
+    // Encoding: 000000 SSSSS TTTTT ----- ----- 011000
     //------------------------------------------------------------------------------------------------------------------
     MULT,
     //------------------------------------------------------------------------------------------------------------------
@@ -409,7 +409,7 @@ enum class CpuOpcode : uint8_t {
     //      The low 32-bits of the result is stored in 'LO' and the high 32-bits stored in 'HI':
     //          HI, LO = S * T
     //
-    // Encoding: 000000 SSSSS TTTTT -- ---- ---- 011001
+    // Encoding: 000000 SSSSS TTTTT ----- ----- 011001
     //------------------------------------------------------------------------------------------------------------------
     MULTU,
     //------------------------------------------------------------------------------------------------------------------
@@ -434,7 +434,7 @@ enum class CpuOpcode : uint8_t {
     //      Do a bitwise logical OR of register 'S' with 16-bit constant 'I' and store in register 'T', I.E:
     //          T = S | I
     //
-    // Encoding: 001101 SSSSS TTTTT IIIIIIII IIIIIIII
+    // Encoding: 001101 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     ORI,
     //------------------------------------------------------------------------------------------------------------------
@@ -446,20 +446,20 @@ enum class CpuOpcode : uint8_t {
     RFE,
     //------------------------------------------------------------------------------------------------------------------
     // [STORE BYTE]
-    //      Store the LEAST SIGNIFICANT BYTE of register 'T' to the address pointed to by register 'R' plus the 16-bit
+    //      Store the LEAST SIGNIFICANT BYTE of register 'T' to the address pointed to by register 'S' plus the 16-bit
     //      SIGNED constant offset 'I':
-    //          R[I] = T & 000000FF
+    //          S[I] = T & 000000FF
     //
-    // Encoding: 101000 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 101000 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     SB,
     //------------------------------------------------------------------------------------------------------------------
     // [STORE HALF WORD]
-    //      Store the LEAST SIGNIFICANT HALF WORD of register 'T' to the ALIGNED address pointed to by register 'R' plus
+    //      Store the LEAST SIGNIFICANT HALF WORD of register 'T' to the ALIGNED address pointed to by register 'S' plus
     //      the 16-bit SIGNED constant offset 'I':
-    //          R[I] = T & 0000FFFF
+    //          S[I] = T & 0000FFFF
     //
-    // Encoding: 101001 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 101001 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     SH,
     //------------------------------------------------------------------------------------------------------------------
@@ -493,7 +493,7 @@ enum class CpuOpcode : uint8_t {
     //      If the condition is 'true' then store '1' in register 'T', otherwise '0'. This is equivalent to:
     //          T = (S < I) ? 1 : 0
     //
-    // Encoding: 001010 SSSSS TTTTT IIIIIIII IIIIIIII
+    // Encoding: 001010 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     SLTI,
     //------------------------------------------------------------------------------------------------------------------
@@ -503,7 +503,7 @@ enum class CpuOpcode : uint8_t {
     //      If the condition is 'true' then store '1' in register 'T', otherwise '0'. This is equivalent to:
     //          T = (S < sign_extend(I)) ? 1 : 0
     //
-    // Encoding: 001011 SSSSS TTTTT IIIIIIII IIIIIIII
+    // Encoding: 001011 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     SLTIU,
     //------------------------------------------------------------------------------------------------------------------
@@ -567,31 +567,31 @@ enum class CpuOpcode : uint8_t {
     SUBU,
     //------------------------------------------------------------------------------------------------------------------
     // [STORE WORD]
-    //      Store the contents of register 'T' to the ALIGNED 32-bit word pointed to by register 'R' plus the 16-bit
+    //      Store the contents of register 'T' to the ALIGNED 32-bit word pointed to by register 'S' plus the 16-bit
     //      SIGNED constant offset 'I':
-    //          T = R[I]
+    //          T = S[I]
     //
-    // Encoding: 101011 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 101011 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     SW,
     //------------------------------------------------------------------------------------------------------------------
     // [STORE WORD FROM COPROCESSOR 2]
-    //      Store the contents of coprocessor 2 register 'T' to the ALIGNED 32-bit word pointed to by register 'R' plus
+    //      Store the contents of coprocessor 2 register 'T' to the ALIGNED 32-bit word pointed to by register 'S' plus
     //      the 16-bit SIGNED constant offset 'I':
-    //          R[I] = COP2[T]
+    //          S[I] = COP2[T]
     //
-    // Encoding: 111010 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 111010 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     SWC2,
     //------------------------------------------------------------------------------------------------------------------
     // [STORE WORD LEFT]
-    //      Makeup a POTENTIALLY UNALIGNED memory address 'A' by adding the address in register 'R' plus the 16-bit
+    //      Makeup a POTENTIALLY UNALIGNED memory address 'A' by adding the address in register 'S' plus the 16-bit
     //      SIGNED constant offset 'I'. Then forcefully word align 'A' by truncating 2 bits to form address 'AL'.
     //      Store a varying number of the MOST SIGNIFICANT bytes in register 'T' to the LEAST SIGNIFICANT bytes of
     //      address 'AL' based on the alignment of address 'A'. Note: all other bytes remain unchanged.
     //
     //      The 4 possible cases are outlined below:
-    //          A = R + I
+    //          A = S + I
     //          AL = A & FFFFFFFC
     //
     //          switch (A % 4)
@@ -600,18 +600,18 @@ enum class CpuOpcode : uint8_t {
     //              case 2:     AL[0] = (AL[0] & FF000000) | (T >> 8)
     //              case 3:     AL[0] = (AL[0] & 00000000) | (T >> 0)
     //
-    // Encoding: 101010 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 101010 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     SWL,
     //------------------------------------------------------------------------------------------------------------------
     // [STORE WORD RIGHT]
-    //      Makeup a POTENTIALLY UNALIGNED memory address 'A' by adding the address in register 'R' plus the 16-bit
+    //      Makeup a POTENTIALLY UNALIGNED memory address 'A' by adding the address in register 'S' plus the 16-bit
     //      SIGNED constant offset 'I'. Then forcefully word align 'A' by truncating 2 bits to form address 'AL'.
     //      Store a varying number of the LEAST SIGNIFICANT bytes in register 'T' to the MOST SIGNIFICANT bytes of
     //      address 'AL' based on the alignment of address 'A'. Note: all other bytes remain unchanged.
     //
     //      The 4 possible cases are outlined below:
-    //          A = R + I
+    //          A = S + I
     //          AL = A & FFFFFFFC
     //
     //          switch (A % 4)
@@ -620,7 +620,7 @@ enum class CpuOpcode : uint8_t {
     //              case 2:     AL[0] = (AL[0] & 0000FFFF) | (T << 16)
     //              case 3:     AL[0] = (AL[0] & 00FFFFFF) | (T << 24)
     //
-    // Encoding: 101110 RRRRR TTTTT IIIIIIII IIIIIIII
+    // Encoding: 101110 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     SWR,
     //------------------------------------------------------------------------------------------------------------------
@@ -628,7 +628,7 @@ enum class CpuOpcode : uint8_t {
     //      Causes a system call exception and transfers control to the exception handler.
     //      Code 'I' is available as a parameter for the exception handler.
     //
-    // Encoding: 000000 IIIIIIII IIIIIIII IIII 001100
+    // Encoding: 000000 IIIII IIIII IIIII IIIII 001100
     //------------------------------------------------------------------------------------------------------------------
     SYSCALL,
     //------------------------------------------------------------------------------------------------------------------
@@ -640,7 +640,7 @@ enum class CpuOpcode : uint8_t {
     //      In MIPS II traps if:
     //          SIGNED registers 'S' == SIGNED register 'T' and uses code 'I' as an execption param.
     //
-    // Encoding: 000000 SSSSS TTTTT IIIIIIII II 110100
+    // Encoding: 000000 SSSSS TTTTT IIIII IIIII 110100
     //------------------------------------------------------------------------------------------------------------------
     TEQ,
     //------------------------------------------------------------------------------------------------------------------
@@ -652,7 +652,7 @@ enum class CpuOpcode : uint8_t {
     //      In MIPS II traps if:
     //          SIGNED register 'S' == SIGNED constant 'I'
     //
-    // Encoding: 000001 SSSSS 01100 IIIIIIII IIIIIIII
+    // Encoding: 000001 SSSSS 01100 IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     TEQI,
     //------------------------------------------------------------------------------------------------------------------
@@ -664,7 +664,7 @@ enum class CpuOpcode : uint8_t {
     //      In MIPS II traps if:
     //          SIGNED register 'S' >= SIGNED register 'T' and uses code 'I' as an execption param.
     //
-    // Encoding: 000000 SSSSS TTTTT IIIIIIII II 110000
+    // Encoding: 000000 SSSSS TTTTT IIIII IIIII 110000
     //------------------------------------------------------------------------------------------------------------------
     TGE,
     //------------------------------------------------------------------------------------------------------------------
@@ -676,7 +676,7 @@ enum class CpuOpcode : uint8_t {
     //      In MIPS II traps if:
     //          SIGNED Register 'S' >= SIGNED constant 'I'
     //
-    // Encoding: 000001 SSSSS 01000 IIIIIIII IIIIIIII
+    // Encoding: 000001 SSSSS 01000 IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     TGEI,
     //------------------------------------------------------------------------------------------------------------------
@@ -688,7 +688,7 @@ enum class CpuOpcode : uint8_t {
     //      In MIPS II traps if:
     //          UNSIGNED Register 'S' >= UNSIGNED, SIGN EXTENDED constant 'I'
     //
-    // Encoding: 000001 SSSSS 01001 IIIIIIII IIIIIIII
+    // Encoding: 000001 SSSSS 01001 IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     TGEIU,
     //------------------------------------------------------------------------------------------------------------------
@@ -700,35 +700,35 @@ enum class CpuOpcode : uint8_t {
     //      In MIPS II traps if:
     //          UNSIGNED register 'S' >= UNSIGNED register 'T' and uses code 'I' as an execption param.
     //
-    // Encoding: 000000 SSSSS TTTTT IIIIIIII II 110001
+    // Encoding: 000000 SSSSS TTTTT IIIII IIIII 110001
     //------------------------------------------------------------------------------------------------------------------
     TGEU,
     //------------------------------------------------------------------------------------------------------------------
     // [PROBE TLB FOR MATCHING ENTRY]
     //      System instruction. See MIPS instruction reference for more details (shouldn't matter much for DOOM).
     //
-    // Encoding: 010000 1 --- -------- -------- 001000
+    // Encoding: 010000 1---- ----- ----- ----- 001000
     //------------------------------------------------------------------------------------------------------------------
     TLBP,
     //------------------------------------------------------------------------------------------------------------------
     // [READ INDEXED TLB ENTRY]
     //      System instruction. See MIPS instruction reference for more details (shouldn't matter much for DOOM).
     //
-    // Encoding: 010000 1 --- -------- -------- 000001
+    // Encoding: 010000 1---- ----- ----- ----- 000001
     //------------------------------------------------------------------------------------------------------------------
     TLBR,
     //------------------------------------------------------------------------------------------------------------------
     // [WRITE INDEXED TLB ENTRY]
     //      System instruction. See MIPS instruction reference for more details (shouldn't matter much for DOOM).
     //
-    // Encoding: 010000 1 --- -------- -------- 000010
+    // Encoding: 010000 1---- ----- ----- ----- 000010
     //------------------------------------------------------------------------------------------------------------------
     TLBWI,
     //------------------------------------------------------------------------------------------------------------------
     // [WRITE RANDOM TLB ENTRY]
     //      System instruction. See MIPS instruction reference for more details (shouldn't matter much for DOOM).
     //
-    // Encoding: 010000 1 --- -------- -------- 000110
+    // Encoding: 010000 1---- ----- ----- ----- 000110
     //------------------------------------------------------------------------------------------------------------------
     TLBWR,
     //------------------------------------------------------------------------------------------------------------------
@@ -740,7 +740,7 @@ enum class CpuOpcode : uint8_t {
     //      In MIPS II traps if:
     //          SIGNED register 'S' < SIGNED register 'T' and uses code 'I' as an execption param.
     //
-    // Encoding: 000000 SSSSS TTTTT IIIIIIII II 110010
+    // Encoding: 000000 SSSSS TTTTT IIIII IIIII 110010
     //------------------------------------------------------------------------------------------------------------------
     TLT,
     //------------------------------------------------------------------------------------------------------------------
@@ -752,7 +752,7 @@ enum class CpuOpcode : uint8_t {
     //      In MIPS II traps if:
     //          SIGNED Register 'S' < SIGNED constant 'I'
     //
-    // Encoding: 000001 SSSSS 01010 IIIIIIII IIIIIIII
+    // Encoding: 000001 SSSSS 01010 IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     TLTI,
     //------------------------------------------------------------------------------------------------------------------
@@ -764,7 +764,7 @@ enum class CpuOpcode : uint8_t {
     //      In MIPS II traps if:
     //          UNSIGNED Register 'S' < UNSIGNED, SIGN EXTENDED constant 'I'
     //
-    // Encoding: 000001 SSSSS 01011 IIIIIIII IIIIIIII
+    // Encoding: 000001 SSSSS 01011 IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     TLTIU,
     //------------------------------------------------------------------------------------------------------------------
@@ -776,7 +776,7 @@ enum class CpuOpcode : uint8_t {
     //      In MIPS II traps if:
     //          UNSIGNED register 'S' < UNSIGNED register 'T' and uses code 'I' as an execption param.
     //
-    // Encoding: 000000 SSSSS TTTTT IIIIIIII II 110011
+    // Encoding: 000000 SSSSS TTTTT IIIII IIIII 110011
     //------------------------------------------------------------------------------------------------------------------
     TLTU,
     //------------------------------------------------------------------------------------------------------------------
@@ -788,7 +788,7 @@ enum class CpuOpcode : uint8_t {
     //      In MIPS II traps if:
     //          Register 'S' != register 'T' and uses code 'I' as an execption param.
     //
-    // Encoding: 000000 SSSSS TTTTT IIIIIIII II 110110
+    // Encoding: 000000 SSSSS TTTTT IIIII IIIII 110110
     //------------------------------------------------------------------------------------------------------------------
     TNE,
     //------------------------------------------------------------------------------------------------------------------
@@ -800,7 +800,7 @@ enum class CpuOpcode : uint8_t {
     //      In MIPS II traps if:
     //          SIGNED Register 'S' != SIGNED constant 'I'
     //
-    // Encoding: 000001 SSSSS 01110 IIIIIIII IIIIIIII
+    // Encoding: 000001 SSSSS 01110 IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     TNEI,
     //------------------------------------------------------------------------------------------------------------------
@@ -816,7 +816,7 @@ enum class CpuOpcode : uint8_t {
     //      Do a bitwise logical exclusive OR of register 'S' with 16-bit constant 'I' and store in register 'T', I.E:
     //          T = S ^ I
     //
-    // Encoding: 001110 SSSSS TTTTT IIIIIIII IIIIIIII
+    // Encoding: 001110 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     XORI,
     //------------------------------------------------------------------------------------------------------------------
