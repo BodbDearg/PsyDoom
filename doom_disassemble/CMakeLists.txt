@@ -1,5 +1,7 @@
 # Platform agnostic sources
 set(SOURCE_FILES
+    "CpuInstruction.h"
+    "CpuOpcode.h"
     "ExeFile.cpp"
     "ExeFile.h"
     "ExeWord.h"
