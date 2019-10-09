@@ -198,6 +198,11 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
     const uint8_t mainOpcode = (uint8_t)(machineCode >> 26);
     const uint32_t machineCode26Bit = machineCode & 0x03FFFFFF;
 
+    // Pre-decode some commonly used instruction parameters here once
+    const uint8_t decodedRegS = (machineCode26Bit >> 21) & 0x1Fu;           // RETRIEVE: ------ SSSSS ----- ----- ----- ------
+    const uint8_t decodedRegT = (machineCode26Bit >> 16) & 0x1Fu;           // RETRIEVE: ------ ----- TTTTT ----- ----- ------
+    const uint16_t decodedImm16 = (uint16_t) machineCode26Bit;              // RETRIEVE: ------ ----- ----- IIIII IIIII IIIIII
+
     switch (mainOpcode) {
         case 0b000000: return decodeMainOpcode0Ins(*this, machineCode26Bit);
         case 0b000001: return decodeMainOpcode1Ins(*this, machineCode26Bit);
@@ -214,143 +219,185 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
         
         case 0b000100:  // BEQ      000100 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::BEQ;
-            regS = (machineCode26Bit >> 21) & 0x1Fu;
-            regT = (machineCode26Bit >> 16) & 0x1Fu;
-            immediateVal = machineCode26Bit & 0xFFFFu;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
             return true;
 
         case 0b000101:  // BNE      000101 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::BNE;
-            regS = (machineCode26Bit >> 21) & 0x1Fu;
-            regT = (machineCode26Bit >> 16) & 0x1Fu;
-            immediateVal = machineCode26Bit & 0xFFFFu;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
             return true;
         
         case 0b000110:  // BLEZ     000110 SSSSS ----- IIIII IIIII IIIIII
             opcode = CpuOpcode::BLEZ;
-            regS = (machineCode26Bit >> 21) & 0x1Fu;
-            immediateVal = machineCode26Bit & 0xFFFFu;
+            regS = decodedRegS;
+            immediateVal = decodedImm16;
             return true;
 
         case 0b000111:  // BGTZ     000111 SSSSS ----- IIIII IIIII IIIIII
             opcode = CpuOpcode::BGTZ;
-            regS = (machineCode26Bit >> 21) & 0x1Fu;
-            immediateVal = machineCode26Bit & 0xFFFFu;
+            regS = decodedRegS;
+            immediateVal = decodedImm16;
             return true;
         
         case 0b001000:  // ADDI     001000 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::ADDI;
-            regS = (machineCode26Bit >> 21) & 0x1Fu;
-            regT = (machineCode26Bit >> 16) & 0x1Fu;
-            immediateVal = machineCode26Bit & 0xFFFFu;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
             return true;
         
         case 0b001001:  // ADDIU    001001 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::ADDIU;
-            regS = (machineCode26Bit >> 21) & 0x1Fu;
-            regT = (machineCode26Bit >> 16) & 0x1Fu;
-            immediateVal = machineCode26Bit & 0xFFFFu;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
             return true;
         
         case 0b001010:  // SLTI     001010 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::SLTI;
-            regS = (machineCode26Bit >> 21) & 0x1Fu;
-            regT = (machineCode26Bit >> 16) & 0x1Fu;
-            immediateVal = machineCode26Bit & 0xFFFFu;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
             return true;
         
         case 0b001011:  // SLTIU    001011 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::SLTIU;
-            regS = (machineCode26Bit >> 21) & 0x1Fu;
-            regT = (machineCode26Bit >> 16) & 0x1Fu;
-            immediateVal = machineCode26Bit & 0xFFFFu;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
             return true;
         
         case 0b001100:  // ANDI     001100 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::ANDI;
-            regS = (machineCode26Bit >> 21) & 0x1Fu;
-            regT = (machineCode26Bit >> 16) & 0x1Fu;
-            immediateVal = machineCode26Bit & 0xFFFFu;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
             return true;
         
         case 0b001101:  // ORI      001101 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::ORI;
-            regS = (machineCode26Bit >> 21) & 0x1Fu;
-            regT = (machineCode26Bit >> 16) & 0x1Fu;
-            immediateVal = machineCode26Bit & 0xFFFFu;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
             return true;
         
         case 0b001110:  // XORI     001110 SSSSS TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::XORI;
-            regS = (machineCode26Bit >> 21) & 0x1Fu;
-            regT = (machineCode26Bit >> 16) & 0x1Fu;
-            immediateVal = machineCode26Bit & 0xFFFFu;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
             return true;
 
         case 0b001111:  // LUI      001111 ----- TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::LUI;
-            regT = (machineCode26Bit >> 16) & 0x1Fu;
-            immediateVal = machineCode26Bit & 0xFFFFu;
+            regT = decodedRegT;
+            immediateVal = decodedRegS;
             return true;
         
         case 0b010000: return decodeMainOpcode16Ins(*this, machineCode26Bit);
         case 0b010010: return decodeMainOpcode18Ins(*this, machineCode26Bit);
 
-        case 0b100000: {    // LB       100000 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b100000:  // LB       100000 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::LB;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
 
-        case 0b100001: {    // LH       100001 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b100001:  // LH       100001 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::LH;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
         
-        case 0b100010: {    // LWL      100010 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b100010:  // LWL      100010 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::LWL;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
         
-        case 0b100011: {    // LW       100011 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b100011:  // LW       100011 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::LW;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
         
-        case 0b100100: {    // LBU      100100 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b100100:  // LBU      100100 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::LBU;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
 
-        case 0b100101: {    // LHU      100101 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b100101:  // LHU      100101 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::LHU;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
 
-        case 0b100110: {    // LWR      100110 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b100110:  // LWR      100110 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::LWR;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
  
-        case 0b101000: {    // SB       101000 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b101000:  // SB       101000 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::SB;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
         
-        case 0b101001: {    // SH       101001 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b101001:  // SH       101001 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::SH;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
         
-        case 0b101010: {    // SWL      101010 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b101010:  // SWL      101010 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::SWL;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
         
-        case 0b101011: {    // SW       101011 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b101011:  // SW       101011 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::SW;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
         
-        case 0b101110: {    // SWR      101110 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b101110:  // SWR      101110 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::SWR;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
         
-        case 0b110010: {    // LWC2     110010 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b110010:  // LWC2     110010 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::LWC2;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
         
-        case 0b111010: {    // SWC2     111010 SSSSS TTTTT IIIII IIIII IIIIII
-            return false;   // TODO
-        }
+        case 0b111010:  // SWC2     111010 SSSSS TTTTT IIIII IIIII IIIIII
+            opcode = CpuOpcode::SWC2;
+            regS = decodedRegS;
+            regT = decodedRegT;
+            immediateVal = decodedImm16;
+            return true;
 
         // Illegal main opcode
         default: break;
