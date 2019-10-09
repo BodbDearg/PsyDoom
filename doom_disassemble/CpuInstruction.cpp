@@ -89,6 +89,9 @@
 // XORI     001110 SSSSS TTTTT IIIIIIII IIIIIIII
 //----------------------------------------------------------------------------------------------------------------------
 
+static uint32_t signExtend16To32Bit(uint16_t val16) noexcept {
+    return (uint32_t)(int32_t)(int16_t) val16;
+}
 
 static bool decodeMainOpcode0Ins(CpuInstruction& ins, const uint32_t machineCode26Bit) noexcept {
     // -----------------------------------------------------------------------------------------------------------------
@@ -199,61 +202,96 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
         case 0b000000: return decodeMainOpcode0Ins(*this, machineCode26Bit);
         case 0b000001: return decodeMainOpcode1Ins(*this, machineCode26Bit);
         
-        case 0b000010: {    // J        000010 II IIIIIIII IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b000010:  // J        000010 II IIIIIIII IIIIIIII IIIIIIII
+            opcode = CpuOpcode::J;
+            immediateVal = machineCode26Bit;
+            return true;
 
-        case 0b000011: {    // JAL      000011 II IIIIIIII IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b000011:  // JAL      000011 II IIIIIIII IIIIIIII IIIIIIII
+            opcode = CpuOpcode::JAL;
+            immediateVal = machineCode26Bit;
+            return true;
         
-        case 0b000100: {    // BEQ      000100 SSSSS TTTTT IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b000100:  // BEQ      000100 SSSSS TTTTT IIIIIIII IIIIIIII
+            opcode = CpuOpcode::BEQ;
+            regS = (machineCode26Bit >> 21) & 0x1Fu;
+            regT = (machineCode26Bit >> 16) & 0x1Fu;
+            immediateVal = machineCode26Bit & 0xFFFFu;
+            return true;
 
-        case 0b000101: {    // BNE      000101 SSSSS TTTTT IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b000101:  // BNE      000101 SSSSS TTTTT IIIIIIII IIIIIIII
+            opcode = CpuOpcode::BNE;
+            regS = (machineCode26Bit >> 21) & 0x1Fu;
+            regT = (machineCode26Bit >> 16) & 0x1Fu;
+            immediateVal = machineCode26Bit & 0xFFFFu;
+            return true;
         
-        case 0b000110: {    // BLEZ     000110 SSSSS ----- IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b000110:  // BLEZ     000110 SSSSS ----- IIIIIIII IIIIIIII
+            opcode = CpuOpcode::BLEZ;
+            regS = (machineCode26Bit >> 21) & 0x1Fu;
+            immediateVal = machineCode26Bit & 0xFFFFu;
+            return true;
 
-        case 0b000111: {    // BGTZ     000111 SSSSS ----- IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b000111:  // BGTZ     000111 SSSSS ----- IIIIIIII IIIIIIII
+            opcode = CpuOpcode::BGTZ;
+            regS = (machineCode26Bit >> 21) & 0x1Fu;
+            immediateVal = machineCode26Bit & 0xFFFFu;
+            return true;
         
-        case 0b001000: {    // ADDI     001000 SSSSS TTTTT IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b001000:  // ADDI     001000 SSSSS TTTTT IIIIIIII IIIIIIII
+            opcode = CpuOpcode::ADDI;
+            regS = (machineCode26Bit >> 21) & 0x1Fu;
+            regT = (machineCode26Bit >> 16) & 0x1Fu;
+            immediateVal = machineCode26Bit & 0xFFFFu;
+            return true;
         
-        case 0b001001: {    // ADDIU    001001 SSSSS TTTTT IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b001001:  // ADDIU    001001 SSSSS TTTTT IIIIIIII IIIIIIII
+            opcode = CpuOpcode::ADDIU;
+            regS = (machineCode26Bit >> 21) & 0x1Fu;
+            regT = (machineCode26Bit >> 16) & 0x1Fu;
+            immediateVal = machineCode26Bit & 0xFFFFu;
+            return true;
         
-        case 0b001010: {    // SLTI     001010 SSSSS TTTTT IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b001010:  // SLTI     001010 SSSSS TTTTT IIIIIIII IIIIIIII
+            opcode = CpuOpcode::SLTI;
+            regS = (machineCode26Bit >> 21) & 0x1Fu;
+            regT = (machineCode26Bit >> 16) & 0x1Fu;
+            immediateVal = machineCode26Bit & 0xFFFFu;
+            return true;
         
-        case 0b001011: {    // SLTIU    001011 SSSSS TTTTT IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b001011:  // SLTIU    001011 SSSSS TTTTT IIIIIIII IIIIIIII
+            opcode = CpuOpcode::SLTIU;
+            regS = (machineCode26Bit >> 21) & 0x1Fu;
+            regT = (machineCode26Bit >> 16) & 0x1Fu;
+            immediateVal = machineCode26Bit & 0xFFFFu;
+            return true;
         
-        case 0b001100: {    // ANDI     001100 SSSSS TTTTT IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b001100:  // ANDI     001100 SSSSS TTTTT IIIIIIII IIIIIIII
+            opcode = CpuOpcode::ANDI;
+            regS = (machineCode26Bit >> 21) & 0x1Fu;
+            regT = (machineCode26Bit >> 16) & 0x1Fu;
+            immediateVal = machineCode26Bit & 0xFFFFu;
+            return true;
         
-        case 0b001101: {    // ORI      001101 SSSSS TTTTT IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b001101:  // ORI      001101 SSSSS TTTTT IIIIIIII IIIIIIII
+            opcode = CpuOpcode::ORI;
+            regS = (machineCode26Bit >> 21) & 0x1Fu;
+            regT = (machineCode26Bit >> 16) & 0x1Fu;
+            immediateVal = machineCode26Bit & 0xFFFFu;
+            return true;
         
-        case 0b001110: {    // XORI     001110 SSSSS TTTTT IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b001110:  // XORI     001110 SSSSS TTTTT IIIIIIII IIIIIIII
+            opcode = CpuOpcode::XORI;
+            regS = (machineCode26Bit >> 21) & 0x1Fu;
+            regT = (machineCode26Bit >> 16) & 0x1Fu;
+            immediateVal = machineCode26Bit & 0xFFFFu;
+            return true;
 
-        case 0b001111: {    // LUI      001111 ----- TTTTT IIIIIIII IIIIIIII
-            return false;   // TODO
-        }
+        case 0b001111:  // LUI      001111 ----- TTTTT IIIIIIII IIIIIIII
+            opcode = CpuOpcode::LUI;
+            regT = (machineCode26Bit >> 16) & 0x1Fu;
+            immediateVal = machineCode26Bit & 0xFFFFu;
+            return true;
         
         case 0b010000: return decodeMainOpcode16Ins(*this, machineCode26Bit);
         case 0b010010: return decodeMainOpcode18Ins(*this, machineCode26Bit);
