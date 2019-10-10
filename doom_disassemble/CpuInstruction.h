@@ -1,3 +1,5 @@
+#pragma once
+
 #include "CpuOpcode.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -40,4 +42,13 @@ struct CpuInstruction {
     // If decoding fails then the instruction will be made into an illegal instruction and 'false' will be returned.
     // Note: all unused values are also given poison values to detect their misuse!
     bool decode(const uint32_t machineCode) noexcept;
+
+    // Get the index of the destination general purpose register (GPR) for the instruction, from 0-31.
+    // Returns '0xFF' if the instruction does not output to a general purpose register.
+    uint8_t getDestGprIdx() const noexcept;
+
+    // Tell if this instruction is effectively a NOP.
+    // Certain instructions like 'SLL r0, r0, 0' (encoded as binary '0') are used as NOP type instructions.
+    // NOPs are used in some places in the code to get around issues with branch and load delay slots by delaying the CPU.
+    bool isNOP() const noexcept;
 };

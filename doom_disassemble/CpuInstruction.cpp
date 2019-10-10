@@ -1,5 +1,7 @@
 #include "CpuInstruction.h"
 
+#include "CpuGpr.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // === MASTER DECODING CHEAT SHEET ===
 //
@@ -739,4 +741,113 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
 
     // If we get to here then it's because decoding has failed
     return false;
+}
+
+uint8_t CpuInstruction::getDestGprIdx() const noexcept {
+    switch (opcode) {
+        case CpuOpcode::ADD:        return regD;
+        case CpuOpcode::ADDI:       return regT;
+        case CpuOpcode::ADDIU:      return regT;
+        case CpuOpcode::ADDU:       return regD;
+        case CpuOpcode::AND:        return regD;
+        case CpuOpcode::ANDI:       return regT;
+        case CpuOpcode::CFC2:       return regT;
+        case CpuOpcode::LB:         return regT;
+        case CpuOpcode::LBU:        return regT;
+        case CpuOpcode::LH:         return regT;
+        case CpuOpcode::LHU:        return regT;
+        case CpuOpcode::LUI:        return regT;
+        case CpuOpcode::LW:         return regT;
+        case CpuOpcode::LWL:        return regT;
+        case CpuOpcode::LWR:        return regT;
+        case CpuOpcode::MFC0:       return regT;
+        case CpuOpcode::MFC2:       return regT;
+        case CpuOpcode::MFHI:       return regD;
+        case CpuOpcode::MFLO:       return regD;
+        case CpuOpcode::NOR:        return regD;
+        case CpuOpcode::OR:         return regD;
+        case CpuOpcode::ORI:        return regT;
+        case CpuOpcode::SLL:        return regD;
+        case CpuOpcode::SLLV:       return regD;
+        case CpuOpcode::SLT:        return regD;
+        case CpuOpcode::SLTI:       return regT;
+        case CpuOpcode::SLTIU:      return regT;
+        case CpuOpcode::SLTU:       return regD;
+        case CpuOpcode::SRA:        return regD;
+        case CpuOpcode::SRAV:       return regD;
+        case CpuOpcode::SRL:        return regD;
+        case CpuOpcode::SRLV:       return regD;
+        case CpuOpcode::SUB:        return regD;
+        case CpuOpcode::SUBU:       return regD;
+        case CpuOpcode::XOR:        return regD;
+        case CpuOpcode::XORI:       return regT;
+
+        default: break;
+    }
+    
+    // No destination GPR for this instruction
+    return 0xFFu;
+}
+
+bool CpuInstruction::isNOP() const noexcept {
+    // If the instruction outputs to a register and that register is the special '$(ZERO)' register then this is a NOP.
+    // Writes to '$(ZERO)' have no effect, because it is not a real register:
+    const uint8_t destGprIdx = getDestGprIdx();
+
+    if (destGprIdx < CpuGpr::NUM_GPRS) {
+        if (destGprIdx == CpuGpr::ZERO) {
+            // I am a NOP because I write to '$(ZERO)'!
+            // All instructions that write directly to a GPR shouldn't have any side effects other than that, so this check works.
+            return true;
+        }
+    }
+
+    // NOP based on operation type
+    switch (opcode) {
+        // NOPs for the case of adding '0' to a register and storing the result in the same register:
+        case CpuOpcode::ADD:    return ((regT == CpuGpr::ZERO) && (regS == regD));
+        case CpuOpcode::ADDI:   return ((immediateVal == 0) && (regS == regT));
+        case CpuOpcode::ADDIU:  return ((immediateVal == 0) && (regS == regT));
+        case CpuOpcode::ADDU:   return ((regT == CpuGpr::ZERO) && (regS == regD));
+        
+        // NOPs for branch conditions that can never be true (0 < 0 and 0 > 0)
+        case CpuOpcode::BGTZ:       return (regS == CpuGpr::ZERO);
+        case CpuOpcode::BLTZ:       return (regS == CpuGpr::ZERO);
+        case CpuOpcode::BLTZAL:     return (regS == CpuGpr::ZERO);
+
+        // NOP if testing the same register is NOT EQUAL to itself
+        case CpuOpcode::BNE:
+            return (regS == regT);
+        
+        // NOPs for OR-ing a register with '0' and storing the result to the same register
+        case CpuOpcode::OR:
+            return (
+                ((regS == CpuGpr::ZERO) && (regD == regT)) |
+                ((regT == CpuGpr::ZERO) && (regD == regS))
+            );
+
+        case CpuOpcode::ORI:
+            return ((immediateVal == 0) && (regS == regT));
+
+        // NOPs for when doing shifts of '0' of a register and storing the result in the same register
+        case CpuOpcode::SLL:    return ((immediateVal == 0) && (regD == regT));
+        case CpuOpcode::SLLV:   return ((regS == CpuGpr::ZERO) && (regD == regT));
+        case CpuOpcode::SRA:    return ((immediateVal == 0) && (regD == regT));        
+        case CpuOpcode::SRAV:   return ((regS == CpuGpr::ZERO) && (regD == regT));
+        case CpuOpcode::SRL:    return ((immediateVal == 0) && (regD == regT));
+        case CpuOpcode::SRLV:   return ((regS == CpuGpr::ZERO) && (regD == regT));
+
+        // NOPs for the case of subtracting '0' from a register and storing the result in the same register:
+        case CpuOpcode::SUB:    return ((regT == CpuGpr::ZERO) && (regS == regD));
+        case CpuOpcode::SUBU:   return ((regT == CpuGpr::ZERO) && (regS == regD));
+
+        // NOPs for XOR-ing a register with '0' and storing the result in the same register:
+        case CpuOpcode::XOR:    return ((regT == CpuGpr::ZERO) && (regS == regD));
+        case CpuOpcode::XORI:   return ((immediateVal == 0) && (regS == regT));
+
+        // Instruction does not generate NOPs!
+        default: break;
+    }
+
+    return false;   // Not a NOP
 }

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ExeWord.h"
 #include <memory>
 

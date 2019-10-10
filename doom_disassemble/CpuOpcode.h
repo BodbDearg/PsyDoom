@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -244,7 +246,7 @@ enum class CpuOpcode : uint8_t {
     //------------------------------------------------------------------------------------------------------------------
     LH,
     //------------------------------------------------------------------------------------------------------------------
-    // [LOAD HALF WORD]
+    // [LOAD HALF WORD UNSIGNED]
     //      Load the contents of the ALIGNED and UNSIGNED 16-bit half word pointed to by register 'S' plus the 16-bit
     //      SIGNED constant offset 'I' and store in register 'T'.
     //          T = S[I]
@@ -569,7 +571,7 @@ enum class CpuOpcode : uint8_t {
     // [STORE WORD]
     //      Store the contents of register 'T' to the ALIGNED 32-bit word pointed to by register 'S' plus the 16-bit
     //      SIGNED constant offset 'I':
-    //          T = S[I]
+    //          S[I] = T
     //
     // Encoding: 101011 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
@@ -826,7 +828,7 @@ enum class CpuOpcode : uint8_t {
     INVALID
 };
 
-static constexpr uint32_t NUM_CPU_OPCODES = (uint32_t) CpuOpcode::INVALID;
+static constexpr const uint32_t NUM_CPU_OPCODES = (uint32_t) CpuOpcode::INVALID;
 
 namespace CpuOpcodeUtils {
     //------------------------------------------------------------------------------------------------------------------
