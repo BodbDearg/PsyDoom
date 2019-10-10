@@ -145,10 +145,10 @@ enum class CpuOpcode : uint8_t {
     BREAK,
     //------------------------------------------------------------------------------------------------------------------
     // [MOVE CONTROL WORD FROM COPROCESSOR 2]
-    //      Move a value from a coprocessor 2 control register 'S' and save the result in register 'T':
-    //          T = COP2_C[S]
+    //      Move a value from a coprocessor 2 control register 'D' and save the result in register 'T':
+    //          T = COP2_C[D]
     //
-    // Encoding: 010010 00010 TTTTT SSSSS ----- ------
+    // Encoding: 010010 00010 TTTTT DDDDD ----- ------
     //------------------------------------------------------------------------------------------------------------------
     CFC2,
     //------------------------------------------------------------------------------------------------------------------
@@ -162,10 +162,10 @@ enum class CpuOpcode : uint8_t {
     COP2,
     //------------------------------------------------------------------------------------------------------------------
     // [MOVE CONTROL WORD TO COPROCESSOR 2]
-    //      Move a value from register 'T' and save to coprocessor 2 control register 'S':
-    //          COP2_C[S] = T
+    //      Move a value from register 'T' and save to coprocessor 2 control register 'D':
+    //          COP2_C[D] = T
     //
-    // Encoding: 010010 00110 TTTTT SSSSS ----- ------
+    // Encoding: 010010 00110 TTTTT DDDDD ----- ------
     //------------------------------------------------------------------------------------------------------------------
     CTC2,
     //------------------------------------------------------------------------------------------------------------------
@@ -707,28 +707,28 @@ enum class CpuOpcode : uint8_t {
     // [PROBE TLB FOR MATCHING ENTRY]
     //      System instruction. See MIPS instruction reference for more details (shouldn't matter much for DOOM).
     //
-    // Encoding: 010000 1---- ----- ----- ----- 001000
+    // Encoding: 010000 10000 ----- ----- ----- 001000
     //------------------------------------------------------------------------------------------------------------------
     TLBP,
     //------------------------------------------------------------------------------------------------------------------
     // [READ INDEXED TLB ENTRY]
     //      System instruction. See MIPS instruction reference for more details (shouldn't matter much for DOOM).
     //
-    // Encoding: 010000 1---- ----- ----- ----- 000001
+    // Encoding: 010000 10000 ----- ----- ----- 000001
     //------------------------------------------------------------------------------------------------------------------
     TLBR,
     //------------------------------------------------------------------------------------------------------------------
     // [WRITE INDEXED TLB ENTRY]
     //      System instruction. See MIPS instruction reference for more details (shouldn't matter much for DOOM).
     //
-    // Encoding: 010000 1---- ----- ----- ----- 000010
+    // Encoding: 010000 10000 ----- ----- ----- 000010
     //------------------------------------------------------------------------------------------------------------------
     TLBWI,
     //------------------------------------------------------------------------------------------------------------------
     // [WRITE RANDOM TLB ENTRY]
     //      System instruction. See MIPS instruction reference for more details (shouldn't matter much for DOOM).
     //
-    // Encoding: 010000 1---- ----- ----- ----- 000110
+    // Encoding: 010000 10000 ----- ----- ----- 000110
     //------------------------------------------------------------------------------------------------------------------
     TLBWR,
     //------------------------------------------------------------------------------------------------------------------

@@ -18,9 +18,9 @@
 // BLTZAL   000001 SSSSS 10000 IIIII IIIII IIIIII
 // BNE      000101 SSSSS TTTTT IIIII IIIII IIIIII
 // BREAK    000000 IIIII IIIII IIIII IIIII 001101
-// CFC2     010010 00010 TTTTT SSSSS ----- ------
+// CFC2     010010 00010 TTTTT DDDDD ----- ------
 // COP2     010010 1IIII IIIII IIIII IIIII IIIIII
-// CTC2     010010 00110 TTTTT SSSSS ----- ------
+// CTC2     010010 00110 TTTTT DDDDD ----- ------
 // DIV      000000 SSSSS TTTTT ----- ----- 011010
 // DIVU     000000 SSSSS TTTTT ----- ----- 011011
 // J        000010 IIIII IIIII IIIII IIIII IIIIII
@@ -75,10 +75,10 @@
 // TGEI     000001 SSSSS 01000 IIIII IIIII IIIIII
 // TGEIU    000001 SSSSS 01001 IIIII IIIII IIIIII
 // TGEU     000000 SSSSS TTTTT IIIII IIIII 110001
-// TLBP     010000 1---- ----- ----- ----- 001000
-// TLBR     010000 1---- ----- ----- ----- 000001
-// TLBWI    010000 1---- ----- ----- ----- 000010
-// TLBWR    010000 1---- ----- ----- ----- 000110
+// TLBP     010000 10000 ----- ----- ----- 001000
+// TLBR     010000 10000 ----- ----- ----- 000001
+// TLBWI    010000 10000 ----- ----- ----- 000010
+// TLBWR    010000 10000 ----- ----- ----- 000110
 // TLT      000000 SSSSS TTTTT IIIII IIIII 110010
 // TLTI     000001 SSSSS 01010 IIIII IIIII IIIIII
 // TLTIU    000001 SSSSS 01011 IIIII IIIII IIIIII
@@ -381,9 +381,9 @@ static bool decodeMainOpcode1Ins(CpuInstruction& ins, const uint32_t machineCode
 
     // Decode the secondary opcode and instruction params.
     // Assign optimistically to the instruciton for now:
-    const uint32_t secondaryOpcode = (machineCode26Bit >> 16) & 0x1Fu;      // RETRIEVE: ----- CCCCC ----- ----- ------
-    ins.regS = (uint8_t)((machineCode26Bit >> 21) & 0x1Fu);                 // RETRIEVE: SSSSS ----- ----- ----- ------
-    ins.immediateVal = machineCode26Bit & 0xFFFFu;                          // RETRIEVE: ----- ----- IIIII IIIII IIIIII
+    const uint8_t secondaryOpcode = (uint8_t)((machineCode26Bit >> 16) & 0x1Fu);    // RETRIEVE: ----- CCCCC ----- ----- ------
+    ins.regS = (uint8_t)((machineCode26Bit >> 21) & 0x1Fu);                         // RETRIEVE: SSSSS ----- ----- ----- ------
+    ins.immediateVal = machineCode26Bit & 0xFFFFu;                                  // RETRIEVE: ----- ----- IIIII IIIII IIIIII
 
     switch (secondaryOpcode) {
         case 0b00000:   // BLTZ     SSSSS 00000 IIIII IIIII IIIIII
@@ -442,14 +442,42 @@ static bool decodeMainOpcode16Ins(CpuInstruction& ins, const uint32_t machineCod
     //
     // MFC0     00000 TTTTT DDDDD ----- ------
     // MTC0     00100 TTTTT DDDDD ----- ------
-    // TLBR     1---- ----- ----- ----- 000001
-    // TLBWI    1---- ----- ----- ----- 000010
-    // TLBWR    1---- ----- ----- ----- 000110
-    // TLBP     1---- ----- ----- ----- 001000
+    // TLBR     10000 ----- ----- ----- 000001
+    // TLBWI    10000 ----- ----- ----- 000010
+    // TLBWR    10000 ----- ----- ----- 000110
+    // TLBP     10000 ----- ----- ----- 001000
     // RFE      10000 ----- ----- ----- 010000
     //------------------------------------------------------------------------------------------------------------------
 
-    // TODO
+    // Retrieve the secondary opcode (top 5 of the 26 bits) and then decide what to do based on that
+    const uint8_t secondaryOpcode = (uint8_t)(machineCode26Bit >> 21);
+
+    if (secondaryOpcode == 0b00000 || secondaryOpcode == 0b00100) {
+        // Either 'MFC0' or 'MTC0'.
+        // Decode the parameters and save the instruction opcode:
+        ins.opcode = (secondaryOpcode == 0b00000) ? CpuOpcode::MFC0 : CpuOpcode::MTC0;
+        ins.regT = (machineCode26Bit >> 16) & 0x1Fu;
+        ins.regD = (machineCode26Bit >> 11) & 0x1Fu;
+        return true;
+    }
+    else if (secondaryOpcode == 0b10000) {
+        // Possibly one of the 'TLBx' instructions or 'RFE'.
+        // Decode the 3rd opcode (last 6-bits) to decide which:
+        const uint8_t tertiaryOpcode = (uint8_t)(machineCode26Bit & 0x3F);
+
+        switch (tertiaryOpcode) {
+            case 0b000001: ins.opcode = CpuOpcode::TLBR;    return true;
+            case 0b000010: ins.opcode = CpuOpcode::TLBWI;   return true;
+            case 0b000110: ins.opcode = CpuOpcode::TLBWR;   return true;
+            case 0b001000: ins.opcode = CpuOpcode::TLBP;    return true;
+            case 0b010000: ins.opcode = CpuOpcode::RFE;     return true;
+
+            // Invalid tertiary opcode
+            default: break;
+        }
+    }
+
+    // Decoding has failed if we have got to here
     return false;
 }
 
@@ -457,22 +485,48 @@ static bool decodeMainOpcode18Ins(CpuInstruction& ins, const uint32_t machineCod
     // -----------------------------------------------------------------------------------------------------------------
     // === MAIN OPCODE '18' INSTRUCTIONS (low 26-bits) ===
     //
-    // CFC2     00010 TTTTT SSSSS ----- ------
+    // CFC2     00010 TTTTT DDDDD ----- ------
     // COP2     1IIII IIIII IIIII IIIII IIIIII
-    // CTC2     00110 TTTTT SSSSS ----- ------
+    // CTC2     00110 TTTTT DDDDD ----- ------
     // MFC2     00000 TTTTT DDDDD ----- ------
     // MTC2     00100 TTTTT DDDDD ----- ------
     //------------------------------------------------------------------------------------------------------------------
 
-    // TODO
+    // Decode the top 5 bits, which is probably the opcode for this instruction.
+    // If the top bit is set however then we are decoding the 'COP2' instruction:
+    const uint8_t secondaryOpcode = (uint8_t)(machineCode26Bit >> 21);
+
+    if ((secondaryOpcode & 0x10) != 0) {
+        // This is the 'COP2' opcode.
+        // 25-bits are used for a parameter for the instruction:
+        ins.opcode = CpuOpcode::COP2;
+        ins.immediateVal = machineCode26Bit & 0x1FFFFFF;
+    } else {
+        // Maybe one of the other opcodes listed above.
+        // Decode the parameters optimistically and see which secondary opcode matches:
+        ins.regT = (uint8_t)((machineCode26Bit >> 16) & 0x1Fu);
+        ins.regD = (uint8_t)((machineCode26Bit >> 11) & 0x1Fu);
+
+        switch (secondaryOpcode) {
+            case 0b00000: ins.opcode = CpuOpcode::MFC2;     return true;
+            case 0b00010: ins.opcode = CpuOpcode::CFC2;     return true;
+            case 0b00100: ins.opcode = CpuOpcode::MTC2;     return true;
+            case 0b00110: ins.opcode = CpuOpcode::CTC2;     return true;
+
+            // Invalid secondary opcode
+            default: break;
+        }
+    }
+
+    // Decoding has failed if we have got to here.
+    // Need to clear the instruction also because we assigned optimistically.
+    ins.clear();
     return false;
 }
 
 bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
     // Clear all opcode fields before we start
     clear();
-
-
 
     // Get the first 6 most significant bits first since that is the main opcode.
     // Also remove the top 6 bits from the instruction word for later decoding.
