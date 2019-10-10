@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) noexcept {
             // Print the address of the data
             const uint32_t addr = exe.baseAddress + progWord * 4;
             PrintUtils::printHexU32(addr, true, curLine);
-            curLine << "    ";
+            curLine << ":    ";
 
             // Print the U32 value
             const uint32_t word = exe.words[progWord].value;
