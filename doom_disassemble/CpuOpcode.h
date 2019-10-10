@@ -172,7 +172,7 @@ enum class CpuOpcode : uint8_t {
     CTC2,
     //------------------------------------------------------------------------------------------------------------------
     // [DIVIDE WORD]
-    //      Divide SIGNED register 'S' by SIGNED register 'T' and save the result in speccial register 'LO'.
+    //      Divide SIGNED register 'S' by SIGNED register 'T' and save the result in special register 'LO'.
     //      The remainder is stored in special register 'HI'.
     //      If dividing by zero then the result is UNPREDICTABLE but no error occurs.
     //
@@ -181,7 +181,7 @@ enum class CpuOpcode : uint8_t {
     DIV,
     //------------------------------------------------------------------------------------------------------------------
     // [DIVIDE UNSIGNED WORD]
-    //      Divide UNSIGNED register 'S' by UNSIGNED register 'T' and save the result in speccial register 'LO'.
+    //      Divide UNSIGNED register 'S' by UNSIGNED register 'T' and save the result in special register 'LO'.
     //      The remainder is stored in special register 'HI'.
     //      If dividing by zero then the result is UNPREDICTABLE but no error occurs.
     //

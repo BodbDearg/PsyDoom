@@ -1,6 +1,75 @@
 #include "CpuInstruction.h"
 
 #include "CpuGpr.h"
+#include "PrintUtils.h"
+
+//----------------------------------------------------------------------------------------------------------------------
+// Print an instruction that assigns to a GPR and that has two input GPR arguments
+//----------------------------------------------------------------------------------------------------------------------
+static void printInstGprOutGprInGprIn(
+    const CpuInstruction& ins,    
+    const uint8_t in1Gpr,
+    const uint8_t in2Gpr,
+    std::stringstream& out
+) noexcept {
+    const uint8_t destGpr = ins.getDestGprIdx();
+    out << CpuGpr::getName(destGpr);
+    out << " = ";
+    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
+    out << ' ';
+    out << CpuGpr::getName(in1Gpr);
+    out << ", ";
+    out << CpuGpr::getName(in2Gpr);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Print an instruction that assigns to a GPR and that has an input GPR arg followed by an I16 constant
+//----------------------------------------------------------------------------------------------------------------------
+static void printInstGprOutGprInI16In(    
+    const CpuInstruction& ins,
+    const uint8_t in1Gpr,
+    const int16_t in2I16,
+    std::stringstream& out
+) noexcept {
+    const uint8_t destGpr = ins.getDestGprIdx();
+    out << CpuGpr::getName(destGpr);
+    out << " = ";
+    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
+    out << ' ';
+    out << CpuGpr::getName(in1Gpr);
+    out << ", ";
+    PrintUtils::printHexI16(in2I16, false, out);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Print an instruction that assigns to a GPR and that has an input GPR arg followed by an U16 constant
+//----------------------------------------------------------------------------------------------------------------------
+static void printInstGprOutGprInU16In(    
+    const CpuInstruction& ins,
+    const uint8_t in1Gpr,
+    const uint16_t in2U16,
+    std::stringstream& out
+) noexcept {
+    const uint8_t destGpr = ins.getDestGprIdx();
+    out << CpuGpr::getName(destGpr);
+    out << " = ";
+    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
+    out << ' ';
+    out << CpuGpr::getName(in1Gpr);
+    out << ", ";
+    PrintUtils::printHexI16(in2U16, false, out);
+}
+
+static void printI16HexOffsetForInst(const int16_t offset, std::stringstream& out) noexcept {
+    // Note: don't print the offset when it is zero
+    if (offset > 0) {
+        out << " + ";
+        PrintUtils::printHexI16(offset, false, out);
+    } else if (offset < 0) {
+        out << ' ';
+        PrintUtils::printHexI16(offset, false, out);
+    }
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 // === MASTER DECODING CHEAT SHEET ===
@@ -850,4 +919,305 @@ bool CpuInstruction::isNOP() const noexcept {
     }
 
     return false;   // Not a NOP
+}
+
+uint32_t CpuInstruction::getBranchInstTargetAddr(const uint32_t thisInstAddr) const noexcept {
+    // All branch instructions use a signed 16-bit WORD (note: not byte!) index as their immediate value.
+    // This plus the instruction address tells us where to go:
+    const int32_t effectiveOffset = ((int32_t)(int16_t) immediateVal) * sizeof(uint32_t);
+    return thisInstAddr + (uint32_t) effectiveOffset;
+}
+
+uint32_t CpuInstruction::getFixedJumpInstTargetAddr(const uint32_t thisInstAddr) const noexcept {
+    // The jump instruction encodes a 28-bit (256 MB) jump within 26-bits by shifting left 2-bits.
+    // Therefore the jump must be within the current 256 MB region.
+    // Use the top 4-bits of the instruction address as the region we are jumping within:
+    const uint32_t baseAddr = thisInstAddr & 0xF0000000;
+    const uint32_t offset = immediateVal << 2;
+    return baseAddr + offset;
+}
+
+void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) const noexcept {
+    // Easy case: handling illegal instructions
+    if (isIllegal()) {
+        out << "<ILLEGAL INSTRUCTION>";
+        return;
+    }
+
+    // Printing each opcode type
+    switch (opcode) {
+        // REG_OUT = OPERATION(regS, regT)
+        case CpuOpcode::ADD:
+        case CpuOpcode::ADDU:
+        case CpuOpcode::AND:
+        case CpuOpcode::NOR:
+        case CpuOpcode::OR:
+        case CpuOpcode::SLT:
+        case CpuOpcode::SLTU:
+        case CpuOpcode::SUB:
+        case CpuOpcode::SUBU:
+        case CpuOpcode::XOR:
+            printInstGprOutGprInGprIn(*this, regS, regT, out);
+            break;
+
+        // REG_OUT = OPERATION(regT, regS)
+        case CpuOpcode::SLLV:
+        case CpuOpcode::SRAV:
+        case CpuOpcode::SRLV:
+            printInstGprOutGprInGprIn(*this, regT, regS, out);
+            break;
+
+        // REG_OUT = OPERATION(regS, (int16_t) immVal)
+        case CpuOpcode::ADDI:
+        case CpuOpcode::SLTI:
+            printInstGprOutGprInI16In(*this, regS, (int16_t) immediateVal, out);
+            break;
+
+        // REG_OUT = OPERATION(regS, (uint16_t) immVal)
+        case CpuOpcode::ADDIU:
+        case CpuOpcode::ANDI:
+        case CpuOpcode::ORI:
+        case CpuOpcode::SLTIU:
+        case CpuOpcode::XORI:
+            printInstGprOutGprInU16In(*this, regS, (uint16_t) immediateVal, out);
+            break;
+
+        // REG_OUT = OPERATION(regT, (uint16_t) immVal)
+        case CpuOpcode::SLL:
+        case CpuOpcode::SRA:
+        case CpuOpcode::SRL:
+            printInstGprOutGprInU16In(*this, regT, (uint16_t) immediateVal, out);
+            break;
+
+        // Instructions that just print their mnemonic
+        case CpuOpcode::RFE:
+        case CpuOpcode::TLBP:
+        case CpuOpcode::TLBR:
+        case CpuOpcode::TLBWI:
+        case CpuOpcode::TLBWR:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            break;
+
+        // All the other mini-groups and individual instructions that can't be covered by the above:
+        case CpuOpcode::BEQ:
+        case CpuOpcode::BNE:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            out << CpuGpr::getName(regS);
+            out << ", ";
+            out << CpuGpr::getName(regT);
+            out << ", ";
+            PrintUtils::printHexU32(getBranchInstTargetAddr(thisInstAddr), false, out);
+            break;
+        
+        case CpuOpcode::BGEZ:
+        case CpuOpcode::BGEZAL:
+        case CpuOpcode::BGTZ:
+        case CpuOpcode::BLEZ:
+        case CpuOpcode::BLTZ:
+        case CpuOpcode::BLTZAL:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            out << CpuGpr::getName(regS);
+            out << ", ";
+            PrintUtils::printHexU32(getBranchInstTargetAddr(thisInstAddr), false, out);
+            break;
+
+        case CpuOpcode::BREAK:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            PrintUtils::printHexU32(immediateVal, true, out);
+            break;
+
+        case CpuOpcode::CFC2:
+            out << CpuGpr::getName(getDestGprIdx());
+            out << " = COP2_CTRL[";
+            out << (uint32_t) regD;
+            out << ']';
+            break;
+
+        case CpuOpcode::COP2:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            PrintUtils::printHexU32(immediateVal, true, out);
+            break;
+
+        case CpuOpcode::CTC2:
+            out << "COP2_CTRL[";
+            out << (uint32_t) regD;
+            out << "] = ";
+            out << CpuGpr::getName(regT);
+            break;
+
+        case CpuOpcode::DIV:
+        case CpuOpcode::DIVU:
+        case CpuOpcode::MULT:
+        case CpuOpcode::MULTU:
+            out << "$HI, $LO = ";
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            out << CpuGpr::getName(regS);
+            out << ", ";
+            out << CpuGpr::getName(regT);
+            break;
+
+        case CpuOpcode::J:
+        case CpuOpcode::JAL:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            PrintUtils::printHexU32(getFixedJumpInstTargetAddr(thisInstAddr), false, out);
+            break;
+
+        case CpuOpcode::JALR:
+        case CpuOpcode::JR:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            out << CpuGpr::getName(regS);
+            break;
+
+        case CpuOpcode::LB:
+        case CpuOpcode::LBU:
+        case CpuOpcode::LH:
+        case CpuOpcode::LHU:
+        case CpuOpcode::LW:
+            out << CpuGpr::getName(getDestGprIdx());
+            out << " = ";
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << " [";
+            out << CpuGpr::getName(regS);
+            printI16HexOffsetForInst((int16_t) immediateVal, out);
+            out << "]";
+            break;
+
+        case CpuOpcode::LUI:
+            out << CpuGpr::getName(getDestGprIdx());
+            out << " = ";
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            PrintUtils::printHexU16((uint16_t) immediateVal, true, out);
+            break;
+
+        case CpuOpcode::LWC2:
+            out << "COP2_DATA[";
+            out << (uint32_t) regT;
+            out << "] = ";
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << " [";
+            out << CpuGpr::getName(regS);
+            printI16HexOffsetForInst((int16_t) immediateVal, out);
+            out << ']';
+            break;
+
+        case CpuOpcode::LWL:
+        case CpuOpcode::LWR:
+            out << CpuGpr::getName(getDestGprIdx());
+            out << " = ";
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            out << CpuGpr::getName(getDestGprIdx());
+            out << ", [";
+            out << CpuGpr::getName(regS);
+            printI16HexOffsetForInst((int16_t) immediateVal, out);
+            out << ']';
+            break;
+
+        case CpuOpcode::MFC0:
+        case CpuOpcode::MFC2:
+            out << CpuGpr::getName(getDestGprIdx());
+            out << (opcode == CpuOpcode::MFC0) ? " = COP0_DATA[" : " = COP2_DATA[";
+            out << (uint32_t) regD;
+            out << ']';
+            break;
+
+        case CpuOpcode::MFHI:
+        case CpuOpcode::MFLO:
+            out << CpuGpr::getName(getDestGprIdx());
+            out << (opcode == CpuOpcode::MFHI) ? " = $HI" : " = $LO";
+            break;
+
+        case CpuOpcode::MTC0:
+        case CpuOpcode::MTC2:
+            out << (opcode == CpuOpcode::MTC0) ? "COP0_DATA[" : "COP2_DATA[";
+            out << (uint32_t) regD;
+            out << "] = ";
+            out << CpuGpr::getName(regT);
+            break;
+
+        case CpuOpcode::MTHI:
+        case CpuOpcode::MTLO:
+            out << (opcode == CpuOpcode::MTHI) ? "$HI = " : "$LO = ";
+            out << CpuGpr::getName(regS);
+            break;
+
+        case CpuOpcode::SB:
+        case CpuOpcode::SH:
+        case CpuOpcode::SW:
+        case CpuOpcode::SWL:
+        case CpuOpcode::SWR:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            out << CpuGpr::getName(regT);
+            out << ", [";
+            out << CpuGpr::getName(regS);
+            printI16HexOffsetForInst((int16_t) immediateVal, out);
+            out << ']';
+            break;
+
+        case CpuOpcode::SWC2:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << " COP2_DATA[";
+            out << (uint32_t) regT;
+            out << "], [";
+            out << CpuGpr::getName(regS);
+            printI16HexOffsetForInst((int16_t) immediateVal, out);
+            out << ']';
+            break;
+
+        case CpuOpcode::SYSCALL:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            PrintUtils::printHexU32(immediateVal, false, out);
+            break;
+
+        case CpuOpcode::TEQ:
+        case CpuOpcode::TGE:
+        case CpuOpcode::TGEU:
+        case CpuOpcode::TLT:
+        case CpuOpcode::TLTU:
+        case CpuOpcode::TNE:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            out << CpuGpr::getName(regS);
+            out << ", ";
+            out << CpuGpr::getName(regT);
+            out << ", ";
+            PrintUtils::printHexU32(immediateVal, false, out);
+            break;
+        
+        case CpuOpcode::TEQI:
+        case CpuOpcode::TGEI:
+        case CpuOpcode::TLTI:
+        case CpuOpcode::TNEI:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            out << CpuGpr::getName(regS);
+            out << ", ";
+            PrintUtils::printHexI16((int16_t) immediateVal, false, out);
+            break;
+
+        case CpuOpcode::TGEIU:
+        case CpuOpcode::TLTIU:
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << ' ';
+            out << CpuGpr::getName(regS);
+            out << ", ";
+            PrintUtils::printHexU32((uint32_t)(int32_t)(int16_t) immediateVal, false, out);
+            break;
+
+        default:
+            out << "<NO INSTRUCTION PRINT IMPLEMENTED FOR OPCODE #";
+            out << (uint32_t) opcode;
+            out << "!>";
+            break;
+    }
 }

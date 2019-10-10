@@ -10,6 +10,8 @@ set(SOURCE_FILES
     "FatalErrors.cpp"
     "FatalErrors.h"
     "Main.cpp"
+    "PrintUtils.cpp"
+    "PrintUtils.h"
 )
 
 set(OTHER_FILES
