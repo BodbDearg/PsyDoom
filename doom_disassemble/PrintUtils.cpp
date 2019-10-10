@@ -4,9 +4,9 @@ void PrintUtils::printHexDigit(const uint8_t nibble, std::stringstream& out) noe
     const uint8_t nibble4Bit = nibble & 0x0Fu;
 
     if (nibble4Bit < 10) {
-        out << '0' + (char) nibble4Bit;
+        out.put('0' + (char) nibble4Bit);
     } else {
-        out << 'A' + (char) nibble4Bit;
+        out.put('A' + (char)(nibble4Bit - 10));
     }
 }
 

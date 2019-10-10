@@ -2,6 +2,12 @@
 #include "FatalErrors.h"
 #include <cstdio>
 
+// TODO: TEMP - REMOVE
+#include "CpuInstruction.h"
+#include "PrintUtils.h"
+#include <sstream>
+#include <string>
+
 //----------------------------------------------------------------------------------------------------------------------
 // Entry point for 'DoomDisassemble'
 //----------------------------------------------------------------------------------------------------------------------
@@ -50,5 +56,34 @@ int main(int argc, char* argv[]) noexcept {
     }
 
     const bool bIsFinalDoom = (exe.sizeInWords == FINAL_DOOM_NUM_PROG_WORDS);
+
+    // TODO: REMOVE - TEMP TEST
+    {
+        FILE* const pFile = std::fopen("disasm_doom_disasm.txt", "w");
+
+        if (!pFile) {
+            FATAL_ERROR_F("Can't open output file to write disassembly to!");
+        }
+
+        std::stringstream curLine;
+
+        for (uint32_t progWord = 0; progWord < exe.sizeInWords; ++progWord) {
+            curLine.str(std::string());
+
+            const uint32_t addr = exe.baseAddress + progWord * 4;
+            PrintUtils::printHexU32(addr, true, curLine);
+            curLine << "        ";
+            
+            CpuInstruction inst;
+            inst.decode(exe.words[progWord].value);
+            inst.print(addr, curLine);
+
+            std::fprintf(pFile, "%s\n", curLine.str().c_str());
+        }
+
+        std::fflush(pFile);
+        std::fclose(pFile);
+    }
+
     return 0;
 }
