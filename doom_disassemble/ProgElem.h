@@ -45,6 +45,15 @@ struct ProgElem {
     ProgElemType    type;               // What type of element this is
     ProgElemType    arrayElemType;      // If an array, what type the array elements are
 
+    inline constexpr ProgElem() noexcept
+        : startAddr(0)
+        , endAddr(0)
+        , name("")
+        , type()
+        , arrayElemType()
+    {
+    }
+
     inline constexpr ProgElem(
         uint32_t startAddr,
         uint32_t endAddr,

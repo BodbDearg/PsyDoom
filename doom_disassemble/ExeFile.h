@@ -1,7 +1,9 @@
 #pragma once
 
 #include "ExeWord.h"
+#include "ProgElem.h"
 #include <memory>
+#include <vector>
 
 //----------------------------------------------------------------------------------------------------------------------
 // Holds the contents of a playstation EXE
@@ -20,9 +22,21 @@ struct ExeFile {
     // The actual words of the EXE (code and data)
     std::unique_ptr<ExeWord[]> words;
 
+    // Identified elements of the program.
+    // Manually identified through investigation.
+    std::vector<ProgElem> progElems;
+
     ExeFile() noexcept;
 
     // Load the playstation EXE from the given path.
     // Aborts the program if there is an error.
     void loadFromFile(const char* const path) noexcept;
+
+    // Set the program elements for the program.
+    // The list will be automatically sorted for fast lookup.
+    void setProgElems(const ProgElem* const pElems, const uint32_t numElems) noexcept;
+
+    // Try and find a program element at the given address.
+    // Returns 'nullptr' if none found.
+    const ProgElem* findProgElemAtAddr(const uint32_t addr) noexcept;
 };

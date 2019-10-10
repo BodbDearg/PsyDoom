@@ -1,6 +1,7 @@
 #include "ExeFile.h"
 
 #include "FatalErrors.h"
+#include <algorithm>
 #include <cstdio>
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -116,6 +117,7 @@ ExeFile::ExeFile() noexcept
     , sizeInWords(0)
     , entryPointWordIdx(0)
     , words(nullptr)
+    , progElems()
 {
 }
 
@@ -180,4 +182,41 @@ void ExeFile::loadFromFile(const char* const path) noexcept {
     baseAddress = header.destAddr;
     sizeInWords = numProgWords;
     entryPointWordIdx = (header.initialPcReg - header.destAddr) / sizeof(uint32_t);
+}
+
+void ExeFile::setProgElems(const ProgElem* const pElems, const uint32_t numElems) noexcept {
+    // Save the elements
+    assert(pElems || numElems == 0);
+    progElems.resize(numElems);
+    std::memcpy(progElems.data(), pElems, sizeof(ProgElem) * numElems);
+
+    // Sort by start address
+    std::sort(
+        progElems.begin(),
+        progElems.end(),
+        [](const ProgElem& elem1, const ProgElem& elem2) noexcept {
+            return (elem1.startAddr < elem2.startAddr);
+        }
+    );
+}
+
+const ProgElem* ExeFile::findProgElemAtAddr(const uint32_t addr) noexcept {
+    auto iter = std::lower_bound(
+        progElems.begin(),
+        progElems.end(),
+        addr,
+        [](const ProgElem& elem, const uint32_t addr) noexcept {
+            return (elem.endAddr <= addr);
+        }
+    );
+
+    if (iter != progElems.end()) {
+       const ProgElem& elem = *iter;
+
+       if (addr >= elem.startAddr && addr < elem.endAddr) {
+            return &elem;
+       }
+    }
+    
+    return nullptr;
 }
