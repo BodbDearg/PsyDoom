@@ -10,6 +10,30 @@ void PrintUtils::printHexDigit(const uint8_t nibble, std::stringstream& out) noe
     }
 }
 
+void PrintUtils::printHexU8(const uint8_t valU16, const bool bZeroPad, std::stringstream& out) noexcept {
+    // First chop off any leading '0' if not zero padding
+    int16_t curShift = 8;
+
+    if (!bZeroPad) {
+        while (curShift > 4) {
+            const uint8_t nibble = (uint8_t)((valU16 >> (curShift - 4)) & 0x0Fu);
+
+            if (nibble == 0) {
+                curShift -= 4;
+            } else {
+                break;
+            }
+        }
+    }
+
+    // Print each nibble
+    while (curShift > 0) {
+        curShift -= 4;
+        const uint8_t nibble = (uint8_t)((valU16 >> curShift) & 0x0Fu);
+        printHexDigit(nibble, out);
+    }
+}
+
 void PrintUtils::printHexI16(const int16_t valI16, const bool bZeroPad, std::stringstream& out) noexcept {
     // Add in the negative sign and get the absolute value to print
     const int32_t valI32 = valI16;

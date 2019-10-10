@@ -35,7 +35,7 @@ static void printInstGprOutGprInI16In(
     out << CpuGpr::getName(destGpr);
     out << " = ";
     out << CpuOpcodeUtils::getMnemonic(ins.opcode);
-    out << ' ';
+    out.put(' ');
     out << CpuGpr::getName(in1Gpr);
     out << ", ";
     PrintUtils::printHexI16(in2I16, false, out);
@@ -54,7 +54,7 @@ static void printInstGprOutGprInU16In(
     out << CpuGpr::getName(destGpr);
     out << " = ";
     out << CpuOpcodeUtils::getMnemonic(ins.opcode);
-    out << ' ';
+    out.put(' ');
     out << CpuGpr::getName(in1Gpr);
     out << ", ";
     PrintUtils::printHexI16(in2U16, false, out);
@@ -66,8 +66,10 @@ static void printI16HexOffsetForInst(const int16_t offset, std::stringstream& ou
         out << " + ";
         PrintUtils::printHexI16(offset, false, out);
     } else if (offset < 0) {
-        out << ' ';
-        PrintUtils::printHexI16(offset, false, out);
+        out << " - ";
+        const int32_t offsetI32 = offset;
+        const uint32_t offsetAbsU32 = -offsetI32;
+        PrintUtils::printHexU16(offsetAbsU32, false, out);
     }
 }
 
@@ -1002,7 +1004,7 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
         case CpuOpcode::BEQ:
         case CpuOpcode::BNE:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             out << CpuGpr::getName(regS);
             out << ", ";
             out << CpuGpr::getName(regT);
@@ -1017,7 +1019,7 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
         case CpuOpcode::BLTZ:
         case CpuOpcode::BLTZAL:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             out << CpuGpr::getName(regS);
             out << ", ";
             PrintUtils::printHexU32(getBranchInstTargetAddr(thisInstAddr), false, out);
@@ -1025,25 +1027,25 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
 
         case CpuOpcode::BREAK:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             PrintUtils::printHexU32(immediateVal, true, out);
             break;
 
         case CpuOpcode::CFC2:
             out << CpuGpr::getName(getDestGprIdx());
-            out << " = COP2_CTRL[";
+            out << " = $cop2_ctrl[";
             out << (uint32_t) regD;
-            out << ']';
+            out.put(']');
             break;
 
         case CpuOpcode::COP2:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             PrintUtils::printHexU32(immediateVal, true, out);
             break;
 
         case CpuOpcode::CTC2:
-            out << "COP2_CTRL[";
+            out << "$cop2_ctrl[";
             out << (uint32_t) regD;
             out << "] = ";
             out << CpuGpr::getName(regT);
@@ -1053,9 +1055,9 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
         case CpuOpcode::DIVU:
         case CpuOpcode::MULT:
         case CpuOpcode::MULTU:
-            out << "$HI, $LO = ";
+            out << "$hi, $lo = ";
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             out << CpuGpr::getName(regS);
             out << ", ";
             out << CpuGpr::getName(regT);
@@ -1064,14 +1066,14 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
         case CpuOpcode::J:
         case CpuOpcode::JAL:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             PrintUtils::printHexU32(getFixedJumpInstTargetAddr(thisInstAddr), false, out);
             break;
 
         case CpuOpcode::JALR:
         case CpuOpcode::JR:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             out << CpuGpr::getName(regS);
             break;
 
@@ -1086,26 +1088,26 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
             out << " [";
             out << CpuGpr::getName(regS);
             printI16HexOffsetForInst((int16_t) immediateVal, out);
-            out << "]";
+            out.put(']');
             break;
 
         case CpuOpcode::LUI:
             out << CpuGpr::getName(getDestGprIdx());
             out << " = ";
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             PrintUtils::printHexU16((uint16_t) immediateVal, true, out);
             break;
 
         case CpuOpcode::LWC2:
-            out << "COP2_DATA[";
+            out << "$cop2_data[";
             out << (uint32_t) regT;
             out << "] = ";
             out << CpuOpcodeUtils::getMnemonic(opcode);
             out << " [";
             out << CpuGpr::getName(regS);
             printI16HexOffsetForInst((int16_t) immediateVal, out);
-            out << ']';
+            out.put(']');
             break;
 
         case CpuOpcode::LWL:
@@ -1118,26 +1120,26 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
             out << ", [";
             out << CpuGpr::getName(regS);
             printI16HexOffsetForInst((int16_t) immediateVal, out);
-            out << ']';
+            out.put(']');
             break;
 
         case CpuOpcode::MFC0:
         case CpuOpcode::MFC2:
             out << CpuGpr::getName(getDestGprIdx());
-            out << (opcode == CpuOpcode::MFC0) ? " = COP0_DATA[" : " = COP2_DATA[";
+            out << ((opcode == CpuOpcode::MFC0) ? " = $cop0_data[" : " = $cop2_data[");     // N.B: Outer parens required due to op precedence!
             out << (uint32_t) regD;
-            out << ']';
+            out.put(']');
             break;
 
         case CpuOpcode::MFHI:
         case CpuOpcode::MFLO:
             out << CpuGpr::getName(getDestGprIdx());
-            out << (opcode == CpuOpcode::MFHI) ? " = $HI" : " = $LO";
+            out << ((opcode == CpuOpcode::MFHI) ? " = $hi" : " = $hi");     // N.B: Outer parens required due to op precedence!
             break;
 
         case CpuOpcode::MTC0:
         case CpuOpcode::MTC2:
-            out << (opcode == CpuOpcode::MTC0) ? "COP0_DATA[" : "COP2_DATA[";
+            out << ((opcode == CpuOpcode::MTC0) ? "$cop0_data[" : "$cop2_data[");   // N.B: Outer parens required due to op precedence!
             out << (uint32_t) regD;
             out << "] = ";
             out << CpuGpr::getName(regT);
@@ -1145,7 +1147,7 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
 
         case CpuOpcode::MTHI:
         case CpuOpcode::MTLO:
-            out << (opcode == CpuOpcode::MTHI) ? "$HI = " : "$LO = ";
+            out << ((opcode == CpuOpcode::MTHI) ? "$hi = " : "$lo = ");     // N.B: Outer parens required due to op precedence!
             out << CpuGpr::getName(regS);
             break;
 
@@ -1155,27 +1157,27 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
         case CpuOpcode::SWL:
         case CpuOpcode::SWR:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             out << CpuGpr::getName(regT);
             out << ", [";
             out << CpuGpr::getName(regS);
             printI16HexOffsetForInst((int16_t) immediateVal, out);
-            out << ']';
+            out.put(']');
             break;
 
         case CpuOpcode::SWC2:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << " COP2_DATA[";
+            out << " $cop2_data[";
             out << (uint32_t) regT;
             out << "], [";
             out << CpuGpr::getName(regS);
             printI16HexOffsetForInst((int16_t) immediateVal, out);
-            out << ']';
+            out.put(']');
             break;
 
         case CpuOpcode::SYSCALL:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             PrintUtils::printHexU32(immediateVal, false, out);
             break;
 
@@ -1186,7 +1188,7 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
         case CpuOpcode::TLTU:
         case CpuOpcode::TNE:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             out << CpuGpr::getName(regS);
             out << ", ";
             out << CpuGpr::getName(regT);
@@ -1199,7 +1201,7 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
         case CpuOpcode::TLTI:
         case CpuOpcode::TNEI:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             out << CpuGpr::getName(regS);
             out << ", ";
             PrintUtils::printHexI16((int16_t) immediateVal, false, out);
@@ -1208,7 +1210,7 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
         case CpuOpcode::TGEIU:
         case CpuOpcode::TLTIU:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out << ' ';
+            out.put(' ');
             out << CpuGpr::getName(regS);
             out << ", ";
             PrintUtils::printHexU32((uint32_t)(int32_t)(int16_t) immediateVal, false, out);

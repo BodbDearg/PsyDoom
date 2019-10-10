@@ -70,13 +70,55 @@ int main(int argc, char* argv[]) noexcept {
         for (uint32_t progWord = 0; progWord < exe.sizeInWords; ++progWord) {
             curLine.str(std::string());
 
+            // Print the address of the data
             const uint32_t addr = exe.baseAddress + progWord * 4;
             PrintUtils::printHexU32(addr, true, curLine);
-            curLine << "        ";
+            curLine << "    ";
+
+            // Print the U32 value
+            const uint32_t word = exe.words[progWord].value;
+            PrintUtils::printHexU32(word, true, curLine);
+            curLine << "  ";
+
+            // Print the individual bytes in memory order (assuming little endian!)
+            const uint8_t wordByte1 = (uint8_t)((word >> 0 ) & 0xFFu);
+            const uint8_t wordByte2 = (uint8_t)((word >> 8 ) & 0xFFu);
+            const uint8_t wordByte3 = (uint8_t)((word >> 16) & 0xFFu);
+            const uint8_t wordByte4 = (uint8_t)((word >> 24) & 0xFFu);
+
+            {
+                PrintUtils::printHexU8(wordByte1, true, curLine); curLine.put(' ');
+                PrintUtils::printHexU8(wordByte2, true, curLine); curLine.put(' ');
+                PrintUtils::printHexU8(wordByte3, true, curLine); curLine.put(' ');
+                PrintUtils::printHexU8(wordByte4, true, curLine);
+            }
+
+            // Print the ascii value of each individual byte.
+            // Don't print control characters or tabs and newlines, replace them with space.
+            curLine << "  ";
+
+            {
+                curLine.put((wordByte1 >= 32 && wordByte1 <= 126) ? (char) wordByte1 : ' ');
+                curLine.put((wordByte2 >= 32 && wordByte2 <= 126) ? (char) wordByte2 : ' ');
+                curLine.put((wordByte3 >= 32 && wordByte3 <= 126) ? (char) wordByte3 : ' ');
+                curLine.put((wordByte4 >= 32 && wordByte4 <= 126) ? (char) wordByte4 : ' ');
+            }
             
+            // Print the instruction itself
+            curLine << "      ";
+
             CpuInstruction inst;
             inst.decode(exe.words[progWord].value);
-            inst.print(addr, curLine);
+
+            if (inst.isNOP()) {
+                curLine << "  nop";
+            } else {
+                if (!CpuOpcodeUtils::isBranchOrJumpOpcode(inst.opcode)) {
+                    curLine << "  ";
+                }
+
+                inst.print(addr, curLine);
+            }
 
             std::fprintf(pFile, "%s\n", curLine.str().c_str());
         }
