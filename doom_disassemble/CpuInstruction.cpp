@@ -700,7 +700,7 @@ bool CpuInstruction::decode(const uint32_t machineCode) noexcept {
         case 0b001111:  // LUI      001111 ----- TTTTT IIIII IIIII IIIIII
             opcode = CpuOpcode::LUI;
             regT = decodedRegT;
-            immediateVal = decodedRegS;
+            immediateVal = decodedImm16;
             return true;
         
         case 0b010000: return decodeMainOpcode16Ins(*this, machineCode26Bit);
