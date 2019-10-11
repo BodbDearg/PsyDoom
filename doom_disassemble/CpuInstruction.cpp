@@ -69,7 +69,7 @@ static void printI16HexOffsetForInst(const int16_t offset, std::stringstream& ou
         out << " - ";
         const int32_t offsetI32 = offset;
         const uint32_t offsetAbsU32 = -offsetI32;
-        PrintUtils::printHexU16(offsetAbsU32, false, out);
+        PrintUtils::printHexU16((uint16_t) offsetAbsU32, false, out);
     }
 }
 
@@ -925,9 +925,10 @@ bool CpuInstruction::isNOP() const noexcept {
 
 uint32_t CpuInstruction::getBranchInstTargetAddr(const uint32_t thisInstAddr) const noexcept {
     // All branch instructions use a signed 16-bit WORD (note: not byte!) index as their immediate value.
-    // This plus the instruction address tells us where to go:
+    // This plus the instruction address tells us where to go.
+    // Note that offset is relative to the address FOLLOWING the branch instruction, hence we add '4' bytes:
     const int32_t effectiveOffset = ((int32_t)(int16_t) immediateVal) * sizeof(uint32_t);
-    return thisInstAddr + (uint32_t) effectiveOffset;
+    return thisInstAddr + (uint32_t) effectiveOffset + 4;
 }
 
 uint32_t CpuInstruction::getFixedJumpInstTargetAddr(const uint32_t thisInstAddr) const noexcept {
@@ -1028,7 +1029,7 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) 
         case CpuOpcode::BREAK:
             out << CpuOpcodeUtils::getMnemonic(opcode);
             out.put(' ');
-            PrintUtils::printHexU32(immediateVal, true, out);
+            PrintUtils::printHexU32(immediateVal, false, out);
             break;
 
         case CpuOpcode::CFC2:
