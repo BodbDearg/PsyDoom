@@ -1,8 +1,8 @@
 #include "ProgElems.h"
 
 static const ProgElem ELEMS[] = {
-    { 0x80014E54, 0x80014EBC, "",                               ProgElemType::FUNCTION },
-    { 0x8003290C, 0x80032934, "",                               ProgElemType::FUNCTION },
+    { 0x80014E54, 0x80014EBC, "",                               ProgElemType::FUNCTION },   // TODO: figure out func ptr jump
+    { 0x8003290C, 0x80032934, "",                               ProgElemType::FUNCTION },   // TODO
     { 0x80049C1C, 0x80049C2C, "LIBAPI_CloseEvent",              ProgElemType::FUNCTION },
     { 0x80049C2C, 0x80049C3C, "LIBAPI_EnterCriticalSection",    ProgElemType::FUNCTION },
     { 0x80049C3C, 0x80049C4C, "LIBAPI_write",                   ProgElemType::FUNCTION },
@@ -22,7 +22,7 @@ static const ProgElem ELEMS[] = {
     { 0x8004AD80, 0x8004AD90, "LIBAPI_ReturnFromException",     ProgElemType::FUNCTION },
     { 0x8004E8B0, 0x8004E8C0, "LIBAPI_GPU_cw",                  ProgElemType::FUNCTION },
     { 0x80050714, 0x800507AC, "main",                           ProgElemType::FUNCTION },
-    { 0x800507AC, 0x8005081C, "",                               ProgElemType::FUNCTION },
+    { 0x800507AC, 0x8005081C, "",                               ProgElemType::FUNCTION },   // TODO
     { 0x80050884, 0x80050894, "LIBAPI_InitHeap",                ProgElemType::FUNCTION },
     { 0x80053D48, 0x80053D58, "LIBAPI_DeliverEvent",            ProgElemType::FUNCTION },
     { 0x80054324, 0x80054334, "LIBAPI_WaitEvent",               ProgElemType::FUNCTION },

@@ -21,15 +21,18 @@ static void printProgElemNameAtAddr(
         PrintUtils::printHexU32(progElem.startAddr, true, out);
     }
 
-    // If the address is not the start of the elem then show an offset too
+    // If the address is not the start of the elem then show an offset too (plus the full address in brackets)
     if (addr != progElem.startAddr) {
         const int32_t addrOffsetInElem = (int32_t)(addr - progElem.startAddr);
 
         if (addrOffsetInElem >= 0) {
-            out.put('+');
+            out << " + ";
         }
 
         PrintUtils::printHexI32(addrOffsetInElem, false, out);
+        out << " (";
+        PrintUtils::printHexU32(addr, true, out);
+        out.put(')');
     }
 }
 
