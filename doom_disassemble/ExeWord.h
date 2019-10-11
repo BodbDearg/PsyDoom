@@ -10,62 +10,11 @@
 struct ExeWord {
     // The actual 32-bit value of the word.
     // This is the value that is read directly from the executable.
-    uint32_t value; 
+    uint32_t value;
 
-    // Whether each byte of data in the word has been categorized as some sort of code or data.
-    // When the disassembler is given instructions as to what sort of information a region in the EXE represents, this
-    // boolean will be set to 'true'. If multiple instructions claim the same program byte as something then a conflict/error
-    // will be raised - each byte can only be classed as something once.
-    bool bByteIsCategorized[4];
-
-    // Functions to mark the EXE word as categorized or check that it is categorized
-    inline void markWordCategorized() noexcept {
-        bByteIsCategorized[0] = true;
-        bByteIsCategorized[1] = true;
-        bByteIsCategorized[2] = true;
-        bByteIsCategorized[3] = true;
-    }
-
-    inline bool isWordCategorized() const noexcept {
-        return (
-            bByteIsCategorized[0] &&
-            bByteIsCategorized[1] &&
-            bByteIsCategorized[2] &&
-            bByteIsCategorized[3]
-        );
-    }
-
-    inline void markHalfWordCategorized(const uint8_t halfWordIdx) noexcept {
-        assert(halfWordIdx < 2);
-
-        if (halfWordIdx == 0) {
-            bByteIsCategorized[0] = true;
-            bByteIsCategorized[1] = true;
-        } else {
-            bByteIsCategorized[2] = true;
-            bByteIsCategorized[3] = true;
-        }
-    }
-
-    inline bool isHalfWordCategorized(const uint8_t halfWordIdx) const noexcept {
-        assert(halfWordIdx < 2);
-
-        if (halfWordIdx == 0) {
-            return (bByteIsCategorized[0] && bByteIsCategorized[1]);
-        } else {
-            return (bByteIsCategorized[2] && bByteIsCategorized[3]);
-        }        
-    }
-
-    inline void markByteCategorized(const uint8_t byteIdx) {
-        assert(byteIdx < 4);
-        bByteIsCategorized[byteIdx] = byteIdx;
-    }
-
-    inline bool isByteCategorized(const uint8_t byteIdx) const noexcept {
-        assert(byteIdx < 4);
-        return bByteIsCategorized[byteIdx];
-    }
+    bool bIsJumpTarget;         // Is this word the target of a fixed jump instruction?
+    bool bIsBranchTarget;       // Is this word the target of a branch instruction?
+    bool bIsDataReferenced;     // Is this word referenced by the data in another 32-bit word? Might indicate a function pointer reference if so.
 
     // Get the address of the entire word, or the specified half word or byte within it based on the
     // given program base address and also the index of this word in the program:

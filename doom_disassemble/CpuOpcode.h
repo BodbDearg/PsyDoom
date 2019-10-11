@@ -957,6 +957,17 @@ namespace CpuOpcodeUtils {
         }
     }
 
+    inline constexpr bool isFixedJumpOpcode(const CpuOpcode opcode) noexcept {
+        switch (opcode) {
+            case CpuOpcode::J:
+            case CpuOpcode::JAL:
+                return true;
+            
+            default:
+                return false;
+        }
+    }
+
     inline constexpr bool isBranchOrJumpOpcode(const CpuOpcode opcode) noexcept {
         return (isBranchOpcode(opcode) || isJumpOpcode(opcode));
     }

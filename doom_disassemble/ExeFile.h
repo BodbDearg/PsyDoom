@@ -44,4 +44,8 @@ struct ExeFile {
     // Print the name of the element at the address.
     // Just prints the raw hex address if there is no such element.
     void printNameOfElemAtAddr(const uint32_t addr, std::ostream& out) const noexcept;
+
+    // Determine which words are referenced by jump instructions, data etc.
+    // Useful in the disassembly to be able to quickly see branch targets and references to specific memory locations.
+    void determineWordReferences() noexcept;
 };

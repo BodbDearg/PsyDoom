@@ -8,7 +8,37 @@
 
 static void printAddressForLine(const uint32_t addr, std::ostream& out) noexcept {
     PrintUtils::printHexU32(addr, true, out);
-    out << ":    ";
+    out << ":";
+}
+
+static void printProgWordReferences(const ExeWord& word, std::ostream& out) noexcept {
+    if (word.bIsBranchTarget || word.bIsDataReferenced || word.bIsJumpTarget) {
+        out << " <- ";
+        uint32_t numWordReferences = 0;
+
+        if (word.bIsJumpTarget) {
+            out.put('J');
+            ++numWordReferences;
+        }
+
+        if (word.bIsBranchTarget) {
+            out.put('B');
+            ++numWordReferences;
+        }
+
+        if (word.bIsDataReferenced) {
+            out.put('R');
+            ++numWordReferences;
+        }
+
+        for (uint32_t i = numWordReferences; i < 3; ++i) {
+            out.put(' ');
+        }
+
+        out << "     ";
+    } else {
+        out << "            ";
+    }
 }
 
 static void printProgElemName(const ProgElem& progElem, const char* const defaultNamePrefix, std::ostream& out) noexcept {
@@ -72,8 +102,12 @@ static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ost
         const uint32_t instAddr = exe.baseAddress + wordIdx * 4;
         printAddressForLine(instAddr , out);
 
-        const uint32_t instWord = exe.words[wordIdx].value;
-        printProgInstruction(exe, instAddr, instWord, out);
+        // Print the references to this exe word
+        const ExeWord exeWord = exe.words[wordIdx];
+        printProgWordReferences(exeWord, out);
+
+        // Print the instruction itself
+        printProgInstruction(exe, instAddr, exeWord.value, out);
         out.put('\n');
     }
 
@@ -139,36 +173,42 @@ static void printUncategorizedProgramRegion(
 
         const uint32_t wordEndByteIdx = wordStartByteIdx + numBytesToPrint;
 
-        // Firstly print the 32-bit word fully if we have a whole word to print
-        const uint32_t programWord = exe.words[curByteIdx / 4].value;
+        // Firstly print the word references if it is a full word.
+        // Otherwise print 12 spaces where the references section would be.
+        const ExeWord exeWord = exe.words[curByteIdx / 4];
 
         if (numBytesToPrint == 4) {
-            PrintUtils::printHexU32(programWord, true, out);
+            printProgWordReferences(exeWord, out);
+        } else {
+            out << "            ";
+        }
+
+        // Print the 32-bit word fully if we have a whole word to print
+        if (numBytesToPrint == 4) {
+            PrintUtils::printHexU32(exeWord.value, true, out);
             out << "  ";
         }
 
         // Next print the individual hex values of the bytes
         for (uint32_t byteIdx = wordStartByteIdx; byteIdx < wordEndByteIdx; ++byteIdx) {
-            const uint8_t byteVal = (uint8_t)(programWord >> (8 * byteIdx));
+            const uint8_t byteVal = (uint8_t)(exeWord.value >> (8 * byteIdx));
             PrintUtils::printHexU8(byteVal, true, out);
             out.put(' ');
         }
 
         // Print the ascii value of each individual byte.
         // Don't print control characters or tabs and newlines, replace them with space.
-        for (uint32_t byteIdx = wordStartByteIdx; byteIdx < wordEndByteIdx; ++byteIdx) {
-            const uint8_t byteVal = (uint8_t)(programWord >> (8 * byteIdx));            
-            out.put((byteVal >= 32 && byteVal <= 126) ? (char) byteVal : ' ');
+        out.put(' ');
 
-            if (byteIdx + 1 < wordEndByteIdx) {
-                out.put(' ');
-            }
+        for (uint32_t byteIdx = wordStartByteIdx; byteIdx < wordEndByteIdx; ++byteIdx) {
+            const uint8_t byteVal = (uint8_t)(exeWord.value >> (8 * byteIdx));            
+            out.put((byteVal >= 32 && byteVal <= 126) ? (char) byteVal : ' ');
         }
 
         // Lastly, if we have 4 bytes then try to decode a program instruction and then move onto a new line
         if (numBytesToPrint == 4) {
             out << "      ";
-            printProgInstruction(exe, exe.baseAddress + curByteIdx, programWord, out);
+            printProgInstruction(exe, exe.baseAddress + curByteIdx, exeWord.value, out);
         }
 
         out.put('\n');

@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) noexcept {
         FATAL_ERROR_F("The given PSX DOOM .EXE file '%s' does not appear to be the US/NTSC version of PSX DOOM or Final DOOM!", psxDoomExePath);
     }
 
-    // Set the program elements for the .EXE.    
+    // Set the program elements for the .EXE and determine references to specific program words
     const bool bIsFinalDoom = (exe.sizeInWords == FINAL_DOOM_NUM_PROG_WORDS);
 
     if (bIsFinalDoom) {
@@ -60,6 +60,8 @@ int main(int argc, char* argv[]) noexcept {
     } else {
         exe.setProgElems(gProgramElems_Doom, gNumProgramElems_Doom);
     }
+
+    exe.determineWordReferences();
 
     // Start printing the disassembly
     try {

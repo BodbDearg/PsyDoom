@@ -1,5 +1,6 @@
 #include "ExeFile.h"
 
+#include "CpuInstruction.h"
 #include "FatalErrors.h"
 #include "PrintUtils.h"
 #include <algorithm>
@@ -233,5 +234,86 @@ void ExeFile::printNameOfElemAtAddr(const uint32_t addr, std::ostream& out) cons
         pElem->printNameAtAddr(addr, out);
     } else {
         PrintUtils::printHexU32(addr, true, out);
+    }
+}
+
+void ExeFile::determineWordReferences() noexcept {
+    const uint32_t exeStartAddr = baseAddress;
+    const uint32_t exeEndAddr = baseAddress + sizeInWords * 4;
+
+    for (uint32_t wordIdx = 0; wordIdx < sizeInWords; ++wordIdx) {
+        // Grab the program element at this word and the word itself
+        const uint32_t word = words[wordIdx].value;
+        const uint32_t wordAddr = baseAddress + wordIdx * 4;
+        const ProgElem* const pProgElem = findProgElemAtAddr(wordAddr);
+
+        // See if the word can have a data or instruction reference
+        bool bCanHaveDataRef = false;
+        bool bCanHaveInstRef = false;
+
+        if (pProgElem == nullptr) {
+            // If the region is undefined then we try to interpret as both code AND data
+            bCanHaveDataRef = true;
+            bCanHaveInstRef = true;
+        } else {
+            switch (pProgElem->type) {
+                case ProgElemType::FUNCTION:
+                    bCanHaveInstRef = true;
+                    break;
+
+                case ProgElemType::ARRAY: {
+                    if (pProgElem->arrayElemType == ProgElemType::PTR32) {
+                        bCanHaveDataRef = true;
+                    }
+                }   break;
+
+                case ProgElemType::PTR32:
+                    bCanHaveDataRef = true;
+                    break;
+
+                // A program element type that can't reference anything
+                default: break;
+            }
+        }
+
+        // Add data references other program words.
+        // These references must be aligned references, don't detect other types of references.
+        if (bCanHaveDataRef) {
+            if (word % 4 == 0) {
+                if (word >= exeStartAddr && word < exeEndAddr) {
+                    const uint32_t referencedWordIdx = (word - baseAddress) / 4;
+                    words[referencedWordIdx].bIsDataReferenced = true;
+                }
+            }
+        }
+
+        // Add code references to other program words.
+        // Obviously code references absolutely HAVE to be aligned!
+        if (bCanHaveInstRef) {
+            CpuInstruction inst;
+
+            if (inst.decode(word)) {
+                const uint32_t thisInstAddr = baseAddress + wordIdx * 4;
+
+                if (CpuOpcodeUtils::isBranchOpcode(inst.opcode)) {
+                    // References to words via branch instructions                    
+                    const uint32_t branchTgtAddr = inst.getBranchInstTargetAddr(thisInstAddr);
+
+                    if (branchTgtAddr >= exeStartAddr && branchTgtAddr < exeEndAddr) {
+                        const uint32_t branchTgtWordIdx = (branchTgtAddr - baseAddress) / 4;
+                        words[branchTgtWordIdx].bIsBranchTarget = true;
+                    }
+                }
+                else if (CpuOpcodeUtils::isFixedJumpOpcode(inst.opcode)) {
+                    // References to words via fixed jump instructions
+                    const uint32_t jumpTgtAddr = inst.getFixedJumpInstTargetAddr(thisInstAddr);
+
+                    if (jumpTgtAddr >= exeStartAddr && jumpTgtAddr < exeEndAddr) {
+                        const uint32_t jumpTgtWordIdx = (jumpTgtAddr - baseAddress) / 4;
+                        words[jumpTgtWordIdx].bIsJumpTarget = true;
+                    }
+                }
+            }
+        }
     }
 }
