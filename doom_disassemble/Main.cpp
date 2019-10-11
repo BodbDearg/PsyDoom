@@ -1,12 +1,9 @@
+#include "DisassemblyPrinter.h"
 #include "ExeFile.h"
 #include "FatalErrors.h"
+#include "ProgElems.h"
 #include <cstdio>
-
-// TODO: TEMP - REMOVE
-#include "CpuInstruction.h"
-#include "PrintUtils.h"
-#include <sstream>
-#include <string>
+#include <fstream>
 
 //----------------------------------------------------------------------------------------------------------------------
 // Entry point for 'DoomDisassemble'
@@ -55,76 +52,22 @@ int main(int argc, char* argv[]) noexcept {
         FATAL_ERROR_F("The given PSX DOOM .EXE file '%s' does not appear to be the US/NTSC version of PSX DOOM or Final DOOM!", psxDoomExePath);
     }
 
+    // Set the program elements for the .EXE.    
     const bool bIsFinalDoom = (exe.sizeInWords == FINAL_DOOM_NUM_PROG_WORDS);
 
-    // TODO: REMOVE - TEMP TEST
-    {
-        FILE* const pFile = std::fopen("disasm_doom_disasm.txt", "w");
+    if (bIsFinalDoom) {
+        FATAL_ERROR("TODO: FINAL DOOM NOT SUPPORTED YET!");
+    } else {
+        exe.setProgElems(gProgramElems_Doom, gNumProgramElems_Doom);
+    }
 
-        if (!pFile) {
-            FATAL_ERROR_F("Can't open output file to write disassembly to!");
-        }
-
-        std::stringstream curLine;
-
-        for (uint32_t progWord = 0; progWord < exe.sizeInWords; ++progWord) {
-            curLine.str(std::string());
-
-            // Print the address of the data
-            const uint32_t addr = exe.baseAddress + progWord * 4;
-            PrintUtils::printHexU32(addr, true, curLine);
-            curLine << ":    ";
-
-            // Print the U32 value
-            const uint32_t word = exe.words[progWord].value;
-            PrintUtils::printHexU32(word, true, curLine);
-            curLine << "  ";
-
-            // Print the individual bytes in memory order (assuming little endian!)
-            const uint8_t wordByte1 = (uint8_t)((word >> 0 ) & 0xFFu);
-            const uint8_t wordByte2 = (uint8_t)((word >> 8 ) & 0xFFu);
-            const uint8_t wordByte3 = (uint8_t)((word >> 16) & 0xFFu);
-            const uint8_t wordByte4 = (uint8_t)((word >> 24) & 0xFFu);
-
-            {
-                PrintUtils::printHexU8(wordByte1, true, curLine); curLine.put(' ');
-                PrintUtils::printHexU8(wordByte2, true, curLine); curLine.put(' ');
-                PrintUtils::printHexU8(wordByte3, true, curLine); curLine.put(' ');
-                PrintUtils::printHexU8(wordByte4, true, curLine);
-            }
-
-            // Print the ascii value of each individual byte.
-            // Don't print control characters or tabs and newlines, replace them with space.
-            curLine << "  ";
-
-            {
-                curLine.put((wordByte1 >= 32 && wordByte1 <= 126) ? (char) wordByte1 : ' ');
-                curLine.put((wordByte2 >= 32 && wordByte2 <= 126) ? (char) wordByte2 : ' ');
-                curLine.put((wordByte3 >= 32 && wordByte3 <= 126) ? (char) wordByte3 : ' ');
-                curLine.put((wordByte4 >= 32 && wordByte4 <= 126) ? (char) wordByte4 : ' ');
-            }
-            
-            // Print the instruction itself
-            curLine << "      ";
-
-            CpuInstruction inst;
-            inst.decode(exe.words[progWord].value);
-
-            if (inst.isNOP()) {
-                curLine << "  nop";
-            } else {
-                if (!CpuOpcodeUtils::isBranchOrJumpOpcode(inst.opcode)) {
-                    curLine << "  ";
-                }
-
-                inst.print(addr, curLine);
-            }
-
-            std::fprintf(pFile, "%s\n", curLine.str().c_str());
-        }
-
-        std::fflush(pFile);
-        std::fclose(pFile);
+    // Start printing the disassembly
+    try {
+        std::fstream fileOut;
+        fileOut.open("disasm_doom_disasm.txt", std::fstream::out);
+        DisassemblyPrinter::printExe(exe, fileOut);
+    } catch (...) {
+        FATAL_ERROR("Failed writing the disassembly to the output file!");
     }
 
     return 0;

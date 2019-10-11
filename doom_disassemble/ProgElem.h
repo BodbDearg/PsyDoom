@@ -84,4 +84,15 @@ struct ProgElem {
     }
 
     constexpr ProgElem(const ProgElem& other) noexcept = default;
+
+    // Tells if the program element fully contains the word which starts at the given address.
+    // Will return 'true' if this is the case.
+    inline bool containsWordAtAddr(const uint32_t wordAddr) const noexcept {
+        return (wordAddr >= startAddr && wordAddr + 4 <= endAddr);
+    }
+
+    // Tells if the program element contains the byte at the given address
+    inline bool containsByteAtAddr(const uint32_t byteAddr) const noexcept {
+        return (byteAddr >= startAddr && byteAddr < endAddr);
+    }
 };

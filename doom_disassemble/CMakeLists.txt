@@ -4,6 +4,8 @@ set(SOURCE_FILES
     "CpuInstruction.cpp"
     "CpuInstruction.h"
     "CpuOpcode.h"
+    "DisassemblyPrinter.cpp"
+    "DisassemblyPrinter.h"
     "ExeFile.cpp"
     "ExeFile.h"
     "ExeWord.h"
