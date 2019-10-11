@@ -20,7 +20,7 @@ static void printProgElemName(const ProgElem& progElem, const char* const defaul
     }
 }
 
-static void printProgInstruction(const uint32_t instAddr, const uint32_t instWord, std::ostream& out) noexcept {
+static void printProgInstruction(const ExeFile& exe, const uint32_t instAddr, const uint32_t instWord, std::ostream& out) noexcept {
     // Firstly decode the instruction
     CpuInstruction inst;
     inst.decode(instWord);
@@ -36,7 +36,7 @@ static void printProgInstruction(const uint32_t instAddr, const uint32_t instWor
             out << "  ";
         }
 
-        inst.print(instAddr, out);
+        inst.print(exe, instAddr, out);
     }
 }
 
@@ -45,10 +45,10 @@ static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ost
     out << ";-----------------------------------------------------------------------------------------------------------------------\n";
     out << "; FUNC: ";
     printProgElemName(progElem, "unnamed_func_", out);
-    out << " (";
+    out << "    (";
     PrintUtils::printHexU32(progElem.startAddr, true, out);
     out.put('-');
-    PrintUtils::printHexU32(progElem.endAddr, true, out);
+    PrintUtils::printHexU32(progElem.endAddr - 1, true, out);
     out << ")\n";
     out << ";-----------------------------------------------------------------------------------------------------------------------\n";
 
@@ -73,7 +73,7 @@ static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ost
         printAddressForLine(instAddr , out);
 
         const uint32_t instWord = exe.words[wordIdx].value;
-        printProgInstruction(instAddr, instWord, out);
+        printProgInstruction(exe, instAddr, instWord, out);
         out.put('\n');
     }
 
@@ -118,7 +118,7 @@ static void printUncategorizedProgramRegion(
     out << "; -- UNCATEGORIZED REGION: ";
     PrintUtils::printHexU32(exe.baseAddress + startByteIdx, true, out);
     out.put('-');
-    PrintUtils::printHexU32(exe.baseAddress + endByteIdx, true, out);
+    PrintUtils::printHexU32(exe.baseAddress + endByteIdx - 1, true, out);
     out.put('\n');
 
     // Continue until the entire region is done
@@ -168,7 +168,7 @@ static void printUncategorizedProgramRegion(
         // Lastly, if we have 4 bytes then try to decode a program instruction and then move onto a new line
         if (numBytesToPrint == 4) {
             out << "      ";
-            printProgInstruction(exe.baseAddress + curByteIdx, programWord, out);
+            printProgInstruction(exe, exe.baseAddress + curByteIdx, programWord, out);
         }
 
         out.put('\n');

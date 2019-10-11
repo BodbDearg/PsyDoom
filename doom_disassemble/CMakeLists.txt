@@ -14,6 +14,7 @@ set(SOURCE_FILES
     "Main.cpp"
     "PrintUtils.cpp"
     "PrintUtils.h"
+    "ProgElem.cpp"
     "ProgElem.h"
     "ProgElems.h"
     "ProgElems_Doom.cpp"

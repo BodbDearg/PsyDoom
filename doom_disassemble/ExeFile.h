@@ -3,6 +3,7 @@
 #include "ExeWord.h"
 #include "ProgElem.h"
 #include <memory>
+#include <ostream>
 #include <vector>
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -38,5 +39,9 @@ struct ExeFile {
 
     // Try and find a program element at the given address.
     // Returns 'nullptr' if none found.
-    const ProgElem* findProgElemAtAddr(const uint32_t addr) noexcept;
+    const ProgElem* findProgElemAtAddr(const uint32_t addr) const noexcept;
+
+    // Print the name of the element at the address.
+    // Just prints the raw hex address if there is no such element.
+    void printNameOfElemAtAddr(const uint32_t addr, std::ostream& out) const noexcept;
 };

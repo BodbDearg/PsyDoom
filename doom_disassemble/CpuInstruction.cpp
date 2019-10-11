@@ -1,6 +1,7 @@
 #include "CpuInstruction.h"
 
 #include "CpuGpr.h"
+#include "ExeFile.h"
 #include "PrintUtils.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -940,7 +941,7 @@ uint32_t CpuInstruction::getFixedJumpInstTargetAddr(const uint32_t thisInstAddr)
     return baseAddr + offset;
 }
 
-void CpuInstruction::print(const uint32_t thisInstAddr, std::ostream& out) const noexcept {
+void CpuInstruction::print(const ExeFile& exe, const uint32_t thisInstAddr, std::ostream& out) const noexcept {
     // Easy case: handling illegal instructions
     if (isIllegal()) {
         out << "<ILLEGAL INSTRUCTION>";
@@ -1067,14 +1068,14 @@ void CpuInstruction::print(const uint32_t thisInstAddr, std::ostream& out) const
         case CpuOpcode::J:
         case CpuOpcode::JAL:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out.put(' ');
-            PrintUtils::printHexU32(getFixedJumpInstTargetAddr(thisInstAddr), false, out);
+            out << " -> ";
+            exe.printNameOfElemAtAddr(getFixedJumpInstTargetAddr(thisInstAddr), out);
             break;
 
         case CpuOpcode::JALR:
         case CpuOpcode::JR:
             out << CpuOpcodeUtils::getMnemonic(opcode);
-            out.put(' ');
+            out << " -> ";
             out << CpuGpr::getName(regS);
             break;
 

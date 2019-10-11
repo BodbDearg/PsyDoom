@@ -1,6 +1,7 @@
 #include "ExeFile.h"
 
 #include "FatalErrors.h"
+#include "PrintUtils.h"
 #include <algorithm>
 #include <cstdio>
 
@@ -204,7 +205,7 @@ void ExeFile::setProgElems(const ProgElem* const pElems, const uint32_t numElems
     );
 }
 
-const ProgElem* ExeFile::findProgElemAtAddr(const uint32_t addr) noexcept {
+const ProgElem* ExeFile::findProgElemAtAddr(const uint32_t addr) const noexcept {
     auto iter = std::lower_bound(
         progElems.begin(),
         progElems.end(),
@@ -223,4 +224,14 @@ const ProgElem* ExeFile::findProgElemAtAddr(const uint32_t addr) noexcept {
     }
     
     return nullptr;
+}
+
+void ExeFile::printNameOfElemAtAddr(const uint32_t addr, std::ostream& out) const noexcept {
+    const ProgElem* const pElem = findProgElemAtAddr(addr);
+
+    if (pElem) {
+        pElem->printNameAtAddr(addr, out);
+    } else {
+        PrintUtils::printHexU32(addr, true, out);
+    }
 }

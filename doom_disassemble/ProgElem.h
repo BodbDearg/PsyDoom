@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ostream>
 
 //----------------------------------------------------------------------------------------------------------------------
 // Data structures that hold manually identified elements of the program.
@@ -20,23 +21,7 @@ enum class ProgElemType : uint8_t {
     PTR32
 };
 
-inline uint32_t getProgElemTypeSize(const ProgElemType type) noexcept {
-    switch (type) {
-        case ProgElemType::FUNCTION:    return 0;   // N/A, depends on size of element memory region
-        case ProgElemType::INT32:       return 4;
-        case ProgElemType::UINT32:      return 4;
-        case ProgElemType::INT16:       return 2;
-        case ProgElemType::UINT16:      return 2;
-        case ProgElemType::INT8:        return 1;
-        case ProgElemType::UINT8:       return 1;
-        case ProgElemType::BOOL8:       return 1;
-        case ProgElemType::CHAR8:       return 1;
-        case ProgElemType::ARRAY:       return 0;   // N/A, depends on size of element memory region
-        case ProgElemType::PTR32:       return 4;
-    }
-
-    return 0;
-}
+uint32_t getProgElemTypeSize(const ProgElemType type) noexcept;
 
 struct ProgElem {
     uint32_t        startAddr;          // Where the element starts in the program (inclusive)
@@ -95,4 +80,8 @@ struct ProgElem {
     inline bool containsByteAtAddr(const uint32_t byteAddr) const noexcept {
         return (byteAddr >= startAddr && byteAddr < endAddr);
     }
+
+    // Print the name of the program element at the given address.
+    // For some element types the address will be ignored, whereas for things like arrays it can be used to compute the element number.
+    void printNameAtAddr(const uint32_t addr, std::ostream& out) const noexcept;
 };
