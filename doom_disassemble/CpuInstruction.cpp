@@ -10,7 +10,7 @@ static void printInstGprOutGprInGprIn(
     const CpuInstruction& ins,    
     const uint8_t in1Gpr,
     const uint8_t in2Gpr,
-    std::stringstream& out
+    std::ostream& out
 ) noexcept {
     const uint8_t destGpr = ins.getDestGprIdx();
     out << CpuGpr::getName(destGpr);
@@ -29,7 +29,7 @@ static void printInstGprOutGprInI16In(
     const CpuInstruction& ins,
     const uint8_t in1Gpr,
     const int16_t in2I16,
-    std::stringstream& out
+    std::ostream& out
 ) noexcept {
     const uint8_t destGpr = ins.getDestGprIdx();
     out << CpuGpr::getName(destGpr);
@@ -48,7 +48,7 @@ static void printInstGprOutGprInU16In(
     const CpuInstruction& ins,
     const uint8_t in1Gpr,
     const uint16_t in2U16,
-    std::stringstream& out
+    std::ostream& out
 ) noexcept {
     const uint8_t destGpr = ins.getDestGprIdx();
     out << CpuGpr::getName(destGpr);
@@ -60,7 +60,7 @@ static void printInstGprOutGprInU16In(
     PrintUtils::printHexI16(in2U16, false, out);
 }
 
-static void printI16HexOffsetForInst(const int16_t offset, std::stringstream& out) noexcept {
+static void printI16HexOffsetForInst(const int16_t offset, std::ostream& out) noexcept {
     // Note: don't print the offset when it is zero
     if (offset > 0) {
         out << " + ";
@@ -940,7 +940,7 @@ uint32_t CpuInstruction::getFixedJumpInstTargetAddr(const uint32_t thisInstAddr)
     return baseAddr + offset;
 }
 
-void CpuInstruction::print(const uint32_t thisInstAddr, std::stringstream& out) const noexcept {
+void CpuInstruction::print(const uint32_t thisInstAddr, std::ostream& out) const noexcept {
     // Easy case: handling illegal instructions
     if (isIllegal()) {
         out << "<ILLEGAL INSTRUCTION>";

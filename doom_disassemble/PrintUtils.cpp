@@ -1,6 +1,6 @@
 #include "PrintUtils.h"
 
-void PrintUtils::printHexDigit(const uint8_t nibble, std::stringstream& out) noexcept {
+void PrintUtils::printHexDigit(const uint8_t nibble, std::ostream& out) noexcept {
     const uint8_t nibble4Bit = nibble & 0x0Fu;
 
     if (nibble4Bit < 10) {
@@ -10,7 +10,7 @@ void PrintUtils::printHexDigit(const uint8_t nibble, std::stringstream& out) noe
     }
 }
 
-void PrintUtils::printHexU8(const uint8_t valU16, const bool bZeroPad, std::stringstream& out) noexcept {
+void PrintUtils::printHexU8(const uint8_t valU16, const bool bZeroPad, std::ostream& out) noexcept {
     // First chop off any leading '0' if not zero padding
     int16_t curShift = 8;
 
@@ -34,7 +34,7 @@ void PrintUtils::printHexU8(const uint8_t valU16, const bool bZeroPad, std::stri
     }
 }
 
-void PrintUtils::printHexI16(const int16_t valI16, const bool bZeroPad, std::stringstream& out) noexcept {
+void PrintUtils::printHexI16(const int16_t valI16, const bool bZeroPad, std::ostream& out) noexcept {
     // Add in the negative sign and get the absolute value to print
     const int32_t valI32 = valI16;
     const uint32_t valAbs = std::abs(valI32);
@@ -66,7 +66,7 @@ void PrintUtils::printHexI16(const int16_t valI16, const bool bZeroPad, std::str
     }
 }
 
-void PrintUtils::printHexU16(const uint16_t valU16, const bool bZeroPad, std::stringstream& out) noexcept {
+void PrintUtils::printHexU16(const uint16_t valU16, const bool bZeroPad, std::ostream& out) noexcept {
     // First chop off any leading '0' if not zero padding
     int16_t curShift = 16;
 
@@ -90,7 +90,7 @@ void PrintUtils::printHexU16(const uint16_t valU16, const bool bZeroPad, std::st
     }
 }
 
-void PrintUtils::printHexU32(const uint32_t valU32, const bool bZeroPad, std::stringstream& out) noexcept {
+void PrintUtils::printHexU32(const uint32_t valU32, const bool bZeroPad, std::ostream& out) noexcept {
     // First chop off any leading '0' if not zero padding
     int16_t curShift = 32;
 

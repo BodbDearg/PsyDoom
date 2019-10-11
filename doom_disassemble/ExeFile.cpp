@@ -190,12 +190,16 @@ void ExeFile::setProgElems(const ProgElem* const pElems, const uint32_t numElems
     progElems.resize(numElems);
     std::memcpy(progElems.data(), pElems, sizeof(ProgElem) * numElems);
 
-    // Sort by start address
+    // Sort by start address, then by end address
     std::sort(
         progElems.begin(),
         progElems.end(),
         [](const ProgElem& elem1, const ProgElem& elem2) noexcept {
-            return (elem1.startAddr < elem2.startAddr);
+            if (elem1.startAddr != elem2.startAddr) {
+                return (elem1.startAddr < elem2.startAddr);
+            }
+
+            return (elem1.endAddr < elem2.endAddr);
         }
     );
 }
