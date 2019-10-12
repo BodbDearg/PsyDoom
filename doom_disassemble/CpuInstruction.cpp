@@ -973,12 +973,12 @@ void CpuInstruction::print(const ExeFile& exe, const uint32_t thisInstAddr, std:
 
         // REG_OUT = OPERATION(regS, (int16_t) immVal)
         case CpuOpcode::ADDI:
+        case CpuOpcode::ADDIU:
         case CpuOpcode::SLTI:
             printInstGprOutGprInI16In(*this, regS, (int16_t) immediateVal, out);
             break;
 
         // REG_OUT = OPERATION(regS, (uint16_t) immVal)
-        case CpuOpcode::ADDIU:
         case CpuOpcode::ANDI:
         case CpuOpcode::ORI:
         case CpuOpcode::SLTIU:
