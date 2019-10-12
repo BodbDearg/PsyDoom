@@ -258,7 +258,7 @@ static bool decodeMainOpcode0Ins(CpuInstruction& ins, const uint32_t machineCode
             return true;
 
         case 0b001001:  // JALR     SSSSS ----- DDDDD ----- 001001
-            ins.opcode = CpuOpcode::JR;
+            ins.opcode = CpuOpcode::JALR;
             ins.regS = decodedRegS;
             ins.regD = decodedRegD;
             return true;
@@ -824,6 +824,7 @@ uint8_t CpuInstruction::getDestGprIdx() const noexcept {
         case CpuOpcode::AND:        return regD;
         case CpuOpcode::ANDI:       return regT;
         case CpuOpcode::CFC2:       return regT;
+        case CpuOpcode::JALR:       return regD;
         case CpuOpcode::LB:         return regT;
         case CpuOpcode::LBU:        return regT;
         case CpuOpcode::LH:         return regT;
@@ -1072,7 +1073,19 @@ void CpuInstruction::print(const ExeFile& exe, const uint32_t thisInstAddr, std:
             exe.printNameOfElemAtAddr(getFixedJumpInstTargetAddr(thisInstAddr), out);
             break;
 
-        case CpuOpcode::JALR:
+        case CpuOpcode::JALR: {
+            // Only show the destination register if it's not the '$ra' (return address) register.
+            // This cuts down on visual noise when reading the disassembly:
+            if (getDestGprIdx() != CpuGpr::RA) {
+                out << CpuGpr::getName(getDestGprIdx());
+                out << " = ";
+            }
+
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << " -> ";
+            out << CpuGpr::getName(regS);
+        }   break;
+
         case CpuOpcode::JR:
             out << CpuOpcodeUtils::getMnemonic(opcode);
             out << " -> ";

@@ -39,6 +39,7 @@ static const ProgElem ELEMS[] = {
     { 0x8002BF2C, 0x8002C07C, "",                                   ProgElemType::FUNCTION }, // TODO (stuck on referenced func 8004C438)
     { 0x800305B0, 0x80030634, "",                                   ProgElemType::FUNCTION },
     { 0x80030F5C, 0x80031088, "",                                   ProgElemType::FUNCTION },
+    { 0x800310C8, 0x80031394, "",                                   ProgElemType::FUNCTION },
     { 0x80031394, 0x800314A4, "",                                   ProgElemType::FUNCTION },
     { 0x80031558, 0x80031648, "",                                   ProgElemType::FUNCTION },
     { 0x80031648, 0x80031698, "",                                   ProgElemType::FUNCTION },
@@ -63,9 +64,10 @@ static const ProgElem ELEMS[] = {
     { 0x80032770, 0x80032838, "",                                   ProgElemType::FUNCTION },
     { 0x80032904, 0x8003290C, "empty_func3",                        ProgElemType::FUNCTION },
     { 0x8003290C, 0x80032934, "",                                   ProgElemType::FUNCTION },
-    { 0x80032934, 0x80032B0C, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80032B0C, 0x80032BB8, "MAYBE_err_func_no_return",           ProgElemType::FUNCTION }, // TODO
+    { 0x80032934, 0x80032B0C, "",                                   ProgElemType::FUNCTION }, // TODO: confused by referenced call '80058534'
+    { 0x80032B0C, 0x80032BB8, "MAYBE_err_func_no_return",           ProgElemType::FUNCTION }, // TODO: confused by referenced call '8004F6AC'
     { 0x800332E0, 0x800333D8, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x800333F0, 0x8003350C, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x8003352C, 0x80033578, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x8003397C, 0x80033AC4, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x80034CB8, 0x80034D14, "",                                   ProgElemType::FUNCTION }, // TODO
@@ -93,22 +95,37 @@ static const ProgElem ELEMS[] = {
     { 0x80049E2C, 0x80049E3C, "LIBAPI_TestEvent",                   ProgElemType::FUNCTION },
     { 0x80049E3C, 0x80049E4C, "LIBAPI_ExitCriticalSection",         ProgElemType::FUNCTION },
     { 0x80049E4C, 0x80049E5C, "LIBAPI_open",                        ProgElemType::FUNCTION },
-    { 0x8004A7AC, 0x8004A7DC, "",                                   ProgElemType::FUNCTION }, // Odd, calls '8004A8E4' via a function ptr at 80075B78[C]. Looks like it leaks stack space by 24 bytes - compiler bug?!
+    { 0x8004A7AC, 0x8004A7DC, "",                                   ProgElemType::FUNCTION },
+    { 0x8004A8E4, 0x8004A9A4, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x8004A8E4, 0x8004A9A4, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x8004AD40, 0x8004AD50, "LIBAPI_HookEntryInt",                ProgElemType::FUNCTION },
     { 0x8004AD50, 0x8004AD60, "LIBAPI_ResetEntryInt",               ProgElemType::FUNCTION },
     { 0x8004AD60, 0x8004AD70, "LIBAPI_ChangeClearRCnt",             ProgElemType::FUNCTION },
     { 0x8004AD80, 0x8004AD90, "LIBAPI_ReturnFromException",         ProgElemType::FUNCTION },
-    { 0x8004BCC8, 0x8004BEF0, "",                                   ProgElemType::FUNCTION }, // TODO (lots of fn ptrs called, do they leak stack space?)
+    { 0x8004AD90, 0x8004ADD0, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x8004BCC8, 0x8004BEF0, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x8004C004, 0x8004C070, "",                                   ProgElemType::FUNCTION },
+    { 0x8004C198, 0x8004C210, "",                                   ProgElemType::FUNCTION },
+    { 0x8004C210, 0x8004C27C, "",                                   ProgElemType::FUNCTION },
     { 0x8004E8B0, 0x8004E8C0, "LIBAPI_GPU_cw",                      ProgElemType::FUNCTION },
     { 0x8004E9F0, 0x8004EA08, "",                                   ProgElemType::FUNCTION },
+    { 0x8004F09C, 0x8004F0DC, "",                                   ProgElemType::FUNCTION },
+    { 0x8004F0DC, 0x8004F180, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x8004F180, 0x8004F44C, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x8004F44C, 0x8004F6AC, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x8004FC28, 0x8004FCB8, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x8004FCB8, 0x8004FCF4, "",                                   ProgElemType::FUNCTION },
     { 0x80050100, 0x80050130, "",                                   ProgElemType::FUNCTION },
     { 0x80050190, 0x800501B4, "",                                   ProgElemType::FUNCTION },
+    { 0x800502EC, 0x80050304, "",                                   ProgElemType::FUNCTION },
+    { 0x80050304, 0x80050310, "",                                   ProgElemType::FUNCTION },
+    { 0x80050334, 0x800503B4, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x80050714, 0x800507AC, "main",                               ProgElemType::FUNCTION },
-    { 0x800507AC, 0x8005081C, "",                                   ProgElemType::FUNCTION },   // TODO: figure out func ptr jump
+    { 0x800507AC, 0x8005081C, "",                                   ProgElemType::FUNCTION }, // TODO: figure out func ptr jump
     { 0x80050884, 0x80050894, "LIBAPI_InitHeap",                    ProgElemType::FUNCTION },
     { 0x80053D48, 0x80053D58, "LIBAPI_DeliverEvent",                ProgElemType::FUNCTION },
     { 0x80054324, 0x80054334, "LIBAPI_WaitEvent",                   ProgElemType::FUNCTION },
+    { 0x800580B4, 0x800580E0, "",                                   ProgElemType::FUNCTION },
     { 0x80058A18, 0x80058A28, "LIBAPI_SysEnqIntRP",                 ProgElemType::FUNCTION },
     { 0x80058A28, 0x80058A38, "LIBAPI_AddDrv",                      ProgElemType::FUNCTION },
     { 0x80058A38, 0x80058A48, "LIBAPI_DelDrv",                      ProgElemType::FUNCTION },
