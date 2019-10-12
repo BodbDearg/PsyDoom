@@ -30,17 +30,28 @@ static const ProgElem ELEMS[] = {
     { 0x80022B58, 0x80022E68, "",                                   ProgElemType::FUNCTION },
     { 0x800230D4, 0x80023700, "",                                   ProgElemType::FUNCTION }, // TODO: appears to be referenced by func ptrs
     { 0x80028C68, 0x80028C74, "",                                   ProgElemType::FUNCTION },
-    { 0x8002BDA4, 0x8002BE68, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x8002BE68, 0x8002BF2C, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x800305B0, 0x80030634, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x8002B9A8, 0x8002B9E0, "",                                   ProgElemType::FUNCTION },
+    { 0x8002B9E0, 0x8002BB50, "",                                   ProgElemType::FUNCTION },
+    { 0x8002BB50, 0x8002BC54, "",                                   ProgElemType::FUNCTION },
+    { 0x8002BC54, 0x8002BDA4, "",                                   ProgElemType::FUNCTION },
+    { 0x8002BDA4, 0x8002BE68, "",                                   ProgElemType::FUNCTION },
+    { 0x8002BE68, 0x8002BF2C, "",                                   ProgElemType::FUNCTION },
+    { 0x8002BF2C, 0x8002C07C, "",                                   ProgElemType::FUNCTION }, // TODO (stuck on referenced func 8004C438)
+    { 0x800305B0, 0x80030634, "",                                   ProgElemType::FUNCTION },
     { 0x80030F5C, 0x80031088, "",                                   ProgElemType::FUNCTION },
-    { 0x80031394, 0x800314A4, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x80031394, 0x800314A4, "",                                   ProgElemType::FUNCTION },
+    { 0x80031558, 0x80031648, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x80031648, 0x80031698, "",                                   ProgElemType::FUNCTION },
+    { 0x800317AC, 0x800319E4, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x800319E4, 0x80031B04, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x80031B04, 0x80031BD4, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x80031BD4, 0x80031C24, "",                                   ProgElemType::FUNCTION },
     { 0x80031C24, 0x80031CE0, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x80031CE0, 0x80031D90, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x80031EB4, 0x80031EDC, "",                                   ProgElemType::FUNCTION },
     { 0x80031EDC, 0x80031FD8, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x80031FD8, 0x80032024, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x80032024, 0x8003206C, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x8003206C, 0x80032144, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x80032144, 0x8003219C, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x800321D0, 0x800323C8, "",                                   ProgElemType::FUNCTION }, // TODO
@@ -79,6 +90,9 @@ static const ProgElem ELEMS[] = {
     { 0x8004AD60, 0x8004AD70, "LIBAPI_ChangeClearRCnt",             ProgElemType::FUNCTION },
     { 0x8004AD80, 0x8004AD90, "LIBAPI_ReturnFromException",         ProgElemType::FUNCTION },
     { 0x8004E8B0, 0x8004E8C0, "LIBAPI_GPU_cw",                      ProgElemType::FUNCTION },
+    { 0x8004E9F0, 0x8004EA08, "",                                   ProgElemType::FUNCTION },
+    { 0x80050100, 0x80050130, "",                                   ProgElemType::FUNCTION },
+    { 0x80050190, 0x800501B4, "",                                   ProgElemType::FUNCTION },
     { 0x80050714, 0x800507AC, "main",                               ProgElemType::FUNCTION },
     { 0x800507AC, 0x8005081C, "",                                   ProgElemType::FUNCTION },   // TODO: figure out func ptr jump
     { 0x80050884, 0x80050894, "LIBAPI_InitHeap",                    ProgElemType::FUNCTION },

@@ -58,7 +58,7 @@ static void printInstGprOutGprInU16In(
     out.put(' ');
     out << CpuGpr::getName(in1Gpr);
     out << ", ";
-    PrintUtils::printHexI16(in2U16, false, out);
+    PrintUtils::printHexU16(in2U16, false, out);
 }
 
 static void printI16HexOffsetForInst(const int16_t offset, std::ostream& out) noexcept {
