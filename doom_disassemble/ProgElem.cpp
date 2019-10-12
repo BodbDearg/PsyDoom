@@ -90,16 +90,16 @@ uint32_t getProgElemTypeSize(const ProgElemType type) noexcept {
 
 void ProgElem::printNameAtAddr(const uint32_t addr, std::ostream& out) const noexcept {
     switch (type) {
-        case ProgElemType::FUNCTION:    printProgElemNameAtAddr(*this, addr, "unnamed_func_", out);     break;
-        case ProgElemType::INT32:       printProgElemNameAtAddr(*this, addr, "unnamed_i32_", out);      break;
-        case ProgElemType::UINT32:      printProgElemNameAtAddr(*this, addr, "unnamed_u32_", out);      break;
-        case ProgElemType::INT16:       printProgElemNameAtAddr(*this, addr, "unnamed_i16_", out);      break;
-        case ProgElemType::UINT16:      printProgElemNameAtAddr(*this, addr, "unnamed_u16_", out);      break;
-        case ProgElemType::INT8:        printProgElemNameAtAddr(*this, addr, "unnamed_i8_", out);       break;
-        case ProgElemType::UINT8:       printProgElemNameAtAddr(*this, addr, "unnamed_u8_", out);       break;
-        case ProgElemType::BOOL8:       printProgElemNameAtAddr(*this, addr, "unnamed_bool8_", out);    break;
-        case ProgElemType::CHAR8:       printProgElemNameAtAddr(*this, addr, "unnamed_char8_", out);    break;
-        case ProgElemType::PTR32:       printProgElemNameAtAddr(*this, addr, "unnamed_pt32_", out);     break;
+        case ProgElemType::FUNCTION:    printProgElemNameAtAddr(*this, addr, "UNNAMED_func_", out);     break;
+        case ProgElemType::INT32:       printProgElemNameAtAddr(*this, addr, "UNNAMED_i32_", out);      break;
+        case ProgElemType::UINT32:      printProgElemNameAtAddr(*this, addr, "UNNAMED_u32_", out);      break;
+        case ProgElemType::INT16:       printProgElemNameAtAddr(*this, addr, "UNNAMED_i16_", out);      break;
+        case ProgElemType::UINT16:      printProgElemNameAtAddr(*this, addr, "UNNAMED_u16_", out);      break;
+        case ProgElemType::INT8:        printProgElemNameAtAddr(*this, addr, "UNNAMED_i8_", out);       break;
+        case ProgElemType::UINT8:       printProgElemNameAtAddr(*this, addr, "UNNAMED_u8_", out);       break;
+        case ProgElemType::BOOL8:       printProgElemNameAtAddr(*this, addr, "UNNAMED_bool8_", out);    break;
+        case ProgElemType::CHAR8:       printProgElemNameAtAddr(*this, addr, "UNNAMED_char8_", out);    break;
+        case ProgElemType::PTR32:       printProgElemNameAtAddr(*this, addr, "UNNAMED_pt32_", out);     break;
 
         case ProgElemType::ARRAY: {
             switch (arrayElemType) {
@@ -110,15 +110,15 @@ void ProgElem::printNameAtAddr(const uint32_t addr, std::ostream& out) const noe
                     printProgElemNameAtAddr(*this, addr, "unnamed_array_INVALID_TYPE_", out);
                     break;
 
-                case ProgElemType::INT32:   printArrayProgElemNameAtAddr(*this, addr, "unnamed_array_i32_", out);    break;
-                case ProgElemType::UINT32:  printArrayProgElemNameAtAddr(*this, addr, "unnamed_array_u32_", out);    break;
-                case ProgElemType::INT16:   printArrayProgElemNameAtAddr(*this, addr, "unnamed_array_i16_", out);    break;
-                case ProgElemType::UINT16:  printArrayProgElemNameAtAddr(*this, addr, "unnamed_array_u16_", out);    break;
-                case ProgElemType::INT8:    printArrayProgElemNameAtAddr(*this, addr, "unnamed_array_i8_", out);     break;
-                case ProgElemType::UINT8:   printArrayProgElemNameAtAddr(*this, addr, "unnamed_array_u8_", out);     break;
-                case ProgElemType::BOOL8:   printArrayProgElemNameAtAddr(*this, addr, "unnamed_array_bool8_", out);  break;
-                case ProgElemType::CHAR8:   printArrayProgElemNameAtAddr(*this, addr, "unnamed_string_", out);       break;
-                case ProgElemType::PTR32:   printArrayProgElemNameAtAddr(*this, addr, "unnamed_array_pt32_", out);   break;
+                case ProgElemType::INT32:   printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_array_i32_", out);    break;
+                case ProgElemType::UINT32:  printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_array_u32_", out);    break;
+                case ProgElemType::INT16:   printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_array_i16_", out);    break;
+                case ProgElemType::UINT16:  printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_array_u16_", out);    break;
+                case ProgElemType::INT8:    printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_array_i8_", out);     break;
+                case ProgElemType::UINT8:   printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_array_u8_", out);     break;
+                case ProgElemType::BOOL8:   printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_array_bool8_", out);  break;
+                case ProgElemType::CHAR8:   printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_string_", out);       break;
+                case ProgElemType::PTR32:   printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_array_pt32_", out);   break;
             }
 
         }   break;
