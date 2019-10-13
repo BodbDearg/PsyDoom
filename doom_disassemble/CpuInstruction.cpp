@@ -74,6 +74,22 @@ static void printI16HexOffsetForInst(const int16_t offset, std::ostream& out) no
     }
 }
 
+static bool isBranchInternalToFunc(
+    const CpuInstruction& branchInst,
+    const uint32_t branchInstAddr,
+    const ProgElem* const pFunc
+) noexcept {
+    if (pFunc) {
+        const uint32_t targetAddr = branchInst.getBranchInstTargetAddr(branchInstAddr);
+
+        if (targetAddr >= pFunc->startAddr && targetAddr < pFunc->endAddr) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // === MASTER DECODING CHEAT SHEET ===
 //
@@ -942,7 +958,12 @@ uint32_t CpuInstruction::getFixedJumpInstTargetAddr(const uint32_t thisInstAddr)
     return baseAddr + offset;
 }
 
-void CpuInstruction::print(const ExeFile& exe, const uint32_t thisInstAddr, std::ostream& out) const noexcept {
+void CpuInstruction::print(
+    const ExeFile& exe,
+    const uint32_t thisInstAddr,
+    const ProgElem* const pParentFunc,
+    std::ostream& out
+) const noexcept {
     // Easy case: handling illegal instructions
     if (isIllegal()) {
         out << "<ILLEGAL INSTRUCTION>";
@@ -1013,6 +1034,11 @@ void CpuInstruction::print(const ExeFile& exe, const uint32_t thisInstAddr, std:
             out << CpuGpr::getName(regT);
             out << ", ";
             PrintUtils::printHexU32(getBranchInstTargetAddr(thisInstAddr), false, out);
+
+            if (isBranchInternalToFunc(*this, thisInstAddr, pParentFunc)) {
+                out << " (I)";
+            }
+
             break;
         
         case CpuOpcode::BGEZ:
@@ -1026,6 +1052,11 @@ void CpuInstruction::print(const ExeFile& exe, const uint32_t thisInstAddr, std:
             out << CpuGpr::getName(regS);
             out << ", ";
             PrintUtils::printHexU32(getBranchInstTargetAddr(thisInstAddr), false, out);
+
+            if (isBranchInternalToFunc(*this, thisInstAddr, pParentFunc)) {
+                out << " (I)";
+            }
+
             break;
 
         case CpuOpcode::BREAK:
@@ -1066,7 +1097,27 @@ void CpuInstruction::print(const ExeFile& exe, const uint32_t thisInstAddr, std:
             out << CpuGpr::getName(regT);
             break;
 
-        case CpuOpcode::J:
+        case CpuOpcode::J: {
+            // For a jump instruction, if it is inside the same parent function then just show the address followed by (I).
+            // The (I) indicates to the reader that it's a jump to inside the same function.
+            const uint32_t targetAddr = getFixedJumpInstTargetAddr(thisInstAddr);
+            const bool bIsJumpInsideParentFunc = (
+                pParentFunc &&
+                (targetAddr >= pParentFunc->startAddr) &&
+                (targetAddr < pParentFunc->endAddr)
+            );
+
+            out << CpuOpcodeUtils::getMnemonic(opcode);
+            out << " -> ";
+
+            if (bIsJumpInsideParentFunc) {
+                PrintUtils::printHexU32(targetAddr, false, out);
+                out << " (I)";
+            } else {
+                exe.printNameOfElemAtAddr(getFixedJumpInstTargetAddr(thisInstAddr), out);
+            }
+        } break;
+
         case CpuOpcode::JAL:
             out << CpuOpcodeUtils::getMnemonic(opcode);
             out << " -> ";
@@ -1074,7 +1125,7 @@ void CpuInstruction::print(const ExeFile& exe, const uint32_t thisInstAddr, std:
             break;
 
         case CpuOpcode::JALR: {
-            // Only show the destination register if it's not the '$ra' (return address) register.
+            // Only show the destination register if it's not the usual '$ra' (return address) register.
             // This cuts down on visual noise when reading the disassembly:
             if (getDestGprIdx() != CpuGpr::RA) {
                 out << CpuGpr::getName(getDestGprIdx());

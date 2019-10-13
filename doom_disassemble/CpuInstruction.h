@@ -4,6 +4,7 @@
 #include <ostream>
 
 struct ExeFile;
+struct ProgElem;
 
 //----------------------------------------------------------------------------------------------------------------------
 // Represents a decoded MIPS instruction
@@ -65,5 +66,10 @@ struct CpuInstruction {
 
     // Print the instruction to the given string buffer.
     // The instruction must be given it's address in the program in order to print (for relative jumps etc.)
-    void print(const ExeFile& exe, const uint32_t thisInstAddr, std::ostream& out) const noexcept;
+    void print(
+        const ExeFile& exe,
+        const uint32_t thisInstAddr,
+        const ProgElem* const pParentFunc,
+        std::ostream& out
+    ) const noexcept;
 };

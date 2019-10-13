@@ -60,7 +60,7 @@ static void printProgElemName(const ProgElem& progElem, const char* const defaul
     }
 }
 
-static void printProgInstruction(const ExeFile& exe, const uint32_t instAddr, const uint32_t instWord, std::ostream& out) noexcept {
+static void printProgInstruction(const ExeFile& exe, const ProgElem* const pParentFunc, const uint32_t instAddr, const uint32_t instWord, std::ostream& out) noexcept {
     // Firstly decode the instruction
     CpuInstruction inst;
     inst.decode(instWord);
@@ -76,7 +76,7 @@ static void printProgInstruction(const ExeFile& exe, const uint32_t instAddr, co
             out << "  ";
         }
 
-        inst.print(exe, instAddr, out);
+        inst.print(exe, instAddr, pParentFunc, out);
     }
 }
 
@@ -117,7 +117,7 @@ static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ost
         printProgWordReferences(exeWord, &progElem, out);
 
         // Print the instruction itself
-        printProgInstruction(exe, instAddr, exeWord.value, out);
+        printProgInstruction(exe, &progElem, instAddr, exeWord.value, out);
         out.put('\n');
     }
 
@@ -218,7 +218,7 @@ static void printUncategorizedProgramRegion(
         // Lastly, if we have 4 bytes then try to decode a program instruction and then move onto a new line
         if (numBytesToPrint == 4) {
             out << "      ";
-            printProgInstruction(exe, exe.baseAddress + curByteIdx, exeWord.value, out);
+            printProgInstruction(exe, nullptr, exe.baseAddress + curByteIdx, exeWord.value, out);
         }
 
         out.put('\n');
