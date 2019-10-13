@@ -15,6 +15,7 @@ static const ProgElem ELEMS[] = {
     { 0x80012B78, 0x80012BD8, "",                                   ProgElemType::FUNCTION }, // TODO: figure out func ptr jump
     { 0x80012E04, 0x80012F00, "",                                   ProgElemType::FUNCTION },
     { 0x80013394, 0x80013528, "",                                   ProgElemType::FUNCTION },
+    { 0x80013528, 0x80013714, "",                                   ProgElemType::FUNCTION },
     { 0x80013714, 0x80013838, "",                                   ProgElemType::FUNCTION },
     { 0x80013838, 0x80013840, "empty_func1",                        ProgElemType::FUNCTION },
     { 0x80014E54, 0x80014EBC, "",                                   ProgElemType::FUNCTION },
@@ -66,6 +67,8 @@ static const ProgElem ELEMS[] = {
     { 0x8003290C, 0x80032934, "",                                   ProgElemType::FUNCTION },
     { 0x80032934, 0x80032B0C, "",                                   ProgElemType::FUNCTION }, // TODO: confused by referenced call '80058534'
     { 0x80032B0C, 0x80032BB8, "MAYBE_err_func_no_return",           ProgElemType::FUNCTION }, // TODO: confused by referenced call '8004F6AC'
+    { 0x80032BF4, 0x80032D04, "",                                   ProgElemType::FUNCTION },
+    { 0x80032D04, 0x80032D84, "",                                   ProgElemType::FUNCTION },
     { 0x80032D84, 0x800332E0, "",                                   ProgElemType::FUNCTION },
     { 0x800332E0, 0x800333D8, "",                                   ProgElemType::FUNCTION },
     { 0x800333D8, 0x800333F0, "",                                   ProgElemType::FUNCTION },
@@ -73,18 +76,23 @@ static const ProgElem ELEMS[] = {
     { 0x8003352C, 0x80033578, "",                                   ProgElemType::FUNCTION },
     { 0x80033578, 0x8003390C, "",                                   ProgElemType::FUNCTION },
     { 0x8003390C, 0x8003397C, "",                                   ProgElemType::FUNCTION },
-    { 0x8003397C, 0x80033AC4, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80034CB8, 0x80034D14, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80034E58, 0x80034EA4, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80035B24, 0x80035C94, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80038558, 0x80038610, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x8003F180, 0x8003F200, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x8003397C, 0x80033AC4, "",                                   ProgElemType::FUNCTION },
+    { 0x8003472C, 0x80034A60, "",                                   ProgElemType::FUNCTION }, // TODO: figure out referenced func '80058534' - may have a switch statement jump table
+    { 0x80034CB8, 0x80034D14, "",                                   ProgElemType::FUNCTION },
+    { 0x80034D14, 0x80034E58, "",                                   ProgElemType::FUNCTION }, // TODO: figure out referenced func '80058534' - may have a switch statement jump table
+    { 0x80034E58, 0x80034EA4, "",                                   ProgElemType::FUNCTION },
+    { 0x80034EA4, 0x80034F04, "",                                   ProgElemType::FUNCTION },
+    { 0x80034F04, 0x80034F54, "",                                   ProgElemType::FUNCTION },    
+    { 0x80035B24, 0x80035C94, "",                                   ProgElemType::FUNCTION },
+    { 0x80038558, 0x80038610, "",                                   ProgElemType::FUNCTION },
+    { 0x8003F180, 0x8003F200, "",                                   ProgElemType::FUNCTION },
     { 0x8003FACC, 0x8003FB9C, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x8003FE20, 0x8003FE58, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x800406D4, 0x800407C8, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x800407C8, 0x80040830, "",                                   ProgElemType::FUNCTION }, // TODO    
     { 0x80040830, 0x80040838, "empty_func2",                        ProgElemType::FUNCTION },
     { 0x80041118, 0x80041318, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x800415B4, 0x800415D4, "",                                   ProgElemType::FUNCTION },
     { 0x800415EC, 0x80041734, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x8004371C, 0x800437F0, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x80049C1C, 0x80049C2C, "LIBAPI_CloseEvent",                  ProgElemType::FUNCTION },
@@ -115,6 +123,7 @@ static const ProgElem ELEMS[] = {
     { 0x8004C210, 0x8004C27C, "",                                   ProgElemType::FUNCTION },
     { 0x8004C438, 0x8004C49C, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x8004C500, 0x8004C5A0, "",                                   ProgElemType::FUNCTION },
+    { 0x8004C72C, 0x8004C79C, "",                                   ProgElemType::FUNCTION },
     { 0x8004C79C, 0x8004C860, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x8004C898, 0x8004CCBC, "",                                   ProgElemType::FUNCTION }, // TODO
     { 0x8004CE54, 0x8004CEAC, "",                                   ProgElemType::FUNCTION }, // TODO

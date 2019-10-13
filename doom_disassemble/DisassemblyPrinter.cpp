@@ -44,10 +44,10 @@ static void printProgWordReferences(const ExeWord& word, const ProgElem* const p
         for (uint32_t i = numWordReferences; i < 4; ++i) {
             out.put(' ');
         }
-
+        
         out << "      ";
     } else {
-        out << "             ";
+        out << "              ";
     }
 }
 
@@ -184,13 +184,13 @@ static void printUncategorizedProgramRegion(
         const uint32_t wordEndByteIdx = wordStartByteIdx + numBytesToPrint;
 
         // Firstly print the word references if it is a full word.
-        // Otherwise print 12 spaces where the references section would be.
+        // Otherwise print 14 spaces where the references section would be.
         const ExeWord exeWord = exe.words[curByteIdx / 4];
 
         if (numBytesToPrint == 4) {
             printProgWordReferences(exeWord, nullptr, out);
         } else {
-            out << "            ";
+            out << "              ";
         }
 
         // Print the 32-bit word fully if we have a whole word to print
