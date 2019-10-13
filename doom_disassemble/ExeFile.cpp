@@ -276,13 +276,16 @@ void ExeFile::determineWordReferences() noexcept {
             }
         }
 
-        // Add data references other program words.
+        // Add data references from other program words.
         // These references must be aligned references, don't detect other types of references.
+        const uint32_t thisWordAddr = baseAddress + wordIdx * 4;
+
         if (bCanHaveDataRef) {
             if (word % 4 == 0) {
                 if (word >= exeStartAddr && word < exeEndAddr) {
-                    const uint32_t referencedWordIdx = (word - baseAddress) / 4;
-                    words[referencedWordIdx].bIsDataReferenced = true;
+                    ExeWord& referencedWord = words[(word - baseAddress) / 4];
+                    referencedWord.bIsDataReferenced = true;
+                    referencedWord.addReferencingWord(thisWordAddr);
                 }
             }
         }
@@ -293,24 +296,24 @@ void ExeFile::determineWordReferences() noexcept {
             CpuInstruction inst;
 
             if (inst.decode(word)) {
-                const uint32_t thisInstAddr = baseAddress + wordIdx * 4;
-
                 if (CpuOpcodeUtils::isBranchOpcode(inst.opcode)) {
                     // References to words via branch instructions                    
-                    const uint32_t branchTgtAddr = inst.getBranchInstTargetAddr(thisInstAddr);
+                    const uint32_t branchTgtAddr = inst.getBranchInstTargetAddr(thisWordAddr);
 
                     if (branchTgtAddr >= exeStartAddr && branchTgtAddr < exeEndAddr) {
-                        const uint32_t branchTgtWordIdx = (branchTgtAddr - baseAddress) / 4;
-                        words[branchTgtWordIdx].bIsBranchTarget = true;
+                        ExeWord& referencedWord = words[(branchTgtAddr - baseAddress) / 4];
+                        referencedWord.bIsBranchTarget = true;
+                        referencedWord.addReferencingWord(thisWordAddr);
                     }
                 }
                 else if (CpuOpcodeUtils::isFixedJumpOpcode(inst.opcode)) {
                     // References to words via fixed jump instructions
-                    const uint32_t jumpTgtAddr = inst.getFixedJumpInstTargetAddr(thisInstAddr);
+                    const uint32_t jumpTgtAddr = inst.getFixedJumpInstTargetAddr(thisWordAddr);
 
                     if (jumpTgtAddr >= exeStartAddr && jumpTgtAddr < exeEndAddr) {
-                        const uint32_t jumpTgtWordIdx = (jumpTgtAddr - baseAddress) / 4;
-                        words[jumpTgtWordIdx].bIsJumpTarget = true;
+                        ExeWord& referencedWord = words[(jumpTgtAddr - baseAddress) / 4];
+                        referencedWord.bIsJumpTarget = true;
+                        referencedWord.addReferencingWord(thisWordAddr);
                     }
                 }
             }

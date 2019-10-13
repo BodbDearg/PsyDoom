@@ -11,7 +11,7 @@ static void printAddressForLine(const uint32_t addr, std::ostream& out) noexcept
     out << ":";
 }
 
-static void printProgWordReferences(const ExeWord& word, std::ostream& out) noexcept {
+static void printProgWordReferences(const ExeWord& word, const ProgElem* const pInsideFunc, std::ostream& out) noexcept {
     if (word.bIsBranchTarget || word.bIsDataReferenced || word.bIsJumpTarget) {
         out << " <- ";
         uint32_t numWordReferences = 0;
@@ -31,13 +31,23 @@ static void printProgWordReferences(const ExeWord& word, std::ostream& out) noex
             ++numWordReferences;
         }
 
-        for (uint32_t i = numWordReferences; i < 3; ++i) {
+        if (pInsideFunc) {
+            // Print 'I' if all references to the word are internal to the containing function
+            if (word.startReferencingAddr != word.endReferencingAddr) {
+                if (word.startReferencingAddr >= pInsideFunc->startAddr && word.endReferencingAddr <= pInsideFunc->endAddr) {
+                    out.put('I');
+                    ++numWordReferences;
+                }
+            }
+        }
+
+        for (uint32_t i = numWordReferences; i < 4; ++i) {
             out.put(' ');
         }
 
-        out << "     ";
+        out << "      ";
     } else {
-        out << "            ";
+        out << "             ";
     }
 }
 
@@ -104,7 +114,7 @@ static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ost
 
         // Print the references to this exe word
         const ExeWord exeWord = exe.words[wordIdx];
-        printProgWordReferences(exeWord, out);
+        printProgWordReferences(exeWord, &progElem, out);
 
         // Print the instruction itself
         printProgInstruction(exe, instAddr, exeWord.value, out);
@@ -178,7 +188,7 @@ static void printUncategorizedProgramRegion(
         const ExeWord exeWord = exe.words[curByteIdx / 4];
 
         if (numBytesToPrint == 4) {
-            printProgWordReferences(exeWord, out);
+            printProgWordReferences(exeWord, nullptr, out);
         } else {
             out << "            ";
         }
