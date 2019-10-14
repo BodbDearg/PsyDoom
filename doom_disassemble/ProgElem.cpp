@@ -117,7 +117,7 @@ void ProgElem::printNameAtAddr(const uint32_t addr, std::ostream& out) const noe
                 case ProgElemType::INT8:    printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_array_i8_", out);     break;
                 case ProgElemType::UINT8:   printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_array_u8_", out);     break;
                 case ProgElemType::BOOL8:   printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_array_bool8_", out);  break;
-                case ProgElemType::CHAR8:   printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_string_", out);       break;
+                case ProgElemType::CHAR8:   printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_string8_", out);      break;
                 case ProgElemType::PTR32:   printArrayProgElemNameAtAddr(*this, addr, "UNNAMED_array_pt32_", out);   break;
             }
 

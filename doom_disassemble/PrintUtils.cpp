@@ -110,6 +110,10 @@ void PrintUtils::printEscapedChar(const char val, std::ostream& out) noexcept {
         out << "\\t";
     } else if (val == '\0') {
         out << "\\0";
+    } else if (val == '\'') {
+        out << "\\\'";
+    } else if (val == '\"') {
+        out << "\\\"";
     } else if (val == '\v') {
         out << "\\v";
     } else if (val == '\f') {
