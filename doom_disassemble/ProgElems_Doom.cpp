@@ -178,6 +178,8 @@ static const ProgElem ELEMS[] = {
     { 0x80049E4C, 0x80049E5C, "LIBAPI_open",                        ProgElemType::FUNCTION },
     { 0x8004A7AC, 0x8004A7DC, "",                                   ProgElemType::FUNCTION },
     { 0x8004A7DC, 0x8004A80C, "",                                   ProgElemType::FUNCTION },
+    { 0x8004A80C, 0x8004A83C, "",                                   ProgElemType::FUNCTION },
+    { 0x8004A89C, 0x8004A8B0, "",                                   ProgElemType::FUNCTION },
     { 0x8004A8E4, 0x8004A9A4, "",                                   ProgElemType::FUNCTION },
     { 0x8004A8E4, 0x8004A9A4, "",                                   ProgElemType::FUNCTION },
     { 0x8004A9A4, 0x8004AB74, "",                                   ProgElemType::FUNCTION },
@@ -248,39 +250,60 @@ static const ProgElem ELEMS[] = {
     { 0x80050884, 0x80050894, "LIBAPI_InitHeap",                    ProgElemType::FUNCTION },
     { 0x80051208, 0x8005171C, "",                                   ProgElemType::FUNCTION },
     { 0x8005178C, 0x80051804, "",                                   ProgElemType::FUNCTION },
+    { 0x80051894, 0x80051E38, "",                                   ProgElemType::FUNCTION },
+    { 0x80051E6C, 0x80051E98, "",                                   ProgElemType::FUNCTION },
+    { 0x80051E98, 0x800521DC, "",                                   ProgElemType::FUNCTION },
     { 0x800522FC, 0x80052524, "",                                   ProgElemType::FUNCTION },
     { 0x80052524, 0x8005280C, "",                                   ProgElemType::FUNCTION },
+    { 0x8005280C, 0x80052898, "",                                   ProgElemType::FUNCTION },
     { 0x80052900, 0x800531EC, "",                                   ProgElemType::FUNCTION },
+    { 0x800531EC, 0x8005336C, "",                                   ProgElemType::FUNCTION },
     { 0x8005336C, 0x8005383C, "",                                   ProgElemType::FUNCTION },
     { 0x8005383C, 0x80053BD4, "",                                   ProgElemType::FUNCTION },
     { 0x80053BD4, 0x80053D00, "",                                   ProgElemType::FUNCTION },
     { 0x80053D48, 0x80053D58, "LIBAPI_DeliverEvent",                ProgElemType::FUNCTION },
+    { 0x80053D58, 0x80053D7C, "",                                   ProgElemType::FUNCTION },
     { 0x80053D7C, 0x80053DA0, "",                                   ProgElemType::FUNCTION },
     { 0x80054134, 0x80054164, "",                                   ProgElemType::FUNCTION },
     { 0x80054164, 0x80054324, "",                                   ProgElemType::FUNCTION },
     { 0x80054324, 0x80054334, "LIBAPI_WaitEvent",                   ProgElemType::FUNCTION },
-    { 0x80054334, 0x80054418, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x80054334, 0x80054418, "",                                   ProgElemType::FUNCTION },
+    { 0x80054418, 0x80054498, "",                                   ProgElemType::FUNCTION },
     { 0x80054498, 0x80054518, "",                                   ProgElemType::FUNCTION },
     { 0x80054518, 0x80054580, "",                                   ProgElemType::FUNCTION },
-    { 0x80054580, 0x800545A0, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x800545A0, 0x80054670, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x80054580, 0x800545A0, "",                                   ProgElemType::FUNCTION },
+    { 0x800545A0, 0x80054670, "",                                   ProgElemType::FUNCTION },
     { 0x800546E0, 0x80054788, "",                                   ProgElemType::FUNCTION },
     { 0x80054788, 0x800547DC, "",                                   ProgElemType::FUNCTION },
-    { 0x800547DC, 0x80054830, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80054830, 0x80054894, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80054894, 0x800548F4, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80054B00, 0x80054B90, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80054C78, 0x80054C98, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80054D20, 0x80054D40, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80054D40, 0x80054D60, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x800547DC, 0x80054830, "",                                   ProgElemType::FUNCTION },
+    { 0x80054830, 0x80054894, "",                                   ProgElemType::FUNCTION },
+    { 0x80054894, 0x800548F4, "",                                   ProgElemType::FUNCTION },
+    { 0x80054B00, 0x80054B90, "",                                   ProgElemType::FUNCTION },
+    { 0x80054C28, 0x80054C78, "",                                   ProgElemType::FUNCTION },
+    { 0x80054C78, 0x80054C98, "",                                   ProgElemType::FUNCTION },
+    { 0x80054D20, 0x80054D40, "",                                   ProgElemType::FUNCTION },
+    { 0x80054D40, 0x80054D60, "",                                   ProgElemType::FUNCTION },
     { 0x80054D60, 0x80054D78, "",                                   ProgElemType::FUNCTION },
     { 0x80054D78, 0x80054D90, "",                                   ProgElemType::FUNCTION },
-    { 0x80054DA8, 0x80054EC0, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80054EC0, 0x80054FCC, "",                                   ProgElemType::FUNCTION }, // TODO
-    { 0x80055114, 0x80055138, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x80054D90, 0x80054DA8, "",                                   ProgElemType::FUNCTION },
+    { 0x80054DA8, 0x80054EC0, "",                                   ProgElemType::FUNCTION },
+    { 0x80054EC0, 0x80054FCC, "",                                   ProgElemType::FUNCTION },
+    { 0x80054FCC, 0x800550F0, "",                                   ProgElemType::FUNCTION },
+    { 0x80055114, 0x80055138, "",                                   ProgElemType::FUNCTION },
     { 0x8005521C, 0x80055320, "",                                   ProgElemType::FUNCTION },
     { 0x80055320, 0x800553A0, "",                                   ProgElemType::FUNCTION },
-    { 0x80057260, 0x80057284, "",                                   ProgElemType::FUNCTION }, // TODO
+    { 0x800553A0, 0x800558DC, "",                                   ProgElemType::FUNCTION }, // TODO: switch statement jump table?
+    { 0x800558DC, 0x80055B50, "",                                   ProgElemType::FUNCTION },
+    { 0x80055B50, 0x80055E10, "",                                   ProgElemType::FUNCTION },
+    { 0x80055E10, 0x8005621C, "",                                   ProgElemType::FUNCTION },
+    { 0x800562A4, 0x80056330, "",                                   ProgElemType::FUNCTION },
+    { 0x80056330, 0x80056410, "",                                   ProgElemType::FUNCTION },
+    { 0x80056410, 0x80056664, "",                                   ProgElemType::FUNCTION },
+    { 0x80056664, 0x80056758, "",                                   ProgElemType::FUNCTION },
+    { 0x80056DBC, 0x80056F18, "",                                   ProgElemType::FUNCTION },
+    { 0x80056F18, 0x8005700C, "",                                   ProgElemType::FUNCTION },
+    { 0x80057260, 0x80057284, "",                                   ProgElemType::FUNCTION },
+    { 0x80057284, 0x800574A8, "",                                   ProgElemType::FUNCTION },
     { 0x800580B4, 0x800580E0, "",                                   ProgElemType::FUNCTION },
     { 0x80058A18, 0x80058A28, "LIBAPI_SysEnqIntRP",                 ProgElemType::FUNCTION },
     { 0x80058A28, 0x80058A38, "LIBAPI_AddDrv",                      ProgElemType::FUNCTION },
