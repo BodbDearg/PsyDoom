@@ -88,3 +88,34 @@ void PrintUtils::printHexU32(const uint32_t val, const bool bZeroPad, std::ostre
 void PrintUtils::printHexI32(const int32_t val, const bool bZeroPad, std::ostream& out) noexcept {
     printHexInt(val, bZeroPad, out);
 }
+
+void PrintUtils::printBool(const bool bVal, std::ostream& out) noexcept {
+    out << (bVal ? "true" : "false");   // N.B - parens are important for correct op order!
+}
+
+void PrintUtils::printEscapedChar(const char val, std::ostream& out) noexcept {
+    const uint8_t valU8 = (uint8_t) val;
+
+    if (valU8 >= 32 && valU8 <= 126) {
+        if (val != '\\') {
+            out.put(val);
+        } else {
+            out << "\\\\";
+        }
+    } else if (val == '\r') {
+        out << "\\r";
+    } else if (val == '\n') {
+        out << "\\n";
+    } else if (val == '\t') {
+        out << "\\t";
+    } else if (val == '\0') {
+        out << "\\0";
+    } else if (val == '\v') {
+        out << "\\v";
+    } else if (val == '\f') {
+        out << "\\f";
+    } else {
+        out << "\\x";
+        printHexU8(valU8, true, out);
+    }
+}

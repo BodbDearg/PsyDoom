@@ -14,4 +14,8 @@ namespace PrintUtils {
     void printHexI16(const int16_t val, const bool bZeroPad, std::ostream& out) noexcept;
     void printHexU32(const uint32_t val, const bool bZeroPad, std::ostream& out) noexcept;
     void printHexI32(const int32_t val, const bool bZeroPad, std::ostream& out) noexcept;
+    void printBool(const bool bVal, std::ostream& out) noexcept;
+
+    // Print a char with characters like newline '\n' or above ascii characters escaped
+    void printEscapedChar(const char val, std::ostream& out) noexcept;
 }

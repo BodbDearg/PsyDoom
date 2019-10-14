@@ -95,11 +95,12 @@ static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ost
     // Validate that the function program element is correctly aligned
     const bool bIsFuncRangeAligned = (
         (progElem.startAddr % 4 == 0) &&
-        (progElem.endAddr % 4 == 0)
+        (progElem.endAddr % 4 == 0) &&
+        (progElem.endAddr > progElem.startAddr)
     );
 
     if (!bIsFuncRangeAligned) {
-        FATAL_ERROR("Invalid function program element! The ranges of addresses specified are NOT 32-bit aligned.");
+        FATAL_ERROR("Invalid function program element! The ranges of addresses specified are NOT 32-bit aligned or the function size is zero!");
     }
 
     // Figure out the start and end word for the function in the .EXE
@@ -122,6 +123,99 @@ static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ost
     }
 
     out.put('\n');
+}
+
+static void printSingleVariable(const ExeFile& exe, const ProgElem& progElem, std::ostream& out) noexcept {
+    // Validate that the variable is correctly aligned, and that the size matches the variable type size
+    const uint32_t varTypeSize = getProgElemTypeSize(progElem.type);
+
+    const bool progElemAligned = (
+        (varTypeSize > 0) &&
+        (progElem.startAddr % varTypeSize == 0) &&
+        (progElem.endAddr % varTypeSize == 0)
+    );
+
+    if (!progElemAligned) {
+        FATAL_ERROR("Invalid single variable program element! The address specified is not properly aligned for the type!");
+    }
+
+    const uint32_t progElemSize = progElem.endAddr - progElem.startAddr;
+
+    if (progElemSize != varTypeSize) {
+        FATAL_ERROR(
+            "Invalid single variable program element! The size of the range specified ('%u') does not match the size of the type! (%u)",
+            progElemSize,
+            varTypeSize
+        );
+    }
+
+    // Load the word for the variable
+    const uint32_t wordIdx = (progElem.startAddr - exe.baseAddress) / 4;
+    const ExeWord exeWord = exe.words[wordIdx];
+    
+    // Shift and/or mask the word's value if the size is less than 32-bits
+    uint32_t varVal = exeWord.value;
+
+    if (varTypeSize != 4) {
+        const uint32_t shift = 8 * (progElem.startAddr % 4);
+        varVal >>= shift;
+
+        if (varTypeSize == 2) {
+            varVal &= 0xFFFFu;
+        } else {
+            varVal &= 0xFFu;
+        }
+    }
+
+    // Print the address of this variable and references to the exe word
+    printAddressForLine(progElem.startAddr, out);
+    printProgWordReferences(exeWord, &progElem, out);
+
+    // Print the name of the program element
+    switch (progElem.type) {
+        case ProgElemType::INT32:       printProgElemName(progElem, "UNNAMED_i32_", out);       break;
+        case ProgElemType::UINT32:      printProgElemName(progElem, "UNNAMED_u32_", out);       break;
+        case ProgElemType::INT16:       printProgElemName(progElem, "UNNAMED_i16_", out);       break;
+        case ProgElemType::UINT16:      printProgElemName(progElem, "UNNAMED_u16_", out);       break;
+        case ProgElemType::INT8:        printProgElemName(progElem, "UNNAMED_i8_", out);        break;
+        case ProgElemType::UINT8:       printProgElemName(progElem, "UNNAMED_u8_", out);        break;
+        case ProgElemType::BOOL8:       printProgElemName(progElem, "UNNAMED_bool8_", out);     break;
+        case ProgElemType::CHAR8:       printProgElemName(progElem, "UNNAMED_char8_", out);     break;
+        case ProgElemType::PTR32:       printProgElemName(progElem, "UNNAMED_pt32_", out);      break;
+
+        default:
+            FATAL_ERROR("Unexpected case! We should never hit this!");
+            break;
+    }
+
+    // Print the value itself
+    out << " = ";
+
+    switch (progElem.type) {
+        case ProgElemType::INT32:       PrintUtils::printHexI32((int32_t) varVal, false, out);      break;
+        case ProgElemType::UINT32:      PrintUtils::printHexU32(varVal, false, out);                break;
+        case ProgElemType::INT16:       PrintUtils::printHexI16((int16_t) varVal, false, out);      break;
+        case ProgElemType::UINT16:      PrintUtils::printHexU16((uint16_t) varVal, false, out);     break;
+        case ProgElemType::INT8:        PrintUtils::printHexI8((int8_t) varVal, false, out);        break;
+        case ProgElemType::UINT8:       PrintUtils::printHexU8((uint8_t) varVal, false, out);       break;
+        case ProgElemType::BOOL8:       PrintUtils::printBool((varVal != 0), out);                  break;
+
+        case ProgElemType::CHAR8:
+            out.put('\'');
+            PrintUtils::printEscapedChar((char) varVal, out);
+            out.put('\'');
+            break;
+
+        case ProgElemType::PTR32:
+            exe.printNameOfElemAtAddr(varVal, out);
+            break;
+
+        default:
+            FATAL_ERROR("Unexpected case! We should never hit this!");
+            break;
+    }
+
+    out << "\n";
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -149,6 +243,18 @@ static void printProgElem(const ExeFile& exe, const ProgElem& progElem, std::ost
         case ProgElemType::FUNCTION:
             printFunction(exe, progElem, out);
             break;
+
+        case ProgElemType::INT32:
+        case ProgElemType::UINT32:
+        case ProgElemType::INT16:
+        case ProgElemType::UINT16:
+        case ProgElemType::INT8:
+        case ProgElemType::UINT8:
+        case ProgElemType::BOOL8:
+        case ProgElemType::CHAR8:
+        case ProgElemType::PTR32:
+            printSingleVariable(exe, progElem, out);
+            break;
     }
 }
 
@@ -159,6 +265,7 @@ static void printUncategorizedProgramRegion(
     std::ostream& out
 ) noexcept {
     // Print the region title
+    out << "\n";
     out << "; -- UNCATEGORIZED REGION: ";
     PrintUtils::printHexU32(exe.baseAddress + startByteIdx, true, out);
     out.put('-');
@@ -225,7 +332,7 @@ static void printUncategorizedProgramRegion(
         curByteIdx += numBytesToPrint;
     }
 
-    out.put('\n');
+    out << "\n\n";
 }
 
 void DisassemblyPrinter::printExe(const ExeFile& exe, std::ostream& out) noexcept {
