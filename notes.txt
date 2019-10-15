@@ -1,0 +1,5 @@
+Sprite lumps in PC DOOM which are NOT in the PSX:
+    VILE, FIRE, SSWV, KEEN, BBRN, BOSF
+
+Sprite lumps in PSX DOOM which are NOT in the PC version:
+    HANC, BLCH, HANL, DED1, DED2, DED3, DED4, DED5, DED6
