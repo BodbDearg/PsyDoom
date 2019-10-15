@@ -319,7 +319,7 @@ static const ProgElem ELEMS[] = {
     { 0x80058A18, 0x80058A28, "LIBAPI_SysEnqIntRP",                 ProgElemType::FUNCTION },
     { 0x80058A28, 0x80058A38, "LIBAPI_AddDrv",                      ProgElemType::FUNCTION },
     { 0x80058A38, 0x80058A48, "LIBAPI_DelDrv",                      ProgElemType::FUNCTION },
-    { 0x80058B58, 0x80058D90, "SPR_LUMP_NAMES",                     ProgElemType::ARRAY, ProgElemType::PTR32 },
+    { 0x80058B58, 0x80058D8C, "SPR_LUMP_NAMES",                     ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80067958, 0x80071958, "FINE_SINE",                          ProgElemType::ARRAY, ProgElemType::INT32, 16 },
     { 0x80071958, 0x8007395C, "TAN_TO_ANGLE",                       ProgElemType::ARRAY, ProgElemType::INT32, 16 },
     { 0x80077624, 0x8007762C, "LUMPNAME_BRS1",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
