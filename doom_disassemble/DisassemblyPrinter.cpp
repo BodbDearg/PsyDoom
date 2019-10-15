@@ -199,6 +199,8 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
     }
 
     // Print each element in the array
+    uint32_t arrayElemNum = 0;
+
     for (uint32_t addr = progElem.startAddr; addr < progElem.endAddr; addr += arrayElemTypeSize) {
         // Load the word for the variable
         const uint32_t wordIdx = (addr - exe.baseAddress) / 4;
@@ -218,9 +220,16 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
             }
         }
 
-        // Indent if not a string
+        // Indent if not a string and if the first element in a line
         if (arrayElemType != ProgElemType::CHAR8) {
-            out << "        ";
+            const bool bDoIndent = (
+                (progElem.arrayElemsPerLine <= 1) ||
+                (arrayElemNum % progElem.arrayElemsPerLine == 0)
+            );
+
+            if (bDoIndent) {
+                out << "        ";
+            }
         }
 
         // Print the value itself
@@ -252,8 +261,19 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
                 out.put(',');
             }
 
-            out.put('\n');
+            const bool bIsTimeForNewLine = (
+                (progElem.arrayElemsPerLine <= 1) ||
+                (arrayElemNum % progElem.arrayElemsPerLine == progElem.arrayElemsPerLine - 1)
+            );
+
+            if (bIsTimeForNewLine) {
+                out.put('\n');
+            } else {
+                out.put(' ');
+            }
         }
+
+        ++arrayElemNum;
     }
 
     // Print the closing of the array

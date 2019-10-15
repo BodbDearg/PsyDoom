@@ -1,6 +1,17 @@
 #include "ProgElems.h"
 
 static const ProgElem ELEMS[] = {
+    { 0x80010030, 0x80010048, "BlueKeyNeededMsg",                   ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x80010048, 0x80010060, "YellowKeyNeededMsg",                 ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x80010060, 0x80010078, "RedKeyNeededMsg",                    ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x80010298, 0x800102C0, "P_NewChaseDir_NoTargetErr",          ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x800103D0, 0x800103E8, "P_GiveAmmo_BadTypeErr",              ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x800103E8, 0x80010404, "HealthBonusPickedUpMsg",             ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x80010404, 0x80010420, "ArmorBonusPickedUpMsg",              ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x80010420, 0x80010430, "SuperChargePickedUpMsg",             ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x80010430, 0x80010440, "MegaSpherePickedUpMsg",              ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x80010440, 0x80010454, "ClipPickedUpMsg",                    ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x80010454, 0x80010470, "BoxOfBulletsPickedUpMsg",            ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80012274, 0x800123A4, "",                                   ProgElemType::FUNCTION },
     { 0x800123E4, 0x80012424, "",                                   ProgElemType::FUNCTION },
     { 0x80012424, 0x800124A8, "",                                   ProgElemType::FUNCTION },
@@ -308,6 +319,9 @@ static const ProgElem ELEMS[] = {
     { 0x80058A18, 0x80058A28, "LIBAPI_SysEnqIntRP",                 ProgElemType::FUNCTION },
     { 0x80058A28, 0x80058A38, "LIBAPI_AddDrv",                      ProgElemType::FUNCTION },
     { 0x80058A38, 0x80058A48, "LIBAPI_DelDrv",                      ProgElemType::FUNCTION },
+    { 0x80067958, 0x80071958, "gFineSine",                          ProgElemType::ARRAY, ProgElemType::INT32, 16 },
+    { 0x80071958, 0x8007395C, "gTanToAngle",                        ProgElemType::ARRAY, ProgElemType::INT32, 16 },
+    
 };
 
 const ProgElem*     gProgramElems_Doom = ELEMS;

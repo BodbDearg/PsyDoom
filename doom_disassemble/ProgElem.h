@@ -24,11 +24,12 @@ enum class ProgElemType : uint8_t {
 uint32_t getProgElemTypeSize(const ProgElemType type) noexcept;
 
 struct ProgElem {
-    uint32_t        startAddr;          // Where the element starts in the program (inclusive)
-    uint32_t        endAddr;            // Where the element ends in the program (exclusive)
-    const char*     name;               // The name of the element - must be a compile time constant string
-    ProgElemType    type;               // What type of element this is
-    ProgElemType    arrayElemType;      // If an array, what type the array elements are
+    uint32_t        startAddr;              // Where the element starts in the program (inclusive)
+    uint32_t        endAddr;                // Where the element ends in the program (exclusive)
+    const char*     name;                   // The name of the element - must be a compile time constant string
+    ProgElemType    type;                   // What type of element this is
+    ProgElemType    arrayElemType;          // If an array, what type the array elements are
+    uint32_t        arrayElemsPerLine;      // How many array elements to print per line
 
     inline constexpr ProgElem() noexcept
         : startAddr(0)
@@ -36,35 +37,39 @@ struct ProgElem {
         , name("")
         , type()
         , arrayElemType()
+        , arrayElemsPerLine(1)
     {
     }
 
     inline constexpr ProgElem(
-        uint32_t startAddr,
-        uint32_t endAddr,
+        const uint32_t startAddr,
+        const uint32_t endAddr,
         const char* const name,
-        ProgElemType type
+        const ProgElemType type
     ) noexcept
         : startAddr(startAddr)
         , endAddr(endAddr)
         , type(type)
         , arrayElemType(type)
         , name(name)
+        , arrayElemsPerLine(1)
     {
     }
 
     inline constexpr ProgElem(
-        uint32_t startAddr,
-        uint32_t endAddr,
+        const uint32_t startAddr,
+        const uint32_t endAddr,
         const char* const name,
-        ProgElemType type,
-        ProgElemType arrayElemType
+        const ProgElemType type,
+        const ProgElemType arrayElemType,
+        const uint32_t arrayElemsPerLine = 1
     ) noexcept
         : startAddr(startAddr)
         , endAddr(endAddr)
         , type(type)
         , arrayElemType(arrayElemType)
         , name(name)
+        , arrayElemsPerLine(arrayElemsPerLine)
     {
     }
 
