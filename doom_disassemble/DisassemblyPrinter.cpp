@@ -143,16 +143,11 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
     // Get the number of array elements
     const uint32_t numArrayElems = (progElem.endAddr - progElem.startAddr) / arrayElemTypeSize; 
 
-    // Print a comment above saying the address range because we don't show that:
-    out << "\n; Range: ";
-    PrintUtils::printHexU32(progElem.startAddr, true, out);
-    out << " - ";
-    PrintUtils::printHexU32(progElem.endAddr - 1, true, out);
-    out.put('\n');
-
-    // Print the type of the array variable and indent
+    // Print the address of this array variable and spacing after it
+    printAddressForLine(progElem.startAddr, out);
     out << "    ";
 
+    // Print the type of the array variable
     switch (arrayElemType) {
         case ProgElemType::INT32:       out << "i32";       break;
         case ProgElemType::UINT32:      out << "u32";       break;
@@ -228,7 +223,7 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
             );
 
             if (bDoIndent) {
-                out << "        ";
+                out << "                 ";
             }
         }
 
@@ -262,8 +257,10 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
             }
 
             const bool bIsTimeForNewLine = (
-                (progElem.arrayElemsPerLine <= 1) ||
-                (arrayElemNum % progElem.arrayElemsPerLine == progElem.arrayElemsPerLine - 1)
+                (arrayElemNum + 1 < numArrayElems) && (
+                    (progElem.arrayElemsPerLine <= 1) ||
+                    (arrayElemNum % progElem.arrayElemsPerLine == progElem.arrayElemsPerLine - 1)
+                )
             );
 
             if (bIsTimeForNewLine) {
@@ -280,7 +277,7 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
     if (arrayElemType == ProgElemType::CHAR8) {
         out << "\"\n";
     } else {
-        out << "    }\n";
+        out << "\n             }\n";
     }
 }
 
@@ -530,7 +527,7 @@ static void printUncategorizedProgramRegion(
         curByteIdx += numBytesToPrint;
     }
 
-    out << "\n\n";
+    out << "\n";
 }
 
 void DisassemblyPrinter::printExe(const ExeFile& exe, std::ostream& out) noexcept {
