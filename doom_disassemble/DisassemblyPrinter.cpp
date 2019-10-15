@@ -323,9 +323,9 @@ static void printSingleVariable(const ExeFile& exe, const ProgElem& progElem, st
         }
     }
 
-    // Print the address of this variable and references to the exe word
+    // Print the address of this variable and spacing after it
     printAddressForLine(progElem.startAddr, out);
-    printProgWordReferences(exeWord, &progElem, out);
+    out << "    ";
 
     // Print the name and type of the single variable
     switch (progElem.type) {
