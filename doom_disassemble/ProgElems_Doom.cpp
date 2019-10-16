@@ -30,10 +30,13 @@ static const ProgElem ELEMS[] = {
     { 0x80013714, 0x80013838, "",                                   ProgElemType::FUNCTION },
     { 0x80013838, 0x80013840, "empty_func1",                        ProgElemType::FUNCTION },
     { 0x80014E54, 0x80014EBC, "",                                   ProgElemType::FUNCTION },
+    { 0x8001C2F8, 0x8001C408, "P_UnsetThingPosition",               ProgElemType::FUNCTION },
     { 0x8001C408, 0x8001C540, "",                                   ProgElemType::FUNCTION },
+    { 0x8001CA18, 0x8001CB9C, "P_SetMobjState",                     ProgElemType::FUNCTION },
     { 0x8001D184, 0x8001D704, "",                                   ProgElemType::FUNCTION },
+    { 0x8001F918, 0x8001FA34, "P_RecursiveSound",                   ProgElemType::FUNCTION },
     { 0x8001FD4C, 0x8001FFBC, "P_CheckAmmo",                        ProgElemType::FUNCTION },
-    { 0x8001FFBC, 0x800201C4, "P_FireWeapon",                       ProgElemType::FUNCTION }, // TODO
+    { 0x8001FFBC, 0x800201C4, "P_FireWeapon",                       ProgElemType::FUNCTION },
     { 0x80020298, 0x80020480, "A_WeaponReady",                      ProgElemType::FUNCTION },
     { 0x8002155C, 0x80021564, "A_Light0",                           ProgElemType::FUNCTION },
     { 0x80021BA0, 0x80021DD8, "",                                   ProgElemType::FUNCTION },
@@ -76,13 +79,13 @@ static const ProgElem ELEMS[] = {
     { 0x8003219C, 0x800321D0, "",                                   ProgElemType::FUNCTION },
     { 0x800321D0, 0x800323C8, "",                                   ProgElemType::FUNCTION },
     { 0x800323C8, 0x800325D8, "",                                   ProgElemType::FUNCTION },
-    { 0x800325D8, 0x80032640, "",                                   ProgElemType::FUNCTION },
+    { 0x800325D8, 0x80032640, "Z_Free2",                            ProgElemType::FUNCTION },
     { 0x80032640, 0x80032770, "",                                   ProgElemType::FUNCTION },
     { 0x80032770, 0x80032838, "",                                   ProgElemType::FUNCTION },
     { 0x80032904, 0x8003290C, "empty_func2",                        ProgElemType::FUNCTION },
     { 0x8003290C, 0x80032934, "",                                   ProgElemType::FUNCTION },
     { 0x80032934, 0x80032B0C, "",                                   ProgElemType::FUNCTION }, // TODO: confused by referenced call '80058534'
-    { 0x80032B0C, 0x80032BB8, "MAYBE_err_func_no_return",           ProgElemType::FUNCTION }, // TODO: confused by referenced call '8004F6AC'
+    { 0x80032B0C, 0x80032BB8, "I_Error",                            ProgElemType::FUNCTION }, // TODO: confused by referenced call '8004F6AC'
     { 0x80032BF4, 0x80032D04, "",                                   ProgElemType::FUNCTION },
     { 0x80032D04, 0x80032D84, "",                                   ProgElemType::FUNCTION },
     { 0x80032D84, 0x800332E0, "",                                   ProgElemType::FUNCTION },
@@ -488,6 +491,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077A74, 0x80077A7C, "LUMPNAME_PUNG",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077A7C, 0x80077A84, "LUMPNAME_SHTG",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077A84, 0x80077A8C, "LUMPNAME_TROO",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x80077BC4, 0x80077BC8, "gValidCount",                        ProgElemType::UINT32 },
 };
 
 const ProgElem*     gProgramElems_Doom = ELEMS;
