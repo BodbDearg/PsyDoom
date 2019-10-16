@@ -190,7 +190,11 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
     if (arrayElemType == ProgElemType::CHAR8) {
         out << " = \"";
     } else {
-        out << " = {\n";
+        if (progElem.arrayElemsPerLine != 0) {
+            out << " = {\n";
+        } else {
+            out << " = { ";
+        }
     }
 
     // Print each element in the array
@@ -217,13 +221,15 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
 
         // Indent if not a string and if the first element in a line
         if (arrayElemType != ProgElemType::CHAR8) {
-            const bool bDoIndent = (
-                (progElem.arrayElemsPerLine <= 1) ||
-                (arrayElemNum % progElem.arrayElemsPerLine == 0)
-            );
+            if (progElem.arrayElemsPerLine != 0) {
+                const bool bDoIndent = (
+                    (progElem.arrayElemsPerLine == 1) ||
+                    (arrayElemNum % progElem.arrayElemsPerLine == 0)
+                );
 
-            if (bDoIndent) {
-                out << "                 ";
+                if (bDoIndent) {
+                    out << "                 ";
+                }
             }
         }
 
@@ -257,8 +263,9 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
             }
 
             const bool bIsTimeForNewLine = (
+                (progElem.arrayElemsPerLine > 0) &&
                 (arrayElemNum + 1 < numArrayElems) && (
-                    (progElem.arrayElemsPerLine <= 1) ||
+                    (progElem.arrayElemsPerLine == 1) ||
                     (arrayElemNum % progElem.arrayElemsPerLine == progElem.arrayElemsPerLine - 1)
                 )
             );
@@ -277,7 +284,11 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
     if (arrayElemType == ProgElemType::CHAR8) {
         out << "\"\n";
     } else {
-        out << "\n             }\n";
+        if (progElem.arrayElemsPerLine > 0) {
+            out << "\n             }\n";
+        } else {
+            out << " }\n";
+        }
     }
 }
 
