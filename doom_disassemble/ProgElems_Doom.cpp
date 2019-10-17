@@ -26,13 +26,14 @@ static const ProgElem ELEMS[] = {
     { 0x80012A80, 0x80012AA0, "M_ClearBox",                         ProgElemType::FUNCTION },
     { 0x80012AA0, 0x80012B10, "M_AddToBox",                         ProgElemType::FUNCTION },
     { 0x80012B10, 0x80012B78, "UNUSED_AddPointToBox",               ProgElemType::FUNCTION },
-    { 0x80012B78, 0x80012BD8, "",                                   ProgElemType::FUNCTION }, // TODO: figure out func ptr jump
+    { 0x80012B78, 0x80012E04, "LIKELY_MiniLoop",                    ProgElemType::FUNCTION }, // TODO: figure out func ptr jump
     { 0x80012E04, 0x80012F00, "",                                   ProgElemType::FUNCTION },
     { 0x80013394, 0x80013528, "",                                   ProgElemType::FUNCTION },
     { 0x80013528, 0x80013714, "",                                   ProgElemType::FUNCTION },
     { 0x80013714, 0x80013838, "",                                   ProgElemType::FUNCTION },
     { 0x80013838, 0x80013840, "empty_func1",                        ProgElemType::FUNCTION },
     { 0x80014E54, 0x80014EBC, "",                                   ProgElemType::FUNCTION },
+    { 0x8001BE78, 0x8001C030, "P_LineAttack",                       ProgElemType::FUNCTION }, // TODO
     { 0x8001C2F8, 0x8001C408, "P_UnsetThingPosition",               ProgElemType::FUNCTION },
     { 0x8001C408, 0x8001C540, "",                                   ProgElemType::FUNCTION },
     { 0x8001CA18, 0x8001CB9C, "P_SetMobjState",                     ProgElemType::FUNCTION },
@@ -43,7 +44,7 @@ static const ProgElem ELEMS[] = {
     { 0x80020298, 0x80020480, "A_WeaponReady",                      ProgElemType::FUNCTION },
     { 0x8002053C, 0x800206B4, "A_Lower",                            ProgElemType::FUNCTION },
     { 0x800206B4, 0x800207A0, "A_Raise",                            ProgElemType::FUNCTION },
-    { 0x80020874, 0x8002096C, "A_Punch",                            ProgElemType::FUNCTION }, // TODO
+    { 0x80020874, 0x8002096C, "A_Punch",                            ProgElemType::FUNCTION },
     { 0x8002155C, 0x80021564, "A_Light0",                           ProgElemType::FUNCTION },
     { 0x80021BA0, 0x80021DD8, "",                                   ProgElemType::FUNCTION },
     { 0x80021EC4, 0x80022104, "",                                   ProgElemType::FUNCTION },
@@ -63,7 +64,7 @@ static const ProgElem ELEMS[] = {
     { 0x8002BE68, 0x8002BF2C, "",                                   ProgElemType::FUNCTION },
     { 0x8002BF2C, 0x8002C07C, "",                                   ProgElemType::FUNCTION }, // TODO (stuck on referenced func 8004C438)
     { 0x800305B0, 0x80030634, "",                                   ProgElemType::FUNCTION },
-    { 0x80030BA0, 0x80030EB4, "",                                   ProgElemType::FUNCTION },
+    { 0x80030BA0, 0x80030EB4, "R_PointToAngle2",                    ProgElemType::FUNCTION },
     { 0x80030F5C, 0x80031088, "",                                   ProgElemType::FUNCTION },
     { 0x800310C8, 0x80031394, "",                                   ProgElemType::FUNCTION },
     { 0x80031394, 0x800314A4, "",                                   ProgElemType::FUNCTION },
@@ -341,7 +342,7 @@ static const ProgElem ELEMS[] = {
     { 0x80058A18, 0x80058A28, "LIBAPI_SysEnqIntRP",                 ProgElemType::FUNCTION },
     { 0x80058A28, 0x80058A38, "LIBAPI_AddDrv",                      ProgElemType::FUNCTION },
     { 0x80058A38, 0x80058A48, "LIBAPI_DelDrv",                      ProgElemType::FUNCTION },
-    { 0x80058A58, 0x80058B58, "gRndTable",                          ProgElemType::ARRAY, ProgElemType::UINT8, 16 },
+    { 0x80058A58, 0x80058B58, "RndTable",                           ProgElemType::ARRAY, ProgElemType::UINT8, 16 },
     { 0x80058B58, 0x80058D8C, "SpriteLumpNames",                    ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80058D8C, 0x80058DA8, "State_S_NULL",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80058DA8, 0x80058DC4, "State_S_LIGHTDONE",                  ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
@@ -562,8 +563,9 @@ static const ProgElem ELEMS[] = {
     { 0x80077A7C, 0x80077A84, "LumpName_SHTG",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077A84, 0x80077A8C, "LumpName_TROO",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077BC4, 0x80077BC8, "gValidCount",                        ProgElemType::UINT32 },
-    { 0x80077E80, 0x80077E84, "rndindex",                           ProgElemType::UINT32 },
-    { 0x80077E84, 0x80077E88, "prndindex",                          ProgElemType::UINT32 },
+    { 0x80077EE8, 0x80077EEC, "gpLineTarget",                       ProgElemType::PTR32 },
+    { 0x80077E80, 0x80077E84, "gRndIndex",                          ProgElemType::UINT32 },
+    { 0x80077E84, 0x80077E88, "gPRndIndex",                         ProgElemType::UINT32 },
 };
 
 const ProgElem*     gProgramElems_Doom = ELEMS;
