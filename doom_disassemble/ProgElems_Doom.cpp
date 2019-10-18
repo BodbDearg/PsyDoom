@@ -68,7 +68,7 @@ static const ProgElem ELEMS[] = {
     { 0x80010B50, 0x80010B7C, "STR_PS_CrossSubsector_Err",              ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80010B7C, 0x80010BA8, "STR_P_PlayerInSpecialSector_Spec_Err",   ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80012274, 0x800123A4, "D_DoomMain",                             ProgElemType::FUNCTION }, // TODO
-    { 0x800123A4, 0x800123E4, "Unused_RunLegals",                       ProgElemType::FUNCTION }, // TODO
+    { 0x800123A4, 0x800123E4, "UNUSED_RunLegals",                       ProgElemType::FUNCTION }, // TODO
     { 0x800123E4, 0x80012424, "RunTitle",                               ProgElemType::FUNCTION },
     { 0x80012424, 0x800124A8, "RunDemo",                                ProgElemType::FUNCTION }, // TODO
     { 0x800124A8, 0x800124E8, "RunCredits",                             ProgElemType::FUNCTION }, // TODO
