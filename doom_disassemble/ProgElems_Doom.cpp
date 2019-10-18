@@ -26,7 +26,7 @@ static const ProgElem ELEMS[] = {
     { 0x80012A80, 0x80012AA0, "M_ClearBox",                         ProgElemType::FUNCTION },
     { 0x80012AA0, 0x80012B10, "M_AddToBox",                         ProgElemType::FUNCTION },
     { 0x80012B10, 0x80012B78, "UNUSED_AddPointToBox",               ProgElemType::FUNCTION },
-    { 0x80012B78, 0x80012E04, "LIKELY_MiniLoop",                    ProgElemType::FUNCTION }, // TODO: figure out func ptr jump
+    { 0x80012B78, 0x80012E04, "MiniLoop",                           ProgElemType::FUNCTION },
     { 0x80012E04, 0x80012F00, "",                                   ProgElemType::FUNCTION },
     { 0x80013394, 0x80013528, "",                                   ProgElemType::FUNCTION },
     { 0x80013528, 0x80013714, "",                                   ProgElemType::FUNCTION },
@@ -85,7 +85,7 @@ static const ProgElem ELEMS[] = {
     { 0x80032144, 0x8003219C, "",                                   ProgElemType::FUNCTION },
     { 0x8003219C, 0x800321D0, "",                                   ProgElemType::FUNCTION },
     { 0x800321D0, 0x800323C8, "",                                   ProgElemType::FUNCTION },
-    { 0x800323C8, 0x800325D8, "",                                   ProgElemType::FUNCTION },
+    { 0x800323C8, 0x800325D8, "",                                   ProgElemType::FUNCTION },    
     { 0x800325D8, 0x80032640, "Z_Free2",                            ProgElemType::FUNCTION },
     { 0x80032640, 0x80032770, "",                                   ProgElemType::FUNCTION },
     { 0x80032770, 0x80032838, "",                                   ProgElemType::FUNCTION },
@@ -93,6 +93,7 @@ static const ProgElem ELEMS[] = {
     { 0x8003290C, 0x80032934, "",                                   ProgElemType::FUNCTION },
     { 0x80032934, 0x80032B0C, "",                                   ProgElemType::FUNCTION }, // TODO: confused by referenced call '80058534'
     { 0x80032B0C, 0x80032BB8, "I_Error",                            ProgElemType::FUNCTION }, // TODO: confused by referenced call '8004F6AC'
+    { 0x80032BB8, 0x80032BF4, "",                                   ProgElemType::FUNCTION },
     { 0x80032BF4, 0x80032D04, "",                                   ProgElemType::FUNCTION },
     { 0x80032D04, 0x80032D84, "",                                   ProgElemType::FUNCTION },
     { 0x80032D84, 0x800332E0, "",                                   ProgElemType::FUNCTION },
@@ -104,6 +105,7 @@ static const ProgElem ELEMS[] = {
     { 0x8003390C, 0x8003397C, "",                                   ProgElemType::FUNCTION },
     { 0x8003397C, 0x80033AC4, "",                                   ProgElemType::FUNCTION },
     { 0x8003472C, 0x80034A60, "",                                   ProgElemType::FUNCTION }, // TODO: figure out referenced func '80058534' - may have a switch statement jump table
+    { 0x80034A60, 0x80034CB8, "",                                   ProgElemType::FUNCTION },
     { 0x80034CB8, 0x80034D14, "",                                   ProgElemType::FUNCTION },
     { 0x80034D14, 0x80034E58, "",                                   ProgElemType::FUNCTION }, // TODO: figure out referenced func '80058534' - may have a switch statement jump table
     { 0x80034E58, 0x80034EA4, "",                                   ProgElemType::FUNCTION },
@@ -136,6 +138,7 @@ static const ProgElem ELEMS[] = {
     { 0x80041118, 0x80041318, "",                                   ProgElemType::FUNCTION },
     { 0x800413A8, 0x800415B4, "",                                   ProgElemType::FUNCTION },
     { 0x800415B4, 0x800415D4, "S_StartSound",                       ProgElemType::FUNCTION },
+    { 0x800415D4, 0x800415EC, "",                                   ProgElemType::FUNCTION },
     { 0x800415EC, 0x8004172C, "",                                   ProgElemType::FUNCTION },
     { 0x80041E78, 0x80041EA4, "",                                   ProgElemType::FUNCTION },
     { 0x80041EBC, 0x80041ECC, "",                                   ProgElemType::FUNCTION },
@@ -563,9 +566,9 @@ static const ProgElem ELEMS[] = {
     { 0x80077A7C, 0x80077A84, "LumpName_SHTG",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077A84, 0x80077A8C, "LumpName_TROO",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077BC4, 0x80077BC8, "gValidCount",                        ProgElemType::UINT32 },
+    { 0x80077608, 0x8007760C, "gRndIndex",                          ProgElemType::UINT32 },
+    { 0x8007760C, 0x80077610, "gPRndIndex",                         ProgElemType::UINT32 },
     { 0x80077EE8, 0x80077EEC, "gpLineTarget",                       ProgElemType::PTR32 },
-    { 0x80077E80, 0x80077E84, "gRndIndex",                          ProgElemType::UINT32 },
-    { 0x80077E84, 0x80077E88, "gPRndIndex",                         ProgElemType::UINT32 },
 };
 
 const ProgElem*     gProgramElems_Doom = ELEMS;

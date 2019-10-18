@@ -1,5 +1,5 @@
 The $gp register appears to be set to the following in main() and kept at that value:
-    80077E58
+    800775E0
 
 Sprite lumps in PC DOOM which are NOT in the PSX:
     VILE, FIRE, SSWV, KEEN, BBRN, BOSF
