@@ -6,6 +6,7 @@ set(SOURCE_FILES
     "CpuOpcode.h"
     "DisassemblyPrinter.cpp"
     "DisassemblyPrinter.h"
+    "ConstEvalRegState.h"
     "ExeFile.cpp"
     "ExeFile.h"
     "ExeWord.h"
