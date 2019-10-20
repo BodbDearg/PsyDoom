@@ -1200,7 +1200,7 @@ void CpuInstruction::print(
         case CpuOpcode::MFHI:
         case CpuOpcode::MFLO:
             out << CpuGpr::getName(getDestGprIdx());
-            out << ((opcode == CpuOpcode::MFHI) ? " = $hi" : " = $hi");     // N.B: Outer parens required due to op precedence!
+            out << ((opcode == CpuOpcode::MFHI) ? " = $hi" : " = $lo");     // N.B: Outer parens required due to op precedence!
             break;
 
         case CpuOpcode::MTC0:

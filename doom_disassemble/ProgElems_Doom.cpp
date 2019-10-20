@@ -248,11 +248,11 @@ static const ProgElem ELEMS[] = {
     { 0x8001223C, 0x80012254, "",                                       ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80012254, 0x80012264, "",                                       ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80012264, 0x80012274, "",                                       ProgElemType::ARRAY, ProgElemType::PTR32 },
-    { 0x80012274, 0x800123A4, "D_DoomMain",                             ProgElemType::FUNCTION }, // TODO: name children
+    { 0x80012274, 0x800123A4, "D_DoomMain",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800123A4, 0x800123E4, "UNUSED_RunLegals",                       ProgElemType::FUNCTION }, // TODO: name children, deref ptrs
     { 0x800123E4, 0x80012424, "RunTitle",                               ProgElemType::FUNCTION },
-    { 0x80012424, 0x800124A8, "RunDemo",                                ProgElemType::FUNCTION }, // TODO: name children
-    { 0x800124A8, 0x800124E8, "RunCredits",                             ProgElemType::FUNCTION }, // TODO: name children
+    { 0x80012424, 0x800124A8, "RunDemo",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x800124A8, 0x800124E8, "RunCredits",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80012850, 0x8001290C, "D_memset",                               ProgElemType::FUNCTION },
     { 0x8001290C, 0x80012940, "D_memcpy",                               ProgElemType::FUNCTION },
     { 0x80012940, 0x8001297C, "D_strncpy",                              ProgElemType::FUNCTION },
@@ -296,7 +296,7 @@ static const ProgElem ELEMS[] = {
     { 0x8001B558, 0x8001B640, "",                                       ProgElemType::FUNCTION },
     { 0x8001B640, 0x8001B67C, "",                                       ProgElemType::FUNCTION },
     { 0x8001B67C, 0x8001B7A4, "",                                       ProgElemType::FUNCTION },
-    { 0x8001BE78, 0x8001C030, "P_LineAttack",                           ProgElemType::FUNCTION }, // TODO: name children
+    { 0x8001BE78, 0x8001C030, "P_LineAttack",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8001C068, 0x8001C128, "",                                       ProgElemType::FUNCTION },
     { 0x8001C2F8, 0x8001C408, "P_UnsetThingPosition",                   ProgElemType::FUNCTION },
     { 0x8001C408, 0x8001C540, "",                                       ProgElemType::FUNCTION },
@@ -305,6 +305,8 @@ static const ProgElem ELEMS[] = {
     { 0x8001CC68, 0x8001CE40, "",                                       ProgElemType::FUNCTION },
     { 0x8001CE40, 0x8001D184, "",                                       ProgElemType::FUNCTION },
     { 0x8001D184, 0x8001D704, "",                                       ProgElemType::FUNCTION },
+    { 0x8001D704, 0x8001D930, "",                                       ProgElemType::FUNCTION },
+    { 0x8001D930, 0x8001DB78, "",                                       ProgElemType::FUNCTION },
     { 0x8001E4F4, 0x8001E720, "",                                       ProgElemType::FUNCTION },
     { 0x8001E76C, 0x8001E868, "",                                       ProgElemType::FUNCTION },
     { 0x8001E868, 0x8001E978, "",                                       ProgElemType::FUNCTION },
@@ -339,6 +341,12 @@ static const ProgElem ELEMS[] = {
     { 0x800230D4, 0x80023700, "",                                       ProgElemType::FUNCTION },
     { 0x80023700, 0x800239D8, "",                                       ProgElemType::FUNCTION },
     { 0x80023AC8, 0x80023C34, "",                                       ProgElemType::FUNCTION },
+    { 0x80023C34, 0x80023E3C, "P_Shoot2",                               ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80023E3C, 0x80023EC4, "",                                       ProgElemType::FUNCTION },
+    { 0x80023EC4, 0x800240BC, "",                                       ProgElemType::FUNCTION },
+    { 0x800240BC, 0x8002425C, "",                                       ProgElemType::FUNCTION },
+    { 0x80024334, 0x80024758, "",                                       ProgElemType::FUNCTION },
+    { 0x8002479C, 0x80024908, "",                                       ProgElemType::FUNCTION },
     { 0x80025F44, 0x80026224, "",                                       ProgElemType::FUNCTION },
     { 0x80026224, 0x80026280, "",                                       ProgElemType::FUNCTION },
     { 0x80026280, 0x800262E4, "",                                       ProgElemType::FUNCTION },
@@ -352,11 +360,13 @@ static const ProgElem ELEMS[] = {
     { 0x80026698, 0x80026700, "",                                       ProgElemType::FUNCTION },
     { 0x80026700, 0x80026794, "",                                       ProgElemType::FUNCTION },
     { 0x80026794, 0x80026D40, "",                                       ProgElemType::FUNCTION },
+    { 0x80026D40, 0x80026E08, "",                                       ProgElemType::FUNCTION },
     { 0x80027768, 0x800277E0, "",                                       ProgElemType::FUNCTION },
     { 0x800277E0, 0x8002784C, "",                                       ProgElemType::FUNCTION },
     { 0x8002784C, 0x80027CB0, "",                                       ProgElemType::FUNCTION },
     { 0x80027CB0, 0x80027D84, "",                                       ProgElemType::FUNCTION },
     { 0x80027D84, 0x80027EA8, "",                                       ProgElemType::FUNCTION },
+    { 0x80027F3C, 0x8002822C, "",                                       ProgElemType::FUNCTION },
     { 0x80028918, 0x80028C38, "",                                       ProgElemType::FUNCTION },
     { 0x80028C38, 0x80028C68, "",                                       ProgElemType::FUNCTION },
     { 0x80028C68, 0x80028C74, "",                                       ProgElemType::FUNCTION },
@@ -398,7 +408,7 @@ static const ProgElem ELEMS[] = {
     { 0x80032904, 0x8003290C, "empty_func2",                            ProgElemType::FUNCTION },
     { 0x8003290C, 0x80032934, "",                                       ProgElemType::FUNCTION },
     { 0x80032934, 0x80032B0C, "",                                       ProgElemType::FUNCTION },
-    { 0x80032B0C, 0x80032BB8, "I_Error",                                ProgElemType::FUNCTION }, // TODO: name children
+    { 0x80032B0C, 0x80032BB8, "I_Error",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80032BB8, 0x80032BF4, "",                                       ProgElemType::FUNCTION },
     { 0x80032BF4, 0x80032D04, "",                                       ProgElemType::FUNCTION },
     { 0x80032D04, 0x80032D84, "",                                       ProgElemType::FUNCTION },
@@ -417,17 +427,18 @@ static const ProgElem ELEMS[] = {
     { 0x80034E58, 0x80034EA4, "",                                       ProgElemType::FUNCTION },
     { 0x80034EA4, 0x80034F04, "",                                       ProgElemType::FUNCTION },
     { 0x80034F04, 0x80034F54, "",                                       ProgElemType::FUNCTION },    
-    { 0x80034F54, 0x80034FA0, "START_UnusedLegals",                     ProgElemType::FUNCTION }, // TODO: name children
-    { 0x80035098, 0x80035268, "START_Title",                            ProgElemType::FUNCTION }, // TODO: name children
-    { 0x80035268, 0x80035294, "STOP_Title",                             ProgElemType::FUNCTION }, // TODO: name children
-    { 0x80035294, 0x8003540C, "TIC_Title",                              ProgElemType::FUNCTION }, // TODO: name children
-    { 0x8003540C, 0x80035B24, "DRAW_Title",                             ProgElemType::FUNCTION }, // TODO: name children
-    { 0x80035B24, 0x80035C94, "RunMenu",                                ProgElemType::FUNCTION }, // TODO: name children
+    { 0x80034F54, 0x80034FA0, "START_UnusedLegals",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80035098, 0x80035268, "START_Title",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80035268, 0x80035294, "STOP_Title",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80035294, 0x8003540C, "TIC_Title",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8003540C, 0x80035B24, "DRAW_Title",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80035B24, 0x80035C94, "RunMenu",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800381B0, 0x80038558, "",                                       ProgElemType::FUNCTION },
     { 0x80038558, 0x80038610, "",                                       ProgElemType::FUNCTION },
     { 0x80038610, 0x80038688, "",                                       ProgElemType::FUNCTION },
     { 0x8003B0F0, 0x8003B238, "",                                       ProgElemType::FUNCTION },
-    { 0x8003F180, 0x8003F200, "",                                       ProgElemType::FUNCTION },
+    { 0x8003F134, 0x8003F180, "FixedMul",                               ProgElemType::FUNCTION },
+    { 0x8003F180, 0x8003F200, "FixedDiv",                               ProgElemType::FUNCTION },
     { 0x8003F200, 0x8003F234, "",                                       ProgElemType::FUNCTION },
     { 0x8003F234, 0x8003F2F0, "",                                       ProgElemType::FUNCTION },
     { 0x8003F2F0, 0x8003F3AC, "",                                       ProgElemType::FUNCTION },
@@ -602,7 +613,7 @@ static const ProgElem ELEMS[] = {
     { 0x80050334, 0x800503B4, "",                                       ProgElemType::FUNCTION },
     { 0x800503B4, 0x8005041C, "",                                       ProgElemType::FUNCTION },
     { 0x80050454, 0x80050460, "",                                       ProgElemType::FUNCTION },
-    { 0x80050714, 0x800507AC, "main",                                   ProgElemType::FUNCTION }, // TODO: name children
+    { 0x80050714, 0x800507AC, "main",                                   ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800507AC, 0x8005081C, "",                                       ProgElemType::FUNCTION },
     { 0x80050884, 0x80050894, "LIBAPI_InitHeap",                        ProgElemType::FUNCTION },
     { 0x80051208, 0x8005171C, "",                                       ProgElemType::FUNCTION },
@@ -1005,7 +1016,9 @@ static const ProgElem ELEMS[] = {
     { 0x80077EE8, 0x80077EEC, "gpLineTarget",                           ProgElemType::PTR32 },
     { 0x80077F80, 0x80077F84, "gAttackAngle",                           ProgElemType::UINT32 },
     { 0x80077F98, 0x80077F9C, "gAttackRange",                           ProgElemType::INT32 },
+    { 0x80077FF8, 0x80077FFC, "gAimTopSlope",                           ProgElemType::INT32 },
     { 0x800780B4, 0x800780B8, "gpShooter",                              ProgElemType::PTR32 },
+    { 0x800782F8, 0x800782FC, "gAimBottomSlope",                        ProgElemType::INT32 },
 };
 
 const ProgElem*     gProgramElems_Doom = ELEMS;
