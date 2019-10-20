@@ -201,9 +201,10 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
     uint32_t arrayElemNum = 0;
 
     for (uint32_t addr = progElem.startAddr; addr < progElem.endAddr; addr += arrayElemTypeSize) {
-        // Load the word for the variable
+        // Load the word for the variable.
+        // Note: if it's out of bounds (a zero initialized global) then it gets a value of zero since it's not defined in the .EXE image:
         const uint32_t wordIdx = (addr - exe.baseAddress) / 4;
-        const ExeWord exeWord = exe.words[wordIdx];
+        const ExeWord exeWord = (wordIdx < exe.sizeInWords) ? exe.words[wordIdx] : ExeWord{};
     
         // Shift and/or mask the word's value if the size is less than 32-bits
         uint32_t elemVal = exeWord.value;
@@ -316,9 +317,10 @@ static void printSingleVariable(const ExeFile& exe, const ProgElem& progElem, st
         );
     }
 
-    // Load the word for the variable
+    // Load the word for the variable.
+    // Note: if it's out of bounds (a zero initialized global) then it gets a value of zero since it's not defined in the .EXE image:
     const uint32_t wordIdx = (progElem.startAddr - exe.baseAddress) / 4;
-    const ExeWord exeWord = exe.words[wordIdx];
+    const ExeWord exeWord = (wordIdx < exe.sizeInWords) ? exe.words[wordIdx] : ExeWord{};
     
     // Shift and/or mask the word's value if the size is less than 32-bits
     uint32_t varVal = exeWord.value;
@@ -427,14 +429,26 @@ static void validateProgElemRange(const ExeFile& exe, const ProgElem& progElem) 
     const uint32_t exeStart = exe.baseAddress;
     const uint32_t exeEnd = exeStart + exe.sizeInWords * 4;
 
-    const bool bProgElemRangeInvalid = (
-        (progElem.endAddr <= progElem.startAddr) ||
+    // Is this element outside of the .EXE image range?
+    const bool bOutsideOfExeRange = (
         (progElem.startAddr < exeStart) ||
         (progElem.endAddr < exeStart) ||
         (progElem.startAddr >= exeEnd) ||
         (progElem.endAddr > exeEnd)
     );
 
+    // Everything except actual functions are allowed to be outside of the .EXE image.
+    // Some globals are stored beyond the address range of the .EXE image (zero initialized globals) and are zero initialized in main() before the program starts.
+    // Of course, functions *MUST* always be in range.
+    const bool bIsAllowedOutsideOfExeRange = (
+        (progElem.type != ProgElemType::FUNCTION)
+    );
+
+    const bool bProgElemRangeInvalid = (
+        (progElem.endAddr <= progElem.startAddr) ||
+        (bOutsideOfExeRange && (!bIsAllowedOutsideOfExeRange))
+    );
+    
     if (bProgElemRangeInvalid) {
         FATAL_ERROR("Invalid program element! The range defined for the element is not valid for the .EXE");
     }
@@ -591,5 +605,19 @@ void DisassemblyPrinter::printExe(const ExeFile& exe, std::ostream& out) noexcep
 
         printUncategorizedProgramRegion(exe, curProgByteIdx, endByteIdx, out);
         curProgByteIdx = endByteIdx;
+    }
+
+    // If there are program elements outside of the .EXE image (zero intialized globals) then print them now
+    if (curProgElemIdx < numProgElems) {
+        out << "\n";
+        out << ";-----------------------------------------------------------------------------------------------------------------------\n";
+        out << "; ZERO initialized globals (not defined in .EXE image, zero initialized in 'main()')\n";
+        out << ";-----------------------------------------------------------------------------------------------------------------------\n\n";
+
+        while (curProgElemIdx < numProgElems) {
+            const ProgElem& progElem = exe.progElems[curProgElemIdx];
+            printProgElem(exe, progElem, out);
+            ++curProgElemIdx;
+        }
     }
 }

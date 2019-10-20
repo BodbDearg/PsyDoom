@@ -1003,6 +1003,9 @@ static const ProgElem ELEMS[] = {
     { 0x80077D44, 0x80077D4C, "STR_LumpName_DEMON",                     ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077D54, 0x80077D5C, "STR_Options",                            ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077EE8, 0x80077EEC, "gpLineTarget",                           ProgElemType::PTR32 },
+    { 0x80077F80, 0x80077F84, "gAttackAngle",                           ProgElemType::UINT32 },
+    { 0x80077F98, 0x80077F9C, "gAttackRange",                           ProgElemType::INT32 },
+    { 0x800780B4, 0x800780B8, "gpShooter",                              ProgElemType::PTR32 },
 };
 
 const ProgElem*     gProgramElems_Doom = ELEMS;
