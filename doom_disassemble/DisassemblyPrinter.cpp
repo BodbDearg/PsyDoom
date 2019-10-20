@@ -179,7 +179,7 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
         case ProgElemType::UINT8:       printProgElemName(progElem, "UNNAMED_array_u8_", out);      break;
         case ProgElemType::BOOL8:       printProgElemName(progElem, "UNNAMED_array_bool8_", out);   break;
         case ProgElemType::CHAR8:       printProgElemName(progElem, "UNNAMED_string8_", out);       break;
-        case ProgElemType::PTR32:       printProgElemName(progElem, "UNNAMED_array_pt32_", out);    break;
+        case ProgElemType::PTR32:       printProgElemName(progElem, "UNNAMED_array_ptr32_", out);   break;
 
         default:
             FATAL_ERROR("Unexpected case! We should never hit this!");
@@ -382,7 +382,7 @@ static void printSingleVariable(const ExeFile& exe, const ProgElem& progElem, st
 
         case ProgElemType::PTR32:
             out << "ptr32 ";
-            printProgElemName(progElem, "UNNAMED_pt32_", out);
+            printProgElemName(progElem, "UNNAMED_ptr32_", out);
             break;
 
         default:
