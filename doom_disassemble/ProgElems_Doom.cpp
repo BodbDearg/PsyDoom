@@ -969,6 +969,8 @@ static const ProgElem ELEMS[] = {
     { 0x80077BAC, 0x80077BB4, "STR_LumpName_PLAYPAL",                   ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077BC4, 0x80077BC8, "gValidCount",                            ProgElemType::UINT32 },
     { 0x80077BE8, 0x80077BF0, "STR_IWAD",                               ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x80077BF8, 0x80077BFC, "StackEndAddr",                           ProgElemType::PTR32 },
+    { 0x80077BFC, 0x80077C00, "StackSize",                              ProgElemType::PTR32 },
     { 0x80077C1C, 0x80077C24, "STR_sio_3",                              ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077C44, 0x80077C4C, "STR_LumpName_LEGALS",                    ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077C4C, 0x80077C54, "STR_LumpName_LOADING",                   ProgElemType::ARRAY, ProgElemType::CHAR8 },
