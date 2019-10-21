@@ -1,12 +1,14 @@
 # Platform agnostic sources
 set(SOURCE_FILES
+    "ConstEvalRegState.h"
+    "ConstInstructionEvaluator.cpp"
+    "ConstInstructionEvaluator.h"
     "CpuGpr.h"
     "CpuInstruction.cpp"
     "CpuInstruction.h"
     "CpuOpcode.h"
     "DisassemblyPrinter.cpp"
     "DisassemblyPrinter.h"
-    "ConstEvalRegState.h"
     "ExeFile.cpp"
     "ExeFile.h"
     "ExeWord.h"
