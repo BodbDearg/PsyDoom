@@ -47,10 +47,6 @@ private:
     // Initialize the const evaluator with the given input register state for the given function in the given exe
     void initEvaluator(const ExeFile& exe, const ProgElem& progElem, const ConstEvalRegState& inputRegState) noexcept;
 
-    // Checks for unevaluated instructions.
-    // Returns true if there are unevaluated instructions and creates a new branch path to execute those instructions.
-    bool checkForUnevaluatedInstructions() noexcept;
-
     // Get the instruction index for the given address.
     // Returns UINT32_MAX if the given address is not valid and pointing to a valid instruction.
     uint32_t getInstructionIdx(const uint32_t instructionAddr) const noexcept;

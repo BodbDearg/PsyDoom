@@ -448,25 +448,14 @@ ConstInstructionEvaluator::~ConstInstructionEvaluator() noexcept {
 }
 
 void ConstInstructionEvaluator::constEvalFunction(const ExeFile& exe, const ProgElem& progElem, const ConstEvalRegState& inputRegState) noexcept {
+    // Initialize the evaluator for this function
     initEvaluator(exe, progElem, inputRegState);
 
-    while (true) {
-        // See if there are branch paths to execute.
-        // If there are some then execute the next one:
-        if (!mBranchPathsToExec.empty()) {
-            BranchPath branchPath = mBranchPathsToExec.back();
-            mBranchPathsToExec.pop_back();
-            evalBranchPath(branchPath);
-        } else {
-            // No branch paths to execute.
-            // Check to see if there are any unevaluated instructions and if there are none then we are done:
-            if (!checkForUnevaluatedInstructions())
-                break;
-
-            // We found unevaluated instructions.
-            // A branch path SHOULD have been created at this point:
-            assert(!mBranchPathsToExec.empty());
-        }
+    // Continue evaluating until there are no more branch paths to execute
+    while (!mBranchPathsToExec.empty()) {
+        BranchPath branchPath = mBranchPathsToExec.back();
+        mBranchPathsToExec.pop_back();
+        evalBranchPath(branchPath);
     }
 }
 
@@ -526,27 +515,6 @@ void ConstInstructionEvaluator::initEvaluator(const ExeFile& exe, const ProgElem
     BranchPath& branchPath = mBranchPathsToExec.emplace_back();
     branchPath.instructionIdx = 0;
     branchPath.regStates = inputRegState;
-}
-
-bool ConstInstructionEvaluator::checkForUnevaluatedInstructions() noexcept {
-    const uint32_t numInstructions = (uint32_t) mInstructions.size();
-
-    for (uint32_t i = 0; i < numInstructions; ++i) {
-        FuncInstruction& instruction = mInstructions[i];
-
-        if (instruction.execCount <= 0) {
-            // Unevaluated instruction.
-            // Create a branch path for it to be executed with unknown input registers:
-            BranchPath& branchPath = mBranchPathsToExec.emplace_back();
-            branchPath.instructionIdx = i;
-            branchPath.regStates.clear();
-
-            // There were unevaluated instructions
-            return true;
-        }
-    }
-
-    return false;
 }
 
 uint32_t ConstInstructionEvaluator::getInstructionIdx(const uint32_t instructionAddr) const noexcept {
