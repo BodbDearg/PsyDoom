@@ -54,7 +54,6 @@ void InstructionCommenter::tryCommentInstruction(
         case CpuOpcode::ADDU:
         case CpuOpcode::AND:
         case CpuOpcode::ANDI:
-        case CpuOpcode::LUI:
         case CpuOpcode::MFHI:
         case CpuOpcode::MFLO:
         case CpuOpcode::NOR:
@@ -81,6 +80,19 @@ void InstructionCommenter::tryCommentInstruction(
                 const uint32_t result = outRegState.gprValue[destRegIdx];
                 out << "Result = ";
                 printNameAndAddress(result, exe, out);
+            }
+        }   break;
+
+        // For LUI just print a result, since it's always just used for the upper pointer of an address.
+        // Even if we don't need the lower 16-bits for the address and nothing further follows LUI, we'll still comment the load anyway:
+        case CpuOpcode::LUI: {
+            const uint8_t destRegIdx = inst.getDestGprIdx();
+
+            if (outRegState.bGprValueKnown[destRegIdx]) {
+                prefixComment(pCommentPrefixer, lineCol, out);
+                const uint32_t result = outRegState.gprValue[destRegIdx];
+                out << "Result = ";
+                PrintUtils::printHexU32(result, true, out);
             }
         }   break;
 
