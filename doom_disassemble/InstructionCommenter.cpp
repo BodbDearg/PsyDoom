@@ -43,7 +43,7 @@ void InstructionCommenter::tryCommentInstruction(
     ConstEvalRegState inRegState;
     ConstEvalRegState outRegState;
     constInstEvaluator.getInRegStateForInstruction(instAddr, inRegState);
-    constInstEvaluator.getInRegStateForInstruction(instAddr, outRegState);
+    constInstEvaluator.getOutRegStateForInstruction(instAddr, outRegState);
 
     // Try to comment
     switch (inst.opcode) {
@@ -78,7 +78,7 @@ void InstructionCommenter::tryCommentInstruction(
 
             if (outRegState.bGprValueKnown[destRegIdx]) {
                 prefixComment(pCommentPrefixer, lineCol, out);
-                const uint32_t result = inRegState.gprValue[destRegIdx];
+                const uint32_t result = outRegState.gprValue[destRegIdx];
                 out << "Result = ";
                 printNameAndAddress(result, exe, out);
             }
