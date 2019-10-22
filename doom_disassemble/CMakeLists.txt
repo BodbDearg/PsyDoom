@@ -14,6 +14,8 @@ set(SOURCE_FILES
     "ExeWord.h"
     "FatalErrors.cpp"
     "FatalErrors.h"
+    "InstructionCommenter.cpp"
+    "InstructionCommenter.h"
     "Main.cpp"
     "PrintUtils.cpp"
     "PrintUtils.h"

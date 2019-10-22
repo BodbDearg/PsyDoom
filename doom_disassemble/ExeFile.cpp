@@ -120,6 +120,7 @@ ExeFile::ExeFile() noexcept
     , entryPointWordIdx(0)
     , words(nullptr)
     , progElems()
+    , assumedGpRegisterValue(0)
 {
 }
 
@@ -227,13 +228,15 @@ const ProgElem* ExeFile::findProgElemAtAddr(const uint32_t addr) const noexcept 
     return nullptr;
 }
 
-void ExeFile::printNameOfElemAtAddr(const uint32_t addr, std::ostream& out) const noexcept {
+bool ExeFile::printNameOfElemAtAddr(const uint32_t addr, std::ostream& out) const noexcept {
     const ProgElem* const pElem = findProgElemAtAddr(addr);
 
     if (pElem) {
         pElem->printNameAtAddr(addr, out);
+        return true;
     } else {
         PrintUtils::printHexU32(addr, true, out);
+        return false;
     }
 }
 

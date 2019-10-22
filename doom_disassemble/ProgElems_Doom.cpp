@@ -1023,3 +1023,4 @@ static const ProgElem ELEMS[] = {
 
 const ProgElem*     gProgramElems_Doom = ELEMS;
 const uint32_t      gNumProgramElems_Doom = sizeof(ELEMS) / sizeof(ProgElem);
+const uint32_t      gGpRegisterValue_Doom = 0x800775E0u;

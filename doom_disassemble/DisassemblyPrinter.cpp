@@ -1,10 +1,19 @@
 #include "DisassemblyPrinter.h"
 
+#include "ConstInstructionEvaluator.h"
 #include "CpuInstruction.h"
 #include "ExeFile.h"
 #include "FatalErrors.h"
+#include "InstructionCommenter.h"
 #include "PrintUtils.h"
 #include <algorithm>
+
+static ConstInstructionEvaluator gConstInstructionEvaluator;
+
+static void prefixInstructionComment(const uint32_t lineCol, std::ostream& out) noexcept {
+    // TODO - indent properly
+    out << "        ; ";
+}
 
 static void printAddressForLine(const uint32_t addr, std::ostream& out) noexcept {
     PrintUtils::printHexU32(addr, true, out);
@@ -61,11 +70,14 @@ static void printProgElemName(const ProgElem& progElem, const char* const defaul
 }
 
 static void printProgInstruction(const ExeFile& exe, const ProgElem* const pParentFunc, const uint32_t instAddr, const uint32_t instWord, std::ostream& out) noexcept {
-    // Firstly decode the instruction
+    // Log where we are in the stream (so we can tell how long the instruction was when printed)
+    const int64_t instructionStartStreamPos = out.tellp();
+
+    // Decode the instruction
     CpuInstruction inst;
     inst.decode(instWord);
 
-    // Print 'nop' if the instruction is a nop, oth
+    // Print 'nop' if the instruction is a nop, otherwise print the instruction
     if (inst.isNOP()) {
         out << "  nop";
     } else {
@@ -77,6 +89,24 @@ static void printProgInstruction(const ExeFile& exe, const ProgElem* const pPare
         }
 
         inst.print(exe, instAddr, pParentFunc, out);
+    }
+
+    // Figure out the printed length of the instruction
+    const int64_t instructionEndStreamPos = out.tellp();
+    assert(instructionEndStreamPos >= instructionStartStreamPos);
+    const uint32_t instructionPrintedLen = (uint32_t)(instructionEndStreamPos - instructionStartStreamPos);
+
+    // Comment on the instruction if there is a parent function
+    if (pParentFunc) {
+        InstructionCommenter::tryCommentInstruction(
+            inst,
+            instAddr,
+            exe,
+            gConstInstructionEvaluator,
+            prefixInstructionComment,
+            instructionPrintedLen,
+            out
+        );
     }
 }
 
@@ -101,6 +131,15 @@ static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ost
 
     if (!bIsFuncRangeAligned) {
         FATAL_ERROR("Invalid function program element! The ranges of addresses specified are NOT 32-bit aligned or the function size is zero!");
+    }
+
+    // Do constant evaluation for the function
+    {
+        ConstEvalRegState constEvalRegState;
+        constEvalRegState.clear();
+        constEvalRegState.setGpr(CpuGpr::GP, exe.assumedGpRegisterValue);
+
+        gConstInstructionEvaluator.constEvalFunction(exe, progElem, constEvalRegState);
     }
 
     // Figure out the start and end word for the function in the .EXE

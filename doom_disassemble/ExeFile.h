@@ -27,6 +27,11 @@ struct ExeFile {
     // Manually identified through investigation.
     std::vector<ProgElem> progElems;
 
+    // The assumed value of the '$gp' register throughout the program - manually identified for the program.
+    // This is set in main() and should remain the same throughout the lifetime of the program.
+    // Access to some globals depends on it, hence knowing it's value allows us to annotate access to those globals.
+    uint32_t assumedGpRegisterValue;
+
     ExeFile() noexcept;
 
     // Load the playstation EXE from the given path.
@@ -43,7 +48,8 @@ struct ExeFile {
 
     // Print the name of the element at the address.
     // Just prints the raw hex address if there is no such element.
-    void printNameOfElemAtAddr(const uint32_t addr, std::ostream& out) const noexcept;
+    // Returns 'true' if an actual name was printed instead of a raw hex address.
+    bool printNameOfElemAtAddr(const uint32_t addr, std::ostream& out) const noexcept;
 
     // Determine which words are referenced by jump instructions, data etc.
     // Useful in the disassembly to be able to quickly see branch targets and references to specific memory locations.

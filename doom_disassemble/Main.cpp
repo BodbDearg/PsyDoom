@@ -59,6 +59,7 @@ int main(int argc, char* argv[]) noexcept {
         FATAL_ERROR("TODO: FINAL DOOM NOT SUPPORTED YET!");
     } else {
         exe.setProgElems(gProgramElems_Doom, gNumProgramElems_Doom);
+        exe.assumedGpRegisterValue = gGpRegisterValue_Doom;
     }
 
     exe.determineWordReferences();

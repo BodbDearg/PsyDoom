@@ -504,7 +504,7 @@ void ConstInstructionEvaluator::initEvaluator(const ExeFile& exe, const ProgElem
     for (uint32_t wordIdx = startExeWord; wordIdx < endExeWord; ++wordIdx) {
         const uint32_t word = exe.words[wordIdx].value;
 
-        FuncInstruction& instruction = mInstructions[wordIdx];
+        FuncInstruction& instruction = mInstructions.emplace_back();
         instruction.instruction.decode(word);
         instruction.regIn.clear();
         instruction.regOut.clear();
