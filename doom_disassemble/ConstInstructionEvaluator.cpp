@@ -47,9 +47,9 @@ static void evalInstImpl(CpuInstruction& inst, const ConstEvalRegState& regIn, C
 
         case CpuOpcode::ADDIU: {
             if (regIn.bGprValueKnown[inst.regS]) {
-                const uint32_t s = regIn.gprValue[inst.regS];
-                const uint32_t i = inst.immediateVal & 0xFFFFu;
-                regOut.setGpr(resultGpr, s + i);
+                const int32_t s = (int32_t) regIn.gprValue[inst.regS];
+                const int32_t i = (int32_t)(int16_t)(uint16_t) inst.immediateVal;
+                regOut.setGpr(resultGpr, (uint32_t)(s + i));
             } else {
                 regOut.clearGpr(resultGpr);
             }
