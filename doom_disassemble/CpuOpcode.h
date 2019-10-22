@@ -972,6 +972,27 @@ namespace CpuOpcodeUtils {
         return (isBranchOpcode(opcode) || isJumpOpcode(opcode));
     }
 
+    inline constexpr bool isTrapOpcode(const CpuOpcode opcode) noexcept {
+        switch (opcode) {
+            case CpuOpcode::TEQ:
+            case CpuOpcode::TEQI:
+            case CpuOpcode::TGE:
+            case CpuOpcode::TGEI:
+            case CpuOpcode::TGEIU:
+            case CpuOpcode::TGEU:
+            case CpuOpcode::TLT:
+            case CpuOpcode::TLTI:
+            case CpuOpcode::TLTIU:
+            case CpuOpcode::TLTU:
+            case CpuOpcode::TNE:
+            case CpuOpcode::TNEI:
+                return true;
+            
+            default:
+                return false;
+        }
+    }
+
     inline constexpr bool isIllegalOpcode(const CpuOpcode opcode) noexcept {
         return ((uint32_t) opcode >= NUM_CPU_OPCODES);
     }

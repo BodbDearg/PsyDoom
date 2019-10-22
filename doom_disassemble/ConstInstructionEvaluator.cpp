@@ -581,6 +581,10 @@ void ConstInstructionEvaluator::evalBranchPath(const BranchPath& branchPath) noe
 
         if (!evalInstruction(thisInst, inputRegState))
             break;
+
+        // If the instruction is a trap instruction (illegal) then do not execute any instructions following it
+        if (CpuOpcodeUtils::isTrapOpcode(thisInst.instruction.opcode))
+            break;
         
         // If the instruction is a branch or jump then the next instruction gets executed also.
         // Determine what the next input state will be based on whether there is a branch or not:
