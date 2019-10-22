@@ -957,6 +957,10 @@ namespace CpuOpcodeUtils {
         }
     }
 
+    inline constexpr bool isBranchOrJumpOpcode(const CpuOpcode opcode) noexcept {
+        return (isBranchOpcode(opcode) || isJumpOpcode(opcode));
+    }
+
     inline constexpr bool isFixedJumpOpcode(const CpuOpcode opcode) noexcept {
         switch (opcode) {
             case CpuOpcode::J:
@@ -968,8 +972,15 @@ namespace CpuOpcodeUtils {
         }
     }
 
-    inline constexpr bool isBranchOrJumpOpcode(const CpuOpcode opcode) noexcept {
-        return (isBranchOpcode(opcode) || isJumpOpcode(opcode));
+    inline constexpr bool isReturningJumpOpcode(const CpuOpcode opcode) noexcept {
+        switch (opcode) {
+            case CpuOpcode::JAL:
+            case CpuOpcode::JALR:
+                return true;
+                
+            default:
+                return false;
+        }
     }
 
     inline constexpr bool isTrapOpcode(const CpuOpcode opcode) noexcept {

@@ -609,7 +609,7 @@ void ConstInstructionEvaluator::evalBranchPath(const BranchPath& branchPath) noe
                 switch (thisInstOpcode) {
                     // Regular jump: just make a branch path to the new location
                     case CpuOpcode::J: {
-                        const uint32_t branchTgtAddr = thisInst.instruction.getBranchInstTargetAddr(thisInstAddr);
+                        const uint32_t branchTgtAddr = thisInst.instruction.getFixedJumpInstTargetAddr(thisInstAddr);
                         const uint32_t branchTgtInstIdx = (branchTgtAddr - mFuncStartAddr) / sizeof(uint32_t);
 
                         BranchPath& newBranchPath = mBranchPathsToExec.emplace_back();
@@ -653,9 +653,20 @@ void ConstInstructionEvaluator::evalBranchPath(const BranchPath& branchPath) noe
 }
 
 bool ConstInstructionEvaluator::evalInstruction(FuncInstruction& inst, const ConstEvalRegState& inRegState) noexcept {
-    // Have we executed the instruction too much already? If so then stop:
-    if (inst.execCount >= MAX_INSTRUCTION_EVALUATIONS)
-        return false;   
+    // Have we executed the instruction too much already? If so then stop, but only stop for certain instruction types:
+    if (inst.execCount >= MAX_INSTRUCTION_EVALUATIONS) {
+        // Enforce the limit on all branches.
+        // Only enforce the limit on jumps that DON'T simply return back to where they were called from.
+        const CpuOpcode opcode = inst.instruction.opcode;
+
+        if (CpuOpcodeUtils::isBranchOpcode(opcode)) {
+            return false;
+        } else if (CpuOpcodeUtils::isJumpOpcode(opcode)) {
+            if (!CpuOpcodeUtils::isReturningJumpOpcode(opcode)) {
+                return false;
+            }
+        }
+    }
 
     // Set the input register state for the instruction.
     // If it's the first time executing we just copy the current input state, otherwise we merge and set any
