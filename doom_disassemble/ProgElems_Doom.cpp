@@ -397,8 +397,8 @@ static const ProgElem ELEMS[] = {
     { 0x80031FD8, 0x80032024, "",                                       ProgElemType::FUNCTION },
     { 0x80032024, 0x8003206C, "",                                       ProgElemType::FUNCTION },
     { 0x8003206C, 0x80032144, "",                                       ProgElemType::FUNCTION },
-    { 0x80032144, 0x8003219C, "",                                       ProgElemType::FUNCTION },
-    { 0x8003219C, 0x800321D0, "",                                       ProgElemType::FUNCTION },
+    { 0x80032144, 0x8003219C, "Z_Init",                                 ProgElemType::FUNCTION }, // TODO: extract globals
+    { 0x8003219C, 0x800321D0, "Z_InitZone",                             ProgElemType::FUNCTION },
     { 0x800321D0, 0x800323C8, "",                                       ProgElemType::FUNCTION },
     { 0x800323C8, 0x800325D8, "",                                       ProgElemType::FUNCTION },
     { 0x800325D8, 0x80032640, "Z_Free2",                                ProgElemType::FUNCTION },

@@ -7,17 +7,17 @@ Stack:
     - Therefore the minimium stack address (to hold a 64-bit value) is '1F7FF8'
 
 Heap:
-    - Initialized to a base address of '800A9EC8'
+    - Initialized to a base address of '800A9EC4'
     - Size is set to '14E134' (1,368,372 bytes)
-    - End of the heap is at '801F7FFC' (does it overlap stack space by 4 bytes?!)
+    - End of the heap is at '801F7FF8'
 
 Zeroed globals memory region:
     - The loaded program ends at '80078000'.
-    - The heap begins at '800A9EC8'.
-    - Therefore there is a gap of '31EC8' (204,488 bytes)
+    - The heap begins at '800A9EC4'.
+    - Therefore there is a gap of '31EC4' (204,484 bytes)
     - Some globals appear to be stored in this region.
         - But they are not a part of the executable image itself.
-    - main() appears to zero the memory for this area before initializing the heap.
+    - main() appears to zero the memory for this area before initializing the heap and a little bit before that.
 
 Sprite lumps in PC DOOM which are NOT in the PSX:
     VILE, FIRE, SSWV, KEEN, BBRN, BOSF
