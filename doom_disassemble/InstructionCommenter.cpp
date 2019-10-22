@@ -129,7 +129,7 @@ void InstructionCommenter::tryCommentInstruction(
         case CpuOpcode::LWC2:
         case CpuOpcode::LWL:
         case CpuOpcode::LWR: {
-            if (outRegState.bGprValueKnown[inst.regS]) {
+            if (inRegState.bGprValueKnown[inst.regS]) {
                 prefixComment(pCommentPrefixer, lineCol, out);
                 const uint32_t s = inRegState.gprValue[inst.regS];
                 const int32_t i = (int32_t)(int16_t)(uint16_t) inst.immediateVal;
@@ -146,7 +146,7 @@ void InstructionCommenter::tryCommentInstruction(
         case CpuOpcode::SWC2:
         case CpuOpcode::SWL:
         case CpuOpcode::SWR: {
-            if (outRegState.bGprValueKnown[inst.regS]) {
+            if (inRegState.bGprValueKnown[inst.regS]) {
                 prefixComment(pCommentPrefixer, lineCol, out);
                 const uint32_t s = inRegState.gprValue[inst.regS];
                 const int32_t i = (int32_t)(int16_t)(uint16_t) inst.immediateVal;
