@@ -11,8 +11,24 @@
 static ConstInstructionEvaluator gConstInstructionEvaluator;
 
 static void prefixInstructionComment(const uint32_t lineCol, std::ostream& out) noexcept {
-    // TODO - indent properly
-    out << "        ; ";
+    // Figure out the start column for the comment
+    constexpr uint32_t minCommentStartCol = 32u;
+    uint32_t commentStartCol = std::max(minCommentStartCol, lineCol);
+
+    while (commentStartCol % 4 != 0) {
+        ++commentStartCol;
+    }
+
+    // Insert the required number of spaces up until the start column
+    uint32_t numSpacesToInsert = commentStartCol - lineCol;
+
+    while (numSpacesToInsert > 0) {
+        out.put(' ');
+        --numSpacesToInsert;
+    }
+
+    // Start of comment
+    out << "; ";
 }
 
 static void printAddressForLine(const uint32_t addr, std::ostream& out) noexcept {
