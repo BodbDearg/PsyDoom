@@ -33,3 +33,12 @@ Likely start of 'mobjinfo_t' (array of 'mobjinfo_t'):
     8005E03C (first entry appears to be the player)
 
 To access an unused scrolling copyright notice, change the instruction at '80012334' from 'F9 48 00 0C' to 'E9 48 00 0C'. This appears to be similar to the copyright notice that is drawn by the initial 'SLUS_000.77' executable, but scrolling and with a shotgun sound played at the start. Was it used in the Demo verison perhaps?
+
+
+Cheats quick ref:
+    - Weapons, keys and ammo:   X, Triangle, L1, Up, Down, R2, Left, Left
+    - Reveal automap:           Triangle, Triangle, L2, R2, L2, R2, R1, Square
+    - God mode:                 Down, L2, Square, R1, Right, L1, Left, Circle
+    - Warp:                     Right, Left, R2, R1, Triangle, L1, Circle, X
+    - Show map objs:            Triangle, Triangle, L2, R2, L2, R2, R1, Circle
+    - X-Ray vision:             L1, R2, L2, R1, Right, Triangle, X, Right
