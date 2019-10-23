@@ -320,15 +320,17 @@ static const ProgElem ELEMS[] = {
     { 0x8001F7D4, 0x8001F848, "",                                       ProgElemType::FUNCTION },
     { 0x8001F848, 0x8001F8A0, "",                                       ProgElemType::FUNCTION },
     { 0x8001F918, 0x8001FA34, "P_RecursiveSound",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8001FD4C, 0x8001FFBC, "P_CheckAmmo",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8001FD4C, 0x8001FFBC, "P_CheckAmmo",                            ProgElemType::FUNCTION },
     { 0x8001FFBC, 0x800201C4, "P_FireWeapon",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800201C4, 0x80020298, "",                                       ProgElemType::FUNCTION },
     { 0x80020298, 0x80020480, "A_WeaponReady",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80020480, 0x8002051C, "A_ReFire",                               ProgElemType::FUNCTION },
     { 0x8002053C, 0x800206B4, "A_Lower",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x800206B4, 0x800207A0, "A_Raise",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80020874, 0x8002096C, "A_Punch",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8002155C, 0x80021564, "A_Light0",                               ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x800206B4, 0x800207A0, "A_Raise",                                ProgElemType::FUNCTION },
+    { 0x80020874, 0x8002096C, "A_Punch",                                ProgElemType::FUNCTION },
+    { 0x80020DF0, 0x80020F7C, "A_FirePistol",                           ProgElemType::FUNCTION },
+    { 0x8002155C, 0x80021564, "A_Light0",                               ProgElemType::FUNCTION },
+    { 0x80021564, 0x80021570, "A_Light1",                               ProgElemType::FUNCTION },
     { 0x80021794, 0x8002190C, "",                                       ProgElemType::FUNCTION },
     { 0x80021BA0, 0x80021DD8, "",                                       ProgElemType::FUNCTION },
     { 0x80021EC4, 0x80022104, "",                                       ProgElemType::FUNCTION },
@@ -693,6 +695,14 @@ static const ProgElem ELEMS[] = {
     { 0x80058E50, 0x80058E6C, "State_S_PUNCH3",                         ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80058E6C, 0x80058E88, "State_S_PUNCH4",                         ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80058E88, 0x80058EA4, "State_S_PUNCH5",                         ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x80058EA4, 0x80058EC0, "State_S_PISTOL",                         ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x80058EC0, 0x80058EDC, "State_S_PISTOLDOWN",                     ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x80058EDC, 0x80058EF8, "State_S_PISTOLUP",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x80058EF8, 0x80058F14, "State_S_PISTOL1",                        ProgElemType::ARRAY, ProgElemType::UINT32, 0 },    
+    { 0x80058F14, 0x80058F30, "State_S_PISTOL2",                        ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x80058F30, 0x80058F4C, "State_S_PISTOL3",                        ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x80058F4C, 0x80058F68, "State_S_PISTOL4",                        ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x80058F68, 0x80058F84, "State_S_PISTOLFLASH",                    ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800670F4, 0x8006710C, "WeaponInfo_Fist",                        ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x8006710C, 0x80067124, "WeaponInfo_Pistol",                      ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80067124, 0x8006713C, "WeaponInfo_Shotgun",                     ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
