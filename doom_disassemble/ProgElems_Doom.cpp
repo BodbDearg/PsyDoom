@@ -372,7 +372,7 @@ static const ProgElem ELEMS[] = {
     { 0x80024334, 0x80024758, "",                                       ProgElemType::FUNCTION },
     { 0x8002479C, 0x80024908, "",                                       ProgElemType::FUNCTION },
     { 0x800249B4, 0x80024B3C, "P_CheckSight",                           ProgElemType::FUNCTION },
-    { 0x80024C14, 0x80024EC0, "P_CrossSubsector",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80024C14, 0x80024EC0, "P_CrossSubsector",                       ProgElemType::FUNCTION },
     { 0x80024EC0, 0x8002502C, "PS_CrossBSPNode",                        ProgElemType::FUNCTION },
     { 0x80025F44, 0x80026224, "",                                       ProgElemType::FUNCTION },
     { 0x80026224, 0x80026280, "",                                       ProgElemType::FUNCTION },

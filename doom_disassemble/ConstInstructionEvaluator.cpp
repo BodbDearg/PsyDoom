@@ -377,14 +377,17 @@ static void evalInstImpl(CpuInstruction& inst, const ConstEvalRegState& regIn, C
             }
         }   break;
 
-        // I don't know what these operatons do, so just wipe everything if we encounter them
+        // Ignore break
         case CpuOpcode::BREAK:
+            break;
+
+        // I don't know what these operatons do, so just clear all transients if we encounter them        
         case CpuOpcode::SYSCALL: 
         case CpuOpcode::TLBP:
         case CpuOpcode::TLBR:
         case CpuOpcode::TLBWI:
         case CpuOpcode::TLBWR: {
-            regOut.clear();
+            regOut.clearFuncCallTransientRegisters();
         }   break;
 
         // These trap instructions are not valid in MIPS I so do nothing if we encounter them
