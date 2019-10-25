@@ -248,7 +248,7 @@ static bool decodeMainOpcode0Ins(CpuInstruction& ins, const uint32_t machineCode
             return true;
 
         case 0b000100:  // SLLV     SSSSS TTTTT DDDDD ----- 000100
-            ins.opcode = CpuOpcode::SRL;
+            ins.opcode = CpuOpcode::SLLV;
             ins.regS = decodedRegS;
             ins.regT = decodedRegT;
             ins.regD = decodedRegD;
