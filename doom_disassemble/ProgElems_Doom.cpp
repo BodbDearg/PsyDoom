@@ -88,6 +88,8 @@ static const ProgElem ELEMS[] = {
     { 0x800110B0, 0x800110C8, "STR_Cheat_GodMode_On",                   ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x800110C8, 0x800110E0, "STR_Cheat_GodMode_Off",                  ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x800110E0, 0x800110F4, "STR_Cheat_LotsOfGoodies",                ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x800110F8, 0x80011120, "",                                       ProgElemType::ARRAY, ProgElemType::PTR32 },
+    { 0x80011120, 0x80011138, "",                                       ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80011138, 0x8001115C, "STR_R_Subsector_Err",                    ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x8001115C, 0x80011168, "STR_LumpName_TEXTURE1",                  ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80011168, 0x80011188, "STR_R_InitPalette_PalFoulup_Err",        ProgElemType::ARRAY, ProgElemType::CHAR8 },
@@ -272,6 +274,7 @@ static const ProgElem ELEMS[] = {
     { 0x80012B10, 0x80012B78, "UNUSED_AddPointToBox",                   ProgElemType::FUNCTION },
     { 0x80012B78, 0x80012E04, "MiniLoop",                               ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80012E04, 0x80012F00, "G_DoLoadLevel",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80012F00, 0x80012F88, "",                                       ProgElemType::FUNCTION },
     { 0x80012F88, 0x80013070, "",                                       ProgElemType::FUNCTION },
     { 0x80013070, 0x80013384, "",                                       ProgElemType::FUNCTION },
     { 0x80013384, 0x80013394, "",                                       ProgElemType::FUNCTION },
@@ -283,10 +286,13 @@ static const ProgElem ELEMS[] = {
     { 0x800138D8, 0x80013B38, "",                                       ProgElemType::FUNCTION },
     { 0x80013C00, 0x80013DE0, "",                                       ProgElemType::FUNCTION },
     { 0x80013DE0, 0x80013F00, "",                                       ProgElemType::FUNCTION },
-    { 0x80013F00, 0x80013FE0, "",                                       ProgElemType::FUNCTION }, // TODO: MAP
-    { 0x80013FE0, 0x800140DC, "",                                       ProgElemType::FUNCTION }, // TODO: MAP
+    { 0x80013F00, 0x80013FE0, "",                                       ProgElemType::FUNCTION },
+    { 0x80013FE0, 0x800140DC, "",                                       ProgElemType::FUNCTION },
     { 0x800140DC, 0x800141DC, "",                                       ProgElemType::FUNCTION },
-    { 0x800141DC, 0x800143C0, "",                                       ProgElemType::FUNCTION }, // TODO: MAP
+    { 0x800141DC, 0x800143C0, "",                                       ProgElemType::FUNCTION },
+    { 0x800145C4, 0x800146F0, "",                                       ProgElemType::FUNCTION },
+    { 0x800146F0, 0x800149B8, "",                                       ProgElemType::FUNCTION },
+    { 0x800149B8, 0x80014A30, "",                                       ProgElemType::FUNCTION },
     { 0x80014A30, 0x80014C44, "T_MoveCeiling",                          ProgElemType::FUNCTION },
     { 0x80014C44, 0x80014E18, "EV_DoCeiling",                           ProgElemType::FUNCTION },
     { 0x80014E18, 0x80014E54, "P_AddActiveCeiling",                     ProgElemType::FUNCTION },
@@ -342,6 +348,7 @@ static const ProgElem ELEMS[] = {
     { 0x8001C408, 0x8001C540, "P_SetThingPosition",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8001C660, 0x8001C724, "P_BlockThingsIterator",                  ProgElemType::FUNCTION },
     { 0x8001C724, 0x8001C838, "P_RemoveMobj",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8001C838, 0x8001CA18, "",                                       ProgElemType::FUNCTION },
     { 0x8001CA18, 0x8001CB9C, "P_SetMobjState",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8001CC68, 0x8001CE40, "P_SpawnMobj",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8001CE40, 0x8001D184, "",                                       ProgElemType::FUNCTION },
@@ -413,6 +420,12 @@ static const ProgElem ELEMS[] = {
     { 0x800249B4, 0x80024B3C, "P_CheckSight",                           ProgElemType::FUNCTION },
     { 0x80024C14, 0x80024EC0, "P_CrossSubsector",                       ProgElemType::FUNCTION },
     { 0x80024EC0, 0x8002502C, "PS_CrossBSPNode",                        ProgElemType::FUNCTION },
+    { 0x8002502C, 0x800251BC, "",                                       ProgElemType::FUNCTION },
+    { 0x800251BC, 0x80025460, "",                                       ProgElemType::FUNCTION },
+    { 0x80025648, 0x80025840, "",                                       ProgElemType::FUNCTION },
+    { 0x80025840, 0x80025A8C, "",                                       ProgElemType::FUNCTION },
+    { 0x80025A8C, 0x80025AFC, "",                                       ProgElemType::FUNCTION },
+    { 0x80025AFC, 0x80025F44, "",                                       ProgElemType::FUNCTION },    
     { 0x80025F44, 0x80026224, "P_InitPicAnims",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80026224, 0x80026280, "getSide",                                ProgElemType::FUNCTION },
     { 0x80026280, 0x800262E4, "getSector",                              ProgElemType::FUNCTION },
@@ -442,11 +455,14 @@ static const ProgElem ELEMS[] = {
     { 0x80028918, 0x80028C38, "",                                       ProgElemType::FUNCTION },
     { 0x80028C38, 0x80028C68, "P_AddThinker",                           ProgElemType::FUNCTION },
     { 0x80028C68, 0x80028C74, "P_RemoveThinker",                        ProgElemType::FUNCTION },
-    { 0x80028D94, 0x80029414, "",                                       ProgElemType::FUNCTION }, // TODO: MAP (+ SWITCH TABLES)
-    { 0x80029414, 0x800295FC, "P_Ticker",                               ProgElemType::FUNCTION }, // TODO: MAP
-    { 0x800295FC, 0x80029684, "P_Drawer",                               ProgElemType::FUNCTION }, // TODO: MAP
-    { 0x80029684, 0x8002971C, "P_Start",                                ProgElemType::FUNCTION }, // TODO: MAP
-    { 0x8002971C, 0x800297A0, "P_Stop",                                 ProgElemType::FUNCTION }, // TODO: MAP
+    { 0x80028D94, 0x80029414, "",                                       ProgElemType::FUNCTION },    
+    { 0x80029414, 0x800295FC, "P_Ticker",                               ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x800295FC, 0x80029684, "P_Drawer",                               ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80029684, 0x8002971C, "P_Start",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002971C, 0x800297A0, "P_Stop",                                 ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x800297A0, 0x80029918, "",                                       ProgElemType::FUNCTION }, // TODO: MAP
+    { 0x80029B38, 0x80029DD4, "",                                       ProgElemType::FUNCTION }, // TODO: MAP
+    { 0x8002A7F8, 0x8002ACE8, "",                                       ProgElemType::FUNCTION }, // TODO: MAP
     { 0x8002B9A8, 0x8002B9E0, "",                                       ProgElemType::FUNCTION },
     { 0x8002B9E0, 0x8002BB50, "",                                       ProgElemType::FUNCTION },
     { 0x8002BB50, 0x8002BC54, "",                                       ProgElemType::FUNCTION },
@@ -455,6 +471,8 @@ static const ProgElem ELEMS[] = {
     { 0x8002BE68, 0x8002BF2C, "",                                       ProgElemType::FUNCTION },
     { 0x8002BF2C, 0x8002C07C, "",                                       ProgElemType::FUNCTION },
     { 0x800305B0, 0x80030634, "",                                       ProgElemType::FUNCTION },
+    { 0x80030634, 0x80030B58, "",                                       ProgElemType::FUNCTION }, // TODO: MAP
+    { 0x80030B58, 0x80030BA0, "",                                       ProgElemType::FUNCTION },
     { 0x80030BA0, 0x80030EB4, "R_PointToAngle2",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80030F5C, 0x80031088, "R_PointInSubsector",                     ProgElemType::FUNCTION },
     { 0x800310C8, 0x80031394, "",                                       ProgElemType::FUNCTION },
@@ -523,9 +541,14 @@ static const ProgElem ELEMS[] = {
     { 0x800381B0, 0x80038558, "",                                       ProgElemType::FUNCTION },
     { 0x80038558, 0x80038610, "",                                       ProgElemType::FUNCTION },
     { 0x80038610, 0x80038688, "",                                       ProgElemType::FUNCTION },
+    { 0x80038688, 0x80038B0C, "",                                       ProgElemType::FUNCTION },
+    { 0x80038B0C, 0x8003A3C8, "",                                       ProgElemType::FUNCTION }, // TODO: MAP
     { 0x8003A3C8, 0x8003A9D4, "",                                       ProgElemType::FUNCTION },
-    { 0x8003B0F0, 0x8003B238, "",                                       ProgElemType::FUNCTION },
+    { 0x8003B0F0, 0x8003B238, "",                                       ProgElemType::FUNCTION },    
     { 0x8003B324, 0x8003BAC0, "",                                       ProgElemType::FUNCTION },
+    { 0x8003BAC0, 0x8003BB08, "",                                       ProgElemType::FUNCTION },
+    { 0x8003BB08, 0x8003BD34, "",                                       ProgElemType::FUNCTION },
+    { 0x8003BD34, 0x8003C3F0, "",                                       ProgElemType::FUNCTION }, // TODO: MAP
     { 0x8003C758, 0x8003CA64, "IN_Start",                               ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003CA64, 0x8003CA8C, "IN_Stop",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003CA8C, 0x8003CE70, "IN_Ticker",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -562,6 +585,7 @@ static const ProgElem ELEMS[] = {
     { 0x80040FAC, 0x80040FCC, "",                                       ProgElemType::FUNCTION },
     { 0x80040FCC, 0x80041014, "",                                       ProgElemType::FUNCTION },
     { 0x80041014, 0x80041050, "",                                       ProgElemType::FUNCTION },
+    { 0x80041050, 0x80041098, "",                                       ProgElemType::FUNCTION }, // TODO: MAP
     { 0x80041098, 0x800410A0, "",                                       ProgElemType::FUNCTION },
     { 0x800410A0, 0x80041118, "",                                       ProgElemType::FUNCTION },
     { 0x80041118, 0x80041318, "",                                       ProgElemType::FUNCTION },
