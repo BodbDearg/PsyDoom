@@ -518,6 +518,19 @@ void ConstInstructionEvaluator::initEvaluator(const ExeFile& exe, const ProgElem
     BranchPath& branchPath = mBranchPathsToExec.emplace_back();
     branchPath.instructionIdx = 0;
     branchPath.regStates = inputRegState;
+
+    // Run through all of the instructions in the function.
+    // If any are referenced by data (i.e a jump table) then add branch paths starting at those instructions too.
+    // This helps catch some code referenced by jump tables.
+    for (uint32_t wordIdx = startExeWord + 1; wordIdx < endExeWord; ++wordIdx) {
+        const ExeWord& word = exe.words[wordIdx];
+
+        if (word.bIsDataReferenced) {
+            BranchPath& branchPath = mBranchPathsToExec.emplace_back();
+            branchPath.instructionIdx = wordIdx - startExeWord;
+            branchPath.regStates = inputRegState;
+        }
+    }
 }
 
 uint32_t ConstInstructionEvaluator::getInstructionIdx(const uint32_t instructionAddr) const noexcept {
