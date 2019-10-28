@@ -1037,6 +1037,8 @@ void CpuInstruction::print(
 
             if (isBranchInternalToFunc(*this, thisInstAddr, pParentFunc)) {
                 out << " (I)";
+            } else if (pParentFunc) {
+                out << " (EXT)";
             }
 
             break;
@@ -1055,6 +1057,8 @@ void CpuInstruction::print(
 
             if (isBranchInternalToFunc(*this, thisInstAddr, pParentFunc)) {
                 out << " (I)";
+            } else if (pParentFunc) {
+                out << " (EXT)";
             }
 
             break;
@@ -1115,6 +1119,10 @@ void CpuInstruction::print(
                 out << " (I)";
             } else {
                 exe.printNameOfElemAtAddr(getFixedJumpInstTargetAddr(thisInstAddr), out);
+
+                if (pParentFunc) {
+                    out << " (EXT)";
+                }
             }
         } break;
 
