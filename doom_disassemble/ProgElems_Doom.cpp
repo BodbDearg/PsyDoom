@@ -388,17 +388,17 @@ static const ProgElem ELEMS[] = {
     { 0x8001A57C, 0x8001A8A0, "P_KillMobj",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8001A8A0, 0x8001AD74, "P_DamageMobj",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8001AD74, 0x8001AE00, "T_FireFlicker",                          ProgElemType::FUNCTION },
-    { 0x8001AE00, 0x8001AE8C, "P_SpawnFireFlicker",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8001AE00, 0x8001AE8C, "P_SpawnFireFlicker",                     ProgElemType::FUNCTION },
     { 0x8001AE8C, 0x8001AF14, "",                                       ProgElemType::FUNCTION },
     { 0x8001AF14, 0x8001AFBC, "",                                       ProgElemType::FUNCTION },
-    { 0x8001AFBC, 0x8001B020, "",                                       ProgElemType::FUNCTION },
+    { 0x8001AFBC, 0x8001B020, "T_StrobeFlash",                          ProgElemType::FUNCTION },
     { 0x8001B020, 0x8001B0F4, "",                                       ProgElemType::FUNCTION },
     { 0x8001B0F4, 0x8001B188, "",                                       ProgElemType::FUNCTION },
-    { 0x8001B188, 0x8001B298, "",                                       ProgElemType::FUNCTION },
-    { 0x8001B298, 0x8001B394, "",                                       ProgElemType::FUNCTION },
-    { 0x8001B394, 0x8001B4A0, "",                                       ProgElemType::FUNCTION },
-    { 0x8001B4A0, 0x8001B558, "",                                       ProgElemType::FUNCTION },
-    { 0x8001B558, 0x8001B640, "",                                       ProgElemType::FUNCTION },
+    { 0x8001B188, 0x8001B298, "EV_StartLightStrobing",                  ProgElemType::FUNCTION },
+    { 0x8001B298, 0x8001B394, "EV_TurnTagLightsOff",                    ProgElemType::FUNCTION },
+    { 0x8001B394, 0x8001B4A0, "EV_LightTurnOn",                         ProgElemType::FUNCTION },
+    { 0x8001B4A0, 0x8001B558, "T_Glow",                                 ProgElemType::FUNCTION },
+    { 0x8001B558, 0x8001B640, "P_SpawnGlowingLight",                    ProgElemType::FUNCTION },
     { 0x8001B640, 0x8001B67C, "P_CheckPosition",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8001B67C, 0x8001B7A4, "P_TryMove",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8001B7A4, 0x8001B848, "",                                       ProgElemType::FUNCTION },
@@ -545,8 +545,8 @@ static const ProgElem ELEMS[] = {
     { 0x80027EA8, 0x80027F3C, "P_StartButton",                          ProgElemType::FUNCTION },
     { 0x80027F3C, 0x8002822C, "P_ChangeSwitchTexture",                  ProgElemType::FUNCTION },
     { 0x8002822C, 0x80028820, "P_UseSpecialLine",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80028820, 0x80028918, "",                                       ProgElemType::FUNCTION },
-    { 0x80028918, 0x80028C38, "",                                       ProgElemType::FUNCTION },
+    { 0x80028820, 0x80028918, "P_Telefrag",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80028918, 0x80028C38, "EV_Teleport",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80028C38, 0x80028C68, "P_AddThinker",                           ProgElemType::FUNCTION },
     { 0x80028C68, 0x80028C74, "P_RemoveThinker",                        ProgElemType::FUNCTION },
     { 0x80028C74, 0x80028D30, "",                                       ProgElemType::FUNCTION },
