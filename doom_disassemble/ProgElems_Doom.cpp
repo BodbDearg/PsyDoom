@@ -530,7 +530,7 @@ static const ProgElem ELEMS[] = {
     { 0x80026600, 0x80026698, "P_FindHighestCeilingSurrounding",        ProgElemType::FUNCTION },
     { 0x80026698, 0x80026700, "P_FindSectorFromLineTag",                ProgElemType::FUNCTION },
     { 0x80026700, 0x80026794, "P_FindMinSurroundingLight",              ProgElemType::FUNCTION },
-    { 0x80026794, 0x80026D40, "P_CrossSpecialLine",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80026794, 0x80026D40, "P_CrossSpecialLine",                     ProgElemType::FUNCTION }, // TODO: figure out CD music related globals
     { 0x80026D40, 0x80026E08, "P_ShootSpecialLine",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80026E08, 0x80026FC8, "P_PlayerInSpecialSector",                ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80026FC8, 0x8002745C, "P_UpdateSpecials",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -735,7 +735,7 @@ static const ProgElem ELEMS[] = {
     { 0x80040830, 0x80040838, "empty_func3",                            ProgElemType::FUNCTION },
     { 0x80040838, 0x800408DC, "",                                       ProgElemType::FUNCTION },
     { 0x800408DC, 0x800408E8, "",                                       ProgElemType::FUNCTION },
-    { 0x800408E8, 0x80040A48, "",                                       ProgElemType::FUNCTION },
+    { 0x800408E8, 0x80040A48, "S_PlayCDMusic",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80040A48, 0x80040B6C, "",                                       ProgElemType::FUNCTION },
     { 0x80040B6C, 0x80040B8C, "",                                       ProgElemType::FUNCTION },
     { 0x80040B8C, 0x80040CA0, "",                                       ProgElemType::FUNCTION },
@@ -748,7 +748,7 @@ static const ProgElem ELEMS[] = {
     { 0x80040F50, 0x80040FAC, "",                                       ProgElemType::FUNCTION },
     { 0x80040FAC, 0x80040FCC, "",                                       ProgElemType::FUNCTION },
     { 0x80040FCC, 0x80041014, "",                                       ProgElemType::FUNCTION },
-    { 0x80041014, 0x80041050, "",                                       ProgElemType::FUNCTION },
+    { 0x80041014, 0x80041050, "S_StopMusic",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80041050, 0x80041098, "",                                       ProgElemType::FUNCTION },
     { 0x80041098, 0x800410A0, "",                                       ProgElemType::FUNCTION },
     { 0x800410A0, 0x80041118, "",                                       ProgElemType::FUNCTION },
@@ -1650,6 +1650,13 @@ static const ProgElem ELEMS[] = {
     { 0x80073E40, 0x80073E44, "DefaultBtnBinding_StrafeRight",          ProgElemType::UINT32 },
     { 0x80073E44, 0x80073E48, "DefaultBtnBinding_WeaponBack",           ProgElemType::UINT32 },
     { 0x80073E48, 0x80073E4C, "DefaultBtnBinding_WeaponForward",        ProgElemType::UINT32 },
+    { 0x80073E4C, 0x80073E50, "CDTrackNum_TitleScreen",                 ProgElemType::UINT32 },
+    { 0x80073E50, 0x80073E54, "CDTrackNum_MainMenu",                    ProgElemType::UINT32 },
+    { 0x80073E54, 0x80073E58, "CDTrackNum_Credits_Demo",                ProgElemType::UINT32 },
+    { 0x80073E58, 0x80073E5C, "CDTrackNum_Intermission",                ProgElemType::UINT32 },
+    { 0x80073E5C, 0x80073E60, "CDTrackNum_ClubDoom",                    ProgElemType::UINT32 },
+    { 0x80073E60, 0x80073E64, "CDTrackNum_Finale_Doom1",                ProgElemType::UINT32 },
+    { 0x80073E64, 0x80073E68, "CDTrackNum_Finale_Doom2",                ProgElemType::UINT32 },
     { 0x800740DC, 0x800740FC, "STR_MapName_01",                         ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x800740FC, 0x8007411C, "STR_MapName_02",                         ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x8007411C, 0x8007413C, "STR_MapName_03",                         ProgElemType::ARRAY, ProgElemType::CHAR8 },
@@ -1691,7 +1698,7 @@ static const ProgElem ELEMS[] = {
     { 0x8007459C, 0x800745BC, "STR_MapName_39",                         ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x800745BC, 0x800745DC, "STR_MapName_40",                         ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x800745DC, 0x800745FC, "STR_MapName_41",                         ProgElemType::ARRAY, ProgElemType::CHAR8 },
-    { 0x800745FC, 0x8007461C, "STR_MapName_42",                         ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x800745FC, 0x8007461C, "STR_MapName_42",                         ProgElemType::ARRAY, ProgElemType::CHAR8 },    
     { 0x8007461C, 0x8007463C, "STR_MapName_43",                         ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x8007463C, 0x8007465C, "STR_MapName_44",                         ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x8007465C, 0x8007467C, "STR_MapName_45",                         ProgElemType::ARRAY, ProgElemType::CHAR8 },
