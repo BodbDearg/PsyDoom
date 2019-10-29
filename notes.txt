@@ -45,3 +45,20 @@ Cheats quick ref:
     - Warp:                     Right, Left, R2, R1, Triangle, L1, Circle, X
     - Show map objs:            Triangle, Triangle, L2, R2, L2, R2, R1, Circle
     - X-Ray vision:             L1, R2, L2, R1, Right, Triangle, X, Right
+
+Anim struct seems to have 1 extra member:
+    struct anim_t {
+        u32 istexture;
+        u32 picnum;
+        u32 basepic;
+        u32 numpics;
+        u32 current;
+        u32 ticMask;    // Determines how frequently anim updates
+    };
+
+Status bar struct seems to look like this:
+    struct stbar_t {
+        spclface_e  specialFace;
+        u32         tryopen[NUMCARDS]; // (NUMCARDS=6)
+        u32         gotgibbed;        
+    };
