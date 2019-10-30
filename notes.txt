@@ -35,6 +35,7 @@ Likely start of 'mobjinfo_t' (array of 'mobjinfo_t'):
 Apparent structure sizes on PSX Doom (bytes):
     - player_t: 300
     - line_t: 76
+    - mobj_t: 148
 
 To access an unused scrolling copyright notice, change the instruction at '80012334' from 'F9 48 00 0C' to 'E9 48 00 0C'. This appears to be similar to the copyright notice that is drawn by the initial 'SLUS_000.77' executable, but scrolling and with a shotgun sound played at the start. Was it used in the Demo verison perhaps?
 
@@ -46,7 +47,7 @@ Cheats quick ref:
     - Show map objs:            Triangle, Triangle, L2, R2, L2, R2, R1, Circle
     - X-Ray vision:             L1, R2, L2, R1, Right, Triangle, X, Right
 
-Anim struct seems to have 1 extra member:
+Anim struct seems to have 1 extra member (24 bytes):
     struct anim_t {
         u32 istexture;
         u32 picnum;
@@ -56,7 +57,7 @@ Anim struct seems to have 1 extra member:
         u32 ticMask;    // Determines how frequently anim updates
     };
 
-Status bar struct seems to look like this:
+Status bar struct seems to look like this (32 bytes):
     struct stbar_t {
         spclface_e  specialFace;
         u32         tryopen[NUMCARDS]; // (NUMCARDS=6)

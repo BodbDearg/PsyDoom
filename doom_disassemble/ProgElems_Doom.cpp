@@ -332,7 +332,7 @@ static const ProgElem ELEMS[] = {
     { 0x80015C04, 0x80015CA8, "P_SpawnDoorRaiseIn5Mins",                ProgElemType::FUNCTION },
     { 0x80015CA8, 0x80015D1C, "",                                       ProgElemType::FUNCTION },
     { 0x80015D1C, 0x80015E00, "",                                       ProgElemType::FUNCTION },
-    { 0x80015E00, 0x80015F68, "P_Move",                                 ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80015E00, 0x80015F68, "P_Move",                                 ProgElemType::FUNCTION },
     { 0x80015F68, 0x80015FB4, "P_TryWalk",                              ProgElemType::FUNCTION },
     { 0x80015FB4, 0x80016334, "P_NewChaseDir",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80016334, 0x800164B4, "P_LookForPlayers",                       ProgElemType::FUNCTION },
@@ -400,7 +400,7 @@ static const ProgElem ELEMS[] = {
     { 0x8001B4A0, 0x8001B558, "T_Glow",                                 ProgElemType::FUNCTION },
     { 0x8001B558, 0x8001B640, "P_SpawnGlowingLight",                    ProgElemType::FUNCTION },
     { 0x8001B640, 0x8001B67C, "P_CheckPosition",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8001B67C, 0x8001B7A4, "P_TryMove",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8001B67C, 0x8001B7A4, "P_TryMove",                              ProgElemType::FUNCTION },
     { 0x8001B7A4, 0x8001B848, "",                                       ProgElemType::FUNCTION },
     { 0x8001B848, 0x8001B9F4, "",                                       ProgElemType::FUNCTION },
     { 0x8001B9F4, 0x8001BC30, "",                                       ProgElemType::FUNCTION },
@@ -419,9 +419,9 @@ static const ProgElem ELEMS[] = {
     { 0x8001C660, 0x8001C724, "P_BlockThingsIterator",                  ProgElemType::FUNCTION },
     { 0x8001C724, 0x8001C838, "P_RemoveMObj",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8001C838, 0x8001CA18, "",                                       ProgElemType::FUNCTION },
-    { 0x8001CA18, 0x8001CB9C, "P_SetMobjState",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8001CA18, 0x8001CB9C, "P_SetMObjState",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8001CB9C, 0x8001CC68, "",                                       ProgElemType::FUNCTION },
-    { 0x8001CC68, 0x8001CE40, "P_SpawnMobj",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8001CC68, 0x8001CE40, "P_SpawnMObj",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8001CE40, 0x8001D184, "",                                       ProgElemType::FUNCTION },
     { 0x8001D184, 0x8001D704, "",                                       ProgElemType::FUNCTION },
     { 0x8001D704, 0x8001D930, "P_SpawnPuff",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -429,11 +429,11 @@ static const ProgElem ELEMS[] = {
     { 0x8001DB78, 0x8001DC94, "",                                       ProgElemType::FUNCTION },
     { 0x8001DC94, 0x8001E0F4, "",                                       ProgElemType::FUNCTION },
     { 0x8001E0F4, 0x8001E4F4, "P_SpawnPlayerMissile",                   ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8001E4F4, 0x8001E720, "P_TryMove2",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8001E4F4, 0x8001E720, "P_TryMove2",                             ProgElemType::FUNCTION }, // TODO 2: name children, extract globals
     { 0x8001E720, 0x8001E76C, "",                                       ProgElemType::FUNCTION },
     { 0x8001E76C, 0x8001E868, "",                                       ProgElemType::FUNCTION },
     { 0x8001E868, 0x8001E978, "",                                       ProgElemType::FUNCTION },
-    { 0x8001E978, 0x8001EC68, "",                                       ProgElemType::FUNCTION },
+    { 0x8001E978, 0x8001EC68, "PM_CheckPosition",                       ProgElemType::FUNCTION }, // TODO 2: name children, extract globals
     { 0x8001EC68, 0x8001ED74, "",                                       ProgElemType::FUNCTION },
     { 0x8001ED74, 0x8001EEC4, "",                                       ProgElemType::FUNCTION },
     { 0x8001EEC4, 0x8001F028, "",                                       ProgElemType::FUNCTION },
@@ -544,8 +544,8 @@ static const ProgElem ELEMS[] = {
     { 0x80027D84, 0x80027EA8, "P_InitSwitchList",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80027EA8, 0x80027F3C, "P_StartButton",                          ProgElemType::FUNCTION },
     { 0x80027F3C, 0x8002822C, "P_ChangeSwitchTexture",                  ProgElemType::FUNCTION },
-    { 0x8002822C, 0x80028820, "P_UseSpecialLine",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80028820, 0x80028918, "P_Telefrag",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002822C, 0x80028820, "P_UseSpecialLine",                       ProgElemType::FUNCTION },
+    { 0x80028820, 0x80028918, "P_Telefrag",                             ProgElemType::FUNCTION },
     { 0x80028918, 0x80028C38, "EV_Teleport",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80028C38, 0x80028C68, "P_AddThinker",                           ProgElemType::FUNCTION },
     { 0x80028C68, 0x80028C74, "P_RemoveThinker",                        ProgElemType::FUNCTION },
@@ -608,7 +608,7 @@ static const ProgElem ELEMS[] = {
     { 0x80031B04, 0x80031BD4, "",                                       ProgElemType::FUNCTION },
     { 0x80031BD4, 0x80031C24, "",                                       ProgElemType::FUNCTION },
     { 0x80031C24, 0x80031CE0, "",                                       ProgElemType::FUNCTION },
-    { 0x80031CE0, 0x80031D90, "",                                       ProgElemType::FUNCTION },
+    { 0x80031CE0, 0x80031D90, "",                                       ProgElemType::FUNCTION },    
     { 0x80031D90, 0x80031E48, "",                                       ProgElemType::FUNCTION },
     { 0x80031E48, 0x80031EB4, "",                                       ProgElemType::FUNCTION },
     { 0x80031EB4, 0x80031EDC, "",                                       ProgElemType::FUNCTION },
@@ -1924,6 +1924,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077BA4, 0x80077BAC, "STR_LumpName_LIGHTS",                    ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077BAC, 0x80077BB4, "STR_LumpName_PLAYPAL",                   ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077BC4, 0x80077BC8, "gValidCount",                            ProgElemType::UINT32 },
+    { 0x80077BD0, 0x80077BD4, "gpFineCosine",                           ProgElemType::PTR32 },
     { 0x80077BE8, 0x80077BF0, "STR_IWAD",                               ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077BF8, 0x80077BFC, "StackEndAddr",                           ProgElemType::PTR32 },
     { 0x80077BFC, 0x80077C00, "StackSize",                              ProgElemType::PTR32 },
@@ -1967,7 +1968,9 @@ static const ProgElem ELEMS[] = {
     { 0x80077EDC, 0x80077EE0, "gppBlockLinks",                          ProgElemType::PTR32 },
     { 0x80077EE8, 0x80077EEC, "gpLineTarget",                           ProgElemType::PTR32 },
     { 0x80077EF0, 0x80077EF4, "gpBombSource",                           ProgElemType::PTR32 },
+    { 0x80077F04, 0x80077F08, "gTmCeilingZ",                            ProgElemType::INT32 },
     { 0x80077F30, 0x80077F34, "gOpenBottom",                            ProgElemType::INT32 },
+    { 0x80077F3C, 0x80077F40, "gTmDropoffZ",                            ProgElemType::INT32 },
     { 0x80077F40, 0x80077F44, "gpSubsectors",                           ProgElemType::PTR32 },
     { 0x80077F44, 0x80077F48, "gPadButtons_Player1",                    ProgElemType::UINT32 },
     { 0x80077F48, 0x80077F4C, "gPadButtons_Player2",                    ProgElemType::UINT32 },
@@ -1991,6 +1994,8 @@ static const ProgElem ELEMS[] = {
     { 0x80078048, 0x8007804C, "gGameMap",                               ProgElemType::UINT32 },
     { 0x8007804C, 0x80078050, "gGameTic",                               ProgElemType::UINT32 },
     { 0x8007805C, 0x80078060, "gbIsNetGame",                            ProgElemType::UINT32 },
+    { 0x80078078, 0x8007807C, "gTmFlags",                               ProgElemType::UINT32 },
+    { 0x8007807C, 0x80078080, "gbFloatOk",                              ProgElemType::UINT32 },
     { 0x8007808C, 0x80078090, "gpTryMoveThing",                         ProgElemType::PTR32 },
     { 0x800780A8, 0x800780AC, "gpSectors",                              ProgElemType::PTR32 },
     { 0x800780AC, 0x800780B4, "gbPlayerInGame",                         ProgElemType::ARRAY, ProgElemType::INT32, 0 },
@@ -2014,16 +2019,21 @@ static const ProgElem ELEMS[] = {
     { 0x800781C8, 0x800781CC, "gNumLines",                              ProgElemType::UINT32 },
     { 0x800781DC, 0x800781E0, "gLowFloor",                              ProgElemType::INT32 },
     { 0x800781E0, 0x800781E4, "gTopSlope",                              ProgElemType::INT32 },
+    { 0x800781E8, 0x800781EC, "gTmFloorZ",                              ProgElemType::INT32 },
     { 0x800781F8, 0x800781FC, "gT1xs",                                  ProgElemType::INT32 },
     { 0x80078204, 0x80078208, "gT2xs",                                  ProgElemType::INT32 },
     { 0x80078208, 0x8007820C, "gT1ys",                                  ProgElemType::INT32 },
     { 0x80078210, 0x80078214, "gT2ys",                                  ProgElemType::INT32 },
     { 0x80078224, 0x80078228, "gNumSubsectors",                         ProgElemType::UINT32 },
     { 0x80078238, 0x8007823C, "gpSegs",                                 ProgElemType::PTR32 },
+    { 0x80078240, 0x80078244, "gOldX",                                  ProgElemType::INT32 },
+    { 0x80078244, 0x80078248, "gOldY",                                  ProgElemType::INT32 },
+    { 0x80078248, 0x8007824C, "gpBlockLine",                            ProgElemType::PTR32 },
     { 0x80078258, 0x8007825C, "gGameSkill",                             ProgElemType::UINT32 },
     { 0x8007827C, 0x80078280, "gOpenRange",                             ProgElemType::INT32 },
     { 0x80078284, 0x80078288, "gBlockmapWidth",                         ProgElemType::UINT32 },
-    { 0x800782C4, 0x800782C8, "gpLatchedMoveThing",                     ProgElemType::PTR32 },
+    { 0x800782BC, 0x800782C0, "gpNewSubsec",                            ProgElemType::PTR32 },
+    { 0x800782C4, 0x800782C8, "gpMoveThing",                            ProgElemType::PTR32 },
     { 0x800782D0, 0x800782D4, "gpShootLine",                            ProgElemType::PTR32 },
     { 0x800782D4, 0x800782D8, "gpShootMObj",                            ProgElemType::PTR32 },
     { 0x800782EC, 0x800782F0, "MAYBE_gPlayerNum",                       ProgElemType::UINT32 },
@@ -2080,10 +2090,12 @@ static const ProgElem ELEMS[] = {
     { 0x800978C4, 0x800978D8, "gButtonList_15",                         ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800978D8, 0x800978EC, "gButtonList_16",                         ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80097C00, 0x80097C10, "gSTrace",                                ProgElemType::ARRAY, ProgElemType::INT32, 0 },
+    { 0x80097C10, 0x80097C20, "gtTmBBox",                               ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x80097C44, 0x80097CBC, "gpActivePlats",                          ProgElemType::ARRAY, ProgElemType::PTR32, 0 },
     { 0x80098718, 0x80098738, "gStatusBar",                             ProgElemType::ARRAY, ProgElemType::PTR32, 0 },
     { 0x800A87EC, 0x800A8918, "gPlayer1",                               ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x800A8918, 0x800A8A44, "gPlayer2",                               ProgElemType::ARRAY, ProgElemType::INT32, 0 },
+    { 0x800A8E90, 0x800A8F24, "gMObjHead",                              ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800A9D18, 0x800A9D90, "gpActiveCeilings",                       ProgElemType::ARRAY, ProgElemType::PTR32, 0 },
 };
 
