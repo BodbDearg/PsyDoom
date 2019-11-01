@@ -330,11 +330,11 @@ static const ProgElem ELEMS[] = {
     { 0x80015988, 0x80015B84, "EV_VerticalDoor",                        ProgElemType::FUNCTION },
     { 0x80015B84, 0x80015C04, "P_SpawnDoorCloseIn30",                   ProgElemType::FUNCTION },
     { 0x80015C04, 0x80015CA8, "P_SpawnDoorRaiseIn5Mins",                ProgElemType::FUNCTION },
-    { 0x80015CA8, 0x80015D1C, "",                                       ProgElemType::FUNCTION },
-    { 0x80015D1C, 0x80015E00, "",                                       ProgElemType::FUNCTION },
+    { 0x80015CA8, 0x80015D1C, "P_CheckMeleeRange",                      ProgElemType::FUNCTION },
+    { 0x80015D1C, 0x80015E00, "P_CheckMissileRange",                    ProgElemType::FUNCTION },
     { 0x80015E00, 0x80015F68, "P_Move",                                 ProgElemType::FUNCTION },
     { 0x80015F68, 0x80015FB4, "P_TryWalk",                              ProgElemType::FUNCTION },
-    { 0x80015FB4, 0x80016334, "P_NewChaseDir",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80015FB4, 0x80016334, "P_NewChaseDir",                          ProgElemType::FUNCTION },
     { 0x80016334, 0x800164B4, "P_LookForPlayers",                       ProgElemType::FUNCTION },
     { 0x800164B4, 0x800165E0, "A_Look",                                 ProgElemType::FUNCTION },
     { 0x800165E0, 0x80016928, "A_Chase",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -372,8 +372,8 @@ static const ProgElem ELEMS[] = {
     { 0x80018C44, 0x80018C78, "A_Hoof",                                 ProgElemType::FUNCTION },
     { 0x80018C78, 0x80018CAC, "A_Metal",                                ProgElemType::FUNCTION },
     { 0x80018CAC, 0x80018CE0, "A_BabyMetal",                            ProgElemType::FUNCTION },
-    { 0x80018CE0, 0x80018D54, "",                                       ProgElemType::FUNCTION },
-    { 0x80018D54, 0x80018DF0, "",                                       ProgElemType::FUNCTION },
+    { 0x80018CE0, 0x80018D54, "L_MissileHit",                           ProgElemType::FUNCTION },
+    { 0x80018D54, 0x80018DF0, "L_SkullBash",                            ProgElemType::FUNCTION },
     { 0x80018DF0, 0x80019010, "T_MovePlane",                            ProgElemType::FUNCTION },
     { 0x80019010, 0x80019100, "T_MoveFloor",                            ProgElemType::FUNCTION },
     { 0x80019100, 0x80019548, "EV_DoFloor",                             ProgElemType::FUNCTION },
@@ -420,8 +420,8 @@ static const ProgElem ELEMS[] = {
     { 0x8001C724, 0x8001C838, "P_RemoveMObj",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8001C838, 0x8001CA18, "",                                       ProgElemType::FUNCTION },
     { 0x8001CA18, 0x8001CB9C, "P_SetMObjState",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8001CB9C, 0x8001CC68, "",                                       ProgElemType::FUNCTION },
-    { 0x8001CC68, 0x8001CE40, "P_SpawnMObj",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8001CB9C, 0x8001CC68, "P_ExplodeMissile",                       ProgElemType::FUNCTION },
+    { 0x8001CC68, 0x8001CE40, "P_SpawnMObj",                            ProgElemType::FUNCTION },
     { 0x8001CE40, 0x8001D184, "",                                       ProgElemType::FUNCTION },
     { 0x8001D184, 0x8001D704, "",                                       ProgElemType::FUNCTION },
     { 0x8001D704, 0x8001D930, "P_SpawnPuff",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -2147,6 +2147,8 @@ static const ProgElem ELEMS[] = {
     { 0x80060B8C, 0x80060BE4, "MObjInfo_MT_MISC86",                     ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80067060, 0x80067080, "MoveXSpeed",                             ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x80067080, 0x800670A0, "MoveYSpeed",                             ProgElemType::ARRAY, ProgElemType::INT32, 0 },
+    { 0x800670A0, 0x800670C4, "OppositeDir",                            ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x800670C4, 0x800670D4, "DiagonalDirs",                           ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800670E4, 0x800670F4, "gClipAmmo",                              ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800670F4, 0x8006710C, "WeaponInfo_Fist",                        ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x8006710C, 0x80067124, "WeaponInfo_Pistol",                      ProgElemType::ARRAY, ProgElemType::UINT32, 0 },

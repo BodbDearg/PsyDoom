@@ -25,17 +25,9 @@ Sprite lumps in PC DOOM which are NOT in the PSX:
 Sprite lumps in PSX DOOM which are NOT in the PC version:
     HANC, BLCH, HANL, DED1, DED2, DED3, DED4, DED5, DED6
 
-Likely range of 'states' (array of 'state_t'):
-    80058D8C-8005E03B (inclusive)
-        756 states?
-
-Likely start of 'mobjinfo_t' (array of 'mobjinfo_t'): 
-    8005E03C (first entry appears to be the player)
-
 Apparent structure sizes on PSX Doom (bytes):
     - player_t: 300
     - line_t: 76
-    - mobj_t: 148
 
 To access an unused scrolling copyright notice, change the instruction at '80012334' from 'F9 48 00 0C' to 'E9 48 00 0C'. This appears to be similar to the copyright notice that is drawn by the initial 'SLUS_000.77' executable, but scrolling and with a shotgun sound played at the start. Was it used in the Demo verison perhaps?
 
@@ -47,45 +39,101 @@ Cheats quick ref:
     - Show map objs:            Triangle, Triangle, L2, R2, L2, R2, R1, Circle
     - X-Ray vision:             L1, R2, L2, R1, Right, Triangle, X, Right
 
-Anim struct seems to have 1 extra member (24 bytes):
+---------------------------------------------------------------------------------------------------
+Data structures
+---------------------------------------------------------------------------------------------------
+
+state_t (28 bytes):
+    struct state_t {
+        000     uint32_t    sprite;
+        004     uint32_t    frame;
+        008     uint32_t    tics;
+        00C     actionf_t   action;
+        010     uint32_t    nextstate;
+        014     uint32_t    misc1;
+        018     uint32_t    misc2;
+    };
+
+anim_t (24 bytes):
     struct anim_t {
-        u32 istexture;
-        u32 picnum;
-        u32 basepic;
-        u32 numpics;
-        u32 current;
-        u32 ticMask;    // Determines how frequently anim updates
+        000     uint32_t    istexture;
+        004     uint32_t    picnum;
+        008     uint32_t    basepic;
+        00C     uint32_t    numpics;
+        010     uint32_t    current;
+        014     uint32_t    ticMask;    // Determines how frequently anim updates (new field for PSX)
     };
 
-Status bar struct seems to look like this (32 bytes):
+stbar_t (32 bytes):
     struct stbar_t {
-        spclface_e  specialFace;
-        u32         tryopen[NUMCARDS]; // (NUMCARDS=6)
-        u32         gotgibbed;        
+        000     spclface_e  specialFace;
+        004     u32         tryopen[NUMCARDS];  // (NUMCARDS=6)
+        01C     u32         gotgibbed;        
     };
 
-mobjinfo_t appears to be (88 bytes):
+mobjinfo_t (88 bytes):
     struct mobjinfo_t {
-        u32 doomednum;
-        u32 spawnstate;
-        i32 spawnhealth;
-        u32 seestate;
-        u32 seesound;
-        i32 reactiontime;
-        u32 attacksound;
-        u32 painstate;
-        i32 painchance;
-        u32 painsound;
-        u32 meleestate;
-        u32 missilestate;
-        u32 deathstate;
-        u32 xdeathstate;
-        u32 deathsound;
-        i32 speed;
-        i32 radius;
-        i32 height;
-        i32 mass;
-        i32 damage;
-        u32 activesound;
-        u32 flags;
+        000     int32_t     doomednum;
+        004     int32_t     spawnstate;
+        008     int32_t     spawnhealth;
+        00C     uint32_t    seestate;
+        010     uint32_t    seesound;
+        014     int32_t     reactiontime;
+        018     uint32_t    attacksound;
+        01C     uint32_t    painstate;
+        020     int32_t     painchance;
+        024     uint32_t    painsound;
+        028     uint32_t    meleestate;
+        02C     uint32_t    missilestate;
+        030     uint32_t    deathstate;
+        034     uint32_t    xdeathstate;
+        038     uint32_t    deathsound;
+        03C     int32_t     speed;
+        040     int32_t     radius;
+        044     int32_t     height;
+        048     int32_t     mass;
+        04C     int32_t     damage;
+        050     uint32_t    activesound;
+        054     uint32_t    flags;
+    };
+
+mobj_t (148 bytes):
+    struct mobj_t {
+        000     fixed_t         x;
+        004     fixed_t         y;
+        008     fixed_t         z;
+        00C     subsector_t*    subsector;
+        010     mobj_t*         prev;           // Linked list of things
+        014     mobj_t*         next;
+        ???     player_t*       player;         // Only valid if type == MT_PLAYER
+        01C     mobj_t*         snext,          // Linked list of things in this sector
+        020     mobj_t*         sprev;
+        024     angle_t         angle;
+        028     uint32_t        sprite;         // used to find patch_t and flip value
+        02C     uint32_t        frame;          // might be ord with FF_FULLBRIGHT
+        030     mobj_t*         bnext;          // Linked list of things in this blockmap block
+        034     mobj_t*         bprev;          
+        038     fixed_t         floorz;         // Closest together of contacted secs
+        03C     fixed_t         ceilingz;       // Closest together of contacted secs
+        040     fixed_t         radius;         // For movement checking
+        044     fixed_t         height;         // For movement checking
+        048     fixed_t         momx;           // Momentums
+        04C     fixed_t         momy;
+        050     fixed_t         momz;
+        054     mobjtype_t      type;
+        058     mobjinfo_t*     info;           // &mobjinfo[mobj->type]
+        05C     int32_t         tics;           // State tic counter
+        060     state_t*        state;
+        064     uint32_t        flags;
+        068     int32_t         health;
+        06C     int32_t         movedir;        // 0-7
+        ???     int32_t         movecount;      // When 0, select a new dir
+        074     mobj_t*         target;         // Thing being chased/attacked (or NULL)
+        078     int32_t         reactiontime;   // If != 0, don't attack yet
+        07C     int32_t         threshold;      // If > 0, the target will be chased
+        ???     uint32_t        spawntype;
+        084     uint32_t        extradata;      // For latecall functions
+        ???     fixed_t         spawnx;
+        ???     fixed_t         spawny;        
+        ???     angle_t         spawnangle;
     };
