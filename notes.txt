@@ -63,3 +63,29 @@ Status bar struct seems to look like this (32 bytes):
         u32         tryopen[NUMCARDS]; // (NUMCARDS=6)
         u32         gotgibbed;        
     };
+
+mobjinfo_t appears to be (88 bytes):
+    struct mobjinfo_t {
+        u32 doomednum;
+        u32 spawnstate;
+        i32 spawnhealth;
+        u32 seestate;
+        u32 seesound;
+        i32 reactiontime;
+        u32 attacksound;
+        u32 painstate;
+        i32 painchance;
+        u32 painsound;
+        u32 meleestate;
+        u32 missilestate;
+        u32 deathstate;
+        u32 xdeathstate;
+        u32 deathsound;
+        i32 speed;
+        i32 radius;
+        i32 height;
+        i32 mass;
+        i32 damage;
+        u32 activesound;
+        u32 flags;
+    };
