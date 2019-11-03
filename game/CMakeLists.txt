@@ -27,9 +27,8 @@ endif()
 add_executable(${GAME_TGT_NAME} ${SOURCE_FILES} ${HEADER_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${HEADER_FILES}" "${OTHER_FILES}")
 
-# Specify include dirs and link libraries
+# Specify include dirs
 include_directories(${INCLUDE_PATHS})
-target_link_libraries(${GAME_TGT_NAME} ${MEDNAFEN_TGT_NAME})
 
 # Other platform or compiler specific settings, flags or switches
 if (PLATFORM_WINDOWS)
