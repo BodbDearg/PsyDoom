@@ -17,10 +17,8 @@ build_setup()
 set(DOOM_DISASM_TGT_NAME    DoomDisassemble)
 set(GAME_TGT_NAME           PC_PSX_Doom)
 set(LIBSDL_TGT_NAME         SDL)
-set(ZLIB_TGT_NAME           ZLib)
 
 # Adding individual projects and libraries
 add_subdirectory("${PROJECT_SOURCE_DIR}/doom_disassemble")
 add_subdirectory("${PROJECT_SOURCE_DIR}/game")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/libsdl")
-add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/zlib")
