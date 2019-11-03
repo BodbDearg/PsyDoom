@@ -1,0 +1,5 @@
+Taken from commit: 
+    https://github.com/stbrumme/hash-library/tree/a8a88f8acbdd97b854b6ac61e53177dc7870f32f
+
+Commit date:
+    Aug 9, 2018
