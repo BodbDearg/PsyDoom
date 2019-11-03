@@ -34,8 +34,8 @@ if (COMPILER_MSVC)
 endif()
 
 # Build the executable and setup IDE folders
-add_executable(${DOOM_DISASM_TGT_NAME} ${SOURCE_FILES} ${HEADER_FILES} ${OTHER_FILES})
-setup_source_groups("${SOURCE_FILES}" "${HEADER_FILES}" "${OTHER_FILES}")
+add_executable(${DOOM_DISASM_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
+setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
 # Other platform or compiler specific settings, flags or switches
 if (COMPILER_MSVC)    

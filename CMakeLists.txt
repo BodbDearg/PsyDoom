@@ -18,9 +18,11 @@ set(DOOM_DISASM_TGT_NAME    DoomDisassemble)
 set(GAME_TGT_NAME           PC_PSX_Doom)
 set(HASHLIBRARY_TGT_NAME    HashLibrary)
 set(LIBSDL_TGT_NAME         SDL)
+set(PSXOBJ_SIGGEN_TGT_NAME  PSXObjSigGen)
 
 # Adding individual projects and libraries
 add_subdirectory("${PROJECT_SOURCE_DIR}/doom_disassemble")
 add_subdirectory("${PROJECT_SOURCE_DIR}/game")
+add_subdirectory("${PROJECT_SOURCE_DIR}/psxobj_siggen")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/hash-library")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/libsdl")
