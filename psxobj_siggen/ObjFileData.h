@@ -101,11 +101,9 @@ struct ObjSymbol {
 struct ObjFile {
     std::vector<ObjSection> sections;
     std::vector<ObjSymbol>  symbols;
-    uint16_t                curSectionNumber;       // Parser state
+    uint32_t                curSectionNumber;       // Parser state
     uint16_t                lnkVersion;             // Should be '2'
     uint16_t                processorType;          // Should be '7' for MIPS
-    uint16_t                fileNumber;
-    std::string             fileName;
 
     inline ObjFile() noexcept
         : sections()
@@ -113,11 +111,19 @@ struct ObjFile {
         , curSectionNumber(UINT16_MAX)
         , lnkVersion(UINT16_MAX)
         , processorType(UINT16_MAX)
-        , fileNumber(UINT16_MAX)
-        , fileName()
     {
     }
 
     inline ObjFile(const ObjFile& other) noexcept = default;
     inline ObjFile(ObjFile&& other) noexcept = default;
+
+    inline ObjSection* getSectionWithNum(const uint32_t sectionNum) noexcept {
+        for (ObjSection& section : sections) {
+            if (section.number == sectionNum) {
+                return &section;
+            }
+        }
+
+        return nullptr;
+    }
 };

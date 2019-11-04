@@ -241,15 +241,19 @@ uint32_t TextStream::readHexUint() {
         }
         
         result *= 10;
-        result += getHexDigitValue(readChar());
+        result += readHexDigit();
     }
 
     return result;
 }
 
+uint32_t TextStream::readHexDigit() {
+    return getHexDigitValue(readChar());
+}
+
 TextStream TextStream::readNextLineAsStream() {
     if (isAtEnd()) {
-        throw TextStreamException("Unexpected end of data!"); 
+        throw TextStreamException("Unexpected end of data!");
     }
     
     const uint32_t startOffset = curOffset;
@@ -260,4 +264,20 @@ TextStream TextStream::readNextLineAsStream() {
 
     ++curOffset;
     return TextStream(str + startOffset, curOffset - startOffset);
+}
+
+std::string TextStream::readDelimitedString(const char begDelimiter, const char endDelimiter) {
+    if (peekChar() != begDelimiter) {
+        throw TextStreamException("Expected a start of string delimiter!");
+    }
+
+    skipChar();
+    std::string output;
+
+    while (peekChar() != endDelimiter) {
+        output.push_back(readChar());
+    }
+
+    skipChar();
+    return output;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 //----------------------------------------------------------------------------------------------------------------------
 // Helper class for text parsing.
@@ -50,9 +51,17 @@ struct TextStream {
     // Expects at least 1 valid hex digit character.
     uint32_t readHexUint();
 
+    // Read a single hex digit (nibble)
+    uint32_t readHexDigit();
+
     // Create a sub text stream consisting of the text up until the end of the current line.
     // Moves this stream along past this line.
     TextStream readNextLineAsStream();
+
+    // Read a string delimited by the given delimiters.
+    // Throws an exception if delimiters are missing.
+    // Escaping is NOT supported.
+    std::string readDelimitedString(const char begDelimiter, const char endDelimiter);
 };
 
 //----------------------------------------------------------------------------------------------------------------------

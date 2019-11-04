@@ -108,6 +108,79 @@ static void parseSectionDefinition(TextStream& text, ObjFile& out) {
     section.alignment = (uint16_t) alignment;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+// Parses text like:
+//      28 : Define file number 9 as "C:\PSX\SRC\C2\SPRINTF.C"
+//----------------------------------------------------------------------------------------------------------------------
+static void parseFileNameDefinition(TextStream& text, [[maybe_unused]] ObjFile& out) {
+    // Just ensure the format is as expected then ignore the rest - we don't use this info
+    TextStream line = text.readNextLineAsStream();
+    line.consumeSpaceSeparatedTokenAhead("28");
+    line.consumeSpaceSeparatedTokenAhead(":");
+    line.consumeSpaceSeparatedTokenAhead("Define");
+    line.consumeSpaceSeparatedTokenAhead("file");
+    line.consumeSpaceSeparatedTokenAhead("number");
+    line.readHexUint();
+    line.consumeSpaceSeparatedTokenAhead("as");
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Parses text like:
+//      6 : Switch to section 2
+//----------------------------------------------------------------------------------------------------------------------
+static void parseSwitchToSectionDirective(TextStream& text, ObjFile& out) {
+    TextStream line = text.readNextLineAsStream();
+    line.consumeSpaceSeparatedTokenAhead("6");
+    line.consumeSpaceSeparatedTokenAhead(":");
+    line.consumeSpaceSeparatedTokenAhead("Switch");
+    line.consumeSpaceSeparatedTokenAhead("to");
+    line.consumeSpaceSeparatedTokenAhead("section");
+    out.curSectionNumber = line.readHexUint();
+    line.skipAsciiWhiteSpace();
+    line.ensureAtEnd();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Parses text like:
+//      2 : Code 37 bytes
+//
+//      0000:30 31 32 33 34 35 36 37 38 39 41 42 43 44 45 46 
+//      0010:00 00 00 00 30 31 32 33 34 35 36 37 38 39 61 62 
+//      0020:63 64 65 66 00 
+//----------------------------------------------------------------------------------------------------------------------
+static void parseCodeDirective(TextStream& text, ObjFile& out) {
+    // Get the current section
+    ObjSection* pSection = out.getSectionWithNum(out.curSectionNumber);
+
+    if (!pSection) {
+        throw ParseException("Invalid current section number!");
+    }
+    
+    // Get the number of bytes
+    TextStream headerLine = text.readNextLineAsStream();
+    headerLine.consumeSpaceSeparatedTokenAhead("2");
+    headerLine.consumeSpaceSeparatedTokenAhead(":");
+    headerLine.consumeSpaceSeparatedTokenAhead("Code");
+
+    const uint32_t numCodeBytes = headerLine.readDecimalUint();
+    headerLine.consumeSpaceSeparatedTokenAhead("bytes");
+    headerLine.skipAsciiWhiteSpace();
+    headerLine.ensureAtEnd();
+
+    // Read the bytes
+    uint32_t numBytesLeft = numCodeBytes;
+
+    while (numBytesLeft > 0) {
+        // Skip the offset at the start of the line first
+        TextStream dataLine = text.readNextLineAsStream();
+        text.readHexUint();
+        text.consumeSpaceSeparatedTokenAhead(":");
+
+        // TODO ... 
+        #error FINISH THIS
+    }
+}
+
 bool ObjFileParser::parseObjFileDumpFromStr(const std::string& str, ObjFile& out) noexcept {
     try {
         TextStream text(str.c_str(), (uint32_t) str.size());
@@ -126,6 +199,10 @@ bool ObjFileParser::parseObjFileDumpFromStr(const std::string& str, ObjFile& out
                 parseProcessorType(text, out);
             } else if (text.checkStringAhead("16")) {
                 parseSectionDefinition(text, out);
+            } else if (text.checkStringAhead("28")) {
+                parseFileNameDefinition(text, out);
+            } else if (text.checkStringAhead("6")) {
+                parseSwitchToSectionDirective(text, out);
             }
         }
 
