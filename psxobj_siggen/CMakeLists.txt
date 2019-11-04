@@ -1,6 +1,7 @@
 # Platform agnostic sources
 set(SOURCE_FILES
     "Main.cpp"
+    "ObjFileData.h"
 )
 
 set(OTHER_FILES
