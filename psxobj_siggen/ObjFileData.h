@@ -10,7 +10,7 @@
 #include <vector>
 
 // Represents a section type in the OBJ file
-enum class SectionType : uint16_t {
+enum class ObjSectionType : uint16_t {
     RDATA,      // Read only data
     TEXT,       // Code
     DATA,       // Writable data
@@ -24,7 +24,7 @@ enum class SectionType : uint16_t {
 // Represents a patch applied to a piece of code or data.
 // I don't put much effort into interpreting these fields however, other than using the target offset
 // to figure out which instructions to mark as 'wildcards' in pattern matching.
-struct Patch {
+struct ObjPatch {
     static constexpr uint16_t NO_SOURCE_SECTION = 0xFFFFu;
     static constexpr uint32_t NO_SOURCE_SYMBOL = 0xFFFFFFFFu;
 
@@ -33,24 +33,49 @@ struct Patch {
     uint32_t    sourceSymbol;       // 'NO_SOURCE_SYMBOL' if none
     uint32_t    sourceOffset;
     uint32_t    targetOffset;
+
+    inline ObjPatch() noexcept
+        : type(UINT16_MAX)
+        , sourceSection(NO_SOURCE_SECTION)
+        , sourceSymbol(NO_SOURCE_SYMBOL)
+        , sourceOffset(UINT32_MAX)
+        , targetOffset(UINT32_MAX)
+    {
+    }
+
+    inline ObjPatch(const ObjPatch& other) noexcept = default;
+    inline ObjPatch(ObjPatch&& other) noexcept = default;
 };
 
 // Represents a section of a particular type in the object file.
 // The section can contain code or data and any number of patches applied at link time.
-struct Section {
+struct ObjSection {
     static constexpr uint16_t MAX_SECTION_NUMBER = 0xFFFEu;
     
     uint16_t                    number;
-    SectionType                 type;
+    ObjSectionType              type;
     uint16_t                    alignment;
     uint16_t                    group;
     std::vector<std::byte>      data;
-    std::vector<Patch>          patches;
+    std::vector<ObjPatch>       patches;
+
+    inline ObjSection() noexcept
+        : number(UINT16_MAX)
+        , type()
+        , alignment(UINT16_MAX)
+        , group(UINT16_MAX)
+        , data()
+        , patches()
+    {
+    }
+
+    inline ObjSection(const ObjSection& other) noexcept = default;
+    inline ObjSection(ObjSection&& other) noexcept = default;
 };
 
 // Represents a symbol defined in the object file.
 // The symbol can be defined within a section in the object file, or externally defined.
-struct Symbol {
+struct ObjSymbol {
     static constexpr uint32_t EXTERNAL_SECTION = 0xFFFFFFFFu;
     static constexpr uint32_t EXTERNAL_OFFSET = 0xFFFFFFFFu;
 
@@ -58,16 +83,41 @@ struct Symbol {
     uint32_t        defSection;     // 'EXTERNAL_SECTION' if externally defined
     uint32_t        defOffset;      // 'EXTERNAL_OFFSET' if externally defined
     std::string     name;
+
+    inline ObjSymbol() noexcept
+        : number(UINT32_MAX)
+        , defSection(UINT32_MAX)
+        , defOffset(UINT32_MAX)
+        , name()
+    {
+    }
+
+    inline ObjSymbol(const ObjSymbol& other) noexcept = default;
+    inline ObjSymbol(ObjSymbol&& other) noexcept = default;
 };
 
 // Container for the entire object file.
 // Contains all of the sections and symbols defined in the object file.
 struct ObjFile {
-    std::vector<Section>    sections;
-    std::vector<Symbol>     symbols;
-    uint16_t                curSectionNumber;
+    std::vector<ObjSection> sections;
+    std::vector<ObjSymbol>  symbols;
+    uint16_t                curSectionNumber;       // Parser state
     uint16_t                lnkVersion;             // Should be '2'
     uint16_t                processorType;          // Should be '7' for MIPS
     uint16_t                fileNumber;
     std::string             fileName;
+
+    inline ObjFile() noexcept
+        : sections()
+        , symbols()
+        , curSectionNumber(UINT16_MAX)
+        , lnkVersion(UINT16_MAX)
+        , processorType(UINT16_MAX)
+        , fileNumber(UINT16_MAX)
+        , fileName()
+    {
+    }
+
+    inline ObjFile(const ObjFile& other) noexcept = default;
+    inline ObjFile(ObjFile&& other) noexcept = default;
 };

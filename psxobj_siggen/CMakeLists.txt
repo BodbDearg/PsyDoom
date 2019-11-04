@@ -2,6 +2,10 @@
 set(SOURCE_FILES
     "Main.cpp"
     "ObjFileData.h"
+    "ObjFileParser.cpp"
+    "ObjFileParser.h"
+    "TextStream.cpp"
+    "TextStream.h"
 )
 
 set(OTHER_FILES
