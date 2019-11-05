@@ -404,6 +404,10 @@ static void parseXDefSymbolDirective(TextStream& text, ObjFile& out) {
 //      10 : Patch type 16 at offset c with (sectbase(2)+$1a0c)
 //      10 : Patch type 74 at offset 70 with [2e]
 //      10 : Patch type 84 at offset 168 with ($c+[2b])
+//      10 : Patch type 82 at offset 14c with ($c+(sectbase(6)+$0))
+//
+// NOTE: in order to keep things simple, I ignore anything past the 'with' token.
+// I don't need to know what something is being patched WITH, just WHAT is being patched for function signature matching.
 //----------------------------------------------------------------------------------------------------------------------
 static void parsePatchDirective(TextStream& text, ObjFile& out) {
     // Get the current section
@@ -427,47 +431,8 @@ static void parsePatchDirective(TextStream& text, ObjFile& out) {
     line.consumeSpaceSeparatedTokenAhead("offset");
     patch.targetOffset = line.readHexUint();
 
+    // Note: simply ignore the rest past this!
     line.consumeSpaceSeparatedTokenAhead("with");
-
-    // Read the source offset, section or symbol
-    if (line.peekChar() == '(') {
-        line.skipChar();
-        line.skipAsciiWhiteSpace();
-
-        if (line.peekChar() == '$') {
-            // Patch to offset plus symbol number 
-            line.consumeSpaceSeparatedTokenAhead("$");
-            patch.sourceOffset = line.readHexUint();
-            line.consumeSpaceSeparatedTokenAhead("+");
-            line.consumeSpaceSeparatedTokenAhead("[");
-            patch.sourceSymbol = line.readHexUint();
-            line.consumeSpaceSeparatedTokenAhead("]");
-        } else {
-            // Patch to section base plus offset
-            line.consumeSpaceSeparatedTokenAhead("sectbase");
-            line.consumeSpaceSeparatedTokenAhead("(");
-            patch.sourceSection = (uint16_t) line.readHexUint();
-            line.consumeSpaceSeparatedTokenAhead(")");
-
-            if (line.peekChar() == '+') {
-                line.consumeSpaceSeparatedTokenAhead("+");
-                line.consumeSpaceSeparatedTokenAhead("$");
-                patch.sourceOffset = line.readHexUint();
-            }
-        }
-
-        line.consumeSpaceSeparatedTokenAhead(")");
-    } else if (line.peekChar() == '[') {
-        // Patching with symbol address
-        line.skipChar();
-        line.skipAsciiWhiteSpace();
-        patch.sourceSymbol = line.readHexUint();
-        line.skipAsciiWhiteSpace();
-        line.consumeStringAhead("]");
-    }
-
-    line.skipAsciiWhiteSpace();
-    line.ensureAtEnd();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

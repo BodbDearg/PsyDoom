@@ -22,23 +22,15 @@ enum class ObjSectionType : uint16_t {
 };
 
 // Represents a patch applied to a piece of code or data.
-// I don't put much effort into interpreting these fields however, other than using the target offset
-// to figure out which instructions to mark as 'wildcards' in pattern matching.
+// Note: in order to keep things simple I don't bother parsing out all of the info involved in the patch because patch source
+// expressions can be pretty complex in the textual OBJ dumps. All I need to know is WHAT is being patched, i.e the offset.
+// This is enough to mark instructions as wildcards for function signature matching.
 struct ObjPatch {
-    static constexpr uint16_t NO_SOURCE_SECTION = 0xFFFFu;
-    static constexpr uint32_t NO_SOURCE_SYMBOL = 0xFFFFFFFFu;
-
-    uint16_t    type;
-    uint16_t    sourceSection;      // 'NO_SOURCE_SECTION' if none
-    uint32_t    sourceSymbol;       // 'NO_SOURCE_SYMBOL' if none
-    uint32_t    sourceOffset;
+    uint32_t    type;
     uint32_t    targetOffset;
 
     inline ObjPatch() noexcept
-        : type(UINT16_MAX)
-        , sourceSection(NO_SOURCE_SECTION)
-        , sourceSymbol(NO_SOURCE_SYMBOL)
-        , sourceOffset(UINT32_MAX)
+        : type(UINT32_MAX)
         , targetOffset(UINT32_MAX)
     {
     }
