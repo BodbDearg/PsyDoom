@@ -76,18 +76,24 @@ struct ObjSection {
 // Represents a symbol defined in the object file.
 // The symbol can be defined within a section in the object file, or externally defined.
 struct ObjSymbol {
-    static constexpr uint32_t EXTERNAL_SECTION = 0xFFFFFFFFu;
-    static constexpr uint32_t EXTERNAL_OFFSET = 0xFFFFFFFFu;
+    static constexpr uint16_t EXTERNAL_SECTION = UINT16_MAX;
+    static constexpr uint32_t EXTERNAL_OFFSET = UINT32_MAX;
+    static constexpr uint32_t NO_SYMBOL_NUMBER = UINT32_MAX;
+    static constexpr uint32_t UNDEFINED_SIZE = UINT32_MAX;
 
-    uint32_t        number;
-    uint32_t        defSection;     // 'EXTERNAL_SECTION' if externally defined
+    uint32_t        number;         // 'NO_SYMBOL_NUMBER' if a symbol number is not assigned (true for local variables)
+    uint16_t        defSection;     // 'EXTERNAL_SECTION' if externally defined
+    bool            bIsLocal;       // True if it is private to the OBJ file
     uint32_t        defOffset;      // 'EXTERNAL_OFFSET' if externally defined
+    uint32_t        defSize;        // Only used for BSS symbols
     std::string     name;
 
     inline ObjSymbol() noexcept
         : number(UINT32_MAX)
-        , defSection(UINT32_MAX)
+        , defSection(UINT16_MAX)
+        , bIsLocal(false)
         , defOffset(UINT32_MAX)
+        , defSize(UNDEFINED_SIZE)
         , name()
     {
     }

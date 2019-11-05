@@ -25,6 +25,190 @@ static void parseHeaderInfo(TextStream& text, ObjFile& out) {
 
 //----------------------------------------------------------------------------------------------------------------------
 // Parses text like:
+//  76 : Function end :
+//      section 557c
+//      offset $000000f4
+//      end line 0
+//----------------------------------------------------------------------------------------------------------------------
+static void parseFunctionEndDirective(TextStream& text, [[maybe_unused]] ObjFile& out) {
+    // Note: just ignoring this directive and skipping past it all
+    {
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("76");
+        line.consumeSpaceSeparatedTokenAhead(":");
+        line.consumeSpaceSeparatedTokenAhead("Function");
+        line.consumeSpaceSeparatedTokenAhead("end");
+        line.consumeSpaceSeparatedTokenAhead(":");
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("section");
+        line.readHexUint();
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("offset");
+        line.consumeSpaceSeparatedTokenAhead("$");
+        line.readHexUint();
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("end");
+        line.consumeSpaceSeparatedTokenAhead("line");
+        line.readHexUint();
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Parses text like:
+//  74 : Function start :
+//      section 557c
+//      offset $00000000
+//      file 59a7
+//      start line 0
+//      frame reg 29
+//      frame size 0
+//      return pc reg 31
+//      mask $00000000
+//      mask offset 0
+//      name _ExpAllocArea
+//----------------------------------------------------------------------------------------------------------------------
+static void parseFunctionStartDirective(TextStream& text, [[maybe_unused]] ObjFile& out) {
+    // Note: just ignoring this directive and skipping past it all
+    {
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("74");
+        line.consumeSpaceSeparatedTokenAhead(":");
+        line.consumeSpaceSeparatedTokenAhead("Function");
+        line.consumeSpaceSeparatedTokenAhead("start");
+        line.consumeSpaceSeparatedTokenAhead(":");
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("section");
+        line.readHexUint();
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("offset");
+        line.consumeSpaceSeparatedTokenAhead("$");
+        line.readHexUint();
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("file");
+        line.readHexUint();
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("start");
+        line.consumeSpaceSeparatedTokenAhead("line");
+        line.readHexUint();
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("frame");
+        line.consumeSpaceSeparatedTokenAhead("reg");
+        line.readHexUint();
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("frame");
+        line.consumeSpaceSeparatedTokenAhead("size");
+        line.readHexUint();
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("return");
+        line.consumeSpaceSeparatedTokenAhead("pc");
+        line.consumeSpaceSeparatedTokenAhead("reg");
+        line.readHexUint();
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("mask");
+        line.consumeSpaceSeparatedTokenAhead("$");
+        line.readHexUint();
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("mask");
+        line.consumeSpaceSeparatedTokenAhead("offset");
+
+        if (line.peekChar() == '-') {
+            line.skipChar();
+        }
+
+        line.readHexUint();
+    }
+
+    {
+        text.skipAsciiWhiteSpace();
+        TextStream line = text.readNextLineAsStream();
+        line.consumeSpaceSeparatedTokenAhead("name");
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Parses text like:
+//      48 : XBSS symbol number 2b '_que' size 1800 in section 6
+//----------------------------------------------------------------------------------------------------------------------
+static void parseXBssSymbolDirective(TextStream& text, ObjFile& out) {
+    // Read symbol number
+    TextStream line = text.readNextLineAsStream();
+    line.consumeSpaceSeparatedTokenAhead("48");
+    line.consumeSpaceSeparatedTokenAhead(":");
+    line.consumeSpaceSeparatedTokenAhead("XBSS");
+    line.consumeSpaceSeparatedTokenAhead("symbol");
+    line.consumeSpaceSeparatedTokenAhead("number");
+
+    ObjSymbol& symbol = out.symbols.emplace_back();
+    symbol.number = line.readHexUint();
+
+    // Read symbol name
+    line.skipAsciiWhiteSpace();
+    symbol.name = line.readDelimitedString('\'', '\'');
+
+    // Read symbol size
+    line.consumeSpaceSeparatedTokenAhead("size");
+    symbol.defSize = line.readHexUint();
+
+    // Read symbol section
+    line.consumeSpaceSeparatedTokenAhead("in");
+    line.consumeSpaceSeparatedTokenAhead("section");
+    symbol.defSection = (uint16_t) line.readHexUint();
+
+    // Ensure no leftovers
+    line.skipAsciiWhiteSpace();
+    line.ensureAtEnd();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Parses text like:
 //      46 : Processor type 7
 //----------------------------------------------------------------------------------------------------------------------
 static void parseProcessorType(TextStream& text, ObjFile& out) {
@@ -127,6 +311,36 @@ static void parseSectionDefinition(TextStream& text, ObjFile& out) {
 
 //----------------------------------------------------------------------------------------------------------------------
 // Parses text like:
+//      18 : Local symbol 'get_mode' at offset 1590 in section 2
+//----------------------------------------------------------------------------------------------------------------------
+static void parseLocalSymbolDirective(TextStream& text, ObjFile& out) {
+    // Read symbol name
+    TextStream line = text.readNextLineAsStream();
+    line.consumeSpaceSeparatedTokenAhead("18");
+    line.consumeSpaceSeparatedTokenAhead(":");
+    line.consumeSpaceSeparatedTokenAhead("Local");
+    line.consumeSpaceSeparatedTokenAhead("symbol");
+
+    ObjSymbol& symbol = out.symbols.emplace_back();
+    symbol.name = line.readDelimitedString('\'', '\'');
+
+    // Read symbol offset
+    line.consumeSpaceSeparatedTokenAhead("at");
+    line.consumeSpaceSeparatedTokenAhead("offset");
+    symbol.defOffset = line.readHexUint();
+
+    // Read symbol section
+    line.consumeSpaceSeparatedTokenAhead("in");
+    line.consumeSpaceSeparatedTokenAhead("section");
+    symbol.defSection = (uint16_t) line.readHexUint();
+
+    // Ensure no leftovers
+    line.skipAsciiWhiteSpace();
+    line.ensureAtEnd();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Parses text like:
 //      14 : XREF symbol number c 'memchr'
 //----------------------------------------------------------------------------------------------------------------------
 static void parseXRefSymbolDirective(TextStream& text, ObjFile& out) {
@@ -178,7 +392,7 @@ static void parseXDefSymbolDirective(TextStream& text, ObjFile& out) {
     // Read symbol section
     line.consumeSpaceSeparatedTokenAhead("in");
     line.consumeSpaceSeparatedTokenAhead("section");
-    symbol.defSection = line.readHexUint();
+    symbol.defSection = (uint16_t) line.readHexUint();
 
     // Ensure no leftovers
     line.skipAsciiWhiteSpace();
@@ -362,7 +576,7 @@ static void parseCodeDirective(TextStream& text, ObjFile& out) {
 // Parses text like:
 //      0 : End of file
 //----------------------------------------------------------------------------------------------------------------------
-static void parseEndOfFileDirective(TextStream& text, ObjFile& out) {
+static void parseEndOfFileDirective(TextStream& text, [[maybe_unused]] ObjFile& out) {
     TextStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("0");
     line.consumeSpaceSeparatedTokenAhead(":");
@@ -387,10 +601,18 @@ bool ObjFileParser::parseObjFileDumpFromStr(const std::string& str, ObjFile& out
             // Parsing various elements ahead
             if (text.checkStringAhead("Header")) {
                 parseHeaderInfo(text, out);
+            } else if (text.checkStringAhead("76")) {
+                parseFunctionEndDirective(text, out);
+            } else if (text.checkStringAhead("74")) {
+                parseFunctionStartDirective(text, out);
+            } else if (text.checkStringAhead("48")) {
+                parseXBssSymbolDirective(text, out);
             } else if (text.checkStringAhead("46")) {
                 parseProcessorType(text, out);
             } else if (text.checkStringAhead("28")) {
                 parseFileNameDefinition(text, out);
+            } else if (text.checkStringAhead("18")) {
+                parseLocalSymbolDirective(text, out);
             } else if (text.checkStringAhead("16")) {
                 parseSectionDefinition(text, out);
             } else if (text.checkStringAhead("14")) {
