@@ -130,6 +130,10 @@ static void buildFuncSignaturesList(ObjFile& objFile, std::vector<FuncSignature>
                     endOffset = nextSymbol.defOffset;
                 }
             }
+
+            // If the next symbol is at the same location then skip exporting this symbol!
+            if (nextSymbol.defOffset == symbol.defOffset)
+                continue;
         }
 
         // Assuming the start and end offsets are both aligned and in range
