@@ -40,6 +40,22 @@ static void parseProcessorType(TextStream& text, ObjFile& out) {
 
 //----------------------------------------------------------------------------------------------------------------------
 // Parses text like:
+//      28 : Define file number 9 as "C:\PSX\SRC\C2\SPRINTF.C"
+//----------------------------------------------------------------------------------------------------------------------
+static void parseFileNameDefinition(TextStream& text, [[maybe_unused]] ObjFile& out) {
+    // Just ensure the format is as expected then ignore the rest - we don't use this info
+    TextStream line = text.readNextLineAsStream();
+    line.consumeSpaceSeparatedTokenAhead("28");
+    line.consumeSpaceSeparatedTokenAhead(":");
+    line.consumeSpaceSeparatedTokenAhead("Define");
+    line.consumeSpaceSeparatedTokenAhead("file");
+    line.consumeSpaceSeparatedTokenAhead("number");
+    line.readHexUint();
+    line.consumeSpaceSeparatedTokenAhead("as");
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Parses text like:
 //      16 : Section symbol number 1 '.rdata' in group 0 alignment 8
 //----------------------------------------------------------------------------------------------------------------------
 static void parseSectionDefinition(TextStream& text, ObjFile& out) {
@@ -52,6 +68,7 @@ static void parseSectionDefinition(TextStream& text, ObjFile& out) {
     line.consumeSpaceSeparatedTokenAhead("number");
 
     const uint32_t sectionNumber = line.readHexUint();
+    line.consumeAsciiWhiteSpaceAhead();
 
     // Parse section type
     struct KnownSectionType {
@@ -110,18 +127,160 @@ static void parseSectionDefinition(TextStream& text, ObjFile& out) {
 
 //----------------------------------------------------------------------------------------------------------------------
 // Parses text like:
-//      28 : Define file number 9 as "C:\PSX\SRC\C2\SPRINTF.C"
+//      14 : XREF symbol number c 'memchr'
 //----------------------------------------------------------------------------------------------------------------------
-static void parseFileNameDefinition(TextStream& text, [[maybe_unused]] ObjFile& out) {
-    // Just ensure the format is as expected then ignore the rest - we don't use this info
+static void parseXRefSymbolDirective(TextStream& text, ObjFile& out) {
+    // Read symbol number
     TextStream line = text.readNextLineAsStream();
-    line.consumeSpaceSeparatedTokenAhead("28");
+    line.consumeSpaceSeparatedTokenAhead("14");
     line.consumeSpaceSeparatedTokenAhead(":");
-    line.consumeSpaceSeparatedTokenAhead("Define");
-    line.consumeSpaceSeparatedTokenAhead("file");
+    line.consumeSpaceSeparatedTokenAhead("XREF");
+    line.consumeSpaceSeparatedTokenAhead("symbol");
     line.consumeSpaceSeparatedTokenAhead("number");
-    line.readHexUint();
-    line.consumeSpaceSeparatedTokenAhead("as");
+
+    ObjSymbol& symbol = out.symbols.emplace_back();
+    symbol.number = line.readHexUint();
+
+    // Read symbol name
+    line.skipAsciiWhiteSpace();
+    symbol.name = line.readDelimitedString('\'', '\'');
+
+    // Ensure no leftovers
+    line.skipAsciiWhiteSpace();
+    line.ensureAtEnd();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Parses text like:
+//      12 : XDEF symbol number a 'sprintf' at offset 0 in section 2
+//----------------------------------------------------------------------------------------------------------------------
+static void parseXDefSymbolDirective(TextStream& text, ObjFile& out) {
+    // Read symbol number
+    TextStream line = text.readNextLineAsStream();
+    line.consumeSpaceSeparatedTokenAhead("12");
+    line.consumeSpaceSeparatedTokenAhead(":");
+    line.consumeSpaceSeparatedTokenAhead("XDEF");
+    line.consumeSpaceSeparatedTokenAhead("symbol");
+    line.consumeSpaceSeparatedTokenAhead("number");
+
+    ObjSymbol& symbol = out.symbols.emplace_back();
+    symbol.number = line.readHexUint();
+
+    // Read symbol name
+    line.skipAsciiWhiteSpace();
+    symbol.name = line.readDelimitedString('\'', '\'');
+
+    // Read symbol offset
+    line.consumeSpaceSeparatedTokenAhead("at");
+    line.consumeSpaceSeparatedTokenAhead("offset");
+    symbol.defOffset = line.readHexUint();
+
+    // Read symbol section
+    line.consumeSpaceSeparatedTokenAhead("in");
+    line.consumeSpaceSeparatedTokenAhead("section");
+    symbol.defSection = line.readHexUint();
+
+    // Ensure no leftovers
+    line.skipAsciiWhiteSpace();
+    line.ensureAtEnd();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Parses text like any of the following lines formats:
+//      10 : Patch type 16 at offset c with (sectbase(2)+$1a0c)
+//      10 : Patch type 74 at offset 70 with [2e]
+//      10 : Patch type 84 at offset 168 with ($c+[2b])
+//----------------------------------------------------------------------------------------------------------------------
+static void parsePatchDirective(TextStream& text, ObjFile& out) {
+    // Get the current section
+    ObjSection* pSection = out.getSectionWithNum(out.curSectionNumber);
+
+    if (!pSection) {
+        throw ParseException("Invalid current section number!");
+    }
+
+    // Read patch type and target offset
+    TextStream line = text.readNextLineAsStream();
+    line.consumeSpaceSeparatedTokenAhead("10");
+    line.consumeSpaceSeparatedTokenAhead(":");
+    line.consumeSpaceSeparatedTokenAhead("Patch");
+    line.consumeSpaceSeparatedTokenAhead("type");
+
+    ObjPatch& patch = pSection->patches.emplace_back();
+    patch.type = (uint16_t) line.readDecimalUint();
+
+    line.consumeSpaceSeparatedTokenAhead("at");
+    line.consumeSpaceSeparatedTokenAhead("offset");
+    patch.targetOffset = line.readHexUint();
+
+    line.consumeSpaceSeparatedTokenAhead("with");
+
+    // Read the source offset, section or symbol
+    if (line.peekChar() == '(') {
+        line.skipChar();
+        line.skipAsciiWhiteSpace();
+
+        if (line.peekChar() == '$') {
+            // Patch to offset plus symbol number 
+            line.consumeSpaceSeparatedTokenAhead("$");
+            patch.sourceOffset = line.readHexUint();
+            line.consumeSpaceSeparatedTokenAhead("+");
+            line.consumeSpaceSeparatedTokenAhead("[");
+            patch.sourceSymbol = line.readHexUint();
+            line.consumeSpaceSeparatedTokenAhead("]");
+        } else {
+            // Patch to section base plus offset
+            line.consumeSpaceSeparatedTokenAhead("sectbase");
+            line.consumeSpaceSeparatedTokenAhead("(");
+            patch.sourceSection = (uint16_t) line.readHexUint();
+            line.consumeSpaceSeparatedTokenAhead(")");
+
+            if (line.peekChar() == '+') {
+                line.consumeSpaceSeparatedTokenAhead("+");
+                line.consumeSpaceSeparatedTokenAhead("$");
+                patch.sourceOffset = line.readHexUint();
+            }
+        }
+
+        line.consumeSpaceSeparatedTokenAhead(")");
+    } else if (line.peekChar() == '[') {
+        // Patching with symbol address
+        line.skipChar();
+        line.skipAsciiWhiteSpace();
+        patch.sourceSymbol = line.readHexUint();
+        line.skipAsciiWhiteSpace();
+        line.consumeStringAhead("]");
+    }
+
+    line.skipAsciiWhiteSpace();
+    line.ensureAtEnd();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Parses text like:
+//      8 : Uninitialised data, 11 bytes
+//----------------------------------------------------------------------------------------------------------------------
+static void parseUnitializedDataDirective(TextStream& text, ObjFile& out) {
+    // Get the current section
+    ObjSection* pSection = out.getSectionWithNum(out.curSectionNumber);
+
+    if (!pSection) {
+        throw ParseException("Invalid current section number!");
+    }
+
+    // Parse the uninitialized data directive and save the 'unitialized' bytes as zeros
+    TextStream line = text.readNextLineAsStream();
+    line.consumeSpaceSeparatedTokenAhead("8");
+    line.consumeSpaceSeparatedTokenAhead(":");
+    line.consumeSpaceSeparatedTokenAhead("Uninitialised");
+    line.consumeSpaceSeparatedTokenAhead("data");
+    line.consumeSpaceSeparatedTokenAhead(",");    
+    const uint32_t numUninitializedBytes = line.readDecimalUint();
+    line.consumeSpaceSeparatedTokenAhead("bytes");
+    line.ensureAtEnd();
+
+    std::vector<std::byte>& sectionBytes = pSection->data;
+    sectionBytes.insert(sectionBytes.end(), numUninitializedBytes, (std::byte) 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -168,23 +327,56 @@ static void parseCodeDirective(TextStream& text, ObjFile& out) {
     headerLine.ensureAtEnd();
 
     // Read the bytes
-    uint32_t numBytesLeft = numCodeBytes;
+    std::vector<std::byte>& sectionBytes = pSection->data;
+    sectionBytes.reserve(sectionBytes.size() + numCodeBytes);
 
-    while (numBytesLeft > 0) {
+    for (uint32_t numBytesLeft = numCodeBytes; numBytesLeft > 0;) {
         // Skip the offset at the start of the line first
         TextStream dataLine = text.readNextLineAsStream();
-        text.readHexUint();
-        text.consumeSpaceSeparatedTokenAhead(":");
+        dataLine.skipAsciiWhiteSpace();
 
-        // TODO ... 
-        #error FINISH THIS
+        if (dataLine.isAtEnd())
+            continue;
+
+        dataLine.readHexUint();
+        dataLine.consumeSpaceSeparatedTokenAhead(":");
+
+        // Continue reading bytes in the line
+        while ((!dataLine.isAtEnd()) && (numBytesLeft > 0)) {
+            if (dataLine.skipAsciiWhiteSpace()) {
+                continue;
+            }
+
+            uint32_t byte = (dataLine.readHexDigit() << 4);
+            byte |= dataLine.readHexDigit();
+            sectionBytes.push_back((std::byte) byte);
+            --numBytesLeft;
+        }
+
+        dataLine.skipAsciiWhiteSpace();
+        dataLine.ensureAtEnd();
     }
 }
 
-bool ObjFileParser::parseObjFileDumpFromStr(const std::string& str, ObjFile& out) noexcept {
-    try {
-        TextStream text(str.c_str(), (uint32_t) str.size());
+//----------------------------------------------------------------------------------------------------------------------
+// Parses text like:
+//      0 : End of file
+//----------------------------------------------------------------------------------------------------------------------
+static void parseEndOfFileDirective(TextStream& text, ObjFile& out) {
+    TextStream line = text.readNextLineAsStream();
+    line.consumeSpaceSeparatedTokenAhead("0");
+    line.consumeSpaceSeparatedTokenAhead(":");
+    line.consumeSpaceSeparatedTokenAhead("End");
+    line.consumeSpaceSeparatedTokenAhead("of");
+    line.consumeSpaceSeparatedTokenAhead("file");
+    line.skipAsciiWhiteSpace();
+    line.ensureAtEnd();
+}
 
+bool ObjFileParser::parseObjFileDumpFromStr(const std::string& str, ObjFile& out) noexcept {
+    TextStream text(str.c_str(), (uint32_t) str.size());
+
+    try {
         // Main parsing loop: continue handling elements until we reach the file end!
         while (!text.isAtEnd()) {
             // If there is white space ahead then skip and retry again
@@ -197,12 +389,27 @@ bool ObjFileParser::parseObjFileDumpFromStr(const std::string& str, ObjFile& out
                 parseHeaderInfo(text, out);
             } else if (text.checkStringAhead("46")) {
                 parseProcessorType(text, out);
-            } else if (text.checkStringAhead("16")) {
-                parseSectionDefinition(text, out);
             } else if (text.checkStringAhead("28")) {
                 parseFileNameDefinition(text, out);
+            } else if (text.checkStringAhead("16")) {
+                parseSectionDefinition(text, out);
+            } else if (text.checkStringAhead("14")) {
+                parseXRefSymbolDirective(text, out);
+            } else if (text.checkStringAhead("12")) {
+                parseXDefSymbolDirective(text, out);
+            } else if (text.checkStringAhead("10")) {
+                parsePatchDirective(text, out);
+            } else if (text.checkStringAhead("8")) {
+                parseUnitializedDataDirective(text, out);
             } else if (text.checkStringAhead("6")) {
                 parseSwitchToSectionDirective(text, out);
+            } else if (text.checkStringAhead("2")) {
+                parseCodeDirective(text, out);
+            } else if (text.checkStringAhead("0")) {
+                parseEndOfFileDirective(text, out);
+                break;
+            } else {
+                throw ParseException("Unknown directive in obj file dump!");
             }
         }
 

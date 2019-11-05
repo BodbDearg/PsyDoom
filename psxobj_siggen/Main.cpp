@@ -1,3 +1,5 @@
+#include "ObjFileData.h"
+#include "ObjFileParser.h"
 #include <cstdio>
 #include <string>
 
@@ -29,7 +31,7 @@
 // Returns false on failure.
 //----------------------------------------------------------------------------------------------------------------------
 static bool readFileAsString(const char* const filePath, std::string& out) noexcept {
-    std::FILE* const pFile = std::fopen(filePath, "r");
+    std::FILE* const pFile = std::fopen(filePath, "rb");
 
     if (!pFile)
         return false;
@@ -76,6 +78,14 @@ int main(int argc, char* argv[]) noexcept {
 
     if (!readFileAsString(inputFilePath, inputFileStr)) {
         std::printf("Failed to read input file '%s'!\n", inputFilePath);
+        return 1;
+    }
+
+    // Parse the input file
+    ObjFile objFile;
+
+    if (!ObjFileParser::parseObjFileDumpFromStr(inputFileStr, objFile)) {
+        return 1;
     }
 
     return 0;

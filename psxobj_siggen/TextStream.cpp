@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-static constexpr bool uppercaseAsciiChar(const char c) noexcept {
+static constexpr char uppercaseAsciiChar(const char c) noexcept {
     if (c >= 'a' && c <= 'z') {
         return (char)(c - 32);
     } else {
@@ -155,7 +155,7 @@ bool TextStream::checkStringAhead(const char* const checkStr) const noexcept {
             break;
         }
 
-        if (curOffset >= endOffset) {   // If we reached the end of the text stream before the end of the check string then no match!
+        if (peekOffset >= endOffset) {  // If we reached the end of the text stream before the end of the check string then no match!
             return false;
         }
 
