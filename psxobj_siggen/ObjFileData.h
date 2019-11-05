@@ -34,9 +34,6 @@ struct ObjPatch {
         , targetOffset(UINT32_MAX)
     {
     }
-
-    inline ObjPatch(const ObjPatch& other) noexcept = default;
-    inline ObjPatch(ObjPatch&& other) noexcept = default;
 };
 
 // Represents a section of a particular type in the object file.
@@ -60,9 +57,6 @@ struct ObjSection {
         , patches()
     {
     }
-
-    inline ObjSection(const ObjSection& other) noexcept = default;
-    inline ObjSection(ObjSection&& other) noexcept = default;
 };
 
 // Represents a symbol defined in the object file.
@@ -90,8 +84,9 @@ struct ObjSymbol {
     {
     }
 
-    inline ObjSymbol(const ObjSymbol& other) noexcept = default;
-    inline ObjSymbol(ObjSymbol&& other) noexcept = default;
+    inline bool isExternal() const noexcept {
+        return (defOffset == EXTERNAL_OFFSET || defSection == EXTERNAL_SECTION);
+    }
 };
 
 // Container for the entire object file.
@@ -112,11 +107,18 @@ struct ObjFile {
     {
     }
 
-    inline ObjFile(const ObjFile& other) noexcept = default;
-    inline ObjFile(ObjFile&& other) noexcept = default;
-
     inline ObjSection* getSectionWithNum(const uint32_t sectionNum) noexcept {
         for (ObjSection& section : sections) {
+            if (section.number == sectionNum) {
+                return &section;
+            }
+        }
+
+        return nullptr;
+    }
+
+    inline const ObjSection* getSectionWithNum(const uint32_t sectionNum) const noexcept {
+        for (const ObjSection& section : sections) {
             if (section.number == sectionNum) {
                 return &section;
             }

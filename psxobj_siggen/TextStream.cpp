@@ -240,8 +240,8 @@ uint32_t TextStream::readHexUint() {
             break;
         }
         
-        result *= 10;
-        result += readHexDigit();
+        result <<= 4;
+        result |= readHexDigit();
     }
 
     return result;
