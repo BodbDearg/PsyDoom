@@ -1,4 +1,4 @@
-#include "TextStream.h"
+#include "TextIStream.h"
 
 #include <cstring>
 
@@ -62,14 +62,14 @@ static constexpr uint32_t getHexDigitValue(const char c) {
     }
 }
 
-TextStream::TextStream(const char* const str, const uint32_t size) noexcept
+TextIStream::TextIStream(const char* const str, const uint32_t size) noexcept
     : str(str)
     , endOffset(size)
     , curOffset(0)
 {        
 }
 
-char TextStream::peekChar() const {
+char TextIStream::peekChar() const {
     if (curOffset < endOffset) {
         return str[curOffset];
     } else {
@@ -77,7 +77,7 @@ char TextStream::peekChar() const {
     }
 }
 
-char TextStream::readChar() {
+char TextIStream::readChar() {
     if (curOffset < endOffset) {
         return str[curOffset++];            
     } else {
@@ -85,7 +85,7 @@ char TextStream::readChar() {
     }
 }
 
-void TextStream::skipChar() {
+void TextIStream::skipChar() {
     if (curOffset < endOffset) {
         ++curOffset;
     } else {
@@ -93,7 +93,7 @@ void TextStream::skipChar() {
     }
 }
 
-void TextStream::skipChars(const uint32_t count) {
+void TextIStream::skipChars(const uint32_t count) {
     if (curOffset + count <= endOffset) {
         curOffset += count;
     } else {
@@ -101,17 +101,17 @@ void TextStream::skipChars(const uint32_t count) {
     }
 }
 
-bool TextStream::isAtEnd() const noexcept {
+bool TextIStream::isAtEnd() const noexcept {
     return (curOffset >= endOffset);
 }
 
-void TextStream::ensureAtEnd() {
+void TextIStream::ensureAtEnd() {
     if (!isAtEnd()) {
         throw TextStreamException("Expected to be at the end of the text stream!");
     }
 }
 
-bool TextStream::skipAsciiWhiteSpace() noexcept {
+bool TextIStream::skipAsciiWhiteSpace() noexcept {
     bool bDidSkipChars = false;
 
     while (!isAtEnd()) {
@@ -126,7 +126,7 @@ bool TextStream::skipAsciiWhiteSpace() noexcept {
     return bDidSkipChars;
 }
 
-bool TextStream::skipAsciiWhiteSpaceOnThisLine() noexcept {
+bool TextIStream::skipAsciiWhiteSpaceOnThisLine() noexcept {
     bool bDidSkipChars = false;
 
     while (!isAtEnd()) {
@@ -144,7 +144,7 @@ bool TextStream::skipAsciiWhiteSpaceOnThisLine() noexcept {
 }
 
 template <bool CaseSensitive>
-bool TextStream::checkStringAhead(const char* const checkStr) const noexcept {
+bool TextIStream::checkStringAhead(const char* const checkStr) const noexcept {
     const char* pCurCheckStrChar = checkStr;
     uint32_t peekOffset = curOffset;
 
@@ -178,11 +178,11 @@ bool TextStream::checkStringAhead(const char* const checkStr) const noexcept {
     return true;
 }
 
-template bool TextStream::checkStringAhead<false>(const char* const checkStr) const noexcept;
-template bool TextStream::checkStringAhead<true>(const char* const checkStr) const noexcept;
+template bool TextIStream::checkStringAhead<false>(const char* const checkStr) const noexcept;
+template bool TextIStream::checkStringAhead<true>(const char* const checkStr) const noexcept;
 
 template <bool CaseSensitive>
-void TextStream::consumeStringAhead(const char* const consumeStr) {
+void TextIStream::consumeStringAhead(const char* const consumeStr) {
     if (!checkStringAhead(consumeStr)) {
         throw TextStreamException("Unexpected string ahead!");
     }
@@ -190,20 +190,20 @@ void TextStream::consumeStringAhead(const char* const consumeStr) {
     curOffset += (uint32_t) std::strlen(consumeStr);
 }
 
-template void TextStream::consumeStringAhead<false>(const char* const consumeStr);
-template void TextStream::consumeStringAhead<true>(const char* const consumeStr);
+template void TextIStream::consumeStringAhead<false>(const char* const consumeStr);
+template void TextIStream::consumeStringAhead<true>(const char* const consumeStr);
 
 template <bool CaseSensitive>
-void TextStream::consumeSpaceSeparatedTokenAhead(const char* const tokenStr) {
+void TextIStream::consumeSpaceSeparatedTokenAhead(const char* const tokenStr) {
     skipAsciiWhiteSpace();
     consumeStringAhead(tokenStr);
     skipAsciiWhiteSpace();
 }
 
-template void TextStream::consumeSpaceSeparatedTokenAhead<false>(const char* const tokenStr);
-template void TextStream::consumeSpaceSeparatedTokenAhead<true>(const char* const tokenStr);
+template void TextIStream::consumeSpaceSeparatedTokenAhead<false>(const char* const tokenStr);
+template void TextIStream::consumeSpaceSeparatedTokenAhead<true>(const char* const tokenStr);
 
-void TextStream::consumeAsciiWhiteSpaceAhead() {
+void TextIStream::consumeAsciiWhiteSpaceAhead() {
     if (!isWhiteSpaceAsciiChar(readChar())) {
         throw TextStreamException("Expected some white space ahead!");
     }
@@ -217,7 +217,7 @@ void TextStream::consumeAsciiWhiteSpaceAhead() {
     }
 }
 
-uint32_t TextStream::readDecimalUint() {
+uint32_t TextIStream::readDecimalUint() {
     uint32_t result = getDecimalDigitValue(readChar());
 
     while (!isAtEnd()) {
@@ -232,7 +232,7 @@ uint32_t TextStream::readDecimalUint() {
     return result;
 }
 
-uint32_t TextStream::readHexUint() {
+uint32_t TextIStream::readHexUint() {
     uint32_t result = getHexDigitValue(readChar());
 
     while (!isAtEnd()) {
@@ -247,11 +247,11 @@ uint32_t TextStream::readHexUint() {
     return result;
 }
 
-uint32_t TextStream::readHexDigit() {
+uint32_t TextIStream::readHexDigit() {
     return getHexDigitValue(readChar());
 }
 
-TextStream TextStream::readNextLineAsStream() {
+TextIStream TextIStream::readNextLineAsStream() {
     if (isAtEnd()) {
         throw TextStreamException("Unexpected end of data!");
     }
@@ -263,10 +263,10 @@ TextStream TextStream::readNextLineAsStream() {
     }
 
     ++curOffset;
-    return TextStream(str + startOffset, curOffset - startOffset);
+    return TextIStream(str + startOffset, curOffset - startOffset);
 }
 
-std::string TextStream::readDelimitedString(const char begDelimiter, const char endDelimiter) {
+std::string TextIStream::readDelimitedString(const char begDelimiter, const char endDelimiter) {
     if (peekChar() != begDelimiter) {
         throw TextStreamException("Expected a start of string delimiter!");
     }

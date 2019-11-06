@@ -4,17 +4,17 @@
 #include <string>
 
 //----------------------------------------------------------------------------------------------------------------------
-// Helper class for text parsing.
+// Helper class for input text stream parsing.
 // Maintains a position within a stream of text and provides utility functions for manipulating the stream.
 //----------------------------------------------------------------------------------------------------------------------
-struct TextStream {
+struct TextIStream {
     const char*     str;
     uint32_t        endOffset;
     uint32_t        curOffset;
 
-    TextStream(const char* const str, const uint32_t size) noexcept;
-    TextStream(const TextStream& other) noexcept = default;
-    TextStream& operator = (const TextStream& other) noexcept = default;
+    TextIStream(const char* const str, const uint32_t size) noexcept;
+    TextIStream(const TextIStream& other) noexcept = default;
+    TextIStream& operator = (const TextIStream& other) noexcept = default;
 
     char peekChar() const;
     char readChar();
@@ -56,7 +56,7 @@ struct TextStream {
 
     // Create a sub text stream consisting of the text up until the end of the current line.
     // Moves this stream along past this line.
-    TextStream readNextLineAsStream();
+    TextIStream readNextLineAsStream();
 
     // Read a string delimited by the given delimiters.
     // Throws an exception if delimiters are missing.

@@ -515,9 +515,11 @@ void ConstInstructionEvaluator::initEvaluator(const ExeFile& exe, const ProgElem
     }
     
     // We start off by evaluating the first instruction in the function with the given input registers
-    BranchPath& branchPath = mBranchPathsToExec.emplace_back();
-    branchPath.instructionIdx = 0;
-    branchPath.regStates = inputRegState;
+    {
+        BranchPath& branchPath = mBranchPathsToExec.emplace_back();
+        branchPath.instructionIdx = 0;
+        branchPath.regStates = inputRegState;
+    }
 
     // Run through all of the instructions in the function.
     // If any are referenced by data (i.e a jump table) then add branch paths starting at those instructions too.

@@ -1,7 +1,7 @@
 #include "ObjFileParser.h"
 
 #include "ObjFileData.h"
-#include "TextStream.h"
+#include "TextIStream.h"
 
 struct ParseException {
     const char* msg;
@@ -12,8 +12,8 @@ struct ParseException {
 // Parses text like:
 //      Header : LNK version 2
 //----------------------------------------------------------------------------------------------------------------------
-static void parseHeaderInfo(TextStream& text, ObjFile& out) {
-    TextStream line = text.readNextLineAsStream();
+static void parseHeaderInfo(TextIStream& text, ObjFile& out) {
+    TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("Header");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("LNK");
@@ -30,10 +30,10 @@ static void parseHeaderInfo(TextStream& text, ObjFile& out) {
 //      offset $000000f4
 //      end line 0
 //----------------------------------------------------------------------------------------------------------------------
-static void parseFunctionEndDirective(TextStream& text, [[maybe_unused]] ObjFile& out) {
+static void parseFunctionEndDirective(TextIStream& text, [[maybe_unused]] ObjFile& out) {
     // Note: just ignoring this directive and skipping past it all
     {
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("76");
         line.consumeSpaceSeparatedTokenAhead(":");
         line.consumeSpaceSeparatedTokenAhead("Function");
@@ -43,14 +43,14 @@ static void parseFunctionEndDirective(TextStream& text, [[maybe_unused]] ObjFile
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("section");
         line.readHexUint();
     }
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("offset");
         line.consumeSpaceSeparatedTokenAhead("$");
         line.readHexUint();
@@ -58,7 +58,7 @@ static void parseFunctionEndDirective(TextStream& text, [[maybe_unused]] ObjFile
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("end");
         line.consumeSpaceSeparatedTokenAhead("line");
         line.readHexUint();
@@ -79,10 +79,10 @@ static void parseFunctionEndDirective(TextStream& text, [[maybe_unused]] ObjFile
 //      mask offset 0
 //      name _ExpAllocArea
 //----------------------------------------------------------------------------------------------------------------------
-static void parseFunctionStartDirective(TextStream& text, [[maybe_unused]] ObjFile& out) {
+static void parseFunctionStartDirective(TextIStream& text, [[maybe_unused]] ObjFile& out) {
     // Note: just ignoring this directive and skipping past it all
     {
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("74");
         line.consumeSpaceSeparatedTokenAhead(":");
         line.consumeSpaceSeparatedTokenAhead("Function");
@@ -92,14 +92,14 @@ static void parseFunctionStartDirective(TextStream& text, [[maybe_unused]] ObjFi
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("section");
         line.readHexUint();
     }
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("offset");
         line.consumeSpaceSeparatedTokenAhead("$");
         line.readHexUint();
@@ -107,14 +107,14 @@ static void parseFunctionStartDirective(TextStream& text, [[maybe_unused]] ObjFi
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("file");
         line.readHexUint();
     }
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("start");
         line.consumeSpaceSeparatedTokenAhead("line");
         line.readHexUint();
@@ -122,7 +122,7 @@ static void parseFunctionStartDirective(TextStream& text, [[maybe_unused]] ObjFi
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("frame");
         line.consumeSpaceSeparatedTokenAhead("reg");
         line.readHexUint();
@@ -130,7 +130,7 @@ static void parseFunctionStartDirective(TextStream& text, [[maybe_unused]] ObjFi
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("frame");
         line.consumeSpaceSeparatedTokenAhead("size");
         line.readHexUint();
@@ -138,7 +138,7 @@ static void parseFunctionStartDirective(TextStream& text, [[maybe_unused]] ObjFi
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("return");
         line.consumeSpaceSeparatedTokenAhead("pc");
         line.consumeSpaceSeparatedTokenAhead("reg");
@@ -147,7 +147,7 @@ static void parseFunctionStartDirective(TextStream& text, [[maybe_unused]] ObjFi
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("mask");
         line.consumeSpaceSeparatedTokenAhead("$");
         line.readHexUint();
@@ -155,7 +155,7 @@ static void parseFunctionStartDirective(TextStream& text, [[maybe_unused]] ObjFi
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("mask");
         line.consumeSpaceSeparatedTokenAhead("offset");
 
@@ -168,7 +168,7 @@ static void parseFunctionStartDirective(TextStream& text, [[maybe_unused]] ObjFi
 
     {
         text.skipAsciiWhiteSpace();
-        TextStream line = text.readNextLineAsStream();
+        TextIStream line = text.readNextLineAsStream();
         line.consumeSpaceSeparatedTokenAhead("name");
     }
 }
@@ -177,9 +177,9 @@ static void parseFunctionStartDirective(TextStream& text, [[maybe_unused]] ObjFi
 // Parses text like:
 //      48 : XBSS symbol number 2b '_que' size 1800 in section 6
 //----------------------------------------------------------------------------------------------------------------------
-static void parseXBssSymbolDirective(TextStream& text, ObjFile& out) {
+static void parseXBssSymbolDirective(TextIStream& text, ObjFile& out) {
     // Read symbol number
-    TextStream line = text.readNextLineAsStream();
+    TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("48");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("XBSS");
@@ -211,8 +211,8 @@ static void parseXBssSymbolDirective(TextStream& text, ObjFile& out) {
 // Parses text like:
 //      46 : Processor type 7
 //----------------------------------------------------------------------------------------------------------------------
-static void parseProcessorType(TextStream& text, ObjFile& out) {
-    TextStream line = text.readNextLineAsStream();
+static void parseProcessorType(TextIStream& text, ObjFile& out) {
+    TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("46");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("Processor");
@@ -226,9 +226,9 @@ static void parseProcessorType(TextStream& text, ObjFile& out) {
 // Parses text like:
 //      28 : Define file number 9 as "C:\PSX\SRC\C2\SPRINTF.C"
 //----------------------------------------------------------------------------------------------------------------------
-static void parseFileNameDefinition(TextStream& text, [[maybe_unused]] ObjFile& out) {
+static void parseFileNameDefinition(TextIStream& text, [[maybe_unused]] ObjFile& out) {
     // Just ensure the format is as expected then ignore the rest - we don't use this info
-    TextStream line = text.readNextLineAsStream();
+    TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("28");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("Define");
@@ -242,9 +242,9 @@ static void parseFileNameDefinition(TextStream& text, [[maybe_unused]] ObjFile& 
 // Parses text like:
 //      16 : Section symbol number 1 '.rdata' in group 0 alignment 8
 //----------------------------------------------------------------------------------------------------------------------
-static void parseSectionDefinition(TextStream& text, ObjFile& out) {
+static void parseSectionDefinition(TextIStream& text, ObjFile& out) {
     // Parse section number
-    TextStream line = text.readNextLineAsStream();
+    TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("16");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("Section");
@@ -313,9 +313,9 @@ static void parseSectionDefinition(TextStream& text, ObjFile& out) {
 // Parses text like:
 //      18 : Local symbol 'get_mode' at offset 1590 in section 2
 //----------------------------------------------------------------------------------------------------------------------
-static void parseLocalSymbolDirective(TextStream& text, ObjFile& out) {
+static void parseLocalSymbolDirective(TextIStream& text, ObjFile& out) {
     // Read symbol name
-    TextStream line = text.readNextLineAsStream();
+    TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("18");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("Local");
@@ -343,9 +343,9 @@ static void parseLocalSymbolDirective(TextStream& text, ObjFile& out) {
 // Parses text like:
 //      14 : XREF symbol number c 'memchr'
 //----------------------------------------------------------------------------------------------------------------------
-static void parseXRefSymbolDirective(TextStream& text, ObjFile& out) {
+static void parseXRefSymbolDirective(TextIStream& text, ObjFile& out) {
     // Read symbol number
-    TextStream line = text.readNextLineAsStream();
+    TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("14");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("XREF");
@@ -368,9 +368,9 @@ static void parseXRefSymbolDirective(TextStream& text, ObjFile& out) {
 // Parses text like:
 //      12 : XDEF symbol number a 'sprintf' at offset 0 in section 2
 //----------------------------------------------------------------------------------------------------------------------
-static void parseXDefSymbolDirective(TextStream& text, ObjFile& out) {
+static void parseXDefSymbolDirective(TextIStream& text, ObjFile& out) {
     // Read symbol number
-    TextStream line = text.readNextLineAsStream();
+    TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("12");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("XDEF");
@@ -409,7 +409,7 @@ static void parseXDefSymbolDirective(TextStream& text, ObjFile& out) {
 // NOTE: in order to keep things simple, I ignore anything past the 'with' token.
 // I don't need to know what something is being patched WITH, just WHAT is being patched for function signature matching.
 //----------------------------------------------------------------------------------------------------------------------
-static void parsePatchDirective(TextStream& text, ObjFile& out) {
+static void parsePatchDirective(TextIStream& text, ObjFile& out) {
     // Get the current section
     ObjSection* pSection = out.getSectionWithNum(out.curSectionNumber);
 
@@ -418,7 +418,7 @@ static void parsePatchDirective(TextStream& text, ObjFile& out) {
     }
 
     // Read patch type and target offset
-    TextStream line = text.readNextLineAsStream();
+    TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("10");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("Patch");
@@ -439,7 +439,7 @@ static void parsePatchDirective(TextStream& text, ObjFile& out) {
 // Parses text like:
 //      8 : Uninitialised data, 11 bytes
 //----------------------------------------------------------------------------------------------------------------------
-static void parseUnitializedDataDirective(TextStream& text, ObjFile& out) {
+static void parseUnitializedDataDirective(TextIStream& text, ObjFile& out) {
     // Get the current section
     ObjSection* pSection = out.getSectionWithNum(out.curSectionNumber);
 
@@ -448,7 +448,7 @@ static void parseUnitializedDataDirective(TextStream& text, ObjFile& out) {
     }
 
     // Parse the uninitialized data directive and save the 'unitialized' bytes as zeros
-    TextStream line = text.readNextLineAsStream();
+    TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("8");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("Uninitialised");
@@ -466,8 +466,8 @@ static void parseUnitializedDataDirective(TextStream& text, ObjFile& out) {
 // Parses text like:
 //      6 : Switch to section 2
 //----------------------------------------------------------------------------------------------------------------------
-static void parseSwitchToSectionDirective(TextStream& text, ObjFile& out) {
-    TextStream line = text.readNextLineAsStream();
+static void parseSwitchToSectionDirective(TextIStream& text, ObjFile& out) {
+    TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("6");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("Switch");
@@ -486,7 +486,7 @@ static void parseSwitchToSectionDirective(TextStream& text, ObjFile& out) {
 //      0010:00 00 00 00 30 31 32 33 34 35 36 37 38 39 61 62 
 //      0020:63 64 65 66 00 
 //----------------------------------------------------------------------------------------------------------------------
-static void parseCodeDirective(TextStream& text, ObjFile& out) {
+static void parseCodeDirective(TextIStream& text, ObjFile& out) {
     // Get the current section
     ObjSection* pSection = out.getSectionWithNum(out.curSectionNumber);
 
@@ -495,7 +495,7 @@ static void parseCodeDirective(TextStream& text, ObjFile& out) {
     }
     
     // Get the number of bytes
-    TextStream headerLine = text.readNextLineAsStream();
+    TextIStream headerLine = text.readNextLineAsStream();
     headerLine.consumeSpaceSeparatedTokenAhead("2");
     headerLine.consumeSpaceSeparatedTokenAhead(":");
     headerLine.consumeSpaceSeparatedTokenAhead("Code");
@@ -511,7 +511,7 @@ static void parseCodeDirective(TextStream& text, ObjFile& out) {
 
     for (uint32_t numBytesLeft = numCodeBytes; numBytesLeft > 0;) {
         // Skip the offset at the start of the line first
-        TextStream dataLine = text.readNextLineAsStream();
+        TextIStream dataLine = text.readNextLineAsStream();
         dataLine.skipAsciiWhiteSpace();
 
         if (dataLine.isAtEnd())
@@ -541,8 +541,8 @@ static void parseCodeDirective(TextStream& text, ObjFile& out) {
 // Parses text like:
 //      0 : End of file
 //----------------------------------------------------------------------------------------------------------------------
-static void parseEndOfFileDirective(TextStream& text, [[maybe_unused]] ObjFile& out) {
-    TextStream line = text.readNextLineAsStream();
+static void parseEndOfFileDirective(TextIStream& text, [[maybe_unused]] ObjFile& out) {
+    TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("0");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("End");
@@ -553,7 +553,7 @@ static void parseEndOfFileDirective(TextStream& text, [[maybe_unused]] ObjFile& 
 }
 
 bool ObjFileParser::parseObjFileDumpFromStr(const std::string& str, ObjFile& out) noexcept {
-    TextStream text(str.c_str(), (uint32_t) str.size());
+    TextIStream text(str.c_str(), (uint32_t) str.size());
 
     try {
         // Main parsing loop: continue handling elements until we reach the file end!
