@@ -19,7 +19,13 @@ namespace FuncSignatureUtils {
     // Build a list of function signatures to export from the given parsed obj file dump
     void buildSigList(ObjFile& objFile, std::vector<FuncSignature>& signatures) noexcept;
 
-    // Print each function signature to the given output stream.
+    // Utilities to print function signatures to the given output stream.
     // Each signature is separated by a new line.
-    void printSigList(const std::vector<FuncSignature>& signatures, std::ostream& out) noexcept;
+    void printSig(const FuncSignature& sig, std::ostream& out) noexcept;
+    void printSigList(const std::vector<FuncSignature>& sigs, std::ostream& out) noexcept;
+
+    // Print disassembly for each function signature to the given output stream.
+    // Each piece of disassembly is separated by a new line.
+    void printSigDisassembly(const FuncSignature& sig, std::ostream& out) noexcept;
+    void printSigListDisassembly(const std::vector<FuncSignature>& sigs, std::ostream& out) noexcept;
 }

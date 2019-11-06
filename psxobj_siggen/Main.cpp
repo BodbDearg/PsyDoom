@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) noexcept {
     std::vector<FuncSignature> signatures;
     signatures.reserve(objFile.symbols.size());
     FuncSignatureUtils::buildSigList(objFile, signatures);
-
+    
     // Print the signatures to the specified file
     try {
         std::fstream out;
@@ -61,6 +61,17 @@ int main(int argc, char* argv[]) noexcept {
         FuncSignatureUtils::printSigList(signatures, out);
     } catch (...) {
         FATAL_ERROR_F("Failed appending the function signatures to the specified output file '%s'!", argv[2]);
+    }
+    
+    // Optionally print disassembly to the specified file
+    if (argc >= 4) {
+        try {
+            std::fstream out;
+            out.open(argv[3], std::fstream::out | std::fstream::app);
+            FuncSignatureUtils::printSigListDisassembly(signatures, out);
+        } catch (...) {
+            FATAL_ERROR_F("Failed appending function disassembly to the specified output file '%s'!", argv[2]);
+        }
     }
 
     return 0;

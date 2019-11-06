@@ -1,5 +1,7 @@
 #include "FuncSignature.h"
 
+#include "CpuInstruction.h"
+#include "ExeFile.h"
 #include "FatalErrors.h"
 #include "ObjFileData.h"
 #include "PrintUtils.h"
@@ -93,24 +95,87 @@ void FuncSignatureUtils::buildSigList(ObjFile& objFile, std::vector<FuncSignatur
     }
 }
 
-void FuncSignatureUtils::printSigList(const std::vector<FuncSignature>& signatures, std::ostream& out) noexcept {
-    for (const FuncSignature& sig : signatures) {
-        out << sig.name << "\n\t";
-        out << sig.instructions.size() << "\n\t";
-        out << sig.wildcardInstructionIndexes.size() << "\n\t";
+void FuncSignatureUtils::printSig(const FuncSignature& sig, std::ostream& out) noexcept {
+    out << sig.name << "\n\t";
+    out << sig.instructions.size() << "\n\t";
+    out << sig.wildcardInstructionIndexes.size() << "\n\t";
 
-        for (const uint32_t instruction : sig.instructions) {
-            PrintUtils::printHexU32(instruction, true, out);
-            out << " ";
+    for (const uint32_t instruction : sig.instructions) {
+        PrintUtils::printHexU32(instruction, true, out);
+        out << " ";
+    }
+
+    out << "\n\t";
+
+    for (const uint32_t index : sig.wildcardInstructionIndexes) {
+        out << index;
+        out << " ";
+    }
+
+    out << "\n";
+}
+
+void FuncSignatureUtils::printSigList(const std::vector<FuncSignature>& sigs, std::ostream& out) noexcept {
+    for (const FuncSignature& sig : sigs) {
+        printSig(sig, out);
+    }
+}
+
+void FuncSignatureUtils::printSigDisassembly(const FuncSignature& sig, std::ostream& out) noexcept {
+    out << sig.name << "\n";
+
+    // Print each instruction
+    ExeFile fakeExeFile;
+    uint32_t instructionIdx = 0;
+    uint32_t instructionOffset = 0;
+
+    for (const uint32_t instWord : sig.instructions) {
+        // Print the relative address for the line plus do indenting for the line
+        out << "    ";
+        PrintUtils::printHexU32(instructionOffset, true, out);
+        out << ":";
+
+        // Print if this is a patched instruction
+        bool bIsPatchedInstruction = false;
+
+        {
+            auto iter = std::find(sig.wildcardInstructionIndexes.begin(), sig.wildcardInstructionIndexes.end(), instructionIdx);
+
+            if (iter != sig.wildcardInstructionIndexes.end()) {
+                bIsPatchedInstruction = true;
+            }
         }
 
-        out << "\n\t";
-
-        for (const uint32_t index : sig.wildcardInstructionIndexes) {
-            out << index;
-            out << " ";
+        if (bIsPatchedInstruction) {
+            out << "*       ";
+        } else {
+            out << "        ";
         }
+        
+        // Decode the instruction
+        CpuInstruction inst;
+        inst.decode(instWord);
+
+        // If the instruction is NOT a branch or jump then indent it slightly.
+        // This makes branches and jumps stand out more.
+        // Control flow instructions are important for detecting function boundaries etc. !
+        if (!CpuOpcodeUtils::isBranchOrJumpOpcode(inst.opcode)) {
+            out << "  ";
+        }
+
+        // Print the instruction and move onto the next
+        inst.print(fakeExeFile, instructionOffset, nullptr, out);
 
         out << "\n";
+        instructionIdx += 1;
+        instructionOffset += 4;
+    }
+
+    out << "\n";
+}
+
+void FuncSignatureUtils::printSigListDisassembly(const std::vector<FuncSignature>& sigs, std::ostream& out) noexcept {
+    for (const FuncSignature& sig : sigs) {
+        printSigDisassembly(sig, out);
     }
 }
