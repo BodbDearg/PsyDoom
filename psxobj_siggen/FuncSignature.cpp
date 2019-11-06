@@ -47,7 +47,7 @@ void FuncSignatureUtils::buildSigList(ObjFile& objFile, std::vector<FuncSignatur
         // Determine the end offset where this symbol ends.
         // It's either at the end of the section data or at the start of the next symbol.
         const std::vector<std::byte>& sectionData = pSection->data;
-        const uint32_t sectionEndOffset = sectionData.size();
+        const uint32_t sectionEndOffset = (uint32_t) sectionData.size();
         uint32_t endOffset = sectionEndOffset;
 
         if ((size_t) symbolIdx + 1 < symbols.size()) {

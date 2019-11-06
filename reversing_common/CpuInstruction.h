@@ -72,4 +72,53 @@ struct CpuInstruction {
         const ProgElem* const pParentFunc,
         std::ostream& out
     ) const noexcept;
+
+    
+    inline int compare(const CpuInstruction& other) const noexcept {
+        if (opcode != other.opcode) {
+            return (opcode < other.opcode) ? -1 : +1;
+        }
+
+        if (regS != other.regS) {
+            return (regS < other.regS) ? -1 : +1;
+        }
+
+        if (regT != other.regT) {
+            return (regT < other.regT) ? -1 : +1;
+        }
+
+        if (regD != other.regD) {
+            return (regD < other.regD) ? -1 : +1;
+        }
+
+        if (immediateVal != other.immediateVal) {
+            return (immediateVal < other.immediateVal) ? -1 : +1;
+        }
+
+        return 0;
+    }
+
+    inline bool operator < (const CpuInstruction& other) const noexcept {
+        return (compare(other) < 0);
+    }
+
+    inline bool operator <= (const CpuInstruction& other) const noexcept {
+        return (compare(other) <= 0);
+    }
+
+    inline bool operator > (const CpuInstruction& other) const noexcept {
+        return (compare(other) > 0);
+    }
+
+    inline bool operator >= (const CpuInstruction& other) const noexcept {
+        return (compare(other) >= 0);
+    }
+
+    inline bool operator != (const CpuInstruction& other) const noexcept {
+        return (compare(other) != 0);
+    }
+
+    inline bool operator == (const CpuInstruction& other) const noexcept {
+        return (compare(other) == 0);
+    }
 };
