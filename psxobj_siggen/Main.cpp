@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) noexcept {
             out.open(argv[3], std::fstream::out | std::fstream::app);
             FuncSignatureUtils::printSigListDisassembly(signatures, out);
         } catch (...) {
-            FATAL_ERROR_F("Failed appending function disassembly to the specified output file '%s'!", argv[2]);
+            FATAL_ERROR_F("Failed appending function disassembly to the specified output file '%s'!", argv[3]);
         }
     }
 
