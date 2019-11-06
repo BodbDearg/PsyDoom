@@ -166,7 +166,7 @@ static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ost
     for (uint32_t wordIdx = startWordIdx; wordIdx < endWordIdx; ++wordIdx) {
         // Print the address of this instruction and then print the instruction itself
         const uint32_t instAddr = exe.baseAddress + wordIdx * 4;
-        printAddressForLine(instAddr , out);
+        printAddressForLine(instAddr, out);
 
         // Print the references to this exe word
         const ExeWord exeWord = exe.words[wordIdx];

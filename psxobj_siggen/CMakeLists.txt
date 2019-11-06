@@ -1,5 +1,7 @@
 # Platform agnostic sources
 set(SOURCE_FILES
+    "FuncSignature.cpp"
+    "FuncSignature.h"
     "Main.cpp"
     "ObjFileData.h"
     "ObjFileParser.cpp"
