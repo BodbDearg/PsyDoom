@@ -989,8 +989,8 @@ static const ProgElem ELEMS[] = {
     { 0x8004B9E4, 0x8004BA30, "",                                       ProgElemType::FUNCTION },
     { 0x8004BA30, 0x8004BA68, "",                                       ProgElemType::FUNCTION },
     { 0x8004BA68, 0x8004BA94, "",                                       ProgElemType::FUNCTION },
-    { 0x8004BA94, 0x8004BBDC, "",                                       ProgElemType::FUNCTION },
-    { 0x8004BBDC, 0x8004BC78, "",                                       ProgElemType::FUNCTION },
+    { 0x8004BA94, 0x8004BBDC, "LIBETC_VSync",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004BBDC, 0x8004BC78, "LIBETC_v_wait",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8004BC78, 0x8004BCC8, "",                                       ProgElemType::FUNCTION },
     { 0x8004BCC8, 0x8004BEF0, "",                                       ProgElemType::FUNCTION },
     { 0x8004BEF0, 0x8004C004, "",                                       ProgElemType::FUNCTION },
