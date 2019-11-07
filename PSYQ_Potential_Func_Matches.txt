@@ -870,7 +870,6 @@
 80050674 matches function 'DpqColorLight'
 800506D4 matches function 'NormalClipS'
 800506E4 matches function 'NormalClipS'
-800507AC matches function '__main'
 8005383C matches function '_spu_setCommonAttr'
 80053BD4 matches function '_spu_getCommonAttr'
 800549A8 matches function 'SpuRGetAllKeysStatus'
