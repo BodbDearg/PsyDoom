@@ -970,7 +970,7 @@ static const ProgElem ELEMS[] = {
     { 0x8004AD40, 0x8004AD50, "LIBAPI_HookEntryInt",                    ProgElemType::FUNCTION },
     { 0x8004AD50, 0x8004AD60, "LIBAPI_ResetEntryInt",                   ProgElemType::FUNCTION },
     { 0x8004AD60, 0x8004AD70, "LIBAPI_ChangeClearRCnt",                 ProgElemType::FUNCTION },
-    { 0x8004AD70, 0x8004AD80, "",                                       ProgElemType::FUNCTION },
+    { 0x8004AD70, 0x8004AD80, "LIBAPI__96_remove",                      ProgElemType::FUNCTION },
     { 0x8004AD80, 0x8004AD90, "LIBAPI_ReturnFromException",             ProgElemType::FUNCTION },
     { 0x8004AD90, 0x8004ADD0, "",                                       ProgElemType::FUNCTION },
     { 0x8004ADD0, 0x8004AE0C, "",                                       ProgElemType::FUNCTION },
