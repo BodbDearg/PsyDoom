@@ -75,7 +75,6 @@
 8004ED80 matches function 'SetBlockFill'
 8004ED94 matches function 'SetLineF2'
 8004EDA8 matches function 'SetLineG2'
-8004BC78 matches function 'puts'
 800501B4 matches function 'SetVertex0'
 800501C4 matches function 'SetVertex1'
 800501D4 matches function 'SetVertex2'
