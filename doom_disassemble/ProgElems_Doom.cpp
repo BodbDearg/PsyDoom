@@ -1147,7 +1147,7 @@ static const ProgElem ELEMS[] = {
     { 0x80050704, 0x80050714, "",                                       ProgElemType::FUNCTION },
     { 0x80050714, 0x800507AC, "main",                                   ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800507AC, 0x8005081C, "LIBSN__main",                            ProgElemType::FUNCTION },
-    { 0x8005081C, 0x80050884, "LIBSN__main_2",                          ProgElemType::FUNCTION },
+    { 0x8005081C, 0x80050884, "LIBSN___do_global_dtors",                ProgElemType::FUNCTION },
     { 0x80050884, 0x80050894, "LIBAPI_InitHeap",                        ProgElemType::FUNCTION },
     { 0x80050894, 0x800508BC, "",                                       ProgElemType::FUNCTION },
     { 0x800508BC, 0x80050FBC, "",                                       ProgElemType::FUNCTION },
