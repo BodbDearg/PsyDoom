@@ -95,6 +95,7 @@ struct ObjFile {
     std::vector<ObjSection> sections;
     std::vector<ObjSymbol>  symbols;
     uint32_t                curSectionNumber;       // Parser state
+    uint32_t                curPatchBaseOffset;     // This should be added to whatever offset is specified in a patch directive
     uint16_t                lnkVersion;             // Should be '2'
     uint16_t                processorType;          // Should be '7' for MIPS
 
@@ -102,6 +103,7 @@ struct ObjFile {
         : sections()
         , symbols()
         , curSectionNumber(UINT16_MAX)
+        , curPatchBaseOffset(0)
         , lnkVersion(UINT16_MAX)
         , processorType(UINT16_MAX)
     {

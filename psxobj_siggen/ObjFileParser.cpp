@@ -429,7 +429,7 @@ static void parsePatchDirective(TextIStream& text, ObjFile& out) {
 
     line.consumeSpaceSeparatedTokenAhead("at");
     line.consumeSpaceSeparatedTokenAhead("offset");
-    patch.targetOffset = line.readHexUint();
+    patch.targetOffset = out.curPatchBaseOffset + line.readHexUint();
 
     // Note: simply ignore the rest past this!
     line.consumeSpaceSeparatedTokenAhead("with");
@@ -467,15 +467,26 @@ static void parseUnitializedDataDirective(TextIStream& text, ObjFile& out) {
 //      6 : Switch to section 2
 //----------------------------------------------------------------------------------------------------------------------
 static void parseSwitchToSectionDirective(TextIStream& text, ObjFile& out) {
+    // Read the current section number
     TextIStream line = text.readNextLineAsStream();
     line.consumeSpaceSeparatedTokenAhead("6");
     line.consumeSpaceSeparatedTokenAhead(":");
     line.consumeSpaceSeparatedTokenAhead("Switch");
     line.consumeSpaceSeparatedTokenAhead("to");
     line.consumeSpaceSeparatedTokenAhead("section");
-    out.curSectionNumber = line.readHexUint();
+    const uint32_t sectionNum  = line.readHexUint();
     line.skipAsciiWhiteSpace();
     line.ensureAtEnd();
+
+    // Save the section number and set the base offset for the next patch    
+    out.curSectionNumber = sectionNum;
+    ObjSection* pSection = out.getSectionWithNum(sectionNum);
+
+    if (!pSection) {
+        throw ParseException("Invalid current section number!");
+    }
+
+    out.curPatchBaseOffset = (uint32_t) pSection->data.size();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
