@@ -107,7 +107,6 @@
 80049D40 matches function 'StartRCnt'
 80049D70 matches function 'StopRCnt'
 80049DA4 matches function 'ResetRCnt'
-80054B00 matches function 'CdInit'
 80054B90 matches function 'def_cbsync'
 80054BB8 matches function 'def_cbready'
 80054BE0 matches function 'def_cbready'

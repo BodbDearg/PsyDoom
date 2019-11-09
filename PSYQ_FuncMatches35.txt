@@ -119,7 +119,6 @@
 8005517C matches function 'StCdInterrupt2'
 800580A8 matches function 'ChangeClearSIO'
 80049D08 matches function 'GetRCnt'
-80054B00 matches function 'CdInit'
 80054B90 matches function 'def_cbsync'
 80054BB8 matches function 'def_cbready'
 80054BE0 matches function 'def_cbready'

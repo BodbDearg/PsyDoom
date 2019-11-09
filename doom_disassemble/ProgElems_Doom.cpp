@@ -950,8 +950,8 @@ static const ProgElem ELEMS[] = {
     { 0x80049E3C, 0x80049E4C, "LIBAPI_ExitCriticalSection",             ProgElemType::FUNCTION },
     { 0x80049E4C, 0x80049E5C, "LIBAPI_open",                            ProgElemType::FUNCTION },
     { 0x80049E5C, 0x8004A6BC, "",                                       ProgElemType::FUNCTION },
-    { 0x8004A6BC, 0x8004A70C, "",                                       ProgElemType::FUNCTION },
-    { 0x8004A70C, 0x8004A73C, "",                                       ProgElemType::FUNCTION },
+    { 0x8004A6BC, 0x8004A70C, "LIBC2_memchr",                           ProgElemType::FUNCTION },
+    { 0x8004A70C, 0x8004A73C, "LIBC2_strlen",                           ProgElemType::FUNCTION },
     { 0x8004A73C, 0x8004A7AC, "",                                       ProgElemType::FUNCTION },
     { 0x8004A7AC, 0x8004A7DC, "LIBETC_ResetCallback",                   ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8004A7DC, 0x8004A80C, "LIBETC_InterruptCallback",               ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -972,10 +972,10 @@ static const ProgElem ELEMS[] = {
     { 0x8004AD60, 0x8004AD70, "LIBAPI_ChangeClearRCnt",                 ProgElemType::FUNCTION },
     { 0x8004AD70, 0x8004AD80, "LIBAPI__96_remove",                      ProgElemType::FUNCTION },
     { 0x8004AD80, 0x8004AD90, "LIBAPI_ReturnFromException",             ProgElemType::FUNCTION },
-    { 0x8004AD90, 0x8004ADD0, "",                                       ProgElemType::FUNCTION },
+    { 0x8004AD90, 0x8004ADD0, "LIBC2_printf",                           ProgElemType::FUNCTION },
     { 0x8004ADD0, 0x8004AE0C, "",                                       ProgElemType::FUNCTION },
     { 0x8004AE0C, 0x8004AE50, "",                                       ProgElemType::FUNCTION },
-    { 0x8004AE50, 0x8004B4C0, "",                                       ProgElemType::FUNCTION },
+    { 0x8004AE50, 0x8004B4C0, "LIBC2_prnt",                             ProgElemType::FUNCTION },
     { 0x8004B4C0, 0x8004B4F4, "",                                       ProgElemType::FUNCTION },
     { 0x8004B4F4, 0x8004B530, "",                                       ProgElemType::FUNCTION },
     { 0x8004B530, 0x8004B5F0, "LIBC2_putchar",                          ProgElemType::FUNCTION },
@@ -1195,7 +1195,7 @@ static const ProgElem ELEMS[] = {
     { 0x80054928, 0x800549A8, "",                                       ProgElemType::FUNCTION },
     { 0x800549A8, 0x80054A78, "",                                       ProgElemType::FUNCTION },
     { 0x80054A78, 0x80054B00, "",                                       ProgElemType::FUNCTION },
-    { 0x80054B00, 0x80054B90, "",                                       ProgElemType::FUNCTION },
+    { 0x80054B00, 0x80054B90, "LIBCD_CdInit",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80054B90, 0x80054BB8, "",                                       ProgElemType::FUNCTION },
     { 0x80054BB8, 0x80054BE0, "",                                       ProgElemType::FUNCTION },
     { 0x80054BE0, 0x80054C08, "",                                       ProgElemType::FUNCTION },
