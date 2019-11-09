@@ -169,7 +169,7 @@ static const ProgElem ELEMS[] = {
     { 0x80011898, 0x800118AC, "STR_HexChars_Lower_Copy2",               ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x800118AC, 0x800118B4, "STR_Null_In_Parens",                     ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x800118B4, 0x800118C8, "STR_HexChars_Upper_Copy2",               ProgElemType::ARRAY, ProgElemType::CHAR8 },
-    { 0x800118C8, 0x80011AAC, "",                                       ProgElemType::ARRAY, ProgElemType::PTR32 },
+    { 0x800118C8, 0x80011AAC, "JumpTable_LIBC2_prnt",                   ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80011AAC, 0x80011AB8, "__ZERO_PADDING__",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80011AB8, 0x80011AD4, "STR_Sys_DMA_Bus_Err",                    ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80011AD4, 0x80011AEC, "STR_Sys_VSync_Timeout_Err",              ProgElemType::ARRAY, ProgElemType::CHAR8 },
@@ -953,42 +953,41 @@ static const ProgElem ELEMS[] = {
     { 0x8004A6BC, 0x8004A70C, "LIBC2_memchr",                           ProgElemType::FUNCTION },
     { 0x8004A70C, 0x8004A73C, "LIBC2_strlen",                           ProgElemType::FUNCTION },
     { 0x8004A73C, 0x8004A7AC, "",                                       ProgElemType::FUNCTION },
-    { 0x8004A7AC, 0x8004A7DC, "LIBETC_ResetCallback",                   ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8004A7DC, 0x8004A80C, "LIBETC_InterruptCallback",               ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8004A80C, 0x8004A83C, "LIBETC_DMACallback",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8004A83C, 0x8004A86C, "LIBETC_VSyncCallbacks",                  ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8004A86C, 0x8004A89C, "LIBETC_StopCallback",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8004A89C, 0x8004A8B0, "",                                       ProgElemType::FUNCTION },
-    { 0x8004A8B0, 0x8004A8C8, "",                                       ProgElemType::FUNCTION },
-    { 0x8004A8C8, 0x8004A8E4, "",                                       ProgElemType::FUNCTION },
-    { 0x8004A8E4, 0x8004A9A4, "",                                       ProgElemType::FUNCTION },
-    { 0x8004A8E4, 0x8004A9A4, "",                                       ProgElemType::FUNCTION },
-    { 0x8004A9A4, 0x8004AB74, "",                                       ProgElemType::FUNCTION },
-    { 0x8004AB74, 0x8004ACA4, "",                                       ProgElemType::FUNCTION },
-    { 0x8004ACA4, 0x8004AD14, "",                                       ProgElemType::FUNCTION },
-    { 0x8004AD14, 0x8004AD40, "",                                       ProgElemType::FUNCTION },
+    { 0x8004A7AC, 0x8004A7DC, "LIBETC_ResetCallback",                   ProgElemType::FUNCTION },
+    { 0x8004A7DC, 0x8004A80C, "LIBETC_InterruptCallback",               ProgElemType::FUNCTION },
+    { 0x8004A80C, 0x8004A83C, "LIBETC_DMACallback",                     ProgElemType::FUNCTION },
+    { 0x8004A83C, 0x8004A86C, "LIBETC_VSyncCallbacks",                  ProgElemType::FUNCTION },
+    { 0x8004A86C, 0x8004A89C, "LIBETC_StopCallback",                    ProgElemType::FUNCTION },
+    { 0x8004A89C, 0x8004A8B0, "LIBETC_CheckCallback",                   ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004A8B0, 0x8004A8C8, "LIBETC_GetIntrMask",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004A8C8, 0x8004A8E4, "LIBETC_SetIntrMask",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004A8E4, 0x8004A9A4, "LIBETC_INTR_startIntr",                  ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004A9A4, 0x8004AB74, "LIBETC_INTR_trapIntr",                   ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004AB74, 0x8004ACA4, "LIBETC_INTR_setIntr",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004ACA4, 0x8004AD14, "LIBETC_INTR_stopIntr",                   ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004AD14, 0x8004AD40, "LIBETC_INTR_memclr",                     ProgElemType::FUNCTION },
     { 0x8004AD40, 0x8004AD50, "LIBAPI_HookEntryInt",                    ProgElemType::FUNCTION },
     { 0x8004AD50, 0x8004AD60, "LIBAPI_ResetEntryInt",                   ProgElemType::FUNCTION },
     { 0x8004AD60, 0x8004AD70, "LIBAPI_ChangeClearRCnt",                 ProgElemType::FUNCTION },
     { 0x8004AD70, 0x8004AD80, "LIBAPI__96_remove",                      ProgElemType::FUNCTION },
     { 0x8004AD80, 0x8004AD90, "LIBAPI_ReturnFromException",             ProgElemType::FUNCTION },
     { 0x8004AD90, 0x8004ADD0, "LIBC2_printf",                           ProgElemType::FUNCTION },
-    { 0x8004ADD0, 0x8004AE0C, "",                                       ProgElemType::FUNCTION },
-    { 0x8004AE0C, 0x8004AE50, "",                                       ProgElemType::FUNCTION },
+    { 0x8004ADD0, 0x8004AE0C, "LIBC2_setjmp",                           ProgElemType::FUNCTION },
+    { 0x8004AE0C, 0x8004AE50, "LIBC2_longjmp",                          ProgElemType::FUNCTION },
     { 0x8004AE50, 0x8004B4C0, "LIBC2_prnt",                             ProgElemType::FUNCTION },
     { 0x8004B4C0, 0x8004B4F4, "",                                       ProgElemType::FUNCTION },
     { 0x8004B4F4, 0x8004B530, "",                                       ProgElemType::FUNCTION },
     { 0x8004B530, 0x8004B5F0, "LIBC2_putchar",                          ProgElemType::FUNCTION },
-    { 0x8004B5F0, 0x8004B654, "",                                       ProgElemType::FUNCTION },
-    { 0x8004B654, 0x8004B69C, "",                                       ProgElemType::FUNCTION },
-    { 0x8004B69C, 0x8004B800, "",                                       ProgElemType::FUNCTION },
-    { 0x8004B800, 0x8004B908, "",                                       ProgElemType::FUNCTION },
-    { 0x8004B908, 0x8004B934, "",                                       ProgElemType::FUNCTION },
-    { 0x8004B934, 0x8004B9AC, "",                                       ProgElemType::FUNCTION },
-    { 0x8004B9AC, 0x8004B9E4, "",                                       ProgElemType::FUNCTION },
-    { 0x8004B9E4, 0x8004BA30, "",                                       ProgElemType::FUNCTION },
-    { 0x8004BA30, 0x8004BA68, "",                                       ProgElemType::FUNCTION },
-    { 0x8004BA68, 0x8004BA94, "",                                       ProgElemType::FUNCTION },
+    { 0x8004B5F0, 0x8004B654, "LIBETC_startIntrVSync",                  ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004B654, 0x8004B69C, "LIBETC_INTR_stopIntr_UNKNOWN_Helper2",   ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004B69C, 0x8004B800, "LIBETC_INTR_VB_trapIntrVSync",           ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004B800, 0x8004B908, "LIBETC_INTR_VB_setIntrVSync",            ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004B908, 0x8004B934, "LIBETC_INTR_VB_memclr",                  ProgElemType::FUNCTION },
+    { 0x8004B934, 0x8004B9AC, "LIBETC_startIntrDMA",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004B9AC, 0x8004B9E4, "LIBETC_INTR_stopIntr_UNKNOWN_Helper1",   ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004B9E4, 0x8004BA30, "LIBETC_INTR_DMA_trapIntrDMA",            ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004BA30, 0x8004BA68, "LIBETC_INTR_DMA_setIntrDMA",             ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004BA68, 0x8004BA94, "LIBETC_INTR_DMA_memclr",                 ProgElemType::FUNCTION },
     { 0x8004BA94, 0x8004BBDC, "LIBETC_VSync",                           ProgElemType::FUNCTION },
     { 0x8004BBDC, 0x8004BC78, "LIBETC_v_wait",                          ProgElemType::FUNCTION },
     { 0x8004BC78, 0x8004BCC8, "LIBC2_puts",                             ProgElemType::FUNCTION },
@@ -1199,9 +1198,9 @@ static const ProgElem ELEMS[] = {
     { 0x80054B90, 0x80054BB8, "",                                       ProgElemType::FUNCTION },
     { 0x80054BB8, 0x80054BE0, "",                                       ProgElemType::FUNCTION },
     { 0x80054BE0, 0x80054C08, "",                                       ProgElemType::FUNCTION },
-    { 0x80054C08, 0x80054C18, "",                                       ProgElemType::FUNCTION },
-    { 0x80054C18, 0x80054C28, "",                                       ProgElemType::FUNCTION },
-    { 0x80054C28, 0x80054C78, "",                                       ProgElemType::FUNCTION },
+    { 0x80054C08, 0x80054C18, "LIBCD_CdStatus",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80054C18, 0x80054C28, "LIBCD_CdLastCom",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80054C28, 0x80054C78, "LIBCD_CdReset",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80054C78, 0x80054C98, "",                                       ProgElemType::FUNCTION },
     { 0x80054C98, 0x80054CB0, "",                                       ProgElemType::FUNCTION },
     { 0x80054CB0, 0x80054CE8, "",                                       ProgElemType::FUNCTION },
@@ -1223,14 +1222,14 @@ static const ProgElem ELEMS[] = {
     { 0x8005521C, 0x80055320, "",                                       ProgElemType::FUNCTION },
     { 0x80055320, 0x800553A0, "",                                       ProgElemType::FUNCTION },
     { 0x800553A0, 0x800558DC, "",                                       ProgElemType::FUNCTION },
-    { 0x800558DC, 0x80055B50, "",                                       ProgElemType::FUNCTION },
-    { 0x80055B50, 0x80055E10, "",                                       ProgElemType::FUNCTION },
+    { 0x800558DC, 0x80055B50, "LIBCD_CD_sync",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80055B50, 0x80055E10, "LIBCD_CD_ready",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80055E10, 0x8005621C, "",                                       ProgElemType::FUNCTION },
-    { 0x8005621C, 0x800562A4, "",                                       ProgElemType::FUNCTION },
+    { 0x8005621C, 0x800562A4, "LIBCD_CD_vol",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800562A4, 0x80056330, "",                                       ProgElemType::FUNCTION },
     { 0x80056330, 0x80056410, "",                                       ProgElemType::FUNCTION },
     { 0x80056410, 0x80056664, "",                                       ProgElemType::FUNCTION },
-    { 0x80056664, 0x80056758, "",                                       ProgElemType::FUNCTION },
+    { 0x80056664, 0x80056758, "LIBCD_CD_initvol",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80056758, 0x80056A50, "",                                       ProgElemType::FUNCTION },
     { 0x80056A50, 0x80056B18, "",                                       ProgElemType::FUNCTION },
     { 0x80056B18, 0x80056DBC, "",                                       ProgElemType::FUNCTION },
@@ -2466,6 +2465,8 @@ static const ProgElem ELEMS[] = {
     { 0x80074B2C, 0x80074B3C, "STR_Menu_MainMenu",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80074B3C, 0x80074B4C, "STR_Menu_RestartLevel",                  ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80074C00, 0x80074C04, "I_ZoneBase",                             ProgElemType::UINT32 },
+    { 0x80075B78, 0x80075B90, "gLIBETC_INTR_interruptsList",            ProgElemType::ARRAY, ProgElemType::PTR32 },
+    { 0x80075B90, 0x80075B94, "gpLIBETC_INTR_interruptsListPtr",        ProgElemType::PTR32 },
     { 0x80075CCC, 0x80075CD0, "gLIBETC_Vcount",                         ProgElemType::UINT32 },    
     { 0x80075CD0, 0x80075D04, "STR_FileId_vsync_c",                     ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80075D04, 0x80075D08, "gLIBETC_VSync_UNKNOWN_VAR_1",            ProgElemType::UINT32 },
@@ -2474,6 +2475,8 @@ static const ProgElem ELEMS[] = {
     { 0x80075D10, 0x80075D14, "gLIBETC_VSync_UNKNOWN_VAR_3",            ProgElemType::UINT32 },
     { 0x80076868, 0x80076878, "gLIBGTE_InitGeom_miniStack",             ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80076878, 0x8007687C, "gbLIBSN__main_called",                   ProgElemType::UINT32 },
+    { 0x80077204, 0x80077208, "gbLIBCD_CD_status",                      ProgElemType::UINT32 },
+    { 0x80077210, 0x80077214, "gbLIBCD_CD_com",                         ProgElemType::UINT32 },
     { 0x80077214, 0x800772B4, "",                                       ProgElemType::ARRAY, ProgElemType::PTR32},
     { 0x80077560, 0x80077578, "STR_siocons_bad_func_err",               ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x800775C8, 0x800775CC, "STR_sio_1",                              ProgElemType::ARRAY, ProgElemType::CHAR8 },
