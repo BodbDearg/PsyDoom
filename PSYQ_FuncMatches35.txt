@@ -275,7 +275,6 @@
 8005515C matches function 'DecDCToutSync'
 8005517C matches function 'DecDCToutSync'
 80057260 matches function 'DecDCToutCallback'
-8004A6BC matches function 'memchr'
 8004E8C0 matches function 'memcpy'
 8004FAA4 matches function 'memset'
 8004FF0C matches function 'ApplyMatrix'

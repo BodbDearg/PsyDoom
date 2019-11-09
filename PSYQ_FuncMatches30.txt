@@ -58,7 +58,6 @@
 800458DC matches function 'CheckCallback'
 8004E918 matches function 'CheckCallback'
 8004D4E4 matches function 'MDEC_status'
-8004A6BC matches function 'memchr'
 8004E8C0 matches function 'memcpy'
 8004FAA4 matches function 'memset'
 80034F44 matches function 'PadVersion'

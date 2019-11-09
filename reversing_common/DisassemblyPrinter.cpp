@@ -57,10 +57,12 @@ static void printProgWordReferences(const ExeWord& word, const ProgElem* const p
         }
 
         if (pInsideFunc) {
-            // Print 'I' if all references to the word are internal to the containing function
+            // Print 'E' if not all references to the word are internal to the containing function
             if (word.startReferencingAddr != word.endReferencingAddr) {
-                if (word.startReferencingAddr >= pInsideFunc->startAddr && word.endReferencingAddr <= pInsideFunc->endAddr) {
-                    out.put('I');
+                const bool bAllRefsInternal = (word.startReferencingAddr >= pInsideFunc->startAddr && word.endReferencingAddr <= pInsideFunc->endAddr);
+
+                if (!bAllRefsInternal) {
+                    out.put('E');
                     ++numWordReferences;
                 }
             }

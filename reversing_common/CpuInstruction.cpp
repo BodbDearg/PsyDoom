@@ -61,6 +61,14 @@ static void printInstGprOutGprInU16In(
     PrintUtils::printHexU16(in2U16, false, out);
 }
 
+static void printHexOffset(const int32_t offset, std::ostream& out) noexcept {
+    if (offset >= 0) {
+        out << "+";
+    }
+    
+    PrintUtils::printHexI32(offset, false, out);
+}
+
 static void printI16HexOffsetForInst(const int16_t offset, std::ostream& out) noexcept {
     // Note: don't print the offset when it is zero
     if (offset > 0) {
@@ -1026,7 +1034,7 @@ void CpuInstruction::print(
 
         // All the other mini-groups and individual instructions that can't be covered by the above:
         case CpuOpcode::BEQ:
-        case CpuOpcode::BNE:
+        case CpuOpcode::BNE: {
             out << CpuOpcodeUtils::getMnemonic(opcode);
             out.put(' ');
             out << CpuGpr::getName(regS);
@@ -1035,33 +1043,41 @@ void CpuInstruction::print(
             out << ", ";
             PrintUtils::printHexU32(getBranchInstTargetAddr(thisInstAddr), false, out);
 
-            if (isBranchInternalToFunc(*this, thisInstAddr, pParentFunc)) {
-                out << " (I)";
-            } else if (pParentFunc) {
-                out << " (EXT)";
+            {
+                const int32_t relativeOffset = ((int32_t)(int16_t) immediateVal) * sizeof(uint32_t);
+                out << " (";
+                printHexOffset(relativeOffset, out);
+                out << ")";
             }
 
-            break;
+            if (!isBranchInternalToFunc(*this, thisInstAddr, pParentFunc)) {
+                out << " (EXT)";
+            }
+        }   break;
         
         case CpuOpcode::BGEZ:
         case CpuOpcode::BGEZAL:
         case CpuOpcode::BGTZ:
         case CpuOpcode::BLEZ:
         case CpuOpcode::BLTZ:
-        case CpuOpcode::BLTZAL:
+        case CpuOpcode::BLTZAL: {
             out << CpuOpcodeUtils::getMnemonic(opcode);
             out.put(' ');
             out << CpuGpr::getName(regS);
             out << ", ";
             PrintUtils::printHexU32(getBranchInstTargetAddr(thisInstAddr), false, out);
 
-            if (isBranchInternalToFunc(*this, thisInstAddr, pParentFunc)) {
-                out << " (I)";
-            } else if (pParentFunc) {
-                out << " (EXT)";
+            {
+                const int32_t relativeOffset = ((int32_t)(int16_t) immediateVal) * sizeof(uint32_t);
+                out << " (";
+                printHexOffset(relativeOffset, out);
+                out << ")";
             }
 
-            break;
+            if (!isBranchInternalToFunc(*this, thisInstAddr, pParentFunc)) {
+                out << " (EXT)";
+            }
+        }   break;
 
         case CpuOpcode::BREAK:
             out << CpuOpcodeUtils::getMnemonic(opcode);
@@ -1116,7 +1132,6 @@ void CpuInstruction::print(
 
             if (bIsJumpInsideParentFunc) {
                 PrintUtils::printHexU32(targetAddr, false, out);
-                out << " (I)";
             } else {
                 exe.printNameOfElemAtAddr(getFixedJumpInstTargetAddr(thisInstAddr), out);
 
