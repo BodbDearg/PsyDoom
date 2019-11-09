@@ -1221,23 +1221,23 @@ static const ProgElem ELEMS[] = {
     { 0x8005519C, 0x8005521C, "",                                       ProgElemType::FUNCTION },
     { 0x8005521C, 0x80055320, "",                                       ProgElemType::FUNCTION },
     { 0x80055320, 0x800553A0, "",                                       ProgElemType::FUNCTION },
-    { 0x800553A0, 0x800558DC, "",                                       ProgElemType::FUNCTION },
+    { 0x800553A0, 0x800558DC, "LIBCD_BIOS_getintr",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800558DC, 0x80055B50, "LIBCD_CD_sync",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80055B50, 0x80055E10, "LIBCD_CD_ready",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80055E10, 0x8005621C, "",                                       ProgElemType::FUNCTION },
+    { 0x80055E10, 0x8005621C, "LIBCD_CD_cw",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8005621C, 0x800562A4, "LIBCD_CD_vol",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x800562A4, 0x80056330, "",                                       ProgElemType::FUNCTION },
-    { 0x80056330, 0x80056410, "",                                       ProgElemType::FUNCTION },
-    { 0x80056410, 0x80056664, "",                                       ProgElemType::FUNCTION },
+    { 0x800562A4, 0x80056330, "LIBCD_CD_shell",                         ProgElemType::FUNCTION },
+    { 0x80056330, 0x80056410, "LIBCD_CD_flush",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80056410, 0x80056664, "LIBCD_CD_init",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80056664, 0x80056758, "LIBCD_CD_initvol",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80056758, 0x80056A50, "",                                       ProgElemType::FUNCTION },
-    { 0x80056A50, 0x80056B18, "",                                       ProgElemType::FUNCTION },
-    { 0x80056B18, 0x80056DBC, "",                                       ProgElemType::FUNCTION },
-    { 0x80056DBC, 0x80056F18, "",                                       ProgElemType::FUNCTION },
-    { 0x80056F18, 0x8005700C, "",                                       ProgElemType::FUNCTION },
-    { 0x8005700C, 0x8005701C, "",                                       ProgElemType::FUNCTION },
-    { 0x8005701C, 0x800570FC, "",                                       ProgElemType::FUNCTION },
-    { 0x800570FC, 0x80057260, "",                                       ProgElemType::FUNCTION },
+    { 0x80056758, 0x80056A50, "LIBCD_BIOS_cd_read_retry",               ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80056A50, 0x80056B18, "LIBCD_CD_readm",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80056B18, 0x80056DBC, "LIBCD_CD_readsync",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80056DBC, 0x80056F18, "LIBCD_CD_datasync",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80056F18, 0x8005700C, "LIBCD_CD_getsector",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8005700C, 0x8005701C, "LIBCD_CD_set_test_parmnum",              ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8005701C, 0x800570FC, "LIBCD_BIOS_callback",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x800570FC, 0x80057260, "LIBCD_BIOS_cb_read",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80057260, 0x80057284, "",                                       ProgElemType::FUNCTION },
     { 0x80057284, 0x800574A8, "",                                       ProgElemType::FUNCTION },
     { 0x800574A8, 0x800575E8, "",                                       ProgElemType::FUNCTION },
@@ -2475,9 +2475,17 @@ static const ProgElem ELEMS[] = {
     { 0x80075D10, 0x80075D14, "gLIBETC_VSync_UNKNOWN_VAR_3",            ProgElemType::UINT32 },
     { 0x80076868, 0x80076878, "gLIBGTE_InitGeom_miniStack",             ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80076878, 0x8007687C, "gbLIBSN__main_called",                   ProgElemType::UINT32 },
-    { 0x80077204, 0x80077208, "gbLIBCD_CD_status",                      ProgElemType::UINT32 },
-    { 0x80077210, 0x80077214, "gbLIBCD_CD_com",                         ProgElemType::UINT32 },
-    { 0x80077214, 0x800772B4, "",                                       ProgElemType::ARRAY, ProgElemType::PTR32},
+    { 0x800771F4, 0x800771F8, "gLIBCD_CD_cbsync",                       ProgElemType::UINT32 },
+    { 0x800771F8, 0x800771FC, "gLIBCD_CD_cbready",                      ProgElemType::UINT32 },
+    { 0x800771FC, 0x80077200, "gLIBCD_CD_cbread",                       ProgElemType::UINT32 },
+    { 0x80077200, 0x80077204, "gLIBCD_CD_debug",                        ProgElemType::UINT32 },
+    { 0x80077204, 0x80077208, "gLIBCD_CD_status",                       ProgElemType::UINT32 },
+    { 0x80077208, 0x8007720C, "gLIBCD_CD_status1",                      ProgElemType::UINT32 },
+    { 0x8007720C, 0x80077210, "gLIBCD_CD_nopen",                        ProgElemType::UINT32 },
+    { 0x80077210, 0x80077214, "gLIBCD_CD_pos",                          ProgElemType::UINT32 },
+    { 0x80077214, 0x80077218, "gLIBCD_CD_com",                          ProgElemType::UINT32 },    
+    { 0x80077218, 0x80077298, "gLIBCD_CD_comstr",                       ProgElemType::ARRAY, ProgElemType::PTR32 },
+    { 0x80077298, 0x800772B8, "gLIBCD_CD_intstr",                       ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80077560, 0x80077578, "STR_siocons_bad_func_err",               ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x800775C8, 0x800775CC, "STR_sio_1",                              ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x800775CC, 0x800775D8, "STR_SIO_console",                        ProgElemType::ARRAY, ProgElemType::CHAR8 },
@@ -2763,6 +2771,8 @@ static const ProgElem ELEMS[] = {
     { 0x800782D4, 0x800782D8, "gpShootMObj",                            ProgElemType::PTR32 },
     { 0x800782EC, 0x800782F0, "MAYBE_gPlayerNum",                       ProgElemType::UINT32 },
     { 0x800782F8, 0x800782FC, "gAimBottomSlope",                        ProgElemType::INT32 },
+    { 0x80086108, 0x80086120, "LIBCD_BIOS_result",                      ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x80086120, 0x8008612C, "LIBCD_BIOS_alarm",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x8008612C, 0x800863AC, "gItemRespawnQueue",                      ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x800863AC, 0x800863C4, "gAnims_1",                               ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800863C4, 0x800863DC, "gAnims_2",                               ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
