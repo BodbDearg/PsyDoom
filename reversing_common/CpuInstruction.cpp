@@ -1050,7 +1050,7 @@ void CpuInstruction::print(
                 out << ")";
             }
 
-            if (!isBranchInternalToFunc(*this, thisInstAddr, pParentFunc)) {
+            if (pParentFunc && (!isBranchInternalToFunc(*this, thisInstAddr, pParentFunc))) {
                 out << " (EXT)";
             }
         }   break;
@@ -1074,7 +1074,7 @@ void CpuInstruction::print(
                 out << ")";
             }
 
-            if (!isBranchInternalToFunc(*this, thisInstAddr, pParentFunc)) {
+            if (pParentFunc && (!isBranchInternalToFunc(*this, thisInstAddr, pParentFunc))) {
                 out << " (EXT)";
             }
         }   break;
