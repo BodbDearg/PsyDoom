@@ -1,6 +1,7 @@
 #include "FatalErrors.h"
 
 #include <cstdarg>
+#include <cstdio>
 #include <cstring>
 #include <vector>
 

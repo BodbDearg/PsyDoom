@@ -49,9 +49,9 @@ struct ProgElem {
     ) noexcept
         : startAddr(startAddr)
         , endAddr(endAddr)
+        , name(name)
         , type(type)
         , arrayElemType(type)
-        , name(name)
         , arrayElemsPerLine(1)
     {
     }
@@ -66,9 +66,9 @@ struct ProgElem {
     ) noexcept
         : startAddr(startAddr)
         , endAddr(endAddr)
+        , name(name)
         , type(type)
         , arrayElemType(arrayElemType)
-        , name(name)
         , arrayElemsPerLine(arrayElemsPerLine)
     {
     }
