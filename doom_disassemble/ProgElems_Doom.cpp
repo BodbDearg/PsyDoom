@@ -1210,9 +1210,9 @@ static const ProgElem ELEMS[] = {
     { 0x80054D60, 0x80054D78, "LIBCD_CdSyncCallback",                   ProgElemType::FUNCTION },
     { 0x80054D78, 0x80054D90, "LIBCD_CdReadyCallback",                  ProgElemType::FUNCTION },
     { 0x80054D90, 0x80054DA8, "LIBCD_CdReadCallback",                   ProgElemType::FUNCTION },
-    { 0x80054DA8, 0x80054EC0, "",                                       ProgElemType::FUNCTION },
-    { 0x80054EC0, 0x80054FCC, "",                                       ProgElemType::FUNCTION },
-    { 0x80054FCC, 0x800550F0, "",                                       ProgElemType::FUNCTION },
+    { 0x80054DA8, 0x80054EC0, "LIBCD_CdControl",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80054EC0, 0x80054FCC, "LIBCD_CdControlF",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80054FCC, 0x800550F0, "LIBCD_CdControlB",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800550F0, 0x80055114, "LIBCD_CdMix",                            ProgElemType::FUNCTION },
     { 0x80055114, 0x80055138, "LIBCD_CdGetSector",                      ProgElemType::FUNCTION },
     { 0x80055138, 0x8005515C, "LIBCD_CdDataCallback",                   ProgElemType::FUNCTION },
@@ -1238,8 +1238,8 @@ static const ProgElem ELEMS[] = {
     { 0x8005700C, 0x8005701C, "LIBCD_CD_set_test_parmnum",              ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8005701C, 0x800570FC, "LIBCD_BIOS_callback",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800570FC, 0x80057260, "LIBCD_BIOS_cb_read",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80057260, 0x80057284, "",                                       ProgElemType::FUNCTION },
-    { 0x80057284, 0x800574A8, "",                                       ProgElemType::FUNCTION },
+    { 0x80057260, 0x80057284, "LIBCD_CdGetToc",                         ProgElemType::FUNCTION },
+    { 0x80057284, 0x800574A8, "LIBCD_CdGetToc2",                        ProgElemType::FUNCTION },
     { 0x800574A8, 0x800575E8, "",                                       ProgElemType::FUNCTION },
     { 0x800575E8, 0x80057728, "",                                       ProgElemType::FUNCTION },
     { 0x80057728, 0x80057850, "",                                       ProgElemType::FUNCTION },
