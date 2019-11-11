@@ -148,7 +148,6 @@
 80042218 matches function 'memcpy'
 80045848 matches function 'KanjiFntClose'
 800459A8 matches function 'KanjiFntClose'
-80058A48 matches function '_ioabort'
 8002051C matches function 'DecDCTout'
 80036CA0 matches function 'DecDCTout'
 80041368 matches function 'DecDCTout'

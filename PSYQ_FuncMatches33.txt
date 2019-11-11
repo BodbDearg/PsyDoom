@@ -141,7 +141,6 @@
 8001290C matches function 'memcpy'
 8003F200 matches function 'memcpy'
 80042218 matches function 'memcpy'
-80058A48 matches function '_ioabort'
 8002051C matches function 'DecDCTvlcSize'
 80036CA0 matches function 'DecDCTvlcSize'
 80041368 matches function 'DecDCTvlcSize'

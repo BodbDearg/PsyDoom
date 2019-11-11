@@ -39,6 +39,12 @@ Cheats quick ref:
     - Show map objs:            Triangle, Triangle, L2, R2, L2, R2, R1, Circle
     - X-Ray vision:             L1, R2, L2, R1, Right, Triangle, X, Right
 
+CD Map array:
+    - Appears to be from 80074C04 - 800754D4 (exclusive).
+    - Each entry consists of two words, one specifying the start CD sector of the file.
+    - The other word specifies the size of the file.
+    - This is used to read files on disk.
+
 ---------------------------------------------------------------------------------------------------
 Data structures
 ---------------------------------------------------------------------------------------------------
