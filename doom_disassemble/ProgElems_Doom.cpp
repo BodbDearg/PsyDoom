@@ -999,12 +999,12 @@ static const ProgElem ELEMS[] = {
     { 0x8004C12C, 0x8004C13C, "",                                       ProgElemType::FUNCTION },
     { 0x8004C13C, 0x8004C198, "",                                       ProgElemType::FUNCTION },
     { 0x8004C198, 0x8004C210, "",                                       ProgElemType::FUNCTION },
-    { 0x8004C210, 0x8004C27C, "",                                       ProgElemType::FUNCTION },
-    { 0x8004C27C, 0x8004C3A4, "",                                       ProgElemType::FUNCTION },
-    { 0x8004C3A4, 0x8004C438, "",                                       ProgElemType::FUNCTION },
-    { 0x8004C438, 0x8004C49C, "",                                       ProgElemType::FUNCTION },
-    { 0x8004C49C, 0x8004C500, "",                                       ProgElemType::FUNCTION },
-    { 0x8004C500, 0x8004C5A0, "",                                       ProgElemType::FUNCTION },
+    { 0x8004C210, 0x8004C27C, "LIBGPU_DrawSync",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004C27C, 0x8004C3A4, "LIBGPU_checkRECT",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004C3A4, 0x8004C438, "LIBGPU_ClearImage",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004C438, 0x8004C49C, "LIBGPU_LoadImage",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004C49C, 0x8004C500, "LIBGPU_StoreImage",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004C500, 0x8004C5A0, "LIBGPU_MoveImage",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8004C5A0, 0x8004C64C, "",                                       ProgElemType::FUNCTION },
     { 0x8004C64C, 0x8004C6CC, "",                                       ProgElemType::FUNCTION },
     { 0x8004C6CC, 0x8004C72C, "",                                       ProgElemType::FUNCTION },
@@ -2756,6 +2756,7 @@ static const ProgElem ELEMS[] = {
     { 0x80075D08, 0x80075D0C, "gLIBETC_VSync_UNKNOWN_VAR_2",            ProgElemType::UINT32 },
     { 0x80075D0C, 0x80075D10, "gLIBETC_Hcount",                         ProgElemType::UINT32 },
     { 0x80075D10, 0x80075D14, "gLIBETC_VSync_UNKNOWN_VAR_3",            ProgElemType::UINT32 },
+    { 0x80075D58, 0x80075D5C, "gpLIBGPU_GPU_printf",                    ProgElemType::PTR32 },
     { 0x80076868, 0x80076878, "gLIBGTE_InitGeom_miniStack",             ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80076878, 0x8007687C, "gbLIBSN__main_called",                   ProgElemType::UINT32 },
     { 0x800771F4, 0x800771F8, "gpLIBCD_CD_cbsync",                      ProgElemType::PTR32 },
