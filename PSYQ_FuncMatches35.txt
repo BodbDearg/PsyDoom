@@ -68,7 +68,6 @@
 80044078 matches function 'StCdInterrupt2'
 800461B4 matches function 'StCdInterrupt2'
 800580A8 matches function 'ChangeClearSIO'
-80049D08 matches function 'GetRCnt'
 8004FAD4 matches function 'LoadTPage'
 8004FBC0 matches function 'LoadClut'
 8004FCB8 matches function 'SetDefDispEnv'
