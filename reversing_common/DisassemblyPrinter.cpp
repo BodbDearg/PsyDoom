@@ -655,12 +655,15 @@ void DisassemblyPrinter::printExe(const ExeFile& exe, std::ostream& out) noexcep
 
         if (curProgElemIdx < numProgElems) {
             const uint32_t progElemStartByteIdx = exe.progElems[curProgElemIdx].startAddr - exe.baseAddress;
-            endByteIdx = std::max(endByteIdx, progElemStartByteIdx);
+            endByteIdx = std::min(std::max(endByteIdx, progElemStartByteIdx), numProgBytes);
         } else {
             endByteIdx = numProgBytes;
         }
 
-        printUncategorizedProgramRegion(exe, curProgByteIdx, endByteIdx, out);
+        if (endByteIdx > curProgByteIdx) {
+            printUncategorizedProgramRegion(exe, curProgByteIdx, endByteIdx, out);
+        }
+
         curProgByteIdx = endByteIdx;
     }
 

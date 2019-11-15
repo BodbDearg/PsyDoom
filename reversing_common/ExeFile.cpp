@@ -153,8 +153,7 @@ void ExeFile::loadFromFile(const char* const path) noexcept {
         (header.progSize < numExeBytes) &&
         (header.progSize + sizeof(ExeHeader) == numExeBytes) &&
         (header.initialPcReg >= header.destAddr) &&                 // Verify the entry point
-        (header.initialPcReg - header.destAddr < numExeBytes) &&    
-        (std::strcmp(EXE_NA_REGION_SIG, header.regionSigAndZeroFill) == 0)  // Verify North American version
+        (header.initialPcReg - header.destAddr < numExeBytes)
     );
 
     if (!bIsValidHeader) {

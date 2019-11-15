@@ -42,24 +42,35 @@ int main(int argc, char* argv[]) noexcept {
         return 1;
     }
 
+    // Disasemble the Japanese version of Destruction Derby if specified.
+    // Using this to try and figure out some PSYQ functions, since it comes with debug symbols and was released around a similar time.
+    const bool bIsDestructionDerby = (std::strstr(argv[1], "DEMOLISH.EXE") != 0);
+
     // Load the exe and verify that it is either DOOM or Final DOOM
     const char* const psxDoomExePath = argv[1];
     ExeFile exe;
     exe.loadFromFile(psxDoomExePath);
 
-    // Verify that it is Final DOOM or DOOM
-    if (exe.sizeInWords != DOOM_NUM_PROG_WORDS && exe.sizeInWords != FINAL_DOOM_NUM_PROG_WORDS) {
-        FATAL_ERROR_F("The given PSX DOOM .EXE file '%s' does not appear to be the US/NTSC version of PSX DOOM or Final DOOM!", psxDoomExePath);
+    // Verify that it is Final DOOM or DOOM if doing that
+    if (!bIsDestructionDerby) {
+        if (exe.sizeInWords != DOOM_NUM_PROG_WORDS && exe.sizeInWords != FINAL_DOOM_NUM_PROG_WORDS) {
+            FATAL_ERROR_F("The given PSX DOOM .EXE file '%s' does not appear to be the US/NTSC version of PSX DOOM or Final DOOM!", psxDoomExePath);
+        }
     }
 
     // Set the program elements for the .EXE and determine references to specific program words
-    const bool bIsFinalDoom = (exe.sizeInWords == FINAL_DOOM_NUM_PROG_WORDS);
-
-    if (bIsFinalDoom) {
-        FATAL_ERROR("TODO: FINAL DOOM NOT SUPPORTED YET!");
+    if (bIsDestructionDerby) {
+        exe.setProgElems(gProgramElems_DestructionDerby, gNumProgramElems_DestructionDerby);
+        exe.assumedGpRegisterValue = gGpRegisterValue_DestructionDerby;
     } else {
-        exe.setProgElems(gProgramElems_Doom, gNumProgramElems_Doom);
-        exe.assumedGpRegisterValue = gGpRegisterValue_Doom;
+        const bool bIsFinalDoom = (exe.sizeInWords == FINAL_DOOM_NUM_PROG_WORDS);
+
+        if (bIsFinalDoom) {
+            FATAL_ERROR("TODO: FINAL DOOM NOT SUPPORTED YET!");
+        } else {
+            exe.setProgElems(gProgramElems_Doom, gNumProgramElems_Doom);
+            exe.assumedGpRegisterValue = gGpRegisterValue_Doom;
+        }
     }
 
     exe.determineWordReferences();
@@ -67,7 +78,8 @@ int main(int argc, char* argv[]) noexcept {
     // Start printing the disassembly
     try {
         std::fstream fileOut;
-        fileOut.open("disasm_doom_disasm.txt", std::fstream::out);
+        const char* const pFileName = (bIsDestructionDerby) ? "disasm_dd_disasm.txt" : "disasm_doom_disasm.txt";
+        fileOut.open(pFileName, std::fstream::out);
         DisassemblyPrinter::printExe(exe, fileOut);
     } catch (...) {
         FATAL_ERROR("Failed writing the disassembly to the output file!");

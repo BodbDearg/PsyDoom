@@ -3,6 +3,7 @@ set(SOURCE_FILES
     "Main.cpp"
     "ProgElems.h"
     "ProgElems_Doom.cpp"
+    "ProgElems_DestructionDerby.cpp"
 )
 
 set(OTHER_FILES
