@@ -887,7 +887,10 @@ static const ProgElem ELEMS[] = {
     { 0x800b129c, 0x800b12ac, "SysEnqIntRP", ProgElemType::FUNCTION },
     { 0x800b12ac, 0x800b12bc, "_ioabort", ProgElemType::FUNCTION },
     { 0x800b12bc, 0x800B12CC, "_sioopen", ProgElemType::FUNCTION },
+    { 0x800db95c, 0x800db960, "_spu_trans_mode", ProgElemType::UINT32 },
     { 0x800e252c, 0x800e2530, "_spu_transferCallback", ProgElemType::PTR32 },
+    { 0x801ca644, 0x801ca648, "_spu_fd", ProgElemType::UINT32 },
+    { 0x801ff0b8, 0x801ff0bC, "_spu_EVdma", ProgElemType::UINT32 },   
 };
 
 const ProgElem*     gProgramElems_DestructionDerby = ELEMS;

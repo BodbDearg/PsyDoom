@@ -1152,13 +1152,13 @@ static const ProgElem ELEMS[] = {
     { 0x800508BC, 0x80050FBC, "LIBSPU__SpuSetVoiceAttr",                ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80050FBC, 0x800510B0, "LIBSPU__spu_note2pitch",                 ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800510B0, 0x80051208, "LIBSPU__spu_pitch2note",                 ProgElemType::FUNCTION },
-    { 0x80051208, 0x8005171C, "",                                       ProgElemType::FUNCTION },
+    { 0x80051208, 0x8005171C, "LIBSPU_SpuSetReverbModeParam",           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8005171C, 0x8005178C, "LIBSPU__SpuIsInAllocateArea",            ProgElemType::FUNCTION },
     { 0x8005178C, 0x80051804, "LIBSPU__SpuIsInAllocateArea_",           ProgElemType::FUNCTION },
     { 0x80051804, 0x80051894, "LIBSPU__spu_reset",                      ProgElemType::FUNCTION },
     { 0x80051894, 0x80051E38, "LIBSPU__spu_init",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80051E38, 0x80051E6C, "",                                       ProgElemType::FUNCTION },
-    { 0x80051E6C, 0x80051E98, "",                                       ProgElemType::FUNCTION },
+    { 0x80051E38, 0x80051E6C, "LIBSPU__spu_close",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80051E6C, 0x80051E98, "LIBSPU__spu_open",                       ProgElemType::FUNCTION },
     { 0x80051E98, 0x800521DC, "LIBSPU__spu_writeByIO",                  ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800521DC, 0x800522FC, "LIBSPU__spu_FiDMA",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800522FC, 0x80052524, "LIBSPU__spu_r",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -1170,25 +1170,25 @@ static const ProgElem ELEMS[] = {
     { 0x8005336C, 0x8005383C, "LIBSPU__spu_setReverbAttr",              ProgElemType::FUNCTION },
     { 0x8005383C, 0x80053BD4, "LIBSPU__spu_setCommonAttr",              ProgElemType::FUNCTION },
     { 0x80053BD4, 0x80053D00, "LIBSPU__spu_getCommonAttr",              ProgElemType::FUNCTION },
-    { 0x80053D00, 0x80053D48, "",                                       ProgElemType::FUNCTION },
+    { 0x80053D00, 0x80053D48, "LIBSPU_SysSpu_setRegister",              ProgElemType::FUNCTION },
     { 0x80053D48, 0x80053D58, "LIBAPI_DeliverEvent",                    ProgElemType::FUNCTION },
     { 0x80053D58, 0x80053D7C, "LIBSPU__SpuDataCallback",                ProgElemType::FUNCTION },
     { 0x80053D7C, 0x80053DA0, "LIBSPU__SpuCallback",                    ProgElemType::FUNCTION },
     { 0x80053DA0, 0x80054134, "LIBSPU_SpuSetCommonAttr",                ProgElemType::FUNCTION },
-    { 0x80054134, 0x80054164, "",                                       ProgElemType::FUNCTION },
-    { 0x80054164, 0x80054324, "",                                       ProgElemType::FUNCTION },
+    { 0x80054134, 0x80054164, "LIBSPU_SpuGetReverbOffsetAddr",          ProgElemType::FUNCTION },
+    { 0x80054164, 0x80054324, "LIBSPU_SpuClearReverbWorkArea",          ProgElemType::FUNCTION },
     { 0x80054324, 0x80054334, "LIBAPI_WaitEvent",                       ProgElemType::FUNCTION },
     { 0x80054334, 0x80054418, "LIBSPU__SpuInit",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80054418, 0x80054498, "LIBSPU_SpuStart",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80054498, 0x80054518, "LIBSPU_SpuSetReverbDepth",               ProgElemType::FUNCTION },
-    { 0x80054518, 0x80054580, "",                                       ProgElemType::FUNCTION },
+    { 0x80054518, 0x80054580, "LIBSPU_SpuSetReverbVoice",               ProgElemType::FUNCTION },
     { 0x80054580, 0x800545A0, "LIBSPU_SpuInit",                         ProgElemType::FUNCTION },
-    { 0x800545A0, 0x80054670, "",                                       ProgElemType::FUNCTION },
-    { 0x80054670, 0x800546E0, "",                                       ProgElemType::FUNCTION },
+    { 0x800545A0, 0x80054670, "LIBSPU_SpuSetReverb",                    ProgElemType::FUNCTION },
+    { 0x80054670, 0x800546E0, "LIBSPU_SpuQuit",                         ProgElemType::FUNCTION },
     { 0x800546E0, 0x80054788, "LIBSPU_SpuIsTransferCompleted",          ProgElemType::FUNCTION },
     { 0x80054788, 0x800547DC, "LIBSPU_SpuInitMalloc",                   ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800547DC, 0x80054830, "LIBSPU_SpuSetTransferMode",              ProgElemType::FUNCTION },
-    { 0x80054830, 0x80054894, "",                                       ProgElemType::FUNCTION },
+    { 0x80054830, 0x80054894, "LIBSPU_SpuSetTransferStartAddr",         ProgElemType::FUNCTION },
     { 0x80054894, 0x800548F4, "LIBSPU_SpuWrite",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800548F4, 0x80054928, "LIBSPU_SpuSetKeyOnWithAttr",             ProgElemType::FUNCTION },
     { 0x80054928, 0x800549A8, "LIBSPU_SpuSetKey",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -2770,12 +2770,15 @@ static const ProgElem ELEMS[] = {
     { 0x80076A38, 0x80076A3C, "gLIBSPU__spu_AllocLastNum",              ProgElemType::UINT32 },
     { 0x80076A3C, 0x80076A40, "gLIBSPU__spu_RXX",                       ProgElemType::PTR32 },
     { 0x80076A40, 0x80076A44, "gLIBSPU__spu_RXX",                       ProgElemType::PTR32 },
-    { 0x80076A44, 0x80076A48, "gLIBSPU__spu_transMode",                 ProgElemType::UINT32 },
+    { 0x80076A44, 0x80076A48, "gLIBSPU__spu_fd",                        ProgElemType::UINT32 },
     { 0x80076A48, 0x80076A4C, "gLIBSPU__spu_trans_mode",                ProgElemType::UINT32 },
+    { 0x80076A4C, 0x80076A50, "gLIBSPU__spu_rev_flag",                  ProgElemType::UINT32 },
+    { 0x80076A50, 0x80076A54, "gLIBSPU__spu_rev_reserve_wa",            ProgElemType::UINT32 },
+    { 0x80076A54, 0x80076A58, "gLIBSPU__spu_rev_offsetaddr",            ProgElemType::PTR32 },
     { 0x80076A5C, 0x80076A60, "gLIBSPU__spu_EVdma",                     ProgElemType::UINT32 },
     { 0x80076E6C, 0x80076E70, "gbLIBSPU__spu_isCalled",                 ProgElemType::UINT32 },
     { 0x80076E70, 0x80076E74, "gLIBSPU__spu_RXX",                       ProgElemType::PTR32 },
-    { 0x80076E74, 0x80076E78, "gLIBSPU__spu_RXX",                       ProgElemType::PTR32 },
+    { 0x80076E74, 0x80076E78, "gLIBSPU__spu_RXX",                       ProgElemType::PTR32 },    
     { 0x800771F4, 0x800771F8, "gpLIBCD_CD_cbsync",                      ProgElemType::PTR32 },
     { 0x800771F8, 0x800771FC, "gpLIBCD_CD_cbready",                     ProgElemType::PTR32 },
     { 0x800771FC, 0x80077200, "gpLIBCD_CD_cbread",                      ProgElemType::PTR32 },
@@ -2798,7 +2801,7 @@ static const ProgElem ELEMS[] = {
     { 0x8007762C, 0x80077634, "STR_LumpName_POB2",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077634, 0x8007763C, "STR_LumpName_POB1",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x8007763C, 0x80077644, "STR_LumpName_HDB6",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
-    { 0x80077644, 0x8007764C, "STR_LumpName_HDB5",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x80077644, 0x8007764C, "STR_LumpName_HDB5",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },    
     { 0x8007764C, 0x80077654, "STR_LumpName_HDB4",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077654, 0x8007765C, "STR_LumpName_HDB3",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x8007765C, 0x80077664, "STR_LumpName_HDB2",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },
@@ -3185,7 +3188,7 @@ static const ProgElem ELEMS[] = {
     { 0x800A918C, 0x800A91A0, "gLIBSPU__spu_rev_attr",                  ProgElemType::ARRAY, ProgElemType::UINT16 },
     { 0x800A91A0, 0x800A91A4, "gLIBSPU__spu_mem_mode_plus",             ProgElemType::UINT32 },
     { 0x800A9518, 0x800A9D18, "gPSXCD_sectorbuf",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
-    { 0x800A9D18, 0x800A9D90, "gpActiveCeilings",                       ProgElemType::ARRAY, ProgElemType::PTR32, 0 },
+    { 0x800A9D18, 0x800A9D90, "gpActiveCeilings",                       ProgElemType::ARRAY, ProgElemType::PTR32, 0 },    
 };
 
 const ProgElem*     gProgramElems_Doom = ELEMS;
