@@ -67,7 +67,6 @@
 80043DF4 matches function 'StCdInterrupt2'
 80044078 matches function 'StCdInterrupt2'
 800461B4 matches function 'StCdInterrupt2'
-800580A8 matches function 'ChangeClearSIO'
 8003351C matches function 'GsSetNearClip'
 80041EAC matches function 'GsSetNearClip'
 80041F5C matches function 'GsSetNearClip'
