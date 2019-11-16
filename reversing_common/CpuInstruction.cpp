@@ -599,6 +599,7 @@ static bool decodeMainOpcode18Ins(CpuInstruction& ins, const uint32_t machineCod
         // 25-bits are used for a parameter for the instruction:
         ins.opcode = CpuOpcode::COP2;
         ins.immediateVal = machineCode26Bit & 0x1FFFFFF;
+        return true;
     } else {
         // Maybe one of the other opcodes listed above.
         // Decode the parameters optimistically and see which secondary opcode matches:
