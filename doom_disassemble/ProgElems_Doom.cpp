@@ -830,24 +830,24 @@ static const ProgElem ELEMS[] = {
     { 0x80045164, 0x800451F4, "",                                       ProgElemType::FUNCTION },
     { 0x800451F4, 0x80045298, "",                                       ProgElemType::FUNCTION },
     { 0x80045298, 0x80045328, "",                                       ProgElemType::FUNCTION },
-    { 0x80045328, 0x80045408, "",                                       ProgElemType::FUNCTION },
-    { 0x80045408, 0x80045450, "",                                       ProgElemType::FUNCTION },
+    { 0x80045328, 0x80045408, "psxspu_init_reverb",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80045408, 0x80045450, "psxspu_set_reverb_depth",                ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80045450, 0x800454FC, "psxspu_init",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x800454FC, 0x80045540, "",                                       ProgElemType::FUNCTION },
-    { 0x80045540, 0x80045584, "",                                       ProgElemType::FUNCTION },
+    { 0x800454FC, 0x80045540, "psxspu_update_master_vol",               ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80045540, 0x80045584, "psxspu_update_master_vol_mode",          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80045584, 0x800455CC, "psxspu_setcdmixon",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800455CC, 0x8004560C, "psxspu_setcdmixoff",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8004560C, 0x80045720, "",                                       ProgElemType::FUNCTION },
+    { 0x8004560C, 0x80045720, "psxspu_fadeengine",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80045720, 0x8004577C, "psxspu_set_cd_vol",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8004577C, 0x8004578C, "psxspu_get_cd_vol",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8004578C, 0x80045844, "psxspu_start_cd_fade",                   ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80045844, 0x80045868, "",                                       ProgElemType::FUNCTION },
+    { 0x80045844, 0x80045868, "psxspu_stop_cd_fade",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80045868, 0x80045880, "psxspu_get_cd_fade_status",              ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80045880, 0x800458DC, "",                                       ProgElemType::FUNCTION },
-    { 0x800458DC, 0x800458EC, "",                                       ProgElemType::FUNCTION },
-    { 0x800458EC, 0x800459A4, "",                                       ProgElemType::FUNCTION },
-    { 0x800459A4, 0x800459C8, "",                                       ProgElemType::FUNCTION },
-    { 0x800459C8, 0x800459E0, "",                                       ProgElemType::FUNCTION },
+    { 0x80045880, 0x800458DC, "psxspu_set_master_vol",                  ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x800458DC, 0x800458EC, "psxspu_get_master_vol",                  ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x800458EC, 0x800459A4, "psxspu_start_master_fade",               ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x800459A4, 0x800459C8, "psxspu_stop_master_fade",                ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x800459C8, 0x800459E0, "psxspu_get_master_fade_status",          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800459E0, 0x800459FC, "",                                       ProgElemType::FUNCTION },
     { 0x800459FC, 0x80045A0C, "",                                       ProgElemType::FUNCTION },
     { 0x80045A0C, 0x80045ACC, "",                                       ProgElemType::FUNCTION },
@@ -3204,7 +3204,7 @@ static const ProgElem ELEMS[] = {
     { 0x800A8918, 0x800A8A44, "gPlayer2",                               ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x800A8E90, 0x800A8F24, "gMObjHead",                              ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800A8F24, 0x800A8F28, "gLIBSPU__spu_mem_mode",                  ProgElemType::UINT32 },
-    { 0x800A918C, 0x800A91A0, "gLIBSPU__spu_rev_attr",                  ProgElemType::ARRAY, ProgElemType::UINT16 },
+    { 0x800A918C, 0x800A91A0, "gLIBSPU__spu_rev_attr",                  ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x800A91A0, 0x800A91A4, "gLIBSPU__spu_mem_mode_plus",             ProgElemType::UINT32 },
     { 0x800A9518, 0x800A9D18, "gPSXCD_sectorbuf",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800A9D18, 0x800A9D90, "gpActiveCeilings",                       ProgElemType::ARRAY, ProgElemType::PTR32, 0 },
