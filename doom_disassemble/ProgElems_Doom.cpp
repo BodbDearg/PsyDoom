@@ -627,7 +627,7 @@ static const ProgElem ELEMS[] = {
     { 0x800328C4, 0x80032904, "Z_FreeMemory",                           ProgElemType::FUNCTION },
     { 0x80032904, 0x8003290C, "Z_DumpHeap",                             ProgElemType::FUNCTION },
     { 0x8003290C, 0x80032934, "StartGame",                              ProgElemType::FUNCTION },
-    { 0x80032934, 0x80032B0C, "",                                       ProgElemType::FUNCTION },
+    { 0x80032934, 0x80032B0C, "init_sony_system",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80032B0C, 0x80032BB8, "I_Error",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80032BB8, 0x80032BF4, "",                                       ProgElemType::FUNCTION },
     { 0x80032BF4, 0x80032D04, "",                                       ProgElemType::FUNCTION },
@@ -635,7 +635,7 @@ static const ProgElem ELEMS[] = {
     { 0x80032D84, 0x800332E0, "",                                       ProgElemType::FUNCTION },
     { 0x800332E0, 0x800333D8, "",                                       ProgElemType::FUNCTION },
     { 0x800333D8, 0x800333F0, "",                                       ProgElemType::FUNCTION },
-    { 0x800333F0, 0x8003350C, "",                                       ProgElemType::FUNCTION },
+    { 0x800333F0, 0x8003350C, "draw_present",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003350C, 0x8003352C, "",                                       ProgElemType::FUNCTION },
     { 0x8003352C, 0x80033578, "",                                       ProgElemType::FUNCTION },
     { 0x80033578, 0x8003390C, "",                                       ProgElemType::FUNCTION },
@@ -760,7 +760,7 @@ static const ProgElem ELEMS[] = {
     { 0x800413A8, 0x800415B4, "",                                       ProgElemType::FUNCTION },
     { 0x800415B4, 0x800415D4, "S_StartSound",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800415D4, 0x800415EC, "",                                       ProgElemType::FUNCTION },
-    { 0x800415EC, 0x8004172C, "",                                       ProgElemType::FUNCTION },
+    { 0x800415EC, 0x8004172C, "PsxSoundInit",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8004172C, 0x80041734, "empty_func4",                            ProgElemType::FUNCTION },
     { 0x80041734, 0x80041778, "",                                       ProgElemType::FUNCTION },
     { 0x80041778, 0x800417B8, "",                                       ProgElemType::FUNCTION },
@@ -775,9 +775,9 @@ static const ProgElem ELEMS[] = {
     { 0x80041EDC, 0x80041EEC, "",                                       ProgElemType::FUNCTION },
     { 0x80041EEC, 0x80041F48, "",                                       ProgElemType::FUNCTION },
     { 0x80041F48, 0x80041F6C, "",                                       ProgElemType::FUNCTION },
-    { 0x80041F6C, 0x80041F8C, "",                                       ProgElemType::FUNCTION },
+    { 0x80041F6C, 0x80041F8C, "wess_install_handler",                   ProgElemType::FUNCTION },
     { 0x80041F8C, 0x80041FAC, "",                                       ProgElemType::FUNCTION },
-    { 0x80041FAC, 0x80042010, "",                                       ProgElemType::FUNCTION },
+    { 0x80041FAC, 0x80042010, "wess_init",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80042010, 0x8004209C, "",                                       ProgElemType::FUNCTION },
     { 0x8004209C, 0x800420AC, "",                                       ProgElemType::FUNCTION },
     { 0x800420AC, 0x800420BC, "",                                       ProgElemType::FUNCTION },
@@ -801,7 +801,7 @@ static const ProgElem ELEMS[] = {
     { 0x80043B30, 0x80043B38, "",                                       ProgElemType::FUNCTION },
     { 0x80043B38, 0x80043B88, "",                                       ProgElemType::FUNCTION },
     { 0x80043B88, 0x80043C1C, "",                                       ProgElemType::FUNCTION },
-    { 0x80043C1C, 0x80043CA8, "",                                       ProgElemType::FUNCTION },
+    { 0x80043C1C, 0x80043CA8, "init_WessTimer",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80043CA8, 0x80043D18, "",                                       ProgElemType::FUNCTION },
     { 0x80043D18, 0x80043D20, "",                                       ProgElemType::FUNCTION },
     { 0x80043D20, 0x80043D94, "",                                       ProgElemType::FUNCTION },
@@ -3092,6 +3092,7 @@ static const ProgElem ELEMS[] = {
     { 0x800780C4, 0x800780C8, "gpBlockmapLump",                         ProgElemType::PTR32 },
     { 0x800780E4, 0x800780E8, "gpRejectMatrix",                         ProgElemType::PTR32 },
     { 0x800780E8, 0x800780EC, "gbCheckPosOnly",                         ProgElemType::UINT32 },
+    { 0x800780F8, 0x800780FC, "gCurDrawDispBufferIdx",                  ProgElemType::UINT32 },
     { 0x80078100, 0x80078104, "gT2x",                                   ProgElemType::INT32 },
     { 0x80078108, 0x8007810C, "gT2y",                                   ProgElemType::INT32 },
     { 0x80078138, 0x8007813C, "gItemRespawnQueueHead",                  ProgElemType::UINT32 },
@@ -3204,6 +3205,10 @@ static const ProgElem ELEMS[] = {
     { 0x800A8918, 0x800A8A44, "gPlayer2",                               ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x800A8E90, 0x800A8F24, "gMObjHead",                              ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800A8F24, 0x800A8F28, "gLIBSPU__spu_mem_mode",                  ProgElemType::UINT32 },
+    { 0x800A90AC, 0x800A9108, "gDrawEnv1",                              ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
+    { 0x800A9108, 0x800A9164, "gDrawEnv2",                              ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
+    { 0x800A9164, 0x800A9178, "gDispEnv1",                              ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
+    { 0x800A9178, 0x800A918C, "gDispEnv2",                              ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x800A918C, 0x800A91A0, "gLIBSPU__spu_rev_attr",                  ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x800A91A0, 0x800A91A4, "gLIBSPU__spu_mem_mode_plus",             ProgElemType::UINT32 },
     { 0x800A9518, 0x800A9D18, "gPSXCD_sectorbuf",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
