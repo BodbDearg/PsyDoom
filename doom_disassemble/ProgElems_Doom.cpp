@@ -746,15 +746,15 @@ static const ProgElem ELEMS[] = {
     { 0x80040E74, 0x80040EFC, "psxcd_restart",                          ProgElemType::FUNCTION },
     { 0x80040EFC, 0x80040F50, "psxcd_elapsed_sectors",                  ProgElemType::FUNCTION },
     { 0x80040F50, 0x80040FAC, "psxcd_set_stereo",                       ProgElemType::FUNCTION },
-    { 0x80040FAC, 0x80040FCC, "S_SetSfxVolume",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80040FCC, 0x80041014, "S_SetMusicVolume",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80041014, 0x80041050, "S_StopMusic",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80041050, 0x80041098, "",                                       ProgElemType::FUNCTION },
-    { 0x80041098, 0x800410A0, "",                                       ProgElemType::FUNCTION },
-    { 0x800410A0, 0x80041118, "",                                       ProgElemType::FUNCTION },
-    { 0x80041118, 0x80041318, "",                                       ProgElemType::FUNCTION },
-    { 0x80041318, 0x80041340, "",                                       ProgElemType::FUNCTION },
-    { 0x80041340, 0x80041368, "",                                       ProgElemType::FUNCTION },
+    { 0x80040FAC, 0x80040FCC, "S_SetSfxVolume",                         ProgElemType::FUNCTION },
+    { 0x80040FCC, 0x80041014, "S_SetMusicVolume",                       ProgElemType::FUNCTION },
+    { 0x80041014, 0x80041050, "S_StopMusicModule",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80041050, 0x80041098, "S_StartMusicModule",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80041098, 0x800410A0, "ZeroHalfWord",                           ProgElemType::FUNCTION },
+    { 0x800410A0, 0x80041118, "S_UnloadSamples",                        ProgElemType::FUNCTION },
+    { 0x80041118, 0x80041318, "S_LoadSoundAndMusic",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80041318, 0x80041340, "S_Pause",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80041340, 0x80041368, "S_Resume",                               ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80041368, 0x80041388, "S_StopSound",                            ProgElemType::FUNCTION },
     { 0x80041388, 0x800413A8, "S_Clear",                                ProgElemType::FUNCTION },
     { 0x800413A8, 0x800415B4, "I_StartSound",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -762,12 +762,12 @@ static const ProgElem ELEMS[] = {
     { 0x800415D4, 0x800415EC, "S_UpdateSounds",                         ProgElemType::FUNCTION },
     { 0x800415EC, 0x8004172C, "PsxSoundInit",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8004172C, 0x80041734, "PsxSoundExit",                           ProgElemType::FUNCTION },
-    { 0x80041734, 0x80041778, "",                                       ProgElemType::FUNCTION },
-    { 0x80041778, 0x800417B8, "",                                       ProgElemType::FUNCTION },
-    { 0x800417B8, 0x80041960, "",                                       ProgElemType::FUNCTION },
-    { 0x80041960, 0x80041ACC, "",                                       ProgElemType::FUNCTION },
-    { 0x80041ACC, 0x80041C88, "",                                       ProgElemType::FUNCTION },
-    { 0x80041C88, 0x80041E78, "",                                       ProgElemType::FUNCTION },
+    { 0x80041734, 0x80041778, "trackstart",                             ProgElemType::FUNCTION },
+    { 0x80041778, 0x800417B8, "trackstop",                              ProgElemType::FUNCTION },
+    { 0x800417B8, 0x80041960, "queue_wess_seq_pause",                   ProgElemType::FUNCTION },
+    { 0x80041960, 0x80041ACC, "queue_wess_seq_restart",                 ProgElemType::FUNCTION },
+    { 0x80041ACC, 0x80041C88, "queue_wess_seq_pauseall",                ProgElemType::FUNCTION },
+    { 0x80041C88, 0x80041E78, "queue_wess_seq_restartall",              ProgElemType::FUNCTION },
     { 0x80041E78, 0x80041EA4, "zeroset",                                ProgElemType::FUNCTION },
     { 0x80041EA4, 0x80041EBC, "wess_install_error_handler",             ProgElemType::FUNCTION },
     { 0x80041EBC, 0x80041ECC, "wess_get_master_status",                 ProgElemType::FUNCTION },
@@ -916,12 +916,12 @@ static const ProgElem ELEMS[] = {
     { 0x80048A88, 0x80048B8C, "Eng_TrkEnd",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80048B8C, 0x80048B94, "Eng_NullEvent",                          ProgElemType::FUNCTION },
     { 0x80048B94, 0x80048EE4, "SeqEngine",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80048EE4, 0x80048FCC, "",                                       ProgElemType::FUNCTION },
-    { 0x80048FCC, 0x80048FF8, "",                                       ProgElemType::FUNCTION },
-    { 0x80048FF8, 0x8004906C, "",                                       ProgElemType::FUNCTION },
-    { 0x8004906C, 0x800493AC, "",                                       ProgElemType::FUNCTION },
-    { 0x800493AC, 0x80049454, "",                                       ProgElemType::FUNCTION },
-    { 0x80049454, 0x800497D8, "",                                       ProgElemType::FUNCTION },
+    { 0x80048EE4, 0x80048FCC, "wess_dig_lcd_loader_init",               ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80048FCC, 0x80048FF8, "wess_dig_set_sample_position",           ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80048FF8, 0x8004906C, "lcd_open",                               ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8004906C, 0x800493AC, "lcd_upload_spu_samples",                 ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x800493AC, 0x80049454, "lcd_close",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80049454, 0x800497D8, "wess_dig_lcd_load",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800497D8, 0x80049808, "wess_master_sfx_volume_get",             ProgElemType::FUNCTION },
     { 0x80049808, 0x80049838, "wess_master_mus_volume_get",             ProgElemType::FUNCTION },
     { 0x80049838, 0x80049870, "wess_master_sfx_vol_set",                ProgElemType::FUNCTION },
