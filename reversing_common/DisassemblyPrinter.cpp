@@ -243,6 +243,19 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
             break;
     }
 
+    // Figure out if the array is defined as part of the EXE image.
+    // If not it is a zero intialized global in the 'BSS' section.
+    // In the case of zero initialized globals, we do not want to print their values as they are not interesting:
+    const uint32_t startWordIdx = (progElem.startAddr - exe.baseAddress) / sizeof(uint32_t);
+    const bool isBssGlobal = (startWordIdx >= exe.sizeInWords);
+
+    // Only print the value of the array if it's a global NOT in the bss section.
+    // Otherwise just emit a newline and exit:
+    if (isBssGlobal) {
+        out.put('\n');
+        return;
+    }
+
     // Print array opening
     if (arrayElemType == ProgElemType::CHAR8) {
         out << " = \"";
@@ -259,7 +272,7 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
 
     for (uint32_t addr = progElem.startAddr; addr < progElem.endAddr; addr += arrayElemTypeSize) {
         // Load the word for the variable.
-        // Note: if it's out of bounds (a zero initialized global) then it gets a value of zero since it's not defined in the .EXE image:
+        // Note that if it's out of bounds (a zero initialized global, in the BSS section) then it's just zero, since it's not specified in the .EXE image:
         const uint32_t wordIdx = (addr - exe.baseAddress) / 4;
         const ExeWord exeWord = (wordIdx < exe.sizeInWords) ? exe.words[wordIdx] : ExeWord{};
     
@@ -375,9 +388,10 @@ static void printSingleVariable(const ExeFile& exe, const ProgElem& progElem, st
     }
 
     // Load the word for the variable.
-    // Note: if it's out of bounds (a zero initialized global) then it gets a value of zero since it's not defined in the .EXE image:
+    // Note that if it's out of bounds (a zero initialized global, in the BSS section) then it's just zero, since it's not specified in the .EXE image:
     const uint32_t wordIdx = (progElem.startAddr - exe.baseAddress) / 4;
-    const ExeWord exeWord = (wordIdx < exe.sizeInWords) ? exe.words[wordIdx] : ExeWord{};
+    const bool bIsNonBssGlobal = (wordIdx < exe.sizeInWords);
+    const ExeWord exeWord = (bIsNonBssGlobal) ? exe.words[wordIdx] : ExeWord{};
     
     // Shift and/or mask the word's value if the size is less than 32-bits
     uint32_t varVal = exeWord.value;
@@ -449,31 +463,33 @@ static void printSingleVariable(const ExeFile& exe, const ProgElem& progElem, st
             break;
     }
 
-    // Print the value itself
-    out << " = ";
+    // Print the value itself if it's defined in the exe image
+    if (bIsNonBssGlobal) {
+        out << " = ";
 
-    switch (progElem.type) {
-        case ProgElemType::INT32:       PrintUtils::printHexI32((int32_t) varVal, false, out);      break;
-        case ProgElemType::UINT32:      PrintUtils::printHexU32(varVal, false, out);                break;
-        case ProgElemType::INT16:       PrintUtils::printHexI16((int16_t) varVal, false, out);      break;
-        case ProgElemType::UINT16:      PrintUtils::printHexU16((uint16_t) varVal, false, out);     break;
-        case ProgElemType::INT8:        PrintUtils::printHexI8((int8_t) varVal, false, out);        break;
-        case ProgElemType::UINT8:       PrintUtils::printHexU8((uint8_t) varVal, false, out);       break;
-        case ProgElemType::BOOL8:       PrintUtils::printBool((varVal != 0), out);                  break;
+        switch (progElem.type) {
+            case ProgElemType::INT32:       PrintUtils::printHexI32((int32_t) varVal, false, out);      break;
+            case ProgElemType::UINT32:      PrintUtils::printHexU32(varVal, false, out);                break;
+            case ProgElemType::INT16:       PrintUtils::printHexI16((int16_t) varVal, false, out);      break;
+            case ProgElemType::UINT16:      PrintUtils::printHexU16((uint16_t) varVal, false, out);     break;
+            case ProgElemType::INT8:        PrintUtils::printHexI8((int8_t) varVal, false, out);        break;
+            case ProgElemType::UINT8:       PrintUtils::printHexU8((uint8_t) varVal, false, out);       break;
+            case ProgElemType::BOOL8:       PrintUtils::printBool((varVal != 0), out);                  break;
 
-        case ProgElemType::CHAR8:
-            out.put('\'');
-            PrintUtils::printEscapedChar((char) varVal, out);
-            out.put('\'');
-            break;
+            case ProgElemType::CHAR8:
+                out.put('\'');
+                PrintUtils::printEscapedChar((char) varVal, out);
+                out.put('\'');
+                break;
 
-        case ProgElemType::PTR32:
-            exe.printNameOfElemAtAddr(varVal, out);
-            break;
+            case ProgElemType::PTR32:
+                exe.printNameOfElemAtAddr(varVal, out);
+                break;
 
-        default:
-            FATAL_ERROR("Unexpected case! We should never hit this!");
-            break;
+            default:
+                FATAL_ERROR("Unexpected case! We should never hit this!");
+                break;
+        }
     }
 
     out << "\n";

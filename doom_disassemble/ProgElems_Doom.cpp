@@ -571,13 +571,13 @@ static const ProgElem ELEMS[] = {
     { 0x8002AE74, 0x8002B2D8, "",                                       ProgElemType::FUNCTION },
     { 0x8002B2D8, 0x8002B3B8, "",                                       ProgElemType::FUNCTION },
     { 0x8002B3B8, 0x8002B9A8, "",                                       ProgElemType::FUNCTION },
-    { 0x8002B9A8, 0x8002B9E0, "",                                       ProgElemType::FUNCTION },
+    { 0x8002B9A8, 0x8002B9E0, "R_InitData",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8002B9E0, 0x8002BB50, "",                                       ProgElemType::FUNCTION },
     { 0x8002BB50, 0x8002BC54, "",                                       ProgElemType::FUNCTION },
     { 0x8002BC54, 0x8002BDA4, "",                                       ProgElemType::FUNCTION },
     { 0x8002BDA4, 0x8002BE68, "",                                       ProgElemType::FUNCTION },
     { 0x8002BE68, 0x8002BF2C, "",                                       ProgElemType::FUNCTION },
-    { 0x8002BF2C, 0x8002C07C, "",                                       ProgElemType::FUNCTION },
+    { 0x8002BF2C, 0x8002C07C, "R_InitPalette",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8002C07C, 0x8002C6F8, "",                                       ProgElemType::FUNCTION },
     { 0x8002C6F8, 0x8002CA8C, "",                                       ProgElemType::FUNCTION },
     { 0x8002CA8C, 0x8002CD68, "",                                       ProgElemType::FUNCTION },
@@ -590,7 +590,7 @@ static const ProgElem ELEMS[] = {
     { 0x8002E714, 0x8002F330, "",                                       ProgElemType::FUNCTION },
     { 0x8002F330, 0x8002FE34, "",                                       ProgElemType::FUNCTION },
     { 0x8002FE34, 0x800305B0, "",                                       ProgElemType::FUNCTION },
-    { 0x800305B0, 0x80030634, "",                                       ProgElemType::FUNCTION },
+    { 0x800305B0, 0x80030634, "R_Init",                                 ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80030634, 0x80030B58, "",                                       ProgElemType::FUNCTION },
     { 0x80030B58, 0x80030BA0, "",                                       ProgElemType::FUNCTION },
     { 0x80030BA0, 0x80030EB4, "R_PointToAngle2",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -598,24 +598,24 @@ static const ProgElem ELEMS[] = {
     { 0x80030F5C, 0x80031088, "R_PointInSubsector",                     ProgElemType::FUNCTION },
     { 0x80031088, 0x800310C8, "",                                       ProgElemType::FUNCTION },
     { 0x800310C8, 0x80031394, "",                                       ProgElemType::FUNCTION },
-    { 0x80031394, 0x800314A4, "W_Init",                                 ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80031394, 0x800314A4, "W_Init",                                 ProgElemType::FUNCTION },
     { 0x800314A4, 0x80031558, "W_CheckNumForName",                      ProgElemType::FUNCTION },
     { 0x80031558, 0x80031648, "W_GetNumForName",                        ProgElemType::FUNCTION },
     { 0x80031648, 0x80031698, "W_LumpLength",                           ProgElemType::FUNCTION },
-    { 0x80031698, 0x800317AC, "W_ReadLump",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x800317AC, 0x800319E4, "W_CacheLumpNum",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x800319E4, 0x80031B04, "",                                       ProgElemType::FUNCTION },
-    { 0x80031B04, 0x80031BD4, "",                                       ProgElemType::FUNCTION },
-    { 0x80031BD4, 0x80031C24, "",                                       ProgElemType::FUNCTION },
+    { 0x80031698, 0x800317AC, "W_ReadLump",                             ProgElemType::FUNCTION },
+    { 0x800317AC, 0x800319E4, "W_CacheLumpNum",                         ProgElemType::FUNCTION },
+    { 0x800319E4, 0x80031B04, "W_CacheLumpName",                        ProgElemType::FUNCTION },
+    { 0x80031B04, 0x80031BD4, "W_OpenMapWad",                           ProgElemType::FUNCTION },
+    { 0x80031BD4, 0x80031C24, "W_MapLumpLength",                        ProgElemType::FUNCTION },
     { 0x80031C24, 0x80031CE0, "",                                       ProgElemType::FUNCTION },
-    { 0x80031CE0, 0x80031D90, "",                                       ProgElemType::FUNCTION },    
+    { 0x80031CE0, 0x80031D90, "W_ReadMapLump",                          ProgElemType::FUNCTION },    
     { 0x80031D90, 0x80031E48, "decode",                                 ProgElemType::FUNCTION },
     { 0x80031E48, 0x80031EB4, "",                                       ProgElemType::FUNCTION },
-    { 0x80031EB4, 0x80031EDC, "",                                       ProgElemType::FUNCTION },
-    { 0x80031EDC, 0x80031FD8, "",                                       ProgElemType::FUNCTION },
-    { 0x80031FD8, 0x80032024, "",                                       ProgElemType::FUNCTION },
-    { 0x80032024, 0x8003206C, "",                                       ProgElemType::FUNCTION },
-    { 0x8003206C, 0x80032144, "",                                       ProgElemType::FUNCTION },
+    { 0x80031EB4, 0x80031EDC, "InitOpenFileSlots",                      ProgElemType::FUNCTION },
+    { 0x80031EDC, 0x80031FD8, "OpenFile",                               ProgElemType::FUNCTION },
+    { 0x80031FD8, 0x80032024, "CloseFile",                              ProgElemType::FUNCTION },
+    { 0x80032024, 0x8003206C, "SeekAndTellFile",                        ProgElemType::FUNCTION },
+    { 0x8003206C, 0x80032144, "ReadFile",                               ProgElemType::FUNCTION },
     { 0x80032144, 0x8003219C, "Z_Init",                                 ProgElemType::FUNCTION },
     { 0x8003219C, 0x800321D0, "Z_InitZone",                             ProgElemType::FUNCTION },
     { 0x800321D0, 0x800323C8, "Z_Malloc2",                              ProgElemType::FUNCTION },
@@ -637,7 +637,7 @@ static const ProgElem ELEMS[] = {
     { 0x800333D8, 0x800333F0, "",                                       ProgElemType::FUNCTION },
     { 0x800333F0, 0x8003350C, "draw_present",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003350C, 0x8003352C, "",                                       ProgElemType::FUNCTION },
-    { 0x8003352C, 0x80033578, "",                                       ProgElemType::FUNCTION },
+    { 0x8003352C, 0x80033578, "I_Init",                                 ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80033578, 0x8003390C, "",                                       ProgElemType::FUNCTION },
     { 0x8003390C, 0x8003397C, "",                                       ProgElemType::FUNCTION },
     { 0x8003397C, 0x80033AC4, "",                                       ProgElemType::FUNCTION },
@@ -677,7 +677,7 @@ static const ProgElem ELEMS[] = {
     { 0x80037B84, 0x80037DBC, "",                                       ProgElemType::FUNCTION },
     { 0x80037DBC, 0x800381B0, "",                                       ProgElemType::FUNCTION },
     { 0x800381B0, 0x80038558, "",                                       ProgElemType::FUNCTION },
-    { 0x80038558, 0x80038610, "",                                       ProgElemType::FUNCTION },
+    { 0x80038558, 0x80038610, "ST_Init",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80038610, 0x80038688, "",                                       ProgElemType::FUNCTION },
     { 0x80038688, 0x80038B0C, "",                                       ProgElemType::FUNCTION },
     { 0x80038B0C, 0x8003A3C8, "",                                       ProgElemType::FUNCTION },
@@ -748,8 +748,8 @@ static const ProgElem ELEMS[] = {
     { 0x80040F50, 0x80040FAC, "psxcd_set_stereo",                       ProgElemType::FUNCTION },
     { 0x80040FAC, 0x80040FCC, "S_SetSfxVolume",                         ProgElemType::FUNCTION },
     { 0x80040FCC, 0x80041014, "S_SetMusicVolume",                       ProgElemType::FUNCTION },
-    { 0x80041014, 0x80041050, "S_StopMusicModule",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80041050, 0x80041098, "S_StartMusicModule",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80041014, 0x80041050, "S_StopMusicSequence",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80041050, 0x80041098, "S_StartMusicSequence",                   ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80041098, 0x800410A0, "ZeroHalfWord",                           ProgElemType::FUNCTION },
     { 0x800410A0, 0x80041118, "S_UnloadSamples",                        ProgElemType::FUNCTION },
     { 0x80041118, 0x80041318, "S_LoadSoundAndMusic",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -2747,6 +2747,8 @@ static const ProgElem ELEMS[] = {
     { 0x800754BC, 0x800754C4, "CDMapTbl_MAP58_LCD",                     ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800754C4, 0x800754CC, "CDMapTbl_MAP59_LCD",                     ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800754CC, 0x800754D4, "CDMapTbl_MAP60_LCD",                     ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x800756D0, 0x800758B0, "gMapMusicSeqAndLcdFile",                 ProgElemType::ARRAY, ProgElemType::UINT32, 2 },
+    { 0x800758BC, 0x800758E4, "gPSXSND_psxSoundSettingsList",           ProgElemType::ARRAY, ProgElemType::UINT32, 2 },
     { 0x800758E4, 0x800758E8, "gWess_num_sd",                           ProgElemType::UINT32 },
     { 0x800758E8, 0x800758EC, "gpWess_tmp_fp_wmd_file_1",               ProgElemType::PTR32 },
     { 0x800758EC, 0x800758F0, "gpWess_tmp_fp_wmd_file_2",               ProgElemType::PTR32 },
@@ -2782,6 +2784,7 @@ static const ProgElem ELEMS[] = {
     { 0x80075A6C, 0x80075AB0, "gWess_SeqFunctions",                     ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80075ABC, 0x80075AC0, "gWess_Eng_piter",                        ProgElemType::PTR32 },
     { 0x80075AC0, 0x80075AC4, "gWess_SeqEngine_pm_stat",                ProgElemType::PTR32 },
+    { 0x80075B00, 0x80075B20, "gWess_CmdLength",                        ProgElemType::ARRAY, ProgElemType::UINT8, 4 },
     { 0x80075B78, 0x80075B90, "gLIBETC_INTR_interruptsList",            ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80075B90, 0x80075B94, "gpLIBETC_INTR_interruptsListPtr",        ProgElemType::PTR32 },
     { 0x80075C04, 0x80075C88, "gLIBC2__ctype_",                         ProgElemType::ARRAY, ProgElemType::UINT8, 16 },    
@@ -2999,6 +3002,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077BAC, 0x80077BB4, "STR_LumpName_PLAYPAL",                   ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077BC4, 0x80077BC8, "gValidCount",                            ProgElemType::UINT32 },
     { 0x80077BD0, 0x80077BD4, "gpFineCosine",                           ProgElemType::PTR32 },
+    { 0x80077BE4, 0x80077BE8, "gbIsLevelDataCached",                    ProgElemType::UINT32 },
     { 0x80077BE8, 0x80077BF0, "STR_IWAD",                               ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80077BF8, 0x80077BFC, "StackEndAddr",                           ProgElemType::PTR32 },
     { 0x80077BFC, 0x80077C00, "StackSize",                              ProgElemType::PTR32 },
@@ -3073,6 +3077,8 @@ static const ProgElem ELEMS[] = {
     { 0x80077DF0, 0x80077DF4, "gPSXCD_newloc",                          ProgElemType::UINT32 },
     { 0x80077DF4, 0x80077DF8, "gPSXCD_lastloc",                         ProgElemType::UINT32 },
     { 0x80077DF8, 0x80077DFC, "gPSXCD_beginloc",                        ProgElemType::UINT32 },
+    { 0x80077E04, 0x80077E08, "gPSXSND_maxWmdSize",                     ProgElemType::UINT32 },
+    { 0x80077E08, 0x80077E10, "gPSXSND_soundSettingsLists",             ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80077E2C, 0x80077E30, "gNumSoundTics",                          ProgElemType::UINT32 },
     { 0x80077E30, 0x80077E34, "gPSXCD_cbsyncsave",                      ProgElemType::UINT32 },
     { 0x80077E34, 0x80077E38, "gPSXCD_cbreadysave",                     ProgElemType::UINT32 },
@@ -3089,6 +3095,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077EE8, 0x80077EEC, "gpLineTarget",                           ProgElemType::PTR32 },
     { 0x80077EF0, 0x80077EF4, "gpBombSource",                           ProgElemType::PTR32 },
     { 0x80077F04, 0x80077F08, "gTmCeilingZ",                            ProgElemType::INT32 },
+    { 0x80077F18, 0x80077F1C, "gpMapWadFileData",                       ProgElemType::PTR32 },
     { 0x80077F20, 0x80077F24, "gTotalKills",                            ProgElemType::UINT32 },
     { 0x80077F2C, 0x80077F30, "gTotalItems",                            ProgElemType::UINT32 },
     { 0x80077F30, 0x80077F34, "gOpenBottom",                            ProgElemType::INT32 },
@@ -3128,11 +3135,13 @@ static const ProgElem ELEMS[] = {
     { 0x800780B4, 0x800780B8, "gpShooter",                              ProgElemType::PTR32 },
     { 0x800780BC, 0x800780C0, "gOpenTop",                               ProgElemType::INT32 },
     { 0x800780C4, 0x800780C8, "gpBlockmapLump",                         ProgElemType::PTR32 },
+    { 0x800780C8, 0x800780CC, "gpMapWadDirectory",                      ProgElemType::PTR32 },
     { 0x800780E4, 0x800780E8, "gpRejectMatrix",                         ProgElemType::PTR32 },
     { 0x800780E8, 0x800780EC, "gbCheckPosOnly",                         ProgElemType::UINT32 },
     { 0x800780F8, 0x800780FC, "gCurDrawDispBufferIdx",                  ProgElemType::UINT32 },
     { 0x80078100, 0x80078104, "gT2x",                                   ProgElemType::INT32 },
     { 0x80078108, 0x8007810C, "gT2y",                                   ProgElemType::INT32 },
+    { 0x8007811C, 0x80078120, "gNumMapWadLumps",                        ProgElemType::UINT32 },
     { 0x80078138, 0x8007813C, "gItemRespawnQueueHead",                  ProgElemType::UINT32 },
     { 0x8007813C, 0x80078140, "gbTryMove2",                             ProgElemType::UINT32 },
     { 0x80078140, 0x80078144, "gpBlockmap",                             ProgElemType::PTR32 },
@@ -3162,6 +3171,7 @@ static const ProgElem ELEMS[] = {
     { 0x80078240, 0x80078244, "gOldX",                                  ProgElemType::INT32 },
     { 0x80078244, 0x80078248, "gOldY",                                  ProgElemType::INT32 },
     { 0x80078248, 0x8007824C, "gpBlockLine",                            ProgElemType::PTR32 },    
+    { 0x80078254, 0x80078258, "gMainWadFileIdx",                        ProgElemType::UINT32 },
     { 0x80078258, 0x8007825C, "gGameSkill",                             ProgElemType::UINT32 },
     { 0x8007827C, 0x80078280, "gOpenRange",                             ProgElemType::INT32 },
     { 0x80078284, 0x80078288, "gBlockmapWidth",                         ProgElemType::UINT32 },
@@ -3170,6 +3180,7 @@ static const ProgElem ELEMS[] = {
     { 0x800782D0, 0x800782D4, "gpShootLine",                            ProgElemType::PTR32 },
     { 0x800782D4, 0x800782D8, "gpShootMObj",                            ProgElemType::PTR32 },
     { 0x800782EC, 0x800782F0, "MAYBE_gPlayerNum",                       ProgElemType::UINT32 },
+    { 0x800782F0, 0x800782F4, "gpbIsMainWadLump",                       ProgElemType::PTR32 },
     { 0x800782F8, 0x800782FC, "gAimBottomSlope",                        ProgElemType::INT32 },    
     { 0x8007831C, 0x80078344, "gPSXCD_cdfile",                          ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80078344, 0x80078358, "gPSXCD_psxcd_cmd_1",                     ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
@@ -3180,6 +3191,7 @@ static const ProgElem ELEMS[] = {
     { 0x800783A8, 0x800783D0, "gPSXCD_newfilestruct",                   ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800783D0, 0x800783F8, "gPSXCD_lastfilestruct",                  ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800783F8, 0x80078588, "gCdlLOCArray",                           ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x80078588, 0x8007EB18, "gPSXSND_wmdMemBuffer",                   ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x8007F024, 0x8007F034, "gWess_data_fileref",                     ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x8007F200, 0x8007F204, "gWess_Read_Vlq_v",                       ProgElemType::UINT32 },
     { 0x8007F204, 0x8007F208, "gWess_Read_Vlq_c",                       ProgElemType::UINT32 },
@@ -3262,6 +3274,7 @@ static const ProgElem ELEMS[] = {
     { 0x800A91A0, 0x800A91A4, "gLIBSPU__spu_mem_mode_plus",             ProgElemType::UINT32 },
     { 0x800A9518, 0x800A9D18, "gPSXCD_sectorbuf",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800A9D18, 0x800A9D90, "gpActiveCeilings",                       ProgElemType::ARRAY, ProgElemType::PTR32, 0 },
+    { 0x800A9D90, 0x800A9E30, "gOpenPsxCdFiles",                        ProgElemType::ARRAY, ProgElemType::UINT32, 0 },  // Max of 4 (40 bytes each)    
 };
 
 const ProgElem*     gProgramElems_Doom = ELEMS;

@@ -154,3 +154,10 @@ mobj_t (148 bytes):
         08E     angle_t         spawnangle;
         ???     uint32_t        ???
     };
+
+lumpinfo_t (16 bytes):
+    struct lumpinfo_t {
+        000     uint32_t    filepos;
+        004     uint32_t    size;
+        008     char        name[8];
+    };
