@@ -155,6 +155,35 @@ mobj_t (148 bytes):
         ???     uint32_t        ???
     };
 
+sector_t (92 bytes):
+    struct sector_t {
+        000     fixed_t     floorheight;
+        004     fixed_t     ceilingheight;
+        008     int32_t     floorpic;
+        00C     int32_t     ceilingpic;
+        010     uint32_t    lightlevel;
+        014     uint32_t    special;
+        018     uint32_t    tag;
+        01C     int32_t     soundtraversed;
+        020     mobj_t*     soundtarget;
+        024     int32_t     blockbox[4];
+        
+        // degenmobj_t
+        struct {            
+            034     mobj_t*     prev;
+            038     mobj_t*     next;
+            03C     fixed_t     x;
+            040     fixed_t     y;
+            044     fixed_t     z;
+        } soundorg;
+
+        048     uint32_t    validcount;
+        04C     mobj_t*     thinglist;
+        050     void*       specialdata;
+        054     uint32_t    linecount;
+        058     line_t**    lines;
+    };
+
 lumpinfo_t (16 bytes):
     struct lumpinfo_t {
         000     uint32_t    filepos;
