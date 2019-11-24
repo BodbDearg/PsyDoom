@@ -120,7 +120,7 @@ mobj_t (148 bytes):
         00C     subsector_t*    subsector;
         010     mobj_t*         prev;           // Linked list of things
         014     mobj_t*         next;
-        ???     uint32_t        ???
+        018     latecall_t      latecall;
         01C     mobj_t*         snext,          // Linked list of things in this sector
         020     mobj_t*         sprev;
         024     angle_t         angle;
