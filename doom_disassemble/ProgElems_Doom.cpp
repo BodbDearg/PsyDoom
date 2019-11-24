@@ -276,10 +276,10 @@ static const ProgElem ELEMS[] = {
     { 0x80012274, 0x800123A4, "D_DoomMain",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800123A4, 0x800123E4, "RunLegals",                              ProgElemType::FUNCTION },
     { 0x800123E4, 0x80012424, "RunTitle",                               ProgElemType::FUNCTION },
-    { 0x80012424, 0x800124A8, "RunDemo",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x800124A8, 0x800124E8, "RunCredits",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x800124E8, 0x800124F8, "",                                       ProgElemType::FUNCTION },
-    { 0x800124F8, 0x80012850, "",                                       ProgElemType::FUNCTION },
+    { 0x80012424, 0x800124A8, "RunDemo",                                ProgElemType::FUNCTION },
+    { 0x800124A8, 0x800124E8, "RunCredits",                             ProgElemType::FUNCTION },
+    { 0x800124E8, 0x800124F8, "UNKNOWN_DoomFunc1",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x800124F8, 0x80012850, "UNKNOWN_DoomFunc2",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80012850, 0x8001290C, "D_memset",                               ProgElemType::FUNCTION },
     { 0x8001290C, 0x80012940, "D_memcpy",                               ProgElemType::FUNCTION },
     { 0x80012940, 0x8001297C, "D_strncpy",                              ProgElemType::FUNCTION },
@@ -301,7 +301,7 @@ static const ProgElem ELEMS[] = {
     { 0x80013528, 0x80013714, "G_RunGame",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80013714, 0x80013838, "G_PlayDemoPtr",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80013838, 0x80013840, "empty_func1",                            ProgElemType::FUNCTION },
-    { 0x80013840, 0x800138D8, "P_RunMobjBase",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80013840, 0x800138D8, "P_RunMobjBase",                          ProgElemType::FUNCTION },
     { 0x800138D8, 0x80013B38, "P_XYMovement",                           ProgElemType::FUNCTION },
     { 0x80013B38, 0x80013C00, "FloatChange",                            ProgElemType::FUNCTION },
     { 0x80013C00, 0x80013DE0, "P_ZMovement",                            ProgElemType::FUNCTION },
@@ -322,7 +322,7 @@ static const ProgElem ELEMS[] = {
     { 0x80014EBC, 0x80014F30, "P_ActivateInStasisCeiling",              ProgElemType::FUNCTION },
     { 0x80014F30, 0x80014FA4, "EV_CeilingCrushStop",                    ProgElemType::FUNCTION },
     { 0x80014FA4, 0x8001504C, "P_ThingHeightClip",                      ProgElemType::FUNCTION },
-    { 0x8001504C, 0x80015238, "PIT_ChangeSector",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8001504C, 0x80015238, "PIT_ChangeSector",                       ProgElemType::FUNCTION },
     { 0x80015238, 0x800152FC, "P_ChangeSector",                         ProgElemType::FUNCTION },
     { 0x800152FC, 0x80015540, "T_VerticalDoor",                         ProgElemType::FUNCTION },
     { 0x80015540, 0x80015764, "EV_DoLockedDoor",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -386,7 +386,7 @@ static const ProgElem ELEMS[] = {
     { 0x80019BA8, 0x80019C8C, "GivePower",                              ProgElemType::FUNCTION },
     { 0x80019C8C, 0x8001A57C, "TouchSpecialThing",                      ProgElemType::FUNCTION },
     { 0x8001A57C, 0x8001A8A0, "P_KillMObj",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8001A8A0, 0x8001AD74, "P_DamageMObj",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8001A8A0, 0x8001AD74, "P_DamageMObj",                           ProgElemType::FUNCTION },
     { 0x8001AD74, 0x8001AE00, "T_FireFlicker",                          ProgElemType::FUNCTION },
     { 0x8001AE00, 0x8001AE8C, "P_SpawnFireFlicker",                     ProgElemType::FUNCTION },
     { 0x8001AE8C, 0x8001AF14, "T_LightFlash",                           ProgElemType::FUNCTION },
@@ -399,7 +399,7 @@ static const ProgElem ELEMS[] = {
     { 0x8001B394, 0x8001B4A0, "EV_LightTurnOn",                         ProgElemType::FUNCTION },
     { 0x8001B4A0, 0x8001B558, "T_Glow",                                 ProgElemType::FUNCTION },
     { 0x8001B558, 0x8001B640, "P_SpawnGlowingLight",                    ProgElemType::FUNCTION },
-    { 0x8001B640, 0x8001B67C, "P_CheckPosition",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8001B640, 0x8001B67C, "P_CheckPosition",                        ProgElemType::FUNCTION },
     { 0x8001B67C, 0x8001B7A4, "P_TryMove",                              ProgElemType::FUNCTION },
     { 0x8001B7A4, 0x8001B848, "P_InterceptVector",                      ProgElemType::FUNCTION },
     { 0x8001B848, 0x8001B9F4, "PIT_UseLines",                           ProgElemType::FUNCTION },
@@ -430,9 +430,9 @@ static const ProgElem ELEMS[] = {
     { 0x8001DC94, 0x8001E0F4, "P_SpawnMissile",                         ProgElemType::FUNCTION },
     { 0x8001E0F4, 0x8001E4F4, "P_SpawnPlayerMissile",                   ProgElemType::FUNCTION },
     { 0x8001E4F4, 0x8001E720, "P_TryMove2",                             ProgElemType::FUNCTION }, // TODO 2: name children, extract globals
-    { 0x8001E720, 0x8001E76C, "",                                       ProgElemType::FUNCTION },
-    { 0x8001E76C, 0x8001E868, "",                                       ProgElemType::FUNCTION },
-    { 0x8001E868, 0x8001E978, "",                                       ProgElemType::FUNCTION },
+    { 0x8001E720, 0x8001E76C, "UNKNOWN_DoomFunc3",                      ProgElemType::FUNCTION },
+    { 0x8001E76C, 0x8001E868, "P_UnsetThingPosition2",                  ProgElemType::FUNCTION },
+    { 0x8001E868, 0x8001E978, "P_SetThingPosition2",                    ProgElemType::FUNCTION },
     { 0x8001E978, 0x8001EC68, "PM_CheckPosition",                       ProgElemType::FUNCTION }, // TODO 2: name children, extract globals
     { 0x8001EC68, 0x8001ED74, "PM_BoxCrossLine",                        ProgElemType::FUNCTION },
     { 0x8001ED74, 0x8001EEC4, "PIT_CheckLine",                          ProgElemType::FUNCTION }, // TODO 2: name children, extract globals
@@ -450,12 +450,12 @@ static const ProgElem ELEMS[] = {
     { 0x8001FB70, 0x8001FC18, "P_SetPsprite",                           ProgElemType::FUNCTION },
     { 0x8001FC18, 0x8001FD4C, "P_BringUpWeapon",                        ProgElemType::FUNCTION },
     { 0x8001FD4C, 0x8001FFBC, "P_CheckAmmo",                            ProgElemType::FUNCTION },
-    { 0x8001FFBC, 0x800201C4, "P_FireWeapon",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8001FFBC, 0x800201C4, "P_FireWeapon",                           ProgElemType::FUNCTION },
     { 0x800201C4, 0x80020298, "P_DropWeapon",                           ProgElemType::FUNCTION },
-    { 0x80020298, 0x80020480, "A_WeaponReady",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80020298, 0x80020480, "A_WeaponReady",                          ProgElemType::FUNCTION },
     { 0x80020480, 0x8002051C, "A_ReFire",                               ProgElemType::FUNCTION },
     { 0x8002051C, 0x8002053C, "A_CheckReload",                          ProgElemType::FUNCTION },
-    { 0x8002053C, 0x800206B4, "A_Lower",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002053C, 0x800206B4, "A_Lower",                                ProgElemType::FUNCTION },
     { 0x800206B4, 0x800207A0, "A_Raise",                                ProgElemType::FUNCTION },
     { 0x800207A0, 0x80020874, "A_GunFlash",                             ProgElemType::FUNCTION },
     { 0x80020874, 0x8002096C, "A_Punch",                                ProgElemType::FUNCTION },
@@ -557,14 +557,14 @@ static const ProgElem ELEMS[] = {
     { 0x80029684, 0x8002971C, "P_Start",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8002971C, 0x800297A0, "P_Stop",                                 ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800297A0, 0x80029918, "P_PlayerMove",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80029918, 0x80029A08, "",                                       ProgElemType::FUNCTION },
-    { 0x80029A08, 0x80029B38, "",                                       ProgElemType::FUNCTION },
-    { 0x80029B38, 0x80029DD4, "",                                       ProgElemType::FUNCTION },
+    { 0x80029918, 0x80029A08, "P_PlayerXYMovement",                     ProgElemType::FUNCTION },
+    { 0x80029A08, 0x80029B38, "P_PlayerZMovement",                      ProgElemType::FUNCTION },
+    { 0x80029B38, 0x80029DD4, "P_PlayerMobjThink",                      ProgElemType::FUNCTION },
     { 0x80029DD4, 0x8002A2B8, "P_BuildMove",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8002A2B8, 0x8002A32C, "P_Thrust",                               ProgElemType::FUNCTION },
     { 0x8002A32C, 0x8002A4E8, "P_CalcHeight",                           ProgElemType::FUNCTION },
     { 0x8002A4E8, 0x8002A6A0, "P_MovePlayer",                           ProgElemType::FUNCTION },
-    { 0x8002A6A0, 0x8002A7F8, "P_DeathThink",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002A6A0, 0x8002A7F8, "P_DeathThink",                           ProgElemType::FUNCTION },
     { 0x8002A7F8, 0x8002ACE8, "P_PlayerThink",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8002ACE8, 0x8002AD3C, "",                                       ProgElemType::FUNCTION },
     { 0x8002AD3C, 0x8002AE74, "",                                       ProgElemType::FUNCTION },
@@ -698,14 +698,14 @@ static const ProgElem ELEMS[] = {
     { 0x8003CEE4, 0x8003D0B4, "",                                       ProgElemType::FUNCTION },
     { 0x8003D0B4, 0x8003D448, "",                                       ProgElemType::FUNCTION },
     { 0x8003D448, 0x8003D6D0, "",                                       ProgElemType::FUNCTION },
-    { 0x8003D6D0, 0x8003D774, "",                                       ProgElemType::FUNCTION },
-    { 0x8003D774, 0x8003D79C, "",                                       ProgElemType::FUNCTION },
-    { 0x8003D79C, 0x8003D8F0, "",                                       ProgElemType::FUNCTION },
-    { 0x8003D8F0, 0x8003D9C4, "",                                       ProgElemType::FUNCTION },
-    { 0x8003D9C4, 0x8003DAF0, "",                                       ProgElemType::FUNCTION },
-    { 0x8003DAF0, 0x8003DB18, "",                                       ProgElemType::FUNCTION },
-    { 0x8003DB18, 0x8003E328, "",                                       ProgElemType::FUNCTION },
-    { 0x8003E328, 0x8003E910, "",                                       ProgElemType::FUNCTION },
+    { 0x8003D6D0, 0x8003D774, "F1_Start",                               ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8003D774, 0x8003D79C, "F1_Stop",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8003D79C, 0x8003D8F0, "F1_Ticker",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8003D8F0, 0x8003D9C4, "F1_Drawer",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8003D9C4, 0x8003DAF0, "F2_Start",                               ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8003DAF0, 0x8003DB18, "F2_Stop",                                ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8003DB18, 0x8003E328, "F2_Ticker",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8003E328, 0x8003E910, "F2_Drawer",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003E910, 0x8003E9D0, "O_Init",                                 ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003E9D0, 0x8003E9F4, "O_Shutdown",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003E9F4, 0x8003EEC8, "O_Control",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -3346,6 +3346,7 @@ static const ProgElem ELEMS[] = {
     { 0x800A8E90, 0x800A8F24, "gMObjHead",                              ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800A8F24, 0x800A8F28, "gLIBSPU__spu_mem_mode",                  ProgElemType::UINT32 },
     { 0x800A9064, 0x800A9074, "gTestBBox",                              ProgElemType::ARRAY, ProgElemType::INT32, 0 },
+    { 0x800A9074, 0x800A9084, "gShootDiv",                              ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x800A90AC, 0x800A9108, "gDrawEnv1",                              ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x800A9108, 0x800A9164, "gDrawEnv2",                              ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x800A9164, 0x800A9178, "gDispEnv1",                              ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
