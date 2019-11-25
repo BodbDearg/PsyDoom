@@ -190,3 +190,21 @@ lumpinfo_t (16 bytes):
         004     uint32_t    size;
         008     char        name[8];
     };
+
+I_AddLumpToTexCache struct (32 bytes):
+    struct texinfo_t {
+        000     int16_t     offsetX;
+        002     int16_t     offsetY;
+        004     uint16_t    width;
+        006     uint16_t    height;
+        008     ???         ???
+        008     ???         ???
+        00A     uint16_t    texPageId;
+        00C     uint16_t    widthIn16Blocks;
+        00E     uint16_t    heightIn16Blocks;
+        010     uint16_t    lumpNum;
+        012     ???         ???
+        014     ???         ???
+        018     ???         ???
+        01C     uint32_t    uploadFrameNum;
+    };
