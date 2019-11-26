@@ -681,10 +681,10 @@ static const ProgElem ELEMS[] = {
     { 0x80038610, 0x80038688, "ST_Start",                               ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80038688, 0x80038B0C, "ST_Ticker",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80038B0C, 0x8003A3C8, "ST_Drawer",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8003A3C8, 0x8003A9D4, "",                                       ProgElemType::FUNCTION },
+    { 0x8003A3C8, 0x8003A9D4, "I_DrawNumber",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003A9D4, 0x8003AD04, "",                                       ProgElemType::FUNCTION },
     { 0x8003AD04, 0x8003B0F0, "",                                       ProgElemType::FUNCTION },
-    { 0x8003B0F0, 0x8003B238, "",                                       ProgElemType::FUNCTION },
+    { 0x8003B0F0, 0x8003B238, "P_UpdatePalette",                        ProgElemType::FUNCTION },
     { 0x8003B238, 0x8003B324, "",                                       ProgElemType::FUNCTION },
     { 0x8003B324, 0x8003BAC0, "I_DrawString",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003BAC0, 0x8003BB08, "AM_Start",                               ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -3346,6 +3346,7 @@ static const ProgElem ELEMS[] = {
     { 0x80078254, 0x80078258, "gMainWadFileIdx",                        ProgElemType::UINT32 },
     { 0x80078258, 0x8007825C, "gGameSkill",                             ProgElemType::UINT32 },
     { 0x80078260, 0x80078264, "gpOldValue",                             ProgElemType::PTR32 },
+    { 0x80078264, 0x80078268, "gbRenderViewFullbright",                 ProgElemType::UINT32 },
     { 0x80078274, 0x80078278, "gpCloseLine",                            ProgElemType::PTR32 },
     { 0x8007827C, 0x80078280, "gOpenRange",                             ProgElemType::INT32 },
     { 0x80078284, 0x80078288, "gBlockmapWidth",                         ProgElemType::UINT32 },
