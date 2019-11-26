@@ -151,8 +151,8 @@ mobj_t (148 bytes):
         088     int16_t         spawnx;
         08A     int16_t         spawny;        
         08C     uint16_t        spawntype;
-        08E     angle_t         spawnangle;
-        ???     uint32_t        ???
+        08E     int16_t         spawnangle;
+        090     mobj_t*         tracer;
     };
 
 sector_t (92 bytes):
@@ -207,4 +207,60 @@ I_AddLumpToTexCache struct (32 bytes):
         014     ???         ???
         018     ???         ???
         01C     uint32_t    uploadFrameNum;
+    };
+
+pspdef_t (16 bytes):
+    struct pspdef_t {
+        000     state_t*    state;
+        004     int32_t     tics;
+        008     fixed_t     sx;
+        00C     fixed_t     sy;
+    };
+
+player_t (300 bytes):
+    struct player_t {
+        000     mobj_t*         mo;
+        004     playerstate_t   playerstate;
+        008     fixed_t         forwardmove;
+        00C     fixed_t         sidemove;
+        010     angle_t         angleturn;
+        014     fixed_t         viewz;
+        018     fixed_t         viewheight;
+        01C     fixed_t         deltaviewheight;
+        020     fixed_t         bob;
+        024     uint32_t        health;
+        028     uint32_t        armorpoints;
+        02C     uint32_t        armortype;        
+        030     int32_t         powers[NUMPOWERS = 6];
+        048     bool32          cards[NUMCARDS = 6];
+        060     bool32          backpack;
+        064     uint32_t        frags;
+        068     uint32_t        __padding;
+        06C     weapontype_t    readyweapon;
+        070     weapontype_t    pendingweapon;
+        074     bool32          weaponowned[NUMWEAPONS = 9];
+        098     uint32_t        ammo[NUMAMMO = 4];
+        0A8     uint32_t        maxammo[NUMAMMO = 4];
+        0B8     uint32_t        attackdown;
+        0BC     uint32_t        usedown;
+        0C0     uint32_t        cheats;
+        0C4     uint32_t        refire;
+        0C8     uint32_t        killcount;
+        0CC     uint32_t        itemcount;
+        0D0     uint32_t        secretcount;
+        0D4     char*           message;
+        0D8     uint32_t        damagecount;
+        0DC     uint32_t        bonuscount;
+        0E0     mobj_t*         attacker;
+        0E4     uint32_t        extralight;
+        0E8     uint32_t        fixedcolormap;
+        0EC     uint32_t        colormap;
+        0F0     pspdef_t        psprites[NUMPSPRITES = 2];
+        110     bool32          didsecret;
+        114     void*           lastsoundsector;
+        118     int32_t         automapx;
+        11C     int32_t         automapy;
+        120     uint32_t        automapscale;
+        124     uint32_t        automapflags;
+        128     uint32_t        turnheld;
     };
