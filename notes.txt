@@ -184,6 +184,15 @@ sector_t (92 bytes):
         058     line_t**    lines;
     };
 
+subsector_t (16 bytes):
+    struct subsector_t {
+        000     sector_t*       sector;
+        004     uint16_t        numSegs;
+        006     uint16_t        firstSeg;
+        008     ???             ???
+        00C     ???             ???
+    };
+
 lumpinfo_t (16 bytes):
     struct lumpinfo_t {
         000     uint32_t    filepos;
