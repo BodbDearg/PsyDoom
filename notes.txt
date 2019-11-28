@@ -45,6 +45,9 @@ CD Map array:
     - The other word specifies the size of the file.
     - This is used to read files on disk.
 
+VRAM viewer:
+    - Adding the flag 0x10 to player cheats flags @ 800A88AC will activate the VRAM viewer on the pause screen.
+
 ---------------------------------------------------------------------------------------------------
 Data structures
 ---------------------------------------------------------------------------------------------------

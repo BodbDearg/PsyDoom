@@ -273,7 +273,7 @@ static const ProgElem ELEMS[] = {
     { 0x8001223C, 0x80012254, "JumpTable_LIBCOMB__comb_control_2",      ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80012254, 0x80012264, "JumpTable_LIBCOMB__comb_control_3",      ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80012264, 0x80012274, "JumpTable_LIBCOMB__comb_control_4",      ProgElemType::ARRAY, ProgElemType::PTR32 },
-    { 0x80012274, 0x800123A4, "D_DoomMain",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80012274, 0x800123A4, "D_DoomMain",                             ProgElemType::FUNCTION },
     { 0x800123A4, 0x800123E4, "RunLegals",                              ProgElemType::FUNCTION },
     { 0x800123E4, 0x80012424, "RunTitle",                               ProgElemType::FUNCTION },
     { 0x80012424, 0x800124A8, "RunDemo",                                ProgElemType::FUNCTION },
@@ -608,7 +608,7 @@ static const ProgElem ELEMS[] = {
     { 0x80031B04, 0x80031BD4, "W_OpenMapWad",                           ProgElemType::FUNCTION },
     { 0x80031BD4, 0x80031C24, "W_MapLumpLength",                        ProgElemType::FUNCTION },
     { 0x80031C24, 0x80031CE0, "W_MapGetNumForName",                     ProgElemType::FUNCTION },
-    { 0x80031CE0, 0x80031D90, "W_ReadMapLump",                          ProgElemType::FUNCTION },    
+    { 0x80031CE0, 0x80031D90, "W_ReadMapLump",                          ProgElemType::FUNCTION },
     { 0x80031D90, 0x80031E48, "decode",                                 ProgElemType::FUNCTION },
     { 0x80031E48, 0x80031EB4, "getDecodedSize",                         ProgElemType::FUNCTION },
     { 0x80031EB4, 0x80031EDC, "InitOpenFileSlots",                      ProgElemType::FUNCTION },
@@ -632,23 +632,23 @@ static const ProgElem ELEMS[] = {
     { 0x80032BB8, 0x80032BF4, "I_ReadGamepad",                          ProgElemType::FUNCTION },
     { 0x80032BF4, 0x80032D04, "I_CacheTexLumpName",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80032D04, 0x80032D84, "I_CacheAndDrawSprite",                   ProgElemType::FUNCTION },
-    { 0x80032D84, 0x800332E0, "I_DrawSprite",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x800332E0, 0x800333D8, "I_DrawPlaque",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80032D84, 0x800332E0, "I_DrawSprite",                           ProgElemType::FUNCTION },
+    { 0x800332E0, 0x800333D8, "I_DrawPlaque",                           ProgElemType::FUNCTION },
     { 0x800333D8, 0x800333F0, "I_IncDrawnFrameCount",                   ProgElemType::FUNCTION },
-    { 0x800333F0, 0x8003350C, "I_DrawPresent",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8003350C, 0x8003352C, "",                                       ProgElemType::FUNCTION },
+    { 0x800333F0, 0x8003350C, "I_DrawPresent",                          ProgElemType::FUNCTION },
+    { 0x8003350C, 0x8003352C, "I_VsyncCallback",                        ProgElemType::FUNCTION },
     { 0x8003352C, 0x80033578, "I_Init",                                 ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80033578, 0x8003390C, "I_CacheTex",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003390C, 0x8003397C, "I_CacheTex_UnknownHelper",               ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003397C, 0x80033AC4, "I_ResetTexCache",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80033AC4, 0x8003472C, "",                                       ProgElemType::FUNCTION },
-    { 0x8003472C, 0x80034A60, "",                                       ProgElemType::FUNCTION },
-    { 0x80034A60, 0x80034CB8, "",                                       ProgElemType::FUNCTION },
-    { 0x80034CB8, 0x80034D14, "",                                       ProgElemType::FUNCTION },
-    { 0x80034D14, 0x80034E58, "",                                       ProgElemType::FUNCTION },
+    { 0x80033AC4, 0x8003472C, "I_VramViewerDraw",                       ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8003472C, 0x80034A60, "I_NetSetup",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80034A60, 0x80034CB8, "I_NetUpdate",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80034CB8, 0x80034D14, "I_NetHandshake",                         ProgElemType::FUNCTION },
+    { 0x80034D14, 0x80034E58, "I_NetSendRecv",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80034E58, 0x80034EA4, "I_SubmitGpuCmds",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80034EA4, 0x80034F04, "",                                       ProgElemType::FUNCTION },
-    { 0x80034F04, 0x80034F54, "",                                       ProgElemType::FUNCTION },
+    { 0x80034EA4, 0x80034F04, "I_LocalButtonsToNet",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80034F04, 0x80034F54, "I_NetButtonsToLocal",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80034F54, 0x80034FA0, "START_Legals",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80034FA0, 0x80034FCC, "STOP_Legals",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80034FCC, 0x8003504C, "TIC_Legals",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -682,8 +682,8 @@ static const ProgElem ELEMS[] = {
     { 0x80038688, 0x80038B0C, "ST_Ticker",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x80038B0C, 0x8003A3C8, "ST_Drawer",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003A3C8, 0x8003A9D4, "I_DrawNumber",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8003A9D4, 0x8003AD04, "",                                       ProgElemType::FUNCTION },
-    { 0x8003AD04, 0x8003B0F0, "",                                       ProgElemType::FUNCTION },
+    { 0x8003A9D4, 0x8003AD04, "I_DrawStringSmall",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8003AD04, 0x8003B0F0, "I_DrawPausedOverlay",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8003B0F0, 0x8003B238, "P_UpdatePalette",                        ProgElemType::FUNCTION },
     { 0x8003B238, 0x8003B324, "",                                       ProgElemType::FUNCTION },
     { 0x8003B324, 0x8003BAC0, "I_DrawString",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
@@ -2855,6 +2855,8 @@ static const ProgElem ELEMS[] = {
     { 0x800775E4, 0x800775E8, "GPU_REG_GP1",                            ProgElemType::PTR32 },
     { 0x800775E8, 0x800775EC, "gpDemoBuffer",                           ProgElemType::PTR32 },
     { 0x800775EC, 0x800775F0, "gpDemo_p",                               ProgElemType::PTR32 },
+    { 0x800775F0, 0x800775F4, "gOptionsSndVol",                         ProgElemType::UINT32 },
+    { 0x800775F4, 0x800775F8, "gOptionsMusVol",                         ProgElemType::UINT32 },
     { 0x800775F8, 0x800775FC, "gCdMusicVol",                            ProgElemType::UINT32 },
     { 0x800775FC, 0x80077600, "gStartSkill",                            ProgElemType::UINT32 },
     { 0x80077600, 0x80077604, "gStartMapOrEpisode",                     ProgElemType::UINT32 },
@@ -3187,8 +3189,10 @@ static const ProgElem ELEMS[] = {
     { 0x80077E48, 0x80077E58, "gLIBGTE__patch_gte_miniStack",           ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80077E58, 0x80077E5C, "gProgramReturnAddr",                     ProgElemType::UINT32 },
     { 0x80077E94, 0x80077E98, "gBombDamage",                            ProgElemType::INT32 },
+    { 0x80077E98, 0x80077E9C, "gTotalVBlanks",                          ProgElemType::UINT32 },
     { 0x80077EA0, 0x80077EA4, "gpSides",                                ProgElemType::PTR32 },
     { 0x80077EA4, 0x80077EA8, "gpBspNodes",                             ProgElemType::PTR32 },
+    { 0x80077EA8, 0x80077EB0, "gNetInputPacket",                        ProgElemType::ARRAY, ProgElemType::UINT8, 0 },
     { 0x80077EB0, 0x80077EB4, "gpLines",                                ProgElemType::PTR32 },
     { 0x80077EB4, 0x80077EB8, "gGameAction",                            ProgElemType::UINT32 },
     { 0x80077EB8, 0x80077EBC, "gBlockmapHeight",                        ProgElemType::UINT32 },
@@ -3196,6 +3200,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077EC0, 0x80077EC4, "gbGamePaused",                           ProgElemType::UINT32 },
     { 0x80077EC4, 0x80077EC8, "gpSprites",                              ProgElemType::PTR32 },
     { 0x80077EC8, 0x80077ECC, "gbOld_isLine",                           ProgElemType::UINT32 },
+    { 0x80077ED4, 0x80077ED8, "gVramViewerTexPage",                     ProgElemType::UINT32 },
     { 0x80077ED8, 0x80077EDC, "gpSlideThing",                           ProgElemType::PTR32 },
     { 0x80077EDC, 0x80077EE0, "gppBlockLinks",                          ProgElemType::PTR32 },
     { 0x80077EE0, 0x80077EE4, "gViewX",                                 ProgElemType::INT32 },
@@ -3207,6 +3212,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077F00, 0x80077F04, "gTestY",                                 ProgElemType::INT32 },
     { 0x80077F04, 0x80077F08, "gTmCeilingZ",                            ProgElemType::INT32 },
     { 0x80077F0C, 0x80077F10, "gMenuTimeoutStartTicCon",                ProgElemType::UINT32 },
+    { 0x80077F14, 0x80077F18, "gNetOutputFd",                           ProgElemType::UINT32 },
     { 0x80077F18, 0x80077F1C, "gpMapWadFileData",                       ProgElemType::PTR32 },
     { 0x80077F20, 0x80077F24, "gTotalKills",                            ProgElemType::UINT32 },
     { 0x80077F28, 0x80077F2C, "gpTestSubSec",                           ProgElemType::PTR32 },
@@ -3236,7 +3242,9 @@ static const ProgElem ELEMS[] = {
     { 0x80077FA0, 0x80077FA4, "gbCrushChange",                          ProgElemType::UINT32 },
     { 0x80077FA4, 0x80077FA8, "gPrevGameTic",                           ProgElemType::UINT32 },
     { 0x80077FAC, 0x80077FB0, "gAimMidSlope",                           ProgElemType::INT32 },
+    { 0x80077FB0, 0x80077FB8, "gNetOutputPacket",                       ProgElemType::ARRAY, ProgElemType::UINT8, 0 },
     { 0x80077FB8, 0x80077FBC, "gCurMObjIdx",                            ProgElemType::UINT32 },
+    { 0x80077FBC, 0x80077FC4, "gPlayersElapsedVBlanks",                 ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80077FC4, 0x80077FC8, "gShootX",                                ProgElemType::INT32 },
     { 0x80077FC8, 0x80077FCC, "MAYBE_gpButtonBindings_Player1",         ProgElemType::PTR32 },
     { 0x80077FCC, 0x80077FD0, "MAYBE_gpButtonBindings_Player2",         ProgElemType::PTR32 },
@@ -3297,6 +3305,7 @@ static const ProgElem ELEMS[] = {
     { 0x80078100, 0x80078104, "gT2x",                                   ProgElemType::INT32 },
     { 0x80078104, 0x80078108, "gTestCeilingz",                          ProgElemType::INT32 },
     { 0x80078108, 0x8007810C, "gT2y",                                   ProgElemType::INT32 },
+    { 0x80078114, 0x80078118, "gLastTotalVBlanks",                      ProgElemType::UINT32 },
     { 0x8007811C, 0x80078120, "gNumMapWadLumps",                        ProgElemType::UINT32 },
     { 0x80078120, 0x80078124, "gTestDropoffZ",                          ProgElemType::INT32 },
     { 0x80078128, 0x8007812C, "gpTextures",                             ProgElemType::PTR32 },
@@ -3324,6 +3333,7 @@ static const ProgElem ELEMS[] = {
     { 0x800781B0, 0x800781B4, "gBlockNvy",                              ProgElemType::INT32 },
     { 0x800781B4, 0x800781B8, "gNumSides",                              ProgElemType::UINT32 },
     { 0x800781B8, 0x800781BC, "gNumBspNodes",                           ProgElemType::UINT32 },
+    { 0x800781BC, 0x800781C0, "gElapsedVBlanks",                        ProgElemType::UINT32 },
     { 0x800781C0, 0x800781C4, "gNumFlatLumps",                          ProgElemType::UINT32 },    
     { 0x800781C4, 0x800781C8, "gpLumpInfo",                             ProgElemType::PTR32 },
     { 0x800781C8, 0x800781CC, "gNumLines",                              ProgElemType::UINT32 },
@@ -3348,6 +3358,7 @@ static const ProgElem ELEMS[] = {
     { 0x80078214, 0x8007821C, "gPlayerOldPadButtons",                   ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80078224, 0x80078228, "gNumSubsectors",                         ProgElemType::UINT32 },
     { 0x80078228, 0x8007822C, "gBlockFrac",                             ProgElemType::INT32 },
+    { 0x80078234, 0x80078238, "gNetInputFd",                            ProgElemType::UINT32 },
     { 0x80078238, 0x8007823C, "gpSegs",                                 ProgElemType::PTR32 },
     { 0x8007823C, 0x80078240, "gpLumpCache",                            ProgElemType::PTR32 },
     { 0x80078240, 0x80078244, "gOldX",                                  ProgElemType::INT32 },
@@ -3359,10 +3370,12 @@ static const ProgElem ELEMS[] = {
     { 0x80078258, 0x8007825C, "gGameSkill",                             ProgElemType::UINT32 },
     { 0x80078260, 0x80078264, "gpOldValue",                             ProgElemType::PTR32 },
     { 0x80078264, 0x80078268, "gbRenderViewFullbright",                 ProgElemType::UINT32 },
+    { 0x80078270, 0x80078274, "gMapNumToCheatWarpTo",                   ProgElemType::UINT32 },
     { 0x80078274, 0x80078278, "gpCloseLine",                            ProgElemType::PTR32 },
     { 0x8007827C, 0x80078280, "gOpenRange",                             ProgElemType::INT32 },
     { 0x80078284, 0x80078288, "gBlockmapWidth",                         ProgElemType::UINT32 },
     { 0x80078294, 0x80078298, "gViewAngle",                             ProgElemType::UINT32 },
+    { 0x8007829C, 0x800782A0, "gLastTgtGameTicCount",                   ProgElemType::UINT32 },
     { 0x800782A8, 0x800782AC, "gCloseDist",                             ProgElemType::INT32 },
     { 0x800782B4, 0x800782B8, "gTestFlags",                             ProgElemType::UINT32 },
     { 0x800782B8, 0x800782BC, "gFirstFlatLumpNum",                      ProgElemType::UINT32 },
