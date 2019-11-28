@@ -48,6 +48,12 @@ CD Map array:
 VRAM viewer:
     - Adding the flag 0x10 to player cheats flags @ 800A88AC will activate the VRAM viewer on the pause screen.
 
+Texture cache:
+    - The first 5 pages are reserved, 4 for the two 16-bit framebuffers, 1 for UI/text sprites.
+    - 11 pages can be used by maps, textures, flats and sprites.
+    - A certain number of those appear to be 'locked' and not unloadable during playthrough.
+    - 256 cache entries are allowed for each page.
+
 ---------------------------------------------------------------------------------------------------
 Data structures
 ---------------------------------------------------------------------------------------------------
@@ -209,15 +215,14 @@ I_AddLumpToTexCache struct (32 bytes):
         002     int16_t     offsetY;
         004     uint16_t    width;
         006     uint16_t    height;
-        008     ???         ???
-        008     ???         ???
+        008     uint8_t     texPageCoordX;
+        009     uint8_t     texPageCoordY;
         00A     uint16_t    texPageId;
         00C     uint16_t    widthIn16Blocks;
         00E     uint16_t    heightIn16Blocks;
         010     uint16_t    lumpNum;
-        012     ???         ???
-        014     ???         ???
-        018     ???         ???
+        012     uint16_t    __padding ?
+        014     texinfo_t** pTexCacheEntry;
         01C     uint32_t    uploadFrameNum;
     };
 
