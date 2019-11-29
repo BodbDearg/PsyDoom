@@ -92,7 +92,7 @@ stbar_t (32 bytes):
     struct stbar_t {
         000     spclface_e  specialFace;
         004     u32         tryopen[NUMCARDS];  // (NUMCARDS=6)
-        01C     u32         gotgibbed;        
+        01C     u32         gotgibbed;
     };
 
 mobjinfo_t (88 bytes):
