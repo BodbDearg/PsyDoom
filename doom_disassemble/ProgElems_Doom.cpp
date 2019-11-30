@@ -3324,6 +3324,7 @@ static const ProgElem ELEMS[] = {
     { 0x80078100, 0x80078104, "gT2x",                                   ProgElemType::INT32 },
     { 0x80078104, 0x80078108, "gTestCeilingz",                          ProgElemType::INT32 },
     { 0x80078108, 0x8007810C, "gT2y",                                   ProgElemType::INT32 },
+    { 0x8007810C, 0x80078110, "gpLeafEdges",                            ProgElemType::PTR32 },
     { 0x80078114, 0x80078118, "gLastTotalVBlanks",                      ProgElemType::UINT32 },
     { 0x8007811C, 0x80078120, "gNumMapWadLumps",                        ProgElemType::UINT32 },
     { 0x80078120, 0x80078124, "gTestDropoffZ",                          ProgElemType::INT32 },
