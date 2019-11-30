@@ -202,6 +202,16 @@ subsector_t (16 bytes):
         00C     ???             ???
     };
 
+side_t (24 bytes):
+    struct side_t {
+        000     fixed_t     textureoffset;
+        004     fixed_t     rowoffset;
+        008     int32_t     toptexture;
+        00C     int32_t     bottomtexture;
+        010     int32_t     midtexture;
+        014     sector_t*   sector;
+    };
+
 lumpinfo_t (16 bytes):
     struct lumpinfo_t {
         000     uint32_t    filepos;
@@ -209,8 +219,8 @@ lumpinfo_t (16 bytes):
         008     char        name[8];
     };
 
-I_AddLumpToTexCache struct (32 bytes):
-    struct texinfo_t {
+texture_t (32 bytes):
+    struct texture_t {
         000     int16_t     offsetX;
         002     int16_t     offsetY;
         004     uint16_t    width;
