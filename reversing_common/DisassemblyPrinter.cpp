@@ -209,7 +209,7 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
         case ProgElemType::INT32:       out << "i32";       break;
         case ProgElemType::UINT32:      out << "u32";       break;
         case ProgElemType::INT16:       out << "i16";       break;
-        case ProgElemType::UINT16:      out << "u32";       break;
+        case ProgElemType::UINT16:      out << "u16";       break;
         case ProgElemType::INT8:        out << "i8";        break;
         case ProgElemType::UINT8:       out << "u8";        break;
         case ProgElemType::BOOL8:       out << "bool8";     break;
