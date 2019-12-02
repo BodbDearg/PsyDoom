@@ -1,0 +1,98 @@
+version: '{branch}-{build}'
+
+clone_depth: 1
+
+environment:
+  PREMAKE_VERSION: 5.0.0-alpha14
+  SDL_VERSION: 2.0.10
+  matrix:
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
+    TOOLSET: vs2019
+    platform: x64
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
+    TOOLSET: vs2019
+    platform: Win32
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    TOOLSET: vs2017
+    platform: x64
+    SKIP_DEPLOY: skip
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    TOOLSET: vs2017
+    platform: Win32
+    SKIP_DEPLOY: skip
+
+# TODO: Move to PowerShell script
+before_build:
+  - git submodule update --init --recursive
+
+  # premake
+  - ps: Start-FileDownload "https://github.com/premake/premake-core/releases/download/v$($env:PREMAKE_VERSION)/premake-$($env:PREMAKE_VERSION)-windows.zip" "premake.zip"
+  - 7z x premake.zip
+
+  # SDL
+  - cd externals
+  - rmdir /Q /S SDL2
+  - ps: Start-FileDownload "https://www.libsdl.org/release/SDL2-devel-$($env:SDL_VERSION)-VC.zip" "SDL.zip"
+  - 7z x SDL.zip 
+  - ren SDL2-%SDL_VERSION% SDL2
+  - cd ..
+  
+  # generate solution
+  - premake5.exe %TOOLSET%
+
+configuration:
+  - release
+
+build:
+  project: avocado.sln
+
+# TODO: Move to PowerShell script
+after_build:
+  - ps: if ($env:platform -eq "Win32") { $env:OS = "windows32" } 
+  - ps: if ($env:platform -eq "x64") { $env:OS = "windows64" } 
+  - ps: $env:DATE=date +%Y%m%d
+  - ps: $env:COMMIT=git rev-parse --short=7 HEAD
+  - ps: $env:ARTIFACT="avocado-$($env:OS)-$($env:DATE)-$($env:COMMIT).zip"
+
+  - mkdir artifact
+
+  # Premake renames x86 to Win32 - undo that
+  - ps: if ($env:platform -eq "Win32") { $env:platform = "x86" } 
+
+  # copy avocado.exe, SDL2.dll and data directory
+  - ps: $env:TARGETDIR = "build\$($env:CONFIGURATION)"
+  - ps: if ($env:platform -ne "x86") { $env:TARGETDIR = $env:TARGETDIR + "_" + $env:platform }
+  - ps: Copy-Item $env:TARGETDIR\avocado.exe artifact\avocado.exe
+  # - ps: Copy-Item $env:TARGETDIR\avocado.pdb artifact\avocado.pdb
+  - ps: Copy-Item externals\SDL2\lib\$env:platform\SDL2.dll artifact\SDL2.dll
+  - ps: Copy-Item data artifact\ -recurse
+
+  # remove .gitignore
+  - ps: Get-ChildItem -Path artifact\data -Include *.gitignore -Recurse | foreach { $_.Delete()}
+
+  # make zip archive
+  - 7z a avocado.zip %APPVEYOR_BUILD_FOLDER%\artifact\.
+
+  - mkdir upload
+  - ps: Copy-Item avocado.zip -Destination upload/$env:ARTIFACT
+
+test_script:
+  - .\%TARGETDIR%\avocado_test.exe --success -r junit > test-result.xml || ver > nul
+
+  - ps: Start-FileDownload 'https://gist.github.com/JaCzekanski/d7a6e06295729a3f81bd9bd488e9d37d/raw/d5bc41278fd198ef5e4afceb35e0587aca7f2f60/gte_valid_0xc0ffee_50.log'
+  - .\%TARGETDIR%\avocado_autotest.exe gte_valid_0xc0ffee_50.log || ver > nul
+
+after_test:
+  - ps: (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\test-result.xml))
+
+on_success:
+  - ps: ./.appveyor/notify-discord.ps1 success $env:WEBHOOK_URL
+on_failure:
+  - ps: ./.appveyor/notify-discord.ps1 failure $env:WEBHOOK_URL
+
+artifacts:
+  - path: avocado.zip
+    name: avocado
+
+deploy_script:
+  - bash ./.travis/deploy.sh %DEPLOY_KEY% upload/
