@@ -1,4 +1,6 @@
+Note: I have stripped out some stuff which is not needed to use this library.
+The full version is available at the link below.
+
 Commit:
     https://github.com/fmtlib/fmt/tree/7111a1eb9f8344d5a72612542fe513af59273246
-
-(Dec 1, 2019, 4:50 PM PST)
+    (Dec 1, 2019, 4:50 PM PST)
