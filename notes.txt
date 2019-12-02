@@ -198,7 +198,8 @@ subsector_t (16 bytes):
         000     sector_t*       sector;
         004     uint16_t        numSegs;
         006     uint16_t        firstSeg;
-        008     ???             ???
+        008     uint16_t        numLeafEdges;
+        00A     uint16_t        firstLeafEdge;
         00C     ???             ???
     };
 

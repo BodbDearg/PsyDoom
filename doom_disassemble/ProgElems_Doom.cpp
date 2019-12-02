@@ -489,7 +489,7 @@ static const ProgElem ELEMS[] = {
     { 0x80022650, 0x800227CC, "P_LoadSideDefs",                         ProgElemType::FUNCTION },
     { 0x800227CC, 0x800228CC, "P_LoadBlockMap",                         ProgElemType::FUNCTION },
     { 0x800228CC, 0x80022920, "P_LoadMapLump",                          ProgElemType::FUNCTION },
-    { 0x80022920, 0x80022B58, "P_LoadLeafs",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x80022920, 0x80022B58, "P_LoadLeafs",                            ProgElemType::FUNCTION },
     { 0x80022B58, 0x80022E68, "P_GroupLines",                           ProgElemType::FUNCTION },
     { 0x80022E68, 0x800230D4, "P_InitMapTextures",                      ProgElemType::FUNCTION },
     { 0x800230D4, 0x80023700, "P_SetupLevel",                           ProgElemType::FUNCTION },
@@ -567,8 +567,8 @@ static const ProgElem ELEMS[] = {
     { 0x8002A6A0, 0x8002A7F8, "P_DeathThink",                           ProgElemType::FUNCTION },
     { 0x8002A7F8, 0x8002ACE8, "P_PlayerThink",                          ProgElemType::FUNCTION },
     { 0x8002ACE8, 0x8002AD3C, "R_BSP",                                  ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8002AD3C, 0x8002AE74, "R_RenderBSPNode",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8002AE74, 0x8002B2D8, "",                                       ProgElemType::FUNCTION },
+    { 0x8002AD3C, 0x8002AE74, "R_RenderBSPNode",                        ProgElemType::FUNCTION },
+    { 0x8002AE74, 0x8002B2D8, "R_CheckBBox",                            ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8002B2D8, 0x8002B3B8, "R_Subsector",                            ProgElemType::FUNCTION },
     { 0x8002B3B8, 0x8002B9A8, "R_AddLine",                              ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8002B9A8, 0x8002B9E0, "R_InitData",                             ProgElemType::FUNCTION },
@@ -579,24 +579,24 @@ static const ProgElem ELEMS[] = {
     { 0x8002BE68, 0x8002BF2C, "R_FlatNumForName",                       ProgElemType::FUNCTION },
     { 0x8002BF2C, 0x8002C07C, "R_InitPalette",                          ProgElemType::FUNCTION },
     { 0x8002C07C, 0x8002C6F8, "R_DrawSky",                              ProgElemType::FUNCTION },
-    { 0x8002C6F8, 0x8002CA8C, "",                                       ProgElemType::FUNCTION },
-    { 0x8002CA8C, 0x8002CD68, "FrontZClip",                             ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8002CD68, 0x8002CE68, "",                                       ProgElemType::FUNCTION },
-    { 0x8002CE68, 0x8002D10C, "LeftEdgeClip",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8002D10C, 0x8002D3AC, "RightEdgeClip",                          ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8002D3AC, 0x8002D684, "",                                       ProgElemType::FUNCTION },
-    { 0x8002D684, 0x8002E2A8, "",                                       ProgElemType::FUNCTION },
-    { 0x8002E2A8, 0x8002E714, "",                                       ProgElemType::FUNCTION },
-    { 0x8002E714, 0x8002F330, "",                                       ProgElemType::FUNCTION },
-    { 0x8002F330, 0x8002FE34, "",                                       ProgElemType::FUNCTION },
-    { 0x8002FE34, 0x800305B0, "",                                       ProgElemType::FUNCTION },
+    { 0x8002C6F8, 0x8002CA8C, "R_DrawSubsector",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002CA8C, 0x8002CD68, "R_FrontZClip",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002CD68, 0x8002CE68, "R_CheckEdgeVisible",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002CE68, 0x8002D10C, "R_LeftEdgeClip",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002D10C, 0x8002D3AC, "R_RightEdgeClip",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002D3AC, 0x8002D684, "R_DrawSubsectorSeg",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002D684, 0x8002E2A8, "R_DrawWallColumns",                      ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002E2A8, 0x8002E714, "R_DrawSubsectorFlat",                    ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002E714, 0x8002F330, "R_DrawFlatSpans",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002F330, 0x8002FE34, "R_DrawSubsectorSprites",                 ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002FE34, 0x800305B0, "R_DrawWeapon",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x800305B0, 0x80030634, "R_Init",                                 ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80030634, 0x80030B58, "R_RenderPlayerView",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x80030B58, 0x80030BA0, "",                                       ProgElemType::FUNCTION },
+    { 0x80030634, 0x80030B58, "R_RenderPlayerView",                     ProgElemType::FUNCTION },
+    { 0x80030B58, 0x80030BA0, "R_SlopeDiv",                             ProgElemType::FUNCTION },
     { 0x80030BA0, 0x80030EB4, "R_PointToAngle2",                        ProgElemType::FUNCTION },
-    { 0x80030EB4, 0x80030F5C, "",                                       ProgElemType::FUNCTION },
+    { 0x80030EB4, 0x80030F5C, "R_PointOnSide",                          ProgElemType::FUNCTION },
     { 0x80030F5C, 0x80031088, "R_PointInSubsector",                     ProgElemType::FUNCTION },
-    { 0x80031088, 0x800310C8, "",                                       ProgElemType::FUNCTION },
+    { 0x80031088, 0x800310C8, "D_mystrlen",                             ProgElemType::FUNCTION },
     { 0x800310C8, 0x80031394, "D_vsprintf",                             ProgElemType::FUNCTION },
     { 0x80031394, 0x800314A4, "W_Init",                                 ProgElemType::FUNCTION },
     { 0x800314A4, 0x80031558, "W_CheckNumForName",                      ProgElemType::FUNCTION },
@@ -3299,6 +3299,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077E38, 0x80077E48, "gLIBC2_putchar_UNKNOWN_VARS",            ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80077E48, 0x80077E58, "gLIBGTE__patch_gte_miniStack",           ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80077E58, 0x80077E5C, "gProgramReturnAddr",                     ProgElemType::UINT32 },
+    { 0x80077E8C, 0x80077E90, "gCurLightValR",                          ProgElemType::UINT32 },
     { 0x80077E94, 0x80077E98, "gBombDamage",                            ProgElemType::INT32 },
     { 0x80077E98, 0x80077E9C, "gTotalVBlanks",                          ProgElemType::UINT32 },
     { 0x80077E9C, 0x80077EA0, "gMapBlueKeyType",                        ProgElemType::UINT32 },
@@ -3344,8 +3345,10 @@ static const ProgElem ELEMS[] = {
     { 0x80077F54, 0x80077F58, "gNumSectors",                            ProgElemType::UINT32 },
     { 0x80077F5C, 0x80077F60, "gNumSpriteLumps",                        ProgElemType::UINT32 },
     { 0x80077F60, 0x80077F64, "gpFlatTranslation",                      ProgElemType::PTR32 },
+    { 0x80077F64, 0x80077F68, "gTotalNumLeafEdges",                     ProgElemType::UINT32 },
     { 0x80077F68, 0x80077F6C, "gTestFloorZ",                            ProgElemType::INT32 },
     { 0x80077F6C, 0x80077F70, "gpTextureTranslation",                   ProgElemType::PTR32 },
+    { 0x80077F70, 0x80077F74, "gCurLightValB",                          ProgElemType::UINT32 },
     { 0x80077F74, 0x80077F78, "gpTexCacheEntries",                      ProgElemType::PTR32 },
     { 0x80077F7C, 0x80077F80, "g3dViewPaletteClutId",                   ProgElemType::UINT32 },
     { 0x80077F80, 0x80077F84, "gAttackAngle",                           ProgElemType::UINT32 },
@@ -3386,6 +3389,7 @@ static const ProgElem ELEMS[] = {
     { 0x80078028, 0x8007802C, "gTexCacheFillPage",                      ProgElemType::UINT32 },
     { 0x8007802C, 0x80078030, "gInvalidPasswordFlashTicsLeft",          ProgElemType::UINT32 },
     { 0x80078030, 0x80078034, "gDebugDrawStringXPos",                   ProgElemType::INT32 },
+    { 0x80078034, 0x80078038, "gCurLightValG",                          ProgElemType::UINT32 },
     { 0x80078038, 0x8007803C, "gShootX2",                               ProgElemType::INT32 },
     { 0x8007803C, 0x80078040, "gDebugDrawStringYPos",                   ProgElemType::INT32 },
     { 0x80078040, 0x80078044, "gSioWriteDoneEvent",                     ProgElemType::UINT32 },
@@ -3393,6 +3397,7 @@ static const ProgElem ELEMS[] = {
     { 0x80078048, 0x8007804C, "gGameMap",                               ProgElemType::UINT32 },
     { 0x8007804C, 0x80078050, "gGameTic",                               ProgElemType::UINT32 },
     { 0x80078050, 0x80078054, "gpSkyTexture",                           ProgElemType::PTR32 },
+    { 0x80078054, 0x80078058, "gpCurLightsLumpEntry",                   ProgElemType::PTR32 },
     { 0x80078058, 0x8007805C, "gbStatusBarPlayerGotGibbed",             ProgElemType::UINT32 },
     { 0x8007805C, 0x80078060, "gNetGame",                               ProgElemType::UINT32 },
     { 0x80078060, 0x80078064, "gpDeathmatchP",                          ProgElemType::PTR32 },
