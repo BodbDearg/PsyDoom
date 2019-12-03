@@ -1,6 +1,0 @@
-Note: I have stripped out some stuff which is not needed to use this library.
-The full version is available at the link below.
-
-Commit:
-    https://github.com/stbrumme/hash-library/tree/a8a88f8acbdd97b854b6ac61e53177dc7870f32f
-    (Aug 9, 2018, 8:24 AM PDT)
