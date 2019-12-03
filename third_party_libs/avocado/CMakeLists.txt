@@ -108,8 +108,8 @@ set(SOURCE_FILES
     "${SRC_DIR}/disc/disc.cpp"
     "${SRC_DIR}/disc/disc.h"
     "${SRC_DIR}/disc/empty.h"
-    "${SRC_DIR}/disc/format/chd_format.cpp"
-    "${SRC_DIR}/disc/format/chd_format.h"
+    # "${SRC_DIR}/disc/format/chd_format.cpp"
+    # "${SRC_DIR}/disc/format/chd_format.h"
     "${SRC_DIR}/disc/format/cue.cpp"
     "${SRC_DIR}/disc/format/cue.h"
     "${SRC_DIR}/disc/format/cue_parser.cpp"
@@ -215,8 +215,8 @@ set(SOURCE_FILES
     "${SRC_DIR}/utils/logic.h"
     "${SRC_DIR}/utils/macros.h"
     "${SRC_DIR}/utils/math.h"
-    "${SRC_DIR}/utils/psf.cpp"
-    "${SRC_DIR}/utils/psf.h"
+    # "${SRC_DIR}/utils/psf.cpp"
+    # "${SRC_DIR}/utils/psf.h"
     "${SRC_DIR}/utils/psx_exe.h"
     "${SRC_DIR}/utils/string.cpp"
     "${SRC_DIR}/utils/string.h"
@@ -228,6 +228,7 @@ set(OTHER_FILES
 add_library(${AVOCADO_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 target_include_directories(${AVOCADO_TGT_NAME} PUBLIC ${INCLUDE_PATHS})
+target_compile_definitions(${AVOCADO_TGT_NAME} PUBLIC DOOM_AVOCADO_MODS=1)
 
 target_link_libraries(${AVOCADO_TGT_NAME}
     ${CEREAL_TGT_NAME}

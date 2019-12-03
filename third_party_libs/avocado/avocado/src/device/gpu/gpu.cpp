@@ -8,8 +8,11 @@
 #include "utils/logic.h"
 #include "utils/macros.h"
 
-// For vram dump
-#include <stb_image_write.h>
+// DC: disabling for this project to simplify dependencies
+#if (!DOOM_AVOCADO_MODS)
+    // For vram dump
+    #include <stb_image_write.h>
+#endif
 
 namespace gpu {
 GPU::GPU(System* sys) : sys(sys) {
@@ -794,16 +797,21 @@ bool GPU::insideDrawingArea(int x, int y) const {
 bool GPU::isNtsc() { return forceNtsc || gp1_08.videoMode == GP1_08::VideoMode::ntsc; }
 
 void GPU::dumpVram() {
-    const char* dumpName = "vram.png";
-    std::vector<uint8_t> vram(VRAM_WIDTH * VRAM_HEIGHT * 3);
+    // DC: disabling for this project to simplify dependencies
+    #if (DOOM_AVOCADO_MODS)        
+        std::abort();   // Not implemented!
+    #else
+        const char* dumpName = "vram.png";
+        std::vector<uint8_t> vram(VRAM_WIDTH * VRAM_HEIGHT * 3);
 
-    for (size_t i = 0; i < this->vram.size(); i++) {
-        PSXColor c(this->vram[i]);
-        vram[i * 3 + 0] = c.r << 3;
-        vram[i * 3 + 1] = c.g << 3;
-        vram[i * 3 + 2] = c.b << 3;
-    }
+        for (size_t i = 0; i < this->vram.size(); i++) {
+            PSXColor c(this->vram[i]);
+            vram[i * 3 + 0] = c.r << 3;
+            vram[i * 3 + 1] = c.g << 3;
+            vram[i * 3 + 2] = c.b << 3;
+        }
 
-    stbi_write_png(dumpName, VRAM_WIDTH, VRAM_HEIGHT, 3, vram.data(), VRAM_WIDTH * 3);
+        stbi_write_png(dumpName, VRAM_WIDTH, VRAM_HEIGHT, 3, vram.data(), VRAM_WIDTH * 3);
+    #endif
 }
 }  // namespace gpu

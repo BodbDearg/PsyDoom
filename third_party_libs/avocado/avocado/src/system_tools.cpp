@@ -29,6 +29,9 @@ void loadFile(std::unique_ptr<System>& sys, const std::string& path) {
     std::string filenameExt = getFilenameExt(path);
     transform(filenameExt.begin(), filenameExt.end(), filenameExt.begin(), tolower);
 
+// DC: Don't need this for this project.
+// Carries with it lots and lots of messy dependencies...
+#if (!DOOM_AVOCADO_MODS)
     if (ext == "psf" || ext == "minipsf") {
         bootstrap(sys);
         if (loadPsf(sys.get(), path)) {
@@ -39,6 +42,7 @@ void loadFile(std::unique_ptr<System>& sys, const std::string& path) {
         sys->state = System::State::run;
         return;
     }
+#endif
 
     if (ext == "exe" || ext == "psexe") {
         bool isPaused = sys->state == System::State::pause;
