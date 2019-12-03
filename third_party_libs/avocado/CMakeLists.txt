@@ -231,6 +231,7 @@ target_include_directories(${AVOCADO_TGT_NAME} PUBLIC ${INCLUDE_PATHS})
 
 target_link_libraries(${AVOCADO_TGT_NAME}
     ${CEREAL_TGT_NAME}
+    ${EVENT_BUS_TGT_NAME}
     ${FMT_TGT_NAME}
     ${GLM_TGT_NAME}
     ${MAGIC_ENUM_TGT_NAME}
