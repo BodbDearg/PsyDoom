@@ -230,6 +230,7 @@ setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 target_include_directories(${AVOCADO_TGT_NAME} PUBLIC ${INCLUDE_PATHS})
 
 target_link_libraries(${AVOCADO_TGT_NAME}
+    ${CEREAL_TGT_NAME}
     ${FMT_TGT_NAME}
     ${MAGIC_ENUM_TGT_NAME}
     ${NLOHMANN_JSON_TGT_NAME}
