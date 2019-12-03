@@ -51,6 +51,14 @@ struct CpuInstruction {
     // Returns '0xFF' if the instruction does not output to a general purpose register.
     uint8_t getDestGprIdx() const noexcept;
 
+    // Get the index of the 1st input general purpose register (GPR) for the instruction, from 0-31.
+    // Returns '0xFF' if the instruction does not have at least 1 input general purpose register.
+    uint8_t getInputGprIdx1() const noexcept;
+
+    // Get the index of the 2nd input general purpose register (GPR) for the instruction, from 0-31.
+    // Returns '0xFF' if the instruction does not have at least 2 input general purpose registers.
+    uint8_t getInputGprIdx2() const noexcept;
+
     // Tell if this instruction is effectively a NOP.
     // Certain instructions like 'SLL r0, r0, 0' (encoded as binary '0') are used as NOP type instructions.
     // NOPs are used in some places in the code to get around issues with branch and load delay slots by delaying the CPU.
@@ -73,7 +81,6 @@ struct CpuInstruction {
         std::ostream& out
     ) const noexcept;
 
-    
     inline int compare(const CpuInstruction& other) const noexcept {
         if (opcode != other.opcode) {
             return (opcode < other.opcode) ? -1 : +1;

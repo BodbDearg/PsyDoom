@@ -883,8 +883,122 @@ uint8_t CpuInstruction::getDestGprIdx() const noexcept {
         default: break;
     }
     
-    // No destination GPR for this instruction
-    return 0xFFu;
+    return 0xFFu;   // No destination GPR for this instruction
+}
+
+uint8_t CpuInstruction::getInputGprIdx1() const noexcept {
+    switch (opcode) {
+        case CpuOpcode::ADD:        return regS;
+        case CpuOpcode::ADDI:       return regS;
+        case CpuOpcode::ADDIU:      return regS;
+        case CpuOpcode::ADDU:       return regS;
+        case CpuOpcode::AND:        return regS;
+        case CpuOpcode::ANDI:       return regS;
+        case CpuOpcode::BEQ:        return regS;
+        case CpuOpcode::BGEZ:       return regS;
+        case CpuOpcode::BGEZAL:     return regS;
+        case CpuOpcode::BGTZ:       return regS;
+        case CpuOpcode::BLEZ:       return regS;
+        case CpuOpcode::BLTZ:       return regS;
+        case CpuOpcode::BLTZAL:     return regS;
+        case CpuOpcode::BNE:        return regS;
+        case CpuOpcode::CTC2:       return regT;
+        case CpuOpcode::DIV:        return regS;
+        case CpuOpcode::DIVU:       return regS;
+        case CpuOpcode::JALR:       return regS;
+        case CpuOpcode::JR:         return regS;
+        case CpuOpcode::LB:         return regS;
+        case CpuOpcode::LBU:        return regS;
+        case CpuOpcode::LH:         return regS;
+        case CpuOpcode::LHU:        return regS;
+        case CpuOpcode::LW:         return regS;
+        case CpuOpcode::LWC2:       return regS;
+        case CpuOpcode::LWL:        return regS;
+        case CpuOpcode::LWR:        return regS;
+        case CpuOpcode::MTC0:       return regT;
+        case CpuOpcode::MTC2:       return regT;
+        case CpuOpcode::MTHI:       return regS;
+        case CpuOpcode::MTLO:       return regS;
+        case CpuOpcode::MULT:       return regS;
+        case CpuOpcode::MULTU:      return regS;
+        case CpuOpcode::NOR:        return regS;
+        case CpuOpcode::OR:         return regS;
+        case CpuOpcode::ORI:        return regS;
+        case CpuOpcode::SB:         return regS;
+        case CpuOpcode::SH:         return regS;
+        case CpuOpcode::SLL:        return regT;
+        case CpuOpcode::SLLV:       return regS;
+        case CpuOpcode::SLT:        return regS;
+        case CpuOpcode::SLTI:       return regS;
+        case CpuOpcode::SLTIU:      return regS;
+        case CpuOpcode::SLTU:       return regS;
+        case CpuOpcode::SRA:        return regT;
+        case CpuOpcode::SRAV:       return regS;
+        case CpuOpcode::SRL:        return regT;
+        case CpuOpcode::SRLV:       return regS;
+        case CpuOpcode::SUB:        return regS;
+        case CpuOpcode::SUBU:       return regS;
+        case CpuOpcode::SW:         return regS;
+        case CpuOpcode::SWL:        return regS;
+        case CpuOpcode::SWR:        return regS;
+        case CpuOpcode::TEQ:        return regS;
+        case CpuOpcode::TEQI:       return regS;
+        case CpuOpcode::TGE:        return regS;
+        case CpuOpcode::TGEI:       return regS;
+        case CpuOpcode::TGEIU:      return regS;
+        case CpuOpcode::TGEU:       return regS;
+        case CpuOpcode::TLT:        return regS;
+        case CpuOpcode::TLTI:       return regS;
+        case CpuOpcode::TLTIU:      return regS;
+        case CpuOpcode::TLTU:       return regS;
+        case CpuOpcode::TNE:        return regS;
+        case CpuOpcode::TNEI:       return regS;
+        case CpuOpcode::XOR:        return regS;
+        case CpuOpcode::XORI:       return regS;
+
+        default: break;
+    }
+    
+    return 0xFFu;   // No 1st input GPR for this instruction
+}
+
+uint8_t CpuInstruction::getInputGprIdx2() const noexcept {
+    switch (opcode) {
+        case CpuOpcode::ADD:        return regT;
+        case CpuOpcode::ADDU:       return regT;
+        case CpuOpcode::AND:        return regT;
+        case CpuOpcode::BEQ:        return regT;
+        case CpuOpcode::BNE:        return regT;
+        case CpuOpcode::DIV:        return regT;
+        case CpuOpcode::DIVU:       return regT;
+        case CpuOpcode::MULT:       return regT;
+        case CpuOpcode::MULTU:      return regT;
+        case CpuOpcode::NOR:        return regT;
+        case CpuOpcode::OR:         return regT;
+        case CpuOpcode::SB:         return regT;
+        case CpuOpcode::SH:         return regT;
+        case CpuOpcode::SLLV:       return regT;
+        case CpuOpcode::SLT:        return regT;
+        case CpuOpcode::SLTU:       return regT;
+        case CpuOpcode::SRAV:       return regT;
+        case CpuOpcode::SRLV:       return regT;
+        case CpuOpcode::SUB:        return regT;
+        case CpuOpcode::SUBU:       return regT;
+        case CpuOpcode::SW:         return regT;
+        case CpuOpcode::SWL:        return regT;
+        case CpuOpcode::SWR:        return regT;
+        case CpuOpcode::TEQ:        return regT;
+        case CpuOpcode::TGE:        return regT;
+        case CpuOpcode::TGEU:       return regT;
+        case CpuOpcode::TLT:        return regT;
+        case CpuOpcode::TLTU:       return regT;
+        case CpuOpcode::TNE:        return regT;
+        case CpuOpcode::XOR:        return regT;
+
+        default: break;
+    }
+    
+    return 0xFFu;   // No 2nd input GPR for this instruction
 }
 
 bool CpuInstruction::isNOP() const noexcept {
