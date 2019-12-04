@@ -13,7 +13,7 @@ static ConstInstructionEvaluator gConstInstructionEvaluator;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Printing C++ literals of various integer types
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void printHexCppInt16Literal(const uint16_t valI16, bool bZeroPad, std::ostream& out) noexcept {
+static void printHexCppInt16Literal(const int16_t valI16, bool bZeroPad, std::ostream& out) noexcept {
     const int64_t valI64 = valI16;
 
     if (valI64 < 0) {
@@ -25,9 +25,14 @@ static void printHexCppInt16Literal(const uint16_t valI16, bool bZeroPad, std::o
     }
 }
 
-static void printHexCppUint16Literal(const uint16_t valI16, bool bZeroPad, std::ostream& out) noexcept {    
+static void printHexCppUint16Literal(const uint16_t valU16, bool bZeroPad, std::ostream& out) noexcept {    
     out << "0x";
-    PrintUtils::printHexU16(valI16, bZeroPad, out);
+    PrintUtils::printHexU16(valU16, bZeroPad, out);
+}
+
+static void printHexCppUint32Literal(const uint32_t valU32, bool bZeroPad, std::ostream& out) noexcept {    
+    out << "0x";
+    PrintUtils::printHexU32(valU32, bZeroPad, out);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -35,40 +40,40 @@ static void printHexCppUint16Literal(const uint16_t valI16, bool bZeroPad, std::
 //------------------------------------------------------------------------------------------------------------------------------------------
 static const char* getGprCppMacroName(const uint8_t gprIdx) noexcept {
     switch (gprIdx) {
-        case CpuGpr::ZERO:  return "VM_ZERO";
-        case CpuGpr::AT:    return "VM_AT";
-        case CpuGpr::V0:    return "VM_V0";
-        case CpuGpr::V1:    return "VM_V1";
-        case CpuGpr::A0:    return "VM_A0";
-        case CpuGpr::A1:    return "VM_A1";
-        case CpuGpr::A2:    return "VM_A2";
-        case CpuGpr::A3:    return "VM_A3";
-        case CpuGpr::T0:    return "VM_T0";
-        case CpuGpr::T1:    return "VM_T1";
-        case CpuGpr::T2:    return "VM_T2";
-        case CpuGpr::T3:    return "VM_T3";
-        case CpuGpr::T4:    return "VM_T4";
-        case CpuGpr::T5:    return "VM_T5";
-        case CpuGpr::T6:    return "VM_T6";
-        case CpuGpr::T7:    return "VM_T7";
-        case CpuGpr::S0:    return "VM_S0";
-        case CpuGpr::S1:    return "VM_S1";
-        case CpuGpr::S2:    return "VM_S2";
-        case CpuGpr::S3:    return "VM_S3";
-        case CpuGpr::S4:    return "VM_S4";
-        case CpuGpr::S5:    return "VM_S5";
-        case CpuGpr::S6:    return "VM_S6";
-        case CpuGpr::S7:    return "VM_S7";
-        case CpuGpr::T8:    return "VM_T8";
-        case CpuGpr::T9:    return "VM_T9";
-        case CpuGpr::K0:    return "VM_K0";
-        case CpuGpr::K1:    return "VM_K1";
-        case CpuGpr::GP:    return "VM_GP";
-        case CpuGpr::SP:    return "VM_SP";
-        case CpuGpr::FP:    return "VM_FP";
-        case CpuGpr::RA:    return "VM_RA";
+        case CpuGpr::ZERO:  return "zero";
+        case CpuGpr::AT:    return "at";
+        case CpuGpr::V0:    return "v0";
+        case CpuGpr::V1:    return "v1";
+        case CpuGpr::A0:    return "a0";
+        case CpuGpr::A1:    return "a1";
+        case CpuGpr::A2:    return "a2";
+        case CpuGpr::A3:    return "a3";
+        case CpuGpr::T0:    return "t0";
+        case CpuGpr::T1:    return "t1";
+        case CpuGpr::T2:    return "t2";
+        case CpuGpr::T3:    return "t3";
+        case CpuGpr::T4:    return "t4";
+        case CpuGpr::T5:    return "t5";
+        case CpuGpr::T6:    return "t6";
+        case CpuGpr::T7:    return "t7";
+        case CpuGpr::S0:    return "s0";
+        case CpuGpr::S1:    return "s1";
+        case CpuGpr::S2:    return "s2";
+        case CpuGpr::S3:    return "s3";
+        case CpuGpr::S4:    return "s4";
+        case CpuGpr::S5:    return "s5";
+        case CpuGpr::S6:    return "s6";
+        case CpuGpr::S7:    return "s7";
+        case CpuGpr::T8:    return "t8";
+        case CpuGpr::T9:    return "t9";
+        case CpuGpr::K0:    return "k0";
+        case CpuGpr::K1:    return "k1";
+        case CpuGpr::GP:    return "gp";
+        case CpuGpr::SP:    return "sp";
+        case CpuGpr::FP:    return "fp";
+        case CpuGpr::RA:    return "ra";
 
-        default: return "VM_INVALID_REG";
+        default: return "INVALID_REG";
     }
 }
 
@@ -83,7 +88,7 @@ static void printInstGprOutGprInGprIn(
 ) {
     const uint8_t destGpr = ins.getDestGprIdx();
     out << getGprCppMacroName(destGpr);
-    out << " = VM_";
+    out << " = ";
     out << CpuOpcodeUtils::getMnemonic(ins.opcode);
     out << "(";
     out << getGprCppMacroName(in1Gpr);
@@ -103,7 +108,7 @@ static void printInstGprOutGprInI16In(
 ) {
     const uint8_t destGpr = ins.getDestGprIdx();
     out << getGprCppMacroName(destGpr);
-    out << " = VM_";
+    out << " = ";
     out << CpuOpcodeUtils::getMnemonic(ins.opcode);
     out.put('(');
     out << getGprCppMacroName(in1Gpr);
@@ -123,7 +128,7 @@ static void printInstGprOutGprInU16In(
 ) {
     const uint8_t destGpr = ins.getDestGprIdx();
     out << getGprCppMacroName(destGpr);
-    out << " = VM_";
+    out << " = ";
     out << CpuOpcodeUtils::getMnemonic(ins.opcode);
     out.put('(');
     out << getGprCppMacroName(in1Gpr);
@@ -133,12 +138,79 @@ static void printInstGprOutGprInU16In(
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Print an instruction that assigns to a GPR and that an input U16 constant
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void printInstGprOutU16In(    
+    const CpuInstruction& ins,
+    const uint16_t inU16,
+    std::ostream& out
+) {
+    const uint8_t destGpr = ins.getDestGprIdx();
+    out << getGprCppMacroName(destGpr);
+    out << " = ";
+    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
+    out.put('(');
+    printHexCppUint16Literal(inU16, false, out);
+    out << ");";
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Print an instruction has two input GPRs and an input I16 constant
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void printInstGprInGprInI16In(
+    const CpuInstruction& ins,    
+    const uint8_t in1Gpr,
+    const uint8_t in2Gpr,
+    const int16_t in3I16,
+    std::ostream& out
+) {
+    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
+    out << "(";
+    out << getGprCppMacroName(in1Gpr);
+    out << ", ";
+    out << getGprCppMacroName(in2Gpr);
+    out << ", ";
+    printHexCppInt16Literal(in3I16, false, out);
+    out << ");";
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Print an instruction has two input GPRs and no output
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void printInstGprInGprIn(
+    const CpuInstruction& ins,    
+    const uint8_t in1Gpr,
+    const uint8_t in2Gpr,
+    std::ostream& out
+) {
+    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
+    out << "(";
+    out << getGprCppMacroName(in1Gpr);
+    out << ", ";
+    out << getGprCppMacroName(in2Gpr);
+    out << ");";
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Print an instruction that takes a single U32 constant as input and has no outputs
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void printInstU32In(    
+    const CpuInstruction& ins,
+    const uint32_t inU32,
+    std::ostream& out
+) {
+    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
+    out.put('(');
+    printHexCppUint32Literal(inU32, false, out);
+    out << ");";
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Print an instruction that has no inputs and no output
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void printInstNoParamNoReturn(const CpuInstruction& ins, std::ostream& out) {
-    out << "VM_";
     out << CpuOpcodeUtils::getMnemonic(ins.opcode);
-    out << ");";
+    out << "();";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -295,6 +367,11 @@ static void printNonBranchOrJumpInstruction(
         case CpuOpcode::ADDI:
         case CpuOpcode::ADDIU:
         case CpuOpcode::SLTI:
+        case CpuOpcode::LB:
+        case CpuOpcode::LBU:
+        case CpuOpcode::LH:
+        case CpuOpcode::LHU:
+        case CpuOpcode::LW:
             printInstGprOutGprInI16In(inst, inst.regS, (int16_t) inst.immediateVal, out);
             break;
 
@@ -313,7 +390,34 @@ static void printNonBranchOrJumpInstruction(
             printInstGprOutGprInU16In(inst, inst.regT, (uint16_t) inst.immediateVal, out);
             break;
 
-        // Instructions that just print their mnemonic
+        // REG_OUT = OPERATION((uint16_t) immVal)
+        case CpuOpcode::LUI:
+            printInstGprOutU16In(inst, (uint16_t) inst.immediateVal, out);
+            break;
+
+        // OPERATION(regS, regT)
+        case CpuOpcode::DIV:
+        case CpuOpcode::DIVU:
+        case CpuOpcode::MULT:
+        case CpuOpcode::MULTU:
+            printInstGprInGprIn(inst, inst.regS, inst.regT, out);
+            break;
+
+        // OPERATION(regT, regS, (int16_t) immVal)
+        case CpuOpcode::SB:
+        case CpuOpcode::SH:
+        case CpuOpcode::SW:
+            printInstGprInGprInI16In(inst, inst.regT, inst.regS, (int16_t) inst.immediateVal, out);
+            break;
+
+        // OPERATION((uint32_t) immVal)
+        case CpuOpcode::BREAK:
+        case CpuOpcode::COP2:
+        case CpuOpcode::SYSCALL:
+            printInstU32In(inst, inst.immediateVal, out);
+            break;
+
+        // Instructions with no inputs or outputs
         case CpuOpcode::RFE:
         case CpuOpcode::TLBP:
         case CpuOpcode::TLBR:
@@ -322,90 +426,12 @@ static void printNonBranchOrJumpInstruction(
             printInstNoParamNoReturn(inst, out);
             break;
 
+        // Special cases
+        case CpuOpcode::CFC2:
+            printInstGprOutU16In(inst, (uint16_t) inst.regD, out);
+            break;
+
     /*
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON EQUAL]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if 'S' == 'T' where 'S', 'T' are registers.
-    //
-    // Encoding: 000100 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BEQ,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON GREATER THAN OR EQUAL TO ZERO]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if register 'S' is >= 0.
-    //
-    // Encoding: 000001 SSSSS 00001 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BGEZ,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON GREATER THAN OR EQUAL TO ZERO AND LINK]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is >= 0 and 'link'.
-    //      The address of the 2nd (note: NOT 1st!) instruction following the branch is saved in register 'RA' (R31).
-    //
-    // Encoding: 000001 SSSSS 10001 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BGEZAL,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON GREATER THAN ZERO]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if register 'S' > 0.
-    //
-    // Encoding: 000111 SSSSS ----- IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BGTZ,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON LESS THAN OR EQUAL TO ZERO]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is <= 0.
-    //
-    // Encoding: 000110 SSSSS ----- IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BLEZ,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON LESS THAN ZERO]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is < 0.
-    //
-    // Encoding: 000001 SSSSS 00000 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BLTZ,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON LESS THAN ZERO AND LINK]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is < 0 and 'link'.
-    //      The address of the 2nd (note: NOT 1st!) instruction following the branch is saved in register 'RA' (R31).
-    //
-    // Encoding: 000001 SSSSS 10000 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BLTZAL,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON NOT EQUAL]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if 'S' != 'T' where 'S', 'T' are registers.
-    //
-    // Encoding: 000101 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BNE,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BREAK]
-    //      Triggers a breakpoint exception and transfers control to the exception handler.
-    //      The 'I' (Code) field is used in the handling of the exception, as an argument.
-    //
-    // Encoding: 000000 IIIII IIIII IIIII IIIII 001101
-    //------------------------------------------------------------------------------------------------------------------
-    BREAK,
-    //------------------------------------------------------------------------------------------------------------------
-    // [MOVE CONTROL WORD FROM COPROCESSOR 2]
-    //      Move a value from a coprocessor 2 control register 'D' and save the result in register 'T':
-    //          T = COP2_C[D]
-    //
-    // Encoding: 010010 00010 TTTTT DDDDD ----- ------
-    //------------------------------------------------------------------------------------------------------------------
-    CFC2,
-    //------------------------------------------------------------------------------------------------------------------
-    // [COPROCESSOR OPERATION TO COPROCESSOR 2]
-    //      Perform an operation on coprocessor 2, which is the 'Geometry Transformation Engine' (GTE) on the PSX.
-    //      The immediate parameter 'I' is passed to the coprocessor so signal what type of operation is intended.
-    //      To see what this means refer to documentation on GTE operations.
-    //
-    // Encoding: 010010 1IIII IIIII IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    COP2,
     //------------------------------------------------------------------------------------------------------------------
     // [MOVE CONTROL WORD TO COPROCESSOR 2]
     //      Move a value from register 'T' and save to coprocessor 2 control register 'D':
@@ -414,107 +440,6 @@ static void printNonBranchOrJumpInstruction(
     // Encoding: 010010 00110 TTTTT DDDDD ----- ------
     //------------------------------------------------------------------------------------------------------------------
     CTC2,
-    //------------------------------------------------------------------------------------------------------------------
-    // [DIVIDE WORD]
-    //      Divide SIGNED register 'S' by SIGNED register 'T' and save the result in special register 'LO'.
-    //      The remainder is stored in special register 'HI'.
-    //      If dividing by zero then the result is UNPREDICTABLE but no error occurs.
-    //
-    // Encoding: 000000 SSSSS TTTTT ----- ----- 011010
-    //------------------------------------------------------------------------------------------------------------------
-    DIV,
-    //------------------------------------------------------------------------------------------------------------------
-    // [DIVIDE UNSIGNED WORD]
-    //      Divide UNSIGNED register 'S' by UNSIGNED register 'T' and save the result in special register 'LO'.
-    //      The remainder is stored in special register 'HI'.
-    //      If dividing by zero then the result is UNPREDICTABLE but no error occurs.
-    //
-    // Encoding: 000000 SSSSS TTTTT ----- ----- 011011
-    //------------------------------------------------------------------------------------------------------------------
-    DIVU,
-    //------------------------------------------------------------------------------------------------------------------
-    // [JUMP]
-    //      Branch to the given program 32-bit WORD index 'I' (note: NOT byte!) within the current 256 MB memory region.
-    //
-    // Encoding: 000010 IIIII IIIII IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    J,
-    //------------------------------------------------------------------------------------------------------------------
-    // [JUMP AND LINK]
-    //      Branch to the given program 32-bit WORD index 'I' (note: NOT byte!) within the current 256 MB memory region.
-    //      The address of the 2nd (note: NOT 1st!) instruction following the branch is also saved in register 'RA' (R31).
-    //
-    // Encoding: 000011 IIIII IIIII IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    JAL,
-    //------------------------------------------------------------------------------------------------------------------
-    // [JUMP AND LINK REGISTER]
-    //      Branch to the location specified in register 'S' and place the return address in register 'D'.
-    //      Note: the return address is the address of the 2nd (note: NOT 1st!) instruction following the branch.
-    //
-    // Encoding: 000000 SSSSS ----- DDDDD ----- 001001
-    //------------------------------------------------------------------------------------------------------------------
-    JALR,
-    //------------------------------------------------------------------------------------------------------------------
-    // [JUMP REGISTER]
-    //      Branch to the location specified in register 'S'.
-    //
-    // Encoding: 000000 SSSSS ----- ----- ----- 001000
-    //------------------------------------------------------------------------------------------------------------------
-    JR,
-    //------------------------------------------------------------------------------------------------------------------
-    // [LOAD BYTE]
-    //      Load the contents of the SIGNED byte pointed to by register 'S' plus the 16-bit SIGNED constant offset 
-    //      'I' and store in register 'T'.
-    //          T = S[I]
-    //
-    // Encoding: 100000 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    LB,
-    //------------------------------------------------------------------------------------------------------------------
-    // [LOAD BYTE UNSIGNED]
-    //      Load the contents of the UNSIGNED byte pointed to by register 'S' plus the 16-bit SIGNED constant offset 
-    //      'I' and store in register 'T'.
-    //          T = S[I]
-    //
-    // Encoding: 100100 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    LBU,
-    //------------------------------------------------------------------------------------------------------------------
-    // [LOAD HALF WORD]
-    //      Load the contents of the ALIGNED and SIGNED 16-bit half word pointed to by register 'S' plus the 16-bit
-    //      SIGNED constant offset 'I' and store in register 'T'.
-    //          T = S[I]
-    //
-    // Encoding: 100001 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    LH,
-    //------------------------------------------------------------------------------------------------------------------
-    // [LOAD HALF WORD UNSIGNED]
-    //      Load the contents of the ALIGNED and UNSIGNED 16-bit half word pointed to by register 'S' plus the 16-bit
-    //      SIGNED constant offset 'I' and store in register 'T'.
-    //          T = S[I]
-    //
-    // Encoding: 100101 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    LHU,
-    //------------------------------------------------------------------------------------------------------------------
-    // [LOAD UPPER IMMEDIATE]
-    //      Load the constant 'I' into the MOST SIGNIFICANT bits of register 'T' and zero all other bits.
-    //          T = I << 16
-    //
-    // Encoding: 001111 ----- TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    LUI,
-    //------------------------------------------------------------------------------------------------------------------
-    // [LOAD WORD]
-    //      Load the contents of the ALIGNED 32-bit word pointed to by register 'S' plus the 16-bit SIGNED constant
-    //      offset 'I' and store in register 'T':
-    //          T = S[I]
-    //
-    // Encoding: 100011 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    LW,
     //------------------------------------------------------------------------------------------------------------------
     // [LOAD WORD TO COPROCESSOR 2]
     //      Load the contents of the ALIGNED 32-bit word pointed to by register 'S' plus the 16-bit SIGNED constant
@@ -641,51 +566,6 @@ static void printNonBranchOrJumpInstruction(
     //------------------------------------------------------------------------------------------------------------------
     MTLO,
     //------------------------------------------------------------------------------------------------------------------
-    // [MULTIPLY WORD]
-    //      Multiply SIGNED register 'S' by SIGNED register 'T' and save the results in special registers 'HI' & 'LO'.
-    //      The low 32-bits of the result is stored in 'LO' and the high 32-bits stored in 'HI':
-    //          HI, LO = S * T
-    //
-    // Encoding: 000000 SSSSS TTTTT ----- ----- 011000
-    //------------------------------------------------------------------------------------------------------------------
-    MULT,
-    //------------------------------------------------------------------------------------------------------------------
-    // [MULTIPLY UNSIGNED WORD]
-    //      Multiply UNSIGNED register 'S' by UNSIGNED register 'T' and save the results in special registers 'HI' & 'LO'.
-    //      The low 32-bits of the result is stored in 'LO' and the high 32-bits stored in 'HI':
-    //          HI, LO = S * T
-    //
-    // Encoding: 000000 SSSSS TTTTT ----- ----- 011001
-    //------------------------------------------------------------------------------------------------------------------
-    MULTU,
-    //------------------------------------------------------------------------------------------------------------------
-    // [STORE BYTE]
-    //      Store the LEAST SIGNIFICANT BYTE of register 'T' to the address pointed to by register 'S' plus the 16-bit
-    //      SIGNED constant offset 'I':
-    //          S[I] = T & 000000FF
-    //
-    // Encoding: 101000 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    SB,
-    //------------------------------------------------------------------------------------------------------------------
-    // [STORE HALF WORD]
-    //      Store the LEAST SIGNIFICANT HALF WORD of register 'T' to the ALIGNED address pointed to by register 'S' plus
-    //      the 16-bit SIGNED constant offset 'I':
-    //          S[I] = T & 0000FFFF
-    //
-    // Encoding: 101001 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    SH,
-    //------------------------------------------------------------------------------------------------------------------
-    // [STORE WORD]
-    //      Store the contents of register 'T' to the ALIGNED 32-bit word pointed to by register 'S' plus the 16-bit
-    //      SIGNED constant offset 'I':
-    //          S[I] = T
-    //
-    // Encoding: 101011 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    SW,
-    //------------------------------------------------------------------------------------------------------------------
     // [STORE WORD FROM COPROCESSOR 2]
     //      Store the contents of coprocessor 2 register 'T' to the ALIGNED 32-bit word pointed to by register 'S' plus
     //      the 16-bit SIGNED constant offset 'I':
@@ -734,14 +614,6 @@ static void printNonBranchOrJumpInstruction(
     // Encoding: 101110 SSSSS TTTTT IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     SWR,
-    //------------------------------------------------------------------------------------------------------------------
-    // [SYSTEM CALL]
-    //      Causes a system call exception and transfers control to the exception handler.
-    //      Code 'I' is available as a parameter for the exception handler.
-    //
-    // Encoding: 000000 IIIII IIIII IIIII IIIII 001100
-    //------------------------------------------------------------------------------------------------------------------
-    SYSCALL,
     //------------------------------------------------------------------------------------------------------------------
     // [TRAP IF EQUAL]
     //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
@@ -886,6 +758,98 @@ static void printNonBranchOrJumpInstruction(
     // Encoding: 000001 SSSSS 01110 IIIII IIIII IIIIII
     //------------------------------------------------------------------------------------------------------------------
     TNEI,
+
+
+
+
+    //------------------------------------------------------------------------------------------------------------------
+    // [JUMP]
+    //      Branch to the given program 32-bit WORD index 'I' (note: NOT byte!) within the current 256 MB memory region.
+    //
+    // Encoding: 000010 IIIII IIIII IIIII IIIII IIIIII
+    //------------------------------------------------------------------------------------------------------------------
+    J,
+    //------------------------------------------------------------------------------------------------------------------
+    // [JUMP AND LINK]
+    //      Branch to the given program 32-bit WORD index 'I' (note: NOT byte!) within the current 256 MB memory region.
+    //      The address of the 2nd (note: NOT 1st!) instruction following the branch is also saved in register 'RA' (R31).
+    //
+    // Encoding: 000011 IIIII IIIII IIIII IIIII IIIIII
+    //------------------------------------------------------------------------------------------------------------------
+    JAL,
+    //------------------------------------------------------------------------------------------------------------------
+    // [JUMP AND LINK REGISTER]
+    //      Branch to the location specified in register 'S' and place the return address in register 'D'.
+    //      Note: the return address is the address of the 2nd (note: NOT 1st!) instruction following the branch.
+    //
+    // Encoding: 000000 SSSSS ----- DDDDD ----- 001001
+    //------------------------------------------------------------------------------------------------------------------
+    JALR,
+    //------------------------------------------------------------------------------------------------------------------
+    // [JUMP REGISTER]
+    //      Branch to the location specified in register 'S'.
+    //
+    // Encoding: 000000 SSSSS ----- ----- ----- 001000
+    //------------------------------------------------------------------------------------------------------------------
+    JR,
+    //------------------------------------------------------------------------------------------------------------------
+    // [BRANCH ON EQUAL]
+    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if 'S' == 'T' where 'S', 'T' are registers.
+    //
+    // Encoding: 000100 SSSSS TTTTT IIIII IIIII IIIIII
+    //------------------------------------------------------------------------------------------------------------------
+    BEQ,
+    //------------------------------------------------------------------------------------------------------------------
+    // [BRANCH ON GREATER THAN OR EQUAL TO ZERO]
+    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if register 'S' is >= 0.
+    //
+    // Encoding: 000001 SSSSS 00001 IIIII IIIII IIIIII
+    //------------------------------------------------------------------------------------------------------------------
+    BGEZ,
+    //------------------------------------------------------------------------------------------------------------------
+    // [BRANCH ON GREATER THAN OR EQUAL TO ZERO AND LINK]
+    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is >= 0 and 'link'.
+    //      The address of the 2nd (note: NOT 1st!) instruction following the branch is saved in register 'RA' (R31).
+    //
+    // Encoding: 000001 SSSSS 10001 IIIII IIIII IIIIII
+    //------------------------------------------------------------------------------------------------------------------
+    BGEZAL,
+    //------------------------------------------------------------------------------------------------------------------
+    // [BRANCH ON GREATER THAN ZERO]
+    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if register 'S' > 0.
+    //
+    // Encoding: 000111 SSSSS ----- IIIII IIIII IIIIII
+    //------------------------------------------------------------------------------------------------------------------
+    BGTZ,
+    //------------------------------------------------------------------------------------------------------------------
+    // [BRANCH ON LESS THAN OR EQUAL TO ZERO]
+    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is <= 0.
+    //
+    // Encoding: 000110 SSSSS ----- IIIII IIIII IIIIII
+    //------------------------------------------------------------------------------------------------------------------
+    BLEZ,
+    //------------------------------------------------------------------------------------------------------------------
+    // [BRANCH ON LESS THAN ZERO]
+    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is < 0.
+    //
+    // Encoding: 000001 SSSSS 00000 IIIII IIIII IIIIII
+    //------------------------------------------------------------------------------------------------------------------
+    BLTZ,
+    //------------------------------------------------------------------------------------------------------------------
+    // [BRANCH ON LESS THAN ZERO AND LINK]
+    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is < 0 and 'link'.
+    //      The address of the 2nd (note: NOT 1st!) instruction following the branch is saved in register 'RA' (R31).
+    //
+    // Encoding: 000001 SSSSS 10000 IIIII IIIII IIIIII
+    //------------------------------------------------------------------------------------------------------------------
+    BLTZAL,
+    //------------------------------------------------------------------------------------------------------------------
+    // [BRANCH ON NOT EQUAL]
+    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if 'S' != 'T' where 'S', 'T' are registers.
+    //
+    // Encoding: 000101 SSSSS TTTTT IIIII IIIII IIIIII
+    //------------------------------------------------------------------------------------------------------------------
+    BNE,
     */
     }
 
@@ -1005,7 +969,7 @@ static void validateFuncElemRange(const ExeFile& exe, const ProgElem& progElem) 
 
 void PseudoCppPrinter::printCpp(const ExeFile& exe, std::ostream& out) {
     // The app must define this header with all of the required macros
-    out << "#include \"PsxVm.h\"\n";
+    out << "#include \"PsxVmMacros.h\"\n";
     out << "\n";
 
     // Validate and print the declarations for all the functions

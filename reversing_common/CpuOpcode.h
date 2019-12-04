@@ -832,7 +832,7 @@ static constexpr const uint32_t NUM_CPU_OPCODES = (uint32_t) CpuOpcode::INVALID;
 
 namespace CpuOpcodeUtils {
     //------------------------------------------------------------------------------------------------------------------
-    // Get the human readable name for an opcode
+    // Get the human readable name for an opcode (lowercase)
     //------------------------------------------------------------------------------------------------------------------
     inline constexpr const char* getMnemonic(const CpuOpcode opcode) noexcept {
         switch (opcode) {
@@ -920,6 +920,102 @@ namespace CpuOpcodeUtils {
             case CpuOpcode::TNEI:       return "tnei";
             case CpuOpcode::XOR:        return "xor";
             case CpuOpcode::XORI:       return "xori";
+            case CpuOpcode::INVALID:
+                break;
+        }
+
+        return "<invalid opcode>";
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Get the human readable name for an opcode (uppercase)
+    //------------------------------------------------------------------------------------------------------------------
+    inline constexpr const char* getUcaseMnemonic(const CpuOpcode opcode) noexcept {
+        switch (opcode) {
+            case CpuOpcode::ADD:        return "ADD";
+            case CpuOpcode::ADDI:       return "ADDI";
+            case CpuOpcode::ADDIU:      return "ADDIU";
+            case CpuOpcode::ADDU:       return "ADDU";
+            case CpuOpcode::AND:        return "AND";
+            case CpuOpcode::ANDI:       return "ANDI";
+            case CpuOpcode::BEQ:        return "BEQ";
+            case CpuOpcode::BGEZ:       return "BGEZ";
+            case CpuOpcode::BGEZAL:     return "BGEZAL";
+            case CpuOpcode::BGTZ:       return "BGTZ";
+            case CpuOpcode::BLEZ:       return "BLEZ";
+            case CpuOpcode::BLTZ:       return "BLTZ";
+            case CpuOpcode::BLTZAL:     return "BLTZAL";
+            case CpuOpcode::BNE:        return "BNE";
+            case CpuOpcode::BREAK:      return "BREAK";
+            case CpuOpcode::CFC2:       return "CFC2";
+            case CpuOpcode::COP2:       return "COP2";
+            case CpuOpcode::CTC2:       return "CTC2";
+            case CpuOpcode::DIV:        return "DIV";
+            case CpuOpcode::DIVU:       return "DIVU";
+            case CpuOpcode::J:          return "J";
+            case CpuOpcode::JAL:        return "JAL";
+            case CpuOpcode::JALR:       return "JALR";
+            case CpuOpcode::JR:         return "JR";
+            case CpuOpcode::LB:         return "LB";
+            case CpuOpcode::LBU:        return "LBU";
+            case CpuOpcode::LH:         return "LH";
+            case CpuOpcode::LHU:        return "LHU";
+            case CpuOpcode::LUI:        return "LUI";
+            case CpuOpcode::LW:         return "LW";
+            case CpuOpcode::LWC2:       return "LWC2";
+            case CpuOpcode::LWL:        return "LWL";
+            case CpuOpcode::LWR:        return "LWR";
+            case CpuOpcode::MFC0:       return "MFC0";
+            case CpuOpcode::MFC2:       return "MFC2";
+            case CpuOpcode::MFHI:       return "MFHI";
+            case CpuOpcode::MFLO:       return "MFLO";
+            case CpuOpcode::MTC0:       return "MTC0";
+            case CpuOpcode::MTC2:       return "MTC2";
+            case CpuOpcode::MTHI:       return "MTHI";
+            case CpuOpcode::MTLO:       return "MTLO";
+            case CpuOpcode::MULT:       return "MULT";
+            case CpuOpcode::MULTU:      return "MULTU";
+            case CpuOpcode::NOR:        return "NOR";
+            case CpuOpcode::OR:         return "OR";
+            case CpuOpcode::ORI:        return "ORI";
+            case CpuOpcode::RFE:        return "RFE";
+            case CpuOpcode::SB:         return "SB";
+            case CpuOpcode::SH:         return "SH";
+            case CpuOpcode::SLL:        return "SLL";
+            case CpuOpcode::SLLV:       return "SLLV";
+            case CpuOpcode::SLT:        return "SLT";
+            case CpuOpcode::SLTI:       return "SLTI";
+            case CpuOpcode::SLTIU:      return "SLTIU";
+            case CpuOpcode::SLTU:       return "SLTU";
+            case CpuOpcode::SRA:        return "SRA";
+            case CpuOpcode::SRAV:       return "SRAV";
+            case CpuOpcode::SRL:        return "SRL";
+            case CpuOpcode::SRLV:       return "SRLV";
+            case CpuOpcode::SUB:        return "SUB";
+            case CpuOpcode::SUBU:       return "SUBU";
+            case CpuOpcode::SW:         return "SW";
+            case CpuOpcode::SWC2:       return "SWC2";
+            case CpuOpcode::SWL:        return "SWL";
+            case CpuOpcode::SWR:        return "SWR";
+            case CpuOpcode::SYSCALL:    return "SYSCALL";
+            case CpuOpcode::TEQ:        return "TEQ";
+            case CpuOpcode::TEQI:       return "TEQI";
+            case CpuOpcode::TGE:        return "TGE";
+            case CpuOpcode::TGEI:       return "TGEI";
+            case CpuOpcode::TGEIU:      return "TGEIU";
+            case CpuOpcode::TGEU:       return "TGEU";
+            case CpuOpcode::TLBP:       return "TLBP";
+            case CpuOpcode::TLBR:       return "TLBR";
+            case CpuOpcode::TLBWI:      return "TLBWI";
+            case CpuOpcode::TLBWR:      return "TLBWR";
+            case CpuOpcode::TLT:        return "TLT";
+            case CpuOpcode::TLTI:       return "TLTI";
+            case CpuOpcode::TLTIU:      return "TLTIU";
+            case CpuOpcode::TLTU:       return "TLTU";
+            case CpuOpcode::TNE:        return "TNE";
+            case CpuOpcode::TNEI:       return "TNEI";
+            case CpuOpcode::XOR:        return "XOR";
+            case CpuOpcode::XORI:       return "XORI";
             case CpuOpcode::INVALID:
                 break;
         }
