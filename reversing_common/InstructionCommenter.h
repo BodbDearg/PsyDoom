@@ -20,7 +20,7 @@ namespace InstructionCommenter {
     // Uses the results of the given constant instruction evaluator to make the comments.
     // Uses the given line column info and the comment prefixer to start the comment.
     void tryCommentInstruction(
-        CpuInstruction& inst,
+        const CpuInstruction& inst,
         const uint32_t instAddr,
         const ExeFile& exe,
         const ConstInstructionEvaluator& constInstEvaluator,        

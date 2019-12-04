@@ -41,6 +41,19 @@ struct CpuInstruction {
         return CpuOpcodeUtils::isIllegalOpcode(opcode);
     }
 
+    // Make and return a NOP instruction.
+    // Mips doesn't have a dedicated NOP instruction, however 'SLL $zero $zero 0' is commonly used for that purpose.
+    static CpuInstruction makeNOP() noexcept {
+        CpuInstruction inst;
+        inst.opcode = CpuOpcode::SLL;
+        inst.regS = 0;
+        inst.regT = 0;
+        inst.regD = 0;
+        inst.immediateVal = 0;
+
+        return inst;
+    }
+
     // Do the hard work of actually decoding the instruction from a 32-bit machine word.
     // The word is assumed to be in little endian format.
     // If decoding fails then the instruction will be made into an illegal instruction and 'false' will be returned.

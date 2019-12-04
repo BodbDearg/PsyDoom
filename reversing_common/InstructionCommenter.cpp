@@ -27,7 +27,7 @@ static void printNameAndAddress(const uint32_t addr, const ExeFile& exe, std::os
 }
 
 void InstructionCommenter::tryCommentInstruction(
-    CpuInstruction& inst,
+    const CpuInstruction& inst,
     const uint32_t instAddr,
     const ExeFile& exe,
     const ConstInstructionEvaluator& constInstEvaluator,
