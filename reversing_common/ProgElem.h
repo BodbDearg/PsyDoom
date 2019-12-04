@@ -88,5 +88,5 @@ struct ProgElem {
 
     // Print the name of the program element at the given address.
     // For some element types the address will be ignored, whereas for things like arrays it can be used to compute the element number.
-    void printNameAtAddr(const uint32_t addr, std::ostream& out) const noexcept;
+    void printNameAtAddr(const uint32_t addr, std::ostream& out) const;
 };

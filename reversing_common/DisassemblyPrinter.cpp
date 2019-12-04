@@ -10,7 +10,7 @@
 
 static ConstInstructionEvaluator gConstInstructionEvaluator;
 
-static void prefixInstructionComment(const uint32_t lineCol, std::ostream& out) noexcept {
+static void prefixInstructionComment(const uint32_t lineCol, std::ostream& out) {
     // Figure out the start column for the comment
     constexpr uint32_t minCommentStartCol = 32u;
     uint32_t commentStartCol = std::max(minCommentStartCol, lineCol);
@@ -31,12 +31,12 @@ static void prefixInstructionComment(const uint32_t lineCol, std::ostream& out) 
     out << "; ";
 }
 
-static void printAddressForLine(const uint32_t addr, std::ostream& out) noexcept {
+static void printAddressForLine(const uint32_t addr, std::ostream& out) {
     PrintUtils::printHexU32(addr, true, out);
     out << ":";
 }
 
-static void printProgWordReferences(const ExeWord& word, const ProgElem* const pInsideFunc, std::ostream& out) noexcept {
+static void printProgWordReferences(const ExeWord& word, const ProgElem* const pInsideFunc, std::ostream& out) {
     if (word.bIsBranchTarget || word.bIsDataReferenced || word.bIsJumpTarget) {
         out << " <- ";
         uint32_t numWordReferences = 0;
@@ -78,7 +78,7 @@ static void printProgWordReferences(const ExeWord& word, const ProgElem* const p
     }
 }
 
-static void printProgElemName(const ProgElem& progElem, const char* const defaultNamePrefix, std::ostream& out) noexcept {
+static void printProgElemName(const ProgElem& progElem, const char* const defaultNamePrefix, std::ostream& out) {
     if (progElem.name != nullptr && progElem.name[0] != 0) {
         out << progElem.name;
     } else {
@@ -87,7 +87,7 @@ static void printProgElemName(const ProgElem& progElem, const char* const defaul
     }
 }
 
-static void printProgInstruction(const ExeFile& exe, const ProgElem* const pParentFunc, const uint32_t instAddr, const uint32_t instWord, std::ostream& out) noexcept {
+static void printProgInstruction(const ExeFile& exe, const ProgElem* const pParentFunc, const uint32_t instAddr, const uint32_t instWord, std::ostream& out) {
     // Log where we are in the stream (so we can tell how long the instruction was when printed)
     const int64_t instructionStartStreamPos = out.tellp();
 
@@ -128,7 +128,7 @@ static void printProgInstruction(const ExeFile& exe, const ProgElem* const pPare
     }
 }
 
-static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ostream& out) noexcept {
+static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ostream& out) {
     // Print the function title
     out << ";-----------------------------------------------------------------------------------------------------------------------\n";
     out << "; FUNC: ";
@@ -182,7 +182,7 @@ static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ost
     out.put('\n');
 }
 
-static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std::ostream& out) noexcept {
+static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std::ostream& out) {
     // Validate that the variable is correctly aligned, and that the size matches the variable type size
     const ProgElemType arrayElemType = progElem.arrayElemType;
     const uint32_t arrayElemTypeSize = getProgElemTypeSize(arrayElemType);
@@ -363,7 +363,7 @@ static void printArrayVariable(const ExeFile& exe, const ProgElem& progElem, std
     }
 }
 
-static void printSingleVariable(const ExeFile& exe, const ProgElem& progElem, std::ostream& out) noexcept {
+static void printSingleVariable(const ExeFile& exe, const ProgElem& progElem, std::ostream& out) {
     // Validate that the variable is correctly aligned, and that the size matches the variable type size
     const uint32_t varTypeSize = getProgElemTypeSize(progElem.type);
 
@@ -527,7 +527,7 @@ static void validateProgElemRange(const ExeFile& exe, const ProgElem& progElem) 
     }
 }
 
-static void printProgElem(const ExeFile& exe, const ProgElem& progElem, std::ostream& out) noexcept {
+static void printProgElem(const ExeFile& exe, const ProgElem& progElem, std::ostream& out) {
     switch (progElem.type) {
         case ProgElemType::FUNCTION:
             printFunction(exe, progElem, out);
@@ -556,7 +556,7 @@ static void printUncategorizedProgramRegion(
     const uint32_t startByteIdx,
     const uint32_t endByteIdx,
     std::ostream& out
-) noexcept {
+) {
     // Print the region title
     out << "\n";
     out << "; -- UNCATEGORIZED REGION: ";
@@ -628,7 +628,7 @@ static void printUncategorizedProgramRegion(
     out << "\n";
 }
 
-void DisassemblyPrinter::printExe(const ExeFile& exe, std::ostream& out) noexcept {
+void DisassemblyPrinter::printExe(const ExeFile& exe, std::ostream& out) {
     // Firstly make sure all program elements are valid and in range for the exe
     for (const ProgElem& progElem : exe.progElems) {
         validateProgElemRange(exe, progElem);

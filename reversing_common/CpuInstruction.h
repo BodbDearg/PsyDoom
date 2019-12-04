@@ -37,7 +37,7 @@ struct CpuInstruction {
     }
 
     // Tell if this is an illegal/invalid instruction
-    inline constexpr bool isIllegal() const {
+    inline constexpr bool isIllegal() const noexcept {
         return CpuOpcodeUtils::isIllegalOpcode(opcode);
     }
 
@@ -59,6 +59,10 @@ struct CpuInstruction {
     // Returns '0xFF' if the instruction does not have at least 2 input general purpose registers.
     uint8_t getInputGprIdx2() const noexcept;
 
+    // Tell if the given general purpose register (specified by index) is one of the input general purpose registers for the instruction.
+    // Useful for analyzing register dependencies between instructions.
+    bool isInputGprIdx(const uint8_t gprIdx) const noexcept;
+
     // Tell if this instruction is effectively a NOP.
     // Certain instructions like 'SLL r0, r0, 0' (encoded as binary '0') are used as NOP type instructions.
     // NOPs are used in some places in the code to get around issues with branch and load delay slots by delaying the CPU.
@@ -79,7 +83,7 @@ struct CpuInstruction {
         const uint32_t thisInstAddr,
         const ProgElem* const pParentFunc,
         std::ostream& out
-    ) const noexcept;
+    ) const;
 
     inline int compare(const CpuInstruction& other) const noexcept {
         if (opcode != other.opcode) {

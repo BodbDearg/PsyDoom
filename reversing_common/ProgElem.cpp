@@ -11,7 +11,7 @@ static void printProgElemNameAtAddr(
     const uint32_t addr,
     const char* const defaultNamePrefix,
     std::ostream& out
-) noexcept {
+) {
     // Does the program element have a name?
     // If it doesn't then makeup a default one based on the prefix we were given...
     if (progElem.name != nullptr && progElem.name[0] != 0) {
@@ -45,7 +45,7 @@ static void printArrayProgElemNameAtAddr(
     const uint32_t addr,
     const char* const defaultNamePrefix,
     std::ostream& out
-) noexcept {
+) {
     // Figure out what array index the given address points to
     int32_t arrayIdx = 0;
     const int32_t elemSize = (int32_t) getProgElemTypeSize(progElem.arrayElemType);
@@ -88,7 +88,7 @@ uint32_t getProgElemTypeSize(const ProgElemType type) noexcept {
     return 0;
 }
 
-void ProgElem::printNameAtAddr(const uint32_t addr, std::ostream& out) const noexcept {
+void ProgElem::printNameAtAddr(const uint32_t addr, std::ostream& out) const {
     switch (type) {
         case ProgElemType::FUNCTION:    printProgElemNameAtAddr(*this, addr, "UNNAMED_func_", out);     break;
         case ProgElemType::INT32:       printProgElemNameAtAddr(*this, addr, "UNNAMED_i32_", out);      break;

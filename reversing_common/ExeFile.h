@@ -49,7 +49,7 @@ struct ExeFile {
     // Print the name of the element at the address.
     // Just prints the raw hex address if there is no such element.
     // Returns 'true' if an actual name was printed instead of a raw hex address.
-    bool printNameOfElemAtAddr(const uint32_t addr, std::ostream& out) const noexcept;
+    bool printNameOfElemAtAddr(const uint32_t addr, std::ostream& out) const;
 
     // Determine which words are referenced by jump instructions, data etc.
     // Useful in the disassembly to be able to quickly see branch targets and references to specific memory locations.

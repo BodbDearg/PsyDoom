@@ -12,7 +12,7 @@ static void printInstGprOutGprInGprIn(
     const uint8_t in1Gpr,
     const uint8_t in2Gpr,
     std::ostream& out
-) noexcept {
+) {
     const uint8_t destGpr = ins.getDestGprIdx();
     out << CpuGpr::getName(destGpr);
     out << " = ";
@@ -31,7 +31,7 @@ static void printInstGprOutGprInI16In(
     const uint8_t in1Gpr,
     const int16_t in2I16,
     std::ostream& out
-) noexcept {
+) {
     const uint8_t destGpr = ins.getDestGprIdx();
     out << CpuGpr::getName(destGpr);
     out << " = ";
@@ -50,7 +50,7 @@ static void printInstGprOutGprInU16In(
     const uint8_t in1Gpr,
     const uint16_t in2U16,
     std::ostream& out
-) noexcept {
+) {
     const uint8_t destGpr = ins.getDestGprIdx();
     out << CpuGpr::getName(destGpr);
     out << " = ";
@@ -61,7 +61,7 @@ static void printInstGprOutGprInU16In(
     PrintUtils::printHexU16(in2U16, false, out);
 }
 
-static void printHexOffset(const int32_t offset, std::ostream& out) noexcept {
+static void printHexOffset(const int32_t offset, std::ostream& out) {
     if (offset >= 0) {
         out << "+";
     }
@@ -69,7 +69,7 @@ static void printHexOffset(const int32_t offset, std::ostream& out) noexcept {
     PrintUtils::printHexI32(offset, false, out);
 }
 
-static void printI16HexOffsetForInst(const int16_t offset, std::ostream& out) noexcept {
+static void printI16HexOffsetForInst(const int16_t offset, std::ostream& out) {
     // Note: don't print the offset when it is zero
     if (offset > 0) {
         out << " + ";
@@ -1001,6 +1001,24 @@ uint8_t CpuInstruction::getInputGprIdx2() const noexcept {
     return 0xFFu;   // No 2nd input GPR for this instruction
 }
 
+bool CpuInstruction::isInputGprIdx(const uint8_t gprIdx) const noexcept {
+    if (gprIdx < CpuGpr::NUM_GPRS) {
+        const uint8_t inputGprIdx1 = getInputGprIdx1();
+
+        if (gprIdx == inputGprIdx1) {
+            return true;
+        } else {
+            // Note: only look for a 2nd input GPR if there was a first!
+            if (inputGprIdx1 < CpuGpr::NUM_GPRS) {
+                const uint8_t inputGprIdx2 = getInputGprIdx2();
+                return (inputGprIdx2 == gprIdx);
+            }
+        }
+    }
+
+    return false;
+}
+
 bool CpuInstruction::isNOP() const noexcept {
     // If the instruction outputs to a register and that register is the special '$(ZERO)' register then this is a NOP.
     // Writes to '$(ZERO)' have no effect, because it is not a real register:
@@ -1086,7 +1104,7 @@ void CpuInstruction::print(
     const uint32_t thisInstAddr,
     const ProgElem* const pParentFunc,
     std::ostream& out
-) const noexcept {
+) const {
     // Easy case: handling illegal instructions
     if (isIllegal()) {
         out << "<ILLEGAL INSTRUCTION>";

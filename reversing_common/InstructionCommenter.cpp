@@ -9,13 +9,13 @@ static void prefixComment(
     const InstructionCommenter::CommentPrefixerFunc pCommentPrefixer,
     const uint32_t lineCol,
     std::ostream& out
-) noexcept {
+) {
     if (pCommentPrefixer) {
         pCommentPrefixer(lineCol, out);
     }
 }
 
-static void printNameAndAddress(const uint32_t addr, const ExeFile& exe, std::ostream& out) noexcept {
+static void printNameAndAddress(const uint32_t addr, const ExeFile& exe, std::ostream& out) {
     const bool bPrintedName = exe.printNameOfElemAtAddr(addr, out);
 
     // If we printed a name then print the address in brackets also
@@ -34,7 +34,7 @@ void InstructionCommenter::tryCommentInstruction(
     const CommentPrefixerFunc pCommentPrefixer,
     const uint32_t lineCol,
     std::ostream& out
-) noexcept {
+) {
     // If the instruction is a NOP then there is nothing to do
     if (inst.isNOP())
         return;

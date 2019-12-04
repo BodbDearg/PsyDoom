@@ -227,7 +227,7 @@ const ProgElem* ExeFile::findProgElemAtAddr(const uint32_t addr) const noexcept 
     return nullptr;
 }
 
-bool ExeFile::printNameOfElemAtAddr(const uint32_t addr, std::ostream& out) const noexcept {
+bool ExeFile::printNameOfElemAtAddr(const uint32_t addr, std::ostream& out) const {
     const ProgElem* const pElem = findProgElemAtAddr(addr);
 
     if (pElem) {

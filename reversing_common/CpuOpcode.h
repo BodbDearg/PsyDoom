@@ -1004,6 +1004,23 @@ namespace CpuOpcodeUtils {
         }
     }
 
+    // Tells if the CPU operation is one with a load delay slot
+    inline constexpr bool isLoadDelaySlotOpcode(const CpuOpcode opcode) noexcept {
+        switch (opcode) {
+            case CpuOpcode::LB:
+            case CpuOpcode::LBU:
+            case CpuOpcode::LH:
+            case CpuOpcode::LHU:
+            case CpuOpcode::LW:
+            case CpuOpcode::LWC2:
+            case CpuOpcode::LWL:
+            case CpuOpcode::LWR:
+                return true;
+        }
+
+        return false;
+    }
+
     inline constexpr bool isIllegalOpcode(const CpuOpcode opcode) noexcept {
         return ((uint32_t) opcode >= NUM_CPU_OPCODES);
     }

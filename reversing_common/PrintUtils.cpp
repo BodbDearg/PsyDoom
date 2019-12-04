@@ -2,7 +2,7 @@
 
 #include <type_traits>
 
-void PrintUtils::printHexDigit(const uint8_t nibble, std::ostream& out) noexcept {
+void PrintUtils::printHexDigit(const uint8_t nibble, std::ostream& out) {
     const uint8_t nibble4Bit = nibble & 0x0Fu;
 
     if (nibble4Bit < 10) {
@@ -13,7 +13,7 @@ void PrintUtils::printHexDigit(const uint8_t nibble, std::ostream& out) noexcept
 }
 
 template <class T>
-static void printHexInt(const T val, const bool bZeroPad, std::ostream& out) noexcept {
+static void printHexInt(const T val, const bool bZeroPad, std::ostream& out) {
     // Add in the negative sign if required
     if constexpr (std::is_signed_v<T>) {
         if (val < 0) {
@@ -65,35 +65,35 @@ static void printHexInt(const T val, const bool bZeroPad, std::ostream& out) noe
     }
 }
 
-void PrintUtils::printHexU8(const uint8_t val, const bool bZeroPad, std::ostream& out) noexcept {
+void PrintUtils::printHexU8(const uint8_t val, const bool bZeroPad, std::ostream& out) {
     printHexInt(val, bZeroPad, out);
 }
 
-void PrintUtils::printHexI8(const int8_t val, const bool bZeroPad, std::ostream& out) noexcept {
+void PrintUtils::printHexI8(const int8_t val, const bool bZeroPad, std::ostream& out) {
     printHexInt(val, bZeroPad, out);
 }
 
-void PrintUtils::printHexU16(const uint16_t val, const bool bZeroPad, std::ostream& out) noexcept {
+void PrintUtils::printHexU16(const uint16_t val, const bool bZeroPad, std::ostream& out) {
     printHexInt(val, bZeroPad, out);
 }
 
-void PrintUtils::printHexI16(const int16_t val, const bool bZeroPad, std::ostream& out) noexcept {
+void PrintUtils::printHexI16(const int16_t val, const bool bZeroPad, std::ostream& out) {
     printHexInt(val, bZeroPad, out);
 }
 
-void PrintUtils::printHexU32(const uint32_t val, const bool bZeroPad, std::ostream& out) noexcept {
+void PrintUtils::printHexU32(const uint32_t val, const bool bZeroPad, std::ostream& out) {
     printHexInt(val, bZeroPad, out);
 }
 
-void PrintUtils::printHexI32(const int32_t val, const bool bZeroPad, std::ostream& out) noexcept {
+void PrintUtils::printHexI32(const int32_t val, const bool bZeroPad, std::ostream& out) {
     printHexInt(val, bZeroPad, out);
 }
 
-void PrintUtils::printBool(const bool bVal, std::ostream& out) noexcept {
+void PrintUtils::printBool(const bool bVal, std::ostream& out) {
     out << (bVal ? "true" : "false");   // N.B - parens are important for correct op order!
 }
 
-void PrintUtils::printEscapedChar(const char val, std::ostream& out) noexcept {
+void PrintUtils::printEscapedChar(const char val, std::ostream& out) {
     const uint8_t valU8 = (uint8_t) val;
 
     if (valU8 >= 32 && valU8 <= 126) {

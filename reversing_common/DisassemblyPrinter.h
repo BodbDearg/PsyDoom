@@ -10,5 +10,5 @@
 struct ExeFile;
 
 namespace DisassemblyPrinter {
-    void printExe(const ExeFile& exe, std::ostream& out) noexcept;
+    void printExe(const ExeFile& exe, std::ostream& out);
 }
