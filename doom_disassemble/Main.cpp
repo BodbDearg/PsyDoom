@@ -2,6 +2,7 @@
 #include "ExeFile.h"
 #include "FatalErrors.h"
 #include "ProgElems.h"
+#include "PseudoCppPrinter.h"
 #include <cstdio>
 #include <fstream>
 
@@ -83,6 +84,15 @@ int main(int argc, char* argv[]) noexcept {
         DisassemblyPrinter::printExe(exe, fileOut);
     } catch (...) {
         FATAL_ERROR("Failed writing the disassembly to the output file!");
+    }
+
+    // Start printing the .cpp file
+    try {
+        std::fstream fileOut;
+        fileOut.open("disasm_doom.cpp", std::fstream::out);
+        PseudoCppPrinter::printCpp(exe, fileOut);
+    } catch (...) {
+        FATAL_ERROR("Failed writing the pseudo c++ code to the output file!");
     }
 
     return 0;

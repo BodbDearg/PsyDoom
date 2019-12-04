@@ -1144,7 +1144,7 @@ static const ProgElem ELEMS[] = {
     { 0x800506E4, 0x800506F4, "LIBGTE_NormalClipS",                     ProgElemType::FUNCTION },
     { 0x800506F4, 0x80050704, "LIBGTE_AverageSZ3",                      ProgElemType::FUNCTION },
     { 0x80050704, 0x80050714, "LIBGTE_AverageSZ4",                      ProgElemType::FUNCTION },
-    { 0x80050714, 0x800507AC, "main",                                   ProgElemType::FUNCTION },
+    { 0x80050714, 0x800507AC, "psyq_main",                              ProgElemType::FUNCTION },
     { 0x800507AC, 0x8005081C, "LIBSN__main",                            ProgElemType::FUNCTION },
     { 0x8005081C, 0x80050884, "LIBSN___do_global_dtors",                ProgElemType::FUNCTION },
     { 0x80050884, 0x80050894, "LIBAPI_InitHeap",                        ProgElemType::FUNCTION },
