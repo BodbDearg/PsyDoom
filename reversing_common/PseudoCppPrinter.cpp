@@ -180,7 +180,7 @@ static void printInst(
     out << mnemonic;
     out.put('(');
     printInstArgs(out, args...);
-    out << ");";
+    out << ")";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -197,7 +197,7 @@ static void indentByNumChars(const uint32_t numChars, std::ostream& out) {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void prefixInstructionComment(const uint32_t lineCol, std::ostream& out) {
     // Figure out the start column for the comment
-    constexpr uint32_t minCommentStartCol = 48u;
+    constexpr uint32_t minCommentStartCol = 56u;
     uint32_t commentStartCol = std::max(minCommentStartCol, lineCol);
 
     while (commentStartCol % 4 != 0) {
@@ -445,98 +445,10 @@ static void printNonBranchOrJumpInstruction(
         case CpuOpcode::SWC2:
             printInst(out, inst, DecU8Arg{ inst.regT }, GprArg{ inst.regS }, HexI16Arg{ (int16_t) inst.immediateVal });
             break;
-
-    /*
-    //------------------------------------------------------------------------------------------------------------------
-    // [JUMP]
-    //      Branch to the given program 32-bit WORD index 'I' (note: NOT byte!) within the current 256 MB memory region.
-    //
-    // Encoding: 000010 IIIII IIIII IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    J,
-    //------------------------------------------------------------------------------------------------------------------
-    // [JUMP AND LINK]
-    //      Branch to the given program 32-bit WORD index 'I' (note: NOT byte!) within the current 256 MB memory region.
-    //      The address of the 2nd (note: NOT 1st!) instruction following the branch is also saved in register 'RA' (R31).
-    //
-    // Encoding: 000011 IIIII IIIII IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    JAL,
-    //------------------------------------------------------------------------------------------------------------------
-    // [JUMP AND LINK REGISTER]
-    //      Branch to the location specified in register 'S' and place the return address in register 'D'.
-    //      Note: the return address is the address of the 2nd (note: NOT 1st!) instruction following the branch.
-    //
-    // Encoding: 000000 SSSSS ----- DDDDD ----- 001001
-    //------------------------------------------------------------------------------------------------------------------
-    JALR,
-    //------------------------------------------------------------------------------------------------------------------
-    // [JUMP REGISTER]
-    //      Branch to the location specified in register 'S'.
-    //
-    // Encoding: 000000 SSSSS ----- ----- ----- 001000
-    //------------------------------------------------------------------------------------------------------------------
-    JR,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON EQUAL]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if 'S' == 'T' where 'S', 'T' are registers.
-    //
-    // Encoding: 000100 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BEQ,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON GREATER THAN OR EQUAL TO ZERO]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if register 'S' is >= 0.
-    //
-    // Encoding: 000001 SSSSS 00001 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BGEZ,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON GREATER THAN OR EQUAL TO ZERO AND LINK]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is >= 0 and 'link'.
-    //      The address of the 2nd (note: NOT 1st!) instruction following the branch is saved in register 'RA' (R31).
-    //
-    // Encoding: 000001 SSSSS 10001 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BGEZAL,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON GREATER THAN ZERO]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if register 'S' > 0.
-    //
-    // Encoding: 000111 SSSSS ----- IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BGTZ,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON LESS THAN OR EQUAL TO ZERO]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is <= 0.
-    //
-    // Encoding: 000110 SSSSS ----- IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BLEZ,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON LESS THAN ZERO]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is < 0.
-    //
-    // Encoding: 000001 SSSSS 00000 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BLTZ,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON LESS THAN ZERO AND LINK]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset if register 'S' is < 0 and 'link'.
-    //      The address of the 2nd (note: NOT 1st!) instruction following the branch is saved in register 'RA' (R31).
-    //
-    // Encoding: 000001 SSSSS 10000 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BLTZAL,
-    //------------------------------------------------------------------------------------------------------------------
-    // [BRANCH ON NOT EQUAL]
-    //      Branch to the given SIGNED 16-bit WORD (not byte!) offset 'I' if 'S' != 'T' where 'S', 'T' are registers.
-    //
-    // Encoding: 000101 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    BNE,
-    */
     }
+
+    // Terminate instruction
+    out.put(';');
 
     // Figure out the printed length of the instruction
     const int64_t instructionEndStreamPos = out.tellp();
@@ -557,6 +469,161 @@ static void printNonBranchOrJumpInstruction(
 
     // Next line!
     out.put('\n');
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Print an instruction that a branch or jump
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void printBranchOrJumpInstruction(
+    const ExeFile& exe,
+    const CpuInstruction branchInst,
+    const uint32_t branchInstAddr,
+    const CpuInstruction nextInst,
+    const uint32_t nextInstAddr,
+    const uint32_t indent,
+    std::ostream& out
+) {
+    // Print the instruction goto label if it requires it, first
+    if (doesInstructionRequireAGotoLabel(exe, branchInstAddr)) {
+        out << "loc_";
+        PrintUtils::printHexU32(branchInstAddr, true, out);
+        out << ":\n";
+    }
+
+    // Figure out if this instruction is a branch
+    const bool bIsBranch = CpuOpcodeUtils::isBranchOpcode(branchInst.opcode);
+
+    // If the instruction is a branch, also figure out whether we can evaluate the branch condition and jump as the last step.
+    // If we can do it, this reordering of instructions allows us to produce shorter and cleaner output.
+    // This is only possible however if the next instruction does NOT modify any of the register that the branch condition depends on.
+    bool bCanLateEvalBranchCond = false;
+
+    if (bIsBranch) {
+        const uint8_t nextInstDestGpr = nextInst.getDestGprIdx();
+        bCanLateEvalBranchCond = (
+            (nextInstDestGpr >= CpuGpr::NUM_GPRS) ||
+            (!branchInst.isInputGprIdx(nextInstDestGpr)) ||
+            (nextInst.isNOP())
+        );
+    }
+
+    // Handle branches that require us to evaluate the branch condition first.
+    // This requires creating a scope, and a boolean variable:
+    uint32_t instIndent = indent;
+
+    if (bIsBranch && (!bCanLateEvalBranchCond)) {
+        // Create a new scope 
+        indentByNumChars(indent, out);
+        out << "{\n";
+
+        // Evaluate the condition
+        instIndent += 4;
+        indentByNumChars(instIndent, out);
+        out << "const bool bJump = ";
+
+        switch (branchInst.opcode) {
+            case CpuOpcode::BEQ:
+            case CpuOpcode::BNE:
+                printInst(out, branchInst, GprArg{ branchInst.regS }, GprArg{ branchInst.regT });
+                break;
+
+            case CpuOpcode::BGEZ:
+            case CpuOpcode::BGTZ:
+            case CpuOpcode::BLEZ:
+            case CpuOpcode::BLTZ:
+                printInst(out, branchInst, GprArg{ branchInst.regS });
+                break;
+
+            // Note: not supporting 'BGEZAL' or 'BLTZAL'!
+            // These are not used in Doom anyway, and probably would not be emitted by a C compiler...
+            case CpuOpcode::BGEZAL:
+            case CpuOpcode::BLTZAL:
+            default:
+                FATAL_ERROR("Unhandled or unsupported branch opcode!");
+                break;
+        }
+
+        out.put('\n');
+    }
+
+    // Print the instruction that follows the branch
+    printNonBranchOrJumpInstruction(exe, nextInst, nextInstAddr, instIndent, out);
+
+    // Handle the branch or jump itself
+    indentByNumChars(instIndent, out);
+
+    if (bIsBranch) {
+        if (bCanLateEvalBranchCond) {
+            // Branch instruction that can be evaluated late: print the if statement
+            out << "if (";
+
+            switch (branchInst.opcode) {
+                case CpuOpcode::BEQ:
+                case CpuOpcode::BNE:
+                    printInst(out, branchInst, GprArg{ branchInst.regS }, GprArg{ branchInst.regT });
+                    break;
+
+                case CpuOpcode::BGEZ:
+                case CpuOpcode::BGTZ:
+                case CpuOpcode::BLEZ:
+                case CpuOpcode::BLTZ:
+                    printInst(out, branchInst, GprArg{ branchInst.regS });
+                    break;
+
+                // Note: not supporting 'BGEZAL' or 'BLTZAL'!
+                // These are not used in Doom anyway, and probably would not be emitted by a C compiler...
+                case CpuOpcode::BGEZAL:
+                case CpuOpcode::BLTZAL:
+                default:
+                    FATAL_ERROR("Unhandled or unsupported branch opcode!");
+                    break;
+            }
+
+            // And print the goto logic for the branch
+            out << ") goto loc_";
+            PrintUtils::printHexU32(branchInst.getBranchInstTargetAddr(branchInstAddr), true, out);
+            out << ";\n";
+        } else {
+            // Branch instruction that can be evaluated late: branch to the specified location if the condition is true
+            out << "if (bJump) goto loc_";
+            PrintUtils::printHexU32(branchInst.getBranchInstTargetAddr(branchInstAddr), true, out);
+            out << ";\n";
+
+            // Close up the scope
+            indentByNumChars(indent, out);
+            out << "}\n";
+        }
+    } else {
+        // Dealing with a jump instruction.
+        // The way we deal with this will vary greatly depending on the instruction...
+        if (branchInst.opcode == CpuOpcode::J) {
+            // Jump just needs a simple 'goto'
+            out << "goto loc_";
+            PrintUtils::printHexU32(branchInst.getBranchInstTargetAddr(branchInstAddr), true, out);
+            out << ";\n";
+        } else if (branchInst.opcode == CpuOpcode::JAL) {
+            // A fixed function call is also easy
+            exe.printNameOfElemAtAddr(branchInst.getFixedJumpInstTargetAddr(branchInstAddr), out);
+            out << "();\n";
+        } else if (branchInst.opcode == CpuOpcode::JALR) {
+            // JALR is tricker.
+            // We need the host program to define the mappings to C++ functions:
+            out << "vm_call(";
+            getGprCppMacroName(branchInst.regS);
+            out << ");\n";
+        } else if (branchInst.opcode == CpuOpcode::JR) {
+            // JR is the trickiest.
+            // It's either a jump table (used for switch statements) or a bios call.
+            // In a lot of cases though it might just be 'jr $ra', which is simply 'return;' in C++:
+            if (branchInst.regS == CpuGpr::RA) {
+                out << "return;\n";
+            } else {
+                out << "<TODO - JR INSTRUCTION!>;\n";
+            }
+        } else {
+            FATAL_ERROR("Illegal jump instruction!");
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -606,8 +673,8 @@ static void printFunction(const ExeFile& exe, const ProgElem& progElem, std::ost
         // See if we are dealing with a branch or jump or just an ordinary instruction.
         // For branches/jumps we need to reorder instructions to account for the branch delay slot:
         if (CpuOpcodeUtils::isBranchOrJumpOpcode(thisInst.opcode)) {
-            // TODO
-            wordIdx += 1;
+            printBranchOrJumpInstruction(exe, thisInst, thisInstAddr, nextInst, nextInstAddr, 4, out);
+            wordIdx += 2;
         } else {
             // Simple case, print a single instruction and move along by 1 instruction
             printNonBranchOrJumpInstruction(exe, thisInst, thisInstAddr, 4, out);
