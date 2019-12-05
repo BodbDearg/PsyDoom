@@ -25,6 +25,18 @@ static void printHexCppInt16Literal(const int16_t valI16, bool bZeroPad, std::os
     }
 }
 
+static void printHexCppInt32Literal(const int32_t valI32, bool bZeroPad, std::ostream& out) noexcept {
+    const int64_t valI64 = valI32;
+
+    if (valI64 < 0) {
+        out << "-0x";
+        PrintUtils::printHexU32((uint32_t)(-valI64), bZeroPad, out);
+    } else {
+        out << "0x";
+        PrintUtils::printHexU32((uint32_t) valI64, bZeroPad, out);
+    }
+}
+
 static void printHexCppUint16Literal(const uint16_t valU16, bool bZeroPad, std::ostream& out) noexcept {    
     out << "0x";
     PrintUtils::printHexU16(valU16, bZeroPad, out);
@@ -78,139 +90,97 @@ static const char* getGprCppMacroName(const uint8_t gprIdx) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Print an instruction that assigns to a GPR and that has two input GPR arguments
+// Instruction argument types
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void printInstGprOutGprInGprIn(
-    const CpuInstruction& ins,    
-    const uint8_t in1Gpr,
-    const uint8_t in2Gpr,
-    std::ostream& out
-) {
-    const uint8_t destGpr = ins.getDestGprIdx();
-    out << getGprCppMacroName(destGpr);
-    out << " = ";
-    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
-    out << "(";
-    out << getGprCppMacroName(in1Gpr);
+struct GprArg       { uint8_t val;  };
+struct DecU8Arg     { uint8_t val;  };
+struct HexI16Arg    { int16_t val;  };
+struct HexU16Arg    { uint16_t val; };
+struct HexI32Arg    { int32_t val;  };
+struct HexU32Arg    { uint32_t val; };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Printing of instruction arguments
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static void printSingleInstArg(std::ostream& out, const T arg);
+
+template <>
+void printSingleInstArg(std::ostream& out, const GprArg arg) {
+    out << getGprCppMacroName(arg.val);
+}
+
+template <>
+void printSingleInstArg(std::ostream& out, const DecU8Arg arg) {
+    out << (uint32_t) arg.val;
+}
+
+template <>
+void printSingleInstArg(std::ostream& out, const HexI16Arg arg) {
+    printHexCppInt16Literal(arg.val, false, out);
+}
+
+template <>
+void printSingleInstArg(std::ostream& out, const HexU16Arg arg) {
+    printHexCppUint16Literal(arg.val, false, out);
+}
+
+template <>
+void printSingleInstArg(std::ostream& out, const HexI32Arg arg) {
+    printHexCppInt32Literal(arg.val, false, out);
+}
+
+template <>
+void printSingleInstArg(std::ostream& out, const HexU32Arg arg) {
+    printHexCppUint32Literal(arg.val, false, out);
+}
+
+template <class... Args>
+static void printInstArgs(std::ostream& out, const Args... args);
+
+static void printInstArgs([[maybe_unused]] std::ostream& out) {}
+
+template <class T>
+static void printInstArgs(std::ostream& out, const T arg) {
+    printSingleInstArg(out, arg);
+}
+
+template <class T, class... Args>
+static void printInstArgs(std::ostream& out, const T arg, const Args... args) {
+    printSingleInstArg(out, arg);
     out << ", ";
-    out << getGprCppMacroName(in2Gpr);
-    out << ");";
+    printInstArgs(out, args...);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Print an instruction that assigns to a GPR and that has an input GPR arg followed by an I16 constant
+// Print a generic instruction
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void printInstGprOutGprInI16In(    
+template <class... Args>
+static void printInst(
+    std::ostream& out,
     const CpuInstruction& ins,
-    const uint8_t in1Gpr,
-    const int16_t in2I16,
-    std::ostream& out
+    const Args... args    
 ) {
+    // Print the destination register, if any
     const uint8_t destGpr = ins.getDestGprIdx();
-    out << getGprCppMacroName(destGpr);
-    out << " = ";
-    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
+
+    if (destGpr < CpuGpr::NUM_GPRS) {
+        out << getGprCppMacroName(destGpr);
+        out << " = ";
+    }
+
+    // Print opcode Mnemonic, braces and function arguments.
+    // Note: replace some reserved C++ words also!
+    const char* mnemonic = CpuOpcodeUtils::getMnemonic(ins.opcode);
+
+    if (std::strcmp(mnemonic, "break") == 0) {
+        mnemonic = "_break";
+    }
+
+    out << mnemonic;
     out.put('(');
-    out << getGprCppMacroName(in1Gpr);
-    out << ", ";
-    printHexCppInt16Literal(in2I16, false, out);
+    printInstArgs(out, args...);
     out << ");";
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Print an instruction that assigns to a GPR and that has an input GPR arg followed by an U16 constant
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void printInstGprOutGprInU16In(    
-    const CpuInstruction& ins,
-    const uint8_t in1Gpr,
-    const uint16_t in2U16,
-    std::ostream& out
-) {
-    const uint8_t destGpr = ins.getDestGprIdx();
-    out << getGprCppMacroName(destGpr);
-    out << " = ";
-    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
-    out.put('(');
-    out << getGprCppMacroName(in1Gpr);
-    out << ", ";
-    printHexCppUint16Literal(in2U16, false, out);
-    out << ");";
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Print an instruction that assigns to a GPR and that an input U16 constant
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void printInstGprOutU16In(    
-    const CpuInstruction& ins,
-    const uint16_t inU16,
-    std::ostream& out
-) {
-    const uint8_t destGpr = ins.getDestGprIdx();
-    out << getGprCppMacroName(destGpr);
-    out << " = ";
-    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
-    out.put('(');
-    printHexCppUint16Literal(inU16, false, out);
-    out << ");";
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Print an instruction has two input GPRs and an input I16 constant
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void printInstGprInGprInI16In(
-    const CpuInstruction& ins,    
-    const uint8_t in1Gpr,
-    const uint8_t in2Gpr,
-    const int16_t in3I16,
-    std::ostream& out
-) {
-    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
-    out << "(";
-    out << getGprCppMacroName(in1Gpr);
-    out << ", ";
-    out << getGprCppMacroName(in2Gpr);
-    out << ", ";
-    printHexCppInt16Literal(in3I16, false, out);
-    out << ");";
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Print an instruction has two input GPRs and no output
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void printInstGprInGprIn(
-    const CpuInstruction& ins,    
-    const uint8_t in1Gpr,
-    const uint8_t in2Gpr,
-    std::ostream& out
-) {
-    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
-    out << "(";
-    out << getGprCppMacroName(in1Gpr);
-    out << ", ";
-    out << getGprCppMacroName(in2Gpr);
-    out << ");";
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Print an instruction that takes a single U32 constant as input and has no outputs
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void printInstU32In(    
-    const CpuInstruction& ins,
-    const uint32_t inU32,
-    std::ostream& out
-) {
-    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
-    out.put('(');
-    printHexCppUint32Literal(inU32, false, out);
-    out << ");";
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Print an instruction that has no inputs and no output
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void printInstNoParamNoReturn(const CpuInstruction& ins, std::ostream& out) {
-    out << CpuOpcodeUtils::getMnemonic(ins.opcode);
-    out << "();";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -342,10 +312,24 @@ static void printNonBranchOrJumpInstruction(
 
     // Print the instruction firstly
     switch (inst.opcode) {
-        // REG_OUT = OPERATION(regS, regT)
+        // OPERATION(regS, regT, (uint16_t) immVal)
+        case CpuOpcode::TEQ:
+        case CpuOpcode::TGE:
+        case CpuOpcode::TGEU:
+        case CpuOpcode::TLT:
+        case CpuOpcode::TLTU:
+        case CpuOpcode::TNE:
+            printInst(out, inst, GprArg{ inst.regS }, GprArg{ inst.regT }, HexU16Arg{ (uint16_t) inst.immediateVal });
+            break;
+
+        // OPERATION(regS, regT)
         case CpuOpcode::ADD:
         case CpuOpcode::ADDU:
         case CpuOpcode::AND:
+        case CpuOpcode::DIV:
+        case CpuOpcode::DIVU:
+        case CpuOpcode::MULT:
+        case CpuOpcode::MULTU:
         case CpuOpcode::NOR:
         case CpuOpcode::OR:
         case CpuOpcode::SLT:
@@ -353,415 +337,116 @@ static void printNonBranchOrJumpInstruction(
         case CpuOpcode::SUB:
         case CpuOpcode::SUBU:
         case CpuOpcode::XOR:
-            printInstGprOutGprInGprIn(inst, inst.regS, inst.regT, out);
+            printInst(out, inst, GprArg{ inst.regS }, GprArg{ inst.regT });
             break;
 
-        // REG_OUT = OPERATION(regT, regS)
+        // OPERATION(regT, regS)
         case CpuOpcode::SLLV:
         case CpuOpcode::SRAV:
         case CpuOpcode::SRLV:
-            printInstGprOutGprInGprIn(inst, inst.regT, inst.regS, out);
+            printInst(out, inst, GprArg{ inst.regT }, GprArg{ inst.regS });
             break;
 
-        // REG_OUT = OPERATION(regS, (int16_t) immVal)
+        // OPERATION(regT, regS, (int16_t) immVal)
+        case CpuOpcode::LWL:
+        case CpuOpcode::LWR:
+        case CpuOpcode::SB:
+        case CpuOpcode::SH:
+        case CpuOpcode::SW:
+        case CpuOpcode::SWL:
+        case CpuOpcode::SWR:
+            printInst(out, inst, GprArg{ inst.regT }, GprArg{ inst.regS }, HexI16Arg{ (int16_t) inst.immediateVal });
+            break;
+
+        // OPERATION(regS, (int32_t) immVal)
+        case CpuOpcode::TEQI:
+        case CpuOpcode::TGEI:
+        case CpuOpcode::TLTI:
+        case CpuOpcode::TNEI:
+            printInst(out, inst, GprArg{ inst.regS }, HexI32Arg{ (int32_t) inst.immediateVal });
+            break;
+
+        // OPERATION(regS, (uint32_t) immVal)
+        case CpuOpcode::TGEIU:
+        case CpuOpcode::TLTIU:
+            printInst(out, inst, GprArg{ inst.regS }, HexU32Arg{ inst.immediateVal });
+            break;
+
+        // OPERATION(regS, (int16_t) immVal)
         case CpuOpcode::ADDI:
         case CpuOpcode::ADDIU:
-        case CpuOpcode::SLTI:
         case CpuOpcode::LB:
         case CpuOpcode::LBU:
         case CpuOpcode::LH:
         case CpuOpcode::LHU:
         case CpuOpcode::LW:
-            printInstGprOutGprInI16In(inst, inst.regS, (int16_t) inst.immediateVal, out);
+        case CpuOpcode::SLTI:
+        case CpuOpcode::SLTIU:
+            printInst(out, inst, GprArg{ inst.regS }, HexI16Arg{ (int16_t) inst.immediateVal });
             break;
 
-        // REG_OUT = OPERATION(regS, (uint16_t) immVal)
+        // OPERATION(regS, (uint16_t) immVal)
         case CpuOpcode::ANDI:
         case CpuOpcode::ORI:
-        case CpuOpcode::SLTIU:
         case CpuOpcode::XORI:
-            printInstGprOutGprInU16In(inst, inst.regS, (uint16_t) inst.immediateVal, out);
+            printInst(out, inst, GprArg{ inst.regS }, HexU16Arg{ (uint16_t) inst.immediateVal });
             break;
 
-        // REG_OUT = OPERATION(regT, (uint16_t) immVal)
+        // OPERATION(regT, (uint16_t) immVal)
         case CpuOpcode::SLL:
         case CpuOpcode::SRA:
         case CpuOpcode::SRL:
-            printInstGprOutGprInU16In(inst, inst.regT, (uint16_t) inst.immediateVal, out);
+            printInst(out, inst, GprArg{ inst.regT }, HexU16Arg{ (uint16_t) inst.immediateVal });
             break;
 
-        // REG_OUT = OPERATION((uint16_t) immVal)
+        // OPERATION(regS)
+        case CpuOpcode::MTHI:
+        case CpuOpcode::MTLO:
+            printInst(out, inst, GprArg{ inst.regS });
+            break;
+
+        // OPERATION((uint16_t) immVal)
         case CpuOpcode::LUI:
-            printInstGprOutU16In(inst, (uint16_t) inst.immediateVal, out);
-            break;
-
-        // OPERATION(regS, regT)
-        case CpuOpcode::DIV:
-        case CpuOpcode::DIVU:
-        case CpuOpcode::MULT:
-        case CpuOpcode::MULTU:
-            printInstGprInGprIn(inst, inst.regS, inst.regT, out);
-            break;
-
-        // OPERATION(regT, regS, (int16_t) immVal)
-        case CpuOpcode::SB:
-        case CpuOpcode::SH:
-        case CpuOpcode::SW:
-            printInstGprInGprInI16In(inst, inst.regT, inst.regS, (int16_t) inst.immediateVal, out);
+            printInst(out, inst, HexU16Arg{ (uint16_t) inst.immediateVal });
             break;
 
         // OPERATION((uint32_t) immVal)
         case CpuOpcode::BREAK:
         case CpuOpcode::COP2:
         case CpuOpcode::SYSCALL:
-            printInstU32In(inst, inst.immediateVal, out);
+            printInst(out, inst, HexU32Arg{ inst.immediateVal });
             break;
 
-        // Instructions with no inputs or outputs
+        // OPERATION()
         case CpuOpcode::RFE:
         case CpuOpcode::TLBP:
         case CpuOpcode::TLBR:
         case CpuOpcode::TLBWI:
         case CpuOpcode::TLBWR:
-            printInstNoParamNoReturn(inst, out);
+        case CpuOpcode::MFHI:
+        case CpuOpcode::MFLO:
+            printInst(out, inst);
             break;
 
         // Special cases
         case CpuOpcode::CFC2:
-            printInstGprOutU16In(inst, (uint16_t) inst.regD, out);
+        case CpuOpcode::MFC0:
+        case CpuOpcode::MFC2:
+            printInst(out, inst, DecU8Arg{ inst.regD });
+            break;
+
+        case CpuOpcode::CTC2:
+        case CpuOpcode::MTC0:
+        case CpuOpcode::MTC2:
+            printInst(out, inst, GprArg{ inst.regT }, DecU8Arg{ inst.regD });
+            break;
+
+        case CpuOpcode::LWC2:
+        case CpuOpcode::SWC2:
+            printInst(out, inst, DecU8Arg{ inst.regT }, GprArg{ inst.regS }, HexI16Arg{ (int16_t) inst.immediateVal });
             break;
 
     /*
-    //------------------------------------------------------------------------------------------------------------------
-    // [MOVE CONTROL WORD TO COPROCESSOR 2]
-    //      Move a value from register 'T' and save to coprocessor 2 control register 'D':
-    //          COP2_C[D] = T
-    //
-    // Encoding: 010010 00110 TTTTT DDDDD ----- ------
-    //------------------------------------------------------------------------------------------------------------------
-    CTC2,
-    //------------------------------------------------------------------------------------------------------------------
-    // [LOAD WORD TO COPROCESSOR 2]
-    //      Load the contents of the ALIGNED 32-bit word pointed to by register 'S' plus the 16-bit SIGNED constant
-    //      offset 'I' and store in coprocessor 2 register 'T':
-    //          COP2[T] = S[I]
-    //
-    // Encoding: 110010 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    LWC2,
-    //------------------------------------------------------------------------------------------------------------------
-    // [LOAD WORD LEFT]
-    //      Makeup a POTENTIALLY UNALIGNED memory address 'A' by adding the address in register 'S' plus the 16-bit
-    //      SIGNED constant offset 'I'. Then forcefully word align 'A' by truncating 2 bits to form address 'AL'.
-    //      Replace the MOST SIGNIFICANT bytes in output register 'T' which are in the word pointed to by 'AL' and
-    //      which are <= address 'A'. All other bytes remain unchanged.
-    //      
-    //      Pseudocode:
-    //          A = S + I
-    //          AL = A & FFFFFFFC
-    //
-    //          switch (A % 4)
-    //              case 0:     T = (T & 00FFFFFF) | (AL[0] << 24)
-    //              case 1:     T = (T & 0000FFFF) | (AL[0] << 16)
-    //              case 2:     T = (T & 000000FF) | (AL[0] << 8)
-    //              case 3:     T = (T & 00000000) | (AL[0] << 0)
-    //
-    // Encoding: 100010 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    LWL,
-    //------------------------------------------------------------------------------------------------------------------
-    // [LOAD WORD RIGHT]
-    //      Makeup a POTENTIALLY UNALIGNED memory address 'A' by adding the address in register 'S' plus the 16-bit
-    //      SIGNED constant offset 'I'. Then forcefully word align 'A' by truncating 2 bits to form address 'AL'.
-    //      Replace the LEAST SIGNIFICANT bytes in output register 'T' which are in the word pointed to by 'AL' and
-    //      which are >= address 'A'. All other bytes remain unchanged.
-    //
-    //      Pseudocode:
-    //          A = S + I
-    //          AL = A & FFFFFFFC
-    //
-    //          switch (A % 4)
-    //              case 0:     T = (T & 00000000) | (AL[0] >> 0)
-    //              case 1:     T = (T & FF000000) | (AL[0] >> 8)
-    //              case 2:     T = (T & FFFF0000) | (AL[0] >> 16)
-    //              case 3:     T = (T & FFFFFF00) | (AL[0] >> 24)
-    //
-    // Encoding: 100110 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    LWR,
-    //------------------------------------------------------------------------------------------------------------------
-    // [MOVE FROM COPROCESSOR 0]
-    //      Move a value from a coprocessor 0 register 'D' and save the result in register 'T':
-    //          T = COP0[D]
-    //
-    // Encoding: 010000 00000 TTTTT DDDDD ----- ------
-    //------------------------------------------------------------------------------------------------------------------
-    MFC0,
-    //------------------------------------------------------------------------------------------------------------------
-    // [MOVE FROM COPROCESSOR 2]
-    //      Move a value from a coprocessor 2 register 'D' and save the result in register 'T':
-    //          T = COP2[D]
-    //
-    // Encoding: 010010 00000 TTTTT DDDDD ----- ------
-    //------------------------------------------------------------------------------------------------------------------
-    MFC2,
-    //------------------------------------------------------------------------------------------------------------------
-    // [MOVE FROM HI REGISTER]
-    //      Copy the value in the special purpose 'HI' register to the given register 'D':
-    //          D = HI
-    //
-    //      IMPORTANT: there are MANY restrictions to when values can be moved TO and FROM this register and what
-    //      causes unpredictable behavior. See the MIPS instruction set reference for more details.
-    //
-    // Encoding: 000000 ----- ----- DDDDD ----- 010000
-    //------------------------------------------------------------------------------------------------------------------
-    MFHI,
-    //------------------------------------------------------------------------------------------------------------------
-    // [MOVE FROM LO REGISTER]
-    //      Copy the value in the special purpose 'LO' register to the given register 'D':
-    //          D = LO
-    //
-    //      IMPORTANT: there are MANY restrictions to when values can be moved TO and FROM this register and what
-    //      causes unpredictable behavior. See the MIPS instruction set reference for more details.
-    //
-    // Encoding: 000000 ----- ----- DDDDD ----- 010010
-    //------------------------------------------------------------------------------------------------------------------
-    MFLO,
-    //------------------------------------------------------------------------------------------------------------------
-    // [MOVE TO COPROCESSOR 0]
-    //      Move a value to a coprocessor 0 register 'D' from register 'T':
-    //          COP0[D] = T
-    //
-    // Encoding: 010000 00100 TTTTT DDDDD ----- ------
-    //------------------------------------------------------------------------------------------------------------------
-    MTC0,
-    //------------------------------------------------------------------------------------------------------------------
-    // [MOVE TO COPROCESSOR 2]
-    //      Move a value to a coprocessor 2 register 'D' from register 'T':
-    //          COP2[D] = T
-    //
-    // Encoding: 010010 00100 TTTTT DDDDD ----- ------
-    //------------------------------------------------------------------------------------------------------------------
-    MTC2,
-    //------------------------------------------------------------------------------------------------------------------
-    // [MOVE TO HI REGISTER]
-    //      Move a value from register 'S' to the special purpose 'HI' register:
-    //          HI = S
-    //
-    //      IMPORTANT: there are MANY restrictions to when values can be moved TO and FROM this register and what
-    //      causes unpredictable behavior. See the MIPS instruction set reference for more details.
-    //
-    // Encoding: 000000 SSSSS ----- ----- ----- 010001
-    //------------------------------------------------------------------------------------------------------------------
-    MTHI,
-    //------------------------------------------------------------------------------------------------------------------
-    // [MOVE TO LO REGISTER]
-    //      Move a value from register 'S' to the special purpose 'LO' register:
-    //          LO = S
-    //
-    //      IMPORTANT: there are MANY restrictions to when values can be moved TO and FROM this register and what
-    //      causes unpredictable behavior. See the MIPS instruction set reference for more details.
-    //
-    // Encoding: 000000 SSSSS ----- ----- ----- 010011
-    //------------------------------------------------------------------------------------------------------------------
-    MTLO,
-    //------------------------------------------------------------------------------------------------------------------
-    // [STORE WORD FROM COPROCESSOR 2]
-    //      Store the contents of coprocessor 2 register 'T' to the ALIGNED 32-bit word pointed to by register 'S' plus
-    //      the 16-bit SIGNED constant offset 'I':
-    //          S[I] = COP2[T]
-    //
-    // Encoding: 111010 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    SWC2,
-    //------------------------------------------------------------------------------------------------------------------
-    // [STORE WORD LEFT]
-    //      Makeup a POTENTIALLY UNALIGNED memory address 'A' by adding the address in register 'S' plus the 16-bit
-    //      SIGNED constant offset 'I'. Then forcefully word align 'A' by truncating 2 bits to form address 'AL'.
-    //      Store a varying number of the MOST SIGNIFICANT bytes in register 'T' to the LEAST SIGNIFICANT bytes of
-    //      address 'AL' based on the alignment of address 'A'. Note: all other bytes remain unchanged.
-    //
-    //      The 4 possible cases are outlined below:
-    //          A = S + I
-    //          AL = A & FFFFFFFC
-    //
-    //          switch (A % 4)
-    //              case 0:     AL[0] = (AL[0] & FFFFFF00) | (T >> 24)
-    //              case 1:     AL[0] = (AL[0] & FFFF0000) | (T >> 16)
-    //              case 2:     AL[0] = (AL[0] & FF000000) | (T >> 8)
-    //              case 3:     AL[0] = (AL[0] & 00000000) | (T >> 0)
-    //
-    // Encoding: 101010 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    SWL,
-    //------------------------------------------------------------------------------------------------------------------
-    // [STORE WORD RIGHT]
-    //      Makeup a POTENTIALLY UNALIGNED memory address 'A' by adding the address in register 'S' plus the 16-bit
-    //      SIGNED constant offset 'I'. Then forcefully word align 'A' by truncating 2 bits to form address 'AL'.
-    //      Store a varying number of the LEAST SIGNIFICANT bytes in register 'T' to the MOST SIGNIFICANT bytes of
-    //      address 'AL' based on the alignment of address 'A'. Note: all other bytes remain unchanged.
-    //
-    //      The 4 possible cases are outlined below:
-    //          A = S + I
-    //          AL = A & FFFFFFFC
-    //
-    //          switch (A % 4)
-    //              case 0:     AL[0] = (AL[0] & 00000000) | (T << 0)
-    //              case 1:     AL[0] = (AL[0] & 000000FF) | (T << 8)
-    //              case 2:     AL[0] = (AL[0] & 0000FFFF) | (T << 16)
-    //              case 3:     AL[0] = (AL[0] & 00FFFFFF) | (T << 24)
-    //
-    // Encoding: 101110 SSSSS TTTTT IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    SWR,
-    //------------------------------------------------------------------------------------------------------------------
-    // [TRAP IF EQUAL]
-    //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
-    //      instructions in unreachable code regions, presumably to clearly mark them as such and cause an illegal
-    //      instruction errors upon execution. I'm handling this instruction just so disassembly is more readable.
-    //
-    //      In MIPS II traps if:
-    //          SIGNED registers 'S' == SIGNED register 'T' and uses code 'I' as an execption param.
-    //
-    // Encoding: 000000 SSSSS TTTTT IIIII IIIII 110100
-    //------------------------------------------------------------------------------------------------------------------
-    TEQ,
-    //------------------------------------------------------------------------------------------------------------------
-    // [TRAP IF EQUAL IMMEDIATE]
-    //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
-    //      instructions in unreachable code regions, presumably to clearly mark them as such and cause an illegal
-    //      instruction errors upon execution. I'm handling this instruction just so disassembly is more readable.
-    //
-    //      In MIPS II traps if:
-    //          SIGNED register 'S' == SIGNED constant 'I'
-    //
-    // Encoding: 000001 SSSSS 01100 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    TEQI,
-    //------------------------------------------------------------------------------------------------------------------
-    // [TRAP IF GREATER OR EQUAL]
-    //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
-    //      instructions in unreachable code regions, presumably to clearly mark them as such and cause an illegal
-    //      instruction errors upon execution. I'm handling this instruction just so disassembly is more readable.
-    //
-    //      In MIPS II traps if:
-    //          SIGNED register 'S' >= SIGNED register 'T' and uses code 'I' as an execption param.
-    //
-    // Encoding: 000000 SSSSS TTTTT IIIII IIIII 110000
-    //------------------------------------------------------------------------------------------------------------------
-    TGE,
-    //------------------------------------------------------------------------------------------------------------------
-    // [TRAP IF GREATER OR EQUAL IMMEDIATE]
-    //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
-    //      instructions in unreachable code regions, presumably to clearly mark them as such and cause an illegal
-    //      instruction errors upon execution. I'm handling this instruction just so disassembly is more readable.
-    //
-    //      In MIPS II traps if:
-    //          SIGNED Register 'S' >= SIGNED constant 'I'
-    //
-    // Encoding: 000001 SSSSS 01000 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    TGEI,
-    //------------------------------------------------------------------------------------------------------------------
-    // [TRAP IF GREATER OR EQUAL IMMEDIATE UNSIGNED]
-    //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
-    //      instructions in unreachable code regions, presumably to clearly mark them as such and cause an illegal
-    //      instruction errors upon execution. I'm handling this instruction just so disassembly is more readable.
-    //
-    //      In MIPS II traps if:
-    //          UNSIGNED Register 'S' >= UNSIGNED, SIGN EXTENDED constant 'I'
-    //
-    // Encoding: 000001 SSSSS 01001 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    TGEIU,
-    //------------------------------------------------------------------------------------------------------------------
-    // [TRAP IF GREATER OR EQUAL UNSIGNED]
-    //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
-    //      instructions in unreachable code regions, presumably to clearly mark them as such and cause an illegal
-    //      instruction errors upon execution. I'm handling this instruction just so disassembly is more readable.
-    //
-    //      In MIPS II traps if:
-    //          UNSIGNED register 'S' >= UNSIGNED register 'T' and uses code 'I' as an execption param.
-    //
-    // Encoding: 000000 SSSSS TTTTT IIIII IIIII 110001
-    //------------------------------------------------------------------------------------------------------------------
-    TGEU,
-    //------------------------------------------------------------------------------------------------------------------
-    // [TRAP IF LESS THAN]
-    //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
-    //      instructions in unreachable code regions, presumably to clearly mark them as such and cause an illegal
-    //      instruction errors upon execution. I'm handling this instruction just so disassembly is more readable.
-    //
-    //      In MIPS II traps if:
-    //          SIGNED register 'S' < SIGNED register 'T' and uses code 'I' as an execption param.
-    //
-    // Encoding: 000000 SSSSS TTTTT IIIII IIIII 110010
-    //------------------------------------------------------------------------------------------------------------------
-    TLT,
-    //------------------------------------------------------------------------------------------------------------------
-    // [TRAP IF LESS THAN IMMEDIATE]
-    //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
-    //      instructions in unreachable code regions, presumably to clearly mark them as such and cause an illegal
-    //      instruction errors upon execution. I'm handling this instruction just so disassembly is more readable.
-    //
-    //      In MIPS II traps if:
-    //          SIGNED Register 'S' < SIGNED constant 'I'
-    //
-    // Encoding: 000001 SSSSS 01010 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    TLTI,
-    //------------------------------------------------------------------------------------------------------------------
-    // [TRAP IF LESS THAN IMMEDIATE UNSIGNED]
-    //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
-    //      instructions in unreachable code regions, presumably to clearly mark them as such and cause an illegal
-    //      instruction errors upon execution. I'm handling this instruction just so disassembly is more readable.
-    //
-    //      In MIPS II traps if:
-    //          UNSIGNED Register 'S' < UNSIGNED, SIGN EXTENDED constant 'I'
-    //
-    // Encoding: 000001 SSSSS 01011 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    TLTIU,
-    //------------------------------------------------------------------------------------------------------------------
-    // [TRAP IF LESS THAN UNSIGNED]
-    //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
-    //      instructions in unreachable code regions, presumably to clearly mark them as such and cause an illegal
-    //      instruction errors upon execution. I'm handling this instruction just so disassembly is more readable.
-    //
-    //      In MIPS II traps if:
-    //          UNSIGNED register 'S' < UNSIGNED register 'T' and uses code 'I' as an execption param.
-    //
-    // Encoding: 000000 SSSSS TTTTT IIIII IIIII 110011
-    //------------------------------------------------------------------------------------------------------------------
-    TLTU,
-    //------------------------------------------------------------------------------------------------------------------
-    // [TRAP IF NOT EQUAL]
-    //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
-    //      instructions in unreachable code regions, presumably to clearly mark them as such and cause an illegal
-    //      instruction errors upon execution. I'm handling this instruction just so disassembly is more readable.
-    //
-    //      In MIPS II traps if:
-    //          Register 'S' != register 'T' and uses code 'I' as an execption param.
-    //
-    // Encoding: 000000 SSSSS TTTTT IIIII IIIII 110110
-    //------------------------------------------------------------------------------------------------------------------
-    TNE,
-    //------------------------------------------------------------------------------------------------------------------
-    // [TRAP IF NOT EQUAL IMMEDIATE]
-    //      NOTE: *NOT* a valid MIPS I instruction on the R3000 CPU. However Sony's compilers appear to insert TRAP
-    //      instructions in unreachable code regions, presumably to clearly mark them as such and cause an illegal
-    //      instruction errors upon execution. I'm handling this instruction just so disassembly is more readable.
-    //
-    //      In MIPS II traps if:
-    //          SIGNED Register 'S' != SIGNED constant 'I'
-    //
-    // Encoding: 000001 SSSSS 01110 IIIII IIIII IIIIII
-    //------------------------------------------------------------------------------------------------------------------
-    TNEI,
-
-
-
-
     //------------------------------------------------------------------------------------------------------------------
     // [JUMP]
     //      Branch to the given program 32-bit WORD index 'I' (note: NOT byte!) within the current 256 MB memory region.
