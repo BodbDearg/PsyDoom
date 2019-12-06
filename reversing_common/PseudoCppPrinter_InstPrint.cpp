@@ -19,6 +19,14 @@ static void printHexOrDecInt32Literal(const int32_t val, std::ostream& out) {
     }
 }
 
+static void printHexOrDecUint32Literal(const uint32_t val, std::ostream& out) {
+    if (val < 10) {
+        out << val;
+    } else {
+        printHexCppUint32Literal(val, false, out);
+    }
+}
+
 void PseudoCppPrinter::printInst_addiu(std::ostream& out, const CpuInstruction& inst) {
     const int16_t i16 = (int16_t) inst.immediateVal;
     const int32_t i32 = i16;
@@ -106,5 +114,33 @@ void PseudoCppPrinter::printInst_addu(std::ostream& out, const CpuInstruction& i
         out << getGprCppMacroName(inst.regS);
         out << " + ";
         out << getGprCppMacroName(inst.regT);
+    }
+}
+
+void PseudoCppPrinter::printInst_ori(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regT);
+    const uint16_t u16 = (uint16_t) inst.immediateVal;
+
+    if (inst.regS == CpuGpr::ZERO) {
+        // Assigning a constant
+        out << " = ";
+        printHexOrDecUint32Literal(u16, out);
+    } 
+    else if (u16 == 0) {
+        // Move instruction
+        out << " = ";
+        out << getGprCppMacroName(inst.regS);
+    }
+    else if (inst.regS == inst.regT) {
+        // Can use '|=' shorthand
+        out << " |= ";
+        printHexOrDecUint32Literal(u16, out);
+    }
+    else {
+        // Regular bitwise OR
+        out << " = ";
+        out << getGprCppMacroName(inst.regS);
+        out << " | ";
+        printHexOrDecUint32Literal(u16, out);
     }
 }

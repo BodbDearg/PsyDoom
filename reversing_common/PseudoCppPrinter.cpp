@@ -340,7 +340,6 @@ static void printNonBranchOrJumpInstruction(
 
         // OPERATION(regS, (uint16_t) immVal)
         case CpuOpcode::ANDI:
-        case CpuOpcode::ORI:
         case CpuOpcode::XORI:
             printInst(out, inst, GprArg{ inst.regS }, HexU16Arg{ (uint16_t) inst.immediateVal });
             break;
@@ -402,6 +401,7 @@ static void printNonBranchOrJumpInstruction(
         // Manually handled instruction types
         case CpuOpcode::ADDIU:      printInst_addiu(out, inst);     break;
         case CpuOpcode::ADDU:       printInst_addu(out, inst);      break;
+        case CpuOpcode::ORI:        printInst_ori(out, inst);       break;
     }
 
     // Terminate instruction
@@ -565,8 +565,8 @@ static void printBranchOrJumpInstruction(
         } else if (branchInst.opcode == CpuOpcode::JALR) {
             // JALR is tricker.
             // We need the host program to define the mappings to C++ functions:
-            out << "vm_call(";
-            getGprCppMacroName(branchInst.regS);
+            out << "pcall(";
+            out << getGprCppMacroName(branchInst.regS);
             out << ");\n";
         } else if (branchInst.opcode == CpuOpcode::JR) {
             // JR is the trickiest.
