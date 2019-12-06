@@ -6,91 +6,13 @@
 #include "FatalErrors.h"
 #include "InstructionCommenter.h"
 #include "PrintUtils.h"
+#include "PseudoCppPrinter_InstPrint.h"
 #include <algorithm>
 #include <set>
 
 static ConstInstructionEvaluator gConstInstructionEvaluator;
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Printing C++ literals of various integer types
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void printHexCppInt16Literal(const int16_t valI16, bool bZeroPad, std::ostream& out) noexcept {
-    const int64_t valI64 = valI16;
-
-    if (valI64 < 0) {
-        out << "-0x";
-        PrintUtils::printHexU16((uint16_t)(-valI64), bZeroPad, out);
-    } else {
-        out << "0x";
-        PrintUtils::printHexU16((uint16_t) valI64, bZeroPad, out);
-    }
-}
-
-static void printHexCppInt32Literal(const int32_t valI32, bool bZeroPad, std::ostream& out) noexcept {
-    const int64_t valI64 = valI32;
-
-    if (valI64 < 0) {
-        out << "-0x";
-        PrintUtils::printHexU32((uint32_t)(-valI64), bZeroPad, out);
-    } else {
-        out << "0x";
-        PrintUtils::printHexU32((uint32_t) valI64, bZeroPad, out);
-    }
-}
-
-static void printHexCppUint16Literal(const uint16_t valU16, bool bZeroPad, std::ostream& out) noexcept {    
-    out << "0x";
-    PrintUtils::printHexU16(valU16, bZeroPad, out);
-    out.put('u');
-}
-
-static void printHexCppUint32Literal(const uint32_t valU32, bool bZeroPad, std::ostream& out) noexcept {    
-    out << "0x";
-    PrintUtils::printHexU32(valU32, bZeroPad, out);
-    out.put('u');
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Get the C++ macro name for the given general purpose register
-//------------------------------------------------------------------------------------------------------------------------------------------
-static const char* getGprCppMacroName(const uint8_t gprIdx) noexcept {
-    switch (gprIdx) {
-        case CpuGpr::ZERO:  return "zero";
-        case CpuGpr::AT:    return "at";
-        case CpuGpr::V0:    return "v0";
-        case CpuGpr::V1:    return "v1";
-        case CpuGpr::A0:    return "a0";
-        case CpuGpr::A1:    return "a1";
-        case CpuGpr::A2:    return "a2";
-        case CpuGpr::A3:    return "a3";
-        case CpuGpr::T0:    return "t0";
-        case CpuGpr::T1:    return "t1";
-        case CpuGpr::T2:    return "t2";
-        case CpuGpr::T3:    return "t3";
-        case CpuGpr::T4:    return "t4";
-        case CpuGpr::T5:    return "t5";
-        case CpuGpr::T6:    return "t6";
-        case CpuGpr::T7:    return "t7";
-        case CpuGpr::S0:    return "s0";
-        case CpuGpr::S1:    return "s1";
-        case CpuGpr::S2:    return "s2";
-        case CpuGpr::S3:    return "s3";
-        case CpuGpr::S4:    return "s4";
-        case CpuGpr::S5:    return "s5";
-        case CpuGpr::S6:    return "s6";
-        case CpuGpr::S7:    return "s7";
-        case CpuGpr::T8:    return "t8";
-        case CpuGpr::T9:    return "t9";
-        case CpuGpr::K0:    return "k0";
-        case CpuGpr::K1:    return "k1";
-        case CpuGpr::GP:    return "gp";
-        case CpuGpr::SP:    return "sp";
-        case CpuGpr::FP:    return "fp";
-        case CpuGpr::RA:    return "ra";
-
-        default: return "INVALID_REG";
-    }
-}
+using namespace PseudoCppPrinter;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Instruction argument types
@@ -357,7 +279,6 @@ static void printNonBranchOrJumpInstruction(
 
         // OPERATION(regS, regT)
         case CpuOpcode::ADD:
-        case CpuOpcode::ADDU:
         case CpuOpcode::AND:
         case CpuOpcode::DIV:
         case CpuOpcode::DIVU:
@@ -407,7 +328,6 @@ static void printNonBranchOrJumpInstruction(
 
         // OPERATION(regS, (int16_t) immVal)
         case CpuOpcode::ADDI:
-        case CpuOpcode::ADDIU:
         case CpuOpcode::LB:
         case CpuOpcode::LBU:
         case CpuOpcode::LH:
@@ -461,7 +381,7 @@ static void printNonBranchOrJumpInstruction(
             printInst(out, inst);
             break;
 
-        // Special cases
+        // Other generic instructions
         case CpuOpcode::CFC2:
         case CpuOpcode::MFC0:
         case CpuOpcode::MFC2:
@@ -478,6 +398,10 @@ static void printNonBranchOrJumpInstruction(
         case CpuOpcode::SWC2:
             printInst(out, inst, DecU8Arg{ inst.regT }, GprArg{ inst.regS }, HexI16Arg{ (int16_t) inst.immediateVal });
             break;
+
+        // Manually handled instruction types
+        case CpuOpcode::ADDIU:      printInst_addiu(out, inst);     break;
+        case CpuOpcode::ADDU:       printInst_addu(out, inst);      break;
     }
 
     // Terminate instruction
@@ -818,5 +742,80 @@ void PseudoCppPrinter::printCpp(const ExeFile& exe, std::ostream& out) {
         if (progElem.type == ProgElemType::FUNCTION) {
             printFunction(exe, progElem, out);
         }
+    }
+}
+
+void PseudoCppPrinter::printHexCppInt16Literal(const int16_t valI16, bool bZeroPad, std::ostream& out) {
+    const int64_t valI64 = valI16;
+
+    if (valI64 < 0) {
+        out << "-0x";
+        PrintUtils::printHexU16((uint16_t)(-valI64), bZeroPad, out);
+    } else {
+        out << "0x";
+        PrintUtils::printHexU16((uint16_t) valI64, bZeroPad, out);
+    }
+}
+
+void PseudoCppPrinter::printHexCppInt32Literal(const int32_t valI32, bool bZeroPad, std::ostream& out) {
+    const int64_t valI64 = valI32;
+
+    if (valI64 < 0) {
+        out << "-0x";
+        PrintUtils::printHexU32((uint32_t)(-valI64), bZeroPad, out);
+    } else {
+        out << "0x";
+        PrintUtils::printHexU32((uint32_t) valI64, bZeroPad, out);
+    }
+}
+
+void PseudoCppPrinter::printHexCppUint16Literal(const uint16_t valU16, bool bZeroPad, std::ostream& out) {    
+    out << "0x";
+    PrintUtils::printHexU16(valU16, bZeroPad, out);
+    out.put('u');
+}
+
+void PseudoCppPrinter::printHexCppUint32Literal(const uint32_t valU32, bool bZeroPad, std::ostream& out) {    
+    out << "0x";
+    PrintUtils::printHexU32(valU32, bZeroPad, out);
+    out.put('u');
+}
+
+const char* PseudoCppPrinter::getGprCppMacroName(const uint8_t gprIdx) noexcept {
+    switch (gprIdx) {
+        case CpuGpr::ZERO:  return "zero";
+        case CpuGpr::AT:    return "at";
+        case CpuGpr::V0:    return "v0";
+        case CpuGpr::V1:    return "v1";
+        case CpuGpr::A0:    return "a0";
+        case CpuGpr::A1:    return "a1";
+        case CpuGpr::A2:    return "a2";
+        case CpuGpr::A3:    return "a3";
+        case CpuGpr::T0:    return "t0";
+        case CpuGpr::T1:    return "t1";
+        case CpuGpr::T2:    return "t2";
+        case CpuGpr::T3:    return "t3";
+        case CpuGpr::T4:    return "t4";
+        case CpuGpr::T5:    return "t5";
+        case CpuGpr::T6:    return "t6";
+        case CpuGpr::T7:    return "t7";
+        case CpuGpr::S0:    return "s0";
+        case CpuGpr::S1:    return "s1";
+        case CpuGpr::S2:    return "s2";
+        case CpuGpr::S3:    return "s3";
+        case CpuGpr::S4:    return "s4";
+        case CpuGpr::S5:    return "s5";
+        case CpuGpr::S6:    return "s6";
+        case CpuGpr::S7:    return "s7";
+        case CpuGpr::T8:    return "t8";
+        case CpuGpr::T9:    return "t9";
+        case CpuGpr::K0:    return "k0";
+        case CpuGpr::K1:    return "k1";
+        case CpuGpr::GP:    return "gp";
+        case CpuGpr::SP:    return "sp";
+        case CpuGpr::FP:    return "fp";
+        case CpuGpr::RA:    return "ra";
+
+        default: return "INVALID_REG";
     }
 }

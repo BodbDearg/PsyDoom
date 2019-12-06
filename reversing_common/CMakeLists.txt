@@ -25,6 +25,8 @@ set(SOURCE_FILES
     "ProgElem.h"
     "PseudoCppPrinter.cpp"
     "PseudoCppPrinter.h"
+    "PseudoCppPrinter_InstPrint.cpp"
+    "PseudoCppPrinter_InstPrint.h"
     "TextIStream.cpp"
     "TextIStream.h"
 )

@@ -14,5 +14,15 @@
 struct ExeFile;
 
 namespace PseudoCppPrinter {
+    // Print out the pseudo C++ code for the given exe
     void printCpp(const ExeFile& exe, std::ostream& out);
+
+    // Printing C++ literals of various integer types
+    void printHexCppInt16Literal(const int16_t valI16, bool bZeroPad, std::ostream& out);
+    void printHexCppInt32Literal(const int32_t valI32, bool bZeroPad, std::ostream& out);
+    void printHexCppUint16Literal(const uint16_t valU16, bool bZeroPad, std::ostream& out);
+    void printHexCppUint32Literal(const uint32_t valU32, bool bZeroPad, std::ostream& out);
+
+    // Get the C++ macro name for the given general purpose register
+    const char* getGprCppMacroName(const uint8_t gprIdx) noexcept;
 }
