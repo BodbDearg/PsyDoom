@@ -2,6 +2,7 @@
 
 #include "ExeWord.h"
 #include "ProgElem.h"
+#include "JRInstHandler.h"
 #include <memory>
 #include <ostream>
 #include <vector>
@@ -27,6 +28,9 @@ struct ExeFile {
     // Manually identified through investigation.
     std::vector<ProgElem> progElems;
 
+    // Handlers for the 'jr' instruction
+    std::vector<JRInstHandler> jrInstHandlers;
+
     // The assumed value of the '$gp' register throughout the program - manually identified for the program.
     // This is set in main() and should remain the same throughout the lifetime of the program.
     // Access to some globals depends on it, hence knowing it's value allows us to annotate access to those globals.
@@ -41,6 +45,9 @@ struct ExeFile {
     // Set the program elements for the program.
     // The list will be automatically sorted for fast lookup.
     void setProgElems(const ProgElem* const pElems, const uint32_t numElems) noexcept;
+
+    // Set the 'jr' instruction handlers for the program
+    void setJRInstHandlers(const JRInstHandler* const pHandlers, const uint32_t numHandlers) noexcept;
 
     // Try and find a program element at the given address.
     // Returns 'nullptr' if none found.

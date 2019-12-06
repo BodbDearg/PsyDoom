@@ -18,6 +18,7 @@ set(SOURCE_FILES
     "FileUtils.h"
     "InstructionCommenter.cpp"
     "InstructionCommenter.h"
+    "JRInstHandler.h"
     "PrintUtils.cpp"
     "PrintUtils.h"
     "ProgElem.cpp"

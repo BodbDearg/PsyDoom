@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) noexcept {
 
     // Set the program elements for the .EXE and determine references to specific program words
     if (bIsDestructionDerby) {
-        exe.setProgElems(gProgramElems_DestructionDerby, gNumProgramElems_DestructionDerby);
+        exe.setProgElems(gpProgramElems_DestructionDerby, gNumProgramElems_DestructionDerby);
         exe.assumedGpRegisterValue = gGpRegisterValue_DestructionDerby;
     } else {
         const bool bIsFinalDoom = (exe.sizeInWords == FINAL_DOOM_NUM_PROG_WORDS);
@@ -69,7 +69,8 @@ int main(int argc, char* argv[]) noexcept {
         if (bIsFinalDoom) {
             FATAL_ERROR("TODO: FINAL DOOM NOT SUPPORTED YET!");
         } else {
-            exe.setProgElems(gProgramElems_Doom, gNumProgramElems_Doom);
+            exe.setProgElems(gpProgramElems_Doom, gNumProgramElems_Doom);
+            exe.setJRInstHandlers(gpJRInstHandlers_Doom, gNumJRInstHandlers_Doom);
             exe.assumedGpRegisterValue = gGpRegisterValue_Doom;
         }
     }
@@ -77,6 +78,7 @@ int main(int argc, char* argv[]) noexcept {
     exe.determineWordReferences();
 
     // Start printing the disassembly
+    #if 0
     try {
         std::fstream fileOut;
         const char* const pFileName = (bIsDestructionDerby) ? "disasm_dd_disasm.txt" : "disasm_doom_disasm.txt";
@@ -85,6 +87,7 @@ int main(int argc, char* argv[]) noexcept {
     } catch (...) {
         FATAL_ERROR("Failed writing the disassembly to the output file!");
     }
+    #endif
 
     // Start printing the .cpp file
     try {

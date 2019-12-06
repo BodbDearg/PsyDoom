@@ -1,4 +1,5 @@
 #include "ProgElems.h"
+#include "ProgElem.h"
 
 static const ProgElem ELEMS[] = {
     { 0x80012048, 0x80012224, "init_smoke", ProgElemType::FUNCTION },
@@ -893,6 +894,6 @@ static const ProgElem ELEMS[] = {
     { 0x801ff0b8, 0x801ff0bC, "_spu_EVdma", ProgElemType::UINT32 },   
 };
 
-const ProgElem*     gProgramElems_DestructionDerby = ELEMS;
+const ProgElem*     gpProgramElems_DestructionDerby = ELEMS;
 const uint32_t      gNumProgramElems_DestructionDerby = sizeof(ELEMS) / sizeof(ProgElem);
 const uint32_t      gGpRegisterValue_DestructionDerby = 0x800BB2DCu;

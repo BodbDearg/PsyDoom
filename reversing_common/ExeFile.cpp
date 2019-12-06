@@ -206,6 +206,12 @@ void ExeFile::setProgElems(const ProgElem* const pElems, const uint32_t numElems
     );
 }
 
+void ExeFile::setJRInstHandlers(const JRInstHandler* const pHandlers, const uint32_t numHandlers) noexcept {
+    assert(pHandlers || numHandlers == 0);
+    jrInstHandlers.resize(numHandlers);
+    std::memcpy(jrInstHandlers.data(), pHandlers, sizeof(JRInstHandler) * numHandlers);
+}
+
 const ProgElem* ExeFile::findProgElemAtAddr(const uint32_t addr) const noexcept {
     auto iter = std::lower_bound(
         progElems.begin(),

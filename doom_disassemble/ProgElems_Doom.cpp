@@ -1,5 +1,8 @@
 #include "ProgElems.h"
 
+#include "ProgElem.h"
+#include "JRInstHandler.h"
+
 static const ProgElem ELEMS[] = {
     { 0x80010000, 0x80010018, "JumpTable_T_MoveCeiling",                ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80010018, 0x80010030, "JumpTable_EV_DoCeiling",                 ProgElemType::ARRAY, ProgElemType::PTR32 },
@@ -252,8 +255,9 @@ static const ProgElem ELEMS[] = {
     { 0x800120B0, 0x800120D4, "STR_Sys_TimeOutSync_Msg",                ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x800120D4, 0x800120EC, "STR_Sys_DiskError_Msg2",                 ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x800120EC, 0x80012108, "STR_Sys_CDROM_UnknownIntr_Err",          ProgElemType::ARRAY, ProgElemType::CHAR8 },
-    { 0x80012108, 0x80012128, "STR_Sys_CD_Sync_Msg",                    ProgElemType::ARRAY, ProgElemType::CHAR8 },
+    { 0x80012108, 0x8001210C, "__ZERO_PADDING__",                       ProgElemType::UINT32 },    
     { 0x8001210C, 0x80012120, "JumpTable_LIBCD_BIOS_getintr",           ProgElemType::ARRAY, ProgElemType::PTR32 },
+    { 0x80012120, 0x80012128, "STR_Sys_CD_Sync_Msg",                    ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80012128, 0x80012134, "STR_Sys_CD_Ready_Msg",                   ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80012134, 0x8001213C, "STR_Sys_MessageLine_Msg",                ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x8001213C, 0x8001214C, "STR_Sys_NoParam_Err",                    ProgElemType::ARRAY, ProgElemType::CHAR8 },
@@ -3710,10 +3714,73 @@ static const ProgElem ELEMS[] = {
     { 0x800A9518, 0x800A9D18, "gPSXCD_sectorbuf",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800A9D18, 0x800A9D90, "gpActiveCeilings",                       ProgElemType::ARRAY, ProgElemType::PTR32, 0 },
     { 0x800A9D90, 0x800A9E30, "gOpenPsxCdFiles",                        ProgElemType::ARRAY, ProgElemType::UINT32, 0 },  // Max of 4 (40 bytes each)
-    { 0x800A9E30, 0x800A9EC4, "gUnusedGameBuffer",                      ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
-    
+    { 0x800A9E30, 0x800A9EC4, "gUnusedGameBuffer",                      ProgElemType::ARRAY, ProgElemType::UINT32, 0 },    
 };
 
-const ProgElem*     gProgramElems_Doom = ELEMS;
-const uint32_t      gNumProgramElems_Doom = sizeof(ELEMS) / sizeof(ProgElem);
-const uint32_t      gGpRegisterValue_Doom = 0x800775E0u;
+static const JRInstHandler JR_INST_HANDLERS[] = {
+    { 0x80014BBC, JRInstHandler::Type::JUMP_TABLE, 0x80010000 },
+    { 0x80014D3C, JRInstHandler::Type::JUMP_TABLE, 0x80010018 },
+    { 0x80015440, JRInstHandler::Type::JUMP_TABLE, 0x80010078 },
+    { 0x80015500, JRInstHandler::Type::JUMP_TABLE, 0x80010098 },
+    { 0x80015590, JRInstHandler::Type::JUMP_TABLE, 0x800100B8 },
+    { 0x80015858, JRInstHandler::Type::JUMP_TABLE, 0x80010278 },
+    { 0x8001891C, JRInstHandler::Type::JUMP_TABLE, 0x800102C0 },
+    { 0x80018B78, JRInstHandler::Type::JUMP_TABLE, 0x80010390 },
+    { 0x800191E8, JRInstHandler::Type::JUMP_TABLE, 0x800103A8 },
+    { 0x80019BCC, JRInstHandler::Type::JUMP_TABLE, 0x800107B8 },
+    { 0x80019D0C, JRInstHandler::Type::JUMP_TABLE, 0x800107D0 },
+    { 0x8001F564, JRInstHandler::Type::JUMP_TABLE, 0x800108E8 },
+    { 0x80026868, JRInstHandler::Type::JUMP_TABLE, 0x80010BAC },
+    { 0x80026E6C, JRInstHandler::Type::JUMP_TABLE, 0x80010DE4 },
+    { 0x80027B24, JRInstHandler::Type::JUMP_TABLE, 0x80010E1C },
+    { 0x800282A0, JRInstHandler::Type::JUMP_TABLE, 0x80010E34 },
+    { 0x800291C0, JRInstHandler::Type::JUMP_TABLE, 0x800110F8 },
+    { 0x800292D0, JRInstHandler::Type::JUMP_TABLE, 0x80011120 },
+    { 0x8003EBE0, JRInstHandler::Type::JUMP_TABLE, 0x80011748 },
+    { 0x80049C20, JRInstHandler::Type::BIOS_CALL },
+    { 0x80049C40, JRInstHandler::Type::BIOS_CALL },
+    { 0x80049C50, JRInstHandler::Type::BIOS_CALL },
+    { 0x80049C60, JRInstHandler::Type::BIOS_CALL },
+    { 0x80049DE0, JRInstHandler::Type::BIOS_CALL },
+    { 0x80049DF0, JRInstHandler::Type::BIOS_CALL },
+    { 0x80049E00, JRInstHandler::Type::BIOS_CALL },
+    { 0x80049E10, JRInstHandler::Type::BIOS_CALL },
+    { 0x80049E20, JRInstHandler::Type::BIOS_CALL },
+    { 0x80049E30, JRInstHandler::Type::BIOS_CALL },
+    { 0x80049E50, JRInstHandler::Type::BIOS_CALL },
+    { 0x8004A114, JRInstHandler::Type::JUMP_TABLE, 0x80011790 },
+    { 0x8004AD44, JRInstHandler::Type::BIOS_CALL },
+    { 0x8004AD54, JRInstHandler::Type::BIOS_CALL },
+    { 0x8004AD64, JRInstHandler::Type::BIOS_CALL },
+    { 0x8004AD74, JRInstHandler::Type::BIOS_CALL },
+    { 0x8004AD84, JRInstHandler::Type::BIOS_CALL },
+    { 0x8004AEFC, JRInstHandler::Type::JUMP_TABLE, 0x800118C8 },
+    { 0x8004E8B4, JRInstHandler::Type::BIOS_CALL },
+    { 0x8004F870, JRInstHandler::Type::JUMP_TABLE, 0x80011DF4 },
+    { 0x80050458, JRInstHandler::Type::BIOS_CALL },
+    { 0x80050888, JRInstHandler::Type::BIOS_CALL },
+    { 0x80050DAC, JRInstHandler::Type::JUMP_TABLE, 0x80011E78 },
+    { 0x80050E80, JRInstHandler::Type::JUMP_TABLE, 0x80011E98 },
+    { 0x80053D4C, JRInstHandler::Type::BIOS_CALL },
+    { 0x80053DF0, JRInstHandler::Type::JUMP_TABLE, 0x80011F14 },
+    { 0x80053EBC, JRInstHandler::Type::JUMP_TABLE, 0x80011F34 },
+    { 0x80054328, JRInstHandler::Type::BIOS_CALL },
+    { 0x800555BC, JRInstHandler::Type::JUMP_TABLE, 0x8001210C },
+    { 0x80058134, JRInstHandler::Type::JUMP_TABLE, 0x800121F4 },
+    { 0x800581E8, JRInstHandler::Type::JUMP_TABLE, 0x80012204 },
+    { 0x80058284, JRInstHandler::Type::JUMP_TABLE, 0x80012218 },
+    { 0x80058574, JRInstHandler::Type::JUMP_TABLE, 0x8001222C },
+    { 0x800586E0, JRInstHandler::Type::JUMP_TABLE, 0x8001223C },
+    { 0x8005885C, JRInstHandler::Type::JUMP_TABLE, 0x80012254 },
+    { 0x800589C0, JRInstHandler::Type::JUMP_TABLE, 0x80012264 },
+    { 0x80058A1C, JRInstHandler::Type::BIOS_CALL },
+    { 0x80058A2C, JRInstHandler::Type::BIOS_CALL },
+    { 0x80058A3C, JRInstHandler::Type::BIOS_CALL },
+    { 0x80058A4C, JRInstHandler::Type::BIOS_CALL },
+};
+
+const ProgElem*         gpProgramElems_Doom = ELEMS;
+const uint32_t          gNumProgramElems_Doom = sizeof(ELEMS) / sizeof(ProgElem);
+const JRInstHandler*    gpJRInstHandlers_Doom = JR_INST_HANDLERS;
+const uint32_t          gNumJRInstHandlers_Doom = sizeof(JR_INST_HANDLERS) / sizeof(JRInstHandler);
+const uint32_t          gGpRegisterValue_Doom = 0x800775E0u;

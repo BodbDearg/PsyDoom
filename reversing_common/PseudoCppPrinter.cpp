@@ -7,6 +7,7 @@
 #include "InstructionCommenter.h"
 #include "PrintUtils.h"
 #include <algorithm>
+#include <set>
 
 static ConstInstructionEvaluator gConstInstructionEvaluator;
 
@@ -40,11 +41,13 @@ static void printHexCppInt32Literal(const int32_t valI32, bool bZeroPad, std::os
 static void printHexCppUint16Literal(const uint16_t valU16, bool bZeroPad, std::ostream& out) noexcept {    
     out << "0x";
     PrintUtils::printHexU16(valU16, bZeroPad, out);
+    out.put('u');
 }
 
 static void printHexCppUint32Literal(const uint32_t valU32, bool bZeroPad, std::ostream& out) noexcept {    
     out << "0x";
     PrintUtils::printHexU32(valU32, bZeroPad, out);
+    out.put('u');
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -281,6 +284,36 @@ static bool doesInstructionRequireAGotoLabel(const ExeFile& exe, const uint32_t 
     assert(exeWordIdx < exe.sizeInWords);
     const ExeWord& word = exe.words[exeWordIdx];
     return (word.bIsBranchTarget || word.bIsDataReferenced || word.bIsJumpTarget);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the 'jr' instruction handler for a specified instruction and abort with failure if not found
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const JRInstHandler& getJRInstHandler(const ExeFile& exe, const uint32_t instAddr) noexcept {
+    for (const JRInstHandler& handler : exe.jrInstHandlers) {
+        if (handler.instAddress == instAddr)
+            return handler;
+    }
+
+    FATAL_ERROR_F("Failed to find a 'jr' instruction handler for the instruction at address 0x%Xu", instAddr);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the given jump table program element or abort with failure if not found
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const ProgElem& getJumpTableProgElem(const ExeFile& exe, const uint32_t atAddr) noexcept {
+    const ProgElem* const pProgElem = exe.findProgElemAtAddr(atAddr);
+    const bool bIsJumpTable = (
+        pProgElem &&
+        (pProgElem->type == ProgElemType::ARRAY) &&
+        (pProgElem->arrayElemType == ProgElemType::PTR32)
+    );
+
+    if (bIsJumpTable) {
+        return *pProgElem;
+    } else {
+        FATAL_ERROR_F("Missing a valid jump required for a 'jr' instruction. Jump table address is: 0x%Xu", atAddr);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -618,7 +651,53 @@ static void printBranchOrJumpInstruction(
             if (branchInst.regS == CpuGpr::RA) {
                 out << "return;\n";
             } else {
-                out << "<TODO - JR INSTRUCTION!>;\n";
+                const JRInstHandler& handler = getJRInstHandler(exe, branchInstAddr);
+
+                if (handler.type == JRInstHandler::Type::BIOS_CALL) {
+                    // The 'jr' instruction is a bios call
+                    out << "bios_call(";
+                    out << getGprCppMacroName(branchInst.regS);
+                    out << ");\n";
+                } else if (handler.type == JRInstHandler::Type::JUMP_TABLE) {
+                    // The 'jr' instruction is a jump table or switch statement, begin creating that now
+                    out << "switch (";
+                    out << getGprCppMacroName(branchInst.regS);
+                    out << ") {\n";
+                    const ProgElem& jumpTable = getJumpTableProgElem(exe, handler.jumpTableAddr);
+                    const uint32_t tableStartWordIdx = (jumpTable.startAddr - exe.baseAddress) / 4;
+                    const uint32_t tableEndWordIdx = (jumpTable.endAddr - exe.baseAddress) / 4;
+
+                    // Print each case.
+                    // Note that jump tables might have duplicate entries, so only do each one once:
+                    std::set<uint32_t> handledJumpTableEntries;
+
+                    for (uint32_t wordIdx = tableStartWordIdx; wordIdx < tableEndWordIdx; ++wordIdx) {
+                        assert(wordIdx < exe.sizeInWords);
+                        const uint32_t jumpTableDest = exe.words[wordIdx].value;
+
+                        // Only print if we didn't already handle this jump
+                        if (handledJumpTableEntries.count(jumpTableDest) <= 0) {
+                            indentByNumChars(instIndent + 4, out);
+                            out << "case ";
+                            printHexCppUint32Literal(jumpTableDest, true, out);
+                            out << ": goto loc_";
+                            PrintUtils::printHexU32(jumpTableDest, true, out);
+                            out << ";\n";
+
+                            // Don't print the same label again
+                            handledJumpTableEntries.emplace(jumpTableDest);
+                        }
+                    }
+
+                    // Print the default case (fatal error) and close
+                    indentByNumChars(instIndent + 4, out);
+                    out << "default: jump_table_err(); break;\n";
+
+                    indentByNumChars(instIndent, out);
+                    out << "}\n";
+                } else {
+                    FATAL_ERROR("Unknown 'jr' instruction handler type!");
+                }
             }
         } else {
             FATAL_ERROR("Illegal jump instruction!");
