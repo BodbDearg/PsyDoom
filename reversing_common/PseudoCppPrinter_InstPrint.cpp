@@ -310,6 +310,23 @@ void PseudoCppPrinter::printInst_slti(std::ostream& out, const CpuInstruction& i
     out << ")";
 }
 
+void PseudoCppPrinter::printInst_sltiu(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regT);
+    const uint32_t i = (uint32_t)(int32_t)(int16_t) inst.immediateVal;      // Needs to be sign extended as per the MIPS docs
+
+    if (i == 0) {
+        // Can never be < 0!
+        out << " = 0";
+    }
+    else {
+        out << " = (";
+        out << getGprMacroNameOr0(inst.regS);
+        out << " < ";
+        printHexOrDecUint32Literal(i, out);
+        out << ")";
+    }
+}
+
 void PseudoCppPrinter::printInst_sltu(std::ostream& out, const CpuInstruction& inst) {
     out << getGprCppMacroName(inst.regD);
 
