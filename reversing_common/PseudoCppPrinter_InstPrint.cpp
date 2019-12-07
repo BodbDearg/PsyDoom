@@ -184,6 +184,34 @@ void PseudoCppPrinter::printInst_mflo(std::ostream& out, const CpuInstruction& i
     out << " = lo";
 }
 
+void PseudoCppPrinter::printInst_nor(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regD);
+
+    if (inst.regS == CpuGpr::ZERO && inst.regT == CpuGpr::ZERO) {
+        // All one bits
+        out << " = ";
+        printHexCppUint32Literal(0xFFFFFFFFu, false, out);
+    }
+    else if (inst.regS == CpuGpr::ZERO) {
+        // Bitwise NOT of register
+        out << " = ~";
+        out << getGprCppMacroName(inst.regT);
+    }
+    else if (inst.regT == CpuGpr::ZERO) {
+        // Bitwise NOT of register
+        out << " = ~";
+        out << getGprCppMacroName(inst.regS);
+    }
+    else {
+        // Regular case
+        out << " = ~(";
+        out << getGprCppMacroName(inst.regS);
+        out << " | ";
+        out << getGprCppMacroName(inst.regT);
+        out << ")";
+    }
+}
+
 void PseudoCppPrinter::printInst_or(std::ostream& out, const CpuInstruction& inst) {
     out << getGprCppMacroName(inst.regD);
 

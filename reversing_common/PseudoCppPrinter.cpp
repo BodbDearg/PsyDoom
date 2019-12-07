@@ -283,7 +283,6 @@ static void printNonBranchOrJumpInstruction(
         case CpuOpcode::DIVU:
         case CpuOpcode::MULT:
         case CpuOpcode::MULTU:
-        case CpuOpcode::NOR:
         case CpuOpcode::SUB:
             printInst(out, inst, GprArg{ inst.regS }, GprArg{ inst.regT });
             break;
@@ -378,6 +377,7 @@ static void printNonBranchOrJumpInstruction(
         case CpuOpcode::LUI:        printInst_lui(out, inst);       break;
         case CpuOpcode::MFHI:       printInst_mfhi(out, inst);      break;
         case CpuOpcode::MFLO:       printInst_mflo(out, inst);      break;
+        case CpuOpcode::NOR:        printInst_nor(out, inst);       break;
         case CpuOpcode::OR:         printInst_or(out, inst);        break;
         case CpuOpcode::ORI:        printInst_ori(out, inst);       break;
         case CpuOpcode::SLL:        printInst_sll(out, inst);       break;
