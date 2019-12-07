@@ -500,6 +500,27 @@ void PseudoCppPrinter::printInst_subu(std::ostream& out, const CpuInstruction& i
     }
 }
 
+void PseudoCppPrinter::printInst_srlv(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regD);
+
+    if (inst.regT == CpuGpr::ZERO) {
+        // Zero assign
+        out << " = 0";
+    }
+    else if (inst.regS == CpuGpr::ZERO) {
+        // Move instruction
+        out << " = ";
+        out << getGprMacroNameOr0(inst.regT);
+    }
+    else {
+        // Regular right shift
+        out << " = ";
+        out << getGprMacroNameOr0(inst.regT);
+        out << " >> ";
+        out << getGprMacroNameOr0(inst.regS);
+    }
+}
+
 void PseudoCppPrinter::printInst_xor(std::ostream& out, const CpuInstruction& inst) {
     out << getGprCppMacroName(inst.regD);
 

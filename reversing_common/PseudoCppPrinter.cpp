@@ -287,11 +287,6 @@ static void printNonBranchOrJumpInstruction(
             printInst(out, inst, GprArg{ inst.regS }, GprArg{ inst.regT });
             break;
 
-        // OPERATION(regT, regS)
-        case CpuOpcode::SRLV:
-            printInst(out, inst, GprArg{ inst.regT }, GprArg{ inst.regS });
-            break;
-
         // OPERATION(regT, regS, (int16_t) immVal)
         case CpuOpcode::LWL:
         case CpuOpcode::LWR:
@@ -387,6 +382,7 @@ static void printNonBranchOrJumpInstruction(
         case CpuOpcode::SRA:        printInst_sra(out, inst);       break;
         case CpuOpcode::SRAV:       printInst_srav(out, inst);      break;
         case CpuOpcode::SRL:        printInst_srl(out, inst);       break;
+        case CpuOpcode::SRLV:       printInst_srlv(out, inst);      break;
         case CpuOpcode::SUBU:       printInst_subu(out, inst);      break;
         case CpuOpcode::XOR:        printInst_xor(out, inst);       break;
         case CpuOpcode::XORI:       printInst_xori(out, inst);      break;

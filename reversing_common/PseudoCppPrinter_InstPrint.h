@@ -29,6 +29,7 @@ namespace PseudoCppPrinter {
     void printInst_sra(std::ostream& out, const CpuInstruction& inst);
     void printInst_srav(std::ostream& out, const CpuInstruction& inst);
     void printInst_srl(std::ostream& out, const CpuInstruction& inst);
+    void printInst_srlv(std::ostream& out, const CpuInstruction& inst);
     void printInst_subu(std::ostream& out, const CpuInstruction& inst);
     void printInst_xor(std::ostream& out, const CpuInstruction& inst);
     void printInst_xori(std::ostream& out, const CpuInstruction& inst);
