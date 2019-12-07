@@ -463,17 +463,12 @@ static void printBranchOrJumpInstruction(
         out << "const bool bJump = ";
 
         switch (branchInst.opcode) {
-            case CpuOpcode::BEQ:
-            case CpuOpcode::BNE:
-                printInst(out, branchInst, GprArg{ branchInst.regS }, GprArg{ branchInst.regT });
-                break;
-
-            case CpuOpcode::BGEZ:
-            case CpuOpcode::BGTZ:
-            case CpuOpcode::BLEZ:
-            case CpuOpcode::BLTZ:
-                printInst(out, branchInst, GprArg{ branchInst.regS });
-                break;
+            case CpuOpcode::BEQ:    printInst_beq(out, branchInst);     break;
+            case CpuOpcode::BGEZ:   printInst_bgez(out, branchInst);    break;
+            case CpuOpcode::BGTZ:   printInst_bgtz(out, branchInst);    break;
+            case CpuOpcode::BLEZ:   printInst_blez(out, branchInst);    break;
+            case CpuOpcode::BLTZ:   printInst_bltz(out, branchInst);    break;
+            case CpuOpcode::BNE:    printInst_bne(out, branchInst);     break;
 
             // Note: not supporting 'BGEZAL' or 'BLTZAL'!
             // These are not used in Doom anyway, and probably would not be emitted by a C compiler...
@@ -496,20 +491,15 @@ static void printBranchOrJumpInstruction(
     if (bIsBranch) {
         if (bCanLateEvalBranchCond) {
             // Branch instruction that can be evaluated late: print the if statement
-            out << "if (";
+            out << "if ";
 
             switch (branchInst.opcode) {
-                case CpuOpcode::BEQ:
-                case CpuOpcode::BNE:
-                    printInst(out, branchInst, GprArg{ branchInst.regS }, GprArg{ branchInst.regT });
-                    break;
-
-                case CpuOpcode::BGEZ:
-                case CpuOpcode::BGTZ:
-                case CpuOpcode::BLEZ:
-                case CpuOpcode::BLTZ:
-                    printInst(out, branchInst, GprArg{ branchInst.regS });
-                    break;
+                case CpuOpcode::BEQ:    printInst_beq(out, branchInst);     break;
+                case CpuOpcode::BGEZ:   printInst_bgez(out, branchInst);    break;
+                case CpuOpcode::BGTZ:   printInst_bgtz(out, branchInst);    break;
+                case CpuOpcode::BLEZ:   printInst_blez(out, branchInst);    break;
+                case CpuOpcode::BLTZ:   printInst_bltz(out, branchInst);    break;
+                case CpuOpcode::BNE:    printInst_bne(out, branchInst);     break;
 
                 // Note: not supporting 'BGEZAL' or 'BLTZAL'!
                 // These are not used in Doom anyway, and probably would not be emitted by a C compiler...
@@ -521,11 +511,11 @@ static void printBranchOrJumpInstruction(
             }
 
             // And print the goto logic for the branch
-            out << ") goto loc_";
+            out << " goto loc_";
             PrintUtils::printHexU32(branchInst.getBranchInstTargetAddr(branchInstAddr), true, out);
             out << ";\n";
         } else {
-            // Branch instruction that can be evaluated late: branch to the specified location if the condition is true
+            // Branch instruction that CANNOT be evaluated late: branch to the specified location if the condition is true
             out << "if (bJump) goto loc_";
             PrintUtils::printHexU32(branchInst.getBranchInstTargetAddr(branchInstAddr), true, out);
             out << ";\n";

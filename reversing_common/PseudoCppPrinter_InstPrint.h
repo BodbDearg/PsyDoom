@@ -14,6 +14,12 @@ namespace PseudoCppPrinter {
     void printInst_addu(std::ostream& out, const CpuInstruction& inst);
     void printInst_and(std::ostream& out, const CpuInstruction& inst);
     void printInst_andi(std::ostream& out, const CpuInstruction& inst);
+    void printInst_beq(std::ostream& out, const CpuInstruction& inst);
+    void printInst_bgez(std::ostream& out, const CpuInstruction& inst);
+    void printInst_bgtz(std::ostream& out, const CpuInstruction& inst);
+    void printInst_blez(std::ostream& out, const CpuInstruction& inst);
+    void printInst_bltz(std::ostream& out, const CpuInstruction& inst);
+    void printInst_bne(std::ostream& out, const CpuInstruction& inst);
     void printInst_lui(std::ostream& out, const CpuInstruction& inst);
     void printInst_mfhi(std::ostream& out, const CpuInstruction& inst);
     void printInst_mflo(std::ostream& out, const CpuInstruction& inst);

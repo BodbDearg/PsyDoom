@@ -158,13 +158,107 @@ void PseudoCppPrinter::printInst_andi(std::ostream& out, const CpuInstruction& i
         // One source reg same as dest: can use '&=' shorthand
         out << " &= ";
         printHexOrDecUint32Literal(i , out);
-    }
+    } 
     else {
         // Regular bitwise AND
         out << " = ";
         out << getGprCppMacroName(inst.regS);
         out << " & ";
         printHexOrDecUint32Literal(i , out);
+    }
+}
+
+void PseudoCppPrinter::printInst_beq(std::ostream& out, const CpuInstruction& inst) {
+    if (inst.regS == CpuGpr::ZERO && inst.regT == CpuGpr::ZERO) {
+        // Always branch
+        out << "(true)";
+    } 
+    else if (inst.regS == CpuGpr::ZERO) {
+        // Branch if zero
+        out << "(";
+        out << getGprCppMacroName(inst.regT);
+        out << " == 0)";
+    }
+    else if (inst.regT == CpuGpr::ZERO) {
+        // Branch if zero
+        out << "(";
+        out << getGprCppMacroName(inst.regS);
+        out << " == 0)";
+    }
+    else {
+        // Regular comparison
+        out << "(";
+        out << getGprCppMacroName(inst.regS);
+        out << " == ";
+        out << getGprCppMacroName(inst.regT);
+        out << ")";
+    }
+}
+
+void PseudoCppPrinter::printInst_bgez(std::ostream& out, const CpuInstruction& inst) {
+    if (inst.regS == CpuGpr::ZERO) {
+        out << "(true)";
+    } else {
+        out << "(i32(";
+        out << getGprMacroNameOr0(inst.regS);
+        out << ") >= 0)";
+    }
+}
+
+void PseudoCppPrinter::printInst_bgtz(std::ostream& out, const CpuInstruction& inst) {
+    if (inst.regS == CpuGpr::ZERO) {
+        out << "(false)";
+    } else {
+        out << "(i32(";
+        out << getGprMacroNameOr0(inst.regS);
+        out << ") > 0)";
+    }
+}
+
+void PseudoCppPrinter::printInst_blez(std::ostream& out, const CpuInstruction& inst) {
+    if (inst.regS == CpuGpr::ZERO) {
+        out << "(true)";
+    } else {
+        out << "(i32(";
+        out << getGprMacroNameOr0(inst.regS);
+        out << ") <= 0)";
+    }
+}
+
+void PseudoCppPrinter::printInst_bltz(std::ostream& out, const CpuInstruction& inst) {
+    if (inst.regS == CpuGpr::ZERO) {
+        out << "(false)";
+    } else {
+        out << "(i32(";
+        out << getGprMacroNameOr0(inst.regS);
+        out << ") < 0)";
+    }
+}
+
+void PseudoCppPrinter::printInst_bne(std::ostream& out, const CpuInstruction& inst) {
+    if (inst.regS == CpuGpr::ZERO && inst.regT == CpuGpr::ZERO) {
+        // Never branch
+        out << "(false)";
+    } 
+    else if (inst.regS == CpuGpr::ZERO) {
+        // Branch if not zero
+        out << "(";
+        out << getGprCppMacroName(inst.regT);
+        out << " != 0)";
+    }
+    else if (inst.regT == CpuGpr::ZERO) {
+        // Branch if not zero
+        out << "(";
+        out << getGprCppMacroName(inst.regS);
+        out << " != 0)";
+    }
+    else {
+        // Regular comparison
+        out << "(";
+        out << getGprCppMacroName(inst.regS);
+        out << " != ";
+        out << getGprCppMacroName(inst.regT);
+        out << ")";
     }
 }
 
