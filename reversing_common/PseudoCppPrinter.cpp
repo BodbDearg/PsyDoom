@@ -285,7 +285,6 @@ static void printNonBranchOrJumpInstruction(
         case CpuOpcode::MULT:
         case CpuOpcode::MULTU:
         case CpuOpcode::NOR:
-        case CpuOpcode::OR:
         case CpuOpcode::SLT:
         case CpuOpcode::SLTU:
         case CpuOpcode::SUB:
@@ -401,6 +400,7 @@ static void printNonBranchOrJumpInstruction(
         // Manually handled instruction types
         case CpuOpcode::ADDIU:      printInst_addiu(out, inst);     break;
         case CpuOpcode::ADDU:       printInst_addu(out, inst);      break;
+        case CpuOpcode::OR:         printInst_or(out, inst);        break;
         case CpuOpcode::ORI:        printInst_ori(out, inst);       break;
     }
 

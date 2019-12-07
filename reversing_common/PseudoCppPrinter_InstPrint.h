@@ -12,5 +12,6 @@ struct CpuInstruction;
 namespace PseudoCppPrinter {
     void printInst_addiu(std::ostream& out, const CpuInstruction& inst);
     void printInst_addu(std::ostream& out, const CpuInstruction& inst);
+    void printInst_or(std::ostream& out, const CpuInstruction& inst);
     void printInst_ori(std::ostream& out, const CpuInstruction& inst);
 }

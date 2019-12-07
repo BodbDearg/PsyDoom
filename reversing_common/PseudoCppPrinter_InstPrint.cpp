@@ -117,6 +117,42 @@ void PseudoCppPrinter::printInst_addu(std::ostream& out, const CpuInstruction& i
     }
 }
 
+void PseudoCppPrinter::printInst_or(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regD);
+
+    if (inst.regS == CpuGpr::ZERO && inst.regT == CpuGpr::ZERO) {
+        // Zero assign
+        out << " = 0";
+    }
+    else if (inst.regS == CpuGpr::ZERO) {
+        // Move instruction
+        out << " = ";
+        out << getGprCppMacroName(inst.regT);
+    }
+    else if (inst.regT == CpuGpr::ZERO) {
+        // Move instruction
+        out << " = ";
+        out << getGprCppMacroName(inst.regS);
+    }
+    else if (inst.regS == inst.regD) {
+        // One source reg same as dest: can use '|=' shorthand
+        out << " |= ";
+        out << getGprCppMacroName(inst.regT);
+    }
+    else if (inst.regT == inst.regD) {
+        // One source reg same as dest: can use '|=' shorthand
+        out << " |= ";
+        out << getGprCppMacroName(inst.regS);
+    }
+    else {
+        // Regular bitwise OR
+        out << " = ";
+        out << getGprCppMacroName(inst.regS);
+        out << " | ";
+        out << getGprCppMacroName(inst.regT);
+    }
+}
+
 void PseudoCppPrinter::printInst_ori(std::ostream& out, const CpuInstruction& inst) {
     out << getGprCppMacroName(inst.regT);
     const uint16_t u16 = (uint16_t) inst.immediateVal;
