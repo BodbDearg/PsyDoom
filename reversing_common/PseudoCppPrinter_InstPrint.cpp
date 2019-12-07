@@ -342,3 +342,31 @@ void PseudoCppPrinter::printInst_subu(std::ostream& out, const CpuInstruction& i
         out << getGprCppMacroName(inst.regT);
     }
 }
+
+void PseudoCppPrinter::printInst_xori(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regT);
+    const uint16_t i = (uint16_t) inst.immediateVal;
+
+    if (inst.regS == CpuGpr::ZERO) {
+        // Literal assign
+        out << " = ";
+        printHexOrDecUint32Literal(i, out);
+    }
+    else if (i == 0) {
+        // Move instruction
+        out << " = ";
+        out << getGprCppMacroName(inst.regS);
+    }
+    else if (inst.regS == inst.regT) {
+        // Can use '^=' shorthand
+        out << " ^= ";
+        printHexOrDecUint32Literal(i, out);
+    }
+    else {
+        // Regular XOR
+        out << " = ";
+        out << getGprCppMacroName(inst.regS);
+        out << " ^ ";
+        printHexOrDecUint32Literal(i, out);
+    }
+}
