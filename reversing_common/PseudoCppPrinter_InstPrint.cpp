@@ -299,6 +299,17 @@ void PseudoCppPrinter::printInst_slt(std::ostream& out, const CpuInstruction& in
     }
 }
 
+void PseudoCppPrinter::printInst_slti(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regT);
+    const int16_t i16 = (int16_t) inst.immediateVal;
+
+    out << " = (i32(";
+    out << getGprMacroNameOr0(inst.regS);
+    out << ") < ";
+    printHexOrDecInt32Literal(i16, out);
+    out << ")";
+}
+
 void PseudoCppPrinter::printInst_sltu(std::ostream& out, const CpuInstruction& inst) {
     out << getGprCppMacroName(inst.regD);
 
@@ -309,8 +320,8 @@ void PseudoCppPrinter::printInst_sltu(std::ostream& out, const CpuInstruction& i
         out << " > 0)";
     }
     else if (inst.regT == CpuGpr::ZERO) {
-        // This can never be false for unsigned numbers (less than 0) - so it just evaluates to '1'
-        out << " = 1";
+        // This can never be true for unsigned numbers (less than 0) - so it just evaluates to '0'
+        out << " = 0";
     }
     else {
         out << " = (";

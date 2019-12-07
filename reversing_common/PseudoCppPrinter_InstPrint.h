@@ -21,6 +21,7 @@ namespace PseudoCppPrinter {
     void printInst_ori(std::ostream& out, const CpuInstruction& inst);
     void printInst_sll(std::ostream& out, const CpuInstruction& inst);
     void printInst_slt(std::ostream& out, const CpuInstruction& inst);
+    void printInst_slti(std::ostream& out, const CpuInstruction& inst);
     void printInst_sltu(std::ostream& out, const CpuInstruction& inst);
     void printInst_sra(std::ostream& out, const CpuInstruction& inst);
     void printInst_srl(std::ostream& out, const CpuInstruction& inst);
