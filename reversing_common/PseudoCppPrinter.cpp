@@ -535,7 +535,7 @@ static void printBranchOrJumpInstruction(
         if (branchInst.opcode == CpuOpcode::J) {
             // Jump just needs a simple 'goto'
             out << "goto loc_";
-            PrintUtils::printHexU32(branchInst.getBranchInstTargetAddr(branchInstAddr), true, out);
+            PrintUtils::printHexU32(branchInst.getFixedJumpInstTargetAddr(branchInstAddr), true, out);
             out << ";\n";
         } else if (branchInst.opcode == CpuOpcode::JAL) {
             // A fixed function call is also easy
