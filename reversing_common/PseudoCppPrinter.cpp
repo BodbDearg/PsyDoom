@@ -344,7 +344,6 @@ static void printNonBranchOrJumpInstruction(
 
         // OPERATION(regT, (uint16_t) immVal)
         case CpuOpcode::SLL:
-        case CpuOpcode::SRL:
             printInst(out, inst, GprArg{ inst.regT }, HexU16Arg{ (uint16_t) inst.immediateVal });
             break;
 
@@ -397,6 +396,7 @@ static void printNonBranchOrJumpInstruction(
         case CpuOpcode::OR:         printInst_or(out, inst);        break;
         case CpuOpcode::ORI:        printInst_ori(out, inst);       break;
         case CpuOpcode::SRA:        printInst_sra(out, inst);       break;
+        case CpuOpcode::SRL:        printInst_srl(out, inst);       break;
         case CpuOpcode::SUBU:       printInst_subu(out, inst);      break;
     }
 
