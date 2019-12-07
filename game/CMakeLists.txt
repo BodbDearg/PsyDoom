@@ -21,6 +21,8 @@ set(SOURCE_FILES
     "PsyQ/LIBSN.h"
     "PsyQ/LIBSPU.cpp"
     "PsyQ/LIBSPU.h"
+    "Wess/PSXCD.h"
+    "Wess/PSXCD.cpp"
 )
 
 set(OTHER_FILES
