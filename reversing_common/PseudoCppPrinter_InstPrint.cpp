@@ -117,6 +117,12 @@ void PseudoCppPrinter::printInst_addu(std::ostream& out, const CpuInstruction& i
     }
 }
 
+void PseudoCppPrinter::printInst_lui(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regT);
+    out << " = ";
+    printHexOrDecUint32Literal(inst.immediateVal << 16, out);
+}
+
 void PseudoCppPrinter::printInst_or(std::ostream& out, const CpuInstruction& inst) {
     out << getGprCppMacroName(inst.regD);
 
