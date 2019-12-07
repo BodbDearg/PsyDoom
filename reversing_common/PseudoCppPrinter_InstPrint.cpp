@@ -187,6 +187,33 @@ void PseudoCppPrinter::printInst_ori(std::ostream& out, const CpuInstruction& in
     }
 }
 
+void PseudoCppPrinter::printInst_sll(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regD);
+    const uint32_t shiftAmount = inst.immediateVal & 0x1Fu;
+
+    if (inst.regT == CpuGpr::ZERO) {
+        // Zero assign
+        out << " = 0";
+    }
+    else if (shiftAmount == 0) {
+        // Move instruction
+        out << " = ";
+        out << getGprCppMacroName(inst.regT);
+    }
+    else if (inst.regT == inst.regD) {
+        // Can use '<<=' shorthand
+        out << " <<= ";
+        out << shiftAmount;
+    }
+    else {
+        // Regular shift instruction
+        out << " = ";
+        out << getGprCppMacroName(inst.regT);
+        out << " << ";
+        out << shiftAmount;
+    }
+}
+
 void PseudoCppPrinter::printInst_sra(std::ostream& out, const CpuInstruction& inst) {
     out << getGprCppMacroName(inst.regD);
     const uint32_t shiftAmount = inst.immediateVal & 0x1Fu;
