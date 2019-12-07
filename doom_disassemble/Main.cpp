@@ -78,7 +78,6 @@ int main(int argc, char* argv[]) noexcept {
     exe.determineWordReferences();
 
     // Start printing the disassembly
-    #if 0
     try {
         std::fstream fileOut;
         const char* const pFileName = (bIsDestructionDerby) ? "disasm_dd_disasm.txt" : "disasm_doom_disasm.txt";
@@ -87,7 +86,6 @@ int main(int argc, char* argv[]) noexcept {
     } catch (...) {
         FATAL_ERROR("Failed writing the disassembly to the output file!");
     }
-    #endif
 
     // Start printing the .cpp file
     try {

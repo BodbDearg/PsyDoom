@@ -707,7 +707,7 @@ static void validateFuncElemRange(const ExeFile& exe, const ProgElem& progElem) 
 
 void PseudoCppPrinter::printCpp(const ExeFile& exe, std::ostream& out) {
     // The app must define this header with all of the required macros
-    out << "#include \"PsxVmMacros.h\"\n";
+    out << "#include \"PsxVm.h\"\n";
     out << "\n";
 
     // Validate and print the declarations for all the functions
