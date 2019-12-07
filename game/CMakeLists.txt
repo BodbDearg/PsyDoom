@@ -1,5 +1,26 @@
 # Platform agnostic sources
 set(SOURCE_FILES
+    "Doom/D_Main.cpp"
+    "Doom/D_Main.h"
+    "PsxVm/PsxVm.h"
+    "PsyQ/LIBAPI.cpp"
+    "PsyQ/LIBAPI.h"
+    "PsyQ/LIBC2.cpp"
+    "PsyQ/LIBC2.h"
+    "PsyQ/LIBCD.cpp"
+    "PsyQ/LIBCD.h"
+    "PsyQ/LIBCOMB.cpp"
+    "PsyQ/LIBCOMB.h"
+    "PsyQ/LIBETC.cpp"
+    "PsyQ/LIBETC.h"
+    "PsyQ/LIBGPU.cpp"
+    "PsyQ/LIBGPU.h"
+    "PsyQ/LIBGTE.cpp"
+    "PsyQ/LIBGTE.h"
+    "PsyQ/LIBSN.cpp"
+    "PsyQ/LIBSN.h"
+    "PsyQ/LIBSPU.cpp"
+    "PsyQ/LIBSPU.h"
 )
 
 set(OTHER_FILES
