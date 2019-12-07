@@ -751,13 +751,11 @@ void PseudoCppPrinter::printHexCppInt32Literal(const int32_t valI32, bool bZeroP
 void PseudoCppPrinter::printHexCppUint16Literal(const uint16_t valU16, bool bZeroPad, std::ostream& out) {    
     out << "0x";
     PrintUtils::printHexU16(valU16, bZeroPad, out);
-    out.put('u');
 }
 
 void PseudoCppPrinter::printHexCppUint32Literal(const uint32_t valU32, bool bZeroPad, std::ostream& out) {    
     out << "0x";
     PrintUtils::printHexU32(valU32, bZeroPad, out);
-    out.put('u');
 }
 
 const char* PseudoCppPrinter::getGprCppMacroName(const uint8_t gprIdx) noexcept {
