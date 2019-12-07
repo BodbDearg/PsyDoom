@@ -10,6 +10,9 @@ struct CpuInstruction;
 // For instructions we want to simplify/cleanup as much as possible.
 //----------------------------------------------------------------------------------------------------------------------
 namespace PseudoCppPrinter {
+    void printInst_ramToCpuLoad(std::ostream& out, const CpuInstruction& inst);     // LW, LH, LHU etc.
+    void printInst_cpuToRamStore(std::ostream& out, const CpuInstruction& inst);    // SW, SH, SB etc.
+
     void printInst_addiu(std::ostream& out, const CpuInstruction& inst);
     void printInst_addu(std::ostream& out, const CpuInstruction& inst);
     void printInst_and(std::ostream& out, const CpuInstruction& inst);

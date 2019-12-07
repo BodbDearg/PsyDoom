@@ -2,6 +2,7 @@
 
 #include "CpuGpr.h"
 #include "CpuInstruction.h"
+#include "CpuOpcode.h"
 #include "PseudoCppPrinter.h"
 #include <cstdlib>
 
@@ -33,6 +34,52 @@ static const char* getGprMacroNameOr0(const uint8_t gprIdx) {
     } else {
         return getGprCppMacroName(gprIdx);
     }
+}
+
+void PseudoCppPrinter::printInst_ramToCpuLoad(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regT);
+    out << " = ";
+    out << CpuOpcodeUtils::getMnemonic(inst.opcode);
+    out << "(";
+    out << getGprMacroNameOr0(inst.regS);
+
+    const int16_t i16 = (int16_t) inst.immediateVal;
+    const int32_t i32 = i16;
+
+    if (i32 != 0) {
+        if (i32 < 0) {
+            out << " - ";
+            printHexCppInt32Literal(-i32, false, out);
+        } else {
+            out << " + ";
+            printHexCppInt32Literal(i32, false, out);
+        }
+    }
+
+    out << ")";
+}
+
+void PseudoCppPrinter::printInst_cpuToRamStore(std::ostream& out, const CpuInstruction& inst) {
+    out << CpuOpcodeUtils::getMnemonic(inst.opcode);
+    out << "(";
+    out << getGprMacroNameOr0(inst.regT);
+    out << ", ";
+    out << getGprMacroNameOr0(inst.regS);
+
+    const int16_t i16 = (int16_t) inst.immediateVal;
+    const int32_t i32 = i16;
+
+    if (i32 != 0) {
+        if (i32 < 0) {
+            out << " - ";
+            printHexCppInt32Literal(-i32, false, out);
+        } else {
+            out << " + ";
+            printHexCppInt32Literal(i32, false, out);
+        }
+    }
+
+    out << ")";
 }
 
 void PseudoCppPrinter::printInst_addiu(std::ostream& out, const CpuInstruction& inst) {
