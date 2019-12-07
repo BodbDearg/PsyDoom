@@ -282,7 +282,7 @@ void PseudoCppPrinter::printInst_slt(std::ostream& out, const CpuInstruction& in
         // This is more readable when comparing against zero
         out << " = (i32(";
         out << getGprMacroNameOr0(inst.regT);
-        out << ") >= 0)";
+        out << ") > 0)";
     }
     else if (inst.regT == CpuGpr::ZERO) {
         // This is more readable when comparing against zero
@@ -296,6 +296,28 @@ void PseudoCppPrinter::printInst_slt(std::ostream& out, const CpuInstruction& in
         out << ") < i32(";
         out << getGprMacroNameOr0(inst.regT);
         out << "))";
+    }
+}
+
+void PseudoCppPrinter::printInst_sltu(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regD);
+
+    if (inst.regS == CpuGpr::ZERO) {
+        // This is more readable when comparing against zero
+        out << " = (";
+        out << getGprMacroNameOr0(inst.regT);
+        out << " > 0)";
+    }
+    else if (inst.regT == CpuGpr::ZERO) {
+        // This can never be false for unsigned numbers (less than 0) - so it just evaluates to '1'
+        out << " = 1";
+    }
+    else {
+        out << " = (";
+        out << getGprMacroNameOr0(inst.regS);
+        out << " < ";
+        out << getGprMacroNameOr0(inst.regT);
+        out << ")";
     }
 }
 
