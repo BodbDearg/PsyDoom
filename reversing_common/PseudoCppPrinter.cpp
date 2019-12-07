@@ -496,27 +496,31 @@ static void printBranchOrJumpInstruction(
     if (bIsBranch) {
         if (bCanLateEvalBranchCond) {
             // Branch instruction that can be evaluated late: print the if statement
-            out << "if ";
+            if (!branchInst.isBranchAlwaysInst()) {
+                out << "if ";
 
-            switch (branchInst.opcode) {
-                case CpuOpcode::BEQ:    printInst_beq(out, branchInst);     break;
-                case CpuOpcode::BGEZ:   printInst_bgez(out, branchInst);    break;
-                case CpuOpcode::BGTZ:   printInst_bgtz(out, branchInst);    break;
-                case CpuOpcode::BLEZ:   printInst_blez(out, branchInst);    break;
-                case CpuOpcode::BLTZ:   printInst_bltz(out, branchInst);    break;
-                case CpuOpcode::BNE:    printInst_bne(out, branchInst);     break;
+                switch (branchInst.opcode) {
+                    case CpuOpcode::BEQ:    printInst_beq(out, branchInst);     break;
+                    case CpuOpcode::BGEZ:   printInst_bgez(out, branchInst);    break;
+                    case CpuOpcode::BGTZ:   printInst_bgtz(out, branchInst);    break;
+                    case CpuOpcode::BLEZ:   printInst_blez(out, branchInst);    break;
+                    case CpuOpcode::BLTZ:   printInst_bltz(out, branchInst);    break;
+                    case CpuOpcode::BNE:    printInst_bne(out, branchInst);     break;
 
-                // Note: not supporting 'BGEZAL' or 'BLTZAL'!
-                // These are not used in Doom anyway, and probably would not be emitted by a C compiler...
-                case CpuOpcode::BGEZAL:
-                case CpuOpcode::BLTZAL:
-                default:
-                    FATAL_ERROR("Unhandled or unsupported branch opcode!");
-                    break;
+                    // Note: not supporting 'BGEZAL' or 'BLTZAL'!
+                    // These are not used in Doom anyway, and probably would not be emitted by a C compiler...
+                    case CpuOpcode::BGEZAL:
+                    case CpuOpcode::BLTZAL:
+                    default:
+                        FATAL_ERROR("Unhandled or unsupported branch opcode!");
+                        break;
+                }
+
+                out.put(' ');
             }
 
             // And print the goto logic for the branch
-            out << " goto loc_";
+            out << "goto loc_";
             PrintUtils::printHexU32(branchInst.getBranchInstTargetAddr(branchInstAddr), true, out);
             out << ";\n";
         } else {

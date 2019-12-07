@@ -1082,6 +1082,14 @@ bool CpuInstruction::isNOP() const noexcept {
     return false;   // Not a NOP
 }
 
+bool CpuInstruction::isBranchAlwaysInst() const noexcept {
+    return (
+        (opcode == CpuOpcode::BEQ) &&
+        (regS == CpuGpr::ZERO) &&
+        (regT == CpuGpr::ZERO)
+    );
+}
+
 uint32_t CpuInstruction::getBranchInstTargetAddr(const uint32_t thisInstAddr) const noexcept {
     // All branch instructions use a signed 16-bit WORD (note: not byte!) index as their immediate value.
     // This plus the instruction address tells us where to go.

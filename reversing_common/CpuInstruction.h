@@ -81,6 +81,9 @@ struct CpuInstruction {
     // NOPs are used in some places in the code to get around issues with branch and load delay slots by delaying the CPU.
     bool isNOP() const noexcept;
 
+    // Tell if the instruction is a branch instruction which always goes to it's target address
+    bool isBranchAlwaysInst() const noexcept;
+
     // Get the target address for this instruction if it is a branch type instruction.
     // The instruction must be given it's address in the program in order to calculate this.
     uint32_t getBranchInstTargetAddr(const uint32_t thisInstAddr) const noexcept;
