@@ -303,7 +303,6 @@ static void printNonBranchOrJumpInstruction(
 
         // OPERATION(regS, (int16_t) immVal)
         case CpuOpcode::ADDI:
-
             printInst(out, inst, GprArg{ inst.regS }, HexI16Arg{ (int16_t) inst.immediateVal });
             break;
 
@@ -342,11 +341,6 @@ static void printNonBranchOrJumpInstruction(
             printInst(out, inst, GprArg{ inst.regT }, DecU8Arg{ inst.regD });
             break;
 
-        case CpuOpcode::LWC2:
-        case CpuOpcode::SWC2:
-            printInst(out, inst, DecU8Arg{ inst.regT }, GprArg{ inst.regS }, HexI16Arg{ (int16_t) inst.immediateVal });
-            break;
-
         // RAM to CPU loads
         case CpuOpcode::LB:
         case CpuOpcode::LBU:
@@ -365,14 +359,20 @@ static void printNonBranchOrJumpInstruction(
         case CpuOpcode::SWL:
         case CpuOpcode::SWR:
             printInst_cpuToRamStore(out, inst);
-            break;            
+            break;
+
+        // Load or store a coprocessor 2 word
+        case CpuOpcode::LWC2:
+        case CpuOpcode::SWC2:
+            printInst_loadOrStoreWordCop2(out, inst);
+            break;
 
         // Manually handled instruction types
         case CpuOpcode::ADDIU:      printInst_addiu(out, inst);     break;
         case CpuOpcode::ADDU:       printInst_addu(out, inst);      break;
         case CpuOpcode::AND:        printInst_and(out, inst);       break;
         case CpuOpcode::ANDI:       printInst_andi(out, inst);      break;
-        case CpuOpcode::LUI:        printInst_lui(out, inst);       break;
+        case CpuOpcode::LUI:        printInst_lui(out, inst);       break;        
         case CpuOpcode::MFHI:       printInst_mfhi(out, inst);      break;
         case CpuOpcode::MFLO:       printInst_mflo(out, inst);      break;
         case CpuOpcode::NOR:        printInst_nor(out, inst);       break;

@@ -82,6 +82,29 @@ void PseudoCppPrinter::printInst_cpuToRamStore(std::ostream& out, const CpuInstr
     out << ")";
 }
 
+void PseudoCppPrinter::printInst_loadOrStoreWordCop2(std::ostream& out, const CpuInstruction& inst) {
+    out << CpuOpcodeUtils::getMnemonic(inst.opcode);
+    out << "(";
+    out << (uint32_t) inst.regT;
+    out << ", ";
+    out << getGprMacroNameOr0(inst.regS);
+
+    const int16_t i16 = (int16_t) inst.immediateVal;
+    const int32_t i32 = i16;
+
+    if (i32 != 0) {
+        if (i32 < 0) {
+            out << " - ";
+            printHexCppInt32Literal(-i32, false, out);
+        } else {
+            out << " + ";
+            printHexCppInt32Literal(i32, false, out);
+        }
+    }
+
+    out << ")";
+}
+
 void PseudoCppPrinter::printInst_addiu(std::ostream& out, const CpuInstruction& inst) {
     const int16_t i16 = (int16_t) inst.immediateVal;
     const int32_t i32 = i16;
