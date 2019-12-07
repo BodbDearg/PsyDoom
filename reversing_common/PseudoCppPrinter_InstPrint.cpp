@@ -186,3 +186,34 @@ void PseudoCppPrinter::printInst_ori(std::ostream& out, const CpuInstruction& in
         printHexOrDecUint32Literal(u16, out);
     }
 }
+
+void PseudoCppPrinter::printInst_subu(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regD);
+
+    if (inst.regS == CpuGpr::ZERO && inst.regT == CpuGpr::ZERO) {
+        // Zero assign
+        out << " = 0";
+    }
+    else if (inst.regS == CpuGpr::ZERO) {
+        // Assigning negative number
+        out << " = -";
+        out << getGprCppMacroName(inst.regT);
+    }
+    else if (inst.regT == CpuGpr::ZERO) {
+        // Move instruction
+        out << " = ";
+        out << getGprCppMacroName(inst.regS);
+    }
+    else if (inst.regS == inst.regD) {
+        // Regular subtract with '-=' shorthand
+        out << " -= ";
+        out << getGprCppMacroName(inst.regT);
+    }
+    else {
+        // Regular subtract
+        out << " = ";
+        out << getGprCppMacroName(inst.regS);
+        out << " - ";
+        out << getGprCppMacroName(inst.regT);
+    }
+}
