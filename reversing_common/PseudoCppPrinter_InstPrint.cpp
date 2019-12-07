@@ -117,6 +117,32 @@ void PseudoCppPrinter::printInst_addu(std::ostream& out, const CpuInstruction& i
     }
 }
 
+void PseudoCppPrinter::printInst_and(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regD);
+
+    if (inst.regS == CpuGpr::ZERO || inst.regT == CpuGpr::ZERO) {
+        // Zero assign
+        out << " = 0";
+    }
+    else if (inst.regS == inst.regD) {
+        // One source reg same as dest: can use '&=' shorthand
+        out << " &= ";
+        out << getGprCppMacroName(inst.regT);
+    }
+    else if (inst.regT == inst.regD) {
+        // One source reg same as dest: can use '&=' shorthand
+        out << " &= ";
+        out << getGprCppMacroName(inst.regS);
+    }
+    else {
+        // Regular bitwise AND
+        out << " = ";
+        out << getGprCppMacroName(inst.regS);
+        out << " & ";
+        out << getGprCppMacroName(inst.regT);
+    }
+}
+
 void PseudoCppPrinter::printInst_andi(std::ostream& out, const CpuInstruction& inst) {
     out << getGprCppMacroName(inst.regT);
     const uint16_t i = (uint16_t) inst.immediateVal;

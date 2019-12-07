@@ -279,7 +279,6 @@ static void printNonBranchOrJumpInstruction(
 
         // OPERATION(regS, regT)
         case CpuOpcode::ADD:
-        case CpuOpcode::AND:
         case CpuOpcode::DIV:
         case CpuOpcode::DIVU:
         case CpuOpcode::MULT:
@@ -386,6 +385,7 @@ static void printNonBranchOrJumpInstruction(
         // Manually handled instruction types
         case CpuOpcode::ADDIU:      printInst_addiu(out, inst);     break;
         case CpuOpcode::ADDU:       printInst_addu(out, inst);      break;
+        case CpuOpcode::AND:        printInst_and(out, inst);       break;
         case CpuOpcode::ANDI:       printInst_andi(out, inst);      break;
         case CpuOpcode::LUI:        printInst_lui(out, inst);       break;
         case CpuOpcode::OR:         printInst_or(out, inst);        break;
