@@ -343,6 +343,42 @@ void PseudoCppPrinter::printInst_subu(std::ostream& out, const CpuInstruction& i
     }
 }
 
+void PseudoCppPrinter::printInst_xor(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regD);
+
+    if (inst.regS == CpuGpr::ZERO && inst.regT == CpuGpr::ZERO) {
+        // Zero assign
+        out << " = 0";
+    }
+    else if (inst.regS == CpuGpr::ZERO) {
+        // Move instruction
+        out << " = ";
+        out << getGprCppMacroName(inst.regT);
+    }
+    else if (inst.regT == CpuGpr::ZERO) {
+        // Move instruction
+        out << " = ";
+        out << getGprCppMacroName(inst.regS);
+    }
+    else if (inst.regS == inst.regD) {
+        // Regular XOR with '^=' shorthand
+        out << " ^= ";
+        out << getGprCppMacroName(inst.regT);
+    }
+    else if (inst.regT == inst.regD) {
+        // Regular XOR with '^=' shorthand
+        out << " ^= ";
+        out << getGprCppMacroName(inst.regS);
+    }
+    else {
+        // Regular XOR
+        out << " = ";
+        out << getGprCppMacroName(inst.regS);
+        out << " ^ ";
+        out << getGprCppMacroName(inst.regT);
+    }
+}
+
 void PseudoCppPrinter::printInst_xori(std::ostream& out, const CpuInstruction& inst) {
     out << getGprCppMacroName(inst.regT);
     const uint16_t i = (uint16_t) inst.immediateVal;
