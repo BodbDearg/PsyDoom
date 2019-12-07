@@ -27,6 +27,14 @@ static void printHexOrDecUint32Literal(const uint32_t val, std::ostream& out) {
     }
 }
 
+static const char* getGprMacroNameOr0(const uint8_t gprIdx) {
+    if (gprIdx == CpuGpr::ZERO) {
+        return "0";
+    } else {
+        return getGprCppMacroName(gprIdx);
+    }
+}
+
 void PseudoCppPrinter::printInst_addiu(std::ostream& out, const CpuInstruction& inst) {
     const int16_t i16 = (int16_t) inst.immediateVal;
     const int32_t i32 = i16;
@@ -36,12 +44,7 @@ void PseudoCppPrinter::printInst_addiu(std::ostream& out, const CpuInstruction& 
     if (i32 == 0) {
         // If the immediate is zero, then it is basically a move or assign
         out << " = ";
-
-        if (inst.regS == CpuGpr::ZERO) {
-            out << "0";
-        } else {
-            out << getGprCppMacroName(inst.regS);
-        }
+        out << getGprMacroNameOr0(inst.regS);
     }
     else if (inst.regS == CpuGpr::ZERO) {
         // If the register is zero then we are just assigning an integer literal
@@ -269,6 +272,30 @@ void PseudoCppPrinter::printInst_sll(std::ostream& out, const CpuInstruction& in
         out << getGprCppMacroName(inst.regT);
         out << " << ";
         out << shiftAmount;
+    }
+}
+
+void PseudoCppPrinter::printInst_slt(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regD);
+
+    if (inst.regS == CpuGpr::ZERO) {
+        // This is more readable when comparing against zero
+        out << " = (i32(";
+        out << getGprMacroNameOr0(inst.regT);
+        out << ") >= 0)";
+    }
+    else if (inst.regT == CpuGpr::ZERO) {
+        // This is more readable when comparing against zero
+        out << " = (i32(";
+        out << getGprMacroNameOr0(inst.regS);
+        out << ") < 0)";
+    }
+    else {
+        out << " = (i32(";
+        out << getGprMacroNameOr0(inst.regS);
+        out << ") < i32(";
+        out << getGprMacroNameOr0(inst.regT);
+        out << "))";
     }
 }
 
