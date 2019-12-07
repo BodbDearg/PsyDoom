@@ -171,6 +171,16 @@ void PseudoCppPrinter::printInst_lui(std::ostream& out, const CpuInstruction& in
     printHexOrDecUint32Literal(inst.immediateVal << 16, out);
 }
 
+void PseudoCppPrinter::printInst_mfhi(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regD);
+    out << " = hi";
+}
+
+void PseudoCppPrinter::printInst_mflo(std::ostream& out, const CpuInstruction& inst) {
+    out << getGprCppMacroName(inst.regD);
+    out << " = lo";
+}
+
 void PseudoCppPrinter::printInst_or(std::ostream& out, const CpuInstruction& inst) {
     out << getGprCppMacroName(inst.regD);
 

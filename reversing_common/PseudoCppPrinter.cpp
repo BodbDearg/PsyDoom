@@ -353,8 +353,6 @@ static void printNonBranchOrJumpInstruction(
         case CpuOpcode::TLBR:
         case CpuOpcode::TLBWI:
         case CpuOpcode::TLBWR:
-        case CpuOpcode::MFHI:
-        case CpuOpcode::MFLO:
             printInst(out, inst);
             break;
 
@@ -382,6 +380,8 @@ static void printNonBranchOrJumpInstruction(
         case CpuOpcode::AND:        printInst_and(out, inst);       break;
         case CpuOpcode::ANDI:       printInst_andi(out, inst);      break;
         case CpuOpcode::LUI:        printInst_lui(out, inst);       break;
+        case CpuOpcode::MFHI:       printInst_mfhi(out, inst);      break;
+        case CpuOpcode::MFLO:       printInst_mflo(out, inst);      break;
         case CpuOpcode::OR:         printInst_or(out, inst);        break;
         case CpuOpcode::ORI:        printInst_ori(out, inst);       break;
         case CpuOpcode::SLL:        printInst_sll(out, inst);       break;
