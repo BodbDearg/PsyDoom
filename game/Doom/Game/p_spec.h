@@ -1,3 +1,5 @@
+#pragma once
+
 void P_InitPicAnims() noexcept;
 void getSide() noexcept;
 void getSector() noexcept;

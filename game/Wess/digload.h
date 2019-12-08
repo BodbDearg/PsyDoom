@@ -1,3 +1,5 @@
+#pragma once
+
 void wess_dig_lcd_loader_init() noexcept;
 void wess_dig_set_sample_position() noexcept;
 void lcd_open() noexcept;

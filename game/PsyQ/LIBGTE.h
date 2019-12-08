@@ -1,3 +1,5 @@
+#pragma once
+
 void LIBGTE_MulMatrix() noexcept;
 void LIBGTE_MulMatrix2() noexcept;
 void LIBGTE_ApplyMatrix() noexcept;

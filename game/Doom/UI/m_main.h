@@ -1,3 +1,5 @@
+#pragma once
+
 void RunMenu() noexcept;
 void M_Start() noexcept;
 void M_Stop() noexcept;

@@ -1,3 +1,5 @@
+#pragma once
+
 void P_RunMobjBase() noexcept;
 void P_XYMovement() noexcept;
 void P_FloatChange() noexcept;

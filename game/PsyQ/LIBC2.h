@@ -1,3 +1,5 @@
+#pragma once
+
 void LIBC2_sprintf() noexcept;
 void LIBC2_memchr() noexcept;
 void LIBC2_strlen() noexcept;

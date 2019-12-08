@@ -1,3 +1,5 @@
+#pragma once
+
 void LIBCOMB_UNKNOWN_func_1() noexcept;
 void LIBCOMB_UNKNOWN_func_2() noexcept;
 void LIBCOMB_UNKNOWN_func_3() noexcept;

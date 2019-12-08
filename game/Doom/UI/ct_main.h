@@ -1,3 +1,5 @@
+#pragma once
+
 void START_ControlsScreen() noexcept;
 void STOP_ControlsScreen() noexcept;
 void TIC_ControlsScreen() noexcept;

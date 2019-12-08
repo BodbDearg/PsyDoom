@@ -1,3 +1,5 @@
+#pragma once
+
 void R_InitData() noexcept;
 void R_InitTextures() noexcept;
 void R_InitFlats() noexcept;

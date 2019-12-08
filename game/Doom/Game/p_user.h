@@ -1,3 +1,5 @@
+#pragma once
+
 void P_PlayerMove() noexcept;
 void P_PlayerXYMovement() noexcept;
 void P_PlayerZMovement() noexcept;

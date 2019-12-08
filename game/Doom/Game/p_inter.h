@@ -1,3 +1,5 @@
+#pragma once
+
 void P_GiveAmmo() noexcept;
 void P_GiveWeapon() noexcept;
 void P_GiveBody() noexcept;

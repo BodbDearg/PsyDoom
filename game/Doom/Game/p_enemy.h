@@ -1,3 +1,5 @@
+#pragma once
+
 void P_CheckMeleeRange() noexcept;
 void P_CheckMissileRange() noexcept;
 void P_Move() noexcept;

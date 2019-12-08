@@ -1,3 +1,5 @@
+#pragma once
+
 void psxspu_init_reverb() noexcept;
 void psxspu_set_reverb_depth() noexcept;
 void psxspu_init() noexcept;

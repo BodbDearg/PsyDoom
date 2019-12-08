@@ -1,3 +1,5 @@
+#pragma once
+
 void LIBCD_CdInit() noexcept;
 void LIBCD_EVENT_def_cbsync() noexcept;
 void LIBCD_EVENT_def_cbready() noexcept;

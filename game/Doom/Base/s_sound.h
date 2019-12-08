@@ -1,3 +1,5 @@
+#pragma once
+
 void S_SetSfxVolume() noexcept;
 void S_SetMusicVolume() noexcept;
 void S_StopMusicSequence() noexcept;

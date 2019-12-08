@@ -1,3 +1,5 @@
+#pragma once
+
 void Z_Init() noexcept;
 void Z_InitZone() noexcept;
 void Z_Malloc2() noexcept;

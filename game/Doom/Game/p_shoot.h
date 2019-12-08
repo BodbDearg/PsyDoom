@@ -1,3 +1,5 @@
+#pragma once
+
 void P_Shoot2() noexcept;
 void PA_DoIntercept() noexcept;
 void PA_ShootLine() noexcept;

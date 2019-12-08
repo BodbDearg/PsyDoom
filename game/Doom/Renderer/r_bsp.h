@@ -1,3 +1,5 @@
+#pragma once
+
 void R_BSP() noexcept;
 void R_RenderBSPNode() noexcept;
 void R_CheckBBox() noexcept;

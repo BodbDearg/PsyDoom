@@ -1,3 +1,5 @@
+#pragma once
+
 void P_SlideMove() noexcept;
 void P_CompletableFrac() noexcept;
 void SL_PointOnSide() noexcept;

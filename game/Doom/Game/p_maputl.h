@@ -1,3 +1,5 @@
+#pragma once
+
 void P_AproxDistance() noexcept;
 void P_PointOnLineSide() noexcept;
 void P_PointOnDivlineSide() noexcept;

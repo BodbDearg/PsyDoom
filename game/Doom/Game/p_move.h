@@ -1,3 +1,5 @@
+#pragma once
+
 void P_TryMove2() noexcept;
 void UNKNOWN_DoomFunc3() noexcept;
 void P_UnsetThingPosition2() noexcept;

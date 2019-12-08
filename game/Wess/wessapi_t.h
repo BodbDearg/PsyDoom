@@ -1,3 +1,5 @@
+#pragma once
+
 void updatetrackstat() noexcept;
 void wess_seq_trigger_type() noexcept;
 void wess_seq_trigger_type_special() noexcept;

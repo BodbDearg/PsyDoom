@@ -1,3 +1,5 @@
+#pragma once
+
 void T_VerticalDoor() noexcept;
 void EV_DoLockedDoor() noexcept;
 void EV_DoDoor() noexcept;

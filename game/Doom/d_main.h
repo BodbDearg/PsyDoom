@@ -1,3 +1,5 @@
+#pragma once
+
 void D_DoomMain() noexcept;
 void RunLegals() noexcept;
 void RunTitle() noexcept;

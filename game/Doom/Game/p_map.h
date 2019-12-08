@@ -1,3 +1,5 @@
+#pragma once
+
 void P_CheckPosition() noexcept;
 void P_TryMove() noexcept;
 void P_InterceptVector() noexcept;

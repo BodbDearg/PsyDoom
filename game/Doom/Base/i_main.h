@@ -1,3 +1,5 @@
+#pragma once
+
 void I_Main() noexcept;
 void I_PSXInit() noexcept;
 void I_Error() noexcept;

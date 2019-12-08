@@ -1,3 +1,5 @@
+#pragma once
+
 void P_RemoveMObj() noexcept;
 void P_RespawnSpecials() noexcept;
 void P_SetMObjState() noexcept;

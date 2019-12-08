@@ -1,3 +1,5 @@
+#pragma once
+
 void P_AddThinker() noexcept;
 void P_RemoveThinker() noexcept;
 void P_RunThinkers() noexcept;

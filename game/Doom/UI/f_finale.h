@@ -1,3 +1,5 @@
+#pragma once
+
 void F1_Start() noexcept;
 void F1_Stop() noexcept;
 void F1_Ticker() noexcept;

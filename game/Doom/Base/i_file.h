@@ -1,3 +1,5 @@
+#pragma once
+
 void InitOpenFileSlots() noexcept;
 void OpenFile() noexcept;
 void CloseFile() noexcept;

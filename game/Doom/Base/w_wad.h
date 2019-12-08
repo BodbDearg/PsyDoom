@@ -1,3 +1,5 @@
+#pragma once
+
 void W_Init() noexcept;
 void W_CheckNumForName() noexcept;
 void W_GetNumForName() noexcept;

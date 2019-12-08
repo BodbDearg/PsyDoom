@@ -1,3 +1,5 @@
+#pragma once
+
 void Read_Vlq() noexcept;
 void Write_Vlq() noexcept;
 void Len_Vlq() noexcept;

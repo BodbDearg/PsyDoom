@@ -1,3 +1,5 @@
+#pragma once
+
 void start_record_music_mute() noexcept;
 void end_record_music_mute() noexcept;
 void add_music_mute_note() noexcept;

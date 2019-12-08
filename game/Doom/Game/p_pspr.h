@@ -1,3 +1,5 @@
+#pragma once
+
 void P_RecursiveSound() noexcept;
 void P_NoiseAlert() noexcept;
 void P_SetPsprite() noexcept;

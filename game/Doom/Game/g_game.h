@@ -1,3 +1,5 @@
+#pragma once
+
 void G_DoLoadLevel() noexcept;
 void G_PlayerFinishLevel() noexcept;
 void G_PlayerReborn() noexcept;

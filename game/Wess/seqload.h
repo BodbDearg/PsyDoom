@@ -1,3 +1,5 @@
+#pragma once
+
 void wess_seq_load_err() noexcept;
 void wess_seq_loader_install_error_handler() noexcept;
 void Is_Seq_Seq_Num_Valid() noexcept;

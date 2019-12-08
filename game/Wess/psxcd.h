@@ -1,3 +1,5 @@
+#pragma once
+
 void PSXCD_psxcd_memcpy() noexcept;
 void psxcd_sync() noexcept;
 void psxcd_critical_sync() noexcept;

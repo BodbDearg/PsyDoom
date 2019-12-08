@@ -1,3 +1,5 @@
+#pragma once
+
 void LIBSPU_SpuSetVoiceAttr() noexcept;
 void LIBSPU__SpuSetVoiceAttr() noexcept;
 void LIBSPU__spu_note2pitch() noexcept;

@@ -1,3 +1,5 @@
+#pragma once
+
 void P_LoadVertexes() noexcept;
 void P_LoadSegs() noexcept;
 void P_LoadSubSectors() noexcept;

@@ -1,3 +1,5 @@
+#pragma once
+
 void GetIntsPerSec() noexcept;
 void CalcPartsPerInt() noexcept;
 void WessInterruptHandler() noexcept;

@@ -1,3 +1,5 @@
+#pragma once
+
 void R_Init() noexcept;
 void R_RenderPlayerView() noexcept;
 void R_SlopeDiv() noexcept;

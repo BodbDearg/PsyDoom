@@ -1,3 +1,5 @@
+#pragma once
+
 void I_DrawNumber() noexcept;
 void I_DrawStringSmall() noexcept;
 void I_DrawPausedOverlay() noexcept;

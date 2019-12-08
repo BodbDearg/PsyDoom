@@ -1,3 +1,5 @@
+#pragma once
+
 void LIBGPU_ResetGraph() noexcept;
 void LIBGPU_SetGraphReverse() noexcept;
 void LIBGPU_SetGraphDebug() noexcept;

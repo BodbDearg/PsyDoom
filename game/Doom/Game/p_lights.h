@@ -1,3 +1,5 @@
+#pragma once
+
 void T_FireFlicker() noexcept;
 void P_SpawnFireFlicker() noexcept;
 void T_LightFlash() noexcept;

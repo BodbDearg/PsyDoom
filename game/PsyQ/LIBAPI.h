@@ -1,3 +1,5 @@
+#pragma once
+
 void LIBAPI_CloseEvent() noexcept;
 void LIBAPI_EnterCriticalSection() noexcept;
 void LIBAPI_write() noexcept;

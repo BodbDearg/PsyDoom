@@ -1,3 +1,5 @@
+#pragma once
+
 void R_DrawSubsector() noexcept;
 void R_FrontZClip() noexcept;
 void R_CheckEdgeVisible() noexcept;

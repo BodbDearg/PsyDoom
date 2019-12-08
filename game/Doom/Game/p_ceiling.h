@@ -1,3 +1,5 @@
+#pragma once
+
 void T_MoveCeiling() noexcept;
 void EV_DoCeiling() noexcept;
 void P_AddActiveCeiling() noexcept;

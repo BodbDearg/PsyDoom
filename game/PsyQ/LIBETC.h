@@ -1,3 +1,5 @@
+#pragma once
+
 void LIBETC_ResetCallback() noexcept;
 void LIBETC_InterruptCallback() noexcept;
 void LIBETC_DMACallback() noexcept;
