@@ -1,6 +1,10 @@
 #include "w_wad.h"
 
+#include "Doom/d_main.h"
+#include "i_file.h"
+#include "i_main.h"
 #include "PsxVm/PsxVm.h"
+#include "z_zone.h"
 
 void W_Init() noexcept {
 loc_80031394:

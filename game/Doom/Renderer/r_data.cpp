@@ -1,6 +1,10 @@
 #include "r_data.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/w_wad.h"
+#include "Doom/Base/z_zone.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBGPU.h"
 
 void R_InitData() noexcept {
 loc_8002B9A8:

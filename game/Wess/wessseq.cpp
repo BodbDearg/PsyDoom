@@ -1,6 +1,7 @@
 #include "wessseq.h"
 
 #include "PsxVm/PsxVm.h"
+#include "wessarc.h"
 
 void Read_Vlq() noexcept {
 loc_80047664:

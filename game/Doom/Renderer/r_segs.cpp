@@ -1,6 +1,8 @@
 #include "r_segs.h"
 
+#include "Doom/Base/w_wad.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBGPU.h"
 
 void R_DrawSubsectorSeg() noexcept {
 loc_8002D3AC:

@@ -1,6 +1,7 @@
 #include "SEQLOAD.h"
 
 #include "PsxVm/PsxVm.h"
+#include "wessarc.h"
 
 void wess_seq_load_err() noexcept {
 loc_80044740:

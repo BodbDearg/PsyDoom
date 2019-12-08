@@ -1,6 +1,7 @@
 #include "wessapi_m.h"
 
 #include "PsxVm/PsxVm.h"
+#include "wessapi.h"
 
 void wess_master_sfx_volume_get() noexcept {
     sp -= 0x18;

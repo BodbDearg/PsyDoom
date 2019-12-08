@@ -1,6 +1,7 @@
 #include "PSXSPU.h"
 
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBSPU.h"
 
 void psxspu_init_reverb() noexcept {
 loc_80045328:

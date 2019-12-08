@@ -1,5 +1,8 @@
 #include "LIBSPU.h"
 
+#include "LIBAPI.h"
+#include "LIBC2.h"
+#include "LIBETC.h"
 #include "PsxVm/PsxVm.h"
 
 void LIBSPU_SpuSetVoiceAttr() noexcept {

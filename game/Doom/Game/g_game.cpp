@@ -1,6 +1,16 @@
 #include "g_game.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/m_random.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Base/z_zone.h"
+#include "Doom/d_main.h"
+#include "Doom/Renderer/r_main.h"
+#include "p_map.h"
+#include "p_mobj.h"
+#include "p_setup.h"
 #include "PsxVm/PsxVm.h"
+#include "Wess/wessapi.h"
 
 void G_DoLoadLevel() noexcept {
 loc_80012E04:

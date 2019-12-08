@@ -1,6 +1,14 @@
 #include "r_main.h"
 
+#include "Doom/Base/i_main.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBGPU.h"
+#include "PsyQ/LIBGTE.h"
+#include "r_bsp.h"
+#include "r_data.h"
+#include "r_draw.h"
+#include "r_sky.h"
+#include "r_things.h"
 
 void R_Init() noexcept {
 loc_800305B0:

@@ -1,6 +1,20 @@
 #include "d_main.h"
 
+#include "Base/d_vsprintf.h"
+#include "Base/i_file.h"
+#include "Base/i_main.h"
+#include "Base/i_misc.h"
+#include "Base/s_sound.h"
+#include "Base/w_wad.h"
+#include "Base/z_zone.h"
+#include "Game/g_game.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBETC.h"
+#include "PsyQ/LIBGPU.h"
+#include "Renderer/r_main.h"
+#include "UI/m_main.h"
+#include "UI/st_main.h"
+#include "Wess/psxsnd.h"
 
 void D_DoomMain() noexcept {
 loc_80012274:

@@ -1,6 +1,23 @@
 #include "p_spec.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/m_random.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Base/w_wad.h"
+#include "Doom/Base/z_zone.h"
+#include "Doom/d_main.h"
+#include "Doom/Renderer/r_data.h"
+#include "p_ceiling.h"
+#include "p_doors.h"
+#include "p_floor.h"
+#include "p_inter.h"
+#include "p_lights.h"
+#include "p_plats.h"
+#include "p_switch.h"
+#include "p_telept.h"
+#include "p_tick.h"
 #include "PsxVm/PsxVm.h"
+#include "Wess/psxcd.h"
 
 void P_InitPicAnims() noexcept {
 loc_80025F44:

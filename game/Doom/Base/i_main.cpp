@@ -1,6 +1,16 @@
 #include "i_main.h"
 
+#include "d_vsprintf.h"
+#include "Doom/d_main.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBAPI.h"
+#include "PsyQ/LIBCOMB.h"
+#include "PsyQ/LIBETC.h"
+#include "PsyQ/LIBGPU.h"
+#include "PsyQ/LIBGTE.h"
+#include "PsyQ/LIBSN.h"
+#include "w_wad.h"
+#include "z_zone.h"
 
 void I_Main() noexcept {
 loc_8003290C:

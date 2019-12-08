@@ -1,5 +1,15 @@
 #include "p_map.h"
 
+#include "Doom/Base/m_random.h"
+#include "Doom/Base/s_sound.h"
+#include "p_inter.h"
+#include "p_maputl.h"
+#include "p_mobj.h"
+#include "p_move.h"
+#include "p_shoot.h"
+#include "p_sight.h"
+#include "p_spec.h"
+#include "p_switch.h"
 #include "PsxVm/PsxVm.h"
 
 void P_CheckPosition() noexcept {

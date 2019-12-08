@@ -1,6 +1,9 @@
 #include "i_crossfade.h"
 
+#include "i_main.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBETC.h"
+#include "PsyQ/LIBGPU.h"
 
 void I_CrossFadeFrameBuffers() noexcept {
 loc_80036448:

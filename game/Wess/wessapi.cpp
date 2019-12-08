@@ -1,6 +1,10 @@
-#include "WESSAPI.h"
+#include "wessapi.h"
 
+#include "psxcmd.h"
 #include "PsxVm/PsxVm.h"
+#include "wessapi_t.h"
+#include "wessarc.h"
+#include "wessseq.h"
 
 void trackstart() noexcept {
 loc_80041734:

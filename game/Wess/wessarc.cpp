@@ -1,6 +1,11 @@
 #include "WESSARC.h"
 
+#include "psxcd.h"
+#include "psxspu.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBAPI.h"
+#include "PsyQ/LIBSPU.h"
+#include "wessseq.h"
 
 void GetIntsPerSec() noexcept {
 loc_80043B30:

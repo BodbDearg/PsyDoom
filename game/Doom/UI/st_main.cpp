@@ -1,6 +1,13 @@
 #include "st_main.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/i_misc.h"
+#include "Doom/Base/m_random.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Base/z_zone.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBC2.h"
+#include "PsyQ/LIBGPU.h"
 
 void ST_Init() noexcept {
 loc_80038558:
@@ -372,7 +379,7 @@ loc_80038AB8:
     v0 += 0x3E68;                                       // Result = StatusBarFaceSpriteInfo[0] (80073E68)
     v1 += v0;
     sw(v1, gp + 0xC50);                                 // Store to: gpCurStatusBarFaceSpriteInfo (80078230)
-    P_UpdatePalette();
+    I_UpdatePalette();
     ra = lw(sp + 0x24);
     s4 = lw(sp + 0x20);
     s3 = lw(sp + 0x1C);

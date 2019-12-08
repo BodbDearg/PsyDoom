@@ -1,5 +1,8 @@
 #include "p_move.h"
 
+#include "Doom/Renderer/r_main.h"
+#include "p_maputl.h"
+#include "p_spec.h"
 #include "PsxVm/PsxVm.h"
 
 void P_TryMove2() noexcept {

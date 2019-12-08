@@ -1,6 +1,7 @@
 #include "r_sky.h"
 
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBGPU.h"
 
 void R_DrawSky() noexcept {
 loc_8002C07C:

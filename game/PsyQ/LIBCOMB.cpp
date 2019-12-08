@@ -1,5 +1,6 @@
 #include "LIBCOMB.h"
 
+#include "LIBAPI.h"
 #include "PsxVm/PsxVm.h"
 
 void LIBCOMB_UNKNOWN_func_1() noexcept {

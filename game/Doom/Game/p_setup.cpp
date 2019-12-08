@@ -1,5 +1,20 @@
 #include "p_setup.h"
 
+#include "Doom/Base/i_file.h"
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/m_bbox.h"
+#include "Doom/Base/m_fixed.h"
+#include "Doom/Base/m_random.h"
+#include "Doom/Base/w_wad.h"
+#include "Doom/Base/z_zone.h"
+#include "Doom/d_main.h"
+#include "Doom/Renderer/r_data.h"
+#include "Doom/Renderer/r_main.h"
+#include "g_game.h"
+#include "p_firesky.h"
+#include "p_mobj.h"
+#include "p_spec.h"
+#include "p_switch.h"
 #include "PsxVm/PsxVm.h"
 
 void P_LoadVertexes() noexcept {

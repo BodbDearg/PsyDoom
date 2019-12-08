@@ -1,6 +1,8 @@
 #include "psx_main.h"
 
+#include "Base/i_main.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBAPI.h"
 
 void psx_main() noexcept {
     v0 = 0x80070000;                                    // Result = 80070000

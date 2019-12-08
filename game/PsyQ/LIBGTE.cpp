@@ -1,5 +1,6 @@
 #include "LIBGTE.h"
 
+#include "LIBAPI.h"
 #include "PsxVm/PsxVm.h"
 
 void LIBGTE_MulMatrix() noexcept {

@@ -1,5 +1,6 @@
 #include "LIBC2.h"
 
+#include "LIBAPI.h"
 #include "PsxVm/PsxVm.h"
 
 void LIBC2_sprintf() noexcept {

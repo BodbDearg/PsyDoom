@@ -1,5 +1,11 @@
 #include "p_pspr.h"
 
+#include "Doom/Base/m_random.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Renderer/r_main.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_mobj.h"
 #include "PsxVm/PsxVm.h"
 
 void P_RecursiveSound() noexcept {

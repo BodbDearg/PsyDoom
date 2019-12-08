@@ -1,6 +1,12 @@
 #include "PSXSND.h"
 
+#include "digload.h"
+#include "Doom/Base/s_sound.h"
+#include "psxcd.h"
 #include "PsxVm/PsxVm.h"
+#include "seqload.h"
+#include "seqload_r.h"
+#include "wessapi.h"
 
 void PsxSoundInit() noexcept {
 loc_800415EC:

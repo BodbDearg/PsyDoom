@@ -1,6 +1,10 @@
 #include "r_things.h"
 
+#include "Doom/Base/i_main.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBGPU.h"
+#include "PsyQ/LIBGTE.h"
+#include "r_main.h"
 
 void R_DrawSubsectorSprites() noexcept {
 loc_8002F330:

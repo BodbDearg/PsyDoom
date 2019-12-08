@@ -1,6 +1,13 @@
 #include "ti_main.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Base/w_wad.h"
+#include "Doom/Game/p_firesky.h"
+#include "Doom/Renderer/r_data.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBGPU.h"
+#include "Wess/psxcd.h"
 
 void START_Title() noexcept {
     sp -= 0x28;

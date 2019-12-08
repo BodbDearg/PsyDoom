@@ -1,6 +1,14 @@
 #include "s_sound.h"
 
+#include "Doom/Renderer/r_main.h"
 #include "PsxVm/PsxVm.h"
+#include "Wess/digload.h"
+#include "Wess/psxspu.h"
+#include "Wess/seqload.h"
+#include "Wess/seqload_r.h"
+#include "Wess/wessapi.h"
+#include "Wess/wessapi_m.h"
+#include "Wess/wessapi_t.h"
 
 void S_SetSfxVolume() noexcept {
 loc_80040FAC:

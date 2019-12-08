@@ -1,6 +1,9 @@
 #include "r_bsp.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/d_main.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBGTE.h"
 
 void R_BSP() noexcept {
 loc_8002ACE8:

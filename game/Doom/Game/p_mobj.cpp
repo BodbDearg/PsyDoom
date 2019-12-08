@@ -1,5 +1,18 @@
 #include "p_mobj.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/i_misc.h"
+#include "Doom/Base/m_random.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Base/z_zone.h"
+#include "Doom/d_main.h"
+#include "Doom/Renderer/r_main.h"
+#include "Doom/UI/st_main.h"
+#include "g_game.h"
+#include "p_map.h"
+#include "p_maputl.h"
+#include "p_password.h"
+#include "p_pspr.h"
 #include "PsxVm/PsxVm.h"
 
 void P_RemoveMObj() noexcept {
@@ -648,7 +661,7 @@ loc_8001D130:
         if (bJump) goto loc_8001D15C;
     }
     ST_Start();
-    P_UpdatePalette();
+    I_UpdatePalette();
     v0 = s0;
 loc_8001D15C:
     ra = lw(sp + 0x30);

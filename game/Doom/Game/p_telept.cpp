@@ -1,5 +1,10 @@
 #include "p_telept.h"
 
+#include "Doom/Base/s_sound.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_maputl.h"
+#include "p_mobj.h"
 #include "PsxVm/PsxVm.h"
 
 void P_Telefrag() noexcept {

@@ -1,5 +1,9 @@
 #include "p_lights.h"
 
+#include "Doom/Base/m_random.h"
+#include "Doom/Base/z_zone.h"
+#include "p_spec.h"
+#include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 
 void T_FireFlicker() noexcept {

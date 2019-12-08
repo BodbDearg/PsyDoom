@@ -1,5 +1,11 @@
 #include "p_inter.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/m_random.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Renderer/r_main.h"
+#include "p_mobj.h"
+#include "p_pspr.h"
 #include "PsxVm/PsxVm.h"
 
 void P_GiveAmmo() noexcept {

@@ -1,6 +1,13 @@
 #include "m_main.h"
 
+#include "Doom/Base/i_crossfade.h"
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/i_misc.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/d_main.h"
+#include "Doom/Game/g_game.h"
 #include "PsxVm/PsxVm.h"
+#include "Wess/psxcd.h"
 
 void RunMenu() noexcept {
 loc_80035B24:

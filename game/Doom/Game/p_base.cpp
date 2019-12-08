@@ -1,5 +1,6 @@
 #include "p_base.h"
 
+#include "Doom/Renderer/r_main.h"
 #include "PsxVm/PsxVm.h"
 
 void P_RunMobjBase() noexcept {

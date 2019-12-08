@@ -1,6 +1,13 @@
 #include "f_finale.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/i_misc.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/d_main.h"
+#include "Doom/Game/p_setup.h"
+#include "Doom/Game/p_tick.h"
 #include "PsxVm/PsxVm.h"
+#include "Wess/psxcd.h"
 
 void F1_Start() noexcept {
     sp -= 0x28;

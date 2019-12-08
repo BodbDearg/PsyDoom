@@ -1,6 +1,9 @@
 #include "i_misc.h"
 
+#include "i_main.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBC2.h"
+#include "PsyQ/LIBGPU.h"
 
 void I_DrawNumber() noexcept {
 loc_8003A3C8:

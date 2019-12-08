@@ -1,6 +1,11 @@
 #include "r_draw.h"
 
+#include "Doom/Base/i_main.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBGTE.h"
+#include "r_plane.h"
+#include "r_segs.h"
+#include "r_things.h"
 
 void R_DrawSubsector() noexcept {
 loc_8002C6F8:

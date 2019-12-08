@@ -1,5 +1,6 @@
 #include "am_main.h"
 
+#include "Doom/Base/i_main.h"
 #include "PsxVm/PsxVm.h"
 
 void AM_Start() noexcept {

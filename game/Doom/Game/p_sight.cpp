@@ -1,5 +1,7 @@
 #include "p_sight.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/m_fixed.h"
 #include "PsxVm/PsxVm.h"
 
 void P_CheckSights() noexcept {
@@ -420,7 +422,7 @@ loc_80024F0C:
     v0 = lw(v0 + 0x7F40);                               // Load from: gpSubsectors (80077F40)
     a0 = s0 << 4;
     a0 += v0;
-    P_CrossSubsector();
+    PS_CrossSubsector();
     goto loc_80025010;
 loc_80024F28:
     v0 = a0 << 3;

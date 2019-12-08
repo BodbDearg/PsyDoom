@@ -1,5 +1,14 @@
 #include "p_switch.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Renderer/r_data.h"
+#include "p_ceiling.h"
+#include "p_doors.h"
+#include "p_floor.h"
+#include "p_lights.h"
+#include "p_plats.h"
+#include "p_spec.h"
 #include "PsxVm/PsxVm.h"
 
 void P_InitSwitchList() noexcept {

@@ -1,5 +1,8 @@
 #include "LIBCD.h"
 
+#include "LIBAPI.h"
+#include "LIBC2.h"
+#include "LIBETC.h"
 #include "PsxVm/PsxVm.h"
 
 void LIBCD_CdInit() noexcept {

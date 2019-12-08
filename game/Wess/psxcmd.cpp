@@ -1,6 +1,9 @@
 #include "psxcmd.h"
 
+#include "psxspu.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBSPU.h"
+#include "wessseq.h"
 
 void start_record_music_mute() noexcept {
 loc_800459E0:

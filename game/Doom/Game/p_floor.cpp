@@ -1,5 +1,10 @@
 #include "p_floor.h"
 
+#include "Doom/Base/s_sound.h"
+#include "Doom/Base/z_zone.h"
+#include "p_change.h"
+#include "p_spec.h"
+#include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 
 void T_MovePlane() noexcept {

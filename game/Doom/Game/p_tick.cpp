@@ -1,6 +1,25 @@
 #include "p_tick.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/m_random.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Base/z_zone.h"
+#include "Doom/d_main.h"
+#include "Doom/Renderer/r_main.h"
+#include "Doom/UI/am_main.h"
+#include "Doom/UI/o_main.h"
+#include "Doom/UI/st_main.h"
+#include "g_game.h"
+#include "p_base.h"
+#include "p_mobj.h"
+#include "p_sight.h"
+#include "p_spec.h"
+#include "p_user.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBGPU.h"
+#include "Wess/psxcd.h"
+#include "Wess/psxspu.h"
+#include "Wess/wessapi.h"
 
 void P_AddThinker() noexcept {
 loc_80028C38:

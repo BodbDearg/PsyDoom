@@ -1,6 +1,8 @@
 #include "i_file.h"
 
+#include "i_main.h"
 #include "PsxVm/PsxVm.h"
+#include "Wess/psxcd.h"
 
 void InitOpenFileSlots() noexcept {
 loc_80031EB4:

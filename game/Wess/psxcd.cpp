@@ -1,5 +1,6 @@
 #include "PSXCD.h"
 
+#include "psxspu.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBCD.h"
 

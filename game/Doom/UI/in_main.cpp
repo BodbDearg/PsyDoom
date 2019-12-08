@@ -1,6 +1,11 @@
 #include "in_main.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/i_misc.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Game/p_password.h"
 #include "PsxVm/PsxVm.h"
+#include "Wess/psxcd.h"
 
 void IN_Start() noexcept {
     sp -= 0x28;

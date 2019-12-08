@@ -1,5 +1,9 @@
 #include "ct_main.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/i_misc.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/d_main.h"
 #include "PsxVm/PsxVm.h"
 
 void START_ControlsScreen() noexcept {

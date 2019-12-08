@@ -106,13 +106,13 @@ void tne(const uint32_t r1, const uint32_t r2, const uint16_t i) noexcept;
 void tnei(const uint32_t r1, const int32_t i) noexcept;
 
 // Arithmetic
-void add(const uint32_t r1, const uint32_t r2) noexcept;
-void addi(const uint32_t r1, const int16_t i) noexcept;
+uint32_t add(const uint32_t r1, const uint32_t r2) noexcept;
+uint32_t addi(const uint32_t r1, const int16_t i) noexcept;
 void div(const uint32_t r1, const uint32_t r2) noexcept;
 void divu(const uint32_t r1, const uint32_t r2) noexcept;
 void mult(const uint32_t r1, const uint32_t r2) noexcept;
 void multu(const uint32_t r1, const uint32_t r2) noexcept;
-void sub(const uint32_t r1, const uint32_t r2) noexcept;
+uint32_t sub(const uint32_t r1, const uint32_t r2) noexcept;
 
 // RAM to CPU loads
 uint32_t lb(const uint32_t addr) noexcept;
@@ -148,7 +148,17 @@ void _break(const uint32_t i) noexcept;
 void syscall(const uint32_t i) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Utilities
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 // Call a function at the given address.
 // The function passes args and return values through the VM interface.
-//------------------------------------------------------------------------------------------------------------------------------------------
 void pcall(const uint32_t addr) noexcept;
+
+// Call a bios function.
+// This will transfer control over to the emulator.
+void bios_call(const uint32_t func) noexcept;
+
+// Called when the code is trying to jump to an unexpected location for a jump table.
+// If this happens then something has seriously gone wrong.
+void jump_table_err() noexcept;

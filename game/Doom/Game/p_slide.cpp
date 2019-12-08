@@ -1,5 +1,6 @@
 #include "p_slide.h"
 
+#include "Doom/Base/m_fixed.h"
 #include "PsxVm/PsxVm.h"
 
 void P_SlideMove() noexcept {

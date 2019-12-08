@@ -1,5 +1,6 @@
 #include "z_zone.h"
 
+#include "i_main.h"
 #include "PsxVm/PsxVm.h"
 
 void Z_Init() noexcept {

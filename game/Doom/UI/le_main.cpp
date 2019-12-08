@@ -1,5 +1,8 @@
 #include "le_main.h"
 
+#include "Doom/Base/i_crossfade.h"
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/s_sound.h"
 #include "PsxVm/PsxVm.h"
 
 void START_Legals() noexcept {

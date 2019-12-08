@@ -1,5 +1,6 @@
 #include "p_password.h"
 
+#include "Doom/d_main.h"
 #include "PsxVm/PsxVm.h"
 
 void P_ComputePassword() noexcept {

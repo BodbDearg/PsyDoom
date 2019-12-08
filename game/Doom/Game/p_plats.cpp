@@ -1,5 +1,12 @@
 #include "p_plats.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/m_random.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Base/z_zone.h"
+#include "p_floor.h"
+#include "p_spec.h"
+#include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 
 void T_PlatRaise() noexcept {

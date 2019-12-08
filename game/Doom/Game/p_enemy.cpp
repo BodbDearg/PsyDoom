@@ -1,5 +1,18 @@
 #include "p_enemy.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/m_fixed.h"
+#include "Doom/Base/m_random.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Renderer/r_main.h"
+#include "p_doors.h"
+#include "p_floor.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_maputl.h"
+#include "p_mobj.h"
+#include "p_sight.h"
+#include "p_switch.h"
 #include "PsxVm/PsxVm.h"
 
 void P_CheckMeleeRange() noexcept {

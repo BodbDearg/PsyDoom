@@ -1,6 +1,8 @@
 #include "r_plane.h"
 
+#include "Doom/Base/w_wad.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBGPU.h"
 
 void R_DrawSubsectorFlat() noexcept {
 loc_8002E2A8:

@@ -1,6 +1,7 @@
 #include "seqload_r.h"
 
 #include "PsxVm/PsxVm.h"
+#include "seqload.h"
 
 void wess_seq_range_sizeof() noexcept {
     v0 = 0x80070000;                                    // Result = 80070000

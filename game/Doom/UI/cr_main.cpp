@@ -1,6 +1,8 @@
 #include "cr_main.h"
 
+#include "Doom/Base/i_main.h"
 #include "PsxVm/PsxVm.h"
+#include "Wess/psxcd.h"
 
 void START_Credits() noexcept {
     sp -= 0x28;

@@ -1,6 +1,9 @@
 #include "digload.h"
 
+#include "psxcd.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBCD.h"
+#include "PsyQ/LIBSPU.h"
 
 void wess_dig_lcd_loader_init() noexcept {
 loc_80048EE4:

@@ -1,6 +1,11 @@
 #include "pw_main.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/i_misc.h"
+#include "Doom/Base/s_sound.h"
+#include "Doom/Game/p_password.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBGPU.h"
 
 void START_PasswordScreen() noexcept {
     sp -= 0x18;

@@ -1,5 +1,7 @@
 #include "p_shoot.h"
 
+#include "Doom/Base/i_main.h"
+#include "Doom/Base/m_fixed.h"
 #include "PsxVm/PsxVm.h"
 
 void P_Shoot2() noexcept {

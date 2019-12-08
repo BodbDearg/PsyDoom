@@ -1,6 +1,8 @@
-#include "WESSAPIT.h"
+#include "wessapi_t.h"
 
 #include "PsxVm/PsxVm.h"
+#include "wessapi.h"
+#include "wessarc.h"
 
 void updatetrackstat() noexcept {
 loc_80044098:
