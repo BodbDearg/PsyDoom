@@ -1,4 +1,3 @@
-// d_main
 void D_DoomMain() noexcept;
 void RunLegals() noexcept;
 void RunTitle() noexcept;
@@ -7,48 +6,6 @@ void RunCredits() noexcept;
 void I_SetDebugDrawStringPos() noexcept;
 void I_DebugDrawString() noexcept;
 void MiniLoop() noexcept;
-
-// vsprintf
-void D_mystrlen() noexcept;
-void D_vsprintf() noexcept;
-
-// le_main
-void START_Legals() noexcept;
-void STOP_Legals() noexcept;
-void TIC_Legals() noexcept;
-void DRAW_Legals() noexcept;
-
-// ti_main
-void START_Title() noexcept;
-void STOP_Title() noexcept;
-void TIC_Title() noexcept;
-void DRAW_Title() noexcept;
-
-// m_main
-void RunMenu() noexcept;
-void M_Start() noexcept;
-void M_Stop() noexcept;
-void M_Ticker() noexcept;
-void M_Drawer() noexcept;
-
-// i_crossfade
-void I_CrossFadeFrameBuffers() noexcept;
-
-// pw_main
-void START_PasswordScreen() noexcept;
-void STOP_PasswordScreen() noexcept;
-void TIC_PasswordScreen() noexcept;
-void DRAW_PasswordScreen() noexcept;
-
-// ct_main
-void START_ControlsScreen() noexcept;
-void STOP_ControlsScreen() noexcept;
-void TIC_ControlsScreen() noexcept;
-void DRAW_ControlsScreen() noexcept;
-
-// p_password
-void P_ComputePassword() noexcept;
-void P_ProcessPassword() noexcept;
 
 void PsxSoundInit() noexcept;
 void PsxSoundExit() noexcept;
@@ -221,5 +178,3 @@ void wess_pan_mode_set() noexcept;
 void wess_seq_range_sizeof() noexcept;
 void wess_seq_range_load() noexcept;
 void wess_seq_range_free() noexcept;
-
-void psx_main() noexcept;
