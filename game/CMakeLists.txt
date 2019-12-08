@@ -116,6 +116,7 @@ set(SOURCE_FILES
     "Doom/UI/st_main.h"
     "Doom/UI/ti_main.cpp"
     "Doom/UI/ti_main.h"
+    "PsxVm/PsxVm.cpp"
     "PsxVm/PsxVm.h"
     "PsyQ/LIBAPI.cpp"
     "PsyQ/LIBAPI.h"

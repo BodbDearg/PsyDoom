@@ -16,75 +16,77 @@ typedef int8_t      i8;
 // Mips R3000 registers and macros aliasing them.
 // Note: not allowing modification of the 'zero' register.
 //------------------------------------------------------------------------------------------------------------------------------------------
-const uint32_t* gpReg_zero;
-uint32_t* gpReg_at;
-uint32_t* gpReg_v0;
-uint32_t* gpReg_v1;
-uint32_t* gpReg_a0;
-uint32_t* gpReg_a1;
-uint32_t* gpReg_a2;
-uint32_t* gpReg_a3;
-uint32_t* gpReg_t0;
-uint32_t* gpReg_t1;
-uint32_t* gpReg_t2;
-uint32_t* gpReg_t3;
-uint32_t* gpReg_t4;
-uint32_t* gpReg_t5;
-uint32_t* gpReg_t6;
-uint32_t* gpReg_t7;
-uint32_t* gpReg_s0;
-uint32_t* gpReg_s1;
-uint32_t* gpReg_s2;
-uint32_t* gpReg_s3;
-uint32_t* gpReg_s4;
-uint32_t* gpReg_s5;
-uint32_t* gpReg_s6;
-uint32_t* gpReg_s7;
-uint32_t* gpReg_t8;
-uint32_t* gpReg_t9;
-uint32_t* gpReg_k0;
-uint32_t* gpReg_k1;
-uint32_t* gpReg_gp;
-uint32_t* gpReg_sp;
-uint32_t* gpReg_fp;
-uint32_t* gpReg_ra;
-uint32_t* gpReg_hi;
-uint32_t* gpReg_lo;
+namespace PsxVm {
+    extern const uint32_t* gpReg_zero;
+    extern uint32_t* gpReg_at;
+    extern uint32_t* gpReg_v0;
+    extern uint32_t* gpReg_v1;
+    extern uint32_t* gpReg_a0;
+    extern uint32_t* gpReg_a1;
+    extern uint32_t* gpReg_a2;
+    extern uint32_t* gpReg_a3;
+    extern uint32_t* gpReg_t0;
+    extern uint32_t* gpReg_t1;
+    extern uint32_t* gpReg_t2;
+    extern uint32_t* gpReg_t3;
+    extern uint32_t* gpReg_t4;
+    extern uint32_t* gpReg_t5;
+    extern uint32_t* gpReg_t6;
+    extern uint32_t* gpReg_t7;
+    extern uint32_t* gpReg_s0;
+    extern uint32_t* gpReg_s1;
+    extern uint32_t* gpReg_s2;
+    extern uint32_t* gpReg_s3;
+    extern uint32_t* gpReg_s4;
+    extern uint32_t* gpReg_s5;
+    extern uint32_t* gpReg_s6;
+    extern uint32_t* gpReg_s7;
+    extern uint32_t* gpReg_t8;
+    extern uint32_t* gpReg_t9;
+    extern uint32_t* gpReg_k0;
+    extern uint32_t* gpReg_k1;
+    extern uint32_t* gpReg_gp;
+    extern uint32_t* gpReg_sp;
+    extern uint32_t* gpReg_fp;
+    extern uint32_t* gpReg_ra;
+    extern uint32_t* gpReg_hi;
+    extern uint32_t* gpReg_lo;
+}
 
-#define zero    (*gpReg_zero)
-#define at      (*gpReg_at)
-#define v0      (*gpReg_v0)
-#define v1      (*gpReg_v1)
-#define a0      (*gpReg_a0)
-#define a1      (*gpReg_a1)
-#define a2      (*gpReg_a2)
-#define a3      (*gpReg_a3)
-#define t0      (*gpReg_t0)
-#define t1      (*gpReg_t1)
-#define t2      (*gpReg_t2)
-#define t3      (*gpReg_t3)
-#define t4      (*gpReg_t4)
-#define t5      (*gpReg_t5)
-#define t6      (*gpReg_t6)
-#define t7      (*gpReg_t7)
-#define s0      (*gpReg_s0)
-#define s1      (*gpReg_s1)
-#define s2      (*gpReg_s2)
-#define s3      (*gpReg_s3)
-#define s4      (*gpReg_s4)
-#define s5      (*gpReg_s5)
-#define s6      (*gpReg_s6)
-#define s7      (*gpReg_s7)
-#define t8      (*gpReg_t8)
-#define t9      (*gpReg_t9)
-#define k0      (*gpReg_k0)
-#define k1      (*gpReg_k1)
-#define gp      (*gpReg_gp)
-#define sp      (*gpReg_sp)
-#define fp      (*gpReg_fp)
-#define ra      (*gpReg_ra)
-#define hi      (*gpReg_hi)
-#define lo      (*gpReg_lo)
+#define zero    (*PsxVm::gpReg_zero)
+#define at      (*PsxVm::gpReg_at)
+#define v0      (*PsxVm::gpReg_v0)
+#define v1      (*PsxVm::gpReg_v1)
+#define a0      (*PsxVm::gpReg_a0)
+#define a1      (*PsxVm::gpReg_a1)
+#define a2      (*PsxVm::gpReg_a2)
+#define a3      (*PsxVm::gpReg_a3)
+#define t0      (*PsxVm::gpReg_t0)
+#define t1      (*PsxVm::gpReg_t1)
+#define t2      (*PsxVm::gpReg_t2)
+#define t3      (*PsxVm::gpReg_t3)
+#define t4      (*PsxVm::gpReg_t4)
+#define t5      (*PsxVm::gpReg_t5)
+#define t6      (*PsxVm::gpReg_t6)
+#define t7      (*PsxVm::gpReg_t7)
+#define s0      (*PsxVm::gpReg_s0)
+#define s1      (*PsxVm::gpReg_s1)
+#define s2      (*PsxVm::gpReg_s2)
+#define s3      (*PsxVm::gpReg_s3)
+#define s4      (*PsxVm::gpReg_s4)
+#define s5      (*PsxVm::gpReg_s5)
+#define s6      (*PsxVm::gpReg_s6)
+#define s7      (*PsxVm::gpReg_s7)
+#define t8      (*PsxVm::gpReg_t8)
+#define t9      (*PsxVm::gpReg_t9)
+#define k0      (*PsxVm::gpReg_k0)
+#define k1      (*PsxVm::gpReg_k1)
+#define gp      (*PsxVm::gpReg_gp)
+#define sp      (*PsxVm::gpReg_sp)
+#define fp      (*PsxVm::gpReg_fp)
+#define ra      (*PsxVm::gpReg_ra)
+#define hi      (*PsxVm::gpReg_hi)
+#define lo      (*PsxVm::gpReg_lo)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Mips instructions that must be emulated.
@@ -92,18 +94,7 @@ uint32_t* gpReg_lo;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 // Trap instructions
-void teq(const uint32_t r1, const uint32_t r2, const uint16_t i) noexcept;
-void teqi(const uint32_t r1, const int32_t i) noexcept;
 void tge(const uint32_t r1, const uint32_t r2, const uint16_t i) noexcept;
-void tgei(const uint32_t r1, const int32_t i) noexcept;
-void tgeiu(const uint32_t r1, const uint32_t i) noexcept;
-void tgeu(const uint32_t r1, const uint32_t r2, const uint16_t i) noexcept;
-void tlt(const uint32_t r1, const uint32_t r2, const uint16_t i) noexcept;
-void tlti(const uint32_t r1, const int32_t i) noexcept;
-void tltiu(const uint32_t r1, const uint32_t i) noexcept;
-void tltu(const uint32_t r1, const uint32_t r2, const uint16_t i) noexcept;
-void tne(const uint32_t r1, const uint32_t r2, const uint16_t i) noexcept;
-void tnei(const uint32_t r1, const int32_t i) noexcept;
 
 // Arithmetic
 uint32_t add(const uint32_t r1, const uint32_t r2) noexcept;
