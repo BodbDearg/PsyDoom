@@ -1,3 +1,4 @@
+// d_main
 void D_DoomMain() noexcept;
 void RunLegals() noexcept;
 void RunTitle() noexcept;
@@ -5,112 +6,21 @@ void RunDemo() noexcept;
 void RunCredits() noexcept;
 void I_SetDebugDrawStringPos() noexcept;
 void I_DebugDrawString() noexcept;
-
 void MiniLoop() noexcept;
-void G_DoLoadLevel() noexcept;
-void G_PlayerFinishLevel() noexcept;
-void G_PlayerReborn() noexcept;
-void G_DoReborn() noexcept;
-void G_SetGameComplete() noexcept;
-void G_InitNew() noexcept;
-void G_RunGame() noexcept;
-void G_PlayDemoPtr() noexcept;
-void empty_func1() noexcept;
-void P_RunMobjBase() noexcept;
-void P_XYMovement() noexcept;
-void P_FloatChange() noexcept;
-void P_ZMovement() noexcept;
-void P_MobjThinker() noexcept;
-void PB_TryMove() noexcept;
-void PB_UnsetThingPosition() noexcept;
-void PB_SetThingPosition() noexcept;
-void PB_CheckPosition() noexcept;
-void PB_BoxCrossLine() noexcept;
-void PB_CheckLine() noexcept;
-void PB_CheckThing() noexcept;
-void PB_CheckLines() noexcept;
-void PB_CheckThings() noexcept;
 
-void P_CheckPosition() noexcept;
-void P_TryMove() noexcept;
-void P_InterceptVector() noexcept;
-void PIT_UseLines() noexcept;
-void P_UseLines() noexcept;
-void PIT_RadiusAttack() noexcept;
-void P_RadiusAttack() noexcept;
-void P_AimLineAttack() noexcept;
-void P_LineAttack() noexcept;
-void P_AproxDistance() noexcept;
-void P_PointOnLineSide() noexcept;
-void P_PointOnDivlineSide() noexcept;
-void P_MakeDivline() noexcept;
-void P_LineOpening() noexcept;
-void P_UnsetThingPosition() noexcept;
-void P_SetThingPosition() noexcept;
-void P_BlockLinesIterator() noexcept;
-void P_BlockThingsIterator() noexcept;
-void P_RemoveMObj() noexcept;
-void P_RespawnSpecials() noexcept;
-void P_SetMObjState() noexcept;
-void P_ExplodeMissile() noexcept;
-void P_SpawnMObj() noexcept;
-void P_SpawnPlayer() noexcept;
-void P_SpawnMapThing() noexcept;
-void P_SpawnPuff() noexcept;
-void P_SpawnBlood() noexcept;
-void P_CheckMissileSpawn() noexcept;
-void P_SpawnMissile() noexcept;
-void P_SpawnPlayerMissile() noexcept;
-void P_TryMove2() noexcept;
-void UNKNOWN_DoomFunc3() noexcept;
-void P_UnsetThingPosition2() noexcept;
-void P_SetThingPosition2() noexcept;
-void PM_CheckPosition() noexcept;
-void PM_BoxCrossLine() noexcept;
-void PIT_CheckLine() noexcept;
-void PIT_CheckThing() noexcept;
-void PM_CheckLines() noexcept;
-void PM_CheckThings() noexcept;
-
-void P_CheckSights() noexcept;
-void P_CheckSight() noexcept;
-void PS_SightCrossLine() noexcept;
-void PS_CrossSubsector() noexcept;
-void PS_CrossBSPNode() noexcept;
-
-void R_BSP() noexcept;
-void R_RenderBSPNode() noexcept;
-void R_CheckBBox() noexcept;
-void R_Subsector() noexcept;
-void R_AddLine() noexcept;
-void R_InitData() noexcept;
-void R_InitTextures() noexcept;
-void R_InitFlats() noexcept;
-void R_InitSprites() noexcept;
-void R_TextureNumForName() noexcept;
-void R_FlatNumForName() noexcept;
-void R_InitPalette() noexcept;
-void R_DrawSky() noexcept;
-void R_DrawSubsector() noexcept;
-void R_FrontZClip() noexcept;
-void R_CheckEdgeVisible() noexcept;
-void R_LeftEdgeClip() noexcept;
-void R_RightEdgeClip() noexcept;
-void R_DrawSubsectorSeg() noexcept;
-void R_DrawWallColumns() noexcept;
-void R_DrawSubsectorFlat() noexcept;
-void R_DrawFlatSpans() noexcept;
-void R_DrawSubsectorSprites() noexcept;
-void R_DrawWeapon() noexcept;
+// r_main
 void R_Init() noexcept;
 void R_RenderPlayerView() noexcept;
 void R_SlopeDiv() noexcept;
 void R_PointToAngle2() noexcept;
 void R_PointOnSide() noexcept;
 void R_PointInSubsector() noexcept;
+
+// vsprintf
 void D_mystrlen() noexcept;
 void D_vsprintf() noexcept;
 
+// i_main
 void StartGame() noexcept;
 void init_sony_system() noexcept;
 void I_Error() noexcept;
@@ -134,48 +44,72 @@ void I_NetSendRecv() noexcept;
 void I_SubmitGpuCmds() noexcept;
 void I_LocalButtonsToNet() noexcept;
 void I_NetButtonsToLocal() noexcept;
+
+// l_main
 void START_Legals() noexcept;
 void STOP_Legals() noexcept;
 void TIC_Legals() noexcept;
 void DRAW_Legals() noexcept;
+
+// t_main
 void START_Title() noexcept;
 void STOP_Title() noexcept;
 void TIC_Title() noexcept;
 void DRAW_Title() noexcept;
+
+// m_main
 void RunMenu() noexcept;
 void M_Start() noexcept;
 void M_Stop() noexcept;
 void M_Ticker() noexcept;
 void M_Drawer() noexcept;
+
+// i_crossfade
 void I_CrossFadeFrameBuffers() noexcept;
+
+// c_main
 void START_Credits() noexcept;
 void STOP_Credits() noexcept;
 void TIC_Credits() noexcept;
 void DRAW_Credits() noexcept;
+
+// pw_main
 void START_PasswordScreen() noexcept;
 void STOP_PasswordScreen() noexcept;
 void TIC_PasswordScreen() noexcept;
 void DRAW_PasswordScreen() noexcept;
+
+// ctrl_main
 void START_ControlsScreen() noexcept;
 void STOP_ControlsScreen() noexcept;
 void TIC_ControlsScreen() noexcept;
 void DRAW_ControlsScreen() noexcept;
+
+// p_password
 void P_ComputePassword() noexcept;
 void P_ProcessPassword() noexcept;
+
+// st_main
 void ST_Init() noexcept;
 void ST_Start() noexcept;
 void ST_Ticker() noexcept;
 void ST_Drawer() noexcept;
+
+// i_misc
 void I_DrawNumber() noexcept;
 void I_DrawStringSmall() noexcept;
 void I_DrawPausedOverlay() noexcept;
 void P_UpdatePalette() noexcept;
 void I_GetStringXPosToCenter() noexcept;
 void I_DrawString() noexcept;
+
+// am_main
 void AM_Start() noexcept;
 void AM_Control() noexcept;
 void AM_Drawer() noexcept;
 void DrawLine() noexcept;
+
+// in_main
 void IN_Start() noexcept;
 void IN_Stop() noexcept;
 void IN_Ticker() noexcept;
@@ -183,6 +117,8 @@ void IN_Drawer() noexcept;
 void IN_SingleDrawer() noexcept;
 void IN_CoopDrawer() noexcept;
 void IN_DeathmatchDrawer() noexcept;
+
+// f_finale
 void F1_Start() noexcept;
 void F1_Stop() noexcept;
 void F1_Ticker() noexcept;
@@ -191,11 +127,14 @@ void F2_Start() noexcept;
 void F2_Stop() noexcept;
 void F2_Ticker() noexcept;
 void F2_Drawer() noexcept;
+
+// o_main
 void O_Init() noexcept;
 void O_Shutdown() noexcept;
 void O_Control() noexcept;
 void O_Drawer() noexcept;
 
+// m_fixed
 void FixedMul() noexcept;
 void FixedDiv() noexcept;
 
