@@ -696,10 +696,10 @@ loc_8001D184:
     }
     v0 += v1;
     v0 <<= 1;
-    v1 = lwl(s2 + 0x3);
-    v1 = lwr(s2);
-    a0 = lwl(s2 + 0x7);
-    a0 = lwr(s2 + 0x4);
+    v1 = lwl(v1, s2 + 0x3);
+    v1 = lwr(v1, s2);
+    a0 = lwl(a0, s2 + 0x7);
+    a0 = lwr(a0, s2 + 0x4);
     a1 = lh(s2 + 0x8);
     at = 0x800B0000;                                    // Result = 800B0000
     at -= 0x718B;                                       // Result = gPlayer0MapThing[1] (800A8E75)

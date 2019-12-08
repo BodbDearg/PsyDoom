@@ -41,6 +41,12 @@ void PseudoCppPrinter::printInst_ramToCpuLoad(std::ostream& out, const CpuInstru
     out << " = ";
     out << CpuOpcodeUtils::getMnemonic(inst.opcode);
     out << "(";
+
+    if (inst.opcode == CpuOpcode::LWL || inst.opcode == CpuOpcode::LWR) {
+        out << getGprMacroNameOr0(inst.regT);
+        out << ", ";
+    }
+
     out << getGprMacroNameOr0(inst.regS);
 
     const int16_t i16 = (int16_t) inst.immediateVal;

@@ -601,8 +601,8 @@ loc_8003FACC:
     sw(v1, at - 0x7CE0);                                // Store to: gPSXCD_cdfile[1] (80078320)
     a2 = 0x80080000;                                    // Result = 80080000
     a2 -= 0x7CCC;                                       // Result = gPSXCD_cdfile[6] (80078334)
-    v1 = lwl(v0 + 0x3);                                 // Load from: gPSXCD_cdfile[0] (8007831F)
-    v1 = lwr(v0);                                       // Load from: gPSXCD_cdfile[0] (8007831C)
+    v1 = lwl(v1, v0 + 0x3);                             // Load from: gPSXCD_cdfile[0] (8007831F)
+    v1 = lwr(v1, v0);                                   // Load from: gPSXCD_cdfile[0] (8007831C)
     swl(v1, a2 + 0x3);                                  // Store to: gPSXCD_cdfile[6] (80078337)
     swr(v1, a2);                                        // Store to: gPSXCD_cdfile[6] (80078334)
     at = 0x80080000;                                    // Result = 80080000
@@ -916,16 +916,16 @@ loc_8003FF98:
     sw(t1, at - 0x7CBC);                                // Store to: gPSXCD_psxcd_cmd_1[0] (80078344)
     a2 = 0x80080000;                                    // Result = 80080000
     a2 -= 0x7CAC;                                       // Result = gPSXCD_psxcd_cmd_1[4] (80078354)
-    v1 = lwl(s1 + 0x1B);
-    v1 = lwr(s1 + 0x18);
+    v1 = lwl(v1, s1 + 0x1B);
+    v1 = lwr(v1, s1 + 0x18);
     swl(v1, a2 + 0x3);                                  // Store to: gPSXCD_psxcd_cmd_1[4] (80078357)
     swr(v1, a2);                                        // Store to: gPSXCD_psxcd_cmd_1[4] (80078354)
     v0++;
     sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7D78;                                       // Result = gPSXCD_cur_io_loc (80077D78)
-    v0 = lwl(s1 + 0x1B);
-    v0 = lwr(s1 + 0x18);
+    v0 = lwl(v0, s1 + 0x1B);
+    v0 = lwr(v0, s1 + 0x18);
     swl(v0, a1 + 0x3);                                  // Store to: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
     swr(v0, a1);                                        // Store to: gPSXCD_cur_io_loc (80077D78)
     sw(fp, gp + 0x794);                                 // Store to: gPSXCD_init_pos (80077D74)
@@ -972,8 +972,8 @@ loc_80040030:
     v1 += s7;
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D78;                                       // Result = gPSXCD_cur_io_loc (80077D78)
-    v0 = lwl(a2 + 0x3);                                 // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
-    v0 = lwr(a2);                                       // Load from: gPSXCD_cur_io_loc (80077D78)
+    v0 = lwl(v0, a2 + 0x3);                             // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
+    v0 = lwr(v0, a2);                                   // Load from: gPSXCD_cur_io_loc (80077D78)
     swl(v0, v1 + 0x3);
     swr(v0, v1);
     v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
@@ -981,8 +981,8 @@ loc_80040030:
     a2 += 0x7D78;                                       // Result = gPSXCD_cur_io_loc (80077D78)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7D68;                                       // Result = gPSXCD_sectorbuf_contents (80077D68)
-    v1 = lwl(a2 + 0x3);                                 // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
-    v1 = lwr(a2);                                       // Load from: gPSXCD_cur_io_loc (80077D78)
+    v1 = lwl(v1, a2 + 0x3);                             // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
+    v1 = lwr(v1, a2);                                   // Load from: gPSXCD_cur_io_loc (80077D78)
     swl(v1, a1 + 0x3);                                  // Store to: gPSXCD_sectorbuf_contents + 3 (80077D6B) (80077D6B)
     swr(v1, a1);                                        // Store to: gPSXCD_sectorbuf_contents (80077D68)
     v0++;
@@ -1018,8 +1018,8 @@ loc_8004011C:
     LIBCD_CdIntToPos();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7D78;                                       // Result = gPSXCD_cur_io_loc (80077D78)
-    v0 = lwl(a1 + 0x3);                                 // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
-    v0 = lwr(a1);                                       // Load from: gPSXCD_cur_io_loc (80077D78)
+    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
+    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_cur_io_loc (80077D78)
     swl(v0, s1 + 0x1B);
     swr(v0, s1 + 0x18);
     sw(0, s1 + 0x1C);
@@ -1045,8 +1045,8 @@ loc_800401A4:
     at += v0;
     sw(t1, at);
     v0 += s7;
-    v1 = lwl(s1 + 0x1B);
-    v1 = lwr(s1 + 0x18);
+    v1 = lwl(v1, s1 + 0x1B);
+    v1 = lwr(v1, s1 + 0x18);
     swl(v1, v0 + 0x3);
     swr(v1, v0);
     v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
@@ -1054,8 +1054,8 @@ loc_800401A4:
     sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7D78;                                       // Result = gPSXCD_cur_io_loc (80077D78)
-    v0 = lwl(s1 + 0x1B);
-    v0 = lwr(s1 + 0x18);
+    v0 = lwl(v0, s1 + 0x1B);
+    v0 = lwr(v0, s1 + 0x18);
     swl(v0, a1 + 0x3);                                  // Store to: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
     swr(v0, a1);                                        // Store to: gPSXCD_cur_io_loc (80077D78)
     sw(fp, gp + 0x794);                                 // Store to: gPSXCD_init_pos (80077D74)
@@ -1099,8 +1099,8 @@ loc_80040294:
     v0 += s7;
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D78;                                       // Result = gPSXCD_cur_io_loc (80077D78)
-    v1 = lwl(a2 + 0x3);                                 // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
-    v1 = lwr(a2);                                       // Load from: gPSXCD_cur_io_loc (80077D78)
+    v1 = lwl(v1, a2 + 0x3);                             // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
+    v1 = lwr(v1, a2);                                   // Load from: gPSXCD_cur_io_loc (80077D78)
     swl(v1, v0 + 0x3);
     swr(v1, v0);
     v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
@@ -1114,8 +1114,8 @@ loc_80040294:
     sw(0, s1 + 0x1C);
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7D78;                                       // Result = gPSXCD_cur_io_loc (80077D78)
-    v0 = lwl(a1 + 0x3);                                 // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
-    v0 = lwr(a1);                                       // Load from: gPSXCD_cur_io_loc (80077D78)
+    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
+    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_cur_io_loc (80077D78)
     swl(v0, s1 + 0x1B);
     swr(v0, s1 + 0x18);
 loc_8004031C:
@@ -1136,8 +1136,8 @@ loc_80040348:
     at += v0;
     sw(t1, at);
     v0 += s7;
-    v1 = lwl(s1 + 0x1B);
-    v1 = lwr(s1 + 0x18);
+    v1 = lwl(v1, s1 + 0x1B);
+    v1 = lwr(v1, s1 + 0x18);
     swl(v1, v0 + 0x3);
     swr(v1, v0);
     v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
@@ -1145,8 +1145,8 @@ loc_80040348:
     sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7D78;                                       // Result = gPSXCD_cur_io_loc (80077D78)
-    v0 = lwl(s1 + 0x1B);
-    v0 = lwr(s1 + 0x18);
+    v0 = lwl(v0, s1 + 0x1B);
+    v0 = lwr(v0, s1 + 0x18);
     swl(v0, a1 + 0x3);                                  // Store to: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
     swr(v0, a1);                                        // Store to: gPSXCD_cur_io_loc (80077D78)
     sw(fp, gp + 0x794);                                 // Store to: gPSXCD_init_pos (80077D74)
@@ -1177,8 +1177,8 @@ loc_800403C0:
     v0 += s7;
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D78;                                       // Result = gPSXCD_cur_io_loc (80077D78)
-    v1 = lwl(a2 + 0x3);                                 // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
-    v1 = lwr(a2);                                       // Load from: gPSXCD_cur_io_loc (80077D78)
+    v1 = lwl(v1, a2 + 0x3);                             // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
+    v1 = lwr(v1, a2);                                   // Load from: gPSXCD_cur_io_loc (80077D78)
     swl(v1, v0 + 0x3);
     swr(v1, v0);
     v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
@@ -1186,8 +1186,8 @@ loc_800403C0:
     a2 += 0x7D78;                                       // Result = gPSXCD_cur_io_loc (80077D78)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7D68;                                       // Result = gPSXCD_sectorbuf_contents (80077D68)
-    v1 = lwl(a2 + 0x3);                                 // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
-    v1 = lwr(a2);                                       // Load from: gPSXCD_cur_io_loc (80077D78)
+    v1 = lwl(v1, a2 + 0x3);                             // Load from: gPSXCD_cur_io_loc + 3 (80077D7B) (80077D7B)
+    v1 = lwr(v1, a2);                                   // Load from: gPSXCD_cur_io_loc (80077D78)
     swl(v1, a1 + 0x3);                                  // Store to: gPSXCD_sectorbuf_contents + 3 (80077D6B) (80077D6B)
     swr(v1, a1);                                        // Store to: gPSXCD_sectorbuf_contents (80077D68)
     sw(s2, s1 + 0x1C);
@@ -1543,24 +1543,24 @@ loc_800408E8:
     LIBCD_CdControlF();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    v0 = lwl(s0 + 0x3);
-    v0 = lwr(s0);
+    v0 = lwl(v0, s0 + 0x3);
+    v0 = lwr(v0, s0);
     swl(v0, a1 + 0x3);                                  // Store to: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
     swr(v0, a1);                                        // Store to: gPSXCD_lastloc (80077DF4)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7DF8;                                       // Result = gPSXCD_beginloc (80077DF8)
-    v0 = lwl(a1 + 0x3);                                 // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(a1);                                       // Load from: gPSXCD_lastloc (80077DF4)
+    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
+    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
     swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_beginloc + 3 (80077DFB) (80077DFB)
     swr(v0, a0);                                        // Store to: gPSXCD_beginloc (80077DF8)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7DF0;                                       // Result = gPSXCD_newloc (80077DF0)
-    v0 = lwl(a1 + 0x3);                                 // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(a1);                                       // Load from: gPSXCD_lastloc (80077DF4)
+    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
+    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
     swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_newloc + 3 (80077DF3) (80077DF3)
     swr(v0, a0);                                        // Store to: gPSXCD_newloc (80077DF0)
 loc_80040A18:
@@ -1617,24 +1617,24 @@ loc_80040A48:
     LIBCD_CdControlF();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    v0 = lwl(s0 + 0x3);
-    v0 = lwr(s0);
+    v0 = lwl(v0, s0 + 0x3);
+    v0 = lwr(v0, s0);
     swl(v0, a1 + 0x3);                                  // Store to: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
     swr(v0, a1);                                        // Store to: gPSXCD_lastloc (80077DF4)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7DF8;                                       // Result = gPSXCD_beginloc (80077DF8)
-    v0 = lwl(a1 + 0x3);                                 // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(a1);                                       // Load from: gPSXCD_lastloc (80077DF4)
+    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
+    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
     swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_beginloc + 3 (80077DFB) (80077DFB)
     swr(v0, a0);                                        // Store to: gPSXCD_beginloc (80077DF8)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7DF0;                                       // Result = gPSXCD_newloc (80077DF0)
-    v0 = lwl(a1 + 0x3);                                 // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(a1);                                       // Load from: gPSXCD_lastloc (80077DF4)
+    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
+    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
     swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_newloc + 3 (80077DF3) (80077DF3)
     swr(v0, a0);                                        // Store to: gPSXCD_newloc (80077DF0)
 loc_80040B50:
@@ -1693,24 +1693,24 @@ loc_80040B8C:
     LIBCD_CdControlF();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    v0 = lwl(s0 + 0x3);
-    v0 = lwr(s0);
+    v0 = lwl(v0, s0 + 0x3);
+    v0 = lwr(v0, s0);
     swl(v0, a1 + 0x3);                                  // Store to: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
     swr(v0, a1);                                        // Store to: gPSXCD_lastloc (80077DF4)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7DF8;                                       // Result = gPSXCD_beginloc (80077DF8)
-    v0 = lwl(a1 + 0x3);                                 // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(a1);                                       // Load from: gPSXCD_lastloc (80077DF4)
+    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
+    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
     swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_beginloc + 3 (80077DFB) (80077DFB)
     swr(v0, a0);                                        // Store to: gPSXCD_beginloc (80077DF8)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7DF0;                                       // Result = gPSXCD_newloc (80077DF0)
-    v0 = lwl(a1 + 0x3);                                 // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(a1);                                       // Load from: gPSXCD_lastloc (80077DF4)
+    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
+    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
     swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_newloc + 3 (80077DF3) (80077DF3)
     swr(v0, a0);                                        // Store to: gPSXCD_newloc (80077DF0)
 loc_80040C88:
@@ -1819,8 +1819,8 @@ loc_80040DD0:
     a1 += 0x7DF0;                                       // Result = gPSXCD_newloc (80077DF0)
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    v0 = lwl(a1 + 0x3);                                 // Load from: gPSXCD_newloc + 3 (80077DF3) (80077DF3)
-    v0 = lwr(a1);                                       // Load from: gPSXCD_newloc (80077DF0)
+    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_newloc + 3 (80077DF3) (80077DF3)
+    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_newloc (80077DF0)
     swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
     swr(v0, a0);                                        // Store to: gPSXCD_lastloc (80077DF4)
     psxspu_get_cd_vol();
@@ -1859,8 +1859,8 @@ loc_80040E74:
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
-    v0 = lwl(a1 + 0x3);                                 // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(a1);                                       // Load from: gPSXCD_lastloc (80077DF4)
+    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
+    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
     swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_cdloc + 3 (80077DEB) (80077DEB)
     swr(v0, a0);                                        // Store to: gPSXCD_cdloc (80077DE8)
     v0 = 1;                                             // Result = 00000001
