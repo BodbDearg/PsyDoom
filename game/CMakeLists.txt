@@ -185,9 +185,18 @@ setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 # Specify include dirs
 include_directories(${INCLUDE_PATHS})
 
-# Setup target compile options
-add_common_target_compile_options(${GAME_TGT_NAME})
+# MSVC use a lower warning level for this project temporarily
+if (COMPILER_MSVC)
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4102)                         # No unreferenced label warnings
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4245)                         # Conversion from signed to unsigned
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4146)                         # Negating unsigned integer
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /W4)
+    target_compile_definitions(${GAME_TGT_NAME} PUBLIC -D_CRT_SECURE_NO_WARNINGS)   # MSVC: Don't complain about using regular 'std::fopen()' etc.    
+else()
+    add_common_target_compile_options(${GAME_TGT_NAME})
+endif()
 
+# Setup target compile options
 if (PLATFORM_WINDOWS)
     set_property(TARGET ${GAME_TGT_NAME} PROPERTY WIN32_EXECUTABLE true)
 endif()
