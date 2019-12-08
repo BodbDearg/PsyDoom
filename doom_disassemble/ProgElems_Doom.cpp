@@ -511,7 +511,7 @@ static const ProgElem ELEMS[] = {
     { 0x80024908, 0x800249B4, "P_CheckSights",                          ProgElemType::FUNCTION },
     { 0x800249B4, 0x80024B3C, "P_CheckSight",                           ProgElemType::FUNCTION },
     { 0x80024B3C, 0x80024C14, "PS_SightCrossLine",                      ProgElemType::FUNCTION },
-    { 0x80024C14, 0x80024EC0, "P_CrossSubsector",                       ProgElemType::FUNCTION },
+    { 0x80024C14, 0x80024EC0, "PS_CrossSubsector",                      ProgElemType::FUNCTION },
     { 0x80024EC0, 0x8002502C, "PS_CrossBSPNode",                        ProgElemType::FUNCTION },
     { 0x8002502C, 0x800251BC, "P_SlideMove",                            ProgElemType::FUNCTION },
     { 0x800251BC, 0x80025460, "P_CompletableFrac",                      ProgElemType::FUNCTION },

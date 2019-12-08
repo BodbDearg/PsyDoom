@@ -6600,7 +6600,7 @@ loc_80024C04:
     return;
 }
 
-void P_CrossSubsector() noexcept {
+void PS_CrossSubsector() noexcept {
 loc_80024C14:
     sp -= 0x20;
     sw(ra, sp + 0x1C);
