@@ -8,25 +8,17 @@ void I_SetDebugDrawStringPos() noexcept;
 void I_DebugDrawString() noexcept;
 void MiniLoop() noexcept;
 
-// r_main
-void R_Init() noexcept;
-void R_RenderPlayerView() noexcept;
-void R_SlopeDiv() noexcept;
-void R_PointToAngle2() noexcept;
-void R_PointOnSide() noexcept;
-void R_PointInSubsector() noexcept;
-
 // vsprintf
 void D_mystrlen() noexcept;
 void D_vsprintf() noexcept;
 
-// l_main
+// le_main
 void START_Legals() noexcept;
 void STOP_Legals() noexcept;
 void TIC_Legals() noexcept;
 void DRAW_Legals() noexcept;
 
-// t_main
+// ti_main
 void START_Title() noexcept;
 void STOP_Title() noexcept;
 void TIC_Title() noexcept;
@@ -42,19 +34,13 @@ void M_Drawer() noexcept;
 // i_crossfade
 void I_CrossFadeFrameBuffers() noexcept;
 
-// c_main
-void START_Credits() noexcept;
-void STOP_Credits() noexcept;
-void TIC_Credits() noexcept;
-void DRAW_Credits() noexcept;
-
 // pw_main
 void START_PasswordScreen() noexcept;
 void STOP_PasswordScreen() noexcept;
 void TIC_PasswordScreen() noexcept;
 void DRAW_PasswordScreen() noexcept;
 
-// ctrl_main
+// ct_main
 void START_ControlsScreen() noexcept;
 void STOP_ControlsScreen() noexcept;
 void TIC_ControlsScreen() noexcept;
@@ -63,55 +49,6 @@ void DRAW_ControlsScreen() noexcept;
 // p_password
 void P_ComputePassword() noexcept;
 void P_ProcessPassword() noexcept;
-
-// st_main
-void ST_Init() noexcept;
-void ST_Start() noexcept;
-void ST_Ticker() noexcept;
-void ST_Drawer() noexcept;
-
-// i_misc
-void I_DrawNumber() noexcept;
-void I_DrawStringSmall() noexcept;
-void I_DrawPausedOverlay() noexcept;
-void P_UpdatePalette() noexcept;
-void I_GetStringXPosToCenter() noexcept;
-void I_DrawString() noexcept;
-
-// am_main
-void AM_Start() noexcept;
-void AM_Control() noexcept;
-void AM_Drawer() noexcept;
-void DrawLine() noexcept;
-
-// in_main
-void IN_Start() noexcept;
-void IN_Stop() noexcept;
-void IN_Ticker() noexcept;
-void IN_Drawer() noexcept;
-void IN_SingleDrawer() noexcept;
-void IN_CoopDrawer() noexcept;
-void IN_DeathmatchDrawer() noexcept;
-
-// f_finale
-void F1_Start() noexcept;
-void F1_Stop() noexcept;
-void F1_Ticker() noexcept;
-void F1_Drawer() noexcept;
-void F2_Start() noexcept;
-void F2_Stop() noexcept;
-void F2_Ticker() noexcept;
-void F2_Drawer() noexcept;
-
-// o_main
-void O_Init() noexcept;
-void O_Shutdown() noexcept;
-void O_Control() noexcept;
-void O_Drawer() noexcept;
-
-// m_fixed
-void FixedMul() noexcept;
-void FixedDiv() noexcept;
 
 void PsxSoundInit() noexcept;
 void PsxSoundExit() noexcept;

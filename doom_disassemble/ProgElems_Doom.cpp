@@ -688,7 +688,7 @@ static const ProgElem ELEMS[] = {
     { 0x8003A3C8, 0x8003A9D4, "I_DrawNumber",                           ProgElemType::FUNCTION },
     { 0x8003A9D4, 0x8003AD04, "I_DrawStringSmall",                      ProgElemType::FUNCTION },
     { 0x8003AD04, 0x8003B0F0, "I_DrawPausedOverlay",                    ProgElemType::FUNCTION },
-    { 0x8003B0F0, 0x8003B238, "P_UpdatePalette",                        ProgElemType::FUNCTION },
+    { 0x8003B0F0, 0x8003B238, "I_UpdatePalette",                        ProgElemType::FUNCTION },
     { 0x8003B238, 0x8003B324, "I_GetStringXPosToCenter",                ProgElemType::FUNCTION },
     { 0x8003B324, 0x8003BAC0, "I_DrawString",                           ProgElemType::FUNCTION },
     { 0x8003BAC0, 0x8003BB08, "AM_Start",                               ProgElemType::FUNCTION },
