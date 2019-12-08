@@ -139,6 +139,20 @@ set(SOURCE_FILES
     "PsyQ/LIBSPU.h"
     "Wess/PSXCD.cpp"
     "Wess/PSXCD.h"
+    "Wess/psxcmd.cpp"
+    "Wess/psxcmd.h"
+    "Wess/psxsnd.cpp"
+    "Wess/psxsnd.h"
+    "Wess/psxspu.cpp"
+    "Wess/psxspu.h"
+    "Wess/seqload.cpp"
+    "Wess/seqload.h"
+    "Wess/wessapi.cpp"
+    "Wess/wessapi.h"
+    "Wess/wessapit.cpp"
+    "Wess/wessapit.h"
+    "Wess/wessarc.cpp"
+    "Wess/wessarc.h"
 )
 
 set(OTHER_FILES
