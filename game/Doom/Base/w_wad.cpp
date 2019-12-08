@@ -107,7 +107,7 @@ loc_80031514:
     v0 = lw(v1);
     v0 &= t0;
     {
-        const bool bJump = (v0 == a3)
+        const bool bJump = (v0 == a3);
         v0 = a0;
         if (bJump) goto loc_8003154C;
     }
@@ -173,7 +173,7 @@ loc_80031608:
 loc_8003160C:
     v0 = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = v1;
         if (bJump) goto loc_80031628;
     }
@@ -620,7 +620,7 @@ loc_80031C9C:
     v0 = lw(v1);
     v0 &= t0;
     {
-        const bool bJump = (v0 == a3)
+        const bool bJump = (v0 == a3);
         v0 = a0;
         if (bJump) goto loc_80031CD4;
     }

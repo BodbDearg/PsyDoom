@@ -26,7 +26,7 @@ loc_80035B4C:
     MiniLoop();
     v1 = 7;                                             // Result = 00000007
     {
-        const bool bJump = (v0 == v1)
+        const bool bJump = (v0 == v1);
         v0 = 7;                                         // Result = 00000007
         if (bJump) goto loc_80035C78;
     }
@@ -140,7 +140,7 @@ void M_Start() noexcept {
     sw(0, gp + 0xA20);                                  // Store to: gCursorPos (80078000)
     sw(0, gp + 0x918);                                  // Store to: gVBlanksUntilMenuMove (80077EF8)
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0x36;                                      // Result = 00000036
         if (bJump) goto loc_80035D64;
     }
@@ -152,7 +152,7 @@ loc_80035D64:
     v0 = lw(gp + 0xB9C);                                // Load from: gMaxStartEpisodeOrMap (8007817C)
     v0 = (i32(v0) < i32(v1));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80035D8C;
     }
@@ -217,14 +217,14 @@ void M_Stop() noexcept {
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80035EB0;
     }
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7600);                               // Load from: gStartMapOrEpisode (80077600)
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 0x1F;                                      // Result = 0000001F
         if (bJump) goto loc_80035EA8;
     }
@@ -260,7 +260,7 @@ loc_80035EF4:
     v0 -= v1;
     v0 = (i32(v0) < 0x708);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 7;                                         // Result = 00000007
         if (bJump) goto loc_80036244;
     }
@@ -270,7 +270,7 @@ loc_80035EF4:
     v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
     v0 = (i32(v0) < i32(v1));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 & 3;
         if (bJump) goto loc_80035F4C;
     }
@@ -282,7 +282,7 @@ loc_80035F4C:
     v0 = s0 & 0x800;
     if (s0 == a0) goto loc_80035FCC;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 0xF0;
         if (bJump) goto loc_80035F64;
     }
@@ -294,13 +294,13 @@ loc_80035F64:
     v0 = (i32(v1) < 3);
     if (i32(v1) < 0) goto loc_80035FCC;
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 9;                                         // Result = 00000009
         if (bJump) goto loc_80036244;
     }
     v0 = 3;                                             // Result = 00000003
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = s0 & 0xF000;
         if (bJump) goto loc_80035FD0;
     }
@@ -315,7 +315,7 @@ loc_80035F64:
     MiniLoop();
     v1 = 4;                                             // Result = 00000004
     {
-        const bool bJump = (v0 != v1)
+        const bool bJump = (v0 != v1);
         v0 = s0 & 0xF000;
         if (bJump) goto loc_80035FD0;
     }
@@ -325,7 +325,7 @@ loc_80035FCC:
     v0 = s0 & 0xF000;
 loc_80035FD0:
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80035FE4;
     }
@@ -382,7 +382,7 @@ loc_8003607C:
 loc_800360A4:
     v0 = 2;                                             // Result = 00000002
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = s0 & 0x2000;
         if (bJump) goto loc_800361E8;
     }
@@ -390,7 +390,7 @@ loc_800360A4:
     goto loc_80036244;
 loc_800360B8:
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 0x8000;
         if (bJump) goto loc_800360F0;
     }
@@ -398,7 +398,7 @@ loc_800360B8:
     v1 = lw(v1 + 0x7604);                               // Load from: gStartGameType (80077604)
     v0 = (v1 < 2);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 + 1;
         if (bJump) goto loc_80036130;
     }
@@ -412,7 +412,7 @@ loc_800360F0:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0--;
         if (bJump) goto loc_80036144;
     }
@@ -431,7 +431,7 @@ loc_80036130:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0x36;                                      // Result = 00000036
         if (bJump) goto loc_80036148;
     }
@@ -444,7 +444,7 @@ loc_80036148:
     v0 = lw(gp + 0xB9C);                                // Load from: gMaxStartEpisodeOrMap (8007817C)
     v0 = (i32(v0) < i32(v1));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80036240;
     }
@@ -455,7 +455,7 @@ loc_80036148:
 loc_80036178:
     v0 = s0 & 0x2000;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 0x8000;
         if (bJump) goto loc_800361B0;
     }
@@ -471,7 +471,7 @@ loc_80036178:
     goto loc_80036238;
 loc_800361B0:
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80036244;
     }
@@ -489,7 +489,7 @@ loc_800361D8:
     goto loc_80036244;
 loc_800361E8:
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 0x8000;
         if (bJump) goto loc_80036210;
     }
@@ -497,21 +497,21 @@ loc_800361E8:
     v1 = lw(v1 + 0x75FC);                               // Load from: gStartSkill (800775FC)
     v0 = (v1 < 3);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 + 1;
         if (bJump) goto loc_80036240;
     }
     goto loc_8003622C;
 loc_80036210:
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80036244;
     }
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x75FC);                               // Load from: gStartSkill (800775FC)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0--;
         if (bJump) goto loc_80036240;
     }
@@ -592,7 +592,7 @@ loc_80036258:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80036398;
     }

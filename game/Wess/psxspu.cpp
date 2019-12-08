@@ -218,7 +218,7 @@ loc_8004560C:
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x59A8);                               // Load from: 800759A8
     {
-        const bool bJump = (i32(v1) <= 0)
+        const bool bJump = (i32(v1) <= 0);
         v1--;
         if (bJump) goto loc_80045698;
     }
@@ -248,7 +248,7 @@ loc_80045698:
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x5994);                               // Load from: 80075994
     {
-        const bool bJump = (i32(v1) <= 0)
+        const bool bJump = (i32(v1) <= 0);
         v1--;
         if (bJump) goto loc_80045710;
     }
@@ -340,7 +340,7 @@ loc_8004578C:
 loc_800457EC:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (v1 != at)
+        const bool bJump = (v1 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_80045804;
     }
@@ -445,7 +445,7 @@ void psxspu_start_master_fade() noexcept {
 loc_8004594C:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (v1 != at)
+        const bool bJump = (v1 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_80045964;
     }

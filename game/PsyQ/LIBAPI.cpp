@@ -54,19 +54,19 @@ loc_80049C84:
     sh(a1, v1 + 0x8);
     v0 = (t0 < 2);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = a2 & 0x10;
         if (bJump) goto loc_80049CC4;
     }
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = a2 & 1;
         if (bJump) goto loc_80049CB4;
     }
     a3 = 0x49;                                          // Result = 00000049
 loc_80049CB4:
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = a2 & 0x1000;
         if (bJump) goto loc_80049CE0;
     }
@@ -75,13 +75,13 @@ loc_80049CB4:
 loc_80049CC4:
     v0 = 2;                                             // Result = 00000002
     {
-        const bool bJump = (t0 != v0)
+        const bool bJump = (t0 != v0);
         v0 = a2 & 0x1000;
         if (bJump) goto loc_80049CE0;
     }
     v0 = a2 & 1;
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = a2 & 0x1000;
         if (bJump) goto loc_80049CE0;
     }
@@ -152,7 +152,7 @@ void LIBAPI_ResetRCnt() noexcept {
     v1 = a0 & 0xFFFF;
     v0 = (i32(v1) < 3);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80049DCC;
     }

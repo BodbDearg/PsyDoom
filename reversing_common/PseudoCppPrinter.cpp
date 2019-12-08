@@ -484,7 +484,7 @@ static void printBranchOrJumpInstruction(
                 break;
         }
 
-        out.put('\n');
+        out << ";\n";
     }
 
     // Print the instruction that follows the branch

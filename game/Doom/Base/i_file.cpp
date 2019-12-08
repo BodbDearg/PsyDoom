@@ -38,7 +38,7 @@ loc_80031F18:
     at += v1;
     v0 = lw(at);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = (i32(s0) < 4);
         if (bJump) goto loc_80031F48;
     }

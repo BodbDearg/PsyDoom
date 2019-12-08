@@ -224,7 +224,7 @@ loc_80025348:
     v1 = lh(s0);
     a0 = lhu(s0);
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v1 = a0 << 16;
         if (bJump) goto loc_800253F0;
     }
@@ -259,7 +259,7 @@ loc_80025400:
     s2++;
     v0 = (i32(s5) < i32(s2));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = (i32(s3) < i32(s6));
         if (bJump) goto loc_80025340;
     }
@@ -267,7 +267,7 @@ loc_80025410:
     v1 = lw(gp + 0xC48);                                // Load from: gBlockFrac (80078228)
     v0 = (i32(v1) < 0x1000);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_8002542C;
     }
@@ -308,7 +308,7 @@ void SL_PointOnSide() noexcept {
     v0 = 0x10000;                                       // Result = 00010000
     v0 = (i32(v0) < i32(s1));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_800254B8;
     }
@@ -359,7 +359,7 @@ void SL_CrossFrac() noexcept {
     v0 >>= 31;
     v1 = s0 >> 31;
     {
-        const bool bJump = (v0 != v1)
+        const bool bJump = (v0 != v1);
         v0 = 0x10000;                                   // Result = 00010000
         if (bJump) goto loc_8002556C;
     }
@@ -530,7 +530,7 @@ loc_80025754:
     v0 >>= 31;
     v1 = s0 >> 31;
     {
-        const bool bJump = (v0 != v1)
+        const bool bJump = (v0 != v1);
         v1 = 0x10000;                                   // Result = 00010000
         if (bJump) goto loc_800257F8;
     }
@@ -611,7 +611,7 @@ loc_8002590C:
     v1 = v0;
     v0 = (i32(a0) < i32(v1));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0x370000;                                  // Result = 00370000
         if (bJump) goto loc_8002594C;
     }

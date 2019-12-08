@@ -314,14 +314,14 @@ loc_8002822C:
     v0 = lw(s0 + 0x10);
     v0 &= 0x20;
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80028808;
     }
     v1 = lw(s0 + 0x14);
     v0 = 1;                                             // Result = 00000001
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80028808;
     }
@@ -330,7 +330,7 @@ loc_80028274:
     v1 = v0 - 1;
     v0 = (v1 < 0x8B);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 << 2;
         if (bJump) goto loc_80028804;
     }
@@ -395,7 +395,7 @@ loc_800282A8:
     a1 = s1;
     EV_DoLockedDoor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -414,7 +414,7 @@ loc_800282D0:
     a1 = 6;                                             // Result = 00000006
     EV_DoDoor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -429,7 +429,7 @@ loc_800282FC:
     a1 = 6;                                             // Result = 00000006
     EV_DoDoor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -464,7 +464,7 @@ loc_8002837C:
     a1 = 5;                                             // Result = 00000005
     EV_DoDoor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -475,7 +475,7 @@ loc_80028398:
     a1 = 6;                                             // Result = 00000006
     EV_DoDoor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -486,7 +486,7 @@ loc_800283B4:
     a1 = 7;                                             // Result = 00000007
     EV_DoDoor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -507,7 +507,7 @@ loc_800283F0:
     a2 = 0;                                             // Result = 00000000
     EV_DoPlat();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -526,7 +526,7 @@ loc_8002842C:
     a1 = 2;                                             // Result = 00000002
     EV_DoDoor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -537,7 +537,7 @@ loc_80028448:
     a1 = 0;                                             // Result = 00000000
     EV_DoCeiling();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -548,7 +548,7 @@ loc_80028464:
     a1 = 0;                                             // Result = 00000000
     EV_DoFloor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -559,7 +559,7 @@ loc_80028480:
     a1 = 1;                                             // Result = 00000001
     EV_DoFloor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -570,7 +570,7 @@ loc_8002849C:
     a1 = 3;                                             // Result = 00000003
     EV_DoDoor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -582,7 +582,7 @@ loc_800284B8:
     a2 = 1;                                             // Result = 00000001
     EV_DoPlat();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -593,7 +593,7 @@ loc_800284D8:
     a1 = 0;                                             // Result = 00000000
     EV_DoDoor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -604,7 +604,7 @@ loc_800284F4:
     a1 = 3;                                             // Result = 00000003
     EV_DoFloor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -616,7 +616,7 @@ loc_80028510:
     a2 = 0x18;                                          // Result = 00000018
     EV_DoPlat();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -628,7 +628,7 @@ loc_80028530:
     a2 = 0x20;                                          // Result = 00000020
     EV_DoPlat();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -639,7 +639,7 @@ loc_80028550:
     a1 = 9;                                             // Result = 00000009
     EV_DoFloor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -651,7 +651,7 @@ loc_8002856C:
     a2 = 0;                                             // Result = 00000000
     EV_DoPlat();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -662,7 +662,7 @@ loc_8002858C:
     a1 = 4;                                             // Result = 00000004
     EV_DoFloor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }
@@ -673,7 +673,7 @@ loc_800285A8:
     a1 = 2;                                             // Result = 00000002
     EV_DoFloor();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80028808;
     }

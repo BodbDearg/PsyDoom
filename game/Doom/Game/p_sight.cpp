@@ -18,13 +18,13 @@ loc_80024930:
     a0 = lw(s0 + 0x64);
     v0 = a0 & s1;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80024988;
     }
     v1 = lw(s0 + 0x5C);
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 0xFBFF0000;                                // Result = FBFF0000
         if (bJump) goto loc_80024988;
     }
@@ -90,7 +90,7 @@ loc_800249B4:
     v1 = v1 << a0;
     v0 &= v1;
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80024B2C;
     }
@@ -304,7 +304,7 @@ loc_80024D7C:
     a3 = v0;
     v0 = (i32(v1) < i32(a3));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = (i32(a0) < i32(a2));
         if (bJump) goto loc_80024D98;
     }
@@ -327,7 +327,7 @@ loc_80024DA4:
 loc_80024DD8:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (a1 != at)
+        const bool bJump = (a1 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_80024DF0;
     }
@@ -353,7 +353,7 @@ loc_80024E0C:
 loc_80024E40:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (a1 != at)
+        const bool bJump = (a1 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_80024E58;
     }
@@ -401,7 +401,7 @@ loc_80024EC0:
     v0 = a0 & 0x8000;
 loc_80024ED8:
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0xFFFF0000;                                // Result = FFFF0000
         if (bJump) goto loc_80024F28;
     }
@@ -452,7 +452,7 @@ loc_80024F28:
     a0 = lw(v0 + 0x30);
     PS_CrossBSPNode();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80025010;
     }

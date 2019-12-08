@@ -37,13 +37,13 @@ void STOP_Legals() noexcept {
 void TIC_Legals() noexcept {
     v0 = lw(gp + 0xBB0);                                // Load from: gTitleScreenSpriteY (80078190)
     {
-        const bool bJump = (i32(v0) <= 0)
+        const bool bJump = (i32(v0) <= 0);
         v0--;
         if (bJump) goto loc_80035000;
     }
     sw(v0, gp + 0xBB0);                                 // Store to: gTitleScreenSpriteY (80078190)
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80035044;
     }
@@ -59,13 +59,13 @@ loc_80035000:
     v1 = v0 - v1;
     v0 = (i32(v1) < 0x79);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80035044;
     }
     v0 = (i32(v1) < 0xB4);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 7;                                         // Result = 00000007
         if (bJump) goto loc_80035044;
     }

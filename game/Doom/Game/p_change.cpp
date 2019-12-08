@@ -31,7 +31,7 @@ loc_80014FFC:
     v0 += a0;
     v0 = (i32(v1) < i32(v0));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 - a0;
         if (bJump) goto loc_8001501C;
     }
@@ -79,7 +79,7 @@ loc_800150A4:
     v0 += a0;
     v0 = (i32(v1) < i32(v0));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 - a0;
         if (bJump) goto loc_800150C4;
     }
@@ -92,13 +92,13 @@ loc_800150C4:
     v0 = (i32(v0) < i32(a0));
     v0 ^= 1;
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80015220;
     }
     v0 = lw(s1 + 0x68);
     {
-        const bool bJump = (i32(v0) > 0)
+        const bool bJump = (i32(v0) > 0);
         v0 = 0x20000;                                   // Result = 00020000
         if (bJump) goto loc_80015158;
     }
@@ -130,7 +130,7 @@ loc_80015158:
     v1 = lw(s1 + 0x64);
     v0 &= v1;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 & 4;
         if (bJump) goto loc_8001517C;
     }
@@ -140,7 +140,7 @@ loc_80015158:
     goto loc_80015220;
 loc_8001517C:
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001521C;
     }
@@ -151,7 +151,7 @@ loc_8001517C:
     v0 = lw(v0 - 0x7FB4);                               // Load from: gGameTic (8007804C)
     v0 &= 3;
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80015220;
     }

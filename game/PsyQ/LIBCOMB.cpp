@@ -119,7 +119,7 @@ loc_80057638:
 loc_8005767C:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (a0 != at)
+        const bool bJump = (a0 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_80057694;
     }
@@ -1024,7 +1024,7 @@ loc_800584D8:
     at = 1;                                             // Result = 00000001
     if (a3 == 0) goto loc_80058294;
     {
-        const bool bJump = (a3 == at)
+        const bool bJump = (a3 == at);
         at = 2;                                         // Result = 00000002
         if (bJump) goto loc_80058410;
     }
@@ -1129,7 +1129,7 @@ loc_8005860C:
 loc_80058644:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (s0 != at)
+        const bool bJump = (s0 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_8005865C;
     }

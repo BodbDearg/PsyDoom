@@ -130,7 +130,7 @@ loc_800490AC:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5AE4);                               // Load from: 80075AE4
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = (i32(v0) < i32(s0));
         if (bJump) goto loc_80049234;
     }
@@ -138,7 +138,7 @@ loc_800490C0:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5AE0);                               // Load from: 80075AE0
     {
-        const bool bJump = (i32(v0) <= 0)
+        const bool bJump = (i32(v0) <= 0);
         v0 <<= 1;
         if (bJump) goto loc_80049178;
     }
@@ -186,7 +186,7 @@ loc_80049178:
     a1 = lw(a1 + 0x5AE0);                               // Load from: 80075AE0
     v0 = (i32(a1) < i32(v0));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s2;
         if (bJump) goto loc_80049380;
     }
@@ -216,7 +216,7 @@ loc_80049178:
     at = 0x80070000;                                    // Result = 80070000
     sw(a0, at + 0x5AE4);                                // Store to: 80075AE4
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s2;
         if (bJump) goto loc_8004921C;
     }
@@ -307,7 +307,7 @@ loc_80049364:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5AE4);                               // Load from: 80075AE4
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s2;
         if (bJump) goto loc_800490C0;
     }
@@ -353,7 +353,7 @@ loc_800493E4:
     goto loc_80049438;
 loc_80049414:
     {
-        const bool bJump = (v0 == s1)
+        const bool bJump = (v0 == s1);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80049438;
     }
@@ -407,7 +407,7 @@ loc_8004949C:
     v0 = lw(s0);
     s2 = lw(sp + 0x10);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_800497A4;
     }
@@ -454,7 +454,7 @@ loc_80049540:
     sw(s0, at + 0x5AEC);                                // Store to: 80075AEC
     v0 = (v0 < 0x65);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = (i32(s1) < 0x800);
         if (bJump) goto loc_8004949C;
     }

@@ -193,7 +193,7 @@ loc_800130E8:
     v1 = lw(gp + 0xA7C);                                // Load from: gNetGame (8007805C)
     v0 = 2;                                             // Result = 00000002
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v1 = a0 << 1;
         if (bJump) goto loc_800131E4;
     }
@@ -222,7 +222,7 @@ loc_8001313C:
 loc_80013154:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (s2 != at)
+        const bool bJump = (s2 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_8001316C;
     }
@@ -249,7 +249,7 @@ loc_8001316C:
     if (v0 != 0) goto loc_800131D8;
     v0 = (i32(s0) < 0x10);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s3 << 2;
         if (bJump) goto loc_8001313C;
     }
@@ -318,7 +318,7 @@ loc_80013288:
     s0 = v1;
     v0 = (i32(s0) < 2);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s0 << 2;
         if (bJump) goto loc_80013288;
     }
@@ -440,7 +440,7 @@ loc_800133FC:
     goto loc_8001347C;
 loc_8001346C:
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 4;                                         // Result = 00000004
         if (bJump) goto loc_8001347C;
     }
@@ -549,19 +549,19 @@ loc_800135B4:
     MiniLoop();
     v0 = lw(gp + 0xA7C);                                // Load from: gNetGame (8007805C)
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0x1E;                                      // Result = 0000001E
         if (bJump) goto loc_80013698;
     }
     v1 = lw(gp + 0xA68);                                // Load from: gGameMap (80078048)
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 0x1F;                                      // Result = 0000001F
         if (bJump) goto loc_80013698;
     }
     v1 = lw(gp + 0xAB8);                                // Load from: gNextMap (80078098)
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = (i32(v1) < 0x3C);
         if (bJump) goto loc_800136A4;
     }
@@ -578,7 +578,7 @@ loc_800135B4:
     if (v0 == s2) goto loc_8001353C;
     if (v0 == s1) goto loc_8001353C;
     {
-        const bool bJump = (v0 == s0)
+        const bool bJump = (v0 == s0);
         v0 = -2;                                        // Result = FFFFFFFE
         if (bJump) goto loc_800136F8;
     }
@@ -605,7 +605,7 @@ loc_800136B8:
     v1 = lw(gp + 0x8D4);                                // Load from: gGameAction (80077EB4)
     v0 = 4;                                             // Result = 00000004
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = 8;                                         // Result = 00000008
         if (bJump) goto loc_8001353C;
     }

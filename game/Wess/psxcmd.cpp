@@ -69,7 +69,7 @@ loc_80045AD8:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lbu(v0 + 0x5A07);                              // Load from: gWess_UNKNOWN_status_byte (80075A07)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 += 0xFF;
         if (bJump) goto loc_80045B04;
     }
@@ -144,7 +144,7 @@ loc_80045C0C:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lbu(v0 + 0x5A06);                              // Load from: gWess_pan_status (80075A06)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0x40;                                      // Result = 00000040
         if (bJump) goto loc_80045C88;
     }
@@ -161,7 +161,7 @@ loc_80045C0C:
     sh(v0, at - 0xF58);                                 // Store to: 8007F0A8
     v0 = (i32(v0) < 0x80);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0x7F;                                      // Result = 0000007F
         if (bJump) goto loc_80045C64;
     }
@@ -225,7 +225,7 @@ loc_80045D1C:
     goto loc_80045E00;
 loc_80045D68:
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 0x80;                                      // Result = 00000080
         if (bJump) goto loc_80045DBC;
     }
@@ -392,7 +392,7 @@ loc_80045FFC:
     a0 = v0 + a2;
     v0 = lbu(a0 + 0x1);
     {
-        const bool bJump = (v0 != a3)
+        const bool bJump = (v0 != a3);
         v0 = v1 + 1;
         if (bJump) goto loc_80046038;
     }
@@ -430,7 +430,7 @@ loc_80046090:
     a0 = v0 + a2;
     v0 = lbu(a0 + 0x4);
     {
-        const bool bJump = (v0 != a3)
+        const bool bJump = (v0 != a3);
         v0 = v1 + 1;
         if (bJump) goto loc_800460D4;
     }
@@ -744,7 +744,7 @@ loc_8004659C:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5A10);                               // Load from: gpWess_pnotestate (80075A10)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = a0 & 2;
         if (bJump) goto loc_80046648;
     }
@@ -884,7 +884,7 @@ loc_800467CC:
     v1 = lbu(a0 + 0x3);
     v0 = lbu(s0 + 0x1);
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8004692C;
     }
@@ -1030,7 +1030,7 @@ loc_80046A00:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lbu(v0 + 0x5A06);                              // Load from: gWess_pan_status (80075A06)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0x40;                                      // Result = 00000040
         if (bJump) goto loc_80046AA8;
     }
@@ -1045,7 +1045,7 @@ loc_80046A00:
     sh(v0, at - 0xEE8);                                 // Store to: 8007F118
     v0 = (i32(v0) < 0x80);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0x7F;                                      // Result = 0000007F
         if (bJump) goto loc_80046A84;
     }
@@ -1115,7 +1115,7 @@ loc_80046B48:
     goto loc_80046C24;
 loc_80046BA0:
     {
-        const bool bJump = (v0 != s2)
+        const bool bJump = (v0 != s2);
         v0 = 0x80;                                      // Result = 00000080
         if (bJump) goto loc_80046BE8;
     }
@@ -1235,7 +1235,7 @@ loc_80046D34:
     sh(v0, at - 0xED4);                                 // Store to: 8007F12C
     v0 = (i32(v0) < 0x80);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0x7F;                                      // Result = 0000007F
         if (bJump) goto loc_80046DA4;
     }
@@ -1397,7 +1397,7 @@ loc_80046F98:
     v1 = lhu(a2 + 0xE);
     v0 = v1 & 0x20;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 & 0x1F;
         if (bJump) goto loc_80047018;
     }
@@ -1549,7 +1549,7 @@ loc_80047230:
     v0 = lw(v0 + 0x5A18);                               // Load from: 80075A18
     v0 = (i32(v1) < i32(v0));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = a1 & 2;
         if (bJump) goto loc_800472CC;
     }

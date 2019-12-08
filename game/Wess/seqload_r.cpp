@@ -22,7 +22,7 @@ loc_80049A8C:
     s0--;
     v0 = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (s0 == v0)
+        const bool bJump = (s0 == v0);
         v0 = s2;                                        // Result = 00000000
         if (bJump) goto loc_80049ABC;
     }
@@ -65,7 +65,7 @@ loc_80049ADC:
     open_sequence_data();
     if (v0 == 0) goto loc_80049B2C;
     {
-        const bool bJump = (s0 != 0)
+        const bool bJump = (s0 != 0);
         s0--;
         if (bJump) goto loc_80049B34;
     }
@@ -120,7 +120,7 @@ loc_80049BCC:
     s0--;
     v0 = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (s0 == v0)
+        const bool bJump = (s0 == v0);
         v0 = s3;                                        // Result = 00000000
         if (bJump) goto loc_80049BFC;
     }

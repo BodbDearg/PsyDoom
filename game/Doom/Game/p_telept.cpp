@@ -32,7 +32,7 @@ loc_8002885C:
     a0 = -v1;
     v0 = (i32(a1) < i32(a0));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = (i32(v1) < i32(a1));
         if (bJump) goto loc_800288E4;
     }
@@ -41,7 +41,7 @@ loc_8002885C:
     a1 = v0 - s3;
     v0 = (i32(a1) < i32(a0));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = (i32(v1) < i32(a1));
         if (bJump) goto loc_800288E4;
     }
@@ -94,13 +94,13 @@ loc_80028918:
     v1 = 0x10000;                                       // Result = 00010000
     v0 &= v1;
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80028C04;
     }
     v0 = 1;                                             // Result = 00000001
     {
-        const bool bJump = (a0 == v0)
+        const bool bJump = (a0 == v0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80028C04;
     }
@@ -165,7 +165,7 @@ loc_80028A54:
     v1 = -a0;
     v0 = (i32(a1) < i32(v1));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = (i32(a0) < i32(a1));
         if (bJump) goto loc_80028ADC;
     }
@@ -174,7 +174,7 @@ loc_80028A54:
     a1 = v0 - s3;
     v0 = (i32(a1) < i32(v1));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = (i32(a0) < i32(a1));
         if (bJump) goto loc_80028ADC;
     }
@@ -241,7 +241,7 @@ loc_80028AEC:
     S_StartSound();
     v0 = lw(s1 + 0x80);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 9;                                         // Result = 00000009
         if (bJump) goto loc_80028BBC;
     }

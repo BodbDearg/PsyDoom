@@ -11,7 +11,7 @@ loc_800507AC:
     sw(s1, sp + 0x8);
     sw(ra, sp + 0xC);
     {
-        const bool bJump = (t0 != 0)
+        const bool bJump = (t0 != 0);
         t0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80050804;
     }

@@ -66,7 +66,7 @@ loc_8002C754:
 loc_8002C7F0:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (v1 != at)
+        const bool bJump = (v1 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_8002C808;
     }
@@ -185,7 +185,7 @@ loc_8002C9A8:
     v0 = lhu(v0 + 0x20);
     v0 &= 1;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = (i32(s2) < i32(s0));
         if (bJump) goto loc_8002C9D8;
     }
@@ -204,7 +204,7 @@ loc_8002C9E0:
     v0 = lw(v0);
     v0 = (i32(v0) < i32(v1));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s3 << 2;                                   // Result = 00000000
         if (bJump) goto loc_8002CA14;
     }
@@ -223,7 +223,7 @@ loc_8002CA14:
     v0 = lw(v0 + 0x7EEC);                               // Load from: gViewZ (80077EEC)
     v0 = (i32(v0) < i32(v1));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s3 << 2;                                   // Result = 00000000
         if (bJump) goto loc_8002CA5C;
     }
@@ -329,7 +329,7 @@ loc_8002CBB8:
 loc_8002CBD0:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (v0 != at)
+        const bool bJump = (v0 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_8002CBE8;
     }
@@ -375,7 +375,7 @@ loc_8002CBE8:
 loc_8002CC88:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (v0 != at)
+        const bool bJump = (v0 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_8002CCA0;
     }
@@ -539,12 +539,12 @@ loc_8002CEC0:
 loc_8002CEEC:
     v1 = lw(s5 + 0x4);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8002CF08;
     }
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = s7 - 1;
         if (bJump) goto loc_8002D0B8;
     }
@@ -589,7 +589,7 @@ loc_8002CF60:
 loc_8002CF98:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (v0 != at)
+        const bool bJump = (v0 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_8002CFB0;
     }
@@ -631,7 +631,7 @@ loc_8002CFB0:
 loc_8002D03C:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (v0 != at)
+        const bool bJump = (v0 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_8002D054;
     }
@@ -720,12 +720,12 @@ loc_8002D164:
 loc_8002D190:
     v1 = lw(s5 + 0x4);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8002D1AC;
     }
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = s7 - 1;
         if (bJump) goto loc_8002D358;
     }
@@ -770,7 +770,7 @@ loc_8002D204:
 loc_8002D23C:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (v0 != at)
+        const bool bJump = (v0 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_8002D254;
     }
@@ -811,7 +811,7 @@ loc_8002D254:
 loc_8002D2DC:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (v0 != at)
+        const bool bJump = (v0 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_8002D2F4;
     }

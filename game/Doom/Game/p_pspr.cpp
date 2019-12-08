@@ -192,7 +192,7 @@ void P_BringUpWeapon() noexcept {
     v1 = lw(s1 + 0x70);
     v0 = 0xA;                                           // Result = 0000000A
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 8;                                         // Result = 00000008
         if (bJump) goto loc_8001FC50;
     }
@@ -289,7 +289,7 @@ loc_8001FD94:
 loc_8001FDA0:
     v0 = 5;                                             // Result = 00000005
     {
-        const bool bJump = (a1 == v0)
+        const bool bJump = (a1 == v0);
         v0 = a1 << 2;
         if (bJump) goto loc_8001FDC4;
     }
@@ -305,7 +305,7 @@ loc_8001FDCC:
     if (v0 == 0) goto loc_8001FDF4;
     v0 = lw(s1 + 0xA0);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 6;                                         // Result = 00000006
         if (bJump) goto loc_8001FDF4;
     }
@@ -317,7 +317,7 @@ loc_8001FDF4:
     v0 = lw(s1 + 0x9C);
     v0 = (i32(v0) < 3);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 3;                                         // Result = 00000003
         if (bJump) goto loc_8001FE20;
     }
@@ -328,7 +328,7 @@ loc_8001FE20:
     if (v0 == 0) goto loc_8001FE48;
     v0 = lw(s1 + 0x98);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 4;                                         // Result = 00000004
         if (bJump) goto loc_8001FE48;
     }
@@ -339,7 +339,7 @@ loc_8001FE48:
     if (v0 == 0) goto loc_8001FE70;
     v0 = lw(s1 + 0x9C);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 2;                                         // Result = 00000002
         if (bJump) goto loc_8001FE70;
     }
@@ -348,7 +348,7 @@ loc_8001FE48:
 loc_8001FE70:
     v0 = lw(s1 + 0x98);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001FE88;
     }
@@ -357,7 +357,7 @@ loc_8001FE70:
 loc_8001FE88:
     v0 = lw(s1 + 0x94);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 8;                                         // Result = 00000008
         if (bJump) goto loc_8001FEA0;
     }
@@ -368,7 +368,7 @@ loc_8001FEA0:
     if (v0 == 0) goto loc_8001FEC8;
     v0 = lw(s1 + 0xA4);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 5;                                         // Result = 00000005
         if (bJump) goto loc_8001FEC8;
     }
@@ -380,7 +380,7 @@ loc_8001FEC8:
     v0 = lw(s1 + 0xA0);
     v0 = (i32(v0) < 0x29);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 7;                                         // Result = 00000007
         if (bJump) goto loc_8001FEF4;
     }
@@ -419,7 +419,7 @@ loc_8001FF34:
     pcall(v0);
     v0 = lw(s0);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_8001FFA4;
     }
@@ -746,7 +746,7 @@ void A_ReFire() noexcept {
     v1 = lw(v1);
     v0 &= v1;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0xA;                                       // Result = 0000000A
         if (bJump) goto loc_80020504;
     }
@@ -794,7 +794,7 @@ void A_Lower() noexcept {
     v1 = lw(s1 + 0x4);
     v0 = 1;                                             // Result = 00000001
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 0x600000;                                  // Result = 00600000
         if (bJump) goto loc_80020588;
     }
@@ -803,7 +803,7 @@ void A_Lower() noexcept {
 loc_80020588:
     v0 = lw(s1 + 0x24);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0xA;                                       // Result = 0000000A
         if (bJump) goto loc_80020624;
     }
@@ -820,7 +820,7 @@ loc_800205B0:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7BE4);                               // Load from: gbIsLevelDataCached (80077BE4)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 << 1;
         if (bJump) goto loc_800205EC;
     }
@@ -1105,7 +1105,7 @@ loc_80020A04:
     v1 = s2 - a1;
     v0 = (v0 < v1);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0xFCCC0000;                                // Result = FCCC0000
         if (bJump) goto loc_80020A84;
     }
@@ -1126,7 +1126,7 @@ loc_80020A84:
     a0 |= 0x3333;                                       // Result = 03333333
     v0 = (a0 < v1);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0xFCF30000;                                // Result = FCF30000
         if (bJump) goto loc_80020AA4;
     }
@@ -1709,7 +1709,7 @@ void A_FireCGun() noexcept {
     v1 = v0 + s1;
     v0 = lw(v1 + 0x98);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0--;
         if (bJump) goto loc_8002153C;
     }
@@ -1942,7 +1942,7 @@ void A_CloseShotgun2() noexcept {
     v1 = lw(v1);
     v0 &= v1;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0xA;                                       // Result = 0000000A
         if (bJump) goto loc_80021774;
     }
@@ -2006,7 +2006,7 @@ loc_80021808:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7BE4);                               // Load from: gbIsLevelDataCached (80077BE4)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 << 1;
         if (bJump) goto loc_80021844;
     }
@@ -2108,13 +2108,13 @@ loc_80021974:
 loc_800219A0:
     v0 = lw(s3);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = -1;                                        // Result = FFFFFFFF
         if (bJump) goto loc_80021A48;
     }
     v1 = lw(s2);
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = v1 - 1;
         if (bJump) goto loc_80021A48;
     }

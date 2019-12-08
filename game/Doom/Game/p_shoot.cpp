@@ -297,7 +297,7 @@ loc_800240BC:
     v0 = lw(s1 + 0x64);
     v0 &= 4;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8002423C;
     }
@@ -329,7 +329,7 @@ loc_800240BC:
     a2 = v0;
     v0 = (i32(v1) < i32(a2));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = (i32(v1) < i32(s0));
         if (bJump) goto loc_80024178;
     }
@@ -344,7 +344,7 @@ loc_80024184:
     v1 = lw(v1 - 0x7D08);                               // Load from: gAimBottomSlope (800782F8)
     v0 = (i32(a2) < i32(v1));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 + a2;
         if (bJump) goto loc_800241A4;
     }
@@ -593,7 +593,7 @@ loc_80024574:
     PA_ShootThing();
 loc_8002457C:
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80024738;
     }
@@ -746,7 +746,7 @@ loc_8002479C:
     v0 = a0 & 0x8000;
 loc_800247B4:
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0xFFFF0000;                                // Result = FFFF0000
         if (bJump) goto loc_80024804;
     }
@@ -797,7 +797,7 @@ loc_80024804:
     a0 = lw(v0 + 0x30);
     PA_CrossBSPNode();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_800248EC;
     }
@@ -818,7 +818,7 @@ loc_80024804:
     v0 = (i32(v0) < i32(a0));
     v0 ^= 1;
     {
-        const bool bJump = (s1 == v0)
+        const bool bJump = (s1 == v0);
         v0 = s2 << 2;
         if (bJump) goto loc_800248E8;
     }

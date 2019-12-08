@@ -85,7 +85,7 @@ loc_8002C1A8:
     v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
     v0 = (a0 < v0);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t1 + a0;
         if (bJump) goto loc_8002C210;
     }
@@ -94,7 +94,7 @@ loc_8002C1A8:
     v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
     v0 = (v0 < v1);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t2 + a0;
         if (bJump) goto loc_8002C2D4;
     }
@@ -275,7 +275,7 @@ loc_8002C4A4:
     v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
     v0 = (a0 < v0);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t5 + a0;
         if (bJump) goto loc_8002C50C;
     }
@@ -284,7 +284,7 @@ loc_8002C4A4:
     v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
     v0 = (v0 < v1);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t6 + a0;
         if (bJump) goto loc_8002C5D0;
     }

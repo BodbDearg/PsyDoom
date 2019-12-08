@@ -549,7 +549,7 @@ loc_8001B558:
 loc_8001B5CC:
     v0 = 2;                                             // Result = 00000002
     {
-        const bool bJump = (s2 == v0)
+        const bool bJump = (s2 == v0);
         v0 = 0xFF;                                      // Result = 000000FF
         if (bJump) goto loc_8001B610;
     }

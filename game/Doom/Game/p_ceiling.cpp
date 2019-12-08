@@ -14,7 +14,7 @@ void T_MoveCeiling() noexcept {
     if (i32(v1) > 0) goto loc_80014A70;
     v0 = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80014B2C;
     }
@@ -47,12 +47,12 @@ loc_80014AD0:
     v1 = lw(s0 + 0xC);
     v0 = (v1 < 5);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = (v1 < 3);
         if (bJump) goto loc_80014B08;
     }
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80014B20;
     }
@@ -93,14 +93,14 @@ loc_80014B2C:
 loc_80014B88:
     v0 = 2;                                             // Result = 00000002
     {
-        const bool bJump = (s1 != v0)
+        const bool bJump = (s1 != v0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80014BF8;
     }
     v1 = lw(s0 + 0xC);
     v0 = (v1 < 6);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 << 2;
         if (bJump) goto loc_80014C2C;
     }
@@ -136,18 +136,18 @@ loc_80014BF8:
     v1 = lw(s0 + 0xC);
     v0 = (v1 < 2);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = (v1 < 4);
         if (bJump) goto loc_80014C2C;
     }
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0x4000;                                    // Result = 00004000
         if (bJump) goto loc_80014C28;
     }
     v0 = 5;                                             // Result = 00000005
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 0x4000;                                    // Result = 00004000
         if (bJump) goto loc_80014C2C;
     }
@@ -353,13 +353,13 @@ loc_80014ED0:
     v1 = lw(a1 + 0x28);
     v0 = lw(a0 + 0x18);
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = (i32(a3) < 0x1E);
         if (bJump) goto loc_80014F20;
     }
     v0 = lw(a1 + 0x24);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = (i32(a3) < 0x1E);
         if (bJump) goto loc_80014F20;
     }
@@ -388,7 +388,7 @@ loc_80014F40:
     v1 = lw(a1 + 0x28);
     v0 = lw(a0 + 0x18);
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = (i32(a3) < 0x1E);
         if (bJump) goto loc_80014F94;
     }

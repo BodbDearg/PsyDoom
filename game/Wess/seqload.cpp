@@ -35,7 +35,7 @@ loc_80044790:
     v0 = lw(v0 + 0x596C);                               // Load from: gWess_max_sequences (8007596C)
     v0 = (i32(a0) < i32(v0));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_800447B4;
     }
@@ -89,7 +89,7 @@ loc_80044850:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5974);                               // Load from: 80075974
     {
-        const bool bJump = (i32(v0) <= 0)
+        const bool bJump = (i32(v0) <= 0);
         v0--;
         if (bJump) goto loc_8004486C;
     }
@@ -122,13 +122,13 @@ loc_8004487C:
     if (v0 == 0) goto loc_80044FF0;
     Is_Seq_Seq_Num_Valid();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80044FF4;
     }
     open_sequence_data();
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s5 << 2;
         if (bJump) goto loc_800448E8;
     }
@@ -199,7 +199,7 @@ loc_800449BC:
     if (v1 == 0) goto loc_80044ACC;
     v0 = 0x32;                                          // Result = 00000032
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = -1;                                        // Result = FFFFFFFF
         if (bJump) goto loc_80044ACC;
     }
@@ -208,7 +208,7 @@ loc_800449BC:
     a0 = lbu(a1 + 0x8);
     a0--;
     {
-        const bool bJump = (a0 == v0)
+        const bool bJump = (a0 == v0);
         v0 = a0 << 2;
         if (bJump) goto loc_80044AE8;
     }
@@ -236,7 +236,7 @@ loc_80044A70:
     v1 = lbu(v1 - 0xFAC);                               // Load from: 8007F054
     v0 = 1;                                             // Result = 00000001
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 2;                                         // Result = 00000002
         if (bJump) goto loc_80044AA4;
     }
@@ -245,7 +245,7 @@ loc_80044A70:
     v0 = lw(v0 + 0x50);
     v0 &= 2;
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 2;                                         // Result = 00000002
         if (bJump) goto loc_80044ACC;
     }
@@ -303,7 +303,7 @@ loc_80044AE8:
     if (v1 == 0) goto loc_80044BA8;
     v0 = 3;                                             // Result = 00000003
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80044BFC;
     }
@@ -327,7 +327,7 @@ loc_80044BCC:
     goto loc_80044D20;
 loc_80044BFC:
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 2;                                         // Result = 00000002
         if (bJump) goto loc_80044CCC;
     }
@@ -631,7 +631,7 @@ loc_80045028:
     if (a2 != s0) goto loc_80045128;
     open_sequence_data();
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s0;                                        // Result = 00000001
         if (bJump) goto loc_80045128;
     }
@@ -672,7 +672,7 @@ loc_80045164:
     if (v0 == 0) goto loc_800451D4;
     Is_Seq_Seq_Num_Valid();
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s0 << 2;
         if (bJump) goto loc_800451A0;
     }
@@ -688,7 +688,7 @@ loc_800451A0:
     v1 += v0;
     v0 = lw(v1 + 0x4);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s1;                                        // Result = 00000000
         if (bJump) goto loc_800451DC;
     }
@@ -718,7 +718,7 @@ loc_800451F4:
     if (v0 == 0) goto loc_80045278;
     Is_Seq_Seq_Num_Valid();
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s0 << 2;
         if (bJump) goto loc_80045238;
     }
@@ -734,7 +734,7 @@ loc_80045238:
     v0 += v1;
     v0 = lw(v0 + 0x4);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s1;                                        // Result = 00000000
         if (bJump) goto loc_8004527C;
     }
@@ -766,7 +766,7 @@ loc_80045298:
     if (v0 == 0) goto loc_8004530C;
     Is_Seq_Seq_Num_Valid();
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s0 << 2;
         if (bJump) goto loc_800452D4;
     }
@@ -782,7 +782,7 @@ loc_800452D4:
     v1 += v0;
     v0 = lw(v1 + 0x4);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s1;                                        // Result = 00000000
         if (bJump) goto loc_80045310;
     }

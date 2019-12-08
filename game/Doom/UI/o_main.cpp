@@ -111,7 +111,7 @@ loc_8003EA6C:
     at += s1;
     v0 = lw(at);
     {
-        const bool bJump = (s0 == v0)
+        const bool bJump = (s0 == v0);
         v0 = s0 & 0x900;
         if (bJump) goto loc_8003EACC;
     }
@@ -181,7 +181,7 @@ loc_8003EB9C:
     v1 = lw(v0);
     v0 = (v1 < 6);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 << 2;
         if (bJump) goto loc_8003EE8C;
     }
@@ -202,12 +202,12 @@ loc_8003EBE8:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
     {
-        const bool bJump = (s2 != v0)
+        const bool bJump = (s2 != v0);
         v0 = s0 & 0x2000;
         if (bJump) goto loc_8003EE8C;
     }
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 0x8000;
         if (bJump) goto loc_8003EC3C;
     }
@@ -218,7 +218,7 @@ loc_8003EBE8:
     at = 0x80070000;                                    // Result = 80070000
     sw(v1, at + 0x75F4);                                // Store to: gOptionsMusVol (800775F4)
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = v1 << 7;
         if (bJump) goto loc_8003EC74;
     }
@@ -275,12 +275,12 @@ loc_8003ECF8:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
     {
-        const bool bJump = (s2 != v0)
+        const bool bJump = (s2 != v0);
         v0 = s0 & 0x2000;
         if (bJump) goto loc_8003EE8C;
     }
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 0x8000;
         if (bJump) goto loc_8003ED4C;
     }
@@ -291,7 +291,7 @@ loc_8003ECF8:
     at = 0x80070000;                                    // Result = 80070000
     sw(v1, at + 0x75F0);                                // Store to: gOptionsSndVol (800775F0)
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = v1 << 7;
         if (bJump) goto loc_8003ED84;
     }
@@ -475,7 +475,7 @@ loc_8003EF8C:
     I_DrawSprite();
     v0 = lw(s1);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 6;                                         // Result = 00000006
         if (bJump) goto loc_8003F020;
     }

@@ -90,7 +90,7 @@ loc_8003F318:
     sw(v1, gp + 0x7C4);                                 // Store to: gPSXCD_sync_intr (80077DA4)
     v0 = 5;                                             // Result = 00000005
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 2;                                         // Result = 00000002
         if (bJump) goto loc_8003F374;
     }
@@ -109,7 +109,7 @@ loc_8003F318:
     goto loc_8003F398;
 loc_8003F374:
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8003F398;
     }
@@ -133,14 +133,14 @@ void PSXCD_cbcomplete() noexcept {
     if (v0 == 0) goto loc_8003F480;
     v0 = 2;                                             // Result = 00000002
     {
-        const bool bJump = (a0 != v0)
+        const bool bJump = (a0 != v0);
         v0 = a0 + 0xA;
         if (bJump) goto loc_8003F460;
     }
     v1 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
     v0 = 0x16;                                          // Result = 00000016
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 9;                                         // Result = 00000009
         if (bJump) goto loc_8003F44C;
     }
@@ -205,7 +205,7 @@ void PSXCD_cbready() noexcept {
     if (v0 == 0) goto loc_8003F74C;
     v0 = lw(gp + 0x784);                                // Load from: gbPSXCD_async_on (80077D64)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 6;                                         // Result = 00000006
         if (bJump) goto loc_8003F74C;
     }
@@ -227,7 +227,7 @@ void PSXCD_cbready() noexcept {
     a0 = lw(at);
     v0 = 3;                                             // Result = 00000003
     {
-        const bool bJump = (a0 == v0)
+        const bool bJump = (a0 == v0);
         v0 = 4;                                         // Result = 00000004
         if (bJump) goto loc_8003F550;
     }
@@ -355,12 +355,12 @@ loc_8003F74C:
     v0 = lbu(s1);
     v0 &= 0x80;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8003F854;
     }
     {
-        const bool bJump = (s0 != v0)
+        const bool bJump = (s0 != v0);
         v0 = 4;                                         // Result = 00000004
         if (bJump) goto loc_8003F7DC;
     }
@@ -387,7 +387,7 @@ loc_8003F74C:
     goto loc_8003F878;
 loc_8003F7DC:
     {
-        const bool bJump = (s0 != v0)
+        const bool bJump = (s0 != v0);
         v0 = 5;                                         // Result = 00000005
         if (bJump) goto loc_8003F838;
     }
@@ -659,7 +659,7 @@ loc_8003FBBC:
     v0 = lbu(gp + 0x7D4);                               // Load from: gPSXCD_check_result[0] (80077DB4)
     v0 &= 2;
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8003FCB4;
     }
@@ -812,7 +812,7 @@ loc_8003FE20:
 loc_8003FE34:
     psxcd_async_on();
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s0;
         if (bJump) goto loc_8003FE34;
     }
@@ -904,7 +904,7 @@ loc_8003FF1C:
     v1 = lw(gp + 0x798);                                // Load from: gPSXCD_cur_io_loc (80077D78)
     v0 = lw(s1 + 0x18);
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = 0x800;                                     // Result = 00000800
         if (bJump) goto loc_8003FFF8;
     }
@@ -941,7 +941,7 @@ loc_8004000C:
     v1 = lw(gp + 0x788);                                // Load from: gPSXCD_sectorbuf_contents (80077D68)
     v0 = lw(gp + 0x798);                                // Load from: gPSXCD_cur_io_loc (80077D78)
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v1 = a0 << 2;
         if (bJump) goto loc_800400E8;
     }
@@ -1257,7 +1257,7 @@ loc_80040508:
     v0 = lw(at);
     sw(v1, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s5;
         if (bJump) goto loc_800406A0;
     }
@@ -1274,12 +1274,12 @@ loc_8004059C:
     v0 = (i32(v1) < 5);
     if (i32(v1) < 0) goto loc_8004063C;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = (i32(v1) < 3);
         if (bJump) goto loc_8004063C;
     }
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_800406A0;
     }
@@ -1738,7 +1738,7 @@ void psxcd_play_status() noexcept {
     if (v1 == v0) goto loc_80040CE0;
     v0 = 0x16;                                          // Result = 00000016
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80040D48;
     }
@@ -1753,7 +1753,7 @@ loc_80040CE0:
     v0 = lbu(gp + 0x7D4);                               // Load from: gPSXCD_check_result[0] (80077DB4)
     v0 &= 2;
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80040D48;
     }

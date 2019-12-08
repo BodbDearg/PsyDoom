@@ -95,7 +95,7 @@ loc_80054C28:
     s0 = a0;
     LIBCD_CD_init();
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80054C64;
     }
@@ -103,7 +103,7 @@ loc_80054C28:
     if (s0 != v0) goto loc_80054C64;
     LIBCD_CD_initvol();
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80054C64;
     }
@@ -137,7 +137,7 @@ void LIBCD_CdComstr() noexcept {
     a0 &= 0xFF;
     v0 = (a0 < 0x1C);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = a0 << 2;
         if (bJump) goto loc_80054CD8;
     }
@@ -157,7 +157,7 @@ void LIBCD_CdIntstr() noexcept {
     a0 &= 0xFF;
     v0 = (a0 < 7);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = a0 << 2;
         if (bJump) goto loc_80054D10;
     }
@@ -270,7 +270,7 @@ loc_80054E58:
     a3 = 0;                                             // Result = 00000000
     LIBCD_CD_cw();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s7 + 1;                                    // Result = 00000001
         if (bJump) goto loc_80054E90;
     }
@@ -278,7 +278,7 @@ loc_80054E70:
     s0--;
     v0 = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (s0 != v0)
+        const bool bJump = (s0 != v0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80054E04;
     }
@@ -348,7 +348,7 @@ loc_80054F68:
     a3 = 1;                                             // Result = 00000001
     LIBCD_CD_cw();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s6 + 1;                                    // Result = 00000001
         if (bJump) goto loc_80054FA0;
     }
@@ -356,7 +356,7 @@ loc_80054F80:
     s0--;
     v0 = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (s0 != v0)
+        const bool bJump = (s0 != v0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80054F14;
     }
@@ -425,7 +425,7 @@ loc_80055074:
     a3 = 0;                                             // Result = 00000000
     LIBCD_CD_cw();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_800550A4;
     }
@@ -681,7 +681,7 @@ loc_800553FC:
     v0 = lbu(v0);
     v0 &= 0x20;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = (i32(v1) < 8);
         if (bJump) goto loc_80055470;
     }
@@ -705,7 +705,7 @@ loc_80055458:
     v0 = (i32(v1) < 8);
 loc_80055470:
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80055458;
     }
@@ -773,7 +773,7 @@ loc_80055590:
     v1 = v0 - 1;
     v0 = (v1 < 5);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 << 2;
         if (bJump) goto loc_800558AC;
     }
@@ -824,7 +824,7 @@ loc_80055614:
     at += v0;
     v0 = lw(at);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 3;                                         // Result = 00000003
         if (bJump) goto loc_80055698;
     }
@@ -1085,7 +1085,7 @@ loc_800559F8:
     v0 = 0;                                             // Result = 00000000
 loc_800559FC:
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = -1;                                        // Result = FFFFFFFF
         if (bJump) goto loc_80055B24;
     }
@@ -1101,7 +1101,7 @@ loc_80055A2C:
     v0 = s0 & 4;
     if (s0 == 0) goto loc_80055AAC;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 2;
         if (bJump) goto loc_80055A74;
     }
@@ -1133,7 +1133,7 @@ loc_80055ABC:
     a2 = v0 & 0xFF;
     v0 = 2;                                             // Result = 00000002
     {
-        const bool bJump = (a2 == v0)
+        const bool bJump = (a2 == v0);
         v0 = 5;                                         // Result = 00000005
         if (bJump) goto loc_80055ADC;
     }
@@ -1248,7 +1248,7 @@ loc_80055C74:
     v0 = 0;                                             // Result = 00000000
 loc_80055C78:
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = -1;                                        // Result = FFFFFFFF
         if (bJump) goto loc_80055DE0;
     }
@@ -1264,7 +1264,7 @@ loc_80055CA8:
     v0 = s0 & 4;
     if (s0 == 0) goto loc_80055D28;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 2;
         if (bJump) goto loc_80055CF0;
     }
@@ -1388,7 +1388,7 @@ loc_80055E78:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7200);                               // Load from: gLIBCD_CD_debug (80077200)
     {
-        const bool bJump = (i32(v0) <= 0)
+        const bool bJump = (i32(v0) <= 0);
         v0 = -2;                                        // Result = FFFFFFFE
         if (bJump) goto loc_800561F4;
     }
@@ -1527,7 +1527,7 @@ loc_800560D4:
     v0 = 0;                                             // Result = 00000000
 loc_800560D8:
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = -1;                                        // Result = FFFFFFFF
         if (bJump) goto loc_800561F4;
     }
@@ -1543,7 +1543,7 @@ loc_80056108:
     v0 = s0 & 4;
     if (s0 == 0) goto loc_80056188;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 2;
         if (bJump) goto loc_80056150;
     }
@@ -1854,7 +1854,7 @@ loc_80056600:
     a3 = 0;                                             // Result = 00000000
     LIBCD_CD_cw();
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = -1;                                        // Result = FFFFFFFF
         if (bJump) goto loc_80056650;
     }
@@ -1864,7 +1864,7 @@ loc_80056600:
     a3 = 0;                                             // Result = 00000000
     LIBCD_CD_cw();
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = -1;                                        // Result = FFFFFFFF
         if (bJump) goto loc_80056650;
     }
@@ -1890,7 +1890,7 @@ loc_80056664:
     if (v0 != 0) goto loc_800566A0;
     v0 = lhu(v1 + 0x1BA);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0x3FFF;                                    // Result = 00003FFF
         if (bJump) goto loc_800566A4;
     }
@@ -2133,7 +2133,7 @@ loc_80056A50:
     v0 = 0x20;                                          // Result = 00000020
     if (v1 == 0) goto loc_80056A88;
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = 0x249;                                     // Result = 00000249
         if (bJump) goto loc_80056A9C;
     }
@@ -2266,7 +2266,7 @@ loc_80056C74:
     v0 = s0 & 4;
     if (s0 == 0) goto loc_80056CF4;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 2;
         if (bJump) goto loc_80056CBC;
     }
@@ -2407,7 +2407,7 @@ loc_80056EC4:
     v0 = 0;                                             // Result = 00000000
 loc_80056EC8:
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = -1;                                        // Result = FFFFFFFF
         if (bJump) goto loc_80056EF8;
     }
@@ -2417,7 +2417,7 @@ loc_80056EC8:
     v1 = 0x1000000;                                     // Result = 01000000
     v0 &= v1;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80056EF8;
     }
@@ -2517,7 +2517,7 @@ loc_80057048:
     v0 = s0 & 4;
     if (s0 == 0) goto loc_800570D0;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 2;
         if (bJump) goto loc_80057090;
     }
@@ -2570,7 +2570,7 @@ void LIBCD_BIOS_cb_read() noexcept {
 loc_80057134:
     v0 = 1;                                             // Result = 00000001
     {
-        const bool bJump = (a0 != v0)
+        const bool bJump = (a0 != v0);
         v0 = -1;                                        // Result = FFFFFFFF
         if (bJump) goto loc_800571AC;
     }

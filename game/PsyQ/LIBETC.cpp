@@ -167,12 +167,12 @@ loc_8004AA08:
 loc_8004AA14:
     v0 = (i32(s2) < 0xB);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 1;
         if (bJump) goto loc_8004AA80;
     }
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s3 << s2;
         if (bJump) goto loc_8004AA6C;
     }
@@ -270,7 +270,7 @@ loc_8004AB74:
     if (s2 == s3) goto loc_8004AC84;
     v0 = lhu(a1 - 0x4);                                 // Load from: 80075B94
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s3;
         if (bJump) goto loc_8004AC84;
     }
@@ -303,7 +303,7 @@ loc_8004AC04:
     v0 = 4;                                             // Result = 00000004
 loc_8004AC30:
     {
-        const bool bJump = (s0 != v0)
+        const bool bJump = (s0 != v0);
         v0 = 5;                                         // Result = 00000005
         if (bJump) goto loc_8004AC48;
     }
@@ -313,7 +313,7 @@ loc_8004AC30:
     v0 = 5;                                             // Result = 00000005
 loc_8004AC48:
     {
-        const bool bJump = (s0 != v0)
+        const bool bJump = (s0 != v0);
         v0 = 6;                                         // Result = 00000006
         if (bJump) goto loc_8004AC60;
     }
@@ -453,7 +453,7 @@ loc_8004B6E4:
 loc_8004B6F0:
     v0 = (i32(s2) < 7);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 1;
         if (bJump) goto loc_8004B76C;
     }
@@ -533,7 +533,7 @@ void LIBETC_INTR_VB_setIntrVSync() noexcept {
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lhu(v0 + 0x5C94);                              // Load from: 80075C94
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s3;
         if (bJump) goto loc_8004B8E8;
     }
@@ -725,7 +725,7 @@ loc_8004BA94:
 loc_8004BAE4:
     v0 = 1;                                             // Result = 00000001
     {
-        const bool bJump = (a0 == v0)
+        const bool bJump = (a0 == v0);
         v0 = s1;
         if (bJump) goto loc_8004BBC4;
     }

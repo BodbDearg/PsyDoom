@@ -7,7 +7,7 @@ void wess_master_sfx_volume_get() noexcept {
     sw(ra, sp + 0x10);
     Is_Module_Loaded();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_800497F8;
     }
@@ -24,7 +24,7 @@ void wess_master_mus_volume_get() noexcept {
     sw(ra, sp + 0x10);
     Is_Module_Loaded();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80049828;
     }
@@ -101,7 +101,7 @@ loc_80049924:
     a0 = lbu(s3);
     v0 = 0xFF;                                          // Result = 000000FF
     {
-        const bool bJump = (a0 == v0)
+        const bool bJump = (a0 == v0);
         v0 = a0 << 2;
         if (bJump) goto loc_800499BC;
     }
@@ -145,7 +145,7 @@ loc_800499C8:
     fp--;
     v0 = fp & 0xFF;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_800499F4;
     }

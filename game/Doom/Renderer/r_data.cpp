@@ -303,7 +303,7 @@ loc_8002BE24:
     v0 = lw(v1);
     v0 &= t0;
     {
-        const bool bJump = (v0 == a3)
+        const bool bJump = (v0 == a3);
         v0 = a0;
         if (bJump) goto loc_8002BE5C;
     }
@@ -360,7 +360,7 @@ loc_8002BEE8:
     v0 = lw(v1);
     v0 &= t0;
     {
-        const bool bJump = (v0 == a3)
+        const bool bJump = (v0 == a3);
         v0 = a0;
         if (bJump) goto loc_8002BF20;
     }

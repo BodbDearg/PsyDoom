@@ -131,7 +131,7 @@ loc_80028DD0:
     s4 = lw(at);
     v0 = s2 & 0x800;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s4 & 0x800;
         if (bJump) goto loc_80028E90;
     }
@@ -166,7 +166,7 @@ loc_80028E90:
     a3 = s3 + v0;
     v0 = s2 & 0x100;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s4 & 0x100;
         if (bJump) goto loc_80028F34;
     }
@@ -189,14 +189,14 @@ loc_80028E90:
     v1 = v0;
     v0 = 9;                                             // Result = 00000009
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = 8;                                         // Result = 00000008
         if (bJump) goto loc_800293E8;
     }
     at = 0x80070000;                                    // Result = 80070000
     sw(v1, at + 0x7EB4);                                // Store to: gGameAction (80077EB4)
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = 5;                                         // Result = 00000005
         if (bJump) goto loc_80028F24;
     }
@@ -219,7 +219,7 @@ loc_80028F68:
     v1 = lw(a3 + 0xC0);
     v0 = v1 & 0x20;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 & 0x10;
         if (bJump) goto loc_80029044;
     }
@@ -233,7 +233,7 @@ loc_80028F68:
     if (i32(v0) > 0) goto loc_80029000;
     v0 = s2 & 0x8000;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s2 & 0x2000;
         if (bJump) goto loc_80028FCC;
     }
@@ -241,7 +241,7 @@ loc_80028F68:
     v0--;
     sw(v0, gp + 0xC90);                                 // Store to: gMapNumToCheatWarpTo (80078270)
     {
-        const bool bJump = (i32(v0) > 0)
+        const bool bJump = (i32(v0) > 0);
         v0 = 0xF;                                       // Result = 0000000F
         if (bJump) goto loc_80028FFC;
     }
@@ -254,7 +254,7 @@ loc_80028FCC:
     sw(v0, gp + 0xC90);                                 // Store to: gMapNumToCheatWarpTo (80078270)
     v0 = (i32(v0) < 0x37);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0xF;                                       // Result = 0000000F
         if (bJump) goto loc_80028FFC;
     }
@@ -268,7 +268,7 @@ loc_80029000:
     v0 = s2 & 0xF0;
     if (s2 == s4) goto loc_800293E8;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 4;                                         // Result = 00000004
         if (bJump) goto loc_800293E8;
     }
@@ -289,7 +289,7 @@ loc_80029044:
     v0 = s2 & 0x8000;
     if (s2 == s4) goto loc_800293E8;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s2 & 0x2000;
         if (bJump) goto loc_80029080;
     }
@@ -306,7 +306,7 @@ loc_80029080:
     sw(v0, gp + 0x8F4);                                 // Store to: gVramViewerTexPage (80077ED4)
     v0 = (i32(v0) < 0xB);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 0xA;                                       // Result = 0000000A
         if (bJump) goto loc_800293E8;
     }
@@ -359,7 +359,7 @@ loc_8002916C:
     v1 = lh(a1);
     v0 = lh(a2);
     {
-        const bool bJump = (v1 != v0)
+        const bool bJump = (v1 != v0);
         v0 = (i32(a0) < 8);
         if (bJump) goto loc_80029198;
     }
@@ -372,7 +372,7 @@ loc_80029194:
     v0 = (i32(a0) < 8);
 loc_80029198:
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = (s0 < 0xA);
         if (bJump) goto loc_800293B4;
     }
@@ -455,7 +455,7 @@ loc_800292AC:
     v1 = v0 - 0x25;
     v0 = (v1 < 6);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 << 2;
         if (bJump) goto loc_80029304;
     }

@@ -58,7 +58,7 @@ loc_80041050:
     S_StopMusicSequence();
     v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 <<= 4;
         if (bJump) goto loc_80041088;
     }
@@ -119,7 +119,7 @@ loc_80041118:
     sw(s0, sp + 0x18);
     if (v0 == s1) goto loc_80041300;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0x3C;                                      // Result = 0000003C
         if (bJump) goto loc_8004119C;
     }
@@ -157,7 +157,7 @@ loc_8004119C:
 loc_800411C8:
     v0 = lw(gp + 0x840);                                // Load from: gbDidLoadDoomSfxLcd (80077E20)
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s1 << 3;
         if (bJump) goto loc_80041204;
     }
@@ -180,7 +180,7 @@ loc_80041204:
     s0 = lw(gp + 0x838);                                // Load from: gNextSoundUploadAddr (80077E18)
     sw(v0, gp + 0x834);                                 // Store to: gCurMapMusicNum (80077E14)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 <<= 4;
         if (bJump) goto loc_800412B8;
     }
@@ -349,7 +349,7 @@ loc_80041450:
     v1 = v0;
     v0 = (a0 < v1);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 - 1;
         if (bJump) goto loc_8004148C;
     }
@@ -405,7 +405,7 @@ loc_80041534:
     v0 = lw(v0 + 0x24);
     v0 &= 1;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0x7F;                                      // Result = 0000007F
         if (bJump) goto loc_80041568;
     }

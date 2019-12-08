@@ -36,7 +36,7 @@ loc_8001B67C:
     v1 = lw(s0 + 0x64);
     v0 &= v1;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0x1000000;                                 // Result = 01000000
         if (bJump) goto loc_8001B708;
     }
@@ -125,7 +125,7 @@ void P_InterceptVector() noexcept {
 loc_8001B824:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (a2 != at)
+        const bool bJump = (a2 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_8001B83C;
     }
@@ -148,7 +148,7 @@ void PIT_UseLines() noexcept {
     v0 = lw(s1 + 0x2C);
     v0 = (i32(v0) < i32(v1));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001B9DC;
     }
@@ -157,7 +157,7 @@ void PIT_UseLines() noexcept {
     v1 = lw(s1 + 0x30);
     v0 = (i32(v0) < i32(v1));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001B9DC;
     }
@@ -166,7 +166,7 @@ void PIT_UseLines() noexcept {
     v0 = lw(s1 + 0x28);
     v0 = (i32(v0) < i32(v1));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001B9DC;
     }
@@ -213,7 +213,7 @@ void PIT_UseLines() noexcept {
 loc_8001B964:
     at = -1;                                            // Result = FFFFFFFF
     {
-        const bool bJump = (a1 != at)
+        const bool bJump = (a1 != at);
         at = 0x80000000;                                // Result = 80000000
         if (bJump) goto loc_8001B97C;
     }
@@ -227,13 +227,13 @@ loc_8001B980:
     v0 = lw(gp + 0xCC8);                                // Load from: gCloseDist (800782A8)
     v0 = (i32(v0) < i32(s0));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001B9DC;
     }
     v0 = lw(s1 + 0x14);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001B9D4;
     }
@@ -242,7 +242,7 @@ loc_8001B980:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7D84);                               // Load from: gOpenRange (8007827C)
     {
-        const bool bJump = (i32(v0) <= 0)
+        const bool bJump = (i32(v0) <= 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001B9D4;
     }
@@ -380,7 +380,7 @@ loc_8001BBB8:
     s1++;
     v0 = (i32(s3) < i32(s1));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = (i32(s2) < i32(s4));
         if (bJump) goto loc_8001BB8C;
     }
@@ -417,18 +417,18 @@ void PIT_RadiusAttack() noexcept {
     v0 = lw(s1 + 0x64);
     v0 &= 4;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0x11;                                      // Result = 00000011
         if (bJump) goto loc_8001BD08;
     }
     v1 = lw(s1 + 0x54);
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = 0xF;                                       // Result = 0000000F
         if (bJump) goto loc_8001BD08;
     }
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001BD0C;
     }
@@ -460,7 +460,7 @@ loc_8001BCD0:
     v0 = lw(gp + 0x8B4);                                // Load from: gBombDamage (80077E94)
     v0 = (i32(s0) < i32(v0));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001BD0C;
     }
@@ -568,7 +568,7 @@ loc_8001BE04:
     v0 = lw(v0 - 0x7D2C);                               // Load from: gpShootMObj (800782D4)
     sw(v0, gp + 0x908);                                 // Store to: gpLineTarget (80077EE8)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_8001BE68;
     }
@@ -598,7 +598,7 @@ loc_8001BE78:
     sw(a2, gp + 0x9B8);                                 // Store to: gAttackRange (80077F98)
     sw(a1, gp + 0x9A0);                                 // Store to: gAttackAngle (80077F80)
     {
-        const bool bJump = (a3 != v0)
+        const bool bJump = (a3 != v0);
         v0 = a3 + 1;
         if (bJump) goto loc_8001BED8;
     }

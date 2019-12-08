@@ -57,7 +57,7 @@ loc_800379F0:
     s1 = lw(s1 - 0x7DEC);                               // Load from: gPlayerOldPadButtons[0] (80078214)
     v0 = s0 & 0xF000;
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s0 & 0x900;
         if (bJump) goto loc_80037A18;
     }
@@ -76,7 +76,7 @@ loc_80037A18:
     sw(v0, a0);                                         // Store to: gVBlanksUntilMenuMove (80077EF8)
     v0 = s0 & 0x4000;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 0x1000;
         if (bJump) goto loc_80037A7C;
     }
@@ -92,7 +92,7 @@ loc_80037A18:
     goto loc_80037AAC;
 loc_80037A7C:
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s0 & 0x900;
         if (bJump) goto loc_80037AB8;
     }
@@ -113,7 +113,7 @@ loc_80037AB4:
     v0 = s0 & 0x900;
 loc_80037AB8:
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 9;                                         // Result = 00000009
         if (bJump) goto loc_80037B6C;
     }
@@ -148,7 +148,7 @@ loc_80037B0C:
 loc_80037B34:
     v0 = s0 & 0xF0;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80037B6C;
     }

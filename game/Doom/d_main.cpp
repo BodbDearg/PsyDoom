@@ -203,7 +203,7 @@ loc_80012578:
     v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
     v0 = (a0 < v0);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t1 + a0;
         if (bJump) goto loc_800125E0;
     }
@@ -212,7 +212,7 @@ loc_80012578:
     v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
     v0 = (v0 < v1);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t2 + a0;
         if (bJump) goto loc_800126A4;
     }
@@ -476,7 +476,7 @@ loc_8001297C:
     v1 = lbu(a1);
     if (v1 == 0) goto loc_800129C0;
     {
-        const bool bJump = (v0 != v1)
+        const bool bJump = (v0 != v1);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_800129CC;
     }
@@ -575,7 +575,7 @@ loc_80012BF8:
     if (v0 == 0) goto loc_80012C80;
     I_NetUpdate();
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 4;                                         // Result = 00000004
         if (bJump) goto loc_80012D34;
     }
@@ -594,7 +594,7 @@ loc_80012CA8:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7F80);                               // Load from: gbDemoPlayback (80078080)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = a0 & 0xF9FF;
         if (bJump) goto loc_80012CE0;
     }
@@ -609,7 +609,7 @@ loc_80012CE0:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7E54);                               // Load from: gbDemoRecording (800781AC)
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = a0 & 0x800;
         if (bJump) goto loc_80012D0C;
     }

@@ -66,7 +66,7 @@ void TIC_Credits() noexcept {
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7F44);                               // Load from: gPlayerPadButtons[0] (80077F44)
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 9;                                         // Result = 00000009
         if (bJump) goto loc_80036D50;
     }
@@ -76,7 +76,7 @@ void TIC_Credits() noexcept {
     v0 -= v1;
     sw(v0, gp + 0x6EC);                                 // Store to: gVBlanksUntilCreditScreenUpdate (80077CCC)
     {
-        const bool bJump = (i32(v0) > 0)
+        const bool bJump = (i32(v0) > 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80036D50;
     }
@@ -89,7 +89,7 @@ void TIC_Credits() noexcept {
     v0 = 1;                                             // Result = 00000001
     if (a0 == 0) goto loc_80036D24;
     {
-        const bool bJump = (a0 == v0)
+        const bool bJump = (a0 == v0);
         v0 = (i32(v1) < -0xE4);
         if (bJump) goto loc_80036D44;
     }
@@ -98,7 +98,7 @@ void TIC_Credits() noexcept {
 loc_80036D24:
     v0 = (i32(v1) < -0xB6);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0xF0;                                      // Result = 000000F0
         if (bJump) goto loc_80036D4C;
     }
@@ -109,7 +109,7 @@ loc_80036D24:
     goto loc_80036D50;
 loc_80036D44:
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 5;                                         // Result = 00000005
         if (bJump) goto loc_80036D50;
     }

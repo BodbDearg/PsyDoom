@@ -45,7 +45,7 @@ loc_8001C0AC:
     v0 = lw(v0 + 0x4);
     v0 = (i32(v0) < i32(a1));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = (i32(a3) > 0);
         if (bJump) goto loc_8001C120;
     }
@@ -97,7 +97,7 @@ loc_8001C17C:
     v0 = lw(s0 + 0x4);
     v0 = (i32(v0) < i32(t0));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = (i32(a2) > 0);
         if (bJump) goto loc_8001C204;
     }
@@ -337,7 +337,7 @@ loc_8001C540:
     v1 = lw(v1 - 0x7D7C);                               // Load from: gBlockmapWidth (80078284)
     v0 = (i32(a0) < i32(v1));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001C644;
     }
@@ -364,7 +364,7 @@ loc_8001C59C:
     v1 = lh(s0);
     a0 = lhu(s0);
     {
-        const bool bJump = (v1 == v0)
+        const bool bJump = (v1 == v0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001C644;
     }
@@ -388,7 +388,7 @@ loc_8001C5E4:
     sw(v1, a0 + 0x40);
     pcall(s2);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_8001C644;
     }
@@ -422,7 +422,7 @@ loc_8001C660:
     v1 = lw(v1 - 0x7D7C);                               // Load from: gBlockmapWidth (80078284)
     v0 = (i32(a0) < i32(v1));
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001C70C;
     }

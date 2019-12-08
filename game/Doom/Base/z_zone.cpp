@@ -115,7 +115,7 @@ loc_800322DC:
     a0 = v0 - s2;
     v0 = (i32(a0) < 0x41);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s1 + s2;
         if (bJump) goto loc_80032340;
     }
@@ -139,7 +139,7 @@ loc_80032340:
 loc_80032354:
     v0 = (i32(s6) < 0x10);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80032374;
     }
@@ -273,7 +273,7 @@ loc_80032560:
 loc_80032574:
     v0 = (i32(s5) < 0x10);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80032594;
     }

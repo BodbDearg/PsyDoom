@@ -95,7 +95,7 @@ loc_8003A500:
     v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
     v0 = (a0 < v0);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t1 + a0;
         if (bJump) goto loc_8003A568;
     }
@@ -104,7 +104,7 @@ loc_8003A500:
     v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
     v0 = (v0 < v1);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t2 + a0;
         if (bJump) goto loc_8003A62C;
     }
@@ -252,7 +252,7 @@ loc_8003A778:
     v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
     v0 = (a0 < v0);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t1 + a0;
         if (bJump) goto loc_8003A7DC;
     }
@@ -466,7 +466,7 @@ loc_8003AACC:
     v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
     v0 = (a0 < v0);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t2 + a0;
         if (bJump) goto loc_8003AB30;
     }
@@ -627,7 +627,7 @@ loc_8003AD64:
     v1 = lw(s0 + 0xC0);
     v0 = v1 & 0x20;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 & 0x10;
         if (bJump) goto loc_8003ADD8;
     }
@@ -709,7 +709,7 @@ loc_8003AE90:
     v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
     v0 = (a0 < v0);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t3 + a0;
         if (bJump) goto loc_8003AEF4;
     }
@@ -866,7 +866,7 @@ loc_8003B0F0:
     v0 = lw(a1 + 0x34);
     a2 = lw(a1 + 0xD8);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = u32(i32(v0) >> 6);
         if (bJump) goto loc_8003B144;
     }
@@ -892,7 +892,7 @@ loc_8003B174:
     a0 = lw(a1 + 0x30);
     v0 = (i32(a0) < 0x3D);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = a0 & 8;
         if (bJump) goto loc_8003B190;
     }
@@ -916,7 +916,7 @@ loc_8003B1C4:
     a0 = lw(a1 + 0x3C);
     v0 = (i32(a0) < 0x3D);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = a0 & 8;
         if (bJump) goto loc_8003B1E0;
     }
@@ -927,7 +927,7 @@ loc_8003B1E0:
 loc_8003B1E8:
     v0 = lw(a1 + 0xDC);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 += 7;
         if (bJump) goto loc_8003B210;
     }
@@ -961,7 +961,7 @@ loc_8003B25C:
     v0 = v1 - 0x41;
     v0 = (v0 < 0x1A);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 - 0x33;
         if (bJump) goto loc_8003B274;
     }
@@ -971,7 +971,7 @@ loc_8003B274:
     v0 = v1 - 0x61;
     v0 = (v0 < 0x1A);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 - 0x39;
         if (bJump) goto loc_8003B28C;
     }
@@ -997,7 +997,7 @@ loc_8003B2C4:
     goto loc_8003B2E4;
 loc_8003B2D4:
     {
-        const bool bJump = (v1 == a3)
+        const bool bJump = (v1 == a3);
         v1 = 0x28;                                      // Result = 00000028
         if (bJump) goto loc_8003B2E4;
     }
@@ -1065,7 +1065,7 @@ loc_8003B3AC:
     v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
     v0 = (a0 < v0);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t1 + a0;
         if (bJump) goto loc_8003B414;
     }
@@ -1074,7 +1074,7 @@ loc_8003B3AC:
     v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
     v0 = (v0 < v1);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t2 + a0;
         if (bJump) goto loc_8003B4D8;
     }
@@ -1225,7 +1225,7 @@ loc_8003B644:
     v0 = v1 - 0x41;
     v0 = (v0 < 0x1A);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 - 0x33;
         if (bJump) goto loc_8003B65C;
     }
@@ -1235,7 +1235,7 @@ loc_8003B65C:
     v0 = v1 - 0x61;
     v0 = (v0 < 0x1A);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = v1 - 0x39;
         if (bJump) goto loc_8003B674;
     }
@@ -1261,7 +1261,7 @@ loc_8003B6AC:
     goto loc_8003B6CC;
 loc_8003B6BC:
     {
-        const bool bJump = (v1 == a3)
+        const bool bJump = (v1 == a3);
         v1 = 0x28;                                      // Result = 00000028
         if (bJump) goto loc_8003B6CC;
     }
@@ -1309,7 +1309,7 @@ loc_8003B75C:
     v0 = t0 - 0x61;
     v0 = (v0 < 0x1A);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = t0 - 0x39;
         if (bJump) goto loc_8003B778;
     }
@@ -1320,7 +1320,7 @@ loc_8003B778:
     v1 = t0 - 0x30;
     v0 = (v1 < 0xA);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = 0x25;                                      // Result = 00000025
         if (bJump) goto loc_8003B790;
     }
@@ -1328,7 +1328,7 @@ loc_8003B778:
     goto loc_8003B7DC;
 loc_8003B790:
     {
-        const bool bJump = (t0 != v0)
+        const bool bJump = (t0 != v0);
         v0 = 0x21;                                      // Result = 00000021
         if (bJump) goto loc_8003B7A0;
     }
@@ -1336,7 +1336,7 @@ loc_8003B790:
     goto loc_8003B7DC;
 loc_8003B7A0:
     {
-        const bool bJump = (t0 != v0)
+        const bool bJump = (t0 != v0);
         v0 = 0x2E;                                      // Result = 0000002E
         if (bJump) goto loc_8003B7B0;
     }
@@ -1344,7 +1344,7 @@ loc_8003B7A0:
     goto loc_8003B7DC;
 loc_8003B7B0:
     {
-        const bool bJump = (t0 != v0)
+        const bool bJump = (t0 != v0);
         v0 = 0x2D;                                      // Result = 0000002D
         if (bJump) goto loc_8003B7C0;
     }
@@ -1352,7 +1352,7 @@ loc_8003B7B0:
     goto loc_8003B7DC;
 loc_8003B7C0:
     {
-        const bool bJump = (t0 == v0)
+        const bool bJump = (t0 == v0);
         t0 = 0x28;                                      // Result = 00000028
         if (bJump) goto loc_8003B7DC;
     }
@@ -1405,7 +1405,7 @@ loc_8003B868:
     v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
     v0 = (a0 < v0);
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = t2 + a0;
         if (bJump) goto loc_8003B8CC;
     }

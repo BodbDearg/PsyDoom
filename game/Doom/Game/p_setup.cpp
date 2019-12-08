@@ -157,7 +157,7 @@ loc_80021C6C:
     v0 = lw(a2 + 0x10);
     v0 &= 4;
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = a3 ^ 1;
         if (bJump) goto loc_80021D7C;
     }
@@ -356,7 +356,7 @@ loc_80021FD4:
     sw(v0, s0 - 0x4);
     D_strncasecmp();
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = -1;                                        // Result = FFFFFFFF
         if (bJump) goto loc_80022078;
     }
@@ -672,7 +672,7 @@ loc_80022500:
 loc_80022510:
     FixedDiv();
     {
-        const bool bJump = (i32(v0) > 0)
+        const bool bJump = (i32(v0) > 0);
         v0 = 2;                                         // Result = 00000002
         if (bJump) goto loc_80022524;
     }
@@ -1026,7 +1026,7 @@ loc_80022A44:
     v0 = lw(gp + 0xA38);                                // Load from: gNumVertexes (80078018)
     v0 = (i32(s0) < i32(v0));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s0 << 3;
         if (bJump) goto loc_80022A70;
     }
@@ -1049,7 +1049,7 @@ loc_80022A9C:
     v0 = lw(gp + 0xAC4);                                // Load from: gNumSegs (800780A4)
     v0 = (i32(s0) < i32(v0));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = s0 << 2;
         if (bJump) goto loc_80022AC4;
     }
@@ -1237,7 +1237,7 @@ loc_80022D24:
     v1 = u32(i32(v1) >> 23);
     v0 = (i32(v1) < i32(a0));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = v1;
         if (bJump) goto loc_80022D98;
     }
@@ -1263,7 +1263,7 @@ loc_80022DC4:
     v1 = u32(i32(v1) >> 23);
     v0 = (i32(v1) < i32(a0));
     {
-        const bool bJump = (v0 != 0)
+        const bool bJump = (v0 != 0);
         v0 = v1;
         if (bJump) goto loc_80022DF4;
     }
@@ -1315,7 +1315,7 @@ loc_80022E68:
 loc_80022E94:
     v1 = lw(s1 + 0x4);
     {
-        const bool bJump = (v1 == s2)
+        const bool bJump = (v1 == s2);
         v1 <<= 5;
         if (bJump) goto loc_80022ECC;
     }
@@ -1977,7 +1977,7 @@ loc_800238E8:
     a0 = v0 + a1;
     v0 = lw(a0);
     {
-        const bool bJump = (v0 == 0)
+        const bool bJump = (v0 == 0);
         v0 = s1 + 0x18;
         if (bJump) goto loc_8002391C;
     }
@@ -2126,7 +2126,7 @@ loc_80023AF8:
 loc_80023B28:
     v1 = lw(s0 - 0x4);
     {
-        const bool bJump = (v1 == s3)
+        const bool bJump = (v1 == s3);
         v1 <<= 5;
         if (bJump) goto loc_80023B70;
     }
@@ -2141,7 +2141,7 @@ loc_80023B28:
 loc_80023B70:
     v1 = lw(s0 + 0x4);
     {
-        const bool bJump = (v1 == s3)
+        const bool bJump = (v1 == s3);
         v1 <<= 5;
         if (bJump) goto loc_80023BB8;
     }
