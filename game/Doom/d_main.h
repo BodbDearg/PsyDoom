@@ -20,31 +20,6 @@ void R_PointInSubsector() noexcept;
 void D_mystrlen() noexcept;
 void D_vsprintf() noexcept;
 
-// i_main
-void StartGame() noexcept;
-void init_sony_system() noexcept;
-void I_Error() noexcept;
-void I_ReadGamepad() noexcept;
-void I_CacheTexForLumpName() noexcept;
-void I_CacheAndDrawSprite() noexcept;
-void I_DrawSprite() noexcept;
-void I_DrawPlaque() noexcept;
-void I_IncDrawnFrameCount() noexcept;
-void I_DrawPresent() noexcept;
-void I_VsyncCallback() noexcept;
-void I_Init() noexcept;
-void I_CacheTex() noexcept;
-void I_RemoveTexCacheEntry() noexcept;
-void I_ResetTexCache() noexcept;
-void I_VramViewerDraw() noexcept;
-void I_NetSetup() noexcept;
-void I_NetUpdate() noexcept;
-void I_NetHandshake() noexcept;
-void I_NetSendRecv() noexcept;
-void I_SubmitGpuCmds() noexcept;
-void I_LocalButtonsToNet() noexcept;
-void I_NetButtonsToLocal() noexcept;
-
 // l_main
 void START_Legals() noexcept;
 void STOP_Legals() noexcept;
@@ -309,4 +284,5 @@ void wess_pan_mode_set() noexcept;
 void wess_seq_range_sizeof() noexcept;
 void wess_seq_range_load() noexcept;
 void wess_seq_range_free() noexcept;
-void psyq_main() noexcept;
+
+void psx_main() noexcept;

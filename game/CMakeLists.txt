@@ -8,6 +8,8 @@ set(SOURCE_FILES
     "Doom/g_game.h"
     "Doom/i_file.cpp"
     "Doom/i_file.h"
+    "Doom/i_main.cpp"
+    "Doom/i_main.h"
     "Doom/m_bbox.cpp"
     "Doom/m_bbox.h"
     "Doom/m_random.cpp"
