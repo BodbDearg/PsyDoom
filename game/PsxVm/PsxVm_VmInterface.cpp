@@ -47,6 +47,7 @@ namespace PsxVm {
 }
 
 static void notImplementedError() noexcept {
+    // TODO: add failure message
     std::abort();
 }
 
@@ -56,6 +57,7 @@ void tge(
     [[maybe_unused]] const uint16_t i
 ) noexcept {
     // Shouldn't ever be invoking this instruction!
+    // TODO: add failure message
     std::abort();
 }
 
@@ -193,11 +195,17 @@ void _break(const uint32_t i) noexcept {
 }
 
 void syscall(const uint32_t i) noexcept {
-    notImplementedError();
+    // Ignore...
 }
 
 void pcall(const uint32_t addr) noexcept {
-    notImplementedError();
+    const VmFunc func = PsxVm::getVmFuncForAddr(addr);
+
+    if (func) {
+        func();
+    } else {
+        abort();    // TODO: add failure message
+    }
 }
 
 void bios_call(const uint32_t func) noexcept {

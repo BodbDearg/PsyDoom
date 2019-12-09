@@ -6,6 +6,8 @@
 #define PSX_VM_NO_REGISTER_MACROS 1     // Because they cause conflicts with Avocado
 #include "PsxVm.h"
 
+#include <map>
+
 // Disabling certain Avocado warnings for MSVC
 #ifdef _MSC_VER
     #pragma warning(push)
@@ -30,6 +32,9 @@ spu::SPU*                PsxVm::gpSpu;
 device::cdrom::CDROM*    PsxVm::gpCdrom;
 
 namespace PsxVm {
+    // Address to function lookup for the VM
+    extern std::map<uint32_t, VmFunc> gFuncTable;
+
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Setup and clear pointers for the VM environment
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -177,4 +182,9 @@ bool PsxVm::init(
 void PsxVm::shutdown() noexcept {
     clearVmPointers();
     gSystem.reset();
+}
+
+VmFunc PsxVm::getVmFuncForAddr(const uint32_t addr) noexcept {
+    auto iter = gFuncTable.find(addr);
+    return (iter != gFuncTable.end()) ? iter->second : nullptr;
 }

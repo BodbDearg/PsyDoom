@@ -117,6 +117,7 @@ set(SOURCE_FILES
     "Doom/UI/ti_main.cpp"
     "Doom/UI/ti_main.h"
     "PsxVm/PsxVm.h"
+    "PsxVm/PsxVm_FuncTable.cpp"
     "PsxVm/PsxVm_VmControl.cpp"
     "PsxVm/PsxVm_VmInterface.cpp"
     "PsyQ/LIBAPI.cpp"

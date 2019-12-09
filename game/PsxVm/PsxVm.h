@@ -12,6 +12,8 @@ typedef int32_t     i32;
 typedef int16_t     i16;
 typedef int8_t      i8;
 
+typedef void (*VmFunc)();
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // VM interface: Mips R3000 registers and macros aliasing them.
 // Note: not allowing modification of the 'zero' register.
@@ -187,4 +189,7 @@ namespace PsxVm {
     ) noexcept;
 
     void shutdown() noexcept;
+
+    // Lookup the function pointer to call for a given address
+    VmFunc getVmFuncForAddr(const uint32_t addr) noexcept;
 }

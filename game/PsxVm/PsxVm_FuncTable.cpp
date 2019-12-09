@@ -1,0 +1,1980 @@
+#define PSX_VM_NO_REGISTER_MACROS 1     // In case of conflicts
+#include "PsxVm.h"
+
+#include <map>
+
+extern void D_DoomMain() noexcept;
+extern void RunLegals() noexcept;
+extern void RunTitle() noexcept;
+extern void RunDemo() noexcept;
+extern void RunCredits() noexcept;
+extern void I_SetDebugDrawStringPos() noexcept;
+extern void I_DebugDrawString() noexcept;
+extern void D_memset() noexcept;
+extern void D_memcpy() noexcept;
+extern void D_strncpy() noexcept;
+extern void D_strncasecmp() noexcept;
+extern void strupr() noexcept;
+extern void P_Random() noexcept;
+extern void M_Random() noexcept;
+extern void M_ClearRandom() noexcept;
+extern void M_ClearBox() noexcept;
+extern void M_AddToBox() noexcept;
+extern void M_AddPointToBox() noexcept;
+extern void MiniLoop() noexcept;
+extern void G_DoLoadLevel() noexcept;
+extern void G_PlayerFinishLevel() noexcept;
+extern void G_PlayerReborn() noexcept;
+extern void G_DoReborn() noexcept;
+extern void G_SetGameComplete() noexcept;
+extern void G_InitNew() noexcept;
+extern void G_RunGame() noexcept;
+extern void G_PlayDemoPtr() noexcept;
+extern void empty_func1() noexcept;
+extern void P_RunMobjBase() noexcept;
+extern void P_XYMovement() noexcept;
+extern void P_FloatChange() noexcept;
+extern void P_ZMovement() noexcept;
+extern void P_MobjThinker() noexcept;
+extern void PB_TryMove() noexcept;
+extern void PB_UnsetThingPosition() noexcept;
+extern void PB_SetThingPosition() noexcept;
+extern void PB_CheckPosition() noexcept;
+extern void PB_BoxCrossLine() noexcept;
+extern void PB_CheckLine() noexcept;
+extern void PB_CheckThing() noexcept;
+extern void PB_CheckLines() noexcept;
+extern void PB_CheckThings() noexcept;
+extern void T_MoveCeiling() noexcept;
+extern void EV_DoCeiling() noexcept;
+extern void P_AddActiveCeiling() noexcept;
+extern void P_RemoveActiveCeiling() noexcept;
+extern void P_ActivateInStasisCeiling() noexcept;
+extern void EV_CeilingCrushStop() noexcept;
+extern void P_ThingHeightClip() noexcept;
+extern void PIT_ChangeSector() noexcept;
+extern void P_ChangeSector() noexcept;
+extern void T_VerticalDoor() noexcept;
+extern void EV_DoLockedDoor() noexcept;
+extern void EV_DoDoor() noexcept;
+extern void EV_VerticalDoor() noexcept;
+extern void P_SpawnDoorCloseIn30() noexcept;
+extern void P_SpawnDoorRaiseIn5Mins() noexcept;
+extern void P_CheckMeleeRange() noexcept;
+extern void P_CheckMissileRange() noexcept;
+extern void P_Move() noexcept;
+extern void P_TryWalk() noexcept;
+extern void P_NewChaseDir() noexcept;
+extern void P_LookForPlayers() noexcept;
+extern void A_Look() noexcept;
+extern void A_Chase() noexcept;
+extern void A_FaceTarget() noexcept;
+extern void A_PosAttack() noexcept;
+extern void A_SPosAttack() noexcept;
+extern void A_CPosAttack() noexcept;
+extern void A_CPosRefire() noexcept;
+extern void A_SpidAttack() noexcept;
+extern void A_SpidRefire() noexcept;
+extern void A_BspiAttack() noexcept;
+extern void A_TroopAttack() noexcept;
+extern void A_SargAttack() noexcept;
+extern void A_HeadAttack() noexcept;
+extern void A_CyberAttack() noexcept;
+extern void A_BruisAttack() noexcept;
+extern void A_SkelMissile() noexcept;
+extern void A_Tracer() noexcept;
+extern void A_SkelWhoosh() noexcept;
+extern void A_SkelFist() noexcept;
+extern void A_FatRaise() noexcept;
+extern void A_FatAttack1() noexcept;
+extern void A_FatAttack2() noexcept;
+extern void A_FatAttack3() noexcept;
+extern void A_SkullAttack() noexcept;
+extern void A_PainShootSkull() noexcept;
+extern void A_PainAttack() noexcept;
+extern void A_PainDie() noexcept;
+extern void A_Scream() noexcept;
+extern void A_XScream() noexcept;
+extern void A_Pain() noexcept;
+extern void A_Fall() noexcept;
+extern void A_Explode() noexcept;
+extern void A_BossDeath() noexcept;
+extern void A_Hoof() noexcept;
+extern void A_Metal() noexcept;
+extern void A_BabyMetal() noexcept;
+extern void L_MissileHit() noexcept;
+extern void L_SkullBash() noexcept;
+extern void T_MovePlane() noexcept;
+extern void T_MoveFloor() noexcept;
+extern void EV_DoFloor() noexcept;
+extern void EV_BuildStairs() noexcept;
+extern void P_GiveAmmo() noexcept;
+extern void P_GiveWeapon() noexcept;
+extern void P_GiveBody() noexcept;
+extern void P_GiveArmor() noexcept;
+extern void P_GiveCard() noexcept;
+extern void P_GivePower() noexcept;
+extern void P_TouchSpecialThing() noexcept;
+extern void P_KillMObj() noexcept;
+extern void P_DamageMObj() noexcept;
+extern void T_FireFlicker() noexcept;
+extern void P_SpawnFireFlicker() noexcept;
+extern void T_LightFlash() noexcept;
+extern void P_SpawnLightFlash() noexcept;
+extern void T_StrobeFlash() noexcept;
+extern void P_SpawnStrobeFlash() noexcept;
+extern void P_SpawnRapidStrobeFlash() noexcept;
+extern void EV_StartLightStrobing() noexcept;
+extern void EV_TurnTagLightsOff() noexcept;
+extern void EV_LightTurnOn() noexcept;
+extern void T_Glow() noexcept;
+extern void P_SpawnGlowingLight() noexcept;
+extern void P_CheckPosition() noexcept;
+extern void P_TryMove() noexcept;
+extern void P_InterceptVector() noexcept;
+extern void PIT_UseLines() noexcept;
+extern void P_UseLines() noexcept;
+extern void PIT_RadiusAttack() noexcept;
+extern void P_RadiusAttack() noexcept;
+extern void P_AimLineAttack() noexcept;
+extern void P_LineAttack() noexcept;
+extern void P_AproxDistance() noexcept;
+extern void P_PointOnLineSide() noexcept;
+extern void P_PointOnDivlineSide() noexcept;
+extern void P_MakeDivline() noexcept;
+extern void P_LineOpening() noexcept;
+extern void P_UnsetThingPosition() noexcept;
+extern void P_SetThingPosition() noexcept;
+extern void P_BlockLinesIterator() noexcept;
+extern void P_BlockThingsIterator() noexcept;
+extern void P_RemoveMObj() noexcept;
+extern void P_RespawnSpecials() noexcept;
+extern void P_SetMObjState() noexcept;
+extern void P_ExplodeMissile() noexcept;
+extern void P_SpawnMObj() noexcept;
+extern void P_SpawnPlayer() noexcept;
+extern void P_SpawnMapThing() noexcept;
+extern void P_SpawnPuff() noexcept;
+extern void P_SpawnBlood() noexcept;
+extern void P_CheckMissileSpawn() noexcept;
+extern void P_SpawnMissile() noexcept;
+extern void P_SpawnPlayerMissile() noexcept;
+extern void P_TryMove2() noexcept;
+extern void UNKNOWN_DoomFunc3() noexcept;
+extern void P_UnsetThingPosition2() noexcept;
+extern void P_SetThingPosition2() noexcept;
+extern void PM_CheckPosition() noexcept;
+extern void PM_BoxCrossLine() noexcept;
+extern void PIT_CheckLine() noexcept;
+extern void PIT_CheckThing() noexcept;
+extern void PM_CheckLines() noexcept;
+extern void PM_CheckThings() noexcept;
+extern void T_PlatRaise() noexcept;
+extern void EV_DoPlat() noexcept;
+extern void P_ActivateInStasis() noexcept;
+extern void EV_StopPlat() noexcept;
+extern void P_AddActivePlat() noexcept;
+extern void P_RemoveActivePlat() noexcept;
+extern void P_RecursiveSound() noexcept;
+extern void P_NoiseAlert() noexcept;
+extern void P_SetPsprite() noexcept;
+extern void P_BringUpWeapon() noexcept;
+extern void P_CheckAmmo() noexcept;
+extern void P_FireWeapon() noexcept;
+extern void P_DropWeapon() noexcept;
+extern void A_WeaponReady() noexcept;
+extern void A_ReFire() noexcept;
+extern void A_CheckReload() noexcept;
+extern void A_Lower() noexcept;
+extern void A_Raise() noexcept;
+extern void A_GunFlash() noexcept;
+extern void A_Punch() noexcept;
+extern void A_Saw() noexcept;
+extern void A_FireMissile() noexcept;
+extern void A_FireBFG() noexcept;
+extern void A_FirePlasma() noexcept;
+extern void P_BulletSlope() noexcept;
+extern void P_GunShot() noexcept;
+extern void A_FirePistol() noexcept;
+extern void A_FireShotgun() noexcept;
+extern void A_FireShotgun2() noexcept;
+extern void A_FireCGun() noexcept;
+extern void A_Light0() noexcept;
+extern void A_Light1() noexcept;
+extern void A_Light2() noexcept;
+extern void A_BFGSpray() noexcept;
+extern void A_BFGsound() noexcept;
+extern void A_OpenShotgun2() noexcept;
+extern void A_LoadShotgun2() noexcept;
+extern void A_CloseShotgun2() noexcept;
+extern void P_SetupPsprites() noexcept;
+extern void P_MovePsprites() noexcept;
+extern void P_LoadVertexes() noexcept;
+extern void P_LoadSegs() noexcept;
+extern void P_LoadSubSectors() noexcept;
+extern void P_LoadSectors() noexcept;
+extern void P_LoadNodes() noexcept;
+extern void P_LoadThings() noexcept;
+extern void P_LoadLineDefs() noexcept;
+extern void P_LoadSideDefs() noexcept;
+extern void P_LoadBlockMap() noexcept;
+extern void P_LoadMapLump() noexcept;
+extern void P_LoadLeafs() noexcept;
+extern void P_GroupLines() noexcept;
+extern void P_InitMapTextures() noexcept;
+extern void P_SetupLevel() noexcept;
+extern void P_LoadBlocks() noexcept;
+extern void P_CacheSprite() noexcept;
+extern void P_CacheMapTexturesWithWidth() noexcept;
+extern void P_Shoot2() noexcept;
+extern void PA_DoIntercept() noexcept;
+extern void PA_ShootLine() noexcept;
+extern void PA_ShootThing() noexcept;
+extern void PA_SightCrossLine() noexcept;
+extern void PA_CrossSubsector() noexcept;
+extern void PointOnVectorSide() noexcept;
+extern void PA_CrossBSPNode() noexcept;
+extern void P_CheckSights() noexcept;
+extern void P_CheckSight() noexcept;
+extern void PS_SightCrossLine() noexcept;
+extern void PS_CrossSubsector() noexcept;
+extern void PS_CrossBSPNode() noexcept;
+extern void P_SlideMove() noexcept;
+extern void P_CompletableFrac() noexcept;
+extern void SL_PointOnSide() noexcept;
+extern void SL_CrossFrac() noexcept;
+extern void CheckLineEnds() noexcept;
+extern void ClipToLine() noexcept;
+extern void SL_CheckLine() noexcept;
+extern void SL_PointOnSide2() noexcept;
+extern void SL_CheckSpecialLines() noexcept;
+extern void P_InitPicAnims() noexcept;
+extern void getSide() noexcept;
+extern void getSector() noexcept;
+extern void twoSided() noexcept;
+extern void getNextSector() noexcept;
+extern void P_FindLowestFloorSurrounding() noexcept;
+extern void P_FindHighestFloorSurrounding() noexcept;
+extern void P_FindNextHighestFloor() noexcept;
+extern void P_FindLowestCeilingSurrounding() noexcept;
+extern void P_FindHighestCeilingSurrounding() noexcept;
+extern void P_FindSectorFromLineTag() noexcept;
+extern void P_FindMinSurroundingLight() noexcept;
+extern void P_CrossSpecialLine() noexcept;
+extern void P_ShootSpecialLine() noexcept;
+extern void P_PlayerInSpecialSector() noexcept;
+extern void P_UpdateSpecials() noexcept;
+extern void EV_DoDonut() noexcept;
+extern void G_ScheduleExitLevel() noexcept;
+extern void G_BeginExitLevel() noexcept;
+extern void G_ExitLevel() noexcept;
+extern void G_SecretExitLevel() noexcept;
+extern void P_SpawnSpecials() noexcept;
+extern void P_UpdateFireSky() noexcept;
+extern void P_InitSwitchList() noexcept;
+extern void P_StartButton() noexcept;
+extern void P_ChangeSwitchTexture() noexcept;
+extern void P_UseSpecialLine() noexcept;
+extern void P_Telefrag() noexcept;
+extern void EV_Teleport() noexcept;
+extern void P_AddThinker() noexcept;
+extern void P_RemoveThinker() noexcept;
+extern void P_RunThinkers() noexcept;
+extern void P_RunMobjLate() noexcept;
+extern void P_CheckCheats() noexcept;
+extern void P_Ticker() noexcept;
+extern void P_Drawer() noexcept;
+extern void P_Start() noexcept;
+extern void P_Stop() noexcept;
+extern void P_PlayerMove() noexcept;
+extern void P_PlayerXYMovement() noexcept;
+extern void P_PlayerZMovement() noexcept;
+extern void P_PlayerMobjThink() noexcept;
+extern void P_BuildMove() noexcept;
+extern void P_Thrust() noexcept;
+extern void P_CalcHeight() noexcept;
+extern void P_MovePlayer() noexcept;
+extern void P_DeathThink() noexcept;
+extern void P_PlayerThink() noexcept;
+extern void R_BSP() noexcept;
+extern void R_RenderBSPNode() noexcept;
+extern void R_CheckBBox() noexcept;
+extern void R_Subsector() noexcept;
+extern void R_AddLine() noexcept;
+extern void R_InitData() noexcept;
+extern void R_InitTextures() noexcept;
+extern void R_InitFlats() noexcept;
+extern void R_InitSprites() noexcept;
+extern void R_TextureNumForName() noexcept;
+extern void R_FlatNumForName() noexcept;
+extern void R_InitPalette() noexcept;
+extern void R_DrawSky() noexcept;
+extern void R_DrawSubsector() noexcept;
+extern void R_FrontZClip() noexcept;
+extern void R_CheckEdgeVisible() noexcept;
+extern void R_LeftEdgeClip() noexcept;
+extern void R_RightEdgeClip() noexcept;
+extern void R_DrawSubsectorSeg() noexcept;
+extern void R_DrawWallColumns() noexcept;
+extern void R_DrawSubsectorFlat() noexcept;
+extern void R_DrawFlatSpans() noexcept;
+extern void R_DrawSubsectorSprites() noexcept;
+extern void R_DrawWeapon() noexcept;
+extern void R_Init() noexcept;
+extern void R_RenderPlayerView() noexcept;
+extern void R_SlopeDiv() noexcept;
+extern void R_PointToAngle2() noexcept;
+extern void R_PointOnSide() noexcept;
+extern void R_PointInSubsector() noexcept;
+extern void D_mystrlen() noexcept;
+extern void D_vsprintf() noexcept;
+extern void W_Init() noexcept;
+extern void W_CheckNumForName() noexcept;
+extern void W_GetNumForName() noexcept;
+extern void W_LumpLength() noexcept;
+extern void W_ReadLump() noexcept;
+extern void W_CacheLumpNum() noexcept;
+extern void W_CacheLumpName() noexcept;
+extern void W_OpenMapWad() noexcept;
+extern void W_MapLumpLength() noexcept;
+extern void W_MapGetNumForName() noexcept;
+extern void W_ReadMapLump() noexcept;
+extern void decode() noexcept;
+extern void getDecodedSize() noexcept;
+extern void InitOpenFileSlots() noexcept;
+extern void OpenFile() noexcept;
+extern void CloseFile() noexcept;
+extern void SeekAndTellFile() noexcept;
+extern void ReadFile() noexcept;
+extern void Z_Init() noexcept;
+extern void Z_InitZone() noexcept;
+extern void Z_Malloc2() noexcept;
+extern void Z_Malloc2_b() noexcept;
+extern void Z_Free2() noexcept;
+extern void Z_FreeTags() noexcept;
+extern void Z_CheckHeap() noexcept;
+extern void Z_ChangeTag() noexcept;
+extern void Z_FreeMemory() noexcept;
+extern void Z_DumpHeap() noexcept;
+extern void I_Main() noexcept;
+extern void I_PSXInit() noexcept;
+extern void I_Error() noexcept;
+extern void I_ReadGamepad() noexcept;
+extern void I_CacheTexForLumpName() noexcept;
+extern void I_CacheAndDrawSprite() noexcept;
+extern void I_DrawSprite() noexcept;
+extern void I_DrawPlaque() noexcept;
+extern void I_IncDrawnFrameCount() noexcept;
+extern void I_DrawPresent() noexcept;
+extern void I_VsyncCallback() noexcept;
+extern void I_Init() noexcept;
+extern void I_CacheTex() noexcept;
+extern void I_RemoveTexCacheEntry() noexcept;
+extern void I_ResetTexCache() noexcept;
+extern void I_VramViewerDraw() noexcept;
+extern void I_NetSetup() noexcept;
+extern void I_NetUpdate() noexcept;
+extern void I_NetHandshake() noexcept;
+extern void I_NetSendRecv() noexcept;
+extern void I_SubmitGpuCmds() noexcept;
+extern void I_LocalButtonsToNet() noexcept;
+extern void I_NetButtonsToLocal() noexcept;
+extern void START_Legals() noexcept;
+extern void STOP_Legals() noexcept;
+extern void TIC_Legals() noexcept;
+extern void DRAW_Legals() noexcept;
+extern void START_Title() noexcept;
+extern void STOP_Title() noexcept;
+extern void TIC_Title() noexcept;
+extern void DRAW_Title() noexcept;
+extern void RunMenu() noexcept;
+extern void M_Start() noexcept;
+extern void M_Stop() noexcept;
+extern void M_Ticker() noexcept;
+extern void M_Drawer() noexcept;
+extern void I_CrossFadeFrameBuffers() noexcept;
+extern void START_Credits() noexcept;
+extern void STOP_Credits() noexcept;
+extern void TIC_Credits() noexcept;
+extern void DRAW_Credits() noexcept;
+extern void START_PasswordScreen() noexcept;
+extern void STOP_PasswordScreen() noexcept;
+extern void TIC_PasswordScreen() noexcept;
+extern void DRAW_PasswordScreen() noexcept;
+extern void START_ControlsScreen() noexcept;
+extern void STOP_ControlsScreen() noexcept;
+extern void TIC_ControlsScreen() noexcept;
+extern void DRAW_ControlsScreen() noexcept;
+extern void P_ComputePassword() noexcept;
+extern void P_ProcessPassword() noexcept;
+extern void ST_Init() noexcept;
+extern void ST_Start() noexcept;
+extern void ST_Ticker() noexcept;
+extern void ST_Drawer() noexcept;
+extern void I_DrawNumber() noexcept;
+extern void I_DrawStringSmall() noexcept;
+extern void I_DrawPausedOverlay() noexcept;
+extern void I_UpdatePalette() noexcept;
+extern void I_GetStringXPosToCenter() noexcept;
+extern void I_DrawString() noexcept;
+extern void AM_Start() noexcept;
+extern void AM_Control() noexcept;
+extern void AM_Drawer() noexcept;
+extern void DrawLine() noexcept;
+extern void IN_Start() noexcept;
+extern void IN_Stop() noexcept;
+extern void IN_Ticker() noexcept;
+extern void IN_Drawer() noexcept;
+extern void IN_SingleDrawer() noexcept;
+extern void IN_CoopDrawer() noexcept;
+extern void IN_DeathmatchDrawer() noexcept;
+extern void F1_Start() noexcept;
+extern void F1_Stop() noexcept;
+extern void F1_Ticker() noexcept;
+extern void F1_Drawer() noexcept;
+extern void F2_Start() noexcept;
+extern void F2_Stop() noexcept;
+extern void F2_Ticker() noexcept;
+extern void F2_Drawer() noexcept;
+extern void O_Init() noexcept;
+extern void O_Shutdown() noexcept;
+extern void O_Control() noexcept;
+extern void O_Drawer() noexcept;
+extern void FixedMul() noexcept;
+extern void FixedDiv() noexcept;
+extern void PSXCD_psxcd_memcpy() noexcept;
+extern void psxcd_sync() noexcept;
+extern void psxcd_critical_sync() noexcept;
+extern void PSXCD_cbcomplete() noexcept;
+extern void PSXCD_cbready() noexcept;
+extern void psxcd_disable_callbacks() noexcept;
+extern void psxcd_enable_callbacks() noexcept;
+extern void psxcd_init() noexcept;
+extern void psxcd_exit() noexcept;
+extern void psxcd_set_data_mode() noexcept;
+extern void psxcd_open() noexcept;
+extern void psxcd_init_pos() noexcept;
+extern void psxcd_async_on() noexcept;
+extern void psxcd_seeking_for_play() noexcept;
+extern void psxcd_waiting_for_pause() noexcept;
+extern void psxcd_read() noexcept;
+extern void psxcd_async_read_cancel() noexcept;
+extern void psxcd_async_read() noexcept;
+extern void psxcd_seek() noexcept;
+extern void psxcd_tell() noexcept;
+extern void psxcd_close() noexcept;
+extern void psxcd_set_audio_mode() noexcept;
+extern void psxcd_set_loop_volume() noexcept;
+extern void psxcd_play_at_andloop() noexcept;
+extern void psxcd_play_at() noexcept;
+extern void psxcd_play() noexcept;
+extern void psxcd_seek_for_play_at() noexcept;
+extern void psxcd_seek_for_play() noexcept;
+extern void psxcd_play_status() noexcept;
+extern void psxcd_stop() noexcept;
+extern void psxcd_pause() noexcept;
+extern void psxcd_restart() noexcept;
+extern void psxcd_elapsed_sectors() noexcept;
+extern void psxcd_set_stereo() noexcept;
+extern void S_SetSfxVolume() noexcept;
+extern void S_SetMusicVolume() noexcept;
+extern void S_StopMusicSequence() noexcept;
+extern void S_StartMusicSequence() noexcept;
+extern void ZeroHalfWord() noexcept;
+extern void S_UnloadSamples() noexcept;
+extern void S_LoadSoundAndMusic() noexcept;
+extern void S_Pause() noexcept;
+extern void S_Resume() noexcept;
+extern void S_StopSound() noexcept;
+extern void S_Clear() noexcept;
+extern void I_StartSound() noexcept;
+extern void S_StartSound() noexcept;
+extern void S_UpdateSounds() noexcept;
+extern void PsxSoundInit() noexcept;
+extern void PsxSoundExit() noexcept;
+extern void trackstart() noexcept;
+extern void trackstop() noexcept;
+extern void queue_wess_seq_pause() noexcept;
+extern void queue_wess_seq_restart() noexcept;
+extern void queue_wess_seq_pauseall() noexcept;
+extern void queue_wess_seq_restartall() noexcept;
+extern void zeroset() noexcept;
+extern void wess_install_error_handler() noexcept;
+extern void wess_get_master_status() noexcept;
+extern void Is_System_Active() noexcept;
+extern void Is_Module_Loaded() noexcept;
+extern void Is_Seq_Num_Valid() noexcept;
+extern void Register_Early_Exit() noexcept;
+extern void wess_install_handler() noexcept;
+extern void wess_restore_handler() noexcept;
+extern void wess_init() noexcept;
+extern void wess_exit() noexcept;
+extern void wess_get_wmd_start() noexcept;
+extern void wess_get_wmd_end() noexcept;
+extern void free_mem_if_mine() noexcept;
+extern void wess_unload_module() noexcept;
+extern void wess_memcpy() noexcept;
+extern void conditional_read() noexcept;
+extern void wess_load_module() noexcept;
+extern void filltrackstat() noexcept;
+extern void assigntrackstat() noexcept;
+extern void wess_seq_structrig() noexcept;
+extern void wess_seq_trigger() noexcept;
+extern void wess_seq_trigger_special() noexcept;
+extern void wess_seq_status() noexcept;
+extern void wess_seq_stop() noexcept;
+extern void wess_seq_stopall() noexcept;
+extern void wess_low_level_init() noexcept;
+extern void wess_low_level_exit() noexcept;
+extern void wess_malloc() noexcept;
+extern void wess_free() noexcept;
+extern void GetIntsPerSec() noexcept;
+extern void CalcPartsPerInt() noexcept;
+extern void WessInterruptHandler() noexcept;
+extern void init_WessTimer() noexcept;
+extern void exit_WessTimer() noexcept;
+extern void Wess_init_for_LoadFileData() noexcept;
+extern void module_open() noexcept;
+extern void module_read() noexcept;
+extern void module_seek() noexcept;
+extern void module_tell() noexcept;
+extern void module_close() noexcept;
+extern void get_num_Wess_Sound_Drivers() noexcept;
+extern void data_open() noexcept;
+extern void data_read_chunk() noexcept;
+extern void data_read() noexcept;
+extern void data_close() noexcept;
+extern void updatetrackstat() noexcept;
+extern void wess_seq_trigger_type() noexcept;
+extern void wess_seq_trigger_type_special() noexcept;
+extern void queue_wess_seq_update_type_special() noexcept;
+extern void wess_seq_stoptype() noexcept;
+extern void wess_seq_load_err() noexcept;
+extern void wess_seq_loader_install_error_handler() noexcept;
+extern void Is_Seq_Seq_Num_Valid() noexcept;
+extern void open_sequence_data() noexcept;
+extern void close_sequence_data() noexcept;
+extern void load_sequence_data() noexcept;
+extern void wess_seq_loader_init() noexcept;
+extern void wess_seq_loader_exit() noexcept;
+extern void wess_seq_sizeof() noexcept;
+extern void wess_seq_load() noexcept;
+extern void wess_seq_free() noexcept;
+extern void psxspu_init_reverb() noexcept;
+extern void psxspu_set_reverb_depth() noexcept;
+extern void psxspu_init() noexcept;
+extern void psxspu_update_master_vol() noexcept;
+extern void psxspu_update_master_vol_mode() noexcept;
+extern void psxspu_setcdmixon() noexcept;
+extern void psxspu_setcdmixoff() noexcept;
+extern void psxspu_fadeengine() noexcept;
+extern void psxspu_set_cd_vol() noexcept;
+extern void psxspu_get_cd_vol() noexcept;
+extern void psxspu_start_cd_fade() noexcept;
+extern void psxspu_stop_cd_fade() noexcept;
+extern void psxspu_get_cd_fade_status() noexcept;
+extern void psxspu_set_master_vol() noexcept;
+extern void psxspu_get_master_vol() noexcept;
+extern void psxspu_start_master_fade() noexcept;
+extern void psxspu_stop_master_fade() noexcept;
+extern void psxspu_get_master_fade_status() noexcept;
+extern void start_record_music_mute() noexcept;
+extern void end_record_music_mute() noexcept;
+extern void add_music_mute_note() noexcept;
+extern void PSX_UNKNOWN_DrvFunc() noexcept;
+extern void TriggerPSXVoice() noexcept;
+extern void PSX_DriverInit() noexcept;
+extern void PSX_DriverExit() noexcept;
+extern void PSX_DriverEntry1() noexcept;
+extern void PSX_DriverEntry2() noexcept;
+extern void PSX_DriverEntry3() noexcept;
+extern void PSX_TrkOff() noexcept;
+extern void PSX_TrkMute() noexcept;
+extern void PSX_PatchChg() noexcept;
+extern void PSX_PatchMod() noexcept;
+extern void PSX_PitchMod() noexcept;
+extern void PSX_ZeroMod() noexcept;
+extern void PSX_ModuMod() noexcept;
+extern void PSX_VolumeMod() noexcept;
+extern void PSX_PanMod() noexcept;
+extern void PSX_PedalMod() noexcept;
+extern void PSX_ReverbMod() noexcept;
+extern void PSX_ChorusMod() noexcept;
+extern void PSX_voiceon() noexcept;
+extern void PSX_voiceparmoff() noexcept;
+extern void PSX_voicerelease() noexcept;
+extern void PSX_voicenote() noexcept;
+extern void PSX_NoteOn() noexcept;
+extern void PSX_NoteOff() noexcept;
+extern void Read_Vlq() noexcept;
+extern void Write_Vlq() noexcept;
+extern void Len_Vlq() noexcept;
+extern void Eng_DriverInit() noexcept;
+extern void Eng_DriverExit() noexcept;
+extern void Eng_DriverEntry1() noexcept;
+extern void Eng_DriverEntry2() noexcept;
+extern void Eng_DriverEntry3() noexcept;
+extern void Eng_TrkOff() noexcept;
+extern void Eng_TrkMute() noexcept;
+extern void Eng_PatchChg() noexcept;
+extern void Eng_PatchMod() noexcept;
+extern void Eng_PitchMod() noexcept;
+extern void Eng_ZeroMod() noexcept;
+extern void Eng_ModuMod() noexcept;
+extern void Eng_VolumeMod() noexcept;
+extern void Eng_PanMod() noexcept;
+extern void Eng_PedalMod() noexcept;
+extern void Eng_ReverbMod() noexcept;
+extern void Eng_ChorusMod() noexcept;
+extern void Eng_NoteOn() noexcept;
+extern void Eng_NoteOff() noexcept;
+extern void Eng_StatusMark() noexcept;
+extern void Eng_GateJump() noexcept;
+extern void Eng_IterJump() noexcept;
+extern void Eng_ResetGates() noexcept;
+extern void Eng_ResetIters() noexcept;
+extern void Eng_WriteIterBox() noexcept;
+extern void Eng_SeqTempo() noexcept;
+extern void Eng_SeqGosub() noexcept;
+extern void Eng_SeqJump() noexcept;
+extern void Eng_SeqRet() noexcept;
+extern void Eng_SeqEnd() noexcept;
+extern void Eng_TrkTempo() noexcept;
+extern void Eng_TrkGosub() noexcept;
+extern void Eng_TrkJump() noexcept;
+extern void Eng_TrkRet() noexcept;
+extern void Eng_TrkEnd() noexcept;
+extern void Eng_NullEvent() noexcept;
+extern void SeqEngine() noexcept;
+extern void wess_dig_lcd_loader_init() noexcept;
+extern void wess_dig_set_sample_position() noexcept;
+extern void lcd_open() noexcept;
+extern void lcd_upload_spu_samples() noexcept;
+extern void lcd_close() noexcept;
+extern void wess_dig_lcd_load() noexcept;
+extern void wess_master_sfx_volume_get() noexcept;
+extern void wess_master_mus_volume_get() noexcept;
+extern void wess_master_sfx_vol_set() noexcept;
+extern void wess_master_mus_vol_set() noexcept;
+extern void wess_pan_mode_get() noexcept;
+extern void wess_pan_mode_set() noexcept;
+extern void wess_seq_range_sizeof() noexcept;
+extern void wess_seq_range_load() noexcept;
+extern void wess_seq_range_free() noexcept;
+extern void LIBAPI_CloseEvent() noexcept;
+extern void LIBAPI_EnterCriticalSection() noexcept;
+extern void LIBAPI_write() noexcept;
+extern void LIBAPI_EnableEvent() noexcept;
+extern void LIBAPI_InitPAD() noexcept;
+extern void LIBAPI_SetRCnt() noexcept;
+extern void LIBAPI_GetRCnt() noexcept;
+extern void LIBAPI_StartRCnt() noexcept;
+extern void LIBAPI_StopRCnt() noexcept;
+extern void LIBAPI_ResetRCnt() noexcept;
+extern void LIBAPI_DisableEvent() noexcept;
+extern void LIBAPI_StartPAD() noexcept;
+extern void LIBAPI_ChangeClearPAD() noexcept;
+extern void LIBAPI_OpenEvent() noexcept;
+extern void LIBAPI_read() noexcept;
+extern void LIBAPI_TestEvent() noexcept;
+extern void LIBAPI_ExitCriticalSection() noexcept;
+extern void LIBAPI_open() noexcept;
+extern void LIBC2_sprintf() noexcept;
+extern void LIBC2_memchr() noexcept;
+extern void LIBC2_strlen() noexcept;
+extern void LIBC2_memmove() noexcept;
+extern void LIBETC_ResetCallback() noexcept;
+extern void LIBETC_InterruptCallback() noexcept;
+extern void LIBETC_DMACallback() noexcept;
+extern void LIBETC_VSyncCallbacks() noexcept;
+extern void LIBETC_StopCallback() noexcept;
+extern void LIBETC_CheckCallback() noexcept;
+extern void LIBETC_GetIntrMask() noexcept;
+extern void LIBETC_SetIntrMask() noexcept;
+extern void LIBETC_INTR_startIntr() noexcept;
+extern void LIBETC_INTR_trapIntr() noexcept;
+extern void LIBETC_INTR_setIntr() noexcept;
+extern void LIBETC_INTR_stopIntr() noexcept;
+extern void LIBETC_INTR_memclr() noexcept;
+extern void LIBAPI_HookEntryInt() noexcept;
+extern void LIBAPI_ResetEntryInt() noexcept;
+extern void LIBAPI_ChangeClearRCnt() noexcept;
+extern void LIBAPI__96_remove() noexcept;
+extern void LIBAPI_ReturnFromException() noexcept;
+extern void LIBC2_printf() noexcept;
+extern void LIBC2_setjmp() noexcept;
+extern void LIBC2_longjmp() noexcept;
+extern void LIBC2_prnt() noexcept;
+extern void LIBC2_toupper() noexcept;
+extern void LIBC2_tolower() noexcept;
+extern void LIBC2_putchar() noexcept;
+extern void LIBETC_startIntrVSync() noexcept;
+extern void LIBETC_INTR_stopIntr_UNKNOWN_Helper2() noexcept;
+extern void LIBETC_INTR_VB_trapIntrVSync() noexcept;
+extern void LIBETC_INTR_VB_setIntrVSync() noexcept;
+extern void LIBETC_INTR_VB_memclr() noexcept;
+extern void LIBETC_startIntrDMA() noexcept;
+extern void LIBETC_INTR_stopIntr_UNKNOWN_Helper1() noexcept;
+extern void LIBETC_INTR_DMA_trapIntrDMA() noexcept;
+extern void LIBETC_INTR_DMA_setIntrDMA() noexcept;
+extern void LIBETC_INTR_DMA_memclr() noexcept;
+extern void LIBETC_VSync() noexcept;
+extern void LIBETC_v_wait() noexcept;
+extern void LIBC2_puts() noexcept;
+extern void LIBGPU_ResetGraph() noexcept;
+extern void LIBGPU_SetGraphReverse() noexcept;
+extern void LIBGPU_SetGraphDebug() noexcept;
+extern void LIBGPU_SetGraphQueue() noexcept;
+extern void LIBGPU_GetGraphType() noexcept;
+extern void LIBGPU_GetGraphDebug() noexcept;
+extern void LIBGPU_DrawSyncCallback() noexcept;
+extern void LIBGPU_SetDispMask() noexcept;
+extern void LIBGPU_DrawSync() noexcept;
+extern void LIBGPU_checkRECT() noexcept;
+extern void LIBGPU_ClearImage() noexcept;
+extern void LIBGPU_LoadImage() noexcept;
+extern void LIBGPU_StoreImage() noexcept;
+extern void LIBGPU_MoveImage() noexcept;
+extern void LIBGPU_ClearOTag() noexcept;
+extern void LIBGPU_ClearOTagR() noexcept;
+extern void LIBGPU_DrawPrim() noexcept;
+extern void LIBGPU_DrawOTag() noexcept;
+extern void LIBGPU_PutDrawEnv() noexcept;
+extern void LIBGPU_GetDrawEnv() noexcept;
+extern void LIBGPU_PutDispEnv() noexcept;
+extern void LIBGPU_GetDispEnv() noexcept;
+extern void LIBGPU_GetODE() noexcept;
+extern void LIBGPU_SetTexWindow() noexcept;
+extern void LIBGPU_SetDrawArea() noexcept;
+extern void LIBGPU_SetDrawOffset() noexcept;
+extern void LIBGPU_SetPriority() noexcept;
+extern void LIBGPU_SetDrawMode() noexcept;
+extern void LIBGPU_SetDrawEnv() noexcept;
+extern void LIBGPU_SYS_get_mode() noexcept;
+extern void LIBGPU_SYS_get_cs() noexcept;
+extern void LIBGPU_SYS_get_ce() noexcept;
+extern void LIBGPU_SYS_get_ofs() noexcept;
+extern void LIBGPU_SYS_get_tw() noexcept;
+extern void LIBGPU_SYS_get_dx() noexcept;
+extern void LIBGPU_SYS__status() noexcept;
+extern void LIBGPU_SYS__otc() noexcept;
+extern void LIBGPU_SYS__clr() noexcept;
+extern void LIBGPU_SYS__dws() noexcept;
+extern void LIBGPU_SYS__drs() noexcept;
+extern void LIBGPU_SYS__ctl() noexcept;
+extern void LIBGPU_SYS__getctl() noexcept;
+extern void LIBGPU_SYS__cwb() noexcept;
+extern void LIBGPU_SYS__cwc() noexcept;
+extern void LIBGPU_SYS__param() noexcept;
+extern void LIBGPU_SYS__addque() noexcept;
+extern void LIBGPU_SYS__addque2() noexcept;
+extern void LIBGPU_SYS__exeque() noexcept;
+extern void LIBGPU_SYS__reset() noexcept;
+extern void LIBGPU_SYS__sync() noexcept;
+extern void LIBGPU_SYS_set_alarm() noexcept;
+extern void LIBGPU_SYS_get_alarm() noexcept;
+extern void LIBGPU_SYS_memset() noexcept;
+extern void LIBAPI_GPU_cw() noexcept;
+extern void LIBC2_memcpy() noexcept;
+extern void LIBETC_SetVideoMode() noexcept;
+extern void LIBETC_GetVideoMode() noexcept;
+extern void LIBGPU_GetTPage() noexcept;
+extern void LIBGPU_GetClut() noexcept;
+extern void LIBGPU_DumpTPage() noexcept;
+extern void LIBGPU_DumpClut() noexcept;
+extern void LIBGPU_NextPrim() noexcept;
+extern void LIBGPU_IsEndPrim() noexcept;
+extern void LIBGPU_AddPrim() noexcept;
+extern void LIBGPU_AddPrims() noexcept;
+extern void LIBGPU_CatPrim() noexcept;
+extern void LIBGPU_TermPrim() noexcept;
+extern void LIBGPU_SetSemiTrans() noexcept;
+extern void LIBGPU_SetShadeTex() noexcept;
+extern void LIBGPU_SetPolyF3() noexcept;
+extern void LIBGPU_SetPolyFT3() noexcept;
+extern void LIBGPU_SetPolyG3() noexcept;
+extern void LIBGPU_SetPolyGT3() noexcept;
+extern void LIBGPU_SetPolyF4() noexcept;
+extern void LIBGPU_SetPolyFT4() noexcept;
+extern void LIBGPU_SetPolyG4() noexcept;
+extern void LIBGPU_SetPolyGT4() noexcept;
+extern void LIBGPU_SetSprt8() noexcept;
+extern void LIBGPU_SetSprt16() noexcept;
+extern void LIBGPU_SetSprt() noexcept;
+extern void LIBGPU_SetTile1() noexcept;
+extern void LIBGPU_SetTile8() noexcept;
+extern void LIBGPU_SetTile16() noexcept;
+extern void LIBGPU_SetTile() noexcept;
+extern void LIBGPU_SetBlockFill() noexcept;
+extern void LIBGPU_SetLineF2() noexcept;
+extern void LIBGPU_SetLineG2() noexcept;
+extern void LIBGPU_SetLineF3() noexcept;
+extern void LIBGPU_SetLineG3() noexcept;
+extern void LIBGPU_SetLineF4() noexcept;
+extern void LIBGPU_SetLineG4() noexcept;
+extern void LIBGPU_MargePrim() noexcept;
+extern void LIBGPU_DumpDrawEnv() noexcept;
+extern void LIBGPU_DumpDispEnv() noexcept;
+extern void LIBGPU_SetDumpFnt() noexcept;
+extern void LIBGPU_FntLoad() noexcept;
+extern void LIBGPU_FntOpen() noexcept;
+extern void LIBGPU_FntFlush() noexcept;
+extern void LIBGPU_FntPrint() noexcept;
+extern void LIBC2_memset() noexcept;
+extern void LIBGPU_LoadTPage() noexcept;
+extern void LIBGPU_LoadClut() noexcept;
+extern void LIBGPU_SetDefDrawEnv() noexcept;
+extern void LIBGPU_SetDefDispEnv() noexcept;
+extern void LIBGTE_MulMatrix() noexcept;
+extern void LIBGTE_MulMatrix2() noexcept;
+extern void LIBGTE_ApplyMatrix() noexcept;
+extern void LIBGTE_ApplyMatrixSV() noexcept;
+extern void LIBGTE_TransMatrix() noexcept;
+extern void LIBGTE_ScaleMatrix() noexcept;
+extern void LIBGTE_SetRotMatrix() noexcept;
+extern void LIBGTE_SetLightMatrix() noexcept;
+extern void LIBGTE_SetColorMatrix() noexcept;
+extern void LIBGTE_SetTransMatrix() noexcept;
+extern void LIBGTE_SetVertex0() noexcept;
+extern void LIBGTE_SetVertex1() noexcept;
+extern void LIBGTE_SetVertex2() noexcept;
+extern void LIBGTE_SetVertexTri() noexcept;
+extern void LIBGTE_SetRGBfifo() noexcept;
+extern void LIBGTE_SetIR123() noexcept;
+extern void LIBGTE_SetIR0() noexcept;
+extern void LIBGTE_SetBackColor() noexcept;
+extern void LIBGTE_SetFarColor() noexcept;
+extern void LIBGTE_SetSZfifo3() noexcept;
+extern void LIBGTE_SetSZfifo4() noexcept;
+extern void LIBGTE_SetSXSYfifo() noexcept;
+extern void LIBGTE_SetRii() noexcept;
+extern void LIBGTE_SetMAC123() noexcept;
+extern void LIBGTE_SetData32() noexcept;
+extern void LIBGTE_SetGeomOffset() noexcept;
+extern void LIBGTE_SetGeomScreen() noexcept;
+extern void LIBGTE_SetDQA() noexcept;
+extern void LIBGTE_SetDQB() noexcept;
+extern void LIBGTE_InitGeom() noexcept;
+extern void LIBGTE__patch_gte() noexcept;
+extern void LIBAPI_FlushCache() noexcept;
+extern void LIBGTE_RotTransPers() noexcept;
+extern void LIBGTE_RotTransPers3() noexcept;
+extern void LIBGTE_RotTrans() noexcept;
+extern void LIBGTE_LocalLight() noexcept;
+extern void LIBGTE_DpqColor() noexcept;
+extern void LIBGTE_NormalColor() noexcept;
+extern void LIBGTE_NormalColor3() noexcept;
+extern void LIBGTE_NormalColorDpq() noexcept;
+extern void LIBGTE_NormalColorDpq3() noexcept;
+extern void LIBGTE_NormalColorCol() noexcept;
+extern void LIBGTE_NormalColorCol3() noexcept;
+extern void LIBGTE_ColorDpq() noexcept;
+extern void LIBGTE_ColorCol() noexcept;
+extern void LIBGTE_NormalClip() noexcept;
+extern void LIBGTE_NormalClipS() noexcept;
+extern void LIBGTE_AverageSZ3() noexcept;
+extern void LIBGTE_AverageSZ4() noexcept;
+extern void psx_main() noexcept;
+extern void LIBSN__main() noexcept;
+extern void LIBSN___do_global_dtors() noexcept;
+extern void LIBAPI_InitHeap() noexcept;
+extern void LIBSPU_SpuSetVoiceAttr() noexcept;
+extern void LIBSPU__SpuSetVoiceAttr() noexcept;
+extern void LIBSPU__spu_note2pitch() noexcept;
+extern void LIBSPU__spu_pitch2note() noexcept;
+extern void LIBSPU_SpuSetReverbModeParam() noexcept;
+extern void LIBSPU__SpuIsInAllocateArea() noexcept;
+extern void LIBSPU__SpuIsInAllocateArea_() noexcept;
+extern void LIBSPU__spu_reset() noexcept;
+extern void LIBSPU__spu_init() noexcept;
+extern void LIBSPU__spu_close() noexcept;
+extern void LIBSPU__spu_open() noexcept;
+extern void LIBSPU__spu_writeByIO() noexcept;
+extern void LIBSPU__spu_FiDMA() noexcept;
+extern void LIBSPU__spu_r() noexcept;
+extern void LIBSPU__spu_t() noexcept;
+extern void LIBSPU__spu_write() noexcept;
+extern void LIBSPU__spu_read() noexcept;
+extern void LIBSPU__spu_ioctl() noexcept;
+extern void LIBSPU__spu_setVoiceAttr() noexcept;
+extern void LIBSPU__spu_setReverbAttr() noexcept;
+extern void LIBSPU__spu_setCommonAttr() noexcept;
+extern void LIBSPU__spu_getCommonAttr() noexcept;
+extern void LIBSPU_SysSpu_setRegister() noexcept;
+extern void LIBAPI_DeliverEvent() noexcept;
+extern void LIBSPU__SpuDataCallback() noexcept;
+extern void LIBSPU__SpuCallback() noexcept;
+extern void LIBSPU_SpuSetCommonAttr() noexcept;
+extern void LIBSPU_SpuGetReverbOffsetAddr() noexcept;
+extern void LIBSPU_SpuClearReverbWorkArea() noexcept;
+extern void LIBAPI_WaitEvent() noexcept;
+extern void LIBSPU__SpuInit() noexcept;
+extern void LIBSPU_SpuStart() noexcept;
+extern void LIBSPU_SpuSetReverbDepth() noexcept;
+extern void LIBSPU_SpuSetReverbVoice() noexcept;
+extern void LIBSPU_SpuInit() noexcept;
+extern void LIBSPU_SpuSetReverb() noexcept;
+extern void LIBSPU_SpuQuit() noexcept;
+extern void LIBSPU_SpuIsTransferCompleted() noexcept;
+extern void LIBSPU_SpuInitMalloc() noexcept;
+extern void LIBSPU_SpuSetTransferMode() noexcept;
+extern void LIBSPU_SpuSetTransferStartAddr() noexcept;
+extern void LIBSPU_SpuWrite() noexcept;
+extern void LIBSPU_SpuSetKeyOnWithAttr() noexcept;
+extern void LIBSPU_SpuSetKey() noexcept;
+extern void LIBSPU_SpuRGetAllKeysStatus() noexcept;
+extern void LIBSPU_SpuGetAllKeysStatus() noexcept;
+extern void LIBCD_CdInit() noexcept;
+extern void LIBCD_EVENT_def_cbsync() noexcept;
+extern void LIBCD_EVENT_def_cbready() noexcept;
+extern void LIBCD_EVENT_def_cbread() noexcept;
+extern void LIBCD_CdStatus() noexcept;
+extern void LIBCD_CdLastCom() noexcept;
+extern void LIBCD_CdReset() noexcept;
+extern void LIBCD_CdFlush() noexcept;
+extern void LIBCD_CdSetDebug() noexcept;
+extern void LIBCD_CdComstr() noexcept;
+extern void LIBCD_CdIntstr() noexcept;
+extern void LIBCD_CdSync() noexcept;
+extern void LIBCD_CdReady() noexcept;
+extern void LIBCD_CdSyncCallback() noexcept;
+extern void LIBCD_CdReadyCallback() noexcept;
+extern void LIBCD_CdReadCallback() noexcept;
+extern void LIBCD_CdControl() noexcept;
+extern void LIBCD_CdControlF() noexcept;
+extern void LIBCD_CdControlB() noexcept;
+extern void LIBCD_CdMix() noexcept;
+extern void LIBCD_CdGetSector() noexcept;
+extern void LIBCD_CdDataCallback() noexcept;
+extern void LIBCD_CdDataSync() noexcept;
+extern void LIBCD_CdReadSync() noexcept;
+extern void LIBCD_CdRead() noexcept;
+extern void LIBCD_CdIntToPos() noexcept;
+extern void LIBCD_CdPosToInt() noexcept;
+extern void LIBCD_BIOS_getintr() noexcept;
+extern void LIBCD_CD_sync() noexcept;
+extern void LIBCD_CD_ready() noexcept;
+extern void LIBCD_CD_cw() noexcept;
+extern void LIBCD_CD_vol() noexcept;
+extern void LIBCD_CD_shell() noexcept;
+extern void LIBCD_CD_flush() noexcept;
+extern void LIBCD_CD_init() noexcept;
+extern void LIBCD_CD_initvol() noexcept;
+extern void LIBCD_BIOS_cd_read_retry() noexcept;
+extern void LIBCD_CD_readm() noexcept;
+extern void LIBCD_CD_readsync() noexcept;
+extern void LIBCD_CD_datasync() noexcept;
+extern void LIBCD_CD_getsector() noexcept;
+extern void LIBCD_CD_set_test_parmnum() noexcept;
+extern void LIBCD_BIOS_callback() noexcept;
+extern void LIBCD_BIOS_cb_read() noexcept;
+extern void LIBCD_CdGetToc() noexcept;
+extern void LIBCD_CdGetToc2() noexcept;
+extern void LIBCOMB_UNKNOWN_func_1() noexcept;
+extern void LIBCOMB_UNKNOWN_func_2() noexcept;
+extern void LIBCOMB_UNKNOWN_func_3() noexcept;
+extern void LIBCOMB_UNKNOWN_func_4() noexcept;
+extern void LIBCOMB_UNKNOWN_func_5() noexcept;
+extern void LIBCOMB_UNKNOWN_func_6() noexcept;
+extern void LIBCOMB_UNKNOWN_func_7() noexcept;
+extern void LIBCOMB_UNKNOWN_func_8() noexcept;
+extern void LIBCOMB_UNKNOWN_func_9() noexcept;
+extern void LIBCOMB_ChangeClearSIO() noexcept;
+extern void LIBCOMB_AddCOMB() noexcept;
+extern void LIBCOMB_DelCOMB() noexcept;
+extern void LIBCOMB_UNKNOWN_ctrl_help() noexcept;
+extern void LIBCOMB__comb_control() noexcept;
+extern void LIBAPI_SysEnqIntRP() noexcept;
+extern void LIBAPI_AddDrv() noexcept;
+extern void LIBAPI_DelDrv() noexcept;
+extern void LIBCOMB__ioabort() noexcept;
+
+namespace PsxVm {
+    std::map<uint32_t, VmFunc> gFuncTable = {
+        { 0x80012274, &D_DoomMain },
+        { 0x800123A4, &RunLegals },
+        { 0x800123E4, &RunTitle },
+        { 0x80012424, &RunDemo },
+        { 0x800124A8, &RunCredits },
+        { 0x800124E8, &I_SetDebugDrawStringPos },
+        { 0x800124F8, &I_DebugDrawString },
+        { 0x80012850, &D_memset },
+        { 0x8001290C, &D_memcpy },
+        { 0x80012940, &D_strncpy },
+        { 0x8001297C, &D_strncasecmp },
+        { 0x800129D4, &strupr },
+        { 0x80012A18, &P_Random },
+        { 0x80012A44, &M_Random },
+        { 0x80012A70, &M_ClearRandom },
+        { 0x80012A80, &M_ClearBox },
+        { 0x80012AA0, &M_AddToBox },
+        { 0x80012B10, &M_AddPointToBox },
+        { 0x80012B78, &MiniLoop },
+        { 0x80012E04, &G_DoLoadLevel },
+        { 0x80012F00, &G_PlayerFinishLevel },
+        { 0x80012F88, &G_PlayerReborn },
+        { 0x80013070, &G_DoReborn },
+        { 0x80013384, &G_SetGameComplete },
+        { 0x80013394, &G_InitNew },
+        { 0x80013528, &G_RunGame },
+        { 0x80013714, &G_PlayDemoPtr },
+        { 0x80013838, &empty_func1 },
+        { 0x80013840, &P_RunMobjBase },
+        { 0x800138D8, &P_XYMovement },
+        { 0x80013B38, &P_FloatChange },
+        { 0x80013C00, &P_ZMovement },
+        { 0x80013DE0, &P_MobjThinker },
+        { 0x80013F00, &PB_TryMove },
+        { 0x80013FE0, &PB_UnsetThingPosition },
+        { 0x800140DC, &PB_SetThingPosition },
+        { 0x800141DC, &PB_CheckPosition },
+        { 0x800143C0, &PB_BoxCrossLine },
+        { 0x800144D8, &PB_CheckLine },
+        { 0x800145C4, &PB_CheckThing },
+        { 0x800146F0, &PB_CheckLines },
+        { 0x800149B8, &PB_CheckThings },
+        { 0x80014A30, &T_MoveCeiling },
+        { 0x80014C44, &EV_DoCeiling },
+        { 0x80014E18, &P_AddActiveCeiling },
+        { 0x80014E54, &P_RemoveActiveCeiling },
+        { 0x80014EBC, &P_ActivateInStasisCeiling },
+        { 0x80014F30, &EV_CeilingCrushStop },
+        { 0x80014FA4, &P_ThingHeightClip },
+        { 0x8001504C, &PIT_ChangeSector },
+        { 0x80015238, &P_ChangeSector },
+        { 0x800152FC, &T_VerticalDoor },
+        { 0x80015540, &EV_DoLockedDoor },
+        { 0x80015764, &EV_DoDoor },
+        { 0x80015988, &EV_VerticalDoor },
+        { 0x80015B84, &P_SpawnDoorCloseIn30 },
+        { 0x80015C04, &P_SpawnDoorRaiseIn5Mins },
+        { 0x80015CA8, &P_CheckMeleeRange },
+        { 0x80015D1C, &P_CheckMissileRange },
+        { 0x80015E00, &P_Move },
+        { 0x80015F68, &P_TryWalk },
+        { 0x80015FB4, &P_NewChaseDir },
+        { 0x80016334, &P_LookForPlayers },
+        { 0x800164B4, &A_Look },
+        { 0x800165E0, &A_Chase },
+        { 0x80016928, &A_FaceTarget },
+        { 0x800169CC, &A_PosAttack },
+        { 0x80016AD4, &A_SPosAttack },
+        { 0x80016C24, &A_CPosAttack },
+        { 0x80016D70, &A_CPosRefire },
+        { 0x80016E6C, &A_SpidAttack },
+        { 0x80016FBC, &A_SpidRefire },
+        { 0x800170BC, &A_BspiAttack },
+        { 0x80017170, &A_TroopAttack },
+        { 0x800172B0, &A_SargAttack },
+        { 0x80017380, &A_HeadAttack },
+        { 0x800174B4, &A_CyberAttack },
+        { 0x80017568, &A_BruisAttack },
+        { 0x80017630, &A_SkelMissile },
+        { 0x80017730, &A_Tracer },
+        { 0x80017980, &A_SkelWhoosh },
+        { 0x80017A30, &A_SkelFist },
+        { 0x80017B90, &A_FatRaise },
+        { 0x80017C40, &A_FatAttack1 },
+        { 0x80017D7C, &A_FatAttack2 },
+        { 0x80017EB8, &A_FatAttack3 },
+        { 0x8001804C, &A_SkullAttack },
+        { 0x800181FC, &A_PainShootSkull },
+        { 0x80018350, &A_PainAttack },
+        { 0x80018520, &A_PainDie },
+        { 0x800188DC, &A_Scream },
+        { 0x80018994, &A_XScream },
+        { 0x800189B4, &A_Pain },
+        { 0x800189EC, &A_Fall },
+        { 0x80018A00, &A_Explode },
+        { 0x80018A24, &A_BossDeath },
+        { 0x80018C44, &A_Hoof },
+        { 0x80018C78, &A_Metal },
+        { 0x80018CAC, &A_BabyMetal },
+        { 0x80018CE0, &L_MissileHit },
+        { 0x80018D54, &L_SkullBash },
+        { 0x80018DF0, &T_MovePlane },
+        { 0x80019010, &T_MoveFloor },
+        { 0x80019100, &EV_DoFloor },
+        { 0x80019548, &EV_BuildStairs },
+        { 0x800197A4, &P_GiveAmmo },
+        { 0x8001998C, &P_GiveWeapon },
+        { 0x80019AF4, &P_GiveBody },
+        { 0x80019B40, &P_GiveArmor },
+        { 0x80019B7C, &P_GiveCard },
+        { 0x80019BA8, &P_GivePower },
+        { 0x80019C8C, &P_TouchSpecialThing },
+        { 0x8001A57C, &P_KillMObj },
+        { 0x8001A8A0, &P_DamageMObj },
+        { 0x8001AD74, &T_FireFlicker },
+        { 0x8001AE00, &P_SpawnFireFlicker },
+        { 0x8001AE8C, &T_LightFlash },
+        { 0x8001AF14, &P_SpawnLightFlash },
+        { 0x8001AFBC, &T_StrobeFlash },
+        { 0x8001B020, &P_SpawnStrobeFlash },
+        { 0x8001B0F4, &P_SpawnRapidStrobeFlash },
+        { 0x8001B188, &EV_StartLightStrobing },
+        { 0x8001B298, &EV_TurnTagLightsOff },
+        { 0x8001B394, &EV_LightTurnOn },
+        { 0x8001B4A0, &T_Glow },
+        { 0x8001B558, &P_SpawnGlowingLight },
+        { 0x8001B640, &P_CheckPosition },
+        { 0x8001B67C, &P_TryMove },
+        { 0x8001B7A4, &P_InterceptVector },
+        { 0x8001B848, &PIT_UseLines },
+        { 0x8001B9F4, &P_UseLines },
+        { 0x8001BC30, &PIT_RadiusAttack },
+        { 0x8001BD24, &P_RadiusAttack },
+        { 0x8001BE04, &P_AimLineAttack },
+        { 0x8001BE78, &P_LineAttack },
+        { 0x8001C030, &P_AproxDistance },
+        { 0x8001C068, &P_PointOnLineSide },
+        { 0x8001C128, &P_PointOnDivlineSide },
+        { 0x8001C21C, &P_MakeDivline },
+        { 0x8001C25C, &P_LineOpening },
+        { 0x8001C2F8, &P_UnsetThingPosition },
+        { 0x8001C408, &P_SetThingPosition },
+        { 0x8001C540, &P_BlockLinesIterator },
+        { 0x8001C660, &P_BlockThingsIterator },
+        { 0x8001C724, &P_RemoveMObj },
+        { 0x8001C838, &P_RespawnSpecials },
+        { 0x8001CA18, &P_SetMObjState },
+        { 0x8001CB9C, &P_ExplodeMissile },
+        { 0x8001CC68, &P_SpawnMObj },
+        { 0x8001CE40, &P_SpawnPlayer },
+        { 0x8001D184, &P_SpawnMapThing },
+        { 0x8001D704, &P_SpawnPuff },
+        { 0x8001D930, &P_SpawnBlood },
+        { 0x8001DB78, &P_CheckMissileSpawn },
+        { 0x8001DC94, &P_SpawnMissile },
+        { 0x8001E0F4, &P_SpawnPlayerMissile },
+        { 0x8001E4F4, &P_TryMove2 },
+        { 0x8001E720, &UNKNOWN_DoomFunc3 },
+        { 0x8001E76C, &P_UnsetThingPosition2 },
+        { 0x8001E868, &P_SetThingPosition2 },
+        { 0x8001E978, &PM_CheckPosition },
+        { 0x8001EC68, &PM_BoxCrossLine },
+        { 0x8001ED74, &PIT_CheckLine },
+        { 0x8001EEC4, &PIT_CheckThing },
+        { 0x8001F028, &PM_CheckLines },
+        { 0x8001F208, &PM_CheckThings },
+        { 0x8001F280, &T_PlatRaise },
+        { 0x8001F464, &EV_DoPlat },
+        { 0x8001F760, &P_ActivateInStasis },
+        { 0x8001F7D4, &EV_StopPlat },
+        { 0x8001F848, &P_AddActivePlat },
+        { 0x8001F8A0, &P_RemoveActivePlat },
+        { 0x8001F918, &P_RecursiveSound },
+        { 0x8001FA34, &P_NoiseAlert },
+        { 0x8001FB70, &P_SetPsprite },
+        { 0x8001FC18, &P_BringUpWeapon },
+        { 0x8001FD4C, &P_CheckAmmo },
+        { 0x8001FFBC, &P_FireWeapon },
+        { 0x800201C4, &P_DropWeapon },
+        { 0x80020298, &A_WeaponReady },
+        { 0x80020480, &A_ReFire },
+        { 0x8002051C, &A_CheckReload },
+        { 0x8002053C, &A_Lower },
+        { 0x800206B4, &A_Raise },
+        { 0x800207A0, &A_GunFlash },
+        { 0x80020874, &A_Punch },
+        { 0x8002096C, &A_Saw },
+        { 0x80020AE4, &A_FireMissile },
+        { 0x80020B48, &A_FireBFG },
+        { 0x80020BAC, &A_FirePlasma },
+        { 0x80020CD4, &P_BulletSlope },
+        { 0x80020D60, &P_GunShot },
+        { 0x80020DF0, &A_FirePistol },
+        { 0x80020F7C, &A_FireShotgun },
+        { 0x8002112C, &A_FireShotgun2 },
+        { 0x80021374, &A_FireCGun },
+        { 0x8002155C, &A_Light0 },
+        { 0x80021564, &A_Light1 },
+        { 0x80021570, &A_Light2 },
+        { 0x8002157C, &A_BFGSpray },
+        { 0x8002166C, &A_BFGsound },
+        { 0x80021690, &A_OpenShotgun2 },
+        { 0x800216B4, &A_LoadShotgun2 },
+        { 0x800216D8, &A_CloseShotgun2 },
+        { 0x80021794, &P_SetupPsprites },
+        { 0x8002190C, &P_MovePsprites },
+        { 0x80021ACC, &P_LoadVertexes },
+        { 0x80021BA0, &P_LoadSegs },
+        { 0x80021DD8, &P_LoadSubSectors },
+        { 0x80021EC4, &P_LoadSectors },
+        { 0x80022104, &P_LoadNodes },
+        { 0x80022278, &P_LoadThings },
+        { 0x8002237C, &P_LoadLineDefs },
+        { 0x80022650, &P_LoadSideDefs },
+        { 0x800227CC, &P_LoadBlockMap },
+        { 0x800228CC, &P_LoadMapLump },
+        { 0x80022920, &P_LoadLeafs },
+        { 0x80022B58, &P_GroupLines },
+        { 0x80022E68, &P_InitMapTextures },
+        { 0x800230D4, &P_SetupLevel },
+        { 0x80023700, &P_LoadBlocks },
+        { 0x800239D8, &P_CacheSprite },
+        { 0x80023AC8, &P_CacheMapTexturesWithWidth },
+        { 0x80023C34, &P_Shoot2 },
+        { 0x80023E3C, &PA_DoIntercept },
+        { 0x80023EC4, &PA_ShootLine },
+        { 0x800240BC, &PA_ShootThing },
+        { 0x8002425C, &PA_SightCrossLine },
+        { 0x80024334, &PA_CrossSubsector },
+        { 0x80024758, &PointOnVectorSide },
+        { 0x8002479C, &PA_CrossBSPNode },
+        { 0x80024908, &P_CheckSights },
+        { 0x800249B4, &P_CheckSight },
+        { 0x80024B3C, &PS_SightCrossLine },
+        { 0x80024C14, &PS_CrossSubsector },
+        { 0x80024EC0, &PS_CrossBSPNode },
+        { 0x8002502C, &P_SlideMove },
+        { 0x800251BC, &P_CompletableFrac },
+        { 0x80025460, &SL_PointOnSide },
+        { 0x800254D0, &SL_CrossFrac },
+        { 0x80025588, &CheckLineEnds },
+        { 0x80025648, &ClipToLine },
+        { 0x80025840, &SL_CheckLine },
+        { 0x80025A8C, &SL_PointOnSide2 },
+        { 0x80025AFC, &SL_CheckSpecialLines },
+        { 0x80025F44, &P_InitPicAnims },
+        { 0x80026224, &getSide },
+        { 0x80026280, &getSector },
+        { 0x800262E4, &twoSided },
+        { 0x80026324, &getNextSector },
+        { 0x80026354, &P_FindLowestFloorSurrounding },
+        { 0x800263E8, &P_FindHighestFloorSurrounding },
+        { 0x80026480, &P_FindNextHighestFloor },
+        { 0x80026564, &P_FindLowestCeilingSurrounding },
+        { 0x80026600, &P_FindHighestCeilingSurrounding },
+        { 0x80026698, &P_FindSectorFromLineTag },
+        { 0x80026700, &P_FindMinSurroundingLight },
+        { 0x80026794, &P_CrossSpecialLine },
+        { 0x80026D40, &P_ShootSpecialLine },
+        { 0x80026E08, &P_PlayerInSpecialSector },
+        { 0x80026FC8, &P_UpdateSpecials },
+        { 0x8002745C, &EV_DoDonut },
+        { 0x800276A8, &G_ScheduleExitLevel },
+        { 0x80027718, &G_BeginExitLevel },
+        { 0x80027768, &G_ExitLevel },
+        { 0x800277E0, &G_SecretExitLevel },
+        { 0x8002784C, &P_SpawnSpecials },
+        { 0x80027CB0, &P_UpdateFireSky },
+        { 0x80027D84, &P_InitSwitchList },
+        { 0x80027EA8, &P_StartButton },
+        { 0x80027F3C, &P_ChangeSwitchTexture },
+        { 0x8002822C, &P_UseSpecialLine },
+        { 0x80028820, &P_Telefrag },
+        { 0x80028918, &EV_Teleport },
+        { 0x80028C38, &P_AddThinker },
+        { 0x80028C68, &P_RemoveThinker },
+        { 0x80028C74, &P_RunThinkers },
+        { 0x80028D30, &P_RunMobjLate },
+        { 0x80028D94, &P_CheckCheats },
+        { 0x80029414, &P_Ticker },
+        { 0x800295FC, &P_Drawer },
+        { 0x80029684, &P_Start },
+        { 0x8002971C, &P_Stop },
+        { 0x800297A0, &P_PlayerMove },
+        { 0x80029918, &P_PlayerXYMovement },
+        { 0x80029A08, &P_PlayerZMovement },
+        { 0x80029B38, &P_PlayerMobjThink },
+        { 0x80029DD4, &P_BuildMove },
+        { 0x8002A2B8, &P_Thrust },
+        { 0x8002A32C, &P_CalcHeight },
+        { 0x8002A4E8, &P_MovePlayer },
+        { 0x8002A6A0, &P_DeathThink },
+        { 0x8002A7F8, &P_PlayerThink },
+        { 0x8002ACE8, &R_BSP },
+        { 0x8002AD3C, &R_RenderBSPNode },
+        { 0x8002AE74, &R_CheckBBox },
+        { 0x8002B2D8, &R_Subsector },
+        { 0x8002B3B8, &R_AddLine },
+        { 0x8002B9A8, &R_InitData },
+        { 0x8002B9E0, &R_InitTextures },
+        { 0x8002BB50, &R_InitFlats },
+        { 0x8002BC54, &R_InitSprites },
+        { 0x8002BDA4, &R_TextureNumForName },
+        { 0x8002BE68, &R_FlatNumForName },
+        { 0x8002BF2C, &R_InitPalette },
+        { 0x8002C07C, &R_DrawSky },
+        { 0x8002C6F8, &R_DrawSubsector },
+        { 0x8002CA8C, &R_FrontZClip },
+        { 0x8002CD68, &R_CheckEdgeVisible },
+        { 0x8002CE68, &R_LeftEdgeClip },
+        { 0x8002D10C, &R_RightEdgeClip },
+        { 0x8002D3AC, &R_DrawSubsectorSeg },
+        { 0x8002D684, &R_DrawWallColumns },
+        { 0x8002E2A8, &R_DrawSubsectorFlat },
+        { 0x8002E714, &R_DrawFlatSpans },
+        { 0x8002F330, &R_DrawSubsectorSprites },
+        { 0x8002FE34, &R_DrawWeapon },
+        { 0x800305B0, &R_Init },
+        { 0x80030634, &R_RenderPlayerView },
+        { 0x80030B58, &R_SlopeDiv },
+        { 0x80030BA0, &R_PointToAngle2 },
+        { 0x80030EB4, &R_PointOnSide },
+        { 0x80030F5C, &R_PointInSubsector },
+        { 0x80031088, &D_mystrlen },
+        { 0x800310C8, &D_vsprintf },
+        { 0x80031394, &W_Init },
+        { 0x800314A4, &W_CheckNumForName },
+        { 0x80031558, &W_GetNumForName },
+        { 0x80031648, &W_LumpLength },
+        { 0x80031698, &W_ReadLump },
+        { 0x800317AC, &W_CacheLumpNum },
+        { 0x800319E4, &W_CacheLumpName },
+        { 0x80031B04, &W_OpenMapWad },
+        { 0x80031BD4, &W_MapLumpLength },
+        { 0x80031C24, &W_MapGetNumForName },
+        { 0x80031CE0, &W_ReadMapLump },
+        { 0x80031D90, &decode },
+        { 0x80031E48, &getDecodedSize },
+        { 0x80031EB4, &InitOpenFileSlots },
+        { 0x80031EDC, &OpenFile },
+        { 0x80031FD8, &CloseFile },
+        { 0x80032024, &SeekAndTellFile },
+        { 0x8003206C, &ReadFile },
+        { 0x80032144, &Z_Init },
+        { 0x8003219C, &Z_InitZone },
+        { 0x800321D0, &Z_Malloc2 },
+        { 0x800323C8, &Z_Malloc2_b },
+        { 0x800325D8, &Z_Free2 },
+        { 0x80032640, &Z_FreeTags },
+        { 0x80032770, &Z_CheckHeap },
+        { 0x80032838, &Z_ChangeTag },
+        { 0x800328C4, &Z_FreeMemory },
+        { 0x80032904, &Z_DumpHeap },
+        { 0x8003290C, &I_Main },
+        { 0x80032934, &I_PSXInit },
+        { 0x80032B0C, &I_Error },
+        { 0x80032BB8, &I_ReadGamepad },
+        { 0x80032BF4, &I_CacheTexForLumpName },
+        { 0x80032D04, &I_CacheAndDrawSprite },
+        { 0x80032D84, &I_DrawSprite },
+        { 0x800332E0, &I_DrawPlaque },
+        { 0x800333D8, &I_IncDrawnFrameCount },
+        { 0x800333F0, &I_DrawPresent },
+        { 0x8003350C, &I_VsyncCallback },
+        { 0x8003352C, &I_Init },
+        { 0x80033578, &I_CacheTex },
+        { 0x8003390C, &I_RemoveTexCacheEntry },
+        { 0x8003397C, &I_ResetTexCache },
+        { 0x80033AC4, &I_VramViewerDraw },
+        { 0x8003472C, &I_NetSetup },
+        { 0x80034A60, &I_NetUpdate },
+        { 0x80034CB8, &I_NetHandshake },
+        { 0x80034D14, &I_NetSendRecv },
+        { 0x80034E58, &I_SubmitGpuCmds },
+        { 0x80034EA4, &I_LocalButtonsToNet },
+        { 0x80034F04, &I_NetButtonsToLocal },
+        { 0x80034F54, &START_Legals },
+        { 0x80034FA0, &STOP_Legals },
+        { 0x80034FCC, &TIC_Legals },
+        { 0x8003504C, &DRAW_Legals },
+        { 0x80035098, &START_Title },
+        { 0x80035268, &STOP_Title },
+        { 0x80035294, &TIC_Title },
+        { 0x8003540C, &DRAW_Title },
+        { 0x80035B24, &RunMenu },
+        { 0x80035C94, &M_Start },
+        { 0x80035E40, &M_Stop },
+        { 0x80035EC4, &M_Ticker },
+        { 0x80036258, &M_Drawer },
+        { 0x80036448, &I_CrossFadeFrameBuffers },
+        { 0x80036BD8, &START_Credits },
+        { 0x80036CA0, &STOP_Credits },
+        { 0x80036CC0, &TIC_Credits },
+        { 0x80036D58, &DRAW_Credits },
+        { 0x80036E1C, &START_PasswordScreen },
+        { 0x80036E6C, &STOP_PasswordScreen },
+        { 0x80036EA0, &TIC_PasswordScreen },
+        { 0x80037134, &DRAW_PasswordScreen },
+        { 0x8003793C, &START_ControlsScreen },
+        { 0x80037980, &STOP_ControlsScreen },
+        { 0x800379AC, &TIC_ControlsScreen },
+        { 0x80037B84, &DRAW_ControlsScreen },
+        { 0x80037DBC, &P_ComputePassword },
+        { 0x800381B0, &P_ProcessPassword },
+        { 0x80038558, &ST_Init },
+        { 0x80038610, &ST_Start },
+        { 0x80038688, &ST_Ticker },
+        { 0x80038B0C, &ST_Drawer },
+        { 0x8003A3C8, &I_DrawNumber },
+        { 0x8003A9D4, &I_DrawStringSmall },
+        { 0x8003AD04, &I_DrawPausedOverlay },
+        { 0x8003B0F0, &I_UpdatePalette },
+        { 0x8003B238, &I_GetStringXPosToCenter },
+        { 0x8003B324, &I_DrawString },
+        { 0x8003BAC0, &AM_Start },
+        { 0x8003BB08, &AM_Control },
+        { 0x8003BD34, &AM_Drawer },
+        { 0x8003C3F0, &DrawLine },
+        { 0x8003C758, &IN_Start },
+        { 0x8003CA64, &IN_Stop },
+        { 0x8003CA8C, &IN_Ticker },
+        { 0x8003CE70, &IN_Drawer },
+        { 0x8003CEE4, &IN_SingleDrawer },
+        { 0x8003D0B4, &IN_CoopDrawer },
+        { 0x8003D448, &IN_DeathmatchDrawer },
+        { 0x8003D6D0, &F1_Start },
+        { 0x8003D774, &F1_Stop },
+        { 0x8003D79C, &F1_Ticker },
+        { 0x8003D8F0, &F1_Drawer },
+        { 0x8003D9C4, &F2_Start },
+        { 0x8003DAF0, &F2_Stop },
+        { 0x8003DB18, &F2_Ticker },
+        { 0x8003E328, &F2_Drawer },
+        { 0x8003E910, &O_Init },
+        { 0x8003E9D0, &O_Shutdown },
+        { 0x8003E9F4, &O_Control },
+        { 0x8003EEC8, &O_Drawer },
+        { 0x8003F134, &FixedMul },
+        { 0x8003F180, &FixedDiv },
+        { 0x8003F200, &PSXCD_psxcd_memcpy },
+        { 0x8003F234, &psxcd_sync },
+        { 0x8003F2F0, &psxcd_critical_sync },
+        { 0x8003F3AC, &PSXCD_cbcomplete },
+        { 0x8003F490, &PSXCD_cbready },
+        { 0x8003F894, &psxcd_disable_callbacks },
+        { 0x8003F8A0, &psxcd_enable_callbacks },
+        { 0x8003F8B0, &psxcd_init },
+        { 0x8003F98C, &psxcd_exit },
+        { 0x8003F9BC, &psxcd_set_data_mode },
+        { 0x8003FACC, &psxcd_open },
+        { 0x8003FB9C, &psxcd_init_pos },
+        { 0x8003FBBC, &psxcd_async_on },
+        { 0x8003FCC4, &psxcd_seeking_for_play },
+        { 0x8003FD74, &psxcd_waiting_for_pause },
+        { 0x8003FE20, &psxcd_read },
+        { 0x8003FE58, &psxcd_async_read_cancel },
+        { 0x8003FEA4, &psxcd_async_read },
+        { 0x800406D4, &psxcd_seek },
+        { 0x800407C8, &psxcd_tell },
+        { 0x80040830, &psxcd_close },
+        { 0x80040838, &psxcd_set_audio_mode },
+        { 0x800408DC, &psxcd_set_loop_volume },
+        { 0x800408E8, &psxcd_play_at_andloop },
+        { 0x80040A48, &psxcd_play_at },
+        { 0x80040B6C, &psxcd_play },
+        { 0x80040B8C, &psxcd_seek_for_play_at },
+        { 0x80040CA0, &psxcd_seek_for_play },
+        { 0x80040CC0, &psxcd_play_status },
+        { 0x80040D58, &psxcd_stop },
+        { 0x80040DD0, &psxcd_pause },
+        { 0x80040E74, &psxcd_restart },
+        { 0x80040EFC, &psxcd_elapsed_sectors },
+        { 0x80040F50, &psxcd_set_stereo },
+        { 0x80040FAC, &S_SetSfxVolume },
+        { 0x80040FCC, &S_SetMusicVolume },
+        { 0x80041014, &S_StopMusicSequence },
+        { 0x80041050, &S_StartMusicSequence },
+        { 0x80041098, &ZeroHalfWord },
+        { 0x800410A0, &S_UnloadSamples },
+        { 0x80041118, &S_LoadSoundAndMusic },
+        { 0x80041318, &S_Pause },
+        { 0x80041340, &S_Resume },
+        { 0x80041368, &S_StopSound },
+        { 0x80041388, &S_Clear },
+        { 0x800413A8, &I_StartSound },
+        { 0x800415B4, &S_StartSound },
+        { 0x800415D4, &S_UpdateSounds },
+        { 0x800415EC, &PsxSoundInit },
+        { 0x8004172C, &PsxSoundExit },
+        { 0x80041734, &trackstart },
+        { 0x80041778, &trackstop },
+        { 0x800417B8, &queue_wess_seq_pause },
+        { 0x80041960, &queue_wess_seq_restart },
+        { 0x80041ACC, &queue_wess_seq_pauseall },
+        { 0x80041C88, &queue_wess_seq_restartall },
+        { 0x80041E78, &zeroset },
+        { 0x80041EA4, &wess_install_error_handler },
+        { 0x80041EBC, &wess_get_master_status },
+        { 0x80041ECC, &Is_System_Active },
+        { 0x80041EDC, &Is_Module_Loaded },
+        { 0x80041EEC, &Is_Seq_Num_Valid },
+        { 0x80041F48, &Register_Early_Exit },
+        { 0x80041F6C, &wess_install_handler },
+        { 0x80041F8C, &wess_restore_handler },
+        { 0x80041FAC, &wess_init },
+        { 0x80042010, &wess_exit },
+        { 0x8004209C, &wess_get_wmd_start },
+        { 0x800420AC, &wess_get_wmd_end },
+        { 0x800420BC, &free_mem_if_mine },
+        { 0x8004210C, &wess_unload_module },
+        { 0x80042218, &wess_memcpy },
+        { 0x8004224C, &conditional_read },
+        { 0x800422EC, &wess_load_module },
+        { 0x800430C4, &filltrackstat },
+        { 0x80043350, &assigntrackstat },
+        { 0x800433B4, &wess_seq_structrig },
+        { 0x800436AC, &wess_seq_trigger },
+        { 0x800436CC, &wess_seq_trigger_special },
+        { 0x8004371C, &wess_seq_status },
+        { 0x800437F0, &wess_seq_stop },
+        { 0x8004397C, &wess_seq_stopall },
+        { 0x80043AF8, &wess_low_level_init },
+        { 0x80043B18, &wess_low_level_exit },
+        { 0x80043B20, &wess_malloc },
+        { 0x80043B28, &wess_free },
+        { 0x80043B30, &GetIntsPerSec },
+        { 0x80043B38, &CalcPartsPerInt },
+        { 0x80043B88, &WessInterruptHandler },
+        { 0x80043C1C, &init_WessTimer },
+        { 0x80043CA8, &exit_WessTimer },
+        { 0x80043D18, &Wess_init_for_LoadFileData },
+        { 0x80043D20, &module_open },
+        { 0x80043D94, &module_read },
+        { 0x80043DB4, &module_seek },
+        { 0x80043DD4, &module_tell },
+        { 0x80043DF4, &module_close },
+        { 0x80043E14, &get_num_Wess_Sound_Drivers },
+        { 0x80043E1C, &data_open },
+        { 0x80043E90, &data_read_chunk },
+        { 0x80043FAC, &data_read },
+        { 0x80044078, &data_close },
+        { 0x80044098, &updatetrackstat },
+        { 0x8004438C, &wess_seq_trigger_type },
+        { 0x800443DC, &wess_seq_trigger_type_special },
+        { 0x80044430, &queue_wess_seq_update_type_special },
+        { 0x800445AC, &wess_seq_stoptype },
+        { 0x80044740, &wess_seq_load_err },
+        { 0x80044778, &wess_seq_loader_install_error_handler },
+        { 0x80044790, &Is_Seq_Seq_Num_Valid },
+        { 0x800447BC, &open_sequence_data },
+        { 0x80044828, &close_sequence_data },
+        { 0x8004487C, &load_sequence_data },
+        { 0x80045028, &wess_seq_loader_init },
+        { 0x8004513C, &wess_seq_loader_exit },
+        { 0x80045164, &wess_seq_sizeof },
+        { 0x800451F4, &wess_seq_load },
+        { 0x80045298, &wess_seq_free },
+        { 0x80045328, &psxspu_init_reverb },
+        { 0x80045408, &psxspu_set_reverb_depth },
+        { 0x80045450, &psxspu_init },
+        { 0x800454FC, &psxspu_update_master_vol },
+        { 0x80045540, &psxspu_update_master_vol_mode },
+        { 0x80045584, &psxspu_setcdmixon },
+        { 0x800455CC, &psxspu_setcdmixoff },
+        { 0x8004560C, &psxspu_fadeengine },
+        { 0x80045720, &psxspu_set_cd_vol },
+        { 0x8004577C, &psxspu_get_cd_vol },
+        { 0x8004578C, &psxspu_start_cd_fade },
+        { 0x80045844, &psxspu_stop_cd_fade },
+        { 0x80045868, &psxspu_get_cd_fade_status },
+        { 0x80045880, &psxspu_set_master_vol },
+        { 0x800458DC, &psxspu_get_master_vol },
+        { 0x800458EC, &psxspu_start_master_fade },
+        { 0x800459A4, &psxspu_stop_master_fade },
+        { 0x800459C8, &psxspu_get_master_fade_status },
+        { 0x800459E0, &start_record_music_mute },
+        { 0x800459FC, &end_record_music_mute },
+        { 0x80045A0C, &add_music_mute_note },
+        { 0x80045ACC, &PSX_UNKNOWN_DrvFunc },
+        { 0x80045B0C, &TriggerPSXVoice },
+        { 0x80045F8C, &PSX_DriverInit },
+        { 0x800461B4, &PSX_DriverExit },
+        { 0x800461D4, &PSX_DriverEntry1 },
+        { 0x80046484, &PSX_DriverEntry2 },
+        { 0x8004648C, &PSX_DriverEntry3 },
+        { 0x80046494, &PSX_TrkOff },
+        { 0x80046540, &PSX_TrkMute },
+        { 0x800466FC, &PSX_PatchChg },
+        { 0x80046724, &PSX_PatchMod },
+        { 0x8004672C, &PSX_PitchMod },
+        { 0x8004697C, &PSX_ZeroMod },
+        { 0x80046984, &PSX_ModuMod },
+        { 0x8004698C, &PSX_VolumeMod },
+        { 0x80046CA4, &PSX_PanMod },
+        { 0x80046F80, &PSX_PedalMod },
+        { 0x80046F88, &PSX_ReverbMod },
+        { 0x80046F90, &PSX_ChorusMod },
+        { 0x80046F98, &PSX_voiceon },
+        { 0x8004706C, &PSX_voiceparmoff },
+        { 0x80047134, &PSX_voicerelease },
+        { 0x80047180, &PSX_voicenote },
+        { 0x80047394, &PSX_NoteOn },
+        { 0x80047578, &PSX_NoteOff },
+        { 0x80047664, &Read_Vlq },
+        { 0x800476DC, &Write_Vlq },
+        { 0x8004773C, &Len_Vlq },
+        { 0x800477A8, &Eng_DriverInit },
+        { 0x800477E4, &Eng_DriverExit },
+        { 0x800477EC, &Eng_DriverEntry1 },
+        { 0x800477F4, &Eng_DriverEntry2 },
+        { 0x800477FC, &Eng_DriverEntry3 },
+        { 0x80047804, &Eng_TrkOff },
+        { 0x800479B0, &Eng_TrkMute },
+        { 0x800479B8, &Eng_PatchChg },
+        { 0x800479E0, &Eng_PatchMod },
+        { 0x800479E8, &Eng_PitchMod },
+        { 0x80047A10, &Eng_ZeroMod },
+        { 0x80047A18, &Eng_ModuMod },
+        { 0x80047A20, &Eng_VolumeMod },
+        { 0x80047A40, &Eng_PanMod },
+        { 0x80047A60, &Eng_PedalMod },
+        { 0x80047A68, &Eng_ReverbMod },
+        { 0x80047A70, &Eng_ChorusMod },
+        { 0x80047A78, &Eng_NoteOn },
+        { 0x80047A80, &Eng_NoteOff },
+        { 0x80047A88, &Eng_StatusMark },
+        { 0x80047BA4, &Eng_GateJump },
+        { 0x80047C90, &Eng_IterJump },
+        { 0x80047D8C, &Eng_ResetGates },
+        { 0x80047E90, &Eng_ResetIters },
+        { 0x80047F94, &Eng_WriteIterBox },
+        { 0x80047FD8, &Eng_SeqTempo },
+        { 0x80048158, &Eng_SeqGosub },
+        { 0x80048334, &Eng_SeqJump },
+        { 0x800484DC, &Eng_SeqRet },
+        { 0x8004862C, &Eng_SeqEnd },
+        { 0x800488D4, &Eng_TrkTempo },
+        { 0x80048930, &Eng_TrkGosub },
+        { 0x800489C4, &Eng_TrkJump },
+        { 0x80048A34, &Eng_TrkRet },
+        { 0x80048A88, &Eng_TrkEnd },
+        { 0x80048B8C, &Eng_NullEvent },
+        { 0x80048B94, &SeqEngine },
+        { 0x80048EE4, &wess_dig_lcd_loader_init },
+        { 0x80048FCC, &wess_dig_set_sample_position },
+        { 0x80048FF8, &lcd_open },
+        { 0x8004906C, &lcd_upload_spu_samples },
+        { 0x800493AC, &lcd_close },
+        { 0x80049454, &wess_dig_lcd_load },
+        { 0x800497D8, &wess_master_sfx_volume_get },
+        { 0x80049808, &wess_master_mus_volume_get },
+        { 0x80049838, &wess_master_sfx_vol_set },
+        { 0x80049870, &wess_master_mus_vol_set },
+        { 0x80049A30, &wess_pan_mode_get },
+        { 0x80049A40, &wess_pan_mode_set },
+        { 0x80049A50, &wess_seq_range_sizeof },
+        { 0x80049ADC, &wess_seq_range_load },
+        { 0x80049B90, &wess_seq_range_free },
+        { 0x80049C1C, &LIBAPI_CloseEvent },
+        { 0x80049C2C, &LIBAPI_EnterCriticalSection },
+        { 0x80049C3C, &LIBAPI_write },
+        { 0x80049C4C, &LIBAPI_EnableEvent },
+        { 0x80049C5C, &LIBAPI_InitPAD },
+        { 0x80049C6C, &LIBAPI_SetRCnt },
+        { 0x80049D08, &LIBAPI_GetRCnt },
+        { 0x80049D40, &LIBAPI_StartRCnt },
+        { 0x80049D70, &LIBAPI_StopRCnt },
+        { 0x80049DA4, &LIBAPI_ResetRCnt },
+        { 0x80049DDC, &LIBAPI_DisableEvent },
+        { 0x80049DEC, &LIBAPI_StartPAD },
+        { 0x80049DFC, &LIBAPI_ChangeClearPAD },
+        { 0x80049E0C, &LIBAPI_OpenEvent },
+        { 0x80049E1C, &LIBAPI_read },
+        { 0x80049E2C, &LIBAPI_TestEvent },
+        { 0x80049E3C, &LIBAPI_ExitCriticalSection },
+        { 0x80049E4C, &LIBAPI_open },
+        { 0x80049E5C, &LIBC2_sprintf },
+        { 0x8004A6BC, &LIBC2_memchr },
+        { 0x8004A70C, &LIBC2_strlen },
+        { 0x8004A73C, &LIBC2_memmove },
+        { 0x8004A7AC, &LIBETC_ResetCallback },
+        { 0x8004A7DC, &LIBETC_InterruptCallback },
+        { 0x8004A80C, &LIBETC_DMACallback },
+        { 0x8004A83C, &LIBETC_VSyncCallbacks },
+        { 0x8004A86C, &LIBETC_StopCallback },
+        { 0x8004A89C, &LIBETC_CheckCallback },
+        { 0x8004A8B0, &LIBETC_GetIntrMask },
+        { 0x8004A8C8, &LIBETC_SetIntrMask },
+        { 0x8004A8E4, &LIBETC_INTR_startIntr },
+        { 0x8004A9A4, &LIBETC_INTR_trapIntr },
+        { 0x8004AB74, &LIBETC_INTR_setIntr },
+        { 0x8004ACA4, &LIBETC_INTR_stopIntr },
+        { 0x8004AD14, &LIBETC_INTR_memclr },
+        { 0x8004AD40, &LIBAPI_HookEntryInt },
+        { 0x8004AD50, &LIBAPI_ResetEntryInt },
+        { 0x8004AD60, &LIBAPI_ChangeClearRCnt },
+        { 0x8004AD70, &LIBAPI__96_remove },
+        { 0x8004AD80, &LIBAPI_ReturnFromException },
+        { 0x8004AD90, &LIBC2_printf },
+        { 0x8004ADD0, &LIBC2_setjmp },
+        { 0x8004AE0C, &LIBC2_longjmp },
+        { 0x8004AE50, &LIBC2_prnt },
+        { 0x8004B4C0, &LIBC2_toupper },
+        { 0x8004B4F4, &LIBC2_tolower },
+        { 0x8004B530, &LIBC2_putchar },
+        { 0x8004B5F0, &LIBETC_startIntrVSync },
+        { 0x8004B654, &LIBETC_INTR_stopIntr_UNKNOWN_Helper2 },
+        { 0x8004B69C, &LIBETC_INTR_VB_trapIntrVSync },
+        { 0x8004B800, &LIBETC_INTR_VB_setIntrVSync },
+        { 0x8004B908, &LIBETC_INTR_VB_memclr },
+        { 0x8004B934, &LIBETC_startIntrDMA },
+        { 0x8004B9AC, &LIBETC_INTR_stopIntr_UNKNOWN_Helper1 },
+        { 0x8004B9E4, &LIBETC_INTR_DMA_trapIntrDMA },
+        { 0x8004BA30, &LIBETC_INTR_DMA_setIntrDMA },
+        { 0x8004BA68, &LIBETC_INTR_DMA_memclr },
+        { 0x8004BA94, &LIBETC_VSync },
+        { 0x8004BBDC, &LIBETC_v_wait },
+        { 0x8004BC78, &LIBC2_puts },
+        { 0x8004BCC8, &LIBGPU_ResetGraph },
+        { 0x8004BEF0, &LIBGPU_SetGraphReverse },
+        { 0x8004C004, &LIBGPU_SetGraphDebug },
+        { 0x8004C070, &LIBGPU_SetGraphQueue },
+        { 0x8004C11C, &LIBGPU_GetGraphType },
+        { 0x8004C12C, &LIBGPU_GetGraphDebug },
+        { 0x8004C13C, &LIBGPU_DrawSyncCallback },
+        { 0x8004C198, &LIBGPU_SetDispMask },
+        { 0x8004C210, &LIBGPU_DrawSync },
+        { 0x8004C27C, &LIBGPU_checkRECT },
+        { 0x8004C3A4, &LIBGPU_ClearImage },
+        { 0x8004C438, &LIBGPU_LoadImage },
+        { 0x8004C49C, &LIBGPU_StoreImage },
+        { 0x8004C500, &LIBGPU_MoveImage },
+        { 0x8004C5A0, &LIBGPU_ClearOTag },
+        { 0x8004C64C, &LIBGPU_ClearOTagR },
+        { 0x8004C6CC, &LIBGPU_DrawPrim },
+        { 0x8004C72C, &LIBGPU_DrawOTag },
+        { 0x8004C79C, &LIBGPU_PutDrawEnv },
+        { 0x8004C860, &LIBGPU_GetDrawEnv },
+        { 0x8004C898, &LIBGPU_PutDispEnv },
+        { 0x8004CCBC, &LIBGPU_GetDispEnv },
+        { 0x8004CCF4, &LIBGPU_GetODE },
+        { 0x8004CD28, &LIBGPU_SetTexWindow },
+        { 0x8004CD64, &LIBGPU_SetDrawArea },
+        { 0x8004CDE8, &LIBGPU_SetDrawOffset },
+        { 0x8004CE2C, &LIBGPU_SetPriority },
+        { 0x8004CE54, &LIBGPU_SetDrawMode },
+        { 0x8004CEAC, &LIBGPU_SetDrawEnv },
+        { 0x8004D158, &LIBGPU_SYS_get_mode },
+        { 0x8004D1B4, &LIBGPU_SYS_get_cs },
+        { 0x8004D288, &LIBGPU_SYS_get_ce },
+        { 0x8004D35C, &LIBGPU_SYS_get_ofs },
+        { 0x8004D3A4, &LIBGPU_SYS_get_tw },
+        { 0x8004D428, &LIBGPU_SYS_get_dx },
+        { 0x8004D4E4, &LIBGPU_SYS__status },
+        { 0x8004D4FC, &LIBGPU_SYS__otc },
+        { 0x8004D5E4, &LIBGPU_SYS__clr },
+        { 0x8004D824, &LIBGPU_SYS__dws },
+        { 0x8004DAA0, &LIBGPU_SYS__drs },
+        { 0x8004DD64, &LIBGPU_SYS__ctl },
+        { 0x8004DD90, &LIBGPU_SYS__getctl },
+        { 0x8004DDA8, &LIBGPU_SYS__cwb },
+        { 0x8004DDF8, &LIBGPU_SYS__cwc },
+        { 0x8004DE44, &LIBGPU_SYS__param },
+        { 0x8004DE74, &LIBGPU_SYS__addque },
+        { 0x8004DE98, &LIBGPU_SYS__addque2 },
+        { 0x8004E1B8, &LIBGPU_SYS__exeque },
+        { 0x8004E47C, &LIBGPU_SYS__reset },
+        { 0x8004E644, &LIBGPU_SYS__sync },
+        { 0x8004E78C, &LIBGPU_SYS_set_alarm },
+        { 0x8004E7C0, &LIBGPU_SYS_get_alarm },
+        { 0x8004E884, &LIBGPU_SYS_memset },
+        { 0x8004E8B0, &LIBAPI_GPU_cw },
+        { 0x8004E8C0, &LIBC2_memcpy },
+        { 0x8004E900, &LIBETC_SetVideoMode },
+        { 0x8004E918, &LIBETC_GetVideoMode },
+        { 0x8004E928, &LIBGPU_GetTPage },
+        { 0x8004E9F0, &LIBGPU_GetClut },
+        { 0x8004EA08, &LIBGPU_DumpTPage },
+        { 0x8004EAD8, &LIBGPU_DumpClut },
+        { 0x8004EB18, &LIBGPU_NextPrim },
+        { 0x8004EB34, &LIBGPU_IsEndPrim },
+        { 0x8004EB50, &LIBGPU_AddPrim },
+        { 0x8004EB8C, &LIBGPU_AddPrims },
+        { 0x8004EBC8, &LIBGPU_CatPrim },
+        { 0x8004EBEC, &LIBGPU_TermPrim },
+        { 0x8004EC04, &LIBGPU_SetSemiTrans },
+        { 0x8004EC2C, &LIBGPU_SetShadeTex },
+        { 0x8004EC54, &LIBGPU_SetPolyF3 },
+        { 0x8004EC68, &LIBGPU_SetPolyFT3 },
+        { 0x8004EC7C, &LIBGPU_SetPolyG3 },
+        { 0x8004EC90, &LIBGPU_SetPolyGT3 },
+        { 0x8004ECA4, &LIBGPU_SetPolyF4 },
+        { 0x8004ECB8, &LIBGPU_SetPolyFT4 },
+        { 0x8004ECCC, &LIBGPU_SetPolyG4 },
+        { 0x8004ECE0, &LIBGPU_SetPolyGT4 },
+        { 0x8004ECF4, &LIBGPU_SetSprt8 },
+        { 0x8004ED08, &LIBGPU_SetSprt16 },
+        { 0x8004ED1C, &LIBGPU_SetSprt },
+        { 0x8004ED30, &LIBGPU_SetTile1 },
+        { 0x8004ED44, &LIBGPU_SetTile8 },
+        { 0x8004ED58, &LIBGPU_SetTile16 },
+        { 0x8004ED6C, &LIBGPU_SetTile },
+        { 0x8004ED80, &LIBGPU_SetBlockFill },
+        { 0x8004ED94, &LIBGPU_SetLineF2 },
+        { 0x8004EDA8, &LIBGPU_SetLineG2 },
+        { 0x8004EDBC, &LIBGPU_SetLineF3 },
+        { 0x8004EDDC, &LIBGPU_SetLineG3 },
+        { 0x8004EDFC, &LIBGPU_SetLineF4 },
+        { 0x8004EE1C, &LIBGPU_SetLineG4 },
+        { 0x8004EE3C, &LIBGPU_MargePrim },
+        { 0x8004EE70, &LIBGPU_DumpDrawEnv },
+        { 0x8004EFF0, &LIBGPU_DumpDispEnv },
+        { 0x8004F09C, &LIBGPU_SetDumpFnt },
+        { 0x8004F0DC, &LIBGPU_FntLoad },
+        { 0x8004F180, &LIBGPU_FntOpen },
+        { 0x8004F44C, &LIBGPU_FntFlush },
+        { 0x8004F6AC, &LIBGPU_FntPrint },
+        { 0x8004FAA4, &LIBC2_memset },
+        { 0x8004FAD4, &LIBGPU_LoadTPage },
+        { 0x8004FBC0, &LIBGPU_LoadClut },
+        { 0x8004FC28, &LIBGPU_SetDefDrawEnv },
+        { 0x8004FCB8, &LIBGPU_SetDefDispEnv },
+        { 0x8004FCF4, &LIBGTE_MulMatrix },
+        { 0x8004FE00, &LIBGTE_MulMatrix2 },
+        { 0x8004FF0C, &LIBGTE_ApplyMatrix },
+        { 0x8004FF5C, &LIBGTE_ApplyMatrixSV },
+        { 0x8004FFB8, &LIBGTE_TransMatrix },
+        { 0x8004FFDC, &LIBGTE_ScaleMatrix },
+        { 0x80050100, &LIBGTE_SetRotMatrix },
+        { 0x80050130, &LIBGTE_SetLightMatrix },
+        { 0x80050160, &LIBGTE_SetColorMatrix },
+        { 0x80050190, &LIBGTE_SetTransMatrix },
+        { 0x800501B4, &LIBGTE_SetVertex0 },
+        { 0x800501C4, &LIBGTE_SetVertex1 },
+        { 0x800501D4, &LIBGTE_SetVertex2 },
+        { 0x800501E4, &LIBGTE_SetVertexTri },
+        { 0x80050204, &LIBGTE_SetRGBfifo },
+        { 0x80050218, &LIBGTE_SetIR123 },
+        { 0x8005022C, &LIBGTE_SetIR0 },
+        { 0x80050238, &LIBGTE_SetBackColor },
+        { 0x80050258, &LIBGTE_SetFarColor },
+        { 0x80050278, &LIBGTE_SetSZfifo3 },
+        { 0x8005028C, &LIBGTE_SetSZfifo4 },
+        { 0x800502A4, &LIBGTE_SetSXSYfifo },
+        { 0x800502B8, &LIBGTE_SetRii },
+        { 0x800502CC, &LIBGTE_SetMAC123 },
+        { 0x800502E0, &LIBGTE_SetData32 },
+        { 0x800502EC, &LIBGTE_SetGeomOffset },
+        { 0x80050304, &LIBGTE_SetGeomScreen },
+        { 0x80050310, &LIBGTE_SetDQA },
+        { 0x8005031C, &LIBGTE_SetDQB },
+        { 0x80050334, &LIBGTE_InitGeom },
+        { 0x800503B4, &LIBGTE__patch_gte },
+        { 0x80050454, &LIBAPI_FlushCache },
+        { 0x80050464, &LIBGTE_RotTransPers },
+        { 0x80050490, &LIBGTE_RotTransPers3 },
+        { 0x800504E4, &LIBGTE_RotTrans },
+        { 0x8005050C, &LIBGTE_LocalLight },
+        { 0x80050530, &LIBGTE_DpqColor },
+        { 0x8005054C, &LIBGTE_NormalColor },
+        { 0x80050568, &LIBGTE_NormalColor3 },
+        { 0x800505A4, &LIBGTE_NormalColorDpq },
+        { 0x800505C8, &LIBGTE_NormalColorDpq3 },
+        { 0x80050610, &LIBGTE_NormalColorCol },
+        { 0x80050630, &LIBGTE_NormalColorCol3 },
+        { 0x80050674, &LIBGTE_ColorDpq },
+        { 0x8005069C, &LIBGTE_ColorCol },
+        { 0x800506C0, &LIBGTE_NormalClip },
+        { 0x800506E4, &LIBGTE_NormalClipS },
+        { 0x800506F4, &LIBGTE_AverageSZ3 },
+        { 0x80050704, &LIBGTE_AverageSZ4 },
+        { 0x80050714, &psx_main },
+        { 0x800507AC, &LIBSN__main },
+        { 0x8005081C, &LIBSN___do_global_dtors },
+        { 0x80050884, &LIBAPI_InitHeap },
+        { 0x80050894, &LIBSPU_SpuSetVoiceAttr },
+        { 0x800508BC, &LIBSPU__SpuSetVoiceAttr },
+        { 0x80050FBC, &LIBSPU__spu_note2pitch },
+        { 0x800510B0, &LIBSPU__spu_pitch2note },
+        { 0x80051208, &LIBSPU_SpuSetReverbModeParam },
+        { 0x8005171C, &LIBSPU__SpuIsInAllocateArea },
+        { 0x8005178C, &LIBSPU__SpuIsInAllocateArea_ },
+        { 0x80051804, &LIBSPU__spu_reset },
+        { 0x80051894, &LIBSPU__spu_init },
+        { 0x80051E38, &LIBSPU__spu_close },
+        { 0x80051E6C, &LIBSPU__spu_open },
+        { 0x80051E98, &LIBSPU__spu_writeByIO },
+        { 0x800521DC, &LIBSPU__spu_FiDMA },
+        { 0x800522FC, &LIBSPU__spu_r },
+        { 0x80052524, &LIBSPU__spu_t },
+        { 0x8005280C, &LIBSPU__spu_write },
+        { 0x80052898, &LIBSPU__spu_read },
+        { 0x80052900, &LIBSPU__spu_ioctl },
+        { 0x800531EC, &LIBSPU__spu_setVoiceAttr },
+        { 0x8005336C, &LIBSPU__spu_setReverbAttr },
+        { 0x8005383C, &LIBSPU__spu_setCommonAttr },
+        { 0x80053BD4, &LIBSPU__spu_getCommonAttr },
+        { 0x80053D00, &LIBSPU_SysSpu_setRegister },
+        { 0x80053D48, &LIBAPI_DeliverEvent },
+        { 0x80053D58, &LIBSPU__SpuDataCallback },
+        { 0x80053D7C, &LIBSPU__SpuCallback },
+        { 0x80053DA0, &LIBSPU_SpuSetCommonAttr },
+        { 0x80054134, &LIBSPU_SpuGetReverbOffsetAddr },
+        { 0x80054164, &LIBSPU_SpuClearReverbWorkArea },
+        { 0x80054324, &LIBAPI_WaitEvent },
+        { 0x80054334, &LIBSPU__SpuInit },
+        { 0x80054418, &LIBSPU_SpuStart },
+        { 0x80054498, &LIBSPU_SpuSetReverbDepth },
+        { 0x80054518, &LIBSPU_SpuSetReverbVoice },
+        { 0x80054580, &LIBSPU_SpuInit },
+        { 0x800545A0, &LIBSPU_SpuSetReverb },
+        { 0x80054670, &LIBSPU_SpuQuit },
+        { 0x800546E0, &LIBSPU_SpuIsTransferCompleted },
+        { 0x80054788, &LIBSPU_SpuInitMalloc },
+        { 0x800547DC, &LIBSPU_SpuSetTransferMode },
+        { 0x80054830, &LIBSPU_SpuSetTransferStartAddr },
+        { 0x80054894, &LIBSPU_SpuWrite },
+        { 0x800548F4, &LIBSPU_SpuSetKeyOnWithAttr },
+        { 0x80054928, &LIBSPU_SpuSetKey },
+        { 0x800549A8, &LIBSPU_SpuRGetAllKeysStatus },
+        { 0x80054A78, &LIBSPU_SpuGetAllKeysStatus },
+        { 0x80054B00, &LIBCD_CdInit },
+        { 0x80054B90, &LIBCD_EVENT_def_cbsync },
+        { 0x80054BB8, &LIBCD_EVENT_def_cbready },
+        { 0x80054BE0, &LIBCD_EVENT_def_cbread },
+        { 0x80054C08, &LIBCD_CdStatus },
+        { 0x80054C18, &LIBCD_CdLastCom },
+        { 0x80054C28, &LIBCD_CdReset },
+        { 0x80054C78, &LIBCD_CdFlush },
+        { 0x80054C98, &LIBCD_CdSetDebug },
+        { 0x80054CB0, &LIBCD_CdComstr },
+        { 0x80054CE8, &LIBCD_CdIntstr },
+        { 0x80054D20, &LIBCD_CdSync },
+        { 0x80054D40, &LIBCD_CdReady },
+        { 0x80054D60, &LIBCD_CdSyncCallback },
+        { 0x80054D78, &LIBCD_CdReadyCallback },
+        { 0x80054D90, &LIBCD_CdReadCallback },
+        { 0x80054DA8, &LIBCD_CdControl },
+        { 0x80054EC0, &LIBCD_CdControlF },
+        { 0x80054FCC, &LIBCD_CdControlB },
+        { 0x800550F0, &LIBCD_CdMix },
+        { 0x80055114, &LIBCD_CdGetSector },
+        { 0x80055138, &LIBCD_CdDataCallback },
+        { 0x8005515C, &LIBCD_CdDataSync },
+        { 0x8005517C, &LIBCD_CdReadSync },
+        { 0x8005519C, &LIBCD_CdRead },
+        { 0x8005521C, &LIBCD_CdIntToPos },
+        { 0x80055320, &LIBCD_CdPosToInt },
+        { 0x800553A0, &LIBCD_BIOS_getintr },
+        { 0x800558DC, &LIBCD_CD_sync },
+        { 0x80055B50, &LIBCD_CD_ready },
+        { 0x80055E10, &LIBCD_CD_cw },
+        { 0x8005621C, &LIBCD_CD_vol },
+        { 0x800562A4, &LIBCD_CD_shell },
+        { 0x80056330, &LIBCD_CD_flush },
+        { 0x80056410, &LIBCD_CD_init },
+        { 0x80056664, &LIBCD_CD_initvol },
+        { 0x80056758, &LIBCD_BIOS_cd_read_retry },
+        { 0x80056A50, &LIBCD_CD_readm },
+        { 0x80056B18, &LIBCD_CD_readsync },
+        { 0x80056DBC, &LIBCD_CD_datasync },
+        { 0x80056F18, &LIBCD_CD_getsector },
+        { 0x8005700C, &LIBCD_CD_set_test_parmnum },
+        { 0x8005701C, &LIBCD_BIOS_callback },
+        { 0x800570FC, &LIBCD_BIOS_cb_read },
+        { 0x80057260, &LIBCD_CdGetToc },
+        { 0x80057284, &LIBCD_CdGetToc2 },
+        { 0x800574A8, &LIBCOMB_UNKNOWN_func_1 },
+        { 0x800575E8, &LIBCOMB_UNKNOWN_func_2 },
+        { 0x80057728, &LIBCOMB_UNKNOWN_func_3 },
+        { 0x80057850, &LIBCOMB_UNKNOWN_func_4 },
+        { 0x80057DA4, &LIBCOMB_UNKNOWN_func_5 },
+        { 0x80057DF4, &LIBCOMB_UNKNOWN_func_6 },
+        { 0x80057DFC, &LIBCOMB_UNKNOWN_func_7 },
+        { 0x80057E58, &LIBCOMB_UNKNOWN_func_8 },
+        { 0x80057F64, &LIBCOMB_UNKNOWN_func_9 },
+        { 0x800580A8, &LIBCOMB_ChangeClearSIO },
+        { 0x800580B4, &LIBCOMB_AddCOMB },
+        { 0x800580E0, &LIBCOMB_DelCOMB },
+        { 0x8005810C, &LIBCOMB_UNKNOWN_ctrl_help },
+        { 0x80058534, &LIBCOMB__comb_control },
+        { 0x80058A18, &LIBAPI_SysEnqIntRP },
+        { 0x80058A28, &LIBAPI_AddDrv },
+        { 0x80058A38, &LIBAPI_DelDrv },
+        { 0x80058A48, &LIBCOMB__ioabort },
+    };
+}
