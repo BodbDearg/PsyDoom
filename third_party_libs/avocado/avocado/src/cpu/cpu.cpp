@@ -89,6 +89,13 @@ INLINE uint32_t CPU::fetchInstruction(uint32_t address) {
 
 bool CPU::executeInstructions(int count) {
     for (int i = 0; i < count; i++) {
+        #if DOOM_AVOCADO_MODS == 1
+            // If the program counter is at this address then return control to the native C++ code.
+            // This is used as the return address for a bios call.
+            if (PC == 0xFFFFFFFC)
+                return true;
+        #endif
+
         // HACK: BIOS hooks
         uint32_t maskedPc = PC & 0x1fff'ffff;
         if (maskedPc == 0xa0 || maskedPc == 0xb0 || maskedPc == 0xc0) sys->handleBiosFunction();

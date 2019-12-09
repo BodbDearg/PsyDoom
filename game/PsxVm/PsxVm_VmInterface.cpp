@@ -201,7 +201,15 @@ void pcall(const uint32_t addr) noexcept {
 }
 
 void bios_call(const uint32_t func) noexcept {
-    notImplementedError();
+    // Set the 'RA' register to indicate that control is to be returned to C++ and the PC to the location of the bios call
+    PsxVm::gpCpu->setReg(31, 0xFFFFFFFC);    
+    PsxVm::gpCpu->setReg(9, *PsxVm::gpReg_t1);
+    PsxVm::gpCpu->setReg(10, *PsxVm::gpReg_t2);
+    PsxVm::gpCpu->setPC(func);
+
+    do {
+        PsxVm::gpSystem->emulateFrame();
+    } while (PsxVm::gpCpu->PC != 0xFFFFFFFC);
 }
 
 void jump_table_err() noexcept {

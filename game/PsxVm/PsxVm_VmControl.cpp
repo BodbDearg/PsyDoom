@@ -133,22 +133,24 @@ namespace PsxVm {
         while (gpSystem->state == System::State::run) {
             gpSystem->emulateFrame();
         }
+
+        gpCpu->breakpoints.clear();
+        gpSystem->debugOutput = true;
+        gpSystem->state = System::State::run;
     }
 }
 
 bool PsxVm::init(const char* const biosFilePath, const char* const doomCdCuePath) noexcept {
-    // Create a new system and load the bios file
+    // Create a new system and load the bios file and the given CUE
     gSystem.reset(new System());
-    
-    if (!gSystem->loadBios(biosFilePath)) {
-        shutdown();
-        return false;
-    }
-
-    // Try to load the given CUE file
     gSystem->cdrom->disc = disc::format::Cue::fromBin(doomCdCuePath);
 
     if (!gSystem->cdrom->disc) {
+        shutdown();
+        return false;
+    }
+    
+    if (!gSystem->loadBios(biosFilePath)) {
         shutdown();
         return false;
     }
@@ -156,7 +158,6 @@ bool PsxVm::init(const char* const biosFilePath, const char* const doomCdCuePath
     // Setup pointers and emulate the bios until the shell
     setupVmPointers();
     emulateBiosUntilShell();
-
     return true;
 }
 
