@@ -179,7 +179,12 @@ namespace PsxVm {
     extern spu::SPU*                gpSpu;
     extern device::cdrom::CDROM*    gpCdrom;
 
-    // Initialize the VM with the given bios file path and the given CD .cue
-    bool init(const char* const biosFilePath, const char* const doomCdCuePath) noexcept;
+    // Initialize the VM with the given bios, original Playstation DOOM .EXE and CD file path (.cue format)
+    bool init(
+        const char* const biosFilePath,
+        const char* const doomExePath,
+        const char* const doomCdCuePath
+    ) noexcept;
+
     void shutdown() noexcept;
 }

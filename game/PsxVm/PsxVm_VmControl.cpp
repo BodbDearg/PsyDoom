@@ -140,8 +140,12 @@ namespace PsxVm {
     }
 }
 
-bool PsxVm::init(const char* const biosFilePath, const char* const doomCdCuePath) noexcept {
-    // Create a new system and load the bios file and the given CUE
+bool PsxVm::init(
+    const char* const biosFilePath,
+    const char* const doomExePath,
+    const char* const doomCdCuePath
+) noexcept {
+    // Create a new system and load the bios file
     gSystem.reset(new System());
     gSystem->cdrom->disc = disc::format::Cue::fromBin(doomCdCuePath);
 
@@ -158,6 +162,15 @@ bool PsxVm::init(const char* const biosFilePath, const char* const doomCdCuePath
     // Setup pointers and emulate the bios until the shell
     setupVmPointers();
     emulateBiosUntilShell();
+
+    // Load the DOOM exe
+    disc::Data data = getFileContents(doomExePath);
+
+    if (!gSystem->loadExeFile(data)) {
+        shutdown();
+        return false;
+    }
+
     return true;
 }
 

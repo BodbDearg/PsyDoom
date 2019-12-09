@@ -9,9 +9,9 @@ int WINAPI wWinMain(
     [[maybe_unused]] HINSTANCE hPrevInstance,
     [[maybe_unused]] LPWSTR lpCmdLine,
     [[maybe_unused]] int nCmdShow
-) {    
+) {
     // Initialize the PSX VM stuff and then launch the app!
-    if (!PsxVm::init("SCPH1001.BIN", "Doom.cue")) {
+    if (!PsxVm::init("SCPH1001.BIN", "PSXDOOM.EXE", "Doom.cue")) {
         return 1;
     }
 
