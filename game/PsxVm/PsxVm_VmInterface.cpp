@@ -65,8 +65,17 @@ uint32_t add(const uint32_t r1, const uint32_t r2) noexcept {
 }
 
 uint32_t addi(const uint32_t r1, const int16_t i) noexcept {
-    notImplementedError();
-    return 0;
+    const uint32_t val = (uint32_t)(int32_t) i;
+    const uint32_t result32 = r1 + val;
+    const uint64_t result64 = (uint64_t) r1 + (uint64_t) val;
+
+    if (result32 != (uint32_t) result64) {
+        // Note: not throwing any hardware exceptions.
+        // Ignore the exception and return the original input register value:
+        return r1;
+    }
+    
+    return result32;
 }
 
 void div(const uint32_t r1, const uint32_t r2) noexcept {
