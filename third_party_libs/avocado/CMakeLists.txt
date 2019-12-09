@@ -225,6 +225,17 @@ set(SOURCE_FILES
 set(OTHER_FILES
 )
 
+if (PLATFORM_WINDOWS)
+    list(APPEND SOURCE_FILES 
+        "${SRC_DIR}/platform/windows/file/file.cpp"
+        "${SRC_DIR}/platform/windows/sound/sound.cpp"
+    )
+elseif(PLATFORM_MAC)
+    # TODO
+else()
+    # TODO
+endif()
+
 add_library(${AVOCADO_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 target_include_directories(${AVOCADO_TGT_NAME} PUBLIC ${INCLUDE_PATHS})
@@ -235,6 +246,7 @@ target_link_libraries(${AVOCADO_TGT_NAME}
     ${EVENT_BUS_TGT_NAME}
     ${FMT_TGT_NAME}
     ${GLM_TGT_NAME}
+    ${LIBSDL_TGT_NAME}
     ${MAGIC_ENUM_TGT_NAME}
     ${NLOHMANN_JSON_TGT_NAME}
 )

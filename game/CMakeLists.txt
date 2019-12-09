@@ -116,8 +116,9 @@ set(SOURCE_FILES
     "Doom/UI/st_main.h"
     "Doom/UI/ti_main.cpp"
     "Doom/UI/ti_main.h"
-    "PsxVm/PsxVm.cpp"
     "PsxVm/PsxVm.h"
+    "PsxVm/PsxVm_VmControl.cpp"
+    "PsxVm/PsxVm_VmInterface.cpp"
     "PsyQ/LIBAPI.cpp"
     "PsyQ/LIBAPI.h"
     "PsyQ/LIBC2.cpp"
@@ -185,11 +186,15 @@ setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 # Specify include dirs
 include_directories(${INCLUDE_PATHS})
 
+# Link against Avocado
+target_link_libraries(${GAME_TGT_NAME} ${AVOCADO_TGT_NAME})
+
 # MSVC use a lower warning level for this project temporarily
 if (COMPILER_MSVC)
-    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4102)                         # No unreferenced label warnings
-    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4245)                         # Conversion from signed to unsigned
-    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4146)                         # Negating unsigned integer
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4102)     # No unreferenced label warnings
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4146)     # Negating unsigned integer
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4245)     # Conversion from signed to unsigned
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4702)     # Unreachable code
     target_compile_options(${GAME_TGT_NAME} PUBLIC /W4)
     target_compile_definitions(${GAME_TGT_NAME} PUBLIC -D_CRT_SECURE_NO_WARNINGS)   # MSVC: Don't complain about using regular 'std::fopen()' etc.    
 else()

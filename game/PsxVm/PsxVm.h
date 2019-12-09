@@ -3,7 +3,7 @@
 #include <cstdint>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Shorthand type aliases
+// VM interface: shorthand type aliases
 //------------------------------------------------------------------------------------------------------------------------------------------
 typedef uint32_t    u32;
 typedef uint16_t    u16;
@@ -13,7 +13,7 @@ typedef int16_t     i16;
 typedef int8_t      i8;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Mips R3000 registers and macros aliasing them.
+// VM interface: Mips R3000 registers and macros aliasing them.
 // Note: not allowing modification of the 'zero' register.
 //------------------------------------------------------------------------------------------------------------------------------------------
 namespace PsxVm {
@@ -53,43 +53,46 @@ namespace PsxVm {
     extern uint32_t* gpReg_lo;
 }
 
-#define zero    (*PsxVm::gpReg_zero)
-#define at      (*PsxVm::gpReg_at)
-#define v0      (*PsxVm::gpReg_v0)
-#define v1      (*PsxVm::gpReg_v1)
-#define a0      (*PsxVm::gpReg_a0)
-#define a1      (*PsxVm::gpReg_a1)
-#define a2      (*PsxVm::gpReg_a2)
-#define a3      (*PsxVm::gpReg_a3)
-#define t0      (*PsxVm::gpReg_t0)
-#define t1      (*PsxVm::gpReg_t1)
-#define t2      (*PsxVm::gpReg_t2)
-#define t3      (*PsxVm::gpReg_t3)
-#define t4      (*PsxVm::gpReg_t4)
-#define t5      (*PsxVm::gpReg_t5)
-#define t6      (*PsxVm::gpReg_t6)
-#define t7      (*PsxVm::gpReg_t7)
-#define s0      (*PsxVm::gpReg_s0)
-#define s1      (*PsxVm::gpReg_s1)
-#define s2      (*PsxVm::gpReg_s2)
-#define s3      (*PsxVm::gpReg_s3)
-#define s4      (*PsxVm::gpReg_s4)
-#define s5      (*PsxVm::gpReg_s5)
-#define s6      (*PsxVm::gpReg_s6)
-#define s7      (*PsxVm::gpReg_s7)
-#define t8      (*PsxVm::gpReg_t8)
-#define t9      (*PsxVm::gpReg_t9)
-#define k0      (*PsxVm::gpReg_k0)
-#define k1      (*PsxVm::gpReg_k1)
-#define gp      (*PsxVm::gpReg_gp)
-#define sp      (*PsxVm::gpReg_sp)
-#define fp      (*PsxVm::gpReg_fp)
-#define ra      (*PsxVm::gpReg_ra)
-#define hi      (*PsxVm::gpReg_hi)
-#define lo      (*PsxVm::gpReg_lo)
+// These are optional, since they can conflict with Avocado and other things due to short names
+#if (!PSX_VM_NO_REGISTER_MACROS)
+    #define zero    (*PsxVm::gpReg_zero)
+    #define at      (*PsxVm::gpReg_at)
+    #define v0      (*PsxVm::gpReg_v0)
+    #define v1      (*PsxVm::gpReg_v1)
+    #define a0      (*PsxVm::gpReg_a0)
+    #define a1      (*PsxVm::gpReg_a1)
+    #define a2      (*PsxVm::gpReg_a2)
+    #define a3      (*PsxVm::gpReg_a3)
+    #define t0      (*PsxVm::gpReg_t0)
+    #define t1      (*PsxVm::gpReg_t1)
+    #define t2      (*PsxVm::gpReg_t2)
+    #define t3      (*PsxVm::gpReg_t3)
+    #define t4      (*PsxVm::gpReg_t4)
+    #define t5      (*PsxVm::gpReg_t5)
+    #define t6      (*PsxVm::gpReg_t6)
+    #define t7      (*PsxVm::gpReg_t7)
+    #define s0      (*PsxVm::gpReg_s0)
+    #define s1      (*PsxVm::gpReg_s1)
+    #define s2      (*PsxVm::gpReg_s2)
+    #define s3      (*PsxVm::gpReg_s3)
+    #define s4      (*PsxVm::gpReg_s4)
+    #define s5      (*PsxVm::gpReg_s5)
+    #define s6      (*PsxVm::gpReg_s6)
+    #define s7      (*PsxVm::gpReg_s7)
+    #define t8      (*PsxVm::gpReg_t8)
+    #define t9      (*PsxVm::gpReg_t9)
+    #define k0      (*PsxVm::gpReg_k0)
+    #define k1      (*PsxVm::gpReg_k1)
+    #define gp      (*PsxVm::gpReg_gp)
+    #define sp      (*PsxVm::gpReg_sp)
+    #define fp      (*PsxVm::gpReg_fp)
+    #define ra      (*PsxVm::gpReg_ra)
+    #define hi      (*PsxVm::gpReg_hi)
+    #define lo      (*PsxVm::gpReg_lo)
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Mips instructions that must be emulated.
+// VM interface: mips instructions.
 // These instructions were not so easy to convert directly to C++ so they are handled via functions.
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -139,10 +142,11 @@ void _break(const uint32_t i) noexcept;
 void syscall(const uint32_t i) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Utilities
+// VM interface: function calls and utilities
+// Call a function pointer or make a bios call.
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-// Call a function at the given address.
+// Call a pointer to a function at the given address.
 // The function passes args and return values through the VM interface.
 void pcall(const uint32_t addr) noexcept;
 
@@ -153,3 +157,29 @@ void bios_call(const uint32_t func) noexcept;
 // Called when the code is trying to jump to an unexpected location for a jump table.
 // If this happens then something has seriously gone wrong.
 void jump_table_err() noexcept;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Avocado types
+//------------------------------------------------------------------------------------------------------------------------------------------
+struct System;
+
+namespace mips              { struct CPU;   }
+namespace gpu               { class GPU;    }
+namespace spu               { struct SPU;   }
+namespace device::cdrom     { class CDROM;  }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// VM control: setup and control the VM
+//------------------------------------------------------------------------------------------------------------------------------------------
+namespace PsxVm {
+    // Access to the emulated PSX, CPU, GPU etc.
+    extern System*                  gpSystem;
+    extern mips::CPU*               gpCpu;
+    extern gpu::GPU*                gpGpu;
+    extern spu::SPU*                gpSpu;
+    extern device::cdrom::CDROM*    gpCdrom;
+
+    // Initialize the VM with the given bios file path and the given CD .cue
+    bool init(const char* const biosFilePath, const char* const doomCdCuePath) noexcept;
+    void shutdown() noexcept;
+}
