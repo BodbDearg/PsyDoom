@@ -734,13 +734,13 @@ void LIBETC_VSync() noexcept {
                 a1 = a0 - 1;
             } else {
                 a0 = v0;
-                LIBETC_v_wait();
+                _thunk_LIBETC_v_wait();
                 v0 = lw(0x80075D04);        // Load from: GPU_REG_GP1 (80075D04)
                 s0 = lw(v0);
                 a0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)
                 a1 = 1;
                 a0++;
-                LIBETC_v_wait();
+                _thunk_LIBETC_v_wait();
                 v0 = 0x80000;
                 v0 &= s0;
 
@@ -777,20 +777,19 @@ void LIBETC_VSync() noexcept {
     sp += 0x20;
 }
 
-void LIBETC_v_wait() noexcept {
-    sp -= 0x20;
-    a1 <<= 15;
-    sw(a1, sp + 0x10);
-    v0 = lw(0x80075CCC);                    // Load from: gLIBETC_Vcount (80075CCC)
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Waits for the specified target vblank amount with a specified timeout.
+// This is an internal PSYQ function and not documented.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept {
+    uint32_t timeoutLeft = (uint32_t) timeout << 15;
+    int32_t vcount = (int32_t) lw(0x80075CCC);          // Load from: gLIBETC_Vcount (80075CCC)
     
-    while (i32(v0) < i32(a0)) {
-        v0 = lw(sp + 0x10);
-        v0--;
-        sw(v0, sp + 0x10);
-        v0 = lw(sp + 0x10);
+    while (vcount < targetVCount) {
+        --timeoutLeft;
 
-        if (v0 == -1) {
-            a0 = 0x80011AD4;                // Result = STR_Sys_VSync_Timeout_Err[0] (80011AD4)
+        if (timeoutLeft == 0xFFFFFFFF) {
+            a0 = 0x80011AD4;                    // Result = STR_Sys_VSync_Timeout_Err[0] (80011AD4)
             LIBC2_puts();
             a0 = 0;
             LIBAPI_ChangeClearPAD();
@@ -800,11 +799,12 @@ void LIBETC_v_wait() noexcept {
             break;
         }
 
-        v0 = lw(0x80075CCC);                // Load from: gLIBETC_Vcount (80075CCC)
+        vcount = (int32_t) lw(0x80075CCC);      // Load from: gLIBETC_Vcount (80075CCC)
     }
-    
-    sp += 0x20;
-    return;
+}
+
+void _thunk_LIBETC_v_wait() noexcept {
+    LIBETC_v_wait(a0, a1);
 }
 
 void LIBETC_SetVideoMode() noexcept {

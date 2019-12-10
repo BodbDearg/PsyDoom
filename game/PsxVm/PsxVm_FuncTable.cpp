@@ -719,7 +719,7 @@ extern void LIBETC_INTR_DMA_trapIntrDMA() noexcept;
 extern void LIBETC_INTR_DMA_setIntrDMA() noexcept;
 extern void LIBETC_INTR_DMA_memclr() noexcept;
 extern void LIBETC_VSync() noexcept;
-extern void LIBETC_v_wait() noexcept;
+extern void _thunk_LIBETC_v_wait() noexcept;
 extern void LIBC2_puts() noexcept;
 extern void LIBGPU_ResetGraph() noexcept;
 extern void LIBGPU_SetGraphReverse() noexcept;
@@ -1707,7 +1707,7 @@ namespace PsxVm {
         { 0x8004BA30, &LIBETC_INTR_DMA_setIntrDMA },
         { 0x8004BA68, &LIBETC_INTR_DMA_memclr },
         { 0x8004BA94, &LIBETC_VSync },
-        { 0x8004BBDC, &LIBETC_v_wait },
+        { 0x8004BBDC, &_thunk_LIBETC_v_wait },
         { 0x8004BC78, &LIBC2_puts },
         { 0x8004BCC8, &LIBGPU_ResetGraph },
         { 0x8004BEF0, &LIBGPU_SetGraphReverse },

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 void LIBETC_ResetCallback() noexcept;
 void LIBETC_InterruptCallback() noexcept;
 void LIBETC_DMACallback() noexcept;
@@ -24,6 +26,7 @@ void LIBETC_INTR_DMA_trapIntrDMA() noexcept;
 void LIBETC_INTR_DMA_setIntrDMA() noexcept;
 void LIBETC_INTR_DMA_memclr() noexcept;
 void LIBETC_VSync() noexcept;
-void LIBETC_v_wait() noexcept;
+void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept;
+void _thunk_LIBETC_v_wait() noexcept;
 void LIBETC_SetVideoMode() noexcept;
 void LIBETC_GetVideoMode() noexcept;
