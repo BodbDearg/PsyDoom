@@ -704,88 +704,77 @@ loc_8004BA88:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Wait for the next vblank or return the time elapsed in vblanks since program start or hblanks since last invocation.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void LIBETC_VSync() noexcept {
-loc_8004BA94:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D04);                               // Load from: GPU_REG_GP1 (80075D04)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D08);                               // Load from: gLIBETC_VSync_UNKNOWN_VAR_2 (80075D08)
     sp -= 0x20;
-    sw(ra, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
+
+    v0 = lw(0x80075D04);        // Load from: GPU_REG_GP1 (80075D04)
+    v1 = lw(0x80075D08);        // Load from: gLIBETC_VSync_UNKNOWN_VAR_2 (80075D08)    
     s0 = lw(v0);
     v0 = lw(v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D0C);                               // Load from: gLIBETC_Hcount (80075D0C)
+
+    v1 = lw(0x80075D0C);        // Load from: gLIBETC_Hcount (80075D0C)
     v0 -= v1;
     s1 = v0 & 0xFFFF;
-    if (i32(a0) >= 0) goto loc_8004BAE4;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5CCC);                               // Load from: gLIBETC_Vcount (80075CCC)
-    goto loc_8004BBC4;
-loc_8004BAE4:
-    v0 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (a0 == v0);
+
+    if (i32(a0) >= 0) {
         v0 = s1;
-        if (bJump) goto loc_8004BBC4;
+
+        if (a0 != 1) {
+            v0 = lw(0x80075D10);        // Load from: gLIBETC_VSync_UNKNOWN_VAR_3 (80075D10)
+            v0--;
+            v0 += a0;
+            a1 = 0;
+
+            if (i32(a0) > 0) {
+                a1 = a0 - 1;
+            } else {
+                a0 = v0;
+                LIBETC_v_wait();
+                v0 = lw(0x80075D04);        // Load from: GPU_REG_GP1 (80075D04)
+                s0 = lw(v0);
+                a0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)
+                a1 = 1;
+                a0++;
+                LIBETC_v_wait();
+                v0 = 0x80000;
+                v0 &= s0;
+
+                if (v0 != 0) {
+                    v1 = lw(0x80075D04);    // Load from: GPU_REG_GP1 (80075D04)
+                    v0 = lw(v1);
+                    v0 ^= s0;
+
+                    if (i32(v0) >= 0) {
+                        a0 = 0x80000000;
+
+                        do {
+                            v0 = lw(v1);
+                            v0 ^= s0;
+                            v0 &= a0;
+                        } while (v0 == 0);
+                    }
+                }
+
+                v0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)
+                v1 = lw(0x80075D08);        // Load from: gLIBETC_VSync_UNKNOWN_VAR_2 (80075D08)
+                sw(v0, 0x80075D10);         // Store to: gLIBETC_VSync_UNKNOWN_VAR_3 (80075D10)
+                v1 = lw(v1);
+                v0 = s1;
+                sw(v1, 0x80075D0C);         // Store to: gLIBETC_Hcount (80075D0C)
+            }
+        }
+    } else {
+        v0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)
     }
-    if (i32(a0) <= 0) goto loc_8004BB10;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D10);                               // Load from: gLIBETC_VSync_UNKNOWN_VAR_3 (80075D10)
-    v0--;
-    v0 += a0;
-    goto loc_8004BB18;
-loc_8004BB10:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D10);                               // Load from: gLIBETC_VSync_UNKNOWN_VAR_3 (80075D10)
-loc_8004BB18:
-    a1 = 0;                                             // Result = 00000000
-    if (i32(a0) <= 0) goto loc_8004BB24;
-    a1 = a0 - 1;
-loc_8004BB24:
-    a0 = v0;
-    LIBETC_v_wait();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D04);                               // Load from: GPU_REG_GP1 (80075D04)
-    s0 = lw(v0);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5CCC);                               // Load from: gLIBETC_Vcount (80075CCC)
-    a1 = 1;                                             // Result = 00000001
-    a0++;
-    LIBETC_v_wait();
-    v0 = 0x80000;                                       // Result = 00080000
-    v0 &= s0;
-    if (v0 == 0) goto loc_8004BB9C;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D04);                               // Load from: GPU_REG_GP1 (80075D04)
-    v0 = lw(v1);
-    v0 ^= s0;
-    if (i32(v0) < 0) goto loc_8004BB9C;
-    a0 = 0x80000000;                                    // Result = 80000000
-loc_8004BB84:
-    v0 = lw(v1);
-    v0 ^= s0;
-    v0 &= a0;
-    if (v0 == 0) goto loc_8004BB84;
-loc_8004BB9C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5CCC);                               // Load from: gLIBETC_Vcount (80075CCC)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D08);                               // Load from: gLIBETC_VSync_UNKNOWN_VAR_2 (80075D08)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5D10);                                // Store to: gLIBETC_VSync_UNKNOWN_VAR_3 (80075D10)
-    v1 = lw(v1);
-    v0 = s1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5D0C);                                // Store to: gLIBETC_Hcount (80075D0C)
-loc_8004BBC4:
-    ra = lw(sp + 0x18);
+
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-    return;
 }
 
 void LIBETC_v_wait() noexcept {
