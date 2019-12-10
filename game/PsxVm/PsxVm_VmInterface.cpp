@@ -170,12 +170,11 @@ void swr(const uint32_t r1, const uint32_t addr) noexcept {
 }
 
 uint32_t mfc0(const uint8_t s) noexcept {
-    notImplementedError();
-    return 0;
+    return gpCpu->cop0.read(s).first;
 }
 
 void mtc0(const uint32_t r1, const uint8_t d) noexcept {
-    notImplementedError();
+    gpCpu->cop0.write(d, r1);
 }
 
 void cop2(const uint32_t i) noexcept {
@@ -183,12 +182,11 @@ void cop2(const uint32_t i) noexcept {
 }
 
 uint32_t cfc2(const uint8_t s) noexcept {
-    notImplementedError();
-    return 0;
+    return gpCpu->gte.read((int) s + 32);
 }
 
 void ctc2(const uint32_t r1, const uint8_t d) noexcept {
-    notImplementedError();
+    gpCpu->gte.write((int) d + 32, r1);
 }
 
 uint32_t mfc2(const uint8_t s) noexcept {
