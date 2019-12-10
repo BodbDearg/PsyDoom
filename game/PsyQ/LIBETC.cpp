@@ -713,7 +713,7 @@ void LIBETC_VSync() noexcept {
     sw(s0, sp + 0x10);
 
     v0 = lw(0x80075D04);        // Load from: GPU_REG_GP1 (80075D04)
-    v1 = lw(0x80075D08);        // Load from: gLIBETC_VSync_UNKNOWN_VAR_2 (80075D08)    
+    v1 = lw(0x80075D08);        // Load from: TIMER_REG_ROOT_CNT_1 (80075D08)    
     s0 = lw(v0);
     v0 = lw(v1);
 
@@ -761,7 +761,7 @@ void LIBETC_VSync() noexcept {
                 }
 
                 v0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)
-                v1 = lw(0x80075D08);        // Load from: gLIBETC_VSync_UNKNOWN_VAR_2 (80075D08)
+                v1 = lw(0x80075D08);        // Load from: TIMER_REG_ROOT_CNT_1 (80075D08)
                 sw(v0, 0x80075D10);         // Store to: gLIBETC_VSync_UNKNOWN_VAR_3 (80075D10)
                 v1 = lw(v1);
                 v0 = s1;

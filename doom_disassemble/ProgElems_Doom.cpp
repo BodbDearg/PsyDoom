@@ -2888,7 +2888,7 @@ static const ProgElem ELEMS[] = {
     { 0x80075CCC, 0x80075CD0, "gLIBETC_Vcount",                         ProgElemType::UINT32 },    
     { 0x80075CD0, 0x80075D04, "STR_FileId_vsync_c",                     ProgElemType::ARRAY, ProgElemType::CHAR8 },
     { 0x80075D04, 0x80075D08, "GPU_REG_GP1",                            ProgElemType::PTR32 },
-    { 0x80075D08, 0x80075D0C, "gLIBETC_VSync_UNKNOWN_VAR_2",            ProgElemType::UINT32 },
+    { 0x80075D08, 0x80075D0C, "TIMER_REG_ROOT_CNT_1",                   ProgElemType::PTR32 },
     { 0x80075D0C, 0x80075D10, "gLIBETC_Hcount",                         ProgElemType::UINT32 },
     { 0x80075D10, 0x80075D14, "gLIBETC_VSync_UNKNOWN_VAR_3",            ProgElemType::UINT32 },
     { 0x80075D14, 0x80075D54, "gLIBGPU_SYS_driver_table",               ProgElemType::ARRAY, ProgElemType::PTR32 },
