@@ -722,80 +722,56 @@ loc_800333D8:
 }
 
 void I_DrawPresent() noexcept {
-loc_800333F0:
     sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a0 = 0;                                             // Result = 00000000
+
+    a0 = 0;
     LIBGPU_DrawSync();
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     LIBETC_VSync();
-    v1 = lw(gp + 0xB18);                                // Load from: gCurDrawDispBufferIdx (800780F8)
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x6F54;                                       // Result = gDrawEnv1[0] (800A90AC)
+
+    v1 = lw(0x800780F8);            // Load from: gCurDrawDispBufferIdx (800780F8)    
     v1 ^= 1;
-    a0 = v1 << 1;
-    a0 += v1;
-    a0 <<= 3;
-    a0 -= v1;
-    a0 <<= 2;
-    sw(v1, gp + 0xB18);                                 // Store to: gCurDrawDispBufferIdx (800780F8)
-    a0 += v0;
+    sw(v1, 0x800780F8);             // Store to: gCurDrawDispBufferIdx (800780F8)    
+    a0 = 0x800A90AC + v1 * 92;      // gDrawEnv1[0] (800A90AC)
     LIBGPU_PutDrawEnv();
-    v0 = lw(gp + 0xB18);                                // Load from: gCurDrawDispBufferIdx (800780F8)
-    a0 = v0 << 2;
-    a0 += v0;
-    a0 <<= 2;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x6E9C;                                       // Result = gDispEnv1[0] (800A9164)
-    a0 += v0;
+
+    v0 = lw(0x800780F8);            // Load from: gCurDrawDispBufferIdx (800780F8)
+    a0 = 0x800A9164 + v0 * 20;      // gDispEnv1[0] (800A9164)
     LIBGPU_PutDispEnv();
-loc_8003345C:
-    a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
-    v1 = lw(gp + 0xB34);                                // Load from: gLastTotalVBlanks (80078114)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7E98);                                // Store to: gTotalVBlanks (80077E98)
-    v0 -= v1;
-    sw(v0, gp + 0xBDC);                                 // Store to: gElapsedVBlanks (800781BC)
-    v0 = (v0 < 2);
-    if (v0 != 0) goto loc_8003345C;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F80);                               // Load from: gbDemoPlayback (80078080)
-    if (v0 != 0) goto loc_800334AC;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E54);                               // Load from: gbDemoRecording (800781AC)
-    if (v0 == 0) goto loc_800334EC;
-loc_800334AC:
-    v0 = lw(gp + 0xBDC);                                // Load from: gElapsedVBlanks (800781BC)
-    v0 = (v0 < 4);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_800334E8;
+
+    do {
+        a0 = -1;
+        LIBETC_VSync();
+        v1 = lw(0x80078114);    // Load from: gLastTotalVBlanks (80078114)
+        sw(v0, 0x80077E98);     // Store to: gTotalVBlanks (80077E98)
+        v0 -= v1;
+        sw(v0, 0x800781BC);     // Store to: gElapsedVBlanks (800781BC)
+    } while (v0 < 2);
+
+    const bool bDemoPlayback = (lw(0x80078080) != 0);       // Load from: gbDemoPlayback (80078080)
+    const bool bDemoRecording = (lw(0x800781AC) != 0);      // Load from: gbDemoRecording (800781AC)
+
+    // Demo playback or recording is made to use 4 tics all the time.
+    // Probably done so the simulation remains consistent.
+    if (bDemoPlayback || bDemoRecording) {
+        v0 = lw(0x800781BC);            // Load from: gElapsedVBlanks (800781BC)
+
+        while (v0 < 4) {
+            a0 = -1;
+            LIBETC_VSync();
+            v1 = lw(0x80078114);        // Load from: gLastTotalVBlanks (80078114)
+            sw(v0, 0x80077E98);         // Store to: gTotalVBlanks (80077E98)
+            v0 -= v1;
+            sw(v0, 0x800781BC);         // Store to: gElapsedVBlanks (800781BC)
+        }
+
+        sw(4, gp + 0xBDC);              // Store to: gElapsedVBlanks (800781BC)
     }
-loc_800334C0:
-    a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
-    v1 = lw(gp + 0xB34);                                // Load from: gLastTotalVBlanks (80078114)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7E98);                                // Store to: gTotalVBlanks (80077E98)
-    v0 -= v1;
-    sw(v0, gp + 0xBDC);                                 // Store to: gElapsedVBlanks (800781BC)
-    v0 = (v0 < 4);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_800334C0;
-    }
-loc_800334E8:
-    sw(v0, gp + 0xBDC);                                 // Store to: gElapsedVBlanks (800781BC)
-loc_800334EC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7E98);                               // Load from: gTotalVBlanks (80077E98)
-    sw(v0, gp + 0xB34);                                 // Store to: gLastTotalVBlanks (80078114)
-    ra = lw(sp + 0x10);
+
+    v0 = lw(0x80077E98);        // Load from: gTotalVBlanks (80077E98)
+    sw(v0, gp + 0xB34);         // Store to: gLastTotalVBlanks (80078114)
+    
     sp += 0x18;
-    return;
 }
 
 void I_VsyncCallback() noexcept {
