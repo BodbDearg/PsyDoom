@@ -73,7 +73,7 @@ uint32_t add(const uint32_t r1, const uint32_t r2) noexcept {
     // Note: not throwing any hardware exceptions.
     // Ignore the overflow exception and return the original input register value:
     if (bIsOverflowing) {
-        return 1;
+        return r1;
     }
 
     return res;
