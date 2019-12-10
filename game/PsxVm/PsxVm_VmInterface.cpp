@@ -62,22 +62,26 @@ void tge(
 }
 
 uint32_t add(const uint32_t r1, const uint32_t r2) noexcept {
-    notImplementedError();
-    return 0;
+    const uint32_t res = r1 + r2;
+
+    // This method of overflow detection is taken from Avocado's 'add' instruction
+    const bool bIsOverflowing = (
+        (((r1 ^ r2) & 0x80000000) == 0) && 
+        ((res ^ r1) & 0x80000000)
+    );
+
+    // Note: not throwing any hardware exceptions.
+    // Ignore the overflow exception and return the original input register value:
+    if (bIsOverflowing) {
+        return 1;
+    }
+
+    return res;
 }
 
 uint32_t addi(const uint32_t r1, const int16_t i) noexcept {
-    const uint32_t val = (uint32_t)(int32_t) i;
-    const uint32_t result32 = r1 + val;
-    const uint64_t result64 = (uint64_t) r1 + (uint64_t) val;
-
-    if (result32 != (uint32_t) result64) {
-        // Note: not throwing any hardware exceptions.
-        // Ignore the exception and return the original input register value:
-        return r1;
-    }
-    
-    return result32;
+    const uint32_t i32 = (uint32_t)(int32_t) i;
+    return add(r1, i32);
 }
 
 void div(const uint32_t r1, const uint32_t r2) noexcept {
