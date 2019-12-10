@@ -106,11 +106,17 @@ void divu(const uint32_t r1, const uint32_t r2) noexcept {
 }
 
 void mult(const uint32_t r1, const uint32_t r2) noexcept {
-    notImplementedError();
+    const int64_t a = (int32_t) r1;
+    const int64_t b = (int32_t) r2;
+    const uint64_t result = (uint64_t)(a * b);
+    *gpReg_lo = result & 0xFFFFFFFF;
+    *gpReg_hi = result >> 32;
 }
 
 void multu(const uint32_t r1, const uint32_t r2) noexcept {
-    notImplementedError();
+    const uint64_t result = (uint64_t) r1 * (uint64_t) r2;
+    *gpReg_lo = result & 0xFFFFFFFF;
+    *gpReg_hi = result >> 32;
 }
 
 uint32_t sub(const uint32_t r1, const uint32_t r2) noexcept {
