@@ -739,14 +739,25 @@ void I_DrawPresent() noexcept {
     a0 = 0x800A9164 + v0 * 20;      // gDispEnv1[0] (800A9164)
     LIBGPU_PutDispEnv();
 
-    do {
-        a0 = -1;
-        LIBETC_VSync();
-        v1 = lw(0x80078114);    // Load from: gLastTotalVBlanks (80078114)
-        sw(v0, 0x80077E98);     // Store to: gTotalVBlanks (80077E98)
-        v0 -= v1;
-        sw(v0, 0x800781BC);     // Store to: gElapsedVBlanks (800781BC)
-    } while (v0 < 2);
+    #if 1
+    {
+        // PC-PSX: fake the passage of two vblanks here.
+        // The original code was basically spinning until the desired time elapsed.
+        const uint32_t totalVBlanks = lw(0x80077E98);       // Load from: gTotalVBlanks (80077E98)
+        sw(2, 0x800781BC);                                  // Store to: gElapsedVBlanks (800781BC)
+        sw(totalVBlanks + 2, 0x80077E98);                   // Store to: gTotalVBlanks (80077E98)
+    }
+    #else
+        // This was the original PSX code waiting for 2 elapsed vblanks
+        do {
+            a0 = -1;
+            LIBETC_VSync();
+            v1 = lw(0x80078114);    // Load from: gLastTotalVBlanks (80078114)
+            sw(v0, 0x80077E98);     // Store to: gTotalVBlanks (80077E98)
+            v0 -= v1;
+            sw(v0, 0x800781BC);     // Store to: gElapsedVBlanks (800781BC)
+        } while (v0 < 2);
+    #endif
 
     const bool bDemoPlayback = (lw(0x80078080) != 0);       // Load from: gbDemoPlayback (80078080)
     const bool bDemoRecording = (lw(0x800781AC) != 0);      // Load from: gbDemoRecording (800781AC)
@@ -756,6 +767,7 @@ void I_DrawPresent() noexcept {
     if (bDemoPlayback || bDemoRecording) {
         v0 = lw(0x800781BC);            // Load from: gElapsedVBlanks (800781BC)
 
+        // TODO: fix for PC-PSX
         while (v0 < 4) {
             a0 = -1;
             LIBETC_VSync();
