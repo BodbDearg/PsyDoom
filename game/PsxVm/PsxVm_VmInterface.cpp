@@ -217,25 +217,35 @@ void syscall(const uint32_t i) noexcept {
 }
 
 void pcall(const uint32_t addr) noexcept {
-    const VmFunc func = PsxVm::getVmFuncForAddr(addr);
-
-    if (func) {
-        func();
+    // Check for a bios function call
+    const uint32_t maskedAdr = addr & 0x1FFFFFFF;
+    
+    if (maskedAdr == 0xa0 || maskedAdr == 0xb0 || maskedAdr == 0xc0) {
+        bios_call(addr);
     } else {
-        abort();    // TODO: add failure message
+        // Regular function pointer call
+        const VmFunc func = PsxVm::getVmFuncForAddr(addr);
+
+        if (func) {
+            func();
+        } else {
+            abort();    // TODO: add failure message
+        }
     }
 }
 
 void bios_call(const uint32_t func) noexcept {
     // Set the 'RA' register to indicate that control is to be returned to C++ and the PC to the location of the bios call
-    PsxVm::gpCpu->setReg(31, 0xFFFFFFFC);    
-    PsxVm::gpCpu->setReg(9, *PsxVm::gpReg_t1);
-    PsxVm::gpCpu->setReg(10, *PsxVm::gpReg_t2);
-    PsxVm::gpCpu->setPC(func);
+    gpCpu->setReg(31, 0xFFFFFFFC);    
+    gpCpu->setReg(9, *gpReg_t1);
+    gpCpu->setReg(10, *gpReg_t2);
+    gpCpu->setPC(func);
+    gpCpu->branchTaken = true;
+    gpCpu->saveStateForException();
 
     do {
-        PsxVm::gpSystem->emulateFrame();
-    } while (PsxVm::gpCpu->PC != 0xFFFFFFFC);
+        gpSystem->cpu->executeInstructions(1024);
+    } while (gpCpu->PC != 0xFFFFFFFC);
 }
 
 void jump_table_err() noexcept {
