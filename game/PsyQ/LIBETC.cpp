@@ -778,38 +778,31 @@ void LIBETC_VSync() noexcept {
 }
 
 void LIBETC_v_wait() noexcept {
-loc_8004BBDC:
     sp -= 0x20;
     a1 <<= 15;
     sw(a1, sp + 0x10);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5CCC);                               // Load from: gLIBETC_Vcount (80075CCC)
-    v0 = (i32(v0) < i32(a0));
-    sw(ra, sp + 0x18);
-    if (v0 == 0) goto loc_8004BC68;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_8004BC04:
-    v0 = lw(sp + 0x10);
-    v0--;
-    sw(v0, sp + 0x10);
-    v0 = lw(sp + 0x10);
-    if (v0 != v1) goto loc_8004BC50;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1AD4;                                       // Result = STR_Sys_VSync_Timeout_Err[0] (80011AD4)
-    LIBC2_puts();
-    a0 = 0;                                             // Result = 00000000
-    LIBAPI_ChangeClearPAD();
-    a0 = 3;                                             // Result = 00000003
-    a1 = 0;                                             // Result = 00000000
-    LIBAPI_ChangeClearRCnt();
-    goto loc_8004BC68;
-loc_8004BC50:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5CCC);                               // Load from: gLIBETC_Vcount (80075CCC)
-    v0 = (i32(v0) < i32(a0));
-    if (v0 != 0) goto loc_8004BC04;
-loc_8004BC68:
-    ra = lw(sp + 0x18);
+    v0 = lw(0x80075CCC);                    // Load from: gLIBETC_Vcount (80075CCC)
+    
+    while (i32(v0) < i32(a0)) {
+        v0 = lw(sp + 0x10);
+        v0--;
+        sw(v0, sp + 0x10);
+        v0 = lw(sp + 0x10);
+
+        if (v0 == -1) {
+            a0 = 0x80011AD4;                // Result = STR_Sys_VSync_Timeout_Err[0] (80011AD4)
+            LIBC2_puts();
+            a0 = 0;
+            LIBAPI_ChangeClearPAD();
+            a0 = 3;
+            a1 = 0;
+            LIBAPI_ChangeClearRCnt();
+            break;
+        }
+
+        v0 = lw(0x80075CCC);                // Load from: gLIBETC_Vcount (80075CCC)
+    }
+    
     sp += 0x20;
     return;
 }
