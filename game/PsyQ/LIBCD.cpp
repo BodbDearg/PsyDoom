@@ -1734,154 +1734,136 @@ loc_800563B4:
 }
 
 void LIBCD_CD_init() noexcept {
-loc_80056410:
     sp -= 0x18;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x2168;                                       // Result = STR_Sys_CD_init_Msg[0] (80012168)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x74F8;                                       // Result = 800774F8
-    sw(ra, sp + 0x14);
     sw(s0, sp + 0x10);
+
+    a0 = 0x80012168;            // Result = STR_Sys_CD_init_Msg[0] (80012168)
+    a1 = 0x800774F8;            // Result = 800774F8
     LIBC2_printf();
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 += 0x74D0;                                       // Result = 800774D0
-    v0 = 9;                                             // Result = 00000009
-    a0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x71F8);                                 // Store to: gpLIBCD_CD_cbready (800771F8)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x71F4);                                 // Store to: gpLIBCD_CD_cbsync (800771F4)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7204);                                 // Store to: gLIBCD_CD_status (80077204)
-loc_80056458:
-    sw(0, v1);
-    v0--;
-    v1 += 4;
-    if (v0 != a0) goto loc_80056458;
+
+    v1 = 0x800774D0;            // Result = 800774D0
+    v0 = 9;
+    a0 = -1;
+    sw(0, 0x800771F8);          // Store to: gpLIBCD_CD_cbready (800771F8)
+    sw(0, 0x800771F4);          // Store to: gpLIBCD_CD_cbsync (800771F4)
+    sw(0, 0x80077204);          // Store to: gLIBCD_CD_status (80077204)
+
+    do {
+        sw(0, v1);
+        v0--;
+        v1 += 4;
+    } while (v0 != a0);
+
     LIBETC_ResetCallback();
-    a1 = 0x80050000;                                    // Result = 80050000
-    a1 += 0x701C;                                       // Result = LIBCD_BIOS_callback (8005701C)
-    a0 = 2;                                             // Result = 00000002
+
+    a0 = 2;
+    a1 = 0x8005701C;                    // Result = LIBCD_BIOS_callback (8005701C)    
     LIBETC_InterruptCallback();
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74B4);                               // Load from: 800774B4
-    v0 = 1;                                             // Result = 00000001
+
+    v1 = lw(0x800774B4);                // Load from: 800774B4
+    v0 = 1;
     sb(v0, v1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x74C0);                               // Load from: 800774C0
+    v0 = lw(0x800774C0);                // Load from: 800774C0
     v0 = lbu(v0);
     v0 &= 7;
-    a0 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_80056504;
-    v1 = 7;                                             // Result = 00000007
-loc_800564B4:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x74B4);                               // Load from: 800774B4
-    sb(a0, v0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x74C0);                               // Load from: 800774C0
-    sb(v1, v0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x74BC);                               // Load from: 800774BC
-    sb(v1, v0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x74C0);                               // Load from: 800774C0
-    v0 = lbu(v0);
-    v0 &= 7;
-    if (v0 != 0) goto loc_800564B4;
-loc_80056504:
-    a0 = 1;                                             // Result = 00000001
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    at = 0x80070000;                                    // Result = 80070000
-    sb(0, at + 0x74CF);                                 // Store to: 800774CF
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lbu(v1 + 0x74CF);                              // Load from: 800774CF
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x74CE;                                       // Result = 800774CE
-    sb(v1, v0);                                         // Store to: 800774CE
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74B4);                               // Load from: 800774B4
-    v0 = 2;                                             // Result = 00000002
-    at = 0x80070000;                                    // Result = 80070000
-    sb(v0, at + 0x74CD);                                // Store to: 800774CD
+    a0 = 1;
+    v1 = 7;
+
+    while (v0 != 0) {
+        v0 = lw(0x800774B4);            // Load from: 800774B4
+        sb(a0, v0);
+        v0 = lw(0x800774C0);            // Load from: 800774C0
+        sb(v1, v0);
+        v0 = lw(0x800774BC);            // Load from: 800774BC
+        sb(v1, v0);
+        v0 = lw(0x800774C0);            // Load from: 800774C0
+        v0 = lbu(v0);
+        v0 &= 7;
+    }
+
+    sb(0, 0x800774CF);              // Store to: 800774CF
+    v1 = lbu(0x800774CF);           // Load from: 800774CF
+    v0 = 0x800774CE;                // Result = 800774CE
+    sb(v1, v0);                     // Store to: 800774CE
+    v1 = lw(0x800774B4);            // Load from: 800774B4
+    v0 = 2;
+    sb(v0, 0x800774CD);             // Store to: 800774CD
     sb(0, v1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x74C0);                               // Load from: 800774C0
-    a3 = 0;                                             // Result = 00000000
+    v0 = lw(0x800774C0);            // Load from: 800774C0    
     sb(0, v0);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74C4);                               // Load from: 800774C4
-    v0 = 0x132C;                                        // Result = 0000132C
+    v1 = lw(0x800774C4);            // Load from: 800774C4
+    v0 = 0x132C;
     sw(v0, v1);
+
+    a0 = 1;
+    a1 = 0;
+    a2 = 0;
+    a3 = 0;
     LIBCD_CD_cw();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7204);                               // Load from: gLIBCD_CD_status (80077204)
+
+    v0 = lw(0x80077204);            // Load from: gLIBCD_CD_status (80077204)
     v0 &= 0x10;
-    a0 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_80056594;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0;                                             // Result = 00000000
-    LIBCD_CD_cw();
-loc_80056594:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7204);                               // Load from: gLIBCD_CD_status (80077204)
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 = lw(s0 + 0x71F4);                               // Load from: gpLIBCD_CD_cbsync (800771F4)
-    v0 = a1 & 0x10;
-    if (v0 == 0) goto loc_80056600;
-loc_800565B0:
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x2154;                                       // Result = STR_Sys_CD_open_Msg[0] (80012154)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x71F4);                                 // Store to: gpLIBCD_CD_cbsync (800771F4)
-    LIBC2_printf();
-    a0 = 1;                                             // Result = 00000001
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0;                                             // Result = 00000000
-    LIBCD_CD_cw();
-    a0 = 0x3C;                                          // Result = 0000003C
-    LIBETC_VSync();
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7204);                               // Load from: gLIBCD_CD_status (80077204)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x71F4);                                // Store to: gpLIBCD_CD_cbsync (800771F4)
-    v0 = a1 & 0x10;
-    if (v0 != 0) goto loc_800565B0;
-loc_80056600:
-    a0 = 0xA;                                           // Result = 0000000A
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0;                                             // Result = 00000000
-    LIBCD_CD_cw();
-    {
-        const bool bJump = (v0 != 0);
-        v0 = -1;                                        // Result = FFFFFFFF
-        if (bJump) goto loc_80056650;
+    
+    if (v0 != 0) {
+        a0 = 1;
+        a1 = 0;
+        a2 = 0;
+        a3 = 0;
+        LIBCD_CD_cw();
     }
-    a0 = 0xC;                                           // Result = 0000000C
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0;                                             // Result = 00000000
-    LIBCD_CD_cw();
-    {
-        const bool bJump = (v0 != 0);
-        v0 = -1;                                        // Result = FFFFFFFF
-        if (bJump) goto loc_80056650;
+
+    a1 = lw(0x80077204);            // Load from: gLIBCD_CD_status (80077204)
+    s0 = lw(0x800771F4);            // Load from: gpLIBCD_CD_cbsync (800771F4)
+    v0 = a1 & 0x10;
+
+    while (v0 != 0) {
+        a0 = 0x80012154;                // Result = STR_Sys_CD_open_Msg[0] (80012154)
+        sw(0, 0x800771F4);              // Store to: gpLIBCD_CD_cbsync (800771F4)
+        LIBC2_printf();
+
+        a0 = 1;
+        a1 = 0;
+        a2 = 0;
+        a3 = 0;
+        LIBCD_CD_cw();
+
+        a0 = 0x3C;
+        LIBETC_VSync();
+
+        a1 = lw(0x80077204);            // Load from: gLIBCD_CD_status (80077204)
+        sw(s0, 0x800771F4);             // Store to: gpLIBCD_CD_cbsync (800771F4)
+        v0 = a1 & 0x10;
     }
-    a0 = 0;                                             // Result = 00000000
-    a1 = 0;                                             // Result = 00000000
-    LIBCD_CD_sync();
-    v0 ^= 2;
-    v0 = (v0 > 0);
-    v0 = -v0;
-loc_80056650:
-    ra = lw(sp + 0x14);
+
+    a0 = 0xA;
+    a1 = 0;
+    a2 = 0;
+    a3 = 0;
+    LIBCD_CD_cw();
+
+    if (v0 == 0) {
+        a0 = 0xC;
+        a1 = 0;
+        a2 = 0;
+        a3 = 0;
+        LIBCD_CD_cw();
+
+        if (v0 == 0) {
+            a0 = 0;
+            a1 = 0;
+            LIBCD_CD_sync();
+            v0 ^= 2;
+            v0 = (v0 > 0);
+            v0 = -v0;
+        } else {
+            v0 = -1;
+        }
+    } else {
+        v0 = -1;
+    }
+
     s0 = lw(sp + 0x10);
     sp += 0x18;
-    return;
 }
 
 void LIBCD_CD_initvol() noexcept {
