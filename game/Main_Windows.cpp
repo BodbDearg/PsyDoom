@@ -4,12 +4,7 @@
 #include "PsxVm/PsxVm.h"
 #include "Doom/psx_main.h"
 
-int WINAPI wWinMain(
-    [[maybe_unused]] HINSTANCE hInstance,
-    [[maybe_unused]] HINSTANCE hPrevInstance,
-    [[maybe_unused]] LPWSTR lpCmdLine,
-    [[maybe_unused]] int nCmdShow
-) {
+int main(int argc, char** argv) {
     // Initialize the PSX VM stuff and then launch the app!
     if (!PsxVm::init("SCPH1001.BIN", "PSXDOOM.EXE", "Doom.cue")) {
         return 1;

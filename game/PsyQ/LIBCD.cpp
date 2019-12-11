@@ -1477,9 +1477,8 @@ void LIBCD_CD_cw() noexcept {
                 a0 = -1;
                 LIBETC_VSync();
                 v1 = lw(0x80086120);                    // Load from: LIBCD_BIOS_alarm[0] (80086120)
-                v1 = (i32(v1) < i32(v0));
 
-                if (v1 != 0) 
+                if (i32(v1) < i32(v0)) 
                     goto loc_8005606C;
 
                 v1 = lw(0x80086124);                    // Load from: LIBCD_BIOS_alarm[1] (80086124)
@@ -1490,22 +1489,22 @@ void LIBCD_CD_cw() noexcept {
 
             loc_8005606C:
                 {
-                    a0 = lbu(s2);                           // Load from: 800774CD
-                    v0 = lbu(s2 + 0x1);                     // Load from: 800774CE
-                    a1 = lw(0x80086128);                    // Load from: LIBCD_BIOS_alarm[2] (80086128)
+                    a0 = lbu(s2);                       // Load from: 800774CD
+                    v0 = lbu(s2 + 0x1);                 // Load from: 800774CE
+                    a1 = lw(0x80086128);                // Load from: LIBCD_BIOS_alarm[2] (80086128)
                     v0 <<= 2;
                     v0 += s3;
                     a0 <<= 2;
                     v1 = lw(v0);
-                    v0 = lbu(0x80077210);                   // Load from: gLIBCD_CD_com (80077210)
+                    v0 = lbu(0x80077210);               // Load from: gLIBCD_CD_com (80077210)
                     a0 += s3;
                     v0 <<= 2;
                     sw(v1, sp + 0x10);
-                    at = 0x80077214;                        // Result = gLIBCD_CD_comstr[0] (80077214)
+                    at = 0x80077214;                    // Result = gLIBCD_CD_comstr[0] (80077214)
                     at += v0;
                     a2 = lw(at);
                     a3 = lw(a0);
-                    a0 = 0x800120B0;                        // Result = STR_Sys_TimeOutSync_Msg[0] (800120B0)
+                    a0 = 0x800120B0;                    // Result = STR_Sys_TimeOutSync_Msg[0] (800120B0)
                     LIBC2_printf();
                     LIBCD_CD_init();
                     v0 = -1;

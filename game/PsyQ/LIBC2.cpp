@@ -2,6 +2,7 @@
 
 #include "LIBAPI.h"
 #include "PsxVm/PsxVm.h"
+#include <cstdio>
 
 void LIBC2_sprintf() noexcept {
 loc_80049E5C:
@@ -1281,51 +1282,55 @@ loc_8004B51C:
 }
 
 void LIBC2_putchar() noexcept {
-loc_8004B530:
-    sp -= 0x20;
-    sb(a0, sp + 0x10);
-    a0 <<= 24;
-    a0 = u32(i32(a0) >> 24);
-    v0 = 9;                                             // Result = 00000009
-    sw(ra, sp + 0x18);
-    if (a0 == v0) goto loc_8004B570;
-    v0 = 0xA;                                           // Result = 0000000A
-    if (a0 != v0) goto loc_8004B598;
-    a0 = 0xD;                                           // Result = 0000000D
-    LIBC2_putchar();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7E38);                                 // Store to: gLIBC2_putchar_UNKNOWN_VARS[0] (80077E38)
-    a0 = 1;                                             // Result = 00000001
-    goto loc_8004B5CC;
-loc_8004B570:
-    a0 = 0x20;                                          // Result = 00000020
-    LIBC2_putchar();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7E38);                               // Load from: gLIBC2_putchar_UNKNOWN_VARS[0] (80077E38)
-    v0 &= 7;
-    if (v0 == 0) goto loc_8004B5D8;
-    goto loc_8004B570;
-loc_8004B598:
-    v0 = lbu(sp + 0x10);
-    at = 0x80070000;                                    // Result = 80070000
-    at += v0;
-    v0 = lb(at + 0x5C75);
-    v0 &= 0x97;
-    a0 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_8004B5CC;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7E38);                               // Load from: gLIBC2_putchar_UNKNOWN_VARS[0] (80077E38)
-    at = 0x80070000;                                    // Result = 80070000
-    v0++;
-    sw(v0, at + 0x7E38);                                // Store to: gLIBC2_putchar_UNKNOWN_VARS[0] (80077E38)
-loc_8004B5CC:
-    a1 = sp + 0x10;
-    a2 = 1;                                             // Result = 00000001
-    LIBAPI_write();
-loc_8004B5D8:
-    ra = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+    // Use standard putchar() so we can see console messages!
+    #if 1
+        putchar(a0);
+    #else
+    loc_8004B530:
+        sp -= 0x20;
+        sb(a0, sp + 0x10);
+        a0 <<= 24;
+        a0 = u32(i32(a0) >> 24);
+        v0 = 9;                                             // Result = 00000009
+        sw(ra, sp + 0x18);
+        if (a0 == v0) goto loc_8004B570;
+        v0 = 0xA;                                           // Result = 0000000A
+        if (a0 != v0) goto loc_8004B598;
+        a0 = 0xD;                                           // Result = 0000000D
+        LIBC2_putchar();
+        at = 0x80070000;                                    // Result = 80070000
+        sw(0, at + 0x7E38);                                 // Store to: gLIBC2_putchar_UNKNOWN_VARS[0] (80077E38)
+        a0 = 1;                                             // Result = 00000001
+        goto loc_8004B5CC;
+    loc_8004B570:
+        a0 = 0x20;                                          // Result = 00000020
+        LIBC2_putchar();
+        v0 = 0x80070000;                                    // Result = 80070000
+        v0 = lw(v0 + 0x7E38);                               // Load from: gLIBC2_putchar_UNKNOWN_VARS[0] (80077E38)
+        v0 &= 7;
+        if (v0 == 0) goto loc_8004B5D8;
+        goto loc_8004B570;
+    loc_8004B598:
+        v0 = lbu(sp + 0x10);
+        at = 0x80070000;                                    // Result = 80070000
+        at += v0;
+        v0 = lb(at + 0x5C75);
+        v0 &= 0x97;
+        a0 = 1;                                             // Result = 00000001
+        if (v0 == 0) goto loc_8004B5CC;
+        v0 = 0x80070000;                                    // Result = 80070000
+        v0 = lw(v0 + 0x7E38);                               // Load from: gLIBC2_putchar_UNKNOWN_VARS[0] (80077E38)
+        at = 0x80070000;                                    // Result = 80070000
+        v0++;
+        sw(v0, at + 0x7E38);                                // Store to: gLIBC2_putchar_UNKNOWN_VARS[0] (80077E38)
+    loc_8004B5CC:
+        a1 = sp + 0x10;
+        a2 = 1;                                             // Result = 00000001
+        LIBAPI_write();
+    loc_8004B5D8:
+        ra = lw(sp + 0x18);
+        sp += 0x20;
+    #endif
 }
 
 void LIBC2_puts() noexcept {

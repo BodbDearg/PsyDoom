@@ -204,7 +204,8 @@ endif()
 
 # Setup target compile options
 if (PLATFORM_WINDOWS)
-    set_property(TARGET ${GAME_TGT_NAME} PROPERTY WIN32_EXECUTABLE true)
+    # Disable for now!
+    # set_property(TARGET ${GAME_TGT_NAME} PROPERTY WIN32_EXECUTABLE true)
 endif()
 
 if (PLATFORM_MAC)
