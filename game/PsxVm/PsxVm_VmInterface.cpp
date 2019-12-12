@@ -7,7 +7,19 @@
 #include "PsxVm.h"
 
 #include <cstdlib>
+
+// Disabling certain Avocado warnings for MSVC
+#ifdef _MSC_VER
+    #pragma warning(push)
+    #pragma warning(disable: 4201)
+    #pragma warning(disable: 4244)
+#endif
+
 #include <system.h>
+
+#ifdef _MSC_VER
+    #pragma warning(pop)
+#endif
 
 using namespace PsxVm;
 
@@ -239,17 +251,27 @@ void pcall(const uint32_t addr) noexcept {
 }
 
 void bios_call(const uint32_t func) noexcept {
-    // Set the 'RA' register to indicate that control is to be returned to C++ and the PC to the location of the bios call
-    gpCpu->setReg(31, 0xFFFFFFFC);    
+    // Set the 'RA' register to return to our 'emulator exit' point.
+    // I've modified Avocado to stop emulation and hand back control to the C++ code when this address is reached.
+    // This is the entrypoint for PSXDOOM.EXE.
+    gpCpu->setReg(31, 0x80050714);
     gpCpu->setReg(9, *gpReg_t1);
     gpCpu->setReg(10, *gpReg_t2);
     gpCpu->setPC(func);
-    gpCpu->branchTaken = true;
-    gpCpu->saveStateForException();
 
-    do {
-        gpSystem->cpu->executeInstructions(1024);
-    } while (gpCpu->PC != 0xFFFFFFFC);
+    while (true) {
+        gpSystem->emulateFrame();
+
+        // Only allow exit if we are the emulator exit point and there are not interrupts pending
+        if (gpCpu->PC == 0x80050714 || gpCpu->PC == 0x80050718) {
+            const bool bInterruptPending = ((gpCpu->cop0.cause.interruptPending & gpCpu->cop0.status.interruptMask) != 0);
+            const bool bInKernelMode = (gpCpu->cop0.status.mode == COP0::STATUS::Mode::kernel);
+
+            if ((!bInterruptPending) && (!bInKernelMode)) {
+                break;
+            }
+        }
+    }
 }
 
 void jump_table_err() noexcept {

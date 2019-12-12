@@ -163,6 +163,7 @@ void jump_table_err() noexcept;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Avocado types
 //------------------------------------------------------------------------------------------------------------------------------------------
+class Interrupt;
 struct System;
 
 namespace mips              { struct CPU;   }
@@ -180,6 +181,7 @@ namespace PsxVm {
     extern gpu::GPU*                gpGpu;
     extern spu::SPU*                gpSpu;
     extern device::cdrom::CDROM*    gpCdrom;
+    extern Interrupt*               gpInterrupt;
 
     // Initialize the VM with the given bios, original Playstation DOOM .EXE and CD file path (.cue format)
     bool init(

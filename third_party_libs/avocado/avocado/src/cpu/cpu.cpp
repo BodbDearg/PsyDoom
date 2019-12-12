@@ -89,12 +89,16 @@ INLINE uint32_t CPU::fetchInstruction(uint32_t address) {
 
 bool CPU::executeInstructions(int count) {
     for (int i = 0; i < count; i++) {
-        #if DOOM_AVOCADO_MODS == 1
-            // If the program counter is at this address then return control to the native C++ code.
-            // This is used as the return address for a bios call.
-            if (PC == 0xFFFFFFFC)
-                return true;
-        #endif
+        // Is it time to hand back control to the native C++ code?
+        // If we have reached the 'exit' point for the emulator (the entrypoint of PSXDOOM.EXE we patched) then do that.
+        if (PC == 0x80050714 || PC == 0x80050718) {
+            const bool bInterruptPending = ((cop0.cause.interruptPending & cop0.status.interruptMask) != 0);
+            const bool bInKernelMode = (cop0.status.mode == COP0::STATUS::Mode::kernel);
+
+            if ((!bInterruptPending) && (!bInKernelMode)) {
+                break;
+            }
+        }
 
         // HACK: BIOS hooks
         uint32_t maskedPc = PC & 0x1fff'ffff;
