@@ -255,16 +255,22 @@ void emu_call(const uint32_t func) noexcept {
     // I've modified Avocado to stop emulation and hand back control to the C++ code when this address is reached.
     // This is the entrypoint for PSXDOOM.EXE.
     gpCpu->setReg(31, 0x80050714);
-    gpCpu->setReg(9, *gpReg_t1);
-    gpCpu->setReg(10, *gpReg_t2);
     gpCpu->setPC(func);
 
     while (true) {
         gpSystem->emulateFrame();
 
         // Only allow exit if we are the emulator exit point and there are not interrupts pending
-        if (gpCpu->PC == 0x80050714 || gpCpu->PC == 0x80050718) {
-            const bool bInterruptPending = ((gpCpu->cop0.cause.interruptPending & gpCpu->cop0.status.interruptMask) != 0);
+        const bool bAtEmuExitPoint = (
+            (gpCpu->PC == 0x80050714 || gpCpu->PC == 0x80050718) &&
+            (gpCpu->nextPC == 0x80050714 || gpCpu->nextPC == 0x80050718)
+        );
+
+        if (bAtEmuExitPoint) {
+            const bool bInterruptPending = (
+                ((gpCpu->cop0.cause.interruptPending & gpCpu->cop0.status.interruptMask) != 0) ||
+                gpSystem->interrupt->interruptPending()
+            );
             const bool bInKernelMode = (gpCpu->cop0.status.mode == COP0::STATUS::Mode::kernel);
 
             if ((!bInterruptPending) && (!bInKernelMode)) {

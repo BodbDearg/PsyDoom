@@ -405,8 +405,17 @@ void System::emulateFrame() {
         #if DOOM_AVOCADO_MODS == 1
             // Is it time to hand back control to the native C++ code?
             // If we have reached the 'exit' point for the emulator (the entrypoint of PSXDOOM.EXE we patched) then do that.
-            if (cpu->PC == 0x80050714 || cpu->PC == 0x80050718) {
-                const bool bInterruptPending = ((cpu->cop0.cause.interruptPending & cpu->cop0.status.interruptMask) != 0);
+            const bool bAtEmuExitPoint = (
+                (cpu->PC == 0x80050714 || cpu->PC == 0x80050718) &&
+                (cpu->nextPC == 0x80050714 || cpu->nextPC == 0x80050718)
+            );
+
+            if (bAtEmuExitPoint) {
+                const bool bInterruptPending = (
+                    ((cpu->cop0.cause.interruptPending & cpu->cop0.status.interruptMask) != 0) ||
+                    interrupt->interruptPending()
+                );
+
                 const bool bInKernelMode = (cpu->cop0.status.mode == COP0::STATUS::Mode::kernel);
 
                 if ((!bInterruptPending) && (!bInKernelMode)) {

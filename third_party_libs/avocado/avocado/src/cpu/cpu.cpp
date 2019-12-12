@@ -89,17 +89,6 @@ INLINE uint32_t CPU::fetchInstruction(uint32_t address) {
 
 bool CPU::executeInstructions(int count) {
     for (int i = 0; i < count; i++) {
-        // Is it time to hand back control to the native C++ code?
-        // If we have reached the 'exit' point for the emulator (the entrypoint of PSXDOOM.EXE we patched) then do that.
-        if (PC == 0x80050714 || PC == 0x80050718) {
-            const bool bInterruptPending = ((cop0.cause.interruptPending & cop0.status.interruptMask) != 0);
-            const bool bInKernelMode = (cop0.status.mode == COP0::STATUS::Mode::kernel);
-
-            if ((!bInterruptPending) && (!bInKernelMode)) {
-                break;
-            }
-        }
-
         // HACK: BIOS hooks
         uint32_t maskedPc = PC & 0x1fff'ffff;
         if (maskedPc == 0xa0 || maskedPc == 0xb0 || maskedPc == 0xc0) sys->handleBiosFunction();
@@ -120,6 +109,25 @@ bool CPU::executeInstructions(int count) {
         moveLoadDelaySlots();
 
         if (sys->state != System::State::run) return false;
+
+        // Is it time to hand back control to the native C++ code?
+        // If we have reached the 'exit' point for the emulator (the entrypoint of PSXDOOM.EXE we patched) then do that.
+        const bool bAtEmuExitPoint = (
+            (PC == 0x80050714 || PC == 0x80050718) &&
+            (nextPC == 0x80050714 || nextPC == 0x80050718)
+        );
+
+        if (bAtEmuExitPoint) {
+            const bool bInterruptPending = (
+                ((cop0.cause.interruptPending & cop0.status.interruptMask) != 0) ||
+                sys->interrupt->interruptPending()
+            );
+            const bool bInKernelMode = (cop0.status.mode == COP0::STATUS::Mode::kernel);
+
+            if ((!bInterruptPending) && (!bInKernelMode)) {
+                break;
+            }
+        }
     }
     return true;
 }
