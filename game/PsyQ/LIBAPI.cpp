@@ -6,7 +6,7 @@ void LIBAPI_CloseEvent() noexcept {
 loc_80049C1C:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 9;                                             // Result = 00000009
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_EnterCriticalSection() noexcept {
@@ -20,21 +20,21 @@ void LIBAPI_write() noexcept {
 loc_80049C3C:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0x35;                                          // Result = 00000035
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_EnableEvent() noexcept {
 loc_80049C4C:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0xC;                                           // Result = 0000000C
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_InitPAD() noexcept {
 loc_80049C5C:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0x12;                                          // Result = 00000012
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_SetRCnt() noexcept {
@@ -172,42 +172,42 @@ void LIBAPI_DisableEvent() noexcept {
 loc_80049DDC:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0xD;                                           // Result = 0000000D
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_StartPAD() noexcept {
 loc_80049DEC:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0x13;                                          // Result = 00000013
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_ChangeClearPAD() noexcept {
 loc_80049DFC:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0x5B;                                          // Result = 0000005B
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_OpenEvent() noexcept {
 loc_80049E0C:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 8;                                             // Result = 00000008
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_read() noexcept {
 loc_80049E1C:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0x34;                                          // Result = 00000034
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_TestEvent() noexcept {
 loc_80049E2C:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0xB;                                           // Result = 0000000B
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_ExitCriticalSection() noexcept {
@@ -221,96 +221,96 @@ void LIBAPI_open() noexcept {
 loc_80049E4C:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0x32;                                          // Result = 00000032
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_HookEntryInt() noexcept {
 loc_8004AD40:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0x19;                                          // Result = 00000019
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_ResetEntryInt() noexcept {
 loc_8004AD50:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0x18;                                          // Result = 00000018
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_ChangeClearRCnt() noexcept {
 loc_8004AD60:
     t2 = 0xC0;                                          // Result = 000000C0
     t1 = 0xA;                                           // Result = 0000000A
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI__96_remove() noexcept {
 loc_8004AD70:
     t2 = 0xA0;                                          // Result = 000000A0
     t1 = 0x72;                                          // Result = 00000072
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_ReturnFromException() noexcept {
 loc_8004AD80:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0x17;                                          // Result = 00000017
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_GPU_cw() noexcept {
 loc_8004E8B0:
     t2 = 0xA0;                                          // Result = 000000A0
     t1 = 0x49;                                          // Result = 00000049
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_FlushCache() noexcept {
 loc_80050454:
     t2 = 0xA0;                                          // Result = 000000A0
     t1 = 0x44;                                          // Result = 00000044
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_InitHeap() noexcept {
 loc_80050884:
     t2 = 0xA0;                                          // Result = 000000A0
     t1 = 0x39;                                          // Result = 00000039
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_DeliverEvent() noexcept {
 loc_80053D48:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 7;                                             // Result = 00000007
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_WaitEvent() noexcept {
 loc_80054324:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0xA;                                           // Result = 0000000A
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_SysEnqIntRP() noexcept {
 loc_80058A18:
     t2 = 0xC0;                                          // Result = 000000C0
     t1 = 2;                                             // Result = 00000002
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_AddDrv() noexcept {
 loc_80058A28:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0x47;                                          // Result = 00000047
-    bios_call(t2);
+    emu_call(t2);
 }
 
 void LIBAPI_DelDrv() noexcept {
 loc_80058A38:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0x48;                                          // Result = 00000048
-    bios_call(t2);
+    emu_call(t2);
 }

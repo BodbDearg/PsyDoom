@@ -552,7 +552,7 @@ loc_80012BB8:
     sw(0, gp + 0xA6C);                                  // Store to: gGameTic (8007804C)
     sw(0, gp + 0xB6C);                                  // Store to: gTicCon (8007814C)
     sw(0, gp + 0xCBC);                                  // Store to: gLastTgtGameTicCount (8007829C)
-    pcall(s0);
+    ptr_call(s0);
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7E44);                                 // Store to: gElapsedVBlanks (800781BC)
     a0 = -1;                                            // Result = FFFFFFFF
@@ -655,10 +655,10 @@ loc_80012D34:
     v0++;
     sw(v0, gp + 0xA6C);                                 // Store to: gGameTic (8007804C)
 loc_80012D6C:
-    pcall(s1);
+    ptr_call(s1);
     s0 = v0;
     if (s0 != 0) goto loc_80012DBC;
-    pcall(s2);
+    ptr_call(s2);
     v1 = lw(gp + 0xA6C);                                // Load from: gGameTic (8007804C)
     v0 = lw(gp + 0x9C4);                                // Load from: gPrevGameTic (80077FA4)
     v0 = (i32(v0) < i32(v1));
@@ -670,7 +670,7 @@ loc_80012DA8:
     goto loc_80012BF8;
 loc_80012DBC:
     a0 = s0;
-    pcall(s3);
+    ptr_call(s3);
     v1 = lw(gp + 0x964);                                // Load from: gPlayerPadButtons[0] (80077F44)
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x7F48);                               // Load from: gPlayerPadButtons[1] (80077F48)

@@ -1549,7 +1549,7 @@ loc_80027400:
     if (v0 == 0) goto loc_80027444;
     a0 = 0x80080000;                                    // Result = 80080000
     a0 = lw(a0 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
-    pcall(v0);
+    ptr_call(v0);
 loc_80027444:
     ra = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);
@@ -1746,7 +1746,7 @@ void G_BeginExitLevel() noexcept {
     sw(v0, s0 + 0xC);
     if (i32(v0) > 0) goto loc_80027754;
     v0 = lw(s0 + 0x10);
-    pcall(v0);
+    ptr_call(v0);
     a0 = s0;
     P_RemoveThinker();
 loc_80027754:

@@ -232,12 +232,12 @@ void syscall(const uint32_t i) noexcept {
     // Ignore...
 }
 
-void pcall(const uint32_t addr) noexcept {
+void ptr_call(const uint32_t addr) noexcept {
     // Check for a bios function call
     const uint32_t maskedAdr = addr & 0x1FFFFFFF;
     
     if (maskedAdr == 0xa0 || maskedAdr == 0xb0 || maskedAdr == 0xc0) {
-        bios_call(addr);
+        emu_call(addr);
     } else {
         // Regular function pointer call
         const VmFunc func = PsxVm::getVmFuncForAddr(addr);
@@ -250,7 +250,7 @@ void pcall(const uint32_t addr) noexcept {
     }
 }
 
-void bios_call(const uint32_t func) noexcept {
+void emu_call(const uint32_t func) noexcept {
     // Set the 'RA' register to return to our 'emulator exit' point.
     // I've modified Avocado to stop emulation and hand back control to the C++ code when this address is reached.
     // This is the entrypoint for PSXDOOM.EXE.

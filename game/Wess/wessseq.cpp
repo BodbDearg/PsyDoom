@@ -364,7 +364,7 @@ loc_80047AD8:
     a1 <<= 16;
     v0 = lw(a2 + 0x4);
     a1 = u32(i32(a1) >> 16);
-    pcall(v0);
+    ptr_call(v0);
     goto loc_80047B94;
 loc_80047B40:
     v0 = 0x80080000;                                    // Result = 80080000
@@ -1130,7 +1130,7 @@ loc_800486C8:
     v0 += s0;
     v0 = lw(v0);
     v0 = lw(v0 + 0x14);
-    pcall(v0);
+    ptr_call(v0);
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0xD38);                                // Load from: 8007F2C8
     v0--;
@@ -1197,7 +1197,7 @@ loc_800487F8:
     v0 += s1;
     v0 = lw(v0);
     v0 = lw(v0 + 0x14);
-    pcall(v0);
+    ptr_call(v0);
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0xD38);                                // Load from: 8007F2C8
     v0--;
@@ -1372,7 +1372,7 @@ loc_80048AC8:
     v0 = lw(at);
     v0 = lw(v0 + 0x14);
     a0 = s0;
-    pcall(v0);
+    ptr_call(v0);
     goto loc_80048B78;
 loc_80048B00:
     if (v0 == 0) goto loc_80048B38;
@@ -1397,7 +1397,7 @@ loc_80048B38:
     v0 = lw(at);
     v0 = lw(v0 + 0x14);
     a0 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     v0 |= 0x40;
     sw(v0, s0);
@@ -1481,7 +1481,7 @@ loc_80048C14:
     v0 = lw(v0);
     v0 = lw(v0 + 0x14);
     a0 = a2;
-    pcall(v0);
+    ptr_call(v0);
     goto loc_80048E34;
 loc_80048CC8:
     v0 = lw(a1);
@@ -1511,7 +1511,7 @@ loc_80048CC8:
     v0 += v1;
     v0 = lw(v0);
     a0 = a1;
-    pcall(v0);
+    ptr_call(v0);
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0xD24);                                // Load from: 8007F2DC
     v1 = 0x80080000;                                    // Result = 80080000
@@ -1535,7 +1535,7 @@ loc_80048D6C:
     at += v0;
     v0 = lw(at);
     a0 = a1;
-    pcall(v0);
+    ptr_call(v0);
     a2 = 0x80080000;                                    // Result = 80080000
     a2 = lw(a2 - 0xD30);                                // Load from: 8007F2D0
     v1 = lw(a2);
@@ -1567,7 +1567,7 @@ loc_80048DFC:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5A94);                               // Load from: gWess_SeqFunctions[A] (80075A94)
     a0 = a1;
-    pcall(v0);
+    ptr_call(v0);
 loc_80048E10:
     a1 = 0x80080000;                                    // Result = 80080000
     a1 = lw(a1 - 0xD30);                                // Load from: 8007F2D0
@@ -1606,7 +1606,7 @@ loc_80048E8C:
     at += v0;
     v0 = lw(at);
     v0 = lw(v0 + 0x8);
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
     s1 = lw(sp + 0x14);

@@ -1816,7 +1816,7 @@ loc_80052294:
     if (v0 == 0) goto loc_800522E0;
     v0 = 0x80090000;                                    // Result = 80090000
     v0 = lw(v0 + 0x7C20);                               // Load from: gLIBSPU__spu_transferCallback (80097C20)
-    pcall(v0);
+    ptr_call(v0);
     goto loc_800522EC;
 loc_800522E0:
     a0 |= 9;                                            // Result = F0000009

@@ -73,7 +73,7 @@ loc_80028CA8:
 loc_80028CE4:
     if (v0 == 0) goto loc_80028CF4;
     a0 = s0;
-    pcall(v0);
+    ptr_call(v0);
 loc_80028CF4:
     v0 = lw(gp + 0xD14);                                // Load from: gNumActiveThinkers (800782F4)
     v0++;
@@ -105,7 +105,7 @@ loc_80028D58:
     v0 = lw(a0 + 0x18);
     s0 = lw(a0 + 0x14);
     if (v0 == 0) goto loc_80028D70;
-    pcall(v0);
+    ptr_call(v0);
 loc_80028D70:
     a0 = s0;
     if (a0 != s1) goto loc_80028D58;
@@ -622,7 +622,7 @@ loc_8002948C:
 loc_800294C8:
     if (v0 == 0) goto loc_800294D8;
     a0 = s0;
-    pcall(v0);
+    ptr_call(v0);
 loc_800294D8:
     v0 = lw(gp + 0xD14);                                // Load from: gNumActiveThinkers (800782F4)
     v0++;
@@ -643,7 +643,7 @@ loc_80029520:
     v0 = lw(a0 + 0x18);
     s0 = lw(a0 + 0x14);
     if (v0 == 0) goto loc_80029538;
-    pcall(v0);
+    ptr_call(v0);
 loc_80029538:
     a0 = s0;
     if (a0 != s1) goto loc_80029520;

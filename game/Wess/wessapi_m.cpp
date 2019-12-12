@@ -133,7 +133,7 @@ loc_80049924:
     v0 = lw(v0 + 0x30);
     a0 = s1;
     sw(a1, sp + 0x18);
-    pcall(v0);
+    ptr_call(v0);
     sw(s0, s1 + 0x34);
     a1 = lw(sp + 0x18);
 loc_800499B4:

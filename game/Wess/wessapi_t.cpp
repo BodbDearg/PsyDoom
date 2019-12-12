@@ -91,7 +91,7 @@ loc_800441C0:
     v0 = lw(v0 + 0x34);
 loc_80044214:
     a0 = s0;
-    pcall(v0);
+    ptr_call(v0);
     sw(s2, s0 + 0x34);
 loc_80044224:
     v0 = s3 & 4;
@@ -130,7 +130,7 @@ loc_80044240:
     v0 = lw(at);
     v0 = lw(v0 + 0x24);
     a0 = s0;
-    pcall(v0);
+    ptr_call(v0);
     sw(s2, s0 + 0x34);
 loc_800442B4:
     v0 = s3 & 0x10;
@@ -412,7 +412,7 @@ loc_80044674:
     v0 = lw(v0);
     v0 = lw(v0 + 0x14);
     s2--;
-    pcall(v0);
+    ptr_call(v0);
     if (s2 == 0) goto loc_800446D8;
 loc_800446CC:
     s0--;

@@ -169,7 +169,7 @@ loc_8001FB94:
     a0 = s1;
     if (v0 == 0) goto loc_8001FBE0;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_8001FC00;
 loc_8001FBE0:
@@ -249,7 +249,7 @@ loc_8001FCC8:
     a0 = s1;
     if (v0 == 0) goto loc_8001FD14;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_8001FD34;
 loc_8001FD14:
@@ -422,7 +422,7 @@ loc_8001FF34:
     a0 = s1;
     if (v0 == 0) goto loc_8001FF80;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     {
         const bool bJump = (v0 == 0);
@@ -489,7 +489,7 @@ loc_8002002C:
     a0 = s1;
     if (v0 == 0) goto loc_80020078;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_80020098;
 loc_80020078:
@@ -601,7 +601,7 @@ loc_80020214:
     a0 = s1;
     if (v0 == 0) goto loc_80020260;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_80020280;
 loc_80020260:
@@ -671,7 +671,7 @@ loc_80020338:
     a0 = s1;
     if (v0 == 0) goto loc_80020384;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_80020468;
 loc_80020384:
@@ -869,7 +869,7 @@ loc_80020630:
     a0 = s1;
     if (v0 == 0) goto loc_8002067C;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_8002069C;
 loc_8002067C:
@@ -927,7 +927,7 @@ loc_8002071C:
     a0 = s1;
     if (v0 == 0) goto loc_80020768;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_80020788;
 loc_80020768:
@@ -979,7 +979,7 @@ loc_800207F0:
     a0 = s1;
     if (v0 == 0) goto loc_8002083C;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_8002085C;
 loc_8002083C:
@@ -1254,7 +1254,7 @@ loc_80020C44:
     a0 = s1;
     if (v0 == 0) goto loc_80020C90;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_80020CB0;
 loc_80020C90:
@@ -1403,7 +1403,7 @@ loc_80020E94:
     a0 = s1;
     if (v0 == 0) goto loc_80020EE0;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_80020F00;
 loc_80020EE0:
@@ -1500,7 +1500,7 @@ loc_80021028:
     a0 = s3;
     if (v0 == 0) goto loc_80021074;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_80021094;
 loc_80021074:
@@ -1605,7 +1605,7 @@ loc_800211E0:
     a0 = s3;
     if (v0 == 0) goto loc_8002122C;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_8002124C;
 loc_8002122C:
@@ -1767,7 +1767,7 @@ loc_80021474:
     a0 = s1;
     if (v0 == 0) goto loc_800214C0;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_800214E0;
 loc_800214C0:
@@ -2054,7 +2054,7 @@ loc_80021888:
     a0 = s1;
     if (v0 == 0) goto loc_800218D4;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_800218F4;
 loc_800218D4:
@@ -2143,7 +2143,7 @@ loc_800219DC:
     a0 = s1;
     if (v0 == 0) goto loc_80021A28;
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
     v0 = lw(s0);
     if (v0 == 0) goto loc_80021A48;
 loc_80021A28:

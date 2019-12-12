@@ -1407,5 +1407,5 @@ void LIBCOMB__ioabort() noexcept {
 loc_80058A48:
     t2 = 0xC0;                                          // Result = 000000C0
     t1 = 0x19;                                          // Result = 00000019
-    bios_call(t2);
+    emu_call(t2);
 }

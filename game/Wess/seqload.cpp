@@ -13,7 +13,7 @@ loc_80044740:
     if (v0 == 0) goto loc_80044768;
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x597C);                               // Load from: 8007597C
-    pcall(v0);
+    ptr_call(v0);
 loc_80044768:
     ra = lw(sp + 0x10);
     sp += 0x18;

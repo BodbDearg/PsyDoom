@@ -23,7 +23,7 @@ loc_8004BCC8:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a1 = s1;
-    pcall(v0);
+    ptr_call(v0);
 loc_8004BD14:
     v0 = s1 & 3;
     s0 = s2 - 2;                                        // Result = 80080354
@@ -64,7 +64,7 @@ loc_8004BD38:
     v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     v0 = lw(v0 + 0x34);
     a0 = 0;                                             // Result = 00000000
-    pcall(v0);
+    ptr_call(v0);
     a0 = v0;
     v0 = a0;
     v1 = v0 & 0xFF;
@@ -119,7 +119,7 @@ loc_8004BE1C:
     sh(v0, at + 0x358);                                 // Store to: 80080358
     v0 = lw(v1 + 0x10);
     a0 |= 1;                                            // Result = 09000001
-    pcall(v0);
+    ptr_call(v0);
     goto loc_8004BEAC;
 loc_8004BE60:
     v0 = 0x400;                                         // Result = 00000400
@@ -135,7 +135,7 @@ loc_8004BE80:
     v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     v0 = lw(v0 + 0x34);
     a0 = 1;                                             // Result = 00000001
-    pcall(v0);
+    ptr_call(v0);
     goto loc_8004BEAC;
 loc_8004BEA4:
     v0 = -1;                                            // Result = FFFFFFFF
@@ -179,14 +179,14 @@ void LIBGPU_SetGraphReverse() noexcept {
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a1 = s1;
-    pcall(v0);
+    ptr_call(v0);
 loc_8004BF40:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     sb(s1, s0);                                         // Store to: 80080357
     v0 = lw(v0 + 0x28);
     a0 = 8;                                             // Result = 00000008
-    pcall(v0);
+    ptr_call(v0);
     v1 = lbu(s0);                                       // Load from: 80080357
     a0 = v0;
     if (v1 == 0) goto loc_8004BF78;
@@ -200,7 +200,7 @@ loc_8004BF7C:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     v0 = lw(v0 + 0x10);
-    pcall(v0);
+    ptr_call(v0);
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lbu(v1 + 0x354);                               // Load from: 80080354
     v0 = 2;                                             // Result = 00000002
@@ -220,7 +220,7 @@ loc_8004BF7C:
     a0 |= 0x501;                                        // Result = 20000501
 loc_8004BFD4:
     v0 = lw(v1 + 0x10);
-    pcall(v0);
+    ptr_call(v0);
     v0 = s2;
 loc_8004BFE8:
     ra = lw(sp + 0x1C);
@@ -252,7 +252,7 @@ loc_8004C004:
     a3 = lbu(a3 + 0x357);                               // Load from: 80080357
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x1B74;                                       // Result = STR_Sys_SetDebug_Msg[0] (80011B74)
-    pcall(v0);
+    ptr_call(v0);
     v0 = s0;
 loc_8004C05C:
     ra = lw(sp + 0x14);
@@ -280,7 +280,7 @@ void LIBGPU_SetGraphQueue() noexcept {
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
 loc_8004C0C0:
     v0 = lbu(s1);                                       // Load from: 80080355
     {
@@ -292,7 +292,7 @@ loc_8004C0C0:
     v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     v0 = lw(v0 + 0x34);
     a0 = 1;                                             // Result = 00000001
-    pcall(v0);
+    ptr_call(v0);
     a0 = 2;                                             // Result = 00000002
     a1 = 0;                                             // Result = 00000000
     sb(s0, s1);                                         // Store to: 80080355
@@ -334,7 +334,7 @@ void LIBGPU_DrawSyncCallback() noexcept {
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x1BB4;                                       // Result = STR_Sys_DrawSyncCallBack_Msg[0] (80011BB4)
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
 loc_8004C174:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 + 0x360);                                // Load from: 80080360
@@ -361,7 +361,7 @@ loc_8004C198:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
 loc_8004C1D4:
     a0 = 0x3000000;                                     // Result = 03000000
     v0 = 0x80070000;                                    // Result = 80070000
@@ -371,7 +371,7 @@ loc_8004C1D4:
     a0 = 0x3000000;                                     // Result = 03000000
 loc_8004C1EC:
     v0 = lw(v0 + 0x10);
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
@@ -393,13 +393,13 @@ loc_8004C210:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
 loc_8004C24C:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     v0 = lw(v0 + 0x3C);
     a0 = s0;
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
@@ -454,7 +454,7 @@ loc_8004C354:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a1 = t0;
-    pcall(v0);
+    ptr_call(v0);
     a1 = lh(s0);
     a2 = lh(s0 + 0x2);
     a3 = lh(s0 + 0x4);
@@ -464,7 +464,7 @@ loc_8004C354:
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x1C04;                                       // Result = STR_Sys_BadRect_Err[C] (80011C04)
     sw(v0, sp + 0x10);
-    pcall(v1);
+    ptr_call(v1);
 loc_8004C390:
     ra = lw(sp + 0x1C);
     s0 = lw(sp + 0x18);
@@ -500,7 +500,7 @@ void LIBGPU_ClearImage() noexcept {
     a0 = lw(v0 + 0xC);
     v0 = lw(v0 + 0x8);
     a3 = s0 | s2;
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x20);
     s3 = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
@@ -529,7 +529,7 @@ loc_8004C438:
     a0 = lw(v0 + 0x20);
     v0 = lw(v0 + 0x8);
     a3 = s1;
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -555,7 +555,7 @@ void LIBGPU_StoreImage() noexcept {
     a0 = lw(v0 + 0x1C);
     v0 = lw(v0 + 0x8);
     a3 = s1;
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -596,7 +596,7 @@ loc_8004C500:
     a0 = lw(v1 + 0x18);
     v0 = lw(v1 + 0x8);
     a1 -= 8;                                            // Result = 80075D5C
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -622,7 +622,7 @@ void LIBGPU_ClearOTag() noexcept {
     a0 += 0x1C4C;                                       // Result = STR_Sys_ClearOTag_Msg[0] (80011C4C)
     a1 = s0;
     a2 = s1;
-    pcall(v0);
+    ptr_call(v0);
 loc_8004C5E4:
     s1--;
     v0 = 0xFF0000;                                      // Result = 00FF0000
@@ -670,14 +670,14 @@ void LIBGPU_ClearOTagR() noexcept {
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a2 = s1;
-    pcall(v0);
+    ptr_call(v0);
 loc_8004C694:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     a0 = s0;
     v0 = lw(v0 + 0x2C);
     a1 = s1;
-    pcall(v0);
+    ptr_call(v0);
     v0 = s0;
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -697,13 +697,13 @@ void LIBGPU_DrawPrim() noexcept {
     v0 = lw(v0 + 0x3C);
     s1 = lbu(s0 + 0x3);
     a0 = 0;                                             // Result = 00000000
-    pcall(v0);
+    ptr_call(v0);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     a0 = s0 + 4;
     v0 = lw(v0 + 0x14);
     a1 = s1;
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -726,7 +726,7 @@ loc_8004C72C:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
 loc_8004C768:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
@@ -734,7 +734,7 @@ loc_8004C768:
     a0 = lw(v0 + 0x18);
     v0 = lw(v0 + 0x4);
     a2 = 0;                                             // Result = 00000000
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
@@ -759,7 +759,7 @@ loc_8004C79C:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a1 = s1;
-    pcall(v0);
+    ptr_call(v0);
 loc_8004C7E8:
     s0 = s1 + 0x1C;
     a0 = s0;
@@ -777,7 +777,7 @@ loc_8004C7E8:
     a0 = lw(v1 + 0x18);
     v0 = lw(v1 + 0x8);
     a3 = 0;                                             // Result = 00000000
-    pcall(v0);
+    ptr_call(v0);
     a0 = s2 + 0xE;                                      // Result = 80080364
     a1 = s1;
     a2 = 0x5C;                                          // Result = 0000005C
@@ -827,7 +827,7 @@ loc_8004C898:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a1 = s0;
-    pcall(v0);
+    ptr_call(v0);
 loc_8004C8EC:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lbu(v0 + 0x354);                               // Load from: 80080354
@@ -856,7 +856,7 @@ loc_8004C948:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     v0 = lw(v0 + 0x10);
-    pcall(v0);
+    ptr_call(v0);
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 + 0x3C8);                                // Load from: gLIBGPU_SYS_p0_82[5] (800803C8)
     v0 = lw(s0 + 0x8);
@@ -977,7 +977,7 @@ loc_8004CAF8:
     a0 |= v1;                                           // Result = 060001F4
     v1 = lw(a1 + 0x10);
     a0 |= v0;                                           // Result = 062441F4
-    pcall(v1);
+    ptr_call(v1);
     v0 = s3 & 0x3FF;
     v0 <<= 10;
     a0 = s1 & 0x3FF;
@@ -987,7 +987,7 @@ loc_8004CAF8:
     a0 |= v1;
     v1 = lw(a1 + 0x10);
     a0 |= v0;
-    pcall(v1);
+    ptr_call(v1);
 loc_8004CB54:
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 + 0x3D0);                                // Load from: gLIBGPU_SYS_p0_82[7] (800803D0)
@@ -1068,7 +1068,7 @@ loc_8004CC68:
     v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     v0 = lw(v0 + 0x10);
     a0 = s2;
-    pcall(v0);
+    ptr_call(v0);
 loc_8004CC84:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 += 0x3C0;                                        // Result = gLIBGPU_SYS_p0_82[3] (800803C0)
@@ -1107,7 +1107,7 @@ void LIBGPU_GetODE() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
     v0 = lw(v0 + 0x38);
-    pcall(v0);
+    ptr_call(v0);
     v0 >>= 31;
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -2378,7 +2378,7 @@ loc_8004DFE4:
     a0 = s0;
 loc_8004DFE8:
     a1 = s2;
-    pcall(s3);
+    ptr_call(s3);
     goto loc_8004E184;
 loc_8004DFF8:
     a1 = 0x80050000;                                    // Result = 80050000
@@ -2587,7 +2587,7 @@ loc_8004E2D4:
     at += 0x4D4;                                        // Result = gLIBGPU_SYS__que[0] (800804D4)
     at += v1;
     v0 = lw(at);
-    pcall(v0);
+    ptr_call(v0);
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x5D98);                               // Load from: gpLIBGPU_SYS__qout (80075D98)
     v0 = v1 << 1;
@@ -2650,7 +2650,7 @@ loc_8004E410:
     sw(0, v1);                                          // Store to: 8008035C
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 + 0x360);                                // Load from: 80080360
-    pcall(v0);
+    ptr_call(v0);
     v0 = 0;                                             // Result = 00000000
 loc_8004E468:
     ra = lw(sp + 0x14);
@@ -3046,7 +3046,7 @@ loc_8004EA3C:
     v1 = lw(v1 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     v0 &= 0x300;
     sw(v0, sp + 0x10);
-    pcall(v1);
+    ptr_call(v1);
     goto loc_8004EAC4;
 loc_8004EA80:
     a0 = 0x80010000;                                    // Result = 80010000
@@ -3065,7 +3065,7 @@ loc_8004EA80:
     t0 = lw(t0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     v1 += v0;
     sw(v1, sp + 0x10);
-    pcall(t0);
+    ptr_call(t0);
 loc_8004EAC4:
     ra = lw(sp + 0x1C);
     s0 = lw(sp + 0x18);
@@ -3085,7 +3085,7 @@ void LIBGPU_DumpClut() noexcept {
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     sw(ra, sp + 0x10);
     a2 >>= 6;
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -3422,14 +3422,14 @@ void LIBGPU_DumpDrawEnv() noexcept {
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x1D34;                                       // Result = STR_Sys_clip_Msg[0] (80011D34)
     sw(v0, sp + 0x10);
-    pcall(v1);
+    ptr_call(v1);
     a1 = lh(s0 + 0x8);
     a2 = lh(s0 + 0xA);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x1D4C;                                       // Result = STR_Sys_ofs_Msg[0] (80011D4C)
-    pcall(v0);
+    ptr_call(v0);
     a1 = lh(s0 + 0xC);
     a2 = lh(s0 + 0xE);
     a3 = lh(s0 + 0x10);
@@ -3439,19 +3439,19 @@ void LIBGPU_DumpDrawEnv() noexcept {
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x1D5C;                                       // Result = STR_Sys_tw_Msg[0] (80011D5C)
     sw(v0, sp + 0x10);
-    pcall(v1);
+    ptr_call(v1);
     a1 = lbu(s0 + 0x16);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x1D74;                                       // Result = STR_Sys_dtd_Msg[0] (80011D74)
-    pcall(v0);
+    ptr_call(v0);
     a1 = lbu(s0 + 0x17);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x1D80;                                       // Result = STR_Sys_dfe_Msg[0] (80011D80)
-    pcall(v0);
+    ptr_call(v0);
     LIBGPU_GetGraphType();
     v1 = 1;                                             // Result = 00000001
     if (v0 == v1) goto loc_8004EF50;
@@ -3473,7 +3473,7 @@ loc_8004EF50:
     v0 <<= 3;
     v0 &= 0x300;
     sw(v0, sp + 0x10);
-    pcall(v1);
+    ptr_call(v1);
     goto loc_8004EFDC;
 loc_8004EF94:
     a0 = 0x80010000;                                    // Result = 80010000
@@ -3493,7 +3493,7 @@ loc_8004EF94:
     v0 &= 0x200;
     v1 += v0;
     sw(v1, sp + 0x10);
-    pcall(t0);
+    ptr_call(t0);
 loc_8004EFDC:
     ra = lw(sp + 0x1C);
     s0 = lw(sp + 0x18);
@@ -3515,7 +3515,7 @@ void LIBGPU_DumpDispEnv() noexcept {
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x1D8C;                                       // Result = STR_Sys_disp_Msg[0] (80011D8C)
     sw(v0, sp + 0x10);
-    pcall(v1);
+    ptr_call(v1);
     a1 = lh(s0 + 0x8);
     a2 = lh(s0 + 0xA);
     a3 = lh(s0 + 0xC);
@@ -3525,19 +3525,19 @@ void LIBGPU_DumpDispEnv() noexcept {
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x1DA8;                                       // Result = STR_Sys_screen_Msg[0] (80011DA8)
     sw(v0, sp + 0x10);
-    pcall(v1);
+    ptr_call(v1);
     a1 = lbu(s0 + 0x10);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x1DC4;                                       // Result = STR_Sys_isinster_Msg[0] (80011DC4)
-    pcall(v0);
+    ptr_call(v0);
     a1 = lbu(s0 + 0x11);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x1DD0;                                       // Result = STR_Sys_isrgb24_Msg[0] (80011DD0)
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x1C);
     s0 = lw(sp + 0x18);
     sp += 0x20;

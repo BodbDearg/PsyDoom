@@ -388,7 +388,7 @@ loc_8001C5E4:
     s0 += 2;
     if (v0 == v1) goto loc_8001C630;
     sw(v1, a0 + 0x40);
-    pcall(s2);
+    ptr_call(s2);
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -450,7 +450,7 @@ loc_8001C6C0:
     if (s0 == 0) goto loc_8001C70C;
 loc_8001C6E8:
     a0 = s0;
-    pcall(s1);
+    ptr_call(s1);
     if (v0 == 0) goto loc_8001C6B8;
     s0 = lw(s0 + 0x30);
     if (s0 != 0) goto loc_8001C6E8;

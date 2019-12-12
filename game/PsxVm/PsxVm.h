@@ -150,11 +150,12 @@ void syscall(const uint32_t i) noexcept;
 
 // Call a pointer to a function at the given address.
 // The function passes args and return values through the VM interface.
-void pcall(const uint32_t addr) noexcept;
+// The call *MAY* be emulated via the PSX emulator.
+void ptr_call(const uint32_t addr) noexcept;
 
-// Call a bios function.
-// This will transfer control over to the emulator.
-void bios_call(const uint32_t func) noexcept;
+// Call function via the emulator.
+// This will transfer control over to the emulator and not return until the called function is exited.
+void emu_call(const uint32_t func) noexcept;
 
 // Called when the code is trying to jump to an unexpected location for a jump table.
 // If this happens then something has seriously gone wrong.

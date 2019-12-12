@@ -548,7 +548,7 @@ static void printBranchOrJumpInstruction(
         } else if (branchInst.opcode == CpuOpcode::JALR) {
             // JALR is tricker.
             // We need the host program to define the mappings to C++ functions:
-            out << "pcall(";
+            out << "ptr_call(";
             out << getGprCppMacroName(branchInst.regS);
             out << ");\n";
         } else if (branchInst.opcode == CpuOpcode::JR) {
@@ -561,8 +561,8 @@ static void printBranchOrJumpInstruction(
                 const JRInstHandler& handler = getJRInstHandler(exe, branchInstAddr);
 
                 if (handler.type == JRInstHandler::Type::BIOS_CALL) {
-                    // The 'jr' instruction is a bios call
-                    out << "bios_call(";
+                    // The 'jr' instruction is an emulated bios call
+                    out << "emu_call(";
                     out << getGprCppMacroName(branchInst.regS);
                     out << ");\n";
                 } else if (handler.type == JRInstHandler::Type::JUMP_TABLE) {

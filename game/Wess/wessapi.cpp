@@ -129,7 +129,7 @@ loc_80041880:
     v0 = lw(v0);
     v0 = lw(v0 + 0x18);
     a0 = s0;
-    pcall(v0);
+    ptr_call(v0);
 loc_800418F0:
     if (s3 == 0) goto loc_80041904;
 loc_800418F8:
@@ -339,7 +339,7 @@ loc_80041B94:
     v0 = lw(v0);
     v0 = lw(v0 + 0x18);
     a0 = s0;
-    pcall(v0);
+    ptr_call(v0);
 loc_80041BF8:
     a0 = s0;
     a1 = s4;
@@ -727,7 +727,7 @@ loc_8004210C:
     v0 = lw(v0 + 0x4);
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x5948);                                 // Store to: gbWess_SeqOn (80075948)
-    pcall(v0);
+    ptr_call(v0);
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     s2 = lbu(v0 + 0x8);
@@ -749,7 +749,7 @@ loc_80042184:
     v0 += s3;
     v0 = lw(v0);
     v0 = lw(v0 + 0x4);
-    pcall(v0);
+    ptr_call(v0);
 loc_800421D8:
     s0++;
     v0 = (i32(s0) < i32(s2));
@@ -1613,7 +1613,7 @@ loc_80042F94:
     a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     v0 = lw(v0);
     s2 = 0;                                             // Result = 00000000
-    pcall(v0);
+    ptr_call(v0);
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     v0 = lbu(a0 + 0x8);
@@ -1637,7 +1637,7 @@ loc_80042FDC:
     v0 += s1;
     v0 = lw(v0);
     v0 = lw(v0);
-    pcall(v0);
+    ptr_call(v0);
 loc_80043024:
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
@@ -2225,7 +2225,7 @@ loc_800438AC:
     v0 = lw(v0);
     v0 = lw(v0 + 0x14);
     s2--;
-    pcall(v0);
+    ptr_call(v0);
     if (s2 == 0) goto loc_80043914;
 loc_80043908:
     s0--;
@@ -2326,7 +2326,7 @@ loc_80043A2C:
     v0 = lw(v0);
     v0 = lw(v0 + 0x14);
     s2--;
-    pcall(v0);
+    ptr_call(v0);
     if (s2 == 0) goto loc_80043A90;
 loc_80043A84:
     s0--;

@@ -24,7 +24,7 @@ loc_800507EC:
     t0 = lw(s0);
     s0 += 4;
     s1--;
-    pcall(t0);
+    ptr_call(t0);
     if (s1 != 0) goto loc_800507EC;
 loc_80050804:
     ra = lw(sp + 0xC);
@@ -49,7 +49,7 @@ loc_80050854:
     t0 = lw(s0);
     s0 += 4;
     s1--;
-    pcall(t0);
+    ptr_call(t0);
     if (s1 != 0) goto loc_80050854;
 loc_8005086C:
     ra = lw(sp + 0xC);

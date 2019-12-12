@@ -11,7 +11,7 @@ loc_8004A7AC:
     sp -= 0x18;
     sw(ra, sp + 0x10);
     v0 = lw(v0 + 0xC);
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -24,7 +24,7 @@ loc_8004A7DC:
     sp -= 0x18;
     sw(ra, sp + 0x10);
     v0 = lw(v0 + 0x8);
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -37,7 +37,7 @@ loc_8004A80C:
     sp -= 0x18;
     sw(ra, sp + 0x10);
     v0 = lw(v0 + 0x4);
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -49,7 +49,7 @@ void LIBETC_VSyncCallbacks() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
     v0 = lw(v0 + 0x14);
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -61,7 +61,7 @@ void LIBETC_StopCallback() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
     v0 = lw(v0 + 0x10);
-    pcall(v0);
+    ptr_call(v0);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -188,7 +188,7 @@ loc_8004AA14:
     v0 = lw(s1);
     if (v0 == 0) goto loc_8004AA6C;
     v0 = lw(s1);
-    pcall(v0);
+    ptr_call(v0);
 loc_8004AA6C:
     s1 += 4;
     s0 >>= 1;
@@ -476,7 +476,7 @@ loc_8004B6F0:
     v0 = lw(s1);
     if (v0 == 0) goto loc_8004B75C;
     v0 = lw(s1);
-    pcall(v0);
+    ptr_call(v0);
 loc_8004B75C:
     s1 += 4;
     s0 >>= 1;
@@ -667,7 +667,7 @@ void LIBETC_INTR_DMA_trapIntrDMA() noexcept {
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5CCC);                               // Load from: gLIBETC_Vcount (80075CCC)
     if (v1 == 0) goto loc_8004BA20;
-    pcall(v1);
+    ptr_call(v1);
 loc_8004BA20:
     ra = lw(sp + 0x10);
     sp += 0x18;

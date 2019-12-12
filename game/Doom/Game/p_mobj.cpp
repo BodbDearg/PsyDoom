@@ -302,7 +302,7 @@ loc_8001CB28:
     v0 = lw(v0 + 0xC);
     if (v0 == 0) goto loc_8001CB80;
     a0 = s0;
-    pcall(v0);
+    ptr_call(v0);
 loc_8001CB80:
     sw(0, s0 + 0x18);
     v0 = 1;                                             // Result = 00000001

@@ -487,7 +487,7 @@ loc_800503B4:
     LIBAPI_EnterCriticalSection();
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0x56;                                          // Result = 00000056
-    pcall(t2);
+    ptr_call(t2);
     k0 = 0x80050000;                                    // Result = 80050000
     k1 = 0x80050000;                                    // Result = 80050000
     v0 = lw(v0 + 0x18);

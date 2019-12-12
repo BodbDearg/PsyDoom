@@ -1114,7 +1114,7 @@ loc_80055A2C:
     a0 = lbu(s4);                                       // Load from: 800774CE
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6110;                                       // Result = LIBCD_BIOS_result[2] (80086110)
-    pcall(v0);
+    ptr_call(v0);
 loc_80055A70:
     v0 = s0 & 2;
 loc_80055A74:
@@ -1125,7 +1125,7 @@ loc_80055A74:
     a0 = lbu(s2);                                       // Load from: 800774CD
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6108;                                       // Result = LIBCD_BIOS_result[0] (80086108)
-    pcall(v0);
+    ptr_call(v0);
     goto loc_80055A2C;
 loc_80055AAC:
     v0 = 0x80070000;                                    // Result = 80070000
@@ -1277,7 +1277,7 @@ loc_80055CA8:
     a0 = lbu(s6);                                       // Load from: 800774CE
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6110;                                       // Result = LIBCD_BIOS_result[2] (80086110)
-    pcall(v0);
+    ptr_call(v0);
 loc_80055CEC:
     v0 = s0 & 2;
 loc_80055CF0:
@@ -1288,7 +1288,7 @@ loc_80055CF0:
     a0 = lbu(s2);                                       // Load from: 800774CD
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6108;                                       // Result = LIBCD_BIOS_result[0] (80086108)
-    pcall(v0);
+    ptr_call(v0);
     goto loc_80055CA8;
 loc_80055D28:
     v0 = 0x80070000;                                    // Result = 80070000
@@ -1542,7 +1542,7 @@ void LIBCD_CD_cw() noexcept {
                             if (v0 != 0) {
                                 a0 = lbu(s4);               // Load from: 800774CE
                                 a1 = 0x80086110;            // Result = LIBCD_BIOS_result[2] (80086110)
-                                pcall(v0);
+                                ptr_call(v0);
                             }
                         }
 
@@ -1558,7 +1558,7 @@ void LIBCD_CD_cw() noexcept {
 
                         a0 = lbu(s2);               // Load from: 800774CD
                         a1 = 0x80086108;            // Result = LIBCD_BIOS_result[0] (80086108)
-                        pcall(v0);
+                        ptr_call(v0);
                     }
 
                     v0 = lw(0x800774B4);            // Load from: 800774B4
@@ -2254,7 +2254,7 @@ loc_80056C74:
     a0 = lbu(s5);                                       // Load from: 800774CE
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6110;                                       // Result = LIBCD_BIOS_result[2] (80086110)
-    pcall(v0);
+    ptr_call(v0);
 loc_80056CB8:
     v0 = s0 & 2;
 loc_80056CBC:
@@ -2265,7 +2265,7 @@ loc_80056CBC:
     a0 = lbu(s3);                                       // Load from: 800774CD
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6108;                                       // Result = LIBCD_BIOS_result[0] (80086108)
-    pcall(v0);
+    ptr_call(v0);
     goto loc_80056C74;
 loc_80056CF4:
     v0 = 0x80070000;                                    // Result = 80070000
@@ -2505,7 +2505,7 @@ loc_80057048:
     a0 = lbu(s2);                                       // Load from: 800774CE
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6110;                                       // Result = LIBCD_BIOS_result[2] (80086110)
-    pcall(v0);
+    ptr_call(v0);
 loc_8005708C:
     v0 = s0 & 2;
 loc_80057090:
@@ -2518,7 +2518,7 @@ loc_80057090:
     a0 = lbu(v0);                                       // Load from: 800774CD
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6108;                                       // Result = LIBCD_BIOS_result[0] (80086108)
-    pcall(v1);
+    ptr_call(v1);
     goto loc_80057048;
 loc_800570D0:
     v0 = 0x80070000;                                    // Result = 80070000
@@ -2610,7 +2610,7 @@ loc_800571D8:
     a0 = 2;                                             // Result = 00000002
 loc_80057240:
     a1 = s1;
-    pcall(v1);
+    ptr_call(v1);
 loc_80057248:
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
