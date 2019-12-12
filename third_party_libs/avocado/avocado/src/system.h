@@ -80,6 +80,11 @@ struct System {
     std::unique_ptr<Serial> serial;
     std::array<std::unique_ptr<device::timer::Timer>, 3> timer;
 
+#if DOOM_AVOCADO_MODS == 1
+    // Are we executing an emulated function call?
+    bool bIsExecutingEmulatedCall;
+#endif
+
     template <typename T>
     INLINE T readMemory(uint32_t address);
     template <typename T>

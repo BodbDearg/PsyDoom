@@ -9,6 +9,12 @@
 #include "utils/file.h"
 #include "utils/psx_exe.h"
 
+#if DOOM_AVOCADO_MODS == 1
+    namespace PsxVm {
+        bool canExitEmulator() noexcept;
+    }
+#endif
+
 System::System() {
     bios.fill(0);
     ram.fill(0);
@@ -34,6 +40,10 @@ System::System() {
 
     debugOutput = config["debug"]["log"]["system"].get<int>();
     biosLog = config["debug"]["log"]["bios"];
+
+#if DOOM_AVOCADO_MODS == 1
+    bIsExecutingEmulatedCall = false;
+#endif
 }
 
 // Note: stupid static_casts and asserts are only to suppress MSVC warnings
@@ -404,24 +414,8 @@ void System::emulateFrame() {
 
         #if DOOM_AVOCADO_MODS == 1
             // Is it time to hand back control to the native C++ code?
-            // If we have reached the 'exit' point for the emulator (the entrypoint of PSXDOOM.EXE we patched) then do that.
-            const bool bAtEmuExitPoint = (
-                (cpu->PC == 0x80050714 || cpu->PC == 0x80050718) &&
-                (cpu->nextPC == 0x80050714 || cpu->nextPC == 0x80050718)
-            );
-
-            if (bAtEmuExitPoint) {
-                const bool bInterruptPending = (
-                    ((cpu->cop0.cause.interruptPending & cpu->cop0.status.interruptMask) != 0) ||
-                    interrupt->interruptPending()
-                );
-
-                const bool bInKernelMode = (cpu->cop0.status.mode == COP0::STATUS::Mode::kernel);
-
-                if ((!bInterruptPending) && (!bInKernelMode)) {
-                    break;
-                }
-            }
+            if (PsxVm::canExitEmulator())
+                break;
         #endif
     }
 }

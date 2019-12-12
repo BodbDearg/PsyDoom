@@ -250,34 +250,43 @@ void ptr_call(const uint32_t addr) noexcept {
     }
 }
 
-void emu_call(const uint32_t func) noexcept {
+static void setupForEmulatorCall() {
     // Set the 'RA' register to return to our 'emulator exit' point.
     // I've modified Avocado to stop emulation and hand back control to the C++ code when this address is reached.
     // This is the entrypoint for PSXDOOM.EXE.
     gpCpu->setReg(31, 0x80050714);
+
+    // Clear load delay and branch related stuff
+    gpCpu->slots[0].reg = DUMMY_REG;
+    gpCpu->slots[1].reg = DUMMY_REG;
+    gpCpu->branchTaken = true;
+    gpCpu->inBranchDelay = false;
+
+    // Executing an emulator call and in a state of running
+    gpSystem->bIsExecutingEmulatedCall = true;
+    gpSystem->state = System::State::run;
+}
+
+static void emulatorCallShutdown() {
+    gpSystem->bIsExecutingEmulatedCall = false;
+}
+
+static void gotoEmulatorExitPoint() {
+    gpCpu->setPC(0x80050714);
+}
+
+void emu_call(const uint32_t func) noexcept {
+    setupForEmulatorCall();
     gpCpu->setPC(func);
 
     while (true) {
         gpSystem->emulateFrame();
 
-        // Only allow exit if we are the emulator exit point and there are not interrupts pending
-        const bool bAtEmuExitPoint = (
-            (gpCpu->PC == 0x80050714 || gpCpu->PC == 0x80050718) &&
-            (gpCpu->nextPC == 0x80050714 || gpCpu->nextPC == 0x80050718)
-        );
-
-        if (bAtEmuExitPoint) {
-            const bool bInterruptPending = (
-                ((gpCpu->cop0.cause.interruptPending & gpCpu->cop0.status.interruptMask) != 0) ||
-                gpSystem->interrupt->interruptPending()
-            );
-            const bool bInKernelMode = (gpCpu->cop0.status.mode == COP0::STATUS::Mode::kernel);
-
-            if ((!bInterruptPending) && (!bInKernelMode)) {
-                break;
-            }
-        }
+        if (canExitEmulator())
+            break;
     }
+
+    emulatorCallShutdown();
 }
 
 void jump_table_err() noexcept {
@@ -285,5 +294,8 @@ void jump_table_err() noexcept {
 }
 
 void emulate_frame() noexcept {
+    setupForEmulatorCall();
+    gotoEmulatorExitPoint();
     gpSystem->emulateFrame();
+    emulatorCallShutdown();
 }

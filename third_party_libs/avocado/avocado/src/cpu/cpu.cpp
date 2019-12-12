@@ -3,6 +3,12 @@
 #include "cpu/instructions.h"
 #include "system.h"
 
+#if DOOM_AVOCADO_MODS == 1
+    namespace PsxVm {
+        bool canExitEmulator() noexcept;
+    }
+#endif
+
 namespace mips {
 CPU::CPU(System* sys) : sys(sys), _opcode(0) {
     setPC(0xBFC00000);
@@ -110,24 +116,11 @@ bool CPU::executeInstructions(int count) {
 
         if (sys->state != System::State::run) return false;
 
-        // Is it time to hand back control to the native C++ code?
-        // If we have reached the 'exit' point for the emulator (the entrypoint of PSXDOOM.EXE we patched) then do that.
-        const bool bAtEmuExitPoint = (
-            (PC == 0x80050714 || PC == 0x80050718) &&
-            (nextPC == 0x80050714 || nextPC == 0x80050718)
-        );
-
-        if (bAtEmuExitPoint) {
-            const bool bInterruptPending = (
-                ((cop0.cause.interruptPending & cop0.status.interruptMask) != 0) ||
-                sys->interrupt->interruptPending()
-            );
-            const bool bInKernelMode = (cop0.status.mode == COP0::STATUS::Mode::kernel);
-
-            if ((!bInterruptPending) && (!bInKernelMode)) {
+        #if DOOM_AVOCADO_MODS == 1
+            // Is it time to hand back control to the native C++ code?
+            if (PsxVm::canExitEmulator())
                 break;
-            }
-        }
+        #endif
     }
     return true;
 }

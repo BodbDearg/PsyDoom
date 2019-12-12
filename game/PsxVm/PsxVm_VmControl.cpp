@@ -176,6 +176,7 @@ bool PsxVm::init(
     // Create a new system and load the bios file
     gSystem.reset(new System());
     gSystem->cdrom->disc = disc::format::Cue::fromBin(doomCdCuePath);
+    gSystem->cdrom->setShell(false);
 
     if (!gSystem->cdrom->disc) {
         shutdown();
@@ -203,7 +204,7 @@ bool PsxVm::init(
 
     // Point the emulator at the exit point
     gSystem->cpu->setReg(31, 0x80050714);
-    gSystem->cpu->setPC(0x80050714);
+    gSystem->cpu->setPC(0x80050714);    
     return true;
 }
 
@@ -217,3 +218,34 @@ VmFunc PsxVm::getVmFuncForAddr(const uint32_t addr) noexcept {
     return (iter != gFuncTable.end()) ? iter->second : nullptr;
 }
 
+bool PsxVm::canExitEmulator() noexcept {
+    // Only allow exit if we are the emulator exit point
+    mips::CPU& cpu = *gpCpu;
+    const uint32_t curPC = cpu.PC;
+    const uint32_t nextPC = cpu.nextPC;
+
+    const bool bAtEmuExitPoint = (
+        (curPC == 0x80050714 || curPC == 0x80050718) &&
+        (nextPC == 0x80050714 || nextPC == 0x80050718)
+    );
+
+    if (!bAtEmuExitPoint)
+        return false;
+    
+    // There must be no interrupts pending also in order to exit
+    if (cpu.cop0.status.interruptEnable) {
+        if ((cpu.cop0.cause.interruptPending & cpu.cop0.status.interruptMask) != 0) {
+            return false;
+        }
+    }
+
+    // FIXME: sometimes get stuck at the exit point in kernel mode??    
+    #if 0
+        // Extra sanity check: the CPU must not be kernel mode to exit
+        if (gpCpu->cop0.status.mode == COP0::STATUS::Mode::kernel)
+            return false;
+    #endif
+
+    // If we get to here then we can exit the emulator back to native code
+    return true;
+}
