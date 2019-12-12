@@ -10,10 +10,15 @@ loc_80049C1C:
 }
 
 void LIBAPI_EnterCriticalSection() noexcept {
+// For now have to emulate this call since syscall() isn't implemented properly yet!
+#if 1
+    emu_call(0x80049C2C);
+#else
 loc_80049C2C:
     a0 = 1;                                             // Result = 00000001
     syscall(0x0);
     return;
+#endif
 }
 
 void LIBAPI_write() noexcept {
@@ -211,10 +216,15 @@ loc_80049E2C:
 }
 
 void LIBAPI_ExitCriticalSection() noexcept {
+// For now have to emulate this call since syscall() isn't implemented properly yet!
+#if 1
+    emu_call(0x80049E3C);
+#else
 loc_80049E3C:
     a0 = 2;                                             // Result = 00000002
     syscall(0x0);
     return;
+#endif
 }
 
 void LIBAPI_open() noexcept {
