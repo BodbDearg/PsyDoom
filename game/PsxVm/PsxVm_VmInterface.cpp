@@ -262,6 +262,11 @@ static void setupForEmulatorCall() {
     gpCpu->branchTaken = true;
     gpCpu->inBranchDelay = false;
 
+    // Clear icache
+    for (mips::CacheLine& cacheLine : gpCpu->icache) {
+        cacheLine = {};
+    }
+
     // Executing an emulator call and in a state of running
     gpSystem->bIsExecutingEmulatedCall = true;
     gpSystem->state = System::State::run;
