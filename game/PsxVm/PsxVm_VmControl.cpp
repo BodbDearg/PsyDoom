@@ -175,15 +175,9 @@ bool PsxVm::init(
 ) noexcept {
     // Create a new system and load the bios file
     gSystem.reset(new System());
-    gSystem->cdrom->disc = disc::format::Cue::fromBin(doomCdCuePath);
-    gSystem->cdrom->setShell(false);
-
-    if (!gSystem->cdrom->disc) {
-        shutdown();
-        return false;
-    }
+    System& system = *gSystem;
     
-    if (!gSystem->loadBios(biosFilePath)) {
+    if (!system.loadBios(biosFilePath)) {
         shutdown();
         return false;
     }
@@ -192,10 +186,19 @@ bool PsxVm::init(
     setupVmPointers();
     emulateBiosUntilShell();
 
+    // Open the DOOM cd
+    system.cdrom->disc = disc::format::Cue::fromBin(doomCdCuePath);
+    system.cdrom->setShell(false);
+
+    if (!system.cdrom->disc) {
+        shutdown();
+        return false;
+    }
+
     // Load the DOOM exe and patch memory to create an emulator 'exit point' where we can return control to native code from
     disc::Data data = getFileContents(doomExePath);
 
-    if (!gSystem->loadExeFile(data)) {
+    if (!system.loadExeFile(data)) {
         shutdown();
         return false;
     }
@@ -203,8 +206,8 @@ bool PsxVm::init(
     createEmulatorExitPointPatch();
 
     // Point the emulator at the exit point
-    gSystem->cpu->setReg(31, 0x80050714);
-    gSystem->cpu->setPC(0x80050714);    
+    system.cpu->setReg(31, 0x80050714);
+    system.cpu->setPC(0x80050714);    
     return true;
 }
 

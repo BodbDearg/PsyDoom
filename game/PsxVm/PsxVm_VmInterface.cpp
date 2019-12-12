@@ -229,7 +229,7 @@ void _break(const uint32_t i) noexcept {
 }
 
 void syscall(const uint32_t i) noexcept {
-    // Ignore...
+    notImplementedError();
 }
 
 void ptr_call(const uint32_t addr) noexcept {
@@ -266,6 +266,9 @@ static void setupForEmulatorCall() {
     for (mips::CacheLine& cacheLine : gpCpu->icache) {
         cacheLine = {};
     }
+    
+    // Clear vblank counter
+    gpSystem->vblankCounter = 0;
 
     // Executing an emulator call and in a state of running
     gpSystem->bIsExecutingEmulatedCall = true;
@@ -301,6 +304,10 @@ void jump_table_err() noexcept {
 void emulate_frame() noexcept {
     setupForEmulatorCall();
     gotoEmulatorExitPoint();
-    gpSystem->emulateFrame();
+
+    while (gpSystem->vblankCounter < 1) {
+        gpSystem->emulateFrame();
+    }
+
     emulatorCallShutdown();
 }

@@ -43,6 +43,7 @@ System::System() {
 
 #if DOOM_AVOCADO_MODS == 1
     bIsExecutingEmulatedCall = false;
+    vblankCounter = 0;
 #endif
 }
 
@@ -393,6 +394,11 @@ void System::emulateFrame() {
 
         if (gpu->emulateGpuCycles(systemCycles)) {
             interrupt->trigger(interrupt::VBLANK);
+
+            #if DOOM_AVOCADO_MODS == 1
+                ++vblankCounter;
+            #endif
+
             return;  // frame emulated
         }
 
