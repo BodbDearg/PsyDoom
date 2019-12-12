@@ -24,6 +24,9 @@ loc_8003290C:
 }
 
 void I_PSXInit() noexcept {
+#if 0
+    emu_call(0x80032934);
+#else
 loc_80032934:
     sp -= 0x28;
     sw(ra, sp + 0x24);
@@ -135,6 +138,7 @@ loc_80032934:
     s0 = lw(sp + 0x18);
     sp += 0x28;
     return;
+#endif
 }
 
 void I_Error() noexcept {
@@ -739,25 +743,20 @@ void I_DrawPresent() noexcept {
     a0 = 0x800A9164 + v0 * 20;      // gDispEnv1[0] (800A9164)
     LIBGPU_PutDispEnv();
 
-    #if 1
-    {
-        // PC-PSX: fake the passage of two vblanks here.
-        // The original code was basically spinning until the desired time elapsed.
-        const uint32_t totalVBlanks = lw(0x80077E98);       // Load from: gTotalVBlanks (80077E98)
-        sw(2, 0x800781BC);                                  // Store to: gElapsedVBlanks (800781BC)
-        sw(totalVBlanks + 2, 0x80077E98);                   // Store to: gTotalVBlanks (80077E98)
-    }
-    #else
-        // This was the original PSX code waiting for 2 elapsed vblanks
-        do {
-            a0 = -1;
-            LIBETC_VSync();
-            v1 = lw(0x80078114);    // Load from: gLastTotalVBlanks (80078114)
-            sw(v0, 0x80077E98);     // Store to: gTotalVBlanks (80077E98)
-            v0 -= v1;
-            sw(v0, 0x800781BC);     // Store to: gElapsedVBlanks (800781BC)
-        } while (v0 < 2);
-    #endif
+    do {
+        // PC-PSX: emulate the passage of a frame's worth of time here.
+        // The code below only polls 'vsync' so no time.
+        #if PC_PSX_DOOM_MODS == 1
+            emulate_frame();
+        #endif
+
+        a0 = -1;
+        LIBETC_VSync();
+        v1 = lw(0x80078114);    // Load from: gLastTotalVBlanks (80078114)
+        sw(v0, 0x80077E98);     // Store to: gTotalVBlanks (80077E98)
+        v0 -= v1;
+        sw(v0, 0x800781BC);     // Store to: gElapsedVBlanks (800781BC)
+    } while (v0 < 2);
 
     const bool bDemoPlayback = (lw(0x80078080) != 0);       // Load from: gbDemoPlayback (80078080)
     const bool bDemoRecording = (lw(0x800781AC) != 0);      // Load from: gbDemoRecording (800781AC)

@@ -200,6 +200,10 @@ bool PsxVm::init(
     }
 
     createEmulatorExitPointPatch();
+
+    // Point the emulator at the exit point
+    gSystem->cpu->setReg(31, 0x80050714);
+    gSystem->cpu->setPC(0x80050714);
     return true;
 }
 

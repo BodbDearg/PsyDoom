@@ -161,6 +161,10 @@ void emu_call(const uint32_t func) noexcept;
 // If this happens then something has seriously gone wrong.
 void jump_table_err() noexcept;
 
+// Emulate a frame in the PSX emulator.
+// This causes time to pass, interupts to be generated etc.
+void emulate_frame() noexcept;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Avocado types
 //------------------------------------------------------------------------------------------------------------------------------------------

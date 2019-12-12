@@ -283,3 +283,7 @@ void emu_call(const uint32_t func) noexcept {
 void jump_table_err() noexcept {
     notImplementedError();
 }
+
+void emulate_frame() noexcept {
+    gpSystem->emulateFrame();
+}
