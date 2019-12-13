@@ -616,6 +616,10 @@ loc_80041F8C:
 }
 
 void wess_init() noexcept {
+// TODO: RUN NATIVELY
+#if 1
+    emu_call(0x80041FAC);
+#else
 loc_80041FAC:
     sp -= 0x18;
     v0 = 0x80070000;                                    // Result = 80070000
@@ -640,6 +644,7 @@ loc_80041FFC:
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
+#endif
 }
 
 void wess_exit() noexcept {

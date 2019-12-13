@@ -9,10 +9,6 @@
 #include "wessapi.h"
 
 void PsxSoundInit() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x800415EC);
-#else
 loc_800415EC:
     sp -= 0x28;
     sw(s3, sp + 0x1C);
@@ -87,8 +83,6 @@ loc_800415EC:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x28;
-    return;
-#endif
 }
 
 void PsxSoundExit() noexcept {

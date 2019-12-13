@@ -708,6 +708,10 @@ loc_8004BA88:
 // Wait for the next vblank or return the time elapsed in vblanks since program start or hblanks since last invocation.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBETC_VSync() noexcept {
+// TODO: RUN NATIVELY
+#if 1
+    emu_call(0x8004BA94);
+#else
     sp -= 0x20;
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
@@ -775,6 +779,7 @@ void LIBETC_VSync() noexcept {
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
+#endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

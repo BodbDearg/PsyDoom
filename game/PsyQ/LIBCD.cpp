@@ -1739,6 +1739,10 @@ loc_800563B4:
 }
 
 void LIBCD_CD_init() noexcept {
+// TODO: RUN NATIVELY
+#if 1
+    emu_call(0x80056410);
+#else
     sp -= 0x18;
     sw(s0, sp + 0x10);
 
@@ -1869,6 +1873,7 @@ void LIBCD_CD_init() noexcept {
 
     s0 = lw(sp + 0x10);
     sp += 0x18;
+#endif
 }
 
 void LIBCD_CD_initvol() noexcept {
