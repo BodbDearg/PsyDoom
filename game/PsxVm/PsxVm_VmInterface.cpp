@@ -139,11 +139,11 @@ uint32_t sub(const uint32_t r1, const uint32_t r2) noexcept {
 }
 
 uint32_t lb(const uint32_t addr) noexcept {
-    return gpCpu->sys->readMemory8(addr);
+    return (uint32_t)(int32_t)(int8_t) gpCpu->sys->readMemory8(addr);
 }
 
 uint32_t lbu(const uint32_t addr) noexcept {
-    return (uint32_t)(int32_t)(int8_t) gpCpu->sys->readMemory8(addr);
+    return gpCpu->sys->readMemory8(addr);
 }
 
 uint32_t lh(const uint32_t addr) noexcept {
