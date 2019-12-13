@@ -16,6 +16,7 @@
 #endif
 
 #include <disc/format/cue.h>
+#include <disc/load.h>
 #include <memory>
 #include <system.h>
 
@@ -138,18 +139,19 @@ static void clearVmPointers() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void emulateBiosUntilShell() noexcept {
     // Set a breakpoint on the BIOS executing up until the shell and emulate until then
-    gpCpu->breakpoints.emplace(0x80030000, mips::CPU::Breakpoint(true));
-    gpSystem->debugOutput = false;
+    mips::CPU& cpu = *gpCpu;
+    System& system = *gpSystem;
 
-    while (gpSystem->state == System::State::run) {
-        gpSystem->emulateFrame();
+    cpu.breakpoints.emplace(0x80030000, mips::CPU::Breakpoint(true));
+    system.debugOutput = false;
+
+    while (system.state == System::State::run) {
+        system.emulateFrame();
     }
 
-    gpCpu->breakpoints.clear();
-    gpSystem->debugOutput = true;
-    gpSystem->state = System::State::run;
-    gpSystem->cpu->cop0.status.interruptEnable = 1;
-    gpSystem->cpu->cop0.status.mode = COP0::STATUS::Mode::user;
+    cpu.breakpoints.clear();
+    system.debugOutput = true;
+    system.state = System::State::run;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -173,27 +175,27 @@ bool PsxVm::init(
     const char* const doomExePath,
     const char* const doomCdCuePath
 ) noexcept {
-    // Create a new system and load the bios file
+    // Create a new system and setup vm pointers 
     gSystem.reset(new System());
     System& system = *gSystem;
-    
-    if (!system.loadBios(biosFilePath)) {
-        shutdown();
-        return false;
-    }
-
-    // Setup pointers and emulate the bios until the shell
     setupVmPointers();
-    emulateBiosUntilShell();
-
-    // Open the DOOM cd
-    system.cdrom->disc = disc::format::Cue::fromBin(doomCdCuePath);
+    
+    // Open the DOOM cdrom
+    system.cdrom->disc = disc::load(doomCdCuePath);
     system.cdrom->setShell(false);
 
     if (!system.cdrom->disc) {
         shutdown();
         return false;
     }
+
+    // Load the bios file and emulate the bios until the shell
+    if (!system.loadBios(biosFilePath)) {
+        shutdown();
+        return false;
+    }
+
+    emulateBiosUntilShell();
 
     // Load the DOOM exe and patch memory to create an emulator 'exit point' where we can return control to native code from
     disc::Data data = getFileContents(doomExePath);
@@ -221,33 +223,30 @@ VmFunc PsxVm::getVmFuncForAddr(const uint32_t addr) noexcept {
     return (iter != gFuncTable.end()) ? iter->second : nullptr;
 }
 
-bool PsxVm::canExitEmulator() noexcept {
-    // Only allow exit if we are the emulator exit point
+bool PsxVm::isEmulatorAtExitPoint() noexcept {
+    // The instructions at '0x80050714' and '0x80050718' are the exit point instructions
     mips::CPU& cpu = *gpCpu;
     const uint32_t curPC = cpu.PC;
     const uint32_t nextPC = cpu.nextPC;
-
-    const bool bAtEmuExitPoint = (
+    return (
         (curPC == 0x80050714 || curPC == 0x80050718) &&
         (nextPC == 0x80050714 || nextPC == 0x80050718)
     );
+}
 
-    if (!bAtEmuExitPoint)
+bool PsxVm::canExitEmulator() noexcept {
+    // Only allow exit if we are the emulator exit point
+    if (!isEmulatorAtExitPoint())
         return false;
     
     // There must be no interrupts pending also in order to exit
+    mips::CPU& cpu = *gpCpu;
+
     if (cpu.cop0.status.interruptEnable) {
         if ((cpu.cop0.cause.interruptPending & cpu.cop0.status.interruptMask) != 0) {
             return false;
         }
     }
-
-    // FIXME: sometimes get stuck at the exit point in kernel mode??    
-    #if 0
-        // Extra sanity check: the CPU must not be kernel mode to exit
-        if (gpCpu->cop0.status.mode == COP0::STATUS::Mode::kernel)
-            return false;
-    #endif
 
     // If we get to here then we can exit the emulator back to native code
     return true;

@@ -3,12 +3,6 @@
 #include "cpu/instructions.h"
 #include "system.h"
 
-#if DOOM_AVOCADO_MODS == 1
-    namespace PsxVm {
-        bool canExitEmulator() noexcept;
-    }
-#endif
-
 namespace mips {
 CPU::CPU(System* sys) : sys(sys), _opcode(0) {
     setPC(0xBFC00000);
@@ -115,13 +109,8 @@ bool CPU::executeInstructions(int count) {
         moveLoadDelaySlots();
 
         if (sys->state != System::State::run) return false;
-
-        #if DOOM_AVOCADO_MODS == 1
-            // Is it time to hand back control to the native C++ code?
-            if (PsxVm::canExitEmulator())
-                break;
-        #endif
     }
+
     return true;
 }
 

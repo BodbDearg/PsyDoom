@@ -24,7 +24,8 @@ loc_8003290C:
 }
 
 void I_PSXInit() noexcept {
-#if 0
+// TODO: RUN NATIVELY
+#if 1
     emu_call(0x80032934);
 #else
 loc_80032934:
@@ -747,7 +748,8 @@ void I_DrawPresent() noexcept {
         // PC-PSX: emulate the passage of a frame's worth of time here.
         // The code below only polls 'vsync' so no time.
         #if PC_PSX_DOOM_MODS == 1
-            emulate_frame();
+            a0 = 0;
+            LIBETC_VSync();
         #endif
 
         a0 = -1;

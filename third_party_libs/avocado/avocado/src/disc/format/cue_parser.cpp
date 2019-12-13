@@ -13,7 +13,12 @@ bool CueParser::parseFile(std::string& line) {
         if (matches.size() != 3) return false;
     }
 
+#if DOOM_AVOCADO_MODS == 1
+    lastFile = matches[1].str();
+#else
     lastFile = cuePath + "/" + matches[1].str();
+#endif
+
     lastFileType = matches[2].str();
 
     // TODO: Handle WAVE type

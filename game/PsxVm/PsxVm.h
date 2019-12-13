@@ -200,6 +200,6 @@ namespace PsxVm {
     // Lookup the function pointer to call for a given address
     VmFunc getVmFuncForAddr(const uint32_t addr) noexcept;
 
-    // Tells if the emulator can return control back to the native C++ code
-    bool canExitEmulator() noexcept;
+    bool isEmulatorAtExitPoint() noexcept;      // Is the emulator at the point in the program where it returns control to C++?
+    bool canExitEmulator() noexcept;            // Tells if the emulator can return control back to the native C++ code
 }

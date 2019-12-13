@@ -783,8 +783,12 @@ void LIBETC_VSync() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept {
     uint32_t timeoutLeft = (uint32_t) timeout << 15;
-    int32_t vcount = (int32_t) lw(0x80075CCC);          // Load from: gLIBETC_Vcount (80075CCC)
-    
+    int32_t vcount = (int32_t) lw(0x80075CCC);          // Load from: gLIBETC_Vcount (80075CCC)  
+
+    #if PC_PSX_DOOM_MODS == 1
+        emulate_frame();
+    #endif
+
     while (vcount < targetVCount) {
         --timeoutLeft;
 
@@ -798,6 +802,10 @@ void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept 
             LIBAPI_ChangeClearRCnt();
             break;
         }
+
+        #if PC_PSX_DOOM_MODS == 1
+            emulate_frame();
+        #endif
 
         vcount = (int32_t) lw(0x80075CCC);      // Load from: gLIBETC_Vcount (80075CCC)
     }

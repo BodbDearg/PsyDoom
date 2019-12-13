@@ -15,6 +15,7 @@
     #pragma warning(disable: 4244)
 #endif
 
+#include <cpu/instructions.h>
 #include <system.h>
 
 #ifdef _MSC_VER
@@ -158,13 +159,33 @@ uint32_t lw(const uint32_t addr) noexcept {
 }
 
 uint32_t lwl(const uint32_t r1, const uint32_t addr) noexcept {
-    notImplementedError();
-    return 0;
+    // This code is largely based on Avocado's implementation of the same instruction
+    const uint32_t mem = gpCpu->sys->readMemory32(addr & 0xFFFFFFFC);
+    uint32_t result;
+
+    switch (addr % 4) {
+        case 0:     result = (r1 & 0x00FFFFFF) | (mem << 24);   break;
+        case 1:     result = (r1 & 0x0000FFFF) | (mem << 16);   break;
+        case 2:     result = (r1 & 0x000000FF) | (mem << 8);    break;
+        default:    result = (r1 & 0x00000000) | (mem);         break;
+    }
+
+    return result;
 }
 
 uint32_t lwr(const uint32_t r1, const uint32_t addr) noexcept {
-    notImplementedError();
-    return 0;
+    // This code is largely based on Avocado's implementation of the same instruction
+    const uint32_t mem = gpCpu->sys->readMemory32(addr & 0xFFFFFFFC);
+    uint32_t result;
+
+    switch (addr % 4) {
+        case 0:     result = (r1 & 0x00000000) | (mem);         break;
+        case 1:     result = (r1 & 0xFF000000) | (mem >> 8);    break;
+        case 2:     result = (r1 & 0xFFFF0000) | (mem >> 16);   break;
+        default:    result = (r1 & 0xFFFFFF00) | (mem >> 24);   break;
+    }
+    
+    return result;
 }
 
 void sb(const uint32_t r1, const uint32_t addr) noexcept {
@@ -180,11 +201,37 @@ void sw(const uint32_t r1, const uint32_t addr) noexcept {
 }
 
 void swl(const uint32_t r1, const uint32_t addr) noexcept {
-    notImplementedError();
+    // This code is largely based on Avocado's implementation of the same instruction
+    System& sys = *gpCpu->sys;
+    const uint32_t alignedAddr = addr & 0xFFFFFFFC;
+    const uint32_t mem = sys.readMemory32(alignedAddr);
+    uint32_t result;
+
+    switch (addr % 4) {
+        case 0:     result = (mem & 0xFFFFFF00) | (r1 >> 24);   break;
+        case 1:     result = (mem & 0xFFFF0000) | (r1 >> 16);   break;
+        case 2:     result = (mem & 0xFF000000) | (r1 >> 8);    break;
+        default:    result = (mem & 0x00000000) | (r1);         break;
+    }
+
+    sys.writeMemory32(alignedAddr, result);
 }
 
 void swr(const uint32_t r1, const uint32_t addr) noexcept {
-    notImplementedError();
+    // This code is largely based on Avocado's implementation of the same instruction
+    System& sys = *gpCpu->sys;
+    const uint32_t alignedAddr = addr & 0xFFFFFFFC;    
+    const uint32_t mem = sys.readMemory32(alignedAddr);
+    uint32_t result;
+
+    switch (addr % 4) {
+        case 0:     result = (r1      ) | (mem & 0x00000000);   break;
+        case 1:     result = (r1 << 8 ) | (mem & 0x000000FF);   break;
+        case 2:     result = (r1 << 16) | (mem & 0x0000FFFF);   break;
+        default:    result = (r1 << 24) | (mem & 0x00FFFFFF);   break;
+    }
+
+    sys.writeMemory32(alignedAddr, result);
 }
 
 uint32_t mfc0(const uint8_t s) noexcept {
@@ -229,7 +276,18 @@ void _break(const uint32_t i) noexcept {
 }
 
 void syscall(const uint32_t i) noexcept {
-    notImplementedError();
+    mips::CPU& cpu = *gpCpu;    
+    const uint32_t oldReg = cpu.reg[4];
+    cpu.setReg(4, i);
+
+    assert(cpu.PC == 0x80050714 || cpu.PC == 0x80050718);
+    instructions::op_syscall(&cpu, {});
+    
+    while (!canExitEmulator()) {
+        gpSystem->emulateFrame();
+    }
+
+    cpu.setReg(4, oldReg);
 }
 
 void ptr_call(const uint32_t addr) noexcept {
@@ -298,7 +356,7 @@ void emu_call(const uint32_t func) noexcept {
 }
 
 void jump_table_err() noexcept {
-    notImplementedError();
+    std::abort();
 }
 
 void emulate_frame() noexcept {

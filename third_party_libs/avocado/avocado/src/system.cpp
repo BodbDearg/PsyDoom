@@ -11,6 +11,7 @@
 
 #if DOOM_AVOCADO_MODS == 1
     namespace PsxVm {
+        bool isEmulatorAtExitPoint() noexcept;
         bool canExitEmulator() noexcept;
     }
 #endif
@@ -420,8 +421,14 @@ void System::emulateFrame() {
 
         #if DOOM_AVOCADO_MODS == 1
             // Is it time to hand back control to the native C++ code?
-            if (PsxVm::canExitEmulator())
+            if (PsxVm::isEmulatorAtExitPoint()) {
+                while (!PsxVm::canExitEmulator()) {
+                    // Need a few more cycles to finish up?
+                    cpu->executeInstructions(1024);
+                }
+
                 break;
+            }
         #endif
     }
 }
