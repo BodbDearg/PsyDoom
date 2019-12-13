@@ -10,8 +10,13 @@ loc_80049C1C:
 }
 
 void LIBAPI_EnterCriticalSection() noexcept {
+// TODO: RUN NATIVELY
+#if 1
+    emu_call(0x80049C2C);
+#else
     a0 = 1;
     syscall(0x0);
+#endif
 }
 
 void LIBAPI_write() noexcept {
@@ -209,8 +214,13 @@ loc_80049E2C:
 }
 
 void LIBAPI_ExitCriticalSection() noexcept {
+// TODO: RUN NATIVELY
+#if 1
+    emu_call(0x80049E3C);
+#else
     a0 = 2;
     syscall(0x0);
+#endif
 }
 
 void LIBAPI_open() noexcept {

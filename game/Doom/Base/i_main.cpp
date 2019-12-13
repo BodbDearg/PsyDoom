@@ -24,10 +24,6 @@ loc_8003290C:
 }
 
 void I_PSXInit() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x80032934);
-#else
 loc_80032934:
     sp -= 0x28;
     sw(ra, sp + 0x24);
@@ -139,7 +135,6 @@ loc_80032934:
     s0 = lw(sp + 0x18);
     sp += 0x28;
     return;
-#endif
 }
 
 void I_Error() noexcept {
@@ -727,6 +722,10 @@ loc_800333D8:
 }
 
 void I_DrawPresent() noexcept {
+// TODO: RUN NATIVELY
+#if 1
+    emu_call(0x800333F0);
+#else
     sp -= 0x18;
 
     a0 = 0;
@@ -785,6 +784,7 @@ void I_DrawPresent() noexcept {
     sw(v0, gp + 0xB34);         // Store to: gLastTotalVBlanks (80078114)
     
     sp += 0x18;
+#endif
 }
 
 void I_VsyncCallback() noexcept {

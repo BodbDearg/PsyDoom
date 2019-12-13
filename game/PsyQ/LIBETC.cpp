@@ -5,6 +5,10 @@
 #include "PsxVm/PsxVm.h"
 
 void LIBETC_ResetCallback() noexcept {
+// TODO: RUN NATIVELY
+#if 1
+    emu_call(0x8004A7AC);
+#else
 loc_8004A7AC:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5B90);                               // Load from: gpLIBETC_INTR_interruptsListPtr (80075B90)
@@ -15,6 +19,7 @@ loc_8004A7AC:
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
+#endif
 }
 
 void LIBETC_InterruptCallback() noexcept {

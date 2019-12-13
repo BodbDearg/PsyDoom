@@ -481,6 +481,10 @@ loc_80050334:
 }
 
 void LIBGTE__patch_gte() noexcept {
+// TODO: RUN NATIVELY
+#if 1
+    emu_call(0x800503B4);
+#else
 loc_800503B4:
     at = 0x80070000;                                    // Result = 80070000
     sw(ra, at + 0x7E48);                                // Store to: gLIBGTE__patch_gte_miniStack[0] (80077E48)
@@ -513,6 +517,7 @@ loc_800503E4:
     sw(v1, k0 + 0xC);
     sw(ra, k0 + 0x7C);
     v0 = mfc0(13);
+#endif
 }
 
 void LIBGTE_RotTransPers() noexcept {
