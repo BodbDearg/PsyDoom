@@ -722,10 +722,6 @@ loc_800333D8:
 }
 
 void I_DrawPresent() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x800333F0);
-#else
     sp -= 0x18;
 
     a0 = 0;
@@ -784,7 +780,6 @@ void I_DrawPresent() noexcept {
     sw(v0, gp + 0xB34);         // Store to: gLastTotalVBlanks (80078114)
     
     sp += 0x18;
-#endif
 }
 
 void I_VsyncCallback() noexcept {
