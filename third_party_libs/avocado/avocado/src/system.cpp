@@ -43,7 +43,6 @@ System::System() {
     biosLog = config["debug"]["log"]["bios"];
 
 #if DOOM_AVOCADO_MODS == 1
-    bIsExecutingEmulatedCall = false;
     vblankCounter = 0;
 #endif
 }
@@ -423,7 +422,7 @@ void System::emulateFrame() {
             // Is it time to hand back control to the native C++ code?
             if (PsxVm::isEmulatorAtExitPoint()) {
                 while (!PsxVm::canExitEmulator()) {
-                    // Need a few more cycles to finish up?
+                    // Need a few more cycles to finish up interrupts?
                     cpu->executeInstructions(1024);
                 }
 

@@ -165,6 +165,9 @@ void jump_table_err() noexcept;
 // This causes time to pass, interupts to be generated etc.
 void emulate_frame() noexcept;
 
+// Do a little bit of emulation in the PSX emulator (not a whole frame)
+void emulate_a_little() noexcept;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Avocado types
 //------------------------------------------------------------------------------------------------------------------------------------------

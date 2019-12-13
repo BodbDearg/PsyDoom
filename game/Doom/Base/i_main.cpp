@@ -740,13 +740,6 @@ void I_DrawPresent() noexcept {
     LIBGPU_PutDispEnv();
 
     do {
-        // PC-PSX: emulate the passage of a frame's worth of time here.
-        // The code below only polls 'vsync' so no time.
-        #if PC_PSX_DOOM_MODS == 1
-            a0 = 0;
-            LIBETC_VSync();
-        #endif
-
         a0 = -1;
         LIBETC_VSync();
         v1 = lw(0x80078114);    // Load from: gLastTotalVBlanks (80078114)
@@ -763,7 +756,6 @@ void I_DrawPresent() noexcept {
     if (bDemoPlayback || bDemoRecording) {
         v0 = lw(0x800781BC);            // Load from: gElapsedVBlanks (800781BC)
 
-        // TODO: fix for PC-PSX
         while (v0 < 4) {
             a0 = -1;
             LIBETC_VSync();

@@ -81,8 +81,7 @@ struct System {
     std::array<std::unique_ptr<device::timer::Timer>, 3> timer;
 
 #if DOOM_AVOCADO_MODS == 1    
-    bool        bIsExecutingEmulatedCall;       // Are we executing an emulated function call?
-    uint32_t    vblankCounter;                  // For tracking how many vblanks have elapsed since a certain point
+    uint32_t vblankCounter;     // For tracking how many vblanks have elapsed since a certain point
 #endif
 
     template <typename T>

@@ -61,6 +61,11 @@ namespace PsxVm {
     uint32_t* gpReg_lo;
 }
 
+// Used to save and restore the value of all registers upon making an emulation call
+static uint32_t gSavedMipsRegs[32];
+static uint32_t gSavedHiReg;
+static uint32_t gSavedLoReg;
+
 static void notImplementedError() noexcept {
     // TODO: add failure message
     std::abort();
@@ -275,9 +280,39 @@ void _break(const uint32_t i) noexcept {
     notImplementedError();
 }
 
+static void saveMipsRegisters() noexcept {
+    mips::CPU& cpu = *gpCpu;
+    std::memcpy(gSavedMipsRegs, cpu.reg, sizeof(uint32_t) * 32);
+    gSavedHiReg = cpu.hi;
+    gSavedLoReg = cpu.lo;
+}
+
+static void restoreMipsRegisters() noexcept {
+    mips::CPU& cpu = *gpCpu;
+    cpu.hi = gSavedHiReg;
+    cpu.lo = gSavedLoReg;
+    std::memcpy(cpu.reg, gSavedMipsRegs, sizeof(uint32_t) * 32);
+
+    // Make sure no load delay stuff and that zero is zero
+    cpu.reg[0] = 0;
+    cpu.slots[0].reg = DUMMY_REG;
+    cpu.slots[1].reg = DUMMY_REG;
+}
+
+static void restoreMipsRegistersExceptReturnRegs() noexcept {
+    mips::CPU& cpu = *gpCpu;
+    const uint32_t retReg1 = cpu.reg[2];
+    const uint32_t retReg2 = cpu.reg[3];
+    
+    restoreMipsRegisters();
+
+    cpu.reg[2] = retReg1;
+    cpu.reg[3] = retReg2;    
+}
+
 void syscall(const uint32_t i) noexcept {
-    mips::CPU& cpu = *gpCpu;    
-    const uint32_t oldReg = cpu.reg[4];
+    saveMipsRegisters();
+    mips::CPU& cpu = *gpCpu;
     cpu.setReg(4, i);
 
     assert(cpu.PC == 0x80050714 || cpu.PC == 0x80050718);
@@ -287,7 +322,7 @@ void syscall(const uint32_t i) noexcept {
         gpSystem->emulateFrame();
     }
 
-    cpu.setReg(4, oldReg);
+    restoreMipsRegistersExceptReturnRegs();
 }
 
 void ptr_call(const uint32_t addr) noexcept {
@@ -319,40 +354,24 @@ static void setupForEmulatorCall() {
     gpCpu->slots[1].reg = DUMMY_REG;
     gpCpu->branchTaken = true;
     gpCpu->inBranchDelay = false;
-
-    // Clear icache
-    for (mips::CacheLine& cacheLine : gpCpu->icache) {
-        cacheLine = {};
-    }
-    
-    // Clear vblank counter
-    gpSystem->vblankCounter = 0;
-
-    // Executing an emulator call and in a state of running
-    gpSystem->bIsExecutingEmulatedCall = true;
-    gpSystem->state = System::State::run;
-}
-
-static void emulatorCallShutdown() {
-    gpSystem->bIsExecutingEmulatedCall = false;
-}
-
-static void gotoEmulatorExitPoint() {
-    gpCpu->setPC(0x80050714);
 }
 
 void emu_call(const uint32_t func) noexcept {
-    setupForEmulatorCall();
-    gpCpu->setPC(func);
+    mips::CPU& cpu = *gpCpu;
+    System& system = *gpSystem;
+
+    saveMipsRegisters();
+    setupForEmulatorCall();    
+    cpu.setPC(func);
 
     while (true) {
-        gpSystem->emulateFrame();
+        system.emulateFrame();
 
         if (canExitEmulator())
             break;
     }
 
-    emulatorCallShutdown();
+    restoreMipsRegistersExceptReturnRegs();
 }
 
 void jump_table_err() noexcept {
@@ -360,12 +379,18 @@ void jump_table_err() noexcept {
 }
 
 void emulate_frame() noexcept {
-    setupForEmulatorCall();
-    gotoEmulatorExitPoint();
+    saveMipsRegisters();
+    gpSystem->vblankCounter = 0;
 
     while (gpSystem->vblankCounter < 1) {
         gpSystem->emulateFrame();
     }
 
-    emulatorCallShutdown();
+    restoreMipsRegisters();
+}
+
+void emulate_a_little() noexcept {
+    saveMipsRegisters();
+    gpSystem->emulateFrame();
+    restoreMipsRegisters();
 }

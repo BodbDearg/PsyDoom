@@ -1458,12 +1458,6 @@ void LIBCD_CD_cw() noexcept {
     v0 = 0;
 
     if (s2 == 0) {
-        // PC-PSX: emulate the passage of a frame's worth of time here.
-        // The code below only polls 'vsync' so no time.
-        #if PC_PSX_DOOM_MODS == 1
-            emulate_frame();
-        #endif
-
         a0 = -1;
         LIBETC_VSync();
         v0 += 0x1E0;
@@ -1480,12 +1474,6 @@ void LIBCD_CD_cw() noexcept {
             s2 = a0;                // Result = 800774CD
             s4 = s2 + 1;            // Result = 800774CE
             do {
-                // PC-PSX: emulate the passage of a frame's worth of time here.
-                // The code below only polls 'vsync' so no time.
-                #if PC_PSX_DOOM_MODS == 1
-                    emulate_frame();
-                #endif
-
                 a0 = -1;
                 LIBETC_VSync();
                 v1 = lw(0x80086120);                    // Load from: LIBCD_BIOS_alarm[0] (80086120)

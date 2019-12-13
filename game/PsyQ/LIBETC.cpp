@@ -713,10 +713,6 @@ loc_8004BA88:
 // Wait for the next vblank or return the time elapsed in vblanks since program start or hblanks since last invocation.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBETC_VSync() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x8004BA94);
-#else
     sp -= 0x20;
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
@@ -778,13 +774,17 @@ void LIBETC_VSync() noexcept {
             }
         }
     } else {
+        // If you are polling vsync do a little emulation to pass the time
+        #if PC_PSX_DOOM_MODS == 1
+            emulate_a_little();
+        #endif
+
         v0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)
     }
 
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-#endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -794,10 +794,6 @@ void LIBETC_VSync() noexcept {
 void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept {
     uint32_t timeoutLeft = (uint32_t) timeout << 15;
     int32_t vcount = (int32_t) lw(0x80075CCC);          // Load from: gLIBETC_Vcount (80075CCC)  
-
-    #if PC_PSX_DOOM_MODS == 1
-        emulate_frame();
-    #endif
 
     while (vcount < targetVCount) {
         --timeoutLeft;
@@ -814,7 +810,7 @@ void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept 
         }
 
         #if PC_PSX_DOOM_MODS == 1
-            emulate_frame();
+            emulate_a_little();
         #endif
 
         vcount = (int32_t) lw(0x80075CCC);      // Load from: gLIBETC_Vcount (80075CCC)
