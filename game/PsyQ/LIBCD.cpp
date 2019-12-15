@@ -187,13 +187,12 @@ loc_80054D20:
 }
 
 void LIBCD_CdReady() noexcept {
-loc_80054D40:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
+    // Speed up the emulation of the CD
+    #if PC_PSX_DOOM_MODS
+        emulate_cdrom();
+    #endif
+
     LIBCD_CD_ready();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void LIBCD_CdSyncCallback() noexcept {

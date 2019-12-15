@@ -403,7 +403,12 @@ void emulate_gpu(const int numCycles) noexcept {
 
 void emulate_cdrom() noexcept {
     System& system = *gpSystem;
-    system.cdrom->step();
+
+    // This speeds up things a bit
+    for (uint32_t i = 0; i < 16; ++i) {
+        system.cdrom->step();        
+    }
+
     system.interrupt->step();
     emulate_a_little();
 }
