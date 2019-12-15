@@ -402,7 +402,7 @@ void emulate_cdrom() noexcept {
     System& system = *gpSystem;
 
     // This speeds up things a bit
-    for (uint32_t i = 0; i < 16; ++i) {
+    for (uint32_t i = 0; i < 32; ++i) {
         system.cdrom->step();        
     }
 

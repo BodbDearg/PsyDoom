@@ -380,6 +380,11 @@ void psxspu_stop_cd_fade() noexcept {
 
 void psxspu_get_cd_fade_status() noexcept {
 loc_80045868:
+    // Emulate a little in case calling code is polling in a loop waiting for changed spu status
+    #if PC_PSX_DOOM_MODS
+        emulate_a_little();
+    #endif
+
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x59A8);                               // Load from: 800759A8
     v0 = (i32(v0) < 2);

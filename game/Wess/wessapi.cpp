@@ -2112,6 +2112,11 @@ void wess_seq_trigger_special() noexcept {
 
 void wess_seq_status() noexcept {
 loc_8004371C:
+    // Emulate a little in case calling code is polling in a loop waiting for status to change
+    #if PC_PSX_DOOM_MODS
+        emulate_a_little();
+    #endif
+
     sp -= 0x18;
     sw(s0, sp + 0x10);
     sw(ra, sp + 0x14);

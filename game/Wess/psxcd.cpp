@@ -1667,14 +1667,8 @@ loc_80040B50:
 }
 
 void psxcd_play() noexcept {
-loc_80040B6C:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a2 = 0;                                             // Result = 00000000
+    a2 = 0;
     psxcd_play_at();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void psxcd_seek_for_play_at() noexcept {
@@ -1902,6 +1896,7 @@ loc_80040EE8:
 }
 
 void psxcd_elapsed_sectors() noexcept {
+    // Emulate the cdrom a bit in case this function is polled in a loop
     #if PC_PSX_DOOM_MODS
         emulate_cdrom();
     #endif

@@ -303,6 +303,10 @@ loc_80054E90:
 }
 
 void LIBCD_CdControlF() noexcept {
+// TODO: RUN NATIVELY
+#if 1
+    emu_call(0x80054EC0);
+#else
 loc_80054EC0:
     sp -= 0x30;
     sw(s1, sp + 0x14);
@@ -377,6 +381,7 @@ loc_80054FA0:
     s0 = lw(sp + 0x10);
     sp += 0x30;
     return;
+#endif
 }
 
 void LIBCD_CdControlB() noexcept {
@@ -549,7 +554,6 @@ loc_800551F8:
 }
 
 void LIBCD_CdIntToPos() noexcept {
-loc_8005521C:
     v1 = 0x1B4E0000;                                    // Result = 1B4E0000
     v1 |= 0x81B5;                                       // Result = 1B4E81B5
     a0 += 0x96;
@@ -614,11 +618,9 @@ loc_8005521C:
     t1 -= a0;
     a1 += t1;
     sb(a1, v0);
-    return;
 }
 
 void LIBCD_CdPosToInt() noexcept {
-loc_80055320:
     v1 = lbu(a0);
     a2 = lbu(a0 + 0x1);
     a1 = v1 >> 4;
@@ -650,7 +652,6 @@ loc_80055320:
     v1 += a1;
     v0 += v1;
     v0 -= 0x96;
-    return;
 }
 
 void LIBCD_BIOS_getintr() noexcept {
@@ -1673,7 +1674,6 @@ loc_80056318:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
-    return;
 }
 
 void LIBCD_CD_flush() noexcept {

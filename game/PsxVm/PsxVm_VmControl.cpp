@@ -15,9 +15,12 @@
     #pragma warning(disable: 4244)
 #endif
 
+#include "PcPsx/Macros.h"
 #include <disc/format/cue.h>
 #include <disc/load.h>
+#include <input/input_manager.h>
 #include <memory>
+#include <SDL.h>
 #include <system.h>
 
 #ifdef _MSC_VER
@@ -26,7 +29,8 @@
 
 using namespace PsxVm;
 
-static std::unique_ptr<System> gSystem;
+static std::unique_ptr<System>          gSystem;
+static std::unique_ptr<InputManager>    gInputMgr;
 
 System*                 PsxVm::gpSystem;
 mips::CPU*              PsxVm::gpCpu;
@@ -39,6 +43,22 @@ namespace PsxVm {
     // Address to function lookup for the VM
     extern std::map<uint32_t, VmFunc> gFuncTable;
 }
+
+// Keys for input handling
+const std::string gPadBtnKey_Up = "controller/1/dpad_up";
+const std::string gPadBtnKey_Down = "controller/1/dpad_down";
+const std::string gPadBtnKey_Left = "controller/1/dpad_left";
+const std::string gPadBtnKey_Right = "controller/1/dpad_right";
+const std::string gPadBtnKey_Triangle = "controller/1/triangle";
+const std::string gPadBtnKey_Circle = "controller/1/circle";
+const std::string gPadBtnKey_Cross = "controller/1/cross";
+const std::string gPadBtnKey_Square = "controller/1/square";
+const std::string gPadBtnKey_Start = "controller/1/start";
+const std::string gPadBtnKey_Select = "controller/1/select";
+const std::string gPadBtnKey_L2 = "controller/1/l2";
+const std::string gPadBtnKey_R2 = "controller/1/r2";
+const std::string gPadBtnKey_L1 = "controller/1/l1";
+const std::string gPadBtnKey_R1 = "controller/1/r1";
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Setup and clear pointers for the VM environment
@@ -209,13 +229,47 @@ bool PsxVm::init(
 
     // Point the emulator at the exit point
     system.cpu->setReg(31, 0x80050714);
-    system.cpu->setPC(0x80050714);    
+    system.cpu->setPC(0x80050714);
+
+    // Setup input manager
+    gInputMgr.reset(new InputManager());
+    InputManager::setInstance(gInputMgr.get());
     return true;
 }
 
 void PsxVm::shutdown() noexcept {
+    InputManager::setInstance(nullptr);
+    gInputMgr.reset();
     clearVmPointers();
     gSystem.reset();
+}
+
+void PsxVm::updateInput() noexcept {
+    // TODO: support configurable input
+    // TODO: support game controller
+    ASSERT(InputManager::getInstance());
+    InputManager& inputMgr = *InputManager::getInstance();
+    const uint8_t* const pKbState = SDL_GetKeyboardState(nullptr);
+
+    inputMgr.setState(gPadBtnKey_Up, InputManager::AnalogValue(pKbState[SDL_SCANCODE_UP] != 0));
+    inputMgr.setState(gPadBtnKey_Down, InputManager::AnalogValue(pKbState[SDL_SCANCODE_DOWN] != 0));
+    inputMgr.setState(gPadBtnKey_Left, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LEFT] != 0));
+    inputMgr.setState(gPadBtnKey_Right, InputManager::AnalogValue(pKbState[SDL_SCANCODE_RIGHT] != 0));
+
+    inputMgr.setState(gPadBtnKey_L1, InputManager::AnalogValue(pKbState[SDL_SCANCODE_A] != 0));
+    inputMgr.setState(gPadBtnKey_R1, InputManager::AnalogValue(pKbState[SDL_SCANCODE_D] != 0));
+    inputMgr.setState(gPadBtnKey_L2, InputManager::AnalogValue(pKbState[SDL_SCANCODE_PAGEUP] != 0 || pKbState[SDL_SCANCODE_Q] != 0));
+    inputMgr.setState(gPadBtnKey_R2, InputManager::AnalogValue(pKbState[SDL_SCANCODE_PAGEDOWN] != 0|| pKbState[SDL_SCANCODE_E] != 0));
+
+    inputMgr.setState(gPadBtnKey_Circle, InputManager::AnalogValue(pKbState[SDL_SCANCODE_SPACE] != 0));
+    inputMgr.setState(gPadBtnKey_Square, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LSHIFT] != 0 || pKbState[SDL_SCANCODE_RSHIFT]));
+    inputMgr.setState(gPadBtnKey_Triangle, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LCTRL] != 0 || pKbState[SDL_SCANCODE_RCTRL]));
+    inputMgr.setState(gPadBtnKey_Cross, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LALT] != 0 || pKbState[SDL_SCANCODE_RALT]));
+
+    inputMgr.setState(gPadBtnKey_Start, InputManager::AnalogValue(pKbState[SDL_SCANCODE_RETURN] != 0));
+    inputMgr.setState(gPadBtnKey_Select, InputManager::AnalogValue(pKbState[SDL_SCANCODE_TAB] != 0));
+
+    gpSystem->controller->update();
 }
 
 VmFunc PsxVm::getVmFuncForAddr(const uint32_t addr) noexcept {

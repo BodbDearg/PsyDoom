@@ -109,15 +109,10 @@ void START_Title() noexcept {
     a1 = lw(a1 + 0x75F8);                               // Load from: gCdMusicVol (800775F8)
     v0 = 0xFA;                                          // Result = 000000FA
     sw(v0, gp + 0xBB0);                                 // Store to: gTitleScreenSpriteY (80078190)
-
-// PC-PSX: FIXME: playing cd audio here gets stuck
-#if !PC_PSX_DOOM_MODS
     psxcd_play();
 loc_80035234:
     psxcd_elapsed_sectors();
     if (v0 == 0) goto loc_80035234;
-#endif
-
     ra = lw(sp + 0x24);
     s4 = lw(sp + 0x20);
     s3 = lw(sp + 0x1C);

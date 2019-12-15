@@ -18,6 +18,7 @@
 
 #include "Macros.h"
 #include <SDL.h>
+#include <thread>
 
 BEGIN_NAMESPACE(PcPsx)
 
@@ -26,6 +27,7 @@ static SDL_Renderer*    gRenderer;
 static SDL_Texture*     gFramebufferTexture;
 static SDL_Rect         gOutputRect;
 static uint32_t*        gpFrameBuffer;
+static uint32_t         gLastFrameTickCount;
 
 static void lockFramebufferTexture() noexcept {
     int pitch = 0;
@@ -166,7 +168,23 @@ void shutdownVideo() noexcept {
 
 void displayFramebuffer() noexcept {    
     handleSdlWindowEvents();
+    PsxVm::updateInput();
     copyPsxToSdlFramebuffer();
+
+    // If not enough time has elapsed since the last frame then wait a bit
+    while (true) {
+        const uint32_t tickCount = SDL_GetTicks();
+        const uint32_t oneFrameTickCount = 1000 / 30;
+        const uint32_t elapsedTicks = tickCount - gLastFrameTickCount;
+
+        if (elapsedTicks < oneFrameTickCount - 1) {
+            std::this_thread::yield();
+        } else {
+            gLastFrameTickCount = tickCount;
+            break;
+        }
+    }
+
     presentSdlFramebuffer();
 }
 
