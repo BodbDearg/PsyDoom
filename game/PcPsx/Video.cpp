@@ -89,6 +89,8 @@ static void handleSdlWindowEvents() noexcept {
 }
 
 static void doFrameRateLimiting() noexcept {
+    const uint32_t startTickCount = SDL_GetTicks();
+
     while (true) {
         const uint32_t tickCount = SDL_GetTicks();
         const uint32_t oneFrameTickCount = 1000 / 30;
@@ -100,6 +102,13 @@ static void doFrameRateLimiting() noexcept {
             gLastFrameTickCount = tickCount;
             break;
         }
+    }
+
+    // Simulate the amount of emulator frames we waited for
+    const uint32_t numEmulatorFramesPassed = (gLastFrameTickCount - startTickCount) / 60;
+
+    for (uint32_t i = 0; i < numEmulatorFramesPassed; ++i) {
+        emulate_frame();
     }
 }
 
