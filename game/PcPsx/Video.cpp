@@ -88,6 +88,21 @@ static void handleSdlWindowEvents() noexcept {
     while (SDL_PollEvent(&event) != 0);
 }
 
+static void doFrameRateLimiting() noexcept {
+    while (true) {
+        const uint32_t tickCount = SDL_GetTicks();
+        const uint32_t oneFrameTickCount = 1000 / 30;
+        const uint32_t elapsedTicks = tickCount - gLastFrameTickCount;
+
+        if (elapsedTicks < oneFrameTickCount - 1) {
+            std::this_thread::yield();
+        } else {
+            gLastFrameTickCount = tickCount;
+            break;
+        }
+    }
+}
+
 void initVideo() noexcept {
     // Initialize SDL subsystems
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
@@ -170,22 +185,8 @@ void displayFramebuffer() noexcept {
     handleSdlWindowEvents();
     PsxVm::updateInput();
     copyPsxToSdlFramebuffer();
-
-    // If not enough time has elapsed since the last frame then wait a bit
-    while (true) {
-        const uint32_t tickCount = SDL_GetTicks();
-        const uint32_t oneFrameTickCount = 1000 / 30;
-        const uint32_t elapsedTicks = tickCount - gLastFrameTickCount;
-
-        if (elapsedTicks < oneFrameTickCount - 1) {
-            std::this_thread::yield();
-        } else {
-            gLastFrameTickCount = tickCount;
-            break;
-        }
-    }
-
     presentSdlFramebuffer();
+    doFrameRateLimiting();
 }
 
 SDL_Window* getWindow() noexcept {
