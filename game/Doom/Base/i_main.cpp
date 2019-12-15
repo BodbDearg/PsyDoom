@@ -2,6 +2,7 @@
 
 #include "d_vsprintf.h"
 #include "Doom/d_main.h"
+#include "PcPsx/Video.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBAPI.h"
 #include "PsyQ/LIBCOMB.h"
@@ -13,14 +14,17 @@
 #include "z_zone.h"
 
 void I_Main() noexcept {
-loc_8003290C:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
     LIBSN__main();
+
+    #if PC_PSX_DOOM_MODS
+        PcPsx::initVideo();
+    #endif
+
     D_DoomMain();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    #if PC_PSX_DOOM_MODS
+        PcPsx::shutdownVideo();
+    #endif
 }
 
 void I_PSXInit() noexcept {
@@ -770,6 +774,10 @@ void I_DrawPresent() noexcept {
 
     v0 = lw(0x80077E98);        // Load from: gTotalVBlanks (80077E98)
     sw(v0, gp + 0xB34);         // Store to: gLastTotalVBlanks (80078114)
+
+    #if PC_PSX_DOOM_MODS
+        PcPsx::displayFramebuffer();
+    #endif
     
     sp += 0x18;
 }
