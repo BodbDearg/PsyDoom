@@ -358,7 +358,12 @@ void System::emulateFrame() {
     cpu->gte.log.clear();
     gpu->gpuLogList.clear();
 
+// DC: This is ENORMOUSLY expensive, and slows things to a crawl every time we want to do a bit of emulation.
+// Since I don't need this can just disable...
+#if !DOOM_AVOCADO_MODS
     gpu->prevVram = gpu->vram;
+#endif
+
     int systemCycles = 300;
     for (;;) {
         #if DOOM_AVOCADO_MODS
