@@ -394,3 +394,16 @@ void emulate_a_little() noexcept {
     gpSystem->emulateFrame();
     restoreMipsRegisters();
 }
+
+void emulate_gpu(const int numCycles) noexcept {
+    if (gpSystem->gpu->emulateGpuCycles((int) numCycles)) {
+        gpSystem->interrupt->trigger(interrupt::VBLANK);
+    }
+}
+
+void emulate_cdrom() noexcept {
+    System& system = *gpSystem;
+    system.cdrom->step();
+    system.interrupt->step();
+    emulate_a_little();
+}

@@ -77,7 +77,6 @@ loc_8004A89C:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x5B96;                                       // Result = 80075B96
     v0 = lhu(v0);                                       // Load from: 80075B96
-    return;
 }
 
 void LIBETC_GetIntrMask() noexcept {
@@ -774,8 +773,10 @@ void LIBETC_VSync() noexcept {
             }
         }
     } else {
-        // If you are polling vsync do a little emulation to pass the time
+        // PC-PSX: If you are polling vsync do a little emulation to pass the time.
+        // Also advance the GPU emulation by a lot.
         #if PC_PSX_DOOM_MODS == 1
+            emulate_gpu(300);
             emulate_a_little();
         #endif
 

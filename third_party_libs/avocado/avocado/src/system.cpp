@@ -9,7 +9,7 @@
 #include "utils/file.h"
 #include "utils/psx_exe.h"
 
-#if DOOM_AVOCADO_MODS == 1
+#if DOOM_AVOCADO_MODS
     namespace PsxVm {
         bool isEmulatorAtExitPoint() noexcept;
         bool canExitEmulator() noexcept;
@@ -42,7 +42,7 @@ System::System() {
     debugOutput = config["debug"]["log"]["system"].get<int>();
     biosLog = config["debug"]["log"]["bios"];
 
-#if DOOM_AVOCADO_MODS == 1
+#if DOOM_AVOCADO_MODS
     vblankCounter = 0;
 #endif
 }
@@ -361,9 +361,17 @@ void System::emulateFrame() {
     gpu->prevVram = gpu->vram;
     int systemCycles = 300;
     for (;;) {
-        if (!cpu->executeInstructions(systemCycles / 3)) {
-            return;
-        }
+        #if DOOM_AVOCADO_MODS
+            // On do a CPU emulation if not at the exit point or if there are interrupts.
+            // Otherwise spare host CPU cycles and skip this...
+            if (!PsxVm::canExitEmulator()) {
+        #endif
+                if (!cpu->executeInstructions(systemCycles / 3)) {
+                    return;
+                }
+        #if DOOM_AVOCADO_MODS
+            }
+        #endif
 
         dma->step();
         cdrom->step();
@@ -395,7 +403,7 @@ void System::emulateFrame() {
         if (gpu->emulateGpuCycles(systemCycles)) {
             interrupt->trigger(interrupt::VBLANK);
 
-            #if DOOM_AVOCADO_MODS == 1
+            #if DOOM_AVOCADO_MODS
                 ++vblankCounter;
             #endif
 
@@ -418,12 +426,12 @@ void System::emulateFrame() {
         }
         // Handle Timer1 - Reset on VBlank
 
-        #if DOOM_AVOCADO_MODS == 1
+        #if DOOM_AVOCADO_MODS
             // Is it time to hand back control to the native C++ code?
             if (PsxVm::isEmulatorAtExitPoint()) {
                 while (!PsxVm::canExitEmulator()) {
                     // Need a few more cycles to finish up interrupts?
-                    cpu->executeInstructions(1024);
+                    cpu->executeInstructions(256);
                 }
 
                 break;

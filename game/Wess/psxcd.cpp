@@ -1902,6 +1902,10 @@ loc_80040EE8:
 }
 
 void psxcd_elapsed_sectors() noexcept {
+    #if PC_PSX_DOOM_MODS
+        emulate_cdrom();
+    #endif
+
 loc_80040EFC:
     v0 = lw(gp + 0x818);                                // Load from: gPSXCD_beginloc (80077DF8)
     sp -= 0x18;
