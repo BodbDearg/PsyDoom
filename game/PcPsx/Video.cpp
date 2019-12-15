@@ -43,8 +43,8 @@ static void presentSdlFramebuffer() noexcept {
 
     gOutputRect.x = 0;
     gOutputRect.y = 0;
-    gOutputRect.w = 1024;
-    gOutputRect.h = 960;
+    gOutputRect.w = 1280;
+    gOutputRect.h = 1200;
     SDL_RenderCopy(gRenderer, gFramebufferTexture, nullptr, &gOutputRect);
 
     SDL_RenderPresent(gRenderer);
@@ -103,8 +103,8 @@ void initVideo() noexcept {
         "PC-PSX DOOM",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        (int32_t) 1024,
-        (int32_t) 960,
+        (int32_t) 1280,
+        (int32_t) 1200,
         windowCreateFlags
     );
 

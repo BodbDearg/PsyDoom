@@ -6,6 +6,7 @@
 #define PSX_VM_NO_REGISTER_MACROS 1     // Because they cause conflicts with Avocado
 #include "PsxVm.h"
 
+#include "PcPsx/Macros.h"
 #include <cstdlib>
 
 // Disabling certain Avocado warnings for MSVC
@@ -65,11 +66,6 @@ namespace PsxVm {
 static uint32_t gSavedMipsRegs[32];
 static uint32_t gSavedHiReg;
 static uint32_t gSavedLoReg;
-
-static void notImplementedError() noexcept {
-    // TODO: add failure message
-    std::abort();
-}
 
 void tge(
     [[maybe_unused]] const uint32_t r1,
@@ -248,7 +244,7 @@ void mtc0(const uint32_t r1, const uint8_t d) noexcept {
 }
 
 void cop2(const uint32_t i) noexcept {
-    notImplementedError();
+    gpCpu->gte.command(gte::Command(i));
 }
 
 uint32_t cfc2(const uint8_t s) noexcept {
@@ -260,24 +256,25 @@ void ctc2(const uint32_t r1, const uint8_t d) noexcept {
 }
 
 uint32_t mfc2(const uint8_t s) noexcept {
-    notImplementedError();
-    return 0;
+    return gpCpu->gte.read(s);
 }
 
 void mtc2(const uint32_t r1, const uint8_t d) noexcept {
-    notImplementedError();
+    gpCpu->gte.write(d, r1);
 }
 
 void lwc2(const uint8_t d, const uint32_t addr) noexcept {
-    notImplementedError();
+    const uint32_t val = gpCpu->sys->readMemory32(addr);
+    gpCpu->gte.write(d, val);
 }
 
 void swc2(const uint8_t s, const uint32_t addr) noexcept {
-    notImplementedError();
+    const uint32_t val = gpCpu->gte.read(s);
+    gpCpu->sys->writeMemory32(addr, val);
 }
 
 void _break(const uint32_t i) noexcept {
-    notImplementedError();
+    FATAL_ERROR("Break instruction not supported!");
 }
 
 static void saveMipsRegisters() noexcept {
@@ -375,7 +372,7 @@ void emu_call(const uint32_t func) noexcept {
 }
 
 void jump_table_err() noexcept {
-    std::abort();
+    FATAL_ERROR("Invalid/unexpected target address for jump table!");
 }
 
 void emulate_frame() noexcept {
