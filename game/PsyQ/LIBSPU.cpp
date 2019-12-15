@@ -4369,6 +4369,12 @@ loc_800546D0:
 }
 
 void LIBSPU_SpuIsTransferCompleted() noexcept {
+// TODO: RUN NATIVELY
+#if 1
+    // Emulate a bit in case the function is being polled for completion
+    emulate_a_little();
+    emu_call(0x800546E0);
+#else
 loc_800546E0:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x6A48);                               // Load from: gLIBSPU__spu_trans_mode (80076A48)
@@ -4416,6 +4422,7 @@ loc_80054770:
     s0 = lw(sp + 0x10);
     sp += 0x20;
     return;
+#endif
 }
 
 void LIBSPU_SpuInitMalloc() noexcept {

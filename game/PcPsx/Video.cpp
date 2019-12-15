@@ -97,6 +97,7 @@ static void doFrameRateLimiting() noexcept {
         const uint32_t elapsedTicks = tickCount - gLastFrameTickCount;
 
         if (elapsedTicks < oneFrameTickCount - 1) {
+            emulate_sound_if_required();
             std::this_thread::yield();
         } else {
             gLastFrameTickCount = tickCount;
@@ -195,6 +196,7 @@ void displayFramebuffer() noexcept {
     PsxVm::updateInput();
     copyPsxToSdlFramebuffer();
     presentSdlFramebuffer();
+    emulate_sound_if_required();
     doFrameRateLimiting();
 }
 

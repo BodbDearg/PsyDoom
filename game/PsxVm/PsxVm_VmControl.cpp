@@ -21,6 +21,7 @@
 #include <input/input_manager.h>
 #include <memory>
 #include <SDL.h>
+#include <sound/sound.h>
 #include <system.h>
 
 #ifdef _MSC_VER
@@ -234,10 +235,16 @@ bool PsxVm::init(
     // Setup input manager
     gInputMgr.reset(new InputManager());
     InputManager::setInstance(gInputMgr.get());
+
+    // Setup sound
+    SDL_InitSubSystem(SDL_INIT_AUDIO);
+    Sound::init();
+    Sound::play();
     return true;
 }
 
 void PsxVm::shutdown() noexcept {
+    Sound::close();
     InputManager::setInstance(nullptr);
     gInputMgr.reset();
     clearVmPointers();

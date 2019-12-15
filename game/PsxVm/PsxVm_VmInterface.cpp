@@ -17,6 +17,7 @@
 #endif
 
 #include <cpu/instructions.h>
+#include <sound/sound.h>
 #include <system.h>
 
 #ifdef _MSC_VER
@@ -395,6 +396,29 @@ void emulate_a_little() noexcept {
 void emulate_gpu(const int numCycles) noexcept {
     if (gpSystem->gpu->emulateGpuCycles((int) numCycles)) {
         gpSystem->interrupt->trigger(interrupt::VBLANK);
+    }
+}
+
+void emulate_sound_if_required() noexcept {    
+    size_t soundBufferSize;
+
+    {
+        std::unique_lock<std::mutex> lock(Sound::audioMutex);
+        soundBufferSize = Sound::buffer.size();
+    }
+
+    if (soundBufferSize < spu::SPU::AUDIO_BUFFER_SIZE) {
+        spu::SPU& spu = *gpSpu;
+        device::cdrom::CDROM& cdrom = *gpCdrom;
+
+        while (!spu.bufferReady) {
+            spu.step(&cdrom);
+        }
+
+        if (spu.bufferReady) {
+            spu.bufferReady = false;
+            Sound::appendBuffer(spu.audioBuffer.begin(), spu.audioBuffer.end());
+        }
     }
 }
 

@@ -177,6 +177,9 @@ void emulate_cdrom() noexcept;
 // Useful to speed up generating a new vblank.
 void emulate_gpu(const int numCycles) noexcept;
 
+// Emulate sound until we have enough samples to handle an upcoming buffer request
+void emulate_sound_if_required() noexcept;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Avocado types
 //------------------------------------------------------------------------------------------------------------------------------------------
