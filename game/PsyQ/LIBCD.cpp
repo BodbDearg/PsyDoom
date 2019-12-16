@@ -303,10 +303,6 @@ loc_80054E90:
 }
 
 void LIBCD_CdControlF() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x80054EC0);
-#else
 loc_80054EC0:
     sp -= 0x30;
     sw(s1, sp + 0x14);
@@ -380,8 +376,6 @@ loc_80054FA0:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x30;
-    return;
-#endif
 }
 
 void LIBCD_CdControlB() noexcept {
@@ -1454,11 +1448,6 @@ void LIBCD_CD_cw() noexcept {
     sb(s1, 0x80077210);             // Store to: gLIBCD_CD_com (80077210)
     sb(s1, v0);
     v0 = 0;
-
-    // PC-PSX: this prevents CD-ROM timeouts
-    #if PC_PSX_DOOM_MODS
-        LIBCD_CdFlush();
-    #endif
 
     if (s2 == 0) {
         a0 = -1;
@@ -2622,10 +2611,6 @@ loc_80057248:
 }
 
 void LIBCD_CdGetToc() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x80057260);
-#else
 loc_80057260:
     sp -= 0x18;
     sw(ra, sp + 0x10);
@@ -2634,8 +2619,6 @@ loc_80057260:
     LIBCD_CdGetToc2();
     ra = lw(sp + 0x10);
     sp += 0x18;
-    return;
-#endif
 }
 
 void LIBCD_CdGetToc2() noexcept {

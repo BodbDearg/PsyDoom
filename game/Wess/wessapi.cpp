@@ -616,10 +616,6 @@ loc_80041F8C:
 }
 
 void wess_init() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x80041FAC);
-#else
 loc_80041FAC:
     sp -= 0x18;
     v0 = 0x80070000;                                    // Result = 80070000
@@ -643,8 +639,6 @@ loc_80041FFC:
     v0 = v1;
     ra = lw(sp + 0x10);
     sp += 0x18;
-    return;
-#endif
 }
 
 void wess_exit() noexcept {
@@ -2114,7 +2108,6 @@ void wess_seq_status() noexcept {
 loc_8004371C:
     // Emulate a little in case calling code is polling in a loop waiting for status to change
     #if PC_PSX_DOOM_MODS
-        emulate_gpu(4096);
         emulate_a_little();
     #endif
 

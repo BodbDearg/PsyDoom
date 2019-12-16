@@ -775,7 +775,7 @@ void LIBETC_VSync() noexcept {
     } else {
         // PC-PSX: If you are polling vsync do a little emulation to pass the time.
         // Also advance the GPU emulation by a lot.
-        #if PC_PSX_DOOM_MODS == 1
+        #if PC_PSX_DOOM_MODS
             emulate_gpu(4096);
             emulate_sound_if_required();
         #endif
@@ -810,7 +810,7 @@ void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept 
             break;
         }
 
-        #if PC_PSX_DOOM_MODS == 1            
+        #if PC_PSX_DOOM_MODS
             emulate_frame();
         #endif
 

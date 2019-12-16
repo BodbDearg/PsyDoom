@@ -578,10 +578,6 @@ loc_8003FAAC:
 }
 
 void psxcd_open() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x8003FACC);
-#else
 loc_8003FACC:
     sp -= 0x20;
     sw(s0, sp + 0x10);
@@ -631,8 +627,6 @@ loc_8003FACC:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-    return;
-#endif
 }
 
 void psxcd_init_pos() noexcept {
@@ -809,10 +803,6 @@ loc_8003FE10:
 }
 
 void psxcd_read() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x8003FE20);
-#else
 loc_8003FE20:
     sp -= 0x18;
     sw(ra, sp + 0x14);
@@ -820,6 +810,12 @@ loc_8003FE20:
     psxcd_async_read();
     s0 = v0;
 loc_8003FE34:
+    // Need to emulate the cdrom so the read actually happens!
+    #if PC_PSX_DOOM_MODS
+        emulate_cdrom();
+        emulate_sound_if_required();
+    #endif
+
     psxcd_async_on();
     {
         const bool bJump = (v0 != 0);
@@ -829,8 +825,6 @@ loc_8003FE34:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
-    return;
-#endif
 }
 
 void psxcd_async_read_cancel() noexcept {
@@ -1359,10 +1353,6 @@ loc_800406A0:
 }
 
 void psxcd_seek() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x800406D4);
-#else
 loc_800406D4:
     sp -= 0x20;
     sw(s1, sp + 0x14);
@@ -1424,15 +1414,9 @@ loc_800407A8:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-    return;
-#endif
 }
 
 void psxcd_tell() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x800407C8);
-#else
 loc_800407C8:
     sp -= 0x20;
     sw(s1, sp + 0x14);
@@ -1458,8 +1442,6 @@ loc_80040818:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-    return;
-#endif
 }
 
 void psxcd_close() noexcept {
