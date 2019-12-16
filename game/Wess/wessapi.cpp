@@ -2114,6 +2114,7 @@ void wess_seq_status() noexcept {
 loc_8004371C:
     // Emulate a little in case calling code is polling in a loop waiting for status to change
     #if PC_PSX_DOOM_MODS
+        emulate_gpu(4096);
         emulate_a_little();
     #endif
 

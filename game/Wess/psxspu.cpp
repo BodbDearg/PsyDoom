@@ -382,6 +382,7 @@ void psxspu_get_cd_fade_status() noexcept {
 loc_80045868:
     // Emulate a little in case calling code is polling in a loop waiting for changed spu status
     #if PC_PSX_DOOM_MODS
+        emulate_gpu(1024);
         emulate_a_little();
     #endif
 

@@ -26,14 +26,6 @@
 
 using namespace PsxVm;
 
-// Helper macros: sanity checks that the PSX emulator is in an expected state upon invoking it and exiting it.
-// We expect to be at the emulator entry point with no interrupts to handle.
-#define DEBUG_SANITY_CHECK_EMULATOR_ENTRY_STATE()\
-    ASSERT_LOG(canExitEmulator(), "Expect emulator to be in a state where we can exit it upon entry (no interrupts, at exit point)")
-
-#define DEBUG_SANITY_CHECK_EMULATOR_EXIT_STATE()\
-    ASSERT_LOG(canExitEmulator(), "Expect emulator to be in a state where we can exit it! (no interrupts, at exit point)")
-
 namespace PsxVm {
     const uint32_t* gpReg_zero;
     uint32_t* gpReg_at;
@@ -286,6 +278,12 @@ void _break(const uint32_t i) noexcept {
     FATAL_ERROR("Break instruction not supported!");
 }
 
+static void emulateUntilCanExit() noexcept {
+    while (!canExitEmulator()) {
+        emulate_a_little();
+    }
+}
+
 static void saveMipsRegisters() noexcept {
     mips::CPU& cpu = *gpCpu;
     std::memcpy(gSavedMipsRegs, cpu.reg, sizeof(uint32_t) * 32);
@@ -317,12 +315,14 @@ static void restoreMipsRegistersExceptReturnRegs() noexcept {
 }
 
 void syscall(const uint32_t i) noexcept {
-    DEBUG_SANITY_CHECK_EMULATOR_ENTRY_STATE();
     saveMipsRegisters();
     mips::CPU& cpu = *gpCpu;
     cpu.setReg(4, i);
 
-    assert(cpu.PC == 0x80050714 || cpu.PC == 0x80050718);
+    // Deal with any unhandled interrupts before we change the program flow
+    emulateUntilCanExit();
+
+    // Do the syscall itself and handle any interrupts resulting from that
     instructions::op_syscall(&cpu, {});
     
     while (!canExitEmulator()) {
@@ -330,7 +330,6 @@ void syscall(const uint32_t i) noexcept {
     }
 
     restoreMipsRegistersExceptReturnRegs();
-    DEBUG_SANITY_CHECK_EMULATOR_EXIT_STATE();
 }
 
 void ptr_call(const uint32_t addr) noexcept {
@@ -346,7 +345,7 @@ void ptr_call(const uint32_t addr) noexcept {
         if (func) {
             func();
         } else {
-            abort();    // TODO: add failure message
+            FATAL_ERROR_F("Can't handle function call %Xu - don't know native function address!", addr);
         }
     }
 }
@@ -365,12 +364,12 @@ static void setupForEmulatorCall() {
 }
 
 void emu_call(const uint32_t func) noexcept {
-    DEBUG_SANITY_CHECK_EMULATOR_ENTRY_STATE();
     mips::CPU& cpu = *gpCpu;
     System& system = *gpSystem;
 
     saveMipsRegisters();
     setupForEmulatorCall();    
+    emulateUntilCanExit();      // Deal with any unhandled interrupts before we change the program flow
     cpu.setPC(func);
 
     while (true) {
@@ -381,7 +380,6 @@ void emu_call(const uint32_t func) noexcept {
     }
 
     restoreMipsRegistersExceptReturnRegs();
-    DEBUG_SANITY_CHECK_EMULATOR_EXIT_STATE();
 }
 
 void jump_table_err() noexcept {
@@ -389,44 +387,66 @@ void jump_table_err() noexcept {
 }
 
 void emulate_frame() noexcept {
-    DEBUG_SANITY_CHECK_EMULATOR_ENTRY_STATE();
     saveMipsRegisters();
     gpSystem->vblankCounter = 0;    
 
-    while (gpSystem->vblankCounter < 1) {
+    while (gpSystem->vblankCounter < 1 || (!canExitEmulator())) {
         gpSystem->emulateFrame();
     }
 
     restoreMipsRegisters();
-    DEBUG_SANITY_CHECK_EMULATOR_EXIT_STATE();
 }
 
 void emulate_a_little() noexcept {
-    DEBUG_SANITY_CHECK_EMULATOR_ENTRY_STATE();
     saveMipsRegisters();
-    gpSystem->emulateFrame();    
+
+    do {
+        gpSystem->emulateFrame();
+    } while (!canExitEmulator());
+    
     restoreMipsRegisters();
-    DEBUG_SANITY_CHECK_EMULATOR_EXIT_STATE();
 }
 
 void emulate_gpu(const int numCycles) noexcept {
-    DEBUG_SANITY_CHECK_EMULATOR_ENTRY_STATE();
+    saveMipsRegisters();
 
     if (gpSystem->gpu->emulateGpuCycles((int) numCycles)) {
         gpSystem->interrupt->trigger(interrupt::VBLANK);
+        gpSystem->interrupt->step();
     }
 
     // If interrupts were generated, handle them.
     // Expect there to be no interrupts always upon entering the emulator:
-    if (!canExitEmulator()) {
-        emulate_a_little();
+    while (!canExitEmulator()) {
+        gpSystem->emulateFrame();
     }
 
-    DEBUG_SANITY_CHECK_EMULATOR_EXIT_STATE();
+    restoreMipsRegisters();
+}
+
+void emulate_timers(const int numCycles) noexcept {
+    saveMipsRegisters();
+
+    System& system = *gpSystem;
+    device::timer::Timer& timer1 = *system.timer[0].get();
+    device::timer::Timer& timer2 = *system.timer[1].get();
+    device::timer::Timer& timer3 = *system.timer[2].get();
+    timer1.step(numCycles);
+    timer2.step(numCycles);
+    timer3.step(numCycles);
+
+    // If interrupts were generated, handle them.
+    // Expect there to be no interrupts always upon entering the emulator:
+    gpSystem->interrupt->step();
+
+    while (!canExitEmulator()) {
+        gpSystem->emulateFrame();
+    }
+
+    restoreMipsRegisters();
 }
 
 void emulate_sound_if_required() noexcept {
-    DEBUG_SANITY_CHECK_EMULATOR_ENTRY_STATE();
     size_t soundBufferSize;
 
     {
@@ -434,45 +454,48 @@ void emulate_sound_if_required() noexcept {
         soundBufferSize = Sound::buffer.size();
     }
 
-    if (soundBufferSize < spu::SPU::AUDIO_BUFFER_SIZE) {
-        spu::SPU& spu = *gpSpu;
-        device::cdrom::CDROM& cdrom = *gpCdrom;
+    if (soundBufferSize >= spu::SPU::AUDIO_BUFFER_SIZE)
+        return;
 
-        while (!spu.bufferReady) {
-            spu.step(&cdrom);
-        }
+    saveMipsRegisters();
+    spu::SPU& spu = *gpSpu;
+    device::cdrom::CDROM& cdrom = *gpCdrom;
 
-        if (spu.bufferReady) {
-            spu.bufferReady = false;
-            Sound::appendBuffer(spu.audioBuffer.begin(), spu.audioBuffer.end());
+    while (!spu.bufferReady) {
+        spu.step(&cdrom);
+        gpSystem->interrupt->step();
+
+        // If interrupts were generated, handle them.
+        // Expect there to be no interrupts always upon entering the emulator:
+        while (!canExitEmulator()) {
+            gpSystem->emulateFrame();
         }
     }
 
-    // If interrupts were generated, handle them.
-    // Expect there to be no interrupts always upon entering the emulator:
-    if (!canExitEmulator()) {
-        emulate_a_little();
+    if (spu.bufferReady) {
+        spu.bufferReady = false;
+        Sound::appendBuffer(spu.audioBuffer.begin(), spu.audioBuffer.end());
     }
 
-    DEBUG_SANITY_CHECK_EMULATOR_EXIT_STATE();
+    restoreMipsRegisters();
 }
 
 void emulate_cdrom() noexcept {
-    DEBUG_SANITY_CHECK_EMULATOR_ENTRY_STATE();
+    saveMipsRegisters();
     System& system = *gpSystem;
 
     // This speeds up things a bit
-    for (uint32_t i = 0; i < 32; ++i) {
+    for (uint32_t i = 0; i < 16; ++i) {
         system.cdrom->step();        
     }
 
-    system.interrupt->step();
-
     // If interrupts were generated, handle them.
     // Expect there to be no interrupts always upon entering the emulator:
-    if (!canExitEmulator()) {
-        emulate_a_little();
+    system.interrupt->step();
+
+    while (!canExitEmulator()) {
+        gpSystem->emulateFrame();
     }
 
-    DEBUG_SANITY_CHECK_EMULATOR_EXIT_STATE();
+    restoreMipsRegisters();
 }

@@ -773,7 +773,11 @@ bool GPU::emulateGpuCycles(int cycles) {
         odd = false;
     }
 
+#if DOOM_AVOCADO_MODS
+    if (gpuLine >= LINES_TOTAL_NTSC - 1) {
+#else
     if (gpuLine == LINES_TOTAL_NTSC - 1) {
+#endif
         gpuLine = 0;
         frames++;
         return true;

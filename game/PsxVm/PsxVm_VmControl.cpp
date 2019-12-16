@@ -232,6 +232,9 @@ bool PsxVm::init(
     system.cpu->setReg(31, 0x80050714);
     system.cpu->setPC(0x80050714);
 
+    // Expect emulator to be in a state where we can exit it
+    ASSERT(canExitEmulator());
+
     // Setup input manager
     gInputMgr.reset(new InputManager());
     InputManager::setInstance(gInputMgr.get());
@@ -308,6 +311,9 @@ bool PsxVm::canExitEmulator() noexcept {
             return false;
         }
     }
+
+    if (gpSystem->interrupt->interruptPending())
+        return false;
 
     // If we get to here then we can exit the emulator back to native code
     return true;
