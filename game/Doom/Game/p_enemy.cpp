@@ -4,6 +4,7 @@
 #include "Doom/Base/m_fixed.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/d_main.h"
 #include "Doom/Renderer/r_main.h"
 #include "p_doors.h"
 #include "p_floor.h"
@@ -1799,7 +1800,7 @@ loc_80017718:
 
 void A_Tracer() noexcept {
     v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v0 = *gpGameTic;
     sp -= 0x20;
     sw(s1, sp + 0x14);
     s1 = a0;

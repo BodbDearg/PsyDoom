@@ -2,6 +2,7 @@
 
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/z_zone.h"
+#include "Doom/d_main.h"
 #include "p_floor.h"
 #include "p_spec.h"
 #include "p_tick.h"
@@ -35,7 +36,7 @@ loc_80014A70:
     a3 = 0;                                             // Result = 00000000
     T_MovePlane();
     v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v1 = *gpGameTic;
     v1 &= 7;
     s1 = v0;
     if (v1 != 0) goto loc_80014AD0;
@@ -84,7 +85,7 @@ loc_80014B2C:
     a3 = lw(s0 + 0x20);
     T_MovePlane();
     v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v1 = *gpGameTic;
     v1 &= 7;
     s1 = v0;
     if (v1 != 0) goto loc_80014B88;

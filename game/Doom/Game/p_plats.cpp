@@ -4,6 +4,7 @@
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/z_zone.h"
+#include "Doom/d_main.h"
 #include "p_floor.h"
 #include "p_spec.h"
 #include "p_tick.h"
@@ -37,7 +38,7 @@ loc_8001F2BC:
     s1 = v0;
     if (v1 == 0) goto loc_8001F31C;
     v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v0 = *gpGameTic;
     v0 &= 7;
     {
         const bool bJump = (v0 != 0);

@@ -39,6 +39,7 @@ gpu::GPU*               PsxVm::gpGpu;
 spu::SPU*               PsxVm::gpSpu;
 device::cdrom::CDROM*   PsxVm::gpCdrom;
 Interrupt*              PsxVm::gpInterrupt;
+uint8_t*                PsxVm::gpRam;
 
 namespace PsxVm {
     // Address to function lookup for the VM
@@ -72,6 +73,7 @@ static void setupVmPointers() noexcept {
     gpSpu = gpSystem->spu.get();
     gpCdrom = gpSystem->cdrom.get();
     gpInterrupt = gpSystem->interrupt.get();
+    gpRam = gpSystem->ram.data();
 
     // Mips registers
     gpReg_zero = &gpCpu->reg[0];
@@ -146,6 +148,7 @@ static void clearVmPointers() noexcept {
     gpReg_at = nullptr;
     gpReg_zero = nullptr;
 
+    gpRam = nullptr;
     gpInterrupt = nullptr;
     gpCdrom = nullptr;
     gpSpu = nullptr;

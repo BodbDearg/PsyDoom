@@ -205,6 +205,7 @@ namespace PsxVm {
     extern spu::SPU*                gpSpu;
     extern device::cdrom::CDROM*    gpCdrom;
     extern Interrupt*               gpInterrupt;
+    extern uint8_t*                 gpRam;
 
     // Initialize the VM with the given bios, original Playstation DOOM .EXE and CD file path (.cue format)
     bool init(

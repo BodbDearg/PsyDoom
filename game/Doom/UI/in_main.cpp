@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/d_main.h"
 #include "Doom/Game/p_password.h"
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
@@ -318,7 +319,7 @@ loc_8003CBD4:
     }
 loc_8003CBF8:
     v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v1 = *gpGameTic;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
     v0 = (i32(v0) < i32(v1));
@@ -468,7 +469,7 @@ loc_8003CDE0:
     S_StartSound();
 loc_8003CE24:
     v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v0 = *gpGameTic;
     v0 &= 1;
     if (v0 != 0) goto loc_8003CE4C;
     a0 = 0;                                             // Result = 00000000

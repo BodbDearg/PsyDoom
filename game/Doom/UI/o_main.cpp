@@ -70,7 +70,7 @@ loc_8003E9DC:
 
 void O_Control() noexcept {
     v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v1 = *gpGameTic;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
     sp -= 0x30;

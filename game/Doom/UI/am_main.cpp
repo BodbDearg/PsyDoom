@@ -1,6 +1,7 @@
 #include "am_main.h"
 
 #include "Doom/Base/i_main.h"
+#include "Doom/d_main.h"
 #include "PsxVm/PsxVm.h"
 
 void AM_Start() noexcept {
@@ -471,7 +472,7 @@ loc_8003C1A0:
     s6 = 0xC000;                                        // Result = 0000C000
     if (v0 != 0) goto loc_8003C1D0;
     v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v0 = *gpGameTic;
     v0 &= 2;
     if (v0 != 0) goto loc_8003C3A4;
 loc_8003C1D0:

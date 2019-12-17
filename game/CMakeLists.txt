@@ -125,6 +125,7 @@ set(SOURCE_FILES
     "PsxVm/PsxVm_FuncTable.cpp"
     "PsxVm/PsxVm_VmControl.cpp"
     "PsxVm/PsxVm_VmInterface.cpp"
+    "PsxVm/VmPtr.h"
     "PsyQ/LIBAPI.cpp"
     "PsyQ/LIBAPI.h"
     "PsyQ/LIBC2.cpp"

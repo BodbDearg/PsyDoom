@@ -91,7 +91,7 @@ loc_8003D80C:
     v0 = (i32(a0) < 0xB);
     if (v0 == 0) goto loc_8003D8C4;
     v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v1 = *gpGameTic;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
     v0 = (i32(v0) < i32(v1));
@@ -338,7 +338,7 @@ loc_8003DBB4:
     goto loc_8003E30C;
 loc_8003DBC8:
     v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v1 = *gpGameTic;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
     v0 = (i32(v0) < i32(v1));
@@ -457,7 +457,7 @@ loc_8003DD2C:
     sw(v1, gp + 0x8F0);                                 // Store to: 80077ED0
 loc_8003DDA0:
     v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v1 = *gpGameTic;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
     v0 = (i32(v0) < i32(v1));

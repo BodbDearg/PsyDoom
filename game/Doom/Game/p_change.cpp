@@ -2,6 +2,7 @@
 
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/d_main.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
@@ -154,7 +155,7 @@ loc_8001517C:
     sw(v0, gp + 0x8DC);                                 // Store to: gbNofit (80077EBC)
     if (v1 == 0) goto loc_80015220;
     v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v0 = *gpGameTic;
     v0 &= 3;
     {
         const bool bJump = (v0 != 0);

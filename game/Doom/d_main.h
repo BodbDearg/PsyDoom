@@ -1,5 +1,9 @@
 #pragma once
 
+#include "PsxVm/VmPtr.h"
+
+extern VmPtr<uint32_t> gpGameTic;
+
 void D_DoomMain() noexcept;
 void RunLegals() noexcept;
 void RunTitle() noexcept;

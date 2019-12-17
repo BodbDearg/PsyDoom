@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/d_main.h"
 #include "Doom/Game/p_password.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
@@ -51,7 +52,7 @@ void TIC_PasswordScreen() noexcept {
     sw(s0, sp + 0x18);
     if (a0 == 0) goto loc_80036EF4;
     v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FB4);                               // Load from: gGameTic (8007804C)
+    v1 = *gpGameTic;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
     v0 = (i32(v0) < i32(v1));
