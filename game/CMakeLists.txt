@@ -24,6 +24,7 @@ set(SOURCE_FILES
     "Doom/Base/z_zone.h"
     "Doom/d_main.cpp"
     "Doom/d_main.h"
+    "Doom/doomdef.h"
     "Doom/Game/g_game.cpp"
     "Doom/Game/g_game.h"
     "Doom/Game/p_base.cpp"

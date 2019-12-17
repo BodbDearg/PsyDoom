@@ -7,6 +7,7 @@
 #include "Base/s_sound.h"
 #include "Base/w_wad.h"
 #include "Base/z_zone.h"
+#include "doomdef.h"
 #include "Game/g_game.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
@@ -20,106 +21,87 @@
 VmPtr<uint32_t> gpGameTic(0x8007804C);
 VmPtr<uint32_t> gpPrevGameTic(0x80077FA4);
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Main DOOM entry point.
+// Bootstraps the engine and platform specific code and runs the game loops.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void D_DoomMain() noexcept {
-loc_80012274:
-    sp -= 0x20;
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
+    // PlayStation specific setup
     I_PSXInit();
-    a2 = 0x51EB0000;                                    // Result = 51EB0000
-    v0 = lw(gp + 0x10);                                 // Load from: gOptionsSndVol (800775F0)
-    a2 |= 0x851F;                                       // Result = 51EB851F
-    v1 = v0 << 7;
-    v1 -= v0;
-    mult(v1, a2);
-    a1 = lw(gp + 0x14);                                 // Load from: gOptionsMusVol (800775F4)
-    a0 = hi;
-    v0 = a1 << 7;
-    v0 -= a1;
-    mult(v0, a2);
-    s0 = 9;                                             // Result = 00000009
-    s1 = 7;                                             // Result = 00000007
-    v1 = u32(i32(v1) >> 31);
-    a0 = u32(i32(a0) >> 5);
-    a0 -= v1;
-    v0 = u32(i32(v0) >> 31);
-    a2 = 0x800A0000;                                    // Result = 800A0000
-    a2 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    a1 = hi;
-    a1 = u32(i32(a1) >> 5);
-    a1 -= v0;
+
+    a0 = (lw(0x800775F0) * 127) / 100;      // Load from: gOptionsSndVol (800775F0)
+    a1 = (lw(0x800775F4) * 127) / 100;      // Load from: gOptionsMusVol (800775F4)    
+    a2 = 0x80098748;                        // Result = gTmpWadLumpBuffer[0] (80098748)
     PsxSoundInit();
+
+    // Initializing standard DOOM subsystems, zone memory management, WAD, platform stuff, renderer etc.
     Z_Init();
     I_Init();
     W_Init();
     R_Init();
     ST_Init();
+
+    // Clearing some global tick counters and inputs
     *gpPrevGameTic = 0;
     *gpGameTic = 0;
-    sw(0, gp + 0xCBC);                                  // Store to: gLastTgtGameTicCount (8007829C)
-    sw(0, gp + 0xB6C);                                  // Store to: gTicCon (8007814C)
-    sw(0, gp + 0x964);                                  // Store to: gPlayerPadButtons[0] (80077F44)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7F48);                                 // Store to: gPlayerPadButtons[1] (80077F48)
-    sw(0, gp + 0xC34);                                  // Store to: gPlayerOldPadButtons[0] (80078214)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7DE8);                                 // Store to: gPlayerOldPadButtons[1] (80078218)
-loc_80012334:
-    RunTitle();
-    if (v0 == s0) goto loc_80012374;
-    a0 = 2;                                             // Result = 00000002
-    RunDemo();
-    if (v0 == s0) goto loc_80012374;
-    RunCredits();
-    if (v0 == s0) goto loc_80012374;
-    a0 = 3;                                             // Result = 00000003
-    RunDemo();
-    if (v0 != s0) goto loc_80012334;
-loc_80012374:
-    RunMenu();
-    if (v0 != s1) goto loc_80012374;
-    goto loc_80012334;
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    sw(0, 0x8007829C);          // Store to: gLastTgtGameTicCount (8007829C)
+    sw(0, 0x8007814C);          // Store to: gTicCon (8007814C)
+    sw(0, 0x80077F44);          // Store to: gPlayerPadButtons[0] (80077F44)
+    sw(0, 0x80077F48);          // Store to: gPlayerPadButtons[1] (80077F48)
+    sw(0, 0x80078214);          // Store to: gPlayerOldPadButtons[0] (80078214)
+    sw(0, 0x80078218);          // Store to: gPlayerOldPadButtons[1] (80078218)
+
+    // TODO: PC-PSX: allow this loop to exit if the application is quit
+    //
+    // The main intro and demo scenes flow.
+    // Continue looping until there is input and then execute the main menu until it times out.    
+    while (true) {
+        RunTitle();
+
+        if (v0 != ga_exitdemo) {
+            a0 = 2;
+            RunDemo();
+
+            if (v0 != ga_exitdemo) {
+                RunCredits();
+
+                if (v0 != ga_exitdemo) {
+                    a0 = 3;
+                    RunDemo();
+
+                    if (v0 != ga_exitdemo)
+                        continue;
+                }
+            }
+        }
+        
+        do {
+            RunMenu();
+        } while (v0 != ga_died);
+    }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Runs a screen with scrolling legals text.
+// This function is never called in the retail game!
+//------------------------------------------------------------------------------------------------------------------------------------------
 void RunLegals() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a0 = 0x80030000;                                    // Result = 80030000
-    a0 += 0x4F54;                                       // Result = START_Legals (80034F54)
-    a1 = 0x80030000;                                    // Result = 80030000
-    a1 += 0x4FA0;                                       // Result = STOP_Legals (80034FA0)
-    a2 = 0x80030000;                                    // Result = 80030000
-    a2 += 0x4FCC;                                       // Result = TIC_Legals (80034FCC)
-    a3 = 0x80030000;                                    // Result = 80030000
-    a3 += 0x504C;                                       // Result = DRAW_Legals (8003504C)
+    a0 = 0x80034F54;        // Result = START_Legals (80034F54)
+    a1 = 0x80034FA0;        // Result = STOP_Legals (80034FA0)
+    a2 = 0x80034FCC;        // Result = TIC_Legals (80034FCC)
+    a3 = 0x8003504C;        // Result = DRAW_Legals (8003504C)
     MiniLoop();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Runs the title screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void RunTitle() noexcept {
-loc_800123E4:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a0 = 0x80030000;                                    // Result = 80030000
-    a0 += 0x5098;                                       // Result = START_Title (80035098)
-    a1 = 0x80030000;                                    // Result = 80030000
-    a1 += 0x5268;                                       // Result = STOP_Title (80035268)
-    a2 = 0x80030000;                                    // Result = 80030000
-    a2 += 0x5294;                                       // Result = TIC_Title (80035294)
-    a3 = 0x80030000;                                    // Result = 80030000
-    a3 += 0x540C;                                       // Result = DRAW_Title (8003540C)
+    a0 = 0x80035098;        // Result = START_Title (80035098)       
+    a1 = 0x80035268;        // Result = STOP_Title (80035268)         
+    a2 = 0x80035294;        // Result = TIC_Title (80035294)
+    a3 = 0x8003540C;        // Result = DRAW_Title (8003540C)
     MiniLoop();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void RunDemo() noexcept {
@@ -157,22 +139,15 @@ loc_80012424:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Runs the credits screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void RunCredits() noexcept {
-loc_800124A8:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a0 = 0x80030000;                                    // Result = 80030000
-    a0 += 0x6BD8;                                       // Result = START_Credits (80036BD8)
-    a1 = 0x80030000;                                    // Result = 80030000
-    a1 += 0x6CA0;                                       // Result = STOP_Credits (80036CA0)
-    a2 = 0x80030000;                                    // Result = 80030000
-    a2 += 0x6CC0;                                       // Result = TIC_Credits (80036CC0)
-    a3 = 0x80030000;                                    // Result = 80030000
-    a3 += 0x6D58;                                       // Result = DRAW_Credits (80036D58)
+    a0 = 0x80036BD8;        // Result = START_Credits (80036BD8)         
+    a1 = 0x80036CA0;        // Result = STOP_Credits (80036CA0)         
+    a2 = 0x80036CC0;        // Result = TIC_Credits (80036CC0)         
+    a3 = 0x80036D58;        // Result = DRAW_Credits (80036D58)
     MiniLoop();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void I_SetDebugDrawStringPos() noexcept {

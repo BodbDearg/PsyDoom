@@ -13,6 +13,11 @@
 #include "w_wad.h"
 #include "z_zone.h"
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// User PlayStation entrypoint for DOOM.
+// This was probably the actual 'main()' function in the real source code.
+// I'm just calling 'I_Main()' so as not to confuse it with our this port's 'main()'... 
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_Main() noexcept {
     LIBSN__main();
 
