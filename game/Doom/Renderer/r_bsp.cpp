@@ -17,7 +17,7 @@ loc_8002ACE8:
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0x7F9C);                                // Store to: gppEndDrawSubsector (80078064)
     a2 = 0x100;                                         // Result = 00000100
-    D_memset();
+    _thunk_D_memset();
     a0 = 0x80080000;                                    // Result = 80080000
     a0 = lw(a0 - 0x7E48);                               // Load from: gNumBspNodes (800781B8)
     at = 0x80080000;                                    // Result = 80080000

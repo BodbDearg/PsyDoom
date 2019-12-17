@@ -65,11 +65,11 @@ loc_800313EC:
     a1 = 0;                                             // Result = 00000000
     sw(v0, gp + 0xD10);                                 // Store to: gpbIsMainWadLump (800782F0)
     a2 <<= 2;
-    D_memset();
+    _thunk_D_memset();
     a0 = lw(gp + 0xD10);                                // Load from: gpbIsMainWadLump (800782F0)
     a2 = lw(gp + 0xC0C);                                // Load from: gNumLumps (800781EC)
     a1 = 0;                                             // Result = 00000000
-    D_memset();
+    _thunk_D_memset();
     ra = lw(sp + 0x30);
     sp += 0x38;
     return;

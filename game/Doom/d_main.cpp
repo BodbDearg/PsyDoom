@@ -395,71 +395,66 @@ loc_800127B8:
     return;
 }
 
-void D_memset() noexcept {
-loc_80012850:
-    v0 = a0 & 3;
-    v1 = a1;
-    if (v0 == 0) goto loc_80012880;
-    a2--;
-loc_80012860:
-    if (i32(a2) < 0) goto loc_80012904;
-    sb(v1, a0);
-    a0++;
-    v0 = a0 & 3;
-    a2--;
-    if (v0 != 0) goto loc_80012860;
-    a2++;
-loc_80012880:
-    v0 = a1 << 24;
-    v1 = a1 << 16;
-    v0 |= v1;
-    v1 = a1 << 8;
-    v0 |= v1;
-    a1 |= v0;
-    v0 = (i32(a2) < 0x20);
-    a3 = a0;
-    if (v0 != 0) goto loc_800128DC;
-    a0 += 4;
-loc_800128A8:
-    sw(a1, a0 + 0x18);
-    sw(a1, a0 + 0x14);
-    sw(a1, a0 + 0x10);
-    sw(a1, a0 + 0xC);
-    sw(a1, a0 + 0x8);
-    sw(a1, a0 + 0x4);
-    sw(a1, a0);
-    a0 += 0x20;
-    sw(a1, a3);
-    a2 -= 0x20;
-    v0 = (i32(a2) < 0x20);
-    a3 += 0x20;
-    if (v0 == 0) goto loc_800128A8;
-loc_800128DC:
-    a2--;
-    v0 = -1;                                            // Result = FFFFFFFF
-    a0 = a3;
-    if (a2 == v0) goto loc_80012904;
-    v0 = a1;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_800128F4:
-    sb(v0, a0);
-    a2--;
-    a0++;
-    if (a2 != v1) goto loc_800128F4;
-loc_80012904:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set a region of memory to a specified byte value.
+// Bulk writes in 32-byte chunks where possible.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void D_memset(void* const pDst, const std::byte fillByte, const uint32_t count) noexcept {
+    // Fill up until the next aligned 32-bit address
+    uint32_t bytesLeft = count;
+    std::byte* pDstByte = (std::byte*) pDst;
+
+    while (((uintptr_t) pDstByte & 3) != 0) {
+        if (bytesLeft == 0)
+            return;
+        
+        *pDstByte = fillByte;
+        ++pDstByte;
+        --bytesLeft;
+    }
+
+    // Fill 32 bytes at a time (with 8 writes)
+    {
+        const uint32_t fb32 = (uint32_t) fillByte;
+        const uint32_t fillWord = (fb32 << 24) | (fb32 << 16) | (fb32 << 8) | fb32;
+    
+        while (bytesLeft >= 32) {
+            uint32_t* const pDstWords = (uint32_t*) pDstByte;
+
+            pDstWords[0] = fillWord;
+            pDstWords[1] = fillWord;
+            pDstWords[2] = fillWord;
+            pDstWords[3] = fillWord;
+            pDstWords[4] = fillWord;
+            pDstWords[5] = fillWord;
+            pDstWords[6] = fillWord;
+            pDstWords[7] = fillWord;
+            
+            pDstByte += 32;
+            bytesLeft -= 32;
+        }
+    }
+
+    // Fill the remaining bytes
+    while (bytesLeft != 0) {
+        *pDstByte = fillByte;
+        bytesLeft--;
+        pDstByte++;
+    }
 }
 
-void _thunk_D_memcpy() noexcept {
-    VmPtr<std::byte> pDst = a0;
-    VmPtr<std::byte> pSrc = a1;
-    D_memcpy(pDst.get(), pSrc.get(), a2);
+void _thunk_D_memset() noexcept {
+    VmPtr<std::byte> pDst(a0);
+    D_memset(pDst.get(), (std::byte) a1, a2);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Copy a number of bytes from source to destination
+//------------------------------------------------------------------------------------------------------------------------------------------
 void D_memcpy(void* const pDst, const void* const pSrc, const uint32_t numBytes) noexcept {
-    std::byte* pDstByte = reinterpret_cast<std::byte*>(pDst);
-    const std::byte* pSrcByte = reinterpret_cast<const std::byte*>(pSrc);
     uint32_t bytesLeft = numBytes;
+    std::byte* pDstByte = (std::byte*) pDst;
+    const std::byte* pSrcByte = (const std::byte*) pSrc;
 
     while (bytesLeft != 0) {
         bytesLeft--;
@@ -467,6 +462,12 @@ void D_memcpy(void* const pDst, const void* const pSrc, const uint32_t numBytes)
         ++pSrcByte;
         ++pDstByte;
     }
+}
+
+void _thunk_D_memcpy() noexcept {
+    VmPtr<std::byte> pDst = a0;
+    VmPtr<std::byte> pSrc = a1;
+    D_memcpy(pDst.get(), pSrc.get(), a2);
 }
 
 void D_strncpy() noexcept {

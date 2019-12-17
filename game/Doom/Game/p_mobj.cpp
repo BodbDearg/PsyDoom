@@ -386,7 +386,7 @@ loc_8001CC68:
     a0 = s3;
     a1 = 0;                                             // Result = 00000000
     a2 = 0x94;                                          // Result = 00000094
-    D_memset();
+    _thunk_D_memset();
     v0 = s0 << 1;
     v0 += s0;
     v0 <<= 2;
@@ -521,7 +521,7 @@ loc_8001CEC8:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
     a2 = 0x94;                                          // Result = 00000094
-    D_memset();
+    _thunk_D_memset();
     v0 = 0x80060000;                                    // Result = 80060000
     v0 -= 0x1FC4;                                       // Result = MObjInfo_MT_PLAYER[0] (8005E03C)
     sw(0, s0 + 0x54);
@@ -840,7 +840,7 @@ loc_8001D3F0:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
     a2 = 0x94;                                          // Result = 00000094
-    D_memset();
+    _thunk_D_memset();
     v0 = 0x80060000;                                    // Result = 80060000
     v0 -= 0x1FC4;                                       // Result = MObjInfo_MT_PLAYER[0] (8005E03C)
     v0 += s4;                                           // Result = MObjInfo_MT_PLAYER[0] (8005E03C)
@@ -1036,7 +1036,7 @@ loc_8001D704:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
     a2 = 0x94;                                          // Result = 00000094
-    D_memset();
+    _thunk_D_memset();
     v0 = 0x1B;                                          // Result = 0000001B
     sw(v0, s0 + 0x54);
     v0 = 0x80060000;                                    // Result = 80060000
@@ -1169,7 +1169,7 @@ loc_8001D930:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
     a2 = 0x94;                                          // Result = 00000094
-    D_memset();
+    _thunk_D_memset();
     v0 = 0x1C;                                          // Result = 0000001C
     sw(v0, s0 + 0x54);
     v0 = 0x80060000;                                    // Result = 80060000
@@ -1377,7 +1377,7 @@ loc_8001DC94:
     a0 = s3;
     a1 = 0;                                             // Result = 00000000
     a2 = 0x94;                                          // Result = 00000094
-    D_memset();
+    _thunk_D_memset();
     v0 = s0 << 1;
     v0 += s0;
     v0 <<= 2;
@@ -1680,7 +1680,7 @@ loc_8001E1A8:
     a0 = s2;
     a1 = 0;                                             // Result = 00000000
     a2 = 0x94;                                          // Result = 00000094
-    D_memset();
+    _thunk_D_memset();
     v0 = s5 << 1;
     v0 += s5;
     v0 <<= 2;

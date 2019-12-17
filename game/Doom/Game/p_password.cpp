@@ -23,7 +23,7 @@ loc_80037DBC:
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
     s0 = v1 + v0;
-    D_memset();
+    _thunk_D_memset();
     a0 = 0;                                             // Result = 00000000
     a2 = 1;                                             // Result = 00000001
     a1 = s0;

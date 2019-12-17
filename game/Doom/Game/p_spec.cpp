@@ -1529,7 +1529,7 @@ loc_800273D0:
     a0 += s0;
     a1 = 0;                                             // Result = 00000000
     a2 = 0x14;                                          // Result = 00000014
-    D_memset();
+    _thunk_D_memset();
 loc_80027400:
     s1++;
     v0 = (i32(s1) < 0x10);
@@ -2148,17 +2148,17 @@ loc_80027C5C:
     a0 -= 0x62E8;                                       // Result = gpActiveCeilings[0] (800A9D18)
     a1 = 0;                                             // Result = 00000000
     a2 = 0x78;                                          // Result = 00000078
-    D_memset();
+    _thunk_D_memset();
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7C44;                                       // Result = gpActivePlats[0] (80097C44)
     a1 = 0;                                             // Result = 00000000
     a2 = 0x78;                                          // Result = 00000078
-    D_memset();
+    _thunk_D_memset();
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x77AC;                                       // Result = gButtonList_1[0] (800977AC)
     a1 = 0;                                             // Result = 00000000
     a2 = 0x140;                                         // Result = 00000140
-    D_memset();
+    _thunk_D_memset();
     ra = lw(sp + 0x30);
     s1 = lw(sp + 0x2C);
     s0 = lw(sp + 0x28);

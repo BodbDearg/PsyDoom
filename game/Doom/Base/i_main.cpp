@@ -805,7 +805,7 @@ loc_8003352C:
     a1 = 0;                                             // Result = 00000000
     sw(a0, gp + 0x994);                                 // Store to: gpTexCacheEntries (80077F74)
     a2 = 0x2C00;                                        // Result = 00002C00
-    D_memset();
+    _thunk_D_memset();
     I_ResetTexCache();
     ra = lw(sp + 0x10);
     sp += 0x18;

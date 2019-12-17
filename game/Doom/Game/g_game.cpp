@@ -87,11 +87,11 @@ loc_80012F00:
     a1 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x14);
     a2 = 0x18;                                          // Result = 00000018
-    D_memset();
+    _thunk_D_memset();
     a0 = s0 + 0x48;
     a1 = 0;                                             // Result = 00000000
     a2 = 0x18;                                          // Result = 00000018
-    D_memset();
+    _thunk_D_memset();
     a0 = lw(s0);
     v1 = 0x8FFF0000;                                    // Result = 8FFF0000
     v0 = lw(a0 + 0x64);
@@ -132,7 +132,7 @@ loc_80012F88:
     s3 = lw(s0 + 0xCC);
     s4 = lw(s0 + 0xD0);
     a2 = 0x12C;                                         // Result = 0000012C
-    D_memset();
+    _thunk_D_memset();
     a1 = 0;                                             // Result = 00000000
     a0 = 0x80060000;                                    // Result = 80060000
     a0 += 0x70D4;                                       // Result = gMaxAmmo[0] (800670D4)
@@ -431,7 +431,7 @@ loc_800133FC:
     s0 -= 0x61D0;                                       // Result = gUnusedGameBuffer[0] (800A9E30)
     a0 = s0;                                            // Result = gUnusedGameBuffer[0] (800A9E30)
     a2 = 0x94;                                          // Result = 00000094
-    D_memset();
+    _thunk_D_memset();
     v1 = 1;                                             // Result = 00000001
     at = 0x800B0000;                                    // Result = 800B0000
     sw(s0, at - 0x76E8);                                // Store to: gPlayer2[0] (800A8918)

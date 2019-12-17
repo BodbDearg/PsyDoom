@@ -110,7 +110,7 @@ loc_80021BD4:
     a2 = v0 << 2;
     a2 += v0;
     a2 <<= 3;
-    D_memset();
+    _thunk_D_memset();
     a0 = s0;
     s0 = 0x800A0000;                                    // Result = 800A0000
     s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
@@ -247,7 +247,7 @@ loc_80021E10:
     a2 = lw(gp + 0xC44);                                // Load from: gNumSubsectors (80078224)
     a0 = lw(gp + 0x960);                                // Load from: gpSubsectors (80077F40)
     a2 <<= 4;
-    D_memset();
+    _thunk_D_memset();
     a1 = lw(gp + 0xC44);                                // Load from: gNumSubsectors (80078224)
     v0 = lw(gp + 0x960);                                // Load from: gpSubsectors (80077F40)
     a0 = 0;                                             // Result = 00000000
@@ -332,7 +332,7 @@ loc_80021F30:
     a2 <<= 3;
     a2 -= v0;
     a2 <<= 2;
-    D_memset();
+    _thunk_D_memset();
     a0 = s0;
     a1 = s3;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
     a2 = 1;                                             // Result = 00000001
@@ -636,7 +636,7 @@ loc_800223C8:
     a2 <<= 2;
     a2 -= v0;
     a2 <<= 2;
-    D_memset();
+    _thunk_D_memset();
     a0 = s0;
     a1 = s5;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
     a2 = 1;                                             // Result = 00000001
@@ -817,7 +817,7 @@ loc_80022694:
     a2 = v0 << 1;
     a2 += v0;
     a2 <<= 3;
-    D_memset();
+    _thunk_D_memset();
     a0 = s0;
     a1 = s3;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
     a2 = 1;                                             // Result = 00000001
@@ -931,7 +931,7 @@ loc_80022850:
     a1 = 0;                                             // Result = 00000000
     sw(a0, gp + 0x8FC);                                 // Store to: gppBlockLinks (80077EDC)
     a2 = s0;
-    D_memset();
+    _thunk_D_memset();
     ra = lw(sp + 0x1C);
     s0 = lw(sp + 0x18);
     sp += 0x20;
@@ -1684,7 +1684,7 @@ loc_800233CC:
     a2 = lw(gp + 0xC44);                                // Load from: gNumSubsectors (80078224)
     a0 = lw(gp + 0x960);                                // Load from: gpSubsectors (80077F40)
     a2 <<= 4;
-    D_memset();
+    _thunk_D_memset();
     a1 = lw(gp + 0xC44);                                // Load from: gNumSubsectors (80078224)
     v0 = lw(gp + 0x960);                                // Load from: gpSubsectors (80077F40)
     a0 = 0;                                             // Result = 00000000
