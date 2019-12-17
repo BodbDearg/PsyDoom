@@ -734,7 +734,7 @@ loc_8001D23C:
     a1 = s2;
     if (v0 == 0) goto loc_8001D6D8;
     a2 = 0xA;                                           // Result = 0000000A
-    D_memcpy();
+    _thunk_D_memcpy();
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7FA0);                               // Load from: gpDeathmatchP (80078060)
     v0 += 0xA;

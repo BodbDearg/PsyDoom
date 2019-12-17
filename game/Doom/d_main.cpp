@@ -450,22 +450,23 @@ loc_80012904:
     return;
 }
 
-void D_memcpy() noexcept {
-loc_8001290C:
-    sp -= 8;
-    v1 = a2 - 1;
-    if (a2 == 0) goto loc_80012934;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_8001291C:
-    v0 = lbu(a1);
-    a1++;
-    v1--;
-    sb(v0, a0);
-    a0++;
-    if (v1 != a2) goto loc_8001291C;
-loc_80012934:
-    sp += 8;
-    return;
+void _thunk_D_memcpy() noexcept {
+    VmPtr<std::byte> pDst = a0;
+    VmPtr<std::byte> pSrc = a1;
+    D_memcpy(pDst.get(), pSrc.get(), a2);
+}
+
+void D_memcpy(void* const pDst, const void* const pSrc, const uint32_t numBytes) noexcept {
+    std::byte* pDstByte = reinterpret_cast<std::byte*>(pDst);
+    const std::byte* pSrcByte = reinterpret_cast<const std::byte*>(pSrc);
+    uint32_t bytesLeft = numBytes;
+
+    while (bytesLeft != 0) {
+        bytesLeft--;
+        *pDstByte = *pSrcByte;
+        ++pSrcByte;
+        ++pDstByte;
+    }
 }
 
 void D_strncpy() noexcept {

@@ -159,7 +159,7 @@ loc_80037B34:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x3E2C;                                       // Result = DefaultBtnBinding_Attack (80073E2C)
     a2 = 0x20;                                          // Result = 00000020
-    D_memcpy();
+    _thunk_D_memcpy();
     a0 = 0;                                             // Result = 00000000
     a1 = 0x17;                                          // Result = 00000017
 loc_80037B60:

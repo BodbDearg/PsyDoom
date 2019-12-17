@@ -651,12 +651,12 @@ loc_80013714:
     sw(v0, at + 0x75EC);                                // Store to: gpDemo_p (800775EC)
     s0 = lw(v1 + 0x4);
     a2 = 0x20;                                          // Result = 00000020
-    D_memcpy();
+    _thunk_D_memcpy();
     a0 = s1;                                            // Result = gBtnBinding_Attack (80073E0C)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lw(a1 + 0x75EC);                               // Load from: gpDemo_p (800775EC)
     a2 = 0x20;                                          // Result = 00000020
-    D_memcpy();
+    _thunk_D_memcpy();
     a0 = s2;
     a1 = s0;
     v0 = 0x80070000;                                    // Result = 80070000
@@ -683,7 +683,7 @@ loc_80013714:
     a2 = 0x20;                                          // Result = 00000020
     sw(0, gp + 0xAA0);                                  // Store to: gbDemoPlayback (80078080)
     s0 = v0;
-    D_memcpy();
+    _thunk_D_memcpy();
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
     a0 = 0x80080000;                                    // Result = 80080000

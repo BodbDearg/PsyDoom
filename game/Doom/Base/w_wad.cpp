@@ -678,7 +678,7 @@ loc_80031D58:
     a2 = lw(v1 + 0x10);
     a1 += v0;
     a2 -= v0;
-    D_memcpy();
+    _thunk_D_memcpy();
 loc_80031D74:
     ra = lw(sp + 0x2C);
     s2 = lw(sp + 0x28);

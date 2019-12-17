@@ -11,7 +11,7 @@ extern void RunCredits() noexcept;
 extern void I_SetDebugDrawStringPos() noexcept;
 extern void I_DebugDrawString() noexcept;
 extern void D_memset() noexcept;
-extern void D_memcpy() noexcept;
+extern void _thunk_D_memcpy() noexcept;
 extern void D_strncpy() noexcept;
 extern void D_strncasecmp() noexcept;
 extern void strupr() noexcept;
@@ -999,7 +999,7 @@ namespace PsxVm {
         { 0x800124E8, &I_SetDebugDrawStringPos },
         { 0x800124F8, &I_DebugDrawString },
         { 0x80012850, &D_memset },
-        { 0x8001290C, &D_memcpy },
+        { 0x8001290C, &_thunk_D_memcpy },
         { 0x80012940, &D_strncpy },
         { 0x8001297C, &D_strncasecmp },
         { 0x800129D4, &strupr },

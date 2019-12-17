@@ -294,7 +294,7 @@ loc_800381B0:
     a1 = v0;
     sw(ra, sp + 0x38);
     a2 = 0xA;                                           // Result = 0000000A
-    D_memcpy();
+    _thunk_D_memcpy();
     a0 = sp + 0x21;
 loc_800381F0:
     v0 = lbu(s0);
