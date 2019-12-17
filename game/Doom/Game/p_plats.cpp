@@ -37,7 +37,6 @@ loc_8001F2BC:
     v1 = (v1 < 2);
     s1 = v0;
     if (v1 == 0) goto loc_8001F31C;
-    v0 = 0x80080000;                                    // Result = 80080000
     v0 = *gpGameTic;
     v0 &= 7;
     {

@@ -196,7 +196,6 @@ void T_MoveFloor() noexcept {
     a2 = lw(s0 + 0x24);
     a3 = lw(s0 + 0x10);
     T_MovePlane();
-    v1 = 0x80080000;                                    // Result = 80080000
     v1 = *gpGameTic;
     v1 &= 3;
     s1 = v0;

@@ -90,10 +90,8 @@ loc_8003D80C:
     a0 = lw(gp + 0xB30);                                // Load from: 80078110
     v0 = (i32(a0) < 0xB);
     if (v0 == 0) goto loc_8003D8C4;
-    v1 = 0x80080000;                                    // Result = 80080000
     v1 = *gpGameTic;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
+    v0 = *gpPrevGameTic;
     v0 = (i32(v0) < i32(v1));
     {
         const bool bJump = (v0 == 0);
@@ -337,10 +335,8 @@ loc_8003DBB4:
     }
     goto loc_8003E30C;
 loc_8003DBC8:
-    v1 = 0x80080000;                                    // Result = 80080000
     v1 = *gpGameTic;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
+    v0 = *gpPrevGameTic;
     v0 = (i32(v0) < i32(v1));
     {
         const bool bJump = (v0 == 0);
@@ -456,10 +452,8 @@ loc_8003DD2C:
     sw(v0, gp + 0x9C8);                                 // Store to: 80077FA8
     sw(v1, gp + 0x8F0);                                 // Store to: 80077ED0
 loc_8003DDA0:
-    v1 = 0x80080000;                                    // Result = 80080000
     v1 = *gpGameTic;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
+    v0 = *gpPrevGameTic;
     v0 = (i32(v0) < i32(v1));
     {
         const bool bJump = (v0 == 0);

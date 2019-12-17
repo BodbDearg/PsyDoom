@@ -271,10 +271,8 @@ loc_80035EF4:
         v0 = 7;                                         // Result = 00000007
         if (bJump) goto loc_80036244;
     }
-    v1 = 0x80080000;                                    // Result = 80080000
     v1 = *gpGameTic;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
+    v0 = *gpPrevGameTic;
     v0 = (i32(v0) < i32(v1));
     {
         const bool bJump = (v0 == 0);

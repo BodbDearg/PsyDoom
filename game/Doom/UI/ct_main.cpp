@@ -39,10 +39,8 @@ void STOP_ControlsScreen() noexcept {
 }
 
 void TIC_ControlsScreen() noexcept {
-    v1 = 0x80080000;                                    // Result = 80080000
     v1 = *gpGameTic;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
+    v0 = *gpPrevGameTic;
     sp -= 0x20;
     sw(ra, sp + 0x18);
     sw(s1, sp + 0x14);

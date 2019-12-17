@@ -16,7 +16,9 @@
 #include "UI/st_main.h"
 #include "Wess/psxsnd.h"
 
+// Timing related variables
 VmPtr<uint32_t> gpGameTic(0x8007804C);
+VmPtr<uint32_t> gpPrevGameTic(0x80077FA4);
 
 void D_DoomMain() noexcept {
 loc_80012274:
@@ -53,7 +55,7 @@ loc_80012274:
     W_Init();
     R_Init();
     ST_Init();
-    sw(0, gp + 0x9C4);                                  // Store to: gPrevGameTic (80077FA4)
+    *gpPrevGameTic = 0;
     *gpGameTic = 0;
     sw(0, gp + 0xCBC);                                  // Store to: gLastTgtGameTicCount (8007829C)
     sw(0, gp + 0xB6C);                                  // Store to: gTicCon (8007814C)
@@ -550,7 +552,7 @@ loc_80012B78:
 loc_80012BB8:
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x7EB4);                                 // Store to: gGameAction (80077EB4)
-    sw(0, gp + 0x9C4);                                  // Store to: gPrevGameTic (80077FA4)
+    *gpPrevGameTic = 0;
     *gpGameTic = 0;
     sw(0, gp + 0xB6C);                                  // Store to: gTicCon (8007814C)
     sw(0, gp + 0xCBC);                                  // Store to: gLastTgtGameTicCount (8007829C)
@@ -662,13 +664,13 @@ loc_80012D6C:
     if (s0 != 0) goto loc_80012DBC;
     ptr_call(s2);
     v1 = *gpGameTic;
-    v0 = lw(gp + 0x9C4);                                // Load from: gPrevGameTic (80077FA4)
+    v0 = *gpPrevGameTic;
     v0 = (i32(v0) < i32(v1));
     if (v0 == 0) goto loc_80012DA8;
     S_UpdateSounds();
 loc_80012DA8:
     v0 = *gpGameTic;
-    sw(v0, gp + 0x9C4);                                 // Store to: gPrevGameTic (80077FA4)
+    *gpPrevGameTic = v0;
     goto loc_80012BF8;
 loc_80012DBC:
     a0 = s0;

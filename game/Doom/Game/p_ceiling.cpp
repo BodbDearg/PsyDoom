@@ -35,7 +35,6 @@ loc_80014A70:
     a2 = lw(s0 + 0x18);
     a3 = 0;                                             // Result = 00000000
     T_MovePlane();
-    v1 = 0x80080000;                                    // Result = 80080000
     v1 = *gpGameTic;
     v1 &= 7;
     s1 = v0;
@@ -84,7 +83,6 @@ loc_80014B2C:
     a2 = lw(s0 + 0x14);
     a3 = lw(s0 + 0x20);
     T_MovePlane();
-    v1 = 0x80080000;                                    // Result = 80080000
     v1 = *gpGameTic;
     v1 &= 7;
     s1 = v0;

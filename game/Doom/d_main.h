@@ -3,6 +3,7 @@
 #include "PsxVm/VmPtr.h"
 
 extern VmPtr<uint32_t> gpGameTic;
+extern VmPtr<uint32_t> gpPrevGameTic;
 
 void D_DoomMain() noexcept;
 void RunLegals() noexcept;

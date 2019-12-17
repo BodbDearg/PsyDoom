@@ -318,10 +318,8 @@ loc_8003CBD4:
         if (bJump) goto loc_8003CAE0;
     }
 loc_8003CBF8:
-    v1 = 0x80080000;                                    // Result = 80080000
     v1 = *gpGameTic;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
+    v0 = *gpPrevGameTic;
     v0 = (i32(v0) < i32(v1));
     s0 = 0;                                             // Result = 00000000
     if (v0 != 0) goto loc_8003CC30;
@@ -468,7 +466,6 @@ loc_8003CDE0:
     a1 = 5;                                             // Result = 00000005
     S_StartSound();
 loc_8003CE24:
-    v0 = 0x80080000;                                    // Result = 80080000
     v0 = *gpGameTic;
     v0 &= 1;
     if (v0 != 0) goto loc_8003CE4C;

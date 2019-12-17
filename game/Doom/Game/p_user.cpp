@@ -1356,10 +1356,8 @@ loc_8002ABC8:
 loc_8002ABCC:
     a0 = s0;
     P_MovePsprites();
-    v1 = 0x80080000;                                    // Result = 80080000
     v1 = *gpGameTic;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FA4);                               // Load from: gPrevGameTic (80077FA4)
+    v0 = *gpPrevGameTic;
     v0 = (i32(v0) < i32(v1));
     if (v0 == 0) goto loc_8002ACCC;
     v0 = lw(s0 + 0x34);
