@@ -1,10 +1,12 @@
 #include "o_main.h"
 
+#include "ct_main.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/d_main.h"
 #include "PsxVm/PsxVm.h"
+#include "pw_main.h"
 
 void O_Init() noexcept {
     sp -= 0x18;
@@ -335,16 +337,10 @@ loc_8003ED84:
 loc_8003EDC8:
     v0 = s0 & 0xF0;
     if (v0 == 0) goto loc_8003EE8C;
-    a0 = 0x80030000;                                    // Result = 80030000
-    a0 += 0x6E1C;                                       // Result = START_PasswordScreen (80036E1C)
-    a1 = 0x80030000;                                    // Result = 80030000
-    a1 += 0x6E6C;                                       // Result = STOP_PasswordScreen (80036E6C)
-    a2 = 0x80030000;                                    // Result = 80030000
-    a2 += 0x6EA0;                                       // Result = TIC_PasswordScreen (80036EA0)
-    a3 = 0x80030000;                                    // Result = 80030000
-    a3 += 0x7134;                                       // Result = DRAW_PasswordScreen (80037134)
-    MiniLoop();
-    v1 = 4;                                             // Result = 00000004
+    
+    v0 = MiniLoop(START_PasswordScreen, STOP_PasswordScreen, TIC_PasswordScreen, DRAW_PasswordScreen);
+    v1 = 4;
+
     s4 -= 4;
     if (v0 != v1) goto loc_8003EE90;
     v0 = 4;                                             // Result = 00000004
@@ -352,17 +348,11 @@ loc_8003EDC8:
 loc_8003EE10:
     v0 = s0 & 0xF0;
     if (v0 == 0) goto loc_8003EE8C;
-    a0 = 0x80030000;                                    // Result = 80030000
-    a0 += 0x793C;                                       // Result = START_ControlsScreen (8003793C)
-    a1 = 0x80030000;                                    // Result = 80030000
-    a1 += 0x7980;                                       // Result = STOP_ControlsScreen (80037980)
-    a2 = 0x80030000;                                    // Result = 80030000
-    a2 += 0x79AC;                                       // Result = TIC_ControlsScreen (800379AC)
-    a3 = 0x80030000;                                    // Result = 80030000
-    a3 += 0x7B84;                                       // Result = DRAW_ControlsScreen (80037B84)
+    
     s4 -= 4;
-    MiniLoop();
+    v0 = MiniLoop(START_ControlsScreen, STOP_ControlsScreen, TIC_ControlsScreen, DRAW_ControlsScreen);
     s2--;
+
     goto loc_8003EE94;
 loc_8003EE4C:
     v0 = s0 & 0xF0;

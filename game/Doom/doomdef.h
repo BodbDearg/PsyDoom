@@ -9,6 +9,7 @@ enum gameaction_t : uint32_t {
     ga_number1      = 1,        // TODO: NAME!
     ga_number2      = 2,        // TODO: NAME!
     ga_number4      = 4,        // TODO: NAME!
+    ga_number5      = 5,        // TODO: NAME!
     ga_died         = 7,        // Player died or menu timed out
     ga_exitdemo     = 9,        // Player aborted the demo screens
 };

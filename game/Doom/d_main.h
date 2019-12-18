@@ -29,4 +29,10 @@ void _thunk_D_memcpy() noexcept;
 void D_strncpy() noexcept;
 void D_strncasecmp() noexcept;
 void strupr() noexcept;
-void MiniLoop() noexcept;
+
+gameaction_t MiniLoop(
+    void (*const pStart)(),
+    void (*const pStop)(),
+    void (*const pTicker)(),
+    void (*const pDrawer)()
+) noexcept;

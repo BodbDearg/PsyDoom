@@ -7,9 +7,12 @@
 #include "Doom/d_main.h"
 #include "Doom/doomdef.h"
 #include "Doom/Renderer/r_main.h"
+#include "Doom/UI/f_finale.h"
+#include "Doom/UI/in_main.h"
 #include "p_map.h"
 #include "p_mobj.h"
 #include "p_setup.h"
+#include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 #include "Wess/wessapi.h"
 
@@ -506,23 +509,20 @@ loc_80013528:
     sw(s2, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
+
 loc_8001353C:
     G_DoLoadLevel();
-    a0 = 0x80030000;                                    // Result = 80030000
-    a0 -= 0x697C;                                       // Result = P_Start (80029684)
-    a1 = 0x80030000;                                    // Result = 80030000
-    a1 -= 0x68E4;                                       // Result = P_Stop (8002971C)
-    a2 = 0x80030000;                                    // Result = 80030000
-    a2 -= 0x6BEC;                                       // Result = P_Ticker (80029414)
-    a3 = 0x80030000;                                    // Result = 80030000
-    a3 -= 0x6A04;                                       // Result = P_Drawer (800295FC)
-    MiniLoop();
+    MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+
     v1 = *gGameAction;
     v0 = 6;                                             // Result = 00000006
     sw(0, gp + 0xA14);                                  // Store to: gbIsLevelBeingRestarted (80077FF4)
     s2 = 4;                                             // Result = 00000004
     if (v1 != v0) goto loc_80013588;
+
+    // Who knows what this function originally did...
     empty_func1();
+
 loc_80013588:
     v0 = *gGameAction;
     v1 = 1;                                             // Result = 00000001
@@ -530,9 +530,11 @@ loc_80013588:
     s1 = 8;                                             // Result = 00000008
     if (v0 == v1) goto loc_800135A8;
     if (v0 != s1) goto loc_800135B4;
+
 loc_800135A8:
     sw(v1, gp + 0xA14);                                 // Store to: gbIsLevelBeingRestarted (80077FF4)
     goto loc_8001353C;
+
 loc_800135B4:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
@@ -546,15 +548,9 @@ loc_800135B4:
     v0 = *gGameAction;
     s0 = 5;                                             // Result = 00000005
     if (v0 == s0) goto loc_800136F8;
-    a0 = 0x80040000;                                    // Result = 80040000
-    a0 -= 0x38A8;                                       // Result = IN_Start (8003C758)
-    a1 = 0x80040000;                                    // Result = 80040000
-    a1 -= 0x359C;                                       // Result = IN_Stop (8003CA64)
-    a2 = 0x80040000;                                    // Result = 80040000
-    a2 -= 0x3574;                                       // Result = IN_Ticker (8003CA8C)
-    a3 = 0x80040000;                                    // Result = 80040000
-    a3 -= 0x3190;                                       // Result = IN_Drawer (8003CE70)
-    MiniLoop();
+    
+    MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
+
     v0 = lw(gp + 0xA7C);                                // Load from: gNetGame (8007805C)
     {
         const bool bJump = (v0 != 0);
@@ -573,15 +569,9 @@ loc_800135B4:
         v0 = (i32(v1) < 0x3C);
         if (bJump) goto loc_800136A4;
     }
-    a0 = 0x80040000;                                    // Result = 80040000
-    a0 -= 0x2930;                                       // Result = F1_Start (8003D6D0)
-    a1 = 0x80040000;                                    // Result = 80040000
-    a1 -= 0x288C;                                       // Result = F1_Stop (8003D774)
-    a2 = 0x80040000;                                    // Result = 80040000
-    a2 -= 0x2864;                                       // Result = F1_Ticker (8003D79C)
-    a3 = 0x80040000;                                    // Result = 80040000
-    a3 -= 0x2710;                                       // Result = F1_Drawer (8003D8F0)
-    MiniLoop();
+    
+    MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
+
     v0 = *gGameAction;
     if (v0 == s2) goto loc_8001353C;
     if (v0 == s1) goto loc_8001353C;
@@ -593,23 +583,19 @@ loc_800135B4:
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
     goto loc_800136F8;
+
 loc_80013698:
     v1 = lw(gp + 0xAB8);                                // Load from: gNextMap (80078098)
     v0 = (i32(v1) < 0x3C);
+
 loc_800136A4:
     if (v0 == 0) goto loc_800136B8;
     sw(v1, gp + 0xA68);                                 // Store to: gGameMap (80078048)
     goto loc_8001353C;
+
 loc_800136B8:
-    a0 = 0x80040000;                                    // Result = 80040000
-    a0 -= 0x263C;                                       // Result = F2_Start (8003D9C4)
-    a1 = 0x80040000;                                    // Result = 80040000
-    a1 -= 0x2510;                                       // Result = F2_Stop (8003DAF0)
-    a2 = 0x80040000;                                    // Result = 80040000
-    a2 -= 0x24E8;                                       // Result = F2_Ticker (8003DB18)
-    a3 = 0x80040000;                                    // Result = 80040000
-    a3 -= 0x1CD8;                                       // Result = F2_Drawer (8003E328)
-    MiniLoop();
+    MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
+
     v1 = *gGameAction;
     v0 = 4;                                             // Result = 00000004
     {
@@ -618,6 +604,7 @@ loc_800136B8:
         if (bJump) goto loc_8001353C;
     }
     if (v1 == v0) goto loc_8001353C;
+
 loc_800136F8:
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
@@ -665,22 +652,15 @@ loc_80013714:
     a2 = 0;                                             // Result = 00000000
     G_InitNew();
     G_DoLoadLevel();
-    a0 = 0x80030000;                                    // Result = 80030000
-    a0 -= 0x697C;                                       // Result = P_Start (80029684)
-    a1 = 0x80030000;                                    // Result = 80030000
-    a1 -= 0x68E4;                                       // Result = P_Stop (8002971C)
-    a2 = 0x80030000;                                    // Result = 80030000
-    a2 -= 0x6BEC;                                       // Result = P_Ticker (80029414)
-    v0 = 1;                                             // Result = 00000001
-    a3 = 0x80030000;                                    // Result = 80030000
-    a3 -= 0x6A04;                                       // Result = P_Drawer (800295FC)
-    *gbDemoPlayback = v0;
-    MiniLoop();
-    a0 = s1;                                            // Result = gBtnBinding_Attack (80073E0C)
+
+    *gbDemoPlayback = true;
+    s0 = MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+
+    a0 = s1;                    // Result = gBtnBinding_Attack (80073E0C)
     a1 = sp + 0x10;
-    a2 = 0x20;                                          // Result = 00000020
+    a2 = 0x20;
     *gbDemoPlayback = false;
-    s0 = v0;
+
     _thunk_D_memcpy();
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
@@ -697,10 +677,12 @@ loc_80013714:
     s1 = lw(sp + 0x34);
     s0 = lw(sp + 0x30);
     sp += 0x40;
-    return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// An unknown function called prior to the level being restarted.
+// Since it's contents are empty in the retail .EXE we cannot deduce what it originally did.
+// It's likely some sort of debug functionality that got compiled out of the retail build.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void empty_func1() noexcept {
-loc_80013838:
-    return;
 }

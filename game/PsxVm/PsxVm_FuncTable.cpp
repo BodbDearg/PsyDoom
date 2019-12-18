@@ -21,7 +21,6 @@ extern void M_ClearRandom() noexcept;
 extern void M_ClearBox() noexcept;
 extern void M_AddToBox() noexcept;
 extern void M_AddPointToBox() noexcept;
-extern void MiniLoop() noexcept;
 extern void G_DoLoadLevel() noexcept;
 extern void G_PlayerFinishLevel() noexcept;
 extern void G_PlayerReborn() noexcept;
@@ -1009,7 +1008,6 @@ namespace PsxVm {
         { 0x80012A80, &M_ClearBox },
         { 0x80012AA0, &M_AddToBox },
         { 0x80012B10, &M_AddPointToBox },
-        { 0x80012B78, &MiniLoop },
         { 0x80012E04, &G_DoLoadLevel },
         { 0x80012F00, &G_PlayerFinishLevel },
         { 0x80012F88, &G_PlayerReborn },

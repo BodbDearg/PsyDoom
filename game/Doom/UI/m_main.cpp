@@ -6,6 +6,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
+#include "o_main.h"
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
 
@@ -21,17 +22,10 @@ loc_80035B24:
     sw(s2, sp + 0x18);
     s2 = s1 + 0x40;                                     // Result = gTexInfo_DOOM[0] (80097A50)
     sw(ra, sp + 0x1C);
+
 loc_80035B4C:
-    a0 = 0x80030000;                                    // Result = 80030000
-    a0 += 0x5C94;                                       // Result = M_Start (80035C94)
-    a1 = 0x80030000;                                    // Result = 80030000
-    a1 += 0x5E40;                                       // Result = M_Stop (80035E40)
-    a2 = 0x80030000;                                    // Result = 80030000
-    a2 += 0x5EC4;                                       // Result = M_Ticker (80035EC4)
-    a3 = 0x80030000;                                    // Result = 80030000
-    a3 += 0x6258;                                       // Result = M_Drawer (80036258)
-    MiniLoop();
-    v1 = 7;                                             // Result = 00000007
+    v0 = MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
+    v1 = 7;
     {
         const bool bJump = (v0 == v1);
         v0 = 7;                                         // Result = 00000007
@@ -306,16 +300,10 @@ loc_80035F64:
         v0 = s0 & 0xF000;
         if (bJump) goto loc_80035FD0;
     }
-    a0 = 0x80040000;                                    // Result = 80040000
-    a0 -= 0x16F0;                                       // Result = O_Init (8003E910)
-    a1 = 0x80040000;                                    // Result = 80040000
-    a1 -= 0x1630;                                       // Result = O_Shutdown (8003E9D0)
-    a2 = 0x80040000;                                    // Result = 80040000
-    a2 -= 0x160C;                                       // Result = O_Control (8003E9F4)
-    a3 = 0x80040000;                                    // Result = 80040000
-    a3 -= 0x1138;                                       // Result = O_Drawer (8003EEC8)
-    MiniLoop();
-    v1 = 4;                                             // Result = 00000004
+
+    v0 = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);
+    v1 = 4;
+
     {
         const bool bJump = (v0 != v1);
         v0 = s0 & 0xF000;

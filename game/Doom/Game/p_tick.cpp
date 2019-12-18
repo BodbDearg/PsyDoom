@@ -196,17 +196,10 @@ loc_80028E90:
     v0 &= s6;
     sw(v0, a3 + 0xC0);
     I_DrawPresent();
-    a0 = 0x80040000;                                    // Result = 80040000
-    a0 -= 0x16F0;                                       // Result = O_Init (8003E910)
-    a1 = 0x80040000;                                    // Result = 80040000
-    a1 -= 0x1630;                                       // Result = O_Shutdown (8003E9D0)
-    a2 = 0x80040000;                                    // Result = 80040000
-    a2 -= 0x160C;                                       // Result = O_Control (8003E9F4)
-    a3 = 0x80040000;                                    // Result = 80040000
-    a3 -= 0x1138;                                       // Result = O_Drawer (8003EEC8)
-    MiniLoop();
-    v1 = v0;
-    v0 = 9;                                             // Result = 00000009
+
+    v1 = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);        
+    v0 = 9;
+
     {
         const bool bJump = (v1 == v0);
         v0 = 8;                                         // Result = 00000008

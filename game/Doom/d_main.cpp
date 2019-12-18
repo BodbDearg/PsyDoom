@@ -13,8 +13,11 @@
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "Renderer/r_main.h"
+#include "UI/cr_main.h"
+#include "UI/le_main.h"
 #include "UI/m_main.h"
 #include "UI/st_main.h"
+#include "UI/ti_main.h"
 #include "Wess/psxsnd.h"
 
 // Helper global holding the result of executing a gameloop via 'MiniLoop'.
@@ -101,22 +104,14 @@ void D_DoomMain() noexcept {
 // This function is never called in the retail game!
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RunLegals() noexcept {
-    a0 = 0x80034F54;        // Result = START_Legals (80034F54)
-    a1 = 0x80034FA0;        // Result = STOP_Legals (80034FA0)
-    a2 = 0x80034FCC;        // Result = TIC_Legals (80034FCC)
-    a3 = 0x8003504C;        // Result = DRAW_Legals (8003504C)
-    MiniLoop();
+    v0 = MiniLoop(START_Legals, STOP_Legals, TIC_Legals, DRAW_Legals);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Runs the title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RunTitle() noexcept {
-    a0 = 0x80035098;        // Result = START_Title (80035098)       
-    a1 = 0x80035268;        // Result = STOP_Title (80035268)         
-    a2 = 0x80035294;        // Result = TIC_Title (80035294)
-    a3 = 0x8003540C;        // Result = DRAW_Title (8003540C)
-    MiniLoop();
+    v0 = MiniLoop(START_Title, STOP_Title, TIC_Title, DRAW_Title);
 }
 
 void RunDemo() noexcept {
@@ -158,11 +153,7 @@ loc_80012424:
 // Runs the credits screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void RunCredits() noexcept {
-    a0 = 0x80036BD8;        // Result = START_Credits (80036BD8)         
-    a1 = 0x80036CA0;        // Result = STOP_Credits (80036CA0)         
-    a2 = 0x80036CC0;        // Result = TIC_Credits (80036CC0)         
-    a3 = 0x80036D58;        // Result = DRAW_Credits (80036D58)
-    MiniLoop();
+    v0 = MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits);
 }
 
 void I_SetDebugDrawStringPos() noexcept {
@@ -528,19 +519,13 @@ loc_80012A10:
 // Runs the game loop for a menu screen or for the level gameplay.
 // Calls startup/shutdown functions and drawer/ticker functions.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void MiniLoop() noexcept {
-    sp -= 0x28;
-    sw(s0, sp + 0x10);
-    sw(s3, sp + 0x1C);
-    sw(s1, sp + 0x14);
-    sw(s2, sp + 0x18);
-    sw(s4, sp + 0x20);
-
-    s0 = a0;
-    s3 = a1;
-    s1 = a2;
-    s2 = a3;
-    
+gameaction_t MiniLoop(
+    void (*const pStart)(),
+    void (*const pStop)(),
+    void (*const pTicker)(),
+    void (*const pDrawer)()
+) noexcept {
+    // Network initialization
     v0 = lw(0x8007805C);        // Load from: gNetGame (8007805C)
 
     if (v0 != 0) {
@@ -555,14 +540,15 @@ void MiniLoop() noexcept {
     *gLastTgtGameTicCount = 0;
 
     // Run startup logic for this game loop beginning
-    ptr_call(s0);
+    pStart();
 
     // Update the video refresh timers
     *gLastTotalVBlanks = LIBETC_VSync(-1);
     *gElapsedVBlanks = 0;
 
-    s4 = 0x80077F44;            // Result = gPlayerPadButtons[0] (80077F44)
-    
+    // Continue running the game loop until something causes us to exit
+    gameaction_t exitAction = ga_nothing;
+
     while (true) {
         v0 = lw(0x80077618);        // Load from: gCurPlayerIndex (80077618)
         at = 0x80077FBC;            // Result = gPlayersElapsedVBlanks[0] (80077FBC)
@@ -579,7 +565,10 @@ void MiniLoop() noexcept {
         a0 = v0;
         v1 = lw(0x80077618);        // Load from: gCurPlayerIndex (80077618)
         v1 <<= 2;
-        a1 = v1 + s4;
+
+        uint32_t x4 = 0x80077F44;   // Result = gPlayerPadButtons[0] (80077F44)
+        a1 = v1 + x4;
+
         sw(a0, a1);
 
         v0 = lw(0x8007805C);        // Load from: gNetGame (8007805C)
@@ -591,15 +580,17 @@ void MiniLoop() noexcept {
 
             if (v0 != 0) {
                 *gGameAction = ga_number4;
-                s0 = ga_number4;
+                exitAction = ga_number4;
                 break;
             }
         }
         else if (*gbDemoRecording || *gbDemoPlayback) {
+            // Demo recording or playback.
+            // Need to either read inputs from or save them to a buffer.
             v0 = a0 & 0xF9FF;
 
             if (*gbDemoPlayback) {
-                s0 = 9;
+                exitAction = ga_exitdemo;
 
                 if (v0 != 0)
                     break;
@@ -621,7 +612,7 @@ void MiniLoop() noexcept {
                 v0 = a0 & 0x800;
             }
 
-            s0 = 5;
+            exitAction = ga_number5;
 
             if (v0 != 0)
                 break;
@@ -653,14 +644,14 @@ void MiniLoop() noexcept {
         }
         
         // Call the ticker function to do updates for the frame
-        ptr_call(s1);
-        s0 = v0;
+        pTicker();
+        exitAction = (gameaction_t) v0;
 
-        if (s0 != 0)
+        if (exitAction != ga_nothing)
             break;
 
         // Call the drawer function to do drawing for the frame
-        ptr_call(s2);
+        pDrawer();
         
         // Do we need to update sound? (sound updates at 15 Hz)
         if (*gPrevGameTic < *gGameTic) {
@@ -671,8 +662,8 @@ void MiniLoop() noexcept {
     }
     
     // Run cleanup logic for this game loop ending
-    a0 = s0;
-    ptr_call(s3);
+    a0 = exitAction;
+    pStop();
 
     // Current pad buttons become the old ones
     v1 = lw(0x80077F44);        // Load from: gPlayerPadButtons[0] (80077F44)
@@ -682,12 +673,5 @@ void MiniLoop() noexcept {
     sw(a0, 0x80078218);         // Store to: gPlayerOldPadButtons[1] (80078218)
 
     // Return the exit game action
-    v0 = s0;
-    
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
+    return exitAction;
 }
