@@ -2867,7 +2867,7 @@ loc_8004E78C:
     sp -= 0x18;
     sw(ra, sp + 0x10);
     a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     v0 += 0xF0;
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at + 0x1CD4);                                // Store to: 80081CD4
@@ -2883,7 +2883,7 @@ loc_8004E7C0:
     sp -= 0x20;
     sw(ra, sp + 0x18);
     a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 + 0x1CD4);                               // Load from: 80081CD4
     v1 = (i32(v1) < i32(v0));

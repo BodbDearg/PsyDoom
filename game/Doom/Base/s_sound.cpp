@@ -443,14 +443,8 @@ loc_80041594:
 }
 
 void S_StartSound() noexcept {
-loc_800415B4:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a2 = 0;                                             // Result = 00000000
+    a2 = 0;
     I_StartSound();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void S_UpdateSounds() noexcept {

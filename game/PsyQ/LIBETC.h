@@ -25,8 +25,12 @@ void LIBETC_INTR_stopIntr_UNKNOWN_Helper1() noexcept;
 void LIBETC_INTR_DMA_trapIntrDMA() noexcept;
 void LIBETC_INTR_DMA_setIntrDMA() noexcept;
 void LIBETC_INTR_DMA_memclr() noexcept;
-void LIBETC_VSync() noexcept;
+
+int32_t LIBETC_VSync(const int32_t mode) noexcept;
+void _thunk_LIBETC_VSync() noexcept;
+
 void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept;
 void _thunk_LIBETC_v_wait() noexcept;
+
 void LIBETC_SetVideoMode() noexcept;
 void LIBETC_GetVideoMode() noexcept;

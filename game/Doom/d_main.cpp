@@ -17,6 +17,10 @@
 #include "UI/st_main.h"
 #include "Wess/psxsnd.h"
 
+// Helper global holding the result of executing a gameloop via 'MiniLoop'.
+// Sometimes this is used in preference to the return action, and sometimes it is used temporarily to hold the return action.
+VmPtr<gameaction_t> gGameAction(0x80077EB4);
+
 // Current and previous game tick count (15 Hz ticks)
 VmPtr<int32_t> gGameTic(0x8007804C);
 VmPtr<int32_t> gPrevGameTic(0x80077FA4);
@@ -544,7 +548,7 @@ void MiniLoop() noexcept {
     }
 
     // Init timers and exit action
-    sw(0, 0x80077EB4);          // Store to: gGameAction (80077EB4)
+    *gGameAction = ga_nothing;
     *gPrevGameTic = 0;
     *gGameTic = 0;
     *gTicCon = 0;
@@ -554,9 +558,7 @@ void MiniLoop() noexcept {
     ptr_call(s0);
 
     // Update the video refresh timers
-    a0 = -1;
-    LIBETC_VSync();
-    *gLastTotalVBlanks = v0;
+    *gLastTotalVBlanks = LIBETC_VSync(-1);
     *gElapsedVBlanks = 0;
 
     s4 = 0x80077F44;            // Result = gPlayerPadButtons[0] (80077F44)
@@ -588,8 +590,8 @@ void MiniLoop() noexcept {
             I_NetUpdate();
 
             if (v0 != 0) {
-                sw(4, 0x80077EB4);          // Store to: gGameAction (80077EB4)
-                s0 = 4;
+                *gGameAction = ga_number4;
+                s0 = ga_number4;
                 break;
             }
         }

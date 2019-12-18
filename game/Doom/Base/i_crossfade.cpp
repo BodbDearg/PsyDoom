@@ -66,7 +66,7 @@ loc_80036448:
     a0 = 0;                                             // Result = 00000000
     LIBGPU_DrawSync();
     a0 = 0;                                             // Result = 00000000
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     a0 = s3;
     LIBGPU_PutDrawEnv();
     a0 = s2;
@@ -460,7 +460,7 @@ loc_80036B40:
     a0 = 0;                                             // Result = 00000000
     LIBGPU_DrawSync();
     a0 = 0;                                             // Result = 00000000
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     v0 = sp + 0x68;
     a0 = s4 << 1;
     a0 += s4;

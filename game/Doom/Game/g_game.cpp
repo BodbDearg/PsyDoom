@@ -5,6 +5,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
+#include "Doom/doomdef.h"
 #include "Doom/Renderer/r_main.h"
 #include "p_map.h"
 #include "p_mobj.h"
@@ -43,7 +44,7 @@ loc_80012E30:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 -= 0x7F54;                                       // Result = gbPlayerInGame[0] (800780AC)
     a2 = v1 + 0x258;                                    // Result = gThingLine_tv1[1] (800A8A48)
-    a1 = lw(gp + 0x8D4);                                // Load from: gGameAction (80077EB4)
+    a1 = *gGameAction;
 loc_80012E84:
     v0 = lw(a0);
     if (v0 == 0) goto loc_80012EB8;
@@ -64,7 +65,7 @@ loc_80012EB8:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
     Z_CheckHeap();
-    sw(0, gp + 0x8D4);                                  // Store to: gGameAction (80077EB4)
+    *gGameAction = ga_nothing;
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
@@ -183,8 +184,7 @@ loc_80013070:
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
     if (v0 != 0) goto loc_800130AC;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0x8D4);                                 // Store to: gGameAction (80077EB4)
+    *gGameAction = ga_number1;
     goto loc_8001335C;
 loc_800130AC:
     v0 = s3 << 2;
@@ -387,9 +387,7 @@ loc_8001335C:
 }
 
 void G_SetGameComplete() noexcept {
-    v0 = 2;                                             // Result = 00000002
-    sw(v0, gp + 0x8D4);                                 // Store to: gGameAction (80077EB4)
-    return;
+    *gGameAction = ga_number2;
 }
 
 void G_InitNew() noexcept {
@@ -519,14 +517,14 @@ loc_8001353C:
     a3 = 0x80030000;                                    // Result = 80030000
     a3 -= 0x6A04;                                       // Result = P_Drawer (800295FC)
     MiniLoop();
-    v1 = lw(gp + 0x8D4);                                // Load from: gGameAction (80077EB4)
+    v1 = *gGameAction;
     v0 = 6;                                             // Result = 00000006
     sw(0, gp + 0xA14);                                  // Store to: gbIsLevelBeingRestarted (80077FF4)
     s2 = 4;                                             // Result = 00000004
     if (v1 != v0) goto loc_80013588;
     empty_func1();
 loc_80013588:
-    v0 = lw(gp + 0x8D4);                                // Load from: gGameAction (80077EB4)
+    v0 = *gGameAction;
     v1 = 1;                                             // Result = 00000001
     if (v0 == s2) goto loc_8001353C;
     s1 = 8;                                             // Result = 00000008
@@ -545,7 +543,7 @@ loc_800135B4:
     sw(v0, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)
     a1 = 8;                                             // Result = 00000008
     Z_FreeTags();
-    v0 = lw(gp + 0x8D4);                                // Load from: gGameAction (80077EB4)
+    v0 = *gGameAction;
     s0 = 5;                                             // Result = 00000005
     if (v0 == s0) goto loc_800136F8;
     a0 = 0x80040000;                                    // Result = 80040000
@@ -584,7 +582,7 @@ loc_800135B4:
     a3 = 0x80040000;                                    // Result = 80040000
     a3 -= 0x2710;                                       // Result = F1_Drawer (8003D8F0)
     MiniLoop();
-    v0 = lw(gp + 0x8D4);                                // Load from: gGameAction (80077EB4)
+    v0 = *gGameAction;
     if (v0 == s2) goto loc_8001353C;
     if (v0 == s1) goto loc_8001353C;
     {
@@ -612,7 +610,7 @@ loc_800136B8:
     a3 = 0x80040000;                                    // Result = 80040000
     a3 -= 0x1CD8;                                       // Result = F2_Drawer (8003E328)
     MiniLoop();
-    v1 = lw(gp + 0x8D4);                                // Load from: gGameAction (80077EB4)
+    v1 = *gGameAction;
     v0 = 4;                                             // Result = 00000004
     {
         const bool bJump = (v1 == v0);

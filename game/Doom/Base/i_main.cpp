@@ -745,8 +745,7 @@ void I_DrawPresent() noexcept {
     LIBGPU_DrawSync();
 
     // Wait for a vblank to occur
-    a0 = 0;
-    LIBETC_VSync();
+    LIBETC_VSync(0);
 
     // Swap the framebuffers
     v1 = lw(0x800780F8);            // Load from: gCurDrawDispBufferIdx (800780F8)    
@@ -762,9 +761,7 @@ void I_DrawPresent() noexcept {
     // Frame rate limiting to 30 Hz.
     // Continously poll and wait until at least 2 vblanks have elapsed before continuing.
     do {
-        a0 = -1;
-        LIBETC_VSync();
-        *gTotalVBlanks = v0;
+        *gTotalVBlanks = LIBETC_VSync(-1);
         *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
     } while (*gElapsedVBlanks < 2);
 
@@ -773,9 +770,7 @@ void I_DrawPresent() noexcept {
     // Probably done so the simulation remains consistent!
     if (*gbDemoPlayback || *gbDemoRecording) {
         while (*gElapsedVBlanks < 4) {
-            a0 = -1;
-            LIBETC_VSync();
-            *gTotalVBlanks = v0;
+            *gTotalVBlanks = LIBETC_VSync(-1);
             *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
         }
 
@@ -2369,7 +2364,7 @@ loc_80034D20:
     a2 = 8;                                             // Result = 00000008
     LIBAPI_read();
     a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     s0 = v0;
 loc_80034D54:
     a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
@@ -2377,7 +2372,7 @@ loc_80034D54:
     a0 = 3;                                             // Result = 00000003
     if (v0 != 0) goto loc_80034D88;
     a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     v0 -= s0;
     v0 = (i32(v0) < 0x12C);
     a0 = 2;                                             // Result = 00000002
@@ -2412,14 +2407,14 @@ loc_80034DB8:
     a2 = 8;                                             // Result = 00000008
     LIBAPI_read();
     a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     s0 = v0;
 loc_80034E04:
     a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
     LIBAPI_TestEvent();
     if (v0 != 0) goto loc_80034E44;
     a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     v0 -= s0;
     v0 = (i32(v0) < 0x12C);
     a0 = 2;                                             // Result = 00000002

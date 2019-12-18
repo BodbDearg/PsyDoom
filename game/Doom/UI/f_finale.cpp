@@ -68,8 +68,7 @@ void F1_Ticker() noexcept {
     sw(ra, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7EB4);                                 // Store to: gGameAction (80077EB4)
+    *gGameAction = ga_nothing;
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
     at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
@@ -83,8 +82,7 @@ void F1_Ticker() noexcept {
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7EC0);                               // Load from: gbGamePaused (80077EC0)
     if (v0 == 0) goto loc_8003D80C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EB4);                               // Load from: gGameAction (80077EB4)
+    v0 = *gGameAction;
     goto loc_8003D8D8;
 loc_8003D80C:
     a0 = lw(gp + 0xB30);                                // Load from: 80078110
@@ -299,8 +297,7 @@ void F2_Ticker() noexcept {
     sw(s2, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7EB4);                                 // Store to: gGameAction (80077EB4)
+    *gGameAction = ga_nothing;
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
     at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
@@ -315,8 +312,7 @@ void F2_Ticker() noexcept {
     v0 = lw(v0 + 0x7EC0);                               // Load from: gbGamePaused (80077EC0)
     s2 = 1;                                             // Result = 00000001
     if (v0 == 0) goto loc_8003DB8C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EB4);                               // Load from: gGameAction (80077EB4)
+    v0 = *gGameAction;
     goto loc_8003E30C;
 loc_8003DB8C:
     v1 = lw(gp + 0xB8C);                                // Load from: 8007816C

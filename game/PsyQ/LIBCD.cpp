@@ -1023,7 +1023,7 @@ loc_800558DC:
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     s3 = 0x80070000;                                    // Result = 80070000
     s3 += 0x7294;                                       // Result = gLIBCD_CD_intstr[0] (80077294)
     s2 = 0x80070000;                                    // Result = 80070000
@@ -1040,7 +1040,7 @@ loc_800558DC:
     sw(v0, at + 0x6128);                                // Store to: LIBCD_BIOS_alarm[2] (80086128)
 loc_80055948:
     a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 + 0x6120);                               // Load from: LIBCD_BIOS_alarm[0] (80086120)
     v1 = (i32(v1) < i32(v0));
@@ -1184,7 +1184,7 @@ loc_80055B50:
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     s5 = 0x80070000;                                    // Result = 80070000
     s5 += 0x7294;                                       // Result = gLIBCD_CD_intstr[0] (80077294)
     s2 = 0x80070000;                                    // Result = 80070000
@@ -1202,7 +1202,7 @@ loc_80055B50:
     sw(v0, at + 0x6128);                                // Store to: LIBCD_BIOS_alarm[2] (80086128)
 loc_80055BC4:
     a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 + 0x6120);                               // Load from: LIBCD_BIOS_alarm[0] (80086120)
     v1 = (i32(v1) < i32(v0));
@@ -1451,7 +1451,7 @@ void LIBCD_CD_cw() noexcept {
 
     if (s2 == 0) {
         a0 = -1;
-        LIBETC_VSync();
+        _thunk_LIBETC_VSync();
         v0 += 0x1E0;
         a0 = 0x800774CD;            // Result = 800774CD
         sw(v0, 0x80086120);         // Store to: LIBCD_BIOS_alarm[0] (80086120)
@@ -1467,7 +1467,7 @@ void LIBCD_CD_cw() noexcept {
             s4 = s2 + 1;            // Result = 800774CE
             do {
                 a0 = -1;
-                LIBETC_VSync();
+                _thunk_LIBETC_VSync();
                 v1 = lw(0x80086120);                    // Load from: LIBCD_BIOS_alarm[0] (80086120)
 
                 if (i32(v1) < i32(v0)) 
@@ -1651,7 +1651,7 @@ loc_800562C8:
     a3 = 0;                                             // Result = 00000000
     LIBCD_CD_cw();
     a0 = 0x3C;                                          // Result = 0000003C
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lw(a1 + 0x7204);                               // Load from: gLIBCD_CD_status (80077204)
     at = 0x80070000;                                    // Result = 80070000
@@ -1812,7 +1812,7 @@ void LIBCD_CD_init() noexcept {
         LIBCD_CD_cw();
 
         a0 = 0x3C;
-        LIBETC_VSync();
+        _thunk_LIBETC_VSync();
 
         a1 = lw(0x80077204);            // Load from: gLIBCD_CD_status (80077204)
         sw(s0, 0x800771F4);             // Store to: gpLIBCD_CD_cbsync (800771F4)
@@ -1975,7 +1975,7 @@ loc_80056838:
     a3 = 0;                                             // Result = 00000000
     LIBCD_CD_cw();
     a0 = 0x3C;                                          // Result = 0000003C
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lw(a1 + 0x7204);                               // Load from: gLIBCD_CD_status (80077204)
     at = 0x80070000;                                    // Result = 80070000
@@ -2066,7 +2066,7 @@ loc_80056904:
     v0 = lw(s1 - 0x8);                                  // Load from: 800774D4
     a0 = -1;                                            // Result = FFFFFFFF
     sw(v0, s1 + 0xC);                                   // Store to: 800774E8
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     v1 = lw(s1 - 0x8);                                  // Load from: 800774D4
     v1 += 0x1E0;
     v0 += v1;
@@ -2161,7 +2161,7 @@ loc_80056B18:
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     s4 = 0x80070000;                                    // Result = 80070000
     s4 += 0x7294;                                       // Result = gLIBCD_CD_intstr[0] (80077294)
     s3 = 0x80070000;                                    // Result = 80070000
@@ -2180,7 +2180,7 @@ loc_80056B18:
     sw(v0, at + 0x6128);                                // Store to: LIBCD_BIOS_alarm[2] (80086128)
 loc_80056B90:
     a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 + 0x6120);                               // Load from: LIBCD_BIOS_alarm[0] (80086120)
     v1 = (i32(v1) < i32(v0));
@@ -2278,7 +2278,7 @@ loc_80056D1C:
     if (v1 != a2) goto loc_80056D1C;
 loc_80056D34:
     a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     v1 = lw(s2);                                        // Load from: 800774EC
     v1 = (i32(v1) < i32(v0));
     if (v1 == 0) goto loc_80056D58;
@@ -2318,7 +2318,7 @@ loc_80056DBC:
     sw(s3, sp + 0x24);
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     s3 = 0x80070000;                                    // Result = 80070000
     s3 += 0x7214;                                       // Result = gLIBCD_CD_comstr[0] (80077214)
     s1 = 0x80070000;                                    // Result = 80070000
@@ -2336,7 +2336,7 @@ loc_80056DBC:
     sw(v0, at + 0x6128);                                // Store to: LIBCD_BIOS_alarm[2] (80086128)
 loc_80056E1C:
     a0 = -1;                                            // Result = FFFFFFFF
-    LIBETC_VSync();
+    _thunk_LIBETC_VSync();
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 + 0x6120);                               // Load from: LIBCD_BIOS_alarm[0] (80086120)
     v1 = (i32(v1) < i32(v0));

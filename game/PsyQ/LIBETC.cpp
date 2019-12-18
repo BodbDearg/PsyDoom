@@ -709,70 +709,76 @@ loc_8004BA88:
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Wait for the next vblank or return the time elapsed in vblanks since program start or hblanks since last invocation.
+// Wait for the next vblank or return the time elapsed in vblanks or hblanks.
+//
+//  Mode:
+//      0   Block until a vsync happens. Return the total number of horizontal blanking units elapsed (16-bit wrapping).
+//      1   Return the number of horizontal blanking units elapsed (16-bit wrapping).
+//    > 1   Wait for 'mode - 1' vblanks since the function was last invoked in this mode.
+//          Return the number of horizontal blanking units elapsed (16-bit wrapping).
+//    < 0   Return the total number of vertical blank units elapsed since program start.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LIBETC_VSync() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-
-    v0 = lw(0x80075D04);        // Load from: GPU_REG_GP1 (80075D04)
-    v1 = lw(0x80075D08);        // Load from: TIMER_REG_ROOT_CNT_1 (80075D08)    
-    s0 = lw(v0);
+int32_t LIBETC_VSync(const int32_t mode) noexcept {
+    v0 = lw(0x80075D04);            // Load from: GPU_REG_GP1 (80075D04)
+    v1 = lw(0x80075D08);            // Load from: TIMER_REG_ROOT_CNT_1 (80075D08)    
+    uint32_t x0 = lw(v0);
     v0 = lw(v1);
 
-    v1 = lw(0x80075D0C);        // Load from: gLIBETC_Hcount (80075D0C)
+    v1 = lw(0x80075D0C);            // Load from: gLIBETC_Hcount (80075D0C)
     v0 -= v1;
-    s1 = v0 & 0xFFFF;
+    uint32_t x1 = v0 & 0xFFFF;
 
-    if (i32(a0) >= 0) {
-        v0 = s1;
+    if (mode >= 0) {
+        v0 = x1;
 
-        if (a0 != 1) {
+        if (mode != 1) {
             v0 = lw(0x80075D10);        // Load from: gLIBETC_VSync_UNKNOWN_VAR_3 (80075D10)
             v0--;
-            v0 += a0;
+            v0 += mode;
             a1 = 0;
 
-            if (i32(a0) > 0) {
-                a1 = a0 - 1;
+            if (mode > 0) {
+                a1 = mode - 1;
             } else {
                 a0 = v0;
                 _thunk_LIBETC_v_wait();
                 v0 = lw(0x80075D04);        // Load from: GPU_REG_GP1 (80075D04)
-                s0 = lw(v0);
+                x0 = lw(v0);
                 a0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)
                 a1 = 1;
                 a0++;
                 _thunk_LIBETC_v_wait();
                 v0 = 0x80000;
-                v0 &= s0;
+                v0 &= x0;
 
                 if (v0 != 0) {
                     v1 = lw(0x80075D04);    // Load from: GPU_REG_GP1 (80075D04)
                     v0 = lw(v1);
-                    v0 ^= s0;
+                    v0 ^= x0;
 
                     if (i32(v0) >= 0) {
                         a0 = 0x80000000;
 
                         do {
                             v0 = lw(v1);
-                            v0 ^= s0;
+                            v0 ^= x0;
                             v0 &= a0;
                         } while (v0 == 0);
                     }
                 }
 
-                v0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)
-                v1 = lw(0x80075D08);        // Load from: TIMER_REG_ROOT_CNT_1 (80075D08)
+                v0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)                
                 sw(v0, 0x80075D10);         // Store to: gLIBETC_VSync_UNKNOWN_VAR_3 (80075D10)
+
+                v1 = lw(0x80075D08);        // Load from: TIMER_REG_ROOT_CNT_1 (80075D08)
                 v1 = lw(v1);
-                v0 = s1;
                 sw(v1, 0x80075D0C);         // Store to: gLIBETC_Hcount (80075D0C)
             }
         }
-    } else {
+
+        return x1;
+    }
+    else {
         // PC-PSX: If you are polling vsync do a little emulation to pass the time.
         // Also advance the GPU emulation by a lot.
         #if PC_PSX_DOOM_MODS
@@ -780,12 +786,12 @@ void LIBETC_VSync() noexcept {
             emulate_sound_if_required();
         #endif
 
-        v0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)
+        return lw(0x80075CCC);      // Load from: gLIBETC_Vcount (80075CCC)
     }
+}
 
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
+void _thunk_LIBETC_VSync() noexcept {
+    v0 = LIBETC_VSync(a0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

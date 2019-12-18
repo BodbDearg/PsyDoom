@@ -212,8 +212,7 @@ loc_80028E90:
         v0 = 8;                                         // Result = 00000008
         if (bJump) goto loc_800293E8;
     }
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x7EB4);                                // Store to: gGameAction (80077EB4)
+    *gGameAction = (gameaction_t) v1;
     {
         const bool bJump = (v1 == v0);
         v0 = 5;                                         // Result = 00000005
@@ -292,8 +291,7 @@ loc_80029000:
         if (bJump) goto loc_800293E8;
     }
     a0 = -0x21;                                         // Result = FFFFFFDF
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7EB4);                                // Store to: gGameAction (80077EB4)
+    *gGameAction = (gameaction_t) v0;
     v0 = lw(a3 + 0xC0);
     v1 = lw(gp + 0xC90);                                // Load from: gMapNumToCheatWarpTo (80078270)
     v0 &= a0;
@@ -585,8 +583,7 @@ void P_Ticker() noexcept {
     sw(s2, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7EB4);                                 // Store to: gGameAction (80077EB4)
+    *gGameAction = ga_nothing;
     P_CheckCheats();
     v0 = lw(gp + 0x8E0);                                // Load from: gbGamePaused (80077EC0)
     if (v0 != 0) goto loc_8002955C;
@@ -676,8 +673,7 @@ loc_800295BC:
     v0 = (i32(v0) < 2);
     s0 += 0x12C;
     if (v0 != 0) goto loc_80029574;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EB4);                               // Load from: gGameAction (80077EB4)
+    v0 = *gGameAction;
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
     s1 = lw(sp + 0x14);

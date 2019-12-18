@@ -432,10 +432,9 @@ loc_8003EEFC:
     s1++;                                               // Result = 00000001
     v0 = (i32(s1) < 4);                                 // Result = 00000001
     if (v0 != 0) goto loc_8003EEF8;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EB4);                               // Load from: gGameAction (80077EB4)
+    v0 = *gGameAction;
     a0 = -1;                                            // Result = FFFFFFFF
-    if (v0 != 0) goto loc_8003F0F4;
+    if (v0 != ga_nothing) goto loc_8003F0F4;
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D54;                                       // Result = STR_Options[0] (80077D54)
     a1 = 0x14;                                          // Result = 00000014
