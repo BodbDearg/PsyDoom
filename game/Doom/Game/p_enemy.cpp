@@ -1799,7 +1799,7 @@ loc_80017718:
 }
 
 void A_Tracer() noexcept {
-    v0 = *gpGameTic;
+    v0 = *gGameTic;
     sp -= 0x20;
     sw(s1, sp + 0x14);
     s1 = a0;

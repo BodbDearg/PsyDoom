@@ -39,8 +39,8 @@ void STOP_ControlsScreen() noexcept {
 }
 
 void TIC_ControlsScreen() noexcept {
-    v1 = *gpGameTic;
-    v0 = *gpPrevGameTic;
+    v1 = *gGameTic;
+    v0 = *gPrevGameTic;
     sp -= 0x20;
     sw(ra, sp + 0x18);
     sw(s1, sp + 0x14);
@@ -248,8 +248,7 @@ loc_80037C9C:
     v0 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
     a2 = 0x26;                                          // Result = 00000026
     if (v0 != s2) goto loc_80037CC4;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v0 = *gTicCon;
     v0 &= 8;
     if (v0 != 0) goto loc_80037CFC;
 loc_80037CC4:
@@ -290,8 +289,7 @@ loc_80037D20:
     v0 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
     a0 = 0x41;                                          // Result = 00000041
     if (v0 != s2) goto loc_80037D6C;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v0 = *gTicCon;
     v0 &= 8;
     if (v0 != 0) goto loc_80037D88;
 loc_80037D6C:

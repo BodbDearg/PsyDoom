@@ -471,7 +471,7 @@ loc_8003C1A0:
     v0 = lw(t4 + 0x4);
     s6 = 0xC000;                                        // Result = 0000C000
     if (v0 != 0) goto loc_8003C1D0;
-    v0 = *gpGameTic;
+    v0 = *gGameTic;
     v0 &= 2;
     if (v0 != 0) goto loc_8003C3A4;
 loc_8003C1D0:

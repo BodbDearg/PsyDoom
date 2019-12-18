@@ -457,8 +457,8 @@ loc_8001346C:
     at = 0x80080000;                                    // Result = 80080000
     sw(v1, at - 0x7F50);                                // Store to: gbPlayerInGame[1] (800780B0)
 loc_8001347C:
-    sw(0, gp + 0xBCC);                                  // Store to: gbDemoRecording (800781AC)
-    sw(0, gp + 0xAA0);                                  // Store to: gbDemoPlayback (80078080)
+    *gbDemoRecording = false;
+    *gbDemoPlayback = false;
     if (s2 != v0) goto loc_800134C8;
     v0 = 2;                                             // Result = 00000002
     at = 0x80060000;                                    // Result = 80060000
@@ -676,12 +676,12 @@ loc_80013714:
     v0 = 1;                                             // Result = 00000001
     a3 = 0x80030000;                                    // Result = 80030000
     a3 -= 0x6A04;                                       // Result = P_Drawer (800295FC)
-    sw(v0, gp + 0xAA0);                                 // Store to: gbDemoPlayback (80078080)
+    *gbDemoPlayback = v0;
     MiniLoop();
     a0 = s1;                                            // Result = gBtnBinding_Attack (80073E0C)
     a1 = sp + 0x10;
     a2 = 0x20;                                          // Result = 00000020
-    sw(0, gp + 0xAA0);                                  // Store to: gbDemoPlayback (80078080)
+    *gbDemoPlayback = false;
     s0 = v0;
     _thunk_D_memcpy();
     v0 = 0x80070000;                                    // Result = 80070000

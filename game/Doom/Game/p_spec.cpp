@@ -1179,8 +1179,8 @@ loc_80026E74:
     v0 = lw(s0 + 0x3C);
     v1 = 7;                                             // Result = 00000007
     if (v0 != 0) goto loc_80026FB4;
-    a0 = *gpGameTic;
-    v0 = *gpPrevGameTic;
+    a0 = *gGameTic;
+    v0 = *gPrevGameTic;
     at = 0x800A0000;                                    // Result = 800A0000
     sw(v1, at - 0x78E8);                                // Store to: gStatusBar[0] (80098718)
     v0 = (i32(v0) < i32(a0));
@@ -1200,8 +1200,8 @@ loc_80026EC8:
     v0 = lw(s0 + 0x3C);
     v1 = 7;                                             // Result = 00000007
     if (v0 != 0) goto loc_80026FB4;
-    a0 = *gpGameTic;
-    v0 = *gpPrevGameTic;
+    a0 = *gGameTic;
+    v0 = *gPrevGameTic;
     at = 0x800A0000;                                    // Result = 800A0000
     sw(v1, at - 0x78E8);                                // Store to: gStatusBar[0] (80098718)
     v0 = (i32(v0) < i32(a0));
@@ -1224,8 +1224,8 @@ loc_80026F1C:
     v0 = (i32(v0) < 5);
     if (v0 == 0) goto loc_80026FB4;
 loc_80026F40:
-    a0 = *gpGameTic;
-    v0 = *gpPrevGameTic;
+    a0 = *gGameTic;
+    v0 = *gPrevGameTic;
     v1 = 7;                                             // Result = 00000007
     at = 0x800A0000;                                    // Result = 800A0000
     sw(v1, at - 0x78E8);                                // Store to: gStatusBar[0] (80098718)
@@ -1273,7 +1273,7 @@ loc_80026FC8:
     if (v0 == 0) goto loc_800270EC;
     a2 = -1;                                            // Result = FFFFFFFF
     a0 = a1 + 0x10;                                     // Result = gAnims_1[4] (800863BC)
-    t3 = *gpGameTic;
+    t3 = *gGameTic;
     t2 = 0x80070000;                                    // Result = 80070000
     t2 = lw(t2 + 0x7F6C);                               // Load from: gpTextureTranslation (80077F6C)
     t1 = 0x80080000;                                    // Result = 80080000

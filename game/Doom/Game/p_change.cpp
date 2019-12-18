@@ -154,7 +154,7 @@ loc_8001517C:
     v1 = lw(gp + 0x9C0);                                // Load from: gbCrushChange (80077FA0)
     sw(v0, gp + 0x8DC);                                 // Store to: gbNofit (80077EBC)
     if (v1 == 0) goto loc_80015220;
-    v0 = *gpGameTic;
+    v0 = *gGameTic;
     v0 &= 3;
     {
         const bool bJump = (v0 != 0);

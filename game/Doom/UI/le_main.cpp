@@ -3,6 +3,7 @@
 #include "Doom/Base/i_crossfade.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/d_main.h"
 #include "PsxVm/PsxVm.h"
 
 void START_Legals() noexcept {
@@ -50,14 +51,12 @@ void TIC_Legals() noexcept {
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80035044;
     }
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v0 = *gTicCon;
     sw(v0, gp + 0x92C);                                 // Store to: gMenuTimeoutStartTicCon (80077F0C)
     v0 = 0;                                             // Result = 00000000
     goto loc_80035044;
 loc_80035000:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v0 = *gTicCon;
     v1 = lw(gp + 0x92C);                                // Load from: gMenuTimeoutStartTicCon (80077F0C)
     v1 = v0 - v1;
     v0 = (i32(v1) < 0x79);

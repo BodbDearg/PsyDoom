@@ -197,9 +197,8 @@ loc_80035DC8:
     sw(v0, at - 0x7F08);                                // Store to: gCurDrawDispBufferIdx (800780F8)
     M_Drawer();
     I_CrossFadeFrameBuffers();
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EB4);                               // Load from: gTicCon (8007814C)
-    v0 = 1;                                             // Result = 00000001
+    v1 = *gTicCon;
+    v0 = 1;
     sb(v0, s0);                                         // Store to: gDrawEnv1[C] (800A90C4)
     at = 0x800B0000;                                    // Result = 800B0000
     sb(v0, at - 0x6EE0);                                // Store to: gDrawEnv2[C] (800A9120)
@@ -257,12 +256,10 @@ void M_Ticker() noexcept {
     a0 = lw(a0 - 0x7DEC);                               // Load from: gPlayerOldPadButtons[0] (80078214)
     sw(ra, sp + 0x14);
     if (s0 == 0) goto loc_80035EF4;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v0 = *gTicCon;
     sw(v0, gp + 0x92C);                                 // Store to: gMenuTimeoutStartTicCon (80077F0C)
 loc_80035EF4:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v0 = *gTicCon;
     v1 = lw(gp + 0x92C);                                // Load from: gMenuTimeoutStartTicCon (80077F0C)
     v0 -= v1;
     v0 = (i32(v0) < 0x708);
@@ -271,8 +268,8 @@ loc_80035EF4:
         v0 = 7;                                         // Result = 00000007
         if (bJump) goto loc_80036244;
     }
-    v1 = *gpGameTic;
-    v0 = *gpPrevGameTic;
+    v1 = *gGameTic;
+    v0 = *gPrevGameTic;
     v0 = (i32(v0) < i32(v1));
     {
         const bool bJump = (v0 == 0);

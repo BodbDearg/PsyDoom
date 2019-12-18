@@ -1,5 +1,11 @@
 #pragma once
 
+#include "PsxVm/VmPtr.h"
+
+extern VmPtr<uint32_t>  gTotalVBlanks;
+extern VmPtr<uint32_t>  gLastTotalVBlanks;
+extern VmPtr<uint32_t>  gElapsedVBlanks;
+
 void I_Main() noexcept;
 void I_PSXInit() noexcept;
 void I_Error() noexcept;

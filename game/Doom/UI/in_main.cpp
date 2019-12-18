@@ -170,8 +170,7 @@ loc_8003C9B4:
     v0 = (i32(a3) < i32(v0));
     a0 += 0x10;
     if (v0 != 0) goto loc_8003C7B4;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v1 = *gTicCon;
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7F68);                               // Load from: gNextMap (80078098)
     sw(0, gp + 0xCFC);                                  // Store to: 800782DC
@@ -218,8 +217,7 @@ void IN_Stop() noexcept {
 }
 
 void IN_Ticker() noexcept {
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v0 = *gTicCon;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7F0C);                               // Load from: gMenuTimeoutStartTicCon (80077F0C)
     sp -= 0x28;
@@ -318,8 +316,8 @@ loc_8003CBD4:
         if (bJump) goto loc_8003CAE0;
     }
 loc_8003CBF8:
-    v1 = *gpGameTic;
-    v0 = *gpPrevGameTic;
+    v1 = *gGameTic;
+    v0 = *gPrevGameTic;
     v0 = (i32(v0) < i32(v1));
     s0 = 0;                                             // Result = 00000000
     if (v0 != 0) goto loc_8003CC30;
@@ -466,7 +464,7 @@ loc_8003CDE0:
     a1 = 5;                                             // Result = 00000005
     S_StartSound();
 loc_8003CE24:
-    v0 = *gpGameTic;
+    v0 = *gGameTic;
     v0 &= 1;
     if (v0 != 0) goto loc_8003CE4C;
     a0 = 0;                                             // Result = 00000000

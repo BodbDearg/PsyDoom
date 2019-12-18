@@ -69,8 +69,8 @@ loc_8003E9DC:
 }
 
 void O_Control() noexcept {
-    v1 = *gpGameTic;
-    v0 = *gpPrevGameTic;
+    v1 = *gGameTic;
+    v0 = *gPrevGameTic;
     sp -= 0x30;
     sw(ra, sp + 0x28);
     sw(s5, sp + 0x24);

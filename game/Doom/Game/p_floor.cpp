@@ -196,7 +196,7 @@ void T_MoveFloor() noexcept {
     a2 = lw(s0 + 0x24);
     a3 = lw(s0 + 0x10);
     T_MovePlane();
-    v1 = *gpGameTic;
+    v1 = *gGameTic;
     v1 &= 3;
     s1 = v0;
     if (v1 != 0) goto loc_80019074;

@@ -17,9 +17,20 @@
 #include "UI/st_main.h"
 #include "Wess/psxsnd.h"
 
-// Timing related variables
-VmPtr<uint32_t> gpGameTic(0x8007804C);
-VmPtr<uint32_t> gpPrevGameTic(0x80077FA4);
+// Current and previous game tick count (15 Hz ticks)
+VmPtr<int32_t> gGameTic(0x8007804C);
+VmPtr<int32_t> gPrevGameTic(0x80077FA4);
+
+// The last tick count we wanted to be at (15 Hz ticks).
+// On the PSX if the game was running slow, then we might not have reached this amount.
+VmPtr<int32_t> gLastTgtGameTicCount(0x8007829C);
+
+// The current number of 60 Hz ticks
+VmPtr<int32_t> gTicCon(0x8007814C);
+
+// Are we playing back or recording a demo?
+VmPtr<bool32_t> gbDemoPlayback(0x80078080);
+VmPtr<bool32_t> gbDemoRecording(0x800781AC);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Main DOOM entry point.
@@ -42,10 +53,10 @@ void D_DoomMain() noexcept {
     ST_Init();
 
     // Clearing some global tick counters and inputs
-    *gpPrevGameTic = 0;
-    *gpGameTic = 0;
-    sw(0, 0x8007829C);          // Store to: gLastTgtGameTicCount (8007829C)
-    sw(0, 0x8007814C);          // Store to: gTicCon (8007814C)
+    *gPrevGameTic = 0;
+    *gGameTic = 0;
+    *gLastTgtGameTicCount = 0;
+    *gTicCon = 0;
     sw(0, 0x80077F44);          // Store to: gPlayerPadButtons[0] (80077F44)
     sw(0, 0x80077F48);          // Store to: gPlayerPadButtons[1] (80077F48)
     sw(0, 0x80078214);          // Store to: gPlayerOldPadButtons[0] (80078214)
@@ -509,162 +520,172 @@ loc_80012A10:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Runs the game loop for a menu screen or for the level gameplay.
+// Calls startup/shutdown functions and drawer/ticker functions.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void MiniLoop() noexcept {
-loc_80012B78:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FA4);                               // Load from: gNetGame (8007805C)
     sp -= 0x28;
     sw(s0, sp + 0x10);
-    s0 = a0;
     sw(s3, sp + 0x1C);
-    s3 = a1;
     sw(s1, sp + 0x14);
-    s1 = a2;
     sw(s2, sp + 0x18);
-    s2 = a3;
-    sw(ra, sp + 0x24);
     sw(s4, sp + 0x20);
-    if (v0 == 0) goto loc_80012BB8;
-    I_NetHandshake();
-loc_80012BB8:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7EB4);                                 // Store to: gGameAction (80077EB4)
-    *gpPrevGameTic = 0;
-    *gpGameTic = 0;
-    sw(0, gp + 0xB6C);                                  // Store to: gTicCon (8007814C)
-    sw(0, gp + 0xCBC);                                  // Store to: gLastTgtGameTicCount (8007829C)
+
+    s0 = a0;
+    s3 = a1;
+    s1 = a2;
+    s2 = a3;
+    
+    v0 = lw(0x8007805C);        // Load from: gNetGame (8007805C)
+
+    if (v0 != 0) {
+        I_NetHandshake();
+    }
+
+    // Init timers and exit action
+    sw(0, 0x80077EB4);          // Store to: gGameAction (80077EB4)
+    *gPrevGameTic = 0;
+    *gGameTic = 0;
+    *gTicCon = 0;
+    *gLastTgtGameTicCount = 0;
+
+    // Run startup logic for this game loop beginning
     ptr_call(s0);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7E44);                                 // Store to: gElapsedVBlanks (800781BC)
-    a0 = -1;                                            // Result = FFFFFFFF
+
+    // Update the video refresh timers
+    a0 = -1;
     LIBETC_VSync();
-    s4 = 0x80070000;                                    // Result = 80070000
-    s4 += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7EEC);                                // Store to: gLastTotalVBlanks (80078114)
-loc_80012BF8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7E44);                               // Load from: gElapsedVBlanks (800781BC)
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    sw(v1, at);
-    v0 = lw(gp + 0x964);                                // Load from: gPlayerPadButtons[0] (80077F44)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F48);                               // Load from: gPlayerPadButtons[1] (80077F48)
-    sw(v0, gp + 0xC34);                                 // Store to: gPlayerOldPadButtons[0] (80078214)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7DE8);                                // Store to: gPlayerOldPadButtons[1] (80078218)
-    I_ReadGamepad();
-    a0 = v0;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FA4);                               // Load from: gNetGame (8007805C)
-    v1 <<= 2;
-    a1 = v1 + s4;
-    sw(a0, a1);
-    if (v0 == 0) goto loc_80012C80;
-    I_NetUpdate();
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_80012D34;
+    *gLastTotalVBlanks = v0;
+    *gElapsedVBlanks = 0;
+
+    s4 = 0x80077F44;            // Result = gPlayerPadButtons[0] (80077F44)
+    
+    while (true) {
+        v0 = lw(0x80077618);        // Load from: gCurPlayerIndex (80077618)
+        at = 0x80077FBC;            // Result = gPlayersElapsedVBlanks[0] (80077FBC)
+        at += v0 * 4;
+        sw(*gElapsedVBlanks, at);
+
+        v0 = lw(0x80077F44);        // Load from: gPlayerPadButtons[0] (80077F44)
+        v1 = lw(0x80077F48);        // Load from: gPlayerPadButtons[1] (80077F48)
+        sw(v0, 0x80078214);         // Store to: gPlayerOldPadButtons[0] (80078214)
+        sw(v1, 0x80078218);         // Store to: gPlayerOldPadButtons[1] (80078218)
+        
+        I_ReadGamepad();
+
+        a0 = v0;
+        v1 = lw(0x80077618);        // Load from: gCurPlayerIndex (80077618)
+        v1 <<= 2;
+        a1 = v1 + s4;
+        sw(a0, a1);
+
+        v0 = lw(0x8007805C);        // Load from: gNetGame (8007805C)
+
+        if (v0 != 0) {
+            // Updates for when we are in a networked game.
+            // Abort from the game also if there is a problem.
+            I_NetUpdate();
+
+            if (v0 != 0) {
+                sw(4, 0x80077EB4);          // Store to: gGameAction (80077EB4)
+                s0 = 4;
+                break;
+            }
+        }
+        else if (*gbDemoRecording || *gbDemoPlayback) {
+            v0 = a0 & 0xF9FF;
+
+            if (*gbDemoPlayback) {
+                s0 = 9;
+
+                if (v0 != 0)
+                    break;
+
+                v1 = lw(0x800775EC);        // Load from: gpDemo_p (800775EC)
+                v0 = v1 + 4;
+                sw(v0, 0x800775EC);         // Store to: gpDemo_p (800775EC)
+                a0 = lw(v1);
+                sw(a0, a1);
+            }
+
+            v0 = a0 & 0x800;
+
+            if (*gbDemoRecording) {
+                v1 = lw(0x800775EC);        // Load from: gpDemo_p (800775EC)
+                v0 = v1 + 4;
+                sw(v0, 0x800775EC);         // Store to: gpDemo_p (800775EC)
+                sw(a0, v1);
+                v0 = a0 & 0x800;
+            }
+
+            s0 = 5;
+
+            if (v0 != 0)
+                break;
+            
+            // Is the demo recording too big or are we at the end of the largest possible demo size?
+            // If so then stop right now...
+            v0 = lw(0x800775EC);    // Load from: gpDemo_p (800775EC)
+            v1 = lw(0x800775E8);    // Load from: gpDemoBuffer (800775E8)
+
+            const int32_t demoTicksElapsed = (v0 - v1) / sizeof(uint32_t);
+
+            if (demoTicksElapsed >= MAX_DEMO_TICKS)
+                break;
+        }
+
+        // Advance the number of 60 Hz ticks passed
+        v0 = *gTicCon;
+        v1 = lw(0x80077FBC);        // Load from: gPlayersElapsedVBlanks[0] (80077FBC)
+        v0 += v1;
+        *gTicCon = v0;
+        
+        // Advance to the next game tick if it is time.
+        // Video refreshes at 60 Hz but the game ticks at 15 Hz:
+        const int32_t tgtGameTicCount = i32(v0) / 4;    
+        
+        if (*gLastTgtGameTicCount < tgtGameTicCount) {
+            *gLastTgtGameTicCount = tgtGameTicCount;
+            *gGameTic += 1;
+        }
+        
+        // Call the ticker function to do updates for the frame
+        ptr_call(s1);
+        s0 = v0;
+
+        if (s0 != 0)
+            break;
+
+        // Call the drawer function to do drawing for the frame
+        ptr_call(s2);
+        
+        // Do we need to update sound? (sound updates at 15 Hz)
+        if (*gPrevGameTic < *gGameTic) {
+            S_UpdateSounds();
+        }
+
+        *gPrevGameTic = *gGameTic;
     }
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7EB4);                                // Store to: gGameAction (80077EB4)
-    s0 = 4;                                             // Result = 00000004
-    goto loc_80012DBC;
-loc_80012C80:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E54);                               // Load from: gbDemoRecording (800781AC)
-    if (v0 != 0) goto loc_80012CA8;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F80);                               // Load from: gbDemoPlayback (80078080)
-    if (v0 == 0) goto loc_80012D34;
-loc_80012CA8:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F80);                               // Load from: gbDemoPlayback (80078080)
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 & 0xF9FF;
-        if (bJump) goto loc_80012CE0;
-    }
-    s0 = 9;                                             // Result = 00000009
-    if (v0 != 0) goto loc_80012DBC;
-    v1 = lw(gp + 0xC);                                  // Load from: gpDemo_p (800775EC)
-    v0 = v1 + 4;
-    sw(v0, gp + 0xC);                                   // Store to: gpDemo_p (800775EC)
-    a0 = lw(v1);
-    sw(a0, a1);
-loc_80012CE0:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E54);                               // Load from: gbDemoRecording (800781AC)
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 & 0x800;
-        if (bJump) goto loc_80012D0C;
-    }
-    v1 = lw(gp + 0xC);                                  // Load from: gpDemo_p (800775EC)
-    v0 = v1 + 4;
-    sw(v0, gp + 0xC);                                   // Store to: gpDemo_p (800775EC)
-    sw(a0, v1);
-    v0 = a0 & 0x800;
-loc_80012D0C:
-    s0 = 5;                                             // Result = 00000005
-    if (v0 != 0) goto loc_80012DBC;
-    v0 = lw(gp + 0xC);                                  // Load from: gpDemo_p (800775EC)
-    v1 = lw(gp + 0x8);                                  // Load from: gpDemoBuffer (800775E8)
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 2);
-    v0 = (i32(v0) < 0x4000);
-    if (v0 == 0) goto loc_80012DBC;
-loc_80012D34:
-    v0 = lw(gp + 0xB6C);                                // Load from: gTicCon (8007814C)
-    v1 = lw(gp + 0x9DC);                                // Load from: gPlayersElapsedVBlanks[0] (80077FBC)
-    v0 += v1;
-    v1 = lw(gp + 0xCBC);                                // Load from: gLastTgtGameTicCount (8007829C)
-    a0 = u32(i32(v0) >> 2);
-    sw(v0, gp + 0xB6C);                                 // Store to: gTicCon (8007814C)
-    v1 = (i32(v1) < i32(a0));
-    if (v1 == 0) goto loc_80012D6C;
-    v0 = *gpGameTic;
-    sw(a0, gp + 0xCBC);                                 // Store to: gLastTgtGameTicCount (8007829C)
-    v0++;
-    *gpGameTic = v0;
-loc_80012D6C:
-    ptr_call(s1);
-    s0 = v0;
-    if (s0 != 0) goto loc_80012DBC;
-    ptr_call(s2);
-    v1 = *gpGameTic;
-    v0 = *gpPrevGameTic;
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_80012DA8;
-    S_UpdateSounds();
-loc_80012DA8:
-    v0 = *gpGameTic;
-    *gpPrevGameTic = v0;
-    goto loc_80012BF8;
-loc_80012DBC:
+    
+    // Run cleanup logic for this game loop ending
     a0 = s0;
     ptr_call(s3);
-    v1 = lw(gp + 0x964);                                // Load from: gPlayerPadButtons[0] (80077F44)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7F48);                               // Load from: gPlayerPadButtons[1] (80077F48)
+
+    // Current pad buttons become the old ones
+    v1 = lw(0x80077F44);        // Load from: gPlayerPadButtons[0] (80077F44)
+    sw(v1, 0x80078214);         // Store to: gPlayerOldPadButtons[0] (80078214)
+
+    a0 = lw(0x80077F48);        // Load from: gPlayerPadButtons[1] (80077F48)
+    sw(a0, 0x80078218);         // Store to: gPlayerOldPadButtons[1] (80078218)
+
+    // Return the exit game action
     v0 = s0;
-    sw(v1, gp + 0xC34);                                 // Store to: gPlayerOldPadButtons[0] (80078214)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0x7DE8);                                // Store to: gPlayerOldPadButtons[1] (80078218)
-    ra = lw(sp + 0x24);
+    
     s4 = lw(sp + 0x20);
     s3 = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x28;
-    return;
 }

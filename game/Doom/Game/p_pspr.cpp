@@ -2,6 +2,7 @@
 
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/d_main.h"
 #include "Doom/Renderer/r_main.h"
 #include "p_inter.h"
 #include "p_map.h"
@@ -702,8 +703,7 @@ loc_800203A8:
     P_FireWeapon();
     goto loc_80020468;
 loc_800203FC:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v1 = *gTicCon;
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
     v1 <<= 6;

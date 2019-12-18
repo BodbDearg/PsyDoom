@@ -39,8 +39,7 @@ loc_8001C724:
     }
     if (v1 == v0) goto loc_8001C7F4;
     a1 = lw(gp + 0xB58);                                // Load from: gItemRespawnQueueHead (80078138)
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v1 = *gTicCon;
     a0 = a1 & 0x3F;
     v0 = a0 << 2;
     at = 0x80090000;                                    // Result = 80090000
@@ -119,8 +118,7 @@ loc_8001C880:
     v0 = lw(gp + 0xBA0);                                // Load from: gItemRespawnQueueTail (80078180)
     a1 = v0 & 0x3F;
     a0 = a1 << 2;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v0 = *gTicCon;
     at = 0x80090000;                                    // Result = 80090000
     at += 0x7910;                                       // Result = gItemRespawnTime[0] (80097910)
     at += a0;
@@ -238,8 +236,7 @@ loc_8001CA18:
     v0 = 0x30;                                          // Result = 00000030
     if (v1 == v0) goto loc_8001CAF0;
     a1 = lw(gp + 0xB58);                                // Load from: gItemRespawnQueueHead (80078138)
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v1 = *gTicCon;
     a0 = a1 & 0x3F;
     v0 = a0 << 2;
     at = 0x80090000;                                    // Result = 80090000

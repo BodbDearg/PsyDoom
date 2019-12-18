@@ -13,6 +13,11 @@
 #include "w_wad.h"
 #include "z_zone.h"
 
+// Video vblank timers: track the total amount, last total and current elapsed amount
+VmPtr<uint32_t> gTotalVBlanks(0x80077E98);
+VmPtr<uint32_t> gLastTotalVBlanks(0x80078114);
+VmPtr<uint32_t> gElapsedVBlanks(0x800781BC);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // User PlayStation entrypoint for DOOM.
 // This was probably the actual 'main()' function in the real source code.
@@ -730,14 +735,20 @@ loc_800333D8:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Swaps the draw and display framebuffers, causing the current frame being rendered to be displayed onscreen.
+// Also does framerate limiting to 30 Hz and updates the elapsed vblank count, which feeds the game's timing system.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawPresent() noexcept {
-    sp -= 0x18;
-
+    // Finish up all in-flight drawing commands
     a0 = 0;
     LIBGPU_DrawSync();
+
+    // Wait for a vblank to occur
     a0 = 0;
     LIBETC_VSync();
 
+    // Swap the framebuffers
     v1 = lw(0x800780F8);            // Load from: gCurDrawDispBufferIdx (800780F8)    
     v1 ^= 1;
     sw(v1, 0x800780F8);             // Store to: gCurDrawDispBufferIdx (800780F8)    
@@ -748,73 +759,66 @@ void I_DrawPresent() noexcept {
     a0 = 0x800A9164 + v0 * 20;      // gDispEnv1[0] (800A9164)
     LIBGPU_PutDispEnv();
 
+    // Frame rate limiting to 30 Hz.
+    // Continously poll and wait until at least 2 vblanks have elapsed before continuing.
     do {
         a0 = -1;
         LIBETC_VSync();
-        v1 = lw(0x80078114);    // Load from: gLastTotalVBlanks (80078114)
-        sw(v0, 0x80077E98);     // Store to: gTotalVBlanks (80077E98)
-        v0 -= v1;
-        sw(v0, 0x800781BC);     // Store to: gElapsedVBlanks (800781BC)
-    } while (v0 < 2);
+        *gTotalVBlanks = v0;
+        *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
+    } while (*gElapsedVBlanks < 2);
 
-    const bool bDemoPlayback = (lw(0x80078080) != 0);       // Load from: gbDemoPlayback (80078080)
-    const bool bDemoRecording = (lw(0x800781AC) != 0);      // Load from: gbDemoRecording (800781AC)
-
-    // Demo playback or recording is made to use 4 tics all the time.
-    // Probably done so the simulation remains consistent.
-    if (bDemoPlayback || bDemoRecording) {
-        v0 = lw(0x800781BC);            // Load from: gElapsedVBlanks (800781BC)
-
-        while (v0 < 4) {
+    // Further framerate limiting for demos:
+    // Demo playback or recording is forced to run at 15 Hz all of the time (the game simulation rate).
+    // Probably done so the simulation remains consistent!
+    if (*gbDemoPlayback || *gbDemoRecording) {
+        while (*gElapsedVBlanks < 4) {
             a0 = -1;
             LIBETC_VSync();
-            v1 = lw(0x80078114);        // Load from: gLastTotalVBlanks (80078114)
-            sw(v0, 0x80077E98);         // Store to: gTotalVBlanks (80077E98)
-            v0 -= v1;
-            sw(v0, 0x800781BC);         // Store to: gElapsedVBlanks (800781BC)
+            *gTotalVBlanks = v0;
+            *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
         }
 
-        sw(4, gp + 0xBDC);              // Store to: gElapsedVBlanks (800781BC)
+        *gElapsedVBlanks = 4;
     }
 
-    v0 = lw(0x80077E98);        // Load from: gTotalVBlanks (80077E98)
-    sw(v0, gp + 0xB34);         // Store to: gLastTotalVBlanks (80078114)
+    // So we can compute the elapsed vblank amount next time round
+    *gLastTotalVBlanks = *gTotalVBlanks;
 
+    // PC-PSX: copy the PSX framebuffer to the display
     #if PC_PSX_DOOM_MODS
         PcPsx::displayFramebuffer();
     #endif
-    
-    sp += 0x18;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Callback for when a vblank occurs.
+// This function appears to be unused in the retail game, probably more simple to use polling instead and not deal with interrupts?
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_VsyncCallback() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7E98);                               // Load from: gTotalVBlanks (80077E98)
-    v0++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7E98);                                // Store to: gTotalVBlanks (80077E98)
-    return;
+    *gTotalVBlanks += 1;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// DOOM engine platform specific initialization.
+// For the PSX this will just setup the texture cache.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_Init() noexcept {
-loc_8003352C:
-    sp -= 0x18;
-    a1 = 0x2C00;                                        // Result = 00002C00
-    a2 = 1;                                             // Result = 00000001
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    sw(ra, sp + 0x10);
-    a3 = 0;                                             // Result = 00000000
+    // Alloc and zero initialize the texture cache entries data structure
+    a0 = lw(0x80078198);        // Load from: gpMainMemZone (80078198)
+    a1 = 0x2C00;
+    a2 = 1;    
+    a3 = 0;
     Z_Malloc2();
+    sw(v0, 0x80077F74);         // Store to: gpTexCacheEntries (80077F74)
+
     a0 = v0;
-    a1 = 0;                                             // Result = 00000000
-    sw(a0, gp + 0x994);                                 // Store to: gpTexCacheEntries (80077F74)
-    a2 = 0x2C00;                                        // Result = 00002C00
+    a1 = 0;
+    a2 = 0x2C00;
     _thunk_D_memset();
+
+    // Do the initial clearing of the texture cache
     I_ResetTexCache();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void I_CacheTex() noexcept {

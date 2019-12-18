@@ -833,8 +833,7 @@ loc_8002A388:
     sw(a0, a1 + 0x14);
     goto loc_8002A4E0;
 loc_8002A3D0:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v1 = *gTicCon;
     v0 = v1 << 1;
     v0 += v1;
     v1 = v0 << 4;
@@ -1356,8 +1355,8 @@ loc_8002ABC8:
 loc_8002ABCC:
     a0 = s0;
     P_MovePsprites();
-    v1 = *gpGameTic;
-    v0 = *gpPrevGameTic;
+    v1 = *gGameTic;
+    v0 = *gPrevGameTic;
     v0 = (i32(v0) < i32(v1));
     if (v0 == 0) goto loc_8002ACCC;
     v0 = lw(s0 + 0x34);

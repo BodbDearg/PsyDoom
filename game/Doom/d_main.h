@@ -1,9 +1,14 @@
 #pragma once
 
 #include "PsxVm/VmPtr.h"
+#include "PcPsx/Types.h"
 
-extern VmPtr<uint32_t> gpGameTic;
-extern VmPtr<uint32_t> gpPrevGameTic;
+extern VmPtr<int32_t>   gGameTic;
+extern VmPtr<int32_t>   gPrevGameTic;
+extern VmPtr<int32_t>   gLastTgtGameTicCount;
+extern VmPtr<int32_t>   gTicCon;
+extern VmPtr<bool32_t>  gbDemoPlayback;
+extern VmPtr<bool32_t>  gbDemoRecording;
 
 void D_DoomMain() noexcept;
 void RunLegals() noexcept;

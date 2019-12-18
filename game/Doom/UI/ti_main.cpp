@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/w_wad.h"
+#include "Doom/d_main.h"
 #include "Doom/Game/p_firesky.h"
 #include "Doom/Renderer/r_data.h"
 #include "PsxVm/PsxVm.h"
@@ -162,8 +163,7 @@ loc_800352B0:
     if (v1 == 0) goto loc_80035310;
     sw(v0, gp + 0xBB0);                                 // Store to: gTitleScreenSpriteY (80078190)
     if (v0 != 0) goto loc_80035310;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v0 = *gTicCon;
     sw(v0, gp + 0x92C);                                 // Store to: gMenuTimeoutStartTicCon (80077F0C)
 loc_80035310:
     v0 = 0x80070000;                                    // Result = 80070000
@@ -216,8 +216,7 @@ loc_800353C8:
     v1 = lw(gp + 0xBB0);                                // Load from: gTitleScreenSpriteY (80078190)
     v0 = 0;                                             // Result = 00000000
     if (v1 != 0) goto loc_800353FC;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v0 = *gTicCon;
     v1 = lw(gp + 0x92C);                                // Load from: gMenuTimeoutStartTicCon (80077F0C)
     v0 -= v1;
     v0 = (i32(v0) < 0x708);

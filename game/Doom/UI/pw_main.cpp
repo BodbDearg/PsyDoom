@@ -51,8 +51,8 @@ void TIC_PasswordScreen() noexcept {
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
     if (a0 == 0) goto loc_80036EF4;
-    v1 = *gpGameTic;
-    v0 = *gpPrevGameTic;
+    v1 = *gGameTic;
+    v0 = *gPrevGameTic;
     v0 = (i32(v0) < i32(v1));
     {
         const bool bJump = (v0 == 0);
@@ -487,8 +487,7 @@ loc_800374B0:
     v0 = lw(gp + 0xB94);                                // Load from: gCurPasswordCharIdx (80078174)
     s1 = a0 + 0x3C;
     if (v0 != s2) goto loc_80037518;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v0 = *gTicCon;
     v0 &= 4;
     {
         const bool bJump = (v0 != 0);

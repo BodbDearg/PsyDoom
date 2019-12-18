@@ -174,11 +174,11 @@ loc_80028E40:
     v1 = lw(v1 - 0x7D28);                               // Load from: gTicConOnPause (800782D8)
     v0 &= s6;
     at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7EB4);                                // Store to: gTicCon (8007814C)
+    *gTicCon = v1;
     v1 = u32(i32(v1) >> 2);
     sw(v0, s5);                                         // Store to: gPlayer1[30] (800A88AC)
     at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7D64);                                // Store to: gLastTgtGameTicCount (8007829C)
+    *gLastTgtGameTicCount = v1;
 loc_80028E90:
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
@@ -338,8 +338,7 @@ loc_800290B0:
     a0 = 0xE;                                           // Result = 0000000E
     wess_seq_stop();
     S_Pause();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB4);                               // Load from: gTicCon (8007814C)
+    v0 = *gTicCon;
     sw(0, gp + 0xA04);                                  // Store to: gCurCheatBtnSequenceIdx (80077FE4)
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0x7D28);                                // Store to: gTicConOnPause (800782D8)
@@ -591,8 +590,8 @@ void P_Ticker() noexcept {
     P_CheckCheats();
     v0 = lw(gp + 0x8E0);                                // Load from: gbGamePaused (80077EC0)
     if (v0 != 0) goto loc_8002955C;
-    v1 = *gpGameTic;
-    v0 = *gpPrevGameTic;
+    v1 = *gGameTic;
+    v0 = *gPrevGameTic;
     v0 = (i32(v0) < i32(v1));
     if (v0 == 0) goto loc_8002955C;
     s0 = 0x80090000;                                    // Result = 80090000
@@ -727,7 +726,7 @@ void P_Start() noexcept {
     AM_Start();
     M_ClearRandom();
     v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F80);                               // Load from: gbDemoPlayback (80078080)
+    v0 = *gbDemoPlayback;
     at = 0x80070000;                                    // Result = 80070000
     sw(s0, at + 0x7BE4);                                // Store to: gbIsLevelDataCached (80077BE4)
     a2 = 0;                                             // Result = 00000000
