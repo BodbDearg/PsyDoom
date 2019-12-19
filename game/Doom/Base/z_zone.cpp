@@ -4,20 +4,26 @@
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the zone memory management system.
+// DOOM doesn't use any PsyQ SDK allocation functions AT ALL (either directly or indirectly) so it just gobbles up the entire of the 
+// available heap space on the system for it's own purposes.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void Z_Init() noexcept {
-    v1 = 0x1FFFFFFF;
-    a0 = HeapStartAddr;
-    a1 = StackEndAddr;
-    v0 = StackSize;
-    a2 = -4;
-    a0 += 3;
-    a0 &= a2;
-    a1 -= v0;
-    v1 &= a0;
-    a1 -= v1;
-    a1 += 3;
-    a1 &= a2;
+    // The 32-bit aligned heap start address and the same value wrapped to 2 MiB.
+    // This value was 32-bit aligned anyway but I guess this code is just making sure of that?
+    constexpr uint32_t AlignedHeapStartAddr = (HeapStartAddr + 3) & 0xFFFFFFFC;
+    constexpr uint32_t WrappedHeapStartAddr = AlignedHeapStartAddr & 0x1FFFFFFF;
+
+    // Figure out the 32-bit aligned heap size
+    constexpr uint32_t StackStartAddr = StackEndAddr - StackSize;
+    constexpr uint32_t AlignedHeapSize = (StackStartAddr - WrappedHeapStartAddr + 3) & 0xFFFFFFFC;
+
+    // Setup the main memory zone (the only zone)
+    a0 = AlignedHeapStartAddr;
+    a1 = AlignedHeapSize;
     Z_InitZone();
+
     sw(v0, 0x80078198);     // Store to: gpMainMemZone (80078198)
 }
 
