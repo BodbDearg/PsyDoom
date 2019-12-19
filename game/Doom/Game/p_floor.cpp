@@ -2,7 +2,7 @@
 
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/z_zone.h"
-#include "Doom/d_main.h"
+#include "g_game.h"
 #include "p_change.h"
 #include "p_spec.h"
 #include "p_tick.h"

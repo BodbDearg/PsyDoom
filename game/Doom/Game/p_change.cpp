@@ -2,7 +2,7 @@
 
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
-#include "Doom/d_main.h"
+#include "g_game.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"

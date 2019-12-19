@@ -3,6 +3,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_main.h"
+#include "g_game.h"
 #include "p_map.h"
 #include "p_mobj.h"
 #include "p_pspr.h"

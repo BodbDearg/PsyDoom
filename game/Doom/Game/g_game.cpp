@@ -16,12 +16,28 @@
 #include "PsxVm/PsxVm.h"
 #include "Wess/wessapi.h"
 
+// Helper global holding the result of executing a gameloop via 'MiniLoop'.
+// Sometimes this is used in preference to the return action, and sometimes it is used temporarily to hold the return action.
+VmPtr<gameaction_t> gGameAction(0x80077EB4);
+
 // The current game map
 VmPtr<int32_t> gGameMap(0x80078048);
 
 // State for each player and whether they are in the game
-VmPtr<player_t[MAXPLAYERS]>     gPlayers(0x800A87EC);
-VmPtr<bool32_t[MAXPLAYERS]>     gbPlayerInGame(0x800780AC);
+VmPtr<player_t[MAXPLAYERS]> gPlayers(0x800A87EC);
+VmPtr<bool32_t[MAXPLAYERS]> gbPlayerInGame(0x800780AC);
+
+// Current and previous game tick count (15 Hz ticks)
+VmPtr<int32_t> gGameTic(0x8007804C);
+VmPtr<int32_t> gPrevGameTic(0x80077FA4);
+
+// The last tick count we wanted to be at (15 Hz ticks).
+// On the PSX if the game was running slow, then we might not have reached this amount.
+VmPtr<int32_t> gLastTgtGameTicCount(0x8007829C);
+
+// Are we playing back or recording a demo?
+VmPtr<bool32_t> gbDemoPlayback(0x80078080);
+VmPtr<bool32_t> gbDemoRecording(0x800781AC);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Displays a loading message then loads the current map

@@ -1,7 +1,7 @@
 #include "am_main.h"
 
 #include "Doom/Base/i_main.h"
-#include "Doom/d_main.h"
+#include "Doom/Game/g_game.h"
 #include "PsxVm/PsxVm.h"
 
 void AM_Start() noexcept {

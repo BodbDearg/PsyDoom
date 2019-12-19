@@ -4,13 +4,7 @@
 #include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 
-extern VmPtr<gameaction_t>  gGameAction;
-extern VmPtr<int32_t>       gGameTic;
-extern VmPtr<int32_t>       gPrevGameTic;
-extern VmPtr<int32_t>       gLastTgtGameTicCount;
-extern VmPtr<int32_t>       gTicCon;
-extern VmPtr<bool32_t>      gbDemoPlayback;
-extern VmPtr<bool32_t>      gbDemoRecording;
+extern VmPtr<int32_t> gTicCon;
 
 void D_DoomMain() noexcept;
 void RunLegals() noexcept;

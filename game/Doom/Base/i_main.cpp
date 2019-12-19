@@ -2,6 +2,7 @@
 
 #include "d_vsprintf.h"
 #include "Doom/d_main.h"
+#include "Doom/Game/g_game.h"
 #include "PcPsx/Video.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBAPI.h"

@@ -20,24 +20,8 @@
 #include "UI/ti_main.h"
 #include "Wess/psxsnd.h"
 
-// Helper global holding the result of executing a gameloop via 'MiniLoop'.
-// Sometimes this is used in preference to the return action, and sometimes it is used temporarily to hold the return action.
-VmPtr<gameaction_t> gGameAction(0x80077EB4);
-
-// Current and previous game tick count (15 Hz ticks)
-VmPtr<int32_t> gGameTic(0x8007804C);
-VmPtr<int32_t> gPrevGameTic(0x80077FA4);
-
-// The last tick count we wanted to be at (15 Hz ticks).
-// On the PSX if the game was running slow, then we might not have reached this amount.
-VmPtr<int32_t> gLastTgtGameTicCount(0x8007829C);
-
 // The current number of 60 Hz ticks
 VmPtr<int32_t> gTicCon(0x8007814C);
-
-// Are we playing back or recording a demo?
-VmPtr<bool32_t> gbDemoPlayback(0x80078080);
-VmPtr<bool32_t> gbDemoRecording(0x800781AC);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Main DOOM entry point.
