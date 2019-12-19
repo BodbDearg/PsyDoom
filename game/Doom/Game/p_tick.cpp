@@ -291,8 +291,7 @@ loc_80029000:
     sw(v0, a3 + 0xC0);
     at = 0x80070000;                                    // Result = 80070000
     sw(v1, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7FB8);                                // Store to: gGameMap (80078048)
+    *gGameMap = v1;
     goto loc_800293E8;
 loc_80029044:
     if (v0 == 0) goto loc_800290EC;
@@ -527,8 +526,7 @@ loc_80029344:
     goto loc_800293C4;
 loc_80029370:
     v0 = lw(a3 + 0xC0);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FB8);                               // Load from: gGameMap (80078048)
+    v1 = *gGameMap;
     v0 |= 0x20;
     sw(v1, gp + 0xC90);                                 // Store to: gMapNumToCheatWarpTo (80078270)
     v1 = (i32(v1) < 0x37);

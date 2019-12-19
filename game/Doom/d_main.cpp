@@ -95,7 +95,7 @@ void D_DoomMain() noexcept {
         
         do {
             RunMenu();
-        } while (v0 != ga_died);
+        } while (v0 != ga_timeout);
     }
 }
 

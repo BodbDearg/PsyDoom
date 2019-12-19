@@ -1,5 +1,11 @@
 #pragma once
 
+#include "Doom/doomdef.h"
+
+extern VmPtr<int32_t>               gGameMap;
+extern VmPtr<player_t[MAXPLAYERS]>  gPlayers;
+extern VmPtr<bool32_t[MAXPLAYERS]>  gbPlayerInGame;
+
 void G_DoLoadLevel() noexcept;
 void G_PlayerFinishLevel() noexcept;
 void G_PlayerReborn() noexcept;

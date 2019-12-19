@@ -5,6 +5,7 @@
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/z_zone.h"
+#include "Doom/Game/g_game.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBC2.h"
 #include "PsyQ/LIBGPU.h"
@@ -607,8 +608,7 @@ loc_80038E54:
     v0 &= 1;
     a0 = sp + 0x18;
     if (v0 == 0) goto loc_80038EA0;
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7FB8);                               // Load from: gGameMap (80078048)
+    a2 = *gGameMap;
     a1 = 0x80010000;                                    // Result = 80010000
     a1 += 0x1628;                                       // Result = STR_LevelNumAndName[0] (80011628)
     a3 = 0x80070000;                                    // Result = 80070000

@@ -7,6 +7,7 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_data.h"
+#include "g_game.h"
 #include "p_ceiling.h"
 #include "p_doors.h"
 #include "p_floor.h"
@@ -1754,8 +1755,7 @@ loc_80027768:
     sp -= 0x18;
     a1 = 0x14;                                          // Result = 00000014
     a2 = 4;                                             // Result = 00000004
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FB8);                               // Load from: gGameMap (80078048)
+    v0 = *gGameMap;
     a0 = 0x80080000;                                    // Result = 80080000
     a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
     sw(ra, sp + 0x14);

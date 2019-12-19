@@ -16,63 +16,70 @@
 #include "PsxVm/PsxVm.h"
 #include "Wess/wessapi.h"
 
+// The current game map
+VmPtr<int32_t> gGameMap(0x80078048);
+
+// State for each player and whether they are in the game
+VmPtr<player_t[MAXPLAYERS]>     gPlayers(0x800A87EC);
+VmPtr<bool32_t[MAXPLAYERS]>     gbPlayerInGame(0x800780AC);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Displays a loading message then loads the current map
+//------------------------------------------------------------------------------------------------------------------------------------------
 void G_DoLoadLevel() noexcept {
-loc_80012E04:
-    sp -= 0x18;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A90;                                       // Result = gTexInfo_LOADING[0] (80097A90)
-    a1 = 0x5F;                                          // Result = 0000005F
-    sw(s0, sp + 0x10);
-    s0 = 3;                                             // Result = 00000003
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    sw(ra, sp + 0x14);
-    a2 = 0x6D;                                          // Result = 0000006D
+    // Draw the loading plaque
+    a0 = 0x80097A90;                // Result = gTexInfo_LOADING[0] (80097A90)
+    a1 = 95;
+    a2 = 109;
+    a3 = lh(0x800A90A4);            // Load from: gPaletteClutId_UI (800A90A4)    
     I_DrawPlaque();
-loc_80012E30:
-    a0 = 5;                                             // Result = 00000005
-    wess_seq_status();
-    if (v0 == s0) goto loc_80012E30;
-    a0 = 7;                                             // Result = 00000007
-    wess_seq_status();
-    if (v0 == s0) goto loc_80012E30;
-    a0 = lw(gp + 0xA68);                                // Load from: gGameMap (80078048)
+
+    // TODO: what is this waiting on?
+    do {
+        a0 = 5;
+        wess_seq_status();
+        if (v0 == 3) continue;
+    
+        a0 = 7;
+        wess_seq_status();    
+        if (v0 == 3) continue;
+
+    } while (false);
+
+    // Loading sound and music
+    a0 = *gGameMap;
     S_LoadSoundAndMusic();
-    t2 = 8;                                             // Result = 00000008
-    t1 = 4;                                             // Result = 00000004
-    t0 = 1;                                             // Result = 00000001
-    a3 = 2;                                             // Result = 00000002
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7810;                                       // Result = gPlayer1[1] (800A87F0)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0x7F54;                                       // Result = gbPlayerInGame[0] (800780AC)
-    a2 = v1 + 0x258;                                    // Result = gThingLine_tv1[1] (800A8A48)
-    a1 = *gGameAction;
-loc_80012E84:
-    v0 = lw(a0);
-    if (v0 == 0) goto loc_80012EB8;
-    if (a1 == t2) goto loc_80012EB4;
-    if (a1 == t1) goto loc_80012EB4;
-    v0 = lw(v1);
-    if (v0 != t0) goto loc_80012EB8;
-loc_80012EB4:
-    sw(a3, v1);
-loc_80012EB8:
-    v1 += 0x12C;
-    v0 = (i32(v1) < i32(a2));
-    a0 += 4;
-    if (v0 != 0) goto loc_80012E84;
-    a0 = lw(gp + 0xA68);                                // Load from: gGameMap (80078048)
-    a1 = lw(gp + 0xC78);                                // Load from: gGameSkill (80078258)
+
+    // Initialize the state of each player if required
+    {
+        const gameaction_t gameAction = *gGameAction;
+
+        player_t* pPlayer = gPlayers.get();
+        player_t* const pEndPlayer = pPlayer + MAXPLAYERS;
+        bool32_t* pbPlayerInGame = gbPlayerInGame.get();
+
+        do {
+            if (*pbPlayerInGame) {
+                if ((gameAction == ga_number8) || (gameAction == ga_number4) || (pPlayer->playerstate == PST_DEAD)) {
+                    pPlayer->playerstate = PST_REBORN;
+                }
+            }
+
+            ++pPlayer;
+            ++pbPlayerInGame;
+        } while (pPlayer < pEndPlayer);
+    }
+
+    // Load level data and do level setup
+    a0 = *gGameMap;
+    a1 = lw(0x80078258);        // Load from: gGameSkill (80078258)
     P_SetupLevel();
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    
+    // Verify heap integrity
+    a0 = lw(0x80078198);        // Load from: gpMainMemZone (80078198)
     Z_CheckHeap();
+
     *gGameAction = ga_nothing;
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void G_PlayerFinishLevel() noexcept {
@@ -187,7 +194,7 @@ loc_80013070:
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
     if (v0 != 0) goto loc_800130AC;
-    *gGameAction = ga_number1;
+    *gGameAction = ga_died;
     goto loc_8001335C;
 loc_800130AC:
     v0 = s3 << 2;
@@ -417,7 +424,7 @@ loc_80013394:
     M_ClearRandom();
     v1 = 2;                                             // Result = 00000002
     v0 = 0x12C;                                         // Result = 0000012C
-    sw(s0, gp + 0xA68);                                 // Store to: gGameMap (80078048)
+    *gGameMap = s0;
     sw(s2, gp + 0xC78);                                 // Store to: gGameSkill (80078258)
     sw(s1, gp + 0xA7C);                                 // Store to: gNetGame (8007805C)
 loc_800133FC:
@@ -557,7 +564,7 @@ loc_800135B4:
         v0 = 0x1E;                                      // Result = 0000001E
         if (bJump) goto loc_80013698;
     }
-    v1 = lw(gp + 0xA68);                                // Load from: gGameMap (80078048)
+    v1 = *gGameMap;
     {
         const bool bJump = (v1 != v0);
         v0 = 0x1F;                                      // Result = 0000001F
@@ -590,7 +597,7 @@ loc_80013698:
 
 loc_800136A4:
     if (v0 == 0) goto loc_800136B8;
-    sw(v1, gp + 0xA68);                                 // Store to: gGameMap (80078048)
+    *gGameMap = v1;
     goto loc_8001353C;
 
 loc_800136B8:

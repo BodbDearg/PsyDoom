@@ -28,6 +28,9 @@ static_assert(
 template <class T>
 class VmPtr {
 public:
+    // This removes the array bounds in the type, so that arrays decay to pointers like in regular C
+    typedef std::remove_all_extents_t<T> ElemTy;
+
     // Construction and assign
     inline constexpr VmPtr() : mAddr(0) noexcept {}
     inline constexpr VmPtr(const VmPtr& other) noexcept : mAddr(other.mAddr) {}
@@ -47,29 +50,29 @@ public:
     inline constexpr operator bool () const noexcept { return (mAddr != 0); }
 
     // Pointer dereferencing
-    inline T* get() const noexcept {
+    inline ElemTy* get() const noexcept {
         const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
-        ASSERT_LOG(wrappedAddr + sizeof(T) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
-        return reinterpret_cast<T*>(PsxVm::gpRam + wrappedAddr);
+        ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
+        return reinterpret_cast<ElemTy*>(PsxVm::gpRam + wrappedAddr);
     }
 
-    inline T& operator * () const noexcept {    
+    inline ElemTy& operator * () const noexcept {    
         const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
-        ASSERT_LOG(wrappedAddr + sizeof(T) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
-        return *reinterpret_cast<T*>(PsxVm::gpRam + wrappedAddr);
+        ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
+        return *reinterpret_cast<ElemTy*>(PsxVm::gpRam + wrappedAddr);
     }
 
-    inline T* operator -> () const noexcept {
+    inline ElemTy* operator -> () const noexcept {
         const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
-        ASSERT_LOG(wrappedAddr + sizeof(T) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
-        return reinterpret_cast<T*>(PsxVm::gpRam + wrappedAddr);
+        ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
+        return reinterpret_cast<ElemTy*>(PsxVm::gpRam + wrappedAddr);
     }
 
-    inline T& operator [] (const size_t index) const noexcept {
+    inline ElemTy& operator [] (const size_t index) const noexcept {
         const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
-        const uint32_t elemAddr = wrappedAddr + uint32_t(sizeof(T)) * index;
-        ASSERT_LOG(elemAddr + sizeof(T) <= 0x200000, "Array element accessed spills past the 2MB of PSX RAM!");
-        return reinterpret_cast<T*>(PsxVm::gpRam + elemAddr);
+        const uint32_t elemAddr = wrappedAddr + uint32_t(sizeof(ElemTy)) * index;
+        ASSERT_LOG(elemAddr + sizeof(ElemTy) <= 0x200000, "Array element accessed spills past the 2MB of PSX RAM!");
+        return reinterpret_cast<ElemTy*>(PsxVm::gpRam + elemAddr);
     }
 
     // Pointer comparison
@@ -89,28 +92,28 @@ public:
 
     // Pointer arithmetic
     inline constexpr VmPtr operator + (const int32_t count) const noexcept {
-        const int32_t offset = int32_t(sizeof(T)) * count;
+        const int32_t offset = int32_t(sizeof(ElemTy)) * count;
         return VmPtr(mAddr + (uint32_t) offset);
     }
 
     inline constexpr void operator += (const int32_t count) const noexcept {
-        const int32_t offset = int32_t(sizeof(T)) * count;
+        const int32_t offset = int32_t(sizeof(ElemTy)) * count;
         mAddr += (uint32_t) offset;
     }
 
     inline constexpr VmPtr operator - (const int32_t count) const noexcept {
-        const int32_t offset = int32_t(sizeof(T)) * count;
+        const int32_t offset = int32_t(sizeof(ElemTy)) * count;
         return VmPtr(mAddr - (uint32_t) offset);
     }
 
     inline constexpr void operator -= (const int32_t count) const noexcept {
-        const int32_t offset = int32_t(sizeof(T)) * count;
+        const int32_t offset = int32_t(sizeof(ElemTy)) * count;
         mAddr -= (uint32_t) offset;
     }
 
     inline constexpr int32_t operator - (const VmPtr other) const noexcept {
         const int32_t addrDiff = (int32_t)(mAddr - other.mAddr);
-        return addrDiff / (int32_t) sizeof(T);
+        return addrDiff / (int32_t) sizeof(ElemTy);
     }
 
 private:

@@ -4,6 +4,7 @@
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/d_main.h"
+#include "Doom/Game/g_game.h"
 #include "Doom/Game/p_password.h"
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
@@ -527,8 +528,7 @@ loc_8003CEE4:
     I_CacheAndDrawSprite();
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = 0x14;                                          // Result = 00000014
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7FB8);                               // Load from: gGameMap (80078048)
+    a2 = *gGameMap;
     s1 = 0x80070000;                                    // Result = 80070000
     s1 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
     a2 <<= 5;
@@ -881,8 +881,7 @@ loc_8003D448:
     I_CacheAndDrawSprite();
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = 0x14;                                          // Result = 00000014
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7FB8);                               // Load from: gGameMap (80078048)
+    a2 = *gGameMap;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
     a2 <<= 5;
