@@ -1,6 +1,7 @@
 #include "p_password.h"
 
 #include "Doom/d_main.h"
+#include "g_game.h"
 #include "PsxVm/PsxVm.h"
 
 void P_ComputePassword() noexcept {
@@ -29,8 +30,7 @@ loc_80037DBC:
     a1 = s0;
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lbu(v0 - 0x7F68);                              // Load from: gNextMap (80078098)
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lbu(v1 - 0x7DA8);                              // Load from: gGameSkill (80078258)
+    v1 = (uint8_t) *gGameSkill;
     v0 &= 0x3F;
     v0 <<= 2;
     v1 &= 3;

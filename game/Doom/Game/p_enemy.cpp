@@ -807,8 +807,7 @@ loc_8001675C:
     P_SetMObjState();
     goto loc_80016910;
 loc_8001676C:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7DA8);                               // Load from: gGameSkill (80078258)
+    v1 = *gGameSkill;
     v0 = 4;                                             // Result = 00000004
     if (v1 == v0) goto loc_80016790;
     v0 = lw(s1 + 0x70);
@@ -883,8 +882,7 @@ loc_80016860:
     a1 = lw(v0 + 0x2C);
     a0 = s1;
     P_SetMObjState();
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7DA8);                               // Load from: gGameSkill (80078258)
+    v1 = *gGameSkill;
     v0 = 4;                                             // Result = 00000004
     if (v1 == v0) goto loc_80016910;
     v0 = lw(s1 + 0x64);

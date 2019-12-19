@@ -746,8 +746,7 @@ loc_8001D28C:
     v0 &= 0x10;
     if (v0 != 0) goto loc_8001D6D8;
 loc_8001D2B4:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7DA8);                               // Load from: gGameSkill (80078258)
+    v1 = *gGameSkill;
     v0 = (v1 < 2);
     if (v0 == 0) goto loc_8001D2D4;
     a1 = 1;                                             // Result = 00000001

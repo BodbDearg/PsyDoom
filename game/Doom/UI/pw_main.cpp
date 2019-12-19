@@ -206,7 +206,7 @@ loc_80037070:
     at = 0x80070000;                                    // Result = 80070000
     sw(v1, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
     at = 0x80080000;                                    // Result = 80080000
-    sw(a1, at - 0x7DA8);                                // Store to: gGameSkill (80078258)
+    *gGameSkill = (skill_t) a1;
     at = 0x80070000;                                    // Result = 80070000
     sw(a1, at + 0x75FC);                                // Store to: gStartSkill (800775FC)
     v0 = 4;                                             // Result = 00000004

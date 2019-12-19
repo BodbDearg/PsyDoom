@@ -20,7 +20,8 @@
 // Sometimes this is used in preference to the return action, and sometimes it is used temporarily to hold the return action.
 VmPtr<gameaction_t> gGameAction(0x80077EB4);
 
-// The current game map
+// The current skill level and game map
+VmPtr<skill_t> gGameSkill(0x80078258);
 VmPtr<int32_t> gGameMap(0x80078048);
 
 // State for each player and whether they are in the game
@@ -88,7 +89,7 @@ void G_DoLoadLevel() noexcept {
 
     // Load level data and do level setup
     a0 = *gGameMap;
-    a1 = lw(0x80078258);        // Load from: gGameSkill (80078258)
+    a1 = *gGameSkill;
     P_SetupLevel();
     
     // Verify heap integrity
@@ -441,7 +442,7 @@ loc_80013394:
     v1 = 2;                                             // Result = 00000002
     v0 = 0x12C;                                         // Result = 0000012C
     *gGameMap = s0;
-    sw(s2, gp + 0xC78);                                 // Store to: gGameSkill (80078258)
+    *gGameSkill = (skill_t) s2;
     sw(s1, gp + 0xA7C);                                 // Store to: gNetGame (8007805C)
 loc_800133FC:
     at = 0x800B0000;                                    // Result = 800B0000

@@ -4,6 +4,7 @@
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Renderer/r_main.h"
+#include "g_game.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
 #include "PsxVm/PsxVm.h"
@@ -54,8 +55,7 @@ loc_80019838:
     v0 += v1;
     s1 = u32(i32(v0) >> 1);
 loc_80019858:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7DA8);                               // Load from: gGameSkill (80078258)
+    v0 = *gGameSkill;
     {
         const bool bJump = (v0 != 0);
         v0 = s2 << 2;
@@ -1284,8 +1284,7 @@ loc_8001A8A0:
 loc_8001A90C:
     s2 = lw(s0 + 0x80);
     if (s2 == 0) goto loc_8001A97C;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7DA8);                               // Load from: gGameSkill (80078258)
+    v0 = *gGameSkill;
     {
         const bool bJump = (v0 != 0);
         v0 = (i32(s3) < 0x1F);

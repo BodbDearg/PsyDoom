@@ -3,6 +3,7 @@
 #include "Doom/doomdef.h"
 
 extern VmPtr<gameaction_t>          gGameAction;
+extern VmPtr<skill_t>               gGameSkill;
 extern VmPtr<int32_t>               gGameMap;
 extern VmPtr<player_t[MAXPLAYERS]>  gPlayers;
 extern VmPtr<bool32_t[MAXPLAYERS]>  gbPlayerInGame;
