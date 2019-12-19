@@ -25,6 +25,7 @@ VmPtr<uint32_t> gElapsedVBlanks(0x800781BC);
 // I'm just calling 'I_Main()' so as not to confuse it with our this port's 'main()'... 
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_Main() noexcept {
+    // PsyQ SDK initialization stuff
     LIBSN__main();
 
     #if PC_PSX_DOOM_MODS

@@ -116,6 +116,11 @@ public:
         return addrDiff / (int32_t) sizeof(ElemTy);
     }
 
+    inline constexpr void operator -- () noexcept     {  mAddr -= sizeof(ElemTy); }
+    inline constexpr void operator -- (int) noexcept  {  mAddr -= sizeof(ElemTy); }
+    inline constexpr void operator ++ () noexcept     {  mAddr += sizeof(ElemTy); }
+    inline constexpr void operator ++ (int) noexcept  {  mAddr += sizeof(ElemTy); }
+
 private:
     uint32_t mAddr;
 };

@@ -2559,7 +2559,7 @@ static const ProgElem ELEMS[] = {
     { 0x80074B4C, 0x80074B88, "OptionsMenuEntries_MainMenu",            ProgElemType::ARRAY, ProgElemType::UINT32, 3 },
     { 0x80074B88, 0x80074BD0, "OptionsMenuEntries_InGame",              ProgElemType::ARRAY, ProgElemType::UINT32, 3 },
     { 0x80074BD0, 0x80074C00, "OptionsMenuEntries_NetGame",             ProgElemType::ARRAY, ProgElemType::UINT32, 3 },
-    { 0x80074C00, 0x80074C04, "I_ZoneBase",                             ProgElemType::UINT32 },
+    { 0x80074C00, 0x80074C04, "HeapStartAddr",                          ProgElemType::UINT32 },
     { 0x80074C04, 0x80074C0C, "CDMapTbl_SYSTEM_CNF",                    ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80074C0C, 0x80074C14, "CDMapTbl_SLUS_000_77",                   ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80074C14, 0x80074C1C, "CDMapTbl_DEMO1_LMP",                     ProgElemType::ARRAY, ProgElemType::UINT32, 0 },

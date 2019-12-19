@@ -1,19 +1,15 @@
 #include "z_zone.h"
 
+#include "Doom/psx_main.h"
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
 
 void Z_Init() noexcept {
-loc_80032144:
-    sp -= 0x18;
-    v1 = 0x1FFF0000;                                    // Result = 1FFF0000
-    v1 |= 0xFFFF;                                       // Result = 1FFFFFFF
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x4C00);                               // Load from: I_ZoneBase (80074C00)
-    a1 = lw(gp + 0x618);                                // Load from: StackEndAddr (80077BF8)
-    v0 = lw(gp + 0x61C);                                // Load from: StackSize (80077BFC)
-    a2 = -4;                                            // Result = FFFFFFFC
-    sw(ra, sp + 0x10);
+    v1 = 0x1FFFFFFF;
+    a0 = HeapStartAddr;
+    a1 = StackEndAddr;
+    v0 = StackSize;
+    a2 = -4;
     a0 += 3;
     a0 &= a2;
     a1 -= v0;
@@ -22,10 +18,7 @@ loc_80032144:
     a1 += 3;
     a1 &= a2;
     Z_InitZone();
-    sw(v0, gp + 0xBB8);                                 // Store to: gpMainMemZone (80078198)
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    sw(v0, 0x80078198);     // Store to: gpMainMemZone (80078198)
 }
 
 void Z_InitZone() noexcept {
