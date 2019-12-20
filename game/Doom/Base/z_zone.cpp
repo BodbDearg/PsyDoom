@@ -72,11 +72,11 @@ loc_800321D0:
     v0 = -4;                                            // Result = FFFFFFFC
 
     s1 = lw(s3 + 0x4);
-    s2 = a1 & v0;
-    v1 = lw(s1 + 0x4);
+    s2 = a1 & v0;    
     s5 = s1;
 
     while (true) {
+        v1 = lw(s1 + 0x4);
         s0 = s1;
 
         if (v1 == 0) {
@@ -93,31 +93,35 @@ loc_800321D0:
         }
 
         if (s0 == 0) goto loc_80032268;
+
         v0 = lw(s0 + 0x4);
-        if (v0 == 0) goto loc_8003229C;
-        v0 = lh(s0 + 0x8);
-        v0 = (i32(v0) < 0x10);
-        a0 = s3;
-        if (v0 == 0) goto loc_80032294;
-        s1 = lw(s0 + 0x10);
-        if (s1 != 0) goto loc_8003226C;
 
-    loc_80032268:
-        s1 = s3 + 8;
+        if (v0 != 0) {
+            v0 = lh(s0 + 0x8);
+            a0 = s3;
 
-    loc_8003226C:
-        if (s1 != s5) goto loc_800322D8;
-        Z_DumpHeap();
-        a0 = 0x800113DC;        // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
-        a1 = s2;
-        I_Error();
-        goto loc_800322D8;
+            if (i32(v0) < 0x10) {
+                s1 = lw(s0 + 0x10);
 
-    loc_80032294:
-        a1 = s0 + 0x18;
-        Z_Free2();
+                if (s1 == 0) {
+                loc_80032268:
+                    s1 = s3 + 8;
+                }
 
-    loc_8003229C:
+                if (s1 == s5) {
+                    Z_DumpHeap();
+                    a0 = 0x800113DC;        // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
+                    a1 = s2;
+                    I_Error();
+                }
+
+                continue;
+            }
+
+            a1 = s0 + 0x18;
+            Z_Free2();
+        }
+
         if (s1 != s0) {
             v0 = lw(s1);
             v1 = lw(s0);
@@ -131,9 +135,6 @@ loc_800321D0:
                 sw(s1, v1 + 0x14);
             }
         }
-
-    loc_800322D8:
-        v1 = lw(s1 + 0x4);
     }
 
     v0 = lw(s1);
