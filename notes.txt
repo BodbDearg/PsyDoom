@@ -158,7 +158,7 @@ mobj_t (148 bytes):
         080     player_t*       player;         // Only valid if type == MT_PLAYER
         084     uint32_t        extradata;      // For latecall functions
         088     int16_t         spawnx;
-        08A     int16_t         spawny;        
+        08A     int16_t         spawny;
         08C     uint16_t        spawntype;
         08E     int16_t         spawnangle;
         090     mobj_t*         tracer;
@@ -291,4 +291,22 @@ player_t (300 bytes):
         120     uint32_t        automapscale;
         124     uint32_t        automapflags;
         128     uint32_t        turnheld;
+    };
+
+memblock_t (24 bytes):
+    struct memblock_t {
+        000     int32_t         size;
+        004     void*           user;
+        008     int16_t         tag;
+        00A     int16_t         id;
+        00C     int32_t         lockframe;
+        010     memblock_t*     next;
+        014     memblock_t*     prev;
+    };
+
+memzone_t (32 bytes):
+    struct memzone_t {
+        000     int32_t         size;
+        004     memblock_t*     rover;
+        008     memblock_t      blocklist;
     };

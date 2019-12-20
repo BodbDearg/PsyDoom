@@ -4,6 +4,9 @@
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
 
+// All blocks must have this id
+static constexpr int16_t ZONEID	= 0x1d4a;
+
 extern const VmPtr<VmPtr<memzone_t>>  gpMainMemZone(0x80078198);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -21,29 +24,29 @@ void Z_Init() noexcept {
     constexpr uint32_t StackStartAddr = StackEndAddr - StackSize;
     constexpr uint32_t AlignedHeapSize = (StackStartAddr - WrappedHeapStartAddr + 3) & 0xFFFFFFFC;
 
-    // Setup the main memory zone (the only zone)
-    a0 = AlignedHeapStartAddr;
-    a1 = AlignedHeapSize;
-    Z_InitZone();
-
-    *gpMainMemZone = v0;
+    // Setup and save the main memory zone (the only zone)
+    *gpMainMemZone = Z_InitZone(AlignedHeapStartAddr, AlignedHeapSize);
 }
 
-void Z_InitZone() noexcept {
-loc_8003219C:
-    v0 = a0;
-    v1 = v0 + 8;
-    sw(a1, v0);
-    a1 -= 8;
-    sw(v1, v0 + 0x4);
-    v1 = 0x1D4A;                                        // Result = 00001D4A
-    sw(a1, v0 + 0x8);
-    sw(0, v0 + 0xC);
-    sh(0, v0 + 0x10);
-    sh(v1, v0 + 0x12);
-    sw(0, v0 + 0x18);
-    sw(0, v0 + 0x1C);
-    return;
+VmPtr<memzone_t> Z_InitZone(const VmPtr<void> pBase, const int32_t size) noexcept {    
+    VmPtr<memzone_t> pZone(pBase.addr());
+
+    pZone->size = size;
+    pZone->rover = pBase.addr() + sizeof(uint32_t) * 2;
+    pZone->blocklist.size = size - sizeof(uint32_t) * 2;
+    pZone->blocklist.user = nullptr;
+    pZone->blocklist.tag = 0;
+    pZone->blocklist.id = ZONEID;
+
+    // This field was not being initialized in PSX DOOM.
+    // It was not serving any useful purpose anyway so probably doesn't matter - initialize here though for good measure:
+    #if PC_PSX_DOOM_MODS
+        pZone->blocklist.lockframe = -1;    
+    #endif
+
+    pZone->blocklist.next = nullptr;
+    pZone->blocklist.prev = nullptr;
+    return pZone;
 }
 
 void Z_Malloc2() noexcept {

@@ -17,9 +17,9 @@ static_assert(sizeof(memblock_t) == 24);
 
 // Info for a memory allocation zone
 struct memzone_t {
-	int32_t				size;			// Total bytes malloced, including header	
-	memblock_t			blocklist;		// Start / end cap for linked list
+	int32_t				size;			// Total bytes malloced, including header		
 	VmPtr<memblock_t>	rover;
+	memblock_t			blocklist;		// Start / end cap for linked list
 };
 
 static_assert(sizeof(memzone_t) == 32);
@@ -27,7 +27,7 @@ static_assert(sizeof(memzone_t) == 32);
 extern const VmPtr<VmPtr<memzone_t>> gpMainMemZone;
 
 void Z_Init() noexcept;
-void Z_InitZone() noexcept;
+VmPtr<memzone_t> Z_InitZone(const VmPtr<void> pBase, const int32_t size) noexcept;
 void Z_Malloc2() noexcept;
 void Z_Malloc2_b() noexcept;
 void Z_Free2() noexcept;
