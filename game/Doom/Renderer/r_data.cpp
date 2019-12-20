@@ -33,8 +33,7 @@ loc_8002B9E0:
     W_GetNumForName();
     a2 = 1;                                             // Result = 00000001
     v0--;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v1 = lw(gp + 0xD00);                                // Load from: gFirstTexLumpNum (800782E0)
     a3 = 0;                                             // Result = 00000000
     sw(v0, gp + 0xBBC);                                 // Store to: gLastTexLumpNum (8007819C)
@@ -91,8 +90,7 @@ loc_8002BAD8:
     t0 += 8;
     if (v0 == 0) goto loc_8002BA94;
 loc_8002BAF4:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     Z_Free2();
     a0 = lw(gp + 0xBF4);                                // Load from: gNumTexLumps (800781D4)
     a2 = 0;                                             // Result = 00000000
@@ -105,9 +103,8 @@ loc_8002BB18:
     v1 += 4;
     if (v0 != 0) goto loc_8002BB18;
 loc_8002BB30:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    a1 = 0x20;                                          // Result = 00000020
+    a0 = *gpMainMemZone;
+    a1 = 0x20;
     Z_FreeTags();
     ra = lw(sp + 0x18);
     sp += 0x20;
@@ -127,11 +124,10 @@ loc_8002BB50:
     sw(v0, gp + 0xCD8);                                 // Store to: gFirstFlatLumpNum (800782B8)
     W_GetNumForName();
     v0--;
-    a2 = 1;                                             // Result = 00000001
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a2 = 1;
+    a0 = *gpMainMemZone;
     v1 = lw(gp + 0xCD8);                                // Load from: gFirstFlatLumpNum (800782B8)
-    a3 = 0;                                             // Result = 00000000
+    a3 = 0;
     sw(v0, gp + 0xB90);                                 // Store to: gLastFlatLumpNum (80078170)
     v0 -= v1;
     v0++;
@@ -193,10 +189,9 @@ loc_8002BC54:
     v0++;
     sw(v0, gp + 0xA34);                                 // Store to: gFirstSpriteLumpNum (80078014)
     W_GetNumForName();
-    a2 = 1;                                             // Result = 00000001
+    a2 = 1;
     v0--;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v1 = lw(gp + 0xA34);                                // Load from: gFirstSpriteLumpNum (80078014)
     a3 = 0;                                             // Result = 00000000
     sw(v0, gp + 0x958);                                 // Store to: gLastSpriteLumpNum (80077F38)
@@ -254,12 +249,10 @@ loc_8002BD50:
     t2 += 8;
     if (v0 == 0) goto loc_8002BCF4;
 loc_8002BD74:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     Z_Free2();
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    a1 = 0x20;                                          // Result = 00000020
+    a0 = *gpMainMemZone;
+    a1 = 0x20;
     Z_FreeTags();
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -451,8 +444,7 @@ loc_8002BFF0:
     v0 = (i32(s0) < 0x14);
     s2 += 2;
     if (v0 != 0) goto loc_8002BFE4;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lhu(v0 - 0x6F7C);                              // Load from: gPaletteClutId_Main (800A9084)
     at = 0x80070000;                                    // Result = 80070000

@@ -37,8 +37,7 @@ loc_80021B00:
     a1 -= v0;
     a1 <<= 2;
     a2 = 2;                                             // Result = 00000002
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     sw(v0, gp + 0xA38);                                 // Store to: gNumVertexes (80078018)
     a3 = 0;                                             // Result = 00000000
     Z_Malloc2();
@@ -94,8 +93,7 @@ loc_80021BD4:
     multu(v0, v1);
     a2 = 2;                                             // Result = 00000002
     a3 = 0;                                             // Result = 00000000
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v0 = hi;
     v0 >>= 3;
     a1 = v0 << 2;
@@ -233,8 +231,7 @@ loc_80021E10:
     v1 = 0x800A0000;                                    // Result = 800A0000
     v1 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
     s0 = v1;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     sw(v0, gp + 0xC44);                                 // Store to: gNumSubsectors (80078224)
     a3 = 0;                                             // Result = 00000000
     Z_Malloc2();
@@ -313,8 +310,7 @@ loc_80021F30:
     v0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
     s3 = v0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
     a3 = 0;                                             // Result = 00000000
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v0 = hi;
     a1 = v0 << 1;
     a1 += v0;
@@ -441,8 +437,7 @@ loc_80022138:
     multu(v0, v1);
     a2 = 2;                                             // Result = 00000002
     a3 = 0;                                             // Result = 00000000
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v0 = hi;
     a1 = v0 << 3;
     a1 -= v0;
@@ -616,8 +611,7 @@ loc_800223C8:
     v0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
     s5 = v0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
     a3 = 0;                                             // Result = 00000000
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v0 = hi;
     v0 >>= 2;
     a1 = v0 << 2;
@@ -801,8 +795,7 @@ loc_80022694:
     v0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
     s3 = v0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
     a3 = 0;                                             // Result = 00000000
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v0 = hi;
     v0 >>= 4;
     a1 = v0 << 1;
@@ -879,10 +872,9 @@ loc_800227CC:
     s0 = a0;
     W_MapLumpLength();
     a1 = v0;
-    a2 = 2;                                             // Result = 00000002
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    a3 = 0;                                             // Result = 00000000
+    a2 = 2;
+    a0 = *gpMainMemZone;
+    a3 = 0;
     Z_Malloc2();
     a0 = s0;
     a1 = v0;
@@ -912,9 +904,8 @@ loc_80022850:
     a1 = lh(v1 + 0x4);
     v0 = t0 << 2;
     mult(v0, a1);
-    a2 = 2;                                             // Result = 00000002
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a2 = 2;
+    a0 = *gpMainMemZone;
     v0 = lh(v1);
     v1 = lh(v1 + 0x2);
     a3 = 0;                                             // Result = 00000000
@@ -945,10 +936,9 @@ void P_LoadMapLump() noexcept {
     s0 = a0;
     W_MapLumpLength();
     a1 = v0;
-    a2 = 2;                                             // Result = 00000002
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    a3 = 0;                                             // Result = 00000000
+    a2 = 2;
+    a0 = *gpMainMemZone;
+    a3 = 0;
     Z_Malloc2();
     a0 = s0;
     a1 = v0;
@@ -1014,10 +1004,9 @@ loc_800229C8:
     I_Error();
 loc_800229E8:
     a1 = s1 << 3;
-    a2 = 2;                                             // Result = 00000002
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    a3 = 0;                                             // Result = 00000000
+    a2 = 2;
+    a0 = *gpMainMemZone;
+    a3 = 0;
     Z_Malloc2();
     s6 = v0;
     v0 = lw(gp + 0x960);                                // Load from: gpSubsectors (80077F40)
@@ -1171,11 +1160,10 @@ loc_80022C2C:
     if (v0 != 0) goto loc_80022BE4;
 loc_80022C3C:
     a1 <<= 2;
-    a2 = 2;                                             // Result = 00000002
-    s4 = 0;                                             // Result = 00000000
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    a3 = 0;                                             // Result = 00000000
+    a2 = 2;
+    s4 = 0;
+    a0 = *gpMainMemZone;
+    a3 = 0;
     Z_Malloc2();
     s5 = v0;
     v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
@@ -1443,8 +1431,7 @@ loc_8002305C:
     v1 += 0x18;
     if (v0 != 0) goto loc_80023020;
 loc_80023068:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
     v0 = 5;                                             // Result = 00000005
@@ -1475,9 +1462,8 @@ loc_800230D4:
     sp -= 0x98;
     sw(s4, sp + 0x88);
     s4 = a0;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    a1 = 0x26;                                          // Result = 00000026
+    a0 = *gpMainMemZone;
+    a1 = 0x26;
     sw(ra, sp + 0x90);
     sw(s5, sp + 0x8C);
     sw(s3, sp + 0x84);
@@ -1490,8 +1476,7 @@ loc_800230D4:
     if (v0 != 0) goto loc_80023140;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v0 &= 1;
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)
@@ -1500,8 +1485,7 @@ loc_800230D4:
 loc_80023140:
     s1 = 0;                                             // Result = 00000000
     I_ResetTexCache();
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     Z_CheckHeap();
     M_ClearRandom();
     v1 = 0;                                             // Result = 00000000
@@ -1614,11 +1598,10 @@ loc_800232F8:
     a1 = v0 << 3;
     a1 -= v0;
     a1 <<= 2;
-    a2 = 2;                                             // Result = 00000002
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a2 = 2;
+    a0 = *gpMainMemZone;
     sw(v0, gp + 0xA38);                                 // Store to: gNumVertexes (80078018)
-    a3 = 0;                                             // Result = 00000000
+    a3 = 0;
     Z_Malloc2();
     a0 = s0;
     a1 = 0x800A0000;                                    // Result = 800A0000
@@ -1666,13 +1649,12 @@ loc_800233CC:
     W_MapLumpLength();
     v0 >>= 2;
     a1 = v0 << 4;
-    a2 = 2;                                             // Result = 00000002
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a2 = 2;
+    a0 = *gpMainMemZone;
     s0 = 0x800A0000;                                    // Result = 800A0000
     s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
     sw(v0, gp + 0xC44);                                 // Store to: gNumSubsectors (80078224)
-    a3 = 0;                                             // Result = 00000000
+    a3 = 0;
     Z_Malloc2();
     a0 = s1;
     a1 = 0x800A0000;                                    // Result = 800A0000
@@ -1713,10 +1695,9 @@ loc_80023468:
     a0 = s0;
     W_MapLumpLength();
     a1 = v0;
-    a2 = 2;                                             // Result = 00000002
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    a3 = 0;                                             // Result = 00000000
+    a2 = 2;
+    a0 = *gpMainMemZone;
+    a3 = 0;
     Z_Malloc2();
     a0 = s0;
     a1 = v0;
@@ -1781,8 +1762,7 @@ loc_80023590:
     if (v0 != 0) goto loc_80023538;
 loc_800235A0:
     P_SpawnSpecials();
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a1 = s5;
     Z_Free2();
     v0 = 0x80070000;                                    // Result = 80070000
@@ -1806,8 +1786,7 @@ loc_800235D8:
     a0 = s1 + 0x10;
     P_LoadBlocks();
 loc_8002360C:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     Z_FreeMemory();
     s0 = v0;
     v0 = 0xBFFF;                                        // Result = 0000BFFF
@@ -1900,10 +1879,9 @@ loc_80023754:
     s4 = v0;
     s3 = s4;
     a1 = s4 - 0x18;
-    a2 = 1;                                             // Result = 00000001
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    a3 = 0;                                             // Result = 00000000
+    a2 = 1;
+    a0 = *gpMainMemZone;
+    a3 = 0;
     Z_Malloc2();
     s1 = v0 - 0x18;
     s2 = s1;
@@ -1973,8 +1951,7 @@ loc_8002388C:
     v1 = lw(sp + 0x24);
     sw(v0, s1 + 0x10);
     sw(v1, s1 + 0x14);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a1 = s1 + 0x18;
     Z_Free2();
     v0 = s7;
@@ -2032,8 +2009,7 @@ loc_80023974:
 loc_80023988:
     s1 = lw(s1 + 0x10);
     if (s4 != 0) goto loc_800238E8;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     Z_CheckHeap();
     ra = lw(sp + 0x54);
     fp = lw(sp + 0x50);

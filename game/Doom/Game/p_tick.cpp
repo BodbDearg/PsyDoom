@@ -62,8 +62,7 @@ loc_80028CA8:
     if (v0 != s2) goto loc_80028CE4;
     v1 = lw(s0 + 0x4);
     v0 = lw(s0);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     sw(v0, v1);
     v1 = lw(s0);
     v0 = lw(s0 + 0x4);
@@ -596,8 +595,7 @@ loc_8002948C:
     if (v0 != s2) goto loc_800294C8;
     v1 = lw(s0 + 0x4);
     v0 = lw(s0);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     sw(v0, v1);
     v1 = lw(s0);
     v0 = lw(s0 + 0x4);

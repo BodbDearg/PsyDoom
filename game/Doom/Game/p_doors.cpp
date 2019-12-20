@@ -376,8 +376,7 @@ loc_800157B4:
     if (v0 != 0) goto loc_800157B0;
     s5 = 1;                                             // Result = 00000001
     a2 = 4;                                             // Result = 00000004
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
     Z_Malloc2();
     s0 = v0;
@@ -562,8 +561,7 @@ loc_80015A6C:
     S_StartSound();
     a1 = 0x28;                                          // Result = 00000028
     a2 = 4;                                             // Result = 00000004
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
     Z_Malloc2();
     s0 = v0;
@@ -651,8 +649,7 @@ loc_80015B84:
     s1 = a0;
     a1 = 0x28;                                          // Result = 00000028
     a2 = 4;                                             // Result = 00000004
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x18);
     sw(s0, sp + 0x10);
@@ -686,8 +683,7 @@ loc_80015C04:
     s1 = a0;
     a1 = 0x28;                                          // Result = 00000028
     a2 = 4;                                             // Result = 00000004
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x18);
     sw(s0, sp + 0x10);

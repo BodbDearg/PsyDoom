@@ -75,8 +75,7 @@ loc_8001C7F4:
     P_UnsetThingPosition();
     v1 = lw(s0 + 0x14);
     v0 = lw(s0 + 0x10);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     sw(v0, v1 + 0x10);
     v1 = lw(s0 + 0x10);
     v0 = lw(s0 + 0x14);
@@ -272,8 +271,7 @@ loc_8001CAF0:
     P_UnsetThingPosition();
     v1 = lw(s0 + 0x14);
     v0 = lw(s0 + 0x10);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     sw(v0, v1 + 0x10);
     v1 = lw(s0 + 0x10);
     v0 = lw(s0 + 0x14);
@@ -373,8 +371,7 @@ loc_8001CC68:
     s0 = a3;
     a1 = 0x94;                                          // Result = 00000094
     a2 = 2;                                             // Result = 00000002
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x24);
     sw(s3, sp + 0x1C);
@@ -507,8 +504,7 @@ loc_8001CE94:
 loc_8001CEC8:
     a2 = 2;                                             // Result = 00000002
     a3 = 0;                                             // Result = 00000000
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     s1 = lh(s4);
     s2 = lh(s4 + 0x2);
     s1 <<= 16;
@@ -828,8 +824,7 @@ loc_8001D3A8:
 loc_8001D3F0:
     a1 = 0x94;                                          // Result = 00000094
     a2 = 2;                                             // Result = 00000002
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
     Z_Malloc2();
     s0 = v0;
@@ -1024,8 +1019,7 @@ loc_8001D704:
     s3 += s0;
     a1 = 0x94;                                          // Result = 00000094
     a2 = 2;                                             // Result = 00000002
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
     Z_Malloc2();
     s0 = v0;
@@ -1157,8 +1151,7 @@ loc_8001D930:
     s3 += s0;
     a1 = 0x94;                                          // Result = 00000094
     a2 = 2;                                             // Result = 00000002
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
     Z_Malloc2();
     s0 = v0;
@@ -1356,8 +1349,7 @@ loc_8001DC94:
     a1 = 0x94;                                          // Result = 00000094
     a2 = 2;                                             // Result = 00000002
     a3 = 0;                                             // Result = 00000000
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v0 = 0x200000;                                      // Result = 00200000
     sw(ra, sp + 0x2C);
     sw(s5, sp + 0x24);
@@ -1665,8 +1657,7 @@ loc_8001E1A8:
     a2 = 2;                                             // Result = 00000002
     v0 = 0x200000;                                      // Result = 00200000
     a3 = 0;                                             // Result = 00000000
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v1 = lw(s3 + 0x8);
     s0 = lw(s3);
     s1 = lw(s3 + 0x4);

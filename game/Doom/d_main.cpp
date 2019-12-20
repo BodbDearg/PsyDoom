@@ -105,8 +105,7 @@ loc_80012424:
     s0 = a0;
     a1 = 0x4000;                                        // Result = 00004000
     a2 = 1;                                             // Result = 00000001
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     sw(ra, sp + 0x14);
     a3 = 0;                                             // Result = 00000000
     Z_Malloc2_b();
@@ -121,8 +120,7 @@ loc_80012424:
     a0 = s0;
     CloseFile();
     G_PlayDemoPtr();
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a1 = lw(gp + 0x8);                                  // Load from: gpDemoBuffer (800775E8)
     s0 = v0;
     Z_Free2();

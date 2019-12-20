@@ -32,12 +32,12 @@ public:
     typedef std::remove_all_extents_t<T> ElemTy;
 
     // Construction and assign
-    inline constexpr VmPtr() : mAddr(0) noexcept {}
+    inline constexpr VmPtr() noexcept : mAddr(0) {}
     inline constexpr VmPtr(const VmPtr& other) noexcept : mAddr(other.mAddr) {}
     inline constexpr VmPtr(const uint32_t addr) noexcept : mAddr(addr) {}
     inline constexpr VmPtr(const std::nullptr_t) noexcept : mAddr(0) {}
 
-    inline constexpr void operator = (const VmPtr& other) noexcept { mAddr = other.addr; }
+    inline constexpr void operator = (const VmPtr& other) noexcept { mAddr = other.mAddr; }
     inline constexpr void operator = (const uint32_t addr) noexcept { mAddr = addr; }
     inline constexpr void operator = (const std::nullptr_t) noexcept { mAddr = 0; }
 
@@ -46,8 +46,8 @@ public:
     inline constexpr void reset(const uint32_t addr) noexcept { mAddr = addr; }
     inline constexpr uint32_t addr() const noexcept { return mAddr; }
 
-    // Check if not null
-    inline constexpr operator bool () const noexcept { return (mAddr != 0); }
+    // Implicit conversion back to uint32_t 
+    inline constexpr operator uint32_t () const noexcept { return mAddr; }
 
     // Pointer dereferencing
     inline ElemTy* get() const noexcept {
@@ -120,6 +120,50 @@ public:
     inline constexpr void operator -- (int) noexcept  {  mAddr -= sizeof(ElemTy); }
     inline constexpr void operator ++ () noexcept     {  mAddr += sizeof(ElemTy); }
     inline constexpr void operator ++ (int) noexcept  {  mAddr += sizeof(ElemTy); }
+
+private:
+    uint32_t mAddr;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Specialization for void pointers
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <>
+class VmPtr<void> {
+public:
+    inline constexpr VmPtr() noexcept : mAddr(0) {}
+    inline constexpr VmPtr(const VmPtr& other) noexcept : mAddr(other.mAddr) {}
+    inline constexpr VmPtr(const uint32_t addr) noexcept : mAddr(addr) {}
+    inline constexpr VmPtr(const std::nullptr_t) noexcept : mAddr(0) {}
+
+    inline constexpr void operator = (const VmPtr& other) noexcept { mAddr = other.mAddr; }
+    inline constexpr void operator = (const uint32_t addr) noexcept { mAddr = addr; }
+    inline constexpr void operator = (const std::nullptr_t) noexcept { mAddr = 0; }
+
+    inline constexpr void reset() noexcept { mAddr = 0; }
+    inline constexpr void reset(const uint32_t addr) noexcept { mAddr = addr; }
+    inline constexpr uint32_t addr() const noexcept { return mAddr; }
+
+    inline constexpr operator bool () const noexcept { return (mAddr != 0); }
+
+    inline void* get() const noexcept {
+        const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
+        return reinterpret_cast<void*>(PsxVm::gpRam + wrappedAddr);
+    }
+
+    inline constexpr bool operator == (const VmPtr other) const noexcept { return (mAddr == other.mAddr); }
+    inline constexpr bool operator != (const VmPtr other) const noexcept { return (mAddr != other.mAddr); }
+    inline constexpr bool operator < (const VmPtr other) const noexcept { return (mAddr < other.mAddr); }
+    inline constexpr bool operator <= (const VmPtr other) const noexcept { return (mAddr <= other.mAddr); }
+    inline constexpr bool operator > (const VmPtr other) const noexcept { return (mAddr > other.mAddr); }
+    inline constexpr bool operator >= (const VmPtr other) const noexcept { return (mAddr >= other.mAddr); }
+
+    inline constexpr bool operator == (const std::nullptr_t) const noexcept { return (mAddr == 0); }
+    inline constexpr bool operator != (const std::nullptr_t) const noexcept { return (mAddr != 0); }
+    inline constexpr bool operator < (const std::nullptr_t) const noexcept { return false; }
+    inline constexpr bool operator <= (const std::nullptr_t) const noexcept { return (mAddr == 0); }
+    inline constexpr bool operator > (const std::nullptr_t) const noexcept { return (mAddr > 0); }
+    inline constexpr bool operator >= (const std::nullptr_t) const noexcept { return (mAddr >= 0); }
 
 private:
     uint32_t mAddr;

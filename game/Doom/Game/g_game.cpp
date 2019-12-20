@@ -18,27 +18,27 @@
 
 // Helper global holding the result of executing a gameloop via 'MiniLoop'.
 // Sometimes this is used in preference to the return action, and sometimes it is used temporarily to hold the return action.
-VmPtr<gameaction_t> gGameAction(0x80077EB4);
+const VmPtr<gameaction_t> gGameAction(0x80077EB4);
 
 // The current skill level and game map
-VmPtr<skill_t> gGameSkill(0x80078258);
-VmPtr<int32_t> gGameMap(0x80078048);
+const VmPtr<skill_t> gGameSkill(0x80078258);
+const VmPtr<int32_t> gGameMap(0x80078048);
 
 // State for each player and whether they are in the game
-VmPtr<player_t[MAXPLAYERS]> gPlayers(0x800A87EC);
-VmPtr<bool32_t[MAXPLAYERS]> gbPlayerInGame(0x800780AC);
+const VmPtr<player_t[MAXPLAYERS]> gPlayers(0x800A87EC);
+const VmPtr<bool32_t[MAXPLAYERS]> gbPlayerInGame(0x800780AC);
 
 // Current and previous game tick count (15 Hz ticks)
-VmPtr<int32_t> gGameTic(0x8007804C);
-VmPtr<int32_t> gPrevGameTic(0x80077FA4);
+const VmPtr<int32_t> gGameTic(0x8007804C);
+const VmPtr<int32_t> gPrevGameTic(0x80077FA4);
 
 // The last tick count we wanted to be at (15 Hz ticks).
 // On the PSX if the game was running slow, then we might not have reached this amount.
-VmPtr<int32_t> gLastTgtGameTicCount(0x8007829C);
+const VmPtr<int32_t> gLastTgtGameTicCount(0x8007829C);
 
 // Are we playing back or recording a demo?
-VmPtr<bool32_t> gbDemoPlayback(0x80078080);
-VmPtr<bool32_t> gbDemoRecording(0x800781AC);
+const VmPtr<bool32_t> gbDemoPlayback(0x80078080);
+const VmPtr<bool32_t> gbDemoRecording(0x800781AC);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Displays a loading message then loads the current map
@@ -434,8 +434,7 @@ loc_80013394:
     sw(v0, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)
     s1 = a2;
     I_ResetTexCache();
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a1 = 0x2E;                                          // Result = 0000002E
     Z_FreeTags();
     M_ClearRandom();
@@ -562,8 +561,7 @@ loc_800135A8:
 loc_800135B4:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v0 &= 1;
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)
@@ -688,8 +686,7 @@ loc_80013714:
     _thunk_D_memcpy();
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v0 &= 1;
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)

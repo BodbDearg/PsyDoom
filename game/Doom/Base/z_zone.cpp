@@ -4,6 +4,8 @@
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
 
+extern const VmPtr<VmPtr<memzone_t>>  gpMainMemZone(0x80078198);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the zone memory management system.
 // DOOM doesn't use any PsyQ SDK allocation functions AT ALL (either directly or indirectly) so it just gobbles up the entire of the 
@@ -24,7 +26,7 @@ void Z_Init() noexcept {
     a1 = AlignedHeapSize;
     Z_InitZone();
 
-    sw(v0, 0x80078198);     // Store to: gpMainMemZone (80078198)
+    *gpMainMemZone = v0;
 }
 
 void Z_InitZone() noexcept {

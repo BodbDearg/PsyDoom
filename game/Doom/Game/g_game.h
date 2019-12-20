@@ -2,16 +2,16 @@
 
 #include "Doom/doomdef.h"
 
-extern VmPtr<gameaction_t>          gGameAction;
-extern VmPtr<skill_t>               gGameSkill;
-extern VmPtr<int32_t>               gGameMap;
-extern VmPtr<player_t[MAXPLAYERS]>  gPlayers;
-extern VmPtr<bool32_t[MAXPLAYERS]>  gbPlayerInGame;
-extern VmPtr<int32_t>               gGameTic;
-extern VmPtr<int32_t>               gPrevGameTic;
-extern VmPtr<int32_t>               gLastTgtGameTicCount;
-extern VmPtr<bool32_t>              gbDemoPlayback;
-extern VmPtr<bool32_t>              gbDemoRecording;
+extern const VmPtr<gameaction_t>            gGameAction;
+extern const VmPtr<skill_t>                 gGameSkill;
+extern const VmPtr<int32_t>                 gGameMap;
+extern const VmPtr<player_t[MAXPLAYERS]>    gPlayers;
+extern const VmPtr<bool32_t[MAXPLAYERS]>    gbPlayerInGame;
+extern const VmPtr<int32_t>                 gGameTic;
+extern const VmPtr<int32_t>                 gPrevGameTic;
+extern const VmPtr<int32_t>                 gLastTgtGameTicCount;
+extern const VmPtr<bool32_t>                gbDemoPlayback;
+extern const VmPtr<bool32_t>                gbDemoRecording;
 
 void G_DoLoadLevel() noexcept;
 void G_PlayerFinishLevel() noexcept;

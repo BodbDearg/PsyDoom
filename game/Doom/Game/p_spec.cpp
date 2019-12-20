@@ -1622,19 +1622,17 @@ loc_80027504:
     s1 = 0;                                             // Result = 00000000
     goto loc_80027624;
 loc_80027564:
-    a1 = 0x2C;                                          // Result = 0000002C
-    a2 = 4;                                             // Result = 00000004
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    a3 = 0;                                             // Result = 00000000
+    a1 = 0x2C;
+    a2 = 4;
+    a0 = *gpMainMemZone;
+    a3 = 0;
     Z_Malloc2();
     s0 = v0;
     a0 = s0;
     P_AddThinker();
-    a1 = 0x2C;                                          // Result = 0000002C
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    v0 = 0xA;                                           // Result = 0000000A
+    a1 = 0x2C;
+    a0 = *gpMainMemZone;
+    v0 = 0xA;
     sw(s0, s1 + 0x50);
     sw(v0, s0 + 0xC);
     v0 = 1;                                             // Result = 00000001
@@ -1706,11 +1704,10 @@ void G_ScheduleExitLevel() noexcept {
     s1 = a0;
     sw(s2, sp + 0x18);
     s2 = a1;
-    a1 = 0x14;                                          // Result = 00000014
-    a2 = 4;                                             // Result = 00000004
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    a3 = 0;                                             // Result = 00000000
+    a1 = 0x14;
+    a2 = 4;
+    a0 = *gpMainMemZone;
+    a3 = 0;
     sw(ra, sp + 0x1C);
     sw(s0, sp + 0x10);
     Z_Malloc2();
@@ -1753,11 +1750,10 @@ loc_80027754:
 void G_ExitLevel() noexcept {
 loc_80027768:
     sp -= 0x18;
-    a1 = 0x14;                                          // Result = 00000014
-    a2 = 4;                                             // Result = 00000004
+    a1 = 0x14;
+    a2 = 4;
     v0 = *gGameMap;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     sw(ra, sp + 0x14);
     sw(s0, sp + 0x10);
     v0++;
@@ -1785,13 +1781,12 @@ loc_80027768:
 void G_SecretExitLevel() noexcept {
 loc_800277E0:
     sp -= 0x18;
-    a1 = 0x14;                                          // Result = 00000014
-    a2 = 4;                                             // Result = 00000004
+    a1 = 0x14;
+    a2 = 4;
     at = 0x80080000;                                    // Result = 80080000
     sw(a0, at - 0x7F68);                                // Store to: gNextMap (80078098)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
-    a3 = 0;                                             // Result = 00000000
+    a0 = *gpMainMemZone;
+    a3 = 0;
     sw(ra, sp + 0x14);
     sw(s0, sp + 0x10);
     Z_Malloc2();

@@ -15,9 +15,9 @@
 #include "z_zone.h"
 
 // Video vblank timers: track the total amount, last total and current elapsed amount
-VmPtr<uint32_t> gTotalVBlanks(0x80077E98);
-VmPtr<uint32_t> gLastTotalVBlanks(0x80078114);
-VmPtr<uint32_t> gElapsedVBlanks(0x800781BC);
+const VmPtr<uint32_t> gTotalVBlanks(0x80077E98);
+const VmPtr<uint32_t> gLastTotalVBlanks(0x80078114);
+const VmPtr<uint32_t> gElapsedVBlanks(0x800781BC);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // User PlayStation entrypoint for DOOM.
@@ -802,7 +802,7 @@ void I_VsyncCallback() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_Init() noexcept {
     // Alloc and zero initialize the texture cache entries data structure
-    a0 = lw(0x80078198);        // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a1 = 0x2C00;
     a2 = 1;    
     a3 = 0;

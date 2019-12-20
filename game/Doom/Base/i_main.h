@@ -2,9 +2,9 @@
 
 #include "PsxVm/VmPtr.h"
 
-extern VmPtr<uint32_t>  gTotalVBlanks;
-extern VmPtr<uint32_t>  gLastTotalVBlanks;
-extern VmPtr<uint32_t>  gElapsedVBlanks;
+extern const VmPtr<uint32_t> gTotalVBlanks;
+extern const VmPtr<uint32_t> gLastTotalVBlanks;
+extern const VmPtr<uint32_t> gElapsedVBlanks;
 
 void I_Main() noexcept;
 void I_PSXInit() noexcept;

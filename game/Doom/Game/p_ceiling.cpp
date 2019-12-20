@@ -212,8 +212,7 @@ loc_80014CB0:
     if (v0 != 0) goto loc_80014CAC;
     s6 = 1;                                             // Result = 00000001
     a2 = 4;                                             // Result = 00000004
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
     Z_Malloc2();
     s0 = v0;

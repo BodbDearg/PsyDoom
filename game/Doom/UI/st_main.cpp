@@ -34,8 +34,7 @@ loc_8003857C:
     a0 += 0x1600;                                       // Result = STR_ST_Init_FinalTexCache_Err[0] (80011600)
     I_Error();
 loc_800385B8:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E68);                               // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
     v0 = 1;                                             // Result = 00000001
