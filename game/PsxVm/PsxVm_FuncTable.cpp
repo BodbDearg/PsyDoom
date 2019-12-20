@@ -352,7 +352,6 @@ extern void Z_FreeTags() noexcept;
 extern void Z_CheckHeap() noexcept;
 extern void Z_ChangeTag() noexcept;
 extern void Z_FreeMemory() noexcept;
-extern void Z_DumpHeap() noexcept;
 extern void I_Main() noexcept;
 extern void I_PSXInit() noexcept;
 extern void I_Error() noexcept;
@@ -1337,7 +1336,6 @@ namespace PsxVm {
         { 0x80032770, &Z_CheckHeap },
         { 0x80032838, &Z_ChangeTag },
         { 0x800328C4, &Z_FreeMemory },
-        { 0x80032904, &Z_DumpHeap },
         { 0x8003290C, &I_Main },
         { 0x80032934, &I_PSXInit },
         { 0x80032B0C, &I_Error },

@@ -153,7 +153,7 @@ loc_80032934:
     return;
 }
 
-void I_Error() noexcept {
+[[noreturn]] void I_Error() noexcept {
 loc_80032B0C:
     sw(a0, sp);
     sw(a1, sp + 0x4);
@@ -194,7 +194,6 @@ loc_80032B9C:
     ra = lw(sp + 0x11C);
     s0 = lw(sp + 0x118);
     sp += 0x120;
-    return;
 }
 
 void I_ReadGamepad() noexcept {

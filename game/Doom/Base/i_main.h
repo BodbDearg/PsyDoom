@@ -8,7 +8,7 @@ extern const VmPtr<uint32_t> gElapsedVBlanks;
 
 void I_Main() noexcept;
 void I_PSXInit() noexcept;
-void I_Error() noexcept;
+[[noreturn]] void I_Error() noexcept;
 void I_ReadGamepad() noexcept;
 void I_CacheTexForLumpName() noexcept;
 void I_CacheAndDrawSprite() noexcept;
