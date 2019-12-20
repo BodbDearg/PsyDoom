@@ -378,7 +378,7 @@ loc_800157B4:
     a2 = 4;                                             // Result = 00000004
     a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s0 = v0;
     a0 = s0;
     P_AddThinker();
@@ -563,7 +563,7 @@ loc_80015A6C:
     a2 = 4;                                             // Result = 00000004
     a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s0 = v0;
     a0 = s0;
     P_AddThinker();
@@ -653,7 +653,7 @@ loc_80015B84:
     a3 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x18);
     sw(s0, sp + 0x10);
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s0 = v0;
     a0 = s0;
     P_AddThinker();
@@ -687,7 +687,7 @@ loc_80015C04:
     a3 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x18);
     sw(s0, sp + 0x10);
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s0 = v0;
     a0 = s0;
     P_AddThinker();

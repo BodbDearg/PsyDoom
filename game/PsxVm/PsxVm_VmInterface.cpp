@@ -499,3 +499,19 @@ void emulate_cdrom() noexcept {
 
     restoreMipsRegisters();
 }
+
+uint32_t ptrToVmAddr(const void* const ptr) noexcept {
+    // Null is allowed to convert back to '0' always
+    if (ptr) {
+        intptr_t offsetToRam = (const uint8_t*) ptr - gpRam;
+
+        // Note: allow a pointer at the end of the 2 MiB RAM region, but no more
+        if (offsetToRam > 0 && offsetToRam <= 0x200000) {
+            return 0x80000000 + offsetToRam;
+        } else {
+            FATAL_ERROR("ptrToVmAddr: pointer does not point to an area inside PSX RAM!");
+        }
+    } else {
+        return 0;
+    }
+}

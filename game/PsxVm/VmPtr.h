@@ -16,6 +16,9 @@ static_assert(
     "For this class to work without strict aliasing violations, std::uint8_t should be a 'char' type!"
 );
 
+// Forward declare, so we don't have to include the header
+uint32_t ptrToVmAddr(const void* const ptr) noexcept;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Virtual Machine RAM pointer.
 // A 32-bit pointer to a location inside of RAM of the emulated PlayStation.
@@ -36,10 +39,12 @@ public:
     inline constexpr VmPtr(const VmPtr& other) noexcept : mAddr(other.mAddr) {}
     inline constexpr VmPtr(const uint32_t addr) noexcept : mAddr(addr) {}
     inline constexpr VmPtr(const std::nullptr_t) noexcept : mAddr(0) {}
+    inline VmPtr(T* const pObj) noexcept : mAddr(ptrToVmAddr(pObj)) {}
 
     inline constexpr void operator = (const VmPtr& other) noexcept { mAddr = other.mAddr; }
     inline constexpr void operator = (const uint32_t addr) noexcept { mAddr = addr; }
     inline constexpr void operator = (const std::nullptr_t) noexcept { mAddr = 0; }
+    inline void operator = (T* const pObj) noexcept { mAddr = ptrToVmAddr(pObj); }
 
     // Change or get the address pointed to
     inline constexpr void reset() noexcept { mAddr = 0; }
@@ -47,7 +52,7 @@ public:
     inline constexpr uint32_t addr() const noexcept { return mAddr; }
 
     // Implicit conversion back to uint32_t 
-    inline constexpr operator uint32_t () const noexcept { return mAddr; }
+    inline constexpr operator uint32_t() const noexcept { return mAddr; }
 
     // Pointer dereferencing
     inline ElemTy* get() const noexcept {
@@ -135,16 +140,18 @@ public:
     inline constexpr VmPtr(const VmPtr& other) noexcept : mAddr(other.mAddr) {}
     inline constexpr VmPtr(const uint32_t addr) noexcept : mAddr(addr) {}
     inline constexpr VmPtr(const std::nullptr_t) noexcept : mAddr(0) {}
+    inline VmPtr(void* const pMem) noexcept : mAddr(ptrToVmAddr(pMem)) {}
 
     inline constexpr void operator = (const VmPtr& other) noexcept { mAddr = other.mAddr; }
     inline constexpr void operator = (const uint32_t addr) noexcept { mAddr = addr; }
     inline constexpr void operator = (const std::nullptr_t) noexcept { mAddr = 0; }
+    inline void operator = (void* const pMem) noexcept { mAddr = ptrToVmAddr(pMem); }
 
     inline constexpr void reset() noexcept { mAddr = 0; }
     inline constexpr void reset(const uint32_t addr) noexcept { mAddr = addr; }
     inline constexpr uint32_t addr() const noexcept { return mAddr; }
 
-    inline constexpr operator bool () const noexcept { return (mAddr != 0); }
+    inline constexpr operator uint32_t() const noexcept { return mAddr; }
 
     inline void* get() const noexcept {
         const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);

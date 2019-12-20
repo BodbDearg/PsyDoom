@@ -1626,7 +1626,7 @@ loc_80027564:
     a2 = 4;
     a0 = *gpMainMemZone;
     a3 = 0;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s0 = v0;
     a0 = s0;
     P_AddThinker();
@@ -1648,7 +1648,7 @@ loc_80027564:
     v0 = lw(s2);
     a3 = 0;                                             // Result = 00000000
     sw(v0, s0 + 0x24);
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s0 = v0;
     a0 = s0;
     P_AddThinker();
@@ -1710,7 +1710,7 @@ void G_ScheduleExitLevel() noexcept {
     a3 = 0;
     sw(ra, sp + 0x1C);
     sw(s0, sp + 0x10);
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s0 = v0;
     a0 = s0;
     P_AddThinker();
@@ -1760,7 +1760,7 @@ loc_80027768:
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0x7F68);                                // Store to: gNextMap (80078098)
     a3 = 0;                                             // Result = 00000000
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s0 = v0;
     a0 = s0;
     P_AddThinker();
@@ -1789,7 +1789,7 @@ loc_800277E0:
     a3 = 0;
     sw(ra, sp + 0x14);
     sw(s0, sp + 0x10);
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s0 = v0;
     a0 = s0;
     P_AddThinker();

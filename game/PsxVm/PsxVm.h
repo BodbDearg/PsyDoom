@@ -1,5 +1,6 @@
 #pragma once
 
+#include "PcPsx/Macros.h"
 #include <cstdint>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -183,6 +184,11 @@ void emulate_timers(const int numCycles) noexcept;
 // Emulate sound until we have enough samples to handle an upcoming buffer request
 void emulate_sound_if_required() noexcept;
 
+// Returns the 32-bit address in PSX RAM (in the 0x80000000 space/segment) of the given real pointer.
+// Used to convert real pointers/addresses back to VM ones.
+// May exit the application with an error if an invalid pointer is given.
+uint32_t ptrToVmAddr(const void* const ptr) noexcept;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Avocado types
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -227,4 +233,28 @@ namespace PsxVm {
 
     // Tells if the emulator can return control back to the native C++ code
     bool canExitEmulator() noexcept;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Convert a VM address to a pointer
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+inline T* vmAddrToPtr(const uint32_t addr) noexcept {
+    if (addr != 0) {
+        const uint32_t wrappedAddr = (addr & 0x1FFFFF);
+        ASSERT_LOG(wrappedAddr + sizeof(T) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
+        return reinterpret_cast<T*>(PsxVm::gpRam + wrappedAddr);
+    } else {
+        return nullptr;
+    }
+}
+
+template <>
+inline void* vmAddrToPtr(const uint32_t addr) noexcept {
+    if (addr != 0) {
+        const uint32_t wrappedAddr = (addr & 0x1FFFFF);
+        return reinterpret_cast<void*>(PsxVm::gpRam + wrappedAddr);
+    } else {
+        return nullptr;
+    }
 }

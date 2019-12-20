@@ -40,7 +40,7 @@ loc_80021B00:
     a0 = *gpMainMemZone;
     sw(v0, gp + 0xA38);                                 // Store to: gNumVertexes (80078018)
     a3 = 0;                                             // Result = 00000000
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = s0;
     s0 = 0x800A0000;                                    // Result = 800A0000
     s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
@@ -100,7 +100,7 @@ loc_80021BD4:
     a1 += v0;
     sw(v0, gp + 0xAC4);                                 // Store to: gNumSegs (800780A4)
     a1 <<= 3;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = v0;
     v0 = lw(gp + 0xAC4);                                // Load from: gNumSegs (800780A4)
     a1 = 0;                                             // Result = 00000000
@@ -234,7 +234,7 @@ loc_80021E10:
     a0 = *gpMainMemZone;
     sw(v0, gp + 0xC44);                                 // Store to: gNumSubsectors (80078224)
     a3 = 0;                                             // Result = 00000000
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = s1;
     a1 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
     sw(v0, gp + 0x960);                                 // Store to: gpSubsectors (80077F40)
@@ -318,7 +318,7 @@ loc_80021F30:
     a1 -= v0;
     sw(v0, gp + 0x974);                                 // Store to: gNumSectors (80077F54)
     a1 <<= 2;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = v0;
     v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
     a1 = 0;                                             // Result = 00000000
@@ -443,7 +443,7 @@ loc_80022138:
     a1 -= v0;
     sw(v0, gp + 0xBD8);                                 // Store to: gNumBspNodes (800781B8)
     a1 <<= 3;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = s0;
     s0 = 0x800A0000;                                    // Result = 800A0000
     s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
@@ -620,7 +620,7 @@ loc_800223C8:
     a1 -= v0;
     sw(v0, gp + 0xBE8);                                 // Store to: gNumLines (800781C8)
     a1 <<= 2;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = v0;
     v0 = lw(gp + 0xBE8);                                // Load from: gNumLines (800781C8)
     a1 = 0;                                             // Result = 00000000
@@ -802,7 +802,7 @@ loc_80022694:
     a1 += v0;
     sw(v0, gp + 0xBD4);                                 // Store to: gNumSides (800781B4)
     a1 <<= 3;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = v0;
     v0 = lw(gp + 0xBD4);                                // Load from: gNumSides (800781B4)
     a1 = 0;                                             // Result = 00000000
@@ -875,7 +875,7 @@ loc_800227CC:
     a2 = 2;
     a0 = *gpMainMemZone;
     a3 = 0;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = s0;
     a1 = v0;
     sw(a1, gp + 0xAE4);                                 // Store to: gpBlockmapLump (800780C4)
@@ -917,7 +917,7 @@ loc_80022850:
     sw(v1, gp + 0xBB4);                                 // Store to: gBlockmapOriginY (80078194)
     s0 = lo;
     a1 = s0;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = v0;
     a1 = 0;                                             // Result = 00000000
     sw(a0, gp + 0x8FC);                                 // Store to: gppBlockLinks (80077EDC)
@@ -939,7 +939,7 @@ void P_LoadMapLump() noexcept {
     a2 = 2;
     a0 = *gpMainMemZone;
     a3 = 0;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = s0;
     a1 = v0;
     sw(a1, gp + 0xB04);                                 // Store to: gpRejectMatrix (800780E4)
@@ -1007,7 +1007,7 @@ loc_800229E8:
     a2 = 2;
     a0 = *gpMainMemZone;
     a3 = 0;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s6 = v0;
     v0 = lw(gp + 0x960);                                // Load from: gpSubsectors (80077F40)
     sw(s6, gp + 0xB2C);                                 // Store to: gpLeafEdges (8007810C)
@@ -1164,7 +1164,7 @@ loc_80022C3C:
     s4 = 0;
     a0 = *gpMainMemZone;
     a3 = 0;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s5 = v0;
     v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
     s6 = lw(gp + 0xAC8);                                // Load from: gpSectors (800780A8)
@@ -1602,7 +1602,7 @@ loc_800232F8:
     a0 = *gpMainMemZone;
     sw(v0, gp + 0xA38);                                 // Store to: gNumVertexes (80078018)
     a3 = 0;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = s0;
     a1 = 0x800A0000;                                    // Result = 800A0000
     a1 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
@@ -1655,7 +1655,7 @@ loc_800233CC:
     s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
     sw(v0, gp + 0xC44);                                 // Store to: gNumSubsectors (80078224)
     a3 = 0;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = s1;
     a1 = 0x800A0000;                                    // Result = 800A0000
     a1 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
@@ -1698,7 +1698,7 @@ loc_80023468:
     a2 = 2;
     a0 = *gpMainMemZone;
     a3 = 0;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = s0;
     a1 = v0;
     sw(a1, gp + 0xB04);                                 // Store to: gpRejectMatrix (800780E4)
@@ -1882,7 +1882,7 @@ loc_80023754:
     a2 = 1;
     a0 = *gpMainMemZone;
     a3 = 0;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s1 = v0 - 0x18;
     s2 = s1;
     v1 = lw(v0 - 0x18);

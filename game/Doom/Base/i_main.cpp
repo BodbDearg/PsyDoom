@@ -805,7 +805,7 @@ void I_Init() noexcept {
     a1 = 0x2C00;
     a2 = 1;    
     a3 = 0;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     sw(v0, 0x80077F74);         // Store to: gpTexCacheEntries (80077F74)
 
     a0 = v0;

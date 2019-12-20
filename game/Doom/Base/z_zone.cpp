@@ -26,17 +26,17 @@ void Z_Init() noexcept {
     constexpr uint32_t AlignedHeapSize = (StackStartAddr - WrappedHeapStartAddr + 3) & 0xFFFFFFFC;
 
     // Setup and save the main memory zone (the only zone)
-    *gpMainMemZone = Z_InitZone(AlignedHeapStartAddr, AlignedHeapSize);
+    *gpMainMemZone = Z_InitZone(vmAddrToPtr<void>(AlignedHeapStartAddr), AlignedHeapSize);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets up the given block of memory as a memory zone
 //------------------------------------------------------------------------------------------------------------------------------------------
-VmPtr<memzone_t> Z_InitZone(const VmPtr<void> pBase, const int32_t size) noexcept {    
-    VmPtr<memzone_t> pZone(pBase.addr());
+memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept {    
+    memzone_t* const pZone = (memzone_t*) pBase;
 
     pZone->size = size;
-    pZone->rover = pBase.addr() + sizeof(uint32_t) * 2;
+    pZone->rover = &pZone->blocklist;
     pZone->blocklist.size = size - sizeof(uint32_t) * 2;
     pZone->blocklist.user = nullptr;
     pZone->blocklist.tag = 0;
@@ -53,7 +53,7 @@ VmPtr<memzone_t> Z_InitZone(const VmPtr<void> pBase, const int32_t size) noexcep
     return pZone;
 }
 
-void Z_Malloc2() noexcept {
+void* Z_Malloc2(memzone_t* const pZone, const int32_t size, const int16_t tag, void* const pUser) noexcept {
 loc_800321D0:
     sp -= 0x30;
     sw(s0, sp + 0x10);
@@ -65,13 +65,15 @@ loc_800321D0:
     sw(s6, sp + 0x28);
     sw(ra, sp + 0x2C);
 
-    s3 = a0;
-    s6 = a2;
-    s4 = a3;
+    s3 = ptrToVmAddr(pZone);
+    s6 = tag;
+    s4 = ptrToVmAddr(pUser);
+
+    a1 = size;
     a1 += 0x1B;
     v0 = -4;                                            // Result = FFFFFFFC
 
-    s1 = lw(s3 + 0x4);
+    s1 = pZone->rover;
     s2 = a1 & v0;    
     s5 = s1;
 
@@ -98,7 +100,7 @@ loc_800321D0:
 
         if (v0 != 0) {
             v0 = lh(s0 + 0x8);
-            a0 = s3;
+            a0 = ptrToVmAddr(pZone);
 
             if (i32(v0) < 0x10) {
                 s1 = lw(s0 + 0x10);
@@ -175,14 +177,14 @@ loc_800321D0:
     v0 = ZONEID;
     sh(s6, s1 + 0x8);
     sh(v0, s1 + 0xA);
-    sw(v1, s3 + 0x4);
+    pZone->rover = v1;
 
     if (v1 == 0) {
         v0 = s3 + 8;
-        sw(v0, s3 + 0x4);
+        pZone->rover = &pZone->blocklist;
     }
 
-    v0 = s1 + 0x18;
+    const VmPtr<void> pUserMem = s1 + 0x18;
     
     s0 = lw(sp + 0x10);
     s1 = lw(sp + 0x14);
@@ -193,6 +195,12 @@ loc_800321D0:
     s6 = lw(sp + 0x28);
     ra = lw(sp + 0x2C);
     sp += 0x30;
+
+    return pUserMem.get();
+}
+
+void _thunk_Z_Malloc2() noexcept {
+    v0 = ptrToVmAddr(Z_Malloc2(vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<void>(a3)));
 }
 
 void Z_Malloc2_b() noexcept {

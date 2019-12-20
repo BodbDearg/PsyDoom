@@ -183,7 +183,7 @@ loc_8001F4B8:
     a2 = 4;                                             // Result = 00000004
     a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     s0 = v0;
     a0 = s0;
     P_AddThinker();

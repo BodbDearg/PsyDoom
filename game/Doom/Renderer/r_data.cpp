@@ -43,7 +43,7 @@ loc_8002B9E0:
     a1 = v0 << 2;
     sw(v0, gp + 0xBF4);                                 // Store to: gNumTexLumps (800781D4)
     a1 += v1;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x115C;                                       // Result = STR_LumpName_TEXTURE1[0] (8001115C)
     a1 = 0x20;                                          // Result = 00000020
@@ -135,7 +135,7 @@ loc_8002BB50:
     sw(v0, gp + 0xBE0);                                 // Store to: gNumFlatLumps (800781C0)
     v0 <<= 2;
     a1 += v0;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = lw(gp + 0xCD8);                                // Load from: gFirstFlatLumpNum (800782B8)
     v1 = lw(gp + 0xBE0);                                // Load from: gNumFlatLumps (800781C0)
     a1 = lw(gp + 0xB90);                                // Load from: gLastFlatLumpNum (80078170)
@@ -199,7 +199,7 @@ loc_8002BC54:
     v0++;
     sw(v0, gp + 0x97C);                                 // Store to: gNumSpriteLumps (80077F5C)
     a1 = v0 << 5;
-    Z_Malloc2();
+    _thunk_Z_Malloc2();
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7B9C;                                       // Result = STR_LumpName_SPRITE1[0] (80077B9C)
     a1 = 0x20;                                          // Result = 00000020
