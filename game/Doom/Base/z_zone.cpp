@@ -53,44 +53,33 @@ memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept {
     return pZone;
 }
 
-void* Z_Malloc2(memzone_t* const pZone, const int32_t size, const int16_t tag, void* const pUser) noexcept {
+void* Z_Malloc2(memzone_t* const pZone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept {
 loc_800321D0:
     sp -= 0x30;
     sw(s0, sp + 0x10);
-    sw(s1, sp + 0x14);
-    sw(s2, sp + 0x18);
-    sw(s3, sp + 0x1C);
-    sw(s4, sp + 0x20);
-    sw(s5, sp + 0x24);
-    sw(s6, sp + 0x28);
-    sw(ra, sp + 0x2C);
 
-    s3 = ptrToVmAddr(pZone);
-    s6 = tag;
-    s4 = ptrToVmAddr(pUser);
+    // This is the real size to allocate: have to add room for a memblock and also 4-byte align
+    const int32_t allocSize = (size + sizeof(memblock_t) + 3) & 0xFFFFFFFC;
 
-    a1 = size;
-    a1 += 0x1B;
-    v0 = -4;                                            // Result = FFFFFFFC
-
-    s1 = pZone->rover;
-    s2 = a1 & v0;    
-    s5 = s1;
+    // Scan through the block list looking for the first free block of sufficient size.
+    // Also throw out any purgable blocks along the way.
+    memblock_t* pBase = pZone->rover.get();
+    memblock_t* const pStart = pBase;
 
     while (true) {
-        v1 = lw(s1 + 0x4);
-        s0 = s1;
+        v1 = pBase->user;
+        s0 = ptrToVmAddr(pBase);
 
         if (v1 == 0) {
-            v0 = lw(s1);
+            v0 = pBase->size;
 
-            if (i32(v0) >= i32(s2))
+            if (i32(v0) >= allocSize)
                 break;
 
-            s0 = s1;
+            s0 = ptrToVmAddr(pBase);
 
             if (v1 == 0) {
-                s0 = lw(s1 + 0x10);
+                s0 = pBase->next;
             }
         }
 
@@ -100,20 +89,19 @@ loc_800321D0:
 
         if (v0 != 0) {
             v0 = lh(s0 + 0x8);
-            a0 = ptrToVmAddr(pZone);
 
             if (i32(v0) < 0x10) {
-                s1 = lw(s0 + 0x10);
+                pBase = vmAddrToPtr<memblock_t>(lw(s0 + 0x10));
 
-                if (s1 == 0) {
+                if (!pBase) {
                 loc_80032268:
-                    s1 = s3 + 8;
+                    pBase = &pZone->blocklist;
                 }
 
-                if (s1 == s5) {
+                if (pBase == pStart) {
                     Z_DumpHeap();
                     a0 = 0x800113DC;        // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
-                    a1 = s2;
+                    a1 = allocSize;
                     I_Error();
                 }
 
@@ -124,83 +112,74 @@ loc_800321D0:
             Z_Free2();
         }
 
-        if (s1 != s0) {
-            v0 = lw(s1);
+        if (ptrToVmAddr(pBase) != s0) {
+            v0 = pBase->size;
             v1 = lw(s0);
             v0 += v1;
-            sw(v0, s1);
+            pBase->size = v0;
             v0 = lw(s0 + 0x10);
-            sw(v0, s1 + 0x10);
+            pBase->next = v0;
             v1 = lw(s0 + 0x10);
 
             if (v1 != 0) {
-                sw(s1, v1 + 0x14);
+                sw(ptrToVmAddr(pBase), v1 + 0x14);
             }
         }
     }
 
-    v0 = lw(s1);
-    a0 = v0 - s2;
-    v0 = s1 + s2;
+    v0 = pBase->size;
+    a0 = v0 - allocSize;
+    v0 = ptrToVmAddr(pBase) + allocSize;
 
     if (i32(a0) > 64) {
-        sw(s1, v0 + 0x14);
-        v1 = lw(s1 + 0x10);
+        sw(ptrToVmAddr(pBase), v0 + 0x14);
+        v1 = pBase->next;
         sw(v1, v0 + 0x10);
 
         if (v1 != 0) {
             sw(v0, v1 + 0x14);
         }
 
-        sw(v0, s1 + 0x10);
-        sw(s2, s1);
+        pBase->next = v0;
+        pBase->size = allocSize;
         sw(a0, v0);
         sw(0, v0 + 0x4);
         sh(0, v0 + 0x8);
     }
 
-    v0 = s1 + 0x18;
+    v0 = ptrToVmAddr(&pBase[1]);
 
-    if (s4 != 0) {
-        sw(s4, s1 + 0x4);
-        sw(v0, s4);
+    if (ppUser) {
+        pBase->user = VmPtr<VmPtr<void>>(ppUser);
+        *ppUser = v0;
     } else {
-        if (i32(s6) >= 0x10) {
+        if (tag >= PU_PURGELEVEL) {
             a0 = 0x80011400;    // Result = STR_Z_Malloc_NoBlockOwner_Err[0] (80011400)
             I_Error();
         }
 
-        sw(1, s1 + 0x4);
+        pBase->user = VmPtr<VmPtr<void>>(0x00000001);
     }
     
-    v1 = lw(s1 + 0x10);
-    v0 = ZONEID;
-    sh(s6, s1 + 0x8);
-    sh(v0, s1 + 0xA);
+    v1 = pBase->next;
+    pBase->tag = tag;
+    pBase->id = ZONEID;
     pZone->rover = v1;
 
     if (v1 == 0) {
-        v0 = s3 + 8;
         pZone->rover = &pZone->blocklist;
     }
 
-    const VmPtr<void> pUserMem = s1 + 0x18;
+    void* pUserMem = &pBase[1];
     
     s0 = lw(sp + 0x10);
-    s1 = lw(sp + 0x14);
-    s2 = lw(sp + 0x18);
-    s3 = lw(sp + 0x1C);
-    s4 = lw(sp + 0x20);
-    s5 = lw(sp + 0x24);
-    s6 = lw(sp + 0x28);
-    ra = lw(sp + 0x2C);
     sp += 0x30;
 
-    return pUserMem.get();
+    return pUserMem;
 }
 
 void _thunk_Z_Malloc2() noexcept {
-    v0 = ptrToVmAddr(Z_Malloc2(vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<void>(a3)));
+    v0 = ptrToVmAddr(Z_Malloc2(vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<VmPtr<void>>(a3)));
 }
 
 void Z_Malloc2_b() noexcept {

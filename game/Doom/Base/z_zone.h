@@ -9,18 +9,27 @@
 //  - Tags >= 100 are purgable whenever needed.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static constexpr int16_t PU_STATIC      = 1;    // Static entire execution time
-static constexpr int16_t PU_SOUND       = 2;    // Static while playing
-static constexpr int16_t PU_MUSIC       = 3;    // Static while playing
-static constexpr int16_t PU_DAVE        = 4;    // Linux Doom comment: "Anything else Dave wants static"
-static constexpr int16_t PU_LEVEL       = 50;   // Static until level exited
-static constexpr int16_t PU_LEVSPEC     = 51;   // A special thinker in a level
-static constexpr int16_t PU_PURGELEVEL  = 100;
-static constexpr int16_t PU_CACHE       = 101;
+
+// TODO: FIGURE OUT PURGE MODES
+#if 0
+    // static constexpr int16_t PU_SOUND       = 2;    // Static while playing (TODO: CONFIRM)
+    // static constexpr int16_t PU_MUSIC       = 3;    // Static while playing (TODO: CONFIRM)
+    // static constexpr int16_t PU_DAVE        = 4;    // Linux Doom comment: "Anything else Dave wants static" (TODO: CONFIRM)
+    // static constexpr int16_t PU_LEVEL       = 16;   // Static until level exited (TODO: CONFIRM)
+    // static constexpr int16_t PU_LEVSPEC     = 51;   // A special thinker in a level (TODO: CONFIRM)
+#endif
+
+static constexpr int16_t PU_PURGELEVEL  = 16;   // (TODO: CONFIRM)
+
+// TODO: FIGURE OUT PURGE MODES
+#if 0
+    // static constexpr int16_t PU_CACHE       = 101;
+#endif
 
 // Holds details on a block of memory
 struct memblock_t {
     int32_t             size;           // Including the header and possibly tiny fragments
-    VmPtr<void*>        user;           // NULL if a free block
+    VmPtr<VmPtr<void*>> user;           // NULL if a free block
     int16_t             tag;            // Purgelevel
     int16_t             id;             // Should be ZONEID
     int32_t             lockframe;      // Don't purge on this frame
@@ -44,7 +53,7 @@ extern const VmPtr<VmPtr<memzone_t>> gpMainMemZone;
 void Z_Init() noexcept;
 memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept;
 
-void* Z_Malloc2(memzone_t* const pZone, const int32_t size, const int16_t tag, void* const pUser) noexcept;
+void* Z_Malloc2(memzone_t* const pZone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept;
 void _thunk_Z_Malloc2() noexcept;
 
 void Z_Malloc2_b() noexcept;

@@ -51,9 +51,9 @@ public:
     inline constexpr void reset(const uint32_t addr) noexcept { mAddr = addr; }
     inline constexpr uint32_t addr() const noexcept { return mAddr; }
 
-    // Implicit conversion back to uint32_t 
+    // Implicit conversion back to uint32_t
     inline constexpr operator uint32_t() const noexcept { return mAddr; }
-
+    
     // Pointer dereferencing
     inline ElemTy* get() const noexcept {
         const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
