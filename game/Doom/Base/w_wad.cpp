@@ -245,7 +245,7 @@ loc_800316D8:
     a0 = *gpMainMemZone;
     a1 = lw(s1 + 0x4);
     a3 = 0;                                             // Result = 00000000
-    Z_Malloc2_b();
+    _thunk_Z_Malloc2_b();
     a2 = 0;                                             // Result = 00000000
     a0 = lw(gp + 0xC74);                                // Load from: gMainWadFileIdx (80078254)
     a1 = lw(s1);
@@ -362,7 +362,7 @@ loc_800318B8:
     a0 = *gpMainMemZone;
     a1 = lw(s1 + 0x4);
     a3 = 0;                                             // Result = 00000000
-    Z_Malloc2_b();
+    _thunk_Z_Malloc2_b();
     a2 = 0;                                             // Result = 00000000
     a0 = lw(gp + 0xC74);                                // Load from: gMainWadFileIdx (80078254)
     a1 = lw(s1);
@@ -518,7 +518,7 @@ loc_80031B04:
     a2 = 1;                                             // Result = 00000001
     a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
-    Z_Malloc2_b();
+    _thunk_Z_Malloc2_b();
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
     sw(v0, gp + 0x938);                                 // Store to: gpMapWadFileData (80077F18)

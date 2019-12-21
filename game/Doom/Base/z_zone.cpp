@@ -69,8 +69,9 @@ void* Z_Malloc2(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<vo
     memblock_t* pBase = zone.rover.get();
     memblock_t* const pStart = pBase;
 
-    while (pBase->user || pBase->size < allocSize) {
-        memblock_t* pRover = (pBase->user) ? pBase : pBase->next.get();
+    while (pBase->user || (pBase->size < allocSize)) {
+        // Set the rover to the next block if the current is free, so we can merge free blocks:
+        memblock_t* const pRover = (pBase->user) ? pBase : pBase->next.get();
 
         // Wraparound to the beginning of the block list if the rover has reached the end
         if (!pRover)
@@ -157,7 +158,7 @@ void* Z_Malloc2(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<vo
     pBase->tag = tag;
     pBase->id = ZONEID;
 
-    // Move along the rover to the next block and return the usable memory allocated (past the block header)
+    // Move along the rover to the next block and return the usable memory allocated (past the allocated block header)
     zone.rover = (pBase->next) ? pBase->next : &zone.blocklist;
     return &pBase[1];
 }
@@ -166,135 +167,117 @@ void _thunk_Z_Malloc2() noexcept {
     v0 = ptrToVmAddr(Z_Malloc2(*vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<VmPtr<void>>(a3)));
 }
 
-void Z_Malloc2_b() noexcept {
-    sp -= 0x30;
-    sw(s0, sp + 0x10);
-    sw(s1, sp + 0x14);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s5, sp + 0x24);
-    sw(s4, sp + 0x20);
-
-    s3 = a0;
-    s2 = a1;    
-    s5 = a2;    
-    s4 = a3;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// An alternate version of Z_Malloc that attempts to allocate at the end of the heap, or at least as close as possible to the end.
+// Ignores the rover used by the memory zone also and always starts from the very end.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void* Z_Malloc2_b(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept {
+    // This is the real size to allocate: have to add room for a memblock and also 4-byte align
+    const int32_t allocSize = (size + sizeof(memblock_t) + 3) & 0xFFFFFFFC;
     
-    v0 = lw(s3 + 0x18);
-    s1 = s3 + 8;
+    // Start at the very last block in the list, since we want to alloc at the end of the heap
+    memblock_t* pBase = &zone.blocklist;
 
-    while (v0 != 0) {
-        s1 = lw(s1 + 0x10);
-        v0 = lw(s1 + 0x10);
+    while (pBase->next) {
+        pBase = pBase->next.get();
     }
 
-    v1 = s2 + 0x1B;
-    v0 = -4;                                            // Result = FFFFFFFC
-    s2 = v1 & v0;
-    a0 = lw(s1 + 0x4);
+    while (pBase->user || (pBase->size < allocSize)) {
+        // Set the rover to the previous block if the current is free, so we can merge free blocks:
+        memblock_t* pRover;
 
-    while ((a0 != 0) || (i32(lw(s1)) < i32(s2))) {
-        if (a0 != 0) {
-            s0 = s1;
+        if (pBase->user) {
+            pRover = pBase;
         } else {
-            s0 = lw(s1 + 0x14);
+            pRover = pBase->prev.get();
 
-            if (s0 == 0) {
+            // Have we gone past the start? If so then we have failed...
+            if (!pRover) {
                 a0 = 0x800113DC;    // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
-                a1 = s2;
+                a1 = allocSize;
                 I_Error();
             }
         }
 
-        v0 = lw(s0 + 0x4);
+        if (pRover->user) {
+            // Is this block exempt from being purged?
+            // If that is the case then we need to try the next one after it.
+            if (pRover->tag < PU_PURGELEVEL) {
+                pBase = pRover->prev.get();
 
-        if (v0 == 0)
-            goto loc_800324B8;
-
-        v0 = lh(s0 + 0x8);
-        a0 = s3;
-
-        if (i32(v0) < 0x10) {
-            s1 = lw(s0 + 0x14);
-            if (s1 == 0) {
-                a0 = 0x80010000;                                    // Result = 80010000
-                a0 += 0x13DC;                                       // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
-                a1 = s2;
-                I_Error();
-            }
-        } else {
-            a1 = s0 + 0x18;
-            _thunk_Z_Free2();
-
-        loc_800324B8:
-            if (s1 != s0) {
-                v0 = lw(s0);
-                v1 = lw(s1);
-                v0 += v1;
-                sw(v0, s0);
-                v0 = lw(s1 + 0x10);
-                sw(v0, s0 + 0x10);
-                v0 = lw(s1 + 0x10);
-                s1 = s0;
-
-                if (v0 != 0) {
-                    sw(s0, v0 + 0x14);
+                // If we have wrapped around back to the start of the zone then we're out of RAM.
+                // In this case we have searched all blocks for one big enough and not found one :(
+                if (!pBase) {
+                    a0 = 0x800113DC;    // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
+                    a1 = allocSize;
+                    I_Error();
                 }
+
+                continue;
+            }
+
+            // Chuck out this block!
+            Z_Free2(**gpMainMemZone, &pRover[1]);
+        }
+
+        // Merge adjacent free memory blocks where possible
+        if (pBase != pRover) {
+            pRover->size = pRover->size + pBase->size;
+            pRover->next = pBase->next;
+            pBase = pRover;
+
+            if (pBase->next) {
+                pBase->next->prev = pRover;
             }
         }
-
-        a0 = lw(s1 + 0x4);
-    };
-
-    v0 = lw(s1);
-    a0 = v0 - s2;
-    v1 = s1;
-
-    if (i32(a0) >= 0x41) {
-        s1 += a0;
-        sw(v1, s1 + 0x14);
-        v0 = lw(v1 + 0x10);
-        sw(v0, s1 + 0x10);
-        
-        if (v0 != 0) {
-            sw(s1, v0 + 0x14);
-        }
-
-        sw(s1, v1 + 0x10);
-        sw(s2, s1);
-        sw(a0, v1);
-        sw(0, v1 + 0x4);
-        sh(0, v1 + 0x8);
     }
 
-    v0 = s1 + 0x18;
+    // If there are enough free bytes following the allocation then make a new memory block and add it into the linked list of blocks.
+    // Unlike the regular Z_Malloc, the new block is added BEFORE the allocated memory.
+    const int32_t numUnusedBytes = pBase->size - allocSize;    
+    memblock_t& freeBlock = *pBase;
 
-    if (s4 != 0) {
-        sw(s4, s1 + 0x4);
-        sw(v0, s4);
+    if (numUnusedBytes > MINFRAGMENT) {
+        pBase = (memblock_t*)((std::byte*) pBase + numUnusedBytes);
+        pBase->size = allocSize;
+        pBase->prev = &freeBlock;
+        pBase->next = freeBlock.next;
+        
+        if (freeBlock.next) {
+            freeBlock.next->prev = pBase;
+        }
+
+        freeBlock.next = pBase;        
+        freeBlock.size = numUnusedBytes;
+        freeBlock.user = nullptr;
+        freeBlock.tag = 0;
+    }
+
+    // Setup the links on the memory block back to the pointer referencing it.
+    // Also populate the pointer referencing it (if given):    
+    if (ppUser) {
+        pBase->user = VmPtr<VmPtr<void>>(ppUser);
+        *ppUser = &pBase[1];
     } else {
-        if (i32(s5) >= 0x10) {
+        if (tag >= PU_PURGELEVEL) {
             a0 = 0x80011400;    // Result = STR_Z_Malloc_NoBlockOwner_Err[0] (80011400)
             I_Error();
         }
         
-        sw(1, s1 + 0x4);
+        // Non purgable blocks without any owner are assigned a pointer value of '1'
+        pBase->user = VmPtr<VmPtr<void>>(0x00000001);
     }
 
-    v0 = ZONEID;
-    sh(v0, s1 + 0xA);
-    v0 = s3 + 8;
-    sh(s5, s1 + 0x8);
-    sw(v0, s3 + 0x4);
-    v0 = s1 + 0x18;
+    pBase->id = ZONEID;
+    pBase->tag = tag;
 
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x30;
+    // Set the rover for the zone and return the usable memory allocated (past the allocated block header)
+    zone.rover = &zone.blocklist;
+    return (void*) &pBase[1];
+}
+
+void _thunk_Z_Malloc2_b() noexcept {
+    v0 = ptrToVmAddr(Z_Malloc2_b(*vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<VmPtr<void>>(a3)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
