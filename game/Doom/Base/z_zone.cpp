@@ -101,8 +101,7 @@ void* Z_Malloc2(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<vo
             }
 
             // Chuck out this block!
-            a1 = ptrToVmAddr(&pRover[1]);
-            _thunk_Z_Free2();
+            Z_Free2(**gpMainMemZone, &pRover[1]);
         }
 
         // Merge adjacent free memory blocks where possible
@@ -170,30 +169,32 @@ void _thunk_Z_Malloc2() noexcept {
 void Z_Malloc2_b() noexcept {
 loc_800323C8:
     sp -= 0x30;
-    sw(s3, sp + 0x1C);
-    s3 = a0;
-    sw(s2, sp + 0x18);
-    s2 = a1;
-    sw(s5, sp + 0x24);
-    s5 = a2;
-    sw(s4, sp + 0x20);
-    s4 = a3;
-    sw(ra, sp + 0x28);
-    sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
+    sw(s1, sp + 0x14);
+    sw(s3, sp + 0x1C);
+    sw(s2, sp + 0x18);
+    sw(s5, sp + 0x24);
+    sw(s4, sp + 0x20);
+
+    s3 = a0;
+    s2 = a1;    
+    s5 = a2;    
+    s4 = a3;
+    
     v0 = lw(s3 + 0x18);
     s1 = s3 + 8;
-    if (v0 == 0) goto loc_80032420;
-loc_80032408:
-    s1 = lw(s1 + 0x10);
-    v0 = lw(s1 + 0x10);
-    if (v0 != 0) goto loc_80032408;
-loc_80032420:
+
+    while (v0 != 0) {
+        s1 = lw(s1 + 0x10);
+        v0 = lw(s1 + 0x10);
+    }
+
     a0 = lw(s1 + 0x4);
     v1 = s2 + 0x1B;
     v0 = -4;                                            // Result = FFFFFFFC
     s2 = v1 & v0;
     goto loc_800324F8;
+
 loc_80032434:
     if (a0 == 0) goto loc_80032444;
 loc_8003243C:
@@ -242,50 +243,49 @@ loc_800324F8:
     v0 = lw(s1);
     v0 = (i32(v0) < i32(s2));
     if (v0 != 0) goto loc_80032434;
+
     v0 = lw(s1);
     a0 = v0 - s2;
-    v0 = (i32(a0) < 0x41);
     v1 = s1;
-    if (v0 != 0) goto loc_80032560;
-    s1 += a0;
-    sw(v1, s1 + 0x14);
-    v0 = lw(v1 + 0x10);
-    sw(v0, s1 + 0x10);
-    if (v0 == 0) goto loc_8003254C;
-    sw(s1, v0 + 0x14);
-loc_8003254C:
-    sw(s1, v1 + 0x10);
-    sw(s2, s1);
-    sw(a0, v1);
-    sw(0, v1 + 0x4);
-    sh(0, v1 + 0x8);
-loc_80032560:
-    v0 = s1 + 0x18;
-    if (s4 == 0) goto loc_80032574;
-    sw(s4, s1 + 0x4);
-    sw(v0, s4);
-    goto loc_80032598;
-loc_80032574:
-    v0 = (i32(s5) < 0x10);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80032594;
+
+    if (i32(a0) >= 0x41) {
+        s1 += a0;
+        sw(v1, s1 + 0x14);
+        v0 = lw(v1 + 0x10);
+        sw(v0, s1 + 0x10);
+        
+        if (v0 != 0) {
+            sw(s1, v0 + 0x14);
+        }
+
+        sw(s1, v1 + 0x10);
+        sw(s2, s1);
+        sw(a0, v1);
+        sw(0, v1 + 0x4);
+        sh(0, v1 + 0x8);
     }
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1400;                                       // Result = STR_Z_Malloc_NoBlockOwner_Err[0] (80011400)
-    I_Error();
-    v0 = 1;                                             // Result = 00000001
-loc_80032594:
-    sw(v0, s1 + 0x4);
-loc_80032598:
-    v0 = 0x1D4A;                                        // Result = 00001D4A
+
+    v0 = s1 + 0x18;
+
+    if (s4 != 0) {
+        sw(s4, s1 + 0x4);
+        sw(v0, s4);
+    } else {
+        if (i32(s5) >= 0x10) {
+            a0 = 0x80011400;    // Result = STR_Z_Malloc_NoBlockOwner_Err[0] (80011400)
+            I_Error();
+        }
+        
+        sw(1, s1 + 0x4);
+    }
+
+    v0 = ZONEID;
     sh(v0, s1 + 0xA);
     v0 = s3 + 8;
     sh(s5, s1 + 0x8);
     sw(v0, s3 + 0x4);
     v0 = s1 + 0x18;
-    ra = lw(sp + 0x28);
+
     s5 = lw(sp + 0x24);
     s4 = lw(sp + 0x20);
     s3 = lw(sp + 0x1C);
@@ -293,7 +293,6 @@ loc_80032598:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x30;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
