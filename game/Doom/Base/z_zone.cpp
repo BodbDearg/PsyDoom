@@ -167,7 +167,6 @@ void _thunk_Z_Malloc2() noexcept {
 }
 
 void Z_Malloc2_b() noexcept {
-loc_800323C8:
     sp -= 0x30;
     sw(s0, sp + 0x10);
     sw(s1, sp + 0x14);
@@ -189,60 +188,63 @@ loc_800323C8:
         v0 = lw(s1 + 0x10);
     }
 
-    a0 = lw(s1 + 0x4);
     v1 = s2 + 0x1B;
     v0 = -4;                                            // Result = FFFFFFFC
     s2 = v1 & v0;
-    goto loc_800324F8;
-
-loc_80032434:
-    if (a0 == 0) goto loc_80032444;
-loc_8003243C:
-    s0 = s1;
-    goto loc_80032464;
-loc_80032444:
-    s0 = lw(s1 + 0x14);
-    if (s0 != 0) goto loc_80032464;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x13DC;                                       // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
-    a1 = s2;
-    I_Error();
-loc_80032464:
-    v0 = lw(s0 + 0x4);
-    if (v0 == 0) goto loc_800324B8;
-    v0 = lh(s0 + 0x8);
-    v0 = (i32(v0) < 0x10);
-    a0 = s3;
-    if (v0 == 0) goto loc_800324B0;
-    s1 = lw(s0 + 0x14);
-    if (s1 != 0) goto loc_800324F4;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x13DC;                                       // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
-    a1 = s2;
-    I_Error();
-    goto loc_800324F4;
-loc_800324B0:
-    a1 = s0 + 0x18;
-    _thunk_Z_Free2();
-loc_800324B8:
-    if (s1 == s0) goto loc_800324F4;
-    v0 = lw(s0);
-    v1 = lw(s1);
-    v0 += v1;
-    sw(v0, s0);
-    v0 = lw(s1 + 0x10);
-    sw(v0, s0 + 0x10);
-    v0 = lw(s1 + 0x10);
-    s1 = s0;
-    if (v0 == 0) goto loc_800324F4;
-    sw(s0, v0 + 0x14);
-loc_800324F4:
     a0 = lw(s1 + 0x4);
-loc_800324F8:
-    if (a0 != 0) goto loc_8003243C;
-    v0 = lw(s1);
-    v0 = (i32(v0) < i32(s2));
-    if (v0 != 0) goto loc_80032434;
+
+    while ((a0 != 0) || (i32(lw(s1)) < i32(s2))) {
+        if (a0 != 0) {
+            s0 = s1;
+        } else {
+            s0 = lw(s1 + 0x14);
+
+            if (s0 == 0) {
+                a0 = 0x800113DC;    // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
+                a1 = s2;
+                I_Error();
+            }
+        }
+
+        v0 = lw(s0 + 0x4);
+
+        if (v0 == 0)
+            goto loc_800324B8;
+
+        v0 = lh(s0 + 0x8);
+        a0 = s3;
+
+        if (i32(v0) < 0x10) {
+            s1 = lw(s0 + 0x14);
+            if (s1 == 0) {
+                a0 = 0x80010000;                                    // Result = 80010000
+                a0 += 0x13DC;                                       // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
+                a1 = s2;
+                I_Error();
+            }
+        } else {
+            a1 = s0 + 0x18;
+            _thunk_Z_Free2();
+
+        loc_800324B8:
+            if (s1 != s0) {
+                v0 = lw(s0);
+                v1 = lw(s1);
+                v0 += v1;
+                sw(v0, s0);
+                v0 = lw(s1 + 0x10);
+                sw(v0, s0 + 0x10);
+                v0 = lw(s1 + 0x10);
+                s1 = s0;
+
+                if (v0 != 0) {
+                    sw(s0, v0 + 0x14);
+                }
+            }
+        }
+
+        a0 = lw(s1 + 0x4);
+    };
 
     v0 = lw(s1);
     a0 = v0 - s2;
