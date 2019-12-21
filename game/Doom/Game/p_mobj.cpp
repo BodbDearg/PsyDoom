@@ -375,7 +375,7 @@ loc_8001CC68:
     a3 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x24);
     sw(s3, sp + 0x1C);
-    _thunk_Z_Malloc2();
+    _thunk_Z_Malloc();
     s3 = v0;
     a0 = s3;
     a1 = 0;                                             // Result = 00000000
@@ -509,7 +509,7 @@ loc_8001CEC8:
     s2 = lh(s4 + 0x2);
     s1 <<= 16;
     s2 <<= 16;
-    _thunk_Z_Malloc2();
+    _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
@@ -826,7 +826,7 @@ loc_8001D3F0:
     a2 = 2;                                             // Result = 00000002
     a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc2();
+    _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
@@ -1021,7 +1021,7 @@ loc_8001D704:
     a2 = 2;                                             // Result = 00000002
     a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc2();
+    _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
@@ -1153,7 +1153,7 @@ loc_8001D930:
     a2 = 2;                                             // Result = 00000002
     a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc2();
+    _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
@@ -1360,7 +1360,7 @@ loc_8001DC94:
     s1 = lw(s4);
     s2 = lw(s4 + 0x4);
     s5 = v1 + v0;
-    _thunk_Z_Malloc2();
+    _thunk_Z_Malloc();
     s3 = v0;
     a0 = s3;
     a1 = 0;                                             // Result = 00000000
@@ -1662,7 +1662,7 @@ loc_8001E1A8:
     s0 = lw(s3);
     s1 = lw(s3 + 0x4);
     s6 = v1 + v0;
-    _thunk_Z_Malloc2();
+    _thunk_Z_Malloc();
     s2 = v0;
     a0 = s2;
     a1 = 0;                                             // Result = 00000000

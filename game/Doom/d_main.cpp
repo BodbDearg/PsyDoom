@@ -108,7 +108,7 @@ loc_80012424:
     a0 = *gpMainMemZone;
     sw(ra, sp + 0x14);
     a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc2_b();
+    _thunk_Z_EndMalloc();
     sw(v0, gp + 0x8);                                   // Store to: gpDemoBuffer (800775E8)
     a0 = s0;
     OpenFile();

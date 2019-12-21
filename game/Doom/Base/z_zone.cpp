@@ -60,7 +60,7 @@ memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept {
 // Allocate a block of memory in the given memory zone with the given purgability tags.
 // Optionally, a referencing pointer field can also be supplied which is updated when the block is allocated or freed.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void* Z_Malloc2(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept {
+void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept {
     // This is the real size to allocate: have to add room for a memblock and also 4-byte align
     const int32_t allocSize = (size + sizeof(memblock_t) + 3) & 0xFFFFFFFC;
 
@@ -163,15 +163,15 @@ void* Z_Malloc2(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<vo
     return &pBase[1];
 }
 
-void _thunk_Z_Malloc2() noexcept {
-    v0 = ptrToVmAddr(Z_Malloc2(*vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<VmPtr<void>>(a3)));
+void _thunk_Z_Malloc() noexcept {
+    v0 = ptrToVmAddr(Z_Malloc(*vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<VmPtr<void>>(a3)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // An alternate version of Z_Malloc that attempts to allocate at the end of the heap, or at least as close as possible to the end.
 // Ignores the rover used by the memory zone also and always starts from the very end.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void* Z_Malloc2_b(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept {
+void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept {
     // This is the real size to allocate: have to add room for a memblock and also 4-byte align
     const int32_t allocSize = (size + sizeof(memblock_t) + 3) & 0xFFFFFFFC;
     
@@ -276,8 +276,8 @@ void* Z_Malloc2_b(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
     return (void*) &pBase[1];
 }
 
-void _thunk_Z_Malloc2_b() noexcept {
-    v0 = ptrToVmAddr(Z_Malloc2_b(*vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<VmPtr<void>>(a3)));
+void _thunk_Z_EndMalloc() noexcept {
+    v0 = ptrToVmAddr(Z_EndMalloc(*vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<VmPtr<void>>(a3)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

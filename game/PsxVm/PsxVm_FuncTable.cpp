@@ -345,8 +345,8 @@ extern void OpenFile() noexcept;
 extern void CloseFile() noexcept;
 extern void SeekAndTellFile() noexcept;
 extern void ReadFile() noexcept;
-extern void _thunk_Z_Malloc2() noexcept;
-extern void _thunk_Z_Malloc2_b() noexcept;
+extern void _thunk_Z_Malloc() noexcept;
+extern void _thunk_Z_EndMalloc() noexcept;
 extern void _thunk_Z_Free2() noexcept;
 extern void Z_FreeTags() noexcept;
 extern void Z_CheckHeap() noexcept;
@@ -1329,8 +1329,8 @@ namespace PsxVm {
         { 0x80031FD8, &CloseFile },
         { 0x80032024, &SeekAndTellFile },
         { 0x8003206C, &ReadFile },
-        { 0x800321D0, &_thunk_Z_Malloc2 },
-        { 0x800323C8, &_thunk_Z_Malloc2_b },
+        { 0x800321D0, &_thunk_Z_Malloc },
+        { 0x800323C8, &_thunk_Z_EndMalloc },
         { 0x800325D8, &_thunk_Z_Free2 },
         { 0x80032640, &Z_FreeTags },
         { 0x80032770, &Z_CheckHeap },

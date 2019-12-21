@@ -53,11 +53,11 @@ extern const VmPtr<VmPtr<memzone_t>> gpMainMemZone;
 void Z_Init() noexcept;
 memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept;
 
-void* Z_Malloc2(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept;
-void _thunk_Z_Malloc2() noexcept;
+void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept;
+void _thunk_Z_Malloc() noexcept;
 
-void* Z_Malloc2_b(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept;
-void _thunk_Z_Malloc2_b() noexcept;
+void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept;
+void _thunk_Z_EndMalloc() noexcept;
 
 void Z_Free2(memzone_t& zone, void* const ptr) noexcept;
 void _thunk_Z_Free2() noexcept;

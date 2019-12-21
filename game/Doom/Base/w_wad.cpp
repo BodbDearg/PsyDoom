@@ -34,7 +34,7 @@ loc_800313EC:
     a0 = *gpMainMemZone;
     sw(v0, gp + 0xC0C);                                 // Store to: gNumLumps (800781EC)
     a1 = v0 << 4;
-    _thunk_Z_Malloc2();
+    _thunk_Z_Malloc();
     a0 = lw(gp + 0xC74);                                // Load from: gMainWadFileIdx (80078254)
     a1 = lw(sp + 0x18);
     sw(v0, gp + 0xBE4);                                 // Store to: gpLumpInfo (800781C4)
@@ -50,13 +50,13 @@ loc_800313EC:
     a1 = lw(gp + 0xC0C);                                // Load from: gNumLumps (800781EC)
     a0 = *gpMainMemZone;
     a1 <<= 2;
-    _thunk_Z_Malloc2();
+    _thunk_Z_Malloc();
     a2 = 1;                                             // Result = 00000001
     a0 = *gpMainMemZone;
     a1 = lw(gp + 0xC0C);                                // Load from: gNumLumps (800781EC)
     sw(v0, gp + 0xC5C);                                 // Store to: gpLumpCache (8007823C)
     a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc2();
+    _thunk_Z_Malloc();
     a0 = lw(gp + 0xC5C);                                // Load from: gpLumpCache (8007823C)
     a2 = lw(gp + 0xC0C);                                // Load from: gNumLumps (800781EC)
     a1 = 0;                                             // Result = 00000000
@@ -245,7 +245,7 @@ loc_800316D8:
     a0 = *gpMainMemZone;
     a1 = lw(s1 + 0x4);
     a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc2_b();
+    _thunk_Z_EndMalloc();
     a2 = 0;                                             // Result = 00000000
     a0 = lw(gp + 0xC74);                                // Load from: gMainWadFileIdx (80078254)
     a1 = lw(s1);
@@ -338,7 +338,7 @@ loc_80031858:
     a3 += s0;
     a1 = v1 - a1;
 loc_80031880:
-    _thunk_Z_Malloc2();
+    _thunk_Z_Malloc();
     v0 = s2 << 2;
     a0 = lw(gp + 0xC5C);                                // Load from: gpLumpCache (8007823C)
     v1 = lw(gp + 0xC0C);                                // Load from: gNumLumps (800781EC)
@@ -362,7 +362,7 @@ loc_800318B8:
     a0 = *gpMainMemZone;
     a1 = lw(s1 + 0x4);
     a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc2_b();
+    _thunk_Z_EndMalloc();
     a2 = 0;                                             // Result = 00000000
     a0 = lw(gp + 0xC74);                                // Load from: gMainWadFileIdx (80078254)
     a1 = lw(s1);
@@ -518,7 +518,7 @@ loc_80031B04:
     a2 = 1;                                             // Result = 00000001
     a0 = *gpMainMemZone;
     a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc2_b();
+    _thunk_Z_EndMalloc();
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
     sw(v0, gp + 0x938);                                 // Store to: gpMapWadFileData (80077F18)

@@ -622,8 +622,8 @@ static const ProgElem ELEMS[] = {
     { 0x8003206C, 0x80032144, "ReadFile",                               ProgElemType::FUNCTION },
     { 0x80032144, 0x8003219C, "Z_Init",                                 ProgElemType::FUNCTION },
     { 0x8003219C, 0x800321D0, "Z_InitZone",                             ProgElemType::FUNCTION },
-    { 0x800321D0, 0x800323C8, "Z_Malloc2",                              ProgElemType::FUNCTION },
-    { 0x800323C8, 0x800325D8, "Z_Malloc2_b",                            ProgElemType::FUNCTION }, // TODO 2: what is the difference between this and the regular Z_Malloc?
+    { 0x800321D0, 0x800323C8, "Z_Malloc",                               ProgElemType::FUNCTION },
+    { 0x800323C8, 0x800325D8, "Z_EndMalloc",                            ProgElemType::FUNCTION },
     { 0x800325D8, 0x80032640, "Z_Free2",                                ProgElemType::FUNCTION },
     { 0x80032640, 0x80032770, "Z_FreeTags",                             ProgElemType::FUNCTION },
     { 0x80032770, 0x80032838, "Z_CheckHeap",                            ProgElemType::FUNCTION },
