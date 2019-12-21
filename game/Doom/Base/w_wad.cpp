@@ -262,7 +262,7 @@ loc_800316D8:
     decode();
     a0 = *gpMainMemZone;
     a1 = s0;
-    Z_Free2();
+    _thunk_Z_Free2();
     goto loc_8003178C;
 loc_80031764:
     a0 = lw(gp + 0xC74);                                // Load from: gMainWadFileIdx (80078254)
@@ -379,7 +379,7 @@ loc_800318B8:
     decode();
     a0 = *gpMainMemZone;
     a1 = s0;
-    Z_Free2();
+    _thunk_Z_Free2();
     goto loc_8003196C;
 loc_80031944:
     a0 = lw(gp + 0xC74);                                // Load from: gMainWadFileIdx (80078254)

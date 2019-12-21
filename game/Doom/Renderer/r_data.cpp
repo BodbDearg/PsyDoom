@@ -91,7 +91,7 @@ loc_8002BAD8:
     if (v0 == 0) goto loc_8002BA94;
 loc_8002BAF4:
     a0 = *gpMainMemZone;
-    Z_Free2();
+    _thunk_Z_Free2();
     a0 = lw(gp + 0xBF4);                                // Load from: gNumTexLumps (800781D4)
     a2 = 0;                                             // Result = 00000000
     if (i32(a0) <= 0) goto loc_8002BB30;
@@ -250,7 +250,7 @@ loc_8002BD50:
     if (v0 == 0) goto loc_8002BCF4;
 loc_8002BD74:
     a0 = *gpMainMemZone;
-    Z_Free2();
+    _thunk_Z_Free2();
     a0 = *gpMainMemZone;
     a1 = 0x20;
     Z_FreeTags();

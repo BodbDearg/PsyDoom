@@ -57,7 +57,10 @@ void* Z_Malloc2(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<vo
 void _thunk_Z_Malloc2() noexcept;
 
 void Z_Malloc2_b() noexcept;
-void Z_Free2() noexcept;
+
+void Z_Free2(memzone_t& zone, void* const ptr) noexcept;
+void _thunk_Z_Free2() noexcept;
+
 void Z_FreeTags() noexcept;
 void Z_CheckHeap() noexcept;
 void Z_ChangeTag() noexcept;

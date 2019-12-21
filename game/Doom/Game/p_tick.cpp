@@ -67,7 +67,7 @@ loc_80028CA8:
     v1 = lw(s0);
     v0 = lw(s0 + 0x4);
     sw(v0, v1 + 0x4);
-    Z_Free2();
+    _thunk_Z_Free2();
     goto loc_80028D04;
 loc_80028CE4:
     if (v0 == 0) goto loc_80028CF4;
@@ -600,7 +600,7 @@ loc_8002948C:
     v1 = lw(s0);
     v0 = lw(s0 + 0x4);
     sw(v0, v1 + 0x4);
-    Z_Free2();
+    _thunk_Z_Free2();
     goto loc_800294E8;
 loc_800294C8:
     if (v0 == 0) goto loc_800294D8;

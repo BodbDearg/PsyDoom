@@ -1764,7 +1764,7 @@ loc_800235A0:
     P_SpawnSpecials();
     a0 = *gpMainMemZone;
     a1 = s5;
-    Z_Free2();
+    _thunk_Z_Free2();
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7FF4);                               // Load from: gbIsLevelBeingRestarted (80077FF4)
     s0 = s4 - 1;
@@ -1953,7 +1953,7 @@ loc_8002388C:
     sw(v1, s1 + 0x14);
     a0 = *gpMainMemZone;
     a1 = s1 + 0x18;
-    Z_Free2();
+    _thunk_Z_Free2();
     v0 = s7;
     goto loc_80023738;
 loc_800238DC:

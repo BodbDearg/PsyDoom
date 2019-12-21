@@ -123,7 +123,7 @@ loc_80012424:
     a0 = *gpMainMemZone;
     a1 = lw(gp + 0x8);                                  // Load from: gpDemoBuffer (800775E8)
     s0 = v0;
-    Z_Free2();
+    _thunk_Z_Free2();
     v0 = s0;
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);

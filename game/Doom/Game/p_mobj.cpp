@@ -81,7 +81,7 @@ loc_8001C7F4:
     v0 = lw(s0 + 0x14);
     a1 = s0;
     sw(v0, v1 + 0x14);
-    Z_Free2();
+    _thunk_Z_Free2();
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
@@ -277,7 +277,7 @@ loc_8001CAF0:
     v0 = lw(s0 + 0x14);
     a1 = s0;
     sw(v0, v1 + 0x14);
-    Z_Free2();
+    _thunk_Z_Free2();
     v0 = 0;                                             // Result = 00000000
     goto loc_8001CB88;
 loc_8001CB28:

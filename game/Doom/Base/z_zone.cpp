@@ -5,7 +5,10 @@
 #include "PsxVm/PsxVm.h"
 
 // All blocks must have this id
-static constexpr int16_t ZONEID	= 0x1d4a;
+static constexpr int16_t ZONEID	= 0x1D4A;
+
+// The minimum size that a memory block must be
+static constexpr int32_t MINFRAGMENT = 64;
 
 // The main (and only) memory zone used by PSX DOOM
 extern const VmPtr<VmPtr<memzone_t>> gpMainMemZone(0x80078198);
@@ -99,7 +102,7 @@ void* Z_Malloc2(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<vo
 
             // Chuck out this block!
             a1 = ptrToVmAddr(&pRover[1]);
-            Z_Free2();
+            _thunk_Z_Free2();
         }
 
         // Merge adjacent free memory blocks where possible
@@ -117,7 +120,7 @@ void* Z_Malloc2(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<vo
     // and add it into the linked list of blocks:
     const int32_t numUnusedBytes = pBase->size - allocSize;
     
-    if (numUnusedBytes > 64) {
+    if (numUnusedBytes > MINFRAGMENT) {
         std::byte* const pUnusedBytes = (std::byte*) pBase + allocSize;
 
         memblock_t& newBlock = (memblock_t&) *pUnusedBytes;
@@ -219,7 +222,7 @@ loc_80032464:
     goto loc_800324F4;
 loc_800324B0:
     a1 = s0 + 0x18;
-    Z_Free2();
+    _thunk_Z_Free2();
 loc_800324B8:
     if (s1 == s0) goto loc_800324F4;
     v0 = lw(s0);
@@ -293,31 +296,33 @@ loc_80032598:
     return;
 }
 
-void Z_Free2() noexcept {
-loc_800325D8:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a1;
-    sw(ra, sp + 0x14);
-    v1 = lh(s0 - 0xE);
-    v0 = 0x1D4A;                                        // Result = 00001D4A
-    if (v1 == v0) goto loc_80032608;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1434;                                       // Result = STR_Z_Free_PtrNoZoneId_Err[0] (80011434)
-    I_Error();
-loc_80032608:
-    v1 = lw(s0 - 0x14);
-    v0 = (v1 < 0x101);
-    if (v0 != 0) goto loc_80032620;
-    sw(0, v1);
-loc_80032620:
-    sw(0, s0 - 0x14);
-    sh(0, s0 - 0x10);
-    sh(0, s0 - 0xE);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Free the given block of memory.
+// Note that the zone param is actually not needed here to perform the dealloc, perhaps it was passed in case it was needed in future?
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Z_Free2([[maybe_unused]] memzone_t& zone, void* const ptr) noexcept {
+    // Get the memory block header which is located before the actual memory.
+    // Verify also that the id is sane and that we are not just being passed a garbage pointer:
+    memblock_t& block = ((memblock_t*) ptr)[-1];
+
+    if (block.id != ZONEID) {
+        a0 = 0x80011434;    // Result = STR_Z_Free_PtrNoZoneId_Err[0] (80011434)
+        I_Error();
+    }
+
+    // Clear the pointer field referencing the memory block too.
+    // Treat very small addresses as not pointers also:
+    if (block.user.get() > vmAddrToPtr<void>(0x100)) {
+        *block.user = nullptr;
+    }
+
+    block.user = nullptr;
+    block.tag = 0;
+    block.id = 0;
+}
+
+void _thunk_Z_Free2() noexcept {
+    Z_Free2(*vmAddrToPtr<memzone_t>(a0), vmAddrToPtr<void>(a1));
 }
 
 void Z_FreeTags() noexcept {
