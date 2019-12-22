@@ -4,17 +4,21 @@
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
 
+static constexpr uint32_t MAX_OPEN_FILES = 4;
+
+static const VmPtr<PsxCd_File[MAX_OPEN_FILES]> gOpenPsxCdFiles(0x800A9D90);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the open file records for the game.
+// There is a maximum of 4 files that can be open at once.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void InitOpenFileSlots() noexcept {
-loc_80031EB4:
-    v0 = 0x78;                                          // Result = 00000078
-loc_80031EB8:
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x626C;                                       // Result = gOpenPsxCdFiles[1] (800A9D94)
-    at += v0;
-    sw(0, at);
-    v0 -= 0x28;
-    if (i32(v0) >= 0) goto loc_80031EB8;
-    return;
+    VmPtr<PsxCd_File> pFile = &gOpenPsxCdFiles[MAX_OPEN_FILES - 1];
+
+    do {
+        pFile->file.size = 0;
+        --pFile;
+    } while (pFile >= gOpenPsxCdFiles);
 }
 
 void OpenFile() noexcept {

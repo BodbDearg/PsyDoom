@@ -1,5 +1,27 @@
 #pragma once
 
+#include <cstdint>
+
+// Describes a track location or file position on a CD.
+// The location is described in audio terms.
+struct CdlLOC {
+    uint8_t minute;
+    uint8_t second;
+    uint8_t sector;
+    uint8_t track;      // Unused
+};
+
+static_assert(sizeof(CdlLOC) == 4);
+
+// Describes a file on a CD, including filename, location on disc and size
+struct CdlFILE {
+    CdlLOC      pos;
+    uint32_t    size;
+    char        name[16];
+};
+
+static_assert(sizeof(CdlFILE) == 24);
+
 void LIBCD_CdInit() noexcept;
 void LIBCD_EVENT_def_cbsync() noexcept;
 void LIBCD_EVENT_def_cbready() noexcept;

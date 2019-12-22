@@ -1,5 +1,18 @@
 #pragma once
 
+#include "PsyQ/LIBCD.h"
+
+// Tracks an open file on the CD-ROM.
+// Contains info about the file as well as the current IO location and status.
+struct PsxCd_File {
+    CdlFILE     file;
+    CdlLOC      new_io_loc;
+    uint32_t    io_block_offset;
+    uint8_t     io_result[8];
+};
+
+static_assert(sizeof(PsxCd_File) == 40);
+
 void PSXCD_psxcd_memcpy() noexcept;
 void psxcd_sync() noexcept;
 void psxcd_critical_sync() noexcept;
