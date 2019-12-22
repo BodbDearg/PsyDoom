@@ -67,26 +67,20 @@ void _thunk_OpenFile() noexcept {
     v0 = OpenFile(a0);
 }
 
-void CloseFile() noexcept {
-loc_80031FD8:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0 << 2;
-    s0 += a0;
-    s0 <<= 3;
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 -= 0x6270;                                       // Result = gOpenPsxCdFiles[0] (800A9D90)
-    sw(ra, sp + 0x14);
-    a0 += s0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Closes the previously opened file slot index
+//------------------------------------------------------------------------------------------------------------------------------------------
+void CloseFile(const int32_t fileSlotIdx) noexcept {
+    VmPtr<PsxCd_File> pFile = &gOpenPsxCdFiles[fileSlotIdx];
+    
+    a0 = pFile;
     psxcd_close();
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x626C;                                       // Result = gOpenPsxCdFiles[1] (800A9D94)
-    at += s0;
-    sw(0, at);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    pFile->file.size = 0;
+}
+
+void _thunk_CloseFile() noexcept {
+    CloseFile(a0);
 }
 
 void SeekAndTellFile() noexcept {

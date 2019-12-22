@@ -536,7 +536,7 @@ loc_80031B04:
     a2 = s1;
     ReadFile();
     a0 = s0;
-    CloseFile();
+    _thunk_CloseFile();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7BE8;                                       // Result = STR_IWAD[0] (80077BE8)
     a0 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)

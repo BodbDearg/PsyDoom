@@ -1907,7 +1907,7 @@ loc_80023754:
     a2 = s4;
     ReadFile();
     a0 = s0;
-    CloseFile();
+    _thunk_CloseFile();
 loc_800237FC:
     v1 = lh(s2 + 0xA);
     v0 = 0x1D4A;                                        // Result = 00001D4A
