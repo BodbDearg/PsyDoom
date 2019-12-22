@@ -4,7 +4,7 @@
 
 void InitOpenFileSlots() noexcept;
 
-int32_t OpenFile(const uint32_t fileNum) noexcept;
+int32_t OpenFile(const CdMapTbl_File discFile) noexcept;
 void _thunk_OpenFile() noexcept;
 
 void CloseFile(const int32_t fileSlotIdx) noexcept;

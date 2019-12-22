@@ -1,5 +1,6 @@
 #include "w_wad.h"
 
+#include "Doom/cdmaptbl.h"
 #include "Doom/d_main.h"
 #include "i_file.h"
 #include "i_main.h"
@@ -33,7 +34,7 @@ static const VmPtr<uint32_t> gMainWadFileIdx(0x80078254);
 void W_Init() noexcept {
     // Initialize the list of open file slots and open the main IWAD file
     InitOpenFileSlots();
-    *gMainWadFileIdx = OpenFile(7);     // TODO: replace filenum with constant
+    *gMainWadFileIdx = OpenFile(CdMapTbl_File::PSXDOOM_WAD);
 
     // Read the header for the IWAD and ensure it has the correct id/magic
     VmSVal<wadinfo_t> wadinfo;

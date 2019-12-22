@@ -2,6 +2,8 @@
 
 #include "PsyQ/LIBCD.h"
 
+enum class CdMapTbl_File : uint32_t;
+
 // Tracks an open file on the CD-ROM.
 // Contains info about the file as well as the current IO location and status.
 struct PsxCd_File {
@@ -20,6 +22,16 @@ enum class PsxCd_SeekMode : uint32_t {
     END = 2     // Seek relative to the end
 };
 
+// Stores the location and size of a file on the CD-ROM.
+// Used by the retail version of the game for fast file access, presumably not used during development as that would be painful.
+// The location is stored in terms of start sector (2048 byte sector) number.
+struct PsxCd_MapTblEntry {
+    uint32_t    startSector;
+    uint32_t    size;
+};
+
+static_assert(sizeof(PsxCd_MapTblEntry) == 8);
+
 void PSXCD_psxcd_memcpy() noexcept;
 void psxcd_sync() noexcept;
 void psxcd_critical_sync() noexcept;
@@ -30,7 +42,10 @@ void psxcd_enable_callbacks() noexcept;
 void psxcd_init() noexcept;
 void psxcd_exit() noexcept;
 void psxcd_set_data_mode() noexcept;
-void psxcd_open() noexcept;
+
+PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept;
+void _thunk_psxcd_open() noexcept;
+
 void psxcd_init_pos() noexcept;
 void psxcd_async_on() noexcept;
 void psxcd_seeking_for_play() noexcept;

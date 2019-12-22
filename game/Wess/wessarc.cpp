@@ -145,7 +145,7 @@ void module_open() noexcept {
 loc_80043D20:
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    psxcd_open();
+    _thunk_psxcd_open();
     a3 = 0x80080000;                                    // Result = 80080000
     a3 -= 0x1004;                                       // Result = gWess_module_fileref[0] (8007EFFC)
     a2 = v0;
@@ -221,7 +221,7 @@ loc_80043E14:
 void data_open() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    psxcd_open();
+    _thunk_psxcd_open();
     a3 = 0x80080000;                                    // Result = 80080000
     a3 -= 0xFDC;                                        // Result = gWess_data_fileref[0] (8007F024)
     a2 = v0;

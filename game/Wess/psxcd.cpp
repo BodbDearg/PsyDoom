@@ -1,8 +1,13 @@
 #include "PSXCD.h"
 
+#include "Doom/cdmaptbl.h"
 #include "psxspu.h"
 #include "PsxVm/PsxVm.h"
+#include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBCD.h"
+
+// Used to hold a file temporarily after opening
+static const VmPtr<PsxCd_File> gPSXCD_cdfile(0x8007831C);
 
 void PSXCD_psxcd_memcpy() noexcept {
 loc_8003F200:
@@ -577,56 +582,47 @@ loc_8003FAAC:
     return;
 }
 
-void psxcd_open() noexcept {
-loc_8003FACC:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0 << 3;
-    sw(s1, sp + 0x14);
-    s1 = 0x80080000;                                    // Result = 80080000
-    s1 -= 0x7CE4;                                       // Result = gPSXCD_cdfile[0] (8007831C)
-    sw(ra, sp + 0x18);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x4C04;                                       // Result = CDMapTbl_SYSTEM_CNF[0] (80074C04)
-    at += s0;
-    a0 = lw(at);
-    a1 = s1;                                            // Result = gPSXCD_cdfile[0] (8007831C)
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Open a specified CD file for reading
+//------------------------------------------------------------------------------------------------------------------------------------------
+PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept {
+    // Sanity check the file is valid!
+    #if PC_PSX_DOOM_MODS
+        if (discFile >= CdMapTbl_File::END) {
+            FATAL_ERROR("psxcd_open: invalid file specified!");
+        }
+    #endif
+
+    // Figure out where the file is on disc and save it's size
+    const PsxCd_MapTblEntry& fileTableEntry = CD_MAP_TBL[(uint32_t) discFile];
+
+    a0 = fileTableEntry.startSector;
+    a1 = ptrToVmAddr(&gPSXCD_cdfile->file.pos);
     LIBCD_CdIntToPos();
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x4C08;                                       // Result = CDMapTbl_SYSTEM_CNF[1] (80074C08)
-    at += s0;
-    v1 = lw(at);
-    v0 = s1;                                            // Result = gPSXCD_cdfile[0] (8007831C)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7CE0);                                // Store to: gPSXCD_cdfile[1] (80078320)
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7CCC;                                       // Result = gPSXCD_cdfile[6] (80078334)
-    v1 = lwl(v1, v0 + 0x3);                             // Load from: gPSXCD_cdfile[0] (8007831F)
-    v1 = lwr(v1, v0);                                   // Load from: gPSXCD_cdfile[0] (8007831C)
-    swl(v1, a2 + 0x3);                                  // Store to: gPSXCD_cdfile[6] (80078337)
-    swr(v1, a2);                                        // Store to: gPSXCD_cdfile[6] (80078334)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7CC8);                                 // Store to: gPSXCD_cdfile[7] (80078338)
-    at = 0x80080000;                                    // Result = 80080000
-    sb(0, at - 0x7CC4);                                 // Store to: gPSXCD_cdfile[8] (8007833C)
-    at = 0x80080000;                                    // Result = 80080000
-    sb(0, at - 0x7CC3);                                 // Store to: gPSXCD_cdfile[8] (8007833D)
-    at = 0x80080000;                                    // Result = 80080000
-    sb(0, at - 0x7CC2);                                 // Store to: gPSXCD_cdfile[8] (8007833E)
-    at = 0x80080000;                                    // Result = 80080000
-    sb(0, at - 0x7CC1);                                 // Store to: gPSXCD_cdfile[8] (8007833F)
-    at = 0x80080000;                                    // Result = 80080000
-    sb(0, at - 0x7CC0);                                 // Store to: gPSXCD_cdfile[9] (80078340)
-    at = 0x80080000;                                    // Result = 80080000
-    sb(0, at - 0x7CBF);                                 // Store to: gPSXCD_cdfile[9] (80078341)
-    at = 0x80080000;                                    // Result = 80080000
-    sb(0, at - 0x7CBE);                                 // Store to: gPSXCD_cdfile[9] (80078342)
-    at = 0x80080000;                                    // Result = 80080000
-    sb(0, at - 0x7CBD);                                 // Store to: gPSXCD_cdfile[9] (80078343)
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
+
+    gPSXCD_cdfile->file.size = fileTableEntry.size;;
+
+    // PC-PSX: 'name' was not initialized in the original PSX code as filenames were not used in the retail version of the game.
+    // Initialize here for good measure:
+    #if PC_PSX_DOOM_MODS
+        for (char& c : gPSXCD_cdfile->file.name) {
+            c = 0;
+        }
+    #endif
+
+    // Initialize file IO position and status
+    gPSXCD_cdfile->new_io_loc = gPSXCD_cdfile->file.pos;
+    gPSXCD_cdfile->io_block_offset = 0;
+
+    for (uint8_t& statusByte : gPSXCD_cdfile->io_result) {
+        statusByte = 0;
+    }
+
+    return gPSXCD_cdfile.get();
+}
+
+void _thunk_psxcd_open() noexcept {
+    v0 = ptrToVmAddr(psxcd_open((CdMapTbl_File) a0));
 }
 
 void psxcd_init_pos() noexcept {
@@ -1444,9 +1440,12 @@ loc_80040818:
     sp += 0x20;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Placeholder for 'closing' a cd file - didn't need to do anything for retail PSX DOOM.
+// In the retail .exe an open cd file is simply a struct describing the current IO location, filename etc.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_close() noexcept {
-loc_80040830:
-    return;
+    // Nothing to do...
 }
 
 void psxcd_set_audio_mode() noexcept {

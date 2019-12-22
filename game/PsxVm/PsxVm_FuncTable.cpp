@@ -448,7 +448,7 @@ extern void psxcd_enable_callbacks() noexcept;
 extern void psxcd_init() noexcept;
 extern void psxcd_exit() noexcept;
 extern void psxcd_set_data_mode() noexcept;
-extern void psxcd_open() noexcept;
+extern void _thunk_psxcd_open() noexcept;
 extern void psxcd_init_pos() noexcept;
 extern void psxcd_async_on() noexcept;
 extern void psxcd_seeking_for_play() noexcept;
@@ -1432,7 +1432,7 @@ namespace PsxVm {
         { 0x8003F8B0, &psxcd_init },
         { 0x8003F98C, &psxcd_exit },
         { 0x8003F9BC, &psxcd_set_data_mode },
-        { 0x8003FACC, &psxcd_open },
+        { 0x8003FACC, &_thunk_psxcd_open },
         { 0x8003FB9C, &psxcd_init_pos },
         { 0x8003FBBC, &psxcd_async_on },
         { 0x8003FCC4, &psxcd_seeking_for_play },

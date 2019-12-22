@@ -23,7 +23,7 @@ loc_800415EC:
     wess_init();
     psxcd_init();
     a0 = 0xC9;                                          // Result = 000000C9
-    psxcd_open();
+    _thunk_psxcd_open();
     a0 = s1;
     s0 = v0;
     a1 = lw(s0 + 0x4);
