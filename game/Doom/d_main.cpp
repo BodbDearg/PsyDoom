@@ -111,7 +111,7 @@ loc_80012424:
     _thunk_Z_EndMalloc();
     sw(v0, gp + 0x8);                                   // Store to: gpDemoBuffer (800775E8)
     a0 = s0;
-    OpenFile();
+    _thunk_OpenFile();
     s0 = v0;
     a0 = s0;
     a1 = lw(gp + 0x8);                                  // Load from: gpDemoBuffer (800775E8)

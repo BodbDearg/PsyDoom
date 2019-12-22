@@ -1869,7 +1869,7 @@ loc_80023738:
 loc_80023754:
     a0 = lw(sp + 0x28);
     s5 = 0;                                             // Result = 00000000
-    OpenFile();
+    _thunk_OpenFile();
     s0 = v0;
     a0 = s0;
     a1 = 0;                                             // Result = 00000000

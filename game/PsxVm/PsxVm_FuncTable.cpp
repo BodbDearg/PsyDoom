@@ -341,7 +341,7 @@ extern void W_ReadMapLump() noexcept;
 extern void decode() noexcept;
 extern void getDecodedSize() noexcept;
 extern void InitOpenFileSlots() noexcept;
-extern void OpenFile() noexcept;
+extern void _thunk_OpenFile() noexcept;
 extern void CloseFile() noexcept;
 extern void SeekAndTellFile() noexcept;
 extern void ReadFile() noexcept;
@@ -1325,7 +1325,7 @@ namespace PsxVm {
         { 0x80031D90, &decode },
         { 0x80031E48, &getDecodedSize },
         { 0x80031EB4, &InitOpenFileSlots },
-        { 0x80031EDC, &OpenFile },
+        { 0x80031EDC, &_thunk_OpenFile },
         { 0x80031FD8, &CloseFile },
         { 0x80032024, &SeekAndTellFile },
         { 0x8003206C, &ReadFile },

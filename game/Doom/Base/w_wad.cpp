@@ -33,10 +33,7 @@ static const VmPtr<uint32_t> gMainWadFileIdx(0x80078254);
 void W_Init() noexcept {
     // Initialize the list of open file slots and open the main IWAD file
     InitOpenFileSlots();
-    
-    a0 = 7;
-    OpenFile();
-    *gMainWadFileIdx = v0;
+    *gMainWadFileIdx = OpenFile(7);     // TODO: replace filenum with constant
 
     // Read the header for the IWAD and ensure it has the correct id/magic
     VmSVal<wadinfo_t> wadinfo;
@@ -517,7 +514,7 @@ loc_80031B04:
     sw(ra, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
-    OpenFile();
+    _thunk_OpenFile();
     s0 = v0;
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
