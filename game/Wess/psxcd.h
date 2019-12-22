@@ -50,7 +50,10 @@ void psxcd_init_pos() noexcept;
 void psxcd_async_on() noexcept;
 void psxcd_seeking_for_play() noexcept;
 void psxcd_waiting_for_pause() noexcept;
-void psxcd_read() noexcept;
+
+int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept;
+void _thunk_psxcd_read() noexcept;
+
 void psxcd_async_read_cancel() noexcept;
 void psxcd_async_read() noexcept;
 void psxcd_seek() noexcept;

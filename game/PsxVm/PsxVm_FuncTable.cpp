@@ -453,7 +453,7 @@ extern void psxcd_init_pos() noexcept;
 extern void psxcd_async_on() noexcept;
 extern void psxcd_seeking_for_play() noexcept;
 extern void psxcd_waiting_for_pause() noexcept;
-extern void psxcd_read() noexcept;
+extern void _thunk_psxcd_read() noexcept;
 extern void psxcd_async_read_cancel() noexcept;
 extern void psxcd_async_read() noexcept;
 extern void psxcd_seek() noexcept;
@@ -1437,7 +1437,7 @@ namespace PsxVm {
         { 0x8003FBBC, &psxcd_async_on },
         { 0x8003FCC4, &psxcd_seeking_for_play },
         { 0x8003FD74, &psxcd_waiting_for_pause },
-        { 0x8003FE20, &psxcd_read },
+        { 0x8003FE20, &_thunk_psxcd_read },
         { 0x8003FE58, &psxcd_async_read_cancel },
         { 0x8003FEA4, &psxcd_async_read },
         { 0x800406D4, &psxcd_seek },

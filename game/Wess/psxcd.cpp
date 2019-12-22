@@ -798,29 +798,38 @@ loc_8003FE10:
     return;
 }
 
-void psxcd_read() noexcept {
-loc_8003FE20:
-    sp -= 0x18;
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Read the specified number of bytes synchronously from the given CD file.
+// Returns the number of bytes read.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept {
+    // Kick off the async read.
+    // Note: number of bytes read will not match request if there was an error!    
+    a0 = ptrToVmAddr(pDest);
+    a1 = numBytes;
+    a2 = ptrToVmAddr(&file);
     psxcd_async_read();
-    s0 = v0;
-loc_8003FE34:
-    // Need to emulate the cdrom so the read actually happens!
-    #if PC_PSX_DOOM_MODS
-        emulate_cdrom();
-        emulate_sound_if_required();
-    #endif
+    const int32_t retBytesRead = v0;
 
-    psxcd_async_on();
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s0;
-        if (bJump) goto loc_8003FE34;
-    }
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
+    // Continue reading until done
+    bool bIsDoingAsyncRead = true;
+
+    do {
+        // Need to emulate the cdrom so the read actually happens!
+        #if PC_PSX_DOOM_MODS
+            emulate_cdrom();
+            emulate_sound_if_required();
+        #endif
+
+        psxcd_async_on();
+        bIsDoingAsyncRead = (v0 != 0);
+    } while (bIsDoingAsyncRead);
+    
+    return retBytesRead;
+}
+
+void _thunk_psxcd_read() noexcept {
+    v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
 }
 
 void psxcd_async_read_cancel() noexcept {

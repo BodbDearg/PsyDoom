@@ -28,7 +28,7 @@ loc_800415EC:
     s0 = v0;
     a1 = lw(s0 + 0x4);
     a2 = s0;
-    psxcd_read();
+    _thunk_psxcd_read();
     a0 = s0;
     psxcd_close();
     s2 = 0x80080000;                                    // Result = 80080000

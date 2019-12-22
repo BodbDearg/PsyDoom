@@ -177,7 +177,7 @@ void module_read() noexcept {
 loc_80043D94:
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    psxcd_read();
+    _thunk_psxcd_read();
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -266,7 +266,7 @@ loc_80043E90:
     s0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
     a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
     a2 = v1;
-    psxcd_read();
+    _thunk_psxcd_read();
     a0 = s2;
     LIBSPU_SpuSetTransferStartAddr();
     a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
@@ -287,7 +287,7 @@ loc_80043F00:
     s0 += 0x6D7C;                                       // Result = gWess_data_read_chunk2[0] (80096D7C)
     a0 = s0;                                            // Result = gWess_data_read_chunk2[0] (80096D7C)
     a2 = v1;
-    psxcd_read();
+    _thunk_psxcd_read();
     a0 = 1;                                             // Result = 00000001
     LIBSPU_SpuIsTransferCompleted();
     a0 = s2;
@@ -303,7 +303,7 @@ loc_80043F54:
     s0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
     a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
     a2 = v1;
-    psxcd_read();
+    _thunk_psxcd_read();
     a0 = 1;                                             // Result = 00000001
     LIBSPU_SpuIsTransferCompleted();
     a0 = s2;

@@ -130,11 +130,8 @@ void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t siz
         a1 = 0;
         a2 = 0;
         psxcd_seek();
-
-        a0 = ptrToVmAddr(pBuffer);
-        a1 = warmupReadSize;
-        a2 = pFile;
-        psxcd_read();
+        
+        psxcd_read(pBuffer, warmupReadSize, *pFile);
     #endif
 
     // This is where we actually seek to the file offset and read it
@@ -143,14 +140,10 @@ void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t siz
     a2 = 0;
     psxcd_seek();
 
-    a0 = ptrToVmAddr(pBuffer);
-    a1 = size;
-    a2 = pFile;
-    psxcd_read();
-    const int32_t numBytesRead = v0;
+    const int32_t numBytesRead = psxcd_read(pBuffer, (int32_t) size, *pFile);
 
     // If the read failed then kill the program with an error
-    if (numBytesRead != size) {
+    if (numBytesRead != (int32_t) size) {
         a0 = 0x800113B4;        // Result = STR_ReadFile_Read_Err[0] (800113B4)                            
         a1 = numBytesRead;
         a2 = size;
