@@ -40,18 +40,15 @@ int32_t OpenFile(const uint32_t fileNum) noexcept {
 
     // Search for a free cd file slot and abort with an error if not found
     int32_t fileSlotIdx = 0;
-
-    {
-        VmPtr<PsxCd_File> pFileSlot = gOpenPsxCdFiles;
-
-        do {
-            if (pFileSlot->file.size == 0)
-                break;
+    VmPtr<PsxCd_File> pFileSlot = gOpenPsxCdFiles;
+    
+    do {
+        if (pFileSlot->file.size == 0)
+            break;
         
-            ++fileSlotIdx;
-            ++pFileSlot;
-        } while (fileSlotIdx < MAX_OPEN_FILES);
-    }
+        ++fileSlotIdx;
+        ++pFileSlot;
+    } while (fileSlotIdx < MAX_OPEN_FILES);
     
     if (fileSlotIdx >= MAX_OPEN_FILES) {
         a0 = 0x80011394;    // Result = STR_OpenFile_TooManyFiles_Err[0] (80011394)              
@@ -59,7 +56,7 @@ int32_t OpenFile(const uint32_t fileNum) noexcept {
     }
     
     // Save the opened file and return the opened file slot index
-    gOpenPsxCdFiles[fileSlotIdx] = *pOpenedFile;
+    *pFileSlot = *pOpenedFile;
     return fileSlotIdx;
 }
 
@@ -83,25 +80,27 @@ void _thunk_CloseFile() noexcept {
     CloseFile(a0);
 }
 
-void SeekAndTellFile() noexcept {
-loc_80032024:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0 << 2;
-    s0 += a0;
-    s0 <<= 3;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x6270;                                       // Result = gOpenPsxCdFiles[0] (800A9D90)
-    s0 += v0;
-    sw(ra, sp + 0x14);
-    a0 = s0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Seek within the specified file using the given seek mode and offset.
+// Returns the offset within the CD file after the seek.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t SeekAndTellFile(const int32_t fileSlotIdx, const int32_t offset, const PsxCd_SeekMode seekMode) noexcept {
+    VmPtr<PsxCd_File> pFile = &gOpenPsxCdFiles[fileSlotIdx];
+
+    a0 = pFile;
+    a1 = offset;
+    a2 = (uint32_t) seekMode;
     psxcd_seek();
-    a0 = s0;
+
+    a0 = pFile;
     psxcd_tell();
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    const int32_t newOffset = v0;
+
+    return newOffset;
+}
+
+void _thunk_SeekAndTellFile() noexcept {
+    v0 = SeekAndTellFile(a0, a1, (PsxCd_SeekMode) a2);
 }
 
 void ReadFile() noexcept {

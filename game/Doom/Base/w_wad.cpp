@@ -58,10 +58,7 @@ void W_Init() noexcept {
     *gpLumpInfo = (lumpinfo_t*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(lumpinfo_t), PU_STATIC, nullptr);
 
     // Read the lump info array
-    a0 = *gMainWadFileIdx;
-    a1 = wadinfo->infotableofs;
-    a2 = 0;
-    SeekAndTellFile();
+    SeekAndTellFile(*gMainWadFileIdx, wadinfo->infotableofs, PsxCd_SeekMode::SET);
 
     a0 = *gMainWadFileIdx;
     a1 = *gpLumpInfo;
@@ -69,14 +66,14 @@ void W_Init() noexcept {
     ReadFile();
 
     // Alloc an array of pointers for the lump cache and an array of bools to say whether each lump was loaded from the main IWAD or a map WAD
-    static_assert(sizeof(bool) == 1, "Expect bool to be 1 byte!");
-    
+    static_assert(sizeof(bool) == 1, "Expect bool to be 1 byte!");    
+
     *gpLumpCache = (VmPtr<void>*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(VmPtr<void>), PU_STATIC, nullptr);
     *gpbIsMainWadLump = (bool*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(bool), PU_STATIC, nullptr);
 
     // Zero initialize the lump cache pointers list the list of bools saying whether each lump was loaded from an IWAD
-    D_memset(gpLumpCache->get(), (std::byte) 0, *gNumLumps * sizeof(VmPtr<void>));
-    D_memset(gpbIsMainWadLump->get(), (std::byte) 0, *gNumLumps * sizeof(bool));
+    D_memset(gpLumpCache->get(), std::byte(0), *gNumLumps * sizeof(VmPtr<void>));
+    D_memset(gpbIsMainWadLump->get(), std::byte(0), *gNumLumps * sizeof(bool));
 }
 
 void W_CheckNumForName() noexcept {
@@ -257,7 +254,7 @@ loc_800316D8:
     a0 = *gMainWadFileIdx;
     a1 = lw(s1);
     s0 = v0;
-    SeekAndTellFile();
+    _thunk_SeekAndTellFile();
     a1 = s0;
     v0 = lw(s1 + 0x10);
     a2 = lw(s1);
@@ -275,7 +272,7 @@ loc_80031764:
     a0 = *gMainWadFileIdx;
     a1 = lw(s1);
     a2 = 0;
-    SeekAndTellFile();
+    _thunk_SeekAndTellFile();
     a1 = s3;
     v0 = lw(s1 + 0x10);
     a2 = lw(s1);
@@ -374,7 +371,7 @@ loc_800318B8:
     a0 = *gMainWadFileIdx;
     a1 = lw(s1);
     s0 = v0;
-    SeekAndTellFile();
+    _thunk_SeekAndTellFile();
     a1 = s0;
     v0 = lw(s1 + 0x10);
     a2 = lw(s1);
@@ -392,7 +389,7 @@ loc_80031944:
     a0 = *gMainWadFileIdx;
     a1 = lw(s1);
     a2 = 0;
-    SeekAndTellFile();
+    _thunk_SeekAndTellFile();
     a1 = s3;
     v0 = lw(s1 + 0x10);
     a2 = lw(s1);
@@ -519,7 +516,7 @@ loc_80031B04:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
     a2 = 2;                                             // Result = 00000002
-    SeekAndTellFile();
+    _thunk_SeekAndTellFile();
     s1 = v0;
     a1 = s1;
     a2 = 1;                                             // Result = 00000001
@@ -530,7 +527,7 @@ loc_80031B04:
     a1 = 0;                                             // Result = 00000000
     sw(v0, gp + 0x938);                                 // Store to: gpMapWadFileData (80077F18)
     a2 = 0;                                             // Result = 00000000
-    SeekAndTellFile();
+    _thunk_SeekAndTellFile();
     a0 = s0;
     a1 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)
     a2 = s1;

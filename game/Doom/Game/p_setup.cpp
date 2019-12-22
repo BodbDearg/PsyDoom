@@ -1874,7 +1874,7 @@ loc_80023754:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
     a2 = 2;                                             // Result = 00000002
-    SeekAndTellFile();
+    _thunk_SeekAndTellFile();
     s4 = v0;
     s3 = s4;
     a1 = s4 - 0x18;
@@ -1901,7 +1901,7 @@ loc_80023754:
     fp = lw(v0 - 0x4);
     s6 = lw(v0 - 0x8);
     a2 = 0;                                             // Result = 00000000
-    SeekAndTellFile();
+    _thunk_SeekAndTellFile();
     a0 = s0;
     a1 = s1;
     a2 = s4;

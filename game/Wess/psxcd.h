@@ -13,6 +13,13 @@ struct PsxCd_File {
 
 static_assert(sizeof(PsxCd_File) == 40);
 
+// Seek mode for seeking: similar to the C standard library seek modes
+enum class PsxCd_SeekMode : uint32_t {
+    SET = 0,    // Set the offset
+    CUR = 1,    // Seek relative to the current position
+    END = 2     // Seek relative to the end
+};
+
 void PSXCD_psxcd_memcpy() noexcept;
 void psxcd_sync() noexcept;
 void psxcd_critical_sync() noexcept;

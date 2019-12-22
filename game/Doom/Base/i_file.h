@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include "Wess/psxcd.h"
 
 void InitOpenFileSlots() noexcept;
 
@@ -10,5 +10,7 @@ void _thunk_OpenFile() noexcept;
 void CloseFile(const int32_t fileSlotIdx) noexcept;
 void _thunk_CloseFile() noexcept;
 
-void SeekAndTellFile() noexcept;
+int32_t SeekAndTellFile(const int32_t fileSlotIdx, const int32_t offset, const PsxCd_SeekMode seekMode) noexcept;
+void _thunk_SeekAndTellFile() noexcept;
+
 void ReadFile() noexcept;
