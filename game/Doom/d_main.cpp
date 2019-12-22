@@ -116,7 +116,7 @@ loc_80012424:
     a0 = s0;
     a1 = lw(gp + 0x8);                                  // Load from: gpDemoBuffer (800775E8)
     a2 = 0x4000;                                        // Result = 00004000
-    ReadFile();
+    _thunk_ReadFile();
     a0 = s0;
     _thunk_CloseFile();
     G_PlayDemoPtr();

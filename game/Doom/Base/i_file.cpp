@@ -103,61 +103,63 @@ void _thunk_SeekAndTellFile() noexcept {
     v0 = SeekAndTellFile(a0, a1, (PsxCd_SeekMode) a2);
 }
 
-void ReadFile() noexcept {
-loc_8003206C:
-    sp -= 0x28;
-    sw(s4, sp + 0x20);
-    s4 = a1;
-    sw(s2, sp + 0x18);
-    s2 = a2;
-    v0 = a0 << 2;
-    v0 += a0;
-    v0 <<= 3;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x6270;                                       // Result = gOpenPsxCdFiles[0] (800A9D90)
-    sw(s1, sp + 0x14);
-    s1 = v0 + v1;
-    a0 = s1;
-    sw(ra, sp + 0x24);
-    sw(s3, sp + 0x1C);
-    sw(s0, sp + 0x10);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Read the specified number of bytes from the given file.
+// If the read fails then the program dies with an error.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t size) noexcept {
+    // Grab the file being read and see what offset we are at in the file.
+    // We will seek to that offset before the read:
+    const VmPtr<PsxCd_File> pFile = &gOpenPsxCdFiles[fileSlotIdx];
+
+    a0 = pFile;
     psxcd_tell();
-    s3 = v0;
-    v0 = (s2 < 0x2001);
-    s0 = s2;
-    if (v0 != 0) goto loc_800320C4;
-    s0 = 0x2000;                                        // Result = 00002000
-loc_800320C4:
-    a0 = s1;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
+    const int32_t curFileOffset = v0;
+
+    // This is really strange... PSX DOOM appears to do some sort of dummy read of 8192 bytes at the start of the file
+    // before reading the actual data that has been requested. I don't know why this was done, maybe a workaround for
+    // some reliability issue or perhaps a trick to get the CD-ROM warmed up for the actual read? I'm not sure...
+    // In any case I'm disabling this code because it appears effectively useless inside an emulated PlayStation enviroment:
+    #if !PC_PSX_DOOM_MODS
+        constexpr uint32_t WARMUP_READ_MAX_SIZE = 8192;
+        uint32_t warmupReadSize = size;
+    
+        if (size > WARMUP_READ_MAX_SIZE) {
+            warmupReadSize = WARMUP_READ_MAX_SIZE;
+        }
+
+        a0 = pFile;
+        a1 = 0;
+        a2 = 0;
+        psxcd_seek();
+
+        a0 = ptrToVmAddr(pBuffer);
+        a1 = warmupReadSize;
+        a2 = pFile;
+        psxcd_read();
+    #endif
+
+    // This is where we actually seek to the file offset and read it
+    a0 = pFile;
+    a1 = curFileOffset;
+    a2 = 0;
     psxcd_seek();
-    a0 = s4;
-    a1 = s0;
-    a2 = s1;
+
+    a0 = ptrToVmAddr(pBuffer);
+    a1 = size;
+    a2 = pFile;
     psxcd_read();
-    a0 = s1;
-    a1 = s3;
-    a2 = 0;                                             // Result = 00000000
-    psxcd_seek();
-    a0 = s4;
-    a1 = s2;
-    a2 = s1;
-    psxcd_read();
-    s0 = v0;
-    a1 = s0;
-    if (s0 == s2) goto loc_80032120;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x13B4;                                       // Result = STR_ReadFile_Read_Err[0] (800113B4)
-    a2 = s2;
-    I_Error();
-loc_80032120:
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+    const int32_t numBytesRead = v0;
+
+    // If the read failed then kill the program with an error
+    if (numBytesRead != size) {
+        a0 = 0x800113B4;        // Result = STR_ReadFile_Read_Err[0] (800113B4)                            
+        a1 = numBytesRead;
+        a2 = size;
+        I_Error();
+    }
+}
+
+void _thunk_ReadFile() noexcept {
+    ReadFile(a0, vmAddrToPtr<void>(a1), a2);
 }

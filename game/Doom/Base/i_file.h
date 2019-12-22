@@ -13,4 +13,5 @@ void _thunk_CloseFile() noexcept;
 int32_t SeekAndTellFile(const int32_t fileSlotIdx, const int32_t offset, const PsxCd_SeekMode seekMode) noexcept;
 void _thunk_SeekAndTellFile() noexcept;
 
-void ReadFile() noexcept;
+void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t size) noexcept;
+void _thunk_ReadFile() noexcept;

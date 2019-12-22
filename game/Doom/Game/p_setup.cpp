@@ -1905,7 +1905,7 @@ loc_80023754:
     a0 = s0;
     a1 = s1;
     a2 = s4;
-    ReadFile();
+    _thunk_ReadFile();
     a0 = s0;
     _thunk_CloseFile();
 loc_800237FC:

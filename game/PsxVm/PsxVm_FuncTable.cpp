@@ -344,7 +344,7 @@ extern void InitOpenFileSlots() noexcept;
 extern void _thunk_OpenFile() noexcept;
 extern void _thunk_CloseFile() noexcept;
 extern void _thunk_SeekAndTellFile() noexcept;
-extern void ReadFile() noexcept;
+extern void _thunk_ReadFile() noexcept;
 extern void _thunk_Z_Malloc() noexcept;
 extern void _thunk_Z_EndMalloc() noexcept;
 extern void _thunk_Z_Free2() noexcept;
@@ -1328,7 +1328,7 @@ namespace PsxVm {
         { 0x80031EDC, &_thunk_OpenFile },
         { 0x80031FD8, &_thunk_CloseFile },
         { 0x80032024, &_thunk_SeekAndTellFile },
-        { 0x8003206C, &ReadFile },
+        { 0x8003206C, &_thunk_ReadFile },
         { 0x800321D0, &_thunk_Z_Malloc },
         { 0x800323C8, &_thunk_Z_EndMalloc },
         { 0x800325D8, &_thunk_Z_Free2 },

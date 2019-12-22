@@ -37,11 +37,7 @@ void W_Init() noexcept {
 
     // Read the header for the IWAD and ensure it has the correct id/magic
     VmSVal<wadinfo_t> wadinfo;
-
-    a0 = *gMainWadFileIdx;
-    a1 = wadinfo.addr();
-    a2 = sizeof(wadinfo_t);
-    ReadFile();
+    ReadFile(*gMainWadFileIdx, wadinfo.get(), sizeof(wadinfo_t));
 
     a0 = ptrToVmAddr(wadinfo->fileid);
     a1 = 0x80077BE8;        // Result = STR_IWAD[0] (80077BE8)
@@ -59,11 +55,7 @@ void W_Init() noexcept {
 
     // Read the lump info array
     SeekAndTellFile(*gMainWadFileIdx, wadinfo->infotableofs, PsxCd_SeekMode::SET);
-
-    a0 = *gMainWadFileIdx;
-    a1 = *gpLumpInfo;
-    a2 = *gNumLumps * sizeof(lumpinfo_t);
-    ReadFile();
+    ReadFile(*gMainWadFileIdx, gpLumpInfo->get(), *gNumLumps * sizeof(lumpinfo_t));
 
     // Alloc an array of pointers for the lump cache and an array of bools to say whether each lump was loaded from the main IWAD or a map WAD
     static_assert(sizeof(bool) == 1, "Expect bool to be 1 byte!");    
@@ -260,7 +252,7 @@ loc_800316D8:
     a2 = lw(s1);
     a0 = *gMainWadFileIdx;
     a2 = v0 - a2;
-    ReadFile();
+    _thunk_ReadFile();
     a0 = s0;
     a1 = s3;
     decode();
@@ -278,7 +270,7 @@ loc_80031764:
     a2 = lw(s1);
     a0 = *gMainWadFileIdx;
     a2 = v0 - a2;
-    ReadFile();
+    _thunk_ReadFile();
 loc_8003178C:
     ra = lw(sp + 0x30);
     s3 = lw(sp + 0x2C);
@@ -377,7 +369,7 @@ loc_800318B8:
     a2 = lw(s1);
     a0 = *gMainWadFileIdx;
     a2 = v0 - a2;
-    ReadFile();
+    _thunk_ReadFile();
     a0 = s0;
     a1 = s3;
     decode();
@@ -395,7 +387,7 @@ loc_80031944:
     a2 = lw(s1);
     a0 = *gMainWadFileIdx;
     a2 = v0 - a2;
-    ReadFile();
+    _thunk_ReadFile();
 loc_8003196C:
     v0 = *gpLumpInfo;
     v1 = s2 << 4;
@@ -531,7 +523,7 @@ loc_80031B04:
     a0 = s0;
     a1 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)
     a2 = s1;
-    ReadFile();
+    _thunk_ReadFile();
     a0 = s0;
     _thunk_CloseFile();
     a1 = 0x80070000;                                    // Result = 80070000
