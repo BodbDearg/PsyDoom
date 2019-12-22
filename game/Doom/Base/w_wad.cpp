@@ -4,6 +4,7 @@
 #include "i_file.h"
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
+#include "PsxVm/VmSVal.h"
 #include "z_zone.h"
 
 // WAD file header
@@ -25,9 +26,11 @@ const VmPtr<VmPtr<bool>>            gpbIsMainWadLump(0x800782F0);
 // Which of the open files is the main WAD file
 static const VmPtr<uint32_t> gMainWadFileIdx(0x80078254);
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the WAD file management system.
+// Opens up the main WAD file and verifies it is valid, and then reads all of the header info for all of the lumps.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void W_Init() noexcept {
-    sp -= 0x38;
-
     // Initialize the list of open file slots and open the main IWAD file
     InitOpenFileSlots();
     
@@ -36,14 +39,16 @@ void W_Init() noexcept {
     *gMainWadFileIdx = v0;
 
     // Read the header for the IWAD and ensure it has the correct id/magic
-    a0 = v0;
-    a1 = sp + 0x10;
-    a2 = 12;
+    VmSVal<wadinfo_t> wadinfo;
+
+    a0 = *gMainWadFileIdx;
+    a1 = wadinfo.addr();
+    a2 = sizeof(wadinfo_t);
     ReadFile();
 
-    a0 = sp + 0x10;
+    a0 = ptrToVmAddr(wadinfo->fileid);
     a1 = 0x80077BE8;        // Result = STR_IWAD[0] (80077BE8)
-    a2 = 4;
+    a2 = sizeof(wadinfo->fileid);
     D_strncasecmp();
 
     if (v0 != 0) {
@@ -52,13 +57,12 @@ void W_Init() noexcept {
     }
 
     // Save the number of lumps and alloc the lump info array
-    v0 = lw(sp + 0x14);
-    *gNumLumps = v0;
+    *gNumLumps = wadinfo->numlumps;
     *gpLumpInfo = (lumpinfo_t*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(lumpinfo_t), PU_STATIC, nullptr);
 
     // Read the lump info array
     a0 = *gMainWadFileIdx;
-    a1 = lw(sp + 0x18);
+    a1 = wadinfo->infotableofs;
     a2 = 0;
     SeekAndTellFile();
 
@@ -69,15 +73,13 @@ void W_Init() noexcept {
 
     // Alloc an array of pointers for the lump cache and an array of bools to say whether each lump was loaded from the main IWAD or a map WAD
     static_assert(sizeof(bool) == 1, "Expect bool to be 1 byte!");
-
+    
     *gpLumpCache = (VmPtr<void>*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(VmPtr<void>), PU_STATIC, nullptr);
     *gpbIsMainWadLump = (bool*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(bool), PU_STATIC, nullptr);
 
     // Zero initialize the lump cache pointers list the list of bools saying whether each lump was loaded from an IWAD
-    D_memset(gpLumpCache.get(), (std::byte) 0, *gNumLumps * sizeof(VmPtr<void>));
-    D_memset(gpbIsMainWadLump.get(), (std::byte) 0, *gNumLumps * sizeof(bool));
-    
-    sp += 0x38;
+    D_memset(gpLumpCache->get(), (std::byte) 0, *gNumLumps * sizeof(VmPtr<void>));
+    D_memset(gpbIsMainWadLump->get(), (std::byte) 0, *gNumLumps * sizeof(bool));
 }
 
 void W_CheckNumForName() noexcept {
