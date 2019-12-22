@@ -6,6 +6,15 @@
 #include "PsxVm/PsxVm.h"
 #include "z_zone.h"
 
+// WAD file header
+struct wadinfo_t {
+    char        fileid[4];      // Should always be "IWAD" for PSX DOOM
+    int32_t     numlumps;       // The number of lumps in the WAD
+    int32_t     infotableofs;   // Offset in the WAD of the lump infos array
+};
+
+static_assert(sizeof(wadinfo_t) == 12);
+
 // Lump related state: the number of lumps, info on each lump, pointers to loaded lumps and
 // whether each lump was loaded from the main IWAD or not.
 const VmPtr<int32_t>                gNumLumps(0x800781EC);
