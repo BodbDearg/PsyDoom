@@ -238,8 +238,7 @@ loc_80032C24:
     a1 = 0x20;                                          // Result = 00000020
     a2 = 0;                                             // Result = 00000000
     W_CacheLumpNum();
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D10);                               // Load from: gpbIsMainWadLump (800782F0)
+    v1 = *gpbIsMainWadLump;
     v1 += s2;
     v1 = lbu(v1);
     a0 = v0;
@@ -964,8 +963,7 @@ loc_800337B8:
     a2 = 0;                                             // Result = 00000000
     W_CacheLumpNum();
     v1 = lh(s3 + 0x10);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7D10);                               // Load from: gpbIsMainWadLump (800782F0)
+    a0 = *gpbIsMainWadLump;
     a0 += v1;
     v1 = lbu(a0);
     s0 = v0;

@@ -37,8 +37,7 @@ loc_8002E2F4:
     v0 = -1;                                            // Result = FFFFFFFF
     if (v1 != v0) goto loc_8002E3F8;
     a0 = lh(s1 + 0x10);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D10);                               // Load from: gpbIsMainWadLump (800782F0)
+    v0 = *gpbIsMainWadLump;
     v0 += a0;
     v0 = lbu(v0);
     {
@@ -47,8 +46,7 @@ loc_8002E2F4:
         if (bJump) goto loc_8002E384;
     }
     v1 = a0 << 2;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7DC4);                               // Load from: gpLumpCache (8007823C)
+    v0 = *gpLumpCache;
     s0 = 0x800A0000;                                    // Result = 800A0000
     s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
     v1 += v0;
@@ -62,8 +60,7 @@ loc_8002E378:
     v0 += a0;
     goto loc_8002E58C;
 loc_8002E384:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7DC4);                               // Load from: gpLumpCache (8007823C)
+    v1 = *gpLumpCache;
     v0 += v1;
     s0 = lw(v0);
     a0 = sp + 0x10;

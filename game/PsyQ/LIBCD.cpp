@@ -1011,6 +1011,11 @@ loc_800558C4:
 
 void LIBCD_CD_sync() noexcept {
 loc_800558DC:
+    // Emulate the CD a little in case code is polling for CD data etc.
+    #if PC_PSX_DOOM_MODS
+        emulate_cdrom();
+    #endif
+
     sp -= 0x38;
     sw(s5, sp + 0x2C);
     s5 = a0;

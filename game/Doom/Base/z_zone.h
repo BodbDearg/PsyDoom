@@ -8,7 +8,7 @@
 //  - Tags < 100 are not overwritten until freed.
 //  - Tags >= 100 are purgable whenever needed.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static constexpr int16_t PU_STATIC      = 1;    // Static entire execution time
+static constexpr int16_t PU_STATIC      = 1;    // Static the entire execution time
 
 // TODO: FIGURE OUT PURGE MODES
 #if 0

@@ -1,5 +1,6 @@
 #include "r_sky.h"
 
+#include "Doom/Base/w_wad.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 
@@ -31,8 +32,7 @@ loc_8002C07C:
     a0 += v1;
     sh(a0, sp + 0x1A);
     v0 = lh(a1 + 0x10);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7DC4);                               // Load from: gpLumpCache (8007823C)
+    v1 = *gpLumpCache;
     v0 <<= 2;
     v0 += v1;
     a1 = lw(v0);

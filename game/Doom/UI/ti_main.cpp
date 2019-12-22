@@ -191,8 +191,7 @@ loc_80035310:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
     v0 = lh(v0 + 0x10);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7DC4);                               // Load from: gpLumpCache (8007823C)
+    v1 = *gpLumpCache;
     v0 <<= 2;
     v0 += v1;
     a1 = lw(v0);
@@ -453,8 +452,7 @@ loc_80035724:
     a0 += v1;
     sh(a0, sp + 0x3A);
     v0 = lh(a1 + 0x10);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7DC4);                               // Load from: gpLumpCache (8007823C)
+    v1 = *gpLumpCache;
     v0 <<= 2;
     v0 += v1;
     a1 = lw(v0);

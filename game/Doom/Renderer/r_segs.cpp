@@ -232,8 +232,7 @@ loc_8002D704:
     s0 = 0x800A0000;                                    // Result = 800A0000
     s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
     v0 = lh(s1 + 0x10);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7DC4);                               // Load from: gpLumpCache (8007823C)
+    v1 = *gpLumpCache;
     v0 <<= 2;
     v0 += v1;
     a0 = lw(v0);

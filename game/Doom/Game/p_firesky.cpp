@@ -1,13 +1,13 @@
 #include "p_firesky.h"
 
+#include "Doom/Base/w_wad.h"
 #include "PsxVm/PsxVm.h"
 
 void P_UpdateFireSky() noexcept {
 loc_80027CB0:
     t3 = a0;
     v0 = lh(t3 + 0x10);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7DC4);                               // Load from: gpLumpCache (8007823C)
+    v1 = *gpLumpCache;
     v0 <<= 2;
     v0 += v1;
     v0 = lw(v0);

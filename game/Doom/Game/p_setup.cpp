@@ -1368,8 +1368,7 @@ loc_80022F0C:
     sh(v1, at - 0x7D34);                                // Store to: gPaletteClutId_CurMapSky (800782CC)
     if (a0 == 0) goto loc_80022FE8;
     a0 = lh(a0 + 0x10);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7E3C);                               // Load from: gpLumpInfo (800781C4)
+    v1 = *gpLumpInfo;
     v0 = a0 << 4;
     v0 += v1;
     v1 = lbu(v0 + 0xC);
@@ -1914,8 +1913,7 @@ loc_800237FC:
     v0 = 0x1D4A;                                        // Result = 00001D4A
     if (v1 != v0) goto loc_800238DC;
     v0 = lh(s2 + 0xC);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7E14);                               // Load from: gNumLumps (800781EC)
+    v1 = *gNumLumps;
     v0 = (i32(v0) < i32(v1));
     if (v0 == 0) goto loc_800238DC;
     v1 = lhu(s2 + 0xE);
@@ -1925,8 +1923,7 @@ loc_800237FC:
     a0 = s2 + 0x18;
     getDecodedSize();
     v1 = lh(s2 + 0xC);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E3C);                               // Load from: gpLumpInfo (800781C4)
+    a0 = *gpLumpInfo;
     v1 <<= 4;
     v1 += a0;
     v1 = lw(v1 + 0x4);
@@ -1963,8 +1960,7 @@ loc_800238E4:
     sw(fp, s1 + 0x14);
 loc_800238E8:
     v0 = lh(s1 + 0xC);
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7DC4);                               // Load from: gpLumpCache (8007823C)
+    a1 = *gpLumpCache;
     v0 <<= 2;
     a0 = v0 + a1;
     v0 = lw(a0);
@@ -1984,8 +1980,7 @@ loc_8002391C:
     v1 += a1;
     sw(v0, v1);
     a0 = lh(s1 + 0xC);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D10);                               // Load from: gpbIsMainWadLump (800782F0)
+    v0 = *gpbIsMainWadLump;
     v1 = lbu(s1 + 0xE);
     v0 += a0;
     sb(v1, v0);
