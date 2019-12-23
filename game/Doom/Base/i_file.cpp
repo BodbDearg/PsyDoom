@@ -83,14 +83,10 @@ void _thunk_CloseFile() noexcept {
 // Returns the offset within the CD file after the seek.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t SeekAndTellFile(const int32_t fileSlotIdx, const int32_t offset, const PsxCd_SeekMode seekMode) noexcept {
-    VmPtr<PsxCd_File> pFile = &gOpenPsxCdFiles[fileSlotIdx];
+    PsxCd_File& file = gOpenPsxCdFiles[fileSlotIdx];
+    psxcd_seek(file, offset, seekMode);
 
-    a0 = pFile;
-    a1 = offset;
-    a2 = (uint32_t) seekMode;
-    _thunk_psxcd_seek();
-
-    a0 = pFile;
+    a0 = ptrToVmAddr(&file);
     psxcd_tell();
     const int32_t newOffset = v0;
 
@@ -108,9 +104,9 @@ void _thunk_SeekAndTellFile() noexcept {
 void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t size) noexcept {
     // Grab the file being read and see what offset we are at in the file.
     // We will seek to that offset before the read:
-    const VmPtr<PsxCd_File> pFile = &gOpenPsxCdFiles[fileSlotIdx];
+    PsxCd_File& file = gOpenPsxCdFiles[fileSlotIdx];
 
-    a0 = pFile;
+    a0 = ptrToVmAddr(&file);
     psxcd_tell();
     const int32_t curFileOffset = v0;
 
@@ -126,21 +122,13 @@ void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t siz
             warmupReadSize = WARMUP_READ_MAX_SIZE;
         }
 
-        a0 = pFile;
-        a1 = 0;
-        a2 = 0;
-        psxcd_seek();
-        
-        psxcd_read(pBuffer, warmupReadSize, *pFile);
+        psxcd_seek(file, 0, PsxCd_SeekMode::SET);
+        psxcd_read(pBuffer, warmupReadSize, file);
     #endif
 
     // This is where we actually seek to the file offset and read it
-    a0 = pFile;
-    a1 = curFileOffset;
-    a2 = 0;
-    _thunk_psxcd_seek();
-
-    const int32_t numBytesRead = psxcd_read(pBuffer, (int32_t) size, *pFile);
+    psxcd_seek(file, curFileOffset, PsxCd_SeekMode::SET);
+    const int32_t numBytesRead = psxcd_read(pBuffer, (int32_t) size, file);
 
     // If the read failed then kill the program with an error
     if (numBytesRead != (int32_t) size) {

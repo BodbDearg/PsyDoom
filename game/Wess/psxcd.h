@@ -57,9 +57,6 @@ void psxcd_waiting_for_pause() noexcept;
 int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept;
 void _thunk_psxcd_read() noexcept;
 
-void psxcd_async_read_cancel() noexcept;
-void psxcd_async_read() noexcept;
-
 int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept;
 void _thunk_psxcd_seek() noexcept;
 

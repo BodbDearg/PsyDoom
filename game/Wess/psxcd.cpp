@@ -12,6 +12,10 @@ static const VmPtr<PsxCd_File> gPSXCD_cdfile(0x8007831C);
 // Last IO location on disc
 static const VmPtr<CdlLOC> gPSXCD_cur_io_loc(0x80077D78);
 
+// Function forward declarations
+void psxcd_async_read_cancel() noexcept;
+void psxcd_async_read() noexcept;
+
 void PSXCD_psxcd_memcpy() noexcept {
 loc_8003F200:
     sp -= 8;
