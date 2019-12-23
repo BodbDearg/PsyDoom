@@ -1459,34 +1459,41 @@ loc_80023068:
 void P_SetupLevel() noexcept {
 loc_800230D4:
     sp -= 0x98;
+    sw(s0, sp + 0x78);
+    sw(s1, sp + 0x7C);
+    sw(s2, sp + 0x80);
+    sw(s3, sp + 0x84);
     sw(s4, sp + 0x88);
+    sw(s5, sp + 0x8C);
+
     s4 = a0;
+
     a0 = *gpMainMemZone;
     a1 = 0x26;
-    sw(ra, sp + 0x90);
-    sw(s5, sp + 0x8C);
-    sw(s3, sp + 0x84);
-    sw(s2, sp + 0x80);
-    sw(s1, sp + 0x7C);
-    sw(s0, sp + 0x78);
     Z_FreeTags();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FF4);                               // Load from: gbIsLevelBeingRestarted (80077FF4)
-    if (v0 != 0) goto loc_80023140;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
-    a0 = *gpMainMemZone;
-    v0 &= 1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)
-    a1 = 8;                                             // Result = 00000008
-    Z_FreeTags();
-loc_80023140:
+
+    v0 = 0x80070000;                // Result = 80070000
+    v0 = lw(v0 + 0x7FF4);           // Load from: gbIsLevelBeingRestarted (80077FF4)
+
+    if (v0 == 0) {
+        v0 = 0x80070000;            // Result = 80070000
+        v0 = lw(v0 + 0x7C08);       // Load from: gLockedTexPagesMask (80077C08)
+        a0 = *gpMainMemZone;
+        v0 &= 1;
+        at = 0x80070000;            // Result = 80070000
+        sw(v0, at + 0x7C08);        // Store to: gLockedTexPagesMask (80077C08)
+        a1 = 8;
+        Z_FreeTags();
+    }
+
     s1 = 0;                                             // Result = 00000000
     I_ResetTexCache();
+    
     a0 = *gpMainMemZone;
     Z_CheckHeap();
+
     M_ClearRandom();
+
     v1 = 0;                                             // Result = 00000000
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x7F20);                                 // Store to: gTotalKills (80077F20)
@@ -1494,30 +1501,31 @@ loc_80023140:
     sw(0, at + 0x7F2C);                                 // Store to: gTotalItems (80077F2C)
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x7FEC);                                 // Store to: gTotalSecret (80077FEC)
-loc_8002317C:
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x774C;                                       // Result = gPlayer1[32] (800A88B4)
-    at += v1;
-    sw(0, at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7744;                                       // Result = gPlayer1[34] (800A88BC)
-    at += v1;
-    sw(0, at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7748;                                       // Result = gPlayer1[33] (800A88B8)
-    at += v1;
-    sw(0, at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x77B0;                                       // Result = gPlayer1[19] (800A8850)
-    at += v1;
-    sw(0, at);
-    s1++;
-    v0 = (i32(s1) < 2);
-    v1 += 0x12C;
-    if (v0 != 0) goto loc_8002317C;
+
+    do {
+        at = 0x800B0000;                                    // Result = 800B0000
+        at -= 0x774C;                                       // Result = gPlayer1[32] (800A88B4)
+        at += v1;
+        sw(0, at);
+        at = 0x800B0000;                                    // Result = 800B0000
+        at -= 0x7744;                                       // Result = gPlayer1[34] (800A88BC)
+        at += v1;
+        sw(0, at);
+        at = 0x800B0000;                                    // Result = 800B0000
+        at -= 0x7748;                                       // Result = gPlayer1[33] (800A88B8)
+        at += v1;
+        sw(0, at);
+        at = 0x800B0000;                                    // Result = 800B0000
+        at -= 0x77B0;                                       // Result = gPlayer1[19] (800A8850)
+        at += v1;
+        sw(0, at);
+        s1++;
+        v0 = (i32(s1) < 2);
+        v1 += 0x12C;
+    } while (v0 != 0);
+
     a1 = s4 - 1;
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
+    v0 = 0x80096550;                                    // Result = gThinkerCap[0] (80096550)
     sw(v0, v0);                                         // Store to: gThinkerCap[0] (80096550)
     at = 0x80090000;                                    // Result = 80090000
     sw(v0, at + 0x6554);                                // Store to: gThinkerCap[1] (80096554)
@@ -1534,9 +1542,11 @@ loc_8002317C:
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7FF0);                                 // Store to: gNumMObjKilled (80078010)
     a0 = a1;
-    if (i32(a1) >= 0) goto loc_80023220;
-    a0 = s4 + 6;
-loc_80023220:
+
+    if (i32(a1) < 0) {
+        a0 = s4 + 6;
+    }
+    
     v0 = u32(i32(a0) >> 3);
     a0 = v0 << 1;
     a0 += v0;
@@ -1546,15 +1556,15 @@ loc_80023220:
     a0 += v0;
     a0 += 8;
     W_OpenMapWad();
-    v1 = 0x66660000;                                    // Result = 66660000
-    v1 |= 0x6667;                                       // Result = 66666667
+
+    v1 = 0x66666667;        // Result = 66666667
     mult(s4, v1);
     a0 = sp + 0x10;
-    v1 = 0x4D;                                          // Result = 0000004D
+    v1 = 0x4D;
     sb(v1, sp + 0x10);
-    v1 = 0x41;                                          // Result = 00000041
+    v1 = 0x41;
     sb(v1, sp + 0x11);
-    v1 = 0x50;                                          // Result = 00000050
+    v1 = 0x50;
     sb(v1, sp + 0x12);
     v1 = u32(i32(s4) >> 31);
     s5 = v0;
@@ -1572,25 +1582,29 @@ loc_80023220:
     sb(v1, sp + 0x14);
     W_MapGetNumForName();
     s2 = v0;
-    v0 = -1;                                            // Result = FFFFFFFF
+    v0 = -1;
     s0 = s2 + 4;
-    if (s2 != v0) goto loc_800232C8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0xAA0;                                        // Result = STR_P_SetupLevel_NotFound_Err[0] (80010AA0)
-    a1 = sp + 0x10;
-    I_Error();
-loc_800232C8:
+
+    if (s2 == v0) {
+        a0 = 0x80010AA0;        // Result = STR_P_SetupLevel_NotFound_Err[0] (80010AA0)
+        a1 = sp + 0x10;
+        I_Error();
+    }
+
     a0 = s2 + 0xA;
     P_LoadBlockMap();
+
+    // Load vertexes
     a0 = s0;
     W_MapLumpLength();
-    v1 = 0x10000;                                       // Result = 00010000
+    v1 = 0x10000;
     v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_800232F8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x8FC;                                        // Result = STR_P_LoadVertexes_LumpTooBig_Err[0] (800108FC)
-    I_Error();
-loc_800232F8:
+
+    if (v1 != 0) {
+        a0 = 0x800108FC;    // Result = STR_P_LoadVertexes_LumpTooBig_Err[0] (800108FC)
+        I_Error();
+    }
+
     a0 = s0;
     W_MapLumpLength();
     v0 >>= 3;
@@ -1606,90 +1620,105 @@ loc_800232F8:
     a1 = 0x800A0000;                                    // Result = 800A0000
     a1 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
     sw(v0, gp + 0xC04);                                 // Store to: gpVertexes (800781E4)
-    a2 = 1;                                             // Result = 00000001
+    a2 = 1;
     W_ReadMapLump();
     a1 = 0x800A0000;                                    // Result = 800A0000
     a1 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
     a3 = lw(gp + 0xA38);                                // Load from: gNumVertexes (80078018)
     a0 = lw(gp + 0xC04);                                // Load from: gpVertexes (800781E4)
-    a2 = 0;                                             // Result = 00000000
-    if (i32(a3) <= 0) goto loc_80023388;
-    v1 = a0 + 0x18;
-loc_8002335C:
-    v0 = lw(a1);
-    a2++;
-    sw(v0, a0);
-    a0 += 0x1C;
-    v0 = lw(a1 + 0x4);
-    a1 += 8;
-    sw(0, v1);
-    sw(v0, v1 - 0x14);
-    v0 = (i32(a2) < i32(a3));
-    v1 += 0x1C;
-    if (v0 != 0) goto loc_8002335C;
-loc_80023388:
+    a2 = 0;
+
+    if (i32(a3) > 0) {
+        v1 = a0 + 0x18;
+        
+        do {
+            v0 = lw(a1);
+            a2++;
+            sw(v0, a0);
+            a0 += 0x1C;
+            v0 = lw(a1 + 0x4);
+            a1 += 8;
+            sw(0, v1);
+            sw(v0, v1 - 0x14);
+            v0 = (i32(a2) < i32(a3));
+            v1 += 0x1C;
+        } while (v0 != 0);
+    }
+
+    // Load subsectors, sidedefs and linedefs
     a0 = s2 + 8;
     P_LoadSectors();
+
     a0 = s2 + 3;
     P_LoadSideDefs();
+
     a0 = s2 + 2;
     P_LoadLineDefs();
+
+    // Load subsectors
     s1 = s2 + 6;
     a0 = s1;
     W_MapLumpLength();
-    v1 = 0x10000;                                       // Result = 00010000
+
+    v1 = 0x10000;
     v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_800233CC;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x930;                                        // Result = STR_P_LoadSubSectors_LumpTooBig_Err[0] (80010930)
-    I_Error();
-loc_800233CC:
+
+    if (v1 != 0) {
+        a0 = 0x80010930;        // Result = STR_P_LoadSubSectors_LumpTooBig_Err[0] (80010930)
+        a0 += 0x930;            
+        I_Error();
+    }
+
     a0 = s1;
     W_MapLumpLength();
     v0 >>= 2;
     a1 = v0 << 4;
     a2 = 2;
     a0 = *gpMainMemZone;
-    s0 = 0x800A0000;                                    // Result = 800A0000
-    s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    sw(v0, gp + 0xC44);                                 // Store to: gNumSubsectors (80078224)
+    s0 = 0x80098748;            // Result = gTmpWadLumpBuffer[0] (80098748)        
+    sw(v0, gp + 0xC44);         // Store to: gNumSubsectors (80078224)
     a3 = 0;
     _thunk_Z_Malloc();
     a0 = s1;
-    a1 = 0x800A0000;                                    // Result = 800A0000
-    a1 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    sw(v0, gp + 0x960);                                 // Store to: gpSubsectors (80077F40)
-    a2 = 1;                                             // Result = 00000001
+    a1 = 0x800A0000;            // Result = 800A0000
+    a1 -= 0x78B8;               // Result = gTmpWadLumpBuffer[0] (80098748)
+    sw(v0, gp + 0x960);         // Store to: gpSubsectors (80077F40)
+    a2 = 1;
     W_ReadMapLump();
-    a1 = 0;                                             // Result = 00000000
-    a2 = lw(gp + 0xC44);                                // Load from: gNumSubsectors (80078224)
-    a0 = lw(gp + 0x960);                                // Load from: gpSubsectors (80077F40)
+    a1 = 0;
+    a2 = lw(gp + 0xC44);        // Load from: gNumSubsectors (80078224)
+    a0 = lw(gp + 0x960);        // Load from: gpSubsectors (80077F40)
     a2 <<= 4;
     _thunk_D_memset();
-    a1 = lw(gp + 0xC44);                                // Load from: gNumSubsectors (80078224)
-    v0 = lw(gp + 0x960);                                // Load from: gpSubsectors (80077F40)
-    a0 = 0;                                             // Result = 00000000
-    if (i32(a1) <= 0) goto loc_80023468;
-    v1 = v0 + 0xA;
-loc_8002343C:
-    v0 = lhu(s0);
-    a0++;
-    sh(v0, v1 - 0x6);
-    v0 = lhu(s0 + 0x2);
-    s0 += 4;
-    sh(0, v1 - 0x2);
-    sh(0, v1);
-    sh(v0, v1 - 0x4);
-    v0 = (i32(a0) < i32(a1));
-    v1 += 0x10;
-    if (v0 != 0) goto loc_8002343C;
-loc_80023468:
+    a1 = lw(gp + 0xC44);        // Load from: gNumSubsectors (80078224)
+    v0 = lw(gp + 0x960);        // Load from: gpSubsectors (80077F40)
+    a0 = 0;
+
+    if (i32(a1) > 0) {
+        v1 = v0 + 0xA;
+
+        do {
+            v0 = lhu(s0);
+            a0++;
+            sh(v0, v1 - 0x6);
+            v0 = lhu(s0 + 0x2);
+            s0 += 4;
+            sh(0, v1 - 0x2);
+            sh(0, v1);
+            sh(v0, v1 - 0x4);
+            v0 = (i32(a0) < i32(a1));
+            v1 += 0x10;
+        } while (v0 != 0);
+    }
+
+    // Load nodes, segs and leafs
     a0 = s2 + 7;
     P_LoadNodes();
     a0 = s2 + 5;
     P_LoadSegs();
     a0 = s2 + 0xB;
     P_LoadLeafs();
+
     s0 = s2 + 9;
     a0 = s0;
     W_MapLumpLength();
@@ -1700,24 +1729,24 @@ loc_80023468:
     _thunk_Z_Malloc();
     a0 = s0;
     a1 = v0;
-    sw(a1, gp + 0xB04);                                 // Store to: gpRejectMatrix (800780E4)
-    a2 = 1;                                             // Result = 00000001
+    sw(a1, gp + 0xB04);         // Store to: gpRejectMatrix (800780E4)
+    a2 = 1;
     W_ReadMapLump();
     s0 = s2 + 1;
     P_GroupLines();
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 -= 0x7F94;                                       // Result = gDeathmatchStarts[0] (8009806C)
-    sw(v0, gp + 0xA80);                                 // Store to: gpDeathmatchP (80078060)
+    v0 = 0x8009806C;            // Result = gDeathmatchStarts[0] (8009806C)              
+    sw(v0, gp + 0xA80);         // Store to: gpDeathmatchP (80078060)
     a0 = s0;
     W_MapLumpLength();
-    v1 = 0x10000;                                       // Result = 00010000
+    v1 = 0x10000;
     v1 = (i32(v1) < i32(v0));
-    s2 = 0;                                             // Result = 00000000
-    if (v1 == 0) goto loc_800234F4;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x984;                                        // Result = STR_P_LoadThings_LumpTooBig_Err[0] (80010984)
-    I_Error();
-loc_800234F4:
+    s2 = 0;
+    
+    if (v1 != 0) {
+        a0 = 0x80010984;    // Result = STR_P_LoadThings_LumpTooBig_Err[0] (80010984)
+        I_Error();
+    }
+
     a0 = s0;
     W_MapLumpLength();
     v1 = 0xCCCC0000;                                    // Result = CCCC0000
@@ -1732,34 +1761,38 @@ loc_800234F4:
     v0 = hi;
     s3 = v0 >> 3;
     W_ReadMapLump();
-    if (s3 == 0) goto loc_800235A0;
-    s0 = s1 + 6;                                        // Result = gTmpWadLumpBuffer[1] (8009874E)
-loc_80023538:
-    v0 = lhu(s1);
-    sh(v0, s1);
-    v0 = lhu(s0 - 0x4);
-    v1 = lhu(s0 - 0x2);
-    a1 = lhu(s0);
-    a2 = lhu(s0 + 0x2);
-    a0 = s1;
-    sh(v0, s0 - 0x4);
-    sh(v1, s0 - 0x2);
-    sh(a1, s0);
-    sh(a2, s0 + 0x2);
-    P_SpawnMapThing();
-    a1 = lh(s0);
-    v0 = (i32(a1) < 0x1000);
-    s2++;
-    if (v0 != 0) goto loc_80023590;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x9A0;                                        // Result = STR_P_LoadThings_BadDoomEdNum_Err[0] (800109A0)
-    I_Error();
-loc_80023590:
-    s0 += 0xA;
-    v0 = (i32(s2) < i32(s3));
-    s1 += 0xA;
-    if (v0 != 0) goto loc_80023538;
-loc_800235A0:
+
+    if (s3 != 0) {
+        s0 = s1 + 6;                                        // Result = gTmpWadLumpBuffer[1] (8009874E)
+
+        do {
+            v0 = lhu(s1);
+            sh(v0, s1);
+            v0 = lhu(s0 - 0x4);
+            v1 = lhu(s0 - 0x2);
+            a1 = lhu(s0);
+            a2 = lhu(s0 + 0x2);
+            a0 = s1;
+            sh(v0, s0 - 0x4);
+            sh(v1, s0 - 0x2);
+            sh(a1, s0);
+            sh(a2, s0 + 0x2);
+            P_SpawnMapThing();
+            a1 = lh(s0);
+            v0 = (i32(a1) < 0x1000);
+            s2++;
+        
+            if (v0 == 0) {
+                a0 = 0x800109A0;    // Result = STR_P_LoadThings_BadDoomEdNum_Err[0] (800109A0)    
+                I_Error();
+            }
+        
+            s0 += 0xA;
+            v0 = (i32(s2) < i32(s3));
+            s1 += 0xA;
+        } while (v0 != 0);
+    }
+
     P_SpawnSpecials();
     a0 = *gpMainMemZone;
     a1 = s5;
@@ -1767,72 +1800,77 @@ loc_800235A0:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7FF4);                               // Load from: gbIsLevelBeingRestarted (80077FF4)
     s0 = s4 - 1;
-    if (v0 != 0) goto loc_8002360C;
-    v0 = s0;
-    if (i32(s0) >= 0) goto loc_800235D8;
-    v0 = s4 + 6;
-loc_800235D8:
-    v0 = u32(i32(v0) >> 3);
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 3;
-    v0 <<= 3;
-    v0 = s0 - v0;
-    s1 = v1 + v0;
-    a0 = s1 + 0x18;
-    P_LoadBlocks();
-    P_InitMapTextures();
-    a0 = s1 + 0x10;
-    P_LoadBlocks();
-loc_8002360C:
+
+    if (v0 == 0) {
+        v0 = s0;
+
+        if (i32(s0) < 0) {
+            v0 = s4 + 6;
+        }
+
+        v0 = u32(i32(v0) >> 3);
+        v1 = v0 << 1;
+        v1 += v0;
+        v1 <<= 3;
+        v0 <<= 3;
+        v0 = s0 - v0;
+        s1 = v1 + v0;
+        a0 = s1 + 0x18;
+        P_LoadBlocks();
+        P_InitMapTextures();
+
+        a0 = s1 + 0x10;
+        P_LoadBlocks();
+    }
+
     a0 = *gpMainMemZone;
     Z_FreeMemory();
     s0 = v0;
     v0 = 0xBFFF;                                        // Result = 0000BFFF
     v0 = (i32(v0) < i32(s0));
-    if (v0 != 0) goto loc_80023648;
-    Z_DumpHeap();
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0xABC;                                        // Result = STR_P_SetupLevel_OutOfMem_Err[0] (80010ABC)
-    a1 = s0;
-    I_Error();
-loc_80023648:
+
+    if (v0 == 0) {
+        Z_DumpHeap();
+        a0 = 0x80010ABC;    // Result = STR_P_SetupLevel_OutOfMem_Err[0] (80010ABC)
+        a1 = s0;
+        I_Error();
+    }
+
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7FA4);                               // Load from: gNetGame (8007805C)
-    if (v0 == 0) goto loc_800236C8;
-    s1 = 0;                                             // Result = 00000000
-    I_NetHandshake();
-    s3 = 0x800B0000;                                    // Result = 800B0000
-    s3 -= 0x7184;                                       // Result = gPlayer1MapThing[0] (800A8E7C)
-    s2 = 0;                                             // Result = 00000000
-loc_80023670:
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0;                                             // Result = 00000000
-    a0 = lh(s3);                                        // Load from: gPlayer1MapThing[0] (800A8E7C)
-    a1 = lh(s3 + 0x2);                                  // Load from: gPlayer1MapThing[1] (800A8E7E)
-    a0 <<= 16;
-    a1 <<= 16;
-    P_SpawnMObj();
-    s0 = v0;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    at += s2;
-    sw(s0, at);
-    a0 = s1;
-    G_DoReborn();
-    a0 = s0;
-    P_RemoveMObj();
-    s1++;
-    v0 = (i32(s1) < 2);
-    s2 += 0x12C;
-    if (v0 != 0) goto loc_80023670;
-    goto loc_800236D8;
-loc_800236C8:
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 -= 0x7184;                                       // Result = gPlayer1MapThing[0] (800A8E7C)
-    P_SpawnPlayer();
-loc_800236D8:
-    ra = lw(sp + 0x90);
+
+    if (v0 != 0) {
+        s1 = 0;
+        I_NetHandshake();
+        s3 = 0x800A8E7C;            // Result = gPlayer1MapThing[0] (800A8E7C)
+        s2 = 0;
+
+        do {
+            a2 = 0;
+            a3 = 0;
+            a0 = lh(s3);                // Load from: gPlayer1MapThing[0] (800A8E7C)
+            a1 = lh(s3 + 0x2);          // Load from: gPlayer1MapThing[1] (800A8E7E)
+            a0 <<= 16;
+            a1 <<= 16;
+            P_SpawnMObj();
+            s0 = v0;
+            at = 0x800A87EC;            // Result = gPlayer1[0] (800A87EC)
+            at += s2;
+            sw(s0, at);
+            a0 = s1;
+            G_DoReborn();
+            a0 = s0;
+            P_RemoveMObj();
+            s1++;
+            v0 = (i32(s1) < 2);
+            s2 += 0x12C;
+        } while (v0 != 0);
+    }
+    else {
+        a0 = 0x800A8E7C;    // Result = gPlayer1MapThing[0] (800A8E7C)
+        P_SpawnPlayer();
+    }
+
     s5 = lw(sp + 0x8C);
     s4 = lw(sp + 0x88);
     s3 = lw(sp + 0x84);
@@ -1840,7 +1878,6 @@ loc_800236D8:
     s1 = lw(sp + 0x7C);
     s0 = lw(sp + 0x78);
     sp += 0x98;
-    return;
 }
 
 void P_LoadBlocks() noexcept {
@@ -1954,7 +1991,7 @@ loc_8002388C:
     v0 = s7;
     goto loc_80023738;
 loc_800238DC:
-    s5 = 1;                                             // Result = 00000001
+    s5 = 1;
     goto loc_8002388C;
 loc_800238E4:
     sw(fp, s1 + 0x14);
