@@ -206,7 +206,7 @@ void module_close() noexcept {
 loc_80043DF4:
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    psxcd_close();
+    _thunk_psxcd_close();
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -383,7 +383,7 @@ loc_80044058:
 void data_close() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    psxcd_close();
+    _thunk_psxcd_close();
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;

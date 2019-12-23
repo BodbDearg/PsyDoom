@@ -30,7 +30,7 @@ loc_800415EC:
     a2 = s0;
     _thunk_psxcd_read();
     a0 = s0;
-    psxcd_close();
+    _thunk_psxcd_close();
     s2 = 0x80080000;                                    // Result = 80080000
     s2 -= 0x1364;                                       // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
     a0 = s2;                                            // Result = gDoomSfxLoadedSamples[0] (8007EC9C)

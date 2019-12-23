@@ -458,7 +458,7 @@ extern void psxcd_async_read_cancel() noexcept;
 extern void psxcd_async_read() noexcept;
 extern void _thunk_psxcd_seek() noexcept;
 extern void psxcd_tell() noexcept;
-extern void psxcd_close() noexcept;
+extern void _thunk_psxcd_close() noexcept;
 extern void psxcd_set_audio_mode() noexcept;
 extern void psxcd_set_loop_volume() noexcept;
 extern void psxcd_play_at_andloop() noexcept;
@@ -1442,7 +1442,7 @@ namespace PsxVm {
         { 0x8003FEA4, &psxcd_async_read },
         { 0x800406D4, &_thunk_psxcd_seek },
         { 0x800407C8, &psxcd_tell },
-        { 0x80040830, &psxcd_close },
+        { 0x80040830, &_thunk_psxcd_close },
         { 0x80040838, &psxcd_set_audio_mode },
         { 0x800408DC, &psxcd_set_loop_volume },
         { 0x800408E8, &psxcd_play_at_andloop },

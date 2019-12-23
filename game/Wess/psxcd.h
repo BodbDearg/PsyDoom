@@ -61,7 +61,10 @@ int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) 
 void _thunk_psxcd_seek() noexcept;
 
 void psxcd_tell() noexcept;
-void psxcd_close() noexcept;
+
+void psxcd_close(PsxCd_File& file) noexcept;
+void _thunk_psxcd_close() noexcept;
+
 void psxcd_set_audio_mode() noexcept;
 void psxcd_set_loop_volume() noexcept;
 void psxcd_play_at_andloop() noexcept;

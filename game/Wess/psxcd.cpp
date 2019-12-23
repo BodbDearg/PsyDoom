@@ -1443,8 +1443,12 @@ loc_80040818:
 // Placeholder for 'closing' a cd file - didn't need to do anything for retail PSX DOOM.
 // In the retail .exe an open cd file is simply a struct describing the current IO location, filename etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void psxcd_close() noexcept {
+void psxcd_close([[maybe_unused]] PsxCd_File& file) noexcept {
     // Nothing to do...
+}
+
+void _thunk_psxcd_close() noexcept {
+    psxcd_close(*vmAddrToPtr<PsxCd_File>(a0));
 }
 
 void psxcd_set_audio_mode() noexcept {

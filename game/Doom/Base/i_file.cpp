@@ -66,12 +66,9 @@ void _thunk_OpenFile() noexcept {
 // Closes the previously opened file slot index
 //------------------------------------------------------------------------------------------------------------------------------------------
 void CloseFile(const int32_t fileSlotIdx) noexcept {
-    VmPtr<PsxCd_File> pFile = &gOpenPsxCdFiles[fileSlotIdx];
-    
-    a0 = pFile;
-    psxcd_close();
-
-    pFile->file.size = 0;
+    PsxCd_File& file = gOpenPsxCdFiles[fileSlotIdx];
+    psxcd_close(file);
+    file.file.size = 0;
 }
 
 void _thunk_CloseFile() noexcept {
