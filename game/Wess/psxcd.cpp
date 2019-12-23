@@ -1,6 +1,7 @@
 #include "PSXCD.h"
 
 #include "Doom/cdmaptbl.h"
+#include "PcPsx/ModMgr.h"
 #include "psxspu.h"
 #include "PsxVm/PsxVm.h"
 #include "PsxVm/VmPtr.h"
@@ -600,6 +601,17 @@ PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept {
         }
     #endif
 
+    #if PC_PSX_DOOM_MODS
+        // Modding mechanism: allow files to be overriden with user files in a specified directory.
+        if (ModMgr::areOverridesAvailableForFile(discFile)) {
+            return (ModMgr::openOverridenFile(discFile, *gPSXCD_cdfile)) ? gPSXCD_cdfile.get() : nullptr;
+        }
+
+        // Clear all fields in the PSXCD file prior to using it - some fields like the track number don't appear to be set otherwise.
+        // This is required for there to be no issues with modding.
+        *gPSXCD_cdfile = {};
+    #endif
+
     // Figure out where the file is on disc and save it's size
     const PsxCd_MapTblEntry& fileTableEntry = CD_MAP_TBL[(uint32_t) discFile];
 
@@ -607,15 +619,7 @@ PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept {
     a1 = ptrToVmAddr(&gPSXCD_cdfile->file.pos);
     LIBCD_CdIntToPos();
 
-    gPSXCD_cdfile->file.size = fileTableEntry.size;;
-
-    // PC-PSX: 'name' was not initialized in the original PSX code as filenames were not used in the retail version of the game.
-    // Initialize here for good measure:
-    #if PC_PSX_DOOM_MODS
-        for (char& c : gPSXCD_cdfile->file.name) {
-            c = 0;
-        }
-    #endif
+    gPSXCD_cdfile->file.size = fileTableEntry.size;
 
     // Initialize file IO position and status
     gPSXCD_cdfile->new_io_loc = gPSXCD_cdfile->file.pos;
@@ -810,6 +814,13 @@ loc_8003FE10:
 // Returns the number of bytes read.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept {
+    // Modding mechanism: allow files to be overriden with user files in a specified directory
+    #if PC_PSX_DOOM_MODS
+        if (ModMgr::isFileOverriden(file)) {
+            return ModMgr::readFromOverridenFile(pDest, numBytes, file);
+        }
+    #endif
+
     // Kick off the async read.
     // Note: number of bytes read will not match request if there was an error!    
     a0 = ptrToVmAddr(pDest);
@@ -1346,6 +1357,13 @@ loc_800406A0:
 // Returns '0' on success, any other value on failure.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept {
+    // Modding mechanism: allow files to be overriden with user files in a specified directory
+    #if PC_PSX_DOOM_MODS
+        if (ModMgr::isFileOverriden(file)) {
+            return ModMgr::seekForOverridenFile(file, offset, mode);
+        }
+    #endif
+
     // Is this an actual valid file? If not then just NOP the call and return '0' for 'success':
     if (file.file.pos == CdlLOC{ 0, 0, 0, 0 })
         return 0;
@@ -1415,6 +1433,13 @@ void _thunk_psxcd_seek() noexcept {
 // Returns the current IO offset within the given file
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxcd_tell(PsxCd_File& file) noexcept {
+    // Modding mechanism: allow files to be overriden with user files in a specified directory
+    #if PC_PSX_DOOM_MODS
+        if (ModMgr::isFileOverriden(file)) {
+            return ModMgr::tellForOverridenFile(file);
+        }
+    #endif
+
     // Is this a real file descriptor or just a dummy one?
     // If it's real figure out the current io offset within the file, otherwise just return '0':
     if (file.file.pos != 0) {       
@@ -1443,7 +1468,15 @@ void _thunk_psxcd_tell() noexcept {
 // In the retail .exe an open cd file is simply a struct describing the current IO location, filename etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_close([[maybe_unused]] PsxCd_File& file) noexcept {
-    // Nothing to do...
+    // Modding mechanism: allow files to be overriden with user files in a specified directory
+    #if PC_PSX_DOOM_MODS
+        if (ModMgr::isFileOverriden(file)) {
+            ModMgr::closeOverridenFile(file);
+            return;
+        }
+    #endif
+
+    // Nothing to do if this is an ordinary game file...
 }
 
 void _thunk_psxcd_close() noexcept {

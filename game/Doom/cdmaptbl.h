@@ -287,10 +287,13 @@ enum class CdMapTbl_File : uint32_t {
     MAP57_LCD,
     MAP58_LCD,
     MAP59_LCD,
-    MAP60_LCD,    
+    MAP60_LCD,
     END             // Note: not an actual entry, used as an end of list marker
 };
 
 // A list of all the files in the game, their start sector on the CD and size.
 // This table can be indexed by using the enum above:
 extern const PsxCd_MapTblEntry CD_MAP_TBL[];
+
+// The names of all the files
+extern const char* const CD_MAP_FILENAMES[];

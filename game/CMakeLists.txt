@@ -123,6 +123,8 @@ set(SOURCE_FILES
     "PcPsx/FatalErrors.cpp"
     "PcPsx/FatalErrors.h"
     "PcPsx/Macros.h"
+    "PcPsx/ModMgr.cpp"
+    "PcPsx/ModMgr.h"
     "PcPsx/Types.h"
     "PcPsx/Video.cpp"
     "PcPsx/Video.h"
