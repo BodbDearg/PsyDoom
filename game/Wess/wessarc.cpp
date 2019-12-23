@@ -196,7 +196,7 @@ loc_80043DB4:
 void module_tell() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    psxcd_tell();
+    _thunk_psxcd_tell();
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;

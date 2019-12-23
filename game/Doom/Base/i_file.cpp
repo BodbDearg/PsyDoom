@@ -82,12 +82,7 @@ void _thunk_CloseFile() noexcept {
 int32_t SeekAndTellFile(const int32_t fileSlotIdx, const int32_t offset, const PsxCd_SeekMode seekMode) noexcept {
     PsxCd_File& file = gOpenPsxCdFiles[fileSlotIdx];
     psxcd_seek(file, offset, seekMode);
-
-    a0 = ptrToVmAddr(&file);
-    psxcd_tell();
-    const int32_t newOffset = v0;
-
-    return newOffset;
+    return psxcd_tell(file);
 }
 
 void _thunk_SeekAndTellFile() noexcept {
@@ -102,10 +97,7 @@ void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t siz
     // Grab the file being read and see what offset we are at in the file.
     // We will seek to that offset before the read:
     PsxCd_File& file = gOpenPsxCdFiles[fileSlotIdx];
-
-    a0 = ptrToVmAddr(&file);
-    psxcd_tell();
-    const int32_t curFileOffset = v0;
+    const int32_t curFileOffset = psxcd_tell(file);
 
     // This is really strange... PSX DOOM appears to do some sort of dummy read of 8192 bytes at the start of the file
     // before reading the actual data that has been requested. I don't know why this was done, maybe a workaround for

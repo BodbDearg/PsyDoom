@@ -1411,32 +1411,31 @@ void _thunk_psxcd_seek() noexcept {
     v0 = psxcd_seek(*vmAddrToPtr<PsxCd_File>(a0), a1, (PsxCd_SeekMode) a2);
 }
 
-void psxcd_tell() noexcept {
-loc_800407C8:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1);
-    if (v0 == 0) goto loc_80040814;
-    a0 = s1 + 0x18;
-    LIBCD_CdPosToInt();
-    a0 = s1;
-    s0 = v0;
-    LIBCD_CdPosToInt();
-    s0 -= v0;
-    v0 = lw(s1 + 0x1C);
-    s0 <<= 11;
-    v0 += s0;
-    goto loc_80040818;
-loc_80040814:
-    v0 = 0;                                             // Result = 00000000
-loc_80040818:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the current IO offset within the given file
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t psxcd_tell(PsxCd_File& file) noexcept {
+    // Is this a real file descriptor or just a dummy one?
+    // If it's real figure out the current io offset within the file, otherwise just return '0':
+    if (file.file.pos != 0) {       
+        a0 = ptrToVmAddr(&file.new_io_loc);
+        LIBCD_CdPosToInt();
+        const int32_t curSec = v0;
+
+        a0 = ptrToVmAddr(&file.file.pos);
+        LIBCD_CdPosToInt();
+        const int32_t fileStartSec = v0;
+
+        const int32_t sectorInFile = curSec - fileStartSec;
+        const int32_t curOffset = sectorInFile * CD_SECTOR_SIZE + file.io_block_offset;
+        return curOffset;
+    } else {
+        return 0;
+    }
+}
+
+void _thunk_psxcd_tell() noexcept {
+    v0 = psxcd_tell(*vmAddrToPtr<PsxCd_File>(a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -60,7 +60,8 @@ void _thunk_psxcd_read() noexcept;
 int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept;
 void _thunk_psxcd_seek() noexcept;
 
-void psxcd_tell() noexcept;
+int32_t psxcd_tell(PsxCd_File& file) noexcept;
+void _thunk_psxcd_tell() noexcept;
 
 void psxcd_close(PsxCd_File& file) noexcept;
 void _thunk_psxcd_close() noexcept;
