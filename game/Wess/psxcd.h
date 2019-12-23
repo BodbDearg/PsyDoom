@@ -4,6 +4,9 @@
 
 enum class CdMapTbl_File : uint32_t;
 
+// Number of bytes in a CD-ROM sector
+static constexpr int32_t CD_SECTOR_SIZE = 2048;
+
 // Tracks an open file on the CD-ROM.
 // Contains info about the file as well as the current IO location and status.
 struct PsxCd_File {
@@ -56,7 +59,10 @@ void _thunk_psxcd_read() noexcept;
 
 void psxcd_async_read_cancel() noexcept;
 void psxcd_async_read() noexcept;
-void psxcd_seek() noexcept;
+
+int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept;
+void _thunk_psxcd_seek() noexcept;
+
 void psxcd_tell() noexcept;
 void psxcd_close() noexcept;
 void psxcd_set_audio_mode() noexcept;

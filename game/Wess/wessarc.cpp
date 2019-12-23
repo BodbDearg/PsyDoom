@@ -187,7 +187,7 @@ void module_seek() noexcept {
 loc_80043DB4:
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    psxcd_seek();
+    _thunk_psxcd_seek();
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -345,7 +345,7 @@ void data_read() noexcept {
 loc_80043FF4:
     a0 = s2;
     a2 = 0;                                             // Result = 00000000
-    psxcd_seek();
+    _thunk_psxcd_seek();
     v0 = 1;                                             // Result = 00000001
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0xFB4);                                 // Store to: 8007F04C

@@ -88,7 +88,7 @@ int32_t SeekAndTellFile(const int32_t fileSlotIdx, const int32_t offset, const P
     a0 = pFile;
     a1 = offset;
     a2 = (uint32_t) seekMode;
-    psxcd_seek();
+    _thunk_psxcd_seek();
 
     a0 = pFile;
     psxcd_tell();
@@ -138,7 +138,7 @@ void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t siz
     a0 = pFile;
     a1 = curFileOffset;
     a2 = 0;
-    psxcd_seek();
+    _thunk_psxcd_seek();
 
     const int32_t numBytesRead = psxcd_read(pBuffer, (int32_t) size, *pFile);
 

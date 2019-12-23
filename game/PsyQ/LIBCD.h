@@ -9,6 +9,25 @@ struct CdlLOC {
     uint8_t second;
     uint8_t sector;
     uint8_t track;      // Unused
+
+    bool operator == (const CdlLOC& other) const noexcept = default;
+
+    // Conversion to and from a single 32-bit int
+    void operator = (const uint32_t loc32) noexcept {
+        minute = (uint8_t)(loc32 >> 0);
+        second = (uint8_t)(loc32 >> 8);
+        sector = (uint8_t)(loc32 >> 16);
+        track = (uint8_t)(loc32 >> 24);
+    }
+
+    inline operator uint32_t () const noexcept {
+        return (
+            ((uint32_t) minute << 0 ) |
+            ((uint32_t) second << 8 ) |
+            ((uint32_t) sector << 16) |
+            ((uint32_t) track  << 24)
+        );
+    }
 };
 
 static_assert(sizeof(CdlLOC) == 4);
