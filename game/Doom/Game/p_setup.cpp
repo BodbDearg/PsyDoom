@@ -1733,7 +1733,6 @@ void P_LoadBlocks() noexcept {
     sw(s7, sp + 0x4C);
     sw(fp, sp + 0x50);
     sw(s6, sp + 0x48);
-    sw(s5, sp + 0x44);
     sw(s4, sp + 0x40);
     sw(s3, sp + 0x3C);
     sw(s2, sp + 0x38);
@@ -1742,173 +1741,185 @@ void P_LoadBlocks() noexcept {
     sw(a0, sp + 0x28);
 
     s7 = 0;
-    v0 = s7;
 
-loc_80023738:
-    v0 = (i32(v0) < 4);
-    s7++;
+    while (true) {
+        if (i32(s7) >= 4) {
+            a0 = 0x80010AE4;    // Result = STR_P_LoadBlocks_DataFailure_Err[0] (80010AE4)
+            I_Error();
+        }
 
-    if (v0 == 0) {
-        a0 = 0x80010AE4;    // Result = STR_P_LoadBlocks_DataFailure_Err[0] (80010AE4)
-        I_Error();
-    }
+        s7++;
 
-    a0 = lw(sp + 0x28);    
-    _thunk_OpenFile();
-    s0 = v0;
+        a0 = lw(sp + 0x28);    
+        _thunk_OpenFile();
+        s0 = v0;
 
-    a0 = s0;
-    a1 = 0;
-    a2 = 2;
-    _thunk_SeekAndTellFile();
-    s4 = v0;
-    s3 = s4;
+        a0 = s0;
+        a1 = 0;
+        a2 = 2;
+        _thunk_SeekAndTellFile();
+        s4 = v0;
+        s3 = s4;
 
-    a0 = *gpMainMemZone;
-    a1 = s4 - 0x18;
-    a2 = 1;    
-    a3 = 0;
-    _thunk_Z_Malloc();
-    s1 = v0 - 0x18;
-    s2 = s1;
+        a0 = *gpMainMemZone;
+        a1 = s4 - 0x18;
+        a2 = 1;    
+        a3 = 0;
+        _thunk_Z_Malloc();
+        s1 = v0 - 0x18;
+        s2 = s1;
 
-    v1 = lw(v0 - 0x18);
-    a0 = lw(v0 - 0x14);
-    a1 = lw(v0 - 0x10);
-    a2 = lw(v0 - 0xC);
-    sw(v1, sp + 0x10);
-    sw(a0, sp + 0x14);
-    sw(a1, sp + 0x18);
-    sw(a2, sp + 0x1C);
-    v1 = lw(v0 - 0x8);
-    a0 = lw(v0 - 0x4);
-    sw(v1, sp + 0x20);
-    sw(a0, sp + 0x24);
-    fp = lw(v0 - 0x4);
-    s6 = lw(v0 - 0x8);
+        v1 = lw(v0 - 0x18);
+        a0 = lw(v0 - 0x14);
+        a1 = lw(v0 - 0x10);
+        a2 = lw(v0 - 0xC);
+        sw(v1, sp + 0x10);
+        sw(a0, sp + 0x14);
+        sw(a1, sp + 0x18);
+        sw(a2, sp + 0x1C);
+        v1 = lw(v0 - 0x8);
+        a0 = lw(v0 - 0x4);
+        sw(v1, sp + 0x20);
+        sw(a0, sp + 0x24);
+        fp = lw(v0 - 0x4);
+        s6 = lw(v0 - 0x8);
 
-    a0 = s0;
-    a1 = 0;
-    a2 = 0;
-    _thunk_SeekAndTellFile();
+        a0 = s0;
+        a1 = 0;
+        a2 = 0;
+        _thunk_SeekAndTellFile();
 
-    a0 = s0;
-    a1 = s1;
-    a2 = s4;
-    _thunk_ReadFile();
+        a0 = s0;
+        a1 = s1;
+        a2 = s4;
+        _thunk_ReadFile();
     
-    a0 = s0;
-    _thunk_CloseFile();
-    
-    s5 = 0;
+        a0 = s0;
+        _thunk_CloseFile();
 
-loc_800237FC:
-    v1 = lh(s2 + 0xA);
-    v0 = 0x1D4A;
-    if (v1 != v0) goto loc_800238DC;
-    v0 = lh(s2 + 0xC);
-    v1 = *gNumLumps;
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_800238DC;
-    v1 = lhu(s2 + 0xE);
-    v0 = (v1 < 2);
-    if (v0 == 0) goto loc_800238DC;
-    if (v1 != 0) goto loc_80023870;
-    
-    a0 = s2 + 0x18;
-    getDecodedSize();
+        bool b1 = true;
 
-    v1 = lh(s2 + 0xC);
-    a0 = *gpLumpInfo;
-    v1 <<= 4;
-    v1 += a0;
-    v1 = lw(v1 + 0x4);
-    if (v0 != v1) goto loc_800238DC;
+        do {
+            v1 = lh(s2 + 0xA);
+            
+            if (v1 != 0x1D4A) {
+                b1 = false;
+                break;
+            }
 
-loc_80023870:
-    v0 = lw(s2);
-    s3 -= v0;
-    if (i32(s3) < 0) goto loc_800238DC;
-    s2 += v0;
-    if (s3 != 0) goto loc_800237FC;
+            v0 = lh(s2 + 0xC);
+            v1 = *gNumLumps;
 
-loc_8002388C:
-    if (s5 == 0) goto loc_800238E4;
-    v0 = lw(sp + 0x10);
-    v1 = lw(sp + 0x14);
-    a0 = lw(sp + 0x18);
-    a1 = lw(sp + 0x1C);
-    sw(v0, s1);
-    sw(v1, s1 + 0x4);
-    sw(a0, s1 + 0x8);
-    sw(a1, s1 + 0xC);
-    v0 = lw(sp + 0x20);
-    v1 = lw(sp + 0x24);
-    sw(v0, s1 + 0x10);
-    sw(v1, s1 + 0x14);
-    
-    a0 = *gpMainMemZone;
-    a1 = s1 + 0x18;
-    _thunk_Z_Free2();
+            if (i32(v0) >= i32(v1)) {
+                b1 = false;
+                break;
+            }
 
-    v0 = s7;
-    goto loc_80023738;
+            v1 = lhu(s2 + 0xE);
 
-loc_800238DC:
-    s5 = 1;
-    goto loc_8002388C;
+            if (v1 >= 2) {
+                b1 = false;
+                break;
+            }
 
-loc_800238E4:
-    sw(fp, s1 + 0x14);
+            if (v1 == 0) {    
+                a0 = s2 + 0x18;
+                getDecodedSize();
 
-loc_800238E8:
-    v0 = lh(s1 + 0xC);
-    a1 = *gpLumpCache;
-    v0 <<= 2;
-    a0 = v0 + a1;
-    v0 = s1 + 0x18;
+                v1 = lh(s2 + 0xC);                
+                v1 <<= 4;
+                a0 = *gpLumpInfo;
+                v1 += a0;
+                v1 = lw(v1 + 0x4);
 
-    if (lw(a0) != 0) {
-        sw(0, s1 + 0x4);
-        sh(0, s1 + 0x8);
-        sh(0, s1 + 0xA);
-    } else {
-        v1 = lh(s1 + 0xC);
-        sw(a0, s1 + 0x4);
-        v1 <<= 2;
-        v1 += a1;
-        sw(v0, v1);
-        a0 = lh(s1 + 0xC);
-        v0 = *gpbIsMainWadLump;
-        v1 = lbu(s1 + 0xE);
-        v0 += a0;
-        sb(v1, v0);
-    }
-    
-    v0 = lw(s1);
-    s4 -= v0;
-    v0 += s1;
+                if (v0 != v1) {
+                    b1 = false;
+                    break;
+                }
+            }
 
-    if (s4 != 0) {
+            v0 = lw(s2);
+            s3 -= v0;
+
+            if (i32(s3) < 0) {
+                b1 = false;
+                break;
+            }
+
+            s2 += v0;
+        } while (s3 != 0);
+
+        if (b1) {
+            sw(fp, s1 + 0x14);
+            break;
+        }
+
+        v0 = lw(sp + 0x10);
+        v1 = lw(sp + 0x14);
+        a0 = lw(sp + 0x18);
+        a1 = lw(sp + 0x1C);
+        sw(v0, s1);
+        sw(v1, s1 + 0x4);
+        sw(a0, s1 + 0x8);
+        sw(a1, s1 + 0xC);
+        v0 = lw(sp + 0x20);
+        v1 = lw(sp + 0x24);
         sw(v0, s1 + 0x10);
-    } else {
-        v0 = s6 - s1;
+        sw(v1, s1 + 0x14);
+    
+        a0 = *gpMainMemZone;
+        a1 = s1 + 0x18;
+        _thunk_Z_Free2();
+    }
 
-        if (s6 != 0) {
-            sw(v0, s1);
+    do {
+        v0 = lh(s1 + 0xC);        
+        v0 <<= 2;
+        a1 = *gpLumpCache;
+        a0 = v0 + a1;
+        v0 = s1 + 0x18;
+
+        if (lw(a0) != 0) {
+            sw(0, s1 + 0x4);
+            sh(0, s1 + 0x8);
+            sh(0, s1 + 0xA);
+        } else {
+            v1 = lh(s1 + 0xC);
+            sw(a0, s1 + 0x4);
+            v1 <<= 2;
+            v1 += a1;
+            sw(v0, v1);
+            a0 = lh(s1 + 0xC);
+            v0 = *gpbIsMainWadLump;
+            v1 = lbu(s1 + 0xE);
+            v0 += a0;
+            sb(v1, v0);
         }
     
-        sw(s6, s1 + 0x10);
-    }
-    
-    v0 = lw(s1 + 0x10);
+        v0 = lw(s1);
+        s4 -= v0;
+        v0 += s1;
 
-    if (v0 != 0) {
-        sw(s1, v0 + 0x14);
-    }
+        if (s4 != 0) {
+            sw(v0, s1 + 0x10);
+        } else {
+            v0 = s6 - s1;
+
+            if (s6 != 0) {
+                sw(v0, s1);
+            }
     
-    s1 = lw(s1 + 0x10);
-    if (s4 != 0) goto loc_800238E8;
+            sw(s6, s1 + 0x10);
+        }
+    
+        v0 = lw(s1 + 0x10);
+
+        if (v0 != 0) {
+            sw(s1, v0 + 0x14);
+        }
+    
+        s1 = lw(s1 + 0x10);
+    } while (s4 != 0);
 
     a0 = *gpMainMemZone;
     Z_CheckHeap();
@@ -1916,7 +1927,6 @@ loc_800238E8:
     fp = lw(sp + 0x50);
     s7 = lw(sp + 0x4C);
     s6 = lw(sp + 0x48);
-    s5 = lw(sp + 0x44);
     s4 = lw(sp + 0x40);
     s3 = lw(sp + 0x3C);
     s2 = lw(sp + 0x38);
