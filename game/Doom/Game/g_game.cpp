@@ -40,6 +40,9 @@ const VmPtr<int32_t> gLastTgtGameTicCount(0x8007829C);
 const VmPtr<bool32_t> gbDemoPlayback(0x80078080);
 const VmPtr<bool32_t> gbDemoRecording(0x800781AC);
 
+// Is the level being restarted?
+const VmPtr<bool32_t> gbIsLevelBeingRestarted(0x80077FF4);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Displays a loading message then loads the current map
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -87,15 +90,13 @@ void G_DoLoadLevel() noexcept {
         } while (pPlayer < pEndPlayer);
     }
 
-    // Load level data and do level setup
-    a0 = *gGameMap;
-    a1 = *gGameSkill;
-    P_SetupLevel();
+    // And and setup the level, then verify the heap after all that is done
+    P_SetupLevel(*gGameMap, *gGameSkill);
     
-    // Verify heap integrity
-    a0 = lw(0x80078198);        // Load from: gpMainMemZone (80078198)
+    a0 = *gpMainMemZone;
     Z_CheckHeap();
 
+    // No action set upon starting a level
     *gGameAction = ga_nothing;
 }
 
@@ -428,7 +429,7 @@ loc_80013394:
     s0 = a1;
     sw(s1, sp + 0x14);
     sw(ra, sp + 0x1C);
-    sw(0, gp + 0xA14);                                  // Store to: gbIsLevelBeingRestarted (80077FF4)
+    *gbIsLevelBeingRestarted = false;
     v0 &= 1;
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)
@@ -539,7 +540,7 @@ loc_8001353C:
 
     v1 = *gGameAction;
     v0 = 6;                                             // Result = 00000006
-    sw(0, gp + 0xA14);                                  // Store to: gbIsLevelBeingRestarted (80077FF4)
+    *gbIsLevelBeingRestarted = false;
     s2 = 4;                                             // Result = 00000004
     if (v1 != v0) goto loc_80013588;
 
@@ -555,7 +556,7 @@ loc_80013588:
     if (v0 != s1) goto loc_800135B4;
 
 loc_800135A8:
-    sw(v1, gp + 0xA14);                                 // Store to: gbIsLevelBeingRestarted (80077FF4)
+    *gbIsLevelBeingRestarted = v1;
     goto loc_8001353C;
 
 loc_800135B4:

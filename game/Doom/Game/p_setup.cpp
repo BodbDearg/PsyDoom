@@ -7,6 +7,7 @@
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Base/z_zone.h"
+#include "Doom/cdmaptbl.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_main.h"
@@ -16,60 +17,84 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "PsxVm/PsxVm.h"
+#include "PsxVm/VmSVal.h"
 
-void P_LoadVertexes() noexcept {
-    sp -= 0x20;
-    sw(s0, sp + 0x18);
-    sw(ra, sp + 0x1C);
-    s0 = a0;
+// Map lump offsets, relative to the 'MAPXX' marker
+enum : uint32_t {
+    ML_LABEL,       // The 'MAPXX' marker lump
+    ML_THINGS,
+    ML_LINEDEFS,
+    ML_SIDEDEFS,
+    ML_VERTEXES,
+    ML_SEGS,
+    ML_SSECTORS,
+    ML_NODES,
+    ML_SECTORS,
+    ML_REJECT,
+    ML_BLOCKMAP,
+    ML_LEAFS
+};
+
+// How much heap space is required after loading the map in order to run the game (48 KiB).
+// If we don't have this much then the game craps out with an error.
+// Need to be able to support various small allocs throughout gameplay for particles and so forth.
+static constexpr int32_t MIN_REQ_HEAP_SPACE_FOR_GAMEPLAY = 0xC000;
+
+// How many maps are in a map folder and the number of files per maps folder etc.
+static constexpr int32_t LEVELS_PER_MAP_FOLDER = (uint32_t) CdMapTbl_File::MAPSPR01_IMG - (uint32_t) CdMapTbl_File::MAP01_WAD;
+static constexpr int32_t NUM_FILES_PER_LEVEL = 3;
+static constexpr int32_t FILES_PER_MAP_FOLDER = LEVELS_PER_MAP_FOLDER * NUM_FILES_PER_LEVEL;
+
+// Map data
+VmPtr<int32_t>  gNumVertexes(0x80078018);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load map vertex data from the specified map lump number
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_LoadVertexes(const uint32_t lumpNum) noexcept {
+    a0 = lumpNum;
     W_MapLumpLength();
-    v1 = 0x10000;                                       // Result = 00010000
-    v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_80021B00;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x8FC;                                        // Result = STR_P_LoadVertexes_LumpTooBig_Err[0] (800108FC)
-    I_Error();
-loc_80021B00:
-    a0 = s0;
+    const int32_t lumpSize = v0;
+    
+    if (lumpSize > TMP_BUFFER_SIZE) {
+        a0 = 0x800108FC;    // Result = STR_P_LoadVertexes_LumpTooBig_Err[0] (800108FC)
+        I_Error();
+    }
+
+    a0 = lumpNum;
     W_MapLumpLength();
-    v0 >>= 3;
-    a1 = v0 << 3;
-    a1 -= v0;
-    a1 <<= 2;
-    a2 = 2;                                             // Result = 00000002
+    *gNumVertexes = lumpSize / 8;
+    
     a0 = *gpMainMemZone;
-    sw(v0, gp + 0xA38);                                 // Store to: gNumVertexes (80078018)
-    a3 = 0;                                             // Result = 00000000
+    a1 = *gNumVertexes * 28;
+    a2 = 2;
+    a3 = 0;
     _thunk_Z_Malloc();
-    a0 = s0;
-    s0 = 0x800A0000;                                    // Result = 800A0000
-    s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    a1 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
-    sw(v0, gp + 0xC04);                                 // Store to: gpVertexes (800781E4)
-    a2 = 1;                                             // Result = 00000001
+    sw(v0, gp + 0xC04);             // Store to: gpVertexes (800781E4)
+
+    a0 = lumpNum;
+    a1 = gTmpBuffer;
+    a2 = 1;
     W_ReadMapLump();
-    a2 = lw(gp + 0xA38);                                // Load from: gNumVertexes (80078018)
-    a0 = lw(gp + 0xC04);                                // Load from: gpVertexes (800781E4)
-    a1 = 0;                                             // Result = 00000000
-    if (i32(a2) <= 0) goto loc_80021B8C;
-    v1 = a0 + 0x18;
-loc_80021B60:
-    v0 = lw(s0);
-    a1++;
-    sw(v0, a0);
-    a0 += 0x1C;
-    v0 = lw(s0 + 0x4);
-    s0 += 8;
-    sw(0, v1);
-    sw(v0, v1 - 0x14);
-    v0 = (i32(a1) < i32(a2));
-    v1 += 0x1C;
-    if (v0 != 0) goto loc_80021B60;
-loc_80021B8C:
-    ra = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+
+    if (*gNumVertexes > 0) {
+        a0 = lw(gp + 0xC04);        // Load from: gpVertexes (800781E4)
+        a1 = gTmpBuffer;
+        a2 = 0;
+
+        do {
+            const fixed_t vx = lw(a1);
+            const fixed_t vy = lw(a1 + 0x4);
+
+            sw(vx, a0);
+            sw(vy, a0 + 0x4);
+            sw(0,  a0 + 0x18);
+            
+            a2++;
+            a1 += 8;
+            a0 += 0x1C;
+        } while (i32(a2) < *gNumVertexes);
+    }
 }
 
 void P_LoadSegs() noexcept {
@@ -110,9 +135,8 @@ loc_80021BD4:
     a2 <<= 3;
     _thunk_D_memset();
     a0 = s0;
-    s0 = 0x800A0000;                                    // Result = 800A0000
-    s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    a1 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    s0 = gTmpBuffer;
+    a1 = gTmpBuffer;
     a2 = 1;                                             // Result = 00000001
     W_ReadMapLump();
     v0 = lw(gp + 0xAC4);                                // Load from: gNumSegs (800780A4)
@@ -228,15 +252,14 @@ loc_80021E10:
     v0 >>= 2;
     a1 = v0 << 4;
     a2 = 2;                                             // Result = 00000002
-    v1 = 0x800A0000;                                    // Result = 800A0000
-    v1 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    s0 = v1;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    v1 = gTmpBuffer;
+    s0 = gTmpBuffer;
     a0 = *gpMainMemZone;
     sw(v0, gp + 0xC44);                                 // Store to: gNumSubsectors (80078224)
     a3 = 0;                                             // Result = 00000000
     _thunk_Z_Malloc();
     a0 = s1;
-    a1 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    a1 = gTmpBuffer;
     sw(v0, gp + 0x960);                                 // Store to: gpSubsectors (80077F40)
     a2 = 1;                                             // Result = 00000001
     W_ReadMapLump();
@@ -305,11 +328,10 @@ loc_80021F30:
     v1 |= 0x4925;                                       // Result = 24924925
     v0 >>= 2;
     multu(v0, v1);
-    a2 = 2;                                             // Result = 00000002
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    s3 = v0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
-    a3 = 0;                                             // Result = 00000000
+    a2 = 2;
+    v0 = gTmpBuffer;
+    s3 = gTmpBuffer;
+    a3 = 0;
     a0 = *gpMainMemZone;
     v0 = hi;
     a1 = v0 << 1;
@@ -321,7 +343,7 @@ loc_80021F30:
     _thunk_Z_Malloc();
     a0 = v0;
     v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
-    a1 = 0;                                             // Result = 00000000
+    a1 = 0;
     sw(a0, gp + 0xAC8);                                 // Store to: gpSectors (800780A8)
     a2 = v0 << 1;
     a2 += v0;
@@ -330,7 +352,7 @@ loc_80021F30:
     a2 <<= 2;
     _thunk_D_memset();
     a0 = s0;
-    a1 = s3;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    a1 = gTmpBuffer;
     a2 = 1;                                             // Result = 00000001
     W_ReadMapLump();
     v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
@@ -445,9 +467,8 @@ loc_80022138:
     a1 <<= 3;
     _thunk_Z_Malloc();
     a0 = s0;
-    s0 = 0x800A0000;                                    // Result = 800A0000
-    s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    a1 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    s0 = gTmpBuffer;
+    a1 = gTmpBuffer;
     sw(v0, gp + 0x8C4);                                 // Store to: gpBspNodes (80077EA4)
     a2 = 1;                                             // Result = 00000001
     W_ReadMapLump();
@@ -512,71 +533,73 @@ loc_80022264:
     return;
 }
 
-void P_LoadThings() noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load map things and spawn them using data from the specified map lump number
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_LoadThings(const int32_t lumpNum) noexcept {
     sp -= 0x30;
     sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(ra, sp + 0x28);
     sw(s3, sp + 0x24);
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
+
+    a0 = lumpNum;
     W_MapLumpLength();
-    v1 = 0x10000;                                       // Result = 00010000
-    v1 = (i32(v1) < i32(v0));
-    s2 = 0;                                             // Result = 00000000
-    if (v1 == 0) goto loc_800222B8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x984;                                        // Result = STR_P_LoadThings_LumpTooBig_Err[0] (80010984)
-    I_Error();
-loc_800222B8:
-    a0 = s0;
+
+    if (i32(v0) > TMP_BUFFER_SIZE) {
+        a0 = 0x80010984;    // Result = STR_P_LoadThings_LumpTooBig_Err[0] (80010984)
+        I_Error();
+    }
+
+    a0 = lumpNum;
     W_MapLumpLength();
-    v1 = 0xCCCC0000;                                    // Result = CCCC0000
-    v1 |= 0xCCCD;                                       // Result = CCCCCCCD
+    v1 = 0xCCCCCCCD;        // Result = CCCCCCCD
     multu(v0, v1);
-    a0 = s0;
-    a1 = 0x800A0000;                                    // Result = 800A0000
-    a1 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    s1 = a1;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
-    a2 = 1;                                             // Result = 00000001
     v0 = hi;
     s3 = v0 >> 3;
+
+    a0 = lumpNum;
+    a1 = gTmpBuffer;
+    a2 = 1;
     W_ReadMapLump();
-    s0 = s1 + 6;                                        // Result = gTmpWadLumpBuffer[1] (8009874E)
-    if (s3 == 0) goto loc_8002235C;
-loc_800222F4:
-    v0 = lhu(s1);
-    sh(v0, s1);
-    v0 = lhu(s0 - 0x4);
-    v1 = lhu(s0 - 0x2);
-    a1 = lhu(s0);
-    a2 = lhu(s0 + 0x2);
-    a0 = s1;
-    sh(v0, s0 - 0x4);
-    sh(v1, s0 - 0x2);
-    sh(a1, s0);
-    sh(a2, s0 + 0x2);
-    P_SpawnMapThing();
-    a1 = lh(s0);
-    v0 = (i32(a1) < 0x1000);
-    s2++;
-    if (v0 != 0) goto loc_8002234C;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x9A0;                                        // Result = STR_P_LoadThings_BadDoomEdNum_Err[0] (800109A0)
-    I_Error();
-loc_8002234C:
-    s0 += 0xA;
-    v0 = (i32(s2) < i32(s3));
-    s1 += 0xA;
-    if (v0 != 0) goto loc_800222F4;
-loc_8002235C:
-    ra = lw(sp + 0x28);
+
+    if (s3 != 0) {
+        s1 = gTmpBuffer;
+        s0 = s1 + 6;        // Result = gTmpWadLumpBuffer[1] (8009874E)
+        s2 = 0;
+
+        do {
+            v0 = lhu(s1);
+            sh(v0, s1);
+            v0 = lhu(s0 - 0x4);
+            v1 = lhu(s0 - 0x2);
+            a1 = lhu(s0);
+            a2 = lhu(s0 + 0x2);
+            a0 = s1;
+            sh(v0, s0 - 0x4);
+            sh(v1, s0 - 0x2);
+            sh(a1, s0);
+            sh(a2, s0 + 0x2);
+            P_SpawnMapThing();
+            a1 = lh(s0);
+            v0 = (i32(a1) < 0x1000);
+            s2++;
+
+            if (v0 == 0) {
+                a0 = 0x800109A0;    // Result = STR_P_LoadThings_BadDoomEdNum_Err[0] (800109A0)    
+                I_Error();
+            }
+        
+            s0 += 0xA;
+            s1 += 0xA;
+        } while (i32(s2) < i32(s3));
+    }
+
     s3 = lw(sp + 0x24);
     s2 = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);
     s0 = lw(sp + 0x18);
     sp += 0x30;
-    return;
 }
 
 void P_LoadLineDefs() noexcept {
@@ -607,9 +630,8 @@ loc_800223C8:
     v0 >>= 1;
     multu(v0, v1);
     a2 = 2;                                             // Result = 00000002
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    s5 = v0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    v0 = gTmpBuffer;
+    s5 = gTmpBuffer;
     a3 = 0;                                             // Result = 00000000
     a0 = *gpMainMemZone;
     v0 = hi;
@@ -632,8 +654,8 @@ loc_800223C8:
     a2 <<= 2;
     _thunk_D_memset();
     a0 = s0;
-    a1 = s5;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
-    a2 = 1;                                             // Result = 00000001
+    a1 = gTmpBuffer;
+    a2 = 1;
     W_ReadMapLump();
     v0 = lw(gp + 0xBE8);                                // Load from: gNumLines (800781C8)
     s4 = lw(gp + 0x8D0);                                // Load from: gpLines (80077EB0)
@@ -790,11 +812,10 @@ loc_80022694:
     v1 = 0x88880000;                                    // Result = 88880000
     v1 |= 0x8889;                                       // Result = 88888889
     multu(v0, v1);
-    a2 = 2;                                             // Result = 00000002
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    s3 = v0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
-    a3 = 0;                                             // Result = 00000000
+    a2 = 2;
+    v0 = gTmpBuffer;
+    s3 = gTmpBuffer;
+    a3 = 0;
     a0 = *gpMainMemZone;
     v0 = hi;
     v0 >>= 4;
@@ -812,8 +833,8 @@ loc_80022694:
     a2 <<= 3;
     _thunk_D_memset();
     a0 = s0;
-    a1 = s3;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
-    a2 = 1;                                             // Result = 00000001
+    a1 = gTmpBuffer;
+    a2 = 1;
     W_ReadMapLump();
     v0 = lw(gp + 0xBD4);                                // Load from: gNumSides (800781B4)
     s2 = lw(gp + 0x8C0);                                // Load from: gpSides (80077EA0)
@@ -975,13 +996,12 @@ loc_80022920:
     I_Error();
 loc_80022974:
     a0 = s2;
-    s0 = 0x800A0000;                                    // Result = 800A0000
-    s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    a1 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
-    a2 = 1;                                             // Result = 00000001
+    s0 = gTmpBuffer;
+    a1 = gTmpBuffer;
+    a2 = 1;
     W_ReadMapLump();
-    s1 = 0;                                             // Result = 00000000
-    s4 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    s1 = 0;
+    s4 = gTmpBuffer;
 loc_80022994:
     a0 = s2;
     W_MapLumpLength();
@@ -1027,7 +1047,7 @@ loc_80022A1C:
     s1 = s4;
 loc_80022A44:
     s0 = lh(s1 + 0x2);
-    v0 = lw(gp + 0xA38);                                // Load from: gNumVertexes (80078018)
+    v0 = *gNumVertexes;
     v0 = (i32(s0) < i32(v0));
     {
         const bool bJump = (v0 != 0);
@@ -1456,37 +1476,29 @@ loc_80023068:
     return;
 }
 
-void P_SetupLevel() noexcept {
+void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) noexcept {
 loc_800230D4:
     sp -= 0x98;
     sw(s0, sp + 0x78);
     sw(s1, sp + 0x7C);
     sw(s2, sp + 0x80);
     sw(s3, sp + 0x84);
-    sw(s4, sp + 0x88);
-    sw(s5, sp + 0x8C);
-
-    s4 = a0;
 
     a0 = *gpMainMemZone;
-    a1 = 0x26;
+    a1 = 38;
     Z_FreeTags();
 
-    v0 = 0x80070000;                // Result = 80070000
-    v0 = lw(v0 + 0x7FF4);           // Load from: gbIsLevelBeingRestarted (80077FF4)
-
-    if (v0 == 0) {
-        v0 = 0x80070000;            // Result = 80070000
-        v0 = lw(v0 + 0x7C08);       // Load from: gLockedTexPagesMask (80077C08)
-        a0 = *gpMainMemZone;
+    if (!*gbIsLevelBeingRestarted) {
+        v0 = lw(0x80077C08);        // Load from: gLockedTexPagesMask (80077C08)        
         v0 &= 1;
-        at = 0x80070000;            // Result = 80070000
-        sw(v0, at + 0x7C08);        // Store to: gLockedTexPagesMask (80077C08)
+        sw(v0, 0x80077C08);         // Store to: gLockedTexPagesMask (80077C08)
+
+        a0 = *gpMainMemZone;
         a1 = 8;
         Z_FreeTags();
     }
 
-    s1 = 0;                                             // Result = 00000000
+    s1 = 0;
     I_ResetTexCache();
     
     a0 = *gpMainMemZone;
@@ -1494,6 +1506,7 @@ loc_800230D4:
 
     M_ClearRandom();
 
+    // Init player stats for the map
     v1 = 0;                                             // Result = 00000000
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x7F20);                                 // Store to: gTotalKills (80077F20)
@@ -1524,7 +1537,7 @@ loc_800230D4:
         v1 += 0x12C;
     } while (v0 != 0);
 
-    a1 = s4 - 1;
+    // Setup the thinkers and map objects lists
     v0 = 0x80096550;                                    // Result = gThinkerCap[0] (80096550)
     sw(v0, v0);                                         // Store to: gThinkerCap[0] (80096550)
     at = 0x80090000;                                    // Result = 80090000
@@ -1535,164 +1548,108 @@ loc_800230D4:
     sw(v1, v0);                                         // Store to: gMObjHead[5] (800A8EA4)
     at = 0x800B0000;                                    // Result = 800B0000
     sw(v1, at - 0x7160);                                // Store to: gMObjHead[4] (800A8EA0)
+
+    // Setup the item respawn queue and map object kill count
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7EC8);                                 // Store to: gItemRespawnQueueHead (80078138)
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7E80);                                 // Store to: gItemRespawnQueueTail (80078180)
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7FF0);                                 // Store to: gNumMObjKilled (80078010)
-    a0 = a1;
 
-    if (i32(a1) < 0) {
-        a0 = s4 + 6;
+    // Figure out which file to open for the map WAD.
+    // Not sure why the PSX code was checking for a negative map index here, maybe a special dev/test thing?
+    const int32_t mapIndex = mapNum - 1;
+    const int32_t mapFolderIdx = (mapIndex >= 0) ?
+        (mapIndex / LEVELS_PER_MAP_FOLDER) :
+        (mapIndex + LEVELS_PER_MAP_FOLDER - 1) / LEVELS_PER_MAP_FOLDER;
+
+    const int32_t mapIdxInFolder = mapIndex - mapFolderIdx * LEVELS_PER_MAP_FOLDER;
+    const int32_t mapFolderOffset = mapFolderIdx * NUM_FILES_PER_LEVEL * LEVELS_PER_MAP_FOLDER;
+    const CdMapTbl_File mapWadFile = (CdMapTbl_File)((uint32_t) CdMapTbl_File::MAP01_WAD + mapIdxInFolder + mapFolderOffset);
+    
+    // Open the map wad
+    a0 = (uint32_t) mapWadFile;
+    W_OpenMapWad();
+    void* const pMapWadFileData = vmAddrToPtr<void>(v0);
+
+    // Figure out the name of the map start lump marker
+    VmSVal<lumpname_t> mapLumpName;
+    mapLumpName->chars[0] = 'M';
+    mapLumpName->chars[1] = 'A';
+    mapLumpName->chars[2] = 'P';
+
+    {
+        uint8_t digit1 = (uint8_t) mapNum / 10;
+        uint8_t digit2 = (uint8_t) mapNum - digit1 * 10;
+        mapLumpName->chars[3] = '0' + digit1;
+        mapLumpName->chars[4] = '0' + digit2;
     }
     
-    v0 = u32(i32(a0) >> 3);
-    a0 = v0 << 1;
-    a0 += v0;
-    a0 <<= 3;
-    v0 <<= 3;
-    v0 = a1 - v0;
-    a0 += v0;
-    a0 += 8;
-    W_OpenMapWad();
-
-    v1 = 0x66666667;        // Result = 66666667
-    mult(s4, v1);
-    a0 = sp + 0x10;
-    v1 = 0x4D;
-    sb(v1, sp + 0x10);
-    v1 = 0x41;
-    sb(v1, sp + 0x11);
-    v1 = 0x50;
-    sb(v1, sp + 0x12);
-    v1 = u32(i32(s4) >> 31);
-    s5 = v0;
-    sb(0, sp + 0x15);
-    a1 = hi;
-    a1 = u32(i32(a1) >> 2);
-    a1 -= v1;
-    v1 = a1 + 0x30;
-    sb(v1, sp + 0x13);
-    v1 = a1 << 2;
-    v1 += a1;
-    v1 <<= 1;
-    v1 = s4 - v1;
-    v1 += 0x30;
-    sb(v1, sp + 0x14);
+    // Get the lump index for the map start lump
+    a0 = ptrToVmAddr(mapLumpName->chars);
     W_MapGetNumForName();
-    s2 = v0;
-    v0 = -1;
-    s0 = s2 + 4;
-
-    if (s2 == v0) {
-        a0 = 0x80010AA0;        // Result = STR_P_SetupLevel_NotFound_Err[0] (80010AA0)
-        a1 = sp + 0x10;
+    const uint32_t mapStartLump = v0;
+    
+    if (mapStartLump == -1) {
+        a0 = 0x80010AA0;    // Result = STR_P_SetupLevel_NotFound_Err[0] (80010AA0)
+        a1 = ptrToVmAddr(mapLumpName->chars);
         I_Error();
     }
 
-    a0 = s2 + 0xA;
+    // Load the blockmap
+    a0 = mapStartLump + ML_BLOCKMAP;
     P_LoadBlockMap();
 
     // Load vertexes
-    a0 = s0;
-    W_MapLumpLength();
-    v1 = 0x10000;
-    v1 = (i32(v1) < i32(v0));
-
-    if (v1 != 0) {
-        a0 = 0x800108FC;    // Result = STR_P_LoadVertexes_LumpTooBig_Err[0] (800108FC)
-        I_Error();
-    }
-
-    a0 = s0;
-    W_MapLumpLength();
-    v0 >>= 3;
-    a1 = v0 << 3;
-    a1 -= v0;
-    a1 <<= 2;
-    a2 = 2;
-    a0 = *gpMainMemZone;
-    sw(v0, gp + 0xA38);                                 // Store to: gNumVertexes (80078018)
-    a3 = 0;
-    _thunk_Z_Malloc();
-    a0 = s0;
-    a1 = 0x800A0000;                                    // Result = 800A0000
-    a1 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    sw(v0, gp + 0xC04);                                 // Store to: gpVertexes (800781E4)
-    a2 = 1;
-    W_ReadMapLump();
-    a1 = 0x800A0000;                                    // Result = 800A0000
-    a1 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    a3 = lw(gp + 0xA38);                                // Load from: gNumVertexes (80078018)
-    a0 = lw(gp + 0xC04);                                // Load from: gpVertexes (800781E4)
-    a2 = 0;
-
-    if (i32(a3) > 0) {
-        v1 = a0 + 0x18;
-        
-        do {
-            v0 = lw(a1);
-            a2++;
-            sw(v0, a0);
-            a0 += 0x1C;
-            v0 = lw(a1 + 0x4);
-            a1 += 8;
-            sw(0, v1);
-            sw(v0, v1 - 0x14);
-            v0 = (i32(a2) < i32(a3));
-            v1 += 0x1C;
-        } while (v0 != 0);
-    }
+    P_LoadVertexes(mapStartLump + ML_VERTEXES);
 
     // Load subsectors, sidedefs and linedefs
-    a0 = s2 + 8;
+    a0 = mapStartLump + ML_SECTORS;
     P_LoadSectors();
 
-    a0 = s2 + 3;
+    a0 = mapStartLump + ML_SIDEDEFS;
     P_LoadSideDefs();
 
-    a0 = s2 + 2;
+    a0 = mapStartLump + ML_LINEDEFS;
     P_LoadLineDefs();
 
     // Load subsectors
-    s1 = s2 + 6;
-    a0 = s1;
+    a0 = mapStartLump + ML_SSECTORS;
     W_MapLumpLength();
 
-    v1 = 0x10000;
-    v1 = (i32(v1) < i32(v0));
-
-    if (v1 != 0) {
-        a0 = 0x80010930;        // Result = STR_P_LoadSubSectors_LumpTooBig_Err[0] (80010930)
-        a0 += 0x930;            
+    if (i32(v0) > TMP_BUFFER_SIZE) {
+        a0 = 0x80010930;    // Result = STR_P_LoadSubSectors_LumpTooBig_Err[0] (80010930)    
         I_Error();
     }
 
-    a0 = s1;
+    a0 = mapStartLump + ML_SSECTORS;
     W_MapLumpLength();
     v0 >>= 2;
+    sw(v0, gp + 0xC44);         // Store to: gNumSubsectors (80078224)
+
+    a0 = *gpMainMemZone;
     a1 = v0 << 4;
     a2 = 2;
-    a0 = *gpMainMemZone;
-    s0 = 0x80098748;            // Result = gTmpWadLumpBuffer[0] (80098748)        
-    sw(v0, gp + 0xC44);         // Store to: gNumSubsectors (80078224)
     a3 = 0;
     _thunk_Z_Malloc();
-    a0 = s1;
-    a1 = 0x800A0000;            // Result = 800A0000
-    a1 -= 0x78B8;               // Result = gTmpWadLumpBuffer[0] (80098748)
     sw(v0, gp + 0x960);         // Store to: gpSubsectors (80077F40)
+
+    a0 = mapStartLump + ML_SSECTORS;
+    a1 = gTmpBuffer;
     a2 = 1;
     W_ReadMapLump();
-    a1 = 0;
-    a2 = lw(gp + 0xC44);        // Load from: gNumSubsectors (80078224)
+
     a0 = lw(gp + 0x960);        // Load from: gpSubsectors (80077F40)
+    a1 = 0;
+    a2 = lw(gp + 0xC44);        // Load from: gNumSubsectors (80078224)    
     a2 <<= 4;
     _thunk_D_memset();
+
+    a0 = 0;
     a1 = lw(gp + 0xC44);        // Load from: gNumSubsectors (80078224)
     v0 = lw(gp + 0x960);        // Load from: gpSubsectors (80077F40)
-    a0 = 0;
+    s0 = gTmpBuffer;
 
     if (i32(a1) > 0) {
         v1 = v0 + 0xA;
@@ -1712,100 +1669,51 @@ loc_800230D4:
     }
 
     // Load nodes, segs and leafs
-    a0 = s2 + 7;
+    a0 = mapStartLump + ML_NODES;
     P_LoadNodes();
-    a0 = s2 + 5;
+
+    a0 = mapStartLump + ML_SEGS;
     P_LoadSegs();
-    a0 = s2 + 0xB;
+    
+    a0 = mapStartLump + ML_LEAFS;
     P_LoadLeafs();
 
-    s0 = s2 + 9;
-    a0 = s0;
+    // Load the reject map
+    a0 = mapStartLump + ML_REJECT;
     W_MapLumpLength();
+
     a1 = v0;
     a2 = 2;
     a0 = *gpMainMemZone;
     a3 = 0;
     _thunk_Z_Malloc();
-    a0 = s0;
-    a1 = v0;
-    sw(a1, gp + 0xB04);         // Store to: gpRejectMatrix (800780E4)
+    sw(v0, gp + 0xB04);     // Store to: gpRejectMatrix (800780E4)
+
+    a0 = mapStartLump + ML_REJECT;
+    a1 = v0;    
     a2 = 1;
     W_ReadMapLump();
-    s0 = s2 + 1;
+
+    // Build sector line lists etc.
     P_GroupLines();
-    v0 = 0x8009806C;            // Result = gDeathmatchStarts[0] (8009806C)              
-    sw(v0, gp + 0xA80);         // Store to: gpDeathmatchP (80078060)
-    a0 = s0;
-    W_MapLumpLength();
-    v1 = 0x10000;
-    v1 = (i32(v1) < i32(v0));
-    s2 = 0;
+
+    // Deathmatch starts
+    v0 = 0x8009806C;        // Result = gDeathmatchStarts[0] (8009806C)              
+    sw(v0, gp + 0xA80);     // Store to: gpDeathmatchP (80078060)
+
+    // Load and spawn things
+    P_LoadThings(mapStartLump + ML_THINGS);
     
-    if (v1 != 0) {
-        a0 = 0x80010984;    // Result = STR_P_LoadThings_LumpTooBig_Err[0] (80010984)
-        I_Error();
-    }
-
-    a0 = s0;
-    W_MapLumpLength();
-    v1 = 0xCCCC0000;                                    // Result = CCCC0000
-    v1 |= 0xCCCD;                                       // Result = CCCCCCCD
-    multu(v0, v1);
-    a0 = s0;
-    a1 = 0x800A0000;                                    // Result = 800A0000
-    a1 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    a2 = 1;                                             // Result = 00000001
-    s1 = 0x800A0000;                                    // Result = 800A0000
-    s1 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    v0 = hi;
-    s3 = v0 >> 3;
-    W_ReadMapLump();
-
-    if (s3 != 0) {
-        s0 = s1 + 6;                                        // Result = gTmpWadLumpBuffer[1] (8009874E)
-
-        do {
-            v0 = lhu(s1);
-            sh(v0, s1);
-            v0 = lhu(s0 - 0x4);
-            v1 = lhu(s0 - 0x2);
-            a1 = lhu(s0);
-            a2 = lhu(s0 + 0x2);
-            a0 = s1;
-            sh(v0, s0 - 0x4);
-            sh(v1, s0 - 0x2);
-            sh(a1, s0);
-            sh(a2, s0 + 0x2);
-            P_SpawnMapThing();
-            a1 = lh(s0);
-            v0 = (i32(a1) < 0x1000);
-            s2++;
-        
-            if (v0 == 0) {
-                a0 = 0x800109A0;    // Result = STR_P_LoadThings_BadDoomEdNum_Err[0] (800109A0)    
-                I_Error();
-            }
-        
-            s0 += 0xA;
-            v0 = (i32(s2) < i32(s3));
-            s1 += 0xA;
-        } while (v0 != 0);
-    }
-
+    // Spawn special thinkers such as light flashes etc. and free up the loaded WAD data
     P_SpawnSpecials();
-    a0 = *gpMainMemZone;
-    a1 = s5;
-    _thunk_Z_Free2();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FF4);                               // Load from: gbIsLevelBeingRestarted (80077FF4)
-    s0 = s4 - 1;
+    Z_Free2(**gpMainMemZone, pMapWadFileData);
 
-    if (v0 == 0) {
-        v0 = s0;
+    // Loading map textures and sprites
+    if (!*gbIsLevelBeingRestarted) {
+        v0 = mapIndex;
 
-        if (i32(s0) < 0) {
-            v0 = s4 + 6;
+        if (mapIndex < 0) {
+            v0 = mapIndex + 7;
         }
 
         v0 = u32(i32(v0) >> 3);
@@ -1813,7 +1721,7 @@ loc_800230D4:
         v1 += v0;
         v1 <<= 3;
         v0 <<= 3;
-        v0 = s0 - v0;
+        v0 = mapIndex - v0;
         s1 = v1 + v0;
         a0 = s1 + 0x18;
         P_LoadBlocks();
@@ -1823,21 +1731,20 @@ loc_800230D4:
         P_LoadBlocks();
     }
 
+    // Check there is enough heap space left in order to run the level
     a0 = *gpMainMemZone;
     Z_FreeMemory();
-    s0 = v0;
-    v0 = 0xBFFF;                                        // Result = 0000BFFF
-    v0 = (i32(v0) < i32(s0));
+    const int32_t freeMemForGameplay = v0;
 
-    if (v0 == 0) {
+    if (freeMemForGameplay < MIN_REQ_HEAP_SPACE_FOR_GAMEPLAY) {
         Z_DumpHeap();
         a0 = 0x80010ABC;    // Result = STR_P_SetupLevel_OutOfMem_Err[0] (80010ABC)
-        a1 = s0;
+        a1 = freeMemForGameplay;
         I_Error();
     }
 
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FA4);                               // Load from: gNetGame (8007805C)
+    // Spawn the player(s)
+    v0 = lw(0x8007805C);    // Load from: gNetGame (8007805C)
 
     if (v0 != 0) {
         s1 = 0;
@@ -1870,9 +1777,7 @@ loc_800230D4:
         a0 = 0x800A8E7C;    // Result = gPlayer1MapThing[0] (800A8E7C)
         P_SpawnPlayer();
     }
-
-    s5 = lw(sp + 0x8C);
-    s4 = lw(sp + 0x88);
+    
     s3 = lw(sp + 0x84);
     s2 = lw(sp + 0x80);
     s1 = lw(sp + 0x7C);

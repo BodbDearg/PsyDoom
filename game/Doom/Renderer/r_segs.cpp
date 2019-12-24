@@ -1,5 +1,6 @@
 #include "r_segs.h"
 
+#include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
@@ -229,14 +230,13 @@ loc_8002D704:
     v1 = lw(s1 + 0x1C);
     v0 = -1;                                            // Result = FFFFFFFF
     if (v1 != v0) goto loc_8002D79C;
-    s0 = 0x800A0000;                                    // Result = 800A0000
-    s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
+    s0 = gTmpBuffer;
     v0 = lh(s1 + 0x10);
     v1 = *gpLumpCache;
     v0 <<= 2;
     v0 += v1;
     a0 = lw(v0);
-    a1 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    a1 = gTmpBuffer;
     decode();
     a0 = sp + 0x10;
     a1 = s0 + 8;                                        // Result = gTmpWadLumpBuffer[2] (80098750)

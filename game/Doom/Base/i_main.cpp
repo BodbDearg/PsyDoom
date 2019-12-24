@@ -14,6 +14,9 @@
 #include "w_wad.h"
 #include "z_zone.h"
 
+// A 64-KB buffer used for WAD loading and other stuff
+const VmPtr<std::byte[TMP_BUFFER_SIZE]> gTmpBuffer(0x80098748);
+
 // Video vblank timers: track the total amount, last total and current elapsed amount
 const VmPtr<uint32_t> gTotalVBlanks(0x80077E98);
 const VmPtr<uint32_t> gLastTotalVBlanks(0x80078114);
@@ -243,11 +246,10 @@ loc_80032C24:
     v1 = lbu(v1);
     a0 = v0;
     if (v1 != 0) goto loc_80032C68;
-    s0 = 0x800A0000;                                    // Result = 800A0000
-    s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    a1 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    s0 = gTmpBuffer;
+    a1 = gTmpBuffer;
     decode();
-    a0 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    a0 = gTmpBuffer;
 loc_80032C68:
     v0 = lhu(a0);
     sh(v0, s1);
@@ -969,9 +971,8 @@ loc_800337B8:
     s0 = v0;
     if (v1 != 0) goto loc_80033800;
     a0 = s0;
-    s0 = 0x800A0000;                                    // Result = 800A0000
-    s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
-    a1 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    s0 = gTmpBuffer;
+    a1 = gTmpBuffer;
     decode();
 loc_80033800:
     a0 = lw(gp + 0xA48);                                // Load from: gTexCacheFillPage (80078028)

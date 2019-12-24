@@ -2,9 +2,13 @@
 
 #include "PsxVm/VmPtr.h"
 
-extern const VmPtr<uint32_t> gTotalVBlanks;
-extern const VmPtr<uint32_t> gLastTotalVBlanks;
-extern const VmPtr<uint32_t> gElapsedVBlanks;
+// Size of the temporary buffer that is used for WAD loading and other stuff - 64 KiB
+static constexpr uint32_t TMP_BUFFER_SIZE = 0x10000;
+
+extern const VmPtr<std::byte[TMP_BUFFER_SIZE]>  gTmpBuffer;
+extern const VmPtr<uint32_t>                    gTotalVBlanks;
+extern const VmPtr<uint32_t>                    gLastTotalVBlanks;
+extern const VmPtr<uint32_t>                    gElapsedVBlanks;
 
 void I_Main() noexcept;
 void I_PSXInit() noexcept;

@@ -1,5 +1,6 @@
 #include "r_plane.h"
 
+#include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
@@ -47,11 +48,10 @@ loc_8002E2F4:
     }
     v1 = a0 << 2;
     v0 = *gpLumpCache;
-    s0 = 0x800A0000;                                    // Result = 800A0000
-    s0 -= 0x78B8;                                       // Result = gTmpWadLumpBuffer[0] (80098748)
+    s0 = gTmpBuffer;
     v1 += v0;
     a0 = lw(v1);
-    a1 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    a1 = gTmpBuffer;
     decode();
     a0 = sp + 0x10;
     goto loc_8002E39C;

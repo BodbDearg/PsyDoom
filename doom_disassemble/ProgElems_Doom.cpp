@@ -3663,7 +3663,7 @@ static const ProgElem ELEMS[] = {
     { 0x8009873C, 0x80098740, "gStatusBarGibAnimTicsLeft",              ProgElemType::UINT32 },
     { 0x80098740, 0x80098744, "gpStatusBarMsgStr",                      ProgElemType::PTR32 },
     { 0x80098744, 0x80098748, "gStatusBarMsgTicsLeft",                  ProgElemType::UINT32 },
-    { 0x80098748, 0x800A8748, "gTmpWadLumpBuffer",                      ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x80098748, 0x800A8748, "gTmpBuffer",                             ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800A8748, 0x800A8758, "gUseLine",                               ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800A8758, 0x800A875C, "gpWess_pm_stat",                         ProgElemType::PTR32 },
     { 0x800A875C, 0x800A876C, "gUseBBox",                               ProgElemType::ARRAY, ProgElemType::UINT32, 0 },

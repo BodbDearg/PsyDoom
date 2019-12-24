@@ -208,12 +208,10 @@ extern void A_LoadShotgun2() noexcept;
 extern void A_CloseShotgun2() noexcept;
 extern void P_SetupPsprites() noexcept;
 extern void P_MovePsprites() noexcept;
-extern void P_LoadVertexes() noexcept;
 extern void P_LoadSegs() noexcept;
 extern void P_LoadSubSectors() noexcept;
 extern void P_LoadSectors() noexcept;
 extern void P_LoadNodes() noexcept;
-extern void P_LoadThings() noexcept;
 extern void P_LoadLineDefs() noexcept;
 extern void P_LoadSideDefs() noexcept;
 extern void P_LoadBlockMap() noexcept;
@@ -221,7 +219,6 @@ extern void P_LoadMapLump() noexcept;
 extern void P_LoadLeafs() noexcept;
 extern void P_GroupLines() noexcept;
 extern void P_InitMapTextures() noexcept;
-extern void P_SetupLevel() noexcept;
 extern void P_LoadBlocks() noexcept;
 extern void P_CacheSprite() noexcept;
 extern void P_CacheMapTexturesWithWidth() noexcept;
@@ -1192,12 +1189,10 @@ namespace PsxVm {
         { 0x800216D8, &A_CloseShotgun2 },
         { 0x80021794, &P_SetupPsprites },
         { 0x8002190C, &P_MovePsprites },
-        { 0x80021ACC, &P_LoadVertexes },
         { 0x80021BA0, &P_LoadSegs },
         { 0x80021DD8, &P_LoadSubSectors },
         { 0x80021EC4, &P_LoadSectors },
         { 0x80022104, &P_LoadNodes },
-        { 0x80022278, &P_LoadThings },
         { 0x8002237C, &P_LoadLineDefs },
         { 0x80022650, &P_LoadSideDefs },
         { 0x800227CC, &P_LoadBlockMap },
@@ -1205,7 +1200,6 @@ namespace PsxVm {
         { 0x80022920, &P_LoadLeafs },
         { 0x80022B58, &P_GroupLines },
         { 0x80022E68, &P_InitMapTextures },
-        { 0x800230D4, &P_SetupLevel },
         { 0x80023700, &P_LoadBlocks },
         { 0x800239D8, &P_CacheSprite },
         { 0x80023AC8, &P_CacheMapTexturesWithWidth },

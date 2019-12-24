@@ -12,6 +12,7 @@ extern const VmPtr<int32_t>                 gPrevGameTic;
 extern const VmPtr<int32_t>                 gLastTgtGameTicCount;
 extern const VmPtr<bool32_t>                gbDemoPlayback;
 extern const VmPtr<bool32_t>                gbDemoRecording;
+extern const VmPtr<bool32_t>                gbIsLevelBeingRestarted;
 
 void G_DoLoadLevel() noexcept;
 void G_PlayerFinishLevel() noexcept;

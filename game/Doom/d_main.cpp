@@ -33,7 +33,7 @@ void D_DoomMain() noexcept {
 
     a0 = (lw(0x800775F0) * 127) / 100;      // Load from: gOptionsSndVol (800775F0)
     a1 = (lw(0x800775F4) * 127) / 100;      // Load from: gOptionsMusVol (800775F4)    
-    a2 = 0x80098748;                        // Result = gTmpWadLumpBuffer[0] (80098748)
+    a2 = gTmpBuffer;
     PsxSoundInit();
 
     // Initializing standard DOOM subsystems, zone memory management, WAD, platform stuff, renderer etc.

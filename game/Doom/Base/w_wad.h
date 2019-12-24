@@ -2,11 +2,16 @@
 
 #include "PsxVm/VmPtr.h"
 
+// Format for a name in a lump file
+struct lumpname_t {
+    char chars[8];
+};
+
 // Header for a lump in a WAD file
 struct lumpinfo_t {
     uint32_t    filepos;
     uint32_t    size;
-    char        name[8];
+    lumpname_t  name;
 };
 
 static_assert(sizeof(lumpinfo_t) == 16);
