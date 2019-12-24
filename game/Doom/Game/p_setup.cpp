@@ -51,7 +51,7 @@ VmPtr<int32_t>  gNumVertexes(0x80078018);
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void P_LoadVertexes(const uint32_t lumpNum) noexcept {
+static void P_LoadVertexes(const int32_t lumpNum) noexcept {
     a0 = lumpNum;
     W_MapLumpLength();
     const int32_t lumpSize = v0;
@@ -233,64 +233,68 @@ loc_80021DC4:
     return;
 }
 
-void P_LoadSubSectors() noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load map subsectors using data from the specified map lump number
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     sp -= 0x28;
-    sw(s1, sp + 0x1C);
-    s1 = a0;
-    sw(ra, sp + 0x20);
     sw(s0, sp + 0x18);
+
+    a0 = lumpNum;
     W_MapLumpLength();
-    v1 = 0x10000;                                       // Result = 00010000
-    v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_80021E10;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x930;                                        // Result = STR_P_LoadSubSectors_LumpTooBig_Err[0] (80010930)
-    I_Error();
-loc_80021E10:
-    a0 = s1;
+
+    if (i32(v0) > TMP_BUFFER_SIZE) {
+        a0 = 0x80010930;    // Result = STR_P_LoadSubSectors_LumpTooBig_Err[0] (80010930)    
+        I_Error();
+    }
+
+    a0 = lumpNum;
     W_MapLumpLength();
     v0 >>= 2;
-    a1 = v0 << 4;
-    a2 = 2;                                             // Result = 00000002
-    v1 = gTmpBuffer;
-    s0 = gTmpBuffer;
+    sw(v0, gp + 0xC44);         // Store to: gNumSubsectors (80078224)
+
     a0 = *gpMainMemZone;
-    sw(v0, gp + 0xC44);                                 // Store to: gNumSubsectors (80078224)
-    a3 = 0;                                             // Result = 00000000
+    a1 = v0 << 4;
+    a2 = 2;
+    a3 = 0;
     _thunk_Z_Malloc();
-    a0 = s1;
+    sw(v0, gp + 0x960);         // Store to: gpSubsectors (80077F40)
+
+    a0 = lumpNum;
     a1 = gTmpBuffer;
-    sw(v0, gp + 0x960);                                 // Store to: gpSubsectors (80077F40)
-    a2 = 1;                                             // Result = 00000001
+    a2 = 1;
     W_ReadMapLump();
-    a1 = 0;                                             // Result = 00000000
-    a2 = lw(gp + 0xC44);                                // Load from: gNumSubsectors (80078224)
-    a0 = lw(gp + 0x960);                                // Load from: gpSubsectors (80077F40)
+
+    a0 = lw(gp + 0x960);        // Load from: gpSubsectors (80077F40)
+    a1 = 0;
+    a2 = lw(gp + 0xC44);        // Load from: gNumSubsectors (80078224)    
     a2 <<= 4;
     _thunk_D_memset();
-    a1 = lw(gp + 0xC44);                                // Load from: gNumSubsectors (80078224)
-    v0 = lw(gp + 0x960);                                // Load from: gpSubsectors (80077F40)
-    a0 = 0;                                             // Result = 00000000
-    if (i32(a1) <= 0) goto loc_80021EAC;
-    v1 = v0 + 0xA;
-loc_80021E80:
-    v0 = lhu(s0);
-    a0++;
-    sh(v0, v1 - 0x6);
-    v0 = lhu(s0 + 0x2);
-    s0 += 4;
-    sh(0, v1 - 0x2);
-    sh(0, v1);
-    sh(v0, v1 - 0x4);
-    v0 = (i32(a0) < i32(a1));
-    v1 += 0x10;
-    if (v0 != 0) goto loc_80021E80;
-loc_80021EAC:
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
+
+    a0 = 0;
+    a1 = lw(gp + 0xC44);        // Load from: gNumSubsectors (80078224)
+    v0 = lw(gp + 0x960);        // Load from: gpSubsectors (80077F40)
+    s0 = gTmpBuffer;
+
+    if (i32(a1) > 0) {
+        v1 = v0 + 0xA;
+
+        do {
+            v0 = lhu(s0);
+            a0++;
+            sh(v0, v1 - 0x6);
+            v0 = lhu(s0 + 0x2);
+            s0 += 4;
+            sh(0, v1 - 0x2);
+            sh(0, v1);
+            sh(v0, v1 - 0x4);
+            v0 = (i32(a0) < i32(a1));
+            v1 += 0x10;
+        } while (v0 != 0);
+    }
+
     s0 = lw(sp + 0x18);
     sp += 0x28;
-    return;
 }
 
 void P_LoadSectors() noexcept {
@@ -536,7 +540,7 @@ loc_80022264:
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map things and spawn them using data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_LoadThings(const int32_t lumpNum) noexcept {
+static void P_LoadThings(const int32_t lumpNum) noexcept {
     sp -= 0x30;
     sw(s0, sp + 0x18);
     sw(s3, sp + 0x24);
@@ -1566,7 +1570,7 @@ loc_800230D4:
 
     const int32_t mapIdxInFolder = mapIndex - mapFolderIdx * LEVELS_PER_MAP_FOLDER;
     const int32_t mapFolderOffset = mapFolderIdx * NUM_FILES_PER_LEVEL * LEVELS_PER_MAP_FOLDER;
-    const CdMapTbl_File mapWadFile = (CdMapTbl_File)((uint32_t) CdMapTbl_File::MAP01_WAD + mapIdxInFolder + mapFolderOffset);
+    const CdMapTbl_File mapWadFile = (CdMapTbl_File)((int32_t) CdMapTbl_File::MAP01_WAD + mapIdxInFolder + mapFolderOffset);
     
     // Open the map wad
     a0 = (uint32_t) mapWadFile;
@@ -1614,61 +1618,9 @@ loc_800230D4:
     a0 = mapStartLump + ML_LINEDEFS;
     P_LoadLineDefs();
 
-    // Load subsectors
-    a0 = mapStartLump + ML_SSECTORS;
-    W_MapLumpLength();
+    // Load subsectors, nodes, segs and leafs
+    P_LoadSubSectors(mapStartLump + ML_SSECTORS);
 
-    if (i32(v0) > TMP_BUFFER_SIZE) {
-        a0 = 0x80010930;    // Result = STR_P_LoadSubSectors_LumpTooBig_Err[0] (80010930)    
-        I_Error();
-    }
-
-    a0 = mapStartLump + ML_SSECTORS;
-    W_MapLumpLength();
-    v0 >>= 2;
-    sw(v0, gp + 0xC44);         // Store to: gNumSubsectors (80078224)
-
-    a0 = *gpMainMemZone;
-    a1 = v0 << 4;
-    a2 = 2;
-    a3 = 0;
-    _thunk_Z_Malloc();
-    sw(v0, gp + 0x960);         // Store to: gpSubsectors (80077F40)
-
-    a0 = mapStartLump + ML_SSECTORS;
-    a1 = gTmpBuffer;
-    a2 = 1;
-    W_ReadMapLump();
-
-    a0 = lw(gp + 0x960);        // Load from: gpSubsectors (80077F40)
-    a1 = 0;
-    a2 = lw(gp + 0xC44);        // Load from: gNumSubsectors (80078224)    
-    a2 <<= 4;
-    _thunk_D_memset();
-
-    a0 = 0;
-    a1 = lw(gp + 0xC44);        // Load from: gNumSubsectors (80078224)
-    v0 = lw(gp + 0x960);        // Load from: gpSubsectors (80077F40)
-    s0 = gTmpBuffer;
-
-    if (i32(a1) > 0) {
-        v1 = v0 + 0xA;
-
-        do {
-            v0 = lhu(s0);
-            a0++;
-            sh(v0, v1 - 0x6);
-            v0 = lhu(s0 + 0x2);
-            s0 += 4;
-            sh(0, v1 - 0x2);
-            sh(0, v1);
-            sh(v0, v1 - 0x4);
-            v0 = (i32(a0) < i32(a1));
-            v1 += 0x10;
-        } while (v0 != 0);
-    }
-
-    // Load nodes, segs and leafs
     a0 = mapStartLump + ML_NODES;
     P_LoadNodes();
 
@@ -1710,24 +1662,15 @@ loc_800230D4:
 
     // Loading map textures and sprites
     if (!*gbIsLevelBeingRestarted) {
-        v0 = mapIndex;
+        const CdMapTbl_File mapTexFile = (CdMapTbl_File)((int32_t) CdMapTbl_File::MAPTEX01_IMG + mapIdxInFolder + mapFolderOffset);
+        const CdMapTbl_File mapSprFile = (CdMapTbl_File)((int32_t) CdMapTbl_File::MAPSPR01_IMG + mapIdxInFolder + mapFolderOffset);
 
-        if (mapIndex < 0) {
-            v0 = mapIndex + 7;
-        }
-
-        v0 = u32(i32(v0) >> 3);
-        v1 = v0 << 1;
-        v1 += v0;
-        v1 <<= 3;
-        v0 <<= 3;
-        v0 = mapIndex - v0;
-        s1 = v1 + v0;
-        a0 = s1 + 0x18;
+        a0 = (int32_t) mapTexFile;
         P_LoadBlocks();
+
         P_InitMapTextures();
 
-        a0 = s1 + 0x10;
+        a0 = (int32_t) mapSprFile;
         P_LoadBlocks();
     }
 
@@ -1786,11 +1729,8 @@ loc_800230D4:
 }
 
 void P_LoadBlocks() noexcept {
-loc_80023700:
     sp -= 0x58;
     sw(s7, sp + 0x4C);
-    s7 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x54);
     sw(fp, sp + 0x50);
     sw(s6, sp + 0x48);
     sw(s5, sp + 0x44);
@@ -1800,32 +1740,38 @@ loc_80023700:
     sw(s1, sp + 0x34);
     sw(s0, sp + 0x30);
     sw(a0, sp + 0x28);
-    v0 = s7;                                            // Result = 00000000
+
+    s7 = 0;
+    v0 = s7;
+
 loc_80023738:
     v0 = (i32(v0) < 4);
     s7++;
-    if (v0 != 0) goto loc_80023754;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0xAE4;                                        // Result = STR_P_LoadBlocks_DataFailure_Err[0] (80010AE4)
-    I_Error();
-loc_80023754:
-    a0 = lw(sp + 0x28);
-    s5 = 0;                                             // Result = 00000000
+
+    if (v0 == 0) {
+        a0 = 0x80010AE4;    // Result = STR_P_LoadBlocks_DataFailure_Err[0] (80010AE4)
+        I_Error();
+    }
+
+    a0 = lw(sp + 0x28);    
     _thunk_OpenFile();
     s0 = v0;
+
     a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 2;                                             // Result = 00000002
+    a1 = 0;
+    a2 = 2;
     _thunk_SeekAndTellFile();
     s4 = v0;
     s3 = s4;
-    a1 = s4 - 0x18;
-    a2 = 1;
+
     a0 = *gpMainMemZone;
+    a1 = s4 - 0x18;
+    a2 = 1;    
     a3 = 0;
     _thunk_Z_Malloc();
     s1 = v0 - 0x18;
     s2 = s1;
+
     v1 = lw(v0 - 0x18);
     a0 = lw(v0 - 0x14);
     a1 = lw(v0 - 0x10);
@@ -1838,21 +1784,27 @@ loc_80023754:
     a0 = lw(v0 - 0x4);
     sw(v1, sp + 0x20);
     sw(a0, sp + 0x24);
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
     fp = lw(v0 - 0x4);
     s6 = lw(v0 - 0x8);
-    a2 = 0;                                             // Result = 00000000
+
+    a0 = s0;
+    a1 = 0;
+    a2 = 0;
     _thunk_SeekAndTellFile();
+
     a0 = s0;
     a1 = s1;
     a2 = s4;
     _thunk_ReadFile();
+    
     a0 = s0;
     _thunk_CloseFile();
+    
+    s5 = 0;
+
 loc_800237FC:
     v1 = lh(s2 + 0xA);
-    v0 = 0x1D4A;                                        // Result = 00001D4A
+    v0 = 0x1D4A;
     if (v1 != v0) goto loc_800238DC;
     v0 = lh(s2 + 0xC);
     v1 = *gNumLumps;
@@ -1862,20 +1814,24 @@ loc_800237FC:
     v0 = (v1 < 2);
     if (v0 == 0) goto loc_800238DC;
     if (v1 != 0) goto loc_80023870;
+    
     a0 = s2 + 0x18;
     getDecodedSize();
+
     v1 = lh(s2 + 0xC);
     a0 = *gpLumpInfo;
     v1 <<= 4;
     v1 += a0;
     v1 = lw(v1 + 0x4);
     if (v0 != v1) goto loc_800238DC;
+
 loc_80023870:
     v0 = lw(s2);
     s3 -= v0;
     if (i32(s3) < 0) goto loc_800238DC;
     s2 += v0;
     if (s3 != 0) goto loc_800237FC;
+
 loc_8002388C:
     if (s5 == 0) goto loc_800238E4;
     v0 = lw(sp + 0x10);
@@ -1890,65 +1846,73 @@ loc_8002388C:
     v1 = lw(sp + 0x24);
     sw(v0, s1 + 0x10);
     sw(v1, s1 + 0x14);
+    
     a0 = *gpMainMemZone;
     a1 = s1 + 0x18;
     _thunk_Z_Free2();
+
     v0 = s7;
     goto loc_80023738;
+
 loc_800238DC:
     s5 = 1;
     goto loc_8002388C;
+
 loc_800238E4:
     sw(fp, s1 + 0x14);
+
 loc_800238E8:
     v0 = lh(s1 + 0xC);
     a1 = *gpLumpCache;
     v0 <<= 2;
     a0 = v0 + a1;
-    v0 = lw(a0);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s1 + 0x18;
-        if (bJump) goto loc_8002391C;
+    v0 = s1 + 0x18;
+
+    if (lw(a0) != 0) {
+        sw(0, s1 + 0x4);
+        sh(0, s1 + 0x8);
+        sh(0, s1 + 0xA);
+    } else {
+        v1 = lh(s1 + 0xC);
+        sw(a0, s1 + 0x4);
+        v1 <<= 2;
+        v1 += a1;
+        sw(v0, v1);
+        a0 = lh(s1 + 0xC);
+        v0 = *gpbIsMainWadLump;
+        v1 = lbu(s1 + 0xE);
+        v0 += a0;
+        sb(v1, v0);
     }
-    sw(0, s1 + 0x4);
-    sh(0, s1 + 0x8);
-    sh(0, s1 + 0xA);
-    goto loc_80023948;
-loc_8002391C:
-    v1 = lh(s1 + 0xC);
-    sw(a0, s1 + 0x4);
-    v1 <<= 2;
-    v1 += a1;
-    sw(v0, v1);
-    a0 = lh(s1 + 0xC);
-    v0 = *gpbIsMainWadLump;
-    v1 = lbu(s1 + 0xE);
-    v0 += a0;
-    sb(v1, v0);
-loc_80023948:
+    
     v0 = lw(s1);
     s4 -= v0;
     v0 += s1;
-    if (s4 == 0) goto loc_80023964;
-    sw(v0, s1 + 0x10);
-    goto loc_80023974;
-loc_80023964:
-    v0 = s6 - s1;
-    if (s6 == 0) goto loc_80023970;
-    sw(v0, s1);
-loc_80023970:
-    sw(s6, s1 + 0x10);
-loc_80023974:
+
+    if (s4 != 0) {
+        sw(v0, s1 + 0x10);
+    } else {
+        v0 = s6 - s1;
+
+        if (s6 != 0) {
+            sw(v0, s1);
+        }
+    
+        sw(s6, s1 + 0x10);
+    }
+    
     v0 = lw(s1 + 0x10);
-    if (v0 == 0) goto loc_80023988;
-    sw(s1, v0 + 0x14);
-loc_80023988:
+
+    if (v0 != 0) {
+        sw(s1, v0 + 0x14);
+    }
+    
     s1 = lw(s1 + 0x10);
     if (s4 != 0) goto loc_800238E8;
+
     a0 = *gpMainMemZone;
     Z_CheckHeap();
-    ra = lw(sp + 0x54);
+    
     fp = lw(sp + 0x50);
     s7 = lw(sp + 0x4C);
     s6 = lw(sp + 0x48);
@@ -1959,7 +1923,6 @@ loc_80023988:
     s1 = lw(sp + 0x34);
     s0 = lw(sp + 0x30);
     sp += 0x58;
-    return;
 }
 
 void P_CacheSprite() noexcept {

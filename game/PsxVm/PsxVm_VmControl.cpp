@@ -6,6 +6,7 @@
 #define PSX_VM_NO_REGISTER_MACROS 1     // Because they cause conflicts with Avocado
 #include "PsxVm.h"
 
+#include "PcPsx/FatalErrors.h"
 #include <map>
 
 // Disabling certain Avocado warnings for MSVC
@@ -209,12 +210,25 @@ bool PsxVm::init(
     system.cdrom->setShell(false);
 
     if (!system.cdrom->disc) {
+        FATAL_ERROR_F(
+            "Couldn't open the .cue disc descriptor '%s'!\n"
+            "Is it present in the current working directory?\n"
+            "This *MUST* be the .cue file for PSX Doom NTSC-U (SLUS-00077).",
+            doomCdCuePath
+        );
+
         shutdown();
         return false;
     }
 
     // Load the bios file and emulate the bios until the shell
     if (!system.loadBios(biosFilePath)) {
+        FATAL_ERROR_F(
+            "Couldn't load the NTSC-U PSX bios file '%s'!\n"
+            "Is it present in the current working directory?",
+            biosFilePath
+        );
+
         shutdown();
         return false;
     }
@@ -225,6 +239,13 @@ bool PsxVm::init(
     disc::Data data = getFileContents(doomExePath);
 
     if (!system.loadExeFile(data)) {
+        FATAL_ERROR_F(
+            "Couldn't load the PSX Doom .exe file '%s'!\n"
+            "Is it present in the current working directory?\n"
+            "This *MUST* be the .exe file for PSX Doom NTSC-U (SLUS-00077).",
+            doomExePath
+        );
+
         shutdown();
         return false;
     }

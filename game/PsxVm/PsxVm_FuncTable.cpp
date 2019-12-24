@@ -209,7 +209,6 @@ extern void A_CloseShotgun2() noexcept;
 extern void P_SetupPsprites() noexcept;
 extern void P_MovePsprites() noexcept;
 extern void P_LoadSegs() noexcept;
-extern void P_LoadSubSectors() noexcept;
 extern void P_LoadSectors() noexcept;
 extern void P_LoadNodes() noexcept;
 extern void P_LoadLineDefs() noexcept;
@@ -1190,7 +1189,6 @@ namespace PsxVm {
         { 0x80021794, &P_SetupPsprites },
         { 0x8002190C, &P_MovePsprites },
         { 0x80021BA0, &P_LoadSegs },
-        { 0x80021DD8, &P_LoadSubSectors },
         { 0x80021EC4, &P_LoadSectors },
         { 0x80022104, &P_LoadNodes },
         { 0x8002237C, &P_LoadLineDefs },
