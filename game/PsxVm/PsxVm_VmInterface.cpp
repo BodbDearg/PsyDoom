@@ -245,7 +245,8 @@ void mtc0(const uint32_t r1, const uint8_t d) noexcept {
 }
 
 void cop2(const uint32_t i) noexcept {
-    gpCpu->gte.command(gte::Command(i));
+    gte::Command cmd(i);
+    gpCpu->gte.command(cmd);
 }
 
 uint32_t cfc2(const uint8_t s) noexcept {

@@ -231,7 +231,12 @@ if (PLATFORM_WINDOWS)
         "${SRC_DIR}/platform/windows/sound/sound.cpp"
     )
 elseif(PLATFORM_MAC)
-    # TODO
+    # Seems odd but these work on Mac too.
+    # Sound is just using SDL and file is just using standard file stuff.
+    list(APPEND SOURCE_FILES 
+        "${SRC_DIR}/platform/windows/file/file.cpp"
+        "${SRC_DIR}/platform/windows/sound/sound.cpp"
+    )
 else()
     # TODO
 endif()

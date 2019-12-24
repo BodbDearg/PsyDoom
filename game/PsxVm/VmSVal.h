@@ -2,6 +2,7 @@
 
 #include "PcPsx/Macros.h"
 #include <cstdint>
+#include <new>
 #include <type_traits>
 
 namespace PsxVm {

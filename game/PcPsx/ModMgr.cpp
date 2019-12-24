@@ -47,6 +47,8 @@ static void parseUserDataDirCommandLineArg(const int argc, const char** const ar
 // Determines what files in the game are overriden with files in a user supplied 'data directory', if any.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void determineFileOverridesInUserDataDir() noexcept {
+// FIXME: get working with MacOS 10.14
+#ifdef WIN32
     // If there is no data dir then there is no overrides
     gbFileHasOverrides.clear();
     gbFileHasOverrides.resize((uint32_t) CdMapTbl_File::END);
@@ -85,6 +87,7 @@ static void determineFileOverridesInUserDataDir() noexcept {
     catch (...) {
         FATAL_ERROR_F("Failed to search the given data/file overrides directory '%s'! Does this directory exist?", gDataDirPath.c_str());
     }
+#endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -149,7 +152,7 @@ bool ModMgr::openOverridenFile(const CdMapTbl_File discFile, PsxCd_File& fileOut
 
     // Figure out the path for the file
     if (discFile >= CdMapTbl_File::END) {
-        FATAL_ERROR_F("ModMgr::openOverridenFile: invalid file specified!");
+        FATAL_ERROR("ModMgr::openOverridenFile: invalid file specified!");
     }
 
     std::string filePath = gDataDirPath;

@@ -38,7 +38,7 @@ int32_t OpenFile(const CdMapTbl_File discFile) noexcept {
 
     // Search for a free cd file slot and abort with an error if not found
     int32_t fileSlotIdx = 0;
-    VmPtr<PsxCd_File> pFileSlot = gOpenPsxCdFiles;
+    VmPtr<PsxCd_File> pFileSlot = gOpenPsxCdFiles.get();
     
     do {
         if (pFileSlot->file.size == 0)
