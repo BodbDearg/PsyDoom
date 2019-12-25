@@ -1664,14 +1664,10 @@ loc_800230D4:
     if (!*gbIsLevelBeingRestarted) {
         const CdMapTbl_File mapTexFile = (CdMapTbl_File)((int32_t) CdMapTbl_File::MAPTEX01_IMG + mapIdxInFolder + mapFolderOffset);
         const CdMapTbl_File mapSprFile = (CdMapTbl_File)((int32_t) CdMapTbl_File::MAPSPR01_IMG + mapIdxInFolder + mapFolderOffset);
-
-        a0 = (int32_t) mapTexFile;
-        P_LoadBlocks();
-
+        
+        P_LoadBlocks(mapTexFile);
         P_InitMapTextures();
-
-        a0 = (int32_t) mapSprFile;
-        P_LoadBlocks();
+        P_LoadBlocks(mapSprFile);
     }
 
     // Check there is enough heap space left in order to run the level
@@ -1728,152 +1724,120 @@ loc_800230D4:
     sp += 0x98;
 }
 
-void P_LoadBlocks() noexcept {
+void P_LoadBlocks(const CdMapTbl_File file) noexcept {
     sp -= 0x58;
-    sw(s7, sp + 0x4C);
-    sw(fp, sp + 0x50);
-    sw(s6, sp + 0x48);
     sw(s4, sp + 0x40);
-    sw(s3, sp + 0x3C);
     sw(s2, sp + 0x38);
     sw(s1, sp + 0x34);
-    sw(s0, sp + 0x30);
-    sw(a0, sp + 0x28);
 
-    s7 = 0;
+    // Try and load the memory blocks containing lumps from the given file.
+    // Retry this a number of times before giving up, if the initial load attempt fails.
+    // Presumably this was to try and recover from a bad CD...
+    int32_t numLoadAttempts = 0;
+    int32_t fileSize = -1;
+    memblock_t allocHeader = {};
 
     while (true) {
-        if (i32(s7) >= 4) {
+        // If there have been too many failed load attempts then issue an error
+        if (numLoadAttempts >= 4) {
             a0 = 0x80010AE4;    // Result = STR_P_LoadBlocks_DataFailure_Err[0] (80010AE4)
             I_Error();
         }
 
-        s7++;
+        ++numLoadAttempts;
+        
+        // Open the blocks file and get it's size
+        const int32_t openFileIdx = OpenFile(file);
+        fileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
 
-        a0 = lw(sp + 0x28);    
-        _thunk_OpenFile();
-        s0 = v0;
+        // Alloc room to hold the file: note that we reduce the alloc size by 'sizeof(memblock_t)' since the blocks
+        // file already includes space for a 'memblock_t' header. We also save the current memblock header just in
+        // case loading fails, so we can restore it prior to deallocation...
+        void* const pAlloc = Z_Malloc(**gpMainMemZone, fileSize - sizeof(memblock_t), PU_STATIC, nullptr);
+        allocHeader = ((memblock_t*) pAlloc)[-1];
+        
+        // Read the file contents
+        SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::SET);
+        
+        void* const pBlockData = &((memblock_t*) pAlloc)[-1];
+        ReadFile(openFileIdx, pBlockData, fileSize);
+        CloseFile(openFileIdx);
 
-        a0 = s0;
-        a1 = 0;
-        a2 = 2;
-        _thunk_SeekAndTellFile();
-        s4 = v0;
-        s3 = s4;
-
-        a0 = *gpMainMemZone;
-        a1 = s4 - 0x18;
-        a2 = 1;    
-        a3 = 0;
-        _thunk_Z_Malloc();
-        s1 = v0 - 0x18;
-        s2 = s1;
-
-        v1 = lw(v0 - 0x18);
-        a0 = lw(v0 - 0x14);
-        a1 = lw(v0 - 0x10);
-        a2 = lw(v0 - 0xC);
-        sw(v1, sp + 0x10);
-        sw(a0, sp + 0x14);
-        sw(a1, sp + 0x18);
-        sw(a2, sp + 0x1C);
-        v1 = lw(v0 - 0x8);
-        a0 = lw(v0 - 0x4);
-        sw(v1, sp + 0x20);
-        sw(a0, sp + 0x24);
-        fp = lw(v0 - 0x4);
-        s6 = lw(v0 - 0x8);
-
-        a0 = s0;
-        a1 = 0;
-        a2 = 0;
-        _thunk_SeekAndTellFile();
-
-        a0 = s0;
-        a1 = s1;
-        a2 = s4;
-        _thunk_ReadFile();
-    
-        a0 = s0;
-        _thunk_CloseFile();
-
-        bool b1 = true;
+        // Process all of the memory blocks in the file and make sure they are ok.
+        // Once they are verified then we can start linking them in with other memory blocks in the heap:
+        bool bLoadedOk = true;
+        int32_t bytesLeft = fileSize;
+        
+        s1 = ptrToVmAddr(pBlockData);
+        s2 = ptrToVmAddr(pBlockData);
 
         do {
-            v1 = lh(s2 + 0xA);
+            // Verify the block has a valid zoneid
+            if (lh(s2 + 0xA) != ZONEID) {
+                bLoadedOk = false;
+                break;
+            }
             
-            if (v1 != 0x1D4A) {
-                b1 = false;
+            // Verify the lump number is valid
+            const int32_t lumpNum = lh(s2 + 0xC);
+
+            if (lumpNum >= *gNumLumps) {
+                bLoadedOk = false;
                 break;
             }
 
-            v0 = lh(s2 + 0xC);
-            v1 = *gNumLumps;
+            // Verify the compression mode is valid
+            const uint16_t compressionMode = lhu(s2 + 0xE);
 
-            if (i32(v0) >= i32(v1)) {
-                b1 = false;
+            if (compressionMode >= 2) {
+                bLoadedOk = false;
                 break;
             }
-
-            v1 = lhu(s2 + 0xE);
-
-            if (v1 >= 2) {
-                b1 = false;
-                break;
-            }
-
-            if (v1 == 0) {    
+            
+            // Verify the decompressed size is valid
+            if (compressionMode == 0) {
                 a0 = s2 + 0x18;
                 getDecodedSize();
-
-                v1 = lh(s2 + 0xC);                
-                v1 <<= 4;
-                a0 = *gpLumpInfo;
-                v1 += a0;
-                v1 = lw(v1 + 0x4);
-
-                if (v0 != v1) {
-                    b1 = false;
+                const uint32_t inflatedSize = v0;
+                
+                const int32_t lumpNum = lh(s2 + 0xC);
+                const lumpinfo_t& lump = (*gpLumpInfo)[lumpNum];
+                
+                if (inflatedSize != lump.size) {
+                    bLoadedOk = false;
                     break;
                 }
             }
 
-            v0 = lw(s2);
-            s3 -= v0;
-
-            if (i32(s3) < 0) {
-                b1 = false;
+            // Advance onto the next block and make sure we haven't gone past the end of the data
+            const int32_t blockSize = lw(s2);
+            bytesLeft -= blockSize;
+            
+            if (bytesLeft < 0) {
+                bLoadedOk = false;
                 break;
             }
 
-            s2 += v0;
-        } while (s3 != 0);
+            s2 += blockSize;
+        } while (bytesLeft != 0);
 
-        if (b1) {
-            sw(fp, s1 + 0x14);
+        // If everything was loaded ok then link the first block into the heap block list and finish up.
+        // Will do the rest of the linking in the loop below:
+        if (bLoadedOk) {
+            sw(allocHeader.prev, s1 + 0x14);
             break;
         }
 
-        v0 = lw(sp + 0x10);
-        v1 = lw(sp + 0x14);
-        a0 = lw(sp + 0x18);
-        a1 = lw(sp + 0x1C);
-        sw(v0, s1);
-        sw(v1, s1 + 0x4);
-        sw(a0, s1 + 0x8);
-        sw(a1, s1 + 0xC);
-        v0 = lw(sp + 0x20);
-        v1 = lw(sp + 0x24);
-        sw(v0, s1 + 0x10);
-        sw(v1, s1 + 0x14);
-    
-        a0 = *gpMainMemZone;
-        a1 = s1 + 0x18;
-        _thunk_Z_Free2();
+        // Load failed: restore the old alloc header and free the memory block.
+        // Will try again a certain number of times to try and counteract unreliable CDs.
+        ((memblock_t*) pBlockData)[0] = allocHeader;
+        Z_Free2(**gpMainMemZone, pAlloc);
     }
+    
+    s4 = fileSize;
 
     do {
-        v0 = lh(s1 + 0xC);        
+        v0 = lh(s1 + 0xC);
         v0 <<= 2;
         a1 = *gpLumpCache;
         a0 = v0 + a1;
@@ -1903,13 +1867,13 @@ void P_LoadBlocks() noexcept {
         if (s4 != 0) {
             sw(v0, s1 + 0x10);
         } else {
-            v0 = s6 - s1;
+            v0 = allocHeader.next.addr() - s1;
 
-            if (s6 != 0) {
+            if (allocHeader.next) {
                 sw(v0, s1);
             }
-    
-            sw(s6, s1 + 0x10);
+            
+            sw(allocHeader.next, s1 + 0x10);
         }
     
         v0 = lw(s1 + 0x10);
@@ -1920,18 +1884,14 @@ void P_LoadBlocks() noexcept {
     
         s1 = lw(s1 + 0x10);
     } while (s4 != 0);
-
+    
+    // After all that is done, make sure the heap is valid
     a0 = *gpMainMemZone;
     Z_CheckHeap();
     
-    fp = lw(sp + 0x50);
-    s7 = lw(sp + 0x4C);
-    s6 = lw(sp + 0x48);
     s4 = lw(sp + 0x40);
-    s3 = lw(sp + 0x3C);
     s2 = lw(sp + 0x38);
     s1 = lw(sp + 0x34);
-    s0 = lw(sp + 0x30);
     sp += 0x58;
 }
 

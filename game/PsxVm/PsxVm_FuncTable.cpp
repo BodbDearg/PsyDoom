@@ -218,7 +218,6 @@ extern void P_LoadMapLump() noexcept;
 extern void P_LoadLeafs() noexcept;
 extern void P_GroupLines() noexcept;
 extern void P_InitMapTextures() noexcept;
-extern void P_LoadBlocks() noexcept;
 extern void P_CacheSprite() noexcept;
 extern void P_CacheMapTexturesWithWidth() noexcept;
 extern void P_Shoot2() noexcept;
@@ -1198,7 +1197,6 @@ namespace PsxVm {
         { 0x80022920, &P_LoadLeafs },
         { 0x80022B58, &P_GroupLines },
         { 0x80022E68, &P_InitMapTextures },
-        { 0x80023700, &P_LoadBlocks },
         { 0x800239D8, &P_CacheSprite },
         { 0x80023AC8, &P_CacheMapTexturesWithWidth },
         { 0x80023C34, &P_Shoot2 },

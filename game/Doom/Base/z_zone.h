@@ -26,6 +26,9 @@ static constexpr int16_t PU_PURGELEVEL  = 16;   // (TODO: CONFIRM)
     // static constexpr int16_t PU_CACHE       = 101;
 #endif
 
+// All blocks must have this id
+static constexpr int16_t ZONEID = 0x1D4A;
+
 // Holds details on a block of memory
 struct memblock_t {
     int32_t             size;           // Including the header and possibly tiny fragments

@@ -4,9 +4,6 @@
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
 
-// All blocks must have this id
-static constexpr int16_t ZONEID	= 0x1D4A;
-
 // The minimum size that a memory block must be
 static constexpr int32_t MINFRAGMENT = 64;
 
