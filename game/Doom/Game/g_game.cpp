@@ -646,7 +646,7 @@ loc_80013714:
     s1 += 0x3E0C;                                       // Result = gBtnBinding_Attack (80073E0C)
     a1 = s1;                                            // Result = gBtnBinding_Attack (80073E0C)
     v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x75E8);                               // Load from: gpDemoBuffer (800775E8)
+    v1 = *gpDemoBuffer;
     sw(ra, sp + 0x3C);
     sw(s2, sp + 0x38);
     sw(s0, sp + 0x30);

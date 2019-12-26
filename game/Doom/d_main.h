@@ -4,13 +4,16 @@
 #include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 
-extern VmPtr<int32_t> gTicCon;
+enum class CdMapTbl_File : uint32_t;
+
+extern VmPtr<int32_t>           gTicCon;
+extern VmPtr<VmPtr<uint32_t>>   gpDemoBuffer;
 
 void D_DoomMain() noexcept;
-void RunLegals() noexcept;
-void RunTitle() noexcept;
-void RunDemo() noexcept;
-void RunCredits() noexcept;
+gameaction_t RunLegals() noexcept;
+gameaction_t RunTitle() noexcept;
+gameaction_t RunDemo(const CdMapTbl_File file) noexcept;
+gameaction_t RunCredits() noexcept;
 void I_SetDebugDrawStringPos() noexcept;
 void I_DebugDrawString() noexcept;
 

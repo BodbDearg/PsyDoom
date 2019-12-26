@@ -4,10 +4,6 @@
 #include <map>
 
 extern void D_DoomMain() noexcept;
-extern void RunLegals() noexcept;
-extern void RunTitle() noexcept;
-extern void RunDemo() noexcept;
-extern void RunCredits() noexcept;
 extern void I_SetDebugDrawStringPos() noexcept;
 extern void I_DebugDrawString() noexcept;
 extern void _thunk_D_memset() noexcept;
@@ -983,10 +979,6 @@ extern void LIBCOMB__ioabort() noexcept;
 namespace PsxVm {
     std::map<uint32_t, VmFunc> gFuncTable = {
         { 0x80012274, &D_DoomMain },
-        { 0x800123A4, &RunLegals },
-        { 0x800123E4, &RunTitle },
-        { 0x80012424, &RunDemo },
-        { 0x800124A8, &RunCredits },
         { 0x800124E8, &I_SetDebugDrawStringPos },
         { 0x800124F8, &I_DebugDrawString },
         { 0x80012850, &_thunk_D_memset },

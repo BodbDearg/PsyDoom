@@ -7,6 +7,7 @@
 #include "Base/s_sound.h"
 #include "Base/w_wad.h"
 #include "Base/z_zone.h"
+#include "cdmaptbl.h"
 #include "doomdef.h"
 #include "Game/g_game.h"
 #include "PsxVm/PsxVm.h"
@@ -22,6 +23,9 @@
 
 // The current number of 60 Hz ticks
 VmPtr<int32_t> gTicCon(0x8007814C);
+
+// Pointer to a buffer holding the demo
+VmPtr<VmPtr<uint32_t>> gpDemoBuffer(0x800775E8);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Main DOOM entry point.
@@ -58,20 +62,10 @@ void D_DoomMain() noexcept {
     // The main intro and demo scenes flow.
     // Continue looping until there is input and then execute the main menu until it times out.    
     while (true) {
-        RunTitle();
-
-        if (v0 != ga_exitdemo) {
-            a0 = 2;
-            RunDemo();
-
-            if (v0 != ga_exitdemo) {
-                RunCredits();
-
-                if (v0 != ga_exitdemo) {
-                    a0 = 3;
-                    RunDemo();
-
-                    if (v0 != ga_exitdemo)
+        if (RunTitle() != ga_exitdemo) {
+            if (RunDemo(CdMapTbl_File::DEMO1_LMP) != ga_exitdemo) {
+                if (RunCredits() != ga_exitdemo) {
+                    if (RunDemo(CdMapTbl_File::DEMO2_LMP) != ga_exitdemo)
                         continue;
                 }
             }
@@ -87,61 +81,47 @@ void D_DoomMain() noexcept {
 // Runs a screen with scrolling legals text.
 // This function is never called in the retail game!
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RunLegals() noexcept {
-    v0 = MiniLoop(START_Legals, STOP_Legals, TIC_Legals, DRAW_Legals);
+gameaction_t RunLegals() noexcept {
+    return MiniLoop(START_Legals, STOP_Legals, TIC_Legals, DRAW_Legals);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Runs the title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RunTitle() noexcept {
-    v0 = MiniLoop(START_Title, STOP_Title, TIC_Title, DRAW_Title);
+gameaction_t RunTitle() noexcept {
+    return MiniLoop(START_Title, STOP_Title, TIC_Title, DRAW_Title);
 }
 
-void RunDemo() noexcept {
-loc_80012424:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    a1 = 0x4000;                                        // Result = 00004000
-    a2 = 1;                                             // Result = 00000001
-    a0 = *gpMainMemZone;
-    sw(ra, sp + 0x14);
-    a3 = 0;                                             // Result = 00000000
-    _thunk_Z_EndMalloc();
-    sw(v0, gp + 0x8);                                   // Store to: gpDemoBuffer (800775E8)
-    a0 = s0;
-    _thunk_OpenFile();
-    s0 = v0;
-    a0 = s0;
-    a1 = lw(gp + 0x8);                                  // Load from: gpDemoBuffer (800775E8)
-    a2 = 0x4000;                                        // Result = 00004000
-    _thunk_ReadFile();
-    a0 = s0;
-    _thunk_CloseFile();
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load and run the specified demo file.
+// The maximum allowed demo size to be handled by this function is 16 KiB.
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
+    // Read the demo file contents (up to 16 KiB)
+    *gpDemoBuffer = (uint32_t*) Z_EndMalloc(**gpMainMemZone, 0x4000, PU_STATIC, nullptr);
+    const uint32_t openFileIdx = OpenFile(file);
+    ReadFile(openFileIdx, gpDemoBuffer->get(), 0x4000);
+    CloseFile(openFileIdx);
+    
+    // Play the demo
     G_PlayDemoPtr();
-    a0 = *gpMainMemZone;
-    a1 = lw(gp + 0x8);                                  // Load from: gpDemoBuffer (800775E8)
-    s0 = v0;
-    _thunk_Z_Free2();
-    v0 = s0;
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    const gameaction_t exitAction = (gameaction_t) v0;
+    
+    // Free the demo buffer and return the exit action
+    Z_Free2(**gpMainMemZone, gpDemoBuffer->get());
+    return exitAction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Runs the credits screen
 //------------------------------------------------------------------------------------------------------------------------------------------
-void RunCredits() noexcept {
-    v0 = MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits);
+gameaction_t RunCredits() noexcept {
+    return MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits);
 }
 
 void I_SetDebugDrawStringPos() noexcept {
     sw(a0, gp + 0xA50);                                 // Store to: gDebugDrawStringXPos (80078030)
     sw(a1, gp + 0xA5C);                                 // Store to: gDebugDrawStringYPos (8007803C)
-    return;
 }
 
 void I_DebugDrawString() noexcept {
