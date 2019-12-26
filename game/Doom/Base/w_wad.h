@@ -19,7 +19,7 @@ static_assert(sizeof(lumpinfo_t) == 16);
 extern const VmPtr<int32_t>             gNumLumps;
 extern const VmPtr<VmPtr<lumpinfo_t>>   gpLumpInfo;
 extern const VmPtr<VmPtr<VmPtr<void>>>  gpLumpCache;
-extern const VmPtr<VmPtr<bool>>         gpbIsMainWadLump;
+extern const VmPtr<VmPtr<bool>>         gpbIsUncompressedLump;
 
 void W_Init() noexcept;
 void W_CheckNumForName() noexcept;

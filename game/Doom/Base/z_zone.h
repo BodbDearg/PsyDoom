@@ -32,7 +32,7 @@ static constexpr int16_t ZONEID = 0x1D4A;
 // Holds details on a block of memory
 struct memblock_t {
     int32_t             size;           // Including the header and possibly tiny fragments
-    VmPtr<VmPtr<void*>> user;           // NULL if a free block
+    VmPtr<VmPtr<void>>  user;           // NULL if a free block
     int16_t             tag;            // Purgelevel
     int16_t             id;             // Should be ZONEID
     int32_t             lockframe;      // Don't purge on this frame

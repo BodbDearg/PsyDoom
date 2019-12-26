@@ -22,7 +22,7 @@ static_assert(sizeof(wadinfo_t) == 12);
 const VmPtr<int32_t>                gNumLumps(0x800781EC);
 const VmPtr<VmPtr<lumpinfo_t>>      gpLumpInfo(0x800781C4);
 const VmPtr<VmPtr<VmPtr<void>>>     gpLumpCache(0x8007823C);
-const VmPtr<VmPtr<bool>>            gpbIsMainWadLump(0x800782F0);
+const VmPtr<VmPtr<bool>>            gpbIsUncompressedLump(0x800782F0);
 
 // Which of the open files is the main WAD file
 static const VmPtr<uint32_t> gMainWadFileIdx(0x80078254);
@@ -58,15 +58,14 @@ void W_Init() noexcept {
     SeekAndTellFile(*gMainWadFileIdx, wadinfo->infotableofs, PsxCd_SeekMode::SET);
     ReadFile(*gMainWadFileIdx, gpLumpInfo->get(), *gNumLumps * sizeof(lumpinfo_t));
 
-    // Alloc an array of pointers for the lump cache and an array of bools to say whether each lump was loaded from the main IWAD or a map WAD
+    // Alloc and zero init the lump cache pointers list and an array of bools to say whether each lump is compressed or not.
     static_assert(sizeof(bool) == 1, "Expect bool to be 1 byte!");    
 
     *gpLumpCache = (VmPtr<void>*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(VmPtr<void>), PU_STATIC, nullptr);
-    *gpbIsMainWadLump = (bool*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(bool), PU_STATIC, nullptr);
+    *gpbIsUncompressedLump = (bool*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(bool), PU_STATIC, nullptr);
 
-    // Zero initialize the lump cache pointers list the list of bools saying whether each lump was loaded from an IWAD
     D_memset(gpLumpCache->get(), std::byte(0), *gNumLumps * sizeof(VmPtr<void>));
-    D_memset(gpbIsMainWadLump->get(), std::byte(0), *gNumLumps * sizeof(bool));
+    D_memset(gpbIsUncompressedLump->get(), std::byte(0), *gNumLumps * sizeof(bool));
 }
 
 void W_CheckNumForName() noexcept {
@@ -397,12 +396,12 @@ loc_8003196C:
     v0 &= 0x80;
     v1 = 1;
     if (v0 == 0) goto loc_800319A0;
-    v0 = *gpbIsMainWadLump;
+    v0 = *gpbIsUncompressedLump;
     v0 += s2;
     sb(s4, v0);
     goto loc_800319B0;
 loc_800319A0:
-    v0 = *gpbIsMainWadLump;
+    v0 = *gpbIsUncompressedLump;
     v0 += s2;
     sb(v1, v0);
 loc_800319B0:

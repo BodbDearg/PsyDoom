@@ -3543,7 +3543,7 @@ static const ProgElem ELEMS[] = {
     { 0x800782E4, 0x800782E8, "gTexCacheFillBlockX",                    ProgElemType::UINT32 },
     { 0x800782E8, 0x800782EC, "gTexCacheFillBlockY",                    ProgElemType::UINT32 },
     { 0x800782EC, 0x800782F0, "gPlayerNum",                             ProgElemType::UINT32 },
-    { 0x800782F0, 0x800782F4, "gpbIsMainWadLump",                       ProgElemType::PTR32 },
+    { 0x800782F0, 0x800782F4, "gpbIsUncompressedLump",                  ProgElemType::PTR32 },
     { 0x800782F4, 0x800782F8, "gNumActiveThinkers",                     ProgElemType::UINT32 },
     { 0x800782F8, 0x800782FC, "gAimBottomSlope",                        ProgElemType::INT32 },
     { 0x8007831C, 0x80078344, "gPSXCD_cdfile",                          ProgElemType::ARRAY, ProgElemType::UINT32, 0 },

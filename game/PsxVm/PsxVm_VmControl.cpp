@@ -296,9 +296,9 @@ void PsxVm::updateInput() noexcept {
     inputMgr.setState(gPadBtnKey_R2, InputManager::AnalogValue(pKbState[SDL_SCANCODE_PAGEDOWN] != 0|| pKbState[SDL_SCANCODE_E] != 0));
 
     inputMgr.setState(gPadBtnKey_Circle, InputManager::AnalogValue(pKbState[SDL_SCANCODE_SPACE] != 0));
-    inputMgr.setState(gPadBtnKey_Square, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LSHIFT] != 0 || pKbState[SDL_SCANCODE_RSHIFT]));
-    inputMgr.setState(gPadBtnKey_Triangle, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LCTRL] != 0 || pKbState[SDL_SCANCODE_RCTRL]));
-    inputMgr.setState(gPadBtnKey_Cross, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LALT] != 0 || pKbState[SDL_SCANCODE_RALT]));
+    inputMgr.setState(gPadBtnKey_Square, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LSHIFT] != 0 || pKbState[SDL_SCANCODE_RSHIFT] != 0));
+    inputMgr.setState(gPadBtnKey_Triangle, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LCTRL] != 0 || pKbState[SDL_SCANCODE_RCTRL] != 0 || pKbState[SDL_SCANCODE_F] != 0));
+    inputMgr.setState(gPadBtnKey_Cross, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LALT] != 0 || pKbState[SDL_SCANCODE_RALT] != 0));
 
     inputMgr.setState(gPadBtnKey_Start, InputManager::AnalogValue(pKbState[SDL_SCANCODE_RETURN] != 0));
     inputMgr.setState(gPadBtnKey_Select, InputManager::AnalogValue(pKbState[SDL_SCANCODE_TAB] != 0));

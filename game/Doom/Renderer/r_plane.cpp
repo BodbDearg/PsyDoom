@@ -38,7 +38,7 @@ loc_8002E2F4:
     v0 = -1;                                            // Result = FFFFFFFF
     if (v1 != v0) goto loc_8002E3F8;
     a0 = lh(s1 + 0x10);
-    v0 = *gpbIsMainWadLump;
+    v0 = *gpbIsUncompressedLump;
     v0 += a0;
     v0 = lbu(v0);
     {

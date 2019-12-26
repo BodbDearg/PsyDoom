@@ -28,6 +28,7 @@ set(SOURCE_FILES
     "Doom/d_main.h"
     "Doom/doomdef.h"
     "Doom/doomdef.h"
+    "Doom/Game/doomdata.h"
     "Doom/Game/g_game.cpp"
     "Doom/Game/g_game.h"
     "Doom/Game/p_base.cpp"

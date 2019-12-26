@@ -241,7 +241,7 @@ loc_80032C24:
     a1 = 0x20;                                          // Result = 00000020
     a2 = 0;                                             // Result = 00000000
     W_CacheLumpNum();
-    v1 = *gpbIsMainWadLump;
+    v1 = *gpbIsUncompressedLump;
     v1 += s2;
     v1 = lbu(v1);
     a0 = v0;
@@ -965,7 +965,7 @@ loc_800337B8:
     a2 = 0;                                             // Result = 00000000
     W_CacheLumpNum();
     v1 = lh(s3 + 0x10);
-    a0 = *gpbIsMainWadLump;
+    a0 = *gpbIsUncompressedLump;
     a0 += v1;
     v1 = lbu(a0);
     s0 = v0;

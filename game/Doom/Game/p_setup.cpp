@@ -11,6 +11,7 @@
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_main.h"
+#include "doomdata.h"
 #include "g_game.h"
 #include "p_firesky.h"
 #include "p_mobj.h"
@@ -18,22 +19,6 @@
 #include "p_switch.h"
 #include "PsxVm/PsxVm.h"
 #include "PsxVm/VmSVal.h"
-
-// Map lump offsets, relative to the 'MAPXX' marker
-enum : uint32_t {
-    ML_LABEL,       // The 'MAPXX' marker lump
-    ML_THINGS,
-    ML_LINEDEFS,
-    ML_SIDEDEFS,
-    ML_VERTEXES,
-    ML_SEGS,
-    ML_SSECTORS,
-    ML_NODES,
-    ML_SECTORS,
-    ML_REJECT,
-    ML_BLOCKMAP,
-    ML_LEAFS
-};
 
 // How much heap space is required after loading the map in order to run the game (48 KiB).
 // If we don't have this much then the game craps out with an error.
@@ -1724,18 +1709,17 @@ loc_800230D4:
     sp += 0x98;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Loads a list of memory blocks containing WAD lumps from the given file.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_LoadBlocks(const CdMapTbl_File file) noexcept {
-    sp -= 0x58;
-    sw(s4, sp + 0x40);
-    sw(s2, sp + 0x38);
-    sw(s1, sp + 0x34);
-
     // Try and load the memory blocks containing lumps from the given file.
     // Retry this a number of times before giving up, if the initial load attempt fails.
     // Presumably this was to try and recover from a bad CD...
     int32_t numLoadAttempts = 0;
     int32_t fileSize = -1;
-    memblock_t allocHeader = {};
+    std::byte* pBlockData = nullptr;
+    memblock_t initialAllocHeader = {};
 
     while (true) {
         // If there have been too many failed load attempts then issue an error
@@ -1751,15 +1735,14 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
         fileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
 
         // Alloc room to hold the file: note that we reduce the alloc size by 'sizeof(memblock_t)' since the blocks
-        // file already includes space for a 'memblock_t' header. We also save the current memblock header just in
-        // case loading fails, so we can restore it prior to deallocation...
-        void* const pAlloc = Z_Malloc(**gpMainMemZone, fileSize - sizeof(memblock_t), PU_STATIC, nullptr);
-        allocHeader = ((memblock_t*) pAlloc)[-1];
+        // file already includes space for a 'memblock_t' header for each lump. We also save the current memblock
+        // header just in case loading fails, so we can restore it prior to deallocation...
+        std::byte* const pAlloc = (std::byte*) Z_Malloc(**gpMainMemZone, fileSize - sizeof(memblock_t), PU_STATIC, nullptr);
+        initialAllocHeader = ((memblock_t*) pAlloc)[-1];
+        pBlockData = (std::byte*) &((fileblock_t*) pAlloc)[-1];
         
         // Read the file contents
         SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::SET);
-        
-        void* const pBlockData = &((memblock_t*) pAlloc)[-1];
         ReadFile(openFileIdx, pBlockData, fileSize);
         CloseFile(openFileIdx);
 
@@ -1767,41 +1750,38 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
         // Once they are verified then we can start linking them in with other memory blocks in the heap:
         bool bLoadedOk = true;
         int32_t bytesLeft = fileSize;
-        
-        s1 = ptrToVmAddr(pBlockData);
-        s2 = ptrToVmAddr(pBlockData);
+        std::byte* pCurBlockData = pBlockData;
 
         do {
             // Verify the block has a valid zoneid
-            if (lh(s2 + 0xA) != ZONEID) {
+            fileblock_t& fileBlock = *(fileblock_t*) pCurBlockData;
+            
+            if (fileBlock.id != ZONEID) {
                 bLoadedOk = false;
                 break;
             }
             
             // Verify the lump number is valid
-            const int32_t lumpNum = lh(s2 + 0xC);
-
-            if (lumpNum >= *gNumLumps) {
+            if (fileBlock.lumpNum >= *gNumLumps) {
                 bLoadedOk = false;
                 break;
             }
 
             // Verify the compression mode is valid
-            const uint16_t compressionMode = lhu(s2 + 0xE);
-
-            if (compressionMode >= 2) {
+            if (fileBlock.isUncompressed >= 2) {
                 bLoadedOk = false;
                 break;
             }
             
             // Verify the decompressed size is valid
-            if (compressionMode == 0) {
-                a0 = s2 + 0x18;
+            if (fileBlock.isUncompressed == 0) {
+                // Get the decompressed size of the data following the file block header
+                a0 = ptrToVmAddr(&(&fileBlock)[1]);
                 getDecodedSize();
                 const uint32_t inflatedSize = v0;
                 
-                const int32_t lumpNum = lh(s2 + 0xC);
-                const lumpinfo_t& lump = (*gpLumpInfo)[lumpNum];
+                // Make sure the decompressed size is what we expect
+                const lumpinfo_t& lump = (*gpLumpInfo)[fileBlock.lumpNum];
                 
                 if (inflatedSize != lump.size) {
                     bLoadedOk = false;
@@ -1810,89 +1790,88 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
             }
 
             // Advance onto the next block and make sure we haven't gone past the end of the data
-            const int32_t blockSize = lw(s2);
+            const int32_t blockSize = fileBlock.size;
             bytesLeft -= blockSize;
             
             if (bytesLeft < 0) {
                 bLoadedOk = false;
                 break;
             }
-
-            s2 += blockSize;
+            
+            pCurBlockData += blockSize;
         } while (bytesLeft != 0);
 
         // If everything was loaded ok then link the first block into the heap block list and finish up.
         // Will do the rest of the linking in the loop below:
         if (bLoadedOk) {
-            sw(allocHeader.prev, s1 + 0x14);
+            memblock_t& memblock = *(memblock_t*) pBlockData;
+            memblock.prev = initialAllocHeader.prev;
             break;
         }
 
         // Load failed: restore the old alloc header and free the memory block.
         // Will try again a certain number of times to try and counteract unreliable CDs.
-        ((memblock_t*) pBlockData)[0] = allocHeader;
+        ((memblock_t*) pBlockData)[0] = initialAllocHeader;
         Z_Free2(**gpMainMemZone, pAlloc);
     }
     
-    s4 = fileSize;
+    // Once all the blocks are loaded and verified then setup all of the block links.
+    // Also mark blocks for lumps that are already loaded as freeable.
+    std::byte* pCurBlockData = pBlockData;
+    int32_t bytesLeft = fileSize;
 
     do {
-        v0 = lh(s1 + 0xC);
-        v0 <<= 2;
-        a1 = *gpLumpCache;
-        a0 = v0 + a1;
-        v0 = s1 + 0x18;
-
-        if (lw(a0) != 0) {
-            sw(0, s1 + 0x4);
-            sh(0, s1 + 0x8);
-            sh(0, s1 + 0xA);
-        } else {
-            v1 = lh(s1 + 0xC);
-            sw(a0, s1 + 0x4);
-            v1 <<= 2;
-            v1 += a1;
-            sw(v0, v1);
-            a0 = lh(s1 + 0xC);
-            v0 = *gpbIsMainWadLump;
-            v1 = lbu(s1 + 0xE);
-            v0 += a0;
-            sb(v1, v0);
-        }
+        // Note: making a copy of the fileblock header to avoid possible strict aliasing weirdness reading and writing to the
+        // same memory using different struct types. The original code did not do that but this should be functionally the same.
+        fileblock_t fileblock = *(fileblock_t*) pCurBlockData;
+        memblock_t& memblock = *(memblock_t*) pCurBlockData;
     
-        v0 = lw(s1);
-        s4 -= v0;
-        v0 += s1;
-
-        if (s4 != 0) {
-            sw(v0, s1 + 0x10);
+        // Check if this lump is already loaded
+        VmPtr<void>& lumpCacheEntry = (*gpLumpCache)[fileblock.lumpNum];
+        
+        if (lumpCacheEntry) {
+            // If the lump is already loaded then mark this memory block as freeable
+            memblock.user = nullptr;
+            memblock.tag = 0;
+            memblock.id = 0;
         } else {
-            v0 = allocHeader.next.addr() - s1;
-
-            if (allocHeader.next) {
-                sw(v0, s1);
+            // Lump not loaded, set the lump cache entry to point to the newly loaded data.
+            // Also save whether the lump is compressed or not:
+            memblock.user = &lumpCacheEntry;
+            lumpCacheEntry = &memblock + 1;
+            gpbIsUncompressedLump[fileblock.lumpNum] = fileblock.isUncompressed;
+        }
+        
+        // Is this the last loade block in the file?
+        // If it is then set the size based on where the next block in the heap starts, otherwise just use the size defined in the file.
+        bytesLeft -= fileblock.size;
+        
+        if (bytesLeft != 0) {
+            memblock_t* const pNextMemblock = (memblock_t*)(pCurBlockData + fileblock.size);
+            memblock.next = pNextMemblock;
+        } else {
+            const uint32_t blockSize = (uint32_t)((std::byte*) initialAllocHeader.next.get() - pCurBlockData);
+            
+            if (initialAllocHeader.next) {
+                memblock.size = blockSize;
             }
             
-            sw(allocHeader.next, s1 + 0x10);
+            memblock.next = initialAllocHeader.next;
         }
-    
-        v0 = lw(s1 + 0x10);
-
-        if (v0 != 0) {
-            sw(s1, v0 + 0x14);
+        
+        // Set backlinks for the next block
+        if (memblock.next) {
+            memblock.next->prev = &memblock;
         }
-    
-        s1 = lw(s1 + 0x10);
-    } while (s4 != 0);
+        
+        // Move onto the next block loaded
+        pCurBlockData = (std::byte*) memblock.next.get();
+        
+    } while (bytesLeft != 0);
     
     // After all that is done, make sure the heap is valid
     a0 = *gpMainMemZone;
     Z_CheckHeap();
-    
-    s4 = lw(sp + 0x40);
-    s2 = lw(sp + 0x38);
-    s1 = lw(sp + 0x34);
-    sp += 0x58;
 }
 
 void P_CacheSprite() noexcept {
