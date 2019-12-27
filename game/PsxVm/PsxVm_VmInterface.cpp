@@ -346,7 +346,7 @@ void ptr_call(const uint32_t addr) noexcept {
         if (func) {
             func();
         } else {
-            FATAL_ERROR_F("Can't handle function call %Xu - don't know native function address!", addr);
+            FATAL_ERROR_F("Can't handle function call %X - don't know native function address!", addr);
         }
     }
 }
