@@ -94,9 +94,7 @@ void G_DoLoadLevel() noexcept {
 
     // And and setup the level, then verify the heap after all that is done
     P_SetupLevel(*gGameMap, *gGameSkill);
-    
-    a0 = *gpMainMemZone;
-    Z_CheckHeap();
+    Z_CheckHeap(**gpMainMemZone);
 
     // No action set upon starting a level
     *gGameAction = ga_nothing;

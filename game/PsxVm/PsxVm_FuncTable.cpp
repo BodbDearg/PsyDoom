@@ -340,7 +340,6 @@ extern void _thunk_Z_Malloc() noexcept;
 extern void _thunk_Z_EndMalloc() noexcept;
 extern void _thunk_Z_Free2() noexcept;
 extern void Z_FreeTags() noexcept;
-extern void Z_CheckHeap() noexcept;
 extern void Z_ChangeTag() noexcept;
 extern void I_PSXInit() noexcept;
 extern void I_Error() noexcept;
@@ -859,7 +858,6 @@ extern void LIBGTE_NormalClip() noexcept;
 extern void LIBGTE_NormalClipS() noexcept;
 extern void LIBGTE_AverageSZ3() noexcept;
 extern void LIBGTE_AverageSZ4() noexcept;
-extern void psx_main() noexcept;
 extern void LIBSN__main() noexcept;
 extern void LIBSN___do_global_dtors() noexcept;
 extern void LIBAPI_InitHeap() noexcept;
@@ -1313,7 +1311,6 @@ namespace PsxVm {
         { 0x800323C8, &_thunk_Z_EndMalloc },
         { 0x800325D8, &_thunk_Z_Free2 },
         { 0x80032640, &Z_FreeTags },
-        { 0x80032770, &Z_CheckHeap },
         { 0x80032838, &Z_ChangeTag },
         { 0x80032934, &I_PSXInit },
         { 0x80032B0C, &I_Error },
@@ -1832,7 +1829,6 @@ namespace PsxVm {
         { 0x800506E4, &LIBGTE_NormalClipS },
         { 0x800506F4, &LIBGTE_AverageSZ3 },
         { 0x80050704, &LIBGTE_AverageSZ4 },
-        { 0x80050714, &psx_main },
         { 0x800507AC, &LIBSN__main },
         { 0x8005081C, &LIBSN___do_global_dtors },
         { 0x80050884, &LIBAPI_InitHeap },

@@ -1480,13 +1480,9 @@ loc_800230D4:
         a1 = 8;
         Z_FreeTags();
     }
-
-    s1 = 0;
+       
     I_ResetTexCache();
-    
-    a0 = *gpMainMemZone;
-    Z_CheckHeap();
-
+    Z_CheckHeap(**gpMainMemZone);
     M_ClearRandom();
 
     // Init player stats for the map
@@ -1497,6 +1493,8 @@ loc_800230D4:
     sw(0, at + 0x7F2C);                                 // Store to: gTotalItems (80077F2C)
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x7FEC);                                 // Store to: gTotalSecret (80077FEC)
+
+    s1 = 0;
 
     do {
         at = 0x800B0000;                                    // Result = 800B0000
@@ -1864,8 +1862,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
     } while (bytesLeft != 0);
     
     // After all that is done, make sure the heap is valid
-    a0 = *gpMainMemZone;
-    Z_CheckHeap();
+    Z_CheckHeap(**gpMainMemZone);
 }
 
 void P_CacheSprite() noexcept {

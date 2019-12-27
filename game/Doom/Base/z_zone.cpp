@@ -379,50 +379,43 @@ loc_80032748:
     return;
 }
 
-void Z_CheckHeap() noexcept {
-loc_80032770:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s0, sp + 0x10);
-    s0 = s1 + 8;
-    sw(ra, sp + 0x18);
-    if (s0 == 0) goto loc_80032820;
-loc_8003278C:
-    v1 = lw(s0 + 0x10);
-    if (v1 != 0) goto loc_800327C4;
-    v0 = lw(s0);
-    v1 = lw(s1);
-    v0 += s0;
-    v0 -= s1;
-    if (v0 == v1) goto loc_80032810;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x145C;                                       // Result = STR_Z_CheckHeap_ZoneSizeChanged_Err[0] (8001145C)
-    goto loc_80032808;
-loc_800327C4:
-    v0 = lw(s0);
-    v0 += s0;
-    if (v0 == v1) goto loc_800327E8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x147C;                                       // Result = STR_Z_CheckHeap_BlockNotTouching_Err[0] (8001147C)
-    I_Error();
-loc_800327E8:
-    v0 = lw(s0 + 0x10);
-    v0 = lw(v0 + 0x14);
-    if (v0 == s0) goto loc_80032810;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x14B4;                                       // Result = STR_Z_CheckHeap_BadBlockBackLink_Err[0] (800114B4)
-loc_80032808:
-    I_Error();
-loc_80032810:
-    s0 = lw(s0 + 0x10);
-    if (s0 != 0) goto loc_8003278C;
-loc_80032820:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Performs basic sanity checks for the integrity of the heap.
+// If any sanity checks fail, then a fatal error is emitted.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Z_CheckHeap(const memzone_t& zone) noexcept {
+    // Sanity check all blocks in the heap
+    for (const memblock_t* pBlock = &zone.blocklist; pBlock; pBlock = pBlock->next.get()) {
+        // If we have reached the end of the block list, make sure we haven't 'lost' any heap memory.
+        // Computed size for all the blocks should match the zone size:
+        if (!pBlock->next) {
+            const std::byte* const pZoneStartByte = (const std::byte*) &zone;
+            const std::byte* const pBlockStartByte = (const std::byte*) pBlock;
+            const std::byte* const pBlockEndByte = pBlockStartByte + pBlock->size;
+            const int32_t actualZoneSize = (int32_t)(pBlockEndByte - pZoneStartByte);
+
+            if (actualZoneSize != zone.size) {
+                a0 = 0x8001145C;    // Result = STR_Z_CheckHeap_ZoneSizeChanged_Err[0] (8001145C)
+                I_Error();
+            }
+
+            continue;
+        }
+
+        // The next block after this block should touch the current block
+        const memblock_t* const pNextBlock = (const memblock_t*)((const std::byte*) pBlock + pBlock->size);
+
+        if (pNextBlock != pBlock->next.get()) {
+            a0 = 0x8001147C;    // Result = STR_Z_CheckHeap_BlockNotTouching_Err[0] (8001147C)
+            I_Error();
+        }
+
+        // The next block should point back to this block
+        if (pBlock->next->prev.get() != pBlock) {
+            a0 = 0x800114B4;    // Result = STR_Z_CheckHeap_BadBlockBackLink_Err[0] (800114B4)
+            I_Error();
+        }
+    }
 }
 
 void Z_ChangeTag() noexcept {
