@@ -524,79 +524,67 @@ loc_800134FC:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Run the actual in-game (3d) portions of the game.
+// Also do intermission and finale screens following a level.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void G_RunGame() noexcept {
-loc_8001353C:
-    G_DoLoadLevel();
-    MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+    do {
+        // Load the level and run the game
+        G_DoLoadLevel();
+        MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
     
-    *gbIsLevelBeingRestarted = false;
+        *gbIsLevelBeingRestarted = false;
     
-    if (*gGameAction == ga_number6) {
-        // Who knows what this function originally did...
-        empty_func1();
-    }
+        if (*gGameAction == ga_number6) {
+            // Who knows what this function originally did...
+            empty_func1();
+        }
     
-    if (*gGameAction == ga_number4)
-        goto loc_8001353C;
+        if (*gGameAction == ga_number4)
+            continue;
     
-    if (*gGameAction == ga_died || *gGameAction == ga_number8) {
-        *gbIsLevelBeingRestarted = true;
-        goto loc_8001353C;
-    }
+        if (*gGameAction == ga_died || *gGameAction == ga_number8) {
+            *gbIsLevelBeingRestarted = true;
+            continue;
+        }
+        
+        // Cleanup after the level is done
+        *gLockedTexPagesMask &= 1;
     
-    *gLockedTexPagesMask &= 1;
+        a0 = *gpMainMemZone;
+        a1 = 8;
+        Z_FreeTags();
     
-    a0 = *gpMainMemZone;
-    a1 = 8;
-    Z_FreeTags();
+        if (*gGameAction == ga_number5)
+            break;
     
-    if (*gGameAction == ga_number5) goto loc_800136F8;
-    
-    MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
+        // Do the intermission
+        MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
 
-    v0 = *gNetGame;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x1E;
-        if (bJump) goto loc_800136A4;
-    }
+        // Should we do the Ultimate DOOM finale?
+        if (*gNetGame == gt_single && *gGameMap == 30 && *gNextMap == 31) {    
+            MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
 
-    v1 = *gGameMap;
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 0x1F;
-        if (bJump) goto loc_800136A4;
-    }
-
-    v1 = *gNextMap;
-    {
-        const bool bJump = (v1 != v0);
-        v0 = (i32(v1) < 0x3C);
-        if (bJump) goto loc_800136A4;
-    }
+            if (*gGameAction == ga_number4 || *gGameAction == ga_number8)
+                continue;
     
-    MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
+            if (*gGameAction == ga_number5)
+                break;
 
-    if (*gGameAction == ga_number4 || *gGameAction == ga_number8)
-        goto loc_8001353C;
-    
-    if (*gGameAction == ga_number5)
-        goto loc_800136F8;
+            *gStartMapOrEpisode = -2;
+            break;
+        }
 
-    sw(-2, 0x80077600);         // Store to: gStartMapOrEpisode (80077600)
-    goto loc_800136F8;
+        // If there is a next map go onto it, otherwise show the DOOM II finale
+        if (*gNextMap < 60) {
+            *gGameMap = *gNextMap;
+            continue;
+        }
 
-loc_800136A4:
-    if (*gNextMap < 60) {
-        *gGameMap = *gNextMap;
-        goto loc_8001353C;
-    }
+        MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
 
-    MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
-
-    if (*gGameAction == ga_number4) goto loc_8001353C;
-    if (*gGameAction == ga_number8) goto loc_8001353C;
-loc_800136F8:;
+    } while (*gGameAction == ga_number4 || *gGameAction == ga_number8);
 }
 
 void G_PlayDemoPtr() noexcept {

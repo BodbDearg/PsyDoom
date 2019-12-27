@@ -75,8 +75,7 @@ loc_80035B4C:
 loc_80035C4C:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x75FC);                               // Load from: gStartSkill (800775FC)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7600);                               // Load from: gStartMapOrEpisode (80077600)
+    a1 = *gStartMapOrEpisode;
     a2 = 0x80070000;                                    // Result = 80070000
     a2 = lw(a2 + 0x7604);                               // Load from: gStartGameType (80077604)
     G_InitNew();
@@ -147,8 +146,7 @@ void M_Start() noexcept {
     v0 = 2;                                             // Result = 00000002
 loc_80035D64:
     sw(v0, gp + 0xB9C);                                 // Store to: gMaxStartEpisodeOrMap (8007817C)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7600);                               // Load from: gStartMapOrEpisode (80077600)
+    v1 = *gStartMapOrEpisode;
     v0 = lw(gp + 0xB9C);                                // Load from: gMaxStartEpisodeOrMap (8007817C)
     v0 = (i32(v0) < i32(v1));
     {
@@ -160,7 +158,7 @@ loc_80035D64:
     if (i32(v1) >= 0) goto loc_80035D94;
 loc_80035D8C:
     at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
+    *gStartMapOrEpisode = v0;
 loc_80035D94:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x3E50;                                       // Result = CDTrackNum_MainMenu (80073E50)
@@ -220,19 +218,16 @@ void M_Stop() noexcept {
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80035EB0;
     }
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7600);                               // Load from: gStartMapOrEpisode (80077600)
+    v1 = *gStartMapOrEpisode;
     {
         const bool bJump = (v1 != v0);
         v0 = 0x1F;                                      // Result = 0000001F
         if (bJump) goto loc_80035EA8;
     }
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
+    *gStartMapOrEpisode = v1;
     goto loc_80035EB0;
 loc_80035EA8:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
+    *gStartMapOrEpisode = v0;
 loc_80035EB0:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -409,8 +404,7 @@ loc_800360F0:
     sw(v0, at + 0x7604);                                // Store to: gStartGameType (80077604)
     if (v0 != 0) goto loc_80036124;
 loc_8003611C:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
+    *gStartMapOrEpisode = a0;
 loc_80036124:
     a0 = 0;                                             // Result = 00000000
 loc_80036128:
@@ -428,8 +422,7 @@ loc_80036144:
     v0 = 2;                                             // Result = 00000002
 loc_80036148:
     sw(v0, gp + 0xB9C);                                 // Store to: gMaxStartEpisodeOrMap (8007817C)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7600);                               // Load from: gStartMapOrEpisode (80077600)
+    v1 = *gStartMapOrEpisode;
     v0 = lw(gp + 0xB9C);                                // Load from: gMaxStartEpisodeOrMap (8007817C)
     v0 = (i32(v0) < i32(v1));
     {
@@ -437,8 +430,7 @@ loc_80036148:
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80036240;
     }
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
+    *gStartMapOrEpisode = v0;
     v0 = 0;                                             // Result = 00000000
     goto loc_80036244;
 loc_80036178:
@@ -448,12 +440,10 @@ loc_80036178:
         v0 = s0 & 0x8000;
         if (bJump) goto loc_800361B0;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7600);                               // Load from: gStartMapOrEpisode (80077600)
+    v0 = *gStartMapOrEpisode;
     v1 = lw(gp + 0xB9C);                                // Load from: gMaxStartEpisodeOrMap (8007817C)
     v0++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
+    *gStartMapOrEpisode = v0;
     v0 = (i32(v1) < i32(v0));
     a0 = 0;                                             // Result = 00000000
     if (v0 != 0) goto loc_800361D8;
@@ -464,17 +454,14 @@ loc_800361B0:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80036244;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7600);                               // Load from: gStartMapOrEpisode (80077600)
+    v0 = *gStartMapOrEpisode;
     v0--;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
-    a0 = 0;                                             // Result = 00000000
+    *gStartMapOrEpisode = v0;
+    a0 = 0;
     if (i32(v0) > 0) goto loc_80036238;
 loc_800361D8:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
-    v0 = 0;                                             // Result = 00000000
+    *gStartMapOrEpisode = v1;
+    v0 = 0;
     goto loc_80036244;
 loc_800361E8:
     {
@@ -585,8 +572,7 @@ loc_80036258:
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80036398;
     }
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7600);                               // Load from: gStartMapOrEpisode (80077600)
+    v1 = *gStartMapOrEpisode;
     if (v1 != v0) goto loc_8003637C;
     a1 = lh(gp + 0x656);                                // Load from: MainMenu_Episode_YPos (80077C36)
     a2 = 0x80010000;                                    // Result = 80010000
@@ -607,8 +593,7 @@ loc_80036398:
     a2 += 0x7CAC;                                       // Result = STR_Level[0] (80077CAC)
     a0 = 0x4A;                                          // Result = 0000004A
     I_DrawString();
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7600);                               // Load from: gStartMapOrEpisode (80077600)
+    a2 = *gStartMapOrEpisode;
     v0 = (i32(a2) < 0xA);
     a0 = 0x88;                                          // Result = 00000088
     if (v0 != 0) goto loc_800363C8;

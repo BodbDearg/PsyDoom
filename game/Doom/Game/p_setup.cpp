@@ -31,7 +31,7 @@ static constexpr int32_t NUM_FILES_PER_LEVEL = 3;
 static constexpr int32_t FILES_PER_MAP_FOLDER = LEVELS_PER_MAP_FOLDER * NUM_FILES_PER_LEVEL;
 
 // Map data
-VmPtr<int32_t>  gNumVertexes(0x80078018);
+const VmPtr<int32_t> gNumVertexes(0x80078018);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number

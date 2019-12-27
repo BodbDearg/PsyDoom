@@ -287,8 +287,7 @@ loc_80029000:
     v1 = lw(gp + 0xC90);                                // Load from: gMapNumToCheatWarpTo (80078270)
     v0 &= a0;
     sw(v0, a3 + 0xC0);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
+    *gStartMapOrEpisode = v1;
     *gGameMap = v1;
     goto loc_800293E8;
 loc_80029044:

@@ -6,8 +6,9 @@
 
 enum class CdMapTbl_File : uint32_t;
 
-extern VmPtr<int32_t>           gTicCon;
-extern VmPtr<VmPtr<uint32_t>>   gpDemoBuffer;
+extern const VmPtr<int32_t>             gTicCon;
+extern const VmPtr<VmPtr<uint32_t>>     gpDemoBuffer;
+extern const VmPtr<int32_t>             gStartMapOrEpisode;
 
 void D_DoomMain() noexcept;
 gameaction_t RunLegals() noexcept;

@@ -3,6 +3,8 @@
 #include "Doom/doomdef.h"
 #include "Doom/cdmaptbl.h"
 
+extern const VmPtr<int32_t> gNumVertexes;
+
 void P_LoadSegs() noexcept;
 void P_LoadSectors() noexcept;
 void P_LoadNodes() noexcept;

@@ -5,7 +5,7 @@
 #include "PsyQ/LIBAPI.h"
 
 // A global that is used to save the return address for the entire .EXE
-VmPtr<uint32_t> gProgramReturnAddr(0x80077E58);
+static const VmPtr<uint32_t> gProgramReturnAddr(0x80077E58);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // This is the reverse engineered entrypoint for PSXDOOM.EXE.

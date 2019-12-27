@@ -2075,8 +2075,7 @@ loc_80034884:
     v0 = lbu(v0 + 0x7604);                              // Load from: gStartGameType (80077604)
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lbu(v1 + 0x75FC);                              // Load from: gStartSkill (800775FC)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lbu(a1 + 0x7600);                              // Load from: gStartMapOrEpisode (80077600)
+    a1 = (uint8_t) *gStartMapOrEpisode;
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x3E0C;                                       // Result = gBtnBinding_Attack (80073E0C)
     at = 0x80070000;                                    // Result = 80070000
@@ -2152,8 +2151,7 @@ loc_8003499C:
     sw(v0, at + 0x7604);                                // Store to: gStartGameType (80077604)
     at = 0x80070000;                                    // Result = 80070000
     sw(v1, at + 0x75FC);                                // Store to: gStartSkill (800775FC)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a1, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
+    *gStartMapOrEpisode = a1;
     I_NetButtonsToLocal();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7FC8);                                // Store to: MAYBE_gpButtonBindings_Player1 (80077FC8)

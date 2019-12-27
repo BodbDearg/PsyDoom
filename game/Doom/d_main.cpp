@@ -22,10 +22,13 @@
 #include "Wess/psxsnd.h"
 
 // The current number of 60 Hz ticks
-VmPtr<int32_t> gTicCon(0x8007814C);
+const VmPtr<int32_t> gTicCon(0x8007814C);
 
 // Pointer to a buffer holding the demo
-VmPtr<VmPtr<uint32_t>> gpDemoBuffer(0x800775E8);
+const VmPtr<VmPtr<uint32_t>> gpDemoBuffer(0x800775E8);
+
+// Starting map or episode when beginning a new game
+const VmPtr<int32_t> gStartMapOrEpisode(0x80077600);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Main DOOM entry point.

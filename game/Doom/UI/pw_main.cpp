@@ -203,8 +203,7 @@ loc_80037070:
     a1 = lw(sp + 0x14);
     sw(a0, gp + 0x65C);                                 // Store to: gbUsingAPassword (80077C3C)
     *gGameMap = v1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
+    *gStartMapOrEpisode = v1;
     at = 0x80080000;                                    // Result = 80080000
     *gGameSkill = (skill_t) a1;
     at = 0x80070000;                                    // Result = 80070000
