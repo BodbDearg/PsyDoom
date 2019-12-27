@@ -1011,11 +1011,6 @@ loc_800558C4:
 
 void LIBCD_CD_sync() noexcept {
 loc_800558DC:
-    // Emulate a little in case code is polling for CD data, waiting for events etc.
-    #if PC_PSX_DOOM_MODS
-        emulate_a_little();
-    #endif
-
     sp -= 0x38;
     sw(s5, sp + 0x2C);
     s5 = a0;
@@ -1044,6 +1039,11 @@ loc_800558DC:
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at + 0x6128);                                // Store to: LIBCD_BIOS_alarm[2] (80086128)
 loc_80055948:
+    // Emulate a little in case code is polling for CD data, waiting for events etc.
+    #if PC_PSX_DOOM_MODS
+        emulate_a_little();
+    #endif
+
     a0 = -1;                                            // Result = FFFFFFFF
     _thunk_LIBETC_VSync();
     v1 = 0x80080000;                                    // Result = 80080000
