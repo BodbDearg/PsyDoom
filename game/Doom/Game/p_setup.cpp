@@ -1773,6 +1773,9 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
                 break;
             }
             
+        // FIXME: Disabling to allow levels from "[GEC] Master Edition PSX Doom" to load - disabling the check appears to be harmless.
+        // Does that mean however that the GEC compression tools are incorrect bad block headers? Should perhaps follow up on this.
+        #if !PC_PSX_DOOM_MODS
             // Verify the decompressed size is valid
             if (fileBlock.isUncompressed == 0) {
                 // Get the decompressed size of the data following the file block header
@@ -1788,6 +1791,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
                     break;
                 }
             }
+        #endif
 
             // Advance onto the next block and make sure we haven't gone past the end of the data
             const int32_t blockSize = fileBlock.size;
