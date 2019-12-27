@@ -342,8 +342,6 @@ extern void _thunk_Z_Free2() noexcept;
 extern void Z_FreeTags() noexcept;
 extern void Z_CheckHeap() noexcept;
 extern void Z_ChangeTag() noexcept;
-extern void Z_FreeMemory() noexcept;
-extern void I_Main() noexcept;
 extern void I_PSXInit() noexcept;
 extern void I_Error() noexcept;
 extern void I_ReadGamepad() noexcept;
@@ -1317,8 +1315,6 @@ namespace PsxVm {
         { 0x80032640, &Z_FreeTags },
         { 0x80032770, &Z_CheckHeap },
         { 0x80032838, &Z_ChangeTag },
-        { 0x800328C4, &Z_FreeMemory },
-        { 0x8003290C, &I_Main },
         { 0x80032934, &I_PSXInit },
         { 0x80032B0C, &I_Error },
         { 0x80032BB8, &I_ReadGamepad },

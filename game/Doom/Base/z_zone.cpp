@@ -459,22 +459,19 @@ loc_800328A4:
     return;
 }
 
-void Z_FreeMemory() noexcept {
-loc_800328C4:
-    a0 += 8;
-    v1 = 0;                                             // Result = 00000000
-    if (a0 == 0) goto loc_800328FC;
-loc_800328D0:
-    v0 = lw(a0 + 0x4);
-    if (v0 != 0) goto loc_800328EC;
-    v0 = lw(a0);
-    v1 += v0;
-loc_800328EC:
-    a0 = lw(a0 + 0x10);
-    if (a0 != 0) goto loc_800328D0;
-loc_800328FC:
-    v0 = v1;                                            // Result = 00000000
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Counts and returns the number of free bytes in the given memory zone
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t Z_FreeMemory(memzone_t& zone) noexcept {
+    int32_t bytesFree = 0;
+
+    for (memblock_t* pBlock = &zone.blocklist; pBlock; pBlock = pBlock->next.get()) {
+        if (!pBlock->user) {
+            bytesFree += pBlock->size;
+        }
+    }
+
+    return bytesFree;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

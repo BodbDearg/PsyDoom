@@ -1650,9 +1650,7 @@ loc_800230D4:
     }
 
     // Check there is enough heap space left in order to run the level
-    a0 = *gpMainMemZone;
-    Z_FreeMemory();
-    const int32_t freeMemForGameplay = v0;
+    const int32_t freeMemForGameplay = Z_FreeMemory(**gpMainMemZone);
 
     if (freeMemForGameplay < MIN_REQ_HEAP_SPACE_FOR_GAMEPLAY) {
         Z_DumpHeap();

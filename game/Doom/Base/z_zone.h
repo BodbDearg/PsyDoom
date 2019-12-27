@@ -68,5 +68,5 @@ void _thunk_Z_Free2() noexcept;
 void Z_FreeTags() noexcept;
 void Z_CheckHeap() noexcept;
 void Z_ChangeTag() noexcept;
-void Z_FreeMemory() noexcept;
+int32_t Z_FreeMemory(memzone_t& zone) noexcept;
 void Z_DumpHeap() noexcept;
