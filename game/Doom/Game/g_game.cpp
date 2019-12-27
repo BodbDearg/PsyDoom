@@ -527,66 +527,60 @@ loc_800134FC:
 }
 
 void G_RunGame() noexcept {
-loc_80013528:
     sp -= 0x20;
-    sw(ra, sp + 0x1C);
     sw(s2, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
+    
+    s1 = 8;
+    s2 = 4;
 
 loc_8001353C:
     G_DoLoadLevel();
     MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
-
-    v1 = *gGameAction;
-    v0 = 6;                                             // Result = 00000006
+    
     *gbIsLevelBeingRestarted = false;
-    s2 = 4;                                             // Result = 00000004
-    if (v1 != v0) goto loc_80013588;
-
-    // Who knows what this function originally did...
-    empty_func1();
-
-loc_80013588:
-    v0 = *gGameAction;
-    v1 = 1;                                             // Result = 00000001
-    if (v0 == s2) goto loc_8001353C;
-    s1 = 8;                                             // Result = 00000008
-    if (v0 == v1) goto loc_800135A8;
-    if (v0 != s1) goto loc_800135B4;
-
-loc_800135A8:
-    *gbIsLevelBeingRestarted = v1;
-    goto loc_8001353C;
-
-loc_800135B4:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
-    a0 = *gpMainMemZone;
+    
+    if (*gGameAction == ga_number6) {
+        // Who knows what this function originally did...
+        empty_func1();
+    }
+    
+    if (*gGameAction == ga_number4)
+        goto loc_8001353C;
+    
+    if (*gGameAction == ga_died || *gGameAction == ga_number8) {
+        *gbIsLevelBeingRestarted = true;
+        goto loc_8001353C;
+    }
+    
+    v0 = lw(0x80077C08);            // Load from: gLockedTexPagesMask (80077C08)
     v0 &= 1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)
-    a1 = 8;                                             // Result = 00000008
+    sw(v0, 0x80077C08);             // Store to: gLockedTexPagesMask (80077C08)
+    
+    a0 = *gpMainMemZone;
+    a1 = 8;
     Z_FreeTags();
+    
     v0 = *gGameAction;
-    s0 = 5;                                             // Result = 00000005
+    s0 = 5;
     if (v0 == s0) goto loc_800136F8;
     
     MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
 
-    v0 = lw(gp + 0xA7C);                                // Load from: gNetGame (8007805C)
+    v0 = lw(gp + 0xA7C);    // Load from: gNetGame (8007805C)
     {
         const bool bJump = (v0 != 0);
-        v0 = 0x1E;                                      // Result = 0000001E
+        v0 = 0x1E;
         if (bJump) goto loc_80013698;
     }
     v1 = *gGameMap;
     {
         const bool bJump = (v1 != v0);
-        v0 = 0x1F;                                      // Result = 0000001F
+        v0 = 0x1F;
         if (bJump) goto loc_80013698;
     }
-    v1 = lw(gp + 0xAB8);                                // Load from: gNextMap (80078098)
+    v1 = lw(gp + 0xAB8);    // Load from: gNextMap (80078098)
     {
         const bool bJump = (v1 != v0);
         v0 = (i32(v1) < 0x3C);
@@ -620,21 +614,19 @@ loc_800136B8:
     MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
 
     v1 = *gGameAction;
-    v0 = 4;                                             // Result = 00000004
+    v0 = 4;
     {
         const bool bJump = (v1 == v0);
-        v0 = 8;                                         // Result = 00000008
+        v0 = 8;
         if (bJump) goto loc_8001353C;
     }
     if (v1 == v0) goto loc_8001353C;
 
 loc_800136F8:
-    ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-    return;
 }
 
 void G_PlayDemoPtr() noexcept {
