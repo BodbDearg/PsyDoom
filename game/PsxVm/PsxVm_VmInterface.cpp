@@ -508,7 +508,7 @@ uint32_t ptrToVmAddr(const void* const ptr) noexcept {
 
         // Note: allow a pointer at the end of the 2 MiB RAM region, but no more
         if (offsetToRam > 0 && offsetToRam <= 0x200000) {
-            return 0x80000000 + offsetToRam;
+            return 0x80000000 + (uint32_t) offsetToRam;
         } else {
             FATAL_ERROR("ptrToVmAddr: pointer does not point to an area inside PSX RAM!");
         }

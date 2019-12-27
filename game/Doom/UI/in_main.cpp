@@ -151,9 +151,8 @@ loc_8003C96C:
     at += a0;
     sw(t3, at);
 loc_8003C97C:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FA4);                               // Load from: gNetGame (8007805C)
-    v0 = 2;                                             // Result = 00000002
+    v1 = *gNetGame;
+    v0 = 2;
     a2 += 4;
     if (v1 != v0) goto loc_8003C9B4;
     at = 0x800B0000;                                    // Result = 800B0000
@@ -172,8 +171,7 @@ loc_8003C9B4:
     a0 += 0x10;
     if (v0 != 0) goto loc_8003C7B4;
     v1 = *gTicCon;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F68);                               // Load from: gNextMap (80078098)
+    v0 = *gNextMap;
     sw(0, gp + 0xCFC);                                  // Store to: 800782DC
     v0 = (i32(v0) < 0x3C);
     at = 0x80070000;                                    // Result = 80070000
@@ -306,9 +304,8 @@ loc_8003CBC0:
     a0 = 0;                                             // Result = 00000000
     if (v0 == 0) goto loc_8003CC20;
 loc_8003CBD4:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FA4);                               // Load from: gNetGame (8007805C)
-    if (a0 == 0) goto loc_8003CBF8;
+    a0 = *gNetGame;
+    if (a0 == gt_single) goto loc_8003CBF8;
     s0++;
     v0 = (i32(s0) < 2);
     {
@@ -489,12 +486,11 @@ loc_8003CE70:
     sp -= 0x18;
     sw(ra, sp + 0x10);
     I_IncDrawnFrameCount();
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FA4);                               // Load from: gNetGame (8007805C)
-    v0 = 1;                                             // Result = 00000001
+    v1 = *gNetGame;
+    v0 = 1;
     {
         const bool bJump = (v1 != v0);
-        v0 = 2;                                         // Result = 00000002
+        v0 = 2;
         if (bJump) goto loc_8003CEA4;
     }
     IN_CoopDrawer();
@@ -580,8 +576,7 @@ loc_8003CEE4:
     a2 = lw(gp + 0x9FC);                                // Load from: 80077FDC
     a1 = 0x75;                                          // Result = 00000075
     I_DrawNumber();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F68);                               // Load from: gNextMap (80078098)
+    v0 = *gNextMap;
     v0 = (i32(v0) < 0x3C);
     a0 = -1;                                            // Result = FFFFFFFF
     if (v0 == 0) goto loc_8003D09C;
@@ -590,8 +585,7 @@ loc_8003CEE4:
     a1 = 0x91;                                          // Result = 00000091
     I_DrawString();
     a0 = -1;                                            // Result = FFFFFFFF
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7F68);                               // Load from: gNextMap (80078098)
+    a2 = *gNextMap;
     a1 = 0xA1;                                          // Result = 000000A1
     a2 <<= 5;
     a2 += s1;
@@ -799,8 +793,7 @@ loc_8003D334:
     a2 = lw(a2);
     a1 = 0x7B;                                          // Result = 0000007B
     I_DrawNumber();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F68);                               // Load from: gNextMap (80078098)
+    v0 = *gNextMap;
     v0 = (i32(v0) < 0x3C);
     a0 = -1;                                            // Result = FFFFFFFF
     if (v0 == 0) goto loc_8003D430;
@@ -810,8 +803,7 @@ loc_8003D334:
     I_DrawString();
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = 0xA5;                                          // Result = 000000A5
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7F68);                               // Load from: gNextMap (80078098)
+    a2 = *gNextMap;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
     a2 <<= 5;
@@ -1000,8 +992,7 @@ loc_8003D658:
     a2 = lw(a2);
     a1 = 0x8A;                                          // Result = 0000008A
     I_DrawNumber();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F68);                               // Load from: gNextMap (80078098)
+    v0 = *gNextMap;
     v0 = (i32(v0) < 0x3C);
     a0 = -1;                                            // Result = FFFFFFFF
     if (v0 == 0) goto loc_8003D6B0;
@@ -1010,8 +1001,7 @@ loc_8003D658:
     a1 = 0xBE;                                          // Result = 000000BE
     I_DrawString();
     a0 = -1;                                            // Result = FFFFFFFF
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7F68);                               // Load from: gNextMap (80078098)
+    a2 = *gNextMap;
     a1 = 0xCE;                                          // Result = 000000CE
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)

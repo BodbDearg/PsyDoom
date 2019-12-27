@@ -459,8 +459,7 @@ loc_8003C168:
     sw(t4, sp + 0x28);
     fp = 0;                                             // Result = 00000000
 loc_8003C178:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FA4);                               // Load from: gNetGame (8007805C)
+    v1 = *gNetGame;
     t4 = 1;                                             // Result = 00000001
     if (v1 == t4) goto loc_8003C1A0;
     v0 = 0x80070000;                                    // Result = 80070000

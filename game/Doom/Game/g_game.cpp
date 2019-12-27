@@ -20,9 +20,11 @@
 // Sometimes this is used in preference to the return action, and sometimes it is used temporarily to hold the return action.
 const VmPtr<gameaction_t> gGameAction(0x80077EB4);
 
-// The current skill level and game map
-const VmPtr<skill_t> gGameSkill(0x80078258);
-const VmPtr<int32_t> gGameMap(0x80078048);
+// The current skill level. game type, game map, and the next/upcoming map
+const VmPtr<skill_t>        gGameSkill(0x80078258);
+const VmPtr<gametype_t>     gNetGame(0x8007805C);
+const VmPtr<int32_t>        gGameMap(0x80078048);
+const VmPtr<int32_t>        gNextMap(0x80078098);
 
 // State for each player and whether they are in the game
 const VmPtr<player_t[MAXPLAYERS]> gPlayers(0x800A87EC);
@@ -201,7 +203,7 @@ loc_80013030:
 
 void G_DoReborn() noexcept {
 loc_80013070:
-    v0 = lw(gp + 0xA7C);                                // Load from: gNetGame (8007805C)
+    v0 = *gNetGame;
     sp -= 0x30;
     sw(s3, sp + 0x1C);
     s3 = a0;
@@ -228,14 +230,14 @@ loc_800130AC:
     if (v0 == 0) goto loc_800130E8;
     sw(0, v1 + 0x80);
 loc_800130E8:
-    v1 = lw(gp + 0xA7C);                                // Load from: gNetGame (8007805C)
-    v0 = 2;                                             // Result = 00000002
+    v1 = *gNetGame;
+    v0 = 2;
     {
         const bool bJump = (v1 != v0);
         v1 = a0 << 1;
         if (bJump) goto loc_800131E4;
     }
-    s0 = 0;                                             // Result = 00000000
+    s0 = 0;
     s4 = s2;
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 - 0x7FA0);                               // Load from: gpDeathmatchP (80078060)
@@ -420,8 +422,6 @@ void G_SetGameComplete() noexcept {
 
 void G_InitNew() noexcept {
 loc_80013394:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
     sp -= 0x20;
     sw(s2, sp + 0x18);
     s2 = a0;
@@ -430,9 +430,7 @@ loc_80013394:
     sw(s1, sp + 0x14);
     sw(ra, sp + 0x1C);
     *gbIsLevelBeingRestarted = false;
-    v0 &= 1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)
+    *gLockedTexPagesMask &= 1;
     s1 = a2;
     I_ResetTexCache();
     a0 = *gpMainMemZone;
@@ -443,7 +441,7 @@ loc_80013394:
     v0 = 0x12C;                                         // Result = 0000012C
     *gGameMap = s0;
     *gGameSkill = (skill_t) s2;
-    sw(s1, gp + 0xA7C);                                 // Store to: gNetGame (8007805C)
+    *gNetGame = (gametype_t) s1;
 loc_800133FC:
     at = 0x800B0000;                                    // Result = 800B0000
     at -= 0x7810;                                       // Result = gPlayer1[1] (800A87F0)
@@ -527,14 +525,6 @@ loc_800134FC:
 }
 
 void G_RunGame() noexcept {
-    sp -= 0x20;
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    
-    s1 = 8;
-    s2 = 4;
-
 loc_8001353C:
     G_DoLoadLevel();
     MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
@@ -554,33 +544,31 @@ loc_8001353C:
         goto loc_8001353C;
     }
     
-    v0 = lw(0x80077C08);            // Load from: gLockedTexPagesMask (80077C08)
-    v0 &= 1;
-    sw(v0, 0x80077C08);             // Store to: gLockedTexPagesMask (80077C08)
+    *gLockedTexPagesMask &= 1;
     
     a0 = *gpMainMemZone;
     a1 = 8;
     Z_FreeTags();
     
-    v0 = *gGameAction;
-    s0 = 5;
-    if (v0 == s0) goto loc_800136F8;
+    if (*gGameAction == ga_number5) goto loc_800136F8;
     
     MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
 
-    v0 = lw(gp + 0xA7C);    // Load from: gNetGame (8007805C)
+    v0 = *gNetGame;
     {
         const bool bJump = (v0 != 0);
         v0 = 0x1E;
-        if (bJump) goto loc_80013698;
+        if (bJump) goto loc_800136A4;
     }
+
     v1 = *gGameMap;
     {
         const bool bJump = (v1 != v0);
         v0 = 0x1F;
-        if (bJump) goto loc_80013698;
+        if (bJump) goto loc_800136A4;
     }
-    v1 = lw(gp + 0xAB8);    // Load from: gNextMap (80078098)
+
+    v1 = *gNextMap;
     {
         const bool bJump = (v1 != v0);
         v0 = (i32(v1) < 0x3C);
@@ -589,44 +577,26 @@ loc_8001353C:
     
     MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
 
-    v0 = *gGameAction;
-    if (v0 == s2) goto loc_8001353C;
-    if (v0 == s1) goto loc_8001353C;
-    {
-        const bool bJump = (v0 == s0);
-        v0 = -2;                                        // Result = FFFFFFFE
-        if (bJump) goto loc_800136F8;
-    }
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7600);                                // Store to: gStartMapOrEpisode (80077600)
+    if (*gGameAction == ga_number4 || *gGameAction == ga_number8)
+        goto loc_8001353C;
+    
+    if (*gGameAction == ga_number5)
+        goto loc_800136F8;
+
+    sw(-2, 0x80077600);         // Store to: gStartMapOrEpisode (80077600)
     goto loc_800136F8;
 
-loc_80013698:
-    v1 = lw(gp + 0xAB8);                                // Load from: gNextMap (80078098)
-    v0 = (i32(v1) < 0x3C);
-
 loc_800136A4:
-    if (v0 == 0) goto loc_800136B8;
-    *gGameMap = v1;
-    goto loc_8001353C;
+    if (*gNextMap < 60) {
+        *gGameMap = *gNextMap;
+        goto loc_8001353C;
+    }
 
-loc_800136B8:
     MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
 
-    v1 = *gGameAction;
-    v0 = 4;
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 8;
-        if (bJump) goto loc_8001353C;
-    }
-    if (v1 == v0) goto loc_8001353C;
-
-loc_800136F8:
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
+    if (*gGameAction == ga_number4) goto loc_8001353C;
+    if (*gGameAction == ga_number8) goto loc_8001353C;
+loc_800136F8:;
 }
 
 void G_PlayDemoPtr() noexcept {
@@ -677,14 +647,13 @@ loc_80013714:
     *gbDemoPlayback = false;
 
     _thunk_D_memcpy();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
-    a0 = *gpMainMemZone;
-    v0 &= 1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)
-    a1 = 0x2E;                                          // Result = 0000002E
+
+    *gLockedTexPagesMask &= 1;
+
+    a0 = *gpMainMemZone;    
+    a1 = 0x2E;
     Z_FreeTags();
+
     v0 = s0;
     ra = lw(sp + 0x3C);
     s2 = lw(sp + 0x38);

@@ -219,9 +219,8 @@ loc_80028F34:
     s0--;
     s1 -= 4;
     if (i32(s0) >= 0) goto loc_80028DD0;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FA4);                               // Load from: gNetGame (8007805C)
-    if (v0 != 0) goto loc_800293E8;
+    v0 = *gNetGame;
+    if (v0 != gt_single) goto loc_800293E8;
     if (s2 != 0) goto loc_80028F68;
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x7EF8);                                 // Store to: gVBlanksUntilMenuMove (80077EF8)

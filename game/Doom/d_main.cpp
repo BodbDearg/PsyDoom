@@ -488,9 +488,7 @@ gameaction_t MiniLoop(
     void (*const pDrawer)()
 ) noexcept {
     // Network initialization
-    v0 = lw(0x8007805C);        // Load from: gNetGame (8007805C)
-
-    if (v0 != 0) {
+    if (*gNetGame != gt_single) {
         I_NetHandshake();
     }
 
@@ -530,12 +528,9 @@ gameaction_t MiniLoop(
 
         uint32_t x4 = 0x80077F44;   // Result = gPlayerPadButtons[0] (80077F44)
         a1 = v1 + x4;
-
         sw(a0, a1);
 
-        v0 = lw(0x8007805C);        // Load from: gNetGame (8007805C)
-
-        if (v0 != 0) {
+        if (*gNetGame != gt_single) {
             // Updates for when we are in a networked game.
             // Abort from the game also if there is a problem.
             I_NetUpdate();

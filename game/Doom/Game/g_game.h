@@ -4,7 +4,9 @@
 
 extern const VmPtr<gameaction_t>            gGameAction;
 extern const VmPtr<skill_t>                 gGameSkill;
+extern const VmPtr<gametype_t>              gNetGame;
 extern const VmPtr<int32_t>                 gGameMap;
+extern const VmPtr<int32_t>                 gNextMap;
 extern const VmPtr<player_t[MAXPLAYERS]>    gPlayers;
 extern const VmPtr<bool32_t[MAXPLAYERS]>    gbPlayerInGame;
 extern const VmPtr<int32_t>                 gGameTic;

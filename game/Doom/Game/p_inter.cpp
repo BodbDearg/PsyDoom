@@ -169,8 +169,7 @@ loc_8001998C:
     s1 = a0;
     sw(s0, sp + 0x10);
     s0 = a1;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7FA4);                               // Load from: gNetGame (8007805C)
+    a1 = *gNetGame;
     v0 = 1;                                             // Result = 00000001
     sw(ra, sp + 0x18);
     if (a1 != v0) goto loc_80019A1C;
@@ -867,9 +866,8 @@ loc_8001A2B8:
     v0 = 1;                                             // Result = 00000001
     sw(v0, s1 + 0x54);
 loc_8001A2EC:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FA4);                               // Load from: gNetGame (8007805C)
-    if (v0 == 0) goto loc_8001A4EC;
+    v0 = *gNetGame;
+    if (v0 == gt_single) goto loc_8001A4EC;
     goto loc_8001A55C;
 loc_8001A308:
     v1 = lw(s1 + 0x24);
@@ -1174,10 +1172,9 @@ loc_8001A730:
     sw(v0, a0 + 0xC8);
     goto loc_8001A7B0;
 loc_8001A770:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FA4);                               // Load from: gNetGame (8007805C)
-    v1 = 0x400000;                                      // Result = 00400000
-    if (v0 != 0) goto loc_8001A7B0;
+    v0 = *gNetGame;
+    v1 = 0x400000;
+    if (v0 != gt_single) goto loc_8001A7B0;
     v0 = lw(s0 + 0x64);
     v0 &= v1;
     if (v0 == 0) goto loc_8001A7B0;

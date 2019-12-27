@@ -35,8 +35,7 @@ loc_8003857C:
     I_Error();
 loc_800385B8:
     a0 = *gpMainMemZone;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
+    v1 = *gLockedTexPagesMask;
     v0 = 1;                                             // Result = 00000001
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7D1C);                                 // Store to: gTexCacheFillBlockX (800782E4)
@@ -47,9 +46,8 @@ loc_800385B8:
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7D88);                                 // Store to: gTexCacheRowBlockH (80078278)
     v1 |= 1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)
-    a1 = 0x20;                                          // Result = 00000020
+    *gLockedTexPagesMask = v1;
+    a1 = 0x20;
     Z_FreeTags();
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -1038,10 +1036,9 @@ loc_80039508:
     v0 = (i32(t4) < 6);
     t6 += 8;
     if (v0 != 0) goto loc_8003926C;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FA4);                               // Load from: gNetGame (8007805C)
-    v0 = 2;                                             // Result = 00000002
-    t2 = 0xFF0000;                                      // Result = 00FF0000
+    v1 = *gNetGame;
+    v0 = 2;
+    t2 = 0xFF0000;
     if (v1 == v0) goto loc_80039DD8;
     t3 = 0x1F800000;                                    // Result = 1F800000
     t3 += 0x204;                                        // Result = 1F800204

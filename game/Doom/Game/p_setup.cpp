@@ -1356,8 +1356,7 @@ loc_80022F0C:
     v0 = 2;                                             // Result = 00000002
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0x7FD8);                                // Store to: gTexCacheFillPage (80078028)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
+    v0 = *gLockedTexPagesMask;
     v1 = 0x800B0000;                                    // Result = 800B0000
     v1 = lhu(v1 - 0x6F7C);                              // Load from: gPaletteClutId_Main (800A9084)
     a0 = 0x80080000;                                    // Result = 80080000
@@ -1371,8 +1370,7 @@ loc_80022F0C:
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x7B34);                                 // Store to: gpUpdateFireSkyFunc (80077B34)
     v0 |= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)
+    *gLockedTexPagesMask = v0;
     at = 0x80080000;                                    // Result = 80080000
     sh(v1, at - 0x7D34);                                // Store to: gPaletteClutId_CurMapSky (800782CC)
     if (a0 == 0) goto loc_80022FE8;
@@ -1440,8 +1438,7 @@ loc_8002305C:
     if (v0 != 0) goto loc_80023020;
 loc_80023068:
     a0 = *gpMainMemZone;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C08);                               // Load from: gLockedTexPagesMask (80077C08)
+    v1 = *gLockedTexPagesMask;
     v0 = 5;                                             // Result = 00000005
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7D1C);                                 // Store to: gTexCacheFillBlockX (800782E4)
@@ -1452,8 +1449,7 @@ loc_80023068:
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7D88);                                 // Store to: gTexCacheRowBlockH (80078278)
     v1 |= 0x1C;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x7C08);                                // Store to: gLockedTexPagesMask (80077C08)
+    *gLockedTexPagesMask = v1;
     a1 = 0x20;                                          // Result = 00000020
     Z_FreeTags();
     P_InitPicAnims();
@@ -1478,9 +1474,7 @@ loc_800230D4:
     Z_FreeTags();
 
     if (!*gbIsLevelBeingRestarted) {
-        v0 = lw(0x80077C08);        // Load from: gLockedTexPagesMask (80077C08)        
-        v0 &= 1;
-        sw(v0, 0x80077C08);         // Store to: gLockedTexPagesMask (80077C08)
+        *gLockedTexPagesMask &= 1;
 
         a0 = *gpMainMemZone;
         a1 = 8;
@@ -1668,9 +1662,7 @@ loc_800230D4:
     }
 
     // Spawn the player(s)
-    v0 = lw(0x8007805C);    // Load from: gNetGame (8007805C)
-
-    if (v0 != 0) {
+    if (*gNetGame != gt_single) {
         s1 = 0;
         I_NetHandshake();
         s3 = 0x800A8E7C;            // Result = gPlayer1MapThing[0] (800A8E7C)

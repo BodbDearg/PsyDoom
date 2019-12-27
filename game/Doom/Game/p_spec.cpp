@@ -1757,8 +1757,7 @@ loc_80027768:
     sw(ra, sp + 0x14);
     sw(s0, sp + 0x10);
     v0++;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7F68);                                // Store to: gNextMap (80078098)
+    *gNextMap = v0;
     a3 = 0;                                             // Result = 00000000
     _thunk_Z_Malloc();
     s0 = v0;
@@ -1782,9 +1781,8 @@ void G_SecretExitLevel() noexcept {
 loc_800277E0:
     sp -= 0x18;
     a1 = 0x14;
-    a2 = 4;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0x7F68);                                // Store to: gNextMap (80078098)
+    a2 = 4;    
+    *gNextMap = a0;
     a0 = *gpMainMemZone;
     a3 = 0;
     sw(ra, sp + 0x14);

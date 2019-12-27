@@ -25,6 +25,13 @@ static constexpr angle_t ANG270	= 0xc0000000;
 // Some global defines and constants
 static constexpr uint32_t MAXPLAYERS = 2;   // Maximum number of players in a multiplayer game
 
+// What type of game is being played
+enum gametype_t : uint32_t {
+    gt_single,
+    gt_coop,
+    gt_deathmatch
+};
+
 // What skill level the game is running at
 enum skill_t : uint32_t {
 	sk_baby,

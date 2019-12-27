@@ -30,8 +30,7 @@ loc_8003E940:
     v0 = (i32(a1) < 2);
     v1 += 4;
     if (v0 != 0) goto loc_8003E940;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FA4);                               // Load from: gNetGame (8007805C)
+    v0 = *gNetGame;
     if (v0 == 0) goto loc_8003E984;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x4BD0;                                       // Result = OptionsMenuEntries_NetGame[0] (80074BD0)

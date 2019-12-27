@@ -28,8 +28,7 @@ loc_80037DBC:
     a0 = 0;                                             // Result = 00000000
     a2 = 1;                                             // Result = 00000001
     a1 = s0;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 - 0x7F68);                              // Load from: gNextMap (80078098)
+    v0 = (uint8_t) *gNextMap;
     v1 = (uint8_t) *gGameSkill;
     v0 &= 0x3F;
     v0 <<= 2;

@@ -93,11 +93,10 @@ loc_80035C78:
 
 void M_Start() noexcept {
     sp -= 0x28;
-    v0 = 1;                                             // Result = 00000001
+    v0 = 1;
     sw(ra, sp + 0x24);
     sw(s0, sp + 0x20);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7FA4);                                 // Store to: gNetGame (8007805C)
+    *gNetGame = gt_single;
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x7618);                                 // Store to: gCurPlayerIndex (80077618)
     at = 0x80080000;                                    // Result = 80080000

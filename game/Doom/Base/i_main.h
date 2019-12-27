@@ -9,6 +9,7 @@ extern const VmPtr<std::byte[TMP_BUFFER_SIZE]>  gTmpBuffer;
 extern const VmPtr<uint32_t>                    gTotalVBlanks;
 extern const VmPtr<uint32_t>                    gLastTotalVBlanks;
 extern const VmPtr<uint32_t>                    gElapsedVBlanks;
+extern const VmPtr<uint32_t>                    gLockedTexPagesMask;
 
 void I_Main() noexcept;
 void I_PSXInit() noexcept;

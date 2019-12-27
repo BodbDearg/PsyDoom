@@ -22,6 +22,11 @@ const VmPtr<uint32_t> gTotalVBlanks(0x80077E98);
 const VmPtr<uint32_t> gLastTotalVBlanks(0x80078114);
 const VmPtr<uint32_t> gElapsedVBlanks(0x800781BC);
 
+// A bit mask of which texture pages (past the initial 4 which are reserved for the framebuffer) are 'locked' during gameplay.
+// Locked texture pages are not allowed to be unloaded and are used for UI sprites, wall and floor textures.
+// Sprites on the other hand are placed in 'unlocked' texture pages and can be evicted at any time.
+const VmPtr<uint32_t> gLockedTexPagesMask(0x80077C08);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // User PlayStation entrypoint for DOOM.
 // This was probably the actual 'main()' function in the real source code.
@@ -855,7 +860,7 @@ loc_800335E8:
     if (v0 != 0) goto loc_8003367C;
     a2 = 0x2E8B0000;                                    // Result = 2E8B0000
     a2 |= 0xA2E9;                                       // Result = 2E8BA2E9
-    a1 = lw(gp + 0x628);                                // Load from: gLockedTexPagesMask (80077C08)
+    a1 = *gLockedTexPagesMask;
 loc_80033610:
     a0 = lw(gp + 0xA48);                                // Load from: gTexCacheFillPage (80078028)
     a0++;
@@ -1081,7 +1086,7 @@ loc_8003397C:
     a3 = 0;                                             // Result = 00000000
     t2 = 0x10;                                          // Result = 00000010
 loc_80033988:
-    v1 = lw(gp + 0x628);                                // Load from: gLockedTexPagesMask (80077C08)
+    v1 = *gLockedTexPagesMask;
     v0 = i32(v1) >> a3;
     goto loc_80033998;
 loc_80033994:
@@ -1131,7 +1136,7 @@ loc_80033A28:
     a3++;
     v0 = (i32(a3) < 0xB);
     if (v0 != 0) goto loc_80033988;
-    a1 = lw(gp + 0x628);                                // Load from: gLockedTexPagesMask (80077C08)
+    a1 = *gLockedTexPagesMask;
     sw(0, gp + 0xA48);                                  // Store to: gTexCacheFillPage (80078028)
     v0 = a1 & 1;
     if (v0 == 0) goto loc_80033AAC;

@@ -91,8 +91,7 @@ loc_8001C7F4:
 void P_RespawnSpecials() noexcept {
 loc_8001C838:
     sp -= 0x20;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FA4);                               // Load from: gNetGame (8007805C)
+    v1 = *gNetGame;
     v0 = 2;                                             // Result = 00000002
     sw(ra, sp + 0x1C);
     sw(s2, sp + 0x18);
@@ -608,8 +607,7 @@ loc_8001CEC8:
     a0 = lh(s4 + 0x6);
     a0--;
     P_SetupPsprites();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FA4);                               // Load from: gNetGame (8007805C)
+    v0 = *gNetGame;
     if (v0 != s5) goto loc_8001D0DC;
     a0 = 1;                                             // Result = 00000001
     v1 = 5;                                             // Result = 00000005
@@ -619,8 +617,7 @@ loc_8001D0C4:
     v1--;
     v0 -= 4;
     if (i32(v1) >= 0) goto loc_8001D0C4;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FA4);                               // Load from: gNetGame (8007805C)
+    v0 = *gNetGame;
 loc_8001D0DC:
     if (v0 != 0) goto loc_8001D130;
     v0 = lh(s4 + 0x6);
@@ -735,8 +732,7 @@ loc_8001D23C:
     sw(v0, at - 0x7FA0);                                // Store to: gpDeathmatchP (80078060)
     goto loc_8001D6D8;
 loc_8001D28C:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FA4);                               // Load from: gNetGame (8007805C)
+    v0 = *gNetGame;
     if (v0 == a0) goto loc_8001D2B4;
     v0 = lhu(s2 + 0x8);
     v0 &= 0x10;
@@ -786,10 +782,9 @@ loc_8001D340:
     a0 += 0x86C;                                        // Result = STR_P_SpawnMapThing_BadDoomEdNum_Err[0] (8001086C)
     I_Error();
 loc_8001D360:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FA4);                               // Load from: gNetGame (8007805C)
-    v0 = 2;                                             // Result = 00000002
-    s3 = 0x80000000;                                    // Result = 80000000
+    v1 = *gNetGame;
+    v0 = 2;
+    s3 = 0x80000000;
     if (v1 != v0) goto loc_8001D3A8;
     v0 = s1 << 1;
     v0 += s1;
