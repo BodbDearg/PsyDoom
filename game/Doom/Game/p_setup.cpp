@@ -1835,7 +1835,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
             // Also save whether the lump is compressed or not:
             memblock.user = &lumpCacheEntry;
             lumpCacheEntry = &memblock + 1;
-            gpbIsUncompressedLump[fileblock.lumpNum] = fileblock.isUncompressed;
+            (*gpbIsUncompressedLump)[fileblock.lumpNum] = fileblock.isUncompressed;
         }
         
         // Is this the last loade block in the file?
