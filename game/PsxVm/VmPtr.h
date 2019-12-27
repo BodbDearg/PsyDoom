@@ -56,24 +56,31 @@ public:
     
     // Pointer dereferencing
     inline ElemTy* get() const noexcept {
-        const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
-        ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
-        return reinterpret_cast<ElemTy*>(PsxVm::gpRam + wrappedAddr);
+        if (mAddr != 0) {
+            const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
+            ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
+            return reinterpret_cast<ElemTy*>(PsxVm::gpRam + wrappedAddr);
+        } else {
+            return nullptr;
+        }
     }
 
-    inline ElemTy& operator * () const noexcept {    
+    inline ElemTy& operator * () const noexcept {
+        ASSERT(mAddr != 0);
         const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
         ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
         return *reinterpret_cast<ElemTy*>(PsxVm::gpRam + wrappedAddr);
     }
 
     inline ElemTy* operator -> () const noexcept {
+        ASSERT(mAddr != 0);
         const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
         ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
         return reinterpret_cast<ElemTy*>(PsxVm::gpRam + wrappedAddr);
     }
 
     inline ElemTy& operator [] (const uint32_t index) const noexcept {
+        ASSERT(mAddr != 0);
         const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
         const uint32_t elemAddr = wrappedAddr + uint32_t(sizeof(ElemTy)) * index;
         ASSERT_LOG(elemAddr + sizeof(ElemTy) <= 0x200000, "Array element accessed spills past the 2MB of PSX RAM!");
@@ -154,8 +161,12 @@ public:
     inline constexpr operator uint32_t() const noexcept { return mAddr; }
 
     inline void* get() const noexcept {
-        const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
-        return reinterpret_cast<void*>(PsxVm::gpRam + wrappedAddr);
+        if (mAddr != 0) {
+            const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
+            return reinterpret_cast<void*>(PsxVm::gpRam + wrappedAddr);
+        } else {
+            return nullptr;
+        }
     }
 
     inline constexpr bool operator == (const VmPtr other) const noexcept { return (mAddr == other.mAddr); }
