@@ -327,7 +327,7 @@ loc_800127B8:
     sh(v1, at + 0x20E);                                 // Store to: 1F80020E
     a1 = lw(sp + 0x120);
     a2 = sp + 0x124;
-    D_vsprintf();
+    v0 = D_vsprintf(vmAddrToPtr<char>(a0), vmAddrToPtr<const char>(a1), a2);
     a0 = lw(gp + 0xA50);                                // Load from: gDebugDrawStringXPos (80078030)
     a1 = lw(gp + 0xA5C);                                // Load from: gDebugDrawStringYPos (8007803C)
     a2 = sp + 0x18;

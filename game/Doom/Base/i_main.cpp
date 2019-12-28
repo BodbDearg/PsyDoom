@@ -173,7 +173,7 @@ loc_80032934:
     a1 = a0;
     a0 = sp + 0x18;
     a2 = sp + 0x124;
-    D_vsprintf();
+    v0 = D_vsprintf(vmAddrToPtr<char>(a0), vmAddrToPtr<const char>(a1), a2);
 
     I_DrawPresent();
 

@@ -20,11 +20,11 @@ static int32_t D_mystrlen(const char* pStr) noexcept {
     }
 }
 
-void D_vsprintf() noexcept {
-    const VmPtr<char> startDstStr = a0;
-    VmPtr<char> dstStr = a0;
-    VmPtr<const char> fmtStr = a1;
-    VmPtr<uint32_t> argPtr = a2;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Printf style printing to a character buffer
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t D_vsprintf(char* dstStr, const char* fmtStr, VmPtr<uint32_t> argPtr) noexcept {
+    char* const startDstStr = dstStr;
 
     while (*fmtStr) {
         // Easy case: a regular character, no placeholders - just copy the input/format string
@@ -55,11 +55,9 @@ void D_vsprintf() noexcept {
             fieldWidth = fieldWidth * 10 + (uint8_t)(fmtChar - '0');
         }
 
-        // Consume 'l' (long) specifier
-        a3 = 0;
-
+        // Consume 'l' (long) specifier.
+        // This is not actually used for any purpose, longs are treated as 32-bit integers too in this case...
         if (*fmtStr == 'l') {
-            a3 = 1;
             ++fmtStr;
         }
 
@@ -97,113 +95,88 @@ void D_vsprintf() noexcept {
             continue;
         }
 
-        v1 = (uint8_t) *fmtStr;
-        v0 = 0x6F;
-        {
-            const bool bJump = (v1 != v0);
-            v0 = 0x78;
-            if (bJump) goto loc_8003123C;
+        // Dealing with a numeric of some sort - figure out the format
+        uint32_t num = -1;
+        uint32_t numBase = -1;
+
+        if (*fmtStr == 'o') {
+            // Octal unsigned number
+            numBase = 8;
+            num = *argPtr;
+            ++argPtr;
         }
-        t3 = 8;
-        goto loc_80031250;
-    loc_8003123C:
-        t3 = 0x10;
-        if (v1 == v0) goto loc_80031250;
-        v0 = 0x58;
-        {
-            const bool bJump = (v1 != v0);
-            v0 = 0x69;
-            if (bJump) goto loc_8003125C;
+        else if (*fmtStr == 'x' || *fmtStr == 'X') {
+            // Hex unsigned number
+            numBase = 16;
+            num = *argPtr;
+            ++argPtr;
         }
-    loc_80031250:
-        a3 = *argPtr;
-        ++argPtr;
-        goto loc_800312B4;
-    loc_8003125C:
-        t3 = 0xA;
-        if (v1 == v0) goto loc_80031278;
-        v0 = 0x64;
-        if (v1 == v0) goto loc_80031278;
+        else if (*fmtStr == 'i' || *fmtStr == 'd' || *fmtStr == 'u') {
+            // Decimal number - signed or unsigned
+            numBase = 10;
+            const int32_t snum = *argPtr;
+            ++argPtr;
 
-        v0 = -1;
-        if (v1 != 0x75) goto loc_8003138C;
+            // Negative number? If so then print '-' and get it's absolute value
+            if (snum < 0 && *fmtStr != 'u') {
+                *dstStr = '-';
+                ++dstStr;
+                num = -snum;
 
-    loc_80031278:
-        v1 = *argPtr;
-        ++argPtr;
+                if (fieldWidth != 0) {
+                    --fieldWidth;
+                }
+            } else {
+                num = snum;
+            }
+        } else {
+            // Invalid format specifier!
+            return -1;
+        }
 
-        if (i32(v1) < 0 && (uint8_t) *fmtStr != 0x75) {
-            *dstStr = 0x2D;
-            ++dstStr;
-            a3 = -v1;
+        // Print the unsigned integer
+        uint32_t numLen = 0;
+
+        while (num != 0 || fieldWidth != 0 || numLen == 0) {
+            // Make room for a new digit, shift the existing string right by 1 char
+            {
+                char* const pStart = dstStr;
+                char* pCur = pStart + numLen;
+
+                while (pCur != pStart) {
+                    *pCur = pCur[-1];
+                    --pCur;
+                }
+            }
+
+            // Pad the string, or put in a digit depending on whether we have padding left to do and the value left to process
+            if (numLen != 0 && fieldWidth != 0 && num == 0) {
+                // Pad with a character
+                *dstStr = paddingChar;
+            } else {
+                // Put in a digit and move along in the number processing
+                *dstStr = (char)(num % numBase);
+
+                if (*dstStr >= 10) {
+                    *dstStr += 'A' - 10;
+                } else {
+                    *dstStr += '0';
+                }
+
+                num = num / numBase;
+            }
+
+            numLen++;
+
             if (fieldWidth != 0) {
                 --fieldWidth;
             }
-        } else {
-            a3 = v1;
         }
 
-    loc_800312B4:
-        t0 = 0;
-    loc_800312B8:
-        v1 = t0 + dstStr;
-        if (t0 == 0) goto loc_800312FC;
-        t1 = dstStr;
-
-        do {
-            v0 = lbu(v1 - 0x1);
-            sb(v0, v1);
-            v1--;
-        } while (v1 != t1);
-
-        if (t0 == 0) goto loc_800312FC;
-        if (fieldWidth == 0) goto loc_800312FC;
-        if (a3 != 0) goto loc_800312FC;
-        *dstStr = paddingChar;
-        goto loc_80031348;
-    loc_800312FC:
-        divu(a3, t3);
-
-        if (t3 == 0) {
-            _break(0x1C00);
-        }
-
-        v0 = hi;
-        *dstStr = v0;
-        v1 = (uint8_t) *dstStr;
-        v0 = v1 + 0x30;
-
-        if (v1 >= 0xA) {
-            v0 = v1 + 0x37;
-        }
-
-        *dstStr = v0;
-        divu(a3, t3);
-
-        if (t3 == 0) {
-            _break(0x1C00);
-        }
-    
-        a3 = lo;
-    loc_80031348:
-        t0++;
-
-        if (fieldWidth != 0) {
-            --fieldWidth;
-        }
-
-        if (a3 != 0) goto loc_800312B8;
-        if (fieldWidth != 0) goto loc_800312B8;
-        if (t0 == 0) goto loc_800312B8;
-        dstStr += t0;
-    loc_80031370:
+        dstStr += numLen;
         ++fmtStr;
     }
 
-loc_80031384:
     *dstStr = 0;
-    v0 = startDstStr - dstStr;
-
-loc_8003138C:
-    return;
+    return (int32_t)(startDstStr - dstStr);
 }
