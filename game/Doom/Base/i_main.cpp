@@ -162,44 +162,52 @@ loc_80032934:
 }
 
 [[noreturn]] void I_Error() noexcept {
-loc_80032B0C:
     sw(a0, sp);
     sw(a1, sp + 0x4);
     sw(a2, sp + 0x8);
     sw(a3, sp + 0xC);
     sp -= 0x120;
+    sw(s0, sp + 0x118);
+    sw(a0, sp + 0x120);
+
     a1 = a0;
     a0 = sp + 0x18;
     a2 = sp + 0x124;
-    sw(ra, sp + 0x11C);
-    sw(s0, sp + 0x118);
-    sw(a1, sp + 0x120);
     D_vsprintf();
+
     I_DrawPresent();
-    a0 = 0x3C0;                                         // Result = 000003C0
-    a1 = 0x100;                                         // Result = 00000100
+
+    a0 = 0x3C0;
+    a1 = 0x100;
     LIBGPU_FntLoad();
-    a0 = 0;                                             // Result = 00000000
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x100;                                         // Result = 00000100
-    v0 = 0x100;                                         // Result = 00000100
-    a3 = 0xC8;                                          // Result = 000000C8
+
     sw(0, sp + 0x10);
-    sw(v0, sp + 0x14);
+    sw(0x100, sp + 0x14);
+
+    a0 = 0;
+    a1 = 0;
+    a2 = 0x100;
+    a3 = 0xC8;
     LIBGPU_FntOpen();
     s0 = v0;
+
     a0 = s0;
     LIBGPU_SetDumpFnt();
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7C24;                                       // Result = STR_I_Error_PrintToScreenFmtStr[0] (80077C24)
+
+    a0 = 0x80077C24;    // Result = STR_I_Error_PrintToScreenFmtStr[0] (80077C24)
     a1 = sp + 0x18;
     LIBGPU_FntPrint();
+
     a0 = s0;
     LIBGPU_FntFlush();
+
     I_DrawPresent();
-loc_80032B9C:
-    goto loc_80032B9C;
-    ra = lw(sp + 0x11C);
+
+    // TODO: PC-PSX: allow the PC client to exit the app from here
+    while (true) {
+        // Deliberate infinite loop...
+    }
+
     s0 = lw(sp + 0x118);
     sp += 0x120;
 }
