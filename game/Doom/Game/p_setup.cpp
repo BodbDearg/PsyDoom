@@ -1451,7 +1451,7 @@ loc_80023068:
     v1 |= 0x1C;
     *gLockedTexPagesMask = v1;
     a1 = 0x20;                                          // Result = 00000020
-    Z_FreeTags();
+    _thunk_Z_FreeTags();
     P_InitPicAnims();
     ra = lw(sp + 0x2C);
     s2 = lw(sp + 0x28);
@@ -1471,14 +1471,14 @@ loc_800230D4:
 
     a0 = *gpMainMemZone;
     a1 = 38;
-    Z_FreeTags();
+    _thunk_Z_FreeTags();
 
     if (!*gbIsLevelBeingRestarted) {
         *gLockedTexPagesMask &= 1;
 
         a0 = *gpMainMemZone;
         a1 = 8;
-        Z_FreeTags();
+        _thunk_Z_FreeTags();
     }
        
     I_ResetTexCache();

@@ -306,77 +306,55 @@ void _thunk_Z_Free2() noexcept {
     Z_Free2(*vmAddrToPtr<memzone_t>(a0), vmAddrToPtr<void>(a1));
 }
 
-void Z_FreeTags() noexcept {
-loc_80032640:
-    sp -= 0x28;
-    sw(s2, sp + 0x18);
-    s2 = a0;
-    sw(s3, sp + 0x1C);
-    s3 = a1;
-    sw(s0, sp + 0x10);
-    s0 = s2 + 8;
-    sw(ra, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s1, sp + 0x14);
-    if (s0 == 0) goto loc_800326E8;
-    s4 = 0x1D4A;                                        // Result = 00001D4A
-loc_80032670:
-    v0 = lw(s0 + 0x4);
-    s1 = lw(s0 + 0x10);
-    if (v0 == 0) goto loc_800326D8;
-    v0 = lh(s0 + 0x8);
-    v0 &= s3;
-    if (v0 == 0) goto loc_800326D8;
-    v0 = lh(s0 + 0xA);
-    if (v0 == s4) goto loc_800326B4;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1434;                                       // Result = STR_Z_Free_PtrNoZoneId_Err[0] (80011434)
-    I_Error();
-loc_800326B4:
-    v1 = lw(s0 + 0x4);
-    v0 = (v1 < 0x101);
-    if (v0 != 0) goto loc_800326CC;
-    sw(0, v1);
-loc_800326CC:
-    sw(0, s0 + 0x4);
-    sh(0, s0 + 0x8);
-    sh(0, s0 + 0xA);
-loc_800326D8:
-    s0 = s1;
-    if (s0 != 0) goto loc_80032670;
-    s0 = s2 + 8;
-loc_800326E8:
-    v0 = s2 + 8;
-    if (s0 == 0) goto loc_80032748;
-loc_800326F0:
-    v0 = lw(s0 + 0x4);
-    s1 = lw(s0 + 0x10);
-    if (v0 != 0) goto loc_8003273C;
-    if (s1 == 0) goto loc_8003273C;
-    v0 = lw(s1 + 0x4);
-    if (v0 != 0) goto loc_8003273C;
-    v0 = lw(s0);
-    v1 = lw(s1);
-    v0 += v1;
-    sw(v0, s0);
-    v0 = lw(s1 + 0x10);
-    s1 = s0;
-    sw(v0, s0 + 0x10);
-    sw(s1, v0 + 0x14);
-loc_8003273C:
-    s0 = s1;
-    v0 = s2 + 8;
-    if (s0 != 0) goto loc_800326F0;
-loc_80032748:
-    sw(v0, s2 + 0x4);
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Free memory blocks that have one or more of the given tag bits
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Z_FreeTags(memzone_t& zone, const int32_t tagBits) noexcept {
+    // Free each block if it is in use and matches one of the given tags
+    for (memblock_t* pBlock = &zone.blocklist; pBlock; pBlock = pBlock->next.get()) {
+        if (pBlock->user) {
+            if ((pBlock->tag & tagBits) != 0) {
+                Z_Free2(zone, &pBlock[1]);
+            }
+        }
+    }
+
+    // Merge any adjacent free blocks that we find together to form bigger memory blocks
+    memblock_t* pNextBlock;
+
+    for (memblock_t* pBlock = &zone.blocklist; pBlock; pBlock = pNextBlock) {
+        pNextBlock = pBlock->next.get();
+
+        // See if there are two adjacent free blocks
+        if ((!pBlock->user) && pNextBlock && (!pNextBlock->user)) {
+            // Merge the two blocks together
+            pBlock->size = pBlock->size + pNextBlock->size;
+            pBlock->next = pNextBlock->next;
+
+            // Update the back reference of the block following the next block.
+            //
+            // Note: in the original code there was no null check when updating this pointer block following the next block.
+            // Perhaps the PSX simply ignored a write to address 0x14 or that was a valid write to BIOS reserved memory?
+            // In any case that won't fly on PC obviously, so I'm adding a safety check here:
+            #if PC_PSX_DOOM_MODS
+                if (pNextBlock->next) {
+            #endif
+                    pNextBlock->next->prev = pBlock;
+            #if PC_PSX_DOOM_MODS
+                }
+            #endif
+            
+            // Move back one block, because we need to examine the next block of the current block again
+            pNextBlock = pBlock;
+        }
+    }
+
+    // Reset the rover back to the start of the heap
+    zone.rover = &zone.blocklist;
+}
+
+void _thunk_Z_FreeTags() noexcept {
+    Z_FreeTags(*vmAddrToPtr<memzone_t>(a0), a1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

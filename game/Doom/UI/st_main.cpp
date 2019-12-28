@@ -48,7 +48,7 @@ loc_800385B8:
     v1 |= 1;
     *gLockedTexPagesMask = v1;
     a1 = 0x20;
-    Z_FreeTags();
+    _thunk_Z_FreeTags();
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;

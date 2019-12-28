@@ -105,7 +105,7 @@ loc_8002BB18:
 loc_8002BB30:
     a0 = *gpMainMemZone;
     a1 = 0x20;
-    Z_FreeTags();
+    _thunk_Z_FreeTags();
     ra = lw(sp + 0x18);
     sp += 0x20;
     return;
@@ -253,7 +253,7 @@ loc_8002BD74:
     _thunk_Z_Free2();
     a0 = *gpMainMemZone;
     a1 = 0x20;
-    Z_FreeTags();
+    _thunk_Z_FreeTags();
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -450,7 +450,7 @@ loc_8002BFF0:
     at = 0x80070000;                                    // Result = 80070000
     sh(v0, at + 0x7F7C);                                // Store to: g3dViewPaletteClutId (80077F7C)
     a1 = 0x20;                                          // Result = 00000020
-    Z_FreeTags();
+    _thunk_Z_FreeTags();
     ra = lw(sp + 0x24);
     s2 = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);

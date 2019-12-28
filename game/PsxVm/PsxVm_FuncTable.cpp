@@ -339,7 +339,7 @@ extern void _thunk_ReadFile() noexcept;
 extern void _thunk_Z_Malloc() noexcept;
 extern void _thunk_Z_EndMalloc() noexcept;
 extern void _thunk_Z_Free2() noexcept;
-extern void Z_FreeTags() noexcept;
+extern void _thunk_Z_FreeTags() noexcept;
 extern void Z_ChangeTag() noexcept;
 extern void I_PSXInit() noexcept;
 extern void I_Error() noexcept;
@@ -1310,7 +1310,7 @@ namespace PsxVm {
         { 0x800321D0, &_thunk_Z_Malloc },
         { 0x800323C8, &_thunk_Z_EndMalloc },
         { 0x800325D8, &_thunk_Z_Free2 },
-        { 0x80032640, &Z_FreeTags },
+        { 0x80032640, &_thunk_Z_FreeTags },
         { 0x80032838, &Z_ChangeTag },
         { 0x80032934, &I_PSXInit },
         { 0x80032B0C, &I_Error },

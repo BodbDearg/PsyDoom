@@ -433,7 +433,7 @@ loc_80013394:
     I_ResetTexCache();
     a0 = *gpMainMemZone;
     a1 = 0x2E;                                          // Result = 0000002E
-    Z_FreeTags();
+    _thunk_Z_FreeTags();
     M_ClearRandom();
     v1 = 2;                                             // Result = 00000002
     v0 = 0x12C;                                         // Result = 0000012C
@@ -552,7 +552,7 @@ void G_RunGame() noexcept {
     
         a0 = *gpMainMemZone;
         a1 = 8;
-        Z_FreeTags();
+        _thunk_Z_FreeTags();
     
         if (*gGameAction == ga_number5)
             break;
@@ -638,7 +638,7 @@ loc_80013714:
 
     a0 = *gpMainMemZone;    
     a1 = 0x2E;
-    Z_FreeTags();
+    _thunk_Z_FreeTags();
 
     v0 = s0;
     ra = lw(sp + 0x3C);
