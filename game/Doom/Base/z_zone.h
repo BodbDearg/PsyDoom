@@ -65,10 +65,10 @@ void _thunk_Z_EndMalloc() noexcept;
 void Z_Free2(memzone_t& zone, void* const ptr) noexcept;
 void _thunk_Z_Free2() noexcept;
 
-void Z_FreeTags(memzone_t& zone, const int32_t tagBits) noexcept;
+void Z_FreeTags(memzone_t& zone, const int16_t tagBits) noexcept;
 void _thunk_Z_FreeTags() noexcept;
 
 void Z_CheckHeap(const memzone_t& zone) noexcept;
-void Z_ChangeTag() noexcept;
+void Z_ChangeTag(void* const ptr, const int16_t tagBits) noexcept;
 int32_t Z_FreeMemory(memzone_t& zone) noexcept;
 void Z_DumpHeap() noexcept;

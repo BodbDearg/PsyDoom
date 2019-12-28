@@ -340,7 +340,6 @@ extern void _thunk_Z_Malloc() noexcept;
 extern void _thunk_Z_EndMalloc() noexcept;
 extern void _thunk_Z_Free2() noexcept;
 extern void _thunk_Z_FreeTags() noexcept;
-extern void Z_ChangeTag() noexcept;
 extern void I_PSXInit() noexcept;
 extern void I_Error() noexcept;
 extern void I_ReadGamepad() noexcept;
@@ -1311,7 +1310,6 @@ namespace PsxVm {
         { 0x800323C8, &_thunk_Z_EndMalloc },
         { 0x800325D8, &_thunk_Z_Free2 },
         { 0x80032640, &_thunk_Z_FreeTags },
-        { 0x80032838, &Z_ChangeTag },
         { 0x80032934, &I_PSXInit },
         { 0x80032B0C, &I_Error },
         { 0x80032BB8, &I_ReadGamepad },

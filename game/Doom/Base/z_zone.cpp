@@ -309,7 +309,7 @@ void _thunk_Z_Free2() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Free memory blocks that have one or more of the given tag bits
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Z_FreeTags(memzone_t& zone, const int32_t tagBits) noexcept {
+void Z_FreeTags(memzone_t& zone, const int16_t tagBits) noexcept {
     // Free each block if it is in use and matches one of the given tags
     for (memblock_t* pBlock = &zone.blocklist; pBlock; pBlock = pBlock->next.get()) {
         if (pBlock->user) {
@@ -354,7 +354,7 @@ void Z_FreeTags(memzone_t& zone, const int32_t tagBits) noexcept {
 }
 
 void _thunk_Z_FreeTags() noexcept {
-    Z_FreeTags(*vmAddrToPtr<memzone_t>(a0), a1);
+    Z_FreeTags(*vmAddrToPtr<memzone_t>(a0), (int16_t) a1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -396,38 +396,28 @@ void Z_CheckHeap(const memzone_t& zone) noexcept {
     }
 }
 
-void Z_ChangeTag() noexcept {
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(s1, sp + 0x14);
-    s1 = a1;
-    sw(s2, sp + 0x18);
-    sw(ra, sp + 0x1C);
-    v1 = lh(s0 - 0xE);
-    v0 = 0x1D4A;                                        // Result = 00001D4A
-    s2 = s0 - 0x18;
-    if (v1 == v0) goto loc_80032874;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x14EC;                                       // Result = STR_Z_ChangeTag_PtrNoZoneId_Err[0] (800114EC)
-    I_Error();
-loc_80032874:
-    v0 = (i32(s1) < 0x10);
-    if (v0 != 0) goto loc_800328A4;
-    v0 = lw(s0 - 0x14);
-    v0 = (v0 < 0x100);
-    if (v0 == 0) goto loc_800328A4;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1518;                                       // Result = STR_Z_ChangeTag_NoBlockOwner_Err[0] (80011518)
-    I_Error();
-loc_800328A4:
-    sh(s1, s2 + 0x8);
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update the tags for a given block of memory
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Z_ChangeTag(void* const ptr, const int16_t tagBits) noexcept {
+    memblock_t& block = ((memblock_t*) ptr)[-1];
+
+    // Sanity check the zoneid for the block
+    if (block.id != ZONEID) {
+        a0 = 0x800114EC;    // Result = STR_Z_ChangeTag_PtrNoZoneId_Err[0] (800114EC)
+        I_Error();
+    }
+
+    // If the block tag makes it purgeable then it must have an owner.
+    // Note: regard very small user addresses as NOT pointers.
+    if (tagBits >= PU_PURGELEVEL) {
+        if (block.user.get() < vmAddrToPtr<void>(0x100)) {
+            a0 = 0x80011518;    // Result = STR_Z_ChangeTag_NoBlockOwner_Err[0] (80011518)
+            I_Error();
+        }
+    }
+
+    block.tag = (int16_t) tagBits;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
