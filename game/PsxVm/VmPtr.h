@@ -108,7 +108,7 @@ public:
         return VmPtr(mAddr + (uint32_t) offset);
     }
 
-    inline constexpr void operator += (const int32_t count) const noexcept {
+    inline constexpr void operator += (const int32_t count) noexcept {
         const int32_t offset = int32_t(sizeof(ElemTy)) * count;
         mAddr += (uint32_t) offset;
     }
@@ -118,7 +118,7 @@ public:
         return VmPtr(mAddr - (uint32_t) offset);
     }
 
-    inline constexpr void operator -= (const int32_t count) const noexcept {
+    inline constexpr void operator -= (const int32_t count) noexcept {
         const int32_t offset = int32_t(sizeof(ElemTy)) * count;
         mAddr -= (uint32_t) offset;
     }
