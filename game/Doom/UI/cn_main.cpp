@@ -1,4 +1,4 @@
-#include "ct_main.h"
+#include "cn_main.h"
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
