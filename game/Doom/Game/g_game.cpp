@@ -494,7 +494,7 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
 // This is used to run the game for non-demo gameplay.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_RunGame() noexcept {
-    do {
+    while (true) {
         // Load the level and run the game
         G_DoLoadLevel();
         MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
@@ -546,7 +546,9 @@ void G_RunGame() noexcept {
 
         MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
 
-    } while (*gGameAction == ga_number4 || *gGameAction == ga_number8);
+        if (*gGameAction != ga_number4 && *gGameAction != ga_number8)
+            break;
+    }
 }
 
 void G_PlayDemoPtr() noexcept {
