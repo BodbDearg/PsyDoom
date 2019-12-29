@@ -418,113 +418,80 @@ void G_SetGameComplete() noexcept {
     *gGameAction = ga_number2;
 }
 
-void G_InitNew() noexcept {
-loc_80013394:
-    sp -= 0x20;
-    sw(s2, sp + 0x18);
-    s2 = a0;
-    sw(s0, sp + 0x10);
-    s0 = a1;
-    sw(s1, sp + 0x14);
-    sw(ra, sp + 0x1C);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Common game setup logic for both demos and regular gameplay
+//------------------------------------------------------------------------------------------------------------------------------------------
+void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameType) noexcept {
+    // Resetting texture and heap memory and the game RNGs
     *gbIsLevelBeingRestarted = false;
     *gLockedTexPagesMask &= 1;
-    s1 = a2;
-    I_ResetTexCache();
-    a0 = *gpMainMemZone;
-    a1 = 0x2E;                                          // Result = 0000002E
-    _thunk_Z_FreeTags();
+    I_ResetTexCache();    
+    Z_FreeTags(**gpMainMemZone, 0x2E);      // TODO: find out what these bit flags are
     M_ClearRandom();
-    v1 = 2;                                             // Result = 00000002
-    v0 = 0x12C;                                         // Result = 0000012C
-    *gGameMap = s0;
-    *gGameSkill = (skill_t) s2;
-    *gNetGame = (gametype_t) s1;
-loc_800133FC:
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7810;                                       // Result = gPlayer1[1] (800A87F0)
-    at += v0;
-    sw(v1, at);
-    v0 -= 0x12C;
-    a1 = 0;                                             // Result = 00000000
-    if (i32(v0) >= 0) goto loc_800133FC;
-    s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 -= 0x61D0;                                       // Result = gUnusedGameBuffer[0] (800A9E30)
-    a0 = s0;                                            // Result = gUnusedGameBuffer[0] (800A9E30)
-    a2 = 0x94;                                          // Result = 00000094
-    _thunk_D_memset();
-    v1 = 1;                                             // Result = 00000001
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(s0, at - 0x76E8);                                // Store to: gPlayer2[0] (800A8918)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(s0, at - 0x7814);                                // Store to: gPlayer1[0] (800A87EC)
-    sw(v1, gp + 0xACC);                                 // Store to: gbPlayerInGame[0] (800780AC)
-    v0 = (s1 < 3);
-    if (s1 != 0) goto loc_8001346C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x3E0C;                                       // Result = gBtnBinding_Attack (80073E0C)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7FC8);                                // Store to: MAYBE_gpButtonBindings_Player1 (80077FC8)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7F50);                                 // Store to: gbPlayerInGame[1] (800780B0)
-    v0 = 4;                                             // Result = 00000004
-    goto loc_8001347C;
-loc_8001346C:
+
+    // Save game params: note that in multiplayer these might be overriden later
+    *gGameMap = mapNum;
+    *gGameSkill = skill;
+    *gNetGame = gameType;
+
+    // Mark all players as reborn
     {
-        const bool bJump = (v0 == 0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_8001347C;
+        player_t* pPlayer = &gPlayers[MAXPLAYERS - 1];
+        player_t* const pFirstPlayer = &gPlayers[0];
+
+        while (pPlayer >= pFirstPlayer) {
+            pPlayer->playerstate = PST_REBORN;
+            --pPlayer;
+        }
     }
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7F50);                                // Store to: gbPlayerInGame[1] (800780B0)
-loc_8001347C:
+    
+    const uint32_t x0 = 0x800A9E30;         // Result = gUnusedGameBuffer[0] (800A9E30)
+
+    a0 = x0;                                // Result = gUnusedGameBuffer[0] (800A9E30)
+    a1 = 0;
+    a2 = 0x94;
+    _thunk_D_memset();
+
+    sw(x0, 0x800A8918);     // Store to: gPlayer2[0] (800A8918)
+    sw(x0, 0x800A87EC);     // Store to: gPlayer1[0] (800A87EC)
+    sw(true, 0x800780AC);   // Store to: gbPlayerInGame[0] (800780AC)
+
+    if (gameType == gt_single) {
+        v0 = 0x80073E0C;            // Result = gBtnBinding_Attack (80073E0C)        
+        sw(v0, 0x80077FC8);         // Store to: MAYBE_gpButtonBindings_Player1 (80077FC8)
+        sw(false, 0x800780B0);      // Store to: gbPlayerInGame[1] (800780B0)
+    } 
+    else if (gameType == gt_deathmatch || gameType == gt_coop) {
+        sw(true, 0x800780B0);       // Store to: gbPlayerInGame[1] (800780B0)
+    }
+
     *gbDemoRecording = false;
     *gbDemoPlayback = false;
-    if (s2 != v0) goto loc_800134C8;
-    v0 = 2;                                             // Result = 00000002
-    at = 0x80060000;                                    // Result = 80060000
-    sw(v0, at - 0x4850);                                // Store to: State_S_SARG_ATK1[2] (8005B7B0)
-    at = 0x80060000;                                    // Result = 80060000
-    sw(v0, at - 0x4834);                                // Store to: State_S_SARG_ATK2[2] (8005B7CC)
-    at = 0x80060000;                                    // Result = 80060000
-    sw(v0, at - 0x4818);                                // Store to: State_S_SARG_ATK3[2] (8005B7E8)
-    v0 = 0xF;                                           // Result = 0000000F
-    at = 0x80060000;                                    // Result = 80060000
-    sw(v0, at - 0x1C18);                                // Store to: MObjInfo_MT_SERGEANT[F] (8005E3E8)
-    v0 = 0x280000;                                      // Result = 00280000
-    at = 0x80060000;                                    // Result = 80060000
-    sw(v0, at - 0x17F8);                                // Store to: MObjInfo_MT_BRUISERSHOT[F] (8005E808)
-    goto loc_800134FC;
-loc_800134C8:
-    at = 0x80060000;                                    // Result = 80060000
-    sw(v0, at - 0x4850);                                // Store to: State_S_SARG_ATK1[2] (8005B7B0)
-    at = 0x80060000;                                    // Result = 80060000
-    sw(v0, at - 0x4834);                                // Store to: State_S_SARG_ATK2[2] (8005B7CC)
-    at = 0x80060000;                                    // Result = 80060000
-    sw(v0, at - 0x4818);                                // Store to: State_S_SARG_ATK3[2] (8005B7E8)
-    v0 = 0xA;                                           // Result = 0000000A
-    at = 0x80060000;                                    // Result = 80060000
-    sw(v0, at - 0x1C18);                                // Store to: MObjInfo_MT_SERGEANT[F] (8005E3E8)
-    v0 = 0x1E0000;                                      // Result = 001E0000
-    at = 0x80060000;                                    // Result = 80060000
-    sw(v0, at - 0x17F8);                                // Store to: MObjInfo_MT_BRUISERSHOT[F] (8005E808)
-    v0 = 0x140000;                                      // Result = 00140000
-loc_800134FC:
-    at = 0x80060000;                                    // Result = 80060000
-    sw(v0, at - 0x1850);                                // Store to: MObjInfo_MT_HEADSHOT[F] (8005E7B0)
-    at = 0x80060000;                                    // Result = 80060000
-    sw(v0, at - 0x18A8);                                // Store to: MObjInfo_MT_TROOPSHOT[F] (8005E758)
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Patching some monster states depending on difficulty
+    if (skill == sk_nightmare) {
+        sw(2, 0x8005B7B0);                  // Store to: State_S_SARG_ATK1[2] (8005B7B0)
+        sw(2, 0x8005B7CC);                  // Store to: State_S_SARG_ATK2[2] (8005B7CC)
+        sw(2, 0x8005B7E8);                  // Store to: State_S_SARG_ATK3[2] (8005B7E8)
+        sw(15, 0x8005E3E8);                 // Store to: MObjInfo_MT_SERGEANT[F] (8005E3E8)
+        sw(40 * FRACUNIT, 0x8005E808);      // Store to: MObjInfo_MT_BRUISERSHOT[F] (8005E808)
+        sw(40 * FRACUNIT, 0x8005E7B0);      // Store to: MObjInfo_MT_HEADSHOT[F] (8005E7B0)
+        sw(40 * FRACUNIT, 0x8005E758);      // Store to: MObjInfo_MT_TROOPSHOT[F] (8005E758)
+    } else {
+        sw(4, 0x8005B7B0);                  // Store to: State_S_SARG_ATK1[2] (8005B7B0)
+        sw(4, 0x8005B7CC);                  // Store to: State_S_SARG_ATK2[2] (8005B7CC)
+        sw(4, 0x8005B7E8);                  // Store to: State_S_SARG_ATK3[2] (8005B7E8)
+        sw(10, 0x8005E3E8);                 // Store to: MObjInfo_MT_SERGEANT[F] (8005E3E8)
+        sw(30 * FRACUNIT, 0x8005E808);      // Store to: MObjInfo_MT_BRUISERSHOT[F] (8005E808)
+        sw(20 * FRACUNIT, 0x8005E7B0);      // Store to: MObjInfo_MT_HEADSHOT[F] (8005E7B0)
+        sw(20 * FRACUNIT, 0x8005E758);      // Store to: MObjInfo_MT_TROOPSHOT[F] (8005E758)
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Run the actual in-game (3d) portions of the game.
 // Also do intermission and finale screens following a level.
+// This is used to run the game for non-demo gameplay.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_RunGame() noexcept {
     do {
@@ -549,14 +516,11 @@ void G_RunGame() noexcept {
         
         // Cleanup after the level is done
         *gLockedTexPagesMask &= 1;
-    
-        a0 = *gpMainMemZone;
-        a1 = 8;
-        _thunk_Z_FreeTags();
-    
+        Z_FreeTags(**gpMainMemZone, 8);     // TODO: find out what these bit flags are
+        
         if (*gGameAction == ga_number5)
             break;
-    
+        
         // Do the intermission
         MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
 
@@ -613,25 +577,21 @@ loc_80013714:
     a1 = lw(a1 + 0x75EC);                               // Load from: gpDemo_p (800775EC)
     a2 = 0x20;                                          // Result = 00000020
     _thunk_D_memcpy();
-    a0 = s2;
-    a1 = s0;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x75EC);                               // Load from: gpDemo_p (800775EC)
     v0 += 0x20;
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x75EC);                                // Store to: gpDemo_p (800775EC)
-    a2 = 0;                                             // Result = 00000000
-    G_InitNew();
+    G_InitNew((skill_t) s2, (int32_t) s0, gt_single);
     G_DoLoadLevel();
 
     *gbDemoPlayback = true;
     s0 = MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+    *gbDemoPlayback = false;
 
     a0 = s1;                    // Result = gBtnBinding_Attack (80073E0C)
     a1 = sp + 0x10;
     a2 = 0x20;
-    *gbDemoPlayback = false;
-
     _thunk_D_memcpy();
 
     *gLockedTexPagesMask &= 1;

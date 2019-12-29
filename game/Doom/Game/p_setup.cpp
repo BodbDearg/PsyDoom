@@ -1439,7 +1439,9 @@ loc_80023068:
 
 void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) noexcept {
 loc_800230D4:
-    sp -= 0x98;
+    VmSVal<lumpname_t> mapLumpName;
+
+    sp -= 0x98;    
     sw(s0, sp + 0x78);
     sw(s1, sp + 0x7C);
     sw(s2, sp + 0x80);
@@ -1531,7 +1533,6 @@ loc_800230D4:
     void* const pMapWadFileData = vmAddrToPtr<void>(v0);
 
     // Figure out the name of the map start lump marker
-    VmSVal<lumpname_t> mapLumpName;
     mapLumpName->chars[0] = 'M';
     mapLumpName->chars[1] = 'A';
     mapLumpName->chars[2] = 'P';

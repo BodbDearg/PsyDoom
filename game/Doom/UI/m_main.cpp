@@ -11,7 +11,6 @@
 #include "Wess/psxcd.h"
 
 void RunMenu() noexcept {
-loc_80035B24:
     sp -= 0x20;
     sw(s0, sp + 0x10);
     s0 = 0x800B0000;                                    // Result = 800B0000
@@ -73,21 +72,16 @@ loc_80035B4C:
     v0 = lw(v0 + 0x7C0C);                               // Load from: gbDidAbortGame (80077C0C)
     if (v0 != 0) goto loc_80035B4C;
 loc_80035C4C:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x75FC);                               // Load from: gStartSkill (800775FC)
-    a1 = *gStartMapOrEpisode;
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7604);                               // Load from: gStartGameType (80077604)
-    G_InitNew();
+    G_InitNew(*gStartSkill, *gStartMapOrEpisode, *gStartGameType);
     G_RunGame();
-    v0 = 0;                                             // Result = 00000000
+
+    v0 = 0;
 loc_80035C78:
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-    return;
 }
 
 void M_Start() noexcept {
@@ -451,7 +445,7 @@ loc_80036178:
 loc_800361B0:
     {
         const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
+        v0 = 0;
         if (bJump) goto loc_80036244;
     }
     v0 = *gStartMapOrEpisode;
@@ -469,8 +463,7 @@ loc_800361E8:
         v0 = s0 & 0x8000;
         if (bJump) goto loc_80036210;
     }
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x75FC);                               // Load from: gStartSkill (800775FC)
+    v1 = *gStartSkill;
     v0 = (v1 < 3);
     {
         const bool bJump = (v0 == 0);
@@ -481,25 +474,23 @@ loc_800361E8:
 loc_80036210:
     {
         const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
+        v0 = 0;
         if (bJump) goto loc_80036244;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x75FC);                               // Load from: gStartSkill (800775FC)
+    v0 = *gStartSkill;
     {
         const bool bJump = (v0 == 0);
         v0--;
         if (bJump) goto loc_80036240;
     }
 loc_8003622C:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x75FC);                                // Store to: gStartSkill (800775FC)
-    a0 = 0;                                             // Result = 00000000
+    *gStartSkill = (skill_t) v0;
+    a0 = 0;
 loc_80036238:
-    a1 = 0x17;                                          // Result = 00000017
+    a1 = 0x17;
     S_StartSound();
 loc_80036240:
-    v0 = 0;                                             // Result = 00000000
+    v0 = 0;
 loc_80036244:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -611,8 +602,7 @@ loc_800363D4:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x3D0C;                                       // Result = STR_MenuOpt_IAmAWimp[0] (80073D0C)
     a1 = lh(gp + 0x658);                                // Load from: MainMenu_Difficulty_YPos (80077C38)
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x75FC);                               // Load from: gStartSkill (800775FC)
+    a2 = *gStartSkill;
     a1 += 0x14;
     a2 <<= 4;
     a2 += v0;

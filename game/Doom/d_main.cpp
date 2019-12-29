@@ -27,8 +27,10 @@ const VmPtr<int32_t> gTicCon(0x8007814C);
 // Pointer to a buffer holding the demo
 const VmPtr<VmPtr<uint32_t>> gpDemoBuffer(0x800775E8);
 
-// Starting map or episode when beginning a new game
-const VmPtr<int32_t> gStartMapOrEpisode(0x80077600);
+// Game start parameters
+const VmPtr<skill_t>        gStartSkill(0x800775FC);
+const VmPtr<int32_t>        gStartMapOrEpisode(0x80077600);
+const VmPtr<gametype_t>     gStartGameType(0x80077604);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Main DOOM entry point.

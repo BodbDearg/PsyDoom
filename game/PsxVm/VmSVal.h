@@ -26,6 +26,11 @@ uint32_t ptrToVmAddr(const void* const ptr) noexcept;
 // This is a value that is allocated on the stack inside the RAM of the emulated PlayStation and accessed in the same way as a VmPtr.
 // The PSX stack pointer is automatically decreased and increased when the stack value is created and destroyed.
 // Useful for replacing the use of stack allocated objects in the translated MIPS code.
+//
+// -- WARNING!! --
+// Stack objects of this type should be declared at the TOP of functions, before any VM stack manipulations.
+// This is because the cleanup of this object will only happen once the native C++ function exits.
+// Failure to do so may result in incorrect register restoring for some semi-emulated code.
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class T>
 class VmSVal {

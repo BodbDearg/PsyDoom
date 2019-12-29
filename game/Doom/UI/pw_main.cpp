@@ -204,11 +204,9 @@ loc_80037070:
     sw(a0, gp + 0x65C);                                 // Store to: gbUsingAPassword (80077C3C)
     *gGameMap = v1;
     *gStartMapOrEpisode = v1;
-    at = 0x80080000;                                    // Result = 80080000
     *gGameSkill = (skill_t) a1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a1, at + 0x75FC);                                // Store to: gStartSkill (800775FC)
-    v0 = 4;                                             // Result = 00000004
+    *gStartSkill = (skill_t) a1;
+    v0 = 4;
     goto loc_8003711C;
 loc_800370C0:
     v0 = 0x10;                                          // Result = 00000010
