@@ -1,7 +1,9 @@
 # StationDoom
 This project is a reverse engineering attempt to backport PSX Doom to PC. Will add more details here later and eventually binary builds once it is stable enough for general release. If you want to try/experiment with this for now, you will need to build from source - see details below.
 
-As of right now the game mostly runs correctly, with some sound syncing issues and a few other problems.
+As of right now the game mostly runs correctly, with some sound syncing issues and a few other problems. Here is a brief demo video of the project:
+
+[![Alt text](https://img.youtube.com/vi/o7t7w1YjjSw/0.jpg)](https://www.youtube.com/watch?v=o7t7w1YjjSw)
 
 The eventual goal of this project is convert the entire game code to C++, remove the PSX BIOS dependency and need for the original .EXE, and hopefully also simplify + remove most emulation code except where strictly necessary for authenticity. All of this while preserving as much of the original code structure and meaning as possible, for historical reference..
 
