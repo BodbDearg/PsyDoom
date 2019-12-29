@@ -17,9 +17,7 @@ loc_80038558:
     sp -= 0x18;
     sw(ra, sp + 0x10);
     if (v0 == 0) goto loc_8003857C;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x15D8;                                       // Result = STR_ST_Init_InitialTexCache_Err[0] (800115D8)
-    I_Error();
+    I_Error("ST_Init: initial texture cache foulup\n");
 loc_8003857C:
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 -= 0x6B18;                                       // Result = gTexInfo_STATUS[0] (800A94E8)
@@ -30,9 +28,7 @@ loc_8003857C:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7FD8);                               // Load from: gTexCacheFillPage (80078028)
     if (v0 == 0) goto loc_800385B8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1600;                                       // Result = STR_ST_Init_FinalTexCache_Err[0] (80011600)
-    I_Error();
+    I_Error("ST_Init: final texture cache foulup\n");
 loc_800385B8:
     a0 = *gpMainMemZone;
     v1 = *gLockedTexPagesMask;

@@ -1251,9 +1251,7 @@ loc_80026F88:
     goto loc_80026FB4;
 loc_80026FA0:
     a1 = lw(a0 + 0x14);
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0xB7C;                                        // Result = STR_P_PlayerInSpecialSector_Spec_Err[0] (80010B7C)
-    I_Error();
+    I_Error("P_PlayerInSpecialSector: unknown special %i", (int32_t) a1);
 loc_80026FB4:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);

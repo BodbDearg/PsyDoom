@@ -302,9 +302,7 @@ loc_8002CB28:
     v0 = (i32(s2) < 0x15);                              // Result = 00000001
     s1 += 8;
     if (v0 != 0) goto loc_8002CB60;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1188;                                       // Result = STR_FrontZClip_PointOverflow_Err[0] (80011188)
-    I_Error();
+    I_Error("FrontZClip: Point Overflow");
 loc_8002CB60:
     v0 = ~s6;
     if (s6 == 0) goto loc_8002CD18;
@@ -322,9 +320,7 @@ loc_8002CB60:
     a0 = (i32(a0) < 0x20);
     s0 = v0 + v1;
     if (a0 != 0) goto loc_8002CBB8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x11A4;                                       // Result = STR_FrontZClip_TooManyVerts_Err[0] (800111A4)
-    I_Error();
+    I_Error("FrontZClip: exceeded max new vertexes\n");
 loc_8002CBB8:
     a0 = s5 << 16;
     v0 = s5 - s6;
@@ -414,9 +410,7 @@ loc_8002CCF8:
     v0 = (i32(s2) < 0x15);                              // Result = 00000001
     s1 += 8;
     if (v0 != 0) goto loc_8002CD18;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1188;                                       // Result = STR_FrontZClip_PointOverflow_Err[0] (80011188)
-    I_Error();
+    I_Error("FrontZClip: Point Overflow");
 loc_8002CD18:
     s7++;
     v0 = (i32(s7) < i32(fp));
@@ -574,9 +568,7 @@ loc_8002CF20:
     a0 = (i32(a0) < 0x20);
     s0 = v0 + v1;
     if (a0 != 0) goto loc_8002CF60;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x11CC;                                       // Result = STR_LeftEdgeClip_TooManyVerts_Err[0] (800111CC)
-    I_Error();
+    I_Error("LeftEdgeClip: exceeded max new vertexes\n");
 loc_8002CF60:
     v1 = lw(s1);
     a0 = lw(s2);
@@ -663,9 +655,7 @@ loc_8002D054:
     v0 = (i32(s4) < 0x15);                              // Result = 00000001
     s3 += 8;
     if (v0 != 0) goto loc_8002D0B8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x11F8;                                       // Result = STR_LeftEdgeClip_PointOverflow_Err[0] (800111F8)
-    I_Error();
+    I_Error("LeftEdgeClip: Point Overflow");
 loc_8002D0B8:
     s1 += 8;
     s6++;
@@ -755,9 +745,7 @@ loc_8002D1C4:
     a0 = (i32(a0) < 0x20);
     s0 = v0 + v1;
     if (a0 != 0) goto loc_8002D204;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1218;                                       // Result = STR_RightEdgeClip_TooManyVerts_Err[0] (80011218)
-    I_Error();
+    I_Error("RightEdgeClip: exceeded max new vertexes\n");
 loc_8002D204:
     v1 = lw(s1);
     a0 = lw(s2);
@@ -844,9 +832,7 @@ loc_8002D2F4:
     v0 = (i32(s4) < 0x15);                              // Result = 00000001
     s3 += 8;
     if (v0 != 0) goto loc_8002D358;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1244;                                       // Result = STR_RightEdgeClip_PointOverflow_Err[0] (80011244)
-    I_Error();
+    I_Error("RightEdgeClip: Point Overflow");
 loc_8002D358:
     s1 += 8;
     s6++;

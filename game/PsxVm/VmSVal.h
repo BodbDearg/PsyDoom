@@ -30,9 +30,19 @@ uint32_t ptrToVmAddr(const void* const ptr) noexcept;
 template <class T>
 class VmSVal {
 public:
+    // Note: reserving an extra 16-bytes in order to account for the fact that this might be used in functions which have
+    // been more or less completely converted over to C++, and which do not manipulate the PSX VM stack pointer on entry/exit.
+    //
+    // This prevents callee functions which have NOT been converted to proper C++ from trashing the memory of this PSX VM stack
+    // value when they are invoked. Typical MIPS calling conventions state that when a function is called, the 16 bytes currently
+    // pointed to by the stack pointer is available for use by the callee. Hence we need to over allocate for this stack value
+    // in order to avoid being trashed due to those assumptions.
+    //
+    static constexpr uint32_t NUM_STACK_GUARD_BYTES = 16;
+
     template <class ...CtorArgs>
     inline VmSVal(CtorArgs&&... ctorArgs) noexcept
-        : mVal(*getObjPtrFromVmAddr(*PsxVm::gpReg_sp - getStackSize()))
+        : mVal(*getObjPtrFromVmAddr(*PsxVm::gpReg_sp - getStackSize() + NUM_STACK_GUARD_BYTES))
     {
         new(&mVal) T(ctorArgs...);
         *PsxVm::gpReg_sp -= getStackSize();
@@ -55,7 +65,8 @@ private:
     // Get the size of this object when it is placed on the stack.
     // The size is aligned up to 4 byte boundaries.
     static inline constexpr uint32_t getStackSize() noexcept {
-        return ((uint32_t) sizeof(T) + 3) & 0xFFFFFFFC;
+        const uint32_t alignedSize = ((uint32_t) sizeof(T) + 3) & 0xFFFFFFFC;
+        return alignedSize + NUM_STACK_GUARD_BYTES;
     }
 
     // Convert the given VM address to a pointer of this object type

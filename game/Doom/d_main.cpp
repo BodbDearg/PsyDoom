@@ -127,11 +127,7 @@ void I_SetDebugDrawStringPos() noexcept {
     sw(a1, gp + 0xA5C);                                 // Store to: gDebugDrawStringYPos (8007803C)
 }
 
-void I_DebugDrawString() noexcept {
-    sw(a0, sp);
-    sw(a1, sp + 0x4);
-    sw(a2, sp + 0x8);
-    sw(a3, sp + 0xC);
+void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
     sp -= 0x120;
     sw(s0, sp + 0x118);
     s0 = 0x1F800000;                                    // Result = 1F800000
@@ -313,7 +309,6 @@ loc_800127B8:
     a0 = s0;                                            // Result = 1F800200
     a1 = 0;                                             // Result = 00000000
     LIBGPU_SetShadeTex();
-    a0 = sp + 0x18;
     v1 = 0x800B0000;                                    // Result = 800B0000
     v1 = lhu(v1 - 0x6F7C);                              // Load from: gPaletteClutId_Main (800A9084)
     v0 = 0x80;                                          // Result = 00000080
@@ -325,9 +320,14 @@ loc_800127B8:
     sb(v0, at + 0x206);                                 // Store to: 1F800206
     at = 0x1F800000;                                    // Result = 1F800000
     sh(v1, at + 0x20E);                                 // Store to: 1F80020E
-    a1 = lw(sp + 0x120);
-    a2 = sp + 0x124;
-    v0 = D_vsprintf(vmAddrToPtr<char>(a0), vmAddrToPtr<const char>(a1), a2);
+    
+    {
+        va_list args;
+        va_start(args, fmtMsg);        
+        v0 = D_vsprintf(vmAddrToPtr<char>(sp + 0x18), fmtMsg, args);
+        va_end(args);
+    }
+
     a0 = lw(gp + 0xA50);                                // Load from: gDebugDrawStringXPos (80078030)
     a1 = lw(gp + 0xA5C);                                // Load from: gDebugDrawStringYPos (8007803C)
     a2 = sp + 0x18;

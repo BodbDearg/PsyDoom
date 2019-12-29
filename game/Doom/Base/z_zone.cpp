@@ -90,9 +90,7 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<voi
                 // In this case we have searched all blocks for one big enough and not found one :(
                 if (pBase == pStart) {
                     Z_DumpHeap();
-                    a0 = 0x800113DC;        // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
-                    a1 = allocSize;
-                    I_Error();
+                    I_Error("Z_Malloc: failed allocation on %i", allocSize);
                 }
 
                 continue;
@@ -143,8 +141,7 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<voi
         *ppUser = &pBase[1];
     } else {
         if (tag >= PU_PURGELEVEL) {
-            a0 = 0x80011400;    // Result = STR_Z_Malloc_NoBlockOwner_Err[0] (80011400)
-            I_Error();
+            I_Error("Z_Malloc: an owner is required for purgable blocks");
         }
 
         // Non purgable blocks without any owner are assigned a pointer value of '1'
@@ -190,9 +187,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
 
             // Have we gone past the start? If so then we have failed...
             if (!pRover) {
-                a0 = 0x800113DC;    // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
-                a1 = allocSize;
-                I_Error();
+                I_Error("Z_Malloc: failed allocation on %i", allocSize);
             }
         }
 
@@ -205,9 +200,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
                 // If we have wrapped around back to the start of the zone then we're out of RAM.
                 // In this case we have searched all blocks for one big enough and not found one :(
                 if (!pBase) {
-                    a0 = 0x800113DC;    // Result = STR_Z_Malloc_AllocFailed_Err[0] (800113DC)
-                    a1 = allocSize;
-                    I_Error();
+                    I_Error("Z_Malloc: failed allocation on %i", allocSize);
                 }
 
                 continue;
@@ -257,8 +250,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
         *ppUser = &pBase[1];
     } else {
         if (tag >= PU_PURGELEVEL) {
-            a0 = 0x80011400;    // Result = STR_Z_Malloc_NoBlockOwner_Err[0] (80011400)
-            I_Error();
+            I_Error("Z_Malloc: an owner is required for purgable blocks");
         }
         
         // Non purgable blocks without any owner are assigned a pointer value of '1'
@@ -287,8 +279,7 @@ void Z_Free2([[maybe_unused]] memzone_t& zone, void* const ptr) noexcept {
     memblock_t& block = ((memblock_t*) ptr)[-1];
 
     if (block.id != ZONEID) {
-        a0 = 0x80011434;    // Result = STR_Z_Free_PtrNoZoneId_Err[0] (80011434)
-        I_Error();
+        I_Error("Z_Free: freed a pointer without ZONEID");
     }
 
     // Clear the pointer field referencing the memory block too.
@@ -373,8 +364,7 @@ void Z_CheckHeap(const memzone_t& zone) noexcept {
             const int32_t actualZoneSize = (int32_t)(pBlockEndByte - pZoneStartByte);
 
             if (actualZoneSize != zone.size) {
-                a0 = 0x8001145C;    // Result = STR_Z_CheckHeap_ZoneSizeChanged_Err[0] (8001145C)
-                I_Error();
+                I_Error("Z_CheckHeap: zone size changed\n");
             }
 
             continue;
@@ -384,14 +374,12 @@ void Z_CheckHeap(const memzone_t& zone) noexcept {
         const memblock_t* const pNextBlock = (const memblock_t*)((const std::byte*) pBlock + pBlock->size);
 
         if (pNextBlock != pBlock->next.get()) {
-            a0 = 0x8001147C;    // Result = STR_Z_CheckHeap_BlockNotTouching_Err[0] (8001147C)
-            I_Error();
+            I_Error("Z_CheckHeap: block size does not touch the next block\n");
         }
 
         // The next block should point back to this block
         if (pBlock->next->prev.get() != pBlock) {
-            a0 = 0x800114B4;    // Result = STR_Z_CheckHeap_BadBlockBackLink_Err[0] (800114B4)
-            I_Error();
+            I_Error("Z_CheckHeap: next block doesn't have proper back link\n");
         }
     }
 }
@@ -404,16 +392,14 @@ void Z_ChangeTag(void* const ptr, const int16_t tagBits) noexcept {
 
     // Sanity check the zoneid for the block
     if (block.id != ZONEID) {
-        a0 = 0x800114EC;    // Result = STR_Z_ChangeTag_PtrNoZoneId_Err[0] (800114EC)
-        I_Error();
+        I_Error("Z_ChangeTag: freed a pointer without ZONEID");
     }
 
     // If the block tag makes it purgeable then it must have an owner.
     // Note: regard very small user addresses as NOT pointers.
     if (tagBits >= PU_PURGELEVEL) {
         if (block.user.get() < vmAddrToPtr<void>(0x100)) {
-            a0 = 0x80011518;    // Result = STR_Z_ChangeTag_NoBlockOwner_Err[0] (80011518)
-            I_Error();
+            I_Error("Z_ChangeTag: an owner is required for purgable blocks");
         }
     }
 

@@ -23,7 +23,7 @@ static int32_t D_mystrlen(const char* pStr) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Printf style printing to a character buffer
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t D_vsprintf(char* dstStr, const char* fmtStr, VmPtr<uint32_t> argPtr) noexcept {
+int32_t D_vsprintf(char* dstStr, const char* fmtStr, va_list args) noexcept {
     char* const startDstStr = dstStr;
 
     while (*fmtStr) {
@@ -63,21 +63,19 @@ int32_t D_vsprintf(char* dstStr, const char* fmtStr, VmPtr<uint32_t> argPtr) noe
 
         // Handle a single character arg if specified
         if (*fmtStr == 'c') {
-            const char singleChar = (char)(uint8_t) *argPtr;
+            const char singleChar = va_arg(args, char);
             *dstStr = singleChar;
             ++dstStr;
-            ++argPtr;
             ++fmtStr;
             continue;
         }
 
         // Handle a string arg if specified
         if (*fmtStr == 's') {
-            VmPtr<const char> argStr(*argPtr);
-            ++argPtr;
+            const char* argStr = va_arg(args, const char*);
 
             // Padding the string if required
-            const int32_t argStrLen = D_mystrlen(argStr.get());
+            const int32_t argStrLen = D_mystrlen(argStr);
 
             while ((fieldWidth--) > argStrLen) {
                 *dstStr = paddingChar;
@@ -102,20 +100,17 @@ int32_t D_vsprintf(char* dstStr, const char* fmtStr, VmPtr<uint32_t> argPtr) noe
         if (*fmtStr == 'o') {
             // Octal unsigned number
             numBase = 8;
-            num = *argPtr;
-            ++argPtr;
+            num = va_arg(args, uint32_t);
         }
         else if (*fmtStr == 'x' || *fmtStr == 'X') {
             // Hex unsigned number
             numBase = 16;
-            num = *argPtr;
-            ++argPtr;
+            num = va_arg(args, uint32_t);
         }
         else if (*fmtStr == 'i' || *fmtStr == 'd' || *fmtStr == 'u') {
             // Decimal number - signed or unsigned
             numBase = 10;
-            const int32_t snum = *argPtr;
-            ++argPtr;
+            const int32_t snum = va_arg(args, int32_t);
 
             // Negative number? If so then print '-' and get it's absolute value
             if (snum < 0 && *fmtStr != 'u') {

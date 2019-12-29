@@ -161,19 +161,17 @@ loc_80032934:
     return;
 }
 
-[[noreturn]] void I_Error() noexcept {
-    sw(a0, sp);
-    sw(a1, sp + 0x4);
-    sw(a2, sp + 0x8);
-    sw(a3, sp + 0xC);
+[[noreturn]] void I_Error(const char* const fmtMsg, ...) noexcept {
     sp -= 0x120;
     sw(s0, sp + 0x118);
     sw(a0, sp + 0x120);
 
-    a1 = a0;
-    a0 = sp + 0x18;
-    a2 = sp + 0x124;
-    v0 = D_vsprintf(vmAddrToPtr<char>(a0), vmAddrToPtr<const char>(a1), a2);
+    {
+        va_list args;
+        va_start(args, fmtMsg);
+        v0 = D_vsprintf(vmAddrToPtr<char>(sp + 0x18), fmtMsg, args);
+        va_end(args);
+    }
 
     I_DrawPresent();
 
@@ -888,9 +886,7 @@ loc_80033610:
     if (v0 != 0) goto loc_80033610;
     s2 = 0;                                             // Result = 00000000
     if (a0 != s5) goto loc_80033670;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1550;                                       // Result = STR_TextureCacheOverflow_Err[0] (80011550)
-    I_Error();
+    I_Error("Texture Cache Overflow\n");
 loc_80033670:
     sw(0, gp + 0xD04);                                  // Store to: gTexCacheFillBlockX (800782E4)
     sw(0, gp + 0xD08);                                  // Store to: gTexCacheFillBlockY (800782E8)

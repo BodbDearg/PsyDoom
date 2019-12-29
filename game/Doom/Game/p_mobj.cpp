@@ -776,11 +776,7 @@ loc_8001D310:
     v0 = 0x7F;                                          // Result = 0000007F
 loc_8001D340:
     if (s1 != v0) goto loc_8001D360;
-    a2 = lh(s2);
-    a3 = lh(s2 + 0x2);
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x86C;                                        // Result = STR_P_SpawnMapThing_BadDoomEdNum_Err[0] (8001086C)
-    I_Error();
+    I_Error("P_SpawnMapThing: Unknown doomednum %d at (%d, %d)", (int32_t) a1, (int32_t) a2, (int32_t) a3);
 loc_8001D360:
     v1 = *gNetGame;
     v0 = 2;

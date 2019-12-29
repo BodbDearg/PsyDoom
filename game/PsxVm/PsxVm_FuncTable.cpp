@@ -5,7 +5,6 @@
 
 extern void D_DoomMain() noexcept;
 extern void I_SetDebugDrawStringPos() noexcept;
-extern void I_DebugDrawString() noexcept;
 extern void _thunk_D_memset() noexcept;
 extern void _thunk_D_memcpy() noexcept;
 extern void D_strncpy() noexcept;
@@ -339,7 +338,6 @@ extern void _thunk_Z_EndMalloc() noexcept;
 extern void _thunk_Z_Free2() noexcept;
 extern void _thunk_Z_FreeTags() noexcept;
 extern void I_PSXInit() noexcept;
-extern void I_Error() noexcept;
 extern void I_ReadGamepad() noexcept;
 extern void I_CacheTexForLumpName() noexcept;
 extern void I_CacheAndDrawSprite() noexcept;
@@ -973,7 +971,6 @@ namespace PsxVm {
     std::map<uint32_t, VmFunc> gFuncTable = {
         { 0x80012274, &D_DoomMain },
         { 0x800124E8, &I_SetDebugDrawStringPos },
-        { 0x800124F8, &I_DebugDrawString },
         { 0x80012850, &_thunk_D_memset },
         { 0x8001290C, &_thunk_D_memcpy },
         { 0x80012940, &D_strncpy },
@@ -1307,7 +1304,6 @@ namespace PsxVm {
         { 0x800325D8, &_thunk_Z_Free2 },
         { 0x80032640, &_thunk_Z_FreeTags },
         { 0x80032934, &I_PSXInit },
-        { 0x80032B0C, &I_Error },
         { 0x80032BB8, &I_ReadGamepad },
         { 0x80032BF4, &I_CacheTexForLumpName },
         { 0x80032D04, &I_CacheAndDrawSprite },

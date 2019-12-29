@@ -758,10 +758,7 @@ loc_800247B4:
     s0 = a0 & v0;
     v0 = (i32(s0) < i32(a2));
     if (v0 != 0) goto loc_800247E8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0xB24;                                        // Result = STR_PA_CrossSubsector_Err[0] (80010B24)
-    a1 = s0;
-    I_Error();
+    I_Error("PA_CrossSubsector: ss %i with numss = %i", (int32_t) s0, (int32_t) a2);
 loc_800247E8:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7F40);                               // Load from: gpSubsectors (80077F40)

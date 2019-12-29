@@ -461,10 +461,7 @@ loc_8002B2D8:
     v0 = (i32(s0) < i32(a2));
     sw(s1, sp + 0x14);
     if (v0 != 0) goto loc_8002B30C;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1138;                                       // Result = STR_R_Subsector_Err[0] (80011138)
-    a1 = s0;
-    I_Error();
+    I_Error("R_Subsector: ss %i with numss = %i", (int32_t) s0, (int32_t) a2);
 loc_8002B30C:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 = lw(a0 - 0x7F9C);                               // Load from: gppEndDrawSubsector (80078064)

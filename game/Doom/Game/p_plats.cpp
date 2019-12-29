@@ -428,9 +428,7 @@ loc_8001F874:
     v0 = (i32(a1) < 0x1E);
     v1 += 4;
     if (v0 != 0) goto loc_8001F85C;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x8A0;                                        // Result = STR_P_AddActivePlat_NoMorePlats_Err[0] (800108A0)
-    I_Error();
+    I_Error("P_AddActivePlat: no more plats!");
 loc_8001F890:
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -459,9 +457,7 @@ loc_8001F8E8:
     v0 = (i32(v1) < 0x1E);
     s0 += 4;
     if (v0 != 0) goto loc_8001F8B8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x8C0;                                        // Result = STR_P_RemoveActivePlat_BadPlat_Err[0] (800108C0)
-    I_Error();
+    I_Error("P_RemoveActivePlat: can't find plat!");
 loc_8001F904:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);

@@ -410,9 +410,7 @@ loc_8002BF2C:
     v1 = 0x14;                                          // Result = 00000014
     s0 = 0;                                             // Result = 00000000
     if (v0 == v1) goto loc_8002BFCC;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1168;                                       // Result = STR_R_InitPalette_PalFoulup_Err[0] (80011168)
-    I_Error();
+    I_Error("R_InitPalettes: palette foulup\n");
 loc_8002BFCC:
     s2 = 0x800B0000;                                    // Result = 800B0000
     s2 -= 0x6F7C;                                       // Result = gPaletteClutId_Main (800A9084)

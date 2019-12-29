@@ -31,9 +31,7 @@ int32_t OpenFile(const CdMapTbl_File discFile) noexcept {
     const PsxCd_File* const pOpenedFile = psxcd_open(discFile);
 
     if (!pOpenedFile) {
-        a0 = 0x80011384;    // Result = STR_CannotOpen_Err[0] (80011384)                            
-        a1 = (uint32_t) discFile;
-        I_Error();
+        I_Error("Cannot open %u", (uint32_t) discFile);
     }
 
     // Search for a free cd file slot and abort with an error if not found
@@ -49,8 +47,7 @@ int32_t OpenFile(const CdMapTbl_File discFile) noexcept {
     } while (fileSlotIdx < MAX_OPEN_FILES);
     
     if (fileSlotIdx >= MAX_OPEN_FILES) {
-        a0 = 0x80011394;    // Result = STR_OpenFile_TooManyFiles_Err[0] (80011394)              
-        I_Error();
+        I_Error("OpenFile: Too many open files!");
     }
     
     // Save the opened file and return the opened file slot index
@@ -121,10 +118,7 @@ void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t siz
 
     // If the read failed then kill the program with an error
     if (numBytesRead != (int32_t) size) {
-        a0 = 0x800113B4;        // Result = STR_ReadFile_Read_Err[0] (800113B4)                            
-        a1 = numBytesRead;
-        a2 = size;
-        I_Error();
+        I_Error("ReadFile: error reading %d of %u bytes\n", numBytesRead, size);
     }
 }
 

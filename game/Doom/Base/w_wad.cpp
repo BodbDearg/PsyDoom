@@ -46,8 +46,7 @@ void W_Init() noexcept {
     D_strncasecmp();
 
     if (v0 != 0) {
-        a0 = 0x80011264;    // Result = STR_W_Init_InvalidIWADId_Err[0] (80011264)
-        I_Error();
+        I_Error("W_Init: invalid main IWAD id");
     }
 
     // Save the number of lumps and alloc the lump info array
@@ -179,9 +178,7 @@ loc_80031620:
     v1 = a0;
     goto loc_8003160C;
 loc_80031628:
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1284;                                       // Result = STR_W_GetNumForName_NotFound_Err[0] (80011284)
-    I_Error();
+    I_Error("W_GetNumForName: %s not found!", vmAddrToPtr<const char>(a1));
 loc_80031638:
     ra = lw(sp + 0x20);
     sp += 0x28;
@@ -197,10 +194,7 @@ loc_80031648:
     v0 = (i32(s0) < i32(v0));
     sw(ra, sp + 0x14);
     if (v0 != 0) goto loc_80031674;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x12A4;                                       // Result = STR_W_LumpLength_OutOfBounds_Err[0] (800112A4)
-    a1 = s0;
-    I_Error();
+    I_Error("W_LumpLength: %i >= numlumps", (int32_t) s0);
 loc_80031674:
     v1 = *gpLumpInfo;
     v0 = s0 << 4;
@@ -225,10 +219,7 @@ void W_ReadLump() noexcept {
     v0 = (i32(s0) < i32(v0));
     sw(s1, sp + 0x24);
     if (v0 != 0) goto loc_800316D8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x12C4;                                       // Result = STR_W_ReadLump_InvalidLumpIdx_Err[0] (800112C4)
-    a1 = s0;
-    I_Error();
+    I_Error("W_ReadLump: %i >= numlumps", (int32_t) s0);
 loc_800316D8:
     v1 = *gpLumpInfo;
     v0 = s0 << 4;
@@ -296,10 +287,7 @@ loc_800317AC:
     v0 = (s2 < v0);
     sw(s0, sp + 0x30);
     if (v0 != 0) goto loc_800317F0;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x12E0;                                       // Result = STR_W_CacheLumpNum_InvalidLumpIdx_Err[0] (800112E0)
-    a1 = s2;
-    I_Error();
+    I_Error("W_CacheLumpNum: %i >= numlumps", (int32_t) s2);
 loc_800317F0:
     v0 = *gpLumpCache;
     s0 = s2 << 2;
@@ -308,10 +296,7 @@ loc_800317F0:
     if (v0 != 0) goto loc_800319B0;
     v0 = lw(gp + 0x604);                                // Load from: gbIsLevelDataCached (80077BE4)
     if (v0 == 0) goto loc_8003182C;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1300;                                       // Result = STR_CacheMissOnLump_Msg[0] (80011300)
-    a1 = s2;
-    I_Error();
+    I_Error("cache miss on lump %i", (int32_t) s2);
 loc_8003182C:
     a2 = s1;
     if (s4 == 0) goto loc_80031858;
@@ -342,10 +327,7 @@ loc_80031880:
     v1 = (i32(s2) < i32(v1));
     s3 = lw(v0);
     if (v1 != 0) goto loc_800318B8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x12C4;                                       // Result = STR_W_ReadLump_InvalidLumpIdx_Err[0] (800112C4)
-    a1 = s2;
-    I_Error();
+    I_Error("W_ReadLump: %i >= numlumps", (int32_t) s2);
 loc_800318B8:
     v1 = *gpLumpInfo;
     v0 = s2 << 4;
@@ -480,10 +462,7 @@ loc_80031AC0:
     v1 = a0;
     goto loc_80031AAC;
 loc_80031AC8:
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1284;                                       // Result = STR_W_GetNumForName_NotFound_Err[0] (80011284)
-    a1 = t1;
-    I_Error();
+    I_Error("W_GetNumForName: %s not found!", vmAddrToPtr<const char>(t1));
 loc_80031AD8:
     a0 = s0;
     a1 = s1;
@@ -532,9 +511,7 @@ loc_80031B04:
     a2 = 4;                                             // Result = 00000004
     D_strncasecmp();
     if (v0 == 0) goto loc_80031BA0;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1318;                                       // Result = STR_W_OpenMapWad_InvalidIWADId_Err[0] (80011318)
-    I_Error();
+    I_Error("W_OpenMapWad: invalid map IWAD id");
 loc_80031BA0:
     v0 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)
     v1 = lw(v0 + 0x4);
@@ -558,10 +535,7 @@ loc_80031BD4:
     v0 = (i32(s0) < i32(v0));
     sw(ra, sp + 0x14);
     if (v0 != 0) goto loc_80031C00;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x133C;                                       // Result = STR_W_MapLumpLength_OutOfRange_Err[0] (8001133C)
-    a1 = s0;
-    I_Error();
+    I_Error("W_MapLumpLength: %i out of range", (int32_t) s0);
 loc_80031C00:
     v1 = lw(gp + 0xAE8);                                // Load from: gpMapWadDirectory (800780C8)
     v0 = s0 << 4;
@@ -639,10 +613,7 @@ loc_80031CE0:
     v0 = (i32(s0) < i32(v0));
     sw(ra, sp + 0x2C);
     if (v0 != 0) goto loc_80031D1C;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1360;                                       // Result = STR_W_ReadMapLump_OutOfRange_Err[0] (80011360)
-    a1 = s0;
-    I_Error();
+    I_Error("W_ReadMapLump: lump %d out of range", (int32_t) s0);
 loc_80031D1C:
     v1 = lw(gp + 0xAE8);                                // Load from: gpMapWadDirectory (800780C8)
     v0 = s0 << 4;

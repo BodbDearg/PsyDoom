@@ -24,10 +24,7 @@ loc_800197A4:
     v0 = (s2 < 5);
     a0 = s2 << 2;
     if (v0 != 0) goto loc_800197EC;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x3D0;                                        // Result = STR_P_GiveAmmo_BadTypeErr[0] (800103D0)
-    a1 = s2;
-    I_Error();
+    I_Error("P_GiveAmmo: bad type %i", (int32_t) s2);
     a0 = s2 << 2;
 loc_800197EC:
     v0 = a0 + s0;

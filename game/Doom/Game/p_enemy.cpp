@@ -251,9 +251,7 @@ loc_80015FB4:
     sw(s0, sp + 0x20);
     v0 = lw(s1 + 0x74);
     if (v0 != 0) goto loc_80015FF4;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x298;                                        // Result = STR_P_NewChaseDir_NoTargetErr[0] (80010298)
-    I_Error();
+    I_Error("P_NewChaseDir: called with no target");
 loc_80015FF4:
     s4 = lw(s1 + 0x6C);
     v0 = lw(s1 + 0x74);

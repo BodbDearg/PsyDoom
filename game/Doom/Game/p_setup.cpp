@@ -42,8 +42,7 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
     const int32_t lumpSize = v0;
     
     if (lumpSize > TMP_BUFFER_SIZE) {
-        a0 = 0x800108FC;    // Result = STR_P_LoadVertexes_LumpTooBig_Err[0] (800108FC)
-        I_Error();
+        I_Error("P_LoadVertexes: lump > 64K");
     }
 
     a0 = lumpNum;
@@ -92,9 +91,7 @@ loc_80021BA0:
     v1 = 0x10000;                                       // Result = 00010000
     v1 = (i32(v1) < i32(v0));
     if (v1 == 0) goto loc_80021BD4;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x918;                                        // Result = STR_P_LoadSegs_LumpTooBig_Err[0] (80010918)
-    I_Error();
+    I_Error("P_LoadSegs: lump > 64K");
 loc_80021BD4:
     a0 = s0;
     W_MapLumpLength();
@@ -229,8 +226,7 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     W_MapLumpLength();
 
     if (i32(v0) > TMP_BUFFER_SIZE) {
-        a0 = 0x80010930;    // Result = STR_P_LoadSubSectors_LumpTooBig_Err[0] (80010930)    
-        I_Error();
+        I_Error("P_LoadSubsectors: lump > 64K");
     }
 
     a0 = lumpNum;
@@ -307,9 +303,7 @@ loc_80021EC4:
     v1 = (i32(v1) < i32(v0));
     s5 = 0;                                             // Result = 00000000
     if (v1 == 0) goto loc_80021F30;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x950;                                        // Result = STR_P_LoadSectors_LumpTooBig_Err[0] (80010950)
-    I_Error();
+    I_Error("P_LoadSectors: lump > 64K");
 loc_80021F30:
     a0 = s0;
     W_MapLumpLength();
@@ -436,9 +430,7 @@ loc_80022104:
     v1 = 0x10000;                                       // Result = 00010000
     v1 = (i32(v1) < i32(v0));
     if (v1 == 0) goto loc_80022138;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x96C;                                        // Result = STR_P_LoadNodes_LumpTooBig_Err[0] (8001096C)
-    I_Error();
+    I_Error("P_LoadNodes: lump > 64K");
 loc_80022138:
     a0 = s0;
     W_MapLumpLength();
@@ -536,8 +528,7 @@ static void P_LoadThings(const int32_t lumpNum) noexcept {
     W_MapLumpLength();
 
     if (i32(v0) > TMP_BUFFER_SIZE) {
-        a0 = 0x80010984;    // Result = STR_P_LoadThings_LumpTooBig_Err[0] (80010984)
-        I_Error();
+        I_Error("P_LoadThings: lump > 64K");
     }
 
     a0 = lumpNum;
@@ -575,10 +566,9 @@ static void P_LoadThings(const int32_t lumpNum) noexcept {
             s2++;
 
             if (v0 == 0) {
-                a0 = 0x800109A0;    // Result = STR_P_LoadThings_BadDoomEdNum_Err[0] (800109A0)    
-                I_Error();
+                I_Error("P_LoadThings: doomednum:%d >= 4096", (int32_t) a1);
             }
-        
+            
             s0 += 0xA;
             s1 += 0xA;
         } while (i32(s2) < i32(s3));
@@ -608,9 +598,7 @@ loc_8002237C:
     v1 = (i32(v1) < i32(v0));
     s6 = 0;                                             // Result = 00000000
     if (v1 == 0) goto loc_800223C8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x9C4;                                        // Result = STR_P_LoadLineDefs_LumpTooBig_Err[0] (800109C4)
-    I_Error();
+    I_Error("P_LoadLineDefs: lump > 64K");
 loc_800223C8:
     a0 = s0;
     W_MapLumpLength();
@@ -792,9 +780,7 @@ loc_80022650:
     v1 = (i32(v1) < i32(v0));
     s4 = 0;                                             // Result = 00000000
     if (v1 == 0) goto loc_80022694;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x9E0;                                        // Result = STR_P_LoadSideDefs_LumpTooBig_Err[0] (800109E0)
-    I_Error();
+    I_Error("P_LoadSideDefs: lump > 64K");
 loc_80022694:
     a0 = s0;
     W_MapLumpLength();
@@ -980,9 +966,7 @@ loc_80022920:
     v1 = (i32(v1) < i32(v0));
     fp = 0;                                             // Result = 00000000
     if (v1 == 0) goto loc_80022974;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x9FC;                                        // Result = STR_P_LoadLeafs_LumpTooBig_Err[0] (800109FC)
-    I_Error();
+    I_Error("P_LoadLeafs: lump > 64K");
 loc_80022974:
     a0 = s2;
     s0 = gTmpBuffer;
@@ -1008,9 +992,7 @@ loc_800229C8:
     v0 = lw(gp + 0xC44);                                // Load from: gNumSubsectors (80078224)
     s4 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
     if (fp == v0) goto loc_800229E8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0xA14;                                        // Result = STR_P_LoadLeafs_Inconsistency_Err[0] (80010A14)
-    I_Error();
+    I_Error("P_LoadLeafs: leaf/subsector inconsistancy");
 loc_800229E8:
     a1 = s1 << 3;
     a2 = 2;
@@ -1043,9 +1025,7 @@ loc_80022A44:
         v0 = s0 << 3;
         if (bJump) goto loc_80022A70;
     }
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0xA40;                                        // Result = STR_P_LoadLeafs_BadVertex_Err[0] (80010A40)
-    I_Error();
+    I_Error("P_LoadLeafs: vertex out of range\n");
     v0 = s0 << 3;
 loc_80022A70:
     v0 -= s0;
@@ -1066,9 +1046,7 @@ loc_80022A9C:
         v0 = s0 << 2;
         if (bJump) goto loc_80022AC4;
     }
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0xA64;                                        // Result = STR_P_LoadLeafs_BadSeg_Err[0] (80010A64)
-    I_Error();
+    I_Error("P_LoadLeafs: seg out of range\n");
     v0 = s0 << 2;
 loc_80022AC4:
     v0 += s0;
@@ -1219,9 +1197,7 @@ loc_80022CFC:
     v0 = s5 - v0;
     v0 = u32(i32(v0) >> 2);
     if (v0 == v1) goto loc_80022D24;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0xA84;                                        // Result = STR_P_GroupLines_Miscounted_Err[0] (80010A84)
-    I_Error();
+    I_Error("P_GroupLines: miscounted");
 loc_80022D24:
     v0 = lw(sp + 0x1C);
     v1 = lw(sp + 0x18);
@@ -1573,9 +1549,7 @@ loc_800230D4:
     const uint32_t mapStartLump = v0;
     
     if (mapStartLump == -1) {
-        a0 = 0x80010AA0;    // Result = STR_P_SetupLevel_NotFound_Err[0] (80010AA0)
-        a1 = ptrToVmAddr(mapLumpName->chars);
-        I_Error();
+        I_Error("P_SetupLevel: %s not found", mapLumpName->chars);
     }
 
     // Load the blockmap
@@ -1652,9 +1626,7 @@ loc_800230D4:
 
     if (freeMemForGameplay < MIN_REQ_HEAP_SPACE_FOR_GAMEPLAY) {
         Z_DumpHeap();
-        a0 = 0x80010ABC;    // Result = STR_P_SetupLevel_OutOfMem_Err[0] (80010ABC)
-        a1 = freeMemForGameplay;
-        I_Error();
+        I_Error("P_SetupLevel: not enough free memory %d", freeMemForGameplay);
     }
 
     // Spawn the player(s)
@@ -1712,8 +1684,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
     while (true) {
         // If there have been too many failed load attempts then issue an error
         if (numLoadAttempts >= 4) {
-            a0 = 0x80010AE4;    // Result = STR_P_LoadBlocks_DataFailure_Err[0] (80010AE4)
-            I_Error();
+            I_Error("P_LoadBlocks: Data Failure");
         }
 
         ++numLoadAttempts;
@@ -1890,10 +1861,7 @@ loc_80023A14:
     a0 = s0;
     if (v0 == 0) goto loc_80023A5C;
 loc_80023A48:
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0xB00;                                        // Result = STR_CacheSprite_BadLump_Err[0] (80010B00)
-    a1 = s0;
-    I_Error();
+    I_Error("CacheSprite: invalid sprite lump %d", (int32_t) s0);
     a0 = s0;
 loc_80023A5C:
     a1 = 8;                                             // Result = 00000008
