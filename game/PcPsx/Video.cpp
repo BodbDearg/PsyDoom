@@ -48,8 +48,8 @@ static void presentSdlFramebuffer() noexcept {
     
 // TODO: do proper resolution config
 #if WIN32
-    gOutputRect.w = 1280;
-    gOutputRect.h = 1200;
+    gOutputRect.w = 1408;
+    gOutputRect.h = 1320;
 #else
     gOutputRect.w = 1024;
     gOutputRect.h = 768;
@@ -140,8 +140,8 @@ void initVideo() noexcept {
         SDL_WINDOWPOS_CENTERED,
     // TODO: do proper resolution config
     #if WIN32
-        (int32_t) 1280,
-        (int32_t) 1200,
+        (int32_t) 1408,
+        (int32_t) 1320,
     #else
        (int32_t) 1024,
        (int32_t) 768,
