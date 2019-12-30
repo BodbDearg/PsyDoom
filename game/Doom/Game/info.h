@@ -1049,16 +1049,16 @@ enum mobjtype_t : uint32_t {
 
 // Sprite frame number flags and masks.
 // The flags are encoded in the frame number itself:
-static constexpr uint32_t FF_FULLBRIGHT	= 0x8000;       // If set the sprite is always displayed fullbright, in spite of lighting conditions.
+static constexpr uint32_t FF_FULLBRIGHT = 0x8000;       // If set the sprite is always displayed fullbright, in spite of lighting conditions.
 static constexpr uint32_t FF_FRAMEMASK  = 0x7fff;       // Mask to retrieve the actual frame number itself.
 
 // Defines a finite state machine state that a map object or player sprite (weapon) can be in
 struct state_t {
-    spritenum_t	    sprite;         // Sprite number to use for the state
-	int32_t         frame;          // What frame of the state to display
-	int32_t         tics;           // Number of tics to remain in this state, or -1 if infinite
+    spritenum_t     sprite;         // Sprite number to use for the state
+    int32_t         frame;          // What frame of the state to display
+    int32_t         tics;           // Number of tics to remain in this state, or -1 if infinite
     VmPtr<void()>   action;         // Action function to call upon entering the state, may have 1 or 2 parameters depending on context (map object vs player sprite).
-    statenum_t		nextstate;      // State number to goto after this state
+    statenum_t      nextstate;      // State number to goto after this state
     int32_t         misc1;          // State specific info 1: appears unused in this version of the game
     int32_t         misc2;          // State specific info 2: appears unused in this version of the game
 };
@@ -1095,5 +1095,5 @@ static_assert(sizeof(mobjinfo_t) == 88);
 
 // The arrays of sprite names, state definitions and map object definitions
 extern const VmPtr<VmPtr<const char>[NUMSPRITES]>   gSprNames;
-extern const VmPtr<state_t[NUMSTATES]>	            gStates;
+extern const VmPtr<state_t[NUMSTATES]>              gStates;
 extern const VmPtr<mobjinfo_t[NUMMOBJTYPES]>        gMObjInfo;

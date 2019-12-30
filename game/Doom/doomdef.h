@@ -23,10 +23,10 @@ static constexpr fixed_t    FRACUNIT = 0x10000;       // 1.0 in 16.16 fixed poin
 // This type is used for most angles in the game, but bits are truncated to lookup sine, cosine etc. table values.
 typedef uint32_t angle_t;
 
-static constexpr angle_t ANG45	= 0x20000000;
-static constexpr angle_t ANG90	= 0x40000000;
-static constexpr angle_t ANG180	= 0x80000000;
-static constexpr angle_t ANG270	= 0xc0000000;
+static constexpr angle_t ANG45  = 0x20000000;
+static constexpr angle_t ANG90  = 0x40000000;
+static constexpr angle_t ANG180 = 0x80000000;
+static constexpr angle_t ANG270 = 0xc0000000;
 
 // Some global defines and constants
 static constexpr uint32_t MAXPLAYERS = 2;   // Maximum number of players in a multiplayer game
@@ -40,11 +40,11 @@ enum gametype_t : uint32_t {
 
 // What skill level the game is running at
 enum skill_t : uint32_t {
-	sk_baby,
-	sk_easy,
-	sk_medium,
-	sk_hard,
-	sk_nightmare
+    sk_baby,
+    sk_easy,
+    sk_medium,
+    sk_hard,
+    sk_nightmare
 };
 
 // Represents a high level result of running a game loop (MiniLoop).
@@ -116,16 +116,16 @@ static_assert(sizeof(mobj_t) == 148);
 
 // Basic player status
 enum playerstate_t : uint32_t {
-	PST_LIVE,       // Player is playing the game           (TODO: CONFIRM!)
-	PST_DEAD,		// Player is dead                       (TODO: CONFIRM!)
-	PST_REBORN      // Player is spawning or respawning     (TODO: CONFIRM!)
+    PST_LIVE,       // Player is playing the game           (TODO: CONFIRM!)
+    PST_DEAD,       // Player is dead                       (TODO: CONFIRM!)
+    PST_REBORN      // Player is spawning or respawning     (TODO: CONFIRM!)
 };
 
 // Player sprite type, just a weapon and a flash in DOOM
 enum psprnum_t : uint32_t {
-	ps_weapon,
-	ps_flash,
-	NUMPSPRITES
+    ps_weapon,
+    ps_flash,
+    NUMPSPRITES
 };
 
 // State for a player sprite
@@ -141,13 +141,13 @@ static_assert(sizeof(pspdef_t) == 16);
 // Keycard types
 enum card_t : uint32_t {
     // TODO: name these labels
-	it_0,
-	it_1,
-	it_2,
-	it_3,
-	it_4,
-	it_5,
-	NUMCARDS
+    it_0,
+    it_1,
+    it_2,
+    it_3,
+    it_4,
+    it_5,
+    NUMCARDS
 };
 
 // Player weapon types
