@@ -7,7 +7,6 @@ extern void D_DoomMain() noexcept;
 extern void I_SetDebugDrawStringPos() noexcept;
 extern void _thunk_D_memset() noexcept;
 extern void _thunk_D_memcpy() noexcept;
-extern void D_strncpy() noexcept;
 extern void D_strncasecmp() noexcept;
 extern void strupr() noexcept;
 extern void P_Random() noexcept;
@@ -970,7 +969,6 @@ namespace PsxVm {
         { 0x800124E8, &I_SetDebugDrawStringPos },
         { 0x80012850, &_thunk_D_memset },
         { 0x8001290C, &_thunk_D_memcpy },
-        { 0x80012940, &D_strncpy },
         { 0x8001297C, &D_strncasecmp },
         { 0x800129D4, &strupr },
         { 0x80012A18, &P_Random },

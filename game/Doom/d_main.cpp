@@ -418,23 +418,19 @@ void _thunk_D_memcpy() noexcept {
     D_memcpy(pDst.get(), pSrc.get(), a2);
 }
 
-void D_strncpy() noexcept {
-loc_80012940:
-    sp -= 8;
-    v1 = a2 - 1;
-    if (a2 == 0) goto loc_80012970;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_80012950:
-    v0 = lbu(a1);
-    a1++;
-    sb(v0, a0);
-    a0++;
-    if (v0 == 0) goto loc_80012970;
-    v1--;
-    if (v1 != a2) goto loc_80012950;
-loc_80012970:
-    sp += 8;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Copy up to 'maxChars' from 'src' to 'dst'
+//------------------------------------------------------------------------------------------------------------------------------------------
+void D_strncpy(char* dst, const char* src, uint32_t maxChars) noexcept {
+    while (maxChars != 0) {
+        const char c = *dst = *src;
+        --maxChars;
+        ++src;
+        ++dst;
+
+        if (c == 0)
+            break;
+    }
 }
 
 void D_strncasecmp() noexcept {

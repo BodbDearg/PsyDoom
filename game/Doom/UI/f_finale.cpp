@@ -123,7 +123,7 @@ loc_8003D80C:
 loc_8003D88C:
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 -= 0x6FB8;                                       // Result = 800A9048
-    D_strncpy();
+    D_strncpy(vmAddrToPtr<char>(a0), vmAddrToPtr<const char>(a1), a2);
 loc_8003D89C:
     v1 = lw(gp + 0x978);                                // Load from: 80077F58
     v0 = v1 + 1;
@@ -369,7 +369,7 @@ loc_8003DBC8:
 loc_8003DC48:
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 -= 0x6FB8;                                       // Result = 800A9048
-    D_strncpy();
+    D_strncpy(vmAddrToPtr<char>(a0), vmAddrToPtr<const char>(a1), a2);
 loc_8003DC58:
     v1 = lw(gp + 0x978);                                // Load from: 80077F58
     v0 = v1 + 1;
