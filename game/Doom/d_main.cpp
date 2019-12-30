@@ -463,16 +463,12 @@ loc_800129CC:
 // Makes the given ASCII string uppercase
 //------------------------------------------------------------------------------------------------------------------------------------------
 void strupr(char* str) noexcept {
-    char c = *str;
-    
-    while (c != 0) {
+    for (char c = *str; c != 0; c = *str) {
         if (c >= 'a' && c <= 'z') {
             c -= 32;
         }
 
-        *str = c;
-        ++str;
-        c = *str;
+        *str++ = c;
     }
 }
 
