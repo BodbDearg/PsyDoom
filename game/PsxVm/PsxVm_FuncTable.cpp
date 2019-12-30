@@ -316,7 +316,6 @@ extern void R_PointInSubsector() noexcept;
 extern void W_Init() noexcept;
 extern void W_CheckNumForName() noexcept;
 extern void W_GetNumForName() noexcept;
-extern void W_LumpLength() noexcept;
 extern void W_ReadLump() noexcept;
 extern void W_CacheLumpNum() noexcept;
 extern void W_CacheLumpName() noexcept;
@@ -1280,7 +1279,6 @@ namespace PsxVm {
         { 0x80031394, &W_Init },
         { 0x800314A4, &W_CheckNumForName },
         { 0x80031558, &W_GetNumForName },
-        { 0x80031648, &W_LumpLength },
         { 0x80031698, &W_ReadLump },
         { 0x800317AC, &W_CacheLumpNum },
         { 0x800319E4, &W_CacheLumpName },

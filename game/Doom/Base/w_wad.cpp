@@ -185,25 +185,17 @@ loc_80031638:
     return;
 }
 
-void W_LumpLength() noexcept {
-loc_80031648:
-    v0 = *gNumLumps;
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = (i32(s0) < i32(v0));
-    sw(ra, sp + 0x14);
-    if (v0 != 0) goto loc_80031674;
-    I_Error("W_LumpLength: %i >= numlumps", (int32_t) s0);
-loc_80031674:
-    v1 = *gpLumpInfo;
-    v0 = s0 << 4;
-    v0 += v1;
-    v0 = lw(v0 + 0x4);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Give the size in bytes of the given lump number from the main IWAD.
+// Issues a fatal error if the lump is not found.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t W_LumpLength(const int32_t lumpNum) noexcept {
+    if (lumpNum >= *gNumLumps) {
+        I_Error("W_LumpLength: %i >= numlumps", lumpNum);
+    }
+
+    const lumpinfo_t& lump = (*gpLumpInfo)[lumpNum];
+    return lump.size;
 }
 
 void W_ReadLump() noexcept {

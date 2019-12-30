@@ -403,12 +403,11 @@ loc_8002BF2C:
     a1 = 0x20;                                          // Result = 00000020
     a2 = 1;                                             // Result = 00000001
     W_CacheLumpNum();
-    a0 = s0;
     s1 = v0;
-    W_LumpLength();
+    v0 = W_LumpLength((int32_t) s0);
     v0 >>= 9;
-    v1 = 0x14;                                          // Result = 00000014
-    s0 = 0;                                             // Result = 00000000
+    v1 = 0x14;
+    s0 = 0;
     if (v0 == v1) goto loc_8002BFCC;
     I_Error("R_InitPalettes: palette foulup\n");
 loc_8002BFCC:

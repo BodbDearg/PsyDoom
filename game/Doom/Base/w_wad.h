@@ -7,6 +7,8 @@ struct lumpname_t {
     char chars[8];
 };
 
+static_assert(sizeof(lumpname_t) == 8);
+
 // Header for a lump in a WAD file
 struct lumpinfo_t {
     uint32_t    filepos;
@@ -24,7 +26,7 @@ extern const VmPtr<VmPtr<bool>>         gpbIsUncompressedLump;
 void W_Init() noexcept;
 void W_CheckNumForName() noexcept;
 void W_GetNumForName() noexcept;
-void W_LumpLength() noexcept;
+int32_t W_LumpLength(const int32_t lumpNum) noexcept;
 void W_ReadLump() noexcept;
 void W_CacheLumpNum() noexcept;
 void W_CacheLumpName() noexcept;
