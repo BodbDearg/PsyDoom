@@ -27,6 +27,10 @@ const VmPtr<uint32_t> gElapsedVBlanks(0x800781BC);
 // Sprites on the other hand are placed in 'unlocked' texture pages and can be evicted at any time.
 const VmPtr<uint32_t> gLockedTexPagesMask(0x80077C08);
 
+// Control related stuff
+const VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>                         gBtnBindings(0x80073E0C);
+const VmPtr<VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>[MAXPLAYERS]>      gpPlayerBtnBindings(0x80077FC8);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // User PlayStation entrypoint for DOOM.
 // This was probably the actual 'main()' function in the real source code.
@@ -2079,8 +2083,7 @@ loc_80034884:
     v0 = lbu(v0 + 0x7604);                              // Load from: gStartGameType (80077604)
     v1 = *gStartSkill;
     a1 = (uint8_t) *gStartMapOrEpisode;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x3E0C;                                       // Result = gBtnBinding_Attack (80073E0C)
+    a0 = gBtnBindings;
     at = 0x80070000;                                    // Result = 80070000
     sb(v0, at + 0x7FB1);                                // Store to: gNetOutputPacket[1] (80077FB1)
     at = 0x80070000;                                    // Result = 80070000
@@ -2113,19 +2116,18 @@ loc_80034928:
     if (v0 == 0) goto loc_80034928;
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x7EAC);                               // Load from: gNetInputPacket[4] (80077EAC)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x3E0C;                                       // Result = gBtnBinding_Attack (80073E0C)
+    v0 = gBtnBindings;
     at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7FC8);                                // Store to: MAYBE_gpButtonBindings_Player1 (80077FC8)
+    gpPlayerBtnBindings[0] = v0;
     I_NetButtonsToLocal();
     at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7FCC);                                // Store to: MAYBE_gpButtonBindings_Player2 (80077FCC)
+    gpPlayerBtnBindings[1] = v0;
     goto loc_80034A44;
 loc_8003496C:
     sw(v0, gp + 0x62C);                                 // Store to: gbDidAbortGame (80077C0C)
-    a0 = 2;                                             // Result = 00000002
-    a1 = 3;                                             // Result = 00000003
-    a2 = 0;                                             // Result = 00000000
+    a0 = 2;
+    a1 = 3;
+    a2 = 0;
     LIBCOMB__comb_control();
     goto loc_80034A48;
 loc_80034988:
@@ -2146,10 +2148,9 @@ loc_8003499C:
     v1 = lbu(v1 + 0x7EAA);                              // Load from: gNetInputPacket[2] (80077EAA)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lbu(a1 + 0x7EAB);                              // Load from: gNetInputPacket[3] (80077EAB)
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 += 0x3E0C;                                       // Result = gBtnBinding_Attack (80073E0C)
+    s0 = gBtnBindings;
     at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x7FCC);                                // Store to: MAYBE_gpButtonBindings_Player2 (80077FCC)
+    gpPlayerBtnBindings[1] = s0;
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7604);                                // Store to: gStartGameType (80077604)
     *gStartSkill = (skill_t) v1;
@@ -2157,7 +2158,7 @@ loc_8003499C:
     I_NetButtonsToLocal();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7FC8);                                // Store to: MAYBE_gpButtonBindings_Player1 (80077FC8)
-    a0 = s0;                                            // Result = gBtnBinding_Attack (80073E0C)
+    a0 = s0;
     I_LocalButtonsToNet();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7FB4);                                // Store to: gNetOutputPacket[4] (80077FB4)

@@ -1,5 +1,6 @@
 #include "p_user.h"
 
+#include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_main.h"
@@ -433,8 +434,7 @@ loc_80029DD4:
     a1 = a0;
     sw(ra, sp + 0x10);
     v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FC8;                                       // Result = MAYBE_gpButtonBindings_Player1 (80077FC8)
+    at = ptrToVmAddr(&gpPlayerBtnBindings[0]);
     at += v0;
     t0 = lw(at);
     at = 0x80070000;                                    // Result = 80070000
@@ -1123,8 +1123,7 @@ loc_8002A7F8:
     at -= 0x7DEC;                                       // Result = gPlayerOldPadButtons[0] (80078214)
     at += v0;
     a1 = lw(at);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FC8;                                       // Result = MAYBE_gpButtonBindings_Player1 (80077FC8)
+    at = ptrToVmAddr(&gpPlayerBtnBindings[0]);
     at += v0;
     s1 = lw(at);
     v0 = 0xA;                                           // Result = 0000000A

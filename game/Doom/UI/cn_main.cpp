@@ -142,11 +142,10 @@ loc_80037B0C:
     a0 = 0;                                             // Result = 00000000
     v0 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
     v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3E0C;                                       // Result = gBtnBinding_Attack (80073E0C)
+    at = gBtnBindings;
     at += v0;
     sw(a2, at);
-    a1 = 0x17;                                          // Result = 00000017
+    a1 = 0x17;
     goto loc_80037B60;
 loc_80037B34:
     v0 = s0 & 0xF0;
@@ -155,17 +154,16 @@ loc_80037B34:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80037B6C;
     }
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x3E0C;                                       // Result = gBtnBinding_Attack (80073E0C)
+    a0 = gBtnBindings;
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x3E2C;                                       // Result = DefaultBtnBinding_Attack (80073E2C)
-    a2 = 0x20;                                          // Result = 00000020
+    a2 = 0x20;
     _thunk_D_memcpy();
-    a0 = 0;                                             // Result = 00000000
-    a1 = 0x17;                                          // Result = 00000017
+    a0 = 0;
+    a1 = 0x17;
 loc_80037B60:
     S_StartSound();
-    v0 = 0;                                             // Result = 00000000
+    v0 = 0;
 loc_80037B6C:
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -205,22 +203,21 @@ loc_80037BAC:
     a2 += 0x15C8;                                       // Result = STR_Configuration[0] (800115C8)
     a1 = 0x14;                                          // Result = 00000014
     I_DrawString();
-    a2 = 0xC;                                           // Result = 0000000C
-    s2 = 0;                                             // Result = 00000000
+    a2 = 0xC;
+    s2 = 0;
     s4 = 0x80070000;                                    // Result = 80070000
     s4 += 0x3DEC;                                       // Result = gBtnSprite_Triangle_ButtonMask (80073DEC)
     s3 = 0x80090000;                                    // Result = 80090000
     s3 += 0x7ADA;                                       // Result = gTexInfo_BUTTONS[2] (80097ADA)
     s1 = 0x2D;                                          // Result = 0000002D
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 += 0x3E0C;                                       // Result = gBtnBinding_Attack (80073E0C)
+    s0 = gBtnBindings;
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lhu(a0 - 0x6B0E);                              // Load from: gTexInfo_STATUS[2] (800A94F2)
-    v0 = 0xC0;                                          // Result = 000000C0
+    v0 = 0xC0;
     sw(v0, sp + 0x14);
-    v0 = 0x10;                                          // Result = 00000010
+    v0 = 0x10;
     sw(v0, sp + 0x18);
-    v0 = 0x12;                                          // Result = 00000012
+    v0 = 0x12;
     sw(v0, sp + 0x1C);
     v0 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
     a1 = 0x800B0000;                                    // Result = 800B0000

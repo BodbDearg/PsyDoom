@@ -456,18 +456,18 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     gPlayers[0].mo = gEmptyMObj;
     gPlayers[1].mo = gEmptyMObj;
 
-    
-    sw(true, 0x800780AC);   // Store to: gbPlayerInGame[0] (800780AC)
+    // Set some player status flags and controls stuff
+    gbPlayerInGame[0] = true;
 
     if (gameType == gt_single) {
-        v0 = 0x80073E0C;            // Result = gBtnBinding_Attack (80073E0C)        
-        sw(v0, 0x80077FC8);         // Store to: MAYBE_gpButtonBindings_Player1 (80077FC8)
-        sw(false, 0x800780B0);      // Store to: gbPlayerInGame[1] (800780B0)
+        gpPlayerBtnBindings[0] = gBtnBindings;
+        gbPlayerInGame[1] = false;
     } 
     else if (gameType == gt_deathmatch || gameType == gt_coop) {
-        sw(true, 0x800780B0);       // Store to: gbPlayerInGame[1] (800780B0)
+        gbPlayerInGame[2] = true;
     }
 
+    // Not recording or playing back a demo (yet)
     *gbDemoRecording = false;
     *gbDemoPlayback = false;
 
@@ -559,9 +559,8 @@ loc_80013714:
     sp -= 0x40;
     a0 = sp + 0x10;
     sw(s1, sp + 0x34);
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x3E0C;                                       // Result = gBtnBinding_Attack (80073E0C)
-    a1 = s1;                                            // Result = gBtnBinding_Attack (80073E0C)
+    s1 = gBtnBindings;
+    a1 = s1;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = *gpDemoBuffer;
     sw(ra, sp + 0x3C);
@@ -577,7 +576,7 @@ loc_80013714:
     s0 = lw(v1 + 0x4);
     a2 = 0x20;                                          // Result = 00000020
     _thunk_D_memcpy();
-    a0 = s1;                                            // Result = gBtnBinding_Attack (80073E0C)
+    a0 = s1;
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lw(a1 + 0x75EC);                               // Load from: gpDemo_p (800775EC)
     a2 = 0x20;                                          // Result = 00000020
@@ -594,7 +593,7 @@ loc_80013714:
     s0 = MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
     *gbDemoPlayback = false;
 
-    a0 = s1;                    // Result = gBtnBinding_Attack (80073E0C)
+    a0 = s1;
     a1 = sp + 0x10;
     a2 = 0x20;
     _thunk_D_memcpy();
