@@ -4,6 +4,7 @@
 #include "Doom/d_main.h"
 #include "i_file.h"
 #include "i_main.h"
+#include "PcPsx/Utils.h"
 #include "PsxVm/PsxVm.h"
 #include "PsxVm/VmSVal.h"
 #include "z_zone.h"
@@ -26,6 +27,10 @@ const VmPtr<VmPtr<bool>>            gpbIsUncompressedLump(0x800782F0);
 
 // Which of the open files is the main WAD file
 static const VmPtr<uint32_t> gMainWadFileIdx(0x80078254);
+
+// This is a mask to chop off the highest bit of the 1st 32-bit word in a lump name.
+// That bit is not part of the name, it is used to indicate whether the lump is compressed or not.
+static constexpr uint32_t NAME_WORD_MASK = isHostCpuLittleEndian() ? 0xFFFFFF7F : 0x7FFFFFFF;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the WAD file management system.
@@ -67,122 +72,54 @@ void W_Init() noexcept {
     D_memset(gpbIsUncompressedLump->get(), std::byte(0), *gNumLumps * sizeof(bool));
 }
 
-void W_CheckNumForName() noexcept {
-    sp -= 0x10;
-    a1 = sp;
-    a2 = sp + 8;
-    sw(0, sp);
-    sw(0, sp + 0x4);
-loc_800314B8:
-    v0 = lbu(a0);
-    v1 = v0;
-    if (v0 == 0) goto loc_800314F0;
-    v0 = v1 - 0x61;
-    v0 = (v0 < 0x1A);
-    a0++;
-    if (v0 == 0) goto loc_800314DC;
-    v1 -= 0x20;
-loc_800314DC:
-    sb(v1, a1);
-    a1++;
-    v0 = (i32(a1) < i32(a2));
-    if (v0 != 0) goto loc_800314B8;
-loc_800314F0:
-    a3 = lw(sp);
-    a2 = lw(sp + 0x4);
-    v1 = *gNumLumps;
-    v0 = *gpLumpInfo;
-    a0 = 0;
-    if (i32(v1) <= 0) goto loc_80031548;
-    t0 = -0x81;                                         // Result = FFFFFF7F
-    a1 = v1;
-    v1 = v0 + 8;
-loc_80031514:
-    v0 = lw(v1 + 0x4);
-    if (v0 != a2) goto loc_80031538;
-    v0 = lw(v1);
-    v0 &= t0;
-    {
-        const bool bJump = (v0 == a3);
-        v0 = a0;
-        if (bJump) goto loc_8003154C;
-    }
-loc_80031538:
-    a0++;
-    v0 = (i32(a0) < i32(a1));
-    v1 += 0x10;
-    if (v0 != 0) goto loc_80031514;
-loc_80031548:
-    v0 = -1;                                            // Result = FFFFFFFF
-loc_8003154C:
-    sp += 0x10;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the lump index for the given lump name (case insensitive) or -1 if not found
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t W_CheckNumForName(const char* const name) noexcept {
+    // Copy the given name and uppercase for case insensitivity
+    char nameUpper[MAXLUMPNAME + 1];
+    D_memset(nameUpper, (std::byte) 0, sizeof(nameUpper));
+    D_strncpy(nameUpper, name, MAXLUMPNAME);
+    nameUpper[MAXLUMPNAME] = 0;
+    strupr(nameUpper);
+
+    // Get the two words of the name for faster comparison
+    const uint32_t findNameW1 = (uint32_t&) nameUpper[0];
+    const uint32_t findNameW2 = (uint32_t&) nameUpper[4];
+
+    // Try to find the given lump name and compare names using 32-bit words rather than single chars
+    lumpinfo_t* pLump = (*gpLumpInfo).get();
+    int32_t lumpIdx = 0;
+
+    while (lumpIdx < *gNumLumps) {
+        // Note: must mask the highest bit of the first character of the lump name.
+        // This bit is used to indicate whether the lump is compressed or not.
+        const uint32_t lumpNameW1 = ((uint32_t&) pLump->name.chars[0]) & NAME_WORD_MASK;
+        const uint32_t lumpNameW2 = ((uint32_t&) pLump->name.chars[4]);
+
+        if (lumpNameW1 == findNameW1 && lumpNameW2 == findNameW2)
+            return lumpIdx;
+        
+        ++lumpIdx;
+        ++pLump;
+    };
+
+    // If we get to here then the lump name is not found
+    return -1;
 }
 
-void W_GetNumForName() noexcept {
-loc_80031558:
-    sp -= 0x28;
-    a1 = a0;
-    a0 = sp + 0x10;
-    a2 = a1;
-    a3 = sp + 0x18;
-    sw(ra, sp + 0x20);
-    sw(0, sp + 0x10);
-    sw(0, sp + 0x14);
-loc_80031578:
-    v0 = lbu(a2);
-    v1 = v0;
-    if (v0 == 0) goto loc_800315B0;
-    v0 = v1 - 0x61;
-    v0 = (v0 < 0x1A);
-    a2++;
-    if (v0 == 0) goto loc_8003159C;
-    v1 -= 0x20;
-loc_8003159C:
-    sb(v1, a0);
-    a0++;
-    v0 = (i32(a0) < i32(a3));
-    if (v0 != 0) goto loc_80031578;
-loc_800315B0:
-    t0 = lw(sp + 0x10);
-    a3 = lw(sp + 0x14);
-    v1 = *gNumLumps;
-    v0 = *gpLumpInfo;
-    a0 = 0;
-    if (i32(v1) <= 0) goto loc_80031608;
-    t1 = -0x81;                                         // Result = FFFFFF7F
-    a2 = v1;
-    v1 = v0 + 8;
-loc_800315D4:
-    v0 = lw(v1 + 0x4);
-    if (v0 != a3) goto loc_800315F8;
-    v0 = lw(v1);
-    v0 &= t1;
-    if (v0 == t0) goto loc_80031620;
-loc_800315F8:
-    a0++;
-    v0 = (i32(a0) < i32(a2));
-    v1 += 0x10;
-    if (v0 != 0) goto loc_800315D4;
-loc_80031608:
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_8003160C:
-    v0 = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 == v0);
-        v0 = v1;
-        if (bJump) goto loc_80031628;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the lump index for the given lump name (case insensitive) or fail with a fatal error if not found
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t W_GetNumForName(const char* const name) noexcept {
+    const int32_t lumpIdx = W_CheckNumForName(name);
+
+    if (lumpIdx >= 0) {
+        return lumpIdx;
+    } else {
+        I_Error("W_GetNumForName: %s not found!", name);
+        return -1;
     }
-    goto loc_80031638;
-loc_80031620:
-    v1 = a0;
-    goto loc_8003160C;
-loc_80031628:
-    I_Error("W_GetNumForName: %s not found!", vmAddrToPtr<const char>(a1));
-loc_80031638:
-    ra = lw(sp + 0x20);
-    sp += 0x28;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

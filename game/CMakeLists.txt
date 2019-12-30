@@ -129,6 +129,7 @@ set(SOURCE_FILES
     "PcPsx/ModMgr.cpp"
     "PcPsx/ModMgr.h"
     "PcPsx/Types.h"
+    "PcPsx/Utils.h"
     "PcPsx/Video.cpp"
     "PcPsx/Video.h"
     "PsxVm/PsxVm.h"

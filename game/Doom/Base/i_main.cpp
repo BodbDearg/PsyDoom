@@ -249,7 +249,7 @@ loc_80032BF4:
     sw(ra, sp + 0x1C);
     sw(s0, sp + 0x10);
     if (a0 == 0) goto loc_80032C24;
-    W_GetNumForName();
+    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
     s2 = v0;
 loc_80032C24:
     a0 = s2;

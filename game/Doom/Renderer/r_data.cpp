@@ -25,12 +25,12 @@ loc_8002B9E0:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7B6C;                                       // Result = STR_LumpName_T_START[0] (80077B6C)
     sw(ra, sp + 0x18);
-    W_GetNumForName();
+    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7B74;                                       // Result = STR_LumpName_T_END[0] (80077B74)
     v0++;
     sw(v0, gp + 0xD00);                                 // Store to: gFirstTexLumpNum (800782E0)
-    W_GetNumForName();
+    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
     a2 = 1;                                             // Result = 00000001
     v0--;
     a0 = *gpMainMemZone;
@@ -117,12 +117,12 @@ loc_8002BB50:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7B7C;                                       // Result = STR_LumpName_F_START[0] (80077B7C)
     sw(ra, sp + 0x18);
-    W_GetNumForName();
+    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7B84;                                       // Result = STR_LumpName_F_END[0] (80077B84)
     v0++;
     sw(v0, gp + 0xCD8);                                 // Store to: gFirstFlatLumpNum (800782B8)
-    W_GetNumForName();
+    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
     v0--;
     a2 = 1;
     a0 = *gpMainMemZone;
@@ -183,12 +183,12 @@ loc_8002BC54:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7B8C;                                       // Result = STR_LumpName_S_START[0] (80077B8C)
     sw(ra, sp + 0x10);
-    W_GetNumForName();
+    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7B94;                                       // Result = STR_LumpName_S_END[0] (80077B94)
     v0++;
     sw(v0, gp + 0xA34);                                 // Store to: gFirstSpriteLumpNum (80078014)
-    W_GetNumForName();
+    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
     a2 = 1;
     v0--;
     a0 = *gpMainMemZone;
@@ -397,7 +397,7 @@ loc_8002BF2C:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7BAC;                                       // Result = STR_LumpName_PLAYPAL[0] (80077BAC)
     sb(v1, v0 + 0x2);
-    W_GetNumForName();
+    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
     s0 = v0;
     a0 = s0;
     a1 = 0x20;                                          // Result = 00000020

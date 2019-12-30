@@ -3,8 +3,10 @@
 #include "PsxVm/VmPtr.h"
 
 // Format for a name in a lump file
+static constexpr uint32_t MAXLUMPNAME = 8;
+
 struct lumpname_t {
-    char chars[8];
+    char chars[MAXLUMPNAME];
 };
 
 static_assert(sizeof(lumpname_t) == 8);
@@ -24,8 +26,8 @@ extern const VmPtr<VmPtr<VmPtr<void>>>  gpLumpCache;
 extern const VmPtr<VmPtr<bool>>         gpbIsUncompressedLump;
 
 void W_Init() noexcept;
-void W_CheckNumForName() noexcept;
-void W_GetNumForName() noexcept;
+int32_t W_CheckNumForName(const char* const name) noexcept;
+int32_t W_GetNumForName(const char* const name) noexcept;
 int32_t W_LumpLength(const int32_t lumpNum) noexcept;
 void W_ReadLump() noexcept;
 void W_CacheLumpNum() noexcept;
