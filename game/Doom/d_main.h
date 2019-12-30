@@ -28,7 +28,7 @@ void _thunk_D_memcpy() noexcept;
 
 void D_strncpy(char* dst, const char* src, uint32_t maxChars) noexcept;
 void D_strncasecmp() noexcept;
-void strupr() noexcept;
+void strupr(char* str) noexcept;
 
 gameaction_t MiniLoop(
     void (*const pStart)(),
