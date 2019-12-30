@@ -135,7 +135,7 @@ void initVideo() noexcept {
     #endif
 
     gWindow = SDL_CreateWindow(
-        "PC-PSX DOOM",
+        "StationDOOM",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
     // TODO: do proper resolution config
