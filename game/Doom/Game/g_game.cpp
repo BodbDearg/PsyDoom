@@ -9,6 +9,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/f_finale.h"
 #include "Doom/UI/in_main.h"
+#include "info.h"
 #include "p_map.h"
 #include "p_mobj.h"
 #include "p_setup.h"
@@ -470,21 +471,21 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
 
     // Patching some monster states depending on difficulty
     if (skill == sk_nightmare) {
-        sw(2, 0x8005B7B0);                  // Store to: State_S_SARG_ATK1[2] (8005B7B0)
-        sw(2, 0x8005B7CC);                  // Store to: State_S_SARG_ATK2[2] (8005B7CC)
-        sw(2, 0x8005B7E8);                  // Store to: State_S_SARG_ATK3[2] (8005B7E8)
-        sw(15, 0x8005E3E8);                 // Store to: MObjInfo_MT_SERGEANT[F] (8005E3E8)
-        sw(40 * FRACUNIT, 0x8005E808);      // Store to: MObjInfo_MT_BRUISERSHOT[F] (8005E808)
-        sw(40 * FRACUNIT, 0x8005E7B0);      // Store to: MObjInfo_MT_HEADSHOT[F] (8005E7B0)
-        sw(40 * FRACUNIT, 0x8005E758);      // Store to: MObjInfo_MT_TROOPSHOT[F] (8005E758)
+        gStates[S_SARG_ATK1].tics = 2;
+        gStates[S_SARG_ATK2].tics = 2;
+        gStates[S_SARG_ATK3].tics = 2;        
+        gMObjInfo[MT_SERGEANT].speed = 15;
+        gMObjInfo[MT_BRUISERSHOT].speed = 40 * FRACUNIT;
+        gMObjInfo[MT_HEADSHOT].speed = 40 * FRACUNIT;
+        gMObjInfo[MT_TROOPSHOT].speed = 40 * FRACUNIT;
     } else {
-        sw(4, 0x8005B7B0);                  // Store to: State_S_SARG_ATK1[2] (8005B7B0)
-        sw(4, 0x8005B7CC);                  // Store to: State_S_SARG_ATK2[2] (8005B7CC)
-        sw(4, 0x8005B7E8);                  // Store to: State_S_SARG_ATK3[2] (8005B7E8)
-        sw(10, 0x8005E3E8);                 // Store to: MObjInfo_MT_SERGEANT[F] (8005E3E8)
-        sw(30 * FRACUNIT, 0x8005E808);      // Store to: MObjInfo_MT_BRUISERSHOT[F] (8005E808)
-        sw(20 * FRACUNIT, 0x8005E7B0);      // Store to: MObjInfo_MT_HEADSHOT[F] (8005E7B0)
-        sw(20 * FRACUNIT, 0x8005E758);      // Store to: MObjInfo_MT_TROOPSHOT[F] (8005E758)
+        gStates[S_SARG_ATK1].tics = 4;
+        gStates[S_SARG_ATK2].tics = 4;
+        gStates[S_SARG_ATK3].tics = 4;
+        gMObjInfo[MT_SERGEANT].speed = 10;
+        gMObjInfo[MT_BRUISERSHOT].speed = 30 * FRACUNIT;
+        gMObjInfo[MT_HEADSHOT].speed = 20 * FRACUNIT;
+        gMObjInfo[MT_TROOPSHOT].speed = 20 * FRACUNIT;
     }
 }
 

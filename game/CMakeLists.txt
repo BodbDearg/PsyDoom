@@ -31,6 +31,8 @@ set(SOURCE_FILES
     "Doom/Game/doomdata.h"
     "Doom/Game/g_game.cpp"
     "Doom/Game/g_game.h"
+    "Doom/Game/info.cpp"
+    "Doom/Game/info.h"
     "Doom/Game/p_base.cpp"
     "Doom/Game/p_base.h"
     "Doom/Game/p_ceiling.cpp"
