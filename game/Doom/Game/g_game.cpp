@@ -46,6 +46,10 @@ const VmPtr<bool32_t> gbDemoRecording(0x800781AC);
 // Is the level being restarted?
 const VmPtr<bool32_t> gbIsLevelBeingRestarted(0x80077FF4);
 
+// An empty map object initially assigned to players during network game setup, for net consistency checks.
+// This is all zeroed out initially.
+const VmPtr<mobj_t> gEmptyMObj(0x800A9E30);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Displays a loading message then loads the current map
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -423,7 +427,7 @@ void G_SetGameComplete() noexcept {
 // Common game setup logic for both demos and regular gameplay
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameType) noexcept {
-    // Resetting texture and heap memory and the game RNGs
+    // Resetting memory management related stuff and RNGs
     *gbIsLevelBeingRestarted = false;
     *gLockedTexPagesMask &= 1;
     I_ResetTexCache();    
@@ -445,16 +449,14 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
             --pPlayer;
         }
     }
+
+    // Clear the empty map object and assign to both players initially.
+    // This is used for network consistency checks:
+    D_memset(gEmptyMObj.get(), (std::byte) 0, sizeof(mobj_t));
+    gPlayers[0].mo = gEmptyMObj;
+    gPlayers[1].mo = gEmptyMObj;
+
     
-    const uint32_t x0 = 0x800A9E30;         // Result = gUnusedGameBuffer[0] (800A9E30)
-
-    a0 = x0;                                // Result = gUnusedGameBuffer[0] (800A9E30)
-    a1 = 0;
-    a2 = 0x94;
-    _thunk_D_memset();
-
-    sw(x0, 0x800A8918);     // Store to: gPlayer2[0] (800A8918)
-    sw(x0, 0x800A87EC);     // Store to: gPlayer1[0] (800A87EC)
     sw(true, 0x800780AC);   // Store to: gbPlayerInGame[0] (800780AC)
 
     if (gameType == gt_single) {

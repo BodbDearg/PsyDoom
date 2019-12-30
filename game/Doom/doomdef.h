@@ -2,10 +2,16 @@
 
 #include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
-#include <cstdint>
 
+struct mobj_t;
+struct mobjinfo_t;
+struct player_t;
 struct sector_t;
 struct state_t;
+struct state_t;
+struct subsector_t;
+
+enum mobjtype_t : uint32_t;
 
 // Alias for fixed point numbers in DOOM: mostly in 16.16 format but does not have to be
 typedef int32_t fixed_t;
@@ -60,8 +66,53 @@ enum gameaction_t : uint32_t {
 // The maximum allowed demo size is 16384 ticks (demo size 64 KiB).
 const int32_t MAX_DEMO_TICKS = 16384;
 
-// TODO: DEFINE DATA STRUCTURE
-struct mobj_t;
+// A function which gets called after regular map object updating is done
+typedef VmPtr<void (mobj_t* pMObj)> latecall_t;
+
+// Holds state for an object in the game world
+struct mobj_t {
+    fixed_t                 x;                  // Global position in the world, in 16.16 format
+    fixed_t                 y;
+    fixed_t                 z;
+    VmPtr<subsector_t>      subsector;
+    VmPtr<mobj_t>           prev;               // Intrusive fields for the global linked list of things
+    VmPtr<mobj_t>           next;
+    latecall_t              latecall;
+    VmPtr<mobj_t>           snext;              // Intrusive fields for the linked list of things in the current sector
+    VmPtr<mobj_t>           sprev;
+    angle_t                 angle;              // Direction the thing is facing in
+    uint32_t                sprite;             // Current sprite displayed
+    uint32_t                frame;              // Current sprite frame displayed. Must use 'FF_FRAMEMASK' to get the actual frame number.
+    VmPtr<mobj_t>           bnext;              // Linked list of things in this blockmap block
+    VmPtr<mobj_t>           bprev;          
+    fixed_t                 floorz;             // Highest floor in contact with map object
+    fixed_t                 ceilingz;           // Lowest floor in contact with map object
+    fixed_t                 radius;             // For collision detection
+    fixed_t                 height;             // For collision detection
+    fixed_t                 momx;               // Current XYZ speed
+    fixed_t                 momy;
+    fixed_t                 momz;
+    mobjtype_t              type;               // Type enum
+    VmPtr<mobjinfo_t>       info;               // Type data
+    int32_t                 tics;               // Tick counter for the current state
+    VmPtr<state_t>          state;              // State data
+    uint32_t                flags;              // See the MF_XXX series of flags for possible bits.
+    int32_t                 health;
+    int32_t                 movedir;            // Diagonal directions: 0-7
+    int32_t                 movecount;          // When this reaches 0 a new dir is selected
+    VmPtr<mobj_t>           target;             // The current map object being chased or attacked (if any)
+    int32_t                 reactiontime;       // Time left until an attack is allowed
+    int32_t                 threshold;          // Time left chasing the current target
+    VmPtr<player_t>         player;             // Associated player, if any
+    uint32_t                extradata;          // Used for latecall functions
+    int16_t                 spawnx;             // Used for respawns: original spawn params
+    int16_t                 spawny;
+    uint16_t                spawntype;
+    int16_t                 spawnangle;
+    VmPtr<mobj_t>           tracer;             // Used by homing missiles
+};
+
+static_assert(sizeof(mobj_t) == 148);
 
 // Basic player status
 enum playerstate_t : uint32_t {

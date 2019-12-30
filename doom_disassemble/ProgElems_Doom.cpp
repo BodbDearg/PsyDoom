@@ -3714,7 +3714,7 @@ static const ProgElem ELEMS[] = {
     { 0x800A9518, 0x800A9D18, "gPSXCD_sectorbuf",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800A9D18, 0x800A9D90, "gpActiveCeilings",                       ProgElemType::ARRAY, ProgElemType::PTR32, 0 },
     { 0x800A9D90, 0x800A9E30, "gOpenPsxCdFiles",                        ProgElemType::ARRAY, ProgElemType::UINT32, 0 },  // Max of 4 (40 bytes each)
-    { 0x800A9E30, 0x800A9EC4, "gUnusedGameBuffer",                      ProgElemType::ARRAY, ProgElemType::UINT32, 0 },    
+    { 0x800A9E30, 0x800A9EC4, "gEmptyMObj",                             ProgElemType::ARRAY, ProgElemType::UINT32, 0 },    
 };
 
 static const JRInstHandler JR_INST_HANDLERS[] = {
