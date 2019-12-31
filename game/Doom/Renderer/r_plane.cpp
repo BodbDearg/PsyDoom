@@ -52,7 +52,7 @@ loc_8002E2F4:
     v1 += v0;
     a0 = lw(v1);
     a1 = gTmpBuffer;
-    decode();
+    _thunk_decode();
     a0 = sp + 0x10;
     goto loc_8002E39C;
 loc_8002E378:

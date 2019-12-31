@@ -237,7 +237,7 @@ loc_8002D704:
     v0 += v1;
     a0 = lw(v0);
     a1 = gTmpBuffer;
-    decode();
+    _thunk_decode();
     a0 = sp + 0x10;
     a1 = s0 + 8;                                        // Result = gTmpWadLumpBuffer[2] (80098750)
     v1 = lbu(s1 + 0x8);

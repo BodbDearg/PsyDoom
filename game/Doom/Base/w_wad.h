@@ -29,12 +29,15 @@ void W_Init() noexcept;
 int32_t W_CheckNumForName(const char* const name) noexcept;
 int32_t W_GetNumForName(const char* const name) noexcept;
 int32_t W_LumpLength(const int32_t lumpNum) noexcept;
-void W_ReadLump() noexcept;
+void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress) noexcept;
 void W_CacheLumpNum() noexcept;
 void W_CacheLumpName() noexcept;
 void W_OpenMapWad() noexcept;
 void W_MapLumpLength() noexcept;
 void W_MapGetNumForName() noexcept;
 void W_ReadMapLump() noexcept;
-void decode() noexcept;
+
+void decode(const void* pSrc, void* pDst) noexcept;
+void _thunk_decode() noexcept;
+
 void getDecodedSize() noexcept;

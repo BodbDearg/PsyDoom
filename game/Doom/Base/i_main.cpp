@@ -263,7 +263,7 @@ loc_80032C24:
     if (v1 != 0) goto loc_80032C68;
     s0 = gTmpBuffer;
     a1 = gTmpBuffer;
-    decode();
+    _thunk_decode();
     a0 = gTmpBuffer;
 loc_80032C68:
     v0 = lhu(a0);
@@ -986,7 +986,7 @@ loc_800337B8:
     a0 = s0;
     s0 = gTmpBuffer;
     a1 = gTmpBuffer;
-    decode();
+    _thunk_decode();
 loc_80033800:
     a0 = lw(gp + 0xA48);                                // Load from: gTexCacheFillPage (80078028)
     v0 = lw(gp + 0xD04);                                // Load from: gTexCacheFillBlockX (800782E4)

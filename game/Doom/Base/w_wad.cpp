@@ -135,70 +135,48 @@ int32_t W_LumpLength(const int32_t lumpNum) noexcept {
     return lump.size;
 }
 
-void W_ReadLump() noexcept {
-    v0 = *gNumLumps;
-    sp -= 0x38;
-    sw(s0, sp + 0x20);
-    s0 = a0;
-    sw(s3, sp + 0x2C);
-    s3 = a1;
-    sw(s2, sp + 0x28);
-    s2 = a2;
-    sw(ra, sp + 0x30);
-    v0 = (i32(s0) < i32(v0));
-    sw(s1, sp + 0x24);
-    if (v0 != 0) goto loc_800316D8;
-    I_Error("W_ReadLump: %i >= numlumps", (int32_t) s0);
-loc_800316D8:
-    v1 = *gpLumpInfo;
-    v0 = s0 << 4;
-    s1 = v0 + v1;
-    if (s2 == 0) goto loc_80031764;
-    v0 = lbu(s1 + 0x8);
-    v0 &= 0x80;
-    if (v0 == 0) goto loc_80031764;
-    a2 = 1;
-    a0 = *gpMainMemZone;
-    a1 = lw(s1 + 0x4);
-    a3 = 0;
-    _thunk_Z_EndMalloc();
-    a2 = 0;
-    a0 = *gMainWadFileIdx;
-    a1 = lw(s1);
-    s0 = v0;
-    _thunk_SeekAndTellFile();
-    a1 = s0;
-    v0 = lw(s1 + 0x10);
-    a2 = lw(s1);
-    a0 = *gMainWadFileIdx;
-    a2 = v0 - a2;
-    _thunk_ReadFile();
-    a0 = s0;
-    a1 = s3;
-    decode();
-    a0 = *gpMainMemZone;
-    a1 = s0;
-    _thunk_Z_Free2();
-    goto loc_8003178C;
-loc_80031764:
-    a0 = *gMainWadFileIdx;
-    a1 = lw(s1);
-    a2 = 0;
-    _thunk_SeekAndTellFile();
-    a1 = s3;
-    v0 = lw(s1 + 0x10);
-    a2 = lw(s1);
-    a0 = *gMainWadFileIdx;
-    a2 = v0 - a2;
-    _thunk_ReadFile();
-loc_8003178C:
-    ra = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x38;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Read the requested lump number from the main IWAD into the given buffer.
+// The buffer must be big enough to accomodate the data.
+// Optionally, decompression can be disabled.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress) noexcept {    
+    // Sanity check the lump number is range.
+    // Note: modified this check to disallow reading the last lump.
+    // This code relies on getting the NEXT lump after the requested one in order to determine sizes.
+    // We shouldn't be reading the last WAD lump anyway as it's an end marker...
+    #if PC_PSX_DOOM_MODS
+        if (lumpNum + 1 >= *gNumLumps) {
+            I_Error("W_ReadLump: %i + 1 >= numlumps", lumpNum);
+        }
+    #else
+        if (lumpNum >= *gNumLumps) {
+            I_Error("W_ReadLump: %i >= numlumps", lumpNum);
+        }
+    #endif
+    
+    // The lump requested and the next one after that
+    const lumpinfo_t& lump = (*gpLumpInfo)[lumpNum];
+    const lumpinfo_t& nextLump = (*gpLumpInfo)[lumpNum + 1];
+
+    // Do we need to decompress? Decompress if specified and if the lumpname has the special bit
+    // set in the first character, indicating that the lump is compressed.
+    const uint32_t sizeToRead = nextLump.filepos - lump.filepos;
+
+    if (bDecompress && (((uint8_t) lump.name.chars[0] & 0x80u) != 0)) {
+        // Decompression needed, must alloc a temp buffer for the compressed data before reading and decompressing!
+        void* const pTmpBuffer = Z_EndMalloc(**gpMainMemZone, lump.size, PU_STATIC, nullptr);        
+        
+        SeekAndTellFile(*gMainWadFileIdx, lump.filepos, PsxCd_SeekMode::SET);
+        ReadFile(*gMainWadFileIdx, pTmpBuffer, sizeToRead);
+        decode(pTmpBuffer, pDest);
+
+        Z_Free2(**gpMainMemZone, pTmpBuffer);
+    } else {
+        // No decompression needed, can just read straight into the output buffer
+        SeekAndTellFile(*gMainWadFileIdx, lump.filepos, PsxCd_SeekMode::SET);
+        ReadFile(*gMainWadFileIdx, pDest, sizeToRead);
+    }
 }
 
 void W_CacheLumpNum() noexcept {
@@ -283,7 +261,7 @@ loc_800318B8:
     _thunk_ReadFile();
     a0 = s0;
     a1 = s3;
-    decode();
+    _thunk_decode();
     a0 = *gpMainMemZone;
     a1 = s0;
     _thunk_Z_Free2();
@@ -299,6 +277,8 @@ loc_80031944:
     a0 = *gMainWadFileIdx;
     a2 = v0 - a2;
     _thunk_ReadFile();
+
+
 loc_8003196C:
     v0 = *gpLumpInfo;
     v1 = s2 << 4;
@@ -555,7 +535,7 @@ loc_80031D1C:
     v0 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)
     a0 = lw(v1);
     a0 += v0;
-    decode();
+    _thunk_decode();
     goto loc_80031D74;
 loc_80031D58:
     a0 = s2;
@@ -574,58 +554,60 @@ loc_80031D74:
     return;
 }
 
-void decode() noexcept {
-loc_80031D90:
-    sp -= 8;
-    a2 = a0;
-    t0 = 0;                                             // Result = 00000000
-    t1 = 0;                                             // Result = 00000000
-    t2 = 1;                                             // Result = 00000001
-loc_80031DA4:
-    v0 = t1 + 1;
-    if (t1 != 0) goto loc_80031DB4;
-    t0 = lbu(a2);
-    a2++;
-loc_80031DB4:
-    t1 = v0 & 7;
-    v0 = t0 & 1;
-    if (v0 == 0) goto loc_80031E24;
-    v0 = lbu(a2);
-    a2++;
-    v1 = lbu(a2);
-    a0 = lbu(a2);
-    a2++;
-    v0 <<= 4;
-    v1 >>= 4;
-    v0 |= v1;
-    v0 = a1 - v0;
-    a0 &= 0xF;
-    a0++;
-    a3 = v0 - 1;
-    if (a0 == t2) goto loc_80031E3C;
-    v1 = 0;                                             // Result = 00000000
-    if (a0 == 0) goto loc_80031E34;
-loc_80031E00:
-    v0 = lbu(a3);
-    a3++;
-    v1++;
-    sb(v0, a1);
-    v0 = (i32(v1) < i32(a0));
-    a1++;
-    if (v0 != 0) goto loc_80031E00;
-    t0 = u32(i32(t0) >> 1);                             // Result = 00000000
-    goto loc_80031DA4;
-loc_80031E24:
-    v0 = lbu(a2);
-    a2++;
-    sb(v0, a1);
-    a1++;
-loc_80031E34:
-    t0 = u32(i32(t0) >> 1);                             // Result = 00000000
-    goto loc_80031DA4;
-loc_80031E3C:
-    sp += 8;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Decode the given compressed data into the given output buffer.
+// The compression algorithm used is a form of LZSS.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void decode(const void* pSrc, void* pDst) noexcept {
+    const uint8_t* pSrcByte = (const uint8_t*) pSrc;
+    uint8_t* pDstByte = (uint8_t*) pDst;
+
+    uint32_t idByte = 0;        // Controls whether there is compressed or uncompressed data ahead
+    uint32_t haveIdByte = 0;    // Controls when to read an id byte, when '0' we need to read another one
+    
+    while (true) {
+        // Read the id byte if required.
+        // We need 1 id byte for every 8 bytes of uncompressed output, or every 8 runs of compressed data.
+        if (haveIdByte == 0) {
+            idByte = *pSrcByte;
+            ++pSrcByte;
+        }
+        
+        haveIdByte = (haveIdByte + 1) & 7;
+
+        if (idByte & 1) {
+            // Compressed data ahead: the first 12-bits tells where to take repeated data from.
+            // The remaining 4-bits tell how many bytes of repeated data to take.
+            const uint32_t srcByte1 = pSrcByte[0];
+            const uint32_t srcByte2 = pSrcByte[1];
+            pSrcByte += 2;
+
+            const int32_t srcOffset = ((srcByte1 << 4) | (srcByte2 >> 4)) + 1;
+            const int32_t numRepeatedBytes = (srcByte2 & 0xF) + 1;
+
+            // A value of '1' is a special value and means we have reached the end of the compressed stream
+            if (numRepeatedBytes == 1)
+                break;
+
+            const uint8_t* const pRepeatedBytes = pDstByte - srcOffset;
+
+            for (uint32_t i = 0; i < numRepeatedBytes; ++i) {
+                *pDstByte = pRepeatedBytes[i];
+                ++pDstByte;
+            }
+        } else {
+            // Uncompressed data: just copy the input byte
+            *pDstByte = *pSrcByte;
+            ++pSrcByte;
+            ++pDstByte;
+        }
+        
+        idByte >>= 1;
+    }
+}
+
+void _thunk_decode() noexcept {
+    decode(vmAddrToPtr<const uint8_t>(a0), vmAddrToPtr<uint8_t>(a1));
 }
 
 void getDecodedSize() noexcept {

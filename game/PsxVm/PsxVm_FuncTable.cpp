@@ -311,14 +311,12 @@ extern void R_SlopeDiv() noexcept;
 extern void R_PointToAngle2() noexcept;
 extern void R_PointOnSide() noexcept;
 extern void R_PointInSubsector() noexcept;
-extern void W_ReadLump() noexcept;
 extern void W_CacheLumpNum() noexcept;
 extern void W_CacheLumpName() noexcept;
 extern void W_OpenMapWad() noexcept;
 extern void W_MapLumpLength() noexcept;
 extern void W_MapGetNumForName() noexcept;
 extern void W_ReadMapLump() noexcept;
-extern void decode() noexcept;
 extern void getDecodedSize() noexcept;
 extern void InitOpenFileSlots() noexcept;
 extern void _thunk_OpenFile() noexcept;
@@ -1269,14 +1267,12 @@ namespace PsxVm {
         { 0x80030BA0, &R_PointToAngle2 },
         { 0x80030EB4, &R_PointOnSide },
         { 0x80030F5C, &R_PointInSubsector },
-        { 0x80031698, &W_ReadLump },
         { 0x800317AC, &W_CacheLumpNum },
         { 0x800319E4, &W_CacheLumpName },
         { 0x80031B04, &W_OpenMapWad },
         { 0x80031BD4, &W_MapLumpLength },
         { 0x80031C24, &W_MapGetNumForName },
         { 0x80031CE0, &W_ReadMapLump },
-        { 0x80031D90, &decode },
         { 0x80031E48, &getDecodedSize },
         { 0x80031EB4, &InitOpenFileSlots },
         { 0x80031EDC, &_thunk_OpenFile },

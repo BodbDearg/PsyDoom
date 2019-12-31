@@ -468,7 +468,8 @@ void strupr(char* str) noexcept {
             c -= 32;
         }
 
-        *str++ = c;
+        *str = c;
+        ++str;
     }
 }
 
