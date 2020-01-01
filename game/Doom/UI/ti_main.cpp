@@ -24,7 +24,7 @@ void START_Title() noexcept {
     a0 = s1;                                            // Result = STR_LumpName_LOADING[0] (80077C4C)
     a1 = 1;                                             // Result = 00000001
     a2 = 0;                                             // Result = 00000000
-    W_CacheLumpName();
+    _thunk_W_CacheLumpName();
     s0 = 0x80090000;                                    // Result = 80090000
     s0 += 0x7A90;                                       // Result = gTexInfo_LOADING[0] (80097A90)
     a0 = s0;                                            // Result = gTexInfo_LOADING[0] (80097A90)
@@ -44,25 +44,25 @@ void START_Title() noexcept {
     a0 = s4;                                            // Result = STR_LumpName_MARB01[0] (80077C54)
     a1 = 1;                                             // Result = 00000001
     a2 = 0;                                             // Result = 00000000
-    W_CacheLumpName();
+    _thunk_W_CacheLumpName();
     s3 = 0x80070000;                                    // Result = 80070000
     s3 += 0x7C5C;                                       // Result = STR_LumpName_BUTTONS[0] (80077C5C)
     a0 = s3;                                            // Result = STR_LumpName_BUTTONS[0] (80077C5C)
     a1 = 1;                                             // Result = 00000001
     a2 = 0;                                             // Result = 00000000
-    W_CacheLumpName();
+    _thunk_W_CacheLumpName();
     s2 = 0x80070000;                                    // Result = 80070000
     s2 += 0x7C64;                                       // Result = STR_LumpName_NETERR[0] (80077C64)
     a0 = s2;                                            // Result = STR_LumpName_NETERR[0] (80077C64)
     a1 = 1;                                             // Result = 00000001
     a2 = 0;                                             // Result = 00000000
-    W_CacheLumpName();
+    _thunk_W_CacheLumpName();
     s1 = 0x80070000;                                    // Result = 80070000
     s1 += 0x7C6C;                                       // Result = STR_LumpName_PAUSE[0] (80077C6C)
     a0 = s1;                                            // Result = STR_LumpName_PAUSE[0] (80077C6C)
     a1 = 1;                                             // Result = 00000001
     a2 = 0;                                             // Result = 00000000
-    W_CacheLumpName();
+    _thunk_W_CacheLumpName();
     a0 = s0 + 0x20;                                     // Result = gTexInfo_MARB01[0] (80097AB0)
     a1 = s4;                                            // Result = STR_LumpName_MARB01[0] (80077C54)
     a2 = 0;                                             // Result = 00000000

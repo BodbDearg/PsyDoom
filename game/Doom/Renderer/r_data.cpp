@@ -53,7 +53,7 @@ loc_8002B9E0:
     v1 += v0;
     sw(v1, gp + 0x98C);                                 // Store to: gpTextureTranslation (80077F6C)
     a2 = 1;                                             // Result = 00000001
-    W_CacheLumpName();
+    _thunk_W_CacheLumpName();
     a1 = v0;
     a2 = lw(gp + 0xD00);                                // Load from: gFirstTexLumpNum (800782E0)
     v1 = lw(gp + 0xBBC);                                // Load from: gLastTexLumpNum (8007819C)
@@ -205,7 +205,7 @@ loc_8002BC54:
     a1 = 0x20;                                          // Result = 00000020
     sw(v0, gp + 0x8E4);                                 // Store to: gpSprites (80077EC4)
     a2 = 1;                                             // Result = 00000001
-    W_CacheLumpName();
+    _thunk_W_CacheLumpName();
     a1 = v0;
     t0 = lw(gp + 0xA34);                                // Load from: gFirstSpriteLumpNum (80078014)
     v1 = lw(gp + 0x958);                                // Load from: gLastSpriteLumpNum (80077F38)
@@ -384,7 +384,7 @@ loc_8002BF2C:
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
-    W_CacheLumpName();
+    _thunk_W_CacheLumpName();
     v1 = 0xFF;                                          // Result = 000000FF
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0x7F98);                                // Store to: gpLightsLump (80078068)

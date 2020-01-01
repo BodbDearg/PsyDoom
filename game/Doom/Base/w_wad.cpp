@@ -245,79 +245,15 @@ void _thunk_W_CacheLumpNum() noexcept {
     v0 = ptrToVmAddr(W_CacheLumpNum((int32_t) a0, (int16_t) a1, (a2 != 0)));
 }
 
-void W_CacheLumpName() noexcept {
-loc_800319E4:
-    sp -= 0x30;
-    t1 = a0;
-    sw(s1, sp + 0x24);
-    s1 = a1;
-    sw(s2, sp + 0x28);
-    s2 = a2;
-    a0 = sp + 0x10;
-    a1 = t1;
-    a2 = sp + 0x18;
-    sw(ra, sp + 0x2C);
-    sw(s0, sp + 0x20);
-    sw(0, sp + 0x10);
-    sw(0, sp + 0x14);
-loc_80031A18:
-    v0 = lbu(a1);
-    v1 = v0;
-    if (v0 == 0) goto loc_80031A50;
-    v0 = v1 - 0x61;
-    v0 = (v0 < 0x1A);
-    a1++;
-    if (v0 == 0) goto loc_80031A3C;
-    v1 -= 0x20;
-loc_80031A3C:
-    sb(v1, a0);
-    a0++;
-    v0 = (i32(a0) < i32(a2));
-    if (v0 != 0) goto loc_80031A18;
-loc_80031A50:
-    a3 = lw(sp + 0x10);
-    a2 = lw(sp + 0x14);
-    v1 = *gNumLumps;
-    v0 = *gpLumpInfo;
-    a0 = 0;
-    if (i32(v1) <= 0) goto loc_80031AA8;
-    t0 = -0x81;                                         // Result = FFFFFF7F
-    a1 = v1;
-    v1 = v0 + 8;
-loc_80031A74:
-    v0 = lw(v1 + 0x4);
-    if (v0 != a2) goto loc_80031A98;
-    v0 = lw(v1);
-    v0 &= t0;
-    if (v0 == a3) goto loc_80031AC0;
-loc_80031A98:
-    a0++;
-    v0 = (i32(a0) < i32(a1));
-    v1 += 0x10;
-    if (v0 != 0) goto loc_80031A74;
-loc_80031AA8:
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_80031AAC:
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (v1 == v0) goto loc_80031AC8;
-    s0 = v1;
-    goto loc_80031AD8;
-loc_80031AC0:
-    v1 = a0;
-    goto loc_80031AAC;
-loc_80031AC8:
-    I_Error("W_GetNumForName: %s not found!", vmAddrToPtr<const char>(t1));
-loc_80031AD8:
-    a0 = s0;
-    a1 = s1;
-    a2 = s2;
-    _thunk_W_CacheLumpNum();
-    ra = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x30;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper that caches a specified lump name from the main IWAD
+//------------------------------------------------------------------------------------------------------------------------------------------
+void* W_CacheLumpName(const char* const name, const int16_t allocTag, const bool bDecompress) noexcept {
+    return W_CacheLumpNum(W_GetNumForName(name), allocTag, bDecompress);
+}
+
+void _thunk_W_CacheLumpName() noexcept {
+    v0 = ptrToVmAddr(W_CacheLumpName(vmAddrToPtr<const char>(a0), (int16_t) a1, (a2 != 0)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

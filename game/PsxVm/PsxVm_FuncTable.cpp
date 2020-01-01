@@ -312,7 +312,7 @@ extern void R_PointToAngle2() noexcept;
 extern void R_PointOnSide() noexcept;
 extern void R_PointInSubsector() noexcept;
 extern void _thunk_W_CacheLumpNum() noexcept;
-extern void W_CacheLumpName() noexcept;
+extern void _thunk_W_CacheLumpName() noexcept;
 extern void _thunk_W_ReadMapLump() noexcept;
 extern void InitOpenFileSlots() noexcept;
 extern void _thunk_OpenFile() noexcept;
@@ -1264,7 +1264,7 @@ namespace PsxVm {
         { 0x80030EB4, &R_PointOnSide },
         { 0x80030F5C, &R_PointInSubsector },
         { 0x800317AC, &_thunk_W_CacheLumpNum },
-        { 0x800319E4, &W_CacheLumpName },
+        { 0x800319E4, &_thunk_W_CacheLumpName },
         { 0x80031CE0, &_thunk_W_ReadMapLump },
         { 0x80031EB4, &InitOpenFileSlots },
         { 0x80031EDC, &_thunk_OpenFile },
