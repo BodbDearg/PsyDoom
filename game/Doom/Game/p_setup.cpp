@@ -370,7 +370,7 @@ loc_80021FD4:
     a1 += 0x7B04;                                       // Result = STR_LumpName_F_SKY[0] (80077B04)
     a2 = 5;                                             // Result = 00000005
     sw(v0, s0 - 0x4);
-    D_strncasecmp();
+    _thunk_D_strncasecmp();
     {
         const bool bJump = (v0 != 0);
         v0 = -1;                                        // Result = FFFFFFFF

@@ -46,12 +46,7 @@ void W_Init() noexcept {
     VmSVal<wadinfo_t> wadinfo;
     ReadFile(*gMainWadFileIdx, wadinfo.get(), sizeof(wadinfo_t));
 
-    a0 = ptrToVmAddr(wadinfo->fileid);
-    a1 = 0x80077BE8;        // Result = STR_IWAD[0] (80077BE8)
-    a2 = sizeof(wadinfo->fileid);
-    D_strncasecmp();
-
-    if (v0 != 0) {
+    if (D_strncasecmp(wadinfo->fileid, "IWAD", sizeof(wadinfo->fileid)) != 0) {
         I_Error("W_Init: invalid main IWAD id");
     }
 
@@ -323,25 +318,24 @@ loc_80031AD8:
 void W_OpenMapWad() noexcept {
 loc_80031B04:
     sp -= 0x20;
-    sw(ra, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
     _thunk_OpenFile();
     s0 = v0;
     a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 2;                                             // Result = 00000002
+    a1 = 0;
+    a2 = 2;
     _thunk_SeekAndTellFile();
     s1 = v0;
     a1 = s1;
-    a2 = 1;                                             // Result = 00000001
+    a2 = 1;
     a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
+    a3 = 0;
     _thunk_Z_EndMalloc();
     a0 = s0;
-    a1 = 0;                                             // Result = 00000000
+    a1 = 0;
     sw(v0, gp + 0x938);                                 // Store to: gpMapWadFileData (80077F18)
-    a2 = 0;                                             // Result = 00000000
+    a2 = 0;
     _thunk_SeekAndTellFile();
     a0 = s0;
     a1 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)
@@ -353,21 +347,21 @@ loc_80031B04:
     a1 += 0x7BE8;                                       // Result = STR_IWAD[0] (80077BE8)
     a0 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)
     a2 = 4;                                             // Result = 00000004
-    D_strncasecmp();
-    if (v0 == 0) goto loc_80031BA0;
-    I_Error("W_OpenMapWad: invalid map IWAD id");
-loc_80031BA0:
+    _thunk_D_strncasecmp();
+
+    if (v0 != 0) {
+        I_Error("W_OpenMapWad: invalid map IWAD id");
+    }
+    
     v0 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)
     v1 = lw(v0 + 0x4);
     a0 = lw(v0 + 0x8);
     sw(v1, gp + 0xB3C);                                 // Store to: gNumMapWadLumps (8007811C)
     v1 = v0 + a0;
     sw(v1, gp + 0xAE8);                                 // Store to: gpMapWadDirectory (800780C8)
-    ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-    return;
 }
 
 void W_MapLumpLength() noexcept {

@@ -433,30 +433,37 @@ void D_strncpy(char* dst, const char* src, uint32_t maxChars) noexcept {
     }
 }
 
-void D_strncasecmp() noexcept {
-loc_8001297C:
-    v0 = lbu(a0);
-    if (v0 == 0) goto loc_800129BC;
-    v1 = lbu(a1);
-    if (v1 == 0) goto loc_800129C0;
-    {
-        const bool bJump = (v0 != v1);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_800129CC;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Compare two strings, up to 'maxCount' characters.
+// Return '0' if equal or '1' if not equal.
+// Confusingly, unlike the equivalent standard C function, this comparison is *NOT* case insensitive.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t D_strncasecmp(const char* str1, const char* str2, int32_t maxCount) noexcept {
+    while (*str1 && *str2) {
+        if (*str1 != *str2)
+            return 1;
+        
+        ++str1;
+        ++str2;
+        --maxCount;
+        
+        // Bug fix: if the function is called with 'maxCount' as '0' for some reason then prevent a near infinite loop
+        // due to wrapping around to '-1'. I don't think this happened in practice but just guard against it here anyway
+        // in case future mods happen to trigger this issue...
+        #if PC_PSX_DOOM_MODS
+            if (maxCount <= 0)
+                return 0;
+        #else
+            if (maxCount == 0)
+                return 0;
+        #endif
     }
-    a0++;
-    a2--;
-    a1++;
-    if (a2 != 0) goto loc_8001297C;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_800129CC;
-loc_800129BC:
-    v1 = lbu(a1);
-loc_800129C0:
-    v0 ^= v1;
-    v0 = (v0 > 0);
-loc_800129CC:
-    return;
+
+    return (*str1 == *str2);
+}
+
+void _thunk_D_strncasecmp() noexcept {
+    v0 = D_strncasecmp(vmAddrToPtr<const char>(a0), vmAddrToPtr<const char>(a1), (int32_t) a2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
