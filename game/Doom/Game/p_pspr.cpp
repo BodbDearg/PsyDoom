@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/w_wad.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_main.h"
 #include "p_inter.h"
@@ -211,8 +212,7 @@ void P_BringUpWeapon() noexcept {
 loc_8001FC50:
     s0 = s1 + 0xF0;
     if (v1 != v0) goto loc_8001FC78;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BE4);                               // Load from: gbIsLevelDataCached (80077BE4)
+    v0 = *gbIsLevelDataCached;
     if (v0 == 0) goto loc_8001FC78;
     a0 = lw(s1);
     a1 = 0xB;                                           // Result = 0000000B
@@ -822,8 +822,7 @@ loc_800205B0:
     v0 = 8;                                             // Result = 00000008
     s0 = s1 + 0xF0;
     if (v1 != v0) goto loc_800205E4;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BE4);                               // Load from: gbIsLevelDataCached (80077BE4)
+    v0 = *gbIsLevelDataCached;
     {
         const bool bJump = (v0 == 0);
         v0 = v1 << 1;
@@ -2007,8 +2006,7 @@ loc_80021808:
     v0 = 8;                                             // Result = 00000008
     s0 = s1 + 0xF0;
     if (v1 != v0) goto loc_8002183C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BE4);                               // Load from: gbIsLevelDataCached (80077BE4)
+    v0 = *gbIsLevelDataCached;
     {
         const bool bJump = (v0 == 0);
         v0 = v1 << 1;

@@ -1359,7 +1359,7 @@ loc_80022F0C:
     a1 = 8;                                             // Result = 00000008
     if (v1 != v0) goto loc_80022FD8;
     a2 = 1;                                             // Result = 00000001
-    W_CacheLumpNum();
+    _thunk_W_CacheLumpNum();
     s0 = 0;                                             // Result = 00000000
     v1 = 0x800B0000;                                    // Result = 800B0000
     v1 = lhu(v1 - 0x6F5E);                              // Load from: gPaletteClutId_Sky (800A90A2)
@@ -1863,7 +1863,7 @@ loc_80023A48:
 loc_80023A5C:
     a1 = 8;                                             // Result = 00000008
     a2 = 0;                                             // Result = 00000000
-    W_CacheLumpNum();
+    _thunk_W_CacheLumpNum();
     v0 = lw(s3);
     if (v0 == 0) goto loc_80023A88;
     s2++;                                               // Result = 00000001

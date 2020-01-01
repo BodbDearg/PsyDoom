@@ -96,7 +96,7 @@ void START_Title() noexcept {
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0x7FB0);                                // Store to: gpSkyTexture (80078050)
     a2 = 1;                                             // Result = 00000001
-    W_CacheLumpNum();
+    _thunk_W_CacheLumpNum();
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lhu(v0 - 0x6F5E);                              // Load from: gPaletteClutId_Sky (800A90A2)
     a0 = 0x80080000;                                    // Result = 80080000

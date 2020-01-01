@@ -66,7 +66,7 @@ loc_80025FE0:
     a0 = lw(a0 - 0x7D20);                               // Load from: gFirstTexLumpNum (800782E0)
     a2 = 0;                                             // Result = 00000000
     a0 += s0;
-    W_CacheLumpNum();
+    _thunk_W_CacheLumpNum();
     v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
     a0 = s0 << 5;
     v0 = lw(v0 + 0x8);
@@ -135,7 +135,7 @@ loc_800260FC:
     a0 = lw(a0 - 0x7D48);                               // Load from: gFirstFlatLumpNum (800782B8)
     a2 = 0;                                             // Result = 00000000
     a0 += s0;
-    W_CacheLumpNum();
+    _thunk_W_CacheLumpNum();
     v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
     a0 = s0 << 5;
     v0 = lw(v0 + 0x8);

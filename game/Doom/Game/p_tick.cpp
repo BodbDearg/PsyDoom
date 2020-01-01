@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/w_wad.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_main.h"
@@ -710,8 +711,7 @@ void P_Start() noexcept {
     M_ClearRandom();
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = *gbDemoPlayback;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x7BE4);                                // Store to: gbIsLevelDataCached (80077BE4)
+    *gbIsLevelDataCached = (s0 != 0);
     a2 = 0;                                             // Result = 00000000
     if (v0 == 0) goto loc_80029700;
     v1 = 0x80070000;                                    // Result = 80070000
@@ -750,8 +750,7 @@ void P_Stop() noexcept {
     s1 = 0x80080000;                                    // Result = 80080000
     s1 -= 0x7F54;                                       // Result = gbPlayerInGame[0] (800780AC)
     sw(0, gp + 0x8E0);                                  // Store to: gbGamePaused (80077EC0)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7BE4);                                 // Store to: gbIsLevelDataCached (80077BE4)
+    *gbIsLevelDataCached = false;
 loc_80029760:
     v0 = lw(s1);
     s1 += 4;

@@ -311,7 +311,7 @@ extern void R_SlopeDiv() noexcept;
 extern void R_PointToAngle2() noexcept;
 extern void R_PointOnSide() noexcept;
 extern void R_PointInSubsector() noexcept;
-extern void W_CacheLumpNum() noexcept;
+extern void _thunk_W_CacheLumpNum() noexcept;
 extern void W_CacheLumpName() noexcept;
 extern void W_OpenMapWad() noexcept;
 extern void W_MapLumpLength() noexcept;
@@ -1266,7 +1266,7 @@ namespace PsxVm {
         { 0x80030BA0, &R_PointToAngle2 },
         { 0x80030EB4, &R_PointOnSide },
         { 0x80030F5C, &R_PointInSubsector },
-        { 0x800317AC, &W_CacheLumpNum },
+        { 0x800317AC, &_thunk_W_CacheLumpNum },
         { 0x800319E4, &W_CacheLumpName },
         { 0x80031B04, &W_OpenMapWad },
         { 0x80031BD4, &W_MapLumpLength },

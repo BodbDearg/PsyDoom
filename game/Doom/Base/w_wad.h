@@ -1,5 +1,6 @@
 #pragma once
 
+#include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 
 // Format for a name in a lump file
@@ -24,13 +25,17 @@ extern const VmPtr<int32_t>             gNumLumps;
 extern const VmPtr<VmPtr<lumpinfo_t>>   gpLumpInfo;
 extern const VmPtr<VmPtr<VmPtr<void>>>  gpLumpCache;
 extern const VmPtr<VmPtr<bool>>         gpbIsUncompressedLump;
+extern const VmPtr<bool32_t>            gbIsLevelDataCached;
 
 void W_Init() noexcept;
 int32_t W_CheckNumForName(const char* const name) noexcept;
 int32_t W_GetNumForName(const char* const name) noexcept;
 int32_t W_LumpLength(const int32_t lumpNum) noexcept;
 void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress) noexcept;
-void W_CacheLumpNum() noexcept;
+
+void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool bDecompress) noexcept;
+void _thunk_W_CacheLumpNum() noexcept;
+
 void W_CacheLumpName() noexcept;
 void W_OpenMapWad() noexcept;
 void W_MapLumpLength() noexcept;

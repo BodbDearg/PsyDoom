@@ -24,6 +24,7 @@ const VmPtr<int32_t>                gNumLumps(0x800781EC);
 const VmPtr<VmPtr<lumpinfo_t>>      gpLumpInfo(0x800781C4);
 const VmPtr<VmPtr<VmPtr<void>>>     gpLumpCache(0x8007823C);
 const VmPtr<VmPtr<bool>>            gpbIsUncompressedLump(0x800782F0);
+const VmPtr<bool32_t>               gbIsLevelDataCached(0x80077BE4);
 
 // Which of the open files is the main WAD file
 static const VmPtr<uint32_t> gMainWadFileIdx(0x80078254);
@@ -179,135 +180,69 @@ void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress
     }
 }
 
-void W_CacheLumpNum() noexcept {
-loc_800317AC:
-    v0 = *gNumLumps;
-    sp -= 0x48;
-    sw(s2, sp + 0x38);
-    s2 = a0;
-    sw(s1, sp + 0x34);
-    s1 = a1;
-    sw(s4, sp + 0x40);
-    s4 = a2;
-    sw(ra, sp + 0x44);
-    sw(s3, sp + 0x3C);
-    v0 = (s2 < v0);
-    sw(s0, sp + 0x30);
-    if (v0 != 0) goto loc_800317F0;
-    I_Error("W_CacheLumpNum: %i >= numlumps", (int32_t) s2);
-loc_800317F0:
-    v0 = *gpLumpCache;
-    s0 = s2 << 2;
-    v0 += s0;
-    v0 = lw(v0);
-    if (v0 != 0) goto loc_800319B0;
-    v0 = lw(gp + 0x604);                                // Load from: gbIsLevelDataCached (80077BE4)
-    if (v0 == 0) goto loc_8003182C;
-    I_Error("cache miss on lump %i", (int32_t) s2);
-loc_8003182C:
-    a2 = s1;
-    if (s4 == 0) goto loc_80031858;
-    v1 = s2 << 4;
-    a0 = *gpMainMemZone;
-    v0 = *gpLumpInfo;
-    a3 = *gpLumpCache;
-    v1 += v0;
-    a1 = lw(v1 + 0x4);
-    a3 += s0;
-    goto loc_80031880;
-loc_80031858:
-    v0 = s2 << 4;
-    a0 = *gpMainMemZone;
-    v1 = *gpLumpInfo;
-    a3 = *gpLumpCache;
-    v0 += v1;
-    v1 = lw(v0 + 0x10);
-    a1 = lw(v0);
-    a3 += s0;
-    a1 = v1 - a1;
-loc_80031880:
-    _thunk_Z_Malloc();
-    v0 = s2 << 2;
-    a0 = *gpLumpCache;
-    v1 = *gNumLumps;
-    v0 += a0;
-    v1 = (i32(s2) < i32(v1));
-    s3 = lw(v0);
-    if (v1 != 0) goto loc_800318B8;
-    I_Error("W_ReadLump: %i >= numlumps", (int32_t) s2);
-loc_800318B8:
-    v1 = *gpLumpInfo;
-    v0 = s2 << 4;
-    s1 = v0 + v1;
-    if (s4 == 0) goto loc_80031944;
-    v0 = lbu(s1 + 0x8);
-    v0 &= 0x80;
-    if (v0 == 0) goto loc_80031944;
-    a2 = 1;
-    a0 = *gpMainMemZone;
-    a1 = lw(s1 + 0x4);
-    a3 = 0;
-    _thunk_Z_EndMalloc();
-    a2 = 0;
-    a0 = *gMainWadFileIdx;
-    a1 = lw(s1);
-    s0 = v0;
-    _thunk_SeekAndTellFile();
-    a1 = s0;
-    v0 = lw(s1 + 0x10);
-    a2 = lw(s1);
-    a0 = *gMainWadFileIdx;
-    a2 = v0 - a2;
-    _thunk_ReadFile();
-    a0 = s0;
-    a1 = s3;
-    _thunk_decode();
-    a0 = *gpMainMemZone;
-    a1 = s0;
-    _thunk_Z_Free2();
-    goto loc_8003196C;
-loc_80031944:
-    a0 = *gMainWadFileIdx;
-    a1 = lw(s1);
-    a2 = 0;
-    _thunk_SeekAndTellFile();
-    a1 = s3;
-    v0 = lw(s1 + 0x10);
-    a2 = lw(s1);
-    a0 = *gMainWadFileIdx;
-    a2 = v0 - a2;
-    _thunk_ReadFile();
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Cache/load the specified lump number and return it's pointer.
+// If the lump is already cached does nothing.
+// Optionally, lump decompression can be skipped.
+// Note that lump caching is *NOT* permitted during regular gameplay!
+//------------------------------------------------------------------------------------------------------------------------------------------
+void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool bDecompress) noexcept {
+    // Sanity check the lump number is in range.
+    // Note: modified this check to disallow caching the last lump.
+    // This code relies on getting the NEXT lump after the requested one in order to determine sizes.
+    // We shouldn't be reading the last WAD lump anyway as it's an end marker...
+    #if PC_PSX_DOOM_MODS
+        if (lumpNum + 1 >= *gNumLumps) {
+            I_Error("W_CacheLumpNum: %i + 1 >= numlumps", lumpNum);
+        }
+    #else
+        if (lumpNum >= *gNumLumps) {
+            I_Error("W_CacheLumpNum: %i >= numlumps", lumpNum);
+        }
+    #endif
 
+    // If the lump is already loaded then we don't need to do anything
+    VmPtr<void>& lumpCacheEntry = (*gpLumpCache)[lumpNum];
+    
+    if (!lumpCacheEntry) {
+        // If the level loading is done then we should NOT be loading lumps during gameplay.
+        // Because CD-ROM I/O is so slow, this would cause very serious stalls and slowdowns during gameplay, so consider it a fatal error.
+        // Unlike PC DOOM the PSX version cannot simply stream in lumps on the fly...
+        if (*gbIsLevelDataCached) {
+            I_Error("cache miss on lump %i", lumpNum);
+        }
+    
+        // Figure out how much data we will need to allocate. If we are decompressing then this will be the decompressed size, otherwise
+        // it will be the actual size of the lump before decompression is applied:
+        lumpinfo_t& lumpInfo = (*gpLumpInfo)[lumpNum];
+        int32_t sizeToRead;
+        
+        if (bDecompress) {
+            sizeToRead = lumpInfo.size;
+        } else {
+            lumpinfo_t& nextLumpInfo = (*gpLumpInfo)[lumpNum + 1];
+            const int32_t lumpStorageSize = nextLumpInfo.filepos - lumpInfo.filepos;
+            sizeToRead = lumpStorageSize;
+        }
 
-loc_8003196C:
-    v0 = *gpLumpInfo;
-    v1 = s2 << 4;
-    v1 += v0;
-    v0 = lbu(v1 + 0x8);
-    v0 &= 0x80;
-    v1 = 1;
-    if (v0 == 0) goto loc_800319A0;
-    v0 = *gpbIsUncompressedLump;
-    v0 += s2;
-    sb(s4, v0);
-    goto loc_800319B0;
-loc_800319A0:
-    v0 = *gpbIsUncompressedLump;
-    v0 += s2;
-    sb(v1, v0);
-loc_800319B0:
-    v1 = *gpLumpCache;
-    v0 = s2 << 2;
-    v0 += v1;
-    v0 = lw(v0);
-    ra = lw(sp + 0x44);
-    s4 = lw(sp + 0x40);
-    s3 = lw(sp + 0x3C);
-    s2 = lw(sp + 0x38);
-    s1 = lw(sp + 0x34);
-    s0 = lw(sp + 0x30);
-    sp += 0x48;
-    return;
+        // Alloc RAM for the lump and read it
+        Z_Malloc(**gpMainMemZone, sizeToRead, allocTag, &lumpCacheEntry);
+        W_ReadLump(lumpNum, lumpCacheEntry.get(), bDecompress);
+
+        // Save whether the lump is compressed or not.
+        // If the lump is compressed then the highest bit of the first character in the name will be set:
+        if ((lumpInfo.name.chars[0] & 0x80) != 0) {
+            (*gpbIsUncompressedLump)[lumpNum] = bDecompress;
+        } else {
+            (*gpbIsUncompressedLump)[lumpNum] = true;
+        }
+    }
+
+    return lumpCacheEntry.get();
+}
+
+void _thunk_W_CacheLumpNum() noexcept {
+    v0 = ptrToVmAddr(W_CacheLumpNum((int32_t) a0, (int16_t) a1, (a2 != 0)));
 }
 
 void W_CacheLumpName() noexcept {
@@ -376,7 +311,7 @@ loc_80031AD8:
     a0 = s0;
     a1 = s1;
     a2 = s2;
-    W_CacheLumpNum();
+    _thunk_W_CacheLumpNum();
     ra = lw(sp + 0x2C);
     s2 = lw(sp + 0x28);
     s1 = lw(sp + 0x24);

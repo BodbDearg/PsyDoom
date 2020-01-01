@@ -402,7 +402,7 @@ loc_8002BF2C:
     a0 = s0;
     a1 = 0x20;                                          // Result = 00000020
     a2 = 1;                                             // Result = 00000001
-    W_CacheLumpNum();
+    _thunk_W_CacheLumpNum();
     s1 = v0;
     v0 = W_LumpLength((int32_t) s0);
     v0 >>= 9;
