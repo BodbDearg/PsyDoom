@@ -74,7 +74,7 @@ void W_Init() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Return the lump index for the given lump name (case insensitive) or -1 if not found
+// Return the lump index for the given main IWAD lump name (case insensitive) or -1 if not found
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t W_CheckNumForName(const char* const name) noexcept {
     // Copy the given name and uppercase for case insensitivity
@@ -89,7 +89,7 @@ int32_t W_CheckNumForName(const char* const name) noexcept {
     const uint32_t findNameW2 = (uint32_t&) nameUpper[4];
 
     // Try to find the given lump name and compare names using 32-bit words rather than single chars
-    lumpinfo_t* pLump = (*gpLumpInfo).get();
+    lumpinfo_t* pLump = gpLumpInfo->get();
     int32_t lumpIdx = 0;
 
     while (lumpIdx < *gNumLumps) {
@@ -110,7 +110,7 @@ int32_t W_CheckNumForName(const char* const name) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Return the lump index for the given lump name (case insensitive) or fail with a fatal error if not found
+// Return the lump index for the given main IWAD lump name (case insensitive) or fail with a fatal error if not found
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t W_GetNumForName(const char* const name) noexcept {
     const int32_t lumpIdx = W_CheckNumForName(name);
@@ -374,57 +374,39 @@ void _thunk_W_MapLumpLength() noexcept {
     v0 = W_MapLumpLength((int32_t) a0);
 }
 
-void W_MapGetNumForName() noexcept {
-loc_80031C24:
-    sp -= 0x10;
-    a1 = sp;
-    a2 = sp + 8;
-    sw(0, sp);
-    sw(0, sp + 0x4);
-loc_80031C38:
-    v0 = lbu(a0);
-    if (v0 == 0) goto loc_80031C78;
-    v1 = lbu(a0);
-    v0 = v1 - 0x61;
-    v0 = (v0 < 0x1A);
-    a0++;
-    if (v0 == 0) goto loc_80031C64;
-    v1 -= 0x20;
-loc_80031C64:
-    sb(v1, a1);
-    a1++;
-    v0 = (i32(a1) < i32(a2));
-    if (v0 != 0) goto loc_80031C38;
-loc_80031C78:
-    a3 = lw(sp);
-    a2 = lw(sp + 0x4);
-    v1 = *gNumMapWadLumps;
-    v0 = *gpMapWadLumpInfo;
-    a0 = 0;
-    if (i32(v1) <= 0) goto loc_80031CD0;
-    t0 = -0x81;                                         // Result = FFFFFF7F
-    a1 = v1;
-    v1 = v0 + 8;
-loc_80031C9C:
-    v0 = lw(v1 + 0x4);
-    if (v0 != a2) goto loc_80031CC0;
-    v0 = lw(v1);
-    v0 &= t0;
-    {
-        const bool bJump = (v0 == a3);
-        v0 = a0;
-        if (bJump) goto loc_80031CD4;
-    }
-loc_80031CC0:
-    a0++;
-    v0 = (i32(a0) < i32(a1));
-    v1 += 0x10;
-    if (v0 != 0) goto loc_80031C9C;
-loc_80031CD0:
-    v0 = -1;                                            // Result = FFFFFFFF
-loc_80031CD4:
-    sp += 0x10;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the lump index for the given map lump name (case insensitive) or -1 if not found
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t W_MapCheckNumForName(const char* const name) noexcept {
+    // Copy the given name and uppercase for case insensitivity
+    char nameUpper[MAXLUMPNAME + 1];
+    D_memset(nameUpper, (std::byte) 0, sizeof(nameUpper));
+    D_strncpy(nameUpper, name, MAXLUMPNAME);
+    nameUpper[MAXLUMPNAME] = 0;
+    strupr(nameUpper);
+
+    // Get the two words of the name for faster comparison
+    const uint32_t findNameW1 = (uint32_t&) nameUpper[0];
+    const uint32_t findNameW2 = (uint32_t&) nameUpper[4];
+
+    // Try to find the given lump name and compare names using 32-bit words rather than single chars
+    lumpinfo_t* pLump = (*gpMapWadLumpInfo).get();
+    int32_t lumpIdx = 0;
+
+    while (lumpIdx < *gNumLumps) {
+        // Note: must mask the highest bit of the first character of the lump name.
+        // This bit is used to indicate whether the lump is compressed or not.
+        const uint32_t lumpNameW1 = ((uint32_t&) pLump->name.chars[0]) & NAME_WORD_MASK;
+        const uint32_t lumpNameW2 = ((uint32_t&) pLump->name.chars[4]);
+
+        if (lumpNameW1 == findNameW1 && lumpNameW2 == findNameW2)
+            return lumpIdx;
+        
+        ++lumpIdx;
+        ++pLump;
+    };
+
+    return -1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

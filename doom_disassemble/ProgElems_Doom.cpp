@@ -611,7 +611,7 @@ static const ProgElem ELEMS[] = {
     { 0x800319E4, 0x80031B04, "W_CacheLumpName",                        ProgElemType::FUNCTION },
     { 0x80031B04, 0x80031BD4, "W_OpenMapWad",                           ProgElemType::FUNCTION },
     { 0x80031BD4, 0x80031C24, "W_MapLumpLength",                        ProgElemType::FUNCTION },
-    { 0x80031C24, 0x80031CE0, "W_MapGetNumForName",                     ProgElemType::FUNCTION },
+    { 0x80031C24, 0x80031CE0, "W_MapCheckNumForName",                   ProgElemType::FUNCTION },
     { 0x80031CE0, 0x80031D90, "W_ReadMapLump",                          ProgElemType::FUNCTION },
     { 0x80031D90, 0x80031E48, "decode",                                 ProgElemType::FUNCTION },
     { 0x80031E48, 0x80031EB4, "getDecodedSize",                         ProgElemType::FUNCTION },

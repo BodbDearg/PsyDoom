@@ -1541,9 +1541,7 @@ loc_800230D4:
     }
     
     // Get the lump index for the map start lump
-    a0 = ptrToVmAddr(mapLumpName->chars);
-    W_MapGetNumForName();
-    const uint32_t mapStartLump = v0;
+    const uint32_t mapStartLump = W_MapCheckNumForName(mapLumpName->chars);
     
     if (mapStartLump == -1) {
         I_Error("P_SetupLevel: %s not found", mapLumpName->chars);
