@@ -596,7 +596,7 @@ gameaction_t MiniLoop(
         
         // Advance to the next game tick if it is time.
         // Video refreshes at 60 Hz but the game ticks at 15 Hz:
-        const int32_t tgtGameTicCount = i32(v0) / 4;    
+        const int32_t tgtGameTicCount = i32(v0) / 4;
         
         if (*gLastTgtGameTicCount < tgtGameTicCount) {
             *gLastTgtGameTicCount = tgtGameTicCount;

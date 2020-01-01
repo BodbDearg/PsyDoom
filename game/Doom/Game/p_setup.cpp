@@ -37,16 +37,14 @@ const VmPtr<int32_t> gNumVertexes(0x80078018);
 // Load map vertex data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadVertexes(const int32_t lumpNum) noexcept {
-    a0 = lumpNum;
-    W_MapLumpLength();
-    const int32_t lumpSize = v0;
+    const int32_t lumpSize = W_MapLumpLength(lumpNum);
     
     if (lumpSize > TMP_BUFFER_SIZE) {
         I_Error("P_LoadVertexes: lump > 64K");
     }
 
     a0 = lumpNum;
-    W_MapLumpLength();
+    W_MapLumpLength(lumpNum);
     *gNumVertexes = lumpSize / 8;
     
     a0 = *gpMainMemZone;
@@ -87,14 +85,14 @@ loc_80021BA0:
     sw(s0, sp + 0x18);
     sw(ra, sp + 0x1C);
     s0 = a0;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = 0x10000;                                       // Result = 00010000
     v1 = (i32(v1) < i32(v0));
     if (v1 == 0) goto loc_80021BD4;
     I_Error("P_LoadSegs: lump > 64K");
 loc_80021BD4:
     a0 = s0;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = 0xAAAA0000;                                    // Result = AAAA0000
     v1 |= 0xAAAB;                                       // Result = AAAAAAAB
     multu(v0, v1);
@@ -223,14 +221,14 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     sw(s0, sp + 0x18);
 
     a0 = lumpNum;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
 
     if (i32(v0) > TMP_BUFFER_SIZE) {
         I_Error("P_LoadSubsectors: lump > 64K");
     }
 
     a0 = lumpNum;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v0 >>= 2;
     sw(v0, gp + 0xC44);         // Store to: gNumSubsectors (80078224)
 
@@ -298,7 +296,7 @@ loc_80021EC4:
     sb(0, sp + 0x13);
     sb(0, sp + 0x14);
     sb(0, sp + 0x15);
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = 0x10000;                                       // Result = 00010000
     v1 = (i32(v1) < i32(v0));
     s5 = 0;                                             // Result = 00000000
@@ -306,7 +304,7 @@ loc_80021EC4:
     I_Error("P_LoadSectors: lump > 64K");
 loc_80021F30:
     a0 = s0;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = 0x24920000;                                    // Result = 24920000
     v1 |= 0x4925;                                       // Result = 24924925
     v0 >>= 2;
@@ -426,14 +424,14 @@ loc_80022104:
     sw(s0, sp + 0x18);
     sw(ra, sp + 0x1C);
     s0 = a0;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = 0x10000;                                       // Result = 00010000
     v1 = (i32(v1) < i32(v0));
     if (v1 == 0) goto loc_80022138;
     I_Error("P_LoadNodes: lump > 64K");
 loc_80022138:
     a0 = s0;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = 0x24920000;                                    // Result = 24920000
     v1 |= 0x4925;                                       // Result = 24924925
     v0 >>= 2;
@@ -525,14 +523,14 @@ static void P_LoadThings(const int32_t lumpNum) noexcept {
     sw(s1, sp + 0x1C);
 
     a0 = lumpNum;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
 
     if (i32(v0) > TMP_BUFFER_SIZE) {
         I_Error("P_LoadThings: lump > 64K");
     }
 
     a0 = lumpNum;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = 0xCCCCCCCD;        // Result = CCCCCCCD
     multu(v0, v1);
     v0 = hi;
@@ -593,7 +591,7 @@ loc_8002237C:
     sw(s3, sp + 0x24);
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = 0x10000;                                       // Result = 00010000
     v1 = (i32(v1) < i32(v0));
     s6 = 0;                                             // Result = 00000000
@@ -601,7 +599,7 @@ loc_8002237C:
     I_Error("P_LoadLineDefs: lump > 64K");
 loc_800223C8:
     a0 = s0;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = 0x92490000;                                    // Result = 92490000
     v1 |= 0x2493;                                       // Result = 92492493
     v0 >>= 1;
@@ -775,7 +773,7 @@ loc_80022650:
     sw(s3, sp + 0x24);
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = 0x10000;                                       // Result = 00010000
     v1 = (i32(v1) < i32(v0));
     s4 = 0;                                             // Result = 00000000
@@ -783,7 +781,7 @@ loc_80022650:
     I_Error("P_LoadSideDefs: lump > 64K");
 loc_80022694:
     a0 = s0;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = 0x88880000;                                    // Result = 88880000
     v1 |= 0x8889;                                       // Result = 88888889
     multu(v0, v1);
@@ -866,7 +864,7 @@ loc_800227CC:
     sw(s0, sp + 0x18);
     sw(ra, sp + 0x1C);
     s0 = a0;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     a1 = v0;
     a2 = 2;
     a0 = *gpMainMemZone;
@@ -878,7 +876,7 @@ loc_800227CC:
     a2 = 1;                                             // Result = 00000001
     W_ReadMapLump();
     a0 = s0;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = v0 >> 31;
     v1 += v0;
     s0 = u32(i32(v1) >> 1);
@@ -930,7 +928,7 @@ void P_LoadMapLump() noexcept {
     sw(s0, sp + 0x10);
     sw(ra, sp + 0x14);
     s0 = a0;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     a1 = v0;
     a2 = 2;
     a0 = *gpMainMemZone;
@@ -961,7 +959,7 @@ loc_80022920:
     sw(s3, sp + 0x2C);
     sw(s1, sp + 0x24);
     sw(s0, sp + 0x20);
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v1 = 0x10000;                                       // Result = 00010000
     v1 = (i32(v1) < i32(v0));
     fp = 0;                                             // Result = 00000000
@@ -977,7 +975,7 @@ loc_80022974:
     s4 = gTmpBuffer;
 loc_80022994:
     a0 = s2;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
     v0 += s0;
     v0 = (s4 < v0);
     if (v0 == 0) goto loc_800229C8;
@@ -1582,7 +1580,7 @@ loc_800230D4:
 
     // Load the reject map
     a0 = mapStartLump + ML_REJECT;
-    W_MapLumpLength();
+    _thunk_W_MapLumpLength();
 
     a1 = v0;
     a2 = 2;

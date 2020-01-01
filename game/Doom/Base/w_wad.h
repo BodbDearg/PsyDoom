@@ -40,7 +40,10 @@ void _thunk_W_CacheLumpNum() noexcept;
 
 void W_CacheLumpName() noexcept;
 void* W_OpenMapWad(const CdMapTbl_File discFile) noexcept;
-void W_MapLumpLength() noexcept;
+
+int32_t W_MapLumpLength(const int32_t lumpNum) noexcept;
+void _thunk_W_MapLumpLength() noexcept;
+
 void W_MapGetNumForName() noexcept;
 void W_ReadMapLump() noexcept;
 

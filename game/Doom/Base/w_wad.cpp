@@ -357,25 +357,21 @@ void* W_OpenMapWad(const CdMapTbl_File discFile) noexcept {
     return gpMapWadFileData->get();
 }
 
-void W_MapLumpLength() noexcept {
-loc_80031BD4:
-    v0 = *gNumMapWadLumps;
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = (i32(s0) < i32(v0));
-    sw(ra, sp + 0x14);
-    if (v0 != 0) goto loc_80031C00;
-    I_Error("W_MapLumpLength: %i out of range", (int32_t) s0);
-loc_80031C00:
-    v1 = lw(gp + 0xAE8);                                // Load from: gpMapWadDirectory (800780C8)
-    v0 = s0 << 4;
-    v0 += v1;
-    v0 = lw(v0 + 0x4);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Give the size in bytes of the given lump number from the currently loaded map WAD.
+// Issues a fatal error if the lump is not found.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t W_MapLumpLength(const int32_t lumpNum) noexcept {
+    if (lumpNum >= *gNumMapWadLumps) {
+        I_Error("W_MapLumpLength: %i out of range", lumpNum);
+    }
+
+    const lumpinfo_t& lump = (*gpMapWadLumpInfo)[lumpNum];
+    return lump.size;
+}
+
+void _thunk_W_MapLumpLength() noexcept {
+    v0 = W_MapLumpLength((int32_t) a0);
 }
 
 void W_MapGetNumForName() noexcept {
