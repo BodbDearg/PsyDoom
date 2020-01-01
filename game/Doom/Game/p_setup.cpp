@@ -1735,12 +1735,8 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
 
             // Verify the decompressed size is valid
             if (fileBlock.isUncompressed == 0) {
-                // Get the decompressed size of the data following the file block header
-                a0 = ptrToVmAddr(&(&fileBlock)[1]);
-                getDecodedSize();
-                const uint32_t inflatedSize = v0;
-                
-                // Make sure the decompressed size is what we expect
+                // Get the decompressed size of the data following the file block header and make sure it is what we expect
+                const uint32_t inflatedSize = getDecodedSize(&(&fileBlock)[1]);
                 const lumpinfo_t& lump = (*gpLumpInfo)[fileBlock.lumpNum];
                 
                 if (inflatedSize != lump.size) {

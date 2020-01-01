@@ -40,4 +40,4 @@ void W_ReadMapLump() noexcept;
 void decode(const void* pSrc, void* pDst) noexcept;
 void _thunk_decode() noexcept;
 
-void getDecodedSize() noexcept;
+uint32_t getDecodedSize(const void* const pSrc) noexcept;

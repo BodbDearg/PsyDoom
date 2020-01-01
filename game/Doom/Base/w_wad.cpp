@@ -591,7 +591,7 @@ void decode(const void* pSrc, void* pDst) noexcept {
 
             const uint8_t* const pRepeatedBytes = pDstByte - srcOffset;
 
-            for (uint32_t i = 0; i < numRepeatedBytes; ++i) {
+            for (int32_t i = 0; i < numRepeatedBytes; ++i) {
                 *pDstByte = pRepeatedBytes[i];
                 ++pDstByte;
             }
@@ -610,36 +610,45 @@ void _thunk_decode() noexcept {
     decode(vmAddrToPtr<const uint8_t>(a0), vmAddrToPtr<uint8_t>(a1));
 }
 
-void getDecodedSize() noexcept {
-loc_80031E48:
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    v1 = 0;                                             // Result = 00000000
-    a3 = 1;                                             // Result = 00000001
-loc_80031E58:
-    v0 = a2 + 1;
-    if (a2 != 0) goto loc_80031E68;
-    a1 = lbu(a0);
-    a0++;
-loc_80031E68:
-    a2 = v0 & 7;
-    v0 = a1 & 1;
-    if (v0 == 0) goto loc_80031E9C;
-    a0++;
-    v0 = lbu(a0);
-    v0 &= 0xF;
-    v0++;
-    a0++;
-    if (v0 == a3) goto loc_80031EAC;
-    v1 += v0;
-    goto loc_80031EA4;
-loc_80031E9C:
-    v1++;
-    a0++;
-loc_80031EA4:
-    a1 = u32(i32(a1) >> 1);                             // Result = 00000000
-    goto loc_80031E58;
-loc_80031EAC:
-    v0 = v1;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Similar to 'decode' except does not do any decompression.
+// Instead, this function returns the decompressed size of the data.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t getDecodedSize(const void* const pSrc) noexcept {
+    // This code is pretty much a replica of 'decode()' - see that function for more details/comments.
+    // The only difference here is that we don't save the decompressed data and just count the number of output bytes instead.
+    const uint8_t* pSrcByte = (uint8_t*) pSrc;
+    uint32_t size = 0;
+
+    uint32_t idByte = 0;
+    uint32_t haveIdByte = 0;
+
+    while (true) {
+        if (haveIdByte == 0) {
+            idByte = *pSrcByte;
+            ++pSrcByte;
+        }
+
+        haveIdByte = (haveIdByte + 1) & 7;
+
+        if (idByte & 1) {
+            // Note: not bothering to read the byte containing only positional information for the replicated data.
+            // We are only interested in the byte count in this instance.
+            const uint32_t srcByte2 = pSrcByte[1];
+            pSrcByte += 2;
+            const int32_t numRepeatedBytes = (srcByte2 & 0xF) + 1;
+
+            if (numRepeatedBytes == 1)
+                break;
+            
+            size += numRepeatedBytes;
+        } else {
+            ++size;
+            ++pSrcByte;
+        }
+
+        idByte >>= 1;
+    }
+
+    return size;
 }
