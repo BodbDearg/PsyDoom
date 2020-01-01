@@ -313,7 +313,6 @@ extern void R_PointOnSide() noexcept;
 extern void R_PointInSubsector() noexcept;
 extern void _thunk_W_CacheLumpNum() noexcept;
 extern void W_CacheLumpName() noexcept;
-extern void W_OpenMapWad() noexcept;
 extern void W_MapLumpLength() noexcept;
 extern void W_MapGetNumForName() noexcept;
 extern void W_ReadMapLump() noexcept;
@@ -1268,7 +1267,6 @@ namespace PsxVm {
         { 0x80030F5C, &R_PointInSubsector },
         { 0x800317AC, &_thunk_W_CacheLumpNum },
         { 0x800319E4, &W_CacheLumpName },
-        { 0x80031B04, &W_OpenMapWad },
         { 0x80031BD4, &W_MapLumpLength },
         { 0x80031C24, &W_MapGetNumForName },
         { 0x80031CE0, &W_ReadMapLump },

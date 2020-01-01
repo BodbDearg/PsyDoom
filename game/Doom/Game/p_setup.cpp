@@ -1528,9 +1528,7 @@ loc_800230D4:
     const CdMapTbl_File mapWadFile = (CdMapTbl_File)((int32_t) CdMapTbl_File::MAP01_WAD + mapIdxInFolder + mapFolderOffset);
     
     // Open the map wad
-    a0 = (uint32_t) mapWadFile;
-    W_OpenMapWad();
-    void* const pMapWadFileData = vmAddrToPtr<void>(v0);
+    void* const pMapWadFileData = W_OpenMapWad(mapWadFile);
 
     // Figure out the name of the map start lump marker
     mapLumpName->chars[0] = 'M';

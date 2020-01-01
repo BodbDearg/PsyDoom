@@ -3,6 +3,8 @@
 #include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 
+enum class CdMapTbl_File : uint32_t;
+
 // Format for a name in a lump file
 static constexpr uint32_t MAXLUMPNAME = 8;
 
@@ -37,7 +39,7 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
 void _thunk_W_CacheLumpNum() noexcept;
 
 void W_CacheLumpName() noexcept;
-void W_OpenMapWad() noexcept;
+void* W_OpenMapWad(const CdMapTbl_File discFile) noexcept;
 void W_MapLumpLength() noexcept;
 void W_MapGetNumForName() noexcept;
 void W_ReadMapLump() noexcept;

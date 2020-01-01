@@ -18,7 +18,7 @@ struct wadinfo_t {
 
 static_assert(sizeof(wadinfo_t) == 12);
 
-// Lump related state: the number of lumps, info on each lump, pointers to loaded lumps and
+// Main IWAD lump related state: the number of lumps, info on each lump, pointers to loaded lumps and
 // whether each lump was loaded from the main IWAD or not.
 const VmPtr<int32_t>                gNumLumps(0x800781EC);
 const VmPtr<VmPtr<lumpinfo_t>>      gpLumpInfo(0x800781C4);
@@ -28,6 +28,11 @@ const VmPtr<bool32_t>               gbIsLevelDataCached(0x80077BE4);
 
 // Which of the open files is the main WAD file
 static const VmPtr<uint32_t> gMainWadFileIdx(0x80078254);
+
+// Map WAD stuff: pointer to the loaded WAD in memory, number of map WAD lumps, pointer to the map WAD info tables (the WAD directory).
+static const VmPtr<VmPtr<void>>     gpMapWadFileData(0x80077F18);
+static const VmPtr<int32_t>         gNumMapWadLumps(0x8007811C);
+const VmPtr<VmPtr<lumpinfo_t>>      gpMapWadLumpInfo(0x800780C8);
 
 // This is a mask to chop off the highest bit of the 1st 32-bit word in a lump name.
 // That bit is not part of the name, it is used to indicate whether the lump is compressed or not.
@@ -315,58 +320,46 @@ loc_80031AD8:
     return;
 }
 
-void W_OpenMapWad() noexcept {
-loc_80031B04:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    _thunk_OpenFile();
-    s0 = v0;
-    a0 = s0;
-    a1 = 0;
-    a2 = 2;
-    _thunk_SeekAndTellFile();
-    s1 = v0;
-    a1 = s1;
-    a2 = 1;
-    a0 = *gpMainMemZone;
-    a3 = 0;
-    _thunk_Z_EndMalloc();
-    a0 = s0;
-    a1 = 0;
-    sw(v0, gp + 0x938);                                 // Store to: gpMapWadFileData (80077F18)
-    a2 = 0;
-    _thunk_SeekAndTellFile();
-    a0 = s0;
-    a1 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)
-    a2 = s1;
-    _thunk_ReadFile();
-    a0 = s0;
-    _thunk_CloseFile();
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7BE8;                                       // Result = STR_IWAD[0] (80077BE8)
-    a0 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)
-    a2 = 4;                                             // Result = 00000004
-    _thunk_D_strncasecmp();
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Open the specified map wad file, load it entirely into memory and return a pointer to it's data
+//------------------------------------------------------------------------------------------------------------------------------------------
+void* W_OpenMapWad(const CdMapTbl_File discFile) noexcept {
+    // Load the entire map WAD into memory
+    {
+        const uint32_t openFileIdx = OpenFile(discFile);
+        const int32_t wadSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
+        *gpMapWadFileData = Z_EndMalloc(**gpMainMemZone, wadSize, PU_STATIC, nullptr);
 
-    if (v0 != 0) {
+        SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::SET);
+        ReadFile(openFileIdx, (*gpMapWadFileData).get(), wadSize);
+        CloseFile(openFileIdx);
+    }
+
+    // Make sure the file id is valid.
+    // Note that PSX DOOM expects the identifier "IWAD" also in it's map wads, rather then "PWAD".
+    // I am relaxing this restriction for the PC-PSX version however and accepting "PWAD" if there:
+    const wadinfo_t& wadinfo = *(wadinfo_t*) gpMapWadFileData->get();
+
+    const bool bIsValidWad = (
+        #if PC_PSX_DOOM_MODS
+            D_strncasecmp(wadinfo.fileid, "PWAD", sizeof(wadinfo.fileid) != 0) || 
+        #endif
+            D_strncasecmp(wadinfo.fileid, "IWAD", sizeof(wadinfo.fileid) != 0)
+    );
+
+    if (!bIsValidWad) {
         I_Error("W_OpenMapWad: invalid map IWAD id");
     }
     
-    v0 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)
-    v1 = lw(v0 + 0x4);
-    a0 = lw(v0 + 0x8);
-    sw(v1, gp + 0xB3C);                                 // Store to: gNumMapWadLumps (8007811C)
-    v1 = v0 + a0;
-    sw(v1, gp + 0xAE8);                                 // Store to: gpMapWadDirectory (800780C8)
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
+    // Finish up by saving some high level map wad info
+    *gNumMapWadLumps = wadinfo.numlumps;
+    *gpMapWadLumpInfo = (lumpinfo_t*)((std::byte*) gpMapWadFileData->get() + wadinfo.infotableofs);
+    return gpMapWadFileData->get();
 }
 
 void W_MapLumpLength() noexcept {
 loc_80031BD4:
-    v0 = lw(gp + 0xB3C);                                // Load from: gNumMapWadLumps (8007811C)
+    v0 = *gNumMapWadLumps;
     sp -= 0x18;
     sw(s0, sp + 0x10);
     s0 = a0;
@@ -409,7 +402,7 @@ loc_80031C64:
 loc_80031C78:
     a3 = lw(sp);
     a2 = lw(sp + 0x4);
-    v1 = lw(gp + 0xB3C);                                // Load from: gNumMapWadLumps (8007811C)
+    v1 = *gNumMapWadLumps;
     v0 = lw(gp + 0xAE8);                                // Load from: gpMapWadDirectory (800780C8)
     a0 = 0;                                             // Result = 00000000
     if (i32(v1) <= 0) goto loc_80031CD0;
@@ -440,7 +433,7 @@ loc_80031CD4:
 
 void W_ReadMapLump() noexcept {
 loc_80031CE0:
-    v0 = lw(gp + 0xB3C);                                // Load from: gNumMapWadLumps (8007811C)
+    v0 = *gNumMapWadLumps;
     sp -= 0x30;
     sw(s0, sp + 0x20);
     s0 = a0;

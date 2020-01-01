@@ -3426,7 +3426,7 @@ static const ProgElem ELEMS[] = {
     { 0x800780BC, 0x800780C0, "gOpenTop",                               ProgElemType::INT32 },
     { 0x800780C0, 0x800780C4, "gNumCrossCheckLines",                    ProgElemType::UINT32 },
     { 0x800780C4, 0x800780C8, "gpBlockmapLump",                         ProgElemType::PTR32 },
-    { 0x800780C8, 0x800780CC, "gpMapWadDirectory",                      ProgElemType::PTR32 },
+    { 0x800780C8, 0x800780CC, "gpMapWadLumpInfo",                       ProgElemType::PTR32 },
     { 0x800780CC, 0x800780D0, "gP1x",                                   ProgElemType::INT32 },
     { 0x800780D0, 0x800780D4, "gP2x",                                   ProgElemType::INT32 },
     { 0x800780D4, 0x800780D8, "gP1y",                                   ProgElemType::INT32 },
