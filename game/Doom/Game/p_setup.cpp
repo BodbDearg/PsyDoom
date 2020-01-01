@@ -57,7 +57,7 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
     a0 = lumpNum;
     a1 = gTmpBuffer;
     a2 = 1;
-    W_ReadMapLump();
+    _thunk_W_ReadMapLump();
 
     if (*gNumVertexes > 0) {
         a0 = lw(gp + 0xC04);        // Load from: gpVertexes (800781E4)
@@ -118,7 +118,7 @@ loc_80021BD4:
     s0 = gTmpBuffer;
     a1 = gTmpBuffer;
     a2 = 1;                                             // Result = 00000001
-    W_ReadMapLump();
+    _thunk_W_ReadMapLump();
     v0 = lw(gp + 0xAC4);                                // Load from: gNumSegs (800780A4)
     t1 = lw(gp + 0xC58);                                // Load from: gpSegs (80078238)
     t2 = 0;                                             // Result = 00000000
@@ -242,7 +242,7 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     a0 = lumpNum;
     a1 = gTmpBuffer;
     a2 = 1;
-    W_ReadMapLump();
+    _thunk_W_ReadMapLump();
 
     a0 = lw(gp + 0x960);        // Load from: gpSubsectors (80077F40)
     a1 = 0;
@@ -335,7 +335,7 @@ loc_80021F30:
     a0 = s0;
     a1 = gTmpBuffer;
     a2 = 1;                                             // Result = 00000001
-    W_ReadMapLump();
+    _thunk_W_ReadMapLump();
     v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
     s4 = lw(gp + 0xAC8);                                // Load from: gpSectors (800780A8)
     if (i32(v0) <= 0) goto loc_800220A8;
@@ -450,7 +450,7 @@ loc_80022138:
     a1 = gTmpBuffer;
     sw(v0, gp + 0x8C4);                                 // Store to: gpBspNodes (80077EA4)
     a2 = 1;                                             // Result = 00000001
-    W_ReadMapLump();
+    _thunk_W_ReadMapLump();
     v0 = lw(gp + 0xBD8);                                // Load from: gNumBspNodes (800781B8)
     t3 = lw(gp + 0x8C4);                                // Load from: gpBspNodes (80077EA4)
     t6 = 0;                                             // Result = 00000000
@@ -539,7 +539,7 @@ static void P_LoadThings(const int32_t lumpNum) noexcept {
     a0 = lumpNum;
     a1 = gTmpBuffer;
     a2 = 1;
-    W_ReadMapLump();
+    _thunk_W_ReadMapLump();
 
     if (s3 != 0) {
         s1 = gTmpBuffer;
@@ -631,7 +631,7 @@ loc_800223C8:
     a0 = s0;
     a1 = gTmpBuffer;
     a2 = 1;
-    W_ReadMapLump();
+    _thunk_W_ReadMapLump();
     v0 = lw(gp + 0xBE8);                                // Load from: gNumLines (800781C8)
     s4 = lw(gp + 0x8D0);                                // Load from: gpLines (80077EB0)
     s0 = s4 + 0x3C;
@@ -808,7 +808,7 @@ loc_80022694:
     a0 = s0;
     a1 = gTmpBuffer;
     a2 = 1;
-    W_ReadMapLump();
+    _thunk_W_ReadMapLump();
     v0 = lw(gp + 0xBD4);                                // Load from: gNumSides (800781B4)
     s2 = lw(gp + 0x8C0);                                // Load from: gpSides (80077EA0)
     s0 = s2 + 0xC;
@@ -874,7 +874,7 @@ loc_800227CC:
     a1 = v0;
     sw(a1, gp + 0xAE4);                                 // Store to: gpBlockmapLump (800780C4)
     a2 = 1;                                             // Result = 00000001
-    W_ReadMapLump();
+    _thunk_W_ReadMapLump();
     a0 = s0;
     _thunk_W_MapLumpLength();
     v1 = v0 >> 31;
@@ -938,7 +938,7 @@ void P_LoadMapLump() noexcept {
     a1 = v0;
     sw(a1, gp + 0xB04);                                 // Store to: gpRejectMatrix (800780E4)
     a2 = 1;                                             // Result = 00000001
-    W_ReadMapLump();
+    _thunk_W_ReadMapLump();
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
@@ -970,7 +970,7 @@ loc_80022974:
     s0 = gTmpBuffer;
     a1 = gTmpBuffer;
     a2 = 1;
-    W_ReadMapLump();
+    _thunk_W_ReadMapLump();
     s1 = 0;
     s4 = gTmpBuffer;
 loc_80022994:
@@ -1592,7 +1592,7 @@ loc_800230D4:
     a0 = mapStartLump + ML_REJECT;
     a1 = v0;    
     a2 = 1;
-    W_ReadMapLump();
+    _thunk_W_ReadMapLump();
 
     // Build sector line lists etc.
     P_GroupLines();

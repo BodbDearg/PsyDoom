@@ -45,7 +45,7 @@ int32_t W_MapLumpLength(const int32_t lumpNum) noexcept;
 void _thunk_W_MapLumpLength() noexcept;
 
 void W_MapGetNumForName() noexcept;
-void W_ReadMapLump() noexcept;
+void _thunk_W_ReadMapLump() noexcept;
 
 void decode(const void* pSrc, void* pDst) noexcept;
 void _thunk_decode() noexcept;

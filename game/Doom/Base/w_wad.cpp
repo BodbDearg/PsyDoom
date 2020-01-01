@@ -141,7 +141,7 @@ int32_t W_LumpLength(const int32_t lumpNum) noexcept {
 // The buffer must be big enough to accomodate the data.
 // Optionally, decompression can be disabled.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress) noexcept {    
+void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress) noexcept {
     // Sanity check the lump number is range.
     // Note: modified this check to disallow reading the last lump.
     // This code relies on getting the NEXT lump after the requested one in order to determine sizes.
@@ -214,13 +214,13 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
     
         // Figure out how much data we will need to allocate. If we are decompressing then this will be the decompressed size, otherwise
         // it will be the actual size of the lump before decompression is applied:
-        lumpinfo_t& lumpInfo = (*gpLumpInfo)[lumpNum];
+        const lumpinfo_t& lumpInfo = (*gpLumpInfo)[lumpNum];
         int32_t sizeToRead;
         
         if (bDecompress) {
             sizeToRead = lumpInfo.size;
         } else {
-            lumpinfo_t& nextLumpInfo = (*gpLumpInfo)[lumpNum + 1];
+            const lumpinfo_t& nextLumpInfo = (*gpLumpInfo)[lumpNum + 1];
             const int32_t lumpStorageSize = nextLumpInfo.filepos - lumpInfo.filepos;
             sizeToRead = lumpStorageSize;
         }
@@ -399,8 +399,8 @@ loc_80031C78:
     a3 = lw(sp);
     a2 = lw(sp + 0x4);
     v1 = *gNumMapWadLumps;
-    v0 = lw(gp + 0xAE8);                                // Load from: gpMapWadDirectory (800780C8)
-    a0 = 0;                                             // Result = 00000000
+    v0 = *gpMapWadLumpInfo;
+    a0 = 0;
     if (i32(v1) <= 0) goto loc_80031CD0;
     t0 = -0x81;                                         // Result = FFFFFF7F
     a1 = v1;
@@ -427,49 +427,44 @@ loc_80031CD4:
     return;
 }
 
-void W_ReadMapLump() noexcept {
-loc_80031CE0:
-    v0 = *gNumMapWadLumps;
-    sp -= 0x30;
-    sw(s0, sp + 0x20);
-    s0 = a0;
-    sw(s2, sp + 0x28);
-    s2 = a1;
-    sw(s1, sp + 0x24);
-    s1 = a2;
-    v0 = (i32(s0) < i32(v0));
-    sw(ra, sp + 0x2C);
-    if (v0 != 0) goto loc_80031D1C;
-    I_Error("W_ReadMapLump: lump %d out of range", (int32_t) s0);
-loc_80031D1C:
-    v1 = lw(gp + 0xAE8);                                // Load from: gpMapWadDirectory (800780C8)
-    v0 = s0 << 4;
-    v1 += v0;
-    if (s1 == 0) goto loc_80031D58;
-    v0 = lbu(v1 + 0x8);
-    v0 &= 0x80;
-    a1 = s2;
-    if (v0 == 0) goto loc_80031D58;
-    v0 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)
-    a0 = lw(v1);
-    a0 += v0;
-    _thunk_decode();
-    goto loc_80031D74;
-loc_80031D58:
-    a0 = s2;
-    a1 = lw(gp + 0x938);                                // Load from: gpMapWadFileData (80077F18)
-    v0 = lw(v1);
-    a2 = lw(v1 + 0x10);
-    a1 += v0;
-    a2 -= v0;
-    _thunk_D_memcpy();
-loc_80031D74:
-    ra = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x30;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Read the requested lump number from the currently open map WAD into the given buffer.
+// The buffer must be big enough to accomodate the data.
+// Optionally, decompression can be disabled.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void W_ReadMapLump(const int32_t lumpNum, void* const pDest, const bool bDecompress) noexcept {
+    // Sanity check the lump number is range.
+    // Note: modified this check to disallow reading the last lump.
+    // This code relies on getting the NEXT lump after the requested one in order to determine sizes.
+    // We shouldn't be reading the last WAD lump anyway as it's an end marker...
+    #if PC_PSX_DOOM_MODS
+        if (lumpNum + 1 >= *gNumMapWadLumps) {
+            I_Error("W_ReadMapLump: lump %d + 1 out of range", lumpNum);
+        }
+    #else
+        if (lumpNum >= *gNumMapWadLumps) {
+            I_Error("W_ReadMapLump: lump %d out of range", lumpNum);
+        }
+    #endif
+
+    // Do we need to decompress? Decompress if specified and if the lumpname has the special bit
+    // set in the first character, indicating that the lump is compressed.
+    const lumpinfo_t& lump = (*gpMapWadLumpInfo)[lumpNum];
+    const std::byte* const pLumpBytes = ((std::byte*) gpMapWadFileData->get()) + lump.filepos;
+    
+    if (bDecompress && (((uint8_t) lump.name.chars[0] & 0x80u) != 0)) {
+        // Decompression needed: decompress to the given output buffer
+        decode(pLumpBytes, pDest);
+    } else {
+        // No decompression needed, can just copy straight into the output buffer
+        const lumpinfo_t& nextLump = (*gpLumpInfo)[lumpNum + 1];
+        const uint32_t sizeToCopy = nextLump.filepos - lump.filepos;
+        D_memcpy(pDest, pLumpBytes, sizeToCopy);
+    }
+}
+
+void _thunk_W_ReadMapLump() noexcept {
+    W_ReadMapLump((int32_t) a0, vmAddrToPtr<void>(a1), (a2 != 0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
