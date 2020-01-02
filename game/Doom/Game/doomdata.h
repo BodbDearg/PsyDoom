@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 #include "Doom/Base/z_zone.h"
+#include "Doom/doomdef.h"
 
 // Map lump offsets, relative to the 'MAPXX' marker
 enum : uint32_t {
@@ -37,3 +38,12 @@ struct fileblock_t {
 };
 
 static_assert(sizeof(fileblock_t) == sizeof(memblock_t));
+
+// A map vertex in a WAD. Note that unlike the PC version the coordinates here are in 16.16 format - presumably to help fight precision issues?
+// The PSX renderer is probably more prone to cracks and other artifacts etc. from BSP splits due to the way so I guess this makes sense.
+struct mapvertex_t {
+    fixed_t x;
+    fixed_t y;
+};
+
+static_assert(sizeof(mapvertex_t) == 8);

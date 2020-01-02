@@ -91,6 +91,7 @@ set(SOURCE_FILES
     "Doom/Renderer/r_data.h"
     "Doom/Renderer/r_draw.cpp"
     "Doom/Renderer/r_draw.h"
+    "Doom/Renderer/r_local.h"
     "Doom/Renderer/r_main.cpp"
     "Doom/Renderer/r_main.h"
     "Doom/Renderer/r_plane.cpp"

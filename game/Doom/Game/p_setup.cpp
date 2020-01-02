@@ -10,6 +10,7 @@
 #include "Doom/cdmaptbl.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
 #include "g_game.h"
@@ -31,51 +32,34 @@ static constexpr int32_t NUM_FILES_PER_LEVEL = 3;
 static constexpr int32_t FILES_PER_MAP_FOLDER = LEVELS_PER_MAP_FOLDER * NUM_FILES_PER_LEVEL;
 
 // Map data
-const VmPtr<int32_t> gNumVertexes(0x80078018);
+const VmPtr<int32_t>            gNumVertexes(0x80078018);
+const VmPtr<VmPtr<vertex_t>>    gpVertexes(0x800781E4);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadVertexes(const int32_t lumpNum) noexcept {
+    // Read the WAD vertexes into the temp buffer from the map WAD
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
     
     if (lumpSize > TMP_BUFFER_SIZE) {
         I_Error("P_LoadVertexes: lump > 64K");
     }
 
-    a0 = lumpNum;
-    W_MapLumpLength(lumpNum);
-    *gNumVertexes = lumpSize / 8;
-    
-    a0 = *gpMainMemZone;
-    a1 = *gNumVertexes * 28;
-    a2 = 2;
-    a3 = 0;
-    _thunk_Z_Malloc();
-    sw(v0, gp + 0xC04);             // Store to: gpVertexes (800781E4)
+    *gNumVertexes = lumpSize / sizeof(mapvertex_t);
+    *gpVertexes = (vertex_t*) Z_Malloc(**gpMainMemZone, *gNumVertexes * sizeof(vertex_t), PU_LEVEL, nullptr);
+    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
 
-    a0 = lumpNum;
-    a1 = gTmpBuffer;
-    a2 = 1;
-    _thunk_W_ReadMapLump();
+    // Convert the vertexes to the renderer runtime format
+    const mapvertex_t* pSrcVertex = (const mapvertex_t*) gTmpBuffer.get();
+    vertex_t* pDstVertex = gpVertexes->get();
 
-    if (*gNumVertexes > 0) {
-        a0 = lw(gp + 0xC04);        // Load from: gpVertexes (800781E4)
-        a1 = gTmpBuffer;
-        a2 = 0;
-
-        do {
-            const fixed_t vx = lw(a1);
-            const fixed_t vy = lw(a1 + 0x4);
-
-            sw(vx, a0);
-            sw(vy, a0 + 0x4);
-            sw(0,  a0 + 0x18);
-            
-            a2++;
-            a1 += 8;
-            a0 += 0x1C;
-        } while (i32(a2) < *gNumVertexes);
+    for (int32_t vertexIdx = 0; vertexIdx < *gNumVertexes; ++vertexIdx) {
+        pDstVertex->x = pSrcVertex->x;
+        pDstVertex->y = pSrcVertex->y;
+        pDstVertex->unknown5 = 0;
+        ++pSrcVertex;
+        ++pDstVertex;
     }
 }
 

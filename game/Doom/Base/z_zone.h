@@ -8,23 +8,11 @@
 //  - Tags < 100 are not overwritten until freed.
 //  - Tags >= 100 are purgable whenever needed.
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+// TODO: FIGURE OUT PURGE MODES
 static constexpr int16_t PU_STATIC      = 1;    // Static the entire execution time
-
-// TODO: FIGURE OUT PURGE MODES
-#if 0
-    // static constexpr int16_t PU_SOUND       = 2;    // Static while playing (TODO: CONFIRM)
-    // static constexpr int16_t PU_MUSIC       = 3;    // Static while playing (TODO: CONFIRM)
-    // static constexpr int16_t PU_DAVE        = 4;    // Linux Doom comment: "Anything else Dave wants static" (TODO: CONFIRM)
-    // static constexpr int16_t PU_LEVEL       = 16;   // Static until level exited (TODO: CONFIRM)
-    // static constexpr int16_t PU_LEVSPEC     = 51;   // A special thinker in a level (TODO: CONFIRM)
-#endif
-
+static constexpr int16_t PU_LEVEL       = 2;    // Remains until level is unloaded
 static constexpr int16_t PU_PURGELEVEL  = 16;   // (TODO: CONFIRM)
-
-// TODO: FIGURE OUT PURGE MODES
-#if 0
-    // static constexpr int16_t PU_CACHE       = 101;
-#endif
 
 // All blocks must have this id
 static constexpr int16_t ZONEID = 0x1D4A;
