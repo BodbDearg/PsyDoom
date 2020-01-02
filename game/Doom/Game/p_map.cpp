@@ -6,6 +6,7 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_move.h"
+#include "p_setup.h"
 #include "p_shoot.h"
 #include "p_sight.h"
 #include "p_spec.h"
@@ -342,8 +343,7 @@ loc_8001BAFC:
     at = 0x800B0000;                                    // Result = 800B0000
     sw(a0, at - 0x78A0);                                // Store to: gUseBBox[1] (800A8760)
 loc_8001BB0C:
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7E6C);                               // Load from: gBlockmapOriginY (80078194)
+    a1 = *gBlockmapOriginY;
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A0);                               // Load from: gUseBBox[1] (800A8760)
     a0 = 0x800B0000;                                    // Result = 800B0000
@@ -359,8 +359,7 @@ loc_8001BB0C:
     s3 = u32(i32(a0) >> 23);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7E74);                               // Load from: gBlockmapOriginX (8007818C)
+    a1 = *gBlockmapOriginX;
     v0++;
     v1 -= a1;
     at = 0x80070000;                                    // Result = 80070000
@@ -504,8 +503,7 @@ loc_8001BD24:
     sw(s0, sp + 0x10);
     v1 = lw(a0 + 0x4);
     sw(a1, gp + 0x910);                                 // Store to: gpBombSource (80077EF0)
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7E6C);                               // Load from: gBlockmapOriginY (80078194)
+    a1 = *gBlockmapOriginY;
     sw(a2, gp + 0x8B4);                                 // Store to: gBombDamage (80077E94)
     a2 <<= 16;
     sw(a0, gp + 0xBC0);                                 // Store to: gpBombSpot (800781A0)
@@ -516,8 +514,7 @@ loc_8001BD24:
     v1 -= a1;
     s3 = u32(i32(v1) >> 23);
     v1 = lw(a0);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E74);                               // Load from: gBlockmapOriginX (8007818C)
+    a0 = *gBlockmapOriginX;
     v0 = a2 + v1;
     v0 -= a0;
     s2 = u32(i32(v0) >> 23);

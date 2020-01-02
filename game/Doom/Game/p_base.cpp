@@ -1,6 +1,7 @@
 #include "p_base.h"
 
 #include "Doom/Renderer/r_main.h"
+#include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
 void P_RunMobjBase() noexcept {
@@ -539,23 +540,19 @@ loc_80014060:
     goto loc_800140D4;
 loc_8001407C:
     v0 = lw(a0 + 0x4);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7E6C);                               // Load from: gBlockmapOriginY (80078194)
+    v1 = *gBlockmapOriginY;
     v0 -= v1;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D7C);                               // Load from: gBlockmapWidth (80078284)
+    v1 = *gBlockmapWidth;
     v0 = u32(i32(v0) >> 23);
     mult(v0, v1);
     v1 = lw(a0);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E74);                               // Load from: gBlockmapOriginX (8007818C)
+    v0 = *gBlockmapOriginX;
     a0 = lw(a0 + 0x30);
     v1 -= v0;
     v1 = u32(i32(v1) >> 23);
     v0 = lo;
     v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EDC);                               // Load from: gppBlockLinks (80077EDC)
+    v1 = *gppBlockLinks;
     v0 <<= 2;
     v0 += v1;
     sw(a0, v0);
@@ -581,31 +578,26 @@ loc_80014110:
     sw(a1, v1 + 0x4C);
     if (v0 != 0) goto loc_800141D4;
     v1 = lw(a1);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E74);                               // Load from: gBlockmapOriginX (8007818C)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E6C);                               // Load from: gBlockmapOriginY (80078194)
+    v0 = *gBlockmapOriginX;
+    a0 = *gBlockmapOriginY;
     v1 -= v0;
     v0 = lw(a1 + 0x4);
     v1 = u32(i32(v1) >> 23);
     v0 -= a0;
     a0 = u32(i32(v0) >> 23);
     if (i32(v1) < 0) goto loc_800141CC;
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7D7C);                               // Load from: gBlockmapWidth (80078284)
+    a2 = *gBlockmapWidth;
     v0 = (i32(v1) < i32(a2));
     if (v0 == 0) goto loc_800141CC;
     if (i32(a0) < 0) goto loc_800141CC;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EB8);                               // Load from: gBlockmapHeight (80077EB8)
+    v0 = *gBlockmapHeight;
     v0 = (i32(a0) < i32(v0));
     mult(a0, a2);
     if (v0 == 0) goto loc_800141CC;
     sw(0, a1 + 0x34);
     v0 = lo;
     v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EDC);                               // Load from: gppBlockLinks (80077EDC)
+    v1 = *gppBlockLinks;
     v0 <<= 2;
     v1 += v0;
     v0 = lw(v1);
@@ -654,10 +646,8 @@ loc_800141DC:
     R_PointInSubsector();
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lw(a0 - 0x6F94);                               // Load from: gTestBBox[2] (800A906C)
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7E74);                               // Load from: gBlockmapOriginX (8007818C)
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7E6C);                               // Load from: gBlockmapOriginY (80078194)
+    a1 = *gBlockmapOriginX;
+    a2 = *gBlockmapOriginY;
     v1 = 0xFFE00000;                                    // Result = FFE00000
     sw(v0, gp + 0x948);                                 // Store to: gpTestSubSec (80077F28)
     sw(0, gp + 0x9AC);                                  // Store to: gpCeilingLine (80077F8C)
@@ -698,14 +688,12 @@ loc_800142F8:
     if (i32(s4) >= 0) goto loc_80014304;
     s4 = 0;                                             // Result = 00000000
 loc_80014304:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D7C);                               // Load from: gBlockmapWidth (80078284)
+    v1 = *gBlockmapWidth;
     v0 = (i32(s3) < i32(v1));
     if (v0 != 0) goto loc_80014320;
     s3 = v1 - 1;
 loc_80014320:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EB8);                               // Load from: gBlockmapHeight (80077EB8)
+    v1 = *gBlockmapHeight;
     v0 = (i32(s2) < i32(v1));
     s1 = a3;
     if (v0 != 0) goto loc_8001433C;
@@ -1003,18 +991,15 @@ loc_800146E8:
 
 void PB_CheckLines() noexcept {
 loc_800146F0:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D7C);                               // Load from: gBlockmapWidth (80078284)
+    v0 = *gBlockmapWidth;
     mult(a1, v0);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EC0);                               // Load from: gpBlockmap (80078140)
+    v1 = *gpBlockmap;
     v0 = lo;
     v0 += a0;
     v0 <<= 1;
     v0 += v1;
     v0 = lh(v0);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F3C);                               // Load from: gpBlockmapLump (800780C4)
+    v1 = *gpBlockmapLump;
     v0 <<= 1;
     t3 = v0 + v1;
     v0 = -1;                                            // Result = FFFFFFFF
@@ -1192,11 +1177,9 @@ loc_800149AC:
 
 void PB_CheckThings() noexcept {
 loc_800149B8:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D7C);                               // Load from: gBlockmapWidth (80078284)
+    v0 = *gBlockmapWidth;
     mult(a1, v0);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EDC);                               // Load from: gppBlockLinks (80077EDC)
+    v1 = *gppBlockLinks;
     sp -= 0x18;
     sw(ra, sp + 0x14);
     sw(s0, sp + 0x10);

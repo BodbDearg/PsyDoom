@@ -203,7 +203,6 @@ extern void P_LoadSectors() noexcept;
 extern void P_LoadNodes() noexcept;
 extern void P_LoadLineDefs() noexcept;
 extern void P_LoadSideDefs() noexcept;
-extern void P_LoadBlockMap() noexcept;
 extern void P_LoadMapLump() noexcept;
 extern void P_LoadLeafs() noexcept;
 extern void P_GroupLines() noexcept;
@@ -1154,7 +1153,6 @@ namespace PsxVm {
         { 0x80022104, &P_LoadNodes },
         { 0x8002237C, &P_LoadLineDefs },
         { 0x80022650, &P_LoadSideDefs },
-        { 0x800227CC, &P_LoadBlockMap },
         { 0x800228CC, &P_LoadMapLump },
         { 0x80022920, &P_LoadLeafs },
         { 0x80022B58, &P_GroupLines },

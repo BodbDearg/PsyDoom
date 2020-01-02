@@ -32,8 +32,15 @@ static constexpr int32_t NUM_FILES_PER_LEVEL = 3;
 static constexpr int32_t FILES_PER_MAP_FOLDER = LEVELS_PER_MAP_FOLDER * NUM_FILES_PER_LEVEL;
 
 // Map data
-const VmPtr<int32_t>            gNumVertexes(0x80078018);
-const VmPtr<VmPtr<vertex_t>>    gpVertexes(0x800781E4);
+const VmPtr<VmPtr<uint16_t>>        gpBlockmapLump(0x800780C4);
+const VmPtr<VmPtr<uint16_t>>        gpBlockmap(0x80078140);
+const VmPtr<int32_t>                gBlockmapWidth(0x80078284);
+const VmPtr<int32_t>                gBlockmapHeight(0x80077EB8);
+const VmPtr<fixed_t>                gBlockmapOriginX(0x8007818C);
+const VmPtr<fixed_t>                gBlockmapOriginY(0x80078194);
+const VmPtr<VmPtr<VmPtr<mobj_t>>>   gppBlockLinks(0x80077EDC);
+const VmPtr<int32_t>                gNumVertexes(0x80078018);
+const VmPtr<VmPtr<vertex_t>>        gpVertexes(0x800781E4);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
@@ -842,69 +849,52 @@ loc_800227A8:
     return;
 }
 
-void P_LoadBlockMap() noexcept {
-loc_800227CC:
-    sp -= 0x20;
-    sw(s0, sp + 0x18);
-    sw(ra, sp + 0x1C);
-    s0 = a0;
-    _thunk_W_MapLumpLength();
-    a1 = v0;
-    a2 = 2;
-    a0 = *gpMainMemZone;
-    a3 = 0;
-    _thunk_Z_Malloc();
-    a0 = s0;
-    a1 = v0;
-    sw(a1, gp + 0xAE4);                                 // Store to: gpBlockmapLump (800780C4)
-    a2 = 1;                                             // Result = 00000001
-    _thunk_W_ReadMapLump();
-    a0 = s0;
-    _thunk_W_MapLumpLength();
-    v1 = v0 >> 31;
-    v1 += v0;
-    s0 = u32(i32(v1) >> 1);
-    v1 = lw(gp + 0xAE4);                                // Load from: gpBlockmapLump (800780C4)
-    v0 = v1 + 8;
-    sw(v0, gp + 0xB60);                                 // Store to: gpBlockmap (80078140)
-    a0 = 0;                                             // Result = 00000000
-    if (i32(s0) <= 0) goto loc_80022850;
-loc_80022838:
-    v0 = lhu(v1);
-    a0++;
-    sh(v0, v1);
-    v0 = (i32(a0) < i32(s0));
-    v1 += 2;
-    if (v0 != 0) goto loc_80022838;
-loc_80022850:
-    v1 = lw(gp + 0xAE4);                                // Load from: gpBlockmapLump (800780C4)
-    t0 = lh(v1 + 0x6);
-    a1 = lh(v1 + 0x4);
-    v0 = t0 << 2;
-    mult(v0, a1);
-    a2 = 2;
-    a0 = *gpMainMemZone;
-    v0 = lh(v1);
-    v1 = lh(v1 + 0x2);
-    a3 = 0;                                             // Result = 00000000
-    sw(a1, gp + 0xCA4);                                 // Store to: gBlockmapWidth (80078284)
-    sw(t0, gp + 0x8D8);                                 // Store to: gBlockmapHeight (80077EB8)
-    v0 <<= 16;
-    v1 <<= 16;
-    sw(v0, gp + 0xBAC);                                 // Store to: gBlockmapOriginX (8007818C)
-    sw(v1, gp + 0xBB4);                                 // Store to: gBlockmapOriginY (80078194)
-    s0 = lo;
-    a1 = s0;
-    _thunk_Z_Malloc();
-    a0 = v0;
-    a1 = 0;                                             // Result = 00000000
-    sw(a0, gp + 0x8FC);                                 // Store to: gppBlockLinks (80077EDC)
-    a2 = s0;
-    _thunk_D_memset();
-    ra = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load the blockmap from the specified map lump number.
+// For more details about the blockmap, see: https://doomwiki.org/wiki/Blockmap
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
+    // Read the blockmap lump into RAM
+    const int32_t lumpSize = W_MapLumpLength(lumpNum);
+    *gpBlockmapLump = (uint16_t*) Z_Malloc(**gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
+    W_ReadMapLump(lumpNum, gpBlockmapLump->get(), true);
+
+    // The first 8 bytes of the blockmap are it's header.    
+    struct blockmap_hdr_t {
+        int16_t     originx;
+        int16_t     originy;
+        int16_t     width;
+        int16_t     height;
+    };
+
+    static_assert(sizeof(blockmap_hdr_t) == 8);
+    blockmap_hdr_t& blockmapHeader = *(blockmap_hdr_t*) gpBlockmapLump->get();
+
+    // The offsets to each blocklist (list of block lines per block) start after the header
+    *gpBlockmap = (uint16_t*)(&(&blockmapHeader)[1]);
+
+    // I'm not sure why this code was doing this pointless copy - disable as it is useless.
+    // Maybe an accidental leftover from when the code was doing something else?
+    #if !PC_PSX_DOOM_MODS
+    {
+        const int32_t count = (lumpSize / 2) + (lumpSize & 1);
+
+        for (int32_t i = 0; i < count; ++i) {
+            (*gpBlockmapLump)[i] = (*gpBlockmapLump)[i];
+        }
+    }
+    #endif
+
+    // Save blockmap dimensions
+    *gBlockmapWidth = blockmapHeader.width;
+    *gBlockmapHeight = blockmapHeader.height;
+    *gBlockmapOriginX = (fixed_t) blockmapHeader.originx << FRACBITS;
+    *gBlockmapOriginY = (fixed_t) blockmapHeader.originy << FRACBITS;
+    
+    // Alloc and null initialize the list of map objects for each block
+    const int32_t blockLinksSize = (int32_t) blockmapHeader.width * (int32_t) blockmapHeader.height * sizeof(VmPtr<mobj_t>);
+    *gppBlockLinks = (VmPtr<mobj_t>*) Z_Malloc(**gpMainMemZone, blockLinksSize, PU_LEVEL, nullptr);
+    D_memset(gppBlockLinks->get(), (std::byte) 0, blockLinksSize);
 }
 
 void P_LoadMapLump() noexcept {
@@ -1199,8 +1189,8 @@ loc_80022D24:
     R_PointInSubsector();
     sw(v0, s3 + 0x14);
     v1 = lw(sp + 0x10);
-    v0 = lw(gp + 0xBB4);                                // Load from: gBlockmapOriginY (80078194)
-    a0 = lw(gp + 0x8D8);                                // Load from: gBlockmapHeight (80077EB8)
+    v0 = *gBlockmapOriginY;
+    a0 = *gBlockmapHeight;
     v1 -= v0;
     v0 = 0x200000;                                      // Result = 00200000
     v1 += v0;
@@ -1215,7 +1205,7 @@ loc_80022D24:
 loc_80022D98:
     sw(v0, s3 - 0x8);
     v0 = lw(sp + 0x14);
-    v1 = lw(gp + 0xBB4);                                // Load from: gBlockmapOriginY (80078194)
+    v1 = *gBlockmapOriginY;
     v0 -= v1;
     v1 = 0xFFE00000;                                    // Result = FFE00000
     v0 += v1;
@@ -1225,8 +1215,8 @@ loc_80022D98:
 loc_80022DC4:
     sw(v1, s3 - 0x4);
     v1 = lw(sp + 0x1C);
-    v0 = lw(gp + 0xBAC);                                // Load from: gBlockmapOriginX (8007818C)
-    a0 = lw(gp + 0xCA4);                                // Load from: gBlockmapWidth (80078284)
+    v0 = *gBlockmapOriginX;
+    a0 = *gBlockmapWidth;
     v1 -= v0;
     v0 = 0x200000;                                      // Result = 00200000
     v1 += v0;
@@ -1241,7 +1231,7 @@ loc_80022DC4:
 loc_80022DF4:
     sw(v0, s3 + 0x4);
     v0 = lw(sp + 0x18);
-    v1 = lw(gp + 0xBAC);                                // Load from: gBlockmapOriginX (8007818C)
+    v1 = *gBlockmapOriginX;
     v0 -= v1;
     v1 = 0xFFE00000;                                    // Result = FFE00000
     v0 += v1;
@@ -1531,14 +1521,10 @@ loc_800230D4:
         I_Error("P_SetupLevel: %s not found", mapLumpName->chars);
     }
 
-    // Load the blockmap
-    a0 = mapStartLump + ML_BLOCKMAP;
-    P_LoadBlockMap();
-
-    // Load vertexes
+    // Loading various map lumps
+    P_LoadBlockMap(mapStartLump + ML_BLOCKMAP);
     P_LoadVertexes(mapStartLump + ML_VERTEXES);
 
-    // Load subsectors, sidedefs and linedefs
     a0 = mapStartLump + ML_SECTORS;
     P_LoadSectors();
 
@@ -1548,7 +1534,6 @@ loc_800230D4:
     a0 = mapStartLump + ML_LINEDEFS;
     P_LoadLineDefs();
 
-    // Load subsectors, nodes, segs and leafs
     P_LoadSubSectors(mapStartLump + ML_SSECTORS);
 
     a0 = mapStartLump + ML_NODES;

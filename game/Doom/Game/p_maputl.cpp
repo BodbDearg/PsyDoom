@@ -2,6 +2,7 @@
 
 #include "Doom/Base/m_fixed.h"
 #include "Doom/Renderer/r_main.h"
+#include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
 void P_AproxDistance() noexcept {
@@ -228,23 +229,19 @@ loc_8001C38C:
     goto loc_8001C400;
 loc_8001C3A8:
     v0 = lw(a0 + 0x4);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7E6C);                               // Load from: gBlockmapOriginY (80078194)
+    v1 = *gBlockmapOriginY;
     v0 -= v1;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D7C);                               // Load from: gBlockmapWidth (80078284)
+    v1 = *gBlockmapWidth;
     v0 = u32(i32(v0) >> 23);
     mult(v0, v1);
     v1 = lw(a0);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E74);                               // Load from: gBlockmapOriginX (8007818C)
+    v0 = *gBlockmapOriginX;
     a0 = lw(a0 + 0x30);
     v1 -= v0;
     v1 = u32(i32(v1) >> 23);
     v0 = lo;
     v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EDC);                               // Load from: gppBlockLinks (80077EDC)
+    v1 = *gppBlockLinks;
     v0 <<= 2;
     v0 += v1;
     sw(a0, v0);
@@ -279,31 +276,26 @@ loc_8001C468:
     v0 &= 0x10;
     if (v0 != 0) goto loc_8001C52C;
     v1 = lw(s0);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E74);                               // Load from: gBlockmapOriginX (8007818C)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E6C);                               // Load from: gBlockmapOriginY (80078194)
+    v0 = *gBlockmapOriginX;
+    a0 = *gBlockmapOriginY;
     v1 -= v0;
     v0 = lw(s0 + 0x4);
     v1 = u32(i32(v1) >> 23);
     v0 -= a0;
     a0 = u32(i32(v0) >> 23);
     if (i32(v1) < 0) goto loc_8001C524;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7D7C);                               // Load from: gBlockmapWidth (80078284)
+    a1 = *gBlockmapWidth;
     v0 = (i32(v1) < i32(a1));
     if (v0 == 0) goto loc_8001C524;
     if (i32(a0) < 0) goto loc_8001C524;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EB8);                               // Load from: gBlockmapHeight (80077EB8)
+    v0 = *gBlockmapHeight;
     v0 = (i32(a0) < i32(v0));
     mult(a0, a1);
     if (v0 == 0) goto loc_8001C524;
     sw(0, s0 + 0x34);
     v0 = lo;
     v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EDC);                               // Load from: gppBlockLinks (80077EDC)
+    v1 = *gppBlockLinks;
     v0 <<= 2;
     v1 += v0;
     v0 = lw(v1);
@@ -335,31 +327,27 @@ loc_8001C540:
     if (i32(a0) < 0) goto loc_8001C640;
     v0 = 1;                                             // Result = 00000001
     if (i32(a1) < 0) goto loc_8001C644;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D7C);                               // Load from: gBlockmapWidth (80078284)
+    v1 = *gBlockmapWidth;
     v0 = (i32(a0) < i32(v1));
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001C644;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EB8);                               // Load from: gBlockmapHeight (80077EB8)
+    v0 = *gBlockmapHeight;
     v0 = (i32(a1) < i32(v0));
     mult(a1, v1);
     if (v0 != 0) goto loc_8001C59C;
     v0 = 1;                                             // Result = 00000001
     goto loc_8001C644;
 loc_8001C59C:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EC0);                               // Load from: gpBlockmap (80078140)
+    v1 = *gpBlockmap;
     v0 = lo;
     v0 += a0;
     v0 <<= 1;
     v0 += v1;
     v0 = lh(v0);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F3C);                               // Load from: gpBlockmapLump (800780C4)
+    v1 = *gpBlockmapLump;
     v0 <<= 1;
     s0 = v0 + v1;
     v0 = -1;                                            // Result = FFFFFFFF
@@ -367,7 +355,7 @@ loc_8001C59C:
     a0 = lhu(s0);
     {
         const bool bJump = (v1 == v0);
-        v0 = 1;                                         // Result = 00000001
+        v0 = 1;
         if (bJump) goto loc_8001C644;
     }
     s1 = -1;                                            // Result = FFFFFFFF
@@ -420,16 +408,14 @@ loc_8001C660:
     if (i32(a0) < 0) goto loc_8001C708;
     v0 = 1;                                             // Result = 00000001
     if (i32(a1) < 0) goto loc_8001C70C;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D7C);                               // Load from: gBlockmapWidth (80078284)
+    v1 = *gBlockmapWidth;
     v0 = (i32(a0) < i32(v1));
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8001C70C;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EB8);                               // Load from: gBlockmapHeight (80077EB8)
+    v0 = *gBlockmapHeight;
     v0 = (i32(a1) < i32(v0));
     mult(a1, v1);
     if (v0 != 0) goto loc_8001C6C0;
@@ -439,8 +425,7 @@ loc_8001C6B8:
     v0 = 0;                                             // Result = 00000000
     goto loc_8001C70C;
 loc_8001C6C0:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EDC);                               // Load from: gppBlockLinks (80077EDC)
+    v1 = *gppBlockLinks;
     v0 = lo;
     v0 += a0;
     v0 <<= 2;

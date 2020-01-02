@@ -2,18 +2,15 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/g_game.h"
+#include "Doom/Game/p_setup.h"
 #include "PsxVm/PsxVm.h"
 
 void AM_Start() noexcept {
 loc_8003BAC0:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E74);                               // Load from: gBlockmapOriginX (8007818C)
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D7C);                               // Load from: gBlockmapWidth (80078284)
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7E6C);                               // Load from: gBlockmapOriginY (80078194)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EB8);                               // Load from: gBlockmapHeight (80077EB8)
+    a0 = *gBlockmapOriginX;
+    v0 = *gBlockmapWidth;
+    a1 = *gBlockmapOriginY;
+    v1 = *gBlockmapHeight;
     v0 <<= 23;
     v0 += a0;
     v1 <<= 23;
