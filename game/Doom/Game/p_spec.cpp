@@ -1221,7 +1221,7 @@ loc_80026EC8:
 loc_80026F1C:
     v0 = lw(s0 + 0x3C);
     if (v0 == 0) goto loc_80026F40;
-    P_Random();
+    _thunk_P_Random();
     v0 = (i32(v0) < 5);
     if (v0 == 0) goto loc_80026FB4;
 loc_80026F40:

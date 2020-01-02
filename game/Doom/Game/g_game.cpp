@@ -258,7 +258,7 @@ loc_800130E8:
     v0 = -v0;
     s2 = u32(i32(v0) >> 1);
 loc_8001313C:
-    P_Random();
+    _thunk_P_Random();
     div(v0, s2);
     if (s2 != 0) goto loc_80013154;
     _break(0x1C00);

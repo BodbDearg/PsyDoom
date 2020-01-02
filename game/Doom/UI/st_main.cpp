@@ -107,10 +107,10 @@ loc_80038688:
     sw(a0, gp + 0xB54);                                 // Store to: gFaceTics (80078134)
     s4 = v1 + v0;
     if (i32(a0) > 0) goto loc_80038710;
-    M_Random();
+    _thunk_M_Random();
     v0 &= 0xF;
     sw(v0, gp + 0xB54);                                 // Store to: gFaceTics (80078134)
-    M_Random();
+    _thunk_M_Random();
     v0 &= 3;
     v1 = 3;                                             // Result = 00000003
     sw(v0, gp + 0xA44);                                 // Store to: gStatusBarFaceFrameNum (80078024)

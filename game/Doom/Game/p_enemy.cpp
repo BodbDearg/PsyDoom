@@ -106,7 +106,7 @@ loc_80015DC8:
     if (v0 != 0) goto loc_80015DD8;
     s0 = 0xC8;                                          // Result = 000000C8
 loc_80015DD8:
-    P_Random();
+    _thunk_P_Random();
     v0 = (i32(v0) < i32(s0));
     v0 ^= 1;
 loc_80015DE8:
@@ -225,7 +225,7 @@ void P_TryWalk() noexcept {
     s0 = a0;
     P_Move();
     if (v0 == 0) goto loc_80015F9C;
-    P_Random();
+    _thunk_P_Random();
     v0 &= 0xF;
     sw(v0, s0 + 0x70);
     v0 = 1;                                             // Result = 00000001
@@ -334,14 +334,14 @@ loc_800160C0:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_800160F8;
     }
-    P_Random();
+    _thunk_P_Random();
     v0 &= 0xF;
     sw(v0, s1 + 0x70);
     v0 = 1;                                             // Result = 00000001
 loc_800160F8:
     if (v0 != 0) goto loc_80016310;
 loc_80016100:
-    P_Random();
+    _thunk_P_Random();
     v0 = (i32(v0) < 0xC9);
     if (v0 == 0) goto loc_80016138;
     v1 = s0;
@@ -387,7 +387,7 @@ loc_80016170:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_800161A8;
     }
-    P_Random();
+    _thunk_P_Random();
     v0 &= 0xF;
     sw(v0, s1 + 0x70);
     v0 = 1;                                             // Result = 00000001
@@ -405,7 +405,7 @@ loc_800161B0:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_800161E8;
     }
-    P_Random();
+    _thunk_P_Random();
     v0 &= 0xF;
     sw(v0, s1 + 0x70);
     v0 = 1;                                             // Result = 00000001
@@ -425,14 +425,14 @@ loc_800161F0:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80016220;
     }
-    P_Random();
+    _thunk_P_Random();
     v0 &= 0xF;
     sw(v0, s1 + 0x70);
     v0 = 1;                                             // Result = 00000001
 loc_80016220:
     if (v0 != 0) goto loc_80016310;
 loc_80016228:
-    P_Random();
+    _thunk_P_Random();
     v0 &= 1;
     s0 = 0;                                             // Result = 00000000
     if (v0 == 0) goto loc_8001628C;
@@ -446,7 +446,7 @@ loc_8001623C:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_8001626C;
     }
-    P_Random();
+    _thunk_P_Random();
     v0 &= 0xF;
     sw(v0, s1 + 0x70);
     v0 = 1;                                             // Result = 00000001
@@ -473,7 +473,7 @@ loc_80016290:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_800162C0;
     }
-    P_Random();
+    _thunk_P_Random();
     v0 &= 0xF;
     sw(v0, s1 + 0x70);
     v0 = 1;                                             // Result = 00000001
@@ -497,7 +497,7 @@ loc_800162D4:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80016304;
     }
-    P_Random();
+    _thunk_P_Random();
     v0 &= 0xF;
     sw(v0, s1 + 0x70);
     v0 = 1;                                             // Result = 00000001
@@ -536,7 +536,7 @@ loc_8001635C:
     v0 = lw(v0 - 0x7F50);                               // Load from: gbPlayerInGame[1] (800780B0)
     a0 = 0;                                             // Result = 00000000
     if (v0 == 0) goto loc_800163B0;
-    P_Random();
+    _thunk_P_Random();
     a0 = v0 & 1;
     v0 = a0 << 2;
     v0 += a0;
@@ -650,7 +650,7 @@ loc_80016520:
         v0 = (i32(v1) < 0x31);
         if (bJump) goto loc_8001655C;
     }
-    P_Random();
+    _thunk_P_Random();
     v0 &= 1;
     a1 = v0 + 0x24;
     goto loc_8001658C;
@@ -661,7 +661,7 @@ loc_8001655C:
         if (bJump) goto loc_80016580;
     }
     if (v0 != 0) goto loc_80016580;
-    P_Random();
+    _thunk_P_Random();
     v0 &= 1;
     a1 = v0 + 0x2F;
     goto loc_8001658C;
@@ -871,7 +871,7 @@ loc_80016840:
     if (v0 != 0) goto loc_80016850;
     s0 = 0xC8;                                          // Result = 000000C8
 loc_80016850:
-    P_Random();
+    _thunk_P_Random();
     v0 = (i32(v0) < i32(s0));
     v0 ^= 1;
 loc_80016860:
@@ -903,7 +903,7 @@ loc_800168D0:
     v0 = lw(s1 + 0x58);
     v0 = lw(v0 + 0x50);
     if (v0 == 0) goto loc_80016910;
-    P_Random();
+    _thunk_P_Random();
     v0 = (i32(v0) < 3);
     if (v0 == 0) goto loc_80016910;
     v0 = lw(s1 + 0x58);
@@ -942,9 +942,9 @@ void A_FaceTarget() noexcept {
     v1 = 0x70000000;                                    // Result = 70000000
     v0 &= v1;
     if (v0 == 0) goto loc_800169B4;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -984,9 +984,9 @@ void A_PosAttack() noexcept {
     v0 &= v1;
     a0 = s2;
     if (v0 == 0) goto loc_80016A60;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s2 + 0x24);
     s0 <<= 21;
@@ -997,13 +997,13 @@ loc_80016A60:
     s1 = lw(s2 + 0x24);
     a1 = 7;                                             // Result = 00000007
     S_StartSound();
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     s0 <<= 20;
     s1 += s0;
-    P_Random();
+    _thunk_P_Random();
     a0 = s2;
     a1 = s1;
     a2 = 0x8000000;                                     // Result = 08000000
@@ -1055,9 +1055,9 @@ void A_SPosAttack() noexcept {
     v1 = 0x70000000;                                    // Result = 70000000
     v0 &= v1;
     if (v0 == 0) goto loc_80016B84;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -1067,13 +1067,13 @@ loc_80016B84:
     s3 = lw(s1 + 0x24);
 loc_80016B88:
     s2++;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     s0 <<= 20;
     s0 += s3;
-    P_Random();
+    _thunk_P_Random();
     v1 = 0x66660000;                                    // Result = 66660000
     v1 |= 0x6667;                                       // Result = 66666667
     mult(v0, v1);
@@ -1137,9 +1137,9 @@ void A_CPosAttack() noexcept {
     v0 &= v1;
     a0 = s3;
     if (v0 == 0) goto loc_80016CD4;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s3 + 0x24);
     s0 <<= 21;
@@ -1153,13 +1153,13 @@ loc_80016CD4:
     a1 = s1;
     P_AimLineAttack();
     s2 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     s0 <<= 20;
     s1 += s0;
-    P_Random();
+    _thunk_P_Random();
     v1 = 0x66660000;                                    // Result = 66660000
     v1 |= 0x6667;                                       // Result = 66666667
     mult(v0, v1);
@@ -1213,16 +1213,16 @@ void A_CPosRefire() noexcept {
     v1 = 0x70000000;                                    // Result = 70000000
     v0 &= v1;
     if (v0 == 0) goto loc_80016DFC;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
     s0 += v0;
     sw(s0, s1 + 0x24);
 loc_80016DFC:
-    P_Random();
+    _thunk_P_Random();
     v0 = (i32(v0) < 0x28);
     if (v0 != 0) goto loc_80016E54;
     a1 = lw(s1 + 0x74);
@@ -1276,9 +1276,9 @@ void A_SpidAttack() noexcept {
     v1 = 0x70000000;                                    // Result = 70000000
     v0 &= v1;
     if (v0 == 0) goto loc_80016F1C;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -1288,13 +1288,13 @@ loc_80016F1C:
     s3 = lw(s1 + 0x24);
 loc_80016F20:
     s2++;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     s0 <<= 20;
     s0 += s3;
-    P_Random();
+    _thunk_P_Random();
     v1 = 0x66660000;                                    // Result = 66660000
     v1 |= 0x6667;                                       // Result = 66666667
     mult(v0, v1);
@@ -1351,16 +1351,16 @@ void A_SpidRefire() noexcept {
     v1 = 0x70000000;                                    // Result = 70000000
     v0 &= v1;
     if (v0 == 0) goto loc_80017048;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
     s0 += v0;
     sw(s0, s1 + 0x24);
 loc_80017048:
-    P_Random();
+    _thunk_P_Random();
     v0 = (i32(v0) < 0xA);
     if (v0 != 0) goto loc_800170A4;
     v0 = lw(s1 + 0x74);
@@ -1409,9 +1409,9 @@ void A_BspiAttack() noexcept {
     v0 &= v1;
     a0 = s1;
     if (v0 == 0) goto loc_8001714C;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -1454,9 +1454,9 @@ void A_TroopAttack() noexcept {
     v1 = 0x70000000;                                    // Result = 70000000
     v0 &= v1;
     if (v0 == 0) goto loc_800171FC;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -1486,7 +1486,7 @@ loc_8001724C:
     if (v1 == 0) goto loc_8001728C;
     a1 = 0x2E;                                          // Result = 0000002E
     S_StartSound();
-    P_Random();
+    _thunk_P_Random();
     a0 = lw(s1 + 0x74);
     a1 = s1;
     a2 = a1;
@@ -1532,16 +1532,16 @@ void A_SargAttack() noexcept {
     v1 = 0x70000000;                                    // Result = 70000000
     v0 &= v1;
     if (v0 == 0) goto loc_8001733C;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
     s0 += v0;
     sw(s0, s1 + 0x24);
 loc_8001733C:
-    P_Random();
+    _thunk_P_Random();
     a0 = s1;
     a2 = 0x460000;                                      // Result = 00460000
     v0 &= 7;
@@ -1583,9 +1583,9 @@ void A_HeadAttack() noexcept {
     v1 = 0x70000000;                                    // Result = 70000000
     v0 &= v1;
     if (v0 == 0) goto loc_8001740C;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -1613,7 +1613,7 @@ loc_8001740C:
 loc_8001745C:
     a0 = s1;
     if (v1 == 0) goto loc_80017490;
-    P_Random();
+    _thunk_P_Random();
     a0 = lw(s1 + 0x74);
     a1 = s1;
     a2 = s1;
@@ -1659,9 +1659,9 @@ void A_CyberAttack() noexcept {
     v0 &= v1;
     a0 = s1;
     if (v0 == 0) goto loc_80017544;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -1708,7 +1708,7 @@ loc_800175C8:
     if (v1 == 0) goto loc_80017610;
     a1 = 0x2E;                                          // Result = 0000002E
     S_StartSound();
-    P_Random();
+    _thunk_P_Random();
     a0 = lw(s0 + 0x74);
     a1 = s0;
     a2 = a1;
@@ -1756,9 +1756,9 @@ void A_SkelMissile() noexcept {
     v0 &= v1;
     a0 = s1;
     if (v0 == 0) goto loc_800176C0;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -1820,7 +1820,7 @@ void A_Tracer() noexcept {
     s0 = v0;
     v0 = 0x10000;                                       // Result = 00010000
     sw(v0, s0 + 0x50);
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x5C);
     v0 &= 3;
     v1 -= v0;
@@ -1972,9 +1972,9 @@ void A_SkelWhoosh() noexcept {
     v0 &= v1;
     a0 = s1;
     if (v0 == 0) goto loc_80017A10;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -2016,9 +2016,9 @@ void A_SkelFist() noexcept {
     v1 = 0x70000000;                                    // Result = 70000000
     v0 &= v1;
     if (v0 == 0) goto loc_80017ABC;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -2045,7 +2045,7 @@ loc_80017ABC:
     v1 ^= 1;
 loc_80017B0C:
     if (v1 == 0) goto loc_80017B78;
-    P_Random();
+    _thunk_P_Random();
     v1 = 0x66660000;                                    // Result = 66660000
     v1 |= 0x6667;                                       // Result = 66666667
     mult(v0, v1);
@@ -2102,9 +2102,9 @@ void A_FatRaise() noexcept {
     v0 &= v1;
     a0 = s1;
     if (v0 == 0) goto loc_80017C20;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -2149,9 +2149,9 @@ void A_FatAttack1() noexcept {
     v0 &= v1;
     a0 = s1;
     if (v0 == 0) goto loc_80017CD8;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -2226,9 +2226,9 @@ void A_FatAttack2() noexcept {
     v0 &= v1;
     a0 = s1;
     if (v0 == 0) goto loc_80017E10;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -2303,9 +2303,9 @@ void A_FatAttack3() noexcept {
     v0 &= v1;
     a0 = s2;
     if (v0 == 0) goto loc_80017F4C;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s2 + 0x24);
     s0 <<= 21;
@@ -2411,9 +2411,9 @@ loc_8001804C:
     v1 = 0x70000000;                                    // Result = 70000000
     v0 &= v1;
     if (v0 == 0) goto loc_80018108;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s1 + 0x24);
     s0 <<= 21;
@@ -2595,9 +2595,9 @@ void A_PainAttack() noexcept {
     v1 = 0x70000000;                                    // Result = 70000000
     v0 &= v1;
     if (v0 == 0) goto loc_800183E0;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     v0 = lw(s2 + 0x24);
     s0 <<= 21;
@@ -2947,12 +2947,12 @@ void A_Scream() noexcept {
         default: jump_table_err(); break;
     }
 loc_80018924:
-    P_Random();
+    _thunk_P_Random();
     v0 &= 1;
     a1 = v0 + 0x27;
     goto loc_80018958;
 loc_80018938:
-    P_Random();
+    _thunk_P_Random();
     v0 &= 1;
     a1 = v0 + 0x31;
     goto loc_80018958;
@@ -3234,7 +3234,7 @@ void L_MissileHit() noexcept {
     sw(s1, sp + 0x14);
     s1 = lw(s0 + 0x84);
     if (s1 == 0) goto loc_80018D34;
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x58);
     v0 &= 7;
     v1 = lw(v1 + 0x4C);
@@ -3264,7 +3264,7 @@ void L_SkullBash() noexcept {
     s1 = lw(s0 + 0x84);
     v0 = 0xFEFF0000;                                    // Result = FEFF0000
     if (s1 == 0) goto loc_80018DAC;
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x58);
     v0 &= 7;
     v1 = lw(v1 + 0x4C);

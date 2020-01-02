@@ -2955,7 +2955,7 @@ static const ProgElem ELEMS[] = {
     { 0x800775FC, 0x80077600, "gStartSkill",                            ProgElemType::UINT32 },
     { 0x80077600, 0x80077604, "gStartMapOrEpisode",                     ProgElemType::UINT32 },
     { 0x80077604, 0x80077608, "gStartGameType",                         ProgElemType::UINT32 },
-    { 0x80077608, 0x8007760C, "gRndIndex",                              ProgElemType::UINT32 },
+    { 0x80077608, 0x8007760C, "gMRndIndex",                             ProgElemType::UINT32 },
     { 0x8007760C, 0x80077610, "gPRndIndex",                             ProgElemType::UINT32 },
     { 0x80077610, 0x80077614, "GPU_REG_GP0",                            ProgElemType::PTR32 },
     { 0x80077614, 0x80077618, "GPU_REG_GP1",                            ProgElemType::PTR32 },

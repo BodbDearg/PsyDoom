@@ -315,7 +315,7 @@ loc_8001F6D8:
     sw(v1, s0 + 0x18);
 loc_8001F6FC:
     sw(s6, s0 + 0x1C);
-    P_Random();
+    _thunk_P_Random();
     a0 = s1 + 0x38;
     a1 = 0x11;                                          // Result = 00000011
     v0 &= 1;

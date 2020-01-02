@@ -1004,7 +1004,7 @@ void A_Punch() noexcept {
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
-    P_Random();
+    _thunk_P_Random();
     v0 &= 7;
     v0++;
     v1 = v0 << 1;
@@ -1017,9 +1017,9 @@ void A_Punch() noexcept {
 loc_800208BC:
     v0 = lw(s3);
     s1 = lw(v0 + 0x24);
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     a2 = 0x460000;                                      // Result = 00460000
     a3 = 0x7FFF0000;                                    // Result = 7FFF0000
     a3 |= 0xFFFF;                                       // Result = 7FFFFFFF
@@ -1063,16 +1063,16 @@ void A_Saw() noexcept {
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
-    P_Random();
+    _thunk_P_Random();
     v0 &= 7;
     v0++;
     s1 = v0 << 1;
     v1 = lw(s3);
     s2 = lw(v1 + 0x24);
     s1 += v0;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     a2 = 0x460000;                                      // Result = 00460000
     a2 |= 1;                                            // Result = 00460001
     a3 = 0x7FFF0000;                                    // Result = 7FFF0000
@@ -1222,7 +1222,7 @@ void A_FirePlasma() noexcept {
     v0 = lw(v1 + 0x98);
     v0--;
     sw(v0, v1 + 0x98);
-    P_Random();
+    _thunk_P_Random();
     a0 = lw(s1 + 0x6C);
     v0 &= 1;
     v1 = a0 << 1;
@@ -1321,15 +1321,15 @@ void P_GunShot() noexcept {
     sw(ra, sp + 0x28);
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
-    P_Random();
+    _thunk_P_Random();
     v0 &= 3;
     v0++;
     s1 = lw(s3 + 0x24);
     s2 = v0 << 2;
     if (s0 != 0) goto loc_80020DB4;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     s0 <<= 18;
     s1 += s0;
@@ -1416,15 +1416,15 @@ loc_80020F00:
     s0 = lw(s1 + 0xC4);
     s3 = lw(s1);
     s0 = (s0 < 1);
-    P_Random();
+    _thunk_P_Random();
     v0 &= 3;
     v0++;
     s1 = lw(s3 + 0x24);
     s2 = v0 << 2;
     if (s0 != 0) goto loc_80020F40;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     s0 <<= 18;
     s1 += s0;
@@ -1518,15 +1518,15 @@ loc_80021094:
     s5 = v0;
 loc_800210AC:
     s4++;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0 & 3;
     s0++;
     v1 = lw(s3);
     s2 = lw(v1 + 0x24);
     s0 <<= 2;
-    P_Random();
+    _thunk_P_Random();
     s1 = v0;
-    P_Random();
+    _thunk_P_Random();
     a2 = 0x8000000;                                     // Result = 08000000
     s1 -= v0;
     s1 <<= 18;
@@ -1644,7 +1644,7 @@ loc_8002124C:
     sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
 loc_800212B8:
     s4++;
-    P_Random();
+    _thunk_P_Random();
     v1 = 0x55550000;                                    // Result = 55550000
     v1 |= 0x5556;                                       // Result = 55555556
     mult(v0, v1);
@@ -1659,15 +1659,15 @@ loc_800212B8:
     v0++;
     s1 = v0 << 2;
     s1 += v0;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     s0 <<= 19;
     s2 += s0;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     a1 = s2;
     a2 = 0x8000000;                                     // Result = 08000000
     s0 -= v0;
@@ -1780,15 +1780,15 @@ loc_800214E0:
     s0 = lw(s1 + 0xC4);
     s3 = lw(s1);
     s0 = (s0 < 1);
-    P_Random();
+    _thunk_P_Random();
     v0 &= 3;
     v0++;
     s1 = lw(s3 + 0x24);
     s2 = v0 << 2;
     if (s0 != 0) goto loc_80021520;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     s0 <<= 18;
     s1 += s0;
@@ -1861,7 +1861,7 @@ loc_800215A8:
     P_SpawnMObj();
 loc_800215F8:
     s0++;
-    P_Random();
+    _thunk_P_Random();
     v1 = s1 + 1;
     v0 &= 7;
     s1 = v1 + v0;

@@ -50,7 +50,7 @@ loc_8001B67C:
         v0 = 0x1000000;                                 // Result = 01000000
         if (bJump) goto loc_8001B708;
     }
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x58);
     v0 &= 7;
     v1 = lw(v1 + 0x4C);
@@ -66,7 +66,7 @@ loc_8001B67C:
 loc_8001B708:
     v0 &= v1;
     if (v0 == 0) goto loc_8001B780;
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x58);
     v0 &= 7;
     v1 = lw(v1 + 0x4C);

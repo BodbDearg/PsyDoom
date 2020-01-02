@@ -8,9 +8,8 @@ extern void I_SetDebugDrawStringPos() noexcept;
 extern void _thunk_D_memset() noexcept;
 extern void _thunk_D_memcpy() noexcept;
 extern void _thunk_D_strncasecmp() noexcept;
-extern void P_Random() noexcept;
-extern void M_Random() noexcept;
-extern void M_ClearRandom() noexcept;
+extern void _thunk_P_Random() noexcept;
+extern void _thunk_M_Random() noexcept;
 extern void M_ClearBox() noexcept;
 extern void M_AddToBox() noexcept;
 extern void M_AddPointToBox() noexcept;
@@ -960,9 +959,8 @@ namespace PsxVm {
         { 0x80012850, &_thunk_D_memset },
         { 0x8001290C, &_thunk_D_memcpy },
         { 0x8001297C, &_thunk_D_strncasecmp },
-        { 0x80012A18, &P_Random },
-        { 0x80012A44, &M_Random },
-        { 0x80012A70, &M_ClearRandom },
+        { 0x80012A18, &_thunk_P_Random },
+        { 0x80012A44, &_thunk_M_Random },
         { 0x80012A80, &M_ClearBox },
         { 0x80012AA0, &M_AddToBox },
         { 0x80012B10, &M_AddPointToBox },

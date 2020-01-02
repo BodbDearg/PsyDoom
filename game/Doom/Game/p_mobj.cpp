@@ -327,7 +327,7 @@ loc_8001CB9C:
     at += v0;
     a1 = lw(at);
     P_SetMObjState();
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x5C);
     v0 &= 1;
     v1 -= v0;
@@ -894,7 +894,7 @@ loc_8001D530:
     sw(s0, at - 0x7160);                                // Store to: gMObjHead[4] (800A8EA0)
     v0 = lw(s0 + 0x5C);
     if (i32(v0) <= 0) goto loc_8001D5BC;
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x5C);
     div(v0, v1);
     if (v1 != 0) goto loc_8001D594;
@@ -1002,9 +1002,9 @@ loc_8001D704:
     s3 = a2;
     sw(ra, sp + 0x20);
     sw(s0, sp + 0x10);
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     s0 <<= 10;
     s3 += s0;
@@ -1095,7 +1095,7 @@ loc_8001D898:
     at = 0x800B0000;                                    // Result = 800B0000
     sw(s0, at - 0x7160);                                // Store to: gMObjHead[4] (800A8EA0)
     sw(v0, s0 + 0x50);
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x5C);
     v0 &= 1;
     v1 -= v0;
@@ -1134,9 +1134,9 @@ loc_8001D930:
     s4 = a3;
     sw(ra, sp + 0x24);
     sw(s0, sp + 0x10);
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     s0 <<= 10;
     s3 += s0;
@@ -1227,7 +1227,7 @@ loc_8001DACC:
     at = 0x800B0000;                                    // Result = 800B0000
     sw(s0, at - 0x7160);                                // Store to: gMObjHead[4] (800A8EA0)
     sw(v0, s0 + 0x50);
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x5C);
     v0 &= 1;
     v1 -= v0;
@@ -1298,7 +1298,7 @@ void P_CheckMissileSpawn() noexcept {
     a1 = lw(at);
     a0 = s0;
     P_SetMObjState();
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x5C);
     v0 &= 1;
     v1 -= v0;
@@ -1449,9 +1449,9 @@ loc_8001DE80:
     v1 = 0x70000000;                                    // Result = 70000000
     v0 &= v1;
     if (v0 == 0) goto loc_8001DED0;
-    P_Random();
+    _thunk_P_Random();
     s0 = v0;
-    P_Random();
+    _thunk_P_Random();
     s0 -= v0;
     s0 <<= 20;
     s2 += s0;
@@ -1558,7 +1558,7 @@ loc_8001DFC4:
     a1 = lw(at);
     a0 = s1;
     P_SetMObjState();
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s1 + 0x5C);
     v0 &= 1;
     v1 -= v0;
@@ -1798,7 +1798,7 @@ loc_8001E368:
     a1 = lw(at);
     a0 = s2;
     P_SetMObjState();
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s2 + 0x5C);
     v0 &= 1;
     v1 -= v0;

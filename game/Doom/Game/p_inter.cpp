@@ -1198,7 +1198,7 @@ loc_8001A7F0:
 loc_8001A7FC:
     a0 = s0;
     P_SetMObjState();
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x5C);
     v0 &= 1;
     v1 -= v0;
@@ -1353,7 +1353,7 @@ loc_8001AA0C:
     v1 = 0x400000;                                      // Result = 00400000
     v1 = (i32(v1) < i32(v0));
     if (v1 == 0) goto loc_8001AA70;
-    P_Random();
+    _thunk_P_Random();
     v0 &= 1;
     {
         const bool bJump = (v0 == 0);
@@ -1513,7 +1513,7 @@ loc_8001AC70:
     P_KillMObj();
     goto loc_8001AD48;
 loc_8001AC98:
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x58);
     v1 = lw(v1 + 0x20);
     v0 = (i32(v0) < i32(v1));

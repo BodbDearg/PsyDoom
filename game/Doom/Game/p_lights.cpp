@@ -15,7 +15,7 @@ void T_FireFlicker() noexcept {
     v0--;
     sw(v0, s0 + 0x10);
     if (v0 != 0) goto loc_8001ADEC;
-    P_Random();
+    _thunk_P_Random();
     v0 &= 3;
     v0 <<= 4;
     a0 = lw(s0 + 0xC);
@@ -93,14 +93,14 @@ void T_LightFlash() noexcept {
     if (v1 != v0) goto loc_8001AEE0;
     v0 = lhu(s0 + 0x18);
     sh(v0, a0 + 0x12);
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x20);
     v0 &= v1;
     goto loc_8001AEF8;
 loc_8001AEE0:
     v0 = lhu(s0 + 0x14);
     sh(v0, a0 + 0x12);
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x1C);
     v0 &= v1;
 loc_8001AEF8:
@@ -143,7 +143,7 @@ loc_8001AF14:
     sw(v0, s0 + 0x1C);
     v0 = 7;                                             // Result = 00000007
     sw(v0, s0 + 0x20);
-    P_Random();
+    _thunk_P_Random();
     v1 = lw(s0 + 0x1C);
     v0 &= v1;
     v0++;
@@ -216,7 +216,7 @@ loc_8001B020:
     sw(0, s1 + 0x14);
 loc_8001B0AC:
     if (s3 != 0) goto loc_8001B0C8;
-    P_Random();
+    _thunk_P_Random();
     v0 &= 7;
     v0++;
     goto loc_8001B0CC;
@@ -328,7 +328,7 @@ loc_8001B1B0:
     if (a0 != v1) goto loc_8001B258;
     sw(0, s0 + 0x14);
 loc_8001B258:
-    P_Random();
+    _thunk_P_Random();
     v0 &= 7;
     v0++;
     sw(v0, s0 + 0x10);
