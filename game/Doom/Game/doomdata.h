@@ -47,3 +47,18 @@ struct mapvertex_t {
 };
 
 static_assert(sizeof(mapvertex_t) == 8);
+
+// Map data for a sector in a WAD
+struct mapsector_t {
+    int16_t     floorheight;
+    int16_t     ceilingheight;
+    char        floorpic[8];
+    char        ceilingpic[8];
+    uint8_t     lightlevel;
+    uint8_t     colorid;            // TODO: Comment
+    int16_t     special;
+    int16_t     tag;
+    uint16_t    flags;              // Affects sound fx (TODO: figure out what this means)
+};
+
+static_assert(sizeof(mapsector_t) == 28);

@@ -114,6 +114,17 @@ struct mobj_t {
 
 static_assert(sizeof(mobj_t) == 148);
 
+// A degenerate map object with most of it's fields chopped out.
+// Used to store a sound origin within sector structures.
+struct degenmobj_t {            
+    fixed_t                 x;
+    fixed_t                 y;
+    fixed_t                 z;
+    VmPtr<subsector_t>      subsector;      // TODO: CONFIRM LAYOUT
+};
+
+static_assert(sizeof(degenmobj_t) == 16);
+
 // Basic player status
 enum playerstate_t : uint32_t {
     PST_LIVE,       // Player is playing the game           (TODO: CONFIRM!)

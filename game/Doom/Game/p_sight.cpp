@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_fixed.h"
+#include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
 void P_CheckSights() noexcept {
@@ -75,8 +76,7 @@ loc_800249B4:
     v0 -= a0;
     mult(v0, a1);
     v0 = lo;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7F54);                               // Load from: gNumSectors (80077F54)
+    a0 = *gNumSectors;
     v1 = u32(i32(v1) >> 2);
     mult(v1, a0);
     v0 = u32(i32(v0) >> 2);

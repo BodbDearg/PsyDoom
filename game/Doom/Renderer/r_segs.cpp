@@ -4,6 +4,7 @@
 #include "Doom/Base/w_wad.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
+#include "r_data.h"
 
 void R_DrawSubsectorSeg() noexcept {
 loc_8002D3AC:
@@ -80,8 +81,7 @@ loc_8002D4A8:
     v0 <<= 2;
     v0 += v1;
     a1 = lw(v0);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v0 = *gpTextures;
     s5 = a3;
     sw(t0, sp + 0x10);
     sw(t1, sp + 0x14);
@@ -128,8 +128,7 @@ loc_8002D558:
     v0 <<= 2;
     v0 += v1;
     a1 = lw(v0);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v0 = *gpTextures;
     fp = a2;
     sw(t0, sp + 0x10);
     sw(t1, sp + 0x14);
@@ -172,8 +171,7 @@ loc_8002D604:
     a1 = lw(v0);
     v0 = s3 & 0x400;
     sw(v0, sp + 0x18);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v0 = *gpTextures;
     a3 = fp;
     sw(t0, sp + 0x10);
     sw(t1, sp + 0x14);

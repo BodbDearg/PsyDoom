@@ -2,6 +2,7 @@
 
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/z_zone.h"
+#include "Doom/Renderer/r_data.h"
 #include "g_game.h"
 #include "p_change.h"
 #include "p_spec.h"
@@ -434,8 +435,7 @@ loc_80019374:
     v0 = lw(v0 + 0xC);
     a0 = s4;
     if (i32(v0) < 0) goto loc_800193CC;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v1 = *gpTextures;
     v0 <<= 5;
     v0 += v1;
     v0 = lh(v0 + 0x6);
@@ -455,8 +455,7 @@ loc_800193D0:
         v0 <<= 5;
         if (bJump) goto loc_80019414;
     }
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v1 = *gpTextures;
     v0 += v1;
     v0 = lh(v0 + 0x6);
     v1 = v0 << 16;

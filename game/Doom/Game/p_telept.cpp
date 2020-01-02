@@ -5,6 +5,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
 void P_Telefrag() noexcept {
@@ -109,8 +110,7 @@ loc_80028918:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80028C04;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F54);                               // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     a2 = lw(s0 + 0x18);
     a1 = 0;                                             // Result = 00000000
     if (i32(v0) <= 0) goto loc_80028C00;
@@ -263,8 +263,7 @@ loc_80028BD8:
     s2 = lw(s2 + 0x14);
     if (s2 != s5) goto loc_800289D4;
 loc_80028BE8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F54);                               // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     a1++;
     v0 = (i32(a1) < i32(v0));
     a3 += 0x5C;

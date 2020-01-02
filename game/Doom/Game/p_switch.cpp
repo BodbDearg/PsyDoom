@@ -34,8 +34,7 @@ loc_80027DC0:
     a0 = s4;
     s2 = v0;
     R_TextureNumForName();
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    a0 = *gpTextures;
     v1 = s2 << 5;
     v1 += a0;
     v1 = lhu(v1 + 0xA);
@@ -47,15 +46,13 @@ loc_80027DC0:
     if (v0 != 0) goto loc_80027E34;
     I_CacheTex();
 loc_80027E14:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v0 = *gpTextures;
     v1 = s0 << 5;
     v1 += v0;
     v0 = lhu(v1 + 0xA);
     if (v0 == 0) goto loc_80027E5C;
 loc_80027E34:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v0 = *gpTextures;
     v1 = s2 << 5;
     a0 = v1 + v0;
     v0 = lhu(a0 + 0xA);

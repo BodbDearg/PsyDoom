@@ -88,19 +88,16 @@ void START_Title() noexcept {
     a0 += 0x7C7C;                                       // Result = STR_LumpName_SKY09[0] (80077C7C)
     R_TextureNumForName();
     a1 = 0x20;                                          // Result = 00000020
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v1 = *gpTextures;
     v0 <<= 5;
     v0 += v1;
     a0 = lh(v0 + 0x10);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7FB0);                                // Store to: gpSkyTexture (80078050)
+    *gpSkyTexture = v0;
     a2 = 1;                                             // Result = 00000001
     _thunk_W_CacheLumpNum();
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lhu(v0 - 0x6F5E);                              // Load from: gPaletteClutId_Sky (800A90A2)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    a0 = *gpSkyTexture;
     at = 0x80080000;                                    // Result = 80080000
     sh(v0, at - 0x7D34);                                // Store to: gPaletteClutId_CurMapSky (800782CC)
     I_CacheTex();
@@ -188,8 +185,7 @@ loc_80035310:
     v0 &= 1;
     v1 &= v0;
     if (v1 == 0) goto loc_800353B8;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    v0 = *gpSkyTexture;
     v0 = lh(v0 + 0x10);
     v1 = *gpLumpCache;
     v0 <<= 2;
@@ -208,8 +204,7 @@ loc_800353A8:
     v0--;
     if (i32(v1) >= 0) goto loc_800353A8;
 loc_800353B8:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    a0 = *gpSkyTexture;
     P_UpdateFireSky();
 loc_800353C8:
     v1 = lw(gp + 0xBB0);                                // Load from: gTitleScreenSpriteY (80078190)
@@ -425,8 +420,7 @@ loc_80035708:
     v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
     if (v1 != v0) goto loc_8003569C;
 loc_80035724:
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    a1 = *gpSkyTexture;
     v1 = lw(a1 + 0x1C);
     v0 = -1;                                            // Result = FFFFFFFF
     {
@@ -459,8 +453,7 @@ loc_80035724:
     a0 = sp + 0x38;
     a1 += 8;
     LIBGPU_LoadImage();
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    v1 = *gpSkyTexture;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
     sw(v0, v1 + 0x1C);
@@ -470,8 +463,7 @@ loc_800357C4:
     v0 = 0x2C;                                          // Result = 0000002C
     sb(v0, sp + 0x17);
     v0 = 0x74;                                          // Result = 00000074
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    a0 = *gpSkyTexture;
     v1 = 0x3F;                                          // Result = 0000003F
     sh(v0, sp + 0x1A);
     sh(v0, sp + 0x22);

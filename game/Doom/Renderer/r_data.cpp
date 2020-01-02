@@ -6,6 +6,10 @@
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 
+// Details about all of the textures in the game and the sky texture
+const VmPtr<VmPtr<texture_t>>   gpTextures(0x80078128);
+const VmPtr<VmPtr<texture_t>>   gpSkyTexture(0x80078050);
+
 void R_InitData() noexcept {
 loc_8002B9A8:
     sp -= 0x18;
@@ -48,7 +52,7 @@ loc_8002B9E0:
     a0 += 0x115C;                                       // Result = STR_LumpName_TEXTURE1[0] (8001115C)
     a1 = 0x20;                                          // Result = 00000020
     v1 = lw(gp + 0xBF4);                                // Load from: gNumTexLumps (800781D4)
-    sw(v0, gp + 0xB48);                                 // Store to: gpTextures (80078128)
+    *gpTextures = v0;
     v1 <<= 5;
     v1 += v0;
     sw(v1, gp + 0x98C);                                 // Store to: gpTextureTranslation (80077F6C)
@@ -57,7 +61,7 @@ loc_8002B9E0:
     a1 = v0;
     a2 = lw(gp + 0xD00);                                // Load from: gFirstTexLumpNum (800782E0)
     v1 = lw(gp + 0xBBC);                                // Load from: gLastTexLumpNum (8007819C)
-    a0 = lw(gp + 0xB48);                                // Load from: gpTextures (80078128)
+    a0 = *gpTextures;
     v0 = (i32(v1) < i32(a2));
     t1 = v1;
     if (v0 != 0) goto loc_8002BAF4;

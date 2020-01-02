@@ -3,11 +3,11 @@
 #include "Doom/Base/w_wad.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
+#include "r_data.h"
 
 void R_DrawSky() noexcept {
 loc_8002C07C:
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    a1 = *gpSkyTexture;
     sp -= 0x28;
     sw(ra, sp + 0x24);
     sw(s0, sp + 0x20);
@@ -39,14 +39,12 @@ loc_8002C07C:
     a0 = sp + 0x18;
     a1 += 8;
     LIBGPU_LoadImage();
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    v1 = *gpSkyTexture;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
     sw(v0, v1 + 0x1C);
 loc_8002C120:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    v1 = *gpSkyTexture;
     s0 = 0x1F800000;                                    // Result = 1F800000
     s0 += 0x200;                                        // Result = 1F800200
     v0 = lbu(v1 + 0x8);
@@ -235,8 +233,7 @@ loc_8002C3E8:
     t7 = 0x4000000;                                     // Result = 04000000
     a3 = 0x80070000;                                    // Result = 80070000
     a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    a0 = *gpSkyTexture;
     v0 = 4;                                             // Result = 00000004
     at = 0x1F800000;                                    // Result = 1F800000
     sb(v0, at + 0x203);                                 // Store to: 1F800203

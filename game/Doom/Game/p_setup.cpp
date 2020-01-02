@@ -31,6 +31,10 @@ static constexpr int32_t LEVELS_PER_MAP_FOLDER = (uint32_t) CdMapTbl_File::MAPSP
 static constexpr int32_t NUM_FILES_PER_LEVEL = 3;
 static constexpr int32_t FILES_PER_MAP_FOLDER = LEVELS_PER_MAP_FOLDER * NUM_FILES_PER_LEVEL;
 
+// Sky stuff
+static constexpr const char* SKY_LUMP_NAME = "F_SKY";
+static constexpr int32_t SKY_LUMP_NAME_LEN = sizeof("F_SKY") - 1;   // -1 to discount null terminator
+
 // Map data
 const VmPtr<VmPtr<uint16_t>>        gpBlockmapLump(0x800780C4);
 const VmPtr<VmPtr<uint16_t>>        gpBlockmap(0x80078140);
@@ -41,6 +45,8 @@ const VmPtr<fixed_t>                gBlockmapOriginY(0x80078194);
 const VmPtr<VmPtr<VmPtr<mobj_t>>>   gppBlockLinks(0x80077EDC);
 const VmPtr<int32_t>                gNumVertexes(0x80078018);
 const VmPtr<VmPtr<vertex_t>>        gpVertexes(0x800781E4);
+const VmPtr<int32_t>                gNumSectors(0x80077F54);
+const VmPtr<VmPtr<sector_t>>        gpSectors(0x800780A8);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
@@ -267,146 +273,82 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     sp += 0x28;
 }
 
-void P_LoadSectors() noexcept {
-loc_80021EC4:
-    sp -= 0x40;
-    sw(s0, sp + 0x20);
-    s0 = a0;
-    v0 = 0x53;                                          // Result = 00000053
-    sb(v0, sp + 0x10);
-    v0 = 0x4B;                                          // Result = 0000004B
-    sb(v0, sp + 0x11);
-    v0 = 0x59;                                          // Result = 00000059
-    sw(ra, sp + 0x38);
-    sw(s5, sp + 0x34);
-    sw(s4, sp + 0x30);
-    sw(s3, sp + 0x2C);
-    sw(s2, sp + 0x28);
-    sw(s1, sp + 0x24);
-    sb(v0, sp + 0x12);
-    sb(0, sp + 0x13);
-    sb(0, sp + 0x14);
-    sb(0, sp + 0x15);
-    _thunk_W_MapLumpLength();
-    v1 = 0x10000;                                       // Result = 00010000
-    v1 = (i32(v1) < i32(v0));
-    s5 = 0;                                             // Result = 00000000
-    if (v1 == 0) goto loc_80021F30;
-    I_Error("P_LoadSectors: lump > 64K");
-loc_80021F30:
-    a0 = s0;
-    _thunk_W_MapLumpLength();
-    v1 = 0x24920000;                                    // Result = 24920000
-    v1 |= 0x4925;                                       // Result = 24924925
-    v0 >>= 2;
-    multu(v0, v1);
-    a2 = 2;
-    v0 = gTmpBuffer;
-    s3 = gTmpBuffer;
-    a3 = 0;
-    a0 = *gpMainMemZone;
-    v0 = hi;
-    a1 = v0 << 1;
-    a1 += v0;
-    a1 <<= 3;
-    a1 -= v0;
-    sw(v0, gp + 0x974);                                 // Store to: gNumSectors (80077F54)
-    a1 <<= 2;
-    _thunk_Z_Malloc();
-    a0 = v0;
-    v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
-    a1 = 0;
-    sw(a0, gp + 0xAC8);                                 // Store to: gpSectors (800780A8)
-    a2 = v0 << 1;
-    a2 += v0;
-    a2 <<= 3;
-    a2 -= v0;
-    a2 <<= 2;
-    _thunk_D_memset();
-    a0 = s0;
-    a1 = gTmpBuffer;
-    a2 = 1;                                             // Result = 00000001
-    _thunk_W_ReadMapLump();
-    v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
-    s4 = lw(gp + 0xAC8);                                // Load from: gpSectors (800780A8)
-    if (i32(v0) <= 0) goto loc_800220A8;
-    s1 = s3 + 0x12;                                     // Result = gTmpWadLumpBuffer[4] (8009875A)
-    s0 = s4 + 0xC;
-loc_80021FD4:
-    v0 = lh(s3);
-    v0 <<= 16;
-    sw(v0, s4);
-    v0 = lh(s1 - 0x10);
-    v0 <<= 16;
-    sw(v0, s0 - 0x8);
-    v0 = lhu(s1 + 0x2);
-    v0 >>= 8;
-    sh(v0, s0 + 0x4);
-    v0 = lbu(s1 + 0x2);
-    sh(v0, s0 + 0x6);
-    v0 = lh(s1 + 0x4);
-    sw(v0, s0 + 0x8);
-    v0 = lh(s1 + 0x6);
-    sw(0, s0 + 0x40);
-    sw(v0, s0 + 0xC);
-    v0 = lh(s1 + 0x8);
-    a0 = s3 + 4;
-    sw(v0, s0 + 0x18);
-    R_FlatNumForName();
-    s2 = s3 + 0xC;
-    a0 = s2;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7B04;                                       // Result = STR_LumpName_F_SKY[0] (80077B04)
-    a2 = 5;                                             // Result = 00000005
-    sw(v0, s0 - 0x4);
-    _thunk_D_strncasecmp();
-    {
-        const bool bJump = (v0 != 0);
-        v0 = -1;                                        // Result = FFFFFFFF
-        if (bJump) goto loc_80022078;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load map sector data from the specified map lump number.
+// Also sets up the sky texture pointer.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_LoadSectors(const int32_t lumpNum) noexcept {
+    // Store the name of the sky lump here
+    VmSVal<lumpname_t> skyLumpName = {};
+    skyLumpName->chars[0] = 'S';
+    skyLumpName->chars[1] = 'K';
+    skyLumpName->chars[2] = 'Y';
+
+    // Sanity check the sectors lump is not too big
+    const int32_t lumpSize = W_MapLumpLength(lumpNum);
+
+    if (lumpSize > TMP_BUFFER_SIZE) {
+        I_Error("P_LoadSectors: lump > 64K");
     }
-    sw(v0, s0);
-    v0 = lbu(s1 - 0x1);
-    sb(v0, sp + 0x13);
-    v0 = lbu(s1);
-    sb(v0, sp + 0x14);
-    goto loc_80022084;
-loc_80022078:
-    a0 = s2;
-    R_FlatNumForName();
-    sw(v0, s0);
-loc_80022084:
-    s5++;
-    s0 += 0x5C;
-    s4 += 0x5C;
-    s1 += 0x1C;
-    v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
-    v0 = (i32(s5) < i32(v0));
-    s3 += 0x1C;
-    if (v0 != 0) goto loc_80021FD4;
-loc_800220A8:
-    v0 = lbu(sp + 0x13);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7FB0);                                 // Store to: gpSkyTexture (80078050)
-    if (v0 == 0) goto loc_800220DC;
-    a0 = sp + 0x10;
-    R_TextureNumForName();
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7ED8);                               // Load from: gpTextures (80078128)
-    v0 <<= 5;
-    v0 += v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7FB0);                                // Store to: gpSkyTexture (80078050)
-loc_800220DC:
-    ra = lw(sp + 0x38);
-    s5 = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x40;
-    return;
+
+    // Alloc ram for the runtime sectors and zero initialize
+    *gNumSectors = lumpSize / sizeof(mapsector_t);
+    *gpSectors = (sector_t*) Z_Malloc(**gpMainMemZone, *gNumSectors * sizeof(sector_t), PU_LEVEL, nullptr);
+    D_memset(gpSectors->get(), (std::byte) 0, *gNumSectors * sizeof(sector_t));
+
+    // Read the map lump containing the sectors
+    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+
+    // Process the WAD sectors and convert them into runtime sectors
+    {
+        const mapsector_t* pSrcSec = (const mapsector_t*) gTmpBuffer.get();
+        sector_t* pDstSec = gpSectors->get();
+
+        for (int32_t secIdx = 0; secIdx < *gNumSectors; ++secIdx) {
+            // Save basic properties
+            pDstSec->floorheight = (fixed_t) pSrcSec->floorheight << FRACBITS;
+            pDstSec->ceilingheight = (fixed_t) pSrcSec->ceilingheight << FRACBITS;
+            pDstSec->colorid = pSrcSec->colorid;
+            pDstSec->lightlevel = pSrcSec->lightlevel;
+            pDstSec->special = pSrcSec->special;
+            pDstSec->thinglist = nullptr;
+            pDstSec->tag = pSrcSec->tag;
+            pDstSec->flags = pSrcSec->flags;
+
+            // Figure out floor texture number
+            a0 = ptrToVmAddr(pSrcSec->floorpic);            
+            R_FlatNumForName();
+            pDstSec->floorpic = v0;
+
+            // Figure out ceiling texture numebr.
+            // Note: if the ceiling has a sky then figure out the sky lump name for it instead - will load the sky lump later on.
+            const bool bCeilHasSky = (D_strncasecmp(pSrcSec->ceilingpic, SKY_LUMP_NAME, SKY_LUMP_NAME_LEN) == 0);
+
+            if (bCeilHasSky) {
+                // No ceiling texture: extract and save the 2 digits for the sky number ('01', '02' etc.)
+                pDstSec->ceilingpic = -1;
+                skyLumpName->chars[3] = pSrcSec->ceilingpic[5];
+                skyLumpName->chars[4] = pSrcSec->ceilingpic[6];
+            } else {
+                // Normal case: ceiling has a texture, save it's number
+                a0 = ptrToVmAddr(pSrcSec->ceilingpic);
+                R_FlatNumForName();
+                pDstSec->ceilingpic = v0;
+            }
+
+            ++pSrcSec;
+            ++pDstSec;
+        }
+    }
+
+    // Set the sky texture pointer
+    if (skyLumpName->chars[3] != 0) {
+        a0 = skyLumpName.addr();
+        R_TextureNumForName();
+        *gpSkyTexture = &(*gpTextures)[v0];
+    } else {
+        *gpSkyTexture = nullptr;
+    }
 }
 
 void P_LoadNodes() noexcept {
@@ -1125,7 +1067,7 @@ loc_80022C3C:
     a3 = 0;
     _thunk_Z_Malloc();
     s5 = v0;
-    v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     s6 = lw(gp + 0xAC8);                                // Load from: gpSectors (800780A8)
     s3 = s6 + 0x30;
     if (i32(v0) <= 0) goto loc_80022E3C;
@@ -1242,7 +1184,7 @@ loc_80022DF4:
 loc_80022E20:
     sw(v1, s3);
     s3 += 0x5C;
-    v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     v0 = (i32(s4) < i32(v0));
     s6 += 0x5C;
     if (v0 != 0) goto loc_80022C6C;
@@ -1261,7 +1203,7 @@ loc_80022E3C:
 
 void P_InitMapTextures() noexcept {
 loc_80022E68:
-    v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     v1 = lw(gp + 0xAC8);                                // Load from: gpSectors (800780A8)
     sp -= 0x30;
     sw(s0, sp + 0x20);
@@ -1296,7 +1238,7 @@ loc_80022ECC:
     if (v0 != 0) goto loc_80022EF8;
     I_CacheTex();
 loc_80022EF8:
-    v0 = lw(gp + 0x974);                                // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     v0 = (i32(s0) < i32(v0));
     s1 += 0x5C;
     if (v0 != 0) goto loc_80022E94;
@@ -1307,8 +1249,7 @@ loc_80022F0C:
     v0 = *gLockedTexPagesMask;
     v1 = 0x800B0000;                                    // Result = 800B0000
     v1 = lhu(v1 - 0x6F7C);                              // Load from: gPaletteClutId_Main (800A9084)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    a0 = *gpSkyTexture;
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7D1C);                                 // Store to: gTexCacheFillBlockX (800782E4)
     at = 0x80080000;                                    // Result = 80080000
@@ -1342,15 +1283,13 @@ loc_80022F0C:
     at = 0x80080000;                                    // Result = 80080000
     sh(v1, at - 0x7D34);                                // Store to: gPaletteClutId_CurMapSky (800782CC)
 loc_80022FBC:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    a0 = *gpSkyTexture;
     s0++;
     P_UpdateFireSky();
     v0 = (i32(s0) < 0x40);
     if (v0 != 0) goto loc_80022FBC;
 loc_80022FD8:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    a0 = *gpSkyTexture;
     I_CacheTex();
 loc_80022FE8:
     a0 = 0x10;                                          // Result = 00000010
@@ -1524,9 +1463,7 @@ loc_800230D4:
     // Loading various map lumps
     P_LoadBlockMap(mapStartLump + ML_BLOCKMAP);
     P_LoadVertexes(mapStartLump + ML_VERTEXES);
-
-    a0 = mapStartLump + ML_SECTORS;
-    P_LoadSectors();
+    P_LoadSectors(mapStartLump + ML_SECTORS);
 
     a0 = mapStartLump + ML_SIDEDEFS;
     P_LoadSideDefs();
@@ -1885,8 +1822,7 @@ loc_80023B28:
         v1 <<= 5;
         if (bJump) goto loc_80023B70;
     }
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v0 = *gpTextures;
     a0 = v1 + v0;
     v0 = lh(a0 + 0x4);
     if (v0 != s1) goto loc_80023B70;
@@ -1900,8 +1836,7 @@ loc_80023B70:
         v1 <<= 5;
         if (bJump) goto loc_80023BB8;
     }
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v0 = *gpTextures;
     a0 = v1 + v0;
     v0 = lh(a0 + 0x4);
     if (v0 != s1) goto loc_80023BB8;
@@ -1912,8 +1847,7 @@ loc_80023BB8:
     v1 = lw(s0);
     s2++;
     if (v1 == s3) goto loc_80023C00;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v0 = *gpTextures;
     v1 <<= 5;
     a0 = v1 + v0;
     v0 = lh(a0 + 0x4);

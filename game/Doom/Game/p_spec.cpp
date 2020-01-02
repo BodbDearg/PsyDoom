@@ -14,6 +14,7 @@
 #include "p_inter.h"
 #include "p_lights.h"
 #include "p_plats.h"
+#include "p_setup.h"
 #include "p_switch.h"
 #include "p_telept.h"
 #include "p_tick.h"
@@ -48,8 +49,7 @@ loc_80025F78:
     a0 = lw(v1 + 0x8);
     a1 = v0;
     sw(a1, v1 + 0x4);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v1 = *gpTextures;
     v0 = a0 << 5;
     v0 += v1;
     v0 = lhu(v0 + 0xA);
@@ -70,8 +70,7 @@ loc_80025FE0:
     v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
     a0 = s0 << 5;
     v0 = lw(v0 + 0x8);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v1 = *gpTextures;
     v0 <<= 5;
     v0 += v1;
     v0 = lbu(v0 + 0x8);
@@ -79,8 +78,7 @@ loc_80025FE0:
     sb(v0, v1 + 0x8);
     v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
     v0 = lw(v0 + 0x8);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v1 = *gpTextures;
     v0 <<= 5;
     v0 += v1;
     v0 = lbu(v0 + 0x9);
@@ -88,8 +86,7 @@ loc_80025FE0:
     sb(v0, v1 + 0x9);
     a1 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
     v0 = lw(a1 + 0x8);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    v1 = *gpTextures;
     v0 <<= 5;
     v0 += v1;
     v0 = lhu(v0 + 0xA);
@@ -512,8 +509,7 @@ loc_80026688:
 
 void P_FindSectorFromLineTag() noexcept {
 loc_80026698:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F54);                               // Load from: gNumSectors (80077F54)
+    v1 = *gNumSectors;
     a1++;
     v0 = (i32(a1) < i32(v1));
     {
@@ -1275,8 +1271,7 @@ loc_80026FC8:
     t3 = *gGameTic;
     t2 = 0x80070000;                                    // Result = 80070000
     t2 = lw(t2 + 0x7F6C);                               // Load from: gpTextureTranslation (80077F6C)
-    t1 = 0x80080000;                                    // Result = 80080000
-    t1 = lw(t1 - 0x7ED8);                               // Load from: gpTextures (80078128)
+    t1 = *gpTextures;
     t0 = 0x80070000;                                    // Result = 80070000
     t0 = lw(t0 + 0x7F60);                               // Load from: gpFlatTranslation (80077F60)
     a3 = 0x80080000;                                    // Result = 80080000
@@ -1539,8 +1534,7 @@ loc_80027400:
     if (v0 == 0) goto loc_80027444;
     v0 = lw(gp + 0x554);                                // Load from: gpUpdateFireSkyFunc (80077B34)
     if (v0 == 0) goto loc_80027444;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FB0);                               // Load from: gpSkyTexture (80078050)
+    a0 = *gpSkyTexture;
     ptr_call(v0);
 loc_80027444:
     ra = lw(sp + 0x20);
@@ -1571,8 +1565,7 @@ loc_8002745C:
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
 loc_800274A4:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F54);                               // Load from: gNumSectors (80077F54)
+    v1 = *gNumSectors;
     a0 = s4 + 1;                                        // Result = 00000000
     v0 = (i32(a0) < i32(v1));
     {
@@ -1805,8 +1798,7 @@ loc_800277E0:
 
 void P_SpawnSpecials() noexcept {
 loc_8002784C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F54);                               // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     sp -= 0x38;
     sw(s0, sp + 0x28);
     s0 = 0x80080000;                                    // Result = 80080000
@@ -1979,8 +1971,7 @@ loc_80027A30:
 loc_80027A38:
     s1++;
 loc_80027A3C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F54);                               // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     v0 = (i32(s1) < i32(v0));
     s0 += 0x5C;
     if (v0 != 0) goto loc_80027874;
@@ -2023,8 +2014,7 @@ loc_80027AC8:
     a0 += 0x4C;
     if (v0 != 0) goto loc_80027A7C;
 loc_80027AD0:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F54);                               // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x7F88);                                 // Store to: gMapBossSpecialFlags (80077F88)
     s1 = 0;                                             // Result = 00000000

@@ -170,26 +170,27 @@ sector_t (92 bytes):
         004     fixed_t     ceilingheight;
         008     int32_t     floorpic;
         00C     int32_t     ceilingpic;
-        010     uint32_t    lightlevel;
-        014     uint32_t    special;
-        018     uint32_t    tag;
+        010     int16_t     colorid;
+        012     int16_t     lightlevel;
+        014     int32_t     special;
+        018     int32_t     tag;
         01C     int32_t     soundtraversed;
         020     mobj_t*     soundtarget;
-        024     int32_t     blockbox[4];
+        024     uint32_t    flags;
+        028     int32_t     blockbox[4];
         
         // degenmobj_t
-        struct {            
-            034     mobj_t*     prev;
-            038     mobj_t*     next;
-            03C     fixed_t     x;
-            040     fixed_t     y;
-            044     fixed_t     z;
+        struct {
+            038     fixed_t         x;
+            03C     fixed_t         y;
+            040     fixed_t         z;
+            044     subsector_t*    subsector;
         } soundorg;
 
-        048     uint32_t    validcount;
+        048     int32_t     validcount;
         04C     mobj_t*     thinglist;
         050     void*       specialdata;
-        054     uint32_t    linecount;
+        054     int32_t     linecount;
         058     line_t**    lines;
     };
 
@@ -233,7 +234,7 @@ texture_t (32 bytes):
         00E     uint16_t    heightIn16Blocks;
         010     uint16_t    lumpNum;
         012     uint16_t    __padding ?
-        014     texinfo_t** pTexCacheEntry;
+        014     texture_t** ppTexCacheEntry;
         01C     uint32_t    uploadFrameNum;
     };
 

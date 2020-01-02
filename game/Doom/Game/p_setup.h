@@ -14,6 +14,8 @@ extern const VmPtr<fixed_t>                 gBlockmapOriginY;
 extern const VmPtr<VmPtr<VmPtr<mobj_t>>>    gppBlockLinks;
 extern const VmPtr<int32_t>                 gNumVertexes;
 extern const VmPtr<VmPtr<vertex_t>>         gpVertexes;
+extern const VmPtr<int32_t>                 gNumSectors;
+extern const VmPtr<VmPtr<sector_t>>         gpSectors;
 
 void P_LoadSegs() noexcept;
 void P_LoadSectors() noexcept;

@@ -2,6 +2,7 @@
 
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/z_zone.h"
+#include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
@@ -347,8 +348,7 @@ loc_8001B274:
 
 void EV_TurnTagLightsOff() noexcept {
 loc_8001B298:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F54);                               // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     sp -= 0x40;
     sw(s3, sp + 0x2C);
     s3 = 0x80080000;                                    // Result = 80080000
@@ -393,8 +393,7 @@ loc_8001B348:
 loc_8001B34C:
     s4++;
     s1 += 0x5C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F54);                               // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     v0 = (i32(s4) < i32(v0));
     s3 += 0x5C;
     if (v0 != 0) goto loc_8001B2D8;
@@ -412,8 +411,7 @@ loc_8001B36C:
 
 void EV_LightTurnOn() noexcept {
 loc_8001B394:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F54);                               // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     sp -= 0x38;
     sw(s3, sp + 0x24);
     s3 = 0x80080000;                                    // Result = 80080000
@@ -423,7 +421,7 @@ loc_8001B394:
     sw(s2, sp + 0x20);
     s2 = a1;
     sw(s4, sp + 0x28);
-    s4 = 0;                                             // Result = 00000000
+    s4 = 0;
     sw(ra, sp + 0x30);
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
@@ -436,7 +434,7 @@ loc_8001B3D8:
     if (s2 != 0) goto loc_8001B454;
     v0 = lw(s1 + 0x42);
     v0 = (i32(s2) < i32(v0));
-    s0 = 0;                                             // Result = 00000000
+    s0 = 0;
     if (v0 == 0) goto loc_8001B454;
 loc_8001B408:
     v1 = lw(s1 + 0x46);
@@ -460,8 +458,7 @@ loc_8001B454:
 loc_8001B458:
     s4++;
     s1 += 0x5C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F54);                               // Load from: gNumSectors (80077F54)
+    v0 = *gNumSectors;
     v0 = (i32(s4) < i32(v0));
     s3 += 0x5C;
     if (v0 != 0) goto loc_8001B3D8;
