@@ -49,6 +49,8 @@ const VmPtr<int32_t>                gNumSectors(0x80077F54);
 const VmPtr<VmPtr<sector_t>>        gpSectors(0x800780A8);
 const VmPtr<int32_t>                gNumSides(0x800781B4);
 const VmPtr<VmPtr<side_t>>          gpSides(0x80077EA0);
+const VmPtr<int32_t>                gNumLines(0x800781C8);
+const VmPtr<VmPtr<line_t>>          gpLines(0x80077EB0);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
@@ -124,8 +126,8 @@ loc_80021BD4:
     if (i32(v0) <= 0) goto loc_80021DC4;
     t0 = s0 + 8;                                        // Result = gTmpWadLumpBuffer[2] (80098750)
     a1 = t1 + 0xC;
-    t4 = lw(gp + 0xC04);                                // Load from: gpVertexes (800781E4)
-    t3 = lw(gp + 0x8C0);                                // Load from: gpSides (80077EA0)
+    t4 = *gpVertexes;
+    t3 = *gpSides;
 loc_80021C6C:
     v1 = lh(s0);
     v0 = v1 << 3;
@@ -150,7 +152,7 @@ loc_80021C6C:
     v0 += v1;
     v0 <<= 2;
     v0 -= v1;
-    v1 = lw(gp + 0x8D0);                                // Load from: gpLines (80077EB0)
+    v1 = *gpLines;
     v0 <<= 2;
     a2 = v0 + v1;
     sw(a2, a1 + 0x8);
@@ -514,188 +516,101 @@ static void P_LoadThings(const int32_t lumpNum) noexcept {
     sp += 0x30;
 }
 
-void P_LoadLineDefs() noexcept {
-loc_8002237C:
-    sp -= 0x38;
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(ra, sp + 0x34);
-    sw(s6, sp + 0x30);
-    sw(s5, sp + 0x2C);
-    sw(s4, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    _thunk_W_MapLumpLength();
-    v1 = 0x10000;                                       // Result = 00010000
-    v1 = (i32(v1) < i32(v0));
-    s6 = 0;                                             // Result = 00000000
-    if (v1 == 0) goto loc_800223C8;
-    I_Error("P_LoadLineDefs: lump > 64K");
-loc_800223C8:
-    a0 = s0;
-    _thunk_W_MapLumpLength();
-    v1 = 0x92490000;                                    // Result = 92490000
-    v1 |= 0x2493;                                       // Result = 92492493
-    v0 >>= 1;
-    multu(v0, v1);
-    a2 = 2;                                             // Result = 00000002
-    v0 = gTmpBuffer;
-    s5 = gTmpBuffer;
-    a3 = 0;                                             // Result = 00000000
-    a0 = *gpMainMemZone;
-    v0 = hi;
-    v0 >>= 2;
-    a1 = v0 << 2;
-    a1 += v0;
-    a1 <<= 2;
-    a1 -= v0;
-    sw(v0, gp + 0xBE8);                                 // Store to: gNumLines (800781C8)
-    a1 <<= 2;
-    _thunk_Z_Malloc();
-    a0 = v0;
-    v0 = lw(gp + 0xBE8);                                // Load from: gNumLines (800781C8)
-    a1 = 0;                                             // Result = 00000000
-    sw(a0, gp + 0x8D0);                                 // Store to: gpLines (80077EB0)
-    a2 = v0 << 2;
-    a2 += v0;
-    a2 <<= 2;
-    a2 -= v0;
-    a2 <<= 2;
-    _thunk_D_memset();
-    a0 = s0;
-    a1 = gTmpBuffer;
-    a2 = 1;
-    _thunk_W_ReadMapLump();
-    v0 = lw(gp + 0xBE8);                                // Load from: gNumLines (800781C8)
-    s4 = lw(gp + 0x8D0);                                // Load from: gpLines (80077EB0)
-    s0 = s4 + 0x3C;
-    if (i32(v0) <= 0) goto loc_80022624;
-    s3 = s5 + 0xC;                                      // Result = gTmpWadLumpBuffer[3] (80098754)
-loc_8002246C:
-    v0 = lh(s3 - 0x8);
-    sw(v0, s0 - 0x2C);
-    v0 = lh(s3 - 0x6);
-    sw(v0, s0 - 0x28);
-    v0 = lh(s3 - 0x4);
-    sw(v0, s0 - 0x24);
-    v0 = lh(s5);
-    a1 = lw(gp + 0xC04);                                // Load from: gpVertexes (800781E4)
-    v1 = v0 << 3;
-    v1 -= v0;
-    v1 <<= 2;
-    v1 += a1;
-    sw(v1, s4);
-    a0 = lh(s3 - 0xA);
-    s2 = v1;
-    v0 = a0 << 3;
-    v0 -= a0;
-    v0 <<= 2;
-    v0 += a1;
-    s1 = v0;
-    sw(v0, s0 - 0x38);
-    v0 = lw(s1);
-    v1 = lw(s2);
-    v0 -= v1;
-    sw(v0, s0 - 0x34);
-    v1 = lw(s1 + 0x4);
-    v0 = lw(s2 + 0x4);
-    a1 = lw(s0 - 0x34);
-    a0 = v1 - v0;
-    sw(a0, s0 - 0x30);
-    if (a1 != 0) goto loc_80022500;
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80022524;
-loc_80022500:
-    if (a0 != 0) goto loc_80022510;
-    sw(0, s0 - 0x8);
-    goto loc_80022528;
-loc_80022510:
-    FixedDiv();
-    {
-        const bool bJump = (i32(v0) > 0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_80022524;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load linedefs from the specified map lump number
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_LoadLineDefs(const int32_t lumpNum) noexcept {
+    // Sanity check the linedefs lump is not too big
+    const int32_t lumpSize = W_MapLumpLength(lumpNum);
+
+    if (lumpSize > TMP_BUFFER_SIZE) {
+        I_Error("P_LoadLineDefs: lump > 64K");
     }
-    v0 = 3;                                             // Result = 00000003
-loc_80022524:
-    sw(v0, s0 - 0x8);
-loc_80022528:
-    a0 = lw(s2);
-    v1 = lw(s1);
-    v0 = (i32(a0) < i32(v1));
-    if (v0 == 0) goto loc_80022550;
-    sw(a0, s0 - 0x10);
-    v0 = lw(s1);
-    sw(v0, s0 - 0xC);
-    goto loc_80022560;
-loc_80022550:
-    sw(v1, s0 - 0x10);
-    v0 = lw(s2);
-    sw(v0, s0 - 0xC);
-loc_80022560:
-    a0 = lw(s2 + 0x4);
-    v1 = lw(s1 + 0x4);
-    v0 = (i32(a0) < i32(v1));
-    if (v0 == 0) goto loc_80022588;
-    sw(a0, s0 - 0x14);
-    v0 = lw(s1 + 0x4);
-    sw(v0, s0 - 0x18);
-    goto loc_80022598;
-loc_80022588:
-    sw(v1, s0 - 0x14);
-    v0 = lw(s2 + 0x4);
-    sw(v0, s0 - 0x18);
-loc_80022598:
-    v1 = lh(s3 - 0x2);
-    v0 = -1;                                            // Result = FFFFFFFF
-    sw(v1, s0 - 0x20);
-    if (v1 == v0) goto loc_800225C8;
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = lw(gp + 0x8C0);                                // Load from: gpSides (80077EA0)
-    v0 <<= 3;
-    v0 += v1;
-    v0 = lw(v0 + 0x14);
-    sw(v0, s0 - 0x4);
-    goto loc_800225CC;
-loc_800225C8:
-    sw(0, s0 - 0x4);
-loc_800225CC:
-    v1 = lh(s3);
-    v0 = -1;                                            // Result = FFFFFFFF
-    sw(v1, s0 - 0x1C);
-    if (v1 == v0) goto loc_800225FC;
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = lw(gp + 0x8C0);                                // Load from: gpSides (80077EA0)
-    v0 <<= 3;
-    v0 += v1;
-    v0 = lw(v0 + 0x14);
-    sw(v0, s0);
-    goto loc_80022600;
-loc_800225FC:
-    sw(0, s0);
-loc_80022600:
-    s6++;
-    s3 += 0xE;
-    s5 += 0xE;
-    s0 += 0x4C;
-    v0 = lw(gp + 0xBE8);                                // Load from: gNumLines (800781C8)
-    v0 = (i32(s6) < i32(v0));
-    s4 += 0x4C;
-    if (v0 != 0) goto loc_8002246C;
-loc_80022624:
-    ra = lw(sp + 0x34);
-    s6 = lw(sp + 0x30);
-    s5 = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x38;
-    return;
+
+    // Alloc ram for the runtime linedefs and zero initialize
+    *gNumLines = lumpSize / sizeof(maplinedef_t);
+    *gpLines = (line_t*) Z_Malloc(**gpMainMemZone, *gNumLines * sizeof(line_t), PU_LEVEL, nullptr);
+    D_memset(gpLines->get(), (std::byte) 0, *gNumLines * sizeof(line_t));
+
+    // Read the map lump containing the sidedefs
+    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+
+    // Process the WAD linedefs and convert them into runtime linedefs
+    const maplinedef_t* pSrcLine = (maplinedef_t*) gTmpBuffer.get();
+    line_t* pDstLine = gpLines->get();
+
+    for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx) {
+        // Save some basic line properties
+        pDstLine->flags = pSrcLine->flags;
+        pDstLine->special = pSrcLine->special;
+        pDstLine->tag = pSrcLine->tag;
+
+        // Save line vertices, delta coordinates and slope type
+        vertex_t& vertex1 = (*gpVertexes)[pSrcLine->vertex1];
+        vertex_t& vertex2 = (*gpVertexes)[pSrcLine->vertex2];
+
+        pDstLine->vertex1 = &vertex1;
+        pDstLine->vertex2 = &vertex2;
+        pDstLine->dx = vertex2.x - vertex1.x;
+        pDstLine->dy = vertex2.y - vertex1.y;
+
+        if (pDstLine->dx == 0) {
+            pDstLine->slopetype = slopetype_t::ST_VERTICAL;
+        } else if (pDstLine->dy == 0) {
+            pDstLine->slopetype = slopetype_t::ST_HORIZONTAL;
+        } else {
+            a0 = pDstLine->dy;
+            a1 = pDstLine->dx;
+            FixedDiv();
+
+            if (int32_t(v0) > 0) {
+                pDstLine->slopetype = slopetype_t::ST_POSITIVE;
+            } else {
+                pDstLine->slopetype = slopetype_t::ST_NEGATIVE;
+            }
+        }
+
+        // Save line bounding box
+        if (vertex1.x < vertex2.x) {
+            pDstLine->bbox[BOXLEFT] = vertex1.x;
+            pDstLine->bbox[BOXRIGHT] = vertex2.x;
+        } else {
+            pDstLine->bbox[BOXLEFT] = vertex2.x;
+            pDstLine->bbox[BOXRIGHT] = vertex1.x;
+        }
+
+        if (vertex1.y < vertex2.y) {
+            pDstLine->bbox[BOXBOTTOM] = vertex1.y;
+            pDstLine->bbox[BOXTOP] = vertex2.y;
+        } else {
+            pDstLine->bbox[BOXBOTTOM] = vertex2.y;
+            pDstLine->bbox[BOXTOP] = vertex1.y;
+        }
+
+        // Save side numbers and sector references
+        const int32_t sidenum1 = pSrcLine->sidenum[0];
+        const int32_t sidenum2 = pSrcLine->sidenum[1];
+
+        pDstLine->sidenum[0] = sidenum1;
+        pDstLine->sidenum[1] = sidenum2;
+
+        if (sidenum1 != -1) {
+            side_t& side = (*gpSides)[sidenum1];
+            pDstLine->frontsector = side.sector;
+        } else {
+            pDstLine->frontsector = nullptr;
+        }
+
+        if (sidenum2 != -1) {
+            side_t& side = (*gpSides)[sidenum2];
+            pDstLine->backsector = side.sector;
+        } else {
+            pDstLine->backsector = nullptr;
+        }
+
+        ++pSrcLine;
+        ++pDstLine;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -895,7 +810,7 @@ loc_80022A44:
     v0 = s0 << 3;
 loc_80022A70:
     v0 -= s0;
-    v1 = lw(gp + 0xC04);                                // Load from: gpVertexes (800781E4)
+    v1 = *gpVertexes;
     v0 <<= 2;
     v0 += v1;
     sw(v0, s6);
@@ -985,10 +900,10 @@ loc_80022B90:
     a0 += 0x10;
     if (v0 != 0) goto loc_80022B90;
 loc_80022BC8:
-    a1 = 0;                                             // Result = 00000000
-    v0 = lw(gp + 0xBE8);                                // Load from: gNumLines (800781C8)
-    s1 = lw(gp + 0x8D0);                                // Load from: gpLines (80077EB0)
-    s4 = 0;                                             // Result = 00000000
+    a1 = 0;
+    v0 = *gNumLines;
+    s1 = *gpLines;
+    s4 = 0;
     if (i32(v0) <= 0) goto loc_80022C3C;
     a2 = v0;
     a0 = s1 + 0x38;
@@ -1020,14 +935,14 @@ loc_80022C3C:
     _thunk_Z_Malloc();
     s5 = v0;
     v0 = *gNumSectors;
-    s6 = lw(gp + 0xAC8);                                // Load from: gpSectors (800780A8)
+    s6 = *gpSectors;
     s3 = s6 + 0x30;
     if (i32(v0) <= 0) goto loc_80022E3C;
 loc_80022C6C:
     a0 = sp + 0x10;
     M_ClearBox();
-    s1 = lw(gp + 0x8D0);                                // Load from: gpLines (80077EB0)
-    v0 = lw(gp + 0xBE8);                                // Load from: gNumLines (800781C8)
+    s1 = *gpLines;
+    v0 = *gNumLines;
     s2 = 0;                                             // Result = 00000000
     sw(s5, s3 + 0x28);
     if (i32(v0) <= 0) goto loc_80022CFC;
@@ -1053,7 +968,7 @@ loc_80022CAC:
 loc_80022CE0:
     s2++;
     s0 += 0x4C;
-    v0 = lw(gp + 0xBE8);                                // Load from: gNumLines (800781C8)
+    v0 = *gNumLines;
     v0 = (i32(s2) < i32(v0));
     s1 += 0x4C;
     if (v0 != 0) goto loc_80022C8C;
@@ -1156,7 +1071,7 @@ loc_80022E3C:
 void P_InitMapTextures() noexcept {
 loc_80022E68:
     v0 = *gNumSectors;
-    v1 = lw(gp + 0xAC8);                                // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     sp -= 0x30;
     sw(s0, sp + 0x20);
     s0 = 0;                                             // Result = 00000000
@@ -1252,8 +1167,8 @@ loc_80022FE8:
     P_InitSwitchList();
     a0 = 0x80;                                          // Result = 00000080
     P_CacheMapTexturesWithWidth();
-    v1 = lw(gp + 0xBD4);                                // Load from: gNumSides (800781B4)
-    v0 = lw(gp + 0x8C0);                                // Load from: gpSides (80077EA0)
+    v1 = *gNumSides;
+    v0 = *gpSides;
     a0 = -1;                                            // Result = FFFFFFFF
     if (i32(v1) <= 0) goto loc_80023068;
     a1 = v1;
@@ -1417,10 +1332,7 @@ loc_800230D4:
     P_LoadVertexes(mapStartLump + ML_VERTEXES);
     P_LoadSectors(mapStartLump + ML_SECTORS);
     P_LoadSideDefs(mapStartLump + ML_SIDEDEFS);
-
-    a0 = mapStartLump + ML_LINEDEFS;
-    P_LoadLineDefs();
-
+    P_LoadLineDefs(mapStartLump + ML_LINEDEFS);
     P_LoadSubSectors(mapStartLump + ML_SSECTORS);
 
     a0 = mapStartLump + ML_NODES;
@@ -1757,11 +1669,11 @@ loc_80023AF8:
     v1 += v0;
     v0 = -v0;
     v1 &= v0;
-    v0 = lw(gp + 0xBD4);                                // Load from: gNumSides (800781B4)
+    v0 = *gNumSides;
     at = 0x80080000;                                    // Result = 80080000
     sw(v1, at - 0x7D1C);                                // Store to: gTexCacheFillBlockX (800782E4)
-    v1 = lw(gp + 0x8C0);                                // Load from: gpSides (80077EA0)
-    s2 = 0;                                             // Result = 00000000
+    v1 = *gpSides;
+    s2 = 0;
     if (i32(v0) <= 0) goto loc_80023C14;
     s3 = -1;                                            // Result = FFFFFFFF
     s0 = v1 + 0xC;
@@ -1806,7 +1718,7 @@ loc_80023BB8:
     if (v0 != 0) goto loc_80023C00;
     I_CacheTex();
 loc_80023C00:
-    v0 = lw(gp + 0xBD4);                                // Load from: gNumSides (800781B4)
+    v0 = *gNumSides;
     v0 = (i32(s2) < i32(v0));
     s0 += 0x18;
     if (v0 != 0) goto loc_80023B28;

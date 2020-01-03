@@ -200,7 +200,6 @@ extern void P_SetupPsprites() noexcept;
 extern void P_MovePsprites() noexcept;
 extern void P_LoadSegs() noexcept;
 extern void P_LoadNodes() noexcept;
-extern void P_LoadLineDefs() noexcept;
 extern void P_LoadMapLump() noexcept;
 extern void P_LoadLeafs() noexcept;
 extern void P_GroupLines() noexcept;
@@ -1148,7 +1147,6 @@ namespace PsxVm {
         { 0x8002190C, &P_MovePsprites },
         { 0x80021BA0, &P_LoadSegs },
         { 0x80022104, &P_LoadNodes },
-        { 0x8002237C, &P_LoadLineDefs },
         { 0x800228CC, &P_LoadMapLump },
         { 0x80022920, &P_LoadLeafs },
         { 0x80022B58, &P_GroupLines },

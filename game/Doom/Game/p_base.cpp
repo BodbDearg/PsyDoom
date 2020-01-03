@@ -1017,8 +1017,7 @@ loc_80014750:
     v0 += v1;
     v0 <<= 2;
     v0 -= v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EB0);                               // Load from: gpLines (80077EB0)
+    v1 = *gpLines;
     v0 <<= 2;
     t1 = v0 + v1;
     v0 = lw(t1 + 0x40);

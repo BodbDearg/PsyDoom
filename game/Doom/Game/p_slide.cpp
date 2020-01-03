@@ -230,8 +230,7 @@ loc_8002539C:
     v0 += v1;
     v0 <<= 2;
     v0 -= v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EB0);                               // Load from: gpLines (80077EB0)
+    v1 = *gpLines;
     v0 <<= 2;
     a0 = v0 + v1;
     v0 = lw(a0 + 0x40);
@@ -847,8 +846,7 @@ loc_80025CF0:
     v0 += v1;
     v0 <<= 2;
     v0 -= v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EB0);                               // Load from: gpLines (80077EB0)
+    v1 = *gpLines;
     v0 <<= 2;
     v1 += v0;
     v0 = lw(v1 + 0x14);

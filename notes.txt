@@ -214,6 +214,25 @@ side_t (24 bytes):
         014     sector_t*   sector;
     };
 
+line_t (76 bytes):
+    struct line_t {
+        000     vertex_t*       v1;
+        004     vertex_t*       v2;
+        008     fixed_t         dx;             // Precomputed 'v2 - v1' in the x and y directions
+        00C     fixed_t         dy;
+        010     int32_t         flags;
+        014     int32_t         special;
+        018     int32_t         tag;
+        01C     int32_t         sidenum[2];     // If sidenum[1] is '-1' then the line is one sided
+        024     fixed_t         bbox[4];
+        034     slopetype_t     slopetype;      // Used to simplify some collision detection
+        038     sector_t*       frontsector;
+        03C     sector_t*       backsector;
+        040     int32_t         validcount;
+        044     void*           specialdata;    // Used by thinkers doing special logic
+        048     fixed_t         fineangle;      // So sine/cosine can be looked up quicker
+    };
+
 lumpinfo_t (16 bytes):
     struct lumpinfo_t {
         000     uint32_t    filepos;

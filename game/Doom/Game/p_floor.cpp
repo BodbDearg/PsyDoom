@@ -5,6 +5,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "g_game.h"
 #include "p_change.h"
+#include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
@@ -276,8 +277,7 @@ loc_80019148:
     v0 += s4;
     v0 <<= 3;
     v0 -= s4;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     v0 <<= 2;
     s2 = v0 + v1;
     v0 = lw(s2 + 0x50);
@@ -498,8 +498,7 @@ loc_80019480:
     getSide();
     a0 = 0xE9BD0000;                                    // Result = E9BD0000
     v0 = lw(v0 + 0x14);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     a0 |= 0x37A7;                                       // Result = E9BD37A7
     v0 -= v1;
     mult(v0, a0);
@@ -569,8 +568,7 @@ loc_8001958C:
     v0 += s3;
     v0 <<= 3;
     v0 -= s3;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     v0 <<= 2;
     s1 = v0 + v1;
     v0 = lw(s1 + 0x50);
@@ -624,8 +622,7 @@ loc_80019670:
     v0 &= 4;
     if (v0 == 0) goto loc_80019748;
     a0 = lw(v1 + 0x38);
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    a1 = *gpSectors;
     v0 = a0 - a1;
     mult(v0, s6);
     v0 = lo;

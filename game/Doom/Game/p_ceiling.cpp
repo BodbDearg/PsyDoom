@@ -4,6 +4,7 @@
 #include "Doom/Base/z_zone.h"
 #include "g_game.h"
 #include "p_floor.h"
+#include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
@@ -203,8 +204,7 @@ loc_80014CB0:
     v0 += s2;
     v0 <<= 3;
     v0 -= s2;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     v0 <<= 2;
     s1 = v0 + v1;
     v0 = lw(s1 + 0x50);

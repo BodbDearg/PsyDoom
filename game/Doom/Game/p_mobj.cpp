@@ -13,6 +13,7 @@
 #include "p_maputl.h"
 #include "p_password.h"
 #include "p_pspr.h"
+#include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
 void P_RemoveMObj() noexcept {
@@ -478,8 +479,7 @@ loc_8001CE40:
     sw(s0, sp + 0x18);
     a0 = lh(s4 + 0x6);
     v1 = a0 << 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7F58;                                       // Result = gpSectors (800780A8)
+    at = *gpSectors;
     at += v1;
     v0 = lw(at);
     v1 += a0;

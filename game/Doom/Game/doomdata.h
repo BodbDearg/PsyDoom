@@ -48,7 +48,7 @@ struct mapvertex_t {
 
 static_assert(sizeof(mapvertex_t) == 8);
 
-// Map data for a sector in a WAD
+// Map data for a sectors, sides, and lines in a WAD
 struct mapsector_t {
     int16_t     floorheight;
     int16_t     ceilingheight;
@@ -63,7 +63,6 @@ struct mapsector_t {
 
 static_assert(sizeof(mapsector_t) == 28);
 
-// Describes a side of a line in a WAD
 struct mapsidedef_t {
 	int16_t     textureoffset;          // Texture x offset
 	int16_t		rowoffset;              // Texture y offset
@@ -74,3 +73,14 @@ struct mapsidedef_t {
 };
 
 static_assert(sizeof(mapsidedef_t) == 30);
+
+struct maplinedef_t {
+	int16_t     vertex1;
+    int16_t     vertex2;
+	int16_t     flags;
+	int16_t     special;
+    int16_t     tag;
+	int16_t     sidenum[2];     // If -1 then the line is 1 sided
+};
+
+static_assert(sizeof(maplinedef_t) == 14);

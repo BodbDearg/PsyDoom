@@ -297,8 +297,7 @@ loc_8001B1B0:
     v0 += s2;
     v0 <<= 3;
     v0 -= s2;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     v0 <<= 2;
     s1 = v0 + v1;
     v0 = lw(s1 + 0x50);
@@ -351,8 +350,7 @@ loc_8001B298:
     v0 = *gNumSectors;
     sp -= 0x40;
     sw(s3, sp + 0x2C);
-    s3 = 0x80080000;                                    // Result = 80080000
-    s3 = lw(s3 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    s3 = *gpSectors;
     sw(s5, sp + 0x34);
     s5 = a0;
     sw(s4, sp + 0x30);
@@ -414,8 +412,7 @@ loc_8001B394:
     v0 = *gNumSectors;
     sp -= 0x38;
     sw(s3, sp + 0x24);
-    s3 = 0x80080000;                                    // Result = 80080000
-    s3 = lw(s3 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    s3 = *gpSectors;
     sw(s5, sp + 0x2C);
     s5 = a0;
     sw(s2, sp + 0x20);

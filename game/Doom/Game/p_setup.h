@@ -3,6 +3,7 @@
 #include "Doom/doomdef.h"
 #include "Doom/cdmaptbl.h"
 
+struct line_t;
 struct side_t;
 struct vertex_t;
 
@@ -19,10 +20,11 @@ extern const VmPtr<int32_t>                 gNumSectors;
 extern const VmPtr<VmPtr<sector_t>>         gpSectors;
 extern const VmPtr<int32_t>                 gNumSides;
 extern const VmPtr<VmPtr<side_t>>           gpSides;
+extern const VmPtr<int32_t>                 gNumLines;
+extern const VmPtr<VmPtr<line_t>>           gpLines;
 
 void P_LoadSegs() noexcept;
 void P_LoadNodes() noexcept;
-void P_LoadLineDefs() noexcept;
 void P_LoadMapLump() noexcept;
 void P_LoadLeafs() noexcept;
 void P_GroupLines() noexcept;

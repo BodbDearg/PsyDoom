@@ -8,6 +8,7 @@
 #include "p_floor.h"
 #include "p_lights.h"
 #include "p_plats.h"
+#include "p_setup.h"
 #include "p_spec.h"
 #include "PsxVm/PsxVm.h"
 
@@ -135,8 +136,7 @@ loc_80027F68:
     a0 = 0xB;                                           // Result = 0000000B
     v0 = v1 << 1;
     v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EA0);                               // Load from: gpSides (80077EA0)
+    v1 = *gpSides;
     v0 <<= 3;
     v0 += v1;
     t0 = lw(v0 + 0x8);
@@ -158,8 +158,7 @@ loc_80027FB4:
     a0 = lw(a0 + 0x77BC);                               // Load from: gButtonList_1[4] (800977BC)
     S_StartSound();
     v0 = lw(s1 + 0x1C);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7EA0);                               // Load from: gpSides (80077EA0)
+    a0 = *gpSides;
     v1 = v0 << 1;
     v1 += v0;
     v1 <<= 3;
@@ -206,8 +205,7 @@ loc_80028080:
     a0 = lw(a0 + 0x77BC);                               // Load from: gButtonList_1[4] (800977BC)
     S_StartSound();
     v0 = lw(s1 + 0x1C);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7EA0);                               // Load from: gpSides (80077EA0)
+    a0 = *gpSides;
     v1 = v0 << 1;
     v1 += v0;
     v1 <<= 3;
@@ -240,8 +238,7 @@ loc_80028110:
     a0 = lw(a0 + 0x77BC);                               // Load from: gButtonList_1[4] (800977BC)
     S_StartSound();
     v0 = lw(s1 + 0x1C);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7EA0);                               // Load from: gpSides (80077EA0)
+    a0 = *gpSides;
     v1 = v0 << 1;
     v1 += v0;
     v1 <<= 3;

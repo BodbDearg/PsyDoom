@@ -207,8 +207,7 @@ loc_80026224:
     v0 += a0;
     v0 <<= 3;
     v0 -= a0;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     v0 <<= 2;
     v0 += v1;
     v0 = lw(v0 + 0x58);
@@ -220,8 +219,7 @@ loc_80026224:
     v1 = lw(a2 + 0x1C);
     v0 = v1 << 1;
     v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EA0);                               // Load from: gpSides (80077EA0)
+    v1 = *gpSides;
     v0 <<= 3;
     v0 += v1;
     return;
@@ -233,8 +231,7 @@ loc_80026280:
     v0 += a0;
     v0 <<= 3;
     v0 -= a0;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     v0 <<= 2;
     v0 += v1;
     v0 = lw(v0 + 0x58);
@@ -246,8 +243,7 @@ loc_80026280:
     v1 = lw(a2 + 0x1C);
     v0 = v1 << 1;
     v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EA0);                               // Load from: gpSides (80077EA0)
+    v1 = *gpSides;
     v0 <<= 3;
     v0 += v1;
     v0 = lw(v0 + 0x14);
@@ -260,8 +256,7 @@ loc_800262E4:
     v0 += a0;
     v0 <<= 3;
     v0 -= a0;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     v0 <<= 2;
     v0 += v1;
     v0 = lw(v0 + 0x58);
@@ -522,8 +517,7 @@ loc_80026698:
     v0 <<= 3;
     v0 -= a1;
     v0 <<= 2;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     a0 = lw(a0 + 0x18);
     v1 += v0;
 loc_800266D4:
@@ -1330,8 +1324,7 @@ loc_800270EC:
     v0 = lw(gp + 0x970);                                // Load from: gNumLinespecials (80077F50)
     s1 = 0;                                             // Result = 00000000
     if (i32(v0) <= 0) goto loc_80027264;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7EA0);                               // Load from: gpSides (80077EA0)
+    a1 = *gpSides;
     t1 = 0x10000;                                       // Result = 00010000
     a3 = 0xFF7F0000;                                    // Result = FF7F0000
     t0 = 0xFFFF0000;                                    // Result = FFFF0000
@@ -1470,8 +1463,7 @@ loc_800272FC:
     a0 = lw(at);
     v0 = v1 << 1;
     v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EA0);                               // Load from: gpSides (80077EA0)
+    v1 = *gpSides;
     v0 <<= 3;
     v0 += v1;
     sw(a0, v0 + 0x8);
@@ -1488,8 +1480,7 @@ loc_80027344:
     a0 = lw(at);
     v0 = v1 << 1;
     v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EA0);                               // Load from: gpSides (80077EA0)
+    v1 = *gpSides;
     v0 <<= 3;
     v0 += v1;
     sw(a0, v0 + 0x10);
@@ -1506,8 +1497,7 @@ loc_8002738C:
     a0 = lw(at);
     v0 = v1 << 1;
     v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EA0);                               // Load from: gpSides (80077EA0)
+    v1 = *gpSides;
     v0 <<= 3;
     v0 += v1;
     sw(a0, v0 + 0xC);
@@ -1578,8 +1568,7 @@ loc_800274A4:
     v0 <<= 3;                                           // Result = 00000000
     v0 -= a0;                                           // Result = 00000000
     v0 <<= 2;                                           // Result = 00000000
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     a1 = lw(fp + 0x18);
     v1 += v0;
 loc_800274E0:
@@ -1598,8 +1587,7 @@ loc_80027504:
     v0 += s4;                                           // Result = FFFFFFFD
     v0 <<= 3;                                           // Result = FFFFFFE8
     v0 -= s4;                                           // Result = FFFFFFE9
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     v0 <<= 2;                                           // Result = FFFFFFA4
     s3 = v0 + v1;
     v0 = lw(s3 + 0x50);
@@ -1801,8 +1789,7 @@ loc_8002784C:
     v0 = *gNumSectors;
     sp -= 0x38;
     sw(s0, sp + 0x28);
-    s0 = 0x80080000;                                    // Result = 80080000
-    s0 = lw(s0 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    s0 = *gpSectors;
     sw(s1, sp + 0x2C);
     s1 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x30);
@@ -1976,16 +1963,14 @@ loc_80027A3C:
     s0 += 0x5C;
     if (v0 != 0) goto loc_80027874;
 loc_80027A54:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E38);                               // Load from: gNumLines (800781C8)
+    v0 = *gNumLines;
     sw(0, gp + 0x970);                                  // Store to: gNumLinespecials (80077F50)
     s1 = 0;                                             // Result = 00000000
     if (i32(v0) <= 0) goto loc_80027AD0;
     a2 = 0x80090000;                                    // Result = 80090000
     a2 += 0x757C;                                       // Result = gpLineSpecialList[0] (8009757C)
     a1 = v0;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7EB0);                               // Load from: gpLines (80077EB0)
+    a0 = *gpLines;
 loc_80027A7C:
     v1 = lw(a0 + 0x14);
     v0 = (i32(v1) < 0xCC);
@@ -2022,8 +2007,7 @@ loc_80027AD0:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0xE1C;                                        // Result = JumpTable_P_SpawnSpecials[0] (80010E1C)
     a1 = v0;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    a0 = *gpSectors;
 loc_80027AFC:
     v0 = lw(a0 + 0x18);
     v1 = v0 - 0x29A;

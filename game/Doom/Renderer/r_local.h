@@ -57,3 +57,32 @@ struct side_t {
 };
 
 static_assert(sizeof(side_t) == 24);
+
+// What type of slope a line has
+enum slopetype_t : uint32_t { 
+    ST_HORIZONTAL,
+    ST_VERTICAL,
+    ST_POSITIVE,
+    ST_NEGATIVE
+};
+
+// Describes a line in the map
+struct line_t {
+    VmPtr<vertex_t>     vertex1;
+    VmPtr<vertex_t>     vertex2;
+	fixed_t		        dx;             // Precomputed 'v2 - v1' in the x and y directions
+    fixed_t		        dy;
+	int32_t             flags;
+	int32_t             special;
+    int32_t             tag;
+	int32_t		        sidenum[2];		// If sidenum[1] is '-1' then the line is one sided
+	fixed_t		        bbox[4];
+	slopetype_t	        slopetype;		// Used to simplify some collision detection
+	VmPtr<sector_t>     frontsector;
+    VmPtr<sector_t>     backsector;
+    int32_t             validcount;
+    VmPtr<void>         specialdata;    // Used by thinkers doing special logic
+	fixed_t             fineangle;		// So sine/cosine can be looked up quicker
+};
+
+static_assert(sizeof(line_t) == 76);

@@ -237,10 +237,8 @@ loc_8003BDC0:
     v0 = lw(v0 + 0x4);
     sw(v0, sp + 0x20);
 loc_8003BDE8:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E38);                               // Load from: gNumLines (800781C8)
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 = lw(s1 + 0x7EB0);                               // Load from: gpLines (80077EB0)
+    v0 = *gNumLines;
+    s1 = *gpLines;
     fp = 0;                                             // Result = 00000000
     if (i32(v0) <= 0) goto loc_8003BF6C;
     s0 = s1 + 0x14;
@@ -326,8 +324,7 @@ loc_8003BF38:
 loc_8003BF4C:
     fp++;
     s0 += 0x4C;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E38);                               // Load from: gNumLines (800781C8)
+    v0 = *gNumLines;
     v0 = (i32(fp) < i32(v0));
     s1 += 0x4C;
     if (v0 != 0) goto loc_8003BE04;

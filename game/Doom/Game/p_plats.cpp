@@ -6,6 +6,7 @@
 #include "Doom/Base/z_zone.h"
 #include "g_game.h"
 #include "p_floor.h"
+#include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
@@ -173,8 +174,7 @@ loc_8001F4B8:
     v0 += s2;
     v0 <<= 3;
     v0 -= s2;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     v0 <<= 2;
     s1 = v0 + v1;
     v0 = lw(s1 + 0x50);
@@ -218,8 +218,7 @@ loc_8001F56C:
     v1 = lw(s3 + 0x1C);
     v0 = v1 << 1;
     v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EA0);                               // Load from: gpSides (80077EA0)
+    v1 = *gpSides;
     v0 <<= 3;
     v0 += v1;
     v0 = lw(v0 + 0x14);
@@ -242,8 +241,7 @@ loc_8001F5C8:
     a0 = s1 + 0x38;
     v0 = v1 << 1;
     v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EA0);                               // Load from: gpSides (80077EA0)
+    v1 = *gpSides;
     v0 <<= 3;
     v0 += v1;
     v0 = lw(v0 + 0x14);

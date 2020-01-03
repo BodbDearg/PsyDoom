@@ -62,6 +62,14 @@ enum gameaction_t : uint32_t {
     ga_exitdemo,    // Player aborted the demo screens
 };
 
+// Coordinate indexes in a bounding box
+enum : uint32_t {
+    BOXTOP,
+    BOXBOTTOM,
+    BOXLEFT,
+    BOXRIGHT
+};
+
 // Maximum number of ticks in a demo.
 // The maximum allowed demo size is 16384 ticks (demo size 64 KiB).
 const int32_t MAX_DEMO_TICKS = 16384;

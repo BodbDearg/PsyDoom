@@ -119,8 +119,7 @@ loc_80028918:
     s5 = t0 - 0x14;                                     // Result = gMObjHead[0] (800A8E90)
     a3 = 0;                                             // Result = 00000000
 loc_800289A4:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v0 = *gpSectors;
     v0 += a3;
     v0 = lw(v0 + 0x18);
     if (v0 != a2) goto loc_80028BE8;
@@ -132,8 +131,7 @@ loc_800289D4:
     a0 = 0xE9BD0000;                                    // Result = E9BD0000
     if (v1 != v0) goto loc_80028BD8;
     v0 = lw(s2 + 0xC);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    v1 = *gpSectors;
     v0 = lw(v0);
     a0 |= 0x37A7;                                       // Result = E9BD37A7
     v0 -= v1;

@@ -64,8 +64,7 @@ loc_800249B4:
     a1 = 0xE9BD0000;                                    // Result = E9BD0000
     sw(ra, sp + 0x10);
     v0 = lw(t0 + 0xC);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7F58);                               // Load from: gpSectors (800780A8)
+    a0 = *gpSectors;
     v0 = lw(v0);
     a1 |= 0x37A7;                                       // Result = E9BD37A7
     v0 -= a0;
