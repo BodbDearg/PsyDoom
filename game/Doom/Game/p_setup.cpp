@@ -47,6 +47,8 @@ const VmPtr<int32_t>                gNumVertexes(0x80078018);
 const VmPtr<VmPtr<vertex_t>>        gpVertexes(0x800781E4);
 const VmPtr<int32_t>                gNumSectors(0x80077F54);
 const VmPtr<VmPtr<sector_t>>        gpSectors(0x800780A8);
+const VmPtr<int32_t>                gNumSides(0x800781B4);
+const VmPtr<VmPtr<side_t>>          gpSides(0x80077EA0);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
@@ -696,99 +698,49 @@ loc_80022624:
     return;
 }
 
-void P_LoadSideDefs() noexcept {
-loc_80022650:
-    sp -= 0x30;
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(ra, sp + 0x2C);
-    sw(s4, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    _thunk_W_MapLumpLength();
-    v1 = 0x10000;                                       // Result = 00010000
-    v1 = (i32(v1) < i32(v0));
-    s4 = 0;                                             // Result = 00000000
-    if (v1 == 0) goto loc_80022694;
-    I_Error("P_LoadSideDefs: lump > 64K");
-loc_80022694:
-    a0 = s0;
-    _thunk_W_MapLumpLength();
-    v1 = 0x88880000;                                    // Result = 88880000
-    v1 |= 0x8889;                                       // Result = 88888889
-    multu(v0, v1);
-    a2 = 2;
-    v0 = gTmpBuffer;
-    s3 = gTmpBuffer;
-    a3 = 0;
-    a0 = *gpMainMemZone;
-    v0 = hi;
-    v0 >>= 4;
-    a1 = v0 << 1;
-    a1 += v0;
-    sw(v0, gp + 0xBD4);                                 // Store to: gNumSides (800781B4)
-    a1 <<= 3;
-    _thunk_Z_Malloc();
-    a0 = v0;
-    v0 = lw(gp + 0xBD4);                                // Load from: gNumSides (800781B4)
-    a1 = 0;                                             // Result = 00000000
-    sw(a0, gp + 0x8C0);                                 // Store to: gpSides (80077EA0)
-    a2 = v0 << 1;
-    a2 += v0;
-    a2 <<= 3;
-    _thunk_D_memset();
-    a0 = s0;
-    a1 = gTmpBuffer;
-    a2 = 1;
-    _thunk_W_ReadMapLump();
-    v0 = lw(gp + 0xBD4);                                // Load from: gNumSides (800781B4)
-    s2 = lw(gp + 0x8C0);                                // Load from: gpSides (80077EA0)
-    s0 = s2 + 0xC;
-    if (i32(v0) <= 0) goto loc_800227A8;
-    s1 = s3 + 0xC;                                      // Result = gTmpWadLumpBuffer[3] (80098754)
-loc_80022724:
-    v0 = lh(s3);
-    a0 = s3 + 4;
-    v0 <<= 16;
-    sw(v0, s2);
-    v0 = lh(s1 - 0xA);
-    s4++;
-    v0 <<= 16;
-    sw(v0, s0 - 0x8);
-    v1 = lh(s1 + 0x10);
-    s2 += 0x18;
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v0 -= v1;
-    v1 = lw(gp + 0xAC8);                                // Load from: gpSectors (800780A8)
-    v0 <<= 2;
-    v0 += v1;
-    sw(v0, s0 + 0x8);
-    R_TextureNumForName();
-    a0 = s3 + 0x14;
-    sw(v0, s0 - 0x4);
-    R_TextureNumForName();
-    a0 = s1;
-    sw(v0, s0 + 0x4);
-    R_TextureNumForName();
-    s1 += 0x1E;
-    s3 += 0x1E;
-    sw(v0, s0);
-    v0 = lw(gp + 0xBD4);                                // Load from: gNumSides (800781B4)
-    v0 = (i32(s4) < i32(v0));
-    s0 += 0x18;
-    if (v0 != 0) goto loc_80022724;
-loc_800227A8:
-    ra = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load side definitions from the specified map lump number
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
+    // Sanity check the sidedefs lump is not too big
+    const int32_t lumpSize = W_MapLumpLength(lumpNum);
+
+    if (lumpSize > TMP_BUFFER_SIZE) {
+        I_Error("P_LoadSideDefs: lump > 64K");
+    }
+
+    // Alloc ram for the runtime sidedefs and zero initialize
+    *gNumSides = lumpSize / sizeof(mapsidedef_t);
+    *gpSides = (side_t*) Z_Malloc(**gpMainMemZone, *gNumSides * sizeof(side_t), PU_LEVEL, nullptr);
+    D_memset(gpSides->get(), (std::byte) 0, *gNumSides  * sizeof(side_t));
+
+    // Read the map lump containing the sidedefs
+    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+
+    // Process the WAD sidedefs and convert them into runtime sidedefs
+    const mapsidedef_t* pSrcSide = (const mapsidedef_t*) gTmpBuffer.get();
+    side_t* pDstSide = gpSides->get();
+
+    for (int32_t sideIdx = 0; sideIdx < *gNumSides; ++sideIdx) {
+        pDstSide->textureoffset = (fixed_t) pSrcSide->textureoffset << FRACBITS;
+        pDstSide->rowoffset = (fixed_t) pSrcSide->rowoffset << FRACBITS;
+        pDstSide->sector = &(*gpSectors)[pSrcSide->sector];
+
+        a0 = ptrToVmAddr(pSrcSide->toptexture);
+        R_TextureNumForName();
+        pDstSide->toptexture = v0;
+
+        a0 = ptrToVmAddr(pSrcSide->midtexture);
+        R_TextureNumForName();
+        pDstSide->midtexture = v0;
+
+        a0 = ptrToVmAddr(pSrcSide->bottomtexture);
+        R_TextureNumForName();
+        pDstSide->bottomtexture = v0;
+
+        ++pSrcSide;
+        ++pDstSide;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1464,9 +1416,7 @@ loc_800230D4:
     P_LoadBlockMap(mapStartLump + ML_BLOCKMAP);
     P_LoadVertexes(mapStartLump + ML_VERTEXES);
     P_LoadSectors(mapStartLump + ML_SECTORS);
-
-    a0 = mapStartLump + ML_SIDEDEFS;
-    P_LoadSideDefs();
+    P_LoadSideDefs(mapStartLump + ML_SIDEDEFS);
 
     a0 = mapStartLump + ML_LINEDEFS;
     P_LoadLineDefs();

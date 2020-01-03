@@ -1,10 +1,15 @@
 #pragma once
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Rendering and geometry related data structures.
+// A lot of these are used by game logic too, in addition to the renderer.
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 #include "Doom/doomdef.h"
 
 struct line_t;
 
-// Represents a vertex used by the renderer
+// Represents a vertex in a line
 struct vertex_t {
     fixed_t     x;
     fixed_t     y;
@@ -17,7 +22,7 @@ struct vertex_t {
 
 static_assert(sizeof(vertex_t) == 28);
 
-// Describes a sector used by the game and renderer
+// Describes a sector or collection of lines and subsectors
 struct sector_t {
     fixed_t                 floorheight;
     fixed_t                 ceilingheight;
@@ -40,3 +45,15 @@ struct sector_t {
 };
 
 static_assert(sizeof(sector_t) == 92);
+
+// Describes a side of a line
+struct side_t {
+    fixed_t             textureoffset;
+    fixed_t             rowoffset;
+    int32_t             toptexture;
+    int32_t             bottomtexture;
+    int32_t             midtexture;
+    VmPtr<sector_t>     sector;
+};
+
+static_assert(sizeof(side_t) == 24);

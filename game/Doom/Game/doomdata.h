@@ -1,7 +1,7 @@
 #pragma once
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Game data structures which are read from files
+// Game data structures which are read from WAD files
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 #include "Doom/Base/z_zone.h"
@@ -62,3 +62,15 @@ struct mapsector_t {
 };
 
 static_assert(sizeof(mapsector_t) == 28);
+
+// Describes a side of a line in a WAD
+struct mapsidedef_t {
+	int16_t     textureoffset;          // Texture x offset
+	int16_t		rowoffset;              // Texture y offset
+	char		toptexture[8];
+    char        bottomtexture[8];
+    char        midtexture[8];
+	int16_t     sector;
+};
+
+static_assert(sizeof(mapsidedef_t) == 30);
