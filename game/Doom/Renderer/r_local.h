@@ -109,7 +109,7 @@ struct seg_t {
     angle_t             angle;
     VmPtr<side_t>       sidedef;
     VmPtr<line_t>       linedef;
-    VmPtr<sector_t>     frontsector;        // TODO: confirm
+    VmPtr<sector_t>     frontsector;
     VmPtr<sector_t>     backsector;
     uint32_t            unknown1;           // TODO: find out what this is
     uint32_t            unknown2;           // TODO: find out what this is
