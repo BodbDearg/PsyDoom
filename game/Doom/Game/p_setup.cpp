@@ -519,7 +519,7 @@ static void P_LoadThings(const int32_t lumpNum) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load linedefs from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_LoadLineDefs(const int32_t lumpNum) noexcept {
+static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
     // Sanity check the linedefs lump is not too big
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
 
