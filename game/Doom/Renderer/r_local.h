@@ -13,11 +13,11 @@ struct line_t;
 struct vertex_t {
     fixed_t     x;
     fixed_t     y;
-    uint32_t    unknown1;       // TODO: what is this field for?
-    uint32_t    unknown2;       // TODO: what is this field for?
-    uint32_t    unknown3;       // TODO: what is this field for?
-    uint32_t    unknown4;       // TODO: what is this field for?
-    uint32_t    unknown5;       // TODO: what is this field for?
+    int32_t     xx;         // TODO: comment on usage
+    int32_t     vx;         // TODO: comment on usage
+    int32_t     vy;         // TODO: comment on usage
+    int32_t     yy;         // TODO: comment on usage
+    int32_t     index;      // TODO: comment on usage
 };
 
 static_assert(sizeof(vertex_t) == 28);

@@ -74,7 +74,7 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
     for (int32_t vertexIdx = 0; vertexIdx < *gNumVertexes; ++vertexIdx) {
         pDstVertex->x = pSrcVertex->x;
         pDstVertex->y = pSrcVertex->y;
-        pDstVertex->unknown5 = 0;
+        pDstVertex->index = 0;
         ++pSrcVertex;
         ++pDstVertex;
     }
@@ -1191,7 +1191,6 @@ loc_8002305C:
     v1 += 0x18;
     if (v0 != 0) goto loc_80023020;
 loc_80023068:
-    a0 = *gpMainMemZone;
     v1 = *gLockedTexPagesMask;
     v0 = 5;                                             // Result = 00000005
     at = 0x80080000;                                    // Result = 80080000
@@ -1204,8 +1203,9 @@ loc_80023068:
     sw(0, at - 0x7D88);                                 // Store to: gTexCacheRowBlockH (80078278)
     v1 |= 0x1C;
     *gLockedTexPagesMask = v1;
-    a1 = 0x20;                                          // Result = 00000020
-    _thunk_Z_FreeTags();
+    
+    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+
     P_InitPicAnims();
     ra = lw(sp + 0x2C);
     s2 = lw(sp + 0x28);
@@ -1225,18 +1225,13 @@ loc_800230D4:
     sw(s2, sp + 0x80);
     sw(s3, sp + 0x84);
 
-    a0 = *gpMainMemZone;
-    a1 = 38;
-    _thunk_Z_FreeTags();
+    Z_FreeTags(**gpMainMemZone, PU_CACHE|PU_LEVSPEC|PU_LEVEL);
 
     if (!*gbIsLevelBeingRestarted) {
         *gLockedTexPagesMask &= 1;
-
-        a0 = *gpMainMemZone;
-        a1 = 8;
-        _thunk_Z_FreeTags();
+        Z_FreeTags(**gpMainMemZone, PU_ANIMATION);
     }
-       
+    
     I_ResetTexCache();
     Z_CheckHeap(**gpMainMemZone);
     M_ClearRandom();

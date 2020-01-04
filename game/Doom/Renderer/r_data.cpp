@@ -107,9 +107,8 @@ loc_8002BB18:
     v1 += 4;
     if (v0 != 0) goto loc_8002BB18;
 loc_8002BB30:
-    a0 = *gpMainMemZone;
-    a1 = 0x20;
-    _thunk_Z_FreeTags();
+    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+
     ra = lw(sp + 0x18);
     sp += 0x20;
     return;
@@ -255,9 +254,9 @@ loc_8002BD50:
 loc_8002BD74:
     a0 = *gpMainMemZone;
     _thunk_Z_Free2();
-    a0 = *gpMainMemZone;
-    a1 = 0x20;
-    _thunk_Z_FreeTags();
+    
+    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -445,13 +444,13 @@ loc_8002BFF0:
     v0 = (i32(s0) < 0x14);
     s2 += 2;
     if (v0 != 0) goto loc_8002BFE4;
-    a0 = *gpMainMemZone;
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lhu(v0 - 0x6F7C);                              // Load from: gPaletteClutId_Main (800A9084)
     at = 0x80070000;                                    // Result = 80070000
     sh(v0, at + 0x7F7C);                                // Store to: g3dViewPaletteClutId (80077F7C)
-    a1 = 0x20;                                          // Result = 00000020
-    _thunk_Z_FreeTags();
+    
+    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+
     ra = lw(sp + 0x24);
     s2 = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);

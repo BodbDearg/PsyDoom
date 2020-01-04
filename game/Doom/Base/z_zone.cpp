@@ -344,10 +344,6 @@ void Z_FreeTags(memzone_t& zone, const int16_t tagBits) noexcept {
     zone.rover = &zone.blocklist;
 }
 
-void _thunk_Z_FreeTags() noexcept {
-    Z_FreeTags(*vmAddrToPtr<memzone_t>(a0), (int16_t) a1);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Performs basic sanity checks for the integrity of the heap.
 // If any sanity checks fail, then a fatal error is emitted.

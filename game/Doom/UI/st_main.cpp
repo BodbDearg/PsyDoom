@@ -30,7 +30,6 @@ loc_8003857C:
     if (v0 == 0) goto loc_800385B8;
     I_Error("ST_Init: final texture cache foulup\n");
 loc_800385B8:
-    a0 = *gpMainMemZone;
     v1 = *gLockedTexPagesMask;
     v0 = 1;                                             // Result = 00000001
     at = 0x80080000;                                    // Result = 80080000
@@ -43,8 +42,9 @@ loc_800385B8:
     sw(0, at - 0x7D88);                                 // Store to: gTexCacheRowBlockH (80078278)
     v1 |= 1;
     *gLockedTexPagesMask = v1;
-    a1 = 0x20;
-    _thunk_Z_FreeTags();
+    
+    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;

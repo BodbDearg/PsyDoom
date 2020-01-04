@@ -431,7 +431,8 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     *gbIsLevelBeingRestarted = false;
     *gLockedTexPagesMask &= 1;
     I_ResetTexCache();    
-    Z_FreeTags(**gpMainMemZone, 0x2E);      // TODO: find out what these bit flags are
+
+    Z_FreeTags(**gpMainMemZone, PU_CACHE|PU_ANIMATION|PU_LEVSPEC|PU_LEVEL);
     M_ClearRandom();
 
     // Save game params: note that in multiplayer these might be overriden later
@@ -519,7 +520,7 @@ void G_RunGame() noexcept {
         
         // Cleanup after the level is done
         *gLockedTexPagesMask &= 1;
-        Z_FreeTags(**gpMainMemZone, 8);     // TODO: find out what these bit flags are
+        Z_FreeTags(**gpMainMemZone, PU_ANIMATION);
         
         if (*gGameAction == ga_number5)
             break;
@@ -599,10 +600,7 @@ loc_80013714:
     _thunk_D_memcpy();
 
     *gLockedTexPagesMask &= 1;
-
-    a0 = *gpMainMemZone;    
-    a1 = 0x2E;
-    _thunk_Z_FreeTags();
+    Z_FreeTags(**gpMainMemZone, PU_CACHE|PU_ANIMATION|PU_LEVSPEC|PU_LEVEL);
 
     v0 = s0;
     ra = lw(sp + 0x3C);
