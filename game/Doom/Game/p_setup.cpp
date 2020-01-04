@@ -631,12 +631,12 @@ void P_LoadMapLump() noexcept {
     return;
 }
 
-void P_LoadLeafs() noexcept {
-loc_80022920:
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load leafs from the specified map lump number
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_LoadLeafs(const int32_t lumpNum) noexcept {
     sp -= 0x48;
     sw(s2, sp + 0x28);
-    s2 = a0;
-    sw(ra, sp + 0x44);
     sw(fp, sp + 0x40);
     sw(s7, sp + 0x3C);
     sw(s6, sp + 0x38);
@@ -645,121 +645,125 @@ loc_80022920:
     sw(s3, sp + 0x2C);
     sw(s1, sp + 0x24);
     sw(s0, sp + 0x20);
+
+    a0 = lumpNum;
     _thunk_W_MapLumpLength();
-    v1 = 0x10000;                                       // Result = 00010000
-    v1 = (i32(v1) < i32(v0));
-    fp = 0;                                             // Result = 00000000
-    if (v1 == 0) goto loc_80022974;
-    I_Error("P_LoadLeafs: lump > 64K");
-loc_80022974:
-    a0 = s2;
-    s0 = gTmpBuffer;
+    
+    if (i32(v0) > TMP_BUFFER_SIZE) {
+        I_Error("P_LoadLeafs: lump > 64K");
+    }
+
+    a0 = lumpNum;    
     a1 = gTmpBuffer;
     a2 = 1;
     _thunk_W_ReadMapLump();
+
+    s0 = gTmpBuffer;
     s1 = 0;
+    fp = 0;
     s4 = gTmpBuffer;
-loc_80022994:
-    a0 = s2;
-    _thunk_W_MapLumpLength();
-    v0 += s0;
-    v0 = (s4 < v0);
-    if (v0 == 0) goto loc_800229C8;
-    v0 = lh(s4);
-    fp++;
-    s1 += v0;
-    v0 <<= 2;
-    v0 += 2;
-    s4 += v0;
-    goto loc_80022994;
-loc_800229C8:
-    v0 = *gNumSubsectors;
-    s4 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
-    if (fp == v0) goto loc_800229E8;
-    I_Error("P_LoadLeafs: leaf/subsector inconsistancy");
-loc_800229E8:
-    a1 = s1 << 3;
-    a2 = 2;
+
+    while (true) {
+        a0 = lumpNum;
+        _thunk_W_MapLumpLength();
+        v0 += s0;
+
+        if (s4 >= v0)
+            break;
+
+        v0 = lh(s4);
+        fp++;
+        s1 += v0;
+        v0 <<= 2;
+        v0 += 2;
+        s4 += v0;
+    }
+
+    if (fp != *gNumSubsectors) {
+        I_Error("P_LoadLeafs: leaf/subsector inconsistancy");
+    }
+
     a0 = *gpMainMemZone;
+    a1 = s1 << 3;
+    a2 = 2;    
     a3 = 0;
     _thunk_Z_Malloc();
     s6 = v0;
-    v0 = *gpSubsectors;
     sw(s6, gp + 0xB2C);                                 // Store to: gpLeafEdges (8007810C)
+
     sw(0, gp + 0x984);                                  // Store to: gTotalNumLeafEdges (80077F64)
-    s7 = 0;                                             // Result = 00000000
-    if (i32(fp) <= 0) goto loc_80022B24;
-    s2 = v0 + 8;
-loc_80022A1C:
-    v0 = lhu(s4);
-    sh(v0, s2);
-    v0 = lhu(gp + 0x984);                               // Load from: gTotalNumLeafEdges (80077F64)
-    v1 = lh(s2);
-    s5 = 0;                                             // Result = 00000000
-    sh(v0, s2 + 0x2);
-    if (i32(v1) <= 0) goto loc_80022AF8;
-    s3 = s6 + 4;
-    s1 = s4;
-loc_80022A44:
-    s0 = lh(s1 + 0x2);
-    v0 = *gNumVertexes;
-    v0 = (i32(s0) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s0 << 3;
-        if (bJump) goto loc_80022A70;
+
+    v0 = *gpSubsectors;
+    s7 = 0;
+    s4 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+
+    if (i32(fp) > 0) {
+        s2 = v0 + 8;
+
+        do {
+            v0 = lhu(s4);
+            sh(v0, s2);
+            v0 = lhu(gp + 0x984);                               // Load from: gTotalNumLeafEdges (80077F64)
+            v1 = lh(s2);            
+            sh(v0, s2 + 0x2);
+
+            s5 = 0;
+
+            if (i32(v1) > 0) {
+                s3 = s6 + 4;
+                s1 = s4;
+
+                do {
+                    s0 = lh(s1 + 0x2);
+                    
+                    if (i32(s0) >= *gNumVertexes) {
+                        I_Error("P_LoadLeafs: vertex out of range\n");                        
+                    }
+
+                    v0 = s0 << 3;
+                    v0 -= s0;
+                    v1 = *gpVertexes;
+                    v0 <<= 2;
+                    v0 += v1;
+                    sw(v0, s6);
+                    s0 = lh(s1 + 0x4);
+                    v0 = -1;                                            // Result = FFFFFFFF
+
+                    if (s0 == v0) {
+                        sw(0, s3);
+                    } else {
+                        if (i32(s0) >= *gNumSegs) {
+                            I_Error("P_LoadLeafs: seg out of range\n");
+                        }
+
+                        v0 = s0 << 2;
+                        v0 += s0;
+                        v1 = *gpSegs;
+                        v0 <<= 3;
+                        v0 += v1;
+                        sw(v0, s3);
+                    }
+
+                    s1 += 4;
+                    s5++;
+                    s3 += 8;
+                    v0 = lh(s2);
+                    s6 += 8;
+                } while (i32(s5) < i32(v0));
+            }
+
+            s7++;
+            v0 = lh(s2);
+            v1 = lw(gp + 0x984);                                // Load from: gTotalNumLeafEdges (80077F64)
+            v0 <<= 2;
+            v0 += 2;
+            s4 += v0;
+            v1 += s5;
+            sw(v1, gp + 0x984);                                 // Store to: gTotalNumLeafEdges (80077F64)
+            s2 += 0x10;
+        } while (i32(s7) < i32(fp));
     }
-    I_Error("P_LoadLeafs: vertex out of range\n");
-    v0 = s0 << 3;
-loc_80022A70:
-    v0 -= s0;
-    v1 = *gpVertexes;
-    v0 <<= 2;
-    v0 += v1;
-    sw(v0, s6);
-    s0 = lh(s1 + 0x4);
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (s0 != v0) goto loc_80022A9C;
-    sw(0, s3);
-    goto loc_80022AD8;
-loc_80022A9C:
-    v0 = *gNumSegs;
-    v0 = (i32(s0) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s0 << 2;
-        if (bJump) goto loc_80022AC4;
-    }
-    I_Error("P_LoadLeafs: seg out of range\n");
-    v0 = s0 << 2;
-loc_80022AC4:
-    v0 += s0;
-    v1 = *gpSegs;
-    v0 <<= 3;
-    v0 += v1;
-    sw(v0, s3);
-loc_80022AD8:
-    s1 += 4;
-    s5++;
-    s3 += 8;
-    v0 = lh(s2);
-    v0 = (i32(s5) < i32(v0));
-    s6 += 8;
-    if (v0 != 0) goto loc_80022A44;
-loc_80022AF8:
-    s7++;
-    v0 = lh(s2);
-    v1 = lw(gp + 0x984);                                // Load from: gTotalNumLeafEdges (80077F64)
-    v0 <<= 2;
-    v0 += 2;
-    s4 += v0;
-    v1 += s5;
-    v0 = (i32(s7) < i32(fp));
-    sw(v1, gp + 0x984);                                 // Store to: gTotalNumLeafEdges (80077F64)
-    s2 += 0x10;
-    if (v0 != 0) goto loc_80022A1C;
-loc_80022B24:
-    ra = lw(sp + 0x44);
+
     fp = lw(sp + 0x40);
     s7 = lw(sp + 0x3C);
     s6 = lw(sp + 0x38);
@@ -770,7 +774,6 @@ loc_80022B24:
     s1 = lw(sp + 0x24);
     s0 = lw(sp + 0x20);
     sp += 0x48;
-    return;
 }
 
 void P_GroupLines() noexcept {
@@ -1237,9 +1240,7 @@ loc_800230D4:
     P_LoadNodes();
 
     P_LoadSegs(mapStartLump + ML_SEGS);
-    
-    a0 = mapStartLump + ML_LEAFS;
-    P_LoadLeafs();
+    P_LoadLeafs(mapStartLump + ML_LEAFS);
 
     // Load the reject map
     a0 = mapStartLump + ML_REJECT;

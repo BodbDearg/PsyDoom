@@ -30,7 +30,6 @@ extern const VmPtr<VmPtr<seg_t>>            gpSegs;
 
 void P_LoadNodes() noexcept;
 void P_LoadMapLump() noexcept;
-void P_LoadLeafs() noexcept;
 void P_GroupLines() noexcept;
 void P_InitMapTextures() noexcept;
 void P_SetupLevel(const int32_t mapNum, const skill_t skill) noexcept;
