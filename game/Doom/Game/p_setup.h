@@ -5,6 +5,7 @@
 
 struct leafedge_t;
 struct line_t;
+struct node_t;
 struct seg_t;
 struct side_t;
 struct vertex_t;
@@ -26,12 +27,13 @@ extern const VmPtr<int32_t>                 gNumLines;
 extern const VmPtr<VmPtr<line_t>>           gpLines;
 extern const VmPtr<int32_t>                 gNumSubsectors;
 extern const VmPtr<VmPtr<subsector_t>>      gpSubsectors;
+extern const VmPtr<int32_t>                 gNumBspNodes;
+extern const VmPtr<VmPtr<node_t>>           gpBspNodes;
 extern const VmPtr<int32_t>                 gNumSegs;
 extern const VmPtr<VmPtr<seg_t>>            gpSegs;
 extern const VmPtr<int32_t>                 gTotalNumLeafEdges;
 extern const VmPtr<VmPtr<leafedge_t>>       gpLeafEdges;
 
-void P_LoadNodes() noexcept;
 void P_LoadMapLump() noexcept;
 void P_GroupLines() noexcept;
 void P_InitMapTextures() noexcept;

@@ -30,8 +30,7 @@ loc_80023C34:
     sw(a3, at - 0x6F88);                                // Store to: gShootDiv[1] (800A9078)
     v0 = lw(v0);
     mult(t1, v0);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E48);                               // Load from: gNumBspNodes (800781B8)
+    a0 = *gNumBspNodes;
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 - 0x7D08);                               // Load from: gAimBottomSlope (800782F8)
     sw(0, gp + 0xCF0);                                  // Store to: gpShootLine (800782D0)
@@ -767,8 +766,7 @@ loc_800247E8:
 loc_80024804:
     v0 = a0 << 3;
     v0 -= a0;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EA4);                               // Load from: gpBspNodes (80077EA4)
+    v1 = *gpBspNodes;
     v0 <<= 3;
     s0 = v0 + v1;
     v0 = 0x800B0000;                                    // Result = 800B0000

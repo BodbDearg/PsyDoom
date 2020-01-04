@@ -694,8 +694,7 @@ loc_80030F54:
 
 void R_PointInSubsector() noexcept {
 loc_80030F5C:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E48);                               // Load from: gNumBspNodes (800781B8)
+    v0 = *gNumBspNodes;
     t0 = a0;
     if (v0 != 0) goto loc_80030F80;
     v0 = *gpSubsectors;
@@ -708,8 +707,7 @@ loc_80030F80:
         v0 = 0xFFFF0000;                                // Result = FFFF0000
         if (bJump) goto loc_80031068;
     }
-    t1 = 0x80070000;                                    // Result = 80070000
-    t1 = lw(t1 + 0x7EA4);                               // Load from: gpBspNodes (80077EA4)
+    t1 = *gpBspNodes;
     v0 = v1 << 3;
 loc_80030F9C:
     v0 -= v1;

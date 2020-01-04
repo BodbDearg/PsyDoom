@@ -23,6 +23,21 @@ enum : uint32_t {
     ML_LEAFS
 };
 
+// Linedef flags
+static constexpr int16_t ML_BLOCKING        = 1;        // TODO: CONFIRM
+static constexpr int16_t ML_BLOCKMONSTERS   = 2;        // TODO: CONFIRM
+static constexpr int16_t ML_TWOSIDED        = 4;        // Unset for single sided lines
+static constexpr int16_t ML_DONTPEGTOP      = 8;        // If unset then upper texture is anchored to the ceiling rather than bottom edge (TODO: CONFIRM)
+static constexpr int16_t ML_DONTPEGBOTTOM   = 16;       // If unset then lower texture is anchored to the floor rather than top edge (TODO: CONFIRM)
+static constexpr int16_t ML_SECRET          = 32;       // Don't show as two sided in the automap, because it's a secret (TODO: CONFIRM)
+static constexpr int16_t ML_SOUNDBLOCK      = 64;       // Stops sound propagation (TODO: CONFIRM)
+static constexpr int16_t ML_DONTDRAW        = 128;      // Hide on the automap (TODO: CONFIRM)
+static constexpr int16_t ML_MAPPED          = 256;      // Set when the line is to be shown on the automap (TODO: CONFIRM)
+
+// If this flag is set for a BSP node child in a wad then it means the child is a subsector.
+// This flag should be removed when retrieving the actual subsector number.
+static constexpr uint16_t NF_SUBSECTOR = 0x8000;
+
 // Header for a block of memory in a memory blocks file.
 // Deliberately the same size as 'memblock_t' so it can be repurposed as that later when the block is loaded into RAM.
 // The data for the block immediately follows this header in the blocks file.
@@ -48,7 +63,7 @@ struct mapvertex_t {
 
 static_assert(sizeof(mapvertex_t) == 8);
 
-// Map data for a sectors, sides, lines, subsectors and line segments in a WAD
+// Map data for a sectors, sides, lines, subsectors, nodes and line segments in a WAD
 struct mapsector_t {
     int16_t     floorheight;
     int16_t     ceilingheight;
@@ -77,7 +92,7 @@ static_assert(sizeof(mapsidedef_t) == 30);
 struct maplinedef_t {
     int16_t     vertex1;
     int16_t     vertex2;
-    int16_t     flags;
+    int16_t     flags;          // A combination of 'ML_XXX' line flags
     int16_t     special;
     int16_t     tag;
     int16_t     sidenum[2];     // If -1 then the line is 1 sided
@@ -92,13 +107,24 @@ struct mapsubsector_t {
 
 static_assert(sizeof(mapsubsector_t) == 4);
 
+struct mapnode_t {
+    int16_t     x;              // The partition line
+    int16_t     y;
+    int16_t     dx;
+    int16_t     dy;
+    int16_t     bbox[2][4];     // Bounding box for both child nodes
+    uint16_t    children[2];    // When 'NF_SUBSECTOR' is set then it means it's a subsector number
+};
+
+static_assert(sizeof(mapnode_t) == 28);
+
 struct mapseg_t {
     int16_t     vertex1;
     int16_t     vertex2;
     int16_t     angle;
     int16_t     linedef;
     int16_t     side;           // '0' or '1': which side of the line the seg is on. Always '0' for one sided lines.
-    int16_t     offset;
+    int16_t     offset;         // TODO: comment
 };
 
 static_assert(sizeof(mapseg_t) == 12);
@@ -116,14 +142,3 @@ struct mapleafedge_t {
 };
 
 static_assert(sizeof(mapleafedge_t) == 4);
-
-// Line behavior flags
-static constexpr int16_t ML_BLOCKING        = 1;        // TODO: CONFIRM
-static constexpr int16_t ML_BLOCKMONSTERS   = 2;        // TODO: CONFIRM
-static constexpr int16_t ML_TWOSIDED        = 4;        // Unset for single sided lines
-static constexpr int16_t ML_DONTPEGTOP      = 8;        // If unset then upper texture is anchored to the ceiling rather than bottom edge (TODO: CONFIRM)
-static constexpr int16_t ML_DONTPEGBOTTOM   = 16;       // If unset then lower texture is anchored to the floor rather than top edge (TODO: CONFIRM)
-static constexpr int16_t ML_SECRET          = 32;       // Don't show as two sided in the automap, because it's a secret (TODO: CONFIRM)
-static constexpr int16_t ML_SOUNDBLOCK      = 64;       // Stops sound propagation (TODO: CONFIRM)
-static constexpr int16_t ML_DONTDRAW        = 128;      // Hide on the automap (TODO: CONFIRM)
-static constexpr int16_t ML_MAPPED          = 256;      // Set when the line is to be shown on the automap (TODO: CONFIRM)

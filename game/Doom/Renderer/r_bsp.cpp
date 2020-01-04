@@ -19,8 +19,7 @@ loc_8002ACE8:
     sw(v0, at - 0x7F9C);                                // Store to: gppEndDrawSubsector (80078064)
     a2 = 0x100;                                         // Result = 00000100
     _thunk_D_memset();
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E48);                               // Load from: gNumBspNodes (800781B8)
+    a0 = *gNumBspNodes;
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7E0C);                                 // Store to: gbIsSkyVisible (800781F4)
     a0--;
@@ -52,8 +51,7 @@ loc_8002AD70:
 loc_8002AD84:
     v0 = v1 << 3;
     v0 -= v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EA4);                               // Load from: gpBspNodes (80077EA4)
+    v1 = *gpBspNodes;
     v0 <<= 3;
     s0 = v0 + v1;
     v0 = 0x80070000;                                    // Result = 80070000

@@ -53,6 +53,8 @@ const VmPtr<int32_t>                gNumLines(0x800781C8);
 const VmPtr<VmPtr<line_t>>          gpLines(0x80077EB0);
 const VmPtr<int32_t>                gNumSubsectors(0x80078224);
 const VmPtr<VmPtr<subsector_t>>     gpSubsectors(0x80077F40);
+const VmPtr<int32_t>                gNumBspNodes(0x800781B8);
+const VmPtr<VmPtr<node_t>>          gpBspNodes(0x80077EA4);
 const VmPtr<int32_t>                gNumSegs(0x800780A4);
 const VmPtr<VmPtr<seg_t>>           gpSegs(0x80078238);
 const VmPtr<int32_t>                gTotalNumLeafEdges(0x80077F64);
@@ -260,98 +262,47 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     }
 }
 
-void P_LoadNodes() noexcept {
-loc_80022104:
-    sp -= 0x20;
-    sw(s0, sp + 0x18);
-    sw(ra, sp + 0x1C);
-    s0 = a0;
-    _thunk_W_MapLumpLength();
-    v1 = 0x10000;                                       // Result = 00010000
-    v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_80022138;
-    I_Error("P_LoadNodes: lump > 64K");
-loc_80022138:
-    a0 = s0;
-    _thunk_W_MapLumpLength();
-    v1 = 0x24920000;                                    // Result = 24920000
-    v1 |= 0x4925;                                       // Result = 24924925
-    v0 >>= 2;
-    multu(v0, v1);
-    a2 = 2;                                             // Result = 00000002
-    a3 = 0;                                             // Result = 00000000
-    a0 = *gpMainMemZone;
-    v0 = hi;
-    a1 = v0 << 3;
-    a1 -= v0;
-    sw(v0, gp + 0xBD8);                                 // Store to: gNumBspNodes (800781B8)
-    a1 <<= 3;
-    _thunk_Z_Malloc();
-    a0 = s0;
-    s0 = gTmpBuffer;
-    a1 = gTmpBuffer;
-    sw(v0, gp + 0x8C4);                                 // Store to: gpBspNodes (80077EA4)
-    a2 = 1;                                             // Result = 00000001
-    _thunk_W_ReadMapLump();
-    v0 = lw(gp + 0xBD8);                                // Load from: gNumBspNodes (800781B8)
-    t3 = lw(gp + 0x8C4);                                // Load from: gpBspNodes (80077EA4)
-    t6 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80022264;
-    t5 = s0 + 6;                                        // Result = gTmpWadLumpBuffer[1] (8009874E)
-    t4 = t3 + 0xC;
-loc_800221AC:
-    t2 = 0;                                             // Result = 00000000
-    v0 = lh(s0);
-    t1 = s0;
-    v0 <<= 16;
-    sw(v0, t3);
-    v0 = lh(t5 - 0x4);
-    t0 = t3;
-    v0 <<= 16;
-    sw(v0, t4 - 0x8);
-    v0 = lh(t5 - 0x2);
-    a3 = s0;
-    v0 <<= 16;
-    sw(v0, t4 - 0x4);
-    v0 = lh(t5);
-    a2 = t3;
-    v0 <<= 16;
-    sw(v0, t4);
-loc_800221F0:
-    a1 = 0;                                             // Result = 00000000
-    a0 = t0 + 0x10;
-    v0 = lhu(a3 + 0x18);
-    v1 = t1 + 8;
-    sw(v0, a2 + 0x30);
-loc_80022204:
-    v0 = lh(v1);
-    v1 += 2;
-    a1++;
-    v0 <<= 16;
-    sw(v0, a0);
-    v0 = (i32(a1) < 4);
-    a0 += 4;
-    if (v0 != 0) goto loc_80022204;
-    t1 += 8;                                            // Result = gTmpWadLumpBuffer[2] (80098750)
-    t0 += 0x10;
-    a3 += 2;                                            // Result = gTmpWadLumpBuffer[0] (8009874A)
-    t2++;                                               // Result = 00000001
-    v0 = (i32(t2) < 2);                                 // Result = 00000001
-    a2 += 4;
-    if (v0 != 0) goto loc_800221F0;
-    t6++;                                               // Result = 00000001
-    t4 += 0x38;
-    t3 += 0x38;
-    t5 += 0x1C;                                         // Result = gTmpWadLumpBuffer[8] (8009876A)
-    v0 = lw(gp + 0xBD8);                                // Load from: gNumBspNodes (800781B8)
-    v0 = (i32(t6) < i32(v0));
-    s0 += 0x1C;                                         // Result = gTmpWadLumpBuffer[7] (80098764)
-    if (v0 != 0) goto loc_800221AC;
-loc_80022264:
-    ra = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load map bsp nodes from the specified map lump number
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_LoadNodes(const int32_t lumpNum) noexcept {
+    // Sanity check the sectors lump is not too big
+    const int32_t lumpSize = W_MapLumpLength(lumpNum);
+    
+    if (lumpSize > TMP_BUFFER_SIZE) {
+        I_Error("P_LoadNodes: lump > 64K");
+    }
+
+    // Alloc ram for the runtime nodes
+    *gNumBspNodes = lumpSize / sizeof(mapnode_t);
+    *gpBspNodes = (node_t*) Z_Malloc(**gpMainMemZone, *gNumBspNodes * sizeof(node_t), PU_LEVEL, nullptr);
+
+    // Read the map lump containing the nodes into a temp buffer from the map WAD
+    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+
+    // Process the WAD nodes and convert them into runtime nodes.
+    // The format for nodes on the PSX appears identical to PC.
+    const mapnode_t* pSrcNode = (const mapnode_t*) gTmpBuffer.get();
+    node_t* pDstNode = gpBspNodes->get();
+
+    for (int32_t nodeIdx = 0; nodeIdx < *gNumBspNodes; ++nodeIdx) {
+        pDstNode->x = (fixed_t) pSrcNode->x << FRACBITS;
+        pDstNode->y = (fixed_t) pSrcNode->y << FRACBITS;
+        pDstNode->dx = (fixed_t) pSrcNode->dx << FRACBITS;
+        pDstNode->dy = (fixed_t) pSrcNode->dy << FRACBITS;
+
+        for (int32_t childIdx = 0; childIdx < 2; ++childIdx) {
+            pDstNode->children[childIdx] = pSrcNode->children[childIdx];
+
+            for (int32_t coordIdx = 0; coordIdx < 4; ++coordIdx) {
+                const fixed_t coord = (fixed_t) pSrcNode->bbox[childIdx][coordIdx] << FRACBITS;
+                pDstNode->bbox[childIdx][coordIdx] = coord;
+            }
+        }
+
+        ++pSrcNode;
+        ++pDstNode;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1178,10 +1129,7 @@ loc_800230D4:
     P_LoadSideDefs(mapStartLump + ML_SIDEDEFS);
     P_LoadLineDefs(mapStartLump + ML_LINEDEFS);
     P_LoadSubSectors(mapStartLump + ML_SSECTORS);
-
-    a0 = mapStartLump + ML_NODES;
-    P_LoadNodes();
-
+    P_LoadNodes(mapStartLump + ML_NODES);
     P_LoadSegs(mapStartLump + ML_SEGS);
     P_LoadLeafs(mapStartLump + ML_LEAFS);
 

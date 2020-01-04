@@ -145,8 +145,7 @@ loc_800249B4:
     v0 -= a1;
     sw(v0, gp + 0xC00);                                 // Store to: gTopSlope (800781E0)
     v0 = lw(t1 + 0x8);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7E48);                               // Load from: gNumBspNodes (800781B8)
+    a0 = *gNumBspNodes;
     sw(a1, gp + 0xA40);                                 // Store to: gSightZStart (80078020)
     v0 -= a1;
     sw(v0, gp + 0xA28);                                 // Store to: gBottomSlope (80078008)
@@ -420,8 +419,7 @@ loc_80024F0C:
 loc_80024F28:
     v0 = a0 << 3;
     v0 -= a0;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EA4);                               // Load from: gpBspNodes (80077EA4)
+    v1 = *gpBspNodes;
     v0 <<= 3;
     s0 = v0 + v1;
     v0 = 0x80090000;                                    // Result = 80090000

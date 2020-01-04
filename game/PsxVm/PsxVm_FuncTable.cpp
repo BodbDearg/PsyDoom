@@ -198,7 +198,6 @@ extern void A_LoadShotgun2() noexcept;
 extern void A_CloseShotgun2() noexcept;
 extern void P_SetupPsprites() noexcept;
 extern void P_MovePsprites() noexcept;
-extern void P_LoadNodes() noexcept;
 extern void P_LoadMapLump() noexcept;
 extern void P_GroupLines() noexcept;
 extern void P_InitMapTextures() noexcept;
@@ -1142,7 +1141,6 @@ namespace PsxVm {
         { 0x800216D8, &A_CloseShotgun2 },
         { 0x80021794, &P_SetupPsprites },
         { 0x8002190C, &P_MovePsprites },
-        { 0x80022104, &P_LoadNodes },
         { 0x800228CC, &P_LoadMapLump },
         { 0x80022B58, &P_GroupLines },
         { 0x80022E68, &P_InitMapTextures },
