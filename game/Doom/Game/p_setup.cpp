@@ -51,6 +51,8 @@ const VmPtr<int32_t>                gNumSides(0x800781B4);
 const VmPtr<VmPtr<side_t>>          gpSides(0x80077EA0);
 const VmPtr<int32_t>                gNumLines(0x800781C8);
 const VmPtr<VmPtr<line_t>>          gpLines(0x80077EB0);
+const VmPtr<int32_t>                gNumSubsectors(0x80078224);
+const VmPtr<VmPtr<subsector_t>>     gpSubsectors(0x80077F40);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
@@ -218,63 +220,32 @@ loc_80021DC4:
 // Load map subsectors using data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
-    sp -= 0x28;
-    sw(s0, sp + 0x18);
+    // Sanity check the subsectors lump is not too big
+    const int32_t lumpSize = W_MapLumpLength(lumpNum);
 
-    a0 = lumpNum;
-    _thunk_W_MapLumpLength();
-
-    if (i32(v0) > TMP_BUFFER_SIZE) {
+    if (lumpSize > TMP_BUFFER_SIZE) {
         I_Error("P_LoadSubsectors: lump > 64K");
     }
 
-    a0 = lumpNum;
-    _thunk_W_MapLumpLength();
-    v0 >>= 2;
-    sw(v0, gp + 0xC44);         // Store to: gNumSubsectors (80078224)
+    // Alloc ram for the runtime subsectors and zero initialize
+    *gNumSubsectors = lumpSize / sizeof(mapsubsector_t);
+    *gpSubsectors = (subsector_t*) Z_Malloc(**gpMainMemZone, *gNumSubsectors * sizeof(subsector_t), PU_LEVEL, nullptr);
+    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+    D_memset(gpSubsectors->get(), (std::byte) 0, *gNumSubsectors * sizeof(subsector_t));
 
-    a0 = *gpMainMemZone;
-    a1 = v0 << 4;
-    a2 = 2;
-    a3 = 0;
-    _thunk_Z_Malloc();
-    sw(v0, gp + 0x960);         // Store to: gpSubsectors (80077F40)
+    // Process the WAD subsectors and convert them into runtime subsectors
+    const mapsubsector_t* pSrcSubsec = (const mapsubsector_t*) gTmpBuffer.get();
+    subsector_t* pDstSubsec = gpSubsectors->get();
 
-    a0 = lumpNum;
-    a1 = gTmpBuffer;
-    a2 = 1;
-    _thunk_W_ReadMapLump();
+    for (int32_t subsectorIdx = 0; subsectorIdx < *gNumSubsectors; ++subsectorIdx) {
+        pDstSubsec->numSegs = pSrcSubsec->numsegs;
+        pDstSubsec->firstSeg = pSrcSubsec->firstseg;        
+        pDstSubsec->unknown3 = 0;
+        pDstSubsec->unknown4 = 0;
 
-    a0 = lw(gp + 0x960);        // Load from: gpSubsectors (80077F40)
-    a1 = 0;
-    a2 = lw(gp + 0xC44);        // Load from: gNumSubsectors (80078224)    
-    a2 <<= 4;
-    _thunk_D_memset();
-
-    a0 = 0;
-    a1 = lw(gp + 0xC44);        // Load from: gNumSubsectors (80078224)
-    v0 = lw(gp + 0x960);        // Load from: gpSubsectors (80077F40)
-    s0 = gTmpBuffer;
-
-    if (i32(a1) > 0) {
-        v1 = v0 + 0xA;
-
-        do {
-            v0 = lhu(s0);
-            a0++;
-            sh(v0, v1 - 0x6);
-            v0 = lhu(s0 + 0x2);
-            s0 += 4;
-            sh(0, v1 - 0x2);
-            sh(0, v1);
-            sh(v0, v1 - 0x4);
-            v0 = (i32(a0) < i32(a1));
-            v1 += 0x10;
-        } while (v0 != 0);
+        ++pSrcSubsec;
+        ++pDstSubsec;
     }
-
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -770,7 +741,7 @@ loc_80022994:
     s4 += v0;
     goto loc_80022994;
 loc_800229C8:
-    v0 = lw(gp + 0xC44);                                // Load from: gNumSubsectors (80078224)
+    v0 = *gNumSubsectors;
     s4 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
     if (fp == v0) goto loc_800229E8;
     I_Error("P_LoadLeafs: leaf/subsector inconsistancy");
@@ -781,7 +752,7 @@ loc_800229E8:
     a3 = 0;
     _thunk_Z_Malloc();
     s6 = v0;
-    v0 = lw(gp + 0x960);                                // Load from: gpSubsectors (80077F40)
+    v0 = *gpSubsectors;
     sw(s6, gp + 0xB2C);                                 // Store to: gpLeafEdges (8007810C)
     sw(0, gp + 0x984);                                  // Store to: gTotalNumLeafEdges (80077F64)
     s7 = 0;                                             // Result = 00000000
@@ -872,11 +843,11 @@ loc_80022B24:
 
 void P_GroupLines() noexcept {
 loc_80022B58:
-    a1 = lw(gp + 0xC44);                                // Load from: gNumSubsectors (80078224)
-    a0 = lw(gp + 0x960);                                // Load from: gpSubsectors (80077F40)
+    a1 = *gNumSubsectors;
+    a0 = *gpSubsectors;
     sp -= 0x60;
     sw(s4, sp + 0x50);
-    s4 = 0;                                             // Result = 00000000
+    s4 = 0;
     sw(ra, sp + 0x5C);
     sw(s6, sp + 0x58);
     sw(s5, sp + 0x54);

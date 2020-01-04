@@ -1,6 +1,7 @@
 #include "r_main.h"
 
 #include "Doom/Base/i_main.h"
+#include "Doom/Game/p_setup.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
@@ -697,8 +698,7 @@ loc_80030F5C:
     v0 = lw(v0 - 0x7E48);                               // Load from: gNumBspNodes (800781B8)
     t0 = a0;
     if (v0 != 0) goto loc_80030F80;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F40);                               // Load from: gpSubsectors (80077F40)
+    v0 = *gpSubsectors;
     goto loc_80031080;
 loc_80030F80:
     v1 = v0 - 1;
@@ -768,8 +768,7 @@ loc_80031048:
 loc_80031068:
     v0 |= 0x7FFF;                                       // Result = FFFF7FFF
     v0 &= v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F40);                               // Load from: gpSubsectors (80077F40)
+    v1 = *gpSubsectors;
     v0 <<= 4;
     v0 += v1;
 loc_80031080:

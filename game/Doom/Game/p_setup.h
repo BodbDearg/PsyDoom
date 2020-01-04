@@ -22,6 +22,8 @@ extern const VmPtr<int32_t>                 gNumSides;
 extern const VmPtr<VmPtr<side_t>>           gpSides;
 extern const VmPtr<int32_t>                 gNumLines;
 extern const VmPtr<VmPtr<line_t>>           gpLines;
+extern const VmPtr<int32_t>                 gNumSubsectors;
+extern const VmPtr<VmPtr<subsector_t>>      gpSubsectors;
 
 void P_LoadSegs() noexcept;
 void P_LoadNodes() noexcept;

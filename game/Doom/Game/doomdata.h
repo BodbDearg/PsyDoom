@@ -84,3 +84,10 @@ struct maplinedef_t {
 };
 
 static_assert(sizeof(maplinedef_t) == 14);
+
+struct mapsubsector_t {
+	int16_t     numsegs;    // How many segs this subsector has
+	int16_t     firstseg;   // Index of the first seg this subsector has (all are stored sequentially)
+};
+
+static_assert(sizeof(mapsubsector_t) == 4);

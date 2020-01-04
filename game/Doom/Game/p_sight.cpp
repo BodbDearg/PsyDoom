@@ -407,15 +407,13 @@ loc_80024ED8:
         if (bJump) goto loc_80024F28;
     }
     v0 |= 0x7FFF;                                       // Result = FFFF7FFF
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7DDC);                               // Load from: gNumSubsectors (80078224)
+    a2 = *gNumSubsectors;
     s0 = a0 & v0;
     v0 = (i32(s0) < i32(a2));
     if (v0 != 0) goto loc_80024F0C;
     I_Error("PS_CrossSubsector: ss %i with numss = %i", (int32_t) s0, (int32_t) a2);
 loc_80024F0C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F40);                               // Load from: gpSubsectors (80077F40)
+    v0 = *gpSubsectors;
     a0 = s0 << 4;
     a0 += v0;
     PS_CrossSubsector();

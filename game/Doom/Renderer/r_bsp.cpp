@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/d_main.h"
+#include "Doom/Game/p_setup.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGTE.h"
 
@@ -452,8 +453,7 @@ loc_8002B2B0:
 
 void R_Subsector() noexcept {
 loc_8002B2D8:
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7DDC);                               // Load from: gNumSubsectors (80078224)
+    a2 = *gNumSubsectors;
     sp -= 0x20;
     sw(s0, sp + 0x10);
     s0 = a0;
@@ -475,8 +475,7 @@ loc_8002B30C:
         v0 = s0 << 4;
         if (bJump) goto loc_8002B3A0;
     }
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F40);                               // Load from: gpSubsectors (80077F40)
+    v1 = *gpSubsectors;
     v0 += v1;
     v1 = lw(v0);
     at = 0x80080000;                                    // Result = 80080000
