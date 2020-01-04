@@ -93,8 +93,8 @@ struct subsector_t {
     int16_t     unknown2;   // TODO: find out what this field is
     int16_t     numSegs;
     int16_t     firstSeg;
-    int16_t     unknown3;   // TODO: find out what this field is
-    int16_t     unknown4;   // TODO: find out what this field is
+    int16_t     numleafedges;
+    int16_t     firstleafedge;
     int16_t     unknown5;   // TODO: find out what this field is
     int16_t     unknown6;   // TODO: find out what this field is
 };
@@ -116,3 +116,13 @@ struct seg_t {
 };
 
 static_assert(sizeof(seg_t) == 40);
+
+// Describes an edge of a leaf.
+// A leaf corresponds to a single subsector, and contains a collection of leaf edges.
+// The leaf edge simply contains a vertex and seg reference.
+struct leafedge_t {
+    VmPtr<vertex_t>     vertex;
+    VmPtr<seg_t>        seg;
+};
+
+static_assert(sizeof(leafedge_t) == 8);

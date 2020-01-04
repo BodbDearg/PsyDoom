@@ -3,6 +3,7 @@
 #include "Doom/doomdef.h"
 #include "Doom/cdmaptbl.h"
 
+struct leafedge_t;
 struct line_t;
 struct seg_t;
 struct side_t;
@@ -27,6 +28,8 @@ extern const VmPtr<int32_t>                 gNumSubsectors;
 extern const VmPtr<VmPtr<subsector_t>>      gpSubsectors;
 extern const VmPtr<int32_t>                 gNumSegs;
 extern const VmPtr<VmPtr<seg_t>>            gpSegs;
+extern const VmPtr<int32_t>                 gTotalNumLeafEdges;
+extern const VmPtr<VmPtr<leafedge_t>>       gpLeafEdges;
 
 void P_LoadNodes() noexcept;
 void P_LoadMapLump() noexcept;

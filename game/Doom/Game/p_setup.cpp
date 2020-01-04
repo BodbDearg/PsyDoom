@@ -55,6 +55,8 @@ const VmPtr<int32_t>                gNumSubsectors(0x80078224);
 const VmPtr<VmPtr<subsector_t>>     gpSubsectors(0x80077F40);
 const VmPtr<int32_t>                gNumSegs(0x800780A4);
 const VmPtr<VmPtr<seg_t>>           gpSegs(0x80078238);
+const VmPtr<int32_t>                gTotalNumLeafEdges(0x80077F64);
+const VmPtr<VmPtr<leafedge_t>>      gpLeafEdges(0x8007810C);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
@@ -172,8 +174,8 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     for (int32_t subsectorIdx = 0; subsectorIdx < *gNumSubsectors; ++subsectorIdx) {
         pDstSubsec->numSegs = pSrcSubsec->numsegs;
         pDstSubsec->firstSeg = pSrcSubsec->firstseg;        
-        pDstSubsec->unknown3 = 0;
-        pDstSubsec->unknown4 = 0;
+        pDstSubsec->numleafedges = 0;
+        pDstSubsec->firstleafedge = 0;
 
         ++pSrcSubsec;
         ++pDstSubsec;
@@ -634,146 +636,87 @@ void P_LoadMapLump() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load leafs from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_LoadLeafs(const int32_t lumpNum) noexcept {
-    sp -= 0x48;
-    sw(s2, sp + 0x28);
-    sw(fp, sp + 0x40);
-    sw(s7, sp + 0x3C);
-    sw(s6, sp + 0x38);
-    sw(s5, sp + 0x34);
-    sw(s4, sp + 0x30);
-    sw(s3, sp + 0x2C);
-    sw(s1, sp + 0x24);
-    sw(s0, sp + 0x20);
-
-    a0 = lumpNum;
-    _thunk_W_MapLumpLength();
+static void P_LoadLeafs(const int32_t lumpNum) noexcept {
+    // Sanity check the sidedefs lump is not too big
+    const int32_t lumpSize = W_MapLumpLength(lumpNum);
     
-    if (i32(v0) > TMP_BUFFER_SIZE) {
+    if (lumpSize > TMP_BUFFER_SIZE) {
         I_Error("P_LoadLeafs: lump > 64K");
     }
 
-    a0 = lumpNum;    
-    a1 = gTmpBuffer;
-    a2 = 1;
-    _thunk_W_ReadMapLump();
+    // Read the map lump containing the leaf edges into a temp buffer from the map WAD
+    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+    const std::byte* const pLumpBeg = gTmpBuffer.get();
+    const std::byte* const pLumpEnd = gTmpBuffer.get() + lumpSize;
 
-    s0 = gTmpBuffer;
-    s1 = 0;
-    fp = 0;
-    s4 = gTmpBuffer;
+    // Determine the number of leafs in the lump.
+    // The number of leafs MUST equal the number of subsectors, and they must be in the same order as their subsectors.
+    int32_t numLeafs = 0;
+    int32_t totalLeafEdges = 0;
 
-    while (true) {
-        a0 = lumpNum;
-        _thunk_W_MapLumpLength();
-        v0 += s0;
+    for (const std::byte* pLumpByte = pLumpBeg; pLumpByte < pLumpEnd;) {
+        // Increment the leaf count and skip past it
+        const mapleaf_t leaf = *(mapleaf_t*) pLumpByte;
+        pLumpByte += sizeof(mapleaf_t);
+        ++numLeafs;
 
-        if (s4 >= v0)
-            break;
-
-        v0 = lh(s4);
-        fp++;
-        s1 += v0;
-        v0 <<= 2;
-        v0 += 2;
-        s4 += v0;
+        // Skip past the leaf edges and include them in the leaf edge count
+        pLumpByte += leaf.numedges * sizeof(mapleafedge_t);
+        totalLeafEdges += leaf.numedges;
     }
 
-    if (fp != *gNumSubsectors) {
+    if (numLeafs != *gNumSubsectors) {
         I_Error("P_LoadLeafs: leaf/subsector inconsistancy");
     }
 
-    a0 = *gpMainMemZone;
-    a1 = s1 << 3;
-    a2 = 2;    
-    a3 = 0;
-    _thunk_Z_Malloc();
-    s6 = v0;
-    sw(s6, gp + 0xB2C);                                 // Store to: gpLeafEdges (8007810C)
+    // Allocate room for all the leaf edges
+    *gpLeafEdges = (leafedge_t*) Z_Malloc(**gpMainMemZone, totalLeafEdges * sizeof(leafedge_t), PU_LEVEL, nullptr);
+    
+    // Convert WAD leaf edges to runtime leaf edges and link them in with other map data structures
+    *gTotalNumLeafEdges = 0;
 
-    sw(0, gp + 0x984);                                  // Store to: gTotalNumLeafEdges (80077F64)
+    const std::byte* pLumpByte = gTmpBuffer.get();
+    subsector_t* pSubsec = gpSubsectors->get();
+    leafedge_t* pDstEdge = gpLeafEdges->get();
 
-    v0 = *gpSubsectors;
-    s7 = 0;
-    s4 = s0;                                            // Result = gTmpWadLumpBuffer[0] (80098748)
+    for (int32_t leafIdx = 0; leafIdx < numLeafs; ++leafIdx) {
+        // Save leaf info on the subsector
+        const mapleaf_t leaf = *(mapleaf_t*) pLumpByte;
+        pLumpByte += sizeof(mapleaf_t);
 
-    if (i32(fp) > 0) {
-        s2 = v0 + 8;
+        pSubsec->numleafedges = leaf.numedges;
+        pSubsec->firstleafedge = (int16_t) *gTotalNumLeafEdges;
 
-        do {
-            v0 = lhu(s4);
-            sh(v0, s2);
-            v0 = lhu(gp + 0x984);                               // Load from: gTotalNumLeafEdges (80077F64)
-            v1 = lh(s2);            
-            sh(v0, s2 + 0x2);
+        // Process the edges in the leaf
+        for (int32_t edgeIdx = 0; edgeIdx < pSubsec->numleafedges; ++edgeIdx) {
+            // Set leaf vertex reference
+            const mapleafedge_t srcEdge = *(const mapleafedge_t*) pLumpByte;
+            pLumpByte += sizeof(mapleafedge_t);
 
-            s5 = 0;
-
-            if (i32(v1) > 0) {
-                s3 = s6 + 4;
-                s1 = s4;
-
-                do {
-                    s0 = lh(s1 + 0x2);
-                    
-                    if (i32(s0) >= *gNumVertexes) {
-                        I_Error("P_LoadLeafs: vertex out of range\n");                        
-                    }
-
-                    v0 = s0 << 3;
-                    v0 -= s0;
-                    v1 = *gpVertexes;
-                    v0 <<= 2;
-                    v0 += v1;
-                    sw(v0, s6);
-                    s0 = lh(s1 + 0x4);
-                    v0 = -1;                                            // Result = FFFFFFFF
-
-                    if (s0 == v0) {
-                        sw(0, s3);
-                    } else {
-                        if (i32(s0) >= *gNumSegs) {
-                            I_Error("P_LoadLeafs: seg out of range\n");
-                        }
-
-                        v0 = s0 << 2;
-                        v0 += s0;
-                        v1 = *gpSegs;
-                        v0 <<= 3;
-                        v0 += v1;
-                        sw(v0, s3);
-                    }
-
-                    s1 += 4;
-                    s5++;
-                    s3 += 8;
-                    v0 = lh(s2);
-                    s6 += 8;
-                } while (i32(s5) < i32(v0));
+            if (srcEdge.vertexnum >= *gNumVertexes) {
+                I_Error("P_LoadLeafs: vertex out of range\n");                        
             }
 
-            s7++;
-            v0 = lh(s2);
-            v1 = lw(gp + 0x984);                                // Load from: gTotalNumLeafEdges (80077F64)
-            v0 <<= 2;
-            v0 += 2;
-            s4 += v0;
-            v1 += s5;
-            sw(v1, gp + 0x984);                                 // Store to: gTotalNumLeafEdges (80077F64)
-            s2 += 0x10;
-        } while (i32(s7) < i32(fp));
-    }
+            pDstEdge->vertex = &(*gpVertexes)[srcEdge.vertexnum];
 
-    fp = lw(sp + 0x40);
-    s7 = lw(sp + 0x3C);
-    s6 = lw(sp + 0x38);
-    s5 = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x48;
+            // Set leaf seg reference
+            if (srcEdge.segnum == -1) {
+                pDstEdge->seg = nullptr;
+            } else {
+                if (srcEdge.segnum >= *gNumSegs) {
+                    I_Error("P_LoadLeafs: seg out of range\n");
+                }
+
+                pDstEdge->seg = &(*gpSegs)[srcEdge.segnum];
+            }
+
+            ++pDstEdge;
+        }
+
+        // Move along to the next leaf
+        *gTotalNumLeafEdges += pSubsec->numleafedges;
+        ++pSubsec;
+    }
 }
 
 void P_GroupLines() noexcept {

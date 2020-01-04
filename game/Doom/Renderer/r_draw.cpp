@@ -1,6 +1,7 @@
 #include "r_draw.h"
 
 #include "Doom/Base/i_main.h"
+#include "Doom/Game/p_setup.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGTE.h"
 #include "r_plane.h"
@@ -26,8 +27,7 @@ loc_8002C6F8:
     sw(s0, sp + 0x58);
     sw(v0, sp + 0x2C);
     v0 = lh(s5 + 0xA);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EF4);                               // Load from: gpLeafEdges (8007810C)
+    v1 = *gpLeafEdges;
     s4 = lh(s5 + 0x8);
     v0 <<= 3;
     s3 = v0 + v1;

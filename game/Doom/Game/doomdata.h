@@ -103,6 +103,20 @@ struct mapseg_t {
 
 static_assert(sizeof(mapseg_t) == 12);
 
+// Header for a leaf and leaf edges
+struct mapleaf_t {
+    uint16_t    numedges;
+};
+
+static_assert(sizeof(mapleaf_t) == 2);
+
+struct mapleafedge_t {
+    int16_t     vertexnum;
+    int16_t     segnum;
+};
+
+static_assert(sizeof(mapleafedge_t) == 4);
+
 // Line behavior flags
 static constexpr int16_t ML_BLOCKING        = 1;        // TODO: CONFIRM
 static constexpr int16_t ML_BLOCKMONSTERS   = 2;        // TODO: CONFIRM
