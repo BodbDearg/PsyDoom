@@ -225,8 +225,7 @@ loc_80024C14:
     s1 = lh(a0 + 0x4);
     v0 = v1 << 2;
     v0 += v1;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7DC8);                               // Load from: gpSegs (80078238)
+    v1 = *gpSegs;
     v0 <<= 3;
     s2 = v0 + v1;
     if (s1 == 0) goto loc_80024EA0;

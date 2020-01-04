@@ -28,6 +28,11 @@ static constexpr angle_t ANG90  = 0x40000000;
 static constexpr angle_t ANG180 = 0x80000000;
 static constexpr angle_t ANG270 = 0xc0000000;
 
+// Constants relating to trig lookup tables
+static constexpr uint32_t FINEANGLES        = 8192;                 // How many entries in sine, cosine etc. LUTs. The number of 'fine' angles.
+static constexpr uint32_t FINEMASK          = FINEANGLES - 1;       // Wrap a 'fine' angle to the LUT tables
+static constexpr uint32_t ANGLETOFINESHIFT  = 19;                   // How many bits to chop off when converting a BAM angle to a 'fine' angle for looking up the trig LUTs.
+
 // Some global defines and constants
 static constexpr uint32_t MAXPLAYERS = 2;   // Maximum number of players in a multiplayer game
 

@@ -608,8 +608,7 @@ loc_80024594:
     s1 = lh(s3 + 0x4);
     v1 = v0 << 2;
     v1 += v0;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7DC8);                               // Load from: gpSegs (80078238)
+    v0 = *gpSegs;
     v1 <<= 3;
     s2 = v1 + v0;
     if (s1 == 0) goto loc_80024734;

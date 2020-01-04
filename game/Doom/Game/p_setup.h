@@ -4,6 +4,7 @@
 #include "Doom/cdmaptbl.h"
 
 struct line_t;
+struct seg_t;
 struct side_t;
 struct vertex_t;
 
@@ -24,8 +25,9 @@ extern const VmPtr<int32_t>                 gNumLines;
 extern const VmPtr<VmPtr<line_t>>           gpLines;
 extern const VmPtr<int32_t>                 gNumSubsectors;
 extern const VmPtr<VmPtr<subsector_t>>      gpSubsectors;
+extern const VmPtr<int32_t>                 gNumSegs;
+extern const VmPtr<VmPtr<seg_t>>            gpSegs;
 
-void P_LoadSegs() noexcept;
 void P_LoadNodes() noexcept;
 void P_LoadMapLump() noexcept;
 void P_LoadLeafs() noexcept;

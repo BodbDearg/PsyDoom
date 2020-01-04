@@ -488,8 +488,7 @@ loc_8002B30C:
     v1 = a0 << 2;
     v1 += a0;
     v1 <<= 3;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7DC8);                               // Load from: gpSegs (80078238)
+    a0 = *gpSegs;
     v0 += 4;
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0x7F9C);                                // Store to: gppEndDrawSubsector (80078064)

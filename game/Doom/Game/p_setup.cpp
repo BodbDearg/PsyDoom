@@ -53,20 +53,25 @@ const VmPtr<int32_t>                gNumLines(0x800781C8);
 const VmPtr<VmPtr<line_t>>          gpLines(0x80077EB0);
 const VmPtr<int32_t>                gNumSubsectors(0x80078224);
 const VmPtr<VmPtr<subsector_t>>     gpSubsectors(0x80077F40);
+const VmPtr<int32_t>                gNumSegs(0x800780A4);
+const VmPtr<VmPtr<seg_t>>           gpSegs(0x80078238);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadVertexes(const int32_t lumpNum) noexcept {
-    // Read the WAD vertexes into the temp buffer from the map WAD
+    // Sanity check the vertices lump is not too big
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
     
     if (lumpSize > TMP_BUFFER_SIZE) {
         I_Error("P_LoadVertexes: lump > 64K");
     }
 
+    // Alloc the runtime vertex array
     *gNumVertexes = lumpSize / sizeof(mapvertex_t);
     *gpVertexes = (vertex_t*) Z_Malloc(**gpMainMemZone, *gNumVertexes * sizeof(vertex_t), PU_LEVEL, nullptr);
+    
+    // Read the WAD vertexes into the temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
 
     // Convert the vertexes to the renderer runtime format
@@ -82,138 +87,63 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
     }
 }
 
-void P_LoadSegs() noexcept {
-loc_80021BA0:
-    sp -= 0x20;
-    sw(s0, sp + 0x18);
-    sw(ra, sp + 0x1C);
-    s0 = a0;
-    _thunk_W_MapLumpLength();
-    v1 = 0x10000;                                       // Result = 00010000
-    v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_80021BD4;
-    I_Error("P_LoadSegs: lump > 64K");
-loc_80021BD4:
-    a0 = s0;
-    _thunk_W_MapLumpLength();
-    v1 = 0xAAAA0000;                                    // Result = AAAA0000
-    v1 |= 0xAAAB;                                       // Result = AAAAAAAB
-    multu(v0, v1);
-    a2 = 2;                                             // Result = 00000002
-    a3 = 0;                                             // Result = 00000000
-    a0 = *gpMainMemZone;
-    v0 = hi;
-    v0 >>= 3;
-    a1 = v0 << 2;
-    a1 += v0;
-    sw(v0, gp + 0xAC4);                                 // Store to: gNumSegs (800780A4)
-    a1 <<= 3;
-    _thunk_Z_Malloc();
-    a0 = v0;
-    v0 = lw(gp + 0xAC4);                                // Load from: gNumSegs (800780A4)
-    a1 = 0;                                             // Result = 00000000
-    sw(a0, gp + 0xC58);                                 // Store to: gpSegs (80078238)
-    a2 = v0 << 2;
-    a2 += v0;
-    a2 <<= 3;
-    _thunk_D_memset();
-    a0 = s0;
-    s0 = gTmpBuffer;
-    a1 = gTmpBuffer;
-    a2 = 1;                                             // Result = 00000001
-    _thunk_W_ReadMapLump();
-    v0 = lw(gp + 0xAC4);                                // Load from: gNumSegs (800780A4)
-    t1 = lw(gp + 0xC58);                                // Load from: gpSegs (80078238)
-    t2 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80021DC4;
-    t0 = s0 + 8;                                        // Result = gTmpWadLumpBuffer[2] (80098750)
-    a1 = t1 + 0xC;
-    t4 = *gpVertexes;
-    t3 = *gpSides;
-loc_80021C6C:
-    v1 = lh(s0);
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v0 += t4;
-    sw(v0, t1);
-    v1 = lh(t0 - 0x6);
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v0 += t4;
-    sw(v0, a1 - 0x8);
-    v0 = lh(t0 - 0x4);
-    v0 <<= 16;
-    sw(v0, a1);
-    v0 = lh(t0 + 0x2);
-    v0 <<= 16;
-    sw(v0, a1 - 0x4);
-    v1 = lh(t0 - 0x2);
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v1 = *gpLines;
-    v0 <<= 2;
-    a2 = v0 + v1;
-    sw(a2, a1 + 0x8);
-    a3 = lh(t0);
-    a0 = a3 << 2;
-    a0 += a2;
-    v1 = lw(a0 + 0x1C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v0 += t3;
-    sw(v0, a1 + 0x4);
-    v1 = lw(a0 + 0x1C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v0 += t3;
-    v0 = lw(v0 + 0x14);
-    sw(v0, a1 + 0xC);
-    v0 = lw(a2 + 0x10);
-    v0 &= 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a3 ^ 1;
-        if (bJump) goto loc_80021D7C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load line segments from the specified map lump number
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_LoadSegs(const int32_t lumpNum) noexcept {
+    // Sanity check the segs lump is not too big
+    const int32_t lumpSize = W_MapLumpLength(lumpNum);
+
+    if (lumpSize > TMP_BUFFER_SIZE) {
+        I_Error("P_LoadSegs: lump > 64K");
     }
-    v0 <<= 2;
-    v0 += a2;
-    v1 = lw(v0 + 0x1C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v0 += t3;
-    v0 = lw(v0 + 0x14);
-    sw(v0, a1 + 0x10);
-    goto loc_80021D80;
-loc_80021D7C:
-    sw(0, a1 + 0x10);
-loc_80021D80:
-    v1 = lw(a2);
-    v0 = lw(t1);
-    t2++;
-    if (v1 != v0) goto loc_80021DA4;
-    v0 = lw(a1);
-    v0 >>= 19;
-    sw(v0, a2 + 0x48);
-loc_80021DA4:
-    a1 += 0x28;
-    t1 += 0x28;
-    t0 += 0xC;
-    v0 = lw(gp + 0xAC4);                                // Load from: gNumSegs (800780A4)
-    v0 = (i32(t2) < i32(v0));
-    s0 += 0xC;
-    if (v0 != 0) goto loc_80021C6C;
-loc_80021DC4:
-    ra = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+    
+    // Alloc ram for the runtime segs and zero initialize
+    *gNumSegs = lumpSize / sizeof(mapseg_t);
+    *gpSegs = (seg_t*) Z_Malloc(**gpMainMemZone, *gNumSegs * sizeof(seg_t), PU_LEVEL, nullptr);
+    D_memset(gpSegs->get(), (std::byte) 0, *gNumSegs * sizeof(seg_t));
+
+    // Read the map lump containing the segs into a temp buffer from the map WAD
+    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+
+    // Process the WAD segs and convert them into runtime segs
+    const mapseg_t* pSrcSeg = (const mapseg_t*) gTmpBuffer.get();
+    seg_t* pDstSeg = gpSegs->get();
+
+    for (int32_t segIdx = 0; segIdx < *gNumSegs; ++segIdx) {
+        // Store basic seg properties
+        pDstSeg->vertex1 = &(*gpVertexes)[pSrcSeg->vertex1];
+        pDstSeg->vertex2 = &(*gpVertexes)[pSrcSeg->vertex2];
+        pDstSeg->angle = (fixed_t) pSrcSeg->angle << FRACBITS;
+        pDstSeg->offset = (fixed_t) pSrcSeg->offset << FRACBITS;
+
+        // Figure out seg line and side
+        line_t& linedef = (*gpLines)[pSrcSeg->linedef];
+        pDstSeg->linedef = &linedef;
+
+        const int32_t sideNum = linedef.sidenum[pSrcSeg->side];
+        side_t& side = (*gpSides)[sideNum];
+        pDstSeg->sidedef = &side;
+
+        // Set front and backsector reference
+        pDstSeg->frontsector = side.sector;
+
+        if (linedef.flags & ML_TWOSIDED) {
+            const int32_t backSideNum = linedef.sidenum[pSrcSeg->side ^ 1];
+            side_t& backSide = (*gpSides)[backSideNum];
+            pDstSeg->backsector = backSide.sector;
+        } else {
+            pDstSeg->backsector = nullptr;
+        }
+        
+        // Take this opportunity to compute line fineangle if the seg is pointing in the same direction
+        if (linedef.vertex1 == pDstSeg->vertex1) {
+            linedef.fineangle = pDstSeg->angle >> ANGLETOFINESHIFT;
+        }
+
+        ++pSrcSeg;
+        ++pDstSeg;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -230,9 +160,11 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     // Alloc ram for the runtime subsectors and zero initialize
     *gNumSubsectors = lumpSize / sizeof(mapsubsector_t);
     *gpSubsectors = (subsector_t*) Z_Malloc(**gpMainMemZone, *gNumSubsectors * sizeof(subsector_t), PU_LEVEL, nullptr);
-    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
     D_memset(gpSubsectors->get(), (std::byte) 0, *gNumSubsectors * sizeof(subsector_t));
 
+    // Read the map lump containing the subsectors into a temp buffer from the map WAD
+    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+    
     // Process the WAD subsectors and convert them into runtime subsectors
     const mapsubsector_t* pSrcSubsec = (const mapsubsector_t*) gTmpBuffer.get();
     subsector_t* pDstSubsec = gpSubsectors->get();
@@ -271,7 +203,7 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     *gpSectors = (sector_t*) Z_Malloc(**gpMainMemZone, *gNumSectors * sizeof(sector_t), PU_LEVEL, nullptr);
     D_memset(gpSectors->get(), (std::byte) 0, *gNumSectors * sizeof(sector_t));
 
-    // Read the map lump containing the sectors
+    // Read the map lump containing the sectors into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
 
     // Process the WAD sectors and convert them into runtime sectors
@@ -503,7 +435,7 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
     *gpLines = (line_t*) Z_Malloc(**gpMainMemZone, *gNumLines * sizeof(line_t), PU_LEVEL, nullptr);
     D_memset(gpLines->get(), (std::byte) 0, *gNumLines * sizeof(line_t));
 
-    // Read the map lump containing the sidedefs
+    // Read the map lump containing the sidedefs into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
 
     // Process the WAD linedefs and convert them into runtime linedefs
@@ -600,7 +532,7 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
     *gpSides = (side_t*) Z_Malloc(**gpMainMemZone, *gNumSides * sizeof(side_t), PU_LEVEL, nullptr);
     D_memset(gpSides->get(), (std::byte) 0, *gNumSides  * sizeof(side_t));
 
-    // Read the map lump containing the sidedefs
+    // Read the map lump containing the sidedefs into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
 
     // Process the WAD sidedefs and convert them into runtime sidedefs
@@ -791,7 +723,7 @@ loc_80022A70:
     sw(0, s3);
     goto loc_80022AD8;
 loc_80022A9C:
-    v0 = lw(gp + 0xAC4);                                // Load from: gNumSegs (800780A4)
+    v0 = *gNumSegs;
     v0 = (i32(s0) < i32(v0));
     {
         const bool bJump = (v0 != 0);
@@ -802,7 +734,7 @@ loc_80022A9C:
     v0 = s0 << 2;
 loc_80022AC4:
     v0 += s0;
-    v1 = lw(gp + 0xC58);                                // Load from: gpSegs (80078238)
+    v1 = *gpSegs;
     v0 <<= 3;
     v0 += v1;
     sw(v0, s3);
@@ -856,7 +788,7 @@ loc_80022B58:
     sw(s1, sp + 0x44);
     sw(s0, sp + 0x40);
     if (i32(a1) <= 0) goto loc_80022BC8;
-    a2 = lw(gp + 0xC58);                                // Load from: gpSegs (80078238)
+    a2 = *gpSegs;
 loc_80022B90:
     v1 = lh(a0 + 0x6);
     v0 = v1 << 2;
@@ -1304,8 +1236,7 @@ loc_800230D4:
     a0 = mapStartLump + ML_NODES;
     P_LoadNodes();
 
-    a0 = mapStartLump + ML_SEGS;
-    P_LoadSegs();
+    P_LoadSegs(mapStartLump + ML_SEGS);
     
     a0 = mapStartLump + ML_LEAFS;
     P_LoadLeafs();

@@ -48,7 +48,7 @@ struct mapvertex_t {
 
 static_assert(sizeof(mapvertex_t) == 8);
 
-// Map data for a sectors, sides, and lines in a WAD
+// Map data for a sectors, sides, lines, subsectors and line segments in a WAD
 struct mapsector_t {
     int16_t     floorheight;
     int16_t     ceilingheight;
@@ -64,30 +64,52 @@ struct mapsector_t {
 static_assert(sizeof(mapsector_t) == 28);
 
 struct mapsidedef_t {
-	int16_t     textureoffset;          // Texture x offset
-	int16_t		rowoffset;              // Texture y offset
-	char		toptexture[8];
+    int16_t     textureoffset;          // Texture x offset
+    int16_t     rowoffset;              // Texture y offset
+    char        toptexture[8];
     char        bottomtexture[8];
     char        midtexture[8];
-	int16_t     sector;
+    int16_t     sector;
 };
 
 static_assert(sizeof(mapsidedef_t) == 30);
 
 struct maplinedef_t {
-	int16_t     vertex1;
+    int16_t     vertex1;
     int16_t     vertex2;
-	int16_t     flags;
-	int16_t     special;
+    int16_t     flags;
+    int16_t     special;
     int16_t     tag;
-	int16_t     sidenum[2];     // If -1 then the line is 1 sided
+    int16_t     sidenum[2];     // If -1 then the line is 1 sided
 };
 
 static_assert(sizeof(maplinedef_t) == 14);
 
 struct mapsubsector_t {
-	int16_t     numsegs;    // How many segs this subsector has
-	int16_t     firstseg;   // Index of the first seg this subsector has (all are stored sequentially)
+    int16_t     numsegs;        // How many segs this subsector has
+    int16_t     firstseg;       // Index of the first seg this subsector has (all are stored sequentially)
 };
 
 static_assert(sizeof(mapsubsector_t) == 4);
+
+struct mapseg_t {
+    int16_t     vertex1;
+    int16_t     vertex2;
+    int16_t     angle;
+    int16_t     linedef;
+    int16_t     side;           // '0' or '1': which side of the line the seg is on. Always '0' for one sided lines.
+    int16_t     offset;
+};
+
+static_assert(sizeof(mapseg_t) == 12);
+
+// Line behavior flags
+static constexpr int16_t ML_BLOCKING        = 1;        // TODO: CONFIRM
+static constexpr int16_t ML_BLOCKMONSTERS   = 2;        // TODO: CONFIRM
+static constexpr int16_t ML_TWOSIDED        = 4;        // Unset for single sided lines
+static constexpr int16_t ML_DONTPEGTOP      = 8;        // If unset then upper texture is anchored to the ceiling rather than bottom edge (TODO: CONFIRM)
+static constexpr int16_t ML_DONTPEGBOTTOM   = 16;       // If unset then lower texture is anchored to the floor rather than top edge (TODO: CONFIRM)
+static constexpr int16_t ML_SECRET          = 32;       // Don't show as two sided in the automap, because it's a secret (TODO: CONFIRM)
+static constexpr int16_t ML_SOUNDBLOCK      = 64;       // Stops sound propagation (TODO: CONFIRM)
+static constexpr int16_t ML_DONTDRAW        = 128;      // Hide on the automap (TODO: CONFIRM)
+static constexpr int16_t ML_MAPPED          = 256;      // Set when the line is to be shown on the automap (TODO: CONFIRM)
