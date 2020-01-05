@@ -310,10 +310,6 @@ static void P_LoadNodes(const int32_t lumpNum) noexcept {
 // Load map things and spawn them using data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadThings(const int32_t lumpNum) noexcept {
-    sp -= 0x30;
-    sw(s0, sp + 0x18);
-    sw(s1, sp + 0x1C);
-
     // Sanity check the things lump is not too big
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
 
@@ -326,43 +322,30 @@ static void P_LoadThings(const int32_t lumpNum) noexcept {
     W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
 
     // Spawn the map things
-    const mapthing_t* pSrcThing = (const mapthing_t*) gTmpBuffer.get();
-
-    s1 = gTmpBuffer;
-    s0 = s1 + 6;        // Result = gTmpWadLumpBuffer[1] (8009874E)
+    mapthing_t* pSrcThing = (mapthing_t*) gTmpBuffer.get();
 
     for (int32_t thingIdx = 0; thingIdx < numThings; ++thingIdx) {
-        v0 = lhu(s1);
-        sh(v0, s1);
+        // Endian correct the map thing
+        pSrcThing->x = Endian::littleToHost(pSrcThing->x);
+        pSrcThing->y = Endian::littleToHost(pSrcThing->y);
+        pSrcThing->angle = Endian::littleToHost(pSrcThing->angle);
+        pSrcThing->type = Endian::littleToHost(pSrcThing->type);
+        pSrcThing->options = Endian::littleToHost(pSrcThing->options);
 
-        v0 = lhu(s0 - 0x4);
-        v1 = lhu(s0 - 0x2);
-        a1 = lhu(s0);
-        a2 = lhu(s0 + 0x2);
-        sh(v0, s0 - 0x4);
-        sh(v1, s0 - 0x2);
-        sh(a1, s0);
-        sh(a2, s0 + 0x2);
-
-        a0 = s1;
+        // Spawn the map thing
+        a0 = ptrToVmAddr(pSrcThing);
+        a1 = pSrcThing->type;
+        a2 = pSrcThing->options;
         P_SpawnMapThing();
 
         // Not sure why this check is being done AFTER we try and spawn the thing, surely it would make more sense to do before?
         // Regardless if the 'DoomEd' number is too big then throw an error:
-        a1 = lh(s0);
-
-        if (i32(a1) >= 4096) {
-            I_Error("P_LoadThings: doomednum:%d >= 4096", (int32_t) a1);
+        if (pSrcThing->type >= 4096) {
+            I_Error("P_LoadThings: doomednum:%d >= 4096", (int32_t) pSrcThing->type);
         }
-            
-        s0 += 0xA;
-        s1 += 0xA;
+
         ++pSrcThing;
     }
-
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
