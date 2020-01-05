@@ -89,14 +89,13 @@ static_assert(sizeof(line_t) == 76);
 
 // Describes a convex region within a sector
 struct subsector_t {
-    int16_t     unknown1;           // TODO: find out what this field is
-    int16_t     unknown2;           // TODO: find out what this field is
-    int16_t     numSegs;
-    int16_t     firstSeg;
-    int16_t     numleafedges;
-    int16_t     firstleafedge;
-    int16_t     unknown5;           // TODO: find out what this field is
-    int16_t     unknown6;           // TODO: find out what this field is
+    VmPtr<sector_t>     sector;
+    int16_t             numsegs;
+    int16_t             firstseg;
+    int16_t             numleafedges;
+    int16_t             firstleafedge;
+    int16_t             unknown5;           // TODO: find out what this field is
+    int16_t             unknown6;           // TODO: find out what this field is
 };
 
 static_assert(sizeof(subsector_t) == 16);

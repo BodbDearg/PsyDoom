@@ -51,6 +51,7 @@ set(SOURCE_FILES
     "Doom/Game/p_inter.h"
     "Doom/Game/p_lights.cpp"
     "Doom/Game/p_lights.h"
+    "Doom/Game/p_local.h"
     "Doom/Game/p_map.cpp"
     "Doom/Game/p_map.h"
     "Doom/Game/p_maputl.cpp"

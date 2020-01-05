@@ -9,8 +9,6 @@ extern void _thunk_D_memcpy() noexcept;
 extern void _thunk_D_strncasecmp() noexcept;
 extern void _thunk_P_Random() noexcept;
 extern void _thunk_M_Random() noexcept;
-extern void M_ClearBox() noexcept;
-extern void M_AddToBox() noexcept;
 extern void M_AddPointToBox() noexcept;
 extern void G_DoLoadLevel() noexcept;
 extern void G_PlayerFinishLevel() noexcept;
@@ -197,7 +195,6 @@ extern void A_LoadShotgun2() noexcept;
 extern void A_CloseShotgun2() noexcept;
 extern void P_SetupPsprites() noexcept;
 extern void P_MovePsprites() noexcept;
-extern void P_GroupLines() noexcept;
 extern void P_InitMapTextures() noexcept;
 extern void P_CacheSprite() noexcept;
 extern void P_CacheMapTexturesWithWidth() noexcept;
@@ -948,8 +945,6 @@ namespace PsxVm {
         { 0x8001297C, &_thunk_D_strncasecmp },
         { 0x80012A18, &_thunk_P_Random },
         { 0x80012A44, &_thunk_M_Random },
-        { 0x80012A80, &M_ClearBox },
-        { 0x80012AA0, &M_AddToBox },
         { 0x80012B10, &M_AddPointToBox },
         { 0x80012E04, &G_DoLoadLevel },
         { 0x80012F00, &G_PlayerFinishLevel },
@@ -1136,7 +1131,6 @@ namespace PsxVm {
         { 0x800216D8, &A_CloseShotgun2 },
         { 0x80021794, &P_SetupPsprites },
         { 0x8002190C, &P_MovePsprites },
-        { 0x80022B58, &P_GroupLines },
         { 0x80022E68, &P_InitMapTextures },
         { 0x800239D8, &P_CacheSprite },
         { 0x80023AC8, &P_CacheMapTexturesWithWidth },

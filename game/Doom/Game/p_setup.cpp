@@ -15,6 +15,7 @@
 #include "doomdata.h"
 #include "g_game.h"
 #include "p_firesky.h"
+#include "p_local.h"
 #include "p_mobj.h"
 #include "p_spec.h"
 #include "p_switch.h"
@@ -176,8 +177,8 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     subsector_t* pDstSubsec = gpSubsectors->get();
 
     for (int32_t subsectorIdx = 0; subsectorIdx < *gNumSubsectors; ++subsectorIdx) {
-        pDstSubsec->numSegs = Endian::littleToHost(pSrcSubsec->numsegs);
-        pDstSubsec->firstSeg = Endian::littleToHost(pSrcSubsec->firstseg);
+        pDstSubsec->numsegs = Endian::littleToHost(pSrcSubsec->numsegs);
+        pDstSubsec->firstseg = Endian::littleToHost(pSrcSubsec->firstseg);
         pDstSubsec->numleafedges = 0;
         pDstSubsec->firstleafedge = 0;
 
@@ -648,202 +649,122 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
     }
 }
 
-void P_GroupLines() noexcept {
-loc_80022B58:
-    a1 = *gNumSubsectors;
-    a0 = *gpSubsectors;
-    sp -= 0x60;
-    sw(s4, sp + 0x50);
-    s4 = 0;
-    sw(ra, sp + 0x5C);
-    sw(s6, sp + 0x58);
-    sw(s5, sp + 0x54);
-    sw(s3, sp + 0x4C);
-    sw(s2, sp + 0x48);
-    sw(s1, sp + 0x44);
-    sw(s0, sp + 0x40);
-    if (i32(a1) <= 0) goto loc_80022BC8;
-    a2 = *gpSegs;
-loc_80022B90:
-    v1 = lh(a0 + 0x6);
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 3;
-    v0 += a2;
-    v0 = lw(v0 + 0x10);
-    v0 = lw(v0 + 0x14);
-    s4++;
-    sw(v0, a0);
-    v0 = (i32(s4) < i32(a1));
-    a0 += 0x10;
-    if (v0 != 0) goto loc_80022B90;
-loc_80022BC8:
-    a1 = 0;
-    v0 = *gNumLines;
-    s1 = *gpLines;
-    s4 = 0;
-    if (i32(v0) <= 0) goto loc_80022C3C;
-    a2 = v0;
-    a0 = s1 + 0x38;
-loc_80022BE4:
-    v1 = lw(a0);
-    v0 = lw(v1 + 0x54);
-    v0++;
-    sw(v0, v1 + 0x54);
-    v1 = lw(a0 + 0x4);
-    a1++;
-    if (v1 == 0) goto loc_80022C2C;
-    v0 = lw(a0);
-    if (v1 == v0) goto loc_80022C2C;
-    v0 = lw(v1 + 0x54);
-    a1++;
-    v0++;
-    sw(v0, v1 + 0x54);
-loc_80022C2C:
-    s4++;
-    v0 = (i32(s4) < i32(a2));
-    a0 += 0x4C;
-    if (v0 != 0) goto loc_80022BE4;
-loc_80022C3C:
-    a1 <<= 2;
-    a2 = 2;
-    s4 = 0;
-    a0 = *gpMainMemZone;
-    a3 = 0;
-    _thunk_Z_Malloc();
-    s5 = v0;
-    v0 = *gNumSectors;
-    s6 = *gpSectors;
-    s3 = s6 + 0x30;
-    if (i32(v0) <= 0) goto loc_80022E3C;
-loc_80022C6C:
-    a0 = sp + 0x10;
-    M_ClearBox();
-    s1 = *gpLines;
-    v0 = *gNumLines;
-    s2 = 0;                                             // Result = 00000000
-    sw(s5, s3 + 0x28);
-    if (i32(v0) <= 0) goto loc_80022CFC;
-    s0 = s1 + 4;
-loc_80022C8C:
-    v0 = lw(s0 + 0x34);
-    if (v0 == s6) goto loc_80022CAC;
-    v0 = lw(s0 + 0x38);
-    if (v0 != s6) goto loc_80022CE0;
-loc_80022CAC:
-    sw(s1, s5);
-    v0 = lw(s1);
-    a1 = lw(v0);
-    a2 = lw(v0 + 0x4);
-    a0 = sp + 0x10;
-    M_AddToBox();
-    v0 = lw(s0);
-    s5 += 4;
-    a1 = lw(v0);
-    a2 = lw(v0 + 0x4);
-    a0 = sp + 0x10;
-    M_AddToBox();
-loc_80022CE0:
-    s2++;
-    s0 += 0x4C;
-    v0 = *gNumLines;
-    v0 = (i32(s2) < i32(v0));
-    s1 += 0x4C;
-    if (v0 != 0) goto loc_80022C8C;
-loc_80022CFC:
-    v0 = lw(s3 + 0x28);
-    v1 = lw(s3 + 0x24);
-    v0 = s5 - v0;
-    v0 = u32(i32(v0) >> 2);
-    if (v0 == v1) goto loc_80022D24;
-    I_Error("P_GroupLines: miscounted");
-loc_80022D24:
-    v0 = lw(sp + 0x1C);
-    v1 = lw(sp + 0x18);
-    v0 += v1;
-    v1 = v0 >> 31;
-    v0 += v1;
-    v0 = u32(i32(v0) >> 1);
-    sw(v0, s3 + 0x8);
-    a1 = lw(sp + 0x10);
-    v0 = lw(sp + 0x14);
-    a0 = lw(s3 + 0x8);
-    a1 += v0;
-    v0 = a1 >> 31;
-    a1 += v0;
-    a1 = u32(i32(a1) >> 1);
-    sw(a1, s3 + 0xC);
-    R_PointInSubsector();
-    sw(v0, s3 + 0x14);
-    v1 = lw(sp + 0x10);
-    v0 = *gBlockmapOriginY;
-    a0 = *gBlockmapHeight;
-    v1 -= v0;
-    v0 = 0x200000;                                      // Result = 00200000
-    v1 += v0;
-    v1 = u32(i32(v1) >> 23);
-    v0 = (i32(v1) < i32(a0));
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Builds the line lists for each sector, bounding boxes as well as sound origin points
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_GroupLines() noexcept {
+    // Associate subsectors with their sectors
     {
-        const bool bJump = (v0 != 0);
-        v0 = v1;
-        if (bJump) goto loc_80022D98;
+        subsector_t* pSubsec = gpSubsectors->get();
+        
+        for (int32_t subsecIdx = 0; subsecIdx < *gNumSubsectors; ++subsecIdx) {
+            const seg_t& seg = (*gpSegs)[pSubsec->firstseg];            
+            pSubsec->sector = seg.sidedef->sector;
+            ++pSubsec;
+        }
     }
-    v0 = a0 - 1;
-loc_80022D98:
-    sw(v0, s3 - 0x8);
-    v0 = lw(sp + 0x14);
-    v1 = *gBlockmapOriginY;
-    v0 -= v1;
-    v1 = 0xFFE00000;                                    // Result = FFE00000
-    v0 += v1;
-    v1 = u32(i32(v0) >> 23);
-    if (i32(v1) >= 0) goto loc_80022DC4;
-    v1 = 0;                                             // Result = 00000000
-loc_80022DC4:
-    sw(v1, s3 - 0x4);
-    v1 = lw(sp + 0x1C);
-    v0 = *gBlockmapOriginX;
-    a0 = *gBlockmapWidth;
-    v1 -= v0;
-    v0 = 0x200000;                                      // Result = 00200000
-    v1 += v0;
-    v1 = u32(i32(v1) >> 23);
-    v0 = (i32(v1) < i32(a0));
+
+    // Count the number of lines in each sector and how many line references there are among all sectors
+    int32_t totalLineRefs = 0;
+
     {
-        const bool bJump = (v0 != 0);
-        v0 = v1;
-        if (bJump) goto loc_80022DF4;
+        line_t* pLine = gpLines->get();
+
+        for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx) {
+            ++pLine->frontsector->linecount;
+            ++totalLineRefs;
+
+            if (pLine->backsector && pLine->backsector != pLine->frontsector) {
+                ++pLine->backsector->linecount;
+                ++totalLineRefs;
+            }
+            
+            ++pLine;
+        }
     }
-    v0 = a0 - 1;
-loc_80022DF4:
-    sw(v0, s3 + 0x4);
-    v0 = lw(sp + 0x18);
-    v1 = *gBlockmapOriginX;
-    v0 -= v1;
-    v1 = 0xFFE00000;                                    // Result = FFE00000
-    v0 += v1;
-    v1 = u32(i32(v0) >> 23);
-    s4++;
-    if (i32(v1) >= 0) goto loc_80022E20;
-    v1 = 0;                                             // Result = 00000000
-loc_80022E20:
-    sw(v1, s3);
-    s3 += 0x5C;
-    v0 = *gNumSectors;
-    v0 = (i32(s4) < i32(v0));
-    s6 += 0x5C;
-    if (v0 != 0) goto loc_80022C6C;
-loc_80022E3C:
-    ra = lw(sp + 0x5C);
-    s6 = lw(sp + 0x58);
-    s5 = lw(sp + 0x54);
-    s4 = lw(sp + 0x50);
-    s3 = lw(sp + 0x4C);
-    s2 = lw(sp + 0x48);
-    s1 = lw(sp + 0x44);
-    s0 = lw(sp + 0x40);
-    sp += 0x60;
-    return;
+
+    // Alloc the array of line refs that will be shared by all sectors
+    VmPtr<line_t>* const pLineRefBuffer = (VmPtr<line_t>*) Z_Malloc(**gpMainMemZone, totalLineRefs * sizeof(VmPtr<line_t>), PU_LEVEL, nullptr);
+    VmPtr<line_t>* pLineRef = pLineRefBuffer;
+
+    // Build the list of lines for each sector, also bounding boxes and the 'sound origin' point
+    sector_t* pSec = gpSectors->get();
+
+    for (int32_t secIdx = 0; secIdx < *gNumSectors; ++secIdx) {
+        // Clear the bounding box for the sector and set the line list start
+        fixed_t bbox[4];
+        M_ClearBox(bbox);
+        pSec->lines = pLineRef;
+
+        // Build up the bounding box and line list for the sector by examining each line in the level against this sector.
+        // Not an efficient algorithm, since it is O(N^2) but works OK given the size of the datasets in DOOM.
+        // This might be a problem if you are planning on making a DOOM open world game however... :P
+        {
+            line_t* pLine = gpLines->get();
+
+            for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx) {
+                // Does this line belong to this sector?
+                // If so save the line reference in the sector line list and add to the sector bounding box.
+                if (pLine->frontsector == pSec || pLine->backsector == pSec) {
+                    *pLineRef = pLine;
+                    ++pLineRef;
+
+                    M_AddToBox(bbox, pLine->vertex1->x, pLine->vertex1->y);
+                    M_AddToBox(bbox, pLine->vertex2->x, pLine->vertex2->y);
+                }
+
+                ++pLine;
+            }
+        }
+
+        // Sanity check the size of the line list we built is what we would expect.
+        // It should not contradict the line count for the sector.
+        const int32_t actualLineCount = (int32_t)(pLineRef - pSec->lines.get());
+
+        if (actualLineCount != pSec->linecount) {
+            I_Error("P_GroupLines: miscounted");
+        }
+
+        // Set the sound origin location for sector sounds and also the subsector.
+        // Use the bounding box center for this.
+        pSec->soundorg.x = (bbox[BOXLEFT] + bbox[BOXRIGHT]) / 2;
+        pSec->soundorg.y = (bbox[BOXTOP] + bbox[BOXBOTTOM]) / 2;
+
+        #if PC_PSX_DOOM_MODS
+            // The original code did not appear to initialize the 'z' field!
+            // I'm not sure it's used for sound code but give it a defined value of midway up in the air for good measure.
+            pSec->soundorg.z = (pSec->floorheight + pSec->ceilingheight) / 2;
+        #endif
+
+        a0 = ptrToVmAddr(&pSec->soundorg);
+        R_PointInSubsector();
+        pSec->soundorg.subsector = v0;
+
+        // Compute the bounding box for the sector in blockmap units.
+        // Note that if the sector extends the beyond the blockmap then we constrain it's coordinate.
+        {
+            int32_t bmcoord = (bbox[BOXTOP] - *gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT;
+            bmcoord = (bmcoord >= *gBlockmapHeight) ? *gBlockmapHeight - 1 : bmcoord;
+            pSec->blockbox[BOXTOP] = bmcoord;
+        }
+        {
+            int32_t bmcoord = (bbox[BOXBOTTOM] - *gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT;
+            bmcoord = (bmcoord < 0) ? 0 : bmcoord;
+            pSec->blockbox[BOXBOTTOM] = bmcoord;
+        }
+        {
+            int32_t bmcoord = (bbox[BOXRIGHT] - *gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT;
+            bmcoord = (bmcoord >= *gBlockmapWidth) ? *gBlockmapWidth - 1 : bmcoord;
+            pSec->blockbox[BOXRIGHT] = bmcoord;
+        }
+        {
+            int32_t bmcoord = (bbox[BOXLEFT] - *gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT;
+            bmcoord = (bmcoord < 0) ? 0 : bmcoord;
+            pSec->blockbox[BOXLEFT] = bmcoord;
+        }
+
+        ++pSec;
+    }
 }
 
 void P_InitMapTextures() noexcept {
