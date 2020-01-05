@@ -154,3 +154,14 @@ struct mapleafedge_t {
 };
 
 static_assert(sizeof(mapleafedge_t) == 4);
+
+// Describes the type, position, angle and flags of a thing in a WAD
+struct mapthing_t {
+    int16_t     x;
+    int16_t     y;
+    int16_t     angle;
+    int16_t     type;
+    int16_t     options;        // MTF_XXX map thing flags
+};
+
+static_assert(sizeof(mapthing_t) == 10);

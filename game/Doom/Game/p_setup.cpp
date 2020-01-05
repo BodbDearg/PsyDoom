@@ -266,7 +266,7 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
 // Load map bsp nodes from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadNodes(const int32_t lumpNum) noexcept {
-    // Sanity check the sectors lump is not too big
+    // Sanity check the nodes lump is not too big
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
     
     if (lumpSize > TMP_BUFFER_SIZE) {
@@ -311,62 +311,54 @@ static void P_LoadNodes(const int32_t lumpNum) noexcept {
 static void P_LoadThings(const int32_t lumpNum) noexcept {
     sp -= 0x30;
     sw(s0, sp + 0x18);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
 
-    a0 = lumpNum;
-    _thunk_W_MapLumpLength();
+    // Sanity check the things lump is not too big
+    const int32_t lumpSize = W_MapLumpLength(lumpNum);
 
-    if (i32(v0) > TMP_BUFFER_SIZE) {
+    if (lumpSize > TMP_BUFFER_SIZE) {
         I_Error("P_LoadThings: lump > 64K");
     }
 
-    a0 = lumpNum;
-    _thunk_W_MapLumpLength();
-    v1 = 0xCCCCCCCD;        // Result = CCCCCCCD
-    multu(v0, v1);
-    v0 = hi;
-    s3 = v0 >> 3;
+    // Determine how many things there are to spawn and read the lump from the WAD
+    const int32_t numThings = lumpSize / sizeof(mapthing_t);
+    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
 
-    a0 = lumpNum;
-    a1 = gTmpBuffer;
-    a2 = 1;
-    _thunk_W_ReadMapLump();
+    // Spawn the map things
+    const mapthing_t* pSrcThing = (const mapthing_t*) gTmpBuffer.get();
 
-    if (s3 != 0) {
-        s1 = gTmpBuffer;
-        s0 = s1 + 6;        // Result = gTmpWadLumpBuffer[1] (8009874E)
-        s2 = 0;
+    s1 = gTmpBuffer;
+    s0 = s1 + 6;        // Result = gTmpWadLumpBuffer[1] (8009874E)
 
-        do {
-            v0 = lhu(s1);
-            sh(v0, s1);
-            v0 = lhu(s0 - 0x4);
-            v1 = lhu(s0 - 0x2);
-            a1 = lhu(s0);
-            a2 = lhu(s0 + 0x2);
-            a0 = s1;
-            sh(v0, s0 - 0x4);
-            sh(v1, s0 - 0x2);
-            sh(a1, s0);
-            sh(a2, s0 + 0x2);
-            P_SpawnMapThing();
-            a1 = lh(s0);
-            v0 = (i32(a1) < 0x1000);
-            s2++;
+    for (int32_t thingIdx = 0; thingIdx < numThings; ++thingIdx) {
+        v0 = lhu(s1);
+        sh(v0, s1);
 
-            if (v0 == 0) {
-                I_Error("P_LoadThings: doomednum:%d >= 4096", (int32_t) a1);
-            }
+        v0 = lhu(s0 - 0x4);
+        v1 = lhu(s0 - 0x2);
+        a1 = lhu(s0);
+        a2 = lhu(s0 + 0x2);
+        sh(v0, s0 - 0x4);
+        sh(v1, s0 - 0x2);
+        sh(a1, s0);
+        sh(a2, s0 + 0x2);
+
+        a0 = s1;
+        P_SpawnMapThing();
+
+        // Not sure why this check is being done AFTER we try and spawn the thing, surely it would make more sense to do before?
+        // Regardless if the 'DoomEd' number is too big then throw an error:
+        a1 = lh(s0);
+
+        if (i32(a1) >= 4096) {
+            I_Error("P_LoadThings: doomednum:%d >= 4096", (int32_t) a1);
+        }
             
-            s0 += 0xA;
-            s1 += 0xA;
-        } while (i32(s2) < i32(s3));
+        s0 += 0xA;
+        s1 += 0xA;
+        ++pSrcThing;
     }
 
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);
     s0 = lw(sp + 0x18);
     sp += 0x30;
@@ -588,7 +580,7 @@ void P_LoadMapLump() noexcept {
 // Load leafs from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadLeafs(const int32_t lumpNum) noexcept {
-    // Sanity check the sidedefs lump is not too big
+    // Sanity check the leafs lump is not too big
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
     
     if (lumpSize > TMP_BUFFER_SIZE) {
