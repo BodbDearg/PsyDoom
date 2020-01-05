@@ -24,15 +24,27 @@ enum : uint32_t {
 };
 
 // Linedef flags
-static constexpr int16_t ML_BLOCKING        = 1;        // TODO: CONFIRM
-static constexpr int16_t ML_BLOCKMONSTERS   = 2;        // TODO: CONFIRM
-static constexpr int16_t ML_TWOSIDED        = 4;        // Unset for single sided lines
-static constexpr int16_t ML_DONTPEGTOP      = 8;        // If unset then upper texture is anchored to the ceiling rather than bottom edge (TODO: CONFIRM)
-static constexpr int16_t ML_DONTPEGBOTTOM   = 16;       // If unset then lower texture is anchored to the floor rather than top edge (TODO: CONFIRM)
-static constexpr int16_t ML_SECRET          = 32;       // Don't show as two sided in the automap, because it's a secret (TODO: CONFIRM)
-static constexpr int16_t ML_SOUNDBLOCK      = 64;       // Stops sound propagation (TODO: CONFIRM)
-static constexpr int16_t ML_DONTDRAW        = 128;      // Hide on the automap (TODO: CONFIRM)
-static constexpr int16_t ML_MAPPED          = 256;      // Set when the line is to be shown on the automap (TODO: CONFIRM)
+static constexpr int16_t ML_BLOCKING        = 0x1;
+static constexpr int16_t ML_BLOCKMONSTERS   = 0x2;
+static constexpr int16_t ML_TWOSIDED        = 0x4;      // Unset for single sided lines
+static constexpr int16_t ML_DONTPEGTOP      = 0x8;      // If unset then upper texture is anchored to the ceiling rather than bottom edge
+static constexpr int16_t ML_DONTPEGBOTTOM   = 0x10;     // If unset then lower texture is anchored to the floor rather than top edge
+static constexpr int16_t ML_SECRET          = 0x20;     // Don't show as two sided in the automap, because it's a secret
+static constexpr int16_t ML_SOUNDBLOCK      = 0x40;     // Stops sound propagation
+static constexpr int16_t ML_DONTDRAW        = 0x80;     // Hide on the automap
+static constexpr int16_t ML_MAPPED          = 0x100;    // Set when the line is to be shown on the automap
+static constexpr int16_t ML_MIDMASKED       = 0x200;    // PSX DOOM: Middle texture has translucent pixels
+static constexpr int16_t ML_MIDTRANSLUCENT  = 0x400;    // PSX DOOM: Middle texture drawn with alpha blending
+static constexpr int16_t ML_BLOCKPRJECTILE  = 0x800;    // PSX DOOM: Line stops projectiles
+
+// Map thing flags
+static constexpr int16_t MTF_EASY           = 0x1;      // Difficulty flags, determines which difficulties the thing appears at
+static constexpr int16_t MTF_NORMAL         = 0x2;
+static constexpr int16_t MTF_HARD           = 0x4;
+static constexpr int16_t MTF_AMBUSH         = 0x8;      // Monster flag: activate only on sight, ignore noise
+static constexpr int16_t MTF_BLENDMASK1     = 0x20;     // PSX DOOM: TODO: comment/explain
+static constexpr int16_t MTF_BLENDMASK2     = 0x40;     // PSX DOOM: TODO: comment/explain
+static constexpr int16_t MTF_BLENDMASK3     = 0x80;     // PSX DOOM: TODO: comment/explain
 
 // If this flag is set for a BSP node child in a wad then it means the child is a subsector.
 // This flag should be removed when retrieving the actual subsector number.

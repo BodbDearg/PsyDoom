@@ -67,10 +67,10 @@ void D_DoomMain() noexcept {
     // The main intro and demo scenes flow.
     // Continue looping until there is input and then execute the main menu until it times out.    
     while (true) {
-        if (RunTitle() != ga_exitdemo) {
-            if (RunDemo(CdMapTbl_File::DEMO1_LMP) != ga_exitdemo) {
-                if (RunCredits() != ga_exitdemo) {
-                    if (RunDemo(CdMapTbl_File::DEMO2_LMP) != ga_exitdemo)
+        if (RunTitle() != ga_exit) {
+            if (RunDemo(CdMapTbl_File::DEMO1_LMP) != ga_exit) {
+                if (RunCredits() != ga_exit) {
+                    if (RunDemo(CdMapTbl_File::DEMO2_LMP) != ga_exit)
                         continue;
                 }
             }
@@ -539,8 +539,8 @@ gameaction_t MiniLoop(
             I_NetUpdate();
 
             if (v0 != 0) {
-                *gGameAction = ga_number4;
-                exitAction = ga_number4;
+                *gGameAction = ga_warped;
+                exitAction = ga_warped;
                 break;
             }
         }
@@ -550,7 +550,7 @@ gameaction_t MiniLoop(
             v0 = a0 & 0xF9FF;
 
             if (*gbDemoPlayback) {
-                exitAction = ga_exitdemo;
+                exitAction = ga_exit;
 
                 if (v0 != 0)
                     break;
@@ -572,7 +572,7 @@ gameaction_t MiniLoop(
                 v0 = a0 & 0x800;
             }
 
-            exitAction = ga_number5;
+            exitAction = ga_exitdemo;
 
             if (v0 != 0)
                 break;

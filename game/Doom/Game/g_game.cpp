@@ -87,7 +87,7 @@ void G_DoLoadLevel() noexcept {
 
         do {
             if (*pbPlayerInGame) {
-                if ((gameAction == ga_number8) || (gameAction == ga_number4) || (pPlayer->playerstate == PST_DEAD)) {
+                if ((gameAction == ga_restart) || (gameAction == ga_warped) || (pPlayer->playerstate == PST_DEAD)) {
                     pPlayer->playerstate = PST_REBORN;
                 }
             }
@@ -420,7 +420,7 @@ loc_8001335C:
 }
 
 void G_SetGameComplete() noexcept {
-    *gGameAction = ga_number2;
+    *gGameAction = ga_completed;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -505,15 +505,16 @@ void G_RunGame() noexcept {
     
         *gbIsLevelBeingRestarted = false;
     
-        if (*gGameAction == ga_number6) {
+        if (*gGameAction == ga_recorddemo) {
             // Who knows what this function originally did...
+            // TODO: rename - we now know it is something to do with ending demo recording.
             empty_func1();
         }
-    
-        if (*gGameAction == ga_number4)
+        
+        if (*gGameAction == ga_warped)
             continue;
     
-        if (*gGameAction == ga_died || *gGameAction == ga_number8) {
+        if (*gGameAction == ga_died || *gGameAction == ga_restart) {
             *gbIsLevelBeingRestarted = true;
             continue;
         }
@@ -522,7 +523,7 @@ void G_RunGame() noexcept {
         *gLockedTexPagesMask &= 1;
         Z_FreeTags(**gpMainMemZone, PU_ANIMATION);
         
-        if (*gGameAction == ga_number5)
+        if (*gGameAction == ga_exitdemo)
             break;
         
         // Do the intermission
@@ -532,10 +533,10 @@ void G_RunGame() noexcept {
         if (*gNetGame == gt_single && *gGameMap == 30 && *gNextMap == 31) {    
             MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
 
-            if (*gGameAction == ga_number4 || *gGameAction == ga_number8)
+            if (*gGameAction == ga_warped || *gGameAction == ga_restart)
                 continue;
     
-            if (*gGameAction == ga_number5)
+            if (*gGameAction == ga_exitdemo)
                 break;
 
             *gStartMapOrEpisode = -2;
@@ -550,7 +551,7 @@ void G_RunGame() noexcept {
 
         MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
 
-        if (*gGameAction != ga_number4 && *gGameAction != ga_number8)
+        if (*gGameAction != ga_warped && *gGameAction != ga_restart)
             break;
     }
 }
@@ -614,6 +615,8 @@ loc_80013714:
 // An unknown function called prior to the level being restarted.
 // Since it's contents are empty in the retail .EXE we cannot deduce what it originally did.
 // It's likely some sort of debug functionality that got compiled out of the retail build.
+//
+// TODO: rename - we now know it is something to do with ending demo recording.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void empty_func1() noexcept {
 }

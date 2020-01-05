@@ -33,8 +33,12 @@ static constexpr uint32_t FINEANGLES        = 8192;                 // How many 
 static constexpr uint32_t FINEMASK          = FINEANGLES - 1;       // Wrap a 'fine' angle to the LUT tables
 static constexpr uint32_t ANGLETOFINESHIFT  = 19;                   // How many bits to chop off when converting a BAM angle to a 'fine' angle for looking up the trig LUTs.
 
-// Some global defines and constants
-static constexpr uint32_t MAXPLAYERS = 2;   // Maximum number of players in a multiplayer game
+// Maximum number of players in a multiplayer game
+static constexpr uint32_t MAXPLAYERS = 2;
+
+// How many game ticks happen per second.
+// PSX DOOM has a 15Hz timebase, similar to Jaguar DOOM. Some operations however update at 30Hz (rendering speed).
+static constexpr int32_t TICRATE = 15;
 
 // What type of game is being played
 enum gametype_t : uint32_t {
@@ -55,16 +59,16 @@ enum skill_t : uint32_t {
 // Represents a high level result of running a game loop (MiniLoop).
 // Determines where the game navigates to next.
 enum gameaction_t : uint32_t {
-    ga_nothing,     // No game action
-    ga_died,        // Player has died
-    ga_number2,     // TODO: NAME!
-    ga_number3,     // TODO: NAME!
-    ga_number4,     // TODO: NAME!
-    ga_number5,     // TODO: NAME!
-    ga_number6,     // TODO: NAME!
-    ga_timeout,     // Player died or menu timed out
-    ga_number8,     // TODO: NAME!
-    ga_exitdemo,    // Player aborted the demo screens
+    ga_nothing,         // No game action
+    ga_died,            // Player has died
+    ga_completed,       // Level complete
+    ga_secretexit,      // Level complete (secret exit)
+    ga_warped,          // Cheat warping to another level
+    ga_exitdemo,        // Demo is finished playback or recording
+    ga_recorddemo,      // PSX DOOM: save the recorded demo? (TODO: confirm)
+    ga_timeout,         // PSX DOOM: player died or menu timed out
+    ga_restart,         // PSX DOOM: player restarted the level
+    ga_exit,            // PSX DOOM: Exit the current screen or demo
 };
 
 // Coordinate indexes in a bounding box
@@ -164,30 +168,28 @@ static_assert(sizeof(pspdef_t) == 16);
 
 // Keycard types
 enum card_t : uint32_t {
-    // TODO: name these labels
-    it_0,
-    it_1,
-    it_2,
-    it_3,
-    it_4,
-    it_5,
+    it_redcard,
+    it_bluecard,
+    it_yellowcard,
+    it_redskull,
+    it_blueskull,
+    it_yellowskull,
     NUMCARDS
 };
 
 // Player weapon types
 enum weapontype_t : uint32_t {
-    // TODO: name these labels
-    wp_0,
-    wp_1,
-    wp_2,
-    wp_3,
-    wp_4,
-    wp_5,
-    wp_6,
-    wp_7,
-    wp_8,
+    wp_fist,
+    wp_pistol,
+    wp_shotgun,
+    wp_supershotgun,    // PSX DOOM: note the new position for this, no longer after 'wp_chainsaw'!
+    wp_chaingun,
+    wp_missile,
+    wp_plasma,
+    wp_bfg,
+    wp_chainsaw,
     NUMWEAPONS,
-    wp_nochange     // Used to represent no weapon change (TODO: CONFIRM)
+    wp_nochange         // Used to represent no weapon change
 };
 
 // Player ammo types
@@ -203,15 +205,20 @@ enum ammotype_t : uint32_t {
 
 // Player powerup types
 enum powertype_t : uint32_t {
-    // TODO: name these labels
-    pw_0,
-    pw_1,
-    pw_2,
-    pw_3,
-    pw_4,
-    pw_5,
+    pw_invulnerability,
+    pw_strength,
+    pw_invisibility,
+    pw_ironfeet,
+    pw_allmap,
+    pw_infrared,
     NUMPOWERS
 };
+
+// How many game ticks each of the powerups last for
+static constexpr int32_t INVULNTICS = 30 * TICRATE;
+static constexpr int32_t INVISTICS = 60 * TICRATE;
+static constexpr int32_t INFRATICS = 120 * TICRATE;
+static constexpr int32_t IRONTICS = 60 * TICRATE;
 
 // Holds state specific to each player
 struct player_t {
