@@ -4,7 +4,7 @@
 #include "Doom/d_main.h"
 #include "i_file.h"
 #include "i_main.h"
-#include "PcPsx/Utils.h"
+#include "PcPsx/Endian.h"
 #include "PsxVm/PsxVm.h"
 #include "PsxVm/VmSVal.h"
 #include "z_zone.h"
@@ -36,7 +36,7 @@ const VmPtr<VmPtr<lumpinfo_t>>      gpMapWadLumpInfo(0x800780C8);
 
 // This is a mask to chop off the highest bit of the 1st 32-bit word in a lump name.
 // That bit is not part of the name, it is used to indicate whether the lump is compressed or not.
-static constexpr uint32_t NAME_WORD_MASK = isHostCpuLittleEndian() ? 0xFFFFFF7F : 0x7FFFFFFF;
+static constexpr uint32_t NAME_WORD_MASK = Endian::isLittle() ? 0xFFFFFF7F : 0x7FFFFFFF;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the WAD file management system.

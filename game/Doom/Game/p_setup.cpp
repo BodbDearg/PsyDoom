@@ -18,6 +18,7 @@
 #include "p_mobj.h"
 #include "p_spec.h"
 #include "p_switch.h"
+#include "PcPsx/Endian.h"
 #include "PsxVm/PsxVm.h"
 #include "PsxVm/VmSVal.h"
 
@@ -83,8 +84,8 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
     vertex_t* pDstVertex = gpVertexes->get();
 
     for (int32_t vertexIdx = 0; vertexIdx < *gNumVertexes; ++vertexIdx) {
-        pDstVertex->x = pSrcVertex->x;
-        pDstVertex->y = pSrcVertex->y;
+        pDstVertex->x = Endian::littleToHost(pSrcVertex->x);
+        pDstVertex->y = Endian::littleToHost(pSrcVertex->y);
         pDstVertex->index = 0;
         ++pSrcVertex;
         ++pDstVertex;
@@ -116,16 +117,16 @@ static void P_LoadSegs(const int32_t lumpNum) noexcept {
 
     for (int32_t segIdx = 0; segIdx < *gNumSegs; ++segIdx) {
         // Store basic seg properties
-        pDstSeg->vertex1 = &(*gpVertexes)[pSrcSeg->vertex1];
-        pDstSeg->vertex2 = &(*gpVertexes)[pSrcSeg->vertex2];
-        pDstSeg->angle = (fixed_t) pSrcSeg->angle << FRACBITS;
-        pDstSeg->offset = (fixed_t) pSrcSeg->offset << FRACBITS;
+        pDstSeg->vertex1 = &(*gpVertexes)[Endian::littleToHost(pSrcSeg->vertex1)];
+        pDstSeg->vertex2 = &(*gpVertexes)[Endian::littleToHost(pSrcSeg->vertex2)];
+        pDstSeg->angle = (fixed_t) Endian::littleToHost(pSrcSeg->angle) << FRACBITS;
+        pDstSeg->offset = (fixed_t) Endian::littleToHost(pSrcSeg->offset) << FRACBITS;
 
         // Figure out seg line and side
-        line_t& linedef = (*gpLines)[pSrcSeg->linedef];
+        line_t& linedef = (*gpLines)[Endian::littleToHost(pSrcSeg->linedef)];
         pDstSeg->linedef = &linedef;
 
-        const int32_t sideNum = linedef.sidenum[pSrcSeg->side];
+        const int32_t sideNum = linedef.sidenum[Endian::littleToHost(pSrcSeg->side)];
         side_t& side = (*gpSides)[sideNum];
         pDstSeg->sidedef = &side;
 
@@ -133,7 +134,7 @@ static void P_LoadSegs(const int32_t lumpNum) noexcept {
         pDstSeg->frontsector = side.sector;
 
         if (linedef.flags & ML_TWOSIDED) {
-            const int32_t backSideNum = linedef.sidenum[pSrcSeg->side ^ 1];
+            const int32_t backSideNum = linedef.sidenum[Endian::littleToHost(pSrcSeg->side) ^ 1];
             side_t& backSide = (*gpSides)[backSideNum];
             pDstSeg->backsector = backSide.sector;
         } else {
@@ -174,8 +175,8 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     subsector_t* pDstSubsec = gpSubsectors->get();
 
     for (int32_t subsectorIdx = 0; subsectorIdx < *gNumSubsectors; ++subsectorIdx) {
-        pDstSubsec->numSegs = pSrcSubsec->numsegs;
-        pDstSubsec->firstSeg = pSrcSubsec->firstseg;        
+        pDstSubsec->numSegs = Endian::littleToHost(pSrcSubsec->numsegs);
+        pDstSubsec->firstSeg = Endian::littleToHost(pSrcSubsec->firstseg);
         pDstSubsec->numleafedges = 0;
         pDstSubsec->firstleafedge = 0;
 
@@ -217,17 +218,17 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
 
         for (int32_t secIdx = 0; secIdx < *gNumSectors; ++secIdx) {
             // Save basic properties
-            pDstSec->floorheight = (fixed_t) pSrcSec->floorheight << FRACBITS;
-            pDstSec->ceilingheight = (fixed_t) pSrcSec->ceilingheight << FRACBITS;
-            pDstSec->colorid = pSrcSec->colorid;
-            pDstSec->lightlevel = pSrcSec->lightlevel;
-            pDstSec->special = pSrcSec->special;
+            pDstSec->floorheight = (fixed_t) Endian::littleToHost(pSrcSec->floorheight) << FRACBITS;
+            pDstSec->ceilingheight = (fixed_t) Endian::littleToHost(pSrcSec->ceilingheight) << FRACBITS;
+            pDstSec->colorid = Endian::littleToHost(pSrcSec->colorid);
+            pDstSec->lightlevel = Endian::littleToHost(pSrcSec->lightlevel);
+            pDstSec->special = Endian::littleToHost(pSrcSec->special);
             pDstSec->thinglist = nullptr;
-            pDstSec->tag = pSrcSec->tag;
-            pDstSec->flags = pSrcSec->flags;
+            pDstSec->tag = Endian::littleToHost(pSrcSec->tag);
+            pDstSec->flags = Endian::littleToHost(pSrcSec->flags);
 
             // Figure out floor texture number
-            a0 = ptrToVmAddr(pSrcSec->floorpic);            
+            a0 = ptrToVmAddr(pSrcSec->floorpic);
             R_FlatNumForName();
             pDstSec->floorpic = v0;
 
@@ -286,16 +287,16 @@ static void P_LoadNodes(const int32_t lumpNum) noexcept {
     node_t* pDstNode = gpBspNodes->get();
 
     for (int32_t nodeIdx = 0; nodeIdx < *gNumBspNodes; ++nodeIdx) {
-        pDstNode->x = (fixed_t) pSrcNode->x << FRACBITS;
-        pDstNode->y = (fixed_t) pSrcNode->y << FRACBITS;
-        pDstNode->dx = (fixed_t) pSrcNode->dx << FRACBITS;
-        pDstNode->dy = (fixed_t) pSrcNode->dy << FRACBITS;
+        pDstNode->x = (fixed_t) Endian::littleToHost(pSrcNode->x) << FRACBITS;
+        pDstNode->y = (fixed_t) Endian::littleToHost(pSrcNode->y) << FRACBITS;
+        pDstNode->dx = (fixed_t) Endian::littleToHost(pSrcNode->dx) << FRACBITS;
+        pDstNode->dy = (fixed_t) Endian::littleToHost(pSrcNode->dy) << FRACBITS;
 
         for (int32_t childIdx = 0; childIdx < 2; ++childIdx) {
-            pDstNode->children[childIdx] = pSrcNode->children[childIdx];
+            pDstNode->children[childIdx] = Endian::littleToHost(pSrcNode->children[childIdx]);
 
             for (int32_t coordIdx = 0; coordIdx < 4; ++coordIdx) {
-                const fixed_t coord = (fixed_t) pSrcNode->bbox[childIdx][coordIdx] << FRACBITS;
+                const fixed_t coord = (fixed_t) Endian::littleToHost(pSrcNode->bbox[childIdx][coordIdx]) << FRACBITS;
                 pDstNode->bbox[childIdx][coordIdx] = coord;
             }
         }
@@ -389,13 +390,13 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
 
     for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx) {
         // Save some basic line properties
-        pDstLine->flags = pSrcLine->flags;
-        pDstLine->special = pSrcLine->special;
-        pDstLine->tag = pSrcLine->tag;
+        pDstLine->flags = Endian::littleToHost(pSrcLine->flags);
+        pDstLine->special = Endian::littleToHost(pSrcLine->special);
+        pDstLine->tag = Endian::littleToHost(pSrcLine->tag);
 
         // Save line vertices, delta coordinates and slope type
-        vertex_t& vertex1 = (*gpVertexes)[pSrcLine->vertex1];
-        vertex_t& vertex2 = (*gpVertexes)[pSrcLine->vertex2];
+        vertex_t& vertex1 = (*gpVertexes)[Endian::littleToHost(pSrcLine->vertex1)];
+        vertex_t& vertex2 = (*gpVertexes)[Endian::littleToHost(pSrcLine->vertex2)];
 
         pDstLine->vertex1 = &vertex1;
         pDstLine->vertex2 = &vertex2;
@@ -436,8 +437,8 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
         }
 
         // Save side numbers and sector references
-        const int32_t sidenum1 = pSrcLine->sidenum[0];
-        const int32_t sidenum2 = pSrcLine->sidenum[1];
+        const int32_t sidenum1 = Endian::littleToHost(pSrcLine->sidenum[0]);
+        const int32_t sidenum2 = Endian::littleToHost(pSrcLine->sidenum[1]);
 
         pDstLine->sidenum[0] = sidenum1;
         pDstLine->sidenum[1] = sidenum2;
@@ -485,9 +486,9 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
     side_t* pDstSide = gpSides->get();
 
     for (int32_t sideIdx = 0; sideIdx < *gNumSides; ++sideIdx) {
-        pDstSide->textureoffset = (fixed_t) pSrcSide->textureoffset << FRACBITS;
-        pDstSide->rowoffset = (fixed_t) pSrcSide->rowoffset << FRACBITS;
-        pDstSide->sector = &(*gpSectors)[pSrcSide->sector];
+        pDstSide->textureoffset = (fixed_t) Endian::littleToHost(pSrcSide->textureoffset) << FRACBITS;
+        pDstSide->rowoffset = (fixed_t) Endian::littleToHost(pSrcSide->rowoffset) << FRACBITS;
+        pDstSide->sector = &(*gpSectors)[Endian::littleToHost(pSrcSide->sector)];
 
         a0 = ptrToVmAddr(pSrcSide->toptexture);
         R_TextureNumForName();
@@ -530,17 +531,24 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     // The offsets to each blocklist (list of block lines per block) start after the header
     *gpBlockmap = (uint16_t*)(&(&blockmapHeader)[1]);
 
-    // I'm not sure why this code was doing this pointless copy - disable as it is useless.
-    // Maybe an accidental leftover from when the code was doing something else?
-    #if !PC_PSX_DOOM_MODS
-    {
+    // Endian correction for the entire blockmap lump.
+    //
+    // PC-PSX: skip doing this on little endian architectures to save a few cycles.
+    // The original code did this transform from little endian to little endian even though it had no effect...
+    #if PC_PSX_DOOM_MODS
+        constexpr bool bEndianCorrect = (!Endian::isLittle());
+    #else
+        constexpr bool bEndianCorrect = true;
+    #endif
+
+    if constexpr (bEndianCorrect) {
+        static_assert(sizeof((*gpBlockmapLump)[0]) == sizeof(int16_t));
         const int32_t count = (lumpSize / 2) + (lumpSize & 1);
 
         for (int32_t i = 0; i < count; ++i) {
-            (*gpBlockmapLump)[i] = (*gpBlockmapLump)[i];
+            (*gpBlockmapLump)[i] = Endian::littleToHost((*gpBlockmapLump)[i]);
         }
     }
-    #endif
 
     // Save blockmap dimensions
     *gBlockmapWidth = blockmapHeader.width;
@@ -598,11 +606,12 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
     int32_t totalLeafEdges = 0;
 
     for (const std::byte* pLumpByte = pLumpBeg; pLumpByte < pLumpEnd;) {
-        // Increment the leaf count and skip past it
-        const mapleaf_t leaf = *(mapleaf_t*) pLumpByte;
+        // Increment the leaf count, convert to host endian and skip past it
+        mapleaf_t leaf = *(mapleaf_t*) pLumpByte;
+        leaf.numedges = Endian::littleToHost(leaf.numedges);
         pLumpByte += sizeof(mapleaf_t);
         ++numLeafs;
-
+        
         // Skip past the leaf edges and include them in the leaf edge count
         pLumpByte += leaf.numedges * sizeof(mapleafedge_t);
         totalLeafEdges += leaf.numedges;
@@ -623,19 +632,25 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
     leafedge_t* pDstEdge = gpLeafEdges->get();
 
     for (int32_t leafIdx = 0; leafIdx < numLeafs; ++leafIdx) {
-        // Save leaf info on the subsector
-        const mapleaf_t leaf = *(mapleaf_t*) pLumpByte;
+        // Convert leaf data to host endian and move past it
+        mapleaf_t leaf = *(mapleaf_t*) pLumpByte;
+        leaf.numedges = Endian::littleToHost(leaf.numedges);
         pLumpByte += sizeof(mapleaf_t);
 
+        // Save leaf info on the subsector
         pSubsec->numleafedges = leaf.numedges;
         pSubsec->firstleafedge = (int16_t) *gTotalNumLeafEdges;
 
         // Process the edges in the leaf
         for (int32_t edgeIdx = 0; edgeIdx < pSubsec->numleafedges; ++edgeIdx) {
-            // Set leaf vertex reference
-            const mapleafedge_t srcEdge = *(const mapleafedge_t*) pLumpByte;
+            // Convert edge data to host endian and move past it
+            mapleafedge_t srcEdge = *(const mapleafedge_t*) pLumpByte;
+            srcEdge.segnum = Endian::littleToHost(srcEdge.segnum);
+            srcEdge.vertexnum = Endian::littleToHost(srcEdge.vertexnum);
+
             pLumpByte += sizeof(mapleafedge_t);
 
+            // Set leaf vertex reference
             if (srcEdge.vertexnum >= *gNumVertexes) {
                 I_Error("P_LoadLeafs: vertex out of range\n");                        
             }
