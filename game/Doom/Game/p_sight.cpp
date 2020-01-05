@@ -83,8 +83,7 @@ loc_800249B4:
     a0 = lo;
     a0 += v0;
     a1 = u32(i32(a0) >> 3);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F1C);                               // Load from: gpRejectMatrix (800780E4)
+    v0 = *gpRejectMatrix;
     a0 &= 7;
     v0 += a1;
     v0 = lbu(v0);

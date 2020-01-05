@@ -60,6 +60,7 @@ const VmPtr<int32_t>                gNumSegs(0x800780A4);
 const VmPtr<VmPtr<seg_t>>           gpSegs(0x80078238);
 const VmPtr<int32_t>                gTotalNumLeafEdges(0x80077F64);
 const VmPtr<VmPtr<leafedge_t>>      gpLeafEdges(0x8007810C);
+const VmPtr<VmPtr<uint8_t>>         gpRejectMatrix(0x800780E4);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
@@ -545,26 +546,13 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     D_memset(gppBlockLinks->get(), (std::byte) 0, blockLinksSize);
 }
 
-void P_LoadMapLump() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x14);
-    s0 = a0;
-    _thunk_W_MapLumpLength();
-    a1 = v0;
-    a2 = 2;
-    a0 = *gpMainMemZone;
-    a3 = 0;
-    _thunk_Z_Malloc();
-    a0 = s0;
-    a1 = v0;
-    sw(a1, gp + 0xB04);                                 // Store to: gpRejectMatrix (800780E4)
-    a2 = 1;                                             // Result = 00000001
-    _thunk_W_ReadMapLump();
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load the reject map from the specified map lump number
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_LoadRejectMap(const int32_t lumpNum) noexcept {
+    const int32_t lumpSize = W_MapLumpLength(lumpNum);
+    *gpRejectMatrix = (uint8_t*) Z_Malloc(**gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
+    W_ReadMapLump(lumpNum, gpRejectMatrix->get(), true);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1122,22 +1110,7 @@ loc_800230D4:
     P_LoadNodes(mapStartLump + ML_NODES);
     P_LoadSegs(mapStartLump + ML_SEGS);
     P_LoadLeafs(mapStartLump + ML_LEAFS);
-
-    // Load the reject map
-    a0 = mapStartLump + ML_REJECT;
-    _thunk_W_MapLumpLength();
-
-    a1 = v0;
-    a2 = 2;
-    a0 = *gpMainMemZone;
-    a3 = 0;
-    _thunk_Z_Malloc();
-    sw(v0, gp + 0xB04);     // Store to: gpRejectMatrix (800780E4)
-
-    a0 = mapStartLump + ML_REJECT;
-    a1 = v0;    
-    a2 = 1;
-    _thunk_W_ReadMapLump();
+    P_LoadRejectMap(mapStartLump + ML_REJECT);
 
     // Build sector line lists etc.
     P_GroupLines();

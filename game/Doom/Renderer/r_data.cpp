@@ -10,17 +10,14 @@
 const VmPtr<VmPtr<texture_t>>   gpTextures(0x80078128);
 const VmPtr<VmPtr<texture_t>>   gpSkyTexture(0x80078050);
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the palette and asset management for various draw assets
+//------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitData() noexcept {
-loc_8002B9A8:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
     R_InitPalette();
     R_InitTextures();
     R_InitFlats();
     R_InitSprites();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void R_InitTextures() noexcept {

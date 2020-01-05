@@ -306,10 +306,6 @@ int32_t W_MapLumpLength(const int32_t lumpNum) noexcept {
     return lump.size;
 }
 
-void _thunk_W_MapLumpLength() noexcept {
-    v0 = W_MapLumpLength((int32_t) a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Return the lump index for the given map lump name (case insensitive) or -1 if not found
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -379,10 +375,6 @@ void W_ReadMapLump(const int32_t lumpNum, void* const pDest, const bool bDecompr
         const uint32_t sizeToCopy = nextLump.filepos - lump.filepos;
         D_memcpy(pDest, pLumpBytes, sizeToCopy);
     }
-}
-
-void _thunk_W_ReadMapLump() noexcept {
-    W_ReadMapLump((int32_t) a0, vmAddrToPtr<void>(a1), (a2 != 0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

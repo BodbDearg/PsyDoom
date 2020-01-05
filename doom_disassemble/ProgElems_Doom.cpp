@@ -492,7 +492,7 @@ static const ProgElem ELEMS[] = {
     { 0x8002237C, 0x80022650, "P_LoadLineDefs",                         ProgElemType::FUNCTION },
     { 0x80022650, 0x800227CC, "P_LoadSideDefs",                         ProgElemType::FUNCTION },
     { 0x800227CC, 0x800228CC, "P_LoadBlockMap",                         ProgElemType::FUNCTION },
-    { 0x800228CC, 0x80022920, "P_LoadMapLump",                          ProgElemType::FUNCTION },
+    { 0x800228CC, 0x80022920, "P_LoadRejectMap",                        ProgElemType::FUNCTION },
     { 0x80022920, 0x80022B58, "P_LoadLeafs",                            ProgElemType::FUNCTION },
     { 0x80022B58, 0x80022E68, "P_GroupLines",                           ProgElemType::FUNCTION },
     { 0x80022E68, 0x800230D4, "P_InitMapTextures",                      ProgElemType::FUNCTION },

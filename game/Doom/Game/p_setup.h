@@ -33,8 +33,8 @@ extern const VmPtr<int32_t>                 gNumSegs;
 extern const VmPtr<VmPtr<seg_t>>            gpSegs;
 extern const VmPtr<int32_t>                 gTotalNumLeafEdges;
 extern const VmPtr<VmPtr<leafedge_t>>       gpLeafEdges;
+extern const VmPtr<VmPtr<uint8_t>>          gpRejectMatrix;
 
-void P_LoadMapLump() noexcept;
 void P_GroupLines() noexcept;
 void P_InitMapTextures() noexcept;
 void P_SetupLevel(const int32_t mapNum, const skill_t skill) noexcept;

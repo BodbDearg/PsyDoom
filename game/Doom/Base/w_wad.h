@@ -42,14 +42,9 @@ void* W_CacheLumpName(const char* const name, const int16_t allocTag, const bool
 void _thunk_W_CacheLumpName() noexcept;
 
 void* W_OpenMapWad(const CdMapTbl_File discFile) noexcept;
-
 int32_t W_MapLumpLength(const int32_t lumpNum) noexcept;
-void _thunk_W_MapLumpLength() noexcept;
-
 int32_t W_MapCheckNumForName(const char* const name) noexcept;
-
 void W_ReadMapLump(const int32_t lumpNum, void* const pDest, const bool bDecompress) noexcept;
-void _thunk_W_ReadMapLump() noexcept;
 
 void decode(const void* pSrc, void* pDst) noexcept;
 void _thunk_decode() noexcept;

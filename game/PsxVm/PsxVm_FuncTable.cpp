@@ -3,7 +3,6 @@
 
 #include <map>
 
-extern void D_DoomMain() noexcept;
 extern void I_SetDebugDrawStringPos() noexcept;
 extern void _thunk_D_memset() noexcept;
 extern void _thunk_D_memcpy() noexcept;
@@ -198,7 +197,6 @@ extern void A_LoadShotgun2() noexcept;
 extern void A_CloseShotgun2() noexcept;
 extern void P_SetupPsprites() noexcept;
 extern void P_MovePsprites() noexcept;
-extern void P_LoadMapLump() noexcept;
 extern void P_GroupLines() noexcept;
 extern void P_InitMapTextures() noexcept;
 extern void P_CacheSprite() noexcept;
@@ -278,7 +276,6 @@ extern void R_RenderBSPNode() noexcept;
 extern void R_CheckBBox() noexcept;
 extern void R_Subsector() noexcept;
 extern void R_AddLine() noexcept;
-extern void R_InitData() noexcept;
 extern void R_InitTextures() noexcept;
 extern void R_InitFlats() noexcept;
 extern void R_InitSprites() noexcept;
@@ -305,7 +302,6 @@ extern void R_PointOnSide() noexcept;
 extern void R_PointInSubsector() noexcept;
 extern void _thunk_W_CacheLumpNum() noexcept;
 extern void _thunk_W_CacheLumpName() noexcept;
-extern void _thunk_W_ReadMapLump() noexcept;
 extern void InitOpenFileSlots() noexcept;
 extern void _thunk_OpenFile() noexcept;
 extern void _thunk_CloseFile() noexcept;
@@ -946,7 +942,6 @@ extern void LIBCOMB__ioabort() noexcept;
 
 namespace PsxVm {
     std::map<uint32_t, VmFunc> gFuncTable = {
-        { 0x80012274, &D_DoomMain },
         { 0x800124E8, &I_SetDebugDrawStringPos },
         { 0x80012850, &_thunk_D_memset },
         { 0x8001290C, &_thunk_D_memcpy },
@@ -1141,7 +1136,6 @@ namespace PsxVm {
         { 0x800216D8, &A_CloseShotgun2 },
         { 0x80021794, &P_SetupPsprites },
         { 0x8002190C, &P_MovePsprites },
-        { 0x800228CC, &P_LoadMapLump },
         { 0x80022B58, &P_GroupLines },
         { 0x80022E68, &P_InitMapTextures },
         { 0x800239D8, &P_CacheSprite },
@@ -1221,7 +1215,6 @@ namespace PsxVm {
         { 0x8002AE74, &R_CheckBBox },
         { 0x8002B2D8, &R_Subsector },
         { 0x8002B3B8, &R_AddLine },
-        { 0x8002B9A8, &R_InitData },
         { 0x8002B9E0, &R_InitTextures },
         { 0x8002BB50, &R_InitFlats },
         { 0x8002BC54, &R_InitSprites },
@@ -1248,7 +1241,6 @@ namespace PsxVm {
         { 0x80030F5C, &R_PointInSubsector },
         { 0x800317AC, &_thunk_W_CacheLumpNum },
         { 0x800319E4, &_thunk_W_CacheLumpName },
-        { 0x80031CE0, &_thunk_W_ReadMapLump },
         { 0x80031EB4, &InitOpenFileSlots },
         { 0x80031EDC, &_thunk_OpenFile },
         { 0x80031FD8, &_thunk_CloseFile },
