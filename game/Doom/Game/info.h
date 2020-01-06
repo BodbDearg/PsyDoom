@@ -954,12 +954,12 @@ enum mobjtype_t : uint32_t {
     MT_MISC1,
     MT_MISC2,
     MT_MISC3,
-    MT_MISC4,
-    MT_MISC5,
-    MT_MISC6,
-    MT_MISC7,
-    MT_MISC8,
-    MT_MISC9,
+    MT_MISC4,                   // Blue keycard
+    MT_MISC5,                   // Red keycard
+    MT_MISC6,                   // Yellow keycard
+    MT_MISC7,                   // Yellow skull key
+    MT_MISC8,                   // Red skull key
+    MT_MISC9,                   // Blue skull key
     MT_MISC10,
     MT_MISC11,
     MT_MISC12,
