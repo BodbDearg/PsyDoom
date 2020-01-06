@@ -6,6 +6,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/Game/g_game.h"
+#include "Doom/Game/p_tick.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBC2.h"
 #include "PsyQ/LIBGPU.h"
@@ -1934,8 +1935,7 @@ loc_8003A368:
     v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
     if (v1 != v0) goto loc_8003A2FC;
 loc_8003A384:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EC0);                               // Load from: gbGamePaused (80077EC0)
+    v0 = *gbGamePaused;
     if (v0 == 0) goto loc_8003A3A0;
     I_DrawPausedOverlay();
 loc_8003A3A0:

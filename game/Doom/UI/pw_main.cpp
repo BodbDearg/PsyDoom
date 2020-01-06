@@ -6,6 +6,7 @@
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_password.h"
+#include "Doom/Game/p_tick.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 
@@ -21,7 +22,7 @@ void START_PasswordScreen() noexcept {
     v1 = lw(v1 + 0x7F48);                               // Load from: gPlayerPadButtons[1] (80077F48)
     sw(0, gp + 0xA4C);                                  // Store to: gInvalidPasswordFlashTicsLeft (8007802C)
     sw(0, gp + 0xB94);                                  // Store to: gCurPasswordCharIdx (80078174)
-    sw(0, gp + 0x918);                                  // Store to: gVBlanksUntilMenuMove (80077EF8)
+    *gVBlanksUntilMenuMove = 0;
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0x7DEC);                                // Store to: gPlayerOldPadButtons[0] (80078214)
     at = 0x80080000;                                    // Result = 80080000
@@ -78,19 +79,18 @@ loc_80036EF4:
         v0 = s0 & 0x900;
         if (bJump) goto loc_80036F1C;
     }
-    sw(0, gp + 0x918);                                  // Store to: gVBlanksUntilMenuMove (80077EF8)
+    *gVBlanksUntilMenuMove = 0;
     goto loc_8003700C;
 loc_80036F1C:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7EF8;                                       // Result = gVBlanksUntilMenuMove (80077EF8)
-    v0 = lw(a0);                                        // Load from: gVBlanksUntilMenuMove (80077EF8)
+    v0 = *gVBlanksUntilMenuMove;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7FBC);                               // Load from: gPlayersElapsedVBlanks[0] (80077FBC)
     v0 -= v1;
-    sw(v0, a0);                                         // Store to: gVBlanksUntilMenuMove (80077EF8)
+    *gVBlanksUntilMenuMove = v0;
     if (i32(v0) > 0) goto loc_80037008;
-    v0 = 0xF;                                           // Result = 0000000F
-    sw(v0, a0);                                         // Store to: gVBlanksUntilMenuMove (80077EF8)
+    *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
     v0 = s0 & 0x1000;
     {
         const bool bJump = (v0 == 0);

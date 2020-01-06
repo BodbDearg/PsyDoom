@@ -532,8 +532,7 @@ loc_80016334:
     v0 &= v1;
     if (v0 != 0) goto loc_800163E0;
 loc_8001635C:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F50);                               // Load from: gbPlayerInGame[1] (800780B0)
+    v0 = gbPlayerInGame[1];
     a0 = 0;                                             // Result = 00000000
     if (v0 == 0) goto loc_800163B0;
     _thunk_P_Random();

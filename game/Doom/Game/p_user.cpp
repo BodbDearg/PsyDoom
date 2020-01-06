@@ -10,6 +10,7 @@
 #include "p_pspr.h"
 #include "p_slide.h"
 #include "p_spec.h"
+#include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 
 void P_PlayerMove() noexcept {
@@ -1248,8 +1249,7 @@ loc_8002A9E0:
 loc_8002AA10:
     sw(a0, s0 + 0x70);
 loc_8002AA14:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EC0);                               // Load from: gbGamePaused (80077EC0)
+    v0 = *gbGamePaused;
     if (v0 != 0) goto loc_8002ACCC;
     a0 = lw(s0);
     P_PlayerMobjThink();

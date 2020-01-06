@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
+#include "Doom/Game/p_tick.h"
 #include "PsxVm/PsxVm.h"
 
 void AM_Start() noexcept {
@@ -24,8 +25,7 @@ loc_8003BAC0:
 
 void AM_Control() noexcept {
 loc_8003BB08:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EC0);                               // Load from: gbGamePaused (80077EC0)
+    v0 = *gbGamePaused;
     if (v0 != 0) goto loc_8003BD2C;
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)

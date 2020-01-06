@@ -6,6 +6,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
+#include "Doom/Game/p_tick.h"
 #include "o_main.h"
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
@@ -92,10 +93,8 @@ void M_Start() noexcept {
     *gNetGame = gt_single;
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x7618);                                 // Store to: gCurPlayerIndex (80077618)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7F54);                                // Store to: gbPlayerInGame[0] (800780AC)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7F50);                                 // Store to: gbPlayerInGame[1] (800780B0)
+    gbPlayerInGame[0] = false;
+    gbPlayerInGame[1] = false;
     I_ResetTexCache();
     s0 = 0x80090000;                                    // Result = 80090000
     s0 += 0x7A90;                                       // Result = gTexInfo_LOADING[0] (80097A90)
@@ -131,7 +130,7 @@ void M_Start() noexcept {
     v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
     sw(0, gp + 0xBF8);                                  // Store to: gCursorFrame (800781D8)
     sw(0, gp + 0xA20);                                  // Store to: gCursorPos (80078000)
-    sw(0, gp + 0x918);                                  // Store to: gVBlanksUntilMenuMove (80077EF8)
+    *gVBlanksUntilMenuMove = 0;
     {
         const bool bJump = (v0 != 0);
         v0 = 0x36;                                      // Result = 00000036
@@ -307,19 +306,16 @@ loc_80035FD0:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80035FE4;
     }
-    sw(0, gp + 0x918);                                  // Store to: gVBlanksUntilMenuMove (80077EF8)
+    *gVBlanksUntilMenuMove = 0;
     goto loc_80036244;
 loc_80035FE4:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7EF8;                                       // Result = gVBlanksUntilMenuMove (80077EF8)
-    v0 = lw(a0);                                        // Load from: gVBlanksUntilMenuMove (80077EF8)
+    v0 = *gVBlanksUntilMenuMove;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7FBC);                               // Load from: gPlayersElapsedVBlanks[0] (80077FBC)
     v0 -= v1;
-    sw(v0, a0);                                         // Store to: gVBlanksUntilMenuMove (80077EF8)
+    *gVBlanksUntilMenuMove = v0;
     if (i32(v0) > 0) goto loc_80036240;
-    v0 = 0xF;                                           // Result = 0000000F
-    sw(v0, a0);                                         // Store to: gVBlanksUntilMenuMove (80077EF8)
+    *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
     v0 = s0 & 0x4000;
     v1 = 4;                                             // Result = 00000004
     if (v0 == 0) goto loc_80036040;

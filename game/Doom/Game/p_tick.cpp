@@ -23,6 +23,19 @@
 #include "Wess/psxspu.h"
 #include "Wess/wessapi.h"
 
+// The maximum level for the warp cheat.
+// PC-PSX: For this version of the game I'm allowing the user to warp to the secret levels!
+// If you're cheating you can more or less do anything anyway, so not much point in hiding these.
+#if PC_PSX_DOOM_MODS
+    static constexpr int32_t MAX_CHEAT_WARP_LEVEL = 59;
+#else
+    static constexpr int32_t MAX_CHEAT_WARP_LEVEL = 54;
+#endif
+
+const VmPtr<int32_t>    gVBlanksUntilMenuMove(0x80077EF8);          // How many 60 Hz ticks until we can move the cursor on the menu
+const VmPtr<bool32_t>   gbGamePaused(0x80077EC0);                   // Whether the game is currently paused by either player
+const VmPtr<int32_t>    gMapNumToCheatWarpTo(0x80078270);           // What map the player currently has selected for cheat warp
+
 void P_AddThinker() noexcept {
 loc_80028C38:
     v0 = 0x80090000;                                    // Result = 80090000
@@ -140,43 +153,48 @@ void P_CheckCheats() noexcept {
     s5 = 0x800A88AC;    // Result = gPlayer1[30] (800A88AC)
     s6 = -0x31;         // Result = FFFFFFCF
 
-    for (s3 = 0x12C, s1 = 4, s0 = 1; i32(s0) >= 0; s3 -= 0x12C, s0--, s1 -= 4) {
-        at = 0x800780AC;                                    // Result = gbPlayerInGame[0] (800780AC)                                     
-        at += s1;
-        v0 = lw(at);
+    s3 = 0x12C;
+    s1 = 4;
 
-        if (v0 == 0)
+    // Check for pause or menu options by any player
+    for (int32_t playerIdx = 1; playerIdx >= 0; --playerIdx, s3 -= 0x12C, s1 -= 4) {
+        // Skip this player if not in the game
+        if (!gbPlayerInGame[playerIdx])
             continue;
 
-        at = 0x80077F44;                                    // Result = gPlayerPadButtons[0] (80077F44)                                   
+        at = 0x80077F44;        // Result = gPlayerPadButtons[0] (80077F44)                                   
         at += s1;
         s2 = lw(at);
-        at = 0x80080000;                                    // Result = 80080000
-        at -= 0x7DEC;                                       // Result = gPlayerOldPadButtons[0] (80078214)
+        at = 0x80078214;        // Result = gPlayerOldPadButtons[0] (80078214)                                   
         at += s1;
         s4 = lw(at);
         
-        // Pause/unpause logic
+        // Has the pause toggle been pressed?
         if ((s2 & 0x800) != 0 && (s4 & 0x800) == 0) {
-            v0 = lw(gp + 0x8E0);                                // Load from: gbGamePaused (80077EC0)
-            v0 ^= 1;
-            sw(v0, gp + 0x8E0);                                 // Store to: gbGamePaused (80077EC0)
+            // Toggle paused status
+            *gbGamePaused = (!*gbGamePaused);
 
-            // If the game is being paused then stop all audio and do nothing else
-            if (v0 != 0) {
+            // Handle the game being paused, if just pausing
+            if (*gbGamePaused) {
+                // Pause all audio
                 psxcd_pause();
-                a0 = 0xD;                                           // Result = 0000000D
+                
+                a0 = 0xD;
                 wess_seq_stop();
-                a0 = 0xE;                                           // Result = 0000000E
+                
+                a0 = 0xE;
                 wess_seq_stop();
+
                 S_Pause();
+
+                // Remember the tick we paused on and reset cheat button sequences
                 v0 = *gTicCon;
-                sw(0, gp + 0xA04);                                  // Store to: gCurCheatBtnSequenceIdx (80077FE4)
-                at = 0x80080000;                                    // Result = 80080000
-                sw(v0, at - 0x7D28);                                // Store to: gTicConOnPause (800782D8)
+                sw(0, 0x80077FE4);          // Store to: gCurCheatBtnSequenceIdx (80077FE4)
+                sw(v0, 0x800782D8);         // Store to: gTicConOnPause (800782D8)
                 RETURN;
             }
 
+            // Otherwise restart audio
             a0 = 0;
             psxcd_restart();
 
@@ -190,14 +208,11 @@ void P_CheckCheats() noexcept {
             psxspu_start_cd_fade();
             S_Resume();
             v0 = lw(s5);                                        // Load from: gPlayer1[30] (800A88AC)
-            v1 = 0x80080000;                                    // Result = 80080000
-            v1 = lw(v1 - 0x7D28);                               // Load from: gTicConOnPause (800782D8)
+            v1 = lw(0x800782D8);                                // Load from: gTicConOnPause (800782D8)
             v0 &= s6;
-            at = 0x80080000;                                    // Result = 80080000
             *gTicCon = v1;
             v1 = u32(i32(v1) >> 2);
             sw(v0, s5);                                         // Store to: gPlayer1[30] (800A88AC)
-            at = 0x80080000;                                    // Result = 80080000
             *gLastTgtGameTicCount = v1;
         }
 
@@ -209,9 +224,7 @@ void P_CheckCheats() noexcept {
         if ((s2 & 0x100) == 0 || (s4 & 0x100) != 0)
             continue;
 
-        v0 = lw(gp + 0x8E0);                                // Load from: gbGamePaused (80077EC0)
-
-        if (v0 == 0)
+        if (!*gbGamePaused)
             continue;
 
         v0 = lw(a3 + 0xC0);
@@ -219,14 +232,16 @@ void P_CheckCheats() noexcept {
         sw(v0, a3 + 0xC0);
         I_DrawPresent();
 
-        v1 = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);
+        // Run the options menu and before restarting or exiting a demo, do one final draw.
+        // TODO: Note sure why that final draw is required yet? Maybe screen fading?
+        const gameaction_t optionsAction = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);
         
-        if ((gameaction_t) v1 == ga_exit)
+        if (optionsAction == ga_exit)
             RETURN;
         
-        *gGameAction = (gameaction_t) v1;
+        *gGameAction = optionsAction;
 
-        if ((gameaction_t) v1 == ga_restart || (gameaction_t) v1 == ga_exitdemo) {
+        if (optionsAction == ga_restart || optionsAction == ga_exitdemo) {
             O_Drawer();
         }
         
@@ -238,47 +253,36 @@ void P_CheckCheats() noexcept {
         RETURN;
 
     if (s2 == 0) {
-        sw(0, 0x80077EF8);      // Store to: gVBlanksUntilMenuMove (80077EF8)
+        *gVBlanksUntilMenuMove = 0;
     }
     
     // Do cheat warp controls if required
     v1 = lw(a3 + 0xC0);
 
     if ((v1 & 0x20) != 0) {
-        a0 = 0x80070000;                                    // Result = 80070000
-        a0 += 0x7EF8;                                       // Result = gVBlanksUntilMenuMove (80077EF8)
-        v0 = lw(a0);                                        // Load from: gVBlanksUntilMenuMove (80077EF8)
-        v1 = 0x80070000;                                    // Result = 80070000
-        v1 = lw(v1 + 0x7FBC);                               // Load from: gPlayersElapsedVBlanks[0] (80077FBC)
+        v0 = *gVBlanksUntilMenuMove;
+        v1 = lw(0x80077FBC);                // Load from: gPlayersElapsedVBlanks[0] (80077FBC)
         v0 -= v1;
-        sw(v0, a0);                                         // Store to: gVBlanksUntilMenuMove (80077EF8)
+        *gVBlanksUntilMenuMove = v0;
 
-        if (i32(v0) <= 0) {
+        if (*gVBlanksUntilMenuMove <= 0) {
             if ((s2 & 0x8000) != 0) {
-                v0 = lw(gp + 0xC90);                            // Load from: gMapNumToCheatWarpTo (80078270)
-                v0--;
-                sw(v0, gp + 0xC90);                             // Store to: gMapNumToCheatWarpTo (80078270)
+                *gMapNumToCheatWarpTo -= 1;
 
-                if (i32(v0) <= 0) {
-                    v0 = 1;
-                    sw(v0, gp + 0xC90);                         // Store to: gMapNumToCheatWarpTo (80078270)
+                if (*gMapNumToCheatWarpTo <= 0) {
+                    *gMapNumToCheatWarpTo = 1;
                 }
 
-                v0 = 0xF;
-                sw(v0, a0);                                     // Store to: gVBlanksUntilMenuMove (80077EF8)
+                *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
             }
             else if ((s2 & 0x2000) != 0) {
-                v0 = lw(gp + 0xC90);                            // Load from: gMapNumToCheatWarpTo (80078270)
-                v0++;
-                sw(v0, gp + 0xC90);                             // Store to: gMapNumToCheatWarpTo (80078270)
+                *gMapNumToCheatWarpTo += 1;
 
-                if (i32(v0) >= 0x37) {
-                    v0 = 0x36;
-                    sw(v0, gp + 0xC90);                         // Store to: gMapNumToCheatWarpTo (80078270)
+                if (*gMapNumToCheatWarpTo > MAX_CHEAT_WARP_LEVEL) {
+                    *gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
                 }
 
-                v0 = 0xF;
-                sw(v0, a0);                                     // Store to: gVBlanksUntilMenuMove (80077EF8)
+                *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
             }
         }
 
@@ -291,11 +295,10 @@ void P_CheckCheats() noexcept {
         a0 = -0x21;                                         // Result = FFFFFFDF
         *gGameAction = ga_warped;
         v0 = lw(a3 + 0xC0);
-        v1 = lw(gp + 0xC90);                                // Load from: gMapNumToCheatWarpTo (80078270)
         v0 &= a0;
         sw(v0, a3 + 0xC0);
-        *gStartMapOrEpisode = v1;
-        *gGameMap = v1;
+        *gStartMapOrEpisode = *gMapNumToCheatWarpTo;
+        *gGameMap = *gMapNumToCheatWarpTo;
         RETURN;
     }
 
@@ -327,9 +330,7 @@ void P_CheckCheats() noexcept {
     }
 
     // Check for cheat sequences if the game is paused and a new button has been pressed
-    v0 = lw(gp + 0x8E0);                                // Load from: gbGamePaused (80077EC0)
-
-    if (v0 == 0)
+    if (!*gbGamePaused)
         RETURN;
 
     if (s2 == 0)
@@ -497,15 +498,13 @@ void P_CheckCheats() noexcept {
                 // Level warp cheat
                 case 5: {
                     v0 = lw(a3 + 0xC0);
-                    v1 = *gGameMap;
                     v0 |= 0x20;
-                    sw(v1, gp + 0xC90);                                 // Store to: gMapNumToCheatWarpTo (80078270)
-                    v1 = (i32(v1) < 0x37);
                     sw(v0, a3 + 0xC0);
                     
-                    if (v1 == 0) {
-                        v0 = 0x36;
-                        sw(v0, gp + 0xC90);                                 // Store to: gMapNumToCheatWarpTo (80078270)
+                    if (*gGameMap > MAX_CHEAT_WARP_LEVEL) {
+                        *gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
+                    } else {
+                        *gMapNumToCheatWarpTo = *gGameMap;
                     }
                 }   break;
 
@@ -566,7 +565,7 @@ void P_Ticker() noexcept {
     sw(s0, sp + 0x10);
     *gGameAction = ga_nothing;
     P_CheckCheats();
-    v0 = lw(gp + 0x8E0);                                // Load from: gbGamePaused (80077EC0)
+    v0 = *gbGamePaused;
     if (v0 != 0) goto loc_8002955C;
     v1 = *gGameTic;
     v0 = *gPrevGameTic;
@@ -696,7 +695,7 @@ void P_Start() noexcept {
     sw(s0, sp + 0x20);
     s0 = 1;                                             // Result = 00000001
     sw(ra, sp + 0x24);
-    sw(0, gp + 0x8E0);                                  // Store to: gbGamePaused (80077EC0)
+    *gbGamePaused = false;
     at = 0x80070000;                                    // Result = 80070000
     sw(s0, at + 0x7BC4);                                // Store to: gValidCount (80077BC4)
     AM_Start();
@@ -741,7 +740,7 @@ void P_Stop() noexcept {
     S_StopMusicSequence();
     s1 = 0x80080000;                                    // Result = 80080000
     s1 -= 0x7F54;                                       // Result = gbPlayerInGame[0] (800780AC)
-    sw(0, gp + 0x8E0);                                  // Store to: gbGamePaused (80077EC0)
+    *gbGamePaused = false;
     *gbIsLevelDataCached = false;
 loc_80029760:
     v0 = lw(s1);

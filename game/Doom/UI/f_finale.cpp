@@ -51,15 +51,12 @@ loc_8003D750:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called to finish up the Ultimate DOOM finale
+//------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Stop() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7EC0);                                 // Store to: gbGamePaused (80077EC0)
+    *gbGamePaused = false;
     psxcd_stop();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void F1_Ticker() noexcept {
@@ -80,8 +77,7 @@ void F1_Ticker() noexcept {
     at += v0;
     s1 = lw(at);
     P_CheckCheats();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EC0);                               // Load from: gbGamePaused (80077EC0)
+    v0 = *gbGamePaused;
     if (v0 == 0) goto loc_8003D80C;
     v0 = *gGameAction;
     goto loc_8003D8D8;
@@ -189,8 +185,7 @@ loc_8003D968:
     a2 -= 0x6FB8;                                       // Result = 800A9048
     a1 = s1;
     I_DrawString();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EC0);                               // Load from: gbGamePaused (80077EC0)
+    v0 = *gbGamePaused;
     if (v0 == 0) goto loc_8003D998;
     I_DrawPausedOverlay();
 loc_8003D998:
@@ -278,15 +273,12 @@ loc_8003DACC:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called to finish up the DOOM II finale
+//------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Stop() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7EC0);                                 // Store to: gbGamePaused (80077EC0)
+    *gbGamePaused = false;
     psxcd_stop();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void F2_Ticker() noexcept {
@@ -308,8 +300,7 @@ void F2_Ticker() noexcept {
     at += v0;
     s1 = lw(at);
     P_CheckCheats();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EC0);                               // Load from: gbGamePaused (80077EC0)
+    v0 = *gbGamePaused;
     s2 = 1;                                             // Result = 00000001
     if (v0 == 0) goto loc_8003DB8C;
     v0 = *gGameAction;
@@ -1231,8 +1222,7 @@ loc_8003E88C:
 loc_8003E8C0:
     I_DrawString();
 loc_8003E8C8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EC0);                               // Load from: gbGamePaused (80077EC0)
+    v0 = *gbGamePaused;
     if (v0 == 0) goto loc_8003E8E4;
     I_DrawPausedOverlay();
 loc_8003E8E4:

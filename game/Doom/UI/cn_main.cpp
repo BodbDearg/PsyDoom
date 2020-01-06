@@ -5,6 +5,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
+#include "Doom/Game/p_tick.h"
 #include "PsxVm/PsxVm.h"
 
 void START_ControlsScreen() noexcept {
@@ -64,19 +65,19 @@ loc_800379F0:
         v0 = s0 & 0x900;
         if (bJump) goto loc_80037A18;
     }
-    sw(0, gp + 0x918);                                  // Store to: gVBlanksUntilMenuMove (80077EF8)
+    
+    *gVBlanksUntilMenuMove = 0;
     goto loc_80037AB8;
 loc_80037A18:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7EF8;                                       // Result = gVBlanksUntilMenuMove (80077EF8)
-    v0 = lw(a0);                                        // Load from: gVBlanksUntilMenuMove (80077EF8)
+    v0 = *gVBlanksUntilMenuMove;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7FBC);                               // Load from: gPlayersElapsedVBlanks[0] (80077FBC)
     v0 -= v1;
-    sw(v0, a0);                                         // Store to: gVBlanksUntilMenuMove (80077EF8)
+    *gVBlanksUntilMenuMove = v0;
     if (i32(v0) > 0) goto loc_80037AB4;
-    v0 = 0xF;                                           // Result = 0000000F
-    sw(v0, a0);                                         // Store to: gVBlanksUntilMenuMove (80077EF8)
+    *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
     v0 = s0 & 0x4000;
     {
         const bool bJump = (v0 == 0);

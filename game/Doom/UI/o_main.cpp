@@ -6,6 +6,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
+#include "Doom/Game/p_tick.h"
 #include "PsxVm/PsxVm.h"
 #include "pw_main.h"
 
@@ -38,8 +39,7 @@ loc_8003E940:
     v0 = 4;                                             // Result = 00000004
     goto loc_8003E9BC;
 loc_8003E984:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EC0);                               // Load from: gbGamePaused (80077EC0)
+    v0 = *gbGamePaused;
     if (v0 == 0) goto loc_8003E9AC;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x4B88;                                       // Result = OptionsMenuEntries_InGame[0] (80074B88)

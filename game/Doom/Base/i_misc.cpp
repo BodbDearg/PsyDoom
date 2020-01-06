@@ -1,5 +1,6 @@
 #include "i_misc.h"
 
+#include "Doom/Game/p_tick.h"
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBC2.h"
@@ -634,8 +635,7 @@ loc_8003AD64:
         v0 = v1 & 0x10;
         if (bJump) goto loc_8003ADD8;
     }
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7D90);                               // Load from: gMapNumToCheatWarpTo (80078270)
+    a2 = *gMapNumToCheatWarpTo;
     a1 = 0x80010000;                                    // Result = 80010000
     a1 += 0x1634;                                       // Result = STR_WarpToLevel[0] (80011634)
     a0 = sp + 0x10;
@@ -646,8 +646,7 @@ loc_8003AD64:
     I_DrawString();
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = 0x3C;                                          // Result = 0000003C
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7D90);                               // Load from: gMapNumToCheatWarpTo (80078270)
+    a2 = *gMapNumToCheatWarpTo;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
     a2 <<= 5;
