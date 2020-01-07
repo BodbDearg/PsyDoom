@@ -162,10 +162,10 @@ void P_CheckCheats() noexcept {
         if (!gbPlayerInGame[playerIdx])
             continue;
 
-        at = 0x80077F44;        // Result = gPlayerPadButtons[0] (80077F44)                                   
+        at = 0x80077F44;        // Result = gTicButtons[0] (80077F44)                                   
         at += s1;
         s2 = lw(at);
-        at = 0x80078214;        // Result = gPlayerOldPadButtons[0] (80078214)                                   
+        at = 0x80078214;        // Result = gOldTicButtons[0] (80078214)                                   
         at += s1;
         s4 = lw(at);
         

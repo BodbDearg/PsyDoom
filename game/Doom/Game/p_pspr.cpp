@@ -693,7 +693,7 @@ loc_800203A8:
     at += v0;
     v1 = lw(at);
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
+    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
     at += v0;
     v0 = lw(at);
     v1 = lw(v1);
@@ -745,7 +745,7 @@ void A_ReFire() noexcept {
     at += v0;
     v1 = lw(at);
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
+    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
     at += v0;
     v0 = lw(at);
     v1 = lw(v1);
@@ -1939,7 +1939,7 @@ void A_CloseShotgun2() noexcept {
     at += v0;
     v1 = lw(at);
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
+    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
     at += v0;
     v0 = lw(at);
     v1 = lw(v1);

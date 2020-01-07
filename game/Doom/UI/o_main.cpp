@@ -107,11 +107,11 @@ loc_8003EA6C:
     v0 = lw(at);
     if (v0 == 0) goto loc_8003EE8C;
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
+    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
     at += s1;
     s0 = lw(at);
     at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7DEC;                                       // Result = gPlayerOldPadButtons[0] (80078214)
+    at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
     at += s1;
     v0 = lw(at);
     {

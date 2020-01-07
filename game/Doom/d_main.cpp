@@ -57,10 +57,10 @@ void D_DoomMain() noexcept {
     *gGameTic = 0;
     *gLastTgtGameTicCount = 0;
     *gTicCon = 0;
-    sw(0, 0x80077F44);          // Store to: gPlayerPadButtons[0] (80077F44)
-    sw(0, 0x80077F48);          // Store to: gPlayerPadButtons[1] (80077F48)
-    sw(0, 0x80078214);          // Store to: gPlayerOldPadButtons[0] (80078214)
-    sw(0, 0x80078218);          // Store to: gPlayerOldPadButtons[1] (80078218)
+    sw(0, 0x80077F44);          // Store to: gTicButtons[0] (80077F44)
+    sw(0, 0x80077F48);          // Store to: gTicButtons[1] (80077F48)
+    sw(0, 0x80078214);          // Store to: gOldTicButtons[0] (80078214)
+    sw(0, 0x80078218);          // Store to: gOldTicButtons[1] (80078218)
 
     // TODO: PC-PSX: allow this loop to exit if the application is quit
     //
@@ -518,10 +518,10 @@ gameaction_t MiniLoop(
         at += v0 * 4;
         sw(*gElapsedVBlanks, at);
 
-        v0 = lw(0x80077F44);        // Load from: gPlayerPadButtons[0] (80077F44)
-        v1 = lw(0x80077F48);        // Load from: gPlayerPadButtons[1] (80077F48)
-        sw(v0, 0x80078214);         // Store to: gPlayerOldPadButtons[0] (80078214)
-        sw(v1, 0x80078218);         // Store to: gPlayerOldPadButtons[1] (80078218)
+        v0 = lw(0x80077F44);        // Load from: gTicButtons[0] (80077F44)
+        v1 = lw(0x80077F48);        // Load from: gTicButtons[1] (80077F48)
+        sw(v0, 0x80078214);         // Store to: gOldTicButtons[0] (80078214)
+        sw(v1, 0x80078218);         // Store to: gOldTicButtons[1] (80078218)
         
         I_ReadGamepad();
 
@@ -529,7 +529,7 @@ gameaction_t MiniLoop(
         v1 = lw(0x80077618);        // Load from: gCurPlayerIndex (80077618)
         v1 <<= 2;
 
-        uint32_t x4 = 0x80077F44;   // Result = gPlayerPadButtons[0] (80077F44)
+        uint32_t x4 = 0x80077F44;   // Result = gTicButtons[0] (80077F44)
         a1 = v1 + x4;
         sw(a0, a1);
 
@@ -626,11 +626,11 @@ gameaction_t MiniLoop(
     pStop();
 
     // Current pad buttons become the old ones
-    v1 = lw(0x80077F44);        // Load from: gPlayerPadButtons[0] (80077F44)
-    sw(v1, 0x80078214);         // Store to: gPlayerOldPadButtons[0] (80078214)
+    v1 = lw(0x80077F44);        // Load from: gTicButtons[0] (80077F44)
+    sw(v1, 0x80078214);         // Store to: gOldTicButtons[0] (80078214)
 
-    a0 = lw(0x80077F48);        // Load from: gPlayerPadButtons[1] (80077F48)
-    sw(a0, 0x80078218);         // Store to: gPlayerOldPadButtons[1] (80078218)
+    a0 = lw(0x80077F48);        // Load from: gTicButtons[1] (80077F48)
+    sw(a0, 0x80078218);         // Store to: gOldTicButtons[1] (80078218)
 
     // Return the exit game action
     return exitAction;

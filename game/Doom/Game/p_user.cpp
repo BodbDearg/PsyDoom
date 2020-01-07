@@ -439,12 +439,12 @@ loc_80029DD4:
     at += v0;
     t0 = lw(at);
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
+    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
     at += v0;
     a2 = lw(at);
     v1 = lw(t0 + 0xC);
     at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7DEC;                                       // Result = gPlayerOldPadButtons[0] (80078214)
+    at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
     at += v0;
     a0 = lw(at);
     a3 = a2 & v1;
@@ -1081,7 +1081,7 @@ loc_8002A7A0:
     v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
+    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
     at += v0;
     v0 = lbu(at);
     {
@@ -1117,11 +1117,11 @@ loc_8002A7F8:
     v1 = lw(s0 + 0x4);
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
+    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
     at += v0;
     s2 = lw(at);
     at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7DEC;                                       // Result = gPlayerOldPadButtons[0] (80078214)
+    at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
     at += v0;
     a1 = lw(at);
     at = ptrToVmAddr(&gpPlayerBtnBindings[0]);

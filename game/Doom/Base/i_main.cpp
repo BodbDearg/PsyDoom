@@ -2219,7 +2219,7 @@ loc_80034A60:
     at = 0x80070000;                                    // Result = 80070000
     sb(v0, at + 0x7FB2);                                // Store to: gNetOutputPacket[2] (80077FB2)
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
+    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
     at += a0;
     v0 = lw(at);
     at = 0x80070000;                                    // Result = 80070000
@@ -2228,7 +2228,7 @@ loc_80034A60:
     s1 = 0x80070000;                                    // Result = 80070000
     s1 += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
     s0 = 0x80070000;                                    // Result = 80070000
-    s0 += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
+    s0 += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
     v1 = lbu(gp + 0x8C8);                               // Load from: gNetInputPacket[0] (80077EA8)
     v0 = 0xAA;                                          // Result = 000000AA
     if (v1 != v0) goto loc_80034B44;
@@ -2288,22 +2288,22 @@ loc_80034B44:
     I_DrawPresent();
     I_NetHandshake();
     at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7F48);                                 // Store to: gPlayerPadButtons[1] (80077F48)
+    sw(0, at + 0x7F48);                                 // Store to: gTicButtons[1] (80077F48)
     at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7DEC);                                 // Store to: gPlayerOldPadButtons[0] (80078214)
+    sw(0, at - 0x7DEC);                                 // Store to: gOldTicButtons[0] (80078214)
     at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7F48);                                 // Store to: gPlayerPadButtons[1] (80077F48)
+    sw(0, at + 0x7F48);                                 // Store to: gTicButtons[1] (80077F48)
     at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7DEC);                                 // Store to: gPlayerOldPadButtons[0] (80078214)
+    sw(0, at - 0x7DEC);                                 // Store to: gOldTicButtons[0] (80078214)
     v0 = 1;                                             // Result = 00000001
     goto loc_80034CA0;
 loc_80034C48:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
-    v1 = s0;                                            // Result = gPlayerPadButtons[0] (80077F44)
+    v1 = s0;                                            // Result = gTicButtons[0] (80077F44)
     if (v0 != 0) goto loc_80034C64;
     v1 = 0x80070000;                                    // Result = 80070000
-    v1 += 0x7F48;                                       // Result = gPlayerPadButtons[1] (80077F48)
+    v1 += 0x7F48;                                       // Result = gTicButtons[1] (80077F48)
 loc_80034C64:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7EAC);                               // Load from: gNetInputPacket[4] (80077EAC)

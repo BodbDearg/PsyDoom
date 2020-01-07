@@ -17,16 +17,16 @@ void START_PasswordScreen() noexcept {
     a1 = 7;                                             // Result = 00000007
     S_StartSound();
     v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F44);                               // Load from: gPlayerPadButtons[0] (80077F44)
+    v0 = lw(v0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
     v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F48);                               // Load from: gPlayerPadButtons[1] (80077F48)
+    v1 = lw(v1 + 0x7F48);                               // Load from: gTicButtons[1] (80077F48)
     sw(0, gp + 0xA4C);                                  // Store to: gInvalidPasswordFlashTicsLeft (8007802C)
     sw(0, gp + 0xB94);                                  // Store to: gCurPasswordCharIdx (80078174)
     *gVBlanksUntilMenuMove = 0;
     at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7DEC);                                // Store to: gPlayerOldPadButtons[0] (80078214)
+    sw(v0, at - 0x7DEC);                                // Store to: gOldTicButtons[0] (80078214)
     at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7DE8);                                // Store to: gPlayerOldPadButtons[1] (80078218)
+    sw(v1, at - 0x7DE8);                                // Store to: gOldTicButtons[1] (80078218)
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -70,9 +70,9 @@ void TIC_PasswordScreen() noexcept {
     S_StartSound();
 loc_80036EF4:
     s0 = 0x80070000;                                    // Result = 80070000
-    s0 = lw(s0 + 0x7F44);                               // Load from: gPlayerPadButtons[0] (80077F44)
+    s0 = lw(s0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
     s1 = 0x80080000;                                    // Result = 80080000
-    s1 = lw(s1 - 0x7DEC);                               // Load from: gPlayerOldPadButtons[0] (80078214)
+    s1 = lw(s1 - 0x7DEC);                               // Load from: gOldTicButtons[0] (80078214)
     v0 = s0 & 0xF000;
     {
         const bool bJump = (v0 != 0);

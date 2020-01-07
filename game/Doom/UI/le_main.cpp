@@ -72,7 +72,7 @@ loc_80035000:
         if (bJump) goto loc_80035044;
     }
     v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F44);                               // Load from: gPlayerPadButtons[0] (80077F44)
+    v0 = lw(v0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
     v0 = (v0 > 0);
     v0 = -v0;
     v0 &= 9;

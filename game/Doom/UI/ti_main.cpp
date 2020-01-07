@@ -135,7 +135,7 @@ void STOP_Title() noexcept {
 
 void TIC_Title() noexcept {
     v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F44);                               // Load from: gPlayerPadButtons[0] (80077F44)
+    v0 = lw(v0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
     sp -= 0x18;
     sw(ra, sp + 0x10);
     if (v0 == 0) goto loc_800352B0;

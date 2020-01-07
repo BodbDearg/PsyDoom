@@ -232,9 +232,9 @@ void M_Ticker() noexcept {
     sp -= 0x18;
     sw(s0, sp + 0x10);
     s0 = 0x80070000;                                    // Result = 80070000
-    s0 = lw(s0 + 0x7F44);                               // Load from: gPlayerPadButtons[0] (80077F44)
+    s0 = lw(s0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
     a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7DEC);                               // Load from: gPlayerOldPadButtons[0] (80078214)
+    a0 = lw(a0 - 0x7DEC);                               // Load from: gOldTicButtons[0] (80078214)
     sw(ra, sp + 0x14);
     if (s0 == 0) goto loc_80035EF4;
     v0 = *gTicCon;

@@ -238,11 +238,11 @@ void IN_Ticker() noexcept {
     v0 = s0 << 2;                                       // Result = 00000000
 loc_8003CAE0:
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
+    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
     at += v0;
     v1 = lw(at);
     at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7DEC;                                       // Result = gPlayerOldPadButtons[0] (80078214)
+    at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
     at += v0;
     v0 = lw(at);
     {

@@ -69,11 +69,11 @@ void F1_Ticker() noexcept {
     *gGameAction = ga_nothing;
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
+    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
     at += v0;
     s0 = lw(at);
     at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7DEC;                                       // Result = gPlayerOldPadButtons[0] (80078214)
+    at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
     at += v0;
     s1 = lw(at);
     P_CheckCheats();
@@ -292,11 +292,11 @@ void F2_Ticker() noexcept {
     *gGameAction = ga_nothing;
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gPlayerPadButtons[0] (80077F44)
+    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
     at += v0;
     s0 = lw(at);
     at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7DEC;                                       // Result = gPlayerOldPadButtons[0] (80078214)
+    at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
     at += v0;
     s1 = lw(at);
     P_CheckCheats();

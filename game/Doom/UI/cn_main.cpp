@@ -56,9 +56,9 @@ void TIC_ControlsScreen() noexcept {
     sw(v0, gp + 0xBF8);                                 // Store to: gCursorFrame (800781D8)
 loc_800379F0:
     s0 = 0x80070000;                                    // Result = 80070000
-    s0 = lw(s0 + 0x7F44);                               // Load from: gPlayerPadButtons[0] (80077F44)
+    s0 = lw(s0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
     s1 = 0x80080000;                                    // Result = 80080000
-    s1 = lw(s1 - 0x7DEC);                               // Load from: gPlayerOldPadButtons[0] (80078214)
+    s1 = lw(s1 - 0x7DEC);                               // Load from: gOldTicButtons[0] (80078214)
     v0 = s0 & 0xF000;
     {
         const bool bJump = (v0 != 0);
