@@ -1,5 +1,6 @@
 #include "p_password.h"
 
+#include "Doom/Base/i_main.h"
 #include "Doom/d_main.h"
 #include "g_game.h"
 #include "PsxVm/PsxVm.h"
@@ -11,8 +12,7 @@ loc_80037DBC:
     s1 = a0;
     a0 = sp + 0x10;
     a1 = 0;                                             // Result = 00000000
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v1 = *gCurPlayerIndex;
     a2 = 8;                                             // Result = 00000008
     sw(ra, sp + 0x20);
     sw(s0, sp + 0x18);

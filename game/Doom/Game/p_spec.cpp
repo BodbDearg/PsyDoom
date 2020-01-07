@@ -1425,8 +1425,7 @@ loc_8002726C:
     at += s0;
     v1 = lw(at);
     if (i32(v1) <= 0) goto loc_80027400;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
     at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)

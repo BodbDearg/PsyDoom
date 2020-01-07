@@ -90,9 +90,9 @@ void M_Start() noexcept {
     v0 = 1;
     sw(ra, sp + 0x24);
     sw(s0, sp + 0x20);
+
     *gNetGame = gt_single;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7618);                                 // Store to: gCurPlayerIndex (80077618)
+    *gCurPlayerIndex = 0;
     gbPlayerInGame[0] = false;
     gbPlayerInGame[1] = false;
     I_ResetTexCache();

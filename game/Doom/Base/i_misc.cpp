@@ -604,8 +604,7 @@ loc_8003ACEC:
 
 void I_DrawPausedOverlay() noexcept {
 loc_8003AD04:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v1 = *gCurPlayerIndex;
     sp -= 0x58;
     sw(ra, sp + 0x54);
     sw(s0, sp + 0x50);
@@ -843,8 +842,7 @@ loc_8003B0B0:
     v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
     if (v1 != v0) goto loc_8003B044;
 loc_8003B0CC:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7ED4);                               // Load from: gVramViewerTexPage (80077ED4)
+    a0 = *gVramViewerTexPage;
     I_VramViewerDraw();
 loc_8003B0DC:
     ra = lw(sp + 0x54);
@@ -855,8 +853,7 @@ loc_8003B0DC:
 
 void I_UpdatePalette() noexcept {
 loc_8003B0F0:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v1 = *gCurPlayerIndex;
     v0 = v1 << 2;
     v0 += v1;
     v1 = v0 << 4;

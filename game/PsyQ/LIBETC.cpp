@@ -825,7 +825,7 @@ void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept 
 }
 
 void _thunk_LIBETC_v_wait() noexcept {
-    LIBETC_v_wait(a0, a1);
+    LIBETC_v_wait((int32_t) a0, (uint16_t) a1);
 }
 
 void LIBETC_SetVideoMode() noexcept {

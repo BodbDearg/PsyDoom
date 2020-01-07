@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Doom/cdmaptbl.h"
 #include "Wess/psxcd.h"
 

@@ -169,8 +169,7 @@ loc_8003EB50:
     v0--;
     sw(v0, v1);
 loc_8003EB80:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     a0 = 0;                                             // Result = 00000000
     if (s2 != v0) goto loc_8003EB9C;
     a1 = 0x12;                                          // Result = 00000012
@@ -203,8 +202,7 @@ loc_8003EB9C:
         default: jump_table_err(); break;
     }
 loc_8003EBE8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     {
         const bool bJump = (s2 != v0);
         v0 = s0 & 0x2000;
@@ -276,8 +274,7 @@ loc_8003ECB0:
     s4 -= 4;
     goto loc_8003EE90;
 loc_8003ECF8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     {
         const bool bJump = (s2 != v0);
         v0 = s0 & 0x2000;
@@ -504,8 +501,7 @@ loc_8003F058:
 loc_8003F074:
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lhu(a0 - 0x6B0E);                              // Load from: gTexInfo_STATUS[2] (800A94F2)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     a1 = 0x800B0000;                                    // Result = 800B0000
     a1 = lh(a1 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     v0 <<= 2;

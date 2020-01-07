@@ -88,8 +88,7 @@ loc_80038658:
 void ST_Ticker() noexcept {
 loc_80038688:
     a0 = lw(gp + 0xB54);                                // Load from: gFaceTics (80078134)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v1 = *gCurPlayerIndex;
     sp -= 0x28;
     sw(ra, sp + 0x24);
     sw(s4, sp + 0x20);
@@ -174,8 +173,7 @@ loc_80038774:
 loc_800387D4:
     v0 = lw(s4 + 0xD4);
     if (v0 == 0) goto loc_8003882C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     v1 = v0 << 2;
     v1 += v0;
     v0 = v1 << 4;
@@ -395,8 +393,7 @@ loc_80038B0C:
     a1 = 0;                                             // Result = 00000000
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lhu(a3 - 0x6B0E);                              // Load from: gTexInfo_STATUS[2] (800A94F2)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v1 = *gCurPlayerIndex;
     a2 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x70);
     sw(s5, sp + 0x6C);

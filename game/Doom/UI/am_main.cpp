@@ -209,8 +209,7 @@ loc_8003BD34:
     sw(s1, sp + 0x3C);
     sw(s0, sp + 0x38);
     I_DrawPresent();
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v1 = *gCurPlayerIndex;
     v0 = v1 << 2;
     v0 += v1;
     v1 = v0 << 4;
@@ -456,8 +455,7 @@ loc_8003C178:
     v1 = *gNetGame;
     t4 = 1;                                             // Result = 00000001
     if (v1 == t4) goto loc_8003C1A0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     if (fp != v0) goto loc_8003C3A4;
 loc_8003C1A0:
     t4 = lw(sp + 0x28);
@@ -470,8 +468,7 @@ loc_8003C1A0:
 loc_8003C1D0:
     t4 = 1;                                             // Result = 00000001
     if (v1 != t4) goto loc_8003C1F8;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     if (fp != v0) goto loc_8003C1F8;
     s6 = 0xCC0000;                                      // Result = 00CC0000
     s6 |= 0xCC00;                                       // Result = 00CCCC00

@@ -142,8 +142,7 @@ void TIC_Title() noexcept {
     v0 = 9;                                             // Result = 00000009
     goto loc_800353FC;
 loc_800352B0:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     v1 = lw(gp + 0x6A4);                                // Load from: gVBlanksUntilTitleSprMove (80077C84)
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
@@ -163,8 +162,7 @@ loc_800352B0:
     v0 = *gTicCon;
     sw(v0, gp + 0x92C);                                 // Store to: gMenuTimeoutStartTicCon (80077F0C)
 loc_80035310:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     v1 = lw(gp + 0x6A8);                                // Load from: gVBlanksUntilTitleFireMove (80077C88)
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000

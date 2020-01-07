@@ -60,8 +60,7 @@ void F1_Stop() noexcept {
 }
 
 void F1_Ticker() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     sp -= 0x20;
     sw(ra, sp + 0x18);
     sw(s1, sp + 0x14);
@@ -282,8 +281,7 @@ void F2_Stop() noexcept {
 }
 
 void F2_Ticker() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     sp -= 0x20;
     sw(ra, sp + 0x1C);
     sw(s2, sp + 0x18);

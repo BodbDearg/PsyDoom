@@ -563,7 +563,6 @@ loc_80013714:
     sw(s1, sp + 0x34);
     s1 = gBtnBindings;
     a1 = s1;
-    v1 = 0x80070000;                                    // Result = 80070000
     v1 = *gpDemoBuffer;
     sw(ra, sp + 0x3C);
     sw(s2, sp + 0x38);
@@ -597,7 +596,7 @@ loc_80013714:
 
     a0 = s1;
     a1 = sp + 0x10;
-    a2 = 0x20;
+    a2 = 32;
     _thunk_D_memcpy();
 
     *gLockedTexPagesMask &= 1;

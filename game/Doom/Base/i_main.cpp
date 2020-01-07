@@ -27,6 +27,9 @@ const VmPtr<uint32_t> gElapsedVBlanks(0x800781BC);
 // Sprites on the other hand are placed in 'unlocked' texture pages and can be evicted at any time.
 const VmPtr<uint32_t> gLockedTexPagesMask(0x80077C08);
 
+// The index of the user's player in the array of players: whether you are player 1 or 2 in other words
+const VmPtr<uint32_t> gCurPlayerIndex(0x80077618);
+
 // Control related stuff
 const VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>                         gBtnBindings(0x80073E0C);
 const VmPtr<VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>[MAXPLAYERS]>      gpPlayerBtnBindings(0x80077FC8);
@@ -1990,9 +1993,7 @@ loc_8003472C:
     a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
     s1 = 0xFFFF0000;                                    // Result = FFFF0000
     a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7618);                                // Store to: gCurPlayerIndex (80077618)
+    *gCurPlayerIndex = 1;
     s0 = 0x4000;                                        // Result = 00004000
     LIBAPI_write();
     a1 = 0x80070000;                                    // Result = 80070000
@@ -2032,8 +2033,7 @@ loc_800347EC:
     a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
     s1 = 0xFFFF0000;                                    // Result = FFFF0000
     a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7618);                                 // Store to: gCurPlayerIndex (80077618)
+    *gCurPlayerIndex = 0;
     s0 = 0x4000;                                        // Result = 00004000
     LIBAPI_read();
 loc_8003480C:
@@ -2076,8 +2076,7 @@ loc_8003485C:
     LIBAPI_write();
 loc_80034884:
     I_NetHandshake();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     if (v0 != 0) goto loc_80034988;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lbu(v0 + 0x7604);                              // Load from: gStartGameType (80077604)
@@ -2206,8 +2205,7 @@ loc_80034A60:
     v0 = v1 >> 8;
     v0 ^= v1;
     v1 >>= 16;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    a0 = *gCurPlayerIndex;
     v0 ^= v1;
     at = 0x80070000;                                    // Result = 80070000
     sb(v0, at + 0x7FB1);                                // Store to: gNetOutputPacket[1] (80077FB1)
@@ -2286,7 +2284,7 @@ loc_80034B44:
     I_DrawSprite();
     I_SubmitGpuCmds();
     I_DrawPresent();
-    I_NetHandshake();
+    I_NetHandshake();    
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x7F48);                                 // Store to: gTicButtons[1] (80077F48)
     at = 0x80080000;                                    // Result = 80080000
@@ -2298,8 +2296,7 @@ loc_80034B44:
     v0 = 1;                                             // Result = 00000001
     goto loc_80034CA0;
 loc_80034C48:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     v1 = s0;                                            // Result = gTicButtons[0] (80077F44)
     if (v0 != 0) goto loc_80034C64;
     v1 = 0x80070000;                                    // Result = 80070000
@@ -2308,8 +2305,7 @@ loc_80034C64:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7EAC);                               // Load from: gNetInputPacket[4] (80077EAC)
     sw(v0, v1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     a0 = s1;                                            // Result = gPlayersElapsedVBlanks[0] (80077FBC)
     if (v0 != 0) goto loc_80034C90;
     a0 = 0x80070000;                                    // Result = 80070000
@@ -2361,8 +2357,7 @@ loc_80034D14:
     sw(ra, sp + 0x14);
     sw(s0, sp + 0x10);
 loc_80034D20:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     if (v0 == 0) goto loc_80034DB8;
     a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
     a1 = 0x80070000;                                    // Result = 80070000

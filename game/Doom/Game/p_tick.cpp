@@ -17,7 +17,9 @@
 #include "p_sight.h"
 #include "p_spec.h"
 #include "p_user.h"
+#include "PcPsx/Utils.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
@@ -32,9 +34,16 @@
     static constexpr int32_t MAX_CHEAT_WARP_LEVEL = 54;
 #endif
 
-const VmPtr<int32_t>    gVBlanksUntilMenuMove(0x80077EF8);          // How many 60 Hz ticks until we can move the cursor on the menu
-const VmPtr<bool32_t>   gbGamePaused(0x80077EC0);                   // Whether the game is currently paused by either player
-const VmPtr<int32_t>    gMapNumToCheatWarpTo(0x80078270);           // What map the player currently has selected for cheat warp
+const VmPtr<int32_t>                gVBlanksUntilMenuMove(0x80077EF8);      // How many 60 Hz ticks until we can move the cursor on the menu
+const VmPtr<bool32_t>               gbGamePaused(0x80077EC0);               // Whether the game is currently paused by either player
+const VmPtr<int32_t>                gMapNumToCheatWarpTo(0x80078270);       // What map the player currently has selected for cheat warp
+const VmPtr<int32_t>                gVramViewerTexPage(0x80077ED4);         // What page of texture memory to display in the VRAM viewer
+const VmPtr<uint32_t[MAXPLAYERS]>   gTicButtons(0x80077F44);                // Currently pressed buttons by all players
+const VmPtr<uint32_t[MAXPLAYERS]>   gOldTicButtons(0x80078214);             // Previously pressed buttons by all players
+
+
+static const VmPtr<int32_t>     gCurCheatBtnSequenceIdx(0x80077FE4);    // What button press in the cheat sequence we are currently on
+static const VmPtr<int32_t>     gTicConOnPause(0x800782D8);             // What 60Hz tick we paused on, used to discount paused time on unpause
 
 void P_AddThinker() noexcept {
 loc_80028C38:
@@ -139,39 +148,18 @@ loc_80028D7C:
 //  (4) Controls for cheats that require them (VRAM viewer, level warp).
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_CheckCheats() noexcept {
-    sp -= 0x40;
-    sw(s0, sp + 0x20);    
-    sw(s5, sp + 0x34);
-    sw(s6, sp + 0x38);
-    sw(s3, sp + 0x2C);
-    sw(s1, sp + 0x24);
-    sw(s4, sp + 0x30);
-    sw(s2, sp + 0x28);
-
-    #define RETURN goto loc_800293E8
-
-    s5 = 0x800A88AC;    // Result = gPlayer1[30] (800A88AC)
-    s6 = -0x31;         // Result = FFFFFFCF
-
-    s3 = 0x12C;
-    s1 = 4;
-
-    // Check for pause or menu options by any player
-    for (int32_t playerIdx = 1; playerIdx >= 0; --playerIdx, s3 -= 0x12C, s1 -= 4) {
-        // Skip this player if not in the game
+    // Check for pause or options menu actions by any player.
+    // Note that one player doing the action causes the action to happen for other players too.
+    for (int32_t playerIdx = 1; playerIdx >= 0; --playerIdx) {
+        // Skip this player if not in the game, otherwise grab inputs for the player
         if (!gbPlayerInGame[playerIdx])
             continue;
 
-        at = 0x80077F44;        // Result = gTicButtons[0] (80077F44)                                   
-        at += s1;
-        s2 = lw(at);
-        at = 0x80078214;        // Result = gOldTicButtons[0] (80078214)                                   
-        at += s1;
-        s4 = lw(at);
+        const uint32_t padBtns = gTicButtons[playerIdx];
+        const uint32_t oldPadBtns = gOldTicButtons[playerIdx];
         
-        // Has the pause toggle been pressed?
-        if ((s2 & 0x800) != 0 && (s4 & 0x800) == 0) {
-            // Toggle paused status
+        // Toggling pause?
+        if (padBtnJustPressed(PADstart, padBtns, oldPadBtns)) {
             *gbGamePaused = (!*gbGamePaused);
 
             // Handle the game being paused, if just pausing
@@ -188,10 +176,9 @@ void P_CheckCheats() noexcept {
                 S_Pause();
 
                 // Remember the tick we paused on and reset cheat button sequences
-                v0 = *gTicCon;
-                sw(0, 0x80077FE4);          // Store to: gCurCheatBtnSequenceIdx (80077FE4)
-                sw(v0, 0x800782D8);         // Store to: gTicConOnPause (800782D8)
-                RETURN;
+                *gCurCheatBtnSequenceIdx = 0;
+                *gTicConOnPause = *gTicCon;
+                return;
             }
 
             // Otherwise restart audio
@@ -202,80 +189,75 @@ void P_CheckCheats() noexcept {
                 psxcd_seeking_for_play();
             } while (v0 != 0);
 
-            a1 = 0x80070000;                                    // Result = 80070000
-            a1 = lw(a1 + 0x75F8);                               // Load from: gCdMusicVol (800775F8)
-            a0 = 0x1F4;                                         // Result = 000001F4
+            a0 = 500;
+            a1 = lw(0x800775F8);        // Load from: gCdMusicVol (800775F8)            
             psxspu_start_cd_fade();
+
             S_Resume();
-            v0 = lw(s5);                                        // Load from: gPlayer1[30] (800A88AC)
-            v1 = lw(0x800782D8);                                // Load from: gTicConOnPause (800782D8)
-            v0 &= s6;
-            *gTicCon = v1;
-            v1 = u32(i32(v1) >> 2);
-            sw(v0, s5);                                         // Store to: gPlayer1[30] (800A88AC)
-            *gLastTgtGameTicCount = v1;
+
+            // Not sure why this is hardcoded to clear this flag specifically for player 2? Seems rather strange...
+            gPlayers[1].cheats &= ~(CF_VRAMVIEWER|CF_WARPMENU);
+
+            // Restore previous tick counters on unpause
+            *gTicCon = *gTicConOnPause;
+            *gLastTgtGameTicCount = *gTicConOnPause / 2;
         }
 
-        // Showing the options menu if the game is paused and the options button has been pressed
-        v0 = 0x800B0000;                                    // Result = 800B0000
-        v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-        a3 = s3 + v0;
-
-        if ((s2 & 0x100) == 0 || (s4 & 0x100) != 0)
+        // Showing the options menu if the game is paused and the options button has just been pressed.
+        // Otherwise do not do any of the logic below...
+        if ((!padBtnJustPressed(PADselect, padBtns, oldPadBtns)) || (!*gbGamePaused))
             continue;
-
-        if (!*gbGamePaused)
-            continue;
-
-        v0 = lw(a3 + 0xC0);
-        v0 &= s6;
-        sw(v0, a3 + 0xC0);
+        
+        // About to open up the options menu, disable these player cheats and present what we have to the screen
+        player_t& player = gPlayers[playerIdx];
+        player.cheats &= ~(CF_VRAMVIEWER|CF_WARPMENU);
         I_DrawPresent();
 
         // Run the options menu and before restarting or exiting a demo, do one final draw.
-        // TODO: Note sure why that final draw is required yet? Maybe screen fading?
         const gameaction_t optionsAction = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);
         
-        if (optionsAction == ga_exit)
-            RETURN;
-        
-        *gGameAction = optionsAction;
+        if (optionsAction != ga_exit) {
+            *gGameAction = optionsAction;
 
-        if (optionsAction == ga_restart || optionsAction == ga_exitdemo) {
-            O_Drawer();
+            if (optionsAction == ga_restart || optionsAction == ga_exitdemo) {
+                O_Drawer();
+            }
         }
         
-        RETURN;
+        return;
     }
 
     // Cheats are disallowed in a multiplayer game
     if (*gNetGame != gt_single)
-        RETURN;
+        return;
 
-    if (s2 == 0) {
+    // Grab inputs for the 1st player.
+    // The rest of the cheat logic is for singleplayer mode only!
+    const uint32_t padBtns = gTicButtons[0];
+    const uint32_t oldPadBtns = gOldTicButtons[0];
+
+    if (padBtns == 0) {
         *gVBlanksUntilMenuMove = 0;
     }
     
-    // Do cheat warp controls if required
-    v1 = lw(a3 + 0xC0);
-
-    if ((v1 & 0x20) != 0) {
-        v0 = *gVBlanksUntilMenuMove;
-        v1 = lw(0x80077FBC);                // Load from: gPlayersElapsedVBlanks[0] (80077FBC)
-        v0 -= v1;
-        *gVBlanksUntilMenuMove = v0;
+    // Are we showing the cheat warp menu?
+    // If so then do the controls for that and exit.
+    player_t& player = gPlayers[0];
+    
+    if (player.cheats & CF_WARPMENU) {
+        *gVBlanksUntilMenuMove -= gPlayersElapsedVBlanks[0];
 
         if (*gVBlanksUntilMenuMove <= 0) {
-            if ((s2 & 0x8000) != 0) {
+            if ((padBtns & PADLleft) != 0) {
                 *gMapNumToCheatWarpTo -= 1;
 
                 if (*gMapNumToCheatWarpTo <= 0) {
                     *gMapNumToCheatWarpTo = 1;
                 }
-
+                
                 *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
             }
-            else if ((s2 & 0x2000) != 0) {
+            else if ((padBtns & PADLright) != 0) {
                 *gMapNumToCheatWarpTo += 1;
 
                 if (*gMapNumToCheatWarpTo > MAX_CHEAT_WARP_LEVEL) {
@@ -286,78 +268,62 @@ void P_CheckCheats() noexcept {
             }
         }
 
-        if (s2 == s4)
-            RETURN;
-        
-        if ((s2 & 0xF0) == 0)
-            RETURN;
-        
-        a0 = -0x21;                                         // Result = FFFFFFDF
-        *gGameAction = ga_warped;
-        v0 = lw(a3 + 0xC0);
-        v0 &= a0;
-        sw(v0, a3 + 0xC0);
-        *gStartMapOrEpisode = *gMapNumToCheatWarpTo;
-        *gGameMap = *gMapNumToCheatWarpTo;
-        RETURN;
-    }
-
-    // Do VRAM viewer controls if required
-    if ((v1 & 0x10) != 0) {
-        if (s2 == s4)
-            RETURN;
-        
-        if ((s2 & 0x8000) != 0) {
-            v0 = lw(gp + 0x8F4);                                // Load from: gVramViewerTexPage (80077ED4)
-            v0--;
-            sw(v0, gp + 0x8F4);                                 // Store to: gVramViewerTexPage (80077ED4)
-
-            if (i32(v0) < 0) {
-                sw(0, gp + 0x8F4);                              // Store to: gVramViewerTexPage (80077ED4)
-            }
-        }
-        else if ((s2 & 0x2000) != 0) {
-            v0 = lw(gp + 0x8F4);                                // Load from: gVramViewerTexPage (80077ED4)
-            v0++;
-            sw(v0, gp + 0x8F4);                                 // Store to: gVramViewerTexPage (80077ED4)
-
-            if (i32(v0) > 10) {
-                sw(10, gp + 0x8F4);                             // Store to: gVramViewerTexPage (80077ED4)
+        // Are we initiating the the actual warp?
+        if (padBtns != oldPadBtns) {
+            if (padBtns & (PADRup|PADRdown|PADRleft|PADRright)) {
+                // Button pressed to initiate the level warp - kick it off!
+                *gGameAction = ga_warped;
+                player.cheats &= (~CF_WARPMENU);
+                *gStartMapOrEpisode = *gMapNumToCheatWarpTo;
+                *gGameMap = *gMapNumToCheatWarpTo;
             }
         }
 
-        RETURN;
+        return;
     }
 
-    // Check for cheat sequences if the game is paused and a new button has been pressed
-    if (!*gbGamePaused)
-        RETURN;
+    // Are we showing the VRAM viewer?
+    // If so then do the controls for that and exit.
+    if (player.cheats & CF_VRAMVIEWER) {
+        if (padBtns != oldPadBtns) {
+            if (padBtns & PADLleft) {
+                --*gVramViewerTexPage;
 
-    if (s2 == 0)
-        RETURN;
+                if (*gVramViewerTexPage < 0) {
+                    *gVramViewerTexPage = 0;
+                }
+            }
+            else if (padBtns & PADLright) {
+                ++*gVramViewerTexPage;
 
-    s0 = 0;
+                if (*gVramViewerTexPage > 10) {
+                    *gVramViewerTexPage = 10;
+                }
+            }
+        }
 
-    if (s2 == s4)
-        RETURN;
+        return;
+    }
+
+    // Check for cheat sequences if the game is paused and buttons are pressed
+    if ((!*gbGamePaused) || (!padBtns) || (padBtns == oldPadBtns))
+        return;
 
     t6 = 0x800A91A4;                                    // Result = gCheatSequenceBtns[0] (800A91A4)
     t3 = 0x80098740;                                    // Result = gpStatusBarMsgStr (80098740)
     t4 = t3 + 4;                                        // Result = gStatusBarMsgTicsLeft (80098744)
     t2 = 1;
-    v0 = lw(gp + 0xA04);                                // Load from: gCurCheatBtnSequenceIdx (80077FE4)
-    t1 = 0x80060000;                                    // Result = 80060000
-    t1 += 0x7778;                                       // Result = CheatSequenceButtons[0] (80067778)
-    v1 = v0 + 1;
-    v0 <<= 1;
-    sw(v1, gp + 0xA04);                                 // Store to: gCurCheatBtnSequenceIdx (80077FE4)
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6E5C;                                       // Result = gCheatSequenceBtns[0] (800A91A4)
-    at += v0;
-    sh(s2, at);
+    t1 = 0x80067778;                                    // Result = CheatSequenceButtons[0] (80067778)
+    at = 0x800A91A4;                                    // Result = gCheatSequenceBtns[0] (800A91A4)                                     
+    at += *gCurCheatBtnSequenceIdx * 2;
+    sh(padBtns, at);
+    ++*gCurCheatBtnSequenceIdx;
+
+    uint32_t cheatIdx = 0;
+    a3 = ptrToVmAddr(&player);
 
     do {
-        t0 = lw(gp + 0xA04);        // Load from: gCurCheatBtnSequenceIdx (80077FE4)
+        t0 = *gCurCheatBtnSequenceIdx;
         a0 = 0;
 
         if (i32(t0) > 0) {
@@ -375,22 +341,17 @@ void P_CheckCheats() noexcept {
         }
 
         if (i32(a0) >= 8) {
-            switch (s0) {
+            switch (cheatIdx) {
                 // Toggle show all map lines cheat
                 case 0: {
-                    v0 = lw(a3 + 0xC0);
-                    v0 ^= 4;
-                    sw(v0, a3 + 0xC0);
-                    v0 &= 4;
+                    player.cheats ^= CF_ALLLINES;
 
-                    if (v0 != 0) {
-                        v0 = 0x80010000;                                    // Result = 80010000
-                        v0 += 0x1060;                                       // Result = STR_Cheat_AllMapLines_On[0] (80011060)
+                    if (player.cheats & CF_ALLLINES) {
+                        v0 = 0x80011060;                                    // Result = STR_Cheat_AllMapLines_On[0] (80011060)
                         sw(v0, t3);
                         sw(t2, t4);
                     } else {
-                        v0 = 0x80010000;                                    // Result = 80010000
-                        v0 += 0x1074;                                       // Result = STR_Cheat_AllMapLines_Off[0] (80011074)
+                        v0 = 0x80011074;                                    // Result = STR_Cheat_AllMapLines_Off[0] (80011074)                                    
                         sw(v0, t3);
                         sw(t2, t4);
                     }
@@ -398,19 +359,14 @@ void P_CheckCheats() noexcept {
 
                 // Toggle show all map things cheat
                 case 1: {
-                    v0 = lw(a3 + 0xC0);
-                    v0 ^= 8;
-                    sw(v0, a3 + 0xC0);
-                    v0 &= 8;
+                    player.cheats ^= CF_ALLMOBJ;
 
-                    if (v0 != 0) {
-                        v0 = 0x80010000;                                    // Result = 80010000
-                        v0 += 0x1088;                                       // Result = STR_Cheat_AllMapThings_On[0] (80011088)
+                    if (player.cheats & CF_ALLMOBJ) {
+                        v0 = 0x80011088;                                    // Result = STR_Cheat_AllMapThings_On[0] (80011088)
                         sw(v0, t3);
                         sw(t2, t4);
                     } else {
-                        v0 = 0x80010000;                                    // Result = 80010000
-                        v0 += 0x109C;                                       // Result = STR_Cheat_AllMapThings_Off[0] (8001109C)
+                        v0 = 0x8001109C;                                    // Result = STR_Cheat_AllMapThings_Off[0] (8001109C)                                  
                         sw(v0, t3);
                         sw(t2, t4);
                     }
@@ -418,18 +374,13 @@ void P_CheckCheats() noexcept {
 
                 // Toggle god mode cheat
                 case 2: {
-                    v0 = lw(a3 + 0xC0);
-                    v0 ^= 2;
-                    sw(v0, a3 + 0xC0);
-                    v0 &= 2;
+                    player.cheats ^= CF_GODMODE;
 
-                    if (v0 != 0) {
+                    if (player.cheats & CF_GODMODE) {
+                        player.health = 100;
+                        player.mo->health = 100;
                         v0 = 0x800110B0;                                    // Result = STR_Cheat_GodMode_On[0] (800110B0)
                         sw(v0, t3);
-                        v1 = lw(a3);
-                        v0 = 0x64;
-                        sw(v0, a3 + 0x24);
-                        sw(v0, v1 + 0x68);
                         sw(t2, t4);
                     } else {
                         v0 = 0x800110C8;                                    // Result = STR_Cheat_GodMode_Off[0] (800110C8)
@@ -495,11 +446,9 @@ void P_CheckCheats() noexcept {
                     sw(t2, t3 + 0x4);
                 }   break;
 
-                // Level warp cheat
+                // Level warp cheat, bring up the warp menu
                 case 5: {
-                    v0 = lw(a3 + 0xC0);
-                    v0 |= 0x20;
-                    sw(v0, a3 + 0xC0);
+                    player.cheats |= CF_WARPMENU;
                     
                     if (*gGameMap > MAX_CHEAT_WARP_LEVEL) {
                         *gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
@@ -509,11 +458,9 @@ void P_CheckCheats() noexcept {
                 }   break;
 
                 // Enable/disable 'xray vision' cheat
-                case 9: {
-                    v0 = lw(a3 + 0xC0);
-                    v0 ^= 0x80;
-                    sw(v0, a3 + 0xC0);
-                }   break;
+                case 9:
+                    player.cheats ^= CF_XRAYVISION;
+                    break;
 
                 // Unused cheat slots
                 case 4:
@@ -526,35 +473,13 @@ void P_CheckCheats() noexcept {
             // A full cheat sequence (8 buttons) was entered - abort the loop
             break;
         } else {
-            s0++;
+            ++cheatIdx;
             t1 += 0x10;
         }
-    } while (s0 < 0xC);
+    } while (cheatIdx < 12);    // TODO: USE A CONSTANT
 
-    v1 = lw(gp + 0xA04);                                // Load from: gCurCheatBtnSequenceIdx (80077FE4)
-    v0 = v1;
-    
-    if (i32(v1) < 0) {
-        v0 = v1 + 7;
-    }
-    
-    v0 = u32(i32(v0) >> 3);
-    v0 <<= 3;
-    v0 = v1 - v0;
-    sw(v0, gp + 0xA04);                                 // Store to: gCurCheatBtnSequenceIdx (80077FE4)
-
-    #undef RETURN
-
-loc_800293E8:
-    ra = lw(sp + 0x3C);
-    s6 = lw(sp + 0x38);
-    s5 = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x40;
+    // Wraparound this if we need to!
+    *gCurCheatBtnSequenceIdx %= 8;      // TODO: USE A CONSTANT
 }
 
 void P_Ticker() noexcept {
@@ -665,8 +590,7 @@ void P_Drawer() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
     I_IncDrawnFrameCount();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     v1 = v0 << 2;
     v1 += v0;
     v0 = v1 << 4;

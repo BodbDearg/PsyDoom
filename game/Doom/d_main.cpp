@@ -10,6 +10,7 @@
 #include "cdmaptbl.h"
 #include "doomdef.h"
 #include "Game/g_game.h"
+#include "Game/p_tick.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -21,11 +22,15 @@
 #include "UI/ti_main.h"
 #include "Wess/psxsnd.h"
 
-// The current number of 60 Hz ticks
+// The current number of 60Hz ticks
 const VmPtr<int32_t> gTicCon(0x8007814C);
 
-// Pointer to a buffer holding the demo
+// The number of elapsed vblanks (60Hz) for all players
+const VmPtr<int32_t[MAXPLAYERS]> gPlayersElapsedVBlanks(0x80077FBC);
+
+// Pointer to a buffer holding the demo and the current pointer within the buffer for playback/recording
 const VmPtr<VmPtr<uint32_t>> gpDemoBuffer(0x800775E8);
+const VmPtr<VmPtr<uint32_t>> gpDemo_p(0x800775EC);
 
 // Game start parameters
 const VmPtr<skill_t>        gStartSkill(0x800775FC);
@@ -57,10 +62,11 @@ void D_DoomMain() noexcept {
     *gGameTic = 0;
     *gLastTgtGameTicCount = 0;
     *gTicCon = 0;
-    sw(0, 0x80077F44);          // Store to: gTicButtons[0] (80077F44)
-    sw(0, 0x80077F48);          // Store to: gTicButtons[1] (80077F48)
-    sw(0, 0x80078214);          // Store to: gOldTicButtons[0] (80078214)
-    sw(0, 0x80078218);          // Store to: gOldTicButtons[1] (80078218)
+
+    for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+        gTicButtons[playerIdx] = 0;
+        gOldTicButtons[playerIdx] = 0;
+    }
 
     // TODO: PC-PSX: allow this loop to exit if the application is quit
     //
@@ -103,9 +109,9 @@ gameaction_t RunTitle() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
     // Read the demo file contents (up to 16 KiB)
-    *gpDemoBuffer = (uint32_t*) Z_EndMalloc(**gpMainMemZone, 0x4000, PU_STATIC, nullptr);
+    *gpDemoBuffer = (uint32_t*) Z_EndMalloc(**gpMainMemZone, 16 * 1024, PU_STATIC, nullptr);
     const uint32_t openFileIdx = OpenFile(file);
-    ReadFile(openFileIdx, gpDemoBuffer->get(), 0x4000);
+    ReadFile(openFileIdx, gpDemoBuffer->get(), 16 * 1024);
     CloseFile(openFileIdx);
     
     // Play the demo
@@ -513,32 +519,25 @@ gameaction_t MiniLoop(
     gameaction_t exitAction = ga_nothing;
 
     while (true) {
-        v0 = lw(0x80077618);        // Load from: gCurPlayerIndex (80077618)
-        at = 0x80077FBC;            // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-        at += v0 * 4;
-        sw(*gElapsedVBlanks, at);
+        // Update timing and buttons
+        gPlayersElapsedVBlanks[*gCurPlayerIndex] = *gElapsedVBlanks;
 
-        v0 = lw(0x80077F44);        // Load from: gTicButtons[0] (80077F44)
-        v1 = lw(0x80077F48);        // Load from: gTicButtons[1] (80077F48)
-        sw(v0, 0x80078214);         // Store to: gOldTicButtons[0] (80078214)
-        sw(v1, 0x80078218);         // Store to: gOldTicButtons[1] (80078218)
+        for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+            gOldTicButtons[playerIdx] = gTicButtons[playerIdx];
+        }
         
+        // Read pad inputs and save as the current pad buttons (overwritten if a demo)
         I_ReadGamepad();
-
-        a0 = v0;
-        v1 = lw(0x80077618);        // Load from: gCurPlayerIndex (80077618)
-        v1 <<= 2;
-
-        uint32_t x4 = 0x80077F44;   // Result = gTicButtons[0] (80077F44)
-        a1 = v1 + x4;
-        sw(a0, a1);
+        const uint32_t padBtns = v0;
+        gTicButtons[*gCurPlayerIndex] = padBtns;
 
         if (*gNetGame != gt_single) {
             // Updates for when we are in a networked game.
             // Abort from the game also if there is a problem.
             I_NetUpdate();
+            bool exitGame = (v0 != 0);
 
-            if (v0 != 0) {
+            if (exitGame) {
                 *gGameAction = ga_warped;
                 exitAction = ga_warped;
                 break;
@@ -547,52 +546,39 @@ gameaction_t MiniLoop(
         else if (*gbDemoRecording || *gbDemoPlayback) {
             // Demo recording or playback.
             // Need to either read inputs from or save them to a buffer.
-            v0 = a0 & 0xF9FF;
-
             if (*gbDemoPlayback) {
+                // Demo playback: any button pressed on the gamepad will abort
                 exitAction = ga_exit;
 
-                if (v0 != 0)
+                if (padBtns & PAD_ANY)
                     break;
 
-                v1 = lw(0x800775EC);        // Load from: gpDemo_p (800775EC)
-                v0 = v1 + 4;
-                sw(v0, 0x800775EC);         // Store to: gpDemo_p (800775EC)
-                a0 = lw(v1);
-                sw(a0, a1);
+                // Read inputs from the demo buffer and advance the demo
+                gTicButtons[*gCurPlayerIndex] = (*gpDemo_p)[0];
+                *gpDemo_p += 1;
+            }
+            else {
+                // Demo recording: record pad inputs to the buffer
+                (*gpDemo_p)[0] = padBtns;
+                *gpDemo_p += 1;
             }
 
-            v0 = a0 & 0x800;
-
-            if (*gbDemoRecording) {
-                v1 = lw(0x800775EC);        // Load from: gpDemo_p (800775EC)
-                v0 = v1 + 4;
-                sw(v0, 0x800775EC);         // Store to: gpDemo_p (800775EC)
-                sw(a0, v1);
-                v0 = a0 & 0x800;
-            }
-
+            // Abort demo recording?
             exitAction = ga_exitdemo;
 
-            if (v0 != 0)
+            if (padBtns & PADstart)
                 break;
             
             // Is the demo recording too big or are we at the end of the largest possible demo size?
             // If so then stop right now...
-            v0 = lw(0x800775EC);    // Load from: gpDemo_p (800775EC)
-            v1 = lw(0x800775E8);    // Load from: gpDemoBuffer (800775E8)
-
-            const int32_t demoTicksElapsed = (v0 - v1) / sizeof(uint32_t);
-
+            const int32_t demoTicksElapsed = (int32_t)(gpDemo_p->get() - gpDemoBuffer->get());
+            
             if (demoTicksElapsed >= MAX_DEMO_TICKS)
                 break;
         }
 
         // Advance the number of 60 Hz ticks passed
-        v0 = *gTicCon;
-        v1 = lw(0x80077FBC);        // Load from: gPlayersElapsedVBlanks[0] (80077FBC)
-        v0 += v1;
-        *gTicCon = v0;
+        *gTicCon += gPlayersElapsedVBlanks[0];
         
         // Advance to the next game tick if it is time.
         // Video refreshes at 60 Hz but the game ticks at 15 Hz:
@@ -626,11 +612,9 @@ gameaction_t MiniLoop(
     pStop();
 
     // Current pad buttons become the old ones
-    v1 = lw(0x80077F44);        // Load from: gTicButtons[0] (80077F44)
-    sw(v1, 0x80078214);         // Store to: gOldTicButtons[0] (80078214)
-
-    a0 = lw(0x80077F48);        // Load from: gTicButtons[1] (80077F48)
-    sw(a0, 0x80078218);         // Store to: gOldTicButtons[1] (80078218)
+    for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+        gOldTicButtons[playerIdx] = gTicButtons[playerIdx];
+    }
 
     // Return the exit game action
     return exitAction;

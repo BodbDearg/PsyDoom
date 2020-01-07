@@ -225,8 +225,7 @@ loc_80019A6C:
     v0 = lw(v1 + 0x74);
     a0 = 0;                                             // Result = 00000000
     if (v0 != 0) goto loc_80019AC8;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     a0 = 1;                                             // Result = 00000001
     sw(a0, v1 + 0x74);
     v1 = v0 << 2;
@@ -1022,8 +1021,7 @@ loc_8001A510:
     a0 = s3;
     P_RemoveMObj();
     v0 = lw(s1 + 0xDC);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    a0 = *gCurPlayerIndex;
     v0 += 4;
     v1 = a0 << 2;
     v1 += a0;
@@ -1106,8 +1104,7 @@ loc_8001A634:
     v0 = (i32(v0) < -0x32);
     a0 = s0;
     if (v0 == 0) goto loc_8001A6B8;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     a0 = lw(s0 + 0x80);
     v1 = v0 << 2;
     v1 += v0;
@@ -1288,8 +1285,7 @@ loc_8001A90C:
     v0 = (i32(s3) < 0x1F);
 loc_8001A938:
     if (v0 != 0) goto loc_8001A97C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     v1 = v0 << 2;
     v1 += v0;
     v0 = v1 << 4;
@@ -1416,8 +1412,7 @@ loc_8001AB24:
     if (v0 != 0) goto loc_8001AD48;
     v0 = lw(s2 + 0x30);
     if (i32(v0) > 0) goto loc_8001AD48;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     v1 = v0 << 2;
     v1 += v0;
     v0 = v1 << 4;

@@ -1,5 +1,6 @@
 #include "p_doors.h"
 
+#include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/z_zone.h"
 #include "p_floor.h"
@@ -217,8 +218,7 @@ loc_80015598:
     v0 += 0x30;                                         // Result = STR_BlueKeyNeededMsg[0] (80010030)
     sw(v0, s0 + 0xD4);
     S_StartSound();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     v1 = v0 << 2;
     v1 += v0;
     v0 = v1 << 4;
@@ -261,8 +261,7 @@ loc_8001562C:
     v0 += 0x48;                                         // Result = STR_YellowKeyNeededMsg[0] (80010048)
     sw(v0, s0 + 0xD4);
     S_StartSound();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     v1 = v0 << 2;
     v1 += v0;
     v0 = v1 << 4;
@@ -305,8 +304,7 @@ loc_800156C0:
     v0 += 0x60;                                         // Result = STR_RedKeyNeededMsg[0] (80010060)
     sw(v0, s0 + 0xD4);
     S_StartSound();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     v1 = v0 << 2;
     v1 += v0;
     v0 = v1 << 4;

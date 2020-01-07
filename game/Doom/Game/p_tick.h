@@ -1,15 +1,17 @@
 #pragma once
 
-#include "PcPsx/Types.h"
-#include "PsxVm/VmPtr.h"
+#include "Doom/doomdef.h"
 
 // How many 60Hz ticks between menu movements - allow roughly 4 a second. This figure can be reset however
 // if there is no input, so that rapidly pressing/releasing buttons can move things faster if required.
 static constexpr int32_t MENU_MOVE_VBLANK_DELAY = 15;
 
-extern const VmPtr<int32_t>     gVBlanksUntilMenuMove;
-extern const VmPtr<bool32_t>    gbGamePaused;
-extern const VmPtr<int32_t>     gMapNumToCheatWarpTo;
+extern const VmPtr<int32_t>                 gVBlanksUntilMenuMove;
+extern const VmPtr<bool32_t>                gbGamePaused;
+extern const VmPtr<int32_t>                 gMapNumToCheatWarpTo;
+extern const VmPtr<int32_t>                 gVramViewerTexPage;
+extern const VmPtr<uint32_t[MAXPLAYERS]>    gTicButtons;
+extern const VmPtr<uint32_t[MAXPLAYERS]>    gOldTicButtons;
 
 void P_AddThinker() noexcept;
 void P_RemoveThinker() noexcept;

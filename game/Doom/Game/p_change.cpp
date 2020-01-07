@@ -1,5 +1,6 @@
 #include "p_change.h"
 
+#include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "g_game.h"
@@ -115,8 +116,7 @@ loc_800150C4:
     a0 = s1;
     a1 = 0x23;                                          // Result = 00000023
     S_StartSound();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     a0 = lw(s1 + 0x80);
     sw(0, s1 + 0x44);
     v1 = v0 << 2;

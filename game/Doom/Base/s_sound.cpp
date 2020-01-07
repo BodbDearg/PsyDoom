@@ -1,6 +1,7 @@
 #include "s_sound.h"
 
 #include "Doom/Renderer/r_main.h"
+#include "i_main.h"
 #include "PsxVm/PsxVm.h"
 #include "Wess/digload.h"
 #include "Wess/psxspu.h"
@@ -312,8 +313,7 @@ loc_800413A8:
     sw(s1, sp + 0x2C);
     sw(s0, sp + 0x28);
     if (v0 == 0) goto loc_80041594;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     s0 = a0;
     v1 = v0 << 2;
     v1 += v0;

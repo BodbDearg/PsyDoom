@@ -61,8 +61,7 @@ loc_80030634:
     sw(v0, gp + 0x8AC);                                 // Store to: gCurLightValR (80077E8C)
     sw(v1, gp + 0xA74);                                 // Store to: gpCurLightsLumpEntry (80078054)
 loc_80030660:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v1 = *gCurPlayerIndex;
     a2 = 0x80070000;                                    // Result = 80070000
     a2 = lw(a2 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
     v0 = v1 << 2;

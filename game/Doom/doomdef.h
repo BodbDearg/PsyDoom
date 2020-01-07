@@ -220,6 +220,14 @@ static constexpr int32_t INVISTICS = 60 * TICRATE;
 static constexpr int32_t INFRATICS = 120 * TICRATE;
 static constexpr int32_t IRONTICS = 60 * TICRATE;
 
+// Player cheat flags
+static constexpr uint32_t CF_GODMODE        = 0x2;      // Invulnerability
+static constexpr uint32_t CF_ALLLINES       = 0x4;      // Show all map lines
+static constexpr uint32_t CF_ALLMOBJ		= 0x8;      // Show all map objects
+static constexpr uint32_t CF_VRAMVIEWER     = 0x10;     // Showing the vram viewer
+static constexpr uint32_t CF_WARPMENU       = 0x20;     // Showing the warp to map menu
+static constexpr uint32_t CF_XRAYVISION     = 0x80;     // Do 'xray vision' or transparent walls
+
 // Holds state specific to each player
 struct player_t {
     VmPtr<mobj_t>       mo;                                 // The map object controlled by the player

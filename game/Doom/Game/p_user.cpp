@@ -1331,8 +1331,7 @@ loc_8002AB44:
     if (v0 != 0) goto loc_8002ABCC;
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v0 = *gCurPlayerIndex;
     {
         const bool bJump = (v1 != v0);
         v0 = 4;                                         // Result = 00000004

@@ -621,8 +621,7 @@ loc_8001D0C4:
 loc_8001D0DC:
     if (v0 != 0) goto loc_8001D130;
     v0 = lh(s4 + 0x6);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v1 = *gCurPlayerIndex;
     v0--;
     {
         const bool bJump = (v0 != v1);
@@ -642,8 +641,7 @@ loc_8001D0DC:
     sw(0, at + 0x7C3C);                                 // Store to: gbUsingAPassword (80077C3C)
 loc_8001D130:
     v0 = lh(s4 + 0x6);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7618);                               // Load from: gCurPlayerIndex (80077618)
+    v1 = *gCurPlayerIndex;
     v0--;
     {
         const bool bJump = (v0 != v1);
