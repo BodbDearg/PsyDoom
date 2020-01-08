@@ -41,22 +41,7 @@ struct CheatSequence {
     uint16_t btns[CHEAT_SEQ_LEN];
 };
 
-enum : uint32_t {
-    CHT_SEQ_SHOW_ALL_MAP_LINES,
-    CHT_SEQ_SHOW_ALL_MAP_THINGS,
-    CHT_SEQ_GOD_MODE,
-    CHT_SEQ_WEAPONS_AND_AMMO,
-    CHT_SEQ_UNUSED_04,
-    CHT_SEQ_LEVEL_WARP,
-    CHT_SEQ_UNUSED_06,
-    CHT_SEQ_UNUSED_07,
-    CHT_SEQ_UNUSED_08,
-    CHT_SEQ_XRAY_VISION,
-    CHT_SEQ_UNUSED_10,
-    CHT_SEQ_UNUSED_11
-};
-
-static constexpr CheatSequence CHEAT_SEQUENCES[12] = {
+static constexpr CheatSequence CHEAT_SEQUENCES[] = {
     { PADRup, PADRup, PADL2, PADR2, PADL2, PADR2, PADR1, PADRleft },                                // CHT_SEQ_SHOW_ALL_MAP_LINES
     { PADRup, PADRup, PADL2, PADR2, PADL2, PADR2, PADR1, PADRright },                               // CHT_SEQ_SHOW_ALL_MAP_THINGS
     { PADLdown, PADL2, PADRleft, PADR1, PADLright, PADL1, PADLleft, PADRright },                    // CHT_SEQ_GOD_MODE
@@ -71,7 +56,7 @@ static constexpr CheatSequence CHEAT_SEQUENCES[12] = {
     { PADRleft, PADRleft, PADRleft, PADRleft, PADRleft, PADRleft, PADRleft, PADRleft }              // CHT_SEQ_UNUSED_11
 };
 
-static constexpr uint32_t NUM_CHEAT_SEQ = C_ARRAY_SIZE(CHEAT_SEQUENCES);
+static_assert(NUM_CHEAT_SEQ == C_ARRAY_SIZE(CHEAT_SEQUENCES));
 
 const VmPtr<int32_t>                gVBlanksUntilMenuMove(0x80077EF8);      // How many 60 Hz ticks until we can move the cursor on the menu
 const VmPtr<bool32_t>               gbGamePaused(0x80077EC0);               // Whether the game is currently paused by either player
@@ -360,9 +345,34 @@ void P_CheckCheats() noexcept {
         return;
     }
 
-    // Only check for cheat sequences if the game is paused and buttons are pressed
-    if ((!*gbGamePaused) || (!padBtns) || (padBtns == oldPadBtns))
+    // Only check for cheat sequences if the game is paused
+    if (!*gbGamePaused)
         return;
+
+    // PC-PSX: allow cheats to be easily input using keyboard keys in dev builds
+    #if PC_PSX_DOOM_MODS
+        static cheatseq_t prevDevCheatSeq = (cheatseq_t) UINT32_MAX;
+        cheatseq_t devCheatSeq = getDevCheatSequenceToExec();
+
+        // Cheat key must be released in order to be used again.
+        // This prevents us from rapidly cycling between on/off states for some cheats.
+        if (devCheatSeq == prevDevCheatSeq) {
+            devCheatSeq = (cheatseq_t) UINT32_MAX;
+        } else {
+            prevDevCheatSeq = devCheatSeq;
+        }
+    #endif
+
+    // Only check for cheat sequences if some new buttons were pressed.
+    // PC-PSX: also check for cheats if any dev cheats are input.
+    if ((!padBtns) || (padBtns == oldPadBtns)) {
+        #if PC_PSX_DOOM_MODS
+            if (devCheatSeq >= NUM_CHEAT_SEQ)
+                return;
+        #else
+            return;
+        #endif
+    }
 
     // Add the currently pressed buttons to the input
     gCheatSequenceBtns[*gCurCheatBtnSequenceIdx] = (uint16_t) padBtns;
@@ -380,6 +390,14 @@ void P_CheckCheats() noexcept {
 
             ++numMatchingBtns;
         }
+
+        // PC-PSX: allow cheats to be easily input using keyboard keys in dev builds
+        #if PC_PSX_DOOM_MODS
+            if (devCheatSeq < NUM_CHEAT_SEQ && cheatSeqIdx == devCheatSeq) {
+                // Force a match if dev cheat keys specify this cheat must be used!
+                numMatchingBtns = CHEAT_SEQ_LEN;
+            }
+        #endif
 
         // Did all of the buttons match an entire cheat sequence?
         if (numMatchingBtns >= CHEAT_SEQ_LEN) {

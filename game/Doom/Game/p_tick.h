@@ -6,6 +6,23 @@
 // if there is no input, so that rapidly pressing/releasing buttons can move things faster if required.
 static constexpr int32_t MENU_MOVE_VBLANK_DELAY = 15;
 
+// Identifier for one of the cheat sequences
+enum cheatseq_t : uint32_t {
+    CHT_SEQ_SHOW_ALL_MAP_LINES,
+    CHT_SEQ_SHOW_ALL_MAP_THINGS,
+    CHT_SEQ_GOD_MODE,
+    CHT_SEQ_WEAPONS_AND_AMMO,
+    CHT_SEQ_UNUSED_04,
+    CHT_SEQ_LEVEL_WARP,
+    CHT_SEQ_UNUSED_06,
+    CHT_SEQ_UNUSED_07,
+    CHT_SEQ_UNUSED_08,
+    CHT_SEQ_XRAY_VISION,
+    CHT_SEQ_UNUSED_10,
+    CHT_SEQ_UNUSED_11,
+    NUM_CHEAT_SEQ
+};
+
 extern const VmPtr<int32_t>                 gVBlanksUntilMenuMove;
 extern const VmPtr<bool32_t>                gbGamePaused;
 extern const VmPtr<int32_t>                 gMapNumToCheatWarpTo;
