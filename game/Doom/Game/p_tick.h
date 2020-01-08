@@ -12,7 +12,12 @@ enum cheatseq_t : uint32_t {
     CHT_SEQ_SHOW_ALL_MAP_THINGS,
     CHT_SEQ_GOD_MODE,
     CHT_SEQ_WEAPONS_AND_AMMO,
+// PC-PSX: turning this into a noclip cheat
+#if PC_PSX_DOOM_MODS
+    CHT_SEQ_NOCLIP,
+#else
     CHT_SEQ_UNUSED_04,
+#endif
     CHT_SEQ_LEVEL_WARP,
     CHT_SEQ_UNUSED_06,
 // PC-PSX: reactivating the VRAM viewer - provide a cheat for it!

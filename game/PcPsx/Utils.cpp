@@ -10,7 +10,7 @@ cheatseq_t getDevCheatSequenceToExec() noexcept {
     if (pKbState[SDL_SCANCODE_F1] != 0) {
         return CHT_SEQ_GOD_MODE;
     } else if (pKbState[SDL_SCANCODE_F2] != 0) {
-        
+        return CHT_SEQ_NOCLIP;
     } else if (pKbState[SDL_SCANCODE_F3] != 0) {
         return CHT_SEQ_WEAPONS_AND_AMMO;   
     } else if (pKbState[SDL_SCANCODE_F4] != 0) {

@@ -46,7 +46,7 @@ static constexpr CheatSequence CHEAT_SEQUENCES[] = {
     { PADRup, PADRup, PADL2, PADR2, PADL2, PADR2, PADR1, PADRright },                               // CHT_SEQ_SHOW_ALL_MAP_THINGS
     { PADLdown, PADL2, PADRleft, PADR1, PADLright, PADL1, PADLleft, PADRright },                    // CHT_SEQ_GOD_MODE
     { PADRdown, PADRup, PADL1, PADLup, PADLdown, PADR2, PADLleft, PADLleft },                       // CHT_SEQ_WEAPONS_AND_AMMO
-    { PADLup, PADLup, PADLup, PADLup, PADLup, PADLup, PADLup, PADR1 },                              // CHT_SEQ_UNUSED_04
+    { PADLup, PADLup, PADLup, PADLup, PADLup, PADLup, PADLup, PADR1 },                              // PSX: CHT_SEQ_UNUSED_04, PC-PSX: CHT_SEQ_NOCLIP
     { PADLright, PADLleft, PADR2, PADR1, PADRup, PADL1, PADRright, PADRdown },                      // CHT_SEQ_LEVEL_WARP
     { PADLleft, PADLleft, PADLleft, PADLleft, PADLleft, PADLleft, PADLleft, PADLleft },             // CHT_SEQ_UNUSED_06
     { PADRup, PADRleft, PADLup, PADLleft, PADLdown, PADLright, PADRdown, PADRright },               // PSX: CHT_SEQ_UNUSED_07, PC-PSX: CHT_SEQ_VRAM_VIEWER
@@ -81,7 +81,8 @@ static const VmPtr<const char> STR_Cheat_AllMapThings_Off(0x8001109C);
 static const VmPtr<const char> STR_Cheat_GodMode_On(0x800110B0);
 static const VmPtr<const char> STR_Cheat_GodMode_Off(0x800110C8);
 static const VmPtr<const char> STR_Cheat_LotsOfGoodies(0x800110E0);
-
+static const VmPtr<const char> STR_Cheat_On(0x8001106E);                    // Temp 'On' message for 'noclip' cheat.
+static const VmPtr<const char> STR_Cheat_Off(0x80011082);                   // Temp 'Off' message for 'noclip' cheat.
 
 void P_AddThinker() noexcept {
 loc_80028C38:
@@ -405,41 +406,38 @@ void P_CheckCheats() noexcept {
                 // Toggle show all map lines cheat
                 case CHT_SEQ_SHOW_ALL_MAP_LINES: {
                     player.cheats ^= CF_ALLLINES;
+                    *gStatusBarMsgTicsLeft = 1;
 
                     if (player.cheats & CF_ALLLINES) {
-                        *gpStatusBarMsgStr = STR_Cheat_AllMapLines_On;
-                        *gStatusBarMsgTicsLeft = 1;
+                        *gpStatusBarMsgStr = STR_Cheat_AllMapLines_On;    
                     } else {
                         *gpStatusBarMsgStr = STR_Cheat_AllMapLines_Off;
-                        *gStatusBarMsgTicsLeft = 1;
                     }
                 }   break;
 
                 // Toggle show all map things cheat
                 case CHT_SEQ_SHOW_ALL_MAP_THINGS: {
                     player.cheats ^= CF_ALLMOBJ;
+                    *gStatusBarMsgTicsLeft = 1;
 
                     if (player.cheats & CF_ALLMOBJ) {
                         *gpStatusBarMsgStr = STR_Cheat_AllMapThings_On;
-                        *gStatusBarMsgTicsLeft = 1;
                     } else {
                         *gpStatusBarMsgStr = STR_Cheat_AllMapThings_Off;
-                        *gStatusBarMsgTicsLeft = 1;
                     }
                 }   break;
 
                 // Toggle god mode cheat
                 case CHT_SEQ_GOD_MODE: {
                     player.cheats ^= CF_GODMODE;
+                    *gStatusBarMsgTicsLeft = 1;
 
                     if (player.cheats & CF_GODMODE) {
                         player.health = 100;
                         player.mo->health = 100;
-                        *gpStatusBarMsgStr = STR_Cheat_GodMode_On;
-                        *gStatusBarMsgTicsLeft = 1;
+                        *gpStatusBarMsgStr = STR_Cheat_GodMode_On;                        
                     } else {
                         *gpStatusBarMsgStr = STR_Cheat_GodMode_Off;
-                        *gStatusBarMsgTicsLeft = 1;
                     }
                 }   break;
                 
@@ -471,8 +469,8 @@ void P_CheckCheats() noexcept {
                         player.ammo[ammoIdx] = player.maxammo[ammoIdx];
                     }
 
-                    *gpStatusBarMsgStr = STR_Cheat_LotsOfGoodies;
                     *gStatusBarMsgTicsLeft = 1;
+                    *gpStatusBarMsgStr = STR_Cheat_LotsOfGoodies;                    
                 }   break;
 
                 // Level warp cheat, bring up the warp menu
@@ -492,9 +490,22 @@ void P_CheckCheats() noexcept {
                     break;
 
             #if PC_PSX_DOOM_MODS
-                case CHT_SEQ_VRAM_VIEWER:
+                // Re-add in the VRAM viewer that was not available in the retail build
+                case CHT_SEQ_VRAM_VIEWER: {
                     player.cheats ^= CF_VRAMVIEWER;
-                    break;
+                }   break;
+
+                // No-clip cheat
+                case CHT_SEQ_NOCLIP: {
+                    player.mo->flags ^= MF_NOCLIP;
+                    *gStatusBarMsgTicsLeft = 1;
+
+                    if (player.mo->flags & MF_NOCLIP) {
+                        *gpStatusBarMsgStr = STR_Cheat_On;
+                    } else {
+                        *gpStatusBarMsgStr = STR_Cheat_Off;
+                    }
+                }   break;
             #endif
             }
             

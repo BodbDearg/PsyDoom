@@ -85,6 +85,35 @@ enum : uint32_t {
 // The maximum allowed demo size is 16384 ticks (demo size 64 KiB).
 const int32_t MAX_DEMO_TICKS = 16384;
 
+// Flags for 'mobj_t'
+static constexpr uint32_t MF_SPECIAL        = 0x1;          // TODO: CONFIRM
+static constexpr uint32_t MF_SOLID		    = 0x2;          // TODO: CONFIRM
+static constexpr uint32_t MF_SHOOTABLE	    = 0x4;          // TODO: CONFIRM
+static constexpr uint32_t MF_NOSECTOR		= 0x8;          // TODO: CONFIRM
+static constexpr uint32_t MF_NOBLOCKMAP	    = 0x10;         // TODO: CONFIRM
+static constexpr uint32_t MF_AMBUSH		    = 0x20;         // TODO: CONFIRM
+static constexpr uint32_t MF_JUSTHIT		= 0x40;         // TODO: CONFIRM
+static constexpr uint32_t MF_JUSTATTACKED	= 0x80;         // TODO: CONFIRM
+static constexpr uint32_t MF_SPAWNCEILING   = 0x100;        // TODO: CONFIRM
+static constexpr uint32_t MF_NOGRAVITY	    = 0x200;        // TODO: CONFIRM
+static constexpr uint32_t MF_DROPOFF		= 0x400;        // TODO: CONFIRM
+static constexpr uint32_t MF_PICKUP		    = 0x800;        // TODO: CONFIRM
+static constexpr uint32_t MF_NOCLIP		    = 0x1000;       // Cheat that disables collision on the player
+static constexpr uint32_t MF_SLIDE		    = 0x2000;       // TODO: CONFIRM
+static constexpr uint32_t MF_FLOAT		    = 0x4000;       // TODO: CONFIRM
+static constexpr uint32_t MF_TELEPORT		= 0x8000;       // TODO: CONFIRM
+static constexpr uint32_t MF_MISSILE		= 0x10000;      // TODO: CONFIRM
+static constexpr uint32_t MF_DROPPED		= 0x20000;      // TODO: CONFIRM
+static constexpr uint32_t MF_SHADOW		    = 0x40000;      // TODO: CONFIRM
+static constexpr uint32_t MF_NOBLOOD		= 0x80000;      // TODO: CONFIRM
+static constexpr uint32_t MF_CORPSE		    = 0x100000;     // TODO: CONFIRM
+static constexpr uint32_t MF_INFLOAT		= 0x200000;     // TODO: CONFIRM
+static constexpr uint32_t MF_COUNTKILL	    = 0x400000;     // TODO: CONFIRM
+static constexpr uint32_t MF_COUNTITEM	    = 0x800000;     // TODO: CONFIRM
+static constexpr uint32_t MF_SKULLFLY		= 0x1000000;    // TODO: CONFIRM
+static constexpr uint32_t MF_NOTDMATCH	    = 0x2000000;    // TODO: CONFIRM
+static constexpr uint32_t MF_SEETARGET	    = 0x4000000;    // TODO: CONFIRM
+
 // A function which gets called after regular map object updating is done
 typedef VmPtr<void (mobj_t* pMObj)> latecall_t;
 
