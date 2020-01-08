@@ -34,16 +34,69 @@
     static constexpr int32_t MAX_CHEAT_WARP_LEVEL = 54;
 #endif
 
+// The number of buttons in a cheat sequence and a list of all the cheat sequences and their indices
+static constexpr uint32_t CHEAT_SEQ_LEN = 8;
+
+struct CheatSequence {
+    uint16_t btns[CHEAT_SEQ_LEN];
+};
+
+enum : uint32_t {
+    CHT_SEQ_SHOW_ALL_MAP_LINES,
+    CHT_SEQ_SHOW_ALL_MAP_THINGS,
+    CHT_SEQ_GOD_MODE,
+    CHT_SEQ_WEAPONS_AND_AMMO,
+    CHT_SEQ_UNUSED_04,
+    CHT_SEQ_LEVEL_WARP,
+    CHT_SEQ_UNUSED_06,
+    CHT_SEQ_UNUSED_07,
+    CHT_SEQ_UNUSED_08,
+    CHT_SEQ_XRAY_VISION,
+    CHT_SEQ_UNUSED_10,
+    CHT_SEQ_UNUSED_11
+};
+
+static constexpr CheatSequence CHEAT_SEQUENCES[12] = {
+    { PADRup, PADRup, PADL2, PADR2, PADL2, PADR2, PADR1, PADRleft },                                // CHT_SEQ_SHOW_ALL_MAP_LINES
+    { PADRup, PADRup, PADL2, PADR2, PADL2, PADR2, PADR1, PADRright },                               // CHT_SEQ_SHOW_ALL_MAP_THINGS
+    { PADLdown, PADL2, PADRleft, PADR1, PADLright, PADL1, PADLleft, PADRright },                    // CHT_SEQ_GOD_MODE
+    { PADRdown, PADRup, PADL1, PADLup, PADLdown, PADR2, PADLleft, PADLleft },                       // CHT_SEQ_WEAPONS_AND_AMMO
+    { PADLup, PADLup, PADLup, PADLup, PADLup, PADLup, PADLup, PADR1 },                              // CHT_SEQ_UNUSED_04
+    { PADLright, PADLleft, PADR2, PADR1, PADRup, PADL1, PADRright, PADRdown },                      // CHT_SEQ_LEVEL_WARP
+    { PADLleft, PADLleft, PADLleft, PADLleft, PADLleft, PADLleft, PADLleft, PADLleft },             // CHT_SEQ_UNUSED_06
+    { PADRup, PADRleft, PADLup, PADLleft, PADLdown, PADLright, PADRdown, PADRright },               // CHT_SEQ_UNUSED_07
+    { PADRdown, PADRdown, PADRdown, PADRdown, PADRdown, PADRdown, PADRdown, PADRdown },             // CHT_SEQ_UNUSED_08
+    { PADL1, PADR2, PADL2, PADR1, PADLright, PADRup, PADRdown, PADLright },                         // CHT_SEQ_XRAY_VISION
+    { PADRright, PADRright, PADRright, PADRright, PADRright, PADRright, PADRright, PADRright },     // CHT_SEQ_UNUSED_10
+    { PADRleft, PADRleft, PADRleft, PADRleft, PADRleft, PADRleft, PADRleft, PADRleft }              // CHT_SEQ_UNUSED_11
+};
+
+static constexpr uint32_t NUM_CHEAT_SEQ = C_ARRAY_SIZE(CHEAT_SEQUENCES);
+
 const VmPtr<int32_t>                gVBlanksUntilMenuMove(0x80077EF8);      // How many 60 Hz ticks until we can move the cursor on the menu
 const VmPtr<bool32_t>               gbGamePaused(0x80077EC0);               // Whether the game is currently paused by either player
 const VmPtr<int32_t>                gMapNumToCheatWarpTo(0x80078270);       // What map the player currently has selected for cheat warp
 const VmPtr<int32_t>                gVramViewerTexPage(0x80077ED4);         // What page of texture memory to display in the VRAM viewer
 const VmPtr<uint32_t[MAXPLAYERS]>   gTicButtons(0x80077F44);                // Currently pressed buttons by all players
 const VmPtr<uint32_t[MAXPLAYERS]>   gOldTicButtons(0x80078214);             // Previously pressed buttons by all players
+const VmPtr<mobj_t>                 gMObjHead(0x800A8E90);                  // Dummy map object which serves as both the head and tail of the map objects linked list.
 
+static const VmPtr<int32_t>                     gCurCheatBtnSequenceIdx(0x80077FE4);    // What button press in the cheat sequence we are currently on
+static const VmPtr<uint16_t[CHEAT_SEQ_LEN]>     gCheatSequenceBtns(0x800A91A4);         // Cheat sequence buttons inputted by the player
+static const VmPtr<int32_t>                     gTicConOnPause(0x800782D8);             // What 60Hz tick we paused on, used to discount paused time on unpause
 
-static const VmPtr<int32_t>     gCurCheatBtnSequenceIdx(0x80077FE4);    // What button press in the cheat sequence we are currently on
-static const VmPtr<int32_t>     gTicConOnPause(0x800782D8);             // What 60Hz tick we paused on, used to discount paused time on unpause
+// Cheat activated message strings.
+//
+// TODO: eventually make these be actual C++ string constants.
+// Can't to do that at the moment since these pointers need to be referenced by a 'VmPtr<T>', hence must be inside the executable itself.
+static const VmPtr<const char> STR_Cheat_AllMapLines_On(0x80011060);
+static const VmPtr<const char> STR_Cheat_AllMapLines_Off(0x80011074);
+static const VmPtr<const char> STR_Cheat_AllMapThings_On(0x80011088);
+static const VmPtr<const char> STR_Cheat_AllMapThings_Off(0x8001109C);
+static const VmPtr<const char> STR_Cheat_GodMode_On(0x800110B0);
+static const VmPtr<const char> STR_Cheat_GodMode_Off(0x800110C8);
+static const VmPtr<const char> STR_Cheat_LotsOfGoodies(0x800110E0);
+
 
 void P_AddThinker() noexcept {
 loc_80028C38:
@@ -195,12 +248,12 @@ void P_CheckCheats() noexcept {
 
             S_Resume();
 
-            // Not sure why this is hardcoded to clear this flag specifically for player 2? Seems rather strange...
+            // Not sure why this was clearing this flag specifically for player 2? Seems rather strange...
             gPlayers[1].cheats &= ~(CF_VRAMVIEWER|CF_WARPMENU);
 
             // Restore previous tick counters on unpause
             *gTicCon = *gTicConOnPause;
-            *gLastTgtGameTicCount = *gTicConOnPause / 2;
+            *gLastTgtGameTicCount = *gTicConOnPause / (REFRESHRATE / TICRATE);
         }
 
         // Showing the options menu if the game is paused and the options button has just been pressed.
@@ -213,7 +266,8 @@ void P_CheckCheats() noexcept {
         player.cheats &= ~(CF_VRAMVIEWER|CF_WARPMENU);
         I_DrawPresent();
 
-        // Run the options menu and before restarting or exiting a demo, do one final draw.
+        // Run the options menu and possibly do one final draw, depending on the exit code.
+        // TODO: what is the final draw for - screen fade?
         const gameaction_t optionsAction = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);
         
         if (optionsAction != ga_exit) {
@@ -236,6 +290,7 @@ void P_CheckCheats() noexcept {
     const uint32_t padBtns = gTicButtons[0];
     const uint32_t oldPadBtns = gOldTicButtons[0];
 
+    // If there is no current input then you can move immediately next frame
     if (padBtns == 0) {
         *gVBlanksUntilMenuMove = 0;
     }
@@ -305,149 +360,105 @@ void P_CheckCheats() noexcept {
         return;
     }
 
-    // Check for cheat sequences if the game is paused and buttons are pressed
+    // Only check for cheat sequences if the game is paused and buttons are pressed
     if ((!*gbGamePaused) || (!padBtns) || (padBtns == oldPadBtns))
         return;
 
-    t6 = 0x800A91A4;                                    // Result = gCheatSequenceBtns[0] (800A91A4)
-    t3 = 0x80098740;                                    // Result = gpStatusBarMsgStr (80098740)
-    t4 = t3 + 4;                                        // Result = gStatusBarMsgTicsLeft (80098744)
-    t2 = 1;
-    t1 = 0x80067778;                                    // Result = CheatSequenceButtons[0] (80067778)
-    at = 0x800A91A4;                                    // Result = gCheatSequenceBtns[0] (800A91A4)                                     
-    at += *gCurCheatBtnSequenceIdx * 2;
-    sh(padBtns, at);
+    // Add the currently pressed buttons to the input
+    gCheatSequenceBtns[*gCurCheatBtnSequenceIdx] = (uint16_t) padBtns;
     ++*gCurCheatBtnSequenceIdx;
 
-    uint32_t cheatIdx = 0;
-    a3 = ptrToVmAddr(&player);
+    // Scan through all the cheats and see if the current input matches any of them
+    for (uint32_t cheatSeqIdx = 0; cheatSeqIdx < NUM_CHEAT_SEQ; ++cheatSeqIdx) {
+        // Try to match this cheat sequence against the current input
+        const CheatSequence& curCheatSeq = CHEAT_SEQUENCES[cheatSeqIdx];
+        int32_t numMatchingBtns = 0;
 
-    do {
-        t0 = *gCurCheatBtnSequenceIdx;
-        a0 = 0;
+        while (numMatchingBtns < *gCurCheatBtnSequenceIdx) {
+            if (gCheatSequenceBtns[numMatchingBtns] != curCheatSeq.btns[numMatchingBtns])
+                break;
 
-        if (i32(t0) > 0) {
-            a2 = t1;
-            a1 = t6;                // Result = gCheatSequenceBtns[0] (800A91A4)
-
-            do {
-                if (lh(a1) != lh(a2))
-                    break;
-
-                a2 += 2;
-                a0++;
-                a1 += 2;
-            } while (i32(a0) < i32(t0));
+            ++numMatchingBtns;
         }
 
-        if (i32(a0) >= 8) {
-            switch (cheatIdx) {
+        // Did all of the buttons match an entire cheat sequence?
+        if (numMatchingBtns >= CHEAT_SEQ_LEN) {
+            switch (cheatSeqIdx) {
                 // Toggle show all map lines cheat
-                case 0: {
+                case CHT_SEQ_SHOW_ALL_MAP_LINES: {
                     player.cheats ^= CF_ALLLINES;
 
                     if (player.cheats & CF_ALLLINES) {
-                        v0 = 0x80011060;                                    // Result = STR_Cheat_AllMapLines_On[0] (80011060)
-                        sw(v0, t3);
-                        sw(t2, t4);
+                        *gpStatusBarMsgStr = STR_Cheat_AllMapLines_On;
+                        *gStatusBarMsgTicsLeft = 1;
                     } else {
-                        v0 = 0x80011074;                                    // Result = STR_Cheat_AllMapLines_Off[0] (80011074)                                    
-                        sw(v0, t3);
-                        sw(t2, t4);
+                        *gpStatusBarMsgStr = STR_Cheat_AllMapLines_Off;
+                        *gStatusBarMsgTicsLeft = 1;
                     }
                 }   break;
 
                 // Toggle show all map things cheat
-                case 1: {
+                case CHT_SEQ_SHOW_ALL_MAP_THINGS: {
                     player.cheats ^= CF_ALLMOBJ;
 
                     if (player.cheats & CF_ALLMOBJ) {
-                        v0 = 0x80011088;                                    // Result = STR_Cheat_AllMapThings_On[0] (80011088)
-                        sw(v0, t3);
-                        sw(t2, t4);
+                        *gpStatusBarMsgStr = STR_Cheat_AllMapThings_On;
+                        *gStatusBarMsgTicsLeft = 1;
                     } else {
-                        v0 = 0x8001109C;                                    // Result = STR_Cheat_AllMapThings_Off[0] (8001109C)                                  
-                        sw(v0, t3);
-                        sw(t2, t4);
+                        *gpStatusBarMsgStr = STR_Cheat_AllMapThings_Off;
+                        *gStatusBarMsgTicsLeft = 1;
                     }
                 }   break;
 
                 // Toggle god mode cheat
-                case 2: {
+                case CHT_SEQ_GOD_MODE: {
                     player.cheats ^= CF_GODMODE;
 
                     if (player.cheats & CF_GODMODE) {
                         player.health = 100;
                         player.mo->health = 100;
-                        v0 = 0x800110B0;                                    // Result = STR_Cheat_GodMode_On[0] (800110B0)
-                        sw(v0, t3);
-                        sw(t2, t4);
+                        *gpStatusBarMsgStr = STR_Cheat_GodMode_On;
+                        *gStatusBarMsgTicsLeft = 1;
                     } else {
-                        v0 = 0x800110C8;                                    // Result = STR_Cheat_GodMode_Off[0] (800110C8)
-                        sw(v0, t3);
-                        sw(t2, t4);
+                        *gpStatusBarMsgStr = STR_Cheat_GodMode_Off;
+                        *gStatusBarMsgTicsLeft = 1;
                     }
                 }   break;
                 
                 // Weapons ammo and keys cheat
-                case 3: {
-                    v0 = 0x800B0000;                                    // Result = 800B0000
-                    v0 -= 0x715C;                                       // Result = gMObjHead[5] (800A8EA4)
-                    a0 = lw(v0);                                        // Load from: gMObjHead[5] (800A8EA4)
-                    v0 -= 0x14;                                         // Result = gMObjHead[0] (800A8E90)
-
-                    if (a0 != v0) {
-                        a1 = v0;                                        // Result = gMObjHead[0] (800A8E90)
-        
-                        // TODO: looks like this code is granting keys based on mobjs in the level
-                        do {
-                            v0 = lw(a0 + 0x54);            
-                            const int32_t sval = v0;
-
-                            switch (sval) {
-                                case MT_MISC4: sw(t2, a3 + 0x4C); break;
-                                case MT_MISC5: sw(t2, a3 + 0x48); break;
-                                case MT_MISC6: sw(t2, a3 + 0x50); break;
-                                case MT_MISC7: sw(t2, a3 + 0x5C); break;
-                                case MT_MISC8: sw(t2, a3 + 0x54); break;
-                                case MT_MISC9: sw(t2, a3 + 0x58); break;
-                            }
-
-                            a0 = lw(a0 + 0x14);
-                        } while (a0 != a1);
+                case CHT_SEQ_WEAPONS_AND_AMMO: {
+                    // Grant any keys that are present in the level.
+                    // Run through the list of keys that are sitting around and give to the player...
+                    for (mobj_t* pMObj = gMObjHead->next.get(); pMObj != gMObjHead.get(); pMObj = pMObj->next.get()) {
+                        switch (pMObj->type) {
+                            case MT_MISC4: player.cards[it_bluecard]    = true; break;
+                            case MT_MISC5: player.cards[it_redcard]     = true; break;
+                            case MT_MISC6: player.cards[it_yellowcard]  = true; break;
+                            case MT_MISC7: player.cards[it_yellowskull] = true; break;
+                            case MT_MISC8: player.cards[it_redskull]    = true; break;
+                            case MT_MISC9: player.cards[it_blueskull]   = true; break;
+                        }
                     }
 
-                    a0 = 8;
-                    v1 = a3 + 0x20;
-                    v0 = 0xC8;
-                    sw(v0, a3 + 0x28);
-                    v0 = 2;
-                    sw(v0, a3 + 0x2C);
+                    // Grant mega armor
+                    player.armorpoints = 200;
+                    player.armortype = 2;
 
-                    do {
-                        sw(t2, v1 + 0x74);
-                        a0--;
-                        v1 -= 4;
-                    } while (i32(a0) >= 0);
+                    // Grant all weapons and max ammo
+                    for (uint32_t weaponIdx = 0; weaponIdx < NUMWEAPONS; ++weaponIdx) {
+                        player.weaponowned[weaponIdx] = true;
+                    }
 
-                    a0 = 0;
-                    v1 = a3;
+                    for (uint32_t ammoIdx = 0; ammoIdx < NUMAMMO; ++ammoIdx) {
+                        player.ammo[ammoIdx] = player.maxammo[ammoIdx];
+                    }
 
-                    do {
-                        v0 = lw(v1 + 0xA8);
-                        a0++;
-                        sw(v0, v1 + 0x98);
-                        v0 = (i32(a0) < 4);
-                        v1 += 4;
-                    } while (v0 != 0);
-
-                    v0 = 0x800110E0;                                    // Result = STR_Cheat_LotsOfGoodies[0] (800110E0)
-                    sw(v0, t3);
-                    sw(t2, t3 + 0x4);
+                    *gpStatusBarMsgStr = STR_Cheat_LotsOfGoodies;
+                    *gStatusBarMsgTicsLeft = 1;
                 }   break;
 
                 // Level warp cheat, bring up the warp menu
-                case 5: {
+                case CHT_SEQ_LEVEL_WARP: {
                     player.cheats |= CF_WARPMENU;
                     
                     if (*gGameMap > MAX_CHEAT_WARP_LEVEL) {
@@ -458,28 +469,18 @@ void P_CheckCheats() noexcept {
                 }   break;
 
                 // Enable/disable 'xray vision' cheat
-                case 9:
+                case CHT_SEQ_XRAY_VISION:
                     player.cheats ^= CF_XRAYVISION;
-                    break;
-
-                // Unused cheat slots
-                case 4:
-                case 6:
-                case 7:
-                case 8:
                     break;
             }
             
-            // A full cheat sequence (8 buttons) was entered - abort the loop
+            // A full cheat sequence (8 buttons) was entered - we are done checking for cheats
             break;
-        } else {
-            ++cheatIdx;
-            t1 += 0x10;
         }
-    } while (cheatIdx < 12);    // TODO: USE A CONSTANT
+    }
 
     // Wraparound this if we need to!
-    *gCurCheatBtnSequenceIdx %= 8;      // TODO: USE A CONSTANT
+    *gCurCheatBtnSequenceIdx %= CHEAT_SEQ_LEN;
 }
 
 void P_Ticker() noexcept {

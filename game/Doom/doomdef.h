@@ -36,9 +36,11 @@ static constexpr uint32_t ANGLETOFINESHIFT  = 19;                   // How many 
 // Maximum number of players in a multiplayer game
 static constexpr uint32_t MAXPLAYERS = 2;
 
-// How many game ticks happen per second.
+// How many game ticks happen per second, how many draws happen per second and the actual refresh rate (60Hz NTSC).
 // PSX DOOM has a 15Hz timebase, similar to Jaguar DOOM. Some operations however update at 30Hz (rendering speed).
 static constexpr int32_t TICRATE = 15;
+static constexpr int32_t DRAWRATE = 60;
+static constexpr int32_t REFRESHRATE = 60;
 
 // What type of game is being played
 enum gametype_t : uint32_t {
@@ -241,7 +243,7 @@ struct player_t {
     fixed_t             bob;
     uint32_t            health;
     uint32_t            armorpoints;
-    uint32_t            armortype;        
+    uint32_t            armortype;                          // 0 = no armor, 1 = regular armor, 2 = mega armor
     int32_t             powers[NUMPOWERS];                  // How many ticks left for each power
     bool32_t            cards[NUMCARDS];                    // Which keycards the player has
     bool32_t            backpack;

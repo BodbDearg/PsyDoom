@@ -11,6 +11,9 @@
 #include "PsyQ/LIBC2.h"
 #include "PsyQ/LIBGPU.h"
 
+const VmPtr<VmPtr<const char>>  gpStatusBarMsgStr(0x80098740);
+const VmPtr<int32_t>            gStatusBarMsgTicsLeft(0x80098744);
+
 void ST_Init() noexcept {
 loc_80038558:
     v0 = 0x80080000;                                    // Result = 80080000
@@ -67,8 +70,7 @@ loc_80038610:
     sw(0, gp + 0x8EC);                                  // Store to: gbStatusBarIsShowingSpecialFace (80077ECC)
     at = 0x800A0000;                                    // Result = 800A0000
     sw(0, at - 0x78E8);                                 // Store to: gStatusBar[0] (80098718)
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(0, at - 0x78BC);                                 // Store to: gStatusBarMsgTicsLeft (80098744)
+    *gStatusBarMsgTicsLeft = 0;
     sw(0, gp + 0xB54);                                  // Store to: gFaceTics (80078134)
     sw(v0, gp + 0xC50);                                 // Store to: gpCurStatusBarFaceSpriteInfo (80078230)
 loc_80038658:
@@ -183,20 +185,16 @@ loc_800387D4:
     at -= 0x7740;                                       // Result = gPlayer1[35] (800A88C0)
     at += v0;
     v1 = lw(at);
-    v0 = 0x4B;                                          // Result = 0000004B
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v0, at - 0x78BC);                                // Store to: gStatusBarMsgTicsLeft (80098744)
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v1, at - 0x78C0);                                // Store to: gpStatusBarMsgStr (80098740)
+    v0 = 0x4B;
+    *gStatusBarMsgTicsLeft = v0;
+    *gpStatusBarMsgStr = v1;
     sw(0, s4 + 0xD4);
 loc_8003882C:
-    v1 = 0x800A0000;                                    // Result = 800A0000
-    v1 -= 0x78BC;                                       // Result = gStatusBarMsgTicsLeft (80098744)
-    v0 = lw(v1);                                        // Load from: gStatusBarMsgTicsLeft (80098744)
-    s2 = 0;                                             // Result = 00000000
+    v0 = *gStatusBarMsgTicsLeft;
+    s2 = 0;
     if (v0 == 0) goto loc_8003884C;
     v0--;
-    sw(v0, v1);                                         // Store to: gStatusBarMsgTicsLeft (80098744)
+    *gStatusBarMsgTicsLeft = v0;
 loc_8003884C:
     s3 = 4;                                             // Result = 00000004
     s1 = 0x800B0000;                                    // Result = 800B0000
@@ -567,8 +565,7 @@ loc_80038DD8:
 loc_80038DF4:
     v1 = 0x800B0000;                                    // Result = 800B0000
     v1 = lhu(v1 - 0x6F5C);                              // Load from: gPaletteClutId_UI (800A90A4)
-    a0 = 0x800A0000;                                    // Result = 800A0000
-    a0 = lw(a0 - 0x78BC);                               // Load from: gStatusBarMsgTicsLeft (80098744)
+    a0 = *gStatusBarMsgTicsLeft;
     v0 = 4;                                             // Result = 00000004
     at = 0x1F800000;                                    // Result = 1F800000
     sb(v0, at + 0x203);                                 // Store to: 1F800203
@@ -582,9 +579,8 @@ loc_80038DF4:
         a0 = 7;                                         // Result = 00000007
         if (bJump) goto loc_80038E54;
     }
-    a2 = 0x800A0000;                                    // Result = 800A0000
-    a2 = lw(a2 - 0x78C0);                               // Load from: gpStatusBarMsgStr (80098740)
-    a1 = 0xC1;                                          // Result = 000000C1
+    a2 = *gpStatusBarMsgStr;
+    a1 = 0xC1;
     goto loc_80038E98;
 loc_80038E3C:
     v0 = t1 + 4;
