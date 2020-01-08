@@ -21,6 +21,8 @@ cheatseq_t getDevCheatSequenceToExec() noexcept {
         return CHT_SEQ_SHOW_ALL_MAP_THINGS;
     } else if (pKbState[SDL_SCANCODE_F7] != 0) {
         return CHT_SEQ_SHOW_ALL_MAP_LINES;
+    } else if (pKbState[SDL_SCANCODE_F8] != 0) {
+        return CHT_SEQ_VRAM_VIEWER;
     }
 
     return (cheatseq_t) UINT32_MAX;  

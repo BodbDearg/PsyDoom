@@ -49,7 +49,7 @@ static constexpr CheatSequence CHEAT_SEQUENCES[] = {
     { PADLup, PADLup, PADLup, PADLup, PADLup, PADLup, PADLup, PADR1 },                              // CHT_SEQ_UNUSED_04
     { PADLright, PADLleft, PADR2, PADR1, PADRup, PADL1, PADRright, PADRdown },                      // CHT_SEQ_LEVEL_WARP
     { PADLleft, PADLleft, PADLleft, PADLleft, PADLleft, PADLleft, PADLleft, PADLleft },             // CHT_SEQ_UNUSED_06
-    { PADRup, PADRleft, PADLup, PADLleft, PADLdown, PADLright, PADRdown, PADRright },               // CHT_SEQ_UNUSED_07
+    { PADRup, PADRleft, PADLup, PADLleft, PADLdown, PADLright, PADRdown, PADRright },               // PSX: CHT_SEQ_UNUSED_07, PC-PSX: CHT_SEQ_VRAM_VIEWER
     { PADRdown, PADRdown, PADRdown, PADRdown, PADRdown, PADRdown, PADRdown, PADRdown },             // CHT_SEQ_UNUSED_08
     { PADL1, PADR2, PADL2, PADR1, PADLright, PADRup, PADRdown, PADLright },                         // CHT_SEQ_XRAY_VISION
     { PADRright, PADRright, PADRright, PADRright, PADRright, PADRright, PADRright, PADRright },     // CHT_SEQ_UNUSED_10
@@ -490,6 +490,12 @@ void P_CheckCheats() noexcept {
                 case CHT_SEQ_XRAY_VISION:
                     player.cheats ^= CF_XRAYVISION;
                     break;
+
+            #if PC_PSX_DOOM_MODS
+                case CHT_SEQ_VRAM_VIEWER:
+                    player.cheats ^= CF_VRAMVIEWER;
+                    break;
+            #endif
             }
             
             // A full cheat sequence (8 buttons) was entered - we are done checking for cheats

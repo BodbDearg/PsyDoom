@@ -15,7 +15,13 @@ enum cheatseq_t : uint32_t {
     CHT_SEQ_UNUSED_04,
     CHT_SEQ_LEVEL_WARP,
     CHT_SEQ_UNUSED_06,
+// PC-PSX: reactivating the VRAM viewer - provide a cheat for it!
+// This is the same cheat code for the VRAM viewer used by the "GEC PlayStation Doom: Master Edition" project also.
+#if PC_PSX_DOOM_MODS
+    CHT_SEQ_VRAM_VIEWER,
+#else
     CHT_SEQ_UNUSED_07,
+#endif
     CHT_SEQ_UNUSED_08,
     CHT_SEQ_XRAY_VISION,
     CHT_SEQ_UNUSED_10,
