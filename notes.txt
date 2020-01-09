@@ -331,3 +331,13 @@ memzone_t (32 bytes):
         004     memblock_t*     rover;
         008     memblock_t      blocklist;
     };
+
+node_t (56 bytes):
+    struct node_t {
+        000     fixed_t     x;                  // The partition line
+        004     fixed_t     y;
+        008     fixed_t     dx;
+        00C     fixed_t     dy;
+        010     fixed_t     bbox[2][4];         // Bounding box for both child nodes
+        030     int32_t     children[2];        // When 'NF_SUBSECTOR' is set then it means it's a subsector number
+    };

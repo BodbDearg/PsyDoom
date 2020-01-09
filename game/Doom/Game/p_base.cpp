@@ -643,7 +643,7 @@ loc_800141DC:
     v0 = a0 - v1;
     at = 0x800B0000;                                    // Result = 800B0000
     sw(v0, at - 0x6F94);                                // Store to: gTestBBox[2] (800A906C)
-    R_PointInSubsector();
+    _thunk_R_PointInSubsector();
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lw(a0 - 0x6F94);                               // Load from: gTestBBox[2] (800A906C)
     a1 = *gBlockmapOriginX;

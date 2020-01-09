@@ -737,7 +737,7 @@ static void P_GroupLines() noexcept {
         #endif
 
         a0 = ptrToVmAddr(&pSec->soundorg);
-        R_PointInSubsector();
+        _thunk_R_PointInSubsector();
         pSec->soundorg.subsector = v0;
 
         // Compute the bounding box for the sector in blockmap units.

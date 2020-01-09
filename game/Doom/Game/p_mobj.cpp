@@ -139,7 +139,7 @@ loc_8001C880:
     a0 = s2;
     s1 = v0 << 16;
     a1 = s1;
-    R_PointInSubsector();
+    _thunk_R_PointInSubsector();
     a0 = s2;
     v0 = lw(v0);
     a1 = s1;

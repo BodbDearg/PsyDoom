@@ -295,8 +295,7 @@ extern void R_Init() noexcept;
 extern void R_RenderPlayerView() noexcept;
 extern void R_SlopeDiv() noexcept;
 extern void R_PointToAngle2() noexcept;
-extern void R_PointOnSide() noexcept;
-extern void R_PointInSubsector() noexcept;
+extern void _thunk_R_PointInSubsector() noexcept;
 extern void _thunk_W_CacheLumpNum() noexcept;
 extern void _thunk_W_CacheLumpName() noexcept;
 extern void InitOpenFileSlots() noexcept;
@@ -1229,8 +1228,7 @@ namespace PsxVm {
         { 0x80030634, &R_RenderPlayerView },
         { 0x80030B58, &R_SlopeDiv },
         { 0x80030BA0, &R_PointToAngle2 },
-        { 0x80030EB4, &R_PointOnSide },
-        { 0x80030F5C, &R_PointInSubsector },
+        { 0x80030F5C, &_thunk_R_PointInSubsector },
         { 0x800317AC, &_thunk_W_CacheLumpNum },
         { 0x800319E4, &_thunk_W_CacheLumpName },
         { 0x80031EB4, &InitOpenFileSlots },

@@ -224,7 +224,7 @@ void P_UnsetThingPosition(mobj_t& thing) noexcept {
             thing.bprev->bnext = thing.bnext;
         } else {
             const int32_t blockx = (thing.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
-            const int32_t blocky = (thing.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;            
+            const int32_t blocky = (thing.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
             (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.next;
         }
     }
@@ -242,7 +242,7 @@ loc_8001C408:
     sw(ra, sp + 0x14);
     a0 = lw(s0);
     a1 = lw(s0 + 0x4);
-    R_PointInSubsector();
+    _thunk_R_PointInSubsector();
     v1 = lw(s0 + 0x64);
     v1 &= 8;
     sw(v0, s0 + 0xC);

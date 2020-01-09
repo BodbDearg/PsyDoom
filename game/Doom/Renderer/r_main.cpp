@@ -1,6 +1,7 @@
 #include "r_main.h"
 
 #include "Doom/Base/i_main.h"
+#include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_setup.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
@@ -8,6 +9,7 @@
 #include "r_bsp.h"
 #include "r_data.h"
 #include "r_draw.h"
+#include "r_local.h"
 #include "r_sky.h"
 #include "r_things.h"
 
@@ -647,127 +649,62 @@ loc_80030EAC:
     return;
 }
 
-void R_PointOnSide() noexcept {
-    a3 = lw(a2 + 0x8);
-    if (a3 != 0) goto loc_80030EF0;
-    v0 = lw(a2);
-    v0 = (i32(v0) < i32(a0));
-    if (v0 != 0) goto loc_80030EE4;
-    v0 = lw(a2 + 0xC);
-    v0 = (i32(v0) > 0);
-    goto loc_80030F54;
-loc_80030EE4:
-    v0 = lw(a2 + 0xC);
-    v0 >>= 31;
-    goto loc_80030F54;
-loc_80030EF0:
-    v1 = lw(a2 + 0xC);
-    if (v1 != 0) goto loc_80030F1C;
-    v0 = lw(a2 + 0x4);
-    v0 = (i32(v0) < i32(a1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(a3) > 0);
-        if (bJump) goto loc_80030F54;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells what side of a line a point is on, with accuracy in terms of integer units.
+// Returns '0' if the point is on the 'front' side of the line, otherwise '1' if on the back side.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t R_PointOnSide(const fixed_t x, const fixed_t y, const node_t& node) noexcept {
+    // Special case shortcut for vertical lines
+    if (node.dx == 0) {
+        if (x <= node.x) {
+            return (node.dy > 0);
+        } else {
+            return (node.dy < 0);
+        }
     }
-    v0 = a3 >> 31;
-    goto loc_80030F54;
-loc_80030F1C:
-    v0 = lw(a2);
-    v1 = u32(i32(v1) >> 16);
-    v0 = a0 - v0;
-    v0 = u32(i32(v0) >> 16);
-    mult(v1, v0);
-    v1 = u32(i32(a3) >> 16);
-    v0 = lw(a2 + 0x4);
-    a0 = lo;
-    v0 = a1 - v0;
-    v0 = u32(i32(v0) >> 16);
-    mult(v0, v1);
-    v0 = lo;
-    v0 = (i32(v0) < i32(a0));
-    v0 ^= 1;
-loc_80030F54:
-    return;
+
+    // Special case shortcut for horizontal lines
+    if (node.dy == 0) {
+        if (y <= node.y) {
+            return (node.dx < 0);
+        } else {
+            return (node.dx > 0);
+        }
+    }
+
+    // Compute which side of the line the point is on using the cross product
+    const fixed_t dx = x - node.x;
+    const fixed_t dy = y - node.y;
+    const int32_t lprod = (node.dy >> FRACBITS) * (dx >> FRACBITS);
+    const int32_t rprod = (node.dx >> FRACBITS) * (dy >> FRACBITS);
+    return (rprod >= lprod);
 }
 
-void R_PointInSubsector() noexcept {
-loc_80030F5C:
-    v0 = *gNumBspNodes;
-    t0 = a0;
-    if (v0 != 0) goto loc_80030F80;
-    v0 = *gpSubsectors;
-    goto loc_80031080;
-loc_80030F80:
-    v1 = v0 - 1;
-    v0 = v1 & 0x8000;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0xFFFF0000;                                // Result = FFFF0000
-        if (bJump) goto loc_80031068;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the subsector that a 2D point is in.
+// Note: there should always be a subsector returned for a valid DOOM level.
+//------------------------------------------------------------------------------------------------------------------------------------------
+subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept {
+    // Not sure why there would ever be '0' BSP nodes - that does not seem like a valid DOOM level to me?
+    // The same logic can also be found in other versions of DOOM...
+    if (*gNumBspNodes == 0) {
+        return gpSubsectors->get();
     }
-    t1 = *gpBspNodes;
-    v0 = v1 << 3;
-loc_80030F9C:
-    v0 -= v1;
-    v0 <<= 3;
-    a2 = v0 + t1;
-    a3 = lw(a2 + 0x8);
-    if (a3 != 0) goto loc_80030FE4;
-    v0 = lw(a2);
-    v0 = (i32(v0) < i32(t0));
-    if (v0 != 0) goto loc_80030FD8;
-    v0 = lw(a2 + 0xC);
-    v0 = (i32(v0) > 0);
-    goto loc_80031048;
-loc_80030FD8:
-    v0 = lw(a2 + 0xC);
-    v0 >>= 31;
-    goto loc_80031048;
-loc_80030FE4:
-    v1 = lw(a2 + 0xC);
-    if (v1 != 0) goto loc_80031010;
-    v0 = lw(a2 + 0x4);
-    v0 = (i32(v0) < i32(a1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(a3) > 0);
-        if (bJump) goto loc_80031048;
+    
+    // Traverse the BSP tree starting at the root node, using the given position to decide which half-spaces to visit.
+    // Once we reach a subsector stop and return it.
+    int32_t nodeNum = *gNumBspNodes - 1;
+    
+    while ((nodeNum & NF_SUBSECTOR) == 0) {
+        node_t& node = (*gpBspNodes)[nodeNum];
+        const int32_t side = R_PointOnSide(x, y, node);
+        nodeNum = node.children[side];
     }
-    v0 = a3 >> 31;
-    goto loc_80031048;
-loc_80031010:
-    v0 = lw(a2);
-    v1 = u32(i32(v1) >> 16);
-    v0 = t0 - v0;
-    v0 = u32(i32(v0) >> 16);
-    mult(v1, v0);
-    v0 = u32(i32(a3) >> 16);
-    v1 = lw(a2 + 0x4);
-    a0 = lo;
-    v1 = a1 - v1;
-    v1 = u32(i32(v1) >> 16);
-    mult(v1, v0);
-    v0 = lo;
-    v0 = (i32(v0) < i32(a0));
-    v0 ^= 1;
-loc_80031048:
-    v0 <<= 2;
-    v0 += a2;
-    v1 = lw(v0 + 0x30);
-    v0 = v1 & 0x8000;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 3;
-        if (bJump) goto loc_80030F9C;
-    }
-    v0 = 0xFFFF0000;                                    // Result = FFFF0000
-loc_80031068:
-    v0 |= 0x7FFF;                                       // Result = FFFF7FFF
-    v0 &= v1;
-    v1 = *gpSubsectors;
-    v0 <<= 4;
-    v0 += v1;
-loc_80031080:
-    return;
+
+    const int32_t actualNodeNum = nodeNum & (~NF_SUBSECTOR);
+    return &(*gpSubsectors)[actualNodeNum];
+}
+
+void _thunk_R_PointInSubsector() noexcept {
+    v0 = ptrToVmAddr(R_PointInSubsector(a0, a1));
 }

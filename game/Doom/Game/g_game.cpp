@@ -369,7 +369,7 @@ loc_80013288:
     a1 = lh(s1 + 0x2);
     a0 <<= 16;
     a1 <<= 16;
-    R_PointInSubsector();
+    _thunk_R_PointInSubsector();
     v1 = 0x6C160000;                                    // Result = 6C160000
     a0 = lh(s1 + 0x4);
     v1 |= 0xC16D;                                       // Result = 6C16C16D

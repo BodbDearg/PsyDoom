@@ -329,7 +329,7 @@ loc_8001E978:
     v0 = a0 - v0;
     at = 0x80090000;                                    // Result = 80090000
     sw(v0, at + 0x7C18);                                // Store to: gtTmbBox[2] (80097C18)
-    R_PointInSubsector();
+    _thunk_R_PointInSubsector();
     v1 = lw(v0);
     sw(v0, gp + 0xCDC);                                 // Store to: gpNewSubsec (800782BC)
     v0 = lw(v0);
