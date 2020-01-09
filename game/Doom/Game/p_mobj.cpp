@@ -418,7 +418,7 @@ loc_8001CC68:
     v0 = lw(v0 + 0x4);
     a0 = s3;
     sw(v0, s3 + 0x2C);
-    P_SetThingPosition();
+    _thunk_P_SetThingPosition();
     v0 = lw(s3 + 0xC);
     v0 = lw(v0);
     v1 = lw(s3 + 0xC);
@@ -551,7 +551,7 @@ loc_8001CEC8:
     v0 = lw(v0 + 0x4);
     a0 = s0;
     sw(v0, s0 + 0x2C);
-    P_SetThingPosition();
+    _thunk_P_SetThingPosition();
     v0 = lw(s0 + 0xC);
     v0 = lw(v0);
     v1 = lw(s0 + 0xC);
@@ -853,7 +853,7 @@ loc_8001D3F0:
     v0 = lw(v0 + 0x4);
     a0 = s0;
     sw(v0, s0 + 0x2C);
-    P_SetThingPosition();
+    _thunk_P_SetThingPosition();
     v0 = lw(s0 + 0xC);
     v0 = lw(v0);
     v1 = lw(s0 + 0xC);
@@ -1054,7 +1054,7 @@ loc_8001D704:
     v0 = lw(v0 + 0x4);
     a0 = s0;
     sw(v0, s0 + 0x2C);
-    P_SetThingPosition();
+    _thunk_P_SetThingPosition();
     v0 = lw(s0 + 0xC);
     v0 = lw(v0);
     v1 = lw(s0 + 0xC);
@@ -1186,7 +1186,7 @@ loc_8001D930:
     v0 = lw(v0 + 0x4);
     a0 = s0;
     sw(v0, s0 + 0x2C);
-    P_SetThingPosition();
+    _thunk_P_SetThingPosition();
     v0 = lw(s0 + 0xC);
     v0 = lw(v0);
     v1 = lw(s0 + 0xC);
@@ -1392,7 +1392,7 @@ loc_8001DC94:
     v0 = lw(v0 + 0x4);
     a0 = s3;
     sw(v0, s3 + 0x2C);
-    P_SetThingPosition();
+    _thunk_P_SetThingPosition();
     v0 = lw(s3 + 0xC);
     v0 = lw(v0);
     v1 = lw(s3 + 0xC);
@@ -1694,7 +1694,7 @@ loc_8001E1A8:
     v0 = lw(v0 + 0x4);
     a0 = s2;
     sw(v0, s2 + 0x2C);
-    P_SetThingPosition();
+    _thunk_P_SetThingPosition();
     v0 = lw(s2 + 0xC);
     v0 = lw(v0);
     v1 = lw(s2 + 0xC);

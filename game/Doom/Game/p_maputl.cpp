@@ -234,71 +234,52 @@ void _thunk_P_UnsetThingPosition() noexcept {
     P_UnsetThingPosition(*vmAddrToPtr<mobj_t>(a0));
 }
 
-void P_SetThingPosition() noexcept {
-loc_8001C408:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    a0 = lw(s0);
-    a1 = lw(s0 + 0x4);
-    _thunk_R_PointInSubsector();
-    v1 = lw(s0 + 0x64);
-    v1 &= 8;
-    sw(v0, s0 + 0xC);
-    if (v1 != 0) goto loc_8001C468;
-    v1 = lw(v0);
-    sw(0, s0 + 0x20);
-    v0 = lw(v1 + 0x4C);
-    sw(v0, s0 + 0x1C);
-    v0 = lw(v1 + 0x4C);
-    if (v0 == 0) goto loc_8001C464;
-    sw(s0, v0 + 0x20);
-loc_8001C464:
-    sw(s0, v1 + 0x4C);
-loc_8001C468:
-    v0 = lw(s0 + 0x64);
-    v0 &= 0x10;
-    if (v0 != 0) goto loc_8001C52C;
-    v1 = lw(s0);
-    v0 = *gBlockmapOriginX;
-    a0 = *gBlockmapOriginY;
-    v1 -= v0;
-    v0 = lw(s0 + 0x4);
-    v1 = u32(i32(v1) >> 23);
-    v0 -= a0;
-    a0 = u32(i32(v0) >> 23);
-    if (i32(v1) < 0) goto loc_8001C524;
-    a1 = *gBlockmapWidth;
-    v0 = (i32(v1) < i32(a1));
-    if (v0 == 0) goto loc_8001C524;
-    if (i32(a0) < 0) goto loc_8001C524;
-    v0 = *gBlockmapHeight;
-    v0 = (i32(a0) < i32(v0));
-    mult(a0, a1);
-    if (v0 == 0) goto loc_8001C524;
-    sw(0, s0 + 0x34);
-    v0 = lo;
-    v0 += v1;
-    v1 = *gppBlockLinks;
-    v0 <<= 2;
-    v1 += v0;
-    v0 = lw(v1);
-    sw(v0, s0 + 0x30);
-    v0 = lw(v1);
-    if (v0 == 0) goto loc_8001C51C;
-    sw(s0, v0 + 0x34);
-loc_8001C51C:
-    sw(s0, v1);
-    goto loc_8001C52C;
-loc_8001C524:
-    sw(0, s0 + 0x34);
-    sw(0, s0 + 0x30);
-loc_8001C52C:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update the subsector for the thing.
+// Also add the thing to sector and blockmap thing lists if applicable.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SetThingPosition(mobj_t& thing) noexcept {
+    // First update what subsector the thing is in
+    subsector_t* const pSubsec = R_PointInSubsector(thing.x, thing.y);
+    thing.subsector = pSubsec;
+
+    // Add the thing to sector thing lists, if the thing flags allow it
+    if ((thing.flags & MF_NOSECTOR) == 0) {
+        sector_t& sec = *pSubsec->sector;
+        thing.sprev = nullptr;
+        thing.snext = sec.thinglist;
+    
+        if (sec.thinglist) {
+            sec.thinglist->sprev = &thing;
+        }
+
+        sec.thinglist = &thing;
+    }
+
+    // Add the thing to blockmap thing lists, if the thing flags allow it
+    if ((thing.flags & MF_NOBLOCKMAP) == 0) {
+        const int32_t blockx = (thing.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
+        const int32_t blocky = (thing.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+
+        if (blockx >= 0 && blockx < *gBlockmapWidth && blocky >= 0 && blocky < *gBlockmapHeight) {
+            VmPtr<mobj_t>& blockmapEntry = (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx];
+            thing.bprev = nullptr;
+            thing.bnext = blockmapEntry;
+
+            if (blockmapEntry) {
+                blockmapEntry->bprev = &thing;
+            }
+
+            blockmapEntry = &thing;
+        } else {
+            thing.bprev = nullptr;
+            thing.bnext = nullptr;
+        }
+    }
+}
+
+void _thunk_P_SetThingPosition() noexcept {
+    P_SetThingPosition(*vmAddrToPtr<mobj_t>(a0));
 }
 
 void P_BlockLinesIterator() noexcept {
