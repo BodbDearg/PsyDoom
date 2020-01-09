@@ -73,7 +73,7 @@ loc_8001C724:
     sh(v1, at);
 loc_8001C7F4:
     a0 = s0;
-    P_UnsetThingPosition();
+    _thunk_P_UnsetThingPosition();
     v1 = lw(s0 + 0x14);
     v0 = lw(s0 + 0x10);
     a0 = *gpMainMemZone;
@@ -268,7 +268,7 @@ loc_8001CA18:
     sh(v1, at);
 loc_8001CAF0:
     a0 = s0;
-    P_UnsetThingPosition();
+    _thunk_P_UnsetThingPosition();
     v1 = lw(s0 + 0x14);
     v0 = lw(s0 + 0x10);
     a0 = *gpMainMemZone;

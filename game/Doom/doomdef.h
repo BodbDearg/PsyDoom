@@ -87,32 +87,32 @@ const int32_t MAX_DEMO_TICKS = 16384;
 
 // Flags for 'mobj_t'
 static constexpr uint32_t MF_SPECIAL        = 0x1;          // TODO: CONFIRM
-static constexpr uint32_t MF_SOLID		    = 0x2;          // TODO: CONFIRM
-static constexpr uint32_t MF_SHOOTABLE	    = 0x4;          // TODO: CONFIRM
-static constexpr uint32_t MF_NOSECTOR		= 0x8;          // TODO: CONFIRM
-static constexpr uint32_t MF_NOBLOCKMAP	    = 0x10;         // TODO: CONFIRM
-static constexpr uint32_t MF_AMBUSH		    = 0x20;         // TODO: CONFIRM
-static constexpr uint32_t MF_JUSTHIT		= 0x40;         // TODO: CONFIRM
-static constexpr uint32_t MF_JUSTATTACKED	= 0x80;         // TODO: CONFIRM
+static constexpr uint32_t MF_SOLID          = 0x2;          // TODO: CONFIRM
+static constexpr uint32_t MF_SHOOTABLE      = 0x4;          // TODO: CONFIRM
+static constexpr uint32_t MF_NOSECTOR       = 0x8;          // Thing is not present in sector thing lists
+static constexpr uint32_t MF_NOBLOCKMAP     = 0x10;         // Thing is not present in the blockmap
+static constexpr uint32_t MF_AMBUSH         = 0x20;         // TODO: CONFIRM
+static constexpr uint32_t MF_JUSTHIT        = 0x40;         // TODO: CONFIRM
+static constexpr uint32_t MF_JUSTATTACKED   = 0x80;         // TODO: CONFIRM
 static constexpr uint32_t MF_SPAWNCEILING   = 0x100;        // TODO: CONFIRM
-static constexpr uint32_t MF_NOGRAVITY	    = 0x200;        // TODO: CONFIRM
-static constexpr uint32_t MF_DROPOFF		= 0x400;        // TODO: CONFIRM
-static constexpr uint32_t MF_PICKUP		    = 0x800;        // TODO: CONFIRM
-static constexpr uint32_t MF_NOCLIP		    = 0x1000;       // Cheat that disables collision on the player
-static constexpr uint32_t MF_SLIDE		    = 0x2000;       // TODO: CONFIRM
-static constexpr uint32_t MF_FLOAT		    = 0x4000;       // TODO: CONFIRM
-static constexpr uint32_t MF_TELEPORT		= 0x8000;       // TODO: CONFIRM
-static constexpr uint32_t MF_MISSILE		= 0x10000;      // TODO: CONFIRM
-static constexpr uint32_t MF_DROPPED		= 0x20000;      // TODO: CONFIRM
-static constexpr uint32_t MF_SHADOW		    = 0x40000;      // TODO: CONFIRM
-static constexpr uint32_t MF_NOBLOOD		= 0x80000;      // TODO: CONFIRM
-static constexpr uint32_t MF_CORPSE		    = 0x100000;     // TODO: CONFIRM
-static constexpr uint32_t MF_INFLOAT		= 0x200000;     // TODO: CONFIRM
-static constexpr uint32_t MF_COUNTKILL	    = 0x400000;     // TODO: CONFIRM
-static constexpr uint32_t MF_COUNTITEM	    = 0x800000;     // TODO: CONFIRM
-static constexpr uint32_t MF_SKULLFLY		= 0x1000000;    // TODO: CONFIRM
-static constexpr uint32_t MF_NOTDMATCH	    = 0x2000000;    // TODO: CONFIRM
-static constexpr uint32_t MF_SEETARGET	    = 0x4000000;    // TODO: CONFIRM
+static constexpr uint32_t MF_NOGRAVITY      = 0x200;        // TODO: CONFIRM
+static constexpr uint32_t MF_DROPOFF        = 0x400;        // TODO: CONFIRM
+static constexpr uint32_t MF_PICKUP         = 0x800;        // TODO: CONFIRM
+static constexpr uint32_t MF_NOCLIP         = 0x1000;       // Cheat that disables collision on the player
+static constexpr uint32_t MF_SLIDE          = 0x2000;       // TODO: CONFIRM
+static constexpr uint32_t MF_FLOAT          = 0x4000;       // TODO: CONFIRM
+static constexpr uint32_t MF_TELEPORT       = 0x8000;       // TODO: CONFIRM
+static constexpr uint32_t MF_MISSILE        = 0x10000;      // TODO: CONFIRM
+static constexpr uint32_t MF_DROPPED        = 0x20000;      // TODO: CONFIRM
+static constexpr uint32_t MF_SHADOW         = 0x40000;      // TODO: CONFIRM
+static constexpr uint32_t MF_NOBLOOD        = 0x80000;      // TODO: CONFIRM
+static constexpr uint32_t MF_CORPSE         = 0x100000;     // TODO: CONFIRM
+static constexpr uint32_t MF_INFLOAT        = 0x200000;     // TODO: CONFIRM
+static constexpr uint32_t MF_COUNTKILL      = 0x400000;     // TODO: CONFIRM
+static constexpr uint32_t MF_COUNTITEM      = 0x800000;     // TODO: CONFIRM
+static constexpr uint32_t MF_SKULLFLY       = 0x1000000;    // TODO: CONFIRM
+static constexpr uint32_t MF_NOTDMATCH      = 0x2000000;    // TODO: CONFIRM
+static constexpr uint32_t MF_SEETARGET      = 0x4000000;    // TODO: CONFIRM
 
 // A function which gets called after regular map object updating is done
 typedef VmPtr<void (mobj_t* pMObj)> latecall_t;
@@ -254,7 +254,7 @@ static constexpr int32_t IRONTICS = 60 * TICRATE;
 // Player cheat flags
 static constexpr uint32_t CF_GODMODE        = 0x2;      // Invulnerability
 static constexpr uint32_t CF_ALLLINES       = 0x4;      // Show all map lines
-static constexpr uint32_t CF_ALLMOBJ		= 0x8;      // Show all map objects
+static constexpr uint32_t CF_ALLMOBJ        = 0x8;      // Show all map objects
 static constexpr uint32_t CF_VRAMVIEWER     = 0x10;     // Showing the vram viewer
 static constexpr uint32_t CF_WARPMENU       = 0x20;     // Showing the warp to map menu
 static constexpr uint32_t CF_XRAYVISION     = 0x80;     // Do 'xray vision' or transparent walls

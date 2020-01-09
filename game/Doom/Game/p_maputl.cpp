@@ -1,7 +1,9 @@
 #include "p_maputl.h"
 
 #include "Doom/Base/m_fixed.h"
+#include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "p_local.h"
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
@@ -193,60 +195,43 @@ loc_8001C2F0:
     return;
 }
 
-void P_UnsetThingPosition() noexcept {
-loc_8001C2F8:
-    v0 = lw(a0 + 0x64);
-    v0 &= 8;
-    if (v0 != 0) goto loc_8001C35C;
-    v1 = lw(a0 + 0x1C);
-    if (v1 == 0) goto loc_8001C328;
-    v0 = lw(a0 + 0x20);
-    sw(v0, v1 + 0x20);
-loc_8001C328:
-    v1 = lw(a0 + 0x20);
-    if (v1 == 0) goto loc_8001C344;
-    v0 = lw(a0 + 0x1C);
-    sw(v0, v1 + 0x1C);
-    goto loc_8001C35C;
-loc_8001C344:
-    v0 = lw(a0 + 0xC);
-    v1 = lw(v0);
-    v0 = lw(a0 + 0x1C);
-    sw(v0, v1 + 0x4C);
-loc_8001C35C:
-    v0 = lw(a0 + 0x64);
-    v0 &= 0x10;
-    if (v0 != 0) goto loc_8001C400;
-    v1 = lw(a0 + 0x30);
-    if (v1 == 0) goto loc_8001C38C;
-    v0 = lw(a0 + 0x34);
-    sw(v0, v1 + 0x34);
-loc_8001C38C:
-    v1 = lw(a0 + 0x34);
-    if (v1 == 0) goto loc_8001C3A8;
-    v0 = lw(a0 + 0x30);
-    sw(v0, v1 + 0x30);
-    goto loc_8001C400;
-loc_8001C3A8:
-    v0 = lw(a0 + 0x4);
-    v1 = *gBlockmapOriginY;
-    v0 -= v1;
-    v1 = *gBlockmapWidth;
-    v0 = u32(i32(v0) >> 23);
-    mult(v0, v1);
-    v1 = lw(a0);
-    v0 = *gBlockmapOriginX;
-    a0 = lw(a0 + 0x30);
-    v1 -= v0;
-    v1 = u32(i32(v1) >> 23);
-    v0 = lo;
-    v0 += v1;
-    v1 = *gppBlockLinks;
-    v0 <<= 2;
-    v0 += v1;
-    sw(a0, v0);
-loc_8001C400:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unlinks the given thing from sector thing lists and the blockmap
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_UnsetThingPosition(mobj_t& thing) noexcept {
+    // Does this thing get assigned to sector thing lists?
+    // If so remove it from the sector thing list.
+    if ((thing.flags & MF_NOSECTOR) == 0) {
+        if (thing.snext) {
+            thing.snext->sprev = thing.sprev;
+        }
+        
+        if (thing.sprev) {
+            thing.sprev->snext = thing.snext;
+        } else {
+            thing.subsector->sector->thinglist = thing.snext;
+        }
+    }
+
+    // Does this thing get added to the blockmap?
+    // If so remove it from the blockmap.
+    if ((thing.flags & MF_NOBLOCKMAP) == 0) {
+        if (thing.bnext) {
+            thing.bnext->bprev = thing.bprev;
+        }
+        
+        if (thing.bprev) {
+            thing.bprev->bnext = thing.bnext;
+        } else {
+            const int32_t blockx = (thing.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
+            const int32_t blocky = (thing.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;            
+            (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.next;
+        }
+    }
+}
+
+void _thunk_P_UnsetThingPosition() noexcept {
+    P_UnsetThingPosition(*vmAddrToPtr<mobj_t>(a0));
 }
 
 void P_SetThingPosition() noexcept {

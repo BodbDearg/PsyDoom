@@ -129,7 +129,7 @@ extern void P_PointOnLineSide() noexcept;
 extern void P_PointOnDivlineSide() noexcept;
 extern void P_MakeDivline() noexcept;
 extern void P_LineOpening() noexcept;
-extern void P_UnsetThingPosition() noexcept;
+extern void _thunk_P_UnsetThingPosition() noexcept;
 extern void P_SetThingPosition() noexcept;
 extern void P_BlockLinesIterator() noexcept;
 extern void P_BlockThingsIterator() noexcept;
@@ -1063,7 +1063,7 @@ namespace PsxVm {
         { 0x8001C128, &P_PointOnDivlineSide },
         { 0x8001C21C, &P_MakeDivline },
         { 0x8001C25C, &P_LineOpening },
-        { 0x8001C2F8, &P_UnsetThingPosition },
+        { 0x8001C2F8, &_thunk_P_UnsetThingPosition },
         { 0x8001C408, &P_SetThingPosition },
         { 0x8001C540, &P_BlockLinesIterator },
         { 0x8001C660, &P_BlockThingsIterator },
