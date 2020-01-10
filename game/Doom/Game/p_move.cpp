@@ -1,6 +1,8 @@
 #include "p_move.h"
 
+#include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "p_local.h"
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -82,7 +84,8 @@ loc_8001E600:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 = lw(a0 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
 loc_8001E608:
-    P_UnsetThingPosition2();
+    P_UnsetThingPosition2(*vmAddrToPtr<mobj_t>(a0));
+
     a0 = 0x80080000;                                    // Result = 80080000
     a0 = lw(a0 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
     v0 = lw(gp + 0xC08);                                // Load from: gTmFloorZ (800781E8)
@@ -183,57 +186,37 @@ void UNKNOWN_DoomFunc3() noexcept {
     return;
 }
 
-void P_UnsetThingPosition2() noexcept {
-loc_8001E76C:
-    v1 = lw(a0 + 0x1C);
-    if (v1 == 0) goto loc_8001E788;
-    v0 = lw(a0 + 0x20);
-    sw(v0, v1 + 0x20);
-loc_8001E788:
-    v1 = lw(a0 + 0x20);
-    if (v1 == 0) goto loc_8001E7A4;
-    v0 = lw(a0 + 0x1C);
-    sw(v0, v1 + 0x1C);
-    goto loc_8001E7BC;
-loc_8001E7A4:
-    v0 = lw(a0 + 0xC);
-    v1 = lw(v0);
-    v0 = lw(a0 + 0x1C);
-    sw(v0, v1 + 0x4C);
-loc_8001E7BC:
-    v0 = lw(a0 + 0x64);
-    v0 &= 0x10;
-    if (v0 != 0) goto loc_8001E860;
-    v1 = lw(a0 + 0x30);
-    if (v1 == 0) goto loc_8001E7EC;
-    v0 = lw(a0 + 0x34);
-    sw(v0, v1 + 0x34);
-loc_8001E7EC:
-    v1 = lw(a0 + 0x34);
-    if (v1 == 0) goto loc_8001E808;
-    v0 = lw(a0 + 0x30);
-    sw(v0, v1 + 0x30);
-    goto loc_8001E860;
-loc_8001E808:
-    v0 = lw(a0 + 0x4);
-    v1 = *gBlockmapOriginY;
-    v0 -= v1;
-    v1 = *gBlockmapWidth;
-    v0 = u32(i32(v0) >> 23);
-    mult(v0, v1);
-    v1 = lw(a0);
-    v0 = *gBlockmapOriginX;
-    a0 = lw(a0 + 0x30);
-    v1 -= v0;
-    v1 = u32(i32(v1) >> 23);
-    v0 = lo;
-    v0 += v1;
-    v1 = *gppBlockLinks;
-    v0 <<= 2;
-    v0 += v1;
-    sw(a0, v0);
-loc_8001E860:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unlinks the given thing from sector thing lists and the blockmap.
+// Very similar to 'P_UnsetThingPosition' except the thing is always unlinked from sectors.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_UnsetThingPosition2(mobj_t& thing) noexcept {
+    // Remove the thing from sector thing lists
+    if (thing.snext) {
+        thing.snext->sprev = thing.sprev;
+    }
+
+    if (thing.sprev) {
+        thing.sprev->snext = thing.snext;
+    } else {
+        thing.subsector->sector->thinglist = thing.snext;
+    }
+
+    // Does this thing get added to the blockmap?
+    // If so remove it from the blockmap.
+    if ((thing.flags & MF_NOBLOCKMAP) == 0) {
+        if (thing.bnext) {
+            thing.bnext->bprev = thing.bprev;
+        }
+        
+        if (thing.bprev) {
+            thing.bprev->bnext = thing.bnext;
+        } else {
+            const int32_t blockx = (thing.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
+            const int32_t blocky = (thing.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+            (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+        }
+    }
 }
 
 void P_SetThingPosition2() noexcept {
