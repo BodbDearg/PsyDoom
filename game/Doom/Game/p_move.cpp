@@ -214,7 +214,17 @@ void P_UnsetThingPosition2(mobj_t& thing) noexcept {
         } else {
             const int32_t blockx = (thing.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
             const int32_t blocky = (thing.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
-            (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+
+            // PC-PSX: prevent buffer overflow if the map object is out of bounds
+            #if PC_PSX_DOOM_MODS
+                if (blockx >= 0 && blockx < *gBlockmapWidth) {
+                    if (blocky >= 0 && blocky < *gBlockmapHeight) {
+                        (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+                    }
+                }
+            #else
+                (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+            #endif
         }
     }
 }
