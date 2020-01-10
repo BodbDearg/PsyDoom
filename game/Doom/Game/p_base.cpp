@@ -1,8 +1,13 @@
 #include "p_base.h"
 
+#include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "p_local.h"
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
+
+// Used in place of 'mobj_t' flags in 'PB_UnsetThingPosition' and 'PB_SetThingPosition' etc.
+static const VmPtr<int32_t> gTestFlags(0x800782B4);
 
 void P_RunMobjBase() noexcept {
 loc_80013840:
@@ -476,7 +481,7 @@ loc_80013F00:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80013FD0;
     }
-    v0 = lw(gp + 0xCD4);                                // Load from: gTestFlags (800782B4)
+    v0 = *gTestFlags;
     v0 &= 0x4400;
     if (v0 != 0) goto loc_80013F98;
     v0 = lw(gp + 0xB40);                                // Load from: gTestDropoffZ (80078120)
@@ -489,7 +494,8 @@ loc_80013F00:
     }
 loc_80013F98:
     a0 = lw(gp + 0xC6C);                                // Load from: gpCurMObj (8007824C)
-    PB_UnsetThingPosition();
+    PB_UnsetThingPosition(*vmAddrToPtr<mobj_t>(a0));
+
     a0 = lw(gp + 0xC6C);                                // Load from: gpCurMObj (8007824C)
     v0 = lw(gp + 0x988);                                // Load from: gTestFloorZ (80077F68)
     v1 = lw(gp + 0xB24);                                // Load from: gTestCeilingz (80078104)
@@ -507,57 +513,36 @@ loc_80013FD0:
     return;
 }
 
-void PB_UnsetThingPosition() noexcept {
-loc_80013FE0:
-    v1 = lw(a0 + 0x1C);
-    if (v1 == 0) goto loc_80013FFC;
-    v0 = lw(a0 + 0x20);
-    sw(v0, v1 + 0x20);
-loc_80013FFC:
-    v1 = lw(a0 + 0x20);
-    if (v1 == 0) goto loc_80014018;
-    v0 = lw(a0 + 0x1C);
-    sw(v0, v1 + 0x1C);
-    goto loc_80014030;
-loc_80014018:
-    v0 = lw(a0 + 0xC);
-    v1 = lw(v0);
-    v0 = lw(a0 + 0x1C);
-    sw(v0, v1 + 0x4C);
-loc_80014030:
-    v0 = lw(gp + 0xCD4);                                // Load from: gTestFlags (800782B4)
-    v0 &= 0x10;
-    if (v0 != 0) goto loc_800140D4;
-    v1 = lw(a0 + 0x30);
-    if (v1 == 0) goto loc_80014060;
-    v0 = lw(a0 + 0x34);
-    sw(v0, v1 + 0x34);
-loc_80014060:
-    v1 = lw(a0 + 0x34);
-    if (v1 == 0) goto loc_8001407C;
-    v0 = lw(a0 + 0x30);
-    sw(v0, v1 + 0x30);
-    goto loc_800140D4;
-loc_8001407C:
-    v0 = lw(a0 + 0x4);
-    v1 = *gBlockmapOriginY;
-    v0 -= v1;
-    v1 = *gBlockmapWidth;
-    v0 = u32(i32(v0) >> 23);
-    mult(v0, v1);
-    v1 = lw(a0);
-    v0 = *gBlockmapOriginX;
-    a0 = lw(a0 + 0x30);
-    v1 -= v0;
-    v1 = u32(i32(v1) >> 23);
-    v0 = lo;
-    v0 += v1;
-    v1 = *gppBlockLinks;
-    v0 <<= 2;
-    v0 += v1;
-    sw(a0, v0);
-loc_800140D4:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unlinks the given thing from sector thing lists and the blockmap.
+// Very similar to 'P_UnsetThingPosition' except the thing is always unlinked from sectors and thing flags are read from a global.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PB_UnsetThingPosition(mobj_t& thing) noexcept {
+    // Remove the thing from sector thing lists
+    if (thing.snext) {
+        thing.snext->sprev = thing.sprev;
+    }
+    
+    if (thing.sprev) {
+        thing.sprev->snext = thing.snext;
+    } else {
+        thing.subsector->sector->thinglist = thing.snext;
+    }
+
+    // Remove the thing from the blockmap, if it is added to the blockmap
+    if ((*gTestFlags & MF_NOBLOCKMAP) == 0) {
+        if (thing.bnext) {
+            thing.bnext->bprev = thing.bprev;
+        }
+
+        if (thing.bprev) {
+            thing.bprev->bnext = thing.bnext;
+        } else {
+            const int32_t blockx = (thing.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
+            const int32_t blocky = (thing.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+            (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+        }
+    }
 }
 
 void PB_SetThingPosition() noexcept {
@@ -573,7 +558,7 @@ loc_800140DC:
     if (v0 == 0) goto loc_80014110;
     sw(a1, v0 + 0x20);
 loc_80014110:
-    v0 = lw(gp + 0xCD4);                                // Load from: gTestFlags (800782B4)
+    v0 = *gTestFlags;
     v0 &= 0x10;
     sw(a1, v1 + 0x4C);
     if (v0 != 0) goto loc_800141D4;
@@ -631,7 +616,7 @@ loc_800141DC:
     v1 = lw(v1 + 0x40);
     s0 = 0x800B0000;                                    // Result = 800B0000
     s0 -= 0x6F9C;                                       // Result = gTestBBox[0] (800A9064)
-    sw(v0, gp + 0xCD4);                                 // Store to: gTestFlags (800782B4)
+    *gTestFlags = v0;
     v0 = v1 + a1;
     sw(v0, s0);                                         // Store to: gTestBBox[0] (800A9064)
     v0 = a1 - v1;
@@ -834,7 +819,7 @@ void PB_CheckLine() noexcept {
     v0 = lw(a0 + 0x3C);
     v1 = 0x10000;                                       // Result = 00010000
     if (v0 == 0) goto loc_80014524;
-    v0 = lw(gp + 0xCD4);                                // Load from: gTestFlags (800782B4)
+    v0 = *gTestFlags;
     v0 &= v1;
     if (v0 != 0) goto loc_80014510;
     v0 = lw(a0 + 0x10);
@@ -928,7 +913,7 @@ loc_80014628:
     if (v0 == 0) goto loc_800146B0;
     v0 = 0x1000000;                                     // Result = 01000000
     if (a2 == a3) goto loc_800146B0;
-    v1 = lw(gp + 0xCD4);                                // Load from: gTestFlags (800782B4)
+    v1 = *gTestFlags;
     v0 &= v1;
     {
         const bool bJump = (v0 != 0);
@@ -1007,8 +992,8 @@ loc_800146F0:
     a0 = lhu(t3);
     sp -= 0x10;
     if (v1 == v0) goto loc_800149A8;
-    v1 = lw(gp + 0xCD4);                                // Load from: gTestFlags (800782B4)
-    v0 = 0x10000;                                       // Result = 00010000
+    v1 = *gTestFlags;
+    v0 = 0x10000;
     t4 = v1 & v0;
     v1 = a0 << 16;
 loc_80014750:

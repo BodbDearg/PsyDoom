@@ -23,7 +23,6 @@ extern void P_FloatChange() noexcept;
 extern void P_ZMovement() noexcept;
 extern void P_MobjThinker() noexcept;
 extern void PB_TryMove() noexcept;
-extern void PB_UnsetThingPosition() noexcept;
 extern void PB_SetThingPosition() noexcept;
 extern void PB_CheckPosition() noexcept;
 extern void PB_BoxCrossLine() noexcept;
@@ -956,7 +955,6 @@ namespace PsxVm {
         { 0x80013C00, &P_ZMovement },
         { 0x80013DE0, &P_MobjThinker },
         { 0x80013F00, &PB_TryMove },
-        { 0x80013FE0, &PB_UnsetThingPosition },
         { 0x800140DC, &PB_SetThingPosition },
         { 0x800141DC, &PB_CheckPosition },
         { 0x800143C0, &PB_BoxCrossLine },
