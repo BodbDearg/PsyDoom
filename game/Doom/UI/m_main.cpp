@@ -94,7 +94,7 @@ void M_Start() noexcept {
 
     *gNetGame = gt_single;
     *gCurPlayerIndex = 0;
-    gbPlayerInGame[0] = false;
+    gbPlayerInGame[0] = true;
     gbPlayerInGame[1] = false;
     I_ResetTexCache();
     s0 = 0x80090000;                                    // Result = 80090000
