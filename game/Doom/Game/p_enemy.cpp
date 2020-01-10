@@ -4,6 +4,7 @@
 #include "Doom/Base/m_fixed.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Renderer/r_main.h"
 #include "g_game.h"
 #include "p_doors.h"
@@ -994,7 +995,7 @@ void A_PosAttack() noexcept {
     a0 = s2;
 loc_80016A60:
     s1 = lw(s2 + 0x24);
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
     _thunk_P_Random();
     s0 = v0;
@@ -1033,7 +1034,7 @@ void A_SPosAttack() noexcept {
     sw(s0, sp + 0x18);
     v0 = lw(s1 + 0x74);
     if (v0 == 0) goto loc_80016C04;
-    a1 = 8;                                             // Result = 00000008
+    a1 = sfx_shotgn;
     S_StartSound();
     v0 = lw(s1 + 0x74);
     s2 = 0;                                             // Result = 00000000
@@ -1115,7 +1116,7 @@ void A_CPosAttack() noexcept {
     sw(s0, sp + 0x18);
     v0 = lw(s3 + 0x74);
     if (v0 == 0) goto loc_80016D50;
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
     v0 = lw(s3 + 0x74);
     a2 = -0x21;                                         // Result = FFFFFFDF
@@ -1254,7 +1255,7 @@ void A_SpidAttack() noexcept {
     sw(s0, sp + 0x18);
     v0 = lw(s1 + 0x74);
     if (v0 == 0) goto loc_80016F9C;
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
     v0 = lw(s1 + 0x74);
     s2 = 0;                                             // Result = 00000000
@@ -1483,7 +1484,7 @@ loc_800171FC:
 loc_8001724C:
     a0 = s1;
     if (v1 == 0) goto loc_8001728C;
-    a1 = 0x2E;                                          // Result = 0000002E
+    a1 = sfx_claw;
     S_StartSound();
     _thunk_P_Random();
     a0 = lw(s1 + 0x74);
@@ -1705,7 +1706,7 @@ void A_BruisAttack() noexcept {
 loc_800175C8:
     a0 = s0;
     if (v1 == 0) goto loc_80017610;
-    a1 = 0x2E;                                          // Result = 0000002E
+    a1 = sfx_claw;
     S_StartSound();
     _thunk_P_Random();
     a0 = lw(s0 + 0x74);
@@ -1981,7 +1982,7 @@ void A_SkelWhoosh() noexcept {
     sw(s0, s1 + 0x24);
     a0 = s1;
 loc_80017A10:
-    a1 = 0x4F;                                          // Result = 0000004F
+    a1 = sfx_skeswg;
     S_StartSound();
 loc_80017A18:
     ra = lw(sp + 0x18);
@@ -2049,7 +2050,7 @@ loc_80017B0C:
     v1 |= 0x6667;                                       // Result = 66666667
     mult(v0, v1);
     a0 = s1;
-    a1 = 0x50;                                          // Result = 00000050
+    a1 = sfx_skepch;
     v1 = u32(i32(v0) >> 31);
     a2 = hi;
     a2 = u32(i32(a2) >> 2);
@@ -2112,7 +2113,7 @@ void A_FatRaise() noexcept {
 loc_80017C1C:
     a0 = s1;
 loc_80017C20:
-    a1 = 0x46;                                          // Result = 00000046
+    a1 = sfx_manatk;
     S_StartSound();
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -2976,13 +2977,8 @@ loc_80018980:
 }
 
 void A_XScream() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a1 = 0x23;                                          // Result = 00000023
+    a1 = sfx_slop;
     S_StartSound();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void A_Pain() noexcept {
@@ -3185,7 +3181,7 @@ void A_Hoof() noexcept {
     sw(s0, sp + 0x10);
     s0 = a0;
     sw(ra, sp + 0x14);
-    a1 = 0x53;                                          // Result = 00000053
+    a1 = sfx_hoof;
     S_StartSound();
     a0 = s0;
     A_Chase();
@@ -3200,7 +3196,7 @@ void A_Metal() noexcept {
     sw(s0, sp + 0x10);
     s0 = a0;
     sw(ra, sp + 0x14);
-    a1 = 0x54;                                          // Result = 00000054
+    a1 = sfx_metal;
     S_StartSound();
     a0 = s0;
     A_Chase();
@@ -3215,7 +3211,7 @@ void A_BabyMetal() noexcept {
     sw(s0, sp + 0x10);
     s0 = a0;
     sw(ra, sp + 0x14);
-    a1 = 0x45;                                          // Result = 00000045
+    a1 = sfx_bspwlk;
     S_StartSound();
     a0 = s0;
     A_Chase();

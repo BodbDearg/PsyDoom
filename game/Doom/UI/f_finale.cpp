@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
@@ -388,8 +389,8 @@ loc_8003DCA8:
     v0 = s0 & 0xF0;
     if (s0 == s1) goto loc_8003DDA0;
     if (v0 == 0) goto loc_8003DDA0;
-    a0 = 0;                                             // Result = 00000000
-    a1 = 8;                                             // Result = 00000008
+    a0 = 0;
+    a1 = sfx_shotgn;
     S_StartSound();
     v0 = lw(gp + 0xCA8);                                // Load from: 80078288
     v0 <<= 3;
@@ -407,7 +408,7 @@ loc_8003DCA8:
     at += v0;
     a1 = lw(at);
     if (a1 == 0) goto loc_8003DD2C;
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     S_StartSound();
 loc_8003DD2C:
     v0 = lw(gp + 0xCA8);                                // Load from: 80078288

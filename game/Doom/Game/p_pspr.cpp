@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_main.h"
@@ -215,7 +216,7 @@ loc_8001FC50:
     v0 = *gbIsLevelDataCached;
     if (v0 == 0) goto loc_8001FC78;
     a0 = lw(s1);
-    a1 = 0xB;                                           // Result = 0000000B
+    a1 = sfx_sawup;
     S_StartSound();
 loc_8001FC78:
     v1 = lw(s1 + 0x70);
@@ -637,7 +638,7 @@ void A_WeaponReady() noexcept {
     v0 -= 0x6B20;                                       // Result = State_S_SAW[0] (800594E0)
     if (v1 != v0) goto loc_800202DC;
     a0 = lw(s1);
-    a1 = 0xC;                                           // Result = 0000000C
+    a1 = sfx_sawidl;
     S_StartSound();
 loc_800202DC:
     v1 = lw(s1 + 0x70);
@@ -829,7 +830,7 @@ loc_800205B0:
         if (bJump) goto loc_800205EC;
     }
     a0 = lw(s1);
-    a1 = 0xB;                                           // Result = 0000000B
+    a1 = sfx_sawup;
     S_StartSound();
     v1 = lw(s1 + 0x70);
 loc_800205E4:
@@ -1033,7 +1034,7 @@ loc_800208BC:
     v0 = lw(v0 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     if (v0 == 0) goto loc_8002094C;
     a0 = lw(s3);
-    a1 = 2;                                             // Result = 00000002
+    a1 = sfx_punch;
     S_StartSound();
     v0 = lw(s3);
     v1 = 0x80070000;                                    // Result = 80070000
@@ -1087,12 +1088,12 @@ void A_Saw() noexcept {
     v0 = lw(v0 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     if (v0 != 0) goto loc_80020A04;
     a0 = lw(s3);
-    a1 = 0xD;                                           // Result = 0000000D
+    a1 = sfx_sawful;
     S_StartSound();
     goto loc_80020AC4;
 loc_80020A04:
     a0 = lw(s3);
-    a1 = 0xE;                                           // Result = 0000000E
+    a1 = sfx_sawhit;
     S_StartSound();
     v0 = lw(s3);
     v1 = 0x80070000;                                    // Result = 80070000
@@ -1359,7 +1360,7 @@ void A_FirePistol() noexcept {
     sw(s2, sp + 0x20);
     sw(s0, sp + 0x18);
     a0 = lw(s1);
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
     v1 = lw(s1 + 0x6C);
     v0 = v1 << 1;
@@ -1456,7 +1457,7 @@ void A_FireShotgun() noexcept {
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
     a0 = lw(s3);
-    a1 = 8;                                             // Result = 00000008
+    a1 = sfx_shotgn;
     S_StartSound();
     v1 = lw(s3 + 0x6C);
     v0 = v1 << 1;
@@ -1558,10 +1559,10 @@ void A_FireShotgun2() noexcept {
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
     a0 = lw(s3);
-    a1 = 0x1D;                                          // Result = 0000001D
+    a1 = sfx_dshtgn;
     S_StartSound();
     a0 = lw(s3);
-    a1 = 0xA0;                                          // Result = 000000A0
+    a1 = 0xA0;
     P_SetMObjState();
     v1 = lw(s3 + 0x6C);
     v0 = v1 << 1;
@@ -1699,7 +1700,7 @@ void A_FireCGun() noexcept {
     sw(s3, sp + 0x24);
     sw(s2, sp + 0x20);
     a0 = lw(s1);
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
     v0 = lw(s1 + 0x6C);
     v1 = v0 << 1;
@@ -1812,19 +1813,16 @@ loc_8002153C:
 
 void A_Light0() noexcept {
     sw(0, a0 + 0xE4);
-    return;
 }
 
 void A_Light1() noexcept {
-    v0 = 8;                                             // Result = 00000008
+    v0 = 8;
     sw(v0, a0 + 0xE4);
-    return;
 }
 
 void A_Light2() noexcept {
-    v0 = 0x10;                                          // Result = 00000010
+    v0 = 0x10;
     sw(v0, a0 + 0xE4);
-    return;
 }
 
 void A_BFGSpray() noexcept {
@@ -1892,36 +1890,21 @@ loc_8002162C:
 }
 
 void A_BFGsound() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
     a0 = lw(a0);
-    a1 = 0xA;                                           // Result = 0000000A
+    a1 = sfx_bfg;
     S_StartSound();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void A_OpenShotgun2() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
     a0 = lw(a0);
-    a1 = 0x1E;                                          // Result = 0000001E
+    a1 = sfx_dbopn;
     S_StartSound();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void A_LoadShotgun2() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
     a0 = lw(a0);
-    a1 = 0x1F;                                          // Result = 0000001F
+    a1 = sfx_dbload;
     S_StartSound();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void A_CloseShotgun2() noexcept {
@@ -1930,7 +1913,7 @@ void A_CloseShotgun2() noexcept {
     s0 = a0;
     sw(ra, sp + 0x14);
     a0 = lw(s0);
-    a1 = 0x20;                                          // Result = 00000020
+    a1 = sfx_dbcls;
     S_StartSound();
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
@@ -2013,7 +1996,7 @@ loc_80021808:
         if (bJump) goto loc_80021844;
     }
     a0 = lw(s1);
-    a1 = 0xB;                                           // Result = 0000000B
+    a1 = sfx_sawup;
     S_StartSound();
     v1 = lw(s1 + 0x70);
 loc_8002183C:

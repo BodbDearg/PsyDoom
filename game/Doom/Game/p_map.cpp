@@ -2,6 +2,7 @@
 
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "p_inter.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
@@ -399,7 +400,7 @@ loc_8001BBC8:
     v0 = lw(a1 + 0x14);
     if (v0 != 0) goto loc_8001BBFC;
     a0 = lw(s5);
-    a1 = 0x1C;                                          // Result = 0000001C
+    a1 = sfx_noway;
     S_StartSound();
     goto loc_8001BC08;
 loc_8001BBFC:

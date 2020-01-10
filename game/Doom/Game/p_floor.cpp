@@ -1,6 +1,7 @@
 #include "p_floor.h"
 
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/Renderer/r_data.h"
 #include "g_game.h"
@@ -203,7 +204,7 @@ void T_MoveFloor() noexcept {
     s1 = v0;
     if (v1 != 0) goto loc_80019074;
     a0 = lw(s0 + 0x14);
-    a1 = 0x15;                                          // Result = 00000015
+    a1 = sfx_stnmov;
     a0 += 0x38;
     S_StartSound();
 loc_80019074:

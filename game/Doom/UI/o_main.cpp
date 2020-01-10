@@ -4,6 +4,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_tick.h"
@@ -12,9 +13,9 @@
 
 void O_Init() noexcept {
     sp -= 0x18;
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     sw(ra, sp + 0x10);
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
     a1 = 0;                                             // Result = 00000000
     a0 = 0x80070000;                                    // Result = 80070000
@@ -119,11 +120,11 @@ loc_8003EA6C:
         v0 = s0 & 0x900;
         if (bJump) goto loc_8003EACC;
     }
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     if (v0 == 0) goto loc_8003EACC;
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
-    v0 = 9;                                             // Result = 00000009
+    v0 = 9;
     goto loc_8003EEA0;
 loc_8003EACC:
     v0 = s0 & 0xF000;
@@ -170,9 +171,9 @@ loc_8003EB50:
     sw(v0, v1);
 loc_8003EB80:
     v0 = *gCurPlayerIndex;
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     if (s2 != v0) goto loc_8003EB9C;
-    a1 = 0x12;                                          // Result = 00000012
+    a1 = sfx_pstop;
     S_StartSound();
 loc_8003EB9C:
     v1 = lw(s4);
@@ -251,9 +252,9 @@ loc_8003EC74:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x75F4);                               // Load from: gOptionsMusVol (800775F4)
     v0 &= 1;
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     if (v0 == 0) goto loc_8003ECB0;
-    a1 = 0x15;                                          // Result = 00000015
+    a1 = sfx_stnmov;
     S_StartSound();
 loc_8003ECB0:
     v0 = 0x80070000;                                    // Result = 80070000
@@ -325,9 +326,9 @@ loc_8003ED84:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x75F0);                               // Load from: gOptionsSndVol (800775F0)
     v0 &= 1;
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     if (v0 == 0) goto loc_8003EE8C;
-    a1 = 0x15;                                          // Result = 00000015
+    a1 = sfx_stnmov;
     S_StartSound();
     s4 -= 4;
     goto loc_8003EE90;
@@ -355,19 +356,19 @@ loc_8003EE4C:
     v0 = s0 & 0xF0;
     s4 -= 4;
     if (v0 == 0) goto loc_8003EE90;
-    a0 = 0;                                             // Result = 00000000
-    a1 = 7;                                             // Result = 00000007
+    a0 = 0;
+    a1 = sfx_pistol;
     S_StartSound();
-    v0 = 5;                                             // Result = 00000005
+    v0 = 5;
     goto loc_8003EEA0;
 loc_8003EE6C:
     v0 = s0 & 0xF0;
     s4 -= 4;
     if (v0 == 0) goto loc_8003EE90;
-    a0 = 0;                                             // Result = 00000000
-    a1 = 7;                                             // Result = 00000007
+    a0 = 0;
+    a1 = sfx_pistol;
     S_StartSound();
-    v0 = 8;                                             // Result = 00000008
+    v0 = 8;
     goto loc_8003EEA0;
 loc_8003EE8C:
     s4 -= 4;
@@ -376,7 +377,7 @@ loc_8003EE90:
 loc_8003EE94:
     s1 -= 4;
     if (i32(s2) >= 0) goto loc_8003EA6C;
-    v0 = 0;                                             // Result = 00000000
+    v0 = 0;
 loc_8003EEA0:
     ra = lw(sp + 0x28);
     s5 = lw(sp + 0x24);

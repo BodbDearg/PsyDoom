@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_password.h"
@@ -295,8 +296,8 @@ loc_8003CB44:
     v0 = (i32(s0) < 2);
     a3 += 4;
     if (v0 != 0) goto loc_8003CB44;
-    a0 = 0;                                             // Result = 00000000
-    a1 = 5;                                             // Result = 00000005
+    a0 = 0;
+    a1 = sfx_barexp;
     S_StartSound();
 loc_8003CBC0:
     v0 = lw(gp + 0xCFC);                                // Load from: 800782DC
@@ -317,14 +318,14 @@ loc_8003CBF8:
     v1 = *gGameTic;
     v0 = *gPrevGameTic;
     v0 = (i32(v0) < i32(v1));
-    s0 = 0;                                             // Result = 00000000
+    s0 = 0;
     if (v0 != 0) goto loc_8003CC30;
-    v0 = 0;                                             // Result = 00000000
+    v0 = 0;
     goto loc_8003CE50;
 loc_8003CC20:
-    a1 = 5;                                             // Result = 00000005
+    a1 = sfx_barexp;
     S_StartSound();
-    v0 = 1;                                             // Result = 00000001
+    v0 = 1;
     goto loc_8003CE50;
 loc_8003CC30:
     t3 = a0;
@@ -459,18 +460,18 @@ loc_8003CDE0:
     a0 = 0;                                             // Result = 00000000
     if (v0 != 0) goto loc_8003CE24;
     sw(v1, gp + 0xCFC);                                 // Store to: 800782DC
-    a1 = 5;                                             // Result = 00000005
+    a1 = sfx_barexp;
     S_StartSound();
 loc_8003CE24:
     v0 = *gGameTic;
     v0 &= 1;
     if (v0 != 0) goto loc_8003CE4C;
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     if (s0 == 0) goto loc_8003CE4C;
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
 loc_8003CE4C:
-    v0 = 0;                                             // Result = 00000000
+    v0 = 0;
 loc_8003CE50:
     ra = lw(sp + 0x20);
     s3 = lw(sp + 0x1C);

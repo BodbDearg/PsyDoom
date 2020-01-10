@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
@@ -1505,13 +1506,13 @@ loc_800273D0:
     at += 0x77BC;                                       // Result = gButtonList_1[4] (800977BC)
     at += s0;
     a0 = lw(at);
-    a1 = 0x16;                                          // Result = 00000016
+    a1 = sfx_swtchn;
     S_StartSound();
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x77AC;                                       // Result = gButtonList_1[0] (800977AC)
     a0 += s0;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x14;                                          // Result = 00000014
+    a1 = 0;
+    a2 = 0x14;
     _thunk_D_memset();
 loc_80027400:
     s1++;

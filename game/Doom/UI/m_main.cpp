@@ -4,6 +4,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_tick.h"
@@ -66,8 +67,8 @@ loc_80035B4C:
     I_CacheAndDrawSprite();
     I_SubmitGpuCmds();
     I_DrawPresent();
-    a0 = 0;                                             // Result = 00000000
-    a1 = 7;                                             // Result = 00000007
+    a0 = 0;
+    a1 = sfx_pistol;
     S_StartSound();
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7C0C);                               // Load from: gbDidAbortGame (80077C0C)
@@ -197,12 +198,12 @@ void M_Stop() noexcept {
     sp -= 0x18;
     sw(s0, sp + 0x10);
     s0 = a0;
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     sw(ra, sp + 0x14);
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
     psxcd_stop();
-    v0 = 9;                                             // Result = 00000009
+    v0 = 9;
     if (s0 != v0) goto loc_80035EB0;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
@@ -340,12 +341,12 @@ loc_80036040:
     v0 = 3;                                             // Result = 00000003
     sw(v0, a0);                                         // Store to: gCursorPos (80078000)
 loc_80036070:
-    a0 = 0;                                             // Result = 00000000
-    a1 = 0x12;                                          // Result = 00000012
+    a0 = 0;
+    a1 = sfx_pstop;
     S_StartSound();
 loc_8003607C:
     v1 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
-    a0 = 1;                                             // Result = 00000001
+    a0 = 1;
     v0 = (i32(v1) < 2);
     if (v1 == a0) goto loc_80036178;
     if (v0 == 0) goto loc_800360A4;
@@ -483,7 +484,7 @@ loc_8003622C:
     *gStartSkill = (skill_t) v0;
     a0 = 0;
 loc_80036238:
-    a1 = 0x17;
+    a1 = sfx_swtchx;
     S_StartSound();
 loc_80036240:
     v0 = 0;

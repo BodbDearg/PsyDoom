@@ -4,6 +4,7 @@
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_tick.h"
@@ -277,9 +278,9 @@ loc_80038968:
     at -= 0x6B4C;                                       // Result = gStatusBarKeyState[0] (800A94B4)
     at += s0;
     v0 = lh(at);
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     if (v0 == 0) goto loc_800389A8;
-    a1 = 0x18;                                          // Result = 00000018
+    a1 = sfx_itemup;
     S_StartSound();
 loc_800389A8:
     s1 += 8;

@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/p_firesky.h"
@@ -122,15 +123,11 @@ loc_80035234:
 }
 
 void STOP_Title() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a0 = 0;                                             // Result = 00000000
-    a1 = 5;                                             // Result = 00000005
+    a0 = 0;
+    a1 = sfx_barexp;
     S_StartSound();
+
     psxcd_stop();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void TIC_Title() noexcept {

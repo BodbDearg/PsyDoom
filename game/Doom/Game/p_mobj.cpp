@@ -4,6 +4,7 @@
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_main.h"
@@ -144,13 +145,13 @@ loc_8001C880:
     v0 = lw(v0);
     a1 = s1;
     a2 = lw(v0);
-    a3 = 0x1E;                                          // Result = 0000001E
+    a3 = 0x1E;
     P_SpawnMObj();
     a0 = v0;
-    a1 = 3;                                             // Result = 00000003
+    a1 = sfx_itmbk;
     S_StartSound();
-    a3 = 0;                                             // Result = 00000000
-    v1 = 0;                                             // Result = 00000000
+    a3 = 0;
+    v1 = 0;
     a0 = lh(s0 + 0x6);
 loc_8001C91C:
     at = 0x80060000;                                    // Result = 80060000

@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_password.h"
@@ -12,9 +13,9 @@
 
 void START_PasswordScreen() noexcept {
     sp -= 0x18;
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     sw(ra, sp + 0x10);
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
@@ -34,9 +35,9 @@ void START_PasswordScreen() noexcept {
 
 void STOP_PasswordScreen() noexcept {
     sp -= 0x18;
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     sw(ra, sp + 0x10);
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
     v0 = 0x20;                                          // Result = 00000020
     sw(v0, gp + 0xB94);                                 // Store to: gCurPasswordCharIdx (80078174)
@@ -63,10 +64,10 @@ void TIC_PasswordScreen() noexcept {
     }
     sw(v0, gp + 0xA4C);                                 // Store to: gInvalidPasswordFlashTicsLeft (8007802C)
     v0 &= 7;
-    v1 = 4;                                             // Result = 00000004
-    a0 = 0;                                             // Result = 00000000
+    v1 = 4;
+    a0 = 0;
     if (v0 != v1) goto loc_80036EF4;
-    a1 = 0x18;                                          // Result = 00000018
+    a1 = sfx_itemup;
     S_StartSound();
 loc_80036EF4:
     s0 = 0x80070000;                                    // Result = 80070000
@@ -121,8 +122,8 @@ loc_80036F70:
     }
 loc_80036F8C:
     sw(v0, gp + 0xB94);                                 // Store to: gCurPasswordCharIdx (80078174)
-    a0 = 0;                                             // Result = 00000000
-    a1 = 0x12;                                          // Result = 00000012
+    a0 = 0;
+    a1 = sfx_pstop;
     S_StartSound();
 loc_80036F9C:
     v0 = s0 & 0x8000;
@@ -150,14 +151,14 @@ loc_80036FCC:
     v0++;
     sw(v0, gp + 0xB94);                                 // Store to: gCurPasswordCharIdx (80078174)
     v0 = (i32(v0) < 0x20);
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     if (v0 != 0) goto loc_80037000;
-    v0 = 0x1F;                                          // Result = 0000001F
+    v0 = 0x1F;
     sw(v0, gp + 0xB94);                                 // Store to: gCurPasswordCharIdx (80078174)
     v0 = s0 & 0x900;
     goto loc_8003700C;
 loc_80037000:
-    a1 = 0x12;                                          // Result = 00000012
+    a1 = sfx_pstop;
     S_StartSound();
 loc_80037008:
     v0 = s0 & 0x900;
@@ -169,9 +170,9 @@ loc_8003700C:
     }
     v0 = s0 & 0xE0;
     if (s0 == s1) goto loc_80037118;
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     if (v0 == 0) goto loc_800370D0;
-    a1 = 0x17;                                          // Result = 00000017
+    a1 = sfx_swtchx;
     S_StartSound();
     a0 = lw(gp + 0x660);                                // Load from: gNumPasswordCharsEntered (80077C40)
     v0 = (i32(a0) < 0xA);
@@ -217,10 +218,10 @@ loc_800370D0:
     v0 = s0 & 0x10;
     {
         const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
+        v0 = 0;
         if (bJump) goto loc_8003711C;
     }
-    a1 = 0x17;                                          // Result = 00000017
+    a1 = sfx_swtchx;
     S_StartSound();
     v0 = lw(gp + 0x660);                                // Load from: gNumPasswordCharsEntered (80077C40)
     v0--;

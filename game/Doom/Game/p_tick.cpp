@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
@@ -203,13 +204,17 @@ void P_CheckCheats() noexcept {
 
             // Handle the game being paused, if just pausing
             if (*gbGamePaused) {
-                // Pause all audio
+                // Pause all audio and also stop the chainsaw sounds.
+                //
+                // Note: Erick also informed me that stopping the chainsaw sounds was actually only added in the 'Greatest Hits'
+                // re-release of DOOM and also in Final DOOM; stopping the chainsaw sound was NOT done in the original DOOM release.
+                // I guess the team took the opportunity with the re-releases and subsequent versions to fix/tweak this code?
                 psxcd_pause();
                 
-                a0 = 0xD;
+                a0 = sfx_sawful;
                 wess_seq_stop();
                 
-                a0 = 0xE;
+                a0 = sfx_sawhit;
                 wess_seq_stop();
 
                 S_Pause();

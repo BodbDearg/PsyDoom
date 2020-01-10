@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
 #include "g_game.h"
 #include "p_floor.h"
@@ -42,19 +43,19 @@ loc_8001F2BC:
     v0 &= 7;
     {
         const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
+        v0 = 1;
         if (bJump) goto loc_8001F320;
     }
     a0 = lw(s0 + 0xC);
-    a1 = 0x15;                                          // Result = 00000015
+    a1 = sfx_stnmov;
     a0 += 0x38;
     S_StartSound();
 loc_8001F31C:
-    v0 = 1;                                             // Result = 00000001
+    v0 = 1;
 loc_8001F320:
     {
         const bool bJump = (s1 != v0);
-        v0 = 2;                                         // Result = 00000002
+        v0 = 2;
         if (bJump) goto loc_8001F354;
     }
     v0 = lw(s0 + 0x2C);
@@ -65,13 +66,13 @@ loc_8001F320:
     }
     a0 = lw(s0 + 0xC);
     v0 = lw(s0 + 0x1C);
-    a1 = 0x11;                                          // Result = 00000011
+    a1 = sfx_pstart;
     sw(s1, s0 + 0x24);
     a0 += 0x38;
     sw(v0, s0 + 0x20);
     goto loc_8001F444;
 loc_8001F354:
-    a1 = 0x12;                                          // Result = 00000012
+    a1 = sfx_pstop;
     if (s1 != v0) goto loc_8001F44C;
     a0 = lw(s0 + 0xC);
     v0 = lw(s0 + 0x1C);
@@ -102,11 +103,11 @@ loc_8001F3B8:
     a0 = lw(s0 + 0xC);
     a1 = lw(s0 + 0x10);
     a2 = lw(s0 + 0x14);
-    a3 = 0;                                             // Result = 00000000
+    a3 = 0;
     T_MovePlane();
     s1 = v0;
-    v0 = 2;                                             // Result = 00000002
-    a1 = 0x12;                                          // Result = 00000012
+    v0 = 2;
+    a1 = sfx_pstop;
     if (s1 != v0) goto loc_8001F44C;
     a0 = lw(s0 + 0xC);
     v0 = lw(s0 + 0x1C);
@@ -129,7 +130,7 @@ loc_8001F434:
     sw(a0, s0 + 0x24);
 loc_8001F438:
     a0 = lw(s0 + 0xC);
-    a1 = 0x11;                                          // Result = 00000011
+    a1 = sfx_pstart;
     a0 += 0x38;
 loc_8001F444:
     S_StartSound();
@@ -315,7 +316,7 @@ loc_8001F6FC:
     sw(s6, s0 + 0x1C);
     _thunk_P_Random();
     a0 = s1 + 0x38;
-    a1 = 0x11;                                          // Result = 00000011
+    a1 = sfx_pstart;
     v0 &= 1;
     sw(v0, s0 + 0x24);
 loc_8001F714:

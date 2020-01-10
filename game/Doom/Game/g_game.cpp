@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/doomdef.h"
@@ -405,7 +406,7 @@ loc_80013288:
     a1 += v0;
     P_SpawnMObj();
     a0 = v0;
-    a1 = 0x1B;                                          // Result = 0000001B
+    a1 = sfx_telept;
     S_StartSound();
 loc_8001335C:
     ra = lw(sp + 0x28);

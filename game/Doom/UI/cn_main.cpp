@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/i_misc.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_tick.h"
@@ -10,9 +11,9 @@
 
 void START_ControlsScreen() noexcept {
     sp -= 0x18;
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     sw(ra, sp + 0x10);
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7AD0;                                       // Result = gTexInfo_BUTTONS[0] (80097AD0)
@@ -29,15 +30,14 @@ void START_ControlsScreen() noexcept {
 
 void STOP_ControlsScreen() noexcept {
     sp -= 0x18;
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     sw(ra, sp + 0x10);
-    a1 = 7;                                             // Result = 00000007
+    a1 = sfx_pistol;
     S_StartSound();
     v0 = 3;                                             // Result = 00000003
     sw(v0, gp + 0xA20);                                 // Store to: gCursorPos (80078000)
     ra = lw(sp + 0x10);
     sp += 0x18;
-    return;
 }
 
 void TIC_ControlsScreen() noexcept {
@@ -111,7 +111,7 @@ loc_80037A7C:
 loc_80037AA8:
     a0 = 0;                                             // Result = 00000000
 loc_80037AAC:
-    a1 = 0x12;                                          // Result = 00000012
+    a1 = sfx_pstop;
     S_StartSound();
 loc_80037AB4:
     v0 = s0 & 0x900;
@@ -161,7 +161,7 @@ loc_80037B34:
     a2 = 0x20;
     _thunk_D_memcpy();
     a0 = 0;
-    a1 = 0x17;
+    a1 = sfx_swtchx;
 loc_80037B60:
     S_StartSound();
     v0 = 0;

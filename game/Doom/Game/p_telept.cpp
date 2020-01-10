@@ -1,6 +1,7 @@
 #include "p_telept.h"
 
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
@@ -213,9 +214,9 @@ loc_80028AEC:
     sw(v0, s1 + 0x8);
     P_SpawnMObj();
     a0 = v0;
-    a1 = 0x1B;                                          // Result = 0000001B
+    a1 = sfx_telept;
     S_StartSound();
-    a3 = 0x1D;                                          // Result = 0000001D
+    a3 = 0x1D;
     v1 = lw(s2 + 0x24);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
@@ -240,7 +241,7 @@ loc_80028AEC:
     a1 += v0;
     P_SpawnMObj();
     a0 = v0;
-    a1 = 0x1B;                                          // Result = 0000001B
+    a1 = sfx_telept;
     S_StartSound();
     v0 = lw(s1 + 0x80);
     {

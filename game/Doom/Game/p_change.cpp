@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "g_game.h"
 #include "p_inter.h"
 #include "p_map.h"
@@ -114,7 +115,7 @@ loc_800150C4:
     a1 = 0x29F;                                         // Result = 0000029F
     P_SetMObjState();
     a0 = s1;
-    a1 = 0x23;                                          // Result = 00000023
+    a1 = sfx_slop;
     S_StartSound();
     v0 = *gCurPlayerIndex;
     a0 = lw(s1 + 0x80);

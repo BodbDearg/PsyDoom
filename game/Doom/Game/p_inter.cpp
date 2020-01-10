@@ -3,6 +3,7 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Renderer/r_main.h"
 #include "g_game.h"
 #include "p_mobj.h"
@@ -191,10 +192,10 @@ loc_800199DC:
     a2 = 2;                                             // Result = 00000002
     P_GiveAmmo();
     a0 = lw(s1);
-    a1 = 0x19;                                          // Result = 00000019
+    a1 = sfx_wpnup;
     sw(s0, s1 + 0x70);
     S_StartSound();
-    v0 = 0;                                             // Result = 00000000
+    v0 = 0;
     goto loc_80019ADC;
 loc_80019A1C:
     v0 = s0 << 1;
@@ -1123,7 +1124,7 @@ loc_8001A6AC:
     a1 = 0x23;                                          // Result = 00000023
     goto loc_8001A6BC;
 loc_8001A6B8:
-    a1 = 0x22;                                          // Result = 00000022
+    a1 = sfx_pldeth;
 loc_8001A6BC:
     S_StartSound();
     v1 = 0x80080000;                                    // Result = 80080000
@@ -1484,7 +1485,7 @@ loc_8001AC24:
     sw(v0, s2 + 0x28);
 loc_8001AC34:
     a0 = s0;
-    a1 = 0x21;                                          // Result = 00000021
+    a1 = sfx_plpain;
     S_StartSound();
     v0 = lw(s2 + 0x24);
     v0 -= s3;

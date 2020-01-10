@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_main.h"
 #include "g_game.h"
@@ -226,7 +227,7 @@ loc_80029A64:
     }
     a0 = s0;
     v1 = lw(s0 + 0x80);
-    a1 = 0x1A;                                          // Result = 0000001A
+    a1 = sfx_oof;
     sw(v0, v1 + 0x1C);
     S_StartSound();
 loc_80029AB0:
@@ -361,7 +362,7 @@ loc_80029C98:
     if (v0 == 0) goto loc_80029CE4;
     v0 = u32(i32(a1) >> 3);
     v1 = lw(s0 + 0x80);
-    a1 = 0x1A;                                          // Result = 0000001A
+    a1 = sfx_oof;
     sw(v0, v1 + 0x1C);
     S_StartSound();
 loc_80029CE4:

@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
 #include "p_floor.h"
 #include "p_setup.h"
@@ -116,7 +117,7 @@ loc_8001546C:
     if (a0 == v0) goto loc_80015528;
 loc_8001548C:
     a0 = lw(s0 + 0x10);
-    a1 = 0x13;                                          // Result = 00000013
+    a1 = sfx_doropn;
     sw(v1, s0 + 0x1C);
 loc_80015498:
     a0 += 0x38;
@@ -213,7 +214,7 @@ loc_80015598:
         if (bJump) goto loc_80015750;
     }
     a0 = a1;
-    a1 = 0x1A;                                          // Result = 0000001A
+    a1 = sfx_oof;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x30;                                         // Result = STR_BlueKeyNeededMsg[0] (80010030)
     sw(v0, s0 + 0xD4);
@@ -256,7 +257,7 @@ loc_8001562C:
         if (bJump) goto loc_80015750;
     }
     a0 = a1;
-    a1 = 0x1A;                                          // Result = 0000001A
+    a1 = sfx_oof;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x48;                                         // Result = STR_YellowKeyNeededMsg[0] (80010048)
     sw(v0, s0 + 0xD4);
@@ -299,7 +300,7 @@ loc_800156C0:
         if (bJump) goto loc_80015750;
     }
     a0 = a1;
-    a1 = 0x1A;                                          // Result = 0000001A
+    a1 = sfx_oof;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x60;                                         // Result = STR_RedKeyNeededMsg[0] (80010060)
     sw(v0, s0 + 0xD4);
@@ -427,7 +428,7 @@ loc_80015888:
 loc_800158A8:
     v0 = lw(s1 + 0x4);
     a0 = lw(s0 + 0x10);
-    a1 = 0x14;                                          // Result = 00000014
+    a1 = sfx_dorcls;
     sw(s6, s0 + 0x1C);
     a0 += 0x38;
     sw(v0, s0 + 0x14);
@@ -462,7 +463,7 @@ loc_8001590C:
     a0 = s7;
     if (v1 == v0) goto loc_800157B4;
     a0 = lw(s0 + 0x10);
-    a1 = 0x13;                                          // Result = 00000013
+    a1 = sfx_doropn;
 loc_80015940:
     a0 += 0x38;
     S_StartSound();
@@ -553,7 +554,7 @@ loc_80015A4C:
     goto loc_80015A6C;
 loc_80015A64:
     a0 = s2 + 0x38;
-    a1 = 0x13;                                          // Result = 00000013
+    a1 = sfx_doropn;
 loc_80015A6C:
     S_StartSound();
     a1 = 0x28;                                          // Result = 00000028

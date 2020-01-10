@@ -3,6 +3,7 @@
 #include "Doom/Base/i_crossfade.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
 #include "PsxVm/PsxVm.h"
 
@@ -16,10 +17,10 @@ void START_Legals() noexcept {
     a1 += 0x7C44;                                       // Result = STR_LumpName_LEGALS[0] (80077C44)
     a2 = 0;                                             // Result = 00000000
     I_CacheTexForLumpName();
-    a0 = 0;                                             // Result = 00000000
-    a1 = 1;                                             // Result = 00000001
+    a0 = 0;
+    a1 = sfx_sgcock;
     S_StartSound();
-    v0 = 0xF0;                                          // Result = 000000F0
+    v0 = 0xF0;
     sw(v0, gp + 0xBB0);                                 // Store to: gTitleScreenSpriteY (80078190)
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -27,15 +28,10 @@ void START_Legals() noexcept {
 }
 
 void STOP_Legals() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a0 = 0;                                             // Result = 00000000
-    a1 = 5;                                             // Result = 00000005
+    a0 = 0;
+    a1 = sfx_barexp;
     S_StartSound();
     I_CrossFadeFrameBuffers();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void TIC_Legals() noexcept {

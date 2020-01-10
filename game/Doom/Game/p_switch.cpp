@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Renderer/r_data.h"
 #include "p_ceiling.h"
 #include "p_doors.h"
@@ -133,7 +134,7 @@ loc_80027F3C:
     sw(0, s1 + 0x14);
 loc_80027F68:
     v1 = lw(s1 + 0x1C);
-    a0 = 0xB;                                           // Result = 0000000B
+    a0 = 0xB;
     v0 = v1 << 1;
     v0 += v1;
     v1 = *gpSides;
@@ -143,9 +144,9 @@ loc_80027F68:
     a3 = lw(v0 + 0x10);
     v1 = lw(s1 + 0x14);
     a2 = lw(v0 + 0xC);
-    a1 = 0x16;                                          // Result = 00000016
+    a1 = sfx_swtchn;
     if (v1 != a0) goto loc_80027FA4;
-    a1 = 0x17;                                          // Result = 00000017
+    a1 = sfx_swtchx;
 loc_80027FA4:
     s0 = 0;                                             // Result = 00000000
     s2 = 0x80090000;                                    // Result = 80090000

@@ -1,6 +1,7 @@
 #include "p_ceiling.h"
 
 #include "Doom/Base/s_sound.h"
+#include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
 #include "g_game.h"
 #include "p_floor.h"
@@ -41,8 +42,8 @@ loc_80014A70:
     s1 = v0;
     if (v1 != 0) goto loc_80014AD0;
     v1 = lw(s0 + 0xC);
-    v0 = 5;                                             // Result = 00000005
-    a1 = 0x15;                                          // Result = 00000015
+    v0 = 5;
+    a1 = sfx_stnmov;
     if (v1 == v0) goto loc_80014AD0;
     a0 = lw(s0 + 0x10);
     a0 += 0x38;
@@ -66,7 +67,7 @@ loc_80014AD0:
     goto loc_80014C2C;
 loc_80014B08:
     v0 = 5;                                             // Result = 00000005
-    a1 = 0x12;                                          // Result = 00000012
+    a1 = sfx_pstop;
     if (v1 != v0) goto loc_80014C2C;
     a0 = lw(s0 + 0x10);
     a0 += 0x38;
@@ -89,8 +90,8 @@ loc_80014B2C:
     s1 = v0;
     if (v1 != 0) goto loc_80014B88;
     v1 = lw(s0 + 0xC);
-    v0 = 5;                                             // Result = 00000005
-    a1 = 0x15;                                          // Result = 00000015
+    v0 = 5;
+    a1 = sfx_stnmov;
     if (v1 == v0) goto loc_80014B88;
     a0 = lw(s0 + 0x10);
     a0 += 0x38;
@@ -122,7 +123,7 @@ loc_80014B88:
     }
 loc_80014BC4:
     a0 = lw(s0 + 0x10);
-    a1 = 0x12;                                          // Result = 00000012
+    a1 = sfx_pstop;
     a0 += 0x38;
     S_StartSound();
 loc_80014BD4:
