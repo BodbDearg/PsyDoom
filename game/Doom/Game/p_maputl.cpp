@@ -230,11 +230,11 @@ void P_UnsetThingPosition(mobj_t& thing) noexcept {
             #if PC_PSX_DOOM_MODS
                 if (blockx >= 0 && blockx < *gBlockmapWidth) {
                     if (blocky >= 0 && blocky < *gBlockmapHeight) {
-                        (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.next;
+                        (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
                     }
                 }
             #else
-                (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.next;
+                (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
             #endif
         }
     }
