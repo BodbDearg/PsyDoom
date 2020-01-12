@@ -384,7 +384,7 @@ extern void O_Init() noexcept;
 extern void O_Shutdown() noexcept;
 extern void O_Control() noexcept;
 extern void O_Drawer() noexcept;
-extern void FixedMul() noexcept;
+extern void _thunk_FixedMul() noexcept;
 extern void FixedDiv() noexcept;
 extern void PSXCD_psxcd_memcpy() noexcept;
 extern void psxcd_sync() noexcept;
@@ -1314,7 +1314,7 @@ namespace PsxVm {
         { 0x8003E9D0, &O_Shutdown },
         { 0x8003E9F4, &O_Control },
         { 0x8003EEC8, &O_Drawer },
-        { 0x8003F134, &FixedMul },
+        { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &FixedDiv },
         { 0x8003F200, &PSXCD_psxcd_memcpy },
         { 0x8003F234, &psxcd_sync },

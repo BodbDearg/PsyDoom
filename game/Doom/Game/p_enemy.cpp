@@ -1873,7 +1873,7 @@ loc_80017850:
     a0 = lw(v1 + 0x3C);
     v0 += s0;
     a1 = lw(v0);
-    FixedMul();
+    _thunk_FixedMul();
     sw(v0, s1 + 0x48);
     v0 = lw(s1 + 0x58);
     at = 0x80060000;                                    // Result = 80060000
@@ -1881,7 +1881,7 @@ loc_80017850:
     at += s0;
     a1 = lw(at);
     a0 = lw(v0 + 0x3C);
-    FixedMul();
+    _thunk_FixedMul();
     sw(v0, s1 + 0x4C);
     v1 = lw(s2);
     a0 = lw(s1);
@@ -2182,7 +2182,7 @@ loc_80017CD8:
     s0 <<= 2;
     v0 += s0;
     a1 = lw(v0);
-    FixedMul();
+    _thunk_FixedMul();
     sw(v0, s1 + 0x48);
     v0 = lw(s1 + 0x58);
     at = 0x80060000;                                    // Result = 80060000
@@ -2190,7 +2190,7 @@ loc_80017CD8:
     at += s0;
     a1 = lw(at);
     a0 = lw(v0 + 0x3C);
-    FixedMul();
+    _thunk_FixedMul();
     sw(v0, s1 + 0x4C);
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
@@ -2260,7 +2260,7 @@ loc_80017E10:
     a0 = lw(v1 + 0x3C);
     v0 += s0;
     a1 = lw(v0);
-    FixedMul();
+    _thunk_FixedMul();
     sw(v0, s1 + 0x48);
     v0 = lw(s1 + 0x58);
     at = 0x80060000;                                    // Result = 80060000
@@ -2268,7 +2268,7 @@ loc_80017E10:
     at += s0;
     a1 = lw(at);
     a0 = lw(v0 + 0x3C);
-    FixedMul();
+    _thunk_FixedMul();
     sw(v0, s1 + 0x4C);
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -2330,7 +2330,7 @@ loc_80017F4C:
     v0 += s0;
     a0 = lw(v1 + 0x3C);
     a1 = lw(v0);
-    FixedMul();
+    _thunk_FixedMul();
     sw(v0, s1 + 0x48);
     v0 = lw(s1 + 0x58);
     at = 0x80060000;                                    // Result = 80060000
@@ -2338,7 +2338,7 @@ loc_80017F4C:
     at += s0;
     a1 = lw(at);
     a0 = lw(v0 + 0x3C);
-    FixedMul();
+    _thunk_FixedMul();
     a0 = s2;
     sw(v0, s1 + 0x4C);
     a1 = lw(a0 + 0x74);
@@ -2357,7 +2357,7 @@ loc_80017F4C:
     v0 += s0;
     a0 = lw(v1 + 0x3C);
     a1 = lw(v0);
-    FixedMul();
+    _thunk_FixedMul();
     sw(v0, s1 + 0x48);
     v0 = lw(s1 + 0x58);
     at = 0x80060000;                                    // Result = 80060000
@@ -2365,7 +2365,7 @@ loc_80017F4C:
     at += s0;
     a1 = lw(at);
     a0 = lw(v0 + 0x3C);
-    FixedMul();
+    _thunk_FixedMul();
     sw(v0, s1 + 0x4C);
     ra = lw(sp + 0x24);
     s2 = lw(sp + 0x20);
@@ -2428,14 +2428,14 @@ loc_80018108:
     v0 += s0;
     a1 = lw(v0);
     a0 = 0x280000;                                      // Result = 00280000
-    FixedMul();
+    _thunk_FixedMul();
     sw(v0, s1 + 0x48);
     at = 0x80060000;                                    // Result = 80060000
     at += 0x7958;                                       // Result = FineSine[0] (80067958)
     at += s0;
     a1 = lw(at);
     a0 = 0x280000;                                      // Result = 00280000
-    FixedMul();
+    _thunk_FixedMul();
     sw(v0, s1 + 0x4C);
     v1 = lw(s2);
     a0 = lw(s1);
@@ -2528,7 +2528,7 @@ loc_80018270:
     s0 += v1;
     s0 += v0;
     a0 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     a0 = s0;
     v1 = lw(s2);
     at = 0x80060000;                                    // Result = 80060000
@@ -2536,7 +2536,7 @@ loc_80018270:
     at += s1;
     a1 = lw(at);
     s0 = v0 + v1;
-    FixedMul();
+    _thunk_FixedMul();
     a0 = s0;
     a1 = lw(s2 + 0x4);
     a3 = 0xE;                                           // Result = 0000000E
@@ -2641,7 +2641,7 @@ loc_80018440:
     s0 += v1;
     s0 += v0;
     a0 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     a0 = s0;
     v1 = lw(s2);
     at = 0x80060000;                                    // Result = 80060000
@@ -2649,7 +2649,7 @@ loc_80018440:
     at += s1;
     a1 = lw(at);
     s0 = v0 + v1;
-    FixedMul();
+    _thunk_FixedMul();
     a0 = s0;
     a1 = lw(s2 + 0x4);
     a3 = 0xE;                                           // Result = 0000000E
@@ -2730,7 +2730,7 @@ loc_800185A4:
     s0 += v1;
     s0 += v0;
     a0 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     a0 = s0;
     v1 = lw(s2);
     at = 0x80060000;                                    // Result = 80060000
@@ -2738,7 +2738,7 @@ loc_800185A4:
     at += s1;
     a1 = lw(at);
     s0 = v0 + v1;
-    FixedMul();
+    _thunk_FixedMul();
     a0 = s0;
     a1 = lw(s2 + 0x4);
     a3 = 0xE;                                           // Result = 0000000E
@@ -2805,7 +2805,7 @@ loc_800186D0:
     s0 += v1;
     s0 += v0;
     a0 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     a0 = s0;
     v1 = lw(s2);
     at = 0x80060000;                                    // Result = 80060000
@@ -2813,7 +2813,7 @@ loc_800186D0:
     at += s1;
     a1 = lw(at);
     s0 = v0 + v1;
-    FixedMul();
+    _thunk_FixedMul();
     a0 = s0;
     a1 = lw(s2 + 0x4);
     a3 = 0xE;                                           // Result = 0000000E
@@ -2880,7 +2880,7 @@ loc_800187FC:
     s0 += v1;
     s0 += v0;
     a0 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     a0 = s0;
     v1 = lw(s2);
     at = 0x80060000;                                    // Result = 80060000
@@ -2888,7 +2888,7 @@ loc_800187FC:
     at += s1;
     a1 = lw(at);
     s0 = v0 + v1;
-    FixedMul();
+    _thunk_FixedMul();
     a0 = s0;
     a1 = lw(s2 + 0x4);
     a3 = 0xE;                                           // Result = 0000000E

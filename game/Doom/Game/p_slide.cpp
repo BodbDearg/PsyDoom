@@ -53,11 +53,11 @@ loc_800250D0:
     a0 = s0;                                            // Result = 00000000
 loc_800250E0:
     a1 = s2;
-    FixedMul();
+    _thunk_FixedMul();
     a0 = s0;
     a1 = s3;
     s1 = v0;
-    FixedMul();
+    _thunk_FixedMul();
     v1 = lw(gp + 0x9B0);                                // Load from: gSlideX (80077F90)
     a0 = v0;
     a2 = s1 + v1;
@@ -71,19 +71,19 @@ loc_800250E0:
     a0 = s2 - s1;
     a1 = lw(gp + 0xBC8);                                // Load from: gBlockNvx (800781A8)
     s4++;
-    FixedMul();
+    _thunk_FixedMul();
     s0 = v0;
     a1 = lw(gp + 0xBD0);                                // Load from: gBlockNvy (800781B0)
     a0 = s3;
-    FixedMul();
+    _thunk_FixedMul();
     s0 += v0;
     a1 = lw(gp + 0xBC8);                                // Load from: gBlockNvx (800781A8)
     a0 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     s2 = v0;
     a1 = lw(gp + 0xBD0);                                // Load from: gBlockNvy (800781B0)
     a0 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     s3 = v0;
     v0 = (i32(s4) < 3);
     a0 = s2;
@@ -293,11 +293,11 @@ void SL_PointOnSide() noexcept {
     v0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
     a1 = lw(gp + 0xB78);                                // Load from: gNvx (80078158)
     a0 -= v0;
-    FixedMul();
+    _thunk_FixedMul();
     s1 = v0;
     a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
     a0 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     s1 += v0;
     v0 = 0x10000;                                       // Result = 00010000
     v0 = (i32(v0) < i32(s1));
@@ -330,11 +330,11 @@ void SL_CrossFrac() noexcept {
     sw(s0, sp + 0x10);
     s1 = v1 - v0;
     a0 = a2 - a0;
-    FixedMul();
+    _thunk_FixedMul();
     s2 = v0;
     a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
     a0 = s1;
-    FixedMul();
+    _thunk_FixedMul();
     s2 += v0;
     a1 = lw(gp + 0xB78);                                // Load from: gNvx (80078158)
     a2 = lw(gp + 0xB10);                                // Load from: gP4x (800780F0)
@@ -343,11 +343,11 @@ void SL_CrossFrac() noexcept {
     a0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
     s1 = v1 - v0;
     a0 = a2 - a0;
-    FixedMul();
+    _thunk_FixedMul();
     s0 = v0;
     a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
     a0 = s1;
-    FixedMul();
+    _thunk_FixedMul();
     s0 += v0;
     v0 = ~s2;
     v0 >>= 31;
@@ -387,11 +387,11 @@ void CheckLineEnds() noexcept {
     v0 = lw(gp + 0xB10);                                // Load from: gP4x (800780F0)
     a1 = s0;
     s2 -= v0;
-    FixedMul();
+    _thunk_FixedMul();
     s1 = v0;
     a0 = s3;
     a1 = s2;
-    FixedMul();
+    _thunk_FixedMul();
     s1 += v0;
     a1 = s0;
     a2 = lw(gp + 0xAF0);                                // Load from: gP2x (800780D0)
@@ -400,11 +400,11 @@ void CheckLineEnds() noexcept {
     a0 = lw(gp + 0xAFC);                                // Load from: gP3x (800780DC)
     s3 = v1 - v0;
     a0 = a2 - a0;
-    FixedMul();
+    _thunk_FixedMul();
     s0 = v0;
     a0 = s3;
     a1 = s2;
-    FixedMul();
+    _thunk_FixedMul();
     s0 += v0;
     s1 = ~s1;
     s1 >>= 31;
@@ -452,11 +452,11 @@ loc_80025648:
     v0 += s0;
     sw(v0, gp + 0xB1C);                                 // Store to: gP4y (800780FC)
     s0 -= v1;
-    FixedMul();
+    _thunk_FixedMul();
     s1 = v0;
     a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
     a0 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     s1 += v0;
     v0 = 0x10000;                                       // Result = 00010000
     v0 = (i32(v0) < i32(s1));
@@ -475,11 +475,11 @@ loc_800256F8:
     v0 = lw(gp + 0xAF4);                                // Load from: gP1y (800780D4)
     a0 = v1 - a0;
     s0 -= v0;
-    FixedMul();
+    _thunk_FixedMul();
     s1 = v0;
     a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
     a0 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     s1 += v0;
     v0 = 0x10000;                                       // Result = 00010000
     v0 = (i32(v0) < i32(s1));
@@ -501,11 +501,11 @@ loc_80025754:
     a0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
     s1 = v1 - v0;
     a0 = a2 - a0;
-    FixedMul();
+    _thunk_FixedMul();
     s2 = v0;
     a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
     a0 = s1;
-    FixedMul();
+    _thunk_FixedMul();
     s2 += v0;
     a1 = lw(gp + 0xB78);                                // Load from: gNvx (80078158)
     a2 = lw(gp + 0xB10);                                // Load from: gP4x (800780F0)
@@ -514,11 +514,11 @@ loc_80025754:
     a0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
     s1 = v1 - v0;
     a0 = a2 - a0;
-    FixedMul();
+    _thunk_FixedMul();
     s0 = v0;
     a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
     a0 = s1;
-    FixedMul();
+    _thunk_FixedMul();
     s0 += v0;
     v0 = ~s2;
     v0 >>= 31;
@@ -647,11 +647,11 @@ loc_80025960:
     v0 = -v0;
     sw(v0, gp + 0xB7C);                                 // Store to: gNvy (8007815C)
     s0 -= t0;
-    FixedMul();
+    _thunk_FixedMul();
     s1 = v0;
     a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
     a0 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     s1 += v0;
     v0 = 0x10000;                                       // Result = 00010000
     v0 = (i32(v0) < i32(s1));
@@ -704,11 +704,11 @@ void SL_PointOnSide2() noexcept {
     sw(s0, sp + 0x10);
     a1 -= a3;
     s2 -= v0;
-    FixedMul();
+    _thunk_FixedMul();
     s0 = v0;
     a0 = s1;
     a1 = s2;
-    FixedMul();
+    _thunk_FixedMul();
     s0 += v0;
     v0 = -1;                                            // Result = FFFFFFFF
     if (i32(s0) < 0) goto loc_80025AE0;
@@ -884,13 +884,13 @@ loc_80025CF0:
     a0 = t1 - s2;
     s3 = s7 - s4;
     a1 = s3;
-    FixedMul();
+    _thunk_FixedMul();
     s0 = v0;
     s1 = s2 - s6;
     t0 = lw(sp + 0x18);
     a1 = s1;
     a0 = t0 - s4;
-    FixedMul();
+    _thunk_FixedMul();
     s0 += v0;
     a1 = s3;
     if (i32(s0) >= 0) goto loc_80025E00;
@@ -898,12 +898,12 @@ loc_80025CF0:
 loc_80025E00:
     t1 = lw(sp + 0x20);
     a0 = t1 - s2;
-    FixedMul();
+    _thunk_FixedMul();
     s0 = v0;
     t0 = lw(sp + 0x28);
     a1 = s1;
     a0 = t0 - s4;
-    FixedMul();
+    _thunk_FixedMul();
     s0 += v0;
     v0 = 1;                                             // Result = 00000001
     if (i32(s0) >= 0) goto loc_80025E30;
@@ -916,7 +916,7 @@ loc_80025E30:
     t1 = lw(sp + 0x18);
     s2 = t0 - t1;
     a1 = s2;
-    FixedMul();
+    _thunk_FixedMul();
     t0 = lw(sp + 0x18);
     t1 = lw(sp + 0x10);
     a0 = s4 - t0;
@@ -924,7 +924,7 @@ loc_80025E30:
     s0 = v0;
     s1 = t1 - t0;
     a1 = s1;
-    FixedMul();
+    _thunk_FixedMul();
     s0 += v0;
     s5 = 1;                                             // Result = 00000001
     if (i32(s0) >= 0) goto loc_80025E88;
@@ -933,12 +933,12 @@ loc_80025E88:
     t1 = lw(sp + 0x10);
     a1 = s2;
     a0 = s6 - t1;
-    FixedMul();
+    _thunk_FixedMul();
     s0 = v0;
     t0 = lw(sp + 0x18);
     a1 = s1;
     a0 = s7 - t0;
-    FixedMul();
+    _thunk_FixedMul();
     s0 += v0;
     v0 = 1;                                             // Result = 00000001
     if (i32(s0) >= 0) goto loc_80025EBC;

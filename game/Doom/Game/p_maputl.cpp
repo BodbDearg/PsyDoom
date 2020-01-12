@@ -125,12 +125,12 @@ loc_8001C1A8:
 loc_8001C1DC:
     a0 = u32(i32(a0) >> 8);
     a1 = u32(i32(a1) >> 8);
-    FixedMul();
+    _thunk_FixedMul();
     a1 = lw(s0 + 0x8);
     a0 = u32(i32(s1) >> 8);
     s0 = v0;
     a1 = u32(i32(a1) >> 8);
-    FixedMul();
+    _thunk_FixedMul();
     v0 = (i32(v0) < i32(s0));
     v0 ^= 1;
 loc_8001C204:

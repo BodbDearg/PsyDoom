@@ -99,14 +99,14 @@ loc_80023C34:
     a0 = lw(a0 - 0x6F84);                               // Load from: gShootDiv[2] (800A907C)
     a1 -= v0;
     sw(a1, gp + 0xBF0);                                 // Store to: gFirstLineFrac (800781D0)
-    FixedMul();
+    _thunk_FixedMul();
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lw(a0 - 0x6F80);                               // Load from: gShootDiv[3] (800A9080)
     v1 = lw(s0);                                        // Load from: gShootDiv[0] (800A9074)
     a1 = lw(gp + 0xBF0);                                // Load from: gFirstLineFrac (800781D0)
     v0 += v1;
     sw(v0, gp + 0x9E4);                                 // Store to: gShootX (80077FC4)
-    FixedMul();
+    _thunk_FixedMul();
     a0 = lw(gp + 0xBF0);                                // Load from: gFirstLineFrac (800781D0)
     v1 = 0x800B0000;                                    // Result = 800B0000
     v1 = lw(v1 - 0x6F88);                               // Load from: gShootDiv[1] (800A9078)
@@ -114,10 +114,10 @@ loc_80023C34:
     a1 = lw(a1 + 0x7F98);                               // Load from: gAttackRange (80077F98)
     v0 += v1;
     sw(v0, gp + 0x9F0);                                 // Store to: gShootY (80077FD0)
-    FixedMul();
+    _thunk_FixedMul();
     a0 = lw(gp + 0x9CC);                                // Load from: gAimMidSlope (80077FAC)
     a1 = v0;
-    FixedMul();
+    _thunk_FixedMul();
     v1 = lw(gp + 0x9F4);                                // Load from: gShootZ (80077FD4)
     v0 += v1;
     sw(v0, gp + 0x9F4);                                 // Store to: gShootZ (80077FD4)
@@ -213,7 +213,7 @@ loc_80023F7C:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x7F98);                               // Load from: gAttackRange (80077F98)
     a1 = s1;
-    FixedMul();
+    _thunk_FixedMul();
     v1 = lw(s0 + 0x38);
     a0 = lw(s0 + 0x3C);
     a1 = lw(v1);
@@ -306,7 +306,7 @@ loc_800240BC:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x7F98);                               // Load from: gAttackRange (80077F98)
     a1 = s3;
-    FixedMul();
+    _thunk_FixedMul();
     s2 = v0;
     a1 = s2;
     a0 = lw(s1 + 0x8);
@@ -366,7 +366,7 @@ loc_800241A4:
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lw(a0 - 0x6F84);                               // Load from: gShootDiv[2] (800A907C)
     a1 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     v1 = 0x800B0000;                                    // Result = 800B0000
     v1 = lw(v1 - 0x6F8C);                               // Load from: gShootDiv[0] (800A9074)
     a0 = 0x800B0000;                                    // Result = 800B0000
@@ -374,7 +374,7 @@ loc_800241A4:
     v0 += v1;
     sw(v0, gp + 0x9E4);                                 // Store to: gShootX (80077FC4)
     a1 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     v1 = 0x800B0000;                                    // Result = 800B0000
     v1 = lw(v1 - 0x6F88);                               // Load from: gShootDiv[1] (800A9078)
     a1 = 0x80070000;                                    // Result = 80070000
@@ -382,10 +382,10 @@ loc_800241A4:
     v0 += v1;
     sw(v0, gp + 0x9F0);                                 // Store to: gShootY (80077FD0)
     a0 = s0;
-    FixedMul();
+    _thunk_FixedMul();
     a0 = lw(gp + 0x96C);                                // Load from: gShootSlope (80077F4C)
     a1 = v0;
-    FixedMul();
+    _thunk_FixedMul();
     v1 = lw(gp + 0x9F4);                                // Load from: gShootZ (80077FD4)
     v1 += v0;
     v0 = 0;                                             // Result = 00000000

@@ -2,28 +2,25 @@
 
 #include "PsxVm/PsxVm.h"
 
-void FixedMul() noexcept {
-loc_8003F134:
-    t0 = a0 ^ a1;
-    v0 = add(zero, a0);
-    if (i32(a0) > 0) goto loc_8003F144;
-    v0 = sub(zero, a0);
-loc_8003F144:
-    v1 = add(zero, a1);
-    if (i32(a1) > 0) goto loc_8003F150;
-    v1 = sub(zero, a1);
-loc_8003F150:
-    multu(v0, v1);
-    a0 = hi;
-    a1 = lo;
-    v0 = a0 << 16;
-    v1 = a1 >> 16;
-    a0 = v0 + v1;
-    v0 = add(zero, a0);
-    if (i32(t0) >= 0) goto loc_8003F178;
-    v0 = sub(zero, a0);
-loc_8003F178:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Multiply two numbers in 16.16 fixed point format
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t FixedMul(const fixed_t a, const fixed_t b) noexcept {
+    // Note: the real version of this relied on combining the seperate 32-bit 'hi' and 'lo' portions of the MIPS 'mulu' instruction result.
+    // This version shortcuts that a bit and just uses 64-bit types provided by modern C++ rather than going through emulator instructions
+    // to get a split hi/lo result. It's the exact same thing basically but this should hopefully be a little faster...
+    const bool bNegativeResult = ((a ^ b) < 0);
+    const uint64_t a_u64 = (a < 0) ? -a : a;
+    const uint64_t b_u64 = (b < 0) ? -b : b;
+
+    const uint64_t result_u64 = (a_u64 * b_u64) >> FRACBITS;
+    const fixed_t result_abs = (fixed_t) result_u64;
+
+    return (bNegativeResult) ? -result_abs : result_abs;
+}
+
+void _thunk_FixedMul() noexcept {
+    v0 = FixedMul(a0, a1);
 }
 
 void FixedDiv() noexcept {
