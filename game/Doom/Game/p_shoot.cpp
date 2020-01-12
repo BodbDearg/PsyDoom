@@ -93,7 +93,7 @@ loc_80023C34:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lw(a1 + 0x7F98);                               // Load from: gAttackRange (80077F98)
     a0 = 0x40000;                                       // Result = 00040000
-    FixedDiv();
+    _thunk_FixedDiv();
     a1 = lw(gp + 0xBF0);                                // Load from: gFirstLineFrac (800781D0)
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lw(a0 - 0x6F84);                               // Load from: gShootDiv[2] (800A907C)
@@ -225,7 +225,7 @@ loc_80023F7C:
     a0 = lw(gp + 0x9F4);                                // Load from: gShootZ (80077FD4)
     a1 = s2;
     a0 = v0 - a0;
-    FixedDiv();
+    _thunk_FixedDiv();
     v1 = lw(gp + 0x9CC);                                // Load from: gAimMidSlope (80077FAC)
     a0 = v0;
     v1 = (i32(a0) < i32(v1));
@@ -252,7 +252,7 @@ loc_8002400C:
     v0 = lw(v0 - 0x7F44);                               // Load from: gOpenTop (800780BC)
     a0 = lw(gp + 0x9F4);                                // Load from: gShootZ (80077FD4)
     a0 = v0 - a0;
-    FixedDiv();
+    _thunk_FixedDiv();
     v1 = lw(gp + 0x9CC);                                // Load from: gAimMidSlope (80077FAC)
     a0 = v0;
     v1 = (i32(v1) < i32(a0));
@@ -314,7 +314,7 @@ loc_800240BC:
     v1 = lw(gp + 0x9F4);                                // Load from: gShootZ (80077FD4)
     a0 += v0;
     a0 -= v1;
-    FixedDiv();
+    _thunk_FixedDiv();
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 - 0x7D08);                               // Load from: gAimBottomSlope (800782F8)
     s0 = v0;
@@ -325,7 +325,7 @@ loc_800240BC:
     a0 = lw(gp + 0x9F4);                                // Load from: gShootZ (80077FD4)
     a1 = s2;
     a0 = v0 - a0;
-    FixedDiv();
+    _thunk_FixedDiv();
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7FF8);                               // Load from: gAimTopSlope (80077FF8)
     a2 = v0;
@@ -361,7 +361,7 @@ loc_800241A4:
     sw(v0, gp + 0x96C);                                 // Store to: gShootSlope (80077F4C)
     sw(s1, gp + 0xCF4);                                 // Store to: gpShootMObj (800782D4)
     a0 = 0xA0000;                                       // Result = 000A0000
-    FixedDiv();
+    _thunk_FixedDiv();
     s0 = s3 - v0;
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lw(a0 - 0x6F84);                               // Load from: gShootDiv[2] (800A907C)
@@ -446,7 +446,7 @@ void PA_SightCrossLine() noexcept {
     v0 = lo;
     a2 = v1 + v0;
     a1 = a0 + a2;
-    FixedDiv();
+    _thunk_FixedDiv();
     goto loc_80024324;
 loc_80024320:
     v0 = -1;                                            // Result = FFFFFFFF
@@ -557,7 +557,7 @@ loc_800244B0:
     v0 = lo;
     v1 += v0;
     a1 = a0 + v1;
-    FixedDiv();
+    _thunk_FixedDiv();
     a1 = v0;
 loc_800244F4:
     v0 = 0x10000;                                       // Result = 00010000
@@ -664,7 +664,7 @@ loc_80024654:
     v0 = lo;
     v1 += v0;
     a1 = a0 + v1;
-    FixedDiv();
+    _thunk_FixedDiv();
     a1 = v0;
 loc_80024698:
     v0 = 0x10000;                                       // Result = 00010000

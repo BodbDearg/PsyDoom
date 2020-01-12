@@ -359,7 +359,7 @@ void SL_CrossFrac() noexcept {
     }
     a0 = s2;
     a1 = a0 - s0;
-    FixedDiv();
+    _thunk_FixedDiv();
 loc_8002556C:
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
@@ -530,7 +530,7 @@ loc_80025754:
     }
     a0 = s2;
     a1 = a0 - s0;
-    FixedDiv();
+    _thunk_FixedDiv();
     v1 = v0;
 loc_800257F8:
     v0 = lw(gp + 0xC48);                                // Load from: gBlockFrac (80078228)

@@ -23,41 +23,51 @@ void _thunk_FixedMul() noexcept {
     v0 = FixedMul(a0, a1);
 }
 
-void FixedDiv() noexcept {
-loc_8003F180:
-    t0 = a0 ^ a1;
-    v0 = add(zero, a0);
-    if (i32(a0) > 0) goto loc_8003F190;
-    v0 = sub(zero, a0);
-loc_8003F190:
-    v1 = add(zero, a1);
-    if (i32(a1) > 0) goto loc_8003F19C;
-    v1 = sub(zero, a1);
-loc_8003F19C:
-    a2 = 0x10000;                                       // Result = 00010000
-    at = (v1 < v0);
-    t2 = 0;                                             // Result = 00000000
-    if (at == 0) goto loc_8003F1C0;
-loc_8003F1AC:
-    v1 <<= 1;
-    a2 <<= 1;
-    at = (v1 < v0);
-    t2 = 0;
-    if (at != 0) goto loc_8003F1AC;
-loc_8003F1C0:
-    at = (i32(v0) < i32(v1));
-    if (at != 0) goto loc_8003F1D4;
-    v0 = sub(v0, v1);
-    t2 |= a2;
-loc_8003F1D4:
-    v0 <<= 1;
-    a2 >>= 1;
-    if (a2 == 0) goto loc_8003F1EC;
-    if (v0 != 0) goto loc_8003F1C0;
-loc_8003F1EC:
-    v0 = add(zero, t2);                                 // Result = 00000000
-    if (i32(t0) >= 0) goto loc_8003F1F8;
-    v0 = sub(zero, t2);                                 // Result = 00000000
-loc_8003F1F8:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Divide 'a' by 'b'. Both numbers are in 16.16 fixed point format.
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t FixedDiv(const fixed_t a, const fixed_t b) noexcept {
+    // First step: make the problem an unsigned one
+    const bool bNegativeResult = ((a ^ b) < 0);
+    uint32_t dividend = (a < 0) ? -a : a;
+    uint32_t divisor = (b < 0) ? -b : b;
+    
+    // Start off asuming the max result is '1.0'.
+    // Shift up the max result by 1 bit until we make the divisor bigger than the dividend.
+    // This gives the maximum possible estimated result:
+    uint32_t resultBit = FRACUNIT;
+
+    while (divisor < dividend) {
+        divisor <<= 1;
+        resultBit <<= 1;
+    }
+
+    // Start doing the division, one bit at a time
+    fixed_t result = 0;
+
+    do {
+        // See if the dividend will fit into the divisor at this bit.
+        // If so then include this result bit.
+        //
+        // Note: the original code did this comparison as a SIGNED comparison so I'm doing
+        // the same thing here for compatibility. It shouldn't matter in most cases but might
+        // be important to get the same result in cases of overflow...
+        //
+        if ((int32_t) dividend >= (int32_t) divisor) {
+            dividend -= divisor;
+            result |= resultBit;
+        }
+
+        // Move along to the next bit.
+        // Stop iteration once theres nothing left to divide or when we have processed all bits.
+        dividend <<= 1;
+        resultBit >>= 1;
+    } while (resultBit != 0 && dividend != 0);
+
+    // Last step, correct the sign of the result
+    return (bNegativeResult) ? -result : result;
+}
+
+void _thunk_FixedDiv() noexcept {
+    v0 = FixedDiv(a0, a1);
 }

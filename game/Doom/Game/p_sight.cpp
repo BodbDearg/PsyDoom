@@ -202,7 +202,7 @@ void PS_SightCrossLine() noexcept {
     v0 = lo;
     a2 = v1 + v0;
     a1 = a0 + a2;
-    FixedDiv();
+    _thunk_FixedDiv();
     goto loc_80024C04;
 loc_80024C00:
     v0 = -1;                                            // Result = FFFFFFFF
@@ -280,7 +280,7 @@ loc_80024CE8:
     v0 = lo;
     v1 += v0;
     a1 = a0 + v1;
-    FixedDiv();
+    _thunk_FixedDiv();
     a1 = v0;
 loc_80024D2C:
     v1 = a1 - 4;

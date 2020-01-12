@@ -395,7 +395,7 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
         } else {
             a0 = pDstLine->dy;
             a1 = pDstLine->dx;
-            FixedDiv();
+            _thunk_FixedDiv();
 
             if (int32_t(v0) > 0) {
                 pDstLine->slopetype = slopetype_t::ST_POSITIVE;
