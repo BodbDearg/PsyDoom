@@ -97,10 +97,13 @@ void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t siz
     const int32_t curFileOffset = psxcd_tell(file);
 
     // This is really strange... PSX DOOM appears to do some sort of dummy read of 8192 bytes at the start of the file
-    // before reading the actual data that has been requested. I don't know why this was done, maybe a workaround for
-    // some reliability issue or perhaps a trick to get the CD-ROM warmed up for the actual read? I'm not sure...
-    // In any case I'm disabling this code because it appears effectively useless inside an emulated PlayStation enviroment:
-    #if !PC_PSX_DOOM_MODS
+    // before reading the actual data that has been requested. I don't know why this was done, maybe perhaps to flush
+    // out whatever the CD-ROM is currently doing with audio or something like that?
+    //
+    // I tried disabling this previously because I thought it would be useless in an emulated PSX environment but
+    // it turns out that it actually DOES cause problems if I omit this code.
+    // Will need to read up more on the PSX hardware to find out why this is required.
+    {
         constexpr uint32_t WARMUP_READ_MAX_SIZE = 8192;
         uint32_t warmupReadSize = size;
     
@@ -110,7 +113,7 @@ void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t siz
 
         psxcd_seek(file, 0, PsxCd_SeekMode::SET);
         psxcd_read(pBuffer, warmupReadSize, file);
-    #endif
+    }
 
     // This is where we actually seek to the file offset and read it
     psxcd_seek(file, curFileOffset, PsxCd_SeekMode::SET);
