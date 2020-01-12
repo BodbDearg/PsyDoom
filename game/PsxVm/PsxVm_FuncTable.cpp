@@ -28,8 +28,8 @@ extern void PB_CheckPosition() noexcept;
 extern void PB_BoxCrossLine() noexcept;
 extern void PB_CheckLine() noexcept;
 extern void PB_CheckThing() noexcept;
-extern void PB_CheckLines() noexcept;
-extern void PB_CheckThings() noexcept;
+extern void PB_BlockLinesIterator() noexcept;
+extern void PB_BlockThingsIterator() noexcept;
 extern void T_MoveCeiling() noexcept;
 extern void EV_DoCeiling() noexcept;
 extern void P_AddActiveCeiling() noexcept;
@@ -145,14 +145,14 @@ extern void P_CheckMissileSpawn() noexcept;
 extern void P_SpawnMissile() noexcept;
 extern void P_SpawnPlayerMissile() noexcept;
 extern void P_TryMove2() noexcept;
-extern void UNKNOWN_DoomFunc3() noexcept;
-extern void P_SetThingPosition2() noexcept;
+extern void PM_PointOnDivlineSide() noexcept;
+extern void PM_SetThingPosition() noexcept;
 extern void PM_CheckPosition() noexcept;
 extern void PM_BoxCrossLine() noexcept;
 extern void PIT_CheckLine() noexcept;
 extern void PIT_CheckThing() noexcept;
-extern void PM_CheckLines() noexcept;
-extern void PM_CheckThings() noexcept;
+extern void PM_BlockLinesIterator() noexcept;
+extern void PM_BlockThingsIterator() noexcept;
 extern void T_PlatRaise() noexcept;
 extern void EV_DoPlat() noexcept;
 extern void P_ActivateInStasis() noexcept;
@@ -958,8 +958,8 @@ namespace PsxVm {
         { 0x800143C0, &PB_BoxCrossLine },
         { 0x800144D8, &PB_CheckLine },
         { 0x800145C4, &PB_CheckThing },
-        { 0x800146F0, &PB_CheckLines },
-        { 0x800149B8, &PB_CheckThings },
+        { 0x800146F0, &PB_BlockLinesIterator },
+        { 0x800149B8, &PB_BlockThingsIterator },
         { 0x80014A30, &T_MoveCeiling },
         { 0x80014C44, &EV_DoCeiling },
         { 0x80014E18, &P_AddActiveCeiling },
@@ -1075,14 +1075,14 @@ namespace PsxVm {
         { 0x8001DC94, &P_SpawnMissile },
         { 0x8001E0F4, &P_SpawnPlayerMissile },
         { 0x8001E4F4, &P_TryMove2 },
-        { 0x8001E720, &UNKNOWN_DoomFunc3 },
-        { 0x8001E868, &P_SetThingPosition2 },
+        { 0x8001E720, &PM_PointOnDivlineSide },
+        { 0x8001E868, &PM_SetThingPosition },
         { 0x8001E978, &PM_CheckPosition },
         { 0x8001EC68, &PM_BoxCrossLine },
         { 0x8001ED74, &PIT_CheckLine },
         { 0x8001EEC4, &PIT_CheckThing },
-        { 0x8001F028, &PM_CheckLines },
-        { 0x8001F208, &PM_CheckThings },
+        { 0x8001F028, &PM_BlockLinesIterator },
+        { 0x8001F208, &PM_BlockThingsIterator },
         { 0x8001F280, &T_PlatRaise },
         { 0x8001F464, &EV_DoPlat },
         { 0x8001F760, &P_ActivateInStasis },

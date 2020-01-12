@@ -84,7 +84,7 @@ loc_8001E600:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 = lw(a0 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
 loc_8001E608:
-    P_UnsetThingPosition2(*vmAddrToPtr<mobj_t>(a0));
+    PM_UnsetThingPosition(*vmAddrToPtr<mobj_t>(a0));
 
     a0 = 0x80080000;                                    // Result = 80080000
     a0 = lw(a0 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
@@ -98,7 +98,7 @@ loc_8001E608:
     sw(v1, a0 + 0x3C);
     sw(a1, a0);
     sw(a2, a0 + 0x4);
-    P_SetThingPosition2();
+    PM_SetThingPosition();
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
     v0 = lw(v1 + 0x80);
@@ -167,7 +167,7 @@ loc_8001E704:
     return;
 }
 
-void UNKNOWN_DoomFunc3() noexcept {
+void PM_PointOnDivlineSide() noexcept {
     v1 = lw(a2);
     v0 = lw(v1);
     a0 -= v0;
@@ -190,7 +190,7 @@ void UNKNOWN_DoomFunc3() noexcept {
 // Unlinks the given thing from sector thing lists and the blockmap.
 // Very similar to 'P_UnsetThingPosition' except the thing is always unlinked from sectors.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_UnsetThingPosition2(mobj_t& thing) noexcept {
+void PM_UnsetThingPosition(mobj_t& thing) noexcept {
     // Remove the thing from sector thing lists
     if (thing.snext) {
         thing.snext->sprev = thing.sprev;
@@ -230,7 +230,7 @@ void P_UnsetThingPosition2(mobj_t& thing) noexcept {
     }
 }
 
-void P_SetThingPosition2() noexcept {
+void PM_SetThingPosition() noexcept {
 loc_8001E868:
     a1 = a0;
     v0 = lw(a1 + 0x64);
@@ -401,7 +401,7 @@ loc_8001EB24:
     a0 = s1;
 loc_8001EB30:
     a1 = s0;
-    PM_CheckThings();
+    PM_BlockThingsIterator();
     s0++;
     if (v0 == 0) goto loc_8001EA5C;
     v0 = (i32(s2) < i32(s0));
@@ -464,7 +464,7 @@ loc_8001EC04:
     a0 = s1;
 loc_8001EC14:
     a1 = s0;
-    PM_CheckLines();
+    PM_BlockLinesIterator();
     s0++;
     if (v0 == 0) goto loc_8001EA5C;
     v0 = (i32(s2) < i32(s0));
@@ -771,7 +771,7 @@ loc_8001F020:
     return;
 }
 
-void PM_CheckLines() noexcept {
+void PM_BlockLinesIterator() noexcept {
 loc_8001F028:
     v0 = *gBlockmapWidth;
     mult(a1, v0);
@@ -891,7 +891,7 @@ loc_8001F1F4:
     return;
 }
 
-void PM_CheckThings() noexcept {
+void PM_BlockThingsIterator() noexcept {
 loc_8001F208:
     v0 = *gBlockmapWidth;
     mult(a1, v0);

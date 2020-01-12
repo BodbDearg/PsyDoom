@@ -14,5 +14,5 @@ void PB_CheckPosition() noexcept;
 void PB_BoxCrossLine() noexcept;
 void PB_CheckLine() noexcept;
 void PB_CheckThing() noexcept;
-void PB_CheckLines() noexcept;
-void PB_CheckThings() noexcept;
+void PB_BlockLinesIterator() noexcept;
+void PB_BlockThingsIterator() noexcept;

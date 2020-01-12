@@ -708,11 +708,11 @@ loc_80014348:
     a0 = s1;
 loc_80014358:
     a1 = s0;
-    PB_CheckLines();
+    PB_BlockLinesIterator();
     a0 = s1;
     if (v0 == 0) goto loc_80014378;
     a1 = s0;
-    PB_CheckThings();
+    PB_BlockThingsIterator();
     s0++;
     if (v0 != 0) goto loc_80014380;
 loc_80014378:
@@ -985,7 +985,7 @@ loc_800146E8:
     return;
 }
 
-void PB_CheckLines() noexcept {
+void PB_BlockLinesIterator() noexcept {
 loc_800146F0:
     v0 = *gBlockmapWidth;
     mult(a1, v0);
@@ -1170,7 +1170,7 @@ loc_800149AC:
     return;
 }
 
-void PB_CheckThings() noexcept {
+void PB_BlockThingsIterator() noexcept {
 loc_800149B8:
     v0 = *gBlockmapWidth;
     mult(a1, v0);
