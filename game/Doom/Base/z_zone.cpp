@@ -214,11 +214,12 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
         if (pBase != pRover) {
             pRover->size = pRover->size + pBase->size;
             pRover->next = pBase->next;
-            pBase = pRover;
 
             if (pBase->next) {
                 pBase->next->prev = pRover;
             }
+
+            pBase = pRover;
         }
     }
 
