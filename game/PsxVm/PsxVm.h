@@ -212,6 +212,7 @@ namespace PsxVm {
     extern device::cdrom::CDROM*    gpCdrom;
     extern Interrupt*               gpInterrupt;
     extern uint8_t*                 gpRam;
+    extern uint8_t*                 gpScratchpad;       // Cache used as fast RAM (1 KiB)
 
     // Initialize the VM with the given bios, original Playstation DOOM .EXE and CD file path (.cue format)
     bool init(

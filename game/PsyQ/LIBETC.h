@@ -1,6 +1,11 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
+
+namespace PsxVm {
+    extern uint8_t* gpScratchpad;
+}
 
 // Bit flags for controller buttons
 static constexpr uint16_t PADLup        = 0x1000;       // Up
@@ -23,6 +28,12 @@ static constexpr uint16_t PADselect     = 0x100;        // Select
 static constexpr uint16_t PAD_ANY = (
     PADLup|PADLdown|PADLleft|PADLright|PADRup|PADRdown|PADRleft|PADRright|PADL1|PADL2|PADR1|PADR2|PADstart|PADselect
 );
+
+// Return a pointer to the specified word in the PSX scratchpad memory/cache.
+// There is 1 KiB of memory in total in the scratchpad.
+static constexpr void* getScratchAddr(const uint32_t word) {
+    return PsxVm::gpScratchpad + word * sizeof(uint32_t);
+}
 
 void LIBETC_ResetCallback() noexcept;
 void LIBETC_InterruptCallback() noexcept;

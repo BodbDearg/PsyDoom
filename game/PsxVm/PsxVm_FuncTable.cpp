@@ -750,7 +750,6 @@ extern void LIBGPU_SetTile8() noexcept;
 extern void LIBGPU_SetTile16() noexcept;
 extern void LIBGPU_SetTile() noexcept;
 extern void LIBGPU_SetBlockFill() noexcept;
-extern void LIBGPU_SetLineF2() noexcept;
 extern void LIBGPU_SetLineG2() noexcept;
 extern void LIBGPU_SetLineF3() noexcept;
 extern void LIBGPU_SetLineG3() noexcept;
@@ -1681,7 +1680,6 @@ namespace PsxVm {
         { 0x8004ED58, &LIBGPU_SetTile16 },
         { 0x8004ED6C, &LIBGPU_SetTile },
         { 0x8004ED80, &LIBGPU_SetBlockFill },
-        { 0x8004ED94, &LIBGPU_SetLineF2 },
         { 0x8004EDA8, &LIBGPU_SetLineG2 },
         { 0x8004EDBC, &LIBGPU_SetLineF3 },
         { 0x8004EDDC, &LIBGPU_SetLineG3 },

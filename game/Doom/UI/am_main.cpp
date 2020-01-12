@@ -5,6 +5,8 @@
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBETC.h"
+#include "PsyQ/LIBGPU.h"
 
 void AM_Start() noexcept {
 loc_8003BAC0:
@@ -598,239 +600,132 @@ loc_8003C3A4:
 }
 
 void DrawLine() noexcept {
-loc_8003C3F0:
-    sp -= 8;
-    t0 = (i32(a1) < -0x80);
-    t4 = lw(sp + 0x18);
-    v0 = (i32(a1) < 0x81);
-    sw(s1, sp + 0x4);
-    sw(s0, sp);
-    if (v0 != 0) goto loc_8003C410;
-    t0 |= 2;
-loc_8003C410:
-    v0 = (i32(a2) < -0x64);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(a2) < 0x65);
-        if (bJump) goto loc_8003C420;
+    t4 = lw(sp + 0x10);
+
+    const uint32_t color = a0;
+    const int32_t x1 = a1;
+    const int32_t y1 = a2;
+    const int32_t x2 = a3;
+    const int32_t y2 = lw(sp + 0x10);
+
+    t0 = (a1 < -128) ? 1 : 0;
+
+    if (i32(a1) > 128) {
+        t0 |= 2;
     }
-    t0 |= 4;
-loc_8003C420:
-    v1 = (i32(a3) < -0x80);
-    if (v0 != 0) goto loc_8003C42C;
-    t0 |= 8;
-loc_8003C42C:
-    v0 = (i32(a3) < 0x81);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(t4) < -0x64);
-        if (bJump) goto loc_8003C43C;
+
+    if (i32(a2) < -100) {
+        t0 |= 4;
     }
-    v1 |= 2;
-loc_8003C43C:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(t4) < 0x65);
-        if (bJump) goto loc_8003C448;
+
+    if (i32(a2) >= 0x65) {
+        t0 |= 8;
     }
-    v1 |= 4;
-loc_8003C448:
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t0 & v1;
-        if (bJump) goto loc_8003C458;
+
+    v1 = (i32(a3) < -128) ? 1 : 0;
+    
+    if (i32(a3) >= 0x81) {
+        v1 |= 2;
     }
-    v1 |= 8;
+
+    if (i32(t4) < -100) {
+        v1 |= 4;
+    }
+
     v0 = t0 & v1;
-loc_8003C458:
-    t1 = 3;                                             // Result = 00000003
-    if (v0 != 0) goto loc_8003C744;
-    t3 = 0x1F800000;                                    // Result = 1F800000
-    t3 += 0x204;                                        // Result = 1F800204
-    t5 = 0xC;                                           // Result = 0000000C
-    t6 = 0x10;                                          // Result = 00000010
-    t2 = 0xFF0000;                                      // Result = 00FF0000
-    t2 |= 0xFFFF;                                       // Result = 00FFFFFF
-    s0 = 0x80080000;                                    // Result = 80080000
-    s0 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s1 = s0 & t2;                                       // Result = 00086550
-    t9 = 0x4000000;                                     // Result = 04000000
-    t8 = 0x80000000;                                    // Result = 80000000
-    t7 = -1;                                            // Result = FFFFFFFF
-    v0 = 3;                                             // Result = 00000003
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x203);                                 // Store to: 1F800203
-    v0 = 0x40;                                          // Result = 00000040
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x207);                                 // Store to: 1F800207
-    v0 = a0 >> 16;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x204);                                 // Store to: 1F800204
-    v0 = a0 >> 8;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x205);                                 // Store to: 1F800205
-    v0 = a1 + 0x80;
-    v1 = 0x64;                                          // Result = 00000064
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x208);                                 // Store to: 1F800208
-    v0 = v1 - a2;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x20A);                                 // Store to: 1F80020A
-    v0 = a3 + 0x80;
-    t0 = 0x80070000;                                    // Result = 80070000
-    t0 = lw(t0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 -= t4;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(a0, at + 0x206);                                 // Store to: 1F800206
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x20C);                                 // Store to: 1F80020C
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v1, at + 0x20E);                                 // Store to: 1F80020E
-loc_8003C504:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = (a0 < v0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t5 + a0;
-        if (bJump) goto loc_8003C56C;
+
+    if (i32(t4) > 100) {
+        v1 |= 8;
     }
-    v0 += 4;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    v0 = (v0 < v1);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t6 + a0;
-        if (bJump) goto loc_8003C630;
+
+    if (t0 & v1) 
+        return;
+
+    LINE_F2& line = *(LINE_F2*) getScratchAddr(128);
+
+    LIBGPU_SetLineF2(line);
+    LIBGPU_setRGB0(line, (uint8_t)(color >> 16), (uint8_t)(color >> 8), (uint8_t) color);
+    LIBGPU_setXY2(line, (int16_t)(x1 + 128), (int16_t)(100 - y1), (int16_t)(x2 + 128), (int16_t)(100 - y2));
+
+    static_assert(sizeof(LINE_F2) % 4 == 0);
+    constexpr int8_t PRIM_TOTAL_WORDS = sizeof(LINE_F2) / sizeof(uint32_t);
+    constexpr int8_t PRIM_DATA_WORDS = PRIM_TOTAL_WORDS - 1;
+
+    t0 = *gpGpuPrimsEnd;
+    t3 = 0x1F800204;
+
+    while (true) {
+        if (*gpGpuPrimsBeg <= *gpGpuPrimsEnd) {
+            if (*gpGpuPrimsEnd + sizeof(LINE_F2) < gGpuCmdsBufferEnd)
+                break;
+            
+            *gpGpuPrimsEnd = gGpuCmdsBuffer;
+
+            v0 = lw(t0) & 0xFF000000;
+            v0 |= gGpuCmdsBuffer & 0x00FFFFFF;
+            sw(v0, t0);
+            sb(0, t0 + 0x3);
+            t0 = *gpGpuPrimsEnd;
+        }
+        
+        if (*gpGpuPrimsEnd + sizeof(LINE_F2) < *gpGpuPrimsBeg)
+            break;
+        
+        while (*gpGpuPrimsBeg != *gpGpuPrimsEnd) {
+            if ((lw(GPU_REG_GP1) & 0x04000000) == 0)
+                break;
+
+            a0 = *gpGpuPrimsBeg;
+            a1 = lbu(a0 + 0x3);
+            v0 = lw(a0);
+            a1--;
+            v0 &= 0x00FFFFFF;
+            v0 |= 0x80000000;
+            *gpGpuPrimsBeg = v0;
+            a0 += 4;
+
+            while (a1 != -1) {
+                v1 = lw(a0);
+                a0 += 4;
+                a1--;
+                sw(v1, GPU_REG_GP0);
+            }
+        }
     }
-    v0 = lw(t0);
-    v1 = 0xFF000000;                                    // Result = FF000000
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    v0 &= v1;
-    v0 |= s1;
-    sw(v0, t0);
-    sb(0, t0 + 0x3);
-    t0 = 0x80070000;                                    // Result = 80070000
-    t0 = lw(t0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-loc_8003C56C:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = t5 + a0;
-    v0 += 4;
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_8003C620;
-    if (v1 == a0) goto loc_8003C504;
-loc_8003C590:
-    v0 = lw(gp + 0x710);                                // Load from: GPU_REG_GP1 (80077CF0)
-    v0 = lw(v0);
-    v0 &= t9;
-    if (v0 == 0) goto loc_8003C504;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= t2;
-    v0 |= t8;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t7) goto loc_8003C5FC;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_8003C5E0:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x70C);                                // Load from: GPU_REG_GP0 (80077CEC)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a2) goto loc_8003C5E0;
-loc_8003C5FC:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 == v0) goto loc_8003C504;
-    goto loc_8003C590;
-loc_8003C620:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 += t6;
-loc_8003C630:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    a1 = 0xFF0000;                                      // Result = 00FF0000
-    a1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    a0 = 0xFF000000;                                    // Result = FF000000
-    v1 = lw(t0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 &= a0;
-    v0 &= a1;
+
+    *gpGpuPrimsEnd += sizeof(LINE_F2);
+    v0 = (*gpGpuPrimsEnd) & 0x00FFFFFF;
+    v1 = lw(t0) & 0xFF000000;
     v1 |= v0;
     sw(v1, t0);
-    sb(t1, t0 + 0x3);
-    t1--;                                               // Result = 00000002
-    v0 = -1;                                            // Result = FFFFFFFF
+    sb(PRIM_DATA_WORDS, t0 + 0x3);
     t0 += 4;
-    if (t1 == v0) goto loc_8003C690;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_8003C678:
-    v0 = lw(t3);
-    t3 += 4;
-    t1--;
-    sw(v0, t0);
-    t0 += 4;
-    if (t1 != v1) goto loc_8003C678;
-loc_8003C690:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    t2 = 0x4000000;                                     // Result = 04000000
-    if (v1 == v0) goto loc_8003C744;
-    a3 = 0xFF0000;                                      // Result = 00FF0000
-    a3 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t1 = 0x80000000;                                    // Result = 80000000
-    t0 = -1;                                            // Result = FFFFFFFF
-loc_8003C6BC:
-    v0 = lw(gp + 0x710);                                // Load from: GPU_REG_GP1 (80077CF0)
-    v0 = lw(v0);
-    v0 &= t2;
-    if (v0 == 0) goto loc_8003C744;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= a3;
-    v0 |= t1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t0) goto loc_8003C728;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_8003C70C:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x70C);                                // Load from: GPU_REG_GP0 (80077CEC)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a2) goto loc_8003C70C;
-loc_8003C728:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 != v0) goto loc_8003C6BC;
-loc_8003C744:
-    s1 = lw(sp + 0x4);
-    s0 = lw(sp);
-    sp += 8;
-    return;
+
+    for (int32_t wordsLeft = PRIM_DATA_WORDS; wordsLeft > 0; --wordsLeft) {
+        v0 = lw(t3);
+        sw(v0, t0);
+        t3 += 4;
+        t0 += 4;
+    }
+     
+    while (*gpGpuPrimsBeg != *gpGpuPrimsEnd) {
+        if ((lw(GPU_REG_GP1) & 0x4000000) == 0)
+            break;
+
+        a0 = *gpGpuPrimsBeg;
+        a1 = lbu(a0 + 0x3);
+        v0 = lw(a0);
+        a1--;
+        v0 &= 0x00FFFFFF;
+        v0 |= 0x80000000;
+        *gpGpuPrimsBeg = v0;
+        a0 += 4;
+
+        while (a1 != -1) {
+            v1 = lw(a0);
+            a0 += 4;
+            a1--;
+            sw(v1, GPU_REG_GP0);
+        }
+    };
 }

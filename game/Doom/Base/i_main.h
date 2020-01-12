@@ -34,6 +34,10 @@ extern const VmPtr<uint32_t>                                            gLockedT
 extern const VmPtr<uint32_t>                                            gLockedTexPagesMask;
 extern const VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>                      gBtnBindings;
 extern const VmPtr<VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>[MAXPLAYERS]>   gpPlayerBtnBindings;
+extern const VmPtr<VmPtr<std::byte>>                                    gpGpuPrimsBeg;
+extern const VmPtr<VmPtr<std::byte>>                                    gpGpuPrimsEnd;
+extern const VmPtr<std::byte[0x10000]>                                  gGpuCmdsBuffer;
+extern const VmPtr<std::byte>                                           gGpuCmdsBufferEnd;
 
 void I_Main() noexcept;
 void I_PSXInit() noexcept;

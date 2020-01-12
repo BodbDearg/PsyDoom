@@ -103,23 +103,23 @@ public:
     inline constexpr bool operator >= (const std::nullptr_t) const noexcept { return (mAddr >= 0); }
 
     // Pointer arithmetic
-    inline constexpr VmPtr operator + (const int32_t count) const noexcept {
-        const int32_t offset = int32_t(sizeof(ElemTy)) * count;
+    inline constexpr VmPtr operator + (const size_t count) const noexcept {
+        const int32_t offset = int32_t(sizeof(ElemTy)) * (int32_t) count;
         return VmPtr(mAddr + (uint32_t) offset);
     }
 
-    inline constexpr void operator += (const int32_t count) noexcept {
-        const int32_t offset = int32_t(sizeof(ElemTy)) * count;
+    inline constexpr void operator += (const size_t count) noexcept {
+        const int32_t offset = int32_t(sizeof(ElemTy)) * (int32_t) count;
         mAddr += (uint32_t) offset;
     }
 
-    inline constexpr VmPtr operator - (const int32_t count) const noexcept {
-        const int32_t offset = int32_t(sizeof(ElemTy)) * count;
+    inline constexpr VmPtr operator - (const size_t count) const noexcept {
+        const int32_t offset = int32_t(sizeof(ElemTy)) * (int32_t) count;
         return VmPtr(mAddr - (uint32_t) offset);
     }
 
-    inline constexpr void operator -= (const int32_t count) noexcept {
-        const int32_t offset = int32_t(sizeof(ElemTy)) * count;
+    inline constexpr void operator -= (const size_t count) noexcept {
+        const int32_t offset = int32_t(sizeof(ElemTy)) * (int32_t) count;
         mAddr -= (uint32_t) offset;
     }
 

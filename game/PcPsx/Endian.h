@@ -4,7 +4,6 @@
 // Endian related utilities.
 // A lot (or all?) of this code can probably go away once we have C++ 20 and it's endian utilities.
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 #include <cstdint>
 
 namespace Endian {
@@ -44,7 +43,7 @@ namespace Endian {
     inline int32_t byteSwap(const int32_t num) noexcept { return (int32_t) byteSwap((uint32_t) num); }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
-    // Convert from little endian to host endian
+    // Convert from little endian to host endian and visa versa
     //--------------------------------------------------------------------------------------------------------------------------------------
     template <class T>
     inline T littleToHost(const T num) noexcept {
@@ -52,6 +51,33 @@ namespace Endian {
             return num;
         } else {
             return byteSwap(num);
+        }
+    }
+
+    template <class T>
+    inline T bigToHost(const T num) noexcept {
+        if constexpr (isLittle()) {
+            return byteSwap(num);
+        } else {
+            return num;
+        }
+    }
+
+    template <class T>
+    inline T hostToLittle(const T num) noexcept {
+        if constexpr (isLittle()) {
+            return num;
+        } else {
+            return byteSwap(num);
+        }
+    }
+
+    template <class T>
+    inline T hostToBig(const T num) noexcept {
+        if constexpr (isLittle()) {
+            return byteSwap(num);
+        } else {
+            return num;
         }
     }
 }

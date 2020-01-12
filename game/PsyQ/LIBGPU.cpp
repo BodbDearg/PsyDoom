@@ -3,6 +3,7 @@
 #include "LIBAPI.h"
 #include "LIBC2.h"
 #include "LIBETC.h"
+#include "PcPsx/Endian.h"
 #include "PsxVm/PsxVm.h"
 
 void LIBGPU_ResetGraph() noexcept {
@@ -3329,12 +3330,10 @@ void LIBGPU_SetBlockFill() noexcept {
     return;
 }
 
-void LIBGPU_SetLineF2() noexcept {
-    v0 = 3;                                             // Result = 00000003
-    sb(v0, a0 + 0x3);
-    v0 = 0x40;                                          // Result = 00000040
-    sb(v0, a0 + 0x7);
-    return;
+void LIBGPU_SetLineF2(LINE_F2& line) noexcept {
+    line.tag &= 0x00FFFFFF;
+    line.tag |= 0x03000000;
+    line.code = 0x40;
 }
 
 void LIBGPU_SetLineG2() noexcept {

@@ -1,5 +1,26 @@
 #pragma once
 
+#include <cstdint>
+
+// GP0 and GP1 GPU registers addresses.
+// These two registers are used to read and write GPU data and for status/control.
+// These addresses were NOT exposed in the original PsyQ SDK as far as I can see.
+static constexpr uint32_t GPU_REG_GP0 = 0x1F801810;
+static constexpr uint32_t GPU_REG_GP1 = 0x1F801814;
+
+// Drawing primitive: unconnected flat shaded line
+struct LINE_F2 {
+	uint32_t	tag;
+	uint8_t		r0;
+	uint8_t		g0;
+	uint8_t		b0;
+	uint8_t		code;
+	int16_t		x0;
+	int16_t		y0;
+	int16_t		x1;
+	int16_t		y1;
+};
+
 void LIBGPU_ResetGraph() noexcept;
 void LIBGPU_SetGraphReverse() noexcept;
 void LIBGPU_SetGraphDebug() noexcept;
@@ -81,7 +102,7 @@ void LIBGPU_SetTile8() noexcept;
 void LIBGPU_SetTile16() noexcept;
 void LIBGPU_SetTile() noexcept;
 void LIBGPU_SetBlockFill() noexcept;
-void LIBGPU_SetLineF2() noexcept;
+void LIBGPU_SetLineF2(LINE_F2& line) noexcept;
 void LIBGPU_SetLineG2() noexcept;
 void LIBGPU_SetLineF3() noexcept;
 void LIBGPU_SetLineG3() noexcept;
@@ -99,3 +120,20 @@ void LIBGPU_LoadTPage() noexcept;
 void LIBGPU_LoadClut() noexcept;
 void LIBGPU_SetDefDrawEnv() noexcept;
 void LIBGPU_SetDefDispEnv() noexcept;
+
+// Set the color on a draw primitive
+template <class T>
+static inline void LIBGPU_setRGB0(T& prim, const uint8_t r0, const uint8_t g0, const uint8_t b0) noexcept {
+	prim.r0 = r0;
+	prim.g0 = g0;
+	prim.b0 = b0;
+}
+
+// Set 2d start and end points on a draw primitive
+template <class T>
+static inline void LIBGPU_setXY2(T& prim, const int16_t x0, const int16_t y0, const int16_t x1, const int16_t y1) noexcept {
+	prim.x0 = x0;
+	prim.y0 = y0;
+	prim.x1 = x1;
+	prim.y1 = y1;
+}
