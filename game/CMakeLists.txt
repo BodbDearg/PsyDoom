@@ -4,6 +4,8 @@ set(SOURCE_FILES
     "Doom/Base/d_vsprintf.h"
     "Doom/Base/i_crossfade.cpp"
     "Doom/Base/i_crossfade.h"
+    "Doom/Base/i_drawcmds.cpp"
+    "Doom/Base/i_drawcmds.h"
     "Doom/Base/i_file.cpp"
     "Doom/Base/i_file.h"
     "Doom/Base/i_main.cpp"

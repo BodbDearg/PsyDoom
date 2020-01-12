@@ -144,6 +144,11 @@ void swc2(const uint8_t s, const uint32_t addr) noexcept;
 void _break(const uint32_t i) noexcept;
 void syscall(const uint32_t i) noexcept;
 
+// Write directly to GPU registers GP0 and GP1 and read the GPU status/control register GP1
+void writeGP0(const uint32_t data) noexcept;
+void writeGP1(const uint32_t data) noexcept;
+uint32_t getGpuStat() noexcept;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // VM interface: function calls and utilities
 // Call a function pointer or make a bios call.

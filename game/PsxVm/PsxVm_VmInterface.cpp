@@ -333,6 +333,18 @@ void syscall(const uint32_t i) noexcept {
     restoreMipsRegistersExceptReturnRegs();
 }
 
+void writeGP0(const uint32_t data) noexcept {
+    gpGpu->writeGP0(data);
+}
+
+void writeGP1(const uint32_t data) noexcept {
+    gpGpu->writeGP1(data);
+}
+
+uint32_t getGpuStat() noexcept {
+    return gpGpu->getStat();
+}
+
 void ptr_call(const uint32_t addr) noexcept {
     // Check for a bios function call
     const uint32_t maskedAdr = addr & 0x1FFFFFFF;

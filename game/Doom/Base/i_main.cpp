@@ -34,12 +34,6 @@ const VmPtr<uint32_t> gCurPlayerIndex(0x80077618);
 const VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>                         gBtnBindings(0x80073E0C);
 const VmPtr<VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>[MAXPLAYERS]>      gpPlayerBtnBindings(0x80077FC8);
 
-// GPU packets beginning and end pointer and the 64 KiB buffer used to hold GPU primitives
-const VmPtr<VmPtr<std::byte>>       gpGpuPrimsBeg(0x80077C14);
-const VmPtr<VmPtr<std::byte>>       gpGpuPrimsEnd(0x80077C18);
-const VmPtr<std::byte[0x10000]>     gGpuCmdsBuffer(0x80086550);
-const VmPtr<std::byte>              gGpuCmdsBufferEnd(0x80096550);
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // User PlayStation entrypoint for DOOM.
 // This was probably the actual 'main()' function in the real source code.

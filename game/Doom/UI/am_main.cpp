@@ -1,5 +1,6 @@
 #include "am_main.h"
 
+#include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
@@ -647,85 +648,5 @@ void DrawLine() noexcept {
     LIBGPU_setRGB0(line, (uint8_t)(color >> 16), (uint8_t)(color >> 8), (uint8_t) color);
     LIBGPU_setXY2(line, (int16_t)(x1 + 128), (int16_t)(100 - y1), (int16_t)(x2 + 128), (int16_t)(100 - y2));
 
-    static_assert(sizeof(LINE_F2) % 4 == 0);
-    constexpr int8_t PRIM_TOTAL_WORDS = sizeof(LINE_F2) / sizeof(uint32_t);
-    constexpr int8_t PRIM_DATA_WORDS = PRIM_TOTAL_WORDS - 1;
-
-    t0 = *gpGpuPrimsEnd;
-    t3 = 0x1F800204;
-
-    while (true) {
-        if (*gpGpuPrimsBeg <= *gpGpuPrimsEnd) {
-            if (*gpGpuPrimsEnd + sizeof(LINE_F2) < gGpuCmdsBufferEnd)
-                break;
-            
-            *gpGpuPrimsEnd = gGpuCmdsBuffer;
-
-            v0 = lw(t0) & 0xFF000000;
-            v0 |= gGpuCmdsBuffer & 0x00FFFFFF;
-            sw(v0, t0);
-            sb(0, t0 + 0x3);
-            t0 = *gpGpuPrimsEnd;
-        }
-        
-        if (*gpGpuPrimsEnd + sizeof(LINE_F2) < *gpGpuPrimsBeg)
-            break;
-        
-        while (*gpGpuPrimsBeg != *gpGpuPrimsEnd) {
-            if ((lw(GPU_REG_GP1) & 0x04000000) == 0)
-                break;
-
-            a0 = *gpGpuPrimsBeg;
-            a1 = lbu(a0 + 0x3);
-            v0 = lw(a0);
-            a1--;
-            v0 &= 0x00FFFFFF;
-            v0 |= 0x80000000;
-            *gpGpuPrimsBeg = v0;
-            a0 += 4;
-
-            while (a1 != -1) {
-                v1 = lw(a0);
-                a0 += 4;
-                a1--;
-                sw(v1, GPU_REG_GP0);
-            }
-        }
-    }
-
-    *gpGpuPrimsEnd += sizeof(LINE_F2);
-    v0 = (*gpGpuPrimsEnd) & 0x00FFFFFF;
-    v1 = lw(t0) & 0xFF000000;
-    v1 |= v0;
-    sw(v1, t0);
-    sb(PRIM_DATA_WORDS, t0 + 0x3);
-    t0 += 4;
-
-    for (int32_t wordsLeft = PRIM_DATA_WORDS; wordsLeft > 0; --wordsLeft) {
-        v0 = lw(t3);
-        sw(v0, t0);
-        t3 += 4;
-        t0 += 4;
-    }
-     
-    while (*gpGpuPrimsBeg != *gpGpuPrimsEnd) {
-        if ((lw(GPU_REG_GP1) & 0x4000000) == 0)
-            break;
-
-        a0 = *gpGpuPrimsBeg;
-        a1 = lbu(a0 + 0x3);
-        v0 = lw(a0);
-        a1--;
-        v0 &= 0x00FFFFFF;
-        v0 |= 0x80000000;
-        *gpGpuPrimsBeg = v0;
-        a0 += 4;
-
-        while (a1 != -1) {
-            v1 = lw(a0);
-            a0 += 4;
-            a1--;
-            sw(v1, GPU_REG_GP0);
-        }
-    };
+    I_AddPrim(line);
 }

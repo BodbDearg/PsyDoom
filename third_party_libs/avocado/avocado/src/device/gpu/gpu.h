@@ -100,7 +100,10 @@ class GPU {
 
     std::array<uint16_t, VRAM_WIDTH * VRAM_HEIGHT> vram{};
 
+// PC-PSX DOOM: allowing some lower level access to the GPU for speed
+#if !DOOM_AVOCADO_MODS
    private:
+#endif
     // Hardware rendering
     std::vector<Vertex> vertices;
 
