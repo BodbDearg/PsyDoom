@@ -12,5 +12,5 @@ void I_AddPrim(const void* const pPrim) noexcept;
 // C++ overload for convenience!
 template <class T>
 inline void I_AddPrim(const T& prim) noexcept {
-    I_AddPrim(&prim);
+    I_AddPrim((const void*) &prim);
 }

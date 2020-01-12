@@ -366,7 +366,7 @@ extern void I_DrawString() noexcept;
 extern void AM_Start() noexcept;
 extern void AM_Control() noexcept;
 extern void AM_Drawer() noexcept;
-extern void DrawLine() noexcept;
+extern void _thunk_DrawLine() noexcept;
 extern void IN_Start() noexcept;
 extern void IN_Stop() noexcept;
 extern void IN_Ticker() noexcept;
@@ -1296,7 +1296,7 @@ namespace PsxVm {
         { 0x8003BAC0, &AM_Start },
         { 0x8003BB08, &AM_Control },
         { 0x8003BD34, &AM_Drawer },
-        { 0x8003C3F0, &DrawLine },
+        { 0x8003C3F0, &_thunk_DrawLine },
         { 0x8003C758, &IN_Start },
         { 0x8003CA64, &IN_Stop },
         { 0x8003CA8C, &IN_Ticker },

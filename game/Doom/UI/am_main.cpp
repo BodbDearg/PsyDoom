@@ -322,7 +322,7 @@ loc_8003BF38:
     a0 = s6;
     a1 = t3;
     a2 = t2;
-    DrawLine();
+    _thunk_DrawLine();
 loc_8003BF4C:
     fp++;
     s0 += 0x4C;
@@ -431,19 +431,19 @@ loc_8003BFA8:
     s3 = u32(i32(v1) >> 16);
     v0 = lo;
     s2 = u32(i32(v0) >> 16);
-    DrawLine();
+    _thunk_DrawLine();
     a0 = 0x80FF;                                        // Result = 000080FF
     a1 = s1;
     a2 = s0;
     a3 = s3;
     sw(s2, sp + 0x10);
-    DrawLine();
+    _thunk_DrawLine();
     a0 = 0x80FF;                                        // Result = 000080FF
     a1 = s5;
     a2 = s4;
     a3 = s3;
     sw(s2, sp + 0x10);
-    DrawLine();
+    _thunk_DrawLine();
 loc_8003C154:
     a3 = s6;
     v0 = 0x800B0000;                                    // Result = 800B0000
@@ -566,19 +566,19 @@ loc_8003C1F8:
     s3 = u32(i32(v1) >> 16);
     v0 = lo;
     s2 = u32(i32(v0) >> 16);
-    DrawLine();
+    _thunk_DrawLine();
     a0 = s6;
     a1 = s1;
     a2 = s0;
     a3 = s3;
     sw(s2, sp + 0x10);
-    DrawLine();
+    _thunk_DrawLine();
     a0 = s6;
     a1 = s5;
     a2 = s4;
     a3 = s3;
     sw(s2, sp + 0x10);
-    DrawLine();
+    _thunk_DrawLine();
 loc_8003C3A4:
     fp++;
     t4 = lw(sp + 0x28);
@@ -600,53 +600,44 @@ loc_8003C3A4:
     return;
 }
 
-void DrawLine() noexcept {
-    t4 = lw(sp + 0x10);
-
-    const uint32_t color = a0;
-    const int32_t x1 = a1;
-    const int32_t y1 = a2;
-    const int32_t x2 = a3;
-    const int32_t y2 = lw(sp + 0x10);
-
-    t0 = (a1 < -128) ? 1 : 0;
-
-    if (i32(a1) > 128) {
-        t0 |= 2;
-    }
-
-    if (i32(a2) < -100) {
-        t0 |= 4;
-    }
-
-    if (i32(a2) >= 0x65) {
-        t0 |= 8;
-    }
-
-    v1 = (i32(a3) < -128) ? 1 : 0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draw an automap line in the specified color
+//------------------------------------------------------------------------------------------------------------------------------------------
+void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const int32_t x2, const int32_t y2) noexcept {    
+    // Reject the line quickly using the 'Cohen–Sutherland' algorithm.
+    // Note: no clipping is done since that is handled by the hardware.
+    enum OutFlags : uint32_t {
+        INSIDE  = 0,
+	    LEFT    = 1,
+	    RIGHT	= 2,
+	    BOTTOM	= 4,
+	    TOP	    = 8
+    };
     
-    if (i32(a3) >= 0x81) {
-        v1 |= 2;
-    }
+    uint32_t outcode1 = (x1 < -128) ? LEFT : INSIDE;
+    if (x1 >  128) { outcode1 |= RIGHT;     }
+    if (y1 < -100) { outcode1 |= BOTTOM;    }
+    if (y1 >  100) { outcode1 |= TOP;       }
 
-    if (i32(t4) < -100) {
-        v1 |= 4;
-    }
-
-    v0 = t0 & v1;
-
-    if (i32(t4) > 100) {
-        v1 |= 8;
-    }
-
-    if (t0 & v1) 
+    uint32_t outcode2 = (x2 < -128) ? LEFT : INSIDE;    
+    if (x2 >  128) { outcode2 |= RIGHT;     }
+    if (y2 < -100) { outcode2 |= BOTTOM;    }
+    if (y2 >  100) { outcode2 |= TOP;       }
+    
+    if (outcode1 & outcode2) 
         return;
 
+    // Setup the map line primitive and draw it.
+    // Use the 1 KiB scratchpad also as temp storage space for the primitive.
     LINE_F2& line = *(LINE_F2*) getScratchAddr(128);
-
+    
     LIBGPU_SetLineF2(line);
     LIBGPU_setRGB0(line, (uint8_t)(color >> 16), (uint8_t)(color >> 8), (uint8_t) color);
     LIBGPU_setXY2(line, (int16_t)(x1 + 128), (int16_t)(100 - y1), (int16_t)(x2 + 128), (int16_t)(100 - y2));
-
+    
     I_AddPrim(line);
+}
+
+void _thunk_DrawLine() noexcept {
+    DrawLine(a0, a1, a2, a3, lw(sp + 0x10));
 }
