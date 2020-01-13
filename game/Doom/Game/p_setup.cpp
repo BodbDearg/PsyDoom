@@ -12,6 +12,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "Doom/Renderer/r_sky.h"
 #include "doomdata.h"
 #include "g_game.h"
 #include "p_firesky.h"
@@ -826,8 +827,7 @@ loc_80022F0C:
     sw(0, at + 0x7B34);                                 // Store to: gpUpdateFireSkyFunc (80077B34)
     v0 |= 2;
     *gLockedTexPagesMask = v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v1, at - 0x7D34);                                // Store to: gPaletteClutId_CurMapSky (800782CC)
+    *gPaletteClutId_CurMapSky = (uint16_t) v1;
     if (a0 == 0) goto loc_80022FE8;
     a0 = lh(a0 + 0x10);
     v1 = *gpLumpInfo;
@@ -846,8 +846,8 @@ loc_80022F0C:
     v0 += 0x7CB0;                                       // Result = P_UpdateFireSky (80027CB0)
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7B34);                                // Store to: gpUpdateFireSkyFunc (80077B34)
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v1, at - 0x7D34);                                // Store to: gPaletteClutId_CurMapSky (800782CC)
+    *gPaletteClutId_CurMapSky = (uint16_t) v1;
+
 loc_80022FBC:
     a0 = *gpSkyTexture;
     s0++;

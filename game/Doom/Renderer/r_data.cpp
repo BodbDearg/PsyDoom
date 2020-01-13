@@ -431,7 +431,7 @@ loc_8002BFF0:
     v0 += 0xF0;
     sh(v1, sp + 0x10);
     sh(v0, sp + 0x12);
-    LIBGPU_LoadImage();
+    _thunk_LIBGPU_LoadImage();
     s1 += 0x200;
     a0 = lh(sp + 0x10);
     a1 = lh(sp + 0x12);
@@ -454,4 +454,29 @@ loc_8002BFF0:
     s0 = lw(sp + 0x18);
     sp += 0x28;
     return;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX addition: helper that consolidates some commonly used graphics logic in one function.
+//
+// Given the specified texture object which is assumed to be 8-bits per pixel (i.e color indexed), returns the 'RECT' in VRAM where the
+// texture would be placed. Useful for getting the texture's VRAM position prior to uploading to the GPU.
+// 
+// I decided to make this a helper rather than duplicate the same code everywhere.
+// Produces the same result as the original inline logic, but cleaner.
+//------------------------------------------------------------------------------------------------------------------------------------------
+RECT getTextureVramRect(const texture_t& tex) noexcept {
+    const int16_t texPageCoordX = (int16_t)(uint16_t) tex.texPageCoordX;    // N.B: make sure to zero extend!
+    const int16_t texPageCoordY = (int16_t)(uint16_t) tex.texPageCoordY;
+    const int16_t texPageId = (int16_t) tex.texPageId;
+    
+    // Note: all x dimension coordinates get divided by 2 because 'RECT' coords are for 16-bit mode.
+    // This function assumes all textures are 8 bits per pixel.
+    RECT rect;
+    rect.x = texPageCoordX / 2 + (texPageId & 0xF) * 64;
+    rect.y = (texPageId & 0x10) * 16 + texPageCoordY;
+    rect.w = tex.width / 2;
+    rect.h = tex.height;
+
+    return rect;
 }

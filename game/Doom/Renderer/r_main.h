@@ -5,6 +5,8 @@
 struct node_t;
 struct subsector_t;
 
+extern const VmPtr<angle_t> gViewAngle;
+
 void R_Init() noexcept;
 void R_RenderPlayerView() noexcept;
 void R_SlopeDiv() noexcept;

@@ -1041,7 +1041,7 @@ loc_8003B324:
     sw(ra, sp + 0x2C);
     sw(s3, sp + 0x24);
     sw(0, sp + 0x10);
-    LIBGPU_SetDrawMode();
+    _thunk_LIBGPU_SetDrawMode();
     s0 += 4;                                            // Result = 1F800204
     t3 = 0xFF0000;                                      // Result = 00FF0000
     t3 |= 0xFFFF;                                       // Result = 00FFFFFF

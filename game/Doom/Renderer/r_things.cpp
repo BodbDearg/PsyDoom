@@ -773,7 +773,7 @@ loc_8002FEA0:
     s3 = (v1 > 0);
     a3 = s3 << 5;
     a3 |= t0;
-    LIBGPU_SetDrawMode();
+    _thunk_LIBGPU_SetDrawMode();
     t2 = fp + 4;                                        // Result = 1F800204
     t5 = 0x80000000;                                    // Result = 80000000
     t4 = -1;                                            // Result = FFFFFFFF

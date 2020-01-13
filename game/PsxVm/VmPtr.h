@@ -21,12 +21,12 @@ uint32_t ptrToVmAddr(const void* const ptr) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Virtual Machine RAM pointer.
-// A 32-bit pointer to a location inside of RAM of the emulated PlayStation.
+// A 32-bit pointer to a location inside of RAM or the scratchpad memory of the emulated PlayStation.
 // Provides easy pointer like operations, and works the same in both 32-bit and 64-bit host environments.
 //
 // Notes:
 //  (1) Pointer addresses wrap every 2MB and map to the same location in PSX RAM.
-//  (2) This pointer cannot be used to refer to device mapped memory addresses, just plain PSX RAM.
+//  (2) This pointer cannot be used to refer to device mapped memory addresses, just plain PSX RAM and the scratchpad.
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class T>
 class VmPtr {

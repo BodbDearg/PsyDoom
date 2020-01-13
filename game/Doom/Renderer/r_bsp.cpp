@@ -520,8 +520,7 @@ loc_8002B3B8:
     v0 &= 0xFFFE;
     sh(v0, s3 + 0x20);
     v1 = lw(s0 + 0x18);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
+    v0 = *gNumFramesDrawn;
     a0 = sp + 0x10;
     if (v1 == v0) goto loc_8002B4BC;
     v0 = lw(s0);
@@ -570,8 +569,7 @@ loc_8002B48C:
     v0 += 0x80;
     sw(v0, s0 + 0x14);
 loc_8002B4AC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
+    v0 = *gNumFramesDrawn;
     sw(v0, s0 + 0x18);
     goto loc_8002B4C4;
 loc_8002B4BC:
@@ -579,8 +577,7 @@ loc_8002B4BC:
     s1 = lw(s0 + 0x10);
 loc_8002B4C4:
     s0 = lw(s3 + 0x4);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
+    v0 = *gNumFramesDrawn;
     v1 = lw(s0 + 0x18);
     a0 = sp + 0x10;
     if (v1 == v0) goto loc_8002B5A0;
@@ -630,8 +627,7 @@ loc_8002B570:
     v0 += 0x80;
     sw(v0, s0 + 0x14);
 loc_8002B590:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
+    v0 = *gNumFramesDrawn;
     sw(v0, s0 + 0x18);
     goto loc_8002B5A8;
 loc_8002B5A0:

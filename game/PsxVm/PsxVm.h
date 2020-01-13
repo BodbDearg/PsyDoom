@@ -242,14 +242,23 @@ namespace PsxVm {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Convert a VM address to a pointer
+// Convert a VM address to a pointer.
+// Note: only RAM and scratchpad memory addresses are converted.
 //------------------------------------------------------------------------------------------------------------------------------------------
 template <class T>
 inline T* vmAddrToPtr(const uint32_t addr) noexcept {
     if (addr != 0) {
-        const uint32_t wrappedAddr = (addr & 0x1FFFFF);
-        ASSERT_LOG(wrappedAddr + sizeof(T) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
-        return reinterpret_cast<T*>(PsxVm::gpRam + wrappedAddr);
+        if (addr >= 0x1F800000 && addr <= 0x1F800400) {
+            // Scratchpad RAM address
+            const uint32_t relativeAddr = addr - 0x1F800000;
+            ASSERT_LOG(relativeAddr + sizeof(T) <= 0x400, "Address pointed to spills past the 1 KiB scratchpad!");
+            return reinterpret_cast<T*>(PsxVm::gpScratchpad + relativeAddr);
+        } else {
+            // Regular RAM address
+            const uint32_t wrappedAddr = (addr & 0x1FFFFF);
+            ASSERT_LOG(wrappedAddr + sizeof(T) <= 0x200000, "Address pointed to spills past the 2 MiB of PSX RAM!");
+            return reinterpret_cast<T*>(PsxVm::gpRam + wrappedAddr);
+        }
     } else {
         return nullptr;
     }
@@ -258,8 +267,15 @@ inline T* vmAddrToPtr(const uint32_t addr) noexcept {
 template <>
 inline void* vmAddrToPtr(const uint32_t addr) noexcept {
     if (addr != 0) {
-        const uint32_t wrappedAddr = (addr & 0x1FFFFF);
-        return reinterpret_cast<void*>(PsxVm::gpRam + wrappedAddr);
+        if (addr >= 0x1F800000 && addr <= 0x1F800400) {
+            // Scratchpad RAM address
+            const uint32_t relativeAddr = addr - 0x1F800000;
+            return reinterpret_cast<void*>(PsxVm::gpScratchpad + relativeAddr);
+        } else {
+            // Regular RAM address
+            const uint32_t wrappedAddr = (addr & 0x1FFFFF);
+            return reinterpret_cast<void*>(PsxVm::gpRam + wrappedAddr);
+        }
     } else {
         return nullptr;
     }

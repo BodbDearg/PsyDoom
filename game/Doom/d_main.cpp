@@ -148,7 +148,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
     a2 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x11C);
     sw(0, sp + 0x10);
-    LIBGPU_SetDrawMode();
+    _thunk_LIBGPU_SetDrawMode();
     s0 += 4;                                            // Result = 1F800204
     t3 = 0xFF0000;                                      // Result = 00FF0000
     t3 |= 0xFFFF;                                       // Result = 00FFFFFF
@@ -310,13 +310,13 @@ loc_800127B8:
     s0 = 0x1F800000;                                    // Result = 1F800000
     s0 += 0x200;                                        // Result = 1F800200
     a0 = s0;                                            // Result = 1F800200
-    LIBGPU_SetSprt();
+    _thunk_LIBGPU_SetSprt();
     a0 = s0;                                            // Result = 1F800200
     a1 = 0;                                             // Result = 00000000
     LIBGPU_SetSemiTrans();
     a0 = s0;                                            // Result = 1F800200
     a1 = 0;                                             // Result = 00000000
-    LIBGPU_SetShadeTex();
+    _thunk_LIBGPU_SetShadeTex();
     v1 = 0x800B0000;                                    // Result = 800B0000
     v1 = lhu(v1 - 0x6F7C);                              // Load from: gPaletteClutId_Main (800A9084)
     v0 = 0x80;                                          // Result = 00000080

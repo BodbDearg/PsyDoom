@@ -29,6 +29,7 @@ extern const VmPtr<std::byte[TMP_BUFFER_SIZE]>                          gTmpBuff
 extern const VmPtr<uint32_t>                                            gTotalVBlanks;
 extern const VmPtr<uint32_t>                                            gLastTotalVBlanks;
 extern const VmPtr<uint32_t>                                            gElapsedVBlanks;
+extern const VmPtr<uint32_t>                                            gNumFramesDrawn;
 extern const VmPtr<uint32_t>                                            gCurPlayerIndex;
 extern const VmPtr<uint32_t>                                            gLockedTexPagesMask;
 extern const VmPtr<uint32_t>                                            gLockedTexPagesMask;

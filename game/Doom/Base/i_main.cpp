@@ -22,6 +22,12 @@ const VmPtr<uint32_t> gTotalVBlanks(0x80077E98);
 const VmPtr<uint32_t> gLastTotalVBlanks(0x80078114);
 const VmPtr<uint32_t> gElapsedVBlanks(0x800781BC);
 
+// Used to tell when the texture cache overflows.
+// Each texture when added to the cache is assigned the current value of this number.
+// When the time comes to evict a texture to make room for another, we check to make sure that the texture wasn't loaded in the current frame.
+// If the evicted texture WAS loaded in the current frame, then it means we've run out of texture memory and can't draw all of the textures in the frame.
+const VmPtr<uint32_t> gNumFramesDrawn(0x80077C10);
+
 // A bit mask of which texture pages (past the initial 4 which are reserved for the framebuffer) are 'locked' during gameplay.
 // Locked texture pages are not allowed to be unloaded and are used for UI sprites, wall and floor textures.
 // Sprites on the other hand are placed in 'unlocked' texture pages and can be evicted at any time.
@@ -369,7 +375,7 @@ loc_80032D84:
     a3 = v0;
     sw(ra, sp + 0x38);
     sw(0, sp + 0x10);
-    LIBGPU_SetDrawMode();
+    _thunk_LIBGPU_SetDrawMode();
     s0 += 4;                                            // Result = 1F800204
     t3 = 0xFF0000;                                      // Result = 00FF0000
     t3 |= 0xFFFF;                                       // Result = 00FFFFFF
@@ -747,12 +753,11 @@ loc_800332E0:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Increments the 'drawn frame' counter used to track texture cache overflows
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_IncDrawnFrameCount() noexcept {
-loc_800333D8:
-    v0 = lw(gp + 0x630);                                // Load from: gNumFramesDrawn (80077C10)
-    v0++;
-    sw(v0, gp + 0x630);                                 // Store to: gNumFramesDrawn (80077C10)
-    return;
+    ++*gNumFramesDrawn;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -838,7 +843,7 @@ void I_Init() noexcept {
 
 void I_CacheTex() noexcept {
 loc_80033578:
-    v0 = lw(gp + 0x630);                                // Load from: gNumFramesDrawn (80077C10)
+    v0 = *gNumFramesDrawn;
     sp -= 0x58;
     sw(s3, sp + 0x44);
     s3 = a0;
@@ -921,7 +926,7 @@ loc_800336C4:
     s1 += 4;
     if (a1 == 0) goto loc_80033720;
     v1 = lw(a1 + 0x1C);
-    v0 = lw(gp + 0x630);                                // Load from: gNumFramesDrawn (80077C10)
+    v0 = *gNumFramesDrawn;
     if (v1 != v0) goto loc_80033718;
     v0 = lh(a1 + 0xC);
     a0 = lw(gp + 0xD04);                                // Load from: gTexCacheFillBlockX (800782E4)
@@ -1018,7 +1023,7 @@ loc_80033800:
     v0 = lhu(s3 + 0x6);
     a0 = sp + 0x10;
     sh(v0, sp + 0x16);
-    LIBGPU_LoadImage();
+    _thunk_LIBGPU_LoadImage();
     v0 = lw(gp + 0xD04);                                // Load from: gTexCacheFillBlockX (800782E4)
     v0 <<= 4;
     sb(v0, s3 + 0x8);

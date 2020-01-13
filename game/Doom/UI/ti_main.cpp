@@ -7,6 +7,7 @@
 #include "Doom/d_main.h"
 #include "Doom/Game/p_firesky.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/Renderer/r_sky.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
@@ -99,8 +100,7 @@ void START_Title() noexcept {
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lhu(v0 - 0x6F5E);                              // Load from: gPaletteClutId_Sky (800A90A2)
     a0 = *gpSkyTexture;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0x7D34);                                // Store to: gPaletteClutId_CurMapSky (800782CC)
+    *gPaletteClutId_CurMapSky = (uint16_t) v0;
     I_CacheTex();
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x3E4C);                               // Load from: CDTrackNum_TitleScreen (80073E4C)
@@ -447,10 +447,9 @@ loc_80035724:
     a1 = lw(v0);
     a0 = sp + 0x38;
     a1 += 8;
-    LIBGPU_LoadImage();
+    _thunk_LIBGPU_LoadImage();
     v1 = *gpSkyTexture;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
+    v0 = *gNumFramesDrawn;
     sw(v0, v1 + 0x1C);
     v0 = 9;                                             // Result = 00000009
 loc_800357C4:
@@ -502,8 +501,7 @@ loc_800357C4:
     v1 += 0x7F;
     sb(v1, sp + 0x35);
     v0 = lhu(a0 + 0xA);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lhu(v1 - 0x7D34);                              // Load from: gPaletteClutId_CurMapSky (800782CC)
+    v1 = *gPaletteClutId_CurMapSky;
     t5 = -1;                                            // Result = FFFFFFFF
     sh(v0, sp + 0x26);
     sh(v1, sp + 0x1E);

@@ -83,9 +83,8 @@ loc_8002E39C:
     v1 <<= 4;
     a2 += v1;
     sh(a2, sp + 0x12);
-    LIBGPU_LoadImage();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
+    _thunk_LIBGPU_LoadImage();
+    v0 = *gNumFramesDrawn;
     sw(v0, s1 + 0x1C);
 loc_8002E3F8:
     s0 = 0x1F800000;                                    // Result = 1F800000

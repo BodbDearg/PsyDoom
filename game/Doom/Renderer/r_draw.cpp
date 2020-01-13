@@ -38,8 +38,7 @@ loc_8002C754:
     sw(v0, s1 + 0x4);
     sw(s0, s1);
     v1 = lw(s0 + 0x18);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
+    v0 = *gNumFramesDrawn;
     a0 = sp + 0x10;
     if (v1 == v0) goto loc_8002C83C;
     v0 = lw(s0);
@@ -87,8 +86,7 @@ loc_8002C808:
     v0 += 0x80;
     sw(v0, s0 + 0x14);
 loc_8002C82C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
+    v0 = *gNumFramesDrawn;
     sw(v0, s0 + 0x18);
 loc_8002C83C:
     s2++;
@@ -386,8 +384,7 @@ loc_8002CCA0:
     v1 = lo;
     v0 = lw(s0 + 0xC);
     mult(v1, v0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
+    v0 = *gNumFramesDrawn;
     a0 += a1;
     sw(a0, s0 + 0x4);
     sw(v1, s0 + 0x8);
@@ -638,8 +635,7 @@ loc_8002D054:
     v1 = lo;
     v0 = lw(s0 + 0xC);
     mult(v1, v0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
+    v0 = *gNumFramesDrawn;
     a0 += a1;
     sw(a0, s0 + 0x4);
     sw(v1, s0 + 0x8);
@@ -815,8 +811,7 @@ loc_8002D2F4:
     v0 = lw(s0 + 0xC);
     v1++;
     mult(v1, v0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C10);                               // Load from: gNumFramesDrawn (80077C10)
+    v0 = *gNumFramesDrawn;
     a0 += a1;
     sw(a0, s0 + 0x4);
     sw(v1, s0 + 0x8);

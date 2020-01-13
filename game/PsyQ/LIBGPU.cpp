@@ -5,6 +5,7 @@
 #include "LIBETC.h"
 #include "PcPsx/Endian.h"
 #include "PsxVm/PsxVm.h"
+#include "PsxVm/VmSVal.h"
 
 void LIBGPU_ResetGraph() noexcept {
 loc_8004BCC8:
@@ -511,31 +512,35 @@ void LIBGPU_ClearImage() noexcept {
     return;
 }
 
-void LIBGPU_LoadImage() noexcept {
-loc_8004C438:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(s1, sp + 0x14);
-    s1 = a1;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1C28;                                       // Result = STR_Sys_LoadImage_Msg[0] (80011C28)
-    sw(ra, sp + 0x18);
-    a1 = s0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Upload the given image data to the given area in VRAM.
+// The image data is expected to be 32-bit aligned and in multiples of 32-bits.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_LoadImage(const RECT& dstRect, const uint32_t* const pImageData) noexcept {
+    // Copy the rect onto the VM stack so that invoked functions can get at it.
+    // The given rect might exist outside of the PlayStation's memory space and only exist in the host app memory space:
+    VmSVal<RECT> dstRectCopy(dstRect);
+    
+    // This sanity checks the rect
+    a0 = 0x80011C28;                                    // Result = STR_Sys_LoadImage_Msg[0] (80011C28)
+    a1 = dstRectCopy.addr();
     LIBGPU_checkRECT();
-    a1 = s0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    a2 = 8;                                             // Result = 00000008
+
+    // Get the low level GPU function table
+    v0 = lw(0x80075D54);                                // Load from: gpLIBGPU_SYS_driver_table (80075D54)
+
+    // Do the upload to PSX RAM.
+    // TODO: make this just load to the PSX VRAM directly.
     a0 = lw(v0 + 0x20);
+    a1 = dstRectCopy.addr();    
+    a2 = 8;
+    a3 = ptrToVmAddr(pImageData);
     v0 = lw(v0 + 0x8);
-    a3 = s1;
     ptr_call(v0);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+}
+
+void _thunk_LIBGPU_LoadImage() noexcept {
+    LIBGPU_LoadImage(*vmAddrToPtr<RECT>(a0), vmAddrToPtr<const uint32_t>(a1));
 }
 
 void LIBGPU_StoreImage() noexcept {
@@ -1199,29 +1204,44 @@ loc_8004CE40:
     return;
 }
 
-void LIBGPU_SetDrawMode() noexcept {
-loc_8004CE54:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    a0 = a1;
-    v0 = 2;                                             // Result = 00000002
-    a1 = a2;
-    sw(s1, sp + 0x14);
-    s1 = lw(sp + 0x30);
-    a2 = a3 & 0xFFFF;
-    sw(ra, sp + 0x18);
-    sb(v0, s0 + 0x3);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Populates a 'set draw mode' primitive with the specified settings.
+// Note that the texture window is optional and if not specified then the current window will be used.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetDrawMode(
+    DR_MODE& modePrim,
+    const bool bCanDrawInDisplayArea,
+    const bool bDitheringOn,
+    const uint32_t texPageId,
+    const RECT* const pNewTexWindow
+) noexcept {
+    // Set primitive size
+    modePrim.tag &= 0x00FFFFFF;
+    modePrim.tag |= uint32_t(2) << 24;
+
+    // Set draw mode
+    a0 = bCanDrawInDisplayArea;
+    a1 = bDitheringOn;
+    a2 = texPageId & 0xFFFF;
     LIBGPU_SYS_get_mode();
-    sw(v0, s0 + 0x4);
-    a0 = s1;
-    LIBGPU_SYS_get_tw();
-    sw(v0, s0 + 0x8);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    modePrim.code[0] = v0;
+
+    // Set a texture window if given, or use the existing one if not given
+    if (pNewTexWindow) {
+        // Copy the RECT given to the stack so it's accessible to the PSX
+        VmSVal<RECT> newTexWin(*pNewTexWindow);
+        a0 = newTexWin.addr();
+        LIBGPU_SYS_get_tw();
+    } else {
+        a0 = 0;
+        LIBGPU_SYS_get_tw();
+    }
+
+    modePrim.code[1] = v0;
+}
+
+void _thunk_LIBGPU_SetDrawMode() noexcept {
+    LIBGPU_SetDrawMode(*vmAddrToPtr<DR_MODE>(a0), a1, a2, a3, vmAddrToPtr<const RECT>(lw(sp + 0x10)));
 }
 
 void LIBGPU_SetDrawEnv() noexcept {
@@ -3185,18 +3205,22 @@ loc_8004EC24:
     return;
 }
 
-void LIBGPU_SetShadeTex() noexcept {
-loc_8004EC2C:
-    if (a1 == 0) goto loc_8004EC40;
-    v0 = lbu(a0 + 0x7);
-    v0 |= 1;
-    goto loc_8004EC4C;
-loc_8004EC40:
-    v0 = lbu(a0 + 0x7);
-    v0 &= 0xFE;
-loc_8004EC4C:
-    sb(v0, a0 + 0x7);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Enable or disable texture shading on a specified primitive.
+// When shading is disabled, the texture is displayed as-is.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetShadeTex(void* const pPrim, const bool bDisableShading) noexcept {
+    uint8_t& primCode = ((uint8_t*) pPrim)[7];
+
+    if (bDisableShading) {
+        primCode |= 1;
+    } else {
+        primCode &= 0xFE;
+    }
+}
+
+void _thunk_LIBGPU_SetShadeTex() noexcept {
+    LIBGPU_SetShadeTex(vmAddrToPtr<void>(a0), a1);
 }
 
 void LIBGPU_SetPolyF3() noexcept {
@@ -3280,13 +3304,16 @@ void LIBGPU_SetSprt16() noexcept {
     return;
 }
 
-void LIBGPU_SetSprt() noexcept {
-loc_8004ED1C:
-    v0 = 4;                                             // Result = 00000004
-    sb(v0, a0 + 0x3);
-    v0 = 0x64;                                          // Result = 00000064
-    sb(v0, a0 + 0x7);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize a sprite primitive
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetSprt(SPRT & sprt) noexcept {
+    LIBGPU_setlen(sprt, 4);
+    sprt.code = 0x64;
+}
+
+void _thunk_LIBGPU_SetSprt() noexcept {
+    LIBGPU_SetSprt(*vmAddrToPtr<SPRT>(a0));
 }
 
 void LIBGPU_SetTile1() noexcept {
@@ -3330,9 +3357,11 @@ void LIBGPU_SetBlockFill() noexcept {
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the specified primitive as a flat shaded and unconnected line
+//------------------------------------------------------------------------------------------------------------------------------------------
 void LIBGPU_SetLineF2(LINE_F2& line) noexcept {
-    line.tag &= 0x00FFFFFF;
-    line.tag |= 0x03000000;
+    LIBGPU_setlen(line, 3);
     line.code = 0x40;
 }
 
@@ -3653,7 +3682,7 @@ loc_8004F208:
     a3 = lhu(a3 + 0x60DC);                              // Load from: gLIBGPU_FONT_tpage (800860DC)
     a2 = 0;                                             // Result = 00000000
     sw(0, sp + 0x10);
-    LIBGPU_SetDrawMode();
+    _thunk_LIBGPU_SetDrawMode();
     {
         const bool bJump = (s0 == 0);
         s0 = s1 - 0x10;                                 // Result = gLIBGPU_FONT_FntLoad_Font[0] (80075DA8)
@@ -3757,7 +3786,7 @@ loc_8004F3C8:
     LIBGPU_SetSprt8();
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
-    LIBGPU_SetShadeTex();
+    _thunk_LIBGPU_SetShadeTex();
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lhu(v0 + 0x60E0);                              // Load from: gLIBGPU_FONT_clut (800860E0)
     s1++;
@@ -4277,7 +4306,7 @@ loc_8004FB7C:
     a0 = sp + 0x10;
 loc_8004FB80:
     a1 = t0;
-    LIBGPU_LoadImage();
+    _thunk_LIBGPU_LoadImage();
     a0 = s0;
     a1 = s2;
     a2 = s1;
@@ -4310,7 +4339,7 @@ loc_8004FBC0:
     sh(s0, sp + 0x10);
     sh(s1, sp + 0x12);
     sh(v0, sp + 0x16);
-    LIBGPU_LoadImage();
+    _thunk_LIBGPU_LoadImage();
     a0 = s0;
     a1 = s1;
     LIBGPU_GetClut();

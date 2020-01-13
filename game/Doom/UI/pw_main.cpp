@@ -278,7 +278,7 @@ loc_80037158:
     a3 = lhu(a3 - 0x6B0E);                              // Load from: gTexInfo_STATUS[2] (800A94F2)
     a2 = 0;                                             // Result = 00000000
     sw(0, sp + 0x10);
-    LIBGPU_SetDrawMode();
+    _thunk_LIBGPU_SetDrawMode();
     s0 += 4;                                            // Result = 1F800204
     t3 = 0xFF0000;                                      // Result = 00FF0000
     t3 |= 0xFFFF;                                       // Result = 00FFFFFF

@@ -13,6 +13,9 @@
 #include "r_sky.h"
 #include "r_things.h"
 
+// View properties
+const VmPtr<angle_t> gViewAngle(0x80078294);
+
 void R_Init() noexcept {
 loc_800305B0:
     sp -= 0x20;
