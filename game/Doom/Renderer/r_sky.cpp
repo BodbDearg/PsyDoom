@@ -52,7 +52,7 @@ void R_DrawSky() noexcept {
     SPRT& skyspr = *(SPRT*) getScratchAddr(128);
     LIBGPU_SetSprt(skyspr);
     LIBGPU_SetShadeTex(&skyspr, true);
-	LIBGPU_setXY0(skyspr, 0, 0);
+    LIBGPU_setXY0(skyspr, 0, 0);
     LIBGPU_setWH(skyspr, 256, skytex.height);   // TODO: use constant for screen width
     LIBGPU_setUV0(skyspr, (uint8_t)(skytex.texPageCoordX - (*gViewAngle >> ANGLETOSKYSHIFT)), skytex.texPageCoordY);
     skyspr.clut = *gPaletteClutId_CurMapSky;

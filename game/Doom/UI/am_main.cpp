@@ -604,14 +604,14 @@ loc_8003C3A4:
 // Draw an automap line in the specified color
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const int32_t x2, const int32_t y2) noexcept {    
-    // Reject the line quickly using the 'Cohen–Sutherland' algorithm.
+    // Reject the line quickly using the 'Cohen-Sutherland' algorithm.
     // Note: no clipping is done since that is handled by the hardware.
     enum OutFlags : uint32_t {
         INSIDE  = 0,
-	    LEFT    = 1,
-	    RIGHT	= 2,
-	    BOTTOM	= 4,
-	    TOP	    = 8
+        LEFT    = 1,
+        RIGHT   = 2,
+        BOTTOM  = 4,
+        TOP     = 8
     };
     
     uint32_t outcode1 = (x1 < -128) ? LEFT : INSIDE;
