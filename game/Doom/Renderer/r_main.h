@@ -5,7 +5,12 @@
 struct node_t;
 struct subsector_t;
 
-extern const VmPtr<angle_t> gViewAngle;
+extern const VmPtr<angle_t>     gViewAngle;
+extern const VmPtr<bool32_t>    gbIsSkyVisible;
+extern const VmPtr<bool32_t>    gbDoViewLighting;
+extern const VmPtr<uint32_t>    gCurLightValR;
+extern const VmPtr<uint32_t>    gCurLightValG;
+extern const VmPtr<uint32_t>    gCurLightValB;
 
 void R_Init() noexcept;
 void R_RenderPlayerView() noexcept;

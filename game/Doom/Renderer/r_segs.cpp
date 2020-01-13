@@ -5,6 +5,7 @@
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
+#include "r_main.h"
 
 void R_DrawSubsectorSeg() noexcept {
 loc_8002D3AC:
@@ -724,8 +725,7 @@ loc_8002DE74:
     t5 = a0 + v1;
     t1 = 0xC8;                                          // Result = 000000C8
 loc_8002DE88:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D9C);                               // Load from: gbRenderViewFullbright (80078264)
+    v0 = *gbDoViewLighting;
     v1 = u32(i32(s3) >> 8);
     if (v0 == 0) goto loc_8002DF44;
     v0 = (i32(v1) < 0x40);
@@ -740,8 +740,7 @@ loc_8002DEB0:
     if (v0 != 0) goto loc_8002DEBC;
     v1 = 0xA0;                                          // Result = 000000A0
 loc_8002DEBC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7E8C);                               // Load from: gCurLightValR (80077E8C)
+    v0 = *gCurLightValR;
     mult(v1, v0);
     v0 = lo;
     a1 = u32(i32(v0) >> 7);
@@ -749,8 +748,7 @@ loc_8002DEBC:
     if (v0 != 0) goto loc_8002DEE4;
     a1 = 0xFF;                                          // Result = 000000FF
 loc_8002DEE4:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FCC);                               // Load from: gCurLightValG (80078034)
+    v0 = *gCurLightValG;
     mult(v1, v0);
     v0 = lo;
     a0 = u32(i32(v0) >> 7);
@@ -758,8 +756,7 @@ loc_8002DEE4:
     if (v0 != 0) goto loc_8002DF0C;
     a0 = 0xFF;                                          // Result = 000000FF
 loc_8002DF0C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F70);                               // Load from: gCurLightValB (80077F70)
+    v0 = *gCurLightValB;
     mult(v1, v0);
     v0 = lo;
     v1 = u32(i32(v0) >> 7);
@@ -772,12 +769,9 @@ loc_8002DF38:
     v0 += a0;
     goto loc_8002E13C;
 loc_8002DF44:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7E8C);                               // Load from: gCurLightValR (80077E8C)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FCC);                               // Load from: gCurLightValG (80078034)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F70);                               // Load from: gCurLightValB (80077F70)
+    a1 = *gCurLightValR;
+    a0 = *gCurLightValG;
+    v1 = *gCurLightValB;
 loc_8002DF5C:
     s7 = 0x1F800000;                                    // Result = 1F800000
     s7 += 0x200;                                        // Result = 1F800200

@@ -1,6 +1,7 @@
 #include "i_misc.h"
 
 #include "Doom/Game/p_tick.h"
+#include "Doom/Renderer/r_main.h"
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBC2.h"
@@ -876,17 +877,14 @@ loc_8003B0F0:
     a2 = v1;
 loc_8003B144:
     a0 = lw(a1 + 0x44);
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7D9C);                                // Store to: gbRenderViewFullbright (80078264)
+    *gbDoViewLighting = true;
     v0 = (i32(a0) < 0x3D);
     v1 = 0;                                             // Result = 00000000
     if (v0 == 0) goto loc_8003B16C;
     v0 = a0 & 8;
     if (v0 == 0) goto loc_8003B174;
 loc_8003B16C:
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7D9C);                                 // Store to: gbRenderViewFullbright (80078264)
+    *gbDoViewLighting = false;
 loc_8003B174:
     a0 = lw(a1 + 0x30);
     v0 = (i32(a0) < 0x3D);
@@ -897,8 +895,7 @@ loc_8003B174:
     }
     if (v0 == 0) goto loc_8003B1A0;
 loc_8003B190:
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7D9C);                                 // Store to: gbRenderViewFullbright (80078264)
+    *gbDoViewLighting = false;
     v1 = 0xE;                                           // Result = 0000000E
     goto loc_8003B210;
 loc_8003B1A0:

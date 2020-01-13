@@ -8,6 +8,7 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/Renderer/r_main.h"
 #include "g_game.h"
 #include "p_ceiling.h"
 #include "p_doors.h"
@@ -1519,8 +1520,7 @@ loc_80027400:
     v0 = (i32(s1) < 0x10);
     s0 += 0x14;
     if (v0 != 0) goto loc_8002726C;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E0C);                               // Load from: gbIsSkyVisible (800781F4)
+    v0 = *gbIsSkyVisible;
     if (v0 == 0) goto loc_80027444;
     v0 = lw(gp + 0x554);                                // Load from: gpUpdateFireSkyFunc (80077B34)
     if (v0 == 0) goto loc_80027444;

@@ -1,9 +1,11 @@
 #include "r_main.h"
 
+#include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_setup.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
 #include "r_bsp.h"
@@ -14,7 +16,14 @@
 #include "r_things.h"
 
 // View properties
-const VmPtr<angle_t> gViewAngle(0x80078294);
+const VmPtr<angle_t>    gViewAngle(0x80078294);
+const VmPtr<bool32_t>   gbIsSkyVisible(0x800781F4);
+
+// Light properties
+const VmPtr<bool32_t>   gbDoViewLighting(0x80078264);
+const VmPtr<uint32_t>   gCurLightValR(0x80077E8C);
+const VmPtr<uint32_t>   gCurLightValG(0x80078034);
+const VmPtr<uint32_t>   gCurLightValB(0x80077F70);
 
 void R_Init() noexcept {
 loc_800305B0:
@@ -53,19 +62,20 @@ loc_800305B0:
 }
 
 void R_RenderPlayerView() noexcept {
-loc_80030634:
-    v0 = lw(gp + 0xC84);                                // Load from: gbRenderViewFullbright (80078264)
     sp -= 0x20;
-    sw(ra, sp + 0x1C);
     sw(s0, sp + 0x18);
-    if (v0 != 0) goto loc_80030660;
-    v1 = lw(gp + 0xA88);                                // Load from: gpLightsLump (80078068)
-    v0 = 0x80;                                          // Result = 00000080
-    sw(v0, gp + 0x990);                                 // Store to: gCurLightValB (80077F70)
-    sw(v0, gp + 0xA54);                                 // Store to: gCurLightValG (80078034)
-    sw(v0, gp + 0x8AC);                                 // Store to: gCurLightValR (80077E8C)
-    sw(v1, gp + 0xA74);                                 // Store to: gpCurLightsLumpEntry (80078054)
-loc_80030660:
+
+    // If currently in fullbright mode (no lighting) then setup the light params now
+    if (!*gbDoViewLighting) {
+        *gCurLightValR = 128;
+        *gCurLightValG = 128;
+        *gCurLightValB = 128;
+        
+        v1 = lw(gp + 0xA88);                            // Load from: gpLightsLump (80078068)
+        sw(v1, gp + 0xA74);                             // Store to: gpCurLightsLumpEntry (80078054)
+    }
+
+    // Setup trig related stuff before drawing
     v1 = *gCurPlayerIndex;
     a2 = 0x80070000;                                    // Result = 80070000
     a2 = lw(a2 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
@@ -117,6 +127,8 @@ loc_80030660:
     at = 0x80080000;                                    // Result = 80080000
     sh(v1, at + 0x653C);                                // Store to: gViewCosDiv16 (8008653C)
     LIBGTE_SetRotMatrix();
+
+    // Traverse the BSP tree to determine what needs to be drawn and in what order
     R_BSP();
     v0 = lw(gp + 0xA84);                                // Load from: gppEndDrawSubsector (80078064)
     s0 = 0x800B0000;                                    // Result = 800B0000
@@ -124,259 +136,109 @@ loc_80030660:
     v0 -= s0;
     v0 = u32(i32(v0) >> 2);
     sw(v0, gp + 0xB0C);                                 // Store to: gNumDrawSubsectors (800780EC)
+
+    // Finish up the previous draw before we continue
     I_DrawPresent();
-    v0 = lw(gp + 0xC14);                                // Load from: gbIsSkyVisible (800781F4)
-    if (v0 == 0) goto loc_80030774;
-    R_DrawSky();
-loc_80030774:
+
+    // Draw the sky if currently visible
+    if (*gbIsSkyVisible) {
+        R_DrawSky();
+    }
+    
+    // Draw all subsectors emitted during BSP traversal.
+    // Draw them in back to front order.
     v1 = lw(gp + 0xA84);                                // Load from: gppEndDrawSubsector (80078064)
     v0 = s0 - 4;                                        // Result = gCheatSequenceBtns[6] (800A91B0)
     v1 -= 4;
     v0 = (v0 < v1);
     sw(v1, gp + 0xA84);                                 // Store to: gppEndDrawSubsector (80078064)
     s0 = 0xFF;                                          // Result = 000000FF
-    if (v0 == 0) goto loc_8003089C;
-loc_80030790:
-    v0 = lw(gp + 0xA84);                                // Load from: gppEndDrawSubsector (80078064)
-    t0 = lw(v0);
-    v0 = lw(gp + 0xC84);                                // Load from: gbRenderViewFullbright (80078264)
-    a1 = lw(t0);
-    sw(a1, gp + 0xA2C);                                 // Store to: gpCurSector (8007800C)
-    if (v0 == 0) goto loc_80030874;
-    v1 = lh(a1 + 0x10);
-    v0 = lw(gp + 0xA88);                                // Load from: gpLightsLump (80078068)
-    a0 = lh(a1 + 0x12);
-    v1 <<= 2;
-    v1 += v0;
-    sw(v1, gp + 0xA74);                                 // Store to: gpCurLightsLumpEntry (80078054)
-    v0 = lbu(v1);
-    mult(a0, v0);
-    a0 = lh(a1 + 0x12);
-    v0 = lo;
-    a3 = u32(i32(v0) >> 8);
-    sw(a3, gp + 0x8AC);                                 // Store to: gCurLightValR (80077E8C)
-    v0 = lbu(v1 + 0x1);
-    mult(a0, v0);
-    a0 = lh(a1 + 0x12);
-    v0 = lo;
-    a2 = u32(i32(v0) >> 8);
-    sw(a2, gp + 0xA54);                                 // Store to: gCurLightValG (80078034)
-    v0 = lbu(v1 + 0x2);
-    mult(a0, v0);
-    a0 = lw(gp + 0x954);                                // Load from: gpViewPlayer (80077F34)
-    v1 = lw(a0 + 0xE4);
-    v0 = lo;
-    a1 = u32(i32(v0) >> 8);
-    sw(a1, gp + 0x990);                                 // Store to: gCurLightValB (80077F70)
-    v0 = a3 + v1;
-    if (v1 == 0) goto loc_80030874;
-    sw(v0, gp + 0x8AC);                                 // Store to: gCurLightValR (80077E8C)
-    v0 = (i32(v0) < 0x100);
-    v1 = lw(a0 + 0xE4);
-    a0 = lw(a0 + 0xE4);
-    v1 += a2;
-    a0 += a1;
-    sw(v1, gp + 0xA54);                                 // Store to: gCurLightValG (80078034)
-    sw(a0, gp + 0x990);                                 // Store to: gCurLightValB (80077F70)
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(v1) < 0x100);
-        if (bJump) goto loc_8003085C;
+
+    while (v0 != 0) {
+        v0 = lw(gp + 0xA84);                                // Load from: gppEndDrawSubsector (80078064)
+        t0 = lw(v0);
+        a1 = lw(t0);
+        sw(a1, gp + 0xA2C);                                 // Store to: gpCurSector (8007800C)
+
+        if (*gbDoViewLighting) {
+            v1 = lh(a1 + 0x10);
+            v0 = lw(gp + 0xA88);                            // Load from: gpLightsLump (80078068)
+            a0 = lh(a1 + 0x12);
+            v1 <<= 2;
+            v1 += v0;
+            sw(v1, gp + 0xA74);                             // Store to: gpCurLightsLumpEntry (80078054)
+            v0 = lbu(v1);
+            mult(a0, v0);
+            a0 = lh(a1 + 0x12);
+            v0 = lo;
+            a3 = u32(i32(v0) >> 8);
+            *gCurLightValR = a3;
+            v0 = lbu(v1 + 0x1);
+            mult(a0, v0);
+            a0 = lh(a1 + 0x12);
+            v0 = lo;
+            a2 = u32(i32(v0) >> 8);
+            *gCurLightValG = a2;
+            v0 = lbu(v1 + 0x2);
+            mult(a0, v0);
+            a0 = lw(gp + 0x954);                            // Load from: gpViewPlayer (80077F34)
+            v1 = lw(a0 + 0xE4);
+            v0 = lo;
+            a1 = u32(i32(v0) >> 8);
+            *gCurLightValB = a1;
+            v0 = a3 + v1;
+
+            if (v1 != 0) {
+                *gCurLightValR = v0;
+                v1 = lw(a0 + 0xE4);
+                a0 = lw(a0 + 0xE4);
+                v1 += a2;
+                a0 += a1;
+                *gCurLightValG = v1;
+                *gCurLightValB = a0;
+
+                if (i32(v0) > 255) {
+                    *gCurLightValR = 255;
+                }
+
+                if (i32(v1) > 255) {
+                    *gCurLightValG = 255;
+                }
+                
+                if (i32(a0) > 255) {
+                    *gCurLightValB = 255;
+                }
+            }
+        }
+        
+        a0 = t0;
+        R_DrawSubsector();
+        v1 = lw(gp + 0xA84);                                // Load from: gppEndDrawSubsector (80078064)
+        v0 = 0x800B0000;                                    // Result = 800B0000
+        v0 -= 0x6E50;                                       // Result = gCheatSequenceBtns[6] (800A91B0)
+        v1 -= 4;
+        v0 = (v0 < v1);
+        sw(v1, gp + 0xA84);                                 // Store to: gppEndDrawSubsector (80078064)
     }
-    sw(s0, gp + 0x8AC);                                 // Store to: gCurLightValR (80077E8C)
-loc_8003085C:
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(a0) < 0x100);
-        if (bJump) goto loc_80030868;
-    }
-    sw(s0, gp + 0xA54);                                 // Store to: gCurLightValG (80078034)
-loc_80030868:
-    if (v0 != 0) goto loc_80030874;
-    sw(s0, gp + 0x990);                                 // Store to: gCurLightValB (80077F70)
-loc_80030874:
-    a0 = t0;
-    R_DrawSubsector();
-    v1 = lw(gp + 0xA84);                                // Load from: gppEndDrawSubsector (80078064)
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x6E50;                                       // Result = gCheatSequenceBtns[6] (800A91B0)
-    v1 -= 4;
-    v0 = (v0 < v1);
-    sw(v1, gp + 0xA84);                                 // Store to: gppEndDrawSubsector (80078064)
-    if (v0 != 0) goto loc_80030790;
-loc_8003089C:
+
     R_DrawWeapon();
-    s0 = 0x1F800000;                                    // Result = 1F800000
-    s0 += 0x200;                                        // Result = 1F800200
-    a0 = s0;                                            // Result = 1F800200
+
+    // Clearing the texture window: this is probably not required?
+    // Not sure what the reason is for this, but everything seems to work fine without doing this.
+    // I'll leave the code as-is for now though until I have a better understanding of this, just in case something breaks.
+    a0 = 0x1F800200;
     a1 = sp + 0x10;
     sh(0, sp + 0x10);
     sh(0, sp + 0x12);
     sh(0, sp + 0x14);
     sh(0, sp + 0x16);
     LIBGPU_SetTexWindow();
-    s0 += 4;                                            // Result = 1F800204
-    t3 = 0xFF0000;                                      // Result = 00FF0000
-    t3 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t7 = 0x80080000;                                    // Result = 80080000
-    t7 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    t8 = t7 & t3;                                       // Result = 00086550
-    t6 = 0x4000000;                                     // Result = 04000000
-    t5 = 0x80000000;                                    // Result = 80000000
-    t4 = -1;                                            // Result = FFFFFFFF
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    t1 = t0 << 2;
-    t2 = t1 + 4;
-loc_80030904:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = (a0 < v0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t1 + a0;
-        if (bJump) goto loc_8003096C;
-    }
-    v0 += 4;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    v0 = (v0 < v1);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t2 + a0;
-        if (bJump) goto loc_80030A30;
-    }
-    v0 = lw(a2);
-    v1 = 0xFF000000;                                    // Result = FF000000
-    at = 0x80070000;                                    // Result = 80070000
-    sw(t7, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    v0 &= v1;
-    v0 |= t8;
-    sw(v0, a2);
-    sb(0, a2 + 0x3);
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-loc_8003096C:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = t1 + a0;
-    v0 += 4;
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_80030A20;
-    if (v1 == a0) goto loc_80030904;
-loc_80030990:
-    v0 = lw(gp + 0x5E0);                                // Load from: GPU_REG_GP1 (80077BC0)
-    v0 = lw(v0);
-    v0 &= t6;
-    if (v0 == 0) goto loc_80030904;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= t3;
-    v0 |= t5;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t4) goto loc_800309FC;
-    a3 = -1;                                            // Result = FFFFFFFF
-loc_800309E0:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x5DC);                                // Load from: GPU_REG_GP0 (80077BBC)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a3) goto loc_800309E0;
-loc_800309FC:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 == v0) goto loc_80030904;
-    goto loc_80030990;
-loc_80030A20:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 += t2;
-loc_80030A30:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    a1 = 0xFF0000;                                      // Result = 00FF0000
-    a1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    a0 = 0xFF000000;                                    // Result = FF000000
-    v1 = lw(a2);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 &= a0;
-    v0 &= a1;
-    v1 |= v0;
-    sw(v1, a2);
-    sb(t0, a2 + 0x3);
-    t0--;
-    v0 = -1;                                            // Result = FFFFFFFF
-    a2 += 4;
-    if (t0 == v0) goto loc_80030A90;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_80030A78:
-    v0 = lw(s0);
-    s0 += 4;
-    t0--;
-    sw(v0, a2);
-    a2 += 4;
-    if (t0 != v1) goto loc_80030A78;
-loc_80030A90:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    t2 = 0x4000000;                                     // Result = 04000000
-    if (v1 == v0) goto loc_80030B44;
-    a3 = 0xFF0000;                                      // Result = 00FF0000
-    a3 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t1 = 0x80000000;                                    // Result = 80000000
-    t0 = -1;                                            // Result = FFFFFFFF
-loc_80030ABC:
-    v0 = lw(gp + 0x5E0);                                // Load from: GPU_REG_GP1 (80077BC0)
-    v0 = lw(v0);
-    v0 &= t2;
-    if (v0 == 0) goto loc_80030B44;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= a3;
-    v0 |= t1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t0) goto loc_80030B28;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_80030B0C:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x5DC);                                // Load from: GPU_REG_GP0 (80077BBC)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a2) goto loc_80030B0C;
-loc_80030B28:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 != v0) goto loc_80030ABC;
+
+    I_AddPrim(getScratchAddr(128));
+
 loc_80030B44:
-    ra = lw(sp + 0x1C);
     s0 = lw(sp + 0x18);
     sp += 0x20;
-    return;
 }
 
 void R_SlopeDiv() noexcept {

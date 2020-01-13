@@ -3517,7 +3517,7 @@ static const ProgElem ELEMS[] = {
     { 0x80078258, 0x8007825C, "gGameSkill",                             ProgElemType::UINT32 },
     { 0x8007825C, 0x80078260, "gCreditsScrollYPos",                     ProgElemType::INT32 },
     { 0x80078260, 0x80078264, "gpOldValue",                             ProgElemType::PTR32 },
-    { 0x80078264, 0x80078268, "gbRenderViewFullbright",                 ProgElemType::UINT32 },
+    { 0x80078264, 0x80078268, "gbDoViewLighting",                       ProgElemType::UINT32 },
     { 0x80078270, 0x80078274, "gMapNumToCheatWarpTo",                   ProgElemType::UINT32 },
     { 0x80078274, 0x80078278, "gpCloseLine",                            ProgElemType::PTR32 },
     { 0x80078278, 0x8007827C, "gTexCacheRowBlockH",                     ProgElemType::UINT32 },

@@ -5,28 +5,22 @@
 #include "Doom/Game/p_setup.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGTE.h"
+#include "r_main.h"
 
 void R_BSP() noexcept {
-loc_8002ACE8:
-    sp -= 0x18;
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 -= 0x70B8;                                       // Result = 800A8F48
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x6E4C;                                       // Result = gpDrawSubsectors[0] (800A91B4)
+    // TODO: what is this buffer?
+    a0 = 0x800A8F48;                                    // Result = 800A8F48
     a1 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x10);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7F9C);                                // Store to: gppEndDrawSubsector (80078064)
     a2 = 0x100;                                         // Result = 00000100
     _thunk_D_memset();
-    a0 = *gNumBspNodes;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7E0C);                                 // Store to: gbIsSkyVisible (800781F4)
-    a0--;
+
+    v0 = 0x800A91B4;                                    // Result = gpDrawSubsectors[0] (800A91B4)
+    sw(v0, 0x80078064);                                 // Store to: gppEndDrawSubsector (80078064)
+
+    *gbIsSkyVisible = false;                            // Initially assume the sky is not visible until found otherwise
+
+    a0 = *gNumBspNodes - 1;
     R_RenderBSPNode();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void R_RenderBSPNode() noexcept {
@@ -847,8 +841,7 @@ loc_8002B810:
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8002B848;
     }
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7E0C);                                // Store to: gbIsSkyVisible (800781F4)
+    *gbIsSkyVisible = v0;
 loc_8002B848:
     v0 = (i32(a3) < 0x101);
     if (i32(a2) >= 0) goto loc_8002B854;

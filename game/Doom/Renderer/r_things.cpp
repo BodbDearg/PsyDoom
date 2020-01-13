@@ -386,12 +386,9 @@ loc_8002F8D4:
     sb(v0, at + 0x206);                                 // Store to: 1F800206
     goto loc_8002F958;
 loc_8002F928:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x7E8C);                              // Load from: gCurLightValR (80077E8C)
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lbu(v1 - 0x7FCC);                              // Load from: gCurLightValG (80078034)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lbu(a0 + 0x7F70);                              // Load from: gCurLightValB (80077F70)
+    v0 = (uint8_t) *gCurLightValR;
+    v1 = (uint8_t) *gCurLightValG;
+    a0 = (uint8_t) *gCurLightValB;
     at = 0x1F800000;                                    // Result = 1F800000
     sb(v0, at + 0x204);                                 // Store to: 1F800204
     at = 0x1F800000;                                    // Result = 1F800000
@@ -1003,12 +1000,9 @@ loc_800302DC:
     v0 += a0;
     goto loc_80030468;
 loc_800302E8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x7E8C);                              // Load from: gCurLightValR (80077E8C)
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lbu(v1 - 0x7FCC);                              // Load from: gCurLightValG (80078034)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lbu(a0 + 0x7F70);                              // Load from: gCurLightValB (80077F70)
+    v0 = (uint8_t) *gCurLightValR;
+    v1 = (uint8_t) *gCurLightValG;
+    a0 = (uint8_t) *gCurLightValB;
     at = 0x1F800000;                                    // Result = 1F800000
     sb(v0, at + 0x204);                                 // Store to: 1F800204
     at = 0x1F800000;                                    // Result = 1F800000

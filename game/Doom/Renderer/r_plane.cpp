@@ -4,6 +4,7 @@
 #include "Doom/Base/w_wad.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
+#include "r_main.h"
 
 void R_DrawSubsectorFlat() noexcept {
 loc_8002E2A8:
@@ -552,8 +553,7 @@ loc_8002EAE4:
     t5 -= t3;
     t1 -= t3;
 loc_8002EAF0:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D9C);                               // Load from: gbRenderViewFullbright (80078264)
+    v0 = *gbDoViewLighting;
     {
         const bool bJump = (v0 == 0);
         v0 = u32(i32(t0) >> 1);
@@ -573,8 +573,7 @@ loc_8002EB20:
     if (v0 != 0) goto loc_8002EB2C;
     v1 = 0xA0;                                          // Result = 000000A0
 loc_8002EB2C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7E8C);                               // Load from: gCurLightValR (80077E8C)
+    v0 = *gCurLightValR;
     mult(v1, v0);
     v0 = lo;
     a3 = u32(i32(v0) >> 7);
@@ -591,8 +590,7 @@ loc_8002EB54:
     if (v0 != 0) goto loc_8002EB7C;
     a2 = 0xFF;                                          // Result = 000000FF
 loc_8002EB7C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F70);                               // Load from: gCurLightValB (80077F70)
+    v0 = *gCurLightValB;
     mult(v1, v0);
     v0 = lo;
     v1 = u32(i32(v0) >> 7);
@@ -609,12 +607,9 @@ loc_8002EBA8:
     v0 += a0;
     goto loc_8002EE08;
 loc_8002EBB4:
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7E8C);                               // Load from: gCurLightValR (80077E8C)
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7FCC);                               // Load from: gCurLightValG (80078034)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F70);                               // Load from: gCurLightValB (80077F70)
+    a3 = *gCurLightValR;
+    a2 = *gCurLightValG;
+    v1 = *gCurLightValB;
     v0 = (i32(a0) < 0x100);
 loc_8002EBD0:
     at = 0x1F800000;                                    // Result = 1F800000
