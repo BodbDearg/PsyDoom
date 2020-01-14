@@ -1,15 +1,28 @@
 #pragma once
 
+#include <cstdint>
+
+// Represents a basic transform matrix encoding a 3D rotation and translation
+struct MATRIX {
+    int16_t m[3][3];    // Rotation matrix: 3x3
+    int32_t t[3];       // Translation
+};
+
+static_assert(sizeof(MATRIX) == 32);
+
 void LIBGTE_MulMatrix() noexcept;
 void LIBGTE_MulMatrix2() noexcept;
 void LIBGTE_ApplyMatrix() noexcept;
 void LIBGTE_ApplyMatrixSV() noexcept;
 void LIBGTE_TransMatrix() noexcept;
 void LIBGTE_ScaleMatrix() noexcept;
-void LIBGTE_SetRotMatrix() noexcept;
+
+void LIBGTE_SetRotMatrix(const MATRIX& m) noexcept;
+void _thunk_LIBGTE_SetRotMatrix() noexcept;
+
 void LIBGTE_SetLightMatrix() noexcept;
 void LIBGTE_SetColorMatrix() noexcept;
-void LIBGTE_SetTransMatrix() noexcept;
+void LIBGTE_SetTransMatrix(const MATRIX& m) noexcept;
 void LIBGTE_SetVertex0() noexcept;
 void LIBGTE_SetVertex1() noexcept;
 void LIBGTE_SetVertex2() noexcept;

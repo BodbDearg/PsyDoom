@@ -2,11 +2,13 @@
 
 #include "Doom/doomdef.h"
 
+struct MATRIX;
 struct node_t;
 struct subsector_t;
 
 extern const VmPtr<angle_t>     gViewAngle;
 extern const VmPtr<bool32_t>    gbIsSkyVisible;
+extern const VmPtr<MATRIX>      gDrawMatrix;
 extern const VmPtr<bool32_t>    gbDoViewLighting;
 extern const VmPtr<uint32_t>    gCurLightValR;
 extern const VmPtr<uint32_t>    gCurLightValG;

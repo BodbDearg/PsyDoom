@@ -267,19 +267,23 @@ void LIBGTE_ScaleMatrix() noexcept {
     return;
 }
 
-void LIBGTE_SetRotMatrix() noexcept {
-loc_80050100:
-    t0 = lw(a0);
-    t1 = lw(a0 + 0x4);
-    t2 = lw(a0 + 0x8);
-    t3 = lw(a0 + 0xC);
-    t4 = lw(a0 + 0x10);
-    ctc2(t0, 0);
-    ctc2(t1, 1);
-    ctc2(t2, 2);
-    ctc2(t3, 3);
-    ctc2(t4, 4);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Upload the rotation component of the given MATRIX to the GTE
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGTE_SetRotMatrix(const MATRIX& m) noexcept {
+    const auto makeWord32 = [](const uint16_t u16a, const uint16_t u16b) noexcept {
+        return (uint32_t) u16a | ((uint32_t) u16b << 16);
+    };
+
+    ctc2(makeWord32(m.m[0][0], m.m[0][1]), 0);
+    ctc2(makeWord32(m.m[0][2], m.m[1][0]), 1);
+    ctc2(makeWord32(m.m[1][1], m.m[1][2]), 2);
+    ctc2(makeWord32(m.m[2][0], m.m[2][1]), 3);
+    ctc2(m.m[2][2], 4);
+}
+
+void _thunk_LIBGTE_SetRotMatrix() noexcept {
+    LIBGTE_SetRotMatrix(*vmAddrToPtr<MATRIX>(a0));
 }
 
 void LIBGTE_SetLightMatrix() noexcept {
@@ -310,15 +314,13 @@ void LIBGTE_SetColorMatrix() noexcept {
     return;
 }
 
-void LIBGTE_SetTransMatrix() noexcept {
-loc_80050190:
-    t0 = lw(a0 + 0x14);
-    t1 = lw(a0 + 0x18);
-    t2 = lw(a0 + 0x1C);
-    ctc2(t0, 5);
-    ctc2(t1, 6);
-    ctc2(t2, 7);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Upload the translation component of the given MATRIX to the GTE
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGTE_SetTransMatrix(const MATRIX& m) noexcept {
+    ctc2(m.t[0], 5);
+    ctc2(m.t[1], 6);
+    ctc2(m.t[2], 7);
 }
 
 void LIBGTE_SetVertex0() noexcept {

@@ -771,10 +771,9 @@ extern void LIBGTE_ApplyMatrix() noexcept;
 extern void LIBGTE_ApplyMatrixSV() noexcept;
 extern void LIBGTE_TransMatrix() noexcept;
 extern void LIBGTE_ScaleMatrix() noexcept;
-extern void LIBGTE_SetRotMatrix() noexcept;
+extern void _thunk_LIBGTE_SetRotMatrix() noexcept;
 extern void LIBGTE_SetLightMatrix() noexcept;
 extern void LIBGTE_SetColorMatrix() noexcept;
-extern void LIBGTE_SetTransMatrix() noexcept;
 extern void LIBGTE_SetVertex0() noexcept;
 extern void LIBGTE_SetVertex1() noexcept;
 extern void LIBGTE_SetVertex2() noexcept;
@@ -1698,10 +1697,9 @@ namespace PsxVm {
         { 0x8004FF5C, &LIBGTE_ApplyMatrixSV },
         { 0x8004FFB8, &LIBGTE_TransMatrix },
         { 0x8004FFDC, &LIBGTE_ScaleMatrix },
-        { 0x80050100, &LIBGTE_SetRotMatrix },
+        { 0x80050100, &_thunk_LIBGTE_SetRotMatrix },
         { 0x80050130, &LIBGTE_SetLightMatrix },
         { 0x80050160, &LIBGTE_SetColorMatrix },
-        { 0x80050190, &LIBGTE_SetTransMatrix },
         { 0x800501B4, &LIBGTE_SetVertex0 },
         { 0x800501C4, &LIBGTE_SetVertex1 },
         { 0x800501D4, &LIBGTE_SetVertex2 },

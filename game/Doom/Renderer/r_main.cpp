@@ -18,6 +18,7 @@
 // View properties
 const VmPtr<angle_t>    gViewAngle(0x80078294);
 const VmPtr<bool32_t>   gbIsSkyVisible(0x800781F4);
+const VmPtr<MATRIX>     gDrawMatrix(0x80086530);
 
 // Light properties
 const VmPtr<bool32_t>   gbDoViewLighting(0x80078264);
@@ -25,40 +26,29 @@ const VmPtr<uint32_t>   gCurLightValR(0x80077E8C);
 const VmPtr<uint32_t>   gCurLightValG(0x80078034);
 const VmPtr<uint32_t>   gCurLightValB(0x80077F70);
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// One time setup for the 3D view renderer
+//------------------------------------------------------------------------------------------------------------------------------------------
 void R_Init() noexcept {
-loc_800305B0:
-    sp -= 0x20;
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
+    // Initialize texture lists, palettes etc.
     R_InitData();
-    s0 = 0x80080000;                                    // Result = 80080000
-    s0 += 0x6544;                                       // Result = 80086544
-    s1 = s0 - 0x14;                                     // Result = gViewSinDiv16 (80086530)
-    sw(0, s0);                                          // Store to: 80086544
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at + 0x6548);                                 // Store to: 80086548
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at + 0x654C);                                 // Store to: 8008654C
-    a0 = s1;                                            // Result = gViewSinDiv16 (80086530)
-    LIBGTE_SetTransMatrix();
-    a0 = s1;                                            // Result = gViewSinDiv16 (80086530)
-    v0 = 0x1000;                                        // Result = 00001000
-    sh(0, s0 - 0x14);                                   // Store to: gViewSinDiv16 (80086530)
-    sh(0, s0 - 0x12);                                   // Store to: gViewSinDiv16 + 2 (80086532) (80086532)
-    sh(0, s0 - 0x10);                                   // Store to: gMinusViewCosDiv16 (80086534)
-    sh(0, s0 - 0xE);                                    // Store to: gMinusViewCosDiv16 + 2 (80086536) (80086536)
-    sh(v0, s0 - 0xC);                                   // Store to: 80086538
-    sh(0, s0 - 0xA);                                    // Store to: 8008653A
-    sh(0, s0 - 0x8);                                    // Store to: gViewCosDiv16 (8008653C)
-    sh(0, s0 - 0x6);                                    // Store to: gViewCosDiv16 + 2 (8008653E) (8008653E)
-    sh(0, s0 - 0x4);                                    // Store to: gViewSinDiv16_2 (80086540)
-    LIBGTE_SetRotMatrix();
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Initialize the transform matrix used for drawing and upload it to the GTE
+    gDrawMatrix->t[0] = 0;
+    gDrawMatrix->t[1] = 0;
+    gDrawMatrix->t[2] = 0;
+    LIBGTE_SetTransMatrix(*gDrawMatrix);
+
+    gDrawMatrix->m[0][0] = 0;
+    gDrawMatrix->m[0][1] = 0;
+    gDrawMatrix->m[0][2] = 0;
+    gDrawMatrix->m[1][0] = 0;
+    gDrawMatrix->m[1][1] = 4096;    // TODO: why this value specifically? Does it represent '1.0'?
+    gDrawMatrix->m[1][2] = 0;
+    gDrawMatrix->m[2][0] = 0;
+    gDrawMatrix->m[2][1] = 0;
+    gDrawMatrix->m[2][2] = 0;
+    LIBGTE_SetRotMatrix(*gDrawMatrix);
 }
 
 void R_RenderPlayerView() noexcept {
@@ -108,25 +98,25 @@ void R_RenderPlayerView() noexcept {
     v0 = lw(v1);
     v1 = lw(a2);
     a0 = 0x80080000;                                    // Result = 80080000
-    a0 += 0x6530;                                       // Result = gViewSinDiv16 (80086530)
+    a0 += 0x6530;                                       // Result = gDrawMatrix_R0C0 (80086530)
     sw(t0, gp + 0xCB4);                                 // Store to: gViewAngle (80078294)
     sw(a1, gp + 0xAD8);                                 // Store to: gViewSin (800780B8)
     v0 = lw(v0 + 0x4);
     a1 = u32(i32(a1) >> 4);
     sw(v1, gp + 0xABC);                                 // Store to: gViewCos (8007809C)
-    sh(a1, a0);                                         // Store to: gViewSinDiv16 (80086530)
+    sh(a1, a0);                                         // Store to: gDrawMatrix_R0C0 (80086530)
     at = 0x80080000;                                    // Result = 80080000
-    sh(a1, at + 0x6540);                                // Store to: gViewSinDiv16_2 (80086540)
+    sh(a1, at + 0x6540);                                // Store to: gDrawMatrix_R2C2 (80086540)
     v0 &= a3;
     sw(v0, gp + 0x904);                                 // Store to: gViewY (80077EE4)
     v0 = -v1;
     v0 = u32(i32(v0) >> 4);
     v1 = u32(i32(v1) >> 4);
     at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at + 0x6534);                                // Store to: gMinusViewCosDiv16 (80086534)
+    sh(v0, at + 0x6534);                                // Store to: gDrawMatrix_R0C2 (80086534)
     at = 0x80080000;                                    // Result = 80080000
-    sh(v1, at + 0x653C);                                // Store to: gViewCosDiv16 (8008653C)
-    LIBGTE_SetRotMatrix();
+    sh(v1, at + 0x653C);                                // Store to: gDrawMatrix_R2C0 (8008653C)
+    _thunk_LIBGTE_SetRotMatrix();
 
     // Traverse the BSP tree to determine what needs to be drawn and in what order
     R_BSP();
