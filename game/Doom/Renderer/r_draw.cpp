@@ -4,6 +4,7 @@
 #include "Doom/Game/p_setup.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGTE.h"
+#include "r_main.h"
 #include "r_plane.h"
 #include "r_segs.h"
 #include "r_things.h"
@@ -200,8 +201,7 @@ loc_8002C9D8:
     s1 += 8;
     if (v0 != 0) goto loc_8002C9A8;
 loc_8002C9E0:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FF4);                               // Load from: gpCurSector (8007800C)
+    v0 = *gpCurDrawSector;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7EEC);                               // Load from: gViewZ (80077EEC)
     v0 = lw(v0);
@@ -216,8 +216,7 @@ loc_8002C9E0:
     a1 = 0;                                             // Result = 00000000
     R_DrawSubsectorFlat();
 loc_8002CA14:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FF4);                               // Load from: gpCurSector (8007800C)
+    a0 = *gpCurDrawSector;
     v1 = lw(a0 + 0xC);
     v0 = -1;                                            // Result = FFFFFFFF
     if (v1 == v0) goto loc_8002CA5C;

@@ -24,8 +24,18 @@ struct texture_t {
 
 static_assert(sizeof(texture_t) == 32);
 
+// An entry in the 'LIGHTS' lump.
+// Simply holds the color of a light to apply to a sector.
+struct light_t {
+    uint8_t     r;
+    uint8_t     g;
+    uint8_t     b;
+    uint8_t     _pad;    // Does not appear to be used, always '0'
+};
+
 extern const VmPtr<VmPtr<texture_t>>    gpTextures;
 extern const VmPtr<VmPtr<texture_t>>    gpSkyTexture;
+extern const VmPtr<VmPtr<light_t>>      gpLightsLump;
 
 void R_InitData() noexcept;
 void R_InitTextures() noexcept;
@@ -35,4 +45,5 @@ void R_TextureNumForName() noexcept;
 void R_FlatNumForName() noexcept;
 void R_InitPalette() noexcept;
 
+// PC-PSX: helper to reduce some redundancy
 RECT getTextureVramRect(const texture_t& tex) noexcept;

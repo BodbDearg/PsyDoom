@@ -10,6 +10,9 @@
 const VmPtr<VmPtr<texture_t>>   gpTextures(0x80078128);
 const VmPtr<VmPtr<texture_t>>   gpSkyTexture(0x80078050);
 
+// The loaded lights lump
+const VmPtr<VmPtr<light_t>>     gpLightsLump(0x80078068);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize the palette and asset management for various draw assets
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -386,14 +389,11 @@ loc_8002BF2C:
     sw(s0, sp + 0x18);
     _thunk_W_CacheLumpName();
     v1 = 0xFF;                                          // Result = 000000FF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7F98);                                // Store to: gpLightsLump (80078068)
+    *gpLightsLump = v0;
     sb(v1, v0);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F98);                               // Load from: gpLightsLump (80078068)
+    v0 = *gpLightsLump;
     sb(v1, v0 + 0x1);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F98);                               // Load from: gpLightsLump (80078068)
+    v0 = *gpLightsLump;
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7BAC;                                       // Result = STR_LumpName_PLAYPAL[0] (80077BAC)
     sb(v1, v0 + 0x2);

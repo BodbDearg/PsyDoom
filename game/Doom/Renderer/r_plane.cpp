@@ -17,13 +17,11 @@ loc_8002E2A8:
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
     if (s2 == 0) goto loc_8002E2E4;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FF4);                               // Load from: gpCurSector (8007800C)
+    v0 = *gpCurDrawSector;
     v0 = lw(v0 + 0xC);
     goto loc_8002E2F4;
 loc_8002E2E4:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FF4);                               // Load from: gpCurSector (8007800C)
+    v0 = *gpCurDrawSector;
     v0 = lw(v0 + 0x8);
 loc_8002E2F4:
     v1 = 0x80070000;                                    // Result = 80070000
@@ -255,16 +253,14 @@ loc_8002E688:
     if (v1 != v0) goto loc_8002E61C;
 loc_8002E6A4:
     if (s2 == 0) goto loc_8002E6C8;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FF4);                               // Load from: gpCurSector (8007800C)
+    v0 = *gpCurDrawSector;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7EEC);                               // Load from: gViewZ (80077EEC)
     v0 = lw(v0 + 0x4);
     v0 -= v1;
     goto loc_8002E6E4;
 loc_8002E6C8:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FF4);                               // Load from: gpCurSector (8007800C)
+    v0 = *gpCurDrawSector;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7EEC);                               // Load from: gViewZ (80077EEC)
     v0 = lw(v0);

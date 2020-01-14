@@ -16,15 +16,26 @@
 #include "r_things.h"
 
 // View properties
-const VmPtr<angle_t>    gViewAngle(0x80078294);
-const VmPtr<bool32_t>   gbIsSkyVisible(0x800781F4);
-const VmPtr<MATRIX>     gDrawMatrix(0x80086530);
+const VmPtr<angle_t>            gViewAngle(0x80078294);
+const VmPtr<VmPtr<player_t>>    gpViewPlayer(0x80077F34);
+const VmPtr<bool32_t>           gbIsSkyVisible(0x800781F4);
+const VmPtr<MATRIX>             gDrawMatrix(0x80086530);
 
 // Light properties
-const VmPtr<bool32_t>   gbDoViewLighting(0x80078264);
-const VmPtr<uint32_t>   gCurLightValR(0x80077E8C);
-const VmPtr<uint32_t>   gCurLightValG(0x80078034);
-const VmPtr<uint32_t>   gCurLightValB(0x80077F70);
+const VmPtr<bool32_t>               gbDoViewLighting(0x80078264);
+const VmPtr<VmPtr<const light_t>>   gpCurLight(0x80078054);
+const VmPtr<uint32_t>               gCurLightValR(0x80077E8C);
+const VmPtr<uint32_t>               gCurLightValG(0x80078034);
+const VmPtr<uint32_t>               gCurLightValB(0x80077F70);
+
+// The list of subsectors to draw and current position in the list.
+// The draw subsector count does not appear to be used for anything however... Maybe used in debug builds for stat tracking?
+const VmPtr<VmPtr<subsector_t>[MAX_DRAW_SUBSECTORS]>    gpDrawSubsectors(0x800A91B4);
+const VmPtr<VmPtr<VmPtr<subsector_t>>>                  gppEndDrawSubsector(0x80078064);
+const VmPtr<int32_t>                                    gNumDrawSubsectors(0x800780EC);
+
+// What sector is currently being drawn
+const VmPtr<VmPtr<sector_t>>    gpCurDrawSector(0x8007800C);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // One time setup for the 3D view renderer
@@ -43,7 +54,7 @@ void R_Init() noexcept {
     gDrawMatrix->m[0][1] = 0;
     gDrawMatrix->m[0][2] = 0;
     gDrawMatrix->m[1][0] = 0;
-    gDrawMatrix->m[1][1] = 4096;    // TODO: why this value specifically? Does it represent '1.0'?
+    gDrawMatrix->m[1][1] = GTE_ROTFRAC_UNIT;
     gDrawMatrix->m[1][2] = 0;
     gDrawMatrix->m[2][0] = 0;
     gDrawMatrix->m[2][1] = 0;
@@ -53,16 +64,13 @@ void R_Init() noexcept {
 
 void R_RenderPlayerView() noexcept {
     sp -= 0x20;
-    sw(s0, sp + 0x18);
 
     // If currently in fullbright mode (no lighting) then setup the light params now
     if (!*gbDoViewLighting) {
         *gCurLightValR = 128;
         *gCurLightValG = 128;
-        *gCurLightValB = 128;
-        
-        v1 = lw(gp + 0xA88);                            // Load from: gpLightsLump (80078068)
-        sw(v1, gp + 0xA74);                             // Store to: gpCurLightsLumpEntry (80078054)
+        *gCurLightValB = 128;        
+        *gpCurLight = &(*gpLightsLump)[0];
     }
 
     // Setup trig related stuff before drawing
@@ -80,7 +88,7 @@ void R_RenderPlayerView() noexcept {
     v0 = lw(v1 + 0x14);
     a1 = lw(v1);
     a3 = 0xFFFF0000;                                    // Result = FFFF0000
-    sw(v1, gp + 0x954);                                 // Store to: gpViewPlayer (80077F34)
+    *gpViewPlayer = v1;
     t0 = lw(a1 + 0x24);
     v0 &= a3;
     sw(v0, gp + 0x90C);                                 // Store to: gViewZ (80077EEC)
@@ -118,99 +126,58 @@ void R_RenderPlayerView() noexcept {
     sh(v1, at + 0x653C);                                // Store to: gDrawMatrix_R2C0 (8008653C)
     _thunk_LIBGTE_SetRotMatrix();
 
-    // Traverse the BSP tree to determine what needs to be drawn and in what order
+    // Traverse the BSP tree to determine what needs to be drawn and in what order.
     R_BSP();
-    v0 = lw(gp + 0xA84);                                // Load from: gppEndDrawSubsector (80078064)
-    s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 -= 0x6E4C;                                       // Result = gpDrawSubsectors[0] (800A91B4)
-    v0 -= s0;
-    v0 = u32(i32(v0) >> 2);
-    sw(v0, gp + 0xB0C);                                 // Store to: gNumDrawSubsectors (800780EC)
+    
+    // Stat tracking: how many subsectors will we draw?
+    *gNumDrawSubsectors = (int32_t)(gppEndDrawSubsector->get() - gpDrawSubsectors.get());
 
-    // Finish up the previous draw before we continue
+    // Finish up the previous draw before we continue and draw the sky if currently visible
     I_DrawPresent();
 
-    // Draw the sky if currently visible
     if (*gbIsSkyVisible) {
         R_DrawSky();
     }
     
     // Draw all subsectors emitted during BSP traversal.
     // Draw them in back to front order.
-    v1 = lw(gp + 0xA84);                                // Load from: gppEndDrawSubsector (80078064)
-    v0 = s0 - 4;                                        // Result = gCheatSequenceBtns[6] (800A91B0)
-    v1 -= 4;
-    v0 = (v0 < v1);
-    sw(v1, gp + 0xA84);                                 // Store to: gppEndDrawSubsector (80078064)
-    s0 = 0xFF;                                          // Result = 000000FF
+    while (*gppEndDrawSubsector > gpDrawSubsectors) {
+        --*gppEndDrawSubsector;
 
-    while (v0 != 0) {
-        v0 = lw(gp + 0xA84);                                // Load from: gppEndDrawSubsector (80078064)
-        t0 = lw(v0);
-        a1 = lw(t0);
-        sw(a1, gp + 0xA2C);                                 // Store to: gpCurSector (8007800C)
+        // Set the current draw sector
+        subsector_t& subsec = ***gppEndDrawSubsector;
+        sector_t& sec = *subsec.sector;
+        *gpCurDrawSector = &sec;
 
+        // Setup the lighting values to use for the sector
         if (*gbDoViewLighting) {
-            v1 = lh(a1 + 0x10);
-            v0 = lw(gp + 0xA88);                            // Load from: gpLightsLump (80078068)
-            a0 = lh(a1 + 0x12);
-            v1 <<= 2;
-            v1 += v0;
-            sw(v1, gp + 0xA74);                             // Store to: gpCurLightsLumpEntry (80078054)
-            v0 = lbu(v1);
-            mult(a0, v0);
-            a0 = lh(a1 + 0x12);
-            v0 = lo;
-            a3 = u32(i32(v0) >> 8);
-            *gCurLightValR = a3;
-            v0 = lbu(v1 + 0x1);
-            mult(a0, v0);
-            a0 = lh(a1 + 0x12);
-            v0 = lo;
-            a2 = u32(i32(v0) >> 8);
-            *gCurLightValG = a2;
-            v0 = lbu(v1 + 0x2);
-            mult(a0, v0);
-            a0 = lw(gp + 0x954);                            // Load from: gpViewPlayer (80077F34)
-            v1 = lw(a0 + 0xE4);
-            v0 = lo;
-            a1 = u32(i32(v0) >> 8);
-            *gCurLightValB = a1;
-            v0 = a3 + v1;
+            // Compute basic light values
+            const light_t& light = (*gpLightsLump)[sec.colorid];
 
-            if (v1 != 0) {
-                *gCurLightValR = v0;
-                v1 = lw(a0 + 0xE4);
-                a0 = lw(a0 + 0xE4);
-                v1 += a2;
-                a0 += a1;
-                *gCurLightValG = v1;
-                *gCurLightValB = a0;
+            *gpCurLight = &light;
+            *gCurLightValR = ((uint32_t) sec.lightlevel * (uint32_t) light.r) >> 8;
+            *gCurLightValG = ((uint32_t) sec.lightlevel * (uint32_t) light.g) >> 8;
+            *gCurLightValB = ((uint32_t) sec.lightlevel * (uint32_t) light.b) >> 8;
 
-                if (i32(v0) > 255) {
-                    *gCurLightValR = 255;
-                }
+            // Contribute the player muzzle flash to the light and saturate
+            const player_t& player = **gpViewPlayer;
 
-                if (i32(v1) > 255) {
-                    *gCurLightValG = 255;
-                }
-                
-                if (i32(a0) > 255) {
-                    *gCurLightValB = 255;
-                }
+            if (player.extralight != 0) {
+                *gCurLightValR += player.extralight;
+                *gCurLightValG += player.extralight;
+                *gCurLightValB += player.extralight;
+
+                if (*gCurLightValR > 255) { *gCurLightValR = 255; }
+                if (*gCurLightValG > 255) { *gCurLightValG = 255; }                
+                if (*gCurLightValB > 255) { *gCurLightValB = 255; }
             }
         }
         
-        a0 = t0;
+        a0 = ptrToVmAddr(&subsec);
         R_DrawSubsector();
-        v1 = lw(gp + 0xA84);                                // Load from: gppEndDrawSubsector (80078064)
-        v0 = 0x800B0000;                                    // Result = 800B0000
-        v0 -= 0x6E50;                                       // Result = gCheatSequenceBtns[6] (800A91B0)
-        v1 -= 4;
-        v0 = (v0 < v1);
-        sw(v1, gp + 0xA84);                                 // Store to: gppEndDrawSubsector (80078064)
     }
 
+    // Draw any player sprites
     R_DrawWeapon();
 
     // Clearing the texture window: this is probably not required?
@@ -227,7 +194,6 @@ void R_RenderPlayerView() noexcept {
     I_AddPrim(getScratchAddr(128));
 
 loc_80030B44:
-    s0 = lw(sp + 0x18);
     sp += 0x20;
 }
 

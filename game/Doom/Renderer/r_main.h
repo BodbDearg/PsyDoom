@@ -2,17 +2,31 @@
 
 #include "Doom/doomdef.h"
 
+// GTE rotation constants: 1.0 and the shift to go from 16.16 to 4.12.
+// The GTE stores rotation matrix entries as 4.12 fixed point numbers!
+static constexpr int16_t GTE_ROTFRAC_UNIT = 4096;
+static constexpr uint16_t GTE_ROTFRAC_SHIFT = 4;
+
+// Renderer general constants
+static constexpr uint32_t MAX_DRAW_SUBSECTORS = 192;
+
+struct light_t;
 struct MATRIX;
 struct node_t;
 struct subsector_t;
 
-extern const VmPtr<angle_t>     gViewAngle;
-extern const VmPtr<bool32_t>    gbIsSkyVisible;
-extern const VmPtr<MATRIX>      gDrawMatrix;
-extern const VmPtr<bool32_t>    gbDoViewLighting;
-extern const VmPtr<uint32_t>    gCurLightValR;
-extern const VmPtr<uint32_t>    gCurLightValG;
-extern const VmPtr<uint32_t>    gCurLightValB;
+extern const VmPtr<angle_t>                                     gViewAngle;
+extern const VmPtr<VmPtr<player_t>>                             gpViewPlayer;
+extern const VmPtr<bool32_t>                                    gbIsSkyVisible;
+extern const VmPtr<MATRIX>                                      gDrawMatrix;
+extern const VmPtr<bool32_t>                                    gbDoViewLighting;
+extern const VmPtr<VmPtr<const light_t>>                        gpCurLight;
+extern const VmPtr<uint32_t>                                    gCurLightValR;
+extern const VmPtr<uint32_t>                                    gCurLightValG;
+extern const VmPtr<uint32_t>                                    gCurLightValB;
+extern const VmPtr<VmPtr<subsector_t>[MAX_DRAW_SUBSECTORS]>     gpDrawSubsectors;
+extern const VmPtr<VmPtr<VmPtr<subsector_t>>>                   gppEndDrawSubsector;
+extern const VmPtr<VmPtr<sector_t>>                             gpCurDrawSector;
 
 void R_Init() noexcept;
 void R_RenderPlayerView() noexcept;

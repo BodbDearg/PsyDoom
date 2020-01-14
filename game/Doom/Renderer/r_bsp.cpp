@@ -14,11 +14,11 @@ void R_BSP() noexcept {
     a2 = 0x100;                                         // Result = 00000100
     _thunk_D_memset();
 
-    v0 = 0x800A91B4;                                    // Result = gpDrawSubsectors[0] (800A91B4)
-    sw(v0, 0x80078064);                                 // Store to: gppEndDrawSubsector (80078064)
+    // The subsector draw list is initially empty and the sky not visible
+    *gppEndDrawSubsector = gpDrawSubsectors;
+    *gbIsSkyVisible = false;
 
-    *gbIsSkyVisible = false;                            // Initially assume the sky is not visible until found otherwise
-
+    // Traverse the BSP tree to generate the list of subsectors to draw
     a0 = *gNumBspNodes - 1;
     R_RenderBSPNode();
 }
@@ -455,10 +455,8 @@ loc_8002B2D8:
     if (v0 != 0) goto loc_8002B30C;
     I_Error("R_Subsector: ss %i with numss = %i", (int32_t) s0, (int32_t) a2);
 loc_8002B30C:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7F9C);                               // Load from: gppEndDrawSubsector (80078064)
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x6E4C;                                       // Result = gpDrawSubsectors[0] (800A91B4)
+    a0 = *gppEndDrawSubsector;
+    v0 = gpDrawSubsectors;
     v0 = a0 - v0;
     v0 = u32(i32(v0) >> 2);
     v0 = (i32(v0) < 0xC0);
@@ -470,20 +468,17 @@ loc_8002B30C:
     v1 = *gpSubsectors;
     v0 += v1;
     v1 = lw(v0);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7FF4);                                // Store to: gpCurSector (8007800C)
+    *gpCurDrawSector = v1;
     sw(v0, a0);
     a0 = lh(v0 + 0x6);
     s0 = lh(v0 + 0x4);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F9C);                               // Load from: gppEndDrawSubsector (80078064)
+    v0 = *gppEndDrawSubsector;
     v1 = a0 << 2;
     v1 += a0;
     v1 <<= 3;
     a0 = *gpSegs;
     v0 += 4;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7F9C);                                // Store to: gppEndDrawSubsector (80078064)
+    *gppEndDrawSubsector = v0;
     s1 = v1 + a0;
     if (s0 == 0) goto loc_8002B3A0;
 loc_8002B38C:
@@ -832,8 +827,7 @@ loc_8002B810:
     a2 = v1 + 0x80;
     a3 = v0 + 0x80;
     if (a2 == a3) goto loc_8002B988;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FF4);                               // Load from: gpCurSector (8007800C)
+    v0 = *gpCurDrawSector;
     v1 = lw(v0 + 0xC);
     v0 = -1;                                            // Result = FFFFFFFF
     {
@@ -899,8 +893,7 @@ loc_8002B8F8:
     if (v0 != 0) goto loc_8002B988;
     a0 = lw(s3 + 0x1C);
     if (a0 == 0) goto loc_8002B95C;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7FF4);                               // Load from: gpCurSector (8007800C)
+    a1 = *gpCurDrawSector;
     v1 = lw(a0 + 0x4);
     v0 = lw(a1);
     v0 = (i32(v0) < i32(v1));

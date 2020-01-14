@@ -9,8 +9,7 @@
 
 void R_DrawSubsectorSeg() noexcept {
 loc_8002D3AC:
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7FF4);                               // Load from: gpCurSector (8007800C)
+    a2 = *gpCurDrawSector;
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lw(a1 + 0x7EEC);                               // Load from: gViewZ (80077EEC)
     sp -= 0x58;
@@ -91,8 +90,7 @@ loc_8002D4A8:
     a1 += v0;
     R_DrawWallColumns();
 loc_8002D4F4:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FF4);                               // Load from: gpCurSector (8007800C)
+    v0 = *gpCurDrawSector;
     v1 = lw(s1);
     v0 = lw(v0);
     v0 = (i32(v0) < i32(v1));
@@ -219,8 +217,7 @@ loc_8002D684:
     s2 = v1 - s5;
     sw(v1, sp + 0x18);
     if (i32(s2) <= 0) goto loc_8002E274;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F34);                               // Load from: gpViewPlayer (80077F34)
+    v0 = *gpViewPlayer;
     v0 = lw(v0 + 0xC0);
     v0 &= 0x80;
     if (v0 == 0) goto loc_8002D704;

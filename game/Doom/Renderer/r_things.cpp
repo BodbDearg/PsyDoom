@@ -709,8 +709,7 @@ loc_8002FE34:
     fp += 0x200;                                        // Result = 1F800200
     sw(s1, sp + 0x24);
     s1 = 0xFF0000;                                      // Result = 00FF0000
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F34);                               // Load from: gpViewPlayer (80077F34)
+    v0 = *gpViewPlayer;
     s1 |= 0xFFFF;                                       // Result = 00FFFFFF
     sw(s7, sp + 0x3C);
     s7 = 0x80080000;                                    // Result = 80080000
@@ -757,8 +756,7 @@ loc_8002FEA0:
     I_CacheTex();
     a0 = fp;                                            // Result = 1F800200
     a1 = 0;                                             // Result = 00000000
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F34);                               // Load from: gpViewPlayer (80077F34)
+    v0 = *gpViewPlayer;
     a2 = 0;                                             // Result = 00000000
     v0 = lw(v0);
     t0 = lhu(s0 + 0xA);
@@ -974,8 +972,7 @@ loc_800301DC:
     v0 = lw(v0 + 0x4);
     v0 &= 0x8000;
     if (v0 == 0) goto loc_800302E8;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FAC);                               // Load from: gpCurLightsLumpEntry (80078054)
+    a0 = *gpCurLight;
     v1 = lbu(a0);
     v0 = v1 << 2;
     v0 += v1;
