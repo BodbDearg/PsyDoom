@@ -35,16 +35,14 @@ loc_8002F388:
     if (v0 != s5) goto loc_8002F4BC;
     a0 = sp + 0x10;
     v0 = lw(s1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE0);                               // Load from: gViewX (80077EE0)
+    v1 = *gViewX;
     a1 = sp + 0x18;
     sh(0, sp + 0x12);
     v0 -= v1;
     v0 = u32(i32(v0) >> 16);
     sh(v0, sp + 0x10);
     v0 = lw(s1 + 0x4);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    v1 = *gViewY;
     v0 -= v1;
     v0 = u32(i32(v0) >> 16);
     sh(v0, sp + 0x14);
@@ -121,7 +119,7 @@ loc_8002F4CC:
     sh(0, sp + 0x2A);
     sh(0, sp + 0x2C);
     sh(0, sp + 0x2E);
-    LIBGPU_SetTexWindow();
+    _thunk_LIBGPU_SetTexWindow();
     s0 += 4;                                            // Result = 1F800204
     t3 = 0xFF0000;                                      // Result = 00FF0000
     t3 |= 0xFFFF;                                       // Result = 00FFFFFF
@@ -319,10 +317,8 @@ loc_8002F7C8:
     s0 = v0 + v1;
     v0 = lw(s0);
     if (v0 == 0) goto loc_8002F86C;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7EE0);                               // Load from: gViewX (80077EE0)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    a0 = *gViewX;
+    a1 = *gViewY;
     a2 = lw(s1);
     a3 = lw(s1 + 0x4);
     R_PointToAngle2();
@@ -398,8 +394,7 @@ loc_8002F928:
 loc_8002F958:
     a1 = lw(s2 + 0x4);
     v0 = lw(s1 + 0x8);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EEC);                               // Load from: gViewZ (80077EEC)
+    v1 = *gViewZ;
     a0 = -a1;
     v0 -= v1;
     v1 = lh(s0 + 0x2);

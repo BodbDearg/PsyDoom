@@ -1120,22 +1120,18 @@ void LIBGPU_GetODE() noexcept {
     return;
 }
 
-void LIBGPU_SetTexWindow() noexcept {
-loc_8004CD28:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = 2;                                             // Result = 00000002
-    a0 = a1;
-    sw(ra, sp + 0x14);
-    sb(v0, s0 + 0x3);
-    LIBGPU_SYS_get_tw();
-    sw(v0, s0 + 0x4);
-    sw(0, s0 + 0x8);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize a draw primitive that sets the current texture window.
+// Use the specified RECT as the window.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetTexWindow(DR_TWIN& prim, const RECT& texWin) noexcept {
+    LIBGPU_setlen(prim, 2);
+    prim.code[0] = LIBGPU_SYS_get_tw(&texWin);
+    prim.code[1] = 0;
+}
+
+void _thunk_LIBGPU_SetTexWindow() noexcept {
+    LIBGPU_SetTexWindow(*vmAddrToPtr<DR_TWIN>(a0), *vmAddrToPtr<RECT>(a1));
 }
 
 void LIBGPU_SetDrawArea() noexcept {
@@ -1231,10 +1227,10 @@ void LIBGPU_SetDrawMode(
         // Copy the RECT given to the stack so it's accessible to the PSX
         VmSVal<RECT> newTexWin(*pNewTexWindow);
         a0 = newTexWin.addr();
-        LIBGPU_SYS_get_tw();
+        _thunk_LIBGPU_SYS_get_tw();
     } else {
         a0 = 0;
-        LIBGPU_SYS_get_tw();
+        _thunk_LIBGPU_SYS_get_tw();
     }
 
     modePrim.code[1] = v0;
@@ -1280,7 +1276,7 @@ loc_8004CEAC:
     LIBGPU_SYS_get_mode();
     a0 = s0 + 0xC;
     sw(v0, s1 + 0x10);
-    LIBGPU_SYS_get_tw();
+    _thunk_LIBGPU_SYS_get_tw();
     sw(v0, s1 + 0x14);
     v0 = 0xE6000000;                                    // Result = E6000000
     sw(v0, s1 + 0x18);
@@ -1575,40 +1571,29 @@ loc_8004D394:
     return;
 }
 
-void LIBGPU_SYS_get_tw() noexcept {
-loc_8004D3A4:
-    sp -= 0x10;
-    if (a0 != 0) goto loc_8004D3B4;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8004D41C;
-loc_8004D3B4:
-    a1 = lbu(a0);
-    a1 >>= 3;
-    sw(a1, sp);
-    a2 = lh(a0 + 0x4);
-    a2 = -a2;
-    a2 &= 0xFF;
-    a2 = u32(i32(a2) >> 3);
-    sw(a2, sp + 0x8);
-    v0 = lbu(a0 + 0x2);
-    a1 <<= 10;
-    v0 >>= 3;
-    sw(v0, sp + 0x4);
-    v0 <<= 15;
-    v1 = lh(a0 + 0x6);
-    a0 = 0xE2000000;                                    // Result = E2000000
-    a1 |= a0;
-    v0 |= a1;
-    v1 = -v1;
-    v1 &= 0xFF;
-    v1 = u32(i32(v1) >> 3);
-    a0 = v1 << 5;
-    v0 |= a0;
-    v0 |= a2;
-    sw(v1, sp + 0xC);
-loc_8004D41C:
-    sp += 0x10;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Internal (non-exposed) PSY-Q SDK Function:
+// Encodes the given rect into a 32-bit texture window setting used by the hardware.
+// For more details see "GP0(E2h) - Texture Window setting":
+//      https://problemkaputt.de/psx-spx.htm#gpudisplaycontrolcommandsgp1
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept {
+    // If no rect then return an invalid encoding
+    if (!pRect)
+        return 0;
+    
+    // Encode the texture window using 5 bits for each piece of info
+    constexpr uint32_t CMD_HEADER = 0xE2000000;
+    const uint32_t twOffsetX = (uint16_t)(pRect->x & 0xFF) >> 3;
+    const uint32_t twOffsetY = (uint16_t)(pRect->y & 0xFF) >> 3;
+    const uint32_t twMaskX = (uint16_t)(-pRect->w & 0xFF) >> 3;
+    const uint32_t twMaskY = (uint16_t)(-pRect->h & 0xFF) >> 3;
+
+    return (CMD_HEADER | (twOffsetY << 15) | (twOffsetX << 10) | (twMaskY << 5) | twMaskX);
+}
+
+void _thunk_LIBGPU_SYS_get_tw() noexcept {
+    v0 = LIBGPU_SYS_get_tw(vmAddrToPtr<const RECT>(a0));
 }
 
 void LIBGPU_SYS_get_dx() noexcept {

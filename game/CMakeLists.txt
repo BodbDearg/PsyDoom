@@ -21,6 +21,7 @@ set(SOURCE_FILES
     "Doom/Base/s_sound.cpp"
     "Doom/Base/s_sound.h"
     "Doom/Base/sounds.h"
+    "Doom/Base/tables.cpp"
     "Doom/Base/w_wad.cpp"
     "Doom/Base/w_wad.h"
     "Doom/Base/z_zone.cpp"

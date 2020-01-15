@@ -97,7 +97,7 @@ loc_8002E3F8:
     sh(v0, sp + 0x14);
     sh(v0, sp + 0x16);
     sh(v1, sp + 0x12);
-    LIBGPU_SetTexWindow();
+    _thunk_LIBGPU_SetTexWindow();
     s0 += 4;                                            // Result = 1F800204
     t2 = 0xFF0000;                                      // Result = 00FF0000
     t2 |= 0xFFFF;                                       // Result = 00FFFFFF
@@ -254,15 +254,13 @@ loc_8002E688:
 loc_8002E6A4:
     if (s2 == 0) goto loc_8002E6C8;
     v0 = *gpCurDrawSector;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EEC);                               // Load from: gViewZ (80077EEC)
+    v1 = *gViewZ;
     v0 = lw(v0 + 0x4);
     v0 -= v1;
     goto loc_8002E6E4;
 loc_8002E6C8:
     v0 = *gpCurDrawSector;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EEC);                               // Load from: gViewZ (80077EEC)
+    v1 = *gViewZ;
     v0 = lw(v0);
     v0 -= v1;
 loc_8002E6E4:
@@ -475,22 +473,18 @@ loc_8002E9B4:
     s4 = lw(sp);
     mult(s4, v0);
     v0 = lo;
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 = lw(a3 - 0x7F64);                               // Load from: gViewCos (8007809C)
+    a3 = *gViewCos;
     t0 = u32(i32(v0) >> 16);
     mult(t0, a3);
     a0 = lo;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F48);                               // Load from: gViewSin (800780B8)
+    v0 = *gViewSin;
     mult(t0, v0);
     t7 -= 2;
     a1 += 2;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    v1 = *gViewY;
     v0 = lo;
     a2 = v0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EE0);                               // Load from: gViewX (80077EE0)
+    v0 = *gViewX;
     t3 = a2 + v1;
     t2 = a0 + v0;
     if (i32(a2) >= 0) goto loc_8002EA2C;

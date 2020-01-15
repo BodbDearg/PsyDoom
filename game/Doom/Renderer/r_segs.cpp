@@ -10,8 +10,7 @@
 void R_DrawSubsectorSeg() noexcept {
 loc_8002D3AC:
     a2 = *gpCurDrawSector;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7EEC);                               // Load from: gViewZ (80077EEC)
+    a1 = *gViewZ;
     sp -= 0x58;
     sw(ra, sp + 0x54);
     sw(fp, sp + 0x50);
@@ -269,7 +268,7 @@ loc_8002D79C:
     v0 = lhu(s1 + 0x6);
     a1 = sp + 0x10;
     sh(v0, sp + 0x16);
-    LIBGPU_SetTexWindow();
+    _thunk_LIBGPU_SetTexWindow();
     s0 += 4;                                            // Result = 1F800204
     t2 = 0xFF0000;                                      // Result = 00FF0000
     t2 |= 0xFFFF;                                       // Result = 00FFFFFF
@@ -521,8 +520,7 @@ loc_8002DB80:
     s7 = lo;
     sw(s7, sp + 0x38);
     t1 = lw(s4 + 0x4);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE0);                               // Load from: gViewX (80077EE0)
+    v1 = *gViewX;
     a1 = lw(t1 + 0xC);
     t0 = lw(t1);
     v0 = a1 >> 19;
@@ -542,8 +540,7 @@ loc_8002DB80:
     v0 = lw(v0);
     t5 = u32(i32(v0) >> 8);
     v0 = lw(t0 + 0x4);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    v1 = *gViewY;
     a0 = lo;
     v0 -= v1;
     v0 = u32(i32(v0) >> 8);

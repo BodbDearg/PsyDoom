@@ -16,8 +16,9 @@ enum mobjtype_t : uint32_t;
 // Alias for fixed point numbers in DOOM: mostly in 16.16 format but does not have to be
 typedef int32_t fixed_t;
 
-static constexpr uint32_t   FRACBITS = 16;            // Number of bits in most fixed point numbers in DOOM
-static constexpr fixed_t    FRACUNIT = 0x10000;       // 1.0 in 16.16 fixed point format
+static constexpr uint32_t   FRACBITS = 16;              // Number of bits in most fixed point numbers in DOOM
+static constexpr fixed_t    FRACUNIT = 0x10000;         // 1.0 in 16.16 fixed point format
+static constexpr fixed_t    FRACMASK = FRACUNIT - 1;    // Mask for the fractional part of a 16.16 fixed point number
 
 // Alias for a 32-bit BAM (Binary angular measurement) angle in DOOM and some commonly used angles.
 // This type is used for most angles in the game, but bits are truncated to lookup sine, cosine etc. table values.
@@ -32,6 +33,11 @@ static constexpr angle_t ANG270 = 0xc0000000;
 static constexpr uint32_t FINEANGLES        = 8192;                 // How many entries in sine, cosine etc. LUTs. The number of 'fine' angles.
 static constexpr uint32_t FINEMASK          = FINEANGLES - 1;       // Wrap a 'fine' angle to the LUT tables
 static constexpr uint32_t ANGLETOFINESHIFT  = 19;                   // How many bits to chop off when converting a BAM angle to a 'fine' angle for looking up the trig LUTs.
+
+// The trig lookup tables.
+// Note that the cosine table is just the sine table phase shifted by PI/2.
+extern const fixed_t gFineSine[(5 * FINEANGLES) / 4];
+extern const fixed_t* const gFineCosine;
 
 // Maximum number of players in a multiplayer game
 static constexpr uint32_t MAXPLAYERS = 2;

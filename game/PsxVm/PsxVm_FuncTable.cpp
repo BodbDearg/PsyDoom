@@ -687,7 +687,7 @@ extern void LIBGPU_GetDrawEnv() noexcept;
 extern void LIBGPU_PutDispEnv() noexcept;
 extern void LIBGPU_GetDispEnv() noexcept;
 extern void LIBGPU_GetODE() noexcept;
-extern void LIBGPU_SetTexWindow() noexcept;
+extern void _thunk_LIBGPU_SetTexWindow() noexcept;
 extern void LIBGPU_SetDrawArea() noexcept;
 extern void LIBGPU_SetDrawOffset() noexcept;
 extern void LIBGPU_SetPriority() noexcept;
@@ -697,7 +697,7 @@ extern void LIBGPU_SYS_get_mode() noexcept;
 extern void LIBGPU_SYS_get_cs() noexcept;
 extern void LIBGPU_SYS_get_ce() noexcept;
 extern void LIBGPU_SYS_get_ofs() noexcept;
-extern void LIBGPU_SYS_get_tw() noexcept;
+extern void _thunk_LIBGPU_SYS_get_tw() noexcept;
 extern void LIBGPU_SYS_get_dx() noexcept;
 extern void LIBGPU_SYS__status() noexcept;
 extern void LIBGPU_SYS__otc() noexcept;
@@ -1613,7 +1613,7 @@ namespace PsxVm {
         { 0x8004C898, &LIBGPU_PutDispEnv },
         { 0x8004CCBC, &LIBGPU_GetDispEnv },
         { 0x8004CCF4, &LIBGPU_GetODE },
-        { 0x8004CD28, &LIBGPU_SetTexWindow },
+        { 0x8004CD28, &_thunk_LIBGPU_SetTexWindow },
         { 0x8004CD64, &LIBGPU_SetDrawArea },
         { 0x8004CDE8, &LIBGPU_SetDrawOffset },
         { 0x8004CE2C, &LIBGPU_SetPriority },
@@ -1623,7 +1623,7 @@ namespace PsxVm {
         { 0x8004D1B4, &LIBGPU_SYS_get_cs },
         { 0x8004D288, &LIBGPU_SYS_get_ce },
         { 0x8004D35C, &LIBGPU_SYS_get_ofs },
-        { 0x8004D3A4, &LIBGPU_SYS_get_tw },
+        { 0x8004D3A4, &_thunk_LIBGPU_SYS_get_tw },
         { 0x8004D428, &LIBGPU_SYS_get_dx },
         { 0x8004D4E4, &LIBGPU_SYS__status },
         { 0x8004D4FC, &LIBGPU_SYS__otc },

@@ -43,16 +43,14 @@ loc_8002C754:
     a0 = sp + 0x10;
     if (v1 == v0) goto loc_8002C83C;
     v0 = lw(s0);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE0);                               // Load from: gViewX (80077EE0)
+    v1 = *gViewX;
     a1 = sp + 0x18;
     sh(0, sp + 0x12);
     v0 -= v1;
     v0 = u32(i32(v0) >> 16);
     sh(v0, sp + 0x10);
     v0 = lw(s0 + 0x4);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    v1 = *gViewY;
     a2 = sp + 0x38;
     v0 -= v1;
     v0 = u32(i32(v0) >> 16);
@@ -202,8 +200,7 @@ loc_8002C9D8:
     if (v0 != 0) goto loc_8002C9A8;
 loc_8002C9E0:
     v0 = *gpCurDrawSector;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EEC);                               // Load from: gViewZ (80077EEC)
+    v1 = *gViewZ;
     v0 = lw(v0);
     v0 = (i32(v0) < i32(v1));
     {
@@ -221,8 +218,7 @@ loc_8002CA14:
     v0 = -1;                                            // Result = FFFFFFFF
     if (v1 == v0) goto loc_8002CA5C;
     v1 = lw(a0 + 0x4);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EEC);                               // Load from: gViewZ (80077EEC)
+    v0 = *gViewZ;
     v0 = (i32(v0) < i32(v1));
     {
         const bool bJump = (v0 == 0);

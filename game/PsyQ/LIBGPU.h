@@ -12,22 +12,22 @@ static constexpr uint32_t GPU_REG_GP1 = 0x1F801814;
 // The coordinates assume 16-bit color values, for other modes coords will need to be scaled accordingly.
 // Note: negative values or values exceeding the 1024x512 (16-bit) framebuffer are NOT allowed!
 struct RECT {
-    int16_t x;      // Position in VRAM
-    int16_t y;
-    int16_t w;      // Size in VRAM
-    int16_t h;
+    int16_t     x;      // Position in VRAM
+    int16_t     y;
+    int16_t     w;      // Size in VRAM
+    int16_t     h;
 };
 
 static_assert(sizeof(RECT) == 8);
 
 // Drawing primitive: unconnected flat shaded line
 struct LINE_F2 {
-    uint32_t    tag;
-    uint8_t     r0;
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive
+    uint8_t     r0;         // Line color
     uint8_t     g0;
     uint8_t     b0;
-    uint8_t     code;
-    int16_t     x0;
+    uint8_t     code;       // Type info for the hardware
+    int16_t     x0;         // Line 2d coords
     int16_t     y0;
     int16_t     x1;
     int16_t     y1;
@@ -37,11 +37,11 @@ static_assert(sizeof(LINE_F2) == 16);
 
 // Drawing primitive: arbitrarily sized sprite
 struct SPRT {
-    uint32_t    tag;
-    uint8_t     r0;
+    uint32_t    tag;        // The primitive size and 24-bit pointer to next primitive
+    uint8_t     r0;         // Color to apply to the sprite
     uint8_t     g0;
     uint8_t     b0;
-    uint8_t     code;
+    uint8_t     code;       // Type info for the hardware
     int16_t     x0;         // Position of the sprite
     int16_t     y0;
     uint8_t     t_u0;       // Texture u/v coords: note could not use just 'v0' due to register name clashing
@@ -53,13 +53,21 @@ struct SPRT {
 
 static_assert(sizeof(SPRT) == 20);
 
-// Drawing primitive: modify the current draw mode as specified by 'LIBGPU_SetDrawMode()'
+// Drawing primitive: modify the current draw mode
 struct DR_MODE {
     uint32_t    tag;
-    uint32_t    code[2];
+    uint32_t    code[2];    // The settings made via 'LIBGPU_SetDrawMode()'
 };
 
 static_assert(sizeof(DR_MODE) == 12);
+
+// Drawing primitive: modify the current texture window as specified by 'LIBGPU_SetTexWindow()'
+struct DR_TWIN {
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive
+    uint32_t    code[2];    // The settings made via 'LIBGPU_SetTexWindow()'
+};
+
+static_assert(sizeof(DR_TWIN) == 12);
 
 void LIBGPU_ResetGraph() noexcept;
 void LIBGPU_SetGraphReverse() noexcept;
@@ -87,7 +95,10 @@ void LIBGPU_GetDrawEnv() noexcept;
 void LIBGPU_PutDispEnv() noexcept;
 void LIBGPU_GetDispEnv() noexcept;
 void LIBGPU_GetODE() noexcept;
-void LIBGPU_SetTexWindow() noexcept;
+
+void LIBGPU_SetTexWindow(DR_TWIN& prim, const RECT& texWin) noexcept;
+void _thunk_LIBGPU_SetTexWindow() noexcept;
+
 void LIBGPU_SetDrawArea() noexcept;
 void LIBGPU_SetDrawOffset() noexcept;
 void LIBGPU_SetPriority() noexcept;
@@ -107,7 +118,10 @@ void LIBGPU_SYS_get_mode() noexcept;
 void LIBGPU_SYS_get_cs() noexcept;
 void LIBGPU_SYS_get_ce() noexcept;
 void LIBGPU_SYS_get_ofs() noexcept;
-void LIBGPU_SYS_get_tw() noexcept;
+
+uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept;
+void _thunk_LIBGPU_SYS_get_tw() noexcept;
+
 void LIBGPU_SYS_get_dx() noexcept;
 void LIBGPU_SYS__status() noexcept;
 void LIBGPU_SYS__otc() noexcept;
@@ -223,4 +237,13 @@ template <class T>
 inline void LIBGPU_setlen(T& prim, const uint8_t len) noexcept {
     prim.tag &= 0x00FFFFFF;
     prim.tag |= (uint32_t) len << 24;
+}
+
+// Set the bounds of a type of RECT
+template <class TRect, class TCoord>
+inline void LIBGPU_setRECT(TRect& rect, const TCoord x, const TCoord y, const TCoord w, const TCoord h) noexcept {
+    rect.x = x;
+    rect.y = y;
+    rect.w = w;
+    rect.h = h;
 }

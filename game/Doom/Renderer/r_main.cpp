@@ -3,6 +3,7 @@
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/doomdata.h"
+#include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
@@ -16,8 +17,13 @@
 #include "r_things.h"
 
 // View properties
-const VmPtr<angle_t>            gViewAngle(0x80078294);
 const VmPtr<VmPtr<player_t>>    gpViewPlayer(0x80077F34);
+const VmPtr<fixed_t>            gViewX(0x80077EE0);
+const VmPtr<fixed_t>            gViewY(0x80077EE4);
+const VmPtr<fixed_t>            gViewZ(0x80077EEC);
+const VmPtr<angle_t>            gViewAngle(0x80078294);
+const VmPtr<fixed_t>            gViewCos(0x8007809C);
+const VmPtr<fixed_t>            gViewSin(0x800780B8);
 const VmPtr<bool32_t>           gbIsSkyVisible(0x800781F4);
 const VmPtr<MATRIX>             gDrawMatrix(0x80086530);
 
@@ -62,9 +68,10 @@ void R_Init() noexcept {
     LIBGTE_SetRotMatrix(*gDrawMatrix);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Render the 3D view and also player weapons
+//------------------------------------------------------------------------------------------------------------------------------------------
 void R_RenderPlayerView() noexcept {
-    sp -= 0x20;
-
     // If currently in fullbright mode (no lighting) then setup the light params now
     if (!*gbDoViewLighting) {
         *gCurLightValR = 128;
@@ -73,58 +80,23 @@ void R_RenderPlayerView() noexcept {
         *gpCurLight = &(*gpLightsLump)[0];
     }
 
-    // Setup trig related stuff before drawing
-    v1 = *gCurPlayerIndex;
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v0 = v1 << 2;
-    v0 += v1;
-    v1 = v0 << 4;
-    v1 -= v0;
-    v1 <<= 2;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    v1 += v0;
-    v0 = lw(v1 + 0x14);
-    a1 = lw(v1);
-    a3 = 0xFFFF0000;                                    // Result = FFFF0000
-    *gpViewPlayer = v1;
-    t0 = lw(a1 + 0x24);
-    v0 &= a3;
-    sw(v0, gp + 0x90C);                                 // Store to: gViewZ (80077EEC)
-    v0 = lw(v1);
-    a1 = t0 >> 19;
-    a1 <<= 2;
-    a2 += a1;
-    v0 = lw(v0);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += a1;
-    a1 = lw(at);
-    v0 &= a3;
-    sw(v0, gp + 0x900);                                 // Store to: gViewX (80077EE0)
-    v0 = lw(v1);
-    v1 = lw(a2);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 += 0x6530;                                       // Result = gDrawMatrix_R0C0 (80086530)
-    sw(t0, gp + 0xCB4);                                 // Store to: gViewAngle (80078294)
-    sw(a1, gp + 0xAD8);                                 // Store to: gViewSin (800780B8)
-    v0 = lw(v0 + 0x4);
-    a1 = u32(i32(a1) >> 4);
-    sw(v1, gp + 0xABC);                                 // Store to: gViewCos (8007809C)
-    sh(a1, a0);                                         // Store to: gDrawMatrix_R0C0 (80086530)
-    at = 0x80080000;                                    // Result = 80080000
-    sh(a1, at + 0x6540);                                // Store to: gDrawMatrix_R2C2 (80086540)
-    v0 &= a3;
-    sw(v0, gp + 0x904);                                 // Store to: gViewY (80077EE4)
-    v0 = -v1;
-    v0 = u32(i32(v0) >> 4);
-    v1 = u32(i32(v1) >> 4);
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at + 0x6534);                                // Store to: gDrawMatrix_R0C2 (80086534)
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v1, at + 0x653C);                                // Store to: gDrawMatrix_R2C0 (8008653C)
-    _thunk_LIBGTE_SetRotMatrix();
+    // Store view parameters before drawing
+    player_t& player = gPlayers[*gCurPlayerIndex];
+
+    *gpViewPlayer = &player;
+    *gViewX = player.mo->x & (~FRACMASK);
+    *gViewY = player.mo->y & (~FRACMASK);
+    *gViewZ = player.viewz & (~FRACMASK);
+    *gViewAngle = player.mo->angle;
+    *gViewCos = gFineCosine[*gViewAngle >> ANGLETOFINESHIFT];
+    *gViewSin = gFineSine[*gViewAngle >> ANGLETOFINESHIFT];
+    
+    // Set the draw matrix and upload to the GTE
+    gDrawMatrix->m[0][0] = (int16_t)( *gViewSin >> GTE_ROTFRAC_SHIFT);
+    gDrawMatrix->m[0][2] = (int16_t)(-*gViewCos >> GTE_ROTFRAC_SHIFT);
+    gDrawMatrix->m[2][0] = (int16_t)( *gViewCos >> GTE_ROTFRAC_SHIFT);
+    gDrawMatrix->m[2][2] = (int16_t)( *gViewSin >> GTE_ROTFRAC_SHIFT);
+    LIBGTE_SetRotMatrix(*gDrawMatrix);
 
     // Traverse the BSP tree to determine what needs to be drawn and in what order.
     R_BSP();
@@ -160,8 +132,6 @@ void R_RenderPlayerView() noexcept {
             *gCurLightValB = ((uint32_t) sec.lightlevel * (uint32_t) light.b) >> 8;
 
             // Contribute the player muzzle flash to the light and saturate
-            const player_t& player = **gpViewPlayer;
-
             if (player.extralight != 0) {
                 *gCurLightValR += player.extralight;
                 *gCurLightValG += player.extralight;
@@ -183,18 +153,12 @@ void R_RenderPlayerView() noexcept {
     // Clearing the texture window: this is probably not required?
     // Not sure what the reason is for this, but everything seems to work fine without doing this.
     // I'll leave the code as-is for now though until I have a better understanding of this, just in case something breaks.
-    a0 = 0x1F800200;
-    a1 = sp + 0x10;
-    sh(0, sp + 0x10);
-    sh(0, sp + 0x12);
-    sh(0, sp + 0x14);
-    sh(0, sp + 0x16);
-    LIBGPU_SetTexWindow();
-
-    I_AddPrim(getScratchAddr(128));
-
-loc_80030B44:
-    sp += 0x20;
+    {
+        DR_TWIN& setTexWinCmd = *(DR_TWIN*) getScratchAddr(128);
+        RECT texWin = { 0, 0, 0, 0 };
+        LIBGPU_SetTexWindow(setTexWinCmd, texWin);
+        I_AddPrim(&setTexWinCmd);
+    }
 }
 
 void R_SlopeDiv() noexcept {

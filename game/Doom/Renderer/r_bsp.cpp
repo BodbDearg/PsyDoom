@@ -48,15 +48,13 @@ loc_8002AD84:
     v1 = *gpBspNodes;
     v0 <<= 3;
     s0 = v0 + v1;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    v0 = *gViewY;
     v1 = lw(s0 + 0x4);
     v0 -= v1;
     v1 = lh(s0 + 0xA);
     v0 = u32(i32(v0) >> 16);
     mult(v0, v1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EE0);                               // Load from: gViewX (80077EE0)
+    v0 = *gViewX;
     v1 = lw(s0);
     v0 -= v1;
     v1 = lo;
@@ -100,8 +98,7 @@ loc_8002AE60:
 void R_CheckBBox() noexcept {
 loc_8002AE74:
     sp -= 0x50;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE0);                               // Load from: gViewX (80077EE0)
+    v1 = *gViewX;
     a3 = a0;
     sw(ra, sp + 0x48);
     sw(s5, sp + 0x44);
@@ -122,8 +119,7 @@ loc_8002AEBC:
     if (v0 != 0) goto loc_8002AED4;
     a1 = 1;                                             // Result = 00000001
 loc_8002AED4:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    a0 = *gViewY;
     v0 = lw(a3);
     v0 = (i32(v0) < i32(a0));
     if (v0 == 0) goto loc_8002AEF8;
@@ -196,25 +192,21 @@ loc_8002AFBC:
     a0 = sp + 0x10;
     goto loc_8002B02C;
 loc_8002AFD8:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    v1 = *gViewY;
     v1 -= s2;
     goto loc_8002B020;
 loc_8002AFE8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EE0);                               // Load from: gViewX (80077EE0)
+    v0 = *gViewX;
     v1 = 0xFFFE0000;                                    // Result = FFFE0000
     v0 -= s4;
     goto loc_8002B020;
 loc_8002AFFC:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE0);                               // Load from: gViewX (80077EE0)
+    v1 = *gViewX;
     v0 = 0x20000;                                       // Result = 00020000
     v1 -= s4;
     goto loc_8002B020;
 loc_8002B010:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    v0 = *gViewY;
     v0 -= s2;
 loc_8002B020:
     v0 = (i32(v0) < i32(v1));
@@ -224,10 +216,8 @@ loc_8002B02C:
     s0 = sp + 0x18;
     a1 = s0;
     s1 = sp + 0x28;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE0);                               // Load from: gViewX (80077EE0)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    v1 = *gViewX;
+    v0 = *gViewY;
     a2 = s1;
     sh(0, sp + 0x12);
     v1 = s4 - v1;
@@ -241,10 +231,8 @@ loc_8002B02C:
     a1 = s0;
     s4 = lw(sp + 0x18);
     s2 = lw(sp + 0x20);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE0);                               // Load from: gViewX (80077EE0)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    v1 = *gViewX;
+    v0 = *gViewY;
     a2 = s1;
     sh(0, sp + 0x12);
     v1 = s5 - v1;
@@ -513,16 +501,14 @@ loc_8002B3B8:
     a0 = sp + 0x10;
     if (v1 == v0) goto loc_8002B4BC;
     v0 = lw(s0);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE0);                               // Load from: gViewX (80077EE0)
+    v1 = *gViewX;
     a1 = sp + 0x18;
     sh(0, sp + 0x12);
     v0 -= v1;
     v0 = u32(i32(v0) >> 16);
     sh(v0, sp + 0x10);
     v0 = lw(s0 + 0x4);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    v1 = *gViewY;
     a2 = sp + 0x28;
     v0 -= v1;
     v0 = u32(i32(v0) >> 16);
@@ -571,16 +557,14 @@ loc_8002B4C4:
     a0 = sp + 0x10;
     if (v1 == v0) goto loc_8002B5A0;
     v0 = lw(s0);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE0);                               // Load from: gViewX (80077EE0)
+    v1 = *gViewX;
     a1 = sp + 0x18;
     sh(0, sp + 0x12);
     v0 -= v1;
     v0 = u32(i32(v0) >> 16);
     sh(v0, sp + 0x10);
     v0 = lw(s0 + 0x4);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE4);                               // Load from: gViewY (80077EE4)
+    v1 = *gViewY;
     a2 = sp + 0x28;
     v0 -= v1;
     v0 = u32(i32(v0) >> 16);

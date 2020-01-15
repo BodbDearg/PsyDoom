@@ -15,8 +15,13 @@ struct MATRIX;
 struct node_t;
 struct subsector_t;
 
-extern const VmPtr<angle_t>                                     gViewAngle;
 extern const VmPtr<VmPtr<player_t>>                             gpViewPlayer;
+extern const VmPtr<fixed_t>                                     gViewX;
+extern const VmPtr<fixed_t>                                     gViewY;
+extern const VmPtr<fixed_t>                                     gViewZ;
+extern const VmPtr<angle_t>                                     gViewAngle;
+extern const VmPtr<fixed_t>                                     gViewCos;
+extern const VmPtr<fixed_t>                                     gViewSin;
 extern const VmPtr<bool32_t>                                    gbIsSkyVisible;
 extern const VmPtr<MATRIX>                                      gDrawMatrix;
 extern const VmPtr<bool32_t>                                    gbDoViewLighting;
