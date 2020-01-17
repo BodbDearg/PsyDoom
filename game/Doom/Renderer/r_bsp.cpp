@@ -173,7 +173,11 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     int32_t vx2, vy2;
 
     {
-        const SVECTOR vecIn = { (x1 - *gViewX) >> 16, 0, (y1 - *gViewY) >> 16 };
+        const SVECTOR vecIn = {
+            (int16_t)((x1 - *gViewX) >> 16),
+            0,
+            (int16_t)((y1 - *gViewY) >> 16)
+        };
         int32_t flagsOut;
         VECTOR vecOut;
 
@@ -182,7 +186,11 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
         vy1 = vecOut.vz;
     }
     {
-        const SVECTOR vecIn = { (x2 - *gViewX) >> 16, 0, (y2 - *gViewY) >> 16 };
+        const SVECTOR vecIn = {
+            (int16_t)((x2 - *gViewX) >> 16),
+            0,
+            (int16_t)((y2 - *gViewY) >> 16)
+        };
         int32_t flagsOut;
         VECTOR vecOut;
 
@@ -350,9 +358,9 @@ void R_AddLine(seg_t& seg) noexcept {
     
     if (segv1.frameUpdated != *gNumFramesDrawn) {
         const SVECTOR viewToPt = {
-            (segv1.x - *gViewX) >> FRACBITS,
+            (int16_t)((segv1.x - *gViewX) >> 16),
             0,
-            (segv1.y - *gViewY) >> FRACBITS
+            (int16_t)((segv1.y - *gViewY) >> 16)
         };
 
         VECTOR viewVec;
