@@ -57,11 +57,9 @@ void R_RenderBSPNode(const int32_t bspnum) noexcept {
         // Note: this strange check is in the PC engine too...
         // Under what circumstances can the node number be '-1'?
         if (bspnum == -1) {
-            a0 = 0;
-            R_Subsector();
+            R_Subsector(0);
         } else {
-            a0 = bspnum & (~NF_SUBSECTOR);
-            R_Subsector();
+            R_Subsector(bspnum & (~NF_SUBSECTOR));
         }
     } else {
         // This is not a subsector, continue traversing the BSP tree.
@@ -305,56 +303,34 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     return false;
 }
 
-void R_Subsector() noexcept {
-loc_8002B2D8:
-    a2 = *gNumSubsectors;
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x18);
-    v0 = (i32(s0) < i32(a2));
-    sw(s1, sp + 0x14);
-    if (v0 != 0) goto loc_8002B30C;
-    I_Error("R_Subsector: ss %i with numss = %i", (int32_t) s0, (int32_t) a2);
-loc_8002B30C:
-    a0 = *gppEndDrawSubsector;
-    v0 = gpDrawSubsectors;
-    v0 = a0 - v0;
-    v0 = u32(i32(v0) >> 2);
-    v0 = (i32(v0) < 0xC0);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 << 4;
-        if (bJump) goto loc_8002B3A0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do preparation for drawing on the given subsector
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_Subsector(const int32_t subsecNum) noexcept {
+    // Bad subsector number?
+    if (subsecNum >= *gNumSubsectors) {
+        I_Error("R_Subsector: ss %i with numss = %i", subsecNum, *gNumSubsectors);
     }
-    v1 = *gpSubsectors;
-    v0 += v1;
-    v1 = lw(v0);
-    *gpCurDrawSector = v1;
-    sw(v0, a0);
-    a0 = lh(v0 + 0x6);
-    s0 = lh(v0 + 0x4);
-    v0 = *gppEndDrawSubsector;
-    v1 = a0 << 2;
-    v1 += a0;
-    v1 <<= 3;
-    a0 = *gpSegs;
-    v0 += 4;
-    *gppEndDrawSubsector = v0;
-    s1 = v1 + a0;
-    if (s0 == 0) goto loc_8002B3A0;
-loc_8002B38C:
-    a0 = s1;
-    R_AddLine();
-    s0--;
-    s1 += 0x28;
-    if (s0 != 0) goto loc_8002B38C;
-loc_8002B3A0:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    
+    // If we've hit the limit for the number of subsectors that can be drawn then stop emitting.
+    // Otherwise add the subsector to the draw list.
+    if (gppEndDrawSubsector->get() - gpDrawSubsectors.get() >= MAX_DRAW_SUBSECTORS)
+        return;
+    
+    subsector_t& subsec = (*gpSubsectors)[subsecNum];
+    *gpCurDrawSector = subsec.sector;
+    **gppEndDrawSubsector = &subsec;
+    *gppEndDrawSubsector += 1;
+    
+    // Do draw preparation on all of the segs in the subsector.
+    // This figures out what areas of the screen they occlude, updates transformed vertex positions, and more...
+    seg_t* pSeg = &(*gpSegs)[subsec.firstseg];
+
+    for (int32_t segsleft = subsec.numsegs; segsleft > 0; --segsleft) {
+        a0 = ptrToVmAddr(pSeg);
+        R_AddLine();
+        ++pSeg;
+    }
 }
 
 void R_AddLine() noexcept {

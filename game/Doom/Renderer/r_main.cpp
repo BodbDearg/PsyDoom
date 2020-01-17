@@ -60,7 +60,7 @@ void R_Init() noexcept {
     gDrawMatrix->m[0][1] = 0;
     gDrawMatrix->m[0][2] = 0;
     gDrawMatrix->m[1][0] = 0;
-    gDrawMatrix->m[1][1] = GTE_ROTFRAC_UNIT;
+    gDrawMatrix->m[1][1] = GTE_ROTFRAC_UNIT;    // This part of the matrix never changes, so assign here
     gDrawMatrix->m[1][2] = 0;
     gDrawMatrix->m[2][0] = 0;
     gDrawMatrix->m[2][1] = 0;
