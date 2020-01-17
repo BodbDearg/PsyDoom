@@ -2,9 +2,11 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/d_main.h"
+#include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_setup.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGTE.h"
+#include "r_local.h"
 #include "r_main.h"
 
 // Used by 'R_CheckBBox' to determine which BSP node bounding box coordinates to check against.
@@ -28,92 +30,70 @@ static const int32_t gCheckcoord[12][4] = {
 // Which screen columns are fully occluded by geometry
 static const VmPtr<bool[SCREEN_W]> gbSolidCols(0x800A8F48);
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do BSP tree traversal (starting at the root node) to build up the list of subsectors to draw
+//------------------------------------------------------------------------------------------------------------------------------------------
 void R_BSP() noexcept {
-    // TODO: what is this buffer?
-    a0 = 0x800A8F48;                                    // Result = gbSolidCols (800A8F48)
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x100;                                         // Result = 00000100
-    _thunk_D_memset();
+    // Initially all screen columns are fully not occluded by geometry    
+    D_memset(gbSolidCols.get(), (std::byte) 0, SCREEN_W * sizeof(bool));
 
-    // The subsector draw list is initially empty and the sky not visible
+    // The subsector draw list is also initially empty and the sky not visible
     *gppEndDrawSubsector = gpDrawSubsectors;
     *gbIsSkyVisible = false;
 
     // Traverse the BSP tree to generate the list of subsectors to draw
-    a0 = *gNumBspNodes - 1;
-    R_RenderBSPNode();
+    const int32_t bsproot = *gNumBspNodes - 1;
+    R_RenderBSPNode(bsproot);
 }
 
-void R_RenderBSPNode() noexcept {
-loc_8002AD3C:
-    sp -= 0x18;
-    v1 = a0;
-    v0 = v1 & 0x8000;
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
-    if (v0 == 0) goto loc_8002AD84;
-    v0 = -1;                                            // Result = FFFFFFFF
-    a0 = 0xFFFF0000;                                    // Result = FFFF0000
-    if (v1 != v0) goto loc_8002AD70;
-    a0 = 0;                                             // Result = 00000000
-    R_Subsector();
-    goto loc_8002AE60;
-loc_8002AD70:
-    a0 |= 0x7FFF;                                       // Result = FFFF7FFF
-    a0 &= v1;
-    R_Subsector();
-    goto loc_8002AE60;
-loc_8002AD84:
-    v0 = v1 << 3;
-    v0 -= v1;
-    v1 = *gpBspNodes;
-    v0 <<= 3;
-    s0 = v0 + v1;   // bspnode
-    v0 = *gViewY;
-    v1 = lw(s0 + 0x4);
-    v0 -= v1;
-    v1 = lh(s0 + 0xA);
-    v0 = u32(i32(v0) >> 16);
-    mult(v0, v1);
-    v0 = *gViewX;
-    v1 = lw(s0);
-    v0 -= v1;
-    v1 = lo;
-    a0 = lh(s0 + 0xE);
-    v0 = u32(i32(v0) >> 16);
-    mult(a0, v0);
-    v0 = lo;
-    v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_8002AE28;
-    a0 = s0 + 0x10;
-    v0 = R_CheckBBox(vmAddrToPtr<fixed_t>(a0));
-    if (v0 == 0) goto loc_8002AE0C;
-    a0 = lw(s0 + 0x30);
-    R_RenderBSPNode();
-loc_8002AE0C:
-    a0 = s0 + 0x20;
-    v0 = R_CheckBBox(vmAddrToPtr<fixed_t>(a0));
-    if (v0 == 0) goto loc_8002AE60;
-    a0 = lw(s0 + 0x34);
-    goto loc_8002AE58;
-loc_8002AE28:
-    a0 = s0 + 0x20;
-    v0 = R_CheckBBox(vmAddrToPtr<fixed_t>(a0));
-    if (v0 == 0) goto loc_8002AE44;
-    a0 = lw(s0 + 0x34);
-    R_RenderBSPNode();
-loc_8002AE44:
-    a0 = s0 + 0x10;
-    v0 = R_CheckBBox(vmAddrToPtr<fixed_t>(a0));
-    if (v0 == 0) goto loc_8002AE60;
-    a0 = lw(s0 + 0x30);
-loc_8002AE58:
-    R_RenderBSPNode();
-loc_8002AE60:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does recursive traversal of the BSP tree to prepare a list of subsectors to draw.
+// Contrary to the name this function doesn't do the actual drawing, just most of the prep work.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_RenderBSPNode(const int32_t bspnum) noexcept {
+    // Is this node number a subsector?
+    // If so then process it for potential drawing:
+    if (bspnum & NF_SUBSECTOR) {
+        // Note: this strange check is in the PC engine too...
+        // Under what circumstances can the node number be '-1'?
+        if (bspnum == -1) {
+            a0 = 0;
+            R_Subsector();
+        } else {
+            a0 = bspnum & (~NF_SUBSECTOR);
+            R_Subsector();
+        }
+    } else {
+        // This is not a subsector, continue traversing the BSP tree.
+        // Only stop when a particular node is determined to be not visible.
+        node_t& node = (*gpBspNodes)[bspnum];
+
+        // Compute which side of the line the point is on using the cross product.
+        // This is pretty much the same code found in 'R_PointOnSide':
+        const int32_t dx = *gViewX - node.x;
+        const int32_t dy = *gViewY - node.y;
+        const int32_t lprod = (node.dx >> FRACBITS) * (dy >> FRACBITS);
+        const int32_t rprod = (node.dy >> FRACBITS) * (dx >> FRACBITS);
+
+        // Depending on which side of the halfspace we are on, reverse the traversal order:
+        if (lprod < rprod) {
+            if (R_CheckBBox(node.bbox[0])) {
+                R_RenderBSPNode(node.children[0]);
+            }
+
+            if (R_CheckBBox(node.bbox[1])) {
+                R_RenderBSPNode(node.children[1]);
+            }
+        } else {
+            if (R_CheckBBox(node.bbox[1])) {
+                R_RenderBSPNode(node.children[1]);
+            }
+            
+            if (R_CheckBBox(node.bbox[0])) {
+                R_RenderBSPNode(node.children[0]);
+            }
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

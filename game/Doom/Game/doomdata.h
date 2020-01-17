@@ -48,7 +48,7 @@ static constexpr int16_t MTF_BLENDMASK3     = 0x80;     // PSX DOOM: TODO: comme
 
 // If this flag is set for a BSP node child in a wad then it means the child is a subsector.
 // This flag should be removed when retrieving the actual subsector number.
-static constexpr uint16_t NF_SUBSECTOR = 0x8000;
+static constexpr uint32_t NF_SUBSECTOR = 0x8000;
 
 // Header for a block of memory in a memory blocks file.
 // Deliberately the same size as 'memblock_t' so it can be repurposed as that later when the block is loaded into RAM.
