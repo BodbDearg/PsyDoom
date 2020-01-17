@@ -46,7 +46,7 @@ loc_8002F388:
     v0 -= v1;
     v0 = u32(i32(v0) >> 16);
     sh(v0, sp + 0x14);
-    LIBGTE_RotTrans();
+    _thunk_LIBGTE_RotTrans();
     v1 = lw(sp + 0x20);
     v0 = (i32(v1) < 4);
     if (v0 != 0) goto loc_8002F4BC;

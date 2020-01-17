@@ -268,7 +268,6 @@ extern void P_DeathThink() noexcept;
 extern void P_PlayerThink() noexcept;
 extern void R_BSP() noexcept;
 extern void R_RenderBSPNode() noexcept;
-extern void R_CheckBBox() noexcept;
 extern void R_Subsector() noexcept;
 extern void R_AddLine() noexcept;
 extern void R_InitTextures() noexcept;
@@ -798,7 +797,7 @@ extern void LIBGTE__patch_gte() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
 extern void LIBGTE_RotTransPers() noexcept;
 extern void LIBGTE_RotTransPers3() noexcept;
-extern void LIBGTE_RotTrans() noexcept;
+extern void _thunk_LIBGTE_RotTrans() noexcept;
 extern void LIBGTE_LocalLight() noexcept;
 extern void LIBGTE_DpqColor() noexcept;
 extern void LIBGTE_NormalColor() noexcept;
@@ -1194,7 +1193,6 @@ namespace PsxVm {
         { 0x8002A7F8, &P_PlayerThink },
         { 0x8002ACE8, &R_BSP },
         { 0x8002AD3C, &R_RenderBSPNode },
-        { 0x8002AE74, &R_CheckBBox },
         { 0x8002B2D8, &R_Subsector },
         { 0x8002B3B8, &R_AddLine },
         { 0x8002B9E0, &R_InitTextures },
@@ -1724,7 +1722,7 @@ namespace PsxVm {
         { 0x80050454, &LIBAPI_FlushCache },
         { 0x80050464, &LIBGTE_RotTransPers },
         { 0x80050490, &LIBGTE_RotTransPers3 },
-        { 0x800504E4, &LIBGTE_RotTrans },
+        { 0x800504E4, &_thunk_LIBGTE_RotTrans },
         { 0x8005050C, &LIBGTE_LocalLight },
         { 0x80050530, &LIBGTE_DpqColor },
         { 0x8005054C, &LIBGTE_NormalColor },

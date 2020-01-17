@@ -4,11 +4,31 @@
 
 // Represents a basic transform matrix encoding a 3D rotation and translation
 struct MATRIX {
-    int16_t m[3][3];    // Rotation matrix: 3x3
-    int32_t t[3];       // Translation
+    int16_t		m[3][3];    // Rotation matrix: 3x3
+    int32_t		t[3];       // Translation
 };
 
 static_assert(sizeof(MATRIX) == 32);
+
+// 3D vector with 32-bit elements
+struct VECTOR {
+	int32_t		vx;
+	int32_t		vy;
+	int32_t		vz;
+	int32_t		pad;
+};
+
+static_assert(sizeof(VECTOR) == 16);
+
+// 3D vector with 16-bit elements	
+struct SVECTOR {
+	int16_t		vx;
+	int16_t		vy;
+	int16_t		vz;
+	int16_t		pad;
+};
+
+static_assert(sizeof(SVECTOR) == 8);
 
 void LIBGTE_MulMatrix() noexcept;
 void LIBGTE_MulMatrix2() noexcept;
@@ -46,7 +66,10 @@ void LIBGTE_InitGeom() noexcept;
 void LIBGTE__patch_gte() noexcept;
 void LIBGTE_RotTransPers() noexcept;
 void LIBGTE_RotTransPers3() noexcept;
-void LIBGTE_RotTrans() noexcept;
+
+void LIBGTE_RotTrans(const SVECTOR& vecIn, VECTOR& vecOut, int32_t& flagsOut) noexcept;
+void _thunk_LIBGTE_RotTrans() noexcept;
+
 void LIBGTE_LocalLight() noexcept;
 void LIBGTE_DpqColor() noexcept;
 void LIBGTE_NormalColor() noexcept;

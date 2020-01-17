@@ -55,7 +55,7 @@ loc_8002C754:
     v0 -= v1;
     v0 = u32(i32(v0) >> 16);
     sh(v0, sp + 0x14);
-    LIBGTE_RotTrans();
+    _thunk_LIBGTE_RotTrans();
     v0 = lw(sp + 0x18);
     sw(v0, s0 + 0xC);
     v1 = lw(sp + 0x20);

@@ -3,6 +3,14 @@
 #include "LIBAPI.h"
 #include "PsxVm/PsxVm.h"
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper: makes a 32-bit unsigned integer from the 2 given 16-bit unsigned integers.
+// The 2nd unsigned integer is the most significant.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static inline uint32_t makeU32(const uint16_t u16a, const uint16_t u16b) noexcept {
+    return (uint32_t) u16a | ((uint32_t) u16b << 16);
+};
+
 void LIBGTE_MulMatrix() noexcept {
     t0 = lw(a0);
     t1 = lw(a0 + 0x4);
@@ -271,14 +279,10 @@ void LIBGTE_ScaleMatrix() noexcept {
 // Upload the rotation component of the given MATRIX to the GTE
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBGTE_SetRotMatrix(const MATRIX& m) noexcept {
-    const auto makeWord32 = [](const uint16_t u16a, const uint16_t u16b) noexcept {
-        return (uint32_t) u16a | ((uint32_t) u16b << 16);
-    };
-
-    ctc2(makeWord32(m.m[0][0], m.m[0][1]), 0);
-    ctc2(makeWord32(m.m[0][2], m.m[1][0]), 1);
-    ctc2(makeWord32(m.m[1][1], m.m[1][2]), 2);
-    ctc2(makeWord32(m.m[2][0], m.m[2][1]), 3);
+    ctc2(makeU32(m.m[0][0], m.m[0][1]), 0);
+    ctc2(makeU32(m.m[0][2], m.m[1][0]), 1);
+    ctc2(makeU32(m.m[1][1], m.m[1][2]), 2);
+    ctc2(makeU32(m.m[2][0], m.m[2][1]), 3);
     ctc2(m.m[2][2], 4);
 }
 
@@ -553,17 +557,22 @@ void LIBGTE_RotTransPers3() noexcept {
     return;
 }
 
-void LIBGTE_RotTrans() noexcept {
-loc_800504E4:
-    lwc2(0, a0);
-    lwc2(1, a0 + 0x4);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Transform the given vector by the current GTE rotation matrix.
+// GTE status flags are saved to the given output pointer.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGTE_RotTrans(const SVECTOR& vecIn, VECTOR& vecOut, int32_t& flagsOut) noexcept {
+    mtc2(makeU32(vecIn.vx, vecIn.vy), 0);
+    mtc2(vecIn.vz, 1);
     cop2(0x480012);
-    swc2(25, a1);
-    swc2(26, a1 + 0x4);
-    swc2(27, a1 + 0x8);
-    v0 = cfc2(31);
-    sw(v0, a2);
-    return;
+    vecOut.vx = mfc2(25);
+    vecOut.vy = mfc2(26);
+    vecOut.vz = mfc2(27);
+    flagsOut = cfc2(31);
+}
+
+void _thunk_LIBGTE_RotTrans() noexcept {
+    LIBGTE_RotTrans(*vmAddrToPtr<const SVECTOR>(a0), *vmAddrToPtr<VECTOR>(a1), *vmAddrToPtr<int32_t>(a2));
 }
 
 void LIBGTE_LocalLight() noexcept {
