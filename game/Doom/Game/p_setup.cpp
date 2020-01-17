@@ -89,7 +89,7 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
     for (int32_t vertexIdx = 0; vertexIdx < *gNumVertexes; ++vertexIdx) {
         pDstVertex->x = Endian::littleToHost(pSrcVertex->x);
         pDstVertex->y = Endian::littleToHost(pSrcVertex->y);
-        pDstVertex->index = 0;
+        pDstVertex->frameUpdated = 0;
         ++pSrcVertex;
         ++pDstVertex;
     }

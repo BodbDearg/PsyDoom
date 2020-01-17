@@ -13,11 +13,11 @@ struct line_t;
 struct vertex_t {
     fixed_t     x;
     fixed_t     y;
-    int32_t     xx;         // TODO: comment on usage
-    int32_t     vx;         // TODO: comment on usage
-    int32_t     vy;         // TODO: comment on usage
-    int32_t     yy;         // TODO: comment on usage
-    int32_t     index;      // TODO: comment on usage
+    fixed_t     scale;              // Scaling due to perspective. Higher values mean the vertex is closer.    
+    int32_t     viewx;              // X position after view translation + rotation.
+    int32_t     viewy;              // Y position after view translation + rotation.
+    int32_t     screenx;            // X location on screen.
+    int32_t     frameUpdated;       // When (in game frames) the vertex was last transformed: used to avoid unnecessary transforms.
 };
 
 static_assert(sizeof(vertex_t) == 28);
@@ -122,7 +122,8 @@ struct seg_t {
     VmPtr<line_t>       linedef;
     VmPtr<sector_t>     frontsector;
     VmPtr<sector_t>     backsector;
-    uint32_t            unknown1;           // TODO: find out what this is
+    uint16_t            flags;              // TODO: find out more about the flags
+    uint16_t            unknown1;           // TODO: find out what this is
     uint32_t            unknown2;           // TODO: find out what this is
 };
 

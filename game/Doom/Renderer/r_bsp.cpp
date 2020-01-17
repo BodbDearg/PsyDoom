@@ -327,68 +327,63 @@ void R_Subsector(const int32_t subsecNum) noexcept {
     seg_t* pSeg = &(*gpSegs)[subsec.firstseg];
 
     for (int32_t segsleft = subsec.numsegs; segsleft > 0; --segsleft) {
-        a0 = ptrToVmAddr(pSeg);
-        R_AddLine();
+        R_AddLine(*pSeg);
         ++pSeg;
     }
 }
 
-void R_AddLine() noexcept {
+void R_AddLine(seg_t& seg) noexcept {
     sp -= 0x48;
     sw(s3, sp + 0x3C);
     sw(s2, sp + 0x38);
     sw(s1, sp + 0x34);
     sw(s0, sp + 0x30);
 
-    s3 = a0;
-    v0 = lhu(s3 + 0x20);
-    s0 = lw(s3);
-    v0 &= 0xFFFE;
-    sh(v0, s3 + 0x20);
-    v1 = lw(s0 + 0x18);
-    v0 = *gNumFramesDrawn;
-    a0 = sp + 0x10;
+    s3 = ptrToVmAddr(&seg);
 
-    if (v1 != v0) {
-        v0 = lw(s0);
-        v1 = *gViewX;
-        a1 = sp + 0x18;
-        sh(0, sp + 0x12);
-        v0 -= v1;
-        v0 = u32(i32(v0) >> 16);
-        sh(v0, sp + 0x10);
-        v0 = lw(s0 + 0x4);
-        v1 = *gViewY;
-        a2 = sp + 0x28;
-        v0 -= v1;
-        v0 = u32(i32(v0) >> 16);
-        sh(v0, sp + 0x14);
-        _thunk_LIBGTE_RotTrans();
-        v0 = lw(sp + 0x18);
-        sw(v0, s0 + 0xC);
-        v1 = lw(sp + 0x20);
+    // TODO: what flag is this clearing?
+    seg.flags &= 0xFFFE;
+
+    // Transform the seg vertices if required.
+    // Transform into view space but also figure out screen X and scaling due to perspective.
+    vertex_t& segv1 = *seg.vertex1;
+    
+    if (segv1.frameUpdated != *gNumFramesDrawn) {
+        const SVECTOR viewToPt = {
+            (segv1.x - *gViewX) >> FRACBITS,
+            0,
+            (segv1.y - *gViewY) >> FRACBITS
+        };
+
+        VECTOR viewVec;
+        int32_t rotFlags;
+        LIBGTE_RotTrans(viewToPt, viewVec, rotFlags);
+
+        v0 = viewVec.vx;
+        segv1.viewx = v0;
+        v1 = viewVec.vz;
+
         s2 = v0;
         s1 = v1;
         v0 = (i32(s1) < 4);
-        sw(s1, s0 + 0x10);
+        segv1.viewy = s1;
 
         if (v0 == 0) {
             v0 = 0x800000;
             div(v0, s1);
             v0 = lo;
             mult(s2, v0);
-            sw(v0, s0 + 0x8);
+            segv1.scale = v0;
             v0 = lo;
             v0 = u32(i32(v0) >> 16);
             v0 += 0x80;
-            sw(v0, s0 + 0x14);
+            segv1.screenx = v0;
         }
 
-        v0 = *gNumFramesDrawn;
-        sw(v0, s0 + 0x18);
+        segv1.frameUpdated = *gNumFramesDrawn;
     } else {
-        s2 = lw(s0 + 0xC);
-        s1 = lw(s0 + 0x10);
+        s2 = segv1.viewx;
+        s1 = segv1.viewy;
     }
 
     s0 = lw(s3 + 0x4);

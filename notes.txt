@@ -341,3 +341,29 @@ node_t (56 bytes):
         010     fixed_t     bbox[2][4];         // Bounding box for both child nodes
         030     int32_t     children[2];        // When 'NF_SUBSECTOR' is set then it means it's a subsector number
     };
+
+seg_t (40 bytes):
+    struct seg_t {
+        000     vertex_t*   vertex1;
+        004     vertex_t*   vertex2;
+        008     fixed_t     offset;
+        00C     angle_t     angle;
+        010     side_t*     sidedef;
+        014     line_t*     linedef;
+        018     sector_t*   frontsector;
+        01C     sector_t*   backsector;
+        020     uint16_t    flags;
+        022     uint16_t    unknown1;
+        024     uint32_t    unknown2;
+    };
+
+vertex_t (28 bytes): 
+    struct vertex_t {
+        000     fixed_t     x;
+        004     fixed_t     y;
+        008     int32_t     scale;
+        00C     int32_t     viewx;
+        010     int32_t     viewy;
+        014     int32_t     screenx;
+        018     int32_t     frameUpdated;
+    };
