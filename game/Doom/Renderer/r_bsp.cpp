@@ -334,14 +334,13 @@ void R_Subsector(const int32_t subsecNum) noexcept {
 }
 
 void R_AddLine() noexcept {
-loc_8002B3B8:
     sp -= 0x48;
     sw(s3, sp + 0x3C);
-    s3 = a0;
-    sw(ra, sp + 0x40);
     sw(s2, sp + 0x38);
     sw(s1, sp + 0x34);
     sw(s0, sp + 0x30);
+
+    s3 = a0;
     v0 = lhu(s3 + 0x20);
     s0 = lw(s3);
     v0 &= 0xFFFE;
@@ -349,412 +348,273 @@ loc_8002B3B8:
     v1 = lw(s0 + 0x18);
     v0 = *gNumFramesDrawn;
     a0 = sp + 0x10;
-    if (v1 == v0) goto loc_8002B4BC;
-    v0 = lw(s0);
-    v1 = *gViewX;
-    a1 = sp + 0x18;
-    sh(0, sp + 0x12);
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 16);
-    sh(v0, sp + 0x10);
-    v0 = lw(s0 + 0x4);
-    v1 = *gViewY;
-    a2 = sp + 0x28;
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 16);
-    sh(v0, sp + 0x14);
-    _thunk_LIBGTE_RotTrans();
-    v0 = lw(sp + 0x18);
-    sw(v0, s0 + 0xC);
-    v1 = lw(sp + 0x20);
-    s2 = v0;
-    s1 = v1;
-    v0 = (i32(s1) < 4);
-    sw(s1, s0 + 0x10);
-    if (v0 != 0) goto loc_8002B4AC;
-    v0 = 0x800000;                                      // Result = 00800000
-    div(v0, s1);
-    if (s1 != 0) goto loc_8002B474;
-    _break(0x1C00);
-loc_8002B474:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (s1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002B48C;
+
+    if (v1 != v0) {
+        v0 = lw(s0);
+        v1 = *gViewX;
+        a1 = sp + 0x18;
+        sh(0, sp + 0x12);
+        v0 -= v1;
+        v0 = u32(i32(v0) >> 16);
+        sh(v0, sp + 0x10);
+        v0 = lw(s0 + 0x4);
+        v1 = *gViewY;
+        a2 = sp + 0x28;
+        v0 -= v1;
+        v0 = u32(i32(v0) >> 16);
+        sh(v0, sp + 0x14);
+        _thunk_LIBGTE_RotTrans();
+        v0 = lw(sp + 0x18);
+        sw(v0, s0 + 0xC);
+        v1 = lw(sp + 0x20);
+        s2 = v0;
+        s1 = v1;
+        v0 = (i32(s1) < 4);
+        sw(s1, s0 + 0x10);
+
+        if (v0 == 0) {
+            v0 = 0x800000;
+            div(v0, s1);
+            v0 = lo;
+            mult(s2, v0);
+            sw(v0, s0 + 0x8);
+            v0 = lo;
+            v0 = u32(i32(v0) >> 16);
+            v0 += 0x80;
+            sw(v0, s0 + 0x14);
+        }
+
+        v0 = *gNumFramesDrawn;
+        sw(v0, s0 + 0x18);
+    } else {
+        s2 = lw(s0 + 0xC);
+        s1 = lw(s0 + 0x10);
     }
-    if (v0 != at) goto loc_8002B48C;
-    tge(zero, zero, 0x5D);
-loc_8002B48C:
-    v0 = lo;
-    mult(s2, v0);
-    sw(v0, s0 + 0x8);
-    v0 = lo;
-    v0 = u32(i32(v0) >> 16);
-    v0 += 0x80;
-    sw(v0, s0 + 0x14);
-loc_8002B4AC:
-    v0 = *gNumFramesDrawn;
-    sw(v0, s0 + 0x18);
-    goto loc_8002B4C4;
-loc_8002B4BC:
-    s2 = lw(s0 + 0xC);
-    s1 = lw(s0 + 0x10);
-loc_8002B4C4:
+
     s0 = lw(s3 + 0x4);
     v0 = *gNumFramesDrawn;
     v1 = lw(s0 + 0x18);
     a0 = sp + 0x10;
-    if (v1 == v0) goto loc_8002B5A0;
-    v0 = lw(s0);
-    v1 = *gViewX;
-    a1 = sp + 0x18;
-    sh(0, sp + 0x12);
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 16);
-    sh(v0, sp + 0x10);
-    v0 = lw(s0 + 0x4);
-    v1 = *gViewY;
-    a2 = sp + 0x28;
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 16);
-    sh(v0, sp + 0x14);
-    _thunk_LIBGTE_RotTrans();
-    v0 = lw(sp + 0x18);
-    sw(v0, s0 + 0xC);
-    v1 = lw(sp + 0x20);
-    a1 = v0;
-    a0 = v1;
-    v0 = (i32(a0) < 4);
-    sw(a0, s0 + 0x10);
-    if (v0 != 0) goto loc_8002B590;
-    v0 = 0x800000;                                      // Result = 00800000
-    div(v0, a0);
-    if (a0 != 0) goto loc_8002B558;
-    _break(0x1C00);
-loc_8002B558:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a0 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002B570;
+
+    if (v1 != v0) {
+        v0 = lw(s0);
+        v1 = *gViewX;
+        a1 = sp + 0x18;
+        sh(0, sp + 0x12);
+        v0 -= v1;
+        v0 = u32(i32(v0) >> 16);
+        sh(v0, sp + 0x10);
+        v0 = lw(s0 + 0x4);
+        v1 = *gViewY;
+        a2 = sp + 0x28;
+        v0 -= v1;
+        v0 = u32(i32(v0) >> 16);
+        sh(v0, sp + 0x14);
+        _thunk_LIBGTE_RotTrans();
+        v0 = lw(sp + 0x18);
+        sw(v0, s0 + 0xC);
+        v1 = lw(sp + 0x20);
+        a1 = v0;
+        a0 = v1;
+        v0 = (i32(a0) < 4);
+        sw(a0, s0 + 0x10);
+
+        if (v0 == 0) {
+            v0 = 0x800000;
+            div(v0, a0);
+            v0 = lo;
+            mult(a1, v0);
+            sw(v0, s0 + 0x8);
+            v0 = lo;
+            v0 = u32(i32(v0) >> 16);
+            v0 += 0x80;
+            sw(v0, s0 + 0x14);
+        }
+
+        v0 = *gNumFramesDrawn;
+        sw(v0, s0 + 0x18);
+    } else {
+        a1 = lw(s0 + 0xC);
+        a0 = lw(s0 + 0x10);
     }
-    if (v0 != at) goto loc_8002B570;
-    tge(zero, zero, 0x5D);
-loc_8002B570:
-    v0 = lo;
-    mult(a1, v0);
-    sw(v0, s0 + 0x8);
-    v0 = lo;
-    v0 = u32(i32(v0) >> 16);
-    v0 += 0x80;
-    sw(v0, s0 + 0x14);
-loc_8002B590:
-    v0 = *gNumFramesDrawn;
-    sw(v0, s0 + 0x18);
-    goto loc_8002B5A8;
-loc_8002B5A0:
-    a1 = lw(s0 + 0xC);
-    a0 = lw(s0 + 0x10);
-loc_8002B5A8:
-    v0 = -s1;
-    a2 = (i32(s2) < i32(v0));
-    v0 = -a0;
-    if (a2 == 0) goto loc_8002B5C4;
-    v0 = (i32(a1) < i32(v0));
-    if (v0 != 0) goto loc_8002B988;
-loc_8002B5C4:
-    v0 = (i32(s1) < i32(s2));
+
+    if (i32(s2) < i32(-s1) && i32(a1) < i32(-a0))
+        goto loc_8002B988;
+    
     mult(a1, s1);
-    if (v0 == 0) goto loc_8002B5DC;
-    v0 = (i32(a0) < i32(a1));
-    if (v0 != 0) goto loc_8002B988;
-loc_8002B5DC:
+
+    if (i32(s1) < i32(s2) && i32(a0) < i32(a1))
+        goto loc_8002B988;
+    
     v0 = lo;
     mult(s2, a0);
     v1 = lo;
     v0 -= v1;
-    if (i32(v0) <= 0) goto loc_8002B988;
-    v0 = -a0;
-    if (a2 == 0) goto loc_8002B658;
-    v0 = (i32(v0) < i32(a1));
-    {
-        const bool bJump = (v0 == 0);
+
+    if (i32(v0) <= 0)
+        goto loc_8002B988;
+
+    if (i32(s2) < i32(-s1) && i32(-a0) < i32(a1)) {
         v0 = s2 + s1;
-        if (bJump) goto loc_8002B658;
+        v1 = v0 << 16;
+        v0 -= a1;
+        v0 -= a0;
+        div(v1, v0);
+        v1 = lo;
+        v0 = a0 - s1;
+        mult(v1, v0);
+        v0 = lo;
+        v0 = u32(i32(v0) >> 16);
+        s1 += v0;
+        s2 = -s1;
     }
-    v1 = v0 << 16;
-    v0 -= a1;
-    v0 -= a0;
-    div(v1, v0);
-    if (v0 != 0) goto loc_8002B624;
-    _break(0x1C00);
-loc_8002B624:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v0 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002B63C;
-    }
-    if (v1 != at) goto loc_8002B63C;
-    tge(zero, zero, 0x5D);
-loc_8002B63C:
-    v1 = lo;
-    v0 = a0 - s1;
-    mult(v1, v0);
-    v0 = lo;
-    v0 = u32(i32(v0) >> 16);
-    s1 += v0;
-    s2 = -s1;
-loc_8002B658:
-    v0 = (i32(s2) < i32(s1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(a0) < i32(a1));
-        if (bJump) goto loc_8002B6BC;
-    }
-    {
-        const bool bJump = (v0 == 0);
+    
+    if (i32(s2) < i32(s1) && i32(a0) < i32(a1)) {
         v0 = s2 - s1;
-        if (bJump) goto loc_8002B6BC;
+        v1 = v0 << 16;
+        v0 -= a1;
+        v0 += a0;
+        div(v1, v0);
+        v1 = lo;
+        v0 = a0 - s1;
+        mult(v1, v0);
+        v0 = lo;
+        v0 = u32(i32(v0) >> 16);
+        a0 = s1 + v0;
+        a1 = a0;
     }
-    v1 = v0 << 16;
-    v0 -= a1;
-    v0 += a0;
-    div(v1, v0);
-    if (v0 != 0) goto loc_8002B688;
-    _break(0x1C00);
-loc_8002B688:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v0 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002B6A0;
+    
+    if (i32(s1) < 3 && i32(a0) < 3)
+        goto loc_8002B988;
+    
+    if (i32(s1) < 2 && i32(a0) >= 3) {
+        v0 = 2;
+        v0 -= s1;
+        v0 <<= 16;
+        v1 = a0 - s1;
+        div(v0, v1);
+        v0 = lo;
+        v1 = a1 - s2;
+        mult(v0, v1);
+        s1 = 2;
+        v0 = lo;
+        v0 = u32(i32(v0) >> 16);
+        s2 += v0;
+    } else if (i32(a0) < 2 && i32(s1) >= 3) {
+        v0 = 2;
+        v0 -= a0;
+        v0 <<= 16;
+        v1 = s1 - a0;
+        div(v0, v1);
+        v0 = lo;
+        v1 = s2 - a1;
+        mult(v0, v1);
+        a0 = 2;
+        v0 = lo;
+        v0 = u32(i32(v0) >> 16);
+        a1 += v0;
     }
-    if (v1 != at) goto loc_8002B6A0;
-    tge(zero, zero, 0x5D);
-loc_8002B6A0:
-    v1 = lo;
-    v0 = a0 - s1;
-    mult(v1, v0);
-    v0 = lo;
-    v0 = u32(i32(v0) >> 16);
-    a0 = s1 + v0;
-    a1 = a0;
-loc_8002B6BC:
-    v0 = (i32(s1) < 3);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(a0) < 3);
-        if (bJump) goto loc_8002B6D0;
-    }
-    if (v0 != 0) goto loc_8002B988;
-loc_8002B6D0:
-    v0 = (i32(s1) < 2);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(a0) < 3);
-        if (bJump) goto loc_8002B74C;
-    }
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(a0) < 2);
-        if (bJump) goto loc_8002B750;
-    }
-    v0 = 2;                                             // Result = 00000002
-    v0 -= s1;
-    v0 <<= 16;
-    v1 = a0 - s1;
-    div(v0, v1);
-    if (v1 != 0) goto loc_8002B704;
-    _break(0x1C00);
-loc_8002B704:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002B71C;
-    }
-    if (v0 != at) goto loc_8002B71C;
-    tge(zero, zero, 0x5D);
-loc_8002B71C:
-    v0 = lo;
-    v1 = a1 - s2;
-    mult(v0, v1);
-    s1 = 2;                                             // Result = 00000002
-    v0 = lo;
-    v0 = u32(i32(v0) >> 16);
-    s2 += v0;
-    goto loc_8002B7B4;
-loc_8002B73C:
-    t0 = a0;
-    goto loc_8002B898;
-loc_8002B744:
-    v1 = a0;
-    goto loc_8002B8D4;
-loc_8002B74C:
-    v0 = (i32(a0) < 2);
-loc_8002B750:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(s1) < 3);
-        if (bJump) goto loc_8002B7B4;
-    }
+
     v1 = s2 << 7;
-    if (v0 != 0) goto loc_8002B7B8;
-    v0 = 2;                                             // Result = 00000002
-    v0 -= a0;
-    v0 <<= 16;
-    v1 = s1 - a0;
-    div(v0, v1);
-    if (v1 != 0) goto loc_8002B780;
-    _break(0x1C00);
-loc_8002B780:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002B798;
-    }
-    if (v0 != at) goto loc_8002B798;
-    tge(zero, zero, 0x5D);
-loc_8002B798:
-    v0 = lo;
-    v1 = s2 - a1;
-    mult(v0, v1);
-    a0 = 2;                                             // Result = 00000002
-    v0 = lo;
-    v0 = u32(i32(v0) >> 16);
-    a1 += v0;
-loc_8002B7B4:
-    v1 = s2 << 7;
-loc_8002B7B8:
     div(v1, s1);
-    if (s1 != 0) goto loc_8002B7C8;
-    _break(0x1C00);
-loc_8002B7C8:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (s1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002B7E0;
-    }
-    if (v1 != at) goto loc_8002B7E0;
-    tge(zero, zero, 0x5D);
-loc_8002B7E0:
     v1 = lo;
     v0 = a1 << 7;
     div(v0, a0);
-    if (a0 != 0) goto loc_8002B7F8;
-    _break(0x1C00);
-loc_8002B7F8:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a0 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002B810;
-    }
-    if (v0 != at) goto loc_8002B810;
-    tge(zero, zero, 0x5D);
-loc_8002B810:
     v0 = lo;
     a2 = v1 + 0x80;
     a3 = v0 + 0x80;
-    if (a2 == a3) goto loc_8002B988;
+
+    if (a2 == a3)
+        goto loc_8002B988;
+
     v0 = *gpCurDrawSector;
     v1 = lw(v0 + 0xC);
-    v0 = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8002B848;
+    
+    if (v1 == -1) {
+        *gbIsSkyVisible = true;
     }
-    *gbIsSkyVisible = v0;
-loc_8002B848:
-    v0 = (i32(a3) < 0x101);
-    if (i32(a2) >= 0) goto loc_8002B854;
-    a2 = 0;                                             // Result = 00000000
-loc_8002B854:
-    t0 = 0x100;                                         // Result = 00000100
-    if (v0 != 0) goto loc_8002B860;
-    a3 = 0x100;                                         // Result = 00000100
-loc_8002B860:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x70B8;                                       // Result = gbSolidCols (800A8F48)
+
+    if (i32(a2) < 0) {
+        a2 = 0;
+    }
+    
+    t0 = 0x100;
+
+    if (i32(a3) >= 0x101) {
+        a3 = 0x100;
+    }
+    
+    v0 = gbSolidCols;
     a1 = a2 + v0;
-    v0 = (i32(a2) < i32(a3));
     a0 = a2;
-    if (v0 == 0) goto loc_8002B898;
-loc_8002B878:
-    v0 = lbu(a1);
-    a1++;
-    if (v0 == 0) goto loc_8002B73C;
-    a0++;
-    v0 = (i32(a0) < i32(a3));
-    if (v0 != 0) goto loc_8002B878;
-loc_8002B898:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x70B9;                                       // Result = 800A8F47
+
+    while (i32(a0) < i32(a3)) {
+        v0 = lbu(a1);
+        a1++;
+
+        if (v0 == 0) {
+            t0 = a0;
+            break;
+        }
+
+        a0++;
+    }
+
+    v0 = 0x800A8F47;
     a1 = a3 + v0;
     a0 = a3 - 1;
-    v0 = (i32(a0) < i32(a2));
-    v1 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_8002B8D4;
-loc_8002B8B4:
-    v0 = lbu(a1);
-    a1--;
-    if (v0 == 0) goto loc_8002B744;
-    a0--;
-    v0 = (i32(a0) < i32(a2));
-    if (v0 == 0) goto loc_8002B8B4;
-loc_8002B8D4:
-    v0 = (i32(v1) < i32(t0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t0 - 1;                                    // Result = 000000FF
-        if (bJump) goto loc_8002B8F8;
+    v1 = 0;
+
+    while (i32(a0) >= i32(a2)) {
+        v0 = lbu(a1);
+        a1--;
+
+        if (v0 == 0) {
+            v1 = a0;
+            break;
+        }
+
+        a0--;
     }
-    sh(v0, s3 + 0x22);
-    v0 = lhu(s3 + 0x20);
-    v1++;
-    sh(v1, s3 + 0x24);
-    v0 |= 1;
-    sh(v0, s3 + 0x20);
-loc_8002B8F8:
+
+    v0 = t0 - 1;
+
+    if (i32(v1) >= i32(t0)) {
+        sh(v0, s3 + 0x22);
+        v0 = lhu(s3 + 0x20);
+        v1++;
+        sh(v1, s3 + 0x24);
+        v0 |= 1;
+        sh(v0, s3 + 0x20);
+    }
+
     v0 = lw(s3 + 0x14);
     v0 = lw(v0 + 0x10);
     v0 &= 0x200;
-    if (v0 != 0) goto loc_8002B988;
-    a0 = lw(s3 + 0x1C);
-    if (a0 == 0) goto loc_8002B95C;
-    a1 = *gpCurDrawSector;
-    v1 = lw(a0 + 0x4);
-    v0 = lw(a1);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8002B95C;
-    v0 = lw(a0);
-    v1 = lw(a1 + 0x4);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 != 0) goto loc_8002B988;
-loc_8002B95C:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x70B8;                                       // Result = gbSolidCols (800A8F48)
-    a1 = a2 + v0;
-    v0 = (i32(a2) < i32(a3));
-    v1 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_8002B988;
-loc_8002B974:
-    sb(v1, a1);
-    a2++;
-    v0 = (i32(a2) < i32(a3));
-    a1++;
-    if (v0 != 0) goto loc_8002B974;
+
+    if (v0 == 0) {
+        a0 = lw(s3 + 0x1C);
+        a1 = *gpCurDrawSector;
+
+        if ((a0 == 0) ||
+            (i32(lw(a1)) >= i32(lw(a0 + 0x4))) ||
+            (i32(lw(a0)) >= i32(lw(a1 + 0x4)))
+        ) {
+            v0 = gbSolidCols;
+            a1 = a2 + v0;
+
+            while (i32(a2) < i32(a3)) {
+                sb(1, a1);
+                a2++;
+                a1++;
+            }
+        }
+    }
+
 loc_8002B988:
-    ra = lw(sp + 0x40);
     s3 = lw(sp + 0x3C);
     s2 = lw(sp + 0x38);
     s1 = lw(sp + 0x34);
     s0 = lw(sp + 0x30);
     sp += 0x48;
-    return;
 }
