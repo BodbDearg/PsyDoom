@@ -143,8 +143,7 @@ void R_RenderPlayerView() noexcept {
             }
         }
         
-        a0 = ptrToVmAddr(&subsec);
-        R_DrawSubsector();
+        R_DrawSubsector(subsec);
     }
 
     // Draw any player sprites

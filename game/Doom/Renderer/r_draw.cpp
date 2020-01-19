@@ -2,246 +2,166 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/p_setup.h"
+#include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGTE.h"
+#include "r_local.h"
 #include "r_main.h"
 #include "r_plane.h"
 #include "r_segs.h"
 #include "r_things.h"
 
-void R_DrawSubsector() noexcept {
-loc_8002C6F8:
-    sp -= 0x78;
-    sw(s5, sp + 0x6C);
-    s5 = a0;
-    v0 = 0x1F800000;                                    // Result = 1F800000
-    v0 += 0xA8;                                         // Result = 1F8000A8
-    sw(s1, sp + 0x5C);
-    s1 = v0 + 4;                                        // Result = 1F8000AC
-    sw(v0, sp + 0x28);
-    v0 += 0xAC;                                         // Result = 1F800154
-    sw(s2, sp + 0x60);
-    s2 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x70);
-    sw(s4, sp + 0x68);
-    sw(s3, sp + 0x64);
-    sw(s0, sp + 0x58);
-    sw(v0, sp + 0x2C);
-    v0 = lh(s5 + 0xA);
-    v1 = *gpLeafEdges;
-    s4 = lh(s5 + 0x8);
-    v0 <<= 3;
-    s3 = v0 + v1;
-    if (i32(s4) <= 0) goto loc_8002C850;
-loc_8002C754:
-    v0 = lw(s3 + 0x4);
-    s0 = lw(s3);
-    sw(v0, s1 + 0x4);
-    sw(s0, s1);
-    v1 = lw(s0 + 0x18);
-    v0 = *gNumFramesDrawn;
-    a0 = sp + 0x10;
-    if (v1 == v0) goto loc_8002C83C;
-    v0 = lw(s0);
-    v1 = *gViewX;
-    a1 = sp + 0x18;
-    sh(0, sp + 0x12);
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 16);
-    sh(v0, sp + 0x10);
-    v0 = lw(s0 + 0x4);
-    v1 = *gViewY;
-    a2 = sp + 0x38;
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 16);
-    sh(v0, sp + 0x14);
-    _thunk_LIBGTE_RotTrans();
-    v0 = lw(sp + 0x18);
-    sw(v0, s0 + 0xC);
-    v1 = lw(sp + 0x20);
-    v0 = (i32(v1) < 4);
-    sw(v1, s0 + 0x10);
-    if (v0 != 0) goto loc_8002C82C;
-    v0 = 0x800000;                                      // Result = 00800000
-    div(v0, v1);
-    if (v1 != 0) goto loc_8002C7F0;
-    _break(0x1C00);
-loc_8002C7F0:
-    at = -1;                                            // Result = FFFFFFFF
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws everything in the subsector: floors, ceilings, walls and things
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_DrawSubsector(subsector_t& subsec) noexcept {
+    // The PSX scratchpad is used to store 2 leafs, grab that memory here.
+    // The code below ping-pongs between both leafs, using them as either input or output leafs for each clipping operation/
+    // I don't know why this particular address is used though...
+    leaf_t* const pLeafs = (leaf_t*) getScratchAddr(42);
+    leaf_t& leaf1 = pLeafs[0];
+    
+    // Cache the entire leaf for the subsector to the scratchpad.
+    // Also transform any leaf vertices that were not yet transformed up until this point.
     {
-        const bool bJump = (v1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002C808;
+        const leafedge_t* pSrcEdge = gpLeafEdges->get() + subsec.firstLeafEdge;
+        leafedge_t* pDstEdge = leaf1.edges;
+        
+        for (int32_t edgeIdx = 0; edgeIdx < subsec.numLeafEdges; ++edgeIdx, ++pSrcEdge, ++pDstEdge) {
+            // Cache the leaf edge
+            vertex_t& vert = *pSrcEdge->vertex;
+            
+            pDstEdge->vertex = &vert;
+            pDstEdge->seg = pSrcEdge->seg;
+            
+            // Transform this leaf edge's vertexes if they need to be transformed
+            if (vert.frameUpdated != *gNumFramesDrawn) {
+                const SVECTOR viewToPt = {
+                    (int16_t)((vert.x - *gViewX) >> 16),
+                    0,
+                    (int16_t)((vert.y - *gViewY) >> 16)
+                };
+                
+                VECTOR viewVec;
+                int32_t rotFlags;
+                LIBGTE_RotTrans(viewToPt, viewVec, rotFlags);
+                
+                vert.viewx = viewVec.vx;
+                vert.viewy = viewVec.vz;
+                
+                if (viewVec.vz > 3) {
+                    vert.scale = (HALF_SCREEN_W * FRACUNIT) / viewVec.vz;
+                    vert.screenx = ((vert.scale * vert.viewx) >> FRACBITS) + HALF_SCREEN_W;
+                }
+                
+                vert.frameUpdated = *gNumFramesDrawn;
+            }
+        }
+        
+        leaf1.numEdges = subsec.numLeafEdges;
     }
-    if (v0 != at) goto loc_8002C808;
-    tge(zero, zero, 0x5D);
-loc_8002C808:
-    v0 = lo;
-    v1 = lw(s0 + 0xC);
-    mult(v0, v1);
-    sw(v0, s0 + 0x8);
-    v0 = lo;
-    v0 = u32(i32(v0) >> 16);
-    v0 += 0x80;
-    sw(v0, s0 + 0x14);
-loc_8002C82C:
-    v0 = *gNumFramesDrawn;
-    sw(v0, s0 + 0x18);
-loc_8002C83C:
-    s2++;
-    s3 += 8;
-    v0 = (i32(s2) < i32(s4));
-    s1 += 8;
-    if (v0 != 0) goto loc_8002C754;
-loc_8002C850:
-    v0 = lw(sp + 0x28);
-    s2 = 0;                                             // Result = 00000000
-    sw(s4, v0);
-    v0 = lw(sp + 0x28);
-    s3 = 0;                                             // Result = 00000000
-    sw(0, gp + 0xC40);                                  // Store to: 80078220
-    s0 = lw(v0);
-    s1 = v0 + 4;
-    if (i32(s0) <= 0) goto loc_8002C8D0;
-    v1 = sp + 0x10;
-loc_8002C87C:
-    v0 = lw(s1);
-    v0 = lw(v0 + 0x10);
-    v0 = (i32(v0) < 4);
-    a1 = sp + 0x28;
-    if (v0 == 0) goto loc_8002C8C0;
-    v0 = s3 << 2;                                       // Result = 00000000
-    v0 += v1;
-    if (s3 != 0) goto loc_8002C8A8;
-    a1 = sp + 0x2C;
-loc_8002C8A8:
-    a0 = lw(v0 + 0x18);
-    a1 = lw(a1);
-    s3 ^= 1;                                            // Result = 00000001
-    R_FrontZClip();
-    v1 = s3 << 2;                                       // Result = 00000004
-    goto loc_8002C8D4;
-loc_8002C8C0:
-    s2++;
-    v0 = (i32(s2) < i32(s0));
-    s1 += 8;
-    if (v0 != 0) goto loc_8002C87C;
-loc_8002C8D0:
-    v1 = s3 << 2;                                       // Result = 00000000
-loc_8002C8D4:
-    v0 = sp + 0x10;
-    s0 = v1 + v0;
-    a1 = lw(s0 + 0x18);
-    a0 = 0;                                             // Result = 00000000
+    
+    // Begin the process of clipping the leaf.
+    // Ping pong between the two leaf buffers for input and output..
+    uint32_t curLeafIdx = 0;
+    
+    // TODO: MAKE A GLOBAL FOR THIS
+    sw(0, gp + 0xC40);      // Store to: 80078220
+    
+    // Clip the leaf against the front plane if required
+    {
+        leafedge_t* pEdge = leaf1.edges;
+        
+        for (int32_t edgeIdx = 0; edgeIdx < subsec.numLeafEdges; ++edgeIdx, ++pEdge) {
+            if (pEdge->vertex->viewy <= NEAR_CLIP_DIST + 1) {
+                a0 = ptrToVmAddr(pLeafs + curLeafIdx);
+                a1 = ptrToVmAddr(pLeafs + (curLeafIdx ^ 1));
+                R_FrontZClip();
+                curLeafIdx ^= 1;
+                break;
+            }
+        }
+    }
+    
+    // TODO: comment/explain and handle return value
+    a0 = 0;
+    a1 = ptrToVmAddr(pLeafs + curLeafIdx);
     R_CheckEdgeVisible();
-    if (i32(v0) < 0) goto loc_8002CA64;
-    v1 = s3 << 2;
-    if (i32(v0) <= 0) goto loc_8002C924;
-    a1 = sp + 0x28;
-    if (s3 != 0) goto loc_8002C904;
-    a1 = sp + 0x2C;
-loc_8002C904:
-    a0 = lw(s0 + 0x18);
-    a1 = lw(a1);
-    R_LeftEdgeClip();
-    v0 = (i32(v0) < 3);
-    s3 ^= 1;                                            // Result = 00000001
-    if (v0 != 0) goto loc_8002CA64;
-    v1 = s3 << 2;                                       // Result = 00000004
-loc_8002C924:
-    v0 = sp + 0x10;
-    s0 = v1 + v0;
-    a1 = lw(s0 + 0x18);
-    a0 = 1;                                             // Result = 00000001
+    
+    if (i32(v0) < 0)
+        return;
+    
+    // Clip the leaf against the left view frustrum plane if required
+    if (i32(v0) > 0) {
+        a0 = ptrToVmAddr(pLeafs + curLeafIdx);
+        a1 = ptrToVmAddr(pLeafs + (curLeafIdx ^ 1));
+        R_LeftEdgeClip();
+        curLeafIdx ^= 1;
+        
+        if (i32(v0) < 3)
+            return;
+    }
+    
+    // TODO: comment/explain and handle return value properly
+    a0 = 1;
+    a1 = ptrToVmAddr(pLeafs + curLeafIdx);
     R_CheckEdgeVisible();
-    if (i32(v0) < 0) goto loc_8002CA64;
-    if (i32(v0) <= 0) goto loc_8002C970;
-    a1 = sp + 0x28;
-    if (s3 != 0) goto loc_8002C954;
-    a1 = sp + 0x2C;
-loc_8002C954:
-    a0 = lw(s0 + 0x18);
-    a1 = lw(a1);
-    R_RightEdgeClip();
-    v0 = (i32(v0) < 3);
-    s3 ^= 1;
-    if (v0 != 0) goto loc_8002CA64;
-loc_8002C970:
-    v0 = s3 << 2;
-    v0 += sp;
-    v1 = lw(v0 + 0x28);
-    s0 = lw(v1);
-    s1 = v1 + 4;
-    v0 = s0 << 3;
-    v0 += s1;
-    a0 = lw(v1 + 0x4);
-    a1 = lw(v1 + 0x8);
-    sw(a0, v0);
-    sw(a1, v0 + 0x4);
-    s2 = 0;                                             // Result = 00000000
-    if (i32(s0) <= 0) goto loc_8002C9E0;
-loc_8002C9A8:
-    v0 = lw(s1 + 0x4);
-    s2++;
-    if (v0 == 0) goto loc_8002C9D4;
-    v0 = lhu(v0 + 0x20);
-    v0 &= 1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(s2) < i32(s0));
-        if (bJump) goto loc_8002C9D8;
+    
+    if (i32(v0) < 0)
+        return;
+    
+    // Clip the leaf against the right view frustrum plane if required
+    if (i32(v0) > 0) {
+        a0 = ptrToVmAddr(pLeafs + curLeafIdx);
+        a1 = ptrToVmAddr(pLeafs + (curLeafIdx ^ 1));
+        R_RightEdgeClip();
+        curLeafIdx ^= 1;
+        
+        if (i32(v0) < 3)
+            return;
     }
-    a0 = s1;
-    R_DrawSubsectorSeg();
-loc_8002C9D4:
-    v0 = (i32(s2) < i32(s0));
-loc_8002C9D8:
-    s1 += 8;
-    if (v0 != 0) goto loc_8002C9A8;
-loc_8002C9E0:
-    v0 = *gpCurDrawSector;
-    v1 = *gViewZ;
-    v0 = lw(v0);
-    v0 = (i32(v0) < i32(v1));
+    
+    // Terminate the list of leaf edges by putting the first edge past the end.
+    // This allows the renderer to access one past the end without worrying about bounds checks.
+    // Handy for when working with edges!
+    leaf_t& drawleaf = pLeafs[curLeafIdx];
+    drawleaf.edges[drawleaf.numEdges] = drawleaf.edges[0];
+    
+    // Draw all visible walls/segs in the leaf
     {
-        const bool bJump = (v0 == 0);
-        v0 = s3 << 2;                                   // Result = 00000000
-        if (bJump) goto loc_8002CA14;
+        leafedge_t* pEdge = drawleaf.edges;
+        
+        for (int32_t edgeIdx = 0; edgeIdx < drawleaf.numEdges; ++edgeIdx, ++pEdge) {
+            // Only draw the seg if its marked as visible
+            seg_t* const pSeg = pEdge->seg.get();
+            
+            if (pSeg && (pSeg->flags & SGF_VISIBLE_COLS)) {
+                a0 = ptrToVmAddr(pEdge);
+                R_DrawSubsectorSeg();       // TODO: RENAME - it's drawing a leaf edge
+            }
+        }
     }
-    v0 += sp;
-    a0 = lw(v0 + 0x28);
-    a1 = 0;                                             // Result = 00000000
-    R_DrawSubsectorFlat();
-loc_8002CA14:
-    a0 = *gpCurDrawSector;
-    v1 = lw(a0 + 0xC);
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (v1 == v0) goto loc_8002CA5C;
-    v1 = lw(a0 + 0x4);
-    v0 = *gViewZ;
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s3 << 2;                                   // Result = 00000000
-        if (bJump) goto loc_8002CA5C;
+    
+    // Draw the floor if above it
+    sector_t& drawsec = **gpCurDrawSector;
+    
+    if (*gViewZ > drawsec.floorheight) {
+        a0 = ptrToVmAddr(&drawleaf);
+        a1 = 0;
+        R_DrawSubsectorFlat();
     }
-    v0 += sp;
-    a0 = lw(v0 + 0x28);
-    a1 = 1;                                             // Result = 00000001
-    R_DrawSubsectorFlat();
-loc_8002CA5C:
-    a0 = s5;
+    
+    // Draw the ceiling if below it and it is not a sky ceiling
+    if ((drawsec.ceilingpic != -1) && (*gViewZ < drawsec.ceilingheight)) {
+        a0 = ptrToVmAddr(&drawleaf);
+        a1 = 1;
+        R_DrawSubsectorFlat();
+    }
+    
+    // Draw all sprites in the subsector
+    a0 = ptrToVmAddr(&subsec);
     R_DrawSubsectorSprites();
-loc_8002CA64:
-    ra = lw(sp + 0x70);
-    s5 = lw(sp + 0x6C);
-    s4 = lw(sp + 0x68);
-    s3 = lw(sp + 0x64);
-    s2 = lw(sp + 0x60);
-    s1 = lw(sp + 0x5C);
-    s0 = lw(sp + 0x58);
-    sp += 0x78;
-    return;
 }
 
 void R_FrontZClip() noexcept {

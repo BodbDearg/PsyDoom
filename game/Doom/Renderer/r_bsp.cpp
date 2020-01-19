@@ -345,9 +345,6 @@ void R_Subsector(const int32_t subsecNum) noexcept {
 // Also marks any columns that it occludes fully.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_AddLine(seg_t& seg) noexcept {
-    // Clip at this depth
-    constexpr int32_t NEAR_CLIP_DIST = 2;
-    
     // Initially assume no columns in the seg are visible
     seg.flags &= (~SGF_VISIBLE_COLS);
     

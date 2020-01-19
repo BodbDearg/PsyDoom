@@ -4,11 +4,12 @@
 
 // GTE rotation constants: 1.0 and the shift to go from 16.16 to 4.12.
 // The GTE stores rotation matrix entries as 4.12 fixed point numbers!
-static constexpr int16_t GTE_ROTFRAC_UNIT = 4096;
-static constexpr uint16_t GTE_ROTFRAC_SHIFT = 4;
+static constexpr int16_t    GTE_ROTFRAC_UNIT    = 4096;
+static constexpr uint16_t   GTE_ROTFRAC_SHIFT   = 4;
 
 // Renderer general constants
-static constexpr uint32_t MAX_DRAW_SUBSECTORS = 192;
+static constexpr uint32_t   MAX_DRAW_SUBSECTORS = 192;
+static constexpr int32_t    NEAR_CLIP_DIST      = 2;        // Clip geometry at this depth
 
 struct light_t;
 struct MATRIX;

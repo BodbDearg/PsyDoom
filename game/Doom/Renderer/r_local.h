@@ -92,8 +92,8 @@ struct subsector_t {
     VmPtr<sector_t>     sector;
     int16_t             numsegs;
     int16_t             firstseg;
-    int16_t             numleafedges;
-    int16_t             firstleafedge;
+    int16_t             numLeafEdges;
+    int16_t             firstLeafEdge;
     int16_t             unknown5;           // TODO: find out what this field is
     int16_t             unknown6;           // TODO: find out what this field is
 };
@@ -142,3 +142,14 @@ struct leafedge_t {
 };
 
 static_assert(sizeof(leafedge_t) == 8);
+
+// Runtime render structure used for rendering leafs.
+// This is cached in scratchpad memory of the PSX, hence the small limits here.
+static constexpr int32_t MAX_LEAF_EDGES = 20;
+
+struct leaf_t {
+    int32_t     numEdges;
+    leafedge_t  edges[MAX_LEAF_EDGES + 1];  // +1 so we store the first edge at the end of the list and avoid bound checking
+};
+
+static_assert(sizeof(leaf_t) == 172);

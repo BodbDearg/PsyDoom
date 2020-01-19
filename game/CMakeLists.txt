@@ -132,6 +132,7 @@ set(SOURCE_FILES
     "PcPsx/Endian.h"
     "PcPsx/FatalErrors.cpp"
     "PcPsx/FatalErrors.h"
+    "PcPsx/Finally.h"
     "PcPsx/Macros.h"
     "PcPsx/ModMgr.cpp"
     "PcPsx/ModMgr.h"

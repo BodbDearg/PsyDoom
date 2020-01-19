@@ -272,8 +272,6 @@ extern void R_InitSprites() noexcept;
 extern void R_TextureNumForName() noexcept;
 extern void R_FlatNumForName() noexcept;
 extern void R_InitPalette() noexcept;
-extern void R_DrawSky() noexcept;
-extern void R_DrawSubsector() noexcept;
 extern void R_FrontZClip() noexcept;
 extern void R_CheckEdgeVisible() noexcept;
 extern void R_LeftEdgeClip() noexcept;
@@ -1193,8 +1191,6 @@ namespace PsxVm {
         { 0x8002BDA4, &R_TextureNumForName },
         { 0x8002BE68, &R_FlatNumForName },
         { 0x8002BF2C, &R_InitPalette },
-        { 0x8002C07C, &R_DrawSky },
-        { 0x8002C6F8, &R_DrawSubsector },
         { 0x8002CA8C, &R_FrontZClip },
         { 0x8002CD68, &R_CheckEdgeVisible },
         { 0x8002CE68, &R_LeftEdgeClip },

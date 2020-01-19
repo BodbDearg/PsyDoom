@@ -180,8 +180,8 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     for (int32_t subsectorIdx = 0; subsectorIdx < *gNumSubsectors; ++subsectorIdx) {
         pDstSubsec->numsegs = Endian::littleToHost(pSrcSubsec->numsegs);
         pDstSubsec->firstseg = Endian::littleToHost(pSrcSubsec->firstseg);
-        pDstSubsec->numleafedges = 0;
-        pDstSubsec->firstleafedge = 0;
+        pDstSubsec->numLeafEdges = 0;
+        pDstSubsec->firstLeafEdge = 0;
 
         ++pSrcSubsec;
         ++pDstSubsec;
@@ -611,11 +611,11 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
         pLumpByte += sizeof(mapleaf_t);
 
         // Save leaf info on the subsector
-        pSubsec->numleafedges = leaf.numedges;
-        pSubsec->firstleafedge = (int16_t) *gTotalNumLeafEdges;
+        pSubsec->numLeafEdges = leaf.numedges;
+        pSubsec->firstLeafEdge = (int16_t) *gTotalNumLeafEdges;
 
         // Process the edges in the leaf
-        for (int32_t edgeIdx = 0; edgeIdx < pSubsec->numleafedges; ++edgeIdx) {
+        for (int32_t edgeIdx = 0; edgeIdx < pSubsec->numLeafEdges; ++edgeIdx) {
             // Convert edge data to host endian and move past it
             mapleafedge_t srcEdge = *(const mapleafedge_t*) pLumpByte;
             srcEdge.segnum = Endian::littleToHost(srcEdge.segnum);
@@ -645,7 +645,7 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
         }
 
         // Move along to the next leaf
-        *gTotalNumLeafEdges += pSubsec->numleafedges;
+        *gTotalNumLeafEdges += pSubsec->numLeafEdges;
         ++pSubsec;
     }
 }
