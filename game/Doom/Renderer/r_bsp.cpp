@@ -231,11 +231,11 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     //  t = (P0y + P0x) / (P0y + P0x - P1x - P1y)
     //--------------------------------------------------------------------------------------------------------------------------------------
 
-    // Is P1 outside the left view frustrum plane and P2 inside?
+    // Is P1 outside the LEFT view frustrum plane and P2 inside?
     // If so then clip against the LEFT plane:
     if ((-vx1 > vy1) && (-vx2 < vy2)) {
         const int32_t a = vx1 + vy1;
-        const int32_t b = -vx2 -vy2;
+        const int32_t b = -vx2 - vy2;
         const fixed_t t = (a << FRACBITS) / (a + b);
 
         // Compute the 'y' value adjustment for the point and convert back to integer coords.
@@ -245,7 +245,7 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
         vx1 = -vy1;
     }
 
-    // Is P2 outside the right view frustrum plane and P1 inside?
+    // Is P2 outside the RIGHT view frustrum plane and P1 inside?
     // If so then clip against the RIGHT plane:
     if ((vx1 < vy1) && (vx2 > vy2)) {
         const int32_t a = vx1 - vy1;
@@ -340,19 +340,18 @@ void R_Subsector(const int32_t subsecNum) noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do draw preparation for the given line segment.
+// Also marks any columns that it occludes fully.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void R_AddLine(seg_t& seg) noexcept {
-    sp -= 0x48;
-    sw(s3, sp + 0x3C);
-    sw(s2, sp + 0x38);
-    sw(s1, sp + 0x34);
-    sw(s0, sp + 0x30);
-
-    s3 = ptrToVmAddr(&seg);
-
-    // TODO: what flag is this clearing?
-    seg.flags &= 0xFFFE;
-
-    // Transform the seg vertices if required.
+    // Clip at this depth
+    constexpr int32_t NEAR_CLIP_DIST = 2;
+    
+    // Initially assume no columns in the seg are visible
+    seg.flags &= (~SGF_VISIBLE_COLS);
+    
+    // Transform the 2 seg vertices if required.
     // Transform into view space but also figure out screen X and scaling due to perspective.
     vertex_t& segv1 = *seg.vertex1;
     
@@ -362,262 +361,216 @@ void R_AddLine(seg_t& seg) noexcept {
             0,
             (int16_t)((segv1.y - *gViewY) >> 16)
         };
-
+        
         VECTOR viewVec;
         int32_t rotFlags;
         LIBGTE_RotTrans(viewToPt, viewVec, rotFlags);
 
-        v0 = viewVec.vx;
-        segv1.viewx = v0;
-        v1 = viewVec.vz;
-
-        s2 = v0;
-        s1 = v1;
-        v0 = (i32(s1) < 4);
-        segv1.viewy = s1;
-
-        if (v0 == 0) {
-            v0 = 0x800000;
-            div(v0, s1);
-            v0 = lo;
-            mult(s2, v0);
-            segv1.scale = v0;
-            v0 = lo;
-            v0 = u32(i32(v0) >> 16);
-            v0 += 0x80;
-            segv1.screenx = v0;
+        segv1.viewx = viewVec.vx;
+        segv1.viewy = viewVec.vz;
+        
+        // Do perspective division if the point is not too close.
+        // This check seems slightly incorrect, should be maybe be '>= NEAR_CLIP_DIST' instead?
+        if (viewVec.vz > NEAR_CLIP_DIST + 1) {
+            segv1.scale = (HALF_SCREEN_W * FRACUNIT) / viewVec.vz;
+            segv1.screenx = ((viewVec.vx * segv1.scale) >> FRACBITS) + HALF_SCREEN_W;
         }
-
+        
         segv1.frameUpdated = *gNumFramesDrawn;
-    } else {
-        s2 = segv1.viewx;
-        s1 = segv1.viewy;
     }
+    
+    vertex_t& segv2 = *seg.vertex2;
+    
+    if (segv2.frameUpdated != *gNumFramesDrawn) {
+        const SVECTOR viewToPt = {
+            (int16_t)((segv2.x - *gViewX) >> 16),
+            0,
+            (int16_t)((segv2.y - *gViewY) >> 16)
+        };
+        
+        VECTOR viewVec;
+        int32_t rotFlags;
+        LIBGTE_RotTrans(viewToPt, viewVec, rotFlags);
+        
+        segv2.viewx = viewVec.vx;
+        segv2.viewy = viewVec.vz;
 
-    s0 = lw(s3 + 0x4);
-    v0 = *gNumFramesDrawn;
-    v1 = lw(s0 + 0x18);
-    a0 = sp + 0x10;
-
-    if (v1 != v0) {
-        v0 = lw(s0);
-        v1 = *gViewX;
-        a1 = sp + 0x18;
-        sh(0, sp + 0x12);
-        v0 -= v1;
-        v0 = u32(i32(v0) >> 16);
-        sh(v0, sp + 0x10);
-        v0 = lw(s0 + 0x4);
-        v1 = *gViewY;
-        a2 = sp + 0x28;
-        v0 -= v1;
-        v0 = u32(i32(v0) >> 16);
-        sh(v0, sp + 0x14);
-        _thunk_LIBGTE_RotTrans();
-        v0 = lw(sp + 0x18);
-        sw(v0, s0 + 0xC);
-        v1 = lw(sp + 0x20);
-        a1 = v0;
-        a0 = v1;
-        v0 = (i32(a0) < 4);
-        sw(a0, s0 + 0x10);
-
-        if (v0 == 0) {
-            v0 = 0x800000;
-            div(v0, a0);
-            v0 = lo;
-            mult(a1, v0);
-            sw(v0, s0 + 0x8);
-            v0 = lo;
-            v0 = u32(i32(v0) >> 16);
-            v0 += 0x80;
-            sw(v0, s0 + 0x14);
+        // Do perspective division if the point is not too close.
+        // This check seems slightly incorrect, should be maybe be '>= NEAR_CLIP_DIST' instead?
+        if (viewVec.vz > NEAR_CLIP_DIST + 1) {
+            segv2.scale = (HALF_SCREEN_W * FRACUNIT) / viewVec.vz;
+            segv2.screenx = ((viewVec.vx * segv2.scale) >> 16) + HALF_SCREEN_W;
         }
-
-        v0 = *gNumFramesDrawn;
-        sw(v0, s0 + 0x18);
-    } else {
-        a1 = lw(s0 + 0xC);
-        a0 = lw(s0 + 0x10);
-    }
-
-    if (i32(s2) < i32(-s1) && i32(a1) < i32(-a0))
-        goto loc_8002B988;
-    
-    mult(a1, s1);
-
-    if (i32(s1) < i32(s2) && i32(a0) < i32(a1))
-        goto loc_8002B988;
-    
-    v0 = lo;
-    mult(s2, a0);
-    v1 = lo;
-    v0 -= v1;
-
-    if (i32(v0) <= 0)
-        goto loc_8002B988;
-
-    if (i32(s2) < i32(-s1) && i32(-a0) < i32(a1)) {
-        v0 = s2 + s1;
-        v1 = v0 << 16;
-        v0 -= a1;
-        v0 -= a0;
-        div(v1, v0);
-        v1 = lo;
-        v0 = a0 - s1;
-        mult(v1, v0);
-        v0 = lo;
-        v0 = u32(i32(v0) >> 16);
-        s1 += v0;
-        s2 = -s1;
+        
+        segv2.frameUpdated = *gNumFramesDrawn;
     }
     
-    if (i32(s2) < i32(s1) && i32(a0) < i32(a1)) {
-        v0 = s2 - s1;
-        v1 = v0 << 16;
-        v0 -= a1;
-        v0 += a0;
-        div(v1, v0);
-        v1 = lo;
-        v0 = a0 - s1;
-        mult(v1, v0);
-        v0 = lo;
-        v0 = u32(i32(v0) >> 16);
-        a0 = s1 + v0;
-        a1 = a0;
+    // Store the clipped line segment points here: initially the line is unclipped
+    int32_t v1x = segv1.viewx;
+    int32_t v1y = segv1.viewy;
+    int32_t v2x = segv2.viewx;
+    int32_t v2y = segv2.viewy;
+    
+    // Are both line segment points outside the LEFT view frustrum plane?
+    if ((-v1x > v1y) && (-v2x > v2y))
+        return;
+    
+    // Are both line segment points outside the RIGHT view frustrum plane?
+    if ((v1x > v1y) && (v2x > v2y))
+        return;
+    
+    // Use 'v2 x v1' (vector cross product) to determine the winding order for the line segment.
+    // If the line segment is back facing then we ignore it.
+    {
+        const int32_t cross = (v2x * v1y) - (v1x * v2y);
+        
+        if (cross <= 0)
+            return;
     }
     
-    if (i32(s1) < 3 && i32(a0) < 3)
-        goto loc_8002B988;
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    // Lots of line/plane clipping code follows below...
+    // For more details on how the clipping works, see the comments in 'R_CheckBBox'.
+    //--------------------------------------------------------------------------------------------------------------------------------------
     
-    if (i32(s1) < 2 && i32(a0) >= 3) {
-        v0 = 2;
-        v0 -= s1;
-        v0 <<= 16;
-        v1 = a0 - s1;
-        div(v0, v1);
-        v0 = lo;
-        v1 = a1 - s2;
-        mult(v0, v1);
-        s1 = 2;
-        v0 = lo;
-        v0 = u32(i32(v0) >> 16);
-        s2 += v0;
-    } else if (i32(a0) < 2 && i32(s1) >= 3) {
-        v0 = 2;
-        v0 -= a0;
-        v0 <<= 16;
-        v1 = s1 - a0;
-        div(v0, v1);
-        v0 = lo;
-        v1 = s2 - a1;
-        mult(v0, v1);
-        a0 = 2;
-        v0 = lo;
-        v0 = u32(i32(v0) >> 16);
-        a1 += v0;
+    // Is P1 outside the LEFT view frustrum plane and P2 inside?
+    // If so then clip against the LEFT plane:
+    if ((-v1x > v1y) && (-v2x < v2y)) {
+        const int32_t a = v1x + v1y;
+        const int32_t b = -v2x - v2y;
+        const fixed_t t = (a << FRACBITS) / (a + b);
+        
+        const fixed_t yAdjust = (v2y - v1y) * t;
+        v1y += yAdjust >> FRACBITS;
+        v1x = -v1y;
     }
-
-    v1 = s2 << 7;
-    div(v1, s1);
-    v1 = lo;
-    v0 = a1 << 7;
-    div(v0, a0);
-    v0 = lo;
-    a2 = v1 + 0x80;
-    a3 = v0 + 0x80;
-
-    if (a2 == a3)
-        goto loc_8002B988;
-
-    v0 = *gpCurDrawSector;
-    v1 = lw(v0 + 0xC);
     
-    if (v1 == -1) {
+    // Is P2 outside the RIGHT view frustrum plane and P1 inside?
+    // If so then clip against the RIGHT plane:
+    if ((v1x < v1y) && (v2x > v2y)) {
+        const int32_t a = v1x - v1y;
+        const int32_t b = -v2x + v2y;
+        const fixed_t t = (a << FRACBITS) / (a + b);
+        
+        const fixed_t yAdjust = (v2y - v1y) * t;
+        v2y = v1y + (yAdjust >> FRACBITS);
+        v2x = v2y;
+    }
+    
+    // If both points are at or before the near plane after clipping then ignore the seg
+    if (v1y <= NEAR_CLIP_DIST && v2y <= NEAR_CLIP_DIST)
+        return;
+    
+    // Clip against the front plane if one of the points is on the inside and the other on the outside.
+    // Note that clipping is slightly over eager and clips a little after the near plane.
+    // This is probably due to accuracy issues...
+    if ((v1y < NEAR_CLIP_DIST) && (v2y >= NEAR_CLIP_DIST + 1)) {
+        const int32_t a = NEAR_CLIP_DIST - v1y;
+        const int32_t b = v2y - NEAR_CLIP_DIST;
+        const fixed_t t = (a << FRACBITS) / (a + b);
+    
+        const fixed_t xAdjust = (v2x - v1x) * t;
+        v1x += xAdjust >> FRACBITS;
+        v1y = NEAR_CLIP_DIST;
+    }
+    else if ((v2y < NEAR_CLIP_DIST) && (v1y >= NEAR_CLIP_DIST + 1)) {
+        const int32_t a = NEAR_CLIP_DIST - v2y;
+        const int32_t b = v1y - NEAR_CLIP_DIST;
+        const fixed_t t = (a << FRACBITS) / (a + b);
+        
+        const fixed_t xAdjust = (v1x - v2x) * t;
+        v2x += xAdjust >> FRACBITS;
+        v2y = NEAR_CLIP_DIST;
+    }
+    
+    // Do perspective division to compute the screen space start and end x values for the line seg.
+    // Scale the result accordingly, noting at at this point the x values have a range of +/- HALF_SCREEN_W.
+    int32_t begX = (v1x * HALF_SCREEN_W) / v1y;
+    int32_t endX = (v2x * HALF_SCREEN_W) / v2y;
+    
+    // Bring into the range 0-SCREEN_W
+    begX += HALF_SCREEN_W;
+    endX += HALF_SCREEN_W;
+    
+    // If the seg is zero sized then ignore
+    if (begX == endX)
+        return;
+
+    // If there is no ceiling texture at this seg then the sky is visible and needs to be drawn
+    if ((*gpCurDrawSector)->ceilingpic == -1) {
         *gbIsSkyVisible = true;
     }
-
-    if (i32(a2) < 0) {
-        a2 = 0;
+    
+    // Clamp the x values to the screen range
+    if (begX < 0) {
+        begX = 0;
     }
     
-    t0 = 0x100;
-
-    if (i32(a3) >= 0x101) {
-        a3 = 0x100;
+    if (endX > SCREEN_W) {
+        endX = SCREEN_W;
     }
     
-    v0 = gbSolidCols;
-    a1 = a2 + v0;
-    a0 = a2;
-
-    while (i32(a0) < i32(a3)) {
-        v0 = lbu(a1);
-        a1++;
-
-        if (v0 == 0) {
-            t0 = a0;
-            break;
-        }
-
-        a0++;
-    }
-
-    v0 = 0x800A8F47;
-    a1 = a3 + v0;
-    a0 = a3 - 1;
-    v1 = 0;
-
-    while (i32(a0) >= i32(a2)) {
-        v0 = lbu(a1);
-        a1--;
-
-        if (v0 == 0) {
-            v1 = a0;
-            break;
-        }
-
-        a0--;
-    }
-
-    v0 = t0 - 1;
-
-    if (i32(v1) >= i32(t0)) {
-        sh(v0, s3 + 0x22);
-        v0 = lhu(s3 + 0x20);
-        v1++;
-        sh(v1, s3 + 0x24);
-        v0 |= 1;
-        sh(v0, s3 + 0x20);
-    }
-
-    v0 = lw(s3 + 0x14);
-    v0 = lw(v0 + 0x10);
-    v0 &= 0x200;
-
-    if (v0 == 0) {
-        a0 = lw(s3 + 0x1C);
-        a1 = *gpCurDrawSector;
-
-        if ((a0 == 0) ||
-            (i32(lw(a1)) >= i32(lw(a0 + 0x4))) ||
-            (i32(lw(a0)) >= i32(lw(a1 + 0x4)))
-        ) {
-            v0 = gbSolidCols;
-            a1 = a2 + v0;
-
-            while (i32(a2) < i32(a3)) {
-                sb(1, a1);
-                a2++;
-                a1++;
+    // Determine the first visible (not fully occluded) column of the seg
+    int16_t visibleBegX = SCREEN_W;
+    
+    {
+        const bool* pbIsSolidCol = gbSolidCols.get() + begX;
+        
+        for (int16_t x = begX; x < endX; ++x, ++pbIsSolidCol) {
+            if (!(*pbIsSolidCol)) {
+                visibleBegX = x;
+                break;
             }
         }
     }
 
-loc_8002B988:
-    s3 = lw(sp + 0x3C);
-    s2 = lw(sp + 0x38);
-    s1 = lw(sp + 0x34);
-    s0 = lw(sp + 0x30);
-    sp += 0x48;
+    // Determine the last visible (not fully occluded) column of the seg
+    int32_t visibleEndX = 0;
+    
+    {
+        const bool* pbIsSolidCol = gbSolidCols.get() + endX;
+        
+        for (int16_t x = endX - 1; x >= begX; --x) {
+            --pbIsSolidCol;
+            
+            if (!(*pbIsSolidCol)) {
+                visibleEndX = x;
+                break;
+            }
+        }
+    }
+
+    // Save the visible column range and seg flags if at least 1 column is visible
+    if (visibleEndX >= visibleBegX) {
+        // Presumably the +/- 1 here are to try and paper over some of the cracks/inaccuracies?
+        seg.begScreenX = visibleBegX - 1;
+        seg.endScreenX = visibleEndX + 1;
+        seg.flags |= SGF_VISIBLE_COLS;
+    }
+    
+    // Mark any columns that this seg fully occludes as 'solid'.
+    // Only do this however if the seg is not drawn with translucent parts or transparency:
+    if ((seg.linedef->flags & ML_MIDMASKED) == 0) {
+        const sector_t& frontSec = **gpCurDrawSector;
+        const sector_t* const pBackSec = seg.backsector.get();
+        
+        // Is this seg something that fully occludes stuff behind it?
+        // This will be the case if the seg is one sided (no back sector) or if there is no height gap between sectors.
+        if ((!pBackSec) ||
+            (frontSec.floorheight >= pBackSec->ceilingheight) ||
+            (pBackSec->floorheight >= frontSec.ceilingheight)
+        ) {
+            // This seg occludes, mark all of it's columns as occluders.
+            //
+            // Note: a minor optimization was also missed here in the original code, we could have just set the
+            // previously determined visible x range to be occluded, rather than the entire seg x range.
+            // Probably doesn't make a huge difference in reality though..
+            //
+            bool* pbIsSolidCol = gbSolidCols.get() + begX;
+            
+            for (int32_t x = begX; x < endX; ++x, ++pbIsSolidCol) {
+                *pbIsSolidCol = true;
+            }
+        }
+    }
 }

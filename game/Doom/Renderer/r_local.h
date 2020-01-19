@@ -112,6 +112,9 @@ struct node_t {
 
 static_assert(sizeof(node_t) == 56);
 
+// Seg flags
+static constexpr uint16_t SGF_VISIBLE_COLS = 0x1;   // The seg has at least 1 visible (non fully occluded column)
+
 // Describes a segment of a line
 struct seg_t {
     VmPtr<vertex_t>     vertex1;
@@ -123,8 +126,9 @@ struct seg_t {
     VmPtr<sector_t>     frontsector;
     VmPtr<sector_t>     backsector;
     uint16_t            flags;              // TODO: find out more about the flags
-    uint16_t            unknown1;           // TODO: find out what this is
-    uint32_t            unknown2;           // TODO: find out what this is
+    uint16_t            begScreenX;         // First visible screenspace column: only set if SGF_VISIBLE_COLS is set
+    uint16_t            endScreenX;         // Last visible screenspace column: only set if SGF_VISIBLE_COLS is set
+    uint16_t            pad;                // TODO: used for any purpose, or just padding?
 };
 
 static_assert(sizeof(seg_t) == 40);

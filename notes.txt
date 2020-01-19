@@ -353,8 +353,9 @@ seg_t (40 bytes):
         018     sector_t*   frontsector;
         01C     sector_t*   backsector;
         020     uint16_t    flags;
-        022     uint16_t    unknown1;
-        024     uint32_t    unknown2;
+        022     uint16_t    begScreenX;
+        024     uint16_t    endScreenX;
+        026     uint16_t    pad;
     };
 
 vertex_t (28 bytes): 

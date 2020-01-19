@@ -33,7 +33,7 @@ static constexpr int16_t ML_SECRET          = 0x20;     // Don't show as two sid
 static constexpr int16_t ML_SOUNDBLOCK      = 0x40;     // Stops sound propagation
 static constexpr int16_t ML_DONTDRAW        = 0x80;     // Hide on the automap
 static constexpr int16_t ML_MAPPED          = 0x100;    // Set when the line is to be shown on the automap
-static constexpr int16_t ML_MIDMASKED       = 0x200;    // PSX DOOM: Middle texture has translucent pixels
+static constexpr int16_t ML_MIDMASKED       = 0x200;    // PSX DOOM: Middle texture has translucent or alpha blended pixels
 static constexpr int16_t ML_MIDTRANSLUCENT  = 0x400;    // PSX DOOM: Middle texture drawn with alpha blending
 static constexpr int16_t ML_BLOCKPRJECTILE  = 0x800;    // PSX DOOM: Line stops projectiles
 
