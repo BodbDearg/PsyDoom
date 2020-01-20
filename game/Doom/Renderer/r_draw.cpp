@@ -84,47 +84,46 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
         }
     }
     
-    // TODO: comment/explain and handle return value
-    a0 = 0;
-    a1 = ptrToVmAddr(pLeafs + curLeafIdx);
-    R_CheckEdgeVisible();
+    // Check to see what side of the left view frustrum plane the leaf's points are on.
+    // Clip the leaf if required, or discard if all the points are offscreen.
+    const int32_t leftPlaneSide = R_CheckLeafSide(false, pLeafs[curLeafIdx]);
     
-    if (i32(v0) < 0)
+    if (leftPlaneSide < 0)
         return;
     
-    // Clip the leaf against the left view frustrum plane if required
-    if (i32(v0) > 0) {
+    if (leftPlaneSide > 0) {
         a0 = ptrToVmAddr(pLeafs + curLeafIdx);
         a1 = ptrToVmAddr(pLeafs + (curLeafIdx ^ 1));
         R_LeftEdgeClip();
         curLeafIdx ^= 1;
         
+        // TODO: comment/handle return value
         if (i32(v0) < 3)
             return;
     }
     
-    // TODO: comment/explain and handle return value properly
-    a0 = 1;
-    a1 = ptrToVmAddr(pLeafs + curLeafIdx);
-    R_CheckEdgeVisible();
+    // Check to see what side of the right view frustrum plane the leaf's points are on.
+    // Clip the leaf if required, or discard if all the points are offscreen.
+    const int32_t rightPlaneSide = R_CheckLeafSide(true, pLeafs[curLeafIdx]);
     
-    if (i32(v0) < 0)
+    if (rightPlaneSide < 0)
         return;
     
     // Clip the leaf against the right view frustrum plane if required
-    if (i32(v0) > 0) {
+    if (rightPlaneSide > 0) {
         a0 = ptrToVmAddr(pLeafs + curLeafIdx);
         a1 = ptrToVmAddr(pLeafs + (curLeafIdx ^ 1));
         R_RightEdgeClip();
         curLeafIdx ^= 1;
         
+        // TODO: comment/handle return value
         if (i32(v0) < 3)
             return;
     }
     
-    // Terminate the list of leaf edges by putting the first edge past the end.
-    // This allows the renderer to access one past the end without worrying about bounds checks.
-    // Handy for when working with edges!
+    // Terminate the list of leaf edges by putting the first edge past the end of the list.
+    // This allows the renderer to implicitly wraparound to the beginning of the list when accessing 1 past the end.
+    // This is useful for when working with edges as it saves checks!
     leaf_t& drawleaf = pLeafs[curLeafIdx];
     drawleaf.edges[drawleaf.numEdges] = drawleaf.edges[0];
     
@@ -345,74 +344,71 @@ loc_8002CD28:
     return;
 }
 
-void R_CheckEdgeVisible() noexcept {
-loc_8002CD68:
-    t0 = a1 + 4;
-    a3 = 0x1F800000;                                    // Result = 1F800000
-    a1 = lw(a1);
-    a2 = 0;                                             // Result = 00000000
-    if (a0 != 0) goto loc_8002CDE0;
-    v0 = (i32(a2) < i32(a1));
-    a0 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_8002CE38;
-    t1 = 1;                                             // Result = 00000001
-loc_8002CD90:
-    v0 = lw(t0);
-    v1 = lw(v0 + 0x10);
-    v0 = lw(v0 + 0xC);
-    v1 = -v1;
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8002CDBC;
-    sw(t1, a3);
-    a2--;
-    goto loc_8002CDC4;
-loc_8002CDBC:
-    sw(0, a3);
-    a2++;
-loc_8002CDC4:
-    a0++;
-    t0 += 8;
-    v0 = (i32(a0) < i32(a1));
-    a3 += 4;
-    if (v0 != 0) goto loc_8002CD90;
-    goto loc_8002CE38;
-loc_8002CDE0:
-    v0 = (i32(a2) < i32(a1));
-    a0 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_8002CE38;
-    t1 = 1;                                             // Result = 00000001
-loc_8002CDF0:
-    v0 = lw(t0);
-    v1 = lw(v0 + 0xC);
-    v0 = lw(v0 + 0x10);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8002CE1C;
-    sw(t1, a3);
-    a2--;
-    goto loc_8002CE24;
-loc_8002CE1C:
-    sw(0, a3);
-    a2++;
-loc_8002CE24:
-    a0++;
-    t0 += 8;
-    v0 = (i32(a0) < i32(a1));
-    a3 += 4;
-    if (v0 != 0) goto loc_8002CDF0;
-loc_8002CE38:
-    v0 = 0x1F800000;                                    // Result = 1F800000
-    v0 = lw(v0);                                        // Load from: 1F800000
-    sw(v0, a3);
-    if (a2 != a1) goto loc_8002CE50;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8002CE60;
-loc_8002CE50:
-    v1 = -a1;
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (a2 == v1) goto loc_8002CE60;
-    v0 = 1;                                             // Result = 00000001
-loc_8002CE60:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Check to see what side of left or right view frustrum plane all points in the leaf are on.
+// Also stores what side each point is on at the start of scratchpad memory as a bool32_t.
+//
+// Returns:
+//      -1  : If all leaf points are on the back side of the plane (leaf can be discarded completely)
+//       0  : If all leaf points are on the front side of the plane (leaf does not need view frustrum clipping)
+//      +1  : If some leaf points are on the inside and some on the outside of the plane (leaf needs to be clipped)
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t R_CheckLeafSide(const bool bRightViewPlane, const leaf_t& leaf) noexcept {
+    // Loop vars for iterating through the leaf
+    const leafedge_t* pLeafEdge = leaf.edges;
+    const int32_t numLeafEdges = leaf.numEdges;
+    
+    // Store whether each point is on the inside or outside of the leaf in scratchpad memory
+    bool32_t* const pbPointsOnOutside = (bool32_t*) getScratchAddr(0);
+    bool32_t* pbPointOnOutside = pbPointsOnOutside;
+    
+    // Track how many points are on the inside or outside of the plane here.
+    // For each point on the inside, increment - otherwise decrement.
+    int32_t insideOutsideCount = 0;
+    
+    // See which plane we are checking against, left or right view frustrum plane
+    if (!bRightViewPlane) {
+        for (int32_t edgeIdx = 0; edgeIdx < numLeafEdges; ++edgeIdx, ++pLeafEdge, ++pbPointOnOutside) {
+            vertex_t& vert = *pLeafEdge->vertex;
+            
+            if (-vert.viewx > vert.viewy) {
+                *pbPointOnOutside = true;
+                --insideOutsideCount;
+            } else {
+                *pbPointOnOutside = false;
+                ++insideOutsideCount;
+            }
+        }
+    } else {
+        for (int32_t edgeIdx = 0; edgeIdx < numLeafEdges; ++edgeIdx, ++pLeafEdge, ++pbPointOnOutside) {
+            vertex_t& vert = *pLeafEdge->vertex;
+            
+            if (vert.viewx > vert.viewy) {
+                *pbPointOnOutside = true;
+                --insideOutsideCount;
+            } else {
+                *pbPointOnOutside = false;
+                ++insideOutsideCount;
+            }
+        }
+    }
+    
+    // Terminate the list of whether each leaf point is on the front side of the plane or not by duplicating
+    // the first entry in the list at the end. This allows the renderer to wraparound automatically to the
+    // beginning of the list when accessing 1 past the end. This saves on checks when working with edges!
+    *pbPointOnOutside = pbPointsOnOutside[0];
+    
+    // Return what the renderer should do with the leaf
+    if (insideOutsideCount == numLeafEdges) {
+        // All points are on the inside, no clipping required
+        return 0;
+    } else if (insideOutsideCount == -numLeafEdges) {
+        // All points are on the outside, leaf should be completely discarded
+        return -1;
+    } else {
+        // Some points are on the inside, some on the outside - clipping is required
+        return 1;
+    }
 }
 
 void R_LeftEdgeClip() noexcept {

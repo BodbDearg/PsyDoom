@@ -585,7 +585,7 @@ static const ProgElem ELEMS[] = {
     { 0x8002C07C, 0x8002C6F8, "R_DrawSky",                              ProgElemType::FUNCTION },
     { 0x8002C6F8, 0x8002CA8C, "R_DrawSubsector",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8002CA8C, 0x8002CD68, "R_FrontZClip",                           ProgElemType::FUNCTION }, // TODO: name children, extract globals
-    { 0x8002CD68, 0x8002CE68, "R_CheckEdgeVisible",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
+    { 0x8002CD68, 0x8002CE68, "R_CheckLeafSide",                        ProgElemType::FUNCTION },
     { 0x8002CE68, 0x8002D10C, "R_LeftEdgeClip",                         ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8002D10C, 0x8002D3AC, "R_RightEdgeClip",                        ProgElemType::FUNCTION }, // TODO: name children, extract globals
     { 0x8002D3AC, 0x8002D684, "R_DrawSubsectorSeg",                     ProgElemType::FUNCTION }, // TODO: name children, extract globals
