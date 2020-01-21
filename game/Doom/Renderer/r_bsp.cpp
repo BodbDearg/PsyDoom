@@ -396,7 +396,7 @@ void R_AddLine(seg_t& seg) noexcept {
         // This check seems slightly incorrect, should be maybe be '>= NEAR_CLIP_DIST' instead?
         if (viewVec.vz > NEAR_CLIP_DIST + 1) {
             segv2.scale = (HALF_SCREEN_W * FRACUNIT) / viewVec.vz;
-            segv2.screenx = ((viewVec.vx * segv2.scale) >> 16) + HALF_SCREEN_W;
+            segv2.screenx = ((viewVec.vx * segv2.scale) >> FRACBITS) + HALF_SCREEN_W;
         }
         
         segv2.frameUpdated = *gNumFramesDrawn;
@@ -508,12 +508,12 @@ void R_AddLine(seg_t& seg) noexcept {
     }
     
     // Determine the first visible (not fully occluded) column of the seg
-    int16_t visibleBegX = SCREEN_W;
+    int32_t visibleBegX = SCREEN_W;
     
     {
         const bool* pbIsSolidCol = gbSolidCols.get() + begX;
         
-        for (int16_t x = begX; x < endX; ++x, ++pbIsSolidCol) {
+        for (int32_t x = begX; x < endX; ++x, ++pbIsSolidCol) {
             if (!(*pbIsSolidCol)) {
                 visibleBegX = x;
                 break;
@@ -527,7 +527,7 @@ void R_AddLine(seg_t& seg) noexcept {
     {
         const bool* pbIsSolidCol = gbSolidCols.get() + endX;
         
-        for (int16_t x = endX - 1; x >= begX; --x) {
+        for (int32_t x = endX - 1; x >= begX; --x) {
             --pbIsSolidCol;
             
             if (!(*pbIsSolidCol)) {
@@ -540,8 +540,8 @@ void R_AddLine(seg_t& seg) noexcept {
     // Save the visible column range and seg flags if at least 1 column is visible
     if (visibleEndX >= visibleBegX) {
         // Presumably the +/- 1 here are to try and paper over some of the cracks/inaccuracies?
-        seg.begScreenX = visibleBegX - 1;
-        seg.endScreenX = visibleEndX + 1;
+        seg.begScreenX = (int16_t)(visibleBegX - 1);
+        seg.endScreenX = (int16_t)(visibleEndX + 1);
         seg.flags |= SGF_VISIBLE_COLS;
     }
     

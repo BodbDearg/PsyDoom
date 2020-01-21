@@ -17,7 +17,7 @@ struct vertex_t {
     int32_t     viewx;              // X position after view translation + rotation.
     int32_t     viewy;              // Y position after view translation + rotation.
     int32_t     screenx;            // X location on screen.
-    int32_t     frameUpdated;       // When (in game frames) the vertex was last transformed: used to avoid unnecessary transforms.
+    uint32_t    frameUpdated;       // When (in game frames) the vertex was last transformed: used to avoid unnecessary transforms.
 };
 
 static_assert(sizeof(vertex_t) == 28);
@@ -126,8 +126,8 @@ struct seg_t {
     VmPtr<sector_t>     frontsector;
     VmPtr<sector_t>     backsector;
     uint16_t            flags;              // TODO: find out more about the flags
-    uint16_t            begScreenX;         // First visible screenspace column: only set if SGF_VISIBLE_COLS is set
-    uint16_t            endScreenX;         // Last visible screenspace column: only set if SGF_VISIBLE_COLS is set
+    int16_t             begScreenX;         // First visible screenspace column: only set if SGF_VISIBLE_COLS is set
+    int16_t             endScreenX;         // Last visible screenspace column: only set if SGF_VISIBLE_COLS is set
     uint16_t            pad;                // TODO: used for any purpose, or just padding?
 };
 
