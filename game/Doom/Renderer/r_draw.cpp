@@ -96,13 +96,10 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
         return;
     
     if (leftPlaneSide > 0) {
-        a0 = ptrToVmAddr(pLeafs + curLeafIdx);
-        a1 = ptrToVmAddr(pLeafs + (curLeafIdx ^ 1));
-        R_LeftEdgeClip();
+        const int32_t numOutputEdges = R_LeftEdgeClip(pLeafs[curLeafIdx], pLeafs[curLeafIdx ^ 1]);
         curLeafIdx ^= 1;
         
-        // TODO: comment/handle return value
-        if (i32(v0) < 3)
+        if (numOutputEdges < 3)     // If there is not a triangle left then discard the subsector
             return;
     }
     
@@ -185,18 +182,20 @@ void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
     
     for (int32_t srcEdgeIdx = 0; srcEdgeIdx < numSrcEdges; ++srcEdgeIdx, ++pSrcEdge) {
         // Grab the next edge after this and wraparound if required
-        const leafedge_t* pNextSrcEdge = pSrcEdge + 1;
+        const leafedge_t* pNextSrcEdge;
         
-        if (srcEdgeIdx == numSrcEdges - 1) {
+        if (srcEdgeIdx < numSrcEdges - 1) {
+            pNextSrcEdge = pSrcEdge + 1;
+        } else {
             pNextSrcEdge = inLeaf.edges;
         }
 
         // Get the 2 points in this edge and their signed distance to the clipping plane
-        vertex_t& srcVert1 = *pSrcEdge->vertex;
-        vertex_t& srcVert2 = *pNextSrcEdge->vertex;
+        const vertex_t& srcVert1 = *pSrcEdge->vertex;
+        const vertex_t& srcVert2 = *pNextSrcEdge->vertex;
         
-        int32_t planeDist1 = CLIP_DIST - srcVert1.viewy;
-        int32_t planeDist2 = CLIP_DIST - srcVert2.viewy;
+        const int32_t planeDist1 = CLIP_DIST - srcVert1.viewy;
+        const int32_t planeDist2 = CLIP_DIST - srcVert2.viewy;
         
         // See if we need to clip or not.
         // Generate a new edge and vertex if required.
@@ -230,6 +229,8 @@ void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
             *gNumNewClipVerts += 1;
             
             if (*gNumNewClipVerts >= MAX_NEW_CLIP_VERTS) {
+                // This check seems incorrect, should be done BEFORE we increment perhaps?
+                // Otherwise the error will trigger when we are at the maximum amount, but not exceeding the limit.
                 I_Error("FrontZClip: exceeded max new vertexes\n");
             }
             
@@ -265,14 +266,13 @@ void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
             // Mark the new vertex as having up-to-date transforms and populate the new edge created.
             // Note that the new edge will only have a seg it doesn't run along the clip plane.
             newVert.frameUpdated = *gNumFramesDrawn;
-            
+            pDstEdge->vertex = &newVert;
+
             if (planeDist1 > 0 && planeDist2 < 0) {
                 pDstEdge->seg = pSrcEdge->seg;
             } else {
                 pDstEdge->seg = nullptr;    // New edge will run along the clip plane, this is not associated with any seg
             }
-            
-            pDstEdge->vertex = &newVert;
         }
         
         // If we get to here then we stored an edge, move along to the next edge
@@ -355,179 +355,108 @@ int32_t R_CheckLeafSide(const bool bRightViewPlane, const leaf_t& leaf) noexcept
     }
 }
 
-void R_LeftEdgeClip() noexcept {
-loc_8002CE68:
-    sp -= 0x48;
-    sw(s3, sp + 0x2C);
-    sw(a1, sp + 0x10);
-    s3 = a1 + 4;
-    sw(s6, sp + 0x38);
-    s6 = 0;                                             // Result = 00000000
-    sw(s4, sp + 0x30);
-    s4 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x44);
-    sw(fp, sp + 0x40);
-    sw(s7, sp + 0x3C);
-    sw(s5, sp + 0x34);
-    sw(s2, sp + 0x28);
-    sw(s1, sp + 0x24);
-    sw(s0, sp + 0x20);
-    s7 = lw(a0);
-    fp = a0 + 4;
-    if (i32(s7) <= 0) goto loc_8002D0CC;
-    s1 = fp;
-    s5 = 0x1F800000;                                    // Result = 1F800000
-loc_8002CEC0:
-    v0 = lw(s5);
-    if (v0 != 0) goto loc_8002CEEC;
-    v0 = lw(s1);
-    v1 = lw(s1 + 0x4);
-    sw(v0, s3);
-    sw(v1, s3 + 0x4);
-    s3 += 8;
-    s4++;                                               // Result = 00000001
-    v0 = lw(s5);
-loc_8002CEEC:
-    v1 = lw(s5 + 0x4);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8002CF08;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Clip the given input leaf against the left view frustrum plane.
+// Returns the result in the given output leaf, and also the number of edges in the output leaf.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t R_LeftEdgeClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
+    // This clipping operation reuses the plane side checking results generated by 'R_CheckLeafSide'.
+    // These results are cached in the PSX's fast scratchpad memory:
+    const bool32_t* pbPointOnOutside = (const bool32_t*) getScratchAddr(0);
+
+    // Run through all the source edges in the given leaf and see if each edge needs to be clipped, skipped or stored as-is
+    const leafedge_t* pSrcEdge = inLeaf.edges;
+    const int32_t numSrcEdges = inLeaf.numEdges;
+
+    leafedge_t* pDstEdge = outLeaf.edges;
+    int32_t numDstEdges = 0;
+
+    for (int32_t srcEdgeIdx = 0; srcEdgeIdx < numSrcEdges; ++srcEdgeIdx, ++pSrcEdge, ++pbPointOnOutside) {
+        // Get whether this edge point and the next are on the inside of the plane
+        const bool bP1Inside = (!pbPointOnOutside[0]);
+        const bool bP2Inside = (!pbPointOnOutside[1]);
+
+        // If the 1st point is on the inside of the clipping plane, emit this edge as-is to begin with
+        if (bP1Inside) {
+            pDstEdge->vertex = pSrcEdge->vertex;
+            pDstEdge->seg = pSrcEdge->seg;
+            ++pDstEdge;
+            ++numDstEdges;
+        }
+
+        // If both points are on the same side of the clipping plane then we do not clip
+        if (bP1Inside == bP2Inside) {
+            continue;
+        }
+
+        // Clipping required: grab the next edge and the vertex to output to
+        const leafedge_t* pNextSrcEdge;
+
+        if (srcEdgeIdx < numSrcEdges - 1) {
+            pNextSrcEdge = pSrcEdge + 1;
+        } else {
+            pNextSrcEdge = inLeaf.edges;
+        }
+
+        vertex_t& newVert = gNewClipVerts[*gNumNewClipVerts];
+        *gNumNewClipVerts += 1;
+
+        if (*gNumNewClipVerts >= MAX_NEW_CLIP_VERTS) {
+            // This check seems incorrect, should be done BEFORE we increment perhaps?
+            // Otherwise the error will trigger when we are at the maximum amount, but not exceeding the limit.
+            I_Error("LeftEdgeClip: exceeded max new vertexes\n");
+        }
+
+        // Get the 2 points in this edge
+        const vertex_t& srcVert1 = *pSrcEdge->vertex;
+        const vertex_t& srcVert2 = *pNextSrcEdge->vertex;
+
+        // Compute the intersection time of the edge against the plane.
+        // Use the same method described in more detail in 'R_CheckBBox':
+        fixed_t intersectT;
+
+        {
+            const int32_t a = srcVert1.viewx + srcVert1.viewy;
+            const int32_t b = -srcVert2.viewx - srcVert2.viewy;
+            intersectT = (a << FRACBITS) / (a + b);
+        }
+
+        // Compute & set the view x/y values for the clipped edge vertex
+        {
+            const int32_t dviewy = (srcVert2.viewy - srcVert1.viewy);
+            newVert.viewy = ((dviewy * intersectT) >> 16) + srcVert1.viewy;
+            newVert.viewx = -newVert.viewy;
+        }
+
+        // Compute the world x/y values for the clipped edge vertex
+        {
+            const int32_t dx = (srcVert2.x - srcVert1.x) >> FRACBITS;
+            const int32_t dy = (srcVert2.y - srcVert1.y) >> FRACBITS;
+            newVert.x = dx * intersectT + srcVert1.x;
+            newVert.y = dy * intersectT + srcVert1.y;
+        }
+
+        // Re-do perspective projection to compute screen x and scale for the vertex
+        newVert.scale = (HALF_SCREEN_W * FRACUNIT) / newVert.viewy;
+        newVert.screenx = ((newVert.viewx * newVert.scale) >> FRACBITS) + HALF_SCREEN_W;
+
+        // Mark the new vertex as having up-to-date transforms
+        newVert.frameUpdated = *gNumFramesDrawn;
+
+        // If we get to here then we stored an edge so move along to the next edge and save the vertex/seg for the edge
+        pDstEdge->vertex = &newVert;
+        pDstEdge->seg = pSrcEdge->seg;
+        ++numDstEdges;
+        ++pDstEdge;
+
+        if (numDstEdges > MAX_LEAF_EDGES) {
+            I_Error("LeftEdgeClip: Point Overflow");
+        }
     }
-    {
-        const bool bJump = (v1 != v0);
-        v0 = s7 - 1;
-        if (bJump) goto loc_8002D0B8;
-    }
-    goto loc_8002CF10;
-loc_8002CF08:
-    v0 = s7 - 1;
-    if (v1 != 0) goto loc_8002D0B8;
-loc_8002CF10:
-    v0 = (i32(s6) < i32(v0));
-    s2 = fp;
-    if (v0 == 0) goto loc_8002CF20;
-    s2 = s1 + 8;
-loc_8002CF20:
-    v1 = *gNumNewClipVerts;
-    a0 = v1 + 1;
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = gNewClipVerts;
-    *gNumNewClipVerts = a0;
-    a0 = (i32(a0) < 0x20);
-    s0 = v0 + v1;
-    if (a0 != 0) goto loc_8002CF60;
-    I_Error("LeftEdgeClip: exceeded max new vertexes\n");
-loc_8002CF60:
-    v1 = lw(s1);
-    a0 = lw(s2);
-    v0 = lw(v1 + 0xC);
-    a1 = lw(v1 + 0x10);
-    v1 = lw(a0 + 0xC);
-    a0 = lw(a0 + 0x10);
-    v0 += a1;
-    v1 += a0;
-    a2 = v0 << 16;
-    v0 -= v1;
-    div(a2, v0);
-    if (v0 != 0) goto loc_8002CF98;
-    _break(0x1C00);
-loc_8002CF98:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v0 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002CFB0;
-    }
-    if (a2 != at) goto loc_8002CFB0;
-    tge(zero, zero, 0x5D);
-loc_8002CFB0:
-    a2 = lo;
-    a0 -= a1;
-    mult(a2, a0);
-    v0 = lo;
-    v0 = u32(i32(v0) >> 16);
-    v0 += a1;
-    sw(v0, s0 + 0x10);
-    v0 = -v0;
-    sw(v0, s0 + 0xC);
-    v0 = lw(s2);
-    v1 = lw(s1);
-    v0 = lw(v0);
-    v1 = lw(v1);
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 16);
-    mult(a2, v0);
-    v0 = lo;
-    v0 += v1;
-    sw(v0, s0);
-    v0 = lw(s2);
-    v1 = lw(s1);
-    v0 = lw(v0 + 0x4);
-    a1 = lw(v1 + 0x4);
-    v0 -= a1;
-    v0 = u32(i32(v0) >> 16);
-    mult(a2, v0);
-    a0 = lo;
-    v0 = lw(s0 + 0x10);
-    v1 = 0x800000;                                      // Result = 00800000
-    div(v1, v0);
-    if (v0 != 0) goto loc_8002D03C;
-    _break(0x1C00);
-loc_8002D03C:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v0 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002D054;
-    }
-    if (v1 != at) goto loc_8002D054;
-    tge(zero, zero, 0x5D);
-loc_8002D054:
-    v1 = lo;
-    v0 = lw(s0 + 0xC);
-    mult(v1, v0);
-    v0 = *gNumFramesDrawn;
-    a0 += a1;
-    sw(a0, s0 + 0x4);
-    sw(v1, s0 + 0x8);
-    sw(v0, s0 + 0x18);
-    v0 = lo;
-    v0 = u32(i32(v0) >> 16);
-    v0 += 0x80;
-    sw(v0, s0 + 0x14);
-    sw(s0, s3);
-    v0 = lw(s1 + 0x4);
-    s4++;                                               // Result = 00000001
-    sw(v0, s3 + 0x4);
-    v0 = (i32(s4) < 0x15);                              // Result = 00000001
-    s3 += 8;
-    if (v0 != 0) goto loc_8002D0B8;
-    I_Error("LeftEdgeClip: Point Overflow");
-loc_8002D0B8:
-    s1 += 8;
-    s6++;
-    v0 = (i32(s6) < i32(s7));
-    s5 += 4;
-    if (v0 != 0) goto loc_8002CEC0;
-loc_8002D0CC:
-    a3 = lw(sp + 0x10);
-    v0 = s4;                                            // Result = 00000000
-    sw(s4, a3);
-    ra = lw(sp + 0x44);
-    fp = lw(sp + 0x40);
-    s7 = lw(sp + 0x3C);
-    s6 = lw(sp + 0x38);
-    s5 = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x48;
-    return;
+
+    // Before we finish up, save the new number of edges after clipping
+    outLeaf.numEdges = numDstEdges;
+    return numDstEdges;
 }
 
 void R_RightEdgeClip() noexcept {

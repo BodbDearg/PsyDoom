@@ -4,7 +4,6 @@
 #include "Doom/d_main.h"
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/p_setup.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGTE.h"
 #include "r_local.h"
 #include "r_main.h"
