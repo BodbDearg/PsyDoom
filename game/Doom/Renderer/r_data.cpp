@@ -10,6 +10,10 @@
 const VmPtr<VmPtr<texture_t>>   gpTextures(0x80078128);
 const VmPtr<VmPtr<texture_t>>   gpSkyTexture(0x80078050);
 
+// Texture translation: converts from an input texture index to the actual texture index to render for that input index.
+// Used to implement animated textures whereby the translation is simply updated as the texture animates.
+const VmPtr<VmPtr<int32_t>>     gpTextureTranslation(0x80077F6C);
+
 // The loaded lights lump
 const VmPtr<VmPtr<light_t>>     gpLightsLump(0x80078068);
 
@@ -55,8 +59,8 @@ loc_8002B9E0:
     *gpTextures = v0;
     v1 <<= 5;
     v1 += v0;
-    sw(v1, gp + 0x98C);                                 // Store to: gpTextureTranslation (80077F6C)
-    a2 = 1;                                             // Result = 00000001
+    *gpTextureTranslation = v1;
+    a2 = 1;
     _thunk_W_CacheLumpName();
     a1 = v0;
     a2 = lw(gp + 0xD00);                                // Load from: gFirstTexLumpNum (800782E0)
@@ -99,7 +103,7 @@ loc_8002BAF4:
     a0 = lw(gp + 0xBF4);                                // Load from: gNumTexLumps (800781D4)
     a2 = 0;                                             // Result = 00000000
     if (i32(a0) <= 0) goto loc_8002BB30;
-    v1 = lw(gp + 0x98C);                                // Load from: gpTextureTranslation (80077F6C)
+    v1 = *gpTextureTranslation;
 loc_8002BB18:
     sw(a2, v1);
     a2++;

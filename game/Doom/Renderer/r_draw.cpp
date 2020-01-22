@@ -2,7 +2,6 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/p_setup.h"
-#include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGTE.h"
@@ -125,17 +124,16 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     leaf_t& drawleaf = pLeafs[curLeafIdx];
     drawleaf.edges[drawleaf.numEdges] = drawleaf.edges[0];
     
-    // Draw all visible walls/segs in the leaf
+    // Draw the walls for all visible edges in the leaf
     {
         leafedge_t* pEdge = drawleaf.edges;
         
         for (int32_t edgeIdx = 0; edgeIdx < drawleaf.numEdges; ++edgeIdx, ++pEdge) {
-            // Only draw the seg if its marked as visible
             seg_t* const pSeg = pEdge->seg.get();
             
+            // Only draw walls for this leaf edge if its seg has visible columns
             if (pSeg && (pSeg->flags & SGF_VISIBLE_COLS)) {
-                a0 = ptrToVmAddr(pEdge);
-                R_DrawSubsectorSeg();       // TODO: RENAME - it's drawing a leaf edge
+                R_DrawWalls(*pEdge);
             }
         }
     }

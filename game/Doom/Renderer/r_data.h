@@ -35,6 +35,7 @@ struct light_t {
 
 extern const VmPtr<VmPtr<texture_t>>    gpTextures;
 extern const VmPtr<VmPtr<texture_t>>    gpSkyTexture;
+extern const VmPtr<VmPtr<int32_t>>      gpTextureTranslation;
 extern const VmPtr<VmPtr<light_t>>      gpLightsLump;
 
 void R_InitData() noexcept;

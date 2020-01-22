@@ -1265,8 +1265,7 @@ loc_80026FC8:
     a2 = -1;                                            // Result = FFFFFFFF
     a0 = a1 + 0x10;                                     // Result = gAnims_1[4] (800863BC)
     t3 = *gGameTic;
-    t2 = 0x80070000;                                    // Result = 80070000
-    t2 = lw(t2 + 0x7F6C);                               // Load from: gpTextureTranslation (80077F6C)
+    t2 = *gpTextureTranslation;
     t1 = *gpTextures;
     t0 = 0x80070000;                                    // Result = 80070000
     t0 = lw(t0 + 0x7F60);                               // Load from: gpFlatTranslation (80077F60)

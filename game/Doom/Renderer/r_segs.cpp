@@ -2,197 +2,170 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
+#include "Doom/Game/doomdata.h"
+#include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
+#include "r_local.h"
 #include "r_main.h"
 
-void R_DrawSubsectorSeg() noexcept {
-loc_8002D3AC:
-    a2 = *gpCurDrawSector;
-    a1 = *gViewZ;
-    sp -= 0x58;
-    sw(ra, sp + 0x54);
-    sw(fp, sp + 0x50);
-    sw(s7, sp + 0x4C);
-    sw(s6, sp + 0x48);
-    sw(s5, sp + 0x44);
-    sw(s4, sp + 0x40);
-    sw(s3, sp + 0x3C);
-    sw(s2, sp + 0x38);
-    sw(s1, sp + 0x34);
-    sw(s0, sp + 0x30);
-    sw(a0, sp + 0x28);
-    s0 = lw(a0 + 0x4);
-    v0 = lw(a2 + 0x4);
-    a0 = lw(s0 + 0x14);
-    v0 = a1 - v0;
-    s4 = u32(i32(v0) >> 16);
-    s5 = s4;
-    s3 = lw(a0 + 0x10);
-    v0 = lw(a2);
-    v1 = s3 | 0x100;
-    v0 = a1 - v0;
-    s7 = u32(i32(v0) >> 16);
-    sw(v1, a0 + 0x10);
-    s1 = lw(s0 + 0x1C);
-    fp = s7;
-    if (s1 == 0) goto loc_8002D5B8;
-    v1 = lw(s1 + 0x4);
-    v0 = lw(s1);
-    a0 = a1 - v1;
-    s6 = u32(i32(a0) >> 16);
-    v0 = a1 - v0;
-    a0 = lw(a2 + 0x4);
-    v1 = (i32(v1) < i32(a0));
-    s2 = u32(i32(v0) >> 16);
-    if (v1 == 0) goto loc_8002D4F4;
-    v1 = lw(s1 + 0xC);
-    v0 = -1;                                            // Result = FFFFFFFF
-    a0 = s6 - s5;
-    if (v1 == v0) goto loc_8002D4F4;
-    v0 = (i32(a0) < 0x100);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s3 & 8;
-        if (bJump) goto loc_8002D474;
+// Texture coordinates in PSX DOOM cannot be higher than '255' due to hardware limitations. All texture coordinates on the PS1 are
+// a single byte only, which restricts the maximum texture size to 256x256 and also the maximum number of times textures can wrap.
+// This is why the map designers for PSX DOOM were restricted to room heights <= 256 units, although there were some workarounds to
+// extend past the limits a little - mainly by using upper and lower walls to do 'full' walls of up to 256 x 3 (768) units.
+//
+// I guess if the engine was a little more advanced it could have removed this limit by splitting up columns that exceeded the PS1's
+// limitations - but that would have also incurred a higher draw cost naturally.
+static constexpr int32_t TEXCOORD_MAX = UINT8_MAX;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draw the upper, lower and middle walls for the given leaf edge
+//------------------------------------------------------------------------------------------------------------------------------------------
+void R_DrawWalls(leafedge_t& edge) noexcept {
+    // Grabbing stuff being drawn
+    sector_t& frontSec = **gpCurDrawSector;
+    seg_t& seg = *edge.seg;
+    side_t& side = *seg.sidedef;
+    line_t& line = *seg.linedef;
+
+    // This line is now viewed by the player: show in the automap if the line is viewable there    
+    line.flags |= ML_MAPPED;
+
+    // Compute the top and bottom y values for the front sector in texture space, relative to the viewpoint.
+    // Note: texture space y coords run in the opposite direction to viewspace z, hence this calculation is
+    // inverted from what it would normally be in viewspace.
+    const int32_t fsec_ty = (*gViewZ - frontSec.ceilingheight) >> FRACBITS;
+    const int32_t fsec_by = (*gViewZ - frontSec.floorheight) >> FRACBITS;
+
+    // Initially the mid wall texture space y coords are that of the sector.
+    // Adjust as we go along if we are drawing a two sided line:
+    int32_t mid_ty = fsec_ty;
+    int32_t mid_by = fsec_by;
+
+    // Draw upper and lower walls if the line is two sided (has a back sector)
+    sector_t* const pBackSec = seg.backsector.get();
+
+    if (pBackSec) {
+        // Get the top and bottom y values for the back sector in texture space
+        const int32_t bsec_ty = (*gViewZ - pBackSec->ceilingheight) >> FRACBITS;
+        const int32_t bsec_by = (*gViewZ - pBackSec->floorheight) >> FRACBITS;
+
+        // Do we need to render the upper wall?
+        // Do so if the ceiling lowers, and if the following texture is not sky:
+        if ((frontSec.ceilingheight > pBackSec->ceilingheight) && (pBackSec->ceilingpic != -1)) {
+            // Update mid texture top bound: anything above this is upper wall
+            mid_ty = bsec_ty;
+
+            // Texture display height: clamp if we exceed h/w limits, so at least we stretch in more a sensible way
+            int32_t tex_h = bsec_ty - fsec_ty;
+
+            if (tex_h > TEXCOORD_MAX) {
+                tex_h = TEXCOORD_MAX;
+            }
+
+            // Compute top and bottom texture 'v' coordinates
+            int32_t vt, vb;
+
+            if (line.flags & ML_DONTPEGTOP) {
+                // Top of texture is at top of upper wall
+                vt = side.rowoffset >> FRACBITS;
+                vb = vt + tex_h;
+            } else {
+                // Bottom of texture is at bottom of upper wall
+                vb = (side.rowoffset >> FRACBITS) + TEXCOORD_MAX;
+                vt = vb - tex_h;
+            }
+            
+            // Draw the columns of wall piece
+            texture_t& tex = (*gpTextures)[(*gpTextureTranslation)[side.toptexture]];
+            R_DrawWallPiece(edge, tex, fsec_ty, bsec_ty, vt, vb, false);
+        }
+        
+        // Do we need to render the lower wall? Do so if the floor raises...
+        if (frontSec.floorheight < pBackSec->floorheight) {
+            // Update mid texture lower bound: anything below this is lower wall
+            mid_by = bsec_by;
+
+            // Texture display height: clamp if we exceed h/w limits, so at least we stretch in more a sensible way
+            int32_t tex_h = fsec_by - bsec_by;
+
+            if (tex_h > TEXCOORD_MAX) {
+                tex_h = TEXCOORD_MAX;
+            }
+
+            // Compute top and bottom texture 'v' coordinates
+            int32_t vt, vb;
+
+            if (line.flags & ML_DONTPEGBOTTOM) {
+                // Bottom of texture is at bottom of lower wall.
+                //
+                // This seems to do a weird wrapping as well every 128 units - not sure why that is...
+                // This could maybe cause some weirdness in some cases with lower walls! 
+                const int32_t wall_h = bsec_by - fsec_ty;
+                vt = ((side.rowoffset >> FRACBITS) + wall_h) & (~128);
+            } else {
+                // Top of texture is at top of lower wall
+                vt = side.rowoffset >> FRACBITS;
+            }
+
+            vb = vt + tex_h;
+            
+            // Draw the columns of wall piece
+            texture_t& tex = (*gpTextures)[(*gpTextureTranslation)[side.bottomtexture]];
+            R_DrawWallPiece(edge, tex, bsec_by, fsec_by, vt, vb, false);
+        }
+
+        // Only draw the mid wall for a 2 sided line if there is a masked texture or translucent wall to draw
+        if ((line.flags & (ML_MIDMASKED | ML_MIDTRANSLUCENT)) == 0)
+            return;
     }
-    a0 = 0xFF;                                          // Result = 000000FF
-loc_8002D474:
-    if (v0 == 0) goto loc_8002D490;
-    v0 = lw(s0 + 0x10);
-    t0 = lh(v0 + 0x6);
-    t1 = t0 + a0;
-    goto loc_8002D4A8;
-loc_8002D490:
-    v0 = lw(s0 + 0x10);
-    v0 = lh(v0 + 0x6);
-    t1 = v0 + 0xFF;
-    t0 = t1 - a0;
-loc_8002D4A8:
-    a2 = s4;
-    a3 = s6;
-    v0 = lw(s0 + 0x10);
-    a0 = lw(sp + 0x28);
-    v0 = lw(v0 + 0x8);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F6C);                               // Load from: gpTextureTranslation (80077F6C)
-    v0 <<= 2;
-    v0 += v1;
-    a1 = lw(v0);
-    v0 = *gpTextures;
-    s5 = a3;
-    sw(t0, sp + 0x10);
-    sw(t1, sp + 0x14);
-    sw(0, sp + 0x18);
-    a1 <<= 5;
-    a1 += v0;
-    R_DrawWallColumns();
-loc_8002D4F4:
-    v0 = *gpCurDrawSector;
-    v1 = lw(s1);
-    v0 = lw(v0);
-    v0 = (i32(v0) < i32(v1));
-    a0 = s7 - s2;
-    if (v0 == 0) goto loc_8002D5AC;
-    v0 = (i32(a0) < 0x100);
+    
+    // Drawing the mid wall
     {
-        const bool bJump = (v0 != 0);
-        v0 = s3 & 0x10;
-        if (bJump) goto loc_8002D524;
+        // Texture display height: clamp if we exceed h/w limits, so at least we stretch in more a sensible way
+        int32_t tex_h = mid_by - mid_ty;
+
+        if (tex_h > TEXCOORD_MAX) {
+            tex_h = TEXCOORD_MAX;
+        }
+        
+        // Compute top and bottom texture 'v' coordinates
+        int32_t vt, vb;
+
+        if (line.flags & ML_DONTPEGBOTTOM) {
+            // Bottom of texture is at bottom of mid wall
+            vb = (side.rowoffset >> FRACBITS) + TEXCOORD_MAX;
+            vt = vb - tex_h;
+        } else {
+            // Top of texture is at top of mid wall
+            vt = side.rowoffset >> FRACBITS;
+            vb = vt + tex_h;
+        }
+
+        // Draw the columns of wall piece.
+        // PSX specific: draw translucent as well if the linedef has that special flag.
+        bool bDrawTransparent = (line.flags & ML_MIDTRANSLUCENT);
+
+        texture_t& tex = (*gpTextures)[(*gpTextureTranslation)[side.midtexture]];
+        R_DrawWallPiece(edge, tex, mid_ty, mid_by, vt, vb, bDrawTransparent);
     }
-    a0 = 0xFF;                                          // Result = 000000FF
-loc_8002D524:
-    if (v0 == 0) goto loc_8002D54C;
-    v0 = lw(s0 + 0x10);
-    v1 = lh(v0 + 0x6);
-    v0 = s2 - s4;
-    v0 += v1;
-    v1 = -0x81;                                         // Result = FFFFFF7F
-    t0 = v0 & v1;
-    goto loc_8002D558;
-loc_8002D54C:
-    v0 = lw(s0 + 0x10);
-    t0 = lh(v0 + 0x6);
-loc_8002D558:
-    t1 = t0 + a0;
-    a2 = s2;
-    a3 = s7;
-    v0 = lw(s0 + 0x10);
-    a0 = lw(sp + 0x28);
-    v0 = lw(v0 + 0xC);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F6C);                               // Load from: gpTextureTranslation (80077F6C)
-    v0 <<= 2;
-    v0 += v1;
-    a1 = lw(v0);
-    v0 = *gpTextures;
-    fp = a2;
-    sw(t0, sp + 0x10);
-    sw(t1, sp + 0x14);
-    sw(0, sp + 0x18);
-    a1 <<= 5;
-    a1 += v0;
-    R_DrawWallColumns();
-loc_8002D5AC:
-    v0 = s3 & 0x600;
-    if (v0 == 0) goto loc_8002D650;
-loc_8002D5B8:
-    a0 = fp - s5;
-    v0 = (i32(a0) < 0x100);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s3 & 0x10;
-        if (bJump) goto loc_8002D5CC;
-    }
-    a0 = 0xFF;                                          // Result = 000000FF
-loc_8002D5CC:
-    if (v0 == 0) goto loc_8002D5F0;
-    v0 = lw(s0 + 0x10);
-    v0 = lh(v0 + 0x6);
-    t1 = v0 + 0xFF;
-    t0 = t1 - a0;
-    goto loc_8002D604;
-loc_8002D5F0:
-    v0 = lw(s0 + 0x10);
-    t0 = lh(v0 + 0x6);
-    t1 = t0 + a0;
-loc_8002D604:
-    a2 = s5;
-    v0 = lw(s0 + 0x10);
-    a0 = lw(sp + 0x28);
-    v0 = lw(v0 + 0x10);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F6C);                               // Load from: gpTextureTranslation (80077F6C)
-    v0 <<= 2;
-    v0 += v1;
-    a1 = lw(v0);
-    v0 = s3 & 0x400;
-    sw(v0, sp + 0x18);
-    v0 = *gpTextures;
-    a3 = fp;
-    sw(t0, sp + 0x10);
-    sw(t1, sp + 0x14);
-    a1 <<= 5;
-    a1 += v0;
-    R_DrawWallColumns();
-loc_8002D650:
-    ra = lw(sp + 0x54);
-    fp = lw(sp + 0x50);
-    s7 = lw(sp + 0x4C);
-    s6 = lw(sp + 0x48);
-    s5 = lw(sp + 0x44);
-    s4 = lw(sp + 0x40);
-    s3 = lw(sp + 0x3C);
-    s2 = lw(sp + 0x38);
-    s1 = lw(sp + 0x34);
-    s0 = lw(sp + 0x30);
-    sp += 0x58;
-    return;
 }
 
-void R_DrawWallColumns() noexcept {
-loc_8002D684:
+void R_DrawWallPiece(
+    const leafedge_t& edge,
+    const texture_t& tex,
+    const int32_t yt,
+    const int32_t yb,
+    const int32_t ut,
+    const int32_t ub,
+    bool bTransparent
+) noexcept {    
+    a0 = ptrToVmAddr(&edge);
+    a1 = ptrToVmAddr(&tex);
+    a2 = yt;
+    a3 = yb;
+
     sp -= 0x88;
     sw(s4, sp + 0x70);
     s4 = a0;
@@ -212,7 +185,7 @@ loc_8002D684:
     v1 = lw(s4 + 0x8);
     s5 = lw(v0 + 0x14);
     v1 = lw(v1 + 0x14);
-    s6 = lw(sp + 0xA0);
+    s6 = bTransparent;
     s2 = v1 - s5;
     sw(v1, sp + 0x18);
     if (i32(s2) <= 0) goto loc_8002E274;
@@ -664,8 +637,8 @@ loc_8002DDB4:
 loc_8002DDC8:
     a0 = t1 - a2;
     v0 = (i32(a0) < 0x1FE);
-    t4 = lw(sp + 0x98);
-    t5 = lw(sp + 0x9C);
+    t4 = ut;
+    t5 = ub;
     {
         const bool bJump = (v0 != 0);
         v0 = 0x64;                                      // Result = 00000064
