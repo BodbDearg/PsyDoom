@@ -216,7 +216,7 @@ bool PsxVm::init(
         FATAL_ERROR_F(
             "Couldn't open the .cue disc descriptor '%s'!\n"
             "Is it present in the current working directory?\n"
-            "This *MUST* be the .cue file for PSX Doom NTSC-U (SLUS-00077).",
+            "This *MUST* be the .cue file for the US/NTSC-U 'Greatest Hits' version of PSX Doom (SLUS-00077).",
             doomCdCuePath
         );
 
@@ -245,7 +245,7 @@ bool PsxVm::init(
         FATAL_ERROR_F(
             "Couldn't load the PSX Doom .exe file '%s'!\n"
             "Is it present in the current working directory?\n"
-            "This *MUST* be the .exe file for PSX Doom NTSC-U (SLUS-00077).",
+            "This *MUST* be the .exe file for the US/NTSC-U 'Greatest Hits' version of PSX Doom (SLUS-00077).",
             doomExePath
         );
 
