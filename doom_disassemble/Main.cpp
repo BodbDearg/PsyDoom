@@ -14,8 +14,8 @@
 //  This program functions as a sort of primitive 'interactive' disassembler specifically (and ONLY!) for the 
 //  following versions of PSXDOOM.EXE:
 //
-//      DOOM        - US, NTSC-U (SLUS-00077) (Size: 428,032 bytes  MD5: fc9a10f36e6a4f6d5933c13ab77d3b06)
-//      Final Doom  - US, NTSC-U (SLUS-00331) (Size: 430,080 bytes  MD5: 0e31dffa3c367e5ffae9e0aa513bb095)
+//      DOOM (Greatest Hits Version)    - US, NTSC-U (SLUS-00077) (Size: 428,032 bytes  MD5: fc9a10f36e6a4f6d5933c13ab77d3b06)
+//      Final Doom                      - US, NTSC-U (SLUS-00331) (Size: 430,080 bytes  MD5: 0e31dffa3c367e5ffae9e0aa513bb095)
 //
 //  Basically you manually specify what each part of the EXE means, whether it is code and data, assign comments and
 //  friendly names etc. and then the assembler can generate an annotated listing of the contents of the .EXE as well as
