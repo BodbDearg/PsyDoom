@@ -19,8 +19,8 @@ Longer term goals include support for Final Doom, proper modding support (I adde
   - **PSXDOOM.EXE**: The PSX DOOM game .EXE file as extracted from the game disc. 
     - This *MUST* be the 'Greatest Hits' US/NTSC version of PlayStation DOOM, or product SLUS-00077.
         - No other versions of the .EXE will work - the game relies on this exact .EXE layout!
-    - The file size *MUST* be 428,032 bytes.
-    - The MD5 for the file *MUST* be: fc9a10f36e6a4f6d5933c13ab77d3b06
+    - The file size *MUST* be `428,032 bytes`.
+    - The MD5 for the file *MUST* be: `fc9a10f36e6a4f6d5933c13ab77d3b06`
   - **DOOM.CUE**: A .cue file pointing to all of the tracks and binary data for the game disc. 
     - The disc *MUST* be the 'Greatest Hits' US/NTSC version of PlayStation DOOM, or product SLUS-00077.
         - No other versions of the CD will work - the game relies on this exact disc layout!
