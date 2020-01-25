@@ -239,8 +239,8 @@ void P_CheckCheats() noexcept {
 
             S_Resume();
 
-            // Not sure why this was clearing this flag specifically for player 2? Seems rather strange...
-            gPlayers[1].cheats &= ~(CF_VRAMVIEWER|CF_WARPMENU);
+            // When the pause menu is opened the warp menu and vram viewer are initially disabled
+            gPlayers[0].cheats &= ~(CF_VRAMVIEWER|CF_WARPMENU);
 
             // Restore previous tick counters on unpause
             *gTicCon = *gTicConOnPause;
