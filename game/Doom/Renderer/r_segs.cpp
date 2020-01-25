@@ -4,8 +4,6 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Game/doomdata.h"
-#include "PcPsx/Finally.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
@@ -167,14 +165,6 @@ void R_DrawWallPiece(
     const int32_t vb,
     bool bTransparent
 ) noexcept {
-    sp -= 0x88;
-    sw(s7, sp + 0x7C);
-
-    auto stackFrameCleanup = finally([]() {
-        s7 = lw(sp + 0x7C);
-        sp += 0x88;
-    });
-
     // Firstly determine the x size of the seg onscreen: if zero or negative sized (back facing?) then ignore
     const leafedge_t& nextEdge = (&edge)[1];
     const vertex_t& vert1 = *edge.vertex;
