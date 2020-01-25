@@ -211,8 +211,10 @@ endif()
 add_executable(${GAME_TGT_NAME} ${SOURCE_FILES} ${OTHER_FILES})
 setup_source_groups("${SOURCE_FILES}" "${OTHER_FILES}")
 
-# This is defined to mark areas where we changed the code from the PSX version
-target_compile_definitions(${GAME_TGT_NAME} PRIVATE -DPC_PSX_DOOM_MODS=1)
+target_compile_definitions(${GAME_TGT_NAME} PRIVATE 
+    -DGAME_VERSION_STR="${GAME_VERSION_STR}"    # Game version string - set in main CMakeLists.txt
+    -DPC_PSX_DOOM_MODS=1                        # Defined to mark areas where we changed the code from the PSX version
+)
 
 # Specify include dirs
 include_directories(${INCLUDE_PATHS})

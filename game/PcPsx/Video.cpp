@@ -134,8 +134,14 @@ void initVideo() noexcept {
         windowCreateFlags |= SDL_WINDOW_OPENGL;
     #endif
 
+    #ifdef GAME_VERSION_STR
+        constexpr const char* gameVersionStr = "PsyDOOM " GAME_VERSION_STR;
+    #else
+        constexpr const char* gameVersionStr = "PsyDOOM <UNKNOWN_VERSION>";
+    #endif
+
     gWindow = SDL_CreateWindow(
-        "StationDOOM",
+        gameVersionStr,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
     // TODO: do proper resolution config

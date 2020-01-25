@@ -1,4 +1,4 @@
-StationDoom contributors (sorted alphabetically)
+PsyDoom contributors (sorted alphabetically)
 ============================================
 
 * **[Erick Vásquez García (Erick194)](https://github.com/Erick194)**

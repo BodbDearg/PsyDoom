@@ -1,4 +1,4 @@
-# StationDoom
+# PsyDoom (formerly 'StationDoom')
 This project is a reverse engineering attempt to backport PSX Doom to PC. Will add more details here later and eventually binary builds once it is stable enough for general release. If you want to try/experiment with this for now, you will need to build from source - see details below.
 
 As of right now the game mostly runs correctly, with some sound syncing issues and a few other problems. Here is a brief video demonstration showing the project in action:
