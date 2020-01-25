@@ -1,4 +1,6 @@
-# PsyDoom (formerly 'StationDoom')
+# PsyDoom
+*(Note: formerly known as 'StationDoom')*
+
 This project is a reverse engineering attempt to backport PSX Doom to PC. Will add more details here later and eventually binary builds once it is stable enough for general release. If you want to try/experiment with this for now, you will need to build from source - see details below.
 
 As of right now the game mostly runs correctly, with some sound syncing issues and a few other problems. Here is a brief video demonstration showing the project in action:
@@ -14,6 +16,8 @@ Longer term goals include support for Final Doom, proper modding support (I adde
 - Builds with Visual Studio 2017/2019 (Windows 64-bit) and also Xcode 11 on MacOS. Other platforms & IDEs not yet supported/tested.
 
 ## Running
+- Make sure to have the latest Visual C redistributable installed:
+  - https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
 - The following items must be present in the working directory of the application:
   - **SCPH1001.BIN**: The original US/NTSC PlayStation 1 BIOS. Later US/NTSC bioses like 'SCPH7001.BIN' may also work if aliased to this name.
   - **PSXDOOM.EXE**: The PSX DOOM game .EXE file as extracted from the game disc. 
