@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(PsyDOOM)
+project(PsyDoom)
 
 # Current game version string
 set(GAME_VERSION_STR "0.0.2")
@@ -22,7 +22,7 @@ set(CEREAL_TGT_NAME             Cereal)
 set(DOOM_DISASM_TGT_NAME        DoomDisassemble)
 set(EVENT_BUS_TGT_NAME          EventBus)
 set(FMT_TGT_NAME                Fmt)
-set(GAME_TGT_NAME               PsyDOOM)
+set(GAME_TGT_NAME               PsyDoom)
 set(GLM_TGT_NAME                GLM)
 set(LIBSDL_TGT_NAME             SDL)
 set(MAGIC_ENUM_TGT_NAME         MagicEnum)

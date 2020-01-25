@@ -135,9 +135,9 @@ void initVideo() noexcept {
     #endif
 
     #ifdef GAME_VERSION_STR
-        constexpr const char* gameVersionStr = "PsyDOOM " GAME_VERSION_STR;
+        constexpr const char* gameVersionStr = "PsyDoom " GAME_VERSION_STR;
     #else
-        constexpr const char* gameVersionStr = "PsyDOOM <UNKNOWN_VERSION>";
+        constexpr const char* gameVersionStr = "PsyDoom <UNKNOWN_VERSION>";
     #endif
 
     gWindow = SDL_CreateWindow(
