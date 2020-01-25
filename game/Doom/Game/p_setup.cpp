@@ -814,8 +814,7 @@ loc_80022F0C:
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0x7FD8);                                // Store to: gTexCacheFillPage (80078028)
     v0 = *gLockedTexPagesMask;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lhu(v1 - 0x6F7C);                              // Load from: gPaletteClutId_Main (800A9084)
+    v1 = *gPaletteClutId_Main;
     a0 = *gpSkyTexture;
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7D1C);                                 // Store to: gTexCacheFillBlockX (800782E4)

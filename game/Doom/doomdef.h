@@ -18,6 +18,8 @@ static constexpr int32_t SCREEN_W = 256;
 static constexpr int32_t SCREEN_H = 240;
 static constexpr int32_t HALF_SCREEN_W = SCREEN_W / 2;
 static constexpr int32_t HALF_SCREEN_H = SCREEN_H / 2;
+static constexpr int32_t VIEW_3D_H = 200;
+static constexpr int32_t HALF_VIEW_3D_H = VIEW_3D_H / 2;
 
 // Alias for fixed point numbers in DOOM: mostly in 16.16 format but does not have to be
 typedef int32_t fixed_t;

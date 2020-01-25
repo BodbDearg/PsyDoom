@@ -35,6 +35,32 @@ struct LINE_F2 {
 
 static_assert(sizeof(LINE_F2) == 16);
 
+// Drawing primitive: flat shaded textured triangle (polygon 3)
+struct POLY_FT3 {
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive
+    uint8_t     r0;         // Color to shade the primitive with
+    uint8_t     g0;
+    uint8_t     b0;
+    uint8_t     code;       // Type info for the hardware
+    int16_t     x0;         // Vertex 1: position
+    int16_t     y0;
+    uint8_t     tu0;        // Vertex 1: texture coords
+    uint8_t     tv0;
+    uint16_t    clut;       // Color lookup table id for 4/8-bit textures
+    int16_t     x1;         // Vertex 2: position
+    int16_t     y1;
+    uint8_t     tu1;        // Vertex 2: texture coords
+    uint8_t     tv1;     
+    uint16_t    tpage;      // Texture page id
+    int16_t     x2;         // Vertex 3: position
+    int16_t     y2;    
+    uint8_t     tu2;        // Vertex 3: texture coords
+    uint8_t     tv2;     
+    uint16_t    pad;        // Not used
+};
+
+static_assert(sizeof(POLY_FT3) == 32);
+
 // Drawing primitive: arbitrarily sized sprite
 struct SPRT {
     uint32_t    tag;        // The primitive size and 24-bit pointer to next primitive
@@ -44,8 +70,8 @@ struct SPRT {
     uint8_t     code;       // Type info for the hardware
     int16_t     x0;         // Position of the sprite
     int16_t     y0;
-    uint8_t     t_u0;       // Texture u/v coords: note could not use just 'v0' due to register name clashing
-    uint8_t     t_v0;
+    uint8_t     tu0;        // Texture u/v coords: note could not use just 'v0' due to register name clashing
+    uint8_t     tv0;
     uint16_t    clut;       // Which CLUT to use for color indexing
     int16_t     w;          // Draw width and height of the sprite
     int16_t     h;
@@ -151,13 +177,12 @@ void LIBGPU_AddPrim() noexcept;
 void LIBGPU_AddPrims() noexcept;
 void LIBGPU_CatPrim() noexcept;
 void LIBGPU_TermPrim() noexcept;
-void LIBGPU_SetSemiTrans() noexcept;
-
+void LIBGPU_SetSemiTrans(void* const pPrim, const bool bTransparent) noexcept;
 void LIBGPU_SetShadeTex(void* const pPrim, const bool bDisableShading) noexcept;
 void _thunk_LIBGPU_SetShadeTex() noexcept;
 
 void LIBGPU_SetPolyF3() noexcept;
-void LIBGPU_SetPolyFT3() noexcept;
+void LIBGPU_SetPolyFT3(POLY_FT3& poly) noexcept;
 void LIBGPU_SetPolyG3() noexcept;
 void LIBGPU_SetPolyGT3() noexcept;
 void LIBGPU_SetPolyF4() noexcept;
@@ -218,6 +243,25 @@ inline void LIBGPU_setXY2(T& prim, const int16_t x0, const int16_t y0, const int
     prim.y1 = y1;
 }
 
+// Set 2d triangle points on a draw primitive
+template <class T>
+inline void LIBGPU_setXY3(
+    T& prim,
+    const int16_t x0,
+    const int16_t y0,
+    const int16_t x1,
+    const int16_t y1,
+    const int16_t x2,
+    const int16_t y2
+) noexcept {
+    prim.x0 = x0;
+    prim.y0 = y0;
+    prim.x1 = x1;
+    prim.y1 = y1;
+    prim.x2 = x2;
+    prim.y2 = y2;
+}
+
 // Set the width and height on a draw primitive
 template <class T>
 inline void LIBGPU_setWH(T& prim, const int16_t w, const int16_t h) noexcept {
@@ -227,9 +271,28 @@ inline void LIBGPU_setWH(T& prim, const int16_t w, const int16_t h) noexcept {
 
 // Set the uv coordinates for a draw primitive
 template <class T>
-inline void LIBGPU_setUV0(T& prim, const uint8_t u, const uint8_t v) noexcept {
-    prim.t_u0 = u;
-    prim.t_v0 = v;
+inline void LIBGPU_setUV0(T& prim, const uint8_t tu0, const uint8_t tv0) noexcept {
+    prim.tu0 = tu0;
+    prim.tv0 = tv0;
+}
+
+// Set the uv coordinates for a triangle draw primitive
+template <class T>
+inline void LIBGPU_setUV3(
+    T& prim,
+    const uint8_t tu0,
+    const uint8_t tv0,
+    const uint8_t tu1,
+    const uint8_t tv1,
+    const uint8_t tu2,
+    const uint8_t tv2
+) noexcept {
+    prim.tu0 = tu0;
+    prim.tv0 = tv0;
+    prim.tu1 = tu1;
+    prim.tv1 = tv1;
+    prim.tu2 = tu2;
+    prim.tv2 = tv2;
 }
 
 // Set the length of the payload for a primitive
@@ -240,8 +303,8 @@ inline void LIBGPU_setlen(T& prim, const uint8_t len) noexcept {
 }
 
 // Set the bounds of a type of RECT
-template <class TRect, class TCoord>
-inline void LIBGPU_setRECT(TRect& rect, const TCoord x, const TCoord y, const TCoord w, const TCoord h) noexcept {
+template <class TRect, class Txy, class Twh>
+inline void LIBGPU_setRECT(TRect& rect, const Txy x, const Txy y, const Twh w, const Twh h) noexcept {
     rect.x = x;
     rect.y = y;
     rect.w = w;

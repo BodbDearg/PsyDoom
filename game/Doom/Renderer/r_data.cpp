@@ -17,6 +17,10 @@ const VmPtr<VmPtr<int32_t>>     gpTextureTranslation(0x80077F6C);
 // The loaded lights lump
 const VmPtr<VmPtr<light_t>>     gpLightsLump(0x80078068);
 
+// Palette stuff
+const VmPtr<uint16_t>   gPaletteClutId_Main(0x800A9084);        // The regular in-game palette
+const VmPtr<uint16_t>   g3dViewPaletteClutId(0x80077F7C);       // Currently active in-game palette. Changes as effects are applied in the game.
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize the palette and asset management for various draw assets
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -415,8 +419,7 @@ loc_8002BF2C:
     if (v0 == v1) goto loc_8002BFCC;
     I_Error("R_InitPalettes: palette foulup\n");
 loc_8002BFCC:
-    s2 = 0x800B0000;                                    // Result = 800B0000
-    s2 -= 0x6F7C;                                       // Result = gPaletteClutId_Main (800A9084)
+    s2 = gPaletteClutId_Main;
     v0 = 0x100;                                         // Result = 00000100
     sh(v0, sp + 0x14);
     v0 = 1;                                             // Result = 00000001
@@ -445,10 +448,7 @@ loc_8002BFF0:
     v0 = (i32(s0) < 0x14);
     s2 += 2;
     if (v0 != 0) goto loc_8002BFE4;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lhu(v0 - 0x6F7C);                              // Load from: gPaletteClutId_Main (800A9084)
-    at = 0x80070000;                                    // Result = 80070000
-    sh(v0, at + 0x7F7C);                                // Store to: g3dViewPaletteClutId (80077F7C)
+    *g3dViewPaletteClutId = *gPaletteClutId_Main;
     
     Z_FreeTags(**gpMainMemZone, PU_CACHE);
 

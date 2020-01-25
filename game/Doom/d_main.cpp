@@ -14,6 +14,7 @@
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
+#include "Renderer/r_data.h"
 #include "Renderer/r_main.h"
 #include "UI/cr_main.h"
 #include "UI/le_main.h"
@@ -313,12 +314,11 @@ loc_800127B8:
     _thunk_LIBGPU_SetSprt();
     a0 = s0;                                            // Result = 1F800200
     a1 = 0;                                             // Result = 00000000
-    LIBGPU_SetSemiTrans();
+    LIBGPU_SetSemiTrans(vmAddrToPtr<void>(a0), false);
     a0 = s0;                                            // Result = 1F800200
     a1 = 0;                                             // Result = 00000000
     _thunk_LIBGPU_SetShadeTex();
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lhu(v1 - 0x6F7C);                              // Load from: gPaletteClutId_Main (800A9084)
+    v1 = *gPaletteClutId_Main;
     v0 = 0x80;                                          // Result = 00000080
     at = 0x1F800000;                                    // Result = 1F800000
     sb(v0, at + 0x204);                                 // Store to: 1F800204

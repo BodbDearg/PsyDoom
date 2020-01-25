@@ -1,10 +1,12 @@
 #include "r_segs.h"
 
+#include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Game/doomdata.h"
 #include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
 #include "r_local.h"
@@ -152,796 +154,293 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws the given upper, lower or middle wall piece for a leaf edge.
+// Draws all of the columns in the wall.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void R_DrawWallPiece(
     const leafedge_t& edge,
-    const texture_t& tex,
+    texture_t& tex,
     const int32_t yt,
     const int32_t yb,
-    const int32_t ut,
-    const int32_t ub,
+    const int32_t vt,
+    const int32_t vb,
     bool bTransparent
-) noexcept {    
-    a0 = ptrToVmAddr(&edge);
-    a1 = ptrToVmAddr(&tex);
-    a2 = yt;
-    a3 = yb;
-
+) noexcept {
     sp -= 0x88;
-    sw(s4, sp + 0x70);
-    s4 = a0;
-    sw(s1, sp + 0x64);
-    s1 = a1;
-    sw(fp, sp + 0x80);
-    fp = a3;
-    sw(ra, sp + 0x84);
     sw(s7, sp + 0x7C);
-    sw(s6, sp + 0x78);
-    sw(s5, sp + 0x74);
-    sw(s3, sp + 0x6C);
-    sw(s2, sp + 0x68);
-    sw(s0, sp + 0x60);
-    sw(a2, sp + 0x58);
-    v0 = lw(s4);
-    v1 = lw(s4 + 0x8);
-    s5 = lw(v0 + 0x14);
-    v1 = lw(v1 + 0x14);
-    s6 = bTransparent;
-    s2 = v1 - s5;
-    sw(v1, sp + 0x18);
-    if (i32(s2) <= 0) goto loc_8002E274;
-    v0 = *gpViewPlayer;
-    v0 = lw(v0 + 0xC0);
-    v0 &= 0x80;
-    if (v0 == 0) goto loc_8002D704;
-    s6 = 1;                                             // Result = 00000001
-loc_8002D704:
-    v1 = lw(s1 + 0x1C);
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (v1 != v0) goto loc_8002D79C;
-    s0 = gTmpBuffer;
-    v0 = lh(s1 + 0x10);
-    v1 = *gpLumpCache;
-    v0 <<= 2;
-    v0 += v1;
-    a0 = lw(v0);
-    a1 = gTmpBuffer;
-    _thunk_decode();
-    a0 = sp + 0x10;
-    a1 = s0 + 8;                                        // Result = gTmpWadLumpBuffer[2] (80098750)
-    v1 = lbu(s1 + 0x8);
-    v0 = lhu(s1 + 0xA);
-    v1 >>= 1;
-    v0 &= 0xF;
-    v0 <<= 6;
-    v1 += v0;
-    sh(v1, sp + 0x10);
-    v1 = lhu(s1 + 0xA);
-    a2 = lbu(s1 + 0x9);
-    v0 = 0x20;                                          // Result = 00000020
-    sh(v0, sp + 0x14);
-    v0 = 0x80;                                          // Result = 00000080
-    sh(v0, sp + 0x16);
-    v1 &= 0x10;
-    v1 <<= 4;
-    a2 += v1;
-    sh(a2, sp + 0x12);
-    _thunk_LIBGPU_LoadImage();
-    v0 = *gNumFramesDrawn;
-    sw(v0, s1 + 0x1C);
-loc_8002D79C:
-    v0 = lbu(s1 + 0x8);
-    sh(v0, sp + 0x10);
-    v0 = lbu(s1 + 0x9);
-    s0 = 0x1F800000;                                    // Result = 1F800000
-    s0 += 0x200;                                        // Result = 1F800200
-    sh(v0, sp + 0x12);
-    v0 = lhu(s1 + 0x4);
-    a0 = s0;                                            // Result = 1F800200
-    sh(v0, sp + 0x14);
-    v0 = lhu(s1 + 0x6);
-    a1 = sp + 0x10;
-    sh(v0, sp + 0x16);
-    _thunk_LIBGPU_SetTexWindow();
-    s0 += 4;                                            // Result = 1F800204
-    t2 = 0xFF0000;                                      // Result = 00FF0000
-    t2 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t6 = 0x80080000;                                    // Result = 80080000
-    t6 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s3 = t6 & t2;                                       // Result = 00086550
-    t5 = 0x4000000;                                     // Result = 04000000
-    t4 = 0x80000000;                                    // Result = 80000000
-    t3 = -1;                                            // Result = FFFFFFFF
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    t1 = t0 << 2;
-    t7 = t1 + 4;
-loc_8002D810:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = (a0 < v0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t1 + a0;
-        if (bJump) goto loc_8002D874;
+
+    auto stackFrameCleanup = finally([]() {
+        s7 = lw(sp + 0x7C);
+        sp += 0x88;
+    });
+
+    // Firstly determine the x size of the seg onscreen: if zero or negative sized (back facing?) then ignore
+    const leafedge_t& nextEdge = (&edge)[1];
+    const vertex_t& vert1 = *edge.vertex;
+    const vertex_t& vert2 = *nextEdge.vertex;
+
+    const int32_t x1 = vert1.screenx;
+    const int32_t x2 = vert2.screenx;
+    const int32_t dx = x2 - x1;
+
+    if (dx <= 0)
+        return;
+
+    // Force the wall to be transparent if the X-Ray vision cheat is on
+    player_t& player = **gpViewPlayer;
+    
+    if (player.cheats & CF_XRAYVISION) {
+        bTransparent = true;
     }
-    v0 += 4;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    v0 = (v0 < v1);
-    v1 = 0xFF000000;                                    // Result = FF000000
-    if (v0 != 0) goto loc_8002DA74;
-    v0 = lw(a2);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(t6, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    v0 &= v1;
-    v0 |= s3;
-    sw(v0, a2);
-    sb(0, a2 + 0x3);
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-loc_8002D874:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = t1 + a0;
-    v0 += 4;
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_8002D928;
-    if (v1 == a0) goto loc_8002D810;
-loc_8002D898:
-    v0 = lw(gp + 0x5D8);                                // Load from: GPU_REG_GP1 (80077BB8)
-    v0 = lw(v0);
-    v0 &= t5;
-    if (v0 == 0) goto loc_8002D810;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= t2;
-    v0 |= t4;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t3) goto loc_8002D904;
-    a3 = -1;                                            // Result = FFFFFFFF
-loc_8002D8E8:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x5D4);                                // Load from: GPU_REG_GP0 (80077BB4)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a3) goto loc_8002D8E8;
-loc_8002D904:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 == v0) goto loc_8002D810;
-    goto loc_8002D898;
-loc_8002D928:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 += t7;
-loc_8002D938:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    a1 = 0xFF0000;                                      // Result = 00FF0000
-    a1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    a0 = 0xFF000000;                                    // Result = FF000000
-    v1 = lw(a2);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 &= a0;
-    v0 &= a1;
-    v1 |= v0;
-    sw(v1, a2);
-    sb(t0, a2 + 0x3);
-    t0--;
-    v0 = -1;                                            // Result = FFFFFFFF
-    a2 += 4;
-    if (t0 == v0) goto loc_8002D998;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_8002D980:
-    v0 = lw(s0);
-    s0 += 4;
-    t0--;
-    sw(v0, a2);
-    a2 += 4;
-    if (t0 != v1) goto loc_8002D980;
-loc_8002D998:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 7;                                         // Result = 00000007
-        if (bJump) goto loc_8002DA50;
+
+    // Decompress and upload the wall texture to VRAM if we haven't already done so.
+    // This code gets invoked constantly for animated textures like the blood or slime fall textures.
+    // Only one frame of the animated texture stays in VRAM at a time!
+    if (tex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
+        // Decompress and get a pointer to the texture data.
+        // TODO: figure out what 8 bytes this is skipping past!
+        decode((*gpLumpCache)[tex.lumpNum].get(), gTmpBuffer.get());
+        const uint32_t* const pTexData = (uint32_t*) gTmpBuffer.get() + 2;
+
+        // Upload to the GPU and mark the texture as loaded this frame
+        const RECT texRect = getTextureVramRect(tex);
+        LIBGPU_LoadImage(texRect, pTexData);
+        tex.uploadFrameNum = *gNumFramesDrawn;
     }
-    t2 = 0x4000000;                                     // Result = 04000000
-    a3 = 0xFF0000;                                      // Result = 00FF0000
-    a3 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t1 = 0x80000000;                                    // Result = 80000000
-    t0 = -1;                                            // Result = FFFFFFFF
-loc_8002D9C8:
-    v0 = lw(gp + 0x5D8);                                // Load from: GPU_REG_GP1 (80077BB8)
-    v0 = lw(v0);
-    v0 &= t2;
+
+    // Set the texture window - the area of VRAM used for texturing
     {
-        const bool bJump = (v0 == 0);
-        v0 = 7;                                         // Result = 00000007
-        if (bJump) goto loc_8002DA50;
+        RECT texRect;
+        LIBGPU_setRECT(texRect, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
+
+        DR_TWIN* const texWinPrim = (DR_TWIN*) getScratchAddr(128);
+        LIBGPU_SetTexWindow(*texWinPrim, texRect);        
+        I_AddPrim(texWinPrim);
     }
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= a3;
-    v0 |= t1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t0) goto loc_8002DA34;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_8002DA18:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x5D4);                                // Load from: GPU_REG_GP0 (80077BB4)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a2) goto loc_8002DA18;
-loc_8002DA34:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 7;                                         // Result = 00000007
-        if (bJump) goto loc_8002D9C8;
+
+    // Initialization of the flat shaded textured triangle drawing primitive
+    POLY_FT3& polyPrim = *(POLY_FT3*) getScratchAddr(128);	
+    LIBGPU_SetPolyFT3(polyPrim);
+        
+    if (bTransparent) {
+        LIBGPU_SetSemiTrans(&polyPrim, true);
     }
-loc_8002DA50:
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x203);                                 // Store to: 1F800203
-    v0 = 0x24;                                          // Result = 00000024
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x207);                                 // Store to: 1F800207
-    v0 = 0x26;                                          // Result = 00000026
-    if (s6 == 0) goto loc_8002DA88;
-    goto loc_8002DA80;
-loc_8002DA74:
-    v0 = t1 + 4;
-    v0 += a0;
-    goto loc_8002D938;
-loc_8002DA80:
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x207);                                 // Store to: 1F800207
-loc_8002DA88:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lhu(v0 + 0x7F7C);                              // Load from: g3dViewPaletteClutId (80077F7C)
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x20E);                                 // Store to: 1F80020E
-    v0 = lhu(s1 + 0xA);
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x216);                                 // Store to: 1F800216
-    v0 = lw(s4);
-    v1 = lw(s4 + 0x8);
-    s3 = lw(v0 + 0x8);
-    v1 = lw(v1 + 0x8);
-    v0 = v1 - s3;
-    div(v0, s2);
-    if (s2 != 0) goto loc_8002DAD4;
-    _break(0x1C00);
-loc_8002DAD4:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (s2 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002DAEC;
+
+    polyPrim.clut = *g3dViewPaletteClutId;
+    polyPrim.tpage = tex.texPageId;
+
+    // Compute scale and y coordinate step per wall column
+    const fixed_t dscale = vert2.scale - vert1.scale;
+    const fixed_t scaleStep = dscale / dx;
+    
+    const fixed_t dyt = (yt * vert2.scale) - (yt * vert1.scale);
+    const fixed_t ytStep = dyt / dx;
+
+    const fixed_t dyb = (yb * vert2.scale) - (yb * vert1.scale);
+    const fixed_t ybStep = dyb / dx;
+
+    // Compute some basic seg stuff, sin/cos of seg angle and relative angles and vectors.
+    // Note that a lot of these amounts are shifted down to 24.8 format - presumably so fixed point math can be can done
+    // in a very simplified way within the bounds of a 32-bit number without handling separate result parts etc.
+    seg_t& seg = *edge.seg;
+    vertex_t& segv1 = *seg.vertex1;
+
+    const uint32_t segFineAngle = seg.angle >> ANGLETOFINESHIFT;
+    const uint32_t segViewFineAngle = (seg.angle - *gViewAngle + ANG90) >> ANGLETOFINESHIFT;
+
+    const fixed_t segSin = gFineSine[segFineAngle] >> 8;
+    const fixed_t segCos = gFineCosine[segFineAngle] >> 8;
+    const fixed_t segViewSin = gFineSine[segViewFineAngle] >> 8;
+    const fixed_t segViewCos = gFineCosine[segViewFineAngle] >> 8;
+    const fixed_t segP1ViewX = (segv1.x - *gViewX) >> 8;
+    const fixed_t segP1ViewY = (segv1.y - *gViewY) >> 8;
+
+    // Compute perpendicular distance to the line segment.
+    // Should be negative if we are on the inside of the line segment:
+    const fixed_t segViewDot = (segP1ViewX * segSin - segP1ViewY * segCos) >> 8;
+
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    // 'U' texture coordinate calculation stuff:
+    //
+    // This stuff is a little hard to understand, and I can't 100% explain the calculations yet - needs further analysis...
+    // But from examining so far it seems that what is going on here is that the column drawing loop is performing a series
+    // of intersections of a line against another line in order to determine the 'u' texture coordinate for each column.
+    // In the loop, one of the lines is advanced along the wall and intersected against another line, which presumably has
+    // some sort of relation to the front view plane.
+    // 
+    // Basically given the equations of two lines:
+    //      a1x + b1y = d1
+    //      a2x + b2y = d2
+    //
+    // An intersection (x,y) point can be determined (via Cramer's Rule) as follows:
+    //      x = (b2d1 - b1d2)/(a1b2 - a2b1)
+    //      y = (a1d2 - a2d1)/(a1b2 - a2b1)
+    //
+    // In the case of 'x' if we say the following:
+    //      x = isectNum / isectDiv
+    //
+    // Filling in the blanks, the game defines the dividend and divisor as follows:
+    //      isectNum = (x1 - HALF_SCREEN_W) * isectNumStep + (segViewSin * 8 * segViewDot)
+    //      isectDiv = (x1 - HALF_SCREEN_W) * isectDivStep - (segViewCos * 8)   
+    // 
+    // Where:
+    //      isectNumStep = (segViewDot * segViewCos) >> 4
+    //      isectDivStep = segViewSin >> 4
+    //
+    // Decomposing further, the line equations are as follows:
+    //      a1 = isectDivStep
+    //      b1 = 8
+    //      d1 = isectNumStep
+    //
+    //      a2 = segViewCos
+    //      b2 = x1 - HALF_SCREEN_W
+    //      d2 = -segViewDot * segViewSin
+    //
+    // I'm not sure what those mean exactly, but it's clear one line is being advanced and intersected against another.
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    
+    // Compute the stepping values used in the loop to compute u coords and also the initial components of the interesection equation
+    const fixed_t isectNumStep = (segViewDot * segViewCos) >> 4;
+    const fixed_t isectDivStep = segViewSin >> 4;
+
+    fixed_t isectNum = (x1 - HALF_SCREEN_W) * isectNumStep + (segViewSin * 8 * segViewDot);
+    fixed_t isectDiv = (x1 - HALF_SCREEN_W) * isectDivStep - (segViewCos * 8);
+
+    // Compute the constant 'u' texture offset for the seg, in pixels.
+    // This offset is based on the texture offset, as well as the viewpoint's distance along the seg.
+    const int32_t segStartU = (
+        (seg.offset + FRACUNIT + seg.sidedef->textureoffset) -
+        (segP1ViewX * segCos + segP1ViewY * segSin)
+    ) >> 8;
+
+    // Compute the start top and bottom y values and bring into screenspace
+    fixed_t ybCur_frac = yb * vert1.scale + HALF_VIEW_3D_H * FRACUNIT;
+    fixed_t ytCur_frac = yt * vert1.scale + HALF_VIEW_3D_H * FRACUNIT;
+
+    // Adjust the starting column if the beginning of the seg is obscured: skip past the not visible columns
+    int32_t xCur = x1;
+
+    if (seg.visibleBegX > x1) {
+        const int32_t numColsToSkip = seg.visibleBegX - x1;
+        xCur = seg.visibleBegX;
+        
+        ytCur_frac += numColsToSkip * ytStep;
+        ybCur_frac += numColsToSkip * ybStep;
+        isectNum += numColsToSkip * isectNumStep;
+        isectDiv += numColsToSkip * isectDivStep;
     }
-    if (v0 != at) goto loc_8002DAEC;
-    tge(zero, zero, 0x5D);
-loc_8002DAEC:
-    s7 = lo;
-    sw(s7, sp + 0x40);
-    s7 = lw(sp + 0x58);
-    mult(s7, s3);
-    t3 = lo;
-    mult(s7, v1);
-    v0 = lo;
-    v0 -= t3;
-    div(v0, s2);
-    if (s2 != 0) goto loc_8002DB24;
-    _break(0x1C00);
-loc_8002DB24:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (s2 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002DB3C;
+
+    // Adjust the end column if the end of the seg is obscured: stop before the not visible columns
+    int32_t xEnd = x2;
+
+    if (seg.visibleEndX < x2) {
+        xEnd = seg.visibleEndX;
     }
-    if (v0 != at) goto loc_8002DB3C;
-    tge(zero, zero, 0x5D);
-loc_8002DB3C:
-    s7 = lo;
-    mult(fp, s3);
-    t2 = lo;
-    mult(fp, v1);
-    v0 = lo;
-    v0 -= t2;
-    sw(s7, sp + 0x28);
-    div(v0, s2);
-    if (s2 != 0) goto loc_8002DB68;
-    _break(0x1C00);
-loc_8002DB68:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (s2 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002DB80;
+
+    // Draw all of the visible wall columns
+    fixed_t scaleCur = vert1.scale;
+
+    while (xCur < xEnd) {
+        // Get column pixel/integer y bounds
+        int16_t ytCur = ytCur_frac >> 16;
+        int16_t ybCur = ybCur_frac >> 16;
+
+        // Ignore the column if it is completely offscreen
+        if ((ytCur <= VIEW_3D_H) && (ybCur >= 0)) {
+            // Compute the 'U' texture coordinate for the column
+            const uint8_t uCur = (isectDiv != 0) ? (uint8_t)((isectNum / isectDiv + segStartU) >> 8) : 0;
+
+            // Some hacky-ish code to clamp the column height to the screen bounds if it gets too big, and to adjust the 'v' texture coords.
+            // For the most part the engine relies on the hardware to do it's clipping for vertical columns, but if the offscreen distance
+            // becomes too great then problems can start occurring and columns don't render. I'm not sure if this is a PSX limitation or
+            // some sort of numeric overflow, but this code attempts to fix it. 
+            //
+            // Note: the value '510' appears to be the maximum we can here use without encountering issues.
+            // If you reduce this any more, then sometimes columns will not draw when you get close enough.
+            // I'm not sure specifically why this was value chosen, perhaps found through trial and error?
+            //
+            const int32_t colHeight = ybCur - ytCur;
+
+            int32_t vtCur = vt;
+            int32_t vbCur = vb;
+
+            if (colHeight >= 510) { 
+                // Compute the amount of 'v' coordinate from the top of the column to the center of the screen
+                const int32_t vHeight = vbCur - vtCur;
+                const fixed_t vTopToCenterFrac = ((HALF_VIEW_3D_H - ytCur) << FRACBITS) / colHeight;
+                const int32_t vTopToCenter = (vTopToCenterFrac * vHeight) >> FRACBITS;
+
+                // Compute the amount of 'v' coordinate for half of the screen
+                const fixed_t vHalfScreenFrac = (HALF_VIEW_3D_H << FRACBITS) / colHeight;
+                const int32_t vHalfScreen = (vHalfScreenFrac * vHeight) >> FRACBITS;
+                
+                // Clamp the render coordinates to the top and bottom of the screen if required
+                const int32_t vtOrig = vtCur;
+
+                if (ytCur < 0) {
+                    // Offscreen to the top: advance the v coordinate by the amount offscreen
+                    ytCur = 0;
+                    vtCur += vTopToCenter - vHalfScreen;
+                }
+
+                if (ybCur > VIEW_3D_H) {
+                    // Offscreen to the bottom: stop the v coordinate at the bottom of the screen
+                    ybCur = VIEW_3D_H;
+                    vbCur = vtOrig + vTopToCenter + vHalfScreen;
+                }
+            }
+
+            // Decide on rgb color values to render the column with
+            int32_t r, g, b;
+
+            if (*gbDoViewLighting) {
+                int32_t lightIntensity = scaleCur >> 8;
+
+                if (lightIntensity < LIGHT_INTENSTIY_MIN) {
+                    lightIntensity = LIGHT_INTENSTIY_MIN;
+                }
+                else if (lightIntensity > LIGHT_INTENSTIY_MAX) {
+                    lightIntensity = LIGHT_INTENSTIY_MAX;
+                }
+
+                r = (lightIntensity * (*gCurLightValR)) >> 7;
+                g = (lightIntensity * (*gCurLightValG)) >> 7;
+                b = (lightIntensity * (*gCurLightValB)) >> 7;
+                if (r > 255) { r = 255; }
+                if (g > 255) { g = 255; }
+                if (b > 255) { b = 255; }
+            } else {
+                r = *gCurLightValR;
+                g = *gCurLightValG;
+                b = *gCurLightValB;
+            }
+
+            // Finally populate the triangle for the wall column and draw
+            LIBGPU_setRGB0(polyPrim, (uint8_t) r, (uint8_t) g, (uint8_t) b);
+
+            LIBGPU_setUV3(
+                polyPrim,
+                (uint8_t) uCur, (uint8_t) vtCur,
+                (uint8_t) uCur, (uint8_t) vbCur,
+                (uint8_t) uCur, (uint8_t) vbCur
+            );
+
+            LIBGPU_setXY3(
+                polyPrim,
+                (int16_t) xCur,     (int16_t) ytCur - 1,
+                (int16_t) xCur + 1, (int16_t) ybCur + 1,
+                (int16_t) xCur,     (int16_t) ybCur + 1
+            );
+
+            I_AddPrim(&polyPrim);
+        }
+
+        ++xCur;
+        ytCur_frac += ytStep;
+        ybCur_frac += ybStep;
+        scaleCur += scaleStep;
+        isectNum += isectNumStep;
+        isectDiv += isectDivStep;
     }
-    if (v0 != at) goto loc_8002DB80;
-    tge(zero, zero, 0x5D);
-loc_8002DB80:
-    s7 = lo;
-    sw(s7, sp + 0x38);
-    t1 = lw(s4 + 0x4);
-    v1 = *gViewX;
-    a1 = lw(t1 + 0xC);
-    t0 = lw(t1);
-    v0 = a1 >> 19;
-    v0 <<= 2;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += v0;
-    a0 = lw(at);
-    a2 = lw(t0);
-    t4 = u32(i32(a0) >> 8);
-    a2 -= v1;
-    a2 = u32(i32(a2) >> 8);
-    mult(a2, t4);
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v0 += a3;
-    v0 = lw(v0);
-    t5 = u32(i32(v0) >> 8);
-    v0 = lw(t0 + 0x4);
-    v1 = *gViewY;
-    a0 = lo;
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 8);
-    mult(v0, t5);
-    v1 = lo;
-    mult(a2, t5);
-    a2 = lo;
-    mult(v0, t4);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D6C);                               // Load from: gViewAngle (80078294)
-    a0 -= v1;
-    a1 -= v0;
-    v0 = 0x40000000;                                    // Result = 40000000
-    a1 += v0;
-    a1 >>= 19;
-    a1 <<= 2;
-    a3 += a1;
-    v0 = lw(a3);
-    a3 = lo;
-    a0 = u32(i32(a0) >> 8);
-    t5 = u32(i32(v0) >> 8);
-    mult(a0, t5);
-    v0 = lo;
-    v1 = s5 - 0x80;
-    fp = u32(i32(v0) >> 4);
-    mult(v1, fp);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += a1;
-    v0 = lw(at);
-    a1 = lo;
-    a0 <<= 3;
-    t4 = u32(i32(v0) >> 8);
-    mult(a0, t4);
-    a0 = lo;
-    s6 = u32(i32(v0) >> 12);
-    mult(v1, s6);
-    a2 += a3;
-    v0 = 0x640000;                                      // Result = 00640000
-    t3 += v0;
-    t2 += v0;
-    t9 = a1 + a0;
-    v1 = t5 << 3;
-    a0 = 0x10000;                                       // Result = 00010000
-    v0 = lo;
-    s1 = v0 - v1;
-    v1 = lw(t1 + 0x10);
-    v0 = lw(t1 + 0x8);
-    v1 = lw(v1);
-    v0 += a0;
-    v0 += v1;
-    v0 -= a2;
-    a2 = lh(t1 + 0x22);
-    v0 = u32(i32(v0) >> 8);
-    sw(v0, sp + 0x48);
-    a3 = lh(t1 + 0x24);
-    v0 = (i32(s5) < i32(a2));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 - s5;
-        if (bJump) goto loc_8002DD24;
-    }
-    s7 = lw(sp + 0x28);
-    mult(v0, s7);
-    a1 = lo;
-    s7 = lw(sp + 0x38);
-    mult(v0, s7);
-    a0 = lo;
-    mult(v0, fp);
-    v1 = lo;
-    mult(v0, s6);
-    s5 = a2;
-    t3 += a1;
-    t2 += a0;
-    t9 += v1;
-    v0 = lo;
-    s1 += v0;
-loc_8002DD24:
-    s7 = lw(sp + 0x18);
-    v0 = (i32(a3) < i32(s7));
-    s0 = s5;
-    if (v0 == 0) goto loc_8002DD40;
-    sw(a3, sp + 0x18);
-    s7 = lw(sp + 0x18);
-loc_8002DD40:
-    v0 = (i32(s0) < i32(s7));
-    t8 = 0xFF0000;                                      // Result = 00FF0000
-    if (v0 == 0) goto loc_8002E274;
-    t8 |= 0xFFFF;                                       // Result = 00FFFFFF
-    s7 = 0x80080000;                                    // Result = 80080000
-    s7 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s7 &= t8;                                           // Result = 00086550
-    sw(s7, sp + 0x58);
-    s5 = 0x4000000;                                     // Result = 04000000
-    s4 = 0x80000000;                                    // Result = 80000000
-loc_8002DD6C:
-    a2 = u32(i32(t3) >> 16);
-    v0 = (i32(a2) < 0xC9);
-    t1 = u32(i32(t2) >> 16);
-    if (v0 == 0) goto loc_8002E23C;
-    if (i32(t1) < 0) goto loc_8002E23C;
-    t6 = 0;                                             // Result = 00000000
-    if (s1 == 0) goto loc_8002DDC8;
-    div(t9, s1);
-    if (s1 != 0) goto loc_8002DD9C;
-    _break(0x1C00);
-loc_8002DD9C:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (s1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002DDB4;
-    }
-    if (t9 != at) goto loc_8002DDB4;
-    tge(zero, zero, 0x5D);
-loc_8002DDB4:
-    v0 = lo;
-    s7 = lw(sp + 0x48);
-    v0 += s7;
-    t6 = u32(i32(v0) >> 8);
-loc_8002DDC8:
-    a0 = t1 - a2;
-    v0 = (i32(a0) < 0x1FE);
-    t4 = ut;
-    t5 = ub;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x64;                                      // Result = 00000064
-        if (bJump) goto loc_8002DE88;
-    }
-    v0 -= a2;
-    v0 <<= 16;
-    div(v0, a0);
-    if (a0 != 0) goto loc_8002DDF8;
-    _break(0x1C00);
-loc_8002DDF8:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a0 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002DE10;
-    }
-    if (v0 != at) goto loc_8002DE10;
-    tge(zero, zero, 0x5D);
-loc_8002DE10:
-    v0 = lo;
-    a1 = t5 - t4;
-    mult(v0, a1);
-    v1 = lo;
-    v0 = 0x640000;                                      // Result = 00640000
-    div(v0, a0);
-    if (a0 != 0) goto loc_8002DE34;
-    _break(0x1C00);
-loc_8002DE34:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a0 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8002DE4C;
-    }
-    if (v0 != at) goto loc_8002DE4C;
-    tge(zero, zero, 0x5D);
-loc_8002DE4C:
-    v0 = lo;
-    mult(v0, a1);
-    v1 = u32(i32(v1) >> 16);
-    a0 = t4 + v1;
-    v0 = lo;
-    v1 = u32(i32(v0) >> 16);
-    if (i32(a2) >= 0) goto loc_8002DE74;
-    a2 = 0;                                             // Result = 00000000
-    t4 = a0 - v1;
-loc_8002DE74:
-    v0 = (i32(t1) < 0xC9);
-    if (v0 != 0) goto loc_8002DE88;
-    t5 = a0 + v1;
-    t1 = 0xC8;                                          // Result = 000000C8
-loc_8002DE88:
-    v0 = *gbDoViewLighting;
-    v1 = u32(i32(s3) >> 8);
-    if (v0 == 0) goto loc_8002DF44;
-    v0 = (i32(v1) < 0x40);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < 0xA1);
-        if (bJump) goto loc_8002DEB0;
-    }
-    v1 = 0x40;                                          // Result = 00000040
-    goto loc_8002DEBC;
-loc_8002DEB0:
-    if (v0 != 0) goto loc_8002DEBC;
-    v1 = 0xA0;                                          // Result = 000000A0
-loc_8002DEBC:
-    v0 = *gCurLightValR;
-    mult(v1, v0);
-    v0 = lo;
-    a1 = u32(i32(v0) >> 7);
-    v0 = (i32(a1) < 0x100);
-    if (v0 != 0) goto loc_8002DEE4;
-    a1 = 0xFF;                                          // Result = 000000FF
-loc_8002DEE4:
-    v0 = *gCurLightValG;
-    mult(v1, v0);
-    v0 = lo;
-    a0 = u32(i32(v0) >> 7);
-    v0 = (i32(a0) < 0x100);
-    if (v0 != 0) goto loc_8002DF0C;
-    a0 = 0xFF;                                          // Result = 000000FF
-loc_8002DF0C:
-    v0 = *gCurLightValB;
-    mult(v1, v0);
-    v0 = lo;
-    v1 = u32(i32(v0) >> 7);
-    v0 = (i32(v1) < 0x100);
-    if (v0 != 0) goto loc_8002DF5C;
-    v1 = 0xFF;                                          // Result = 000000FF
-    goto loc_8002DF5C;
-loc_8002DF38:
-    v0 = t1 + 4;
-    v0 += a0;
-    goto loc_8002E13C;
-loc_8002DF44:
-    a1 = *gCurLightValR;
-    a0 = *gCurLightValG;
-    v1 = *gCurLightValB;
-loc_8002DF5C:
-    s7 = 0x1F800000;                                    // Result = 1F800000
-    s7 += 0x200;                                        // Result = 1F800200
-    t7 = s7 + 4;                                        // Result = 1F800204
-    s2 = -1;                                            // Result = FFFFFFFF
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = a2 - 1;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x20A);                                 // Store to: 1F80020A
-    v0 = s0 + 1;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x210);                                 // Store to: 1F800210
-    v0 = t1 + 1;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(a1, at + 0x204);                                 // Store to: 1F800204
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(a0, at + 0x205);                                 // Store to: 1F800205
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v1, at + 0x206);                                 // Store to: 1F800206
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(s0, at + 0x208);                                 // Store to: 1F800208
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x212);                                 // Store to: 1F800212
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(s0, at + 0x218);                                 // Store to: 1F800218
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x21A);                                 // Store to: 1F80021A
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(t4, at + 0x20D);                                 // Store to: 1F80020D
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(t5, at + 0x215);                                 // Store to: 1F800215
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(t5, at + 0x21D);                                 // Store to: 1F80021D
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(t6, at + 0x20C);                                 // Store to: 1F80020C
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(t6, at + 0x214);                                 // Store to: 1F800214
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(t6, at + 0x21C);                                 // Store to: 1F80021C
-    t1 = t0 << 2;
-    t4 = t1 + 4;
-loc_8002E008:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = (a0 < v0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t1 + a0;
-        if (bJump) goto loc_8002E078;
-    }
-    v0 += 4;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    v0 = (v0 < v1);
-    v1 = 0xFF000000;                                    // Result = FF000000
-    if (v0 != 0) goto loc_8002DF38;
-    s7 = 0x80080000;                                    // Result = 80080000
-    s7 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    v0 = lw(a3);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s7, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    s7 = lw(sp + 0x58);
-    v0 &= v1;
-    v0 |= s7;
-    sw(v0, a3);
-    sb(0, a3 + 0x3);
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-loc_8002E078:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = t1 + a0;
-    v0 += 4;
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_8002E12C;
-    if (v1 == a0) goto loc_8002E008;
-loc_8002E09C:
-    v0 = lw(gp + 0x5D8);                                // Load from: GPU_REG_GP1 (80077BB8)
-    v0 = lw(v0);
-    v0 &= s5;
-    if (v0 == 0) goto loc_8002E008;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= t8;
-    v0 |= s4;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == s2) goto loc_8002E108;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_8002E0EC:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x5D4);                                // Load from: GPU_REG_GP0 (80077BB4)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a2) goto loc_8002E0EC;
-loc_8002E108:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 == v0) goto loc_8002E008;
-    goto loc_8002E09C;
-loc_8002E12C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 += t4;
-loc_8002E13C:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    a0 = 0xFF000000;                                    // Result = FF000000
-    v1 = lw(a3);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 &= a0;
-    v0 &= t8;
-    v1 |= v0;
-    sw(v1, a3);
-    sb(t0, a3 + 0x3);
-    t0--;
-    v0 = -1;                                            // Result = FFFFFFFF
-    a3 += 4;
-    if (t0 == v0) goto loc_8002E194;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_8002E17C:
-    v0 = lw(t7);
-    t7 += 4;
-    t0--;
-    sw(v0, a3);
-    a3 += 4;
-    if (t0 != v1) goto loc_8002E17C;
-loc_8002E194:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 == v0) goto loc_8002E23C;
-    a3 = -1;                                            // Result = FFFFFFFF
-loc_8002E1B4:
-    v0 = lw(gp + 0x5D8);                                // Load from: GPU_REG_GP1 (80077BB8)
-    v0 = lw(v0);
-    v0 &= s5;
-    if (v0 == 0) goto loc_8002E23C;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= t8;
-    v0 |= s4;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == a3) goto loc_8002E220;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_8002E204:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x5D4);                                // Load from: GPU_REG_GP0 (80077BB4)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a2) goto loc_8002E204;
-loc_8002E220:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 != v0) goto loc_8002E1B4;
-loc_8002E23C:
-    s7 = lw(sp + 0x40);
-    s3 += s7;
-    s7 = lw(sp + 0x28);
-    t9 += fp;
-    t3 += s7;
-    s7 = lw(sp + 0x38);
-    t2 += s7;
-    s7 = lw(sp + 0x18);
-    s0++;
-    v0 = (i32(s0) < i32(s7));
-    s1 += s6;
-    if (v0 != 0) goto loc_8002DD6C;
-loc_8002E274:
-    ra = lw(sp + 0x84);
-    fp = lw(sp + 0x80);
-    s7 = lw(sp + 0x7C);
-    s6 = lw(sp + 0x78);
-    s5 = lw(sp + 0x74);
-    s4 = lw(sp + 0x70);
-    s3 = lw(sp + 0x6C);
-    s2 = lw(sp + 0x68);
-    s1 = lw(sp + 0x64);
-    s0 = lw(sp + 0x60);
-    sp += 0x88;
-    return;
 }

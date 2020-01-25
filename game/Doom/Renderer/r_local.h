@@ -9,6 +9,10 @@
 
 struct line_t;
 
+// Min/max light diminishing intensities
+static constexpr int32_t LIGHT_INTENSTIY_MIN = 64;
+static constexpr int32_t LIGHT_INTENSTIY_MAX = 160;
+
 // Represents a vertex in a line
 struct vertex_t {
     fixed_t     x;
@@ -126,8 +130,8 @@ struct seg_t {
     VmPtr<sector_t>     frontsector;
     VmPtr<sector_t>     backsector;
     uint16_t            flags;              // TODO: find out more about the flags
-    int16_t             begScreenX;         // First visible screenspace column: only set if SGF_VISIBLE_COLS is set
-    int16_t             endScreenX;         // Last visible screenspace column: only set if SGF_VISIBLE_COLS is set
+    int16_t             visibleBegX;        // First visible screenspace column: only set if SGF_VISIBLE_COLS is set
+    int16_t             visibleEndX;        // Last visible screenspace column (inclusive): only set if SGF_VISIBLE_COLS is set
     uint16_t            pad;                // TODO: used for any purpose, or just padding?
 };
 

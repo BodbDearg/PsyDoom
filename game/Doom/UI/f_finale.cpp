@@ -8,6 +8,7 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
+#include "Doom/Renderer/r_data.h"
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
 
@@ -159,8 +160,7 @@ void F1_Drawer() noexcept {
     a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F7C);                               // Load from: gPaletteClutId_Main (800A9084)
+    a3 = *gPaletteClutId_Main;
     s1 = 0x2D;                                          // Result = 0000002D
     I_CacheAndDrawSprite();
     v0 = lw(gp + 0xB30);                                // Load from: 80078110
@@ -876,8 +876,7 @@ void F2_Drawer() noexcept {
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7BB0;                                       // Result = gTexInfo_DEMON[0] (80097BB0)
     a1 = 0;                                             // Result = 00000000
-    s2 = 0x800B0000;                                    // Result = 800B0000
-    s2 -= 0x6F7C;                                       // Result = gPaletteClutId_Main (800A9084)
+    s2 = gPaletteClutId_Main;
     a3 = lh(s2);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0;                                             // Result = 00000000
     I_CacheAndDrawSprite();

@@ -7,6 +7,7 @@
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_tick.h"
+#include "Doom/Renderer/r_data.h"
 #include "PsxVm/PsxVm.h"
 
 void START_ControlsScreen() noexcept {
@@ -189,8 +190,7 @@ loc_80037BAC:
     a0 += 0x7AB0;                                       // Result = gTexInfo_MARB01[0] (80097AB0)
     a1 = s0 << 6;
     a2 = s1 << 6;
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F7C);                               // Load from: gPaletteClutId_Main (800A9084)
+    a3 = *gPaletteClutId_Main;
     s0++;
     I_CacheAndDrawSprite();
     v0 = (i32(s0) < 4);
@@ -257,8 +257,7 @@ loc_80037CC4:
     sw(v0, sp + 0x18);
     sw(v0, sp + 0x1C);
     a0 = lhu(s3);                                       // Load from: gTexInfo_BUTTONS[2] (80097ADA)
-    a1 = 0x800B0000;                                    // Result = 800B0000
-    a1 = lh(a1 - 0x6F7C);                               // Load from: gPaletteClutId_Main (800A9084)
+    a1 = *gPaletteClutId_Main;
     v0 = lbu(s3 - 0x2);                                 // Load from: gTexInfo_BUTTONS[2] (80097AD8)
     t0 = lbu(s3 - 0x1);                                 // Load from: gTexInfo_BUTTONS[2] (80097AD9)
     v0 += v1;

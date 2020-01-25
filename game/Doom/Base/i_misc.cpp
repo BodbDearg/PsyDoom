@@ -1,6 +1,7 @@
 #include "i_misc.h"
 
 #include "Doom/Game/p_tick.h"
+#include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_main.h"
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
@@ -623,8 +624,7 @@ loc_8003AD04:
     if (v0 != 0) goto loc_8003AD64;
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7A70;                                       // Result = gTexInfo_PAUSE[0] (80097A70)
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F7C);                               // Load from: gPaletteClutId_Main (800A9084)
+    a3 = *gPaletteClutId_Main;
     a2 = 0x6C;                                          // Result = 0000006C
     I_CacheAndDrawSprite();
 loc_8003AD64:
@@ -935,12 +935,11 @@ loc_8003B1E8:
     v1 += 9;                                            // Result = 0000000C
 loc_8003B210:
     v0 = v1 << 1;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6F7C;                                       // Result = gPaletteClutId_Main (800A9084)
+    at = gPaletteClutId_Main;
     at += v0;
     v0 = lhu(at);
     at = 0x80070000;                                    // Result = 80070000
-    sh(v0, at + 0x7F7C);                                // Store to: g3dViewPaletteClutId (80077F7C)
+    *g3dViewPaletteClutId = (uint16_t) v0;
     return;
 }
 

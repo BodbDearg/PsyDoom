@@ -3176,18 +3176,17 @@ loc_8004EBEC:
     return;
 }
 
-void LIBGPU_SetSemiTrans() noexcept {
-loc_8004EC04:
-    if (a1 == 0) goto loc_8004EC18;
-    v0 = lbu(a0 + 0x7);
-    v0 |= 2;
-    goto loc_8004EC24;
-loc_8004EC18:
-    v0 = lbu(a0 + 0x7);
-    v0 &= 0xFD;
-loc_8004EC24:
-    sb(v0, a0 + 0x7);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Enable/disable semi-transparency on the specified drawing primitive
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetSemiTrans(void* const pPrim, const bool bTransparent) noexcept {
+    uint8_t& primCode = ((uint8_t*) pPrim)[7];
+
+    if (bTransparent) {
+        primCode |= 0x2;
+    } else {
+        primCode &= 0xFD;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -3216,12 +3215,12 @@ void LIBGPU_SetPolyF3() noexcept {
     return;
 }
 
-void LIBGPU_SetPolyFT3() noexcept {
-    v0 = 7;                                             // Result = 00000007
-    sb(v0, a0 + 0x3);
-    v0 = 0x24;                                          // Result = 00000024
-    sb(v0, a0 + 0x7);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize a flat shaded textured triangle primitive
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetPolyFT3(POLY_FT3& poly) noexcept {
+    LIBGPU_setlen(poly, 7);
+    poly.code = 0x24;
 }
 
 void LIBGPU_SetPolyG3() noexcept {

@@ -539,8 +539,8 @@ void R_AddLine(seg_t& seg) noexcept {
     // Save the visible column range and seg flags if at least 1 column is visible
     if (visibleEndX >= visibleBegX) {
         // Presumably the +/- 1 here are to try and paper over some of the cracks/inaccuracies?
-        seg.begScreenX = (int16_t)(visibleBegX - 1);
-        seg.endScreenX = (int16_t)(visibleEndX + 1);
+        seg.visibleBegX = (int16_t)(visibleBegX - 1);
+        seg.visibleEndX = (int16_t)(visibleEndX + 1);
         seg.flags |= SGF_VISIBLE_COLS;
     }
     

@@ -4,6 +4,9 @@
 
 struct RECT;
 
+// Constant for an invalid or undefined (not yet set) upload frame number for a texture
+static constexpr uint32_t TEX_INVALID_UPLOAD_FRAME_NUM = UINT32_MAX;
+
 // Stores information about a texture, including it's dimensions, lump info and texture cache info
 struct texture_t {
     int16_t                     offsetX;
@@ -37,6 +40,8 @@ extern const VmPtr<VmPtr<texture_t>>    gpTextures;
 extern const VmPtr<VmPtr<texture_t>>    gpSkyTexture;
 extern const VmPtr<VmPtr<int32_t>>      gpTextureTranslation;
 extern const VmPtr<VmPtr<light_t>>      gpLightsLump;
+extern const VmPtr<uint16_t>            gPaletteClutId_Main;
+extern const VmPtr<uint16_t>            g3dViewPaletteClutId;
 
 void R_InitData() noexcept;
 void R_InitTextures() noexcept;

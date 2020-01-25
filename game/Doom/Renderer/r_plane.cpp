@@ -4,6 +4,7 @@
 #include "Doom/Base/w_wad.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
+#include "r_data.h"
 #include "r_main.h"
 
 void R_DrawSubsectorFlat() noexcept {
@@ -426,8 +427,7 @@ loc_8002E918:
     v0 = 0x800A0000;                                    // Result = 800A0000
     v0 -= 0x7F30;                                       // Result = 800980D0
     s3 = v1 + v0;                                       // Result = 80098710
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lhu(v1 + 0x7F7C);                              // Load from: g3dViewPaletteClutId (80077F7C)
+    v1 = *g3dViewPaletteClutId;
     s4 = lw(sp + 0x8);
     v0 = 7;                                             // Result = 00000007
     at = 0x1F800000;                                    // Result = 1F800000

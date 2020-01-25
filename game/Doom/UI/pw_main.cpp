@@ -8,6 +8,7 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_password.h"
 #include "Doom/Game/p_tick.h"
+#include "Doom/Renderer/r_data.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 
@@ -260,8 +261,7 @@ loc_80037158:
     a0 += 0x7AB0;                                       // Result = gTexInfo_MARB01[0] (80097AB0)
     a1 = s0 << 6;
     a2 = s1 << 6;
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F7C);                               // Load from: gPaletteClutId_Main (800A9084)
+    a3 = *gPaletteClutId_Main;
     s0++;
     I_CacheAndDrawSprite();
     v0 = (i32(s0) < 4);

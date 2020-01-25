@@ -7,6 +7,7 @@
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_password.h"
+#include "Doom/Renderer/r_data.h"
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
 
@@ -516,8 +517,7 @@ loc_8003CEE4:
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F7C);                               // Load from: gPaletteClutId_Main (800A9084)
+    a3 = *gPaletteClutId_Main;
     a2 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x28);
     sw(s1, sp + 0x24);
@@ -632,8 +632,7 @@ loc_8003D0B4:
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F7C);                               // Load from: gPaletteClutId_Main (800A9084)
+    a3 = *gPaletteClutId_Main;
     a2 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x50);
     sw(s1, sp + 0x4C);
@@ -856,8 +855,7 @@ loc_8003D448:
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F7C);                               // Load from: gPaletteClutId_Main (800A9084)
+    a3 = *gPaletteClutId_Main;
     a2 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x48);
     sw(s3, sp + 0x44);

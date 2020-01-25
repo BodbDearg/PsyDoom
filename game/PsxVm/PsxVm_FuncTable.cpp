@@ -718,9 +718,7 @@ extern void LIBGPU_AddPrim() noexcept;
 extern void LIBGPU_AddPrims() noexcept;
 extern void LIBGPU_CatPrim() noexcept;
 extern void LIBGPU_TermPrim() noexcept;
-extern void LIBGPU_SetSemiTrans() noexcept;
 extern void LIBGPU_SetPolyF3() noexcept;
-extern void LIBGPU_SetPolyFT3() noexcept;
 extern void LIBGPU_SetPolyG3() noexcept;
 extern void LIBGPU_SetPolyGT3() noexcept;
 extern void LIBGPU_SetPolyF4() noexcept;
@@ -1631,9 +1629,7 @@ namespace PsxVm {
         { 0x8004EB8C, &LIBGPU_AddPrims },
         { 0x8004EBC8, &LIBGPU_CatPrim },
         { 0x8004EBEC, &LIBGPU_TermPrim },
-        { 0x8004EC04, &LIBGPU_SetSemiTrans },
         { 0x8004EC54, &LIBGPU_SetPolyF3 },
-        { 0x8004EC68, &LIBGPU_SetPolyFT3 },
         { 0x8004EC7C, &LIBGPU_SetPolyG3 },
         { 0x8004EC90, &LIBGPU_SetPolyGT3 },
         { 0x8004ECA4, &LIBGPU_SetPolyF4 },

@@ -3,6 +3,7 @@
 #include "d_vsprintf.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
+#include "Doom/Renderer/r_data.h"
 #include "PcPsx/Video.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBAPI.h"
@@ -1223,8 +1224,7 @@ loc_80033AC4:
     sh(v1, at + 0x210);                                 // Store to: 1F800210
     at = 0x1F800000;                                    // Result = 1F800000
     sh(v1, at + 0x220);                                 // Store to: 1F800220
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lhu(v1 - 0x6F7C);                              // Load from: gPaletteClutId_Main (800A9084)
+    v1 = *gPaletteClutId_Main;
     a1 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x2C);
     sw(s6, sp + 0x28);
