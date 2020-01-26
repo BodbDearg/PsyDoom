@@ -93,7 +93,12 @@ static void copyPsxToSdlFramebuffer() noexcept {
 static void handleSdlWindowEvents() noexcept {
     // TODO: handle events and maybe move this elsewhere
     SDL_Event event = {};    
-    while (SDL_PollEvent(&event) != 0);
+    while (SDL_PollEvent(&event) != 0) {
+        // TODO: temp hack to allow quitting
+        if (event.type == SDL_QUIT) {
+            std::exit(0);
+        }
+    }
 }
 
 static void doFrameRateLimiting() noexcept {
