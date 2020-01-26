@@ -272,8 +272,6 @@ extern void R_InitSprites() noexcept;
 extern void R_TextureNumForName() noexcept;
 extern void R_FlatNumForName() noexcept;
 extern void R_InitPalette() noexcept;
-extern void R_DrawSubsectorFlat() noexcept;
-extern void R_DrawFlatSpans() noexcept;
 extern void R_DrawSubsectorSprites() noexcept;
 extern void R_DrawWeapon() noexcept;
 extern void R_Init() noexcept;
@@ -1183,8 +1181,6 @@ namespace PsxVm {
         { 0x8002BDA4, &R_TextureNumForName },
         { 0x8002BE68, &R_FlatNumForName },
         { 0x8002BF2C, &R_InitPalette },
-        { 0x8002E2A8, &R_DrawSubsectorFlat },
-        { 0x8002E714, &R_DrawFlatSpans },
         { 0x8002F330, &R_DrawSubsectorSprites },
         { 0x8002FE34, &R_DrawWeapon },
         { 0x800305B0, &R_Init },

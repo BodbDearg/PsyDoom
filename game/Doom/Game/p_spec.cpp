@@ -116,8 +116,7 @@ loc_800260A4:
     a0 = lw(v1 + 0x8);
     a1 = v0;
     sw(a1, v1 + 0x4);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EDC);                               // Load from: gpFlatTextures (80078124)
+    v1 = *gpFlatTextures;
     v0 = a0 << 5;
     v0 += v1;
     v0 = lhu(v0 + 0xA);
@@ -138,8 +137,7 @@ loc_800260FC:
     v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
     a0 = s0 << 5;
     v0 = lw(v0 + 0x8);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EDC);                               // Load from: gpFlatTextures (80078124)
+    v1 = *gpFlatTextures;
     v0 <<= 5;
     v0 += v1;
     v0 = lbu(v0 + 0x8);
@@ -147,8 +145,7 @@ loc_800260FC:
     sb(v0, v1 + 0x8);
     v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
     v0 = lw(v0 + 0x8);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EDC);                               // Load from: gpFlatTextures (80078124)
+    v1 = *gpFlatTextures;
     v0 <<= 5;
     v0 += v1;
     v0 = lbu(v0 + 0x9);
@@ -156,8 +153,7 @@ loc_800260FC:
     sb(v0, v1 + 0x9);
     a1 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
     v0 = lw(a1 + 0x8);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EDC);                               // Load from: gpFlatTextures (80078124)
+    v1 = *gpFlatTextures;
     v0 <<= 5;
     v0 += v1;
     v0 = lhu(v0 + 0xA);
@@ -1267,10 +1263,8 @@ loc_80026FC8:
     t3 = *gGameTic;
     t2 = *gpTextureTranslation;
     t1 = *gpTextures;
-    t0 = 0x80070000;                                    // Result = 80070000
-    t0 = lw(t0 + 0x7F60);                               // Load from: gpFlatTranslation (80077F60)
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 = lw(a3 - 0x7EDC);                               // Load from: gpFlatTextures (80078124)
+    t0 = *gpFlatTranslation;
+    a3 = *gpFlatTextures;
 loc_8002701C:
     v0 = lw(a0 + 0x4);
     v0 &= t3;

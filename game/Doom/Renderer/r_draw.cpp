@@ -142,16 +142,12 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     sector_t& drawsec = **gpCurDrawSector;
     
     if (*gViewZ > drawsec.floorheight) {
-        a0 = ptrToVmAddr(&drawleaf);
-        a1 = 0;
-        R_DrawSubsectorFlat();
+        R_DrawSubsectorFlat(drawleaf, false);
     }
     
     // Draw the ceiling if below it and it is not a sky ceiling
     if ((drawsec.ceilingpic != -1) && (*gViewZ < drawsec.ceilingheight)) {
-        a0 = ptrToVmAddr(&drawleaf);
-        a1 = 1;
-        R_DrawSubsectorFlat();
+        R_DrawSubsectorFlat(drawleaf, true);
     }
     
     // Draw all sprites in the subsector

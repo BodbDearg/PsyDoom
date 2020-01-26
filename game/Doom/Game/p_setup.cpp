@@ -788,16 +788,14 @@ loc_80022E94:
         v1 <<= 5;
         if (bJump) goto loc_80022ECC;
     }
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EDC);                               // Load from: gpFlatTextures (80078124)
+    v0 = *gpFlatTextures;
     a0 = v1 + v0;
     v0 = lhu(a0 + 0xA);
     if (v0 != 0) goto loc_80022ECC;
     I_CacheTex();
 loc_80022ECC:
     v0 = lw(s1);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7EDC);                               // Load from: gpFlatTextures (80078124)
+    v1 = *gpFlatTextures;
     v0 <<= 5;
     a0 = v0 + v1;
     v0 = lhu(a0 + 0xA);

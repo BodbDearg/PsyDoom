@@ -37,8 +37,10 @@ struct light_t {
 };
 
 extern const VmPtr<VmPtr<texture_t>>    gpTextures;
+extern const VmPtr<VmPtr<texture_t>>    gpFlatTextures;
 extern const VmPtr<VmPtr<texture_t>>    gpSkyTexture;
 extern const VmPtr<VmPtr<int32_t>>      gpTextureTranslation;
+extern const VmPtr<VmPtr<int32_t>>      gpFlatTranslation;
 extern const VmPtr<VmPtr<light_t>>      gpLightsLump;
 extern const VmPtr<uint16_t>            gPaletteClutId_Main;
 extern const VmPtr<uint16_t>            g3dViewPaletteClutId;

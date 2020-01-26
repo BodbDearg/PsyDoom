@@ -8,11 +8,15 @@
 
 // Details about all of the textures in the game and the sky texture
 const VmPtr<VmPtr<texture_t>>   gpTextures(0x80078128);
+const VmPtr<VmPtr<texture_t>>   gpFlatTextures(0x80078124);
 const VmPtr<VmPtr<texture_t>>   gpSkyTexture(0x80078050);
 
 // Texture translation: converts from an input texture index to the actual texture index to render for that input index.
 // Used to implement animated textures whereby the translation is simply updated as the texture animates.
 const VmPtr<VmPtr<int32_t>>     gpTextureTranslation(0x80077F6C);
+
+// Flat translation: similar function to texture translation except for flats rather than wall textures.
+const VmPtr<VmPtr<int32_t>>     gpFlatTranslation(0x80077F60);
 
 // The loaded lights lump
 const VmPtr<VmPtr<light_t>>     gpLightsLump(0x80078068);
@@ -150,10 +154,10 @@ loc_8002BB50:
     a0 = lw(gp + 0xCD8);                                // Load from: gFirstFlatLumpNum (800782B8)
     v1 = lw(gp + 0xBE0);                                // Load from: gNumFlatLumps (800781C0)
     a1 = lw(gp + 0xB90);                                // Load from: gLastFlatLumpNum (80078170)
-    sw(v0, gp + 0xB44);                                 // Store to: gpFlatTextures (80078124)
+    *gpFlatTextures = v0;
     v1 <<= 5;
     v1 += v0;
-    sw(v1, gp + 0x980);                                 // Store to: gpFlatTranslation (80077F60)
+    *gpFlatTranslation = v1;
     v1 = v0;
     v0 = (i32(a1) < i32(a0));
     if (v0 != 0) goto loc_8002BC18;
@@ -175,7 +179,7 @@ loc_8002BC18:
     a1 = lw(gp + 0xBE0);                                // Load from: gNumFlatLumps (800781C0)
     a0 = 0;                                             // Result = 00000000
     if (i32(a1) <= 0) goto loc_8002BC44;
-    v1 = lw(gp + 0x980);                                // Load from: gpFlatTranslation (80077F60)
+    v1 = *gpFlatTranslation;
 loc_8002BC2C:
     sw(a0, v1);
     a0++;
