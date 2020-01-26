@@ -39,6 +39,12 @@ macro(compiler_specific_setup)
         set(CMAKE_C_FLAGS -g)
         set(CMAKE_CXX_FLAGS -g)
     endif()
+
+    # MSVC: statically link against the CRT.
+    # Doing this for end user convenience to try and avoid missing CRT dll issues.
+    if (COMPILER_MSVC)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
 endmacro()
 
 macro(build_setup)

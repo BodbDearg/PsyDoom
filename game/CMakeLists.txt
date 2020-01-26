@@ -218,7 +218,7 @@ target_compile_definitions(${GAME_TGT_NAME} PRIVATE
 
 # Specify include dirs
 include_directories(${INCLUDE_PATHS})
-
+    
 # Link against Avocado
 target_link_libraries(${GAME_TGT_NAME} ${AVOCADO_TGT_NAME})
 
@@ -228,8 +228,10 @@ if (COMPILER_MSVC)
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4146)     # Negating unsigned integer
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4245)     # Conversion from signed to unsigned
     target_compile_options(${GAME_TGT_NAME} PUBLIC /wd4702)     # Unreachable code
-    target_compile_options(${GAME_TGT_NAME} PUBLIC /W4)
-    target_compile_definitions(${GAME_TGT_NAME} PUBLIC -D_CRT_SECURE_NO_WARNINGS)   # MSVC: Don't complain about using regular 'std::fopen()' etc.    
+    target_compile_options(${GAME_TGT_NAME} PUBLIC /W4)         # Enable all warnings (except the ones disabled above)
+    
+    # MSVC: Don't complain about using regular 'std::fopen()' etc.
+    target_compile_definitions(${GAME_TGT_NAME} PUBLIC -D_CRT_SECURE_NO_WARNINGS)
 else()
     add_common_target_compile_options(${GAME_TGT_NAME})
 endif()
