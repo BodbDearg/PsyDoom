@@ -43,6 +43,11 @@ Interrupt*              PsxVm::gpInterrupt;
 uint8_t*                PsxVm::gpRam;
 uint8_t*                PsxVm::gpScratchpad;
 
+// TODO: this is a temp hack for gamepad support
+static SDL_GameController*  gpGameController;
+static SDL_Joystick*        gpJoystick;
+static SDL_JoystickID       gJoystickId;
+
 namespace PsxVm {
     // Address to function lookup for the VM
     extern std::map<uint32_t, VmFunc> gFuncTable;
@@ -63,6 +68,38 @@ const std::string gPadBtnKey_L2 = "controller/1/l2";
 const std::string gPadBtnKey_R2 = "controller/1/r2";
 const std::string gPadBtnKey_L1 = "controller/1/l1";
 const std::string gPadBtnKey_R1 = "controller/1/r1";
+
+// TODO: temp function to check for game controller connection/disconnection.
+// Eventually should live elsewhere and be broken up into separate close / rescan functions.
+static void rescanGameControllers() noexcept {
+    if (gpGameController) {
+        if (!SDL_GameControllerGetAttached(gpGameController)) {
+            // Gamepad disconnected
+            SDL_GameControllerClose(gpGameController);
+            gpGameController = nullptr;
+            gpJoystick = nullptr;
+            gJoystickId = {};
+        }
+    } else {
+        // No gamepad: see if there are any joysticks connected.
+        // Note: a return of < 0 means an error, which we will ignore:
+        const int numJoysticks = SDL_NumJoysticks();
+
+        for (int joyIdx = 0; joyIdx < numJoysticks; ++joyIdx) {
+            // If we find a valid game controller then try to open it.
+            // If we succeed then our work is done!
+            if (SDL_IsGameController(joyIdx)) {           
+                gpGameController = SDL_GameControllerOpen(joyIdx);
+
+                if (gpGameController) {
+                    gpJoystick = SDL_GameControllerGetJoystick(gpGameController);
+                    gJoystickId = SDL_JoystickInstanceID(gpJoystick);
+                    break;
+                }       
+            }
+        }        
+    }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Setup and clear pointers for the VM environment
@@ -266,8 +303,9 @@ bool PsxVm::init(
     gInputMgr.reset(new InputManager());
     InputManager::setInstance(gInputMgr.get());
 
-    // Setup sound
-    SDL_InitSubSystem(SDL_INIT_AUDIO);
+    // Setup sound.
+    // TODO: also setting up game controllers here - move elsewhere.
+    SDL_InitSubSystem(SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER);
     Sound::init();
     Sound::play();
     return true;
@@ -284,27 +322,99 @@ void PsxVm::shutdown() noexcept {
 void PsxVm::updateInput() noexcept {
     // TODO: support configurable input
     // TODO: support game controller
-    ASSERT(InputManager::getInstance());
-    InputManager& inputMgr = *InputManager::getInstance();
     const uint8_t* const pKbState = SDL_GetKeyboardState(nullptr);
 
-    inputMgr.setState(gPadBtnKey_Up, InputManager::AnalogValue(pKbState[SDL_SCANCODE_UP] != 0));
-    inputMgr.setState(gPadBtnKey_Down, InputManager::AnalogValue(pKbState[SDL_SCANCODE_DOWN] != 0));
-    inputMgr.setState(gPadBtnKey_Left, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LEFT] != 0));
-    inputMgr.setState(gPadBtnKey_Right, InputManager::AnalogValue(pKbState[SDL_SCANCODE_RIGHT] != 0));
+    InputManager::AnalogValue btnUp = (pKbState[SDL_SCANCODE_UP] != 0);
+    InputManager::AnalogValue btnDown = (pKbState[SDL_SCANCODE_DOWN] != 0);
+    InputManager::AnalogValue btnLeft = (pKbState[SDL_SCANCODE_LEFT] != 0);
+    InputManager::AnalogValue btnRight = (pKbState[SDL_SCANCODE_RIGHT] != 0);
+    InputManager::AnalogValue btnL1 = (pKbState[SDL_SCANCODE_A] != 0);
+    InputManager::AnalogValue btnR1 = (pKbState[SDL_SCANCODE_D] != 0);
+    InputManager::AnalogValue btnL2 = ((pKbState[SDL_SCANCODE_PAGEDOWN] != 0) || (pKbState[SDL_SCANCODE_Q] != 0));
+    InputManager::AnalogValue btnR2 = ((pKbState[SDL_SCANCODE_PAGEUP] != 0) || (pKbState[SDL_SCANCODE_E] != 0));
+    InputManager::AnalogValue btnCircle = (pKbState[SDL_SCANCODE_SPACE] != 0);
+    InputManager::AnalogValue btnSquare = ((pKbState[SDL_SCANCODE_LSHIFT] != 0) || (pKbState[SDL_SCANCODE_RSHIFT] != 0));
+    InputManager::AnalogValue btnTriangle = ((pKbState[SDL_SCANCODE_LCTRL] != 0) || (pKbState[SDL_SCANCODE_RCTRL] != 0) || (pKbState[SDL_SCANCODE_F] != 0));
+    InputManager::AnalogValue btnCross = ((pKbState[SDL_SCANCODE_LALT] != 0) || (pKbState[SDL_SCANCODE_RALT] != 0));
+    InputManager::AnalogValue btnStart = (pKbState[SDL_SCANCODE_RETURN] != 0);
+    InputManager::AnalogValue btnSelect = (pKbState[SDL_SCANCODE_TAB] != 0);
 
-    inputMgr.setState(gPadBtnKey_L1, InputManager::AnalogValue(pKbState[SDL_SCANCODE_A] != 0));
-    inputMgr.setState(gPadBtnKey_R1, InputManager::AnalogValue(pKbState[SDL_SCANCODE_D] != 0));
-    inputMgr.setState(gPadBtnKey_L2, InputManager::AnalogValue(pKbState[SDL_SCANCODE_PAGEDOWN] != 0 || pKbState[SDL_SCANCODE_Q] != 0));
-    inputMgr.setState(gPadBtnKey_R2, InputManager::AnalogValue(pKbState[SDL_SCANCODE_PAGEUP] != 0|| pKbState[SDL_SCANCODE_E] != 0));
+    // TODO: temp hack for gamepad support
+    rescanGameControllers();
 
-    inputMgr.setState(gPadBtnKey_Circle, InputManager::AnalogValue(pKbState[SDL_SCANCODE_SPACE] != 0));
-    inputMgr.setState(gPadBtnKey_Square, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LSHIFT] != 0 || pKbState[SDL_SCANCODE_RSHIFT] != 0));
-    inputMgr.setState(gPadBtnKey_Triangle, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LCTRL] != 0 || pKbState[SDL_SCANCODE_RCTRL] != 0 || pKbState[SDL_SCANCODE_F] != 0));
-    inputMgr.setState(gPadBtnKey_Cross, InputManager::AnalogValue(pKbState[SDL_SCANCODE_LALT] != 0 || pKbState[SDL_SCANCODE_RALT] != 0));
+    if (gpGameController) {
+        auto setValueIfPressed = [&](InputManager::AnalogValue& value, const SDL_GameControllerButton controllerBtn) noexcept {
+            if (SDL_GameControllerGetButton(gpGameController, controllerBtn)) {
+                value.value = UINT8_MAX;
+            }
+        };
 
-    inputMgr.setState(gPadBtnKey_Start, InputManager::AnalogValue(pKbState[SDL_SCANCODE_RETURN] != 0));
-    inputMgr.setState(gPadBtnKey_Select, InputManager::AnalogValue(pKbState[SDL_SCANCODE_TAB] != 0));
+        auto setValueIfTrigPressed = [&](InputManager::AnalogValue& value, const SDL_GameControllerAxis axis) noexcept {
+            if (SDL_GameControllerGetAxis(gpGameController, axis) >= 0.5f) {
+                value.value = UINT8_MAX;
+            }
+        };
+
+        setValueIfPressed(btnUp, SDL_CONTROLLER_BUTTON_DPAD_UP);
+        setValueIfPressed(btnDown, SDL_CONTROLLER_BUTTON_DPAD_DOWN);
+        setValueIfPressed(btnLeft, SDL_CONTROLLER_BUTTON_DPAD_LEFT);
+        setValueIfPressed(btnRight, SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
+        setValueIfPressed(btnL2, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
+        setValueIfPressed(btnR2, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
+        setValueIfPressed(btnTriangle, SDL_CONTROLLER_BUTTON_Y);
+        setValueIfPressed(btnSquare, SDL_CONTROLLER_BUTTON_X);
+        setValueIfPressed(btnCircle, SDL_CONTROLLER_BUTTON_B);
+        setValueIfPressed(btnCross, SDL_CONTROLLER_BUTTON_A);
+        setValueIfPressed(btnStart, SDL_CONTROLLER_BUTTON_START);
+        setValueIfPressed(btnSelect, SDL_CONTROLLER_BUTTON_BACK);
+
+        const int16_t DIGITAL_THRESHOLD = INT16_MAX / 2;
+
+        if (SDL_GameControllerGetAxis(gpGameController, SDL_CONTROLLER_AXIS_LEFTX) >= DIGITAL_THRESHOLD) {
+            btnR1.value = UINT8_MAX;
+        } else if (SDL_GameControllerGetAxis(gpGameController, SDL_CONTROLLER_AXIS_LEFTX) <= -DIGITAL_THRESHOLD) {
+            btnL1.value = UINT8_MAX;
+        }
+
+        if (SDL_GameControllerGetAxis(gpGameController, SDL_CONTROLLER_AXIS_LEFTY) >= DIGITAL_THRESHOLD) {
+            btnDown.value = UINT8_MAX;
+        } else if (SDL_GameControllerGetAxis(gpGameController, SDL_CONTROLLER_AXIS_LEFTY) <= -DIGITAL_THRESHOLD) {
+            btnUp.value = UINT8_MAX;
+        }
+
+        if (SDL_GameControllerGetAxis(gpGameController, SDL_CONTROLLER_AXIS_RIGHTX) >= DIGITAL_THRESHOLD) {
+            btnRight.value = UINT8_MAX;
+        } else if (SDL_GameControllerGetAxis(gpGameController, SDL_CONTROLLER_AXIS_RIGHTX) <= -DIGITAL_THRESHOLD) {
+            btnLeft.value = UINT8_MAX;
+        }
+
+        if (SDL_GameControllerGetAxis(gpGameController, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) >= DIGITAL_THRESHOLD) {
+            btnTriangle.value = UINT8_MAX;
+        }
+
+        if (SDL_GameControllerGetAxis(gpGameController, SDL_CONTROLLER_AXIS_TRIGGERLEFT) >= DIGITAL_THRESHOLD) {
+            btnSquare.value = UINT8_MAX;
+        }
+    }
+
+    // Update the emulator controller 
+    ASSERT(InputManager::getInstance());
+    InputManager& inputMgr = *InputManager::getInstance();
+
+    inputMgr.setState(gPadBtnKey_Up, btnUp);
+    inputMgr.setState(gPadBtnKey_Down, btnDown);
+    inputMgr.setState(gPadBtnKey_Left, btnLeft);
+    inputMgr.setState(gPadBtnKey_Right, btnRight);
+    inputMgr.setState(gPadBtnKey_L1, btnL1);
+    inputMgr.setState(gPadBtnKey_R1, btnR1);
+    inputMgr.setState(gPadBtnKey_L2, btnL2);
+    inputMgr.setState(gPadBtnKey_R2, btnR2);
+    inputMgr.setState(gPadBtnKey_Circle, btnCircle);
+    inputMgr.setState(gPadBtnKey_Square, btnSquare);
+    inputMgr.setState(gPadBtnKey_Triangle, btnTriangle);
+    inputMgr.setState(gPadBtnKey_Cross, btnCross);
+    inputMgr.setState(gPadBtnKey_Start, btnStart);
+    inputMgr.setState(gPadBtnKey_Select, btnSelect);
 
     gpSystem->controller->update();
 }
