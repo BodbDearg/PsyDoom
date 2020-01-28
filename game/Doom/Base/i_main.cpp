@@ -770,8 +770,11 @@ void I_DrawPresent() noexcept {
     a0 = 0;
     LIBGPU_DrawSync();
 
-    // Wait for a vblank to occur
-    LIBETC_VSync(0);
+    // PC-PSX: this interferes with frame pacing in the new host environment - disabling
+    #if !PC_PSX_DOOM_MODS
+        // Wait for a vblank to occur
+        LIBETC_VSync(0);
+    #endif
 
     // Swap the framebuffers
     v1 = lw(0x800780F8);            // Load from: gCurDrawDispBufferIdx (800780F8)    
@@ -787,6 +790,11 @@ void I_DrawPresent() noexcept {
     // Frame rate limiting to 30 Hz.
     // Continously poll and wait until at least 2 vblanks have elapsed before continuing.
     do {
+        // PC-PSX: wait one 30 Hz tick
+        #if PC_PSX_DOOM_MODS
+            PcPsx::doFrameRateLimiting();
+        #endif
+
         *gTotalVBlanks = LIBETC_VSync(-1);
         *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
     } while (*gElapsedVBlanks < 2);
@@ -796,6 +804,11 @@ void I_DrawPresent() noexcept {
     // Probably done so the simulation remains consistent!
     if (*gbDemoPlayback || *gbDemoRecording) {
         while (*gElapsedVBlanks < 4) {
+            // PC-PSX: wait one 30 Hz tick
+            #if PC_PSX_DOOM_MODS
+                PcPsx::doFrameRateLimiting();
+            #endif
+
             *gTotalVBlanks = LIBETC_VSync(-1);
             *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
         }

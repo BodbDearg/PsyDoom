@@ -135,15 +135,17 @@ static void handleSdlWindowEvents() noexcept {
     }
 }
 
-static void doFrameRateLimiting() noexcept {
-    const uint32_t startTickCount = SDL_GetTicks();
+void doFrameRateLimiting() noexcept {
+    // Make sure sound is up to date on entry
+    emulate_sound_if_required();
 
+    // Limit the frame rate to 30 Hz
     while (true) {
         const uint32_t tickCount = SDL_GetTicks();
         const uint32_t oneFrameTickCount = 1000 / 30;
         const uint32_t elapsedTicks = tickCount - gLastFrameTickCount;
 
-        if (elapsedTicks < oneFrameTickCount - 1) {
+        if (elapsedTicks < oneFrameTickCount) {
             emulate_sound_if_required();
             std::this_thread::yield();
         } else {
@@ -152,12 +154,13 @@ static void doFrameRateLimiting() noexcept {
         }
     }
 
-    // Simulate the amount of emulator frames we waited for
-    const uint32_t numEmulatorFramesPassed = (gLastFrameTickCount - startTickCount) / 60;
-
-    for (uint32_t i = 0; i < numEmulatorFramesPassed; ++i) {
+    // Simulate the amount of emulator frames we waited for (2 60 Hz frames)
+    for (uint32_t i = 0; i < 2; ++i) {
         emulate_frame();
     }
+
+    // Make sure sound is up to date on exit
+    emulate_sound_if_required();
 }
 
 void initVideo() noexcept {
@@ -250,12 +253,11 @@ void shutdownVideo() noexcept {
 }
 
 void displayFramebuffer() noexcept {    
-    handleSdlWindowEvents();
-    PsxVm::updateInput();
+    handleSdlWindowEvents();    
     copyPsxToSdlFramebuffer();
     presentSdlFramebuffer();
     emulate_sound_if_required();
-    doFrameRateLimiting();
+    PsxVm::updateInput();
 }
 
 SDL_Window* getWindow() noexcept {
