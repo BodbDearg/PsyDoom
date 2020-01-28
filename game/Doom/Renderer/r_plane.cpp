@@ -3,13 +3,28 @@
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
-#include "PcPsx/Finally.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "r_data.h"
 #include "r_local.h"
 #include "r_main.h"
+
+// Stores the extents of a horizontal flat span
+struct span_t {
+    int32_t bounds[2];
+};
+
+// Index into flat span bounds
+enum : uint32_t {
+    SPAN_LEFT,
+    SPAN_RIGHT
+};
+
+// The bounds of each flat span for the currently drawing flat
+static const VmPtr<span_t[VIEW_3D_H]> gFlatSpans(0x800980D0);
+
+// Internal plane rendering function only: forward declare here
+static void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& tex) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw either the floor or ceiling flat for a subsector's leaf
@@ -68,472 +83,354 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
     R_DrawFlatSpans(leaf, planeZ >> FRACBITS, tex);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draw the horizontal flat spans for the specified subsector's leaf
+//------------------------------------------------------------------------------------------------------------------------------------------
 void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& tex) noexcept {
-    a0 = ptrToVmAddr(&leaf);
-    a1 = planeViewZ;
-    a2 = ptrToVmAddr(&tex);
+    // Compute the screen x and y values for each leaf vertex and save to scratchpad memory for fast access
+    uint32_t* const pVerticesScreenX = (uint32_t*) getScratchAddr(160);
+    uint32_t* const pVerticesScreenY = pVerticesScreenX + (MAX_LEAF_EDGES + 1);
 
-    sp -= 0x60;
-    sw(fp, sp + 0x58);
-    sw(s7, sp + 0x54);
-    sw(s6, sp + 0x50);
-    sw(s5, sp + 0x4C);
-    sw(s4, sp + 0x48);
-    sw(s3, sp + 0x44);
-    sw(s2, sp + 0x40);
-    sw(s1, sp + 0x3C);
-    sw(s0, sp + 0x38);
+    {
+        uint32_t* pVertScreenX = pVerticesScreenX;
+        uint32_t* pVertScreenY = pVerticesScreenY;
+        leafedge_t* pEdge = leaf.edges;
 
-    auto cleanupStackFrame = finally([]() {
-        fp = lw(sp + 0x58);
-        s7 = lw(sp + 0x54);
-        s6 = lw(sp + 0x50);
-        s5 = lw(sp + 0x4C);
-        s4 = lw(sp + 0x48);
-        s3 = lw(sp + 0x44);
-        s2 = lw(sp + 0x40);
-        s1 = lw(sp + 0x3C);
-        s0 = lw(sp + 0x38);
-        sp += 0x60;
-    });
+        for (int32_t edgeIdx = 0; edgeIdx < leaf.numEdges; ++edgeIdx, ++pEdge, ++pVertScreenX, ++pVertScreenY) {
+            const vertex_t& vert = *pEdge->vertex;
+            const int32_t screenY = (HALF_VIEW_3D_H - 1) - ((planeViewZ * vert.scale) >> FRACBITS);
 
-    v1 = a0 + 4;
-    a3 = 0x1F800000;                                    // Result = 1F800000
-    a3 += 0x280;                                        // Result = 1F800280
-    t0 = a3 + 0x54;                                     // Result = 1F8002D4
-
-    sw(a1, sp);
-    t2 = lw(a0);
-    t8 = 0;
-    a0 = 0x63;                                          // Result = 00000063
-
-    while (i32(t8) < i32(t2)) {
-        v0 = lw(v1);
-        v0 = lw(v0 + 0x14);
-        sw(v0, a3);
-        v0 = lw(v1);
-        s4 = lw(sp);
-        v0 = lw(v0 + 0x8);
-        mult(s4, v0);
-        t8++;
-        a3 += 4;
-        v1 += 8;
-        v0 = lo;
-        v0 = u32(i32(v0) >> 16);
-        v0 = a0 - v0;
-        sw(v0, t0);
-        t0 += 4;
+            *pVertScreenX = vert.screenx;
+            *pVertScreenY = screenY;
+        }
     }
 
-    t5 = 0xC8;                                          // Result = 000000C8
-    t8 = 0;                                             // Result = 00000000
-    sw(0, sp + 0x8);
-    t4 = 0x1F800000;                                    // Result = 1F800000
-    t4 += 0x2D4;                                        // Result = 1F8002D4
-    t6 = t4 - 0x54;                                     // Result = 1F800280
-    t3 = t4;                                            // Result = 1F8002D4
+    // Determine the y bounds for the plane and for each row determine the x bounds.
+    // Basically figuring out what spans we need to draw:
+    int32_t planeBegY = VIEW_3D_H;
+    int32_t planeEndY = 0;
 
-    while (i32(t8) < i32(t2)) {
-        v0 = t2 - 1;
-        v1 = t8 + 1;
+    {
+        // Add each edge's contribution to draw/span bounds
+        const uint32_t* pVertScreenY = pVerticesScreenY;
 
-        if (t8 == v0) {
-            v1 = 0;
+        for (int32_t edgeIdx = 0; edgeIdx < leaf.numEdges; ++edgeIdx, ++pVertScreenY) {
+            int32_t nextEdgeIdx = edgeIdx + 1;
+
+            if (edgeIdx == leaf.numEdges - 1) {
+                nextEdgeIdx = 0;
+            }
+
+            const int32_t vertScreenY = *pVertScreenY;
+            const int32_t nextVertScreenY = pVerticesScreenY[nextEdgeIdx];
+
+            if (vertScreenY != nextVertScreenY) {
+                // Figure out the screen x and y value for the top and bottom point of the edge.
+                // This also determines which side of the screen the flat edge is on.
+                // Edges on the left side of the screen go bottom to top, and edges on the right go top to bottom.
+                int32_t botEdgeIdx;
+                int32_t topEdgeIdx;
+                int32_t spanBound;
+
+                if (vertScreenY < nextVertScreenY) {
+                    // Flat edge is on the right side of the screen running downwards
+                    botEdgeIdx = edgeIdx;
+                    topEdgeIdx = nextEdgeIdx;
+                    spanBound = SPAN_RIGHT;
+                } else {
+                    // Flat edge is on the left side of the screen running upwards
+                    botEdgeIdx = nextEdgeIdx;
+                    topEdgeIdx = edgeIdx;
+                    spanBound = SPAN_LEFT;
+                }
+
+                const fixed_t topScreenX = pVerticesScreenX[topEdgeIdx] << FRACBITS;
+                const fixed_t botScreenX = pVerticesScreenX[botEdgeIdx] << FRACBITS;
+
+                const int32_t topScreenY = pVerticesScreenY[topEdgeIdx];
+                const int32_t botScreenY = pVerticesScreenY[botEdgeIdx];
+
+                // Figure out the size of the edge and x step per screen row
+                const fixed_t screenW = topScreenX - botScreenX;
+                const int32_t screenH = topScreenY - botScreenY;
+                const fixed_t xStep = screenW / screenH;
+
+                // Clamp the edge y bounds to the screen
+                fixed_t x = botScreenX;
+                int32_t y = botScreenY;
+
+                if (botScreenY < 0) {
+                    x -= botScreenY * xStep;
+                    y = 0;
+                }
+
+                int32_t yEnd = topScreenY;
+
+                if (topScreenY > VIEW_3D_H) {
+                    yEnd = VIEW_3D_H;
+                }
+
+                if (y < planeBegY) {
+                    planeBegY = y;
+                }
+
+                if (yEnd > planeEndY) {
+                    planeEndY = yEnd;
+                }
+
+                // For each row in this edge, set the appropriate bound in the flat spans that the edge intersects
+                span_t* pSpan = &gFlatSpans[y];
+                
+                while (y < yEnd) {
+                    pSpan->bounds[spanBound] = x >> FRACBITS;
+                    x += xStep;
+                    ++y;
+                    ++pSpan;
+                }
+            }
         }
-
-        v0 = v1 << 2;
-        v0 += t4;
-        a0 = lw(v0);
-    
-        if (a0 != lw(t3)) {            
-            if (i32(lw(t3)) < i32(a0)) {
-                a0 = t8;
-                t1 = 1;
-            } else {
-                a0 = v1;
-                v1 = t8;
-                t1 = 0;
-            }
-
-            a0 <<= 2;
-            v0 = a0 + t4;
-            v1 <<= 2;
-            a3 = lw(v0);
-            v0 = v1 + t4;
-            a0 += t6;
-            v1 += t6;
-            t0 = lw(v0);
-            v0 = lw(a0);
-            v1 = lw(v1);
-            t7 = v0 << 16;
-            a1 = v1 << 16;
-            v1 = a1 - t7;
-            v0 = t0 - a3;
-            div(v1, v0);
-            s6 = lo;
-
-            if (i32(a3) < 0) {
-                mult(a3, s6);
-                a3 = 0;
-                v0 = lo;
-                t7 -= v0;
-            }
-
-            if (i32(t0) >= 0xC9) {
-                t0 = 0xC8;
-            }
-
-            if (i32(a3) < i32(t5)) {
-                t5 = a3;
-            }
-
-            s4 = lw(sp + 0x8);
-            a0 = a3 << 3;
-
-            if (i32(s4) < i32(t0)) {
-                sw(t0, sp + 0x8);
-            }
-
-            v0 = t1 << 2;                                       // Result = 00000000
-            v1 = 0x800A0000;                                    // Result = 800A0000
-            v1 -= 0x7F30;                                       // Result = 800980D0
-            v0 += v1;                                           // Result = 800980D0
-            s3 = a0 + v0;
-    
-            while (i32(a3) < i32(t0)) {
-                v0 = u32(i32(t7) >> 16);
-                sw(v0, s3);
-                s3 += 8;
-                a3++;
-                t7 += s6;
-            }
-        }
-
-        t8++;
-        t3 += 4;
     }
 
-    v1 = t5 << 3;                                       // Result = 00000640
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 -= 0x7F30;                                       // Result = 800980D0
-    s3 = v1 + v0;                                       // Result = 80098710
-    v1 = *g3dViewPaletteClutId;
-    s4 = lw(sp + 0x8);
-    v0 = 7;                                             // Result = 00000007
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x203);                                 // Store to: 1F800203
-    v0 = 0x24;                                          // Result = 00000024
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x207);                                 // Store to: 1F800207
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v1, at + 0x20E);                                 // Store to: 1F80020E
-    v0 = lhu(a2 + 0xA);
-    s1 = t5;                                            // Result = 000000C8
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x216);                                 // Store to: 1F800216
-    s2 = 0x00FFFFFF;
-    s4 = 0x80086550;                                    // Result = gGpuCmdsBuffer[0] (80086550)
-    s4 &= s2;                                           // Result = 00086550
-    sw(s4, sp + 0x10);
-    fp = -1;                                            // Result = FFFFFFFF
+    // PC-PSX: sanity check these bounds
+    #if PC_PSX_DOOM_MODS
+        ASSERT((planeBegY >= planeEndY) || (planeBegY >= 0 && planeBegY <  VIEW_3D_H));
+        ASSERT((planeBegY >= planeEndY) || (planeEndY >= 0 && planeEndY <= VIEW_3D_H));
+    #endif
 
-    while (i32(s1) < i32(s4)) {
-        t7 = lw(s3);
-        s3 += 4;
-        a1 = lw(s3);
-        s3 += 4;
+    // Fill in the parts of the draw primitive that are common to all flat spans
+    POLY_FT3& polyPrim = *(POLY_FT3*) getScratchAddr(128);
 
-        if (t7 != a1) {
-            v0 = t7;
+    LIBGPU_SetPolyFT3(polyPrim);
+    polyPrim.clut = *g3dViewPaletteClutId;
+    polyPrim.tpage = tex.texPageId;
 
-            if (i32(a1) < i32(t7)) {
-                t7 = a1;
-                a1 = v0;
-            }
+    // Draw all of the horizontal spans in the flat
+    const span_t* pSpan = &gFlatSpans[planeBegY];
 
-            v0 = s1 << 2;
-            at = 0x80070000;                                    // Result = 80070000
-            at += 0x395C;                                       // Result = 8007395C
-            at += v0;
-            v0 = lw(at);
-            s4 = lw(sp);
-            mult(s4, v0);
-            v0 = lo;
-            a3 = *gViewCos;
-            t0 = u32(i32(v0) >> 16);
-            mult(t0, a3);
-            a0 = lo;
-            v0 = *gViewSin;
-            mult(t0, v0);
-            t7 -= 2;
-            a1 += 2;
-            v1 = *gViewY;
-            v0 = lo;
-            a2 = v0;
-            v0 = *gViewX;
-            t3 = a2 + v1;
-            t2 = a0 + v0;
-    
-            if (i32(a2) < 0) {
-                a2 += 0x7F;
-            }
+    for (int32_t spanY = planeBegY; spanY < planeEndY; ++spanY, ++pSpan) {
+        // Get the bounds of the span and skip if zero sized
+        int32_t spanL = pSpan->bounds[SPAN_LEFT];
+        int32_t spanR = pSpan->bounds[SPAN_RIGHT];
 
-            v0 = -a3;
-            mult(v0, t0);
-            v0 = lo;
-            s5 = u32(i32(a2) >> 7);
-    
-            if (i32(v0) < 0) {
-                v0 += 0x7F;
-            }
+        if (spanL == spanR)
+            continue;
 
-            a2 = t7 - 0x80;
-            mult(a2, s5);
-            a0 = lo;
-            v0 = u32(i32(v0) >> 7);
-            mult(a2, v0);
-            v1 = lo;
-            a2 = a1 - 0x80;
-            mult(a2, s5);
-            sw(v0, sp + 0x30);
-            v0 = lo;
-            s4 = lw(sp + 0x30);
-            mult(a2, s4);
-            a0 += t2;
-            a0 = u32(i32(a0) >> 16);
-            v1 += t3;
-            v0 += t2;
-            t4 = u32(i32(v0) >> 16);
-            v0 = lo;
-            v0 += t3;
-            t5 = u32(i32(v0) >> 16);
-            t1 = u32(i32(v1) >> 16);
+        // Swap the span bounds if they are the wrong way around
+        if (spanL > spanR) {
+            const int32_t oldSpanL = spanL;
+            spanL = spanR;
+            spanR = oldSpanL;
+        }
 
-            if (i32(a0) < i32(t4)) {
-                s4 = -0x40;                 // Result = FFFFFFC0
-                t6 = a0 & s4;
-                a0 -= t6;
-                t4 -= t6;
-            } else {
-                s4 = -0x40;                 // Result = FFFFFFC0
-                t6 = t4 & s4;
-                t4 -= t6;
-                a0 -= t6;
-            }
+        // Hack that extends the span bounds, presumably so they join with walls etc.
+        // This does cause some visual bugs in places, particularly around steps.
+        // If you look at some steps in PSX DOOM the flat sometimes extends past where it should into the 'air'...
+        spanL -= 2;
+        spanR += 2;
 
-            s4 = -0x40;                     // Result = FFFFFFC0
+        // Figure out the distance away that the flat span is at
+        const int32_t dist = (gYSlope[spanY] * planeViewZ) >> FRACBITS;
 
-            if (i32(t1) < i32(t5)) {
-                t3 = t1 & s4;
-                t1 -= t3;
-                t5 -= t3;
-            } else {
-                t3 = t5 & s4;
-                t5 -= t3;
-                t1 -= t3;
-            }
+        // Compute the base texture uv offset for the span based on solely on global position and view angle
+        const fixed_t viewCos = *gViewCos;
+        const fixed_t viewSin = *gViewSin;
+        const fixed_t viewX = *gViewX;
+        const fixed_t viewY = *gViewY;        
+        const fixed_t spanUOffset = dist * viewCos + viewX;
+        const fixed_t spanVOffset = dist * viewSin + viewY;
+
+        // Compute the uv stepping per each pixel in the span.
+        // I'm not sure why the code is doing a 'ceil' type rounding operation here in the case negative coords...
+        fixed_t uStepPerX = dist *  viewSin;
+        fixed_t vStepPerX = dist * -viewCos;
+        
+        if (uStepPerX < 0) {
+            uStepPerX += HALF_SCREEN_W - 1;     // Round up if negative, why is this?
+        }
+
+        if (vStepPerX < 0) {
+            vStepPerX += HALF_SCREEN_W - 1;     // Round up if negative, why is this?
+        }
+
+        uStepPerX /= HALF_SCREEN_W;
+        vStepPerX /= HALF_SCREEN_W;        
+
+        // Compute the uv coordinates for the left and right of the span
+        const int32_t spanViewL = spanL - HALF_SCREEN_W;
+        const int32_t spanViewR = spanR - HALF_SCREEN_W;
+
+        int32_t spanUL = (spanViewL * uStepPerX + spanUOffset) >> FRACBITS;
+        int32_t spanUR = (spanViewR * uStepPerX + spanUOffset) >> FRACBITS;
+
+        int32_t spanVL = (spanViewL * vStepPerX + spanVOffset) >> FRACBITS;
+        int32_t spanVR = (spanViewR * vStepPerX + spanVOffset) >> FRACBITS;
+
+        // Wrap the uv coordinates to 64x64 using the smallest u or v coordinate as the basis for wrapping.
+        // Note: if we wanted to support textures > 64x64 then this code would need to change!
+        constexpr int32_t WRAP_ADJUST_MASK_64 = ~63;
+
+        if (spanUL < spanUR) {
+            const int32_t uadjust = spanUL & WRAP_ADJUST_MASK_64;
+            spanUL -= uadjust;
+            spanUR -= uadjust;
+        } else {
+            const int32_t uadjust = spanUR & WRAP_ADJUST_MASK_64;
+            spanUR -= uadjust;
+            spanUL -= uadjust;
+        }
+
+        if (spanVL < spanVR) {
+            const int32_t vadjust = spanVL & WRAP_ADJUST_MASK_64;
+            spanVL -= vadjust;
+            spanVR -= vadjust;
+        } else {
+            const int32_t vadjust = spanVR & WRAP_ADJUST_MASK_64;
+            spanVR -= vadjust;
+            spanVL -= vadjust;
+        }
+
+        // Determine the light color multiplier to use for the span and set on the draw primitive
+        {
+            int32_t r, g, b;
 
             if (*gbDoViewLighting) {
-                v0 = u32(i32(t0) >> 1);
-                v1 = 0xA0;                                          // Result = 000000A0
-                v1 -= v0;
-
-                if (i32(v1) < 0x40) {
-                    v1 = 0x40;
-                } else if (i32(v1) >= 0xA1) {
-                    v1 = 0xA0;
-                }
-
-                v0 = *gCurLightValR;
-                mult(v1, v0);
-                v0 = lo;
-                a3 = u32(i32(v0) >> 7);
-
-                if (i32(a3) >= 0x100) {
-                    a3 = 0xFF;
-                }
-
-                v0 = 0x80080000;                                    // Result = 80080000
-                v0 = lw(v0 - 0x7FCC);                               // Load from: gCurLightValG (80078034)
-                mult(v1, v0);
-                v0 = lo;
-                a2 = u32(i32(v0) >> 7);
-
-                if (i32(a2) >= 0x100) {
-                    a2 = 0xFF;
-                }
-
-                v0 = *gCurLightValB;
-                mult(v1, v0);
-                v0 = lo;
-                v1 = u32(i32(v0) >> 7);
-
-                if (i32(v1) >= 0x100) {
-                    v1 = 0xFF;
-                }
-            } else {
-                a3 = *gCurLightValR;
-                a2 = *gCurLightValG;
-                v1 = *gCurLightValB;        
-            }
-
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(a3, at + 0x204);                                 // Store to: 1F800204
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(a2, at + 0x205);                                 // Store to: 1F800205
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v1, at + 0x206);                                 // Store to: 1F800206
-            t9 = 0;                                             // Result = 00000000
-
-            if (i32(a0) >= 0x100 || i32(t4) >= 0x100 || i32(t1) >= 0x100 || i32(t5) >= 0x100) {
-                v0 = t4 - a0;
-
-                if (i32(v0) < 0) {
-                    v0 = -v0;
-                }
-
-                t9 = u32(i32(v0) >> 7);
-                v0 = t5 - t1;
-
-                if (i32(v0) < 0) {
-                    v0 = -v0;
-                }
-
-                v1 = u32(i32(v0) >> 7);
-
-                if (i32(t9) < i32(v1)) {
-                    t9 = v1;
-                }
-            }
-
-            v0 = a1 - t7;
-
-            if (t9 == 0) {
-                s4 = 0x1F800000;                                    // Result = 1F800000
-                s4 += 0x200;                                        // Result = 1F800200
-                t3 = s4 + 4;                                        // Result = 1F800204
-                t2 = 0x1F800000;                                    // Result = 1F800000
-                t2 = lbu(t2 + 0x203);                               // Load from: 1F800203
-                t0 = 0x80070000;                                    // Result = 80070000
-                t0 = lw(t0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-                v0 = s1 + 1;
-                at = 0x1F800000;                                    // Result = 1F800000
-                sh(t7, at + 0x208);                                 // Store to: 1F800208
-                at = 0x1F800000;                                    // Result = 1F800000
-                sh(s1, at + 0x20A);                                 // Store to: 1F80020A
-                at = 0x1F800000;                                    // Result = 1F800000
-                sh(a1, at + 0x210);                                 // Store to: 1F800210
-                at = 0x1F800000;                                    // Result = 1F800000
-                sh(s1, at + 0x212);                                 // Store to: 1F800212
-                at = 0x1F800000;                                    // Result = 1F800000
-                sh(a1, at + 0x218);                                 // Store to: 1F800218
-                at = 0x1F800000;                                    // Result = 1F800000
-                sh(v0, at + 0x21A);                                 // Store to: 1F80021A
-                at = 0x1F800000;                                    // Result = 1F800000
-                sb(a0, at + 0x20C);                                 // Store to: 1F80020C
-                at = 0x1F800000;                                    // Result = 1F800000
-                sb(t1, at + 0x20D);                                 // Store to: 1F80020D
-                at = 0x1F800000;                                    // Result = 1F800000
-                sb(t4, at + 0x214);                                 // Store to: 1F800214
-                at = 0x1F800000;                                    // Result = 1F800000
-                sb(t5, at + 0x215);                                 // Store to: 1F800215
-                at = 0x1F800000;                                    // Result = 1F800000
-                sb(t4, at + 0x21C);                                 // Store to: 1F80021C
-                at = 0x1F800000;                                    // Result = 1F800000
-                sb(t5, at + 0x21D);                                 // Store to: 1F80021D
-                t1 = t2 << 2;
-                t4 = t1 + 4;
-
-                I_AddPrim(getScratchAddr(128));
-            } else {
-                t9++;
-                div(v0, t9);
-                s6 = lo;
-                v0 = t4 - a0;
-                div(v0, t9);
-                s5 = lo;
-                v0 = t5 - t1;
-                div(v0, t9);
-                s4 = lo;
-                t8 = 0;                                             // Result = 00000000
-                sw(s4, sp + 0x30);
-                s7 = -0x80;                                         // Result = FFFFFF80
-
-                while (i32(t8) < i32(t9)) {
-                    a1 = t7 + s6;
-                    t4 = a0 + s5;
-                    s4 = lw(sp + 0x30);
-                    t6 = 0;
-                    t5 = t1 + s4;
-
-                    if (i32(a0) < i32(t4) && i32(t4) >= 0x100) {
-                        t6 = a0 & s7;
-                        a0 -= t6;
-                        t4 -= t6;
-                    } else if (i32(t4) < i32(a0) && i32(a0) >= 0x100) {
-                        t6 = t4 & s7;
-                        t4 -= t6;
-                        a0 -= t6;
-                    }
-
-                    t3 = 0;
-
-                    if (i32(t1) < i32(t5) && i32(t5) >= 0x100) {
-                        t3 = t1 & s7;
-                        t1 -= t3;
-                        t5 -= t3;
-                    } else if (i32(t5) < i32(t1) && i32(t1) >= 0x100) {
-                        t3 = t5 & s7;
-                        t5 -= t3;
-                        t1 -= t3;
-                    }
-
-                    s4 = 0x1F800000;                                    // Result = 1F800000
-                    s4 += 0x200;                                        // Result = 1F800200
-                    s0 = s4 + 4;                                        // Result = 1F800204
-                    t2 = 0x1F800000;                                    // Result = 1F800000
-                    t2 = lbu(t2 + 0x203);                               // Load from: 1F800203
-                    a3 = 0x80070000;                                    // Result = 80070000
-                    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-                    v0 = s1 + 1;
-                    at = 0x1F800000;                                    // Result = 1F800000
-                    sh(t7, at + 0x208);                                 // Store to: 1F800208
-                    at = 0x1F800000;                                    // Result = 1F800000
-                    sh(s1, at + 0x20A);                                 // Store to: 1F80020A
-                    at = 0x1F800000;                                    // Result = 1F800000
-                    sh(a1, at + 0x210);                                 // Store to: 1F800210
-                    at = 0x1F800000;                                    // Result = 1F800000
-                    sh(s1, at + 0x212);                                 // Store to: 1F800212
-                    at = 0x1F800000;                                    // Result = 1F800000
-                    sh(a1, at + 0x218);                                 // Store to: 1F800218
-                    at = 0x1F800000;                                    // Result = 1F800000
-                    sh(v0, at + 0x21A);                                 // Store to: 1F80021A
-                    at = 0x1F800000;                                    // Result = 1F800000
-                    sb(a0, at + 0x20C);                                 // Store to: 1F80020C
-                    at = 0x1F800000;                                    // Result = 1F800000
-                    sb(t1, at + 0x20D);                                 // Store to: 1F80020D
-                    at = 0x1F800000;                                    // Result = 1F800000
-                    sb(t4, at + 0x214);                                 // Store to: 1F800214
-                    at = 0x1F800000;                                    // Result = 1F800000
-                    sb(t5, at + 0x215);                                 // Store to: 1F800215
-                    at = 0x1F800000;                                    // Result = 1F800000
-                    sb(t4, at + 0x21C);                                 // Store to: 1F80021C
-                    at = 0x1F800000;                                    // Result = 1F800000
-                    sb(t5, at + 0x21D);                                 // Store to: 1F80021D
-                    t1 = t2 << 2;
-                    t7 = t1 + 4;
-	
-                    I_AddPrim(getScratchAddr(128));
+                int32_t lightIntensity = LIGHT_INTENSTIY_MAX - dist / 2;
             
-                    t7 = a1;
-                    a0 = t4 + t6;
-                    t8++;
-                    t1 = t5 + t3;
+                if (lightIntensity < LIGHT_INTENSTIY_MIN) {
+                    lightIntensity = LIGHT_INTENSTIY_MIN;
+                } 
+                else if (lightIntensity > LIGHT_INTENSTIY_MAX) {
+                    lightIntensity = LIGHT_INTENSTIY_MAX;
                 }
+
+                r = (lightIntensity * (*gCurLightValR)) >> 7;
+                g = (lightIntensity * (*gCurLightValG)) >> 7;
+                b = (lightIntensity * (*gCurLightValB)) >> 7;
+                if (r > 255) { r = 255; }
+                if (g > 255) { g = 255; }
+                if (b > 255) { b = 255; }
+            } else {
+                r = *gCurLightValR;
+                g = *gCurLightValG;
+                b = *gCurLightValB;
+            }
+
+            LIBGPU_setRGB0(polyPrim, (uint8_t) r, (uint8_t) g, (uint8_t) b);
+        }
+
+        // Determine how many span segments we will have to draw, minus 1.
+        //
+        // Because the PlayStation's GPU only supports byte texture coordinates, we must split up spans that have a distance of 256 units or
+        // greater in texture space in order to work our way around this restriction, and issue more draw calls. The texcoord range limit will
+        // typically be hit for the floors or ceilings of large open areas, where the floor or ceiling texture repeats many times.
+        //
+        // First of all check if if we have hit the limit, and need to split up the span into multiple pieces:
+        int32_t numSpanPieces = 0;
+        
+        if ((spanUL > TEXCOORD_MAX) || (spanUR > TEXCOORD_MAX) || (spanVL > TEXCOORD_MAX) || (spanVR > TEXCOORD_MAX)) {
+            // It looks like we are going to need more than 1 span segment given the texture coordinates exceed the max possible by the hardware.
+            // Determine how much of the texture we are going to display across the span.
+            int32_t spanUSize = spanUR - spanUL;
+            int32_t spanVSize = spanVR - spanVL;
+            if (spanUSize < 0) { spanUSize = -spanUSize; }
+            if (spanVSize < 0) { spanVSize = -spanVSize; }
+
+            // Determine the number of span pieces we would need based on the u and v range pick the largest figure.
+            // The code here appears to be conservative and limits the max u & v range of each span piece to 128 units, well below the maximum of 256.
+            const int32_t numUPieces = spanUSize >> 7;
+            const int32_t numVPieces = spanVSize >> 7;
+
+            if (numUPieces > numVPieces) {
+                numSpanPieces = numUPieces;
+            } else {
+                numSpanPieces = numVPieces;
             }
         }
 
-        s4 = lw(sp + 0x8);
-        s1++;
+        // Draw the flat span piece(s)
+        if (numSpanPieces == 0) {
+            // Easy case - we can draw the entire flat span with a single polygon primitive
+            LIBGPU_setXY3(polyPrim,
+                (int16_t) spanL, (int16_t) spanY,
+                (int16_t) spanR, (int16_t) spanY,
+                (int16_t) spanR, (int16_t) spanY + 1
+            );
+
+            LIBGPU_setUV3(polyPrim,
+                (uint8_t) spanUL, (uint8_t) spanVL,
+                (uint8_t) spanUR, (uint8_t) spanVR,
+                (uint8_t) spanUR, (uint8_t) spanVR
+            );
+            
+            I_AddPrim(&polyPrim);
+        } else {
+            // Harder case: we must split up the flat span and issue multiple primitives.
+            // Note also, the piece count is minus 1 so increment here now to get the true amount:
+            ++numSpanPieces;
+
+            // Figure out the u, v and x increment per span piece
+            const int32_t xStep = (spanR - spanL) / numSpanPieces;
+            const int32_t uStep = (spanUR - spanUL) / numSpanPieces;
+            const int32_t vStep = (spanVR - spanVL) / numSpanPieces;
+
+            // Issue the draw primitives for all of the span pieces
+            for (int32_t pieceIdx = 0; pieceIdx < numSpanPieces; ++pieceIdx) {
+                // Step the right bounds to the next piece
+                spanR = spanL + xStep;
+                spanUR = spanUL + uStep;
+                spanVR = spanVL + vStep;
+                
+                // Wrap the uv coordinates to 128x128 using the smallest u or v coordinate as the basis for wrapping.
+                // Do this in a similar way to the initial draw preparation, except this time the wrapping is 128x128.
+                //
+                // Potential bug: it looks like the 'left == right' equality case is not being handled.
+                // In some circumstances it might be possible for wrapping to not be done and for the span to be distorted?
+                constexpr int32_t WRAP_ADJUST_MASK_128 = ~127;
+
+                int32_t uadjust = 0;
+                int32_t vadjust = 0;
+
+                if ((spanUL < spanUR) && (spanUR > TEXCOORD_MAX)) {
+                    uadjust = spanUL & WRAP_ADJUST_MASK_128;
+                    spanUL -= uadjust;
+                    spanUR -= uadjust;
+                } else if ((spanUL > spanUR) && (spanUL > TEXCOORD_MAX)) {
+                    uadjust = spanUR & WRAP_ADJUST_MASK_128;
+                    spanUR -= uadjust;
+                    spanUL -= uadjust;
+                }
+
+                if ((spanVL < spanVR) && (spanVR > TEXCOORD_MAX)) {
+                    vadjust = spanVL & WRAP_ADJUST_MASK_128;
+                    spanVL -= vadjust;
+                    spanVR -= vadjust;
+                } else if ((spanVL > spanVR) && (spanVL > TEXCOORD_MAX)) {
+                    vadjust = spanVR & WRAP_ADJUST_MASK_128;
+                    spanVR -= vadjust;
+                    spanVL -= vadjust;
+                }
+
+                // Setup the rest of the drawing primitive and draw the span
+                LIBGPU_setXY3(polyPrim,
+                    (int16_t) spanL, (int16_t) spanY,
+                    (int16_t) spanR, (int16_t) spanY,
+                    (int16_t) spanR, (int16_t) spanY + 1
+                );
+
+                LIBGPU_setUV3(polyPrim,
+                    (uint8_t) spanUL, (uint8_t) spanVL,
+                    (uint8_t) spanUR, (uint8_t) spanVR,
+                    (uint8_t) spanUR, (uint8_t) spanVR
+                );
+	            
+                I_AddPrim(&polyPrim);
+                
+                // Move coords onto the next span.
+                // Note that the previous wrapping operation (if any) is also undone here.
+                spanL = spanR;
+                spanUL = spanUR + uadjust;
+                spanVL = spanVR + vadjust;
+            }
+        }
     }
 }

@@ -1,7 +1,5 @@
 #include "cdmaptbl.h"
 
-// A list of file ids representing files on the disc.
-// These ids are used when referencing 
 const PsxCd_MapTblEntry CD_MAP_TBL[] = {
     { 0x0018, 0x44     },   // SYSTEM_CNF
     { 0x0019, 0xDD800  },   // SLUS_000_77

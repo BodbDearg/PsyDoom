@@ -10,15 +10,6 @@
 #include "r_local.h"
 #include "r_main.h"
 
-// Texture coordinates in PSX DOOM cannot be higher than '255' due to hardware limitations. All texture coordinates on the PS1 are
-// a single byte only, which restricts the maximum texture size to 256x256 and also the maximum number of times textures can wrap.
-// This is why the map designers for PSX DOOM were restricted to room heights <= 256 units, although there were some workarounds to
-// extend past the limits a little - mainly by using upper and lower walls to do 'full' walls of up to 256 x 3 (768) units.
-//
-// I guess if the engine was a little more advanced it could have removed this limit by splitting up columns that exceeded the PS1's
-// limitations - but that would have also incurred a higher draw cost naturally.
-static constexpr int32_t TEXCOORD_MAX = UINT8_MAX;
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw the upper, lower and middle walls for the given leaf edge
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -409,15 +400,13 @@ void R_DrawWallPiece(
             // Finally populate the triangle for the wall column and draw
             LIBGPU_setRGB0(polyPrim, (uint8_t) r, (uint8_t) g, (uint8_t) b);
 
-            LIBGPU_setUV3(
-                polyPrim,
+            LIBGPU_setUV3(polyPrim,
                 (uint8_t) uCur, (uint8_t) vtCur,
                 (uint8_t) uCur, (uint8_t) vbCur,
                 (uint8_t) uCur, (uint8_t) vbCur
             );
 
-            LIBGPU_setXY3(
-                polyPrim,
+            LIBGPU_setXY3(polyPrim,
                 (int16_t) xCur,     (int16_t) ytCur - 1,
                 (int16_t) xCur + 1, (int16_t) ybCur + 1,
                 (int16_t) xCur,     (int16_t) ybCur + 1

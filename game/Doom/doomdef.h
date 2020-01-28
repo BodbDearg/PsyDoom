@@ -47,6 +47,10 @@ static constexpr uint32_t ANGLETOFINESHIFT  = 19;                   // How many 
 extern const fixed_t gFineSine[(5 * FINEANGLES) / 4];
 extern const fixed_t* const gFineCosine;
 
+// Provides a multiplier for a screen y coordinate.
+// When multiplied against a plane/flat z-height, yields the distance away that a particular flat span is.
+extern const fixed_t gYSlope[VIEW_3D_H];
+
 // Maximum number of players in a multiplayer game
 static constexpr uint32_t MAXPLAYERS = 2;
 

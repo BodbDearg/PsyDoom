@@ -9,6 +9,15 @@
 
 struct line_t;
 
+// Texture coordinates in PSX DOOM cannot be higher than '255' due to hardware limitations. All texture coordinates on the PS1 are
+// a single byte only, which restricts the maximum texture size to 256x256 and also the maximum number of times textures can wrap.
+// This is why the map designers for PSX DOOM were restricted to room heights <= 256 units, although there were some workarounds to
+// extend past the limits a little - mainly by using upper and lower walls to do 'full' walls of up to 256 x 3 (768) units.
+//
+// I guess if the engine was a little more advanced it could have removed this limit by splitting up columns that exceeded the PS1's
+// limitations - but that would have also incurred a higher draw cost naturally.
+static constexpr int32_t TEXCOORD_MAX = UINT8_MAX;
+
 // Min/max light diminishing intensities
 static constexpr int32_t LIGHT_INTENSTIY_MIN = 64;
 static constexpr int32_t LIGHT_INTENSTIY_MAX = 160;
