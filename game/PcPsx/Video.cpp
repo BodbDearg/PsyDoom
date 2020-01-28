@@ -29,6 +29,29 @@ static SDL_Rect         gOutputRect;
 static uint32_t*        gpFrameBuffer;
 static uint32_t         gLastFrameTickCount;
 
+// TODO: this is a temporary thing.
+// Note that I am using the stretched NTSC resolution here for game resolution width, not the physical framebuffer width (256 pixels wide).
+// See: https://doomwiki.org/wiki/Sony_PlayStation
+constexpr int32_t GAME_RES_X = 293;
+constexpr int32_t GAME_RES_Y = 240;
+
+// TODO: this is temporary until resolution is properly configurable
+static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
+    // Get the screen resolution.
+    // On high DPI screens like MacOS retina the resolution returned will be virtual not physical resolution.
+    SDL_DisplayMode displayMode;
+    SDL_GetCurrentDisplayMode(0, &displayMode);
+    
+    // Make the windows multiple of the original resolution.
+    // Allow some room for window edges and decoration.
+    int32_t xMultiplier = std::max((displayMode.w - 20) / GAME_RES_X, 1);
+    int32_t yMultiplier = std::max((displayMode.h - 40) / GAME_RES_Y, 1);
+    int32_t multiplier = std::min(xMultiplier, yMultiplier);
+
+    w = GAME_RES_X * multiplier;
+    h = GAME_RES_Y * multiplier;
+}
+
 static void lockFramebufferTexture() noexcept {
     int pitch = 0;
     if (SDL_LockTexture(gFramebufferTexture, nullptr, reinterpret_cast<void**>(&gpFrameBuffer), &pitch) != 0) {
@@ -41,22 +64,31 @@ static void unlockFramebufferTexture() noexcept {
 }
 
 static void presentSdlFramebuffer() noexcept {
+    // Get the size of the window.
+    // Don't bother outputting if the window has been made zero sized.
+    int32_t winSizeX = {};
+    int32_t winSizeY = {};
+    SDL_GetWindowSize(gWindow, &winSizeX, &winSizeY);
+
+    if (winSizeX <= 0 || winSizeY <= 0)
+        return;
+
+    // Grab the framebuffer texture for writing to
     unlockFramebufferTexture();
 
-    gOutputRect.x = 0;
-    gOutputRect.y = 0;
-    
-// TODO: do proper resolution config
-#if WIN32
-    gOutputRect.w = 1408;
-    gOutputRect.h = 1320;
-#else
-    gOutputRect.w = 1024;
-    gOutputRect.h = 768;
-#endif
-    
+    // Determine the scale to output at preserving the original game aspect ratio
+    const float xScale = (float) winSizeX / (float) GAME_RES_X;
+    const float yScale = (float) winSizeY / (float) GAME_RES_Y;
+    const float scale = std::min(xScale, yScale);
+
+    // Determine output width and height and center the framebuffer image in the window
+    gOutputRect.w = (int32_t)(GAME_RES_X * scale);
+    gOutputRect.h = (int32_t)(GAME_RES_Y * scale);
+    gOutputRect.x = winSizeX / 2 - gOutputRect.w / 2;
+    gOutputRect.y = winSizeY / 2 - gOutputRect.h / 2;
     SDL_RenderCopy(gRenderer, gFramebufferTexture, nullptr, &gOutputRect);
 
+    // Present the rendered frame and re-lock the framebuffer texture
     SDL_RenderPresent(gRenderer);
     lockFramebufferTexture();
 }
@@ -135,7 +167,7 @@ void initVideo() noexcept {
     }
 
     // TODO: Provide a way to switch between fullscreen and back...
-    Uint32 windowCreateFlags = 0;
+    Uint32 windowCreateFlags = SDL_WINDOW_RESIZABLE;
 
     #ifndef __MACOSX__
         windowCreateFlags |= SDL_WINDOW_OPENGL;
@@ -147,18 +179,17 @@ void initVideo() noexcept {
         constexpr const char* gameVersionStr = "PsyDoom <UNKNOWN_VERSION>";
     #endif
 
+    // TODO: this is temporary
+    int32_t winSizeX = 0;
+    int32_t winSizeY = 0;
+    decideStartupResolution(winSizeX, winSizeY);
+
     gWindow = SDL_CreateWindow(
         gameVersionStr,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-    // TODO: do proper resolution config
-    #if WIN32
-        (int32_t) 1408,
-        (int32_t) 1320,
-    #else
-       (int32_t) 1024,
-       (int32_t) 768,
-    #endif
+        winSizeX,
+        winSizeY,
         windowCreateFlags
     );
 
