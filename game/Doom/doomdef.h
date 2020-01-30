@@ -131,6 +131,13 @@ static constexpr uint32_t MF_COUNTITEM      = 0x800000;     // TODO: CONFIRM
 static constexpr uint32_t MF_SKULLFLY       = 0x1000000;    // TODO: CONFIRM
 static constexpr uint32_t MF_NOTDMATCH      = 0x2000000;    // TODO: CONFIRM
 static constexpr uint32_t MF_SEETARGET      = 0x4000000;    // TODO: CONFIRM
+static constexpr uint32_t MF_BLENDMASK1     = 0x10000000;   // TODO: CONFIRM
+static constexpr uint32_t MF_BLENDMASK2     = 0x20000000;   // TODO: CONFIRM
+static constexpr uint32_t MF_BLENDMASK3     = 0x40000000;   // TODO: CONFIRM
+
+static constexpr uint32_t MF_ALL_BLEND_MASKS = (
+    MF_BLENDMASK1 | MF_BLENDMASK2 | MF_BLENDMASK3
+);
 
 // A function which gets called after regular map object updating is done
 typedef VmPtr<void (mobj_t* pMObj)> latecall_t;

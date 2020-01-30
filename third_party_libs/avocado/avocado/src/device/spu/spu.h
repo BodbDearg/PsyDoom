@@ -18,8 +18,13 @@ struct SPU {
     static const int RAM_SIZE = 1024 * 512;
 
 // PC-PSX DOOM: use a large audio buffer to prevent skipping!
+// Note: use a larger buffer also in debug, since that is slower.
 #if DOOM_AVOCADO_MODS
-    static const size_t AUDIO_BUFFER_SIZE = 128 * 2 * 4;
+    #if NDEBUG
+        static const size_t AUDIO_BUFFER_SIZE = 128 * 2 * 4;
+    #else
+        static const size_t AUDIO_BUFFER_SIZE = 512 * 2 * 4;
+    #endif
 #else
     static const size_t AUDIO_BUFFER_SIZE = 28 * 2 * 4;
 #endif

@@ -64,8 +64,7 @@ loc_80025F78:
     if (v0 != 0) goto loc_800261B8;
     a1 = 8;                                             // Result = 00000008
 loc_80025FE0:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7D20);                               // Load from: gFirstTexLumpNum (800782E0)
+    a0 = *gFirstTexLumpNum;
     a2 = 0;                                             // Result = 00000000
     a0 += s0;
     _thunk_W_CacheLumpNum();
@@ -129,8 +128,7 @@ loc_800260A4:
     if (v0 != 0) goto loc_800261B8;
     a1 = 8;                                             // Result = 00000008
 loc_800260FC:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7D48);                               // Load from: gFirstFlatLumpNum (800782B8)
+    a0 = *gFirstFlatLumpNum;
     a2 = 0;                                             // Result = 00000000
     a0 += s0;
     _thunk_W_CacheLumpNum();

@@ -1280,12 +1280,10 @@ loc_80023A0C:
     s1 = s3;
 loc_80023A14:
     s0 = lw(s1 + 0x4);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FEC);                               // Load from: gFirstSpriteLumpNum (80078014)
+    v0 = *gFirstSpriteLumpNum;
     v0 = (i32(s0) < i32(v0));
     if (v0 != 0) goto loc_80023A48;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F38);                               // Load from: gLastSpriteLumpNum (80077F38)
+    v0 = *gLastSpriteLumpNum;
     v0 = (i32(v0) < i32(s0));
     a0 = s0;
     if (v0 == 0) goto loc_80023A5C;

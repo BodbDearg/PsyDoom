@@ -107,6 +107,7 @@ set(SOURCE_FILES
     "Doom/Renderer/r_sky.h"
     "Doom/Renderer/r_things.cpp"
     "Doom/Renderer/r_things.h"
+    "Doom/Renderer/sprinfo.cpp"
     "Doom/UI/am_main.cpp"
     "Doom/UI/am_main.h"
     "Doom/UI/cn_main.cpp"

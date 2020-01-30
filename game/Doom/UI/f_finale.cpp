@@ -929,14 +929,12 @@ loc_8003E3DC:
     at += 0x6BFC;                                       // Result = 80066BFC
     at += a0;
     v1 = lw(at);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FEC);                               // Load from: gFirstSpriteLumpNum (80078014)
+    a0 = *gFirstSpriteLumpNum;
     v0 += v1;
     v1 = lw(v0 + 0x4);
     s0 = lbu(v0 + 0x24);
     v1 -= a0;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7EC4);                               // Load from: gpSprites (80077EC4)
+    a0 = *gpSpriteTextures;
     v1 <<= 5;
     s1 = v1 + a0;
     a0 = s1;

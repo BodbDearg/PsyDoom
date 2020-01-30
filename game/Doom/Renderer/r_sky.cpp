@@ -49,13 +49,13 @@ void R_DrawSky() noexcept {
     }
 
     // Setup and draw the sky sprite
-    SPRT& skyspr = *(SPRT*) getScratchAddr(128);
-    LIBGPU_SetSprt(skyspr);
-    LIBGPU_SetShadeTex(&skyspr, true);
-    LIBGPU_setXY0(skyspr, 0, 0);
-    LIBGPU_setWH(skyspr, SCREEN_W, skytex.height);
-    LIBGPU_setUV0(skyspr, (uint8_t)(skytex.texPageCoordX - (*gViewAngle >> ANGLETOSKYSHIFT)), skytex.texPageCoordY);
-    skyspr.clut = *gPaletteClutId_CurMapSky;
+    SPRT& spr = *(SPRT*) getScratchAddr(128);
+    LIBGPU_SetSprt(spr);
+    LIBGPU_SetShadeTex(&spr, true);
+    LIBGPU_setXY0(spr, 0, 0);
+    LIBGPU_setWH(spr, SCREEN_W, skytex.height);
+    LIBGPU_setUV0(spr, (uint8_t)(skytex.texPageCoordX - (*gViewAngle >> ANGLETOSKYSHIFT)), skytex.texPageCoordY);
+    spr.clut = *gPaletteClutId_CurMapSky;
     
-    I_AddPrim(&skyspr);
+    I_AddPrim(&spr);
 }

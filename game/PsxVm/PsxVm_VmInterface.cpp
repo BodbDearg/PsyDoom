@@ -526,7 +526,7 @@ uint32_t ptrToVmAddr(const void* const ptr) noexcept {
             const intptr_t offsetToScratchpad = (const uint8_t*) ptr - gpScratchpad;
 
             if (offsetToScratchpad >= 0 && offsetToScratchpad <= 0x400) {
-                return 0x1F800000 + offsetToScratchpad;
+                return 0x1F800000 + (uint32_t) offsetToScratchpad;
             } else {
                 FATAL_ERROR("ptrToVmAddr: pointer does not point to an area inside PSX RAM or the scratchpad!");
             }

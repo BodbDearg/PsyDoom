@@ -9,6 +9,7 @@
 // Details about all of the textures in the game and the sky texture
 const VmPtr<VmPtr<texture_t>>   gpTextures(0x80078128);
 const VmPtr<VmPtr<texture_t>>   gpFlatTextures(0x80078124);
+const VmPtr<VmPtr<texture_t>>   gpSpriteTextures(0x80077EC4);
 const VmPtr<VmPtr<texture_t>>   gpSkyTexture(0x80078050);
 
 // Texture translation: converts from an input texture index to the actual texture index to render for that input index.
@@ -24,6 +25,17 @@ const VmPtr<VmPtr<light_t>>     gpLightsLump(0x80078068);
 // Palette stuff
 const VmPtr<uint16_t>   gPaletteClutId_Main(0x800A9084);        // The regular in-game palette
 const VmPtr<uint16_t>   g3dViewPaletteClutId(0x80077F7C);       // Currently active in-game palette. Changes as effects are applied in the game.
+
+// Lump number ranges
+const VmPtr<int32_t>    gFirstTexLumpNum(0x800782E0);
+const VmPtr<int32_t>    gLastTexLumpNum(0x8007819C);
+const VmPtr<int32_t>    gNumTexLumps(0x800781D4);
+const VmPtr<int32_t>    gFirstFlatLumpNum(0x800782B8);
+const VmPtr<int32_t>    gLastFlatLumpNum(0x80078170);
+const VmPtr<int32_t>    gNumFlatLumps(0x800781C0);
+const VmPtr<int32_t>    gFirstSpriteLumpNum(0x80078014);
+const VmPtr<int32_t>    gLastSpriteLumpNum(0x80077F38);
+const VmPtr<int32_t>    gNumSpriteLumps(0x80077F5C);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize the palette and asset management for various draw assets
@@ -45,25 +57,25 @@ loc_8002B9E0:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7B74;                                       // Result = STR_LumpName_T_END[0] (80077B74)
     v0++;
-    sw(v0, gp + 0xD00);                                 // Store to: gFirstTexLumpNum (800782E0)
+    *gFirstTexLumpNum = v0;
     v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
     a2 = 1;                                             // Result = 00000001
     v0--;
     a0 = *gpMainMemZone;
-    v1 = lw(gp + 0xD00);                                // Load from: gFirstTexLumpNum (800782E0)
+    v1 = *gFirstTexLumpNum;
     a3 = 0;                                             // Result = 00000000
-    sw(v0, gp + 0xBBC);                                 // Store to: gLastTexLumpNum (8007819C)
+    *gLastTexLumpNum = v0;
     v0 -= v1;
     v0++;
     v1 = v0 << 5;
     a1 = v0 << 2;
-    sw(v0, gp + 0xBF4);                                 // Store to: gNumTexLumps (800781D4)
+    *gNumTexLumps = v0;
     a1 += v1;
     _thunk_Z_Malloc();
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x115C;                                       // Result = STR_LumpName_TEXTURE1[0] (8001115C)
     a1 = 0x20;                                          // Result = 00000020
-    v1 = lw(gp + 0xBF4);                                // Load from: gNumTexLumps (800781D4)
+    v1 = *gNumTexLumps;
     *gpTextures = v0;
     v1 <<= 5;
     v1 += v0;
@@ -71,8 +83,8 @@ loc_8002B9E0:
     a2 = 1;
     _thunk_W_CacheLumpName();
     a1 = v0;
-    a2 = lw(gp + 0xD00);                                // Load from: gFirstTexLumpNum (800782E0)
-    v1 = lw(gp + 0xBBC);                                // Load from: gLastTexLumpNum (8007819C)
+    a2 = *gFirstTexLumpNum;
+    v1 = *gLastTexLumpNum;
     a0 = *gpTextures;
     v0 = (i32(v1) < i32(a2));
     t1 = v1;
@@ -108,8 +120,8 @@ loc_8002BAD8:
 loc_8002BAF4:
     a0 = *gpMainMemZone;
     _thunk_Z_Free2();
-    a0 = lw(gp + 0xBF4);                                // Load from: gNumTexLumps (800781D4)
-    a2 = 0;                                             // Result = 00000000
+    a0 = *gNumTexLumps;
+    a2 = 0;
     if (i32(a0) <= 0) goto loc_8002BB30;
     v1 = *gpTextureTranslation;
 loc_8002BB18:
@@ -136,24 +148,24 @@ loc_8002BB50:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7B84;                                       // Result = STR_LumpName_F_END[0] (80077B84)
     v0++;
-    sw(v0, gp + 0xCD8);                                 // Store to: gFirstFlatLumpNum (800782B8)
+    *gFirstFlatLumpNum = v0;
     v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
     v0--;
     a2 = 1;
     a0 = *gpMainMemZone;
-    v1 = lw(gp + 0xCD8);                                // Load from: gFirstFlatLumpNum (800782B8)
+    v1 = *gFirstFlatLumpNum;
     a3 = 0;
-    sw(v0, gp + 0xB90);                                 // Store to: gLastFlatLumpNum (80078170)
+    *gLastFlatLumpNum = v0;
     v0 -= v1;
     v0++;
     a1 = v0 << 5;
-    sw(v0, gp + 0xBE0);                                 // Store to: gNumFlatLumps (800781C0)
+    *gNumFlatLumps = v0;
     v0 <<= 2;
     a1 += v0;
     _thunk_Z_Malloc();
-    a0 = lw(gp + 0xCD8);                                // Load from: gFirstFlatLumpNum (800782B8)
-    v1 = lw(gp + 0xBE0);                                // Load from: gNumFlatLumps (800781C0)
-    a1 = lw(gp + 0xB90);                                // Load from: gLastFlatLumpNum (80078170)
+    a0 = *gFirstFlatLumpNum;
+    v1 = *gNumFlatLumps;
+    a1 = *gLastFlatLumpNum;
     *gpFlatTextures = v0;
     v1 <<= 5;
     v1 += v0;
@@ -176,8 +188,8 @@ loc_8002BBF0:
     v1 += 0x20;
     if (v0 == 0) goto loc_8002BBF0;
 loc_8002BC18:
-    a1 = lw(gp + 0xBE0);                                // Load from: gNumFlatLumps (800781C0)
-    a0 = 0;                                             // Result = 00000000
+    a1 = *gNumFlatLumps;
+    a0 = 0;
     if (i32(a1) <= 0) goto loc_8002BC44;
     v1 = *gpFlatTranslation;
 loc_8002BC2C:
@@ -202,29 +214,29 @@ loc_8002BC54:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7B94;                                       // Result = STR_LumpName_S_END[0] (80077B94)
     v0++;
-    sw(v0, gp + 0xA34);                                 // Store to: gFirstSpriteLumpNum (80078014)
+    *gFirstSpriteLumpNum = v0;
     v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
     a2 = 1;
     v0--;
     a0 = *gpMainMemZone;
-    v1 = lw(gp + 0xA34);                                // Load from: gFirstSpriteLumpNum (80078014)
-    a3 = 0;                                             // Result = 00000000
-    sw(v0, gp + 0x958);                                 // Store to: gLastSpriteLumpNum (80077F38)
+    v1 = *gFirstSpriteLumpNum;
+    a3 = 0;
+    *gLastSpriteLumpNum = v0;
     v0 -= v1;
     v0++;
-    sw(v0, gp + 0x97C);                                 // Store to: gNumSpriteLumps (80077F5C)
+    *gNumSpriteLumps = v0;
     a1 = v0 << 5;
     _thunk_Z_Malloc();
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7B9C;                                       // Result = STR_LumpName_SPRITE1[0] (80077B9C)
     a1 = 0x20;                                          // Result = 00000020
-    sw(v0, gp + 0x8E4);                                 // Store to: gpSprites (80077EC4)
+    *gpSpriteTextures = v0;
     a2 = 1;                                             // Result = 00000001
     _thunk_W_CacheLumpName();
     a1 = v0;
-    t0 = lw(gp + 0xA34);                                // Load from: gFirstSpriteLumpNum (80078014)
-    v1 = lw(gp + 0x958);                                // Load from: gLastSpriteLumpNum (80077F38)
-    t1 = lw(gp + 0x8E4);                                // Load from: gpSprites (80077EC4)
+    t0 = *gFirstSpriteLumpNum;
+    v1 = *gLastSpriteLumpNum;
+    t1 = *gpSpriteTextures;
     v0 = (i32(v1) < i32(t0));
     t2 = a1;
     if (v0 != 0) goto loc_8002BD74;
@@ -296,15 +308,15 @@ loc_8002BDDC:
     v0 = (i32(a1) < i32(a2));
     if (v0 != 0) goto loc_8002BDB8;
 loc_8002BDF0:
-    v0 = lw(gp + 0xD00);                                // Load from: gFirstTexLumpNum (800782E0)
+    v0 = *gFirstTexLumpNum;
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 - 0x7E3C);                               // Load from: gpLumpInfo (800781C4)
     a3 = lw(sp);
     v0 <<= 4;
     v0 += v1;
-    v1 = lw(gp + 0xBF4);                                // Load from: gNumTexLumps (800781D4)
+    v1 = *gNumTexLumps;
     a2 = lw(sp + 0x4);
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     if (i32(v1) <= 0) goto loc_8002BE58;
     t0 = -0x81;                                         // Result = FFFFFF7F
     a1 = v1;
@@ -353,15 +365,15 @@ loc_8002BEA0:
     v0 = (i32(a1) < i32(a2));
     if (v0 != 0) goto loc_8002BE7C;
 loc_8002BEB4:
-    v0 = lw(gp + 0xCD8);                                // Load from: gFirstFlatLumpNum (800782B8)
+    v0 = *gFirstFlatLumpNum;
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 - 0x7E3C);                               // Load from: gpLumpInfo (800781C4)
     a3 = lw(sp);
     v0 <<= 4;
     v0 += v1;
-    v1 = lw(gp + 0xBE0);                                // Load from: gNumFlatLumps (800781C0)
+    v1 = *gNumFlatLumps;
     a2 = lw(sp + 0x4);
-    a0 = 0;                                             // Result = 00000000
+    a0 = 0;
     if (i32(v1) <= 0) goto loc_8002BF1C;
     t0 = -0x81;                                         // Result = FFFFFF7F
     a1 = v1;

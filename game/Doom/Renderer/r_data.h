@@ -38,12 +38,22 @@ struct light_t {
 
 extern const VmPtr<VmPtr<texture_t>>    gpTextures;
 extern const VmPtr<VmPtr<texture_t>>    gpFlatTextures;
+extern const VmPtr<VmPtr<texture_t>>    gpSpriteTextures;
 extern const VmPtr<VmPtr<texture_t>>    gpSkyTexture;
 extern const VmPtr<VmPtr<int32_t>>      gpTextureTranslation;
 extern const VmPtr<VmPtr<int32_t>>      gpFlatTranslation;
 extern const VmPtr<VmPtr<light_t>>      gpLightsLump;
 extern const VmPtr<uint16_t>            gPaletteClutId_Main;
 extern const VmPtr<uint16_t>            g3dViewPaletteClutId;
+extern const VmPtr<int32_t>             gFirstTexLumpNum;
+extern const VmPtr<int32_t>             gLastTexLumpNum;
+extern const VmPtr<int32_t>             gNumTexLumps;
+extern const VmPtr<int32_t>             gFirstFlatLumpNum;
+extern const VmPtr<int32_t>             gLastFlatLumpNum;
+extern const VmPtr<int32_t>             gNumFlatLumps;
+extern const VmPtr<int32_t>             gFirstSpriteLumpNum;
+extern const VmPtr<int32_t>             gLastSpriteLumpNum;
+extern const VmPtr<int32_t>             gNumSpriteLumps;
 
 void R_InitData() noexcept;
 void R_InitTextures() noexcept;

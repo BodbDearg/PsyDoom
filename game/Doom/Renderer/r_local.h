@@ -6,6 +6,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 #include "Doom/doomdef.h"
+#include "Doom/Game/info.h"
 
 struct line_t;
 
@@ -166,3 +167,18 @@ struct leaf_t {
 };
 
 static_assert(sizeof(leaf_t) == 172);
+
+// Holds information for a sprite frame
+struct spriteframe_t {
+	bool32_t    rotate;     // When false 'lump[0]' should be used for all angles
+	uint32_t    lump[8];	// The lump number to use for viewing angles 0-7
+	uint8_t		flip[8];	// Whether to flip horizontally viewing angles 0-7, non zero if flip
+};
+
+// Holds information for a sequence of sprite frames
+struct spritedef_t { 
+	int32_t				    numframes;
+	const spriteframe_t*    spriteframes;
+};
+
+extern const spritedef_t gSprites[NUMSPRITES];
