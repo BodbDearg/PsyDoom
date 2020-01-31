@@ -153,10 +153,12 @@ void R_RenderPlayerView() noexcept {
     // Not sure what the reason is for this, but everything seems to work fine without doing this.
     // I'll leave the code as-is for now though until I have a better understanding of this, just in case something breaks.
     {
-        DR_TWIN& setTexWinCmd = *(DR_TWIN*) getScratchAddr(128);
-        RECT texWin = { 0, 0, 0, 0 };
-        LIBGPU_SetTexWindow(setTexWinCmd, texWin);
-        I_AddPrim(&setTexWinCmd);
+        RECT texWinRect;
+        LIBGPU_setRECT(texWinRect, 0, 0, 0, 0);
+
+        DR_TWIN* const pTexWinPrim = (DR_TWIN*) getScratchAddr(128);
+        LIBGPU_SetTexWindow(*pTexWinPrim, texWinRect);
+        I_AddPrim(pTexWinPrim);
     }
 }
 

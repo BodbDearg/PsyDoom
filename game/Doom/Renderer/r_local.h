@@ -181,4 +181,5 @@ struct spritedef_t {
 	const spriteframe_t*    spriteframes;
 };
 
+// The list of sprite sequences 
 extern const spritedef_t gSprites[NUMSPRITES];

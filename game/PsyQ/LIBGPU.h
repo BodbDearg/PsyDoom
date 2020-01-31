@@ -50,16 +50,47 @@ struct POLY_FT3 {
     int16_t     x1;         // Vertex 2: position
     int16_t     y1;
     uint8_t     tu1;        // Vertex 2: texture coords
-    uint8_t     tv1;     
+    uint8_t     tv1;
     uint16_t    tpage;      // Texture page id
     int16_t     x2;         // Vertex 3: position
-    int16_t     y2;    
+    int16_t     y2;
     uint8_t     tu2;        // Vertex 3: texture coords
-    uint8_t     tv2;     
+    uint8_t     tv2;
     uint16_t    pad;        // Not used
 };
 
 static_assert(sizeof(POLY_FT3) == 32);
+
+// Drawing primitive: flat shaded textured quad (polygon 4)
+struct POLY_FT4 {
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive
+    uint8_t     r0;         // Color to shade the primitive with
+    uint8_t     g0;
+    uint8_t     b0;
+    uint8_t     code;       // Type info for the hardware
+    int16_t     x0;         // Vertex 1: position
+    int16_t     y0;
+    uint8_t     tu0;        // Vertex 1: texture coords
+    uint8_t     tv0;
+    uint16_t    clut;       // Color lookup table id for 4/8-bit textures
+    int16_t     x1;         // Vertex 2: position
+    int16_t     y1;
+    uint8_t     tu1;        // Vertex 2: texture coords
+    uint8_t     tv1;
+    uint16_t    tpage;      // Texture page id
+    int16_t     x2;         // Vertex 3: position
+    int16_t     y2;    
+    uint8_t     tu2;        // Vertex 3: texture coords
+    uint8_t     tv2;
+    uint16_t    pad1;       // Not used
+    int16_t     x3;         // Vertex 4: position
+    int16_t     y3;
+    uint8_t     tu3;        // Vertex 4: texture coords
+    uint8_t     tv3;
+	uint16_t    pad2;       // Not used
+};
+
+static_assert(sizeof(POLY_FT4) == 40);
 
 // Drawing primitive: arbitrarily sized sprite
 struct SPRT {
@@ -186,7 +217,7 @@ void LIBGPU_SetPolyFT3(POLY_FT3& poly) noexcept;
 void LIBGPU_SetPolyG3() noexcept;
 void LIBGPU_SetPolyGT3() noexcept;
 void LIBGPU_SetPolyF4() noexcept;
-void LIBGPU_SetPolyFT4() noexcept;
+void LIBGPU_SetPolyFT4(POLY_FT4& poly) noexcept;
 void LIBGPU_SetPolyG4() noexcept;
 void LIBGPU_SetPolyGT4() noexcept;
 void LIBGPU_SetSprt8() noexcept;
@@ -229,14 +260,14 @@ inline void LIBGPU_setRGB0(T& prim, const uint8_t r0, const uint8_t g0, const ui
 
 // Set a 2d point on a draw primitive
 template <class T>
-inline void LIBGPU_setXY0(T& prim, const int16_t x0, const int16_t y0) noexcept {
+inline constexpr void LIBGPU_setXY0(T& prim, const int16_t x0, const int16_t y0) noexcept {
     prim.x0 = x0;
     prim.y0 = y0;
 }
 
 // Set 2d start and end points on a draw primitive
 template <class T>
-inline void LIBGPU_setXY2(T& prim, const int16_t x0, const int16_t y0, const int16_t x1, const int16_t y1) noexcept {
+inline constexpr void LIBGPU_setXY2(T& prim, const int16_t x0, const int16_t y0, const int16_t x1, const int16_t y1) noexcept {
     prim.x0 = x0;
     prim.y0 = y0;
     prim.x1 = x1;
@@ -245,7 +276,7 @@ inline void LIBGPU_setXY2(T& prim, const int16_t x0, const int16_t y0, const int
 
 // Set 2d triangle points on a draw primitive
 template <class T>
-inline void LIBGPU_setXY3(
+inline constexpr void LIBGPU_setXY3(
     T& prim,
     const int16_t x0,
     const int16_t y0,
@@ -262,23 +293,46 @@ inline void LIBGPU_setXY3(
     prim.y2 = y2;
 }
 
+// Set 2d triangle points on a quad primitive
+template <class T>
+inline constexpr void LIBGPU_setXY4(
+    T& prim,
+    const int16_t x0,
+    const int16_t y0,
+    const int16_t x1,
+    const int16_t y1,
+    const int16_t x2,
+    const int16_t y2,
+    const int16_t x3,
+    const int16_t y3
+) noexcept {
+    prim.x0 = x0;
+    prim.y0 = y0;
+    prim.x1 = x1;
+    prim.y1 = y1;
+    prim.x2 = x2;
+    prim.y2 = y2;
+    prim.x3 = x3;
+    prim.y3 = y3;
+}
+
 // Set the width and height on a draw primitive
 template <class T>
-inline void LIBGPU_setWH(T& prim, const int16_t w, const int16_t h) noexcept {
+inline constexpr void LIBGPU_setWH(T& prim, const int16_t w, const int16_t h) noexcept {
     prim.w = w;
     prim.h = h;
 }
 
 // Set the uv coordinates for a draw primitive
 template <class T>
-inline void LIBGPU_setUV0(T& prim, const uint8_t tu0, const uint8_t tv0) noexcept {
+inline constexpr void LIBGPU_setUV0(T& prim, const uint8_t tu0, const uint8_t tv0) noexcept {
     prim.tu0 = tu0;
     prim.tv0 = tv0;
 }
 
 // Set the uv coordinates for a triangle draw primitive
 template <class T>
-inline void LIBGPU_setUV3(
+inline constexpr void LIBGPU_setUV3(
     T& prim,
     const uint8_t tu0,
     const uint8_t tv0,
@@ -295,18 +349,73 @@ inline void LIBGPU_setUV3(
     prim.tv2 = tv2;
 }
 
+// Set the uv coordinates for a quad draw primitive
+template <class T>
+inline constexpr void LIBGPU_setUV4(
+    T& prim,
+    const uint8_t tu0,
+    const uint8_t tv0,
+    const uint8_t tu1,
+    const uint8_t tv1,
+    const uint8_t tu2,
+    const uint8_t tv2,
+    const uint8_t tu3,
+    const uint8_t tv3
+) noexcept {
+    prim.tu0 = tu0;
+    prim.tv0 = tv0;
+    prim.tu1 = tu1;
+    prim.tv1 = tv1;
+    prim.tu2 = tu2;
+    prim.tv2 = tv2;
+    prim.tu3 = tu3;
+    prim.tv3 = tv3;
+}
+
 // Set the length of the payload for a primitive
 template <class T>
-inline void LIBGPU_setlen(T& prim, const uint8_t len) noexcept {
+inline constexpr void LIBGPU_setlen(T& prim, const uint8_t len) noexcept {
     prim.tag &= 0x00FFFFFF;
     prim.tag |= (uint32_t) len << 24;
 }
 
-// Set the bounds of a type of RECT
-template <class TRect, class Txy, class Twh>
-inline void LIBGPU_setRECT(TRect& rect, const Txy x, const Txy y, const Twh w, const Twh h) noexcept {
+// Set the bounds of a RECT
+inline constexpr void LIBGPU_setRECT(RECT& rect, const int16_t x, const int16_t y, const int16_t w, const int16_t h) noexcept {
     rect.x = x;
     rect.y = y;
     rect.w = w;
     rect.h = h;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Computes the 'tpage' (texture page) member of a drawing primitive.
+// Note: the texture page address is limited to a multiple of 64 in the X direction and a multiple of 256 in the Y direction.
+//
+// Inputs:
+//  (1) texMode : What format the texture is in.
+//          0 = 4 bit indexed (uses CLUT)
+//          1 = 8 bit indexed (uses CLUT)
+//          2 = 16 bit raw/direct
+//  (2) semiTransRate : Semi transparency rate.
+//      Controls the blend equation, how much of the 'src' (new pixel) and 'dst' (previous pixel) to use.
+//          0 = 0.5 * dst + 0.5 * src   (50% alpha blend)
+//          1 = 1.0 * dst + 1.0 * src   (additive blend)
+//          2 = 1.0 * dst - 1.0 * src   (subtractive blend)
+//          3 = 1.0 * dst + 0.25 * src  (additive 25% blend)
+//  (3) tpageX : texture page address (x, must be multiple of 64)
+//  (4) tpageY : texture page address (y, must be multiple of 256)
+//------------------------------------------------------------------------------------------------------------------------------------------
+inline constexpr uint16_t LIBGPU_getTPage(
+    const int32_t texFmt,
+    const int32_t semiTransRate,
+    const int32_t tpageX,
+    const int32_t tpageY
+) noexcept {
+	 return (uint16_t)(
+        ((texFmt & 0x3) << 7)|
+        ((semiTransRate & 0x3) << 5)|
+        ((tpageY & 0x100) >> 4)|
+        ((tpageX & 0x3ff) >> 6)|
+	    ((tpageY & 0x200) << 2)
+    );
 }

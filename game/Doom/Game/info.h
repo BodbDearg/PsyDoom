@@ -1050,7 +1050,7 @@ enum mobjtype_t : uint32_t {
 // Sprite frame number flags and masks.
 // The flags are encoded in the frame number itself:
 static constexpr uint32_t FF_FULLBRIGHT = 0x8000;       // If set the sprite is always displayed fullbright, in spite of lighting conditions.
-static constexpr uint32_t FF_FRAMEMASK  = 0x7fff;       // Mask to retrieve the actual frame number itself.
+static constexpr uint32_t FF_FRAMEMASK  = 0x7FFF;       // Mask to retrieve the actual frame number itself.
 
 // Defines a finite state machine state that a map object or player sprite (weapon) can be in
 struct state_t {

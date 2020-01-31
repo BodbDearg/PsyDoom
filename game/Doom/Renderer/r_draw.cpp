@@ -2,7 +2,6 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/p_setup.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGTE.h"
 #include "r_local.h"
@@ -151,8 +150,7 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     }
     
     // Draw all sprites in the subsector
-    a0 = ptrToVmAddr(&subsec);
-    R_DrawSubsectorSprites();
+    R_DrawSubsectorSprites(subsec);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

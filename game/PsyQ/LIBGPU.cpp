@@ -3247,12 +3247,12 @@ void LIBGPU_SetPolyF4() noexcept {
     return;
 }
 
-void LIBGPU_SetPolyFT4() noexcept {
-    v0 = 9;                                             // Result = 00000009
-    sb(v0, a0 + 0x3);
-    v0 = 0x2C;                                          // Result = 0000002C
-    sb(v0, a0 + 0x7);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize a flat shaded textured quad primitive
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetPolyFT4(POLY_FT4& poly) noexcept {
+    LIBGPU_setlen(poly, 9);
+    poly.code = 0x2C;
 }
 
 void LIBGPU_SetPolyG4() noexcept {

@@ -1,7 +1,6 @@
 #include "i_file.h"
 
 #include "i_main.h"
-#include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
 
 static constexpr int32_t MAX_OPEN_FILES = 4;
@@ -55,10 +54,6 @@ int32_t OpenFile(const CdMapTbl_File discFile) noexcept {
     return fileSlotIdx;
 }
 
-void _thunk_OpenFile() noexcept {
-    v0 = OpenFile((CdMapTbl_File) a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Closes the previously opened file slot index
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -66,10 +61,6 @@ void CloseFile(const int32_t fileSlotIdx) noexcept {
     PsxCd_File& file = gOpenPsxCdFiles[fileSlotIdx];
     psxcd_close(file);
     file.file.size = 0;
-}
-
-void _thunk_CloseFile() noexcept {
-    CloseFile(a0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,10 +71,6 @@ int32_t SeekAndTellFile(const int32_t fileSlotIdx, const int32_t offset, const P
     PsxCd_File& file = gOpenPsxCdFiles[fileSlotIdx];
     psxcd_seek(file, offset, seekMode);
     return psxcd_tell(file);
-}
-
-void _thunk_SeekAndTellFile() noexcept {
-    v0 = SeekAndTellFile(a0, a1, (PsxCd_SeekMode) a2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -123,8 +110,4 @@ void ReadFile(const int32_t fileSlotIdx, void* const pBuffer, const uint32_t siz
     if (numBytesRead != (int32_t) size) {
         I_Error("ReadFile: error reading %d of %u bytes\n", numBytesRead, size);
     }
-}
-
-void _thunk_ReadFile() noexcept {
-    ReadFile(a0, vmAddrToPtr<void>(a1), a2);
 }

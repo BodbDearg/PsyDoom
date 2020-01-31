@@ -272,20 +272,12 @@ extern void R_InitSprites() noexcept;
 extern void R_TextureNumForName() noexcept;
 extern void R_FlatNumForName() noexcept;
 extern void R_InitPalette() noexcept;
-extern void R_DrawSubsectorSprites() noexcept;
-extern void R_DrawWeapon() noexcept;
 extern void R_Init() noexcept;
-extern void R_RenderPlayerView() noexcept;
 extern void R_SlopeDiv() noexcept;
 extern void R_PointToAngle2() noexcept;
 extern void _thunk_R_PointInSubsector() noexcept;
 extern void _thunk_W_CacheLumpNum() noexcept;
 extern void _thunk_W_CacheLumpName() noexcept;
-extern void InitOpenFileSlots() noexcept;
-extern void _thunk_OpenFile() noexcept;
-extern void _thunk_CloseFile() noexcept;
-extern void _thunk_SeekAndTellFile() noexcept;
-extern void _thunk_ReadFile() noexcept;
 extern void _thunk_Z_Malloc() noexcept;
 extern void _thunk_Z_EndMalloc() noexcept;
 extern void _thunk_Z_Free2() noexcept;
@@ -720,7 +712,6 @@ extern void LIBGPU_SetPolyF3() noexcept;
 extern void LIBGPU_SetPolyG3() noexcept;
 extern void LIBGPU_SetPolyGT3() noexcept;
 extern void LIBGPU_SetPolyF4() noexcept;
-extern void LIBGPU_SetPolyFT4() noexcept;
 extern void LIBGPU_SetPolyG4() noexcept;
 extern void LIBGPU_SetPolyGT4() noexcept;
 extern void LIBGPU_SetSprt8() noexcept;
@@ -1181,20 +1172,12 @@ namespace PsxVm {
         { 0x8002BDA4, &R_TextureNumForName },
         { 0x8002BE68, &R_FlatNumForName },
         { 0x8002BF2C, &R_InitPalette },
-        { 0x8002F330, &R_DrawSubsectorSprites },
-        { 0x8002FE34, &R_DrawWeapon },
         { 0x800305B0, &R_Init },
-        { 0x80030634, &R_RenderPlayerView },
         { 0x80030B58, &R_SlopeDiv },
         { 0x80030BA0, &R_PointToAngle2 },
         { 0x80030F5C, &_thunk_R_PointInSubsector },
         { 0x800317AC, &_thunk_W_CacheLumpNum },
         { 0x800319E4, &_thunk_W_CacheLumpName },
-        { 0x80031EB4, &InitOpenFileSlots },
-        { 0x80031EDC, &_thunk_OpenFile },
-        { 0x80031FD8, &_thunk_CloseFile },
-        { 0x80032024, &_thunk_SeekAndTellFile },
-        { 0x8003206C, &_thunk_ReadFile },
         { 0x800321D0, &_thunk_Z_Malloc },
         { 0x800323C8, &_thunk_Z_EndMalloc },
         { 0x800325D8, &_thunk_Z_Free2 },
@@ -1629,7 +1612,6 @@ namespace PsxVm {
         { 0x8004EC7C, &LIBGPU_SetPolyG3 },
         { 0x8004EC90, &LIBGPU_SetPolyGT3 },
         { 0x8004ECA4, &LIBGPU_SetPolyF4 },
-        { 0x8004ECB8, &LIBGPU_SetPolyFT4 },
         { 0x8004ECCC, &LIBGPU_SetPolyG4 },
         { 0x8004ECE0, &LIBGPU_SetPolyGT4 },
         { 0x8004ECF4, &LIBGPU_SetSprt8 },

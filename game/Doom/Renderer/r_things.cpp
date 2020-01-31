@@ -3,7 +3,6 @@
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/info.h"
-#include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -12,406 +11,248 @@
 #include "r_local.h"
 #include "r_main.h"
 
-void R_DrawSubsectorSprites() noexcept {
-    sp -= 0x58;
-    sw(s5, sp + 0x4C);
-    sw(s6, sp + 0x50);
-    sw(s4, sp + 0x48);
-    sw(s3, sp + 0x44);
-    sw(s2, sp + 0x40);
-    sw(s1, sp + 0x3C);
-    sw(s0, sp + 0x38);
+// Describes a sprite that is to be drawn
+struct vissprite_t {
+	int32_t                 viewx;      // Viewspace x position
+	fixed_t                 scale;      // Scale due to perspective
+	VmPtr<mobj_t>           thing;      // The thing
+    VmPtr<vissprite_t>      next;       // Next in the list of sprites
+};
 
-    auto stackCleanup = finally([]() {
-        s6 = lw(sp + 0x50);
-        s5 = lw(sp + 0x4C);
-        s4 = lw(sp + 0x48);
-        s3 = lw(sp + 0x44);
-        s2 = lw(sp + 0x40);
-        s1 = lw(sp + 0x3C);
-        s0 = lw(sp + 0x38);
-        sp += 0x58;        
-    });
+static_assert(sizeof(vissprite_t) == 16);
 
-    s5 = a0;
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 += 0x6D78;                                       // Result = 80096D78
-    v1 = v0 - 0xC;                                      // Result = 80096D6C
+// This is the maximum number of vissprites that can be drawn per subsector.
+// Any more than this will simply be ignored.
+static constexpr int32_t MAXVISSPRITES = 64;
+
+// The linked list of draw sprites (sorted back to front) for the current subsector and head of the draw list.
+// The head is a dummy vissprite which is not actually drawn and vorks in a similar fashion to the head of the map objects list.
+static const VmPtr<vissprite_t[MAXVISSPRITES]> gVisSprites(0x800A8A7C);
+static const VmPtr<vissprite_t[MAXVISSPRITES]> gVisSpriteHead(0x80096D6C);
+
+void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
+    // Initially the linked list of draw sprites is empty, cap it off as such
+    gVisSpriteHead->next = gVisSpriteHead.get();
     
-    sw(v1, v0);                                         // Store to: 80096D78
-    v0 = lw(s5);
-    s1 = lw(v0 + 0x4C);
-    s3 = 0x800B0000;                                    // Result = 800B0000
-    s3 -= 0x7584;                                       // Result = 800A8A7C
-    s4 = 0;                                             // Result = 00000000
-    s0 = s3 + 0xC;                                      // Result = 800A8A88
+    // Run through all the things in the current sector and add things in this subsector to the draw list
+    sector_t& sector = *subsec.sector;
+    int32_t numDrawSprites = 0;
 
-    for (s1 = lw(v0 + 0x4C); s1 != 0; s1 = lw(s1 + 0x1C)) {
-        v0 = lw(s1 + 0xC);
-        a2 = sp + 0x30;
+    {
+        vissprite_t* pVisSprite = gVisSprites.get();
 
-        if (v0 != s5)
-            continue;
+        for (mobj_t* pThing = sector.thinglist.get(); pThing; pThing = pThing->snext.get()) {
+            // Only draw the thing if it's in the subsector we are interested in
+            if (pThing->subsector != &subsec)
+                continue;
 
-        a0 = sp + 0x10;
-        v0 = lw(s1);
-        v1 = *gViewX;
-        a1 = sp + 0x18;
-        sh(0, sp + 0x12);
-        v0 -= v1;
-        v0 = u32(i32(v0) >> 16);
-        sh(v0, sp + 0x10);
-        v0 = lw(s1 + 0x4);
-        v1 = *gViewY;
-        v0 -= v1;
-        v0 = u32(i32(v0) >> 16);
-        sh(v0, sp + 0x14);
-        _thunk_LIBGTE_RotTrans();
-        v1 = lw(sp + 0x20);
+            // Get the sprite's viewspace position
+            VECTOR viewpos;
 
-        if (i32(v1) < 4)
-            continue;
+            {
+                SVECTOR worldpos = {
+                    (int16_t)((pThing->x - *gViewX) >> FRACBITS),
+                    0,
+                    (int16_t)((pThing->y - *gViewY) >> FRACBITS)
+                };
+                int32_t flagsOut;
+                LIBGTE_RotTrans(worldpos, viewpos, flagsOut);
+            }
 
-        a0 = v1 << 1;
-        v1 = lw(sp + 0x18);
+            // If the sprite is too close the near or left/right clip planes (respectively) then ignore.
+            // Note that the near plane clipping is more aggressive here than elsewhere, but left/right clipping is far more lenient
+            // since it increases the view frustrum FOV to around 126 degrees for the purposes of culling sprite positions:
+            if (viewpos.vz < NEAR_CLIP_DIST * 2)
+                continue;
+
+            {
+                const int32_t leftRightClipX = viewpos.vz * 2;
+
+                if (viewpos.vx < -leftRightClipX)
+                    continue;
+
+                if (viewpos.vx > leftRightClipX)
+                    continue;
+            }
         
-        if (i32(v1) < i32(-a0))
-            continue;
+            // Sprite is not offscreen! Save viewspace position, scale due to perspective, and it's thing.
+            pVisSprite->viewx = viewpos.vx;
+            pVisSprite->scale = (HALF_SCREEN_W * FRACUNIT) / viewpos.vz;
+            pVisSprite->thing = pThing;
 
-        if (i32(a0) < i32(v1))
-            continue;
+            // Find the vissprite in the linked list to insert the new sprite AFTER.
+            // This will be first sprite for which the next sprite is bigger than the new sprite we are inserting.
+            // This method basically sorts the sprites from back to front, with sprites at the back being first in the draw list:
+            vissprite_t* pInsertPt = gVisSpriteHead.get();
 
-        v0 = 0x800000;                                      // Result = 00800000
-        sw(v1, s3);                                         // Store to: 800A8A7C
-        v1 = lw(sp + 0x20);
-        div(v0, v1);
-        v0 = lo;
-        sw(s1, s0 - 0x4);                                   // Store to: 800A8A84
-        sw(v0, s0 - 0x8);                                   // Store to: 800A8A80
-        v0 = 0x80090000;                                    // Result = 80090000
-        v0 = lw(v0 + 0x6D78);                               // Load from: 80096D78
-        s2 = 0x80090000;                                    // Result = 80090000
-        s2 += 0x6D6C;                                       // Result = 80096D6C
-        a0 = lw(s0 - 0x8);                                  // Load from: 800A8A80
-        a1 = s2;                                            // Result = 80096D6C
+            {
+                vissprite_t* pNextSpr = pInsertPt->next.get();
 
-        while (v0 != 0x80096D6C) {
-            v1 = lw(s2 + 0xC);
-            v0 = lw(v1 + 0x4);
+                while (pNextSpr != gVisSpriteHead.get()) {
+                    if (pNextSpr->scale >= pVisSprite->scale)
+                        break;
 
-            if (i32(v0) >= i32(a0))
+                    pInsertPt = pNextSpr;
+                    pNextSpr = pNextSpr->next.get();
+                }
+            }
+
+            // Add the sprite into the linked list at the insertion point and move onto the next sprite slot
+            pVisSprite->next = pInsertPt->next;
+            pInsertPt->next = pVisSprite;
+            ++numDrawSprites;
+            ++pVisSprite;
+
+            // If we have exceeded the sprite limit then do not draw any more!
+            if (numDrawSprites >= MAXVISSPRITES)
                 break;
-
-            v0 = lw(v1 + 0xC);
-            s2 = v1;
         }
-
-        v0 = lw(s2 + 0xC);
-        s4++;                                               // Result = 00000001
-        sw(v0, s0);                                         // Store to: 800A8A88
-        s0 += 0x10;                                         // Result = 800A8A98
-        sw(s3, s2 + 0xC);
-        v0 = (i32(s4) < 0x40);                              // Result = 00000001
-        s3 += 0x10;                                         // Result = 800A8A8C
-
-        if (v0 == 0)
-            break;
     }
 
-    a1 = sp + 0x28;
-
-    if (s4 == 0)
+    // If there is nothing to draw then we are done
+    if (numDrawSprites == 0)
         return;
 
-    s0 = 0x1F800000;                                    // Result = 1F800000
-    s0 += 0x200;                                        // Result = 1F800200
-    a0 = s0;                                            // Result = 1F800200
-    sh(0, sp + 0x28);
-    sh(0, sp + 0x2A);
-    sh(0, sp + 0x2C);
-    sh(0, sp + 0x2E);
-    _thunk_LIBGPU_SetTexWindow();
-    s0 += 4;                                            // Result = 1F800204
-    t3 = 0xFF0000;                                      // Result = 00FF0000
-    t3 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t7 = 0x80080000;                                    // Result = 80080000
-    t7 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s1 = t7 & t3;                                       // Result = 00086550
-    t6 = 0x4000000;                                     // Result = 04000000
-    t5 = 0x80000000;                                    // Result = 80000000
-    t4 = -1;                                            // Result = FFFFFFFF
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    t1 = t0 << 2;
-    t2 = t1 + 4;
+    // Clear the texture window to disable wrapping
+    {
+        RECT texWinRect;
+        LIBGPU_setRECT(texWinRect, 0, 0, 0, 0);
 
-    I_AddPrim(getScratchAddr(128));
-	
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x6D78;                                       // Result = 80096D78
-    s2 = lw(v1);                                        // Load from: 80096D78
+        DR_TWIN* const pTexWinPrim = (DR_TWIN*) getScratchAddr(128);
+        LIBGPU_SetTexWindow(*pTexWinPrim, texWinRect);
+        I_AddPrim(pTexWinPrim);
+    }
     
-    v0 = 9;                                             // Result = 00000009
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x203);                                 // Store to: 1F800203
-    
-    v0 = 0x2C;                                          // Result = 0000002C
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x207);                                 // Store to: 1F800207
+    // Initialize the quad primitive used to draw sprites
+    POLY_FT4& polyPrim = *(POLY_FT4*) getScratchAddr(128);
+    LIBGPU_SetPolyFT4(polyPrim);
+    polyPrim.clut = *g3dViewPaletteClutId;
 
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lhu(a0 + 0x7F7C);                              // Load from: g3dViewPaletteClutId (80077F7C)
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(a0, at + 0x20E);                                 // Store to: 1F80020E
+    // Draw all the sprites in the draw list for the subsector
+    for (const vissprite_t* pSpr = gVisSpriteHead->next.get(); pSpr != gVisSpriteHead.get(); pSpr = pSpr->next.get()) {
+        // Grab the sprite frame to use
+        const mobj_t& thing = *pSpr->thing;
+        const spritedef_t& spriteDef = gSprites[thing.sprite];
+        const spriteframe_t& frame = spriteDef.spriteframes[thing.frame & FF_FRAMEMASK];
+        
+        // Decide on which sprite lump to use and whether the sprite is flipped.
+        // If the frame supports rotations then decide on the exact orientation to use, otherwise use the default.
+        int32_t lumpNum;
+        bool bFlipSpr;
 
-    s4 = 0xFF0000;                                      // Result = 00FF0000
-    s6 = 0x1F800000;                                    // Result = 1F800000
-    s6 += 0x200;                                        // Result = 1F800200
-    s5 = 0x80080000;                                    // Result = 80080000
-    s5 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s4 |= 0xFFFF;                                       // Result = 00FFFFFF
-
-    while (s2 != 0x80096D6C) {
-        s1 = lw(s2 + 0x8);
-        a0 = lw(s1 + 0x28);
-        v1 = lw(s1 + 0x2C);
-        a0 <<= 3;
-        v1 &= 0x7FFF;
-        v0 = v1 << 1;
-        v0 += v1;
-        v0 <<= 2;
-        v0 -= v1;
-        at = 0x80060000;                                    // Result = 80060000
-        at += 0x6BFC;                                       // Result = 80066BFC
-        at += a0;
-        v1 = lw(at);
-        v0 <<= 2;
-        s0 = v0 + v1;
-        v0 = lw(s0);
-
-        if (v0 != 0) {
+        if (frame.rotate) {
             a0 = *gViewX;
             a1 = *gViewY;
-            a2 = lw(s1);
-            a3 = lw(s1 + 0x4);
+            a2 = thing.x;
+            a3 = thing.y;
             R_PointToAngle2();
-            v1 = lw(s1 + 0x24);
-            v0 -= v1;
-            v1 = 0x90000000;                                    // Result = 90000000
-            v0 += v1;
-            v0 >>= 29;
-            v1 = v0 << 2;
-            v1 += s0;
-            v0 += s0;
-            v1 = lw(v1 + 0x4);
-            s3 = lbu(v0 + 0x24);
+
+            const angle_t angToThing = v0;
+            const uint32_t dirIdx = (angToThing - thing.angle + (ANG45 / 2) * 9) >> 29;     // Note: this is the same calculation as on PC
+
+            lumpNum = frame.lump[dirIdx];
+            bFlipSpr = frame.flip[dirIdx];
         } else {
-            v1 = lw(s0 + 0x4);
-            s3 = lbu(s0 + 0x24);
+            lumpNum = frame.lump[0];
+            bFlipSpr = frame.flip[0];
         }
 
-        v0 = *gFirstSpriteLumpNum;
-        v0 = v1 - v0;
-        v1 = *gpSpriteTextures;
-        v0 <<= 5;
-        s0 = v0 + v1;
-        a0 = s0;
+        // Upload the sprite texture to VRAM if not already uploaded
+        const int32_t sprIndex = lumpNum - *gFirstSpriteLumpNum;
+        texture_t& tex = (*gpSpriteTextures)[sprIndex];
+
+        a0 = ptrToVmAddr(&tex);
         I_CacheTex();
-        v0 = lw(s1 + 0x64);
-        v0 >>= 28;
-        v1 = v0 & 7;
 
-        if (v1 != 0) {
-            v0 = 0x1F800000;                                    // Result = 1F800000
-            v0 = lbu(v0 + 0x207);                               // Load from: 1F800207
-            v0 |= 2;
+        // Get the 3 blending flags and set whether the sprite is semi transparent
+        const int32_t blendFlags = (thing.flags & MF_ALL_BLEND_MASKS) >> 28;
+        
+        if (blendFlags != 0) {
+            LIBGPU_SetSemiTrans(&polyPrim, true);
         } else {
-            v0 = 0x1F800000;                                    // Result = 1F800000
-            v0 = lbu(v0 + 0x207);                               // Load from: 1F800207
-            v0 &= 0xFD;
+            LIBGPU_SetSemiTrans(&polyPrim, false);
         }
 
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x207);                                 // Store to: 1F800207
-        v0 = u32(i32(v1) >> 1);
-        v1 = lhu(s0 + 0xA);
-        v0 <<= 5;
-        v1 |= v0;
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v1, at + 0x216);                                 // Store to: 1F800216
-        v0 = 0xA0;
+        // Apply the desired semi transparency mode.
+        // Note: this is encoded/packed into the texture page id.
+        polyPrim.tpage = tex.texPageId | LIBGPU_getTPage(0, blendFlags >> 1, 0, 0);
 
-        if ((lw(s1 + 0x2C) & 0x8000) != 0) {
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v0, at + 0x204);                                 // Store to: 1F800204
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v0, at + 0x205);                                 // Store to: 1F800205
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v0, at + 0x206);                                 // Store to: 1F800206
+        // Set draw color
+        if (thing.frame & FF_FULLBRIGHT) {
+            LIBGPU_setRGB0(polyPrim, LIGHT_INTENSTIY_MAX, LIGHT_INTENSTIY_MAX, LIGHT_INTENSTIY_MAX);
         } else {
-            v0 = (uint8_t) *gCurLightValR;
-            v1 = (uint8_t) *gCurLightValG;
-            a0 = (uint8_t) *gCurLightValB;
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v0, at + 0x204);                                 // Store to: 1F800204
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v1, at + 0x205);                                 // Store to: 1F800205
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(a0, at + 0x206);                                 // Store to: 1F800206
+            LIBGPU_setRGB0(polyPrim, (uint8_t) *gCurLightValR, (uint8_t) *gCurLightValG, (uint8_t) *gCurLightValB);
         }
 
-        a1 = lw(s2 + 0x4);
-        v0 = lw(s1 + 0x8);
-        v1 = *gViewZ;
-        a0 = -a1;
-        v0 -= v1;
-        v1 = lh(s0 + 0x2);
-        v0 = u32(i32(v0) >> 16);
-        v0 += v1;
-        mult(a0, v0);
-        v1 = lh(s0 + 0x4);
-        v0 = v1 << 1;
-        v0 += v1;
-        v1 = v0 << 4;
-        v0 += v1;
-        v1 = v0 << 8;
-        v0 += v1;
-        v1 = lo;
-        v0 <<= 2;
-        v0 = u32(i32(v0) >> 16);
-        mult(v0, a1);
-        a0 = lo;
-        v0 = lh(s0 + 0x6);
-        mult(v0, a1);
-        v1 = u32(i32(v1) >> 16);
-        a2 = v1 + 0x64;
-        a3 = u32(i32(a0) >> 16);
-        v0 = lo;
-        t1 = u32(i32(v0) >> 16);
+        // Figure out the y position and width + height for the sprite.
+        //
+        // The 4/5 scaling of sprite width here is very interesting: this may have been an attempt to perhaps account for the fact
+        // that the original artwork was designed for non square pixels that were around 1.2 times taller than they were wide, so
+        // on a system where pixels were square (regular TVs?) this could make the artwork seem wider than originally intended.
+        // For more on this topic see 'GAME ENGINE BLACK BOOK: DOOM - 5.12.12 Sprite aspect ratio'.
+        //
+        // In any case the effect of the adjustment is largely nullified by the fact that the game stretches the 256 pixel wide
+        // framebuffer to roughly 293 pixels, so sprites like the Cacodemon still appear mostly round rather than elliptical.
+        // Oh well, points for effort at least!
+        constexpr fixed_t ASPECT_CORRECT = (FRACUNIT * 4) / 5;
+        
+        const fixed_t scale = pSpr->scale;
+        int32_t drawY = (thing.z - *gViewZ) >> FRACBITS;
+        drawY += tex.offsetY;
+        drawY = (drawY * -scale) >> FRACBITS;   // Scale due to perspective
+        drawY += HALF_VIEW_3D_H;
 
-        if (s3 == 0) {
-            v0 = lbu(s0 + 0x8);
-            v1 = lh(s0);
-            a0 = lw(s2);
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v0, at + 0x20C);                                 // Store to: 1F80020C
-            v0 = v1 << 1;
-            v0 += v1;
-            v1 = v0 << 4;
-            v0 += v1;
-            v1 = v0 << 8;
-            v0 += v1;
-            v0 <<= 2;
-            v0 = u32(i32(v0) >> 16);
-            a0 -= v0;
-            v0 = lbu(s0 + 0x8);
-            v1 = lbu(s0 + 0x4);
-            mult(a0, a1);
-            v0 += v1;
-            v0--;
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v0, at + 0x214);                                 // Store to: 1F800214
-            v0 = lbu(s0 + 0x8);
-            v1 = lbu(s0 + 0x4);
-            v0 += v1;
-            v0--;
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v0, at + 0x224);                                 // Store to: 1F800224
-            v0 = lbu(s0 + 0x8);
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v0, at + 0x21C);                                 // Store to: 1F80021C
-            v0 = lo;
-            v0 = u32(i32(v0) >> 16);
-            v1 = v0 + 0x80;
+        int32_t drawW = (tex.width * ASPECT_CORRECT) >> FRACBITS;
+        drawW = (drawW * scale) >> FRACBITS;
+
+        const int32_t drawH = (tex.height * scale) >> FRACBITS;
+
+        // Sprite UV coordinates for left, right, top and bottom
+        const uint8_t tex_ul = tex.texPageCoordX;
+        const uint8_t tex_ur = tex.texPageCoordX + (uint8_t) tex.width - 1;
+        const uint8_t tex_vt = tex.texPageCoordY;
+        const uint8_t tex_vb = tex.texPageCoordY + (uint8_t) tex.height - 1;
+
+        // Set sprite UV coordinates and decide on draw x position
+        const int32_t texOffsetX = (tex.offsetX * ASPECT_CORRECT) >> FRACBITS;
+        int32_t drawX;
+
+        if (!bFlipSpr) {
+            LIBGPU_setUV4(polyPrim, 
+                tex_ul, tex_vt,
+                tex_ur, tex_vt,
+                tex_ul, tex_vb,
+                tex_ur, tex_vb
+            );
+
+            drawX = ((pSpr->viewx - texOffsetX) * scale) >> FRACBITS;
+            drawX += HALF_SCREEN_W;
         } else {
-            v1 = lh(s0);
-            a0 = lbu(s0 + 0x4);
-            v0 = v1 << 1;
-            v0 += v1;
-            v1 = v0 << 4;
-            v0 += v1;
-            v1 = v0 << 8;
-            v0 += v1;
-            v0 <<= 2;
-            v1 = lw(s2);
-            v0 = u32(i32(v0) >> 16);
-            v0 += v1;
-            v1 = lbu(s0 + 0x8);
-            mult(v0, a1);
-            v1 += a0;
-            v1--;
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v1, at + 0x20C);                                 // Store to: 1F80020C
-            v0 = lbu(s0 + 0x8);
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v0, at + 0x214);                                 // Store to: 1F800214
-            v0 = lbu(s0 + 0x8);
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v0, at + 0x224);                                 // Store to: 1F800224
-            v0 = lbu(s0 + 0x8);
-            v1 = lbu(s0 + 0x4);
-            v0 += v1;
-            v0--;
-            v1 = a3 - 0x80;
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(v0, at + 0x21C);                                 // Store to: 1F80021C
-            v0 = lo;
-            v0 = u32(i32(v0) >> 16);
-            v1 = v0 - v1;
+            LIBGPU_setUV4(polyPrim, 
+                tex_ur, tex_vt,
+                tex_ul, tex_vt,
+                tex_ur, tex_vb,
+                tex_ul, tex_vb
+            );
+
+            drawX = ((pSpr->viewx + texOffsetX) * scale) >> FRACBITS;
+            drawX += HALF_SCREEN_W - drawW;
         }
 
-        t2 = s6 + 4;                                        // Result = 1F800204
-        t4 = s5 & s4;                                       // Result = 00086550
-        t7 = 0x4000000;                                     // Result = 04000000
-        t0 = 0x1F800000;                                    // Result = 1F800000
-        t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-        v0 = v1 + a3;
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x210);                                 // Store to: 1F800210
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x220);                                 // Store to: 1F800220
-        v0 = a2 + t1;
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v1, at + 0x208);                                 // Store to: 1F800208
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(a2, at + 0x20A);                                 // Store to: 1F80020A
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(a2, at + 0x212);                                 // Store to: 1F800212
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x222);                                 // Store to: 1F800222
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v1, at + 0x218);                                 // Store to: 1F800218
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x21A);                                 // Store to: 1F80021A
-        v0 = lbu(s0 + 0x9);
-        a2 = 0x80070000;                                    // Result = 80070000
-        a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-        t6 = 0x80000000;                                    // Result = 80000000
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-        v0 = lbu(s0 + 0x9);
-        t5 = -1;                                            // Result = FFFFFFFF
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x215);                                 // Store to: 1F800215
-        v0 = lbu(s0 + 0x9);
-        v1 = lbu(s0 + 0x6);
-        t1 = t0 << 2;
-        v0 += v1;
-        v0--;
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x225);                                 // Store to: 1F800225
-        v0 = lbu(s0 + 0x9);
-        v1 = lbu(s0 + 0x6);
-        t3 = t1 + 4;
-        v0 += v1;
-        v0--;
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x21D);                                 // Store to: 1F80021D
-	
-        I_AddPrim(getScratchAddr(128));	
-        s2 = lw(s2 + 0xC);
+        // Finally set the vertexes position and submit the quad
+        const int16_t pos_lx = (int16_t)(drawX);
+        const int16_t pos_rx = (int16_t)(drawX + drawW);
+        const int16_t pos_ty = (int16_t)(drawY);
+        const int16_t pos_by = (int16_t)(drawY + drawH);
+
+        LIBGPU_setXY4(polyPrim,
+            pos_lx, pos_ty,
+            pos_rx, pos_ty,
+            pos_lx, pos_by,
+            pos_rx, pos_by
+        );
+
+        I_AddPrim(&polyPrim);
     }
 }
 
@@ -442,17 +283,12 @@ void R_DrawWeapon() noexcept {
 
         // Setup the default drawing mode to disable wrapping (remove texture window).
         // This code also sets blending options and encodes that in the texture page id.
-        uint16_t transparencyFlags = 0;
+        bool bIsTransparent;
 
         {
             RECT texWin = { 0, 0, 0, 0 };
-            const bool bIsTransparent = ((player.mo->flags & MF_ALL_BLEND_MASKS) != 0);
-
-            if (bIsTransparent) {
-                transparencyFlags |= 0x20;  // TODO: make constants for PSYQ transparency flags
-            }
-
-            const uint16_t texPageId = tex.texPageId | transparencyFlags;
+            bIsTransparent = ((player.mo->flags & MF_ALL_BLEND_MASKS) != 0);
+            const uint16_t texPageId = tex.texPageId | LIBGPU_getTPage(0, (bIsTransparent) ? 1 : 0, 0, 0);
 
             DR_MODE& drawMode = *(DR_MODE*) getScratchAddr(128);
             LIBGPU_SetDrawMode(drawMode, false, false, texPageId, &texWin);
@@ -464,7 +300,7 @@ void R_DrawWeapon() noexcept {
         SPRT& spr = *(SPRT*) getScratchAddr(128);
         LIBGPU_SetSprt(spr);
 
-        if (transparencyFlags != 0) {
+        if (bIsTransparent) {
             LIBGPU_SetSemiTrans(&spr, true);
         }
 
