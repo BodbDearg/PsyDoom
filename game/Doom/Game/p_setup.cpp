@@ -728,18 +728,19 @@ static void P_GroupLines() noexcept {
 
         // Set the sound origin location for sector sounds and also the subsector.
         // Use the bounding box center for this.
-        pSec->soundorg.x = (bbox[BOXLEFT] + bbox[BOXRIGHT]) / 2;
-        pSec->soundorg.y = (bbox[BOXTOP] + bbox[BOXBOTTOM]) / 2;
+        {
+            degenmobj_t& soundorg = pSec->soundorg;
+            soundorg.x = (bbox[BOXLEFT] + bbox[BOXRIGHT]) / 2;
+            soundorg.y = (bbox[BOXTOP] + bbox[BOXBOTTOM]) / 2;
 
-        #if PC_PSX_DOOM_MODS
-            // The original code did not appear to initialize the 'z' field!
-            // I'm not sure it's used for sound code but give it a defined value of midway up in the air for good measure.
-            pSec->soundorg.z = (pSec->floorheight + pSec->ceilingheight) / 2;
-        #endif
+            #if PC_PSX_DOOM_MODS
+                // The original code did not appear to initialize the 'z' field!
+                // I'm not sure it's used for sound code but give it a defined value of midway up in the air for good measure.
+                soundorg.z = (pSec->floorheight + pSec->ceilingheight) / 2;
+            #endif
 
-        a0 = ptrToVmAddr(&pSec->soundorg);
-        _thunk_R_PointInSubsector();
-        pSec->soundorg.subsector = v0;
+            pSec->soundorg.subsector = R_PointInSubsector(soundorg.x, soundorg.y);
+        }
 
         // Compute the bounding box for the sector in blockmap units.
         // Note that if the sector extends the beyond the blockmap then we constrain it's coordinate.
