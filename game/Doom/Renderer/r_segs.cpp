@@ -201,7 +201,7 @@ void R_DrawWallPiece(
     }
 
     // Initialization of the flat shaded textured triangle drawing primitive
-    POLY_FT3& polyPrim = *(POLY_FT3*) getScratchAddr(128);	
+    POLY_FT3& polyPrim = *(POLY_FT3*) getScratchAddr(128);
     LIBGPU_SetPolyFT3(polyPrim);
         
     if (bTransparent) {

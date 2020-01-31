@@ -4,28 +4,28 @@
 
 // Represents a basic transform matrix encoding a 3D rotation and translation
 struct MATRIX {
-    int16_t		m[3][3];    // Rotation matrix: 3x3
-    int32_t		t[3];       // Translation
+    int16_t     m[3][3];    // Rotation matrix: 3x3
+    int32_t     t[3];       // Translation
 };
 
 static_assert(sizeof(MATRIX) == 32);
 
 // 3D vector with 32-bit elements
 struct VECTOR {
-	int32_t		vx;
-	int32_t		vy;
-	int32_t		vz;
-	int32_t		pad;
+    int32_t     vx;
+    int32_t     vy;
+    int32_t     vz;
+    int32_t     pad;
 };
 
 static_assert(sizeof(VECTOR) == 16);
 
-// 3D vector with 16-bit elements	
+// 3D vector with 16-bit elements   
 struct SVECTOR {
-	int16_t		vx;
-	int16_t		vy;
-	int16_t		vz;
-	int16_t		pad;
+    int16_t     vx;
+    int16_t     vy;
+    int16_t     vz;
+    int16_t     pad;
 };
 
 static_assert(sizeof(SVECTOR) == 8);

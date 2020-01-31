@@ -69,7 +69,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
         LIBGPU_SetTexWindow(*pTexWinPrim, texWinRect);
         I_AddPrim(pTexWinPrim);
     }
-	
+    
     // Get Z position of the plane (height) in viewspace
     fixed_t planeZ;
 
@@ -422,7 +422,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                     (uint8_t) spanUR, (uint8_t) spanVR,
                     (uint8_t) spanUR, (uint8_t) spanVR
                 );
-	            
+                
                 I_AddPrim(&polyPrim);
                 
                 // Move coords onto the next span.

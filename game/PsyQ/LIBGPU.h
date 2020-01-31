@@ -87,7 +87,7 @@ struct POLY_FT4 {
     int16_t     y3;
     uint8_t     tu3;        // Vertex 4: texture coords
     uint8_t     tv3;
-	uint16_t    pad2;       // Not used
+    uint16_t    pad2;       // Not used
 };
 
 static_assert(sizeof(POLY_FT4) == 40);
@@ -411,11 +411,11 @@ inline constexpr uint16_t LIBGPU_getTPage(
     const int32_t tpageX,
     const int32_t tpageY
 ) noexcept {
-	 return (uint16_t)(
+     return (uint16_t)(
         ((texFmt & 0x3) << 7)|
         ((semiTransRate & 0x3) << 5)|
         ((tpageY & 0x100) >> 4)|
         ((tpageX & 0x3ff) >> 6)|
-	    ((tpageY & 0x200) << 2)
+        ((tpageY & 0x200) << 2)
     );
 }

@@ -13,9 +13,9 @@
 
 // Describes a sprite that is to be drawn
 struct vissprite_t {
-	int32_t                 viewx;      // Viewspace x position
-	fixed_t                 scale;      // Scale due to perspective
-	VmPtr<mobj_t>           thing;      // The thing
+    int32_t                 viewx;      // Viewspace x position
+    fixed_t                 scale;      // Scale due to perspective
+    VmPtr<mobj_t>           thing;      // The thing
     VmPtr<vissprite_t>      next;       // Next in the list of sprites
 };
 
@@ -329,7 +329,7 @@ void R_DrawWeapon() noexcept {
                 (uint8_t) *gCurLightValB
             );
         }
-	    
+        
         I_AddPrim(&spr);
     }
 }
