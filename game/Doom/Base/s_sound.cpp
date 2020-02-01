@@ -352,7 +352,7 @@ loc_80041450:
     v0 = 0x4640000;                                     // Result = 04640000
     v0 = (i32(v0) < i32(s1));
     if (v0 != 0) goto loc_80041594;
-    R_PointToAngle2();
+    _thunk_R_PointToAngle2();
     a0 = lw(s2 + 0x24);
     v1 = v0;
     v0 = (a0 < v1);

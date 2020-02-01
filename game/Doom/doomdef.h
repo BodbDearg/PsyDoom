@@ -35,17 +35,20 @@ typedef uint32_t angle_t;
 static constexpr angle_t ANG45  = 0x20000000;
 static constexpr angle_t ANG90  = 0x40000000;
 static constexpr angle_t ANG180 = 0x80000000;
-static constexpr angle_t ANG270 = 0xc0000000;
+static constexpr angle_t ANG270 = 0xC0000000;
 
 // Constants relating to trig lookup tables
 static constexpr uint32_t FINEANGLES        = 8192;                 // How many entries in sine, cosine etc. LUTs. The number of 'fine' angles.
 static constexpr uint32_t FINEMASK          = FINEANGLES - 1;       // Wrap a 'fine' angle to the LUT tables
 static constexpr uint32_t ANGLETOFINESHIFT  = 19;                   // How many bits to chop off when converting a BAM angle to a 'fine' angle for looking up the trig LUTs.
+static constexpr uint32_t SLOPERANGE	    = 2048;                 // Number of entries (-1) in the 
 
 // The trig lookup tables.
 // Note that the cosine table is just the sine table phase shifted by PI/2.
+// The 'gTanToAngle' also is only defined for angles 0-45 degrees, and the lookup index must be obtained by using 'R_SlopeDiv'.
 extern const fixed_t gFineSine[(5 * FINEANGLES) / 4];
 extern const fixed_t* const gFineCosine;
+extern const angle_t gTanToAngle[SLOPERANGE + 1];   // +1 so we can handle slope 'x/y' where 'x == y' without extra checking.
 
 // Provides a multiplier for a screen y coordinate.
 // When multiplied against a plane/flat z-height, yields the distance away that a particular flat span is.

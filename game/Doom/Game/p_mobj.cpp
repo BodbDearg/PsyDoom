@@ -1442,7 +1442,7 @@ loc_8001DE80:
     a1 = lw(s4 + 0x4);
     a2 = lw(s6);
     a3 = lw(s6 + 0x4);
-    R_PointToAngle2();
+    _thunk_R_PointToAngle2();
     s2 = v0;
     v0 = lw(s6 + 0x64);
     v1 = 0x70000000;                                    // Result = 70000000

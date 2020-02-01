@@ -272,9 +272,7 @@ extern void R_InitSprites() noexcept;
 extern void R_TextureNumForName() noexcept;
 extern void R_FlatNumForName() noexcept;
 extern void R_InitPalette() noexcept;
-extern void R_Init() noexcept;
-extern void R_SlopeDiv() noexcept;
-extern void R_PointToAngle2() noexcept;
+extern void _thunk_R_PointToAngle2() noexcept;
 extern void _thunk_R_PointInSubsector() noexcept;
 extern void _thunk_W_CacheLumpNum() noexcept;
 extern void _thunk_W_CacheLumpName() noexcept;
@@ -1172,9 +1170,7 @@ namespace PsxVm {
         { 0x8002BDA4, &R_TextureNumForName },
         { 0x8002BE68, &R_FlatNumForName },
         { 0x8002BF2C, &R_InitPalette },
-        { 0x800305B0, &R_Init },
-        { 0x80030B58, &R_SlopeDiv },
-        { 0x80030BA0, &R_PointToAngle2 },
+        { 0x80030BA0, &_thunk_R_PointToAngle2 },
         { 0x80030F5C, &_thunk_R_PointInSubsector },
         { 0x800317AC, &_thunk_W_CacheLumpNum },
         { 0x800319E4, &_thunk_W_CacheLumpName },

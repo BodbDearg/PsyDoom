@@ -162,277 +162,70 @@ void R_RenderPlayerView() noexcept {
     }
 }
 
-void R_SlopeDiv() noexcept {
-    v0 = (a1 < 0x200);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x800;                                     // Result = 00000800
-        if (bJump) goto loc_80030B98;
-    }
-    v1 = a0 << 3;
-    v0 = a1 >> 8;
-    divu(v1, v0);
-    if (v0 != 0) goto loc_80030B7C;
-    _break(0x1C00);
-loc_80030B7C:
-    v1 = lo;
-    v0 = (v1 < 0x801);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = v1;
-        if (bJump) goto loc_80030B98;
-    }
-    v1 = 0x800;                                         // Result = 00000800
-    v0 = v1;                                            // Result = 00000800
-loc_80030B98:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Figures out the index from 'gTanToAngle' to use for the given input angle.
+// The angle is specified by the slope, which is decomposed into a separate numerator and demoninator.
+// This function is only meaningful for angles within the first octant of the unit circle (<= 45 degrees).
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t R_SlopeDiv(const uint32_t num, const uint32_t den) noexcept {
+    // If we're going to be dividing by 1 (or zero) then just return the max angle index (45 degrees)
+    if (den < 512) 
+        return SLOPERANGE;
+
+    // Otherwise figure out the lookup index from the table and clamp to the max range
+    const uint32_t ans = (num << 3) / (den >> 8);
+    return (ans <= SLOPERANGE) ? ans : SLOPERANGE;
 }
 
-void R_PointToAngle2() noexcept {
-loc_80030BA0:
-    a2 -= a0;
-    a3 -= a1;
-    if (a2 != 0) goto loc_80030BB4;
-    v0 = 0;                                             // Result = 00000000
-    if (a3 == 0) goto loc_80030EAC;
-loc_80030BB4:
-    if (i32(a2) < 0) goto loc_80030D30;
-    v0 = (i32(a3) < i32(a2));
-    if (i32(a3) < 0) goto loc_80030C68;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (a2 < 0x200);
-        if (bJump) goto loc_80030C24;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Calculates the angle going from one 2d point to another
+//------------------------------------------------------------------------------------------------------------------------------------------
+angle_t R_PointToAngle2(const fixed_t x1, const fixed_t y1, const fixed_t x2, const fixed_t y2) noexcept {
+    fixed_t dx = x2 - x1;
+    fixed_t dy = y2 - y1;
+
+    if (dx == 0 && dy == 0)
+        return 0;
+
+    if (dx >= 0) {        
+        if (dy >= 0) {
+            if (dx > dy) {
+                return gTanToAngle[R_SlopeDiv(dy, dx)];                 // Octant 0
+            } else {
+                return ANG90 - 1 - gTanToAngle[R_SlopeDiv(dx, dy)];     // Octant 1
+            }
+        } else {
+            dy = -dy;
+            
+            if (dx > dy) {
+                return -gTanToAngle[R_SlopeDiv(dy, dx)];                // Octant 8
+            } else {
+                return ANG270 + gTanToAngle[R_SlopeDiv(dx, dy)];        // Octant 7
+            }
+        }
+    } else {
+        dx = -dx;
+
+        if (dy >= 0) {
+            if (dx > dy) {
+                return ANG180 - 1 - gTanToAngle[R_SlopeDiv(dy, dx)];    // Octant 3
+            } else {
+                return ANG90 + gTanToAngle[R_SlopeDiv(dx, dy)];         // Octant 2
+            }
+        } else {
+            dy = -dy;
+
+            if (dx > dy) {
+                return gTanToAngle[R_SlopeDiv(dy, dx)] - ANG180;        // Octant 4
+            } else {
+                return ANG270 - 1 - gTanToAngle[R_SlopeDiv(dx, dy)];    // Octant 5
+            }
+        }
     }
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x800;                                     // Result = 00000800
-        if (bJump) goto loc_80030C08;
-    }
-    v1 = a3 << 3;
-    v0 = a2 >> 8;
-    divu(v1, v0);
-    if (v0 != 0) goto loc_80030BEC;
-    _break(0x1C00);
-loc_80030BEC:
-    v1 = lo;
-    v0 = (v1 < 0x801);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = v1;
-        if (bJump) goto loc_80030C08;
-    }
-    v1 = 0x800;                                         // Result = 00000800
-    v0 = v1;                                            // Result = 00000800
-loc_80030C08:
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x1958;                                       // Result = TanToAngle[0] (80071958)
-    at += v0;
-    v0 = lw(at);
-    goto loc_80030EAC;
-loc_80030C24:
-    v0 = (a3 < 0x200);
-    v1 = 0x800;                                         // Result = 00000800
-    if (v0 != 0) goto loc_80030C60;
-    v1 = a2 << 3;
-    v0 = a3 >> 8;
-    divu(v1, v0);
-    if (v0 != 0) goto loc_80030C48;
-    _break(0x1C00);
-loc_80030C48:
-    v1 = lo;
-    v0 = (v1 < 0x801);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x3FFF0000;                                // Result = 3FFF0000
-        if (bJump) goto loc_80030E90;
-    }
-    v1 = 0x800;                                         // Result = 00000800
-loc_80030C60:
-    v0 = 0x3FFF0000;                                    // Result = 3FFF0000
-    goto loc_80030E90;
-loc_80030C68:
-    a3 = -a3;
-    v0 = (i32(a3) < i32(a2));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (a2 < 0x200);
-        if (bJump) goto loc_80030CD0;
-    }
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x800;                                     // Result = 00000800
-        if (bJump) goto loc_80030CB4;
-    }
-    v1 = a3 << 3;
-    v0 = a2 >> 8;
-    divu(v1, v0);
-    if (v0 != 0) goto loc_80030C98;
-    _break(0x1C00);
-loc_80030C98:
-    v1 = lo;
-    v0 = (v1 < 0x801);
-    if (v0 != 0) goto loc_80030CB0;
-    v1 = 0x800;                                         // Result = 00000800
-loc_80030CB0:
-    v0 = v1;
-loc_80030CB4:
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x1958;                                       // Result = TanToAngle[0] (80071958)
-    at += v0;
-    v0 = lw(at);
-    v0 = -v0;
-    goto loc_80030EAC;
-loc_80030CD0:
-    v0 = (a3 < 0x200);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x800;                                     // Result = 00000800
-        if (bJump) goto loc_80030D10;
-    }
-    v1 = a2 << 3;
-    v0 = a3 >> 8;
-    divu(v1, v0);
-    if (v0 != 0) goto loc_80030CF4;
-    _break(0x1C00);
-loc_80030CF4:
-    v1 = lo;
-    v0 = (v1 < 0x801);
-    if (v0 != 0) goto loc_80030D0C;
-    v1 = 0x800;                                         // Result = 00000800
-loc_80030D0C:
-    v0 = v1;
-loc_80030D10:
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x1958;                                       // Result = TanToAngle[0] (80071958)
-    at += v0;
-    v1 = lw(at);
-    v0 = 0xC0000000;                                    // Result = C0000000
-    v0 += v1;
-    goto loc_80030EAC;
-loc_80030D30:
-    a2 = -a2;
-    if (i32(a3) < 0) goto loc_80030DE4;
-    v0 = (i32(a3) < i32(a2));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (a2 < 0x200);
-        if (bJump) goto loc_80030D84;
-    }
-    v1 = 0x800;                                         // Result = 00000800
-    if (v0 != 0) goto loc_80030D7C;
-    v1 = a3 << 3;
-    v0 = a2 >> 8;
-    divu(v1, v0);
-    if (v0 != 0) goto loc_80030D64;
-    _break(0x1C00);
-loc_80030D64:
-    v1 = lo;
-    v0 = (v1 < 0x801);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x7FFF0000;                                // Result = 7FFF0000
-        if (bJump) goto loc_80030E90;
-    }
-    v1 = 0x800;                                         // Result = 00000800
-loc_80030D7C:
-    v0 = 0x7FFF0000;                                    // Result = 7FFF0000
-    goto loc_80030E90;
-loc_80030D84:
-    v0 = (a3 < 0x200);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x800;                                     // Result = 00000800
-        if (bJump) goto loc_80030DC4;
-    }
-    v1 = a2 << 3;
-    v0 = a3 >> 8;
-    divu(v1, v0);
-    if (v0 != 0) goto loc_80030DA8;
-    _break(0x1C00);
-loc_80030DA8:
-    v1 = lo;
-    v0 = (v1 < 0x801);
-    if (v0 != 0) goto loc_80030DC0;
-    v1 = 0x800;                                         // Result = 00000800
-loc_80030DC0:
-    v0 = v1;
-loc_80030DC4:
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x1958;                                       // Result = TanToAngle[0] (80071958)
-    at += v0;
-    v1 = lw(at);
-    v0 = 0x40000000;                                    // Result = 40000000
-    v0 += v1;
-    goto loc_80030EAC;
-loc_80030DE4:
-    a3 = -a3;
-    v0 = (i32(a3) < i32(a2));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (a2 < 0x200);
-        if (bJump) goto loc_80030E50;
-    }
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x800;                                     // Result = 00000800
-        if (bJump) goto loc_80030E30;
-    }
-    v1 = a3 << 3;
-    v0 = a2 >> 8;
-    divu(v1, v0);
-    if (v0 != 0) goto loc_80030E14;
-    _break(0x1C00);
-loc_80030E14:
-    v1 = lo;
-    v0 = (v1 < 0x801);
-    if (v0 != 0) goto loc_80030E2C;
-    v1 = 0x800;                                         // Result = 00000800
-loc_80030E2C:
-    v0 = v1;
-loc_80030E30:
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x1958;                                       // Result = TanToAngle[0] (80071958)
-    at += v0;
-    v1 = lw(at);
-    v0 = 0x80000000;                                    // Result = 80000000
-    v0 = v1 - v0;
-    goto loc_80030EAC;
-loc_80030E50:
-    v0 = (a3 < 0x200);
-    v1 = 0x800;                                         // Result = 00000800
-    if (v0 != 0) goto loc_80030E8C;
-    v1 = a2 << 3;
-    v0 = a3 >> 8;
-    divu(v1, v0);
-    if (v0 != 0) goto loc_80030E74;
-    _break(0x1C00);
-loc_80030E74:
-    v1 = lo;
-    v0 = (v1 < 0x801);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0xBFFF0000;                                // Result = BFFF0000
-        if (bJump) goto loc_80030E90;
-    }
-    v1 = 0x800;                                         // Result = 00000800
-loc_80030E8C:
-    v0 = 0xBFFF0000;                                    // Result = BFFF0000
-loc_80030E90:
-    v1 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x1958;                                       // Result = TanToAngle[0] (80071958)
-    at += v1;
-    v1 = lw(at);
-    v0 |= 0xFFFF;
-    v0 -= v1;
-loc_80030EAC:
-    return;
+}
+
+void _thunk_R_PointToAngle2() noexcept {
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

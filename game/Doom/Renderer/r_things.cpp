@@ -141,14 +141,8 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         bool bFlipSpr;
 
         if (frame.rotate) {
-            a0 = *gViewX;
-            a1 = *gViewY;
-            a2 = thing.x;
-            a3 = thing.y;
-            R_PointToAngle2();
-
-            const angle_t angToThing = v0;
-            const uint32_t dirIdx = (angToThing - thing.angle + (ANG45 / 2) * 9) >> 29;     // Note: this is the same calculation as on PC
+            const angle_t angToThing = R_PointToAngle2(*gViewX, *gViewY, thing.x, thing.y);
+            const uint32_t dirIdx = (angToThing - thing.angle + (ANG45 / 2) * 9) >> 29;     // Note: same calculation as PC Doom
 
             lumpNum = frame.lump[dirIdx];
             bFlipSpr = frame.flip[dirIdx];

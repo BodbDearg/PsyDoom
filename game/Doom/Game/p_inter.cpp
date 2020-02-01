@@ -1315,7 +1315,7 @@ loc_8001A9AC:
     a1 = lw(s5 + 0x4);
     a2 = lw(s0);
     a3 = lw(s0 + 0x4);
-    R_PointToAngle2();
+    _thunk_R_PointToAngle2();
     s4 = v0;
     v0 = s3 << 1;
     v0 += s3;
