@@ -8,12 +8,12 @@
 //  - Tags < PU_PURGELEVEL are not overwritten until freed.
 //  - Tags >= PU_PURGELEVEL are purgable whenever needed.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static constexpr int16_t PU_STATIC      = 1;    // Static the entire execution time
-static constexpr int16_t PU_LEVEL       = 2;    // Remains until level is unloaded
-static constexpr int16_t PU_LEVSPEC     = 4;    // TODO: comment on typical use
-static constexpr int16_t PU_ANIMATION   = 8;    // TODO: comment on typical use
-static constexpr int16_t PU_PURGELEVEL  = 16;   // TODO: comment on typical use
-static constexpr int16_t PU_CACHE       = 32;   // TODO: comment on typical use
+static constexpr int16_t PU_STATIC      = 0x01;     // Static the entire execution time
+static constexpr int16_t PU_LEVEL       = 0x02;     // Remains until level is unloaded
+static constexpr int16_t PU_LEVSPEC     = 0x04;     // TODO: comment on typical use
+static constexpr int16_t PU_ANIMATION   = 0x08;     // TODO: comment on typical use
+static constexpr int16_t PU_PURGELEVEL  = 0x10;     // TODO: comment on typical use
+static constexpr int16_t PU_CACHE       = 0x20;     // TODO: comment on typical use
 
 // All blocks must have this id
 static constexpr int16_t ZONEID = 0x1D4A;

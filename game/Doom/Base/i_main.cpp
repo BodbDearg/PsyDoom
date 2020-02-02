@@ -25,10 +25,10 @@
 //  (3) The first 4 texture pages are reserved for the front and back framebuffer.
 //      Each framebuffer is 256x256 pixels (note: some vertical space is unused) but since the data is
 //      16 bits per pixel rather than 8 bits, each screen occupies 2 texture pages rather than 1.
-//  (4) The 5th texture page is reserved for UI elements and fonts.
-//      These elements are kept loaded at all times.
-//  (5) The remaining 11 pages are free to be used in any way for map textures and sprites.
+//  (4) Following that, 11 pages are free to be used in any way for map textures and sprites.
 //      This is what is referred to as the 'texture cache'.
+//  (5) 1 texture page at the end appears to be reserved/unused during gameplay.
+//      TODO: find out more about why this is.
 //  (6) Each of the 11 256x256 pages are broken up into a grid of 16x16 cells, where each cell is 16 pixels wide and tall.
 //      Each cell stores a pointer to the 'texture_t' occupying the cell, if any.
 //  (7) When adding a sprite or texture to the cache, the code will search through the cells for a free space
@@ -52,6 +52,7 @@ constexpr uint32_t TCACHE_CELL_SIZE         = 16;
 constexpr uint32_t TCACHE_CELLS_X           = 256 / TCACHE_CELL_SIZE;
 constexpr uint32_t TCACHE_CELLS_Y           = 256 / TCACHE_CELL_SIZE;
 constexpr uint32_t NUM_TCACHE_PAGE_CELLS    = TCACHE_CELLS_X * TCACHE_CELLS_Y;
+constexpr uint32_t ALL_TPAGES_MASK          = (UINT32_MAX >> (32 - NUM_TCACHE_PAGES));
 
 struct tcachepage_t {
     VmPtr<texture_t> cells[TCACHE_CELLS_Y][TCACHE_CELLS_X];
@@ -64,6 +65,29 @@ struct tcache_t {
 };
 
 static_assert(sizeof(tcache_t) == 1024 * 11);
+
+// The texture coordinates of each texture cache page in VRAM. 
+// Notes:
+//  (1) Since the PsyQ SDK expects these coordinates to be in terms of a 16-bit texture, X is halved here
+//      because Doom's textures are actually 8 bit.
+//  (2) The coordinates ignore the first 4 pages in VRAM, since that is used for the framebuffer.
+//  (3) The extra 'reserved' texture page that is not used in the cache is also here too, hence 1 extra coordinate.
+//      TODO: find out more about this.
+//
+constexpr uint16_t TEX_PAGE_VRAM_TEXCOORDS[NUM_TCACHE_PAGES + 1][2] = {
+    512,    0,
+    640,    0,
+    768,    0,
+    896,    0,
+    0,      256,
+    128,    256,
+    256,    256,
+    384,    256,
+    512,    256,
+    640,    256,
+    768,    256,
+    896,    256
+};
 
 // Texture cache variables.
 // The texture cache data structure, where we are filling in the cache next and the current fill row height.
@@ -902,246 +926,166 @@ void I_Init() noexcept {
     I_PurgeTexCache();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Upload the specified texture into VRAM if it's not already resident.
+// If there's no more room for textures in VRAM for this frame then the game will die with an error.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_CacheTex(texture_t& tex) noexcept {
-    a0 = ptrToVmAddr(&tex);
+    // First update the frame the texture was added to the cache, for tracking overflows
+    tex.uploadFrameNum = *gNumFramesDrawn;
 
-    sp -= 0x58;
-    sw(s3, sp + 0x44);
-    sw(s5, sp + 0x4C);
-    sw(s4, sp + 0x48);
-    sw(s2, sp + 0x40);
-    sw(s1, sp + 0x3C);
-    sw(s0, sp + 0x38);
-
-    auto cleanupStack = finally([](){
-        s5 = lw(sp + 0x4C);
-        s4 = lw(sp + 0x48);
-        s3 = lw(sp + 0x44);
-        s2 = lw(sp + 0x40);
-        s1 = lw(sp + 0x3C);
-        s0 = lw(sp + 0x38);
-        sp += 0x58;
-    });
-
-    s3 = a0;
-
-    v0 = *gNumFramesDrawn;
-    v1 = lhu(s3 + 0xA);
-    sw(v0, s3 + 0x1C);
-
-    if (v1 != 0)
+    // If the texture is already in the cache then there is nothing else to do
+    if (tex.texPageId != 0)
         return;
 
-    s5 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
+    const uint32_t startTCacheFillPage = *gTCacheFillPage;
+    VmPtr<texture_t>* pTexStartCacheCell = nullptr;
 
     {
-    begin:
-        v0 = lh(s3 + 0xC);
-        v1 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
-        v0 += v1;
-
-        if (i32(v0) > 0x10) {
-            v0 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
-            v1 = lw(gp + 0xC98);                                // Load from: gTCacheFillRowCellH (80078278)
-            sw(0, gp + 0xD04);                                  // Store to: gTCacheFillCellX (800782E4)
-            sw(0, gp + 0xC98);                                  // Store to: gTCacheFillRowCellH (80078278)
-            v0 += v1;
-            sw(v0, gp + 0xD08);                                 // Store to: gTCacheFillCellY (800782E8)
+    find_free_tcache_location:
+        // Move onto another row in the texture cache if this row can't accomodate the texture
+        if (*gTCacheFillCellX + tex.widthIn16Blocks > TCACHE_CELLS_X) {
+            *gTCacheFillCellY = *gTCacheFillCellY + *gTCacheFillRowCellH;
+            *gTCacheFillCellX = 0;
+            *gTCacheFillRowCellH = 0;
         }
-
-        v0 = lh(s3 + 0xE);
-        v1 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
-        v0 += v1;
-        s2 = 0;
-
-        if (i32(v0) > 0x10) {
-            a2 = 0x2E8B0000;                                    // Result = 2E8B0000
-            a2 |= 0xA2E9;                                       // Result = 2E8BA2E9
-            a1 = *gLockedTexPagesMask;
-
-            do {
-                a0 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
-                a0++;
-                mult(a0, a2);
-                v0 = u32(i32(a0) >> 31);
-                v1 = hi;
-                v1 = u32(i32(v1) >> 1);
-                v1 -= v0;
-                v0 = v1 << 1;
-                v0 += v1;
-                v0 <<= 2;
-                v0 -= v1;
-                a0 -= v0;
-                v0 = i32(a1) >> a0;
-                v0 &= 1;
-                sw(a0, gp + 0xA48);                                 // Store to: gTCacheFillPage (80078028)
-            } while (v0 != 0);
-
-            s2 = 0;
         
-            if (a0 == s5) {
+        // Move onto another page in the texture cache if this page can't accomodate the texture.
+        // Find one that is not locked and which is available for modification.
+        if (*gTCacheFillCellY + tex.heightIn16Blocks > TCACHE_CELLS_Y) {            
+            const uint32_t lockedTPages = *gLockedTexPagesMask;
+
+            // PC-PSX: if all the pages are locked this code will loop forever.
+            // If this situation arises go straight to the overflow error so we can at least report the problem.
+            #if PC_PSX_DOOM_MODS
+                if ((lockedTPages & ALL_TPAGES_MASK) != ALL_TPAGES_MASK) {
+            #endif
+                    // Continue moving to the next texture page and wraparound if required until we find one that is not locked
+                    do {
+                        *gTCacheFillPage += 1;
+                        *gTCacheFillPage -= (*gTCacheFillPage / NUM_TCACHE_PAGES) * NUM_TCACHE_PAGES;
+                    } while ((lockedTPages >> *gTCacheFillPage) & 1);
+            #if PC_PSX_DOOM_MODS
+                }
+            #endif
+
+            // If we wound up back where we started then there's nowhere in the cache to fit this texture.
+            // This is where the imfamous overflow error kicks in...
+            if (*gTCacheFillPage == startTCacheFillPage) {
                 I_Error("Texture Cache Overflow\n");
             }
 
-            sw(0, gp + 0xD04);                                  // Store to: gTCacheFillCellX (800782E4)
-            sw(0, gp + 0xD08);                                  // Store to: gTCacheFillCellY (800782E8)
-            sw(0, gp + 0xC98);                                  // Store to: gTCacheFillRowCellH (80078278)
+            *gTCacheFillCellX = 0;
+            *gTCacheFillCellY = 0;
+            *gTCacheFillRowCellH = 0;
         }
 
-        v1 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
-        v0 = lw(gp + 0x994);                                // Load from: gpTexCache (80077F74)
-        a0 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
-        v1 <<= 10;
-        v1 += v0;
-        a0 <<= 6;
-        v0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
-        v1 += a0;
-        v0 <<= 2;
-        s4 = v1 + v0;
-        v0 = lh(s3 + 0xE);
-        s1 = s4;
+        // At the current fill location search all of the cells in the texture cache that this texture would occupy.
+        // Make sure all of the cells are free and available for use before we can proceed.
+        // If cells are not free then evict whatever is in the cache if allowed, otherwise skip past it.
+        tcache_t& tcache = **gpTexCache;
+        tcachepage_t& tcachepage = tcache.pages[*gTCacheFillPage];
+        pTexStartCacheCell = &tcachepage.cells[*gTCacheFillCellY][*gTCacheFillCellX];
 
-        if (i32(v0) > 0) {
-            do {
-                v0 = lh(s3 + 0xC);
-                s0 = 0;
+        {
+            // Iterate through all the cells this texture would occupy
+            VmPtr<texture_t>* pCacheEntry = pTexStartCacheCell;
+            
+            for (int32_t y = 0; y < tex.heightIn16Blocks; ++y) {
+                for (int32_t x = 0; x < tex.widthIn16Blocks; ++x) {
+                    // Check to see if this cell is empty and move past it.
+                    // If it's already empty then we don't need to do anything:
+                    texture_t* const pCellTex = pCacheEntry->get();
+                    ++pCacheEntry;
 
-                while (i32(s0) < i32(v0)) {
-                    a1 = lw(s1);
-                    s1 += 4;
+                    if (!pCellTex)
+                        continue;
 
-                    if (a1 != 0) {
-                        v1 = lw(a1 + 0x1C);
-                        v0 = *gNumFramesDrawn;
+                    // Cell is not empty! If the texture in the cell is in use for this frame then we can't evict it.
+                    // In this case skip past the texture and try again:
+                    if (pCellTex->uploadFrameNum == *gNumFramesDrawn) {
+                        *gTCacheFillCellX += pCellTex->widthIn16Blocks;
 
-                        if (v1 == v0) {
-                            v0 = lh(a1 + 0xC);
-                            a0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
-                            a1 = lh(a1 + 0xE);
-                            v1 = lw(gp + 0xC98);                                // Load from: gTCacheFillRowCellH (80078278)
-                            v0 += a0;
-                            sw(v0, gp + 0xD04);                                 // Store to: gTCacheFillCellX (800782E4)
-
-                            if (i32(v1) < i32(a1)) {
-                                sw(a1, gp + 0xC98);                             // Store to: gTCacheFillRowCellH (80078278)
-                            }
-
-                            goto begin;
+                        // We may need to skip onto the next row on retry also, make sure we have the right row height recorded.
+                        // The row height is the max of all the texture heights on the row basically:
+                        if (*gTCacheFillRowCellH < pCellTex->heightIn16Blocks) {
+                            *gTCacheFillRowCellH = pCellTex->heightIn16Blocks;
                         }
 
-                        a0 = a1;
-                        I_RemoveTexCacheEntry();
+                        goto find_free_tcache_location;
                     }
 
-                    v0 = lh(s3 + 0xC);
-                    s0++;
+                    // The cell is not empty but we can evict the texture, do that here now
+                    a0 = ptrToVmAddr(pCellTex);
+                    I_RemoveTexCacheEntry();
                 }
 
-                v0 = 0x10;
-                v0 -= s0;
-                v0 <<= 2;
-                s1 += v0;
-                v0 = lh(s3 + 0xE);
-                s2++;
-            } while (i32(s2) < i32(v0));
+                pCacheEntry += TCACHE_CELLS_X - tex.widthIn16Blocks;    // Move onto the next row of cells
+            }
         }
     }
 
-    s1 = s4;
-    v0 = lh(s3 + 0xE);
-    s2 = 0;
-    v1 = 0x10;
+    // Fill all of the cells in the cache occupied by this texture with references to it
+    {
+        VmPtr<texture_t>* pCacheEntry = pTexStartCacheCell;
 
-    while (i32(s2) < i32(v0)) {
-        v0 = lh(s3 + 0xC);
-        s0 = 0;
+        for (int32_t y = 0; y < tex.heightIn16Blocks; ++y) {
+            for (int32_t x = 0; x < tex.widthIn16Blocks; ++x) {
+                *pCacheEntry = &tex;
+                ++pCacheEntry;
+            }
 
-        while (i32(s0) < i32(v0)) {
-            sw(s3, s1);
-            v0 = lh(s3 + 0xC);
-            s0++;
-            s1 += 4;
+            pCacheEntry += TCACHE_CELLS_X - tex.widthIn16Blocks;    // Move to the next row of cells
         }
-
-        v0 = v1 - s0;
-        v0 <<= 2;
-        s1 += v0;
-        v0 = lh(s3 + 0xE);
-        s2++;
     }
 
-    a1 = 0x20;
-    a0 = lh(s3 + 0x10);
-    a2 = 0;
-    _thunk_W_CacheLumpNum();
-    v1 = lh(s3 + 0x10);
-    a0 = *gpbIsUncompressedLump;
-    a0 += v1;
-    v1 = lbu(a0);
-    s0 = v0;
+    // Record on the texture where it is located in the cache (top left corner)
+    tex.ppTexCacheEntries = ptrToVmAddr(pTexStartCacheCell);
 
-    if (v1 == 0) {
-        a0 = s0;
-        s0 = gTmpBuffer;
-        a1 = gTmpBuffer;
-        _thunk_decode();
+    // Make sure the texture's lump is loaded and decompress if required
+    const void* pTexData = W_CacheLumpNum(tex.lumpNum, PU_CACHE, false);
+    const bool bIsTexCompressed = (!(*gpbIsUncompressedLump)[tex.lumpNum]);
+
+    if (bIsTexCompressed) {
+        decode(pTexData, gTmpBuffer.get());
+        pTexData = gTmpBuffer.get();
     }
 
-    a0 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
-    v0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
-    sw(s4, s3 + 0x14);
-    a0 <<= 3;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3C7C;                                       // Result = TexPageVramTexCoords[0] (80073C7C)
-    at += a0;
-    v1 = lhu(at);
-    v0 <<= 3;
-    v1 += v0;
-    v0 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
-    sh(v1, sp + 0x10);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3C80;                                       // Result = TexPageVramTexCoords[1] (80073C80)
-    at += a0;
-    v1 = lhu(at);
-    v0 <<= 4;
-    v1 += v0;
-    sh(v1, sp + 0x12);
-    v0 = lhu(s3 + 0x4);
-    a1 = s0 + 8;
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 17);
-    sh(v0, sp + 0x14);
-    v0 = lhu(s3 + 0x6);
-    a0 = sp + 0x10;
-    sh(v0, sp + 0x16);
-    _thunk_LIBGPU_LoadImage();
-    v0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
-    v0 <<= 4;
-    sb(v0, s3 + 0x8);
-    v0 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
-    a0 = 1;                                             // Result = 00000001
-    v0 <<= 4;
-    sb(v0, s3 + 0x9);
-    v0 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
-    a1 = 0;                                             // Result = 00000000
-    a2 = v0 + 4;
-    v0 <<= 3;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3C80;                                       // Result = TexPageVramTexCoords[1] (80073C80)
-    at += v0;
-    a3 = lw(at);
-    a2 <<= 7;
+    // Upload the texture to VRAM at the current fill location
+    {
+        const uint16_t tpageU = TEX_PAGE_VRAM_TEXCOORDS[*gTCacheFillPage][0];
+        const uint16_t tpageV = TEX_PAGE_VRAM_TEXCOORDS[*gTCacheFillPage][1];
+        
+        RECT dstVramRect;
+        LIBGPU_setRECT(
+            dstVramRect,
+            (int16_t)(tpageU + (*gTCacheFillCellX) * (TCACHE_CELL_SIZE / 2)),
+            (int16_t)(tpageV + (*gTCacheFillCellY) * TCACHE_CELL_SIZE),
+            tex.width / 2,
+            tex.height
+        );
+
+        LIBGPU_LoadImage(dstVramRect, (uint32_t*) pTexData + 2);    // TODO: figure out what 8 bytes is being skipped
+    }
+
+    // Save the textures page coordinate
+    tex.texPageCoordX = (uint8_t)((*gTCacheFillCellX) * TCACHE_CELL_SIZE);
+    tex.texPageCoordY = (uint8_t)((*gTCacheFillCellY) * TCACHE_CELL_SIZE);
+
+    // Get and save the texture page id
+    a0 = 1;
+    a1 = 0;
+    a2 = (*gTCacheFillPage + 4) * 128;
+    a3 = TEX_PAGE_VRAM_TEXCOORDS[*gTCacheFillPage][1];
     LIBGPU_GetTPage();
-    v1 = lh(s3 + 0xC);
-    a0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
-    a1 = lh(s3 + 0xE);
-    sh(v0, s3 + 0xA);
-    v0 = lw(gp + 0xC98);                                // Load from: gTCacheFillRowCellH (80078278)
-    v1 += a0;
-    sw(v1, gp + 0xD04);                                 // Store to: gTCacheFillCellX (800782E4)
+    tex.texPageId = (uint16_t) v0;
 
-    if (i32(v0) < i32(a1)) {
-        sw(a1, gp + 0xC98);                             // Store to: gTCacheFillRowCellH (80078278)
+    // Advance the fill position in the texture cache.
+    // Also expand the fill row height if this texture is taller than the current height.
+    *gTCacheFillCellX += tex.widthIn16Blocks;
+
+    if (*gTCacheFillRowCellH < tex.heightIn16Blocks) {
+        *gTCacheFillRowCellH = tex.heightIn16Blocks;
     }
 }
 
@@ -1200,7 +1144,7 @@ void I_PurgeTexCache() noexcept {
             if ((lockedTCachePages >> texPageIdx) & 1)
                 continue;
         #else
-            while ((lockedTCachePages >> texPageIdx) & 1) {
+            while ((lockedTPages >> texPageIdx) & 1) {
                 ++texPageIdx;
             }
         #endif
@@ -1238,8 +1182,6 @@ void I_PurgeTexCache() noexcept {
     //
     // PC-PSX: I also added an additional safety check here.
     // If all the pages are locked for some reason this code would loop forever, check for that situation first.
-    constexpr uint32_t ALL_TPAGES_MASK = (UINT32_MAX >> (32 - NUM_TCACHE_PAGES));
-
     const uint32_t lockedTPages = *gLockedTexPagesMask;
     *gTCacheFillPage = 0;
     
