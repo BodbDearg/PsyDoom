@@ -793,7 +793,7 @@ loc_80022E94:
     a0 = v1 + v0;
     v0 = lhu(a0 + 0xA);
     if (v0 != 0) goto loc_80022ECC;
-    I_CacheTex();
+    _thunk_I_CacheTex();
 loc_80022ECC:
     v0 = lw(s1);
     v1 = *gpFlatTextures;
@@ -802,7 +802,7 @@ loc_80022ECC:
     v0 = lhu(a0 + 0xA);
     s0++;
     if (v0 != 0) goto loc_80022EF8;
-    I_CacheTex();
+    _thunk_I_CacheTex();
 loc_80022EF8:
     v0 = *gNumSectors;
     v0 = (i32(s0) < i32(v0));
@@ -854,7 +854,7 @@ loc_80022FBC:
     if (v0 != 0) goto loc_80022FBC;
 loc_80022FD8:
     a0 = *gpSkyTexture;
-    I_CacheTex();
+    _thunk_I_CacheTex();
 loc_80022FE8:
     a0 = 0x10;                                          // Result = 00000010
     P_CacheMapTexturesWithWidth();
@@ -1359,7 +1359,7 @@ loc_80023B28:
     if (v0 != s1) goto loc_80023B70;
     v0 = lhu(a0 + 0xA);
     if (v0 != 0) goto loc_80023B70;
-    I_CacheTex();
+    _thunk_I_CacheTex();
 loc_80023B70:
     v1 = lw(s0 + 0x4);
     {
@@ -1373,7 +1373,7 @@ loc_80023B70:
     if (v0 != s1) goto loc_80023BB8;
     v0 = lhu(a0 + 0xA);
     if (v0 != 0) goto loc_80023BB8;
-    I_CacheTex();
+    _thunk_I_CacheTex();
 loc_80023BB8:
     v1 = lw(s0);
     s2++;
@@ -1385,7 +1385,7 @@ loc_80023BB8:
     if (v0 != s1) goto loc_80023C00;
     v0 = lhu(a0 + 0xA);
     if (v0 != 0) goto loc_80023C00;
-    I_CacheTex();
+    _thunk_I_CacheTex();
 loc_80023C00:
     v0 = *gNumSides;
     v0 = (i32(s2) < i32(v0));

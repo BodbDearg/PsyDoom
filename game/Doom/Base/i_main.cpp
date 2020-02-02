@@ -4,6 +4,7 @@
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Renderer/r_data.h"
+#include "PcPsx/Finally.h"
 #include "PcPsx/Video.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBAPI.h"
@@ -362,7 +363,7 @@ loc_80032CD0:
     sh(v0, a0 + 0xE);
     sh(0, a0 + 0xA);
     sh(s2, a0 + 0x10);
-    I_CacheTex();
+    _thunk_I_CacheTex();
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -383,7 +384,7 @@ loc_80032D04:
     sw(s1, sp + 0x24);
     sw(ra, sp + 0x30);
     s1 = a3;
-    I_CacheTex();
+    _thunk_I_CacheTex();
     v0 = lbu(s0 + 0x8);
     a0 = lhu(s0 + 0xA);
     sw(v0, sp + 0x10);
@@ -786,7 +787,7 @@ loc_800332E0:
     LIBGPU_MoveImage();
     I_IncDrawnFrameCount();
     a0 = s0;
-    I_CacheTex();
+    _thunk_I_CacheTex();
     v0 = lbu(s0 + 0x8);
     a0 = lhu(s0 + 0xA);
     sw(v0, sp + 0x10);
@@ -901,161 +902,191 @@ void I_Init() noexcept {
     I_PurgeTexCache();
 }
 
-void I_CacheTex() noexcept {
-loc_80033578:
-    v0 = *gNumFramesDrawn;
+void I_CacheTex(texture_t& tex) noexcept {
+    a0 = ptrToVmAddr(&tex);
+
     sp -= 0x58;
     sw(s3, sp + 0x44);
-    s3 = a0;
-    sw(ra, sp + 0x50);
     sw(s5, sp + 0x4C);
     sw(s4, sp + 0x48);
     sw(s2, sp + 0x40);
     sw(s1, sp + 0x3C);
     sw(s0, sp + 0x38);
+
+    auto cleanupStack = finally([](){
+        s5 = lw(sp + 0x4C);
+        s4 = lw(sp + 0x48);
+        s3 = lw(sp + 0x44);
+        s2 = lw(sp + 0x40);
+        s1 = lw(sp + 0x3C);
+        s0 = lw(sp + 0x38);
+        sp += 0x58;
+    });
+
+    s3 = a0;
+
+    v0 = *gNumFramesDrawn;
     v1 = lhu(s3 + 0xA);
     sw(v0, s3 + 0x1C);
-    if (v1 != 0) goto loc_800338E4;
+
+    if (v1 != 0)
+        return;
+
     s5 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
-loc_800335B4:
-    v0 = lh(s3 + 0xC);
-    v1 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
-    v0 += v1;
-    v0 = (i32(v0) < 0x11);
-    if (v0 != 0) goto loc_800335E8;
-    v0 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
-    v1 = lw(gp + 0xC98);                                // Load from: gTCacheFillRowCellH (80078278)
-    sw(0, gp + 0xD04);                                  // Store to: gTCacheFillCellX (800782E4)
-    sw(0, gp + 0xC98);                                  // Store to: gTCacheFillRowCellH (80078278)
-    v0 += v1;
-    sw(v0, gp + 0xD08);                                 // Store to: gTCacheFillCellY (800782E8)
-loc_800335E8:
-    v0 = lh(s3 + 0xE);
-    v1 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
-    v0 += v1;
-    v0 = (i32(v0) < 0x11);
-    s2 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_8003367C;
-    a2 = 0x2E8B0000;                                    // Result = 2E8B0000
-    a2 |= 0xA2E9;                                       // Result = 2E8BA2E9
-    a1 = *gLockedTexPagesMask;
-loc_80033610:
-    a0 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
-    a0++;
-    mult(a0, a2);
-    v0 = u32(i32(a0) >> 31);
-    v1 = hi;
-    v1 = u32(i32(v1) >> 1);
-    v1 -= v0;
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    a0 -= v0;
-    v0 = i32(a1) >> a0;
-    v0 &= 1;
-    sw(a0, gp + 0xA48);                                 // Store to: gTCacheFillPage (80078028)
-    if (v0 != 0) goto loc_80033610;
-    s2 = 0;                                             // Result = 00000000
-    if (a0 != s5) goto loc_80033670;
-    I_Error("Texture Cache Overflow\n");
-loc_80033670:
-    sw(0, gp + 0xD04);                                  // Store to: gTCacheFillCellX (800782E4)
-    sw(0, gp + 0xD08);                                  // Store to: gTCacheFillCellY (800782E8)
-    sw(0, gp + 0xC98);                                  // Store to: gTCacheFillRowCellH (80078278)
-loc_8003367C:
-    v1 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
-    v0 = lw(gp + 0x994);                                // Load from: gpTexCache (80077F74)
-    a0 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
-    v1 <<= 10;
-    v1 += v0;
-    a0 <<= 6;
-    v0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
-    v1 += a0;
-    v0 <<= 2;
-    s4 = v1 + v0;
-    v0 = lh(s3 + 0xE);
+
+    {
+    begin:
+        v0 = lh(s3 + 0xC);
+        v1 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
+        v0 += v1;
+
+        if (i32(v0) > 0x10) {
+            v0 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
+            v1 = lw(gp + 0xC98);                                // Load from: gTCacheFillRowCellH (80078278)
+            sw(0, gp + 0xD04);                                  // Store to: gTCacheFillCellX (800782E4)
+            sw(0, gp + 0xC98);                                  // Store to: gTCacheFillRowCellH (80078278)
+            v0 += v1;
+            sw(v0, gp + 0xD08);                                 // Store to: gTCacheFillCellY (800782E8)
+        }
+
+        v0 = lh(s3 + 0xE);
+        v1 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
+        v0 += v1;
+        s2 = 0;
+
+        if (i32(v0) > 0x10) {
+            a2 = 0x2E8B0000;                                    // Result = 2E8B0000
+            a2 |= 0xA2E9;                                       // Result = 2E8BA2E9
+            a1 = *gLockedTexPagesMask;
+
+            do {
+                a0 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
+                a0++;
+                mult(a0, a2);
+                v0 = u32(i32(a0) >> 31);
+                v1 = hi;
+                v1 = u32(i32(v1) >> 1);
+                v1 -= v0;
+                v0 = v1 << 1;
+                v0 += v1;
+                v0 <<= 2;
+                v0 -= v1;
+                a0 -= v0;
+                v0 = i32(a1) >> a0;
+                v0 &= 1;
+                sw(a0, gp + 0xA48);                                 // Store to: gTCacheFillPage (80078028)
+            } while (v0 != 0);
+
+            s2 = 0;
+        
+            if (a0 == s5) {
+                I_Error("Texture Cache Overflow\n");
+            }
+
+            sw(0, gp + 0xD04);                                  // Store to: gTCacheFillCellX (800782E4)
+            sw(0, gp + 0xD08);                                  // Store to: gTCacheFillCellY (800782E8)
+            sw(0, gp + 0xC98);                                  // Store to: gTCacheFillRowCellH (80078278)
+        }
+
+        v1 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
+        v0 = lw(gp + 0x994);                                // Load from: gpTexCache (80077F74)
+        a0 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
+        v1 <<= 10;
+        v1 += v0;
+        a0 <<= 6;
+        v0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
+        v1 += a0;
+        v0 <<= 2;
+        s4 = v1 + v0;
+        v0 = lh(s3 + 0xE);
+        s1 = s4;
+
+        if (i32(v0) > 0) {
+            do {
+                v0 = lh(s3 + 0xC);
+                s0 = 0;
+
+                while (i32(s0) < i32(v0)) {
+                    a1 = lw(s1);
+                    s1 += 4;
+
+                    if (a1 != 0) {
+                        v1 = lw(a1 + 0x1C);
+                        v0 = *gNumFramesDrawn;
+
+                        if (v1 == v0) {
+                            v0 = lh(a1 + 0xC);
+                            a0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
+                            a1 = lh(a1 + 0xE);
+                            v1 = lw(gp + 0xC98);                                // Load from: gTCacheFillRowCellH (80078278)
+                            v0 += a0;
+                            sw(v0, gp + 0xD04);                                 // Store to: gTCacheFillCellX (800782E4)
+
+                            if (i32(v1) < i32(a1)) {
+                                sw(a1, gp + 0xC98);                             // Store to: gTCacheFillRowCellH (80078278)
+                            }
+
+                            goto begin;
+                        }
+
+                        a0 = a1;
+                        I_RemoveTexCacheEntry();
+                    }
+
+                    v0 = lh(s3 + 0xC);
+                    s0++;
+                }
+
+                v0 = 0x10;
+                v0 -= s0;
+                v0 <<= 2;
+                s1 += v0;
+                v0 = lh(s3 + 0xE);
+                s2++;
+            } while (i32(s2) < i32(v0));
+        }
+    }
+
     s1 = s4;
-    if (i32(v0) <= 0) goto loc_80033758;
-loc_800336B4:
-    v0 = lh(s3 + 0xC);
-    s0 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80033734;
-loc_800336C4:
-    a1 = lw(s1);
-    s1 += 4;
-    if (a1 == 0) goto loc_80033720;
-    v1 = lw(a1 + 0x1C);
-    v0 = *gNumFramesDrawn;
-    if (v1 != v0) goto loc_80033718;
-    v0 = lh(a1 + 0xC);
-    a0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
-    a1 = lh(a1 + 0xE);
-    v1 = lw(gp + 0xC98);                                // Load from: gTCacheFillRowCellH (80078278)
-    v0 += a0;
-    v1 = (i32(v1) < i32(a1));
-    sw(v0, gp + 0xD04);                                 // Store to: gTCacheFillCellX (800782E4)
-    if (v1 == 0) goto loc_800335B4;
-    sw(a1, gp + 0xC98);                                 // Store to: gTCacheFillRowCellH (80078278)
-    goto loc_800335B4;
-loc_80033718:
-    a0 = a1;
-    I_RemoveTexCacheEntry();
-loc_80033720:
-    v0 = lh(s3 + 0xC);
-    s0++;
-    v0 = (i32(s0) < i32(v0));
-    if (v0 != 0) goto loc_800336C4;
-loc_80033734:
-    v0 = 0x10;                                          // Result = 00000010
-    v0 -= s0;
-    v0 <<= 2;
-    s1 += v0;
     v0 = lh(s3 + 0xE);
-    s2++;
-    v0 = (i32(s2) < i32(v0));
-    if (v0 != 0) goto loc_800336B4;
-loc_80033758:
-    s1 = s4;
-    v0 = lh(s3 + 0xE);
-    s2 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_800337B8;
-    v1 = 0x10;                                          // Result = 00000010
-loc_80033770:
-    v0 = lh(s3 + 0xC);
-    s0 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80033798;
-loc_80033780:
-    sw(s3, s1);
-    v0 = lh(s3 + 0xC);
-    s0++;
-    v0 = (i32(s0) < i32(v0));
-    s1 += 4;
-    if (v0 != 0) goto loc_80033780;
-loc_80033798:
-    v0 = v1 - s0;
-    v0 <<= 2;
-    s1 += v0;
-    v0 = lh(s3 + 0xE);
-    s2++;
-    v0 = (i32(s2) < i32(v0));
-    if (v0 != 0) goto loc_80033770;
-loc_800337B8:
-    a1 = 0x20;                                          // Result = 00000020
+    s2 = 0;
+    v1 = 0x10;
+
+    while (i32(s2) < i32(v0)) {
+        v0 = lh(s3 + 0xC);
+        s0 = 0;
+
+        while (i32(s0) < i32(v0)) {
+            sw(s3, s1);
+            v0 = lh(s3 + 0xC);
+            s0++;
+            s1 += 4;
+        }
+
+        v0 = v1 - s0;
+        v0 <<= 2;
+        s1 += v0;
+        v0 = lh(s3 + 0xE);
+        s2++;
+    }
+
+    a1 = 0x20;
     a0 = lh(s3 + 0x10);
-    a2 = 0;                                             // Result = 00000000
+    a2 = 0;
     _thunk_W_CacheLumpNum();
     v1 = lh(s3 + 0x10);
     a0 = *gpbIsUncompressedLump;
     a0 += v1;
     v1 = lbu(a0);
     s0 = v0;
-    if (v1 != 0) goto loc_80033800;
-    a0 = s0;
-    s0 = gTmpBuffer;
-    a1 = gTmpBuffer;
-    _thunk_decode();
-loc_80033800:
+
+    if (v1 == 0) {
+        a0 = s0;
+        s0 = gTmpBuffer;
+        a1 = gTmpBuffer;
+        _thunk_decode();
+    }
+
     a0 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
     v0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
     sw(s4, s3 + 0x14);
@@ -1107,20 +1138,15 @@ loc_80033800:
     sh(v0, s3 + 0xA);
     v0 = lw(gp + 0xC98);                                // Load from: gTCacheFillRowCellH (80078278)
     v1 += a0;
-    v0 = (i32(v0) < i32(a1));
     sw(v1, gp + 0xD04);                                 // Store to: gTCacheFillCellX (800782E4)
-    if (v0 == 0) goto loc_800338E4;
-    sw(a1, gp + 0xC98);                                 // Store to: gTCacheFillRowCellH (80078278)
-loc_800338E4:
-    ra = lw(sp + 0x50);
-    s5 = lw(sp + 0x4C);
-    s4 = lw(sp + 0x48);
-    s3 = lw(sp + 0x44);
-    s2 = lw(sp + 0x40);
-    s1 = lw(sp + 0x3C);
-    s0 = lw(sp + 0x38);
-    sp += 0x58;
-    return;
+
+    if (i32(v0) < i32(a1)) {
+        sw(a1, gp + 0xC98);                             // Store to: gTCacheFillRowCellH (80078278)
+    }
+}
+
+void _thunk_I_CacheTex() noexcept {
+    I_CacheTex(*vmAddrToPtr<texture_t>(a0));
 }
 
 void I_RemoveTexCacheEntry() noexcept {
@@ -2319,7 +2345,7 @@ loc_80034B44:
     I_IncDrawnFrameCount();
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7AF0;                                       // Result = gTexInfo_NETERR[0] (80097AF0)
-    I_CacheTex();
+    _thunk_I_CacheTex();
     a1 = s0;
     a0 = 0x80090000;                                    // Result = 80090000
     a0 = lhu(a0 + 0x7AFA);                              // Load from: gTexInfo_NETERR[2] (80097AFA)

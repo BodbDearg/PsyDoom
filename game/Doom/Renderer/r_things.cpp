@@ -3,7 +3,6 @@
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/info.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
@@ -154,9 +153,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         // Upload the sprite texture to VRAM if not already uploaded
         const int32_t sprIndex = lumpNum - *gFirstSpriteLumpNum;
         texture_t& tex = (*gpSpriteTextures)[sprIndex];
-
-        a0 = ptrToVmAddr(&tex);
-        I_CacheTex();
+        I_CacheTex(tex);
 
         // Get the 3 blending flags and set whether the sprite is semi transparent
         const int32_t blendFlags = (thing.flags & MF_ALL_BLEND_MASKS) >> 28;
@@ -263,17 +260,15 @@ void R_DrawWeapon() noexcept {
         if (!pSprite->state)
             continue;
 
-        // Get the texture for the sprite
+        // Get the texture for the sprite and upload to VRAM if required
         const state_t& state = *pSprite->state;
         const spritedef_t& spriteDef = gSprites[state.sprite];
         const int32_t frameNum = state.frame & FF_FRAMEMASK;
         const spriteframe_t& frame = spriteDef.spriteframes[frameNum];
         const int32_t texNum = frame.lump[0] - *gFirstSpriteLumpNum;
-        texture_t& tex = (*gpSpriteTextures)[texNum];
 
-        // Load the texture to VRAM if required
-        a0 = ptrToVmAddr(&tex);
-        I_CacheTex();
+        texture_t& tex = (*gpSpriteTextures)[texNum];
+        I_CacheTex(tex);
 
         // Setup the default drawing mode to disable wrapping (remove texture window).
         // This code also sets blending options and encodes that in the texture page id.

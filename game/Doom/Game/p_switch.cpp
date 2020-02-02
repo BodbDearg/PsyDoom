@@ -46,7 +46,7 @@ loc_80027DC0:
     a0 += v0;
     v0 = lhu(a0 + 0xA);
     if (v0 != 0) goto loc_80027E34;
-    I_CacheTex();
+    _thunk_I_CacheTex();
 loc_80027E14:
     v0 = *gpTextures;
     v1 = s0 << 5;
@@ -59,7 +59,7 @@ loc_80027E34:
     a0 = v1 + v0;
     v0 = lhu(a0 + 0xA);
     if (v0 != 0) goto loc_80027E5C;
-    I_CacheTex();
+    _thunk_I_CacheTex();
 loc_80027E5C:
     sw(s2, s1);
     s1 += 4;

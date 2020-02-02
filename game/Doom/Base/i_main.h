@@ -2,6 +2,8 @@
 
 #include "Doom/doomdef.h"
 
+struct texture_t;
+
 // Size of the temporary buffer that is used for WAD loading and other stuff - 64 KiB
 static constexpr uint32_t TMP_BUFFER_SIZE = 0x10000;
 
@@ -48,7 +50,10 @@ void I_IncDrawnFrameCount() noexcept;
 void I_DrawPresent() noexcept;
 void I_VsyncCallback() noexcept;
 void I_Init() noexcept;
-void I_CacheTex() noexcept;
+
+void I_CacheTex(texture_t& tex) noexcept;
+void _thunk_I_CacheTex() noexcept;
+
 void I_RemoveTexCacheEntry() noexcept;
 void I_PurgeTexCache() noexcept;
 void I_VramViewerDraw() noexcept;

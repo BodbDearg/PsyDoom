@@ -26,7 +26,7 @@ void F1_Start() noexcept {
     I_DrawPlaque();
     I_PurgeTexCache();
     a0 = s0 - 0x80;                                     // Result = gTexInfo_BACK[0] (80097A10)
-    I_CacheTex();
+    _thunk_I_CacheTex();
     a2 = 0;                                             // Result = 00000000
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x3E60);                               // Load from: CDTrackNum_Finale_Doom1 (80073E60)
@@ -938,7 +938,7 @@ loc_8003E3DC:
     v1 <<= 5;
     s1 = v1 + a0;
     a0 = s1;
-    I_CacheTex();
+    _thunk_I_CacheTex();
     v0 = 9;                                             // Result = 00000009
     at = 0x1F800000;                                    // Result = 1F800000
     sb(v0, at + 0x203);                                 // Store to: 1F800203

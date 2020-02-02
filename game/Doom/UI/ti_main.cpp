@@ -101,7 +101,7 @@ void START_Title() noexcept {
     v0 = lhu(v0 - 0x6F5E);                              // Load from: gPaletteClutId_Sky (800A90A2)
     a0 = *gpSkyTexture;
     *gPaletteClutId_CurMapSky = (uint16_t) v0;
-    I_CacheTex();
+    _thunk_I_CacheTex();
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x3E4C);                               // Load from: CDTrackNum_TitleScreen (80073E4C)
     a1 = 0x80070000;                                    // Result = 80070000
