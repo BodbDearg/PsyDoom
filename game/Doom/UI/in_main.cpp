@@ -14,7 +14,7 @@
 void IN_Start() noexcept {
     sp -= 0x28;
     sw(ra, sp + 0x20);
-    I_ResetTexCache();
+    I_PurgeTexCache();
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
     a1 = 0x80070000;                                    // Result = 80070000

@@ -253,7 +253,7 @@ texture_t (32 bytes):
         00E     uint16_t    heightIn16Blocks;
         010     uint16_t    lumpNum;
         012     uint16_t    __padding ?
-        014     texture_t** ppTexCacheEntry;
+        014     texture_t** ppTexCacheEntries;
         018     uint32_t    unknown1;
         01C     uint32_t    uploadFrameNum;
     };

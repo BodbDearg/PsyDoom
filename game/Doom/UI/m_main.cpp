@@ -96,7 +96,7 @@ void M_Start() noexcept {
     *gCurPlayerIndex = 0;
     gbPlayerInGame[0] = true;
     gbPlayerInGame[1] = false;
-    I_ResetTexCache();
+    I_PurgeTexCache();
     s0 = 0x80090000;                                    // Result = 80090000
     s0 += 0x7A90;                                       // Result = gTexInfo_LOADING[0] (80097A90)
     a0 = s0;                                            // Result = gTexInfo_LOADING[0] (80097A90)

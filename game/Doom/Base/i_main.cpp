@@ -15,6 +15,63 @@
 #include "w_wad.h"
 #include "z_zone.h"
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Texture cache related constants and data structures.
+// VRAM for PSX Doom is managed as follows:
+//
+//  (1) There is 1 MiB in total of VRAM split into 16 texture 'pages'.
+//  (2) Each texture page is 256x256 when interpreted as 8 bits per pixel data and 64 KiB in size.
+//  (3) The first 4 texture pages are reserved for the front and back framebuffer.
+//      Each framebuffer is 256x256 pixels (note: some vertical space is unused) but since the data is
+//      16 bits per pixel rather than 8 bits, each screen occupies 2 texture pages rather than 1.
+//  (4) The 5th texture page is reserved for UI elements and fonts.
+//      These elements are kept loaded at all times.
+//  (5) The remaining 11 pages are free to be used in any way for map textures and sprites.
+//      This is what is referred to as the 'texture cache'.
+//  (6) Each of the 11 256x256 pages are broken up into a grid of 16x16 cells, where each cell is 16 pixels wide and tall.
+//      Each cell stores a pointer to the 'texture_t' occupying the cell, if any.
+//  (7) When adding a sprite or texture to the cache, the code will search through the cells for a free space
+//      large enough to accomodate the given resource size, rounded up to 16 pixel increments. The search starts after
+//      where the last texture was placed and proceeds across and downwards (in that order) to fill the current texture page.
+//      If the current texture page has been filled then the algorithm moves around to the next page, potentially wrapping
+//      around back to the first.
+//  (8) If a request to add a texture to the cache comes across occupied VRAM cells with textures uploaded in the current frame,
+//      then a 'Texture Cache Overflow' fatal error is declared. This means that the algorithm has looped around once already and
+//      filled the cache entirely in the same frame. Uploading any more textures would overwrite textures needed for current drawing
+//      so that this point the renderer gives up and dies. Perhaps a more robust fix for this problem might have been to simply ignore
+//      the request, or flush all pending drawing ops and clear the cache - but perhaps those solutions were deemed unacceptable...
+//  (9) One other small detail also is that certain texture pages can be marked as 'locked'.
+//      These 'locked' pages are left alone when clearing or adding textures to the cache.
+//      Map floor and wall textures are placed in 'locked' pages so that they are never unloaded during level gameplay.
+//  (10) Lastly it is worth mentioning that since textures in unlocked pages can be evicted at any time, these textures must also be
+//       backed up and retained in main RAM. So essentially the renderer needs to keep a copy of all sprite data in main RAM also.
+//------------------------------------------------------------------------------------------------------------------------------------------
+constexpr uint32_t NUM_TCACHE_PAGES         = 11;
+constexpr uint32_t TCACHE_CELL_SIZE         = 16;
+constexpr uint32_t TCACHE_CELLS_X           = 256 / TCACHE_CELL_SIZE;
+constexpr uint32_t TCACHE_CELLS_Y           = 256 / TCACHE_CELL_SIZE;
+constexpr uint32_t NUM_TCACHE_PAGE_CELLS    = TCACHE_CELLS_X * TCACHE_CELLS_Y;
+
+struct tcachepage_t {
+    VmPtr<texture_t> cells[TCACHE_CELLS_Y][TCACHE_CELLS_X];
+};
+
+static_assert(sizeof(tcachepage_t) == 1024);
+
+struct tcache_t {
+    tcachepage_t pages[NUM_TCACHE_PAGES];
+};
+
+static_assert(sizeof(tcache_t) == 1024 * 11);
+
+// Texture cache variables.
+// The texture cache data structure, where we are filling in the cache next and the current fill row height.
+static const VmPtr<VmPtr<tcache_t>>     gpTexCache(0x80077F74);
+static const VmPtr<uint32_t>            gTCacheFillPage(0x80078028);
+static const VmPtr<uint32_t>            gTCacheFillCellX(0x800782E4);
+static const VmPtr<uint32_t>            gTCacheFillCellY(0x800782E8);
+static const VmPtr<uint32_t>            gTCacheFillRowCellH(0x80078278);
+
 // A 64-KB buffer used for WAD loading and other stuff
 const VmPtr<std::byte[TMP_BUFFER_SIZE]> gTmpBuffer(0x80098748);
 
@@ -838,21 +895,10 @@ void I_VsyncCallback() noexcept {
 // For the PSX this will just setup the texture cache.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_Init() noexcept {
-    // Alloc and zero initialize the texture cache entries data structure
-    a0 = *gpMainMemZone;
-    a1 = 0x2C00;
-    a2 = 1;    
-    a3 = 0;
-    _thunk_Z_Malloc();
-    sw(v0, 0x80077F74);         // Store to: gpTexCacheEntries (80077F74)
-
-    a0 = v0;
-    a1 = 0;
-    a2 = 0x2C00;
-    _thunk_D_memset();
-
-    // Do the initial clearing of the texture cache
-    I_ResetTexCache();
+    // Alloc the texture cache, zero initialize and do a 'purge' to initialize tracking/management state
+    *gpTexCache = (tcache_t*) Z_Malloc(**gpMainMemZone, sizeof(tcache_t), PU_STATIC, nullptr);
+    D_memset(gpTexCache->get(), (std::byte) 0, sizeof(tcache_t));
+    I_PurgeTexCache();
 }
 
 void I_CacheTex() noexcept {
@@ -870,22 +916,22 @@ loc_80033578:
     v1 = lhu(s3 + 0xA);
     sw(v0, s3 + 0x1C);
     if (v1 != 0) goto loc_800338E4;
-    s5 = lw(gp + 0xA48);                                // Load from: gTexCacheFillPage (80078028)
+    s5 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
 loc_800335B4:
     v0 = lh(s3 + 0xC);
-    v1 = lw(gp + 0xD04);                                // Load from: gTexCacheFillBlockX (800782E4)
+    v1 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
     v0 += v1;
     v0 = (i32(v0) < 0x11);
     if (v0 != 0) goto loc_800335E8;
-    v0 = lw(gp + 0xD08);                                // Load from: gTexCacheFillBlockY (800782E8)
-    v1 = lw(gp + 0xC98);                                // Load from: gTexCacheRowBlockH (80078278)
-    sw(0, gp + 0xD04);                                  // Store to: gTexCacheFillBlockX (800782E4)
-    sw(0, gp + 0xC98);                                  // Store to: gTexCacheRowBlockH (80078278)
+    v0 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
+    v1 = lw(gp + 0xC98);                                // Load from: gTCacheFillRowCellH (80078278)
+    sw(0, gp + 0xD04);                                  // Store to: gTCacheFillCellX (800782E4)
+    sw(0, gp + 0xC98);                                  // Store to: gTCacheFillRowCellH (80078278)
     v0 += v1;
-    sw(v0, gp + 0xD08);                                 // Store to: gTexCacheFillBlockY (800782E8)
+    sw(v0, gp + 0xD08);                                 // Store to: gTCacheFillCellY (800782E8)
 loc_800335E8:
     v0 = lh(s3 + 0xE);
-    v1 = lw(gp + 0xD08);                                // Load from: gTexCacheFillBlockY (800782E8)
+    v1 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
     v0 += v1;
     v0 = (i32(v0) < 0x11);
     s2 = 0;                                             // Result = 00000000
@@ -894,7 +940,7 @@ loc_800335E8:
     a2 |= 0xA2E9;                                       // Result = 2E8BA2E9
     a1 = *gLockedTexPagesMask;
 loc_80033610:
-    a0 = lw(gp + 0xA48);                                // Load from: gTexCacheFillPage (80078028)
+    a0 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
     a0++;
     mult(a0, a2);
     v0 = u32(i32(a0) >> 31);
@@ -908,23 +954,23 @@ loc_80033610:
     a0 -= v0;
     v0 = i32(a1) >> a0;
     v0 &= 1;
-    sw(a0, gp + 0xA48);                                 // Store to: gTexCacheFillPage (80078028)
+    sw(a0, gp + 0xA48);                                 // Store to: gTCacheFillPage (80078028)
     if (v0 != 0) goto loc_80033610;
     s2 = 0;                                             // Result = 00000000
     if (a0 != s5) goto loc_80033670;
     I_Error("Texture Cache Overflow\n");
 loc_80033670:
-    sw(0, gp + 0xD04);                                  // Store to: gTexCacheFillBlockX (800782E4)
-    sw(0, gp + 0xD08);                                  // Store to: gTexCacheFillBlockY (800782E8)
-    sw(0, gp + 0xC98);                                  // Store to: gTexCacheRowBlockH (80078278)
+    sw(0, gp + 0xD04);                                  // Store to: gTCacheFillCellX (800782E4)
+    sw(0, gp + 0xD08);                                  // Store to: gTCacheFillCellY (800782E8)
+    sw(0, gp + 0xC98);                                  // Store to: gTCacheFillRowCellH (80078278)
 loc_8003367C:
-    v1 = lw(gp + 0xA48);                                // Load from: gTexCacheFillPage (80078028)
-    v0 = lw(gp + 0x994);                                // Load from: gpTexCacheEntries (80077F74)
-    a0 = lw(gp + 0xD08);                                // Load from: gTexCacheFillBlockY (800782E8)
+    v1 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
+    v0 = lw(gp + 0x994);                                // Load from: gpTexCache (80077F74)
+    a0 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
     v1 <<= 10;
     v1 += v0;
     a0 <<= 6;
-    v0 = lw(gp + 0xD04);                                // Load from: gTexCacheFillBlockX (800782E4)
+    v0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
     v1 += a0;
     v0 <<= 2;
     s4 = v1 + v0;
@@ -943,14 +989,14 @@ loc_800336C4:
     v0 = *gNumFramesDrawn;
     if (v1 != v0) goto loc_80033718;
     v0 = lh(a1 + 0xC);
-    a0 = lw(gp + 0xD04);                                // Load from: gTexCacheFillBlockX (800782E4)
+    a0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
     a1 = lh(a1 + 0xE);
-    v1 = lw(gp + 0xC98);                                // Load from: gTexCacheRowBlockH (80078278)
+    v1 = lw(gp + 0xC98);                                // Load from: gTCacheFillRowCellH (80078278)
     v0 += a0;
     v1 = (i32(v1) < i32(a1));
-    sw(v0, gp + 0xD04);                                 // Store to: gTexCacheFillBlockX (800782E4)
+    sw(v0, gp + 0xD04);                                 // Store to: gTCacheFillCellX (800782E4)
     if (v1 == 0) goto loc_800335B4;
-    sw(a1, gp + 0xC98);                                 // Store to: gTexCacheRowBlockH (80078278)
+    sw(a1, gp + 0xC98);                                 // Store to: gTCacheFillRowCellH (80078278)
     goto loc_800335B4;
 loc_80033718:
     a0 = a1;
@@ -1010,8 +1056,8 @@ loc_800337B8:
     a1 = gTmpBuffer;
     _thunk_decode();
 loc_80033800:
-    a0 = lw(gp + 0xA48);                                // Load from: gTexCacheFillPage (80078028)
-    v0 = lw(gp + 0xD04);                                // Load from: gTexCacheFillBlockX (800782E4)
+    a0 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
+    v0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
     sw(s4, s3 + 0x14);
     a0 <<= 3;
     at = 0x80070000;                                    // Result = 80070000
@@ -1020,7 +1066,7 @@ loc_80033800:
     v1 = lhu(at);
     v0 <<= 3;
     v1 += v0;
-    v0 = lw(gp + 0xD08);                                // Load from: gTexCacheFillBlockY (800782E8)
+    v0 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
     sh(v1, sp + 0x10);
     at = 0x80070000;                                    // Result = 80070000
     at += 0x3C80;                                       // Result = TexPageVramTexCoords[1] (80073C80)
@@ -1038,14 +1084,14 @@ loc_80033800:
     a0 = sp + 0x10;
     sh(v0, sp + 0x16);
     _thunk_LIBGPU_LoadImage();
-    v0 = lw(gp + 0xD04);                                // Load from: gTexCacheFillBlockX (800782E4)
+    v0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
     v0 <<= 4;
     sb(v0, s3 + 0x8);
-    v0 = lw(gp + 0xD08);                                // Load from: gTexCacheFillBlockY (800782E8)
+    v0 = lw(gp + 0xD08);                                // Load from: gTCacheFillCellY (800782E8)
     a0 = 1;                                             // Result = 00000001
     v0 <<= 4;
     sb(v0, s3 + 0x9);
-    v0 = lw(gp + 0xA48);                                // Load from: gTexCacheFillPage (80078028)
+    v0 = lw(gp + 0xA48);                                // Load from: gTCacheFillPage (80078028)
     a1 = 0;                                             // Result = 00000000
     a2 = v0 + 4;
     v0 <<= 3;
@@ -1056,15 +1102,15 @@ loc_80033800:
     a2 <<= 7;
     LIBGPU_GetTPage();
     v1 = lh(s3 + 0xC);
-    a0 = lw(gp + 0xD04);                                // Load from: gTexCacheFillBlockX (800782E4)
+    a0 = lw(gp + 0xD04);                                // Load from: gTCacheFillCellX (800782E4)
     a1 = lh(s3 + 0xE);
     sh(v0, s3 + 0xA);
-    v0 = lw(gp + 0xC98);                                // Load from: gTexCacheRowBlockH (80078278)
+    v0 = lw(gp + 0xC98);                                // Load from: gTCacheFillRowCellH (80078278)
     v1 += a0;
     v0 = (i32(v0) < i32(a1));
-    sw(v1, gp + 0xD04);                                 // Store to: gTexCacheFillBlockX (800782E4)
+    sw(v1, gp + 0xD04);                                 // Store to: gTCacheFillCellX (800782E4)
     if (v0 == 0) goto loc_800338E4;
-    sw(a1, gp + 0xC98);                                 // Store to: gTexCacheRowBlockH (80078278)
+    sw(a1, gp + 0xC98);                                 // Store to: gTCacheFillRowCellH (80078278)
 loc_800338E4:
     ra = lw(sp + 0x50);
     s5 = lw(sp + 0x4C);
@@ -1110,91 +1156,83 @@ loc_80033970:
     return;
 }
 
-void I_ResetTexCache() noexcept {
-loc_8003397C:
-    sp -= 0x10;
-    a3 = 0;                                             // Result = 00000000
-    t2 = 0x10;                                          // Result = 00000010
-loc_80033988:
-    v1 = *gLockedTexPagesMask;
-    v0 = i32(v1) >> a3;
-    goto loc_80033998;
-loc_80033994:
-    v0 = i32(v1) >> a3;
-loc_80033998:
-    v0 &= 1;
-    a3++;
-    if (v0 != 0) goto loc_80033994;
-    a3--;
-    t1 = 0;                                             // Result = 00000000
-    v1 = lw(gp + 0x994);                                // Load from: gpTexCacheEntries (80077F74)
-    v0 = a3 << 10;
-    t0 = v0 + v1;
-loc_800339B8:
-    v0 = lw(t0);
-    if (v0 == 0) goto loc_80033A28;
-    a1 = v0;
-    a0 = lw(v0 + 0x14);
-    v0 = lh(a1 + 0xE);
-    a2 = 0;                                             // Result = 00000000
-    sh(0, a1 + 0xA);
-    if (i32(v0) <= 0) goto loc_80033A28;
-loc_800339E0:
-    v0 = lh(a1 + 0xC);
-    v1 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80033A08;
-loc_800339F0:
-    sw(0, a0);
-    v0 = lh(a1 + 0xC);
-    v1++;
-    v0 = (i32(v1) < i32(v0));
-    a0 += 4;
-    if (v0 != 0) goto loc_800339F0;
-loc_80033A08:
-    v0 = t2 - v1;
-    v0 <<= 2;
-    a0 += v0;
-    v0 = lh(a1 + 0xE);
-    a2++;
-    v0 = (i32(a2) < i32(v0));
-    if (v0 != 0) goto loc_800339E0;
-loc_80033A28:
-    t1++;
-    v0 = (i32(t1) < 0x100);
-    t0 += 4;
-    if (v0 != 0) goto loc_800339B8;
-    a3++;
-    v0 = (i32(a3) < 0xB);
-    if (v0 != 0) goto loc_80033988;
-    a1 = *gLockedTexPagesMask;
-    sw(0, gp + 0xA48);                                  // Store to: gTexCacheFillPage (80078028)
-    v0 = a1 & 1;
-    if (v0 == 0) goto loc_80033AAC;
-    a2 = 0x2E8B0000;                                    // Result = 2E8B0000
-    a2 |= 0xA2E9;                                       // Result = 2E8BA2E9
-loc_80033A64:
-    a0 = lw(gp + 0xA48);                                // Load from: gTexCacheFillPage (80078028)
-    a0++;
-    mult(a0, a2);
-    v0 = u32(i32(a0) >> 31);
-    v1 = hi;
-    v1 = u32(i32(v1) >> 1);
-    v1 -= v0;
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    a0 -= v0;
-    sw(a0, gp + 0xA48);                                 // Store to: gTexCacheFillPage (80078028)
-    a0 = i32(a1) >> a0;
-    a0 &= 1;
-    if (a0 != 0) goto loc_80033A64;
-loc_80033AAC:
-    sw(0, gp + 0xD04);                                  // Store to: gTexCacheFillBlockX (800782E4)
-    sw(0, gp + 0xD08);                                  // Store to: gTexCacheFillBlockY (800782E8)
-    sw(0, gp + 0xC98);                                  // Store to: gTexCacheRowBlockH (80078278)
-    sp += 0x10;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Evicts all textures in non-locked pages in the texture cache.
+// Also resets the next position that we will populate the cache at.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_PurgeTexCache() noexcept {
+    tcache_t& tcache = **gpTexCache;
+
+    for (int32_t texPageIdx = 0; texPageIdx < NUM_TCACHE_PAGES; ++texPageIdx) {
+        // Leave this texture page alone and skip past it if it is locked
+        const uint32_t lockedTCachePages = *gLockedTexPagesMask;
+
+        // PC-PSX: this could potentially skip past the last texture cache page if it is locked.
+        // It doesn't happen in practice because the last pages are always used for sprites and unlocked, but
+        // change the method used here to skip just in case we do get undefined behavior...
+        #if PC_PSX_DOOM_MODS
+            if ((lockedTCachePages >> texPageIdx) & 1)
+                continue;
+        #else
+            while ((lockedTCachePages >> texPageIdx) & 1) {
+                ++texPageIdx;
+            }
+        #endif
+
+        // Run though all of the cells in the texture cache page.
+        // For each cell where we find an occupying texture, clear any cells that the found texture occupies.
+        {
+            VmPtr<texture_t>* pPageCacheEntry = &tcache.pages[texPageIdx].cells[0][0];
+
+            for (uint32_t cellIdx = 0; cellIdx < NUM_TCACHE_PAGE_CELLS; ++cellIdx, ++pPageCacheEntry) {
+                // Ignore the texture cache cell if not occupied by a texture
+                if (!pPageCacheEntry->get())
+                    continue;
+
+                // Get the texture occupying this cell and clear it's texture page.
+                texture_t& tex = **pPageCacheEntry;
+                tex.texPageId = 0;
+
+                // Clear all cells occupied by the texture
+                VmPtr<texture_t>* pTexCacheEntry = tex.ppTexCacheEntries.get();
+
+                for (int32_t y = 0; y < tex.heightIn16Blocks; ++y) {
+                    for (int32_t x = 0; x < tex.widthIn16Blocks; ++x) {
+                        *pTexCacheEntry = nullptr;
+                        ++pTexCacheEntry;
+                    }
+
+                    pTexCacheEntry += TCACHE_CELLS_X - tex.widthIn16Blocks;     // Move to the next row of cells
+                }
+            }
+        }
+    }
+
+    // Decide on the initial texture cache fill page: find the first page that is not locked.
+    //
+    // PC-PSX: I also added an additional safety check here.
+    // If all the pages are locked for some reason this code would loop forever, check for that situation first.
+    constexpr uint32_t ALL_TPAGES_MASK = (UINT32_MAX >> (32 - NUM_TCACHE_PAGES));
+
+    const uint32_t lockedTPages = *gLockedTexPagesMask;
+    *gTCacheFillPage = 0;
+    
+    #if PC_PSX_DOOM_MODS
+        if ((lockedTPages & ALL_TPAGES_MASK) != ALL_TPAGES_MASK) {
+    #endif
+            // Move onto the next texture cache page and wraparound, until we find an unlocked page to settle on
+            while ((lockedTPages >> *gTCacheFillPage) & 1) {
+                *gTCacheFillPage += 1;
+                *gTCacheFillPage -= (*gTCacheFillPage / NUM_TCACHE_PAGES) * NUM_TCACHE_PAGES;
+            }
+    #if PC_PSX_DOOM_MODS
+        }
+    #endif
+
+    // Reset the other fill parameters
+    *gTCacheFillCellX = 0;
+    *gTCacheFillCellY = 0;
+    *gTCacheFillRowCellH = 0;
 }
 
 void I_VramViewerDraw() noexcept {
@@ -1424,7 +1462,7 @@ loc_80033E20:
     t9 = 0x4000000;                                     // Result = 04000000
     t8 = 0x80000000;                                    // Result = 80000000
     t5 = -1;                                            // Result = FFFFFFFF
-    v1 = lw(gp + 0x994);                                // Load from: gpTexCacheEntries (80077F74)
+    v1 = lw(gp + 0x994);                                // Load from: gpTexCache (80077F74)
     v0 = s2 << 10;
     s4 = v0 + v1;
 loc_80033E54:

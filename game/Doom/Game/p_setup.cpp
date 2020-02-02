@@ -929,7 +929,7 @@ loc_800230D4:
         Z_FreeTags(**gpMainMemZone, PU_ANIMATION);
     }
     
-    I_ResetTexCache();
+    I_PurgeTexCache();
     Z_CheckHeap(**gpMainMemZone);
     M_ClearRandom();
 

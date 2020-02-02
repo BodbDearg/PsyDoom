@@ -50,7 +50,7 @@ void I_VsyncCallback() noexcept;
 void I_Init() noexcept;
 void I_CacheTex() noexcept;
 void I_RemoveTexCacheEntry() noexcept;
-void I_ResetTexCache() noexcept;
+void I_PurgeTexCache() noexcept;
 void I_VramViewerDraw() noexcept;
 void I_NetSetup() noexcept;
 void I_NetUpdate() noexcept;

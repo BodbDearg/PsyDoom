@@ -16,11 +16,11 @@ struct texture_t {
     uint8_t                     texPageCoordX;          // TODO: COMMENT
     uint8_t                     texPageCoordY;          // TODO: COMMENT
     uint16_t                    texPageId;              // TODO: COMMENT
-    uint16_t                    widthIn16Blocks;        // Width in 16 pixel increments (rounded up)
-    uint16_t                    heightIn16Blocks;       // Height in 16 pixel increments (rounded up)
+    uint16_t                    widthIn16Blocks;        // Width and height of the texture in 16 pixel increments (rounded up).
+    uint16_t                    heightIn16Blocks;       //  thse are the number of texture cache cells in the X and Y direction the texture uses.
     uint16_t                    lumpNum;
     uint16_t                    __padding;              // TODO: is this actually used?
-    VmPtr<VmPtr<texture_t>>     ppTexCacheEntry;        // The texture cache entry for this texture
+    VmPtr<VmPtr<texture_t>>     ppTexCacheEntries;      // Points to the top left cell in the texture cache where this texture is placed.
     uint32_t                    unknown1;               // TODO: what is this?
     uint32_t                    uploadFrameNum;         // What frame the texture was added to the texture cache, used to detect texture cache overflows
 };

@@ -10,7 +10,7 @@
 void START_Legals() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    I_ResetTexCache();
+    I_PurgeTexCache();
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7BD0;                                       // Result = gTexInfo_LEGALS[0] (80097BD0)
     a1 = 0x80070000;                                    // Result = 80070000

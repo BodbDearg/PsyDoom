@@ -20,7 +20,7 @@ void START_Title() noexcept {
     sw(s2, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
-    I_ResetTexCache();
+    I_PurgeTexCache();
     s1 = 0x80070000;                                    // Result = 80070000
     s1 += 0x7C4C;                                       // Result = STR_LumpName_LOADING[0] (80077C4C)
     a0 = s1;                                            // Result = STR_LumpName_LOADING[0] (80077C4C)

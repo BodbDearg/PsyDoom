@@ -431,7 +431,7 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     // Resetting memory management related stuff and RNGs
     *gbIsLevelBeingRestarted = false;
     *gLockedTexPagesMask &= 1;
-    I_ResetTexCache();    
+    I_PurgeTexCache();    
 
     Z_FreeTags(**gpMainMemZone, PU_CACHE|PU_ANIMATION|PU_LEVSPEC|PU_LEVEL);
     M_ClearRandom();

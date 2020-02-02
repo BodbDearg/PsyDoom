@@ -24,7 +24,7 @@ void F1_Start() noexcept {
     sw(ra, sp + 0x24);
     a2 = 0x6D;                                          // Result = 0000006D
     I_DrawPlaque();
-    I_ResetTexCache();
+    I_PurgeTexCache();
     a0 = s0 - 0x80;                                     // Result = gTexInfo_BACK[0] (80097A10)
     I_CacheTex();
     a2 = 0;                                             // Result = 00000000
@@ -211,7 +211,7 @@ void F2_Start() noexcept {
     sw(ra, sp + 0x64);
     a2 = 0x6D;                                          // Result = 0000006D
     I_DrawPlaque();
-    I_ResetTexCache();
+    I_PurgeTexCache();
     a0 = s0 + 0x120;                                    // Result = gTexInfo_DEMON[0] (80097BB0)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7D44;                                       // Result = STR_LumpName_DEMON[0] (80077D44)

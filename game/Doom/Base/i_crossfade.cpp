@@ -16,7 +16,7 @@ loc_80036448:
     sw(s2, sp + 0x170);
     sw(s1, sp + 0x16C);
     sw(s0, sp + 0x168);
-    I_ResetTexCache();
+    I_PurgeTexCache();
     s3 = sp + 0x68;
     a0 = s3;
     a1 = 0x200;                                         // Result = 00000200
