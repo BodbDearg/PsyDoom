@@ -108,7 +108,7 @@ loc_800365C4:
     a2 = 0;                                             // Result = 00000000
 loc_800365D0:
     a3 = 0;                                             // Result = 00000000
-    LIBGPU_GetTPage();
+    _thunk_LIBGPU_GetTPage();
     sh(v0, sp + 0x2E);
     v0 = 9;                                             // Result = 00000009
     sb(v0, sp + 0x43);
@@ -148,7 +148,7 @@ loc_8003665C:
     a2 = 0;                                             // Result = 00000000
 loc_80036668:
     a3 = 0;                                             // Result = 00000000
-    LIBGPU_GetTPage();
+    _thunk_LIBGPU_GetTPage();
     sh(v0, sp + 0x56);
     sh(0, sp + 0x4E);
     s1 = 0xFF;                                          // Result = 000000FF

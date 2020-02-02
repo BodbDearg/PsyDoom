@@ -693,7 +693,7 @@ extern void LIBAPI_GPU_cw() noexcept;
 extern void LIBC2_memcpy() noexcept;
 extern void LIBETC_SetVideoMode() noexcept;
 extern void LIBETC_GetVideoMode() noexcept;
-extern void LIBGPU_GetTPage() noexcept;
+extern void _thunk_LIBGPU_GetTPage() noexcept;
 extern void LIBGPU_GetClut() noexcept;
 extern void LIBGPU_DumpTPage() noexcept;
 extern void LIBGPU_DumpClut() noexcept;
@@ -1588,7 +1588,7 @@ namespace PsxVm {
         { 0x8004E8C0, &LIBC2_memcpy },
         { 0x8004E900, &LIBETC_SetVideoMode },
         { 0x8004E918, &LIBETC_GetVideoMode },
-        { 0x8004E928, &LIBGPU_GetTPage },
+        { 0x8004E928, &_thunk_LIBGPU_GetTPage },
         { 0x8004E9F0, &LIBGPU_GetClut },
         { 0x8004EA08, &LIBGPU_DumpTPage },
         { 0x8004EAD8, &LIBGPU_DumpClut },

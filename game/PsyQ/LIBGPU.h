@@ -198,7 +198,16 @@ void LIBGPU_SYS__sync() noexcept;
 void LIBGPU_SYS_set_alarm() noexcept;
 void LIBGPU_SYS_get_alarm() noexcept;
 void LIBGPU_SYS_memset() noexcept;
-void LIBGPU_GetTPage() noexcept;
+
+uint16_t LIBGPU_GetTPage(
+    const int32_t texFmt,
+    const int32_t semiTransRate,
+    const int32_t tpageX,
+    const int32_t tpageY
+) noexcept;
+
+void _thunk_LIBGPU_GetTPage() noexcept;
+
 void LIBGPU_GetClut() noexcept;
 void LIBGPU_DumpTPage() noexcept;
 void LIBGPU_DumpClut() noexcept;

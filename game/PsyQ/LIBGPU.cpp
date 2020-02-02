@@ -2951,8 +2951,17 @@ loc_8004E8A4:
     return;
 }
 
-void LIBGPU_GetTPage() noexcept {
-loc_8004E928:
+uint16_t LIBGPU_GetTPage(
+    const int32_t texFmt,
+    const int32_t semiTransRate,
+    const int32_t tpageX,
+    const int32_t tpageY
+) noexcept {
+    a0 = texFmt;
+    a1 = semiTransRate;
+    a2 = tpageX;
+    a3 = tpageY;
+
     sp -= 0x28;
     sw(s0, sp + 0x10);
     s0 = a0;
@@ -3009,7 +3018,12 @@ loc_8004E9CC:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x28;
-    return;
+
+    return (uint16_t) v0;
+}
+
+void _thunk_LIBGPU_GetTPage() noexcept {
+    v0 = LIBGPU_GetTPage(a0, a1, a2, a3);
 }
 
 void LIBGPU_GetClut() noexcept {
@@ -4295,7 +4309,7 @@ loc_8004FB80:
     a1 = s2;
     a2 = s1;
     a3 = s3;
-    LIBGPU_GetTPage();
+    _thunk_LIBGPU_GetTPage();
     v0 &= 0xFFFF;
     ra = lw(sp + 0x28);
     s3 = lw(sp + 0x24);
@@ -4364,7 +4378,7 @@ loc_8004FC28:
     v1 ^= 0x1E0;
     v1 = (v1 > 0);
     sb(v1, s0 + 0x17);
-    LIBGPU_GetTPage();
+    _thunk_LIBGPU_GetTPage();
     sh(v0, s0 + 0x14);
     v0 = s0;
     sb(0, v0 + 0x18);

@@ -48,9 +48,10 @@
 //       backed up and retained in main RAM. So essentially the renderer needs to keep a copy of all sprite data in main RAM also.
 //------------------------------------------------------------------------------------------------------------------------------------------
 constexpr uint32_t NUM_TCACHE_PAGES         = 11;
+constexpr uint32_t TCACHE_PAGE_SIZE         = 256;  // Square size: 256x256 pixels
 constexpr uint32_t TCACHE_CELL_SIZE         = 16;
-constexpr uint32_t TCACHE_CELLS_X           = 256 / TCACHE_CELL_SIZE;
-constexpr uint32_t TCACHE_CELLS_Y           = 256 / TCACHE_CELL_SIZE;
+constexpr uint32_t TCACHE_CELLS_X           = TCACHE_PAGE_SIZE / TCACHE_CELL_SIZE;
+constexpr uint32_t TCACHE_CELLS_Y           = TCACHE_PAGE_SIZE / TCACHE_CELL_SIZE;
 constexpr uint32_t NUM_TCACHE_PAGE_CELLS    = TCACHE_CELLS_X * TCACHE_CELLS_Y;
 constexpr uint32_t ALL_TPAGES_MASK          = (UINT32_MAX >> (32 - NUM_TCACHE_PAGES));
 
@@ -1070,14 +1071,14 @@ void I_CacheTex(texture_t& tex) noexcept {
     // Save the textures page coordinate
     tex.texPageCoordX = (uint8_t)((*gTCacheFillCellX) * TCACHE_CELL_SIZE);
     tex.texPageCoordY = (uint8_t)((*gTCacheFillCellY) * TCACHE_CELL_SIZE);
-
+    
     // Get and save the texture page id
-    a0 = 1;
-    a1 = 0;
-    a2 = (*gTCacheFillPage + 4) * 128;
-    a3 = TEX_PAGE_VRAM_TEXCOORDS[*gTCacheFillPage][1];
-    LIBGPU_GetTPage();
-    tex.texPageId = (uint16_t) v0;
+    tex.texPageId = LIBGPU_GetTPage(
+        1,                                                  // Format 1 = 8 bpp (indexed)
+        0,                                                  // Note: transparency bits are added later during rendering
+        (*gTCacheFillPage + 4) * (TCACHE_PAGE_SIZE / 2),    // Note: must skip the first 4 pages as that is the front and back framebuffer
+        TEX_PAGE_VRAM_TEXCOORDS[*gTCacheFillPage][1]
+    );
 
     // Advance the fill position in the texture cache.
     // Also expand the fill row height if this texture is taller than the current height.
@@ -1265,7 +1266,7 @@ loc_80033AC4:
     at += v0;
     a3 = lw(at);
     a2 <<= 7;
-    LIBGPU_GetTPage();
+    _thunk_LIBGPU_GetTPage();
     t4 = 0x1F800000;                                    // Result = 1F800000
     t4 += 0x204;                                        // Result = 1F800204
     t3 = 0xFF0000;                                      // Result = 00FF0000
