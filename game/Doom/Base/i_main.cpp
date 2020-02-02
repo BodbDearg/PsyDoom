@@ -1016,8 +1016,7 @@ void I_CacheTex(texture_t& tex) noexcept {
                     }
 
                     // The cell is not empty but we can evict the texture, do that here now
-                    a0 = ptrToVmAddr(pCellTex);
-                    I_RemoveTexCacheEntry();
+                    I_RemoveTexCacheEntry(*pCellTex);
                 }
 
                 pCacheEntry += TCACHE_CELLS_X - tex.widthIn16Blocks;    // Move onto the next row of cells
@@ -1093,37 +1092,28 @@ void _thunk_I_CacheTex() noexcept {
     I_CacheTex(*vmAddrToPtr<texture_t>(a0));
 }
 
-void I_RemoveTexCacheEntry() noexcept {
-loc_8003390C:
-    sp -= 0x10;
-    a1 = lw(a0 + 0x14);
-    v0 = lh(a0 + 0xE);
-    a2 = 0;                                             // Result = 00000000
-    sh(0, a0 + 0xA);
-    if (i32(v0) <= 0) goto loc_80033970;
-    a3 = 0x10;                                          // Result = 00000010
-loc_80033928:
-    v0 = lh(a0 + 0xC);
-    v1 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80033950;
-loc_80033938:
-    sw(0, a1);
-    v0 = lh(a0 + 0xC);
-    v1++;
-    v0 = (i32(v1) < i32(v0));
-    a1 += 4;
-    if (v0 != 0) goto loc_80033938;
-loc_80033950:
-    v0 = a3 - v1;
-    v0 <<= 2;
-    a1 += v0;
-    v0 = lh(a0 + 0xE);
-    a2++;
-    v0 = (i32(a2) < i32(v0));
-    if (v0 != 0) goto loc_80033928;
-loc_80033970:
-    sp += 0x10;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Removes the given texture from the cache and frees any cells that it is using.
+// Note this should only be called if the texture is actually in the cache!
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_RemoveTexCacheEntry(texture_t& tex) noexcept {
+    // PC-PSX: added sanity check: this could trash textures in the cache if the texture is already freed!
+    #if PC_PSX_DOOM_MODS
+        ASSERT(tex.texPageId != 0);
+    #endif
+
+    // Wipe the texture page id used and clear any cells the texture occupies
+    tex.texPageId = 0;
+    VmPtr<texture_t>* pCacheEntry = tex.ppTexCacheEntries.get();
+    
+    for (int32_t y = 0; y < tex.heightIn16Blocks; ++y) {
+        for (int32_t x = 0; x < tex.widthIn16Blocks; ++x) {
+            *pCacheEntry = nullptr;
+            ++pCacheEntry;
+        }
+
+        pCacheEntry += TCACHE_CELLS_X - tex.widthIn16Blocks;    // Next row
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

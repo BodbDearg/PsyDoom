@@ -288,7 +288,6 @@ extern void I_DrawPlaque() noexcept;
 extern void I_DrawPresent() noexcept;
 extern void I_VsyncCallback() noexcept;
 extern void _thunk_I_CacheTex() noexcept;
-extern void I_RemoveTexCacheEntry() noexcept;
 extern void I_VramViewerDraw() noexcept;
 extern void I_NetSetup() noexcept;
 extern void I_NetUpdate() noexcept;
@@ -1184,7 +1183,6 @@ namespace PsxVm {
         { 0x800333F0, &I_DrawPresent },
         { 0x8003350C, &I_VsyncCallback },
         { 0x80033578, &_thunk_I_CacheTex },
-        { 0x8003390C, &I_RemoveTexCacheEntry },
         { 0x80033AC4, &I_VramViewerDraw },
         { 0x8003472C, &I_NetSetup },
         { 0x80034A60, &I_NetUpdate },

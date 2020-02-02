@@ -54,7 +54,7 @@ void I_Init() noexcept;
 void I_CacheTex(texture_t& tex) noexcept;
 void _thunk_I_CacheTex() noexcept;
 
-void I_RemoveTexCacheEntry() noexcept;
+void I_RemoveTexCacheEntry(texture_t& tex) noexcept;
 void I_PurgeTexCache() noexcept;
 void I_VramViewerDraw() noexcept;
 void I_NetSetup() noexcept;

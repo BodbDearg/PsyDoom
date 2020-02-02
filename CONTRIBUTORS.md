@@ -27,6 +27,10 @@ PsyDoom contributors (sorted alphabetically)
             https://gist.github.com/Erick194/96f360d99e905f085f0ee50c097d3b65
             https://gist.github.com/Erick194/0f57e686e57ec43f1067f254f2fbe79a
             https://gist.github.com/Erick194/e609690fe0250c5243cb4c705815dacf
+        * P_PlayerZMovement
+            https://www.doomworld.com/forum/topic/101161-gec-master-edition-psx-doom-for-the-playstation-1102019-beta-3-release-now-are-you-ready-for-more-action/?page=54&tab=comments#comment-2076239
+        * Texture cache code:
+            https://gist.github.com/Erick194/41c9ee0ac44e3a4c4daa952ac28f1b28
 
 * **[Samuel Villarreal (svkaiser)](https://github.com/svkaiser)**
 
