@@ -44,7 +44,20 @@ void I_PSXInit() noexcept;
 void I_ReadGamepad() noexcept;
 void I_CacheTexForLumpName() noexcept;
 void I_CacheAndDrawSprite() noexcept;
-void I_DrawSprite() noexcept;
+
+void I_DrawSprite(
+    const uint16_t texPageId,
+    const int16_t clutId,
+    const int16_t xpos,
+    const int16_t ypos,
+    const uint8_t texU,
+    const uint8_t texV,
+    const uint16_t texW,
+    const uint16_t texH
+) noexcept;
+
+void _thunk_I_DrawSprite() noexcept;
+
 void I_DrawPlaque() noexcept;
 void I_IncDrawnFrameCount() noexcept;
 void I_DrawPresent() noexcept;

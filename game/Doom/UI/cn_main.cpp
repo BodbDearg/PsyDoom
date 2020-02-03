@@ -231,7 +231,7 @@ loc_80037BAC:
     v0 <<= 4;
     v0 += 0x84;
     sw(v0, sp + 0x10);
-    I_DrawSprite();
+    _thunk_I_DrawSprite();
 loc_80037C70:
     v1 = 0;                                             // Result = 00000000
     a1 = lw(s0);
@@ -263,7 +263,7 @@ loc_80037CC4:
     v0 += v1;
     sw(v0, sp + 0x10);
     sw(t0, sp + 0x14);
-    I_DrawSprite();
+    _thunk_I_DrawSprite();
 loc_80037CFC:
     s1 += 0x14;
     s2++;

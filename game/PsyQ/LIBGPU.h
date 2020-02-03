@@ -103,7 +103,7 @@ struct SPRT {
     int16_t     y0;
     uint8_t     tu0;        // Texture u/v coords: note could not use just 'v0' due to register name clashing
     uint8_t     tv0;
-    uint16_t    clut;       // Which CLUT to use for color indexing
+    int16_t     clut;       // Which CLUT to use for color indexing
     int16_t     w;          // Draw width and height of the sprite
     int16_t     h;
 };

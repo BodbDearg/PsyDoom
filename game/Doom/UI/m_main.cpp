@@ -536,7 +536,7 @@ loc_80036258:
     v0 = 0x12;                                          // Result = 00000012
     sw(v0, sp + 0x1C);
     a3 -= 2;
-    I_DrawSprite();
+    _thunk_I_DrawSprite();
     a1 = lh(gp + 0x654);                                // Load from: MainMenu_GameMode_YPos (80077C34)
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x1568;                                       // Result = STR_GameMode[0] (80011568)

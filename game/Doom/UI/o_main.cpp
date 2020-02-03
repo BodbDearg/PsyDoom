@@ -461,7 +461,7 @@ loc_8003EF8C:
     a1 = lh(s6);                                        // Load from: gPaletteClutId_UI (800A90A4)
     a2 += 0xD;
     a3 += 0x14;
-    I_DrawSprite();
+    _thunk_I_DrawSprite();
     v0 = lw(s1);
     {
         const bool bJump = (v0 != 0);
@@ -491,7 +491,7 @@ loc_8003F03C:
     a2 += v1;
     a2 += 0xE;
     a3 += 0x14;
-    I_DrawSprite();
+    _thunk_I_DrawSprite();
 loc_8003F058:
     s2++;
     s0 += 0xC;
@@ -530,7 +530,7 @@ loc_8003F074:
     a2 -= 0x18;
     a3 -= 2;
     sw(v1, sp + 0x10);
-    I_DrawSprite();
+    _thunk_I_DrawSprite();
 loc_8003F0F4:
     I_SubmitGpuCmds();
     I_DrawPresent();

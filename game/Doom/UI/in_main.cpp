@@ -658,7 +658,7 @@ loc_8003D0B4:
     sw(v1, sp + 0x14);
     sw(t0, sp + 0x18);
     sw(t1, sp + 0x1C);
-    I_DrawSprite();
+    _thunk_I_DrawSprite();
     a0 = 0x82;                                          // Result = 00000082
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D20;                                       // Result = STR_You[0] (80077D20)
@@ -680,7 +680,7 @@ loc_8003D0B4:
     sw(v1, sp + 0x14);
     sw(t0, sp + 0x18);
     sw(t1, sp + 0x1C);
-    I_DrawSprite();
+    _thunk_I_DrawSprite();
     a0 = 0xD0;                                          // Result = 000000D0
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D24;                                       // Result = STR_Him[0] (80077D24)
@@ -931,7 +931,7 @@ loc_8003D554:
     v0 = lbu(s2 + 0x5);
     a3 = 0x46;                                          // Result = 00000046
     sw(v0, sp + 0x1C);
-    I_DrawSprite();
+    _thunk_I_DrawSprite();
     a0 = 0x76;                                          // Result = 00000076
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D20;                                       // Result = STR_You[0] (80077D20)
@@ -949,7 +949,7 @@ loc_8003D554:
     v0 = lbu(s3 + 0x5);
     a3 = 0x46;                                          // Result = 00000046
     sw(v0, sp + 0x1C);
-    I_DrawSprite();
+    _thunk_I_DrawSprite();
     a0 = 0xC3;                                          // Result = 000000C3
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D24;                                       // Result = STR_Him[0] (80077D24)
