@@ -1,13 +1,17 @@
 # PsyDoom
 *(Note: formerly known as 'StationDoom')*
 
-This project is a reverse engineering attempt to backport PSX Doom to PC. Will add more details here later and eventually binary builds once it is stable enough for general release. If you want to try/experiment with this for now, you will need to build from source - see details below.
+This project is a reverse engineering attempt to backport PSX Doom to PC. The code is derived directly from the original machine code (see commit history for a timeline of its transformation) and currently runs in a semi-native, semi-emulated environment. The 'Avocado' PlayStation emulator is used to handle the specifics of the PSX hardware and emulate couple of small functions that don't yet work correctly in C++. Eventually the goal is reach 100% native status and remove all dependencies on emulation entirely.
+
+A sister project, [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE), by [Erick Vásquez García (Erick194)](https://github.com/Erick194) also completely recreates the Doom source code for the actual PlayStation hardware and 'PsyQ' SDK. The reverse engineering work in that project is used to accelerate the incremental transition to native C++ for this project, and also interpretation of the code. Going forward, both projects will likely share improvements and refinements and collaborate even more.
+
+Will add more details here later and eventually 'official' binary builds once it is stable enough for general release. If you want to try/experiment with this for now, you will need to build from source or use one of the occasional binaries that I will put up - see details below.
 
 As of right now the game mostly runs correctly, with some sound syncing issues and a few other problems. Here is a brief video demonstration showing the project in action:
 
 [![Alt text](https://img.youtube.com/vi/o7t7w1YjjSw/0.jpg)](https://www.youtube.com/watch?v=o7t7w1YjjSw)
 
-The eventual goal of this project is convert the entire game code to C++, remove the PSX BIOS dependency and need for the original .EXE, and hopefully also simplify + remove most emulation code except where strictly necessary for authenticity. All of this while preserving as much of the original code structure and meaning as possible, for historical reference..
+As mentioned above the eventual goal of this project is convert the entire game code to C++, remove the PSX BIOS dependency and need for the original .EXE, and hopefully also simplify + remove most emulation code except where strictly necessary for authenticity. All of this while preserving as much of the original code structure and meaning as possible, for historical reference..
 
 Longer term goals include support for Final Doom, proper modding support (I added some basic support so far!) and PSX DOOM engine limit removal. Once all those things have been done this project can also be forked to provide an 'enhanced' version of game with support for higher resolution, fixing of graphical glitches, support for widescreen and so on.
 
@@ -61,7 +65,6 @@ Longer term goals include support for Final Doom, proper modding support (I adde
 - The Avocado PSX emulator backend (used for hardware emulation and bios calls) seems to draw some sprites 1 pixel too small in some cases.
     - This issue can be seen on menus and also with the sky.
 - Only the 'Greatest Hits' US version of PSX DOOM is supported, not Final DOOM or any other SKU.
-- Demos currently play too fast.
 - Multiplayer does not work and will freeze the game.
 - The intro movie does not play yet.
 - Probably other lots of other stuff not mentioned here...
