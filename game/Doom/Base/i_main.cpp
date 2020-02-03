@@ -337,7 +337,11 @@ loc_80032BE8:
     a0 = 0;                                             // Result = 00000000
 loc_80032BEC:
     v0 = a0;
-    return;
+
+    // TODO: temp hack to reduce input lag - get the button bits directly from the emulator.
+    // Cleanup this stuff in a bit:
+    PsxVm::updateInput();
+    v0 = PsxVm::getControllerButtonBits();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

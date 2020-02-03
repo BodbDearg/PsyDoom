@@ -239,6 +239,9 @@ namespace PsxVm {
 
     // Tells if the emulator can return control back to the native C++ code
     bool canExitEmulator() noexcept;
+
+    // Get the button bits for the controller directly, bypassing emulation
+    uint16_t getControllerButtonBits() noexcept;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

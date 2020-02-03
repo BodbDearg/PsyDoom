@@ -419,6 +419,32 @@ void PsxVm::updateInput() noexcept {
     gpSystem->controller->update();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gets the state of the controller directly to bypass input lag caused by emulation
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t PsxVm::getControllerButtonBits() noexcept {
+    uint16_t buttonBits = 0;
+    InputManager& inputMgr = *InputManager::getInstance();
+
+    // TODO: make constants for these outside of LIBETC
+    if (inputMgr.getDigital(gPadBtnKey_Up))         { buttonBits |= 0x1000; }
+    if (inputMgr.getDigital(gPadBtnKey_Down))       { buttonBits |= 0x4000; }
+    if (inputMgr.getDigital(gPadBtnKey_Left))       { buttonBits |= 0x8000; }
+    if (inputMgr.getDigital(gPadBtnKey_Right))      { buttonBits |= 0x2000; }
+    if (inputMgr.getDigital(gPadBtnKey_L1))         { buttonBits |= 0x4;    }
+    if (inputMgr.getDigital(gPadBtnKey_R1))         { buttonBits |= 0x8;    }
+    if (inputMgr.getDigital(gPadBtnKey_L2))         { buttonBits |= 0x1;    }
+    if (inputMgr.getDigital(gPadBtnKey_R2))         { buttonBits |= 0x2;    }
+    if (inputMgr.getDigital(gPadBtnKey_Circle))     { buttonBits |= 0x20;   }
+    if (inputMgr.getDigital(gPadBtnKey_Square))     { buttonBits |= 0x80;   }
+    if (inputMgr.getDigital(gPadBtnKey_Triangle))   { buttonBits |= 0x10;   }
+    if (inputMgr.getDigital(gPadBtnKey_Cross))      { buttonBits |= 0x40;   }
+    if (inputMgr.getDigital(gPadBtnKey_Start))      { buttonBits |= 0x800;  }
+    if (inputMgr.getDigital(gPadBtnKey_Select))     { buttonBits |= 0x100;  }
+
+    return buttonBits;
+}
+
 VmFunc PsxVm::getVmFuncForAddr(const uint32_t addr) noexcept {
     auto iter = gFuncTable.find(addr);
     return (iter != gFuncTable.end()) ? iter->second : nullptr;
