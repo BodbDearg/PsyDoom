@@ -14,22 +14,22 @@ void START_Credits() noexcept {
     a1 += 0x7CBC;                                       // Result = STR_LumpName_IDCRED1[0] (80077CBC)
     sw(ra, sp + 0x24);
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = s0 + 0x20;                                     // Result = gTexInfo_IDCRED2[0] (80097B50)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7CC4;                                       // Result = STR_LumpName_IDCRED2[0] (80077CC4)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = s0 + 0x40;                                     // Result = gTexInfo_WMSCRED1[0] (80097B70)
     a1 = 0x80010000;                                    // Result = 80010000
     a1 += 0x1590;                                       // Result = STR_LumpName_WMSCRED1[0] (80011590)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = s0 + 0x60;                                     // Result = gTexInfo_WMSCRED2[0] (80097B90)
     a1 = 0x80010000;                                    // Result = 80010000
     a1 += 0x159C;                                       // Result = STR_LumpName_WMSCRED2[0] (8001159C)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     v1 = 0x80070000;                                    // Result = 80070000
     v1 += 0x3E54;                                       // Result = CDTrackNum_Credits_Demo (80073E54)
     a2 = 0;                                             // Result = 00000000

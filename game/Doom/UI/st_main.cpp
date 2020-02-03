@@ -29,7 +29,7 @@ loc_8003857C:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7CE4;                                       // Result = STR_LumpName_STATUS[0] (80077CE4)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7FD8);                               // Load from: gTexCacheFillPage (80078028)
     if (v0 == 0) goto loc_800385B8;

@@ -249,7 +249,7 @@ texture_t (32 bytes):
         008     uint8_t     texPageCoordX;
         009     uint8_t     texPageCoordY;
         00A     uint16_t    texPageId;
-        00C     uint16_t    widthIn16Blocks;
+        00C     uint16_t    width16;
         00E     uint16_t    heightIn16Blocks;
         010     uint16_t    lumpNum;
         012     uint16_t    __padding ?

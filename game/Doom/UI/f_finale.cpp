@@ -216,7 +216,7 @@ void F2_Start() noexcept {
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7D44;                                       // Result = STR_LumpName_DEMON[0] (80077D44)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     P_LoadBlocks(CdMapTbl_File::MAPSPR60_IMG);
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x4A68);                               // Load from: CastInfo_1_ZombieMan[1] (80074A68)

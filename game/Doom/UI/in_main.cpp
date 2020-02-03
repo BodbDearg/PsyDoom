@@ -20,7 +20,7 @@ void IN_Start() noexcept {
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7CFC;                                       // Result = STR_LumpName_BACK_2[0] (80077CFC)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     t3 = 0x64;                                          // Result = 00000064
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000

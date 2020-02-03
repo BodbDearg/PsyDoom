@@ -16,7 +16,7 @@ void START_Legals() noexcept {
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C44;                                       // Result = STR_LumpName_LEGALS[0] (80077C44)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = 0;
     a1 = sfx_sgcock;
     S_StartSound();

@@ -103,7 +103,7 @@ void M_Start() noexcept {
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C4C;                                       // Result = STR_LumpName_LOADING[0] (80077C4C)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = s0;                                            // Result = gTexInfo_LOADING[0] (80097A90)
     a1 = 0x5F;                                          // Result = 0000005F
     a3 = 0x800B0000;                                    // Result = 800B0000
@@ -116,17 +116,17 @@ void M_Start() noexcept {
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C8C;                                       // Result = STR_LumpName_BACK[0] (80077C8C)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = s0 - 0x40;                                     // Result = gTexInfo_DOOM[0] (80097A50)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C94;                                       // Result = STR_LumpName_DOOM[0] (80077C94)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = s0 + 0x80;                                     // Result = gTexInfo_CONNECT[0] (80097B10)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C9C;                                       // Result = STR_LumpName_CONNECT[0] (80077C9C)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
     sw(0, gp + 0xBF8);                                  // Store to: gCursorFrame (800781D8)

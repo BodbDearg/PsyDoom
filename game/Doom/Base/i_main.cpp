@@ -5,6 +5,7 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Renderer/r_data.h"
 #include "i_drawcmds.h"
+#include "PcPsx/Endian.h"
 #include "PcPsx/Finally.h"
 #include "PcPsx/Video.h"
 #include "PsxVm/PsxVm.h"
@@ -133,9 +134,9 @@ const VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>                         gBtnBindings
 const VmPtr<VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>[MAXPLAYERS]>      gpPlayerBtnBindings(0x80077FC8);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// User PlayStation entrypoint for DOOM.
+// User/client entrypoint for PlayStation DOOM.
 // This was probably the actual 'main()' function in the real source code.
-// I'm just calling 'I_Main()' so as not to confuse it with our this port's 'main()'... 
+// I'm just calling 'I_Main()' so as not to confuse it with this port's 'main()'... 
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_Main() noexcept {
     // PsyQ SDK initialization stuff
@@ -339,70 +340,55 @@ loc_80032BEC:
     return;
 }
 
-void I_CacheTexForLumpName() noexcept {
-loc_80032BF4:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    a0 = a1;
-    sw(s2, sp + 0x18);
-    s2 = a2;
-    sw(ra, sp + 0x1C);
-    sw(s0, sp + 0x10);
-    if (a0 == 0) goto loc_80032C24;
-    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
-    s2 = v0;
-loc_80032C24:
-    a0 = s2;
-    a1 = 0x20;                                          // Result = 00000020
-    a2 = 0;                                             // Result = 00000000
-    _thunk_W_CacheLumpNum();
-    v1 = *gpbIsUncompressedLump;
-    v1 += s2;
-    v1 = lbu(v1);
-    a0 = v0;
-    if (v1 != 0) goto loc_80032C68;
-    s0 = gTmpBuffer;
-    a1 = gTmpBuffer;
-    _thunk_decode();
-    a0 = gTmpBuffer;
-loc_80032C68:
-    v0 = lhu(a0);
-    sh(v0, s1);
-    v0 = lhu(a0 + 0x2);
-    sh(v0, s1 + 0x2);
-    v0 = lhu(a0 + 0x4);
-    sh(v0, s1 + 0x4);
-    v0 = lhu(a0 + 0x6);
-    sh(v0, s1 + 0x6);
-    v1 = lh(a0 + 0x4);
-    v0 = v1 + 0xF;
-    {
-        const bool bJump = (i32(v0) >= 0);
-        v0 = u32(i32(v0) >> 4);
-        if (bJump) goto loc_80032CB4;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load the WAD data for the specified texture lump and populate the 'texture_t' object info.
+// Also put the texture/sprite into VRAM.
+// The lump can either be specified by name or by number.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpNum) noexcept {
+    // Do a name lookup?
+    if (name) {
+        lumpNum = W_GetNumForName(name);
     }
-    v0 = v1 + 0x1E;
-    v0 = u32(i32(v0) >> 4);
-loc_80032CB4:
-    sh(v0, s1 + 0xC);
-    a0 = lh(a0 + 0x6);
-    v0 = a0 + 0xF;
-    if (i32(v0) >= 0) goto loc_80032CD0;
-    v0 = a0 + 0x1E;
-loc_80032CD0:
-    a0 = s1;
-    v0 = u32(i32(v0) >> 4);
-    sh(v0, a0 + 0xE);
-    sh(0, a0 + 0xA);
-    sh(s2, a0 + 0x10);
-    _thunk_I_CacheTex();
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Ensure the lump data is loaded and decompress if required
+    const void* pLumpData = W_CacheLumpNum(lumpNum, PU_CACHE, false);
+    const bool bIsCompressed = (!(*gpbIsUncompressedLump)[lumpNum]);
+
+    if (bIsCompressed) {
+        decode(pLumpData, gTmpBuffer.get());
+        pLumpData = gTmpBuffer.get();
+    }
+
+    // Populate the basic info for the texture
+    const patch_t& patch = *(const patch_t*) pLumpData;
+    tex.offsetX = Endian::littleToHost(patch.offsetX);
+    tex.offsetY = Endian::littleToHost(patch.offsetY);
+
+    const int16_t patchW = Endian::littleToHost(patch.width);
+    const int16_t patchH = Endian::littleToHost(patch.height);
+    tex.width = patchW;
+    tex.height = patchH;
+    
+    if (patchW + 15 >= 0) {
+        tex.width16 = (patchW + 15) / 16;
+    } else {
+        tex.width16 = (patchW + 30) / 16;   // Not sure why would patch sizes be negative? What does that mean?
+    }
+    
+    if (patchH + 15 >= 0) {
+        tex.height16 = (patchH + 15) / 16;
+    } else {
+        tex.height16 = (patchH + 30) / 16;  // Not sure why would patch sizes be negative? What does that mean?
+    }
+    
+    tex.texPageId = 0;
+    tex.lumpNum = (uint16_t) lumpNum;
+    I_CacheTex(tex);
+}
+
+void _thunk_I_LoadAndCacheTexLump() noexcept {
+    I_LoadAndCacheTexLump(*vmAddrToPtr<texture_t>(a0), vmAddrToPtr<const char>(a1), a2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -597,7 +583,7 @@ void I_CacheTex(texture_t& tex) noexcept {
     {
     find_free_tcache_location:
         // Move onto another row in the texture cache if this row can't accomodate the texture
-        if (*gTCacheFillCellX + tex.widthIn16Blocks > TCACHE_CELLS_X) {
+        if (*gTCacheFillCellX + tex.width16 > TCACHE_CELLS_X) {
             *gTCacheFillCellY = *gTCacheFillCellY + *gTCacheFillRowCellH;
             *gTCacheFillCellX = 0;
             *gTCacheFillRowCellH = 0;
@@ -605,7 +591,7 @@ void I_CacheTex(texture_t& tex) noexcept {
         
         // Move onto another page in the texture cache if this page can't accomodate the texture.
         // Find one that is not locked and which is available for modification.
-        if (*gTCacheFillCellY + tex.heightIn16Blocks > TCACHE_CELLS_Y) {            
+        if (*gTCacheFillCellY + tex.height16 > TCACHE_CELLS_Y) {            
             const uint32_t lockedTPages = *gLockedTexPagesMask;
 
             // PC-PSX: if all the pages are locked this code will loop forever.
@@ -644,8 +630,8 @@ void I_CacheTex(texture_t& tex) noexcept {
             // Iterate through all the cells this texture would occupy
             VmPtr<texture_t>* pCacheEntry = pTexStartCacheCell;
             
-            for (int32_t y = 0; y < tex.heightIn16Blocks; ++y) {
-                for (int32_t x = 0; x < tex.widthIn16Blocks; ++x) {
+            for (int32_t y = 0; y < tex.height16; ++y) {
+                for (int32_t x = 0; x < tex.width16; ++x) {
                     // Check to see if this cell is empty and move past it.
                     // If it's already empty then we don't need to do anything:
                     texture_t* const pCellTex = pCacheEntry->get();
@@ -657,12 +643,12 @@ void I_CacheTex(texture_t& tex) noexcept {
                     // Cell is not empty! If the texture in the cell is in use for this frame then we can't evict it.
                     // In this case skip past the texture and try again:
                     if (pCellTex->uploadFrameNum == *gNumFramesDrawn) {
-                        *gTCacheFillCellX += pCellTex->widthIn16Blocks;
+                        *gTCacheFillCellX += pCellTex->width16;
 
                         // We may need to skip onto the next row on retry also, make sure we have the right row height recorded.
                         // The row height is the max of all the texture heights on the row basically:
-                        if (*gTCacheFillRowCellH < pCellTex->heightIn16Blocks) {
-                            *gTCacheFillRowCellH = pCellTex->heightIn16Blocks;
+                        if (*gTCacheFillRowCellH < pCellTex->height16) {
+                            *gTCacheFillRowCellH = pCellTex->height16;
                         }
 
                         goto find_free_tcache_location;
@@ -672,7 +658,7 @@ void I_CacheTex(texture_t& tex) noexcept {
                     I_RemoveTexCacheEntry(*pCellTex);
                 }
 
-                pCacheEntry += TCACHE_CELLS_X - tex.widthIn16Blocks;    // Move onto the next row of cells
+                pCacheEntry += TCACHE_CELLS_X - tex.width16;    // Move onto the next row of cells
             }
         }
     }
@@ -681,13 +667,13 @@ void I_CacheTex(texture_t& tex) noexcept {
     {
         VmPtr<texture_t>* pCacheEntry = pTexStartCacheCell;
 
-        for (int32_t y = 0; y < tex.heightIn16Blocks; ++y) {
-            for (int32_t x = 0; x < tex.widthIn16Blocks; ++x) {
+        for (int32_t y = 0; y < tex.height16; ++y) {
+            for (int32_t x = 0; x < tex.width16; ++x) {
                 *pCacheEntry = &tex;
                 ++pCacheEntry;
             }
 
-            pCacheEntry += TCACHE_CELLS_X - tex.widthIn16Blocks;    // Move to the next row of cells
+            pCacheEntry += TCACHE_CELLS_X - tex.width16;    // Move to the next row of cells
         }
     }
 
@@ -734,10 +720,10 @@ void I_CacheTex(texture_t& tex) noexcept {
 
     // Advance the fill position in the texture cache.
     // Also expand the fill row height if this texture is taller than the current height.
-    *gTCacheFillCellX += tex.widthIn16Blocks;
+    *gTCacheFillCellX += tex.width16;
 
-    if (*gTCacheFillRowCellH < tex.heightIn16Blocks) {
-        *gTCacheFillRowCellH = tex.heightIn16Blocks;
+    if (*gTCacheFillRowCellH < tex.height16) {
+        *gTCacheFillRowCellH = tex.height16;
     }
 }
 
@@ -759,13 +745,13 @@ void I_RemoveTexCacheEntry(texture_t& tex) noexcept {
     tex.texPageId = 0;
     VmPtr<texture_t>* pCacheEntry = tex.ppTexCacheEntries.get();
     
-    for (int32_t y = 0; y < tex.heightIn16Blocks; ++y) {
-        for (int32_t x = 0; x < tex.widthIn16Blocks; ++x) {
+    for (int32_t y = 0; y < tex.height16; ++y) {
+        for (int32_t x = 0; x < tex.width16; ++x) {
             *pCacheEntry = nullptr;
             ++pCacheEntry;
         }
 
-        pCacheEntry += TCACHE_CELLS_X - tex.widthIn16Blocks;    // Next row
+        pCacheEntry += TCACHE_CELLS_X - tex.width16;    // Next row
     }
 }
 
@@ -809,13 +795,13 @@ void I_PurgeTexCache() noexcept {
                 // Clear all cells occupied by the texture
                 VmPtr<texture_t>* pTexCacheEntry = tex.ppTexCacheEntries.get();
 
-                for (int32_t y = 0; y < tex.heightIn16Blocks; ++y) {
-                    for (int32_t x = 0; x < tex.widthIn16Blocks; ++x) {
+                for (int32_t y = 0; y < tex.height16; ++y) {
+                    for (int32_t x = 0; x < tex.width16; ++x) {
                         *pTexCacheEntry = nullptr;
                         ++pTexCacheEntry;
                     }
 
-                    pTexCacheEntry += TCACHE_CELLS_X - tex.widthIn16Blocks;     // Move to the next row of cells
+                    pTexCacheEntry += TCACHE_CELLS_X - tex.width16;     // Move to the next row of cells
                 }
             }
         }

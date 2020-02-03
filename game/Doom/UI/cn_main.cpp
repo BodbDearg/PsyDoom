@@ -23,7 +23,7 @@ void START_ControlsScreen() noexcept {
     sw(0, gp + 0xBF8);                                  // Store to: gCursorFrame (800781D8)
     sw(0, gp + 0xA20);                                  // Store to: gCursorPos (80078000)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;

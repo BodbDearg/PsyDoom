@@ -32,7 +32,7 @@ void START_Title() noexcept {
     a0 = s0;                                            // Result = gTexInfo_LOADING[0] (80097A90)
     a1 = s1;                                            // Result = STR_LumpName_LOADING[0] (80077C4C)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = s0;                                            // Result = gTexInfo_LOADING[0] (80097A90)
     a1 = 0x5F;                                          // Result = 0000005F
     a3 = 0x800B0000;                                    // Result = 800B0000
@@ -68,24 +68,24 @@ void START_Title() noexcept {
     a0 = s0 + 0x20;                                     // Result = gTexInfo_MARB01[0] (80097AB0)
     a1 = s4;                                            // Result = STR_LumpName_MARB01[0] (80077C54)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = s0 + 0x40;                                     // Result = gTexInfo_BUTTONS[0] (80097AD0)
     a1 = s3;                                            // Result = STR_LumpName_BUTTONS[0] (80077C5C)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = s0 + 0x60;                                     // Result = gTexInfo_NETERR[0] (80097AF0)
     a1 = s2;                                            // Result = STR_LumpName_NETERR[0] (80077C64)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = s0 - 0x20;                                     // Result = gTexInfo_PAUSE[0] (80097A70)
     a1 = s1;                                            // Result = STR_LumpName_PAUSE[0] (80077C6C)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = s0 - 0x60;                                     // Result = gTexInfo_TITLE[0] (80097A30)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C74;                                       // Result = STR_LumpName_TITLE[0] (80077C74)
     a2 = 0;                                             // Result = 00000000
-    I_CacheTexForLumpName();
+    _thunk_I_LoadAndCacheTexLump();
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7C7C;                                       // Result = STR_LumpName_SKY09[0] (80077C7C)
     R_TextureNumForName();

@@ -634,7 +634,7 @@ static const ProgElem ELEMS[] = {
     { 0x80032934, 0x80032B0C, "I_PSXInit",                              ProgElemType::FUNCTION },
     { 0x80032B0C, 0x80032BB8, "I_Error",                                ProgElemType::FUNCTION },
     { 0x80032BB8, 0x80032BF4, "I_ReadGamepad",                          ProgElemType::FUNCTION },
-    { 0x80032BF4, 0x80032D04, "I_CacheTexForLumpName",                  ProgElemType::FUNCTION },
+    { 0x80032BF4, 0x80032D04, "I_LoadAndCacheTexLump",                  ProgElemType::FUNCTION },
     { 0x80032D04, 0x80032D84, "I_CacheAndDrawSprite",                   ProgElemType::FUNCTION },
     { 0x80032D84, 0x800332E0, "I_DrawSprite",                           ProgElemType::FUNCTION },
     { 0x800332E0, 0x800333D8, "I_DrawLoadingPlaque",                    ProgElemType::FUNCTION },
