@@ -3,6 +3,8 @@ PsyDoom contributors (sorted alphabetically)
 
 * **[Erick Vásquez García (Erick194)](https://github.com/Erick194)**
 
+    * Author of the sister project of PsyDoom: [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE)
+        * This project which completely recreates the PSX Doom source code for the original hardware serves as an invaluable source of information for this project. It helps greatly accelerate PsyDoom's transition to native C++.
     * Various information and code for PSX DOOM based on his own extensive reverse engineering efforts, including:
         * Z_Zone comparison:
             https://gist.github.com/Erick194/cccab97eb7cad64fb338fa1048a4743d
