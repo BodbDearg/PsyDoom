@@ -284,7 +284,7 @@ extern void I_ReadGamepad() noexcept;
 extern void I_CacheTexForLumpName() noexcept;
 extern void _thunk_I_CacheAndDrawSprite() noexcept;
 extern void _thunk_I_DrawSprite() noexcept;
-extern void I_DrawPlaque() noexcept;
+extern void _thunk_I_DrawLoadingPlaque() noexcept;
 extern void I_DrawPresent() noexcept;
 extern void I_VsyncCallback() noexcept;
 extern void _thunk_I_CacheTex() noexcept;
@@ -644,12 +644,12 @@ extern void LIBGPU_GetGraphType() noexcept;
 extern void LIBGPU_GetGraphDebug() noexcept;
 extern void LIBGPU_DrawSyncCallback() noexcept;
 extern void LIBGPU_SetDispMask() noexcept;
-extern void LIBGPU_DrawSync() noexcept;
+extern void _thunk_LIBGPU_DrawSync() noexcept;
 extern void LIBGPU_checkRECT() noexcept;
 extern void LIBGPU_ClearImage() noexcept;
 extern void _thunk_LIBGPU_LoadImage() noexcept;
 extern void LIBGPU_StoreImage() noexcept;
-extern void LIBGPU_MoveImage() noexcept;
+extern void _thunk_LIBGPU_MoveImage() noexcept;
 extern void LIBGPU_ClearOTag() noexcept;
 extern void LIBGPU_ClearOTagR() noexcept;
 extern void LIBGPU_DrawPrim() noexcept;
@@ -1179,7 +1179,7 @@ namespace PsxVm {
         { 0x80032BF4, &I_CacheTexForLumpName },
         { 0x80032D04, &_thunk_I_CacheAndDrawSprite },
         { 0x80032D84, &_thunk_I_DrawSprite },
-        { 0x800332E0, &I_DrawPlaque },
+        { 0x800332E0, &_thunk_I_DrawLoadingPlaque },
         { 0x800333F0, &I_DrawPresent },
         { 0x8003350C, &I_VsyncCallback },
         { 0x80033578, &_thunk_I_CacheTex },
@@ -1539,12 +1539,12 @@ namespace PsxVm {
         { 0x8004C12C, &LIBGPU_GetGraphDebug },
         { 0x8004C13C, &LIBGPU_DrawSyncCallback },
         { 0x8004C198, &LIBGPU_SetDispMask },
-        { 0x8004C210, &LIBGPU_DrawSync },
+        { 0x8004C210, &_thunk_LIBGPU_DrawSync },
         { 0x8004C27C, &LIBGPU_checkRECT },
         { 0x8004C3A4, &LIBGPU_ClearImage },
         { 0x8004C438, &_thunk_LIBGPU_LoadImage },
         { 0x8004C49C, &LIBGPU_StoreImage },
-        { 0x8004C500, &LIBGPU_MoveImage },
+        { 0x8004C500, &_thunk_LIBGPU_MoveImage },
         { 0x8004C5A0, &LIBGPU_ClearOTag },
         { 0x8004C64C, &LIBGPU_ClearOTagR },
         { 0x8004C6CC, &LIBGPU_DrawPrim },

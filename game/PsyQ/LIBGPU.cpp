@@ -380,32 +380,21 @@ loc_8004C1EC:
     return;
 }
 
-void LIBGPU_DrawSync() noexcept {
-loc_8004C210:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x356);                               // Load from: 80080356
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = (v0 < 2);
-    sw(ra, sp + 0x14);
-    if (v0 != 0) goto loc_8004C24C;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1BE4;                                       // Result = STR_Sys_DrawSync_Msg[0] (80011BE4)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a1 = s0;
-    ptr_call(v0);
-loc_8004C24C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    v0 = lw(v0 + 0x3C);
-    a0 = s0;
-    ptr_call(v0);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Wait for all GPU operations to complete or return the amount left.
+//
+// Mode:
+//  0 = Block until all drawing operations are complete
+//  1 = Return the number of drawing operations currently in progress.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t LIBGPU_DrawSync([[maybe_unused]] const int32_t mode) noexcept {
+    // This function doesn't need to do anything in this emulated environment.
+    // When we submit something to the 'gpu' then Avocado executes it immediately and blocks before returning.
+    return 0;
+}
+
+void _thunk_LIBGPU_DrawSync() noexcept {
+    v0 = LIBGPU_DrawSync(a0);
 }
 
 void LIBGPU_checkRECT() noexcept {
@@ -569,8 +558,14 @@ void LIBGPU_StoreImage() noexcept {
     return;
 }
 
-void LIBGPU_MoveImage() noexcept {
+int32_t LIBGPU_MoveImage(const RECT& src, const int32_t dstX, const int32_t dstY) noexcept {
 loc_8004C500:
+    VmSVal<RECT> srcVmStack = src;
+
+    a0 = srcVmStack.addr();
+    a1 = dstX;
+    a2 = dstY;
+
     sp -= 0x20;
     sw(s2, sp + 0x18);
     s2 = a0;
@@ -608,7 +603,11 @@ loc_8004C500:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-    return;
+    return v0;
+}
+
+void _thunk_LIBGPU_MoveImage() noexcept {
+    v0 = LIBGPU_MoveImage(*vmAddrToPtr<const RECT>(a0), a1, a2);
 }
 
 void LIBGPU_ClearOTag() noexcept {

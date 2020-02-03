@@ -41,7 +41,7 @@ static constexpr angle_t ANG270 = 0xC0000000;
 static constexpr uint32_t FINEANGLES        = 8192;                 // How many entries in sine, cosine etc. LUTs. The number of 'fine' angles.
 static constexpr uint32_t FINEMASK          = FINEANGLES - 1;       // Wrap a 'fine' angle to the LUT tables
 static constexpr uint32_t ANGLETOFINESHIFT  = 19;                   // How many bits to chop off when converting a BAM angle to a 'fine' angle for looking up the trig LUTs.
-static constexpr uint32_t SLOPERANGE	    = 2048;                 // Number of entries (-1) in the 
+static constexpr uint32_t SLOPERANGE        = 2048;                 // Number of entries (-1) in the 
 
 // The trig lookup tables.
 // Note that the cosine table is just the sine table phase shifted by PI/2.

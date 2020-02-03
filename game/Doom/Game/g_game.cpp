@@ -60,7 +60,7 @@ void G_DoLoadLevel() noexcept {
     a1 = 95;
     a2 = 109;
     a3 = lh(0x800A90A4);            // Load from: gPaletteClutId_UI (800A90A4)    
-    I_DrawPlaque();
+    _thunk_I_DrawLoadingPlaque();
 
     // TODO: what is this waiting on?
     do {

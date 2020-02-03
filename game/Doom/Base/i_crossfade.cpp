@@ -53,8 +53,7 @@ loc_80036448:
     LIBGPU_SetDefDispEnv();
     a1 = 0x300;                                         // Result = 00000300
     a2 = 0x100;                                         // Result = 00000100
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F08);                               // Load from: gCurDrawDispBufferIdx (800780F8)
+    v0 = *gCurDispBufferIdx;
     s4 = 0;                                             // Result = 00000000
     a0 = v0 << 2;
     a0 += v0;
@@ -62,9 +61,9 @@ loc_80036448:
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 -= 0x6E9C;                                       // Result = gDispEnv1[0] (800A9164)
     a0 += v0;
-    LIBGPU_MoveImage();
+    _thunk_LIBGPU_MoveImage();
     a0 = 0;                                             // Result = 00000000
-    LIBGPU_DrawSync();
+    _thunk_LIBGPU_DrawSync();
     a0 = 0;                                             // Result = 00000000
     _thunk_LIBETC_VSync();
     a0 = s3;
@@ -74,8 +73,7 @@ loc_80036448:
     v0 = 9;                                             // Result = 00000009
     sb(v0, sp + 0x1B);
     v0 = 0x2C;                                          // Result = 0000002C
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7F08);                               // Load from: gCurDrawDispBufferIdx (800780F8)
+    a0 = *gCurDispBufferIdx;
     v1 = 0xFF;                                          // Result = 000000FF
     sb(v0, sp + 0x1F);
     v0 = 0xEF;                                          // Result = 000000EF
@@ -113,8 +111,7 @@ loc_800365D0:
     v0 = 9;                                             // Result = 00000009
     sb(v0, sp + 0x43);
     v0 = 0x2E;                                          // Result = 0000002E
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7F08);                               // Load from: gCurDrawDispBufferIdx (800780F8)
+    a0 = *gCurDispBufferIdx;
     v1 = 0xFF;                                          // Result = 000000FF
     sb(v0, sp + 0x47);
     v0 = 0xEF;                                          // Result = 000000EF
@@ -458,7 +455,7 @@ loc_80036B40:
     s4 ^= 1;
     I_SubmitGpuCmds();
     a0 = 0;                                             // Result = 00000000
-    LIBGPU_DrawSync();
+    _thunk_LIBGPU_DrawSync();
     a0 = 0;                                             // Result = 00000000
     _thunk_LIBETC_VSync();
     v0 = sp + 0x68;

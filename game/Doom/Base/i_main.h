@@ -2,6 +2,8 @@
 
 #include "Doom/doomdef.h"
 
+struct DISPENV;
+struct DRAWENV;
 struct texture_t;
 
 // Size of the temporary buffer that is used for WAD loading and other stuff - 64 KiB
@@ -31,6 +33,9 @@ extern const VmPtr<std::byte[TMP_BUFFER_SIZE]>                          gTmpBuff
 extern const VmPtr<uint32_t>                                            gTotalVBlanks;
 extern const VmPtr<uint32_t>                                            gLastTotalVBlanks;
 extern const VmPtr<uint32_t>                                            gElapsedVBlanks;
+extern const VmPtr<uint32_t>                                            gCurDispBufferIdx;
+extern const VmPtr<DISPENV[2]>                                          gDispEnvs;
+extern const VmPtr<DRAWENV[2]>                                          gDrawEnvs;
 extern const VmPtr<uint32_t>                                            gNumFramesDrawn;
 extern const VmPtr<uint32_t>                                            gCurPlayerIndex;
 extern const VmPtr<uint32_t>                                            gLockedTexPagesMask;
@@ -43,6 +48,8 @@ void I_PSXInit() noexcept;
 [[noreturn]] void I_Error(const char* const fmtMsg, ...) noexcept;
 void I_ReadGamepad() noexcept;
 void I_CacheTexForLumpName() noexcept;
+
+void I_CacheAndDrawSprite(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept;
 void _thunk_I_CacheAndDrawSprite() noexcept;
 
 void I_DrawSprite(
@@ -58,7 +65,9 @@ void I_DrawSprite(
 
 void _thunk_I_DrawSprite() noexcept;
 
-void I_DrawPlaque() noexcept;
+void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept;
+void _thunk_I_DrawLoadingPlaque() noexcept;
+
 void I_IncDrawnFrameCount() noexcept;
 void I_DrawPresent() noexcept;
 void I_VsyncCallback() noexcept;

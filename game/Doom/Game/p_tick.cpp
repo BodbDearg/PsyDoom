@@ -698,7 +698,7 @@ void P_Stop() noexcept {
     sw(ra, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
-    LIBGPU_DrawSync();
+    _thunk_LIBGPU_DrawSync();
     s0 = 0;                                             // Result = 00000000
     S_Clear();
     psxcd_stop();

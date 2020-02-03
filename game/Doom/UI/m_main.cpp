@@ -52,7 +52,7 @@ loc_80035B4C:
     a1 = 0x36;                                          // Result = 00000036
     a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0x67;                                          // Result = 00000067
-    I_DrawPlaque();
+    _thunk_I_DrawLoadingPlaque();
     I_NetSetup();
     I_IncDrawnFrameCount();
     a0 = s1;                                            // Result = gTexInfo_BACK[0] (80097A10)
@@ -109,7 +109,7 @@ void M_Start() noexcept {
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     a2 = 0x6D;                                          // Result = 0000006D
-    I_DrawPlaque();
+    _thunk_I_DrawLoadingPlaque();
     a0 = 0;                                             // Result = 00000000
     S_LoadSoundAndMusic();
     a0 = s0 - 0x80;                                     // Result = gTexInfo_BACK[0] (80097A10)

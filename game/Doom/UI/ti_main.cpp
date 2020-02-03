@@ -38,7 +38,7 @@ void START_Title() noexcept {
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     a2 = 0x6D;                                          // Result = 0000006D
-    I_DrawPlaque();
+    _thunk_I_DrawLoadingPlaque();
     a0 = 0;                                             // Result = 00000000
     S_LoadSoundAndMusic();
     s4 = 0x80070000;                                    // Result = 80070000

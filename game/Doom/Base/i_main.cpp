@@ -107,6 +107,13 @@ const VmPtr<uint32_t> gTotalVBlanks(0x80077E98);
 const VmPtr<uint32_t> gLastTotalVBlanks(0x80078114);
 const VmPtr<uint32_t> gElapsedVBlanks(0x800781BC);
 
+// The index of the currently displaying framebuffer, 0 or 1
+const VmPtr<uint32_t> gCurDispBufferIdx(0x800780F8);
+
+// The draw and display environments for framebuffers 0 and 1
+const VmPtr<DISPENV[2]> gDispEnvs(0x800A9164);
+const VmPtr<DRAWENV[2]> gDrawEnvs(0x800A90AC);
+
 // Used to tell when the texture cache overflows.
 // Each texture when added to the cache is assigned the current value of this number.
 // When the time comes to evict a texture to make room for another, we check to make sure that the texture wasn't loaded in the current frame.
@@ -211,7 +218,7 @@ loc_80032934:
     a3 = 0x100;                                         // Result = 00000100
     sw(s0, sp + 0x10);
     LIBGPU_SetDefDispEnv();
-    sw(0, gp + 0xB18);                                  // Store to: gCurDrawDispBufferIdx (800780F8)
+    *gCurDispBufferIdx = 0;
     LIBAPI_EnterCriticalSection();
     LIBAPI_ExitCriticalSection();
     LIBCOMB_AddCOMB();
@@ -402,12 +409,7 @@ loc_80032CD0:
 // Similar to 'I_DrawSprite' except the image being drawn is added to VRAM first before drawing.
 // Because a texture object is specified also, less parameters are required.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void I_CacheAndDrawSprite(
-    texture_t& tex,
-    const int16_t xpos,
-    const int16_t ypos,
-    const int16_t clutId
-) noexcept {
+void I_CacheAndDrawSprite(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept {
     I_CacheTex(tex);
     I_DrawSprite(tex.texPageId, clutId, xpos, ypos, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
 }
@@ -463,65 +465,30 @@ void _thunk_I_DrawSprite() noexcept {
     );
 }
 
-void I_DrawPlaque() noexcept {
-loc_800332E0:
-    sp -= 0x40;
-    sw(s0, sp + 0x28);
-    s0 = a0;
-    sw(s2, sp + 0x30);
-    s2 = a1;
-    sw(s3, sp + 0x34);
-    s3 = a2;
-    sw(s1, sp + 0x2C);
-    s1 = a3;
-    sw(ra, sp + 0x38);
-    a0 = 0;                                             // Result = 00000000
-    LIBGPU_DrawSync();
-    a3 = lw(gp + 0xB18);                                // Load from: gCurDrawDispBufferIdx (800780F8)
-    v1 = a3 ^ 1;
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    a0 = a3 << 2;
-    a0 += a3;
-    a0 <<= 2;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6E9C;                                       // Result = gDispEnv1[0] (800A9164)
-    at += v0;
-    a1 = lh(at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6E9A;                                       // Result = gDispEnv1[1] (800A9166)
-    at += v0;
-    a2 = lh(at);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x6E9C;                                       // Result = gDispEnv1[0] (800A9164)
-    a0 += v0;
-    LIBGPU_MoveImage();
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Copies the front buffer to the back buffer, draws a loading plaque over it and presents it to the screen.
+// Useful for drawing a loading message before doing a long running load or connect operation.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept {
+    // Make sure the GPU is idle and copy the front buffer to the back buffer, will draw over that
+    LIBGPU_DrawSync(0);
+
+    const DISPENV& frontBuffer = gDispEnvs[*gCurDispBufferIdx];
+    const DISPENV& backBuffer = gDispEnvs[*gCurDispBufferIdx ^ 1];
+    LIBGPU_MoveImage(frontBuffer.disp, backBuffer.disp.x, backBuffer.disp.y);
+
+    // Ensure the plaque is loaded
     I_IncDrawnFrameCount();
-    a0 = s0;
-    _thunk_I_CacheTex();
-    v0 = lbu(s0 + 0x8);
-    a0 = lhu(s0 + 0xA);
-    sw(v0, sp + 0x10);
-    v0 = lbu(s0 + 0x9);
-    a1 = s1;
-    sw(v0, sp + 0x14);
-    v0 = lh(s0 + 0x4);
-    a2 = s2;
-    sw(v0, sp + 0x18);
-    v0 = lh(s0 + 0x6);
-    a3 = s3;
-    sw(v0, sp + 0x1C);
-    _thunk_I_DrawSprite();
+    I_CacheTex(tex);
+
+    // Draw and present the plaque
+    I_DrawSprite(tex.texPageId, clutId, xpos, ypos, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
     I_SubmitGpuCmds();
     I_DrawPresent();
-    ra = lw(sp + 0x38);
-    s3 = lw(sp + 0x34);
-    s2 = lw(sp + 0x30);
-    s1 = lw(sp + 0x2C);
-    s0 = lw(sp + 0x28);
-    sp += 0x40;
-    return;
+}
+
+void _thunk_I_DrawLoadingPlaque() noexcept {
+    I_DrawLoadingPlaque(*vmAddrToPtr<texture_t>(a0), (int16_t) a1, (int16_t) a2, (int16_t) a3);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -537,8 +504,7 @@ void I_IncDrawnFrameCount() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawPresent() noexcept {
     // Finish up all in-flight drawing commands
-    a0 = 0;
-    LIBGPU_DrawSync();
+    LIBGPU_DrawSync(0);
 
     // PC-PSX: this interferes with frame pacing in the new host environment - disabling
     #if !PC_PSX_DOOM_MODS
@@ -547,14 +513,13 @@ void I_DrawPresent() noexcept {
     #endif
 
     // Swap the framebuffers
-    v1 = lw(0x800780F8);            // Load from: gCurDrawDispBufferIdx (800780F8)    
-    v1 ^= 1;
-    sw(v1, 0x800780F8);             // Store to: gCurDrawDispBufferIdx (800780F8)    
-    a0 = 0x800A90AC + v1 * 92;      // gDrawEnv1[0] (800A90AC)
+    *gCurDispBufferIdx ^= 1;
+
+    // TODO: give this the proper function sig
+    a0 = ptrToVmAddr(&gDrawEnvs[*gCurDispBufferIdx]);
     LIBGPU_PutDrawEnv();
 
-    v0 = lw(0x800780F8);            // Load from: gCurDrawDispBufferIdx (800780F8)
-    a0 = 0x800A9164 + v0 * 20;      // gDispEnv1[0] (800A9164)
+    a0 = ptrToVmAddr(&gDispEnvs[*gCurDispBufferIdx]);
     LIBGPU_PutDispEnv();
 
     // Frame rate limiting to 30 Hz.
@@ -1941,7 +1906,7 @@ loc_80034B44:
     s0 = 0x800B0000;                                    // Result = 800B0000
     s0 = lh(s0 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     a0 = 0;                                             // Result = 00000000
-    LIBGPU_DrawSync();
+    _thunk_LIBGPU_DrawSync();
     a3 = lw(gp + 0xB18);                                // Load from: gCurDrawDispBufferIdx (800780F8)
     v1 = a3 ^ 1;
     v0 = v1 << 2;
@@ -1961,7 +1926,7 @@ loc_80034B44:
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 -= 0x6E9C;                                       // Result = gDispEnv1[0] (800A9164)
     a0 += v0;
-    LIBGPU_MoveImage();
+    _thunk_LIBGPU_MoveImage();
     I_IncDrawnFrameCount();
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7AF0;                                       // Result = gTexInfo_NETERR[0] (80097AF0)

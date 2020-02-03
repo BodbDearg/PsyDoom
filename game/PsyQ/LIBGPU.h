@@ -126,6 +126,40 @@ struct DR_TWIN {
 
 static_assert(sizeof(DR_TWIN) == 12);
 
+// Settings for the front buffer (buffer being displayed)
+struct DISPENV {
+    RECT        disp;           // What to to display from the frame buffer. Width can be: 256, 320, 384, 512, or 640. Height can be: 240 or 480.
+    RECT        screen;         // Output screen display area. 0,0 top left of monitor, 256, 240 is lower right.
+    uint8_t     isinter;        // If '1' the display is interlaced
+    uint8_t     isrgb24;        // If '1' the display is RGB24
+    uint8_t     _pad[2];        // Unused/reserved
+};
+
+static_assert(sizeof(DISPENV) == 20);
+
+// Draw primitive for setting a new draw environment
+struct DR_ENV {
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive
+    uint32_t    code[15];   // Data populated by 'SetDrawEnv'
+};
+
+static_assert(sizeof(DR_ENV) == 64);
+
+// Settings for the back buffer (buffer being drawn to)
+struct DRAWENV {
+     RECT       clip;           // Rectangular area to restrict drawing to. Must be between 0,0 to 1023,511 (inclusive).
+     int16_t    ofs[2];         // Pixel offsets added to primitives before drawing
+     RECT       tw;             // Specify what part of VRAM to wrap within
+     uint16_t   tpage;          // Starting/initial value of for the current texture page
+     uint8_t    dtd;            // If '1' dithering is enabled
+     uint8_t    dfe;            // If '1' drawing to the display area is allowed
+     uint8_t    isbg;           // If '1' clear the background with color 'r0', 'g0', 'b0' when the drawing environment is set
+     uint8_t    r0, g0, b0;     // Clear color to use if 'isbg' is '1'.
+     DR_ENV     dr_env;         // For internal PsyQ SDK use only
+};
+
+static_assert(sizeof(DRAWENV) == 92);
+
 void LIBGPU_ResetGraph() noexcept;
 void LIBGPU_SetGraphReverse() noexcept;
 void LIBGPU_SetGraphDebug() noexcept;
@@ -134,7 +168,10 @@ void LIBGPU_GetGraphType() noexcept;
 void LIBGPU_GetGraphDebug() noexcept;
 void LIBGPU_DrawSyncCallback() noexcept;
 void LIBGPU_SetDispMask() noexcept;
-void LIBGPU_DrawSync() noexcept;
+
+int32_t LIBGPU_DrawSync(const int32_t mode) noexcept;
+void _thunk_LIBGPU_DrawSync() noexcept;
+
 void LIBGPU_checkRECT() noexcept;
 void LIBGPU_ClearImage() noexcept;
 
@@ -142,7 +179,10 @@ void LIBGPU_LoadImage(const RECT& dstRect, const uint32_t* const pImageData) noe
 void _thunk_LIBGPU_LoadImage() noexcept;
 
 void LIBGPU_StoreImage() noexcept;
-void LIBGPU_MoveImage() noexcept;
+
+int32_t LIBGPU_MoveImage(const RECT& src, const int32_t dstX, const int32_t dstY) noexcept;
+void _thunk_LIBGPU_MoveImage() noexcept;
+
 void LIBGPU_ClearOTag() noexcept;
 void LIBGPU_ClearOTagR() noexcept;
 void LIBGPU_DrawPrim() noexcept;

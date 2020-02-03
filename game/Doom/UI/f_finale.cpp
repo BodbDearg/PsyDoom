@@ -23,7 +23,7 @@ void F1_Start() noexcept {
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     sw(ra, sp + 0x24);
     a2 = 0x6D;                                          // Result = 0000006D
-    I_DrawPlaque();
+    _thunk_I_DrawLoadingPlaque();
     I_PurgeTexCache();
     a0 = s0 - 0x80;                                     // Result = gTexInfo_BACK[0] (80097A10)
     _thunk_I_CacheTex();
@@ -210,7 +210,7 @@ void F2_Start() noexcept {
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     sw(ra, sp + 0x64);
     a2 = 0x6D;                                          // Result = 0000006D
-    I_DrawPlaque();
+    _thunk_I_DrawLoadingPlaque();
     I_PurgeTexCache();
     a0 = s0 + 0x120;                                    // Result = gTexInfo_DEMON[0] (80097BB0)
     a1 = 0x80070000;                                    // Result = 80070000
