@@ -626,7 +626,7 @@ loc_8003AD04:
     a0 += 0x7A70;                                       // Result = gTexInfo_PAUSE[0] (80097A70)
     a3 = *gPaletteClutId_Main;
     a2 = 0x6C;                                          // Result = 0000006C
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
 loc_8003AD64:
     v1 = lw(s0 + 0xC0);
     v0 = v1 & 0x20;

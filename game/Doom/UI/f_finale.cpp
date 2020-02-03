@@ -162,7 +162,7 @@ void F1_Drawer() noexcept {
     a2 = 0;                                             // Result = 00000000
     a3 = *gPaletteClutId_Main;
     s1 = 0x2D;                                          // Result = 0000002D
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     v0 = lw(gp + 0xB30);                                // Load from: 80078110
     s0 = 0;                                             // Result = 00000000
     if (i32(v0) <= 0) goto loc_8003D968;
@@ -879,7 +879,7 @@ void F2_Drawer() noexcept {
     s2 = gPaletteClutId_Main;
     a3 = lh(s2);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0;                                             // Result = 00000000
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     v1 = lw(gp + 0xB8C);                                // Load from: 8007816C
     v0 = (i32(v1) < 2);
     if (i32(v1) < 0) goto loc_8003E8C8;

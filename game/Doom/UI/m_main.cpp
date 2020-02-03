@@ -37,12 +37,12 @@ loc_80035B4C:
     a1 = 0;                                             // Result = 00000000
     a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0;                                             // Result = 00000000
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     a0 = s2;                                            // Result = gTexInfo_DOOM[0] (80097A50)
     a1 = 0x4B;                                          // Result = 0000004B
     a3 = lh(s0 + 0x22);                                 // Load from: gPaletteClutId_Title (800A90A6)
     a2 = 0x14;                                          // Result = 00000014
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     I_SubmitGpuCmds();
     I_DrawPresent();
     v0 = 0x80070000;                                    // Result = 80070000
@@ -59,12 +59,12 @@ loc_80035B4C:
     a1 = 0;                                             // Result = 00000000
     a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0;                                             // Result = 00000000
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     a0 = s2;                                            // Result = gTexInfo_DOOM[0] (80097A50)
     a1 = 0x4B;                                          // Result = 0000004B
     a3 = lh(s0 + 0x22);                                 // Load from: gPaletteClutId_Title (800A90A6)
     a2 = 0x14;                                          // Result = 00000014
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     I_SubmitGpuCmds();
     I_DrawPresent();
     a0 = 0;
@@ -507,13 +507,13 @@ loc_80036258:
     a1 = 0;                                             // Result = 00000000
     a3 = *gPaletteClutId_Main;
     a2 = 0;                                             // Result = 00000000
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     a0 = s0 + 0x40;                                     // Result = gTexInfo_DOOM[0] (80097A50)
     a1 = 0x4B;                                          // Result = 0000004B
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5A);                               // Load from: gPaletteClutId_Title (800A90A6)
     a2 = 0x14;                                          // Result = 00000014
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     a2 = 0x32;                                          // Result = 00000032
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lhu(a0 - 0x6B0E);                              // Load from: gTexInfo_STATUS[2] (800A94F2)

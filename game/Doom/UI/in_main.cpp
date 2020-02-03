@@ -522,7 +522,7 @@ loc_8003CEE4:
     sw(ra, sp + 0x28);
     sw(s1, sp + 0x24);
     sw(s0, sp + 0x20);
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = 0x14;                                          // Result = 00000014
     a2 = *gGameMap;
@@ -637,7 +637,7 @@ loc_8003D0B4:
     sw(ra, sp + 0x50);
     sw(s1, sp + 0x4C);
     sw(s0, sp + 0x48);
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     a2 = 0x8B;                                          // Result = 0000008B
     s0 = 0x800B0000;                                    // Result = 800B0000
     s0 -= 0x6B0E;                                       // Result = gTexInfo_STATUS[2] (800A94F2)
@@ -862,7 +862,7 @@ loc_8003D448:
     sw(s2, sp + 0x40);
     sw(s1, sp + 0x3C);
     sw(s0, sp + 0x38);
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = 0x14;                                          // Result = 00000014
     a2 = *gGameMap;

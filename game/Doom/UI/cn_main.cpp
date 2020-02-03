@@ -192,7 +192,7 @@ loc_80037BAC:
     a2 = s1 << 6;
     a3 = *gPaletteClutId_Main;
     s0++;
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     v0 = (i32(s0) < 4);
     if (v0 != 0) goto loc_80037BAC;
     s1++;                                               // Result = 00000001

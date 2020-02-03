@@ -86,7 +86,7 @@ void DRAW_Legals() noexcept {
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     a1 = 0;                                             // Result = 00000000
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     I_SubmitGpuCmds();
     I_DrawPresent();
     ra = lw(sp + 0x10);

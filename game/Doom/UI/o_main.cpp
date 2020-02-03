@@ -414,7 +414,7 @@ loc_8003EEFC:
     a2 = s1 << 6;
     a3 = *gPaletteClutId_Main;
     s0++;
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     v0 = (i32(s0) < 4);
     if (v0 != 0) goto loc_8003EEFC;
     s1++;                                               // Result = 00000001

@@ -140,7 +140,7 @@ loc_80036D88:
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F58);                               // Load from: gPaletteClutId_IdCredits1 (800A90A8)
     a2 = 0;                                             // Result = 00000000
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     a0 = s0 + 0x20;                                     // Result = gTexInfo_IDCRED2[0] (80097B50)
     a2 = lw(gp + 0xC7C);                                // Load from: gCreditsScrollYPos (8007825C)
     a3 = 0x800B0000;                                    // Result = 800B0000
@@ -154,14 +154,14 @@ loc_80036DC0:
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F56);                               // Load from: gPaletteClutId_WilliamsCredits1 (800A90AA)
     a2 = 0;                                             // Result = 00000000
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
     a0 = s0 + 0x20;                                     // Result = gTexInfo_WMSCRED2[0] (80097B90)
     a2 = lw(gp + 0xC7C);                                // Load from: gCreditsScrollYPos (8007825C)
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     a1 = 7;                                             // Result = 00000007
 loc_80036DF0:
-    I_CacheAndDrawSprite();
+    _thunk_I_CacheAndDrawSprite();
 loc_80036DF8:
     I_SubmitGpuCmds();
     I_DrawPresent();

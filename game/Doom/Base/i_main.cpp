@@ -398,39 +398,22 @@ loc_80032CD0:
     return;
 }
 
-void I_CacheAndDrawSprite() noexcept {
-loc_80032D04:
-    sp -= 0x38;
-    sw(s0, sp + 0x20);
-    s0 = a0;
-    sw(s2, sp + 0x28);
-    s2 = a1;
-    sw(s3, sp + 0x2C);
-    s3 = a2;
-    sw(s1, sp + 0x24);
-    sw(ra, sp + 0x30);
-    s1 = a3;
-    _thunk_I_CacheTex();
-    v0 = lbu(s0 + 0x8);
-    a0 = lhu(s0 + 0xA);
-    sw(v0, sp + 0x10);
-    v0 = lbu(s0 + 0x9);
-    a1 = s1;
-    sw(v0, sp + 0x14);
-    v0 = lh(s0 + 0x4);
-    a2 = s2;
-    sw(v0, sp + 0x18);
-    v0 = lh(s0 + 0x6);
-    a3 = s3;
-    sw(v0, sp + 0x1C);
-    _thunk_I_DrawSprite();
-    ra = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x38;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Similar to 'I_DrawSprite' except the image being drawn is added to VRAM first before drawing.
+// Because a texture object is specified also, less parameters are required.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_CacheAndDrawSprite(
+    texture_t& tex,
+    const int16_t xpos,
+    const int16_t ypos,
+    const int16_t clutId
+) noexcept {
+    I_CacheTex(tex);
+    I_DrawSprite(tex.texPageId, clutId, xpos, ypos, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
+}
+
+void _thunk_I_CacheAndDrawSprite() noexcept {
+    I_CacheAndDrawSprite(*vmAddrToPtr<texture_t>(a0), (int16_t) a1, (int16_t) a2, (int16_t) a3);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

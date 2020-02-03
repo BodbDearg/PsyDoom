@@ -43,7 +43,7 @@ void I_PSXInit() noexcept;
 [[noreturn]] void I_Error(const char* const fmtMsg, ...) noexcept;
 void I_ReadGamepad() noexcept;
 void I_CacheTexForLumpName() noexcept;
-void I_CacheAndDrawSprite() noexcept;
+void _thunk_I_CacheAndDrawSprite() noexcept;
 
 void I_DrawSprite(
     const uint16_t texPageId,
