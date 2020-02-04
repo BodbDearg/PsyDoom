@@ -231,9 +231,7 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
             pDstSec->flags = Endian::littleToHost(pSrcSec->flags);
 
             // Figure out floor texture number
-            a0 = ptrToVmAddr(pSrcSec->floorpic);
-            R_FlatNumForName();
-            pDstSec->floorpic = v0;
+            pDstSec->floorpic = R_FlatNumForName(pSrcSec->floorpic);
 
             // Figure out ceiling texture numebr.
             // Note: if the ceiling has a sky then figure out the sky lump name for it instead - will load the sky lump later on.
@@ -246,9 +244,7 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
                 skyLumpName[4] = pSrcSec->ceilingpic[6];
             } else {
                 // Normal case: ceiling has a texture, save it's number
-                a0 = ptrToVmAddr(pSrcSec->ceilingpic);
-                R_FlatNumForName();
-                pDstSec->ceilingpic = v0;
+                pDstSec->ceilingpic = R_FlatNumForName(pSrcSec->ceilingpic);
             }
 
             ++pSrcSec;

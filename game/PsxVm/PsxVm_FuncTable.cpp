@@ -267,7 +267,7 @@ extern void P_MovePlayer() noexcept;
 extern void P_DeathThink() noexcept;
 extern void P_PlayerThink() noexcept;
 extern void _thunk_R_TextureNumForName() noexcept;
-extern void R_FlatNumForName() noexcept;
+extern void _thunk_R_FlatNumForName() noexcept;
 extern void R_InitPalette() noexcept;
 extern void _thunk_R_PointToAngle2() noexcept;
 extern void _thunk_R_PointInSubsector() noexcept;
@@ -1159,7 +1159,7 @@ namespace PsxVm {
         { 0x8002A6A0, &P_DeathThink },
         { 0x8002A7F8, &P_PlayerThink },
         { 0x8002BDA4, &_thunk_R_TextureNumForName },
-        { 0x8002BE68, &R_FlatNumForName },
+        { 0x8002BE68, &_thunk_R_FlatNumForName },
         { 0x8002BF2C, &R_InitPalette },
         { 0x80030BA0, &_thunk_R_PointToAngle2 },
         { 0x80030F5C, &_thunk_R_PointInSubsector },

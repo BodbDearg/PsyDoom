@@ -106,11 +106,11 @@ loc_80025FE0:
     goto loc_800261B8;
 loc_800260A4:
     a0 = s1 + 4;
-    R_FlatNumForName();
+    _thunk_R_FlatNumForName();
     v1 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
     a0 = s2;
     sw(v0, v1 + 0x8);
-    R_FlatNumForName();
+    _thunk_R_FlatNumForName();
     v1 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
     a0 = lw(v1 + 0x8);
     a1 = v0;

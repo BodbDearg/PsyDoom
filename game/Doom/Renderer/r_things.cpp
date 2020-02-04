@@ -29,6 +29,9 @@ static constexpr int32_t MAXVISSPRITES = 64;
 static const VmPtr<vissprite_t[MAXVISSPRITES]> gVisSprites(0x800A8A7C);
 static const VmPtr<vissprite_t[MAXVISSPRITES]> gVisSpriteHead(0x80096D6C);
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws all of the sprites in a subsector, back to front
+//------------------------------------------------------------------------------------------------------------------------------------------
 void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
     // Initially the linked list of draw sprites is empty, cap it off as such
     gVisSpriteHead->next = gVisSpriteHead.get();

@@ -210,7 +210,7 @@ void R_InitSprites() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Given a lump name (case insensitive) for a texture, returns the texture index among texture lumps.
+// Given a lump name (case insensitive) for a wall texture, returns the texture index among wall texture lumps.
 // Returns '-1' if the name was not found.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t R_TextureNumForName(const char* const name) noexcept {
@@ -247,61 +247,48 @@ void _thunk_R_TextureNumForName() noexcept {
     v0 = R_TextureNumForName(vmAddrToPtr<const char>(a0));
 }
 
-void R_FlatNumForName() noexcept {
-loc_8002BE68:
-    sp -= 0x10;
-    a1 = sp;
-    a2 = sp + 8;
-    sw(0, sp);
-    sw(0, sp + 0x4);
-loc_8002BE7C:
-    v0 = lbu(a0);
-    v1 = v0;
-    if (v0 == 0) goto loc_8002BEB4;
-    v0 = v1 - 0x61;
-    v0 = (v0 < 0x1A);
-    a0++;
-    if (v0 == 0) goto loc_8002BEA0;
-    v1 -= 0x20;
-loc_8002BEA0:
-    sb(v1, a1);
-    a1++;
-    v0 = (i32(a1) < i32(a2));
-    if (v0 != 0) goto loc_8002BE7C;
-loc_8002BEB4:
-    v0 = *gFirstFlatLumpNum;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7E3C);                               // Load from: gpLumpInfo (800781C4)
-    a3 = lw(sp);
-    v0 <<= 4;
-    v0 += v1;
-    v1 = *gNumFlatLumps;
-    a2 = lw(sp + 0x4);
-    a0 = 0;
-    if (i32(v1) <= 0) goto loc_8002BF1C;
-    t0 = -0x81;                                         // Result = FFFFFF7F
-    a1 = v1;
-    v1 = v0 + 8;
-loc_8002BEE8:
-    v0 = lw(v1 + 0x4);
-    if (v0 != a2) goto loc_8002BF0C;
-    v0 = lw(v1);
-    v0 &= t0;
-    {
-        const bool bJump = (v0 == a3);
-        v0 = a0;
-        if (bJump) goto loc_8002BF20;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Given a lump name (case insensitive) for a flat texture, returns the texture index among flat texture lumps.
+// PC-PSX: Returns '-1' if the name was not found. Originally returned '0'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t R_FlatNumForName(const char* const name) noexcept {
+    // Chunk up the name for faster comparisons and also make case insensitive (uppercase).
+    // Note: using a union here to try and avoid strict aliasing violations.
+    lumpname_t nameUpper = {};
+    
+    for (int32_t i = 0; (i < 8) && name[i]; ++i) {
+        char c = name[i];
+
+        if (c >= 'a' && c <= 'z') {
+            c -= 'a' - 'A';
+        }
+
+        nameUpper.chars[i] = c;
     }
-loc_8002BF0C:
-    a0++;
-    v0 = (i32(a0) < i32(a1));
-    v1 += 0x10;
-    if (v0 != 0) goto loc_8002BEE8;
-loc_8002BF1C:
-    v0 = 0;                                             // Result = 00000000
-loc_8002BF20:
-    sp += 0x10;
-    return;
+
+    // Search for the specified lump name and return the index if found
+    const lumpinfo_t* pLumpInfo = &(*gpLumpInfo)[*gFirstFlatLumpNum];
+
+    for (int32_t lumpIdx = 0; lumpIdx < *gNumTexLumps; ++lumpIdx, ++pLumpInfo) {
+        if (pLumpInfo->name.words[1] == nameUpper.words[1]) {
+            if ((pLumpInfo->name.words[0] & NAME_WORD_MASK) == nameUpper.words[0]) {
+                // Found the requested lump name!
+                return lumpIdx;
+            }
+        }
+    }
+
+    // PC-PSX: Returning '0' means we return a valid index even if not found.
+    // Fix this and change the return to '-1' if not found.
+    #if PC_PSX_DOOM_MODS
+        return -1;
+    #else
+        return 0;
+    #endif
+}
+
+void _thunk_R_FlatNumForName() noexcept {
+    v0 = R_FlatNumForName(vmAddrToPtr<const char>(a0));
 }
 
 void R_InitPalette() noexcept {

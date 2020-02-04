@@ -75,7 +75,9 @@ void R_InitSprites() noexcept;
 int32_t R_TextureNumForName(const char* const name) noexcept;
 void _thunk_R_TextureNumForName() noexcept;
 
-void R_FlatNumForName() noexcept;
+int32_t R_FlatNumForName(const char* const name) noexcept;
+void _thunk_R_FlatNumForName() noexcept;
+
 void R_InitPalette() noexcept;
 
 // PC-PSX: helper to reduce some redundancy
