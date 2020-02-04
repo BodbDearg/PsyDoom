@@ -377,13 +377,13 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
     if (patchW + 15 >= 0) {
         tex.width16 = (patchW + 15) / 16;
     } else {
-        tex.width16 = (patchW + 30) / 16;   // Not sure why would patch sizes be negative? What does that mean?
+        tex.width16 = (patchW + 30) / 16;   // Not sure why texture sizes would be negative? What does that mean?
     }
     
     if (patchH + 15 >= 0) {
         tex.height16 = (patchH + 15) / 16;
     } else {
-        tex.height16 = (patchH + 30) / 16;  // Not sure why would patch sizes be negative? What does that mean?
+        tex.height16 = (patchH + 30) / 16;  // Not sure why texture sizes would be negative? What does that mean?
     }
     
     tex.texPageId = 0;

@@ -15,7 +15,7 @@ struct texture_t {
     int16_t                     height;                 // TODO: is this signed or unsigned?
     uint8_t                     texPageCoordX;          // TODO: COMMENT
     uint8_t                     texPageCoordY;          // TODO: COMMENT
-    uint16_t                    texPageId;              // TODO: COMMENT
+    uint16_t                    texPageId;              // Hardware specific field corresonding to the texture page in VRAM where the texture is held. '0' when not resident in VRAM.
     uint16_t                    width16;                // Width of the texture in 16 pixel units (rounded up). Base unit for a texture cache cell.
     uint16_t                    height16;               // Height of the texture in 16 pixel units (rounded up). Base unit for a texture cache cell.
     uint16_t                    lumpNum;

@@ -165,3 +165,11 @@ struct mapthing_t {
 };
 
 static_assert(sizeof(mapthing_t) == 10);
+
+// Metadata for a texture in the TEXTURE1 lump
+struct maptexture_t {
+    int16_t     _unused1;   // Unused, should be zero. Can't derive the original intent for this as there are no examples of it's use.
+    int16_t     _unused2;   // Unused, should be zero. Can't derive the original intent for this as there are no examples of it's use.
+    int16_t     width;
+    int16_t     height;
+};

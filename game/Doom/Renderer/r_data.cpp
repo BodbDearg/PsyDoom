@@ -3,6 +3,8 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/Base/z_zone.h"
+#include "Doom/Game/doomdata.h"
+#include "PcPsx/Endian.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 
@@ -47,95 +49,69 @@ void R_InitData() noexcept {
     R_InitSprites();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the global wall textures list and load texture size metadata.
+// Also initialize the texture translation table for animated wall textures.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitTextures() noexcept {
-loc_8002B9E0:
-    sp -= 0x20;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7B6C;                                       // Result = STR_LumpName_T_START[0] (80077B6C)
-    sw(ra, sp + 0x18);
-    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7B74;                                       // Result = STR_LumpName_T_END[0] (80077B74)
-    v0++;
-    *gFirstTexLumpNum = v0;
-    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
-    a2 = 1;                                             // Result = 00000001
-    v0--;
-    a0 = *gpMainMemZone;
-    v1 = *gFirstTexLumpNum;
-    a3 = 0;                                             // Result = 00000000
-    *gLastTexLumpNum = v0;
-    v0 -= v1;
-    v0++;
-    v1 = v0 << 5;
-    a1 = v0 << 2;
-    *gNumTexLumps = v0;
-    a1 += v1;
-    _thunk_Z_Malloc();
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x115C;                                       // Result = STR_LumpName_TEXTURE1[0] (8001115C)
-    a1 = 0x20;                                          // Result = 00000020
-    v1 = *gNumTexLumps;
-    *gpTextures = v0;
-    v1 <<= 5;
-    v1 += v0;
-    *gpTextureTranslation = v1;
-    a2 = 1;
-    _thunk_W_CacheLumpName();
-    a1 = v0;
-    a2 = *gFirstTexLumpNum;
-    v1 = *gLastTexLumpNum;
-    a0 = *gpTextures;
-    v0 = (i32(v1) < i32(a2));
-    t1 = v1;
-    if (v0 != 0) goto loc_8002BAF4;
-    t0 = a1 + 6;
-    a0 += 0x10;
-loc_8002BA94:
-    v0 = lhu(t0 - 0x2);
-    sh(v0, a0 - 0xC);
-    v0 = lhu(t0);
-    a3 = lh(a0 - 0xC);
-    sh(0, a0 - 0x6);
-    v1 = a3 + 0xF;
-    sh(v0, a0 - 0xA);
-    if (i32(v1) >= 0) goto loc_8002BABC;
-    v1 = a3 + 0x1E;
-loc_8002BABC:
-    a3 = lh(a0 - 0xA);
-    v0 = u32(i32(v1) >> 4);
-    sh(v0, a0 - 0x4);
-    v0 = a3 + 0xF;
-    sh(a2, a0);
-    if (i32(v0) >= 0) goto loc_8002BAD8;
-    v0 = a3 + 0x1E;
-loc_8002BAD8:
-    a2++;
-    v0 = u32(i32(v0) >> 4);
-    sh(v0, a0 - 0x2);
-    a0 += 0x20;
-    v0 = (i32(t1) < i32(a2));
-    t0 += 8;
-    if (v0 == 0) goto loc_8002BA94;
-loc_8002BAF4:
-    a0 = *gpMainMemZone;
-    _thunk_Z_Free2();
-    a0 = *gNumTexLumps;
-    a2 = 0;
-    if (i32(a0) <= 0) goto loc_8002BB30;
-    v1 = *gpTextureTranslation;
-loc_8002BB18:
-    sw(a2, v1);
-    a2++;
-    v0 = (i32(a2) < i32(a0));
-    v1 += 4;
-    if (v0 != 0) goto loc_8002BB18;
-loc_8002BB30:
-    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+    // Determine basic texture list stats
+    *gFirstTexLumpNum = W_GetNumForName("T_START") + 1;
+    *gLastTexLumpNum = W_GetNumForName("T_END") - 1;
+    *gNumTexLumps = *gLastTexLumpNum - *gFirstTexLumpNum + 1;
 
-    ra = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+    // Alloc the list of textures and texture translation table
+    {
+        std::byte* const pAlloc = (std::byte*) Z_Malloc(
+            **gpMainMemZone,
+            (*gNumTexLumps) * (sizeof(texture_t) + sizeof(int32_t)),
+            PU_STATIC,
+            nullptr
+        );
+
+        *gpTextures = (texture_t*) pAlloc;
+        *gpTextureTranslation = (int32_t*)(pAlloc + (*gNumTexLumps) * sizeof(texture_t));
+    }
+
+    // Load the texture metadata lump and process each associated texture entry with the loaded size info
+    {
+        maptexture_t* const pMapTextures = (maptexture_t*) W_CacheLumpName("TEXTURE1", PU_CACHE, true);
+        maptexture_t* pMapTex = pMapTextures;
+
+        texture_t* pTex = gpTextures->get();
+    
+        for (int32_t lumpNum = *gFirstTexLumpNum; lumpNum < *gLastTexLumpNum; ++lumpNum, ++pMapTex, ++pTex) {
+            pTex->lumpNum = (uint16_t) lumpNum;
+            pTex->texPageId = 0;            
+            pTex->width = Endian::littleToHost(pMapTex->width);
+            pTex->height = Endian::littleToHost(pMapTex->height);
+
+            if (pTex->width + 15 >= 0) {
+                pTex->width16 = (pTex->width + 15) / 16;
+            } else {
+                pTex->width16 = (pTex->width + 30) / 16;    // This case is never hit. Not sure why texture sizes would be negative? What does that mean?
+            }
+            
+            if (pTex->height + 15 >= 0) {
+                pTex->height16 = (pTex->height + 15) / 16;
+            } else {
+                pTex->height16 = (pTex->height + 30) / 16;  // This case is never hit. Not sure why texture sizes would be negative? What does that mean?
+            }
+        }
+
+        // Cleanup this after we are done
+        Z_Free2(**gpMainMemZone, pMapTextures);
+    }
+    
+    // Init the texture translation table: initially all textures translate to themselves
+    int32_t* const pTexTranslation = gpTextureTranslation->get();
+
+    for (int32_t texIdx = 0; texIdx < *gNumTexLumps; ++texIdx) {
+        pTexTranslation[texIdx] = texIdx;
+    }
+    
+    // Clear out any blocks marked as 'cache' which can be evicted.
+    // This call is here probably to try and avoid spikes in memory load.
+    Z_FreeTags(**gpMainMemZone, PU_CACHE);
 }
 
 void R_InitFlats() noexcept {
