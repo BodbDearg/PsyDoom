@@ -22,7 +22,6 @@
 #include "p_switch.h"
 #include "PcPsx/Endian.h"
 #include "PsxVm/PsxVm.h"
-#include "PsxVm/VmSVal.h"
 
 // How much heap space is required after loading the map in order to run the game (48 KiB).
 // If we don't have this much then the game craps out with an error.
@@ -389,11 +388,7 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
         } else if (pDstLine->dy == 0) {
             pDstLine->slopetype = slopetype_t::ST_HORIZONTAL;
         } else {
-            a0 = pDstLine->dy;
-            a1 = pDstLine->dx;
-            _thunk_FixedDiv();
-
-            if (int32_t(v0) > 0) {
+            if (FixedDiv(pDstLine->dy, pDstLine->dx) > 0) {
                 pDstLine->slopetype = slopetype_t::ST_POSITIVE;
             } else {
                 pDstLine->slopetype = slopetype_t::ST_NEGATIVE;
@@ -899,9 +894,6 @@ loc_80023068:
 }
 
 void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) noexcept {
-loc_800230D4:
-    VmSVal<lumpname_t> mapLumpName;
-
     sp -= 0x98;    
     sw(s0, sp + 0x78);
     sw(s1, sp + 0x7C);
@@ -987,22 +979,23 @@ loc_800230D4:
     void* const pMapWadFileData = W_OpenMapWad(mapWadFile);
 
     // Figure out the name of the map start lump marker
-    mapLumpName->chars[0] = 'M';
-    mapLumpName->chars[1] = 'A';
-    mapLumpName->chars[2] = 'P';
+    char mapLumpName[8] = {};
+    mapLumpName[0] = 'M';
+    mapLumpName[1] = 'A';
+    mapLumpName[2] = 'P';
 
     {
         uint8_t digit1 = (uint8_t) mapNum / 10;
         uint8_t digit2 = (uint8_t) mapNum - digit1 * 10;
-        mapLumpName->chars[3] = '0' + digit1;
-        mapLumpName->chars[4] = '0' + digit2;
+        mapLumpName[3] = '0' + digit1;
+        mapLumpName[4] = '0' + digit2;
     }
     
     // Get the lump index for the map start lump
-    const uint32_t mapStartLump = W_MapCheckNumForName(mapLumpName->chars);
+    const uint32_t mapStartLump = W_MapCheckNumForName(mapLumpName);
     
     if (mapStartLump == -1) {
-        I_Error("P_SetupLevel: %s not found", mapLumpName->chars);
+        I_Error("P_SetupLevel: %s not found", mapLumpName);
     }
 
     // Loading various map lumps
