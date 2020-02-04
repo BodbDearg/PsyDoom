@@ -1,15 +1,22 @@
 #pragma once
 
+#include "PcPsx/Endian.h"
 #include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 
 enum class CdMapTbl_File : uint32_t;
 
-// Format for a name in a lump file
+// This is a mask to chop off the highest bit of the 1st 32-bit word in a lump name.
+// That bit is not part of the name, it is used to indicate whether the lump is compressed or not.
+static constexpr uint32_t NAME_WORD_MASK = Endian::isLittle() ? 0xFFFFFF7F : 0x7FFFFFFF;
+
+// Format for a name in a lump file.
+// Note: using a union here so we can do writes as words or chars in certain places without causing strict aliasing violations.
 static constexpr uint32_t MAXLUMPNAME = 8;
 
-struct lumpname_t {
-    char chars[MAXLUMPNAME];
+union lumpname_t {
+    char        chars[MAXLUMPNAME];
+    uint32_t    words[2];
 };
 
 static_assert(sizeof(lumpname_t) == 8);

@@ -194,10 +194,10 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadSectors(const int32_t lumpNum) noexcept {
     // Store the name of the sky lump here
-    VmSVal<lumpname_t> skyLumpName = {};
-    skyLumpName->chars[0] = 'S';
-    skyLumpName->chars[1] = 'K';
-    skyLumpName->chars[2] = 'Y';
+    char skyLumpName[8] = {};
+    skyLumpName[0] = 'S';
+    skyLumpName[1] = 'K';
+    skyLumpName[2] = 'Y';
 
     // Sanity check the sectors lump is not too big
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
@@ -242,8 +242,8 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
             if (bCeilHasSky) {
                 // No ceiling texture: extract and save the 2 digits for the sky number ('01', '02' etc.)
                 pDstSec->ceilingpic = -1;
-                skyLumpName->chars[3] = pSrcSec->ceilingpic[5];
-                skyLumpName->chars[4] = pSrcSec->ceilingpic[6];
+                skyLumpName[3] = pSrcSec->ceilingpic[5];
+                skyLumpName[4] = pSrcSec->ceilingpic[6];
             } else {
                 // Normal case: ceiling has a texture, save it's number
                 a0 = ptrToVmAddr(pSrcSec->ceilingpic);
@@ -257,10 +257,9 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     }
 
     // Set the sky texture pointer
-    if (skyLumpName->chars[3] != 0) {
-        a0 = skyLumpName.addr();
-        R_TextureNumForName();
-        *gpSkyTexture = &(*gpTextures)[v0];
+    if (skyLumpName[3] != 0) {
+        const int32_t skyTexIdx = R_TextureNumForName(skyLumpName);
+        *gpSkyTexture = &(*gpTextures)[skyTexIdx];
     } else {
         *gpSkyTexture = nullptr;
     }
@@ -475,18 +474,9 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
         pDstSide->textureoffset = (fixed_t) Endian::littleToHost(pSrcSide->textureoffset) << FRACBITS;
         pDstSide->rowoffset = (fixed_t) Endian::littleToHost(pSrcSide->rowoffset) << FRACBITS;
         pDstSide->sector = &(*gpSectors)[Endian::littleToHost(pSrcSide->sector)];
-
-        a0 = ptrToVmAddr(pSrcSide->toptexture);
-        R_TextureNumForName();
-        pDstSide->toptexture = v0;
-
-        a0 = ptrToVmAddr(pSrcSide->midtexture);
-        R_TextureNumForName();
-        pDstSide->midtexture = v0;
-
-        a0 = ptrToVmAddr(pSrcSide->bottomtexture);
-        R_TextureNumForName();
-        pDstSide->bottomtexture = v0;
+        pDstSide->toptexture = R_TextureNumForName(pSrcSide->toptexture);
+        pDstSide->midtexture = R_TextureNumForName(pSrcSide->midtexture);
+        pDstSide->bottomtexture = R_TextureNumForName(pSrcSide->bottomtexture);
 
         ++pSrcSide;
         ++pDstSide;

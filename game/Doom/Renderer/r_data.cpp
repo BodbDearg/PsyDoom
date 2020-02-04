@@ -209,61 +209,42 @@ void R_InitSprites() noexcept {
     Z_FreeTags(**gpMainMemZone, PU_CACHE);
 }
 
-void R_TextureNumForName() noexcept {
-loc_8002BDA4:
-    sp -= 0x10;
-    a1 = sp;
-    a2 = sp + 8;
-    sw(0, sp);
-    sw(0, sp + 0x4);
-loc_8002BDB8:
-    v0 = lbu(a0);
-    v1 = v0;
-    if (v0 == 0) goto loc_8002BDF0;
-    v0 = v1 - 0x61;
-    v0 = (v0 < 0x1A);
-    a0++;
-    if (v0 == 0) goto loc_8002BDDC;
-    v1 -= 0x20;
-loc_8002BDDC:
-    sb(v1, a1);
-    a1++;
-    v0 = (i32(a1) < i32(a2));
-    if (v0 != 0) goto loc_8002BDB8;
-loc_8002BDF0:
-    v0 = *gFirstTexLumpNum;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7E3C);                               // Load from: gpLumpInfo (800781C4)
-    a3 = lw(sp);
-    v0 <<= 4;
-    v0 += v1;
-    v1 = *gNumTexLumps;
-    a2 = lw(sp + 0x4);
-    a0 = 0;
-    if (i32(v1) <= 0) goto loc_8002BE58;
-    t0 = -0x81;                                         // Result = FFFFFF7F
-    a1 = v1;
-    v1 = v0 + 8;
-loc_8002BE24:
-    v0 = lw(v1 + 0x4);
-    if (v0 != a2) goto loc_8002BE48;
-    v0 = lw(v1);
-    v0 &= t0;
-    {
-        const bool bJump = (v0 == a3);
-        v0 = a0;
-        if (bJump) goto loc_8002BE5C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Given a lump name (case insensitive) for a texture, returns the texture index among texture lumps.
+// Returns '-1' if the name was not found.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t R_TextureNumForName(const char* const name) noexcept {
+    // Chunk up the name for faster comparisons and also make case insensitive (uppercase).
+    // Note: using a union here to try and avoid strict aliasing violations.
+    lumpname_t nameUpper = {};
+    
+    for (int32_t i = 0; (i < 8) && name[i]; ++i) {
+        char c = name[i];
+
+        if (c >= 'a' && c <= 'z') {
+            c -= 'a' - 'A';
+        }
+
+        nameUpper.chars[i] = c;
     }
-loc_8002BE48:
-    a0++;
-    v0 = (i32(a0) < i32(a1));
-    v1 += 0x10;
-    if (v0 != 0) goto loc_8002BE24;
-loc_8002BE58:
-    v0 = -1;                                            // Result = FFFFFFFF
-loc_8002BE5C:
-    sp += 0x10;
-    return;
+
+    // Search for the specified lump name and return the index if found
+    const lumpinfo_t* pLumpInfo = &(*gpLumpInfo)[*gFirstTexLumpNum];
+
+    for (int32_t lumpIdx = 0; lumpIdx < *gNumTexLumps; ++lumpIdx, ++pLumpInfo) {
+        if (pLumpInfo->name.words[1] == nameUpper.words[1]) {
+            if ((pLumpInfo->name.words[0] & NAME_WORD_MASK) == nameUpper.words[0]) {
+                // Found the requested lump name!
+                return lumpIdx;
+            }
+        }
+    }
+
+    return -1;
+}
+
+void _thunk_R_TextureNumForName() noexcept {
+    v0 = R_TextureNumForName(vmAddrToPtr<const char>(a0));
 }
 
 void R_FlatNumForName() noexcept {

@@ -34,10 +34,6 @@ static const VmPtr<VmPtr<void>>     gpMapWadFileData(0x80077F18);
 static const VmPtr<int32_t>         gNumMapWadLumps(0x8007811C);
 const VmPtr<VmPtr<lumpinfo_t>>      gpMapWadLumpInfo(0x800780C8);
 
-// This is a mask to chop off the highest bit of the 1st 32-bit word in a lump name.
-// That bit is not part of the name, it is used to indicate whether the lump is compressed or not.
-static constexpr uint32_t NAME_WORD_MASK = Endian::isLittle() ? 0xFFFFFF7F : 0x7FFFFFFF;
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the WAD file management system.
 // Opens up the main WAD file and verifies it is valid, and then reads all of the header info for all of the lumps.

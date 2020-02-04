@@ -32,10 +32,10 @@ loc_80027D84:
     sw(s0, sp + 0x10);
 loc_80027DC0:
     a0 = s3;
-    R_TextureNumForName();
+    _thunk_R_TextureNumForName();
     a0 = s4;
     s2 = v0;
-    R_TextureNumForName();
+    _thunk_R_TextureNumForName();
     a0 = *gpTextures;
     v1 = s2 << 5;
     v1 += a0;

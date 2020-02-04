@@ -71,7 +71,10 @@ void R_InitData() noexcept;
 void R_InitTextures() noexcept;
 void R_InitFlats() noexcept;
 void R_InitSprites() noexcept;
-void R_TextureNumForName() noexcept;
+
+int32_t R_TextureNumForName(const char* const name) noexcept;
+void _thunk_R_TextureNumForName() noexcept;
+
 void R_FlatNumForName() noexcept;
 void R_InitPalette() noexcept;
 

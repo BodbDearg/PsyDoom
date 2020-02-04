@@ -88,7 +88,7 @@ void START_Title() noexcept {
     _thunk_I_LoadAndCacheTexLump();
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7C7C;                                       // Result = STR_LumpName_SKY09[0] (80077C7C)
-    R_TextureNumForName();
+    _thunk_R_TextureNumForName();
     a1 = 0x20;                                          // Result = 00000020
     v1 = *gpTextures;
     v0 <<= 5;
