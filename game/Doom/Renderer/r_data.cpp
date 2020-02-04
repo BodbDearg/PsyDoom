@@ -79,7 +79,7 @@ void R_InitTextures() noexcept {
 
         texture_t* pTex = gpTextures->get();
     
-        for (int32_t lumpNum = *gFirstTexLumpNum; lumpNum < *gLastTexLumpNum; ++lumpNum, ++pMapTex, ++pTex) {
+        for (int32_t lumpNum = *gFirstTexLumpNum; lumpNum <= *gLastTexLumpNum; ++lumpNum, ++pMapTex, ++pTex) {
             pTex->lumpNum = (uint16_t) lumpNum;
             pTex->texPageId = 0;
             pTex->width = Endian::littleToHost(pMapTex->width);
@@ -145,7 +145,7 @@ void R_InitFlats() noexcept {
     {
         texture_t* pTex = gpFlatTextures->get();
 
-        for (int32_t lumpNum = *gFirstFlatLumpNum; lumpNum < *gLastFlatLumpNum; ++lumpNum, ++pTex) {
+        for (int32_t lumpNum = *gFirstFlatLumpNum; lumpNum <= *gLastFlatLumpNum; ++lumpNum, ++pTex) {
             pTex->lumpNum = (uint16_t) lumpNum;
             pTex->texPageId = 0;
             pTex->width = FLAT_TEX_SIZE;
