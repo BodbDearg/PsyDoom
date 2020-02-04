@@ -429,10 +429,6 @@ void decode(const void* pSrc, void* pDst) noexcept {
     }
 }
 
-void _thunk_decode() noexcept {
-    decode(vmAddrToPtr<const uint8_t>(a0), vmAddrToPtr<uint8_t>(a1));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Similar to 'decode' except does not do any decompression.
 // Instead, this function returns the decompressed size of the data.

@@ -45,8 +45,5 @@ void* W_OpenMapWad(const CdMapTbl_File discFile) noexcept;
 int32_t W_MapLumpLength(const int32_t lumpNum) noexcept;
 int32_t W_MapCheckNumForName(const char* const name) noexcept;
 void W_ReadMapLump(const int32_t lumpNum, void* const pDest, const bool bDecompress) noexcept;
-
 void decode(const void* pSrc, void* pDst) noexcept;
-void _thunk_decode() noexcept;
-
 uint32_t getDecodedSize(const void* const pSrc) noexcept;

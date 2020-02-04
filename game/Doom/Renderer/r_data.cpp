@@ -59,7 +59,7 @@ void R_InitTextures() noexcept {
     *gLastTexLumpNum = W_GetNumForName("T_END") - 1;
     *gNumTexLumps = *gLastTexLumpNum - *gFirstTexLumpNum + 1;
 
-    // Alloc the list of textures and texture translation table
+    // Alloc the list of textures and the texture translation table
     {
         std::byte* const pAlloc = (std::byte*) Z_Malloc(
             **gpMainMemZone,
@@ -81,7 +81,7 @@ void R_InitTextures() noexcept {
     
         for (int32_t lumpNum = *gFirstTexLumpNum; lumpNum < *gLastTexLumpNum; ++lumpNum, ++pMapTex, ++pTex) {
             pTex->lumpNum = (uint16_t) lumpNum;
-            pTex->texPageId = 0;            
+            pTex->texPageId = 0;
             pTex->width = Endian::littleToHost(pMapTex->width);
             pTex->height = Endian::littleToHost(pMapTex->height);
 
@@ -114,70 +114,53 @@ void R_InitTextures() noexcept {
     Z_FreeTags(**gpMainMemZone, PU_CACHE);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the global flat textures list.
+// Also initialize the flat texture translation table used for animation.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitFlats() noexcept {
-loc_8002BB50:
-    sp -= 0x20;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7B7C;                                       // Result = STR_LumpName_F_START[0] (80077B7C)
-    sw(ra, sp + 0x18);
-    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7B84;                                       // Result = STR_LumpName_F_END[0] (80077B84)
-    v0++;
-    *gFirstFlatLumpNum = v0;
-    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
-    v0--;
-    a2 = 1;
-    a0 = *gpMainMemZone;
-    v1 = *gFirstFlatLumpNum;
-    a3 = 0;
-    *gLastFlatLumpNum = v0;
-    v0 -= v1;
-    v0++;
-    a1 = v0 << 5;
-    *gNumFlatLumps = v0;
-    v0 <<= 2;
-    a1 += v0;
-    _thunk_Z_Malloc();
-    a0 = *gFirstFlatLumpNum;
-    v1 = *gNumFlatLumps;
-    a1 = *gLastFlatLumpNum;
-    *gpFlatTextures = v0;
-    v1 <<= 5;
-    v1 += v0;
-    *gpFlatTranslation = v1;
-    v1 = v0;
-    v0 = (i32(a1) < i32(a0));
-    if (v0 != 0) goto loc_8002BC18;
-    a3 = 0x40;                                          // Result = 00000040
-    a2 = 4;                                             // Result = 00000004
-    v1 += 0x10;
-loc_8002BBF0:
-    sh(a0, v1);
-    a0++;
-    sh(a3, v1 - 0xC);
-    sh(a3, v1 - 0xA);
-    sh(0, v1 - 0x6);
-    sh(a2, v1 - 0x4);
-    sh(a2, v1 - 0x2);
-    v0 = (i32(a1) < i32(a0));
-    v1 += 0x20;
-    if (v0 == 0) goto loc_8002BBF0;
-loc_8002BC18:
-    a1 = *gNumFlatLumps;
-    a0 = 0;
-    if (i32(a1) <= 0) goto loc_8002BC44;
-    v1 = *gpFlatTranslation;
-loc_8002BC2C:
-    sw(a0, v1);
-    a0++;
-    v0 = (i32(a0) < i32(a1));
-    v1 += 4;
-    if (v0 != 0) goto loc_8002BC2C;
-loc_8002BC44:
-    ra = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+    // Determine basic flat texture list stats
+    *gFirstFlatLumpNum = W_GetNumForName("F_START") + 1;
+    *gLastFlatLumpNum = W_GetNumForName("F_END") - 1;
+    *gNumFlatLumps = *gLastFlatLumpNum - *gFirstFlatLumpNum + 1;
+
+    // Alloc the list of flat textures and the flat texture translation table
+    {
+        std::byte* const pAlloc = (std::byte*) Z_Malloc(
+            **gpMainMemZone,
+            (*gNumFlatLumps) * (sizeof(texture_t) + sizeof(int32_t)),
+            PU_STATIC,
+            nullptr
+        );
+
+        *gpFlatTextures = (texture_t*) pAlloc;
+        *gpFlatTranslation = (int32_t*)(pAlloc + (*gNumFlatLumps) * sizeof(texture_t));
+    }
+
+    // The hardcoded assumed/size for flats.
+    // If you wanted to support variable sized flat textures then the code which follows would need to change.
+    constexpr uint32_t FLAT_TEX_SIZE = 64;
+
+    // Setup the texture structs for each flat
+    {
+        texture_t* pTex = gpFlatTextures->get();
+
+        for (int32_t lumpNum = *gFirstFlatLumpNum; lumpNum < *gLastFlatLumpNum; ++lumpNum, ++pTex) {
+            pTex->lumpNum = (uint16_t) lumpNum;
+            pTex->texPageId = 0;
+            pTex->width = FLAT_TEX_SIZE;
+            pTex->height = FLAT_TEX_SIZE;
+            pTex->width16 = FLAT_TEX_SIZE / 16;
+            pTex->height16 = FLAT_TEX_SIZE / 16;
+        }
+    }
+
+    // Init the flat translation table: initially all flats translate to themselves
+    int32_t* const pFlatTranslation = gpFlatTranslation->get();
+
+    for (int32_t texIdx = 0; texIdx < *gNumFlatLumps; ++texIdx) {
+        pFlatTranslation[texIdx] = texIdx;
+    }
 }
 
 void R_InitSprites() noexcept {
