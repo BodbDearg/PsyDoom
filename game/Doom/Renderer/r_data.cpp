@@ -163,86 +163,50 @@ void R_InitFlats() noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the global sprite textures list and load sprite size and offset metadata
+//------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitSprites() noexcept {
-loc_8002BC54:
-    sp -= 0x18;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7B8C;                                       // Result = STR_LumpName_S_START[0] (80077B8C)
-    sw(ra, sp + 0x10);
-    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7B94;                                       // Result = STR_LumpName_S_END[0] (80077B94)
-    v0++;
-    *gFirstSpriteLumpNum = v0;
-    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
-    a2 = 1;
-    v0--;
-    a0 = *gpMainMemZone;
-    v1 = *gFirstSpriteLumpNum;
-    a3 = 0;
-    *gLastSpriteLumpNum = v0;
-    v0 -= v1;
-    v0++;
-    *gNumSpriteLumps = v0;
-    a1 = v0 << 5;
-    _thunk_Z_Malloc();
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7B9C;                                       // Result = STR_LumpName_SPRITE1[0] (80077B9C)
-    a1 = 0x20;                                          // Result = 00000020
-    *gpSpriteTextures = v0;
-    a2 = 1;                                             // Result = 00000001
-    _thunk_W_CacheLumpName();
-    a1 = v0;
-    t0 = *gFirstSpriteLumpNum;
-    v1 = *gLastSpriteLumpNum;
-    t1 = *gpSpriteTextures;
-    v0 = (i32(v1) < i32(t0));
-    t2 = a1;
-    if (v0 != 0) goto loc_8002BD74;
-    t3 = v1;
-    a3 = a1 + 6;
-    a0 = t1 + 0x10;
-loc_8002BCF4:
-    v0 = lhu(t2);
-    sh(v0, t1);
-    v0 = lhu(a3 - 0x4);
-    sh(v0, a0 - 0xE);
-    v0 = lhu(a3 - 0x2);
-    sh(v0, a0 - 0xC);
-    v0 = lhu(a3);
-    a2 = lh(a0 - 0xC);
-    sh(0, a0 - 0x6);
-    v1 = a2 + 0xF;
-    sh(v0, a0 - 0xA);
-    if (i32(v1) >= 0) goto loc_8002BD34;
-    v1 = a2 + 0x1E;
-loc_8002BD34:
-    a2 = lh(a0 - 0xA);
-    v0 = u32(i32(v1) >> 4);
-    sh(v0, a0 - 0x4);
-    v0 = a2 + 0xF;
-    sh(t0, a0);
-    if (i32(v0) >= 0) goto loc_8002BD50;
-    v0 = a2 + 0x1E;
-loc_8002BD50:
-    t0++;
-    v0 = u32(i32(v0) >> 4);
-    sh(v0, a0 - 0x2);
-    a0 += 0x20;
-    t1 += 0x20;
-    a3 += 8;
-    v0 = (i32(t3) < i32(t0));
-    t2 += 8;
-    if (v0 == 0) goto loc_8002BCF4;
-loc_8002BD74:
-    a0 = *gpMainMemZone;
-    _thunk_Z_Free2();
-    
-    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+    // Determine basic sprite texture list stats
+    *gFirstSpriteLumpNum = W_GetNumForName("S_START") + 1;
+    *gLastSpriteLumpNum = W_GetNumForName("S_END") - 1;
+    *gNumSpriteLumps = *gLastSpriteLumpNum - *gFirstSpriteLumpNum + 1;
 
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    // Alloc the list of sprite textures
+    *gpSpriteTextures = (texture_t*) Z_Malloc(**gpMainMemZone, (*gNumSpriteLumps) * sizeof(texture_t), PU_STATIC, nullptr);
+
+    // Load the sprite metadata lump and process each associated sprite texture entry.
+    // The metadata gives us the size and offsetting for each sprite.
+    maptexture_t* const pMapSpriteTextures = (maptexture_t*) W_CacheLumpName("SPRITE1", PU_CACHE, true);
+    maptexture_t* pMapTex = pMapSpriteTextures;
+
+    texture_t* pTex = gpSpriteTextures->get();
+    
+    for (int32_t lumpNum = *gFirstSpriteLumpNum; lumpNum <= *gLastSpriteLumpNum; ++lumpNum, ++pTex, ++pMapTex) {
+        pTex->lumpNum = (uint16_t) lumpNum;
+        pTex->texPageId = 0;
+        pTex->offsetX = Endian::littleToHost(pMapTex->offsetX);
+        pTex->offsetY = Endian::littleToHost(pMapTex->offsetY);
+        pTex->width = Endian::littleToHost(pMapTex->width);
+        pTex->height = Endian::littleToHost(pMapTex->height);
+
+        if (pTex->width + 15 >= 0) {
+            pTex->width16 = (pTex->width + 15) / 16;
+        } else {
+            pTex->width16 = (pTex->width + 30) / 16;        // This case is never hit. Not sure why sprite sizes would be negative? What does that mean?
+        }
+
+        if (pTex->height + 15 >= 0) {
+            pTex->height16 = (pTex->height + 15) / 16;
+        } else {
+            pTex->height16 = (pTex->height + 30) / 16;      // This case is never hit. Not sure why sprite sizes would be negative? What does that mean?
+        }
+    }
+
+    // Cleanup this after we are done and clear out any blocks marked as 'cache' - those can be evicted.
+    // This call is here probably to try and avoid spikes in memory load.
+    Z_Free2(**gpMainMemZone, pMapSpriteTextures);
+    Z_FreeTags(**gpMainMemZone, PU_CACHE);
 }
 
 void R_TextureNumForName() noexcept {

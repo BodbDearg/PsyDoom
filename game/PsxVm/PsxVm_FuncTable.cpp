@@ -266,9 +266,6 @@ extern void P_CalcHeight() noexcept;
 extern void P_MovePlayer() noexcept;
 extern void P_DeathThink() noexcept;
 extern void P_PlayerThink() noexcept;
-extern void R_InitTextures() noexcept;
-extern void R_InitFlats() noexcept;
-extern void R_InitSprites() noexcept;
 extern void R_TextureNumForName() noexcept;
 extern void R_FlatNumForName() noexcept;
 extern void R_InitPalette() noexcept;
@@ -1161,9 +1158,6 @@ namespace PsxVm {
         { 0x8002A4E8, &P_MovePlayer },
         { 0x8002A6A0, &P_DeathThink },
         { 0x8002A7F8, &P_PlayerThink },
-        { 0x8002B9E0, &R_InitTextures },
-        { 0x8002BB50, &R_InitFlats },
-        { 0x8002BC54, &R_InitSprites },
         { 0x8002BDA4, &R_TextureNumForName },
         { 0x8002BE68, &R_FlatNumForName },
         { 0x8002BF2C, &R_InitPalette },
