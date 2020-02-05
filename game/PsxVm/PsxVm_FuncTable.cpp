@@ -268,7 +268,6 @@ extern void P_DeathThink() noexcept;
 extern void P_PlayerThink() noexcept;
 extern void _thunk_R_TextureNumForName() noexcept;
 extern void _thunk_R_FlatNumForName() noexcept;
-extern void R_InitPalette() noexcept;
 extern void _thunk_R_PointToAngle2() noexcept;
 extern void _thunk_R_PointInSubsector() noexcept;
 extern void _thunk_W_CacheLumpNum() noexcept;
@@ -691,7 +690,6 @@ extern void LIBC2_memcpy() noexcept;
 extern void LIBETC_SetVideoMode() noexcept;
 extern void LIBETC_GetVideoMode() noexcept;
 extern void _thunk_LIBGPU_GetTPage() noexcept;
-extern void LIBGPU_GetClut() noexcept;
 extern void LIBGPU_DumpTPage() noexcept;
 extern void LIBGPU_DumpClut() noexcept;
 extern void LIBGPU_NextPrim() noexcept;
@@ -1160,7 +1158,6 @@ namespace PsxVm {
         { 0x8002A7F8, &P_PlayerThink },
         { 0x8002BDA4, &_thunk_R_TextureNumForName },
         { 0x8002BE68, &_thunk_R_FlatNumForName },
-        { 0x8002BF2C, &R_InitPalette },
         { 0x80030BA0, &_thunk_R_PointToAngle2 },
         { 0x80030F5C, &_thunk_R_PointInSubsector },
         { 0x800317AC, &_thunk_W_CacheLumpNum },
@@ -1583,7 +1580,6 @@ namespace PsxVm {
         { 0x8004E900, &LIBETC_SetVideoMode },
         { 0x8004E918, &LIBETC_GetVideoMode },
         { 0x8004E928, &_thunk_LIBGPU_GetTPage },
-        { 0x8004E9F0, &LIBGPU_GetClut },
         { 0x8004EA08, &LIBGPU_DumpTPage },
         { 0x8004EAD8, &LIBGPU_DumpClut },
         { 0x8004EB18, &LIBGPU_NextPrim },

@@ -517,7 +517,7 @@ loc_8003CEE4:
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
-    a3 = *gPaletteClutId_Main;
+    a3 = gPaletteClutIds[MAINPAL];
     a2 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x28);
     sw(s1, sp + 0x24);
@@ -632,7 +632,7 @@ loc_8003D0B4:
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
-    a3 = *gPaletteClutId_Main;
+    a3 = gPaletteClutIds[MAINPAL];
     a2 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x50);
     sw(s1, sp + 0x4C);
@@ -855,7 +855,7 @@ loc_8003D448:
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
-    a3 = *gPaletteClutId_Main;
+    a3 = gPaletteClutIds[MAINPAL];
     a2 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x48);
     sw(s3, sp + 0x44);

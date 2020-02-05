@@ -412,7 +412,7 @@ loc_8003EEFC:
     a0 += 0x7AB0;                                       // Result = gTexInfo_MARB01[0] (80097AB0)
     a1 = s0 << 6;
     a2 = s1 << 6;
-    a3 = *gPaletteClutId_Main;
+    a3 = gPaletteClutIds[MAINPAL];
     s0++;
     _thunk_I_CacheAndDrawSprite();
     v0 = (i32(s0) < 4);

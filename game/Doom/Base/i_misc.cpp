@@ -624,7 +624,7 @@ loc_8003AD04:
     if (v0 != 0) goto loc_8003AD64;
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7A70;                                       // Result = gTexInfo_PAUSE[0] (80097A70)
-    a3 = *gPaletteClutId_Main;
+    a3 = gPaletteClutIds[MAINPAL];
     a2 = 0x6C;                                          // Result = 0000006C
     _thunk_I_CacheAndDrawSprite();
 loc_8003AD64:
@@ -935,7 +935,7 @@ loc_8003B1E8:
     v1 += 9;                                            // Result = 0000000C
 loc_8003B210:
     v0 = v1 << 1;
-    at = gPaletteClutId_Main;
+    at = gPaletteClutIds;
     at += v0;
     v0 = lhu(at);
     at = 0x80070000;                                    // Result = 80070000

@@ -8,6 +8,11 @@
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 
+// Structure for a palette in the game: contains 256 RGBA5551 color values.
+struct palette_t {
+    uint16_t colors[256];
+};
+
 // Details about all of the textures in the game and the sky texture
 const VmPtr<VmPtr<texture_t>>   gpTextures(0x80078128);
 const VmPtr<VmPtr<texture_t>>   gpFlatTextures(0x80078124);
@@ -25,8 +30,8 @@ const VmPtr<VmPtr<int32_t>>     gpFlatTranslation(0x80077F60);
 const VmPtr<VmPtr<light_t>>     gpLightsLump(0x80078068);
 
 // Palette stuff
-const VmPtr<uint16_t>   gPaletteClutId_Main(0x800A9084);        // The regular in-game palette
-const VmPtr<uint16_t>   g3dViewPaletteClutId(0x80077F7C);       // Currently active in-game palette. Changes as effects are applied in the game.
+const VmPtr<uint16_t[NUMPALETTES]>      gPaletteClutIds(0x800A9084);            // CLUT ids for all of the game's palettes. These are all held in VRAM.
+const VmPtr<uint16_t>                   g3dViewPaletteClutId(0x80077F7C);       // Currently active in-game palette. Changes as effects are applied in the game.
 
 // Lump number ranges
 const VmPtr<int32_t>    gFirstTexLumpNum(0x800782E0);
@@ -291,80 +296,64 @@ void _thunk_R_FlatNumForName() noexcept {
     v0 = R_FlatNumForName(vmAddrToPtr<const char>(a0));
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Loads all of the game's palettes into VRAM.
+// Also loads the 'LIGHTS' lump which gives the color multipliers for various sector colors.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void R_InitPalette() noexcept {
-loc_8002BF2C:
-    sp -= 0x28;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7BA4;                                       // Result = STR_LumpName_LIGHTS[0] (80077BA4)
-    a1 = 1;                                             // Result = 00000001
-    a2 = 1;                                             // Result = 00000001
-    sw(ra, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    _thunk_W_CacheLumpName();
-    v1 = 0xFF;                                          // Result = 000000FF
-    *gpLightsLump = v0;
-    sb(v1, v0);
-    v0 = *gpLightsLump;
-    sb(v1, v0 + 0x1);
-    v0 = *gpLightsLump;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7BAC;                                       // Result = STR_LumpName_PLAYPAL[0] (80077BAC)
-    sb(v1, v0 + 0x2);
-    v0 = W_GetNumForName(vmAddrToPtr<const char>(a0));
-    s0 = v0;
-    a0 = s0;
-    a1 = 0x20;                                          // Result = 00000020
-    a2 = 1;                                             // Result = 00000001
-    _thunk_W_CacheLumpNum();
-    s1 = v0;
-    v0 = W_LumpLength((int32_t) s0);
-    v0 >>= 9;
-    v1 = 0x14;
-    s0 = 0;
-    if (v0 == v1) goto loc_8002BFCC;
-    I_Error("R_InitPalettes: palette foulup\n");
-loc_8002BFCC:
-    s2 = gPaletteClutId_Main;
-    v0 = 0x100;                                         // Result = 00000100
-    sh(v0, sp + 0x14);
-    v0 = 1;                                             // Result = 00000001
-    sh(v0, sp + 0x16);
-loc_8002BFE4:
-    v0 = s0;
-    if (i32(s0) >= 0) goto loc_8002BFF0;
-    v0 = s0 + 0xF;
-loc_8002BFF0:
-    a0 = sp + 0x10;
-    a1 = s1;
-    v0 = u32(i32(v0) >> 4);
-    v1 = v0 << 8;
-    v0 <<= 4;
-    v0 = s0 - v0;
-    v0 += 0xF0;
-    sh(v1, sp + 0x10);
-    sh(v0, sp + 0x12);
-    _thunk_LIBGPU_LoadImage();
-    s1 += 0x200;
-    a0 = lh(sp + 0x10);
-    a1 = lh(sp + 0x12);
-    s0++;
-    LIBGPU_GetClut();
-    sh(v0, s2);
-    v0 = (i32(s0) < 0x14);
-    s2 += 2;
-    if (v0 != 0) goto loc_8002BFE4;
-    *g3dViewPaletteClutId = *gPaletteClutId_Main;
-    
-    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+    // Load the colored light multipliers lump and force the first entry to be fullbright
+    *gpLightsLump = (light_t*) W_CacheLumpName("LIGHTS", PU_STATIC, true);
 
-    ra = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+    light_t& firstLight = **gpLightsLump;
+    firstLight.r = 255;
+    firstLight.g = 255;
+    firstLight.b = 255;
+
+    // Load the palettes lump and sanity check its size
+    const int32_t playpalLumpNum = W_GetNumForName("PLAYPAL");
+    const palette_t* const pGamePalettes = (const palette_t*) W_CacheLumpNum(playpalLumpNum, PU_CACHE, true);
+    const int32_t numPalettes = W_LumpLength(playpalLumpNum) / sizeof(palette_t);
+    
+    if (numPalettes != NUMPALETTES) {
+        I_Error("R_InitPalettes: palette foulup\n");
+    }
+
+    // Upload all the palettes into VRAM
+    {
+        RECT dstVramRect;
+        dstVramRect.w = 256;
+        dstVramRect.h = 1;
+
+        const palette_t* pPalette = pGamePalettes;
+        uint16_t* pClutId = gPaletteClutIds.get();
+
+        for (int32_t palIdx = 0; palIdx < NUMPALETTES; ++palIdx, ++pPalette, ++pClutId) {
+            // How many palettes we can squeeze onto a VRAM texture page that also has a framebuffer.
+            // The palettes for the game are packed into some of the unused rows of the framebuffer.
+            constexpr int32_t PAL_ROWS_PER_TPAGE = 256 - SCREEN_H;
+
+            // Set the destination location in VRAM for the palette.
+            //
+            // Note: i'm not sure why this check is done - the palette index cannot be negative?
+            // Perhaps something that was compiled out for the PAL version of the game maybe?
+            const int32_t palRow = (palIdx >= 0) ? palIdx : palIdx + 15;
+            const int32_t palTPage = palRow / PAL_ROWS_PER_TPAGE;
+
+            dstVramRect.x = (int16_t)(palTPage * 256);
+            dstVramRect.y = (int16_t)(palRow - palTPage * PAL_ROWS_PER_TPAGE + SCREEN_H);
+            
+            // Upload the palette to VRAM and save the CLUT id for this location
+            LIBGPU_LoadImage(dstVramRect, (const uint32_t*) pPalette->colors);
+            *pClutId = LIBGPU_GetClut(dstVramRect.x, dstVramRect.y);
+        }
+    }
+
+    // Set the initial palette to use for the 3d view: use the regular palette
+    *g3dViewPaletteClutId = gPaletteClutIds[MAINPAL];
+    
+    // Clear out the palette data we just loaded as it's now in VRAM and doesn't need a backing RAM store.
+    // This will also clear out anything else that is non essential.
+    Z_FreeTags(**gpMainMemZone, PU_CACHE);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

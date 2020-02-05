@@ -318,7 +318,7 @@ loc_800127B8:
     a0 = s0;                                            // Result = 1F800200
     a1 = 0;                                             // Result = 00000000
     _thunk_LIBGPU_SetShadeTex();
-    v1 = *gPaletteClutId_Main;
+    v1 = gPaletteClutIds[MAINPAL];
     v0 = 0x80;                                          // Result = 00000080
     at = 0x1F800000;                                    // Result = 1F800000
     sb(v0, at + 0x204);                                 // Store to: 1F800204

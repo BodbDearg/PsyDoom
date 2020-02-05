@@ -16,7 +16,7 @@
 void RunMenu() noexcept {
     sp -= 0x20;
     sw(s0, sp + 0x10);
-    s0 = gPaletteClutId_Main;
+    s0 = gPaletteClutIds;
     sw(s1, sp + 0x14);
     s1 = 0x80090000;                                    // Result = 80090000
     s1 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
@@ -505,7 +505,7 @@ loc_80036258:
     s0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
     a0 = s0;                                            // Result = gTexInfo_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
-    a3 = *gPaletteClutId_Main;
+    a3 = gPaletteClutIds[MAINPAL];
     a2 = 0;                                             // Result = 00000000
     _thunk_I_CacheAndDrawSprite();
     a0 = s0 + 0x40;                                     // Result = gTexInfo_DOOM[0] (80097A50)

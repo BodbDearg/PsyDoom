@@ -3025,14 +3025,12 @@ void _thunk_LIBGPU_GetTPage() noexcept {
     v0 = LIBGPU_GetTPage(a0, a1, a2, a3);
 }
 
-void LIBGPU_GetClut() noexcept {
-loc_8004E9F0:
-    v0 = a1 << 6;
-    a0 = u32(i32(a0) >> 4);
-    a0 &= 0x3F;
-    v0 |= a0;
-    v0 &= 0xFFFF;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the CLUT id for a CLUT uploaded to the given coordinate in VRAM.
+// Note: the x address is limited to being in multiples of 16.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t LIBGPU_GetClut(const int32_t x, const int32_t y) noexcept {
+    return (uint16_t)((y << 6) | ((x >> 4) & 0x3F));
 }
 
 void LIBGPU_DumpTPage() noexcept {
@@ -4339,7 +4337,7 @@ loc_8004FBC0:
     _thunk_LIBGPU_LoadImage();
     a0 = s0;
     a1 = s1;
-    LIBGPU_GetClut();
+    v0 = LIBGPU_GetClut(a0, a1);
     v0 &= 0xFFFF;
     ra = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);

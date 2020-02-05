@@ -190,7 +190,7 @@ loc_80037BAC:
     a0 += 0x7AB0;                                       // Result = gTexInfo_MARB01[0] (80097AB0)
     a1 = s0 << 6;
     a2 = s1 << 6;
-    a3 = *gPaletteClutId_Main;
+    a3 = gPaletteClutIds[MAINPAL];
     s0++;
     _thunk_I_CacheAndDrawSprite();
     v0 = (i32(s0) < 4);
@@ -257,7 +257,7 @@ loc_80037CC4:
     sw(v0, sp + 0x18);
     sw(v0, sp + 0x1C);
     a0 = lhu(s3);                                       // Load from: gTexInfo_BUTTONS[2] (80097ADA)
-    a1 = *gPaletteClutId_Main;
+    a1 = gPaletteClutIds[MAINPAL];
     v0 = lbu(s3 - 0x2);                                 // Load from: gTexInfo_BUTTONS[2] (80097AD8)
     t0 = lbu(s3 - 0x1);                                 // Load from: gTexInfo_BUTTONS[2] (80097AD9)
     v0 += v1;

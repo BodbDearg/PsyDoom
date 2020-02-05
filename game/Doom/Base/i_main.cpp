@@ -876,7 +876,7 @@ loc_80033AC4:
     sh(v1, at + 0x210);                                 // Store to: 1F800210
     at = 0x1F800000;                                    // Result = 1F800000
     sh(v1, at + 0x220);                                 // Store to: 1F800220
-    v1 = *gPaletteClutId_Main;
+    v1 = gPaletteClutIds[MAINPAL];
     a1 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x2C);
     sw(s6, sp + 0x28);

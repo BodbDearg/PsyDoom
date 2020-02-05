@@ -160,7 +160,7 @@ void F1_Drawer() noexcept {
     a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
-    a3 = *gPaletteClutId_Main;
+    a3 = gPaletteClutIds[MAINPAL];
     s1 = 0x2D;                                          // Result = 0000002D
     _thunk_I_CacheAndDrawSprite();
     v0 = lw(gp + 0xB30);                                // Load from: 80078110
@@ -876,7 +876,7 @@ void F2_Drawer() noexcept {
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7BB0;                                       // Result = gTexInfo_DEMON[0] (80097BB0)
     a1 = 0;                                             // Result = 00000000
-    s2 = gPaletteClutId_Main;
+    s2 = gPaletteClutIds;
     a3 = lh(s2);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_CacheAndDrawSprite();

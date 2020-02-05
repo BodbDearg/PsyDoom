@@ -248,7 +248,7 @@ uint16_t LIBGPU_GetTPage(
 
 void _thunk_LIBGPU_GetTPage() noexcept;
 
-void LIBGPU_GetClut() noexcept;
+uint16_t LIBGPU_GetClut(const int32_t x, const int32_t y) noexcept;
 void LIBGPU_DumpTPage() noexcept;
 void LIBGPU_DumpClut() noexcept;
 void LIBGPU_NextPrim() noexcept;

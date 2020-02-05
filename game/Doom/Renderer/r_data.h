@@ -7,6 +7,23 @@ struct RECT;
 // Constant for an invalid or undefined (not yet set) upload frame number for a texture
 static constexpr uint32_t TEX_INVALID_UPLOAD_FRAME_NUM = UINT32_MAX;
 
+// The number of palettes available in the game
+static constexpr uint32_t NUMPALETTES = 20;
+
+// Palette indices and ranges
+static constexpr uint32_t MAINPAL               = 0;    // Used for most sprites and textures in the game
+static constexpr uint32_t STARTREDPALS          = 1;    // Pain palettes (red shift) start 
+static constexpr uint32_t NUMREDPALS            = 8;    // Number of pain palettes
+static constexpr uint32_t STARTBONUSPALS        = 9;    // Bonus pickup (gold shift) palettes start
+static constexpr uint32_t NUMBONUSPALS          = 4;    // Number of bonus pickup palettes
+static constexpr uint32_t RADIATIONPAL          = 13;   // Radiation suit green shift
+static constexpr uint32_t INVULNERABILITYPAL    = 14;   // PSX Doom: invulernability effect
+static constexpr uint32_t FIRESKYPAL            = 15;   // PSX Doom: fire sky palette
+static constexpr uint32_t UIPAL                 = 16;   // PSX Doom: ui elements palette
+static constexpr uint32_t TITLEPAL              = 17;   // PSX Doom: title screen palette
+static constexpr uint32_t IDCREDITS1PAL         = 18;   // PSX Doom: id credits screen palette
+static constexpr uint32_t WCREDITS1PAL          = 19;   // PSX Doom: williams credits screen palette
+
 // Stores information about a texture, including it's dimensions, lump info and texture cache info
 struct texture_t {
     int16_t                     offsetX;
@@ -29,10 +46,10 @@ static_assert(sizeof(texture_t) == 32);
 
 // Stores info about the size of a texture in WAD lump
 struct patch_t {
-	int16_t     offsetX;
-	int16_t     offsetY;
-	int16_t     width;
-	int16_t     height;
+    int16_t     offsetX;
+    int16_t     offsetY;
+    int16_t     width;
+    int16_t     height;
 };
 
 static_assert(sizeof(patch_t) == 8);
@@ -48,24 +65,24 @@ struct light_t {
 
 static_assert(sizeof(light_t) == 4);
 
-extern const VmPtr<VmPtr<texture_t>>    gpTextures;
-extern const VmPtr<VmPtr<texture_t>>    gpFlatTextures;
-extern const VmPtr<VmPtr<texture_t>>    gpSpriteTextures;
-extern const VmPtr<VmPtr<texture_t>>    gpSkyTexture;
-extern const VmPtr<VmPtr<int32_t>>      gpTextureTranslation;
-extern const VmPtr<VmPtr<int32_t>>      gpFlatTranslation;
-extern const VmPtr<VmPtr<light_t>>      gpLightsLump;
-extern const VmPtr<uint16_t>            gPaletteClutId_Main;
-extern const VmPtr<uint16_t>            g3dViewPaletteClutId;
-extern const VmPtr<int32_t>             gFirstTexLumpNum;
-extern const VmPtr<int32_t>             gLastTexLumpNum;
-extern const VmPtr<int32_t>             gNumTexLumps;
-extern const VmPtr<int32_t>             gFirstFlatLumpNum;
-extern const VmPtr<int32_t>             gLastFlatLumpNum;
-extern const VmPtr<int32_t>             gNumFlatLumps;
-extern const VmPtr<int32_t>             gFirstSpriteLumpNum;
-extern const VmPtr<int32_t>             gLastSpriteLumpNum;
-extern const VmPtr<int32_t>             gNumSpriteLumps;
+extern const VmPtr<VmPtr<texture_t>>        gpTextures;
+extern const VmPtr<VmPtr<texture_t>>        gpFlatTextures;
+extern const VmPtr<VmPtr<texture_t>>        gpSpriteTextures;
+extern const VmPtr<VmPtr<texture_t>>        gpSkyTexture;
+extern const VmPtr<VmPtr<int32_t>>          gpTextureTranslation;
+extern const VmPtr<VmPtr<int32_t>>          gpFlatTranslation;
+extern const VmPtr<VmPtr<light_t>>          gpLightsLump;
+extern const VmPtr<uint16_t[NUMPALETTES]>   gPaletteClutIds;
+extern const VmPtr<uint16_t>                g3dViewPaletteClutId;
+extern const VmPtr<int32_t>                 gFirstTexLumpNum;
+extern const VmPtr<int32_t>                 gLastTexLumpNum;
+extern const VmPtr<int32_t>                 gNumTexLumps;
+extern const VmPtr<int32_t>                 gFirstFlatLumpNum;
+extern const VmPtr<int32_t>                 gLastFlatLumpNum;
+extern const VmPtr<int32_t>                 gNumFlatLumps;
+extern const VmPtr<int32_t>                 gFirstSpriteLumpNum;
+extern const VmPtr<int32_t>                 gLastSpriteLumpNum;
+extern const VmPtr<int32_t>                 gNumSpriteLumps;
 
 void R_InitData() noexcept;
 void R_InitTextures() noexcept;
