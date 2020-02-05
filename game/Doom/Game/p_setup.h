@@ -8,6 +8,7 @@ struct line_t;
 struct node_t;
 struct seg_t;
 struct side_t;
+struct texture_t;
 struct vertex_t;
 
 extern const VmPtr<VmPtr<uint16_t>>         gpBlockmapLump;
@@ -35,7 +36,9 @@ extern const VmPtr<int32_t>                 gTotalNumLeafEdges;
 extern const VmPtr<VmPtr<leafedge_t>>       gpLeafEdges;
 extern const VmPtr<VmPtr<uint8_t>>          gpRejectMatrix;
 
-void P_InitMapTextures() noexcept;
+extern void (*gUpdateFireSkyFunc)(texture_t& skyTex);
+
+void P_Init() noexcept;
 void P_SetupLevel(const int32_t mapNum, const skill_t skill) noexcept;
 void P_LoadBlocks(const CdMapTbl_File file) noexcept;
 void P_CacheSprite() noexcept;

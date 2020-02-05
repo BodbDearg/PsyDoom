@@ -3,8 +3,10 @@
 #include "Doom/Base/w_wad.h"
 #include "PsxVm/PsxVm.h"
 
-void P_UpdateFireSky() noexcept {
+void P_UpdateFireSky(texture_t& skyTex) noexcept {
 loc_80027CB0:
+    a0 = ptrToVmAddr(&skyTex);
+
     t3 = a0;
     v0 = lh(t3 + 0x10);
     v1 = *gpLumpCache;

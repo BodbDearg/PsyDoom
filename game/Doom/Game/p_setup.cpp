@@ -63,6 +63,10 @@ const VmPtr<int32_t>                gTotalNumLeafEdges(0x80077F64);
 const VmPtr<VmPtr<leafedge_t>>      gpLeafEdges(0x8007810C);
 const VmPtr<VmPtr<uint8_t>>         gpRejectMatrix(0x800780E4);
 
+// Function to update the fire sky.
+// Set when the map has a fire sky, otherwise null.
+void (*gUpdateFireSkyFunc)(texture_t& skyTex) = nullptr;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Load map vertex data from the specified map lump number
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -750,147 +754,131 @@ static void P_GroupLines() noexcept {
     }
 }
 
-void P_InitMapTextures() noexcept {
-loc_80022E68:
-    v0 = *gNumSectors;
-    v1 = *gpSectors;
-    sp -= 0x30;
-    sw(s0, sp + 0x20);
-    s0 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x2C);
-    sw(s2, sp + 0x28);
-    sw(s1, sp + 0x24);
-    if (i32(v0) <= 0) goto loc_80022F0C;
-    s2 = -1;                                            // Result = FFFFFFFF
-    s1 = v1 + 8;
-loc_80022E94:
-    v1 = lw(s1 + 0x4);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Loads wall, floor and switch textures into VRAM.
+// For animated textures the first frame will be put into VRAM and the rest of the animation cached in main RAM.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_Init() noexcept {
+    // Load sector flats into VRAM if not already there
     {
-        const bool bJump = (v1 == s2);
-        v1 <<= 5;
-        if (bJump) goto loc_80022ECC;
-    }
-    v0 = *gpFlatTextures;
-    a0 = v1 + v0;
-    v0 = lhu(a0 + 0xA);
-    if (v0 != 0) goto loc_80022ECC;
-    _thunk_I_CacheTex();
-loc_80022ECC:
-    v0 = lw(s1);
-    v1 = *gpFlatTextures;
-    v0 <<= 5;
-    a0 = v0 + v1;
-    v0 = lhu(a0 + 0xA);
-    s0++;
-    if (v0 != 0) goto loc_80022EF8;
-    _thunk_I_CacheTex();
-loc_80022EF8:
-    v0 = *gNumSectors;
-    v0 = (i32(s0) < i32(v0));
-    s1 += 0x5C;
-    if (v0 != 0) goto loc_80022E94;
-loc_80022F0C:
-    v0 = 2;                                             // Result = 00000002
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7FD8);                                // Store to: gTexCacheFillPage (80078028)
-    v0 = *gLockedTexPagesMask;
-    v1 = gPaletteClutIds[MAINPAL];
-    a0 = *gpSkyTexture;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7D1C);                                 // Store to: gTexCacheFillBlockX (800782E4)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7D18);                                 // Store to: gTexCacheFillBlockY (800782E8)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7D88);                                 // Store to: gTexCacheRowBlockH (80078278)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7B34);                                 // Store to: gpUpdateFireSkyFunc (80077B34)
-    v0 |= 2;
-    *gLockedTexPagesMask = v0;
-    *gPaletteClutId_CurMapSky = (uint16_t) v1;
-    if (a0 == 0) goto loc_80022FE8;
-    a0 = lh(a0 + 0x10);
-    v1 = *gpLumpInfo;
-    v0 = a0 << 4;
-    v0 += v1;
-    v1 = lbu(v0 + 0xC);
-    v0 = 0x39;                                          // Result = 00000039
-    a1 = 8;                                             // Result = 00000008
-    if (v1 != v0) goto loc_80022FD8;
-    a2 = 1;                                             // Result = 00000001
-    _thunk_W_CacheLumpNum();
-    s0 = 0;                                             // Result = 00000000
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lhu(v1 - 0x6F5E);                              // Load from: gPaletteClutId_Sky (800A90A2)
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 += 0x7CB0;                                       // Result = P_UpdateFireSky (80027CB0)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7B34);                                // Store to: gpUpdateFireSkyFunc (80077B34)
-    *gPaletteClutId_CurMapSky = (uint16_t) v1;
+        const sector_t* pSec = gpSectors->get();
 
-loc_80022FBC:
-    a0 = *gpSkyTexture;
-    s0++;
-    P_UpdateFireSky();
-    v0 = (i32(s0) < 0x40);
-    if (v0 != 0) goto loc_80022FBC;
-loc_80022FD8:
-    a0 = *gpSkyTexture;
-    _thunk_I_CacheTex();
-loc_80022FE8:
-    a0 = 0x10;                                          // Result = 00000010
-    P_CacheMapTexturesWithWidth();
-    a0 = 0x40;                                          // Result = 00000040
-    P_CacheMapTexturesWithWidth();
-    s0 = 0;                                             // Result = 00000000
-    P_InitSwitchList();
-    a0 = 0x80;                                          // Result = 00000080
-    P_CacheMapTexturesWithWidth();
-    v1 = *gNumSides;
-    v0 = *gpSides;
-    a0 = -1;                                            // Result = FFFFFFFF
-    if (i32(v1) <= 0) goto loc_80023068;
-    a1 = v1;
-    v1 = v0 + 0xC;
-loc_80023020:
-    v0 = lw(v1 - 0x4);
-    if (v0 != a0) goto loc_80023034;
-    sw(0, v1 - 0x4);
-loc_80023034:
-    v0 = lw(v1 + 0x4);
-    if (v0 != a0) goto loc_80023048;
-    sw(0, v1 + 0x4);
-loc_80023048:
-    v0 = lw(v1);
-    s0++;
-    if (v0 != a0) goto loc_8002305C;
-    sw(0, v1);
-loc_8002305C:
-    v0 = (i32(s0) < i32(a1));
-    v1 += 0x18;
-    if (v0 != 0) goto loc_80023020;
-loc_80023068:
-    v1 = *gLockedTexPagesMask;
-    v0 = 5;                                             // Result = 00000005
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7D1C);                                 // Store to: gTexCacheFillBlockX (800782E4)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7D18);                                 // Store to: gTexCacheFillBlockY (800782E8)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7FD8);                                // Store to: gTexCacheFillPage (80078028)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7D88);                                 // Store to: gTexCacheRowBlockH (80078278)
-    v1 |= 0x1C;
-    *gLockedTexPagesMask = v1;
+        for (int32_t secIdx = 0; secIdx < *gNumSectors; ++secIdx, ++pSec) {
+            // Note: ceiling might not have a texture (sky)
+            if (pSec->ceilingpic != -1) {
+                texture_t& ceilTex = (*gpFlatTextures)[pSec->ceilingpic];
+
+                if (ceilTex.texPageId == 0) {
+                    I_CacheTex(ceilTex);
+                }
+            }
+
+            texture_t& floorTex = (*gpFlatTextures)[pSec->floorpic];
+
+            if (floorTex.texPageId == 0) {
+                I_CacheTex(floorTex);
+            }
+        }
+    }
     
+    // Lock the texture page (2nd page) used exclusively by flat textures.
+    // Also force the fill location in VRAM to the 3rd page after we add flats.
+    //
+    // This code makes the following assumptions:
+    //  (1) The 2nd page can ONLY contain flat textures.
+    //      Even if not completely full it's put off limits and 'locked' before we can use it for other stuff.
+    //  (2) Flats will NEVER use more than one texture page.
+    //      This therefore restricts the maximum number of flats to 16 because even if we add more, they will
+    //      be evicted by any wall texture loads below - since we forced the fill location to the start of the 3rd page.
+    //
+    // So if you want to support more than 16 flats or do a more flexible VRAM arrangement, this is the place to look..
+    *gLockedTexPagesMask |= 0b0000'0000'0010;
+    *gTCacheFillPage = 2;
+    *gTCacheFillCellX = 0;
+    *gTCacheFillCellY = 0;
+    *gTCacheFillRowCellH = 0;
+
+    // Initialize the sky texture, palette and do some more specialized setup if it's the fire sky
+    gUpdateFireSkyFunc = nullptr;
+    *gPaletteClutId_CurMapSky = gPaletteClutIds[MAINPAL];
+
+    if (*gpSkyTexture) {
+        // If the lump name for the sky follows the format 'xxxx9' then assume it is a fire sky.
+        // That needs to have it's lump cached, palette & update function set and initial few updates done...
+        texture_t& skyTex = **gpSkyTexture;
+        const lumpinfo_t& skyTexLump = (*gpLumpInfo)[skyTex.lumpNum];
+
+        if (skyTexLump.name.chars[4] == '9') {
+            W_CacheLumpNum(skyTex.lumpNum, PU_ANIMATION, true);
+            *gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
+            gUpdateFireSkyFunc = P_UpdateFireSky;
+            
+            // This gets the fire going, so it doesn't take a while to creep up when the map is started.
+            // Do a number of fire update rounds before the player even enters the map:
+            for (int32_t i = 0; i < 64; ++i) {
+                P_UpdateFireSky(skyTex);
+            }
+        }
+
+        // Ensure the sky texture is in VRAM
+        I_CacheTex(skyTex);
+    }
+
+    // Load wall and switch textures into VRAM.
+    // Note that switches are assumed to be 64 pixels wide, hence cached just before the 128 pixel textures.
+    a0 = 16;
+    P_CacheMapTexturesWithWidth();
+
+    a0 = 64;
+    P_CacheMapTexturesWithWidth();
+
+    P_InitSwitchList();
+
+    a0 = 128;
+    P_CacheMapTexturesWithWidth();
+
+    // Give all sides without textures a default one.
+    // Maybe done so constant validity checks don't have to be done elsewhere in the game to avoid crashing?
+    {
+        side_t* pSide = gpSides->get();
+
+        for (int32_t sideIdx = 0; sideIdx < *gNumSides; ++sideIdx, ++pSide) {
+            if (pSide->toptexture == -1) {
+                pSide->toptexture = 0;
+            }
+            
+            if (pSide->midtexture == -1) {
+                pSide->midtexture = 0;
+            }
+
+            if (pSide->bottomtexture == -1) {
+                pSide->bottomtexture = 0;
+            }
+        }
+    }
+    
+    // Some more hardcoded limits and memory arrangement for textures, this time for wall textures.
+    // Lock down the texture pages used by wall textures and set the cache to start filling immediately after that (on the 6th page).
+    // 
+    // Basically only the 3rd, 4th and 5th texture pages can be used for wall textures.
+    // This gives a maximum wall texture area of 768x256 - everything else after that is reserved for sprites.
+    // Even if the code above fills in more textures, they will eventually be evicted from the cache in favor of sprites.
+    *gLockedTexPagesMask |= 0b0000'0001'1100;
+    *gTCacheFillPage = 5;
+    *gTCacheFillCellX = 0;
+    *gTCacheFillCellY = 0;
+    *gTCacheFillRowCellH = 0;
+    
+    // Clear out any floor or wall textures we had temporarily in RAM from the above caching.
+    //
+    // Small optimization opportunity: this is slightly wasteful in that if we have animated walls/floors, then they will be evicted by this
+    // call here and then reloaded immediately again in the call to 'P_InitPicAnims', but under a different zone memory manager tag.
+    // We could perhaps change the memory tag and retain them in RAM if still needed for animation?
     Z_FreeTags(**gpMainMemZone, PU_CACHE);
 
+    // Load animated wall and flat textures into RAM so they are ready when needed.
+    // These will be uploaded dynamically into VRAM at runtime, as the engine animates the flat or wall texture.
     P_InitPicAnims();
-    ra = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x30;
-    return;
 }
 
 void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) noexcept {
@@ -1030,7 +1018,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         const CdMapTbl_File mapSprFile = (CdMapTbl_File)((int32_t) CdMapTbl_File::MAPSPR01_IMG + mapIdxInFolder + mapFolderOffset);
         
         P_LoadBlocks(mapTexFile);
-        P_InitMapTextures();
+        P_Init();
         P_LoadBlocks(mapSprFile);
     }
 

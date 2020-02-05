@@ -1,3 +1,5 @@
 #pragma once
 
-void P_UpdateFireSky() noexcept;
+struct texture_t;
+
+void P_UpdateFireSky(texture_t& skyTex) noexcept;

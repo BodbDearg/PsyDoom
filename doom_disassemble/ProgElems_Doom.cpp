@@ -495,7 +495,7 @@ static const ProgElem ELEMS[] = {
     { 0x800228CC, 0x80022920, "P_LoadRejectMap",                        ProgElemType::FUNCTION },
     { 0x80022920, 0x80022B58, "P_LoadLeafs",                            ProgElemType::FUNCTION },
     { 0x80022B58, 0x80022E68, "P_GroupLines",                           ProgElemType::FUNCTION },
-    { 0x80022E68, 0x800230D4, "P_InitMapTextures",                      ProgElemType::FUNCTION },
+    { 0x80022E68, 0x800230D4, "P_Init",                                 ProgElemType::FUNCTION },
     { 0x800230D4, 0x80023700, "P_SetupLevel",                           ProgElemType::FUNCTION },
     { 0x80023700, 0x800239D8, "P_LoadBlocks",                           ProgElemType::FUNCTION },
     { 0x800239D8, 0x80023AC8, "P_CacheSprite",                          ProgElemType::FUNCTION },

@@ -1511,13 +1511,11 @@ loc_80027400:
     v0 = (i32(s1) < 0x10);
     s0 += 0x14;
     if (v0 != 0) goto loc_8002726C;
-    v0 = *gbIsSkyVisible;
-    if (v0 == 0) goto loc_80027444;
-    v0 = lw(gp + 0x554);                                // Load from: gpUpdateFireSkyFunc (80077B34)
-    if (v0 == 0) goto loc_80027444;
-    a0 = *gpSkyTexture;
-    ptr_call(v0);
-loc_80027444:
+    
+    if (*gbIsSkyVisible && gUpdateFireSkyFunc) {    
+        gUpdateFireSkyFunc(**gpSkyTexture);
+    }
+    
     ra = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);
     s0 = lw(sp + 0x18);

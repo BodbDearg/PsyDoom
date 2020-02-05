@@ -193,7 +193,6 @@ extern void A_LoadShotgun2() noexcept;
 extern void A_CloseShotgun2() noexcept;
 extern void P_SetupPsprites() noexcept;
 extern void P_MovePsprites() noexcept;
-extern void P_InitMapTextures() noexcept;
 extern void P_CacheSprite() noexcept;
 extern void P_CacheMapTexturesWithWidth() noexcept;
 extern void P_Shoot2() noexcept;
@@ -240,7 +239,6 @@ extern void G_BeginExitLevel() noexcept;
 extern void G_ExitLevel() noexcept;
 extern void G_SecretExitLevel() noexcept;
 extern void P_SpawnSpecials() noexcept;
-extern void P_UpdateFireSky() noexcept;
 extern void P_InitSwitchList() noexcept;
 extern void P_StartButton() noexcept;
 extern void P_ChangeSwitchTexture() noexcept;
@@ -1083,7 +1081,6 @@ namespace PsxVm {
         { 0x800216D8, &A_CloseShotgun2 },
         { 0x80021794, &P_SetupPsprites },
         { 0x8002190C, &P_MovePsprites },
-        { 0x80022E68, &P_InitMapTextures },
         { 0x800239D8, &P_CacheSprite },
         { 0x80023AC8, &P_CacheMapTexturesWithWidth },
         { 0x80023C34, &P_Shoot2 },
@@ -1130,7 +1127,6 @@ namespace PsxVm {
         { 0x80027768, &G_ExitLevel },
         { 0x800277E0, &G_SecretExitLevel },
         { 0x8002784C, &P_SpawnSpecials },
-        { 0x80027CB0, &P_UpdateFireSky },
         { 0x80027D84, &P_InitSwitchList },
         { 0x80027EA8, &P_StartButton },
         { 0x80027F3C, &P_ChangeSwitchTexture },

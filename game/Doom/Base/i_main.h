@@ -29,6 +29,11 @@ enum padbinding_t {
 // TODO: create constants for available button bits. 
 typedef uint32_t padbuttons_t;
 
+extern const VmPtr<uint32_t>                                            gTCacheFillPage;
+extern const VmPtr<uint32_t>                                            gTCacheFillCellX;
+extern const VmPtr<uint32_t>                                            gTCacheFillCellY;
+extern const VmPtr<uint32_t>                                            gTCacheFillRowCellH;
+extern const VmPtr<uint32_t>                                            gLockedTexPagesMask;
 extern const VmPtr<std::byte[TMP_BUFFER_SIZE]>                          gTmpBuffer;
 extern const VmPtr<uint32_t>                                            gTotalVBlanks;
 extern const VmPtr<uint32_t>                                            gLastTotalVBlanks;
@@ -38,8 +43,6 @@ extern const VmPtr<DISPENV[2]>                                          gDispEnv
 extern const VmPtr<DRAWENV[2]>                                          gDrawEnvs;
 extern const VmPtr<uint32_t>                                            gNumFramesDrawn;
 extern const VmPtr<uint32_t>                                            gCurPlayerIndex;
-extern const VmPtr<uint32_t>                                            gLockedTexPagesMask;
-extern const VmPtr<uint32_t>                                            gLockedTexPagesMask;
 extern const VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>                      gBtnBindings;
 extern const VmPtr<VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>[MAXPLAYERS]>   gpPlayerBtnBindings;
 

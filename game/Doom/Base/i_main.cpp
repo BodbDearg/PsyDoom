@@ -93,12 +93,18 @@ constexpr uint16_t TEX_PAGE_VRAM_TEXCOORDS[NUM_TCACHE_PAGES + 1][2] = {
 };
 
 // Texture cache variables.
-// The texture cache data structure, where we are filling in the cache next and the current fill row height.
-static const VmPtr<VmPtr<tcache_t>>     gpTexCache(0x80077F74);
-static const VmPtr<uint32_t>            gTCacheFillPage(0x80078028);
-static const VmPtr<uint32_t>            gTCacheFillCellX(0x800782E4);
-static const VmPtr<uint32_t>            gTCacheFillCellY(0x800782E8);
-static const VmPtr<uint32_t>            gTCacheFillRowCellH(0x80078278);
+// The texture cache data structure, where we are filling in the cache next and the current fill row height (in cells).
+static const VmPtr<VmPtr<tcache_t>> gpTexCache(0x80077F74);
+
+const VmPtr<uint32_t>   gTCacheFillPage(0x80078028);
+const VmPtr<uint32_t>   gTCacheFillCellX(0x800782E4);
+const VmPtr<uint32_t>   gTCacheFillCellY(0x800782E8);
+const VmPtr<uint32_t>   gTCacheFillRowCellH(0x80078278);
+
+// Texture cache: a bit mask of which texture pages (past the initial 4 which are reserved for the framebuffer) are 'locked' during gameplay.
+// Locked texture pages are not allowed to be unloaded and are used for UI sprites, wall and floor textures.
+// Sprites on the other hand are placed in 'unlocked' texture pages and can be evicted at any time.
+const VmPtr<uint32_t> gLockedTexPagesMask(0x80077C08);
 
 // A 64-KB buffer used for WAD loading and other stuff
 const VmPtr<std::byte[TMP_BUFFER_SIZE]> gTmpBuffer(0x80098748);
@@ -120,11 +126,6 @@ const VmPtr<DRAWENV[2]> gDrawEnvs(0x800A90AC);
 // When the time comes to evict a texture to make room for another, we check to make sure that the texture wasn't loaded in the current frame.
 // If the evicted texture WAS loaded in the current frame, then it means we've run out of texture memory and can't draw all of the textures in the frame.
 const VmPtr<uint32_t> gNumFramesDrawn(0x80077C10);
-
-// A bit mask of which texture pages (past the initial 4 which are reserved for the framebuffer) are 'locked' during gameplay.
-// Locked texture pages are not allowed to be unloaded and are used for UI sprites, wall and floor textures.
-// Sprites on the other hand are placed in 'unlocked' texture pages and can be evicted at any time.
-const VmPtr<uint32_t> gLockedTexPagesMask(0x80077C08);
 
 // The index of the user's player in the array of players: whether you are player 1 or 2 in other words
 const VmPtr<uint32_t> gCurPlayerIndex(0x80077618);

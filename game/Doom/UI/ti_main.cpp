@@ -199,8 +199,7 @@ loc_800353A8:
     v0--;
     if (i32(v1) >= 0) goto loc_800353A8;
 loc_800353B8:
-    a0 = *gpSkyTexture;
-    P_UpdateFireSky();
+    P_UpdateFireSky(**gpSkyTexture);
 loc_800353C8:
     v1 = lw(gp + 0xBB0);                                // Load from: gTitleScreenSpriteY (80078190)
     v0 = 0;                                             // Result = 00000000
