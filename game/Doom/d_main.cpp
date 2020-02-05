@@ -528,7 +528,7 @@ gameaction_t MiniLoop(
         
         // Read pad inputs and save as the current pad buttons (overwritten if a demo)
         I_ReadGamepad();
-        const uint32_t padBtns = v0;
+        uint32_t padBtns = v0;
         gTicButtons[*gCurPlayerIndex] = padBtns;
 
         if (*gNetGame != gt_single) {
@@ -553,8 +553,10 @@ gameaction_t MiniLoop(
                 if (padBtns & PAD_ANY)
                     break;
 
-                // Read inputs from the demo buffer and advance the demo
-                gTicButtons[*gCurPlayerIndex] = (*gpDemo_p)[0];
+                // Read inputs from the demo buffer and advance the demo.
+                // N.B: Demo inputs override everything else from here on in.
+                padBtns = (*gpDemo_p)[0];
+                gTicButtons[*gCurPlayerIndex] = padBtns;
                 *gpDemo_p += 1;
             }
             else {

@@ -190,7 +190,7 @@ loc_80028D7C:
 void P_CheckCheats() noexcept {
     // Check for pause or options menu actions by any player.
     // Note that one player doing the action causes the action to happen for other players too.
-    for (int32_t playerIdx = 1; playerIdx >= 0; --playerIdx) {
+    for (int32_t playerIdx = MAXPLAYERS - 1; playerIdx >= 0; --playerIdx) {
         // Skip this player if not in the game, otherwise grab inputs for the player
         if (!gbPlayerInGame[playerIdx])
             continue;
