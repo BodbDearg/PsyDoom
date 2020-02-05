@@ -194,7 +194,6 @@ extern void A_CloseShotgun2() noexcept;
 extern void P_SetupPsprites() noexcept;
 extern void P_MovePsprites() noexcept;
 extern void P_CacheSprite() noexcept;
-extern void P_CacheMapTexturesWithWidth() noexcept;
 extern void P_Shoot2() noexcept;
 extern void PA_DoIntercept() noexcept;
 extern void PA_ShootLine() noexcept;
@@ -1082,7 +1081,6 @@ namespace PsxVm {
         { 0x80021794, &P_SetupPsprites },
         { 0x8002190C, &P_MovePsprites },
         { 0x800239D8, &P_CacheSprite },
-        { 0x80023AC8, &P_CacheMapTexturesWithWidth },
         { 0x80023C34, &P_Shoot2 },
         { 0x80023E3C, &PA_DoIntercept },
         { 0x80023EC4, &PA_ShootLine },

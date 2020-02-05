@@ -6,6 +6,15 @@ struct DISPENV;
 struct DRAWENV;
 struct texture_t;
 
+// Texture cache related constants
+static constexpr uint32_t NUM_TCACHE_PAGES      = 11;
+static constexpr uint32_t TCACHE_PAGE_SIZE      = 256;  // Square size: 256x256 pixels
+static constexpr uint32_t TCACHE_CELL_SIZE      = 16;
+static constexpr uint32_t TCACHE_CELLS_X        = TCACHE_PAGE_SIZE / TCACHE_CELL_SIZE;
+static constexpr uint32_t TCACHE_CELLS_Y        = TCACHE_PAGE_SIZE / TCACHE_CELL_SIZE;
+static constexpr uint32_t NUM_TCACHE_PAGE_CELLS = TCACHE_CELLS_X * TCACHE_CELLS_Y;
+static constexpr uint32_t ALL_TPAGES_MASK       = (UINT32_MAX >> (32 - NUM_TCACHE_PAGES));
+
 // Size of the temporary buffer that is used for WAD loading and other stuff - 64 KiB
 static constexpr uint32_t TMP_BUFFER_SIZE = 0x10000;
 

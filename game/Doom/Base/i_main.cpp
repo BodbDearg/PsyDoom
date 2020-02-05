@@ -19,7 +19,7 @@
 #include "z_zone.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Texture cache related constants and data structures.
+// Texture cache related stuff.
 // VRAM for PSX Doom is managed as follows:
 //
 //  (1) There is 1 MiB in total of VRAM split into 16 texture 'pages'.
@@ -49,14 +49,6 @@
 //  (10) Lastly it is worth mentioning that since textures in unlocked pages can be evicted at any time, these textures must also be
 //       backed up and retained in main RAM. So essentially the renderer needs to keep a copy of all sprite data in main RAM also.
 //------------------------------------------------------------------------------------------------------------------------------------------
-constexpr uint32_t NUM_TCACHE_PAGES         = 11;
-constexpr uint32_t TCACHE_PAGE_SIZE         = 256;  // Square size: 256x256 pixels
-constexpr uint32_t TCACHE_CELL_SIZE         = 16;
-constexpr uint32_t TCACHE_CELLS_X           = TCACHE_PAGE_SIZE / TCACHE_CELL_SIZE;
-constexpr uint32_t TCACHE_CELLS_Y           = TCACHE_PAGE_SIZE / TCACHE_CELL_SIZE;
-constexpr uint32_t NUM_TCACHE_PAGE_CELLS    = TCACHE_CELLS_X * TCACHE_CELLS_Y;
-constexpr uint32_t ALL_TPAGES_MASK          = (UINT32_MAX >> (32 - NUM_TCACHE_PAGES));
-
 struct tcachepage_t {
     VmPtr<texture_t> cells[TCACHE_CELLS_Y][TCACHE_CELLS_X];
 };

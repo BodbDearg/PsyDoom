@@ -826,16 +826,10 @@ void P_Init() noexcept {
 
     // Load wall and switch textures into VRAM.
     // Note that switches are assumed to be 64 pixels wide, hence cached just before the 128 pixel textures.
-    a0 = 16;
-    P_CacheMapTexturesWithWidth();
-
-    a0 = 64;
-    P_CacheMapTexturesWithWidth();
-
+    P_CacheMapTexturesWithWidth(16);
+    P_CacheMapTexturesWithWidth(64);
     P_InitSwitchList();
-
-    a0 = 128;
-    P_CacheMapTexturesWithWidth();
+    P_CacheMapTexturesWithWidth(128);
 
     // Give all sides without textures a default one.
     // Maybe done so constant validity checks don't have to be done elsewhere in the game to avoid crashing?
@@ -1286,84 +1280,46 @@ loc_80023AA0:
     return;
 }
 
-void P_CacheMapTexturesWithWidth() noexcept {
-loc_80023AC8:
-    sp -= 0x30;
-    sw(s1, sp + 0x1C);
-    s1 = a0;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D1C);                               // Load from: gTexCacheFillBlockX (800782E4)
-    sw(ra, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s0, sp + 0x18);
-    v1 = v0 - 1;
-    if (i32(s1) >= 0) goto loc_80023AF8;
-    a0 = s1 + 0xF;
-loc_80023AF8:
-    v0 = u32(i32(a0) >> 4);
-    v1 += v0;
-    v0 = -v0;
-    v1 &= v0;
-    v0 = *gNumSides;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7D1C);                                // Store to: gTexCacheFillBlockX (800782E4)
-    v1 = *gpSides;
-    s2 = 0;
-    if (i32(v0) <= 0) goto loc_80023C14;
-    s3 = -1;                                            // Result = FFFFFFFF
-    s0 = v1 + 0xC;
-loc_80023B28:
-    v1 = lw(s0 - 0x4);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Cache map textures with the given width into VRAM.
+// Textures are cached in groups according to their width in order to try and make more efficient use of VRAM space.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
+    // Round the current fill position in the texture cache up to the nearest multiple of the given texture width.
+    // This ensures that for instance 64 pixel textures are on 64 pixel boundaries on the x dimension.
     {
-        const bool bJump = (v1 == s3);
-        v1 <<= 5;
-        if (bJump) goto loc_80023B70;
+        const int32_t cellX = *gTCacheFillCellX;
+        const int32_t cellW = ((width >= 0) ? width : width + 15) / TCACHE_CELL_SIZE;   // This is a signed floor() operation
+        const int32_t cellXRnd = (cellX + (cellW - 1)) & (-cellW);                      // Note: '&(-cellW)' chops off the unwanted lower bits from the result
+        *gTCacheFillCellX = cellXRnd;
     }
-    v0 = *gpTextures;
-    a0 = v1 + v0;
-    v0 = lh(a0 + 0x4);
-    if (v0 != s1) goto loc_80023B70;
-    v0 = lhu(a0 + 0xA);
-    if (v0 != 0) goto loc_80023B70;
-    _thunk_I_CacheTex();
-loc_80023B70:
-    v1 = lw(s0 + 0x4);
-    {
-        const bool bJump = (v1 == s3);
-        v1 <<= 5;
-        if (bJump) goto loc_80023BB8;
+
+    // Run through all the sides in the map and cache textures with the specified width
+    side_t* pSide = gpSides->get();
+
+    for (int32_t sideIdx = 0; sideIdx < *gNumSides; ++sideIdx, ++pSide) {
+        if (pSide->toptexture != -1) {
+            texture_t& tex = (*gpTextures)[pSide->toptexture];
+
+            if ((tex.width == width) && (tex.texPageId == 0)) {
+                I_CacheTex(tex);
+            }
+        }
+        
+        if (pSide->midtexture != -1) {
+            texture_t& tex = (*gpTextures)[pSide->midtexture];
+
+            if ((tex.width == width) && (tex.texPageId == 0)) {
+                I_CacheTex(tex);
+            }
+        }
+        
+        if (pSide->bottomtexture != -1) {
+            texture_t& tex = (*gpTextures)[pSide->bottomtexture];
+
+            if ((tex.width == width) && (tex.texPageId == 0)) {
+                I_CacheTex(tex);
+            }
+        }
     }
-    v0 = *gpTextures;
-    a0 = v1 + v0;
-    v0 = lh(a0 + 0x4);
-    if (v0 != s1) goto loc_80023BB8;
-    v0 = lhu(a0 + 0xA);
-    if (v0 != 0) goto loc_80023BB8;
-    _thunk_I_CacheTex();
-loc_80023BB8:
-    v1 = lw(s0);
-    s2++;
-    if (v1 == s3) goto loc_80023C00;
-    v0 = *gpTextures;
-    v1 <<= 5;
-    a0 = v1 + v0;
-    v0 = lh(a0 + 0x4);
-    if (v0 != s1) goto loc_80023C00;
-    v0 = lhu(a0 + 0xA);
-    if (v0 != 0) goto loc_80023C00;
-    _thunk_I_CacheTex();
-loc_80023C00:
-    v0 = *gNumSides;
-    v0 = (i32(s2) < i32(v0));
-    s0 += 0x18;
-    if (v0 != 0) goto loc_80023B28;
-loc_80023C14:
-    ra = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
 }
