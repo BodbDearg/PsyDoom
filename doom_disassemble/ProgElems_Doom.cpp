@@ -300,7 +300,7 @@ static const ProgElem ELEMS[] = {
     { 0x80012F00, 0x80012F88, "G_PlayerFinishLevel",                    ProgElemType::FUNCTION },
     { 0x80012F88, 0x80013070, "G_PlayerReborn",                         ProgElemType::FUNCTION },
     { 0x80013070, 0x80013384, "G_DoReborn",                             ProgElemType::FUNCTION },
-    { 0x80013384, 0x80013394, "G_SetGameComplete",                      ProgElemType::FUNCTION },
+    { 0x80013384, 0x80013394, "G_CompleteLevel",                        ProgElemType::FUNCTION },
     { 0x80013394, 0x80013528, "G_InitNew",                              ProgElemType::FUNCTION },
     { 0x80013528, 0x80013714, "G_RunGame",                              ProgElemType::FUNCTION },
     { 0x80013714, 0x80013838, "G_PlayDemoPtr",                          ProgElemType::FUNCTION },

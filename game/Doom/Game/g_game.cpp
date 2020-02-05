@@ -420,7 +420,7 @@ loc_8001335C:
     return;
 }
 
-void G_SetGameComplete() noexcept {
+void G_CompleteLevel() noexcept {
     *gGameAction = ga_completed;
 }
 
