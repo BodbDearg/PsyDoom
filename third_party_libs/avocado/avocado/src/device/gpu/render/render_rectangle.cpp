@@ -45,16 +45,9 @@ INLINE void rectangle(GPU* gpu, const primitive::Rect& rect) {
         gpu->minDrawingX(pos.x),  //
         gpu->minDrawingY(pos.y)   //
     );
-    const ivec2 max(                            //
-    // Doom: temp fix for SPRT primitives rendering 1 pixel too short or tall.
-    // Not sure if this is the correct fix however.
-    #if DOOM_AVOCADO_MODS
+    const ivec2 max(                                //
         gpu->maxDrawingX(pos.x + rect.size.x - 1),  //
         gpu->maxDrawingY(pos.y + rect.size.y - 1)   //
-    #else
-        gpu->maxDrawingX(pos.x + rect.size.x),  //
-        gpu->maxDrawingY(pos.y + rect.size.y)   //
-    #endif
     );
 
     const ivec2 uv(                   //
@@ -73,15 +66,8 @@ INLINE void rectangle(GPU* gpu, const primitive::Rect& rect) {
     }
 
     int x, y, u, v;
-// Doom: temp fix for SPRT primitives rendering 1 pixel too short or tall.
-// Not sure if this is the correct fix however.
-#if DOOM_AVOCADO_MODS
     for (y = min.y, v = uv.y; y <= max.y; y++, v += vStep) {
         for (x = min.x, u = uv.x; x <= max.x; x++, u += uStep) {
-#else
-    for (y = min.y, v = uv.y; y < max.y; y++, v += vStep) {
-        for (x = min.x, u = uv.x; x < max.x; x++, u += uStep) {
-#endif
             PSXColor bg = VRAM[y][x];
             if (unlikely(checkMaskBeforeDraw)) {
                 if (bg.k) continue;

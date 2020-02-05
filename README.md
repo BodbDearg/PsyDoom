@@ -62,8 +62,6 @@ Longer term goals include support for Final Doom, proper modding support (I adde
 ## Current limitations/bugs
 - Sound is frequently out of sync with gameplay - not severely but sometimes it can be noticed. Probably due to emulation being either advanced too much or too little. Should eventually be fixed once sound engine advancement is tied to real-time.
 - Occasionally the game will freeze when loading maps.
-- The Avocado PSX emulator backend (used for hardware emulation and bios calls) seems to draw some sprites 1 pixel too small in some cases.
-    - This issue can be seen on menus and also with the sky.
 - Only the 'Greatest Hits' US version of PSX DOOM is supported, not Final DOOM or any other SKU.
 - Multiplayer does not work and will freeze the game.
 - The intro movie does not play yet.
