@@ -460,37 +460,40 @@ void emulate_timers(const int numCycles) noexcept {
 }
 
 void emulate_sound_if_required() noexcept {
-    size_t soundBufferSize;
+    while (true) {
+        size_t soundBufferSize;
 
-    {
-        std::unique_lock<std::mutex> lock(Sound::audioMutex);
-        soundBufferSize = Sound::buffer.size();
-    }
-
-    if (soundBufferSize >= spu::SPU::AUDIO_BUFFER_SIZE)
-        return;
-
-    saveMipsRegisters();
-    spu::SPU& spu = *gpSpu;
-    device::cdrom::CDROM& cdrom = *gpCdrom;
-
-    while (!spu.bufferReady) {
-        spu.step(&cdrom);
-        gpSystem->interrupt->step();
-
-        // If interrupts were generated, handle them.
-        // Expect there to be no interrupts always upon entering the emulator:
-        while (!canExitEmulator()) {
-            gpSystem->emulateFrame();
+        {
+            std::unique_lock<std::mutex> lock(Sound::audioMutex);
+            soundBufferSize = Sound::buffer.size();
         }
-    }
 
-    if (spu.bufferReady) {
-        spu.bufferReady = false;
-        Sound::appendBuffer(spu.audioBuffer.begin(), spu.audioBuffer.end());
-    }
+        // FIXME: temp hack - fill the sound buffers up a decent amount to prevent skipping
+        if (soundBufferSize >= 1024 * 2)
+            return;
+        
+        saveMipsRegisters();
+        spu::SPU& spu = *gpSpu;
+        device::cdrom::CDROM& cdrom = *gpCdrom;
 
-    restoreMipsRegisters();
+        while (!spu.bufferReady) {
+            spu.step(&cdrom);
+            gpSystem->interrupt->step();
+
+            // If interrupts were generated, handle them.
+            // Expect there to be no interrupts always upon entering the emulator:
+            while (!canExitEmulator()) {
+                gpSystem->emulateFrame();
+            }
+        }
+
+        if (spu.bufferReady) {
+            spu.bufferReady = false;
+            Sound::appendBuffer(spu.audioBuffer.begin(), spu.audioBuffer.end());
+        }
+
+        restoreMipsRegisters();
+    }
 }
 
 void emulate_cdrom() noexcept {
