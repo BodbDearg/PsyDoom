@@ -43,7 +43,19 @@ macro(compiler_specific_setup)
     # MSVC: statically link against the CRT.
     # Doing this for end user convenience to try and avoid missing CRT dll issues.
     if (COMPILER_MSVC)
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        # Use only debug when required, manually enable if need be - release much faster.
+        # TODO: make this configurable
+        if (true)
+            set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
+        else()
+            set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        endif()
+
+        # Disabling 'security check' and 'basic runtime checks' for debug.
+        # These slow down the debug build too much, especially 'basic runtime checks'.
+        # TODO: make these configurable
+        add_compile_options(/GS-)
+        STRING (REGEX REPLACE "/RTC[^ ]*" "" CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG}")
     endif()
 endmacro()
 
