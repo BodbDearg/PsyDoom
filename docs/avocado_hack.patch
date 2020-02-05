@@ -1,0 +1,23 @@
+A quick hack that can be applied to get Avocado loading PSXDOOM.EXE directly upon opening 'Doom.cue'.
+This hack is useful for debugging because it preserves the original addresses and offsets in .EXE.
+When PSXDOOM.EXE is launched via 'SLUS_000.77' the addresses shift somewhat.
+
+===============================================================================
+
+diff --git a/src/system_tools.cpp b/src/system_tools.cpp
+index 688cdae..52bbf11 100644
+--- a/src/system_tools.cpp
++++ b/src/system_tools.cpp
+@@ -88,6 +88,12 @@ void loadFile(std::unique_ptr<System>& sys, const std::string& path) {
+     if (disc) {
+         sys->cdrom->disc = std::move(disc);
+         sys->cdrom->setShell(false);
++        
++        sys->loadBios("C:\\Bin\\avocado_psx_emulator\\data\\bios\\SCPH1001.bin");
++        sys->cpu->breakpoints.emplace(0x80030000, mips::CPU::Breakpoint(true));
++        while (sys->state == System::State::run) sys->emulateFrame();
++        sys->loadExeFile(getFileContents("C:\\Bin\\avocado_psx_emulator\\data\\iso\\PSXDOOM.EXE"));
++        
+         toast(fmt::format("{} loaded", filenameExt));
+     } else {
+         toast(fmt::format("Cannot load {}", filenameExt));
