@@ -1,5 +1,36 @@
-6.1.0 - TBD
------------
+6.1.2 - 2019-12-11
+------------------
+
+* Fixed ABI compatibility with ``libfmt.so.6.0.0``
+  (`#1471 <https://github.com/fmtlib/fmt/issues/1471>`_).
+
+* Fixed handling types convertible to ``std::string_view``
+  (`#1451 <https://github.com/fmtlib/fmt/pull/1451>`_).
+  Thanks `@denizevrenci (Deniz Evrenci) <https://github.com/denizevrenci>`_.
+
+* Made CUDA test an opt-in enabled via the ``FMT_CUDA_TEST`` CMake option.
+
+* Fixed sign conversion warnings
+  (`#1440 <https://github.com/fmtlib/fmt/pull/1440>`_).
+  Thanks `@0x8000-0000 (Florin Iucha) <https://github.com/0x8000-0000>`_.
+
+6.1.1 - 2019-12-04
+------------------
+
+* Fixed shared library build on Windows
+  (`#1443 <https://github.com/fmtlib/fmt/pull/1443>`_,
+  `#1445 <https://github.com/fmtlib/fmt/issues/1445>`_,
+  `#1446 <https://github.com/fmtlib/fmt/pull/1446>`_,
+  `#1450 <https://github.com/fmtlib/fmt/issues/1450>`_).
+  Thanks `@egorpugin (Egor Pugin) <https://github.com/egorpugin>`_,
+  `@bbolli (Beat Bolli) <https://github.com/bbolli>`_.
+
+* Added a missing decimal point in exponent notation with trailing zeros.
+
+* Removed deprecated ``format_arg_store::TYPES``.
+
+6.1.0 - 2019-12-01
+------------------
 
 * {fmt} now formats IEEE 754 ``float`` and ``double`` using the shortest decimal
   representation with correct rounding by default:
@@ -92,7 +123,7 @@
 
   Thanks `@jeremyong (Jeremy Ong) <https://github.com/jeremyong>`_.
 
-* Changed formatting of octal zero with prefix from "0o0" to "0":
+* Changed formatting of octal zero with prefix from "00" to "0":
 
   .. code:: c++
 

@@ -45,6 +45,8 @@ System::System() {
 #if DOOM_AVOCADO_MODS
     vblankCounter = 0;
 #endif
+    
+    cycles = 0;
 }
 
 // Note: stupid static_casts and asserts are only to suppress MSVC warnings

@@ -6,24 +6,25 @@
 #include "device/cdrom/cdrom.h"
 #include "interpolation.h"
 #include "reverb.h"
+#include "sample.h"
 #include "sound/adpcm.h"
 #include "system.h"
 #include "utils/file.h"
 #include "utils/math.h"
+#include "config.h"
 
 using namespace spu;
 
 SPU::SPU(System* sys) : sys(sys) {
+    verbose = config["debug"]["log"]["spu"];
     ram.fill(0);
     audioBufferPos = 0;
     captureBufferIndex = 0;
 }
 
 void SPU::step(device::cdrom::CDROM* cdrom) {
-    float sumLeft = 0, sumReverbLeft = 0;
-    float sumRight = 0, sumReverbRight = 0;
-
-    int16_t cdLeft = 0, cdRight = 0;
+    Sample sumLeft = 0, sumReverbLeft = 0;
+    Sample sumRight = 0, sumReverbRight = 0;
 
     noise.doNoise(control.noiseFrequencyStep, control.noiseFrequencyShift);
 
@@ -33,43 +34,38 @@ void SPU::step(device::cdrom::CDROM* cdrom) {
         if (voice.state == Voice::State::Off) continue;
 
         if (voice.decodedSamples.empty()) {
-            auto readAddress = voice.currentAddress._reg * 8;
-            if (control.irqEnable && readAddress == irqAddress._reg * 8) {
-                SPUSTAT._reg |= 1 << 6;
-                sys->interrupt->trigger(interrupt::SPU);
-            }
-            voice.decodedSamples = ADPCM::decode(&ram[readAddress], voice.prevSample);
+            auto block = readBlock(voice.currentAddress._reg * 8);
+            voice.decodedSamples = ADPCM::decode(block.data(), voice.prevSample);
             voice.flagsParsed = false;
         }
 
         voice.processEnvelope();
 
         uint32_t step = voice.sampleRate._reg;
-        if (voice.pitchModulation && v > 0 && !forcePitchModulationOff) {
-            int32_t factor = static_cast<int32_t>(floatToInt(voices[v - 1].sample) + 0x8000);
+        if (voice.pitchModulation && v > 0) {
+            int32_t factor = voices[v - 1].sample + 0x8000;
             step = (step * factor) >> 15;
             step &= 0xffff;
         }
         if (step > 0x3fff) step = 0x4000;
 
-        float sample;
-
+        Sample sample;
         if (voice.mode == Voice::Mode::Noise) {
-            sample = intToFloat(noise.getNoiseLevel());
-        } else if (forceInterpolationOff) {
-            sample = intToFloat(voice.decodedSamples[voice.counter.sample]);
+            sample = noise.getNoiseLevel();
         } else {
-            sample = intToFloat(spu::interpolate(voice, voice.counter.sample, voice.counter.index));
+            sample = interpolate(voice, voice.counter.sample, voice.counter.index);
         }
-        sample *= intToFloat(voice.adsrVolume._reg);
+        sample *= voice.adsrVolume._reg;
         voice.sample = sample;
 
-        sumLeft += sample * voice.volume.getLeft();
-        sumRight += sample * voice.volume.getRight();
+        if (voice.enabled) {
+            sumLeft += sample * voice.volume.getLeft();
+            sumRight += sample * voice.volume.getRight();
 
-        if (voice.reverb) {
-            sumReverbLeft += sample * voice.volume.getLeft();
-            sumReverbRight += sample * voice.volume.getRight();
+            if (voice.reverb) {
+                sumReverbLeft += sample * voice.volume.getLeft();
+                sumReverbRight += sample * voice.volume.getRight();
+            }
         }
 
         voice.counter._reg += step;
@@ -91,11 +87,27 @@ void SPU::step(device::cdrom::CDROM* cdrom) {
         }
     }
 
-    sumLeft *= mainVolume.getLeft();
-    sumRight *= mainVolume.getRight();
+    // Mix with cd
+    Sample cdLeft = 0, cdRight = 0;
+    if (!cdrom->audio.empty()) {
+        std::tie(cdLeft, cdRight) = cdrom->audio.front();
+
+        // TODO: Refactor to use ring buffer
+        cdrom->audio.pop_front();
+
+        if (control.cdEnable) {
+            sumLeft += cdLeft * cdVolume.getLeft();
+            sumRight += cdRight * cdVolume.getRight();
+
+            if (control.cdReverb) {
+                sumReverbLeft += cdLeft * cdVolume.getLeft();
+                sumReverbRight += cdRight * cdVolume.getRight();
+            }
+        }
+    }
 
     if (!forceReverbOff && control.masterReverb) {
-        static float reverbLeft = 0.f, reverbRight = 0.f;
+        static int16_t reverbLeft = 0, reverbRight = 0;
         static int reverbCounter = 0;
         if (reverbCounter++ % 2 == 0) {
             std::tie(reverbLeft, reverbRight) = doReverb(this, std::make_tuple(sumReverbLeft, sumReverbRight));
@@ -104,34 +116,16 @@ void SPU::step(device::cdrom::CDROM* cdrom) {
         sumRight += reverbRight;
     }
 
-    // Mix with cd
-    if (!cdrom->audio.first.empty()) {
-        cdLeft = cdrom->audio.first.front();
-        cdRight = cdrom->audio.second.front();
+    sumLeft *= std::min<int16_t>(0x3fff, mainVolume.getLeft()) * 2;
+    sumRight *= std::min<int16_t>(0x3fff, mainVolume.getRight()) * 2;
 
-        float left = intToFloat(cdLeft);
-        float right = intToFloat(cdRight);
-
-        // TODO: Refactor to use ring buffer
-        cdrom->audio.first.pop_front();
-        cdrom->audio.second.pop_front();
-
-        // 0x80 - full volume
-        // 0xff - 2x volume
-        float l_l = cdrom->volumeLeftToLeft / 128.f;
-        float l_r = cdrom->volumeLeftToRight / 128.f;
-        float r_l = cdrom->volumeRightToLeft / 128.f;
-        float r_r = cdrom->volumeRightToRight / 128.f;
-
-        sumLeft += left * l_l;
-        sumRight += left * l_r;
-
-        sumLeft += right * r_l;
-        sumRight += right * r_r;
+    if (!control.unmute) {
+        sumLeft = 0;
+        sumRight = 0;
     }
 
-    audioBuffer[audioBufferPos] = floatToInt(clamp(sumLeft, -1.f, 1.f));
-    audioBuffer[audioBufferPos + 1] = floatToInt(clamp(sumRight, -1.f, 1.f));
+    audioBuffer[audioBufferPos] = sumLeft;
+    audioBuffer[audioBufferPos + 1] = sumRight;
 
     audioBufferPos += 2;
     if (audioBufferPos >= AUDIO_BUFFER_SIZE) {
@@ -139,13 +133,17 @@ void SPU::step(device::cdrom::CDROM* cdrom) {
         bufferReady = true;
     }
 
-    uint32_t cdLeftAddress = captureBufferIndex;
-    uint32_t cdRightAddress = 0x400 + captureBufferIndex;
+    const uint32_t cdLeftAddress = 0x000 + captureBufferIndex;
+    const uint32_t cdRightAddress = 0x400 + captureBufferIndex;
+    const uint32_t voice1Address = 0x800 + captureBufferIndex;
+    const uint32_t voice3Address = 0xC00 + captureBufferIndex;
 
     captureBufferIndex = (captureBufferIndex + 2) & 0x3ff;
 
     memoryWrite16(cdLeftAddress, cdLeft);
     memoryWrite16(cdRightAddress, cdRight);
+    memoryWrite16(voice1Address, voices[1].sample);
+    memoryWrite16(voice3Address, voices[3].sample);
 }
 
 uint8_t SPU::readVoice(uint32_t address) const {
@@ -182,6 +180,25 @@ uint8_t SPU::readVoice(uint32_t address) const {
 void SPU::writeVoice(uint32_t address, uint8_t data) {
     int voice = address / 0x10;
     int reg = address % 0x10;
+
+    const auto getRegInfo = [&](int reg) {
+        switch (reg) {
+            case 3: return fmt::format("Volume: 0x{:08x}", voices[voice].volume._reg);
+            case 5: return fmt::format("Sample rate: 0x{:04x}", voices[voice].sampleRate._reg);
+            case 7: return fmt::format("Start address: 0x{:04x}", voices[voice].startAddress._reg);
+            case 11: return fmt::format("ADSR: 0x{:08x}", voices[voice].adsr._reg);
+            case 13: return fmt::format("ADSR Volume: 0x{:04}", voices[voice].adsrVolume._reg);
+            case 15: return fmt::format("Repeat address: 0x{:04}", voices[voice].repeatAddress._reg);
+            default: return std::string();
+        }
+    };
+
+    if (verbose) {
+        auto regInfo = getRegInfo(reg);
+        if (!regInfo.empty()) {
+            fmt::print("[SPU] W Voice {:2d}, {}\n", voice + 1, regInfo);
+        }
+    }
 
     switch (reg) {
         case 0:
@@ -234,6 +251,8 @@ uint8_t SPU::read(uint32_t address) {
     }()
 
     address += BASE_ADDRESS;
+
+    if (verbose) fmt::print("[SPU] R 0x{:08x}\n", address);
 
     if (address >= 0x1f801c00 && address < 0x1f801c00 + 0x10 * VOICE_COUNT) {
         return readVoice(address - 0x1f801c00);
@@ -299,9 +318,7 @@ uint8_t SPU::read(uint32_t address) {
     }
 
     if (address >= 0x1f801dae && address <= 0x1f801daf) {  // SPUSTAT
-        SPUSTAT._reg &= 0x0FC0;
-        SPUSTAT._reg |= (control._reg & 0x3F);
-        return SPUSTAT.read(address - 0x1f801dae);
+        return status._byte[address - 0x1f801dae];
     }
 
     if (address >= 0x1f801db8 && address <= 0x1f801dbb) {  // Current Main Volume L/R ?? (used by MGS)
@@ -335,6 +352,15 @@ void SPU::write(uint32_t address, uint8_t data) {
         writeVoice(address - 0x1f801c00, data);
         return;
     }
+    if (verbose) {
+        if (address >= 0x1f801da8 && address <= 0x1f801da9) {
+        } else if (address >= 0x1f801d88 && address <= 0x1f801d8b) {
+        } else if (address >= 0x1f801d8c && address <= 0x1f801d8f) {
+        } else if (address >= 0x1f801d98 && address <= 0x1f801d9b) {
+        } else {
+            fmt::print("[SPU] W 0x{:08x}: 0x{:02x}\n", address, data);
+        }
+    }
 
     if (address >= 0x1f801d80 && address <= 0x1f801d83) {  // Main Volume L/R
         mainVolume.write(address - 0x1f801d80, data);
@@ -348,14 +374,16 @@ void SPU::write(uint32_t address, uint8_t data) {
 
     if (address >= 0x1f801d88 && address <= 0x1f801d8b) {  // Voices Key On
         FOR_EACH_VOICE(address - 0x1f801d88, [&](int v, bool bit) {
-            if (bit) voices[v].keyOn();
+            if (bit) voices[v].keyOn(sys->cycles);
+            if (bit && verbose) fmt::print("[SPU] W Voice {:2d}, KeyOn\n", v + 1);
         });
         return;
     }
 
     if (address >= 0x1f801d8c && address <= 0x1f801d8f) {  // Voices Key Off
         FOR_EACH_VOICE(address - 0x1f801d8c, [&](int v, bool bit) {
-            if (bit) voices[v].keyOff();
+            if (bit) voices[v].keyOff(sys->cycles);
+            if (bit && verbose) fmt::print("[SPU] W Voice {:2d}, KeyOff\n", v + 1);
         });
         return;
     }
@@ -373,7 +401,10 @@ void SPU::write(uint32_t address, uint8_t data) {
     }
 
     if (address >= 0x1f801d98 && address <= 0x1f801d9b) {  // Voice Reverb
-        FOR_EACH_VOICE(address - 0x1f801d98, [&](int v, bool bit) { voices[v].reverb = bit; });
+        FOR_EACH_VOICE(address - 0x1f801d98, [&](int v, bool bit) {
+            voices[v].reverb = bit;
+            if (bit && verbose) fmt::print("[SPU] W Voice {:2d}, Reverb On\n", v + 1);
+        });
         return;
     }
 
@@ -411,8 +442,12 @@ void SPU::write(uint32_t address, uint8_t data) {
     }
 
     if (address >= 0x1f801daa && address <= 0x1f801dab) {  // SPUCNT
-        SPUSTAT._reg &= ~(1 << 6);
         control._byte[address - 0x1f801daa] = data;
+
+        status.currentMode = control._reg & 0x3f;
+        if (!control.irqEnable) {
+            status.irqFlag = false;
+        }
         return;
     }
 
@@ -445,7 +480,7 @@ void SPU::memoryWrite8(uint32_t address, uint8_t data) {
     ram[address] = data;
 
     if (control.irqEnable && address == irqAddress._reg * 8) {
-        SPUSTAT._reg |= 1 << 6;
+        status.irqFlag = true;
         sys->interrupt->trigger(interrupt::SPU);
     }
 }
@@ -453,6 +488,17 @@ void SPU::memoryWrite8(uint32_t address, uint8_t data) {
 void SPU::memoryWrite16(uint32_t address, uint16_t data) {
     memoryWrite8(address, (uint8_t)data);
     memoryWrite8(address + 1, (uint8_t)(data >> 8));
+}
+
+std::array<uint8_t, 16> SPU::readBlock(uint32_t address) {
+    if (control.irqEnable && address == irqAddress._reg * 8) {
+        status.irqFlag = true;
+        sys->interrupt->trigger(interrupt::SPU);
+    }
+
+    std::array<uint8_t, 16> buf;
+    std::copy(ram.begin() + address, ram.begin() + address + 16, buf.begin());
+    return buf;
 }
 
 void SPU::dumpRam() {

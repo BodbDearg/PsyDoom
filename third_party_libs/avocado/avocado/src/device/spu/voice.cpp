@@ -24,6 +24,8 @@ Voice::Voice() {
     loadRepeatAddress = false;
 
     prevSample[0] = prevSample[1] = 0;
+
+    enabled = true;
 }
 
 Envelope Voice::getCurrentPhase() {
@@ -63,7 +65,7 @@ void Voice::processEnvelope() {
             cycles *= 4;
         }
         if (e.direction == Dir::Decrease) {
-            step = (int)(ceilf((float)adsrVolume._reg / (float)0x8000) * (float)step);
+            step = step * adsrVolume._reg / 0x8000;
         }
     }
 
@@ -83,15 +85,17 @@ void Voice::processEnvelope() {
 void Voice::parseFlags(uint8_t flags) {
     flagsParsed = true;
 
-    if (flags & ADPCM::Flag::Start) {
+    // Mark beginning of the loop
+    if (flags & ADPCM::Flag::LoopStart) {
         repeatAddress = currentAddress;
     }
 
-    if (flags & ADPCM::Flag::End) {
-        // Jump to Repeat address AFTER playing current sample
+    // Jump to Repeat address AFTER playing current sample
+    if (flags & ADPCM::Flag::LoopEnd) {
         loopEnd = true;
         loadRepeatAddress = true;
 
+        // if Repeat == 0 - force Release
         if (!(flags & ADPCM::Flag::Repeat) && mode != Mode::Noise) {
             adsrVolume._reg = 0;
             keyOff();
@@ -99,7 +103,9 @@ void Voice::parseFlags(uint8_t flags) {
     }
 }
 
-void Voice::keyOn() {
+void Voice::keyOn(uint64_t cycles) {
+    decodedSamples.clear();
+    counter.sample = 0;
     adsrVolume._reg = 0;
 
     // INFO: Square games load repeatAddress before keyOn,
@@ -107,7 +113,7 @@ void Voice::keyOn() {
     // ignoreLoadRepeatAddress is set to true on write to repeatAddress register
     if (!ignoreLoadRepeatAddress) {
         repeatAddress._reg = startAddress._reg;
-        ignoreLoadRepeatAddress = false;
+        ignoreLoadRepeatAddress = true;
     }
 
     currentAddress._reg = startAddress._reg;
@@ -115,9 +121,21 @@ void Voice::keyOn() {
     loopEnd = false;
     loadRepeatAddress = false;
     adsrWaitCycles = 0;
+
+    prevSample[0] = prevSample[1] = 0;
+    prevDecodedSamples.clear();
+
+    this->cycles = cycles;
 }
 
-void Voice::keyOff() {
+void Voice::keyOff(uint64_t cycles) {
+    // SPU seems to ignore KeyOff events that were fired close to KeyOn.
+    // Value of 384 cycles was picked by listening to Dragon Ball Final Bout - BGM 29
+    // and comparing it to recording from real HW.
+    // It's not verified by any tests for now
+    if (cycles != 0 && cycles - this->cycles < 384) {
+        return;
+    }
     state = Voice::State::Release;
     adsrWaitCycles = 0;
 }

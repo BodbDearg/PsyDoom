@@ -11,7 +11,6 @@
 #include "utils/file.h"
 
 bool showGraphicsOptionsWindow = false;
-bool showBiosWindow = false;
 bool showControllerSetupWindow = false;
 
 // TODO: Move these windows to separate classes
@@ -155,73 +154,6 @@ void graphicsOptionsWindow() {
     ImGui::End();
 }
 
-void biosSelectionWindow() {
-    static bool biosesFound = false;
-    static std::vector<std::string> bioses;
-    static int selectedBios = 0;
-
-    try {
-        if (!biosesFound) {
-            bioses.clear();
-            auto dir = fs::directory_iterator("data/bios");
-            for (auto& e : dir) {
-                if (!fs::is_regular_file(e)) continue;
-
-                auto path = e.path().string();
-                auto ext = getExtension(path);
-                std::transform(ext.begin(), ext.end(), ext.begin(), tolower);
-
-                if (ext == "bin" || ext == "rom") {
-                    bioses.push_back(path);
-                }
-            }
-            biosesFound = true;
-
-            int i = 0;
-            for (auto it = bioses.begin(); it != bioses.end(); ++it, ++i) {
-                if (*it == config["bios"]) {
-                    selectedBios = i;
-                    break;
-                }
-            }
-        }
-    } catch (fs::filesystem_error& err) {
-        fmt::print("{}", err.what());
-    }
-
-    ImGui::Begin("BIOS", &showBiosWindow, ImGuiWindowFlags_AlwaysAutoResize);
-    if (bioses.empty()) {
-        ImGui::Text(
-            "BIOS directory is empty.\n"
-            "You need one of BIOS files (eg. SCPH1001.bin) placed in data/bios directory.\n"
-            ".bin and .rom extensions are recognised.");
-    } else {
-        ImGui::ListBox(
-            "", &selectedBios,
-            [](void* data, int idx, const char** out_text) {
-                const std::vector<std::string>* v = (std::vector<std::string>*)data;
-                *out_text = v->at(idx).c_str();
-                return true;
-            },
-            (void*)&bioses, (int)bioses.size());
-
-        if (ImGui::Button("Select", ImVec2(-1, 0)) && selectedBios < (int)bioses.size()) {
-            std::string biosPath = bioses[selectedBios];
-// SDL treats relative paths (not starting with /) as relative to app internal storage path
-// Storing path as absolute is needed for file to be found
-#ifdef ANDROID
-            biosPath = fs::absolute(biosPath).string();
-#endif
-            config["bios"] = biosPath;
-
-            biosesFound = false;
-            showBiosWindow = false;
-            bus.notify(Event::System::HardReset{});
-        }
-    }
-    ImGui::End();
-}
-
 void drawImage(const std::optional<Image> image, float w = 0.f, float h = 0.f) {
     if (auto img = image) {
         ImVec2 size;
@@ -302,15 +234,13 @@ void controllerSetupWindow() {
 
     const auto controllerTypes = magic_enum::enum_entries<ControllerType>();
 
-    const std::array<const char*, 5> defaults = {{
-        "Defaults ...",
-        "Clear",
-        "Keyboard (Numpad)",
-        "Mouse",
-        "Controller 1",
+    const std::array<const char*, 7> defaults = {{
+        "Defaults ...", "Clear", "Keyboard (WADX)", "Keyboard (Numpad)", "Mouse", "Controller 1",
+        "Controller 2",  // TODO: Add autodetection for game controllers
     }};
 
-    ImGui::Begin("Controller", &showControllerSetupWindow, ImVec2(500.f, 320.f), ImGuiWindowFlags_NoScrollbar);
+    ImGui::SetNextWindowSize(ImVec2(500.f, 320.f), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Controller", &showControllerSetupWindow, ImGuiWindowFlags_NoScrollbar);
 
     ImGui::PushItemWidth(-1);
     if (ImGui::BeginCombo("##combo_controller", comboString.c_str())) {
@@ -360,9 +290,11 @@ void controllerSetupWindow() {
             auto& keysConfig = config["controller"][std::to_string(selectedController)]["keys"];
             switch (pos) {
                 case 1: keysConfig = DefaultKeyBindings::none(); break;
-                case 2: keysConfig = DefaultKeyBindings::keyboard_numpad(); break;
-                case 3: keysConfig = DefaultKeyBindings::mouse(); break;
-                case 4: keysConfig = DefaultKeyBindings::controller(); break;
+                case 2: keysConfig = DefaultKeyBindings::keyboard_wadx(); break;
+                case 3: keysConfig = DefaultKeyBindings::keyboard_numpad(); break;
+                case 4: keysConfig = DefaultKeyBindings::mouse(); break;
+                case 5: keysConfig = DefaultKeyBindings::controller(1); break;
+                case 6: keysConfig = DefaultKeyBindings::controller(2); break;
             }
         }
         ImGui::PopItemWidth();

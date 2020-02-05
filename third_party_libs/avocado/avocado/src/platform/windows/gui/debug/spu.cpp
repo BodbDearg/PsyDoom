@@ -4,19 +4,27 @@
 #include <vector>
 #include "device/spu/spu.h"
 #include "system.h"
+#include <SDL.h>
+
+namespace ImGui {
+template <typename... Args>
+void Fmt(const char* fmt, Args... args) {
+    ImGui::TextUnformatted(fmt::format(fmt, args...).c_str());
+}
+};  // namespace ImGui
 
 namespace gui::debug {
 using namespace spu;
 
 void channelsInfo(spu::SPU* spu, bool parseValues) {
-    const int COL_NUM = 11;
+    const int COL_NUM = 12;
     float columnsWidth[COL_NUM] = {0};
+    int n = 0;
 
     auto column = [&](const std::string& str) {
-        static int n = 0;
         ImVec2 size = ImGui::CalcTextSize(str.c_str());
-        size.x += 8.f;
-        if (size.x > columnsWidth[n]) columnsWidth[n] = size.x;
+        float width = std::max(size.x + 8.f, 48.f);
+        if (width > columnsWidth[n]) columnsWidth[n] = width;
         ImGui::TextUnformatted(str.c_str());
         ImGui::NextColumn();
         if (++n >= COL_NUM) n = 0;
@@ -29,7 +37,7 @@ void channelsInfo(spu::SPU* spu, bool parseValues) {
             case Voice::State::Sustain: return "  S ";
             case Voice::State::Release: return "   R";
             case Voice::State::Off:
-            default: return "";
+            default: return "    ";
         }
     };
 
@@ -66,6 +74,7 @@ void channelsInfo(spu::SPU* spu, bool parseValues) {
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[1]);
     ImGui::Columns(COL_NUM, nullptr, false);
 
+    column(" ");
     column("Ch");
     column("State");
     column("VolL");
@@ -86,12 +95,52 @@ void channelsInfo(spu::SPU* spu, bool parseValues) {
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.f, 1.f, 1.f, 1.f));
         }
 
-        column(fmt::format("{}", i + 1));
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+        if (ImGui::Checkbox(fmt::format("##enabled{}", i + 1).c_str(), &v.enabled)) {
+            if (ImGui::GetIO().KeyShift) {
+                for (int j = 0; j < spu::SPU::VOICE_COUNT; j++) {
+                    if (j != i) spu->voices[j].enabled = false;
+                }
+                v.enabled = true;
+            }
+            if (ImGui::GetIO().KeyCtrl) {
+                for (int j = 0; j < spu::SPU::VOICE_COUNT; j++) {
+                    if (j != i) spu->voices[j].enabled = true;
+                }
+                v.enabled = false;
+            }
+        }
+        ImGui::PopStyleVar();
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::TextUnformatted("Shift + click - mute other channels");
+            ImGui::TextUnformatted("Ctrl  + click - play other channels");
+            ImGui::EndTooltip();
+        }
+        columnsWidth[n++] = ImGui::GetItemRectSize().x + 4.f;
+        ImGui::NextColumn();
+
+        column(fmt::format("{:2d}", i + 1));
 
         column(mapState(v.state));
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        ImU32 frameColor = ImGui::GetColorU32(ImGui::GetStyleColorVec4(ImGuiCol_FrameBg));
+        if (v.state == Voice::State::Off) {
+            frameColor = ImGui::GetColorU32(ImVec4(0.4f, 0.4f, 0.4f, .25f));
+        }
+        int barHeight = 12;  // TODO: Do not hardcode!
+        auto bar = [&](float w) {
+            ImVec2 src = ImGui::GetCursorScreenPos();
+            drawList->AddRectFilled(src, ImVec2(src.x + ImGui::GetColumnWidth(n) * w, src.y + barHeight), frameColor);
+        };
         if (parseValues) {
-            column(fmt::format("{:.0f}", v.volume.getLeft() * 100.f));
-            column(fmt::format("{:.0f}", v.volume.getRight() * 100.f));
+            bar(intToFloat(v.volume.getLeft()));
+            column(fmt::format("{:.0f}", intToFloat(v.volume.getLeft()) * 100.f));
+
+            bar(intToFloat(v.volume.getRight()));
+            column(fmt::format("{:.0f}", intToFloat(v.volume.getRight()) * 100.f));
+
+            bar(intToFloat(v.adsrVolume._reg));
             column(fmt::format("{:.0f}", (v.adsrVolume._reg / static_cast<float>(0x7fff)) * 100.f));
         } else {
             column(fmt::format("{:04x}", v.volume.left));
@@ -100,10 +149,22 @@ void channelsInfo(spu::SPU* spu, bool parseValues) {
         }
 
         if (parseValues) {
-            column(fmt::format("{:5d} Hz", static_cast<int>(std::min((uint16_t)0x1000, v.sampleRate._reg) / 4096.f * 44100.f)));
+            column(fmt::format("{:5.0f} Hz", v.sampleRate._reg / 4096.f * 44100.f));
         } else {
             column(fmt::format("{:04x}", v.sampleRate._reg));
         }
+        ImVec2 src = ImGui::GetCursorScreenPos();
+
+        float startP = v.startAddress._reg * 8 / (float)spu::SPU::RAM_SIZE;
+        float currP = v.currentAddress._reg * 8 / (float)spu::SPU::RAM_SIZE;
+        float repeatP = v.repeatAddress._reg * 8 / (float)spu::SPU::RAM_SIZE;
+        drawList->AddRectFilled(ImVec2(src.x + ImGui::GetColumnWidth(n) * startP, src.y),
+                                ImVec2(src.x + ImGui::GetColumnWidth(n) * repeatP, src.y + barHeight), frameColor);
+
+        ImU32 lineColor = ImGui::GetColorU32(ImVec4(0.8f, 0.8f, 0.8f, 1.f));
+        drawList->AddLine(ImVec2(src.x + ImGui::GetColumnWidth(n) * currP, src.y),
+                          ImVec2(src.x + ImGui::GetColumnWidth(n) * currP, src.y + barHeight), lineColor);
+
         column(fmt::format("{:04x}", v.currentAddress._reg));
         column(fmt::format("{:04x}", v.startAddress._reg));
         column(fmt::format("{:04x}", v.repeatAddress._reg));
@@ -206,11 +267,24 @@ void registersInfo(spu::SPU* spu) {
     ImGui::Text("CD     volume: %08x", spu->cdVolume._reg);
     ImGui::Text("Ext    volume: %08x", spu->extVolume._reg);
     ImGui::Text("Reverb volume: %08x", spu->reverbVolume._reg);
-    ImGui::Text("Control: 0x%04x     %-10s   %-4s   %-8s   %-3s %s %s", spu->control._reg, spu->control.spuEnable ? "SPU enable" : "",
-                spu->control.mute ? "" : "Mute", spu->control.cdEnable ? "Audio CD" : "", spu->control.irqEnable ? "IRQ" : "",
-                spu->control.masterReverb ? "Reverb" : "", spu->control.cdReverb ? "CD_Reverb" : "");
-
-    ImGui::Text("Status:  0x%0x04  %-3s", spu->SPUSTAT._reg, (spu->SPUSTAT._reg & (1 << 6)) ? "IRQ" : "");
+    ImGui::Fmt("Control: 0x{:04x}  {:10s} {:4s} {:8s} {:3s} {:6s} {:9s}",  //
+               spu->control._reg,                                          //
+               spu->control.spuEnable ? "SPU enable" : "",                 //
+               spu->control.unmute ? "" : "Mute",                          //
+               spu->control.cdEnable ? "Audio CD" : "",                    //
+               spu->control.irqEnable ? "IRQ" : "",                        //
+               spu->control.masterReverb ? "Reverb" : "",                  //
+               spu->control.cdReverb ? "CD_Reverb" : ""                    //
+    );
+    ImGui::Fmt("Status:  0x{:04x}  CaptureBuffer={:6s} {:8s} {:8s} {:8s} {:9s} {:3s}",  //
+               spu->status._reg,                                                        //
+               spu->status.captureBufferHalf ? "Second" : "First",                      //
+               spu->status.dmaBusy ? "DMA_Busy" : "",                                   //
+               spu->status.dmaReadRequest ? "DMA_Rreq" : "",                            //
+               spu->status.dmaWriteRequest ? "DMA_Wreq" : "",                           //
+               spu->status.dmaReadWriteRequest ? "DMA_RWreq" : "",                      //
+               spu->status.irqFlag ? "IRQ" : ""                                         //
+    );
 
     ImGui::Text("IRQ Address: 0x%08x", spu->irqAddress._reg);
     ImGui::PopStyleVar();
@@ -225,11 +299,6 @@ void renderSamples(spu::SPU* spu) {
     ImGui::PlotLines("Preview", samples.data(), (int)samples.size(), 0, nullptr, -1.0f, 1.0f, ImVec2(400, 80));
 }
 
-void debugTools(spu::SPU* spu) {
-    ImGui::Checkbox("Force interpolation off", &spu->forceInterpolationOff);
-    ImGui::Checkbox("Force Pitch Modulation off", &spu->forcePitchModulationOff);
-}
-
 void SPU::spuWindow(spu::SPU* spu) {
     const auto treeFlags = ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_DefaultOpen;
     static bool parseValues = true;
@@ -239,7 +308,6 @@ void SPU::spuWindow(spu::SPU* spu) {
     if (ImGui::TreeNodeEx("Channels", treeFlags)) channelsInfo(spu, parseValues);
     if (ImGui::TreeNodeEx("Reverb", treeFlags)) reverbInfo(spu);
     if (ImGui::TreeNodeEx("Registers", treeFlags)) registersInfo(spu);
-    if (ImGui::TreeNodeEx("Debug tools", treeFlags)) debugTools(spu);
 
     ImGui::Checkbox("Parse values", &parseValues);
     renderSamples(spu);

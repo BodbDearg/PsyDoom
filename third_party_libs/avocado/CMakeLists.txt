@@ -99,6 +99,7 @@ set(SOURCE_FILES
     "${SRC_DIR}/device/spu/regs.h"
     "${SRC_DIR}/device/spu/reverb.cpp"
     "${SRC_DIR}/device/spu/reverb.h"
+    "${SRC_DIR}/device/spu/sample.h"
     "${SRC_DIR}/device/spu/spu.cpp"
     "${SRC_DIR}/device/spu/spu.h"
     "${SRC_DIR}/device/spu/voice.cpp"

@@ -17,7 +17,7 @@ struct Voice {
         };
         uint32_t _reg = 0;
     };
-    Volume volume;
+    SweepVolume volume;
     Reg16 sampleRate;
     Reg16 startAddress;
     ADSR adsr;
@@ -37,7 +37,10 @@ struct Voice {
     bool loadRepeatAddress;
     bool flagsParsed;
 
-    float sample;  // Used for Pitch Modulation
+    int16_t sample;  // Used for Pitch Modulation
+
+    bool enabled;     // Allows for muting individual channels
+    uint64_t cycles;  // For dismissing KeyOff write right after KeyOn
 
     // ADPCM decoding
     int32_t prevSample[2];
@@ -50,8 +53,8 @@ struct Voice {
     void processEnvelope();
     void parseFlags(uint8_t flags);
 
-    void keyOn();
-    void keyOff();
+    void keyOn(uint64_t cycles = 0);
+    void keyOff(uint64_t cycles = 0);
 
     template <class Archive>
     void serialize(Archive& ar) {
@@ -70,6 +73,7 @@ struct Voice {
         ar(loadRepeatAddress);
         ar(flagsParsed);
         ar(sample);
+        ar(cycles);
         ar(prevSample);
         ar(decodedSamples);
         ar(prevDecodedSamples);

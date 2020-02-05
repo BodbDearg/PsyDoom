@@ -29,6 +29,8 @@ struct SPU {
     static const size_t AUDIO_BUFFER_SIZE = 28 * 2 * 4;
 #endif
 
+    int verbose;
+
     std::array<Voice, VOICE_COUNT> voices;
 
     Volume mainVolume;
@@ -41,7 +43,7 @@ struct SPU {
     uint32_t currentDataAddress;
     DataTransferControl dataTransferControl;
     Control control;
-    Reg16 SPUSTAT;
+    Status status;
 
     uint32_t captureBufferIndex;
 
@@ -52,9 +54,7 @@ struct SPU {
 
     std::array<uint8_t, RAM_SIZE> ram;
 
-    bool forceReverbOff = false;           // Debug use
-    bool forceInterpolationOff = false;    // Debug use
-    bool forcePitchModulationOff = false;  // Debug use
+    bool forceReverbOff = false;  // Debug use
     Reg16 reverbBase;
     std::array<Reg16, 32> reverbRegisters;
     uint32_t reverbCurrentAddress;
@@ -75,7 +75,7 @@ struct SPU {
 
     void memoryWrite8(uint32_t address, uint8_t data);
     void memoryWrite16(uint32_t address, uint16_t data);
-
+    std::array<uint8_t, 16> readBlock(uint32_t address);
     void dumpRam();
 
     template <class Archive>
@@ -90,7 +90,7 @@ struct SPU {
         ar(currentDataAddress);
         ar(dataTransferControl._reg);
         ar(control._reg);
-        ar(SPUSTAT);
+        ar(status._reg);
         ar(captureBufferIndex);
         ar(noise);
         ar(_keyOn);
