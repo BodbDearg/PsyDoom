@@ -319,7 +319,7 @@ extern void ST_Init() noexcept;
 extern void ST_Start() noexcept;
 extern void ST_Ticker() noexcept;
 extern void ST_Drawer() noexcept;
-extern void I_DrawNumber() noexcept;
+extern void _thunk_I_DrawNumber() noexcept;
 extern void I_DrawStringSmall() noexcept;
 extern void I_DrawPausedOverlay() noexcept;
 extern void I_UpdatePalette() noexcept;
@@ -1204,7 +1204,7 @@ namespace PsxVm {
         { 0x80038610, &ST_Start },
         { 0x80038688, &ST_Ticker },
         { 0x80038B0C, &ST_Drawer },
-        { 0x8003A3C8, &I_DrawNumber },
+        { 0x8003A3C8, &_thunk_I_DrawNumber },
         { 0x8003A9D4, &I_DrawStringSmall },
         { 0x8003AD04, &I_DrawPausedOverlay },
         { 0x8003B0F0, &I_UpdatePalette },

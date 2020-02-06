@@ -826,15 +826,15 @@ loc_800391D4:
 loc_800391DC:
     a0 = 0x1C;                                          // Result = 0000001C
     a1 = 0xCC;                                          // Result = 000000CC
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     a0 = 0x47;                                          // Result = 00000047
     a2 = lw(s2 + 0x24);
     a1 = 0xCC;                                          // Result = 000000CC
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     a0 = 0xA8;                                          // Result = 000000A8
     a2 = lw(s2 + 0x28);
     a1 = 0xCC;                                          // Result = 000000CC
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     t4 = 0;                                             // Result = 00000000
     s5 = 0x1F800000;                                    // Result = 1F800000
     s5 += 0x200;                                        // Result = 1F800200
@@ -1751,7 +1751,7 @@ loc_8003A098:
     a0 = 0xE1;                                          // Result = 000000E1
     a2 = lw(s2 + 0x64);
     a1 = 0xCC;                                          // Result = 000000CC
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
 loc_8003A0A8:
     v0 = lw(gp + 0xB50);                                // Load from: gbDrawStatusBarFace (80078130)
     t6 = 0x4000000;                                     // Result = 04000000

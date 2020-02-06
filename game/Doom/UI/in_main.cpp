@@ -547,7 +547,7 @@ loc_8003CEE4:
     a0 = 0xAA;                                          // Result = 000000AA
     a2 = lw(gp + 0xCC0);                                // Load from: 800782A0
     a1 = 0x41;                                          // Result = 00000041
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     a0 = 0x35;                                          // Result = 00000035
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D10;                                       // Result = STR_Items[0] (80077D10)
@@ -560,7 +560,7 @@ loc_8003CEE4:
     a0 = 0xAA;                                          // Result = 000000AA
     a2 = lw(gp + 0xCCC);                                // Load from: 800782AC
     a1 = 0x5B;                                          // Result = 0000005B
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     a0 = 0x1A;                                          // Result = 0000001A
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D18;                                       // Result = STR_Secrets[0] (80077D18)
@@ -573,7 +573,7 @@ loc_8003CEE4:
     a0 = 0xAA;                                          // Result = 000000AA
     a2 = lw(gp + 0x9FC);                                // Load from: 80077FDC
     a1 = 0x75;                                          // Result = 00000075
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     v0 = *gNextMap;
     v0 = (i32(v0) < 0x3C);
     a0 = -1;                                            // Result = FFFFFFFF
@@ -706,7 +706,7 @@ loc_8003D0B4:
     at += v0;
     a2 = lw(at);
     a1 = 0x4F;                                          // Result = 0000004F
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     v0 = *gCurPlayerIndex;
     a2 = 0x80080000;                                    // Result = 80080000
     a2 -= 0x7D60;                                       // Result = 800782A0
@@ -717,7 +717,7 @@ loc_8003D0B4:
 loc_8003D224:
     a2 = lw(a2);
     a1 = 0x4F;                                          // Result = 0000004F
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     a0 = 0x35;                                          // Result = 00000035
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D10;                                       // Result = STR_Items[0] (80077D10)
@@ -739,7 +739,7 @@ loc_8003D224:
     at += v0;
     a2 = lw(at);
     a1 = 0x65;                                          // Result = 00000065
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     v0 = *gCurPlayerIndex;
     a2 = 0x80080000;                                    // Result = 80080000
     a2 -= 0x7D54;                                       // Result = 800782AC
@@ -750,7 +750,7 @@ loc_8003D224:
 loc_8003D2AC:
     a2 = lw(a2);
     a1 = 0x65;                                          // Result = 00000065
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     a0 = 0x1A;                                          // Result = 0000001A
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D18;                                       // Result = STR_Secrets[0] (80077D18)
@@ -772,7 +772,7 @@ loc_8003D2AC:
     at += v0;
     a2 = lw(at);
     a1 = 0x7B;                                          // Result = 0000007B
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     v0 = *gCurPlayerIndex;
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7FDC;                                       // Result = 80077FDC
@@ -783,7 +783,7 @@ loc_8003D2AC:
 loc_8003D334:
     a2 = lw(a2);
     a1 = 0x7B;                                          // Result = 0000007B
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     v0 = *gNextMap;
     v0 = (i32(v0) < 0x3C);
     a0 = -1;                                            // Result = FFFFFFFF
@@ -965,7 +965,7 @@ loc_8003D554:
     at += v0;
     a2 = lw(at);
     a1 = 0x8A;                                          // Result = 0000008A
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     v0 = *gCurPlayerIndex;
     a2 = 0x80080000;                                    // Result = 80080000
     a2 -= 0x7D98;                                       // Result = 80078268
@@ -976,7 +976,7 @@ loc_8003D554:
 loc_8003D658:
     a2 = lw(a2);
     a1 = 0x8A;                                          // Result = 0000008A
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
     v0 = *gNextMap;
     v0 = (i32(v0) < 0x3C);
     a0 = -1;                                            // Result = FFFFFFFF

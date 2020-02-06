@@ -587,7 +587,7 @@ loc_80036398:
     a0 = 0x94;                                          // Result = 00000094
 loc_800363C8:
     a1 = lh(gp + 0x656);                                // Load from: MainMenu_Episode_YPos (80077C36)
-    I_DrawNumber();
+    _thunk_I_DrawNumber();
 loc_800363D4:
     a1 = lh(gp + 0x658);                                // Load from: MainMenu_Difficulty_YPos (80077C38)
     a2 = 0x80010000;                                    // Result = 80010000
