@@ -172,7 +172,7 @@ loc_8003D940:
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = s1;
     a2 = s2;
-    I_DrawString();
+    _thunk_I_DrawString();
     s1 += 0xE;
     v0 = lw(gp + 0xB30);                                // Load from: 80078110
     s0++;
@@ -184,7 +184,7 @@ loc_8003D968:
     a2 = 0x800B0000;                                    // Result = 800B0000
     a2 -= 0x6FB8;                                       // Result = 800A9048
     a1 = s1;
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = *gbGamePaused;
     if (v0 == 0) goto loc_8003D998;
     I_DrawPausedOverlay();
@@ -901,7 +901,7 @@ loc_8003E3A0:
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = s0;
     a2 = s2;
-    I_DrawString();
+    _thunk_I_DrawString();
     s0 += 0xE;
     v0 = lw(gp + 0xB30);                                // Load from: 80078110
     s1++;
@@ -1206,7 +1206,7 @@ loc_8003E88C:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x1734;                                       // Result = STR_CastOfCharacters[0] (80011734)
     a1 = 0x14;                                          // Result = 00000014
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = lw(gp + 0xCA8);                                // Load from: 80078288
     a0 = -1;                                            // Result = FFFFFFFF
     v0 <<= 3;
@@ -1216,7 +1216,7 @@ loc_8003E88C:
     a2 = lw(at);
     a1 = 0xD0;                                          // Result = 000000D0
 loc_8003E8C0:
-    I_DrawString();
+    _thunk_I_DrawString();
 loc_8003E8C8:
     v0 = *gbGamePaused;
     if (v0 == 0) goto loc_8003E8E4;

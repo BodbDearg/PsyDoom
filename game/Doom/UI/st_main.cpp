@@ -12,6 +12,11 @@
 #include "PsyQ/LIBC2.h"
 #include "PsyQ/LIBGPU.h"
 
+// The main UI texture atlas for the game.
+// This is loaded into the 1st available texture page and kept loaded at all times after that.
+const VmPtr<texture_t> gTex_STATUS(0x800A94E8);
+
+// Status bar message
 const VmPtr<VmPtr<const char>>  gpStatusBarMsgStr(0x80098740);
 const VmPtr<int32_t>            gStatusBarMsgTicsLeft(0x80098744);
 

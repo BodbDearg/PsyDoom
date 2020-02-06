@@ -714,7 +714,7 @@ loc_80037828:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x15A8;                                       // Result = STR_Password[0] (800115A8)
     a1 = 0x14;                                          // Result = 00000014
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = lw(gp + 0x660);                                // Load from: gNumPasswordCharsEntered (80077C40)
     s2 = 0;                                             // Result = 00000000
     sb(0, sp + 0x19);
@@ -734,7 +734,7 @@ loc_80037864:
     v0 = lbu(at);
     s0 += 0xE;
     sb(v0, sp + 0x18);
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = lw(gp + 0x660);                                // Load from: gNumPasswordCharsEntered (80077C40)
     s2++;
     v0 = (i32(s2) < i32(v0));
@@ -755,7 +755,7 @@ loc_800378C4:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7CD0;                                       // Result = STR_EmptyPasswordChar[0] (80077CD0)
     a1 = 0xA0;                                          // Result = 000000A0
-    I_DrawString();
+    _thunk_I_DrawString();
     s2++;
     v0 = (i32(s2) < 0xA);
     s0 += 0xE;
@@ -768,7 +768,7 @@ loc_800378E8:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x15B4;                                       // Result = STR_InvalidPassword[0] (800115B4)
     a1 = 0xC8;                                          // Result = 000000C8
-    I_DrawString();
+    _thunk_I_DrawString();
 loc_8003790C:
     I_SubmitGpuCmds();
     I_DrawPresent();

@@ -541,7 +541,7 @@ loc_80036258:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x1568;                                       // Result = STR_GameMode[0] (80011568)
     a0 = 0x4A;                                          // Result = 0000004A
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0x5A;                                          // Result = 0000005A
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x3CDC;                                       // Result = STR_MenuOpt_SinglePlayer[0] (80073CDC)
@@ -551,7 +551,7 @@ loc_80036258:
     a1 += 0x14;
     a2 <<= 4;
     a2 += v0;
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
     {
@@ -565,21 +565,21 @@ loc_80036258:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x1574;                                       // Result = STR_UltimateDoom[0] (80011574)
     a0 = 0x4A;                                          // Result = 0000004A
-    I_DrawString();
+    _thunk_I_DrawString();
     goto loc_800363D4;
 loc_8003637C:
     a1 = lh(gp + 0x656);                                // Load from: MainMenu_Episode_YPos (80077C36)
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7CA4;                                       // Result = STR_Doom2[0] (80077CA4)
     a0 = 0x4A;                                          // Result = 0000004A
-    I_DrawString();
+    _thunk_I_DrawString();
     goto loc_800363D4;
 loc_80036398:
     a1 = lh(gp + 0x656);                                // Load from: MainMenu_Episode_YPos (80077C36)
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7CAC;                                       // Result = STR_Level[0] (80077CAC)
     a0 = 0x4A;                                          // Result = 0000004A
-    I_DrawString();
+    _thunk_I_DrawString();
     a2 = *gStartMapOrEpisode;
     v0 = (i32(a2) < 0xA);
     a0 = 0x88;                                          // Result = 00000088
@@ -593,7 +593,7 @@ loc_800363D4:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x1584;                                       // Result = STR_Difficulty[0] (80011584)
     a0 = 0x4A;                                          // Result = 0000004A
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0x5A;                                          // Result = 0000005A
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x3D0C;                                       // Result = STR_MenuOpt_IAmAWimp[0] (80073D0C)
@@ -602,12 +602,12 @@ loc_800363D4:
     a1 += 0x14;
     a2 <<= 4;
     a2 += v0;
-    I_DrawString();
+    _thunk_I_DrawString();
     a1 = lh(gp + 0x65A);                                // Load from: MainMenu_Options_YPos (80077C3A)
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7CB4;                                       // Result = STR_Options[0] (80077CB4)
     a0 = 0x4A;                                          // Result = 0000004A
-    I_DrawString();
+    _thunk_I_DrawString();
     I_SubmitGpuCmds();
     I_DrawPresent();
     ra = lw(sp + 0x24);

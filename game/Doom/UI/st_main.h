@@ -2,6 +2,9 @@
 
 #include "PsxVm/VmPtr.h"
 
+struct texture_t;
+
+extern const VmPtr<texture_t>           gTex_STATUS;
 extern const VmPtr<VmPtr<const char>>   gpStatusBarMsgStr;
 extern const VmPtr<int32_t>             gStatusBarMsgTicsLeft;
 

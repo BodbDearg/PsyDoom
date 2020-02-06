@@ -3,6 +3,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_main.h"
+#include "Doom/UI/st_main.h"
 #include "i_drawcmds.h"
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
@@ -18,23 +19,85 @@ struct fontchar_t {
     std::uint8_t h;
 };
 
-static constexpr fontchar_t BIG_FONT_DIGITS[] = {
-    {  0,  195, 11, 16  },  // 0
-    {  12, 195, 11, 16  },  // 1
-    {  24, 195, 11, 16  },  // 2
-    {  36, 195, 11, 16  },  // 3
-    {  48, 195, 11, 16  },  // 4
-    {  60, 195, 11, 16  },  // 5
-    {  72, 195, 11, 16  },  // 6
-    {  84, 195, 11, 16  },  // 7
-    {  96, 195, 11, 16  },  // 8
-    { 108, 195, 11, 16  }   // 9
+static constexpr fontchar_t BIG_FONT_CHARS[] = {
+	{   0, 195,  11,  16 }, // 0 - 0
+	{  12, 195,  11,  16 }, // 1 - 1
+	{  24, 195,  11,  16 }, // 2 - 2
+	{  36, 195,  11,  16 }, // 3 - 3
+	{  48, 195,  11,  16 }, // 4 - 4
+	{  60, 195,  11,  16 }, // 5 - 5
+	{  72, 195,  11,  16 }, // 6 - 6
+	{  84, 195,  11,  16 }, // 7 - 7
+	{  96, 195,  11,  16 }, // 8 - 8
+	{ 108, 195,  11,  16 }, // 9 - 9
+	{ 232, 195,  11,  16 }, // - - 10
+	{ 120, 195,  11,  15 }, // % - 11
+	{   0, 211,   7,  16 }, // ! - 12
+	{   8, 211,   7,  16 }, // . - 13
+	{  16, 211,  15,  16 }, // A - 14
+	{  32, 211,  13,  16 }, // B - 15
+	{  46, 211,  12,  16 }, // C - 16
+	{  60, 211,  13,  16 }, // D - 17
+	{  74, 211,  13,  16 }, // E - 18
+	{  88, 211,  13,  16 }, // F - 19
+	{ 102, 211,  13,  16 }, // G - 20
+	{ 116, 211,  13,  16 }, // H - 21
+	{ 130, 211,   6,  16 }, // I - 22
+	{ 136, 211,  12,  16 }, // J - 23
+	{ 148, 211,  14,  16 }, // K - 24
+	{ 162, 211,  13,  16 }, // L - 25
+	{ 176, 211,  15,  16 }, // M - 26
+	{ 192, 211,  15,  16 }, // N - 27
+	{ 208, 211,  13,  16 }, // O - 28
+	{ 222, 211,  13,  16 }, // P - 29
+	{ 236, 211,  13,  16 }, // Q - 30
+	{   0, 227,  13,  16 }, // R - 31
+	{  14, 227,  13,  16 }, // S - 32
+	{  28, 227,  14,  16 }, // T - 33
+	{  42, 227,  13,  16 }, // U - 34
+	{  56, 227,  15,  16 }, // V - 35
+	{  72, 227,  15,  16 }, // W - 36
+	{  88, 227,  15,  16 }, // X - 37
+	{ 104, 227,  13,  16 }, // Y - 38
+	{ 118, 227,  13,  16 }, // Z - 39
+	{ 132, 230,  13,  13 }, // a - 40
+	{ 146, 230,  12,  13 }, // b - 41
+	{ 158, 230,  11,  13 }, // c - 42
+	{ 170, 230,  11,  13 }, // d - 43
+    { 182, 230,  10,  13 }, // e - 44
+	{ 192, 230,  11,  13 }, // f - 45
+	{ 204, 230,  11,  13 }, // g - 46
+	{ 216, 230,  12,  13 }, // h - 47
+	{ 228, 230,   5,  13 }, // i - 48
+	{ 234, 230,  10,  13 }, // j - 49
+	{   0, 243,  12,  13 }, // k - 50
+	{  12, 243,   9,  13 }, // l - 51
+	{  22, 243,  13,  13 }, // m - 52
+	{  36, 243,  13,  13 }, // n - 53
+	{  50, 243,  11,  13 }, // o - 54
+	{  62, 243,  11,  13 }, // p - 55
+	{  74, 243,  11,  13 }, // q - 56
+	{  86, 243,  11,  13 }, // r - 57
+	{  98, 243,  12,  13 }, // s - 58
+	{ 112, 243,  11,  13 }, // t - 59
+	{ 124, 243,  11,  13 }, // u - 60
+	{ 136, 243,  13,  13 }, // v - 61
+	{ 150, 243,  13,  13 }, // w - 62
+	{ 164, 243,  13,  13 }, // x - 63
+	{ 178, 243,  13,  13 }, // y - 64
+	{ 192, 243,  13,  13 }  // z - 65
 };
 
-static constexpr fontchar_t BIG_FONT_MINUS         = { 232, 195,  11,  16 };    // -
-static constexpr fontchar_t BIG_FONT_PERCENT       = { 120, 195,  11,  15 };    // %
-static constexpr fontchar_t BIG_FONT_EXCLAMATION   = {   0, 211,   7,  16 };    // !
-static constexpr fontchar_t BIG_FONT_PERIOD        = { 232, 195,  11,  16 };    // .
+// Starting indices for various individual and groups of big font chars
+enum : int32_t {
+    BIG_FONT_DIGITS         = 0,
+    BIG_FONT_MINUS          = 10,
+    BIG_FONT_PERCENT        = 11,
+    BIG_FONT_EXCLAMATION    = 12,
+    BIG_FONT_PERIOD         = 13,
+    BIG_FONT_UCASE_ALPHA    = 14,
+    BIG_FONT_LCASE_ALPHA    = 40
+};
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw a number using the large font at the specified pixel location
@@ -47,7 +110,14 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
         // Set these primitive properties prior to drawing rather than allowing them to be undefined as in the original code.
         // I think this drawing code just happened to work because of the types of operations which occurred just before it.
         // They must have produced primitive state changes that we actually desired for this function...
-        // Relying on external draw code and ordering however is brittle, so be explicit here and set exactly what we need:
+        // Relying on external draw code and ordering however is brittle, so be explicit here and set exactly what we need:    
+        {
+            // Set the draw mode to remove the current texture window and texture page to the STATUS graphic
+            DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, nullptr);        
+            I_AddPrim(&drawModePrim);
+        }
+
         LIBGPU_SetSprt(spritePrim);
         LIBGPU_setRGB0(spritePrim, 127, 127, 127);
         spritePrim.clut = gPaletteClutIds[UIPAL];
@@ -92,7 +162,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
         const int32_t digit = digits[digitIdx];
 
         spritePrim.x0 = (int16_t) curX;
-        spritePrim.tu0 = BIG_FONT_DIGITS[digit].u;
+        spritePrim.tu0 = BIG_FONT_CHARS[BIG_FONT_DIGITS + digit].u;
         I_AddPrim(&spritePrim);
 
         curX -= 11;
@@ -101,7 +171,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
     // Print the minus symbol if the value was negative
     if (bNegativeVal) {
         spritePrim.x0 = (int16_t) curX;
-        spritePrim.tu0 = BIG_FONT_EXCLAMATION.u;
+        spritePrim.tu0 = BIG_FONT_CHARS[BIG_FONT_EXCLAMATION].u;
         I_AddPrim(&spritePrim);
     }
 }
@@ -354,7 +424,7 @@ loc_8003AD64:
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = 0x28;                                          // Result = 00000028
     a2 = sp + 0x10;
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = 0x3C;                                          // Result = 0000003C
     a2 = *gMapNumToCheatWarpTo;
@@ -362,7 +432,7 @@ loc_8003AD64:
     v0 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
     a2 <<= 5;
     a2 += v0;
-    I_DrawString();
+    _thunk_I_DrawString();
     goto loc_8003B0DC;
 loc_8003ADCC:
     v0 = t3 + 4;                                        // Result = 00000018
@@ -654,598 +724,116 @@ loc_8003B210:
     return;
 }
 
-void I_GetStringXPosToCenter() noexcept {
-    a2 = 0;                                             // Result = 00000000
-    v1 = lbu(a0);
-    a0++;
-    if (v1 == 0) goto loc_8003B30C;
-    t2 = 0x25;                                          // Result = 00000025
-    t1 = 0x21;                                          // Result = 00000021
-    t0 = 0x2E;                                          // Result = 0000002E
-    a3 = 0x2D;                                          // Result = 0000002D
-loc_8003B25C:
-    v0 = v1 - 0x41;
-    v0 = (v0 < 0x1A);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 - 0x33;
-        if (bJump) goto loc_8003B274;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// For the given string returns the 'x' coordinate to draw it in the center of the screen.
+// Assumes the big font is being used.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static int32_t I_GetStringXPosToCenter(const char* const str) noexcept {
+    // Go through the entire string and get the width of all characters that would be drawn
+    int32_t width = 0;
+    const char* pCurChar = str;
+
+    for (char c = *pCurChar; c != 0; ++pCurChar, c = *pCurChar) {
+        // Figure out which font character to use, and y positioning
+        int32_t charIdx = 0;
+
+        if ((c >= 'A') && (c <= 'Z')) {
+            charIdx = BIG_FONT_UCASE_ALPHA + (c - 'A');
+        } else if ((c >= 'a') && (c <= 'z')) {
+            charIdx = BIG_FONT_LCASE_ALPHA + (c - 'a');
+        } else if ((c >= '0') && (c <= '9')) {
+            charIdx = BIG_FONT_DIGITS + (c - '0');
+        } else if (c == '%') {
+            charIdx = BIG_FONT_PERCENT;
+        } else if (c == '!') {
+            charIdx = BIG_FONT_EXCLAMATION;
+        } else if (c == '.') {
+            charIdx = BIG_FONT_PERIOD;
+        } else if (c == '-') {
+            charIdx = BIG_FONT_MINUS;
+        } else {
+            width += 6;     // Whitespace
+            continue;
+        }
+
+        const fontchar_t& fontchar = BIG_FONT_CHARS[charIdx];
+        width += fontchar.w;
     }
-    v1 = v0 << 2;
-    goto loc_8003B2E4;
-loc_8003B274:
-    v0 = v1 - 0x61;
-    v0 = (v0 < 0x1A);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 - 0x39;
-        if (bJump) goto loc_8003B28C;
-    }
-    v1 = v0 << 2;
-    goto loc_8003B2E4;
-loc_8003B28C:
-    a1 = v1 - 0x30;
-    v0 = (a1 < 0xA);
-    if (v0 == 0) goto loc_8003B2A4;
-    v1 = a1 << 2;
-    goto loc_8003B2E4;
-loc_8003B2A4:
-    if (v1 != t2) goto loc_8003B2B4;
-    v1 = 0x2C;                                          // Result = 0000002C
-    goto loc_8003B2E4;
-loc_8003B2B4:
-    if (v1 != t1) goto loc_8003B2C4;
-    v1 = 0x30;                                          // Result = 00000030
-    goto loc_8003B2E4;
-loc_8003B2C4:
-    if (v1 != t0) goto loc_8003B2D4;
-    v1 = 0x34;                                          // Result = 00000034
-    goto loc_8003B2E4;
-loc_8003B2D4:
-    {
-        const bool bJump = (v1 == a3);
-        v1 = 0x28;                                      // Result = 00000028
-        if (bJump) goto loc_8003B2E4;
-    }
-    a2 += 6;
-    goto loc_8003B2FC;
-loc_8003B2E4:
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3F86;                                       // Result = BigFontTexcoords_0[2] (80073F86)
-    at += v1;
-    v0 = lbu(at);
-    a2 += v0;
-loc_8003B2FC:
-    v1 = lbu(a0);
-    a0++;
-    if (v1 != 0) goto loc_8003B25C;
-loc_8003B30C:
-    v0 = 0x100;                                         // Result = 00000100
-    v0 -= a2;
-    v1 = v0 >> 31;
-    v0 += v1;
-    v0 = u32(i32(v0) >> 1);
-    return;
+
+    // Figure out an x position to center this string in the middle of the screen
+    return (SCREEN_W - width) / 2;
 }
 
-void I_DrawString() noexcept {
-loc_8003B324:
-    sp -= 0x30;
-    sw(s1, sp + 0x1C);
-    s1 = a0;
-    sw(s4, sp + 0x28);
-    s4 = a1;
-    sw(s2, sp + 0x20);
-    s2 = a2;
-    sw(s0, sp + 0x18);
-    s0 = 0x1F800000;                                    // Result = 1F800000
-    s0 += 0x200;                                        // Result = 1F800200
-    a0 = s0;                                            // Result = 1F800200
-    a1 = 0;                                             // Result = 00000000
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lhu(a3 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
-    a2 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x2C);
-    sw(s3, sp + 0x24);
-    sw(0, sp + 0x10);
-    _thunk_LIBGPU_SetDrawMode();
-    s0 += 4;                                            // Result = 1F800204
-    t3 = 0xFF0000;                                      // Result = 00FF0000
-    t3 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t7 = 0x80080000;                                    // Result = 80080000
-    t7 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    t8 = t7 & t3;                                       // Result = 00086550
-    t6 = 0x4000000;                                     // Result = 04000000
-    t5 = 0x80000000;                                    // Result = 80000000
-    t4 = -1;                                            // Result = FFFFFFFF
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    t1 = t0 << 2;
-    t2 = t1 + 4;
-loc_8003B3AC:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = (a0 < v0);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draw the given string using the big font at the given pixel location.
+// If '-1' is specified for the x coordinate, the string is drawn centered horizontally in the middle of the screen.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexcept {
+    // Set the draw mode to remove the current texture window and texture page to the STATUS graphic
     {
-        const bool bJump = (v0 != 0);
-        v0 = t1 + a0;
-        if (bJump) goto loc_8003B414;
+        DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
+        LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, nullptr);        
+        I_AddPrim(&drawModePrim);
     }
-    v0 += 4;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    v0 = (v0 < v1);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t2 + a0;
-        if (bJump) goto loc_8003B4D8;
+
+    // Some basic setup of the sprite primitive for all characters
+    SPRT& spritePrim = *(SPRT*) getScratchAddr(128);
+
+    LIBGPU_SetSprt(spritePrim);
+    LIBGPU_SetShadeTex(&spritePrim, true);
+    spritePrim.clut = gPaletteClutIds[UIPAL];
+
+    #if PC_PSX_DOOM_MODS
+        // The color RGB value was undefined for this function in the original code - would use whatever the previous value was.
+        // This is a little brittle so ensure we are not dependent on external draw operations being done in a certain order:
+        LIBGPU_setRGB0(spritePrim, 127, 127, 127);
+    #endif
+
+    // Decide on starting x position: can either be so the string is centered in the screen, or just the value verbatim
+    int32_t curX = (x != -1) ? x : I_GetStringXPosToCenter(str);
+
+    // Draw all the characters in the string
+    const char* pCurChar = str;
+
+    for (char c = *pCurChar; c != 0; ++pCurChar, c = *pCurChar) {
+        // Figure out which font character to use, and y positioning
+        int32_t curY = y;
+        int32_t charIdx = 0;
+
+        if ((c >= 'A') && (c <= 'Z')) {
+            charIdx = BIG_FONT_UCASE_ALPHA + (c - 'A');
+        } else if ((c >= 'a') && (c <= 'z')) {
+            charIdx = BIG_FONT_LCASE_ALPHA + (c - 'a');
+            curY += 3;
+        } else if ((c >= '0') && (c <= '9')) {
+            charIdx = BIG_FONT_DIGITS + (c - '0');
+        } else if (c == '%') {
+            charIdx = BIG_FONT_PERCENT;
+        } else if (c == '!') {
+            charIdx = BIG_FONT_EXCLAMATION;
+        } else if (c == '.') {
+            charIdx = BIG_FONT_PERIOD;
+        } else if (c == '-') {
+            charIdx = BIG_FONT_MINUS;
+        } else {
+            curX += 6;      // Whitespace
+            continue;
+        }
+
+        // Populate and submit the sprite primitive
+        const fontchar_t& fontchar = BIG_FONT_CHARS[charIdx];
+
+        LIBGPU_setXY0(spritePrim, (int16_t) curX, (int16_t) curY);
+        LIBGPU_setUV0(spritePrim, fontchar.u, fontchar.v);
+        LIBGPU_setWH(spritePrim, fontchar.w, fontchar.h);
+	
+        I_AddPrim(&spritePrim);
+
+        // Move past the drawn character
+        curX += fontchar.w;
     }
-    v0 = lw(a2);
-    v1 = 0xFF000000;                                    // Result = FF000000
-    at = 0x80070000;                                    // Result = 80070000
-    sw(t7, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    v0 &= v1;
-    v0 |= t8;
-    sw(v0, a2);
-    sb(0, a2 + 0x3);
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-loc_8003B414:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = t1 + a0;
-    v0 += 4;
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_8003B4C8;
-    if (v1 == a0) goto loc_8003B3AC;
-loc_8003B438:
-    v0 = lw(gp + 0x700);                                // Load from: GPU_REG_GP1 (80077CE0)
-    v0 = lw(v0);
-    v0 &= t6;
-    if (v0 == 0) goto loc_8003B3AC;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= t3;
-    v0 |= t5;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t4) goto loc_8003B4A4;
-    a3 = -1;                                            // Result = FFFFFFFF
-loc_8003B488:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x6FC);                                // Load from: GPU_REG_GP0 (80077CDC)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a3) goto loc_8003B488;
-loc_8003B4A4:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 == v0) goto loc_8003B3AC;
-    goto loc_8003B438;
-loc_8003B4C8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 += t2;
-loc_8003B4D8:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    a1 = 0xFF0000;                                      // Result = 00FF0000
-    a1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    a0 = 0xFF000000;                                    // Result = FF000000
-    v1 = lw(a2);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 &= a0;
-    v0 &= a1;
-    v1 |= v0;
-    sw(v1, a2);
-    sb(t0, a2 + 0x3);
-    t0--;
-    v0 = -1;                                            // Result = FFFFFFFF
-    a2 += 4;
-    if (t0 == v0) goto loc_8003B538;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_8003B520:
-    v0 = lw(s0);
-    s0 += 4;
-    t0--;
-    sw(v0, a2);
-    a2 += 4;
-    if (t0 != v1) goto loc_8003B520;
-loc_8003B538:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 == v0) goto loc_8003B5F0;
-    t2 = 0x4000000;                                     // Result = 04000000
-    a3 = 0xFF0000;                                      // Result = 00FF0000
-    a3 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t1 = 0x80000000;                                    // Result = 80000000
-    t0 = -1;                                            // Result = FFFFFFFF
-loc_8003B568:
-    v0 = lw(gp + 0x700);                                // Load from: GPU_REG_GP1 (80077CE0)
-    v0 = lw(v0);
-    v0 &= t2;
-    if (v0 == 0) goto loc_8003B5F0;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= a3;
-    v0 |= t1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t0) goto loc_8003B5D4;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_8003B5B8:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x6FC);                                // Load from: GPU_REG_GP0 (80077CDC)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a2) goto loc_8003B5B8;
-loc_8003B5D4:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 != v0) goto loc_8003B568;
-loc_8003B5F0:
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lhu(v1 - 0x6F5C);                              // Load from: gPaletteClutId_UI (800A90A4)
-    v0 = 4;                                             // Result = 00000004
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x203);                                 // Store to: 1F800203
-    v0 = 0x65;                                          // Result = 00000065
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x207);                                 // Store to: 1F800207
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v1, at + 0x20E);                                 // Store to: 1F80020E
-    a1 = 0;                                             // Result = 00000000
-    if (s1 != v0) goto loc_8003B708;
-    v1 = lbu(s2);
-    a2 = s2 + 1;
-    if (v1 == 0) goto loc_8003B6F4;
-    t2 = 0x25;                                          // Result = 00000025
-    t1 = 0x21;                                          // Result = 00000021
-    t0 = 0x2E;                                          // Result = 0000002E
-    a3 = 0x2D;                                          // Result = 0000002D
-loc_8003B644:
-    v0 = v1 - 0x41;
-    v0 = (v0 < 0x1A);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 - 0x33;
-        if (bJump) goto loc_8003B65C;
-    }
-    v1 = v0 << 2;
-    goto loc_8003B6CC;
-loc_8003B65C:
-    v0 = v1 - 0x61;
-    v0 = (v0 < 0x1A);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 - 0x39;
-        if (bJump) goto loc_8003B674;
-    }
-    v1 = v0 << 2;
-    goto loc_8003B6CC;
-loc_8003B674:
-    a0 = v1 - 0x30;
-    v0 = (a0 < 0xA);
-    if (v0 == 0) goto loc_8003B68C;
-    v1 = a0 << 2;
-    goto loc_8003B6CC;
-loc_8003B68C:
-    if (v1 != t2) goto loc_8003B69C;
-    v1 = 0x2C;                                          // Result = 0000002C
-    goto loc_8003B6CC;
-loc_8003B69C:
-    if (v1 != t1) goto loc_8003B6AC;
-    v1 = 0x30;                                          // Result = 00000030
-    goto loc_8003B6CC;
-loc_8003B6AC:
-    if (v1 != t0) goto loc_8003B6BC;
-    v1 = 0x34;                                          // Result = 00000034
-    goto loc_8003B6CC;
-loc_8003B6BC:
-    {
-        const bool bJump = (v1 == a3);
-        v1 = 0x28;                                      // Result = 00000028
-        if (bJump) goto loc_8003B6CC;
-    }
-    a1 += 6;
-    goto loc_8003B6E4;
-loc_8003B6CC:
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3F86;                                       // Result = BigFontTexcoords_0[2] (80073F86)
-    at += v1;
-    v0 = lbu(at);
-    a1 += v0;
-loc_8003B6E4:
-    v1 = lbu(a2);
-    a2++;
-    if (v1 != 0) goto loc_8003B644;
-loc_8003B6F4:
-    v0 = 0x100;                                         // Result = 00000100
-    v0 -= a1;
-    v1 = v0 >> 31;
-    v0 += v1;
-    s1 = u32(i32(v0) >> 1);
-loc_8003B708:
-    t0 = lbu(s2);
-    s2++;
-    if (t0 == 0) goto loc_8003BA9C;
-    s3 = 0x1F800000;                                    // Result = 1F800000
-    s3 += 0x200;                                        // Result = 1F800200
-    t4 = 0xFF0000;                                      // Result = 00FF0000
-    t4 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t9 = 0x80080000;                                    // Result = 80080000
-    t9 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    t8 = t9 & t4;                                       // Result = 00086550
-    s0 = 0x4000000;                                     // Result = 04000000
-    t7 = 0x80000000;                                    // Result = 80000000
-    t6 = -1;                                            // Result = FFFFFFFF
-loc_8003B740:
-    v0 = t0 - 0x41;
-    v0 = (v0 < 0x1A);
-    a0 = s4;
-    if (v0 == 0) goto loc_8003B75C;
-    v0 = t0 - 0x33;
-    t0 = v0 << 2;
-    goto loc_8003B7DC;
-loc_8003B75C:
-    v0 = t0 - 0x61;
-    v0 = (v0 < 0x1A);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = t0 - 0x39;
-        if (bJump) goto loc_8003B778;
-    }
-    t0 = v0 << 2;
-    a0 += 3;
-    goto loc_8003B7DC;
-loc_8003B778:
-    v1 = t0 - 0x30;
-    v0 = (v1 < 0xA);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x25;                                      // Result = 00000025
-        if (bJump) goto loc_8003B790;
-    }
-    t0 = v1 << 2;
-    goto loc_8003B7DC;
-loc_8003B790:
-    {
-        const bool bJump = (t0 != v0);
-        v0 = 0x21;                                      // Result = 00000021
-        if (bJump) goto loc_8003B7A0;
-    }
-    t0 = 0x2C;                                          // Result = 0000002C
-    goto loc_8003B7DC;
-loc_8003B7A0:
-    {
-        const bool bJump = (t0 != v0);
-        v0 = 0x2E;                                      // Result = 0000002E
-        if (bJump) goto loc_8003B7B0;
-    }
-    t0 = 0x30;                                          // Result = 00000030
-    goto loc_8003B7DC;
-loc_8003B7B0:
-    {
-        const bool bJump = (t0 != v0);
-        v0 = 0x2D;                                      // Result = 0000002D
-        if (bJump) goto loc_8003B7C0;
-    }
-    t0 = 0x34;                                          // Result = 00000034
-    goto loc_8003B7DC;
-loc_8003B7C0:
-    {
-        const bool bJump = (t0 == v0);
-        t0 = 0x28;                                      // Result = 00000028
-        if (bJump) goto loc_8003B7DC;
-    }
-    s1 += 6;
-    goto loc_8003BA8C;
-loc_8003B7D0:
-    v0 = t2 + 4;
-    v0 += a0;
-    goto loc_8003B990;
-loc_8003B7DC:
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(s1, at + 0x208);                                 // Store to: 1F800208
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(a0, at + 0x20A);                                 // Store to: 1F80020A
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3F84;                                       // Result = BigFontTexcoords_0[0] (80073F84)
-    at += t0;
-    v0 = lbu(at);
-    t1 = 0x1F800000;                                    // Result = 1F800000
-    t1 = lbu(t1 + 0x203);                               // Load from: 1F800203
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20C);                                 // Store to: 1F80020C
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3F85;                                       // Result = BigFontTexcoords_0[1] (80073F85)
-    at += t0;
-    v0 = lbu(at);
-    t3 = s3 + 4;                                        // Result = 1F800204
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3F86;                                       // Result = BigFontTexcoords_0[2] (80073F86)
-    at += t0;
-    v0 = lbu(at);
-    t2 = t1 << 2;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x210);                                 // Store to: 1F800210
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3F87;                                       // Result = BigFontTexcoords_0[3] (80073F87)
-    at += t0;
-    v0 = lbu(at);
-    t5 = t2 + 4;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x212);                                 // Store to: 1F800212
-loc_8003B868:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = (a0 < v0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t2 + a0;
-        if (bJump) goto loc_8003B8CC;
-    }
-    v0 += 4;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    v0 = (v0 < v1);
-    v1 = 0xFF000000;                                    // Result = FF000000
-    if (v0 != 0) goto loc_8003B7D0;
-    v0 = lw(a3);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(t9, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    v0 &= v1;
-    v0 |= t8;
-    sw(v0, a3);
-    sb(0, a3 + 0x3);
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-loc_8003B8CC:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = t2 + a0;
-    v0 += 4;
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_8003B980;
-    if (v1 == a0) goto loc_8003B868;
-loc_8003B8F0:
-    v0 = lw(gp + 0x700);                                // Load from: GPU_REG_GP1 (80077CE0)
-    v0 = lw(v0);
-    v0 &= s0;
-    if (v0 == 0) goto loc_8003B868;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= t4;
-    v0 |= t7;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t6) goto loc_8003B95C;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_8003B940:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x6FC);                                // Load from: GPU_REG_GP0 (80077CDC)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a2) goto loc_8003B940;
-loc_8003B95C:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 == v0) goto loc_8003B868;
-    goto loc_8003B8F0;
-loc_8003B980:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 += t5;
-loc_8003B990:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    a0 = 0xFF000000;                                    // Result = FF000000
-    v1 = lw(a3);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 &= a0;
-    v0 &= t4;
-    v1 |= v0;
-    sw(v1, a3);
-    sb(t1, a3 + 0x3);
-    t1--;
-    a3 += 4;
-    if (t1 == t6) goto loc_8003BA58;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_8003B9CC:
-    v0 = lw(t3);
-    t3 += 4;
-    t1--;
-    sw(v0, a3);
-    a3 += 4;
-    if (t1 != v1) goto loc_8003B9CC;
-    goto loc_8003BA58;
-loc_8003B9EC:
-    v0 = lw(gp + 0x700);                                // Load from: GPU_REG_GP1 (80077CE0)
-    v0 = lw(v0);
-    v0 &= s0;
-    if (v0 == 0) goto loc_8003BA74;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= t4;
-    v0 |= t7;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t6) goto loc_8003BA58;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_8003BA3C:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x6FC);                                // Load from: GPU_REG_GP0 (80077CDC)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a2) goto loc_8003BA3C;
-loc_8003BA58:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 != v0) goto loc_8003B9EC;
-loc_8003BA74:
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3F86;                                       // Result = BigFontTexcoords_0[2] (80073F86)
-    at += t0;                                           // Result = BigFontTexcoords_Minus[2] (80073FAE)
-    v0 = lbu(at);                                       // Load from: BigFontTexcoords_Minus[2] (80073FAE)
-    s1 += v0;
-loc_8003BA8C:
-    t0 = lbu(s2);
-    s2++;
-    if (t0 != 0) goto loc_8003B740;
-loc_8003BA9C:
-    ra = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
+}
+
+void _thunk_I_DrawString() noexcept {
+    I_DrawString(a0, a1, vmAddrToPtr<const char>(a2));
 }

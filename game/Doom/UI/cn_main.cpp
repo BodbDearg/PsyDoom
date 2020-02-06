@@ -203,7 +203,7 @@ loc_80037BAC:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x15C8;                                       // Result = STR_Configuration[0] (800115C8)
     a1 = 0x14;                                          // Result = 00000014
-    I_DrawString();
+    _thunk_I_DrawString();
     a2 = 0xC;
     s2 = 0;
     s4 = 0x80070000;                                    // Result = 80070000
@@ -278,7 +278,7 @@ loc_80037D20:
     a0 = 0x41;                                          // Result = 00000041
     a1 = s0;
     a2 = s1;
-    I_DrawString();
+    _thunk_I_DrawString();
     s1 += 0x10;
     s2++;
     v0 = (i32(s2) < 8);
@@ -297,7 +297,7 @@ loc_80037D6C:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7CD4;                                       // Result = STR_Default[0] (80077CD4)
     a1 += 0x2D;
-    I_DrawString();
+    _thunk_I_DrawString();
 loc_80037D88:
     I_SubmitGpuCmds();
     I_DrawPresent();

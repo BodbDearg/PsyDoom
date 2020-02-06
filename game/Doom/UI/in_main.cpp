@@ -527,23 +527,23 @@ loc_8003CEE4:
     s1 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
     a2 <<= 5;
     a2 += s1;
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = -1;                                            // Result = FFFFFFFF
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x1648;                                       // Result = STR_Finished[0] (80011648)
     a1 = 0x24;                                          // Result = 00000024
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0x39;                                          // Result = 00000039
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D04;                                       // Result = STR_Kills[0] (80077D04)
     a1 = 0x41;                                          // Result = 00000041
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0xB6;                                          // Result = 000000B6
     a1 = 0x41;                                          // Result = 00000041
     s0 = 0x80070000;                                    // Result = 80070000
     s0 += 0x7D0C;                                       // Result = STR_Percent[0] (80077D0C)
     a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0xAA;                                          // Result = 000000AA
     a2 = lw(gp + 0xCC0);                                // Load from: 800782A0
     a1 = 0x41;                                          // Result = 00000041
@@ -552,11 +552,11 @@ loc_8003CEE4:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D10;                                       // Result = STR_Items[0] (80077D10)
     a1 = 0x5B;                                          // Result = 0000005B
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0xB6;                                          // Result = 000000B6
     a1 = 0x5B;                                          // Result = 0000005B
     a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0xAA;                                          // Result = 000000AA
     a2 = lw(gp + 0xCCC);                                // Load from: 800782AC
     a1 = 0x5B;                                          // Result = 0000005B
@@ -565,11 +565,11 @@ loc_8003CEE4:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D18;                                       // Result = STR_Secrets[0] (80077D18)
     a1 = 0x75;                                          // Result = 00000075
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0xB6;                                          // Result = 000000B6
     a1 = 0x75;                                          // Result = 00000075
     a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0xAA;                                          // Result = 000000AA
     a2 = lw(gp + 0x9FC);                                // Load from: 80077FDC
     a1 = 0x75;                                          // Result = 00000075
@@ -581,18 +581,18 @@ loc_8003CEE4:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x1654;                                       // Result = STR_Entering[0] (80011654)
     a1 = 0x91;                                          // Result = 00000091
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = -1;                                            // Result = FFFFFFFF
     a2 = *gNextMap;
     a1 = 0xA1;                                          // Result = 000000A1
     a2 <<= 5;
     a2 += s1;
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = -1;                                            // Result = FFFFFFFF
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x1660;                                       // Result = STR_Password[0] (80011660)
     a1 = 0xBB;                                          // Result = 000000BB
-    I_DrawString();
+    _thunk_I_DrawString();
     v1 = 0;                                             // Result = 00000000
     a0 = sp + 0x10;
 loc_8003D04C:
@@ -614,7 +614,7 @@ loc_8003D04C:
     sb(0, v0);
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = 0xCB;                                          // Result = 000000CB
-    I_DrawString();
+    _thunk_I_DrawString();
 loc_8003D09C:
     ra = lw(sp + 0x28);
     s1 = lw(sp + 0x24);
@@ -660,7 +660,7 @@ loc_8003D0B4:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D20;                                       // Result = STR_You[0] (80077D20)
     a1 = 0x34;                                          // Result = 00000034
-    I_DrawString();
+    _thunk_I_DrawString();
     a2 = 0xD5;                                          // Result = 000000D5
     a0 = lhu(s0);                                       // Load from: gTex_STATUS[2] (800A94F2)
     a1 = 0x800B0000;                                    // Result = 800B0000
@@ -682,22 +682,22 @@ loc_8003D0B4:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D24;                                       // Result = STR_Him[0] (80077D24)
     a1 = 0x34;                                          // Result = 00000034
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0x39;                                          // Result = 00000039
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D04;                                       // Result = STR_Kills[0] (80077D04)
     a1 = 0x4F;                                          // Result = 0000004F
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0x9B;                                          // Result = 0000009B
     a1 = 0x4F;                                          // Result = 0000004F
     s0 = 0x80070000;                                    // Result = 80070000
     s0 += 0x7D0C;                                       // Result = STR_Percent[0] (80077D0C)
     a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0xE4;                                          // Result = 000000E4
     a1 = 0x4F;                                          // Result = 0000004F
     a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = *gCurPlayerIndex;
     a0 = 0x8F;                                          // Result = 0000008F
     v0 <<= 2;
@@ -722,15 +722,15 @@ loc_8003D224:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D10;                                       // Result = STR_Items[0] (80077D10)
     a1 = 0x65;                                          // Result = 00000065
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0x9B;                                          // Result = 0000009B
     a1 = 0x65;                                          // Result = 00000065
     a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0xE4;                                          // Result = 000000E4
     a1 = 0x65;                                          // Result = 00000065
     a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = *gCurPlayerIndex;
     a0 = 0x8F;                                          // Result = 0000008F
     v0 <<= 2;
@@ -755,15 +755,15 @@ loc_8003D2AC:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D18;                                       // Result = STR_Secrets[0] (80077D18)
     a1 = 0x7B;                                          // Result = 0000007B
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0x9B;                                          // Result = 0000009B
     a1 = 0x7B;                                          // Result = 0000007B
     a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0xE4;                                          // Result = 000000E4
     a1 = 0x7B;                                          // Result = 0000007B
     a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = *gCurPlayerIndex;
     a0 = 0x8F;                                          // Result = 0000008F
     v0 <<= 2;
@@ -791,7 +791,7 @@ loc_8003D334:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x1654;                                       // Result = STR_Entering[0] (80011654)
     a1 = 0x95;                                          // Result = 00000095
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = 0xA5;                                          // Result = 000000A5
     a2 = *gNextMap;
@@ -799,7 +799,7 @@ loc_8003D334:
     v0 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
     a2 <<= 5;
     a2 += v0;
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = *gCurPlayerIndex;
     v1 = v0 << 2;
     v1 += v0;
@@ -815,7 +815,7 @@ loc_8003D334:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x1660;                                       // Result = STR_Password[0] (80011660)
     a1 = 0xBF;                                          // Result = 000000BF
-    I_DrawString();
+    _thunk_I_DrawString();
     v1 = 0;                                             // Result = 00000000
     a0 = sp + 0x20;
 loc_8003D3E0:
@@ -837,7 +837,7 @@ loc_8003D3E0:
     sb(0, v0);
     a0 = -1;                                            // Result = FFFFFFFF
     a1 = 0xCF;                                          // Result = 000000CF
-    I_DrawString();
+    _thunk_I_DrawString();
 loc_8003D430:
     ra = lw(sp + 0x50);
     s1 = lw(sp + 0x4C);
@@ -867,12 +867,12 @@ loc_8003D448:
     v0 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
     a2 <<= 5;
     a2 += v0;
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = -1;                                            // Result = FFFFFFFF
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x1648;                                       // Result = STR_Finished[0] (80011648)
     a1 = 0x24;                                          // Result = 00000024
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = lw(gp + 0xC88);                                // Load from: 80078268
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 - 0x7D94);                               // Load from: 8007826C
@@ -933,7 +933,7 @@ loc_8003D554:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D20;                                       // Result = STR_You[0] (80077D20)
     a1 = 0x66;                                          // Result = 00000066
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = lbu(s3 + 0x2);
     sw(v0, sp + 0x10);
     v0 = lbu(s3 + 0x3);
@@ -951,12 +951,12 @@ loc_8003D554:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D24;                                       // Result = STR_Him[0] (80077D24)
     a1 = 0x66;                                          // Result = 00000066
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = 0x23;                                          // Result = 00000023
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D28;                                       // Result = STR_Frags[0] (80077D28)
     a1 = 0x8A;                                          // Result = 0000008A
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = *gCurPlayerIndex;
     a0 = 0x85;                                          // Result = 00000085
     v0 <<= 2;
@@ -984,7 +984,7 @@ loc_8003D658:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x1654;                                       // Result = STR_Entering[0] (80011654)
     a1 = 0xBE;                                          // Result = 000000BE
-    I_DrawString();
+    _thunk_I_DrawString();
     a0 = -1;                                            // Result = FFFFFFFF
     a2 = *gNextMap;
     a1 = 0xCE;                                          // Result = 000000CE
@@ -992,7 +992,7 @@ loc_8003D658:
     v0 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
     a2 <<= 5;
     a2 += v0;
-    I_DrawString();
+    _thunk_I_DrawString();
 loc_8003D6B0:
     ra = lw(sp + 0x48);
     s3 = lw(sp + 0x44);

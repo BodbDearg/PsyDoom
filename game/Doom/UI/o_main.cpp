@@ -426,7 +426,7 @@ loc_8003EEFC:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x7D54;                                       // Result = STR_Options[0] (80077D54)
     a1 = 0x14;                                          // Result = 00000014
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = lw(gp + 0xB38);                                // Load from: gCurNumOptionsMenuEntries (80078118)
     s1 = lw(gp + 0xCE0);                                // Load from: gpCurOptionsMenuEntries (800782C0)
     s2 = 0;                                             // Result = 00000000
@@ -447,7 +447,7 @@ loc_8003EF8C:
     a1 = lw(s0);
     v0 <<= 4;
     a2 += v0;
-    I_DrawString();
+    _thunk_I_DrawString();
     v0 = lw(s1);
     v0 = (v0 < 2);
     if (v0 == 0) goto loc_8003F058;

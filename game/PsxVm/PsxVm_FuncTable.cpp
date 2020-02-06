@@ -323,8 +323,7 @@ extern void _thunk_I_DrawNumber() noexcept;
 extern void I_DrawStringSmall() noexcept;
 extern void I_DrawPausedOverlay() noexcept;
 extern void I_UpdatePalette() noexcept;
-extern void I_GetStringXPosToCenter() noexcept;
-extern void I_DrawString() noexcept;
+extern void _thunk_I_DrawString() noexcept;
 extern void AM_Start() noexcept;
 extern void AM_Control() noexcept;
 extern void AM_Drawer() noexcept;
@@ -1208,8 +1207,7 @@ namespace PsxVm {
         { 0x8003A9D4, &I_DrawStringSmall },
         { 0x8003AD04, &I_DrawPausedOverlay },
         { 0x8003B0F0, &I_UpdatePalette },
-        { 0x8003B238, &I_GetStringXPosToCenter },
-        { 0x8003B324, &I_DrawString },
+        { 0x8003B324, &_thunk_I_DrawString },
         { 0x8003BAC0, &AM_Start },
         { 0x8003BB08, &AM_Control },
         { 0x8003BD34, &AM_Drawer },
