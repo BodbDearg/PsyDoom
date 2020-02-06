@@ -19,9 +19,9 @@ void RunMenu() noexcept {
     s0 = gPaletteClutIds;
     sw(s1, sp + 0x14);
     s1 = 0x80090000;                                    // Result = 80090000
-    s1 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
+    s1 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
     sw(s2, sp + 0x18);
-    s2 = s1 + 0x40;                                     // Result = gTexInfo_DOOM[0] (80097A50)
+    s2 = s1 + 0x40;                                     // Result = gTex_DOOM[0] (80097A50)
     sw(ra, sp + 0x1C);
 
 loc_80035B4C:
@@ -33,12 +33,12 @@ loc_80035B4C:
         if (bJump) goto loc_80035C78;
     }
     I_IncDrawnFrameCount();
-    a0 = s1;                                            // Result = gTexInfo_BACK[0] (80097A10)
+    a0 = s1;                                            // Result = gTex_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
     a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_CacheAndDrawSprite();
-    a0 = s2;                                            // Result = gTexInfo_DOOM[0] (80097A50)
+    a0 = s2;                                            // Result = gTex_DOOM[0] (80097A50)
     a1 = 0x4B;                                          // Result = 0000004B
     a3 = lh(s0 + 0x22);                                 // Load from: gPaletteClutId_Title (800A90A6)
     a2 = 0x14;                                          // Result = 00000014
@@ -47,7 +47,7 @@ loc_80035B4C:
     I_DrawPresent();
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
-    a0 = s1 + 0x100;                                    // Result = gTexInfo_CONNECT[0] (80097B10)
+    a0 = s1 + 0x100;                                    // Result = gTex_CONNECT[0] (80097B10)
     if (v0 == 0) goto loc_80035C4C;
     a1 = 0x36;                                          // Result = 00000036
     a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
@@ -55,12 +55,12 @@ loc_80035B4C:
     _thunk_I_DrawLoadingPlaque();
     I_NetSetup();
     I_IncDrawnFrameCount();
-    a0 = s1;                                            // Result = gTexInfo_BACK[0] (80097A10)
+    a0 = s1;                                            // Result = gTex_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
     a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_CacheAndDrawSprite();
-    a0 = s2;                                            // Result = gTexInfo_DOOM[0] (80097A50)
+    a0 = s2;                                            // Result = gTex_DOOM[0] (80097A50)
     a1 = 0x4B;                                          // Result = 0000004B
     a3 = lh(s0 + 0x22);                                 // Load from: gPaletteClutId_Title (800A90A6)
     a2 = 0x14;                                          // Result = 00000014
@@ -98,13 +98,13 @@ void M_Start() noexcept {
     gbPlayerInGame[1] = false;
     I_PurgeTexCache();
     s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7A90;                                       // Result = gTexInfo_LOADING[0] (80097A90)
-    a0 = s0;                                            // Result = gTexInfo_LOADING[0] (80097A90)
+    s0 += 0x7A90;                                       // Result = gTex_LOADING[0] (80097A90)
+    a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C4C;                                       // Result = STR_LumpName_LOADING[0] (80077C4C)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_LoadAndCacheTexLump();
-    a0 = s0;                                            // Result = gTexInfo_LOADING[0] (80097A90)
+    a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
     a1 = 0x5F;                                          // Result = 0000005F
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
@@ -112,17 +112,17 @@ void M_Start() noexcept {
     _thunk_I_DrawLoadingPlaque();
     a0 = 0;                                             // Result = 00000000
     S_LoadSoundAndMusic();
-    a0 = s0 - 0x80;                                     // Result = gTexInfo_BACK[0] (80097A10)
+    a0 = s0 - 0x80;                                     // Result = gTex_BACK[0] (80097A10)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C8C;                                       // Result = STR_LumpName_BACK[0] (80077C8C)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_LoadAndCacheTexLump();
-    a0 = s0 - 0x40;                                     // Result = gTexInfo_DOOM[0] (80097A50)
+    a0 = s0 - 0x40;                                     // Result = gTex_DOOM[0] (80097A50)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C94;                                       // Result = STR_LumpName_DOOM[0] (80077C94)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_LoadAndCacheTexLump();
-    a0 = s0 + 0x80;                                     // Result = gTexInfo_CONNECT[0] (80097B10)
+    a0 = s0 + 0x80;                                     // Result = gTex_CONNECT[0] (80097B10)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C9C;                                       // Result = STR_LumpName_CONNECT[0] (80077C9C)
     a2 = 0;                                             // Result = 00000000
@@ -502,13 +502,13 @@ loc_80036258:
     sw(s0, sp + 0x20);
     I_IncDrawnFrameCount();
     s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
-    a0 = s0;                                            // Result = gTexInfo_BACK[0] (80097A10)
+    s0 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
+    a0 = s0;                                            // Result = gTex_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
     a3 = gPaletteClutIds[MAINPAL];
     a2 = 0;                                             // Result = 00000000
     _thunk_I_CacheAndDrawSprite();
-    a0 = s0 + 0x40;                                     // Result = gTexInfo_DOOM[0] (80097A50)
+    a0 = s0 + 0x40;                                     // Result = gTex_DOOM[0] (80097A50)
     a1 = 0x4B;                                          // Result = 0000004B
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5A);                               // Load from: gPaletteClutId_Title (800A90A6)
@@ -516,7 +516,7 @@ loc_80036258:
     _thunk_I_CacheAndDrawSprite();
     a2 = 0x32;                                          // Result = 00000032
     a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lhu(a0 - 0x6B0E);                              // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a0 = lhu(a0 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
     a1 = 0x800B0000;                                    // Result = 800B0000
     a1 = lh(a1 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     v1 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)

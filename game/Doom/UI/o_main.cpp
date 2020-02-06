@@ -409,7 +409,7 @@ loc_8003EEF8:
     s0 = 0;                                             // Result = 00000000
 loc_8003EEFC:
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7AB0;                                       // Result = gTexInfo_MARB01[0] (80097AB0)
+    a0 += 0x7AB0;                                       // Result = gTex_MARB01[0] (80097AB0)
     a1 = s0 << 6;
     a2 = s1 << 6;
     a3 = gPaletteClutIds[MAINPAL];
@@ -432,7 +432,7 @@ loc_8003EEFC:
     s2 = 0;                                             // Result = 00000000
     if (i32(v0) <= 0) goto loc_8003F074;
     s7 = 0x800B0000;                                    // Result = 800B0000
-    s7 -= 0x6B0E;                                       // Result = gTexInfo_STATUS[2] (800A94F2)
+    s7 -= 0x6B0E;                                       // Result = gTex_STATUS[2] (800A94F2)
     s6 = 0x800B0000;                                    // Result = 800B0000
     s6 -= 0x6F5C;                                       // Result = gPaletteClutId_UI (800A90A4)
     s5 = 0xB8;                                          // Result = 000000B8
@@ -457,7 +457,7 @@ loc_8003EF8C:
     sw(s5, sp + 0x14);
     sw(s4, sp + 0x18);
     sw(s3, sp + 0x1C);
-    a0 = lhu(s7);                                       // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a0 = lhu(s7);                                       // Load from: gTex_STATUS[2] (800A94F2)
     a1 = lh(s6);                                        // Load from: gPaletteClutId_UI (800A90A4)
     a2 += 0xD;
     a3 += 0x14;
@@ -472,7 +472,7 @@ loc_8003EF8C:
     a3 = lw(s0);
     sw(s4, sp + 0x10);
     sw(s5, sp + 0x14);
-    a0 = lhu(s7);                                       // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a0 = lhu(s7);                                       // Load from: gTex_STATUS[2] (800A94F2)
     a2 = 0x80070000;                                    // Result = 80070000
     a2 = lw(a2 + 0x75F4);                               // Load from: gOptionsMusVol (800775F4)
     goto loc_8003F03C;
@@ -481,7 +481,7 @@ loc_8003F020:
     a3 = lw(s0);
     sw(s4, sp + 0x10);
     sw(s5, sp + 0x14);
-    a0 = lhu(s7);                                       // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a0 = lhu(s7);                                       // Load from: gTex_STATUS[2] (800A94F2)
     a2 = 0x80070000;                                    // Result = 80070000
     a2 = lw(a2 + 0x75F0);                               // Load from: gOptionsSndVol (800775F0)
 loc_8003F03C:
@@ -501,7 +501,7 @@ loc_8003F058:
     if (v0 != 0) goto loc_8003EF8C;
 loc_8003F074:
     a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lhu(a0 - 0x6B0E);                              // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a0 = lhu(a0 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
     v0 = *gCurPlayerIndex;
     a1 = 0x800B0000;                                    // Result = 800B0000
     a1 = lh(a1 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)

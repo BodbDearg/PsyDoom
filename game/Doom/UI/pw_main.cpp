@@ -258,7 +258,7 @@ loc_80037134:
     s0 = 0;                                             // Result = 00000000
 loc_80037158:
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7AB0;                                       // Result = gTexInfo_MARB01[0] (80097AB0)
+    a0 += 0x7AB0;                                       // Result = gTex_MARB01[0] (80097AB0)
     a1 = s0 << 6;
     a2 = s1 << 6;
     a3 = gPaletteClutIds[MAINPAL];
@@ -275,7 +275,7 @@ loc_80037158:
     a0 = s0;                                            // Result = 1F800200
     a1 = 0;                                             // Result = 00000000
     a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lhu(a3 - 0x6B0E);                              // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a3 = lhu(a3 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
     a2 = 0;                                             // Result = 00000000
     sw(0, sp + 0x10);
     _thunk_LIBGPU_SetDrawMode();

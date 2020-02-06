@@ -8,24 +8,24 @@ void START_Credits() noexcept {
     sp -= 0x28;
     sw(s0, sp + 0x20);
     s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7B30;                                       // Result = gTexInfo_IDCRED1[0] (80097B30)
-    a0 = s0;                                            // Result = gTexInfo_IDCRED1[0] (80097B30)
+    s0 += 0x7B30;                                       // Result = gTex_IDCRED1[0] (80097B30)
+    a0 = s0;                                            // Result = gTex_IDCRED1[0] (80097B30)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7CBC;                                       // Result = STR_LumpName_IDCRED1[0] (80077CBC)
     sw(ra, sp + 0x24);
     a2 = 0;                                             // Result = 00000000
     _thunk_I_LoadAndCacheTexLump();
-    a0 = s0 + 0x20;                                     // Result = gTexInfo_IDCRED2[0] (80097B50)
+    a0 = s0 + 0x20;                                     // Result = gTex_IDCRED2[0] (80097B50)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7CC4;                                       // Result = STR_LumpName_IDCRED2[0] (80077CC4)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_LoadAndCacheTexLump();
-    a0 = s0 + 0x40;                                     // Result = gTexInfo_WMSCRED1[0] (80097B70)
+    a0 = s0 + 0x40;                                     // Result = gTex_WMSCRED1[0] (80097B70)
     a1 = 0x80010000;                                    // Result = 80010000
     a1 += 0x1590;                                       // Result = STR_LumpName_WMSCRED1[0] (80011590)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_LoadAndCacheTexLump();
-    a0 = s0 + 0x60;                                     // Result = gTexInfo_WMSCRED2[0] (80097B90)
+    a0 = s0 + 0x60;                                     // Result = gTex_WMSCRED2[0] (80097B90)
     a1 = 0x80010000;                                    // Result = 80010000
     a1 += 0x159C;                                       // Result = STR_LumpName_WMSCRED2[0] (8001159C)
     a2 = 0;                                             // Result = 00000000
@@ -134,14 +134,14 @@ void DRAW_Credits() noexcept {
     goto loc_80036DF8;
 loc_80036D88:
     s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7B30;                                       // Result = gTexInfo_IDCRED1[0] (80097B30)
-    a0 = s0;                                            // Result = gTexInfo_IDCRED1[0] (80097B30)
+    s0 += 0x7B30;                                       // Result = gTex_IDCRED1[0] (80097B30)
+    a0 = s0;                                            // Result = gTex_IDCRED1[0] (80097B30)
     a1 = 0;                                             // Result = 00000000
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F58);                               // Load from: gPaletteClutId_IdCredits1 (800A90A8)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_CacheAndDrawSprite();
-    a0 = s0 + 0x20;                                     // Result = gTexInfo_IDCRED2[0] (80097B50)
+    a0 = s0 + 0x20;                                     // Result = gTex_IDCRED2[0] (80097B50)
     a2 = lw(gp + 0xC7C);                                // Load from: gCreditsScrollYPos (8007825C)
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
@@ -149,13 +149,13 @@ loc_80036D88:
     goto loc_80036DF0;
 loc_80036DC0:
     s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7B70;                                       // Result = gTexInfo_WMSCRED1[0] (80097B70)
-    a0 = s0;                                            // Result = gTexInfo_WMSCRED1[0] (80097B70)
+    s0 += 0x7B70;                                       // Result = gTex_WMSCRED1[0] (80097B70)
+    a0 = s0;                                            // Result = gTex_WMSCRED1[0] (80097B70)
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F56);                               // Load from: gPaletteClutId_WilliamsCredits1 (800A90AA)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_CacheAndDrawSprite();
-    a0 = s0 + 0x20;                                     // Result = gTexInfo_WMSCRED2[0] (80097B90)
+    a0 = s0 + 0x20;                                     // Result = gTex_WMSCRED2[0] (80097B90)
     a2 = lw(gp + 0xC7C);                                // Load from: gCreditsScrollYPos (8007825C)
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)

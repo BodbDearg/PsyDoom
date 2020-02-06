@@ -17,7 +17,7 @@ void START_ControlsScreen() noexcept {
     a1 = sfx_pistol;
     S_StartSound();
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7AD0;                                       // Result = gTexInfo_BUTTONS[0] (80097AD0)
+    a0 += 0x7AD0;                                       // Result = gTex_BUTTONS[0] (80097AD0)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C5C;                                       // Result = STR_LumpName_BUTTONS[0] (80077C5C)
     sw(0, gp + 0xBF8);                                  // Store to: gCursorFrame (800781D8)
@@ -187,7 +187,7 @@ void DRAW_ControlsScreen() noexcept {
     s0 = 0;                                             // Result = 00000000
 loc_80037BAC:
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7AB0;                                       // Result = gTexInfo_MARB01[0] (80097AB0)
+    a0 += 0x7AB0;                                       // Result = gTex_MARB01[0] (80097AB0)
     a1 = s0 << 6;
     a2 = s1 << 6;
     a3 = gPaletteClutIds[MAINPAL];
@@ -209,11 +209,11 @@ loc_80037BAC:
     s4 = 0x80070000;                                    // Result = 80070000
     s4 += 0x3DEC;                                       // Result = gBtnSprite_Triangle_ButtonMask (80073DEC)
     s3 = 0x80090000;                                    // Result = 80090000
-    s3 += 0x7ADA;                                       // Result = gTexInfo_BUTTONS[2] (80097ADA)
+    s3 += 0x7ADA;                                       // Result = gTex_BUTTONS[2] (80097ADA)
     s1 = 0x2D;                                          // Result = 0000002D
     s0 = gBtnBindings;
     a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lhu(a0 - 0x6B0E);                              // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a0 = lhu(a0 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
     v0 = 0xC0;
     sw(v0, sp + 0x14);
     v0 = 0x10;
@@ -256,10 +256,10 @@ loc_80037CC4:
     v1 <<= 4;                                           // Result = 00000000
     sw(v0, sp + 0x18);
     sw(v0, sp + 0x1C);
-    a0 = lhu(s3);                                       // Load from: gTexInfo_BUTTONS[2] (80097ADA)
+    a0 = lhu(s3);                                       // Load from: gTex_BUTTONS[2] (80097ADA)
     a1 = gPaletteClutIds[MAINPAL];
-    v0 = lbu(s3 - 0x2);                                 // Load from: gTexInfo_BUTTONS[2] (80097AD8)
-    t0 = lbu(s3 - 0x1);                                 // Load from: gTexInfo_BUTTONS[2] (80097AD9)
+    v0 = lbu(s3 - 0x2);                                 // Load from: gTex_BUTTONS[2] (80097AD8)
+    t0 = lbu(s3 - 0x1);                                 // Load from: gTex_BUTTONS[2] (80097AD9)
     v0 += v1;
     sw(v0, sp + 0x10);
     sw(t0, sp + 0x14);

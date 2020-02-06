@@ -16,8 +16,8 @@ void F1_Start() noexcept {
     sp -= 0x28;
     sw(s0, sp + 0x20);
     s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7A90;                                       // Result = gTexInfo_LOADING[0] (80097A90)
-    a0 = s0;                                            // Result = gTexInfo_LOADING[0] (80097A90)
+    s0 += 0x7A90;                                       // Result = gTex_LOADING[0] (80097A90)
+    a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
     a1 = 0x5F;                                          // Result = 0000005F
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
@@ -25,7 +25,7 @@ void F1_Start() noexcept {
     a2 = 0x6D;                                          // Result = 0000006D
     _thunk_I_DrawLoadingPlaque();
     I_PurgeTexCache();
-    a0 = s0 - 0x80;                                     // Result = gTexInfo_BACK[0] (80097A10)
+    a0 = s0 - 0x80;                                     // Result = gTex_BACK[0] (80097A10)
     _thunk_I_CacheTex();
     a2 = 0;                                             // Result = 00000000
     a0 = 0x80070000;                                    // Result = 80070000
@@ -157,7 +157,7 @@ void F1_Drawer() noexcept {
     sw(s0, sp + 0x18);
     I_IncDrawnFrameCount();
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
+    a0 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
     a3 = gPaletteClutIds[MAINPAL];
@@ -203,8 +203,8 @@ void F2_Start() noexcept {
     sp -= 0x68;
     sw(s0, sp + 0x60);
     s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7A90;                                       // Result = gTexInfo_LOADING[0] (80097A90)
-    a0 = s0;                                            // Result = gTexInfo_LOADING[0] (80097A90)
+    s0 += 0x7A90;                                       // Result = gTex_LOADING[0] (80097A90)
+    a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
     a1 = 0x5F;                                          // Result = 0000005F
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
@@ -212,7 +212,7 @@ void F2_Start() noexcept {
     a2 = 0x6D;                                          // Result = 0000006D
     _thunk_I_DrawLoadingPlaque();
     I_PurgeTexCache();
-    a0 = s0 + 0x120;                                    // Result = gTexInfo_DEMON[0] (80097BB0)
+    a0 = s0 + 0x120;                                    // Result = gTex_DEMON[0] (80097BB0)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7D44;                                       // Result = STR_LumpName_DEMON[0] (80077D44)
     a2 = 0;                                             // Result = 00000000
@@ -874,7 +874,7 @@ void F2_Drawer() noexcept {
     sw(s0, sp + 0x18);
     I_IncDrawnFrameCount();
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7BB0;                                       // Result = gTexInfo_DEMON[0] (80097BB0)
+    a0 += 0x7BB0;                                       // Result = gTex_DEMON[0] (80097BB0)
     a1 = 0;                                             // Result = 00000000
     s2 = gPaletteClutIds;
     a3 = lh(s2);                                        // Load from: gPaletteClutId_Main (800A9084)

@@ -623,7 +623,7 @@ loc_8003AD04:
     a1 = 0x6B;                                          // Result = 0000006B
     if (v0 != 0) goto loc_8003AD64;
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A70;                                       // Result = gTexInfo_PAUSE[0] (80097A70)
+    a0 += 0x7A70;                                       // Result = gTex_PAUSE[0] (80097A70)
     a3 = gPaletteClutIds[MAINPAL];
     a2 = 0x6C;                                          // Result = 0000006C
     _thunk_I_CacheAndDrawSprite();
@@ -1032,7 +1032,7 @@ loc_8003B324:
     a0 = s0;                                            // Result = 1F800200
     a1 = 0;                                             // Result = 00000000
     a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lhu(a3 - 0x6B0E);                              // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a3 = lhu(a3 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
     a2 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x2C);
     sw(s3, sp + 0x24);

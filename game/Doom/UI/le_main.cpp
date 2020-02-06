@@ -12,7 +12,7 @@ void START_Legals() noexcept {
     sw(ra, sp + 0x10);
     I_PurgeTexCache();
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7BD0;                                       // Result = gTexInfo_LEGALS[0] (80097BD0)
+    a0 += 0x7BD0;                                       // Result = gTex_LEGALS[0] (80097BD0)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C44;                                       // Result = STR_LumpName_LEGALS[0] (80077C44)
     a2 = 0;                                             // Result = 00000000
@@ -81,7 +81,7 @@ void DRAW_Legals() noexcept {
     sw(ra, sp + 0x10);
     I_IncDrawnFrameCount();
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7BD0;                                       // Result = gTexInfo_LEGALS[0] (80097BD0)
+    a0 += 0x7BD0;                                       // Result = gTex_LEGALS[0] (80097BD0)
     a2 = lw(gp + 0xBB0);                                // Load from: gTitleScreenSpriteY (80078190)
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)

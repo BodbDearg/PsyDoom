@@ -25,7 +25,7 @@ loc_80038558:
     I_Error("ST_Init: initial texture cache foulup\n");
 loc_8003857C:
     a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 -= 0x6B18;                                       // Result = gTexInfo_STATUS[0] (800A94E8)
+    a0 -= 0x6B18;                                       // Result = gTex_STATUS[0] (800A94E8)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7CE4;                                       // Result = STR_LumpName_STATUS[0] (80077CE4)
     a2 = 0;                                             // Result = 00000000
@@ -391,7 +391,7 @@ loc_80038B0C:
     a0 = s0;                                            // Result = 1F800200
     a1 = 0;                                             // Result = 00000000
     a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lhu(a3 - 0x6B0E);                              // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a3 = lhu(a3 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
     v1 = *gCurPlayerIndex;
     a2 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x70);

@@ -145,7 +145,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
     a0 = s0;                                            // Result = 1F800200
     a1 = 0;                                             // Result = 00000000
     a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lhu(a3 - 0x6B0E);                              // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a3 = lhu(a3 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
     a2 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x11C);
     sw(0, sp + 0x10);
