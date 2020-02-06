@@ -61,7 +61,7 @@ const VmPtr<mobj_t> gEmptyMObj(0x800A9E30);
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_DoLoadLevel() noexcept {
     // Draw the loading plaque
-    a0 = 0x80097A90;                // Result = gTexInfo_LOADING[0] (80097A90)
+    a0 = 0x80097A90;                // Result = gTex_LOADING[0] (80097A90)
     a1 = 95;
     a2 = 109;
     a3 = lh(0x800A90A4);            // Load from: gPaletteClutId_UI (800A90A4)    

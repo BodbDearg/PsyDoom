@@ -1912,19 +1912,19 @@ loc_80034B44:
     _thunk_LIBGPU_MoveImage();
     I_IncDrawnFrameCount();
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7AF0;                                       // Result = gTexInfo_NETERR[0] (80097AF0)
+    a0 += 0x7AF0;                                       // Result = gTex_NETERR[0] (80097AF0)
     _thunk_I_CacheTex();
     a1 = s0;
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 = lhu(a0 + 0x7AFA);                              // Load from: gTexInfo_NETERR[2] (80097AFA)
+    a0 = lhu(a0 + 0x7AFA);                              // Load from: gTex_NETERR[2] (80097AFA)
     v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lbu(v0 + 0x7AF8);                              // Load from: gTexInfo_NETERR[2] (80097AF8)
+    v0 = lbu(v0 + 0x7AF8);                              // Load from: gTex_NETERR[2] (80097AF8)
     v1 = 0x80090000;                                    // Result = 80090000
-    v1 = lbu(v1 + 0x7AF9);                              // Load from: gTexInfo_NETERR[2] (80097AF9)
+    v1 = lbu(v1 + 0x7AF9);                              // Load from: gTex_NETERR[2] (80097AF9)
     a3 = 0x80090000;                                    // Result = 80090000
-    a3 = lh(a3 + 0x7AF4);                               // Load from: gTexInfo_NETERR[1] (80097AF4)
+    a3 = lh(a3 + 0x7AF4);                               // Load from: gTex_NETERR[1] (80097AF4)
     t0 = 0x80090000;                                    // Result = 80090000
-    t0 = lh(t0 + 0x7AF6);                               // Load from: gTexInfo_NETERR[1] (80097AF6)
+    t0 = lh(t0 + 0x7AF6);                               // Load from: gTex_NETERR[1] (80097AF6)
     a2 = 0x54;                                          // Result = 00000054
     sw(a3, sp + 0x18);
     a3 = 0x6D;                                          // Result = 0000006D

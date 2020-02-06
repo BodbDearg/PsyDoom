@@ -16,7 +16,7 @@ void IN_Start() noexcept {
     sw(ra, sp + 0x20);
     I_PurgeTexCache();
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
+    a0 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7CFC;                                       // Result = STR_LumpName_BACK_2[0] (80077CFC)
     a2 = 0;                                             // Result = 00000000
@@ -512,7 +512,7 @@ void IN_SingleDrawer() noexcept {
 loc_8003CEE4:
     sp -= 0x30;
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
+    a0 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
     a3 = gPaletteClutIds[MAINPAL];
     a2 = 0;                                             // Result = 00000000
@@ -627,7 +627,7 @@ void IN_CoopDrawer() noexcept {
 loc_8003D0B4:
     sp -= 0x58;
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
+    a0 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
     a3 = gPaletteClutIds[MAINPAL];
     a2 = 0;                                             // Result = 00000000
@@ -637,10 +637,10 @@ loc_8003D0B4:
     _thunk_I_CacheAndDrawSprite();
     a2 = 0x8B;                                          // Result = 0000008B
     s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 -= 0x6B0E;                                       // Result = gTexInfo_STATUS[2] (800A94F2)
+    s0 -= 0x6B0E;                                       // Result = gTex_STATUS[2] (800A94F2)
     s1 = 0x80070000;                                    // Result = 80070000
     s1 += 0x3E6A;                                       // Result = StatusBarFaceSpriteInfo[2] (80073E6A)
-    a0 = lhu(s0);                                       // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a0 = lhu(s0);                                       // Load from: gTex_STATUS[2] (800A94F2)
     a1 = 0x800B0000;                                    // Result = 800B0000
     a1 = lh(a1 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     v0 = lbu(s1);                                       // Load from: StatusBarFaceSpriteInfo[2] (80073E6A)
@@ -662,7 +662,7 @@ loc_8003D0B4:
     a1 = 0x34;                                          // Result = 00000034
     I_DrawString();
     a2 = 0xD5;                                          // Result = 000000D5
-    a0 = lhu(s0);                                       // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a0 = lhu(s0);                                       // Load from: gTex_STATUS[2] (800A94F2)
     a1 = 0x800B0000;                                    // Result = 800B0000
     a1 = lh(a1 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     v0 = lbu(s1);                                       // Load from: StatusBarFaceSpriteInfo[2] (80073E6A)
@@ -850,7 +850,7 @@ void IN_DeathmatchDrawer() noexcept {
 loc_8003D448:
     sp -= 0x50;
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A10;                                       // Result = gTexInfo_BACK[0] (80097A10)
+    a0 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
     a1 = 0;                                             // Result = 00000000
     a3 = gPaletteClutIds[MAINPAL];
     a2 = 0;                                             // Result = 00000000
@@ -917,9 +917,9 @@ loc_8003D554:
     sw(v0, sp + 0x10);
     v0 = lbu(s2 + 0x3);
     s1 = 0x800B0000;                                    // Result = 800B0000
-    s1 -= 0x6B0E;                                       // Result = gTexInfo_STATUS[2] (800A94F2)
+    s1 -= 0x6B0E;                                       // Result = gTex_STATUS[2] (800A94F2)
     sw(v0, sp + 0x14);
-    a0 = lhu(s1);                                       // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a0 = lhu(s1);                                       // Load from: gTex_STATUS[2] (800A94F2)
     v0 = lbu(s2 + 0x4);
     s0 = 0x800B0000;                                    // Result = 800B0000
     s0 -= 0x6F5C;                                       // Result = gPaletteClutId_UI (800A90A4)
@@ -938,7 +938,7 @@ loc_8003D554:
     sw(v0, sp + 0x10);
     v0 = lbu(s3 + 0x3);
     sw(v0, sp + 0x14);
-    a0 = lhu(s1);                                       // Load from: gTexInfo_STATUS[2] (800A94F2)
+    a0 = lhu(s1);                                       // Load from: gTex_STATUS[2] (800A94F2)
     v0 = lbu(s3 + 0x4);
     a2 = 0xC8;                                          // Result = 000000C8
     sw(v0, sp + 0x18);
