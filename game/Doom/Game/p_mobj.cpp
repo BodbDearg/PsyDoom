@@ -17,6 +17,13 @@
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
+// Item respawn queue
+const VmPtr<int32_t> gItemRespawnQueueHead(0x80078138);
+const VmPtr<int32_t> gItemRespawnQueueTail(0x80078180);
+
+// Object kill tracking
+const VmPtr<int32_t> gNumMObjKilled(0x80078010);
+
 void P_RemoveMObj() noexcept {
 loc_8001C724:
     sp -= 0x18;
@@ -40,7 +47,7 @@ loc_8001C724:
         if (bJump) goto loc_8001C7F4;
     }
     if (v1 == v0) goto loc_8001C7F4;
-    a1 = lw(gp + 0xB58);                                // Load from: gItemRespawnQueueHead (80078138)
+    a1 = *gItemRespawnQueueHead;
     v1 = *gTicCon;
     a0 = a1 & 0x3F;
     v0 = a0 << 2;
@@ -67,7 +74,7 @@ loc_8001C724:
     sh(v1, at);
     v1 = lhu(s0 + 0x8E);
     a1++;
-    sw(a1, gp + 0xB58);                                 // Store to: gItemRespawnQueueHead (80078138)
+    *gItemRespawnQueueHead = a1;
     at = 0x80080000;                                    // Result = 80080000
     at += 0x6130;                                       // Result = gItemRespawnQueue[2] (80086130)
     at += v0;
@@ -100,8 +107,8 @@ loc_8001C838:
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
     if (v1 != v0) goto loc_8001C9FC;
-    v1 = lw(gp + 0xB58);                                // Load from: gItemRespawnQueueHead (80078138)
-    v0 = lw(gp + 0xBA0);                                // Load from: gItemRespawnQueueTail (80078180)
+    v1 = *gItemRespawnQueueHead;
+    v0 = *gItemRespawnQueueTail;
     {
         const bool bJump = (v1 == v0);
         v0 = v1 - v0;
@@ -113,9 +120,9 @@ loc_8001C838:
         v0 = v1 - 0x40;
         if (bJump) goto loc_8001C880;
     }
-    sw(v0, gp + 0xBA0);                                 // Store to: gItemRespawnQueueTail (80078180)
+    *gItemRespawnQueueTail = v0;
 loc_8001C880:
-    v0 = lw(gp + 0xBA0);                                // Load from: gItemRespawnQueueTail (80078180)
+    v0 = *gItemRespawnQueueTail;
     a1 = v0 & 0x3F;
     a0 = a1 << 2;
     v0 = *gTicCon;
@@ -202,10 +209,10 @@ loc_8001C984:
     sh(v0, a1 + 0x8A);
     v0 = lhu(s0 + 0x6);
     sh(v0, a1 + 0x8C);
-    v0 = lw(gp + 0xBA0);                                // Load from: gItemRespawnQueueTail (80078180)
+    v0 = *gItemRespawnQueueTail;
     v1 = lhu(s0 + 0x4);
     v0++;
-    sw(v0, gp + 0xBA0);                                 // Store to: gItemRespawnQueueTail (80078180)
+    *gItemRespawnQueueTail = v0;
     sh(v1, a1 + 0x8E);
 loc_8001C9FC:
     ra = lw(sp + 0x1C);
@@ -235,7 +242,7 @@ loc_8001CA18:
     if (v1 == v0) goto loc_8001CAF0;
     v0 = 0x30;                                          // Result = 00000030
     if (v1 == v0) goto loc_8001CAF0;
-    a1 = lw(gp + 0xB58);                                // Load from: gItemRespawnQueueHead (80078138)
+    a1 = *gItemRespawnQueueHead;
     v1 = *gTicCon;
     a0 = a1 & 0x3F;
     v0 = a0 << 2;
@@ -262,7 +269,7 @@ loc_8001CA18:
     sh(v1, at);
     v1 = lhu(s0 + 0x8E);
     a1++;
-    sw(a1, gp + 0xB58);                                 // Store to: gItemRespawnQueueHead (80078138)
+    *gItemRespawnQueueHead = a1;
     at = 0x80080000;                                    // Result = 80080000
     at += 0x6130;                                       // Result = gItemRespawnQueue[2] (80086130)
     at += v0;
@@ -691,23 +698,23 @@ loc_8001D184:
     a0 = lwr(a0, s2 + 0x4);
     a1 = lh(s2 + 0x8);
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x718B;                                       // Result = gPlayer0MapThing[1] (800A8E75)
+    at -= 0x718B;                                       // Result = gPlayerStarts_-1[1] (800A8E75)
     at += v0;
     swl(v1, at);
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x718E;                                       // Result = gPlayer0MapThing[0] (800A8E72)
+    at -= 0x718E;                                       // Result = gPlayerStarts_-1[0] (800A8E72)
     at += v0;
     swr(v1, at);
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7187;                                       // Result = gPlayer0MapThing[3] (800A8E79)
+    at -= 0x7187;                                       // Result = gPlayerStarts_-1[3] (800A8E79)
     at += v0;
     swl(a0, at);
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x718A;                                       // Result = gPlayer0MapThing[2] (800A8E76)
+    at -= 0x718A;                                       // Result = gPlayerStarts_-1[2] (800A8E76)
     at += v0;
     swr(a0, at);
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7186;                                       // Result = gPlayer0MapThing[4] (800A8E7A)
+    at -= 0x7186;                                       // Result = gPlayerStarts_-1[4] (800A8E7A)
     at += v0;
     sh(a1, at);
     goto loc_8001D6D8;
@@ -715,8 +722,7 @@ loc_8001D23C:
     v0 = 0xB;                                           // Result = 0000000B
     a0 = 2;                                             // Result = 00000002
     if (v1 != v0) goto loc_8001D28C;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7FA0);                               // Load from: gpDeathmatchP (80078060)
+    a0 = *gpDeathmatchP;
     v0 = 0x800A0000;                                    // Result = 800A0000
     v0 -= 0x7F30;                                       // Result = 800980D0
     v0 = (a0 < v0);
@@ -724,11 +730,9 @@ loc_8001D23C:
     if (v0 == 0) goto loc_8001D6D8;
     a2 = 0xA;                                           // Result = 0000000A
     _thunk_D_memcpy();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FA0);                               // Load from: gpDeathmatchP (80078060)
+    v0 = *gpDeathmatchP;
     v0 += 0xA;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7FA0);                                // Store to: gpDeathmatchP (80078060)
+    *gpDeathmatchP = v0;
     goto loc_8001D6D8;
 loc_8001D28C:
     v0 = *gNetGame;
@@ -917,11 +921,9 @@ loc_8001D5BC:
     v0 &= v1;
     v1 = 0x800000;                                      // Result = 00800000
     if (v0 == 0) goto loc_8001D5E8;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F20);                               // Load from: gTotalKills (80077F20)
+    v0 = *gTotalKills;
     v0++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7F20);                                // Store to: gTotalKills (80077F20)
+    *gTotalKills = v0;
 loc_8001D5E8:
     v0 = lw(s0 + 0x64);
     v0 &= v1;
@@ -930,11 +932,9 @@ loc_8001D5E8:
         v0 = 0xB60B0000;                                // Result = B60B0000
         if (bJump) goto loc_8001D618;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F2C);                               // Load from: gTotalItems (80077F2C)
+    v0 = *gTotalItems;
     v0++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7F2C);                                // Store to: gTotalItems (80077F2C)
+    *gTotalItems = v0;
     v0 = 0xB60B0000;                                    // Result = B60B0000
 loc_8001D618:
     v1 = lhu(s2 + 0x4);

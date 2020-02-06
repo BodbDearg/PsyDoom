@@ -28,12 +28,9 @@ void IN_Start() noexcept {
     t4 = 0x80080000;                                    // Result = 80080000
     t4 -= 0x7D60;                                       // Result = 800782A0
     a3 = t4;                                            // Result = 800782A0
-    t2 = 0x80070000;                                    // Result = 80070000
-    t2 = lw(t2 + 0x7F20);                               // Load from: gTotalKills (80077F20)
-    t1 = 0x80070000;                                    // Result = 80070000
-    t1 = lw(t1 + 0x7F2C);                               // Load from: gTotalItems (80077F2C)
-    t0 = 0x80070000;                                    // Result = 80070000
-    t0 = lw(t0 + 0x7FEC);                               // Load from: gTotalSecret (80077FEC)
+    t2 = *gTotalKills;
+    t1 = *gTotalItems;
+    t0 = *gTotalSecret;
 loc_8003C7B4:
     at = 0x80080000;                                    // Result = 80080000
     at -= 0x7D98;                                       // Result = 80078268

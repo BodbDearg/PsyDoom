@@ -1127,8 +1127,7 @@ loc_8001A6B8:
     a1 = sfx_pldeth;
 loc_8001A6BC:
     S_StartSound();
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FF0);                               // Load from: gNumMObjKilled (80078010)
+    v1 = *gNumMObjKilled;
     v0 = (i32(v1) < 0x20);
     {
         const bool bJump = (v0 != 0);
@@ -1141,8 +1140,7 @@ loc_8001A6BC:
     at += v0;
     a0 = lw(at);
     P_RemoveMObj();
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FF0);                               // Load from: gNumMObjKilled (80078010)
+    v1 = *gNumMObjKilled;
     v0 = v1 & 0x1F;
 loc_8001A708:
     v0 <<= 2;
@@ -1151,8 +1149,7 @@ loc_8001A708:
     at -= 0x7894;                                       // Result = gMObjPendingRemovalQueue[0] (800A876C)
     at += v0;
     sw(s0, at);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7FF0);                                // Store to: gNumMObjKilled (80078010)
+    *gNumMObjKilled = v1;
     goto loc_8001A7B0;
 loc_8001A730:
     if (a0 == 0) goto loc_8001A770;

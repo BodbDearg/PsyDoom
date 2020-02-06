@@ -40,6 +40,8 @@ extern const VmPtr<int32_t>                 gMapNumToCheatWarpTo;
 extern const VmPtr<int32_t>                 gVramViewerTexPage;
 extern const VmPtr<uint32_t[MAXPLAYERS]>    gTicButtons;
 extern const VmPtr<uint32_t[MAXPLAYERS]>    gOldTicButtons;
+extern const VmPtr<thinker_t>               gThinkerCap;
+extern const VmPtr<mobj_t>                  gMObjHead;
 extern const VmPtr<mobj_t>                  gMObjHead;
 
 void P_AddThinker() noexcept;

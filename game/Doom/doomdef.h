@@ -106,6 +106,16 @@ enum : uint32_t {
 // The maximum allowed demo size is 16384 ticks (demo size 64 KiB).
 const int32_t MAX_DEMO_TICKS = 16384;
 
+// Format for a thinker function to handle some periodic update for an actor/system
+typedef VmPtr<void (*)> think_t;
+
+// An element that receives periodic updates
+struct thinker_t {
+    VmPtr<thinker_t>    prev;
+    VmPtr<thinker_t>    next;
+    think_t             function;
+};
+
 // Flags for 'mobj_t'
 static constexpr uint32_t MF_SPECIAL        = 0x1;          // TODO: CONFIRM
 static constexpr uint32_t MF_SOLID          = 0x2;          // TODO: CONFIRM

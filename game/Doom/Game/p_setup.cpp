@@ -20,6 +20,7 @@
 #include "p_mobj.h"
 #include "p_spec.h"
 #include "p_switch.h"
+#include "p_tick.h"
 #include "PcPsx/Endian.h"
 #include "PsxVm/PsxVm.h"
 
@@ -38,30 +39,33 @@ static constexpr const char* SKY_LUMP_NAME = "F_SKY";
 static constexpr int32_t SKY_LUMP_NAME_LEN = sizeof("F_SKY") - 1;   // -1 to discount null terminator
 
 // Map data
-const VmPtr<VmPtr<uint16_t>>        gpBlockmapLump(0x800780C4);
-const VmPtr<VmPtr<uint16_t>>        gpBlockmap(0x80078140);
-const VmPtr<int32_t>                gBlockmapWidth(0x80078284);
-const VmPtr<int32_t>                gBlockmapHeight(0x80077EB8);
-const VmPtr<fixed_t>                gBlockmapOriginX(0x8007818C);
-const VmPtr<fixed_t>                gBlockmapOriginY(0x80078194);
-const VmPtr<VmPtr<VmPtr<mobj_t>>>   gppBlockLinks(0x80077EDC);
-const VmPtr<int32_t>                gNumVertexes(0x80078018);
-const VmPtr<VmPtr<vertex_t>>        gpVertexes(0x800781E4);
-const VmPtr<int32_t>                gNumSectors(0x80077F54);
-const VmPtr<VmPtr<sector_t>>        gpSectors(0x800780A8);
-const VmPtr<int32_t>                gNumSides(0x800781B4);
-const VmPtr<VmPtr<side_t>>          gpSides(0x80077EA0);
-const VmPtr<int32_t>                gNumLines(0x800781C8);
-const VmPtr<VmPtr<line_t>>          gpLines(0x80077EB0);
-const VmPtr<int32_t>                gNumSubsectors(0x80078224);
-const VmPtr<VmPtr<subsector_t>>     gpSubsectors(0x80077F40);
-const VmPtr<int32_t>                gNumBspNodes(0x800781B8);
-const VmPtr<VmPtr<node_t>>          gpBspNodes(0x80077EA4);
-const VmPtr<int32_t>                gNumSegs(0x800780A4);
-const VmPtr<VmPtr<seg_t>>           gpSegs(0x80078238);
-const VmPtr<int32_t>                gTotalNumLeafEdges(0x80077F64);
-const VmPtr<VmPtr<leafedge_t>>      gpLeafEdges(0x8007810C);
-const VmPtr<VmPtr<uint8_t>>         gpRejectMatrix(0x800780E4);
+const VmPtr<VmPtr<uint16_t>>                        gpBlockmapLump(0x800780C4);
+const VmPtr<VmPtr<uint16_t>>                        gpBlockmap(0x80078140);
+const VmPtr<int32_t>                                gBlockmapWidth(0x80078284);
+const VmPtr<int32_t>                                gBlockmapHeight(0x80077EB8);
+const VmPtr<fixed_t>                                gBlockmapOriginX(0x8007818C);
+const VmPtr<fixed_t>                                gBlockmapOriginY(0x80078194);
+const VmPtr<VmPtr<VmPtr<mobj_t>>>                   gppBlockLinks(0x80077EDC);
+const VmPtr<int32_t>                                gNumVertexes(0x80078018);
+const VmPtr<VmPtr<vertex_t>>                        gpVertexes(0x800781E4);
+const VmPtr<int32_t>                                gNumSectors(0x80077F54);
+const VmPtr<VmPtr<sector_t>>                        gpSectors(0x800780A8);
+const VmPtr<int32_t>                                gNumSides(0x800781B4);
+const VmPtr<VmPtr<side_t>>                          gpSides(0x80077EA0);
+const VmPtr<int32_t>                                gNumLines(0x800781C8);
+const VmPtr<VmPtr<line_t>>                          gpLines(0x80077EB0);
+const VmPtr<int32_t>                                gNumSubsectors(0x80078224);
+const VmPtr<VmPtr<subsector_t>>                     gpSubsectors(0x80077F40);
+const VmPtr<int32_t>                                gNumBspNodes(0x800781B8);
+const VmPtr<VmPtr<node_t>>                          gpBspNodes(0x80077EA4);
+const VmPtr<int32_t>                                gNumSegs(0x800780A4);
+const VmPtr<VmPtr<seg_t>>                           gpSegs(0x80078238);
+const VmPtr<int32_t>                                gTotalNumLeafEdges(0x80077F64);
+const VmPtr<VmPtr<leafedge_t>>                      gpLeafEdges(0x8007810C);
+const VmPtr<VmPtr<uint8_t>>                         gpRejectMatrix(0x800780E4);
+const VmPtr<mapthing_t[MAXPLAYERS]>                 gPlayerStarts(0x800A8E7C);
+const VmPtr<mapthing_t[MAX_DEATHMATCH_STARTS]>      gDeathmatchStarts(0x8009806C);
+const VmPtr<VmPtr<mapthing_t>>                      gpDeathmatchP(0x80078060);
 
 // Function to update the fire sky.
 // Set when the map has a fire sky, otherwise null.
@@ -875,13 +879,12 @@ void P_Init() noexcept {
     P_InitPicAnims();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Loads the specified level, textures and sets it up for gameplay by spawning things, players etc.
+// Note: while most of the loading and setup is done here for the level, sound and music are handled eleswhere.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) noexcept {
-    sp -= 0x98;    
-    sw(s0, sp + 0x78);
-    sw(s1, sp + 0x7C);
-    sw(s2, sp + 0x80);
-    sw(s3, sp + 0x84);
-
+    // Cleanup of memory and resetting the RNG before we start
     Z_FreeTags(**gpMainMemZone, PU_CACHE|PU_LEVSPEC|PU_LEVEL);
 
     if (!*gbIsLevelBeingRestarted) {
@@ -894,57 +897,30 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     M_ClearRandom();
 
     // Init player stats for the map
-    v1 = 0;                                             // Result = 00000000
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7F20);                                 // Store to: gTotalKills (80077F20)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7F2C);                                 // Store to: gTotalItems (80077F2C)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7FEC);                                 // Store to: gTotalSecret (80077FEC)
+    *gTotalKills = 0;
+    *gTotalItems = 0;
+    *gTotalSecret = 0;
 
-    s1 = 0;
+    for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+        player_t& player = gPlayers[playerIdx];
 
-    do {
-        at = 0x800B0000;                                    // Result = 800B0000
-        at -= 0x774C;                                       // Result = gPlayer1[32] (800A88B4)
-        at += v1;
-        sw(0, at);
-        at = 0x800B0000;                                    // Result = 800B0000
-        at -= 0x7744;                                       // Result = gPlayer1[34] (800A88BC)
-        at += v1;
-        sw(0, at);
-        at = 0x800B0000;                                    // Result = 800B0000
-        at -= 0x7748;                                       // Result = gPlayer1[33] (800A88B8)
-        at += v1;
-        sw(0, at);
-        at = 0x800B0000;                                    // Result = 800B0000
-        at -= 0x77B0;                                       // Result = gPlayer1[19] (800A8850)
-        at += v1;
-        sw(0, at);
-        s1++;
-        v0 = (i32(s1) < 2);
-        v1 += 0x12C;
-    } while (v0 != 0);
+        player.killcount = 0;
+        player.secretcount = 0;
+        player.itemcount = 0;
+        player.frags = 0;
+    }
 
     // Setup the thinkers and map objects lists
-    v0 = 0x80096550;                                    // Result = gThinkerCap[0] (80096550)
-    sw(v0, v0);                                         // Store to: gThinkerCap[0] (80096550)
-    at = 0x80090000;                                    // Result = 80090000
-    sw(v0, at + 0x6554);                                // Store to: gThinkerCap[1] (80096554)
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x715C;                                       // Result = gMObjHead[5] (800A8EA4)
-    v1 = v0 - 0x14;                                     // Result = gMObjHead[0] (800A8E90)
-    sw(v1, v0);                                         // Store to: gMObjHead[5] (800A8EA4)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(v1, at - 0x7160);                                // Store to: gMObjHead[4] (800A8EA0)
+    gThinkerCap->prev = gThinkerCap.get();
+    gThinkerCap->next = gThinkerCap.get();
+
+    gMObjHead->next = gMObjHead.get();
+    gMObjHead->prev = gMObjHead.get();
 
     // Setup the item respawn queue and map object kill count
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7EC8);                                 // Store to: gItemRespawnQueueHead (80078138)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7E80);                                 // Store to: gItemRespawnQueueTail (80078180)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7FF0);                                 // Store to: gNumMObjKilled (80078010)
+    *gItemRespawnQueueHead = 0;
+    *gItemRespawnQueueTail = 0;
+    *gNumMObjKilled = 0;
 
     // Figure out which file to open for the map WAD.
     // Not sure why the PSX code was checking for a negative map index here, maybe a special dev/test thing?
@@ -995,11 +971,8 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     // Build sector line lists etc.
     P_GroupLines();
 
-    // Deathmatch starts
-    v0 = 0x8009806C;        // Result = gDeathmatchStarts[0] (8009806C)              
-    sw(v0, gp + 0xA80);     // Store to: gpDeathmatchP (80078060)
-
-    // Load and spawn things
+    // Load and spawn map things. Also initialize the next deathmatch start.
+    *gpDeathmatchP = &gDeathmatchStarts[0];
     P_LoadThings(mapStartLump + ML_THINGS);
     
     // Spawn special thinkers such as light flashes etc. and free up the loaded WAD data
@@ -1026,42 +999,31 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 
     // Spawn the player(s)
     if (*gNetGame != gt_single) {
-        s1 = 0;
         I_NetHandshake();
-        s3 = 0x800A8E7C;            // Result = gPlayer1MapThing[0] (800A8E7C)
-        s2 = 0;
-
-        do {
-            a2 = 0;
-            a3 = 0;
-            a0 = lh(s3);                // Load from: gPlayer1MapThing[0] (800A8E7C)
-            a1 = lh(s3 + 0x2);          // Load from: gPlayer1MapThing[1] (800A8E7E)
-            a0 <<= 16;
-            a1 <<= 16;
+        
+        // Randomly spawn players in different locations - this logic is a little strange.
+        // We spawn all players in the same location but immediately respawn and remove the old 'mobj_t' to get the random starts.
+        for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+            a0 = (int32_t) gPlayerStarts[0].x << FRACBITS;
+            a1 = (int32_t) gPlayerStarts[0].y << FRACBITS;
+            a2 = 0; // Z
+            a3 = MT_PLAYER;
             P_SpawnMObj();
-            s0 = v0;
-            at = 0x800A87EC;            // Result = gPlayer1[0] (800A87EC)
-            at += s2;
-            sw(s0, at);
-            a0 = s1;
+            mobj_t* const pMObj = vmAddrToPtr<mobj_t>(v0);
+            
+            gPlayers[playerIdx].mo = pMObj;
+
+            a0 = playerIdx;
             G_DoReborn();
-            a0 = s0;
+
+            a0 = ptrToVmAddr(pMObj);
             P_RemoveMObj();
-            s1++;
-            v0 = (i32(s1) < 2);
-            s2 += 0x12C;
-        } while (v0 != 0);
+        }
     }
     else {
-        a0 = 0x800A8E7C;    // Result = gPlayer1MapThing[0] (800A8E7C)
+        a0 = ptrToVmAddr(&gPlayerStarts[0]);
         P_SpawnPlayer();
     }
-    
-    s3 = lw(sp + 0x84);
-    s2 = lw(sp + 0x80);
-    s1 = lw(sp + 0x7C);
-    s0 = lw(sp + 0x78);
-    sp += 0x98;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

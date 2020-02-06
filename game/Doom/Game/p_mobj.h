@@ -1,5 +1,11 @@
 #pragma once
 
+#include "PsxVm/VmPtr.h"
+
+extern const VmPtr<int32_t>     gItemRespawnQueueHead;
+extern const VmPtr<int32_t>     gItemRespawnQueueTail;
+extern const VmPtr<int32_t>     gNumMObjKilled;
+
 void P_RemoveMObj() noexcept;
 void P_RespawnSpecials() noexcept;
 void P_SetMObjState() noexcept;

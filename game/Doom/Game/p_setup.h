@@ -5,36 +5,43 @@
 
 struct leafedge_t;
 struct line_t;
+struct mapthing_t;
 struct node_t;
 struct seg_t;
 struct side_t;
 struct texture_t;
 struct vertex_t;
 
-extern const VmPtr<VmPtr<uint16_t>>         gpBlockmapLump;
-extern const VmPtr<VmPtr<uint16_t>>         gpBlockmap;
-extern const VmPtr<int32_t>                 gBlockmapWidth;
-extern const VmPtr<int32_t>                 gBlockmapHeight;
-extern const VmPtr<fixed_t>                 gBlockmapOriginX;
-extern const VmPtr<fixed_t>                 gBlockmapOriginY;
-extern const VmPtr<VmPtr<VmPtr<mobj_t>>>    gppBlockLinks;
-extern const VmPtr<int32_t>                 gNumVertexes;
-extern const VmPtr<VmPtr<vertex_t>>         gpVertexes;
-extern const VmPtr<int32_t>                 gNumSectors;
-extern const VmPtr<VmPtr<sector_t>>         gpSectors;
-extern const VmPtr<int32_t>                 gNumSides;
-extern const VmPtr<VmPtr<side_t>>           gpSides;
-extern const VmPtr<int32_t>                 gNumLines;
-extern const VmPtr<VmPtr<line_t>>           gpLines;
-extern const VmPtr<int32_t>                 gNumSubsectors;
-extern const VmPtr<VmPtr<subsector_t>>      gpSubsectors;
-extern const VmPtr<int32_t>                 gNumBspNodes;
-extern const VmPtr<VmPtr<node_t>>           gpBspNodes;
-extern const VmPtr<int32_t>                 gNumSegs;
-extern const VmPtr<VmPtr<seg_t>>            gpSegs;
-extern const VmPtr<int32_t>                 gTotalNumLeafEdges;
-extern const VmPtr<VmPtr<leafedge_t>>       gpLeafEdges;
-extern const VmPtr<VmPtr<uint8_t>>          gpRejectMatrix;
+// Maximum amount of deathmatch starts
+static constexpr uint32_t MAX_DEATHMATCH_STARTS	= 10;
+
+extern const VmPtr<VmPtr<uint16_t>>                     gpBlockmapLump;
+extern const VmPtr<VmPtr<uint16_t>>                     gpBlockmap;
+extern const VmPtr<int32_t>                             gBlockmapWidth;
+extern const VmPtr<int32_t>                             gBlockmapHeight;
+extern const VmPtr<fixed_t>                             gBlockmapOriginX;
+extern const VmPtr<fixed_t>                             gBlockmapOriginY;
+extern const VmPtr<VmPtr<VmPtr<mobj_t>>>                gppBlockLinks;
+extern const VmPtr<int32_t>                             gNumVertexes;
+extern const VmPtr<VmPtr<vertex_t>>                     gpVertexes;
+extern const VmPtr<int32_t>                             gNumSectors;
+extern const VmPtr<VmPtr<sector_t>>                     gpSectors;
+extern const VmPtr<int32_t>                             gNumSides;
+extern const VmPtr<VmPtr<side_t>>                       gpSides;
+extern const VmPtr<int32_t>                             gNumLines;
+extern const VmPtr<VmPtr<line_t>>                       gpLines;
+extern const VmPtr<int32_t>                             gNumSubsectors;
+extern const VmPtr<VmPtr<subsector_t>>                  gpSubsectors;
+extern const VmPtr<int32_t>                             gNumBspNodes;
+extern const VmPtr<VmPtr<node_t>>                       gpBspNodes;
+extern const VmPtr<int32_t>                             gNumSegs;
+extern const VmPtr<VmPtr<seg_t>>                        gpSegs;
+extern const VmPtr<int32_t>                             gTotalNumLeafEdges;
+extern const VmPtr<VmPtr<leafedge_t>>                   gpLeafEdges;
+extern const VmPtr<VmPtr<uint8_t>>                      gpRejectMatrix;
+extern const VmPtr<mapthing_t[MAXPLAYERS]>              gPlayerStarts;
+extern const VmPtr<mapthing_t[MAX_DEATHMATCH_STARTS]>   gDeathmatchStarts;
+extern const VmPtr<VmPtr<mapthing_t>>                   gpDeathmatchP;
 
 extern void (*gUpdateFireSkyFunc)(texture_t& skyTex);
 

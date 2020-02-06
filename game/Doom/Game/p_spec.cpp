@@ -1892,11 +1892,10 @@ loc_80027978:
     s1++;
     goto loc_80027A3C;
 loc_80027988:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FEC);                               // Load from: gTotalSecret (80077FEC)
+    v0 = *gTotalSecret;
     v0++;
     at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7FEC);                                // Store to: gTotalSecret (80077FEC)
+    *gTotalSecret = v0;
     s1++;
     goto loc_80027A3C;
 loc_800279A8:

@@ -65,6 +65,7 @@ const VmPtr<int32_t>                gMapNumToCheatWarpTo(0x80078270);       // W
 const VmPtr<int32_t>                gVramViewerTexPage(0x80077ED4);         // What page of texture memory to display in the VRAM viewer
 const VmPtr<uint32_t[MAXPLAYERS]>   gTicButtons(0x80077F44);                // Currently pressed buttons by all players
 const VmPtr<uint32_t[MAXPLAYERS]>   gOldTicButtons(0x80078214);             // Previously pressed buttons by all players
+const VmPtr<thinker_t>              gThinkerCap(0x80096550);                // Dummy thinker which serves as both the head and tail of the thinkers list.
 const VmPtr<mobj_t>                 gMObjHead(0x800A8E90);                  // Dummy map object which serves as both the head and tail of the map objects linked list.
 
 static const VmPtr<int32_t>                     gCurCheatBtnSequenceIdx(0x80077FE4);    // What button press in the cheat sequence we are currently on

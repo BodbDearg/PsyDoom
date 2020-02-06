@@ -40,6 +40,11 @@ const VmPtr<int32_t> gPrevGameTic(0x80077FA4);
 // On the PSX if the game was running slow, then we might not have reached this amount.
 const VmPtr<int32_t> gLastTgtGameTicCount(0x8007829C);
 
+// Player stats
+const VmPtr<int32_t> gTotalKills(0x80077F20);
+const VmPtr<int32_t> gTotalItems(0x80077F2C);
+const VmPtr<int32_t> gTotalSecret(0x80077FEC);
+
 // Are we playing back or recording a demo?
 const VmPtr<bool32_t> gbDemoPlayback(0x80078080);
 const VmPtr<bool32_t> gbDemoRecording(0x800781AC);
@@ -243,10 +248,8 @@ loc_800130E8:
     }
     s0 = 0;
     s4 = s2;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7FA0);                               // Load from: gpDeathmatchP (80078060)
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 -= 0x7F94;                                       // Result = gDeathmatchStarts[0] (8009806C)
+    v1 = *gpDeathmatchP;
+    v0 = gDeathmatchStarts;
     v1 -= v0;
     v0 = v1 << 1;
     v0 += v1;
@@ -281,8 +284,7 @@ loc_8001316C:
     v0 = v1 << 2;
     v0 += v1;
     v0 <<= 1;
-    v1 = 0x800A0000;                                    // Result = 800A0000
-    v1 -= 0x7F94;                                       // Result = gDeathmatchStarts[0] (8009806C)
+    v1 = gDeathmatchStarts;
     s1 = v0 + v1;
     a1 = lh(s1);
     a2 = lh(s1 + 0x2);
@@ -300,7 +302,7 @@ loc_8001316C:
     v0 += s3;
     v0 <<= 1;
     v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7184;                                       // Result = gPlayer1MapThing[0] (800A8E7C)
+    v1 -= 0x7184;                                       // Result = gPlayerStarts_1[0] (800A8E7C)
     s1 = v0 + v1;
     goto loc_80013278;
 loc_800131D8:
@@ -309,7 +311,7 @@ loc_800131D8:
     goto loc_80013278;
 loc_800131E4:
     v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7184;                                       // Result = gPlayer1MapThing[0] (800A8E7C)
+    v0 -= 0x7184;                                       // Result = gPlayerStarts_1[0] (800A8E7C)
     s1 = v1 + v0;
     at = 0x800B0000;                                    // Result = 800B0000
     at -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
@@ -326,7 +328,7 @@ loc_800131E4:
     s2 = 0;                                             // Result = 00000000
 loc_80013224:
     s4 = 0x800B0000;                                    // Result = 800B0000
-    s4 -= 0x7184;                                       // Result = gPlayer1MapThing[0] (800A8E7C)
+    s4 -= 0x7184;                                       // Result = gPlayerStarts_1[0] (800A8E7C)
     s1 = s2 + s4;
     at = 0x800B0000;                                    // Result = 800B0000
     at -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
@@ -356,7 +358,7 @@ loc_80013288:
     v0 <<= 1;
     v1 = s0 + 1;
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x717E;                                       // Result = gPlayer1MapThing[3] (800A8E82)
+    at -= 0x717E;                                       // Result = gPlayerStarts_1[3] (800A8E82)
     at += v0;
     sh(v1, at);
     s0 = v1;
