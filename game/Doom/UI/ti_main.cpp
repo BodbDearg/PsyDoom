@@ -4,6 +4,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
 #include "Doom/Base/w_wad.h"
+#include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/p_firesky.h"
 #include "Doom/Renderer/r_data.h"
@@ -20,13 +21,13 @@ void START_Title() noexcept {
     sw(s2, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
+
     I_PurgeTexCache();
+
     s1 = 0x80070000;                                    // Result = 80070000
     s1 += 0x7C4C;                                       // Result = STR_LumpName_LOADING[0] (80077C4C)
-    a0 = s1;                                            // Result = STR_LumpName_LOADING[0] (80077C4C)
-    a1 = 1;                                             // Result = 00000001
-    a2 = 0;                                             // Result = 00000000
-    _thunk_W_CacheLumpName();
+
+    W_CacheLumpName("LOADING", PU_STATIC, false);
     s0 = 0x80090000;                                    // Result = 80090000
     s0 += 0x7A90;                                       // Result = gTex_LOADING[0] (80097A90)
     a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
@@ -46,28 +47,23 @@ void START_Title() noexcept {
     
     s4 = 0x80070000;                                    // Result = 80070000
     s4 += 0x7C54;                                       // Result = STR_LumpName_MARB01[0] (80077C54)
-    a0 = s4;                                            // Result = STR_LumpName_MARB01[0] (80077C54)
-    a1 = 1;                                             // Result = 00000001
-    a2 = 0;                                             // Result = 00000000
-    _thunk_W_CacheLumpName();
+    W_CacheLumpName("MARB01", PU_STATIC, false);
+    
     s3 = 0x80070000;                                    // Result = 80070000
     s3 += 0x7C5C;                                       // Result = STR_LumpName_BUTTONS[0] (80077C5C)
     a0 = s3;                                            // Result = STR_LumpName_BUTTONS[0] (80077C5C)
     a1 = 1;                                             // Result = 00000001
     a2 = 0;                                             // Result = 00000000
-    _thunk_W_CacheLumpName();
+    W_CacheLumpName("BUTTONS", PU_STATIC, false);
+    
     s2 = 0x80070000;                                    // Result = 80070000
     s2 += 0x7C64;                                       // Result = STR_LumpName_NETERR[0] (80077C64)
-    a0 = s2;                                            // Result = STR_LumpName_NETERR[0] (80077C64)
-    a1 = 1;                                             // Result = 00000001
-    a2 = 0;                                             // Result = 00000000
-    _thunk_W_CacheLumpName();
+    W_CacheLumpName("NETERR", PU_STATIC, false);
+
     s1 = 0x80070000;                                    // Result = 80070000
     s1 += 0x7C6C;                                       // Result = STR_LumpName_PAUSE[0] (80077C6C)
-    a0 = s1;                                            // Result = STR_LumpName_PAUSE[0] (80077C6C)
-    a1 = 1;                                             // Result = 00000001
-    a2 = 0;                                             // Result = 00000000
-    _thunk_W_CacheLumpName();
+    W_CacheLumpName("PAUSE", PU_STATIC, false);
+
     a0 = s0 + 0x20;                                     // Result = gTex_MARB01[0] (80097AB0)
     a1 = s4;                                            // Result = STR_LumpName_MARB01[0] (80077C54)
     a2 = 0;                                             // Result = 00000000
@@ -97,14 +93,12 @@ void START_Title() noexcept {
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7C7C;                                       // Result = STR_LumpName_SKY09[0] (80077C7C)
     _thunk_R_TextureNumForName();
-    a1 = 0x20;                                          // Result = 00000020
     v1 = *gpTextures;
     v0 <<= 5;
     v0 += v1;
     a0 = lh(v0 + 0x10);
     *gpSkyTexture = v0;
-    a2 = 1;                                             // Result = 00000001
-    _thunk_W_CacheLumpNum();
+    W_CacheLumpNum(a0, PU_CACHE, true);
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lhu(v0 - 0x6F5E);                              // Load from: gPaletteClutId_Sky (800A90A2)
     a0 = *gpSkyTexture;

@@ -5,7 +5,6 @@
 #include "i_file.h"
 #include "i_main.h"
 #include "PcPsx/Endian.h"
-#include "PsxVm/PsxVm.h"
 #include "PsxVm/VmSVal.h"
 #include "z_zone.h"
 
@@ -237,19 +236,11 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
     return lumpCacheEntry.get();
 }
 
-void _thunk_W_CacheLumpNum() noexcept {
-    v0 = ptrToVmAddr(W_CacheLumpNum((int32_t) a0, (int16_t) a1, (a2 != 0)));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Helper that caches a specified lump name from the main IWAD
 //------------------------------------------------------------------------------------------------------------------------------------------
 void* W_CacheLumpName(const char* const name, const int16_t allocTag, const bool bDecompress) noexcept {
     return W_CacheLumpNum(W_GetNumForName(name), allocTag, bDecompress);
-}
-
-void _thunk_W_CacheLumpName() noexcept {
-    v0 = ptrToVmAddr(W_CacheLumpName(vmAddrToPtr<const char>(a0), (int16_t) a1, (a2 != 0)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -62,12 +62,10 @@ loc_80025F78:
     }
     s0 = a0;
     if (v0 != 0) goto loc_800261B8;
-    a1 = 8;                                             // Result = 00000008
 loc_80025FE0:
     a0 = *gFirstTexLumpNum;
-    a2 = 0;                                             // Result = 00000000
     a0 += s0;
-    _thunk_W_CacheLumpNum();
+    W_CacheLumpNum(a0, PU_ANIMATION, false);
     v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
     a0 = s0 << 5;
     v0 = lw(v0 + 0x8);
@@ -126,12 +124,10 @@ loc_800260A4:
     }
     s0 = a0;
     if (v0 != 0) goto loc_800261B8;
-    a1 = 8;                                             // Result = 00000008
 loc_800260FC:
     a0 = *gFirstFlatLumpNum;
-    a2 = 0;                                             // Result = 00000000
     a0 += s0;
-    _thunk_W_CacheLumpNum();
+    W_CacheLumpNum(a0, PU_ANIMATION, false);
     v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
     a0 = s0 << 5;
     v0 = lw(v0 + 0x8);

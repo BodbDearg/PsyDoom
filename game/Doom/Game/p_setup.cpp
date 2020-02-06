@@ -1215,9 +1215,7 @@ loc_80023A48:
     I_Error("CacheSprite: invalid sprite lump %d", (int32_t) s0);
     a0 = s0;
 loc_80023A5C:
-    a1 = 8;                                             // Result = 00000008
-    a2 = 0;                                             // Result = 00000000
-    _thunk_W_CacheLumpNum();
+    W_CacheLumpNum(a0, PU_ANIMATION, false);
     v0 = lw(s3);
     if (v0 == 0) goto loc_80023A88;
     s2++;                                               // Result = 00000001

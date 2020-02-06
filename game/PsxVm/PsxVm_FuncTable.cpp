@@ -267,8 +267,6 @@ extern void _thunk_R_TextureNumForName() noexcept;
 extern void _thunk_R_FlatNumForName() noexcept;
 extern void _thunk_R_PointToAngle2() noexcept;
 extern void _thunk_R_PointInSubsector() noexcept;
-extern void _thunk_W_CacheLumpNum() noexcept;
-extern void _thunk_W_CacheLumpName() noexcept;
 extern void _thunk_Z_Malloc() noexcept;
 extern void _thunk_Z_EndMalloc() noexcept;
 extern void _thunk_Z_Free2() noexcept;
@@ -1154,8 +1152,6 @@ namespace PsxVm {
         { 0x8002BE68, &_thunk_R_FlatNumForName },
         { 0x80030BA0, &_thunk_R_PointToAngle2 },
         { 0x80030F5C, &_thunk_R_PointInSubsector },
-        { 0x800317AC, &_thunk_W_CacheLumpNum },
-        { 0x800319E4, &_thunk_W_CacheLumpName },
         { 0x800321D0, &_thunk_Z_Malloc },
         { 0x800323C8, &_thunk_Z_EndMalloc },
         { 0x800325D8, &_thunk_Z_Free2 },
