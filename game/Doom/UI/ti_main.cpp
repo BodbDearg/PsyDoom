@@ -285,18 +285,24 @@ void DRAW_Title() noexcept {
     const uint8_t texU = skytex.texPageCoordX;
     const uint8_t texV = skytex.texPageCoordY;
 
+    #if PC_PSX_DOOM_MODS
+        constexpr uint8_t SKY_W = 64;   // PC-PSX: fix a 4 pixel gap at the right side of the screen with the fire
+    #else
+        constexpr uint8_t SKY_W = 63;
+    #endif
+
     LIBGPU_setUV4(polyPrim,
-        texU,       texV,
-        texU + 63,  texV,
-        texU,       texV + 127,
-        texU + 63,  texV + 127
+        texU,           texV,
+        texU + SKY_W,   texV,
+        texU,           texV + 127,
+        texU + SKY_W,   texV + 127
     );
 
     LIBGPU_setXY4(polyPrim,
         0,      116,
-        63,     116,
+        SKY_W,  116,
         0,      243,
-        63,     243
+        SKY_W,  243
     );
 
     polyPrim.tpage = skytex.texPageId;
@@ -306,12 +312,10 @@ void DRAW_Title() noexcept {
     for (int32_t i = 0; i < 4; ++i) {
         I_AddPrim(&polyPrim);
 
-        constexpr int64_t PIECE_X_STEP = 63;
-
-        polyPrim.x0 += PIECE_X_STEP;
-        polyPrim.x1 += PIECE_X_STEP;
-        polyPrim.x2 += PIECE_X_STEP;
-        polyPrim.x3 += PIECE_X_STEP;
+        polyPrim.x0 += SKY_W;
+        polyPrim.x1 += SKY_W;
+        polyPrim.x2 += SKY_W;
+        polyPrim.x3 += SKY_W;
     }
 
     I_SubmitGpuCmds();
