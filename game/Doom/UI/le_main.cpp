@@ -6,6 +6,7 @@
 #include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
 #include "PsxVm/PsxVm.h"
+#include "ti_main.h"
 
 void START_Legals() noexcept {
     sp -= 0x18;
@@ -35,13 +36,13 @@ void STOP_Legals() noexcept {
 }
 
 void TIC_Legals() noexcept {
-    v0 = lw(gp + 0xBB0);                                // Load from: gTitleScreenSpriteY (80078190)
+    v0 = *gTitleScreenSpriteY;
     {
         const bool bJump = (i32(v0) <= 0);
         v0--;
         if (bJump) goto loc_80035000;
     }
-    sw(v0, gp + 0xBB0);                                 // Store to: gTitleScreenSpriteY (80078190)
+    *gTitleScreenSpriteY = v0;
     {
         const bool bJump = (v0 != 0);
         v0 = 0;                                         // Result = 00000000
@@ -82,7 +83,7 @@ void DRAW_Legals() noexcept {
     I_IncDrawnFrameCount();
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7BD0;                                       // Result = gTex_LEGALS[0] (80097BD0)
-    a2 = lw(gp + 0xBB0);                                // Load from: gTitleScreenSpriteY (80078190)
+    a2 = *gTitleScreenSpriteY;
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     a1 = 0;                                             // Result = 00000000
