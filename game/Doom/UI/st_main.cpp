@@ -392,15 +392,10 @@ loc_80038AB8:
 void ST_Drawer() noexcept {
     sp -= 0x78;
     sw(s0, sp + 0x58);
-    sw(s5, sp + 0x6C);
     sw(s4, sp + 0x68);
-    sw(s3, sp + 0x64);
     sw(s2, sp + 0x60);
-    sw(s1, sp + 0x5C);
 
-    s0 = 0x1F800000;                                    // Result = 1F800000
-    s0 += 0x200;                                        // Result = 1F800200
-    a0 = s0;                                            // Result = 1F800200
+    a0 = 0x1F800200;
     a1 = 0;                                             // Result = 00000000
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lhu(a3 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
@@ -408,6 +403,7 @@ void ST_Drawer() noexcept {
     a2 = 0;                                             // Result = 00000000
     
     sw(0, sp + 0x10);
+
     v0 = v1 << 2;
     v0 += v1;
     v1 = v0 << 4;
@@ -417,447 +413,353 @@ void ST_Drawer() noexcept {
     v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
     s2 = v1 + v0;
     _thunk_LIBGPU_SetDrawMode();
-    s0 += 4;                                            // Result = 1F800204
-    t2 = 0xFF0000;                                      // Result = 00FF0000
-    t2 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t6 = 0x80080000;                                    // Result = 80080000
-    t6 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s1 = t6 & t2;                                       // Result = 00086550
-    t5 = 0x4000000;                                     // Result = 04000000
-    t4 = 0x80000000;                                    // Result = 80000000
-    t3 = -1;                                            // Result = FFFFFFFF
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    t1 = t0 << 2;
-    t7 = t1 + 4;
 
     I_AddPrim(getScratchAddr(128));
 
     v1 = 0x800B0000;                                    // Result = 800B0000
     v1 = lhu(v1 - 0x6F5C);                              // Load from: gPaletteClutId_UI (800A90A4)
-    a0 = *gStatusBarMsgTicsLeft;
+    
     v0 = 4;                                             // Result = 00000004
     at = 0x1F800000;                                    // Result = 1F800000
     sb(v0, at + 0x203);                                 // Store to: 1F800203
+    
     v0 = 0x65;                                          // Result = 00000065
     at = 0x1F800000;                                    // Result = 1F800000
     sb(v0, at + 0x207);                                 // Store to: 1F800207
+    
     at = 0x1F800000;                                    // Result = 1F800000
     sh(v1, at + 0x20E);                                 // Store to: 1F80020E
-    {
-        const bool bJump = (i32(a0) <= 0);
-        a0 = 7;                                         // Result = 00000007
-        if (bJump) goto loc_80038E54;
+
+    a0 = 7;
+
+    if (*gStatusBarMsgTicsLeft > 0) {
+        a2 = *gpStatusBarMsgStr;
+        a1 = 0xC1;
+        I_DrawStringSmall(a0, a1, vmAddrToPtr<const char>(a2));
+    } else {
+        v0 = lw(s2 + 0x124);
+        v0 &= 1;
+        a0 = sp + 0x18;
+         
+        if (v0 != 0) {
+            a2 = *gGameMap;
+            a1 = 0x80010000;                                    // Result = 80010000
+            a1 += 0x1628;                                       // Result = STR_LevelNumAndName[0] (80011628)
+            a3 = 0x80070000;                                    // Result = 80070000
+            a3 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
+            v0 = a2 << 5;
+            a3 += v0;
+            LIBC2_sprintf();
+
+            a0 = 7;
+            a1 = 0xC1;
+            a2 = sp + 0x18;
+            I_DrawStringSmall(a0, a1, vmAddrToPtr<const char>(a2));
+        }
     }
-    a2 = *gpStatusBarMsgStr;
-    a1 = 0xC1;
-    goto loc_80038E98;
-loc_80038E54:
-    v0 = lw(s2 + 0x124);
-    v0 &= 1;
-    a0 = sp + 0x18;
-    if (v0 == 0) goto loc_80038EA0;
-    a2 = *gGameMap;
-    a1 = 0x80010000;                                    // Result = 80010000
-    a1 += 0x1628;                                       // Result = STR_LevelNumAndName[0] (80011628)
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
-    v0 = a2 << 5;
-    a3 += v0;
-    LIBC2_sprintf();
-    a0 = 7;                                             // Result = 00000007
-    a1 = 0xC1;                                          // Result = 000000C1
-    a2 = sp + 0x18;
-loc_80038E98:
-    I_DrawStringSmall(a0, a1, vmAddrToPtr<const char>(a2));
-loc_80038EA0:
-    t3 = 0x1F800000;                                    // Result = 1F800000
-    t3 += 0x204;                                        // Result = 1F800204
-    t2 = 0xFF0000;                                      // Result = 00FF0000
-    t2 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t7 = 0x80080000;                                    // Result = 80080000
-    t7 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s1 = t7 & t2;                                       // Result = 00086550
-    t6 = 0x4000000;                                     // Result = 04000000
-    t5 = 0x80000000;                                    // Result = 80000000
-    t4 = -1;                                            // Result = FFFFFFFF
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
+
     v0 = 0xC8;                                          // Result = 000000C8
     at = 0x1F800000;                                    // Result = 1F800000
     sh(v0, at + 0x20A);                                 // Store to: 1F80020A
+    
     v0 = 0x100;                                         // Result = 00000100
     at = 0x1F800000;                                    // Result = 1F800000
     sh(v0, at + 0x210);                                 // Store to: 1F800210
+    
     v0 = 0x28;                                          // Result = 00000028
     at = 0x1F800000;                                    // Result = 1F800000
     sh(0, at + 0x208);                                  // Store to: 1F800208
+    
     at = 0x1F800000;                                    // Result = 1F800000
     sb(0, at + 0x20C);                                  // Store to: 1F80020C
+    
     at = 0x1F800000;                                    // Result = 1F800000
     sb(0, at + 0x20D);                                  // Store to: 1F80020D
+    
     at = 0x1F800000;                                    // Result = 1F800000
     sh(v0, at + 0x212);                                 // Store to: 1F800212
-    t1 = t0 << 2;
-    s0 = t1 + 4;
 
     I_AddPrim(getScratchAddr(128));
 
     s4 = lw(s2 + 0x70);
-    v0 = 0xA;                                           // Result = 0000000A
-    {
-        const bool bJump = (s4 != v0);
-        v0 = s4 << 1;
-        if (bJump) goto loc_80039178;
-    }
-    s4 = lw(s2 + 0x6C);
     v0 = s4 << 1;
-loc_80039178:
+
+    if (s4 == 0xA) {
+        s4 = lw(s2 + 0x6C);
+        v0 = s4 << 1;
+    }
+    
     v0 += s4;
     v0 <<= 3;
     at = 0x80060000;                                    // Result = 80060000
     at += 0x70F4;                                       // Result = WeaponInfo_Fist[0] (800670F4)
     at += v0;
     a2 = lw(at);
-    v0 = 5;                                             // Result = 00000005
-    {
-        const bool bJump = (a2 != v0);
-        v0 = a2 << 2;
-        if (bJump) goto loc_800391D4;
+    v0 = a2 << 2;
+
+    if (a2 == 5) {
+        a2 = 0;
+    } else {
+        v0 += s2;
+        a2 = lw(v0 + 0x98);
     }
-    a2 = 0;                                             // Result = 00000000
-    goto loc_800391DC;
-loc_800391D4:
-    v0 += s2;
-    a2 = lw(v0 + 0x98);
-loc_800391DC:
+
     a0 = 0x1C;                                          // Result = 0000001C
-    a1 = 0xCC;                                          // Result = 000000CC
+    a1 = 0xCC;                                          // Result = 000000CC    
     _thunk_I_DrawNumber();
+
     a0 = 0x47;                                          // Result = 00000047
     a2 = lw(s2 + 0x24);
-    a1 = 0xCC;                                          // Result = 000000CC
+    a1 = 0xCC;                                          // Result = 000000CC    
     _thunk_I_DrawNumber();
+
     a0 = 0xA8;                                          // Result = 000000A8
     a2 = lw(s2 + 0x28);
     a1 = 0xCC;                                          // Result = 000000CC
     _thunk_I_DrawNumber();
+
     t4 = 0;                                             // Result = 00000000
-    s5 = 0x1F800000;                                    // Result = 1F800000
-    s5 += 0x200;                                        // Result = 1F800200
-    t5 = 0xFF0000;                                      // Result = 00FF0000
-    t5 |= 0xFFFF;                                       // Result = 00FFFFFF
-    s3 = 0x80080000;                                    // Result = 80080000
-    s3 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s1 = s3 & t5;                                       // Result = 00086550
-    t9 = 0x4000000;                                     // Result = 04000000
-    t8 = 0x80000000;                                    // Result = 80000000
-    t7 = -1;                                            // Result = FFFFFFFF
     s0 = 0x72;                                          // Result = 00000072
     t6 = 0;                                             // Result = 00000000
+    
     v0 = 0x64;                                          // Result = 00000064
     at = 0x1F800000;                                    // Result = 1F800000
     sh(v0, at + 0x208);                                 // Store to: 1F800208
+    
     v0 = 0xB8;                                          // Result = 000000B8
     at = 0x1F800000;                                    // Result = 1F800000
     sb(v0, at + 0x20D);                                 // Store to: 1F80020D
+    
     v0 = 0xB;                                           // Result = 0000000B
     at = 0x1F800000;                                    // Result = 1F800000
     sh(v0, at + 0x210);                                 // Store to: 1F800210
+    
     v0 = 8;                                             // Result = 00000008
     at = 0x1F800000;                                    // Result = 1F800000
     sh(v0, at + 0x212);                                 // Store to: 1F800212
-loc_8003926C:
-    v0 = t4 << 2;
-    v0 += s2;
-    v0 = lw(v0 + 0x48);
-    t3 = s5 + 4;                                        // Result = 1F800204
-    if (v0 != 0) goto loc_800392BC;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4C;                                       // Result = gStatusBarKeyState[0] (800A94B4)
-    at += t6;
-    v0 = lh(at);
-    if (v0 == 0) goto loc_80039508;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4A;                                       // Result = gStatusBarKeyState[1] (800A94B6)
-    at += t6;
-    v0 = lh(at);
-    if (v0 == 0) goto loc_80039508;
-loc_800392BC:
-    v0 = t4 << 1;
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x40D0;                                       // Result = StatusBarKeyYPos[0] (800740D0)
-    at += v0;
-    v0 = lhu(at);
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(s0, at + 0x20C);                                 // Store to: 1F80020C
-    t1 = t0 << 2;
-    t2 = t1 + 4;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x20A);                                 // Store to: 1F80020A
 
-    I_AddPrim(getScratchAddr(128));
+    do {
+        v0 = t4 << 2;
+        v0 += s2;
+        v0 = lw(v0 + 0x48);
 
-loc_80039508:
-    s0 += 0xB;
-    t4++;
-    v0 = (i32(t4) < 6);
-    t6 += 8;
-    if (v0 != 0) goto loc_8003926C;
+        if ((v0 != 0) || (
+                (lh(0x800A94B4 + t6) != 0) &&               // Result = gStatusBarKeyState[0] (800A94B4)
+                (lh(0x800A94B6 + t6) != 0)                  // Result = gStatusBarKeyState[1] (800A94B6)
+            )
+        ) {
+            v0 = t4 << 1;
+            at = 0x80070000;                                    // Result = 80070000
+            at += 0x40D0;                                       // Result = StatusBarKeyYPos[0] (800740D0)
+            at += v0;
+            
+            v0 = lhu(at);
+            at = 0x1F800000;                                    // Result = 1F800000
+            sb(s0, at + 0x20C);                                 // Store to: 1F80020C
+            
+            at = 0x1F800000;                                    // Result = 1F800000
+            sh(v0, at + 0x20A);                                 // Store to: 1F80020A
+
+            I_AddPrim(getScratchAddr(128));
+        }
+
+        s0 += 0xB;
+        t4++;
+        v0 = (i32(t4) < 6);
+        t6 += 8;
+    } while (v0 != 0);
+
     v1 = *gNetGame;
     v0 = 2;
-    t2 = 0xFF0000;
-    if (v1 == v0) goto loc_80039DD8;
-    t3 = 0x1F800000;                                    // Result = 1F800000
-    t3 += 0x204;                                        // Result = 1F800204
-    t2 |= 0xFFFF;                                       // Result = 00FFFFFF
-    s0 = 0x80080000;                                    // Result = 80080000
-    s0 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s1 = s0 & t2;                                       // Result = 00086550
-    t6 = 0x4000000;                                     // Result = 04000000
-    t5 = 0x80000000;                                    // Result = 80000000
-    t4 = -1;                                            // Result = FFFFFFFF
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = 0xC8;                                          // Result = 000000C8
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x208);                                 // Store to: 1F800208
-    v0 = 0xCD;                                          // Result = 000000CD
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x20A);                                 // Store to: 1F80020A
-    v0 = 0xB4;                                          // Result = 000000B4
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20C);                                 // Store to: 1F80020C
-    v0 = 0xB8;                                          // Result = 000000B8
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-    v0 = 0x33;                                          // Result = 00000033
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x210);                                 // Store to: 1F800210
-    v0 = 0x17;                                          // Result = 00000017
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x212);                                 // Store to: 1F800212
-    t1 = t0 << 2;
-    t7 = t1 + 4;
 
-    I_AddPrim(getScratchAddr(128));
+    if (v1 != v0) {
+        v0 = 0xC8;                                          // Result = 000000C8
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x208);                                 // Store to: 1F800208
+        
+        v0 = 0xCD;                                          // Result = 000000CD
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x20A);                                 // Store to: 1F80020A
+        
+        v0 = 0xB4;                                          // Result = 000000B4
+        at = 0x1F800000;                                    // Result = 1F800000
+        sb(v0, at + 0x20C);                                 // Store to: 1F80020C
+        
+        v0 = 0xB8;                                          // Result = 000000B8
+        at = 0x1F800000;                                    // Result = 1F800000
+        sb(v0, at + 0x20D);                                 // Store to: 1F80020D
+        
+        v0 = 0x33;                                          // Result = 00000033
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x210);                                 // Store to: 1F800210
 
-    t4 = 2;
+        v0 = 0x17;                                          // Result = 00000017
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x212);                                 // Store to: 1F800212
 
-    s3 = 0x1F800000;                                    // Result = 1F800000
-    s3 += 0x200;                                        // Result = 1F800200
-    t5 = 0xFF0000;                                      // Result = 00FF0000
-    t5 |= 0xFFFF;                                       // Result = 00FFFFFF
-    s1 = 0x80080000;                                    // Result = 80080000
-    s1 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    t9 = s1 & t5;                                       // Result = 00086550
-    t8 = 0x4000000;                                     // Result = 04000000
-    s0 = 0x80000000;                                    // Result = 80000000
-    t6 = -1;                                            // Result = FFFFFFFF
-    t7 = -0x18;                                         // Result = FFFFFFE8
-    v0 = 0xB8;                                          // Result = 000000B8
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-    v0 = 4;                                             // Result = 00000004
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x210);                                 // Store to: 1F800210
-    v0 = 6;                                             // Result = 00000006
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x212);                                 // Store to: 1F800212
-loc_80039844:
-    v0 = t4 << 2;
-    v0 += s2;
-    v0 = lw(v0 + 0x74);
-    t3 = s3 + 4;                                        // Result = 1F800204
-    if (v0 == 0) goto loc_80039AC8;
-    v0 = t4 << 1;
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x40B0;                                       // Result = StatusBarWeaponBoxesXPos[0] (800740B0)
-    at += v0;
-    v1 = lhu(at);
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 += 5;
-    t1 = t0 << 2;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v1, at + 0x208);                                 // Store to: 1F800208
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x40C0;                                       // Result = StatusBarWeaponBoxesYPos[0] (800740C0)
-    at += v0;
-    v0 = lhu(at);
-    t2 = t1 + 4;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(t7, at + 0x20C);                                 // Store to: 1F80020C
-    v0 += 3;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x20A);                                 // Store to: 1F80020A
+        I_AddPrim(getScratchAddr(128));
 
+        t4 = 2;
 
-    I_AddPrim(getScratchAddr(128));
+        t7 = -0x18;                                         // Result = FFFFFFE8
+        v0 = 0xB8;                                          // Result = 000000B8
+        at = 0x1F800000;                                    // Result = 1F800000
+        sb(v0, at + 0x20D);                                 // Store to: 1F80020D
+        
+        v0 = 4;                                             // Result = 00000004
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x210);                                 // Store to: 1F800210
 
-loc_80039AC8:
-    t4++;
-    v0 = (i32(t4) < 8);
-    t7 += 4;
-    if (v0 != 0) goto loc_80039844;
-    t2 = 0x1F800000;                                    // Result = 1F800000
-    t2 += 0x204;                                        // Result = 1F800204
-    t3 = 0xFF0000;                                      // Result = 00FF0000
-    t3 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t7 = 0x80080000;                                    // Result = 80080000
-    t7 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s1 = t7 & t3;                                       // Result = 00086550
-    t6 = 0x4000000;                                     // Result = 04000000
-    t5 = 0x80000000;                                    // Result = 80000000
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x408C;                                       // Result = WeaponNumbers[0] (8007408C)
-    v1 = s4 << 2;
-    v1 += v0;
-    t4 = -1;                                            // Result = FFFFFFFF
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    v0 = lw(v1);
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 <<= 1;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x40B0;                                       // Result = StatusBarWeaponBoxesXPos[0] (800740B0)
-    at += v0;
-    v0 = lhu(at);
-    t1 = t0 << 2;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x208);                                 // Store to: 1F800208
-    v0 = lw(v1);
-    s0 = t1 + 4;
-    v0 <<= 1;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x40C0;                                       // Result = StatusBarWeaponBoxesYPos[0] (800740C0)
-    at += v0;
-    v1 = lhu(at);
-    v0 = 0xA4;                                          // Result = 000000A4
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20C);                                 // Store to: 1F80020C
-    v0 = 0xC0;                                          // Result = 000000C0
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-    v0 = 0xC;                                           // Result = 0000000C
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x210);                                 // Store to: 1F800210
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x212);                                 // Store to: 1F800212
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v1, at + 0x20A);                                 // Store to: 1F80020A
+        v0 = 6;                                             // Result = 00000006
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x212);                                 // Store to: 1F800212
+
+        do {
+            v0 = t4 << 2;
+            v0 += s2;
+            v0 = lw(v0 + 0x74);
+
+            if (v0 != 0) {
+                v0 = t4 << 1;
+                at = 0x80070000;                                    // Result = 80070000
+                at += 0x40B0;                                       // Result = StatusBarWeaponBoxesXPos[0] (800740B0)
+                at += v0;
+                v1 = lhu(at);
+                v1 += 5;
+                at = 0x1F800000;                                    // Result = 1F800000
+                sh(v1, at + 0x208);                                 // Store to: 1F800208
+                
+                at = 0x80070000;                                    // Result = 80070000
+                at += 0x40C0;                                       // Result = StatusBarWeaponBoxesYPos[0] (800740C0)
+                at += v0;
+                v0 = lhu(at);
+                at = 0x1F800000;                                    // Result = 1F800000
+                sb(t7, at + 0x20C);                                 // Store to: 1F80020C
+
+                v0 += 3;
+                at = 0x1F800000;                                    // Result = 1F800000
+                sh(v0, at + 0x20A);                                 // Store to: 1F80020A
+
+                I_AddPrim(getScratchAddr(128));
+            }
+
+            t4++;
+            v0 = (i32(t4) < 8);
+            t7 += 4;
+        } while (v0 != 0);
+
+        v0 = 0x80070000;                                    // Result = 80070000
+        v0 += 0x408C;                                       // Result = WeaponNumbers[0] (8007408C)
+        v1 = s4 << 2;
+        v1 += v0;
+        v0 = lw(v1);
+        v0 <<= 1;
+        at = 0x80070000;                                    // Result = 80070000
+        at += 0x40B0;                                       // Result = StatusBarWeaponBoxesXPos[0] (800740B0)
+        at += v0;
+        v0 = lhu(at);
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x208);                                 // Store to: 1F800208
+
+        v0 = lw(v1);
+        v0 <<= 1;
+        at = 0x80070000;                                    // Result = 80070000
+        at += 0x40C0;                                       // Result = StatusBarWeaponBoxesYPos[0] (800740C0)
+        at += v0;
+        v1 = lhu(at);
+        
+        v0 = 0xA4;                                          // Result = 000000A4
+        at = 0x1F800000;                                    // Result = 1F800000
+        sb(v0, at + 0x20C);                                 // Store to: 1F80020C
+        
+        v0 = 0xC0;                                          // Result = 000000C0
+        at = 0x1F800000;                                    // Result = 1F800000
+        sb(v0, at + 0x20D);                                 // Store to: 1F80020D
+        
+        v0 = 0xC;                                           // Result = 0000000C        
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x210);                                 // Store to: 1F800210
+        
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x212);                                 // Store to: 1F800212
+        
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v1, at + 0x20A);                                 // Store to: 1F80020A
     
-    I_AddPrim(getScratchAddr(128));
-    goto loc_8003A0A8;
+        I_AddPrim(getScratchAddr(128));
+    } else {
+        v0 = 0xD1;                                          // Result = 000000D1
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x208);                                 // Store to: 1F800208
+        
+        v0 = 0xDD;                                          // Result = 000000DD
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x20A);                                 // Store to: 1F80020A
+        
+        v0 = 0xD0;                                          // Result = 000000D0
+        at = 0x1F800000;                                    // Result = 1F800000
+        sb(v0, at + 0x20C);                                 // Store to: 1F80020C
+        
+        v0 = 0xF3;                                          // Result = 000000F3
+        at = 0x1F800000;                                    // Result = 1F800000
+        sb(v0, at + 0x20D);                                 // Store to: 1F80020D
+        
+        v0 = 0x21;                                          // Result = 00000021
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x210);                                 // Store to: 1F800210
+        
+        v0 = 8;                                             // Result = 00000008
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x212);                                 // Store to: 1F800212
 
-loc_80039DD8:
-    t3 = 0x1F800000;                                    // Result = 1F800000
-    t3 += 0x204;                                        // Result = 1F800204
-    t2 |= 0xFFFF;                                       // Result = 00FFFFFF
-    s0 = 0x80080000;                                    // Result = 80080000
-    s0 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s1 = s0 & t2;                                       // Result = 00086550
-    t6 = 0x4000000;                                     // Result = 04000000
-    t5 = 0x80000000;                                    // Result = 80000000
-    t4 = -1;                                            // Result = FFFFFFFF
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = 0xD1;                                          // Result = 000000D1
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x208);                                 // Store to: 1F800208
-    v0 = 0xDD;                                          // Result = 000000DD
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x20A);                                 // Store to: 1F80020A
-    v0 = 0xD0;                                          // Result = 000000D0
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20C);                                 // Store to: 1F80020C
-    v0 = 0xF3;                                          // Result = 000000F3
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-    v0 = 0x21;                                          // Result = 00000021
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x210);                                 // Store to: 1F800210
-    v0 = 8;                                             // Result = 00000008
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x212);                                 // Store to: 1F800212
-    t1 = t0 << 2;
-    t7 = t1 + 4;
+        I_AddPrim(getScratchAddr(128));
 
-    I_AddPrim(getScratchAddr(128));
+        a0 = 0xE1;                                          // Result = 000000E1
+        a2 = lw(s2 + 0x64);
+        a1 = 0xCC;                                          // Result = 000000CC
+        _thunk_I_DrawNumber();
+    }
 
-    a0 = 0xE1;                                          // Result = 000000E1
-    a2 = lw(s2 + 0x64);
-    a1 = 0xCC;                                          // Result = 000000CC
-    _thunk_I_DrawNumber();
-
-loc_8003A0A8:
     v0 = lw(gp + 0xB50);                                // Load from: gbDrawStatusBarFace (80078130)
-    t6 = 0x4000000;                                     // Result = 04000000
-    if (v0 == 0) goto loc_8003A384;
-    t3 = 0x1F800000;                                    // Result = 1F800000
-    t3 += 0x204;                                        // Result = 1F800204
-    t2 = 0xFF0000;                                      // Result = 00FF0000
-    t2 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t7 = 0x80080000;                                    // Result = 80080000
-    t7 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    v1 = lw(gp + 0xC50);                                // Load from: gpCurStatusBarFaceSpriteInfo (80078230)
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = lbu(v1);
-    s1 = t7 & t2;                                       // Result = 00086550
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x208);                                 // Store to: 1F800208
-    v0 = lbu(v1 + 0x1);
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x20A);                                 // Store to: 1F80020A
-    v0 = lbu(v1 + 0x2);
-    t5 = 0x80000000;                                    // Result = 80000000
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20C);                                 // Store to: 1F80020C
-    v0 = lbu(v1 + 0x3);
-    t4 = -1;                                            // Result = FFFFFFFF
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-    v0 = lbu(v1 + 0x4);
-    t1 = t0 << 2;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x210);                                 // Store to: 1F800210
-    v0 = lbu(v1 + 0x5);
-    s0 = t1 + 4;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x212);                                 // Store to: 1F800212
 
-    I_AddPrim(getScratchAddr(128));     // TODO: status bar face
+    if (v0 != 0) {
+        v1 = lw(gp + 0xC50);                                // Load from: gpCurStatusBarFaceSpriteInfo (80078230)
+        
+        v0 = lbu(v1);
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x208);                                 // Store to: 1F800208
+        
+        v0 = lbu(v1 + 0x1);
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x20A);                                 // Store to: 1F80020A
+        
+        v0 = lbu(v1 + 0x2);
+        at = 0x1F800000;                                    // Result = 1F800000
+        sb(v0, at + 0x20C);                                 // Store to: 1F80020C
+        
+        v0 = lbu(v1 + 0x3);
+        at = 0x1F800000;                                    // Result = 1F800000
+        sb(v0, at + 0x20D);                                 // Store to: 1F80020D
+        
+        v0 = lbu(v1 + 0x4);
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x210);                                 // Store to: 1F800210
+        
+        v0 = lbu(v1 + 0x5);
+        at = 0x1F800000;                                    // Result = 1F800000
+        sh(v0, at + 0x212);                                 // Store to: 1F800212
 
-loc_8003A384:
+        I_AddPrim(getScratchAddr(128));     // TODO: status bar face
+    }
+
     v0 = *gbGamePaused;
 
-    if (v0 == 0) goto loc_8003A3A0;
-    I_DrawPausedOverlay();
-loc_8003A3A0:
+    if (v0 != 0) {
+        I_DrawPausedOverlay();
+    }
     
-    s5 = lw(sp + 0x6C);
     s4 = lw(sp + 0x68);
-    s3 = lw(sp + 0x64);
     s2 = lw(sp + 0x60);
-    s1 = lw(sp + 0x5C);
     s0 = lw(sp + 0x58);
     sp += 0x78;
 }
