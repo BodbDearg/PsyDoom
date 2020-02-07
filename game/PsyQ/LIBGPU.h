@@ -61,6 +61,25 @@ struct POLY_FT3 {
 
 static_assert(sizeof(POLY_FT3) == 32);
 
+// Drawing primitive: flat shaded colored quad (polygon 4)
+struct POLY_F4 {
+    uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive
+    uint8_t     r0;         // Color to shade the primitive with
+    uint8_t     g0;
+    uint8_t     b0;
+    uint8_t     code;       // Type info for the hardware
+	int16_t	    x0;         // Vertex 1: position
+    int16_t     y0;
+	int16_t	    x1;         // Vertex 2: position
+    int16_t     y1;
+	int16_t	    x2;         // Vertex 3: position
+    int16_t     y2;
+	int16_t	    x3;         // Vertex 4: position
+    int16_t     y3;
+};
+
+static_assert(sizeof(POLY_F4) == 24);
+
 // Drawing primitive: flat shaded textured quad (polygon 4)
 struct POLY_FT4 {
     uint32_t    tag;        // The primitive size and 24-bit pointer to the next primitive
@@ -265,7 +284,7 @@ void LIBGPU_SetPolyF3() noexcept;
 void LIBGPU_SetPolyFT3(POLY_FT3& poly) noexcept;
 void LIBGPU_SetPolyG3() noexcept;
 void LIBGPU_SetPolyGT3() noexcept;
-void LIBGPU_SetPolyF4() noexcept;
+void LIBGPU_SetPolyF4(POLY_F4& poly) noexcept;
 void LIBGPU_SetPolyFT4(POLY_FT4& poly) noexcept;
 void LIBGPU_SetPolyG4() noexcept;
 void LIBGPU_SetPolyGT4() noexcept;

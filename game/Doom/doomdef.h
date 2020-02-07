@@ -102,6 +102,9 @@ enum : uint32_t {
     BOXRIGHT
 };
 
+// Number of maps in the game
+static constexpr uint32_t NUMMAPS = 59;
+
 // Maximum number of ticks in a demo.
 // The maximum allowed demo size is 16384 ticks (demo size 64 KiB).
 const int32_t MAX_DEMO_TICKS = 16384;
@@ -296,6 +299,7 @@ static constexpr uint32_t CF_ALLMOBJ        = 0x8;      // Show all map objects
 static constexpr uint32_t CF_VRAMVIEWER     = 0x10;     // Showing the vram viewer
 static constexpr uint32_t CF_WARPMENU       = 0x20;     // Showing the warp to map menu
 static constexpr uint32_t CF_XRAYVISION     = 0x80;     // Do 'xray vision' or transparent walls
+static constexpr uint32_t CF_NOPAUSEMSG     = 0x100;    // Don't draw the 'paused' plaque when paused: never set anywhere?
 
 // Holds state specific to each player
 struct player_t {

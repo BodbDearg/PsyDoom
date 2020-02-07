@@ -1,8 +1,10 @@
 #include "i_misc.h"
 
+#include "Doom/Game/g_game.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_main.h"
+#include "Doom/UI/in_main.h"
 #include "Doom/UI/st_main.h"
 #include "i_drawcmds.h"
 #include "i_main.h"
@@ -10,6 +12,7 @@
 #include "PsyQ/LIBC2.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
+#include <cstdio>
 
 // Where on the UI texture are each of the font characters located and the size of each character
 struct fontchar_t {
@@ -20,72 +23,72 @@ struct fontchar_t {
 };
 
 static constexpr fontchar_t BIG_FONT_CHARS[] = {
-	{   0, 195,  11,  16 }, // 0 - 0
-	{  12, 195,  11,  16 }, // 1 - 1
-	{  24, 195,  11,  16 }, // 2 - 2
-	{  36, 195,  11,  16 }, // 3 - 3
-	{  48, 195,  11,  16 }, // 4 - 4
-	{  60, 195,  11,  16 }, // 5 - 5
-	{  72, 195,  11,  16 }, // 6 - 6
-	{  84, 195,  11,  16 }, // 7 - 7
-	{  96, 195,  11,  16 }, // 8 - 8
-	{ 108, 195,  11,  16 }, // 9 - 9
-	{ 232, 195,  11,  16 }, // - - 10
-	{ 120, 195,  11,  15 }, // % - 11
-	{   0, 211,   7,  16 }, // ! - 12
-	{   8, 211,   7,  16 }, // . - 13
-	{  16, 211,  15,  16 }, // A - 14
-	{  32, 211,  13,  16 }, // B - 15
-	{  46, 211,  12,  16 }, // C - 16
-	{  60, 211,  13,  16 }, // D - 17
-	{  74, 211,  13,  16 }, // E - 18
-	{  88, 211,  13,  16 }, // F - 19
-	{ 102, 211,  13,  16 }, // G - 20
-	{ 116, 211,  13,  16 }, // H - 21
-	{ 130, 211,   6,  16 }, // I - 22
-	{ 136, 211,  12,  16 }, // J - 23
-	{ 148, 211,  14,  16 }, // K - 24
-	{ 162, 211,  13,  16 }, // L - 25
-	{ 176, 211,  15,  16 }, // M - 26
-	{ 192, 211,  15,  16 }, // N - 27
-	{ 208, 211,  13,  16 }, // O - 28
-	{ 222, 211,  13,  16 }, // P - 29
-	{ 236, 211,  13,  16 }, // Q - 30
-	{   0, 227,  13,  16 }, // R - 31
-	{  14, 227,  13,  16 }, // S - 32
-	{  28, 227,  14,  16 }, // T - 33
-	{  42, 227,  13,  16 }, // U - 34
-	{  56, 227,  15,  16 }, // V - 35
-	{  72, 227,  15,  16 }, // W - 36
-	{  88, 227,  15,  16 }, // X - 37
-	{ 104, 227,  13,  16 }, // Y - 38
-	{ 118, 227,  13,  16 }, // Z - 39
-	{ 132, 230,  13,  13 }, // a - 40
-	{ 146, 230,  12,  13 }, // b - 41
-	{ 158, 230,  11,  13 }, // c - 42
-	{ 170, 230,  11,  13 }, // d - 43
+    {   0, 195,  11,  16 }, // 0 - 0
+    {  12, 195,  11,  16 }, // 1 - 1
+    {  24, 195,  11,  16 }, // 2 - 2
+    {  36, 195,  11,  16 }, // 3 - 3
+    {  48, 195,  11,  16 }, // 4 - 4
+    {  60, 195,  11,  16 }, // 5 - 5
+    {  72, 195,  11,  16 }, // 6 - 6
+    {  84, 195,  11,  16 }, // 7 - 7
+    {  96, 195,  11,  16 }, // 8 - 8
+    { 108, 195,  11,  16 }, // 9 - 9
+    { 232, 195,  11,  16 }, // - - 10
+    { 120, 195,  11,  15 }, // % - 11
+    {   0, 211,   7,  16 }, // ! - 12
+    {   8, 211,   7,  16 }, // . - 13
+    {  16, 211,  15,  16 }, // A - 14
+    {  32, 211,  13,  16 }, // B - 15
+    {  46, 211,  12,  16 }, // C - 16
+    {  60, 211,  13,  16 }, // D - 17
+    {  74, 211,  13,  16 }, // E - 18
+    {  88, 211,  13,  16 }, // F - 19
+    { 102, 211,  13,  16 }, // G - 20
+    { 116, 211,  13,  16 }, // H - 21
+    { 130, 211,   6,  16 }, // I - 22
+    { 136, 211,  12,  16 }, // J - 23
+    { 148, 211,  14,  16 }, // K - 24
+    { 162, 211,  13,  16 }, // L - 25
+    { 176, 211,  15,  16 }, // M - 26
+    { 192, 211,  15,  16 }, // N - 27
+    { 208, 211,  13,  16 }, // O - 28
+    { 222, 211,  13,  16 }, // P - 29
+    { 236, 211,  13,  16 }, // Q - 30
+    {   0, 227,  13,  16 }, // R - 31
+    {  14, 227,  13,  16 }, // S - 32
+    {  28, 227,  14,  16 }, // T - 33
+    {  42, 227,  13,  16 }, // U - 34
+    {  56, 227,  15,  16 }, // V - 35
+    {  72, 227,  15,  16 }, // W - 36
+    {  88, 227,  15,  16 }, // X - 37
+    { 104, 227,  13,  16 }, // Y - 38
+    { 118, 227,  13,  16 }, // Z - 39
+    { 132, 230,  13,  13 }, // a - 40
+    { 146, 230,  12,  13 }, // b - 41
+    { 158, 230,  11,  13 }, // c - 42
+    { 170, 230,  11,  13 }, // d - 43
     { 182, 230,  10,  13 }, // e - 44
-	{ 192, 230,  11,  13 }, // f - 45
-	{ 204, 230,  11,  13 }, // g - 46
-	{ 216, 230,  12,  13 }, // h - 47
-	{ 228, 230,   5,  13 }, // i - 48
-	{ 234, 230,  10,  13 }, // j - 49
-	{   0, 243,  12,  13 }, // k - 50
-	{  12, 243,   9,  13 }, // l - 51
-	{  22, 243,  13,  13 }, // m - 52
-	{  36, 243,  13,  13 }, // n - 53
-	{  50, 243,  11,  13 }, // o - 54
-	{  62, 243,  11,  13 }, // p - 55
-	{  74, 243,  11,  13 }, // q - 56
-	{  86, 243,  11,  13 }, // r - 57
-	{  98, 243,  12,  13 }, // s - 58
-	{ 112, 243,  11,  13 }, // t - 59
-	{ 124, 243,  11,  13 }, // u - 60
-	{ 136, 243,  13,  13 }, // v - 61
-	{ 150, 243,  13,  13 }, // w - 62
-	{ 164, 243,  13,  13 }, // x - 63
-	{ 178, 243,  13,  13 }, // y - 64
-	{ 192, 243,  13,  13 }  // z - 65
+    { 192, 230,  11,  13 }, // f - 45
+    { 204, 230,  11,  13 }, // g - 46
+    { 216, 230,  12,  13 }, // h - 47
+    { 228, 230,   5,  13 }, // i - 48
+    { 234, 230,  10,  13 }, // j - 49
+    {   0, 243,  12,  13 }, // k - 50
+    {  12, 243,   9,  13 }, // l - 51
+    {  22, 243,  13,  13 }, // m - 52
+    {  36, 243,  13,  13 }, // n - 53
+    {  50, 243,  11,  13 }, // o - 54
+    {  62, 243,  11,  13 }, // p - 55
+    {  74, 243,  11,  13 }, // q - 56
+    {  86, 243,  11,  13 }, // r - 57
+    {  98, 243,  12,  13 }, // s - 58
+    { 112, 243,  11,  13 }, // t - 59
+    { 124, 243,  11,  13 }, // u - 60
+    { 136, 243,  13,  13 }, // v - 61
+    { 150, 243,  13,  13 }, // w - 62
+    { 164, 243,  13,  13 }, // x - 63
+    { 178, 243,  13,  13 }, // y - 64
+    { 192, 243,  13,  13 }  // z - 65
 };
 
 // Starting indices for various individual and groups of big font chars
@@ -385,252 +388,43 @@ loc_8003ACEC:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draw pause screen elements, including the plaque and level warp and vram viewer cheats
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawPausedOverlay() noexcept {
-loc_8003AD04:
-    v1 = *gCurPlayerIndex;
-    sp -= 0x58;
-    sw(ra, sp + 0x54);
-    sw(s0, sp + 0x50);
-    v0 = v1 << 2;
-    v0 += v1;
-    v1 = v0 << 4;
-    v1 -= v0;
-    v1 <<= 2;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    s0 = v1 + v0;
-    v0 = lw(s0 + 0xC0);
-    v0 &= 0x100;
-    a1 = 0x6B;                                          // Result = 0000006B
-    if (v0 != 0) goto loc_8003AD64;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A70;                                       // Result = gTex_PAUSE[0] (80097A70)
-    a3 = gPaletteClutIds[MAINPAL];
-    a2 = 0x6C;                                          // Result = 0000006C
-    _thunk_I_CacheAndDrawSprite();
-loc_8003AD64:
-    v1 = lw(s0 + 0xC0);
-    v0 = v1 & 0x20;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 & 0x10;
-        if (bJump) goto loc_8003ADD8;
+    // Draw the paused plaque unless disabled
+    const player_t& player = gPlayers[*gCurPlayerIndex];
+
+    if ((player.cheats & CF_NOPAUSEMSG) == 0) {
+        I_CacheAndDrawSprite(*gTex_PAUSE, 107, 108, gPaletteClutIds[MAINPAL]);
     }
-    a2 = *gMapNumToCheatWarpTo;
-    a1 = 0x80010000;                                    // Result = 80010000
-    a1 += 0x1634;                                       // Result = STR_WarpToLevel[0] (80011634)
-    a0 = sp + 0x10;
-    LIBC2_sprintf();
-    a0 = -1;                                            // Result = FFFFFFFF
-    a1 = 0x28;                                          // Result = 00000028
-    a2 = sp + 0x10;
-    _thunk_I_DrawString();
-    a0 = -1;                                            // Result = FFFFFFFF
-    a1 = 0x3C;                                          // Result = 0000003C
-    a2 = *gMapNumToCheatWarpTo;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
-    a2 <<= 5;
-    a2 += v0;
-    _thunk_I_DrawString();
-    goto loc_8003B0DC;
-loc_8003ADCC:
-    v0 = t3 + 4;                                        // Result = 00000018
-    v0 += a0;
-    goto loc_8003AFB8;
-loc_8003ADD8:
-    t0 = 5;                                             // Result = 00000005
-    if (v0 == 0) goto loc_8003B0DC;
-    t2 = 0x1F800000;                                    // Result = 1F800000
-    t2 += 0x204;                                        // Result = 1F800204
-    t3 = 0x14;                                          // Result = 00000014
-    t1 = 0xFF0000;                                      // Result = 00FF0000
-    t1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t7 = 0x80080000;                                    // Result = 80080000
-    t7 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s0 = t7 & t1;                                       // Result = 00086550
-    t6 = 0x4000000;                                     // Result = 04000000
-    t5 = 0x80000000;                                    // Result = 80000000
-    t4 = -1;                                            // Result = FFFFFFFF
-    t8 = 0x18;                                          // Result = 00000018
-    v0 = 5;                                             // Result = 00000005
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x203);                                 // Store to: 1F800203
-    v0 = 0x28;                                          // Result = 00000028
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 = 0x100;                                         // Result = 00000100
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x207);                                 // Store to: 1F800207
-    v0 = 0xF0;                                          // Result = 000000F0
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(0, at + 0x204);                                  // Store to: 1F800204
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(0, at + 0x205);                                  // Store to: 1F800205
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(0, at + 0x206);                                  // Store to: 1F800206
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(0, at + 0x208);                                  // Store to: 1F800208
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(0, at + 0x20A);                                  // Store to: 1F80020A
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v1, at + 0x20C);                                 // Store to: 1F80020C
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(0, at + 0x20E);                                  // Store to: 1F80020E
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(0, at + 0x210);                                  // Store to: 1F800210
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x212);                                 // Store to: 1F800212
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v1, at + 0x214);                                 // Store to: 1F800214
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x216);                                 // Store to: 1F800216
-loc_8003AE90:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = (a0 < v0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t3 + a0;
-        if (bJump) goto loc_8003AEF4;
+
+    if (player.cheats & CF_WARPMENU) {
+        // Draw the level warp menu
+        char warpmsg[64];
+        std::sprintf(warpmsg, "warp to level %d", *gMapNumToCheatWarpTo);
+        I_DrawString(-1, 40, warpmsg);
+        I_DrawString(-1, 60, gMapNames[*gMapNumToCheatWarpTo - 1]);
     }
-    v0 += 4;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    v0 = (v0 < v1);
-    v1 = 0xFF000000;                                    // Result = FF000000
-    if (v0 != 0) goto loc_8003ADCC;
-    v0 = lw(a3);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(t7, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    v0 &= v1;
-    v0 |= s0;
-    sw(v0, a3);
-    sb(0, a3 + 0x3);
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-loc_8003AEF4:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = t3 + a0;
-    v0 += 4;
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_8003AFA8;
-    if (v1 == a0) goto loc_8003AE90;
-loc_8003AF18:
-    v0 = lw(gp + 0x700);                                // Load from: GPU_REG_GP1 (80077CE0)
-    v0 = lw(v0);
-    v0 &= t6;
-    if (v0 == 0) goto loc_8003AE90;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= t1;
-    v0 |= t5;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t4) goto loc_8003AF84;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_8003AF68:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x6FC);                                // Load from: GPU_REG_GP0 (80077CDC)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a2) goto loc_8003AF68;
-loc_8003AF84:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 == v0) goto loc_8003AE90;
-    goto loc_8003AF18;
-loc_8003AFA8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 += t8;
-loc_8003AFB8:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    a1 = 0xFF0000;                                      // Result = 00FF0000
-    a1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    a0 = 0xFF000000;                                    // Result = FF000000
-    v1 = lw(a3);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 &= a0;
-    v0 &= a1;
-    v1 |= v0;
-    sw(v1, a3);
-    sb(t0, a3 + 0x3);
-    t0--;                                               // Result = 00000004
-    v0 = -1;                                            // Result = FFFFFFFF
-    a3 += 4;
-    if (t0 == v0) goto loc_8003B018;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_8003B000:
-    v0 = lw(t2);
-    t2 += 4;
-    t0--;
-    sw(v0, a3);
-    a3 += 4;
-    if (t0 != v1) goto loc_8003B000;
-loc_8003B018:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    t2 = 0x4000000;                                     // Result = 04000000
-    if (v1 == v0) goto loc_8003B0CC;
-    a3 = 0xFF0000;                                      // Result = 00FF0000
-    a3 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t1 = 0x80000000;                                    // Result = 80000000
-    t0 = -1;                                            // Result = FFFFFFFF
-loc_8003B044:
-    v0 = lw(gp + 0x700);                                // Load from: GPU_REG_GP1 (80077CE0)
-    v0 = lw(v0);
-    v0 &= t2;
-    if (v0 == 0) goto loc_8003B0CC;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= a3;
-    v0 |= t1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t0) goto loc_8003B0B0;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_8003B094:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x6FC);                                // Load from: GPU_REG_GP0 (80077CDC)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a2) goto loc_8003B094;
-loc_8003B0B0:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 != v0) goto loc_8003B044;
-loc_8003B0CC:
-    a0 = *gVramViewerTexPage;
-    I_VramViewerDraw();
-loc_8003B0DC:
-    ra = lw(sp + 0x54);
-    s0 = lw(sp + 0x50);
-    sp += 0x58;
-    return;
+    else if (player.cheats & CF_VRAMVIEWER) {
+        // Draw the vram viewer: first clear the background to black and then draw it
+        {
+            POLY_F4& polyPrim = *(POLY_F4*) getScratchAddr(128);
+            LIBGPU_SetPolyF4(polyPrim);
+            LIBGPU_setRGB0(polyPrim, 0, 0, 0);
+            LIBGPU_setXY4(polyPrim,
+                0,          0,
+                SCREEN_W,   0,
+                0,          SCREEN_H,
+                SCREEN_W,   SCREEN_H
+            );
+
+            I_AddPrim(getScratchAddr(128));
+        }
+        
+        a0 = *gVramViewerTexPage;
+        I_VramViewerDraw();
+    }
 }
 
 void I_UpdatePalette() noexcept {
@@ -739,19 +533,26 @@ static int32_t I_GetStringXPosToCenter(const char* const str) noexcept {
 
         if ((c >= 'A') && (c <= 'Z')) {
             charIdx = BIG_FONT_UCASE_ALPHA + (c - 'A');
-        } else if ((c >= 'a') && (c <= 'z')) {
+        }
+        else if ((c >= 'a') && (c <= 'z')) {
             charIdx = BIG_FONT_LCASE_ALPHA + (c - 'a');
-        } else if ((c >= '0') && (c <= '9')) {
+        }
+        else if ((c >= '0') && (c <= '9')) {
             charIdx = BIG_FONT_DIGITS + (c - '0');
-        } else if (c == '%') {
+        }
+        else if (c == '%') {
             charIdx = BIG_FONT_PERCENT;
-        } else if (c == '!') {
+        }
+        else if (c == '!') {
             charIdx = BIG_FONT_EXCLAMATION;
-        } else if (c == '.') {
+        }
+        else if (c == '.') {
             charIdx = BIG_FONT_PERIOD;
-        } else if (c == '-') {
+        }
+        else if (c == '-') {
             charIdx = BIG_FONT_MINUS;
-        } else {
+        }
+        else {
             width += 6;     // Whitespace
             continue;
         }
@@ -802,20 +603,27 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
 
         if ((c >= 'A') && (c <= 'Z')) {
             charIdx = BIG_FONT_UCASE_ALPHA + (c - 'A');
-        } else if ((c >= 'a') && (c <= 'z')) {
+        }
+        else if ((c >= 'a') && (c <= 'z')) {
             charIdx = BIG_FONT_LCASE_ALPHA + (c - 'a');
             curY += 3;
-        } else if ((c >= '0') && (c <= '9')) {
+        }
+        else if ((c >= '0') && (c <= '9')) {
             charIdx = BIG_FONT_DIGITS + (c - '0');
-        } else if (c == '%') {
+        }
+        else if (c == '%') {
             charIdx = BIG_FONT_PERCENT;
-        } else if (c == '!') {
+        }
+        else if (c == '!') {
             charIdx = BIG_FONT_EXCLAMATION;
-        } else if (c == '.') {
+        }
+        else if (c == '.') {
             charIdx = BIG_FONT_PERIOD;
-        } else if (c == '-') {
+        }
+        else if (c == '-') {
             charIdx = BIG_FONT_MINUS;
-        } else {
+        }
+        else {
             curX += 6;      // Whitespace
             continue;
         }
@@ -826,7 +634,7 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
         LIBGPU_setXY0(spritePrim, (int16_t) curX, (int16_t) curY);
         LIBGPU_setUV0(spritePrim, fontchar.u, fontchar.v);
         LIBGPU_setWH(spritePrim, fontchar.w, fontchar.h);
-	
+    
         I_AddPrim(&spritePrim);
 
         // Move past the drawn character

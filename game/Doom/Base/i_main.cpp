@@ -126,6 +126,12 @@ const VmPtr<uint32_t> gCurPlayerIndex(0x80077618);
 const VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>                         gBtnBindings(0x80073E0C);
 const VmPtr<VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>[MAXPLAYERS]>      gpPlayerBtnBindings(0x80077FC8);
 
+// Loading, connecting, error etc. plaques
+const VmPtr<texture_t>  gTex_PAUSE(0x80097A70);
+const VmPtr<texture_t>  gTex_LOADING(0x80097A90);
+const VmPtr<texture_t>  gTex_NETERR(0x80097AF0);
+const VmPtr<texture_t>  gTex_CONNECT(0x80097B10);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // User/client entrypoint for PlayStation DOOM.
 // This was probably the actual 'main()' function in the real source code.

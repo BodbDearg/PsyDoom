@@ -13,7 +13,7 @@ struct texture_t;
 struct vertex_t;
 
 // Maximum amount of deathmatch starts
-static constexpr uint32_t MAX_DEATHMATCH_STARTS	= 10;
+static constexpr uint32_t MAX_DEATHMATCH_STARTS = 10;
 
 extern const VmPtr<VmPtr<uint16_t>>                     gpBlockmapLump;
 extern const VmPtr<VmPtr<uint16_t>>                     gpBlockmap;

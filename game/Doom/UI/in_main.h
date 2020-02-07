@@ -1,5 +1,7 @@
 #pragma once
 
+extern const char gMapNames[][32];
+
 void IN_Start() noexcept;
 void IN_Stop() noexcept;
 void IN_Ticker() noexcept;

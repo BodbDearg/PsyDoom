@@ -321,7 +321,6 @@ extern void ST_Ticker() noexcept;
 extern void ST_Drawer() noexcept;
 extern void _thunk_I_DrawNumber() noexcept;
 extern void I_DrawStringSmall() noexcept;
-extern void I_DrawPausedOverlay() noexcept;
 extern void I_UpdatePalette() noexcept;
 extern void _thunk_I_DrawString() noexcept;
 extern void AM_Start() noexcept;
@@ -695,7 +694,6 @@ extern void LIBGPU_TermPrim() noexcept;
 extern void LIBGPU_SetPolyF3() noexcept;
 extern void LIBGPU_SetPolyG3() noexcept;
 extern void LIBGPU_SetPolyGT3() noexcept;
-extern void LIBGPU_SetPolyF4() noexcept;
 extern void LIBGPU_SetPolyG4() noexcept;
 extern void LIBGPU_SetPolyGT4() noexcept;
 extern void LIBGPU_SetSprt8() noexcept;
@@ -1205,7 +1203,6 @@ namespace PsxVm {
         { 0x80038B0C, &ST_Drawer },
         { 0x8003A3C8, &_thunk_I_DrawNumber },
         { 0x8003A9D4, &I_DrawStringSmall },
-        { 0x8003AD04, &I_DrawPausedOverlay },
         { 0x8003B0F0, &I_UpdatePalette },
         { 0x8003B324, &_thunk_I_DrawString },
         { 0x8003BAC0, &AM_Start },
@@ -1579,7 +1576,6 @@ namespace PsxVm {
         { 0x8004EC54, &LIBGPU_SetPolyF3 },
         { 0x8004EC7C, &LIBGPU_SetPolyG3 },
         { 0x8004EC90, &LIBGPU_SetPolyGT3 },
-        { 0x8004ECA4, &LIBGPU_SetPolyF4 },
         { 0x8004ECCC, &LIBGPU_SetPolyG4 },
         { 0x8004ECE0, &LIBGPU_SetPolyGT4 },
         { 0x8004ECF4, &LIBGPU_SetSprt8 },

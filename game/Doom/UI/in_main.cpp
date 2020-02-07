@@ -8,8 +8,73 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_password.h"
 #include "Doom/Renderer/r_data.h"
+#include "PcPsx/Macros.h"
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
+
+const char gMapNames[][32] = {
+    "Hangar",
+    "Plant",
+    "Toxin Refinery",
+    "Command Control",
+    "Phobos Lab",
+    "Central Processing",
+    "Computer Station",
+    "Phobos Anomaly",
+    "Deimos Anomaly",
+    "Containment Area",
+    "Refinery",
+    "Deimos Lab",
+    "Command Center",
+    "Halls of the Damned",
+    "Spawning Vats",
+    "Hell Gate",
+    "Hell Keep",
+    "Pandemonium",
+    "House of Pain",
+    "Unholy Cathedral",
+    "Mt. Erebus",
+    "Limbo",
+    "Tower Of Babel",
+    "Hell Beneath",
+    "Perfect Hatred",
+    "Sever The Wicked",
+    "Unruly Evil",
+    "Unto The Cruel",
+    "Twilight Descends",
+    "Threshold of Pain",
+    "Entryway",
+    "Underhalls",
+    "The Gantlet",
+    "The Focus",
+    "The Waste Tunnels",
+    "The Crusher",
+    "Dead Simple",
+    "Tricks And Traps",
+    "The Pit",
+    "Refueling Base",
+    "O of Destruction!",
+    "The Factory",
+    "The Inmost Dens",
+    "Suburbs",
+    "Tenements",
+    "The Courtyard",
+    "The Citadel",
+    "Nirvana",
+    "The Catacombs",
+    "Barrels of Fun",
+    "Bloodfalls",
+    "The Abandoned Mines",
+    "Monster Condo",
+    "Redemption Denied",
+    "Fortress of Mystery",
+    "The Military Base",
+    "The Marshes",
+    "The Mansion",
+    "Club Doom"
+};
+
+static_assert(C_ARRAY_SIZE(gMapNames) == NUMMAPS);
 
 void IN_Start() noexcept {
     sp -= 0x28;
