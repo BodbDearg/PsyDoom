@@ -115,14 +115,15 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
         // They must have produced primitive state changes that we actually desired for this function...
         // Relying on external draw code and ordering however is brittle, so be explicit here and set exactly what we need:    
         {
-            // Set the draw mode to remove the current texture window and texture page to the STATUS graphic
+            // Set the draw mode to disable wrapping (zero sized text window) and texture page to the STATUS graphic
             DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
-            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, nullptr);        
+            const RECT texWindow = { 0, 0, 0, 0 };
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, &texWindow);
             I_AddPrim(&drawModePrim);
         }
 
         LIBGPU_SetSprt(spritePrim);
-        LIBGPU_setRGB0(spritePrim, 127, 127, 127);
+        LIBGPU_SetShadeTex(&spritePrim, true);
         spritePrim.clut = gPaletteClutIds[UIPAL];
     #endif
 
@@ -183,209 +184,65 @@ void _thunk_I_DrawNumber() noexcept {
     I_DrawNumber(a0, a1, a2);
 }
 
-void I_DrawStringSmall() noexcept {
-loc_8003A9D4:
-    sp -= 0x10;
-    t5 = a0;
-    v0 = 8;                                             // Result = 00000008
-    sw(s2, sp + 0x8);
-    sw(s1, sp + 0x4);
-    sw(s0, sp);
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(a1, at + 0x20A);                                 // Store to: 1F80020A
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x210);                                 // Store to: 1F800210
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x212);                                 // Store to: 1F800212
-    a0 = lbu(a2);
-    a2++;
-    if (a0 == 0) goto loc_8003ACEC;
-    s2 = 0x1F800000;                                    // Result = 1F800000
-    s2 += 0x200;                                        // Result = 1F800200
-    t4 = 0xFF0000;                                      // Result = 00FF0000
-    t4 |= 0xFFFF;                                       // Result = 00FFFFFF
-    s1 = 0x80080000;                                    // Result = 80080000
-    s1 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    s0 = s1 & t4;                                       // Result = 00086550
-    t9 = 0x4000000;                                     // Result = 04000000
-    t8 = 0x80000000;                                    // Result = 80000000
-    t7 = -1;                                            // Result = FFFFFFFF
-loc_8003AA3C:
-    v0 = a0 - 0x61;
-    v0 = (v0 < 0x1A);
-    if (v0 == 0) goto loc_8003AA50;
-    a0 -= 0x20;
-loc_8003AA50:
-    a0 -= 0x21;
-    v0 = (a0 < 0x40);
-    if (v0 != 0) goto loc_8003AA74;
-    t5 += 8;
-    goto loc_8003ACDC;
-loc_8003AA68:
-    v0 = t2 + 4;
-    v0 += a0;
-    goto loc_8003ABF4;
-loc_8003AA74:
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(t5, at + 0x208);                                 // Store to: 1F800208
-    v1 = a0;
-    if (i32(a0) >= 0) goto loc_8003AA88;
-    v1 = a0 + 0x1F;
-loc_8003AA88:
-    t3 = s2 + 4;                                        // Result = 1F800204
-    v1 = u32(i32(v1) >> 5);
-    v0 = v1 << 5;
-    v0 = a0 - v0;
-    v0 <<= 3;
-    v1 <<= 3;
-    t1 = 0x1F800000;                                    // Result = 1F800000
-    t1 = lbu(t1 + 0x203);                               // Load from: 1F800203
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 -= 0x58;
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20C);                                 // Store to: 1F80020C
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v1, at + 0x20D);                                 // Store to: 1F80020D
-    t2 = t1 << 2;
-    t6 = t2 + 4;
-loc_8003AACC:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = (a0 < v0);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draw a string using the very small font used for hud status bar messages
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_DrawStringSmall(const int32_t x, const int32_t y, const char* const str) noexcept {
+    // PC-PSX: this draw state was not defined in the original game: explicitly make sure it is setup correctly here.
+    // Do not rely on previous drawing code to set it correctly!
+    #if PC_PSX_DOOM_MODS
     {
-        const bool bJump = (v0 != 0);
-        v0 = t2 + a0;
-        if (bJump) goto loc_8003AB30;
+        DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
+        const RECT texWindow = { 0, 0, 0, 0 };
+        LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, &texWindow);
+        I_AddPrim(&drawModePrim);
     }
-    v0 += 4;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    v0 = (v0 < v1);
-    v1 = 0xFF000000;                                    // Result = FF000000
-    if (v0 != 0) goto loc_8003AA68;
-    v0 = lw(a3);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s1, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    v0 &= v1;
-    v0 |= s0;
-    sw(v0, a3);
-    sb(0, a3 + 0x3);
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-loc_8003AB30:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = t2 + a0;
-    v0 += 4;
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_8003ABE4;
-    if (v1 == a0) goto loc_8003AACC;
-loc_8003AB54:
-    v0 = lw(gp + 0x700);                                // Load from: GPU_REG_GP1 (80077CE0)
-    v0 = lw(v0);
-    v0 &= t9;
-    if (v0 == 0) goto loc_8003AACC;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= t4;
-    v0 |= t8;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t7) goto loc_8003ABC0;
-    t0 = -1;                                            // Result = FFFFFFFF
-loc_8003ABA4:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x6FC);                                // Load from: GPU_REG_GP0 (80077CDC)
-    a1--;
-    sw(v1, v0);
-    if (a1 != t0) goto loc_8003ABA4;
-loc_8003ABC0:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 == v0) goto loc_8003AACC;
-    goto loc_8003AB54;
-loc_8003ABE4:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 += t6;
-loc_8003ABF4:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    a0 = 0xFF000000;                                    // Result = FF000000
-    v1 = lw(a3);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 &= a0;
-    v0 &= t4;
-    v1 |= v0;
-    sw(v1, a3);
-    sb(t1, a3 + 0x3);
-    t1--;
-    a3 += 4;
-    if (t1 == t7) goto loc_8003ACBC;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_8003AC30:
-    v0 = lw(t3);
-    t3 += 4;
-    t1--;
-    sw(v0, a3);
-    a3 += 4;
-    if (t1 != v1) goto loc_8003AC30;
-    goto loc_8003ACBC;
-loc_8003AC50:
-    v0 = lw(gp + 0x700);                                // Load from: GPU_REG_GP1 (80077CE0)
-    v0 = lw(v0);
-    v0 &= t9;
-    if (v0 == 0) goto loc_8003ACD8;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= t4;
-    v0 |= t8;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t7) goto loc_8003ACBC;
-    a3 = -1;                                            // Result = FFFFFFFF
-loc_8003ACA0:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp + 0x6FC);                                // Load from: GPU_REG_GP0 (80077CDC)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a3) goto loc_8003ACA0;
-loc_8003ACBC:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 != v0) goto loc_8003AC50;
-loc_8003ACD8:
-    t5 += 8;
-loc_8003ACDC:
-    a0 = lbu(a2);
-    a2++;
-    if (a0 != 0) goto loc_8003AA3C;
-loc_8003ACEC:
-    s2 = lw(sp + 0x8);
-    s1 = lw(sp + 0x4);
-    s0 = lw(sp);
-    sp += 0x10;
-    return;
+    #endif
+
+    // Common sprite setup for every character
+    SPRT& spritePrim = *(SPRT*) getScratchAddr(128);    
+    LIBGPU_setWH(spritePrim, 8, 8);
+    spritePrim.y0 = (int16_t) y;
+
+    // PC-PSX: this draw state was not defined in the original game: explicitly make sure it is setup correctly here.
+    // Do not rely on previous drawing code to set it correctly!
+    #if PC_PSX_DOOM_MODS
+        LIBGPU_SetSprt(spritePrim);
+        LIBGPU_SetShadeTex(&spritePrim, true);
+        spritePrim.clut = gPaletteClutIds[UIPAL];
+    #endif
+    
+    // Draw each visible character in the string
+    int32_t curX = x;
+    const char* pCurChar = str;
+
+    for (char c = *pCurChar; c != 0; ++pCurChar, c = *pCurChar) {
+        // Uppercase the character if lowercase: the small font only has uppercase defined
+        if (c >= 'a' && c <= 'z') {
+            c += 'A' - 'a';
+        }
+
+        // Figure out the font character index.
+        // Note that the first 33 characters (control characters and space) are just printed as 8px whitespace.
+        int32_t charIdx = (int32_t) c - 33;
+
+        // Only 64 ascii characters (after whitespace) are supported by this font
+        if (charIdx >= 0 && charIdx < 64) {
+            // Figure out the u and v texture coordinates to use based on the font character: each character is 8x8 px
+            const int32_t fontRow = charIdx / 32;
+            const int32_t fontCol = charIdx - fontRow * 32;
+            const int32_t texU = fontCol * 8;
+            const int32_t texV = fontRow * 8 - 88;
+
+            // Populate and submit the primitive
+            LIBGPU_setUV0(spritePrim, (uint8_t) texU, (uint8_t) texV);
+            spritePrim.x0 = (int16_t) curX;
+
+            I_AddPrim(&spritePrim);
+        }
+
+        curX += 8;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -573,7 +430,15 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
     // Set the draw mode to remove the current texture window and texture page to the STATUS graphic
     {
         DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
-        LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, nullptr);        
+
+        // PC-PSX: define the texture window while we are at, rather than relying on the one set externally
+        #if PC_PSX_DOOM_MODS
+            const RECT texWindow = { 0, 0, 0, 0 };
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, &texWindow);
+        #else
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, nullptr);
+        #endif
+
         I_AddPrim(&drawModePrim);
     }
 
@@ -583,12 +448,6 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_SetShadeTex(&spritePrim, true);
     spritePrim.clut = gPaletteClutIds[UIPAL];
-
-    #if PC_PSX_DOOM_MODS
-        // The color RGB value was undefined for this function in the original code - would use whatever the previous value was.
-        // This is a little brittle so ensure we are not dependent on external draw operations being done in a certain order:
-        LIBGPU_setRGB0(spritePrim, 127, 127, 127);
-    #endif
 
     // Decide on starting x position: can either be so the string is centered in the screen, or just the value verbatim
     int32_t curX = (x != -1) ? x : I_GetStringXPosToCenter(str);

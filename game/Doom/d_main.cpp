@@ -339,7 +339,7 @@ loc_800127B8:
     a0 = lw(gp + 0xA50);                                // Load from: gDebugDrawStringXPos (80078030)
     a1 = lw(gp + 0xA5C);                                // Load from: gDebugDrawStringYPos (8007803C)
     a2 = sp + 0x18;
-    I_DrawStringSmall();
+    I_DrawStringSmall(a0, a1, vmAddrToPtr<const char>(a2));
     v0 = lw(gp + 0xA5C);                                // Load from: gDebugDrawStringYPos (8007803C)
     v0 += 8;
     sw(v0, gp + 0xA5C);                                 // Store to: gDebugDrawStringYPos (8007803C)

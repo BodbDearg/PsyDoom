@@ -613,7 +613,7 @@ loc_80038E54:
     a1 = 0xC1;                                          // Result = 000000C1
     a2 = sp + 0x18;
 loc_80038E98:
-    I_DrawStringSmall();
+    I_DrawStringSmall(a0, a1, vmAddrToPtr<const char>(a2));
 loc_80038EA0:
     t3 = 0x1F800000;                                    // Result = 1F800000
     t3 += 0x204;                                        // Result = 1F800204
