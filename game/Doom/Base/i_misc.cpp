@@ -284,95 +284,59 @@ void I_DrawPausedOverlay() noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Decide which palette to use for the 3d view, based on the player's current status and bonuses
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_UpdatePalette() noexcept {
-loc_8003B0F0:
-    v1 = *gCurPlayerIndex;
-    v0 = v1 << 2;
-    v0 += v1;
-    v1 = v0 << 4;
-    v1 -= v0;
-    v1 <<= 2;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    a1 = v1 + v0;
-    v0 = lw(a1 + 0x34);
-    a2 = lw(a1 + 0xD8);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = u32(i32(v0) >> 6);
-        if (bJump) goto loc_8003B144;
+    // Decide on red amount from current damage or scaled beserk time left (pick whichever is greatest)
+    player_t& player = gPlayers[*gCurPlayerIndex];
+    int32_t redAmount = player.damagecount;
+
+    if (player.powers[pw_strength] != 0) {
+        const int32_t berserkAmount = 12 - player.powers[pw_strength] / 64;
+        
+        if (berserkAmount > redAmount) {
+            redAmount = berserkAmount;
+        }
     }
-    v1 = 0xC;                                           // Result = 0000000C
-    v1 -= v0;
-    v0 = (i32(a2) < i32(v1));
-    if (v0 == 0) goto loc_8003B144;
-    a2 = v1;
-loc_8003B144:
-    a0 = lw(a1 + 0x44);
+
+    // Deciding on various palettes and effects based on the player status.
+    // A lot of these powerups start blinking when the player gets to 4 seconds or less remaining.
     *gbDoViewLighting = true;
-    v0 = (i32(a0) < 0x3D);
-    v1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_8003B16C;
-    v0 = a0 & 8;
-    if (v0 == 0) goto loc_8003B174;
-loc_8003B16C:
-    *gbDoViewLighting = false;
-loc_8003B174:
-    a0 = lw(a1 + 0x30);
-    v0 = (i32(a0) < 0x3D);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 & 8;
-        if (bJump) goto loc_8003B190;
+    uint32_t paletteIdx = MAINPAL;
+
+    if ((player.powers[pw_infrared] > TICRATE * 4) || (player.powers[pw_infrared] & 8)) {
+        *gbDoViewLighting = false;
     }
-    if (v0 == 0) goto loc_8003B1A0;
-loc_8003B190:
-    *gbDoViewLighting = false;
-    v1 = 0xE;                                           // Result = 0000000E
-    goto loc_8003B210;
-loc_8003B1A0:
-    v0 = a2 + 7;
-    if (a2 == 0) goto loc_8003B1C4;
-    v1 = u32(i32(v0) >> 3);
-    v0 = (i32(v1) < 8);
-    if (v0 != 0) goto loc_8003B1BC;
-    v1 = 7;                                             // Result = 00000007
-loc_8003B1BC:
-    v1++;
-    goto loc_8003B210;
-loc_8003B1C4:
-    a0 = lw(a1 + 0x3C);
-    v0 = (i32(a0) < 0x3D);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 & 8;
-        if (bJump) goto loc_8003B1E0;
+
+    if ((player.powers[pw_invulnerability] > TICRATE * 4) || (player.powers[pw_invulnerability] & 8)) {
+        *gbDoViewLighting = false;
+        paletteIdx = INVULNERABILITYPAL;
     }
-    if (v0 == 0) goto loc_8003B1E8;
-loc_8003B1E0:
-    v1 = 0xD;                                           // Result = 0000000D
-    goto loc_8003B210;
-loc_8003B1E8:
-    v0 = lw(a1 + 0xDC);
-    {
-        const bool bJump = (v0 == 0);
-        v0 += 7;
-        if (bJump) goto loc_8003B210;
+    else if (redAmount != 0) {
+        int32_t redPalIdx = (redAmount + 7) / 8;
+        
+        if (redPalIdx >= NUMREDPALS) {
+            redPalIdx = NUMREDPALS - 1;
+        }
+
+        paletteIdx = STARTREDPALS + redPalIdx;
     }
-    v1 = u32(i32(v0) >> 3);
-    v0 = (i32(v1) < 4);
-    v1 += 9;
-    if (v0 != 0) goto loc_8003B210;
-    v1 = 3;                                             // Result = 00000003
-    v1 += 9;                                            // Result = 0000000C
-loc_8003B210:
-    v0 = v1 << 1;
-    at = gPaletteClutIds;
-    at += v0;
-    v0 = lhu(at);
-    at = 0x80070000;                                    // Result = 80070000
-    *g3dViewPaletteClutId = (uint16_t) v0;
-    return;
+    else if ((player.powers[pw_ironfeet] > TICRATE * 4) || (player.powers[pw_ironfeet] & 8)) {
+        paletteIdx = RADIATIONPAL;
+    }
+    else if (player.bonuscount != 0) {
+        int32_t bonusPalIdx = (player.bonuscount + 7) / 8;
+        
+        if (bonusPalIdx >= NUMBONUSPALS) {
+            bonusPalIdx = NUMBONUSPALS - 1;
+        }
+
+        paletteIdx = STARTBONUSPALS + bonusPalIdx;
+    }
+
+    // Save the palette we decided on
+    *g3dViewPaletteClutId = gPaletteClutIds[paletteIdx];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
