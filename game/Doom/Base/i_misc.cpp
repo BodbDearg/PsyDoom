@@ -263,8 +263,7 @@ void I_DrawPausedOverlay() noexcept {
             I_AddPrim(getScratchAddr(128));
         }
         
-        a0 = *gVramViewerTexPage;
-        I_VramViewerDraw();
+        I_VramViewerDraw(*gVramViewerTexPage);
     }
 }
 
