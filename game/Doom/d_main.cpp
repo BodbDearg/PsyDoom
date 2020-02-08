@@ -1,6 +1,7 @@
 #include "d_main.h"
 
 #include "Base/d_vsprintf.h"
+#include "Base/i_drawcmds.h"
 #include "Base/i_file.h"
 #include "Base/i_main.h"
 #include "Base/i_misc.h"
@@ -22,6 +23,7 @@
 #include "UI/st_main.h"
 #include "UI/ti_main.h"
 #include "Wess/psxsnd.h"
+#include <cstdio>
 
 // The current number of 60Hz ticks
 const VmPtr<int32_t> gTicCon(0x8007814C);
@@ -37,6 +39,10 @@ const VmPtr<VmPtr<uint32_t>> gpDemo_p(0x800775EC);
 const VmPtr<skill_t>        gStartSkill(0x800775FC);
 const VmPtr<int32_t>        gStartMapOrEpisode(0x80077600);
 const VmPtr<gametype_t>     gStartGameType(0x80077604);
+
+// Debug draw string position
+const VmPtr<int32_t>    gDebugDrawStringXPos(0x80078030);
+const VmPtr<int32_t>    gDebugDrawStringYPos(0x8007803C);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Main DOOM entry point.
@@ -131,222 +137,64 @@ gameaction_t RunCredits() noexcept {
     return MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits);
 }
 
-void I_SetDebugDrawStringPos() noexcept {
-    sw(a0, gp + 0xA50);                                 // Store to: gDebugDrawStringXPos (80078030)
-    sw(a1, gp + 0xA5C);                                 // Store to: gDebugDrawStringYPos (8007803C)
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the text position for the debug draw string
+//------------------------------------------------------------------------------------------------------------------------------------------
+void I_SetDebugDrawStringPos(const int32_t x, const int32_t y) noexcept {
+    *gDebugDrawStringXPos = x;
+    *gDebugDrawStringYPos = y;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draw the debug draw string.
+// The string also scrolls down the screen with repeated calls.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
-    sp -= 0x120;
-    sw(s0, sp + 0x118);
-    s0 = 0x1F800000;                                    // Result = 1F800000
-    s0 += 0x200;                                        // Result = 1F800200
-    sw(a0, sp + 0x120);
-    a0 = s0;                                            // Result = 1F800200
-    a1 = 0;                                             // Result = 00000000
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lhu(a3 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
-    a2 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x11C);
-    sw(0, sp + 0x10);
-    _thunk_LIBGPU_SetDrawMode();
-    s0 += 4;                                            // Result = 1F800204
-    t3 = 0xFF0000;                                      // Result = 00FF0000
-    t3 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t7 = 0x80080000;                                    // Result = 80080000
-    t7 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    t8 = t7 & t3;                                       // Result = 00086550
-    t6 = 0x4000000;                                     // Result = 04000000
-    t5 = 0x80000000;                                    // Result = 80000000
-    t4 = -1;                                            // Result = FFFFFFFF
-    t0 = 0x1F800000;                                    // Result = 1F800000
-    t0 = lbu(t0 + 0x203);                               // Load from: 1F800203
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    t1 = t0 << 2;
-    t2 = t1 + 4;
-loc_80012578:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = (a0 < v0);
+    // Setup the drawing mode
     {
-        const bool bJump = (v0 != 0);
-        v0 = t1 + a0;
-        if (bJump) goto loc_800125E0;
+        DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
+
+        // PC-PSX: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that
+        #if PC_PSX_DOOM_MODS
+            RECT texWindow = { 0, 0, 0, 0 };
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, &texWindow);
+        #else
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, nullptr);
+        #endif
     }
-    v0 += 4;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    v0 = (v0 < v1);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t2 + a0;
-        if (bJump) goto loc_800126A4;
+
+    // Setting up some sprite primitive stuff for the 'draw string' call that follows
+	{
+        SPRT& spritePrim = *(SPRT*) getScratchAddr(128);
+
+        LIBGPU_SetSprt(spritePrim);
+        LIBGPU_SetSemiTrans(&spritePrim, false);
+        LIBGPU_SetShadeTex(&spritePrim, false);
+        LIBGPU_setRGB0(spritePrim, 128, 128, 128);    
+        spritePrim.clut = gPaletteClutIds[MAINPAL];
     }
-    v0 = lw(a2);
-    v1 = 0xFF000000;                                    // Result = FF000000
-    at = 0x80070000;                                    // Result = 80070000
-    sw(t7, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    v0 &= v1;
-    v0 |= t8;
-    sw(v0, a2);
-    sb(0, a2 + 0x3);
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-loc_800125E0:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = t1 + a0;
-    v0 += 4;
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_80012694;
-    if (v1 == a0) goto loc_80012578;
-loc_80012604:
-    v0 = lw(gp + 0x4);                                  // Load from: GPU_REG_GP1 (800775E4)
-    v0 = lw(v0);
-    v0 &= t6;
-    if (v0 == 0) goto loc_80012578;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= t3;
-    v0 |= t5;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t4) goto loc_80012670;
-    a3 = -1;                                            // Result = FFFFFFFF
-loc_80012654:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp);                                        // Load from: GPU_REG_GP0 (800775E0)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a3) goto loc_80012654;
-loc_80012670:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 == v0) goto loc_80012578;
-    goto loc_80012604;
-loc_80012694:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v0 += t2;
-loc_800126A4:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C18);                                // Store to: gpGpuPrimsEnd (80077C18)
-    a1 = 0xFF0000;                                      // Result = 00FF0000
-    a1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    a0 = 0xFF000000;                                    // Result = FF000000
-    v1 = lw(a2);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    v1 &= a0;
-    v0 &= a1;
-    v1 |= v0;
-    sw(v1, a2);
-    sb(t0, a2 + 0x3);
-    t0--;
-    v0 = -1;                                            // Result = FFFFFFFF
-    a2 += 4;
-    if (t0 == v0) goto loc_80012704;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_800126EC:
-    v0 = lw(s0);
-    s0 += 4;
-    t0--;
-    sw(v0, a2);
-    a2 += 4;
-    if (t0 != v1) goto loc_800126EC;
-loc_80012704:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    t2 = 0x4000000;                                     // Result = 04000000
-    if (v1 == v0) goto loc_800127B8;
-    a3 = 0xFF0000;                                      // Result = 00FF0000
-    a3 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t1 = 0x80000000;                                    // Result = 80000000
-    t0 = -1;                                            // Result = FFFFFFFF
-loc_80012730:
-    v0 = lw(gp + 0x4);                                  // Load from: GPU_REG_GP1 (800775E4)
-    v0 = lw(v0);
-    v0 &= t2;
-    if (v0 == 0) goto loc_800127B8;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    a1 = lbu(a0 + 0x3);
-    v0 = lw(a0);
-    a1--;
-    v0 &= a3;
-    v0 |= t1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C14);                                // Store to: gpGpuPrimsBeg (80077C14)
-    a0 += 4;
-    if (a1 == t0) goto loc_8001279C;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_80012780:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = lw(gp);                                        // Load from: GPU_REG_GP0 (800775E0)
-    a1--;
-    sw(v1, v0);
-    if (a1 != a2) goto loc_80012780;
-loc_8001279C:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gpGpuPrimsBeg (80077C14)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gpGpuPrimsEnd (80077C18)
-    if (v1 != v0) goto loc_80012730;
-loc_800127B8:
-    s0 = 0x1F800000;                                    // Result = 1F800000
-    s0 += 0x200;                                        // Result = 1F800200
-    a0 = s0;                                            // Result = 1F800200
-    _thunk_LIBGPU_SetSprt();
-    a0 = s0;                                            // Result = 1F800200
-    a1 = 0;                                             // Result = 00000000
-    LIBGPU_SetSemiTrans(vmAddrToPtr<void>(a0), false);
-    a0 = s0;                                            // Result = 1F800200
-    a1 = 0;                                             // Result = 00000000
-    _thunk_LIBGPU_SetShadeTex();
-    v1 = gPaletteClutIds[MAINPAL];
-    v0 = 0x80;                                          // Result = 00000080
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x204);                                 // Store to: 1F800204
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x205);                                 // Store to: 1F800205
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x206);                                 // Store to: 1F800206
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v1, at + 0x20E);                                 // Store to: 1F80020E
     
+    // Format the message and print
+    char msgBuffer[256];
+
     {
         va_list args;
-        va_start(args, fmtMsg);        
-        v0 = D_vsprintf(vmAddrToPtr<char>(sp + 0x18), fmtMsg, args);
+        va_start(args, fmtMsg);
+
+        // PC-PSX: Use 'vsnprint' as it's safer!
+        #if PC_PSX_DOOM_MODS
+            std::vsnprintf(msgBuffer, C_ARRAY_SIZE(msgBuffer), fmtMsg, args);
+        #else
+            D_vsprintf(msgBuffer, fmtMsg, args);
+        #endif
+
         va_end(args);
     }
 
-    a0 = lw(gp + 0xA50);                                // Load from: gDebugDrawStringXPos (80078030)
-    a1 = lw(gp + 0xA5C);                                // Load from: gDebugDrawStringYPos (8007803C)
-    a2 = sp + 0x18;
-    I_DrawStringSmall(a0, a1, vmAddrToPtr<const char>(a2));
-    v0 = lw(gp + 0xA5C);                                // Load from: gDebugDrawStringYPos (8007803C)
-    v0 += 8;
-    sw(v0, gp + 0xA5C);                                 // Store to: gDebugDrawStringYPos (8007803C)
-    ra = lw(sp + 0x11C);
-    s0 = lw(sp + 0x118);
-    sp += 0x120;
-    return;
+    I_DrawStringSmall(*gDebugDrawStringXPos, *gDebugDrawStringYPos, msgBuffer);
+
+    // The message scrolls down the screen as it is drawn more
+    *gDebugDrawStringYPos += 8;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

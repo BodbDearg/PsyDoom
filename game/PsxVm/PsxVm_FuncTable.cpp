@@ -3,7 +3,6 @@
 
 #include <map>
 
-extern void I_SetDebugDrawStringPos() noexcept;
 extern void _thunk_D_memset() noexcept;
 extern void _thunk_D_memcpy() noexcept;
 extern void _thunk_D_strncasecmp() noexcept;
@@ -883,7 +882,6 @@ extern void LIBCOMB__ioabort() noexcept;
 
 namespace PsxVm {
     std::map<uint32_t, VmFunc> gFuncTable = {
-        { 0x800124E8, &I_SetDebugDrawStringPos },
         { 0x80012850, &_thunk_D_memset },
         { 0x8001290C, &_thunk_D_memcpy },
         { 0x8001297C, &_thunk_D_strncasecmp },

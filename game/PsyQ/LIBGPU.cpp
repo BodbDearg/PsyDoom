@@ -3307,10 +3307,6 @@ void LIBGPU_SetSprt(SPRT & sprt) noexcept {
     sprt.code = 0x64;
 }
 
-void _thunk_LIBGPU_SetSprt() noexcept {
-    LIBGPU_SetSprt(*vmAddrToPtr<SPRT>(a0));
-}
-
 void LIBGPU_SetTile1() noexcept {
     v0 = 2;                                             // Result = 00000002
     sb(v0, a0 + 0x3);

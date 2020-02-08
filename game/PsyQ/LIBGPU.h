@@ -290,10 +290,7 @@ void LIBGPU_SetPolyG4() noexcept;
 void LIBGPU_SetPolyGT4() noexcept;
 void LIBGPU_SetSprt8() noexcept;
 void LIBGPU_SetSprt16() noexcept;
-
 void LIBGPU_SetSprt(SPRT & sprt) noexcept;
-void _thunk_LIBGPU_SetSprt() noexcept;
-
 void LIBGPU_SetTile1() noexcept;
 void LIBGPU_SetTile8() noexcept;
 void LIBGPU_SetTile16() noexcept;

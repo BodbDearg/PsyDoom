@@ -188,29 +188,13 @@ void _thunk_I_DrawNumber() noexcept {
 // Draw a string using the very small font used for hud status bar messages
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawStringSmall(const int32_t x, const int32_t y, const char* const str) noexcept {
-    // PC-PSX: this draw state was not defined in the original game: explicitly make sure it is setup correctly here.
-    // Do not rely on previous drawing code to set it correctly!
-    #if PC_PSX_DOOM_MODS
-    {
-        DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
-        const RECT texWindow = { 0, 0, 0, 0 };
-        LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, &texWindow);
-        I_AddPrim(&drawModePrim);
-    }
-    #endif
-
-    // Common sprite setup for every character
+    // Common sprite setup for every character.
+    //
+    // Note: lots of stuff like shading, color etc. is deliberately LEFT ALONE and not defined/specified here.
+    // It's up to external code to customize that if it wants.
     SPRT& spritePrim = *(SPRT*) getScratchAddr(128);    
     LIBGPU_setWH(spritePrim, 8, 8);
     spritePrim.y0 = (int16_t) y;
-
-    // PC-PSX: this draw state was not defined in the original game: explicitly make sure it is setup correctly here.
-    // Do not rely on previous drawing code to set it correctly!
-    #if PC_PSX_DOOM_MODS
-        LIBGPU_SetSprt(spritePrim);
-        LIBGPU_SetShadeTex(&spritePrim, true);
-        spritePrim.clut = gPaletteClutIds[UIPAL];
-    #endif
     
     // Draw each visible character in the string
     int32_t curX = x;
