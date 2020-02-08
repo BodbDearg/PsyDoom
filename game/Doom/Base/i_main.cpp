@@ -126,6 +126,10 @@ const VmPtr<uint32_t> gCurPlayerIndex(0x80077618);
 const VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>                         gBtnBindings(0x80073E0C);
 const VmPtr<VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>[MAXPLAYERS]>      gpPlayerBtnBindings(0x80077FC8);
 
+// The main UI texture atlas for the game.
+// This is loaded into the 1st available texture page and kept loaded at all times after that.
+const VmPtr<texture_t> gTex_STATUS(0x800A94E8);
+
 // Loading, connecting, error etc. plaques
 const VmPtr<texture_t>  gTex_PAUSE(0x80097A70);
 const VmPtr<texture_t>  gTex_LOADING(0x80097A90);

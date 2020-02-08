@@ -1140,7 +1140,7 @@ loc_8002A7F8:
     v0 = a0 << 2;
 loc_8002A874:
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x408C;                                       // Result = WeaponNumbers[0] (8007408C)
+    at += 0x408C;                                       // Result = gWeaponMicroIndexes[0] (8007408C)
     at += v0;
     a0 = lw(at);
     v1 = lw(s1 + 0x18);

@@ -589,7 +589,7 @@ loc_8003CEE4:
     a1 = 0x14;                                          // Result = 00000014
     a2 = *gGameMap;
     s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
+    s1 += 0x40BC;                                       // Result = gMicronumsX[6] (800740BC)
     a2 <<= 5;
     a2 += s1;
     _thunk_I_DrawString();
@@ -861,7 +861,7 @@ loc_8003D334:
     a1 = 0xA5;                                          // Result = 000000A5
     a2 = *gNextMap;
     v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
+    v0 += 0x40BC;                                       // Result = gMicronumsX[6] (800740BC)
     a2 <<= 5;
     a2 += v0;
     _thunk_I_DrawString();
@@ -929,7 +929,7 @@ loc_8003D448:
     a1 = 0x14;                                          // Result = 00000014
     a2 = *gGameMap;
     v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
+    v0 += 0x40BC;                                       // Result = gMicronumsX[6] (800740BC)
     a2 <<= 5;
     a2 += v0;
     _thunk_I_DrawString();
@@ -1054,7 +1054,7 @@ loc_8003D658:
     a2 = *gNextMap;
     a1 = 0xCE;                                          // Result = 000000CE
     v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
+    v0 += 0x40BC;                                       // Result = gMicronumsX[6] (800740BC)
     a2 <<= 5;
     a2 += v0;
     _thunk_I_DrawString();

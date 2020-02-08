@@ -68,13 +68,13 @@ struct POLY_F4 {
     uint8_t     g0;
     uint8_t     b0;
     uint8_t     code;       // Type info for the hardware
-	int16_t	    x0;         // Vertex 1: position
+    int16_t     x0;         // Vertex 1: position
     int16_t     y0;
-	int16_t	    x1;         // Vertex 2: position
+    int16_t     x1;         // Vertex 2: position
     int16_t     y1;
-	int16_t	    x2;         // Vertex 3: position
+    int16_t     x2;         // Vertex 3: position
     int16_t     y2;
-	int16_t	    x3;         // Vertex 4: position
+    int16_t     x3;         // Vertex 4: position
     int16_t     y3;
 };
 

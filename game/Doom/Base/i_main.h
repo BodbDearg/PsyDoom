@@ -54,6 +54,7 @@ extern const VmPtr<uint32_t>                                            gNumFram
 extern const VmPtr<uint32_t>                                            gCurPlayerIndex;
 extern const VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>                      gBtnBindings;
 extern const VmPtr<VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>[MAXPLAYERS]>   gpPlayerBtnBindings;
+extern const VmPtr<texture_t>                                           gTex_STATUS;
 extern const VmPtr<texture_t>                                           gTex_PAUSE;
 extern const VmPtr<texture_t>                                           gTex_LOADING;
 extern const VmPtr<texture_t>                                           gTex_NETERR;

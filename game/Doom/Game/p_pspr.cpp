@@ -6,11 +6,88 @@
 #include "Doom/Base/sounds.h"
 #include "Doom/Base/w_wad.h"
 #include "Doom/d_main.h"
+#include "Doom/doomdef.h"
 #include "Doom/Renderer/r_main.h"
+#include "info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_mobj.h"
 #include "PsxVm/PsxVm.h"
+
+const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
+    {   // Fist
+        am_noammo,              // ammo
+        S_PUNCHUP,              // upstate
+        S_PUNCHDOWN,            // downstate
+        S_PUNCH,                // readystate
+        S_PUNCH1,               // atkstate
+        S_NULL                  // flashstate
+    },
+    {   // Pistol
+        am_clip,                // ammo
+        S_PISTOLUP,             // upstate
+        S_PISTOLDOWN,           // downstate
+        S_PISTOL,               // readystate
+        S_PISTOL2,              // atkstate
+        S_PISTOLFLASH           // flashstate
+    },
+    {   // Shotgun
+        am_shell,               // ammo
+        S_SGUNUP,               // upstate
+        S_SGUNDOWN,             // downstate
+        S_SGUN,                 // readystate
+        S_SGUN2,                // atkstate
+        S_SGUNFLASH1            // flashstate
+    },
+    {   // Super Shotgun
+        am_shell,               // ammo
+        S_DSGUNUP,              // upstate
+        S_DSGUNDOWN,            // downstate
+        S_DSGUN,                // readystate
+        S_DSGUN1,               // atkstate
+        S_DSGUNFLASH1           // flashstate
+    },    
+    {   // Chaingun
+        am_clip,                // ammo
+        S_CHAINUP,              // upstate
+        S_CHAINDOWN,            // downstate
+        S_CHAIN,                // readystate
+        S_CHAIN1,               // atkstate
+        S_CHAINFLASH1           // flashstate
+    },
+    {   // Rocket Launcher
+        am_misl,                // ammo
+        S_MISSILEUP,            // upstate
+        S_MISSILEDOWN,          // downstate
+        S_MISSILE,              // readystate
+        S_MISSILE1,             // atkstate
+        S_MISSILEFLASH1         // flashstate
+    },
+    {   // Plasma Rifle
+        am_cell,                // ammo
+        S_PLASMAUP,             // upstate
+        S_PLASMADOWN,           // downstate
+        S_PLASMA,               // readystate
+        S_PLASMA1,              // atkstate
+        S_PLASMAFLASH1          // flashstate
+    },
+    {   // BFG
+        am_cell,                // ammo
+        S_BFGUP,                // upstate
+        S_BFGDOWN,              // downstate
+        S_BFG,                  // readystate
+        S_BFG1,                 // atkstate
+        S_BFGFLASH1             // flashstate
+    },
+    {   // Chainsaw
+        am_noammo,              // ammo
+        S_SAWUP,                // upstate
+        S_SAWDOWN,              // downstate
+        S_SAW,                  // readystate
+        S_SAW1,                 // atkstate
+        S_NULL                  // flashstate
+    }
+};
 
 void P_RecursiveSound() noexcept {
 loc_8001F918:

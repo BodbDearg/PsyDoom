@@ -9,18 +9,106 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_tick.h"
+#include "Doom/Renderer/r_data.h"
+#include "in_main.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBC2.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
+#include <cstdio>
 
-// The main UI texture atlas for the game.
-// This is loaded into the 1st available texture page and kept loaded at all times after that.
-const VmPtr<texture_t> gTex_STATUS(0x800A94E8);
+// Positions for each of the micronumbers on the status bar
+static constexpr int32_t NUMMICROS = 8;
+
+static const int16_t gMicronumsX[NUMMICROS] = { 199, 212, 225, 238, 199, 212, 225, 238 };
+static const int16_t gMicronumsY[NUMMICROS] = { 204, 204, 204, 204, 216, 216, 216, 216 };
+
+// Keycard y positions on the status bar
+static const int16_t gCardY[NUMCARDS] = { 204, 212, 220, 204, 212, 220 };
+
+// Which slot (by index) on the weapon micronumbers display each weapon maps to
+static const int32_t gWeaponMicroIndexes[NUMWEAPONS] = { 0, 1, 2, 3, 4, 5, 6, 7, 0 };
+
+// Describes 1 frame of a status bar face sprite
+struct facesprite_t {
+    uint8_t xPos;
+	uint8_t yPos;
+	uint8_t texU;
+	uint8_t texV;
+	uint8_t w;
+	uint8_t h;
+};
+
+// The definitions for each face sprite
+static constexpr int32_t NUMFACES = 47;
+
+static const facesprite_t gFaceSprites[NUMFACES] = {
+	{ 118, 202,   0,  41, 19, 29 },     // STFST01  - 0
+	{ 118, 202,  20,  41, 19, 29 },     // STFST02  - 1
+	{ 118, 202, 234, 137, 19, 29 },     // STFST00  - 2
+	{ 118, 202,  40,  41, 21, 31 },     // STFTL00  - 3
+	{ 118, 202,  62,  41, 21, 31 },     // STFTR00  - 4
+	{ 118, 202,  84,  41, 19, 31 },     // STFOUCH0 - 5
+	{ 118, 202, 104,  41, 19, 31 },     // STFEVL0  - 6 (EVILFACE)
+	{ 118, 202, 124,  41, 19, 31 },     // STFKILL0 - 7
+	{ 118, 202, 144,  41, 19, 31 },     // STFST11  - 8
+	{ 118, 202, 164,  41, 19, 31 },     // STFST10  - 9
+	{ 118, 202, 184,  41, 19, 31 },     // STFST12  - 10
+	{ 118, 202, 204,  41, 20, 31 },     // STFTL10  - 11
+	{ 118, 202, 226,  41, 21, 31 },     // STFTR10  - 12
+	{ 118, 202,   0,  73, 19, 31 },     // STFOUCH1 - 13
+	{ 118, 202,  20,  73, 19, 31 },     // STFEVL1  - 14
+	{ 118, 202,  40,  73, 19, 31 },     // STFKILL1 - 15
+	{ 118, 202,  60,  73, 19, 31 },     // STFST21  - 16
+	{ 118, 202,  80,  73, 19, 31 },     // STFST20  - 17
+	{ 118, 202, 100,  73, 19, 31 },     // STFST22  - 18
+	{ 118, 202, 120,  73, 22, 31 },     // STFTL20  - 19
+	{ 118, 202, 142,  73, 22, 31 },     // STFTR20  - 20
+	{ 118, 202, 166,  73, 19, 31 },     // STFOUCH2 - 21
+	{ 118, 202, 186,  73, 19, 31 },     // STFEVL2  - 22
+	{ 118, 202, 206,  73, 19, 31 },     // STFKILL2 - 23
+	{ 118, 202, 226,  73, 19, 31 },     // STFST31  - 24
+	{ 118, 202,   0, 105, 19, 31 },     // STFST30  - 25
+	{ 118, 202,  20, 105, 19, 31 },     // STFST32  - 26
+	{ 118, 202,  40, 105, 23, 31 },     // STFTL30  - 27
+	{ 118, 202,  64, 105, 23, 31 },     // STFTR30  - 28
+	{ 118, 202,  88, 105, 19, 31 },     // STFOUCH3 - 29
+	{ 118, 202, 108, 105, 19, 31 },     // STFEVL3  - 30
+	{ 118, 202, 128, 105, 19, 31 },     // STFKILL3 - 31
+	{ 118, 202, 148, 105, 19, 31 },     // STFST41  - 32
+	{ 118, 202, 168, 105, 19, 31 },     // STFST40  - 33
+	{ 118, 202, 188, 105, 19, 31 },     // STFST42  - 34
+	{ 118, 202, 208, 105, 24, 31 },     // STFTL40  - 35
+	{ 118, 202, 232, 105, 23, 31 },     // STFTR40  - 36
+	{ 118, 202,   0, 137, 18, 31 },     // STFOUCH4 - 37
+	{ 118, 202,  20, 137, 19, 31 },     // STFEVL4  - 38
+	{ 118, 202,  40, 137, 19, 31 },     // STFKILL4 - 39
+	{ 118, 202,  60, 137, 19, 31 },     // STFGOD0  - 40 (GODFACE)
+	{ 118, 202,  80, 137, 19, 31 },     // STFDEAD0 - 41 (DEADFACE)
+	{ 118, 202, 100, 137, 19, 30 },     // STSPLAT0 - 42 (FIRSTSPLAT)
+	{ 114, 201, 120, 137, 27, 30 },     // STSPLAT1 - 43
+	{ 114, 204, 148, 137, 28, 30 },     // STSPLAT2 - 44
+	{ 114, 204, 176, 137, 28, 30 },     // STSPLAT3 - 45
+	{ 114, 204, 204, 137, 28, 30 }      // STSPLAT4 - 46
+};
+
+// State relating to flashing keycards on the status bar
+struct sbflash_t {
+	int16_t	    active;     // Is the flash currently active?
+	int16_t	    doDraw;     // Are we currently drawing the keycard as part of the flash?
+	int16_t     delay;      // Ticks until next draw/no-draw change
+	int16_t	    times;      // How many flashes are left
+};
+
+static const VmPtr<sbflash_t[NUMCARDS]> gFlashCards(0x800A94B4);
 
 // Status bar message
 const VmPtr<VmPtr<const char>>  gpStatusBarMsgStr(0x80098740);
 const VmPtr<int32_t>            gStatusBarMsgTicsLeft(0x80098744);
+
+// Face related state
+static const VmPtr<bool32_t>                gbDrawSBFace(0x80078130);
+static const VmPtr<VmPtr<facesprite_t>>     gpCurSBFaceSprite(0x80078230);
 
 void ST_Init() noexcept {
 loc_80038558:
@@ -71,7 +159,7 @@ loc_80038610:
     v1 = v0 - 0x18;                                     // Result = gStatusBar[1] (8009871C)
     sw(0, v0);                                          // Store to: gStatusBar[7] (80098734)
     v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0xB50);                                 // Store to: gbDrawStatusBarFace (80078130)
+    *gbDrawSBFace = v0;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x3E68;                                       // Result = StatusBarFaceSpriteInfo[0] (80073E68)
     sw(0, gp + 0xA78);                                  // Store to: gbStatusBarPlayerGotGibbed (80078058)
@@ -80,11 +168,11 @@ loc_80038610:
     sw(0, at - 0x78E8);                                 // Store to: gStatusBar[0] (80098718)
     *gStatusBarMsgTicsLeft = 0;
     sw(0, gp + 0xB54);                                  // Store to: gFaceTics (80078134)
-    sw(v0, gp + 0xC50);                                 // Store to: gpCurStatusBarFaceSpriteInfo (80078230)
+    *gpCurSBFaceSprite = v0;
 loc_80038658:
     sw(0, v1);
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4C;                                       // Result = gStatusBarKeyState[0] (800A94B4)
+    at -= 0x6B4C;                                       // Result = gFlashCards[0] (800A94B4)
     at += a0;
     sh(0, at);
     a0 += 8;
@@ -179,7 +267,7 @@ loc_80038774:
     v0 = (i32(v0) < 5);
     if (v0 != 0) goto loc_800387D4;
     sw(0, gp + 0xA78);                                  // Store to: gbStatusBarPlayerGotGibbed (80078058)
-    sw(0, gp + 0xB50);                                  // Store to: gbDrawStatusBarFace (80078130)
+    *gbDrawSBFace = false;
 loc_800387D4:
     v0 = lw(s4 + 0xD4);
     if (v0 == 0) goto loc_8003882C;
@@ -206,7 +294,7 @@ loc_8003882C:
 loc_8003884C:
     s3 = 4;                                             // Result = 00000004
     s1 = 0x800B0000;                                    // Result = 800B0000
-    s1 -= 0x6B4C;                                       // Result = gStatusBarKeyState[0] (800A94B4)
+    s1 -= 0x6B4C;                                       // Result = gFlashCards[0] (800A94B4)
     s0 = 0;                                             // Result = 00000000
 loc_8003885C:
     v0 = 0x800A0000;                                    // Result = 800A0000
@@ -223,15 +311,15 @@ loc_8003885C:
     sh(v0, s1);
     v0 = 7;                                             // Result = 00000007
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B48;                                       // Result = gStatusBarKeyState[2] (800A94B8)
+    at -= 0x6B48;                                       // Result = gFlashCards[2] (800A94B8)
     at += s0;
     sh(s3, at);
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B46;                                       // Result = gStatusBarKeyState[3] (800A94BA)
+    at -= 0x6B46;                                       // Result = gFlashCards[3] (800A94BA)
     at += s0;
     sh(v0, at);
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4A;                                       // Result = gStatusBarKeyState[1] (800A94B6)
+    at -= 0x6B4A;                                       // Result = gFlashCards[1] (800A94B6)
     at += s0;
     sh(0, at);
     s1 += 8;
@@ -240,9 +328,9 @@ loc_800388C0:
     v0 = lh(s1);
     if (v0 == 0) goto loc_800389A8;
     v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x6B4C;                                       // Result = gStatusBarKeyState[0] (800A94B4)
+    v1 -= 0x6B4C;                                       // Result = gFlashCards[0] (800A94B4)
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B48;                                       // Result = gStatusBarKeyState[2] (800A94B8)
+    at -= 0x6B48;                                       // Result = gFlashCards[2] (800A94B8)
     at += s0;
     v0 = lhu(at);
     a0 = s0 + v1;
@@ -251,38 +339,38 @@ loc_800388C0:
     v0 <<= 16;
     if (v0 != 0) goto loc_800389A8;
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4A;                                       // Result = gStatusBarKeyState[1] (800A94B6)
+    at -= 0x6B4A;                                       // Result = gFlashCards[1] (800A94B6)
     at += s0;
     v0 = lhu(at);
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B46;                                       // Result = gStatusBarKeyState[3] (800A94BA)
+    at -= 0x6B46;                                       // Result = gFlashCards[3] (800A94BA)
     at += s0;
     v1 = lhu(at);
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B48;                                       // Result = gStatusBarKeyState[2] (800A94B8)
+    at -= 0x6B48;                                       // Result = gFlashCards[2] (800A94B8)
     at += s0;
     sh(s3, at);
     v0 ^= 1;
     v1--;
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4A;                                       // Result = gStatusBarKeyState[1] (800A94B6)
+    at -= 0x6B4A;                                       // Result = gFlashCards[1] (800A94B6)
     at += s0;
     sh(v0, at);
     sh(v1, a0 + 0x6);
     v1 <<= 16;
     if (v1 != 0) goto loc_80038968;
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4C;                                       // Result = gStatusBarKeyState[0] (800A94B4)
+    at -= 0x6B4C;                                       // Result = gFlashCards[0] (800A94B4)
     at += s0;
     sh(0, at);
 loc_80038968:
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4A;                                       // Result = gStatusBarKeyState[1] (800A94B6)
+    at -= 0x6B4A;                                       // Result = gFlashCards[1] (800A94B6)
     at += s0;
     v0 = lh(at);
     if (v0 == 0) goto loc_800389A8;
     at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4C;                                       // Result = gStatusBarKeyState[0] (800A94B4)
+    at -= 0x6B4C;                                       // Result = gFlashCards[0] (800A94B4)
     at += s0;
     v0 = lh(at);
     a0 = 0;
@@ -377,7 +465,7 @@ loc_80038AB8:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x3E68;                                       // Result = StatusBarFaceSpriteInfo[0] (80073E68)
     v1 += v0;
-    sw(v1, gp + 0xC50);                                 // Store to: gpCurStatusBarFaceSpriteInfo (80078230)
+    *gpCurSBFaceSprite = v1;
     I_UpdatePalette();
     ra = lw(sp + 0x24);
     s4 = lw(sp + 0x20);
@@ -389,377 +477,159 @@ loc_80038AB8:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do drawing for the HUD status bar
+//------------------------------------------------------------------------------------------------------------------------------------------
 void ST_Drawer() noexcept {
-    sp -= 0x78;
-    sw(s0, sp + 0x58);
-    sw(s4, sp + 0x68);
-    sw(s2, sp + 0x60);
+    // Setup the current texture page and texture window.
+    // PC-PSX: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that.
+    {
+        DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
 
-    a0 = 0x1F800200;
-    a1 = 0;                                             // Result = 00000000
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lhu(a3 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
-    v1 = *gCurPlayerIndex;
-    a2 = 0;                                             // Result = 00000000
+        #if PC_PSX_DOOM_MODS
+            RECT texWindow = { 0, 0, 0, 0 };
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, &texWindow);
+        #else
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, nullptr);
+        #endif
+
+        I_AddPrim(&drawModePrim);
+    }
+
+    // Setup some sprite primitive state that is used for all the draw calls that follow
+    SPRT& spritePrim = *(SPRT*) getScratchAddr(128);
+
+    LIBGPU_SetSprt(spritePrim);
+    LIBGPU_SetShadeTex(&spritePrim, true);
+    spritePrim.clut = gPaletteClutIds[UIPAL];
     
-    sw(0, sp + 0x10);
-
-    v0 = v1 << 2;
-    v0 += v1;
-    v1 = v0 << 4;
-    v1 -= v0;
-    v1 <<= 2;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    s2 = v1 + v0;
-    _thunk_LIBGPU_SetDrawMode();
-
-    I_AddPrim(getScratchAddr(128));
-
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lhu(v1 - 0x6F5C);                              // Load from: gPaletteClutId_UI (800A90A4)
-    
-    v0 = 4;                                             // Result = 00000004
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x203);                                 // Store to: 1F800203
-    
-    v0 = 0x65;                                          // Result = 00000065
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x207);                                 // Store to: 1F800207
-    
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v1, at + 0x20E);                                 // Store to: 1F80020E
-
-    a0 = 7;
+    // Draw the current status bar message, or the map name (if in the automap)
+    player_t& player = gPlayers[*gCurPlayerIndex];
 
     if (*gStatusBarMsgTicsLeft > 0) {
-        a2 = *gpStatusBarMsgStr;
-        a1 = 0xC1;
-        I_DrawStringSmall(a0, a1, vmAddrToPtr<const char>(a2));
+        I_DrawStringSmall(7, 193, gpStatusBarMsgStr->get());
     } else {
-        v0 = lw(s2 + 0x124);
-        v0 &= 1;
-        a0 = sp + 0x18;
-         
-        if (v0 != 0) {
-            a2 = *gGameMap;
-            a1 = 0x80010000;                                    // Result = 80010000
-            a1 += 0x1628;                                       // Result = STR_LevelNumAndName[0] (80011628)
-            a3 = 0x80070000;                                    // Result = 80070000
-            a3 += 0x40BC;                                       // Result = StatusBarWeaponBoxesXPos[6] (800740BC)
-            v0 = a2 << 5;
-            a3 += v0;
-            LIBC2_sprintf();
+        if (player.automapflags & AF_ACTIVE) {
+            constexpr const char* const MAP_TITLE_FMT = "LEVEL %d:%s";
+            char mapTitle[64];
 
-            a0 = 7;
-            a1 = 0xC1;
-            a2 = sp + 0x18;
-            I_DrawStringSmall(a0, a1, vmAddrToPtr<const char>(a2));
+            // PC-PSX: use 'snprintf' just to be safe here
+            #if PC_PSX_DOOM_MODS
+                std::snprintf(mapTitle, C_ARRAY_SIZE(mapTitle), MAP_TITLE_FMT, *gGameMap, gMapNames[*gGameMap - 1]);
+            #else
+                std::sprintf(mapTitle, MAP_TITLE_FMT, *gGameMap, gMapNames[*gGameMap - 1]);
+            #endif
+
+            I_DrawStringSmall(7, 193, mapTitle);
         }
     }
 
-    v0 = 0xC8;                                          // Result = 000000C8
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x20A);                                 // Store to: 1F80020A
-    
-    v0 = 0x100;                                         // Result = 00000100
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x210);                                 // Store to: 1F800210
-    
-    v0 = 0x28;                                          // Result = 00000028
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(0, at + 0x208);                                  // Store to: 1F800208
-    
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(0, at + 0x20C);                                  // Store to: 1F80020C
-    
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(0, at + 0x20D);                                  // Store to: 1F80020D
-    
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x212);                                 // Store to: 1F800212
+    // Draw the background for the status bar
+    LIBGPU_setXY0(spritePrim, 0, 200);
+    LIBGPU_setUV0(spritePrim, 0, 0);
+    LIBGPU_setWH(spritePrim, 256, 40);
 
-    I_AddPrim(getScratchAddr(128));
+    I_AddPrim(&spritePrim);
 
-    s4 = lw(s2 + 0x70);
-    v0 = s4 << 1;
+    // Figure out what weapon to display ammo for and what to show for the ammo amount
+    const weapontype_t weapon = (player.pendingweapon == wp_nochange) ?
+        player.readyweapon :
+        player.pendingweapon;
 
-    if (s4 == 0xA) {
-        s4 = lw(s2 + 0x6C);
-        v0 = s4 << 1;
-    }
-    
-    v0 += s4;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F4;                                       // Result = WeaponInfo_Fist[0] (800670F4)
-    at += v0;
-    a2 = lw(at);
-    v0 = a2 << 2;
+    const weaponinfo_t& weaponInfo = gWeaponInfo[weapon];
+    const ammotype_t ammoType = weaponInfo.ammo;
+    const int32_t ammo = (ammoType != am_noammo) ? player.ammo[ammoType] : 0;
 
-    if (a2 == 5) {
-        a2 = 0;
-    } else {
-        v0 += s2;
-        a2 = lw(v0 + 0x98);
-    }
+    // Draw ammo, health and armor amounts
+    I_DrawNumber(28, 204, ammo);
+    I_DrawNumber(71, 204, player.health);
+    I_DrawNumber(168, 204, player.armorpoints);
 
-    a0 = 0x1C;                                          // Result = 0000001C
-    a1 = 0xCC;                                          // Result = 000000CC    
-    _thunk_I_DrawNumber();
+    // Draw keycards and skull keys
+    {
+        LIBGPU_setWH(spritePrim, 11, 8);
+        spritePrim.x0 = 100;
+        spritePrim.tv0 = 184;
 
-    a0 = 0x47;                                          // Result = 00000047
-    a2 = lw(s2 + 0x24);
-    a1 = 0xCC;                                          // Result = 000000CC    
-    _thunk_I_DrawNumber();
+        uint8_t texU = 114;
 
-    a0 = 0xA8;                                          // Result = 000000A8
-    a2 = lw(s2 + 0x28);
-    a1 = 0xCC;                                          // Result = 000000CC
-    _thunk_I_DrawNumber();
+        for (int32_t cardIdx = 0; cardIdx < NUMCARDS; ++cardIdx) {
+            const bool bHaveCard = player.cards[cardIdx];
 
-    t4 = 0;                                             // Result = 00000000
-    s0 = 0x72;                                          // Result = 00000072
-    t6 = 0;                                             // Result = 00000000
-    
-    v0 = 0x64;                                          // Result = 00000064
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x208);                                 // Store to: 1F800208
-    
-    v0 = 0xB8;                                          // Result = 000000B8
-    at = 0x1F800000;                                    // Result = 1F800000
-    sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-    
-    v0 = 0xB;                                           // Result = 0000000B
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x210);                                 // Store to: 1F800210
-    
-    v0 = 8;                                             // Result = 00000008
-    at = 0x1F800000;                                    // Result = 1F800000
-    sh(v0, at + 0x212);                                 // Store to: 1F800212
+            // Draw the card if we have it or if it's currently flashing
+            if (bHaveCard || (gFlashCards[cardIdx].active && gFlashCards[cardIdx].doDraw)) {
+                spritePrim.tu0 = texU;
+                spritePrim.y0 = gCardY[cardIdx];
 
-    do {
-        v0 = t4 << 2;
-        v0 += s2;
-        v0 = lw(v0 + 0x48);
-
-        if ((v0 != 0) || (
-                (lh(0x800A94B4 + t6) != 0) &&               // Result = gStatusBarKeyState[0] (800A94B4)
-                (lh(0x800A94B6 + t6) != 0)                  // Result = gStatusBarKeyState[1] (800A94B6)
-            )
-        ) {
-            v0 = t4 << 1;
-            at = 0x80070000;                                    // Result = 80070000
-            at += 0x40D0;                                       // Result = StatusBarKeyYPos[0] (800740D0)
-            at += v0;
-            
-            v0 = lhu(at);
-            at = 0x1F800000;                                    // Result = 1F800000
-            sb(s0, at + 0x20C);                                 // Store to: 1F80020C
-            
-            at = 0x1F800000;                                    // Result = 1F800000
-            sh(v0, at + 0x20A);                                 // Store to: 1F80020A
-
-            I_AddPrim(getScratchAddr(128));
-        }
-
-        s0 += 0xB;
-        t4++;
-        v0 = (i32(t4) < 6);
-        t6 += 8;
-    } while (v0 != 0);
-
-    v1 = *gNetGame;
-    v0 = 2;
-
-    if (v1 != v0) {
-        v0 = 0xC8;                                          // Result = 000000C8
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x208);                                 // Store to: 1F800208
-        
-        v0 = 0xCD;                                          // Result = 000000CD
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x20A);                                 // Store to: 1F80020A
-        
-        v0 = 0xB4;                                          // Result = 000000B4
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x20C);                                 // Store to: 1F80020C
-        
-        v0 = 0xB8;                                          // Result = 000000B8
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-        
-        v0 = 0x33;                                          // Result = 00000033
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x210);                                 // Store to: 1F800210
-
-        v0 = 0x17;                                          // Result = 00000017
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x212);                                 // Store to: 1F800212
-
-        I_AddPrim(getScratchAddr(128));
-
-        t4 = 2;
-
-        t7 = -0x18;                                         // Result = FFFFFFE8
-        v0 = 0xB8;                                          // Result = 000000B8
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-        
-        v0 = 4;                                             // Result = 00000004
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x210);                                 // Store to: 1F800210
-
-        v0 = 6;                                             // Result = 00000006
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x212);                                 // Store to: 1F800212
-
-        do {
-            v0 = t4 << 2;
-            v0 += s2;
-            v0 = lw(v0 + 0x74);
-
-            if (v0 != 0) {
-                v0 = t4 << 1;
-                at = 0x80070000;                                    // Result = 80070000
-                at += 0x40B0;                                       // Result = StatusBarWeaponBoxesXPos[0] (800740B0)
-                at += v0;
-                v1 = lhu(at);
-                v1 += 5;
-                at = 0x1F800000;                                    // Result = 1F800000
-                sh(v1, at + 0x208);                                 // Store to: 1F800208
-                
-                at = 0x80070000;                                    // Result = 80070000
-                at += 0x40C0;                                       // Result = StatusBarWeaponBoxesYPos[0] (800740C0)
-                at += v0;
-                v0 = lhu(at);
-                at = 0x1F800000;                                    // Result = 1F800000
-                sb(t7, at + 0x20C);                                 // Store to: 1F80020C
-
-                v0 += 3;
-                at = 0x1F800000;                                    // Result = 1F800000
-                sh(v0, at + 0x20A);                                 // Store to: 1F80020A
-
-                I_AddPrim(getScratchAddr(128));
+                I_AddPrim(&spritePrim);
             }
 
-            t4++;
-            v0 = (i32(t4) < 8);
-            t7 += 4;
-        } while (v0 != 0);
+            texU += 11;
+        }
+    }
 
-        v0 = 0x80070000;                                    // Result = 80070000
-        v0 += 0x408C;                                       // Result = WeaponNumbers[0] (8007408C)
-        v1 = s4 << 2;
-        v1 += v0;
-        v0 = lw(v1);
-        v0 <<= 1;
-        at = 0x80070000;                                    // Result = 80070000
-        at += 0x40B0;                                       // Result = StatusBarWeaponBoxesXPos[0] (800740B0)
-        at += v0;
-        v0 = lhu(at);
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x208);                                 // Store to: 1F800208
+    // Draw weapon selector or frags (if deathmatch)
+    if (*gNetGame != gt_deathmatch) {
+        // Draw the weapon number box/container
+        LIBGPU_setXY0(spritePrim, 200, 205);
+        LIBGPU_setUV0(spritePrim, 180, 184);
+        LIBGPU_setWH(spritePrim, 51, 23);
 
-        v0 = lw(v1);
-        v0 <<= 1;
-        at = 0x80070000;                                    // Result = 80070000
-        at += 0x40C0;                                       // Result = StatusBarWeaponBoxesYPos[0] (800740C0)
-        at += v0;
-        v1 = lhu(at);
+        I_AddPrim(&spritePrim);
+
+        // Draw the micro numbers for each weapon.
+        // Note that numbers '1' and '2' are already baked into the status bar graphic, so we start at the shotgun.
+        {
+            LIBGPU_setWH(spritePrim, 4, 6);
+            spritePrim.tv0 = 184;
+
+            uint8_t texU = 232;
+
+            for (int32_t weaponIdx = wp_shotgun; weaponIdx < NUMMICROS; ++weaponIdx) {
+                if (player.weaponowned[weaponIdx]) {
+                    LIBGPU_setXY0(spritePrim, gMicronumsX[weaponIdx] + 5, gMicronumsY[weaponIdx] + 3);
+                    spritePrim.tu0 = texU;
+
+                    I_AddPrim(&spritePrim);
+                }
+
+                texU += 4;
+            }
+        }
+
+        // Draw the white box or highlight for the currently selected weapon
+        const int32_t microNumIdx = gWeaponMicroIndexes[weapon];
+
+        LIBGPU_setXY0(spritePrim, gMicronumsX[microNumIdx], gMicronumsY[microNumIdx]);
+        LIBGPU_setUV0(spritePrim, 164, 192);
+        LIBGPU_setWH(spritePrim, 12, 12);
         
-        v0 = 0xA4;                                          // Result = 000000A4
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x20C);                                 // Store to: 1F80020C
-        
-        v0 = 0xC0;                                          // Result = 000000C0
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-        
-        v0 = 0xC;                                           // Result = 0000000C        
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x210);                                 // Store to: 1F800210
-        
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x212);                                 // Store to: 1F800212
-        
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v1, at + 0x20A);                                 // Store to: 1F80020A
-    
-        I_AddPrim(getScratchAddr(128));
+        I_AddPrim(&spritePrim);
     } else {
-        v0 = 0xD1;                                          // Result = 000000D1
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x208);                                 // Store to: 1F800208
-        
-        v0 = 0xDD;                                          // Result = 000000DD
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x20A);                                 // Store to: 1F80020A
-        
-        v0 = 0xD0;                                          // Result = 000000D0
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x20C);                                 // Store to: 1F80020C
-        
-        v0 = 0xF3;                                          // Result = 000000F3
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-        
-        v0 = 0x21;                                          // Result = 00000021
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x210);                                 // Store to: 1F800210
-        
-        v0 = 8;                                             // Result = 00000008
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x212);                                 // Store to: 1F800212
+        // Draw the frags container box
+        LIBGPU_setXY0(spritePrim, 209, 221);
+        LIBGPU_setUV0(spritePrim, 208, 243);
+        LIBGPU_setWH(spritePrim, 33, 8);
 
-        I_AddPrim(getScratchAddr(128));
+        I_AddPrim(&spritePrim);
 
-        a0 = 0xE1;                                          // Result = 000000E1
-        a2 = lw(s2 + 0x64);
-        a1 = 0xCC;                                          // Result = 000000CC
-        _thunk_I_DrawNumber();
+        // Draw the number of frags
+        I_DrawNumber(225, 204, player.frags);
     }
 
-    v0 = lw(gp + 0xB50);                                // Load from: gbDrawStatusBarFace (80078130)
+    // Draw the doomguy face if enabled
+    if (*gbDrawSBFace) {
+        const facesprite_t& sprite = **gpCurSBFaceSprite;
 
-    if (v0 != 0) {
-        v1 = lw(gp + 0xC50);                                // Load from: gpCurStatusBarFaceSpriteInfo (80078230)
-        
-        v0 = lbu(v1);
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x208);                                 // Store to: 1F800208
-        
-        v0 = lbu(v1 + 0x1);
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x20A);                                 // Store to: 1F80020A
-        
-        v0 = lbu(v1 + 0x2);
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x20C);                                 // Store to: 1F80020C
-        
-        v0 = lbu(v1 + 0x3);
-        at = 0x1F800000;                                    // Result = 1F800000
-        sb(v0, at + 0x20D);                                 // Store to: 1F80020D
-        
-        v0 = lbu(v1 + 0x4);
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x210);                                 // Store to: 1F800210
-        
-        v0 = lbu(v1 + 0x5);
-        at = 0x1F800000;                                    // Result = 1F800000
-        sh(v0, at + 0x212);                                 // Store to: 1F800212
+        LIBGPU_setXY0(spritePrim, sprite.xPos, sprite.yPos);
+        LIBGPU_setUV0(spritePrim, sprite.texU, sprite.texV);
+        LIBGPU_setWH(spritePrim, sprite.w, sprite.h);
 
-        I_AddPrim(getScratchAddr(128));     // TODO: status bar face
+        I_AddPrim(&spritePrim);
     }
 
-    v0 = *gbGamePaused;
-
-    if (v0 != 0) {
+    // Draw the paused overlay, level warp and vram viewer
+    if (*gbGamePaused) {
         I_DrawPausedOverlay();
     }
-    
-    s4 = lw(sp + 0x68);
-    s2 = lw(sp + 0x60);
-    s0 = lw(sp + 0x58);
-    sp += 0x78;
 }

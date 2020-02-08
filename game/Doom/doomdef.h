@@ -266,14 +266,28 @@ enum weapontype_t : uint32_t {
 
 // Player ammo types
 enum ammotype_t : uint32_t {
-    // TODO: name these labels
-    am_0,
-    am_1,
-    am_2,
-    am_3,
+    am_clip,        // Clip for pistol and chaingun
+    am_shell,       // Shells for shotgun and super shotgun
+    am_cell,        // Cells for BFG and plasma guns
+    am_misl,        // Rockets for rocket launcher
     NUMAMMO,
-    am_noammo       // The 'no' ammo type used for ammoless weapons (TODO: CONFIRM)
+    am_noammo       // The 'no' ammo type used for ammoless weapons
 };
+
+// Describes the state transitions for a weapon and the ammo it uses
+struct weaponinfo_t {
+    ammotype_t  ammo;
+    int32_t     upstate;
+    int32_t     downstate;
+    int32_t     readystate;
+    int32_t     atkstate;
+    int32_t     flashstate;
+};
+
+static_assert(sizeof(weaponinfo_t) == 24);
+
+// Descriptions for all of the weapons in the game
+extern const weaponinfo_t gWeaponInfo[NUMWEAPONS];
 
 // Player powerup types
 enum powertype_t : uint32_t {
@@ -300,6 +314,10 @@ static constexpr uint32_t CF_VRAMVIEWER     = 0x10;     // Showing the vram view
 static constexpr uint32_t CF_WARPMENU       = 0x20;     // Showing the warp to map menu
 static constexpr uint32_t CF_XRAYVISION     = 0x80;     // Do 'xray vision' or transparent walls
 static constexpr uint32_t CF_NOPAUSEMSG     = 0x100;    // Don't draw the 'paused' plaque when paused: never set anywhere?
+
+// Player automap flags
+static constexpr uint32_t AF_ACTIVE = 0x1;      // Automap is displaying
+static constexpr uint32_t AF_FOLLOW = 0x2;      // Follow mode enabled
 
 // Holds state specific to each player
 struct player_t {
