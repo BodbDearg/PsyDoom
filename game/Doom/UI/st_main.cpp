@@ -32,72 +32,72 @@ static const int32_t gWeaponMicroIndexes[NUMWEAPONS] = { 0, 1, 2, 3, 4, 5, 6, 7,
 // Describes 1 frame of a status bar face sprite
 struct facesprite_t {
     uint8_t xPos;
-	uint8_t yPos;
-	uint8_t texU;
-	uint8_t texV;
-	uint8_t w;
-	uint8_t h;
+    uint8_t yPos;
+    uint8_t texU;
+    uint8_t texV;
+    uint8_t w;
+    uint8_t h;
 };
 
 // The definitions for each face sprite
 static constexpr int32_t NUMFACES = 47;
 
 static const facesprite_t gFaceSprites[NUMFACES] = {
-	{ 118, 202,   0,  41, 19, 29 },     // STFST01  - 0
-	{ 118, 202,  20,  41, 19, 29 },     // STFST02  - 1
-	{ 118, 202, 234, 137, 19, 29 },     // STFST00  - 2
-	{ 118, 202,  40,  41, 21, 31 },     // STFTL00  - 3
-	{ 118, 202,  62,  41, 21, 31 },     // STFTR00  - 4
-	{ 118, 202,  84,  41, 19, 31 },     // STFOUCH0 - 5
-	{ 118, 202, 104,  41, 19, 31 },     // STFEVL0  - 6 (EVILFACE)
-	{ 118, 202, 124,  41, 19, 31 },     // STFKILL0 - 7
-	{ 118, 202, 144,  41, 19, 31 },     // STFST11  - 8
-	{ 118, 202, 164,  41, 19, 31 },     // STFST10  - 9
-	{ 118, 202, 184,  41, 19, 31 },     // STFST12  - 10
-	{ 118, 202, 204,  41, 20, 31 },     // STFTL10  - 11
-	{ 118, 202, 226,  41, 21, 31 },     // STFTR10  - 12
-	{ 118, 202,   0,  73, 19, 31 },     // STFOUCH1 - 13
-	{ 118, 202,  20,  73, 19, 31 },     // STFEVL1  - 14
-	{ 118, 202,  40,  73, 19, 31 },     // STFKILL1 - 15
-	{ 118, 202,  60,  73, 19, 31 },     // STFST21  - 16
-	{ 118, 202,  80,  73, 19, 31 },     // STFST20  - 17
-	{ 118, 202, 100,  73, 19, 31 },     // STFST22  - 18
-	{ 118, 202, 120,  73, 22, 31 },     // STFTL20  - 19
-	{ 118, 202, 142,  73, 22, 31 },     // STFTR20  - 20
-	{ 118, 202, 166,  73, 19, 31 },     // STFOUCH2 - 21
-	{ 118, 202, 186,  73, 19, 31 },     // STFEVL2  - 22
-	{ 118, 202, 206,  73, 19, 31 },     // STFKILL2 - 23
-	{ 118, 202, 226,  73, 19, 31 },     // STFST31  - 24
-	{ 118, 202,   0, 105, 19, 31 },     // STFST30  - 25
-	{ 118, 202,  20, 105, 19, 31 },     // STFST32  - 26
-	{ 118, 202,  40, 105, 23, 31 },     // STFTL30  - 27
-	{ 118, 202,  64, 105, 23, 31 },     // STFTR30  - 28
-	{ 118, 202,  88, 105, 19, 31 },     // STFOUCH3 - 29
-	{ 118, 202, 108, 105, 19, 31 },     // STFEVL3  - 30
-	{ 118, 202, 128, 105, 19, 31 },     // STFKILL3 - 31
-	{ 118, 202, 148, 105, 19, 31 },     // STFST41  - 32
-	{ 118, 202, 168, 105, 19, 31 },     // STFST40  - 33
-	{ 118, 202, 188, 105, 19, 31 },     // STFST42  - 34
-	{ 118, 202, 208, 105, 24, 31 },     // STFTL40  - 35
-	{ 118, 202, 232, 105, 23, 31 },     // STFTR40  - 36
-	{ 118, 202,   0, 137, 18, 31 },     // STFOUCH4 - 37
-	{ 118, 202,  20, 137, 19, 31 },     // STFEVL4  - 38
-	{ 118, 202,  40, 137, 19, 31 },     // STFKILL4 - 39
-	{ 118, 202,  60, 137, 19, 31 },     // STFGOD0  - 40 (GODFACE)
-	{ 118, 202,  80, 137, 19, 31 },     // STFDEAD0 - 41 (DEADFACE)
-	{ 118, 202, 100, 137, 19, 30 },     // STSPLAT0 - 42 (FIRSTSPLAT)
-	{ 114, 201, 120, 137, 27, 30 },     // STSPLAT1 - 43
-	{ 114, 204, 148, 137, 28, 30 },     // STSPLAT2 - 44
-	{ 114, 204, 176, 137, 28, 30 },     // STSPLAT3 - 45
-	{ 114, 204, 204, 137, 28, 30 }      // STSPLAT4 - 46
+    { 118, 202,   0,  41, 19, 29 },     // STFST01  - 0
+    { 118, 202,  20,  41, 19, 29 },     // STFST02  - 1
+    { 118, 202, 234, 137, 19, 29 },     // STFST00  - 2
+    { 118, 202,  40,  41, 21, 31 },     // STFTL00  - 3
+    { 118, 202,  62,  41, 21, 31 },     // STFTR00  - 4
+    { 118, 202,  84,  41, 19, 31 },     // STFOUCH0 - 5
+    { 118, 202, 104,  41, 19, 31 },     // STFEVL0  - 6 (EVILFACE)
+    { 118, 202, 124,  41, 19, 31 },     // STFKILL0 - 7
+    { 118, 202, 144,  41, 19, 31 },     // STFST11  - 8
+    { 118, 202, 164,  41, 19, 31 },     // STFST10  - 9
+    { 118, 202, 184,  41, 19, 31 },     // STFST12  - 10
+    { 118, 202, 204,  41, 20, 31 },     // STFTL10  - 11
+    { 118, 202, 226,  41, 21, 31 },     // STFTR10  - 12
+    { 118, 202,   0,  73, 19, 31 },     // STFOUCH1 - 13
+    { 118, 202,  20,  73, 19, 31 },     // STFEVL1  - 14
+    { 118, 202,  40,  73, 19, 31 },     // STFKILL1 - 15
+    { 118, 202,  60,  73, 19, 31 },     // STFST21  - 16
+    { 118, 202,  80,  73, 19, 31 },     // STFST20  - 17
+    { 118, 202, 100,  73, 19, 31 },     // STFST22  - 18
+    { 118, 202, 120,  73, 22, 31 },     // STFTL20  - 19
+    { 118, 202, 142,  73, 22, 31 },     // STFTR20  - 20
+    { 118, 202, 166,  73, 19, 31 },     // STFOUCH2 - 21
+    { 118, 202, 186,  73, 19, 31 },     // STFEVL2  - 22
+    { 118, 202, 206,  73, 19, 31 },     // STFKILL2 - 23
+    { 118, 202, 226,  73, 19, 31 },     // STFST31  - 24
+    { 118, 202,   0, 105, 19, 31 },     // STFST30  - 25
+    { 118, 202,  20, 105, 19, 31 },     // STFST32  - 26
+    { 118, 202,  40, 105, 23, 31 },     // STFTL30  - 27
+    { 118, 202,  64, 105, 23, 31 },     // STFTR30  - 28
+    { 118, 202,  88, 105, 19, 31 },     // STFOUCH3 - 29
+    { 118, 202, 108, 105, 19, 31 },     // STFEVL3  - 30
+    { 118, 202, 128, 105, 19, 31 },     // STFKILL3 - 31
+    { 118, 202, 148, 105, 19, 31 },     // STFST41  - 32
+    { 118, 202, 168, 105, 19, 31 },     // STFST40  - 33
+    { 118, 202, 188, 105, 19, 31 },     // STFST42  - 34
+    { 118, 202, 208, 105, 24, 31 },     // STFTL40  - 35
+    { 118, 202, 232, 105, 23, 31 },     // STFTR40  - 36
+    { 118, 202,   0, 137, 18, 31 },     // STFOUCH4 - 37
+    { 118, 202,  20, 137, 19, 31 },     // STFEVL4  - 38
+    { 118, 202,  40, 137, 19, 31 },     // STFKILL4 - 39
+    { 118, 202,  60, 137, 19, 31 },     // STFGOD0  - 40 (GODFACE)
+    { 118, 202,  80, 137, 19, 31 },     // STFDEAD0 - 41 (DEADFACE)
+    { 118, 202, 100, 137, 19, 30 },     // STSPLAT0 - 42 (FIRSTSPLAT)
+    { 114, 201, 120, 137, 27, 30 },     // STSPLAT1 - 43
+    { 114, 204, 148, 137, 28, 30 },     // STSPLAT2 - 44
+    { 114, 204, 176, 137, 28, 30 },     // STSPLAT3 - 45
+    { 114, 204, 204, 137, 28, 30 }      // STSPLAT4 - 46
 };
 
 // State relating to flashing keycards on the status bar
 struct sbflash_t {
-	int16_t	    active;     // Is the flash currently active?
-	int16_t	    doDraw;     // Are we currently drawing the keycard as part of the flash?
-	int16_t     delay;      // Ticks until next draw/no-draw change
-	int16_t	    times;      // How many flashes are left
+    int16_t     active;     // Is the flash currently active?
+    int16_t     doDraw;     // Are we currently drawing the keycard as part of the flash?
+    int16_t     delay;      // Ticks until next draw/no-draw change
+    int16_t     times;      // How many flashes are left
 };
 
 static const VmPtr<sbflash_t[NUMCARDS]> gFlashCards(0x800A94B4);
