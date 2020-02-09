@@ -18,6 +18,16 @@
 #include "w_wad.h"
 #include "z_zone.h"
 
+#include <ctime>
+
+// FIXME: remove this eventually.
+// Set to '1' to enable very hacky high frame rate support
+#define TEMP_HIGH_FRAMERATE_HACK 0
+
+#if TEMP_HIGH_FRAMERATE_HACK
+    #include <ctime>
+#endif
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Texture cache related stuff.
 // VRAM for PSX Doom is managed as follows:
@@ -519,17 +529,35 @@ void I_DrawPresent() noexcept {
     a0 = ptrToVmAddr(&gDispEnvs[*gCurDispBufferIdx]);
     LIBGPU_PutDispEnv();
 
-    // Frame rate limiting to 30 Hz.
-    // Continously poll and wait until at least 2 vblanks have elapsed before continuing.
-    do {
-        // PC-PSX: wait one 30 Hz tick
-        #if PC_PSX_DOOM_MODS
-            PcPsx::doFrameRateLimiting();
-        #endif
+    // FIXME: remove this eventually.
+    #if TEMP_HIGH_FRAMERATE_HACK
+        // Hack/experiment with high frame rates - needs a lot of work
+        {
+            const clock_t now = std::clock();
+            *gTotalVBlanks = ((uint64_t) now * 60) / (uint64_t) CLOCKS_PER_SEC;
+            *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
 
-        *gTotalVBlanks = LIBETC_VSync(-1);
-        *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
-    } while (*gElapsedVBlanks < 2);
+            if (*gElapsedVBlanks > 16) {
+                *gElapsedVBlanks = 16;
+            }
+
+            for (int32_t i = 0; i < *gElapsedVBlanks; ++i) {
+                emulate_frame();
+            }
+        }
+    #else
+        // Frame rate limiting to 30 Hz.
+        // Continously poll and wait until at least 2 vblanks have elapsed before continuing.
+        do {
+            // PC-PSX: wait one 30 Hz tick
+            #if PC_PSX_DOOM_MODS
+                PcPsx::doFrameRateLimiting();
+            #endif
+
+            *gTotalVBlanks = LIBETC_VSync(-1);
+            *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
+        } while (*gElapsedVBlanks < 2);
+    #endif
 
     // Further framerate limiting for demos:
     // Demo playback or recording is forced to run at 15 Hz all of the time (the game simulation rate).
