@@ -332,7 +332,7 @@ void DRAW_PasswordScreen() noexcept {
         LIBGPU_setXY0(spritePrim, charX, charY);
         LIBGPU_setUV0(spritePrim, fontChar.u, fontChar.v);
         LIBGPU_setWH(spritePrim, fontChar.w, fontChar.h);
-	
+        
         I_AddPrim(&spritePrim);
     }
 

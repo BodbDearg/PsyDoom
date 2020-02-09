@@ -164,7 +164,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
     }
 
     // Setting up some sprite primitive stuff for the 'draw string' call that follows
-	{
+    {
         SPRT& spritePrim = *(SPRT*) getScratchAddr(128);
 
         LIBGPU_SetSprt(spritePrim);

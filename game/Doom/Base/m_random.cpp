@@ -4,7 +4,7 @@
 #include "PsxVm/VmPtr.h"
 
 // The RNG table for PSX DOOM - same as the PC version and other ports
-static constexpr uint8_t RND_TABLE[256] = {
+const uint8_t gRndTable[256] = {
     0x00, 0x08, 0x6D, 0xDC, 0xDE, 0xF1, 0x95, 0x6B, 0x4B, 0xF8, 0xFE, 0x8C, 0x10, 0x42, 0x4A, 0x15,
     0xD3, 0x2F, 0x50, 0xF2, 0x9A, 0x1B, 0xCD, 0x80, 0xA1, 0x59, 0x4D, 0x24, 0x5F, 0x6E, 0x55, 0x30,
     0xD4, 0x8C, 0xD3, 0xF9, 0x16, 0x4F, 0xC8, 0x32, 0x1C, 0xBC, 0x34, 0x8C, 0xCA, 0x78, 0x44, 0x91,
@@ -32,7 +32,7 @@ static const VmPtr<uint32_t>   gMRndIndex(0x80077608);
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t P_Random() noexcept {
     *gPRndIndex = (*gPRndIndex + 1) & 0xFF;
-    return (int32_t)(uint32_t) RND_TABLE[*gPRndIndex];
+    return (int32_t)(uint32_t) gRndTable[*gPRndIndex];
 }
 
 void _thunk_P_Random() noexcept {
@@ -44,7 +44,7 @@ void _thunk_P_Random() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t M_Random() noexcept {
     *gMRndIndex = (*gMRndIndex + 1) & 0xFF;
-    return (int32_t)(uint32_t) RND_TABLE[*gMRndIndex];
+    return (int32_t)(uint32_t) gRndTable[*gMRndIndex];
 }
 
 void _thunk_M_Random() noexcept {
