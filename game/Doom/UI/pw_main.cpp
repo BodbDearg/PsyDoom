@@ -286,11 +286,11 @@ void DRAW_PasswordScreen() noexcept {
     // Common sprite setup for all the password chars
     SPRT& spritePrim = *(SPRT*) getScratchAddr(128);
 
-    LIBGPU_SetSprt(spritePrim);    
+    LIBGPU_SetSprt(spritePrim);
     spritePrim.clut = gPaletteClutIds[UIPAL];
 
     // Draw the array of password characters
-    for (int32_t pwCharIdx = 0; pwCharIdx < 32; ++pwCharIdx) {
+    for (int32_t pwCharIdx = 0; pwCharIdx < NUM_PW_CHARS; ++pwCharIdx) {
         // Determine where to place the character
         constexpr int32_t CHARS_PER_ROW = 8;
         constexpr int32_t CHAR_SPACING = 20;
@@ -340,35 +340,38 @@ void DRAW_PasswordScreen() noexcept {
     I_DrawString(-1, 20, "Password");
 
     // Draw password characters that were input
-    constexpr int32_t CHAR_SPACING = 14;
-
     {
-        char charStr[2];
-        charStr[1] = 0;
+        constexpr int32_t CHARS_START_X = 58;
+        constexpr int32_t CHARS_SPACING = 14;
 
-        int32_t xpos = 58;
+        {
+            char charStr[2];
+            charStr[1] = 0;
+
+            int32_t xpos = CHARS_START_X;
         
-        for (int32_t charIdx = 0; charIdx < *gNumPasswordCharsEntered; ++charIdx) {
-            const uint8_t pwCharIdx = gPasswordCharBuffer[charIdx];
-            charStr[0] = gPasswordChars[pwCharIdx];
-            I_DrawString(xpos, 160, charStr);
-            xpos += CHAR_SPACING;
+            for (int32_t charIdx = 0; charIdx < *gNumPasswordCharsEntered; ++charIdx) {
+                const uint8_t pwCharIdx = gPasswordCharBuffer[charIdx];
+                charStr[0] = gPasswordChars[pwCharIdx];
+                I_DrawString(xpos, 160, charStr);
+                xpos += CHARS_SPACING;
+            }
         }
-    }
-    
-    // Draw password characters that need to be input
-    {
-        int32_t xpos = (*gNumPasswordCharsEntered) * CHAR_SPACING + 58;
+        
+        // Draw password characters that need to be input
+        {
+            int32_t xpos = (*gNumPasswordCharsEntered) * CHARS_SPACING + CHARS_START_X;
 
-        for (int32_t charIdx = *gNumPasswordCharsEntered; charIdx < PW_SEQ_LEN; ++charIdx) {
-            I_DrawString(xpos, 160, ".");
-            xpos += CHAR_SPACING;
+            for (int32_t charIdx = *gNumPasswordCharsEntered; charIdx < PW_SEQ_LEN; ++charIdx) {
+                I_DrawString(xpos, 160, ".");
+                xpos += CHARS_SPACING;
+            }
         }
-    }
-    
-    // Flash the invalid password message if a password was entered wrong
-    if (*gInvalidPasswordFlashTicsLeft & 4) {
-        I_DrawString(-1, 200, "Invalid Password");
+        
+        // Flash the invalid password message if a password was entered wrong
+        if (*gInvalidPasswordFlashTicsLeft & 4) {
+            I_DrawString(-1, 200, "Invalid Password");
+        }
     }
 
     // Finish up the draw
