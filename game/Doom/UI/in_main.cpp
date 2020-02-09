@@ -10,6 +10,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "PcPsx/Macros.h"
 #include "PsxVm/PsxVm.h"
+#include "pw_main.h"
 #include "Wess/psxcd.h"
 
 const char gMapNames[][32] = {
@@ -242,11 +243,11 @@ loc_8003C9B4:
     sw(v1, at + 0x7F0C);                                // Store to: gMenuTimeoutStartTicCon (80077F0C)
     if (v0 == 0) goto loc_8003CA10;
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x6560;                                       // Result = gPasswordChars[0] (80096560)
+    a0 += 0x6560;                                       // Result = gPasswordCharBuffer[0] (80096560)
     P_ComputePassword();
     v0 = 0xA;                                           // Result = 0000000A
     at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7C40);                                // Store to: gNumPasswordCharsEntered (80077C40)
+    *gNumPasswordCharsEntered = v0;
 loc_8003CA10:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x3E58;                                       // Result = CDTrackNum_Intermission (80073E58)
@@ -662,7 +663,7 @@ loc_8003CEE4:
     a0 = sp + 0x10;
 loc_8003D04C:
     at = 0x80090000;                                    // Result = 80090000
-    at += 0x6560;                                       // Result = gPasswordChars[0] (80096560)
+    at += 0x6560;                                       // Result = gPasswordCharBuffer[0] (80096560)
     at += v1;
     v0 = lbu(at);
     at = 0x80070000;                                    // Result = 80070000
@@ -885,7 +886,7 @@ loc_8003D334:
     a0 = sp + 0x20;
 loc_8003D3E0:
     at = 0x80090000;                                    // Result = 80090000
-    at += 0x6560;                                       // Result = gPasswordChars[0] (80096560)
+    at += 0x6560;                                       // Result = gPasswordCharBuffer[0] (80096560)
     at += v1;
     v0 = lbu(at);
     at = 0x80070000;                                    // Result = 80070000

@@ -12,6 +12,8 @@
 #include "PsxVm/PsxVm.h"
 #include "pw_main.h"
 
+const VmPtr<texture_t> gTex_MARB01(0x80097AB0);
+
 void O_Init() noexcept {
     sp -= 0x18;
     a0 = 0;

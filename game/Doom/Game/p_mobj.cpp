@@ -641,7 +641,7 @@ loc_8001D0DC:
     a1 = sp + 0x10;
     if (v0 == 0) goto loc_8001D130;
     a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x6560;                                       // Result = gPasswordChars[0] (80096560)
+    a0 += 0x6560;                                       // Result = gPasswordCharBuffer[0] (80096560)
     a2 = a1;
     a3 = s3;
     P_ProcessPassword();

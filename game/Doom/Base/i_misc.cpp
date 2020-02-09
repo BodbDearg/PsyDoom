@@ -14,15 +14,7 @@
 #include "PsyQ/LIBGPU.h"
 #include <cstdio>
 
-// Where on the UI texture are each of the font characters located and the size of each character
-struct fontchar_t {
-    std::uint8_t u;
-    std::uint8_t v;
-    std::uint8_t w;
-    std::uint8_t h;
-};
-
-static constexpr fontchar_t BIG_FONT_CHARS[] = {
+const fontchar_t gBigFontChars[NUM_BIG_FONT_CHARS] = {
     {   0, 195,  11,  16 }, // 0 - 0
     {  12, 195,  11,  16 }, // 1 - 1
     {  24, 195,  11,  16 }, // 2 - 2
@@ -91,17 +83,6 @@ static constexpr fontchar_t BIG_FONT_CHARS[] = {
     { 192, 243,  13,  13 }  // z - 65
 };
 
-// Starting indices for various individual and groups of big font chars
-enum : int32_t {
-    BIG_FONT_DIGITS         = 0,
-    BIG_FONT_MINUS          = 10,
-    BIG_FONT_PERCENT        = 11,
-    BIG_FONT_EXCLAMATION    = 12,
-    BIG_FONT_PERIOD         = 13,
-    BIG_FONT_UCASE_ALPHA    = 14,
-    BIG_FONT_LCASE_ALPHA    = 40
-};
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw a number using the large font at the specified pixel location
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -166,7 +147,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
         const int32_t digit = digits[digitIdx];
 
         spritePrim.x0 = (int16_t) curX;
-        spritePrim.tu0 = BIG_FONT_CHARS[BIG_FONT_DIGITS + digit].u;
+        spritePrim.tu0 = gBigFontChars[BIG_FONT_DIGITS + digit].u;
         I_AddPrim(&spritePrim);
 
         curX -= 11;
@@ -175,7 +156,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
     // Print the minus symbol if the value was negative
     if (bNegativeVal) {
         spritePrim.x0 = (int16_t) curX;
-        spritePrim.tu0 = BIG_FONT_CHARS[BIG_FONT_EXCLAMATION].u;
+        spritePrim.tu0 = gBigFontChars[BIG_FONT_EXCLAMATION].u;
         I_AddPrim(&spritePrim);
     }
 }
@@ -361,7 +342,7 @@ static int32_t I_GetStringXPosToCenter(const char* const str) noexcept {
             continue;
         }
 
-        const fontchar_t& fontchar = BIG_FONT_CHARS[charIdx];
+        const fontchar_t& fontchar = gBigFontChars[charIdx];
         width += fontchar.w;
     }
 
@@ -435,7 +416,7 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
         }
 
         // Populate and submit the sprite primitive
-        const fontchar_t& fontchar = BIG_FONT_CHARS[charIdx];
+        const fontchar_t& fontchar = gBigFontChars[charIdx];
 
         LIBGPU_setXY0(spritePrim, (int16_t) curX, (int16_t) curY);
         LIBGPU_setUV0(spritePrim, fontchar.u, fontchar.v);
