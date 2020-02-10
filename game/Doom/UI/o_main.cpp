@@ -13,7 +13,66 @@
 #include "PsxVm/PsxVm.h"
 #include "pw_main.h"
 
+// Available options and their names
+enum option_t : uint32_t {
+    opt_music,
+    opt_sound,
+    opt_password,
+    opt_config,
+    opt_main_menu,
+    opt_restart
+};
+
+const char gOptionNames[][16] = {
+    { "Music Volume"    },
+    { "Sound Volume"    },
+    { "Password"        },
+    { "Configuration"   },
+    { "Main Menu"       },
+    { "Restart Level"   }
+};
+
+// The layout for the options menu: outside of gameplay, in gameplay (single player) and in gameplay (multiplayer)
+struct menuitem_t {
+    option_t    option;
+    int32_t     x;
+    int32_t     y;
+};
+
+static const menuitem_t gOptMenuItems_MainMenu[] = {
+    { opt_music,        62, 65  },
+    { opt_sound,        62, 105 },
+    { opt_password,     62, 145 },
+    { opt_config,       62, 170 },
+    { opt_main_menu,    62, 195 },
+};
+
+static const menuitem_t gOptMenuItems_Single[] = {
+    { opt_music,        62, 50  },
+    { opt_sound,        62, 90  },
+    { opt_password,     62, 130 },
+    { opt_config,       62, 155 },
+    { opt_main_menu,    62, 180 },
+    { opt_restart,      62, 205 },
+};
+
+static const menuitem_t gOptMenuItems_NetGame[] = {
+    { opt_music,        62, 70  },
+    { opt_sound,        62, 110 },
+    { opt_main_menu,    62, 150 },
+    { opt_restart,      62, 175 },
+};
+
+// Currently in-use options menu layout: items list and size
+static const VmPtr<int32_t>             gOptionsMenuSize(0x80078118);
+static const VmPtr<VmPtr<menuitem_t>>   gpOptionsMenuItems(0x800782C0);
+
+// The marble floor texture used as a background for the options menu
 const VmPtr<texture_t> gTex_MARB01(0x80097AB0);
+
+// Current options music and sound volume
+const VmPtr<int32_t> gOptionsSndVol(0x800775F0);
+const VmPtr<int32_t> gOptionsMusVol(0x800775F4);
 
 void O_Init() noexcept {
     sp -= 0x18;
@@ -39,7 +98,7 @@ loc_8003E940:
     if (v0 == 0) goto loc_8003E984;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x4BD0;                                       // Result = OptionsMenuEntries_NetGame[0] (80074BD0)
-    sw(v0, gp + 0xCE0);                                 // Store to: gpCurOptionsMenuEntries (800782C0)
+    *gpOptionsMenuItems = v0;
     v0 = 4;                                             // Result = 00000004
     goto loc_8003E9BC;
 loc_8003E984:
@@ -47,16 +106,16 @@ loc_8003E984:
     if (v0 == 0) goto loc_8003E9AC;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x4B88;                                       // Result = OptionsMenuEntries_InGame[0] (80074B88)
-    sw(v0, gp + 0xCE0);                                 // Store to: gpCurOptionsMenuEntries (800782C0)
+    *gpOptionsMenuItems = v0;
     v0 = 6;                                             // Result = 00000006
     goto loc_8003E9BC;
 loc_8003E9AC:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x4B4C;                                       // Result = OptionsMenuEntries_MainMenu[0] (80074B4C)
-    sw(v0, gp + 0xCE0);                                 // Store to: gpCurOptionsMenuEntries (800782C0)
+    *gpOptionsMenuItems = v0;
     v0 = 5;                                             // Result = 00000005
 loc_8003E9BC:
-    sw(v0, gp + 0xB38);                                 // Store to: gCurNumOptionsMenuEntries (80078118)
+    *gOptionsMenuSize = v0;
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -152,7 +211,7 @@ loc_8003EAF0:
     a0 = s1 + s5;
     if (v0 == 0) goto loc_8003EB50;
     v1 = lw(a0);
-    v0 = lw(gp + 0xB38);                                // Load from: gCurNumOptionsMenuEntries (80078118)
+    v0 = *gOptionsMenuSize;
     v1++;
     v0--;
     v0 = (i32(v0) < i32(v1));
@@ -168,7 +227,7 @@ loc_8003EB50:
     v0--;
     sw(v0, v1);
     if (i32(v0) >= 0) goto loc_8003EB80;
-    v0 = lw(gp + 0xB38);                                // Load from: gCurNumOptionsMenuEntries (80078118)
+    v0 = *gOptionsMenuSize;
     v0--;
     sw(v0, v1);
 loc_8003EB80:
@@ -181,7 +240,7 @@ loc_8003EB9C:
     v1 = lw(s4);
     v0 = v1 << 1;
     v0 += v1;
-    v1 = lw(gp + 0xCE0);                                // Load from: gpCurOptionsMenuEntries (800782C0)
+    v1 = *gpOptionsMenuItems;
     v0 <<= 2;
     v0 += v1;
     v1 = lw(v0);
@@ -216,32 +275,26 @@ loc_8003EBE8:
         v0 = s0 & 0x8000;
         if (bJump) goto loc_8003EC3C;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x75F4);                               // Load from: gOptionsMusVol (800775F4)
+    v0 = *gOptionsMusVol;
     v1 = v0 + 1;
     v0 = (i32(v1) < 0x65);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x75F4);                                // Store to: gOptionsMusVol (800775F4)
+    *gOptionsMusVol = v1;
     {
         const bool bJump = (v0 != 0);
         v0 = v1 << 7;
         if (bJump) goto loc_8003EC74;
     }
     v0 = 0x64;                                          // Result = 00000064
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x75F4);                                // Store to: gOptionsMusVol (800775F4)
+    *gOptionsMusVol = v0;
     goto loc_8003ECB0;
 loc_8003EC3C:
     if (v0 == 0) goto loc_8003EE8C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x75F4);                               // Load from: gOptionsMusVol (800775F4)
+    v0 = *gOptionsMusVol;
     v1 = v0 - 1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x75F4);                                // Store to: gOptionsMusVol (800775F4)
+    *gOptionsMusVol = v1;
     v0 = v1 << 7;
     if (i32(v1) >= 0) goto loc_8003EC74;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x75F4);                                 // Store to: gOptionsMusVol (800775F4)
+    *gOptionsMusVol = 0;
     goto loc_8003ECB0;
 loc_8003EC74:
     v0 -= v1;
@@ -251,16 +304,14 @@ loc_8003EC74:
     a0 = u32(i32(a0) >> 5);
     a0 -= v0;
     S_SetMusicVolume();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x75F4);                               // Load from: gOptionsMusVol (800775F4)
+    v0 = *gOptionsMusVol;
     v0 &= 1;
     a0 = 0;
     if (v0 == 0) goto loc_8003ECB0;
     a1 = sfx_stnmov;
     S_StartSound();
 loc_8003ECB0:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x75F4);                               // Load from: gOptionsMusVol (800775F4)
+    v0 = *gOptionsMusVol;
     v1 = v0 << 4;
     v1 -= v0;
     v1 <<= 2;
@@ -288,33 +339,27 @@ loc_8003ECF8:
         v0 = s0 & 0x8000;
         if (bJump) goto loc_8003ED4C;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x75F0);                               // Load from: gOptionsSndVol (800775F0)
+    v0 = *gOptionsSndVol;
     v1 = v0 + 1;
     v0 = (i32(v1) < 0x65);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x75F0);                                // Store to: gOptionsSndVol (800775F0)
+    *gOptionsSndVol = v1;
     {
         const bool bJump = (v0 != 0);
         v0 = v1 << 7;
         if (bJump) goto loc_8003ED84;
     }
     v0 = 0x64;                                          // Result = 00000064
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x75F0);                                // Store to: gOptionsSndVol (800775F0)
+    *gOptionsSndVol = v0;
     s4 -= 4;
     goto loc_8003EE90;
 loc_8003ED4C:
     if (v0 == 0) goto loc_8003EE8C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x75F0);                               // Load from: gOptionsSndVol (800775F0)
+    v0 = *gOptionsSndVol;
     v1 = v0 - 1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x75F0);                                // Store to: gOptionsSndVol (800775F0)
+    *gOptionsSndVol = v1;
     v0 = v1 << 7;
     if (i32(v1) >= 0) goto loc_8003ED84;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x75F0);                                 // Store to: gOptionsSndVol (800775F0)
+    *gOptionsSndVol = 0;
     s4 -= 4;
     goto loc_8003EE90;
 loc_8003ED84:
@@ -325,8 +370,7 @@ loc_8003ED84:
     a0 = u32(i32(a0) >> 5);
     a0 -= v0;
     S_SetSfxVolume();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x75F0);                               // Load from: gOptionsSndVol (800775F0)
+    v0 = *gOptionsSndVol;
     v0 &= 1;
     a0 = 0;
     if (v0 == 0) goto loc_8003EE8C;
@@ -392,157 +436,79 @@ loc_8003EEA0:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws the options menu
+//------------------------------------------------------------------------------------------------------------------------------------------
 void O_Drawer() noexcept {
-loc_8003EEC8:
-    sp -= 0x50;
-    sw(ra, sp + 0x48);
-    sw(s7, sp + 0x44);
-    sw(s6, sp + 0x40);
-    sw(s5, sp + 0x3C);
-    sw(s4, sp + 0x38);
-    sw(s3, sp + 0x34);
-    sw(s2, sp + 0x30);
-    sw(s1, sp + 0x2C);
-    sw(s0, sp + 0x28);
+    // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
     I_IncDrawnFrameCount();
-    s1 = 0;                                             // Result = 00000000
-loc_8003EEF8:
-    s0 = 0;                                             // Result = 00000000
-loc_8003EEFC:
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7AB0;                                       // Result = gTex_MARB01[0] (80097AB0)
-    a1 = s0 << 6;
-    a2 = s1 << 6;
-    a3 = gPaletteClutIds[MAINPAL];
-    s0++;
-    _thunk_I_CacheAndDrawSprite();
-    v0 = (i32(s0) < 4);
-    if (v0 != 0) goto loc_8003EEFC;
-    s1++;                                               // Result = 00000001
-    v0 = (i32(s1) < 4);                                 // Result = 00000001
-    if (v0 != 0) goto loc_8003EEF8;
-    v0 = *gGameAction;
-    a0 = -1;                                            // Result = FFFFFFFF
-    if (v0 != ga_nothing) goto loc_8003F0F4;
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7D54;                                       // Result = STR_Options[0] (80077D54)
-    a1 = 0x14;                                          // Result = 00000014
-    _thunk_I_DrawString();
-    v0 = lw(gp + 0xB38);                                // Load from: gCurNumOptionsMenuEntries (80078118)
-    s1 = lw(gp + 0xCE0);                                // Load from: gpCurOptionsMenuEntries (800782C0)
-    s2 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_8003F074;
-    s7 = 0x800B0000;                                    // Result = 800B0000
-    s7 -= 0x6B0E;                                       // Result = gTex_STATUS[2] (800A94F2)
-    s6 = 0x800B0000;                                    // Result = 800B0000
-    s6 -= 0x6F5C;                                       // Result = gPaletteClutId_UI (800A90A4)
-    s5 = 0xB8;                                          // Result = 000000B8
-    s4 = 0x6C;                                          // Result = 0000006C
-    s3 = 0xB;                                           // Result = 0000000B
-    s0 = s1 + 8;
-loc_8003EF8C:
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x4AEC;                                       // Result = STR_Menu_MusicVolume[0] (80074AEC)
-    a0 = lw(s0 - 0x4);
-    v0 = lw(s1);
-    a1 = lw(s0);
-    v0 <<= 4;
-    a2 += v0;
-    _thunk_I_DrawString();
-    v0 = lw(s1);
-    v0 = (v0 < 2);
-    if (v0 == 0) goto loc_8003F058;
-    a2 = lw(s0 - 0x4);
-    a3 = lw(s0);
-    sw(0, sp + 0x10);
-    sw(s5, sp + 0x14);
-    sw(s4, sp + 0x18);
-    sw(s3, sp + 0x1C);
-    a0 = lhu(s7);                                       // Load from: gTex_STATUS[2] (800A94F2)
-    a1 = lh(s6);                                        // Load from: gPaletteClutId_UI (800A90A4)
-    a2 += 0xD;
-    a3 += 0x14;
-    _thunk_I_DrawSprite();
-    v0 = lw(s1);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 6;                                         // Result = 00000006
-        if (bJump) goto loc_8003F020;
+
+    for (int16_t y = 0; y < 4; ++y) {
+        for (int16_t x = 0; x < 4; ++x) {
+            I_CacheAndDrawSprite(*gTex_MARB01, x * 64, y * 64, gPaletteClutIds[MAINPAL]);
+        }
     }
-    v1 = lw(s0 - 0x4);
-    a3 = lw(s0);
-    sw(s4, sp + 0x10);
-    sw(s5, sp + 0x14);
-    a0 = lhu(s7);                                       // Load from: gTex_STATUS[2] (800A94F2)
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x75F4);                               // Load from: gOptionsMusVol (800775F4)
-    goto loc_8003F03C;
-loc_8003F020:
-    v1 = lw(s0 - 0x4);
-    a3 = lw(s0);
-    sw(s4, sp + 0x10);
-    sw(s5, sp + 0x14);
-    a0 = lhu(s7);                                       // Load from: gTex_STATUS[2] (800A94F2)
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x75F0);                               // Load from: gOptionsSndVol (800775F0)
-loc_8003F03C:
-    sw(v0, sp + 0x18);
-    sw(s3, sp + 0x1C);
-    a1 = lh(s6);                                        // Load from: gPaletteClutId_UI (800A90A4)
-    a2 += v1;
-    a2 += 0xE;
-    a3 += 0x14;
-    _thunk_I_DrawSprite();
-loc_8003F058:
-    s2++;
-    s0 += 0xC;
-    v0 = lw(gp + 0xB38);                                // Load from: gCurNumOptionsMenuEntries (80078118)
-    v0 = (i32(s2) < i32(v0));
-    s1 += 0xC;
-    if (v0 != 0) goto loc_8003EF8C;
-loc_8003F074:
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lhu(a0 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
-    v0 = *gCurPlayerIndex;
-    a1 = 0x800B0000;                                    // Result = 800B0000
-    a1 = lh(a1 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    v0 <<= 2;
-    at = gCursorPos;
-    at += v0;
-    v1 = lw(at);
-    a2 = lw(gp + 0xCE0);                                // Load from: gpCurOptionsMenuEntries (800782C0)
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 += a2;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7E28);                               // Load from: gCursorFrame (800781D8)
-    a2 = lw(v0 + 0x4);
-    a3 = lw(v0 + 0x8);
-    v0 = 0xC0;                                          // Result = 000000C0
-    sw(v0, sp + 0x14);
-    v0 = 0x10;                                          // Result = 00000010
-    sw(v0, sp + 0x18);
-    v0 = 0x12;                                          // Result = 00000012
-    sw(v0, sp + 0x1C);
-    v1 <<= 4;
-    v1 += 0x84;
-    a2 -= 0x18;
-    a3 -= 2;
-    sw(v1, sp + 0x10);
-    _thunk_I_DrawSprite();
-loc_8003F0F4:
+
+    // Don't do any rendering if we are about to exit the menu
+    if (*gGameAction == ga_nothing) {
+        // Menu title
+        I_DrawString(-1, 20, "Options");
+
+        // Draw each menu item for the current options screen layout.
+        // The available options will vary depending on game mode.
+        const menuitem_t* pMenuItem = gpOptionsMenuItems->get();
+        
+        for (int32_t optIdx = 0; optIdx < *gOptionsMenuSize; ++optIdx, ++pMenuItem) {
+            // Draw the option label
+            I_DrawString(pMenuItem->x, pMenuItem->y, gOptionNames[pMenuItem->option]);
+
+            // If the option has a slider associated with it, draw that too
+            if (pMenuItem->option <= opt_sound) {
+                // Draw the slider backing/container
+                I_DrawSprite(
+                    gTex_STATUS->texPageId,
+                    gPaletteClutIds[UIPAL],
+                    (int16_t) pMenuItem->x + 13,
+                    (int16_t) pMenuItem->y + 20,
+                    0,
+                    184,
+                    108,
+                    11
+                );
+
+                // Draw the slider handle
+                const int32_t sliderVal = (pMenuItem->option == opt_sound) ? *gOptionsSndVol : *gOptionsMusVol;
+
+                I_DrawSprite(
+                    gTex_STATUS->texPageId,
+                    gPaletteClutIds[UIPAL],
+                    (int16_t)(pMenuItem->x + 14 + sliderVal),
+                    (int16_t)(pMenuItem->y + 20),
+                    108,
+                    184,
+                    6,
+                    11
+                );
+            }
+        }
+
+        // Draw the skull cursor
+        const int32_t cursorPos = gCursorPos[*gCurPlayerIndex];
+        const menuitem_t& menuItem = (*gpOptionsMenuItems)[cursorPos];
+
+        I_DrawSprite(
+            gTex_STATUS->texPageId,
+            gPaletteClutIds[UIPAL],
+            (int16_t) menuItem.x - 24,
+            (int16_t) menuItem.y - 2,
+            M_SKULL_TEX_U + (uint8_t)(*gCursorFrame) * M_SKULL_W,
+            M_SKULL_TEX_V,
+            M_SKULL_W,
+            M_SKULL_H
+        );
+    }
+
+    // Finish up the frame
     I_SubmitGpuCmds();
     I_DrawPresent();
-    ra = lw(sp + 0x48);
-    s7 = lw(sp + 0x44);
-    s6 = lw(sp + 0x40);
-    s5 = lw(sp + 0x3C);
-    s4 = lw(sp + 0x38);
-    s3 = lw(sp + 0x34);
-    s2 = lw(sp + 0x30);
-    s1 = lw(sp + 0x2C);
-    s0 = lw(sp + 0x28);
-    sp += 0x50;
-    return;
 }

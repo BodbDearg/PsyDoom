@@ -20,6 +20,7 @@
 #include "UI/cr_main.h"
 #include "UI/le_main.h"
 #include "UI/m_main.h"
+#include "UI/o_main.h"
 #include "UI/st_main.h"
 #include "UI/ti_main.h"
 #include "Wess/psxsnd.h"
@@ -52,8 +53,8 @@ void D_DoomMain() noexcept {
     // PlayStation specific setup
     I_PSXInit();
 
-    a0 = (lw(0x800775F0) * 127) / 100;      // Load from: gOptionsSndVol (800775F0)
-    a1 = (lw(0x800775F4) * 127) / 100;      // Load from: gOptionsMusVol (800775F4)    
+    a0 = ((*gOptionsSndVol) * 127) / 100;      // Load from: gOptionsSndVol (800775F0)
+    a1 = ((*gOptionsMusVol) * 127) / 100;      // Load from: gOptionsMusVol (800775F4)
     a2 = gTmpBuffer;
     PsxSoundInit();
 

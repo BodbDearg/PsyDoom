@@ -259,12 +259,12 @@ loc_8003711C:
 // Renders the password screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DRAW_PasswordScreen() noexcept {
+    // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
     I_IncDrawnFrameCount();
 
-    // Draw the background using the 'MARB01' sprite
-    for (int32_t y = 0; y < 4; ++y) {
-        for (int32_t x = 0; x < 4; ++x) {
-            I_CacheAndDrawSprite(*gTex_MARB01, (int16_t) x * 64, (int16_t) y * 64, gPaletteClutIds[MAINPAL]);
+    for (int16_t y = 0; y < 4; ++y) {
+        for (int16_t x = 0; x < 4; ++x) {
+            I_CacheAndDrawSprite(*gTex_MARB01, x * 64, y * 64, gPaletteClutIds[MAINPAL]);
         }
     }
 

@@ -13,17 +13,17 @@
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
 
-const VmPtr<texture_t>  gTex_BACK(0x80097A10);          // The background texture for the main menu
-const VmPtr<int32_t>    gCursorPos(0x80078000);         // Which of the menu options the cursor is over (see 'menu_t')
-const VmPtr<int32_t>    gCursorFrame(0x800781D8);       // Current frame that the menu cursor is displaying
+const VmPtr<texture_t>              gTex_BACK(0x80097A10);          // The background texture for the main menu
+const VmPtr<int32_t[MAXPLAYERS]>    gCursorPos(0x80078000);         // Which of the menu options each player's cursor is over (see 'menu_t')
+const VmPtr<int32_t>                gCursorFrame(0x800781D8);       // Current frame that the menu cursor is displaying
 
 // Main menu options
 enum menu_t : int32_t {
-	gamemode,
-	level,
-	difficulty,
+    gamemode,
+    level,
+    difficulty,
     options,
-	NUMMENUITEMS
+    NUMMENUITEMS
 };
 
 // The position of each main menu option
@@ -36,15 +36,15 @@ static const int16_t gMenuYPos[NUMMENUITEMS] = {
 
 // Game mode names and skill names
 static const char gGameTypeNames[NUMGAMETYPES][16] = {
-	"Single Player",
-	"Cooperative",
-	"Deathmatch"
+    "Single Player",
+    "Cooperative",
+    "Deathmatch"
 };
 
 static const char gSkillNames[NUMSKILLS][16] = {
-	"I am a Wimp",
-	"Not Too Rough",
-	"Hurt Me Plenty",
+    "I am a Wimp",
+    "Not Too Rough",
+    "Hurt Me Plenty",
     "Ultra Violence",
 #if PC_PSX_DOOM_MODS    // PC-PSX: exposing the unused 'Nightmare' mode
     "Nightmare"
@@ -329,7 +329,7 @@ loc_80035F4C:
     goto loc_80036244;
 loc_80035F64:
     if (v0 == 0) goto loc_80035FCC;
-    v1 = *gCursorPos;
+    v1 = gCursorPos[0];
     v0 = (i32(v1) < 3);
     if (i32(v1) < 0) goto loc_80035FCC;
     {
@@ -376,7 +376,7 @@ loc_80035FE4:
     v1 = 4;                                             // Result = 00000004
     if (v0 == 0) goto loc_80036040;
     a0 = gCursorPos;
-    v0 = *gCursorPos;
+    v0 = gCursorPos[0];
     v0++;
     sw(v0, a0);                                         // Store to: gCursorPos (80078000)
     if (v0 != v1) goto loc_80036070;
@@ -387,7 +387,7 @@ loc_80036040:
     v1 = -1;                                            // Result = FFFFFFFF
     if (v0 == 0) goto loc_8003607C;
     a0 = gCursorPos;
-    v0 = *gCursorPos;
+    v0 = gCursorPos[0];
     v0--;
     sw(v0, a0);                                         // Store to: gCursorPos (80078000)
     if (v0 != v1) goto loc_80036070;
@@ -398,7 +398,7 @@ loc_80036070:
     a1 = sfx_pstop;
     S_StartSound();
 loc_8003607C:
-    v1 = *gCursorPos;
+    v1 = gCursorPos[0];
     a0 = 1;
     v0 = (i32(v1) < 2);
     if (v1 == a0) goto loc_80036178;
@@ -569,7 +569,7 @@ void M_Drawer() noexcept {
         gTex_STATUS->texPageId,
         gPaletteClutIds[UIPAL],
         50,
-        gMenuYPos[*gCursorPos] - 2,
+        gMenuYPos[gCursorPos[0]] - 2,
         M_SKULL_TEX_U + (uint8_t)(*gCursorFrame) * M_SKULL_W,
         M_SKULL_TEX_V,
         M_SKULL_W,
