@@ -8,6 +8,7 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_password.h"
 #include "Doom/Renderer/r_data.h"
+#include "m_main.h"
 #include "PcPsx/Macros.h"
 #include "PsxVm/PsxVm.h"
 #include "pw_main.h"
@@ -81,8 +82,7 @@ void IN_Start() noexcept {
     sp -= 0x28;
     sw(ra, sp + 0x20);
     I_PurgeTexCache();
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
+    a0 = gTex_BACK;
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7CFC;                                       // Result = STR_LumpName_BACK_2[0] (80077CFC)
     a2 = 0;                                             // Result = 00000000
@@ -577,8 +577,7 @@ loc_8003CEC4:
 void IN_SingleDrawer() noexcept {
 loc_8003CEE4:
     sp -= 0x30;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
+    a0 = gTex_BACK;
     a1 = 0;                                             // Result = 00000000
     a3 = gPaletteClutIds[MAINPAL];
     a2 = 0;                                             // Result = 00000000
@@ -692,8 +691,7 @@ loc_8003D09C:
 void IN_CoopDrawer() noexcept {
 loc_8003D0B4:
     sp -= 0x58;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
+    a0 = gTex_BACK;
     a1 = 0;                                             // Result = 00000000
     a3 = gPaletteClutIds[MAINPAL];
     a2 = 0;                                             // Result = 00000000
@@ -915,8 +913,7 @@ loc_8003D430:
 void IN_DeathmatchDrawer() noexcept {
 loc_8003D448:
     sp -= 0x50;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
+    a0 = gTex_BACK;
     a1 = 0;                                             // Result = 00000000
     a3 = gPaletteClutIds[MAINPAL];
     a2 = 0;                                             // Result = 00000000

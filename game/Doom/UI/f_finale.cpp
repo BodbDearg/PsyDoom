@@ -12,6 +12,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
+#include "m_main.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -102,7 +103,7 @@ void F1_Start() noexcept {
     a2 = 0x6D;                                          // Result = 0000006D
     _thunk_I_DrawLoadingPlaque();
     I_PurgeTexCache();
-    a0 = s0 - 0x80;                                     // Result = gTex_BACK[0] (80097A10)
+    a0 = gTex_BACK;
     _thunk_I_CacheTex();
     a2 = 0;                                             // Result = 00000000
     a0 = 0x80070000;                                    // Result = 80070000
@@ -224,53 +225,32 @@ loc_8003D8D8:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the rendering for the Doom I finale screen (text popping up gradually)
+//------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Drawer() noexcept {
-    sp -= 0x28;
-    sw(ra, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
+    // Increment the frame count (for the texture cache) and draw the background
     I_IncDrawnFrameCount();
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    a3 = gPaletteClutIds[MAINPAL];
-    s1 = 0x2D;                                          // Result = 0000002D
-    _thunk_I_CacheAndDrawSprite();
-    v0 = *gFinLinesDone;
-    s0 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_8003D968;
-    s2 = 0x80070000;                                    // Result = 80070000
-    s2 += 0x483C;                                       // Result = STR_Doom1_WinText_1[0] (8007483C)
-loc_8003D940:
-    a0 = -1;                                            // Result = FFFFFFFF
-    a1 = s1;
-    a2 = s2;
-    _thunk_I_DrawString();
-    s1 += 0xE;
-    v0 = *gFinLinesDone;
-    s0++;
-    v0 = (i32(s0) < i32(v0));
-    s2 += 0x19;
-    if (v0 != 0) goto loc_8003D940;
-loc_8003D968:
-    a0 = -1;                                            // Result = FFFFFFFF
-    a2 = gFinIncomingLine;
-    a1 = s1;
-    _thunk_I_DrawString();
-    v0 = *gbGamePaused;
-    if (v0 == 0) goto loc_8003D998;
-    I_DrawPausedOverlay();
-loc_8003D998:
+    I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+
+    // Show both the incoming and fully displayed text lines
+    int32_t ypos = 45;
+    
+    for (int32_t lineIdx = 0; lineIdx < *gFinLinesDone; ++lineIdx) {
+        I_DrawString(-1, ypos, gDoom1WinText[lineIdx]);
+        ypos += 14;
+    }
+    
+    I_DrawString(-1, ypos, gFinIncomingLine.get());
+
+    // Not sure why the finale screen would be 'paused'?
+    if (*gbGamePaused) {
+        I_DrawPausedOverlay();
+    }
+
+    // Finish up the frame
     I_SubmitGpuCmds();
     I_DrawPresent();
-    ra = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
 }
 
 void F2_Start() noexcept {
@@ -1012,7 +992,7 @@ void F2_Drawer() noexcept {
         I_DrawString(-1, 208, gCastOrder[*gCastNum].name);
     }
 
-    // Not sure why the finale screen would be 'paused'...
+    // Not sure why the finale screen would be 'paused'?
     if (*gbGamePaused) {
         I_DrawPausedOverlay();
     }

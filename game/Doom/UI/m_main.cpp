@@ -13,13 +13,15 @@
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
 
+// The background texture for the main menu
+const VmPtr<texture_t> gTex_BACK(0x80097A10);
+
 void RunMenu() noexcept {
     sp -= 0x20;
     sw(s0, sp + 0x10);
     s0 = gPaletteClutIds;
     sw(s1, sp + 0x14);
-    s1 = 0x80090000;                                    // Result = 80090000
-    s1 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
+    s1 = gTex_BACK;
     sw(s2, sp + 0x18);
     s2 = s1 + 0x40;                                     // Result = gTex_DOOM[0] (80097A50)
     sw(ra, sp + 0x1C);
@@ -33,7 +35,7 @@ loc_80035B4C:
         if (bJump) goto loc_80035C78;
     }
     I_IncDrawnFrameCount();
-    a0 = s1;                                            // Result = gTex_BACK[0] (80097A10)
+    a0 = gTex_BACK;
     a1 = 0;                                             // Result = 00000000
     a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0;                                             // Result = 00000000
@@ -55,7 +57,7 @@ loc_80035B4C:
     _thunk_I_DrawLoadingPlaque();
     I_NetSetup();
     I_IncDrawnFrameCount();
-    a0 = s1;                                            // Result = gTex_BACK[0] (80097A10)
+    a0 = gTex_BACK;
     a1 = 0;                                             // Result = 00000000
     a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0;                                             // Result = 00000000
@@ -112,7 +114,7 @@ void M_Start() noexcept {
     _thunk_I_DrawLoadingPlaque();
     a0 = 0;                                             // Result = 00000000
     S_LoadSoundAndMusic();
-    a0 = s0 - 0x80;                                     // Result = gTex_BACK[0] (80097A10)
+    a0 = gTex_BACK;
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C8C;                                       // Result = STR_LumpName_BACK[0] (80077C8C)
     a2 = 0;                                             // Result = 00000000
@@ -501,9 +503,8 @@ loc_80036258:
     sw(ra, sp + 0x24);
     sw(s0, sp + 0x20);
     I_IncDrawnFrameCount();
-    s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7A10;                                       // Result = gTex_BACK[0] (80097A10)
-    a0 = s0;                                            // Result = gTex_BACK[0] (80097A10)
+    s0 = gTex_BACK;
+    a0 = gTex_BACK;
     a1 = 0;                                             // Result = 00000000
     a3 = gPaletteClutIds[MAINPAL];
     a2 = 0;                                             // Result = 00000000
