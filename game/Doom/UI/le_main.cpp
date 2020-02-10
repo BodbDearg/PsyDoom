@@ -5,92 +5,78 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
+#include "Doom/Game/p_tick.h"
+#include "Doom/Renderer/r_data.h"
+#include "m_main.h"
 #include "PsxVm/PsxVm.h"
 #include "ti_main.h"
 
+// Texture for the legals screen text
+static const VmPtr<texture_t> gTex_LEGALS(0x80097BD0);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Startup/init logic for the 'legals' screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void START_Legals() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    I_PurgeTexCache();
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7BD0;                                       // Result = gTex_LEGALS[0] (80097BD0)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7C44;                                       // Result = STR_LumpName_LEGALS[0] (80077C44)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
+    I_PurgeTexCache();    
+    I_LoadAndCacheTexLump(*gTex_LEGALS, "LEGALS", 0);
+
     a0 = 0;
     a1 = sfx_sgcock;
     S_StartSound();
-    v0 = 0xF0;
-    sw(v0, gp + 0xBB0);                                 // Store to: gTitleScreenSpriteY (80078190)
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    *gTitleScreenSpriteY = 240;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shutdown logic for the 'legals' screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void STOP_Legals() noexcept {
     a0 = 0;
     a1 = sfx_barexp;
     S_StartSound();
+
     I_CrossFadeFrameBuffers();
 }
 
-void TIC_Legals() noexcept {
-    v0 = *gTitleScreenSpriteY;
-    {
-        const bool bJump = (i32(v0) <= 0);
-        v0--;
-        if (bJump) goto loc_80035000;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update logic for the 'legals' screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t TIC_Legals() noexcept {
+    // Scroll the legal text, otherwise check for timeout
+    if (*gTitleScreenSpriteY > 0) {
+        *gTitleScreenSpriteY = *gTitleScreenSpriteY - 1;
+    
+        if (*gTitleScreenSpriteY == 0) {
+            *gMenuTimeoutStartTicCon = *gTicCon;
+        }
+    } else {
+        // Must hold the legals text for a small amount of time before allowing skip (via a button press) or timeout
+        const int32_t waitTicsElapsed = *gTicCon - *gMenuTimeoutStartTicCon;
+        
+        if (waitTicsElapsed > 120) {
+            if (waitTicsElapsed >= 180) 
+                return ga_timeout;
+            
+            if (gTicButtons[0] != 0)
+                return ga_exit;
+        }
     }
-    *gTitleScreenSpriteY = v0;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80035044;
-    }
-    v0 = *gTicCon;
-    sw(v0, gp + 0x92C);                                 // Store to: gMenuTimeoutStartTicCon (80077F0C)
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80035044;
-loc_80035000:
-    v0 = *gTicCon;
-    v1 = lw(gp + 0x92C);                                // Load from: gMenuTimeoutStartTicCon (80077F0C)
-    v1 = v0 - v1;
-    v0 = (i32(v1) < 0x79);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80035044;
-    }
-    v0 = (i32(v1) < 0xB4);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 7;                                         // Result = 00000007
-        if (bJump) goto loc_80035044;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
-    v0 = (v0 > 0);
-    v0 = -v0;
-    v0 &= 9;
-loc_80035044:
-    return;
+
+    return ga_nothing;
 }
 
+void _thunk_TIC_Legals() noexcept {
+    v0 = TIC_Legals();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does drawing for the 'legals' screen - very simple, just a single sprite
+//------------------------------------------------------------------------------------------------------------------------------------------
 void DRAW_Legals() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    I_IncDrawnFrameCount();
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7BD0;                                       // Result = gTex_LEGALS[0] (80097BD0)
-    a2 = *gTitleScreenSpriteY;
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    a1 = 0;                                             // Result = 00000000
-    _thunk_I_CacheAndDrawSprite();
+    I_IncDrawnFrameCount();    
+    I_CacheAndDrawSprite(*gTex_LEGALS, 0, (int16_t) *gTitleScreenSpriteY, gPaletteClutIds[UIPAL]);
+
     I_SubmitGpuCmds();
     I_DrawPresent();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }

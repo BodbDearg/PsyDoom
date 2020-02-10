@@ -240,7 +240,7 @@ loc_8003C9B4:
     sw(0, gp + 0xCFC);                                  // Store to: 800782DC
     v0 = (i32(v0) < 0x3C);
     at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x7F0C);                                // Store to: gMenuTimeoutStartTicCon (80077F0C)
+    *gMenuTimeoutStartTicCon = v1;
     if (v0 == 0) goto loc_8003CA10;
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x6560;                                       // Result = gPasswordCharBuffer[0] (80096560)
@@ -282,8 +282,7 @@ void IN_Stop() noexcept {
 
 void IN_Ticker() noexcept {
     v0 = *gTicCon;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F0C);                               // Load from: gMenuTimeoutStartTicCon (80077F0C)
+    v1 = *gMenuTimeoutStartTicCon;
     sp -= 0x28;
     sw(ra, sp + 0x20);
     sw(s3, sp + 0x1C);

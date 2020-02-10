@@ -13,6 +13,7 @@ static constexpr uint8_t M_SKULL_H = 18;
 extern const VmPtr<texture_t>               gTex_BACK;
 extern const VmPtr<int32_t[MAXPLAYERS]>     gCursorPos;
 extern const VmPtr<int32_t>                 gCursorFrame;
+extern const VmPtr<int32_t>                 gMenuTimeoutStartTicCon;
 
 void RunMenu() noexcept;
 void M_Start() noexcept;

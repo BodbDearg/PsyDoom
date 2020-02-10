@@ -64,6 +64,8 @@ void I_Main() noexcept;
 void I_PSXInit() noexcept;
 [[noreturn]] void I_Error(const char* const fmtMsg, ...) noexcept;
 void I_ReadGamepad() noexcept;
+
+void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpNum) noexcept;
 void _thunk_I_LoadAndCacheTexLump() noexcept;
 
 void I_CacheAndDrawSprite(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept;

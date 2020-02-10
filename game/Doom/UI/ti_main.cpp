@@ -10,6 +10,7 @@
 #include "Doom/Game/p_firesky.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_sky.h"
+#include "m_main.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -168,7 +169,7 @@ loc_800352B0:
     *gTitleScreenSpriteY = v0;
     if (v0 != 0) goto loc_80035310;
     v0 = *gTicCon;
-    sw(v0, gp + 0x92C);                                 // Store to: gMenuTimeoutStartTicCon (80077F0C)
+    *gMenuTimeoutStartTicCon = v0;
 loc_80035310:
     v0 = *gCurPlayerIndex;
     v1 = lw(gp + 0x6A8);                                // Load from: gVBlanksUntilTitleFireMove (80077C88)
@@ -216,7 +217,7 @@ loc_800353C8:
     v0 = 0;                                             // Result = 00000000
     if (v1 != 0) goto loc_800353FC;
     v0 = *gTicCon;
-    v1 = lw(gp + 0x92C);                                // Load from: gMenuTimeoutStartTicCon (80077F0C)
+    v1 = *gMenuTimeoutStartTicCon;
     v0 -= v1;
     v0 = (i32(v0) < 0x708);
     v0 ^= 1;

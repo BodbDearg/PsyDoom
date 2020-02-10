@@ -287,17 +287,14 @@ extern void I_LocalButtonsToNet() noexcept;
 extern void I_NetButtonsToLocal() noexcept;
 extern void START_Legals() noexcept;
 extern void STOP_Legals() noexcept;
-extern void TIC_Legals() noexcept;
-extern void DRAW_Legals() noexcept;
+extern void _thunk_TIC_Legals() noexcept;
 extern void START_Title() noexcept;
 extern void STOP_Title() noexcept;
 extern void TIC_Title() noexcept;
-extern void DRAW_Title() noexcept;
 extern void RunMenu() noexcept;
 extern void M_Start() noexcept;
 extern void M_Stop() noexcept;
 extern void M_Ticker() noexcept;
-extern void M_Drawer() noexcept;
 extern void I_CrossFadeFrameBuffers() noexcept;
 extern void START_Credits() noexcept;
 extern void STOP_Credits() noexcept;
@@ -306,7 +303,6 @@ extern void DRAW_Credits() noexcept;
 extern void START_PasswordScreen() noexcept;
 extern void STOP_PasswordScreen() noexcept;
 extern void TIC_PasswordScreen() noexcept;
-extern void DRAW_PasswordScreen() noexcept;
 extern void START_ControlsScreen() noexcept;
 extern void STOP_ControlsScreen() noexcept;
 extern void TIC_ControlsScreen() noexcept;
@@ -316,7 +312,6 @@ extern void P_ProcessPassword() noexcept;
 extern void ST_Init() noexcept;
 extern void ST_Start() noexcept;
 extern void ST_Ticker() noexcept;
-extern void ST_Drawer() noexcept;
 extern void _thunk_I_DrawNumber() noexcept;
 extern void _thunk_I_DrawString() noexcept;
 extern void AM_Start() noexcept;
@@ -337,7 +332,6 @@ extern void F2_Ticker() noexcept;
 extern void O_Init() noexcept;
 extern void O_Shutdown() noexcept;
 extern void O_Control() noexcept;
-extern void O_Drawer() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
 extern void PSXCD_psxcd_memcpy() noexcept;
@@ -1163,17 +1157,14 @@ namespace PsxVm {
         { 0x80034F04, &I_NetButtonsToLocal },
         { 0x80034F54, &START_Legals },
         { 0x80034FA0, &STOP_Legals },
-        { 0x80034FCC, &TIC_Legals },
-        { 0x8003504C, &DRAW_Legals },
+        { 0x80034FCC, &_thunk_TIC_Legals },
         { 0x80035098, &START_Title },
         { 0x80035268, &STOP_Title },
         { 0x80035294, &TIC_Title },
-        { 0x8003540C, &DRAW_Title },
         { 0x80035B24, &RunMenu },
         { 0x80035C94, &M_Start },
         { 0x80035E40, &M_Stop },
         { 0x80035EC4, &M_Ticker },
-        { 0x80036258, &M_Drawer },
         { 0x80036448, &I_CrossFadeFrameBuffers },
         { 0x80036BD8, &START_Credits },
         { 0x80036CA0, &STOP_Credits },
@@ -1182,7 +1173,6 @@ namespace PsxVm {
         { 0x80036E1C, &START_PasswordScreen },
         { 0x80036E6C, &STOP_PasswordScreen },
         { 0x80036EA0, &TIC_PasswordScreen },
-        { 0x80037134, &DRAW_PasswordScreen },
         { 0x8003793C, &START_ControlsScreen },
         { 0x80037980, &STOP_ControlsScreen },
         { 0x800379AC, &TIC_ControlsScreen },
@@ -1192,7 +1182,6 @@ namespace PsxVm {
         { 0x80038558, &ST_Init },
         { 0x80038610, &ST_Start },
         { 0x80038688, &ST_Ticker },
-        { 0x80038B0C, &ST_Drawer },
         { 0x8003A3C8, &_thunk_I_DrawNumber },
         { 0x8003B324, &_thunk_I_DrawString },
         { 0x8003BAC0, &AM_Start },
@@ -1213,7 +1202,6 @@ namespace PsxVm {
         { 0x8003E910, &O_Init },
         { 0x8003E9D0, &O_Shutdown },
         { 0x8003E9F4, &O_Control },
-        { 0x8003EEC8, &O_Drawer },
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },
         { 0x8003F200, &PSXCD_psxcd_memcpy },

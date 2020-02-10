@@ -13,9 +13,10 @@
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
 
-const VmPtr<texture_t>              gTex_BACK(0x80097A10);          // The background texture for the main menu
-const VmPtr<int32_t[MAXPLAYERS]>    gCursorPos(0x80078000);         // Which of the menu options each player's cursor is over (see 'menu_t')
-const VmPtr<int32_t>                gCursorFrame(0x800781D8);       // Current frame that the menu cursor is displaying
+const VmPtr<texture_t>              gTex_BACK(0x80097A10);                  // The background texture for the main menu
+const VmPtr<int32_t[MAXPLAYERS]>    gCursorPos(0x80078000);                 // Which of the menu options each player's cursor is over (see 'menu_t')
+const VmPtr<int32_t>                gCursorFrame(0x800781D8);               // Current frame that the menu cursor is displaying
+const VmPtr<int32_t>                gMenuTimeoutStartTicCon(0x80077F0C);    // Tick that we start checking for menu timeouts from
 
 // Main menu options
 enum menu_t : int32_t {
@@ -242,7 +243,7 @@ loc_80035DC8:
     sb(v0, s0);                                         // Store to: gDrawEnv1[C] (800A90C4)
     at = 0x800B0000;                                    // Result = 800B0000
     sb(v0, at - 0x6EE0);                                // Store to: gDrawEnv2[C] (800A9120)
-    sw(v1, gp + 0x92C);                                 // Store to: gMenuTimeoutStartTicCon (80077F0C)
+    *gMenuTimeoutStartTicCon = v1;
     ra = lw(sp + 0x24);
     s0 = lw(sp + 0x20);
     sp += 0x28;
@@ -294,10 +295,10 @@ void M_Ticker() noexcept {
     sw(ra, sp + 0x14);
     if (s0 == 0) goto loc_80035EF4;
     v0 = *gTicCon;
-    sw(v0, gp + 0x92C);                                 // Store to: gMenuTimeoutStartTicCon (80077F0C)
+    *gMenuTimeoutStartTicCon = v0;
 loc_80035EF4:
     v0 = *gTicCon;
-    v1 = lw(gp + 0x92C);                                // Load from: gMenuTimeoutStartTicCon (80077F0C)
+    v1 = *gMenuTimeoutStartTicCon;
     v0 -= v1;
     v0 = (i32(v0) < 0x708);
     {

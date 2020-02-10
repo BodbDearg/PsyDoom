@@ -101,7 +101,7 @@ void D_DoomMain() noexcept {
 // This function is never called in the retail game!
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunLegals() noexcept {
-    return MiniLoop(START_Legals, STOP_Legals, TIC_Legals, DRAW_Legals);
+    return MiniLoop(START_Legals, STOP_Legals, _thunk_TIC_Legals, DRAW_Legals);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
