@@ -8,6 +8,7 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
+#include "m_main.h"
 #include "PsxVm/PsxVm.h"
 
 void START_ControlsScreen() noexcept {
@@ -21,7 +22,7 @@ void START_ControlsScreen() noexcept {
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C5C;                                       // Result = STR_LumpName_BUTTONS[0] (80077C5C)
     sw(0, gp + 0xBF8);                                  // Store to: gCursorFrame (800781D8)
-    sw(0, gp + 0xA20);                                  // Store to: gCursorPos (80078000)
+    *gCursorPos = 0;
     a2 = 0;                                             // Result = 00000000
     _thunk_I_LoadAndCacheTexLump();
     ra = lw(sp + 0x10);
@@ -36,7 +37,7 @@ void STOP_ControlsScreen() noexcept {
     a1 = sfx_pistol;
     S_StartSound();
     v0 = 3;                                             // Result = 00000003
-    sw(v0, gp + 0xA20);                                 // Store to: gCursorPos (80078000)
+    *gCursorPos = v0;
     ra = lw(sp + 0x10);
     sp += 0x18;
 }
@@ -85,9 +86,8 @@ loc_80037A18:
         v0 = s0 & 0x1000;
         if (bJump) goto loc_80037A7C;
     }
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 -= 0x8000;                                       // Result = gCursorPos (80078000)
-    v0 = lw(v1);                                        // Load from: gCursorPos (80078000)
+    v1 = gCursorPos;
+    v0 = *gCursorPos;
     v0++;
     sw(v0, v1);                                         // Store to: gCursorPos (80078000)
     v0 = (i32(v0) < 9);
@@ -101,9 +101,8 @@ loc_80037A7C:
         v0 = s0 & 0x900;
         if (bJump) goto loc_80037AB8;
     }
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 -= 0x8000;                                       // Result = gCursorPos (80078000)
-    v0 = lw(v1);                                        // Load from: gCursorPos (80078000)
+    v1 = gCursorPos;
+    v0 = *gCursorPos;
     v0--;
     sw(v0, v1);                                         // Store to: gCursorPos (80078000)
     if (i32(v0) >= 0) goto loc_80037AA8;
@@ -124,7 +123,7 @@ loc_80037AB8:
     }
     v0 = 0;                                             // Result = 00000000
     if (s0 == s1) goto loc_80037B6C;
-    v0 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
+    v0 = *gCursorPos;
     v0 = (i32(v0) < 8);
     a0 = 0;                                             // Result = 00000000
     if (v0 == 0) goto loc_80037B34;
@@ -142,7 +141,7 @@ loc_80037AE4:
     goto loc_80037B6C;
 loc_80037B0C:
     a0 = 0;                                             // Result = 00000000
-    v0 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
+    v0 = *gCursorPos;
     v0 <<= 2;
     at = gBtnBindings;
     at += v0;
@@ -220,7 +219,7 @@ loc_80037BAC:
     sw(v0, sp + 0x18);
     v0 = 0x12;
     sw(v0, sp + 0x1C);
-    v0 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
+    v0 = *gCursorPos;
     a1 = 0x800B0000;                                    // Result = 800B0000
     a1 = lh(a1 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     a3 = v0 << 2;
@@ -244,7 +243,7 @@ loc_80037C7C:
     a0 += 4;                                            // Result = gBtnSprite_Circle_ButtonMask (80073DF0)
     if (v0 != 0) goto loc_80037C7C;
 loc_80037C9C:
-    v0 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
+    v0 = *gCursorPos;
     a2 = 0x26;                                          // Result = 00000026
     if (v0 != s2) goto loc_80037CC4;
     v0 = *gTicCon;
@@ -284,7 +283,7 @@ loc_80037D20:
     v0 = (i32(s2) < 8);
     s0 += 0x14;
     if (v0 != 0) goto loc_80037D20;
-    v0 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
+    v0 = *gCursorPos;
     a0 = 0x41;                                          // Result = 00000041
     if (v0 != s2) goto loc_80037D6C;
     v0 = *gTicCon;

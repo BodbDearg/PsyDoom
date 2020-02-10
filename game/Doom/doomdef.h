@@ -67,7 +67,10 @@ static constexpr int32_t REFRESHRATE = 60;
 enum gametype_t : uint32_t {
     gt_single,
     gt_coop,
-    gt_deathmatch
+    gt_deathmatch,
+#if PC_PSX_DOOM_MODS    // PC-PSX: adding this for convenience
+    NUMGAMETYPES
+#endif
 };
 
 // What skill level the game is running at
@@ -76,7 +79,10 @@ enum skill_t : uint32_t {
     sk_easy,
     sk_medium,
     sk_hard,
-    sk_nightmare
+    sk_nightmare,
+#if PC_PSX_DOOM_MODS    // PC-PSX: adding this for convenience
+    NUMSKILLS
+#endif
 };
 
 // Represents a high level result of running a game loop (MiniLoop).

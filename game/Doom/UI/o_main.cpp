@@ -9,6 +9,7 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
+#include "m_main.h"
 #include "PsxVm/PsxVm.h"
 #include "pw_main.h"
 
@@ -23,8 +24,7 @@ void O_Init() noexcept {
     a1 = 0;                                             // Result = 00000000
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7EF8;                                       // Result = gVBlanksUntilMenuMove (80077EF8)
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 -= 0x8000;                                       // Result = gCursorPos (80078000)
+    v1 = gCursorPos;
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x7E28);                                 // Store to: gCursorFrame (800781D8)
 loc_8003E940:
@@ -100,8 +100,7 @@ loc_8003EA50:
 loc_8003EA54:
     s3 = 0x51EB0000;                                    // Result = 51EB0000
     s3 |= 0x851F;                                       // Result = 51EB851F
-    s5 = 0x80080000;                                    // Result = 80080000
-    s5 -= 0x8000;                                       // Result = gCursorPos (80078000)
+    s5 = gCursorPos;
     s4 = s5 + 4;                                        // Result = DefaultCursorPos (80078004)
     s1 = 4;                                             // Result = 00000004
 loc_8003EA6C:
@@ -508,8 +507,7 @@ loc_8003F074:
     a1 = 0x800B0000;                                    // Result = 800B0000
     a1 = lh(a1 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     v0 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x8000;                                       // Result = gCursorPos (80078000)
+    at = gCursorPos;
     at += v0;
     v1 = lw(at);
     a2 = lw(gp + 0xCE0);                                // Load from: gpCurOptionsMenuEntries (800782C0)

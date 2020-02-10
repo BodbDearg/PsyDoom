@@ -13,8 +13,46 @@
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
 
-// The background texture for the main menu
-const VmPtr<texture_t> gTex_BACK(0x80097A10);
+const VmPtr<texture_t>  gTex_BACK(0x80097A10);          // The background texture for the main menu
+const VmPtr<int32_t>    gCursorPos(0x80078000);         // Which of the menu options the cursor is over (see 'menu_t')
+const VmPtr<int32_t>    gCursorFrame(0x800781D8);       // Current frame that the menu cursor is displaying
+
+// Main menu options
+enum menu_t : int32_t {
+	gamemode,
+	level,
+	difficulty,
+    options,
+	NUMMENUITEMS
+};
+
+// The position of each main menu option
+static const int16_t gMenuYPos[NUMMENUITEMS] = {
+    91,     // gamemode
+    133,    // level
+    158,    // difficulty
+    200     // options
+};
+
+// Game mode names and skill names
+static const char gGameTypeNames[NUMGAMETYPES][16] = {
+	"Single Player",
+	"Cooperative",
+	"Deathmatch"
+};
+
+static const char gSkillNames[NUMSKILLS][16] = {
+	"I am a Wimp",
+	"Not Too Rough",
+	"Hurt Me Plenty",
+    "Ultra Violence",
+#if PC_PSX_DOOM_MODS    // PC-PSX: exposing the unused 'Nightmare' mode
+    "Nightmare"
+#endif
+};
+
+// The texture for the DOOM logo
+static const VmPtr<texture_t> gTex_DOOM(0x80097A50);
 
 void RunMenu() noexcept {
     sp -= 0x20;
@@ -23,7 +61,7 @@ void RunMenu() noexcept {
     sw(s1, sp + 0x14);
     s1 = gTex_BACK;
     sw(s2, sp + 0x18);
-    s2 = s1 + 0x40;                                     // Result = gTex_DOOM[0] (80097A50)
+    s2 = gTex_DOOM;
     sw(ra, sp + 0x1C);
 
 loc_80035B4C:
@@ -35,38 +73,46 @@ loc_80035B4C:
         if (bJump) goto loc_80035C78;
     }
     I_IncDrawnFrameCount();
+
     a0 = gTex_BACK;
     a1 = 0;                                             // Result = 00000000
     a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_CacheAndDrawSprite();
-    a0 = s2;                                            // Result = gTex_DOOM[0] (80097A50)
+
+    a0 = gTex_DOOM;
     a1 = 0x4B;                                          // Result = 0000004B
     a3 = lh(s0 + 0x22);                                 // Load from: gPaletteClutId_Title (800A90A6)
     a2 = 0x14;                                          // Result = 00000014
     _thunk_I_CacheAndDrawSprite();
+    
     I_SubmitGpuCmds();
     I_DrawPresent();
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
     a0 = s1 + 0x100;                                    // Result = gTex_CONNECT[0] (80097B10)
     if (v0 == 0) goto loc_80035C4C;
+    
     a1 = 0x36;                                          // Result = 00000036
     a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0x67;                                          // Result = 00000067
     _thunk_I_DrawLoadingPlaque();
+
     I_NetSetup();
     I_IncDrawnFrameCount();
+    
     a0 = gTex_BACK;
     a1 = 0;                                             // Result = 00000000
     a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_CacheAndDrawSprite();
-    a0 = s2;                                            // Result = gTex_DOOM[0] (80097A50)
+
+    a0 = gTex_DOOM;
     a1 = 0x4B;                                          // Result = 0000004B
     a3 = lh(s0 + 0x22);                                 // Load from: gPaletteClutId_Title (800A90A6)
     a2 = 0x14;                                          // Result = 00000014
     _thunk_I_CacheAndDrawSprite();
+    
     I_SubmitGpuCmds();
     I_DrawPresent();
     a0 = 0;
@@ -99,6 +145,7 @@ void M_Start() noexcept {
     gbPlayerInGame[0] = true;
     gbPlayerInGame[1] = false;
     I_PurgeTexCache();
+    
     s0 = 0x80090000;                                    // Result = 80090000
     s0 += 0x7A90;                                       // Result = gTex_LOADING[0] (80097A90)
     a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
@@ -106,33 +153,39 @@ void M_Start() noexcept {
     a1 += 0x7C4C;                                       // Result = STR_LumpName_LOADING[0] (80077C4C)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_LoadAndCacheTexLump();
+    
     a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
     a1 = 0x5F;                                          // Result = 0000005F
     a3 = 0x800B0000;                                    // Result = 800B0000
     a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
     a2 = 0x6D;                                          // Result = 0000006D
     _thunk_I_DrawLoadingPlaque();
+    
     a0 = 0;                                             // Result = 00000000
     S_LoadSoundAndMusic();
+    
     a0 = gTex_BACK;
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C8C;                                       // Result = STR_LumpName_BACK[0] (80077C8C)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_LoadAndCacheTexLump();
-    a0 = s0 - 0x40;                                     // Result = gTex_DOOM[0] (80097A50)
+
+    a0 = gTex_DOOM;                                     // Result = gTex_DOOM[0] (80097A50)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C94;                                       // Result = STR_LumpName_DOOM[0] (80077C94)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_LoadAndCacheTexLump();
+    
     a0 = s0 + 0x80;                                     // Result = gTex_CONNECT[0] (80097B10)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7C9C;                                       // Result = STR_LumpName_CONNECT[0] (80077C9C)
     a2 = 0;                                             // Result = 00000000
     _thunk_I_LoadAndCacheTexLump();
+    
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
     sw(0, gp + 0xBF8);                                  // Store to: gCursorFrame (800781D8)
-    sw(0, gp + 0xA20);                                  // Store to: gCursorPos (80078000)
+    *gCursorPos = 0;
     *gVBlanksUntilMenuMove = 0;
     {
         const bool bJump = (v0 != 0);
@@ -276,7 +329,7 @@ loc_80035F4C:
     goto loc_80036244;
 loc_80035F64:
     if (v0 == 0) goto loc_80035FCC;
-    v1 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
+    v1 = *gCursorPos;
     v0 = (i32(v1) < 3);
     if (i32(v1) < 0) goto loc_80035FCC;
     {
@@ -322,9 +375,8 @@ loc_80035FE4:
     v0 = s0 & 0x4000;
     v1 = 4;                                             // Result = 00000004
     if (v0 == 0) goto loc_80036040;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0x8000;                                       // Result = gCursorPos (80078000)
-    v0 = lw(a0);                                        // Load from: gCursorPos (80078000)
+    a0 = gCursorPos;
+    v0 = *gCursorPos;
     v0++;
     sw(v0, a0);                                         // Store to: gCursorPos (80078000)
     if (v0 != v1) goto loc_80036070;
@@ -334,9 +386,8 @@ loc_80036040:
     v0 = s0 & 0x1000;
     v1 = -1;                                            // Result = FFFFFFFF
     if (v0 == 0) goto loc_8003607C;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0x8000;                                       // Result = gCursorPos (80078000)
-    v0 = lw(a0);                                        // Load from: gCursorPos (80078000)
+    a0 = gCursorPos;
+    v0 = *gCursorPos;
     v0--;
     sw(v0, a0);                                         // Store to: gCursorPos (80078000)
     if (v0 != v1) goto loc_80036070;
@@ -347,7 +398,7 @@ loc_80036070:
     a1 = sfx_pstop;
     S_StartSound();
 loc_8003607C:
-    v1 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
+    v1 = *gCursorPos;
     a0 = 1;
     v0 = (i32(v1) < 2);
     if (v1 == a0) goto loc_80036178;
@@ -497,122 +548,52 @@ loc_80036244:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Renders the main menu
+//------------------------------------------------------------------------------------------------------------------------------------------
 void M_Drawer() noexcept {
-loc_80036258:
-    sp -= 0x28;
-    sw(ra, sp + 0x24);
-    sw(s0, sp + 0x20);
+    // Draw the menu background and increment frame count for the texture cache
     I_IncDrawnFrameCount();
-    s0 = gTex_BACK;
-    a0 = gTex_BACK;
-    a1 = 0;                                             // Result = 00000000
-    a3 = gPaletteClutIds[MAINPAL];
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_CacheAndDrawSprite();
-    a0 = s0 + 0x40;                                     // Result = gTex_DOOM[0] (80097A50)
-    a1 = 0x4B;                                          // Result = 0000004B
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F5A);                               // Load from: gPaletteClutId_Title (800A90A6)
-    a2 = 0x14;                                          // Result = 00000014
-    _thunk_I_CacheAndDrawSprite();
-    a2 = 0x32;                                          // Result = 00000032
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lhu(a0 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
-    a1 = 0x800B0000;                                    // Result = 800B0000
-    a1 = lh(a1 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    v1 = lw(gp + 0xA20);                                // Load from: gCursorPos (80078000)
-    v0 = lw(gp + 0xBF8);                                // Load from: gCursorFrame (800781D8)
-    v1 <<= 1;
-    v0 <<= 4;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7C34;                                       // Result = MainMenu_GameMode_YPos (80077C34)
-    at += v1;
-    a3 = lh(at);
-    v0 += 0x84;
-    sw(v0, sp + 0x10);
-    v0 = 0xC0;                                          // Result = 000000C0
-    sw(v0, sp + 0x14);
-    v0 = 0x10;                                          // Result = 00000010
-    sw(v0, sp + 0x18);
-    v0 = 0x12;                                          // Result = 00000012
-    sw(v0, sp + 0x1C);
-    a3 -= 2;
-    _thunk_I_DrawSprite();
-    a1 = lh(gp + 0x654);                                // Load from: MainMenu_GameMode_YPos (80077C34)
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0x1568;                                       // Result = STR_GameMode[0] (80011568)
-    a0 = 0x4A;                                          // Result = 0000004A
-    _thunk_I_DrawString();
-    a0 = 0x5A;                                          // Result = 0000005A
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x3CDC;                                       // Result = STR_MenuOpt_SinglePlayer[0] (80073CDC)
-    a1 = lh(gp + 0x654);                                // Load from: MainMenu_GameMode_YPos (80077C34)
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7604);                               // Load from: gStartGameType (80077604)
-    a1 += 0x14;
-    a2 <<= 4;
-    a2 += v0;
-    _thunk_I_DrawString();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80036398;
+    I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+
+    // Draw the DOOM logo
+    I_CacheAndDrawSprite(*gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
+
+    // Draw the skull cursor
+    I_DrawSprite(
+        gTex_STATUS->texPageId,
+        gPaletteClutIds[UIPAL],
+        50,
+        gMenuYPos[*gCursorPos] - 2,
+        M_SKULL_TEX_U + (uint8_t)(*gCursorFrame) * M_SKULL_W,
+        M_SKULL_TEX_V,
+        M_SKULL_W,
+        M_SKULL_H
+    );
+
+    // Draw the text for the various menu entries
+    I_DrawString(74, gMenuYPos[gamemode], "Game Mode");
+    I_DrawString(90, gMenuYPos[gamemode] + 20, gGameTypeNames[*gStartGameType]);
+
+    if (*gStartGameType == gt_single) {
+        if (*gStartMapOrEpisode == 1) {
+            I_DrawString(74, gMenuYPos[level], "Ultimate Doom");
+        } else {
+            I_DrawString(74, gMenuYPos[level], "Doom II");
+        }
+    } else {
+        // Coop or deathmatch game, draw the level number rather than episode
+        I_DrawString(74, gMenuYPos[level], "Level");
+
+        const int32_t xpos = (*gStartMapOrEpisode >= 10) ? 148 : 136;
+        I_DrawNumber(xpos, gMenuYPos[level], *gStartMapOrEpisode);
     }
-    v1 = *gStartMapOrEpisode;
-    if (v1 != v0) goto loc_8003637C;
-    a1 = lh(gp + 0x656);                                // Load from: MainMenu_Episode_YPos (80077C36)
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0x1574;                                       // Result = STR_UltimateDoom[0] (80011574)
-    a0 = 0x4A;                                          // Result = 0000004A
-    _thunk_I_DrawString();
-    goto loc_800363D4;
-loc_8003637C:
-    a1 = lh(gp + 0x656);                                // Load from: MainMenu_Episode_YPos (80077C36)
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7CA4;                                       // Result = STR_Doom2[0] (80077CA4)
-    a0 = 0x4A;                                          // Result = 0000004A
-    _thunk_I_DrawString();
-    goto loc_800363D4;
-loc_80036398:
-    a1 = lh(gp + 0x656);                                // Load from: MainMenu_Episode_YPos (80077C36)
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7CAC;                                       // Result = STR_Level[0] (80077CAC)
-    a0 = 0x4A;                                          // Result = 0000004A
-    _thunk_I_DrawString();
-    a2 = *gStartMapOrEpisode;
-    v0 = (i32(a2) < 0xA);
-    a0 = 0x88;                                          // Result = 00000088
-    if (v0 != 0) goto loc_800363C8;
-    a0 = 0x94;                                          // Result = 00000094
-loc_800363C8:
-    a1 = lh(gp + 0x656);                                // Load from: MainMenu_Episode_YPos (80077C36)
-    _thunk_I_DrawNumber();
-loc_800363D4:
-    a1 = lh(gp + 0x658);                                // Load from: MainMenu_Difficulty_YPos (80077C38)
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0x1584;                                       // Result = STR_Difficulty[0] (80011584)
-    a0 = 0x4A;                                          // Result = 0000004A
-    _thunk_I_DrawString();
-    a0 = 0x5A;                                          // Result = 0000005A
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x3D0C;                                       // Result = STR_MenuOpt_IAmAWimp[0] (80073D0C)
-    a1 = lh(gp + 0x658);                                // Load from: MainMenu_Difficulty_YPos (80077C38)
-    a2 = *gStartSkill;
-    a1 += 0x14;
-    a2 <<= 4;
-    a2 += v0;
-    _thunk_I_DrawString();
-    a1 = lh(gp + 0x65A);                                // Load from: MainMenu_Options_YPos (80077C3A)
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7CB4;                                       // Result = STR_Options[0] (80077CB4)
-    a0 = 0x4A;                                          // Result = 0000004A
-    _thunk_I_DrawString();
+
+    I_DrawString(74, gMenuYPos[difficulty], "Difficulty");
+    I_DrawString(90, gMenuYPos[difficulty] + 20, gSkillNames[*gStartSkill]);
+    I_DrawString(74, gMenuYPos[options], "Options");
+    
+    // Finish up the frame
     I_SubmitGpuCmds();
     I_DrawPresent();
-    ra = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x28;
-    return;
 }
