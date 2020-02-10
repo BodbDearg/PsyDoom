@@ -275,7 +275,7 @@ void swc2(const uint8_t s, const uint32_t addr) noexcept {
     gpCpu->sys->writeMemory32(addr, val);
 }
 
-void _break(const uint32_t i) noexcept {
+void _break([[maybe_unused]] const uint32_t i) noexcept {
     FATAL_ERROR("Break instruction not supported!");
 }
 

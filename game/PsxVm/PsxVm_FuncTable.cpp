@@ -332,10 +332,8 @@ extern void IN_CoopDrawer() noexcept;
 extern void IN_DeathmatchDrawer() noexcept;
 extern void F1_Start() noexcept;
 extern void F1_Ticker() noexcept;
-extern void F1_Drawer() noexcept;
 extern void F2_Start() noexcept;
 extern void F2_Ticker() noexcept;
-extern void F2_Drawer() noexcept;
 extern void O_Init() noexcept;
 extern void O_Shutdown() noexcept;
 extern void O_Control() noexcept;
@@ -1210,10 +1208,8 @@ namespace PsxVm {
         { 0x8003D448, &IN_DeathmatchDrawer },
         { 0x8003D6D0, &F1_Start },
         { 0x8003D79C, &F1_Ticker },
-        { 0x8003D8F0, &F1_Drawer },
         { 0x8003D9C4, &F2_Start },
         { 0x8003DB18, &F2_Ticker },
-        { 0x8003E328, &F2_Drawer },
         { 0x8003E910, &O_Init },
         { 0x8003E9D0, &O_Shutdown },
         { 0x8003E9F4, &O_Control },
