@@ -514,7 +514,12 @@ loc_800361E8:
         if (bJump) goto loc_80036210;
     }
     v1 = *gStartSkill;
+// PC-PSX: allow nightmare to be selected
+#if PC_PSX_DOOM_MODS
+    v0 = (v1 < sk_nightmare);
+#else
     v0 = (v1 < 3);
+#endif
     {
         const bool bJump = (v0 == 0);
         v0 = v1 + 1;
