@@ -1,3 +1,7 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Code for the 'legals' screen.
+// This screen is unused in the retail version of the game, it was only used in demo builds of DOOM.
+//------------------------------------------------------------------------------------------------------------------------------------------
 #include "le_main.h"
 
 #include "Doom/Base/i_crossfade.h"

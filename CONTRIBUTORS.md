@@ -36,6 +36,11 @@ PsyDoom contributors (sorted alphabetically)
             https://www.doomworld.com/forum/topic/101161-gec-master-edition-psx-doom-for-the-playstation-1102019-beta-3-release-now-are-you-ready-for-more-action/?page=54&tab=comments#comment-2076239
         * Texture cache code:
             https://gist.github.com/Erick194/41c9ee0ac44e3a4c4daa952ac28f1b28
+        * Pointing out the origin of 'legals' screen (used in the demo):
+            https://github.com/BodbDearg/PsyDoom/commit/77cc15835535ec44f4248c5f55ebdf3aca57bb31
+        * Pointing out issues with 'Nightmare' mode passwords and a fix:
+            https://github.com/BodbDearg/PsyDoom/commit/53219ed02236d96b3a628bc8db43233928954f8d
+            https://github.com/Erick194/PSXDOOM-RE/commit/7d1a37385c32c5c8f3026c3d8164647c8e67ff00
 
 * **[Samuel Villarreal (svkaiser)](https://github.com/svkaiser)**
 

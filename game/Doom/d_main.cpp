@@ -98,7 +98,7 @@ void D_DoomMain() noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Runs a screen with scrolling legals text.
-// This function is never called in the retail game!
+// This function is never called in the retail game, but was used for the PSX DOOM demo build.
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunLegals() noexcept {
     return MiniLoop(START_Legals, STOP_Legals, _thunk_TIC_Legals, DRAW_Legals);

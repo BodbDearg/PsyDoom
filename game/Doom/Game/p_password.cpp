@@ -5,6 +5,12 @@
 #include "g_game.h"
 #include "PsxVm/PsxVm.h"
 
+// FIXME: all the password code needs to be updated to work with nightmare mode.
+//
+// See:
+//  https://github.com/BodbDearg/PsyDoom/commit/53219ed02236d96b3a628bc8db43233928954f8d
+//  https://github.com/Erick194/PSXDOOM-RE/commit/7d1a37385c32c5c8f3026c3d8164647c8e67ff00
+//
 void P_ComputePassword() noexcept {
 loc_80037DBC:
     sp -= 0x28;
