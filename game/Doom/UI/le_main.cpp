@@ -25,7 +25,7 @@ void START_Legals() noexcept {
     a1 = sfx_sgcock;
     S_StartSound();
 
-    *gTitleScreenSpriteY = 240;
+    *gTitleScreenSpriteY = SCREEN_H;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

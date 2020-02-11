@@ -116,8 +116,7 @@ void START_Title() noexcept {
     _thunk_I_CacheTex();
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x3E4C);                               // Load from: CDTrackNum_TitleScreen (80073E4C)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x75F8);                               // Load from: gCdMusicVol (800775F8)
+    a1 = *gCdMusicVol;
     v0 = 0xFA;                                          // Result = 000000FA
     *gTitleScreenSpriteY = v0;
     psxcd_play();

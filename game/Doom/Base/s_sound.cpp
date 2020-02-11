@@ -11,6 +11,20 @@
 #include "Wess/wessapi_m.h"
 #include "Wess/wessapi_t.h"
 
+// What track each piece of music uses
+const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS] = {
+    2,      // cdmusic_title_screen
+    3,      // cdmusic_main_menu
+    4,      // cdmusic_credits_demo
+    5,      // cdmusic_intermission
+    6,      // cdmusic_club_doom
+    7,      // cdmusic_finale_doom1
+    8       // cdmusic_finale_doom2
+};
+
+// Current volume cd music is played back at
+const VmPtr<int32_t> gCdMusicVol(0x800775F8);
+
 void S_SetSfxVolume() noexcept {
 loc_80040FAC:
     sp -= 0x18;

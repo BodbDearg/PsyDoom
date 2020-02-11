@@ -323,8 +323,7 @@ loc_8003ECB0:
     v0 = hi;
     v0 = u32(i32(v0) >> 5);
     v0 -= v1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x75F8);                                // Store to: gCdMusicVol (800775F8)
+    *gCdMusicVol = v0;
     s4 -= 4;
     goto loc_8003EE90;
 loc_8003ECF8:

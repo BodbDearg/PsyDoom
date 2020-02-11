@@ -903,8 +903,7 @@ loc_80026ABC:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x3E5C;                                       // Result = CDTrackNum_ClubDoom (80073E5C)
     a0 = lw(v0);                                        // Load from: CDTrackNum_ClubDoom (80073E5C)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x75F8);                               // Load from: gCdMusicVol (800775F8)
+    a1 = *gCdMusicVol;
     a2 = 0;                                             // Result = 00000000
     sw(0, sp + 0x18);
     sw(0, sp + 0x1C);

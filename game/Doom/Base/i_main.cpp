@@ -541,7 +541,7 @@ void I_DrawPresent() noexcept {
                 *gElapsedVBlanks = 16;
             }
 
-            for (int32_t i = 0; i < *gElapsedVBlanks; ++i) {
+            for (uint32_t i = 0; i < *gElapsedVBlanks; ++i) {
                 emulate_frame();
             }
         }

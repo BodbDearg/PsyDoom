@@ -252,8 +252,7 @@ loc_8003CA10:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x3E58;                                       // Result = CDTrackNum_Intermission (80073E58)
     a0 = lw(v0);                                        // Load from: CDTrackNum_Intermission (80073E58)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x75F8);                               // Load from: gCdMusicVol (800775F8)
+    a1 = *gCdMusicVol;
     a2 = 0;                                             // Result = 00000000
     sw(0, sp + 0x18);
     sw(0, sp + 0x1C);

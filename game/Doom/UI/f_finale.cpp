@@ -108,8 +108,7 @@ void F1_Start() noexcept {
     a2 = 0;                                             // Result = 00000000
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x3E60);                               // Load from: CDTrackNum_Finale_Doom1 (80073E60)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x75F8);                               // Load from: gCdMusicVol (800775F8)
+    a1 = *gCdMusicVol;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x3E54);                               // Load from: CDTrackNum_Credits_Demo (80073E54)
     a3 = 0;                                             // Result = 00000000
@@ -307,8 +306,7 @@ void F2_Start() noexcept {
     a2 = 0;                                             // Result = 00000000
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x3E64);                               // Load from: CDTrackNum_Finale_Doom2 (80073E64)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x75F8);                               // Load from: gCdMusicVol (800775F8)
+    a1 = *gCdMusicVol;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x3E54);                               // Load from: CDTrackNum_Credits_Demo (80073E54)
     a3 = 0;                                             // Result = 00000000

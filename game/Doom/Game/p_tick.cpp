@@ -235,7 +235,7 @@ void P_CheckCheats() noexcept {
             } while (v0 != 0);
 
             a0 = 500;
-            a1 = lw(0x800775F8);        // Load from: gCdMusicVol (800775F8)            
+            a1 = *gCdMusicVol;
             psxspu_start_cd_fade();
 
             S_Resume();
@@ -673,8 +673,7 @@ void P_Start() noexcept {
     if (v0 == 0) goto loc_80029700;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 += 0x3E54;                                       // Result = CDTrackNum_Credits_Demo (80073E54)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x75F8);                               // Load from: gCdMusicVol (800775F8)
+    a1 = *gCdMusicVol;
     v0 = lw(v1);                                        // Load from: CDTrackNum_Credits_Demo (80073E54)
     sw(0, sp + 0x18);
     sw(0, sp + 0x1C);

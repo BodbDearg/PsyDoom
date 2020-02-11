@@ -135,7 +135,7 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
 // Runs the credits screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunCredits() noexcept {
-    return MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits);
+    return MiniLoop(START_Credits, STOP_Credits, _thunk_TIC_Credits, DRAW_Credits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
