@@ -1,5 +1,6 @@
 #include "ti_main.h"
 
+#include "cn_main.h"
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/s_sound.h"
@@ -11,6 +12,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_sky.h"
 #include "m_main.h"
+#include "o_main.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -23,121 +25,70 @@ const VmPtr<int32_t> gTitleScreenSpriteY(0x80078190);
 // The DOOM logo texture
 const VmPtr<texture_t> gTex_TITLE(0x80097A30);
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialization logic for the main title screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void START_Title() noexcept {
-    sp -= 0x28;
-    sw(ra, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-
+    // Cleanup the texture cache and remove anything we can
     I_PurgeTexCache();
 
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x7C4C;                                       // Result = STR_LumpName_LOADING[0] (80077C4C)
-
+    // Show the loading plaque
     W_CacheLumpName("LOADING", PU_STATIC, false);
-    s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7A90;                                       // Result = gTex_LOADING[0] (80097A90)
-    a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
-    a1 = s1;                                            // Result = STR_LumpName_LOADING[0] (80077C4C)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
-
-    a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
-    a1 = 0x5F;                                          // Result = 0000005F
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    a2 = 0x6D;                                          // Result = 0000006D
-    _thunk_I_DrawLoadingPlaque();
+    I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
+    I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
     
-    a0 = 0;                                             // Result = 00000000
+    // TODO
+    a0 = 0;
     S_LoadSoundAndMusic();
     
-    s4 = 0x80070000;                                    // Result = 80070000
-    s4 += 0x7C54;                                       // Result = STR_LumpName_MARB01[0] (80077C54)
+    // Cache commonly used UI lumps for fast access and upload them to VRAM
     W_CacheLumpName("MARB01", PU_STATIC, false);
-    
-    s3 = 0x80070000;                                    // Result = 80070000
-    s3 += 0x7C5C;                                       // Result = STR_LumpName_BUTTONS[0] (80077C5C)
-    a0 = s3;                                            // Result = STR_LumpName_BUTTONS[0] (80077C5C)
-    a1 = 1;                                             // Result = 00000001
-    a2 = 0;                                             // Result = 00000000
     W_CacheLumpName("BUTTONS", PU_STATIC, false);
-    
-    s2 = 0x80070000;                                    // Result = 80070000
-    s2 += 0x7C64;                                       // Result = STR_LumpName_NETERR[0] (80077C64)
     W_CacheLumpName("NETERR", PU_STATIC, false);
-
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x7C6C;                                       // Result = STR_LumpName_PAUSE[0] (80077C6C)
     W_CacheLumpName("PAUSE", PU_STATIC, false);
 
-    a0 = s0 + 0x20;                                     // Result = gTex_MARB01[0] (80097AB0)
-    a1 = s4;                                            // Result = STR_LumpName_MARB01[0] (80077C54)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
+    I_LoadAndCacheTexLump(*gTex_MARB01, "MARB01", 0);
+    I_LoadAndCacheTexLump(*gTex_BUTTONS, "BUTTONS", 0);
+    I_LoadAndCacheTexLump(*gTex_NETERR, "NETERR", 0);
+    I_LoadAndCacheTexLump(*gTex_PAUSE, "PAUSE", 0);
+    I_LoadAndCacheTexLump(*gTex_TITLE, "TITLE", 0);
     
-    a0 = s0 + 0x40;                                     // Result = gTex_BUTTONS[0] (80097AD0)
-    a1 = s3;                                            // Result = STR_LumpName_BUTTONS[0] (80077C5C)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
+    // Cache the fire sky texture used in the title screen and save it's reference
+    {
+        const int32_t skyTexLumpNum = R_TextureNumForName("SKY09");
+        texture_t& skyTex = (*gpTextures)[skyTexLumpNum];
+
+        *gpSkyTexture = &skyTex;
+        *gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
+
+        W_CacheLumpNum(skyTex.lumpNum, PU_CACHE, true);
+        I_CacheTex(skyTex);
+    }
     
-    a0 = s0 + 0x60;                                     // Result = gTex_NETERR[0] (80097AF0)
-    a1 = s2;                                            // Result = STR_LumpName_NETERR[0] (80077C64)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
-    
-    a0 = s0 - 0x20;                                     // Result = gTex_PAUSE[0] (80097A70)
-    a1 = s1;                                            // Result = STR_LumpName_PAUSE[0] (80077C6C)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
-    
-    a0 = s0 - 0x60;                                     // Result = gTex_TITLE[0] (80097A30)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7C74;                                       // Result = STR_LumpName_TITLE[0] (80077C74)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
-    
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7C7C;                                       // Result = STR_LumpName_SKY09[0] (80077C7C)
-    _thunk_R_TextureNumForName();
-    v1 = *gpTextures;
-    v0 <<= 5;
-    v0 += v1;
-    a0 = lh(v0 + 0x10);
-    *gpSkyTexture = v0;
-    W_CacheLumpNum(a0, PU_CACHE, true);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lhu(v0 - 0x6F5E);                              // Load from: gPaletteClutId_Sky (800A90A2)
-    a0 = *gpSkyTexture;
-    *gPaletteClutId_CurMapSky = (uint16_t) v0;
-    _thunk_I_CacheTex();
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x3E4C);                               // Load from: CDTrackNum_TitleScreen (80073E4C)
+    // Initially the DOOM logo is offscreen
+    *gTitleScreenSpriteY = SCREEN_H + 10;
+
+    // Play the music for the title screen
+    a0 = gCDTrackNum[cdmusic_title_screen];
     a1 = *gCdMusicVol;
-    v0 = 0xFA;                                          // Result = 000000FA
-    *gTitleScreenSpriteY = v0;
     psxcd_play();
-loc_80035234:
-    psxcd_elapsed_sectors();
-    if (v0 == 0) goto loc_80035234;
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+    
+    // TODO: comment on elapsed sector stuff here
+    do {
+        psxcd_elapsed_sectors();
+    } while (v0 == 0);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shutdown/cleanup logic for the main title screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void STOP_Title() noexcept {
+    // Play a barrel explode noise
     a0 = 0;
     a1 = sfx_barexp;
     S_StartSound();
 
+    // Stop the current audio track
     psxcd_stop();
 }
 
