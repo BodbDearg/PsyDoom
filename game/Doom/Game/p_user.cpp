@@ -436,7 +436,7 @@ loc_80029DD4:
     a1 = a0;
     sw(ra, sp + 0x10);
     v0 <<= 2;
-    at = ptrToVmAddr(&gpPlayerBtnBindings[0]);
+    at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
     at += v0;
     t0 = lw(at);
     at = 0x80070000;                                    // Result = 80070000
@@ -1125,7 +1125,7 @@ loc_8002A7F8:
     at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
     at += v0;
     a1 = lw(at);
-    at = ptrToVmAddr(&gpPlayerBtnBindings[0]);
+    at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
     at += v0;
     s1 = lw(at);
     v0 = 0xA;                                           // Result = 0000000A

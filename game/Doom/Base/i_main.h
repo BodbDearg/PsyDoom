@@ -18,18 +18,33 @@ static constexpr uint32_t ALL_TPAGES_MASK       = (UINT32_MAX >> (32 - NUM_TCACH
 // Size of the temporary buffer that is used for WAD loading and other stuff - 64 KiB
 static constexpr uint32_t TMP_BUFFER_SIZE = 0x10000;
 
-// Gamepad button binding index: these are the actions which are configurable to different buttons.
+// Game control binding index: these are the actions which are configurable to different buttons.
 // These also must be synchronized in a network game.
-enum padbinding_t {
-    PAD_BINDING_ATTACK,
-    PAD_BINDING_USE,
-    PAD_BINDING_STRAFE,
-    PAD_BINDING_SPEED,
-    PAD_BINDING_STRAFE_LEFT,
-    PAD_BINDING_STRAFE_RIGHT,
-    PAD_BINDING_WEAPON_BACK,
-    PAD_BINDING_WEAPON_FORWARD,
-    NUM_PAD_BINDINGS
+enum controlbinding_t : int32_t {
+    cbind_attack,
+    cbind_use,
+    cbind_strafe,
+    cbind_speed,
+    cbind_strafe_left,
+    cbind_strafe_right,
+    cbind_weapon_back,
+    cbind_weapon_forward,
+    NUM_CTRL_BINDS
+};
+
+// Configurable buttons on the d-pad.
+// These give an index into the array of button masks for configurable buttons.
+// That in turn allows us to match buttons to bindable actions.
+enum : int32_t {
+    bindablebtn_triangle,
+    bindablebtn_circle,
+    bindablebtn_cross,
+    bindablebtn_square,
+    bindablebtn_l1,
+    bindablebtn_r1,
+    bindablebtn_l2,
+    bindablebtn_r2,
+    NUM_BINDABLE_BTNS
 };
 
 // Type for a pressed button mask.
@@ -38,27 +53,28 @@ enum padbinding_t {
 // TODO: create constants for available button bits. 
 typedef uint32_t padbuttons_t;
 
-extern const VmPtr<uint32_t>                                            gTCacheFillPage;
-extern const VmPtr<uint32_t>                                            gTCacheFillCellX;
-extern const VmPtr<uint32_t>                                            gTCacheFillCellY;
-extern const VmPtr<uint32_t>                                            gTCacheFillRowCellH;
-extern const VmPtr<uint32_t>                                            gLockedTexPagesMask;
-extern const VmPtr<std::byte[TMP_BUFFER_SIZE]>                          gTmpBuffer;
-extern const VmPtr<uint32_t>                                            gTotalVBlanks;
-extern const VmPtr<uint32_t>                                            gLastTotalVBlanks;
-extern const VmPtr<uint32_t>                                            gElapsedVBlanks;
-extern const VmPtr<uint32_t>                                            gCurDispBufferIdx;
-extern const VmPtr<DISPENV[2]>                                          gDispEnvs;
-extern const VmPtr<DRAWENV[2]>                                          gDrawEnvs;
-extern const VmPtr<uint32_t>                                            gNumFramesDrawn;
-extern const VmPtr<uint32_t>                                            gCurPlayerIndex;
-extern const VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>                      gBtnBindings;
-extern const VmPtr<VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>[MAXPLAYERS]>   gpPlayerBtnBindings;
-extern const VmPtr<texture_t>                                           gTex_STATUS;
-extern const VmPtr<texture_t>                                           gTex_PAUSE;
-extern const VmPtr<texture_t>                                           gTex_LOADING;
-extern const VmPtr<texture_t>                                           gTex_NETERR;
-extern const VmPtr<texture_t>                                           gTex_CONNECT;
+extern const VmPtr<uint32_t>                                                gTCacheFillPage;
+extern const VmPtr<uint32_t>                                                gTCacheFillCellX;
+extern const VmPtr<uint32_t>                                                gTCacheFillCellY;
+extern const VmPtr<uint32_t>                                                gTCacheFillRowCellH;
+extern const VmPtr<uint32_t>                                                gLockedTexPagesMask;
+extern const VmPtr<std::byte[TMP_BUFFER_SIZE]>                              gTmpBuffer;
+extern const VmPtr<uint32_t>                                                gTotalVBlanks;
+extern const VmPtr<uint32_t>                                                gLastTotalVBlanks;
+extern const VmPtr<uint32_t>                                                gElapsedVBlanks;
+extern const VmPtr<uint32_t>                                                gCurDispBufferIdx;
+extern const VmPtr<DISPENV[2]>                                              gDispEnvs;
+extern const VmPtr<DRAWENV[2]>                                              gDrawEnvs;
+extern const VmPtr<uint32_t>                                                gNumFramesDrawn;
+extern const VmPtr<uint32_t>                                                gCurPlayerIndex;
+extern const VmPtr<padbuttons_t[NUM_CTRL_BINDS]>                            gCtrlBindings;
+extern const VmPtr<VmPtr<padbuttons_t[NUM_CTRL_BINDS]>[MAXPLAYERS]>         gpPlayerCtrlBindings;
+extern const padbuttons_t                                                   gBtnMasks[NUM_BINDABLE_BTNS];
+extern const VmPtr<texture_t>                                               gTex_STATUS;
+extern const VmPtr<texture_t>                                               gTex_PAUSE;
+extern const VmPtr<texture_t>                                               gTex_LOADING;
+extern const VmPtr<texture_t>                                               gTex_NETERR;
+extern const VmPtr<texture_t>                                               gTex_CONNECT;
 
 void I_Main() noexcept;
 void I_PSXInit() noexcept;

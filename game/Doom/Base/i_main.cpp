@@ -137,8 +137,19 @@ const VmPtr<uint32_t> gNumFramesDrawn(0x80077C10);
 const VmPtr<uint32_t> gCurPlayerIndex(0x80077618);
 
 // Control related stuff
-const VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>                         gBtnBindings(0x80073E0C);
-const VmPtr<VmPtr<padbuttons_t[NUM_PAD_BINDINGS]>[MAXPLAYERS]>      gpPlayerBtnBindings(0x80077FC8);
+const VmPtr<padbuttons_t[NUM_CTRL_BINDS]>                       gCtrlBindings(0x80073E0C);
+const VmPtr<VmPtr<padbuttons_t[NUM_CTRL_BINDS]>[MAXPLAYERS]>    gpPlayerCtrlBindings(0x80077FC8);
+
+const padbuttons_t gBtnMasks[NUM_BINDABLE_BTNS] = {
+    PADRup,         // bindablebtn_triangle
+    PADRright,      // bindablebtn_circle
+    PADRdown,       // bindablebtn_cross
+    PADRleft,       // bindablebtn_square
+    PADL1,          // bindablebtn_l1
+    PADR1,          // bindablebtn_r1
+    PADL2,          // bindablebtn_l2
+    PADR2           // bindablebtn_r2
+};
 
 // The main UI texture atlas for the game.
 // This is loaded into the 1st available texture page and kept loaded at all times after that.
@@ -1062,7 +1073,7 @@ loc_80034884:
     v0 = lbu(v0 + 0x7604);                              // Load from: gStartGameType (80077604)
     v1 = *gStartSkill;
     a1 = (uint8_t) *gStartMapOrEpisode;
-    a0 = gBtnBindings;
+    a0 = gCtrlBindings;
     at = 0x80070000;                                    // Result = 80070000
     sb(v0, at + 0x7FB1);                                // Store to: gNetOutputPacket[1] (80077FB1)
     at = 0x80070000;                                    // Result = 80070000
@@ -1095,12 +1106,12 @@ loc_80034928:
     if (v0 == 0) goto loc_80034928;
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x7EAC);                               // Load from: gNetInputPacket[4] (80077EAC)
-    v0 = gBtnBindings;
+    v0 = gCtrlBindings;
     at = 0x80070000;                                    // Result = 80070000
-    gpPlayerBtnBindings[0] = v0;
+    gpPlayerCtrlBindings[0] = v0;
     I_NetButtonsToLocal();
     at = 0x80070000;                                    // Result = 80070000
-    gpPlayerBtnBindings[1] = v0;
+    gpPlayerCtrlBindings[1] = v0;
     goto loc_80034A44;
 loc_8003496C:
     sw(v0, gp + 0x62C);                                 // Store to: gbDidAbortGame (80077C0C)
@@ -1127,9 +1138,9 @@ loc_8003499C:
     v1 = lbu(v1 + 0x7EAA);                              // Load from: gNetInputPacket[2] (80077EAA)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lbu(a1 + 0x7EAB);                              // Load from: gNetInputPacket[3] (80077EAB)
-    s0 = gBtnBindings;
+    s0 = gCtrlBindings;
     at = 0x80070000;                                    // Result = 80070000
-    gpPlayerBtnBindings[1] = s0;
+    gpPlayerCtrlBindings[1] = s0;
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7604);                                // Store to: gStartGameType (80077604)
     *gStartSkill = (skill_t) v1;

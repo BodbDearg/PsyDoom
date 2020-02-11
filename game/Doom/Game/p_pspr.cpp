@@ -767,7 +767,7 @@ loc_800203A8:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
     v0 <<= 2;
-    at = ptrToVmAddr(&gpPlayerBtnBindings[0]);
+    at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
     at += v0;
     v1 = lw(at);
     at = 0x80070000;                                    // Result = 80070000
@@ -819,7 +819,7 @@ void A_ReFire() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
     v0 <<= 2;
-    at = ptrToVmAddr(&gpPlayerBtnBindings[0]);
+    at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
     at += v0;
     v1 = lw(at);
     at = 0x80070000;                                    // Result = 80070000
@@ -1995,7 +1995,7 @@ void A_CloseShotgun2() noexcept {
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
     v0 <<= 2;
-    at = ptrToVmAddr(&gpPlayerBtnBindings[0]);
+    at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
     at += v0;
     v1 = lw(at);
     at = 0x80070000;                                    // Result = 80070000

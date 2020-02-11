@@ -9,7 +9,23 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
+#include "o_main.h"
 #include "PsxVm/PsxVm.h"
+
+// Names for all the control bindings
+static const char gCtrlBindingNames[NUM_CTRL_BINDS][16] = {
+    { "Attack"              },
+    { "Use"                 },
+    { "Strafe On"           },
+    { "Speed"               },
+    { "Strafe Left"         },
+    { "Strafe Right"        },
+    { "Weapon Backward"     },
+    { "Weapon Forward"      }
+};
+
+// Graphic containing sprites for all of the 8 bindable buttons
+const VmPtr<texture_t> gTex_BUTTONS(0x80097AD0);
 
 void START_ControlsScreen() noexcept {
     sp -= 0x18;
@@ -143,7 +159,7 @@ loc_80037B0C:
     a0 = 0;                                             // Result = 00000000
     v0 = gCursorPos[0];
     v0 <<= 2;
-    at = gBtnBindings;
+    at = gCtrlBindings;
     at += v0;
     sw(a2, at);
     a1 = 0x17;
@@ -155,7 +171,7 @@ loc_80037B34:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80037B6C;
     }
-    a0 = gBtnBindings;
+    a0 = gCtrlBindings;
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x3E2C;                                       // Result = DefaultBtnBinding_Attack (80073E2C)
     a2 = 0x20;
@@ -173,139 +189,94 @@ loc_80037B6C:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Renders the control configuration screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void DRAW_ControlsScreen() noexcept {
-    sp -= 0x38;
-    sw(ra, sp + 0x34);
-    sw(s4, sp + 0x30);
-    sw(s3, sp + 0x2C);
-    sw(s2, sp + 0x28);
-    sw(s1, sp + 0x24);
-    sw(s0, sp + 0x20);
+    // Increment the frame count for the texture cache and draw the background using the 'MARB01' sprite
     I_IncDrawnFrameCount();
-    s1 = 0;                                             // Result = 00000000
-    s0 = 0;                                             // Result = 00000000
-loc_80037BAC:
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7AB0;                                       // Result = gTex_MARB01[0] (80097AB0)
-    a1 = s0 << 6;
-    a2 = s1 << 6;
-    a3 = gPaletteClutIds[MAINPAL];
-    s0++;
-    _thunk_I_CacheAndDrawSprite();
-    v0 = (i32(s0) < 4);
-    if (v0 != 0) goto loc_80037BAC;
-    s1++;                                               // Result = 00000001
-    v0 = (i32(s1) < 4);                                 // Result = 00000001
-    s0 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_80037BAC;
-    a0 = -1;                                            // Result = FFFFFFFF
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0x15C8;                                       // Result = STR_Configuration[0] (800115C8)
-    a1 = 0x14;                                          // Result = 00000014
-    _thunk_I_DrawString();
-    a2 = 0xC;
-    s2 = 0;
-    s4 = 0x80070000;                                    // Result = 80070000
-    s4 += 0x3DEC;                                       // Result = gBtnSprite_Triangle_ButtonMask (80073DEC)
-    s3 = 0x80090000;                                    // Result = 80090000
-    s3 += 0x7ADA;                                       // Result = gTex_BUTTONS[2] (80097ADA)
-    s1 = 0x2D;                                          // Result = 0000002D
-    s0 = gBtnBindings;
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lhu(a0 - 0x6B0E);                              // Load from: gTex_STATUS[2] (800A94F2)
-    v0 = 0xC0;
-    sw(v0, sp + 0x14);
-    v0 = 0x10;
-    sw(v0, sp + 0x18);
-    v0 = 0x12;
-    sw(v0, sp + 0x1C);
-    v0 = gCursorPos[0];
-    a1 = 0x800B0000;                                    // Result = 800B0000
-    a1 = lh(a1 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    a3 = v0 << 2;
-    a3 += v0;
-    a3 <<= 2;
-    v0 = lw(gp + 0xBF8);                                // Load from: gCursorFrame (800781D8)
-    a3 += 0x2B;
-    v0 <<= 4;
-    v0 += 0x84;
-    sw(v0, sp + 0x10);
-    _thunk_I_DrawSprite();
-loc_80037C70:
-    v1 = 0;                                             // Result = 00000000
-    a1 = lw(s0);
-    a0 = s4;                                            // Result = gBtnSprite_Triangle_ButtonMask (80073DEC)
-loc_80037C7C:
-    v0 = lw(a0);
-    if (a1 == v0) goto loc_80037C9C;
-    v1++;                                               // Result = 00000001
-    v0 = (i32(v1) < 8);                                 // Result = 00000001
-    a0 += 4;                                            // Result = gBtnSprite_Circle_ButtonMask (80073DF0)
-    if (v0 != 0) goto loc_80037C7C;
-loc_80037C9C:
-    v0 = gCursorPos[0];
-    a2 = 0x26;                                          // Result = 00000026
-    if (v0 != s2) goto loc_80037CC4;
-    v0 = *gTicCon;
-    v0 &= 8;
-    if (v0 != 0) goto loc_80037CFC;
-loc_80037CC4:
-    a3 = s1;
-    v0 = 0x10;                                          // Result = 00000010
-    v1 <<= 4;                                           // Result = 00000000
-    sw(v0, sp + 0x18);
-    sw(v0, sp + 0x1C);
-    a0 = lhu(s3);                                       // Load from: gTex_BUTTONS[2] (80097ADA)
-    a1 = gPaletteClutIds[MAINPAL];
-    v0 = lbu(s3 - 0x2);                                 // Load from: gTex_BUTTONS[2] (80097AD8)
-    t0 = lbu(s3 - 0x1);                                 // Load from: gTex_BUTTONS[2] (80097AD9)
-    v0 += v1;
-    sw(v0, sp + 0x10);
-    sw(t0, sp + 0x14);
-    _thunk_I_DrawSprite();
-loc_80037CFC:
-    s1 += 0x14;
-    s2++;
-    v0 = (i32(s2) < 8);
-    s0 += 4;
-    if (v0 != 0) goto loc_80037C70;
-    s2 = 0;                                             // Result = 00000000
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x3D6C;                                       // Result = STR_MenuOpt_Attack[0] (80073D6C)
-    s0 = 0x2D;                                          // Result = 0000002D
-loc_80037D20:
-    a0 = 0x41;                                          // Result = 00000041
-    a1 = s0;
-    a2 = s1;
-    _thunk_I_DrawString();
-    s1 += 0x10;
-    s2++;
-    v0 = (i32(s2) < 8);
-    s0 += 0x14;
-    if (v0 != 0) goto loc_80037D20;
-    v0 = gCursorPos[0];
-    a0 = 0x41;                                          // Result = 00000041
-    if (v0 != s2) goto loc_80037D6C;
-    v0 = *gTicCon;
-    v0 &= 8;
-    if (v0 != 0) goto loc_80037D88;
-loc_80037D6C:
-    a1 = s2 << 2;
-    a1 += s2;
-    a1 <<= 2;
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7CD4;                                       // Result = STR_Default[0] (80077CD4)
-    a1 += 0x2D;
-    _thunk_I_DrawString();
-loc_80037D88:
+
+    for (int32_t y = 0; y < 4; ++y) {
+        for (int32_t x = 0; x < 4; ++x) {
+            I_CacheAndDrawSprite(*gTex_MARB01, (int16_t) x * 64, (int16_t) y * 64, gPaletteClutIds[MAINPAL]);
+        }
+    }
+
+    // Screen header text
+    I_DrawString(-1, 20, "Configuration");
+
+    // Draw the skull cursor    
+    I_DrawSprite(
+        gTex_STATUS->texPageId,
+        gPaletteClutIds[UIPAL],
+        12,
+        (int16_t) gCursorPos[0] * 20 + 43,
+        M_SKULL_TEX_U + (uint8_t)(*gCursorFrame) * M_SKULL_W,
+        M_SKULL_TEX_V,
+        M_SKULL_W,
+        M_SKULL_H
+    );
+
+    // Draw which button each action is bound to
+    {
+        const padbuttons_t* pCtrlBinding = gCtrlBindings.get();
+        int16_t ypos = 45;
+
+        for (int16_t ctrlBindIdx = 0; ctrlBindIdx < NUM_CTRL_BINDS; ++ctrlBindIdx, ++pCtrlBinding) {
+            // Try to find which button this action is mapped to
+            const padbuttons_t bindingButton = *pCtrlBinding;
+            int16_t bindableBtnIdx = 0;
+
+            {
+                const padbuttons_t* pBtnMask = gBtnMasks;
+
+                while (bindableBtnIdx < NUM_BINDABLE_BTNS) {
+                    if (bindingButton == *pBtnMask) 
+                        break;
+                    
+                    ++pBtnMask;
+                    ++bindableBtnIdx;
+                }
+            }
+
+            // Draw the button, unless the cursor is on it and it is flashing and currently invisible (it's flashed every 8 ticks)
+            if ((gCursorPos[0] != ctrlBindIdx) || ((*gTicCon & 8) == 0)) {
+                constexpr uint8_t BTN_SPRITE_SIZE = 16;
+
+                I_DrawSprite(
+                    gTex_BUTTONS->texPageId,
+                    gPaletteClutIds[MAINPAL],
+                    38,
+                    ypos,
+                    gTex_BUTTONS->texPageCoordX + (uint8_t) bindableBtnIdx * BTN_SPRITE_SIZE,
+                    gTex_BUTTONS->texPageCoordY,
+                    BTN_SPRITE_SIZE,
+                    BTN_SPRITE_SIZE
+                );
+            }
+
+            ypos += 20;
+        } 
+    }
+
+    // Draw the control binding names
+    {
+        int32_t ypos = 45;
+
+        for (int32_t ctrlBindIdx = 0; ctrlBindIdx < NUM_CTRL_BINDS; ++ctrlBindIdx) {
+            I_DrawString(65, ypos, gCtrlBindingNames[ctrlBindIdx]);
+            ypos += 20;
+        }
+    }
+
+    // Draw 'Default' (reset controls to default) menu option
+    constexpr int32_t menuOptIdx = NUM_CTRL_BINDS;
+
+    if ((gCursorPos[0] != menuOptIdx) || ((*gTicCon & 8) == 0)) {
+        I_DrawString(65, NUM_CTRL_BINDS * 20 + 45, "Default");
+    }
+
+    // Finish up the frame
     I_SubmitGpuCmds();
     I_DrawPresent();
-    ra = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x38;
-    return;
 }

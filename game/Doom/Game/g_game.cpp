@@ -464,7 +464,7 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     gbPlayerInGame[0] = true;
 
     if (gameType == gt_single) {
-        gpPlayerBtnBindings[0] = gBtnBindings;
+        gpPlayerCtrlBindings[0] = gCtrlBindings;
         gbPlayerInGame[1] = false;
     } 
     else if (gameType == gt_deathmatch || gameType == gt_coop) {
@@ -564,7 +564,7 @@ loc_80013714:
     sp -= 0x40;
     a0 = sp + 0x10;
     sw(s1, sp + 0x34);
-    s1 = gBtnBindings;
+    s1 = gCtrlBindings;
     a1 = s1;
     v1 = *gpDemoBuffer;
     sw(ra, sp + 0x3C);
