@@ -338,6 +338,9 @@ loc_80032934:
     // TODO: PC-PSX: allow the PC client to exit the app from here
     while (true) {
         // Deliberate infinite loop...
+        #if PC_PSX_DOOM_MODS
+            PcPsx::handleSdlWindowEvents();     // TODO: this is a temp hack to quitting the app after I_Error()
+        #endif
     }
 
     s0 = lw(sp + 0x118);

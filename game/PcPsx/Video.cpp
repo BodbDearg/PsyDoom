@@ -122,7 +122,7 @@ static void copyPsxToSdlFramebuffer() noexcept {
     }
 }
 
-static void handleSdlWindowEvents() noexcept {
+void handleSdlWindowEvents() noexcept {
     // TODO: handle events and maybe move this elsewhere
     SDL_Event event = {};    
 
