@@ -9,6 +9,7 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/p_firesky.h"
+#include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_sky.h"
 #include "m_main.h"
@@ -19,11 +20,15 @@
 #include "Wess/psxcd.h"
 
 // Current position of the DOOM logo.
-// Also adopted by the unused scrolling 'legals' screen for the same purpose.
+// Also adopted by the 'legals' screen for the same purpose.
 const VmPtr<int32_t> gTitleScreenSpriteY(0x80078190);
 
 // The DOOM logo texture
-const VmPtr<texture_t> gTex_TITLE(0x80097A30);
+static const VmPtr<texture_t> gTex_TITLE(0x80097A30);
+
+// Controls how frequently the title sprite and fire sky update and move
+static const VmPtr<int32_t> gVBlanksUntilTitleSprMove(0x80077C84);
+static const VmPtr<int32_t> gVBlanksUntilTitleFireMove(0x80077C88);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialization logic for the main title screen
@@ -92,91 +97,77 @@ void STOP_Title() noexcept {
     psxcd_stop();
 }
 
-void TIC_Title() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 == 0) goto loc_800352B0;
-    v0 = 9;                                             // Result = 00000009
-    goto loc_800353FC;
-loc_800352B0:
-    v0 = *gCurPlayerIndex;
-    v1 = lw(gp + 0x6A4);                                // Load from: gVBlanksUntilTitleSprMove (80077C84)
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    v0 = lw(at);
-    v1 -= v0;
-    sw(v1, gp + 0x6A4);                                 // Store to: gVBlanksUntilTitleSprMove (80077C84)
-    v0 = 2;                                             // Result = 00000002
-    if (i32(v1) > 0) goto loc_80035310;
-    v1 = *gTitleScreenSpriteY;
-    sw(v0, gp + 0x6A4);                                 // Store to: gVBlanksUntilTitleSprMove (80077C84)
-    v0 = v1 - 1;
-    if (v1 == 0) goto loc_80035310;
-    *gTitleScreenSpriteY = v0;
-    if (v0 != 0) goto loc_80035310;
-    v0 = *gTicCon;
-    *gMenuTimeoutStartTicCon = v0;
-loc_80035310:
-    v0 = *gCurPlayerIndex;
-    v1 = lw(gp + 0x6A8);                                // Load from: gVBlanksUntilTitleFireMove (80077C88)
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    v0 = lw(at);
-    v1 -= v0;
-    sw(v1, gp + 0x6A8);                                 // Store to: gVBlanksUntilTitleFireMove (80077C88)
-    {
-        const bool bJump = (i32(v1) > 0);
-        v1 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_800353C8;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update logic for the main title screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t TIC_Title() noexcept {
+    // End the title screen if any buttons are pressed
+    if (gTicButtons[0] != 0)
+        return ga_exit;
+    
+    // Decrement the time until the title sprite moves
+    const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[*gCurPlayerIndex];
+    *gVBlanksUntilTitleSprMove -= elapsedVBlanks;
+    
+    // If it is time to move the title sprite then do that.
+    // Stop the title sprite also once it reaches the top of the screen and begin the menu timeout counter.
+    if (*gVBlanksUntilTitleSprMove <= 0) {
+        *gVBlanksUntilTitleSprMove = 2;
+
+        if (*gTitleScreenSpriteY != 0) {
+            *gTitleScreenSpriteY -= 1;
+
+            if (*gTitleScreenSpriteY == 0) {
+                *gMenuTimeoutStartTicCon = *gTicCon;    // Start the timeout process...
+            }
+        }
     }
-    v0 = *gTitleScreenSpriteY;
-    sw(v1, gp + 0x6A8);                                 // Store to: gVBlanksUntilTitleFireMove (80077C88)
-    v1 = (i32(v0) < 0x32);
-    v0 ^= 1;
-    v0 &= 1;
-    v1 &= v0;
-    if (v1 == 0) goto loc_800353B8;
-    v0 = *gpSkyTexture;
-    v0 = lh(v0 + 0x10);
-    v1 = *gpLumpCache;
-    v0 <<= 2;
-    v0 += v1;
-    a1 = lw(v0);
-    v0 = lbu(a1 + 0x1FC8);
-    a0 = v0 - 1;
-    v1 = 0x3F;                                          // Result = 0000003F
-    if (i32(a0) >= 0) goto loc_800353A4;
-    a0 = 0;                                             // Result = 00000000
-loc_800353A4:
-    v0 = a1 + 0x2007;
-loc_800353A8:
-    sb(a0, v0);
-    v1--;
-    v0--;
-    if (i32(v1) >= 0) goto loc_800353A8;
-loc_800353B8:
-    P_UpdateFireSky(**gpSkyTexture);
-loc_800353C8:
-    v1 = *gTitleScreenSpriteY;
-    v0 = 0;                                             // Result = 00000000
-    if (v1 != 0) goto loc_800353FC;
-    v0 = *gTicCon;
-    v1 = *gMenuTimeoutStartTicCon;
-    v0 -= v1;
-    v0 = (i32(v0) < 0x708);
-    v0 ^= 1;
-    v0 = -v0;
-    v0 &= 7;
-loc_800353FC:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Update the fire sky if it is time to do that
+    *gVBlanksUntilTitleFireMove -= elapsedVBlanks;
+    
+    if (*gVBlanksUntilTitleFireMove <= 0) {        
+        *gVBlanksUntilTitleFireMove = 2;
+
+        // Once the title screen sprite is above a certain height, begin to fizzle out the fire.
+        // Do this for every even y position that the title screen sprite is at.
+        // Eventually it will settle at position '0' so we will do this all the time then and completely put out the fire.
+        if ((*gTitleScreenSpriteY < 50) && ((*gTitleScreenSpriteY & 1) == 0)) {
+            // Get the pixels for the last row in the fire sky
+            texture_t& skyTex = **gpSkyTexture;
+            uint8_t* const pLumpData = (uint8_t*)(*gpLumpCache)[skyTex.lumpNum].get();
+            uint8_t* const pFSkyRows = pLumpData + 8;   // TODO: comment what is being skipped
+            uint8_t* const pFSkyLastRow = pFSkyRows + FIRESKY_W * (FIRESKY_H - 1);
+
+            // Sample the first pixel of the last row (the fire generator row) and decrease its 'temperature' by 1.
+            // We will apply this temperature to the entire last row of the fire sky.
+            uint8_t newFireTemp = pFSkyLastRow[0];
+
+            if (newFireTemp > 0) {
+                --newFireTemp;
+            }
+
+            // Apply the new temperature to the generator row of the fire to decrease it's intensity
+            for (int32_t x = 0; x < FIRESKY_W; ++x) {
+                pFSkyLastRow[x] = newFireTemp;
+            }
+        }
+
+        // Run the fire sky simulation
+        P_UpdateFireSky(**gpSkyTexture);
+    }
+    
+    // If the title sprite has not reached the top of the screen then we don't ever timeout
+    if (*gTitleScreenSpriteY != 0)
+        return ga_nothing;
+    
+    // Once the title sprite reaches the top of the screen, timeout after a while...
+    const bool bHasTimedOut = (*gTicCon - *gMenuTimeoutStartTicCon >= 1800);
+    return (bHasTimedOut) ? ga_timeout : ga_nothing;
+}
+
+void _thunk_TIC_Title() noexcept {
+    v0 = TIC_Title();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

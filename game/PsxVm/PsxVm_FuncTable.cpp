@@ -290,7 +290,7 @@ extern void STOP_Legals() noexcept;
 extern void _thunk_TIC_Legals() noexcept;
 extern void START_Title() noexcept;
 extern void STOP_Title() noexcept;
-extern void TIC_Title() noexcept;
+extern void _thunk_TIC_Title() noexcept;
 extern void RunMenu() noexcept;
 extern void M_Start() noexcept;
 extern void M_Stop() noexcept;
@@ -1156,7 +1156,7 @@ namespace PsxVm {
         { 0x80034FCC, &_thunk_TIC_Legals },
         { 0x80035098, &START_Title },
         { 0x80035268, &STOP_Title },
-        { 0x80035294, &TIC_Title },
+        { 0x80035294, &_thunk_TIC_Title },
         { 0x80035B24, &RunMenu },
         { 0x80035C94, &M_Start },
         { 0x80035E40, &M_Stop },

@@ -108,7 +108,7 @@ gameaction_t RunLegals() noexcept {
 // Runs the title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunTitle() noexcept {
-    return MiniLoop(START_Title, STOP_Title, TIC_Title, DRAW_Title);
+    return MiniLoop(START_Title, STOP_Title, _thunk_TIC_Title, DRAW_Title);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
