@@ -47,10 +47,40 @@ enum : int32_t {
     NUM_BINDABLE_BTNS
 };
 
+// Button bits/masks for gamepad buttons
+static constexpr uint16_t PAD_UP        = 0x1000;
+static constexpr uint16_t PAD_DOWN      = 0x4000;
+static constexpr uint16_t PAD_LEFT      = 0x8000;
+static constexpr uint16_t PAD_RIGHT     = 0x2000;
+static constexpr uint16_t PAD_TRIANGLE  = 0x10;
+static constexpr uint16_t PAD_CROSS     = 0x40;
+static constexpr uint16_t PAD_SQUARE    = 0x80;
+static constexpr uint16_t PAD_CIRCLE    = 0x20;
+static constexpr uint16_t PAD_L1        = 0x4;
+static constexpr uint16_t PAD_L2        = 0x1;
+static constexpr uint16_t PAD_R1        = 0x8;
+static constexpr uint16_t PAD_R2        = 0x2;
+static constexpr uint16_t PAD_START     = 0x800;
+static constexpr uint16_t PAD_SELECT    = 0x100;
+
+static constexpr uint16_t PAD_DIRECTION = (
+    PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT
+);
+
+static constexpr uint16_t PAD_ACTION = (
+    PAD_TRIANGLE | PAD_CROSS | PAD_SQUARE | PAD_CIRCLE
+);
+
+static constexpr uint16_t PAD_SHOULDER_BTNS = (
+    PAD_L1 | PAD_L2 | PAD_R1 | PAD_R2
+);
+
+static constexpr uint16_t PAD_ANY = (
+    PAD_DIRECTION | PAD_ACTION | PAD_SHOULDER_BTNS | PAD_START | PAD_SELECT
+);
+
 // Type for a pressed button mask.
 // Certain bits correspond to certain buttons on the PSX digital controller.
-//
-// TODO: create constants for available button bits. 
 typedef uint32_t padbuttons_t;
 
 extern const VmPtr<uint32_t>                                                gTCacheFillPage;

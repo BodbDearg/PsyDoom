@@ -43,18 +43,18 @@ struct CheatSequence {
 };
 
 static constexpr CheatSequence CHEAT_SEQUENCES[] = {
-    { PADRup, PADRup, PADL2, PADR2, PADL2, PADR2, PADR1, PADRleft },                                // CHT_SEQ_SHOW_ALL_MAP_LINES
-    { PADRup, PADRup, PADL2, PADR2, PADL2, PADR2, PADR1, PADRright },                               // CHT_SEQ_SHOW_ALL_MAP_THINGS
-    { PADLdown, PADL2, PADRleft, PADR1, PADLright, PADL1, PADLleft, PADRright },                    // CHT_SEQ_GOD_MODE
-    { PADRdown, PADRup, PADL1, PADLup, PADLdown, PADR2, PADLleft, PADLleft },                       // CHT_SEQ_WEAPONS_AND_AMMO
-    { PADLup, PADLup, PADLup, PADLup, PADLup, PADLup, PADLup, PADR1 },                              // PSX: CHT_SEQ_UNUSED_04, PC-PSX: CHT_SEQ_NOCLIP
-    { PADLright, PADLleft, PADR2, PADR1, PADRup, PADL1, PADRright, PADRdown },                      // CHT_SEQ_LEVEL_WARP
-    { PADLleft, PADLleft, PADLleft, PADLleft, PADLleft, PADLleft, PADLleft, PADLleft },             // CHT_SEQ_UNUSED_06
-    { PADRup, PADRleft, PADLup, PADLleft, PADLdown, PADLright, PADRdown, PADRright },               // PSX: CHT_SEQ_UNUSED_07, PC-PSX: CHT_SEQ_VRAM_VIEWER
-    { PADRdown, PADRdown, PADRdown, PADRdown, PADRdown, PADRdown, PADRdown, PADRdown },             // CHT_SEQ_UNUSED_08
-    { PADL1, PADR2, PADL2, PADR1, PADLright, PADRup, PADRdown, PADLright },                         // CHT_SEQ_XRAY_VISION
-    { PADRright, PADRright, PADRright, PADRright, PADRright, PADRright, PADRright, PADRright },     // CHT_SEQ_UNUSED_10
-    { PADRleft, PADRleft, PADRleft, PADRleft, PADRleft, PADRleft, PADRleft, PADRleft }              // CHT_SEQ_UNUSED_11
+    { PAD_TRIANGLE, PAD_TRIANGLE, PAD_L2,     PAD_R2,     PAD_L2,       PAD_R2,       PAD_R1,     PAD_SQUARE },     // CHT_SEQ_SHOW_ALL_MAP_LINES
+    { PAD_TRIANGLE, PAD_TRIANGLE, PAD_L2,     PAD_R2,     PAD_L2,       PAD_R2,       PAD_R1,     PAD_CIRCLE },     // CHT_SEQ_SHOW_ALL_MAP_THINGS
+    { PAD_DOWN,     PAD_L2,       PAD_SQUARE, PAD_R1,     PAD_RIGHT,    PAD_L1,       PAD_LEFT,   PAD_CIRCLE },     // CHT_SEQ_GOD_MODE
+    { PAD_CROSS,    PAD_TRIANGLE, PAD_L1,     PAD_UP,     PAD_DOWN,     PAD_R2,       PAD_LEFT,   PAD_LEFT   },     // CHT_SEQ_WEAPONS_AND_AMMO
+    { PAD_UP,       PAD_UP,       PAD_UP,     PAD_UP,     PAD_UP,       PAD_UP,       PAD_UP,     PAD_R1     },     // PC-PSX: CHT_SEQ_NOCLIP (PSX: CHT_SEQ_UNUSED_04)
+    { PAD_RIGHT,    PAD_LEFT,     PAD_R2,     PAD_R1,     PAD_TRIANGLE, PAD_L1,       PAD_CIRCLE, PAD_CROSS  },     // CHT_SEQ_LEVEL_WARP
+    { PAD_LEFT,     PAD_LEFT,     PAD_LEFT,   PAD_LEFT,   PAD_LEFT,     PAD_LEFT,     PAD_LEFT,   PAD_LEFT   },     // CHT_SEQ_UNUSED_06
+    { PAD_TRIANGLE, PAD_SQUARE,   PAD_UP,     PAD_LEFT,   PAD_DOWN,     PAD_RIGHT,    PAD_CROSS,  PAD_CIRCLE },     // PC-PSX: CHT_SEQ_VRAM_VIEWER (PSX: CHT_SEQ_UNUSED_07)
+    { PAD_CROSS,    PAD_CROSS,    PAD_CROSS,  PAD_CROSS,  PAD_CROSS,    PAD_CROSS,    PAD_CROSS,  PAD_CROSS  },     // CHT_SEQ_UNUSED_08
+    { PAD_L1,       PAD_R2,       PAD_L2,     PAD_R1,     PAD_RIGHT,    PAD_TRIANGLE, PAD_CROSS,  PAD_RIGHT  },     // CHT_SEQ_XRAY_VISION
+    { PAD_CIRCLE,   PAD_CIRCLE,   PAD_CIRCLE, PAD_CIRCLE, PAD_CIRCLE,   PAD_CIRCLE,   PAD_CIRCLE, PAD_CIRCLE },     // CHT_SEQ_UNUSED_10
+    { PAD_SQUARE,   PAD_SQUARE,   PAD_SQUARE, PAD_SQUARE, PAD_SQUARE,   PAD_SQUARE,   PAD_SQUARE, PAD_SQUARE }      // CHT_SEQ_UNUSED_11
 };
 
 static_assert(NUM_CHEAT_SEQ == C_ARRAY_SIZE(CHEAT_SEQUENCES));
@@ -200,7 +200,7 @@ void P_CheckCheats() noexcept {
         const uint32_t oldPadBtns = gOldTicButtons[playerIdx];
         
         // Toggling pause?
-        if (padBtnJustPressed(PADstart, padBtns, oldPadBtns)) {
+        if (padBtnJustPressed(PAD_START, padBtns, oldPadBtns)) {
             *gbGamePaused = (!*gbGamePaused);
 
             // Handle the game being paused, if just pausing
@@ -250,7 +250,7 @@ void P_CheckCheats() noexcept {
 
         // Showing the options menu if the game is paused and the options button has just been pressed.
         // Otherwise do not do any of the logic below...
-        if ((!padBtnJustPressed(PADselect, padBtns, oldPadBtns)) || (!*gbGamePaused))
+        if ((!padBtnJustPressed(PAD_SELECT, padBtns, oldPadBtns)) || (!*gbGamePaused))
             continue;
         
         // About to open up the options menu, disable these player cheats and present what we have to the screen
@@ -295,7 +295,7 @@ void P_CheckCheats() noexcept {
         *gVBlanksUntilMenuMove -= gPlayersElapsedVBlanks[0];
 
         if (*gVBlanksUntilMenuMove <= 0) {
-            if ((padBtns & PADLleft) != 0) {
+            if ((padBtns & PAD_LEFT) != 0) {
                 *gMapNumToCheatWarpTo -= 1;
 
                 if (*gMapNumToCheatWarpTo <= 0) {
@@ -304,7 +304,7 @@ void P_CheckCheats() noexcept {
                 
                 *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
             }
-            else if ((padBtns & PADLright) != 0) {
+            else if ((padBtns & PAD_RIGHT) != 0) {
                 *gMapNumToCheatWarpTo += 1;
 
                 if (*gMapNumToCheatWarpTo > MAX_CHEAT_WARP_LEVEL) {
@@ -317,7 +317,7 @@ void P_CheckCheats() noexcept {
 
         // Are we initiating the the actual warp?
         if (padBtns != oldPadBtns) {
-            if (padBtns & (PADRup|PADRdown|PADRleft|PADRright)) {
+            if (padBtns & PAD_ACTION) {
                 // Button pressed to initiate the level warp - kick it off!
                 *gGameAction = ga_warped;
                 player.cheats &= (~CF_WARPMENU);
@@ -333,14 +333,14 @@ void P_CheckCheats() noexcept {
     // If so then do the controls for that and exit.
     if (player.cheats & CF_VRAMVIEWER) {
         if (padBtns != oldPadBtns) {
-            if (padBtns & PADLleft) {
+            if (padBtns & PAD_LEFT) {
                 --*gVramViewerTexPage;
 
                 if (*gVramViewerTexPage < 0) {
                     *gVramViewerTexPage = 0;
                 }
             }
-            else if (padBtns & PADLright) {
+            else if (padBtns & PAD_RIGHT) {
                 ++*gVramViewerTexPage;
 
                 if (*gVramViewerTexPage > 10) {

@@ -417,7 +417,7 @@ gameaction_t MiniLoop(
             // Abort demo recording?
             exitAction = ga_exitdemo;
 
-            if (padBtns & PADstart)
+            if (padBtns & PAD_START)
                 break;
             
             // Is the demo recording too big or are we at the end of the largest possible demo size?

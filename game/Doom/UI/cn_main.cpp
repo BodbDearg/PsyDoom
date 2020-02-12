@@ -24,169 +24,136 @@ static const char gCtrlBindingNames[NUM_CTRL_BINDS][16] = {
     { "Weapon Forward"      }
 };
 
+// The default control bindings for all actions
+static const padbuttons_t gDefaultCtrlBindings[NUM_CTRL_BINDS] = {
+    PAD_TRIANGLE,   // cbind_attack
+    PAD_CIRCLE,     // cbind_use
+    PAD_CROSS,      // cbind_strafe
+    PAD_SQUARE,     // cbind_speed
+    PAD_L1,         // cbind_strafe_left
+    PAD_R1,         // cbind_strafe_right
+    PAD_L2,         // cbind_weapon_back
+    PAD_R2          // cbind_weapon_forward
+};
+
 // Graphic containing sprites for all of the 8 bindable buttons
 const VmPtr<texture_t> gTex_BUTTONS(0x80097AD0);
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Startup/initialization logic for the control configuration screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void START_ControlsScreen() noexcept {
-    sp -= 0x18;
     a0 = 0;
-    sw(ra, sp + 0x10);
     a1 = sfx_pistol;
     S_StartSound();
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7AD0;                                       // Result = gTex_BUTTONS[0] (80097AD0)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7C5C;                                       // Result = STR_LumpName_BUTTONS[0] (80077C5C)
-    sw(0, gp + 0xBF8);                                  // Store to: gCursorFrame (800781D8)
+
+    *gCursorFrame = 0;
     gCursorPos[0] = 0;
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    I_LoadAndCacheTexLump(*gTex_BUTTONS, "BUTTONS", 0);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shutdown/cleanup logic for the control configuration screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void STOP_ControlsScreen() noexcept {
-    sp -= 0x18;
     a0 = 0;
-    sw(ra, sp + 0x10);
     a1 = sfx_pistol;
     S_StartSound();
-    v0 = 3;                                             // Result = 00000003
-    gCursorPos[0] = v0;
-    ra = lw(sp + 0x10);
-    sp += 0x18;
+
+    gCursorPos[0] = 3;
 }
 
-void TIC_ControlsScreen() noexcept {
-    v1 = *gGameTic;
-    v0 = *gPrevGameTic;
-    sp -= 0x20;
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = (i32(v0) < i32(v1));
-    sw(s0, sp + 0x10);
-    if (v0 == 0) goto loc_800379F0;
-    v0 = v1 & 3;
-    if (v0 != 0) goto loc_800379F0;
-    v0 = lw(gp + 0xBF8);                                // Load from: gCursorFrame (800781D8)
-    v0 ^= 1;
-    sw(v0, gp + 0xBF8);                                 // Store to: gCursorFrame (800781D8)
-loc_800379F0:
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 = lw(s0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
-    s1 = 0x80080000;                                    // Result = 80080000
-    s1 = lw(s1 - 0x7DEC);                               // Load from: gOldTicButtons[0] (80078214)
-    v0 = s0 & 0xF000;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s0 & 0x900;
-        if (bJump) goto loc_80037A18;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update logic for the control configuration screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t TIC_ControlsScreen() noexcept {
+    // Animate the cursor every so often
+    if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 3) == 0)) {
+        *gCursorFrame ^= 1;
     }
     
-    *gVBlanksUntilMenuMove = 0;
-    goto loc_80037AB8;
-loc_80037A18:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7EF8;                                       // Result = gVBlanksUntilMenuMove (80077EF8)
-    v0 = *gVBlanksUntilMenuMove;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7FBC);                               // Load from: gPlayersElapsedVBlanks[0] (80077FBC)
-    v0 -= v1;
-    *gVBlanksUntilMenuMove = v0;
-    if (i32(v0) > 0) goto loc_80037AB4;
-    *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
-    v0 = s0 & 0x4000;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 & 0x1000;
-        if (bJump) goto loc_80037A7C;
+    // Do menu up/down movements
+    const uint32_t ticButtons = gTicButtons[0];
+    
+    if ((ticButtons & PAD_DIRECTION) == 0) {
+        // If no buttons are currently pressed then you can move immediately next time they are
+        *gVBlanksUntilMenuMove = 0;
+    } else {
+        // Check to see if we can move up/down in the menu now.
+        // The delay controls how often movement is repeated when up or down is held.
+        *gVBlanksUntilMenuMove -= gPlayersElapsedVBlanks[0];
+
+        if (*gVBlanksUntilMenuMove <= 0) {
+            *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
+
+            if (ticButtons & PAD_DOWN) {
+                // Down is pressed and movement is allowed: move, wraparound (if required) and play a sound
+                gCursorPos[0]++;
+                
+                if (gCursorPos[0] > NUM_BINDABLE_BTNS) {
+                    gCursorPos[0] = 0;
+                }
+
+                a0 = 0;
+                a1 = sfx_pstop;
+                S_StartSound();
+            } else if (ticButtons & PAD_UP) {
+                // Up is pressed and movement is allowed: move, wraparound (if required) and play a sound
+                gCursorPos[0]--;
+                
+                if (gCursorPos[0] < 0) {
+                    gCursorPos[0] = NUM_BINDABLE_BTNS;
+                }
+
+                a0 = 0;
+                a1 = sfx_pstop;
+                S_StartSound();
+            }
+        }
     }
-    v1 = gCursorPos;
-    v0 = gCursorPos[0];
-    v0++;
-    sw(v0, v1);                                         // Store to: gCursorPos (80078000)
-    v0 = (i32(v0) < 9);
-    a0 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_80037AAC;
-    sw(0, v1);                                          // Store to: gCursorPos (80078000)
-    goto loc_80037AAC;
-loc_80037A7C:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 & 0x900;
-        if (bJump) goto loc_80037AB8;
+
+    // Exit out of the controls screen if start or select are pressed
+    if (ticButtons & (PAD_START | PAD_SELECT))
+        return ga_exit;
+
+    // Check for inputs to change control bindings if no new buttons are pressed just finish up now
+    if (ticButtons == gOldTicButtons[0]) 
+        return ga_nothing;
+    
+    if (gCursorPos[0] < 8) {
+        // Skull cursor is over a bindable action slot. 
+        // See if any of the buttons which are bindable have been pressed:
+        for (int16_t btnIdx = 0; btnIdx < NUM_BINDABLE_BTNS; ++btnIdx) {
+            const uint32_t btnMask = gBtnMasks[btnIdx];
+
+            if (ticButtons & btnMask) {
+                // This button has been pressed - assign it to the current action:
+                gCtrlBindings[gCursorPos[0]] = btnMask;
+
+                // Play a sound for the assignment and finish up button search
+                a0 = 0;
+                a1 = sfx_swtchx;
+                S_StartSound();
+                break;
+            }
+        }
+    } 
+    else if (ticButtons & PAD_ACTION) {
+        // One of the right action buttons is pressed on the default configuration slot.
+        // Restore the control bindings to their defaults and play a sound to acknowledge the change:
+        D_memcpy(gCtrlBindings.get(), gDefaultCtrlBindings, sizeof(gDefaultCtrlBindings));
+        
+        a0 = 0;
+        a1 = sfx_swtchx;
+        S_StartSound();
     }
-    v1 = gCursorPos;
-    v0 = gCursorPos[0];
-    v0--;
-    sw(v0, v1);                                         // Store to: gCursorPos (80078000)
-    if (i32(v0) >= 0) goto loc_80037AA8;
-    v0 = 8;                                             // Result = 00000008
-    sw(v0, v1);                                         // Store to: gCursorPos (80078000)
-loc_80037AA8:
-    a0 = 0;                                             // Result = 00000000
-loc_80037AAC:
-    a1 = sfx_pstop;
-    S_StartSound();
-loc_80037AB4:
-    v0 = s0 & 0x900;
-loc_80037AB8:
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 9;                                         // Result = 00000009
-        if (bJump) goto loc_80037B6C;
-    }
-    v0 = 0;                                             // Result = 00000000
-    if (s0 == s1) goto loc_80037B6C;
-    v0 = gCursorPos[0];
-    v0 = (i32(v0) < 8);
-    a0 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_80037B34;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 += 0x3DEC;                                       // Result = gBtnSprite_Triangle_ButtonMask (80073DEC)
-loc_80037AE4:
-    a2 = lw(v1);
-    v0 = s0 & a2;
-    a0++;
-    if (v0 != 0) goto loc_80037B0C;
-    v0 = (i32(a0) < 8);
-    v1 += 4;
-    if (v0 != 0) goto loc_80037AE4;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80037B6C;
-loc_80037B0C:
-    a0 = 0;                                             // Result = 00000000
-    v0 = gCursorPos[0];
-    v0 <<= 2;
-    at = gCtrlBindings;
-    at += v0;
-    sw(a2, at);
-    a1 = 0x17;
-    goto loc_80037B60;
-loc_80037B34:
-    v0 = s0 & 0xF0;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80037B6C;
-    }
-    a0 = gCtrlBindings;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x3E2C;                                       // Result = DefaultBtnBinding_Attack (80073E2C)
-    a2 = 0x20;
-    _thunk_D_memcpy();
-    a0 = 0;
-    a1 = sfx_swtchx;
-loc_80037B60:
-    S_StartSound();
-    v0 = 0;
-loc_80037B6C:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    return ga_nothing;
+}
+
+void _thunk_TIC_ControlsScreen() noexcept {
+    v0 = TIC_ControlsScreen();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

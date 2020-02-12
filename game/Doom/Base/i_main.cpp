@@ -141,14 +141,14 @@ const VmPtr<padbuttons_t[NUM_CTRL_BINDS]>                       gCtrlBindings(0x
 const VmPtr<VmPtr<padbuttons_t[NUM_CTRL_BINDS]>[MAXPLAYERS]>    gpPlayerCtrlBindings(0x80077FC8);
 
 const padbuttons_t gBtnMasks[NUM_BINDABLE_BTNS] = {
-    PADRup,         // bindablebtn_triangle
-    PADRright,      // bindablebtn_circle
-    PADRdown,       // bindablebtn_cross
-    PADRleft,       // bindablebtn_square
-    PADL1,          // bindablebtn_l1
-    PADR1,          // bindablebtn_r1
-    PADL2,          // bindablebtn_l2
-    PADR2           // bindablebtn_r2
+    PAD_TRIANGLE,   // bindablebtn_triangle
+    PAD_CIRCLE,     // bindablebtn_circle
+    PAD_CROSS,      // bindablebtn_cross
+    PAD_SQUARE,     // bindablebtn_square
+    PAD_L1,         // bindablebtn_l1
+    PAD_R1,         // bindablebtn_r1
+    PAD_L2,         // bindablebtn_l2
+    PAD_R2          // bindablebtn_r2
 };
 
 // The main UI texture atlas for the game.

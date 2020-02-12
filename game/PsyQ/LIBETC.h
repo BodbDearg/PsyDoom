@@ -7,28 +7,6 @@ namespace PsxVm {
     extern uint8_t* gpScratchpad;
 }
 
-// Bit flags for controller buttons
-static constexpr uint16_t PADLup        = 0x1000;       // Up
-static constexpr uint16_t PADLdown      = 0x4000;       // Down
-static constexpr uint16_t PADLleft      = 0x8000;       // Left
-static constexpr uint16_t PADLright     = 0x2000;       // Right
-static constexpr uint16_t PADRup        = 0x10;         // Triangle
-static constexpr uint16_t PADRdown      = 0x40;         // Cross
-static constexpr uint16_t PADRleft      = 0x80;         // Square
-static constexpr uint16_t PADRright     = 0x20;         // Circle
-static constexpr uint16_t PADL1         = 0x4;          // L1
-static constexpr uint16_t PADL2         = 0x1;          // L2
-static constexpr uint16_t PADR1         = 0x8;          // R1
-static constexpr uint16_t PADR2         = 0x2;          // R2
-static constexpr uint16_t PADstart      = 0x800;        // Start
-static constexpr uint16_t PADselect     = 0x100;        // Select
-
-// A combination of all the available pad buttons.
-// There was no such constant in the PsyQ SDK but I'm making it since the value is used in some places in DOOM:
-static constexpr uint16_t PAD_ANY = (
-    PADLup|PADLdown|PADLleft|PADLright|PADRup|PADRdown|PADRleft|PADRright|PADL1|PADL2|PADR1|PADR2|PADstart|PADselect
-);
-
 // Return a pointer to the specified word in the PSX scratchpad memory/cache.
 // There is 1 KiB of memory in total in the scratchpad.
 static inline void* getScratchAddr(const uint32_t word) {

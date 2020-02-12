@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PsxVm/VmPtr.h"
+#include "Doom/doomdef.h"
 
 struct texture_t;
 
@@ -8,5 +8,8 @@ extern const VmPtr<texture_t> gTex_BUTTONS;
 
 void START_ControlsScreen() noexcept;
 void STOP_ControlsScreen() noexcept;
-void TIC_ControlsScreen() noexcept;
+
+gameaction_t TIC_ControlsScreen() noexcept;
+void _thunk_TIC_ControlsScreen() noexcept;
+
 void DRAW_ControlsScreen() noexcept;

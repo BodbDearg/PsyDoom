@@ -393,7 +393,7 @@ loc_8003EE10:
     if (v0 == 0) goto loc_8003EE8C;
     
     s4 -= 4;
-    v0 = MiniLoop(START_ControlsScreen, STOP_ControlsScreen, TIC_ControlsScreen, DRAW_ControlsScreen);
+    v0 = MiniLoop(START_ControlsScreen, STOP_ControlsScreen, _thunk_TIC_ControlsScreen, DRAW_ControlsScreen);
     s2--;
 
     goto loc_8003EE94;
