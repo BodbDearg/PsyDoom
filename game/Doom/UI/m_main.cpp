@@ -10,7 +10,9 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
+#include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
+#include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 
 const VmPtr<texture_t>              gTex_BACK(0x80097A10);                  // The background texture for the main menu
@@ -54,6 +56,9 @@ static const char gSkillNames[NUMSKILLS][16] = {
 
 // The texture for the DOOM logo
 static const VmPtr<texture_t> gTex_DOOM(0x80097A50);
+
+// Restricts what maps or episodes the player can pick
+static const VmPtr<int32_t> gMaxStartEpisodeOrMap(0x8007817C);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Starts up the main menu and returns the action to do on exit
@@ -100,118 +105,89 @@ gameaction_t RunMenu() noexcept {
     return ga_nothing;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Setup/init logic for the main menu
+//------------------------------------------------------------------------------------------------------------------------------------------
 void M_Start() noexcept {
+    // TODO: remove once there is no more VM stack use!
     sp -= 0x28;
-    v0 = 1;
-    sw(ra, sp + 0x24);
-    sw(s0, sp + 0x20);
+    auto cleanupStackFrame = finally([]{ sp += 0x28; });
 
+    // Assume no networked game initially
     *gNetGame = gt_single;
     *gCurPlayerIndex = 0;
     gbPlayerInGame[0] = true;
     gbPlayerInGame[1] = false;
+
+    // Clear out any textures that can be unloaded
     I_PurgeTexCache();
     
-    s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7A90;                                       // Result = gTex_LOADING[0] (80097A90)
-    a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7C4C;                                       // Result = STR_LumpName_LOADING[0] (80077C4C)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
+    // Show the loading plaque
+    I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
+    I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
     
-    a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
-    a1 = 0x5F;                                          // Result = 0000005F
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    a2 = 0x6D;                                          // Result = 0000006D
-    _thunk_I_DrawLoadingPlaque();
-    
-    a0 = 0;                                             // Result = 00000000
+    // TODO
+    a0 = 0;
     S_LoadSoundAndMusic();
     
-    a0 = gTex_BACK;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7C8C;                                       // Result = STR_LumpName_BACK[0] (80077C8C)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
-
-    a0 = gTex_DOOM;                                     // Result = gTex_DOOM[0] (80097A50)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7C94;                                       // Result = STR_LumpName_DOOM[0] (80077C94)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
+    // Load and cache some commonly used UI textures
+    I_LoadAndCacheTexLump(*gTex_BACK, "BACK", 0);
+    I_LoadAndCacheTexLump(*gTex_DOOM, "DOOM", 0);
+    I_LoadAndCacheTexLump(*gTex_CONNECT, "CONNECT", 0);
     
-    a0 = s0 + 0x80;                                     // Result = gTex_CONNECT[0] (80097B10)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7C9C;                                       // Result = STR_LumpName_CONNECT[0] (80077C9C)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
-    
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
-    sw(0, gp + 0xBF8);                                  // Store to: gCursorFrame (800781D8)
+    // Some basic menu setup
+    *gCursorFrame = 0;
     *gCursorPos = 0;
     *gVBlanksUntilMenuMove = 0;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x36;                                      // Result = 00000036
-        if (bJump) goto loc_80035D64;
+    
+    if (*gStartGameType == gt_single) {
+        *gMaxStartEpisodeOrMap = 2;                 // Episode '1' = Ultimate DOOM, '2' = Doom II
+    } else {
+        *gMaxStartEpisodeOrMap = NUMREGULARMAPS;    // For multiplayer any of the normal (non secret) maps can be selected
     }
-    v0 = 2;                                             // Result = 00000002
-loc_80035D64:
-    sw(v0, gp + 0xB9C);                                 // Store to: gMaxStartEpisodeOrMap (8007817C)
-    v1 = *gStartMapOrEpisode;
-    v0 = lw(gp + 0xB9C);                                // Load from: gMaxStartEpisodeOrMap (8007817C)
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80035D8C;
+    
+    if (*gStartMapOrEpisode > *gMaxStartEpisodeOrMap) {
+        // Wrap back around if we have to...
+        *gStartMapOrEpisode = 1;
+    } 
+    else if (*gStartMapOrEpisode < 0) {
+        // Start map or episode will be set to '< 0' when the Doom I is finished.
+        // This implies we want to point the user to Doom II:
+        *gStartMapOrEpisode = 2;
     }
-    v0 = 2;                                             // Result = 00000002
-    if (i32(v1) >= 0) goto loc_80035D94;
-loc_80035D8C:
-    at = 0x80070000;                                    // Result = 80070000
-    *gStartMapOrEpisode = v0;
-loc_80035D94:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x3E50;                                       // Result = CDTrackNum_MainMenu (80073E50)
-    a0 = lw(v0);                                        // Load from: CDTrackNum_MainMenu (80073E50)
+
+    // Play the main menu music
+    a0 = gCDTrackNum[cdmusic_main_menu];
     a1 = *gCdMusicVol;
-    a2 = 0;                                             // Result = 00000000
+    a2 = 0;
+    a3 = 0;
+    sw(gCDTrackNum[cdmusic_main_menu], sp + 0x10);
+    sw(*gCdMusicVol, sp + 0x14);
     sw(0, sp + 0x18);
     sw(0, sp + 0x1C);
-    v0 = lw(v0);                                        // Load from: CDTrackNum_MainMenu (80073E50)
-    a3 = 0;                                             // Result = 00000000
-    sw(v0, sp + 0x10);
-    sw(a1, sp + 0x14);
     psxcd_play_at_andloop();
-loc_80035DC8:
-    psxcd_elapsed_sectors();
-    if (v0 == 0) goto loc_80035DC8;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F08);                               // Load from: gCurDrawDispBufferIdx (800780F8)
-    s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 -= 0x6F3C;                                       // Result = gDrawEnv1[C] (800A90C4)
-    sb(0, s0);                                          // Store to: gDrawEnv1[C] (800A90C4)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sb(0, at - 0x6EE0);                                 // Store to: gDrawEnv2[C] (800A9120)
-    v0 ^= 1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7F08);                                // Store to: gCurDrawDispBufferIdx (800780F8)
+
+    // TODO: comment on elapsed sector stuff here
+    do {
+        psxcd_elapsed_sectors();
+    } while (v0 == 0);
+
+    // Don't clear the screen when setting a new draw environment.
+    // Need to preserve the screen contents for the cross fade:
+    gDrawEnvs[0].isbg = false;
+    gDrawEnvs[1].isbg = false;
+
+    // Draw the menu to the other framebuffer and do the cross fade
+    *gCurDispBufferIdx ^= 1;
     M_Drawer();
     I_CrossFadeFrameBuffers();
-    v1 = *gTicCon;
-    v0 = 1;
-    sb(v0, s0);                                         // Store to: gDrawEnv1[C] (800A90C4)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sb(v0, at - 0x6EE0);                                // Store to: gDrawEnv2[C] (800A9120)
-    *gMenuTimeoutStartTicCon = v1;
-    ra = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x28;
-    return;
+
+    // Restore background clearing for both draw envs
+    gDrawEnvs[0].isbg = true;
+    gDrawEnvs[1].isbg = true;
+
+    // Begin counting for menu timeouts
+    *gMenuTimeoutStartTicCon = *gTicCon;
 }
 
 void M_Stop() noexcept {

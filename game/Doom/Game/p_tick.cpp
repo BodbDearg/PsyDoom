@@ -32,7 +32,7 @@
 #if PC_PSX_DOOM_MODS
     static constexpr int32_t MAX_CHEAT_WARP_LEVEL = NUMMAPS;
 #else
-    static constexpr int32_t MAX_CHEAT_WARP_LEVEL = 54;
+    static constexpr int32_t MAX_CHEAT_WARP_LEVEL = NUMREGULARMAPS;
 #endif
 
 // The number of buttons in a cheat sequence and a list of all the cheat sequences and their indices

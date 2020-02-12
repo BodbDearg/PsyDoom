@@ -108,8 +108,9 @@ enum : uint32_t {
     BOXRIGHT
 };
 
-// Number of maps in the game
+// Number of maps in the game and number of regular (non secret) maps
 static constexpr uint32_t NUMMAPS = 59;
+static constexpr uint32_t NUMREGULARMAPS = 54;
 
 // Maximum number of ticks in a demo.
 // The maximum allowed demo size is 16384 ticks (demo size 64 KiB).
