@@ -55,84 +55,49 @@ static const char gSkillNames[NUMSKILLS][16] = {
 // The texture for the DOOM logo
 static const VmPtr<texture_t> gTex_DOOM(0x80097A50);
 
-void RunMenu() noexcept {
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = gPaletteClutIds;
-    sw(s1, sp + 0x14);
-    s1 = gTex_BACK;
-    sw(s2, sp + 0x18);
-    s2 = gTex_DOOM;
-    sw(ra, sp + 0x1C);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Starts up the main menu and returns the action to do on exit
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t RunMenu() noexcept {
+    do {
+        // Run the menu: abort to the title screen & demos if the menu timed out
+        if (MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer) == ga_timeout)
+            return ga_timeout;
 
-loc_80035B4C:
-    v0 = MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer);
-    v1 = 7;
-    {
-        const bool bJump = (v0 == v1);
-        v0 = 7;                                         // Result = 00000007
-        if (bJump) goto loc_80035C78;
-    }
-    I_IncDrawnFrameCount();
+        // If we're not timing out draw the background and DOOM logo to prep for a 'loading' or 'connecting' plaque being drawn
+        I_IncDrawnFrameCount();    
+        I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+        I_CacheAndDrawSprite(*gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
+        I_SubmitGpuCmds();    
+        I_DrawPresent();
 
-    a0 = gTex_BACK;
-    a1 = 0;                                             // Result = 00000000
-    a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_CacheAndDrawSprite();
+        // If the game type is singleplayer then we can just go straight to initializing and running the game.
+        // Otherwise for a net game, we need to establish a connection and show the 'connecting' plaque...
+        if (*gStartGameType == gt_single)
+            break;
+        
+        I_DrawLoadingPlaque(*gTex_CONNECT, 54, 103, gPaletteClutIds[MAINPAL]);
+        I_NetSetup();
 
-    a0 = gTex_DOOM;
-    a1 = 0x4B;                                          // Result = 0000004B
-    a3 = lh(s0 + 0x22);                                 // Load from: gPaletteClutId_Title (800A90A6)
-    a2 = 0x14;                                          // Result = 00000014
-    _thunk_I_CacheAndDrawSprite();
-    
-    I_SubmitGpuCmds();
-    I_DrawPresent();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
-    a0 = s1 + 0x100;                                    // Result = gTex_CONNECT[0] (80097B10)
-    if (v0 == 0) goto loc_80035C4C;
-    
-    a1 = 0x36;                                          // Result = 00000036
-    a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
-    a2 = 0x67;                                          // Result = 00000067
-    _thunk_I_DrawLoadingPlaque();
+        // Once the net connection has been established, re-draw the background in prep for a loading or error plaque
+        I_IncDrawnFrameCount();
+        I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+        I_CacheAndDrawSprite(*gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);    
+        I_SubmitGpuCmds();
+        I_DrawPresent();
+        
+        // Play a sound to acknowledge that the connecting process has ended
+        a0 = 0;
+        a1 = sfx_pistol;
+        S_StartSound();
 
-    I_NetSetup();
-    I_IncDrawnFrameCount();
-    
-    a0 = gTex_BACK;
-    a1 = 0;                                             // Result = 00000000
-    a3 = lh(s0);                                        // Load from: gPaletteClutId_Main (800A9084)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_CacheAndDrawSprite();
+    } while (*gbDidAbortGame);
 
-    a0 = gTex_DOOM;
-    a1 = 0x4B;                                          // Result = 0000004B
-    a3 = lh(s0 + 0x22);                                 // Load from: gPaletteClutId_Title (800A90A6)
-    a2 = 0x14;                                          // Result = 00000014
-    _thunk_I_CacheAndDrawSprite();
-    
-    I_SubmitGpuCmds();
-    I_DrawPresent();
-    a0 = 0;
-    a1 = sfx_pistol;
-    S_StartSound();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C0C);                               // Load from: gbDidAbortGame (80077C0C)
-    if (v0 != 0) goto loc_80035B4C;
-loc_80035C4C:
+    // Startup the game!
     G_InitNew(*gStartSkill, *gStartMapOrEpisode, *gStartGameType);
     G_RunGame();
 
-    v0 = 0;
-loc_80035C78:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
+    return ga_nothing;
 }
 
 void M_Start() noexcept {

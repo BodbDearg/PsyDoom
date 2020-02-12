@@ -41,6 +41,9 @@ const VmPtr<skill_t>        gStartSkill(0x800775FC);
 const VmPtr<int32_t>        gStartMapOrEpisode(0x80077600);
 const VmPtr<gametype_t>     gStartGameType(0x80077604);
 
+// Net games: set if the connection attempt was aborted
+const VmPtr<bool32_t>   gbDidAbortGame(0x80077C0C);
+
 // Debug draw string position
 const VmPtr<int32_t>    gDebugDrawStringXPos(0x80078030);
 const VmPtr<int32_t>    gDebugDrawStringYPos(0x8007803C);
@@ -53,8 +56,8 @@ void D_DoomMain() noexcept {
     // PlayStation specific setup
     I_PSXInit();
 
-    a0 = ((*gOptionsSndVol) * 127) / 100;      // Load from: gOptionsSndVol (800775F0)
-    a1 = ((*gOptionsMusVol) * 127) / 100;      // Load from: gOptionsMusVol (800775F4)
+    a0 = ((*gOptionsSndVol) * 127) / 100;
+    a1 = ((*gOptionsMusVol) * 127) / 100;
     a2 = gTmpBuffer;
     PsxSoundInit();
 
@@ -90,9 +93,10 @@ void D_DoomMain() noexcept {
             }
         }
         
-        do {
-            RunMenu();
-        } while (v0 != ga_timeout);
+        while (true) {
+            if (RunMenu() == ga_timeout)
+                break;
+        }
     }
 }
 

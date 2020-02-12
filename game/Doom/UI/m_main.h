@@ -15,7 +15,7 @@ extern const VmPtr<int32_t[MAXPLAYERS]>     gCursorPos;
 extern const VmPtr<int32_t>                 gCursorFrame;
 extern const VmPtr<int32_t>                 gMenuTimeoutStartTicCon;
 
-void RunMenu() noexcept;
+gameaction_t RunMenu() noexcept;
 void M_Start() noexcept;
 void M_Stop() noexcept;
 void M_Ticker() noexcept;

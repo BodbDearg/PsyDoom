@@ -13,6 +13,7 @@ extern const VmPtr<VmPtr<uint32_t>>         gpDemo_p;
 extern const VmPtr<skill_t>                 gStartSkill;
 extern const VmPtr<int32_t>                 gStartMapOrEpisode;
 extern const VmPtr<gametype_t>              gStartGameType;
+extern const VmPtr<bool32_t>                gbDidAbortGame;
 
 void D_DoomMain() noexcept;
 gameaction_t RunLegals() noexcept;
