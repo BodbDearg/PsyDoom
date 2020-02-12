@@ -87,7 +87,7 @@ void START_Title() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Shutdown/cleanup logic for the main title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
-void STOP_Title() noexcept {
+void STOP_Title([[maybe_unused]] const gameaction_t exitAction) noexcept {
     // Play a barrel explode noise
     a0 = 0;
     a1 = sfx_barexp;
@@ -95,6 +95,10 @@ void STOP_Title() noexcept {
 
     // Stop the current audio track
     psxcd_stop();
+}
+
+void _thunk_STOP_Title() noexcept {
+    STOP_Title((gameaction_t) a0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

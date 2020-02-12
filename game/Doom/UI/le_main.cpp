@@ -35,12 +35,16 @@ void START_Legals() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Shutdown logic for the 'legals' screen
 //------------------------------------------------------------------------------------------------------------------------------------------
-void STOP_Legals() noexcept {
+void STOP_Legals([[maybe_unused]] const gameaction_t exitAction) noexcept {
     a0 = 0;
     a1 = sfx_barexp;
     S_StartSound();
 
     I_CrossFadeFrameBuffers();
+}
+
+void _thunk_STOP_Legals() noexcept {
+    STOP_Legals((gameaction_t) a0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

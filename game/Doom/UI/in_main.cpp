@@ -76,7 +76,7 @@ const char gMapNames[][32] = {
     "Club Doom"
 };
 
-static_assert(C_ARRAY_SIZE(gMapNames) == NUMMAPS);
+static_assert(C_ARRAY_SIZE(gMapNames) == NUM_MAPS);
 
 void IN_Start() noexcept {
     sp -= 0x28;

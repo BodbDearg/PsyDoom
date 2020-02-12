@@ -66,7 +66,7 @@ static const VmPtr<int32_t> gMaxStartEpisodeOrMap(0x8007817C);
 gameaction_t RunMenu() noexcept {
     do {
         // Run the menu: abort to the title screen & demos if the menu timed out
-        if (MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer) == ga_timeout)
+        if (MiniLoop(M_Start, _thunk_M_Stop, M_Ticker, M_Drawer) == ga_timeout)
             return ga_timeout;
 
         // If we're not timing out draw the background and DOOM logo to prep for a 'loading' or 'connecting' plaque being drawn
@@ -141,15 +141,15 @@ void M_Start() noexcept {
     *gVBlanksUntilMenuMove = 0;
     
     if (*gStartGameType == gt_single) {
-        *gMaxStartEpisodeOrMap = 2;                 // Episode '1' = Ultimate DOOM, '2' = Doom II
+        *gMaxStartEpisodeOrMap = MAX_EPISODE;
     } else {
-        *gMaxStartEpisodeOrMap = NUMREGULARMAPS;    // For multiplayer any of the normal (non secret) maps can be selected
+        *gMaxStartEpisodeOrMap = NUM_REGULAR_MAPS;      // For multiplayer any of the normal (non secret) maps can be selected
     }
     
     if (*gStartMapOrEpisode > *gMaxStartEpisodeOrMap) {
         // Wrap back around if we have to...
         *gStartMapOrEpisode = 1;
-    } 
+    }
     else if (*gStartMapOrEpisode < 0) {
         // Start map or episode will be set to '< 0' when the Doom I is finished.
         // This implies we want to point the user to Doom II:
@@ -190,39 +190,28 @@ void M_Start() noexcept {
     *gMenuTimeoutStartTicCon = *gTicCon;
 }
 
-void M_Stop() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Teardown/cleanup logic for the main menu
+//------------------------------------------------------------------------------------------------------------------------------------------
+void M_Stop(const gameaction_t exitAction) noexcept {
+    // Play the pistol sound and stop the current cd music track
     a0 = 0;
-    sw(ra, sp + 0x14);
     a1 = sfx_pistol;
     S_StartSound();
+
     psxcd_stop();
-    v0 = 9;
-    if (s0 != v0) goto loc_80035EB0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80035EB0;
+
+    // Single player: adjust the start map for the episode that was selected
+    if ((exitAction == ga_exit) && (*gStartGameType == gt_single)) {
+        // If DOOM II is selected: point to the first map of DOOM II
+        if (*gStartMapOrEpisode != episode_doom1) {
+            *gStartMapOrEpisode = 31;
+        }
     }
-    v1 = *gStartMapOrEpisode;
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 0x1F;                                      // Result = 0000001F
-        if (bJump) goto loc_80035EA8;
-    }
-    *gStartMapOrEpisode = v1;
-    goto loc_80035EB0;
-loc_80035EA8:
-    *gStartMapOrEpisode = v0;
-loc_80035EB0:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+}
+
+void _thunk_M_Stop() noexcept {
+    M_Stop((gameaction_t) a0);
 }
 
 void M_Ticker() noexcept {

@@ -56,12 +56,16 @@ void START_ControlsScreen() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Shutdown/cleanup logic for the control configuration screen
 //------------------------------------------------------------------------------------------------------------------------------------------
-void STOP_ControlsScreen() noexcept {
+void STOP_ControlsScreen([[maybe_unused]] const gameaction_t exitAction) noexcept {
     a0 = 0;
     a1 = sfx_pistol;
     S_StartSound();
 
     gCursorPos[0] = 3;
+}
+
+void _thunk_STOP_ControlsScreen() noexcept {
+    STOP_ControlsScreen((gameaction_t) a0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

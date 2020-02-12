@@ -17,6 +17,9 @@ extern const VmPtr<int32_t>                 gMenuTimeoutStartTicCon;
 
 gameaction_t RunMenu() noexcept;
 void M_Start() noexcept;
-void M_Stop() noexcept;
+
+void M_Stop(const gameaction_t exitAction) noexcept;
+void _thunk_M_Stop() noexcept;
+
 void M_Ticker() noexcept;
 void M_Drawer() noexcept;

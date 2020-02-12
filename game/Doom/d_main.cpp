@@ -105,14 +105,14 @@ void D_DoomMain() noexcept {
 // This function is never called in the retail game, but was used for the PSX DOOM demo build.
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunLegals() noexcept {
-    return MiniLoop(START_Legals, STOP_Legals, _thunk_TIC_Legals, DRAW_Legals);
+    return MiniLoop(START_Legals, _thunk_STOP_Legals, _thunk_TIC_Legals, DRAW_Legals);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Runs the title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunTitle() noexcept {
-    return MiniLoop(START_Title, STOP_Title, _thunk_TIC_Title, DRAW_Title);
+    return MiniLoop(START_Title, _thunk_STOP_Title, _thunk_TIC_Title, DRAW_Title);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -139,7 +139,7 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
 // Runs the credits screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunCredits() noexcept {
-    return MiniLoop(START_Credits, STOP_Credits, _thunk_TIC_Credits, DRAW_Credits);
+    return MiniLoop(START_Credits, _thunk_STOP_Credits, _thunk_TIC_Credits, DRAW_Credits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

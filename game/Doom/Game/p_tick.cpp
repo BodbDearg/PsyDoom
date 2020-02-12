@@ -30,9 +30,9 @@
 // PC-PSX: For this version of the game I'm allowing the user to warp to the secret levels!
 // If you're cheating you can more or less do anything anyway, so not much point in hiding these.
 #if PC_PSX_DOOM_MODS
-    static constexpr int32_t MAX_CHEAT_WARP_LEVEL = NUMMAPS;
+    static constexpr int32_t MAX_CHEAT_WARP_LEVEL = NUM_MAPS;
 #else
-    static constexpr int32_t MAX_CHEAT_WARP_LEVEL = NUMREGULARMAPS;
+    static constexpr int32_t MAX_CHEAT_WARP_LEVEL = NUM_REGULAR_MAPS;
 #endif
 
 // The number of buttons in a cheat sequence and a list of all the cheat sequences and their indices

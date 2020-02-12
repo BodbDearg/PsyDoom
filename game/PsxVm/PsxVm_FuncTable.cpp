@@ -286,13 +286,13 @@ extern void I_SubmitGpuCmds() noexcept;
 extern void I_LocalButtonsToNet() noexcept;
 extern void I_NetButtonsToLocal() noexcept;
 extern void START_Legals() noexcept;
-extern void STOP_Legals() noexcept;
+extern void _thunk_STOP_Legals() noexcept;
 extern void _thunk_TIC_Legals() noexcept;
 extern void START_Title() noexcept;
-extern void STOP_Title() noexcept;
+extern void _thunk_STOP_Title() noexcept;
 extern void _thunk_TIC_Title() noexcept;
 extern void M_Start() noexcept;
-extern void M_Stop() noexcept;
+extern void _thunk_M_Stop() noexcept;
 extern void M_Ticker() noexcept;
 extern void I_CrossFadeFrameBuffers() noexcept;
 extern void _thunk_TIC_Credits() noexcept;
@@ -300,7 +300,7 @@ extern void START_PasswordScreen() noexcept;
 extern void STOP_PasswordScreen() noexcept;
 extern void TIC_PasswordScreen() noexcept;
 extern void START_ControlsScreen() noexcept;
-extern void STOP_ControlsScreen() noexcept;
+extern void _thunk_STOP_ControlsScreen() noexcept;
 extern void _thunk_TIC_ControlsScreen() noexcept;
 extern void P_ComputePassword() noexcept;
 extern void P_ProcessPassword() noexcept;
@@ -1151,13 +1151,13 @@ namespace PsxVm {
         { 0x80034EA4, &I_LocalButtonsToNet },
         { 0x80034F04, &I_NetButtonsToLocal },
         { 0x80034F54, &START_Legals },
-        { 0x80034FA0, &STOP_Legals },
+        { 0x80034FA0, &_thunk_STOP_Legals },
         { 0x80034FCC, &_thunk_TIC_Legals },
         { 0x80035098, &START_Title },
-        { 0x80035268, &STOP_Title },
+        { 0x80035268, &_thunk_STOP_Title },
         { 0x80035294, &_thunk_TIC_Title },
         { 0x80035C94, &M_Start },
-        { 0x80035E40, &M_Stop },
+        { 0x80035E40, &_thunk_M_Stop },
         { 0x80035EC4, &M_Ticker },
         { 0x80036448, &I_CrossFadeFrameBuffers },
         { 0x80036CC0, &_thunk_TIC_Credits },
@@ -1165,7 +1165,7 @@ namespace PsxVm {
         { 0x80036E6C, &STOP_PasswordScreen },
         { 0x80036EA0, &TIC_PasswordScreen },
         { 0x8003793C, &START_ControlsScreen },
-        { 0x80037980, &STOP_ControlsScreen },
+        { 0x80037980, &_thunk_STOP_ControlsScreen },
         { 0x800379AC, &_thunk_TIC_ControlsScreen },
         { 0x80037DBC, &P_ComputePassword },
         { 0x800381B0, &P_ProcessPassword },
