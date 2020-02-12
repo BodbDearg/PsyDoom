@@ -317,7 +317,7 @@ void P_CheckCheats() noexcept {
 
         // Are we initiating the the actual warp?
         if (padBtns != oldPadBtns) {
-            if (padBtns & PAD_ACTION) {
+            if (padBtns & PAD_ACTION_BTNS) {
                 // Button pressed to initiate the level warp - kick it off!
                 *gGameAction = ga_warped;
                 player.cheats &= (~CF_WARPMENU);

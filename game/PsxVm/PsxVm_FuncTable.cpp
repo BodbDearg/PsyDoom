@@ -293,7 +293,7 @@ extern void _thunk_STOP_Title() noexcept;
 extern void _thunk_TIC_Title() noexcept;
 extern void M_Start() noexcept;
 extern void _thunk_M_Stop() noexcept;
-extern void M_Ticker() noexcept;
+extern void _thunk_M_Ticker() noexcept;
 extern void I_CrossFadeFrameBuffers() noexcept;
 extern void _thunk_TIC_Credits() noexcept;
 extern void START_PasswordScreen() noexcept;
@@ -1158,7 +1158,7 @@ namespace PsxVm {
         { 0x80035294, &_thunk_TIC_Title },
         { 0x80035C94, &M_Start },
         { 0x80035E40, &_thunk_M_Stop },
-        { 0x80035EC4, &M_Ticker },
+        { 0x80035EC4, &_thunk_M_Ticker },
         { 0x80036448, &I_CrossFadeFrameBuffers },
         { 0x80036CC0, &_thunk_TIC_Credits },
         { 0x80036E1C, &START_PasswordScreen },

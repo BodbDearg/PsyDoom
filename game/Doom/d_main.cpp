@@ -403,7 +403,7 @@ gameaction_t MiniLoop(
                 // Demo playback: any button pressed on the gamepad will abort
                 exitAction = ga_exit;
 
-                if (padBtns & PAD_ANY)
+                if (padBtns & PAD_ANY_BTNS)
                     break;
 
                 // Read inputs from the demo buffer and advance the demo.

@@ -50,7 +50,7 @@ static const char gSkillNames[NUMSKILLS][16] = {
     "Hurt Me Plenty",
     "Ultra Violence",
 #if PC_PSX_DOOM_MODS    // PC-PSX: exposing the unused 'Nightmare' mode
-    "Nightmare"
+    "Nightmare!"
 #endif
 };
 
@@ -66,7 +66,7 @@ static const VmPtr<int32_t> gMaxStartEpisodeOrMap(0x8007817C);
 gameaction_t RunMenu() noexcept {
     do {
         // Run the menu: abort to the title screen & demos if the menu timed out
-        if (MiniLoop(M_Start, _thunk_M_Stop, M_Ticker, M_Drawer) == ga_timeout)
+        if (MiniLoop(M_Start, _thunk_M_Stop, _thunk_M_Ticker, M_Drawer) == ga_timeout)
             return ga_timeout;
 
         // If we're not timing out draw the background and DOOM logo to prep for a 'loading' or 'connecting' plaque being drawn
@@ -214,273 +214,185 @@ void _thunk_M_Stop() noexcept {
     M_Stop((gameaction_t) a0);
 }
 
-void M_Ticker() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 = lw(s0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7DEC);                               // Load from: gOldTicButtons[0] (80078214)
-    sw(ra, sp + 0x14);
-    if (s0 == 0) goto loc_80035EF4;
-    v0 = *gTicCon;
-    *gMenuTimeoutStartTicCon = v0;
-loc_80035EF4:
-    v0 = *gTicCon;
-    v1 = *gMenuTimeoutStartTicCon;
-    v0 -= v1;
-    v0 = (i32(v0) < 0x708);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 7;                                         // Result = 00000007
-        if (bJump) goto loc_80036244;
-    }
-    v1 = *gGameTic;
-    v0 = *gPrevGameTic;
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 & 3;
-        if (bJump) goto loc_80035F4C;
-    }
-    if (v0 != 0) goto loc_80035F4C;
-    v0 = lw(gp + 0xBF8);                                // Load from: gCursorFrame (800781D8)
-    v0 ^= 1;
-    sw(v0, gp + 0xBF8);                                 // Store to: gCursorFrame (800781D8)
-loc_80035F4C:
-    v0 = s0 & 0x800;
-    if (s0 == a0) goto loc_80035FCC;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 & 0xF0;
-        if (bJump) goto loc_80035F64;
-    }
-    v0 = 9;                                             // Result = 00000009
-    goto loc_80036244;
-loc_80035F64:
-    if (v0 == 0) goto loc_80035FCC;
-    v1 = gCursorPos[0];
-    v0 = (i32(v1) < 3);
-    if (i32(v1) < 0) goto loc_80035FCC;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 9;                                         // Result = 00000009
-        if (bJump) goto loc_80036244;
-    }
-    v0 = 3;                                             // Result = 00000003
-    {
-        const bool bJump = (v1 != v0);
-        v0 = s0 & 0xF000;
-        if (bJump) goto loc_80035FD0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update/ticker logic for the main menu
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t M_Ticker() noexcept {
+    // Reset the menu timeout if buttons are being pressed
+    const padbuttons_t ticButtons = gTicButtons[0];
+
+    if (ticButtons != 0) {
+        *gMenuTimeoutStartTicCon = *gTicCon;
     }
 
-    v0 = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);
-    v1 = 4;
+    // Exit the menu if timed out
+    if (*gTicCon - *gMenuTimeoutStartTicCon >= 1800)
+        return ga_timeout;
 
-    {
-        const bool bJump = (v0 != v1);
-        v0 = s0 & 0xF000;
-        if (bJump) goto loc_80035FD0;
+    // Animate the skull cursor
+    if ((*gPrevGameTic < *gGameTic) && ((*gGameTic & 3) == 0)) {
+        *gCursorFrame ^= 1;
     }
-    v0 = 4;                                             // Result = 00000004
-    goto loc_80036244;
-loc_80035FCC:
-    v0 = s0 & 0xF000;
-loc_80035FD0:
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80035FE4;
+    
+    // Check for game start or options open actions
+    if (ticButtons != gOldTicButtons[0]) {
+        // If start is pressed then begin a game, no matter what menu option is picked
+        if (ticButtons & PAD_START)
+            return ga_exit;
+    
+        // If an action button is pressed then we can either start a map or open the options
+        if ((ticButtons & PAD_ACTION_BTNS) && (gCursorPos[0] >= gamemode)) {
+            if (gCursorPos[0] < options)
+                return ga_exit;
+
+            if (gCursorPos[0] == options) {
+                // Options entry pressed: run the options menu.
+                // Note that if a level password is entered correctly there, we exit with 'ga_warped' as the action.
+                if (MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer) == ga_warped)
+                    return ga_warped;
+            }
+        }
     }
-    *gVBlanksUntilMenuMove = 0;
-    goto loc_80036244;
-loc_80035FE4:
-    v0 = *gVBlanksUntilMenuMove;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7FBC);                               // Load from: gPlayersElapsedVBlanks[0] (80077FBC)
-    v0 -= v1;
-    *gVBlanksUntilMenuMove = v0;
-    if (i32(v0) > 0) goto loc_80036240;
+
+    // Check for movement with the DPAD direction buttons.
+    // If there is none then we can just stop here:    
+    if ((ticButtons & PAD_DIRECTION_BTNS) == 0) {
+        *gVBlanksUntilMenuMove = 0;
+        return ga_nothing;
+    }
+
+    // Movement repeat rate limiting for when movement buttons are held down
+    *gVBlanksUntilMenuMove -= gPlayersElapsedVBlanks[0];
+
+    if (*gVBlanksUntilMenuMove > 0)
+        return ga_nothing;
+
     *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
-    v0 = s0 & 0x4000;
-    v1 = 4;                                             // Result = 00000004
-    if (v0 == 0) goto loc_80036040;
-    a0 = gCursorPos;
-    v0 = gCursorPos[0];
-    v0++;
-    sw(v0, a0);                                         // Store to: gCursorPos (80078000)
-    if (v0 != v1) goto loc_80036070;
-    sw(0, a0);                                          // Store to: gCursorPos (80078000)
-    goto loc_80036070;
-loc_80036040:
-    v0 = s0 & 0x1000;
-    v1 = -1;                                            // Result = FFFFFFFF
-    if (v0 == 0) goto loc_8003607C;
-    a0 = gCursorPos;
-    v0 = gCursorPos[0];
-    v0--;
-    sw(v0, a0);                                         // Store to: gCursorPos (80078000)
-    if (v0 != v1) goto loc_80036070;
-    v0 = 3;                                             // Result = 00000003
-    sw(v0, a0);                                         // Store to: gCursorPos (80078000)
-loc_80036070:
-    a0 = 0;
-    a1 = sfx_pstop;
-    S_StartSound();
-loc_8003607C:
-    v1 = gCursorPos[0];
-    a0 = 1;
-    v0 = (i32(v1) < 2);
-    if (v1 == a0) goto loc_80036178;
-    if (v0 == 0) goto loc_800360A4;
-    v0 = s0 & 0x2000;
-    if (v1 == 0) goto loc_800360B8;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80036244;
-loc_800360A4:
-    v0 = 2;                                             // Result = 00000002
-    {
-        const bool bJump = (v1 == v0);
-        v0 = s0 & 0x2000;
-        if (bJump) goto loc_800361E8;
+
+    // Do menu up/down movements
+    if (ticButtons & PAD_DOWN) {
+        *gCursorPos += 1;
+        
+        if (*gCursorPos == NUMMENUITEMS) {
+            *gCursorPos = (menu_t) 0;
+        }
+
+        a0 = 0;
+        a1 = sfx_pstop;
+        S_StartSound();
     }
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80036244;
-loc_800360B8:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 & 0x8000;
-        if (bJump) goto loc_800360F0;
+    else if (ticButtons & PAD_UP) {
+        *gCursorPos -= 1;
+
+        if (*gCursorPos == -1) {
+            *gCursorPos = NUMMENUITEMS - 1;
+        }
+
+        a0 = 0;
+        a1 = sfx_pstop;
+        S_StartSound();
     }
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7604);                               // Load from: gStartGameType (80077604)
-    v0 = (v1 < 2);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 + 1;
-        if (bJump) goto loc_80036130;
+
+    if (gCursorPos[0] == gamemode) {
+        // Menu left/right movements: game mode
+        if (ticButtons & PAD_RIGHT) {
+            if (*gStartGameType < gt_deathmatch) {
+                *gStartGameType = (gametype_t)((uint32_t) *gStartGameType + 1);
+                
+                if (*gStartGameType == gt_coop) {
+                    *gStartMapOrEpisode = 1;
+                }
+
+                a0 = 0;
+                a1 = 0x17;
+                S_StartSound();
+            }
+        } 
+        else if ((ticButtons & PAD_LEFT) != 0) {
+            if (*gStartGameType != gt_single) {
+                *gStartGameType = (gametype_t)((uint32_t) *gStartGameType -1);
+
+                if (*gStartGameType == gt_single) {
+                    *gStartMapOrEpisode = 1;
+                }
+
+                a0 = 0;
+                a1 = 0x17;
+                S_StartSound();
+            }
+        }
+
+        if (*gStartGameType == gt_single) {
+            *gMaxStartEpisodeOrMap = MAX_EPISODE;
+        } else {
+            *gMaxStartEpisodeOrMap = NUM_REGULAR_MAPS;
+        }
+
+        if (*gStartMapOrEpisode > *gMaxStartEpisodeOrMap) {
+            *gStartMapOrEpisode = 1;
+        }
+
+        return ga_nothing;
+    }    
+    else if (gCursorPos[0] == level) {
+        // Menu left/right movements: level/episode select
+        if (ticButtons & PAD_RIGHT) {
+            *gStartMapOrEpisode += 1;
+            
+            if (*gStartMapOrEpisode <= *gMaxStartEpisodeOrMap) {
+                a0 = 0;
+                a1 = sfx_swtchx;
+                S_StartSound();
+            } else {
+                *gStartMapOrEpisode = *gMaxStartEpisodeOrMap;
+            }
+        } 
+        else if (ticButtons & PAD_LEFT) {
+            *gStartMapOrEpisode -= 1;
+            
+            if (*gStartMapOrEpisode > 0) {
+                a0 = 0;
+                a1 = sfx_swtchx;
+                S_StartSound();
+            } else {
+                *gStartMapOrEpisode = 1;
+            }
+        }
+
+        return ga_nothing;
     }
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7604);                                // Store to: gStartGameType (80077604)
-    if (v0 == a0) goto loc_8003611C;
-    a0 = 0;                                             // Result = 00000000
-    goto loc_80036128;
-loc_800360F0:
-    if (v0 == 0) goto loc_80036130;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
-    {
-        const bool bJump = (v0 == 0);
-        v0--;
-        if (bJump) goto loc_80036144;
+    else if (gCursorPos[0] == difficulty) {
+        // Menu left/right movements: difficulty select
+        if (ticButtons & PAD_RIGHT) {
+            // PC-PSX: allow the previously hidden 'Nightmare' skill to be selected
+            #if PC_PSX_DOOM_MODS
+                constexpr skill_t MAX_ALLOWED_SKILL = sk_nightmare;
+            #else
+                constexpr skill_t MAX_ALLOWED_SKILL = sk_hard;
+            #endif
+
+            if (*gStartSkill < MAX_ALLOWED_SKILL) {
+                *gStartSkill = (skill_t)((uint32_t) *gStartSkill + 1);
+                a0 = 0;
+                a1 = sfx_swtchx;
+                S_StartSound();                
+            }
+        } 
+        else if (ticButtons & PAD_LEFT) {
+            if (*gStartSkill != sk_baby) {
+                *gStartSkill = (skill_t)((uint32_t) *gStartSkill - 1);
+                a0 = 0;
+                a1 = sfx_swtchx;
+                S_StartSound();
+            }
+        }
     }
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7604);                                // Store to: gStartGameType (80077604)
-    if (v0 != 0) goto loc_80036124;
-loc_8003611C:
-    *gStartMapOrEpisode = a0;
-loc_80036124:
-    a0 = 0;                                             // Result = 00000000
-loc_80036128:
-    a1 = 0x17;                                          // Result = 00000017
-    S_StartSound();
-loc_80036130:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7604);                               // Load from: gStartGameType (80077604)
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x36;                                      // Result = 00000036
-        if (bJump) goto loc_80036148;
-    }
-loc_80036144:
-    v0 = 2;                                             // Result = 00000002
-loc_80036148:
-    sw(v0, gp + 0xB9C);                                 // Store to: gMaxStartEpisodeOrMap (8007817C)
-    v1 = *gStartMapOrEpisode;
-    v0 = lw(gp + 0xB9C);                                // Load from: gMaxStartEpisodeOrMap (8007817C)
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80036240;
-    }
-    *gStartMapOrEpisode = v0;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80036244;
-loc_80036178:
-    v0 = s0 & 0x2000;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 & 0x8000;
-        if (bJump) goto loc_800361B0;
-    }
-    v0 = *gStartMapOrEpisode;
-    v1 = lw(gp + 0xB9C);                                // Load from: gMaxStartEpisodeOrMap (8007817C)
-    v0++;
-    *gStartMapOrEpisode = v0;
-    v0 = (i32(v1) < i32(v0));
-    a0 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_800361D8;
-    goto loc_80036238;
-loc_800361B0:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;
-        if (bJump) goto loc_80036244;
-    }
-    v0 = *gStartMapOrEpisode;
-    v0--;
-    *gStartMapOrEpisode = v0;
-    a0 = 0;
-    if (i32(v0) > 0) goto loc_80036238;
-loc_800361D8:
-    *gStartMapOrEpisode = v1;
-    v0 = 0;
-    goto loc_80036244;
-loc_800361E8:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 & 0x8000;
-        if (bJump) goto loc_80036210;
-    }
-    v1 = *gStartSkill;
-// PC-PSX: allow nightmare to be selected
-#if PC_PSX_DOOM_MODS
-    v0 = (v1 < sk_nightmare);
-#else
-    v0 = (v1 < 3);
-#endif
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 + 1;
-        if (bJump) goto loc_80036240;
-    }
-    goto loc_8003622C;
-loc_80036210:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;
-        if (bJump) goto loc_80036244;
-    }
-    v0 = *gStartSkill;
-    {
-        const bool bJump = (v0 == 0);
-        v0--;
-        if (bJump) goto loc_80036240;
-    }
-loc_8003622C:
-    *gStartSkill = (skill_t) v0;
-    a0 = 0;
-loc_80036238:
-    a1 = sfx_swtchx;
-    S_StartSound();
-loc_80036240:
-    v0 = 0;
-loc_80036244:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    return ga_nothing;
+}
+
+void _thunk_M_Ticker() noexcept {
+    v0 = M_Ticker();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

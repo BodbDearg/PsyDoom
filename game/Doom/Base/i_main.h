@@ -63,11 +63,11 @@ static constexpr uint16_t PAD_R2        = 0x2;
 static constexpr uint16_t PAD_START     = 0x800;
 static constexpr uint16_t PAD_SELECT    = 0x100;
 
-static constexpr uint16_t PAD_DIRECTION = (
+static constexpr uint16_t PAD_DIRECTION_BTNS = (
     PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT
 );
 
-static constexpr uint16_t PAD_ACTION = (
+static constexpr uint16_t PAD_ACTION_BTNS = (
     PAD_TRIANGLE | PAD_CROSS | PAD_SQUARE | PAD_CIRCLE
 );
 
@@ -75,8 +75,8 @@ static constexpr uint16_t PAD_SHOULDER_BTNS = (
     PAD_L1 | PAD_L2 | PAD_R1 | PAD_R2
 );
 
-static constexpr uint16_t PAD_ANY = (
-    PAD_DIRECTION | PAD_ACTION | PAD_SHOULDER_BTNS | PAD_START | PAD_SELECT
+static constexpr uint16_t PAD_ANY_BTNS = (
+    PAD_DIRECTION_BTNS | PAD_ACTION_BTNS | PAD_SHOULDER_BTNS | PAD_START | PAD_SELECT
 );
 
 // Type for a pressed button mask.

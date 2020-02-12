@@ -61,7 +61,7 @@ void STOP_ControlsScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
     a1 = sfx_pistol;
     S_StartSound();
 
-    gCursorPos[0] = 3;
+    gCursorPos[0] = 3;  // Point to the 'controls' option of the options menu
 }
 
 void _thunk_STOP_ControlsScreen() noexcept {
@@ -80,7 +80,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
     // Do menu up/down movements
     const uint32_t ticButtons = gTicButtons[0];
     
-    if ((ticButtons & PAD_DIRECTION) == 0) {
+    if ((ticButtons & PAD_DIRECTION_BTNS) == 0) {
         // If no buttons are currently pressed then you can move immediately next time they are
         *gVBlanksUntilMenuMove = 0;
     } else {
@@ -143,7 +143,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
             }
         }
     } 
-    else if (ticButtons & PAD_ACTION) {
+    else if (ticButtons & PAD_ACTION_BTNS) {
         // One of the right action buttons is pressed on the default configuration slot.
         // Restore the control bindings to their defaults and play a sound to acknowledge the change:
         D_memcpy(gCtrlBindings.get(), gDefaultCtrlBindings, sizeof(gDefaultCtrlBindings));
