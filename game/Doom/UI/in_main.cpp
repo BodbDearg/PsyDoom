@@ -17,9 +17,9 @@
 #include "Wess/psxcd.h"
 
 struct pstats_t {
-    int32_t		killpercent;
-    int32_t		itempercent;
-    int32_t	    secretpercent;
+    int32_t     killpercent;
+    int32_t     itempercent;
+    int32_t     secretpercent;
     int32_t     fragcount;
 };
 
