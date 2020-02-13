@@ -9,10 +9,20 @@
 #include "Doom/Game/p_password.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
+#include "PcPsx/Finally.h"
 #include "PcPsx/Macros.h"
 #include "PsxVm/PsxVm.h"
 #include "pw_main.h"
 #include "Wess/psxcd.h"
+
+struct pstats_t {
+    int32_t		killpercent;
+    int32_t		itempercent;
+    int32_t	    secretpercent;
+    int32_t     fragcount;
+};
+
+static_assert(sizeof(pstats_t) == 16);
 
 const char gMapNames[][32] = {
     "Hangar",
@@ -78,205 +88,98 @@ const char gMapNames[][32] = {
 
 static_assert(C_ARRAY_SIZE(gMapNames) == NUM_MAPS);
 
+// The final stats to display for each player
+static const VmPtr<pstats_t> gPStats(0x80097C24);
+
+// The currently displaying stats for each player, this is ramped up over time
+static const VmPtr<int32_t[MAXPLAYERS]>     gKillValue(0x800782A0);
+static const VmPtr<int32_t[MAXPLAYERS]>     gItemValue(0x800782AC);
+static const VmPtr<int32_t[MAXPLAYERS]>     gSecretValue(0x80077FDC);
+static const VmPtr<int32_t[MAXPLAYERS]>     gFragValue(0x80078268);
+
+// What stage of the intermission we are at.
+// 0 = ramping up score, 1 = score fully shown, 2 = begin exiting intermission.
+static const VmPtr<int32_t[MAXPLAYERS]>     gIntermissionStage(0x800782DC);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialization/setup logic for the intermission screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void IN_Start() noexcept {
+    // TODO: clean this up once we no longer use the VM stack
     sp -= 0x28;
-    sw(ra, sp + 0x20);
+    auto cleanupStackFrame = finally([](){ sp += 0x28; });
+
+    // Clear out purgable textures and cache the background for the intermission
     I_PurgeTexCache();
-    a0 = gTex_BACK;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7CFC;                                       // Result = STR_LumpName_BACK_2[0] (80077CFC)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
-    t3 = 0x64;                                          // Result = 00000064
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    a0 = 0;                                             // Result = 00000000
-    t4 = 0x80080000;                                    // Result = 80080000
-    t4 -= 0x7D60;                                       // Result = 800782A0
-    a3 = t4;                                            // Result = 800782A0
-    t2 = *gTotalKills;
-    t1 = *gTotalItems;
-    t0 = *gTotalSecret;
-loc_8003C7B4:
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7D98;                                       // Result = 80078268
-    at += a2;
-    sw(0, at);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FDC;                                       // Result = 80077FDC
-    at += a2;
-    sw(0, at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7D54;                                       // Result = 800782AC
-    at += a2;
-    sw(0, at);
-    sw(0, a3);
-    if (t2 == 0) goto loc_8003C85C;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x774C;                                       // Result = gPlayer1[32] (800A88B4)
-    at += a1;
-    v0 = lw(at);
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 3;
-    v1 += v0;
-    v1 <<= 2;
-    div(v1, t2);
-    if (t2 != 0) goto loc_8003C824;
-    _break(0x1C00);
-loc_8003C824:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (t2 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8003C83C;
+    I_LoadAndCacheTexLump(*gTex_BACK, "BACK", 0);
+
+    // Initialize final and displayed stats for all players
+    for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+        const player_t& player = gPlayers[playerIdx];
+        pstats_t& pstats = gPStats[playerIdx];
+
+        gKillValue[playerIdx] = 0;
+        gItemValue[playerIdx] = 0;
+        gSecretValue[playerIdx] = 0;
+        gFragValue[playerIdx] = 0;
+
+        if (*gTotalKills != 0) {
+            pstats.killpercent = (player.killcount * 100) / *gTotalKills;
+        } else {
+            pstats.killpercent = 100;
+        }
+
+        if (*gTotalItems != 0) {
+            pstats.itempercent = (player.itemcount * 100) / *gTotalItems;
+        } else {
+            pstats.itempercent = 100;
+        }
+
+        if (*gTotalSecret != 0) {
+            pstats.secretpercent = (player.secretcount * 100) / *gTotalSecret;
+        } else {
+            pstats.secretpercent = 100;
+        }
+
+        if (*gNetGame == gt_deathmatch) {
+            pstats.fragcount = player.frags;
+        }
     }
-    if (v1 != at) goto loc_8003C83C;
-    tge(zero, zero, 0x5D);
-loc_8003C83C:
-    v1 = lo;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C24;                                       // Result = 80097C24
-    at += a0;
-    sw(v1, at);
-    goto loc_8003C86C;
-loc_8003C85C:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C24;                                       // Result = 80097C24
-    at += a0;
-    sw(t3, at);
-loc_8003C86C:
-    if (t1 == 0) goto loc_8003C8E4;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7748;                                       // Result = gPlayer1[33] (800A88B8)
-    at += a1;
-    v0 = lw(at);
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 3;
-    v1 += v0;
-    v1 <<= 2;
-    div(v1, t1);
-    if (t1 != 0) goto loc_8003C8AC;
-    _break(0x1C00);
-loc_8003C8AC:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (t1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8003C8C4;
+
+    // Init menu timeout and intermission stage
+    *gIntermissionStage = 0;
+    *gMenuTimeoutStartTicCon = *gTicCon;
+
+    // Compute the password for the next map
+    if (*gNextMap <= NUM_MAPS) {
+        a0 = ptrToVmAddr(gPasswordCharBuffer.get());
+        P_ComputePassword();
+        *gNumPasswordCharsEntered = 10;
     }
-    if (v1 != at) goto loc_8003C8C4;
-    tge(zero, zero, 0x5D);
-loc_8003C8C4:
-    v1 = lo;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C28;                                       // Result = 80097C28
-    at += a0;
-    sw(v1, at);
-    goto loc_8003C8F4;
-loc_8003C8E4:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C28;                                       // Result = 80097C28
-    at += a0;
-    sw(t3, at);
-loc_8003C8F4:
-    if (t0 == 0) goto loc_8003C96C;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7744;                                       // Result = gPlayer1[34] (800A88BC)
-    at += a1;
-    v0 = lw(at);
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 3;
-    v1 += v0;
-    v1 <<= 2;
-    div(v1, t0);
-    if (t0 != 0) goto loc_8003C934;
-    _break(0x1C00);
-loc_8003C934:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (t0 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8003C94C;
-    }
-    if (v1 != at) goto loc_8003C94C;
-    tge(zero, zero, 0x5D);
-loc_8003C94C:
-    v1 = lo;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C2C;                                       // Result = 80097C2C
-    at += a0;
-    sw(v1, at);
-    goto loc_8003C97C;
-loc_8003C96C:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C2C;                                       // Result = 80097C2C
-    at += a0;
-    sw(t3, at);
-loc_8003C97C:
-    v1 = *gNetGame;
-    v0 = 2;
-    a2 += 4;
-    if (v1 != v0) goto loc_8003C9B4;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x77B0;                                       // Result = gPlayer1[19] (800A8850)
-    at += a1;
-    v0 = lw(at);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C30;                                       // Result = 80097C30
-    at += a0;
-    sw(v0, at);
-loc_8003C9B4:
-    a1 += 0x12C;
-    a3 += 4;
-    v0 = t4 + 8;                                        // Result = gCloseDist (800782A8)
-    v0 = (i32(a3) < i32(v0));
-    a0 += 0x10;
-    if (v0 != 0) goto loc_8003C7B4;
-    v1 = *gTicCon;
-    v0 = *gNextMap;
-    sw(0, gp + 0xCFC);                                  // Store to: 800782DC
-    v0 = (i32(v0) < 0x3C);
-    at = 0x80070000;                                    // Result = 80070000
-    *gMenuTimeoutStartTicCon = v1;
-    if (v0 == 0) goto loc_8003CA10;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x6560;                                       // Result = gPasswordCharBuffer[0] (80096560)
-    P_ComputePassword();
-    v0 = 0xA;                                           // Result = 0000000A
-    at = 0x80070000;                                    // Result = 80070000
-    *gNumPasswordCharsEntered = v0;
-loc_8003CA10:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x3E58;                                       // Result = CDTrackNum_Intermission (80073E58)
-    a0 = lw(v0);                                        // Load from: CDTrackNum_Intermission (80073E58)
+    
+    // Play the intermission cd track
+    a0 = gCDTrackNum[cdmusic_intermission];
     a1 = *gCdMusicVol;
-    a2 = 0;                                             // Result = 00000000
+    a2 = 0;
+    a3 = 0;
+    sw(gCDTrackNum[cdmusic_intermission], sp + 0x10);
+    sw(*gCdMusicVol, sp + 0x14);
     sw(0, sp + 0x18);
     sw(0, sp + 0x1C);
-    v0 = lw(v0);                                        // Load from: CDTrackNum_Intermission (80073E58)
-    a3 = 0;                                             // Result = 00000000
-    sw(v0, sp + 0x10);
-    sw(a1, sp + 0x14);
     psxcd_play_at_andloop();
-loc_8003CA44:
-    psxcd_elapsed_sectors();
-    if (v0 == 0) goto loc_8003CA44;
-    ra = lw(sp + 0x20);
-    sp += 0x28;
-    return;
+
+    // TODO: comment on elapsed sector stuff here
+    do {
+        psxcd_elapsed_sectors();
+    } while (v0 == 0);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shutdown logic for the intermission screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void IN_Stop() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
     IN_Drawer();
     psxcd_stop();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void IN_Ticker() noexcept {
@@ -293,11 +196,11 @@ void IN_Ticker() noexcept {
     if (v0 != 0) goto loc_8003CE4C;
     s0 = 0;                                             // Result = 00000000
     s3 = 0x80080000;                                    // Result = 80080000
-    s3 -= 0x7D60;                                       // Result = 800782A0
+    s3 -= 0x7D60;                                       // Result = gKillValue[0] 800782A0
     s2 = 0x80080000;                                    // Result = 80080000
-    s2 -= 0x7D54;                                       // Result = 800782AC
+    s2 -= 0x7D54;                                       // Result = gItemValue[0] 800782AC
     s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x7FDC;                                       // Result = 80077FDC
+    s1 += 0x7FDC;                                       // Result = gSecretValue[0] 80077FDC
     v0 = s0 << 2;                                       // Result = 00000000
 loc_8003CAE0:
     at = 0x80070000;                                    // Result = 80070000
@@ -318,16 +221,16 @@ loc_8003CAE0:
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_8003CBD4;
     }
-    v1 = lw(gp + 0xCFC);                                // Load from: 800782DC
+    v1 = *gIntermissionStage;
     v1++;
-    sw(v1, gp + 0xCFC);                                 // Store to: 800782DC
-    a2 = s1;                                            // Result = 80077FDC
+    *gIntermissionStage = v1;
+    a2 = s1;                                            // Result = gSecretValue[0] 80077FDC
     if (v1 != v0) goto loc_8003CBC0;
     s0 = 0;                                             // Result = 00000000
     a3 = 0x80080000;                                    // Result = 80080000
-    a3 -= 0x7D98;                                       // Result = 80078268
-    a1 = s2;                                            // Result = 800782AC
-    a0 = s3;                                            // Result = 800782A0
+    a3 -= 0x7D98;                                       // Result = gFragValue[0] 80078268
+    a1 = s2;                                            // Result = gItemValue[0] 800782AC
+    a0 = s3;                                            // Result = gKillValue[0] 800782A0
     v1 = 0;                                             // Result = 00000000
 loc_8003CB44:
     at = 0x80090000;                                    // Result = 80090000
@@ -362,7 +265,7 @@ loc_8003CB44:
     a1 = sfx_barexp;
     S_StartSound();
 loc_8003CBC0:
-    v0 = lw(gp + 0xCFC);                                // Load from: 800782DC
+    v0 = *gIntermissionStage;
     v0 = (i32(v0) < 2);
     a0 = 0;                                             // Result = 00000000
     if (v0 == 0) goto loc_8003CC20;
@@ -394,12 +297,12 @@ loc_8003CC30:
     a1 = 0;                                             // Result = 00000000
     t1 = 0;                                             // Result = 00000000
     t2 = 0x80080000;                                    // Result = 80080000
-    t2 -= 0x7D54;                                       // Result = 800782AC
-    a3 = t2;                                            // Result = 800782AC
+    t2 -= 0x7D54;                                       // Result = gItemValue[0] 800782AC
+    a3 = t2;                                            // Result = gItemValue[0] 800782AC
     t0 = 0x80080000;                                    // Result = 80080000
-    t0 -= 0x7D60;                                       // Result = 800782A0
+    t0 -= 0x7D60;                                       // Result = gKillValue[0] 800782A0
     a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D98;                                       // Result = 80078268
+    a2 -= 0x7D98;                                       // Result = gFragValue[0] 80078268
 loc_8003CC58:
     v0 = 2;                                             // Result = 00000002
     if (t3 != v0) goto loc_8003CCF0;
@@ -485,7 +388,7 @@ loc_8003CD3C:
     sw(v1, a3);
 loc_8003CD88:
     v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x7FDC;                                       // Result = 80077FDC
+    v0 += 0x7FDC;                                       // Result = gSecretValue[0] 80077FDC
     a0 = t1 + v0;
     v1 = lw(a0);
     at = 0x80090000;                                    // Result = 80090000
@@ -518,10 +421,10 @@ loc_8003CDE0:
     if (v0 != 0) goto loc_8003CC58;
     v1 = 1;                                             // Result = 00000001
     if (s0 != 0) goto loc_8003CE24;
-    v0 = lw(gp + 0xCFC);                                // Load from: 800782DC
+    v0 = *gIntermissionStage;
     a0 = 0;                                             // Result = 00000000
     if (v0 != 0) goto loc_8003CE24;
-    sw(v1, gp + 0xCFC);                                 // Store to: 800782DC
+    *gIntermissionStage = v1;
     a1 = sfx_barexp;
     S_StartSound();
 loc_8003CE24:
@@ -608,7 +511,7 @@ loc_8003CEE4:
     a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
     _thunk_I_DrawString();
     a0 = 0xAA;                                          // Result = 000000AA
-    a2 = lw(gp + 0xCC0);                                // Load from: 800782A0
+    a2 = lw(gp + 0xCC0);                                // Load from: gKillValue[0] 800782A0
     a1 = 0x41;                                          // Result = 00000041
     _thunk_I_DrawNumber();
     a0 = 0x35;                                          // Result = 00000035
@@ -621,7 +524,7 @@ loc_8003CEE4:
     a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
     _thunk_I_DrawString();
     a0 = 0xAA;                                          // Result = 000000AA
-    a2 = lw(gp + 0xCCC);                                // Load from: 800782AC
+    a2 = lw(gp + 0xCCC);                                // Load from: gItemValue[0] 800782AC
     a1 = 0x5B;                                          // Result = 0000005B
     _thunk_I_DrawNumber();
     a0 = 0x1A;                                          // Result = 0000001A
@@ -634,7 +537,7 @@ loc_8003CEE4:
     a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
     _thunk_I_DrawString();
     a0 = 0xAA;                                          // Result = 000000AA
-    a2 = lw(gp + 0x9FC);                                // Load from: 80077FDC
+    a2 = lw(gp + 0x9FC);                                // Load from: gSecretValue[0] 80077FDC
     a1 = 0x75;                                          // Result = 00000075
     _thunk_I_DrawNumber();
     v0 = *gNextMap;
@@ -764,18 +667,18 @@ loc_8003D0B4:
     a0 = 0x8F;                                          // Result = 0000008F
     v0 <<= 2;
     at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7D60;                                       // Result = 800782A0
+    at -= 0x7D60;                                       // Result = gKillValue[0] 800782A0
     at += v0;
     a2 = lw(at);
     a1 = 0x4F;                                          // Result = 0000004F
     _thunk_I_DrawNumber();
     v0 = *gCurPlayerIndex;
     a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D60;                                       // Result = 800782A0
+    a2 -= 0x7D60;                                       // Result = gKillValue[0] 800782A0
     a0 = 0xD8;                                          // Result = 000000D8
     if (v0 != 0) goto loc_8003D224;
     a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D5C;                                       // Result = 800782A4
+    a2 -= 0x7D5C;                                       // Result = gKillValue[1] 800782A4
 loc_8003D224:
     a2 = lw(a2);
     a1 = 0x4F;                                          // Result = 0000004F
@@ -797,18 +700,18 @@ loc_8003D224:
     a0 = 0x8F;                                          // Result = 0000008F
     v0 <<= 2;
     at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7D54;                                       // Result = 800782AC
+    at -= 0x7D54;                                       // Result = gItemValue[0] 800782AC
     at += v0;
     a2 = lw(at);
     a1 = 0x65;                                          // Result = 00000065
     _thunk_I_DrawNumber();
     v0 = *gCurPlayerIndex;
     a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D54;                                       // Result = 800782AC
+    a2 -= 0x7D54;                                       // Result = gItemValue[0] 800782AC
     a0 = 0xD8;                                          // Result = 000000D8
     if (v0 != 0) goto loc_8003D2AC;
     a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D50;                                       // Result = 800782B0
+    a2 -= 0x7D50;                                       // Result = gItemValue[1] 800782B0
 loc_8003D2AC:
     a2 = lw(a2);
     a1 = 0x65;                                          // Result = 00000065
@@ -830,18 +733,18 @@ loc_8003D2AC:
     a0 = 0x8F;                                          // Result = 0000008F
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FDC;                                       // Result = 80077FDC
+    at += 0x7FDC;                                       // Result = gSecretValue[0] 80077FDC
     at += v0;
     a2 = lw(at);
     a1 = 0x7B;                                          // Result = 0000007B
     _thunk_I_DrawNumber();
     v0 = *gCurPlayerIndex;
     a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7FDC;                                       // Result = 80077FDC
+    a2 += 0x7FDC;                                       // Result = gSecretValue[0] 80077FDC
     a0 = 0xD8;                                          // Result = 000000D8
     if (v0 != 0) goto loc_8003D334;
     a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7FE0;                                       // Result = 80077FE0
+    a2 += 0x7FE0;                                       // Result = gSecretValue[1] 80077FE0
 loc_8003D334:
     a2 = lw(a2);
     a1 = 0x7B;                                          // Result = 0000007B
@@ -934,9 +837,9 @@ loc_8003D448:
     a2 += 0x1648;                                       // Result = STR_Finished[0] (80011648)
     a1 = 0x24;                                          // Result = 00000024
     _thunk_I_DrawString();
-    a0 = lw(gp + 0xC88);                                // Load from: 80078268
+    a0 = lw(gp + 0xC88);                                // Load from: gFragValue[0] 80078268
     v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D94);                               // Load from: 8007826C
+    v1 = lw(v1 - 0x7D94);                               // Load from: gFragValue[1] 8007826C
     v0 = (i32(v1) < i32(a0));
     {
         const bool bJump = (v0 == 0);
@@ -1022,18 +925,18 @@ loc_8003D554:
     a0 = 0x85;                                          // Result = 00000085
     v0 <<= 2;
     at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7D98;                                       // Result = 80078268
+    at -= 0x7D98;                                       // Result = gFragValue[0] 80078268
     at += v0;
     a2 = lw(at);
     a1 = 0x8A;                                          // Result = 0000008A
     _thunk_I_DrawNumber();
     v0 = *gCurPlayerIndex;
     a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D98;                                       // Result = 80078268
+    a2 -= 0x7D98;                                       // Result = gFragValue[0] 80078268
     a0 = 0xCE;                                          // Result = 000000CE
     if (v0 != 0) goto loc_8003D658;
     a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D94;                                       // Result = 8007826C
+    a2 -= 0x7D94;                                       // Result = gFragValue[1] 8007826C
 loc_8003D658:
     a2 = lw(a2);
     a1 = 0x8A;                                          // Result = 0000008A
