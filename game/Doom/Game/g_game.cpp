@@ -530,7 +530,7 @@ void G_RunGame() noexcept {
             break;
         
         // Do the intermission
-        MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
+        MiniLoop(IN_Start, _thunk_IN_Stop, _thunk_IN_Ticker, IN_Drawer);
 
         // Should we do the Ultimate DOOM finale?
         if (*gNetGame == gt_single && *gGameMap == 30 && *gNextMap == 31) {    

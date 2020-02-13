@@ -7,6 +7,7 @@
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_password.h"
+#include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
 #include "PcPsx/Finally.h"
@@ -177,274 +178,146 @@ void IN_Start() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Shutdown logic for the intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
-void IN_Stop() noexcept {
+void IN_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     IN_Drawer();
     psxcd_stop();
 }
 
-void IN_Ticker() noexcept {
-    v0 = *gTicCon;
-    v1 = *gMenuTimeoutStartTicCon;
-    sp -= 0x28;
-    sw(ra, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 -= v1;
-    v0 = (i32(v0) < 0x3D);
-    sw(s0, sp + 0x10);
-    if (v0 != 0) goto loc_8003CE4C;
-    s0 = 0;                                             // Result = 00000000
-    s3 = 0x80080000;                                    // Result = 80080000
-    s3 -= 0x7D60;                                       // Result = gKillValue[0] 800782A0
-    s2 = 0x80080000;                                    // Result = 80080000
-    s2 -= 0x7D54;                                       // Result = gItemValue[0] 800782AC
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x7FDC;                                       // Result = gSecretValue[0] 80077FDC
-    v0 = s0 << 2;                                       // Result = 00000000
-loc_8003CAE0:
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    at += v0;
-    v1 = lw(at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
-    at += v0;
-    v0 = lw(at);
-    {
-        const bool bJump = (v1 == v0);
-        v0 = v1 & 0xF0;
-        if (bJump) goto loc_8003CBD4;
+void _thunk_IN_Stop() noexcept {
+    IN_Stop((gameaction_t) a0);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update logic for the intermission screen.
+// Adavnces the counters and checks for user input to skip to the next intermission stage.
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t IN_Ticker() noexcept {
+    // Intermission pauses for 1 second (60 vblanks) initially to stop accidental button presses
+    if (*gTicCon - *gMenuTimeoutStartTicCon <= 60)
+        return ga_nothing;   
+
+    // Checking for inputs from all players to speed up the intermission
+    for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+        const padbuttons_t ticButtons = gTicButtons[playerIdx];
+        const padbuttons_t oldTicButtons = gOldTicButtons[playerIdx];
+        
+        // Handle the player trying to goto to the next stage of the intermission when action buttons are pressed
+        if ((ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS)) {
+            // Advance to the next stage of the intermission
+            *gIntermissionStage += 1;
+
+            // If we are skipping to the stats being fully shown then fully display them now
+            if (*gIntermissionStage == 1) {
+                for (int32_t i = 0; i < MAXPLAYERS; ++i) {
+                    const pstats_t& stats = gPStats[i];
+
+                    gKillValue[i] = stats.killpercent;
+                    gItemValue[i] = stats.itempercent;
+                    gSecretValue[i] = stats.secretpercent;
+                    gFragValue[i] = stats.fragcount;
+                }
+
+                a0 = 0;
+                a1 = sfx_barexp;
+                S_StartSound();
+            }
+
+            // If we are at the stage where the intermission can be exited do that now
+            if (*gIntermissionStage >= 2) {
+                a0 = 0;
+                a1 = sfx_barexp;
+                S_StartSound();
+
+                return ga_died;
+            }
+        }
+
+        // If a single player game only check the first player for skip inputs
+        if (*gNetGame == gt_single)
+            break;
     }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8003CBD4;
+
+    // If a full 15Hz tick has not yet elapsed then do not advance the count
+    if (*gGameTic <= *gPrevGameTic)
+        return ga_nothing;
+    
+    // Count up the applicable stats for the current game mode.
+    // The step is increments of '2' and if we go past our target then we clamp in each case.
+    bool bStillCounting = false;
+
+    for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+        const pstats_t& stats = gPStats[playerIdx];
+
+        if (*gNetGame == gt_deathmatch) {
+            // Deathmatch game: note that frag count can count both downwards and upwards
+            if (stats.fragcount < 0) {
+                if (gFragValue[playerIdx] > stats.fragcount) {
+                    gFragValue[playerIdx] -= 2;
+                    bStillCounting = true;
+
+                    if (gFragValue[playerIdx] < stats.fragcount) {
+                        gFragValue[playerIdx] = stats.fragcount;
+                    }
+                }
+            } else {
+                if (gFragValue[playerIdx] < stats.fragcount) {
+                    gFragValue[playerIdx] += 2;
+                    bStillCounting = true;
+
+                    if (gFragValue[playerIdx] > stats.fragcount) {
+                        gFragValue[playerIdx] = stats.fragcount;
+                    }
+                }
+            }
+        }
+        else {
+            // Single player or co-op game
+            if (gKillValue[playerIdx] < stats.killpercent) {
+                gKillValue[playerIdx] += 2;
+                bStillCounting = true;
+
+                if (gKillValue[playerIdx] > stats.killpercent) {
+                    gKillValue[playerIdx] = stats.killpercent;
+                }
+            }
+
+            if (gItemValue[playerIdx] < stats.itempercent) {
+                gItemValue[playerIdx] += 2;
+                bStillCounting = true;
+
+                if (gItemValue[playerIdx] > stats.itempercent) {
+                    gItemValue[playerIdx] = stats.itempercent;
+                }
+            }
+
+            if (gSecretValue[playerIdx] < stats.secretpercent) {
+                gSecretValue[playerIdx] += 2;
+                bStillCounting = true;
+
+                if (gSecretValue[playerIdx] > stats.secretpercent) {
+                    gSecretValue[playerIdx] = stats.secretpercent;
+                }
+            }
+        }
     }
-    v1 = *gIntermissionStage;
-    v1++;
-    *gIntermissionStage = v1;
-    a2 = s1;                                            // Result = gSecretValue[0] 80077FDC
-    if (v1 != v0) goto loc_8003CBC0;
-    s0 = 0;                                             // Result = 00000000
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 -= 0x7D98;                                       // Result = gFragValue[0] 80078268
-    a1 = s2;                                            // Result = gItemValue[0] 800782AC
-    a0 = s3;                                            // Result = gKillValue[0] 800782A0
-    v1 = 0;                                             // Result = 00000000
-loc_8003CB44:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C24;                                       // Result = 80097C24
-    at += v1;
-    v0 = lw(at);
-    s0++;
-    sw(v0, a0);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C28;                                       // Result = 80097C28
-    at += v1;
-    v0 = lw(at);
-    a0 += 4;
-    sw(v0, a1);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C2C;                                       // Result = 80097C2C
-    at += v1;
-    v0 = lw(at);
-    a1 += 4;
-    sw(v0, a2);
-    a2 += 4;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C30;                                       // Result = 80097C30
-    at += v1;
-    v0 = lw(at);
-    v1 += 0x10;
-    sw(v0, a3);
-    v0 = (i32(s0) < 2);
-    a3 += 4;
-    if (v0 != 0) goto loc_8003CB44;
-    a0 = 0;
-    a1 = sfx_barexp;
-    S_StartSound();
-loc_8003CBC0:
-    v0 = *gIntermissionStage;
-    v0 = (i32(v0) < 2);
-    a0 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_8003CC20;
-loc_8003CBD4:
-    a0 = *gNetGame;
-    if (a0 == gt_single) goto loc_8003CBF8;
-    s0++;
-    v0 = (i32(s0) < 2);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s0 << 2;
-        if (bJump) goto loc_8003CAE0;
+
+    // If the ramp up is done and we are on the initial stage then advance to the next and do the explode sfx
+    if ((!bStillCounting) && (*gIntermissionStage == 0)) {
+        *gIntermissionStage = 1;
+
+        a0 = 0;
+        a1 = sfx_barexp;
+        S_StartSound();
     }
-loc_8003CBF8:
-    v1 = *gGameTic;
-    v0 = *gPrevGameTic;
-    v0 = (i32(v0) < i32(v1));
-    s0 = 0;
-    if (v0 != 0) goto loc_8003CC30;
-    v0 = 0;
-    goto loc_8003CE50;
-loc_8003CC20:
-    a1 = sfx_barexp;
-    S_StartSound();
-    v0 = 1;
-    goto loc_8003CE50;
-loc_8003CC30:
-    t3 = a0;
-    a1 = 0;                                             // Result = 00000000
-    t1 = 0;                                             // Result = 00000000
-    t2 = 0x80080000;                                    // Result = 80080000
-    t2 -= 0x7D54;                                       // Result = gItemValue[0] 800782AC
-    a3 = t2;                                            // Result = gItemValue[0] 800782AC
-    t0 = 0x80080000;                                    // Result = 80080000
-    t0 -= 0x7D60;                                       // Result = gKillValue[0] 800782A0
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D98;                                       // Result = gFragValue[0] 80078268
-loc_8003CC58:
-    v0 = 2;                                             // Result = 00000002
-    if (t3 != v0) goto loc_8003CCF0;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C30;                                       // Result = 80097C30
-    at += a1;
-    v0 = lw(at);
-    if (i32(v0) >= 0) goto loc_8003CCC0;
-    v1 = lw(a2);
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 - 2;
-        if (bJump) goto loc_8003CDE0;
+
+    // Do periodic gun shot sounds (every 2nd tick) while the count up is happening
+    if (bStillCounting && ((*gGameTic & 1) == 0)) {
+        a0 = 0;
+        a1 = sfx_pistol;
+        S_StartSound();
     }
-    sw(v0, a2);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C30;                                       // Result = 80097C30
-    at += a1;
-    v1 = lw(at);
-    v0 = (i32(v0) < i32(v1));
-loc_8003CCB0:
-    s0 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_8003CDE0;
-    sw(v1, a2);
-    goto loc_8003CDE0;
-loc_8003CCC0:
-    v1 = lw(a2);
-    v0 = (i32(v1) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 + 2;
-        if (bJump) goto loc_8003CDE0;
-    }
-    sw(v0, a2);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C30;                                       // Result = 80097C30
-    at += a1;
-    v1 = lw(at);
-    v0 = (i32(v1) < i32(v0));
-    goto loc_8003CCB0;
-loc_8003CCF0:
-    v1 = lw(t0);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C24;                                       // Result = 80097C24
-    at += a1;
-    v0 = lw(at);
-    v0 = (i32(v1) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 + 2;
-        if (bJump) goto loc_8003CD3C;
-    }
-    sw(v0, t0);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C24;                                       // Result = 80097C24
-    at += a1;
-    v1 = lw(at);
-    v0 = (i32(v1) < i32(v0));
-    s0 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_8003CD3C;
-    sw(v1, t0);
-loc_8003CD3C:
-    v1 = lw(a3);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C28;                                       // Result = 80097C28
-    at += a1;
-    v0 = lw(at);
-    v0 = (i32(v1) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 + 2;
-        if (bJump) goto loc_8003CD88;
-    }
-    sw(v0, a3);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C28;                                       // Result = 80097C28
-    at += a1;
-    v1 = lw(at);
-    v0 = (i32(v1) < i32(v0));
-    s0 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_8003CD88;
-    sw(v1, a3);
-loc_8003CD88:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x7FDC;                                       // Result = gSecretValue[0] 80077FDC
-    a0 = t1 + v0;
-    v1 = lw(a0);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C2C;                                       // Result = 80097C2C
-    at += a1;
-    v0 = lw(at);
-    v0 = (i32(v1) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 + 2;
-        if (bJump) goto loc_8003CDE0;
-    }
-    sw(v0, a0);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7C2C;                                       // Result = 80097C2C
-    at += a1;
-    v1 = lw(at);
-    v0 = (i32(v1) < i32(v0));
-    s0 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_8003CDE0;
-    sw(v1, a0);
-loc_8003CDE0:
-    a1 += 0x10;
-    t1 += 4;
-    a3 += 4;
-    t0 += 4;
-    v0 = t2 + 8;                                        // Result = gTestFlags (800782B4)
-    v0 = (i32(a3) < i32(v0));
-    a2 += 4;
-    if (v0 != 0) goto loc_8003CC58;
-    v1 = 1;                                             // Result = 00000001
-    if (s0 != 0) goto loc_8003CE24;
-    v0 = *gIntermissionStage;
-    a0 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_8003CE24;
-    *gIntermissionStage = v1;
-    a1 = sfx_barexp;
-    S_StartSound();
-loc_8003CE24:
-    v0 = *gGameTic;
-    v0 &= 1;
-    if (v0 != 0) goto loc_8003CE4C;
-    a0 = 0;
-    if (s0 == 0) goto loc_8003CE4C;
-    a1 = sfx_pistol;
-    S_StartSound();
-loc_8003CE4C:
-    v0 = 0;
-loc_8003CE50:
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+
+    return ga_nothing;
 }
 
 void IN_Drawer() noexcept {
@@ -473,6 +346,10 @@ loc_8003CEC4:
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
+}
+
+void _thunk_IN_Ticker() noexcept {
+    v0 = IN_Ticker();
 }
 
 void IN_SingleDrawer() noexcept {
