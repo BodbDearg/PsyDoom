@@ -308,7 +308,7 @@ gameaction_t M_Ticker() noexcept {
                 S_StartSound();
             }
         } 
-        else if ((ticButtons & PAD_LEFT) != 0) {
+        else if (ticButtons & PAD_LEFT) {
             if (*gStartGameType != gt_single) {
                 *gStartGameType = (gametype_t)((uint32_t) *gStartGameType -1);
 
