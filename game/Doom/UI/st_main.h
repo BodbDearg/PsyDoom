@@ -12,8 +12,15 @@ struct facesprite_t {
     uint8_t h;
 };
 
+static_assert(sizeof(facesprite_t) == 6);
+
 // The number of face sprite definitions there are
 static constexpr int32_t NUMFACES = 47;
+
+// Some of the indexes into the face sprite array
+static constexpr int32_t EVILFACE   = 6;
+static constexpr int32_t GODFACE    = 40;
+static constexpr int32_t DEADFACE   = 41;
 
 extern const facesprite_t               gFaceSprites[NUMFACES];
 extern const VmPtr<VmPtr<const char>>   gpStatusBarMsgStr;

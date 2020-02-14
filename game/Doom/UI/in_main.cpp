@@ -436,6 +436,7 @@ void IN_CoopDrawer() noexcept {
         I_DrawString(-1, 149, "Entering");
         I_DrawString(-1, 165, gMapNames[*gNextMap - 1]);
 
+        // Well this is mean! The current player only gets to see a password if not dead :(
         if (gPlayers[*gCurPlayerIndex].health > 0) {
             I_DrawString(-1, 191, "Password");
 
@@ -451,158 +452,79 @@ void IN_CoopDrawer() noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws the deathmatch mode intermission screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void IN_DeathmatchDrawer() noexcept {
-loc_8003D448:
-    sp -= 0x50;
-    a0 = gTex_BACK;
-    a1 = 0;                                             // Result = 00000000
-    a3 = gPaletteClutIds[MAINPAL];
-    a2 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x48);
-    sw(s3, sp + 0x44);
-    sw(s2, sp + 0x40);
-    sw(s1, sp + 0x3C);
-    sw(s0, sp + 0x38);
-    _thunk_I_CacheAndDrawSprite();
-    a0 = -1;                                            // Result = FFFFFFFF
-    a1 = 0x14;                                          // Result = 00000014
-    a2 = *gGameMap;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x40BC;                                       // Result = gMicronumsX[6] (800740BC)
-    a2 <<= 5;
-    a2 += v0;
-    _thunk_I_DrawString();
-    a0 = -1;                                            // Result = FFFFFFFF
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0x1648;                                       // Result = STR_Finished[0] (80011648)
-    a1 = 0x24;                                          // Result = 00000024
-    _thunk_I_DrawString();
-    a0 = lw(gp + 0xC88);                                // Load from: gFragValue[0] 80078268
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D94);                               // Load from: gFragValue[1] 8007826C
-    v0 = (i32(v1) < i32(a0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(a0) < i32(v1));
-        if (bJump) goto loc_8003D504;
+    I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+
+    I_DrawString(-1, 20, gMapNames[*gGameMap - 1]);
+    I_DrawString(-1, 36, "Finished");
+
+    const facesprite_t* pFaceSpriteP1;
+    const facesprite_t* pFaceSpriteP2;
+    
+    if (gFragValue[0] > gFragValue[1]) {
+        if (*gCurPlayerIndex == 0) {
+            pFaceSpriteP1 = &gFaceSprites[EVILFACE];
+            pFaceSpriteP2 = &gFaceSprites[DEADFACE];
+        } else {
+            pFaceSpriteP1 = &gFaceSprites[DEADFACE];
+            pFaceSpriteP2 = &gFaceSprites[EVILFACE];
+        }
     }
-    v0 = *gCurPlayerIndex;
-    if (v0 != 0) goto loc_8003D4F4;
-    s2 = 0x80070000;                                    // Result = 80070000
-    s2 += 0x3E8C;                                       // Result = StatusBarFaceSpriteInfo[24] (80073E8C)
-    s3 = s2 + 0xD2;                                     // Result = StatusBarFaceSpriteInfo[F6] (80073F5E)
-    goto loc_8003D554;
-loc_8003D4F4:
-    s3 = 0x80070000;                                    // Result = 80070000
-    s3 += 0x3E8C;                                       // Result = StatusBarFaceSpriteInfo[24] (80073E8C)
-    s2 = s3 + 0xD2;                                     // Result = StatusBarFaceSpriteInfo[F6] (80073F5E)
-    goto loc_8003D554;
-loc_8003D504:
-    if (v0 == 0) goto loc_8003D540;
-    v0 = *gCurPlayerIndex;
-    if (v0 != 0) goto loc_8003D530;
-    s2 = 0x80070000;                                    // Result = 80070000
-    s2 += 0x3F5E;                                       // Result = StatusBarFaceSpriteInfo[F6] (80073F5E)
-    s3 = s2 - 0xD2;                                     // Result = StatusBarFaceSpriteInfo[24] (80073E8C)
-    goto loc_8003D554;
-loc_8003D530:
-    s3 = 0x80070000;                                    // Result = 80070000
-    s3 += 0x3F5E;                                       // Result = StatusBarFaceSpriteInfo[F6] (80073F5E)
-    s2 = s3 - 0xD2;                                     // Result = StatusBarFaceSpriteInfo[24] (80073E8C)
-    goto loc_8003D554;
-loc_8003D540:
-    if (v1 != a0) goto loc_8003D554;
-    s3 = 0x80070000;                                    // Result = 80070000
-    s3 += 0x3E68;                                       // Result = StatusBarFaceSpriteInfo[0] (80073E68)
-    s2 = s3;                                            // Result = StatusBarFaceSpriteInfo[0] (80073E68)
-loc_8003D554:
-    v0 = lbu(s2 + 0x2);
-    a2 = 0x7F;                                          // Result = 0000007F
-    sw(v0, sp + 0x10);
-    v0 = lbu(s2 + 0x3);
-    s1 = 0x800B0000;                                    // Result = 800B0000
-    s1 -= 0x6B0E;                                       // Result = gTex_STATUS[2] (800A94F2)
-    sw(v0, sp + 0x14);
-    a0 = lhu(s1);                                       // Load from: gTex_STATUS[2] (800A94F2)
-    v0 = lbu(s2 + 0x4);
-    s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 -= 0x6F5C;                                       // Result = gPaletteClutId_UI (800A90A4)
-    sw(v0, sp + 0x18);
-    a1 = lh(s0);                                        // Load from: gPaletteClutId_UI (800A90A4)
-    v0 = lbu(s2 + 0x5);
-    a3 = 0x46;                                          // Result = 00000046
-    sw(v0, sp + 0x1C);
-    _thunk_I_DrawSprite();
-    a0 = 0x76;                                          // Result = 00000076
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7D20;                                       // Result = STR_You[0] (80077D20)
-    a1 = 0x66;                                          // Result = 00000066
-    _thunk_I_DrawString();
-    v0 = lbu(s3 + 0x2);
-    sw(v0, sp + 0x10);
-    v0 = lbu(s3 + 0x3);
-    sw(v0, sp + 0x14);
-    a0 = lhu(s1);                                       // Load from: gTex_STATUS[2] (800A94F2)
-    v0 = lbu(s3 + 0x4);
-    a2 = 0xC8;                                          // Result = 000000C8
-    sw(v0, sp + 0x18);
-    a1 = lh(s0);                                        // Load from: gPaletteClutId_UI (800A90A4)
-    v0 = lbu(s3 + 0x5);
-    a3 = 0x46;                                          // Result = 00000046
-    sw(v0, sp + 0x1C);
-    _thunk_I_DrawSprite();
-    a0 = 0xC3;                                          // Result = 000000C3
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7D24;                                       // Result = STR_Him[0] (80077D24)
-    a1 = 0x66;                                          // Result = 00000066
-    _thunk_I_DrawString();
-    a0 = 0x23;                                          // Result = 00000023
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7D28;                                       // Result = STR_Frags[0] (80077D28)
-    a1 = 0x8A;                                          // Result = 0000008A
-    _thunk_I_DrawString();
-    v0 = *gCurPlayerIndex;
-    a0 = 0x85;                                          // Result = 00000085
-    v0 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7D98;                                       // Result = gFragValue[0] 80078268
-    at += v0;
-    a2 = lw(at);
-    a1 = 0x8A;                                          // Result = 0000008A
-    _thunk_I_DrawNumber();
-    v0 = *gCurPlayerIndex;
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D98;                                       // Result = gFragValue[0] 80078268
-    a0 = 0xCE;                                          // Result = 000000CE
-    if (v0 != 0) goto loc_8003D658;
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D94;                                       // Result = gFragValue[1] 8007826C
-loc_8003D658:
-    a2 = lw(a2);
-    a1 = 0x8A;                                          // Result = 0000008A
-    _thunk_I_DrawNumber();
-    v0 = *gNextMap;
-    v0 = (i32(v0) < 0x3C);
-    a0 = -1;                                            // Result = FFFFFFFF
-    if (v0 == 0) goto loc_8003D6B0;
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0x1654;                                       // Result = STR_Entering[0] (80011654)
-    a1 = 0xBE;                                          // Result = 000000BE
-    _thunk_I_DrawString();
-    a0 = -1;                                            // Result = FFFFFFFF
-    a2 = *gNextMap;
-    a1 = 0xCE;                                          // Result = 000000CE
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x40BC;                                       // Result = gMicronumsX[6] (800740BC)
-    a2 <<= 5;
-    a2 += v0;
-    _thunk_I_DrawString();
-loc_8003D6B0:
-    ra = lw(sp + 0x48);
-    s3 = lw(sp + 0x44);
-    s2 = lw(sp + 0x40);
-    s1 = lw(sp + 0x3C);
-    s0 = lw(sp + 0x38);
-    sp += 0x50;
-    return;
+    else if (gFragValue[0] < gFragValue[1]) {
+        if (*gCurPlayerIndex == 0) {
+            pFaceSpriteP1 = &gFaceSprites[DEADFACE];
+            pFaceSpriteP2 = &gFaceSprites[EVILFACE];
+        } else {
+            pFaceSpriteP1 = &gFaceSprites[EVILFACE];
+            pFaceSpriteP2 = &gFaceSprites[DEADFACE];
+        }
+    }
+// PC-PSX: This check will always evaluate to 'true' so help compilers which might warn we are using unitialized vars...
+#if PC_PSX_DOOM_MODS
+    else {
+#else
+    else if (gFragValue[0] == gFragValue[1]) {
+#endif
+        pFaceSpriteP1 = &gFaceSprites[0];
+        pFaceSpriteP2 = &gFaceSprites[0];
+    }
+        
+    I_DrawSprite(
+        gTex_STATUS->texPageId,
+        gPaletteClutIds[UIPAL],
+        127,
+        70,
+        pFaceSpriteP1->texU,
+        pFaceSpriteP1->texV,
+        pFaceSpriteP1->w,
+        pFaceSpriteP1->h
+    );
+
+    I_DrawString(118, 102, "you");
+
+    I_DrawSprite(
+        gTex_STATUS->texPageId,
+        gPaletteClutIds[UIPAL],
+        200,
+        70,
+        pFaceSpriteP2->texU,
+        pFaceSpriteP2->texV,
+        pFaceSpriteP2->w,
+        pFaceSpriteP2->h
+    );
+
+    I_DrawString(195, 102, "him");
+
+    I_DrawString(35, 138, "Frags");
+    I_DrawNumber(133, 138, gFragValue[*gCurPlayerIndex]);
+    I_DrawNumber(206, 138, gFragValue[(*gCurPlayerIndex == 0) ? 1 : 0]);
+
+    // Only draw the next map if there is one
+    if (*gNextMap <= NUM_MAPS) {
+        I_DrawString(-1, 190, "Entering");
+        I_DrawString(-1, 206, gMapNames[*gNextMap - 1]);
+    }
 }
