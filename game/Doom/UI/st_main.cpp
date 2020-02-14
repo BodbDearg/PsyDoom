@@ -29,20 +29,8 @@ static const int16_t gCardY[NUMCARDS] = { 204, 212, 220, 204, 212, 220 };
 // Which slot (by index) on the weapon micronumbers display each weapon maps to
 static const int32_t gWeaponMicroIndexes[NUMWEAPONS] = { 0, 1, 2, 3, 4, 5, 6, 7, 0 };
 
-// Describes 1 frame of a status bar face sprite
-struct facesprite_t {
-    uint8_t xPos;
-    uint8_t yPos;
-    uint8_t texU;
-    uint8_t texV;
-    uint8_t w;
-    uint8_t h;
-};
-
 // The definitions for each face sprite
-static constexpr int32_t NUMFACES = 47;
-
-static const facesprite_t gFaceSprites[NUMFACES] = {
+const facesprite_t gFaceSprites[NUMFACES] = {
     { 118, 202,   0,  41, 19, 29 },     // STFST01  - 0
     { 118, 202,  20,  41, 19, 29 },     // STFST02  - 1
     { 118, 202, 234, 137, 19, 29 },     // STFST00  - 2

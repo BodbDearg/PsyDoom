@@ -14,6 +14,7 @@
 #include "PcPsx/Macros.h"
 #include "PsxVm/PsxVm.h"
 #include "pw_main.h"
+#include "st_main.h"
 #include "Wess/psxcd.h"
 
 struct pstats_t {
@@ -368,7 +369,7 @@ void IN_SingleDrawer() noexcept {
         I_DrawString(-1, 145, "Entering");
         I_DrawString(-1, 161, gMapNames[*gNextMap - 1]);
         I_DrawString(-1, 187, "Password");
-        
+
         char passwordStr[PW_SEQ_LEN + 1];
 
         for (int32_t i = 0; i < PW_SEQ_LEN; ++i) {
@@ -380,226 +381,74 @@ void IN_SingleDrawer() noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws the cooperative mode intermission screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void IN_CoopDrawer() noexcept {
-loc_8003D0B4:
-    sp -= 0x58;
-    a0 = gTex_BACK;
-    a1 = 0;                                             // Result = 00000000
-    a3 = gPaletteClutIds[MAINPAL];
-    a2 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x50);
-    sw(s1, sp + 0x4C);
-    sw(s0, sp + 0x48);
-    _thunk_I_CacheAndDrawSprite();
-    a2 = 0x8B;                                          // Result = 0000008B
-    s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 -= 0x6B0E;                                       // Result = gTex_STATUS[2] (800A94F2)
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x3E6A;                                       // Result = StatusBarFaceSpriteInfo[2] (80073E6A)
-    a0 = lhu(s0);                                       // Load from: gTex_STATUS[2] (800A94F2)
-    a1 = 0x800B0000;                                    // Result = 800B0000
-    a1 = lh(a1 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    v0 = lbu(s1);                                       // Load from: StatusBarFaceSpriteInfo[2] (80073E6A)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lbu(v1 + 0x3E6B);                              // Load from: StatusBarFaceSpriteInfo[3] (80073E6B)
-    t0 = 0x80070000;                                    // Result = 80070000
-    t0 = lbu(t0 + 0x3E6C);                              // Load from: StatusBarFaceSpriteInfo[4] (80073E6C)
-    t1 = 0x80070000;                                    // Result = 80070000
-    t1 = lbu(t1 + 0x3E6D);                              // Load from: StatusBarFaceSpriteInfo[5] (80073E6D)
-    a3 = 0x14;                                          // Result = 00000014
-    sw(v0, sp + 0x10);
-    sw(v1, sp + 0x14);
-    sw(t0, sp + 0x18);
-    sw(t1, sp + 0x1C);
-    _thunk_I_DrawSprite();
-    a0 = 0x82;                                          // Result = 00000082
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7D20;                                       // Result = STR_You[0] (80077D20)
-    a1 = 0x34;                                          // Result = 00000034
-    _thunk_I_DrawString();
-    a2 = 0xD5;                                          // Result = 000000D5
-    a0 = lhu(s0);                                       // Load from: gTex_STATUS[2] (800A94F2)
-    a1 = 0x800B0000;                                    // Result = 800B0000
-    a1 = lh(a1 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    v0 = lbu(s1);                                       // Load from: StatusBarFaceSpriteInfo[2] (80073E6A)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lbu(v1 + 0x3E6B);                              // Load from: StatusBarFaceSpriteInfo[3] (80073E6B)
-    t0 = 0x80070000;                                    // Result = 80070000
-    t0 = lbu(t0 + 0x3E6C);                              // Load from: StatusBarFaceSpriteInfo[4] (80073E6C)
-    t1 = 0x80070000;                                    // Result = 80070000
-    t1 = lbu(t1 + 0x3E6D);                              // Load from: StatusBarFaceSpriteInfo[5] (80073E6D)
-    a3 = 0x14;                                          // Result = 00000014
-    sw(v0, sp + 0x10);
-    sw(v1, sp + 0x14);
-    sw(t0, sp + 0x18);
-    sw(t1, sp + 0x1C);
-    _thunk_I_DrawSprite();
-    a0 = 0xD0;                                          // Result = 000000D0
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7D24;                                       // Result = STR_Him[0] (80077D24)
-    a1 = 0x34;                                          // Result = 00000034
-    _thunk_I_DrawString();
-    a0 = 0x39;                                          // Result = 00000039
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7D04;                                       // Result = STR_Kills[0] (80077D04)
-    a1 = 0x4F;                                          // Result = 0000004F
-    _thunk_I_DrawString();
-    a0 = 0x9B;                                          // Result = 0000009B
-    a1 = 0x4F;                                          // Result = 0000004F
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 += 0x7D0C;                                       // Result = STR_Percent[0] (80077D0C)
-    a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    _thunk_I_DrawString();
-    a0 = 0xE4;                                          // Result = 000000E4
-    a1 = 0x4F;                                          // Result = 0000004F
-    a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    _thunk_I_DrawString();
-    v0 = *gCurPlayerIndex;
-    a0 = 0x8F;                                          // Result = 0000008F
-    v0 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7D60;                                       // Result = gKillValue[0] 800782A0
-    at += v0;
-    a2 = lw(at);
-    a1 = 0x4F;                                          // Result = 0000004F
-    _thunk_I_DrawNumber();
-    v0 = *gCurPlayerIndex;
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D60;                                       // Result = gKillValue[0] 800782A0
-    a0 = 0xD8;                                          // Result = 000000D8
-    if (v0 != 0) goto loc_8003D224;
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D5C;                                       // Result = gKillValue[1] 800782A4
-loc_8003D224:
-    a2 = lw(a2);
-    a1 = 0x4F;                                          // Result = 0000004F
-    _thunk_I_DrawNumber();
-    a0 = 0x35;                                          // Result = 00000035
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7D10;                                       // Result = STR_Items[0] (80077D10)
-    a1 = 0x65;                                          // Result = 00000065
-    _thunk_I_DrawString();
-    a0 = 0x9B;                                          // Result = 0000009B
-    a1 = 0x65;                                          // Result = 00000065
-    a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    _thunk_I_DrawString();
-    a0 = 0xE4;                                          // Result = 000000E4
-    a1 = 0x65;                                          // Result = 00000065
-    a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    _thunk_I_DrawString();
-    v0 = *gCurPlayerIndex;
-    a0 = 0x8F;                                          // Result = 0000008F
-    v0 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7D54;                                       // Result = gItemValue[0] 800782AC
-    at += v0;
-    a2 = lw(at);
-    a1 = 0x65;                                          // Result = 00000065
-    _thunk_I_DrawNumber();
-    v0 = *gCurPlayerIndex;
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D54;                                       // Result = gItemValue[0] 800782AC
-    a0 = 0xD8;                                          // Result = 000000D8
-    if (v0 != 0) goto loc_8003D2AC;
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7D50;                                       // Result = gItemValue[1] 800782B0
-loc_8003D2AC:
-    a2 = lw(a2);
-    a1 = 0x65;                                          // Result = 00000065
-    _thunk_I_DrawNumber();
-    a0 = 0x1A;                                          // Result = 0000001A
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7D18;                                       // Result = STR_Secrets[0] (80077D18)
-    a1 = 0x7B;                                          // Result = 0000007B
-    _thunk_I_DrawString();
-    a0 = 0x9B;                                          // Result = 0000009B
-    a1 = 0x7B;                                          // Result = 0000007B
-    a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    _thunk_I_DrawString();
-    a0 = 0xE4;                                          // Result = 000000E4
-    a1 = 0x7B;                                          // Result = 0000007B
-    a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    _thunk_I_DrawString();
-    v0 = *gCurPlayerIndex;
-    a0 = 0x8F;                                          // Result = 0000008F
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FDC;                                       // Result = gSecretValue[0] 80077FDC
-    at += v0;
-    a2 = lw(at);
-    a1 = 0x7B;                                          // Result = 0000007B
-    _thunk_I_DrawNumber();
-    v0 = *gCurPlayerIndex;
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7FDC;                                       // Result = gSecretValue[0] 80077FDC
-    a0 = 0xD8;                                          // Result = 000000D8
-    if (v0 != 0) goto loc_8003D334;
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7FE0;                                       // Result = gSecretValue[1] 80077FE0
-loc_8003D334:
-    a2 = lw(a2);
-    a1 = 0x7B;                                          // Result = 0000007B
-    _thunk_I_DrawNumber();
-    v0 = *gNextMap;
-    v0 = (i32(v0) < 0x3C);
-    a0 = -1;                                            // Result = FFFFFFFF
-    if (v0 == 0) goto loc_8003D430;
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0x1654;                                       // Result = STR_Entering[0] (80011654)
-    a1 = 0x95;                                          // Result = 00000095
-    _thunk_I_DrawString();
-    a0 = -1;                                            // Result = FFFFFFFF
-    a1 = 0xA5;                                          // Result = 000000A5
-    a2 = *gNextMap;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x40BC;                                       // Result = gMicronumsX[6] (800740BC)
-    a2 <<= 5;
-    a2 += v0;
-    _thunk_I_DrawString();
-    v0 = *gCurPlayerIndex;
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x77F0;                                       // Result = gPlayer1[9] (800A8810)
-    at += v0;
-    v0 = lw(at);
-    a0 = -1;                                            // Result = FFFFFFFF
-    if (i32(v0) <= 0) goto loc_8003D430;
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0x1660;                                       // Result = STR_Password[0] (80011660)
-    a1 = 0xBF;                                          // Result = 000000BF
-    _thunk_I_DrawString();
-    v1 = 0;                                             // Result = 00000000
-    a0 = sp + 0x20;
-loc_8003D3E0:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x6560;                                       // Result = gPasswordCharBuffer[0] (80096560)
-    at += v1;
-    v0 = lbu(at);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3D4C;                                       // Result = STR_PasswordChars[0] (80073D4C)
-    at += v0;
-    v0 = lbu(at);
-    v1++;
-    sb(v0, a0);
-    v0 = (i32(v1) < 0xA);
-    a0++;
-    if (v0 != 0) goto loc_8003D3E0;
-    a2 = sp + 0x20;
-    v0 = a2 + v1;
-    sb(0, v0);
-    a0 = -1;                                            // Result = FFFFFFFF
-    a1 = 0xCF;                                          // Result = 000000CF
-    _thunk_I_DrawString();
-loc_8003D430:
-    ra = lw(sp + 0x50);
-    s1 = lw(sp + 0x4C);
-    s0 = lw(sp + 0x48);
-    sp += 0x58;
-    return;
+    I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+
+    I_DrawSprite(
+        gTex_STATUS->texPageId,
+        gPaletteClutIds[UIPAL],
+        139,
+        20,
+        gFaceSprites[0].texU,
+        gFaceSprites[0].texV,
+        gFaceSprites[0].w,
+        gFaceSprites[0].h
+    );
+
+    I_DrawString(130, 52, "you");
+
+    I_DrawSprite(
+        gTex_STATUS->texPageId,
+        gPaletteClutIds[UIPAL],
+        213,
+        20,
+        gFaceSprites[0].texU,
+        gFaceSprites[0].texV,
+        gFaceSprites[0].w,
+        gFaceSprites[0].h
+    );
+
+    I_DrawString(208, 52, "him");
+    
+    I_DrawString(57, 79, "Kills");
+    I_DrawString(155, 79, "%");
+    I_DrawString(228, 79, "%");
+    I_DrawNumber(143, 79, gKillValue[*gCurPlayerIndex]);
+    I_DrawNumber(216, 79, gKillValue[(*gCurPlayerIndex == 0) ? 1 : 0]);
+
+    I_DrawString(53, 101, "Items");
+    I_DrawString(155, 101, "%");
+    I_DrawString(228, 101, "%");
+    I_DrawNumber(143, 101, gItemValue[*gCurPlayerIndex]);
+    I_DrawNumber(216, 101, gItemValue[(*gCurPlayerIndex == 0) ? 1 : 0]);
+
+    I_DrawString(26, 123, "Secrets");
+    I_DrawString(155, 123, "%");
+    I_DrawString(228, 123, "%");
+    I_DrawNumber(143, 123, gSecretValue[*gCurPlayerIndex]);
+    I_DrawNumber(216, 123, gSecretValue[(*gCurPlayerIndex == 0) ? 1 : 0]);
+
+    // Only draw the next map and password if there is a next map
+    if (*gNextMap < 60) {
+        I_DrawString(-1, 149, "Entering");
+        I_DrawString(-1, 165, gMapNames[*gNextMap - 1]);
+
+        if (gPlayers[*gCurPlayerIndex].health > 0) {
+            I_DrawString(-1, 191, "Password");
+
+            char passwordStr[PW_SEQ_LEN + 1];
+
+            for (int32_t i = 0; i < PW_SEQ_LEN; ++i) {
+                passwordStr[i] = gPasswordChars[gPasswordCharBuffer[i]];
+            }
+
+            passwordStr[PW_SEQ_LEN] = 0;
+            I_DrawString(-1, 207, passwordStr);
+        }
+    }
 }
 
 void IN_DeathmatchDrawer() noexcept {
