@@ -307,8 +307,6 @@ extern void P_ProcessPassword() noexcept;
 extern void ST_Init() noexcept;
 extern void ST_Start() noexcept;
 extern void ST_Ticker() noexcept;
-extern void _thunk_I_DrawNumber() noexcept;
-extern void _thunk_I_DrawString() noexcept;
 extern void AM_Start() noexcept;
 extern void AM_Control() noexcept;
 extern void AM_Drawer() noexcept;
@@ -1167,8 +1165,6 @@ namespace PsxVm {
         { 0x80038558, &ST_Init },
         { 0x80038610, &ST_Start },
         { 0x80038688, &ST_Ticker },
-        { 0x8003A3C8, &_thunk_I_DrawNumber },
-        { 0x8003B324, &_thunk_I_DrawString },
         { 0x8003BAC0, &AM_Start },
         { 0x8003BB08, &AM_Control },
         { 0x8003BD34, &AM_Drawer },

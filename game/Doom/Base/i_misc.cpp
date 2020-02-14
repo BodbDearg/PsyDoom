@@ -5,11 +5,8 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/in_main.h"
-#include "Doom/UI/st_main.h"
 #include "i_drawcmds.h"
 #include "i_main.h"
-#include "PsxVm/PsxVm.h"
-#include "PsyQ/LIBC2.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include <cstdio>
@@ -159,10 +156,6 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
         spritePrim.tu0 = gBigFontChars[BIG_FONT_EXCLAMATION].u;
         I_AddPrim(&spritePrim);
     }
-}
-
-void _thunk_I_DrawNumber() noexcept {
-    I_DrawNumber(a0, a1, a2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -427,8 +420,4 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
         // Move past the drawn character
         curX += fontchar.w;
     }
-}
-
-void _thunk_I_DrawString() noexcept {
-    I_DrawString(a0, a1, vmAddrToPtr<const char>(a2));
 }
