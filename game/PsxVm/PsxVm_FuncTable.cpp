@@ -315,8 +315,6 @@ extern void AM_Drawer() noexcept;
 extern void _thunk_DrawLine() noexcept;
 extern void IN_Start() noexcept;
 extern void _thunk_IN_Ticker() noexcept;
-extern void IN_Drawer() noexcept;
-extern void IN_SingleDrawer() noexcept;
 extern void IN_CoopDrawer() noexcept;
 extern void IN_DeathmatchDrawer() noexcept;
 extern void F1_Start() noexcept;
@@ -1179,8 +1177,6 @@ namespace PsxVm {
         { 0x8003C3F0, &_thunk_DrawLine },
         { 0x8003C758, &IN_Start },
         { 0x8003CA8C, &_thunk_IN_Ticker },
-        { 0x8003CE70, &IN_Drawer },
-        { 0x8003CEE4, &IN_SingleDrawer },
         { 0x8003D0B4, &IN_CoopDrawer },
         { 0x8003D448, &IN_DeathmatchDrawer },
         { 0x8003D6D0, &F1_Start },

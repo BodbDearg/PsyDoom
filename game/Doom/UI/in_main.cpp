@@ -320,150 +320,64 @@ gameaction_t IN_Ticker() noexcept {
     return ga_nothing;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws the intermission screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void IN_Drawer() noexcept {
-loc_8003CE70:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
     I_IncDrawnFrameCount();
-    v1 = *gNetGame;
-    v0 = 1;
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 2;
-        if (bJump) goto loc_8003CEA4;
+
+    if (*gNetGame == gt_coop) {
+        IN_CoopDrawer();
+    } else if (*gNetGame == gt_deathmatch) {
+        IN_DeathmatchDrawer();
+    } else {
+        IN_SingleDrawer();
     }
-    IN_CoopDrawer();
-    goto loc_8003CEC4;
-loc_8003CEA4:
-    if (v1 != v0) goto loc_8003CEBC;
-    IN_DeathmatchDrawer();
-    goto loc_8003CEC4;
-loc_8003CEBC:
-    IN_SingleDrawer();
-loc_8003CEC4:
+
     I_SubmitGpuCmds();
     I_DrawPresent();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void _thunk_IN_Ticker() noexcept {
     v0 = IN_Ticker();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Draws the single player intermission screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void IN_SingleDrawer() noexcept {
-loc_8003CEE4:
-    sp -= 0x30;
-    a0 = gTex_BACK;
-    a1 = 0;                                             // Result = 00000000
-    a3 = gPaletteClutIds[MAINPAL];
-    a2 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x28);
-    sw(s1, sp + 0x24);
-    sw(s0, sp + 0x20);
-    _thunk_I_CacheAndDrawSprite();
-    a0 = -1;                                            // Result = FFFFFFFF
-    a1 = 0x14;                                          // Result = 00000014
-    a2 = *gGameMap;
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x40BC;                                       // Result = gMicronumsX[6] (800740BC)
-    a2 <<= 5;
-    a2 += s1;
-    _thunk_I_DrawString();
-    a0 = -1;                                            // Result = FFFFFFFF
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0x1648;                                       // Result = STR_Finished[0] (80011648)
-    a1 = 0x24;                                          // Result = 00000024
-    _thunk_I_DrawString();
-    a0 = 0x39;                                          // Result = 00000039
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7D04;                                       // Result = STR_Kills[0] (80077D04)
-    a1 = 0x41;                                          // Result = 00000041
-    _thunk_I_DrawString();
-    a0 = 0xB6;                                          // Result = 000000B6
-    a1 = 0x41;                                          // Result = 00000041
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 += 0x7D0C;                                       // Result = STR_Percent[0] (80077D0C)
-    a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    _thunk_I_DrawString();
-    a0 = 0xAA;                                          // Result = 000000AA
-    a2 = lw(gp + 0xCC0);                                // Load from: gKillValue[0] 800782A0
-    a1 = 0x41;                                          // Result = 00000041
-    _thunk_I_DrawNumber();
-    a0 = 0x35;                                          // Result = 00000035
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7D10;                                       // Result = STR_Items[0] (80077D10)
-    a1 = 0x5B;                                          // Result = 0000005B
-    _thunk_I_DrawString();
-    a0 = 0xB6;                                          // Result = 000000B6
-    a1 = 0x5B;                                          // Result = 0000005B
-    a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    _thunk_I_DrawString();
-    a0 = 0xAA;                                          // Result = 000000AA
-    a2 = lw(gp + 0xCCC);                                // Load from: gItemValue[0] 800782AC
-    a1 = 0x5B;                                          // Result = 0000005B
-    _thunk_I_DrawNumber();
-    a0 = 0x1A;                                          // Result = 0000001A
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x7D18;                                       // Result = STR_Secrets[0] (80077D18)
-    a1 = 0x75;                                          // Result = 00000075
-    _thunk_I_DrawString();
-    a0 = 0xB6;                                          // Result = 000000B6
-    a1 = 0x75;                                          // Result = 00000075
-    a2 = s0;                                            // Result = STR_Percent[0] (80077D0C)
-    _thunk_I_DrawString();
-    a0 = 0xAA;                                          // Result = 000000AA
-    a2 = lw(gp + 0x9FC);                                // Load from: gSecretValue[0] 80077FDC
-    a1 = 0x75;                                          // Result = 00000075
-    _thunk_I_DrawNumber();
-    v0 = *gNextMap;
-    v0 = (i32(v0) < 0x3C);
-    a0 = -1;                                            // Result = FFFFFFFF
-    if (v0 == 0) goto loc_8003D09C;
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0x1654;                                       // Result = STR_Entering[0] (80011654)
-    a1 = 0x91;                                          // Result = 00000091
-    _thunk_I_DrawString();
-    a0 = -1;                                            // Result = FFFFFFFF
-    a2 = *gNextMap;
-    a1 = 0xA1;                                          // Result = 000000A1
-    a2 <<= 5;
-    a2 += s1;
-    _thunk_I_DrawString();
-    a0 = -1;                                            // Result = FFFFFFFF
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0x1660;                                       // Result = STR_Password[0] (80011660)
-    a1 = 0xBB;                                          // Result = 000000BB
-    _thunk_I_DrawString();
-    v1 = 0;                                             // Result = 00000000
-    a0 = sp + 0x10;
-loc_8003D04C:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x6560;                                       // Result = gPasswordCharBuffer[0] (80096560)
-    at += v1;
-    v0 = lbu(at);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x3D4C;                                       // Result = STR_PasswordChars[0] (80073D4C)
-    at += v0;
-    v0 = lbu(at);
-    v1++;
-    sb(v0, a0);
-    v0 = (i32(v1) < 0xA);
-    a0++;
-    if (v0 != 0) goto loc_8003D04C;
-    a2 = sp + 0x10;
-    v0 = a2 + v1;
-    sb(0, v0);
-    a0 = -1;                                            // Result = FFFFFFFF
-    a1 = 0xCB;                                          // Result = 000000CB
-    _thunk_I_DrawString();
-loc_8003D09C:
-    ra = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x30;
-    return;
+    I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+
+    I_DrawString(-1, 20, gMapNames[*gGameMap - 1]);
+    I_DrawString(-1, 36, "Finished");
+
+    I_DrawString(57, 65, "Kills");
+    I_DrawString(182, 65, "%");
+    I_DrawNumber(170, 65, gKillValue[0]);
+    
+    I_DrawString(53, 91, "Items");
+    I_DrawString(182, 91, "%");
+    I_DrawNumber(170, 91, gItemValue[0]);
+
+    I_DrawString(26, 117, "Secrets");
+    I_DrawString(182, 117, "%");
+    I_DrawNumber(170, 117, gSecretValue[0]);
+    
+    // Only draw the next map and password if there is a next map
+    if (*gNextMap <= NUM_MAPS) {
+        I_DrawString(-1, 145, "Entering");
+        I_DrawString(-1, 161, gMapNames[*gNextMap - 1]);
+        I_DrawString(-1, 187, "Password");
+        
+        char passwordStr[PW_SEQ_LEN + 1];
+
+        for (int32_t i = 0; i < PW_SEQ_LEN; ++i) {
+            passwordStr[i] = gPasswordChars[gPasswordCharBuffer[i]];
+        }
+
+        passwordStr[PW_SEQ_LEN] = 0;
+        I_DrawString(-1, 203, passwordStr);
+    }
 }
 
 void IN_CoopDrawer() noexcept {
