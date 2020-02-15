@@ -15,9 +15,7 @@
 #include "PsxVm/PsxVm.h"
 
 void P_PlayerMove() noexcept {
-loc_800297A0:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     sp -= 0x28;
     sw(s0, sp + 0x10);
     s0 = a0;
@@ -431,8 +429,7 @@ loc_80029DC0:
 void P_BuildMove() noexcept {
 loc_80029DD4:
     sp -= 0x18;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     a1 = a0;
     sw(ra, sp + 0x10);
     v0 <<= 2;
@@ -486,8 +483,7 @@ loc_80029E80:
     v0 &= a2;
     v1 = a3 << 2;
     if (v0 == 0) goto loc_80029EDC;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
     at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
@@ -504,8 +500,7 @@ loc_80029EDC:
     v0 = lw(t0 + 0x14);
     v0 &= a2;
     if (v0 == 0) goto loc_80029F40;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
     at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
@@ -533,8 +528,7 @@ loc_80029F40:
     }
     v1 = a3 << 2;
     if (v0 == 0) goto loc_80029F98;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
     at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
@@ -554,8 +548,7 @@ loc_80029F98:
         v0 = a2 & 0x1000;
         if (bJump) goto loc_8002A190;
     }
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
     at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
@@ -587,8 +580,7 @@ loc_80029FF8:
         v0 = a2 & 0x2000;
         if (bJump) goto loc_8002A064;
     }
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v1 = lw(a1 + 0x128);
     v0 <<= 2;
     v1 <<= 2;
@@ -613,8 +605,7 @@ loc_8002A064:
         v0 = a2 & 0x1000;
         if (bJump) goto loc_8002A190;
     }
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v1 = lw(a1 + 0x128);
     v0 <<= 2;
     v1 <<= 2;
@@ -643,8 +634,7 @@ loc_8002A0CC:
         v0 = a2 & 0x2000;
         if (bJump) goto loc_8002A128;
     }
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v1 = lw(a1 + 0x128);
     v0 <<= 2;
     v1 <<= 2;
@@ -669,8 +659,7 @@ loc_8002A128:
         v0 = a2 & 0x1000;
         if (bJump) goto loc_8002A190;
     }
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v1 = lw(a1 + 0x128);
     v0 <<= 2;
     v1 <<= 2;
@@ -698,8 +687,7 @@ loc_8002A18C:
 loc_8002A190:
     v1 = a3 << 2;
     if (v0 == 0) goto loc_8002A1D0;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
     at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
@@ -714,8 +702,7 @@ loc_8002A190:
 loc_8002A1D0:
     v0 = a2 & 0x4000;
     if (v0 == 0) goto loc_8002A22C;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
     at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
@@ -1078,8 +1065,7 @@ loc_8002A78C:
     }
     sw(v0, s0 + 0xD8);
 loc_8002A7A0:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v0 <<= 2;
     at = 0x80070000;                                    // Result = 80070000
     at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
@@ -1107,8 +1093,7 @@ loc_8002A7E4:
 
 void P_PlayerThink() noexcept {
 loc_8002A7F8:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     sp -= 0x20;
     sw(s0, sp + 0x10);
     s0 = a0;
@@ -1330,8 +1315,7 @@ loc_8002AB44:
     sw(v0, s0 + 0xB8);
     v0 = (i32(v0) < 0x1F);
     if (v0 != 0) goto loc_8002ABCC;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v1 = *gPlayerNum;
     v0 = *gCurPlayerIndex;
     {
         const bool bJump = (v1 != v0);

@@ -36,6 +36,7 @@ enum cheatseq_t : uint32_t {
 
 extern const VmPtr<int32_t>                 gVBlanksUntilMenuMove;
 extern const VmPtr<bool32_t>                gbGamePaused;
+extern const VmPtr<int32_t>                 gPlayerNum;
 extern const VmPtr<int32_t>                 gMapNumToCheatWarpTo;
 extern const VmPtr<int32_t>                 gVramViewerTexPage;
 extern const VmPtr<uint32_t[MAXPLAYERS]>    gTicButtons;

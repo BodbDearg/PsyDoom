@@ -12,6 +12,7 @@
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_mobj.h"
+#include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 
 const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
@@ -764,8 +765,7 @@ loc_80020384:
     sw(0, s0);
     goto loc_80020468;
 loc_800203A8:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v0 <<= 2;
     at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
     at += v0;
@@ -814,8 +814,7 @@ loc_80020468:
 }
 
 void A_ReFire() noexcept {
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     sp -= 0x18;
     sw(ra, sp + 0x10);
     v0 <<= 2;
@@ -1992,8 +1991,7 @@ void A_CloseShotgun2() noexcept {
     a0 = lw(s0);
     a1 = sfx_dbcls;
     S_StartSound();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v0 <<= 2;
     at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
     at += v0;
@@ -2134,8 +2132,7 @@ loc_8002190C:
     sp -= 0x38;
     sw(s1, sp + 0x1C);
     s1 = a0;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v1 = *gPlayerNum;
     a1 = 0x80080000;                                    // Result = 80080000
     a1 -= 0x7F70;                                       // Result = gTicRemainder[0] (80078090)
     sw(ra, sp + 0x30);
@@ -2158,8 +2155,7 @@ loc_8002190C:
 loc_80021974:
     s3 = s1 + 0xF0;
     s5 = 0;                                             // Result = 00000000
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v1 = *gPlayerNum;
     s2 = s1 + 0xF4;
     v1 <<= 2;
     v1 += a1;
@@ -2218,8 +2214,7 @@ loc_80021A48:
     v0 = (i32(s5) < 2);
     s3 += 0x10;
     if (v0 != 0) goto loc_800219A0;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v0 <<= 2;
     at = 0x80080000;                                    // Result = 80080000
     at -= 0x7F70;                                       // Result = gTicRemainder[0] (80078090)

@@ -61,6 +61,7 @@ static_assert(NUM_CHEAT_SEQ == C_ARRAY_SIZE(CHEAT_SEQUENCES));
 
 const VmPtr<int32_t>                gVBlanksUntilMenuMove(0x80077EF8);      // How many 60 Hz ticks until we can move the cursor on the menu
 const VmPtr<bool32_t>               gbGamePaused(0x80077EC0);               // Whether the game is currently paused by either player
+const VmPtr<int32_t>                gPlayerNum(0x800782EC);                 // Current player number being updated/processed
 const VmPtr<int32_t>                gMapNumToCheatWarpTo(0x80078270);       // What map the player currently has selected for cheat warp
 const VmPtr<int32_t>                gVramViewerTexPage(0x80077ED4);         // What page of texture memory to display in the VRAM viewer
 const VmPtr<uint32_t[MAXPLAYERS]>   gTicButtons(0x80077F44);                // Currently pressed buttons by all players
@@ -592,14 +593,14 @@ loc_80029544:
     P_RespawnSpecials();
     ST_Ticker();
 loc_8002955C:
-    sw(0, gp + 0xD0C);                                  // Store to: gPlayerNum (800782EC)
+    *gPlayerNum = 0;
     s0 = 0x800B0000;                                    // Result = 800B0000
     s0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
     s2 = 0x80080000;                                    // Result = 80080000
     s2 -= 0x7F54;                                       // Result = gbPlayerInGame[0] (800780AC)
     s1 = 2;                                             // Result = 00000002
 loc_80029574:
-    a0 = lw(gp + 0xD0C);                                // Load from: gPlayerNum (800782EC)
+    a0 = *gPlayerNum;
     v0 = a0 << 2;
     v0 += s2;
     v0 = lw(v0);
@@ -609,13 +610,13 @@ loc_80029574:
     G_DoReborn();
 loc_800295AC:
     a0 = s0;
-    AM_Control();
+    AM_Control(*vmAddrToPtr<player_t>(a0));
     a0 = s0;
     P_PlayerThink();
 loc_800295BC:
-    v0 = lw(gp + 0xD0C);                                // Load from: gPlayerNum (800782EC)
+    v0 = *gPlayerNum;
     v0++;
-    sw(v0, gp + 0xD0C);                                 // Store to: gPlayerNum (800782EC)
+    *gPlayerNum = v0;
     v0 = (i32(v0) < 2);
     s0 += 0x12C;
     if (v0 != 0) goto loc_80029574;

@@ -333,7 +333,7 @@ static constexpr uint32_t CF_NOPAUSEMSG     = 0x100;    // Don't draw the 'pause
 
 // Player automap flags
 static constexpr uint32_t AF_ACTIVE = 0x1;      // Automap is displaying
-static constexpr uint32_t AF_FOLLOW = 0x2;      // Follow mode enabled
+static constexpr uint32_t AF_FOLLOW = 0x2;      // If set then do not follow the player in the automap (manual automap movement)
 
 // Holds state specific to each player
 struct player_t {

@@ -3,199 +3,131 @@
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
 #include "Doom/Game/g_game.h"
+#include "Doom/Game/p_local.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
+static constexpr fixed_t MOVESTEP   = FRACUNIT * 128;   // Controls how fast manual automap movement happens
+static constexpr fixed_t SCALESTEP  = 2;                // How fast to scale in/out
+static constexpr int32_t MAXSCALE   = 64;               // Maximum map zoom
+static constexpr int32_t MINSCALE   = 8;                // Minimum map zoom
+
+static const VmPtr<fixed_t> gAutomapXMin(0x80078280);
+static const VmPtr<fixed_t> gAutomapXMax(0x80078290);
+static const VmPtr<fixed_t> gAutomapYMin(0x8007828C);
+static const VmPtr<fixed_t> gAutomapYMax(0x80078298);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Automap initialization logic
+//------------------------------------------------------------------------------------------------------------------------------------------
 void AM_Start() noexcept {
-loc_8003BAC0:
-    a0 = *gBlockmapOriginX;
-    v0 = *gBlockmapWidth;
-    a1 = *gBlockmapOriginY;
-    v1 = *gBlockmapHeight;
-    v0 <<= 23;
-    v0 += a0;
-    v1 <<= 23;
-    v1 += a1;
-    sw(a0, gp + 0xCA0);                                 // Store to: gAutomapXMin (80078280)
-    sw(v0, gp + 0xCB0);                                 // Store to: gAutomapXMax (80078290)
-    sw(a1, gp + 0xCAC);                                 // Store to: gAutomapYMin (8007828C)
-    sw(v1, gp + 0xCB8);                                 // Store to: gAutomapYMax (80078298)
-    return;
+    *gAutomapXMin = *gBlockmapOriginX;
+    *gAutomapYMin = *gBlockmapOriginY;
+    *gAutomapXMax = (*gBlockmapWidth  << MAPBLOCKSHIFT) + *gBlockmapOriginX;    
+    *gAutomapYMax = (*gBlockmapHeight << MAPBLOCKSHIFT) + *gBlockmapOriginY;
 }
 
-void AM_Control() noexcept {
-loc_8003BB08:
-    v0 = *gbGamePaused;
-    if (v0 != 0) goto loc_8003BD2C;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    at += v0;
-    a2 = lw(at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
-    at += v0;
-    v0 = lw(at);
-    v1 = a2 & 0x100;
-    v0 &= 0x100;
-    if (v1 == 0) goto loc_8003BB88;
-    if (v0 != 0) goto loc_8003BB88;
-    v0 = lw(a0 + 0x124);
-    v1 = lw(a0);
-    v0 ^= 1;
-    sw(v0, a0 + 0x124);
-    v0 = lw(v1);
-    v1 = lw(a0);
-    sw(v0, a0 + 0x118);
-    v0 = lw(v1 + 0x4);
-    sw(v0, a0 + 0x11C);
-loc_8003BB88:
-    a1 = lw(a0 + 0x124);
-    v0 = a1 & 1;
-    if (v0 == 0) goto loc_8003BD2C;
-    v0 = lw(a0 + 0x4);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a2 & 0x40;
-        if (bJump) goto loc_8003BD2C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update logic for the automap: handles player input & controls
+//------------------------------------------------------------------------------------------------------------------------------------------
+void AM_Control(player_t& player) noexcept {
+    // If the game is paused we do nothing
+    if (*gbGamePaused)
+        return;
+    
+    // Toggle the automap on and off if select has just been pressed
+    const padbuttons_t ticButtons = gTicButtons[*gPlayerNum];
+    
+    if ((ticButtons & PAD_SELECT) && ((gOldTicButtons[*gPlayerNum] & PAD_SELECT) == 0)) {
+        player.automapflags ^= AF_ACTIVE;
+        player.automapx = player.mo->x;
+        player.automapy = player.mo->y;
     }
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a1 & 2;
-        if (bJump) goto loc_8003BBC4;
+
+    // If the automap is not active or the player dead then do nothing
+    if ((player.automapflags & AF_ACTIVE) == 0)
+        return;
+
+    if (player.playerstate != PST_LIVE)
+        return;
+
+    // Follow the player unless the cross button is pressed.
+    // The rest of the logic is for when we are NOT following the player.
+    if ((ticButtons & PAD_CROSS) == 0) {
+        player.automapflags &= ~AF_FOLLOW;
+        return;
     }
-    v0 = -3;                                            // Result = FFFFFFFD
-    v0 &= a1;
-    sw(v0, a0 + 0x124);
-    goto loc_8003BD2C;
-loc_8003BBC4:
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a2 & 0x80;
-        if (bJump) goto loc_8003BBF4;
+    
+    // Snap the manual automap movement position to the player location once we transition from following to not following
+    if ((player.automapflags & AF_FOLLOW) == 0) {
+        player.automapflags |= AF_FOLLOW;
+        player.automapx = player.mo->x;
+        player.automapy = player.mo->y;
     }
-    v1 = lw(a0);
-    v0 = a1 | 2;
-    sw(v0, a0 + 0x124);
-    v0 = lw(v1);
-    v1 = lw(a0);
-    sw(v0, a0 + 0x118);
-    v0 = lw(v1 + 0x4);
-    sw(v0, a0 + 0x11C);
-    v0 = a2 & 0x80;
-loc_8003BBF4:
-    a1 = 0x800000;                                      // Result = 00800000
-    if (v0 == 0) goto loc_8003BC00;
-    a1 = 0x1000000;                                     // Result = 01000000
-loc_8003BC00:
-    v0 = lw(a0 + 0x124);
-    v0 &= 2;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 & 0x2000;
-        if (bJump) goto loc_8003BD2C;
+    
+    // Figure out the movement amount for manual camera movement    
+    const fixed_t moveStep = (ticButtons & PAD_SQUARE) ? MOVESTEP * 2 : MOVESTEP;
+
+    // Not sure why this check was done, it can never be true due to the logic above.
+    // PC-PSX: remove this block as it is useless...
+    #if !PC_PSX_DOOM_MODS
+        if ((player.automapflags & AF_FOLLOW) == 0)
+            return;
+    #endif
+
+    // Left/right movement
+    if (ticButtons & PAD_RIGHT) {
+        player.automapx += moveStep;
+
+        if (player.automapx > *gAutomapXMax) {
+            player.automapx = *gAutomapXMax;
+        }
     }
-    if (v0 == 0) goto loc_8003BC34;
-    v0 = lw(a0 + 0x118);
-    v1 = lw(gp + 0xCB0);                                // Load from: gAutomapXMax (80078290)
-    v0 += a1;
-    sw(v0, a0 + 0x118);
-    v0 = (i32(v1) < i32(v0));
-    goto loc_8003BC54;
-loc_8003BC34:
-    v0 = a2 & 0x8000;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 & 0x1000;
-        if (bJump) goto loc_8003BC60;
+    else if (ticButtons & PAD_LEFT) {
+        player.automapx -= moveStep;
+
+        if (player.automapx < *gAutomapXMin) {
+            player.automapx = *gAutomapXMin;
+        }
     }
-    v0 = lw(a0 + 0x118);
-    v1 = lw(gp + 0xCA0);                                // Load from: gAutomapXMin (80078280)
-    v0 -= a1;
-    sw(v0, a0 + 0x118);
-    v0 = (i32(v0) < i32(v1));
-loc_8003BC54:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 & 0x1000;
-        if (bJump) goto loc_8003BC60;
+
+    // Up/down movement
+    if (ticButtons & PAD_UP) {
+        player.automapy += moveStep;
+
+        if (player.automapy > *gAutomapYMax) {
+            player.automapy = *gAutomapYMax;
+        }
     }
-    sw(v1, a0 + 0x118);
-loc_8003BC60:
-    if (v0 == 0) goto loc_8003BC80;
-    v0 = lw(a0 + 0x11C);
-    v1 = lw(gp + 0xCB8);                                // Load from: gAutomapYMax (80078298)
-    v0 += a1;
-    sw(v0, a0 + 0x11C);
-    v0 = (i32(v1) < i32(v0));
-    goto loc_8003BCA0;
-loc_8003BC80:
-    v0 = a2 & 0x4000;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 & 8;
-        if (bJump) goto loc_8003BCAC;
+    else if (ticButtons & PAD_DOWN) {
+        player.automapy -= moveStep;
+
+        if (player.automapy < *gAutomapYMin) {
+            player.automapy = *gAutomapYMin;
+        }
     }
-    v0 = lw(a0 + 0x11C);
-    v1 = lw(gp + 0xCAC);                                // Load from: gAutomapYMin (8007828C)
-    v0 -= a1;
-    sw(v0, a0 + 0x11C);
-    v0 = (i32(v0) < i32(v1));
-loc_8003BCA0:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 & 8;
-        if (bJump) goto loc_8003BCAC;
+    
+    // Scale up and down
+    if (ticButtons & PAD_R1) {
+        player.automapscale -= SCALESTEP;
+        
+        if (player.automapscale < MINSCALE) {
+            player.automapscale = MINSCALE;
+        }
+    } 
+    else if (ticButtons & PAD_L1) {
+        player.automapscale += SCALESTEP;
+
+        if (player.automapscale > MAXSCALE) {
+            player.automapscale = MAXSCALE;
+        }
     }
-    sw(v1, a0 + 0x11C);
-loc_8003BCAC:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 & 4;
-        if (bJump) goto loc_8003BCD8;
-    }
-    v0 = lw(a0 + 0x120);
-    v0 -= 2;
-    sw(v0, a0 + 0x120);
-    v0 = (i32(v0) < 8);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_8003BD00;
-    }
-    sw(v0, a0 + 0x120);
-    goto loc_8003BD00;
-loc_8003BCD8:
-    if (v0 == 0) goto loc_8003BD00;
-    v0 = lw(a0 + 0x120);
-    v0 += 2;
-    sw(v0, a0 + 0x120);
-    v0 = (i32(v0) < 0x41);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x40;                                      // Result = 00000040
-        if (bJump) goto loc_8003BD00;
-    }
-    sw(v0, a0 + 0x120);
-loc_8003BD00:
-    a0 = 0xFFFF0000;                                    // Result = FFFF0000
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D14);                               // Load from: gPlayerNum (800782EC)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    v1 <<= 2;
-    v1 += v0;
-    v0 = lw(v1);
-    a0 |= 0xFF3;                                        // Result = FFFF0FF3
-    v0 &= a0;
-    sw(v0, v1);
-loc_8003BD2C:
-    return;
+
+    // When not in follow mode, consume these inputs so that we don't move the player in the level
+    gTicButtons[*gPlayerNum] &= ~(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_R1 | PAD_L1);
 }
 
 void AM_Drawer() noexcept {
