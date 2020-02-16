@@ -2,18 +2,28 @@
 
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
+#include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_local.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
-#include "PsxVm/PsxVm.h"
+#include "Doom/Renderer/r_local.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
-static constexpr fixed_t MOVESTEP   = FRACUNIT * 128;   // Controls how fast manual automap movement happens
-static constexpr fixed_t SCALESTEP  = 2;                // How fast to scale in/out
-static constexpr int32_t MAXSCALE   = 64;               // Maximum map zoom
-static constexpr int32_t MINSCALE   = 8;                // Minimum map zoom
+static constexpr fixed_t MOVESTEP       = FRACUNIT * 128;   // Controls how fast manual automap movement happens
+static constexpr fixed_t SCALESTEP      = 2;                // How fast to scale in/out
+static constexpr int32_t MAXSCALE       = 64;               // Maximum map zoom
+static constexpr int32_t MINSCALE       = 8;                // Minimum map zoom
+static constexpr int32_t THING_TRI_SIZE = 24;               // The size of the triangles for thing displays on the automap
+
+// Map line colors
+static constexpr uint32_t COLOR_RED     = 0xA40000;
+static constexpr uint32_t COLOR_GREEN   = 0x00C000;
+static constexpr uint32_t COLOR_BROWN   = 0x8A5C30;
+static constexpr uint32_t COLOR_YELLOW  = 0xCCCC00;
+static constexpr uint32_t COLOR_GREY    = 0x808080;
+static constexpr uint32_t COLOR_AQUA    = 0x0080FF;
 
 static const VmPtr<fixed_t> gAutomapXMin(0x80078280);
 static const VmPtr<fixed_t> gAutomapXMax(0x80078290);
@@ -130,406 +140,158 @@ void AM_Control(player_t& player) noexcept {
     gTicButtons[*gPlayerNum] &= ~(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_R1 | PAD_L1);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does drawing for the automap
+//------------------------------------------------------------------------------------------------------------------------------------------
 void AM_Drawer() noexcept {
-loc_8003BD34:
-    sp -= 0x60;
-    sw(ra, sp + 0x5C);
-    sw(fp, sp + 0x58);
-    sw(s7, sp + 0x54);
-    sw(s6, sp + 0x50);
-    sw(s5, sp + 0x4C);
-    sw(s4, sp + 0x48);
-    sw(s3, sp + 0x44);
-    sw(s2, sp + 0x40);
-    sw(s1, sp + 0x3C);
-    sw(s0, sp + 0x38);
+    // Finish up the previous frame
     I_DrawPresent();
-    v1 = *gCurPlayerIndex;
-    v0 = v1 << 2;
-    v0 += v1;
-    v1 = v0 << 4;
-    v1 -= v0;
-    v1 <<= 2;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    v1 += v0;
-    sw(v1, sp + 0x28);
-    v0 = lw(v1 + 0x124);
-    s7 = lw(v1 + 0x120);
-    v0 &= 2;
-    if (v0 == 0) goto loc_8003BDC0;
-    t4 = lw(v1 + 0x118);
-    sw(t4, sp + 0x18);
-    t4 = lw(v1 + 0x11C);
-    sw(t4, sp + 0x20);
-    goto loc_8003BDE8;
-loc_8003BDC0:
-    t4 = lw(sp + 0x28);
-    v0 = lw(t4);
-    t4 = lw(v0);
-    sw(t4, sp + 0x18);
-    v0 = lw(v0 + 0x4);
-    sw(v0, sp + 0x20);
-loc_8003BDE8:
-    v0 = *gNumLines;
-    s1 = *gpLines;
-    fp = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_8003BF6C;
-    s0 = s1 + 0x14;
-loc_8003BE04:
-    v0 = lw(s0 - 0x4);
-    v1 = 0x100;                                         // Result = 00000100
-    v0 &= 0x180;
-    s6 = 0x8A0000;                                      // Result = 008A0000
-    if (v0 == v1) goto loc_8003BE44;
-    t4 = lw(sp + 0x28);
-    v0 = lw(t4 + 0x40);
-    if (v0 != 0) goto loc_8003BE44;
-    v0 = lw(t4 + 0xC0);
-    v0 &= 4;
-    if (v0 == 0) goto loc_8003BF4C;
-loc_8003BE44:
-    v1 = lw(s1);
-    t4 = lw(sp + 0x18);
-    v0 = lw(v1);
-    v0 -= t4;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    v0 = lw(v1 + 0x4);
-    t4 = lw(sp + 0x20);
-    a1 = lo;
-    v0 -= t4;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    v1 = lw(s0 - 0x10);
-    t4 = lw(sp + 0x18);
-    v0 = lw(v1);
-    a0 = lo;
-    v0 -= t4;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    t4 = lw(sp + 0x20);
-    v0 = lw(v1 + 0x4);
-    v1 = lo;
-    v0 -= t4;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    s6 |= 0x5C30;                                       // Result = 008A5C30
-    t2 = u32(i32(a0) >> 16);
-    t4 = lw(sp + 0x28);
-    a3 = u32(i32(v1) >> 16);
-    v0 = lo;
-    a0 = u32(i32(v0) >> 16);
-    v0 = lw(t4 + 0xC0);
-    v1 = lw(t4 + 0x40);
-    v0 &= 4;
-    v0 += v1;
-    t3 = u32(i32(a1) >> 16);
-    if (v0 == 0) goto loc_8003BEFC;
-    v0 = lw(s0 - 0x4);
-    v0 &= 0x100;
-    if (v0 != 0) goto loc_8003BEFC;
-    s6 = 0x800000;                                      // Result = 00800000
-    s6 |= 0x8080;                                       // Result = 00808080
-    goto loc_8003BF38;
-loc_8003BEFC:
-    v1 = lw(s0 - 0x4);
-    v0 = v1 & 0x20;
-    if (v0 != 0) goto loc_8003BF34;
-    v0 = lw(s0);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 & 4;
-        if (bJump) goto loc_8003BF2C;
+
+    // Determine the scale to render the map at
+    const player_t& curPlayer = gPlayers[*gCurPlayerIndex];
+    const int32_t scale = curPlayer.automapscale;
+
+    // Determine the map camera origin depending on follow mode status
+    fixed_t ox, oy;
+
+    if (curPlayer.automapflags & AF_FOLLOW) {
+        ox = curPlayer.automapx;
+        oy = curPlayer.automapy;
+    } else {
+        ox = curPlayer.mo->x;
+        oy = curPlayer.mo->y;
     }
-    s6 = 0xCC0000;                                      // Result = 00CC0000
-    s6 |= 0xCC00;                                       // Result = 00CCCC00
-    goto loc_8003BF38;
-loc_8003BF2C:
-    if (v0 != 0) goto loc_8003BF38;
-loc_8003BF34:
-    s6 = 0xA40000;                                      // Result = 00A40000
-loc_8003BF38:
-    sw(a0, sp + 0x10);
-    a0 = s6;
-    a1 = t3;
-    a2 = t2;
-    _thunk_DrawLine();
-loc_8003BF4C:
-    fp++;
-    s0 += 0x4C;
-    v0 = *gNumLines;
-    v0 = (i32(fp) < i32(v0));
-    s1 += 0x4C;
-    if (v0 != 0) goto loc_8003BE04;
-loc_8003BF6C:
-    t4 = lw(sp + 0x28);
-    v0 = lw(t4 + 0xC0);
-    v0 &= 8;
-    if (v0 == 0) goto loc_8003C168;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x715C;                                       // Result = gMObjHead[5] (800A8EA4)
-    a3 = lw(v0);                                        // Load from: gMObjHead[5] (800A8EA4)
-    v0 -= 0x14;                                         // Result = gMObjHead[0] (800A8E90)
-    if (a3 == v0) goto loc_8003C168;
-    fp = 0x80060000;                                    // Result = 80060000
-    fp += 0x7958;                                       // Result = FineSine[0] (80067958)
-loc_8003BFA8:
-    t4 = lw(sp + 0x28);
-    v0 = lw(t4);
-    s6 = lw(a3 + 0x14);
-    if (a3 == v0) goto loc_8003C154;
-    t0 = lw(a3 + 0x24);
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 = lw(a3);
-    t4 = lw(sp + 0x18);
-    a1 = t0 >> 19;
-    a1 <<= 2;
-    v0 = a1 + a2;
-    a0 = lw(v0);
-    t3 = v1 - t4;
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    v0 += t3;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    a1 += fp;
-    t4 = lw(sp + 0x20);
-    v0 = lw(a3 + 0x4);
-    v1 = lw(a1);
-    t2 = v0 - t4;
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    a1 = lo;
-    v0 += t2;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    v1 = 0xA0000000;                                    // Result = A0000000
-    v1 += t0;
-    v1 >>= 19;
-    v1 <<= 2;
-    v0 = v1 + a2;
-    a0 = lw(v0);
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    t1 = lo;
-    v0 += t3;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    v1 += fp;
-    v1 = lw(v1);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    a3 = lo;
-    v0 += t2;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    v1 = 0x60000000;                                    // Result = 60000000
-    v1 += t0;
-    v1 >>= 19;
-    v1 <<= 2;
-    a2 += v1;
-    a0 = lw(a2);
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    t0 = lo;
-    v0 += t3;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    v1 += fp;
-    v1 = lw(v1);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v1 = lo;
-    v0 += t2;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    s5 = u32(i32(a1) >> 16);
-    a1 = s5;
-    s4 = u32(i32(t1) >> 16);
-    a2 = s4;
-    a0 = 0x80FF;                                        // Result = 000080FF
-    s1 = u32(i32(a3) >> 16);
-    a3 = s1;
-    s0 = u32(i32(t0) >> 16);
-    sw(s0, sp + 0x10);
-    s3 = u32(i32(v1) >> 16);
-    v0 = lo;
-    s2 = u32(i32(v0) >> 16);
-    _thunk_DrawLine();
-    a0 = 0x80FF;                                        // Result = 000080FF
-    a1 = s1;
-    a2 = s0;
-    a3 = s3;
-    sw(s2, sp + 0x10);
-    _thunk_DrawLine();
-    a0 = 0x80FF;                                        // Result = 000080FF
-    a1 = s5;
-    a2 = s4;
-    a3 = s3;
-    sw(s2, sp + 0x10);
-    _thunk_DrawLine();
-loc_8003C154:
-    a3 = s6;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7170;                                       // Result = gMObjHead[0] (800A8E90)
-    if (a3 != v0) goto loc_8003BFA8;
-loc_8003C168:
-    t4 = 0x800B0000;                                    // Result = 800B0000
-    t4 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    sw(t4, sp + 0x28);
-    fp = 0;                                             // Result = 00000000
-loc_8003C178:
-    v1 = *gNetGame;
-    t4 = 1;                                             // Result = 00000001
-    if (v1 == t4) goto loc_8003C1A0;
-    v0 = *gCurPlayerIndex;
-    if (fp != v0) goto loc_8003C3A4;
-loc_8003C1A0:
-    t4 = lw(sp + 0x28);
-    v0 = lw(t4 + 0x4);
-    s6 = 0xC000;                                        // Result = 0000C000
-    if (v0 != 0) goto loc_8003C1D0;
-    v0 = *gGameTic;
-    v0 &= 2;
-    if (v0 != 0) goto loc_8003C3A4;
-loc_8003C1D0:
-    t4 = 1;                                             // Result = 00000001
-    if (v1 != t4) goto loc_8003C1F8;
-    v0 = *gCurPlayerIndex;
-    if (fp != v0) goto loc_8003C1F8;
-    s6 = 0xCC0000;                                      // Result = 00CC0000
-    s6 |= 0xCC00;                                       // Result = 00CCCC00
-loc_8003C1F8:
-    t4 = lw(sp + 0x28);
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    a2 = lw(t4);
-    t4 = lw(sp + 0x18);
-    t0 = lw(a2 + 0x24);
-    v1 = lw(a2);
-    a1 = t0 >> 19;
-    a1 <<= 2;
-    v0 = a1 + a3;
-    a0 = lw(v0);
-    t3 = v1 - t4;
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    v0 += t3;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    t4 = 0x80060000;                                    // Result = 80060000
-    t4 += 0x7958;                                       // Result = FineSine[0] (80067958)
-    a1 += t4;
-    t4 = lw(sp + 0x20);
-    v0 = lw(a2 + 0x4);
-    v1 = lw(a1);
-    t2 = v0 - t4;
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    a1 = lo;
-    v0 += t2;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    v1 = 0xA0000000;                                    // Result = A0000000
-    v1 += t0;
-    v1 >>= 19;
-    v1 <<= 2;
-    v0 = v1 + a3;
-    a0 = lw(v0);
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    a2 = lo;
-    v0 += t3;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    t4 = 0x80060000;                                    // Result = 80060000
-    t4 += 0x7958;                                       // Result = FineSine[0] (80067958)
-    v1 += t4;
-    v1 = lw(v1);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    t1 = lo;
-    v0 += t2;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    v1 = 0x60000000;                                    // Result = 60000000
-    v1 += t0;
-    v1 >>= 19;
-    v1 <<= 2;
-    a3 += v1;
-    a0 = lw(a3);
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    t0 = lo;
-    v0 += t3;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    v1 += t4;
-    v1 = lw(v1);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v1 = lo;
-    v0 += t2;
-    v0 = u32(i32(v0) >> 8);
-    mult(s7, v0);
-    s5 = u32(i32(a1) >> 16);
-    a1 = s5;
-    s4 = u32(i32(a2) >> 16);
-    a2 = s4;
-    a0 = s6;
-    s1 = u32(i32(t1) >> 16);
-    a3 = s1;
-    s0 = u32(i32(t0) >> 16);
-    sw(s0, sp + 0x10);
-    s3 = u32(i32(v1) >> 16);
-    v0 = lo;
-    s2 = u32(i32(v0) >> 16);
-    _thunk_DrawLine();
-    a0 = s6;
-    a1 = s1;
-    a2 = s0;
-    a3 = s3;
-    sw(s2, sp + 0x10);
-    _thunk_DrawLine();
-    a0 = s6;
-    a1 = s5;
-    a2 = s4;
-    a3 = s3;
-    sw(s2, sp + 0x10);
-    _thunk_DrawLine();
-loc_8003C3A4:
-    fp++;
-    t4 = lw(sp + 0x28);
-    v0 = (i32(fp) < 2);
-    t4 += 0x12C;
-    sw(t4, sp + 0x28);
-    if (v0 != 0) goto loc_8003C178;
-    ra = lw(sp + 0x5C);
-    fp = lw(sp + 0x58);
-    s7 = lw(sp + 0x54);
-    s6 = lw(sp + 0x50);
-    s5 = lw(sp + 0x4C);
-    s4 = lw(sp + 0x48);
-    s3 = lw(sp + 0x44);
-    s2 = lw(sp + 0x40);
-    s1 = lw(sp + 0x3C);
-    s0 = lw(sp + 0x38);
-    sp += 0x60;
-    return;
+
+    // Draw all the map lines
+    {
+        const line_t* pLine = gpLines->get();
+
+        for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx, ++pLine) {
+            // See whether we should skip drawing the line.
+            // Skip if not seen (mapped) or marked as "Don't draw" when we don't have the 'all map' powerup or similar cheats activated.
+            if (((pLine->flags & ML_MAPPED) == 0) || (pLine->flags & ML_DONTDRAW)) {
+                if (curPlayer.powers[pw_allmap] == 0) {
+                    if ((curPlayer.cheats & CF_ALLLINES) == 0)
+                        continue;
+                }
+            }
+
+            // Compute the line points in viewspace
+            const int32_t x1 = (((pLine->vertex1->x - ox) / SCREEN_W) * scale) >> FRACBITS;
+            const int32_t y1 = (((pLine->vertex1->y - oy) / SCREEN_W) * scale) >> FRACBITS;
+            const int32_t x2 = (((pLine->vertex2->x - ox) / SCREEN_W) * scale) >> FRACBITS;
+            const int32_t y2 = (((pLine->vertex2->y - oy) / SCREEN_W) * scale) >> FRACBITS;
+
+            // Decide on line color
+            uint32_t color = COLOR_BROWN;   // Normal two sided line
+            
+            if (((curPlayer.cheats & CF_ALLLINES) + curPlayer.powers[pw_allmap] != 0) &&
+                ((pLine->flags & ML_MAPPED) == 0)
+            ) {
+                color = COLOR_GREY;     // A known line (due to all map cheat/powerup) but unseen
+            }            
+            else if (pLine->flags & ML_SECRET) {
+                color = COLOR_RED;      // Secret
+            }
+            else if (pLine->special != 0) {
+                color = COLOR_YELLOW;   // Special or activatable thing
+            }
+            else if ((pLine->flags & ML_TWOSIDED) == 0) {
+                color = COLOR_RED;      // One sided line
+            }
+            
+            DrawLine(color, x1, y1, x2, y2);
+        }
+    }
+    
+    // Show all map things cheat: display a little wireframe triangle for for all things
+    if (curPlayer.cheats & CF_ALLMOBJ) {
+        for (mobj_t* pMObj = gMObjHead->next.get(); pMObj != gMObjHead.get(); pMObj = pMObj->next.get()) {
+            // Ignore the player for this particular draw
+            if (pMObj == curPlayer.mo.get())
+                continue;
+
+            // Compute the the sine and cosines for the angles of the 3 points in the triangle
+            const uint32_t fineAng1 = (pMObj->angle                ) >> ANGLETOFINESHIFT;
+            const uint32_t fineAng2 = (pMObj->angle - ANG90 - ANG45) >> ANGLETOFINESHIFT;
+            const uint32_t fineAng3 = (pMObj->angle + ANG90 + ANG45) >> ANGLETOFINESHIFT;
+
+            const fixed_t cos1 = gFineCosine[fineAng1];
+            const fixed_t cos2 = gFineCosine[fineAng2];
+            const fixed_t cos3 = gFineCosine[fineAng3];
+
+            const fixed_t sin1 = gFineSine[fineAng1];
+            const fixed_t sin2 = gFineSine[fineAng2];
+            const fixed_t sin3 = gFineSine[fineAng3];
+
+            // Compute the line points
+            const fixed_t vx = pMObj->x - ox;
+            const fixed_t vy = pMObj->y - oy;
+
+            const int32_t x1 = (((vx + cos1 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+            const int32_t y1 = (((vy + sin1 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+            const int32_t x2 = (((vx + cos2 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+            const int32_t y2 = (((vy + sin2 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+            const int32_t x3 = (((vx + cos3 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+            const int32_t y3 = (((vy + sin3 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+
+            // Draw the triangle
+            DrawLine(COLOR_AQUA, x1, y1, x2, y2);
+            DrawLine(COLOR_AQUA, x2, y2, x3, y3);
+            DrawLine(COLOR_AQUA, x1, y1, x3, y3);
+        }
+    }
+
+    // Draw map things for players: again display a little triangle for each player
+    for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+        // In deathmatch only show this player's triangle
+        if ((*gNetGame != gt_coop) && (playerIdx != *gCurPlayerIndex))
+            continue;
+
+        // Flash the player's triangle when alive
+        const player_t& player = gPlayers[playerIdx];
+        
+        if ((player.playerstate == PST_LIVE) && (*gGameTic & 2))
+            continue;
+        
+        // Change the colors of this player in COOP to distinguish
+        uint32_t color = COLOR_GREEN;
+
+        if ((*gNetGame == gt_coop) && (playerIdx == *gCurPlayerIndex)) {
+            color = COLOR_YELLOW;
+        }
+
+        // Compute the the sine and cosines for the angles of the 3 points in the triangle
+        const mobj_t& mobj = *player.mo;
+
+        const uint32_t fineAng1 = (mobj.angle                ) >> ANGLETOFINESHIFT;
+        const uint32_t fineAng2 = (mobj.angle - ANG90 - ANG45) >> ANGLETOFINESHIFT;
+        const uint32_t fineAng3 = (mobj.angle + ANG90 + ANG45) >> ANGLETOFINESHIFT;
+
+        const fixed_t cos1 = gFineCosine[fineAng1];
+        const fixed_t cos2 = gFineCosine[fineAng2];
+        const fixed_t cos3 = gFineCosine[fineAng3];
+
+        const fixed_t sin1 = gFineSine[fineAng1];
+        const fixed_t sin2 = gFineSine[fineAng2];
+        const fixed_t sin3 = gFineSine[fineAng3];
+
+        // Compute the line points
+        const fixed_t vx = player.mo->x - ox;
+        const fixed_t vy = player.mo->y - oy;
+
+        const int32_t x1 = (((vx + cos1 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+        const int32_t y1 = (((vy + sin1 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+        const int32_t x2 = (((vx + cos2 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+        const int32_t y2 = (((vy + sin2 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+        const int32_t x3 = (((vx + cos3 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+        const int32_t y3 = (((vy + sin3 * THING_TRI_SIZE) / SCREEN_W) * scale) >> FRACBITS;
+
+        // Draw the triangle
+        DrawLine(color, x1, y1, x2, y2);
+        DrawLine(color, x2, y2, x3, y3);
+        DrawLine(color, x1, y1, x3, y3);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -551,7 +313,7 @@ void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const in
     if (y1 < -100) { outcode1 |= BOTTOM;    }
     if (y1 >  100) { outcode1 |= TOP;       }
 
-    uint32_t outcode2 = (x2 < -128) ? LEFT : INSIDE;    
+    uint32_t outcode2 = (x2 < -128) ? LEFT : INSIDE;
     if (x2 >  128) { outcode2 |= RIGHT;     }
     if (y2 < -100) { outcode2 |= BOTTOM;    }
     if (y2 >  100) { outcode2 |= TOP;       }
@@ -568,8 +330,4 @@ void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const in
     LIBGPU_setXY2(line, (int16_t)(x1 + 128), (int16_t)(100 - y1), (int16_t)(x2 + 128), (int16_t)(100 - y2));
     
     I_AddPrim(&line);
-}
-
-void _thunk_DrawLine() noexcept {
-    DrawLine(a0, a1, a2, a3, lw(sp + 0x10));
 }
