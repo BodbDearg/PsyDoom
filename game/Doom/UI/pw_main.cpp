@@ -25,40 +25,38 @@ static const VmPtr<int32_t>     gCurPasswordCharIdx(0x80078174);            // W
 const VmPtr<int32_t>                gNumPasswordCharsEntered(0x80077C40);
 const VmPtr<uint8_t[PW_SEQ_LEN]>    gPasswordCharBuffer(0x80096560);
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the password screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void START_PasswordScreen() noexcept {
-    sp -= 0x18;
-    
     a0 = 0;    
     a1 = sfx_pistol;
     S_StartSound();
 
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F48);                               // Load from: gTicButtons[1] (80077F48)
+    // Reset control related stuff and password entry status
+    gVBlanksUntilMenuMove[0] = 0;
+    gOldTicButtons[0] = gTicButtons[0];
+    gOldTicButtons[1] = gTicButtons[1];
+
     *gInvalidPasswordFlashTicsLeft = 0;
     *gCurPasswordCharIdx = 0;
-    gVBlanksUntilMenuMove[0] = 0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7DEC);                                // Store to: gOldTicButtons[0] (80078214)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7DE8);                                // Store to: gOldTicButtons[1] (80078218)
-
-    sp += 0x18;
 }
 
-void STOP_PasswordScreen() noexcept {
-    sp -= 0x18;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shuts down the password screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcept {
     a0 = 0;
-    sw(ra, sp + 0x10);
     a1 = sfx_pistol;
     S_StartSound();
-    v0 = 0x20;                                          // Result = 00000020
-    *gCurPasswordCharIdx = v0;
+
+    // Draw the screen one more time before we transition
+    *gCurPasswordCharIdx = 32;
     DRAW_PasswordScreen();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+}
+
+void _thunk_STOP_PasswordScreen() noexcept {
+    STOP_PasswordScreen((gameaction_t) a0);
 }
 
 void TIC_PasswordScreen() noexcept {

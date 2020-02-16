@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PsxVm/VmPtr.h"
+#include "Doom/doomdef.h"
 
 // How many password characters are available for the password system
 static constexpr int32_t NUM_PW_CHARS = 32;
@@ -13,6 +13,9 @@ extern const VmPtr<int32_t>                 gNumPasswordCharsEntered;
 extern const VmPtr<uint8_t[PW_SEQ_LEN]>     gPasswordCharBuffer;
 
 void START_PasswordScreen() noexcept;
-void STOP_PasswordScreen() noexcept;
+
+void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcept;
+void _thunk_STOP_PasswordScreen() noexcept;
+
 void TIC_PasswordScreen() noexcept;
 void DRAW_PasswordScreen() noexcept;

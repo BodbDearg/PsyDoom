@@ -279,7 +279,7 @@ gameaction_t O_Control() noexcept {
             // Password entry
             case opt_password: {
                 if (ticButtons & PAD_ACTION_BTNS) {
-                    if (MiniLoop(START_PasswordScreen, STOP_PasswordScreen, TIC_PasswordScreen, DRAW_PasswordScreen) == ga_warped)
+                    if (MiniLoop(START_PasswordScreen, _thunk_STOP_PasswordScreen, TIC_PasswordScreen, DRAW_PasswordScreen) == ga_warped)
                         return ga_warped;
                 }
             }   break;
