@@ -74,63 +74,50 @@ const VmPtr<texture_t> gTex_MARB01(0x80097AB0);
 const VmPtr<int32_t> gOptionsSndVol(0x800775F0);
 const VmPtr<int32_t> gOptionsMusVol(0x800775F4);
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the options menu
+//------------------------------------------------------------------------------------------------------------------------------------------
 void O_Init() noexcept {
-    sp -= 0x18;
+    // BAM!
     a0 = 0;
-    sw(ra, sp + 0x10);
     a1 = sfx_pistol;
     S_StartSound();
-    a1 = 0;                                             // Result = 00000000
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7EF8;                                       // Result = gVBlanksUntilMenuMove (80077EF8)
-    v1 = gCursorPos;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7E28);                                 // Store to: gCursorFrame (800781D8)
-loc_8003E940:
-    sw(0, v1);
-    sw(0, a0);
-    a0 += 4;
-    a1++;
-    v0 = (i32(a1) < 2);
-    v1 += 4;
-    if (v0 != 0) goto loc_8003E940;
-    v0 = *gNetGame;
-    if (v0 == 0) goto loc_8003E984;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x4BD0;                                       // Result = OptionsMenuEntries_NetGame[0] (80074BD0)
-    *gpOptionsMenuItems = v0;
-    v0 = 4;                                             // Result = 00000004
-    goto loc_8003E9BC;
-loc_8003E984:
-    v0 = *gbGamePaused;
-    if (v0 == 0) goto loc_8003E9AC;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x4B88;                                       // Result = OptionsMenuEntries_InGame[0] (80074B88)
-    *gpOptionsMenuItems = v0;
-    v0 = 6;                                             // Result = 00000006
-    goto loc_8003E9BC;
-loc_8003E9AC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x4B4C;                                       // Result = OptionsMenuEntries_MainMenu[0] (80074B4C)
-    *gpOptionsMenuItems = v0;
-    v0 = 5;                                             // Result = 00000005
-loc_8003E9BC:
-    *gOptionsMenuSize = v0;
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Initialize cursor position and vblanks until move for all players
+    *gCursorFrame = 0;
+
+    for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+        gCursorPos[playerIdx] = 0;
+        gVBlanksUntilMenuMove[playerIdx] = 0;
+    }
+
+    // Set what menu layout to use
+    if (*gNetGame != gt_single) {
+        *gpOptionsMenuItems = 0x80074BD0;   // TODO: OptionsMenuEntries_NetGame[0] (80074BD0)
+        *gOptionsMenuSize = 4;
+    }    
+    else if (*gbGamePaused) {
+        *gpOptionsMenuItems = 0x80074B88;   // TODO: OptionsMenuEntries_InGame[0] (80074B88)
+        *gOptionsMenuSize = 6;
+    }
+    else {
+        *gpOptionsMenuItems = 0x80074B4C;   // TODO: OptionsMenuEntries_MainMenu[0] (80074B4C)
+        *gOptionsMenuSize = 5;
+    }
 }
 
-void O_Shutdown() noexcept {
-    v1 = 1;                                             // Result = 00000001
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 -= 0x7FFC;                                       // Result = DefaultCursorPos (80078004)
-loc_8003E9DC:
-    sw(0, v0);
-    v1--;
-    v0 -= 4;
-    if (i32(v1) >= 0) goto loc_8003E9DC;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shuts down the options menu
+//------------------------------------------------------------------------------------------------------------------------------------------
+void O_Shutdown([[maybe_unused]] const gameaction_t exitAction) noexcept {
+    // Reset the cursor position for all players
+    for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+        gCursorPos[playerIdx] = 0;
+    }
+}
+
+void _thunk_O_Shutdown() noexcept {
+    O_Shutdown((gameaction_t) a0);
 }
 
 void O_Control() noexcept {

@@ -59,7 +59,7 @@ static constexpr CheatSequence CHEAT_SEQUENCES[] = {
 
 static_assert(NUM_CHEAT_SEQ == C_ARRAY_SIZE(CHEAT_SEQUENCES));
 
-const VmPtr<int32_t>                gVBlanksUntilMenuMove(0x80077EF8);      // How many 60 Hz ticks until we can move the cursor on the menu
+const VmPtr<int32_t[MAXPLAYERS]>    gVBlanksUntilMenuMove(0x80077EF8);      // How many 60 Hz ticks until we can move the cursor on the menu (one slot for each player)
 const VmPtr<bool32_t>               gbGamePaused(0x80077EC0);               // Whether the game is currently paused by either player
 const VmPtr<int32_t>                gPlayerNum(0x800782EC);                 // Current player number being updated/processed
 const VmPtr<int32_t>                gMapNumToCheatWarpTo(0x80078270);       // What map the player currently has selected for cheat warp
@@ -261,7 +261,7 @@ void P_CheckCheats() noexcept {
 
         // Run the options menu and possibly do one final draw, depending on the exit code.
         // TODO: what is the final draw for - screen fade?
-        const gameaction_t optionsAction = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);
+        const gameaction_t optionsAction = MiniLoop(O_Init, _thunk_O_Shutdown, O_Control, O_Drawer);
         
         if (optionsAction != ga_exit) {
             *gGameAction = optionsAction;
@@ -285,7 +285,7 @@ void P_CheckCheats() noexcept {
 
     // If there is no current input then you can move immediately next frame
     if (padBtns == 0) {
-        *gVBlanksUntilMenuMove = 0;
+        gVBlanksUntilMenuMove[0] = 0;
     }
     
     // Are we showing the cheat warp menu?
@@ -293,9 +293,9 @@ void P_CheckCheats() noexcept {
     player_t& player = gPlayers[0];
     
     if (player.cheats & CF_WARPMENU) {
-        *gVBlanksUntilMenuMove -= gPlayersElapsedVBlanks[0];
+        gVBlanksUntilMenuMove[0] -= gPlayersElapsedVBlanks[0];
 
-        if (*gVBlanksUntilMenuMove <= 0) {
+        if (gVBlanksUntilMenuMove[0] <= 0) {
             if ((padBtns & PAD_LEFT) != 0) {
                 *gMapNumToCheatWarpTo -= 1;
 
@@ -303,7 +303,7 @@ void P_CheckCheats() noexcept {
                     *gMapNumToCheatWarpTo = 1;
                 }
                 
-                *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
+                gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
             }
             else if ((padBtns & PAD_RIGHT) != 0) {
                 *gMapNumToCheatWarpTo += 1;
@@ -312,7 +312,7 @@ void P_CheckCheats() noexcept {
                     *gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
                 }
 
-                *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
+                gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
             }
         }
 

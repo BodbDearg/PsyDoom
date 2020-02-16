@@ -138,7 +138,7 @@ void M_Start() noexcept {
     // Some basic menu setup
     *gCursorFrame = 0;
     *gCursorPos = 0;
-    *gVBlanksUntilMenuMove = 0;
+    gVBlanksUntilMenuMove[0] = 0;
     
     if (*gStartGameType == gt_single) {
         *gMaxStartEpisodeOrMap = MAX_EPISODE;
@@ -248,7 +248,7 @@ gameaction_t M_Ticker() noexcept {
             if (gCursorPos[0] == options) {
                 // Options entry pressed: run the options menu.
                 // Note that if a level password is entered correctly there, we exit with 'ga_warped' as the action.
-                if (MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer) == ga_warped)
+                if (MiniLoop(O_Init, _thunk_O_Shutdown, O_Control, O_Drawer) == ga_warped)
                     return ga_warped;
             }
         }
@@ -257,17 +257,17 @@ gameaction_t M_Ticker() noexcept {
     // Check for movement with the DPAD direction buttons.
     // If there is none then we can just stop here:    
     if ((ticButtons & PAD_DIRECTION_BTNS) == 0) {
-        *gVBlanksUntilMenuMove = 0;
+        gVBlanksUntilMenuMove[0] = 0;
         return ga_nothing;
     }
 
     // Movement repeat rate limiting for when movement buttons are held down
-    *gVBlanksUntilMenuMove -= gPlayersElapsedVBlanks[0];
+    gVBlanksUntilMenuMove[0] -= gPlayersElapsedVBlanks[0];
 
-    if (*gVBlanksUntilMenuMove > 0)
+    if (gVBlanksUntilMenuMove[0] > 0)
         return ga_nothing;
 
-    *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
+    gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
 
     // Do menu up/down movements
     if (ticButtons & PAD_DOWN) {

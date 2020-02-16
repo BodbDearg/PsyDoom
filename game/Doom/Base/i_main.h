@@ -115,7 +115,6 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
 void _thunk_I_LoadAndCacheTexLump() noexcept;
 
 void I_CacheAndDrawSprite(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept;
-void _thunk_I_CacheAndDrawSprite() noexcept;
 
 void I_DrawSprite(
     const uint16_t texPageId,
@@ -127,8 +126,6 @@ void I_DrawSprite(
     const uint16_t texW,
     const uint16_t texH
 ) noexcept;
-
-void _thunk_I_DrawSprite() noexcept;
 
 void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept;
 void _thunk_I_DrawLoadingPlaque() noexcept;

@@ -3331,7 +3331,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077EEC, 0x80077EF0, "gViewZ",                                 ProgElemType::INT32 },
     { 0x80077EF0, 0x80077EF4, "gpBombSource",                           ProgElemType::PTR32 },
     { 0x80077EF4, 0x80077EF8, "gTestX",                                 ProgElemType::INT32 },    
-    { 0x80077EF8, 0x80077EFC, "gVBlanksUntilMenuMove",                  ProgElemType::INT32 },
+    { 0x80077EF8, 0x80077F00, "gVBlanksUntilMenuMove",                  ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x80077F00, 0x80077F04, "gTestY",                                 ProgElemType::INT32 },
     { 0x80077F04, 0x80077F08, "gTmCeilingZ",                            ProgElemType::INT32 },
     { 0x80077F08, 0x80077F0C, "gStatusBarCurSpecialFace",               ProgElemType::UINT32 },

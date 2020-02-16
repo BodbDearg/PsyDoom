@@ -435,10 +435,6 @@ void I_CacheAndDrawSprite(texture_t& tex, const int16_t xpos, const int16_t ypos
     I_DrawSprite(tex.texPageId, clutId, xpos, ypos, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
 }
 
-void _thunk_I_CacheAndDrawSprite() noexcept {
-    I_CacheAndDrawSprite(*vmAddrToPtr<texture_t>(a0), (int16_t) a1, (int16_t) a2, (int16_t) a3);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draws a sprite to the screen with the specified texture coords, position and palette.
 // The sprite is drawn without any scaling or rotation, just a very basic 1:1 blit is done.
@@ -471,19 +467,6 @@ void I_DrawSprite(
     spritePrim.clut = clutId;
 
     I_AddPrim(getScratchAddr(128));
-}
-
-void _thunk_I_DrawSprite() noexcept {
-    I_DrawSprite(
-        (uint16_t) a0,
-        (int16_t) a1,
-        (int16_t) a2,
-        (int16_t) a3,
-        (uint8_t) lw(sp + 0x10),
-        (uint8_t) lw(sp + 0x14),
-        (uint16_t) lw(sp + 0x18),
-        (uint16_t) lw(sp + 0x1C)
-    );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1275,7 +1258,18 @@ loc_80034B44:
     sw(v0, sp + 0x10);
     sw(v1, sp + 0x14);
     sw(t0, sp + 0x1C);
-    _thunk_I_DrawSprite();
+
+    I_DrawSprite(
+        (uint16_t) a0,
+        (int16_t) a1,
+        (int16_t) a2,
+        (int16_t) a3,
+        (uint8_t) lw(sp + 0x10),
+        (uint8_t) lw(sp + 0x14),
+        (uint16_t) lw(sp + 0x18),
+        (uint16_t) lw(sp + 0x1C)
+    );
+
     I_SubmitGpuCmds();
     I_DrawPresent();
     I_NetHandshake();    

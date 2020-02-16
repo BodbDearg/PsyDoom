@@ -82,14 +82,14 @@ gameaction_t TIC_ControlsScreen() noexcept {
     
     if ((ticButtons & PAD_DIRECTION_BTNS) == 0) {
         // If no buttons are currently pressed then you can move immediately next time they are
-        *gVBlanksUntilMenuMove = 0;
+        gVBlanksUntilMenuMove[0] = 0;
     } else {
         // Check to see if we can move up/down in the menu now.
         // The delay controls how often movement is repeated when up or down is held.
-        *gVBlanksUntilMenuMove -= gPlayersElapsedVBlanks[0];
+        gVBlanksUntilMenuMove[0] -= gPlayersElapsedVBlanks[0];
 
-        if (*gVBlanksUntilMenuMove <= 0) {
-            *gVBlanksUntilMenuMove = MENU_MOVE_VBLANK_DELAY;
+        if (gVBlanksUntilMenuMove[0] <= 0) {
+            gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
 
             if (ticButtons & PAD_DOWN) {
                 // Down is pressed and movement is allowed: move, wraparound (if required) and play a sound

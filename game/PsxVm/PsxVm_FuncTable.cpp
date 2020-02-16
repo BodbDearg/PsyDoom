@@ -272,11 +272,8 @@ extern void _thunk_Z_Free2() noexcept;
 extern void I_PSXInit() noexcept;
 extern void I_ReadGamepad() noexcept;
 extern void _thunk_I_LoadAndCacheTexLump() noexcept;
-extern void _thunk_I_CacheAndDrawSprite() noexcept;
-extern void _thunk_I_DrawSprite() noexcept;
 extern void _thunk_I_DrawLoadingPlaque() noexcept;
 extern void I_DrawPresent() noexcept;
-extern void I_VsyncCallback() noexcept;
 extern void _thunk_I_CacheTex() noexcept;
 extern void I_NetSetup() noexcept;
 extern void I_NetUpdate() noexcept;
@@ -314,7 +311,7 @@ extern void F1_Ticker() noexcept;
 extern void F2_Start() noexcept;
 extern void F2_Ticker() noexcept;
 extern void O_Init() noexcept;
-extern void O_Shutdown() noexcept;
+extern void _thunk_O_Shutdown() noexcept;
 extern void O_Control() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
@@ -1126,11 +1123,8 @@ namespace PsxVm {
         { 0x80032934, &I_PSXInit },
         { 0x80032BB8, &I_ReadGamepad },
         { 0x80032BF4, &_thunk_I_LoadAndCacheTexLump },
-        { 0x80032D04, &_thunk_I_CacheAndDrawSprite },
-        { 0x80032D84, &_thunk_I_DrawSprite },
         { 0x800332E0, &_thunk_I_DrawLoadingPlaque },
         { 0x800333F0, &I_DrawPresent },
-        { 0x8003350C, &I_VsyncCallback },
         { 0x80033578, &_thunk_I_CacheTex },
         { 0x8003472C, &I_NetSetup },
         { 0x80034A60, &I_NetUpdate },
@@ -1168,7 +1162,7 @@ namespace PsxVm {
         { 0x8003D9C4, &F2_Start },
         { 0x8003DB18, &F2_Ticker },
         { 0x8003E910, &O_Init },
-        { 0x8003E9D0, &O_Shutdown },
+        { 0x8003E9D0, &_thunk_O_Shutdown },
         { 0x8003E9F4, &O_Control },
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },
