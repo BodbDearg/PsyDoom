@@ -2963,7 +2963,7 @@ static const ProgElem ELEMS[] = {
     { 0x8007760C, 0x80077610, "gPRndIndex",                             ProgElemType::UINT32 },
     { 0x80077610, 0x80077614, "GPU_REG_GP0",                            ProgElemType::PTR32 },
     { 0x80077614, 0x80077618, "GPU_REG_GP1",                            ProgElemType::PTR32 },
-    { 0x80077618, 0x8007761C, "gCurPlayerIndex",                        ProgElemType::UINT32 },
+    { 0x80077618, 0x8007761C, "gCurPlayerIndex",                        ProgElemType::INT32 },
     { 0x8007761C, 0x80077620, "GPU_REG_GP0",                            ProgElemType::PTR32 },
     { 0x80077620, 0x80077624, "GPU_REG_GP1",                            ProgElemType::PTR32 },
     { 0x80077624, 0x8007762C, "STR_LumpName_BRS1",                      ProgElemType::ARRAY, ProgElemType::CHAR8 },

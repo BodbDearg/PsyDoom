@@ -243,7 +243,7 @@ void AM_Drawer() noexcept {
     }
 
     // Draw map things for players: again display a little triangle for each player
-    for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+    for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
         // In deathmatch only show this player's triangle
         if ((*gNetGame != gt_coop) && (playerIdx != *gCurPlayerIndex))
             continue;

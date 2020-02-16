@@ -55,7 +55,7 @@ extern const angle_t gTanToAngle[SLOPERANGE + 1];   // +1 so we can handle slope
 extern const fixed_t gYSlope[VIEW_3D_H];
 
 // Maximum number of players in a multiplayer game
-static constexpr uint32_t MAXPLAYERS = 2;
+static constexpr int32_t MAXPLAYERS = 2;
 
 // How many game ticks happen per second, how many draws happen per second and the actual refresh rate (60Hz NTSC).
 // PSX DOOM has a 15Hz timebase, similar to Jaguar DOOM. Some operations however update at 30Hz (rendering speed).

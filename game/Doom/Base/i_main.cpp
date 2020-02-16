@@ -134,7 +134,7 @@ const VmPtr<DRAWENV[2]> gDrawEnvs(0x800A90AC);
 const VmPtr<uint32_t> gNumFramesDrawn(0x80077C10);
 
 // The index of the user's player in the array of players: whether you are player 1 or 2 in other words
-const VmPtr<uint32_t> gCurPlayerIndex(0x80077618);
+const VmPtr<int32_t> gCurPlayerIndex(0x80077618);
 
 // Control related stuff
 const VmPtr<padbuttons_t[NUM_CTRL_BINDS]>                       gCtrlBindings(0x80073E0C);

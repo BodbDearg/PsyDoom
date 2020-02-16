@@ -96,7 +96,7 @@ extern const VmPtr<uint32_t>                                                gCur
 extern const VmPtr<DISPENV[2]>                                              gDispEnvs;
 extern const VmPtr<DRAWENV[2]>                                              gDrawEnvs;
 extern const VmPtr<uint32_t>                                                gNumFramesDrawn;
-extern const VmPtr<uint32_t>                                                gCurPlayerIndex;
+extern const VmPtr<int32_t>                                                 gCurPlayerIndex;
 extern const VmPtr<padbuttons_t[NUM_CTRL_BINDS]>                            gCtrlBindings;
 extern const VmPtr<VmPtr<padbuttons_t[NUM_CTRL_BINDS]>[MAXPLAYERS]>         gpPlayerCtrlBindings;
 extern const padbuttons_t                                                   gBtnMasks[NUM_BINDABLE_BTNS];

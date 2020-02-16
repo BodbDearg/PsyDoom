@@ -312,7 +312,7 @@ extern void F2_Start() noexcept;
 extern void F2_Ticker() noexcept;
 extern void O_Init() noexcept;
 extern void _thunk_O_Shutdown() noexcept;
-extern void O_Control() noexcept;
+extern void _thunk_O_Control() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
 extern void PSXCD_psxcd_memcpy() noexcept;
@@ -1163,7 +1163,7 @@ namespace PsxVm {
         { 0x8003DB18, &F2_Ticker },
         { 0x8003E910, &O_Init },
         { 0x8003E9D0, &_thunk_O_Shutdown },
-        { 0x8003E9F4, &O_Control },
+        { 0x8003E9F4, &_thunk_O_Control },
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },
         { 0x8003F200, &PSXCD_psxcd_memcpy },

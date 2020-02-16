@@ -261,7 +261,7 @@ void P_CheckCheats() noexcept {
 
         // Run the options menu and possibly do one final draw, depending on the exit code.
         // TODO: what is the final draw for - screen fade?
-        const gameaction_t optionsAction = MiniLoop(O_Init, _thunk_O_Shutdown, O_Control, O_Drawer);
+        const gameaction_t optionsAction = MiniLoop(O_Init, _thunk_O_Shutdown, _thunk_O_Control, O_Drawer);
         
         if (optionsAction != ga_exit) {
             *gGameAction = optionsAction;

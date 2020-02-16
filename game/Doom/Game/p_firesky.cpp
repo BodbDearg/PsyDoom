@@ -60,5 +60,5 @@ void P_UpdateFireSky(texture_t& skyTex) noexcept {
 
     // Mark the sky texture as 'not uploaded' to VRAM even though it may be there.
     // This invalidation causes it to be re-upoaded the next time it is drawn, so the updates done here will be visible.
-    skyTex.uploadFrameNum = -1;
+    skyTex.uploadFrameNum = TEX_INVALID_UPLOAD_FRAME_NUM;
 }

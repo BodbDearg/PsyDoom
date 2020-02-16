@@ -230,7 +230,7 @@ gameaction_t M_Ticker() noexcept {
         return ga_timeout;
 
     // Animate the skull cursor
-    if ((*gPrevGameTic < *gGameTic) && ((*gGameTic & 3) == 0)) {
+    if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 3) == 0)) {
         *gCursorFrame ^= 1;
     }
     
@@ -248,7 +248,7 @@ gameaction_t M_Ticker() noexcept {
             if (gCursorPos[0] == options) {
                 // Options entry pressed: run the options menu.
                 // Note that if a level password is entered correctly there, we exit with 'ga_warped' as the action.
-                if (MiniLoop(O_Init, _thunk_O_Shutdown, O_Control, O_Drawer) == ga_warped)
+                if (MiniLoop(O_Init, _thunk_O_Shutdown, _thunk_O_Control, O_Drawer) == ga_warped)
                     return ga_warped;
             }
         }
