@@ -17,5 +17,7 @@ void START_PasswordScreen() noexcept;
 void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcept;
 void _thunk_STOP_PasswordScreen() noexcept;
 
-void TIC_PasswordScreen() noexcept;
+gameaction_t TIC_PasswordScreen() noexcept;
+void _thunk_TIC_PasswordScreen() noexcept;
+
 void DRAW_PasswordScreen() noexcept;

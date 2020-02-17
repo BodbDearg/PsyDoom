@@ -10,10 +10,11 @@
 #include "Doom/Game/p_password.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
+#include "o_main.h"
+#include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
-#include "o_main.h"
 
 // The list of password characters
 const char gPasswordChars[NUM_PW_CHARS + 1] = "bcdfghjklmnpqrstvwxyz0123456789!";
@@ -59,198 +60,153 @@ void _thunk_STOP_PasswordScreen() noexcept {
     STOP_PasswordScreen((gameaction_t) a0);
 }
 
-void TIC_PasswordScreen() noexcept {
-    a0 = *gInvalidPasswordFlashTicsLeft;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update logic for the password screen, entering password characters and so on...
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t TIC_PasswordScreen() noexcept {
+    // TODO: REMOVE
     sp -= 0x28;
-    sw(ra, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    if (a0 == 0) goto loc_80036EF4;
-    v1 = *gGameTic;
-    v0 = *gPrevGameTic;
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 - 1;
-        if (bJump) goto loc_80036EF4;
+    auto cleanupStackFrame = finally([](){ sp += 0x28; });
+
+    // Do invalid password flash sfx every so often if currently active
+    if (*gInvalidPasswordFlashTicsLeft != 0) {
+        if (*gGameTic > *gPrevGameTic) {
+            *gInvalidPasswordFlashTicsLeft -= 1;
+            
+            if ((*gInvalidPasswordFlashTicsLeft & 7) == 4) {
+                a0 = 0;
+                a1 = sfx_itemup;
+                S_StartSound();
+            }
+        }
     }
-    *gInvalidPasswordFlashTicsLeft = v0;
-    v0 &= 7;
-    v1 = 4;
-    a0 = 0;
-    if (v0 != v1) goto loc_80036EF4;
-    a1 = sfx_itemup;
-    S_StartSound();
-loc_80036EF4:
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 = lw(s0 + 0x7F44);                               // Load from: gTicButtons[0] (80077F44)
-    s1 = 0x80080000;                                    // Result = 80080000
-    s1 = lw(s1 - 0x7DEC);                               // Load from: gOldTicButtons[0] (80078214)
-    v0 = s0 & 0xF000;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s0 & 0x900;
-        if (bJump) goto loc_80036F1C;
+
+    // Handle up/down/left/right movements
+    const padbuttons_t ticButtons = gTicButtons[0];
+    const padbuttons_t oldTicButtons = gOldTicButtons[0];
+
+    if ((ticButtons & PAD_DIRECTION_BTNS) == 0) {
+        // If there are no direction buttons pressed this frame then we can move immediately next time
+        gVBlanksUntilMenuMove[0] = 0;
+    } else {
+        // Direction buttons pressed, see if it is time to move:
+        gVBlanksUntilMenuMove[0] -= gPlayersElapsedVBlanks[0];
+
+        if (gVBlanksUntilMenuMove[0] <= 0) {
+            gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
+            
+            if (ticButtons & PAD_UP) {
+                if (*gCurPasswordCharIdx >= 8) {
+                    *gCurPasswordCharIdx -= 8;
+
+                    a0 = 0;
+                    a1 = sfx_pstop;
+                    S_StartSound();
+                }
+            }
+            else if (ticButtons & PAD_DOWN) {
+                if (*gCurPasswordCharIdx + 8 < NUM_PW_CHARS) {
+                    *gCurPasswordCharIdx += 8;
+
+                    a0 = 0;
+                    a1 = sfx_pstop;
+                    S_StartSound();
+                }
+            }
+
+            if (ticButtons & PAD_LEFT) {
+                *gCurPasswordCharIdx -= 1;
+
+                if (*gCurPasswordCharIdx < 0) {
+                    *gCurPasswordCharIdx = 0;
+                } else {
+                    a0 = 0;
+                    a1 = sfx_pstop;
+                    S_StartSound();
+                }
+            }
+            else if (ticButtons & PAD_RIGHT) {
+                *gCurPasswordCharIdx += 1;
+
+                if (*gCurPasswordCharIdx >= NUM_PW_CHARS) {
+                    *gCurPasswordCharIdx = NUM_PW_CHARS - 1;
+                } else {
+                    a0 = 0;
+                    a1 = sfx_pstop;
+                    S_StartSound();
+                }
+            }
+        }
     }
-    gVBlanksUntilMenuMove[0] = 0;
-    goto loc_8003700C;
-loc_80036F1C:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7EF8;                                       // Result = gVBlanksUntilMenuMove (80077EF8)
-    v0 = gVBlanksUntilMenuMove[0];
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7FBC);                               // Load from: gPlayersElapsedVBlanks[0] (80077FBC)
-    v0 -= v1;
-    gVBlanksUntilMenuMove[0] = v0;
-    if (i32(v0) > 0) goto loc_80037008;
-    gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
-    v0 = s0 & 0x1000;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 & 0x4000;
-        if (bJump) goto loc_80036F70;
+
+    // Exit this screen if start or select are pressed
+    if (ticButtons & (PAD_START | PAD_SELECT))
+        return ga_exit;
+
+    // Nothing more to do if new buttons are not pressed
+    if (ticButtons == oldTicButtons)
+        return ga_nothing;
+
+    if (ticButtons & (PAD_SQUARE | PAD_CROSS | PAD_CIRCLE)) {
+        // Entering a password character (if there is a free slot)
+        a0 = 0;
+        a1 = sfx_swtchx;
+        S_StartSound();
+
+        if (*gNumPasswordCharsEntered < PW_SEQ_LEN) {
+            gPasswordCharBuffer[*gNumPasswordCharsEntered] = (uint8_t) *gCurPasswordCharIdx;
+            *gNumPasswordCharsEntered += 1;
+            
+            // If the password sequence is not yet complete then there is nothing more to do
+            if (*gNumPasswordCharsEntered < PW_SEQ_LEN) 
+                return ga_nothing;
+        }
+        
+        // Process the password once it is complete
+        a0 = gPasswordCharBuffer;
+        a1 = sp + 0x10;     // TODO: level num
+        a2 = sp + 0x14;     // TODO: skill
+        a3 = 0;
+        P_ProcessPassword();
+        
+        if (v0 != 0) {
+            // Valid password entered, begin warping to the destination map
+            v1 = lw(sp + 0x10);
+            a1 = lw(sp + 0x14);
+            sw(1, gp + 0x65C);      // Store to: gbUsingAPassword (80077C3C)
+            
+            *gGameMap = v1;
+            *gStartMapOrEpisode = v1;
+            *gGameSkill = (skill_t) a1;
+            *gStartSkill = (skill_t) a1;
+
+            return ga_warped;
+        } 
+        else {
+            // Invalid password entered, flash the message for a bit
+            *gInvalidPasswordFlashTicsLeft = 16;
+        }
     }
-    v1 = *gCurPasswordCharIdx;
-    v0 = (i32(v1) < 8);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s0 & 0x8000;
-        if (bJump) goto loc_80036FA0;
+    else if (ticButtons & PAD_TRIANGLE) {
+        // Delete a password sequence character and reset it's value in the buffer to the default
+        a0 = 0;
+        a1 = sfx_swtchx;
+        S_StartSound();
+
+        *gNumPasswordCharsEntered -= 1;
+
+        if (*gNumPasswordCharsEntered < 0) {
+            *gNumPasswordCharsEntered = 0;
+        }
+
+        gPasswordCharBuffer[*gNumPasswordCharsEntered] = 0;
     }
-    v0 = v1 - 8;
-    goto loc_80036F8C;
-loc_80036F70:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 & 0x8000;
-        if (bJump) goto loc_80036FA0;
-    }
-    v1 = *gCurPasswordCharIdx;
-    v0 = (i32(v1) < 0x18);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 + 8;
-        if (bJump) goto loc_80036F9C;
-    }
-loc_80036F8C:
-    *gCurPasswordCharIdx = v0;
-    a0 = 0;
-    a1 = sfx_pstop;
-    S_StartSound();
-loc_80036F9C:
-    v0 = s0 & 0x8000;
-loc_80036FA0:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 & 0x2000;
-        if (bJump) goto loc_80036FCC;
-    }
-    v0 = *gCurPasswordCharIdx;
-    v0--;
-    *gCurPasswordCharIdx = v0;
-    a0 = 0;                                             // Result = 00000000
-    if (i32(v0) >= 0) goto loc_80037000;
-    *gCurPasswordCharIdx = 0;
-    v0 = s0 & 0x900;
-    goto loc_8003700C;
-loc_80036FCC:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 & 0x900;
-        if (bJump) goto loc_8003700C;
-    }
-    v0 = *gCurPasswordCharIdx;
-    v0++;
-    *gCurPasswordCharIdx = v0;
-    v0 = (i32(v0) < 0x20);
-    a0 = 0;
-    if (v0 != 0) goto loc_80037000;
-    v0 = 0x1F;
-    *gCurPasswordCharIdx = v0;
-    v0 = s0 & 0x900;
-    goto loc_8003700C;
-loc_80037000:
-    a1 = sfx_pstop;
-    S_StartSound();
-loc_80037008:
-    v0 = s0 & 0x900;
-loc_8003700C:
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 9;                                         // Result = 00000009
-        if (bJump) goto loc_8003711C;
-    }
-    v0 = s0 & 0xE0;
-    if (s0 == s1) goto loc_80037118;
-    a0 = 0;
-    if (v0 == 0) goto loc_800370D0;
-    a1 = sfx_swtchx;
-    S_StartSound();
-    a0 = *gNumPasswordCharsEntered;
-    v0 = (i32(a0) < 0xA);
-    a2 = sp + 0x14;
-    if (v0 == 0) goto loc_80037070;
-    v1 = *gCurPasswordCharIdx;
-    v0 = a0 + 1;
-    *gNumPasswordCharsEntered = v0;
-    at = gPasswordCharBuffer;
-    at += a0;
-    sb(v1, at);
-    v0 = *gNumPasswordCharsEntered;
-    v0 = (i32(v0) < 0xA);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8003711C;
-    }
-loc_80037070:
-    a0 = gPasswordCharBuffer;
-    a1 = sp + 0x10;
-    a3 = 0;                                             // Result = 00000000
-    P_ProcessPassword();
-    a0 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_800370C0;
-    v1 = lw(sp + 0x10);
-    a1 = lw(sp + 0x14);
-    sw(a0, gp + 0x65C);                                 // Store to: gbUsingAPassword (80077C3C)
-    *gGameMap = v1;
-    *gStartMapOrEpisode = v1;
-    *gGameSkill = (skill_t) a1;
-    *gStartSkill = (skill_t) a1;
-    v0 = 4;
-    goto loc_8003711C;
-loc_800370C0:
-    v0 = 0x10;                                          // Result = 00000010
-    *gInvalidPasswordFlashTicsLeft = v0;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8003711C;
-loc_800370D0:
-    v0 = s0 & 0x10;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;
-        if (bJump) goto loc_8003711C;
-    }
-    a1 = sfx_swtchx;
-    S_StartSound();
-    v0 = *gNumPasswordCharsEntered;
-    v0--;
-    *gNumPasswordCharsEntered = v0;
-    if (i32(v0) >= 0) goto loc_80037100;
-    *gNumPasswordCharsEntered = 0;
-loc_80037100:
-    v0 = *gNumPasswordCharsEntered;
-    at = gPasswordCharBuffer;
-    at += v0;
-    sb(0, at);
-loc_80037118:
-    v0 = 0;                                             // Result = 00000000
-loc_8003711C:
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+
+    return ga_nothing;
+}
+
+void _thunk_TIC_PasswordScreen() noexcept {
+    v0 = TIC_PasswordScreen();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
