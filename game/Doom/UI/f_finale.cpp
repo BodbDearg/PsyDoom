@@ -13,6 +13,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "m_main.h"
+#include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -84,54 +85,49 @@ static const VmPtr<finalestage_t> gFinaleStage(0x8007816C);
 
 static const VmPtr<int32_t>         gFinTextYPos(0x80077F10);           // Current y position of the top finale line
 static const VmPtr<char[28]>        gFinIncomingLine(0x800A9048);       // Text for the incoming line
+static const VmPtr<int32_t>         gFinIncomingLineLen(0x80077F58);    // How many characters are being displayed for the incomming text line
 static const VmPtr<int32_t>         gFinLinesDone(0x80078110);          // How many full lines we are displaying
 static const VmPtr<int32_t>         gCastNum(0x80078288);               // Which of the cast characters (specified by index) we are showing
 static const VmPtr<VmPtr<state_t>>  gpCastState(0x80077FA8);            // Current state being displayed for the cast character
 static const VmPtr<texture_t>       gTex_DEMON(0x80097BB0);             // The demon (icon of sin) background for the DOOM II finale
 
-
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the Ultimate DOOM finale screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Start() noexcept {
+    // TODO: remove this eventually when no more VM stack is being used
     sp -= 0x28;
-    sw(s0, sp + 0x20);
-    s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7A90;                                       // Result = gTex_LOADING[0] (80097A90)
-    a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
-    a1 = 0x5F;                                          // Result = 0000005F
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    sw(ra, sp + 0x24);
-    a2 = 0x6D;                                          // Result = 0000006D
-    _thunk_I_DrawLoadingPlaque();
+    auto cleanupStackFrame = finally([](){ sp += 0x28; });
+
+    // Draw the loading plaque, purge the texture cache and load up the background needed
+    I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
     I_PurgeTexCache();
-    a0 = gTex_BACK;
-    _thunk_I_CacheTex();
-    a2 = 0;                                             // Result = 00000000
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x3E60);                               // Load from: CDTrackNum_Finale_Doom1 (80073E60)
-    a1 = *gCdMusicVol;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x3E54);                               // Load from: CDTrackNum_Credits_Demo (80073E54)
-    a3 = 0;                                             // Result = 00000000
+    I_CacheTex(*gTex_BACK);
+
+    // Init finale 
     *gFinLinesDone = 0;
-    sw(0, gp + 0x978);                                  // Store to: 80077F58
-    at = 0x800B0000;                                    // Result = 800B0000
+    *gFinIncomingLineLen = 0;
     gFinIncomingLine[0] = 0;
+
+    // Play the finale cd track
+    a0 = gCDTrackNum[cdmusic_finale_doom1];
+    a1 = *gCdMusicVol;
+    a2 = 0;
+    a3 = 0;
+    sw(gCDTrackNum[cdmusic_credits_demo], sp + 0x10);
+    sw(*gCdMusicVol, sp + 0x14);
     sw(0, sp + 0x18);
     sw(0, sp + 0x1C);
-    sw(v0, sp + 0x10);
-    sw(a1, sp + 0x14);
     psxcd_play_at_andloop();
-loc_8003D750:
-    psxcd_elapsed_sectors();
-    if (v0 == 0) goto loc_8003D750;
-    ra = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x28;
-    return;
+
+    // TODO: comment on elapsed sector stuff here
+    do {
+        psxcd_elapsed_sectors();
+    } while (v0 == 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Called to finish up the Ultimate DOOM finale
+// Called to shut down the Ultimate DOOM finale screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Stop() noexcept {
     *gbGamePaused = false;
@@ -182,7 +178,7 @@ loc_8003D80C:
     v0 += a0;
     v0 <<= 3;
     v0 += a0;
-    a2 = lw(gp + 0x978);                                // Load from: 80077F58
+    a2 = *gFinIncomingLineLen;
     a1 = v0 + v1;
     v0 = a1 + a2;
     v0 = lbu(v0);
@@ -191,16 +187,16 @@ loc_8003D80C:
         v0 = a0 + 1;
         if (bJump) goto loc_8003D88C;
     }
-    sw(0, gp + 0x978);                                  // Store to: 80077F58
+    *gFinIncomingLineLen = 0;
     *gFinLinesDone = v0;
     goto loc_8003D89C;
 loc_8003D88C:
     a0 = gFinIncomingLine;
     D_strncpy(vmAddrToPtr<char>(a0), vmAddrToPtr<const char>(a1), a2);
 loc_8003D89C:
-    v1 = lw(gp + 0x978);                                // Load from: 80077F58
+    v1 = *gFinIncomingLineLen;
     v0 = v1 + 1;
-    sw(v0, gp + 0x978);                                 // Store to: 80077F58
+    *gFinIncomingLineLen = v0;
     at = gFinIncomingLine;
     at += v1;
     sb(0, at);
@@ -285,7 +281,7 @@ void F2_Start() noexcept {
     v0 = lw(at);
     *gFinaleStage = F_STAGE_TEXT;  // TODO: give proper enum
     *gFinLinesDone = 0;
-    sw(0, gp + 0x978);                                  // Store to: 80077F58
+    *gFinIncomingLineLen = 0;
     *gCastNum = 0;
     sw(0, gp + 0x998);                                  // Store to: 80077F78
     sw(0, gp + 0xAA8);                                  // Store to: 80078088
@@ -388,7 +384,7 @@ loc_8003DBC8:
     v1 = 0x80070000;                                    // Result = 80070000
     v1 += 0x4950;                                       // Result = STR_Doom2_WinText_1[0] (80074950)
     a0 = *gFinLinesDone;
-    a2 = lw(gp + 0x978);                                // Load from: 80077F58
+    a2 = *gFinIncomingLineLen;
     v0 = a0 << 1;
     v0 += a0;
     v0 <<= 3;
@@ -403,7 +399,7 @@ loc_8003DBC8:
     }
     *gFinLinesDone = v0;
     v0 = (i32(v0) < 0xB);
-    sw(0, gp + 0x978);                                  // Store to: 80077F58
+    *gFinIncomingLineLen = 0;
     if (v0 != 0) goto loc_8003DC58;
     *gFinaleStage = (finalestage_t) s2;
     goto loc_8003DC58;
@@ -411,9 +407,9 @@ loc_8003DC48:
     a0 = gFinIncomingLine;
     D_strncpy(vmAddrToPtr<char>(a0), vmAddrToPtr<const char>(a1), a2);
 loc_8003DC58:
-    v1 = lw(gp + 0x978);                                // Load from: 80077F58
+    v1 = *gFinIncomingLineLen;
     v0 = v1 + 1;
-    sw(v0, gp + 0x978);                                 // Store to: 80077F58
+    *gFinIncomingLineLen = v0;
     at = gFinIncomingLine;
     at += v1;
     sb(0, at);
