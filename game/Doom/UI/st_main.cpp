@@ -98,44 +98,33 @@ const VmPtr<int32_t>            gStatusBarMsgTicsLeft(0x80098744);
 static const VmPtr<bool32_t>                gbDrawSBFace(0x80078130);
 static const VmPtr<VmPtr<facesprite_t>>     gpCurSBFaceSprite(0x80078230);
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// 'Status bar' one time initialization.
+// Loads and caches in VRAM the UI texture atlas used throughout the game.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void ST_Init() noexcept {
-loc_80038558:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FD8);                               // Load from: gTexCacheFillPage (80078028)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 == 0) goto loc_8003857C;
-    I_Error("ST_Init: initial texture cache foulup\n");
-loc_8003857C:
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 -= 0x6B18;                                       // Result = gTex_STATUS[0] (800A94E8)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7CE4;                                       // Result = STR_LumpName_STATUS[0] (80077CE4)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7FD8);                               // Load from: gTexCacheFillPage (80078028)
-    if (v0 == 0) goto loc_800385B8;
-    I_Error("ST_Init: final texture cache foulup\n");
-loc_800385B8:
-    v1 = *gLockedTexPagesMask;
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7D1C);                                 // Store to: gTexCacheFillBlockX (800782E4)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7D18);                                 // Store to: gTexCacheFillBlockY (800782E8)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7FD8);                                // Store to: gTexCacheFillPage (80078028)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7D88);                                 // Store to: gTexCacheRowBlockH (80078278)
-    v1 |= 1;
-    *gLockedTexPagesMask = v1;
-    
-    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+    // Expect no use of the texture cache at this point
+    if (*gTCacheFillPage != 0) {
+        I_Error("ST_Init: initial texture cache foulup\n");
+    }
 
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    // Load this into the first texture cache page and expect it to be resident there
+    I_LoadAndCacheTexLump(*gTex_STATUS, "STATUS", 0);
+
+    if (*gTCacheFillPage != 0) {
+        I_Error("ST_Init: final texture cache foulup\n");
+    }
+
+    // Lock down the first texture cache page (keep in VRAM at all times) and move the next fill location to the next page after
+    *gLockedTexPagesMask |= 1;
+    
+    *gTCacheFillPage = 1;
+    *gTCacheFillCellX = 0;
+    *gTCacheFillCellY = 0;
+    *gTCacheFillRowCellH = 0;
+    
+    // The STATUS texture can now be evicted from memory since it will always be in VRAM
+    Z_FreeTags(**gpMainMemZone, PU_CACHE);
 }
 
 void ST_Start() noexcept {

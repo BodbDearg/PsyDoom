@@ -301,7 +301,6 @@ extern void _thunk_STOP_ControlsScreen() noexcept;
 extern void _thunk_TIC_ControlsScreen() noexcept;
 extern void P_ComputePassword() noexcept;
 extern void P_ProcessPassword() noexcept;
-extern void ST_Init() noexcept;
 extern void ST_Start() noexcept;
 extern void ST_Ticker() noexcept;
 extern void IN_Start() noexcept;
@@ -315,6 +314,7 @@ extern void _thunk_O_Shutdown() noexcept;
 extern void _thunk_O_Control() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
+
 extern void PSXCD_psxcd_memcpy() noexcept;
 extern void psxcd_sync() noexcept;
 extern void psxcd_critical_sync() noexcept;
@@ -534,6 +534,7 @@ extern void wess_pan_mode_set() noexcept;
 extern void wess_seq_range_sizeof() noexcept;
 extern void wess_seq_range_load() noexcept;
 extern void wess_seq_range_free() noexcept;
+
 extern void LIBAPI_CloseEvent() noexcept;
 extern void LIBAPI_EnterCriticalSection() noexcept;
 extern void LIBAPI_write() noexcept;
@@ -1152,7 +1153,6 @@ namespace PsxVm {
         { 0x800379AC, &_thunk_TIC_ControlsScreen },
         { 0x80037DBC, &P_ComputePassword },
         { 0x800381B0, &P_ProcessPassword },
-        { 0x80038558, &ST_Init },
         { 0x80038610, &ST_Start },
         { 0x80038688, &ST_Ticker },
         { 0x8003C758, &IN_Start },

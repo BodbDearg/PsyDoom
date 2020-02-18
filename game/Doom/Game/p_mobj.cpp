@@ -8,6 +8,7 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_main.h"
+#include "Doom/UI/pw_main.h"
 #include "Doom/UI/st_main.h"
 #include "g_game.h"
 #include "p_map.h"
@@ -636,8 +637,7 @@ loc_8001D0DC:
         v0 = s0;
         if (bJump) goto loc_8001D15C;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7C3C);                               // Load from: gbUsingAPassword (80077C3C)
+    v0 = *gbUsingAPassword;
     a1 = sp + 0x10;
     if (v0 == 0) goto loc_8001D130;
     a0 = 0x80090000;                                    // Result = 80090000
@@ -645,8 +645,7 @@ loc_8001D0DC:
     a2 = a1;
     a3 = s3;
     P_ProcessPassword();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7C3C);                                 // Store to: gbUsingAPassword (80077C3C)
+    *gbUsingAPassword = false;
 loc_8001D130:
     v0 = lh(s4 + 0x6);
     v1 = *gCurPlayerIndex;

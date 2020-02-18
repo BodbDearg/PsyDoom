@@ -26,6 +26,9 @@ static const VmPtr<int32_t>     gCurPasswordCharIdx(0x80078174);            // W
 const VmPtr<int32_t>                gNumPasswordCharsEntered(0x80077C40);
 const VmPtr<uint8_t[PW_SEQ_LEN]>    gPasswordCharBuffer(0x80096560);
 
+// True if a valid password is currently being used
+const VmPtr<bool32_t> gbUsingAPassword(0x80077C3C);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the password screen
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -171,10 +174,10 @@ gameaction_t TIC_PasswordScreen() noexcept {
         
         if (v0 != 0) {
             // Valid password entered, begin warping to the destination map
+            *gbUsingAPassword = true;
+
             v1 = lw(sp + 0x10);
             a1 = lw(sp + 0x14);
-            sw(1, gp + 0x65C);      // Store to: gbUsingAPassword (80077C3C)
-            
             *gGameMap = v1;
             *gStartMapOrEpisode = v1;
             *gGameSkill = (skill_t) a1;
