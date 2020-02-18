@@ -88,6 +88,10 @@ static const VmPtr<char[28]>        gFinIncomingLine(0x800A9048);       // Text 
 static const VmPtr<int32_t>         gFinIncomingLineLen(0x80077F58);    // How many characters are being displayed for the incomming text line
 static const VmPtr<int32_t>         gFinLinesDone(0x80078110);          // How many full lines we are displaying
 static const VmPtr<int32_t>         gCastNum(0x80078288);               // Which of the cast characters (specified by index) we are showing
+static const VmPtr<int32_t>         gCastTics(0x80077ED0);              // Tracks current time in the current cast state
+static const VmPtr<int32_t>         gCastFrames(0x80078088);            // Tracks how many frames a cast member has done - used to decide when to attack
+static const VmPtr<int32_t>         gCastOnMelee(0x80078168);           // If non zero then the cast member should do a melee attack
+static const VmPtr<bool32_t>        gbCastDeath(0x80077F78);            // Are we killing the current cast member?
 static const VmPtr<VmPtr<state_t>>  gpCastState(0x80077FA8);            // Current state being displayed for the cast character
 static const VmPtr<texture_t>       gTex_DEMON(0x80097BB0);             // The demon (icon of sin) background for the DOOM II finale
 
@@ -214,80 +218,63 @@ void F1_Drawer() noexcept {
     I_DrawPresent();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the DOOM II finale screen
+//------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Start() noexcept {
+    // TODO: remove this eventually when no more VM stack is being used
     sp -= 0x68;
-    sw(s0, sp + 0x60);
-    s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7A90;                                       // Result = gTex_LOADING[0] (80097A90)
-    a0 = s0;                                            // Result = gTex_LOADING[0] (80097A90)
-    a1 = 0x5F;                                          // Result = 0000005F
-    a3 = 0x800B0000;                                    // Result = 800B0000
-    a3 = lh(a3 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    sw(ra, sp + 0x64);
-    a2 = 0x6D;                                          // Result = 0000006D
-    _thunk_I_DrawLoadingPlaque();
+    auto cleanupStackFrame = finally([](){ sp += 0x68; });
+    
+    // Show the loading plaque and purge the texture cache
+    I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);    
     I_PurgeTexCache();
-    a0 = s0 + 0x120;                                    // Result = gTex_DEMON[0] (80097BB0)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7D44;                                       // Result = STR_LumpName_DEMON[0] (80077D44)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_I_LoadAndCacheTexLump();
+
+    // Load the background and sprites needed
+    I_LoadAndCacheTexLump(*gTex_DEMON, "DEMON", 0);
     P_LoadBlocks(CdMapTbl_File::MAPSPR60_IMG);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x4A68);                               // Load from: CastInfo_1_ZombieMan[1] (80074A68)
-    gFinIncomingLine[0] = 0;
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1FB8;                                       // Result = MObjInfo_MT_PLAYER[3] (8005E048)
-    at += v0;
-    v0 = lw(at);
-    *gFinaleStage = F_STAGE_TEXT;  // TODO: give proper enum
+
+    // Initialize the finale text
+    const mobjinfo_t& mobjInfo = gMObjInfo[gCastOrder[0].type];
+    const state_t& state = gStates[mobjInfo.seestate];
+
+    *gFinaleStage = F_STAGE_TEXT;
     *gFinLinesDone = 0;
     *gFinIncomingLineLen = 0;
+    gFinIncomingLine[0] = 0;
+    *gFinTextYPos = 45;
+    
+    // Initialize the cast display
     *gCastNum = 0;
-    sw(0, gp + 0x998);                                  // Store to: 80077F78
-    sw(0, gp + 0xAA8);                                  // Store to: 80078088
-    sw(0, gp + 0xB88);                                  // Store to: 80078168
-    v1 = v0 << 3;
-    v1 -= v0;
-    v1 <<= 2;
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v1 += v0;
-    a1 = lw(v1 + 0x8);
-    v0 = 0x2D;                                          // Result = 0000002D
-    *gFinTextYPos = v0;
-    *gpCastState = v1;
-    sw(a1, gp + 0x8F0);                                 // Store to: 80077ED0
-    a0 = 0x3C;                                          // Result = 0000003C
+    *gpCastState = ptrToVmAddr(&state);
+    *gCastTics = state.tics;
+    *gbCastDeath = false;
+    *gCastFrames = 0;
+    *gCastOnMelee = 0;
+    
+    // TODO: explain
+    a0 = 60;
     S_LoadSoundAndMusic();
-    a2 = 0;                                             // Result = 00000000
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x3E64);                               // Load from: CDTrackNum_Finale_Doom2 (80073E64)
+
+    // Play the finale cd track    
+    a0 = gCDTrackNum[cdmusic_finale_doom2];
     a1 = *gCdMusicVol;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x3E54);                               // Load from: CDTrackNum_Credits_Demo (80073E54)
-    a3 = 0;                                             // Result = 00000000
+    a2 = 0;
+    a3 = 0;
+    sw(gCDTrackNum[cdmusic_credits_demo], sp + 0x10);
+    sw(*gCdMusicVol, sp + 0x14);
     sw(0, sp + 0x18);
     sw(0, sp + 0x1C);
-    sw(v0, sp + 0x10);
-    sw(a1, sp + 0x14);
     psxcd_play_at_andloop();
-loc_8003DACC:
-    psxcd_elapsed_sectors();
-    if (v0 == 0) goto loc_8003DACC;
-    ra = lw(sp + 0x64);
-    s0 = lw(sp + 0x60);
-    sp += 0x68;
-    return;
+
+    // TODO: comment on elapsed sector stuff here
+    do {
+        psxcd_elapsed_sectors();
+    } while (v0 == 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Called to finish up the DOOM II finale
+// Called to shut down the DOOM II finale screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Stop() noexcept {
     *gbGamePaused = false;
@@ -395,7 +382,7 @@ loc_8003DC80:
     v0 = 0;                                             // Result = 00000000
     goto loc_8003E30C;
 loc_8003DCA8:
-    v0 = lw(gp + 0x998);                                // Load from: 80077F78
+    v0 = *gbCastDeath;
     if (v0 != 0) goto loc_8003DDA0;
     v0 = s0 & 0xF0;
     if (s0 == s1) goto loc_8003DDA0;
@@ -444,10 +431,10 @@ loc_8003DD2C:
     v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
     v0 += v1;
     v1 = lw(v0 + 0x8);
-    sw(s2, gp + 0x998);                                 // Store to: 80077F78
-    sw(0, gp + 0xAA8);                                  // Store to: 80078088
+    *gbCastDeath = s2;
+    *gCastFrames = 0;
     *gpCastState = v0;
-    sw(v1, gp + 0x8F0);                                 // Store to: 80077ED0
+    *gCastTics = v1;
 loc_8003DDA0:
     v1 = *gGameTic;
     v0 = *gPrevGameTic;
@@ -457,7 +444,7 @@ loc_8003DDA0:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_8003E30C;
     }
-    v0 = lw(gp + 0x998);                                // Load from: 80077F78
+    v0 = *gbCastDeath;
     if (v0 == 0) goto loc_8003DEC0;
     v0 = *gpCastState;
     v0 = lw(v0 + 0x10);
@@ -469,7 +456,7 @@ loc_8003DDA0:
     at += 0x4A64;                                       // Result = CastInfo_1_ZombieMan[0] (80074A64)
     at += v1;
     v1 = lw(at);
-    sw(0, gp + 0x998);                                  // Store to: 80077F78
+    *gbCastDeath = false;
     *gCastNum = v0;
     if (v1 != 0) goto loc_8003DE1C;
     *gCastNum = 0;
@@ -482,7 +469,7 @@ loc_8003DE1C:
     v1 = lw(at);
     a1 = 0x80060000;                                    // Result = 80060000
     a1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    sw(0, gp + 0xAA8);                                  // Store to: 80078088
+    *gCastFrames = 0;
     v0 = v1 << 1;
     v0 += v1;
     v0 <<= 2;
@@ -515,9 +502,9 @@ loc_8003DE1C:
     a1 = v0;
     goto loc_8003E090;
 loc_8003DEC0:
-    v0 = lw(gp + 0x8F0);                                // Load from: 80077ED0
+    v0 = *gCastTics;
     v0--;
-    sw(v0, gp + 0x8F0);                                 // Store to: 80077ED0
+    *gCastTics = v0;
     {
         const bool bJump = (i32(v0) > 0);
         v0 = 0;                                         // Result = 00000000
@@ -721,10 +708,10 @@ loc_8003E090:
     S_StartSound();
 loc_8003E098:
     v0 = *gpCastState;
-    v1 = lw(gp + 0xAA8);                                // Load from: 80078088
+    v1 = *gCastFrames;
     a0 = lw(v0 + 0x10);
     v1++;
-    sw(v1, gp + 0xAA8);                                 // Store to: 80078088
+    *gCastFrames = v1;
     v0 = a0 << 3;
     v0 -= a0;
     v0 <<= 2;
@@ -734,7 +721,7 @@ loc_8003E098:
     *gpCastState = v0;
     v0 = 0xC;                                           // Result = 0000000C
     if (v1 != v0) goto loc_8003E25C;
-    v0 = lw(gp + 0xB88);                                // Load from: 80078168
+    v0 = *gCastOnMelee;
     if (v0 == 0) goto loc_8003E130;
     v0 = *gCastNum;
     v0 <<= 3;
@@ -775,12 +762,12 @@ loc_8003E17C:
     v0 <<= 2;
     v0 += a0;
     *gpCastState = v0;
-    v0 = lw(gp + 0xB88);                                // Load from: 80078168
+    v0 = *gCastOnMelee;
     a0 = *gpCastState;
     v1 = v0 ^ 1;
     v0 = 0x80060000;                                    // Result = 80060000
     v0 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    sw(v1, gp + 0xB88);                                 // Store to: 80078168
+    *gCastOnMelee = v1;
     if (a0 != v0) goto loc_8003E25C;
     if (v1 == 0) goto loc_8003E200;
     v0 = *gCastNum;
@@ -823,7 +810,7 @@ loc_8003E24C:
     v0 += a0;
     *gpCastState = v0;
 loc_8003E25C:
-    v1 = lw(gp + 0xAA8);                                // Load from: 80078088
+    v1 = *gCastFrames;
     v0 = 0x18;                                          // Result = 00000018
     if (v1 == v0) goto loc_8003E280;
     v1 = *gpCastState;
@@ -846,7 +833,7 @@ loc_8003E280:
     at -= 0x1FB8;                                       // Result = MObjInfo_MT_PLAYER[3] (8005E048)
     at += v0;
     v1 = lw(at);
-    sw(0, gp + 0xAA8);                                  // Store to: 80078088
+    *gCastFrames = 0;
     v0 = v1 << 3;
     v0 -= v1;
     v0 <<= 2;
@@ -858,14 +845,14 @@ loc_8003E2E4:
     v0 = *gpCastState;
     v1 = lw(v0 + 0x8);
     v0 = -1;                                            // Result = FFFFFFFF
-    sw(v1, gp + 0x8F0);                                 // Store to: 80077ED0
+    *gCastTics = v1;
     {
         const bool bJump = (v1 != v0);
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_8003E30C;
     }
     v0 = 0xF;                                           // Result = 0000000F
-    sw(v0, gp + 0x8F0);                                 // Store to: 80077ED0
+    *gCastTics = v0;
 loc_8003E308:
     v0 = 0;                                             // Result = 00000000
 loc_8003E30C:
