@@ -301,7 +301,7 @@ extern void _thunk_STOP_ControlsScreen() noexcept;
 extern void _thunk_TIC_ControlsScreen() noexcept;
 extern void P_ComputePassword() noexcept;
 extern void P_ProcessPassword() noexcept;
-extern void ST_Start() noexcept;
+extern void ST_InitEveryLevel() noexcept;
 extern void ST_Ticker() noexcept;
 extern void IN_Start() noexcept;
 extern void _thunk_IN_Ticker() noexcept;
@@ -1153,7 +1153,7 @@ namespace PsxVm {
         { 0x800379AC, &_thunk_TIC_ControlsScreen },
         { 0x80037DBC, &P_ComputePassword },
         { 0x800381B0, &P_ProcessPassword },
-        { 0x80038610, &ST_Start },
+        { 0x80038610, &ST_InitEveryLevel },
         { 0x80038688, &ST_Ticker },
         { 0x8003C758, &IN_Start },
         { 0x8003CA8C, &_thunk_IN_Ticker },

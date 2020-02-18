@@ -413,38 +413,38 @@ void P_CheckCheats() noexcept {
                 // Toggle show all map lines cheat
                 case CHT_SEQ_SHOW_ALL_MAP_LINES: {
                     player.cheats ^= CF_ALLLINES;
-                    *gStatusBarMsgTicsLeft = 1;
+                    gStatusBar->messageTicsLeft = 1;
 
                     if (player.cheats & CF_ALLLINES) {
-                        *gpStatusBarMsgStr = STR_Cheat_AllMapLines_On;    
+                        gStatusBar->message = STR_Cheat_AllMapLines_On;
                     } else {
-                        *gpStatusBarMsgStr = STR_Cheat_AllMapLines_Off;
+                        gStatusBar->message = STR_Cheat_AllMapLines_Off;
                     }
                 }   break;
 
                 // Toggle show all map things cheat
                 case CHT_SEQ_SHOW_ALL_MAP_THINGS: {
                     player.cheats ^= CF_ALLMOBJ;
-                    *gStatusBarMsgTicsLeft = 1;
+                    gStatusBar->messageTicsLeft = 1;
 
                     if (player.cheats & CF_ALLMOBJ) {
-                        *gpStatusBarMsgStr = STR_Cheat_AllMapThings_On;
+                        gStatusBar->message = STR_Cheat_AllMapThings_On;
                     } else {
-                        *gpStatusBarMsgStr = STR_Cheat_AllMapThings_Off;
+                        gStatusBar->message = STR_Cheat_AllMapThings_Off;
                     }
                 }   break;
 
                 // Toggle god mode cheat
                 case CHT_SEQ_GOD_MODE: {
                     player.cheats ^= CF_GODMODE;
-                    *gStatusBarMsgTicsLeft = 1;
+                    gStatusBar->messageTicsLeft = 1;
 
                     if (player.cheats & CF_GODMODE) {
                         player.health = 100;
                         player.mo->health = 100;
-                        *gpStatusBarMsgStr = STR_Cheat_GodMode_On;                        
+                        gStatusBar->message = STR_Cheat_GodMode_On;
                     } else {
-                        *gpStatusBarMsgStr = STR_Cheat_GodMode_Off;
+                        gStatusBar->message = STR_Cheat_GodMode_Off;
                     }
                 }   break;
                 
@@ -476,8 +476,8 @@ void P_CheckCheats() noexcept {
                         player.ammo[ammoIdx] = player.maxammo[ammoIdx];
                     }
 
-                    *gStatusBarMsgTicsLeft = 1;
-                    *gpStatusBarMsgStr = STR_Cheat_LotsOfGoodies;                    
+                    gStatusBar->messageTicsLeft = 1;
+                    gStatusBar->message = STR_Cheat_LotsOfGoodies;
                 }   break;
 
                 // Level warp cheat, bring up the warp menu
@@ -505,12 +505,12 @@ void P_CheckCheats() noexcept {
                 // No-clip cheat
                 case CHT_SEQ_NOCLIP: {
                     player.mo->flags ^= MF_NOCLIP;
-                    *gStatusBarMsgTicsLeft = 1;
+                    gStatusBar->messageTicsLeft = 1;
 
                     if (player.mo->flags & MF_NOCLIP) {
-                        *gpStatusBarMsgStr = STR_Cheat_On;
+                        gStatusBar->message = STR_Cheat_On;
                     } else {
-                        *gpStatusBarMsgStr = STR_Cheat_Off;
+                        gStatusBar->message = STR_Cheat_Off;
                     }
                 }   break;
             #endif

@@ -655,7 +655,7 @@ loc_8001D130:
         v0 = s0;
         if (bJump) goto loc_8001D15C;
     }
-    ST_Start();
+    ST_InitEveryLevel();
     I_UpdatePalette();
     v0 = s0;
 loc_8001D15C:

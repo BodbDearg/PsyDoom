@@ -90,13 +90,15 @@ struct sbflash_t {
 
 static const VmPtr<sbflash_t[NUMCARDS]> gFlashCards(0x800A94B4);
 
-// Status bar message
-const VmPtr<VmPtr<const char>>  gpStatusBarMsgStr(0x80098740);
-const VmPtr<int32_t>            gStatusBarMsgTicsLeft(0x80098744);
+// Status bar
+extern const VmPtr<stbar_t>     gStatusBar(0x80098714);
 
 // Face related state
+static const VmPtr<int32_t>                 gFaceTics(0x80078134);
 static const VmPtr<bool32_t>                gbDrawSBFace(0x80078130);
 static const VmPtr<VmPtr<facesprite_t>>     gpCurSBFaceSprite(0x80078230);
+static const VmPtr<bool32_t>                gbGibDraw(0x80078058);
+static const VmPtr<bool32_t>                gbDoSpclFace(0x80077ECC);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // 'Status bar' one time initialization.
@@ -127,42 +129,28 @@ void ST_Init() noexcept {
     Z_FreeTags(**gpMainMemZone, PU_CACHE);
 }
 
-void ST_Start() noexcept {
-loc_80038610:
-    a1 = 0;                                             // Result = 00000000
-    a0 = 0;                                             // Result = 00000000
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 -= 0x78CC;                                       // Result = gStatusBar[7] (80098734)
-    v1 = v0 - 0x18;                                     // Result = gStatusBar[1] (8009871C)
-    sw(0, v0);                                          // Store to: gStatusBar[7] (80098734)
-    v0 = 1;                                             // Result = 00000001
-    *gbDrawSBFace = v0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x3E68;                                       // Result = StatusBarFaceSpriteInfo[0] (80073E68)
-    sw(0, gp + 0xA78);                                  // Store to: gbStatusBarPlayerGotGibbed (80078058)
-    sw(0, gp + 0x8EC);                                  // Store to: gbStatusBarIsShowingSpecialFace (80077ECC)
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(0, at - 0x78E8);                                 // Store to: gStatusBar[0] (80098718)
-    *gStatusBarMsgTicsLeft = 0;
-    sw(0, gp + 0xB54);                                  // Store to: gFaceTics (80078134)
-    *gpCurSBFaceSprite = v0;
-loc_80038658:
-    sw(0, v1);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4C;                                       // Result = gFlashCards[0] (800A94B4)
-    at += a0;
-    sh(0, at);
-    a0 += 8;
-    a1++;
-    v0 = (i32(a1) < 6);
-    v1 += 4;
-    if (v0 != 0) goto loc_80038658;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Status bar initialization done at the beginning of each level
+//------------------------------------------------------------------------------------------------------------------------------------------
+void ST_InitEveryLevel() noexcept {
+    gStatusBar->gotgibbed = false;
+    gStatusBar->specialFace = f_none;
+    gStatusBar->messageTicsLeft = 0;
+
+    *gbDrawSBFace = true;
+    *gFaceTics = 0;
+    *gpCurSBFaceSprite = 0x80073E68;                    // TODO: StatusBarFaceSpriteInfo[0] (80073E68)
+    *gbGibDraw = false;
+    *gbDoSpclFace = false;
+
+    for (int32_t keyIdx = 0; keyIdx < NUMCARDS; ++keyIdx) {
+        gStatusBar->tryopen[keyIdx] = false;
+        gFlashCards[keyIdx].active = false;
+    }
 }
 
 void ST_Ticker() noexcept {
-loc_80038688:
-    a0 = lw(gp + 0xB54);                                // Load from: gFaceTics (80078134)
+    a0 = *gFaceTics;
     v1 = *gCurPlayerIndex;
     sp -= 0x28;
     sw(ra, sp + 0x24);
@@ -179,12 +167,12 @@ loc_80038688:
     v1 <<= 2;
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    sw(a0, gp + 0xB54);                                 // Store to: gFaceTics (80078134)
+    *gFaceTics = a0;
     s4 = v1 + v0;
     if (i32(a0) > 0) goto loc_80038710;
     _thunk_M_Random();
     v0 &= 0xF;
-    sw(v0, gp + 0xB54);                                 // Store to: gFaceTics (80078134)
+    *gFaceTics = v0;
     _thunk_M_Random();
     v0 &= 3;
     v1 = 3;                                             // Result = 00000003
@@ -196,7 +184,7 @@ loc_80038688:
     }
     sw(v0, gp + 0xA44);                                 // Store to: gStatusBarFaceFrameNum (80078024)
 loc_8003870C:
-    sw(0, gp + 0x8EC);                                  // Store to: gbStatusBarIsShowingSpecialFace (80077ECC)
+    *gbDoSpclFace = false;
 loc_80038710:
     v1 = 0x800A0000;                                    // Result = 800A0000
     v1 -= 0x78E8;                                       // Result = gStatusBar[0] (80098718)
@@ -204,10 +192,10 @@ loc_80038710:
     if (v0 == 0) goto loc_80038740;
     sw(v0, gp + 0x928);                                 // Store to: gStatusBarCurSpecialFace (80077F08)
     v0 = 0xF;                                           // Result = 0000000F
-    sw(v0, gp + 0xB54);                                 // Store to: gFaceTics (80078134)
+    *gFaceTics = v0;
     v0 = 1;                                             // Result = 00000001
     sw(0, v1);                                          // Store to: gStatusBar[0] (80098718)
-    sw(v0, gp + 0x8EC);                                 // Store to: gbStatusBarIsShowingSpecialFace (80077ECC)
+    *gbDoSpclFace = v0;
 loc_80038740:
     v0 = 0x800A0000;                                    // Result = 800A0000
     v0 = lw(v0 - 0x78CC);                               // Load from: gStatusBar[7] (80098734)
@@ -223,9 +211,9 @@ loc_80038740:
     sw(0, at - 0x78C8);                                 // Store to: gStatusBarGibAnimFrame (80098738)
     at = 0x800A0000;                                    // Result = 800A0000
     sw(0, at - 0x78CC);                                 // Store to: gStatusBar[7] (80098734)
-    sw(v0, gp + 0xA78);                                 // Store to: gbStatusBarPlayerGotGibbed (80078058)
+    *gbGibDraw = v0;
 loc_80038774:
-    v0 = lw(gp + 0xA78);                                // Load from: gbStatusBarPlayerGotGibbed (80078058)
+    v0 = *gbGibDraw;
     if (v0 == 0) goto loc_800387D4;
     v0 = 0x800A0000;                                    // Result = 800A0000
     v0 = lw(v0 - 0x78C4);                               // Load from: gStatusBarGibAnimTicsLeft (8009873C)
@@ -243,7 +231,7 @@ loc_80038774:
     sw(v0, at - 0x78C8);                                // Store to: gStatusBarGibAnimFrame (80098738)
     v0 = (i32(v0) < 5);
     if (v0 != 0) goto loc_800387D4;
-    sw(0, gp + 0xA78);                                  // Store to: gbStatusBarPlayerGotGibbed (80078058)
+    *gbGibDraw = false;
     *gbDrawSBFace = false;
 loc_800387D4:
     v0 = lw(s4 + 0xD4);
@@ -259,15 +247,15 @@ loc_800387D4:
     at += v0;
     v1 = lw(at);
     v0 = 0x4B;
-    *gStatusBarMsgTicsLeft = v0;
-    *gpStatusBarMsgStr = v1;
+    gStatusBar->messageTicsLeft = v0;
+    gStatusBar->message = v1;
     sw(0, s4 + 0xD4);
 loc_8003882C:
-    v0 = *gStatusBarMsgTicsLeft;
+    v0 = gStatusBar->messageTicsLeft;
     s2 = 0;
     if (v0 == 0) goto loc_8003884C;
     v0--;
-    *gStatusBarMsgTicsLeft = v0;
+    gStatusBar->messageTicsLeft = v0;
 loc_8003884C:
     s3 = 4;                                             // Result = 00000004
     s1 = 0x800B0000;                                    // Result = 800B0000
@@ -372,7 +360,7 @@ loc_800389E0:
     sw(v1, at - 0x78EC);                                // Store to: gStatusBarFaceAnimNum (80098714)
     goto loc_80038AB8;
 loc_800389F0:
-    v0 = lw(gp + 0xA78);                                // Load from: gbStatusBarPlayerGotGibbed (80078058)
+    v0 = *gbGibDraw;
     if (v0 == 0) goto loc_80038A10;
     v0 = 0x800A0000;                                    // Result = 800A0000
     v0 = lw(v0 - 0x78C8);                               // Load from: gStatusBarGibAnimFrame (80098738)
@@ -382,7 +370,7 @@ loc_80038A10:
     v1 = lw(s4 + 0x24);
     v0 = 0x29;                                          // Result = 00000029
     if (v1 == 0) goto loc_80038AB0;
-    v0 = lw(gp + 0x8EC);                                // Load from: gbStatusBarIsShowingSpecialFace (80077ECC)
+    v0 = *gbDoSpclFace;
     {
         const bool bJump = (v0 == 0);
         v0 = 0x66660000;                                // Result = 66660000
@@ -483,8 +471,8 @@ void ST_Drawer() noexcept {
     // Draw the current status bar message, or the map name (if in the automap)
     player_t& player = gPlayers[*gCurPlayerIndex];
 
-    if (*gStatusBarMsgTicsLeft > 0) {
-        I_DrawStringSmall(7, 193, gpStatusBarMsgStr->get());
+    if (gStatusBar->messageTicsLeft > 0) {
+        I_DrawStringSmall(7, 193, gStatusBar->message.get());
     } else {
         if (player.automapflags & AF_ACTIVE) {
             constexpr const char* const MAP_TITLE_FMT = "LEVEL %d:%s";
