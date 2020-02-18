@@ -534,7 +534,7 @@ void G_RunGame() noexcept {
 
         // Should we do the Ultimate DOOM finale?
         if (*gNetGame == gt_single && *gGameMap == 30 && *gNextMap == 31) {    
-            MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
+            MiniLoop(F1_Start, _thunk_F1_Stop, _thunk_F1_Ticker, F1_Drawer);
 
             if (*gGameAction == ga_warped || *gGameAction == ga_restart)
                 continue;

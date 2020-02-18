@@ -129,95 +129,61 @@ void F1_Start() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Called to shut down the Ultimate DOOM finale screen
 //------------------------------------------------------------------------------------------------------------------------------------------
-void F1_Stop() noexcept {
+void F1_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     *gbGamePaused = false;
     psxcd_stop();
 }
 
-void F1_Ticker() noexcept {
-    v0 = *gCurPlayerIndex;
-    sp -= 0x20;
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
+void _thunk_F1_Stop() noexcept {
+    F1_Stop((gameaction_t) a0);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update logic for the Ultimate DOOM finale screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t F1_Ticker() noexcept {
+    // Grab inputs and set global game action
     *gGameAction = ga_nothing;
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    at += v0;
-    s0 = lw(at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
-    at += v0;
-    s1 = lw(at);
+
+    const padbuttons_t ticButtons = gTicButtons[*gCurPlayerIndex];
+    const padbuttons_t oldTicButtons = gOldTicButtons[*gCurPlayerIndex];
+
+    // Not sure why this screen is updating cheats or checking for pause...
     P_CheckCheats();
-    v0 = *gbGamePaused;
-    if (v0 == 0) goto loc_8003D80C;
-    v0 = *gGameAction;
-    goto loc_8003D8D8;
-loc_8003D80C:
-    a0 = *gFinLinesDone;
-    v0 = (i32(a0) < 0xB);
-    if (v0 == 0) goto loc_8003D8C4;
-    v1 = *gGameTic;
-    v0 = *gPrevGameTic;
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 & 1;
-        if (bJump) goto loc_8003D8D4;
+    
+    if (*gbGamePaused)
+        return *gGameAction;
+
+    // Check to see if the text needs to advance more, or if we can exit
+    if (*gFinLinesDone < 11) {
+        // Text is not yet done popping up: only adavnce if time has elapsed and on every 2nd tick
+        if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 1) == 0)) {
+            // Get the current incoming text line text and see if we need to move onto another
+            const char* const textLine = gDoom1WinText[*gFinLinesDone];
+
+            if (textLine[*gFinIncomingLineLen] == 0) {
+                // We've reached the end of this line, move onto a new one
+                *gFinIncomingLineLen = 0;
+                *gFinLinesDone = *gFinLinesDone + 1;
+            } else {
+                D_strncpy(gFinIncomingLine.get(), textLine, *gFinIncomingLineLen);
+            }
+            
+            // Null terminate the incomming text line and include this character in the length
+            gFinIncomingLine[*gFinIncomingLineLen] = 0;
+            *gFinIncomingLineLen += 1;
+        }
     }
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8003D8D8;
+    else if ((ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS)) {
+        // If all the lines are done and an action button is just pressed then exit the screen
+        return ga_exit;
     }
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 += 0x483C;                                       // Result = STR_Doom1_WinText_1[0] (8007483C)
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    v0 += a0;
-    a2 = *gFinIncomingLineLen;
-    a1 = v0 + v1;
-    v0 = a1 + a2;
-    v0 = lbu(v0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a0 + 1;
-        if (bJump) goto loc_8003D88C;
-    }
-    *gFinIncomingLineLen = 0;
-    *gFinLinesDone = v0;
-    goto loc_8003D89C;
-loc_8003D88C:
-    a0 = gFinIncomingLine;
-    D_strncpy(vmAddrToPtr<char>(a0), vmAddrToPtr<const char>(a1), a2);
-loc_8003D89C:
-    v1 = *gFinIncomingLineLen;
-    v0 = v1 + 1;
-    *gFinIncomingLineLen = v0;
-    at = gFinIncomingLine;
-    at += v1;
-    sb(0, at);
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8003D8D8;
-loc_8003D8C4:
-    v0 = s0 & 0xF0;
-    if (s0 == s1) goto loc_8003D8D4;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 9;                                         // Result = 00000009
-        if (bJump) goto loc_8003D8D8;
-    }
-loc_8003D8D4:
-    v0 = 0;                                             // Result = 00000000
-loc_8003D8D8:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    
+    return ga_nothing;
+}
+
+void _thunk_F1_Ticker() noexcept {
+    v0 = F1_Ticker();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

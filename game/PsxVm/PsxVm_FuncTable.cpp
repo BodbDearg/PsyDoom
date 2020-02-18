@@ -306,7 +306,7 @@ extern void ST_Ticker() noexcept;
 extern void IN_Start() noexcept;
 extern void _thunk_IN_Ticker() noexcept;
 extern void F1_Start() noexcept;
-extern void F1_Ticker() noexcept;
+extern void _thunk_F1_Ticker() noexcept;
 extern void F2_Start() noexcept;
 extern void F2_Ticker() noexcept;
 extern void O_Init() noexcept;
@@ -1158,7 +1158,7 @@ namespace PsxVm {
         { 0x8003C758, &IN_Start },
         { 0x8003CA8C, &_thunk_IN_Ticker },
         { 0x8003D6D0, &F1_Start },
-        { 0x8003D79C, &F1_Ticker },
+        { 0x8003D79C, &_thunk_F1_Ticker },
         { 0x8003D9C4, &F2_Start },
         { 0x8003DB18, &F2_Ticker },
         { 0x8003E910, &O_Init },
