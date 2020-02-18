@@ -34,7 +34,7 @@ struct stbar_t {
     uint32_t            tryopen[NUMCARDS];
     uint32_t            gotgibbed;
     int32_t             gibframe;
-    int32_t             gibdelay;
+    int32_t             gibframeTicsLeft;
     VmPtr<const char>   message;
     int32_t             messageTicsLeft;
 };
@@ -48,6 +48,7 @@ static constexpr int32_t NUMFACES = 47;
 static constexpr int32_t EVILFACE   = 6;
 static constexpr int32_t GODFACE    = 40;
 static constexpr int32_t DEADFACE   = 41;
+static constexpr int32_t FIRSTSPLAT = 42;   // Gib frames
 
 extern const facesprite_t       gFaceSprites[NUMFACES];
 extern const VmPtr<stbar_t>     gStatusBar;

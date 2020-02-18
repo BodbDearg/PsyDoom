@@ -11,11 +11,16 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "in_main.h"
+#include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBC2.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include <cstdio>
+
+static constexpr int32_t GIBTIME    = 2;    // How long frames in the gib animation last
+static constexpr int32_t FLASHDELAY = 4;    // Tics in between keycard flashes
+static constexpr int32_t FLASHTIMES = 6;    // Number of times to toggle keycard state between visible and invisible (when flashing)
 
 // Positions for each of the micronumbers on the status bar
 static constexpr int32_t NUMMICROS = 8;
@@ -91,7 +96,7 @@ struct sbflash_t {
 static const VmPtr<sbflash_t[NUMCARDS]> gFlashCards(0x800A94B4);
 
 // Status bar
-extern const VmPtr<stbar_t>     gStatusBar(0x80098714);
+const VmPtr<stbar_t> gStatusBar(0x80098714);
 
 // Face related state
 static const VmPtr<int32_t>                 gFaceTics(0x80078134);
@@ -99,6 +104,8 @@ static const VmPtr<bool32_t>                gbDrawSBFace(0x80078130);
 static const VmPtr<VmPtr<facesprite_t>>     gpCurSBFaceSprite(0x80078230);
 static const VmPtr<bool32_t>                gbGibDraw(0x80078058);
 static const VmPtr<bool32_t>                gbDoSpclFace(0x80077ECC);
+static const VmPtr<int32_t>                 gNewFace(0x80078024);
+static const VmPtr<spclface_e>              gSpclFaceType(0x80077F08);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // 'Status bar' one time initialization.
@@ -143,303 +150,145 @@ void ST_InitEveryLevel() noexcept {
     *gbGibDraw = false;
     *gbDoSpclFace = false;
 
-    for (int32_t keyIdx = 0; keyIdx < NUMCARDS; ++keyIdx) {
-        gStatusBar->tryopen[keyIdx] = false;
-        gFlashCards[keyIdx].active = false;
+    for (int32_t cardIdx = 0; cardIdx < NUMCARDS; ++cardIdx) {
+        gStatusBar->tryopen[cardIdx] = false;
+        gFlashCards[cardIdx].active = false;
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Runs update logic for the status bar.
+// Also updates the current palette used by the game.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void ST_Ticker() noexcept {
-    a0 = *gFaceTics;
-    v1 = *gCurPlayerIndex;
-    sp -= 0x28;
-    sw(ra, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    a0--;
-    v0 = v1 << 2;
-    v0 += v1;
-    v1 = v0 << 4;
-    v1 -= v0;
-    v1 <<= 2;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    *gFaceTics = a0;
-    s4 = v1 + v0;
-    if (i32(a0) > 0) goto loc_80038710;
-    _thunk_M_Random();
-    v0 &= 0xF;
-    *gFaceTics = v0;
-    _thunk_M_Random();
-    v0 &= 3;
-    v1 = 3;                                             // Result = 00000003
-    sw(v0, gp + 0xA44);                                 // Store to: gStatusBarFaceFrameNum (80078024)
-    {
-        const bool bJump = (v0 != v1);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8003870C;
+    player_t& player = gPlayers[*gCurPlayerIndex];
+
+    // Do face animation
+    *gFaceTics -= 1;
+
+    if (*gFaceTics <= 0) {
+        *gFaceTics = M_Random() & 15;
+        *gNewFace = M_Random() & 3;
+
+        if (*gNewFace == 3) {
+            *gNewFace = 1;
+        }
+
+        *gbDoSpclFace = false;
     }
-    sw(v0, gp + 0xA44);                                 // Store to: gStatusBarFaceFrameNum (80078024)
-loc_8003870C:
-    *gbDoSpclFace = false;
-loc_80038710:
-    v1 = 0x800A0000;                                    // Result = 800A0000
-    v1 -= 0x78E8;                                       // Result = gStatusBar[0] (80098718)
-    v0 = lw(v1);                                        // Load from: gStatusBar[0] (80098718)
-    if (v0 == 0) goto loc_80038740;
-    sw(v0, gp + 0x928);                                 // Store to: gStatusBarCurSpecialFace (80077F08)
-    v0 = 0xF;                                           // Result = 0000000F
-    *gFaceTics = v0;
-    v0 = 1;                                             // Result = 00000001
-    sw(0, v1);                                          // Store to: gStatusBar[0] (80098718)
-    *gbDoSpclFace = v0;
-loc_80038740:
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 = lw(v0 - 0x78CC);                               // Load from: gStatusBar[7] (80098734)
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_80038774;
+    
+    // Handle if we are doing a special face
+    if (gStatusBar->specialFace != f_none) {
+        *gbDoSpclFace = true;
+        *gSpclFaceType = gStatusBar->specialFace;
+        *gFaceTics = TICRATE;
+        gStatusBar->specialFace = f_none;
     }
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v0, at - 0x78C4);                                // Store to: gStatusBarGibAnimTicsLeft (8009873C)
-    v0 = 1;                                             // Result = 00000001
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(0, at - 0x78C8);                                 // Store to: gStatusBarGibAnimFrame (80098738)
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(0, at - 0x78CC);                                 // Store to: gStatusBar[7] (80098734)
-    *gbGibDraw = v0;
-loc_80038774:
-    v0 = *gbGibDraw;
-    if (v0 == 0) goto loc_800387D4;
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 = lw(v0 - 0x78C4);                               // Load from: gStatusBarGibAnimTicsLeft (8009873C)
-    v0--;
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v0, at - 0x78C4);                                // Store to: gStatusBarGibAnimTicsLeft (8009873C)
-    v1 = 2;                                             // Result = 00000002
-    if (i32(v0) > 0) goto loc_800387D4;
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 = lw(v0 - 0x78C8);                               // Load from: gStatusBarGibAnimFrame (80098738)
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v1, at - 0x78C4);                                // Store to: gStatusBarGibAnimTicsLeft (8009873C)
-    v0++;
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v0, at - 0x78C8);                                // Store to: gStatusBarGibAnimFrame (80098738)
-    v0 = (i32(v0) < 5);
-    if (v0 != 0) goto loc_800387D4;
-    *gbGibDraw = false;
-    *gbDrawSBFace = false;
-loc_800387D4:
-    v0 = lw(s4 + 0xD4);
-    if (v0 == 0) goto loc_8003882C;
-    v0 = *gCurPlayerIndex;
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7740;                                       // Result = gPlayer1[35] (800A88C0)
-    at += v0;
-    v1 = lw(at);
-    v0 = 0x4B;
-    gStatusBar->messageTicsLeft = v0;
-    gStatusBar->message = v1;
-    sw(0, s4 + 0xD4);
-loc_8003882C:
-    v0 = gStatusBar->messageTicsLeft;
-    s2 = 0;
-    if (v0 == 0) goto loc_8003884C;
-    v0--;
-    gStatusBar->messageTicsLeft = v0;
-loc_8003884C:
-    s3 = 4;                                             // Result = 00000004
-    s1 = 0x800B0000;                                    // Result = 800B0000
-    s1 -= 0x6B4C;                                       // Result = gFlashCards[0] (800A94B4)
-    s0 = 0;                                             // Result = 00000000
-loc_8003885C:
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 -= 0x78E4;                                       // Result = gStatusBar[1] (8009871C)
-    v1 = s2 << 2;
-    v1 += v0;
-    v0 = lw(v1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_800388C0;
+
+    // Handle being gibbed
+    if (gStatusBar->gotgibbed) {
+        *gbGibDraw = true;
+        gStatusBar->gibframeTicsLeft = GIBTIME;
+        gStatusBar->gibframe = 0;
+        gStatusBar->gotgibbed = false;
     }
-    sw(0, v1);
-    sh(v0, s1);
-    v0 = 7;                                             // Result = 00000007
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B48;                                       // Result = gFlashCards[2] (800A94B8)
-    at += s0;
-    sh(s3, at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B46;                                       // Result = gFlashCards[3] (800A94BA)
-    at += s0;
-    sh(v0, at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4A;                                       // Result = gFlashCards[1] (800A94B6)
-    at += s0;
-    sh(0, at);
-    s1 += 8;
-    goto loc_800389AC;
-loc_800388C0:
-    v0 = lh(s1);
-    if (v0 == 0) goto loc_800389A8;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x6B4C;                                       // Result = gFlashCards[0] (800A94B4)
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B48;                                       // Result = gFlashCards[2] (800A94B8)
-    at += s0;
-    v0 = lhu(at);
-    a0 = s0 + v1;
-    v0--;
-    sh(v0, a0 + 0x4);
-    v0 <<= 16;
-    if (v0 != 0) goto loc_800389A8;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4A;                                       // Result = gFlashCards[1] (800A94B6)
-    at += s0;
-    v0 = lhu(at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B46;                                       // Result = gFlashCards[3] (800A94BA)
-    at += s0;
-    v1 = lhu(at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B48;                                       // Result = gFlashCards[2] (800A94B8)
-    at += s0;
-    sh(s3, at);
-    v0 ^= 1;
-    v1--;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4A;                                       // Result = gFlashCards[1] (800A94B6)
-    at += s0;
-    sh(v0, at);
-    sh(v1, a0 + 0x6);
-    v1 <<= 16;
-    if (v1 != 0) goto loc_80038968;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4C;                                       // Result = gFlashCards[0] (800A94B4)
-    at += s0;
-    sh(0, at);
-loc_80038968:
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4A;                                       // Result = gFlashCards[1] (800A94B6)
-    at += s0;
-    v0 = lh(at);
-    if (v0 == 0) goto loc_800389A8;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6B4C;                                       // Result = gFlashCards[0] (800A94B4)
-    at += s0;
-    v0 = lh(at);
-    a0 = 0;
-    if (v0 == 0) goto loc_800389A8;
-    a1 = sfx_itemup;
-    S_StartSound();
-loc_800389A8:
-    s1 += 8;
-loc_800389AC:
-    s2++;
-    v0 = (i32(s2) < 6);
-    s0 += 8;
-    if (v0 != 0) goto loc_8003885C;
-    v0 = lw(s4 + 0xC0);
-    v0 &= 2;
-    v1 = 0x28;                                          // Result = 00000028
-    if (v0 != 0) goto loc_800389E0;
-    v0 = lw(s4 + 0x30);
-    if (v0 == 0) goto loc_800389F0;
-loc_800389E0:
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v1, at - 0x78EC);                                // Store to: gStatusBarFaceAnimNum (80098714)
-    goto loc_80038AB8;
-loc_800389F0:
-    v0 = *gbGibDraw;
-    if (v0 == 0) goto loc_80038A10;
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 = lw(v0 - 0x78C8);                               // Load from: gStatusBarGibAnimFrame (80098738)
-    v0 += 0x2A;
-    goto loc_80038AB0;
-loc_80038A10:
-    v1 = lw(s4 + 0x24);
-    v0 = 0x29;                                          // Result = 00000029
-    if (v1 == 0) goto loc_80038AB0;
-    v0 = *gbDoSpclFace;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x66660000;                                // Result = 66660000
-        if (bJump) goto loc_80038A70;
+    
+    // Animate being gibbed
+    if (*gbGibDraw) {
+        gStatusBar->gibframeTicsLeft -= 1;
+
+        if (gStatusBar->gibframeTicsLeft <= 0) {
+            gStatusBar->gibframe += 1;
+            gStatusBar->gibframeTicsLeft = GIBTIME;
+
+            // Is the gib animation fully played out? If so we render nothing...
+            if (gStatusBar->gibframe >= 5) {
+                *gbGibDraw = false;
+                *gbDrawSBFace = false;
+            }
+        }
     }
-    v0 |= 0x6667;                                       // Result = 66666667
-    mult(v1, v0);
-    v1 = u32(i32(v1) >> 31);
-    v0 = hi;
-    v0 = u32(i32(v0) >> 3);
-    v1 = v0 - v1;
-    v0 = (i32(v1) < 4);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_80038A5C;
+
+    // Handle new messages to display
+    if (player.message) {
+        gStatusBar->message = player.message;
+        gStatusBar->messageTicsLeft = TICRATE * 5;
+        player.message = nullptr;
     }
-    v1 = 0;                                             // Result = 00000000
-    goto loc_80038A64;
-loc_80038A5C:
-    v0 -= v1;
-    v1 = v0 << 3;
-loc_80038A64:
-    v0 = lw(gp + 0x928);                                // Load from: gStatusBarCurSpecialFace (80077F08)
-    v0 += v1;
-    goto loc_80038AB0;
-loc_80038A70:
-    v0 |= 0x6667;                                       // Result = 66666667
-    mult(v1, v0);
-    v1 = u32(i32(v1) >> 31);
-    v0 = hi;
-    v0 = u32(i32(v0) >> 3);
-    v1 = v0 - v1;
-    v0 = (i32(v1) < 4);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_80038A9C;
+
+    // Decrease message time left
+    if (gStatusBar->messageTicsLeft != 0) {
+        gStatusBar->messageTicsLeft -= 1;
     }
-    v1 = 0;                                             // Result = 00000000
-    goto loc_80038AA4;
-loc_80038A9C:
-    v0 -= v1;
-    v1 = v0 << 3;
-loc_80038AA4:
-    v0 = lw(gp + 0xA44);                                // Load from: gStatusBarFaceFrameNum (80078024)
-    v0 += v1;
-loc_80038AB0:
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v0, at - 0x78EC);                                // Store to: gStatusBarFaceAnimNum (80098714)
-loc_80038AB8:
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 = lw(v0 - 0x78EC);                               // Load from: gStatusBarFaceAnimNum (80098714)
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 1;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x3E68;                                       // Result = StatusBarFaceSpriteInfo[0] (80073E68)
-    v1 += v0;
-    *gpCurSBFaceSprite = v1;
+
+    // Update the keycard flash for all keys
+    for (int32_t cardIdx = 0; cardIdx < NUMCARDS; ++cardIdx) {
+        sbflash_t& flashCard = gFlashCards[cardIdx];
+
+        // Are we starting up a keycard flash or processing a current one?
+        if (gStatusBar->tryopen[cardIdx]) {
+            // Starting up a keycard flash
+            gStatusBar->tryopen[cardIdx] = false;
+            flashCard.active = true;
+            flashCard.delay = FLASHDELAY;
+            flashCard.times = FLASHTIMES + 1;
+            flashCard.doDraw = false;
+        }
+        else if (flashCard.active) {
+            // Processing an existing keycard flash
+            flashCard.delay -= 1;
+
+            if (flashCard.delay == 0) {
+                // Time to change flash keyframe (visible/invisible state)
+                flashCard.delay = FLASHDELAY;
+                flashCard.doDraw ^= 1;
+                flashCard.times -= 1;
+
+                // Are we done the flash?
+                if (flashCard.times == 0) {
+                    flashCard.active = false;
+                }
+                
+                // Play the item pickup sound if flashing on
+                if (flashCard.doDraw && flashCard.active) {
+                    a0 = 0;
+                    a1 = sfx_itemup;
+                    S_StartSound();
+                }
+            }
+        }
+    }
+    
+    // Decide on the face frame to use
+    if ((player.cheats & CF_GODMODE) || (player.powers[pw_invulnerability] != 0)) {
+        // Godmode/invulnerability face
+        gStatusBar->face = GODFACE;
+    } else {
+        if (*gbGibDraw) {
+            // Player is being gibbed: use that face
+            gStatusBar->face = gStatusBar->gibframe + FIRSTSPLAT;
+        }
+        else if (player.health != 0) {
+            // Player is alive: decide on face based on special face type and current health
+            const int32_t healthSeg = player.health / 20;
+            const int32_t healthFrameOffset = (healthSeg >= 4) ? 0 : (4 - healthSeg) * 8;
+
+            if (*gbDoSpclFace) {
+                gStatusBar->face = *gSpclFaceType + healthFrameOffset;
+            } else {
+                gStatusBar->face = *gNewFace + healthFrameOffset;
+            }
+        } else {
+            // Player is dead: use dead face
+            gStatusBar->face = DEADFACE;
+        }
+    }
+    
+    // Save the sprite info for the face that will be drawn
+    *gpCurSBFaceSprite = 0x80073E68 + gStatusBar->face * sizeof(facesprite_t);  // TODO: StatusBarFaceSpriteInfo[0] (80073E68)
+
+    // Update the current palette in use
     I_UpdatePalette();
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

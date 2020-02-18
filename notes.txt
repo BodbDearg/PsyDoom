@@ -95,9 +95,9 @@ stbar_t (52 bytes):
         008     u32         tryopen[NUMCARDS];  // (NUMCARDS=6)
         020     u32         gotgibbed;
         024     i32         gibframe;
-        028     i32         gibdelay;
+        028     i32         gibframeTicsLeft;
         02C     char*       message;
-        030     int         messagedelay;
+        030     int         messageTicsLeft;
     };
 
 mobjinfo_t (88 bytes):
