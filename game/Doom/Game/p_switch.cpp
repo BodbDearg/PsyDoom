@@ -13,72 +13,99 @@
 #include "p_spec.h"
 #include "PsxVm/PsxVm.h"
 
+// Defines the two textures used by a switch
+struct switchlist_t {
+	char    name1[9];
+	char	name2[9];
+};
+
+// All of the switch textures in the game
+static const switchlist_t gAlphSwitchList[] = {
+    { "SW1BMET",  "SW2BMET"  },
+    { "SW1BRICK", "SW2BRICK" },
+    { "SW1BRNZ",  "SW2BRNZ"  },
+    { "SW1BROWN", "SW2BROWN" },
+    { "SW1MARB",  "SW2MARB"  },
+    { "SW1MET",   "SW2MET"   },
+    { "SW1METAL", "SW2METAL" },
+    { "SW1NEW02", "SW2NEW02" },
+    { "SW1NEW03", "SW2NEW03" },
+    { "SW1NEW04", "SW2NEW04" },
+    { "SW1NEW05", "SW2NEW05" },
+    { "SW1NEW06", "SW2NEW06" },
+    { "SW1NEW10", "SW2NEW10" },
+    { "SW1NEW11", "SW2NEW11" },
+    { "SW1NEW13", "SW2NEW13" },
+    { "SW1NEW14", "SW2NEW14" },
+    { "SW1NEW20", "SW2NEW20" },
+    { "SW1NEW25", "SW2NEW25" },
+    { "SW1NEW26", "SW2NEW26" },
+    { "SW1NEW28", "SW2NEW28" },
+    { "SW1NEW29", "SW2NEW29" },
+    { "SW1NEW30", "SW2NEW30" },
+    { "SW1NEW31", "SW2NEW31" },
+    { "SW1NEW32", "SW2NEW32" },
+    { "SW1NEW33", "SW2NEW33" },
+    { "SW1NEW34", "SW2NEW34" },
+    { "SW1NEW35", "SW2NEW35" },
+    { "SW1NEW36", "SW2NEW36" },
+    { "SW1NEW39", "SW2NEW39" },
+    { "SW1NEW40", "SW2NEW40" },
+    { "SW1NEW41", "SW2NEW41" },
+    { "SW1NEW42", "SW2NEW42" },
+    { "SW1NEW45", "SW2NEW45" },
+    { "SW1NEW46", "SW2NEW46" },
+    { "SW1NEW47", "SW2NEW47" },
+    { "SW1NEW51", "SW2NEW51" },
+    { "SW1NEW57", "SW2NEW57" },
+    { "SW1NEW60", "SW2NEW60" },
+    { "SW1NEW63", "SW2NEW63" },
+    { "SW1NEW65", "SW2NEW65" },
+    { "SW1NEW66", "SW2NEW66" },
+    { "SW1NEW68", "SW2NEW68" },
+    { "SW1NEW69", "SW2NEW69" },
+    { "SW1NEW70", "SW2NEW70" },
+    { "SW1RED",   "SW2RED"   },
+    { "SW1RUST",  "SW2RUST"  },
+    { "SW1SKULL", "SW2SKULL" },
+    { "SW1STAR",  "SW2STAR"  },
+    { "SW1STEEL", "SW2STEEL" },
+};
+
+static constexpr int32_t NUM_SWITCH_TYPES = C_ARRAY_SIZE(gAlphSwitchList);
+
+// The 2 lumps for each switch texture in the game
+static const VmPtr<int32_t[NUM_SWITCH_TYPES * 2]> gSwitchList(0x800975FC);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Caches textures for all active switches in the level.
+// Must be done after 64 pixel wide wall textures have been cached in order to work.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_InitSwitchList() noexcept {
-loc_80027D84:
-    sp -= 0x30;
-    sw(s5, sp + 0x24);
-    s5 = 0;                                             // Result = 00000000
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 += 0x7404;                                       // Result = AlphSwitchList_1_a[0] (80067404)
-    sw(s4, sp + 0x20);
-    s4 = v0 + 9;                                        // Result = AlphSwitchList_1_b[0] (8006740D)
-    sw(s3, sp + 0x1C);
-    s3 = v0;                                            // Result = AlphSwitchList_1_a[0] (80067404)
-    sw(s1, sp + 0x14);
-    s1 = 0x80090000;                                    // Result = 80090000
-    s1 += 0x75FC;                                       // Result = gSwitchList[0] (800975FC)
-    sw(ra, sp + 0x28);
-    sw(s2, sp + 0x18);
-    sw(s0, sp + 0x10);
-loc_80027DC0:
-    a0 = s3;
-    _thunk_R_TextureNumForName();
-    a0 = s4;
-    s2 = v0;
-    _thunk_R_TextureNumForName();
-    a0 = *gpTextures;
-    v1 = s2 << 5;
-    v1 += a0;
-    v1 = lhu(v1 + 0xA);
-    s0 = v0;
-    if (v1 == 0) goto loc_80027E14;
-    v0 = s0 << 5;
-    a0 += v0;
-    v0 = lhu(a0 + 0xA);
-    if (v0 != 0) goto loc_80027E34;
-    _thunk_I_CacheTex();
-loc_80027E14:
-    v0 = *gpTextures;
-    v1 = s0 << 5;
-    v1 += v0;
-    v0 = lhu(v1 + 0xA);
-    if (v0 == 0) goto loc_80027E5C;
-loc_80027E34:
-    v0 = *gpTextures;
-    v1 = s2 << 5;
-    a0 = v1 + v0;
-    v0 = lhu(a0 + 0xA);
-    if (v0 != 0) goto loc_80027E5C;
-    _thunk_I_CacheTex();
-loc_80027E5C:
-    sw(s2, s1);
-    s1 += 4;
-    sw(s0, s1);
-    s1 += 4;
-    s4 += 0x12;
-    s5++;
-    v0 = (s5 < 0x31);
-    s3 += 0x12;
-    if (v0 != 0) goto loc_80027DC0;
-    ra = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x30;
-    return;
+    int32_t* pSwitchLump = gSwitchList.get();
+
+    for (int32_t switchIdx = 0; switchIdx < NUM_SWITCH_TYPES; ++switchIdx) {
+        // Get both textures for the switch
+        const int32_t tex1Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name1);
+        const int32_t tex2Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name2);
+        
+        texture_t& tex1 = (*gpTextures)[tex1Lump];
+        texture_t& tex2 = (*gpTextures)[tex2Lump];
+
+        // Cache the other switch texture if one of the switch textures is loaded
+        if ((tex1.texPageId) != 0 && (tex2.texPageId == 0)) {
+            I_CacheTex(tex2);
+        }
+
+        if ((tex2.texPageId != 0) && (tex1.texPageId == 0)) {
+            I_CacheTex(tex1);
+        }
+        
+        // Save what lumps the switch uses
+        pSwitchLump[0] = tex1Lump;
+        pSwitchLump[1] = tex2Lump;
+        pSwitchLump += 2;
+    }
 }
 
 void P_StartButton() noexcept {

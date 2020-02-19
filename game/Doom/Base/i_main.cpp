@@ -755,10 +755,6 @@ void I_CacheTex(texture_t& tex) noexcept {
     }
 }
 
-void _thunk_I_CacheTex() noexcept {
-    I_CacheTex(*vmAddrToPtr<texture_t>(a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Removes the given texture from the cache and frees any cells that it is using.
 // Note this should only be called if the texture is actually in the cache!
@@ -1230,9 +1226,7 @@ loc_80034B44:
     a0 += v0;
     _thunk_LIBGPU_MoveImage();
     I_IncDrawnFrameCount();
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7AF0;                                       // Result = gTex_NETERR[0] (80097AF0)
-    _thunk_I_CacheTex();
+    I_CacheTex(*gTex_NETERR);
     a1 = s0;
     a0 = 0x80090000;                                    // Result = 80090000
     a0 = lhu(a0 + 0x7AFA);                              // Load from: gTex_NETERR[2] (80097AFA)

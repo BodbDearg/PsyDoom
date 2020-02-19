@@ -131,10 +131,7 @@ void I_IncDrawnFrameCount() noexcept;
 void I_DrawPresent() noexcept;
 void I_VsyncCallback() noexcept;
 void I_Init() noexcept;
-
 void I_CacheTex(texture_t& tex) noexcept;
-void _thunk_I_CacheTex() noexcept;
-
 void I_RemoveTexCacheEntry(texture_t& tex) noexcept;
 void I_PurgeTexCache() noexcept;
 void I_VramViewerDraw(const int32_t texPageNum) noexcept;

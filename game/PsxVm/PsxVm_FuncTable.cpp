@@ -7,7 +7,6 @@ extern void _thunk_D_memset() noexcept;
 extern void _thunk_D_memcpy() noexcept;
 extern void _thunk_D_strncasecmp() noexcept;
 extern void _thunk_P_Random() noexcept;
-extern void _thunk_M_Random() noexcept;
 extern void M_AddPointToBox() noexcept;
 extern void G_DoLoadLevel() noexcept;
 extern void G_PlayerFinishLevel() noexcept;
@@ -237,7 +236,6 @@ extern void G_BeginExitLevel() noexcept;
 extern void G_ExitLevel() noexcept;
 extern void G_SecretExitLevel() noexcept;
 extern void P_SpawnSpecials() noexcept;
-extern void P_InitSwitchList() noexcept;
 extern void P_StartButton() noexcept;
 extern void P_ChangeSwitchTexture() noexcept;
 extern void P_UseSpecialLine() noexcept;
@@ -272,7 +270,6 @@ extern void _thunk_Z_Free2() noexcept;
 extern void I_PSXInit() noexcept;
 extern void I_ReadGamepad() noexcept;
 extern void I_DrawPresent() noexcept;
-extern void _thunk_I_CacheTex() noexcept;
 extern void I_NetSetup() noexcept;
 extern void I_NetUpdate() noexcept;
 extern void I_NetHandshake() noexcept;
@@ -857,7 +854,6 @@ namespace PsxVm {
         { 0x8001290C, &_thunk_D_memcpy },
         { 0x8001297C, &_thunk_D_strncasecmp },
         { 0x80012A18, &_thunk_P_Random },
-        { 0x80012A44, &_thunk_M_Random },
         { 0x80012B10, &M_AddPointToBox },
         { 0x80012E04, &G_DoLoadLevel },
         { 0x80012F00, &G_PlayerFinishLevel },
@@ -1087,7 +1083,6 @@ namespace PsxVm {
         { 0x80027768, &G_ExitLevel },
         { 0x800277E0, &G_SecretExitLevel },
         { 0x8002784C, &P_SpawnSpecials },
-        { 0x80027D84, &P_InitSwitchList },
         { 0x80027EA8, &P_StartButton },
         { 0x80027F3C, &P_ChangeSwitchTexture },
         { 0x8002822C, &P_UseSpecialLine },
@@ -1122,7 +1117,6 @@ namespace PsxVm {
         { 0x80032934, &I_PSXInit },
         { 0x80032BB8, &I_ReadGamepad },
         { 0x800333F0, &I_DrawPresent },
-        { 0x80033578, &_thunk_I_CacheTex },
         { 0x8003472C, &I_NetSetup },
         { 0x80034A60, &I_NetUpdate },
         { 0x80034CB8, &I_NetHandshake },
