@@ -271,8 +271,6 @@ extern void _thunk_Z_EndMalloc() noexcept;
 extern void _thunk_Z_Free2() noexcept;
 extern void I_PSXInit() noexcept;
 extern void I_ReadGamepad() noexcept;
-extern void _thunk_I_LoadAndCacheTexLump() noexcept;
-extern void _thunk_I_DrawLoadingPlaque() noexcept;
 extern void I_DrawPresent() noexcept;
 extern void _thunk_I_CacheTex() noexcept;
 extern void I_NetSetup() noexcept;
@@ -1123,8 +1121,6 @@ namespace PsxVm {
         { 0x800325D8, &_thunk_Z_Free2 },
         { 0x80032934, &I_PSXInit },
         { 0x80032BB8, &I_ReadGamepad },
-        { 0x80032BF4, &_thunk_I_LoadAndCacheTexLump },
-        { 0x800332E0, &_thunk_I_DrawLoadingPlaque },
         { 0x800333F0, &I_DrawPresent },
         { 0x80033578, &_thunk_I_CacheTex },
         { 0x8003472C, &I_NetSetup },

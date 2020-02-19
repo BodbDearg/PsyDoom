@@ -422,10 +422,6 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
     I_CacheTex(tex);
 }
 
-void _thunk_I_LoadAndCacheTexLump() noexcept {
-    I_LoadAndCacheTexLump(*vmAddrToPtr<texture_t>(a0), vmAddrToPtr<const char>(a1), a2);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Similar to 'I_DrawSprite' except the image being drawn is added to VRAM first before drawing.
 // Because a texture object is specified also, less parameters are required.
@@ -489,10 +485,6 @@ void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos,
     I_DrawSprite(tex.texPageId, clutId, xpos, ypos, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
     I_SubmitGpuCmds();
     I_DrawPresent();
-}
-
-void _thunk_I_DrawLoadingPlaque() noexcept {
-    I_DrawLoadingPlaque(*vmAddrToPtr<texture_t>(a0), (int16_t) a1, (int16_t) a2, (int16_t) a3);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
