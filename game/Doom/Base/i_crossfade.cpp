@@ -1,6 +1,7 @@
 #include "i_crossfade.h"
 
 #include "i_main.h"
+#include "PcPsx/Video.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -18,13 +19,16 @@ loc_80036448:
     sw(s0, sp + 0x168);
     I_PurgeTexCache();
     s3 = sp + 0x68;
+
+    s1 = 0xF0;                                          // Result = 000000F0
+
     a0 = s3;
     a1 = 0x200;                                         // Result = 00000200
     a2 = 0x100;                                         // Result = 00000100
-    a3 = 0x100;                                         // Result = 00000100
-    s1 = 0xF0;                                          // Result = 000000F0
+    a3 = 0x100;                                         // Result = 00000100    
     sw(s1, sp + 0x10);
     LIBGPU_SetDefDrawEnv();
+    
     a0 = sp + 0xC4;
     a1 = 0x300;                                         // Result = 00000300
     a2 = 0x100;                                         // Result = 00000100
@@ -35,6 +39,7 @@ loc_80036448:
     sb(s0, sp + 0x7F);
     sw(s1, sp + 0x10);
     LIBGPU_SetDefDrawEnv();
+
     s2 = sp + 0x120;
     a0 = s2;
     a1 = 0x300;                                         // Result = 00000300
@@ -45,12 +50,14 @@ loc_80036448:
     sb(s0, sp + 0xDB);
     sw(s1, sp + 0x10);
     LIBGPU_SetDefDispEnv();
+
     a0 = sp + 0x134;
     a1 = 0x200;                                         // Result = 00000200
     a2 = 0x100;                                         // Result = 00000100
     a3 = 0x100;                                         // Result = 00000100
     sw(s1, sp + 0x10);
     LIBGPU_SetDefDispEnv();
+
     a1 = 0x300;                                         // Result = 00000300
     a2 = 0x100;                                         // Result = 00000100
     v0 = *gCurDispBufferIdx;
@@ -474,6 +481,12 @@ loc_80036B40:
     LIBGPU_PutDispEnv();
     s1 -= 5;
     t3 = sp + 0x1C;
+
+    // PC-PSX: copy the PSX framebuffer to the display
+    #if PC_PSX_DOOM_MODS
+        PcPsx::displayFramebuffer();
+    #endif
+
     if (i32(s1) >= 0) goto loc_8003669C;
     I_SubmitGpuCmds();
     I_DrawPresent();
