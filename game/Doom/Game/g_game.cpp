@@ -7,6 +7,7 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/doomdef.h"
+#include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/f_finale.h"
 #include "Doom/UI/in_main.h"
@@ -61,11 +62,7 @@ const VmPtr<mobj_t> gEmptyMObj(0x800A9E30);
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_DoLoadLevel() noexcept {
     // Draw the loading plaque
-    a0 = 0x80097A90;                // Result = gTex_LOADING[0] (80097A90)
-    a1 = 95;
-    a2 = 109;
-    a3 = lh(0x800A90A4);            // Load from: gPaletteClutId_UI (800A90A4)    
-    _thunk_I_DrawLoadingPlaque();
+    I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
 
     // TODO: what is this waiting on?
     do {
@@ -87,20 +84,15 @@ void G_DoLoadLevel() noexcept {
     {
         const gameaction_t gameAction = *gGameAction;
 
-        player_t* pPlayer = gPlayers.get();
-        player_t* const pEndPlayer = pPlayer + MAXPLAYERS;
-        bool32_t* pbPlayerInGame = gbPlayerInGame.get();
+        for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+            if (gbPlayerInGame[playerIdx]) {
+                player_t& player = gPlayers[playerIdx];
 
-        do {
-            if (*pbPlayerInGame) {
-                if ((gameAction == ga_restart) || (gameAction == ga_warped) || (pPlayer->playerstate == PST_DEAD)) {
-                    pPlayer->playerstate = PST_REBORN;
+                if ((gameAction == ga_restart) || (gameAction == ga_warped) || (player.playerstate == PST_DEAD)) {
+                    player.playerstate = PST_REBORN;
                 }
             }
-
-            ++pPlayer;
-            ++pbPlayerInGame;
-        } while (pPlayer < pEndPlayer);
+        }
     }
 
     // And and setup the level, then verify the heap after all that is done
