@@ -15,8 +15,8 @@
 
 // Defines the two textures used by a switch
 struct switchlist_t {
-	char    name1[9];
-	char	name2[9];
+    char    name1[9];
+    char    name2[9];
 };
 
 // All of the switch textures in the game

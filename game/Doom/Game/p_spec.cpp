@@ -23,174 +23,102 @@
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
 
+// Definition for a flat or texture animation
+struct animdef_t {
+    bool        istexture;      // False for flats
+    char        startname[9];   // Name of the first lump in the animation
+    char        endname[9];     // Name of the last lump in the animation
+    uint32_t    ticmask;        // New field for PSX: controls which game tics the animation will advance on
+};
+
+// Definitions for all flat and texture animations in the game
+static const animdef_t gAnimDefs[MAXANIMS] = {
+    { 0, "BLOOD1",   "BLOOD3",   3 },
+    { 0, "BSLIME01", "BSLIME04", 3 },
+    { 0, "CSLIME01", "CSLIME04", 3 },
+    { 0, "ENERG01",  "ENERG04",  3 },
+    { 0, "LAVA01",   "LAVA04",   3 },
+    { 0, "WATER01",  "WATER04",  3 },
+    { 0, "SLIME01",  "SLIME03",  3 },
+    { 1, "BFALL1",   "BFALL4",   3 },
+    { 1, "ENERGY01", "ENERGY04", 3 },
+    { 1, "FIRE01",   "FIRE02",   3 },
+    { 1, "FLAME01",  "FLAME03",  3 },
+    { 1, "LAVWAL01", "LAVWAL03", 3 },
+    { 1, "SFALL1",   "SFALL4",   3 },
+    { 1, "SLIM01",   "SLIM04",   3 },
+    { 1, "TVSNOW01", "TVSNOW03", 1 },
+    { 1, "WARN01",   "WARN02",   3 }
+};
+
+const VmPtr<anim_t[MAXANIMS]>   gAnims(0x800863AC);
+const VmPtr<VmPtr<anim_t>>      gpLastAnim(0x80078164);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Caches into RAM the textures for all animated flats and textures.
+// Also sets up the spot in VRAM where these animations will go - they occupy the same spot as the base animation frame.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_InitPicAnims() noexcept {
-loc_80025F44:
-    sp -= 0x28;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 += 0x63AC;                                       // Result = gAnims_1[0] (800863AC)
-    sw(s1, sp + 0x14);
-    s1 = 0x80060000;                                    // Result = 80060000
-    s1 += 0x7244;                                       // Result = AnimDefs_1_bIsTexture (80067244)
-    sw(s3, sp + 0x1C);
-    s3 = 0;                                             // Result = 00000000
-    sw(s2, sp + 0x18);
-    s2 = s1 + 0xD;                                      // Result = AnimDefs_1_startName[0] (80067251)
-    sw(ra, sp + 0x20);
-    sw(s0, sp + 0x10);
-    sw(v0, gp + 0xB84);                                 // Store to: gpLastAnim (80078164)
-loc_80025F78:
-    v0 = lw(s1);
-    if (v0 == 0) goto loc_800260A4;
-    a0 = s1 + 4;
-    _thunk_R_TextureNumForName();
-    v1 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
-    a0 = s2;
-    sw(v0, v1 + 0x8);
-    _thunk_R_TextureNumForName();
-    v1 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
-    a0 = lw(v1 + 0x8);
-    a1 = v0;
-    sw(a1, v1 + 0x4);
-    v1 = *gpTextures;
-    v0 = a0 << 5;
-    v0 += v1;
-    v0 = lhu(v0 + 0xA);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(a1) < i32(a0));
-        if (bJump) goto loc_800261F0;
+    *gpLastAnim = &gAnims[0];
+
+    for (int32_t animIdx = 0; animIdx < MAXANIMS; ++animIdx) {
+        const animdef_t& animdef = gAnimDefs[animIdx];
+        anim_t& lastanim = **gpLastAnim;
+
+        if (animdef.istexture) {
+            // Determine the lump range for the animation
+            lastanim.basepic = R_TextureNumForName(animdef.startname);
+            lastanim.picnum = R_TextureNumForName(animdef.endname);
+
+            // Ignore this animation if it's not used in the level
+            texture_t& basetex = (*gpTextures)[lastanim.basepic];
+
+            if (basetex.texPageId == 0)
+                continue;
+
+            // For all frames in the animation, cache the lump in RAM and make it occupy the same VRAM spot as the base texture
+            for (int32_t picNum = lastanim.basepic; picNum <= lastanim.picnum; ++picNum) {
+                // Ensure the lump is cached in RAM for runtime (will need to be backed in RAM in case it's evicted from VRAM)
+                W_CacheLumpNum(*gFirstTexLumpNum + picNum, PU_ANIMATION, false);
+
+                texture_t& dstTex = (*gpTextures)[picNum];
+                dstTex.texPageCoordX = basetex.texPageCoordX;
+                dstTex.texPageCoordY = basetex.texPageCoordY;
+                dstTex.texPageId = basetex.texPageId;
+                dstTex.ppTexCacheEntries = basetex.ppTexCacheEntries;
+            }
+        } else {
+            // Determine the lump range for the animation
+            lastanim.basepic = R_FlatNumForName(animdef.startname);
+            lastanim.picnum = R_FlatNumForName(animdef.endname);
+
+            // Ignore this animation if it's not used in the level
+            texture_t& basetex = (*gpFlatTextures)[lastanim.basepic];
+
+            if (basetex.texPageId == 0)
+                continue;
+
+            // For all frames in the animation, cache the lump in RAM and make it occupy the same VRAM spot as the base texture
+            for (int32_t picNum = lastanim.basepic; picNum <= lastanim.picnum; ++picNum) {
+                // Ensure the lump is cached in RAM for runtime (will need to be backed in RAM in case it's evicted from VRAM)
+                W_CacheLumpNum(*gFirstFlatLumpNum + picNum, PU_ANIMATION, false);
+
+                texture_t& dstTex = (*gpFlatTextures)[picNum];
+                dstTex.texPageCoordX = basetex.texPageCoordX;
+                dstTex.texPageCoordY = basetex.texPageCoordY;
+                dstTex.texPageId = basetex.texPageId;
+                dstTex.ppTexCacheEntries = basetex.ppTexCacheEntries;
+            }
+        }
+        
+        // Init the anim state and move onto the next
+        lastanim.istexture = animdef.istexture;
+        lastanim.numpics = lastanim.picnum - lastanim.basepic + 1;
+        lastanim.current = lastanim.basepic;
+        lastanim.ticmask = animdef.ticmask;
+
+        *gpLastAnim += 1;
     }
-    s0 = a0;
-    if (v0 != 0) goto loc_800261B8;
-loc_80025FE0:
-    a0 = *gFirstTexLumpNum;
-    a0 += s0;
-    W_CacheLumpNum(a0, PU_ANIMATION, false);
-    v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
-    a0 = s0 << 5;
-    v0 = lw(v0 + 0x8);
-    v1 = *gpTextures;
-    v0 <<= 5;
-    v0 += v1;
-    v0 = lbu(v0 + 0x8);
-    v1 += a0;
-    sb(v0, v1 + 0x8);
-    v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
-    v0 = lw(v0 + 0x8);
-    v1 = *gpTextures;
-    v0 <<= 5;
-    v0 += v1;
-    v0 = lbu(v0 + 0x9);
-    v1 += a0;
-    sb(v0, v1 + 0x9);
-    a1 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
-    v0 = lw(a1 + 0x8);
-    v1 = *gpTextures;
-    v0 <<= 5;
-    v0 += v1;
-    v0 = lhu(v0 + 0xA);
-    a0 += v1;
-    sh(v0, a0 + 0xA);
-    v0 = lw(a1 + 0x8);
-    v0 <<= 5;
-    v0 += v1;
-    v0 = lw(v0 + 0x14);
-    sw(v0, a0 + 0x14);
-    v0 = lw(a1 + 0x4);
-    s0++;
-    v0 = (i32(v0) < i32(s0));
-    a1 = 8;                                             // Result = 00000008
-    if (v0 == 0) goto loc_80025FE0;
-    goto loc_800261B8;
-loc_800260A4:
-    a0 = s1 + 4;
-    _thunk_R_FlatNumForName();
-    v1 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
-    a0 = s2;
-    sw(v0, v1 + 0x8);
-    _thunk_R_FlatNumForName();
-    v1 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
-    a0 = lw(v1 + 0x8);
-    a1 = v0;
-    sw(a1, v1 + 0x4);
-    v1 = *gpFlatTextures;
-    v0 = a0 << 5;
-    v0 += v1;
-    v0 = lhu(v0 + 0xA);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(a1) < i32(a0));
-        if (bJump) goto loc_800261F0;
-    }
-    s0 = a0;
-    if (v0 != 0) goto loc_800261B8;
-loc_800260FC:
-    a0 = *gFirstFlatLumpNum;
-    a0 += s0;
-    W_CacheLumpNum(a0, PU_ANIMATION, false);
-    v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
-    a0 = s0 << 5;
-    v0 = lw(v0 + 0x8);
-    v1 = *gpFlatTextures;
-    v0 <<= 5;
-    v0 += v1;
-    v0 = lbu(v0 + 0x8);
-    v1 += a0;
-    sb(v0, v1 + 0x8);
-    v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
-    v0 = lw(v0 + 0x8);
-    v1 = *gpFlatTextures;
-    v0 <<= 5;
-    v0 += v1;
-    v0 = lbu(v0 + 0x9);
-    v1 += a0;
-    sb(v0, v1 + 0x9);
-    a1 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
-    v0 = lw(a1 + 0x8);
-    v1 = *gpFlatTextures;
-    v0 <<= 5;
-    v0 += v1;
-    v0 = lhu(v0 + 0xA);
-    a0 += v1;
-    sh(v0, a0 + 0xA);
-    v0 = lw(a1 + 0x8);
-    v0 <<= 5;
-    v0 += v1;
-    v0 = lw(v0 + 0x14);
-    sw(v0, a0 + 0x14);
-    v0 = lw(a1 + 0x4);
-    s0++;
-    v0 = (i32(v0) < i32(s0));
-    a1 = 8;                                             // Result = 00000008
-    if (v0 == 0) goto loc_800260FC;
-loc_800261B8:
-    v1 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
-    a1 = lw(s1);
-    a2 = lw(v1 + 0x8);
-    v0 = lw(v1 + 0x4);
-    a0 = lw(v1 + 0x8);
-    sw(a1, v1);
-    v0 -= a0;
-    v0++;
-    sw(a2, v1 + 0x10);
-    sw(v0, v1 + 0xC);
-    a0 = lw(s2 + 0xB);
-    v0 = v1 + 0x18;
-    sw(v0, gp + 0xB84);                                 // Store to: gpLastAnim (80078164)
-    sw(a0, v1 + 0x14);
-loc_800261F0:
-    s3++;
-    s2 += 0x1C;
-    v0 = (s3 < 0x10);
-    s1 += 0x1C;
-    if (v0 != 0) goto loc_80025F78;
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
 }
 
 void getSide() noexcept {
@@ -1243,7 +1171,7 @@ loc_80026FB4:
 void P_UpdateSpecials() noexcept {
 loc_80026FC8:
     sp -= 0x28;
-    v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
+    v0 = *gpLastAnim;
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x63AC;                                       // Result = gAnims_1[0] (800863AC)
     sw(ra, sp + 0x20);
@@ -1303,7 +1231,7 @@ loc_800270B0:
 loc_800270D4:
     sw(a2, v0 + 0x1C);
 loc_800270D8:
-    v0 = lw(gp + 0xB84);                                // Load from: gpLastAnim (80078164)
+    v0 = *gpLastAnim;
     a1 += 0x18;
     v0 = (a1 < v0);
     a0 += 0x18;

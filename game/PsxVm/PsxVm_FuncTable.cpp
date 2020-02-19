@@ -214,7 +214,6 @@ extern void ClipToLine() noexcept;
 extern void SL_CheckLine() noexcept;
 extern void SL_PointOnSide2() noexcept;
 extern void SL_CheckSpecialLines() noexcept;
-extern void P_InitPicAnims() noexcept;
 extern void getSide() noexcept;
 extern void getSector() noexcept;
 extern void twoSided() noexcept;
@@ -260,8 +259,6 @@ extern void P_CalcHeight() noexcept;
 extern void P_MovePlayer() noexcept;
 extern void P_DeathThink() noexcept;
 extern void P_PlayerThink() noexcept;
-extern void _thunk_R_TextureNumForName() noexcept;
-extern void _thunk_R_FlatNumForName() noexcept;
 extern void _thunk_R_PointToAngle2() noexcept;
 extern void _thunk_R_PointInSubsector() noexcept;
 extern void _thunk_Z_Malloc() noexcept;
@@ -1061,7 +1058,6 @@ namespace PsxVm {
         { 0x80025840, &SL_CheckLine },
         { 0x80025A8C, &SL_PointOnSide2 },
         { 0x80025AFC, &SL_CheckSpecialLines },
-        { 0x80025F44, &P_InitPicAnims },
         { 0x80026224, &getSide },
         { 0x80026280, &getSector },
         { 0x800262E4, &twoSided },
@@ -1107,8 +1103,6 @@ namespace PsxVm {
         { 0x8002A4E8, &P_MovePlayer },
         { 0x8002A6A0, &P_DeathThink },
         { 0x8002A7F8, &P_PlayerThink },
-        { 0x8002BDA4, &_thunk_R_TextureNumForName },
-        { 0x8002BE68, &_thunk_R_FlatNumForName },
         { 0x80030BA0, &_thunk_R_PointToAngle2 },
         { 0x80030F5C, &_thunk_R_PointInSubsector },
         { 0x800321D0, &_thunk_Z_Malloc },

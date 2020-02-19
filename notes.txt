@@ -81,11 +81,11 @@ state_t (28 bytes):
 anim_t (24 bytes):
     struct anim_t {
         000     uint32_t    istexture;
-        004     uint32_t    picnum;
-        008     uint32_t    basepic;
-        00C     uint32_t    numpics;
-        010     uint32_t    current;
-        014     uint32_t    ticMask;    // Determines how frequently anim updates (new field for PSX)
+        004     int32_t     picnum;
+        008     int32_t     basepic;
+        00C     int32_t     numpics;
+        010     int32_t     current;
+        014     uint32_t    ticmask;    // Determines how frequently anim updates (new field for PSX)
     };
 
 stbar_t (52 bytes):

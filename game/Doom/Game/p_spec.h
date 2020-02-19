@@ -1,5 +1,26 @@
 #pragma once
 
+#include "Doom/doomdef.h"
+
+// Holds state for an animated texture or flat.
+// Note that only one of these exists per texture - individual walls & floors do not have unique anims.
+struct anim_t {
+    uint32_t    istexture;
+    int32_t     picnum;
+    int32_t     basepic;
+    int32_t     numpics;
+    int32_t     current;
+    uint32_t    ticmask;        // New field for PSX: controls which game tics the animation will advance on
+};
+
+static_assert(sizeof(anim_t) == 24);
+
+// The number of animated floor/texture types in the game
+static constexpr int32_t MAXANIMS = 16;
+
+extern const VmPtr<anim_t[MAXANIMS]>    gAnims;
+extern const VmPtr<VmPtr<anim_t>>       gpLastAnim;
+
 void P_InitPicAnims() noexcept;
 void getSide() noexcept;
 void getSector() noexcept;

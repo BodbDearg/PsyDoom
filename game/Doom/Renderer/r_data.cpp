@@ -5,7 +5,6 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/Game/doomdata.h"
 #include "PcPsx/Endian.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 
 // Structure for a palette in the game: contains 256 RGBA5551 color values.
@@ -248,10 +247,6 @@ int32_t R_TextureNumForName(const char* const name) noexcept {
     return -1;
 }
 
-void _thunk_R_TextureNumForName() noexcept {
-    v0 = R_TextureNumForName(vmAddrToPtr<const char>(a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Given a lump name (case insensitive) for a flat texture, returns the texture index among flat texture lumps.
 // PC-PSX: Returns '-1' if the name was not found. Originally returned '0'.
@@ -290,10 +285,6 @@ int32_t R_FlatNumForName(const char* const name) noexcept {
     #else
         return 0;
     #endif
-}
-
-void _thunk_R_FlatNumForName() noexcept {
-    v0 = R_FlatNumForName(vmAddrToPtr<const char>(a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
