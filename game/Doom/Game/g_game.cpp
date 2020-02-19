@@ -552,7 +552,7 @@ void G_RunGame() noexcept {
             continue;
         }
 
-        MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
+        MiniLoop(F2_Start, _thunk_F2_Stop, _thunk_F2_Ticker, F2_Drawer);
 
         if (*gGameAction != ga_warped && *gGameAction != ga_restart)
             break;

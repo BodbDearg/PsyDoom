@@ -160,7 +160,7 @@ gameaction_t F1_Ticker() noexcept {
 
     // Check to see if the text needs to advance more, or if we can exit
     if (*gFinLinesDone < 11) {
-        // Text is not yet done popping up: only adavnce if time has elapsed and on every 2nd tick
+        // Text is not yet done popping up: only advance if time has elapsed and on every 2nd tick
         if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 1) == 0)) {
             // Get the current incoming text line text and see if we need to move onto another
             const char* const textLine = gDoom1WinText[*gFinLinesDone];
@@ -276,592 +276,211 @@ void F2_Start() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Called to shut down the DOOM II finale screen
 //------------------------------------------------------------------------------------------------------------------------------------------
-void F2_Stop() noexcept {
+void F2_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     *gbGamePaused = false;
     psxcd_stop();
 }
 
-void F2_Ticker() noexcept {
-    v0 = *gCurPlayerIndex;
-    sp -= 0x20;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
+void _thunk_F2_Stop() noexcept {
+    F2_Stop((gameaction_t) a0);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update logic for the DOOM II finale screen
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t F2_Ticker() noexcept {
+    // Grab inputs and set global game action
     *gGameAction = ga_nothing;
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    at += v0;
-    s0 = lw(at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
-    at += v0;
-    s1 = lw(at);
+
+    const padbuttons_t ticButtons = gTicButtons[*gCurPlayerIndex];
+    const padbuttons_t oldTicButtons = gOldTicButtons[*gCurPlayerIndex];
+
+    // Not sure why this screen is updating cheats or checking for pause...
     P_CheckCheats();
-    v0 = *gbGamePaused;
-    s2 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_8003DB8C;
-    v0 = *gGameAction;
-    goto loc_8003E30C;
-loc_8003DB8C:
-    v1 = *gFinaleStage;
-    v0 = (i32(v1) < F_STAGE_CAST);
-    if (v1 == s2) goto loc_8003DC80;
-    if (v0 == 0) goto loc_8003DBB4;
-    v0 = 0;                                             // Result = 00000000
-    if (v1 == 0) goto loc_8003DBC8;
-    goto loc_8003E30C;
-loc_8003DBB4:
-    v0 = 2;                                             // Result = 00000002
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8003DCA8;
+    
+    if (*gbGamePaused)
+        return *gGameAction;
+    
+    // Handle whatever finale stage we are on
+    if (*gFinaleStage == F_STAGE_TEXT) {
+        // Currently popping up text: only advance if time has elapsed and on every 2nd tick
+        if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 1) == 0)) {
+            // Get the current incoming text line text and see if we need to move onto another
+            const char* const textLine = gDoom2WinText[*gFinLinesDone];
+
+            if (textLine[*gFinIncomingLineLen] == 0) {
+                // We've reached the end of this line, move onto a new one
+                *gFinLinesDone += 1;
+                *gFinIncomingLineLen = 0;
+
+                // If we're done all the lines then begin scrolling the text up
+                if (*gFinLinesDone >= 11) {
+                    *gFinaleStage = F_STAGE_SCROLLTEXT;
+                }
+            } else {
+                D_strncpy(gFinIncomingLine.get(), textLine, *gFinIncomingLineLen);
+            }
+
+            // Null terminate the incomming text line and include this character in the length
+            gFinIncomingLine[*gFinIncomingLineLen] = 0;
+            *gFinIncomingLineLen += 1;
+        }
     }
-    goto loc_8003E30C;
-loc_8003DBC8:
-    v1 = *gGameTic;
-    v0 = *gPrevGameTic;
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 & 1;
-        if (bJump) goto loc_8003E308;
+    else if (*gFinaleStage == F_STAGE_SCROLLTEXT) {
+        // Scrolling the finale text upwards for a bit before the cast call
+        *gFinTextYPos -= 1;
+        
+        if (*gFinTextYPos < -200) {
+            *gFinaleStage = F_STAGE_CAST;
+        }
     }
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8003E30C;
+    else if (*gFinaleStage == F_STAGE_CAST)  {
+        // Doing the cast call: see first if the player is shooting the current character
+        if ((!*gbCastDeath) && (ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS)) {
+            // Shooting this character! Play the shotgun sound:
+            a0 = 0;
+            a1 = sfx_shotgn;
+            S_StartSound();
+
+            // Play enemy death sound if it has it
+            const mobjinfo_t& mobjinfo = gMObjInfo[gCastOrder[*gCastNum].type];
+            
+            if (mobjinfo.deathsound != 0) {
+                a0 = 0;
+                a1 = mobjinfo.deathsound;
+                S_StartSound();
+            }
+
+            // Begin playing the death animation
+            const state_t& deathState = gStates[mobjinfo.deathstate];
+
+            *gbCastDeath = true;
+            *gCastFrames = 0;
+            *gpCastState = ptrToVmAddr(&deathState);
+            *gCastTics = deathState.tics;
+        }
+
+        // Only advance character animation if time has passed
+        if (*gGameTic > *gPrevGameTic) {
+            if (*gbCastDeath && ((*gpCastState)->nextstate == S_NULL)) {
+                // Character is dead and there is no state which follows (death anim is finished): switch to the next character
+                *gCastNum += 1;
+                *gbCastDeath = false;
+
+                // Loop back around to the first character when we reach the end
+                if (gCastOrder[*gCastNum].name  == nullptr) {
+                    *gCastNum = 0;
+                }
+
+                // Initialize frame count, set state to the 'see' state and make a noise if there is a 'see' sound
+                const castinfo_t& castinfo = gCastOrder[*gCastNum];
+                const mobjinfo_t& mobjinfo = gMObjInfo[castinfo.type];
+
+                *gCastFrames = 0;
+                *gpCastState = &gStates[mobjinfo.seestate];
+
+                if (mobjinfo.seesound != 0) {
+                    a0 = 0;
+                    a1 = mobjinfo.seesound;
+                    S_StartSound();
+                }
+            } else {
+                // Character is not dead, advance the time until the next state
+                *gCastTics -= 1;
+
+                // If we still have time until the next state then there is nothing more to do
+                if (*gCastTics > 0)
+                    return ga_nothing;
+            
+                // Hacked in logic to play sounds on certain frames of animation
+                int32_t soundId;
+
+                switch ((*gpCastState)->nextstate) {
+                    case S_PLAY_ATK2:   soundId = sfx_dshtgn;   break;
+                    case S_POSS_ATK2:   soundId = sfx_pistol;   break;
+                    case S_SPOS_ATK2:   soundId = sfx_shotgn;   break;
+                    case S_SKEL_FIST2:  soundId = sfx_skeswg;   break;
+                    case S_SKEL_FIST4:  soundId = sfx_skepch;   break;
+                    case S_SKEL_MISS2:  soundId = sfx_skeatk;   break;
+                    case S_FATT_ATK2:
+                    case S_FATT_ATK5:
+                    case S_FATT_ATK8:   soundId = sfx_firsht;   break;
+                    case S_CPOS_ATK2:
+                    case S_CPOS_ATK3:
+                    case S_CPOS_ATK4:   soundId = sfx_pistol;   break;
+                    case S_TROO_ATK3:   soundId = sfx_claw;     break;
+                    case S_SARG_ATK2:   soundId = sfx_sgtatk;   break;
+                    case S_BOSS_ATK2:
+                    case S_BOS2_ATK2:
+                    case S_HEAD_ATK2:   soundId = sfx_firsht;   break;
+                    case S_SKULL_ATK2:  soundId = sfx_sklatk;   break;
+                    case S_SPID_ATK2:
+                    case S_SPID_ATK3:   soundId = sfx_pistol;   break;
+                    case S_BSPI_ATK2:   soundId = sfx_plasma;   break;
+                    case S_CYBER_ATK2:
+                    case S_CYBER_ATK4:
+                    case S_CYBER_ATK6:  soundId = sfx_rlaunc;   break;
+                    case S_PAIN_ATK3:   soundId = sfx_sklatk;   break;
+
+                    default: soundId = 0;
+                }
+
+                if (soundId != 0) {
+                    a0 = 0;
+                    a1 = soundId;
+                    S_StartSound();
+                }
+            }
+
+            // Advance onto the next state
+            *gpCastState = &gStates[(*gpCastState)->nextstate];
+            *gCastFrames += 1;
+
+            const castinfo_t& castinfo = gCastOrder[*gCastNum];
+            const mobjinfo_t& mobjinfo = gMObjInfo[castinfo.type];
+
+            // Every 12 frames make the enemy attack.
+            // Alternate between melee and ranged attacks where possible.
+            if (*gCastFrames == 12) {
+                if (*gCastOnMelee) {
+                    *gpCastState = &gStates[mobjinfo.meleestate];
+                } else {
+                    *gpCastState = &gStates[mobjinfo.missilestate];
+                }
+
+                // If there wasn't a ranged or melee attack then try using the opposite attack type
+                *gCastOnMelee ^= 1;
+
+                if (gpCastState->get() == &gStates[S_NULL]) {
+                    if (*gCastOnMelee) {
+                        *gpCastState = &gStates[mobjinfo.meleestate];
+                    } else {
+                        *gpCastState = &gStates[mobjinfo.missilestate];
+                    }
+                }
+            }
+
+            // If it is the player then every so often put it into the 'see' state
+            if ((*gCastFrames == 24) || (gpCastState->get() == &gStates[S_PLAY])) {
+                *gpCastState = &gStates[mobjinfo.seestate];
+                *gCastFrames = 0;
+            }
+            
+            // Update the number of tics to stay in this state.
+            // If the state defines no time limit then make up one:
+            *gCastTics = (*gpCastState)->tics;
+
+            if (*gCastTics == -1) {
+                *gCastTics = TICRATE;
+            }
+        }
     }
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 += 0x4950;                                       // Result = STR_Doom2_WinText_1[0] (80074950)
-    a0 = *gFinLinesDone;
-    a2 = *gFinIncomingLineLen;
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    v0 += a0;
-    a1 = v0 + v1;
-    v0 = a1 + a2;
-    v0 = lbu(v0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a0 + 1;
-        if (bJump) goto loc_8003DC48;
-    }
-    *gFinLinesDone = v0;
-    v0 = (i32(v0) < 0xB);
-    *gFinIncomingLineLen = 0;
-    if (v0 != 0) goto loc_8003DC58;
-    *gFinaleStage = (finalestage_t) s2;
-    goto loc_8003DC58;
-loc_8003DC48:
-    a0 = gFinIncomingLine;
-    D_strncpy(vmAddrToPtr<char>(a0), vmAddrToPtr<const char>(a1), a2);
-loc_8003DC58:
-    v1 = *gFinIncomingLineLen;
-    v0 = v1 + 1;
-    *gFinIncomingLineLen = v0;
-    at = gFinIncomingLine;
-    at += v1;
-    sb(0, at);
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8003E30C;
-loc_8003DC80:
-    v0 = *gFinTextYPos;
-    v0--;
-    *gFinTextYPos = v0;
-    v0 = (i32(v0) < -0xC8);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_8003E308;
-    }
-    *gFinaleStage = (finalestage_t) v0;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8003E30C;
-loc_8003DCA8:
-    v0 = *gbCastDeath;
-    if (v0 != 0) goto loc_8003DDA0;
-    v0 = s0 & 0xF0;
-    if (s0 == s1) goto loc_8003DDA0;
-    if (v0 == 0) goto loc_8003DDA0;
-    a0 = 0;
-    a1 = sfx_shotgn;
-    S_StartSound();
-    v0 = *gCastNum;
-    v0 <<= 3;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x4A68;                                       // Result = CastInfo_1_ZombieMan[1] (80074A68)
-    at += v0;
-    v1 = lw(at);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F8C;                                       // Result = MObjInfo_MT_PLAYER[E] (8005E074)
-    at += v0;
-    a1 = lw(at);
-    if (a1 == 0) goto loc_8003DD2C;
-    a0 = 0;
-    S_StartSound();
-loc_8003DD2C:
-    v0 = *gCastNum;
-    v0 <<= 3;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x4A68;                                       // Result = CastInfo_1_ZombieMan[1] (80074A68)
-    at += v0;
-    v1 = lw(at);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F94;                                       // Result = MObjInfo_MT_PLAYER[C] (8005E06C)
-    at += v0;
-    v1 = lw(at);
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    v1 = lw(v0 + 0x8);
-    *gbCastDeath = s2;
-    *gCastFrames = 0;
-    *gpCastState = v0;
-    *gCastTics = v1;
-loc_8003DDA0:
-    v1 = *gGameTic;
-    v0 = *gPrevGameTic;
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8003E30C;
-    }
-    v0 = *gbCastDeath;
-    if (v0 == 0) goto loc_8003DEC0;
-    v0 = *gpCastState;
-    v0 = lw(v0 + 0x10);
-    if (v0 != 0) goto loc_8003DEC0;
-    v0 = *gCastNum;
-    v0++;
-    v1 = v0 << 3;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x4A64;                                       // Result = CastInfo_1_ZombieMan[0] (80074A64)
-    at += v1;
-    v1 = lw(at);
-    *gbCastDeath = false;
-    *gCastNum = v0;
-    if (v1 != 0) goto loc_8003DE1C;
-    *gCastNum = 0;
-loc_8003DE1C:
-    a0 = *gCastNum;
-    a0 <<= 3;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x4A68;                                       // Result = CastInfo_1_ZombieMan[1] (80074A68)
-    at += a0;
-    v1 = lw(at);
-    a1 = 0x80060000;                                    // Result = 80060000
-    a1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    *gCastFrames = 0;
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1FB8;                                       // Result = MObjInfo_MT_PLAYER[3] (8005E048)
-    at += v0;
-    v0 = lw(at);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x4A68;                                       // Result = CastInfo_1_ZombieMan[1] (80074A68)
-    at += a0;
-    a0 = lw(at);
-    v1 = v0 << 3;
-    v1 -= v0;
-    v1 <<= 2;
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 2;
-    v0 -= a0;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1FB4;                                       // Result = MObjInfo_MT_PLAYER[4] (8005E04C)
-    at += v0;
-    v0 = lw(at);
-    v1 += a1;
-    *gpCastState = v1;
-    a0 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_8003E098;
-    a1 = v0;
-    goto loc_8003E090;
-loc_8003DEC0:
-    v0 = *gCastTics;
-    v0--;
-    *gCastTics = v0;
-    {
-        const bool bJump = (i32(v0) > 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8003E30C;
-    }
-    v0 = *gpCastState;
-    v1 = lw(v0 + 0x10);
-    v0 = 0x167;                                         // Result = 00000167
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (v1 < 0x168);
-        if (bJump) goto loc_8003E054;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x10A;                                     // Result = 0000010A
-        if (bJump) goto loc_8003DF94;
-    }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (v1 < 0x10B);
-        if (bJump) goto loc_8003E04C;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xDB;                                      // Result = 000000DB
-        if (bJump) goto loc_8003DF4C;
-    }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (v1 < 0xDC);
-        if (bJump) goto loc_8003E03C;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xA0;                                      // Result = 000000A0
-        if (bJump) goto loc_8003DF30;
-    }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0xBE;                                      // Result = 000000BE
-        if (bJump) goto loc_8003E034;
-    }
-    a1 = 7;                                             // Result = 00000007
-    if (v1 == v0) goto loc_8003E088;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_8003E088;
-loc_8003DF30:
-    v0 = 0x106;                                         // Result = 00000106
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0x108;                                     // Result = 00000108
-        if (bJump) goto loc_8003E044;
-    }
-    a1 = 0x50;                                          // Result = 00000050
-    if (v1 == v0) goto loc_8003E088;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_8003E088;
-loc_8003DF4C:
-    v0 = 0x12F;                                         // Result = 0000012F
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (v1 < 0x130);
-        if (bJump) goto loc_8003E064;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x129;                                     // Result = 00000129
-        if (bJump) goto loc_8003DF78;
-    }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0x12C;                                     // Result = 0000012C
-        if (bJump) goto loc_8003E064;
-    }
-    a1 = 0x4A;                                          // Result = 0000004A
-    if (v1 == v0) goto loc_8003E088;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_8003E088;
-loc_8003DF78:
-    v0 = (v1 < 0x14C);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (v1 < 0x149);
-        if (bJump) goto loc_8003E084;
-    }
-    a1 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_8003E088;
-    a1 = 7;                                             // Result = 00000007
-    goto loc_8003E088;
-loc_8003DF94:
-    v0 = (v1 < 0x1E7);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (v1 < 0x1E5);
-        if (bJump) goto loc_8003DFEC;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x1A5;                                     // Result = 000001A5
-        if (bJump) goto loc_8003E06C;
-    }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (v1 < 0x1A6);
-        if (bJump) goto loc_8003E064;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x182;                                     // Result = 00000182
-        if (bJump) goto loc_8003DFD0;
-    }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0x18F;                                     // Result = 0000018F
-        if (bJump) goto loc_8003E05C;
-    }
-    a1 = 0x4A;                                          // Result = 0000004A
-    if (v1 == v0) goto loc_8003E088;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_8003E088;
-loc_8003DFD0:
-    v0 = 0x1BB;                                         // Result = 000001BB
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0x1CB;                                     // Result = 000001CB
-        if (bJump) goto loc_8003E064;
-    }
-    a1 = 0x3B;                                          // Result = 0000003B
-    if (v1 == v0) goto loc_8003E088;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_8003E088;
-loc_8003DFEC:
-    v0 = 0x225;                                         // Result = 00000225
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (v1 < 0x226);
-        if (bJump) goto loc_8003E07C;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x205;                                     // Result = 00000205
-        if (bJump) goto loc_8003E018;
-    }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0x223;                                     // Result = 00000223
-        if (bJump) goto loc_8003E074;
-    }
-    a1 = 0xF;                                           // Result = 0000000F
-    if (v1 == v0) goto loc_8003E088;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_8003E088;
-loc_8003E018:
-    v0 = 0x227;                                         // Result = 00000227
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0x23C;                                     // Result = 0000023C
-        if (bJump) goto loc_8003E07C;
-    }
-    a1 = 0x3B;                                          // Result = 0000003B
-    if (v1 == v0) goto loc_8003E088;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_8003E088;
-loc_8003E034:
-    a1 = 0x1D;                                          // Result = 0000001D
-    goto loc_8003E088;
-loc_8003E03C:
-    a1 = 8;                                             // Result = 00000008
-    goto loc_8003E088;
-loc_8003E044:
-    a1 = 0x4F;                                          // Result = 0000004F
-    goto loc_8003E088;
-loc_8003E04C:
-    a1 = 0x4E;                                          // Result = 0000004E
-    goto loc_8003E088;
-loc_8003E054:
-    a1 = 0x2E;                                          // Result = 0000002E
-    goto loc_8003E088;
-loc_8003E05C:
-    a1 = 0x35;                                          // Result = 00000035
-    goto loc_8003E088;
-loc_8003E064:
-    a1 = 0x4A;                                          // Result = 0000004A
-    goto loc_8003E088;
-loc_8003E06C:
-    a1 = 7;                                             // Result = 00000007
-    goto loc_8003E088;
-loc_8003E074:
-    a1 = 9;                                             // Result = 00000009
-    goto loc_8003E088;
-loc_8003E07C:
-    a1 = 0xF;                                           // Result = 0000000F
-    goto loc_8003E088;
-loc_8003E084:
-    a1 = 0;                                             // Result = 00000000
-loc_8003E088:
-    a0 = 0;                                             // Result = 00000000
-    if (a1 == 0) goto loc_8003E098;
-loc_8003E090:
-    S_StartSound();
-loc_8003E098:
-    v0 = *gpCastState;
-    v1 = *gCastFrames;
-    a0 = lw(v0 + 0x10);
-    v1++;
-    *gCastFrames = v1;
-    v0 = a0 << 3;
-    v0 -= a0;
-    v0 <<= 2;
-    a0 = 0x80060000;                                    // Result = 80060000
-    a0 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += a0;
-    *gpCastState = v0;
-    v0 = 0xC;                                           // Result = 0000000C
-    if (v1 != v0) goto loc_8003E25C;
-    v0 = *gCastOnMelee;
-    if (v0 == 0) goto loc_8003E130;
-    v0 = *gCastNum;
-    v0 <<= 3;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x4A68;                                       // Result = CastInfo_1_ZombieMan[1] (80074A68)
-    at += v0;
-    v1 = lw(at);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F9C;                                       // Result = MObjInfo_MT_PLAYER[A] (8005E064)
-    at += v0;
-    v1 = lw(at);
-    v0 = v1 << 3;
-    goto loc_8003E17C;
-loc_8003E130:
-    v0 = *gCastNum;
-    v0 <<= 3;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x4A68;                                       // Result = CastInfo_1_ZombieMan[1] (80074A68)
-    at += v0;
-    v1 = lw(at);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F98;                                       // Result = MObjInfo_MT_PLAYER[B] (8005E068)
-    at += v0;
-    v1 = lw(at);
-    v0 = v1 << 3;
-loc_8003E17C:
-    v0 -= v1;
-    v0 <<= 2;
-    v0 += a0;
-    *gpCastState = v0;
-    v0 = *gCastOnMelee;
-    a0 = *gpCastState;
-    v1 = v0 ^ 1;
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    *gCastOnMelee = v1;
-    if (a0 != v0) goto loc_8003E25C;
-    if (v1 == 0) goto loc_8003E200;
-    v0 = *gCastNum;
-    v0 <<= 3;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x4A68;                                       // Result = CastInfo_1_ZombieMan[1] (80074A68)
-    at += v0;
-    v1 = lw(at);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F9C;                                       // Result = MObjInfo_MT_PLAYER[A] (8005E064)
-    at += v0;
-    v1 = lw(at);
-    v0 = v1 << 3;
-    goto loc_8003E24C;
-loc_8003E200:
-    v0 = *gCastNum;
-    v0 <<= 3;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x4A68;                                       // Result = CastInfo_1_ZombieMan[1] (80074A68)
-    at += v0;
-    v1 = lw(at);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F98;                                       // Result = MObjInfo_MT_PLAYER[B] (8005E068)
-    at += v0;
-    v1 = lw(at);
-    v0 = v1 << 3;
-loc_8003E24C:
-    v0 -= v1;
-    v0 <<= 2;
-    v0 += a0;
-    *gpCastState = v0;
-loc_8003E25C:
-    v1 = *gCastFrames;
-    v0 = 0x18;                                          // Result = 00000018
-    if (v1 == v0) goto loc_8003E280;
-    v1 = *gpCastState;
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 -= 0x619C;                                       // Result = State_S_PLAY[0] (80059E64)
-    if (v1 != v0) goto loc_8003E2E4;
-loc_8003E280:
-    v0 = *gCastNum;
-    v0 <<= 3;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x4A68;                                       // Result = CastInfo_1_ZombieMan[1] (80074A68)
-    at += v0;
-    v1 = lw(at);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1FB8;                                       // Result = MObjInfo_MT_PLAYER[3] (8005E048)
-    at += v0;
-    v1 = lw(at);
-    *gCastFrames = 0;
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    *gpCastState = v0;
-loc_8003E2E4:
-    v0 = *gpCastState;
-    v1 = lw(v0 + 0x8);
-    v0 = -1;                                            // Result = FFFFFFFF
-    *gCastTics = v1;
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8003E30C;
-    }
-    v0 = 0xF;                                           // Result = 0000000F
-    *gCastTics = v0;
-loc_8003E308:
-    v0 = 0;                                             // Result = 00000000
-loc_8003E30C:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    return ga_nothing;
+}
+
+void _thunk_F2_Ticker() noexcept {
+    v0 = F2_Ticker();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
