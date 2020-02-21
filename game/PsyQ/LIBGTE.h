@@ -32,8 +32,7 @@ static_assert(sizeof(SVECTOR) == 8);
 
 void LIBGTE_SetRotMatrix(const MATRIX& m) noexcept;
 void LIBGTE_SetTransMatrix(const MATRIX& m) noexcept;
-void LIBGTE_SetGeomOffset() noexcept;
-void LIBGTE_SetGeomScreen() noexcept;
+void LIBGTE_SetGeomOffset(const int32_t x, const int32_t y) noexcept;
+void LIBGTE_SetGeomScreen(const int32_t h) noexcept;
 void LIBGTE_InitGeom() noexcept;
-void LIBGTE__patch_gte() noexcept;
 void LIBGTE_RotTrans(const SVECTOR& vecIn, VECTOR& vecOut, int32_t& flagsOut) noexcept;

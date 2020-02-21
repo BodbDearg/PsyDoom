@@ -12,6 +12,11 @@ class GTE;
 }
 
 class GTE {
+// DOOM: allow access to GTE state
+#if DOOM_AVOCADO_MODS
+public:
+#endif
+
     union Flag {
         enum {
             IR0_SATURATED = 1 << 12,

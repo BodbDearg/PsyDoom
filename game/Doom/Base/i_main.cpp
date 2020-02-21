@@ -205,15 +205,14 @@ loc_80032934:
     a0 = 0;                                             // Result = 00000000
     LIBAPI_ChangeClearPAD();
     s2 = 1;                                             // Result = 00000001
-    LIBGTE_InitGeom();
-    a0 = 0x80;                                          // Result = 00000080
-    LIBGTE_SetGeomScreen();
-    a0 = 0x80;                                          // Result = 00000080
-    a1 = 0x64;                                          // Result = 00000064
-    LIBGTE_SetGeomOffset();
+    LIBGTE_InitGeom();    
+
+    // These calls don't really matter for PSX DOOM since we don't do perspective projection using the GTE
+    LIBGTE_SetGeomScreen(128);
+    LIBGTE_SetGeomOffset(128, 100);
+
     s1 = 0x800B0000;                                    // Result = 800B0000
-    s1 -= 0x6F54;                                       // Result = gDrawEnv1[0] (800A90AC)
-    
+    s1 -= 0x6F54;                                       // Result = gDrawEnv1[0] (800A90AC)    
     a0 = s1;                                            // Result = gDrawEnv1[0] (800A90AC)
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000

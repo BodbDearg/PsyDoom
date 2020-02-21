@@ -676,10 +676,6 @@ extern void LIBGPU_FntPrint() noexcept;
 extern void LIBC2_memset() noexcept;
 extern void LIBGPU_LoadTPage() noexcept;
 extern void LIBGPU_LoadClut() noexcept;
-extern void LIBGTE_SetGeomOffset() noexcept;
-extern void LIBGTE_SetGeomScreen() noexcept;
-extern void LIBGTE_InitGeom() noexcept;
-extern void LIBGTE__patch_gte() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
 extern void LIBSN__main() noexcept;
 extern void LIBSN___do_global_dtors() noexcept;
@@ -1468,10 +1464,6 @@ namespace PsxVm {
         { 0x8004FAA4, &LIBC2_memset },
         { 0x8004FAD4, &LIBGPU_LoadTPage },
         { 0x8004FBC0, &LIBGPU_LoadClut },
-        { 0x800502EC, &LIBGTE_SetGeomOffset },
-        { 0x80050304, &LIBGTE_SetGeomScreen },
-        { 0x80050334, &LIBGTE_InitGeom },
-        { 0x800503B4, &LIBGTE__patch_gte },
         { 0x80050454, &LIBAPI_FlushCache },
         { 0x800507AC, &LIBSN__main },
         { 0x8005081C, &LIBSN___do_global_dtors },
