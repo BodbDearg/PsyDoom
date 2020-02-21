@@ -1214,11 +1214,11 @@ void P_CacheSprite_X(spritedef_t *sprdef) {
 void P_CacheSprite(const spritedef_t& sprdef) noexcept {
     // Cache all frames in the sprite
     for (int32_t frameIdx = 0; frameIdx < sprdef.numframes; ++frameIdx) {
-        const spriteframe_t* const pSpr = &sprdef.spriteframes[frameIdx];
+        const spriteframe_t& spriteFrame = sprdef.spriteframes[frameIdx];
 
-        // Cache all directions 
+        // Cache all directions for the frame
         for (int32_t dirIdx = 0; dirIdx < 8; ++dirIdx) {
-            const uint32_t lumpNum = pSpr->lump[dirIdx];
+            const uint32_t lumpNum = spriteFrame.lump[dirIdx];
             
             if ((lumpNum < *gFirstSpriteLumpNum) || (lumpNum > *gLastSpriteLumpNum)) {
                 I_Error("CacheSprite: invalid sprite lump %d", lumpNum);
@@ -1227,7 +1227,7 @@ void P_CacheSprite(const spritedef_t& sprdef) noexcept {
             W_CacheLumpNum(lumpNum, PU_ANIMATION, false);
 
             // If there are no more rotations for this sprite then stop here
-            if (!pSpr->rotate)
+            if (!spriteFrame.rotate)
                 break;
         }
     }
