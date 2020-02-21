@@ -1185,59 +1185,52 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
     Z_CheckHeap(**gpMainMemZone);
 }
 
-void P_CacheSprite() noexcept {
-    sp -= 0x38;
-    sw(s5, sp + 0x2C);
-    s5 = a0;
-    sw(s4, sp + 0x28);
-    sw(ra, sp + 0x30);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    v0 = lw(s5);
-    s3 = lw(s5 + 0x4);
-    s4 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80023AA0;
-loc_80023A0C:
-    s2 = 0;                                             // Result = 00000000
-    s1 = s3;
-loc_80023A14:
-    s0 = lw(s1 + 0x4);
-    v0 = *gFirstSpriteLumpNum;
-    v0 = (i32(s0) < i32(v0));
-    if (v0 != 0) goto loc_80023A48;
-    v0 = *gLastSpriteLumpNum;
-    v0 = (i32(v0) < i32(s0));
-    a0 = s0;
-    if (v0 == 0) goto loc_80023A5C;
-loc_80023A48:
-    I_Error("CacheSprite: invalid sprite lump %d", (int32_t) s0);
-    a0 = s0;
-loc_80023A5C:
-    W_CacheLumpNum(a0, PU_ANIMATION, false);
-    v0 = lw(s3);
-    if (v0 == 0) goto loc_80023A88;
-    s2++;                                               // Result = 00000001
-    v0 = (i32(s2) < 8);                                 // Result = 00000001
-    s1 += 4;
-    if (v0 != 0) goto loc_80023A14;
-loc_80023A88:
-    s4++;
-    v0 = lw(s5);
-    v0 = (i32(s4) < i32(v0));
-    s3 += 0x2C;
-    if (v0 != 0) goto loc_80023A0C;
-loc_80023AA0:
-    ra = lw(sp + 0x30);
-    s5 = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x38;
-    return;
+void P_CacheSprite_X(spritedef_t *sprdef) {
+    // Cache all frames in the sprite
+    for (int32_t frameIdx = 0; frameIdx < sprdef->numframes; ++frameIdx) {
+        const spriteframe_t* const pSpr = &sprdef->spriteframes[frameIdx];
+
+        // Cache all directions 
+        for (int32_t dirIdx = 0; dirIdx < 8; ++dirIdx) {
+            const uint32_t lumpNum = pSpr->lump[dirIdx];
+            
+            if ((lumpNum < *gFirstSpriteLumpNum) || (lumpNum > *gLastSpriteLumpNum)) {
+                I_Error("CacheSprite: invalid sprite lump %d", lumpNum);
+            }
+
+            W_CacheLumpNum(lumpNum, PU_ANIMATION, false);
+
+            // If there are no more rotations for this sprite then stop here
+            if (!pSpr->rotate)
+                break;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Caches into RAM all frames for a sprite.
+// This function appears to be unused in the retail version of the game.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_CacheSprite(const spritedef_t& sprdef) noexcept {
+    // Cache all frames in the sprite
+    for (int32_t frameIdx = 0; frameIdx < sprdef.numframes; ++frameIdx) {
+        const spriteframe_t* const pSpr = &sprdef.spriteframes[frameIdx];
+
+        // Cache all directions 
+        for (int32_t dirIdx = 0; dirIdx < 8; ++dirIdx) {
+            const uint32_t lumpNum = pSpr->lump[dirIdx];
+            
+            if ((lumpNum < *gFirstSpriteLumpNum) || (lumpNum > *gLastSpriteLumpNum)) {
+                I_Error("CacheSprite: invalid sprite lump %d", lumpNum);
+            }
+
+            W_CacheLumpNum(lumpNum, PU_ANIMATION, false);
+
+            // If there are no more rotations for this sprite then stop here
+            if (!pSpr->rotate)
+                break;
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

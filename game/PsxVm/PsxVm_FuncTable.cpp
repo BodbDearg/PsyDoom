@@ -191,7 +191,6 @@ extern void A_LoadShotgun2() noexcept;
 extern void A_CloseShotgun2() noexcept;
 extern void P_SetupPsprites() noexcept;
 extern void P_MovePsprites() noexcept;
-extern void P_CacheSprite() noexcept;
 extern void P_Shoot2() noexcept;
 extern void PA_DoIntercept() noexcept;
 extern void PA_ShootLine() noexcept;
@@ -266,7 +265,6 @@ extern void _thunk_Z_EndMalloc() noexcept;
 extern void _thunk_Z_Free2() noexcept;
 extern void I_PSXInit() noexcept;
 extern void I_ReadGamepad() noexcept;
-extern void I_DrawPresent() noexcept;
 extern void I_NetSetup() noexcept;
 extern void I_NetUpdate() noexcept;
 extern void I_NetHandshake() noexcept;
@@ -987,7 +985,6 @@ namespace PsxVm {
         { 0x800216D8, &A_CloseShotgun2 },
         { 0x80021794, &P_SetupPsprites },
         { 0x8002190C, &P_MovePsprites },
-        { 0x800239D8, &P_CacheSprite },
         { 0x80023C34, &P_Shoot2 },
         { 0x80023E3C, &PA_DoIntercept },
         { 0x80023EC4, &PA_ShootLine },
@@ -1062,7 +1059,6 @@ namespace PsxVm {
         { 0x800325D8, &_thunk_Z_Free2 },
         { 0x80032934, &I_PSXInit },
         { 0x80032BB8, &I_ReadGamepad },
-        { 0x800333F0, &I_DrawPresent },
         { 0x8003472C, &I_NetSetup },
         { 0x80034A60, &I_NetUpdate },
         { 0x80034CB8, &I_NetHandshake },
