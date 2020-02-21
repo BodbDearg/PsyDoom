@@ -283,7 +283,6 @@ extern void _thunk_TIC_Title() noexcept;
 extern void M_Start() noexcept;
 extern void _thunk_M_Stop() noexcept;
 extern void _thunk_M_Ticker() noexcept;
-extern void I_CrossFadeFrameBuffers() noexcept;
 extern void _thunk_TIC_Credits() noexcept;
 extern void START_PasswordScreen() noexcept;
 extern void _thunk_STOP_PasswordScreen() noexcept;
@@ -605,9 +604,7 @@ extern void LIBGPU_ClearOTag() noexcept;
 extern void LIBGPU_ClearOTagR() noexcept;
 extern void LIBGPU_DrawPrim() noexcept;
 extern void LIBGPU_DrawOTag() noexcept;
-extern void LIBGPU_PutDrawEnv() noexcept;
 extern void LIBGPU_GetDrawEnv() noexcept;
-extern void LIBGPU_PutDispEnv() noexcept;
 extern void LIBGPU_GetDispEnv() noexcept;
 extern void LIBGPU_GetODE() noexcept;
 extern void _thunk_LIBGPU_SetTexWindow() noexcept;
@@ -681,8 +678,6 @@ extern void LIBGPU_FntPrint() noexcept;
 extern void LIBC2_memset() noexcept;
 extern void LIBGPU_LoadTPage() noexcept;
 extern void LIBGPU_LoadClut() noexcept;
-extern void LIBGPU_SetDefDrawEnv() noexcept;
-extern void LIBGPU_SetDefDispEnv() noexcept;
 extern void LIBGTE_MulMatrix() noexcept;
 extern void LIBGTE_MulMatrix2() noexcept;
 extern void LIBGTE_ApplyMatrix() noexcept;
@@ -1127,7 +1122,6 @@ namespace PsxVm {
         { 0x80035C94, &M_Start },
         { 0x80035E40, &_thunk_M_Stop },
         { 0x80035EC4, &_thunk_M_Ticker },
-        { 0x80036448, &I_CrossFadeFrameBuffers },
         { 0x80036CC0, &_thunk_TIC_Credits },
         { 0x80036E1C, &START_PasswordScreen },
         { 0x80036E6C, &_thunk_STOP_PasswordScreen },
@@ -1447,9 +1441,7 @@ namespace PsxVm {
         { 0x8004C64C, &LIBGPU_ClearOTagR },
         { 0x8004C6CC, &LIBGPU_DrawPrim },
         { 0x8004C72C, &LIBGPU_DrawOTag },
-        { 0x8004C79C, &LIBGPU_PutDrawEnv },
         { 0x8004C860, &LIBGPU_GetDrawEnv },
-        { 0x8004C898, &LIBGPU_PutDispEnv },
         { 0x8004CCBC, &LIBGPU_GetDispEnv },
         { 0x8004CCF4, &LIBGPU_GetODE },
         { 0x8004CD28, &_thunk_LIBGPU_SetTexWindow },
@@ -1523,8 +1515,6 @@ namespace PsxVm {
         { 0x8004FAA4, &LIBC2_memset },
         { 0x8004FAD4, &LIBGPU_LoadTPage },
         { 0x8004FBC0, &LIBGPU_LoadClut },
-        { 0x8004FC28, &LIBGPU_SetDefDrawEnv },
-        { 0x8004FCB8, &LIBGPU_SetDefDispEnv },
         { 0x8004FCF4, &LIBGTE_MulMatrix },
         { 0x8004FE00, &LIBGTE_MulMatrix2 },
         { 0x8004FF0C, &LIBGTE_ApplyMatrix },

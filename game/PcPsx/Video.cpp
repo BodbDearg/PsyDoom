@@ -102,7 +102,7 @@ static void copyPsxToSdlFramebuffer() noexcept {
         const uint16_t* const rowPixels = vramPixels + ((intptr_t) y + gpu.displayAreaStartY) * 1024;
         const uint32_t xStart = (uint32_t) gpu.displayAreaStartX;
         const uint32_t xEnd = xStart + 256;
-        ASSERT(xEnd <= 512);
+        ASSERT(xEnd <= 1024);
 
         for (uint32_t x = xStart; x < xEnd; ++x) {
             const uint16_t srcPixel = rowPixels[x];

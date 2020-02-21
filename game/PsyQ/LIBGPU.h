@@ -206,9 +206,9 @@ void LIBGPU_ClearOTag() noexcept;
 void LIBGPU_ClearOTagR() noexcept;
 void LIBGPU_DrawPrim() noexcept;
 void LIBGPU_DrawOTag() noexcept;
-void LIBGPU_PutDrawEnv() noexcept;
+DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept;
 void LIBGPU_GetDrawEnv() noexcept;
-void LIBGPU_PutDispEnv() noexcept;
+DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept;
 void LIBGPU_GetDispEnv() noexcept;
 void LIBGPU_GetODE() noexcept;
 
@@ -312,8 +312,9 @@ void LIBGPU_FntFlush() noexcept;
 void LIBGPU_FntPrint() noexcept;
 void LIBGPU_LoadTPage() noexcept;
 void LIBGPU_LoadClut() noexcept;
-void LIBGPU_SetDefDrawEnv() noexcept;
-void LIBGPU_SetDefDispEnv() noexcept;
+
+DRAWENV& LIBGPU_SetDefDrawEnv(DRAWENV& env, const int32_t x, const int32_t y, const int32_t w, const  int32_t h) noexcept;
+DISPENV& LIBGPU_SetDefDispEnv(DISPENV& disp, const int32_t x, const int32_t y, const int32_t w, const int32_t h) noexcept;
 
 // Set the color on a draw primitive
 template <class T>

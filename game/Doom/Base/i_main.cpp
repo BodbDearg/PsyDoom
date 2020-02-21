@@ -213,12 +213,14 @@ loc_80032934:
     LIBGTE_SetGeomOffset();
     s1 = 0x800B0000;                                    // Result = 800B0000
     s1 -= 0x6F54;                                       // Result = gDrawEnv1[0] (800A90AC)
+    
     a0 = s1;                                            // Result = gDrawEnv1[0] (800A90AC)
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
     a3 = 0x100;                                         // Result = 00000100
     sw(s0, sp + 0x10);
-    LIBGPU_SetDefDrawEnv();
+    LIBGPU_SetDefDrawEnv(*vmAddrToPtr<DRAWENV>(a0), a1, a2, a3, s0);
+
     a0 = s1 + 0x5C;                                     // Result = gDrawEnv2[0] (800A9108)
     a1 = 0x100;                                         // Result = 00000100
     a2 = 0;                                             // Result = 00000000
@@ -228,7 +230,8 @@ loc_80032934:
     at = 0x800B0000;                                    // Result = 800B0000
     sb(0, at - 0x6F3E);                                 // Store to: gDrawEnv1[B] (800A90C2)
     sw(s0, sp + 0x10);
-    LIBGPU_SetDefDrawEnv();
+    LIBGPU_SetDefDrawEnv(*vmAddrToPtr<DRAWENV>(a0), a1, a2, a3, s0);
+
     s1 = 0x800B0000;                                    // Result = 800B0000
     s1 -= 0x6E9C;                                       // Result = gDispEnv1[0] (800A9164)
     a0 = s1;                                            // Result = gDispEnv1[0] (800A9164)
@@ -240,13 +243,13 @@ loc_80032934:
     at = 0x800B0000;                                    // Result = 800B0000
     sb(0, at - 0x6EE2);                                 // Store to: gDrawEnv2[B] (800A911E)
     sw(s0, sp + 0x10);
-    LIBGPU_SetDefDispEnv();
+    LIBGPU_SetDefDispEnv(*vmAddrToPtr<DISPENV>(a0), a1, a2, a3, s0);
     a0 = s1 + 0x14;                                     // Result = gDispEnv2[0] (800A9178)
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
     a3 = 0x100;                                         // Result = 00000100
     sw(s0, sp + 0x10);
-    LIBGPU_SetDefDispEnv();
+    LIBGPU_SetDefDispEnv(*vmAddrToPtr<DISPENV>(a0), a1, a2, a3, s0);
     *gCurDispBufferIdx = 0;
     LIBAPI_EnterCriticalSection();
     LIBAPI_ExitCriticalSection();
@@ -510,13 +513,8 @@ void I_DrawPresent() noexcept {
 
     // Swap the framebuffers
     *gCurDispBufferIdx ^= 1;
-
-    // TODO: give this the proper function sig
-    a0 = ptrToVmAddr(&gDrawEnvs[*gCurDispBufferIdx]);
-    LIBGPU_PutDrawEnv();
-
-    a0 = ptrToVmAddr(&gDispEnvs[*gCurDispBufferIdx]);
-    LIBGPU_PutDispEnv();
+    LIBGPU_PutDrawEnv(gDrawEnvs[*gCurDispBufferIdx]);
+    LIBGPU_PutDispEnv(gDispEnvs[*gCurDispBufferIdx]);
 
     // FIXME: remove this eventually.
     #if TEMP_HIGH_FRAMERATE_HACK

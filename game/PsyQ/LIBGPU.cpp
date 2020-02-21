@@ -4,6 +4,7 @@
 #include "LIBC2.h"
 #include "LIBETC.h"
 #include "PcPsx/Endian.h"
+#include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
 #include "PsxVm/VmSVal.h"
 
@@ -746,15 +747,20 @@ loc_8004C768:
     return;
 }
 
-void LIBGPU_PutDrawEnv() noexcept {
-loc_8004C79C:
+DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept {
+    // TODO: this is a temporary measure
+    VmSVal<DRAWENV> envStack = env;
+    auto convertOnExit = finally([&](){ env = *envStack; });
+
+    a0 = envStack.addr();
+
     sp -= 0x20;
     sw(s2, sp + 0x18);
-    s2 = 0x80080000;                                    // Result = 80080000
-    s2 += 0x356;                                        // Result = 80080356
-    sw(ra, sp + 0x1C);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
+
+    s2 = 0x80080000;                                    // Result = 80080000
+    s2 += 0x356;                                        // Result = 80080356
     v0 = lbu(s2);                                       // Load from: 80080356
     v0 = (v0 < 2);
     s1 = a0;
@@ -788,12 +794,13 @@ loc_8004C7E8:
     a2 = 0x5C;                                          // Result = 0000005C
     LIBC2_memcpy();
     v0 = s1;
-    ra = lw(sp + 0x1C);
+
     s2 = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-    return;
+
+    return env;
 }
 
 void LIBGPU_GetDrawEnv() noexcept {
@@ -812,7 +819,13 @@ void LIBGPU_GetDrawEnv() noexcept {
     return;
 }
 
-void LIBGPU_PutDispEnv() noexcept {
+DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept {
+    // TODO: this is a temporary measure
+    VmSVal<DISPENV> envStack = env;
+    auto convertOnExit = finally([&](){ env = *envStack; });
+
+    a0 = envStack.addr();
+
 loc_8004C898:
     sp -= 0x28;
     sw(s0, sp + 0x10);
@@ -1087,7 +1100,8 @@ loc_8004CC84:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x28;
-    return;
+
+    return env;
 }
 
 void LIBGPU_GetDispEnv() noexcept {
@@ -2211,6 +2225,7 @@ loc_8004DD64:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
     sw(a0, v0);
+    
     v0 = a0 >> 24;
     at = 0x80080000;                                    // Result = 80080000
     at += 0x3D4;                                        // Result = gLIBGPU_SYS_ctlbuf[0] (800803D4)
@@ -4342,60 +4357,54 @@ loc_8004FBC0:
     return;
 }
 
-void LIBGPU_SetDefDrawEnv() noexcept {
-loc_8004FC28:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = 1;                                             // Result = 00000001
-    v1 = lw(sp + 0x28);
-    a0 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x14);
-    sh(a1, s0);
-    sh(a1, s0 + 0x8);
-    a1 = 0;                                             // Result = 00000000
-    sh(a2, s0 + 0x2);
-    sh(a2, s0 + 0xA);
-    a2 = 0x280;                                         // Result = 00000280
-    sh(a3, s0 + 0x4);
-    a3 = 0;                                             // Result = 00000000
-    sh(0, s0 + 0xC);
-    sh(0, s0 + 0xE);
-    sh(0, s0 + 0x10);
-    sh(0, s0 + 0x12);
-    sb(0, s0 + 0x19);
-    sb(0, s0 + 0x1A);
-    sb(0, s0 + 0x1B);
-    sb(v0, s0 + 0x16);
-    sh(v1, s0 + 0x6);
-    v1 ^= 0x1E0;
-    v1 = (v1 > 0);
-    sb(v1, s0 + 0x17);
-    _thunk_LIBGPU_GetTPage();
-    sh(v0, s0 + 0x14);
-    v0 = s0;
-    sb(0, v0 + 0x18);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets up the given draw environment struct to the defaults with the given draw area
+//------------------------------------------------------------------------------------------------------------------------------------------
+DRAWENV& LIBGPU_SetDefDrawEnv(DRAWENV& env, const int32_t x, const int32_t y, const int32_t w, const  int32_t h) noexcept {
+  env.clip.x = (int16_t) x;
+  env.clip.y = (int16_t) y;
+  env.clip.w = (int16_t) w;
+  env.clip.h = (int16_t) h;
+
+  env.ofs[0] = (int16_t) x;
+  env.ofs[1] = (int16_t) y;
+
+  env.tw.x = 0;
+  env.tw.y = 0;
+  env.tw.w = 0;
+  env.tw.h = 0;
+  env.tpage = LIBGPU_GetTPage(0, 0, 640, 0);
+
+  env.dtd = 1;
+  env.dfe = (h != 480);
+
+  env.r0 = 0;
+  env.g0 = 0;
+  env.b0 = 0;  
+  
+  env.isbg = 0;
+  return env;
 }
 
-void LIBGPU_SetDefDispEnv() noexcept {
-loc_8004FCB8:
-    v1 = lw(sp + 0x10);
-    v0 = a0;
-    sh(a1, v0);
-    sh(a2, v0 + 0x2);
-    sh(a3, v0 + 0x4);
-    sh(0, v0 + 0x8);
-    sh(0, v0 + 0xA);
-    sh(0, v0 + 0xC);
-    sh(0, v0 + 0xE);
-    sb(0, v0 + 0x11);
-    sb(0, v0 + 0x10);
-    sb(0, v0 + 0x13);
-    sb(0, v0 + 0x12);
-    sh(v1, v0 + 0x6);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets up the given display environment struct to the defaults with the given display area
+//------------------------------------------------------------------------------------------------------------------------------------------
+DISPENV& LIBGPU_SetDefDispEnv(DISPENV& disp, const int32_t x, const int32_t y, const int32_t w, const int32_t h) noexcept {
+  disp.disp.x = (int16_t) x;
+  disp.disp.y = (int16_t) y;
+  disp.disp.w = (int16_t) w;
+  disp.disp.h = (int16_t) h;
+
+  disp.screen.x = 0;
+  disp.screen.y = 0;
+  disp.screen.w = 0;
+  disp.screen.h = 0;
+
+  disp.isinter = 0;
+  disp.isrgb24 = 0;
+  
+  disp._pad[0] = 0;
+  disp._pad[1] = 0;
+  
+  return disp;
 }
