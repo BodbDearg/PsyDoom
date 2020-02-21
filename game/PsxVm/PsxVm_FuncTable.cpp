@@ -678,54 +678,11 @@ extern void LIBGPU_FntPrint() noexcept;
 extern void LIBC2_memset() noexcept;
 extern void LIBGPU_LoadTPage() noexcept;
 extern void LIBGPU_LoadClut() noexcept;
-extern void LIBGTE_MulMatrix() noexcept;
-extern void LIBGTE_MulMatrix2() noexcept;
-extern void LIBGTE_ApplyMatrix() noexcept;
-extern void LIBGTE_ApplyMatrixSV() noexcept;
-extern void LIBGTE_TransMatrix() noexcept;
-extern void LIBGTE_ScaleMatrix() noexcept;
-extern void _thunk_LIBGTE_SetRotMatrix() noexcept;
-extern void LIBGTE_SetLightMatrix() noexcept;
-extern void LIBGTE_SetColorMatrix() noexcept;
-extern void LIBGTE_SetVertex0() noexcept;
-extern void LIBGTE_SetVertex1() noexcept;
-extern void LIBGTE_SetVertex2() noexcept;
-extern void LIBGTE_SetVertexTri() noexcept;
-extern void LIBGTE_SetRGBfifo() noexcept;
-extern void LIBGTE_SetIR123() noexcept;
-extern void LIBGTE_SetIR0() noexcept;
-extern void LIBGTE_SetBackColor() noexcept;
-extern void LIBGTE_SetFarColor() noexcept;
-extern void LIBGTE_SetSZfifo3() noexcept;
-extern void LIBGTE_SetSZfifo4() noexcept;
-extern void LIBGTE_SetSXSYfifo() noexcept;
-extern void LIBGTE_SetRii() noexcept;
-extern void LIBGTE_SetMAC123() noexcept;
-extern void LIBGTE_SetData32() noexcept;
 extern void LIBGTE_SetGeomOffset() noexcept;
 extern void LIBGTE_SetGeomScreen() noexcept;
-extern void LIBGTE_SetDQA() noexcept;
-extern void LIBGTE_SetDQB() noexcept;
 extern void LIBGTE_InitGeom() noexcept;
 extern void LIBGTE__patch_gte() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
-extern void LIBGTE_RotTransPers() noexcept;
-extern void LIBGTE_RotTransPers3() noexcept;
-extern void _thunk_LIBGTE_RotTrans() noexcept;
-extern void LIBGTE_LocalLight() noexcept;
-extern void LIBGTE_DpqColor() noexcept;
-extern void LIBGTE_NormalColor() noexcept;
-extern void LIBGTE_NormalColor3() noexcept;
-extern void LIBGTE_NormalColorDpq() noexcept;
-extern void LIBGTE_NormalColorDpq3() noexcept;
-extern void LIBGTE_NormalColorCol() noexcept;
-extern void LIBGTE_NormalColorCol3() noexcept;
-extern void LIBGTE_ColorDpq() noexcept;
-extern void LIBGTE_ColorCol() noexcept;
-extern void LIBGTE_NormalClip() noexcept;
-extern void LIBGTE_NormalClipS() noexcept;
-extern void LIBGTE_AverageSZ3() noexcept;
-extern void LIBGTE_AverageSZ4() noexcept;
 extern void LIBSN__main() noexcept;
 extern void LIBSN___do_global_dtors() noexcept;
 extern void LIBAPI_InitHeap() noexcept;
@@ -1515,54 +1472,11 @@ namespace PsxVm {
         { 0x8004FAA4, &LIBC2_memset },
         { 0x8004FAD4, &LIBGPU_LoadTPage },
         { 0x8004FBC0, &LIBGPU_LoadClut },
-        { 0x8004FCF4, &LIBGTE_MulMatrix },
-        { 0x8004FE00, &LIBGTE_MulMatrix2 },
-        { 0x8004FF0C, &LIBGTE_ApplyMatrix },
-        { 0x8004FF5C, &LIBGTE_ApplyMatrixSV },
-        { 0x8004FFB8, &LIBGTE_TransMatrix },
-        { 0x8004FFDC, &LIBGTE_ScaleMatrix },
-        { 0x80050100, &_thunk_LIBGTE_SetRotMatrix },
-        { 0x80050130, &LIBGTE_SetLightMatrix },
-        { 0x80050160, &LIBGTE_SetColorMatrix },
-        { 0x800501B4, &LIBGTE_SetVertex0 },
-        { 0x800501C4, &LIBGTE_SetVertex1 },
-        { 0x800501D4, &LIBGTE_SetVertex2 },
-        { 0x800501E4, &LIBGTE_SetVertexTri },
-        { 0x80050204, &LIBGTE_SetRGBfifo },
-        { 0x80050218, &LIBGTE_SetIR123 },
-        { 0x8005022C, &LIBGTE_SetIR0 },
-        { 0x80050238, &LIBGTE_SetBackColor },
-        { 0x80050258, &LIBGTE_SetFarColor },
-        { 0x80050278, &LIBGTE_SetSZfifo3 },
-        { 0x8005028C, &LIBGTE_SetSZfifo4 },
-        { 0x800502A4, &LIBGTE_SetSXSYfifo },
-        { 0x800502B8, &LIBGTE_SetRii },
-        { 0x800502CC, &LIBGTE_SetMAC123 },
-        { 0x800502E0, &LIBGTE_SetData32 },
         { 0x800502EC, &LIBGTE_SetGeomOffset },
         { 0x80050304, &LIBGTE_SetGeomScreen },
-        { 0x80050310, &LIBGTE_SetDQA },
-        { 0x8005031C, &LIBGTE_SetDQB },
         { 0x80050334, &LIBGTE_InitGeom },
         { 0x800503B4, &LIBGTE__patch_gte },
         { 0x80050454, &LIBAPI_FlushCache },
-        { 0x80050464, &LIBGTE_RotTransPers },
-        { 0x80050490, &LIBGTE_RotTransPers3 },
-        { 0x800504E4, &_thunk_LIBGTE_RotTrans },
-        { 0x8005050C, &LIBGTE_LocalLight },
-        { 0x80050530, &LIBGTE_DpqColor },
-        { 0x8005054C, &LIBGTE_NormalColor },
-        { 0x80050568, &LIBGTE_NormalColor3 },
-        { 0x800505A4, &LIBGTE_NormalColorDpq },
-        { 0x800505C8, &LIBGTE_NormalColorDpq3 },
-        { 0x80050610, &LIBGTE_NormalColorCol },
-        { 0x80050630, &LIBGTE_NormalColorCol3 },
-        { 0x80050674, &LIBGTE_ColorDpq },
-        { 0x8005069C, &LIBGTE_ColorCol },
-        { 0x800506C0, &LIBGTE_NormalClip },
-        { 0x800506E4, &LIBGTE_NormalClipS },
-        { 0x800506F4, &LIBGTE_AverageSZ3 },
-        { 0x80050704, &LIBGTE_AverageSZ4 },
         { 0x800507AC, &LIBSN__main },
         { 0x8005081C, &LIBSN___do_global_dtors },
         { 0x80050884, &LIBAPI_InitHeap },
