@@ -431,10 +431,9 @@ loc_8004C768:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     a1 = s0;
-    a0 = lw(v0 + 0x18);
-    v0 = lw(v0 + 0x4);
+    a0 = lw(v0 + 0x18);     // LIBGPU_SYS__cwc
     a2 = 0;                                             // Result = 00000000
-    ptr_call(v0);
+    LIBGPU_SYS__addque();
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
