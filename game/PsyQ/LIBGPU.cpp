@@ -63,11 +63,8 @@ loc_8004BD38:
     v0 |= 0xFFFF;                                       // Result = 00FFFFFF
     a0 &= v0;
     LIBAPI_GPU_cw();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    v0 = lw(v0 + 0x34);
-    a0 = 0;                                             // Result = 00000000
-    ptr_call(v0);
+    a0 = 0;
+    LIBGPU_SYS__reset();
     a0 = v0;
     v0 = a0;
     v1 = v0 & 0xFF;
@@ -113,16 +110,13 @@ loc_8004BE1C:
     }
     a0 = 0x9000000;                                     // Result = 09000000
     sb(v0, s2 - 0x2);                                   // Store to: 80080354
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     v0 = 0x400;                                         // Result = 00000400
     at = 0x80080000;                                    // Result = 80080000
     sh(v0, at + 0x35A);                                 // Store to: 8008035A
     at = 0x80080000;                                    // Result = 80080000
     sh(v0, at + 0x358);                                 // Store to: 80080358
-    v0 = lw(v1 + 0x10);
     a0 |= 1;                                            // Result = 09000001
-    ptr_call(v0);
+    LIBGPU_SYS__ctl();
     goto loc_8004BEAC;
 loc_8004BE60:
     v0 = 0x400;                                         // Result = 00000400
@@ -134,11 +128,8 @@ loc_8004BE64:
     sh(v0, at + 0x35A);                                 // Store to: 8008035A
     goto loc_8004BEAC;
 loc_8004BE80:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    v0 = lw(v0 + 0x34);
-    a0 = 1;                                             // Result = 00000001
-    ptr_call(v0);
+    a0 = 1;
+    LIBGPU_SYS__reset();
     goto loc_8004BEAC;
 loc_8004BEA4:
     v0 = -1;                                            // Result = FFFFFFFF
@@ -155,77 +146,6 @@ loc_8004BEAC:
     a2 = 0x14;                                          // Result = 00000014
     LIBGPU_SYS_memset();
 loc_8004BED4:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
-}
-
-void LIBGPU_SetGraphReverse() noexcept {
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x356);                               // Load from: 80080356
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    s0 = 0x80080000;                                    // Result = 80080000
-    s0 += 0x357;                                        // Result = 80080357
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    s2 = lbu(s0);                                       // Load from: 80080357
-    v0 = (v0 < 2);
-    s1 = a0;
-    if (v0 != 0) goto loc_8004BF40;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1B5C;                                       // Result = STR_Sys_SetGraphReverse_Msg[0] (80011B5C)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a1 = s1;
-    ptr_call(v0);
-loc_8004BF40:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    sb(s1, s0);                                         // Store to: 80080357
-    v0 = lw(v0 + 0x28);
-    a0 = 8;                                             // Result = 00000008
-    ptr_call(v0);
-    v1 = lbu(s0);                                       // Load from: 80080357
-    a0 = v0;
-    if (v1 == 0) goto loc_8004BF78;
-    v0 = 0x8000000;                                     // Result = 08000000
-    v0 |= 0x80;                                         // Result = 08000080
-    goto loc_8004BF7C;
-loc_8004BF78:
-    v0 = 0x8000000;                                     // Result = 08000000
-loc_8004BF7C:
-    a0 |= v0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    v0 = lw(v0 + 0x10);
-    ptr_call(v0);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lbu(v1 + 0x354);                               // Load from: 80080354
-    v0 = 2;                                             // Result = 00000002
-    {
-        const bool bJump = (v1 != v0);
-        v0 = s2;
-        if (bJump) goto loc_8004BFE8;
-    }
-    a0 = 0x20000000;                                    // Result = 20000000
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x357);                               // Load from: 80080357
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    a0 |= 0x504;                                        // Result = 20000504
-    if (v0 == 0) goto loc_8004BFD4;
-    a0 = 0x20000000;                                    // Result = 20000000
-    a0 |= 0x501;                                        // Result = 20000501
-loc_8004BFD4:
-    v0 = lw(v1 + 0x10);
-    ptr_call(v0);
-    v0 = s2;
-loc_8004BFE8:
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -264,62 +184,10 @@ loc_8004C05C:
     return;
 }
 
-void LIBGPU_SetGraphQueue() noexcept {
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x356);                               // Load from: 80080356
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    sw(s1, sp + 0x14);
-    s1 = 0x80080000;                                    // Result = 80080000
-    s1 += 0x355;                                        // Result = 80080355
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    s2 = lbu(s1);                                       // Load from: 80080355
-    v0 = (v0 < 2);
-    s0 = a0;
-    if (v0 != 0) goto loc_8004C0C0;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1BA0;                                       // Result = STR_Sys_SetGraphQueue_Msg[0] (80011BA0)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a1 = s0;
-    ptr_call(v0);
-loc_8004C0C0:
-    v0 = lbu(s1);                                       // Load from: 80080355
-    {
-        const bool bJump = (s0 == v0);
-        v0 = s2;
-        if (bJump) goto loc_8004C100;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    v0 = lw(v0 + 0x34);
-    a0 = 1;                                             // Result = 00000001
-    ptr_call(v0);
-    a0 = 2;                                             // Result = 00000002
-    a1 = 0;                                             // Result = 00000000
-    sb(s0, s1);                                         // Store to: 80080355
-    LIBETC_DMACallback();
-    v0 = s2;
-loc_8004C100:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
-}
-
 void LIBGPU_GetGraphType() noexcept {
 loc_8004C11C:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lbu(v0 + 0x354);                               // Load from: 80080354
-    return;
-}
-
-void LIBGPU_GetGraphDebug() noexcept {
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x356);                               // Load from: 80080356
     return;
 }
 
@@ -367,14 +235,11 @@ loc_8004C198:
     ptr_call(v0);
 loc_8004C1D4:
     a0 = 0x3000000;                                     // Result = 03000000
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     a0 |= 1;                                            // Result = 03000001
     if (s0 == 0) goto loc_8004C1EC;
     a0 = 0x3000000;                                     // Result = 03000000
 loc_8004C1EC:
-    v0 = lw(v0 + 0x10);
-    ptr_call(v0);
+    LIBGPU_SYS__ctl();
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
@@ -464,44 +329,6 @@ loc_8004C390:
     return;
 }
 
-void LIBGPU_ClearImage() noexcept {
-    sp -= 0x28;
-    sw(s3, sp + 0x1C);
-    s3 = a0;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1C1C;                                       // Result = STR_Sys_ClearImage_Msg[4] (80011C1C)
-    sw(s2, sp + 0x18);
-    s2 = a1;
-    a1 = s3;
-    sw(s1, sp + 0x14);
-    s1 = a2;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x20);
-    s0 = a3;
-    LIBGPU_checkRECT();
-    a1 = s3;
-    s0 &= 0xFF;
-    s0 <<= 16;
-    s1 &= 0xFF;
-    s1 <<= 8;
-    s0 |= s1;
-    s2 &= 0xFF;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    a2 = 8;                                             // Result = 00000008
-    a0 = lw(v0 + 0xC);
-    v0 = lw(v0 + 0x8);
-    a3 = s0 | s2;
-    ptr_call(v0);
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Upload the given image data to the given area in VRAM.
 // The image data is expected to be 32-bit aligned and in multiples of 32-bits.
@@ -521,42 +348,15 @@ void LIBGPU_LoadImage(const RECT& dstRect, const uint32_t* const pImageData) noe
 
     // Do the upload to PSX RAM.
     // TODO: make this just load to the PSX VRAM directly.
-    a0 = lw(v0 + 0x20);
+    a0 = lw(v0 + 0x20);         // LIBGPU_SYS__dws
     a1 = dstRectCopy.addr();    
     a2 = 8;
     a3 = ptrToVmAddr(pImageData);
-    v0 = lw(v0 + 0x8);
-    ptr_call(v0);
+    LIBGPU_SYS__addque2();
 }
 
 void _thunk_LIBGPU_LoadImage() noexcept {
     LIBGPU_LoadImage(*vmAddrToPtr<RECT>(a0), vmAddrToPtr<const uint32_t>(a1));
-}
-
-void LIBGPU_StoreImage() noexcept {
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(s1, sp + 0x14);
-    s1 = a1;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1C34;                                       // Result = STR_Sys_StoreImage_Msg[0] (80011C34)
-    sw(ra, sp + 0x18);
-    a1 = s0;
-    LIBGPU_checkRECT();
-    a1 = s0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    a2 = 8;                                             // Result = 00000008
-    a0 = lw(v0 + 0x1C);
-    v0 = lw(v0 + 0x8);
-    a3 = s1;
-    ptr_call(v0);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
 }
 
 int32_t LIBGPU_MoveImage(const RECT& src, const int32_t dstX, const int32_t dstY) noexcept {
@@ -595,10 +395,10 @@ loc_8004C500:
     a3 = 0;                                             // Result = 00000000
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5D6C);                                // Store to: 80075D6C
-    a0 = lw(v1 + 0x18);
-    v0 = lw(v1 + 0x8);
+    a0 = lw(v1 + 0x18); // LIBGPU_SYS__cwc
     a1 -= 8;                                            // Result = 80075D5C
-    ptr_call(v0);
+    LIBGPU_SYS__addque2();
+
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -609,112 +409,6 @@ loc_8004C500:
 
 void _thunk_LIBGPU_MoveImage() noexcept {
     v0 = LIBGPU_MoveImage(*vmAddrToPtr<const RECT>(a0), a1, a2);
-}
-
-void LIBGPU_ClearOTag() noexcept {
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x356);                               // Load from: 80080356
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(s1, sp + 0x14);
-    s1 = a1;
-    v0 = (v0 < 2);
-    sw(ra, sp + 0x18);
-    if (v0 != 0) goto loc_8004C5E4;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1C4C;                                       // Result = STR_Sys_ClearOTag_Msg[0] (80011C4C)
-    a1 = s0;
-    a2 = s1;
-    ptr_call(v0);
-loc_8004C5E4:
-    s1--;
-    v0 = 0xFF0000;                                      // Result = 00FF0000
-    if (s1 == 0) goto loc_8004C628;
-    a1 = 0xFF0000;                                      // Result = 00FF0000
-    a1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    a2 = 0xFF000000;                                    // Result = FF000000
-loc_8004C5FC:
-    s1--;
-    a0 = s0 + 4;
-    sb(0, s0 + 0x3);
-    v0 = lw(s0);
-    v1 = a0 & a1;
-    v0 &= a2;
-    v0 |= v1;
-    sw(v0, s0);
-    s0 = a0;
-    if (s1 != 0) goto loc_8004C5FC;
-    v0 = 0xFF0000;                                      // Result = 00FF0000
-loc_8004C628:
-    v0 |= 0xFFFF;                                       // Result = 00FFFFFF
-    sw(v0, s0);
-    v0 = s0;
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
-}
-
-void LIBGPU_ClearOTagR() noexcept {
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x356);                               // Load from: 80080356
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(s1, sp + 0x14);
-    s1 = a1;
-    v0 = (v0 < 2);
-    sw(ra, sp + 0x18);
-    if (v0 != 0) goto loc_8004C694;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1C64;                                       // Result = STR_Sys_ClearOTagR_Msg[0] (80011C64)
-    a1 = s0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a2 = s1;
-    ptr_call(v0);
-loc_8004C694:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    a0 = s0;
-    v0 = lw(v0 + 0x2C);
-    a1 = s1;
-    ptr_call(v0);
-    v0 = s0;
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
-}
-
-void LIBGPU_DrawPrim() noexcept {
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = lw(v0 + 0x3C);
-    s1 = lbu(s0 + 0x3);
-    a0 = 0;                                             // Result = 00000000
-    ptr_call(v0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    a0 = s0 + 4;
-    v0 = lw(v0 + 0x14);
-    a1 = s1;
-    ptr_call(v0);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
 }
 
 void LIBGPU_DrawOTag() noexcept {
@@ -785,10 +479,9 @@ loc_8004C7E8:
     v1 = lw(v1 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     v0 |= a0;
     sw(v0, s1 + 0x1C);
-    a0 = lw(v1 + 0x18);
-    v0 = lw(v1 + 0x8);
+    a0 = lw(v1 + 0x18); // LIBGPU_SYS__cwc
     a3 = 0;                                             // Result = 00000000
-    ptr_call(v0);
+    LIBGPU_SYS__addque2();
     a0 = s2 + 0xE;                                      // Result = 80080364
     a1 = s1;
     a2 = 0x5C;                                          // Result = 0000005C
@@ -801,22 +494,6 @@ loc_8004C7E8:
     sp += 0x20;
 
     return env;
-}
-
-void LIBGPU_GetDrawEnv() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 += 0x364;                                        // Result = 80080364
-    sw(ra, sp + 0x14);
-    a2 = 0x5C;                                          // Result = 0000005C
-    LIBC2_memcpy();
-    v0 = s0;
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept {
@@ -870,11 +547,8 @@ loc_8004C92C:
     v0 |= v1;
     v1 = 0x5000000;                                     // Result = 05000000
 loc_8004C948:
-    a0 = v0 | v1;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    v0 = lw(v0 + 0x10);
-    ptr_call(v0);
+    a0 = v0 | v1;    
+    LIBGPU_SYS__ctl();
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 + 0x3C8);                                // Load from: gLIBGPU_SYS_p0_82[5] (800803C8)
     v0 = lw(s0 + 0x8);
@@ -990,22 +664,17 @@ loc_8004CAF8:
     v0 <<= 12;                                          // Result = 00244000
     a0 = a1 & 0xFFF;                                    // Result = 000001F4
     v1 = 0x6000000;                                     // Result = 06000000
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     a0 |= v1;                                           // Result = 060001F4
-    v1 = lw(a1 + 0x10);
     a0 |= v0;                                           // Result = 062441F4
-    ptr_call(v1);
+    LIBGPU_SYS__ctl();
+
     v0 = s3 & 0x3FF;
     v0 <<= 10;
     a0 = s1 & 0x3FF;
     v1 = 0x7000000;                                     // Result = 07000000
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
     a0 |= v1;
-    v1 = lw(a1 + 0x10);
     a0 |= v0;
-    ptr_call(v1);
+    LIBGPU_SYS__ctl();
 loc_8004CB54:
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 + 0x3D0);                                // Load from: gLIBGPU_SYS_p0_82[7] (800803D0)
@@ -1082,11 +751,8 @@ loc_8004CC5C:
     if (v0 != 0) goto loc_8004CC68;
     s2 |= 0x24;
 loc_8004CC68:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    v0 = lw(v0 + 0x10);
     a0 = s2;
-    ptr_call(v0);
+    LIBGPU_SYS__ctl();
 loc_8004CC84:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 += 0x3C0;                                        // Result = gLIBGPU_SYS_p0_82[3] (800803C0)
@@ -1104,35 +770,6 @@ loc_8004CC84:
     return env;
 }
 
-void LIBGPU_GetDispEnv() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 += 0x3C0;                                        // Result = gLIBGPU_SYS_p0_82[3] (800803C0)
-    sw(ra, sp + 0x14);
-    a2 = 0x14;                                          // Result = 00000014
-    LIBC2_memcpy();
-    v0 = s0;
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-}
-
-void LIBGPU_GetODE() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = lw(v0 + 0x38);
-    ptr_call(v0);
-    v0 >>= 31;
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize a draw primitive that sets the current texture window.
 // Use the specified RECT as the window.
@@ -1145,72 +782,6 @@ void LIBGPU_SetTexWindow(DR_TWIN& prim, const RECT& texWin) noexcept {
 
 void _thunk_LIBGPU_SetTexWindow() noexcept {
     LIBGPU_SetTexWindow(*vmAddrToPtr<DR_TWIN>(a0), *vmAddrToPtr<RECT>(a1));
-}
-
-void LIBGPU_SetDrawArea() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s0, sp + 0x10);
-    s0 = a1;
-    v0 = 2;                                             // Result = 00000002
-    sw(ra, sp + 0x18);
-    sb(v0, s1 + 0x3);
-    a0 = lh(s0);
-    a1 = lh(s0 + 0x2);
-    LIBGPU_SYS_get_cs();
-    sw(v0, s1 + 0x4);
-    a0 = lhu(s0);
-    v0 = lhu(s0 + 0x4);
-    a1 = lhu(s0 + 0x2);
-    a0 += v0;
-    a0--;
-    a0 <<= 16;
-    v0 = lhu(s0 + 0x6);
-    a0 = u32(i32(a0) >> 16);
-    a1 += v0;
-    a1--;
-    a1 <<= 16;
-    a1 = u32(i32(a1) >> 16);
-    LIBGPU_SYS_get_ce();
-    sw(v0, s1 + 0x8);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
-}
-
-void LIBGPU_SetDrawOffset() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = 2;                                             // Result = 00000002
-    sw(ra, sp + 0x14);
-    sb(v0, s0 + 0x3);
-    a0 = lh(a1);
-    a1 = lh(a1 + 0x2);
-    LIBGPU_SYS_get_ofs();
-    sw(v0, s0 + 0x4);
-    sw(0, s0 + 0x8);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-}
-
-void LIBGPU_SetPriority() noexcept {
-    v0 = 2;                                             // Result = 00000002
-    sb(v0, a0 + 0x3);
-    v1 = 0xE6000000;                                    // Result = E6000000
-    if (a1 == 0) goto loc_8004CE40;
-    v1 |= 2;                                            // Result = E6000002
-loc_8004CE40:
-    v0 = (a2 > 0);
-    v0 |= v1;
-    sw(v0, a0 + 0x4);
-    sw(0, a0 + 0x8);
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1664,223 +1235,6 @@ loc_8004D4DC:
     return;
 }
 
-void LIBGPU_SYS__status() noexcept {
-loc_8004D4E4:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    v0 = lw(v0);
-    return;
-}
-
-void LIBGPU_SYS__otc() noexcept {
-loc_8004D4FC:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a1;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x5D90);                               // Load from: 80075D90
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = lw(a1);
-    v1 = 0x8000000;                                     // Result = 08000000
-    v0 |= v1;
-    sw(v0, a1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D8C);                               // Load from: 80075D8C
-    sw(0, v0);
-    v0 = s0 << 2;
-    v0 -= 4;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D84);                               // Load from: 80075D84
-    a0 += v0;
-    sw(a0, v1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D88);                               // Load from: 80075D88
-    v1 = 0x11000000;                                    // Result = 11000000
-    sw(s0, v0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D8C);                               // Load from: 80075D8C
-    v1 |= 2;                                            // Result = 11000002
-    sw(v1, v0);
-    LIBGPU_SYS_set_alarm();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D8C);                               // Load from: 80075D8C
-    v0 = lw(v0);
-    v1 = 0x1000000;                                     // Result = 01000000
-    v0 &= v1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0;
-        if (bJump) goto loc_8004D5CC;
-    }
-    s1 = 0x1000000;                                     // Result = 01000000
-loc_8004D59C:
-    LIBGPU_SYS_get_alarm();
-    {
-        const bool bJump = (v0 != 0);
-        v0 = -1;                                        // Result = FFFFFFFF
-        if (bJump) goto loc_8004D5CC;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D8C);                               // Load from: 80075D8C
-    v0 = lw(v0);
-    v0 &= s1;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s0;
-        if (bJump) goto loc_8004D59C;
-    }
-loc_8004D5CC:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
-}
-
-void LIBGPU_SYS__clr() noexcept {
-loc_8004D5E4:
-    sp -= 0x30;
-    sw(ra, sp + 0x28);
-    sw(s1, sp + 0x24);
-    sw(s0, sp + 0x20);
-    v0 = lhu(a0);
-    sh(v0, sp + 0x10);
-    v0 = lhu(a0 + 0x2);
-    sh(v0, sp + 0x12);
-    v1 = lhu(a0 + 0x4);
-    sh(v1, sp + 0x14);
-    v0 = lhu(a0 + 0x6);
-    sh(v0, sp + 0x16);
-    v0 = v1 << 16;
-    a0 = u32(i32(v0) >> 16);
-    t1 = a1;
-    if (i32(a0) < 0) goto loc_8004D664;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 += 0x358;                                        // Result = 80080358
-    v0 = lhu(a1);                                       // Load from: 80080358
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < i32(a0));
-    if (v0 == 0) goto loc_8004D668;
-    v1 = lhu(a1);                                       // Load from: 80080358
-    goto loc_8004D668;
-loc_8004D664:
-    v1 = 0;                                             // Result = 00000000
-loc_8004D668:
-    a0 = lh(sp + 0x16);
-    sh(v1, sp + 0x14);
-    v1 = a0;
-    if (i32(a0) < 0) goto loc_8004D6A8;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 += 0x35A;                                        // Result = 8008035A
-    v0 = lhu(a1);                                       // Load from: 8008035A
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < i32(a0));
-    if (v0 == 0) goto loc_8004D6AC;
-    v1 = lhu(a1);                                       // Load from: 8008035A
-    goto loc_8004D6AC;
-loc_8004D6A8:
-    v1 = 0;                                             // Result = 00000000
-loc_8004D6AC:
-    v0 = lhu(sp + 0x10);
-    v0 &= 0x3F;
-    sh(v1, sp + 0x16);
-    if (v0 != 0) goto loc_8004D6D4;
-    v0 = lhu(sp + 0x14);
-    v0 &= 0x3F;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x4FF0000;                                 // Result = 04FF0000
-        if (bJump) goto loc_8004D7AC;
-    }
-loc_8004D6D4:
-    a1 = 0xFF0000;                                      // Result = 00FF0000
-    a1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    a2 = 0xE4FF0000;                                    // Result = E4FF0000
-    a2 |= 0xFFFF;                                       // Result = E4FFFFFF
-    t0 = 0x3FF0000;                                     // Result = 03FF0000
-    t0 |= 0xFFFF;                                       // Result = 03FFFFFF
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 += 0x328;                                        // Result = 80080328
-    v0 = a3 & a1;                                       // Result = 00080328
-    v1 = 0x7000000;                                     // Result = 07000000
-    v0 |= v1;                                           // Result = 07080328
-    s0 = 0xE3000000;                                    // Result = E3000000
-    s1 = 0xE5000000;                                    // Result = E5000000
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at + 0x308);                                 // Store to: 80080308
-    v0 = 0xE6000000;                                    // Result = E6000000
-    v1 = lw(sp + 0x10);
-    a1 &= t1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at + 0x318);                                 // Store to: 80080318
-    v0 = 0x60000000;                                    // Result = 60000000
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a2, at + 0x310);                                 // Store to: 80080310
-    a2 = lw(sp + 0x14);
-    a1 |= v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(s0, at + 0x30C);                                 // Store to: 8008030C
-    at = 0x80080000;                                    // Result = 80080000
-    sw(s1, at + 0x314);                                 // Store to: 80080314
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a1, at + 0x31C);                                 // Store to: 8008031C
-    sw(t0, a3);                                         // Store to: 80080328
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at + 0x320);                                 // Store to: 80080320
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a2, at + 0x324);                                 // Store to: 80080324
-    a0 = 3;                                             // Result = 00000003
-    LIBGPU_SYS__param();
-    v0 |= s0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at + 0x32C);                                 // Store to: 8008032C
-    a0 = 4;                                             // Result = 00000004
-    LIBGPU_SYS__param();
-    v1 = 0xE4000000;                                    // Result = E4000000
-    v0 |= v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at + 0x330);                                 // Store to: 80080330
-    a0 = 5;                                             // Result = 00000005
-    LIBGPU_SYS__param();
-    v0 |= s1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at + 0x334);                                 // Store to: 80080334
-    goto loc_8004D7F8;
-loc_8004D7AC:
-    v0 |= 0xFFFF;                                       // Result = 04FFFFFF
-    v1 = 0xFF0000;                                      // Result = 00FF0000
-    v1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at + 0x308);                                 // Store to: 80080308
-    v0 = 0xE6000000;                                    // Result = E6000000
-    v1 &= t1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at + 0x30C);                                 // Store to: 8008030C
-    v0 = 0x2000000;                                     // Result = 02000000
-    a0 = lw(sp + 0x10);
-    a1 = lw(sp + 0x14);
-    v1 |= v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at + 0x310);                                 // Store to: 80080310
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at + 0x314);                                 // Store to: 80080314
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a1, at + 0x318);                                 // Store to: 80080318
-loc_8004D7F8:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 += 0x308;                                        // Result = 80080308
-    LIBGPU_SYS__cwc();
-    v0 = 0;                                             // Result = 00000000
-    ra = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x30;
-    return;
-}
-
 void LIBGPU_SYS__dws() noexcept {
 loc_8004D824:
     sp -= 0x38;
@@ -2044,182 +1398,6 @@ loc_8004DA7C:
     return;
 }
 
-void LIBGPU_SYS__drs() noexcept {
-loc_8004DAA0:
-    sp -= 0x38;
-    sw(s0, sp + 0x20);
-    s0 = a0;
-    sw(s1, sp + 0x24);
-    s1 = a1;
-    sw(ra, sp + 0x30);
-    sw(s3, sp + 0x2C);
-    sw(s2, sp + 0x28);
-    LIBGPU_SYS_set_alarm();
-    v0 = lhu(s0);
-    sh(v0, sp + 0x10);
-    v0 = lhu(s0 + 0x2);
-    sh(v0, sp + 0x12);
-    v1 = lhu(s0 + 0x4);
-    sh(v1, sp + 0x14);
-    v0 = lhu(s0 + 0x6);
-    sh(v0, sp + 0x16);
-    v0 = v1 << 16;
-    a0 = u32(i32(v0) >> 16);
-    if (i32(a0) < 0) goto loc_8004DB34;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 += 0x358;                                        // Result = 80080358
-    v0 = lhu(a1);                                       // Load from: 80080358
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < i32(a0));
-    if (v0 == 0) goto loc_8004DB38;
-    v1 = lhu(a1);                                       // Load from: 80080358
-    goto loc_8004DB38;
-loc_8004DB34:
-    v1 = 0;                                             // Result = 00000000
-loc_8004DB38:
-    a1 = lh(sp + 0x16);
-    sh(v1, sp + 0x14);
-    v1 = a1;
-    if (i32(a1) < 0) goto loc_8004DB78;
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 += 0x35A;                                        // Result = 8008035A
-    v0 = lhu(a2);                                       // Load from: 8008035A
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < i32(a1));
-    a0 = v1;
-    if (v0 == 0) goto loc_8004DB7C;
-    a0 = lhu(a2);                                       // Load from: 8008035A
-    v0 = a0 << 16;
-    goto loc_8004DB80;
-loc_8004DB78:
-    a0 = 0;                                             // Result = 00000000
-loc_8004DB7C:
-    v0 = a0 << 16;
-loc_8004DB80:
-    v1 = lh(sp + 0x14);
-    v0 = u32(i32(v0) >> 16);
-    mult(v1, v0);
-    sh(a0, sp + 0x16);
-    v0 = lo;
-    v0++;
-    v1 = v0 >> 31;
-    v0 += v1;
-    a0 = u32(i32(v0) >> 1);
-    s0 = u32(i32(v0) >> 5);
-    if (i32(a0) > 0) goto loc_8004DBB4;
-    v0 = -1;                                            // Result = FFFFFFFF
-    goto loc_8004DD44;
-loc_8004DBB4:
-    v1 = s0;
-    v0 = v1 << 4;
-    s0 = a0 - v0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    s3 = v1;
-    v0 = lw(v0);
-    v1 = 0x4000000;                                     // Result = 04000000
-    v0 &= v1;
-    if (v0 != 0) goto loc_8004DC14;
-    s2 = 0x4000000;                                     // Result = 04000000
-loc_8004DBE4:
-    LIBGPU_SYS_get_alarm();
-    {
-        const bool bJump = (v0 != 0);
-        v0 = -1;                                        // Result = FFFFFFFF
-        if (bJump) goto loc_8004DD44;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    v0 = lw(v0);
-    v0 &= s2;
-    if (v0 == 0) goto loc_8004DBE4;
-loc_8004DC14:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    v0 = 0x4000000;                                     // Result = 04000000
-    sw(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D70);                               // Load from: GPU_REG_GP0 (80075D70)
-    v0 = 0x1000000;                                     // Result = 01000000
-    sw(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D70);                               // Load from: GPU_REG_GP0 (80075D70)
-    v0 = 0xC0000000;                                    // Result = C0000000
-    sw(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D70);                               // Load from: GPU_REG_GP0 (80075D70)
-    v0 = lw(sp + 0x10);
-    sw(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D70);                               // Load from: GPU_REG_GP0 (80075D70)
-    v0 = lw(sp + 0x14);
-    sw(v0, v1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    v0 = lw(v0);
-    v1 = 0x8000000;                                     // Result = 08000000
-    v0 &= v1;
-    if (v0 != 0) goto loc_8004DCC0;
-    s2 = 0x8000000;                                     // Result = 08000000
-loc_8004DC90:
-    LIBGPU_SYS_get_alarm();
-    {
-        const bool bJump = (v0 != 0);
-        v0 = -1;                                        // Result = FFFFFFFF
-        if (bJump) goto loc_8004DD44;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    v0 = lw(v0);
-    v0 &= s2;
-    if (v0 == 0) goto loc_8004DC90;
-loc_8004DCC0:
-    s0--;
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (s0 == v0) goto loc_8004DCF4;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_8004DCD4:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D70);                               // Load from: GPU_REG_GP0 (80075D70)
-    v0 = lw(v0);
-    s0--;
-    sw(v0, s1);
-    s1 += 4;
-    if (s0 != v1) goto loc_8004DCD4;
-loc_8004DCF4:
-    v1 = 0x4000000;                                     // Result = 04000000
-    if (s3 == 0) goto loc_8004DD40;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    v1 |= 3;                                            // Result = 04000003
-    sw(v1, v0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D78);                               // Load from: 80075D78
-    a0 = 0x1000000;                                     // Result = 01000000
-    sw(s1, v0);
-    v0 = s3 << 16;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D7C);                               // Load from: 80075D7C
-    v0 |= 0x10;
-    sw(v0, v1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D80);                               // Load from: 80075D80
-    a0 |= 0x200;                                        // Result = 01000200
-    sw(a0, v0);
-loc_8004DD40:
-    v0 = 0;                                             // Result = 00000000
-loc_8004DD44:
-    ra = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x38;
-    return;
-}
-
 void LIBGPU_SYS__ctl() noexcept {
 loc_8004DD64:
     v0 = 0x80070000;                                    // Result = 80070000
@@ -2243,31 +1421,6 @@ loc_8004DD90:
     return;
 }
 
-void LIBGPU_SYS__cwb() noexcept {
-loc_8004DDA8:
-    sp -= 8;
-    a2 = a1 - 1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    v0 = 0x4000000;                                     // Result = 04000000
-    sw(v0, v1);
-    v0 = 0;                                             // Result = 00000000
-    if (a1 == 0) goto loc_8004DDEC;
-    a1 = -1;                                            // Result = FFFFFFFF
-loc_8004DDCC:
-    v1 = lw(a0);
-    a0 += 4;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D70);                               // Load from: GPU_REG_GP0 (80075D70)
-    a2--;
-    sw(v1, v0);
-    v0 = 0;                                             // Result = 00000000
-    if (a2 != a1) goto loc_8004DDCC;
-loc_8004DDEC:
-    sp += 8;
-    return;
-}
-
 void LIBGPU_SYS__cwc() noexcept {
 loc_8004DDF8:
     v1 = 0x4000000;                                     // Result = 04000000
@@ -2286,22 +1439,6 @@ loc_8004DDF8:
     v0 = lw(v0 + 0x5D80);                               // Load from: 80075D80
     v1 |= 0x401;                                        // Result = 01000401
     sw(v1, v0);
-    return;
-}
-
-void LIBGPU_SYS__param() noexcept {
-loc_8004DE44:
-    v0 = 0x10000000;                                    // Result = 10000000
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    a0 |= v0;
-    sw(a0, v1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D70);                               // Load from: GPU_REG_GP0 (80075D70)
-    v1 = 0xFF0000;                                      // Result = 00FF0000
-    v0 = lw(v0);
-    v1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    v0 &= v1;
     return;
 }
 
@@ -3048,81 +2185,6 @@ uint16_t LIBGPU_GetClut(const int32_t x, const int32_t y) noexcept {
     return (uint16_t)((y << 6) | ((x >> 4) & 0x3F));
 }
 
-void LIBGPU_DumpTPage() noexcept {
-    sp -= 0x20;
-    sw(s0, sp + 0x18);
-    sw(ra, sp + 0x1C);
-    s0 = a0;
-    LIBGPU_GetGraphType();
-    v1 = 1;                                             // Result = 00000001
-    if (v0 == v1) goto loc_8004EA3C;
-    LIBGPU_GetGraphType();
-    v1 = 2;                                             // Result = 00000002
-    {
-        const bool bJump = (v0 != v1);
-        v0 = s0 & 0xFFFF;
-        if (bJump) goto loc_8004EA80;
-    }
-loc_8004EA3C:
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1D0C;                                       // Result = STR_Sys_tpage_Msg[0] (80011D0C)
-    v0 = s0 & 0xFFFF;
-    a1 = v0 >> 9;
-    a1 &= 3;
-    a2 = v0 >> 7;
-    a2 &= 3;
-    a3 = v0 << 6;
-    a3 &= 0x7C0;
-    v0 <<= 3;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    v0 &= 0x300;
-    sw(v0, sp + 0x10);
-    ptr_call(v1);
-    goto loc_8004EAC4;
-loc_8004EA80:
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1D0C;                                       // Result = STR_Sys_tpage_Msg[0] (80011D0C)
-    a1 = v0 >> 7;
-    a1 &= 3;
-    a2 = v0 >> 5;
-    a2 &= 3;
-    a3 = v0 << 6;
-    a3 &= 0x7C0;
-    v1 = v0 << 4;
-    v1 &= 0x100;
-    v0 >>= 2;
-    v0 &= 0x200;
-    t0 = 0x80070000;                                    // Result = 80070000
-    t0 = lw(t0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    v1 += v0;
-    sw(v1, sp + 0x10);
-    ptr_call(t0);
-loc_8004EAC4:
-    ra = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x20;
-    return;
-}
-
-void LIBGPU_DumpClut() noexcept {
-    sp -= 0x18;
-    a2 = a0;
-    a1 = a2 & 0x3F;
-    a2 &= 0xFFFF;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1D24;                                       // Result = STR_Sys_clut_Msg[0] (80011D24)
-    a1 <<= 4;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    sw(ra, sp + 0x10);
-    a2 >>= 6;
-    ptr_call(v0);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-}
-
 void LIBGPU_NextPrim() noexcept {
     v1 = 0xFF0000;                                      // Result = 00FF0000
     v0 = lw(a0);
@@ -3233,36 +2295,12 @@ void _thunk_LIBGPU_SetShadeTex() noexcept {
     LIBGPU_SetShadeTex(vmAddrToPtr<void>(a0), a1);
 }
 
-void LIBGPU_SetPolyF3() noexcept {
-    v0 = 4;                                             // Result = 00000004
-    sb(v0, a0 + 0x3);
-    v0 = 0x20;                                          // Result = 00000020
-    sb(v0, a0 + 0x7);
-    return;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize a flat shaded textured triangle primitive
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBGPU_SetPolyFT3(POLY_FT3& poly) noexcept {
     LIBGPU_setlen(poly, 7);
     poly.code = 0x24;
-}
-
-void LIBGPU_SetPolyG3() noexcept {
-    v0 = 6;                                             // Result = 00000006
-    sb(v0, a0 + 0x3);
-    v0 = 0x30;                                          // Result = 00000030
-    sb(v0, a0 + 0x7);
-    return;
-}
-
-void LIBGPU_SetPolyGT3() noexcept {
-    v0 = 9;                                             // Result = 00000009
-    sb(v0, a0 + 0x3);
-    v0 = 0x34;                                          // Result = 00000034
-    sb(v0, a0 + 0x7);
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -3281,35 +2319,11 @@ void LIBGPU_SetPolyFT4(POLY_FT4& poly) noexcept {
     poly.code = 0x2C;
 }
 
-void LIBGPU_SetPolyG4() noexcept {
-    v0 = 8;                                             // Result = 00000008
-    sb(v0, a0 + 0x3);
-    v0 = 0x38;                                          // Result = 00000038
-    sb(v0, a0 + 0x7);
-    return;
-}
-
-void LIBGPU_SetPolyGT4() noexcept {
-    v0 = 0xC;                                           // Result = 0000000C
-    sb(v0, a0 + 0x3);
-    v0 = 0x3C;                                          // Result = 0000003C
-    sb(v0, a0 + 0x7);
-    return;
-}
-
 void LIBGPU_SetSprt8() noexcept {
 loc_8004ECF4:
     v0 = 3;                                             // Result = 00000003
     sb(v0, a0 + 0x3);
     v0 = 0x74;                                          // Result = 00000074
-    sb(v0, a0 + 0x7);
-    return;
-}
-
-void LIBGPU_SetSprt16() noexcept {
-    v0 = 3;                                             // Result = 00000003
-    sb(v0, a0 + 0x3);
-    v0 = 0x7C;                                          // Result = 0000007C
     sb(v0, a0 + 0x7);
     return;
 }
@@ -3322,43 +2336,11 @@ void LIBGPU_SetSprt(SPRT & sprt) noexcept {
     sprt.code = 0x64;
 }
 
-void LIBGPU_SetTile1() noexcept {
-    v0 = 2;                                             // Result = 00000002
-    sb(v0, a0 + 0x3);
-    v0 = 0x68;                                          // Result = 00000068
-    sb(v0, a0 + 0x7);
-    return;
-}
-
-void LIBGPU_SetTile8() noexcept {
-    v0 = 2;                                             // Result = 00000002
-    sb(v0, a0 + 0x3);
-    v0 = 0x70;                                          // Result = 00000070
-    sb(v0, a0 + 0x7);
-    return;
-}
-
-void LIBGPU_SetTile16() noexcept {
-    v0 = 2;                                             // Result = 00000002
-    sb(v0, a0 + 0x3);
-    v0 = 0x78;                                          // Result = 00000078
-    sb(v0, a0 + 0x7);
-    return;
-}
-
 void LIBGPU_SetTile() noexcept {
 loc_8004ED6C:
     v0 = 3;                                             // Result = 00000003
     sb(v0, a0 + 0x3);
     v0 = 0x60;                                          // Result = 00000060
-    sb(v0, a0 + 0x7);
-    return;
-}
-
-void LIBGPU_SetBlockFill() noexcept {
-    v0 = 3;                                             // Result = 00000003
-    sb(v0, a0 + 0x3);
-    v0 = 2;                                             // Result = 00000002
     sb(v0, a0 + 0x7);
     return;
 }
@@ -3369,58 +2351,6 @@ void LIBGPU_SetBlockFill() noexcept {
 void LIBGPU_SetLineF2(LINE_F2& line) noexcept {
     LIBGPU_setlen(line, 3);
     line.code = 0x40;
-}
-
-void LIBGPU_SetLineG2() noexcept {
-    v0 = 4;                                             // Result = 00000004
-    sb(v0, a0 + 0x3);
-    v0 = 0x50;                                          // Result = 00000050
-    sb(v0, a0 + 0x7);
-    return;
-}
-
-void LIBGPU_SetLineF3() noexcept {
-    v1 = 0x55550000;                                    // Result = 55550000
-    v1 |= 0x5555;                                       // Result = 55555555
-    v0 = 5;                                             // Result = 00000005
-    sb(v0, a0 + 0x3);
-    v0 = 0x48;                                          // Result = 00000048
-    sb(v0, a0 + 0x7);
-    sw(v1, a0 + 0x14);
-    return;
-}
-
-void LIBGPU_SetLineG3() noexcept {
-    v1 = 0x55550000;                                    // Result = 55550000
-    v1 |= 0x5555;                                       // Result = 55555555
-    v0 = 7;                                             // Result = 00000007
-    sb(v0, a0 + 0x3);
-    v0 = 0x58;                                          // Result = 00000058
-    sb(v0, a0 + 0x7);
-    sw(v1, a0 + 0x1C);
-    return;
-}
-
-void LIBGPU_SetLineF4() noexcept {
-    v1 = 0x55550000;                                    // Result = 55550000
-    v1 |= 0x5555;                                       // Result = 55555555
-    v0 = 6;                                             // Result = 00000006
-    sb(v0, a0 + 0x3);
-    v0 = 0x4C;                                          // Result = 0000004C
-    sb(v0, a0 + 0x7);
-    sw(v1, a0 + 0x18);
-    return;
-}
-
-void LIBGPU_SetLineG4() noexcept {
-    v1 = 0x55550000;                                    // Result = 55550000
-    v1 |= 0x5555;                                       // Result = 55555555
-    v0 = 9;                                             // Result = 00000009
-    sb(v0, a0 + 0x3);
-    v0 = 0x5C;                                          // Result = 0000005C
-    sb(v0, a0 + 0x7);
-    sw(v1, a0 + 0x24);
-    return;
 }
 
 void LIBGPU_MargePrim() noexcept {
@@ -3439,142 +2369,6 @@ void LIBGPU_MargePrim() noexcept {
 loc_8004EE64:
     v0 = -1;                                            // Result = FFFFFFFF
 loc_8004EE68:
-    return;
-}
-
-void LIBGPU_DumpDrawEnv() noexcept {
-    sp -= 0x20;
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(ra, sp + 0x1C);
-    a1 = lh(s0);
-    a2 = lh(s0 + 0x2);
-    a3 = lh(s0 + 0x4);
-    v0 = lh(s0 + 0x6);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1D34;                                       // Result = STR_Sys_clip_Msg[0] (80011D34)
-    sw(v0, sp + 0x10);
-    ptr_call(v1);
-    a1 = lh(s0 + 0x8);
-    a2 = lh(s0 + 0xA);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1D4C;                                       // Result = STR_Sys_ofs_Msg[0] (80011D4C)
-    ptr_call(v0);
-    a1 = lh(s0 + 0xC);
-    a2 = lh(s0 + 0xE);
-    a3 = lh(s0 + 0x10);
-    v0 = lh(s0 + 0x12);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1D5C;                                       // Result = STR_Sys_tw_Msg[0] (80011D5C)
-    sw(v0, sp + 0x10);
-    ptr_call(v1);
-    a1 = lbu(s0 + 0x16);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1D74;                                       // Result = STR_Sys_dtd_Msg[0] (80011D74)
-    ptr_call(v0);
-    a1 = lbu(s0 + 0x17);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1D80;                                       // Result = STR_Sys_dfe_Msg[0] (80011D80)
-    ptr_call(v0);
-    LIBGPU_GetGraphType();
-    v1 = 1;                                             // Result = 00000001
-    if (v0 == v1) goto loc_8004EF50;
-    LIBGPU_GetGraphType();
-    v1 = 2;                                             // Result = 00000002
-    if (v0 != v1) goto loc_8004EF94;
-loc_8004EF50:
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1D0C;                                       // Result = STR_Sys_tpage_Msg[0] (80011D0C)
-    v0 = lhu(s0 + 0x14);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a1 = v0 >> 9;
-    a1 &= 3;
-    a2 = v0 >> 7;
-    a2 &= 3;
-    a3 = v0 << 6;
-    a3 &= 0x7C0;
-    v0 <<= 3;
-    v0 &= 0x300;
-    sw(v0, sp + 0x10);
-    ptr_call(v1);
-    goto loc_8004EFDC;
-loc_8004EF94:
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1D0C;                                       // Result = STR_Sys_tpage_Msg[0] (80011D0C)
-    v0 = lhu(s0 + 0x14);
-    t0 = 0x80070000;                                    // Result = 80070000
-    t0 = lw(t0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a1 = v0 >> 7;
-    a1 &= 3;
-    a2 = v0 >> 5;
-    a2 &= 3;
-    a3 = v0 << 6;
-    a3 &= 0x7C0;
-    v1 = v0 << 4;
-    v1 &= 0x100;
-    v0 >>= 2;
-    v0 &= 0x200;
-    v1 += v0;
-    sw(v1, sp + 0x10);
-    ptr_call(t0);
-loc_8004EFDC:
-    ra = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x20;
-    return;
-}
-
-void LIBGPU_DumpDispEnv() noexcept {
-    sp -= 0x20;
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(ra, sp + 0x1C);
-    a1 = lh(s0);
-    a2 = lh(s0 + 0x2);
-    a3 = lh(s0 + 0x4);
-    v0 = lh(s0 + 0x6);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1D8C;                                       // Result = STR_Sys_disp_Msg[0] (80011D8C)
-    sw(v0, sp + 0x10);
-    ptr_call(v1);
-    a1 = lh(s0 + 0x8);
-    a2 = lh(s0 + 0xA);
-    a3 = lh(s0 + 0xC);
-    v0 = lh(s0 + 0xE);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1DA8;                                       // Result = STR_Sys_screen_Msg[0] (80011DA8)
-    sw(v0, sp + 0x10);
-    ptr_call(v1);
-    a1 = lbu(s0 + 0x10);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1DC4;                                       // Result = STR_Sys_isinster_Msg[0] (80011DC4)
-    ptr_call(v0);
-    a1 = lbu(s0 + 0x11);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1DD0;                                       // Result = STR_Sys_isrgb24_Msg[0] (80011DD0)
-    ptr_call(v0);
-    ra = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x20;
     return;
 }
 

@@ -180,11 +180,8 @@ struct DRAWENV {
 static_assert(sizeof(DRAWENV) == 92);
 
 void LIBGPU_ResetGraph() noexcept;
-void LIBGPU_SetGraphReverse() noexcept;
 void LIBGPU_SetGraphDebug() noexcept;
-void LIBGPU_SetGraphQueue() noexcept;
 void LIBGPU_GetGraphType() noexcept;
-void LIBGPU_GetGraphDebug() noexcept;
 void LIBGPU_DrawSyncCallback() noexcept;
 void LIBGPU_SetDispMask() noexcept;
 
@@ -192,32 +189,19 @@ int32_t LIBGPU_DrawSync(const int32_t mode) noexcept;
 void _thunk_LIBGPU_DrawSync() noexcept;
 
 void LIBGPU_checkRECT() noexcept;
-void LIBGPU_ClearImage() noexcept;
 
 void LIBGPU_LoadImage(const RECT& dstRect, const uint32_t* const pImageData) noexcept;
 void _thunk_LIBGPU_LoadImage() noexcept;
 
-void LIBGPU_StoreImage() noexcept;
-
 int32_t LIBGPU_MoveImage(const RECT& src, const int32_t dstX, const int32_t dstY) noexcept;
 void _thunk_LIBGPU_MoveImage() noexcept;
 
-void LIBGPU_ClearOTag() noexcept;
-void LIBGPU_ClearOTagR() noexcept;
-void LIBGPU_DrawPrim() noexcept;
 void LIBGPU_DrawOTag() noexcept;
 DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept;
-void LIBGPU_GetDrawEnv() noexcept;
 DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept;
-void LIBGPU_GetDispEnv() noexcept;
-void LIBGPU_GetODE() noexcept;
 
 void LIBGPU_SetTexWindow(DR_TWIN& prim, const RECT& texWin) noexcept;
 void _thunk_LIBGPU_SetTexWindow() noexcept;
-
-void LIBGPU_SetDrawArea() noexcept;
-void LIBGPU_SetDrawOffset() noexcept;
-void LIBGPU_SetPriority() noexcept;
 
 void LIBGPU_SetDrawMode(
     DR_MODE& modePrim,
@@ -239,16 +223,10 @@ uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept;
 void _thunk_LIBGPU_SYS_get_tw() noexcept;
 
 void LIBGPU_SYS_get_dx() noexcept;
-void LIBGPU_SYS__status() noexcept;
-void LIBGPU_SYS__otc() noexcept;
-void LIBGPU_SYS__clr() noexcept;
 void LIBGPU_SYS__dws() noexcept;
-void LIBGPU_SYS__drs() noexcept;
 void LIBGPU_SYS__ctl() noexcept;
 void LIBGPU_SYS__getctl() noexcept;
-void LIBGPU_SYS__cwb() noexcept;
 void LIBGPU_SYS__cwc() noexcept;
-void LIBGPU_SYS__param() noexcept;
 void LIBGPU_SYS__addque() noexcept;
 void LIBGPU_SYS__addque2() noexcept;
 void LIBGPU_SYS__exeque() noexcept;
@@ -268,43 +246,25 @@ uint16_t LIBGPU_GetTPage(
 void _thunk_LIBGPU_GetTPage() noexcept;
 
 uint16_t LIBGPU_GetClut(const int32_t x, const int32_t y) noexcept;
-void LIBGPU_DumpTPage() noexcept;
-void LIBGPU_DumpClut() noexcept;
-void LIBGPU_NextPrim() noexcept;
-void LIBGPU_IsEndPrim() noexcept;
-void LIBGPU_AddPrim() noexcept;
-void LIBGPU_AddPrims() noexcept;
-void LIBGPU_CatPrim() noexcept;
-void LIBGPU_TermPrim() noexcept;
+
+void LIBGPU_NextPrim() noexcept;        // TODO: still needed?
+void LIBGPU_IsEndPrim() noexcept;       // TODO: still needed?
+void LIBGPU_AddPrim() noexcept;         // TODO: still needed?
+void LIBGPU_AddPrims() noexcept;        // TODO: still needed?
+void LIBGPU_CatPrim() noexcept;         // TODO: still needed?
+void LIBGPU_TermPrim() noexcept;        // TODO: still needed?
 void LIBGPU_SetSemiTrans(void* const pPrim, const bool bTransparent) noexcept;
 void LIBGPU_SetShadeTex(void* const pPrim, const bool bDisableShading) noexcept;
 void _thunk_LIBGPU_SetShadeTex() noexcept;
 
-void LIBGPU_SetPolyF3() noexcept;
 void LIBGPU_SetPolyFT3(POLY_FT3& poly) noexcept;
-void LIBGPU_SetPolyG3() noexcept;
-void LIBGPU_SetPolyGT3() noexcept;
 void LIBGPU_SetPolyF4(POLY_F4& poly) noexcept;
 void LIBGPU_SetPolyFT4(POLY_FT4& poly) noexcept;
-void LIBGPU_SetPolyG4() noexcept;
-void LIBGPU_SetPolyGT4() noexcept;
 void LIBGPU_SetSprt8() noexcept;
-void LIBGPU_SetSprt16() noexcept;
 void LIBGPU_SetSprt(SPRT & sprt) noexcept;
-void LIBGPU_SetTile1() noexcept;
-void LIBGPU_SetTile8() noexcept;
-void LIBGPU_SetTile16() noexcept;
 void LIBGPU_SetTile() noexcept;
-void LIBGPU_SetBlockFill() noexcept;
 void LIBGPU_SetLineF2(LINE_F2& line) noexcept;
-void LIBGPU_SetLineG2() noexcept;
-void LIBGPU_SetLineF3() noexcept;
-void LIBGPU_SetLineG3() noexcept;
-void LIBGPU_SetLineF4() noexcept;
-void LIBGPU_SetLineG4() noexcept;
-void LIBGPU_MargePrim() noexcept;
-void LIBGPU_DumpDrawEnv() noexcept;
-void LIBGPU_DumpDispEnv() noexcept;
+void LIBGPU_MargePrim() noexcept;       // TODO: still needed?
 void LIBGPU_SetDumpFnt() noexcept;
 void LIBGPU_FntLoad() noexcept;
 void LIBGPU_FntOpen() noexcept;

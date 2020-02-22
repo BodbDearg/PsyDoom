@@ -585,30 +585,16 @@ extern void _thunk_LIBETC_VSync() noexcept;
 extern void _thunk_LIBETC_v_wait() noexcept;
 extern void LIBC2_puts() noexcept;
 extern void LIBGPU_ResetGraph() noexcept;
-extern void LIBGPU_SetGraphReverse() noexcept;
 extern void LIBGPU_SetGraphDebug() noexcept;
-extern void LIBGPU_SetGraphQueue() noexcept;
 extern void LIBGPU_GetGraphType() noexcept;
-extern void LIBGPU_GetGraphDebug() noexcept;
 extern void LIBGPU_DrawSyncCallback() noexcept;
 extern void LIBGPU_SetDispMask() noexcept;
 extern void _thunk_LIBGPU_DrawSync() noexcept;
 extern void LIBGPU_checkRECT() noexcept;
-extern void LIBGPU_ClearImage() noexcept;
 extern void _thunk_LIBGPU_LoadImage() noexcept;
-extern void LIBGPU_StoreImage() noexcept;
 extern void _thunk_LIBGPU_MoveImage() noexcept;
-extern void LIBGPU_ClearOTag() noexcept;
-extern void LIBGPU_ClearOTagR() noexcept;
-extern void LIBGPU_DrawPrim() noexcept;
 extern void LIBGPU_DrawOTag() noexcept;
-extern void LIBGPU_GetDrawEnv() noexcept;
-extern void LIBGPU_GetDispEnv() noexcept;
-extern void LIBGPU_GetODE() noexcept;
 extern void _thunk_LIBGPU_SetTexWindow() noexcept;
-extern void LIBGPU_SetDrawArea() noexcept;
-extern void LIBGPU_SetDrawOffset() noexcept;
-extern void LIBGPU_SetPriority() noexcept;
 extern void _thunk_LIBGPU_SetDrawMode() noexcept;
 extern void LIBGPU_SetDrawEnv() noexcept;
 extern void LIBGPU_SYS_get_mode() noexcept;
@@ -617,16 +603,10 @@ extern void LIBGPU_SYS_get_ce() noexcept;
 extern void LIBGPU_SYS_get_ofs() noexcept;
 extern void _thunk_LIBGPU_SYS_get_tw() noexcept;
 extern void LIBGPU_SYS_get_dx() noexcept;
-extern void LIBGPU_SYS__status() noexcept;
-extern void LIBGPU_SYS__otc() noexcept;
-extern void LIBGPU_SYS__clr() noexcept;
 extern void LIBGPU_SYS__dws() noexcept;
-extern void LIBGPU_SYS__drs() noexcept;
 extern void LIBGPU_SYS__ctl() noexcept;
 extern void LIBGPU_SYS__getctl() noexcept;
-extern void LIBGPU_SYS__cwb() noexcept;
 extern void LIBGPU_SYS__cwc() noexcept;
-extern void LIBGPU_SYS__param() noexcept;
 extern void LIBGPU_SYS__addque() noexcept;
 extern void LIBGPU_SYS__addque2() noexcept;
 extern void LIBGPU_SYS__exeque() noexcept;
@@ -640,34 +620,15 @@ extern void LIBC2_memcpy() noexcept;
 extern void LIBETC_SetVideoMode() noexcept;
 extern void LIBETC_GetVideoMode() noexcept;
 extern void _thunk_LIBGPU_GetTPage() noexcept;
-extern void LIBGPU_DumpTPage() noexcept;
-extern void LIBGPU_DumpClut() noexcept;
 extern void LIBGPU_NextPrim() noexcept;
 extern void LIBGPU_IsEndPrim() noexcept;
 extern void LIBGPU_AddPrim() noexcept;
 extern void LIBGPU_AddPrims() noexcept;
 extern void LIBGPU_CatPrim() noexcept;
 extern void LIBGPU_TermPrim() noexcept;
-extern void LIBGPU_SetPolyF3() noexcept;
-extern void LIBGPU_SetPolyG3() noexcept;
-extern void LIBGPU_SetPolyGT3() noexcept;
-extern void LIBGPU_SetPolyG4() noexcept;
-extern void LIBGPU_SetPolyGT4() noexcept;
 extern void LIBGPU_SetSprt8() noexcept;
-extern void LIBGPU_SetSprt16() noexcept;
-extern void LIBGPU_SetTile1() noexcept;
-extern void LIBGPU_SetTile8() noexcept;
-extern void LIBGPU_SetTile16() noexcept;
 extern void LIBGPU_SetTile() noexcept;
-extern void LIBGPU_SetBlockFill() noexcept;
-extern void LIBGPU_SetLineG2() noexcept;
-extern void LIBGPU_SetLineF3() noexcept;
-extern void LIBGPU_SetLineG3() noexcept;
-extern void LIBGPU_SetLineF4() noexcept;
-extern void LIBGPU_SetLineG4() noexcept;
 extern void LIBGPU_MargePrim() noexcept;
-extern void LIBGPU_DumpDrawEnv() noexcept;
-extern void LIBGPU_DumpDispEnv() noexcept;
 extern void LIBGPU_SetDumpFnt() noexcept;
 extern void LIBGPU_FntLoad() noexcept;
 extern void LIBGPU_FntOpen() noexcept;
@@ -1373,30 +1334,16 @@ namespace PsxVm {
         { 0x8004BBDC, &_thunk_LIBETC_v_wait },
         { 0x8004BC78, &LIBC2_puts },
         { 0x8004BCC8, &LIBGPU_ResetGraph },
-        { 0x8004BEF0, &LIBGPU_SetGraphReverse },
         { 0x8004C004, &LIBGPU_SetGraphDebug },
-        { 0x8004C070, &LIBGPU_SetGraphQueue },
         { 0x8004C11C, &LIBGPU_GetGraphType },
-        { 0x8004C12C, &LIBGPU_GetGraphDebug },
         { 0x8004C13C, &LIBGPU_DrawSyncCallback },
         { 0x8004C198, &LIBGPU_SetDispMask },
         { 0x8004C210, &_thunk_LIBGPU_DrawSync },
         { 0x8004C27C, &LIBGPU_checkRECT },
-        { 0x8004C3A4, &LIBGPU_ClearImage },
         { 0x8004C438, &_thunk_LIBGPU_LoadImage },
-        { 0x8004C49C, &LIBGPU_StoreImage },
         { 0x8004C500, &_thunk_LIBGPU_MoveImage },
-        { 0x8004C5A0, &LIBGPU_ClearOTag },
-        { 0x8004C64C, &LIBGPU_ClearOTagR },
-        { 0x8004C6CC, &LIBGPU_DrawPrim },
         { 0x8004C72C, &LIBGPU_DrawOTag },
-        { 0x8004C860, &LIBGPU_GetDrawEnv },
-        { 0x8004CCBC, &LIBGPU_GetDispEnv },
-        { 0x8004CCF4, &LIBGPU_GetODE },
         { 0x8004CD28, &_thunk_LIBGPU_SetTexWindow },
-        { 0x8004CD64, &LIBGPU_SetDrawArea },
-        { 0x8004CDE8, &LIBGPU_SetDrawOffset },
-        { 0x8004CE2C, &LIBGPU_SetPriority },
         { 0x8004CE54, &_thunk_LIBGPU_SetDrawMode },
         { 0x8004CEAC, &LIBGPU_SetDrawEnv },
         { 0x8004D158, &LIBGPU_SYS_get_mode },
@@ -1405,16 +1352,10 @@ namespace PsxVm {
         { 0x8004D35C, &LIBGPU_SYS_get_ofs },
         { 0x8004D3A4, &_thunk_LIBGPU_SYS_get_tw },
         { 0x8004D428, &LIBGPU_SYS_get_dx },
-        { 0x8004D4E4, &LIBGPU_SYS__status },
-        { 0x8004D4FC, &LIBGPU_SYS__otc },
-        { 0x8004D5E4, &LIBGPU_SYS__clr },
         { 0x8004D824, &LIBGPU_SYS__dws },
-        { 0x8004DAA0, &LIBGPU_SYS__drs },
         { 0x8004DD64, &LIBGPU_SYS__ctl },
         { 0x8004DD90, &LIBGPU_SYS__getctl },
-        { 0x8004DDA8, &LIBGPU_SYS__cwb },
         { 0x8004DDF8, &LIBGPU_SYS__cwc },
-        { 0x8004DE44, &LIBGPU_SYS__param },
         { 0x8004DE74, &LIBGPU_SYS__addque },
         { 0x8004DE98, &LIBGPU_SYS__addque2 },
         { 0x8004E1B8, &LIBGPU_SYS__exeque },
@@ -1428,34 +1369,15 @@ namespace PsxVm {
         { 0x8004E900, &LIBETC_SetVideoMode },
         { 0x8004E918, &LIBETC_GetVideoMode },
         { 0x8004E928, &_thunk_LIBGPU_GetTPage },
-        { 0x8004EA08, &LIBGPU_DumpTPage },
-        { 0x8004EAD8, &LIBGPU_DumpClut },
         { 0x8004EB18, &LIBGPU_NextPrim },
         { 0x8004EB34, &LIBGPU_IsEndPrim },
         { 0x8004EB50, &LIBGPU_AddPrim },
         { 0x8004EB8C, &LIBGPU_AddPrims },
         { 0x8004EBC8, &LIBGPU_CatPrim },
         { 0x8004EBEC, &LIBGPU_TermPrim },
-        { 0x8004EC54, &LIBGPU_SetPolyF3 },
-        { 0x8004EC7C, &LIBGPU_SetPolyG3 },
-        { 0x8004EC90, &LIBGPU_SetPolyGT3 },
-        { 0x8004ECCC, &LIBGPU_SetPolyG4 },
-        { 0x8004ECE0, &LIBGPU_SetPolyGT4 },
         { 0x8004ECF4, &LIBGPU_SetSprt8 },
-        { 0x8004ED08, &LIBGPU_SetSprt16 },
-        { 0x8004ED30, &LIBGPU_SetTile1 },
-        { 0x8004ED44, &LIBGPU_SetTile8 },
-        { 0x8004ED58, &LIBGPU_SetTile16 },
         { 0x8004ED6C, &LIBGPU_SetTile },
-        { 0x8004ED80, &LIBGPU_SetBlockFill },
-        { 0x8004EDA8, &LIBGPU_SetLineG2 },
-        { 0x8004EDBC, &LIBGPU_SetLineF3 },
-        { 0x8004EDDC, &LIBGPU_SetLineG3 },
-        { 0x8004EDFC, &LIBGPU_SetLineF4 },
-        { 0x8004EE1C, &LIBGPU_SetLineG4 },
         { 0x8004EE3C, &LIBGPU_MargePrim },
-        { 0x8004EE70, &LIBGPU_DumpDrawEnv },
-        { 0x8004EFF0, &LIBGPU_DumpDispEnv },
         { 0x8004F09C, &LIBGPU_SetDumpFnt },
         { 0x8004F0DC, &LIBGPU_FntLoad },
         { 0x8004F180, &LIBGPU_FntOpen },
