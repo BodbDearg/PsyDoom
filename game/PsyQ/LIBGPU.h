@@ -192,7 +192,7 @@ void LIBGPU_checkRECT() noexcept;
 void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noexcept;
 void _thunk_LIBGPU_LoadImage() noexcept;
 
-int32_t LIBGPU_MoveImage(const RECT& src, const int32_t dstX, const int32_t dstY) noexcept;
+int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t dstY) noexcept;
 void _thunk_LIBGPU_MoveImage() noexcept;
 
 void LIBGPU_DrawOTag() noexcept;

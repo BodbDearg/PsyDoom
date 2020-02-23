@@ -352,52 +352,34 @@ void _thunk_LIBGPU_LoadImage() noexcept {
     LIBGPU_LoadImage(*vmAddrToPtr<RECT>(a0), vmAddrToPtr<const uint16_t>(a1));
 }
 
-int32_t LIBGPU_MoveImage(const RECT& src, const int32_t dstX, const int32_t dstY) noexcept {
-loc_8004C500:
-    VmSVal<RECT> srcVmStack = src;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Copy one part of VRAM to another part of VRAM
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t dstY) noexcept {
+    // Sanity checks
+    SanityCheckVramRect(srcRect);
 
-    a0 = srcVmStack.addr();
-    a1 = dstX;
-    a2 = dstY;
+    ASSERT(dstX >= 0);
+    ASSERT(dstY >= 0);
+    ASSERT(dstX + srcRect.w <= gpu::VRAM_WIDTH);
+    ASSERT(dstY + srcRect.y <= gpu::VRAM_WIDTH);
 
-    sp -= 0x20;
-    sw(s2, sp + 0x18);
-    s2 = a0;
-    sw(s1, sp + 0x14);
-    s1 = a1;
-    sw(s0, sp + 0x10);
-    s0 = a2;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1C40;                                       // Result = STR_Sys_MoveImage_Msg[0] (80011C40)
-    sw(ra, sp + 0x1C);
-    a1 = s2;
-    LIBGPU_checkRECT();
-    s0 <<= 16;
-    s1 &= 0xFFFF;
-    s0 |= s1;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x5D64;                                       // Result = 80075D64
-    v0 = lw(s2);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    a2 = 0x14;                                          // Result = 00000014
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x5D68);                                // Store to: 80075D68
-    sw(v0, a1);                                         // Store to: 80075D64
-    v0 = lw(s2 + 0x4);
-    a3 = 0;                                             // Result = 00000000
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5D6C);                                // Store to: 80075D6C
-    a0 = lw(v1 + 0x18); // LIBGPU_SYS__cwc
-    a1 -= 8;                                            // Result = 80075D5C
-    LIBGPU_SYS__addque2();
+    // Copy each row
+    const uint32_t numRows = srcRect.h;
+    const uint32_t rowSize = srcRect.w * sizeof(uint16_t);
 
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return v0;
+    gpu::GPU& gpu = *PsxVm::gpGpu;
+
+    const uint16_t* pSrcRow = gpu.vram.data() + srcRect.x + (intptr_t) srcRect.y * gpu::VRAM_WIDTH;
+    uint16_t* pDstRow = gpu.vram.data() + dstX + (intptr_t) dstY * gpu::VRAM_WIDTH;
+
+    for (uint32_t rowIdx = 0; rowIdx < numRows; ++rowIdx) {
+        std::memcpy(pDstRow, pSrcRow, rowSize);
+        pSrcRow += gpu::VRAM_WIDTH;
+        pDstRow += gpu::VRAM_WIDTH;
+    }
+
+    return 0;   // This is the position of the command in the queue, according to PsyQ docs - don't care about this...
 }
 
 void _thunk_LIBGPU_MoveImage() noexcept {
