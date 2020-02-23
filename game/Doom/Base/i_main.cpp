@@ -728,7 +728,7 @@ void I_CacheTex(texture_t& tex) noexcept {
             tex.height
         );
 
-        LIBGPU_LoadImage(dstVramRect, (uint32_t*) pTexData + 2);    // TODO: figure out what 8 bytes is being skipped
+        LIBGPU_LoadImage(dstVramRect, (uint16_t*) pTexData + 4);    // TODO: figure out what 8 bytes is being skipped
     }
 
     // Save the textures page coordinate

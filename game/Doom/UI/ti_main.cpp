@@ -216,7 +216,7 @@ void DRAW_Title() noexcept {
         // Figure out where the texture is in VRAM coords and upload it
         const RECT vramRect = getTextureVramRect(skytex);
         const void* const pSkyTexData = (*gpLumpCache)[skytex.lumpNum].get();
-        LIBGPU_LoadImage(vramRect, (const uint32_t*) pSkyTexData + 2);              // TODO: what 8 bytes is this skipping?
+        LIBGPU_LoadImage(vramRect, (const uint16_t*) pSkyTexData + 4);  // TODO: what 8 bytes is this skipping?
 
         // Mark this as uploaded now
         skytex.uploadFrameNum = *gNumFramesDrawn;

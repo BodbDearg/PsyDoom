@@ -26,7 +26,7 @@ void R_DrawSky() noexcept {
 
     if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {        
         const void* const pLumpData = (*gpLumpCache)[skytex.lumpNum].get();
-        const uint32_t* const pTexData = (const std::uint32_t*) pLumpData + 2;      // TODO: find out why it is skipping two words and comment
+        const uint16_t* const pTexData = (const std::uint16_t*) pLumpData + 4;      // TODO: find out why it is skipping two words and comment
         RECT vramRect = getTextureVramRect(skytex);
 
         LIBGPU_LoadImage(vramRect, pTexData);

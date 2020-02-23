@@ -8,9 +8,23 @@
 #include "PsxVm/VmSVal.h"
 
 #include <device/gpu/gpu.h>
+#include <cstring>
 
 // N.B: needs to happen AFTER Avocado includes due to clashes caused by the MIPS register macros
 #include "PsxVm/PsxVm.h"
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Helper that ensures that a given RECT is in VRAM bounds for debug builds.
+// Similar to the internal PSY-Q function, 'LIBGPU_checkRECT'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void SanityCheckVramRect(const RECT& rect) {
+    ASSERT(rect.w > 0);
+    ASSERT(rect.h > 0);
+    ASSERT(rect.x >= 0);
+    ASSERT(rect.y >= 0);
+    ASSERT(rect.x + rect.w <= gpu::VRAM_WIDTH);
+    ASSERT(rect.y + rect.h <= gpu::VRAM_HEIGHT);
+}
 
 void LIBGPU_ResetGraph() noexcept {
 loc_8004BCC8:
@@ -308,33 +322,34 @@ loc_8004C390:
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Upload the given image data to the given area in VRAM.
-// The image data is expected to be 32-bit aligned and in multiples of 32-bits.
+// Upload the given image data to the given area in VRAM
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LIBGPU_LoadImage(const RECT& dstRect, const uint32_t* const pImageData) noexcept {
-    // Copy the rect onto the VM stack so that invoked functions can get at it.
-    // The given rect might exist outside of the PlayStation's memory space and only exist in the host app memory space:
-    VmSVal<RECT> dstRectCopy(dstRect);
-    
-    // This sanity checks the rect
-    a0 = 0x80011C28;                                    // Result = STR_Sys_LoadImage_Msg[0] (80011C28)
-    a1 = dstRectCopy.addr();
-    LIBGPU_checkRECT();
+void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noexcept {
+    // Sanity checks
+    ASSERT(pImageData);
+    SanityCheckVramRect(dstRect);
 
-    // Get the low level GPU function table
-    v0 = lw(0x80075D54);                                // Load from: gpLIBGPU_SYS_driver_table (80075D54)
+    // Copy each row into VRAM
+    const uint32_t dstX = dstRect.x;
+    const uint32_t dstY = dstRect.y;
+    const uint32_t dstW = dstRect.w;
+    const uint32_t dstH = dstRect.h;
+    const uint32_t rowSize = dstW  * sizeof(uint16_t);
 
-    // Do the upload to PSX RAM.
-    // TODO: make this just load to the PSX VRAM directly.
-    a0 = lw(v0 + 0x20);         // LIBGPU_SYS__dws
-    a1 = dstRectCopy.addr();    
-    a2 = 8;
-    a3 = ptrToVmAddr(pImageData);
-    LIBGPU_SYS__addque2();
+    gpu::GPU& gpu = *PsxVm::gpGpu;
+
+    const uint16_t* pSrcRow = pImageData;
+    uint16_t* pDstRow = gpu.vram.data() + dstX + (intptr_t) dstY * gpu::VRAM_WIDTH;
+
+    for (uint32_t rowIdx = 0; rowIdx < dstH; ++rowIdx) {
+        std::memcpy(pDstRow, pSrcRow, rowSize);
+        pSrcRow += dstW;
+        pDstRow += gpu::VRAM_WIDTH;
+    }
 }
 
 void _thunk_LIBGPU_LoadImage() noexcept {
-    LIBGPU_LoadImage(*vmAddrToPtr<RECT>(a0), vmAddrToPtr<const uint32_t>(a1));
+    LIBGPU_LoadImage(*vmAddrToPtr<RECT>(a0), vmAddrToPtr<const uint16_t>(a1));
 }
 
 int32_t LIBGPU_MoveImage(const RECT& src, const int32_t dstX, const int32_t dstY) noexcept {

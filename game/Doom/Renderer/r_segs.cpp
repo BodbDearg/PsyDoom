@@ -182,7 +182,7 @@ void R_DrawWallPiece(
         // Decompress and get a pointer to the texture data.
         // TODO: figure out what 8 bytes this is skipping past!
         decode((*gpLumpCache)[tex.lumpNum].get(), gTmpBuffer.get());
-        const uint32_t* const pTexData = (uint32_t*) gTmpBuffer.get() + 2;
+        const uint16_t* const pTexData = (uint16_t*) gTmpBuffer.get() + 4;
 
         // Upload to the GPU and mark the texture as loaded this frame
         const RECT texRect = getTextureVramRect(tex);

@@ -334,7 +334,7 @@ void R_InitPalette() noexcept {
             dstVramRect.y = (int16_t)(palRow - palTPage * PAL_ROWS_PER_TPAGE + SCREEN_H);
             
             // Upload the palette to VRAM and save the CLUT id for this location
-            LIBGPU_LoadImage(dstVramRect, (const uint32_t*) pPalette->colors);
+            LIBGPU_LoadImage(dstVramRect, (const uint16_t*) pPalette->colors);
             *pClutId = LIBGPU_GetClut(dstVramRect.x, dstVramRect.y);
         }
     }

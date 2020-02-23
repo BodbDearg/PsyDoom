@@ -54,7 +54,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
 
         // Load the decompressed texture to the required part of VRAM and mark as loaded 
         const RECT vramRect = getTextureVramRect(tex);
-        LIBGPU_LoadImage(vramRect, (uint32_t*) pLumpData + 2);      // TODO: figure out what 8 bytes are being skipped        
+        LIBGPU_LoadImage(vramRect, (uint16_t*) pLumpData + 4);      // TODO: figure out what 8 bytes are being skipped
         tex.uploadFrameNum = *gNumFramesDrawn;
     }
 
