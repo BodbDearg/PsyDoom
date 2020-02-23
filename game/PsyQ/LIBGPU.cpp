@@ -195,32 +195,6 @@ loc_8004C11C:
     return;
 }
 
-void LIBGPU_DrawSyncCallback() noexcept {
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x356);                               // Load from: 80080356
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = (v0 < 2);
-    sw(ra, sp + 0x14);
-    if (v0 != 0) goto loc_8004C174;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1BB4;                                       // Result = STR_Sys_DrawSyncCallBack_Msg[0] (80011BB4)
-    a1 = s0;
-    ptr_call(v0);
-loc_8004C174:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 + 0x360);                                // Load from: 80080360
-    at = 0x80080000;                                    // Result = 80080000
-    sw(s0, at + 0x360);                                 // Store to: 80080360
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-}
-
 void LIBGPU_SetDispMask() noexcept {
 loc_8004C198:
     v0 = 0x80080000;                                    // Result = 80080000
@@ -528,276 +502,65 @@ DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept {
     return env;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets the current display enviroment. This includes information about where in the framebuffer we display from, video resolution etc.
+//------------------------------------------------------------------------------------------------------------------------------------------
 DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept {
-    // TODO: this is a temporary measure
-    VmSVal<DISPENV> envStack = env;
-    auto convertOnExit = finally([&](){ env = *envStack; });
+    gpu::GPU& gpu = *PsxVm::gpGpu;
 
-    a0 = envStack.addr();
+    // Set display width, height and color depth
+    switch (env.disp.w) {
+        case 256: {
+            gpu.gp1_08.horizontalResolution1 = gpu::GP1_08::HorizontalResolution::r256;
+            gpu.gp1_08.horizontalResolution2 = gpu::GP1_08::HorizontalResolution2::normal;
+        }   break;
+        case 320: {
+            gpu.gp1_08.horizontalResolution1 = gpu::GP1_08::HorizontalResolution::r320;
+            gpu.gp1_08.horizontalResolution2 = gpu::GP1_08::HorizontalResolution2::normal;
+        }   break;
+        case 386: {
+            gpu.gp1_08.horizontalResolution1 = {};
+            gpu.gp1_08.horizontalResolution2 = gpu::GP1_08::HorizontalResolution2::r386;
+        }   break;
+        case 512: {
+            gpu.gp1_08.horizontalResolution1 = gpu::GP1_08::HorizontalResolution::r512;
+            gpu.gp1_08.horizontalResolution2 = gpu::GP1_08::HorizontalResolution2::normal;
+        }   break;
+        case 640: {
+            gpu.gp1_08.horizontalResolution1 = gpu::GP1_08::HorizontalResolution::r640;
+            gpu.gp1_08.horizontalResolution2 = gpu::GP1_08::HorizontalResolution2::normal;
+        }   break;
 
-loc_8004C898:
-    sp -= 0x28;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 += 0x356;                                        // Result = 80080356
-    sw(ra, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = lbu(v0);                                       // Load from: 80080356
-    v0 = (v0 < 2);
-    s2 = 0x8000000;                                     // Result = 08000000
-    if (v0 != 0) goto loc_8004C8EC;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1CA8;                                       // Result = STR_Sys_PutDisplayEnv_Msg[0] (80011CA8)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a1 = s0;
-    ptr_call(v0);
-loc_8004C8EC:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x354);                               // Load from: 80080354
-    v0--;
-    v0 = (v0 < 2);
-    if (v0 == 0) goto loc_8004C92C;
-    a0 = s0;
-    LIBGPU_SYS_get_dx();
-    v1 = lhu(s0 + 0x2);
-    v0 &= 0xFFF;
-    v1 &= 0xFFF;
-    v1 <<= 12;
-    v1 |= v0;
-    v0 = 0x5000000;                                     // Result = 05000000
-    goto loc_8004C948;
-loc_8004C92C:
-    v0 = lhu(s0 + 0x2);
-    v1 = lhu(s0);
-    v0 &= 0x3FF;
-    v0 <<= 10;
-    v1 &= 0x3FF;
-    v0 |= v1;
-    v1 = 0x5000000;                                     // Result = 05000000
-loc_8004C948:
-    a0 = v0 | v1;    
-    LIBGPU_SYS__ctl();
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 + 0x3C8);                                // Load from: gLIBGPU_SYS_p0_82[5] (800803C8)
-    v0 = lw(s0 + 0x8);
-    if (v1 != v0) goto loc_8004C998;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 + 0x3CC);                                // Load from: gLIBGPU_SYS_p0_82[6] (800803CC)
-    v0 = lw(s0 + 0xC);
-    if (v1 == v0) goto loc_8004CB54;
-loc_8004C998:
-    LIBETC_GetVideoMode();
-    v1 = lh(s0 + 0x8);
-    sb(v0, s0 + 0x12);
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 1;
-    a1 = v0 + 0x260;
-    v0 = lbu(s0 + 0x12);
-    a0 = lh(s0 + 0xA);
-    s1 = a0 + 0x13;
-    if (v0 != 0) goto loc_8004C9CC;
-    s1 = a0 + 0x10;
-loc_8004C9CC:
-    v1 = lh(s0 + 0xC);
-    v0 = v1 << 2;
-    if (v1 == 0) goto loc_8004C9EC;
-    v0 += v1;
-    v0 <<= 1;
-    a2 = a1 + v0;
-    goto loc_8004C9F0;
-loc_8004C9EC:
-    a2 = a1 + 0xA00;
-loc_8004C9F0:
-    v0 = lh(s0 + 0xE);
-    s3 = s1 + v0;
-    if (v0 != 0) goto loc_8004CA04;
-    s3 = s1 + 0xF0;
-loc_8004CA04:
-    v0 = (i32(a1) < 0x1F4);
-    a0 = 0x1F4;                                         // Result = 000001F4
-    if (v0 != 0) goto loc_8004CA24;
-    a0 = a1;
-    v0 = (i32(a0) < 0xCDB);
-    a1 = a0;
-    if (v0 != 0) goto loc_8004CA28;
-    a0 = 0xCDA;                                         // Result = 00000CDA
-loc_8004CA24:
-    a1 = a0;
-loc_8004CA28:
-    v1 = a1 + 0x50;
-    v0 = (i32(a2) < i32(v1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(a2) < 0xCDB);
-        if (bJump) goto loc_8004CA44;
+        default: {
+            FATAL_ERROR("Bad display mode width!");
+        }   break;
     }
-    v1 = a2;
-    if (v0 != 0) goto loc_8004CA44;
-    v1 = 0xCDA;                                         // Result = 00000CDA
-loc_8004CA44:
-    a2 = v1;
-    if (i32(s1) < 0) goto loc_8004CA98;
-    v0 = lbu(s0 + 0x12);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(s1) < 0x137);
-        if (bJump) goto loc_8004CA6C;
-    }
-    if (v0 == 0) goto loc_8004CA78;
-    a0 = s1;
-    goto loc_8004CA9C;
-loc_8004CA6C:
-    v0 = (i32(s1) < 0xFF);
-    if (v0 != 0) goto loc_8004CA90;
-loc_8004CA78:
-    v0 = lbu(s0 + 0x12);
-    a0 = 0xFE;                                          // Result = 000000FE
-    if (v0 == 0) goto loc_8004CA9C;
-    a0 = 0x136;                                         // Result = 00000136
-    goto loc_8004CA9C;
-loc_8004CA90:
-    a0 = s1;
-    goto loc_8004CA9C;
-loc_8004CA98:
-    a0 = 0;                                             // Result = 00000000
-loc_8004CA9C:
-    s1 = a0;
-    v1 = s1 + 1;
-    v0 = (i32(s3) < i32(v1));
-    if (v0 != 0) goto loc_8004CAF8;
-    v0 = lbu(s0 + 0x12);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(s3) < 0x139);
-        if (bJump) goto loc_8004CAD0;
-    }
-    if (v0 == 0) goto loc_8004CADC;
-    v1 = s3;
-    goto loc_8004CAF8;
-loc_8004CAD0:
-    v0 = (i32(s3) < 0x101);
-    if (v0 != 0) goto loc_8004CAF4;
-loc_8004CADC:
-    v0 = lbu(s0 + 0x12);
-    v1 = 0x100;                                         // Result = 00000100
-    if (v0 == 0) goto loc_8004CAF8;
-    v1 = 0x138;                                         // Result = 00000138
-    goto loc_8004CAF8;
-loc_8004CAF4:
-    v1 = s3;
-loc_8004CAF8:
-    s3 = v1;
-    v0 = a2 & 0xFFF;                                    // Result = 00000244
-    v0 <<= 12;                                          // Result = 00244000
-    a0 = a1 & 0xFFF;                                    // Result = 000001F4
-    v1 = 0x6000000;                                     // Result = 06000000
-    a0 |= v1;                                           // Result = 060001F4
-    a0 |= v0;                                           // Result = 062441F4
-    LIBGPU_SYS__ctl();
 
-    v0 = s3 & 0x3FF;
-    v0 <<= 10;
-    a0 = s1 & 0x3FF;
-    v1 = 0x7000000;                                     // Result = 07000000
-    a0 |= v1;
-    a0 |= v0;
-    LIBGPU_SYS__ctl();
-loc_8004CB54:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 + 0x3D0);                                // Load from: gLIBGPU_SYS_p0_82[7] (800803D0)
-    v0 = lw(s0 + 0x10);
-    if (v1 != v0) goto loc_8004CB9C;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 + 0x3C0);                                // Load from: gLIBGPU_SYS_p0_82[3] (800803C0)
-    v0 = lw(s0);
-    if (v1 != v0) goto loc_8004CB9C;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 + 0x3C4);                                // Load from: gLIBGPU_SYS_p0_82[4] (800803C4)
-    v0 = lw(s0 + 0x4);
-    if (v1 == v0) goto loc_8004CC84;
-loc_8004CB9C:
-    LIBETC_GetVideoMode();
-    sb(v0, s0 + 0x12);
-    v1 = lbu(s0 + 0x12);
-    v0 = 1;                                             // Result = 00000001
-    if (v1 != v0) goto loc_8004CBBC;
-    s2 |= 8;                                            // Result = 08000008
-loc_8004CBBC:
-    v0 = lbu(s0 + 0x11);
-    if (v0 == 0) goto loc_8004CBD0;
-    s2 |= 0x10;
-loc_8004CBD0:
-    v0 = lbu(s0 + 0x10);
-    if (v0 == 0) goto loc_8004CBE4;
-    s2 |= 0x20;
-loc_8004CBE4:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 += 0x357;                                        // Result = 80080357
-    v0 = lbu(v0);                                       // Load from: 80080357
-    if (v0 == 0) goto loc_8004CC00;
-    s2 |= 0x80;
-loc_8004CC00:
-    v1 = lh(s0 + 0x4);
-    v0 = (i32(v1) < 0x119);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(v1) < 0x161);
-        if (bJump) goto loc_8004CC48;
+    switch (env.disp.h) {
+        case 240: gpu.gp1_08.verticalResolution = gpu::GP1_08::VerticalResolution::r240; break;
+        case 480: gpu.gp1_08.verticalResolution = gpu::GP1_08::VerticalResolution::r480; break;
+
+        default: {
+            FATAL_ERROR("Bad display mode height!");
+        }   break;
     }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < 0x191);
-        if (bJump) goto loc_8004CC24;
+
+    gpu.gp1_08.interlace = (env.isinter != 0);
+    gpu.gp1_08.colorDepth = (env.isrgb24 != 0) ?
+        gpu::GP1_08::ColorDepth::bit24 :
+        gpu::GP1_08::ColorDepth::bit15;
+
+    // Set the location in VRAM to display from
+    gpu.displayAreaStartX = env.disp.x;
+    gpu.displayAreaStartY = env.disp.y;
+
+    // Set the display range if specified, otherwise leave alone (I've never seen DOOM try to modify this)
+    if ((env.screen.w != 0) && (env.screen.h != 0)) {
+        gpu.displayRangeX1 = env.screen.x;
+        gpu.displayRangeX2 = env.screen.x + env.screen.w;
+        gpu.displayRangeY1 = env.screen.y;
+        gpu.displayRangeY2 = env.screen.y + env.screen.h;
     }
-    s2 |= 1;
-    goto loc_8004CC48;
-loc_8004CC24:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < 0x231);
-        if (bJump) goto loc_8004CC34;
-    }
-    s2 |= 0x40;
-    goto loc_8004CC48;
-loc_8004CC34:
-    if (v0 == 0) goto loc_8004CC44;
-    s2 |= 2;
-    goto loc_8004CC48;
-loc_8004CC44:
-    s2 |= 3;
-loc_8004CC48:
-    v0 = lbu(s0 + 0x12);
-    v1 = lh(s0 + 0x6);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(v1) < 0x121);
-        if (bJump) goto loc_8004CC5C;
-    }
-    v0 = (i32(v1) < 0x101);
-loc_8004CC5C:
-    if (v0 != 0) goto loc_8004CC68;
-    s2 |= 0x24;
-loc_8004CC68:
-    a0 = s2;
-    LIBGPU_SYS__ctl();
-loc_8004CC84:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 += 0x3C0;                                        // Result = gLIBGPU_SYS_p0_82[3] (800803C0)
-    a1 = s0;
-    a2 = 0x14;                                          // Result = 00000014
-    LIBC2_memcpy();
-    v0 = s0;
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
 
     return env;
 }
@@ -1049,61 +812,6 @@ void _thunk_LIBGPU_SYS_get_tw() noexcept {
     v0 = LIBGPU_SYS_get_tw(vmAddrToPtr<const RECT>(a0));
 }
 
-void LIBGPU_SYS_get_dx() noexcept {
-loc_8004D428:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 += 0x354;                                        // Result = 80080354
-    v0 = lbu(v0);                                       // Load from: 80080354
-    v1 = v0 & 0xFF;
-    v0 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_8004D458;
-    }
-    if (v1 == v0) goto loc_8004D480;
-    goto loc_8004D4D8;
-loc_8004D458:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x357);                               // Load from: 80080357
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x400;                                     // Result = 00000400
-        if (bJump) goto loc_8004D4D8;
-    }
-    v1 = lh(a0 + 0x4);
-    a0 = lh(a0);
-loc_8004D474:
-    v0 -= v1;
-    v0 -= a0;
-    goto loc_8004D4DC;
-loc_8004D480:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x357);                               // Load from: 80080357
-    if (v0 == 0) goto loc_8004D4B8;
-    v0 = lhu(a0 + 0x4);
-    a0 = lh(a0);
-    v0 <<= 16;
-    v1 = u32(i32(v0) >> 16);
-    v0 >>= 31;
-    v1 += v0;
-    v1 = u32(i32(v1) >> 1);
-    v0 = 0x400;                                         // Result = 00000400
-    goto loc_8004D474;
-loc_8004D4B8:
-    v0 = lhu(a0);
-    v0 <<= 16;
-    v1 = u32(i32(v0) >> 16);
-    v0 >>= 31;
-    v1 += v0;
-    v0 = u32(i32(v1) >> 1);
-    goto loc_8004D4DC;
-loc_8004D4D8:
-    v0 = lh(a0);
-loc_8004D4DC:
-    return;
-}
-
 void LIBGPU_SYS__dws() noexcept {
 loc_8004D824:
     sp -= 0x38;
@@ -1278,15 +986,6 @@ loc_8004DD64:
     at += 0x3D4;                                        // Result = gLIBGPU_SYS_ctlbuf[0] (800803D4)
     at += v0;
     sb(a0, at);
-    return;
-}
-
-void LIBGPU_SYS__getctl() noexcept {
-loc_8004DD90:
-    at = 0x80080000;                                    // Result = 80080000
-    at += 0x3D4;                                        // Result = gLIBGPU_SYS_ctlbuf[0] (800803D4)
-    at += a0;
-    v0 = lbu(at);
     return;
 }
 

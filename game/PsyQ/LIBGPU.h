@@ -182,7 +182,6 @@ static_assert(sizeof(DRAWENV) == 92);
 void LIBGPU_ResetGraph() noexcept;
 void LIBGPU_SetGraphDebug() noexcept;
 void LIBGPU_GetGraphType() noexcept;
-void LIBGPU_DrawSyncCallback() noexcept;
 void LIBGPU_SetDispMask() noexcept;
 
 int32_t LIBGPU_DrawSync(const int32_t mode) noexcept;
@@ -221,10 +220,8 @@ void LIBGPU_SYS_get_ofs() noexcept;
 uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept;
 void _thunk_LIBGPU_SYS_get_tw() noexcept;
 
-void LIBGPU_SYS_get_dx() noexcept;
 void LIBGPU_SYS__dws() noexcept;
 void LIBGPU_SYS__ctl() noexcept;
-void LIBGPU_SYS__getctl() noexcept;
 void LIBGPU_SYS__cwc() noexcept;
 void LIBGPU_SYS__addque() noexcept;
 void LIBGPU_SYS__addque2() noexcept;

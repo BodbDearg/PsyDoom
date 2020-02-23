@@ -587,7 +587,6 @@ extern void LIBC2_puts() noexcept;
 extern void LIBGPU_ResetGraph() noexcept;
 extern void LIBGPU_SetGraphDebug() noexcept;
 extern void LIBGPU_GetGraphType() noexcept;
-extern void LIBGPU_DrawSyncCallback() noexcept;
 extern void LIBGPU_SetDispMask() noexcept;
 extern void _thunk_LIBGPU_DrawSync() noexcept;
 extern void LIBGPU_checkRECT() noexcept;
@@ -601,10 +600,8 @@ extern void LIBGPU_SYS_get_cs() noexcept;
 extern void LIBGPU_SYS_get_ce() noexcept;
 extern void LIBGPU_SYS_get_ofs() noexcept;
 extern void _thunk_LIBGPU_SYS_get_tw() noexcept;
-extern void LIBGPU_SYS_get_dx() noexcept;
 extern void LIBGPU_SYS__dws() noexcept;
 extern void LIBGPU_SYS__ctl() noexcept;
-extern void LIBGPU_SYS__getctl() noexcept;
 extern void LIBGPU_SYS__cwc() noexcept;
 extern void LIBGPU_SYS__addque() noexcept;
 extern void LIBGPU_SYS__addque2() noexcept;
@@ -1335,7 +1332,6 @@ namespace PsxVm {
         { 0x8004BCC8, &LIBGPU_ResetGraph },
         { 0x8004C004, &LIBGPU_SetGraphDebug },
         { 0x8004C11C, &LIBGPU_GetGraphType },
-        { 0x8004C13C, &LIBGPU_DrawSyncCallback },
         { 0x8004C198, &LIBGPU_SetDispMask },
         { 0x8004C210, &_thunk_LIBGPU_DrawSync },
         { 0x8004C27C, &LIBGPU_checkRECT },
@@ -1349,10 +1345,8 @@ namespace PsxVm {
         { 0x8004D288, &LIBGPU_SYS_get_ce },
         { 0x8004D35C, &LIBGPU_SYS_get_ofs },
         { 0x8004D3A4, &_thunk_LIBGPU_SYS_get_tw },
-        { 0x8004D428, &LIBGPU_SYS_get_dx },
         { 0x8004D824, &LIBGPU_SYS__dws },
         { 0x8004DD64, &LIBGPU_SYS__ctl },
-        { 0x8004DD90, &LIBGPU_SYS__getctl },
         { 0x8004DDF8, &LIBGPU_SYS__cwc },
         { 0x8004DE74, &LIBGPU_SYS__addque },
         { 0x8004DE98, &LIBGPU_SYS__addque2 },
