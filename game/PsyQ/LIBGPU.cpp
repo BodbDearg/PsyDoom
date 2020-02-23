@@ -529,7 +529,7 @@ DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept {
         }   break;
 
         default: {
-            FATAL_ERROR("Bad display mode width!");
+            ASSERT_FAIL("Bad display mode width!");
         }   break;
     }
 
@@ -538,7 +538,7 @@ DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept {
         case 480: gpu.gp1_08.verticalResolution = gpu::GP1_08::VerticalResolution::r480; break;
 
         default: {
-            FATAL_ERROR("Bad display mode height!");
+            ASSERT_FAIL("Bad display mode height!");
         }   break;
     }
 

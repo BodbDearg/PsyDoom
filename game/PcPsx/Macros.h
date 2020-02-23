@@ -47,6 +47,16 @@
     #define ASSERT_LOG_F(Condition, MessageFormat, ...)
 #endif
 
+// Raise a failed assertion
+#if ASSERTS_ENABLED == 1
+    #define ASSERT_FAIL(MessageFormat, ...)\
+        do {\
+            FatalErrors::errorWithFormat("Assert failed! %s\n" ## MessageFormat ## "\n", __VA_ARGS__);\
+        } while (0)
+#else
+    #define ASSERT_FAIL(MessageFormat, ...)
+#endif
+
 // Raise a fatal error message
 #define FATAL_ERROR(Message)\
     do {\
