@@ -22,6 +22,11 @@ const int LINE_VBLANK_START_NTSC = 243;
 const int LINES_TOTAL_NTSC = 263;
 
 class GPU {
+// PC-PSX DOOM: allowing some lower level access to the GPU for speed
+#if DOOM_AVOCADO_MODS
+public:
+#endif
+
     friend class cereal::access;
     friend struct ::System;
     friend class ::Render;

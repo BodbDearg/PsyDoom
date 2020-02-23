@@ -213,7 +213,6 @@ void LIBGPU_SetDrawMode(
 
 void _thunk_LIBGPU_SetDrawMode() noexcept;
 
-void LIBGPU_SetDrawEnv() noexcept;
 void LIBGPU_SYS_get_mode() noexcept;
 void LIBGPU_SYS_get_cs() noexcept;
 void LIBGPU_SYS_get_ce() noexcept;

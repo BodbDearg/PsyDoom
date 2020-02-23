@@ -5,8 +5,12 @@
 #include "LIBETC.h"
 #include "PcPsx/Endian.h"
 #include "PcPsx/Finally.h"
-#include "PsxVm/PsxVm.h"
 #include "PsxVm/VmSVal.h"
+
+#include <device/gpu/gpu.h>
+
+// N.B: needs to happen AFTER Avocado includes due to clashes caused by the MIPS register macros
+#include "PsxVm/PsxVm.h"
 
 void LIBGPU_ResetGraph() noexcept {
 loc_8004BCC8:
@@ -440,57 +444,86 @@ loc_8004C768:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets up the drawing environment and potentially clears the screen also.
+// The draw environment includes the display area, texture page and texture window settings, blending settings and so on...
+//------------------------------------------------------------------------------------------------------------------------------------------
 DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept {
-    // TODO: this is a temporary measure
-    VmSVal<DRAWENV> envStack = env;
-    auto convertOnExit = finally([&](){ env = *envStack; });
+    gpu::GPU& gpu = *PsxVm::gpGpu;
+    
+    // Set drawing area and offset
+    gpu.drawingArea.left = env.clip.x;
+    gpu.drawingArea.top = env.clip.y;
+    gpu.drawingArea.right = env.clip.x + env.clip.w - 1;
+    gpu.drawingArea.bottom = env.clip.y + env.clip.h - 1;
+    
+    gpu.drawingOffsetX = env.ofs[0];
+    gpu.drawingOffsetY = env.ofs[1];
+    
+    // Set the texture window offset and mask.
+    // Note that the units are specified in multiples of 8 for the GPU.
+    gpu.gp0_e2.offsetX = env.tw.x / 8;
+    gpu.gp0_e2.offsetY = env.tw.y / 8;
 
-    a0 = envStack.addr();
+    if (env.tw.w == 0) {
+        gpu.gp0_e2.maskX = 0;
+    } else if (env.tw.w > 1) {
+        gpu.gp0_e2.maskX = (env.tw.w / 8) - 1;
+    } else {
+        gpu.gp0_e2.maskX = 1;
+    }
+    
+    if (env.tw.h == 0) {
+        gpu.gp0_e2.maskY = 0;
+    } else if (env.tw.h > 1) {
+        gpu.gp0_e2.maskY = (env.tw.h / 8) - 1;
+    } else {
+        gpu.gp0_e2.maskY = 1;
+    }
 
-    sp -= 0x20;
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
+    // Set texture page position and bit rate
+    gpu.gp0_e1.texturePageBaseX = (env.tpage & 0x0F) >> 0;      // This is multiples of 64
+    gpu.gp0_e1.texturePageBaseY = (env.tpage & 0x10) >> 4;      // This is multiples of 256
+    
+    switch ((env.tpage >> 7) & 0x3) {
+        case 0: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit4;
+        case 1: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit8;
+        case 2: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit15;
+        default: break;
+    }
 
-    s2 = 0x80080000;                                    // Result = 80080000
-    s2 += 0x356;                                        // Result = 80080356
-    v0 = lbu(s2);                                       // Load from: 80080356
-    v0 = (v0 < 2);
-    s1 = a0;
-    if (v0 != 0) goto loc_8004C7E8;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1C90;                                       // Result = STR_Sys_PutDrawEnv_Msg[0] (80011C90)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a1 = s1;
-    ptr_call(v0);
-loc_8004C7E8:
-    s0 = s1 + 0x1C;
-    a0 = s0;
-    a1 = s1;
-    LIBGPU_SetDrawEnv();
-    a0 = 0xFF0000;                                      // Result = 00FF0000
-    a0 |= 0xFFFF;                                       // Result = 00FFFFFF
-    a1 = s0;
-    a2 = 0x40;                                          // Result = 00000040
-    v0 = lw(s1 + 0x1C);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    v0 |= a0;
-    sw(v0, s1 + 0x1C);
-    a0 = lw(v1 + 0x18); // LIBGPU_SYS__cwc
-    a3 = 0;                                             // Result = 00000000
-    LIBGPU_SYS__addque2();
-    a0 = s2 + 0xE;                                      // Result = 80080364
-    a1 = s1;
-    a2 = 0x5C;                                          // Result = 0000005C
-    LIBC2_memcpy();
-    v0 = s1;
+    // Set transparency mode
+    switch ((env.tpage >> 5) & 0x3) {
+        case 0: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::Bby2plusFby2;
+        case 1: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BplusF;
+        case 2: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BminusF;
+        case 3: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BplusFby4;
+        default: break;
+    }
 
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
+    // Set dithering and draw to display area flags
+    gpu.gp0_e1.dither24to15 = (env.dtd != 0);
+    gpu.gp0_e1.drawingToDisplayArea = (env.dfe != 0) ?
+        gpu::GP0_E1::DrawingToDisplayArea::allowed :
+        gpu::GP0_E1::DrawingToDisplayArea::prohibited;
+
+    // Clear the screen if specified by the DRAWENV.
+    // Fill the draw area with the specified background color.
+    if (env.isbg) {
+        RGB rgb = {};
+        rgb.r = env.r0;
+        rgb.g = env.g0;
+        rgb.b = env.b0;
+
+        const int32_t drawW = (gpu.drawingArea.right - gpu.drawingArea.left + 1) & 0xFFFF;
+        const int32_t drawH = (gpu.drawingArea.bottom - gpu.drawingArea.top + 1) & 0xFFFF;
+
+        gpu.arguments[0] = rgb.raw;
+        gpu.arguments[1] = gpu.drawingArea.left | (gpu.drawingArea.top << 16);
+        gpu.arguments[2] = drawW | (drawH << 16);
+
+        gpu.cmdFillRectangle();
+    }
 
     return env;
 }
@@ -821,169 +854,6 @@ void LIBGPU_SetDrawMode(
 
 void _thunk_LIBGPU_SetDrawMode() noexcept {
     LIBGPU_SetDrawMode(*vmAddrToPtr<DR_MODE>(a0), a1, a2, a3, vmAddrToPtr<const RECT>(lw(sp + 0x10)));
-}
-
-void LIBGPU_SetDrawEnv() noexcept {
-loc_8004CEAC:
-    sp -= 0x30;
-    sw(s0, sp + 0x20);
-    s0 = a1;
-    sw(s1, sp + 0x24);
-    s1 = a0;
-    sw(ra, sp + 0x28);
-    a0 = lh(s0);
-    a1 = lh(s0 + 0x2);
-    LIBGPU_SYS_get_cs();
-    sw(v0, s1 + 0x4);
-    a0 = lhu(s0 + 0x4);
-    v0 = lhu(s0);
-    a1 = lhu(s0 + 0x2);
-    a0 += v0;
-    a0--;
-    a0 <<= 16;
-    v0 = lhu(s0 + 0x6);
-    a0 = u32(i32(a0) >> 16);
-    a1 += v0;
-    a1--;
-    a1 <<= 16;
-    a1 = u32(i32(a1) >> 16);
-    LIBGPU_SYS_get_ce();
-    sw(v0, s1 + 0x8);
-    a0 = lh(s0 + 0x8);
-    a1 = lh(s0 + 0xA);
-    LIBGPU_SYS_get_ofs();
-    sw(v0, s1 + 0xC);
-    a0 = lbu(s0 + 0x17);
-    a1 = lbu(s0 + 0x16);
-    a2 = lhu(s0 + 0x14);
-    LIBGPU_SYS_get_mode();
-    a0 = s0 + 0xC;
-    sw(v0, s1 + 0x10);
-    _thunk_LIBGPU_SYS_get_tw();
-    sw(v0, s1 + 0x14);
-    v0 = 0xE6000000;                                    // Result = E6000000
-    sw(v0, s1 + 0x18);
-    v0 = lbu(s0 + 0x18);
-    t0 = 7;                                             // Result = 00000007
-    if (v0 == 0) goto loc_8004D138;
-    v0 = lhu(s0);
-    sh(v0, sp + 0x10);
-    v0 = lhu(s0 + 0x2);
-    sh(v0, sp + 0x12);
-    v1 = lhu(s0 + 0x4);
-    sh(v1, sp + 0x14);
-    v0 = lhu(s0 + 0x6);
-    sh(v0, sp + 0x16);
-    v0 = v1 << 16;
-    a0 = u32(i32(v0) >> 16);
-    if (i32(a0) < 0) goto loc_8004CFD0;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 += 0x358;                                        // Result = 80080358
-    v0 = lhu(a1);                                       // Load from: 80080358
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < i32(a0));
-    if (v0 == 0) goto loc_8004CFD4;
-    v1 = lhu(a1);                                       // Load from: 80080358
-    goto loc_8004CFD4;
-loc_8004CFD0:
-    v1 = 0;                                             // Result = 00000000
-loc_8004CFD4:
-    a0 = lh(sp + 0x16);
-    sh(v1, sp + 0x14);
-    v1 = a0;
-    if (i32(a0) < 0) goto loc_8004D014;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 += 0x35A;                                        // Result = 8008035A
-    v0 = lhu(a1);                                       // Load from: 8008035A
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < i32(a0));
-    if (v0 == 0) goto loc_8004D018;
-    v1 = lhu(a1);                                       // Load from: 8008035A
-    goto loc_8004D018;
-loc_8004D014:
-    v1 = 0;                                             // Result = 00000000
-loc_8004D018:
-    a0 = lhu(sp + 0x10);
-    v0 = a0 & 0x3F;
-    sh(v1, sp + 0x16);
-    if (v0 != 0) goto loc_8004D040;
-    v0 = lhu(sp + 0x14);
-    v0 &= 0x3F;
-    a1 = t0 << 2;                                       // Result = 0000001C
-    if (v0 == 0) goto loc_8004D0E0;
-loc_8004D040:
-    a2 = t0 << 2;                                       // Result = 0000001C
-    t0++;                                               // Result = 00000008
-    a1 = t0 << 2;                                       // Result = 00000020
-    t0++;                                               // Result = 00000009
-    v0 = lhu(s0 + 0x8);
-    a2 += s1;
-    v0 = a0 - v0;
-    sh(v0, sp + 0x10);
-    v0 = lhu(sp + 0x12);
-    v1 = lhu(s0 + 0xA);
-    a0 = 0x60000000;                                    // Result = 60000000
-    v0 -= v1;
-    sh(v0, sp + 0x12);
-    v0 = lbu(s0 + 0x1B);
-    v1 = lbu(s0 + 0x1A);
-    v0 <<= 16;
-    v1 <<= 8;
-    v1 |= a0;
-    a0 = lbu(s0 + 0x19);
-    v0 |= v1;
-    v0 |= a0;
-    sw(v0, a2);
-    v0 = lw(sp + 0x10);
-    a1 += s1;
-    sw(v0, a1);
-    v0 = t0 << 2;                                       // Result = 00000024
-    v1 = lw(sp + 0x14);
-    v0 += s1;
-    sw(v1, v0);
-    v0 = lhu(sp + 0x10);
-    v1 = lhu(s0 + 0x8);
-    v0 += v1;
-    sh(v0, sp + 0x10);
-    v0 = lhu(sp + 0x12);
-    v1 = lhu(s0 + 0xA);
-    t0++;                                               // Result = 0000000A
-    v0 += v1;
-    sh(v0, sp + 0x12);
-    goto loc_8004D138;
-loc_8004D0E0:
-    t0++;                                               // Result = 00000008
-    a2 = t0 << 2;                                       // Result = 00000020
-    t0++;                                               // Result = 00000009
-    a3 = t0 << 2;                                       // Result = 00000024
-    t0++;                                               // Result = 0000000A
-    a1 += s1;
-    a0 = 0x2000000;                                     // Result = 02000000
-    v0 = lbu(s0 + 0x1B);
-    v1 = lbu(s0 + 0x1A);
-    v0 <<= 16;
-    v1 <<= 8;
-    v1 |= a0;
-    a0 = lbu(s0 + 0x19);
-    v0 |= v1;
-    v0 |= a0;
-    sw(v0, a1);
-    v0 = lw(sp + 0x10);
-    a2 += s1;
-    sw(v0, a2);
-    v0 = lw(sp + 0x14);
-    a3 += s1;
-    sw(v0, a3);
-loc_8004D138:
-    v0 = t0 - 1;
-    sb(v0, s1 + 0x3);
-    ra = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x30;
-    return;
 }
 
 void LIBGPU_SYS_get_mode() noexcept {
