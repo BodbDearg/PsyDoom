@@ -213,14 +213,10 @@ void LIBGPU_SetDrawMode(
 void _thunk_LIBGPU_SetDrawMode() noexcept;
 
 void LIBGPU_SYS_get_mode() noexcept;
-void LIBGPU_SYS_get_cs() noexcept;
-void LIBGPU_SYS_get_ce() noexcept;
-void LIBGPU_SYS_get_ofs() noexcept;
 
 uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept;
 void _thunk_LIBGPU_SYS_get_tw() noexcept;
 
-void LIBGPU_SYS__dws() noexcept;
 void LIBGPU_SYS__ctl() noexcept;
 void LIBGPU_SYS__cwc() noexcept;
 void LIBGPU_SYS__addque() noexcept;
@@ -267,7 +263,7 @@ void LIBGPU_FntOpen() noexcept;
 void LIBGPU_FntFlush() noexcept;
 void LIBGPU_FntPrint() noexcept;
 void LIBGPU_LoadTPage() noexcept;
-void LIBGPU_LoadClut() noexcept;
+uint16_t LIBGPU_LoadClut(const uint16_t* pColors, const int32_t x, const int32_t y) noexcept;
 
 DRAWENV& LIBGPU_SetDefDrawEnv(DRAWENV& env, const int32_t x, const int32_t y, const int32_t w, const  int32_t h) noexcept;
 DISPENV& LIBGPU_SetDefDispEnv(DISPENV& disp, const int32_t x, const int32_t y, const int32_t w, const int32_t h) noexcept;

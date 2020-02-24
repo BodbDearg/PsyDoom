@@ -596,11 +596,7 @@ extern void LIBGPU_DrawOTag() noexcept;
 extern void _thunk_LIBGPU_SetTexWindow() noexcept;
 extern void _thunk_LIBGPU_SetDrawMode() noexcept;
 extern void LIBGPU_SYS_get_mode() noexcept;
-extern void LIBGPU_SYS_get_cs() noexcept;
-extern void LIBGPU_SYS_get_ce() noexcept;
-extern void LIBGPU_SYS_get_ofs() noexcept;
 extern void _thunk_LIBGPU_SYS_get_tw() noexcept;
-extern void LIBGPU_SYS__dws() noexcept;
 extern void LIBGPU_SYS__ctl() noexcept;
 extern void LIBGPU_SYS__cwc() noexcept;
 extern void LIBGPU_SYS__addque() noexcept;
@@ -632,7 +628,6 @@ extern void LIBGPU_FntFlush() noexcept;
 extern void LIBGPU_FntPrint() noexcept;
 extern void LIBC2_memset() noexcept;
 extern void LIBGPU_LoadTPage() noexcept;
-extern void LIBGPU_LoadClut() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
 extern void LIBSN__main() noexcept;
 extern void LIBSN___do_global_dtors() noexcept;
@@ -1341,11 +1336,7 @@ namespace PsxVm {
         { 0x8004CD28, &_thunk_LIBGPU_SetTexWindow },
         { 0x8004CE54, &_thunk_LIBGPU_SetDrawMode },
         { 0x8004D158, &LIBGPU_SYS_get_mode },
-        { 0x8004D1B4, &LIBGPU_SYS_get_cs },
-        { 0x8004D288, &LIBGPU_SYS_get_ce },
-        { 0x8004D35C, &LIBGPU_SYS_get_ofs },
         { 0x8004D3A4, &_thunk_LIBGPU_SYS_get_tw },
-        { 0x8004D824, &LIBGPU_SYS__dws },
         { 0x8004DD64, &LIBGPU_SYS__ctl },
         { 0x8004DDF8, &LIBGPU_SYS__cwc },
         { 0x8004DE74, &LIBGPU_SYS__addque },
@@ -1377,7 +1368,6 @@ namespace PsxVm {
         { 0x8004F6AC, &LIBGPU_FntPrint },
         { 0x8004FAA4, &LIBC2_memset },
         { 0x8004FAD4, &LIBGPU_LoadTPage },
-        { 0x8004FBC0, &LIBGPU_LoadClut },
         { 0x80050454, &LIBAPI_FlushCache },
         { 0x800507AC, &LIBSN__main },
         { 0x8005081C, &LIBSN___do_global_dtors },

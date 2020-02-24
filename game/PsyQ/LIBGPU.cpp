@@ -13,19 +13,6 @@
 // N.B: needs to happen AFTER Avocado includes due to clashes caused by the MIPS register macros
 #include "PsxVm/PsxVm.h"
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Helper that ensures that a given RECT is in VRAM bounds for debug builds.
-// Similar to the internal PSY-Q function, 'LIBGPU_checkRECT'.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void SanityCheckVramRect(const RECT& rect) {
-    ASSERT(rect.w > 0);
-    ASSERT(rect.h > 0);
-    ASSERT(rect.x >= 0);
-    ASSERT(rect.y >= 0);
-    ASSERT(rect.x + rect.w <= gpu::VRAM_WIDTH);
-    ASSERT(rect.y + rect.h <= gpu::VRAM_HEIGHT);
-}
-
 void LIBGPU_ResetGraph() noexcept {
 loc_8004BCC8:
     sp -= 0x20;
@@ -327,24 +314,54 @@ loc_8004C390:
 void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noexcept {
     // Sanity checks
     ASSERT(pImageData);
-    SanityCheckVramRect(dstRect);
+    ASSERT(dstRect.w > 0);
+    ASSERT(dstRect.h > 0);
+    ASSERT(dstRect.w <= gpu::VRAM_WIDTH);
+    ASSERT(dstRect.h <= gpu::VRAM_HEIGHT);
+
+    // Determine the destination bounds and row size for the copy.
+    // Note that we must wrap horizontal coordinates (see comments below).
+    const uint16_t rowW = dstRect.w;
+    const uint16_t dstLx = (uint16_t)(dstRect.x            ) % (uint16_t) gpu::VRAM_WIDTH;
+    const uint16_t dstRx = (uint16_t)(dstRect.x + rowW     ) % (uint16_t) gpu::VRAM_WIDTH;
+    const uint16_t dstTy = (uint16_t)(dstRect.y            );
+    const uint16_t dstBy = (uint16_t)(dstRect.y + dstRect.h);
 
     // Copy each row into VRAM
-    const uint32_t dstX = dstRect.x;
-    const uint32_t dstY = dstRect.y;
-    const uint32_t dstW = dstRect.w;
-    const uint32_t dstH = dstRect.h;
-    const uint32_t rowSize = dstW  * sizeof(uint16_t);
-
     gpu::GPU& gpu = *PsxVm::gpGpu;
+    uint16_t* const pVram = gpu.vram.data();
 
-    const uint16_t* pSrcRow = pImageData;
-    uint16_t* pDstRow = gpu.vram.data() + dstX + (intptr_t) dstY * gpu::VRAM_WIDTH;
+    const uint16_t* pSrcPixels = pImageData;
 
-    for (uint32_t rowIdx = 0; rowIdx < dstH; ++rowIdx) {
-        std::memcpy(pDstRow, pSrcRow, rowSize);
-        pSrcRow += dstW;
-        pDstRow += gpu::VRAM_WIDTH;
+    for (uint32_t dstY = dstTy; dstY < dstBy; ++dstY) {
+        // Note: destination Y wrapped due to behavior mentioned in NO$PSX specs (see comments below)
+        const uint16_t dstYWrapped = dstY % gpu::VRAM_HEIGHT;
+        uint16_t* const pDstRow = pVram + (intptr_t) dstYWrapped * gpu::VRAM_WIDTH;
+
+        // According to the following specs:
+        //  https://problemkaputt.de/psx-spx.htm#graphicsprocessingunitgpu
+        // Under "GPU Memory Transfer Commands" and "Wrapping".
+        // If a load operation happens to exceed the bounds of VRAM, then it will wrap around to the opposite side of VRAM.
+        // 
+        // If we detect this situation then we need to split the copy up into two parts.
+        // The 2nd copy part will begin at the left edge of VRAM.
+        //
+        if (dstLx <= dstRx) {
+            // Usual case: no wraparound, so we can do a simple memcpy for the entire row
+            std::memcpy(pDstRow + dstLx, pSrcPixels, rowW * sizeof(uint16_t));
+            pSrcPixels += rowW;
+        }
+        else {
+            // The copy wraps around to the left side of VRAM, need to do 2 separate memcpy operations:
+            const int32_t numWrappedPixels = dstLx + rowW - gpu::VRAM_WIDTH;
+            const int32_t numNonWrappedPixels = rowW - numWrappedPixels;
+            
+            std::memcpy(pDstRow + dstLx, pSrcPixels, numNonWrappedPixels * sizeof(uint16_t));
+            pSrcPixels += numNonWrappedPixels;
+
+            std::memcpy(pDstRow, pSrcPixels, numWrappedPixels * sizeof(uint16_t));
+            pSrcPixels += numWrappedPixels;
+        }
     }
 }
 
@@ -357,10 +374,11 @@ void _thunk_LIBGPU_LoadImage() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t dstY) noexcept {
     // Sanity checks
-    SanityCheckVramRect(srcRect);
-
-    ASSERT(dstX >= 0);
-    ASSERT(dstY >= 0);
+    ASSERT((srcRect.w > 0) && (srcRect.h > 0));
+    ASSERT((srcRect.x >= 0) && (srcRect.y >= 0));
+    ASSERT(srcRect.x + srcRect.w <= gpu::VRAM_WIDTH);
+    ASSERT(srcRect.y + srcRect.h <= gpu::VRAM_HEIGHT);
+    ASSERT((dstX >= 0) && (dstY >= 0));
     ASSERT(dstX + srcRect.w <= gpu::VRAM_WIDTH);
     ASSERT(dstY + srcRect.y <= gpu::VRAM_WIDTH);
 
@@ -645,145 +663,6 @@ loc_8004D1AC:
     return;
 }
 
-void LIBGPU_SYS_get_cs() noexcept {
-loc_8004D1B4:
-    a2 = a0;
-    a0 <<= 16;
-    v1 = u32(i32(a0) >> 16);
-    if (i32(v1) < 0) goto loc_8004D1F8;
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 += 0x358;                                        // Result = 80080358
-    v0 = lhu(a3);                                       // Load from: 80080358
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < i32(v1));
-    a0 = a2;
-    if (v0 == 0) goto loc_8004D1FC;
-    a0 = lhu(a3);                                       // Load from: 80080358
-    v0 = a1 << 16;
-    goto loc_8004D200;
-loc_8004D1F8:
-    a0 = 0;                                             // Result = 00000000
-loc_8004D1FC:
-    v0 = a1 << 16;
-loc_8004D200:
-    v1 = u32(i32(v0) >> 16);
-    a2 = a0;
-    if (i32(v1) < 0) goto loc_8004D23C;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 += 0x35A;                                        // Result = 8008035A
-    v0 = lhu(a0);                                       // Load from: 8008035A
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8004D240;
-    a1 = lhu(a0);                                       // Load from: 8008035A
-    goto loc_8004D240;
-loc_8004D23C:
-    a1 = 0;                                             // Result = 00000000
-loc_8004D240:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 += 0x354;                                        // Result = 80080354
-    v0 = lbu(v0);                                       // Load from: 80080354
-    v0--;
-    v0 = (v0 < 2);
-    v1 = a1 & 0xFFF;
-    if (v0 != 0) goto loc_8004D270;
-    v1 = a1 & 0x3FF;
-    v1 <<= 10;
-    v0 = a2 & 0x3FF;                                    // Result = 00000000
-    goto loc_8004D278;
-loc_8004D270:
-    v1 <<= 12;
-    v0 = a2 & 0xFFF;                                    // Result = 00000000
-loc_8004D278:
-    a0 = 0xE3000000;                                    // Result = E3000000
-    v0 |= a0;                                           // Result = E3000000
-    v0 |= v1;
-    return;
-}
-
-void LIBGPU_SYS_get_ce() noexcept {
-loc_8004D288:
-    a2 = a0;
-    a0 <<= 16;
-    v1 = u32(i32(a0) >> 16);
-    if (i32(v1) < 0) goto loc_8004D2CC;
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 += 0x358;                                        // Result = 80080358
-    v0 = lhu(a3);                                       // Load from: 80080358
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < i32(v1));
-    a0 = a2;
-    if (v0 == 0) goto loc_8004D2D0;
-    a0 = lhu(a3);                                       // Load from: 80080358
-    v0 = a1 << 16;
-    goto loc_8004D2D4;
-loc_8004D2CC:
-    a0 = 0;                                             // Result = 00000000
-loc_8004D2D0:
-    v0 = a1 << 16;
-loc_8004D2D4:
-    v1 = u32(i32(v0) >> 16);
-    a2 = a0;
-    if (i32(v1) < 0) goto loc_8004D310;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 += 0x35A;                                        // Result = 8008035A
-    v0 = lhu(a0);                                       // Load from: 8008035A
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8004D314;
-    a1 = lhu(a0);                                       // Load from: 8008035A
-    goto loc_8004D314;
-loc_8004D310:
-    a1 = 0;                                             // Result = 00000000
-loc_8004D314:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 += 0x354;                                        // Result = 80080354
-    v0 = lbu(v0);                                       // Load from: 80080354
-    v0--;
-    v0 = (v0 < 2);
-    v1 = a1 & 0xFFF;
-    if (v0 != 0) goto loc_8004D344;
-    v1 = a1 & 0x3FF;
-    v1 <<= 10;
-    v0 = a2 & 0x3FF;                                    // Result = 00000000
-    goto loc_8004D34C;
-loc_8004D344:
-    v1 <<= 12;
-    v0 = a2 & 0xFFF;                                    // Result = 00000000
-loc_8004D34C:
-    a0 = 0xE4000000;                                    // Result = E4000000
-    v0 |= a0;                                           // Result = E4000000
-    v0 |= v1;
-    return;
-}
-
-void LIBGPU_SYS_get_ofs() noexcept {
-loc_8004D35C:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 += 0x354;                                        // Result = 80080354
-    v0 = lbu(v0);                                       // Load from: 80080354
-    v0--;
-    v0 = (v0 < 2);
-    v1 = a1 & 0xFFF;
-    if (v0 != 0) goto loc_8004D38C;
-    v1 = a1 & 0x7FF;
-    v1 <<= 11;
-    v0 = a0 & 0x7FF;
-    goto loc_8004D394;
-loc_8004D38C:
-    v1 <<= 12;
-    v0 = a0 & 0xFFF;
-loc_8004D394:
-    a0 = 0xE5000000;                                    // Result = E5000000
-    v0 |= a0;
-    v0 |= v1;
-    return;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Internal (non-exposed) PSY-Q SDK Function:
 // Encodes the given rect into a 32-bit texture window setting used by the hardware.
@@ -807,169 +686,6 @@ uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept {
 
 void _thunk_LIBGPU_SYS_get_tw() noexcept {
     v0 = LIBGPU_SYS_get_tw(vmAddrToPtr<const RECT>(a0));
-}
-
-void LIBGPU_SYS__dws() noexcept {
-loc_8004D824:
-    sp -= 0x38;
-    sw(s0, sp + 0x20);
-    s0 = a0;
-    sw(s1, sp + 0x24);
-    s1 = a1;
-    sw(ra, sp + 0x34);
-    sw(s4, sp + 0x30);
-    sw(s3, sp + 0x2C);
-    sw(s2, sp + 0x28);
-    LIBGPU_SYS_set_alarm();
-    v0 = lhu(s0);
-    sh(v0, sp + 0x10);
-    v0 = lhu(s0 + 0x2);
-    sh(v0, sp + 0x12);
-    v1 = lhu(s0 + 0x4);
-    sh(v1, sp + 0x14);
-    v0 = lhu(s0 + 0x6);
-    sh(v0, sp + 0x16);
-    v0 = v1 << 16;
-    a0 = u32(i32(v0) >> 16);
-    s4 = 0;                                             // Result = 00000000
-    if (i32(a0) < 0) goto loc_8004D8BC;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 += 0x358;                                        // Result = 80080358
-    v0 = lhu(a1);                                       // Load from: 80080358
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < i32(a0));
-    if (v0 == 0) goto loc_8004D8C0;
-    v1 = lhu(a1);                                       // Load from: 80080358
-    goto loc_8004D8C0;
-loc_8004D8BC:
-    v1 = 0;                                             // Result = 00000000
-loc_8004D8C0:
-    a1 = lh(sp + 0x16);
-    sh(v1, sp + 0x14);
-    v1 = a1;
-    if (i32(a1) < 0) goto loc_8004D900;
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 += 0x35A;                                        // Result = 8008035A
-    v0 = lhu(a2);                                       // Load from: 8008035A
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < i32(a1));
-    a0 = v1;
-    if (v0 == 0) goto loc_8004D904;
-    a0 = lhu(a2);                                       // Load from: 8008035A
-    v0 = a0 << 16;
-    goto loc_8004D908;
-loc_8004D900:
-    a0 = 0;                                             // Result = 00000000
-loc_8004D904:
-    v0 = a0 << 16;
-loc_8004D908:
-    v1 = lh(sp + 0x14);
-    v0 = u32(i32(v0) >> 16);
-    mult(v1, v0);
-    sh(a0, sp + 0x16);
-    v0 = lo;
-    v0++;
-    v1 = v0 >> 31;
-    v0 += v1;
-    a0 = u32(i32(v0) >> 1);
-    s0 = u32(i32(v0) >> 5);
-    if (i32(a0) > 0) goto loc_8004D93C;
-    v0 = -1;                                            // Result = FFFFFFFF
-    goto loc_8004DA7C;
-loc_8004D93C:
-    v1 = s0;
-    v0 = v1 << 4;
-    s0 = a0 - v0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    s3 = v1;
-    v0 = lw(v0);
-    v1 = 0x4000000;                                     // Result = 04000000
-    v0 &= v1;
-    a0 = 0xA0000000;                                    // Result = A0000000
-    if (v0 != 0) goto loc_8004D99C;
-    s2 = 0x4000000;                                     // Result = 04000000
-loc_8004D96C:
-    LIBGPU_SYS_get_alarm();
-    {
-        const bool bJump = (v0 != 0);
-        v0 = -1;                                        // Result = FFFFFFFF
-        if (bJump) goto loc_8004DA7C;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    v0 = lw(v0);
-    v0 &= s2;
-    a0 = 0xA0000000;                                    // Result = A0000000
-    if (v0 == 0) goto loc_8004D96C;
-loc_8004D99C:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    v0 = 0x4000000;                                     // Result = 04000000
-    sw(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D70);                               // Load from: GPU_REG_GP0 (80075D70)
-    v0 = 0x1000000;                                     // Result = 01000000
-    sw(v0, v1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D70);                               // Load from: GPU_REG_GP0 (80075D70)
-    if (s4 == 0) goto loc_8004D9D0;
-    a0 = 0xB0000000;                                    // Result = B0000000
-loc_8004D9D0:
-    sw(a0, v0);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D70);                               // Load from: GPU_REG_GP0 (80075D70)
-    v0 = lw(sp + 0x10);
-    sw(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D70);                               // Load from: GPU_REG_GP0 (80075D70)
-    v0 = lw(sp + 0x14);
-    s0--;
-    sw(v0, v1);
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (s0 == v0) goto loc_8004DA2C;
-    a0 = -1;                                            // Result = FFFFFFFF
-loc_8004DA0C:
-    v1 = lw(s1);
-    s1 += 4;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D70);                               // Load from: GPU_REG_GP0 (80075D70)
-    s0--;
-    sw(v1, v0);
-    if (s0 != a0) goto loc_8004DA0C;
-loc_8004DA2C:
-    v1 = 0x4000000;                                     // Result = 04000000
-    if (s3 == 0) goto loc_8004DA78;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    v1 |= 2;                                            // Result = 04000002
-    sw(v1, v0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D78);                               // Load from: 80075D78
-    a0 = 0x1000000;                                     // Result = 01000000
-    sw(s1, v0);
-    v0 = s3 << 16;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D7C);                               // Load from: 80075D7C
-    v0 |= 0x10;
-    sw(v0, v1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D80);                               // Load from: 80075D80
-    a0 |= 0x201;                                        // Result = 01000201
-    sw(a0, v0);
-loc_8004DA78:
-    v0 = 0;                                             // Result = 00000000
-loc_8004DA7C:
-    ra = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x38;
-    return;
 }
 
 void LIBGPU_SYS__ctl() noexcept {
@@ -1968,7 +1684,7 @@ loc_8004F0DC:
     a1 = s2;
     sw(ra, sp + 0x2C);
     a2 = s1 + 0x80;
-    LIBGPU_LoadClut();
+    v0 = LIBGPU_LoadClut(vmAddrToPtr<uint16_t>(a0), a1, a2);
     a0 = s0 + 0x200;                                    // Result = gLIBGPU_FONT_FntLoad_FontTex[0] (80076060)
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
@@ -2687,33 +2403,18 @@ loc_8004FB80:
     return;
 }
 
-void LIBGPU_LoadClut() noexcept {
-loc_8004FBC0:
-    sp -= 0x28;
-    v0 = a0;
-    sw(s0, sp + 0x18);
-    s0 = a1;
-    sw(s1, sp + 0x1C);
-    s1 = a2;
-    a0 = sp + 0x10;
-    a1 = v0;
-    v0 = 0x100;                                         // Result = 00000100
-    sh(v0, sp + 0x14);
-    v0 = 1;                                             // Result = 00000001
-    sw(ra, sp + 0x20);
-    sh(s0, sp + 0x10);
-    sh(s1, sp + 0x12);
-    sh(v0, sp + 0x16);
-    _thunk_LIBGPU_LoadImage();
-    a0 = s0;
-    a1 = s1;
-    v0 = LIBGPU_GetClut(a0, a1);
-    v0 &= 0xFFFF;
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Uploads the given color lookup table to the specified location in VRAM
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t LIBGPU_LoadClut(const uint16_t* pColors, const int32_t x, const int32_t y) noexcept {
+    RECT dstRect;
+    dstRect.x = (int16_t) x;
+    dstRect.y = (int16_t) y;
+    dstRect.w = 256;
+    dstRect.h = 1;
+    LIBGPU_LoadImage(dstRect, pColors);
+
+    return LIBGPU_GetClut(x, y);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
