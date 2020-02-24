@@ -228,10 +228,13 @@ void LIBGPU_SetDrawMode(
 
 void _thunk_LIBGPU_SetDrawMode() noexcept;
 
-void LIBGPU_SYS_get_mode() noexcept;
+uint32_t LIBGPU_SYS_get_mode(
+    const bool bCanDrawInDisplayArea,
+    const bool bDitheringOn,
+    const uint16_t texPageId
+) noexcept;
 
 uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept;
-void _thunk_LIBGPU_SYS_get_tw() noexcept;
 
 void LIBGPU_SYS__ctl() noexcept;
 void LIBGPU_SYS__reset() noexcept;

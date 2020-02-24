@@ -615,58 +615,43 @@ void LIBGPU_SetDrawMode(
     modePrim.tag &= 0x00FFFFFF;
     modePrim.tag |= uint32_t(2) << 24;
 
-    // Set draw mode
-    a0 = bCanDrawInDisplayArea;
-    a1 = bDitheringOn;
-    a2 = texPageId & 0xFFFF;
-    LIBGPU_SYS_get_mode();
-    modePrim.code[0] = v0;
+    // Set draw mode field
+    modePrim.code[0] = LIBGPU_SYS_get_mode(bCanDrawInDisplayArea, bDitheringOn, (uint16_t) texPageId);
 
-    // Set a texture window if given, or use the existing one if not given
+    // Set the texture window field
     if (pNewTexWindow) {
-        // Copy the RECT given to the stack so it's accessible to the PSX
-        VmSVal<RECT> newTexWin(*pNewTexWindow);
-        a0 = newTexWin.addr();
-        _thunk_LIBGPU_SYS_get_tw();
+        modePrim.code[1] = LIBGPU_SYS_get_tw(pNewTexWindow);
     } else {
-        a0 = 0;
-        _thunk_LIBGPU_SYS_get_tw();
+        modePrim.code[1] = LIBGPU_SYS_get_tw(nullptr);
     }
-
-    modePrim.code[1] = v0;
 }
 
 void _thunk_LIBGPU_SetDrawMode() noexcept {
     LIBGPU_SetDrawMode(*vmAddrToPtr<DR_MODE>(a0), a1, a2, a3, vmAddrToPtr<const RECT>(lw(sp + 0x10)));
 }
 
-void LIBGPU_SYS_get_mode() noexcept {
-loc_8004D158:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 += 0x354;                                        // Result = 80080354
-    v0 = lbu(v0);                                       // Load from: 80080354
-    v0--;
-    v0 = (v0 < 2);
-    if (v0 == 0) goto loc_8004D194;
-    v1 = 0xE1000000;                                    // Result = E1000000
-    if (a1 == 0) goto loc_8004D184;
-    v1 |= 0x800;                                        // Result = E1000800
-loc_8004D184:
-    v0 = a2 & 0x27FF;
-    if (a0 == 0) goto loc_8004D1AC;
-    v0 |= 0x1000;
-    goto loc_8004D1AC;
-loc_8004D194:
-    v1 = 0xE1000000;                                    // Result = E1000000
-    if (a1 == 0) goto loc_8004D1A0;
-    v1 |= 0x200;                                        // Result = E1000200
-loc_8004D1A0:
-    v0 = a2 & 0x9FF;
-    if (a0 == 0) goto loc_8004D1AC;
-    v0 |= 0x400;
-loc_8004D1AC:
-    v0 |= v1;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Internal PsyQ SDK function: gets the 1st code field for a 'DR_MODE' primitive based on the given draw mode params.
+// For more details see "GP0(E1h) - Draw Mode setting (aka "Texpage")":
+//      https://problemkaputt.de/psx-spx.htm#gpudisplaycontrolcommandsgp1
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t LIBGPU_SYS_get_mode(
+    const bool bCanDrawInDisplayArea,
+    const bool bDitheringOn,
+    const uint16_t texPageId
+) noexcept {
+    // Note: I've simplified this a lot from the actual disassembled code.
+    //
+    // Depending on the value of an unknown LIBGPU global byte (via an if/else statement), the bit values used for dithering, tex page id etc. here
+    // would be very different. I've cut out the these alternate values for all the fields because I couldn't see any mention of them in the NO$PSX specs.
+    // They may be different values required for special development GPUs or arcade boards, I'm not sure...
+    constexpr uint32_t CMD_HEADER = 0xE1000000;
+
+    const uint32_t ditherBits = (bDitheringOn != 0) ? 0x200 : 0x0;
+    const uint32_t texPageIdBits = texPageId & 0x9FF;
+    const uint32_t drawInDisplayAreaBits = (bCanDrawInDisplayArea != 0) ? 0x400 : 0x0;
+
+    return CMD_HEADER | ditherBits | texPageIdBits | drawInDisplayAreaBits;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -682,16 +667,13 @@ uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept {
     
     // Encode the texture window using 5 bits for each piece of info
     constexpr uint32_t CMD_HEADER = 0xE2000000;
+
     const uint32_t twOffsetX = (uint16_t)(pRect->x & 0xFF) >> 3;
     const uint32_t twOffsetY = (uint16_t)(pRect->y & 0xFF) >> 3;
     const uint32_t twMaskX = (uint16_t)(-pRect->w & 0xFF) >> 3;
     const uint32_t twMaskY = (uint16_t)(-pRect->h & 0xFF) >> 3;
 
     return (CMD_HEADER | (twOffsetY << 15) | (twOffsetX << 10) | (twMaskY << 5) | twMaskX);
-}
-
-void _thunk_LIBGPU_SYS_get_tw() noexcept {
-    v0 = LIBGPU_SYS_get_tw(vmAddrToPtr<const RECT>(a0));
 }
 
 void LIBGPU_SYS__ctl() noexcept {
