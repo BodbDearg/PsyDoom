@@ -588,9 +588,6 @@ extern void LIBGPU_ResetGraph() noexcept;
 extern void LIBGPU_SetGraphDebug() noexcept;
 extern void LIBGPU_GetGraphType() noexcept;
 extern void LIBGPU_SetDispMask() noexcept;
-extern void _thunk_LIBGPU_LoadImage() noexcept;
-extern void _thunk_LIBGPU_MoveImage() noexcept;
-extern void _thunk_LIBGPU_SetDrawMode() noexcept;
 extern void LIBGPU_SYS__ctl() noexcept;
 extern void LIBGPU_SYS__reset() noexcept;
 extern void LIBGPU_SYS_memset() noexcept;
@@ -598,7 +595,6 @@ extern void LIBAPI_GPU_cw() noexcept;
 extern void LIBC2_memcpy() noexcept;
 extern void LIBETC_SetVideoMode() noexcept;
 extern void LIBETC_GetVideoMode() noexcept;
-extern void _thunk_LIBGPU_GetTPage() noexcept;
 extern void LIBGPU_NextPrim() noexcept;
 extern void LIBGPU_IsEndPrim() noexcept;
 extern void LIBGPU_AddPrim() noexcept;
@@ -1313,9 +1309,6 @@ namespace PsxVm {
         { 0x8004C004, &LIBGPU_SetGraphDebug },
         { 0x8004C11C, &LIBGPU_GetGraphType },
         { 0x8004C198, &LIBGPU_SetDispMask },
-        { 0x8004C438, &_thunk_LIBGPU_LoadImage },
-        { 0x8004C500, &_thunk_LIBGPU_MoveImage },
-        { 0x8004CE54, &_thunk_LIBGPU_SetDrawMode },
         { 0x8004DD64, &LIBGPU_SYS__ctl },
         { 0x8004E47C, &LIBGPU_SYS__reset },
         { 0x8004E884, &LIBGPU_SYS_memset },
@@ -1323,7 +1316,6 @@ namespace PsxVm {
         { 0x8004E8C0, &LIBC2_memcpy },
         { 0x8004E900, &LIBETC_SetVideoMode },
         { 0x8004E918, &LIBETC_GetVideoMode },
-        { 0x8004E928, &_thunk_LIBGPU_GetTPage },
         { 0x8004EB18, &LIBGPU_NextPrim },
         { 0x8004EB34, &LIBGPU_IsEndPrim },
         { 0x8004EB50, &LIBGPU_AddPrim },

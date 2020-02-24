@@ -1220,7 +1220,7 @@ loc_80034B44:
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 -= 0x6E9C;                                       // Result = gDispEnv1[0] (800A9164)
     a0 += v0;
-    _thunk_LIBGPU_MoveImage();
+    v0 = LIBGPU_MoveImage(*vmAddrToPtr<const RECT>(a0), a1, a2);
     I_IncDrawnFrameCount();
     I_CacheTex(*gTex_NETERR);
     a1 = s0;

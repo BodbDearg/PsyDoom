@@ -300,10 +300,6 @@ void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noe
     }
 }
 
-void _thunk_LIBGPU_LoadImage() noexcept {
-    LIBGPU_LoadImage(*vmAddrToPtr<RECT>(a0), vmAddrToPtr<const uint16_t>(a1));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Copy one part of VRAM to another part of VRAM
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -333,10 +329,6 @@ int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t 
     }
 
     return 0;   // This is the position of the command in the queue, according to PsyQ docs - don't care about this...
-}
-
-void _thunk_LIBGPU_MoveImage() noexcept {
-    v0 = LIBGPU_MoveImage(*vmAddrToPtr<const RECT>(a0), a1, a2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -555,10 +547,6 @@ void LIBGPU_SetDrawMode(
     } else {
         modePrim.code[1] = LIBGPU_SYS_get_tw(nullptr);
     }
-}
-
-void _thunk_LIBGPU_SetDrawMode() noexcept {
-    LIBGPU_SetDrawMode(*vmAddrToPtr<DR_MODE>(a0), a1, a2, a3, vmAddrToPtr<const RECT>(lw(sp + 0x10)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -827,10 +815,6 @@ loc_8004E9CC:
     return (uint16_t) v0;
 }
 
-void _thunk_LIBGPU_GetTPage() noexcept {
-    v0 = LIBGPU_GetTPage(a0, a1, a2, a3);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Returns the CLUT id for a CLUT uploaded to the given coordinate in VRAM.
 // Note: the x address is limited to being in multiples of 16.
@@ -933,10 +917,6 @@ void LIBGPU_SetShadeTex(void* const pPrim, const bool bDisableShading) noexcept 
     } else {
         primCode &= 0xFE;
     }
-}
-
-void _thunk_LIBGPU_SetShadeTex() noexcept {
-    LIBGPU_SetShadeTex(vmAddrToPtr<void>(a0), a1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1135,7 +1115,7 @@ loc_8004F208:
     a3 = lhu(a3 + 0x60DC);                              // Load from: gLIBGPU_FONT_tpage (800860DC)
     a2 = 0;                                             // Result = 00000000
     sw(0, sp + 0x10);
-    _thunk_LIBGPU_SetDrawMode();
+    LIBGPU_SetDrawMode(*vmAddrToPtr<DR_MODE>(a0), a1, a2, a3, vmAddrToPtr<const RECT>(lw(sp + 0x10)));
     {
         const bool bJump = (s0 == 0);
         s0 = s1 - 0x10;                                 // Result = gLIBGPU_FONT_FntLoad_Font[0] (80075DA8)
@@ -1239,7 +1219,7 @@ loc_8004F3C8:
     LIBGPU_SetSprt8();
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
-    _thunk_LIBGPU_SetShadeTex();
+    LIBGPU_SetShadeTex(vmAddrToPtr<void>(a0), a1);
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lhu(v0 + 0x60E0);                              // Load from: gLIBGPU_FONT_clut (800860E0)
     s1++;

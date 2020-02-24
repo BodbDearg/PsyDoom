@@ -203,17 +203,12 @@ void LIBGPU_SetDispMask() noexcept;
 int32_t LIBGPU_DrawSync(const int32_t mode) noexcept;
 
 void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noexcept;
-void _thunk_LIBGPU_LoadImage() noexcept;
-
 int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t dstY) noexcept;
-void _thunk_LIBGPU_MoveImage() noexcept;
-
 void LIBGPU_DrawOTag(const void* const pPrimList) noexcept;
 DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept;
 DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept;
 
 void LIBGPU_SetTexWindow(DR_TWIN& prim, const RECT& texWin) noexcept;
-void _thunk_LIBGPU_SetTexWindow() noexcept;
 
 void LIBGPU_SetDrawMode(
     DR_MODE& modePrim,
@@ -222,8 +217,6 @@ void LIBGPU_SetDrawMode(
     const uint32_t texPageId,
     const RECT* const pNewTexWindow
 ) noexcept;
-
-void _thunk_LIBGPU_SetDrawMode() noexcept;
 
 uint32_t LIBGPU_SYS_get_mode(
     const bool bCanDrawInDisplayArea,
@@ -244,8 +237,6 @@ uint16_t LIBGPU_GetTPage(
     const int32_t tpageY
 ) noexcept;
 
-void _thunk_LIBGPU_GetTPage() noexcept;
-
 uint16_t LIBGPU_GetClut(const int32_t x, const int32_t y) noexcept;
 
 void LIBGPU_NextPrim() noexcept;        // TODO: still needed?
@@ -255,7 +246,6 @@ void LIBGPU_AddPrims() noexcept;        // TODO: still needed?
 void LIBGPU_CatPrim() noexcept;         // TODO: still needed?
 void LIBGPU_SetSemiTrans(void* const pPrim, const bool bTransparent) noexcept;
 void LIBGPU_SetShadeTex(void* const pPrim, const bool bDisableShading) noexcept;
-void _thunk_LIBGPU_SetShadeTex() noexcept;
 
 void LIBGPU_SetPolyFT3(POLY_FT3& poly) noexcept;
 void LIBGPU_SetPolyF4(POLY_F4& poly) noexcept;
