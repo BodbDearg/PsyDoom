@@ -218,14 +218,7 @@ uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept;
 void _thunk_LIBGPU_SYS_get_tw() noexcept;
 
 void LIBGPU_SYS__ctl() noexcept;
-void LIBGPU_SYS__cwc() noexcept;
-void LIBGPU_SYS__addque() noexcept;
-void LIBGPU_SYS__addque2() noexcept;
-void LIBGPU_SYS__exeque() noexcept;
 void LIBGPU_SYS__reset() noexcept;
-void LIBGPU_SYS__sync() noexcept;
-void LIBGPU_SYS_set_alarm() noexcept;
-void LIBGPU_SYS_get_alarm() noexcept;
 void LIBGPU_SYS_memset() noexcept;
 
 uint16_t LIBGPU_GetTPage(

@@ -597,14 +597,7 @@ extern void _thunk_LIBGPU_SetDrawMode() noexcept;
 extern void LIBGPU_SYS_get_mode() noexcept;
 extern void _thunk_LIBGPU_SYS_get_tw() noexcept;
 extern void LIBGPU_SYS__ctl() noexcept;
-extern void LIBGPU_SYS__cwc() noexcept;
-extern void LIBGPU_SYS__addque() noexcept;
-extern void LIBGPU_SYS__addque2() noexcept;
-extern void LIBGPU_SYS__exeque() noexcept;
 extern void LIBGPU_SYS__reset() noexcept;
-extern void LIBGPU_SYS__sync() noexcept;
-extern void LIBGPU_SYS_set_alarm() noexcept;
-extern void LIBGPU_SYS_get_alarm() noexcept;
 extern void LIBGPU_SYS_memset() noexcept;
 extern void LIBAPI_GPU_cw() noexcept;
 extern void LIBC2_memcpy() noexcept;
@@ -1336,14 +1329,7 @@ namespace PsxVm {
         { 0x8004D158, &LIBGPU_SYS_get_mode },
         { 0x8004D3A4, &_thunk_LIBGPU_SYS_get_tw },
         { 0x8004DD64, &LIBGPU_SYS__ctl },
-        { 0x8004DDF8, &LIBGPU_SYS__cwc },
-        { 0x8004DE74, &LIBGPU_SYS__addque },
-        { 0x8004DE98, &LIBGPU_SYS__addque2 },
-        { 0x8004E1B8, &LIBGPU_SYS__exeque },
         { 0x8004E47C, &LIBGPU_SYS__reset },
-        { 0x8004E644, &LIBGPU_SYS__sync },
-        { 0x8004E78C, &LIBGPU_SYS_set_alarm },
-        { 0x8004E7C0, &LIBGPU_SYS_get_alarm },
         { 0x8004E884, &LIBGPU_SYS_memset },
         { 0x8004E8B0, &LIBAPI_GPU_cw },
         { 0x8004E8C0, &LIBC2_memcpy },
