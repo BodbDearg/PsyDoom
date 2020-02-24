@@ -995,16 +995,6 @@ void LIBGPU_CatPrim() noexcept {
     return;
 }
 
-void LIBGPU_TermPrim() noexcept {
-loc_8004EBEC:
-    v1 = 0xFF0000;                                      // Result = 00FF0000
-    v0 = lw(a0);
-    v1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    v0 |= v1;
-    sw(v0, a0);
-    return;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Enable/disable semi-transparency on the specified drawing primitive
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1421,7 +1411,7 @@ loc_8004F4D8:
     s7 = s0 + v0;
     v1 += s5;
     sw(v1, sp + 0x18);
-    LIBGPU_TermPrim();
+    LIBGPU_TermPrim(*vmAddrToPtr<SPRT_8>(a0));
     v0 = lbu(s1);
     if (v0 == 0) goto loc_8004F640;
     s3 = s6 + 0xA;

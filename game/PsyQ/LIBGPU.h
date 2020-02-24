@@ -129,6 +129,22 @@ struct SPRT {
 
 static_assert(sizeof(SPRT) == 20);
 
+// Drawing primitive: 8x8 sprite
+struct SPRT_8 {
+    uint32_t    tag;        // The primitive size and 24-bit pointer to next primitive
+    uint8_t     r0;         // Color to apply to the sprite
+    uint8_t     g0;
+    uint8_t     b0;
+    uint8_t     code;       // Type info for the hardware
+    int16_t     x0;         // Position of the sprite
+    int16_t     y0;
+    uint8_t     tu0;        // Texture u/v coords: note could not use just 'v0' due to register name clashing
+    uint8_t     tv0;
+    int16_t     clut;       // Which CLUT to use for color indexing
+};
+
+static_assert(sizeof(SPRT_8) == 16);
+
 // Drawing primitive: modify the current draw mode
 struct DR_MODE {
     uint32_t    tag;
@@ -237,7 +253,6 @@ void LIBGPU_IsEndPrim() noexcept;       // TODO: still needed?
 void LIBGPU_AddPrim() noexcept;         // TODO: still needed?
 void LIBGPU_AddPrims() noexcept;        // TODO: still needed?
 void LIBGPU_CatPrim() noexcept;         // TODO: still needed?
-void LIBGPU_TermPrim() noexcept;        // TODO: still needed?
 void LIBGPU_SetSemiTrans(void* const pPrim, const bool bTransparent) noexcept;
 void LIBGPU_SetShadeTex(void* const pPrim, const bool bDisableShading) noexcept;
 void _thunk_LIBGPU_SetShadeTex() noexcept;
@@ -429,4 +444,13 @@ inline constexpr uint16_t LIBGPU_getTPage(
         ((tpageX & 0x3ff) >> 6)|
         ((tpageY & 0x200) << 2)
     );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Caps or marks the end of a primitive list.
+// No further primitives after the given primitive are processed.
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+inline void LIBGPU_TermPrim(T& prim) noexcept {
+    prim.tag |= 0x00FFFFFF;
 }
