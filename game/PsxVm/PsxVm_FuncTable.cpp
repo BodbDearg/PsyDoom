@@ -592,7 +592,6 @@ extern void _thunk_LIBGPU_DrawSync() noexcept;
 extern void LIBGPU_checkRECT() noexcept;
 extern void _thunk_LIBGPU_LoadImage() noexcept;
 extern void _thunk_LIBGPU_MoveImage() noexcept;
-extern void LIBGPU_DrawOTag() noexcept;
 extern void _thunk_LIBGPU_SetTexWindow() noexcept;
 extern void _thunk_LIBGPU_SetDrawMode() noexcept;
 extern void LIBGPU_SYS_get_mode() noexcept;
@@ -1332,7 +1331,6 @@ namespace PsxVm {
         { 0x8004C27C, &LIBGPU_checkRECT },
         { 0x8004C438, &_thunk_LIBGPU_LoadImage },
         { 0x8004C500, &_thunk_LIBGPU_MoveImage },
-        { 0x8004C72C, &LIBGPU_DrawOTag },
         { 0x8004CD28, &_thunk_LIBGPU_SetTexWindow },
         { 0x8004CE54, &_thunk_LIBGPU_SetDrawMode },
         { 0x8004D158, &LIBGPU_SYS_get_mode },

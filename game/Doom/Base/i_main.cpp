@@ -1412,9 +1412,8 @@ loc_80034E58:
     if (v0 == v1) goto loc_80034E84;
     v0 = 0xFF0000;                                      // Result = 00FF0000
     v0 |= 0xFFFF;                                       // Result = 00FFFFFF
-    sw(v0, v1);
-    a0 = lw(gp + 0x634);                                // Load from: gpGpuPrimsBeg (80077C14)
-    LIBGPU_DrawOTag();
+    sw(v0, v1);    
+    LIBGPU_DrawOTag(gpGpuPrimsBeg->get());
 loc_80034E84:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)

@@ -195,7 +195,7 @@ void _thunk_LIBGPU_LoadImage() noexcept;
 int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t dstY) noexcept;
 void _thunk_LIBGPU_MoveImage() noexcept;
 
-void LIBGPU_DrawOTag() noexcept;
+void LIBGPU_DrawOTag(const void* const pPrimList) noexcept;
 DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept;
 DISPENV& LIBGPU_PutDispEnv(DISPENV& env) noexcept;
 

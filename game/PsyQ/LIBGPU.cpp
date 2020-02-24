@@ -404,33 +404,39 @@ void _thunk_LIBGPU_MoveImage() noexcept {
     v0 = LIBGPU_MoveImage(*vmAddrToPtr<const RECT>(a0), a1, a2);
 }
 
-void LIBGPU_DrawOTag() noexcept {
-loc_8004C72C:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x356);                               // Load from: 80080356
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = (v0 < 2);
-    sw(ra, sp + 0x14);
-    if (v0 != 0) goto loc_8004C768;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1C7C;                                       // Result = STR_Sys_DrawOTag_Msg[0] (80011C7C)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a1 = s0;
-    ptr_call(v0);
-loc_8004C768:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D54);                               // Load from: gpLIBGPU_SYS_driver_table (80075D54)
-    a1 = s0;
-    a0 = lw(v0 + 0x18);     // LIBGPU_SYS__cwc
-    a2 = 0;                                             // Result = 00000000
-    LIBGPU_SYS__addque();
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Submit a linked list of GPU drawing primitives.
+// These may include drawing primitves, or primitives that set GPU state.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_DrawOTag(const void* const pPrimList) noexcept {
+    const uint32_t* pCurPrimWord = (const uint32_t*) pPrimList;
+
+    while (true) {
+        // Read the tag for this primitive and determine its data size in words.
+        // Also determine the next primitive address (24-bit relative, and absolute).
+        const uint32_t tag = pCurPrimWord[0];
+        ++pCurPrimWord;
+
+        const uint32_t numDataWords = tag >> 24;
+        const uint32_t nextPrimAddr24 = tag & 0x00FFFFFF;
+        const uint32_t nextPrimAddrAbs = nextPrimAddr24 | 0x80000000;
+
+        // Submit the primitive's data words to the GPU
+        uint32_t dataWordsLeft = numDataWords;
+
+        while (dataWordsLeft > 0) {
+            const uint32_t dataWord = pCurPrimWord[0];
+            ++pCurPrimWord;
+            --dataWordsLeft;
+            writeGP0(dataWord);
+        }
+
+        // Stop if we've reached the end of the primitive list, otherwise move onto the next one
+        if (nextPrimAddr24 == 0x00FFFFFF)
+            break;
+
+        pCurPrimWord = vmAddrToPtr<uint32_t>(nextPrimAddrAbs);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -2044,7 +2050,7 @@ loc_8004F640:
     LIBGPU_AddPrim();
 loc_8004F65C:
     a0 = lw(sp + 0x10);
-    LIBGPU_DrawOTag();
+    LIBGPU_DrawOTag(vmAddrToPtr<void>(a0));
     v1 = lw(s4 + 0x24);
     v0 = lw(sp + 0x10);
     sw(0, s4 + 0x28);
