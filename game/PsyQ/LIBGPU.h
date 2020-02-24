@@ -270,7 +270,17 @@ void LIBGPU_FntLoad() noexcept;
 void LIBGPU_FntOpen() noexcept;
 void LIBGPU_FntFlush() noexcept;
 void LIBGPU_FntPrint() noexcept;
-void LIBGPU_LoadTPage() noexcept;
+
+uint16_t LIBGPU_LoadTPage(
+    const void* pImageData,
+    const int32_t bitDepth,
+    const int32_t semiTransRate,
+    const int32_t dstX,
+    const int32_t dstY,
+    const int32_t imgW,
+    const int32_t imgH
+) noexcept;
+
 uint16_t LIBGPU_LoadClut(const uint16_t* pColors, const int32_t x, const int32_t y) noexcept;
 
 DRAWENV& LIBGPU_SetDefDrawEnv(DRAWENV& env, const int32_t x, const int32_t y, const int32_t w, const  int32_t h) noexcept;
@@ -418,7 +428,7 @@ inline constexpr void LIBGPU_setRECT(RECT& rect, const int16_t x, const int16_t 
 // Note: the texture page address is limited to a multiple of 64 in the X direction and a multiple of 256 in the Y direction.
 //
 // Inputs:
-//  (1) texMode : What format the texture is in.
+//  (1) bitDepth : What format the texture is in.
 //          0 = 4 bit indexed (uses CLUT)
 //          1 = 8 bit indexed (uses CLUT)
 //          2 = 16 bit raw/direct
@@ -432,13 +442,13 @@ inline constexpr void LIBGPU_setRECT(RECT& rect, const int16_t x, const int16_t 
 //  (4) tpageY : texture page address (y, must be multiple of 256)
 //------------------------------------------------------------------------------------------------------------------------------------------
 inline constexpr uint16_t LIBGPU_getTPage(
-    const int32_t texFmt,
+    const int32_t bitDepth,
     const int32_t semiTransRate,
     const int32_t tpageX,
     const int32_t tpageY
 ) noexcept {
      return (uint16_t)(
-        ((texFmt & 0x3) << 7)|
+        ((bitDepth & 0x3) << 7)|
         ((semiTransRate & 0x3) << 5)|
         ((tpageY & 0x100) >> 4)|
         ((tpageX & 0x3ff) >> 6)|

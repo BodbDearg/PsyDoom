@@ -613,7 +613,6 @@ extern void LIBGPU_FntOpen() noexcept;
 extern void LIBGPU_FntFlush() noexcept;
 extern void LIBGPU_FntPrint() noexcept;
 extern void LIBC2_memset() noexcept;
-extern void LIBGPU_LoadTPage() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
 extern void LIBSN__main() noexcept;
 extern void LIBSN___do_global_dtors() noexcept;
@@ -1339,7 +1338,6 @@ namespace PsxVm {
         { 0x8004F44C, &LIBGPU_FntFlush },
         { 0x8004F6AC, &LIBGPU_FntPrint },
         { 0x8004FAA4, &LIBC2_memset },
-        { 0x8004FAD4, &LIBGPU_LoadTPage },
         { 0x80050454, &LIBAPI_FlushCache },
         { 0x800507AC, &LIBSN__main },
         { 0x8005081C, &LIBSN___do_global_dtors },

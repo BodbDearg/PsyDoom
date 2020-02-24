@@ -243,7 +243,8 @@ int32_t LIBGPU_DrawSync([[maybe_unused]] const int32_t mode) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Upload the given image data to the given area in VRAM
+// Upload the given image data to the given area in VRAM.
+// The image format is assumed to be 16-bit.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noexcept {
     // Sanity checks
@@ -1058,7 +1059,16 @@ loc_8004F0DC:
     a3 = s2;
     sw(s1, sp + 0x10);
     sw(v0, sp + 0x18);
-    LIBGPU_LoadTPage();
+    LIBGPU_LoadTPage(
+        vmAddrToPtr<void>(a0),
+        a1,
+        a2,
+        a3,
+        lw(sp + 0x10),
+        lw(sp + 0x14),
+        lw(sp + 0x18)
+    );
+
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x5DA8;                                       // Result = gLIBGPU_FONT_FntLoad_Font[0] (80075DA8)
     a1 = 0;                                             // Result = 00000000
@@ -1699,74 +1709,49 @@ loc_8004FA7C:
     return;
 }
 
-void LIBGPU_LoadTPage() noexcept {
-loc_8004FAD4:
-    sp -= 0x30;
-    sw(s3, sp + 0x24);
-    s3 = lw(sp + 0x40);
-    v1 = lw(sp + 0x44);
-    v0 = lw(sp + 0x48);
-    t0 = a0;
-    sw(s0, sp + 0x18);
-    s0 = a1;
-    sw(s2, sp + 0x20);
-    s2 = a2;
-    sw(s1, sp + 0x1C);
-    s1 = a3;
-    sw(ra, sp + 0x28);
-    sh(s1, sp + 0x10);
-    sh(v0, sp + 0x16);
-    v0 = 1;                                             // Result = 00000001
-    sh(s3, sp + 0x12);
-    if (s0 == v0) goto loc_8004FB64;
-    v0 = (i32(s0) < 2);
-    if (v0 == 0) goto loc_8004FB38;
-    a0 = sp + 0x10;
-    if (s0 == 0) goto loc_8004FB4C;
-    goto loc_8004FB80;
-loc_8004FB38:
-    v0 = 2;                                             // Result = 00000002
-    a0 = sp + 0x10;
-    if (s0 == v0) goto loc_8004FB78;
-    goto loc_8004FB80;
-loc_8004FB4C:
-    v0 = v1;
-    if (i32(v1) >= 0) goto loc_8004FB58;
-    v0 = v1 + 3;
-loc_8004FB58:
-    v0 = u32(i32(v0) >> 2);
-    sh(v0, sp + 0x14);
-    goto loc_8004FB7C;
-loc_8004FB64:
-    v0 = v1 >> 31;
-    v0 += v1;
-    v0 = u32(i32(v0) >> 1);
-    sh(v0, sp + 0x14);
-    goto loc_8004FB7C;
-loc_8004FB78:
-    sh(v1, sp + 0x14);
-loc_8004FB7C:
-    a0 = sp + 0x10;
-loc_8004FB80:
-    a1 = t0;
-    _thunk_LIBGPU_LoadImage();
-    a0 = s0;
-    a1 = s2;
-    a2 = s1;
-    a3 = s3;
-    _thunk_LIBGPU_GetTPage();
-    v0 &= 0xFFFF;
-    ra = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load the given texture into VRAM.
+// Returns the texture page id for the loaded texture.
+//
+// Params:
+//  (1) pImageData:     The image data.
+//  (2) bitDepth:       Image bit depth: 0 = 4 bit; 1 = 8 bit; 2 = 16 bit
+//  (3) semiTransRate:  Semi transparency rate: see 'LIBGPU_getTPage' for more details.
+//  (4) dstX, dstY,     Bounds of the destination RECT in vram.
+//      imgW, imgH:     Note: these coordinates are in terms of the image format (4/8/16 bpp), and will be divided accordingly
+//                      to obtain the address in VRAM when the pixels are interpreted as 16-bit.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t LIBGPU_LoadTPage(
+    const void* pImageData,
+    const int32_t bitDepth,
+    const int32_t semiTransRate,
+    const int32_t dstX,
+    const int32_t dstY,
+    const int32_t imgW,
+    const int32_t imgH
+) noexcept {
+    // Figure out the destination RECT in VRAM in terms of 16-bit pixels
+    RECT dstRect;  
+    dstRect.x = (int16_t) dstX;
+    dstRect.y = (int16_t) dstY;
+    dstRect.h = (int16_t) imgH;
+    
+    if (bitDepth == 0) {
+        dstRect.w = (int16_t)(imgW / 4);    // 4-bits per pixel mode
+    } else if (bitDepth == 1) {        
+        dstRect.w = (int16_t)(imgW / 2);    // 8-bits per pixel mode
+    } else if (bitDepth == 2) {
+        dstRect.w = (int16_t) imgW;         // 16-bits per pixel mode
+    }
+
+    // Upload the image to VRAM and return it's texture page id
+    LIBGPU_LoadImage(dstRect, (const uint16_t*) pImageData);
+    return LIBGPU_GetTPage(bitDepth, semiTransRate, dstX, dstY);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Uploads the given color lookup table to the specified location in VRAM
+// Uploads the given color lookup table to the specified location in VRAM.
+// Returns the Clut ID for the uploaded CLUT.
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint16_t LIBGPU_LoadClut(const uint16_t* pColors, const int32_t x, const int32_t y) noexcept {
     RECT dstRect;
