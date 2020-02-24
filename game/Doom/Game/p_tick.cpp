@@ -695,11 +695,10 @@ loc_80029708:
 
 void P_Stop() noexcept {
     sp -= 0x20;
-    a0 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
-    _thunk_LIBGPU_DrawSync();
+    LIBGPU_DrawSync(0);
     s0 = 0;                                             // Result = 00000000
     S_Clear();
     psxcd_stop();

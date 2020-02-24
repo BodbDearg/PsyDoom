@@ -201,9 +201,6 @@ void LIBGPU_GetGraphType() noexcept;
 void LIBGPU_SetDispMask() noexcept;
 
 int32_t LIBGPU_DrawSync(const int32_t mode) noexcept;
-void _thunk_LIBGPU_DrawSync() noexcept;
-
-void LIBGPU_checkRECT() noexcept;
 
 void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noexcept;
 void _thunk_LIBGPU_LoadImage() noexcept;

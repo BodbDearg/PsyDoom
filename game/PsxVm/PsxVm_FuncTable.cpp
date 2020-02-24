@@ -588,11 +588,8 @@ extern void LIBGPU_ResetGraph() noexcept;
 extern void LIBGPU_SetGraphDebug() noexcept;
 extern void LIBGPU_GetGraphType() noexcept;
 extern void LIBGPU_SetDispMask() noexcept;
-extern void _thunk_LIBGPU_DrawSync() noexcept;
-extern void LIBGPU_checkRECT() noexcept;
 extern void _thunk_LIBGPU_LoadImage() noexcept;
 extern void _thunk_LIBGPU_MoveImage() noexcept;
-extern void _thunk_LIBGPU_SetTexWindow() noexcept;
 extern void _thunk_LIBGPU_SetDrawMode() noexcept;
 extern void LIBGPU_SYS__ctl() noexcept;
 extern void LIBGPU_SYS__reset() noexcept;
@@ -1317,11 +1314,8 @@ namespace PsxVm {
         { 0x8004C004, &LIBGPU_SetGraphDebug },
         { 0x8004C11C, &LIBGPU_GetGraphType },
         { 0x8004C198, &LIBGPU_SetDispMask },
-        { 0x8004C210, &_thunk_LIBGPU_DrawSync },
-        { 0x8004C27C, &LIBGPU_checkRECT },
         { 0x8004C438, &_thunk_LIBGPU_LoadImage },
         { 0x8004C500, &_thunk_LIBGPU_MoveImage },
-        { 0x8004CD28, &_thunk_LIBGPU_SetTexWindow },
         { 0x8004CE54, &_thunk_LIBGPU_SetDrawMode },
         { 0x8004DD64, &LIBGPU_SYS__ctl },
         { 0x8004E47C, &LIBGPU_SYS__reset },

@@ -1,3 +1,7 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Module containing a partial reimplementation of the PSY-Q 'LIBGPU' library.
+// These functions are not neccesarily faithful to the original code, and are reworked to make the game run in it's new environment.
+//------------------------------------------------------------------------------------------------------------------------------------------
 #include "LIBGPU.h"
 
 #include "LIBAPI.h"
@@ -236,76 +240,6 @@ int32_t LIBGPU_DrawSync([[maybe_unused]] const int32_t mode) noexcept {
     // This function doesn't need to do anything in this emulated environment.
     // When we submit something to the 'gpu' then Avocado executes it immediately and blocks before returning.
     return 0;
-}
-
-void _thunk_LIBGPU_DrawSync() noexcept {
-    v0 = LIBGPU_DrawSync(a0);
-}
-
-void LIBGPU_checkRECT() noexcept {
-loc_8004C27C:
-    sp -= 0x20;
-    t0 = a0;
-    sw(s0, sp + 0x18);
-    s0 = a1;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lbu(v1 + 0x356);                               // Load from: 80080356
-    v0 = 1;                                             // Result = 00000001
-    sw(ra, sp + 0x1C);
-    if (v1 == v0) goto loc_8004C2B4;
-    v0 = 2;                                             // Result = 00000002
-    if (v1 == v0) goto loc_8004C34C;
-    goto loc_8004C390;
-loc_8004C2B4:
-    a1 = lh(s0 + 0x4);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lh(v1 + 0x358);                                // Load from: 80080358
-    v0 = (i32(v1) < i32(a1));
-    if (v0 != 0) goto loc_8004C33C;
-    a3 = lh(s0);
-    v0 = a1 + a3;
-    v0 = (i32(v1) < i32(v0));
-    if (v0 != 0) goto loc_8004C33C;
-    v1 = lh(s0 + 0x2);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lh(a0 + 0x35A);                                // Load from: 8008035A
-    v0 = (i32(a0) < i32(v1));
-    if (v0 != 0) goto loc_8004C33C;
-    a2 = lh(s0 + 0x6);
-    v0 = v1 + a2;
-    v0 = (i32(a0) < i32(v0));
-    if (v0 != 0) goto loc_8004C33C;
-    if (i32(a1) <= 0) goto loc_8004C33C;
-    if (i32(a3) < 0) goto loc_8004C33C;
-    if (i32(v1) < 0) goto loc_8004C33C;
-    if (i32(a2) > 0) goto loc_8004C390;
-loc_8004C33C:
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1BF8;                                       // Result = STR_Sys_BadRect_Err[0] (80011BF8)
-    goto loc_8004C354;
-loc_8004C34C:
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1C18;                                       // Result = STR_Sys_ClearImage_Msg[0] (80011C18)
-loc_8004C354:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a1 = t0;
-    ptr_call(v0);
-    a1 = lh(s0);
-    a2 = lh(s0 + 0x2);
-    a3 = lh(s0 + 0x4);
-    v0 = lh(s0 + 0x6);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1C04;                                       // Result = STR_Sys_BadRect_Err[C] (80011C04)
-    sw(v0, sp + 0x10);
-    ptr_call(v1);
-loc_8004C390:
-    ra = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x20;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -594,10 +528,6 @@ void LIBGPU_SetTexWindow(DR_TWIN& prim, const RECT& texWin) noexcept {
     LIBGPU_setlen(prim, 2);
     prim.code[0] = LIBGPU_SYS_get_tw(&texWin);
     prim.code[1] = 0;
-}
-
-void _thunk_LIBGPU_SetTexWindow() noexcept {
-    LIBGPU_SetTexWindow(*vmAddrToPtr<DR_TWIN>(a0), *vmAddrToPtr<RECT>(a1));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

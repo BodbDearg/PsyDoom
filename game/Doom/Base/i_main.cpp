@@ -1200,8 +1200,7 @@ loc_80034A60:
 loc_80034B44:
     s0 = 0x800B0000;                                    // Result = 800B0000
     s0 = lh(s0 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    a0 = 0;                                             // Result = 00000000
-    _thunk_LIBGPU_DrawSync();
+    LIBGPU_DrawSync(0);
     a3 = lw(gp + 0xB18);                                // Load from: gCurDrawDispBufferIdx (800780F8)
     v1 = a3 ^ 1;
     v0 = v1 << 2;
