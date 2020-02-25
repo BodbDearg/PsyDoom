@@ -191,7 +191,6 @@ static_assert(sizeof(DRAWENV) == 92);
 
 void LIBGPU_ResetGraph(const int32_t resetMode) noexcept;
 void LIBGPU_SetGraphDebug(const int32_t debugLevel) noexcept;
-void LIBGPU_GetGraphType() noexcept;
 void LIBGPU_SetDispMask() noexcept;
 
 int32_t LIBGPU_DrawSync(const int32_t mode) noexcept;

@@ -112,13 +112,6 @@ void LIBGPU_SetGraphDebug([[maybe_unused]] const int32_t debugLevel) noexcept {
     // Nothing to do here...
 }
 
-void LIBGPU_GetGraphType() noexcept {
-loc_8004C11C:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x354);                               // Load from: 80080354
-    return;
-}
-
 void LIBGPU_SetDispMask() noexcept {
 loc_8004C198:
     v0 = 0x80080000;                                    // Result = 80080000
@@ -499,75 +492,21 @@ loc_8004DD64:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Similar to the PSYQ macro version of this function - LIBGPU_getTPage.
+//
+// In the original PSYQ SDK this version did some additional checks against 'GetGraphType' to determine how to compute the texture page id,
+// but those checks are skipped here for simplicity. I'm not sure what 'LIBGPU_GetGraphType' did, it may have been a check for special
+// development GPU types.
+//------------------------------------------------------------------------------------------------------------------------------------------
 uint16_t LIBGPU_GetTPage(
     const int32_t texFmt,
     const int32_t semiTransRate,
     const int32_t tpageX,
     const int32_t tpageY
 ) noexcept {
-    a0 = texFmt;
-    a1 = semiTransRate;
-    a2 = tpageX;
-    a3 = tpageY;
-
-    sp -= 0x28;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(s2, sp + 0x18);
-    s2 = a1;
-    sw(s3, sp + 0x1C);
-    s3 = a2;
-    sw(s1, sp + 0x14);
-    sw(ra, sp + 0x20);
-    s1 = a3;
-    LIBGPU_GetGraphType();
-    v1 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (v0 == v1);
-        v1 = s0 & 3;
-        if (bJump) goto loc_8004E974;
-    }
-    LIBGPU_GetGraphType();
-    v1 = 2;                                             // Result = 00000002
-    {
-        const bool bJump = (v0 != v1);
-        v1 = s0 & 3;
-        if (bJump) goto loc_8004E99C;
-    }
-loc_8004E974:
-    v1 <<= 9;
-    v0 = s2 & 3;
-    v0 <<= 7;
-    v1 |= v0;
-    v0 = s1 & 0x300;
-    v0 = u32(i32(v0) >> 3);
-    v1 |= v0;
-    v0 = s3 & 0x3FF;
-    v0 = u32(i32(v0) >> 6);
-    goto loc_8004E9CC;
-loc_8004E99C:
-    v1 <<= 7;
-    v0 = s2 & 3;
-    v0 <<= 5;
-    v1 |= v0;
-    v0 = s1 & 0x100;
-    v0 = u32(i32(v0) >> 4);
-    v1 |= v0;
-    v0 = s3 & 0x3FF;
-    v0 = u32(i32(v0) >> 6);
-    v1 |= v0;
-    v0 = s1 & 0x200;
-    v0 <<= 2;
-loc_8004E9CC:
-    v0 |= v1;
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-
-    return (uint16_t) v0;
+    // This is just an alias for 'LIBGPU_getTPage' (macro  'getTPage') in this PSYQ SDK re-implementation
+    return LIBGPU_getTPage(texFmt, semiTransRate, tpageX, tpageY);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
