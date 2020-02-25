@@ -2,12 +2,6 @@
 
 #include <cstdint>
 
-// GP0 and GP1 GPU registers addresses.
-// These two registers are used to read and write GPU data and for status/control.
-// These addresses were NOT exposed in the original PsyQ SDK as far as I can see.
-static constexpr uint32_t GPU_REG_GP0 = 0x1F801810;
-static constexpr uint32_t GPU_REG_GP1 = 0x1F801814;
-
 // Represents a rectangular area of the framebuffer.
 // The coordinates assume 16-bit color values, for other modes coords will need to be scaled accordingly.
 // Note: negative values or values exceeding the 1024x512 (16-bit) framebuffer are NOT allowed!
@@ -195,7 +189,7 @@ struct DRAWENV {
 
 static_assert(sizeof(DRAWENV) == 92);
 
-void LIBGPU_ResetGraph() noexcept;
+void LIBGPU_ResetGraph(const int32_t resetMode) noexcept;
 void LIBGPU_SetGraphDebug() noexcept;
 void LIBGPU_GetGraphType() noexcept;
 void LIBGPU_SetDispMask() noexcept;
@@ -227,8 +221,6 @@ uint32_t LIBGPU_SYS_get_mode(
 uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept;
 
 void LIBGPU_SYS__ctl() noexcept;
-void LIBGPU_SYS__reset() noexcept;
-void LIBGPU_SYS_memset() noexcept;
 
 uint16_t LIBGPU_GetTPage(
     const int32_t texFmt,

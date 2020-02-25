@@ -189,9 +189,7 @@ void I_PSXInit() noexcept {
     sw(s0, sp + 0x18);
     
     LIBETC_ResetCallback();
-    
-    a0 = 0;                                             // Result = 00000000
-    LIBGPU_ResetGraph();
+    LIBGPU_ResetGraph(0);
     
     a0 = 0;                                             // Result = 00000000
     LIBGPU_SetGraphDebug();
