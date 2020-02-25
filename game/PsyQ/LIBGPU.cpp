@@ -99,34 +99,17 @@ void LIBGPU_ResetGraph([[maybe_unused]] const int32_t resetMode) noexcept {
     // I've verified that it doesn't result in any difference in GPU state when it is called...
 }
 
-void LIBGPU_SetGraphDebug() noexcept {
-loc_8004C004:
-    sp -= 0x18;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 += 0x356;                                        // Result = 80080356
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
-    s0 = lbu(v1);                                       // Load from: 80080356
-    sb(a0, v1);                                         // Store to: 80080356
-    a0 &= 0xFF;
-    v0 = s0;
-    if (a0 == 0) goto loc_8004C05C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a1 = lbu(v1);                                       // Load from: 80080356
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lbu(a2 + 0x354);                               // Load from: 80080354
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 = lbu(a3 + 0x357);                               // Load from: 80080357
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1B74;                                       // Result = STR_Sys_SetDebug_Msg[0] (80011B74)
-    ptr_call(v0);
-    v0 = s0;
-loc_8004C05C:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the graphics debugging level from 0-2.
+// This call is IGNORED or this cut down version of LIBGPU.
+//
+// Mode meanings:
+//  0 = Reset everything
+//  1 = Cancel all drawing and flush the command buffer.
+//  3 = Initialize draw environment but preserve display environment.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetGraphDebug([[maybe_unused]] const int32_t debugLevel) noexcept {
+    // Nothing to do here...
 }
 
 void LIBGPU_GetGraphType() noexcept {

@@ -190,9 +190,7 @@ void I_PSXInit() noexcept {
     
     LIBETC_ResetCallback();
     LIBGPU_ResetGraph(0);
-    
-    a0 = 0;                                             // Result = 00000000
-    LIBGPU_SetGraphDebug();
+    LIBGPU_SetGraphDebug(0);
 
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7788;                                       // Result = gPadInputBuffer_1[0] (80097788)

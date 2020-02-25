@@ -190,7 +190,7 @@ struct DRAWENV {
 static_assert(sizeof(DRAWENV) == 92);
 
 void LIBGPU_ResetGraph(const int32_t resetMode) noexcept;
-void LIBGPU_SetGraphDebug() noexcept;
+void LIBGPU_SetGraphDebug(const int32_t debugLevel) noexcept;
 void LIBGPU_GetGraphType() noexcept;
 void LIBGPU_SetDispMask() noexcept;
 
