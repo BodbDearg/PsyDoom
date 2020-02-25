@@ -11,11 +11,79 @@
 #include "PcPsx/Finally.h"
 #include "PsxVm/VmSVal.h"
 
-#include <device/gpu/gpu.h>
+#include <cstdarg>
 #include <cstring>
+#include <device/gpu/gpu.h>
 
 // N.B: needs to happen AFTER Avocado includes due to clashes caused by the MIPS register macros
 #include "PsxVm/PsxVm.h"
+
+// The CLUT and texture page for the debug font
+static uint16_t gDFontClutId;
+static uint16_t gDFontTPageId;
+
+// Display area for the debug font and whether to clear the background to 0,0,0 before drawing
+static int16_t gDFontDispX;
+static int16_t gDFontDispY;
+static int16_t gDFontDispW;
+static int16_t gDFontDispH;
+static bool    gDFontClearBg;
+
+// The buffer for debug font printing and how many chars it can hold
+static constexpr int32_t DBG_MSG_BUF_SIZE = 1024;
+static char gDbgMsgBuf[DBG_MSG_BUF_SIZE];
+
+// Current print position in the debug message buffer
+static int32_t gDbgMsgBufPos;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX helper function that clears the current drawing area to the specified color
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void clearDrawingArea(const uint8_t r, const uint8_t g, const uint8_t b) noexcept {
+    gpu::GPU& gpu = *PsxVm::gpGpu;
+
+    RGB rgb = {};
+    rgb.r = r;
+    rgb.g = g;
+    rgb.b = b;
+
+    const int32_t drawW = (gpu.drawingArea.right - gpu.drawingArea.left + 1) & 0xFFFF;
+    const int32_t drawH = (gpu.drawingArea.bottom - gpu.drawingArea.top + 1) & 0xFFFF;
+
+    gpu.arguments[0] = rgb.raw;
+    gpu.arguments[1] = gpu.drawingArea.left | (gpu.drawingArea.top << 16);
+    gpu.arguments[2] = drawW | (drawH << 16);
+
+    gpu.cmdFillRectangle();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX helper function that sets the current texture page on the GPU.
+// Note that this will also set the semi-transparency mode, in addition to the texture bit depth.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void setGpuTPage(const uint16_t tpageId) noexcept {
+    gpu::GPU& gpu = *PsxVm::gpGpu;
+    
+    // Set texture page position and bit rate
+    gpu.gp0_e1.texturePageBaseX = (tpageId & 0x0F) >> 0;    // This is multiples of 64
+    gpu.gp0_e1.texturePageBaseY = (tpageId & 0x10) >> 4;    // This is multiples of 256
+    
+    switch ((tpageId >> 7) & 0x3) {
+        case 0: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit4;
+        case 1: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit8;
+        case 2: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit15;
+        default: break;
+    }
+
+    // Set transparency mode
+    switch ((tpageId >> 5) & 0x3) {
+        case 0: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::Bby2plusFby2;
+        case 1: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BplusF;
+        case 2: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BminusF;
+        case 3: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BplusFby4;
+        default: break;
+    }
+}
 
 void LIBGPU_ResetGraph() noexcept {
 loc_8004BCC8:
@@ -403,25 +471,8 @@ DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept {
         gpu.gp0_e2.maskY = 1;
     }
 
-    // Set texture page position and bit rate
-    gpu.gp0_e1.texturePageBaseX = (env.tpage & 0x0F) >> 0;      // This is multiples of 64
-    gpu.gp0_e1.texturePageBaseY = (env.tpage & 0x10) >> 4;      // This is multiples of 256
-    
-    switch ((env.tpage >> 7) & 0x3) {
-        case 0: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit4;
-        case 1: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit8;
-        case 2: gpu.gp0_e1.texturePageColors = gpu::GP0_E1::TexturePageColors::bit15;
-        default: break;
-    }
-
-    // Set transparency mode
-    switch ((env.tpage >> 5) & 0x3) {
-        case 0: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::Bby2plusFby2;
-        case 1: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BplusF;
-        case 2: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BminusF;
-        case 3: gpu.gp0_e1.semiTransparency = gpu::SemiTransparency::BplusFby4;
-        default: break;
-    }
+    // Set the texture page
+    setGpuTPage(env.tpage);
 
     // Set dithering and draw to display area flags
     gpu.gp0_e1.dither24to15 = (env.dtd != 0);
@@ -432,19 +483,7 @@ DRAWENV& LIBGPU_PutDrawEnv(DRAWENV& env) noexcept {
     // Clear the screen if specified by the DRAWENV.
     // Fill the draw area with the specified background color.
     if (env.isbg) {
-        RGB rgb = {};
-        rgb.r = env.r0;
-        rgb.g = env.g0;
-        rgb.b = env.b0;
-
-        const int32_t drawW = (gpu.drawingArea.right - gpu.drawingArea.left + 1) & 0xFFFF;
-        const int32_t drawH = (gpu.drawingArea.bottom - gpu.drawingArea.top + 1) & 0xFFFF;
-
-        gpu.arguments[0] = rgb.raw;
-        gpu.arguments[1] = gpu.drawingArea.left | (gpu.drawingArea.top << 16);
-        gpu.arguments[2] = drawW | (drawH << 16);
-
-        gpu.cmdFillRectangle();
+        clearDrawingArea(env.r0, env.g0, env.b0);
     }
 
     return env;
@@ -943,13 +982,12 @@ void LIBGPU_SetPolyFT4(POLY_FT4& poly) noexcept {
     poly.code = 0x2C;
 }
 
-void LIBGPU_SetSprt8() noexcept {
-loc_8004ECF4:
-    v0 = 3;                                             // Result = 00000003
-    sb(v0, a0 + 0x3);
-    v0 = 0x74;                                          // Result = 00000074
-    sb(v0, a0 + 0x7);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize an 8x8 sprite primitive
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetSprt8(SPRT_8& sprite) noexcept {
+    LIBGPU_setlen(sprite, 3);
+    sprite.code = 0x74;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -958,15 +996,6 @@ loc_8004ECF4:
 void LIBGPU_SetSprt(SPRT & sprt) noexcept {
     LIBGPU_setlen(sprt, 4);
     sprt.code = 0x64;
-}
-
-void LIBGPU_SetTile() noexcept {
-loc_8004ED6C:
-    v0 = 3;                                             // Result = 00000003
-    sb(v0, a0 + 0x3);
-    v0 = 0x60;                                          // Result = 00000060
-    sb(v0, a0 + 0x7);
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -996,697 +1025,163 @@ loc_8004EE68:
     return;
 }
 
-void LIBGPU_SetDumpFnt() noexcept {
-loc_8004F09C:
-    if (i32(a0) < 0) goto loc_8004F0D4;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5E58);                               // Load from: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-    v0 = (i32(v0) < i32(a0));
-    if (v0 != 0) goto loc_8004F0D4;
-    v0 = 0x80050000;                                    // Result = 80050000
-    v0 -= 0x954;                                        // Result = LIBGPU_FntPrint (8004F6AC)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x5E5C);                                // Store to: gLIBGPU_FONT_UNKNOWN_2 (80075E5C)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5D58);                                // Store to: gpLIBGPU_GPU_printf (80075D58)
-loc_8004F0D4:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set which print stream to use for debug printing.
+// Note: for this re-implementation of LIBGPU multiple debug print streams are NOT supported, therfore this call is ignored.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetDumpFnt([[maybe_unused]] const int32_t printStreamId) noexcept {
+    // Ignored.. Not supporting multiple debug print streams!
 }
 
-void LIBGPU_FntLoad() noexcept {
-loc_8004F0DC:
-    sp -= 0x30;
-    sw(s2, sp + 0x28);
-    s2 = a0;
-    sw(s1, sp + 0x24);
-    s1 = a1;
-    sw(s0, sp + 0x20);
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 += 0x5E60;                                       // Result = gLIBGPU_FONT_FntLoad_Clut[0] (80075E60)
-    a0 = s0;                                            // Result = gLIBGPU_FONT_FntLoad_Clut[0] (80075E60)
-    a1 = s2;
-    sw(ra, sp + 0x2C);
-    a2 = s1 + 0x80;
-    v0 = LIBGPU_LoadClut(vmAddrToPtr<uint16_t>(a0), a1, a2);
-    a0 = s0 + 0x200;                                    // Result = gLIBGPU_FONT_FntLoad_FontTex[0] (80076060)
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at + 0x60E0);                                // Store to: gLIBGPU_FONT_clut (800860E0)
-    v0 = 0x80;                                          // Result = 00000080
-    sw(v0, sp + 0x14);
-    v0 = 0x20;                                          // Result = 00000020
-    a3 = s2;
-    sw(s1, sp + 0x10);
-    sw(v0, sp + 0x18);
-    LIBGPU_LoadTPage(
-        vmAddrToPtr<void>(a0),
-        a1,
-        a2,
-        a3,
-        lw(sp + 0x10),
-        lw(sp + 0x14),
-        lw(sp + 0x18)
-    );
-
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x5DA8;                                       // Result = gLIBGPU_FONT_FntLoad_Font[0] (80075DA8)
-    a1 = 0;                                             // Result = 00000000
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at + 0x60DC);                                // Store to: gLIBGPU_FONT_tpage (800860DC)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5E58);                                 // Store to: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-    a2 = 0xB0;                                          // Result = 000000B0
-    LIBC2_memset();
-    ra = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x30;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load the font used for debug printing to the given location in VRAM.
+// This step must be performed prior to debug printing.
+//
+// The font data occupies 128x32 pixels in 4-bit mode or 32x32 pixels when interpreted as 16-bit.
+// The CLUT for the font is placed at location 'dstX, dstY + 128'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_FntLoad(const int32_t dstX, const int32_t dstY) noexcept {
+    gDFontClutId = LIBGPU_LoadClut(gLIBGPU_DebugFont_Clut, dstX, dstY + 128);
+    gDFontTPageId = LIBGPU_LoadTPage((const int16_t*) gLIBGPU_DebugFont_Texture, 0, 0, dstX, dstY, 128, 32);
 }
 
-void LIBGPU_FntOpen() noexcept {
-loc_8004F180:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5E58);                               // Load from: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-    sp -= 0x40;
-    sw(s2, sp + 0x28);
-    s2 = lw(sp + 0x54);
-    sw(s0, sp + 0x20);
-    s0 = lw(sp + 0x50);
-    sw(s3, sp + 0x2C);
-    s3 = a0;
-    sw(s4, sp + 0x30);
-    s4 = a1;
-    sw(s5, sp + 0x34);
-    s5 = a2;
-    sw(s6, sp + 0x38);
-    s6 = a3;
-    sw(ra, sp + 0x3C);
-    v0 = (i32(v1) < 4);
-    sw(s1, sp + 0x24);
-    if (v0 != 0) goto loc_8004F1D4;
-    v0 = -1;                                            // Result = FFFFFFFF
-    goto loc_8004F420;
-loc_8004F1D4:
-    if (v1 != 0) goto loc_8004F1E4;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x6860);                                 // Store to: gLIBGPU_FONT_UNKNOWN_3 (80076860)
-loc_8004F1E4:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6860);                               // Load from: gLIBGPU_FONT_UNKNOWN_3 (80076860)
-    v0 = s2 + a0;
-    v0 = (i32(v0) < 0x401);
-    a1 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_8004F208;
-    v0 = 0x400;                                         // Result = 00000400
-    s2 = v0 - a0;
-loc_8004F208:
-    a0 = v1 << 1;
-    a0 += v1;
-    a0 <<= 2;
-    a0 -= v1;
-    a0 <<= 2;
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x5DB8;                                       // Result = gLIBGPU_FONT_FntLoad_Font[4] (80075DB8)
-    a0 += s1;
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 = lhu(a3 + 0x60DC);                              // Load from: gLIBGPU_FONT_tpage (800860DC)
-    a2 = 0;                                             // Result = 00000000
-    sw(0, sp + 0x10);
-    LIBGPU_SetDrawMode(*vmAddrToPtr<DR_MODE>(a0), a1, a2, a3, vmAddrToPtr<const RECT>(lw(sp + 0x10)));
-    {
-        const bool bJump = (s0 == 0);
-        s0 = s1 - 0x10;                                 // Result = gLIBGPU_FONT_FntLoad_Font[0] (80075DA8)
-        if (bJump) goto loc_8004F2E4;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5E58);                               // Load from: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-    a0 = v0 << 1;
-    a0 += v0;
-    a0 <<= 2;
-    a0 -= v0;
-    a0 <<= 2;
-    a0 += s0;
-    LIBGPU_SetTile();
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5E58);                               // Load from: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 2;
-    v0 += s0;
-    sb(0, v0 + 0x4);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5E58);                               // Load from: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 2;
-    v0 += s0;
-    sb(0, v0 + 0x5);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5E58);                               // Load from: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 2;
-    v0 += s0;
-    sb(0, v0 + 0x6);
-loc_8004F2E4:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5E58);                               // Load from: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-    a0 = s1 - 0x10;                                     // Result = gLIBGPU_FONT_FntLoad_Font[0] (80075DA8)
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 2;
-    v1 -= v0;
-    v1 <<= 2;
-    a0 += v1;
-    sh(s3, a0 + 0x8);
-    sh(s4, a0 + 0xA);
-    sh(s5, a0 + 0xC);
-    sh(s6, a0 + 0xE);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6860);                               // Load from: gLIBGPU_FONT_UNKNOWN_3 (80076860)
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 += 0x1CDC;                                       // Result = gLIBGPU_FONT_str_6[0] (80081CDC)
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5DC4;                                       // Result = gLIBGPU_FONT_FntLoad_Font[7] (80075DC4)
-    at += v1;
-    sw(s2, at);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5DD0;                                       // Result = gLIBGPU_FONT_FntLoad_Font[A] (80075DD0)
-    at += v1;
-    sw(0, at);
-    v0 += a0;
-    a0 <<= 4;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5DCC;                                       // Result = gLIBGPU_FONT_FntLoad_Font[9] (80075DCC)
-    at += v1;
-    sw(v0, at);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 += 0x20DC;                                       // Result = gLIBGPU_FONT_sprt_7[0] (800820DC)
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5DCC;                                       // Result = gLIBGPU_FONT_FntLoad_Font[9] (80075DCC)
-    at += v1;
-    a1 = lw(at);
-    a0 += v0;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5DC8;                                       // Result = gLIBGPU_FONT_FntLoad_Font[8] (80075DC8)
-    at += v1;
-    sw(a0, at);
-    sb(0, a1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5E58);                               // Load from: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5DC8;                                       // Result = gLIBGPU_FONT_FntLoad_Font[8] (80075DC8)
-    at += v0;
-    s0 = lw(at);
-    s1 = 0;                                             // Result = 00000000
-    if (i32(s2) <= 0) goto loc_8004F3F8;
-loc_8004F3C8:
-    a0 = s0;
-    LIBGPU_SetSprt8();
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    LIBGPU_SetShadeTex(vmAddrToPtr<void>(a0), a1);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lhu(v0 + 0x60E0);                              // Load from: gLIBGPU_FONT_clut (800860E0)
-    s1++;
-    sh(v0, s0 + 0xE);
-    v0 = (i32(s1) < i32(s2));
-    s0 += 0x10;
-    if (v0 != 0) goto loc_8004F3C8;
-loc_8004F3F8:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6860);                               // Load from: gLIBGPU_FONT_UNKNOWN_3 (80076860)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5E58);                               // Load from: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-    v1 += s2;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x6860);                                // Store to: gLIBGPU_FONT_UNKNOWN_3 (80076860)
-    v1 = v0 + 1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5E58);                                // Store to: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-loc_8004F420:
-    ra = lw(sp + 0x3C);
-    s6 = lw(sp + 0x38);
-    s5 = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x40;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Open a print stream for debug printing with the debug font.
+// Sets the parameters for print area and whether to clear the background to 0,0,0.
+// The id of the opened print stream is returned.
+//
+// Params:
+//  dispX, dispY:   top left position of the screen RECT to output the debug text to.
+//  dispW, dispH:   bounds of the area to output debug text to.
+//  bClearBg:       if true then the background is cleared to 0,0,0 when 'flushing' (displaying) debug text.
+//  maxChars:       maximum number of characters to print. This field is IGNORED for this re-implementation of LIBGPU.
+//
+// Note:
+//  (1) For this re-implementation of LIBGPU multiple debug print streams are NOT supported, this call always returns '0'.
+//  (2) There is no way or need provided to close this 'stream'. It's always there and always has a fixed overhead.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t LIBGPU_FntOpen(
+    const int32_t dispX,
+    const int32_t dispY,
+    const int32_t dispW,
+    const int32_t dispH,
+    const bool bClearBg,
+    [[maybe_unused]] const int32_t maxChars
+) noexcept {    
+    gDFontDispX = (int16_t) dispX;
+    gDFontDispY = (int16_t) dispY;
+    gDFontDispW = (int16_t) dispW;
+    gDFontDispH = (int16_t) dispH;
+    gDbgMsgBufPos = 0;
+
+    return 0;   // Print stream id is always 0 in this cut down LIBGPU!
 }
 
-void LIBGPU_FntFlush() noexcept {
-loc_8004F44C:
-    sp -= 0x48;
-    sw(ra, sp + 0x44);
-    sw(fp, sp + 0x40);
-    sw(s7, sp + 0x3C);
-    sw(s6, sp + 0x38);
-    sw(s5, sp + 0x34);
-    sw(s4, sp + 0x30);
-    sw(s3, sp + 0x2C);
-    sw(s2, sp + 0x28);
-    sw(s1, sp + 0x24);
-    sw(s0, sp + 0x20);
-    if (i32(a0) < 0) goto loc_8004F494;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5E58);                               // Load from: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-    v0 = (i32(a0) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a0 << 1;
-        if (bJump) goto loc_8004F4D8;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Flushes the message buffer for debug printing so it is displayed to the screen.
+// After this call the buffer position is also reset.
+// Note: the given print stream id field is IGNORED because this reimplementation of LIBGPU does not support multiple debug print streams.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_FntFlush([[maybe_unused]] const int32_t printStreamId) noexcept {
+    // Clear the drawing area if specified
+    if (gDFontClearBg) {
+        clearDrawingArea(0, 0, 0);
     }
-loc_8004F494:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5E5C);                               // Load from: gLIBGPU_FONT_UNKNOWN_2 (80075E5C)
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 2;
-    v0 -= a0;
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5DCC;                                       // Result = gLIBGPU_FONT_FntLoad_Font[9] (80075DCC)
-    at += v0;
-    v0 = lw(at);
+
+    // Set the current texture page id to use and clear the texture window
     {
-        const bool bJump = (v0 != 0);
-        v0 = a0 << 1;
-        if (bJump) goto loc_8004F4D8;
+        DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
+        LIBGPU_SetDrawMode(drawModePrim, false, false, gDFontTPageId, nullptr);
+        LIBGPU_TermPrim(drawModePrim);
+        LIBGPU_DrawOTag(&drawModePrim);
+        LIBGPU_DrawSync(0);
     }
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8004F678;
-loc_8004F4D8:
-    v0 += a0;
-    v0 <<= 2;
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 += 0x5DA8;                                       // Result = gLIBGPU_FONT_FntLoad_Font[0] (80075DA8)
-    s4 = v0 + v1;
-    a3 = s4 + 0x10;
-    sw(a3, sp + 0x10);
-    a0 = lw(sp + 0x10);
-    s1 = lw(s4 + 0x24);
-    s6 = lw(s4 + 0x20);
-    fp = lw(s4 + 0x1C);
-    s0 = lh(s4 + 0x8);
-    s5 = lh(s4 + 0xA);
-    v0 = lh(s4 + 0xC);
-    v1 = lh(s4 + 0xE);
-    s7 = s0 + v0;
-    v1 += s5;
-    sw(v1, sp + 0x18);
-    LIBGPU_TermPrim(*vmAddrToPtr<SPRT_8>(a0));
-    v0 = lbu(s1);
-    if (v0 == 0) goto loc_8004F640;
-    s3 = s6 + 0xA;
-loc_8004F540:
-    v0 = 0x20;                                          // Result = 00000020
-    if (fp == 0) goto loc_8004F640;
-    v1 = lbu(s1);
-    s2 = 0;                                             // Result = 00000000
-    if (v1 == v0) goto loc_8004F5F0;
-    v0 = (i32(v1) < 0x21);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 9;                                         // Result = 00000009
-        if (bJump) goto loc_8004F584;
+
+    // Use this primitive to do the printing - do common setup
+    SPRT_8 spritePrim = {};
+    LIBGPU_SetSprt8(spritePrim);
+    LIBGPU_TermPrim(spritePrim);
+    LIBGPU_setRGB0(spritePrim, 127, 127, 127);
+    spritePrim.clut = gDFontClutId;
+    
+    // Print all characters in the message buffer
+    const int16_t xend = gDFontDispX + gDFontDispW;
+    const int16_t yend = gDFontDispY + gDFontDispH;
+
+    int16_t xpos = gDFontDispX;
+    int16_t ypos = gDFontDispY;
+
+    for (int32_t charIdx = 0; charIdx < gDbgMsgBufPos; ++charIdx) {
+        // Get the character and ignore if a non printable control char or past the printable range.
+        // Only 64 glyphs are supported for the debug font, from decimal 32 to 95 (inclusive).
+        // For lower case alpha characters we upper case so that they may be printed:
+        const char c = gDbgMsgBuf[charIdx];
+        const char cUpper = (c >= 'a' && c <= 'z') ? c - 32 : c;
+
+        if (cUpper == ' ') {
+            xpos += 8;
+        }
+        else if (cUpper == '\t') {
+            xpos += 32;
+        }
+        else if (cUpper == '\n') {
+            xpos = gDFontDispX;
+            ypos += 8;
+        }
+        else if (cUpper >= 32 && cUpper <= 95) {
+            // Normal non space font character, this one we will actually print
+            const uint8_t glyphIdx = (uint8_t)(cUpper - 32);
+            const uint8_t glyphRow = glyphIdx / 16;
+            const uint8_t glyphCol = glyphIdx % 16;
+
+            spritePrim.x0 = xpos;
+            spritePrim.y0 = ypos;
+            spritePrim.tu0 = glyphCol * 8;
+            spritePrim.tv0 = glyphRow * 8;
+
+            LIBGPU_DrawOTag(&spritePrim);
+            LIBGPU_DrawSync(0);
+
+            xpos += 8;
+        }
+
+        // Bounds checking
+        if (xpos >= xend) {
+            xpos = gDFontDispX;
+            ypos += 8;
+        }
+
+        if (ypos >= yend) {
+            break;
+        }
     }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0xA;                                       // Result = 0000000A
-        if (bJump) goto loc_8004F57C;
-    }
-    if (v1 != v0) goto loc_8004F584;
-    s2 = 1;                                             // Result = 00000001
-    goto loc_8004F604;
-loc_8004F57C:
-    s0 += 0x20;
-    goto loc_8004F5F4;
-loc_8004F584:
-    v0 = lbu(s1);
-    v0 -= 0x61;
-    v0 = (v0 < 0x1A);
-    if (v0 == 0) goto loc_8004F5A8;
-    v0 = lbu(s1);
-    v1 = v0 - 0x40;
-    goto loc_8004F5B4;
-loc_8004F5A8:
-    v0 = lbu(s1);
-    v1 = v0 - 0x20;
-loc_8004F5B4:
-    v0 = v1;
-    if (i32(v1) >= 0) goto loc_8004F5C0;
-    v0 = v1 + 0xF;
-loc_8004F5C0:
-    a0 = u32(i32(v0) >> 4);
-    v0 = a0 << 4;
-    v0 = v1 - v0;
-    a2 = v0 << 3;
-    v0 = a0 << 3;
-    a0 = lw(sp + 0x10);
-    a1 = s6;
-    sb(a2, s3 + 0x2);
-    sb(v0, s3 + 0x3);
-    sh(s0, s3 - 0x2);
-    sh(s5, s3);
-    LIBGPU_AddPrim();
-loc_8004F5F0:
-    s0 += 8;
-loc_8004F5F4:
-    v0 = (i32(s0) < i32(s7));
-    if (v0 != 0) goto loc_8004F604;
-    s2 = 1;                                             // Result = 00000001
-loc_8004F604:
-    if (s2 == 0) goto loc_8004F624;
-    s5 += 8;
-    a3 = lw(sp + 0x18);
-    s0 = lh(s4 + 0x8);
-    v0 = (i32(s5) < i32(a3));
-    if (v0 == 0) goto loc_8004F640;
-loc_8004F624:
-    s3 += 0x10;
-    s6 += 0x10;
-    s1++;
-    v0 = lbu(s1);
-    fp--;
-    if (v0 != 0) goto loc_8004F540;
-loc_8004F640:
-    v0 = lbu(s4 + 0x7);
-    if (v0 == 0) goto loc_8004F65C;
-    a0 = lw(sp + 0x10);
-    a1 = s4;
-    LIBGPU_AddPrim();
-loc_8004F65C:
-    a0 = lw(sp + 0x10);
-    LIBGPU_DrawOTag(vmAddrToPtr<void>(a0));
-    v1 = lw(s4 + 0x24);
-    v0 = lw(sp + 0x10);
-    sw(0, s4 + 0x28);
-    sb(0, v1);
-loc_8004F678:
-    ra = lw(sp + 0x44);
-    fp = lw(sp + 0x40);
-    s7 = lw(sp + 0x3C);
-    s6 = lw(sp + 0x38);
-    s5 = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x48;
-    return;
+
+    // Reset the buffer position for next time round
+    gDbgMsgBufPos = 0;
 }
 
-void LIBGPU_FntPrint() noexcept {
-loc_8004F6AC:
-    sw(a0, sp);
-    sw(a1, sp + 0x4);
-    sw(a2, sp + 0x8);
-    sw(a3, sp + 0xC);
-    sp -= 0x238;
-    v0 = sp + 0x23C;
-    sw(ra, sp + 0x230);
-    sw(s5, sp + 0x22C);
-    sw(s4, sp + 0x228);
-    sw(s3, sp + 0x224);
-    sw(s2, sp + 0x220);
-    sw(s1, sp + 0x21C);
-    sw(s0, sp + 0x218);
-    sw(a0, sp + 0x238);
-    sw(v0, sp + 0x210);
-    if (i32(a0) < 0) goto loc_8004F704;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5E58);                               // Load from: gLIBGPU_FONT_UNKNOWN_1 (80075E58)
-    v0 = (i32(a0) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = sp + 0x240;
-        if (bJump) goto loc_8004F748;
-    }
-loc_8004F704:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5E5C);                               // Load from: gLIBGPU_FONT_UNKNOWN_2 (80075E5C)
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 2;
-    v1 -= v0;
-    v1 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5DCC;                                       // Result = gLIBGPU_FONT_FntLoad_Font[9] (80075DCC)
-    at += v1;
-    v1 = lw(at);
-    s3 = a0;
-    sw(v0, sp + 0x238);
-    if (v1 != 0) goto loc_8004F750;
-loc_8004F740:
-    v0 = -1;                                            // Result = FFFFFFFF
-    goto loc_8004FA7C;
-loc_8004F748:
-    sw(v0, sp + 0x210);
-    s3 = lw(sp + 0x23C);
-loc_8004F750:
-    v1 = lw(sp + 0x238);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 += 0x5DA8;                                       // Result = gLIBGPU_FONT_FntLoad_Font[0] (80075DA8)
-    s1 = v0 + v1;
-    v1 = lw(s1 + 0x28);
-    v0 = lw(s1 + 0x1C);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 != 0) goto loc_8004F740;
-    a1 = lbu(s3);
-    if (a1 == 0) goto loc_8004FA64;
-    s5 = 0x25;                                          // Result = 00000025
-    s4 = 0xCCCC0000;                                    // Result = CCCC0000
-    s4 |= 0xCCCD;                                       // Result = CCCCCCCD
-loc_8004F7AC:
-    if (a1 != s5) goto loc_8004F7C8;
-    s3++;
-    a1 = lbu(s3);
-    s2 = 0;                                             // Result = 00000000
-    if (a1 != s5) goto loc_8004F800;
-loc_8004F7C8:
-    a0 = lw(s1 + 0x28);
-    v1 = lw(s1 + 0x24);
-    v0 = a0 + 1;
-    v1 += a0;
-    sw(v0, s1 + 0x28);
-    sb(a1, v1);
-    v1 = lw(s1 + 0x28);
-    v0 = lw(s1 + 0x1C);
-    v0 = (i32(v0) < i32(v1));
-    s3++;
-    if (v0 == 0) goto loc_8004FA54;
-    v0 = -1;                                            // Result = FFFFFFFF
-    goto loc_8004FA7C;
-loc_8004F800:
-    v0 = a1 ^ 0x30;
-    v0 = (v0 < 1);
-    a3 = v0;
-    goto loc_8004F82C;
-loc_8004F810:
-    v0 = s2 << 2;
-    v0 += s2;
-    v0 <<= 1;
-    v0 -= 0x30;
-    s2 = v0 + a1;
-    s3++;
-    a1 = lbu(s3);
-loc_8004F82C:
-    v0 = a1 - 0x30;
-    v0 = (v0 < 0xA);
-    if (v0 != 0) goto loc_8004F810;
-    s0 = sp + 0x210;
-    if (i32(s2) > 0) goto loc_8004F84C;
-    s2 = 1;                                             // Result = 00000001
-loc_8004F84C:
-    v1 = a1 - 0x58;
-    v0 = (v1 < 0x21);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_8004F9B0;
-    }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x1DF4;                                       // Result = JumpTable_LIBGPU_FntPrint[0] (80011DF4)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x8004F8F8: goto loc_8004F8F8;
-        case 0x8004F9B0: goto loc_8004F9B0;
-        case 0x8004F970: goto loc_8004F970;
-        case 0x8004F878: goto loc_8004F878;
-        case 0x8004F990: goto loc_8004F990;
-        default: jump_table_err(); break;
-    }
-loc_8004F878:
-    v1 = lw(sp + 0x210);
-    v0 = v1 + 4;
-    sw(v0, sp + 0x210);
-    a0 = lw(v1);
-    a1 = 0;                                             // Result = 00000000
-    if (i32(a0) >= 0) goto loc_8004F8A0;
-    a0 = -a0;
-    a1 = 0x2D;                                          // Result = 0000002D
-loc_8004F8A0:
-    a2 = 0;                                             // Result = 00000000
-loc_8004F8A4:
-    multu(a0, s4);
-    s0--;
-    a2++;
-    v1 = hi;
-    v1 >>= 3;
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 1;
-    v0 = a0 - v0;
-    v0 += 0x30;
-    sb(v0, s0);
-    a0 = v1;
-    if (a2 == 0) goto loc_8004F8A4;
-    if (a0 != 0) goto loc_8004F8A4;
-    v0 = (i32(a2) < i32(s2));
-    if (a1 == 0) goto loc_8004F9B4;
-    s0--;
-    sb(a1, s0);
-    a2++;
-    goto loc_8004F9B0;
-loc_8004F8F8:
-    v1 = lw(sp + 0x210);
-    a2 = 0;                                             // Result = 00000000
-    v0 = v1 + 4;
-    sw(v0, sp + 0x210);
-    a0 = lw(v1);
-loc_8004F90C:
-    s0--;
-loc_8004F910:
-    v0 = a0 & 0xF;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6864);                               // Load from: gpLIBGPU_FONT_hexchars_upper (80076864)
-    a0 >>= 4;
-    v1 += v0;
-    v0 = lbu(v1);
-    a2++;
-    sb(v0, s0);
-    if (a2 == 0) goto loc_8004F90C;
-    s0--;
-    if (a0 != 0) goto loc_8004F910;
-    s0++;
-    v0 = a3 & 0xFF;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(a2) < i32(s2));
-        if (bJump) goto loc_8004F9B0;
-    }
-    v1 = 0x30;                                          // Result = 00000030
-    if (v0 == 0) goto loc_8004F9FC;
-loc_8004F954:
-    s0--;
-    a2++;
-    v0 = (i32(a2) < i32(s2));
-    sb(v1, s0);
-    if (v0 != 0) goto loc_8004F954;
-    goto loc_8004F9B4;
-loc_8004F970:
-    v0 = lw(sp + 0x210);
-    s0--;
-    v1 = v0 + 4;
-    sw(v1, sp + 0x210);
-    v0 = lbu(v0);
-    a2 = 1;                                             // Result = 00000001
-    sb(v0, s0);
-    goto loc_8004F9B0;
-loc_8004F990:
-    v1 = lw(sp + 0x210);
-    v0 = v1 + 4;
-    sw(v0, sp + 0x210);
-    s0 = lw(v1);
-    a0 = s0;
-    LIBC2_strlen();
-    a2 = v0;
-loc_8004F9B0:
-    v0 = (i32(a2) < i32(s2));
-loc_8004F9B4:
-    if (v0 == 0) goto loc_8004F9FC;
-    a1 = 0x20;                                          // Result = 00000020
-loc_8004F9C0:
-    a0 = lw(s1 + 0x28);
-    v1 = lw(s1 + 0x24);
-    v0 = a0 + 1;
-    v1 += a0;
-    sw(v0, s1 + 0x28);
-    sb(a1, v1);
-    v1 = lw(s1 + 0x28);
-    v0 = lw(s1 + 0x1C);
-    v0 = (i32(v0) < i32(v1));
-    s2--;
-    if (v0 != 0) goto loc_8004F740;
-    v0 = (i32(a2) < i32(s2));
-    if (v0 != 0) goto loc_8004F9C0;
-loc_8004F9FC:
-    a2--;
-    v0 = -1;                                            // Result = FFFFFFFF
-    a1 = -1;                                            // Result = FFFFFFFF
-    if (a2 == v0) goto loc_8004FA50;
-loc_8004FA0C:
-    a0 = lw(s1 + 0x28);
-    v0 = a0 + 1;
-    sw(v0, s1 + 0x28);
-    v0 = lw(s1 + 0x24);
-    v1 = lbu(s0);
-    v0 += a0;
-    sb(v1, v0);
-    v1 = lw(s1 + 0x28);
-    v0 = lw(s1 + 0x1C);
-    v0 = (i32(v0) < i32(v1));
-    s0++;
-    if (v0 != 0) goto loc_8004F740;
-    a2--;
-    if (a2 != a1) goto loc_8004FA0C;
-loc_8004FA50:
-    s3++;
-loc_8004FA54:
-    a1 = lbu(s3);
-    if (a1 != 0) goto loc_8004F7AC;
-loc_8004FA64:
-    v0 = lw(s1 + 0x24);
-    v1 = lw(s1 + 0x28);
-    v0 += v1;
-    sb(0, v0);
-    v0 = lw(s1 + 0x28);
-loc_8004FA7C:
-    ra = lw(sp + 0x230);
-    s5 = lw(sp + 0x22C);
-    s4 = lw(sp + 0x228);
-    s3 = lw(sp + 0x224);
-    s2 = lw(sp + 0x220);
-    s1 = lw(sp + 0x21C);
-    s0 = lw(sp + 0x218);
-    sp += 0x238;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Print the given formatted message to the given print stream id.
+//
+// Notes:
+//  (1) Print stream id is IGNORED for this reimplementation of LIBGPU. Only a single debug print stream is supported!
+//  (2) The debug font must be 'flushed' to display the message.
+//  (3) If the message buffer is full then the rest of the message will be ignored.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_FntPrint([[maybe_unused]] const int32_t printStreamId, const char* const fmtMsg, ...) noexcept {
+    // Message buffer already full (counting the null) ? If so then ignore...
+    if (gDbgMsgBufPos + 1 >= DBG_MSG_BUF_SIZE)
+        return;
+
+    // Print the message to the message buffer
+    va_list args;
+    va_start(args, fmtMsg);
+
+    const int32_t bufCharsAvailable = DBG_MSG_BUF_SIZE - gDbgMsgBufPos;
+    const int numCharsWritten = vsnprintf(gDbgMsgBuf, (size_t) bufCharsAvailable, fmtMsg, args);
+    gDbgMsgBufPos += numCharsWritten;
+    
+    va_end(args);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

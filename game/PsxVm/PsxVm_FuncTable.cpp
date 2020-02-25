@@ -600,14 +600,7 @@ extern void LIBGPU_IsEndPrim() noexcept;
 extern void LIBGPU_AddPrim() noexcept;
 extern void LIBGPU_AddPrims() noexcept;
 extern void LIBGPU_CatPrim() noexcept;
-extern void LIBGPU_SetSprt8() noexcept;
-extern void LIBGPU_SetTile() noexcept;
 extern void LIBGPU_MargePrim() noexcept;
-extern void LIBGPU_SetDumpFnt() noexcept;
-extern void LIBGPU_FntLoad() noexcept;
-extern void LIBGPU_FntOpen() noexcept;
-extern void LIBGPU_FntFlush() noexcept;
-extern void LIBGPU_FntPrint() noexcept;
 extern void LIBC2_memset() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
 extern void LIBSN__main() noexcept;
@@ -1321,14 +1314,7 @@ namespace PsxVm {
         { 0x8004EB50, &LIBGPU_AddPrim },
         { 0x8004EB8C, &LIBGPU_AddPrims },
         { 0x8004EBC8, &LIBGPU_CatPrim },
-        { 0x8004ECF4, &LIBGPU_SetSprt8 },
-        { 0x8004ED6C, &LIBGPU_SetTile },
         { 0x8004EE3C, &LIBGPU_MargePrim },
-        { 0x8004F09C, &LIBGPU_SetDumpFnt },
-        { 0x8004F0DC, &LIBGPU_FntLoad },
-        { 0x8004F180, &LIBGPU_FntOpen },
-        { 0x8004F44C, &LIBGPU_FntFlush },
-        { 0x8004F6AC, &LIBGPU_FntPrint },
         { 0x8004FAA4, &LIBC2_memset },
         { 0x80050454, &LIBAPI_FlushCache },
         { 0x800507AC, &LIBSN__main },

@@ -160,6 +160,7 @@ set(SOURCE_FILES
     "PsyQ/LIBETC.h"
     "PsyQ/LIBGPU.cpp"
     "PsyQ/LIBGPU.h"
+    "PsyQ/LIBGPU_Resources.cpp"
     "PsyQ/LIBGTE.cpp"
     "PsyQ/LIBGTE.h"
     "PsyQ/LIBSN.cpp"

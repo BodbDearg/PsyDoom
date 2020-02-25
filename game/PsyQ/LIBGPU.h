@@ -250,16 +250,24 @@ void LIBGPU_SetShadeTex(void* const pPrim, const bool bDisableShading) noexcept;
 void LIBGPU_SetPolyFT3(POLY_FT3& poly) noexcept;
 void LIBGPU_SetPolyF4(POLY_F4& poly) noexcept;
 void LIBGPU_SetPolyFT4(POLY_FT4& poly) noexcept;
-void LIBGPU_SetSprt8() noexcept;
+void LIBGPU_SetSprt8(SPRT_8& sprite) noexcept;
 void LIBGPU_SetSprt(SPRT & sprt) noexcept;
-void LIBGPU_SetTile() noexcept;
 void LIBGPU_SetLineF2(LINE_F2& line) noexcept;
 void LIBGPU_MargePrim() noexcept;       // TODO: still needed?
-void LIBGPU_SetDumpFnt() noexcept;
-void LIBGPU_FntLoad() noexcept;
-void LIBGPU_FntOpen() noexcept;
-void LIBGPU_FntFlush() noexcept;
-void LIBGPU_FntPrint() noexcept;
+void LIBGPU_SetDumpFnt(const int32_t printStreamId) noexcept;
+void LIBGPU_FntLoad(const int32_t dstX, const int32_t dstY) noexcept;
+
+int32_t LIBGPU_FntOpen(
+    const int32_t dispX,
+    const int32_t dispY,
+    const int32_t dispW,
+    const int32_t dispH,
+    const bool bClearBg,
+    const int32_t maxChars
+) noexcept;
+
+void LIBGPU_FntFlush(const int32_t printStreamId) noexcept;
+void LIBGPU_FntPrint(const int32_t printStreamId, const char* const fmtMsg, ...) noexcept;
 
 uint16_t LIBGPU_LoadTPage(
     const void* pImageData,
@@ -454,3 +462,9 @@ template <class T>
 inline void LIBGPU_TermPrim(T& prim) noexcept {
     prim.tag |= 0x00FFFFFF;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Debug font resources used by LIBGPU
+//------------------------------------------------------------------------------------------------------------------------------------------
+extern const uint8_t    gLIBGPU_DebugFont_Texture[2048];
+extern const uint16_t   gLIBGPU_DebugFont_Clut[256];

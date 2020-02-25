@@ -182,35 +182,38 @@ void I_Main() noexcept {
 }
 
 void I_PSXInit() noexcept {
-loc_80032934:
     sp -= 0x28;
     sw(ra, sp + 0x24);
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
+    
     LIBETC_ResetCallback();
+    
     a0 = 0;                                             // Result = 00000000
     LIBGPU_ResetGraph();
+    
     a0 = 0;                                             // Result = 00000000
     LIBGPU_SetGraphDebug();
+
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x7788;                                       // Result = gPadInputBuffer_1[0] (80097788)
     a1 = 0x22;                                          // Result = 00000022
     a2 = 0x80090000;                                    // Result = 80090000
     a2 += 0x78EC;                                       // Result = gPadInputBuffer_2[0] (800978EC)
     a3 = 0x22;                                          // Result = 00000022
-    LIBAPI_InitPAD();
-    s0 = 0xF0;                                          // Result = 000000F0
+    LIBAPI_InitPAD();    
     LIBAPI_StartPAD();
+
     a0 = 0;                                             // Result = 00000000
     LIBAPI_ChangeClearPAD();
-    s2 = 1;                                             // Result = 00000001
-    LIBGTE_InitGeom();    
+    LIBGTE_InitGeom();
 
     // These calls don't really matter for PSX DOOM since we don't do perspective projection using the GTE
     LIBGTE_SetGeomScreen(128);
     LIBGTE_SetGeomOffset(128, 100);
 
+    s0 = 0xF0;                                          // Result = 000000F0
     s1 = 0x800B0000;                                    // Result = 800B0000
     s1 -= 0x6F54;                                       // Result = gDrawEnv1[0] (800A90AC)    
     a0 = s1;                                            // Result = gDrawEnv1[0] (800A90AC)
@@ -220,6 +223,7 @@ loc_80032934:
     sw(s0, sp + 0x10);
     LIBGPU_SetDefDrawEnv(*vmAddrToPtr<DRAWENV>(a0), a1, a2, a3, s0);
 
+    s2 = 1;                                             // Result = 00000001
     a0 = s1 + 0x5C;                                     // Result = gDrawEnv2[0] (800A9108)
     a1 = 0x100;                                         // Result = 00000100
     a2 = 0;                                             // Result = 00000000
@@ -243,25 +247,31 @@ loc_80032934:
     sb(0, at - 0x6EE2);                                 // Store to: gDrawEnv2[B] (800A911E)
     sw(s0, sp + 0x10);
     LIBGPU_SetDefDispEnv(*vmAddrToPtr<DISPENV>(a0), a1, a2, a3, s0);
+    
     a0 = s1 + 0x14;                                     // Result = gDispEnv2[0] (800A9178)
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
     a3 = 0x100;                                         // Result = 00000100
     sw(s0, sp + 0x10);
     LIBGPU_SetDefDispEnv(*vmAddrToPtr<DISPENV>(a0), a1, a2, a3, s0);
+    
     *gCurDispBufferIdx = 0;
+    
     LIBAPI_EnterCriticalSection();
     LIBAPI_ExitCriticalSection();
     LIBCOMB_AddCOMB();
+    
     a0 = 0xF0000000;                                    // Result = F0000000
     a0 |= 0xB;                                          // Result = F000000B
     a1 = 0x400;                                         // Result = 00000400
     a2 = 0x2000;                                        // Result = 00002000
     a3 = 0;                                             // Result = 00000000
-    LIBAPI_OpenEvent();
+    LIBAPI_OpenEvent();    
     a0 = v0;
     sw(a0, gp + 0x944);                                 // Store to: gSioErrorEvent (80077F24)
+    
     LIBAPI_EnableEvent();
+    
     a0 = 0xF0000000;                                    // Result = F0000000
     a0 |= 0xB;                                          // Result = F000000B
     a1 = 0x800;                                         // Result = 00000800
@@ -270,71 +280,69 @@ loc_80032934:
     LIBAPI_OpenEvent();
     a0 = v0;
     sw(a0, gp + 0xA60);                                 // Store to: gSioWriteDoneEvent (80078040)
+    
     LIBAPI_EnableEvent();
+    
     s0 = 0x80070000;                                    // Result = 80070000
     s0 += 0x7C1C;                                       // Result = STR_sio_3[0] (80077C1C)
     a0 = s0;                                            // Result = STR_sio_3[0] (80077C1C)
     a1 = 2;                                             // Result = 00000002
     LIBAPI_open();
+    
     a0 = s0;                                            // Result = STR_sio_3[0] (80077C1C)
     sw(v0, gp + 0x934);                                 // Store to: gNetOutputFd (80077F14)
     a1 = 0x8001;                                        // Result = 00008001
     LIBAPI_open();
+    
     a0 = 1;                                             // Result = 00000001
     a1 = 3;                                             // Result = 00000003
     sw(v0, gp + 0xC54);                                 // Store to: gNetInputFd (80078234)
     a2 = 0x9600;                                        // Result = 00009600
     LIBCOMB__comb_control();
+    
     I_DrawPresent();
     I_DrawPresent();
+
     a0 = 1;                                             // Result = 00000001
     LIBGPU_SetDispMask();
+
     ra = lw(sp + 0x24);
     s2 = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);
     s0 = lw(sp + 0x18);
     sp += 0x28;
-    return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Prints a fatal non-recoverable error to the screen using a debug font.
+// The error message is formatted printf style.
+//------------------------------------------------------------------------------------------------------------------------------------------
 [[noreturn]] void I_Error(const char* const fmtMsg, ...) noexcept {
-    sp -= 0x120;
-    sw(s0, sp + 0x118);
-    sw(a0, sp + 0x120);
+    // Compose the message
+    char msgBuffer[256];
 
     {
         va_list args;
         va_start(args, fmtMsg);
-        v0 = D_vsprintf(vmAddrToPtr<char>(sp + 0x18), fmtMsg, args);
+        D_vsprintf(msgBuffer, fmtMsg, args);
         va_end(args);
     }
 
+    // Finish up any current drawing
     I_DrawPresent();
 
-    a0 = 0x3C0;
-    a1 = 0x100;
-    LIBGPU_FntLoad();
+    // Load the debug font to VRAM
+    LIBGPU_FntLoad(960, 256);
+    
+    // Open a print stream for debug printing and make it current
+    const int32_t printStreamId = LIBGPU_FntOpen(0, 0, 256, 200, false, 256);
+    LIBGPU_SetDumpFnt(printStreamId);
 
-    sw(0, sp + 0x10);
-    sw(0x100, sp + 0x14);
+    // Print the required string, then flush to display
+    LIBGPU_FntPrint(printStreamId, "\n\n\n %s", msgBuffer);
+    LIBGPU_FntFlush(printStreamId);
 
-    a0 = 0;
-    a1 = 0;
-    a2 = 0x100;
-    a3 = 0xC8;
-    LIBGPU_FntOpen();
-    s0 = v0;
-
-    a0 = s0;
-    LIBGPU_SetDumpFnt();
-
-    a0 = 0x80077C24;    // Result = STR_I_Error_PrintToScreenFmtStr[0] (80077C24)
-    a1 = sp + 0x18;
-    LIBGPU_FntPrint();
-
-    a0 = s0;
-    LIBGPU_FntFlush();
-
+    // Present the resulting message
     I_DrawPresent();
 
     // TODO: PC-PSX: allow the PC client to exit the app from here
@@ -344,9 +352,6 @@ loc_80032934:
             PcPsx::handleSdlWindowEvents();     // TODO: this is a temp hack to quitting the app after I_Error()
         #endif
     }
-
-    s0 = lw(sp + 0x118);
-    sp += 0x120;
 }
 
 void I_ReadGamepad() noexcept {
