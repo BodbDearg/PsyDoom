@@ -806,10 +806,11 @@ void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept 
         --timeoutLeft;
 
         if (timeoutLeft == 0xFFFFFFFF) {
-            a0 = 0x80011AD4;                    // Result = STR_Sys_VSync_Timeout_Err[0] (80011AD4)
-            LIBC2_puts();
+            std::puts("VSync: timeout\n");
+
             a0 = 0;
             LIBAPI_ChangeClearPAD();
+            
             a0 = 3;
             a1 = 0;
             LIBAPI_ChangeClearRCnt();

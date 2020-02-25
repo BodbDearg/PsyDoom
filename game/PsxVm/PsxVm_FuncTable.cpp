@@ -542,10 +542,8 @@ extern void LIBAPI_read() noexcept;
 extern void LIBAPI_TestEvent() noexcept;
 extern void LIBAPI_ExitCriticalSection() noexcept;
 extern void LIBAPI_open() noexcept;
-extern void LIBC2_sprintf() noexcept;
 extern void LIBC2_memchr() noexcept;
 extern void LIBC2_strlen() noexcept;
-extern void LIBC2_memmove() noexcept;
 extern void LIBETC_ResetCallback() noexcept;
 extern void LIBETC_InterruptCallback() noexcept;
 extern void LIBETC_DMACallback() noexcept;
@@ -569,7 +567,6 @@ extern void LIBC2_setjmp() noexcept;
 extern void LIBC2_longjmp() noexcept;
 extern void LIBC2_prnt() noexcept;
 extern void LIBC2_toupper() noexcept;
-extern void LIBC2_tolower() noexcept;
 extern void LIBC2_putchar() noexcept;
 extern void LIBETC_startIntrVSync() noexcept;
 extern void LIBETC_INTR_stopIntr_UNKNOWN_Helper2() noexcept;
@@ -583,15 +580,12 @@ extern void LIBETC_INTR_DMA_setIntrDMA() noexcept;
 extern void LIBETC_INTR_DMA_memclr() noexcept;
 extern void _thunk_LIBETC_VSync() noexcept;
 extern void _thunk_LIBETC_v_wait() noexcept;
-extern void LIBC2_puts() noexcept;
 extern void LIBGPU_GetGraphType() noexcept;
 extern void LIBGPU_SetDispMask() noexcept;
 extern void LIBGPU_SYS__ctl() noexcept;
 extern void LIBAPI_GPU_cw() noexcept;
-extern void LIBC2_memcpy() noexcept;
 extern void LIBETC_SetVideoMode() noexcept;
 extern void LIBETC_GetVideoMode() noexcept;
-extern void LIBC2_memset() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
 extern void LIBSN__main() noexcept;
 extern void LIBSN___do_global_dtors() noexcept;
@@ -1246,10 +1240,8 @@ namespace PsxVm {
         { 0x80049E2C, &LIBAPI_TestEvent },
         { 0x80049E3C, &LIBAPI_ExitCriticalSection },
         { 0x80049E4C, &LIBAPI_open },
-        { 0x80049E5C, &LIBC2_sprintf },
         { 0x8004A6BC, &LIBC2_memchr },
         { 0x8004A70C, &LIBC2_strlen },
-        { 0x8004A73C, &LIBC2_memmove },
         { 0x8004A7AC, &LIBETC_ResetCallback },
         { 0x8004A7DC, &LIBETC_InterruptCallback },
         { 0x8004A80C, &LIBETC_DMACallback },
@@ -1272,8 +1264,6 @@ namespace PsxVm {
         { 0x8004ADD0, &LIBC2_setjmp },
         { 0x8004AE0C, &LIBC2_longjmp },
         { 0x8004AE50, &LIBC2_prnt },
-        { 0x8004B4C0, &LIBC2_toupper },
-        { 0x8004B4F4, &LIBC2_tolower },
         { 0x8004B530, &LIBC2_putchar },
         { 0x8004B5F0, &LIBETC_startIntrVSync },
         { 0x8004B654, &LIBETC_INTR_stopIntr_UNKNOWN_Helper2 },
@@ -1287,15 +1277,12 @@ namespace PsxVm {
         { 0x8004BA68, &LIBETC_INTR_DMA_memclr },
         { 0x8004BA94, &_thunk_LIBETC_VSync },
         { 0x8004BBDC, &_thunk_LIBETC_v_wait },
-        { 0x8004BC78, &LIBC2_puts },
         { 0x8004C11C, &LIBGPU_GetGraphType },
         { 0x8004C198, &LIBGPU_SetDispMask },
         { 0x8004DD64, &LIBGPU_SYS__ctl },
         { 0x8004E8B0, &LIBAPI_GPU_cw },
-        { 0x8004E8C0, &LIBC2_memcpy },
         { 0x8004E900, &LIBETC_SetVideoMode },
         { 0x8004E918, &LIBETC_GetVideoMode },
-        { 0x8004FAA4, &LIBC2_memset },
         { 0x80050454, &LIBAPI_FlushCache },
         { 0x800507AC, &LIBSN__main },
         { 0x8005081C, &LIBSN___do_global_dtors },
