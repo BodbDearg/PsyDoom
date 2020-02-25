@@ -239,11 +239,6 @@ uint16_t LIBGPU_GetTPage(
 
 uint16_t LIBGPU_GetClut(const int32_t x, const int32_t y) noexcept;
 
-void LIBGPU_NextPrim() noexcept;        // TODO: still needed?
-void LIBGPU_IsEndPrim() noexcept;       // TODO: still needed?
-void LIBGPU_AddPrim() noexcept;         // TODO: still needed?
-void LIBGPU_AddPrims() noexcept;        // TODO: still needed?
-void LIBGPU_CatPrim() noexcept;         // TODO: still needed?
 void LIBGPU_SetSemiTrans(void* const pPrim, const bool bTransparent) noexcept;
 void LIBGPU_SetShadeTex(void* const pPrim, const bool bDisableShading) noexcept;
 
@@ -253,7 +248,6 @@ void LIBGPU_SetPolyFT4(POLY_FT4& poly) noexcept;
 void LIBGPU_SetSprt8(SPRT_8& sprite) noexcept;
 void LIBGPU_SetSprt(SPRT & sprt) noexcept;
 void LIBGPU_SetLineF2(LINE_F2& line) noexcept;
-void LIBGPU_MargePrim() noexcept;       // TODO: still needed?
 void LIBGPU_SetDumpFnt(const int32_t printStreamId) noexcept;
 void LIBGPU_FntLoad(const int32_t dstX, const int32_t dstY) noexcept;
 
@@ -452,6 +446,14 @@ inline constexpr uint16_t LIBGPU_getTPage(
         ((tpageX & 0x3ff) >> 6)|
         ((tpageY & 0x200) << 2)
     );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if a primitive is the end of the primitives list
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+inline bool LIBGPU_IsEndPrim(const T& prim) noexcept {
+    return ((prim.tag & 0x00FFFFFF) == 0x00FFFFFF);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

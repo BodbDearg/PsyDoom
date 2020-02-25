@@ -595,12 +595,6 @@ extern void LIBAPI_GPU_cw() noexcept;
 extern void LIBC2_memcpy() noexcept;
 extern void LIBETC_SetVideoMode() noexcept;
 extern void LIBETC_GetVideoMode() noexcept;
-extern void LIBGPU_NextPrim() noexcept;
-extern void LIBGPU_IsEndPrim() noexcept;
-extern void LIBGPU_AddPrim() noexcept;
-extern void LIBGPU_AddPrims() noexcept;
-extern void LIBGPU_CatPrim() noexcept;
-extern void LIBGPU_MargePrim() noexcept;
 extern void LIBC2_memset() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
 extern void LIBSN__main() noexcept;
@@ -1309,12 +1303,6 @@ namespace PsxVm {
         { 0x8004E8C0, &LIBC2_memcpy },
         { 0x8004E900, &LIBETC_SetVideoMode },
         { 0x8004E918, &LIBETC_GetVideoMode },
-        { 0x8004EB18, &LIBGPU_NextPrim },
-        { 0x8004EB34, &LIBGPU_IsEndPrim },
-        { 0x8004EB50, &LIBGPU_AddPrim },
-        { 0x8004EB8C, &LIBGPU_AddPrims },
-        { 0x8004EBC8, &LIBGPU_CatPrim },
-        { 0x8004EE3C, &LIBGPU_MargePrim },
         { 0x8004FAA4, &LIBC2_memset },
         { 0x80050454, &LIBAPI_FlushCache },
         { 0x800507AC, &LIBSN__main },

@@ -862,75 +862,6 @@ uint16_t LIBGPU_GetClut(const int32_t x, const int32_t y) noexcept {
     return (uint16_t)((y << 6) | ((x >> 4) & 0x3F));
 }
 
-void LIBGPU_NextPrim() noexcept {
-    v1 = 0xFF0000;                                      // Result = 00FF0000
-    v0 = lw(a0);
-    v1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    v0 &= v1;
-    v1 = 0x80000000;                                    // Result = 80000000
-    v0 |= v1;
-    return;
-}
-
-void LIBGPU_IsEndPrim() noexcept {
-    v1 = 0xFF0000;                                      // Result = 00FF0000
-    v0 = lw(a0);
-    v1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    v0 &= v1;
-    v0 ^= v1;
-    v0 = (v0 < 1);
-    return;
-}
-
-void LIBGPU_AddPrim() noexcept {
-loc_8004EB50:
-    a2 = 0xFF0000;                                      // Result = 00FF0000
-    a2 |= 0xFFFF;                                       // Result = 00FFFFFF
-    a3 = 0xFF000000;                                    // Result = FF000000
-    v1 = lw(a1);
-    v0 = lw(a0);
-    v1 &= a3;
-    v0 &= a2;
-    v1 |= v0;
-    sw(v1, a1);
-    v0 = lw(a0);
-    a1 &= a2;
-    v0 &= a3;
-    v0 |= a1;
-    sw(v0, a0);
-    return;
-}
-
-void LIBGPU_AddPrims() noexcept {
-    a3 = 0xFF0000;                                      // Result = 00FF0000
-    a3 |= 0xFFFF;                                       // Result = 00FFFFFF
-    t0 = 0xFF000000;                                    // Result = FF000000
-    v1 = lw(a2);
-    v0 = lw(a0);
-    v1 &= t0;
-    v0 &= a3;
-    v1 |= v0;
-    sw(v1, a2);
-    v0 = lw(a0);
-    a1 &= a3;
-    v0 &= t0;
-    v0 |= a1;
-    sw(v0, a0);
-    return;
-}
-
-void LIBGPU_CatPrim() noexcept {
-    a2 = 0xFF0000;                                      // Result = 00FF0000
-    a2 |= 0xFFFF;                                       // Result = 00FFFFFF
-    v1 = 0xFF000000;                                    // Result = FF000000
-    v0 = lw(a0);
-    a1 &= a2;
-    v0 &= v1;
-    v0 |= a1;
-    sw(v0, a0);
-    return;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Enable/disable semi-transparency on the specified drawing primitive
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1004,25 +935,6 @@ void LIBGPU_SetSprt(SPRT & sprt) noexcept {
 void LIBGPU_SetLineF2(LINE_F2& line) noexcept {
     LIBGPU_setlen(line, 3);
     line.code = 0x40;
-}
-
-void LIBGPU_MargePrim() noexcept {
-    v0 = lbu(a0 + 0x3);
-    v1 = lbu(a1 + 0x3);
-    v0 += v1;
-    v1 = v0 + 1;
-    v0 = (i32(v1) < 0x21);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8004EE64;
-    }
-    sb(v1, a0 + 0x3);
-    goto loc_8004EE68;
-loc_8004EE64:
-    v0 = -1;                                            // Result = FFFFFFFF
-loc_8004EE68:
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
