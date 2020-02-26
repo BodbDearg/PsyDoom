@@ -16,6 +16,7 @@
 #include "p_mobj.h"
 #include "p_setup.h"
 #include "p_tick.h"
+#include "PcPsx/Endian.h"
 #include "PsxVm/PsxVm.h"
 #include "Wess/wessapi.h"
 
@@ -551,58 +552,51 @@ void G_RunGame() noexcept {
     }
 }
 
-void G_PlayDemoPtr() noexcept {
-loc_80013714:
-    sp -= 0x40;
-    a0 = sp + 0x10;
-    sw(s1, sp + 0x34);
-    s1 = gCtrlBindings;
-    a1 = s1;
-    v1 = *gpDemoBuffer;
-    sw(ra, sp + 0x3C);
-    sw(s2, sp + 0x38);
-    sw(s0, sp + 0x30);
-    v0 = v1 + 4;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x75EC);                                // Store to: gpDemo_p (800775EC)
-    s2 = lw(v1);
-    v0 = v1 + 8;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x75EC);                                // Store to: gpDemo_p (800775EC)
-    s0 = lw(v1 + 0x4);
-    a2 = 0x20;                                          // Result = 00000020
-    _thunk_D_memcpy();
-    a0 = s1;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x75EC);                               // Load from: gpDemo_p (800775EC)
-    a2 = 0x20;                                          // Result = 00000020
-    _thunk_D_memcpy();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x75EC);                               // Load from: gpDemo_p (800775EC)
-    v0 += 0x20;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x75EC);                                // Store to: gpDemo_p (800775EC)
-    G_InitNew((skill_t) s2, (int32_t) s0, gt_single);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Plays back the current demo in the demo buffer
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t G_PlayDemoPtr() noexcept {
+    // Read the demo skill and map number
+    *gpDemo_p = *gpDemoBuffer;
+
+    const skill_t skill = (skill_t) Endian::littleToHost((*gpDemo_p)[0]);
+    const int32_t mapNum = (int32_t) Endian::littleToHost((*gpDemo_p)[1]);
+
+    *gpDemo_p += 2;
+
+    // Read the control bindings for the demo and save the previous ones before that    
+    padbuttons_t prevCtrlBindings[NUM_BINDABLE_BTNS];
+    
+    D_memcpy(prevCtrlBindings, gCtrlBindings.get(), sizeof(prevCtrlBindings));
+    D_memcpy(gCtrlBindings.get(), gpDemo_p->get(), sizeof(prevCtrlBindings));
+
+    #if PC_PSX_DOOM_MODS
+        // PC-PSX: endian correct the controls written to the demo also
+        if constexpr (!Endian::isLittle()) {
+            for (uint32_t i = 0; i < NUM_BINDABLE_BTNS; ++i) {
+                gCtrlBindings[i] = Endian::littleToHost(gCtrlBindings[i]);
+            }
+        }
+    #endif
+
+    static_assert(sizeof(prevCtrlBindings) == 32);
+    *gpDemo_p += 8;
+    
+    // Initialize the demo pointer, game and load the level
+    G_InitNew(skill, mapNum, gt_single);
     G_DoLoadLevel();
 
+    // Run the demo
     *gbDemoPlayback = true;
-    s0 = MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+    const gameaction_t exitAction = MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
     *gbDemoPlayback = false;
 
-    a0 = s1;
-    a1 = sp + 0x10;
-    a2 = 32;
-    _thunk_D_memcpy();
-
+    // Restore the previous control bindings and cleanup
+    D_memcpy(gCtrlBindings.get(), prevCtrlBindings, sizeof(prevCtrlBindings));
     *gLockedTexPagesMask &= 1;
-    Z_FreeTags(**gpMainMemZone, PU_CACHE|PU_ANIMATION|PU_LEVSPEC|PU_LEVEL);
+    Z_FreeTags(**gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
 
-    v0 = s0;
-    ra = lw(sp + 0x3C);
-    s2 = lw(sp + 0x38);
-    s1 = lw(sp + 0x34);
-    s0 = lw(sp + 0x30);
-    sp += 0x40;
+    return exitAction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

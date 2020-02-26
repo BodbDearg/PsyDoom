@@ -126,11 +126,8 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
     ReadFile(openFileIdx, gpDemoBuffer->get(), 16 * 1024);
     CloseFile(openFileIdx);
     
-    // Play the demo
-    G_PlayDemoPtr();
-    const gameaction_t exitAction = (gameaction_t) v0;
-    
-    // Free the demo buffer and return the exit action
+    // Play the demo, free the demo buffer and return the exit action
+    const gameaction_t exitAction = G_PlayDemoPtr();
     Z_Free2(**gpMainMemZone, gpDemoBuffer->get());
     return exitAction;
 }

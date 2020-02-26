@@ -26,5 +26,5 @@ void G_DoReborn() noexcept;
 void G_CompleteLevel() noexcept;
 void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameType) noexcept;
 void G_RunGame() noexcept;
-void G_PlayDemoPtr() noexcept;
+gameaction_t G_PlayDemoPtr() noexcept;
 void empty_func1() noexcept;

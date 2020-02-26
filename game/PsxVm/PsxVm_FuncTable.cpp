@@ -13,7 +13,6 @@ extern void G_PlayerFinishLevel() noexcept;
 extern void G_PlayerReborn() noexcept;
 extern void G_DoReborn() noexcept;
 extern void G_CompleteLevel() noexcept;
-extern void G_PlayDemoPtr() noexcept;
 extern void empty_func1() noexcept;
 extern void P_RunMobjBase() noexcept;
 extern void P_XYMovement() noexcept;
@@ -703,7 +702,6 @@ namespace PsxVm {
         { 0x80012F88, &G_PlayerReborn },
         { 0x80013070, &G_DoReborn },
         { 0x80013384, &G_CompleteLevel },
-        { 0x80013714, &G_PlayDemoPtr },
         { 0x80013838, &empty_func1 },
         { 0x80013840, &P_RunMobjBase },
         { 0x800138D8, &P_XYMovement },
