@@ -16,10 +16,7 @@ static inline void* getScratchAddr(const uint32_t word) {
 void LIBETC_ResetCallback() noexcept;
 void LIBETC_InterruptCallback() noexcept;
 void LIBETC_DMACallback() noexcept;
-void LIBETC_VSyncCallbacks() noexcept;
-void LIBETC_StopCallback() noexcept;
 void LIBETC_CheckCallback() noexcept;
-void LIBETC_GetIntrMask() noexcept;
 void LIBETC_SetIntrMask() noexcept;
 void LIBETC_INTR_startIntr() noexcept;
 void LIBETC_INTR_trapIntr() noexcept;
@@ -42,6 +39,3 @@ void _thunk_LIBETC_VSync() noexcept;
 
 void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept;
 void _thunk_LIBETC_v_wait() noexcept;
-
-void LIBETC_SetVideoMode() noexcept;
-void LIBETC_GetVideoMode() noexcept;

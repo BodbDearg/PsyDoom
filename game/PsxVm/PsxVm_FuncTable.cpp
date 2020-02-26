@@ -547,10 +547,7 @@ extern void LIBC2_strlen() noexcept;
 extern void LIBETC_ResetCallback() noexcept;
 extern void LIBETC_InterruptCallback() noexcept;
 extern void LIBETC_DMACallback() noexcept;
-extern void LIBETC_VSyncCallbacks() noexcept;
-extern void LIBETC_StopCallback() noexcept;
 extern void LIBETC_CheckCallback() noexcept;
-extern void LIBETC_GetIntrMask() noexcept;
 extern void LIBETC_SetIntrMask() noexcept;
 extern void LIBETC_INTR_startIntr() noexcept;
 extern void LIBETC_INTR_trapIntr() noexcept;
@@ -579,8 +576,6 @@ extern void LIBETC_INTR_DMA_setIntrDMA() noexcept;
 extern void LIBETC_INTR_DMA_memclr() noexcept;
 extern void _thunk_LIBETC_VSync() noexcept;
 extern void _thunk_LIBETC_v_wait() noexcept;
-extern void LIBETC_SetVideoMode() noexcept;
-extern void LIBETC_GetVideoMode() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
 extern void LIBSN__main() noexcept;
 extern void LIBSN___do_global_dtors() noexcept;
@@ -1240,10 +1235,7 @@ namespace PsxVm {
         { 0x8004A7AC, &LIBETC_ResetCallback },
         { 0x8004A7DC, &LIBETC_InterruptCallback },
         { 0x8004A80C, &LIBETC_DMACallback },
-        { 0x8004A83C, &LIBETC_VSyncCallbacks },
-        { 0x8004A86C, &LIBETC_StopCallback },
         { 0x8004A89C, &LIBETC_CheckCallback },
-        { 0x8004A8B0, &LIBETC_GetIntrMask },
         { 0x8004A8C8, &LIBETC_SetIntrMask },
         { 0x8004A8E4, &LIBETC_INTR_startIntr },
         { 0x8004A9A4, &LIBETC_INTR_trapIntr },
@@ -1272,8 +1264,6 @@ namespace PsxVm {
         { 0x8004BA68, &LIBETC_INTR_DMA_memclr },
         { 0x8004BA94, &_thunk_LIBETC_VSync },
         { 0x8004BBDC, &_thunk_LIBETC_v_wait },
-        { 0x8004E900, &LIBETC_SetVideoMode },
-        { 0x8004E918, &LIBETC_GetVideoMode },
         { 0x80050454, &LIBAPI_FlushCache },
         { 0x800507AC, &LIBSN__main },
         { 0x8005081C, &LIBSN___do_global_dtors },

@@ -48,42 +48,11 @@ loc_8004A80C:
     return;
 }
 
-void LIBETC_VSyncCallbacks() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5B90);                               // Load from: gpLIBETC_INTR_interruptsListPtr (80075B90)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = lw(v0 + 0x14);
-    ptr_call(v0);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-}
-
-void LIBETC_StopCallback() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5B90);                               // Load from: gpLIBETC_INTR_interruptsListPtr (80075B90)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = lw(v0 + 0x10);
-    ptr_call(v0);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-}
-
 void LIBETC_CheckCallback() noexcept {
 loc_8004A89C:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x5B96;                                       // Result = 80075B96
     v0 = lhu(v0);                                       // Load from: 80075B96
-}
-
-void LIBETC_GetIntrMask() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5BFC);                               // Load from: 80075BFC
-    v0 = lhu(v0);
-    return;
 }
 
 void LIBETC_SetIntrMask() noexcept {
@@ -827,19 +796,4 @@ void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept 
 
 void _thunk_LIBETC_v_wait() noexcept {
     LIBETC_v_wait((int32_t) a0, (uint16_t) a1);
-}
-
-void LIBETC_SetVideoMode() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5DA4);                               // Load from: gLIBETC_videoMode (80075DA4)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x5DA4);                                // Store to: gLIBETC_videoMode (80075DA4)
-    return;
-}
-
-void LIBETC_GetVideoMode() noexcept {
-loc_8004E918:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5DA4);                               // Load from: gLIBETC_videoMode (80075DA4)
-    return;
 }
