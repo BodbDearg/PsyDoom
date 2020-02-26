@@ -711,8 +711,7 @@ loc_80029760:
     v0 = lw(s1);
     s1 += 4;
     if (v0 == 0) goto loc_80029778;
-    a0 = s0;
-    G_PlayerFinishLevel();
+    G_PlayerFinishLevel(s0);
 loc_80029778:
     s0++;
     v0 = (i32(s0) < 2);

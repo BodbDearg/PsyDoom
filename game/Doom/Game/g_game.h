@@ -20,11 +20,11 @@ extern const VmPtr<bool32_t>                gbDemoRecording;
 extern const VmPtr<bool32_t>                gbIsLevelBeingRestarted;
 
 void G_DoLoadLevel() noexcept;
-void G_PlayerFinishLevel() noexcept;
+void G_PlayerFinishLevel(int32_t playerIdx) noexcept;
 void G_PlayerReborn() noexcept;
 void G_DoReborn() noexcept;
 void G_CompleteLevel() noexcept;
 void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameType) noexcept;
 void G_RunGame() noexcept;
 gameaction_t G_PlayDemoPtr() noexcept;
-void empty_func1() noexcept;
+void G_BeginDemoRecording() noexcept;

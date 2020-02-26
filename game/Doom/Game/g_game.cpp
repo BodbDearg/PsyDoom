@@ -104,41 +104,24 @@ void G_DoLoadLevel() noexcept {
     *gGameAction = ga_nothing;
 }
 
-void G_PlayerFinishLevel() noexcept {
-loc_80012F00:
-    sp -= 0x18;
-    v0 = a0 << 2;
-    v0 += a0;
-    sw(s0, sp + 0x10);
-    s0 = v0 << 4;
-    s0 -= v0;
-    s0 <<= 2;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    s0 += v0;
-    a0 = s0 + 0x30;
-    a1 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x14);
-    a2 = 0x18;                                          // Result = 00000018
-    _thunk_D_memset();
-    a0 = s0 + 0x48;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x18;                                          // Result = 00000018
-    _thunk_D_memset();
-    a0 = lw(s0);
-    v1 = 0x8FFF0000;                                    // Result = 8FFF0000
-    v0 = lw(a0 + 0x64);
-    v1 |= 0xFFFF;                                       // Result = 8FFFFFFF
-    v0 &= v1;
-    sw(v0, a0 + 0x64);
-    sw(0, s0 + 0xE4);
-    sw(0, s0 + 0xE8);
-    sw(0, s0 + 0xD8);
-    sw(0, s0 + 0xDC);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Some end of level logic for the player
+//------------------------------------------------------------------------------------------------------------------------------------------
+void G_PlayerFinishLevel(int32_t playerIdx) noexcept {
+    // Remove cards and powerups
+    D_memset(gPlayers[playerIdx].powers, (std::byte) 0, sizeof(player_t::powers));
+    D_memset(gPlayers[playerIdx].cards, (std::byte) 0, sizeof(player_t::cards));
+
+    // Clear blending flags on the player.
+    // PC-PSX: preserve the noclip cheat also, if active.
+    mobj_t& mobj = *gPlayers[playerIdx].mo;
+    mobj.flags &= ~(MF_BLENDMASK1 | MF_BLENDMASK2 | MF_BLENDMASK3);
+
+    // Clearing out a few other fields
+    gPlayers[playerIdx].extralight = 0;
+    gPlayers[playerIdx].fixedcolormap = 0;
+    gPlayers[playerIdx].damagecount = 0;
+    gPlayers[playerIdx].bonuscount = 0;
 }
 
 void G_PlayerReborn() noexcept {
@@ -415,6 +398,9 @@ loc_8001335C:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Mark the level as done
+//------------------------------------------------------------------------------------------------------------------------------------------
 void G_CompleteLevel() noexcept {
     *gGameAction = ga_completed;
 }
@@ -502,9 +488,7 @@ void G_RunGame() noexcept {
         *gbIsLevelBeingRestarted = false;
     
         if (*gGameAction == ga_recorddemo) {
-            // Who knows what this function originally did...
-            // TODO: rename - we now know it is something to do with ending demo recording.
-            empty_func1();
+            G_BeginDemoRecording();
         }
         
         if (*gGameAction == ga_warped)
@@ -600,11 +584,10 @@ gameaction_t G_PlayDemoPtr() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// An unknown function called prior to the level being restarted.
-// Since it's contents are empty in the retail .EXE we cannot deduce what it originally did.
-// It's likely some sort of debug functionality that got compiled out of the retail build.
-//
-// TODO: rename - we now know it is something to do with ending demo recording.
+// An empty function called when a level is being started while a demo is being recorded.
+// Does nothing in the retail version of the game, but likely did stuff in debug builds.
+// My guess is that this did something relating to saving or allocating space for the demo to be recorded.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void empty_func1() noexcept {
+void G_BeginDemoRecording() noexcept {
+    // Who knows what this did...
 }
