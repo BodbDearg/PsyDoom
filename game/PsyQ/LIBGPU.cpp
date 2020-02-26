@@ -4,19 +4,13 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "LIBGPU.h"
 
-#include "LIBAPI.h"
-#include "LIBC2.h"
 #include "LIBETC.h"
-#include "PcPsx/Endian.h"
-#include "PcPsx/Finally.h"
-#include "PsxVm/VmSVal.h"
+
+#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PsxVm/PsxVm.h"
 
 #include <cstdarg>
-#include <cstring>
 #include <device/gpu/gpu.h>
-
-// N.B: needs to happen AFTER Avocado includes due to clashes caused by the MIPS register macros
-#include "PsxVm/PsxVm.h"
 
 // The CLUT and texture page for the debug font
 static uint16_t gDFontClutId;
@@ -112,33 +106,13 @@ void LIBGPU_SetGraphDebug([[maybe_unused]] const int32_t debugLevel) noexcept {
     // Nothing to do here...
 }
 
-void LIBGPU_SetDispMask() noexcept {
-loc_8004C198:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 + 0x356);                               // Load from: 80080356
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = (v0 < 2);
-    sw(ra, sp + 0x14);
-    if (v0 != 0) goto loc_8004C1D4;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1BD0;                                       // Result = STR_Sys_SetDisplayMask_Msg[0] (80011BD0)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D58);                               // Load from: gpLIBGPU_GPU_printf (80075D58)
-    a1 = s0;
-    ptr_call(v0);
-loc_8004C1D4:
-    a0 = 0x3000000;                                     // Result = 03000000
-    a0 |= 1;                                            // Result = 03000001
-    if (s0 == 0) goto loc_8004C1EC;
-    a0 = 0x3000000;                                     // Result = 03000000
-loc_8004C1EC:
-    LIBGPU_SYS__ctl();
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Enable/disable display output. If the mask is non zero then the display is enabled.
+// I don't actually respect this flag in the emulated environment, so the call is useless - but set anyway.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBGPU_SetDispMask(const int32_t mask) noexcept {
+    gpu::GPU& gpu = *PsxVm::gpGpu;
+    gpu.displayDisable = (mask == 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -476,20 +450,6 @@ uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept {
     const uint32_t twMaskY = (uint16_t)(-pRect->h & 0xFF) >> 3;
 
     return (CMD_HEADER | (twOffsetY << 15) | (twOffsetX << 10) | (twMaskY << 5) | twMaskX);
-}
-
-void LIBGPU_SYS__ctl() noexcept {
-loc_8004DD64:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5D74);                               // Load from: GPU_REG_GP1 (80075D74)
-    sw(a0, v0);
-    
-    v0 = a0 >> 24;
-    at = 0x80080000;                                    // Result = 80080000
-    at += 0x3D4;                                        // Result = gLIBGPU_SYS_ctlbuf[0] (800803D4)
-    at += v0;
-    sb(a0, at);
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

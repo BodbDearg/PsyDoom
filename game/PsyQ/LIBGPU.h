@@ -191,7 +191,7 @@ static_assert(sizeof(DRAWENV) == 92);
 
 void LIBGPU_ResetGraph(const int32_t resetMode) noexcept;
 void LIBGPU_SetGraphDebug(const int32_t debugLevel) noexcept;
-void LIBGPU_SetDispMask() noexcept;
+void LIBGPU_SetDispMask(const int32_t mask) noexcept;
 
 int32_t LIBGPU_DrawSync(const int32_t mode) noexcept;
 
@@ -218,8 +218,6 @@ uint32_t LIBGPU_SYS_get_mode(
 ) noexcept;
 
 uint32_t LIBGPU_SYS_get_tw(const RECT* const pRect) noexcept;
-
-void LIBGPU_SYS__ctl() noexcept;
 
 uint16_t LIBGPU_GetTPage(
     const int32_t texFmt,

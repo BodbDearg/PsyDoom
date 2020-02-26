@@ -579,9 +579,6 @@ extern void LIBETC_INTR_DMA_setIntrDMA() noexcept;
 extern void LIBETC_INTR_DMA_memclr() noexcept;
 extern void _thunk_LIBETC_VSync() noexcept;
 extern void _thunk_LIBETC_v_wait() noexcept;
-extern void LIBGPU_SetDispMask() noexcept;
-extern void LIBGPU_SYS__ctl() noexcept;
-extern void LIBAPI_GPU_cw() noexcept;
 extern void LIBETC_SetVideoMode() noexcept;
 extern void LIBETC_GetVideoMode() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
@@ -1275,9 +1272,6 @@ namespace PsxVm {
         { 0x8004BA68, &LIBETC_INTR_DMA_memclr },
         { 0x8004BA94, &_thunk_LIBETC_VSync },
         { 0x8004BBDC, &_thunk_LIBETC_v_wait },
-        { 0x8004C198, &LIBGPU_SetDispMask },
-        { 0x8004DD64, &LIBGPU_SYS__ctl },
-        { 0x8004E8B0, &LIBAPI_GPU_cw },
         { 0x8004E900, &LIBETC_SetVideoMode },
         { 0x8004E918, &LIBETC_GetVideoMode },
         { 0x80050454, &LIBAPI_FlushCache },

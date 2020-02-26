@@ -23,7 +23,6 @@ void LIBAPI_ResetEntryInt() noexcept;
 void LIBAPI_ChangeClearRCnt() noexcept;
 void LIBAPI__96_remove() noexcept;
 void LIBAPI_ReturnFromException() noexcept;
-void LIBAPI_GPU_cw() noexcept;
 void LIBAPI_FlushCache() noexcept;
 void LIBAPI_InitHeap() noexcept;
 void LIBAPI_DeliverEvent() noexcept;

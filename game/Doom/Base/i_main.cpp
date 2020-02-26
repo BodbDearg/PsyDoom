@@ -299,8 +299,7 @@ void I_PSXInit() noexcept {
     I_DrawPresent();
     I_DrawPresent();
 
-    a0 = 1;                                             // Result = 00000001
-    LIBGPU_SetDispMask();
+    LIBGPU_SetDispMask(1);
 
     ra = lw(sp + 0x24);
     s2 = lw(sp + 0x20);

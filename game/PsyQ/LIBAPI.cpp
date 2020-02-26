@@ -265,13 +265,6 @@ loc_8004AD80:
     emu_call(t2);
 }
 
-void LIBAPI_GPU_cw() noexcept {
-loc_8004E8B0:
-    t2 = 0xA0;                                          // Result = 000000A0
-    t1 = 0x49;                                          // Result = 00000049
-    emu_call(t2);
-}
-
 void LIBAPI_FlushCache() noexcept {
 loc_80050454:
     t2 = 0xA0;                                          // Result = 000000A0
