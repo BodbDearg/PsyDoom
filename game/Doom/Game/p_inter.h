@@ -1,5 +1,10 @@
 #pragma once
 
+#include "Doom/doomdef.h"
+
+extern const VmPtr<int32_t[NUMAMMO]>   gMaxAmmo;
+extern const VmPtr<int32_t[NUMAMMO]>   gClipAmmo;
+
 void P_GiveAmmo() noexcept;
 void P_GiveWeapon() noexcept;
 void P_GiveBody() noexcept;

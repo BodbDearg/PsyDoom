@@ -10,6 +10,10 @@
 #include "p_pspr.h"
 #include "PsxVm/PsxVm.h"
 
+// The maximum amount of ammo for each ammo type and how much ammo each clip type gives
+const VmPtr<int32_t[NUMAMMO]>   gMaxAmmo(0x800670D4);
+const VmPtr<int32_t[NUMAMMO]>   gClipAmmo(0x800670E4);
+
 void P_GiveAmmo() noexcept {
 loc_800197A4:
     sp -= 0x20;

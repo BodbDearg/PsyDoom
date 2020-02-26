@@ -507,7 +507,7 @@ loc_8001CE94:
     a1 = 0x94;                                          // Result = 00000094
     if (v0 != s5) goto loc_8001CEC8;
     a0--;
-    G_PlayerReborn();
+    G_PlayerReborn(a0);
     a1 = 0x94;                                          // Result = 00000094
 loc_8001CEC8:
     a2 = 2;                                             // Result = 00000002

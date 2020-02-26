@@ -12,6 +12,8 @@
 #include "Doom/UI/f_finale.h"
 #include "Doom/UI/in_main.h"
 #include "info.h"
+#include "p_inter.h"
+#include "p_local.h"
 #include "p_map.h"
 #include "p_mobj.h"
 #include "p_setup.h"
@@ -124,66 +126,38 @@ void G_PlayerFinishLevel(int32_t playerIdx) noexcept {
     gPlayers[playerIdx].bonuscount = 0;
 }
 
-void G_PlayerReborn() noexcept {
-loc_80012F88:
-    sp -= 0x28;
-    v0 = a0 << 2;
-    v0 += a0;
-    sw(s0, sp + 0x10);
-    s0 = v0 << 4;
-    s0 -= v0;
-    s0 <<= 2;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    s0 += v0;
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    s1 = lw(s0 + 0x64);
-    s2 = lw(s0 + 0xC8);
-    s3 = lw(s0 + 0xCC);
-    s4 = lw(s0 + 0xD0);
-    a2 = 0x12C;                                         // Result = 0000012C
-    _thunk_D_memset();
-    a1 = 0;                                             // Result = 00000000
-    a0 = 0x80060000;                                    // Result = 80060000
-    a0 += 0x70D4;                                       // Result = gMaxAmmo[0] (800670D4)
-    v1 = 1;                                             // Result = 00000001
-    v0 = 0x64;                                          // Result = 00000064
-    sw(v0, s0 + 0x24);
-    v0 = 0x32;                                          // Result = 00000032
-    sw(v1, s0 + 0xB8);
-    sw(v1, s0 + 0xBC);
-    sw(0, s0 + 0x4);
-    sw(v1, s0 + 0x70);
-    sw(v1, s0 + 0x6C);
-    sw(v1, s0 + 0x74);
-    sw(v1, s0 + 0x78);
-    sw(v0, s0 + 0x98);
-    sw(s1, s0 + 0x64);
-    sw(s2, s0 + 0xC8);
-    sw(s3, s0 + 0xCC);
-    sw(s4, s0 + 0xD0);
-loc_80013030:
-    v0 = lw(a0);
-    a0 += 4;
-    a1++;
-    sw(v0, s0 + 0xA8);
-    v0 = (i32(a1) < 4);
-    s0 += 4;
-    if (v0 != 0) goto loc_80013030;
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Re-initializes player state after respawning
+//------------------------------------------------------------------------------------------------------------------------------------------
+void G_PlayerReborn(const int32_t playerIdx) noexcept {
+    // Save the old player stats and reset player state completely
+    player_t& player = gPlayers[playerIdx];
+
+    const uint32_t frags = player.frags;
+    const uint32_t killcount = player.killcount;
+    const uint32_t itemcount = player.itemcount;
+    const uint32_t secretcount = player.secretcount;
+
+    D_memset(&player, (std::byte) 0, sizeof(player_t));
+
+    // Initialize player state and restore the previously saved stats
+    player.health = MAXHEALTH;
+    player.attackdown = 1;
+    player.usedown = 1;
+    player.playerstate = PST_LIVE;
+    player.pendingweapon = wp_pistol;
+    player.readyweapon = wp_pistol;
+    player.weaponowned[wp_fist] = true;
+    player.weaponowned[wp_pistol] = true;
+    player.ammo[am_clip] = 50;
+    player.frags = frags;
+    player.killcount = killcount;
+    player.itemcount = itemcount;
+    player.secretcount = secretcount;
+
+    for (int32_t ammoIdx = 0; ammoIdx < NUMAMMO; ++ammoIdx) {
+        player.maxammo[ammoIdx] = gMaxAmmo[ammoIdx];
+    }
 }
 
 void G_DoReborn() noexcept {

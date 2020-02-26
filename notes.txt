@@ -293,8 +293,8 @@ player_t (300 bytes):
         06C     weapontype_t    readyweapon;
         070     weapontype_t    pendingweapon;
         074     bool32          weaponowned[NUMWEAPONS = 9];
-        098     uint32_t        ammo[NUMAMMO = 4];
-        0A8     uint32_t        maxammo[NUMAMMO = 4];
+        098     int32_t         ammo[NUMAMMO = 4];
+        0A8     int32_t         maxammo[NUMAMMO = 4];
         0B8     uint32_t        attackdown;
         0BC     uint32_t        usedown;
         0C0     uint32_t        cheats;

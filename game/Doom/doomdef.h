@@ -357,8 +357,8 @@ struct player_t {
     weapontype_t        readyweapon;
     weapontype_t        pendingweapon;
     bool32_t            weaponowned[NUMWEAPONS];
-    uint32_t            ammo[NUMAMMO];
-    uint32_t            maxammo[NUMAMMO];
+    int32_t             ammo[NUMAMMO];
+    int32_t             maxammo[NUMAMMO];
     uint32_t            attackdown;
     uint32_t            usedown;
     uint32_t            cheats;

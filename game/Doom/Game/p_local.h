@@ -14,3 +14,6 @@ static constexpr uint32_t   MAPBMASK        = MAPBLOCKSIZE - 1;             // A
 
 // The maximum 'radius' around sectors when determining blockmap extents
 static constexpr fixed_t MAXRADIUS = 32 * FRACUNIT;
+
+// Default maximum health for the player
+static constexpr int32_t MAXHEALTH = 100;
