@@ -1520,7 +1520,7 @@ loc_80027564:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     a1 = 0x2C;
     a0 = *gpMainMemZone;
     v0 = 0xA;
@@ -1542,7 +1542,7 @@ loc_80027564:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = -1;                                            // Result = FFFFFFFF
     sw(s0, s3 + 0x50);
     sw(s7, s0 + 0x8);
@@ -1604,7 +1604,7 @@ void G_ScheduleExitLevel() noexcept {
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 0x80020000;                                    // Result = 80020000
     v0 += 0x7718;                                       // Result = G_BeginExitLevel (80027718)
     sw(v0, s0 + 0x8);
@@ -1630,7 +1630,7 @@ void G_BeginExitLevel() noexcept {
     v0 = lw(s0 + 0x10);
     ptr_call(v0);
     a0 = s0;
-    P_RemoveThinker();
+    _thunk_P_RemoveThinker();
 loc_80027754:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -1653,7 +1653,7 @@ loc_80027768:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 0x80020000;                                    // Result = 80020000
     v0 += 0x7718;                                       // Result = G_BeginExitLevel (80027718)
     sw(v0, s0 + 0x8);
@@ -1681,7 +1681,7 @@ loc_800277E0:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 0x80020000;                                    // Result = 80020000
     v0 += 0x7718;                                       // Result = G_BeginExitLevel (80027718)
     sw(v0, s0 + 0x8);

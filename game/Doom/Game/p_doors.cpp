@@ -99,7 +99,7 @@ loc_80015448:
     v0 = lw(s0 + 0x10);
     a0 = s0;
     sw(0, v0 + 0x50);
-    P_RemoveThinker();
+    _thunk_P_RemoveThinker();
     a0 = lw(s0 + 0x10);
     a1 = 0x58;                                          // Result = 00000058
     goto loc_80015498;
@@ -161,7 +161,7 @@ loc_80015518:
     v0 = lw(s0 + 0x10);
     a0 = s0;
     sw(0, v0 + 0x50);
-    P_RemoveThinker();
+    _thunk_P_RemoveThinker();
 loc_80015528:
     ra = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);
@@ -380,7 +380,7 @@ loc_800157B4:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x52FC;                                       // Result = T_VerticalDoor (800152FC)
     sw(s0, s1 + 0x50);
@@ -564,7 +564,7 @@ loc_80015A6C:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x52FC;                                       // Result = T_VerticalDoor (800152FC)
     a0 = 1;                                             // Result = 00000001
@@ -654,7 +654,7 @@ loc_80015B84:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x52FC;                                       // Result = T_VerticalDoor (800152FC)
     sw(s0, s1 + 0x50);
@@ -688,7 +688,7 @@ loc_80015C04:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     a0 = s1;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x52FC;                                       // Result = T_VerticalDoor (800152FC)

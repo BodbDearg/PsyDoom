@@ -187,7 +187,7 @@ loc_8001F4B8:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 0x80020000;                                    // Result = 80020000
     v0 -= 0xD80;                                        // Result = T_PlatRaise (8001F280)
     sw(s4, s0 + 0x34);
@@ -449,7 +449,7 @@ loc_8001F8B8:
     v0 = lw(a0 + 0xC);
     sw(0, v0 + 0x50);
     a0 = lw(s0);
-    P_RemoveThinker();
+    _thunk_P_RemoveThinker();
     sw(0, s0);
     goto loc_8001F904;
 loc_8001F8E8:

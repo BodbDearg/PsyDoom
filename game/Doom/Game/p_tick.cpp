@@ -90,25 +90,30 @@ static const VmPtr<const char> STR_Cheat_LotsOfGoodies(0x800110E0);
 static const VmPtr<const char> STR_Cheat_On(0x8001106E);                    // Temp 'On' message for 'noclip' cheat.
 static const VmPtr<const char> STR_Cheat_Off(0x80011082);                   // Temp 'Off' message for 'noclip' cheat.
 
-void P_AddThinker() noexcept {
-loc_80028C38:
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x6550);                               // Load from: gThinkerCap[0] (80096550)
-    sw(a0, v0 + 0x4);
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    sw(v0, a0 + 0x4);
-    v1 = lw(v0);                                        // Load from: gThinkerCap[0] (80096550)
-    sw(v1, a0);
-    sw(a0, v0);                                         // Store to: gThinkerCap[0] (80096550)
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Add a thinker to the linked list of thinkers
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_AddThinker(thinker_t& thinker) noexcept {
+    gThinkerCap->prev->next = &thinker;
+    thinker.next = gThinkerCap.get();
+    thinker.prev = gThinkerCap->prev;
+    gThinkerCap->prev = &thinker;
 }
 
-void P_RemoveThinker() noexcept {
-loc_80028C68:
-    v0 = -1;                                            // Result = FFFFFFFF
-    sw(v0, a0 + 0x8);
-    return;
+void _thunk_P_AddThinker() noexcept {
+    P_AddThinker(*vmAddrToPtr<thinker_t>(a0));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Mark a thinker for removal from the list of thinkers.
+// The removal happens later, during updates.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_RemoveThinker(thinker_t& thinker) noexcept {
+    thinker.function = (think_t) -1;
+}
+
+void _thunk_P_RemoveThinker() noexcept {
+    P_RemoveThinker(*vmAddrToPtr<thinker_t>(a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -118,7 +123,7 @@ void P_RunThinkers() noexcept {
     *gNumActiveThinkers = 0;
 
     for (thinker_t* pThinker = gThinkerCap->next.get(); pThinker != gThinkerCap.get(); pThinker = pThinker->next.get()) {
-        if (pThinker->function.addr() == (uint32_t) -1) {
+        if (pThinker->function == (think_t) -1) {
             // Time to remove this thinker, it's function has been zapped
             pThinker->next->prev = pThinker->prev;
             pThinker->prev->next = pThinker->next;

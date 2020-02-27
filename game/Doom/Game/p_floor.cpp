@@ -239,7 +239,7 @@ loc_800190B4:
     sw(v0, v1 + 0x8);
 loc_800190E0:
     a0 = s0;
-    P_RemoveThinker();
+    _thunk_P_RemoveThinker();
 loc_800190E8:
     ra = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);
@@ -292,7 +292,7 @@ loc_80019148:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 0x80020000;                                    // Result = 80020000
     v0 -= 0x6FF0;                                       // Result = T_MoveFloor (80019010)
     sw(s0, s2 + 0x50);
@@ -582,7 +582,7 @@ loc_8001958C:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     sw(s0, s1 + 0x50);
     t0 = 0x80020000;                                    // Result = 80020000
     t0 -= 0x6FF0;                                       // Result = T_MoveFloor (80019010)
@@ -648,7 +648,7 @@ loc_80019670:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     a3 = 1;                                             // Result = 00000001
     sw(s0, s1 + 0x50);
     t0 = 0x80020000;                                    // Result = 80020000

@@ -58,7 +58,7 @@ loc_8001AE00:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 0x80020000;                                    // Result = 80020000
     v0 -= 0x528C;                                       // Result = T_FireFlicker (8001AD74)
     sw(v0, s0 + 0x8);
@@ -129,7 +129,7 @@ loc_8001AF14:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 0x80020000;                                    // Result = 80020000
     v0 -= 0x5174;                                       // Result = T_LightFlash (8001AE8C)
     sw(v0, s0 + 0x8);
@@ -197,7 +197,7 @@ loc_8001B020:
     _thunk_Z_Malloc();
     s1 = v0;
     a0 = s1;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 3;                                             // Result = 00000003
     sw(s2, s1 + 0xC);
     sw(s0, s1 + 0x1C);
@@ -249,7 +249,7 @@ loc_8001B0F4:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v1 = 1;                                             // Result = 00000001
     v0 = 0xA;                                           // Result = 0000000A
     sw(s1, s0 + 0xC);
@@ -309,7 +309,7 @@ loc_8001B1B0:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 3;                                             // Result = 00000003
     sw(s1, s0 + 0xC);
     sw(s4, s0 + 0x1C);
@@ -526,7 +526,7 @@ loc_8001B558:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 0x80020000;                                    // Result = 80020000
     v0 -= 0x4B60;                                       // Result = T_Glow (8001B4A0)
     a0 = 1;                                             // Result = 00000001

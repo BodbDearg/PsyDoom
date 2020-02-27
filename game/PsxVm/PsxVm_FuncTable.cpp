@@ -234,8 +234,8 @@ extern void P_ChangeSwitchTexture() noexcept;
 extern void P_UseSpecialLine() noexcept;
 extern void P_Telefrag() noexcept;
 extern void EV_Teleport() noexcept;
-extern void P_AddThinker() noexcept;
-extern void P_RemoveThinker() noexcept;
+extern void _thunk_P_AddThinker() noexcept;
+extern void _thunk_P_RemoveThinker() noexcept;
 extern void P_RunThinkers() noexcept;
 extern void P_RunMobjLate() noexcept;
 extern void P_CheckCheats() noexcept;
@@ -917,8 +917,8 @@ namespace PsxVm {
         { 0x8002822C, &P_UseSpecialLine },
         { 0x80028820, &P_Telefrag },
         { 0x80028918, &EV_Teleport },
-        { 0x80028C38, &P_AddThinker },
-        { 0x80028C68, &P_RemoveThinker },
+        { 0x80028C38, &_thunk_P_AddThinker },
+        { 0x80028C68, &_thunk_P_RemoveThinker },
         { 0x80028C74, &P_RunThinkers },
         { 0x80028D30, &P_RunMobjLate },
         { 0x80028D94, &P_CheckCheats },

@@ -218,7 +218,7 @@ loc_80014CB0:
     _thunk_Z_Malloc();
     s0 = v0;
     a0 = s0;
-    P_AddThinker();
+    _thunk_P_AddThinker();
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x4A30;                                       // Result = T_MoveCeiling (80014A30)
     sw(s0, s1 + 0x50);
@@ -329,7 +329,7 @@ loc_80014E6C:
     v0 = lw(v0 + 0x10);
     sw(0, v0 + 0x50);
     a0 = lw(s0);
-    P_RemoveThinker();
+    _thunk_P_RemoveThinker();
     sw(0, s0);
     goto loc_80014EA8;
 loc_80014E9C:
