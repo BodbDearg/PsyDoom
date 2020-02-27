@@ -154,7 +154,7 @@ void I_SetDebugDrawStringPos(const int32_t x, const int32_t y) noexcept {
 void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
     // Setup the drawing mode
     {
-        DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
+        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
 
         // PC-PSX: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that
         #if PC_PSX_DOOM_MODS
@@ -167,7 +167,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
 
     // Setting up some sprite primitive stuff for the 'draw string' call that follows
     {
-        SPRT& spritePrim = *(SPRT*) getScratchAddr(128);
+        SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
 
         LIBGPU_SetSprt(spritePrim);
         LIBGPU_SetSemiTrans(&spritePrim, false);

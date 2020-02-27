@@ -42,13 +42,13 @@ void R_DrawSky() noexcept {
             skytex.height
         };
 
-        DR_MODE& drawMode = *(DR_MODE*) getScratchAddr(128);
+        DR_MODE& drawMode = *(DR_MODE*) LIBETC_getScratchAddr(128);
         LIBGPU_SetDrawMode(drawMode, false, false, skytex.texPageId, &textureWindow);
         I_AddPrim(&drawMode);
     }
 
     // Setup and draw the sky sprite
-    SPRT& spr = *(SPRT*) getScratchAddr(128);
+    SPRT& spr = *(SPRT*) LIBETC_getScratchAddr(128);
     LIBGPU_SetSprt(spr);
     LIBGPU_SetShadeTex(&spr, true);
     LIBGPU_setXY0(spr, 0, 0);

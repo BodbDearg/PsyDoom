@@ -108,7 +108,7 @@ void F1_Start() noexcept {
     I_PurgeTexCache();
     I_CacheTex(*gTex_BACK);
 
-    // Init finale 
+    // Init finale
     *gFinLinesDone = 0;
     *gFinIncomingLineLen = 0;
     gFinIncomingLine[0] = 0;
@@ -248,7 +248,7 @@ void F2_Start() noexcept {
     a0 = 60;
     S_LoadSoundAndMusic();
 
-    // Play the finale cd track    
+    // Play the finale cd track
     a0 = gCDTrackNum[cdmusic_finale_doom2];
     a1 = *gCdMusicVol;
     a2 = 0;
@@ -489,7 +489,7 @@ void F2_Drawer() noexcept {
         I_CacheTex(spriteTex);
 
         // Setup and draw the sprite for the cast character
-        POLY_FT4& polyPrim = *(POLY_FT4*) getScratchAddr(128);
+        POLY_FT4& polyPrim = *(POLY_FT4*) LIBETC_getScratchAddr(128);
 
         LIBGPU_SetPolyFT4(polyPrim);
         LIBGPU_SetShadeTex(&polyPrim, true);

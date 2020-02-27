@@ -240,7 +240,7 @@ bool PsxVm::init(
     const char* const doomExePath,
     const char* const doomCdCuePath
 ) noexcept {
-    // Create a new system and setup vm pointers 
+    // Create a new system and setup vm pointers
     gSystem.reset(new System());
     System& system = *gSystem;
     setupVmPointers();
@@ -397,7 +397,7 @@ void PsxVm::updateInput() noexcept {
         }
     }
 
-    // Update the emulator controller 
+    // Update the emulator controller
     ASSERT(InputManager::getInstance());
     InputManager& inputMgr = *InputManager::getInstance();
 

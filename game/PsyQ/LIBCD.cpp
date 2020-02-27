@@ -1377,7 +1377,7 @@ void LIBCD_CD_cw() noexcept {
 
     v0 = s1 & 0xFF;
     v1 = v0 << 2;
-    at = 0x80077434;            // Result = 80077434    
+    at = 0x80077434;            // Result = 80077434
     at += v1;
     v0 = lw(at);
 
@@ -1778,7 +1778,7 @@ void LIBCD_CD_init() noexcept {
     v0 = 2;
     sb(v0, 0x800774CD);             // Store to: 800774CD
     sb(0, v1);
-    v0 = lw(0x800774C0);            // Load from: 800774C0    
+    v0 = lw(0x800774C0);            // Load from: 800774C0
     sb(0, v0);
     v1 = lw(0x800774C4);            // Load from: 800774C4
     v0 = 0x132C;

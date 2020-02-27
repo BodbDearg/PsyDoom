@@ -159,7 +159,7 @@ void R_RenderPlayerView() noexcept {
         RECT texWinRect;
         LIBGPU_setRECT(texWinRect, 0, 0, 0, 0);
 
-        DR_TWIN* const pTexWinPrim = (DR_TWIN*) getScratchAddr(128);
+        DR_TWIN* const pTexWinPrim = (DR_TWIN*) LIBETC_getScratchAddr(128);
         LIBGPU_SetTexWindow(*pTexWinPrim, texWinRect);
         I_AddPrim(pTexWinPrim);
     }

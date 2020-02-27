@@ -48,7 +48,7 @@ struct sector_t {
     int32_t                 tag;
     int32_t                 soundtraversed;
     VmPtr<mobj_t>           soundtarget;
-    uint32_t                flags;              // TODO: CONFIRM LAYOUT    
+    uint32_t                flags;              // TODO: CONFIRM LAYOUT
     int32_t                 blockbox[4];        // TODO: CONFIRM LAYOUT
     degenmobj_t             soundorg;           // TODO: CONFIRM LAYOUT
     int32_t                 validcount;
@@ -181,5 +181,5 @@ struct spritedef_t {
     const spriteframe_t*    spriteframes;
 };
 
-// The list of sprite sequences 
+// The list of sprite sequences
 extern const spritedef_t gSprites[NUMSPRITES];

@@ -12,7 +12,7 @@ static constexpr uint32_t NUMPALETTES = 20;
 
 // Palette indices and ranges
 static constexpr uint32_t MAINPAL               = 0;    // Used for most sprites and textures in the game
-static constexpr uint32_t STARTREDPALS          = 1;    // Pain palettes (red shift) start 
+static constexpr uint32_t STARTREDPALS          = 1;    // Pain palettes (red shift) start
 static constexpr uint32_t NUMREDPALS            = 8;    // Number of pain palettes
 static constexpr uint32_t STARTBONUSPALS        = 9;    // Bonus pickup (gold shift) palettes start
 static constexpr uint32_t NUMBONUSPALS          = 4;    // Number of bonus pickup palettes

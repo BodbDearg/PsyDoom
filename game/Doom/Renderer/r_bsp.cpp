@@ -33,7 +33,7 @@ static const VmPtr<bool[SCREEN_W]> gbSolidCols(0x800A8F48);
 // Do BSP tree traversal (starting at the root node) to build up the list of subsectors to draw
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_BSP() noexcept {
-    // Initially all screen columns are fully not occluded by geometry    
+    // Initially all screen columns are fully not occluded by geometry
     D_memset(gbSolidCols.get(), (std::byte) 0, SCREEN_W * sizeof(bool));
 
     // The subsector draw list is also initially empty and the sky not visible

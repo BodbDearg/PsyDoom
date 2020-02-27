@@ -295,7 +295,7 @@ void ST_Drawer() noexcept {
     // Setup the current texture page and texture window.
     // PC-PSX: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that.
     {
-        DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
+        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
 
         #if PC_PSX_DOOM_MODS
             RECT texWindow = { 0, 0, 0, 0 };
@@ -308,7 +308,7 @@ void ST_Drawer() noexcept {
     }
 
     // Setup some sprite primitive state that is used for all the draw calls that follow
-    SPRT& spritePrim = *(SPRT*) getScratchAddr(128);
+    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
 
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_SetShadeTex(&spritePrim, true);

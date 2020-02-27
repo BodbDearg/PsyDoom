@@ -425,7 +425,7 @@ gameaction_t G_PlayDemoPtr() noexcept {
 
     *gpDemo_p += 2;
 
-    // Read the control bindings for the demo and save the previous ones before that    
+    // Read the control bindings for the demo and save the previous ones before that
     padbuttons_t prevCtrlBindings[NUM_BINDABLE_BTNS];
     
     D_memcpy(prevCtrlBindings, gCtrlBindings.get(), sizeof(prevCtrlBindings));

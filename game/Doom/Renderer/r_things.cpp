@@ -120,13 +120,13 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         RECT texWinRect;
         LIBGPU_setRECT(texWinRect, 0, 0, 0, 0);
 
-        DR_TWIN* const pTexWinPrim = (DR_TWIN*) getScratchAddr(128);
+        DR_TWIN* const pTexWinPrim = (DR_TWIN*) LIBETC_getScratchAddr(128);
         LIBGPU_SetTexWindow(*pTexWinPrim, texWinRect);
         I_AddPrim(pTexWinPrim);
     }
     
     // Initialize the quad primitive used to draw sprites
-    POLY_FT4& polyPrim = *(POLY_FT4*) getScratchAddr(128);
+    POLY_FT4& polyPrim = *(POLY_FT4*) LIBETC_getScratchAddr(128);
     LIBGPU_SetPolyFT4(polyPrim);
     polyPrim.clut = *g3dViewPaletteClutId;
 
@@ -282,14 +282,14 @@ void R_DrawWeapon() noexcept {
             bIsTransparent = ((player.mo->flags & MF_ALL_BLEND_MASKS) != 0);
             const uint16_t texPageId = tex.texPageId | LIBGPU_getTPage(0, (bIsTransparent) ? 1 : 0, 0, 0);
 
-            DR_MODE& drawMode = *(DR_MODE*) getScratchAddr(128);
+            DR_MODE& drawMode = *(DR_MODE*) LIBETC_getScratchAddr(128);
             LIBGPU_SetDrawMode(drawMode, false, false, texPageId, &texWin);
             I_AddPrim(&drawMode);
         }
 
         // Setup the sprite to be drawn and submit the drawing primitive.
         // Set transparency, size, UV coords, palette and color before drawing.
-        SPRT& spr = *(SPRT*) getScratchAddr(128);
+        SPRT& spr = *(SPRT*) LIBETC_getScratchAddr(128);
         LIBGPU_SetSprt(spr);
 
         if (bIsTransparent) {

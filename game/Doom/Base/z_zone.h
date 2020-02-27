@@ -33,7 +33,7 @@ static_assert(sizeof(memblock_t) == 24);
 
 // Info for a memory allocation zone
 struct memzone_t {
-    int32_t             size;           // Total bytes malloced, including header       
+    int32_t             size;           // Total bytes malloced, including header
     VmPtr<memblock_t>   rover;
     memblock_t          blocklist;      // Start / end cap for linked list
 };

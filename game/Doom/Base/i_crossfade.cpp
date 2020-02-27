@@ -86,7 +86,7 @@ void I_CrossFadeFrameBuffers() noexcept {
     polyPrim2.tpage = LIBGPU_GetTPage(2, 0, (*gCurDispBufferIdx == 0) ? 0 : 256, 0);
     polyPrim2.clut = 0;
 
-    // Run the cross fade until completion    
+    // Run the cross fade until completion
     uint32_t framebufferIdx = 0;
     
     for (int32_t fade = 255; fade >= 0; fade -= 5) {

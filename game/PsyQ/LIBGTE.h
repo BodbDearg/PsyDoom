@@ -20,7 +20,7 @@ struct VECTOR {
 
 static_assert(sizeof(VECTOR) == 16);
 
-// 3D vector with 16-bit elements   
+// 3D vector with 16-bit elements
 struct SVECTOR {
     int16_t     vx;
     int16_t     vy;

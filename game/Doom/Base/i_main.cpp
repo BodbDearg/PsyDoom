@@ -449,13 +449,13 @@ void I_DrawSprite(
 ) noexcept {
     // Set the drawing mode
     {
-        DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
+        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
         LIBGPU_SetDrawMode(drawModePrim, false, false, texPageId, nullptr);
         I_AddPrim(&drawModePrim);
     }
 
     // Setup the sprite primitive and submit
-    SPRT& spritePrim = *(SPRT*) getScratchAddr(128);
+    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
 
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_setRGB0(spritePrim, 128, 128, 128);
@@ -464,7 +464,7 @@ void I_DrawSprite(
     LIBGPU_setWH(spritePrim, texW, texH);
     spritePrim.clut = clutId;
 
-    I_AddPrim(getScratchAddr(128));
+    I_AddPrim(LIBETC_getScratchAddr(128));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -860,7 +860,7 @@ void I_PurgeTexCache() noexcept {
 void I_VramViewerDraw(const int32_t texPageNum) noexcept {
     // Draw a sprite covering the screen which covers the entire vram page
     {
-        POLY_FT4& polyPrim = *(POLY_FT4*) getScratchAddr(128);
+        POLY_FT4& polyPrim = *(POLY_FT4*) LIBETC_getScratchAddr(128);
 
         LIBGPU_SetPolyFT4(polyPrim);
         LIBGPU_setRGB0(polyPrim, 128, 128, 128);
@@ -903,7 +903,7 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
             continue;
 
         // Setup some stuff for all lines drawn
-        LINE_F2& linePrim = *(LINE_F2*) getScratchAddr(128);
+        LINE_F2& linePrim = *(LINE_F2*) LIBETC_getScratchAddr(128);
         LIBGPU_SetLineF2(linePrim);
         LIBGPU_setRGB0(linePrim, 255, 0, 0);
         
@@ -923,17 +923,17 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
         const int16_t w = pTex->width;
 
         // Draw all the box lines for the cache entry
-        LIBGPU_setXY2(linePrim, x, y, x + w, y);                // Top                           
+        LIBGPU_setXY2(linePrim, x, y, x + w, y);                // Top
         I_AddPrim(&linePrim);
 
         LIBGPU_setXY2(linePrim, x + w, y, x + w, y + h);        // Right
-        I_AddPrim(getScratchAddr(128));
+        I_AddPrim(LIBETC_getScratchAddr(128));
 
         LIBGPU_setXY2(linePrim, x + w, y + h, x, y + h);        // Bottom
-        I_AddPrim(getScratchAddr(128));
+        I_AddPrim(LIBETC_getScratchAddr(128));
 
         LIBGPU_setXY2(linePrim, x, y + h, x, y);                // Left
-        I_AddPrim(getScratchAddr(128));
+        I_AddPrim(LIBETC_getScratchAddr(128));
     }
 }
 

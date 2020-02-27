@@ -9,7 +9,7 @@ namespace PsxVm {
 
 // Return a pointer to the specified word in the PSX scratchpad memory/cache.
 // There is 1 KiB of memory in total in the scratchpad.
-static inline void* getScratchAddr(const uint32_t word) {
+static inline void* LIBETC_getScratchAddr(const uint32_t word) {
     return PsxVm::gpScratchpad + word * sizeof(uint32_t);
 }
 

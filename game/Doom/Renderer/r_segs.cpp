@@ -20,7 +20,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
     side_t& side = *seg.sidedef;
     line_t& line = *seg.linedef;
 
-    // This line is now viewed by the player: show in the automap if the line is viewable there    
+    // This line is now viewed by the player: show in the automap if the line is viewable there
     line.flags |= ML_MAPPED;
 
     // Compute the top and bottom y values for the front sector in texture space, relative to the viewpoint.
@@ -195,13 +195,13 @@ void R_DrawWallPiece(
         RECT texRect;
         LIBGPU_setRECT(texRect, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
 
-        DR_TWIN* const texWinPrim = (DR_TWIN*) getScratchAddr(128);
+        DR_TWIN* const texWinPrim = (DR_TWIN*) LIBETC_getScratchAddr(128);
         LIBGPU_SetTexWindow(*texWinPrim, texRect);        
         I_AddPrim(texWinPrim);
     }
 
     // Initialization of the flat shaded textured triangle drawing primitive
-    POLY_FT3& polyPrim = *(POLY_FT3*) getScratchAddr(128);
+    POLY_FT3& polyPrim = *(POLY_FT3*) LIBETC_getScratchAddr(128);
     LIBGPU_SetPolyFT3(polyPrim);
         
     if (bTransparent) {

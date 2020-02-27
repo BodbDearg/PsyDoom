@@ -52,7 +52,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
             pLumpData = gTmpBuffer.get();
         }
 
-        // Load the decompressed texture to the required part of VRAM and mark as loaded 
+        // Load the decompressed texture to the required part of VRAM and mark as loaded
         const RECT vramRect = getTextureVramRect(tex);
         LIBGPU_LoadImage(vramRect, (uint16_t*) pLumpData + 4);      // TODO: figure out what 8 bytes are being skipped
         tex.uploadFrameNum = *gNumFramesDrawn;
@@ -65,7 +65,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
         RECT texWinRect;
         LIBGPU_setRECT(texWinRect, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
 
-        DR_TWIN* const pTexWinPrim = (DR_TWIN*) getScratchAddr(128);
+        DR_TWIN* const pTexWinPrim = (DR_TWIN*) LIBETC_getScratchAddr(128);
         LIBGPU_SetTexWindow(*pTexWinPrim, texWinRect);
         I_AddPrim(pTexWinPrim);
     }
@@ -88,7 +88,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& tex) noexcept {
     // Compute the screen x and y values for each leaf vertex and save to scratchpad memory for fast access
-    uint32_t* const pVerticesScreenX = (uint32_t*) getScratchAddr(160);
+    uint32_t* const pVerticesScreenX = (uint32_t*) LIBETC_getScratchAddr(160);
     uint32_t* const pVerticesScreenY = pVerticesScreenX + (MAX_LEAF_EDGES + 1);
 
     {
@@ -198,7 +198,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
     #endif
 
     // Fill in the parts of the draw primitive that are common to all flat spans
-    POLY_FT3& polyPrim = *(POLY_FT3*) getScratchAddr(128);
+    POLY_FT3& polyPrim = *(POLY_FT3*) LIBETC_getScratchAddr(128);
 
     LIBGPU_SetPolyFT3(polyPrim);
     polyPrim.clut = *g3dViewPaletteClutId;

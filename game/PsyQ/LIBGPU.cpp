@@ -617,7 +617,7 @@ void LIBGPU_FntFlush([[maybe_unused]] const int32_t printStreamId) noexcept {
 
     // Set the current texture page id to use and clear the texture window
     {
-        DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
+        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
         LIBGPU_SetDrawMode(drawModePrim, false, false, gDFontTPageId, nullptr);
         LIBGPU_TermPrim(drawModePrim);
         LIBGPU_DrawOTag(&drawModePrim);

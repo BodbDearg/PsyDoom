@@ -78,7 +78,7 @@ void AM_Control(player_t& player) noexcept {
         player.automapy = player.mo->y;
     }
     
-    // Figure out the movement amount for manual camera movement    
+    // Figure out the movement amount for manual camera movement
     const fixed_t moveStep = (ticButtons & PAD_SQUARE) ? MOVESTEP * 2 : MOVESTEP;
 
     // Not sure why this check was done, it can never be true due to the logic above.
@@ -323,7 +323,7 @@ void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const in
 
     // Setup the map line primitive and draw it.
     // Use the 1 KiB scratchpad also as temp storage space for the primitive.
-    LINE_F2& line = *(LINE_F2*) getScratchAddr(128);
+    LINE_F2& line = *(LINE_F2*) LIBETC_getScratchAddr(128);
     
     LIBGPU_SetLineF2(line);
     LIBGPU_setRGB0(line, (uint8_t)(color >> 16), (uint8_t)(color >> 8), (uint8_t) color);

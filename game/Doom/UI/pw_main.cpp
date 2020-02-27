@@ -198,7 +198,7 @@ void DRAW_PasswordScreen() noexcept {
 
     // Setup the draw mode
     {
-        DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
+        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
 
         // PC-PSX: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that
         #if PC_PSX_DOOM_MODS
@@ -212,7 +212,7 @@ void DRAW_PasswordScreen() noexcept {
     }
 
     // Common sprite setup for all the password chars
-    SPRT& spritePrim = *(SPRT*) getScratchAddr(128);
+    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
 
     LIBGPU_SetSprt(spritePrim);
     spritePrim.clut = gPaletteClutIds[UIPAL];

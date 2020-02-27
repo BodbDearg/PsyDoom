@@ -155,7 +155,7 @@ void DRAW_ControlsScreen() noexcept {
     // Screen header text
     I_DrawString(-1, 20, "Configuration");
 
-    // Draw the skull cursor    
+    // Draw the skull cursor
     I_DrawSprite(
         gTex_STATUS->texPageId,
         gPaletteClutIds[UIPAL],

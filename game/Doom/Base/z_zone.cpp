@@ -12,7 +12,7 @@ extern const VmPtr<VmPtr<memzone_t>> gpMainMemZone(0x80078198);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the zone memory management system.
-// DOOM doesn't use any PsyQ SDK allocation functions AT ALL (either directly or indirectly) so it just gobbles up the entire of the 
+// DOOM doesn't use any PsyQ SDK allocation functions AT ALL (either directly or indirectly) so it just gobbles up the entire of the
 // available heap space on the system for it's own purposes.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Z_Init() noexcept {

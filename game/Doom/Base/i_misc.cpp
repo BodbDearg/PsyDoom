@@ -85,7 +85,7 @@ const fontchar_t gBigFontChars[NUM_BIG_FONT_CHARS] = {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcept {
     // Basic setup of the drawing primitive
-    SPRT& spritePrim = *(SPRT*) getScratchAddr(128);
+    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
 
     #if PC_PSX_DOOM_MODS
         // Set these primitive properties prior to drawing rather than allowing them to be undefined as in the original code.
@@ -94,7 +94,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
         // Relying on external draw code and ordering however is brittle, so be explicit here and set exactly what we need:    
         {
             // Set the draw mode to disable wrapping (zero sized text window) and texture page to the STATUS graphic
-            DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
+            DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
             const RECT texWindow = { 0, 0, 0, 0 };
             LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, &texWindow);
             I_AddPrim(&drawModePrim);
@@ -166,7 +166,7 @@ void I_DrawStringSmall(const int32_t x, const int32_t y, const char* const str) 
     //
     // Note: lots of stuff like shading, color etc. is deliberately LEFT ALONE and not defined/specified here.
     // It's up to external code to customize that if it wants.
-    SPRT& spritePrim = *(SPRT*) getScratchAddr(128);    
+    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
     LIBGPU_setWH(spritePrim, 8, 8);
     spritePrim.y0 = (int16_t) y;
     
@@ -224,7 +224,7 @@ void I_DrawPausedOverlay() noexcept {
     else if (player.cheats & CF_VRAMVIEWER) {
         // Draw the vram viewer: first clear the background to black and then draw it
         {
-            POLY_F4& polyPrim = *(POLY_F4*) getScratchAddr(128);
+            POLY_F4& polyPrim = *(POLY_F4*) LIBETC_getScratchAddr(128);
             LIBGPU_SetPolyF4(polyPrim);
             LIBGPU_setRGB0(polyPrim, 0, 0, 0);
             LIBGPU_setXY4(polyPrim,
@@ -234,7 +234,7 @@ void I_DrawPausedOverlay() noexcept {
                 SCREEN_W,   SCREEN_H
             );
 
-            I_AddPrim(getScratchAddr(128));
+            I_AddPrim(LIBETC_getScratchAddr(128));
         }
         
         I_VramViewerDraw(*gVramViewerTexPage);
@@ -350,7 +350,7 @@ static int32_t I_GetStringXPosToCenter(const char* const str) noexcept {
 void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexcept {
     // Set the draw mode to remove the current texture window and texture page to the STATUS graphic
     {
-        DR_MODE& drawModePrim = *(DR_MODE*) getScratchAddr(128);
+        DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
 
         // PC-PSX: define the texture window while we are at, rather than relying on the one set externally
         #if PC_PSX_DOOM_MODS
@@ -364,7 +364,7 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
     }
 
     // Some basic setup of the sprite primitive for all characters
-    SPRT& spritePrim = *(SPRT*) getScratchAddr(128);
+    SPRT& spritePrim = *(SPRT*) LIBETC_getScratchAddr(128);
 
     LIBGPU_SetSprt(spritePrim);
     LIBGPU_SetShadeTex(&spritePrim, true);
