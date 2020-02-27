@@ -50,10 +50,12 @@ void P_RemoveThinker() noexcept;
 void P_RunThinkers() noexcept;
 void P_RunMobjLate() noexcept;
 void P_CheckCheats() noexcept;
-void P_Ticker() noexcept;
+
+gameaction_t P_Ticker() noexcept;
+void _thunk_P_Ticker() noexcept;
+
 void P_Drawer() noexcept;
 void P_Start() noexcept;
 
 void P_Stop(const gameaction_t exitAction) noexcept;
 void _thunk_P_Stop() noexcept;
-

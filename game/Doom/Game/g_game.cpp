@@ -362,7 +362,7 @@ void G_RunGame() noexcept {
     while (true) {
         // Load the level and run the game
         G_DoLoadLevel();
-        MiniLoop(P_Start, _thunk_P_Stop, P_Ticker, P_Drawer);
+        MiniLoop(P_Start, _thunk_P_Stop, _thunk_P_Ticker, P_Drawer);
     
         *gbIsLevelBeingRestarted = false;
     
@@ -451,7 +451,7 @@ gameaction_t G_PlayDemoPtr() noexcept {
 
     // Run the demo
     *gbDemoPlayback = true;
-    const gameaction_t exitAction = MiniLoop(P_Start, _thunk_P_Stop, P_Ticker, P_Drawer);
+    const gameaction_t exitAction = MiniLoop(P_Start, _thunk_P_Stop, _thunk_P_Ticker, P_Drawer);
     *gbDemoPlayback = false;
 
     // Restore the previous control bindings and cleanup

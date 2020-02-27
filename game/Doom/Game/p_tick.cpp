@@ -73,6 +73,9 @@ static const VmPtr<int32_t>                     gCurCheatBtnSequenceIdx(0x80077F
 static const VmPtr<uint16_t[CHEAT_SEQ_LEN]>     gCheatSequenceBtns(0x800A91A4);         // Cheat sequence buttons inputted by the player
 static const VmPtr<int32_t>                     gTicConOnPause(0x800782D8);             // What 60Hz tick we paused on, used to discount paused time on unpause
 
+// Stat tracking counts
+static const VmPtr<int32_t> gNumActiveThinkers(0x800782F4);
+
 // Cheat activated message strings.
 //
 // TODO: eventually make these be actual C++ string constants.
@@ -108,78 +111,42 @@ loc_80028C68:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Execute think logic for all thinkers
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_RunThinkers() noexcept {
-    sp -= 0x20;
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 += 0x6554;                                       // Result = gThinkerCap[1] (80096554)
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    s0 = lw(v0);                                        // Load from: gThinkerCap[1] (80096554)
-    v0 -= 4;                                            // Result = gThinkerCap[0] (80096550)
-    sw(0, gp + 0xD14);                                  // Store to: gNumActiveThinkers (800782F4)
-    s2 = -1;                                            // Result = FFFFFFFF
-    if (s0 == v0) goto loc_80028D14;
-    s1 = v0;                                            // Result = gThinkerCap[0] (80096550)
-loc_80028CA8:
-    v0 = lw(s0 + 0x8);
-    a1 = s0;
-    if (v0 != s2) goto loc_80028CE4;
-    v1 = lw(s0 + 0x4);
-    v0 = lw(s0);
-    a0 = *gpMainMemZone;
-    sw(v0, v1);
-    v1 = lw(s0);
-    v0 = lw(s0 + 0x4);
-    sw(v0, v1 + 0x4);
-    _thunk_Z_Free2();
-    goto loc_80028D04;
-loc_80028CE4:
-    if (v0 == 0) goto loc_80028CF4;
-    a0 = s0;
-    ptr_call(v0);
-loc_80028CF4:
-    v0 = lw(gp + 0xD14);                                // Load from: gNumActiveThinkers (800782F4)
-    v0++;
-    sw(v0, gp + 0xD14);                                 // Store to: gNumActiveThinkers (800782F4)
-loc_80028D04:
-    s0 = lw(s0 + 0x4);
-    if (s0 != s1) goto loc_80028CA8;
-loc_80028D14:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    *gNumActiveThinkers = 0;
+
+    for (thinker_t* pThinker = gThinkerCap->next.get(); pThinker != gThinkerCap.get(); pThinker = pThinker->next.get()) {
+        if (pThinker->function.addr() == (uint32_t) -1) {
+            // Time to remove this thinker, it's function has been zapped
+            pThinker->next->prev = pThinker->prev;
+            pThinker->prev->next = pThinker->next;
+            Z_Free2(**gpMainMemZone, pThinker);
+        } else {
+            // Run the thinker if it has a think function and increment the active count stat
+            if (pThinker->function) {
+                // TODO: use a native function call
+                a0 = ptrToVmAddr(pThinker);
+                ptr_call(pThinker->function);
+            }
+
+            *gNumActiveThinkers += 1;
+        }
+    }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Execute the 'late call' update function for all map objects
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_RunMobjLate() noexcept {
-    sp -= 0x20;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x715C;                                       // Result = gMObjHead[5] (800A8EA4)
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    a0 = lw(v0);                                        // Load from: gMObjHead[5] (800A8EA4)
-    v0 -= 0x14;                                         // Result = gMObjHead[0] (800A8E90)
-    s1 = v0;                                            // Result = gMObjHead[0] (800A8E90)
-    if (a0 == v0) goto loc_80028D7C;
-loc_80028D58:
-    v0 = lw(a0 + 0x18);
-    s0 = lw(a0 + 0x14);
-    if (v0 == 0) goto loc_80028D70;
-    ptr_call(v0);
-loc_80028D70:
-    a0 = s0;
-    if (a0 != s1) goto loc_80028D58;
-loc_80028D7C:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    for (mobj_t* pMObj = gMObjHead->next.get(); pMObj != gMObjHead.get(); pMObj = pMObj->next.get()) {
+        if (pMObj->latecall) {
+            // TODO: use a native function call
+            a0 = ptrToVmAddr(pMObj);
+            ptr_call(pMObj->latecall);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -525,108 +492,51 @@ void P_CheckCheats() noexcept {
     *gCurCheatBtnSequenceIdx %= CHEAT_SEQ_LEN;
 }
 
-void P_Ticker() noexcept {
-    sp -= 0x20;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// High level tick/update logic for main gameplay
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t P_Ticker() noexcept {    
     *gGameAction = ga_nothing;
+
+    // Check for pause and cheats
     P_CheckCheats();
-    v0 = *gbGamePaused;
-    if (v0 != 0) goto loc_8002955C;
-    v1 = *gGameTic;
-    v0 = *gPrevGameTic;
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8002955C;
-    s0 = 0x80090000;                                    // Result = 80090000
-    s0 = lw(s0 + 0x6554);                               // Load from: gThinkerCap[1] (80096554)
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    sw(0, gp + 0xD14);                                  // Store to: gNumActiveThinkers (800782F4)
-    if (s0 == v0) goto loc_800294F8;
-    s2 = -1;                                            // Result = FFFFFFFF
-    s1 = v0;                                            // Result = gThinkerCap[0] (80096550)
-loc_8002948C:
-    v0 = lw(s0 + 0x8);
-    a1 = s0;
-    if (v0 != s2) goto loc_800294C8;
-    v1 = lw(s0 + 0x4);
-    v0 = lw(s0);
-    a0 = *gpMainMemZone;
-    sw(v0, v1);
-    v1 = lw(s0);
-    v0 = lw(s0 + 0x4);
-    sw(v0, v1 + 0x4);
-    _thunk_Z_Free2();
-    goto loc_800294E8;
-loc_800294C8:
-    if (v0 == 0) goto loc_800294D8;
-    a0 = s0;
-    ptr_call(v0);
-loc_800294D8:
-    v0 = lw(gp + 0xD14);                                // Load from: gNumActiveThinkers (800782F4)
-    v0++;
-    sw(v0, gp + 0xD14);                                 // Store to: gNumActiveThinkers (800782F4)
-loc_800294E8:
-    s0 = lw(s0 + 0x4);
-    if (s0 != s1) goto loc_8002948C;
-loc_800294F8:
-    P_CheckSights();
-    P_RunMobjBase();
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x715C);                               // Load from: gMObjHead[5] (800A8EA4)
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7170;                                       // Result = gMObjHead[0] (800A8E90)
-    s1 = v0;                                            // Result = gMObjHead[0] (800A8E90)
-    if (a0 == v0) goto loc_80029544;
-loc_80029520:
-    v0 = lw(a0 + 0x18);
-    s0 = lw(a0 + 0x14);
-    if (v0 == 0) goto loc_80029538;
-    ptr_call(v0);
-loc_80029538:
-    a0 = s0;
-    if (a0 != s1) goto loc_80029520;
-loc_80029544:
-    P_UpdateSpecials();
-    P_RespawnSpecials();
-    ST_Ticker();
-loc_8002955C:
-    *gPlayerNum = 0;
-    s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    s2 = 0x80080000;                                    // Result = 80080000
-    s2 -= 0x7F54;                                       // Result = gbPlayerInGame[0] (800780AC)
-    s1 = 2;                                             // Result = 00000002
-loc_80029574:
-    a0 = *gPlayerNum;
-    v0 = a0 << 2;
-    v0 += s2;
-    v0 = lw(v0);
-    if (v0 == 0) goto loc_800295BC;
-    v0 = lw(s0 + 0x4);
-    if (v0 != s1) goto loc_800295AC;
-    G_DoReborn(*gPlayerNum);
-loc_800295AC:
-    a0 = s0;
-    AM_Control(*vmAddrToPtr<player_t>(a0));
-    a0 = s0;
-    P_PlayerThink();
-loc_800295BC:
-    v0 = *gPlayerNum;
-    v0++;
-    *gPlayerNum = v0;
-    v0 = (i32(v0) < 2);
-    s0 += 0x12C;
-    if (v0 != 0) goto loc_80029574;
-    v0 = *gGameAction;
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Run map entities and do status bar logic, if it's time
+    if ((!*gbGamePaused) && (*gGameTic > *gPrevGameTic)) {
+        P_RunThinkers();
+        P_CheckSights();
+        P_RunMobjBase();
+        P_RunMobjLate();
+        P_UpdateSpecials();
+        P_RespawnSpecials();
+        ST_Ticker();
+    }
+
+    // Run player logic
+    for (*gPlayerNum = 0; *gPlayerNum < MAXPLAYERS; *gPlayerNum += 1) {
+        // Only if this player is in the game!
+        if (!gbPlayerInGame[*gPlayerNum])
+            continue;
+
+        // Respawn if we need to
+        player_t& player = gPlayers[*gPlayerNum];
+
+        if (player.playerstate == PST_REBORN) {
+            G_DoReborn(gPlayerNum);
+        }
+
+        // Do automap and player controls/movement
+        AM_Control(player);
+
+        a0 = ptrToVmAddr(&player);
+        P_PlayerThink();
+    }
+
+    return *gGameAction;
+}
+
+void _thunk_P_Ticker() noexcept {
+    v0 = P_Ticker();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
