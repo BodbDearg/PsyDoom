@@ -184,7 +184,7 @@ loc_80027FB4:
     if (v0 != t0) goto loc_80028080;
     a0 = 0x80090000;                                    // Result = 80090000
     a0 = lw(a0 + 0x77BC);                               // Load from: gButtonList_1[4] (800977BC)
-    S_StartSound();
+    _thunk_S_StartSound();
     v0 = lw(s1 + 0x1C);
     a0 = *gpSides;
     v1 = v0 << 1;
@@ -231,7 +231,7 @@ loc_80028080:
     if (v0 != a3) goto loc_80028110;
     a0 = 0x80090000;                                    // Result = 80090000
     a0 = lw(a0 + 0x77BC);                               // Load from: gButtonList_1[4] (800977BC)
-    S_StartSound();
+    _thunk_S_StartSound();
     v0 = lw(s1 + 0x1C);
     a0 = *gpSides;
     v1 = v0 << 1;
@@ -264,7 +264,7 @@ loc_80028110:
     if (v0 != a2) goto loc_800281F8;
     a0 = 0x80090000;                                    // Result = 80090000
     a0 = lw(a0 + 0x77BC);                               // Load from: gButtonList_1[4] (800977BC)
-    S_StartSound();
+    _thunk_S_StartSound();
     v0 = lw(s1 + 0x1C);
     a0 = *gpSides;
     v1 = v0 << 1;

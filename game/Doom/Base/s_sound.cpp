@@ -456,9 +456,19 @@ loc_80041594:
     return;
 }
 
-void S_StartSound() noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Play the sound effect with the given id.
+// The origin parameter is optional and helps determine panning/attenuation.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void S_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept {
+    a0 = ptrToVmAddr(pOrigin);
+    a1 = soundId;
     a2 = 0;
     I_StartSound();
+}
+
+void _thunk_S_StartSound() noexcept {    
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 }
 
 void S_UpdateSounds() noexcept {

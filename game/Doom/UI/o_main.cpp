@@ -78,10 +78,8 @@ const VmPtr<int32_t> gOptionsMusVol(0x800775F4);
 // Initializes the options menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void O_Init() noexcept {
-    // BAM!
-    a0 = 0;
-    a1 = sfx_pistol;
-    S_StartSound();
+    // BAM
+    S_StartSound(nullptr, sfx_pistol);
 
     // Initialize cursor position and vblanks until move for all players
     *gCursorFrame = 0;
@@ -137,10 +135,7 @@ gameaction_t O_Control() noexcept {
 
         // Allow the start or select buttons to close the menu
         if ((ticButtons != oldTicButtons) && (ticButtons & (PAD_START | PAD_SELECT))) {
-            a0 = 0;
-            a1 = sfx_pistol;
-            S_StartSound();
-
+            S_StartSound(nullptr, sfx_pistol);
             return ga_exit;
         }
         
@@ -164,9 +159,7 @@ gameaction_t O_Control() noexcept {
 
                     // Note: only play sound for this user's player!
                     if (playerIdx == *gCurPlayerIndex) {
-                        a0 = 0;
-                        a1 = sfx_pstop;
-                        S_StartSound();
+                        S_StartSound(nullptr, sfx_pstop);
                     }
                 }
                 else if (ticButtons & PAD_UP) {
@@ -178,9 +171,7 @@ gameaction_t O_Control() noexcept {
 
                     // Note: only play sound for this user's player!
                     if (playerIdx == *gCurPlayerIndex) {
-                        a0 = 0;
-                        a1 = sfx_pstop;
-                        S_StartSound();
+                        S_StartSound(nullptr, sfx_pstop);
                     }
                 }
             }
@@ -204,9 +195,7 @@ gameaction_t O_Control() noexcept {
                             S_SetMusicVolume();
 
                             if (*gOptionsMusVol & 1) {
-                                a0 = 0;
-                                a1 = sfx_stnmov;
-                                S_StartSound();
+                                S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
 
@@ -222,9 +211,7 @@ gameaction_t O_Control() noexcept {
                             S_SetMusicVolume();
 
                             if (*gOptionsMusVol & 1) {
-                                a0 = 0;
-                                a1 = sfx_stnmov;
-                                S_StartSound();
+                                S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
 
@@ -245,11 +232,9 @@ gameaction_t O_Control() noexcept {
                         } else {
                             a0 = ((*gOptionsSndVol) * 127) / 100;
                             S_SetSfxVolume();
-                        
+                            
                             if (*gOptionsSndVol & 1) {
-                                a0 = 0;
-                                a1 = sfx_stnmov;
-                                S_StartSound();
+                                S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
                     }
@@ -261,11 +246,9 @@ gameaction_t O_Control() noexcept {
                         } else {
                             a0 = ((*gOptionsSndVol) * 127) / 100;
                             S_SetSfxVolume();
-                        
+                            
                             if (*gOptionsSndVol & 1) {
-                                a0 = 0;
-                                a1 = sfx_stnmov;
-                                S_StartSound();
+                                S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
                     }
@@ -290,10 +273,7 @@ gameaction_t O_Control() noexcept {
             // Main menu option
             case opt_main_menu: {
                 if (ticButtons & PAD_ACTION_BTNS) {
-                    a0 = 0;
-                    a1 = sfx_pistol;
-                    S_StartSound();
-
+                    S_StartSound(nullptr, sfx_pistol);
                     return ga_exitdemo;
                 }
             }   break;
@@ -301,10 +281,7 @@ gameaction_t O_Control() noexcept {
             // Restart option
             case opt_restart: {
                 if (ticButtons & PAD_ACTION_BTNS) {
-                    a0 = 0;
-                    a1 = sfx_pistol;
-                    S_StartSound();
-
+                    S_StartSound(nullptr, sfx_pistol);
                     return ga_restart;
                 }
             }   break;

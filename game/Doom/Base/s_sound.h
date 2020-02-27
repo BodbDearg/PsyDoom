@@ -2,6 +2,9 @@
 
 #include "PsxVm/VmPtr.h"
 
+enum sfxenum_t : uint32_t;
+struct mobj_t;
+
 // Enum for a CD music piece and also an index into the 'gCDTrackNum' array to get an actual track number
 enum cdmusic_t : uint32_t {
     cdmusic_title_screen,
@@ -30,5 +33,8 @@ void S_Resume() noexcept;
 void S_StopSound() noexcept;
 void S_Clear() noexcept;
 void I_StartSound() noexcept;
-void S_StartSound() noexcept;
+
+void S_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept;
+void _thunk_S_StartSound() noexcept;
+
 void S_UpdateSounds() noexcept;

@@ -12,7 +12,6 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
-#include "PsxVm/PsxVm.h"
 #include "ti_main.h"
 
 // Texture for the legals screen text
@@ -23,12 +22,9 @@ static const VmPtr<texture_t> gTex_LEGALS(0x80097BD0);
 //------------------------------------------------------------------------------------------------------------------------------------------
 void START_Legals() noexcept {
     I_PurgeTexCache();    
-    I_LoadAndCacheTexLump(*gTex_LEGALS, "LEGALS", 0);
-
-    a0 = 0;
-    a1 = sfx_sgcock;
-    S_StartSound();
-
+    I_LoadAndCacheTexLump(*gTex_LEGALS, "LEGALS", 0);    
+    
+    S_StartSound(nullptr, sfx_sgcock);
     *gTitleScreenSpriteY = SCREEN_H;
 }
 
@@ -36,10 +32,7 @@ void START_Legals() noexcept {
 // Shutdown logic for the 'legals' screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void STOP_Legals([[maybe_unused]] const gameaction_t exitAction) noexcept {
-    a0 = 0;
-    a1 = sfx_barexp;
-    S_StartSound();
-
+    S_StartSound(nullptr, sfx_barexp);
     I_CrossFadeFrameBuffers();
 }
 

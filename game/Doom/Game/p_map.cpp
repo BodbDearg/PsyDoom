@@ -401,7 +401,7 @@ loc_8001BBC8:
     if (v0 != 0) goto loc_8001BBFC;
     a0 = lw(s5);
     a1 = sfx_noway;
-    S_StartSound();
+    _thunk_S_StartSound();
     goto loc_8001BC08;
 loc_8001BBFC:
     a0 = lw(s5);

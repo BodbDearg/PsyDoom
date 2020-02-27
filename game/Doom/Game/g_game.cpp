@@ -271,10 +271,8 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
     P_SpawnMObj();
     mobj_t* const pSpawnedThing = vmAddrToPtr<mobj_t>(v0);
     
-    // Play the teleport sound    
-    a0 = ptrToVmAddr(pSpawnedThing);
-    a1 = sfx_telept;
-    S_StartSound();
+    // Play the teleport sound
+    S_StartSound(pSpawnedThing, sfx_telept);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

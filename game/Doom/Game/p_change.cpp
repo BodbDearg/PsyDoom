@@ -116,7 +116,7 @@ loc_800150C4:
     P_SetMObjState();
     a0 = s1;
     a1 = sfx_slop;
-    S_StartSound();
+    _thunk_S_StartSound();
     v0 = *gCurPlayerIndex;
     a0 = lw(s1 + 0x80);
     sw(0, s1 + 0x44);

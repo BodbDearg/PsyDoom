@@ -12,7 +12,6 @@
 #include "Doom/Renderer/r_data.h"
 #include "in_main.h"
 #include "PcPsx/Finally.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBC2.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -251,9 +250,7 @@ void ST_Ticker() noexcept {
                 
                 // Play the item pickup sound if flashing on
                 if (flashCard.doDraw && flashCard.active) {
-                    a0 = 0;
-                    a1 = sfx_itemup;
-                    S_StartSound();
+                    S_StartSound(nullptr, sfx_itemup);
                 }
             }
         }

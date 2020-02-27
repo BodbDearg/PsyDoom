@@ -198,7 +198,7 @@ loc_800199DC:
     a0 = lw(s1);
     a1 = sfx_wpnup;
     sw(s0, s1 + 0x70);
-    S_StartSound();
+    _thunk_S_StartSound();
     v0 = 0;
     goto loc_80019ADC;
 loc_80019A1C:
@@ -1040,7 +1040,7 @@ loc_8001A510:
     a0 = 0;                                             // Result = 00000000
     if (s1 != v0) goto loc_8001A55C;
     a1 = s2;
-    S_StartSound();
+    _thunk_S_StartSound();
 loc_8001A55C:
     ra = lw(sp + 0x20);
     s3 = lw(sp + 0x1C);
@@ -1130,7 +1130,7 @@ loc_8001A6AC:
 loc_8001A6B8:
     a1 = sfx_pldeth;
 loc_8001A6BC:
-    S_StartSound();
+    _thunk_S_StartSound();
     v1 = *gNumMObjKilled;
     v0 = (i32(v1) < 0x20);
     {
@@ -1487,7 +1487,7 @@ loc_8001AC24:
 loc_8001AC34:
     a0 = s0;
     a1 = sfx_plpain;
-    S_StartSound();
+    _thunk_S_StartSound();
     v0 = lw(s2 + 0x24);
     v0 -= s3;
     sw(v0, s2 + 0x24);

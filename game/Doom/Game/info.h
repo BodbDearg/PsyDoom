@@ -8,6 +8,8 @@
 
 #include "PsxVm/VmPtr.h"
 
+enum sfxenum_t : uint32_t;
+
 // Indexes into the array of sprite lump names
 enum spritenum_t : uint32_t {
     SPR_TROO,
@@ -1071,23 +1073,23 @@ struct mobjinfo_t {
     statenum_t      spawnstate;
     int32_t         spawnhealth;
     statenum_t      seestate;
-    uint32_t        seesound;
+    sfxenum_t       seesound;
     int32_t         reactiontime;
-    uint32_t        attacksound;
+    sfxenum_t       attacksound;
     statenum_t      painstate;
     int32_t         painchance;
-    uint32_t        painsound;
+    sfxenum_t       painsound;
     statenum_t      meleestate;
     statenum_t      missilestate;
     statenum_t      deathstate;
     statenum_t      xdeathstate;
-    uint32_t        deathsound;
+    sfxenum_t       deathsound;
     int32_t         speed;
     int32_t         radius;
     int32_t         height;
     int32_t         mass;
     int32_t         damage;
-    uint32_t        activesound;
+    sfxenum_t       activesound;
     uint32_t        flags;
 };
 

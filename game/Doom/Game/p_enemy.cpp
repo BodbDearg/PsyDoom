@@ -683,7 +683,7 @@ loc_800165A4:
 loc_800165AC:
     a0 = s0;
 loc_800165B0:
-    S_StartSound();
+    _thunk_S_StartSound();
 loc_800165B8:
     v0 = lw(s0 + 0x58);
     a1 = lw(v0 + 0xC);
@@ -796,7 +796,7 @@ loc_80016728:
     a1 = lw(v0 + 0x18);
     if (a1 == 0) goto loc_80016754;
     a0 = s1;
-    S_StartSound();
+    _thunk_S_StartSound();
     v0 = lw(s1 + 0x58);
 loc_80016754:
     a1 = lw(v0 + 0x28);
@@ -909,7 +909,7 @@ loc_800168D0:
     v0 = lw(s1 + 0x58);
     a1 = lw(v0 + 0x50);
     a0 = s1;
-    S_StartSound();
+    _thunk_S_StartSound();
 loc_80016910:
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -996,7 +996,7 @@ void A_PosAttack() noexcept {
 loc_80016A60:
     s1 = lw(s2 + 0x24);
     a1 = sfx_pistol;
-    S_StartSound();
+    _thunk_S_StartSound();
     _thunk_P_Random();
     s0 = v0;
     _thunk_P_Random();
@@ -1035,7 +1035,7 @@ void A_SPosAttack() noexcept {
     v0 = lw(s1 + 0x74);
     if (v0 == 0) goto loc_80016C04;
     a1 = sfx_shotgn;
-    S_StartSound();
+    _thunk_S_StartSound();
     v0 = lw(s1 + 0x74);
     s2 = 0;                                             // Result = 00000000
     if (v0 == 0) goto loc_80016B84;
@@ -1117,7 +1117,7 @@ void A_CPosAttack() noexcept {
     v0 = lw(s3 + 0x74);
     if (v0 == 0) goto loc_80016D50;
     a1 = sfx_pistol;
-    S_StartSound();
+    _thunk_S_StartSound();
     v0 = lw(s3 + 0x74);
     a2 = -0x21;                                         // Result = FFFFFFDF
     if (v0 == 0) goto loc_80016CD0;
@@ -1256,7 +1256,7 @@ void A_SpidAttack() noexcept {
     v0 = lw(s1 + 0x74);
     if (v0 == 0) goto loc_80016F9C;
     a1 = sfx_pistol;
-    S_StartSound();
+    _thunk_S_StartSound();
     v0 = lw(s1 + 0x74);
     s2 = 0;                                             // Result = 00000000
     if (v0 == 0) goto loc_80016F1C;
@@ -1485,7 +1485,7 @@ loc_8001724C:
     a0 = s1;
     if (v1 == 0) goto loc_8001728C;
     a1 = sfx_claw;
-    S_StartSound();
+    _thunk_S_StartSound();
     _thunk_P_Random();
     a0 = lw(s1 + 0x74);
     a1 = s1;
@@ -1707,7 +1707,7 @@ loc_800175C8:
     a0 = s0;
     if (v1 == 0) goto loc_80017610;
     a1 = sfx_claw;
-    S_StartSound();
+    _thunk_S_StartSound();
     _thunk_P_Random();
     a0 = lw(s0 + 0x74);
     a1 = s0;
@@ -1983,7 +1983,7 @@ void A_SkelWhoosh() noexcept {
     a0 = s1;
 loc_80017A10:
     a1 = sfx_skeswg;
-    S_StartSound();
+    _thunk_S_StartSound();
 loc_80017A18:
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -2063,7 +2063,7 @@ loc_80017B0C:
     s0 = v0 << 1;
     s0 += v0;
     s0 <<= 1;
-    S_StartSound();
+    _thunk_S_StartSound();
     a0 = lw(s1 + 0x74);
     a1 = s1;
     a2 = a1;
@@ -2114,7 +2114,7 @@ loc_80017C1C:
     a0 = s1;
 loc_80017C20:
     a1 = sfx_manatk;
-    S_StartSound();
+    _thunk_S_StartSound();
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -2392,7 +2392,7 @@ loc_8001804C:
     sw(v0, s1 + 0x64);
     a1 = lw(a1 + 0x18);
     s2 = a2;
-    S_StartSound();
+    _thunk_S_StartSound();
     v0 = lw(s1 + 0x74);
     a2 = -0x21;                                         // Result = FFFFFFDF
     if (v0 == 0) goto loc_80018108;
@@ -2968,7 +2968,7 @@ loc_80018958:
     if (v1 == v0) goto loc_80018978;
     a0 = s0;
 loc_80018978:
-    S_StartSound();
+    _thunk_S_StartSound();
 loc_80018980:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -2978,7 +2978,7 @@ loc_80018980:
 
 void A_XScream() noexcept {
     a1 = sfx_slop;
-    S_StartSound();
+    _thunk_S_StartSound();
 }
 
 void A_Pain() noexcept {
@@ -2987,7 +2987,7 @@ void A_Pain() noexcept {
     v0 = lw(a0 + 0x58);
     a1 = lw(v0 + 0x24);
     if (a1 == 0) goto loc_800189DC;
-    S_StartSound();
+    _thunk_S_StartSound();
 loc_800189DC:
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -3182,7 +3182,7 @@ void A_Hoof() noexcept {
     s0 = a0;
     sw(ra, sp + 0x14);
     a1 = sfx_hoof;
-    S_StartSound();
+    _thunk_S_StartSound();
     a0 = s0;
     A_Chase();
     ra = lw(sp + 0x14);
@@ -3197,7 +3197,7 @@ void A_Metal() noexcept {
     s0 = a0;
     sw(ra, sp + 0x14);
     a1 = sfx_metal;
-    S_StartSound();
+    _thunk_S_StartSound();
     a0 = s0;
     A_Chase();
     ra = lw(sp + 0x14);
@@ -3212,7 +3212,7 @@ void A_BabyMetal() noexcept {
     s0 = a0;
     sw(ra, sp + 0x14);
     a1 = sfx_bspwlk;
-    S_StartSound();
+    _thunk_S_StartSound();
     a0 = s0;
     A_Chase();
     ra = lw(sp + 0x14);

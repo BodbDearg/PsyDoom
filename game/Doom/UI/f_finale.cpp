@@ -326,17 +326,13 @@ gameaction_t F2_Ticker() noexcept {
         // Doing the cast call: see first if the player is shooting the current character
         if ((!*gbCastDeath) && (ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS)) {
             // Shooting this character! Play the shotgun sound:
-            a0 = 0;
-            a1 = sfx_shotgn;
-            S_StartSound();
+            S_StartSound(nullptr, sfx_shotgn);
 
             // Play enemy death sound if it has it
             const mobjinfo_t& mobjinfo = gMObjInfo[gCastOrder[*gCastNum].type];
             
             if (mobjinfo.deathsound != 0) {
-                a0 = 0;
-                a1 = mobjinfo.deathsound;
-                S_StartSound();
+                S_StartSound(nullptr, mobjinfo.deathsound);
             }
 
             // Begin playing the death animation
@@ -368,9 +364,7 @@ gameaction_t F2_Ticker() noexcept {
                 *gpCastState = &gStates[mobjinfo.seestate];
 
                 if (mobjinfo.seesound != 0) {
-                    a0 = 0;
-                    a1 = mobjinfo.seesound;
-                    S_StartSound();
+                    S_StartSound(nullptr, mobjinfo.seesound);
                 }
             } else {
                 // Character is not dead, advance the time until the next state
@@ -381,7 +375,7 @@ gameaction_t F2_Ticker() noexcept {
                     return ga_nothing;
             
                 // Hacked in logic to play sounds on certain frames of animation
-                int32_t soundId;
+                sfxenum_t soundId;
 
                 switch ((*gpCastState)->nextstate) {
                     case S_PLAY_ATK2:   soundId = sfx_dshtgn;   break;
@@ -410,13 +404,11 @@ gameaction_t F2_Ticker() noexcept {
                     case S_CYBER_ATK6:  soundId = sfx_rlaunc;   break;
                     case S_PAIN_ATK3:   soundId = sfx_sklatk;   break;
 
-                    default: soundId = 0;
+                    default: soundId = sfx_None;
                 }
 
-                if (soundId != 0) {
-                    a0 = 0;
-                    a1 = soundId;
-                    S_StartSound();
+                if (soundId != sfx_None) {
+                    S_StartSound(nullptr, soundId);
                 }
             }
 

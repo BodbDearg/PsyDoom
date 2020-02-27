@@ -49,7 +49,7 @@ loc_8001F2BC:
     a0 = lw(s0 + 0xC);
     a1 = sfx_stnmov;
     a0 += 0x38;
-    S_StartSound();
+    _thunk_S_StartSound();
 loc_8001F31C:
     v0 = 1;
 loc_8001F320:
@@ -79,7 +79,7 @@ loc_8001F354:
     sw(s1, s0 + 0x24);
     a0 += 0x38;
     sw(v0, s0 + 0x20);
-    S_StartSound();
+    _thunk_S_StartSound();
     v1 = lw(s0 + 0x34);
     v0 = (v1 < 3);
     if (v1 == s1) goto loc_8001F3A8;
@@ -133,7 +133,7 @@ loc_8001F438:
     a1 = sfx_pstart;
     a0 += 0x38;
 loc_8001F444:
-    S_StartSound();
+    _thunk_S_StartSound();
 loc_8001F44C:
     ra = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);
@@ -320,7 +320,7 @@ loc_8001F6FC:
     v0 &= 1;
     sw(v0, s0 + 0x24);
 loc_8001F714:
-    S_StartSound();
+    _thunk_S_StartSound();
 loc_8001F71C:
     a0 = s0;
     P_AddActivePlat();

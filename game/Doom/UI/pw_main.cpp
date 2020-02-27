@@ -33,9 +33,7 @@ const VmPtr<bool32_t> gbUsingAPassword(0x80077C3C);
 // Initializes the password screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void START_PasswordScreen() noexcept {
-    a0 = 0;    
-    a1 = sfx_pistol;
-    S_StartSound();
+    S_StartSound(nullptr, sfx_pistol);
 
     // Reset control related stuff and password entry status
     gVBlanksUntilMenuMove[0] = 0;
@@ -50,9 +48,7 @@ void START_PasswordScreen() noexcept {
 // Shuts down the password screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcept {
-    a0 = 0;
-    a1 = sfx_pistol;
-    S_StartSound();
+    S_StartSound(nullptr, sfx_pistol);
 
     // Draw the screen one more time before we transition
     *gCurPasswordCharIdx = 32;
@@ -73,9 +69,7 @@ gameaction_t TIC_PasswordScreen() noexcept {
             *gInvalidPasswordFlashTicsLeft -= 1;
             
             if ((*gInvalidPasswordFlashTicsLeft & 7) == 4) {
-                a0 = 0;
-                a1 = sfx_itemup;
-                S_StartSound();
+                S_StartSound(nullptr, sfx_itemup);
             }
         }
     }
@@ -97,19 +91,13 @@ gameaction_t TIC_PasswordScreen() noexcept {
             if (ticButtons & PAD_UP) {
                 if (*gCurPasswordCharIdx >= 8) {
                     *gCurPasswordCharIdx -= 8;
-
-                    a0 = 0;
-                    a1 = sfx_pstop;
-                    S_StartSound();
+                    S_StartSound(nullptr, sfx_pstop);
                 }
             }
             else if (ticButtons & PAD_DOWN) {
                 if (*gCurPasswordCharIdx + 8 < NUM_PW_CHARS) {
                     *gCurPasswordCharIdx += 8;
-
-                    a0 = 0;
-                    a1 = sfx_pstop;
-                    S_StartSound();
+                    S_StartSound(nullptr, sfx_pstop);
                 }
             }
 
@@ -119,9 +107,7 @@ gameaction_t TIC_PasswordScreen() noexcept {
                 if (*gCurPasswordCharIdx < 0) {
                     *gCurPasswordCharIdx = 0;
                 } else {
-                    a0 = 0;
-                    a1 = sfx_pstop;
-                    S_StartSound();
+                    S_StartSound(nullptr, sfx_pstop);
                 }
             }
             else if (ticButtons & PAD_RIGHT) {
@@ -130,9 +116,7 @@ gameaction_t TIC_PasswordScreen() noexcept {
                 if (*gCurPasswordCharIdx >= NUM_PW_CHARS) {
                     *gCurPasswordCharIdx = NUM_PW_CHARS - 1;
                 } else {
-                    a0 = 0;
-                    a1 = sfx_pstop;
-                    S_StartSound();
+                    S_StartSound(nullptr, sfx_pstop);
                 }
             }
         }
@@ -148,9 +132,7 @@ gameaction_t TIC_PasswordScreen() noexcept {
 
     if (ticButtons & (PAD_SQUARE | PAD_CROSS | PAD_CIRCLE)) {
         // Entering a password character (if there is a free slot)
-        a0 = 0;
-        a1 = sfx_swtchx;
-        S_StartSound();
+        S_StartSound(nullptr, sfx_swtchx);
 
         if (*gNumPasswordCharsEntered < PW_SEQ_LEN) {
             gPasswordCharBuffer[*gNumPasswordCharsEntered] = (uint8_t) *gCurPasswordCharIdx;
@@ -188,10 +170,7 @@ gameaction_t TIC_PasswordScreen() noexcept {
     }
     else if (ticButtons & PAD_TRIANGLE) {
         // Delete a password sequence character and reset it's value in the buffer to the default
-        a0 = 0;
-        a1 = sfx_swtchx;
-        S_StartSound();
-
+        S_StartSound(nullptr, sfx_swtchx);
         *gNumPasswordCharsEntered -= 1;
 
         if (*gNumPasswordCharsEntered < 0) {

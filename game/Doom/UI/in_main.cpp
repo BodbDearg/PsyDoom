@@ -214,17 +214,12 @@ gameaction_t IN_Ticker() noexcept {
                     gFragValue[i] = stats.fragcount;
                 }
 
-                a0 = 0;
-                a1 = sfx_barexp;
-                S_StartSound();
+                S_StartSound(nullptr, sfx_barexp);
             }
 
             // If we are at the stage where the intermission can be exited do that now
             if (*gIntermissionStage >= 2) {
-                a0 = 0;
-                a1 = sfx_barexp;
-                S_StartSound();
-
+                S_StartSound(nullptr, sfx_barexp);
                 return ga_died;
             }
         }
@@ -301,17 +296,12 @@ gameaction_t IN_Ticker() noexcept {
     // If the ramp up is done and we are on the initial stage then advance to the next and do the explode sfx
     if ((!bStillCounting) && (*gIntermissionStage == 0)) {
         *gIntermissionStage = 1;
-
-        a0 = 0;
-        a1 = sfx_barexp;
-        S_StartSound();
+        S_StartSound(nullptr, sfx_barexp);
     }
 
     // Do periodic gun shot sounds (every 2nd tick) while the count up is happening
     if (bStillCounting && ((*gGameTic & 1) == 0)) {
-        a0 = 0;
-        a1 = sfx_pistol;
-        S_StartSound();
+        S_StartSound(nullptr, sfx_pistol);
     }
 
     return ga_nothing;

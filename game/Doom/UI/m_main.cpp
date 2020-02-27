@@ -92,9 +92,7 @@ gameaction_t RunMenu() noexcept {
         I_DrawPresent();
         
         // Play a sound to acknowledge that the connecting process has ended
-        a0 = 0;
-        a1 = sfx_pistol;
-        S_StartSound();
+        S_StartSound(nullptr, sfx_pistol);
 
     } while (*gbDidAbortGame);
 
@@ -195,10 +193,7 @@ void M_Start() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Stop(const gameaction_t exitAction) noexcept {
     // Play the pistol sound and stop the current cd music track
-    a0 = 0;
-    a1 = sfx_pistol;
-    S_StartSound();
-
+    S_StartSound(nullptr, sfx_pistol);
     psxcd_stop();
 
     // Single player: adjust the start map for the episode that was selected
@@ -273,9 +268,7 @@ gameaction_t M_Ticker() noexcept {
             *gCursorPos = (menu_t) 0;
         }
 
-        a0 = 0;
-        a1 = sfx_pstop;
-        S_StartSound();
+        S_StartSound(nullptr, sfx_pstop);
     }
     else if (ticButtons & PAD_UP) {
         *gCursorPos -= 1;
@@ -284,9 +277,7 @@ gameaction_t M_Ticker() noexcept {
             *gCursorPos = NUMMENUITEMS - 1;
         }
 
-        a0 = 0;
-        a1 = sfx_pstop;
-        S_StartSound();
+        S_StartSound(nullptr, sfx_pstop);
     }
 
     if (gCursorPos[0] == gamemode) {
@@ -299,9 +290,7 @@ gameaction_t M_Ticker() noexcept {
                     *gStartMapOrEpisode = 1;
                 }
 
-                a0 = 0;
-                a1 = 0x17;
-                S_StartSound();
+                S_StartSound(nullptr, sfx_swtchx);
             }
         } 
         else if (ticButtons & PAD_LEFT) {
@@ -312,9 +301,7 @@ gameaction_t M_Ticker() noexcept {
                     *gStartMapOrEpisode = 1;
                 }
 
-                a0 = 0;
-                a1 = 0x17;
-                S_StartSound();
+                S_StartSound(nullptr, sfx_swtchx);
             }
         }
 
@@ -336,9 +323,7 @@ gameaction_t M_Ticker() noexcept {
             *gStartMapOrEpisode += 1;
             
             if (*gStartMapOrEpisode <= *gMaxStartEpisodeOrMap) {
-                a0 = 0;
-                a1 = sfx_swtchx;
-                S_StartSound();
+                S_StartSound(nullptr, sfx_swtchx);
             } else {
                 *gStartMapOrEpisode = *gMaxStartEpisodeOrMap;
             }
@@ -347,9 +332,7 @@ gameaction_t M_Ticker() noexcept {
             *gStartMapOrEpisode -= 1;
             
             if (*gStartMapOrEpisode > 0) {
-                a0 = 0;
-                a1 = sfx_swtchx;
-                S_StartSound();
+                S_StartSound(nullptr, sfx_swtchx);
             } else {
                 *gStartMapOrEpisode = 1;
             }
@@ -369,17 +352,13 @@ gameaction_t M_Ticker() noexcept {
 
             if (*gStartSkill < MAX_ALLOWED_SKILL) {
                 *gStartSkill = (skill_t)((uint32_t) *gStartSkill + 1);
-                a0 = 0;
-                a1 = sfx_swtchx;
-                S_StartSound();                
+                S_StartSound(nullptr, sfx_swtchx);
             }
         } 
         else if (ticButtons & PAD_LEFT) {
             if (*gStartSkill != sk_baby) {
                 *gStartSkill = (skill_t)((uint32_t) *gStartSkill - 1);
-                a0 = 0;
-                a1 = sfx_swtchx;
-                S_StartSound();
+                S_StartSound(nullptr, sfx_swtchx);
             }
         }
     }

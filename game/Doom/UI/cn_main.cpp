@@ -10,7 +10,6 @@
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
 #include "o_main.h"
-#include "PsxVm/PsxVm.h"
 
 // Names for all the control bindings
 static const char gCtrlBindingNames[NUM_CTRL_BINDS][16] = {
@@ -43,10 +42,8 @@ const VmPtr<texture_t> gTex_BUTTONS(0x80097AD0);
 // Startup/initialization logic for the control configuration screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void START_ControlsScreen() noexcept {
-    a0 = 0;
-    a1 = sfx_pistol;
-    S_StartSound();
-
+    S_StartSound(nullptr, sfx_pistol);
+    
     *gCursorFrame = 0;
     gCursorPos[0] = 0;
 
@@ -57,9 +54,7 @@ void START_ControlsScreen() noexcept {
 // Shutdown/cleanup logic for the control configuration screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void STOP_ControlsScreen([[maybe_unused]] const gameaction_t exitAction) noexcept {
-    a0 = 0;
-    a1 = sfx_pistol;
-    S_StartSound();
+    S_StartSound(nullptr, sfx_pistol);
 
     gCursorPos[0] = 3;  // Point to the 'controls' option of the options menu
 }
@@ -95,10 +90,9 @@ gameaction_t TIC_ControlsScreen() noexcept {
                     gCursorPos[0] = 0;
                 }
 
-                a0 = 0;
-                a1 = sfx_pstop;
-                S_StartSound();
-            } else if (ticButtons & PAD_UP) {
+                S_StartSound(nullptr, sfx_pstop);
+            } 
+            else if (ticButtons & PAD_UP) {
                 // Up is pressed and movement is allowed: move, wraparound (if required) and play a sound
                 gCursorPos[0]--;
                 
@@ -106,9 +100,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
                     gCursorPos[0] = NUM_BINDABLE_BTNS;
                 }
 
-                a0 = 0;
-                a1 = sfx_pstop;
-                S_StartSound();
+                S_StartSound(nullptr, sfx_pstop);
             }
         }
     }
@@ -132,9 +124,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
                 gCtrlBindings[gCursorPos[0]] = btnMask;
 
                 // Play a sound for the assignment and finish up button search
-                a0 = 0;
-                a1 = sfx_swtchx;
-                S_StartSound();
+                S_StartSound(nullptr, sfx_swtchx);
                 break;
             }
         }
@@ -143,10 +133,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
         // One of the right action buttons is pressed on the default configuration slot.
         // Restore the control bindings to their defaults and play a sound to acknowledge the change:
         D_memcpy(gCtrlBindings.get(), gDefaultCtrlBindings, sizeof(gDefaultCtrlBindings));
-        
-        a0 = 0;
-        a1 = sfx_swtchx;
-        S_StartSound();
+        S_StartSound(nullptr, sfx_swtchx);
     }
 
     return ga_nothing;
