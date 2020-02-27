@@ -222,33 +222,22 @@ int32_t LIBGPU_MoveImage(const RECT& srcRect, const int32_t dstX, const int32_t 
 // These may include drawing primitves, or primitives that set GPU state.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBGPU_DrawOTag(const void* const pPrimList) noexcept {
-    const uint32_t* pCurPrimWord = (const uint32_t*) pPrimList;
+    const uint32_t* pCurPrim = (const uint32_t*) pPrimList;
 
     while (true) {
-        // Read the tag for this primitive and determine its data size in words.
-        // Also determine the next primitive address (24-bit relative, and absolute).
-        const uint32_t tag = pCurPrimWord[0];
-        ++pCurPrimWord;
-
-        const uint32_t numDataWords = tag >> 24;
+        // Read the tag for this primitive and determine the next primitive address (24-bit relative, and absolute).
+        const uint32_t tag = pCurPrim[0];
         const uint32_t nextPrimAddr24 = tag & 0x00FFFFFF;
         const uint32_t nextPrimAddrAbs = nextPrimAddr24 | 0x80000000;
 
-        // Submit the primitive's data words to the GPU
-        uint32_t dataWordsLeft = numDataWords;
-
-        while (dataWordsLeft > 0) {
-            const uint32_t dataWord = pCurPrimWord[0];
-            ++pCurPrimWord;
-            --dataWordsLeft;
-            writeGP0(dataWord);
-        }
+        // Submit the primitive to the GPU
+        PsxVm::submitGpuPrimitive(pCurPrim);
 
         // Stop if we've reached the end of the primitive list, otherwise move onto the next one
         if (nextPrimAddr24 == 0x00FFFFFF)
             break;
 
-        pCurPrimWord = vmAddrToPtr<uint32_t>(nextPrimAddrAbs);
+        pCurPrim = vmAddrToPtr<uint32_t>(nextPrimAddrAbs);
     }
 }
 

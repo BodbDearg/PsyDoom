@@ -242,6 +242,9 @@ namespace PsxVm {
 
     // Get the button bits for the controller directly, bypassing emulation
     uint16_t getControllerButtonBits() noexcept;
+
+    // Submit a drawing primitive to the GPU
+    void submitGpuPrimitive(const void* const pPrim) noexcept;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

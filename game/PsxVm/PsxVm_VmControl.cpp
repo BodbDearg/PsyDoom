@@ -445,6 +445,27 @@ uint16_t PsxVm::getControllerButtonBits() noexcept {
     return buttonBits;
 }
 
+void PsxVm::submitGpuPrimitive(const void* const pPrim) noexcept {
+    ASSERT(pPrim);
+    
+    // Get the primitive tag and consequently how many data words there are in the primitive
+    const uint32_t* pCurWord = (const uint32_t*) pPrim;
+    const uint32_t tag = pCurWord[0];    
+    const uint32_t numDataWords = tag >> 24;
+
+    ++pCurWord;
+
+    // Submit the primitive's data words to the GPU
+    uint32_t dataWordsLeft = numDataWords;
+
+    while (dataWordsLeft > 0) {
+        const uint32_t dataWord = *pCurWord;
+        ++pCurWord;
+        --dataWordsLeft;
+        writeGP0(dataWord);
+    }
+}
+
 VmFunc PsxVm::getVmFuncForAddr(const uint32_t addr) noexcept {
     auto iter = gFuncTable.find(addr);
     return (iter != gFuncTable.end()) ? iter->second : nullptr;

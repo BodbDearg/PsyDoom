@@ -48,30 +48,20 @@ static void flushGpuCmds() noexcept {
         // Abort for now if CPU to GPU DMA is off; hope that it gets turned on later or the queue gets cleared somehow?
         // Not sure what situation is would occur in...
         //
-        // PC-PSX: I'm disabling this check for good measure.
+        // PC-PSX: I'm disabling this check for good measure, just to be on the safe side.
+        // Drawing is pretty much native now so emulator DMA should not be getting in our way.
+        //
         #if !PC_PSX_DOOM_MODS
             if (!isCpuToGpuDmaEnabled())
                 break;
         #endif
         
-        // Read the tag for this primitive and determine its data size (in words) and the next primitive address
+        // Read the tag for this primitive the next primitive address
         const uint32_t tag = ((uint32_t*) gpGpuPrimsBeg->get())[0];
-        *gpGpuPrimsBeg += sizeof(uint32_t);
-
-        const uint32_t numDataWords = tag >> 24;
         const uint32_t nextPrimAddr = (tag & 0x00FFFFFF) | 0x80000000;
 
-        // Submit the primitive's data words to the GPU
-        uint32_t dataWordsLeft = numDataWords;
-
-        while (dataWordsLeft > 0) {
-            const uint32_t dataWord = ((uint32_t*) gpGpuPrimsBeg->get())[0];
-            *gpGpuPrimsBeg += sizeof(uint32_t);
-            --dataWordsLeft;
-            writeGP0(dataWord);
-        }
-
-        // Move onto the next primitive
+        // Submit the primitive to the GPU and move onto the next one
+        PsxVm::submitGpuPrimitive(gpGpuPrimsBeg->get());
         *gpGpuPrimsBeg = nextPrimAddr;
     }
 }
