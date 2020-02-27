@@ -31,10 +31,13 @@ static uint32_t makePrimTag(const uint32_t primSize, void* const pNextPrim) noex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // GPU status check: tells if CPU to GPU dma enabled
+// PC-PSX: this is not needed anymore.
 //------------------------------------------------------------------------------------------------------------------------------------------
+#if !PC_PSX_DOOM_MODS
 static bool isCpuToGpuDmaEnabled() noexcept {
     return (getGpuStat() & 0x04000000);
 }
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Flushes the GPU command queue and sends all commands to the GPU.
@@ -42,11 +45,14 @@ static bool isCpuToGpuDmaEnabled() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void flushGpuCmds() noexcept {
     while (*gpGpuPrimsBeg != *gpGpuPrimsEnd) {
-        // Abort for now if CPU to GPU DMA is off.
-        // Hope that it gets turned on later or the queue gets cleared somehow?
+        // Abort for now if CPU to GPU DMA is off; hope that it gets turned on later or the queue gets cleared somehow?
         // Not sure what situation is would occur in...
-        if (!isCpuToGpuDmaEnabled())
-            break;
+        //
+        // PC-PSX: I'm disabling this check for good measure.
+        #if !PC_PSX_DOOM_MODS
+            if (!isCpuToGpuDmaEnabled())
+                break;
+        #endif
         
         // Read the tag for this primitive and determine its data size (in words) and the next primitive address
         const uint32_t tag = ((uint32_t*) gpGpuPrimsBeg->get())[0];
