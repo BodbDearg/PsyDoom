@@ -8,9 +8,11 @@
 #include "Doom/d_main.h"
 #include "Doom/doomdef.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/f_finale.h"
 #include "Doom/UI/in_main.h"
+#include "doomdata.h"
 #include "info.h"
 #include "p_inter.h"
 #include "p_local.h"
@@ -160,216 +162,119 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
     }
 }
 
-void G_DoReborn() noexcept {
-loc_80013070:
-    v0 = *gNetGame;
-    sp -= 0x30;
-    sw(s3, sp + 0x1C);
-    s3 = a0;
-    sw(ra, sp + 0x28);
-    sw(s5, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    if (v0 != 0) goto loc_800130AC;
-    *gGameAction = ga_died;
-    goto loc_8001335C;
-loc_800130AC:
-    v0 = s3 << 2;
-    a0 = v0 + s3;
-    v0 = a0 << 4;
-    v0 -= a0;
-    s2 = v0 << 2;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    at += s2;
-    v1 = lw(at);
-    v0 = lw(v1 + 0x80);
-    if (v0 == 0) goto loc_800130E8;
-    sw(0, v1 + 0x80);
-loc_800130E8:
-    v1 = *gNetGame;
-    v0 = 2;
-    {
-        const bool bJump = (v1 != v0);
-        v1 = a0 << 1;
-        if (bJump) goto loc_800131E4;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Logic for respawning the player in co-op or deathmatch games
+//------------------------------------------------------------------------------------------------------------------------------------------
+void G_DoReborn(const int32_t playerIdx) noexcept {
+    // No respawning in single player
+    if (*gNetGame == gt_single) {
+        *gGameAction = ga_died;
+        return;
     }
-    s0 = 0;
-    s4 = s2;
-    v1 = *gpDeathmatchP;
-    v0 = gDeathmatchStarts;
-    v1 -= v0;
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = v0 << 4;
-    v0 += v1;
-    v1 = v0 << 8;
-    v0 += v1;
-    v1 = v0 << 16;
-    v0 += v1;
-    v0 = -v0;
-    s2 = u32(i32(v0) >> 1);
-loc_8001313C:
-    _thunk_P_Random();
-    div(v0, s2);
-    if (s2 != 0) goto loc_80013154;
-    _break(0x1C00);
-loc_80013154:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (s2 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8001316C;
+
+    // Disassociate the player's corpse from the player
+    if (gPlayers[playerIdx].mo->player) {
+        gPlayers[playerIdx].mo->player = nullptr;
     }
-    if (v0 != at) goto loc_8001316C;
-    tge(zero, zero, 0x5D);
-loc_8001316C:
-    v1 = hi;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    at += s4;
-    a0 = lw(at);
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 1;
-    v1 = gDeathmatchStarts;
-    s1 = v0 + v1;
-    a1 = lh(s1);
-    a2 = lh(s1 + 0x2);
-    a1 <<= 16;
-    a2 <<= 16;
-    P_CheckPosition();
-    s0++;
-    if (v0 != 0) goto loc_800131D8;
-    v0 = (i32(s0) < 0x10);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s3 << 2;
-        if (bJump) goto loc_8001313C;
+
+    // Try and pick a point to spawn at
+    mapthing_t* pSpawnPt = nullptr;
+
+    if (*gNetGame == gt_deathmatch) {
+        // Deathmatch game: try to choose a random spawn point that's good
+        const int32_t numSpawnPts = (int32_t)(gpDeathmatchP->get() - gDeathmatchStarts.get());
+
+        for (int32_t attemptNum = 0; attemptNum < 16; ++attemptNum) {
+            mapthing_t* const pCandidateSpawnPt = &gDeathmatchStarts[P_Random() % numSpawnPts];
+
+            a0 = gPlayers[playerIdx].mo;
+            a1 = (fixed_t) pCandidateSpawnPt->x << FRACBITS;
+            a2 = (fixed_t) pCandidateSpawnPt->y << FRACBITS;
+            P_CheckPosition();
+            const bool bPositionOk = v0;
+
+            // If we found a good position we can stop.
+            // Make sure the map object type is correct for this player index also.
+            if (bPositionOk) {
+                pSpawnPt = pCandidateSpawnPt;
+                pSpawnPt->type = 1 + (int16_t) playerIdx;
+                break;
+            }
+        }
     }
-    v0 += s3;
-    v0 <<= 1;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7184;                                       // Result = gPlayerStarts_1[0] (800A8E7C)
-    s1 = v0 + v1;
-    goto loc_80013278;
-loc_800131D8:
-    v0 = s3 + 1;
-    sh(v0, s1 + 0x6);
-    goto loc_80013278;
-loc_800131E4:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7184;                                       // Result = gPlayerStarts_1[0] (800A8E7C)
-    s1 = v1 + v0;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    at += s2;
-    a0 = lw(at);
-    a1 = lh(s1);
-    a2 = lh(s1 + 0x2);
-    a1 <<= 16;
-    a2 <<= 16;
-    P_CheckPosition();
-    s0 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_80013278;
-    s5 = s2;
-    s2 = 0;                                             // Result = 00000000
-loc_80013224:
-    s4 = 0x800B0000;                                    // Result = 800B0000
-    s4 -= 0x7184;                                       // Result = gPlayerStarts_1[0] (800A8E7C)
-    s1 = s2 + s4;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    at += s5;
-    a0 = lw(at);
-    a1 = lh(s1);
-    a2 = lh(s1 + 0x2);
-    a1 <<= 16;
-    a2 <<= 16;
-    P_CheckPosition();
-    s0++;
-    if (v0 != 0) goto loc_800131D8;
-    v0 = (i32(s0) < 2);
-    s2 += 0xA;
-    if (v0 != 0) goto loc_80013224;
-    v0 = s3 << 2;
-    v0 += s3;
-    v0 <<= 1;
-    s1 = v0 + s4;
-loc_80013278:
-    a0 = s1;
+    else {
+        // Cooperative game: try to spawn at this player's assigned spawn point first
+        mapthing_t* pCandidateSpawnPt = &gPlayerStarts[playerIdx];
+
+        a0 = gPlayers[playerIdx].mo;
+        a1 = (fixed_t) pCandidateSpawnPt->x << FRACBITS;
+        a2 = (fixed_t) pCandidateSpawnPt->y << FRACBITS;
+        P_CheckPosition();
+        bool bPositionOk = v0;
+
+        // If that didn't work out try another player's spawn point
+        if (!bPositionOk) {
+            for (int32_t spawnPtIdx = 0; spawnPtIdx < MAXPLAYERS; ++spawnPtIdx) {
+                pCandidateSpawnPt = &gPlayerStarts[spawnPtIdx];
+                
+                a0 = gPlayers[playerIdx].mo;
+                a1 = (fixed_t) pCandidateSpawnPt->x << FRACBITS;
+                a2 = (fixed_t) pCandidateSpawnPt->y << FRACBITS;
+                P_CheckPosition();
+                bPositionOk = v0;
+
+                // If we found a good position we can stop.
+                // Make sure the map object type is correct for this player index also.
+                if (bPositionOk) {
+                    pSpawnPt = pCandidateSpawnPt;
+                    pSpawnPt->type = 1 + (int16_t) playerIdx;
+                    break;
+                }
+            }
+        }
+    }
+
+    // If we didn't find any good spawn point then just use the default start for this player
+    if (!pSpawnPt) {
+        pSpawnPt = &gPlayerStarts[playerIdx];
+    }
+
+    // Spawn the player
+    a0 = ptrToVmAddr(pSpawnPt);
     P_SpawnPlayer();
-    s0 = 0;                                             // Result = 00000000
-    v0 = s0 << 2;                                       // Result = 00000000
-loc_80013288:
-    v0 += s0;
-    v0 <<= 1;
-    v1 = s0 + 1;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x717E;                                       // Result = gPlayerStarts_1[3] (800A8E82)
-    at += v0;
-    sh(v1, at);
-    s0 = v1;
-    v0 = (i32(s0) < 2);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s0 << 2;
-        if (bJump) goto loc_80013288;
+
+    // Restore all cooperative starts back to having their previous type, if we modified them.
+    // The co-op spawn logic assumes the type is correct for the corresponding player index.
+    for (int32_t spawnPtIdx = 0; spawnPtIdx < MAXPLAYERS; ++spawnPtIdx) {
+        gPlayerStarts[spawnPtIdx].type = 1 + spawnPtIdx;
     }
-    a0 = lh(s1);
-    a1 = lh(s1 + 0x2);
-    a0 <<= 16;
-    a1 <<= 16;
-    _thunk_R_PointInSubsector();
-    v1 = 0x6C160000;                                    // Result = 6C160000
-    a0 = lh(s1 + 0x4);
-    v1 |= 0xC16D;                                       // Result = 6C16C16D
-    multu(a0, v1);
-    a3 = 0x1D;                                          // Result = 0000001D
-    a1 = lh(s1);
-    v0 = lw(v0);
-    a1 <<= 16;
-    a2 = lw(v0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 = hi;
-    a0 -= v1;
-    a0 >>= 1;
-    v1 += a0;
-    v1 <<= 7;
-    v1 &= 0x7000;
-    v0 += v1;
-    v0 = lw(v0);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += v1;
-    v1 = lw(at);
-    a0 = v0 << 2;
-    a0 += v0;
-    a0 <<= 2;
-    a0 += a1;
-    a1 = v1 << 2;
-    a1 += v1;
-    v0 = lh(s1 + 0x2);
-    a1 <<= 2;
-    v0 <<= 16;
-    a1 += v0;
+    
+    // Figure out what subsector the player will spawn in
+    const fixed_t spawnX = (fixed_t) pSpawnPt->x << FRACBITS;
+    const fixed_t spawnY = (fixed_t) pSpawnPt->y << FRACBITS;
+    subsector_t* const pSubsec = R_PointInSubsector(spawnX, spawnY);
+
+    // This mask wraps the fine angle for the map thing and restricts it to the 8 diagonal directions
+    constexpr uint32_t FINE_ANGLE_MASK = FINEANGLES - (FINEANGLES / 8);
+
+    // Compute the fine angle for the map thing and wrap + restrict to 8 directions.
+    // The angle in the wad is from 0-360, so we must scale and adjust accordingly.
+    const uint32_t fineAngle = (((uint32_t) pSpawnPt->angle * FINEANGLES) / 360) & FINE_ANGLE_MASK;
+    
+    // Spawn teleport fog a bit away from the player in the direction the player is facing (clamped to 8 directions)
+    const fixed_t spawnZ = pSubsec->sector->floorheight;
+
+    a0 = spawnX + gFineCosine[fineAngle] * 20;
+    a1 = spawnY + gFineSine[fineAngle] * 20;
+    a2 = spawnZ;
+    a3 = MT_TFOG;
     P_SpawnMObj();
-    a0 = v0;
+    mobj_t* const pSpawnedThing = vmAddrToPtr<mobj_t>(v0);
+    
+    // Play the teleport sound    
+    a0 = ptrToVmAddr(pSpawnedThing);
     a1 = sfx_telept;
     S_StartSound();
-loc_8001335C:
-    ra = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x30;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

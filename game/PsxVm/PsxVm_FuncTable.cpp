@@ -9,7 +9,6 @@ extern void _thunk_D_strncasecmp() noexcept;
 extern void _thunk_P_Random() noexcept;
 extern void M_AddPointToBox() noexcept;
 extern void G_DoLoadLevel() noexcept;
-extern void G_DoReborn() noexcept;
 extern void G_CompleteLevel() noexcept;
 extern void P_RunMobjBase() noexcept;
 extern void P_XYMovement() noexcept;
@@ -695,7 +694,6 @@ namespace PsxVm {
         { 0x80012A18, &_thunk_P_Random },
         { 0x80012B10, &M_AddPointToBox },
         { 0x80012E04, &G_DoLoadLevel },
-        { 0x80013070, &G_DoReborn },
         { 0x80013384, &G_CompleteLevel },
         { 0x80013840, &P_RunMobjBase },
         { 0x800138D8, &P_XYMovement },

@@ -607,7 +607,7 @@ loc_80029574:
     if (v0 == 0) goto loc_800295BC;
     v0 = lw(s0 + 0x4);
     if (v0 != s1) goto loc_800295AC;
-    G_DoReborn();
+    G_DoReborn(*gPlayerNum);
 loc_800295AC:
     a0 = s0;
     AM_Control(*vmAddrToPtr<player_t>(a0));

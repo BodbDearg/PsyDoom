@@ -65,7 +65,7 @@ const VmPtr<VmPtr<leafedge_t>>                      gpLeafEdges(0x8007810C);
 const VmPtr<VmPtr<uint8_t>>                         gpRejectMatrix(0x800780E4);
 const VmPtr<mapthing_t[MAXPLAYERS]>                 gPlayerStarts(0x800A8E7C);
 const VmPtr<mapthing_t[MAX_DEATHMATCH_STARTS]>      gDeathmatchStarts(0x8009806C);
-const VmPtr<VmPtr<mapthing_t>>                      gpDeathmatchP(0x80078060);
+const VmPtr<VmPtr<mapthing_t>>                      gpDeathmatchP(0x80078060);          // Points past the end of the deathmatch starts list
 
 // Function to update the fire sky.
 // Set when the map has a fire sky, otherwise null.
@@ -1012,9 +1012,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
             mobj_t* const pMObj = vmAddrToPtr<mobj_t>(v0);
             
             gPlayers[playerIdx].mo = pMObj;
-
-            a0 = playerIdx;
-            G_DoReborn();
+            G_DoReborn(playerIdx);
 
             a0 = ptrToVmAddr(pMObj);
             P_RemoveMObj();
