@@ -240,9 +240,7 @@ extern void P_RunThinkers() noexcept;
 extern void P_RunMobjLate() noexcept;
 extern void P_CheckCheats() noexcept;
 extern void P_Ticker() noexcept;
-extern void P_Drawer() noexcept;
 extern void P_Start() noexcept;
-extern void P_Stop() noexcept;
 extern void P_PlayerMove() noexcept;
 extern void P_PlayerXYMovement() noexcept;
 extern void P_PlayerZMovement() noexcept;
@@ -925,9 +923,7 @@ namespace PsxVm {
         { 0x80028D30, &P_RunMobjLate },
         { 0x80028D94, &P_CheckCheats },
         { 0x80029414, &P_Ticker },
-        { 0x800295FC, &P_Drawer },
         { 0x80029684, &P_Start },
-        { 0x8002971C, &P_Stop },
         { 0x800297A0, &P_PlayerMove },
         { 0x80029918, &P_PlayerXYMovement },
         { 0x80029A08, &P_PlayerZMovement },

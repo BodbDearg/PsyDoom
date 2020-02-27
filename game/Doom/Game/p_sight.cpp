@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_fixed.h"
+#include "Doom/Renderer/r_main.h"
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
@@ -97,16 +98,14 @@ loc_800249B4:
     a3 = 0xFFFE0000;                                    // Result = FFFE0000
     a2 = 0x10000;                                       // Result = 00010000
     a1 = lw(t0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
+    v0 = *gValidCount;
     a1 &= a3;
     a1 |= a2;
     at = 0x80090000;                                    // Result = 80090000
     sw(a1, at + 0x7C00);                                // Store to: gSTrace[0] (80097C00)
     a0 = lw(t0 + 0x4);
     v0++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7BC4);                                // Store to: gValidCount (80077BC4)
+    *gValidCount = v0;
     v0 = u32(i32(a1) >> 16);
     sw(v0, gp + 0xC18);                                 // Store to: gT1xs (800781F8)
     a0 &= a3;
@@ -229,8 +228,7 @@ loc_80024C14:
     if (s1 == 0) goto loc_80024EA0;
 loc_80024C4C:
     s0 = lw(s2 + 0x14);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
+    v1 = *gValidCount;
     v0 = lw(s0 + 0x40);
     if (v0 == v1) goto loc_80024E94;
     v0 = lw(s0 + 0x4);

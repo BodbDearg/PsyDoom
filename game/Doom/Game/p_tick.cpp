@@ -629,96 +629,78 @@ loc_800295BC:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does all drawing for main gameplay
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_Drawer() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
     I_IncDrawnFrameCount();
-    v0 = *gCurPlayerIndex;
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x76F0;                                       // Result = gPlayer1[49] (800A8910)
-    at += v0;
-    v0 = lw(at);
-    v0 &= 1;
-    if (v0 == 0) goto loc_8002965C;
-    AM_Drawer();
-    goto loc_80029664;
-loc_8002965C:
-    R_RenderPlayerView();
-loc_80029664:
+
+    // Draw either the automap or 3d view, depending on whether the automap is active or not
+    if (gPlayers[*gCurPlayerIndex].automapflags & AF_ACTIVE) {
+        AM_Drawer();
+    } else {
+        R_RenderPlayerView();
+    }
+
     ST_Drawer();
     I_SubmitGpuCmds();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Starts up main gameplay
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_Start() noexcept {
-    sp -= 0x28;
-    sw(s0, sp + 0x20);
-    s0 = 1;                                             // Result = 00000001
-    sw(ra, sp + 0x24);
+    // Initialize some basic fields and the automap
     *gbGamePaused = false;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x7BC4);                                // Store to: gValidCount (80077BC4)
+    *gValidCount = 1;
+    
     AM_Start();
     M_ClearRandom();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = *gbDemoPlayback;
-    *gbIsLevelDataCached = (s0 != 0);
-    a2 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_80029700;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 += 0x3E54;                                       // Result = CDTrackNum_Credits_Demo (80073E54)
-    a1 = *gCdMusicVol;
-    v0 = lw(v1);                                        // Load from: CDTrackNum_Credits_Demo (80073E54)
-    sw(0, sp + 0x18);
-    sw(0, sp + 0x1C);
-    sw(v0, sp + 0x10);
-    sw(a1, sp + 0x14);
-    a0 = lw(v1);                                        // Load from: CDTrackNum_Credits_Demo (80073E54)
-    a3 = 0;                                             // Result = 00000000
-    psxcd_play_at_andloop();
-    goto loc_80029708;
-loc_80029700:
-    S_StartMusicSequence();
-loc_80029708:
-    ra = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x28;
-    return;
+
+    // Shouldn't be loading anything off the CDROM during gameplay after this point
+    *gbIsLevelDataCached = true;
+
+    // Play music: for demos play the credits music cd track.
+    // Otherwise play some sequencer music for the level.
+    if (!*gbDemoPlayback) {
+        S_StartMusicSequence();
+    } else {
+        a0 = gCDTrackNum[cdmusic_credits_demo];
+        a1 = *gCdMusicVol;
+        a2 = 0;
+        a3 = 0;
+        sw(gCDTrackNum[cdmusic_credits_demo], sp + 0x10);
+        sw(*gCdMusicVol, sp + 0x14);
+        sw(0, sp + 0x18);
+        sw(0, sp + 0x1C);    
+        psxcd_play_at_andloop();
+    }
 }
 
-void P_Stop() noexcept {
-    sp -= 0x20;
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shuts down main gameplay
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
+    // Finish up any GPU related work
     LIBGPU_DrawSync(0);
-    s0 = 0;                                             // Result = 00000000
+    
+    // Stop all sounds and music
     S_Clear();
     psxcd_stop();
     S_StopMusicSequence();
-    s1 = 0x80080000;                                    // Result = 80080000
-    s1 -= 0x7F54;                                       // Result = gbPlayerInGame[0] (800780AC)
+
+    // Game is no longer paused and level data no longer cached
     *gbGamePaused = false;
     *gbIsLevelDataCached = false;
-loc_80029760:
-    v0 = lw(s1);
-    s1 += 4;
-    if (v0 == 0) goto loc_80029778;
-    G_PlayerFinishLevel(s0);
-loc_80029778:
-    s0++;
-    v0 = (i32(s0) < 2);
-    if (v0 != 0) goto loc_80029760;
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Finish up the level for each player
+    for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
+        if (gbPlayerInGame[playerIdx]) {
+            G_PlayerFinishLevel(playerIdx);
+        }
+    }
+}
+
+void _thunk_P_Stop() noexcept {
+    P_Stop((gameaction_t) a0);
 }

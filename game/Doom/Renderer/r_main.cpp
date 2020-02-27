@@ -16,6 +16,9 @@
 #include "r_sky.h"
 #include "r_things.h"
 
+// Incremented whenever checks are made
+const VmPtr<uint32_t>   gValidCount(0x80077BC4);
+
 // View properties
 const VmPtr<VmPtr<player_t>>    gpViewPlayer(0x80077F34);
 const VmPtr<fixed_t>            gViewX(0x80077EE0);

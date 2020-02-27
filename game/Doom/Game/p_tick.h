@@ -53,4 +53,7 @@ void P_CheckCheats() noexcept;
 void P_Ticker() noexcept;
 void P_Drawer() noexcept;
 void P_Start() noexcept;
-void P_Stop() noexcept;
+
+void P_Stop(const gameaction_t exitAction) noexcept;
+void _thunk_P_Stop() noexcept;
+

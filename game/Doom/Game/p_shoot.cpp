@@ -2,6 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/m_fixed.h"
+#include "Doom/Renderer/r_main.h"
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
@@ -613,8 +614,7 @@ loc_80024594:
     if (s1 == 0) goto loc_80024734;
 loc_800245B8:
     s0 = lw(s2 + 0x14);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
+    v1 = *gValidCount;
     v0 = lw(s0 + 0x40);
     if (v0 == v1) goto loc_80024728;
     v0 = lw(s0 + 0x4);

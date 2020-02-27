@@ -3175,7 +3175,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077BB8, 0x80077BBC, "GPU_REG_GP1",                            ProgElemType::PTR32 },
     { 0x80077BBC, 0x80077BC0, "GPU_REG_GP0",                            ProgElemType::PTR32 },
     { 0x80077BC0, 0x80077BC4, "GPU_REG_GP1",                            ProgElemType::PTR32 },
-    { 0x80077BC4, 0x80077BC8, "gValidCount",                            ProgElemType::UINT32 },
+    { 0x80077BC4, 0x80077BC8, "gValidCount",                            ProgElemType::INT32 },
     { 0x80077BC8, 0x80077BCC, "GPU_REG_GP0",                            ProgElemType::PTR32 },
     { 0x80077BCC, 0x80077BD0, "GPU_REG_GP1",                            ProgElemType::PTR32 },
     { 0x80077BD0, 0x80077BD4, "gpFineCosine",                           ProgElemType::PTR32 },

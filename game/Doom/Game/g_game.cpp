@@ -246,7 +246,7 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
     // Restore all cooperative starts back to having their previous type, if we modified them.
     // The co-op spawn logic assumes the type is correct for the corresponding player index.
     for (int32_t spawnPtIdx = 0; spawnPtIdx < MAXPLAYERS; ++spawnPtIdx) {
-        gPlayerStarts[spawnPtIdx].type = 1 + spawnPtIdx;
+        gPlayerStarts[spawnPtIdx].type = 1 + (int16_t) spawnPtIdx;
     }
     
     // Figure out what subsector the player will spawn in
@@ -362,7 +362,7 @@ void G_RunGame() noexcept {
     while (true) {
         // Load the level and run the game
         G_DoLoadLevel();
-        MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+        MiniLoop(P_Start, _thunk_P_Stop, P_Ticker, P_Drawer);
     
         *gbIsLevelBeingRestarted = false;
     
@@ -451,7 +451,7 @@ gameaction_t G_PlayDemoPtr() noexcept {
 
     // Run the demo
     *gbDemoPlayback = true;
-    const gameaction_t exitAction = MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
+    const gameaction_t exitAction = MiniLoop(P_Start, _thunk_P_Stop, P_Ticker, P_Drawer);
     *gbDemoPlayback = false;
 
     // Restore the previous control bindings and cleanup

@@ -16,6 +16,7 @@ struct MATRIX;
 struct node_t;
 struct subsector_t;
 
+extern const VmPtr<uint32_t>                                    gValidCount;
 extern const VmPtr<VmPtr<player_t>>                             gpViewPlayer;
 extern const VmPtr<fixed_t>                                     gViewX;
 extern const VmPtr<fixed_t>                                     gViewY;

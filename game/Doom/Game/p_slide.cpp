@@ -1,6 +1,7 @@
 #include "p_slide.h"
 
 #include "Doom/Base/m_fixed.h"
+#include "Doom/Renderer/r_main.h"
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
@@ -174,11 +175,9 @@ loc_8002526C:
     v0 -= a0;
     s6 = u32(i32(v0) >> 23);
     v1 -= a0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
+    v0 = *gValidCount;
     v0++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7BC4);                                // Store to: gValidCount (80077BC4)
+    *gValidCount = v0;
     s3 = u32(i32(v1) >> 23);
     if (i32(a1) >= 0) goto loc_800252EC;
     a1 = 0;                                             // Result = 00000000
@@ -234,8 +233,7 @@ loc_8002539C:
     v0 <<= 2;
     a0 = v0 + v1;
     v0 = lw(a0 + 0x40);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
+    v1 = *gValidCount;
     s0 += 2;
     if (v0 == v1) goto loc_800253E0;
     sw(v1, a0 + 0x40);
@@ -805,14 +803,12 @@ loc_80025C2C:
     v1--;
     sw(v1, sp + 0x68);
 loc_80025C50:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
+    v0 = *gValidCount;
     t0 = lw(sp + 0x58);
     sw(a0, sp + 0x30);
     sw(0, gp + 0x9BC);                                  // Store to: gpSpecialLine (80077F9C)
     v0++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7BC4);                                // Store to: gValidCount (80077BC4)
+    *gValidCount = v0;
     v0 = (i32(t0) < i32(a0));
     if (v0 != 0) goto loc_80025F10;
 loc_80025C7C:
@@ -853,8 +849,7 @@ loc_80025CF0:
     sw(v1, gp + 0xA3C);                                 // Store to: gpLine (8007801C)
     if (v0 == 0) goto loc_80025EC4;
     v0 = lw(v1 + 0x40);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
+    a0 = *gValidCount;
     if (v0 == a0) goto loc_80025EC4;
     v0 = lw(v1 + 0x2C);
     sw(a0, v1 + 0x40);
