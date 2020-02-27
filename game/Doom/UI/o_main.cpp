@@ -116,10 +116,6 @@ void O_Shutdown([[maybe_unused]] const gameaction_t exitAction) noexcept {
     }
 }
 
-void _thunk_O_Shutdown() noexcept {
-    O_Shutdown((gameaction_t) a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Runs update logic for the options menu: does menu controls
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -279,7 +275,7 @@ gameaction_t O_Control() noexcept {
             // Password entry
             case opt_password: {
                 if (ticButtons & PAD_ACTION_BTNS) {
-                    if (MiniLoop(START_PasswordScreen, _thunk_STOP_PasswordScreen, _thunk_TIC_PasswordScreen, DRAW_PasswordScreen) == ga_warped)
+                    if (MiniLoop(START_PasswordScreen, STOP_PasswordScreen, TIC_PasswordScreen, DRAW_PasswordScreen) == ga_warped)
                         return ga_warped;
                 }
             }   break;
@@ -287,7 +283,7 @@ gameaction_t O_Control() noexcept {
             // Controller configuration
             case opt_config: {
                 if (ticButtons & PAD_ACTION_BTNS) {
-                    MiniLoop(START_ControlsScreen, _thunk_STOP_ControlsScreen, _thunk_TIC_ControlsScreen, DRAW_ControlsScreen);
+                    MiniLoop(START_ControlsScreen, STOP_ControlsScreen, TIC_ControlsScreen, DRAW_ControlsScreen);
                 }
             }   break;
 
@@ -316,10 +312,6 @@ gameaction_t O_Control() noexcept {
     }
 
     return ga_nothing;
-}
-
-void _thunk_O_Control() noexcept {
-    v0 = O_Control();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

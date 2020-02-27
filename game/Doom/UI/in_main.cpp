@@ -184,10 +184,6 @@ void IN_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     psxcd_stop();
 }
 
-void _thunk_IN_Stop() noexcept {
-    IN_Stop((gameaction_t) a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Update logic for the intermission screen.
 // Adavnces the counters and checks for user input to skip to the next intermission stage.
@@ -337,10 +333,6 @@ void IN_Drawer() noexcept {
 
     I_SubmitGpuCmds();
     I_DrawPresent();
-}
-
-void _thunk_IN_Ticker() noexcept {
-    v0 = IN_Ticker();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

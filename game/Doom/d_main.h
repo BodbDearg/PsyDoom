@@ -38,7 +38,7 @@ void strupr(char* str) noexcept;
 
 gameaction_t MiniLoop(
     void (*const pStart)(),
-    void (*const pStop)(),
-    void (*const pTicker)(),
+    void (*const pStop)(const gameaction_t exitAction),
+    gameaction_t (*const pTicker)(),
     void (*const pDrawer)()
 ) noexcept;

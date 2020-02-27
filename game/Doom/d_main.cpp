@@ -105,14 +105,14 @@ void D_DoomMain() noexcept {
 // This function is never called in the retail game, but was used for the PSX DOOM demo build.
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunLegals() noexcept {
-    return MiniLoop(START_Legals, _thunk_STOP_Legals, _thunk_TIC_Legals, DRAW_Legals);
+    return MiniLoop(START_Legals, STOP_Legals, TIC_Legals, DRAW_Legals);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Runs the title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunTitle() noexcept {
-    return MiniLoop(START_Title, _thunk_STOP_Title, _thunk_TIC_Title, DRAW_Title);
+    return MiniLoop(START_Title, STOP_Title, TIC_Title, DRAW_Title);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
 // Runs the credits screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunCredits() noexcept {
-    return MiniLoop(START_Credits, _thunk_STOP_Credits, _thunk_TIC_Credits, DRAW_Credits);
+    return MiniLoop(START_Credits, STOP_Credits, TIC_Credits, DRAW_Credits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -342,8 +342,8 @@ void strupr(char* str) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t MiniLoop(
     void (*const pStart)(),
-    void (*const pStop)(),
-    void (*const pTicker)(),
+    void (*const pStop)(const gameaction_t exitAction),
+    gameaction_t (*const pTicker)(),
     void (*const pDrawer)()
 ) noexcept {
     // Network initialization
@@ -442,8 +442,7 @@ gameaction_t MiniLoop(
         }
         
         // Call the ticker function to do updates for the frame
-        pTicker();
-        exitAction = (gameaction_t) v0;
+        exitAction = pTicker();
 
         if (exitAction != ga_nothing)
             break;
@@ -460,8 +459,7 @@ gameaction_t MiniLoop(
     }
     
     // Run cleanup logic for this game loop ending
-    a0 = exitAction;
-    pStop();
+    pStop(exitAction);
 
     // Current pad buttons become the old ones
     for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {

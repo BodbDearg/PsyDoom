@@ -138,10 +138,6 @@ void F1_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     psxcd_stop();
 }
 
-void _thunk_F1_Stop() noexcept {
-    F1_Stop((gameaction_t) a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Update logic for the Ultimate DOOM finale screen
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -184,10 +180,6 @@ gameaction_t F1_Ticker() noexcept {
     }
     
     return ga_nothing;
-}
-
-void _thunk_F1_Ticker() noexcept {
-    v0 = F1_Ticker();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -279,10 +271,6 @@ void F2_Start() noexcept {
 void F2_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     *gbGamePaused = false;
     psxcd_stop();
-}
-
-void _thunk_F2_Stop() noexcept {
-    F2_Stop((gameaction_t) a0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -477,10 +465,6 @@ gameaction_t F2_Ticker() noexcept {
     }
 
     return ga_nothing;
-}
-
-void _thunk_F2_Ticker() noexcept {
-    v0 = F2_Ticker();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

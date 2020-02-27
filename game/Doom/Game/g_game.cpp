@@ -362,7 +362,7 @@ void G_RunGame() noexcept {
     while (true) {
         // Load the level and run the game
         G_DoLoadLevel();
-        MiniLoop(P_Start, _thunk_P_Stop, _thunk_P_Ticker, P_Drawer);
+        MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
     
         *gbIsLevelBeingRestarted = false;
     
@@ -386,11 +386,11 @@ void G_RunGame() noexcept {
             break;
         
         // Do the intermission
-        MiniLoop(IN_Start, _thunk_IN_Stop, _thunk_IN_Ticker, IN_Drawer);
+        MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
 
         // Should we do the Ultimate DOOM finale?
         if (*gNetGame == gt_single && *gGameMap == 30 && *gNextMap == 31) {    
-            MiniLoop(F1_Start, _thunk_F1_Stop, _thunk_F1_Ticker, F1_Drawer);
+            MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
 
             if (*gGameAction == ga_warped || *gGameAction == ga_restart)
                 continue;
@@ -408,7 +408,7 @@ void G_RunGame() noexcept {
             continue;
         }
 
-        MiniLoop(F2_Start, _thunk_F2_Stop, _thunk_F2_Ticker, F2_Drawer);
+        MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
 
         if (*gGameAction != ga_warped && *gGameAction != ga_restart)
             break;
@@ -451,7 +451,7 @@ gameaction_t G_PlayDemoPtr() noexcept {
 
     // Run the demo
     *gbDemoPlayback = true;
-    const gameaction_t exitAction = MiniLoop(P_Start, _thunk_P_Stop, _thunk_P_Ticker, P_Drawer);
+    const gameaction_t exitAction = MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
     *gbDemoPlayback = false;
 
     // Restore the previous control bindings and cleanup

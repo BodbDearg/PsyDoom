@@ -64,10 +64,6 @@ void STOP_ControlsScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
     gCursorPos[0] = 3;  // Point to the 'controls' option of the options menu
 }
 
-void _thunk_STOP_ControlsScreen() noexcept {
-    STOP_ControlsScreen((gameaction_t) a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Update logic for the control configuration screen
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -154,10 +150,6 @@ gameaction_t TIC_ControlsScreen() noexcept {
     }
 
     return ga_nothing;
-}
-
-void _thunk_TIC_ControlsScreen() noexcept {
-    v0 = TIC_ControlsScreen();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

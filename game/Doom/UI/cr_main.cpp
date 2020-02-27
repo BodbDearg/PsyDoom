@@ -63,10 +63,6 @@ void STOP_Credits([[maybe_unused]] const gameaction_t exitAction) noexcept {
     psxcd_stop();
 }
 
-void _thunk_STOP_Credits() noexcept {
-    STOP_Credits((gameaction_t) a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Update logic for the credits screen
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -98,10 +94,6 @@ gameaction_t TIC_Credits() noexcept {
     }
 
     return ga_nothing;
-}
-
-void _thunk_TIC_Credits() noexcept {
-    v0 = TIC_Credits();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

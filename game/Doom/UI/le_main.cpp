@@ -43,10 +43,6 @@ void STOP_Legals([[maybe_unused]] const gameaction_t exitAction) noexcept {
     I_CrossFadeFrameBuffers();
 }
 
-void _thunk_STOP_Legals() noexcept {
-    STOP_Legals((gameaction_t) a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Update logic for the 'legals' screen
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -72,10 +68,6 @@ gameaction_t TIC_Legals() noexcept {
     }
 
     return ga_nothing;
-}
-
-void _thunk_TIC_Legals() noexcept {
-    v0 = TIC_Legals();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

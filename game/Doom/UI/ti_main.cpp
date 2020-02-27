@@ -97,10 +97,6 @@ void STOP_Title([[maybe_unused]] const gameaction_t exitAction) noexcept {
     psxcd_stop();
 }
 
-void _thunk_STOP_Title() noexcept {
-    STOP_Title((gameaction_t) a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Update logic for the main title screen
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -168,10 +164,6 @@ gameaction_t TIC_Title() noexcept {
     // Once the title sprite reaches the top of the screen, timeout after a while...
     const bool bHasTimedOut = (*gTicCon - *gMenuTimeoutStartTicCon >= 1800);
     return (bHasTimedOut) ? ga_timeout : ga_nothing;
-}
-
-void _thunk_TIC_Title() noexcept {
-    v0 = TIC_Title();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

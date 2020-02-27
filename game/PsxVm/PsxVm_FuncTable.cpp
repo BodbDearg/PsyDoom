@@ -239,7 +239,6 @@ extern void _thunk_P_RemoveThinker() noexcept;
 extern void P_RunThinkers() noexcept;
 extern void P_RunMobjLate() noexcept;
 extern void P_CheckCheats() noexcept;
-extern void _thunk_P_Ticker() noexcept;
 extern void P_Start() noexcept;
 extern void P_PlayerMove() noexcept;
 extern void P_PlayerXYMovement() noexcept;
@@ -266,34 +265,18 @@ extern void I_SubmitGpuCmds() noexcept;
 extern void I_LocalButtonsToNet() noexcept;
 extern void I_NetButtonsToLocal() noexcept;
 extern void START_Legals() noexcept;
-extern void _thunk_STOP_Legals() noexcept;
-extern void _thunk_TIC_Legals() noexcept;
 extern void START_Title() noexcept;
-extern void _thunk_STOP_Title() noexcept;
-extern void _thunk_TIC_Title() noexcept;
 extern void M_Start() noexcept;
-extern void _thunk_M_Stop() noexcept;
-extern void _thunk_M_Ticker() noexcept;
-extern void _thunk_TIC_Credits() noexcept;
 extern void START_PasswordScreen() noexcept;
-extern void _thunk_STOP_PasswordScreen() noexcept;
-extern void _thunk_TIC_PasswordScreen() noexcept;
 extern void START_ControlsScreen() noexcept;
-extern void _thunk_STOP_ControlsScreen() noexcept;
-extern void _thunk_TIC_ControlsScreen() noexcept;
 extern void P_ComputePassword() noexcept;
 extern void P_ProcessPassword() noexcept;
 extern void ST_InitEveryLevel() noexcept;
 extern void ST_Ticker() noexcept;
 extern void IN_Start() noexcept;
-extern void _thunk_IN_Ticker() noexcept;
 extern void F1_Start() noexcept;
-extern void _thunk_F1_Ticker() noexcept;
 extern void F2_Start() noexcept;
-extern void _thunk_F2_Ticker() noexcept;
 extern void O_Init() noexcept;
-extern void _thunk_O_Shutdown() noexcept;
-extern void _thunk_O_Control() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
 
@@ -922,7 +905,6 @@ namespace PsxVm {
         { 0x80028C74, &P_RunThinkers },
         { 0x80028D30, &P_RunMobjLate },
         { 0x80028D94, &P_CheckCheats },
-        { 0x80029414, &_thunk_P_Ticker },
         { 0x80029684, &P_Start },
         { 0x800297A0, &P_PlayerMove },
         { 0x80029918, &P_PlayerXYMovement },
@@ -949,34 +931,18 @@ namespace PsxVm {
         { 0x80034EA4, &I_LocalButtonsToNet },
         { 0x80034F04, &I_NetButtonsToLocal },
         { 0x80034F54, &START_Legals },
-        { 0x80034FA0, &_thunk_STOP_Legals },
-        { 0x80034FCC, &_thunk_TIC_Legals },
         { 0x80035098, &START_Title },
-        { 0x80035268, &_thunk_STOP_Title },
-        { 0x80035294, &_thunk_TIC_Title },
         { 0x80035C94, &M_Start },
-        { 0x80035E40, &_thunk_M_Stop },
-        { 0x80035EC4, &_thunk_M_Ticker },
-        { 0x80036CC0, &_thunk_TIC_Credits },
         { 0x80036E1C, &START_PasswordScreen },
-        { 0x80036E6C, &_thunk_STOP_PasswordScreen },
-        { 0x80036EA0, &_thunk_TIC_PasswordScreen },
         { 0x8003793C, &START_ControlsScreen },
-        { 0x80037980, &_thunk_STOP_ControlsScreen },
-        { 0x800379AC, &_thunk_TIC_ControlsScreen },
         { 0x80037DBC, &P_ComputePassword },
         { 0x800381B0, &P_ProcessPassword },
         { 0x80038610, &ST_InitEveryLevel },
         { 0x80038688, &ST_Ticker },
         { 0x8003C758, &IN_Start },
-        { 0x8003CA8C, &_thunk_IN_Ticker },
         { 0x8003D6D0, &F1_Start },
-        { 0x8003D79C, &_thunk_F1_Ticker },
         { 0x8003D9C4, &F2_Start },
-        { 0x8003DB18, &_thunk_F2_Ticker },
         { 0x8003E910, &O_Init },
-        { 0x8003E9D0, &_thunk_O_Shutdown },
-        { 0x8003E9F4, &_thunk_O_Control },
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },
         { 0x8003F200, &PSXCD_psxcd_memcpy },

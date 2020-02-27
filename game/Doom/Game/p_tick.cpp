@@ -233,7 +233,7 @@ void P_CheckCheats() noexcept {
 
         // Run the options menu and possibly do one final draw, depending on the exit code.
         // TODO: what is the final draw for - screen fade?
-        const gameaction_t optionsAction = MiniLoop(O_Init, _thunk_O_Shutdown, _thunk_O_Control, O_Drawer);
+        const gameaction_t optionsAction = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);
         
         if (optionsAction != ga_exit) {
             *gGameAction = optionsAction;
@@ -540,10 +540,6 @@ gameaction_t P_Ticker() noexcept {
     return *gGameAction;
 }
 
-void _thunk_P_Ticker() noexcept {
-    v0 = P_Ticker();
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Does all drawing for main gameplay
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -614,8 +610,4 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
             G_PlayerFinishLevel(playerIdx);
         }
     }
-}
-
-void _thunk_P_Stop() noexcept {
-    P_Stop((gameaction_t) a0);
 }

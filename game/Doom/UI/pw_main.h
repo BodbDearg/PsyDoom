@@ -14,11 +14,6 @@ extern const VmPtr<uint8_t[PW_SEQ_LEN]>     gPasswordCharBuffer;
 extern const VmPtr<bool32_t>                gbUsingAPassword;
 
 void START_PasswordScreen() noexcept;
-
-void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcept;
-void _thunk_STOP_PasswordScreen() noexcept;
-
+void STOP_PasswordScreen(const gameaction_t exitAction) noexcept;
 gameaction_t TIC_PasswordScreen() noexcept;
-void _thunk_TIC_PasswordScreen() noexcept;
-
 void DRAW_PasswordScreen() noexcept;

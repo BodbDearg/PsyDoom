@@ -59,10 +59,6 @@ void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
     DRAW_PasswordScreen();
 }
 
-void _thunk_STOP_PasswordScreen() noexcept {
-    STOP_PasswordScreen((gameaction_t) a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Update logic for the password screen, entering password characters and so on...
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -206,10 +202,6 @@ gameaction_t TIC_PasswordScreen() noexcept {
     }
 
     return ga_nothing;
-}
-
-void _thunk_TIC_PasswordScreen() noexcept {
-    v0 = TIC_PasswordScreen();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

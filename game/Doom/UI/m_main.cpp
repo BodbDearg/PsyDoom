@@ -66,7 +66,7 @@ static const VmPtr<int32_t> gMaxStartEpisodeOrMap(0x8007817C);
 gameaction_t RunMenu() noexcept {
     do {
         // Run the menu: abort to the title screen & demos if the menu timed out
-        if (MiniLoop(M_Start, _thunk_M_Stop, _thunk_M_Ticker, M_Drawer) == ga_timeout)
+        if (MiniLoop(M_Start, M_Stop, M_Ticker, M_Drawer) == ga_timeout)
             return ga_timeout;
 
         // If we're not timing out draw the background and DOOM logo to prep for a 'loading' or 'connecting' plaque being drawn
@@ -210,10 +210,6 @@ void M_Stop(const gameaction_t exitAction) noexcept {
     }
 }
 
-void _thunk_M_Stop() noexcept {
-    M_Stop((gameaction_t) a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Update/ticker logic for the main menu
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -248,7 +244,7 @@ gameaction_t M_Ticker() noexcept {
             if (gCursorPos[0] == options) {
                 // Options entry pressed: run the options menu.
                 // Note that if a level password is entered correctly there, we exit with 'ga_warped' as the action.
-                if (MiniLoop(O_Init, _thunk_O_Shutdown, _thunk_O_Control, O_Drawer) == ga_warped)
+                if (MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer) == ga_warped)
                     return ga_warped;
             }
         }
@@ -389,10 +385,6 @@ gameaction_t M_Ticker() noexcept {
     }
 
     return ga_nothing;
-}
-
-void _thunk_M_Ticker() noexcept {
-    v0 = M_Ticker();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
