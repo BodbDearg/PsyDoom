@@ -63,6 +63,7 @@ Longer term goals include support for Final Doom, proper modding support (I adde
         - Many things are broken in this mode, including:
             - View bobbing.
             - Gravity being far too strong (related to this physics bug, see: https://www.youtube.com/watch?v=7RBycvyZf3I).
+            - Not as smooth as it could be, occasional stuttering.
             - It also doesn't seem to work properly on MacOS.
     - Nonetheless you can enable to get an idea of how a high FPS PSX DOOM might feel.
         - Add the `-highfps` command line switch to enable it.
