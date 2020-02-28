@@ -7,6 +7,7 @@
 #include "i_drawcmds.h"
 #include "PcPsx/Endian.h"
 #include "PcPsx/Finally.h"
+#include "PcPsx/ModMgr.h"
 #include "PcPsx/Video.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBAPI.h"
@@ -17,16 +18,7 @@
 #include "PsyQ/LIBSN.h"
 #include "w_wad.h"
 #include "z_zone.h"
-
 #include <ctime>
-
-// FIXME: remove this eventually.
-// Set to '1' to enable very hacky high frame rate support
-#define TEMP_HIGH_FRAMERATE_HACK 0
-
-#if TEMP_HIGH_FRAMERATE_HACK
-    #include <ctime>
-#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Texture cache related stuff.
@@ -515,34 +507,40 @@ void I_DrawPresent() noexcept {
     LIBGPU_PutDrawEnv(gDrawEnvs[*gCurDispBufferIdx]);
     LIBGPU_PutDispEnv(gDispEnvs[*gCurDispBufferIdx]);
 
-    // FIXME: remove this eventually.
-    #if TEMP_HIGH_FRAMERATE_HACK
-        // Hack/experiment with high frame rates - needs a lot of work
-        {
-            const clock_t now = std::clock();
-            *gTotalVBlanks = ((uint64_t) now * 60) / (uint64_t) CLOCKS_PER_SEC;
-            *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
+    // FIXME: remove the high fps hack eventually
+    #if PC_PSX_DOOM_MODS
+        if (ModMgr::useHighFpsHack()) {
+    #endif
+            // Hack/experiment with high frame rates - needs a lot of work
+            {
+                const clock_t now = std::clock();
+                *gTotalVBlanks = ((uint64_t) now * 60) / (uint64_t) CLOCKS_PER_SEC;
+                *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
 
-            if (*gElapsedVBlanks > 16) {
-                *gElapsedVBlanks = 16;
-            }
+                if (*gElapsedVBlanks > 16) {
+                    *gElapsedVBlanks = 16;
+                }
 
-            for (uint32_t i = 0; i < *gElapsedVBlanks; ++i) {
-                emulate_frame();
+                for (uint32_t i = 0; i < *gElapsedVBlanks; ++i) {
+                    emulate_frame();
+                }
             }
+    #if PC_PSX_DOOM_MODS
+        } else {
+    #endif
+            // Frame rate limiting to 30 Hz.
+            // Continously poll and wait until at least 2 vblanks have elapsed before continuing.
+            do {
+                // PC-PSX: wait one 30 Hz tick
+                #if PC_PSX_DOOM_MODS
+                    PcPsx::doFrameRateLimiting();
+                #endif
+
+                *gTotalVBlanks = LIBETC_VSync(-1);
+                *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
+            } while (*gElapsedVBlanks < 2);
+    #if PC_PSX_DOOM_MODS
         }
-    #else
-        // Frame rate limiting to 30 Hz.
-        // Continously poll and wait until at least 2 vblanks have elapsed before continuing.
-        do {
-            // PC-PSX: wait one 30 Hz tick
-            #if PC_PSX_DOOM_MODS
-                PcPsx::doFrameRateLimiting();
-            #endif
-
-            *gTotalVBlanks = LIBETC_VSync(-1);
-            *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
-        } while (*gElapsedVBlanks < 2);
     #endif
 
     // Further framerate limiting for demos:

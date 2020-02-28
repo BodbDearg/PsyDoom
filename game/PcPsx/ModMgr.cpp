@@ -25,6 +25,9 @@ static std::vector<bool> gbFileHasOverrides;
 // Only a certain amount are allowed at a time:
 static std::FILE* gOpenFileSlots[MAX_OPEN_FILES] = {};
 
+// TODO: replace with a proper config mechanism
+static bool gbUseHighFpsHack = false;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Parse the user supplied data directory command line argument.
 // This is specified as:
@@ -116,6 +119,14 @@ static bool isValidOverridenFile(const PsxCd_File& file) noexcept {
 
 void ModMgr::init(const int argc, const char** const argv) noexcept {
     parseUserDataDirCommandLineArg(argc, argv);
+
+    // TODO: remove this eventually
+    for (int32_t i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "-highfps") == 0) {
+            gbUseHighFpsHack = true;
+        }
+    }
+
     determineFileOverridesInUserDataDir();
 }
 
@@ -133,6 +144,10 @@ void ModMgr::shutdown() noexcept {
     gbFileHasOverrides.shrink_to_fit();
     gDataDirPath.clear();
     gDataDirPath.shrink_to_fit();
+}
+
+bool ModMgr::useHighFpsHack() noexcept {
+    return gbUseHighFpsHack;
 }
 
 bool ModMgr::areOverridesAvailableForFile(const CdMapTbl_File discFile) noexcept {

@@ -7,6 +7,9 @@ namespace ModMgr {
     void init(const int argc, const char** const argv) noexcept;
     void shutdown() noexcept;
 
+    // TODO: remove this eventually and replace with a proper config mechanism
+    bool useHighFpsHack() noexcept;
+
     // File overrides mechanism
     bool areOverridesAvailableForFile(const CdMapTbl_File discFile) noexcept;
     bool isFileOverriden(const PsxCd_File& file) noexcept;

@@ -55,10 +55,17 @@ Longer term goals include support for Final Doom, proper modding support (I adde
     - F8: VRAM Viewer (functionality hidden in retail)
 - Hacky/temp 'mods' system.
     - You can override some files (currently .WAD and .IMG files only) by supplying the game with a directory containing those overrides.
-    - Specify the directory using the '-datadir <MY_DIRECTORY_PATH>' command line argument.
+    - Specify the directory using the `-datadir <MY_DIRECTORY_PATH>` command line argument.
     - Put files in this folder (note: not in any child folders!) that you wish to override, e.g 'MAP01.WAD'.
     - If the game goes to load a file such as 'MAP01.WAD' and it is present in the overrides dir, then the on-disk version will be used instead.
-
+- Hacky high FPS (60 Hz) mode.
+    - I've added a temporary hack to allow frame rates to exceed the 30Hz max of the original.
+        - Many things are broken in this mode, including:
+            - View bobbing.
+            - Gravity being far too strong (related to this physics bug, see: https://www.youtube.com/watch?v=7RBycvyZf3I).
+            - It also doesn't seem to work properly on MacOS.
+    - Nonetheless you can enable to get an idea of how a high FPS PSX DOOM might feel.
+        - Add the `-highfps` command line switch to enable it.
 ## Current limitations/bugs
 - Sound is frequently out of sync with gameplay - not severely but sometimes it can be noticed. Probably due to emulation being either advanced too much or too little. Should eventually be fixed once sound engine advancement is tied to real-time.
 - Occasionally the game will freeze when loading maps.
