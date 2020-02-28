@@ -13,7 +13,7 @@ int main(const int argc, const char** const argv) noexcept {
         // Set the working directory to the .app folder if we can't find Doom.cue:
         NSFileManager* fileMgr = [NSFileManager defaultManager];
         NSString* workingDir = [fileMgr currentDirectoryPath];
-        std::printf("PSYDOOM current working directory: %s\n", workingDir.UTF8String);
+        std::printf("PsyDoom current working directory: %s\n", workingDir.UTF8String);
         
         if (![fileMgr fileExistsAtPath: @"Doom.cue"]) {
             NSURL* bundleURL = [[NSBundle mainBundle] bundleURL];
@@ -25,7 +25,7 @@ int main(const int argc, const char** const argv) noexcept {
                 appFolder = bundleURL;
             }
             
-            std::printf("'Doom.cue' not found at current PSYDOOM working directory! Changing PSYDOOM working dir to: %s\n", appFolder.path.UTF8String);
+            std::printf("'Doom.cue' not found at current PsyDoom working directory! Changing PsyDoom working dir to: %s\n", appFolder.path.UTF8String);
             [fileMgr changeCurrentDirectoryPath: appFolder.path];
         }
     
