@@ -49,12 +49,18 @@
 
 // Raise a failed assertion
 #if ASSERTS_ENABLED == 1
-    #define ASSERT_FAIL(MessageFormat, ...)\
+    #define ASSERT_FAIL(Message)\
         do {\
-            FatalErrors::errorWithFormat("Assert failed! %s\n" ## MessageFormat ## "\n", __VA_ARGS__);\
+            FatalErrors::errorWithFormat("Assert failed!\n%s\n", Message);\
+        } while (0)
+    
+    #define ASSERT_FAIL_F(MessageFormat, ...)\
+        do {\
+            FatalErrors::errorWithFormat("Assert failed!\n" ## MessageFormat ## "\n", __VA_ARGS__);\
         } while (0)
 #else
-    #define ASSERT_FAIL(MessageFormat, ...)
+    #define ASSERT_FAIL(Message)
+    #define ASSERT_FAIL_F(MessageFormat, ...)
 #endif
 
 // Raise a fatal error message
