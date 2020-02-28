@@ -234,6 +234,10 @@ namespace PsxVm {
     // Lookup the function pointer to call for a given address
     VmFunc getVmFuncForAddr(const uint32_t addr) noexcept;
 
+    // Give the PSX VM address for the given native C++ function.
+    // Will return '0' if the native function is not mapped to a VM address.
+    uint32_t getNativeFuncVmAddr(void* const pFunc) noexcept;
+
     // Is the emulator at the point in the program where it returns control to C++?
     bool isEmulatorAtExitPoint() noexcept;
 

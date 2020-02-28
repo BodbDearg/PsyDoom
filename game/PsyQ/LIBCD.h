@@ -1,6 +1,9 @@
 #pragma once
 
-#include <cstdint>
+#include "PsxVm/VmPtr.h"
+
+// Maximum number of tracks on a CD
+static constexpr int32_t CdlMAXTOC = 100;
 
 // Describes a track location or file position on a CD.
 // The location is described in audio terms.
@@ -38,6 +41,9 @@ struct CdlFILE {
 };
 
 static_assert(sizeof(CdlFILE) == 24);
+
+// Callback for 'CdReadCallback', 'CdReadyCallback', and 'CdSyncCallback'
+typedef VmPtr<void (*)(const int32_t status, const uint8_t* pResult)> CdlCB;
 
 void LIBCD_CdInit() noexcept;
 void LIBCD_EVENT_def_cbsync() noexcept;

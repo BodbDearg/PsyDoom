@@ -2,16 +2,23 @@
 
 #include "Doom/cdmaptbl.h"
 #include "PcPsx/ModMgr.h"
+#include "PcPsx/Types.h"
 #include "psxspu.h"
 #include "PsxVm/PsxVm.h"
 #include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBCD.h"
 
-// Used to hold a file temporarily after opening
-static const VmPtr<PsxCd_File> gPSXCD_cdfile(0x8007831C);
+static const VmPtr<bool32_t>                gbPSXCD_IsCdInit(0x80077D70);       // If true then the 'psxcd' module has been initialized
+static const VmPtr<bool32_t>                gbPSXCD_init_pos(0x80077D74);       // Set to true when we know the current position of the CD, false otherwise
+static const VmPtr<bool32_t>                gbPSXCD_async_on(0x80077D64);       // True when there is an asynchronous read happening
+static const VmPtr<PsxCd_File>              gPSXCD_cdfile(0x8007831C);          // Used to hold a file temporarily after opening
+static const VmPtr<CdlLOC>                  gPSXCD_cur_io_loc(0x80077D78);      // Last IO location on disc
+static const VmPtr<CdlLOC[CdlMAXTOC]>       gTrackCdlLOC(0x800783F8);           // Locations on the disc for all CD tracks
 
-// Last IO location on disc
-static const VmPtr<CdlLOC> gPSXCD_cur_io_loc(0x80077D78);
+// Previous 'CdReadyCallback' and 'CDSyncCallback' functions used by LIBCD prior to initializing this module.
+// Used for restoring once we shutdown this module.
+static const VmPtr<CdlCB> gPSXCD_cbsyncsave(0x80077E30);
+static const VmPtr<CdlCB> gPSXCD_cbreadysave(0x80077E34);
 
 // Function forward declarations
 void psxcd_async_read_cancel() noexcept;
@@ -463,56 +470,51 @@ loc_8003F8A0:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the WESS (Williams Entertainment Sound System) CD handling module
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_init() noexcept {
-loc_8003F8B0:
-    v0 = lw(gp + 0x790);                                // Load from: gbPSXCD_IsCdInit (80077D70)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 != 0) goto loc_8003F97C;
+    // If we've already done this then just no-op
+    if (*gbPSXCD_IsCdInit)
+        return;
+
+    // Initialize LIBCD
     LIBCD_CdInit();
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0x790);                                 // Store to: gbPSXCD_IsCdInit (80077D70)
-    v1 = 0;                                             // Result = 00000000
-loc_8003F8D4:
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7C08;                                       // Result = gCdlLOCArray[0] (800783F8)
-    at += v1;
-    sb(0, at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7C07;                                       // Result = gCdlLOCArray[0] (800783F9)
-    at += v1;
-    sb(0, at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7C06;                                       // Result = gCdlLOCArray[0] (800783FA)
-    at += v1;
-    sb(0, at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7C05;                                       // Result = gCdlLOCArray[0] (800783FB)
-    at += v1;
-    sb(0, at);
-    v1 += 4;
-    v0 = (i32(v1) < 0x190);
-    if (v0 != 0) goto loc_8003F8D4;
+    *gbPSXCD_IsCdInit = true;
+
+    // Clear the locations for all CD tracks
+    int32_t trackOffset = 0;
+        
+    for (int32_t trackIdx = 0; trackIdx < CdlMAXTOC; ++trackIdx) {
+        CdlLOC& trackpos = gTrackCdlLOC[trackIdx];
+        trackpos.minute = 0;
+        trackpos.second = 0;
+        trackpos.sector = 0;
+        trackpos.track = 0;
+    }
+
+    // Initialize the SPU
     psxspu_init();
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0x7C08;                                       // Result = gCdlLOCArray[0] (800783F8)
+
+    // Get the locations of all CD tracks
+    a0 = ptrToVmAddr(gTrackCdlLOC.get());
     LIBCD_CdGetToc();
-    if (v0 == 0) goto loc_8003F97C;
-    a0 = 0x80040000;                                    // Result = 80040000
-    a0 -= 0xC54;                                        // Result = PSXCD_cbcomplete (8003F3AC)
-    sw(0, gp + 0x794);                                  // Store to: gPSXCD_init_pos (80077D74)
-    sw(0, gp + 0x784);                                  // Store to: gbPSXCD_async_on (80077D64)
-    LIBCD_CdSyncCallback();
-    a0 = 0x80040000;                                    // Result = 80040000
-    a0 -= 0xB70;                                        // Result = PSXCD_cbready (8003F490)
-    sw(v0, gp + 0x850);                                 // Store to: gPSXCD_cbsyncsave (80077E30)
-    LIBCD_CdReadyCallback();
-    sw(v0, gp + 0x854);                                 // Store to: gPSXCD_cbreadysave (80077E34)
-    psxcd_enable_callbacks();
-loc_8003F97C:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    const int32_t trackCount = v0;
+
+    if (trackCount != 0) {
+        *gbPSXCD_init_pos = false;
+        *gbPSXCD_async_on = false;
+        
+        a0 = PsxVm::getNativeFuncVmAddr(PSXCD_cbcomplete);
+        LIBCD_CdSyncCallback();
+        *gPSXCD_cbsyncsave = v0;
+
+        a0 = PsxVm::getNativeFuncVmAddr(PSXCD_cbready);
+        LIBCD_CdReadyCallback();
+        *gPSXCD_cbreadysave = v0;
+
+        psxcd_enable_callbacks();
+    }
 }
 
 void psxcd_exit() noexcept {
@@ -638,7 +640,7 @@ void _thunk_psxcd_open() noexcept {
 
 void psxcd_init_pos() noexcept {
 loc_8003FB9C:
-    sw(0, gp + 0x794);                                  // Store to: gPSXCD_init_pos (80077D74)
+    sw(0, gp + 0x794);                                  // Store to: gbPSXCD_init_pos (80077D74)
     sw(0, gp + 0x7E8);                                  // Store to: gbPSXCD_playflag (80077DC8)
     sw(0, gp + 0x7F8);                                  // Store to: gbPSXCD_loopflag (80077DD8)
     sw(0, gp + 0x77C);                                  // Store to: gbPSXCD_seeking_for_play (80077D5C)
@@ -858,7 +860,7 @@ loc_8003FE58:
     sw(ra, sp + 0x10);
     if (v0 == 0) goto loc_8003FE94;
     sw(0, gp + 0x784);                                  // Store to: gbPSXCD_async_on (80077D64)
-    sw(0, gp + 0x794);                                  // Store to: gPSXCD_init_pos (80077D74)
+    sw(0, gp + 0x794);                                  // Store to: gbPSXCD_init_pos (80077D74)
     psxcd_sync();
     v0 = 1;                                             // Result = 00000001
     sw(v0, gp + 0x780);                                 // Store to: gbPSXCD_waiting_for_pause (80077D60)
@@ -928,7 +930,7 @@ loc_8003FF1C:
     if (t0 == 0) goto loc_80040174;
     v0 = (s2 < 0x800);
     if (s5 == 0) goto loc_80040178;
-    v0 = lw(gp + 0x794);                                // Load from: gPSXCD_init_pos (80077D74)
+    v0 = lw(gp + 0x794);                                // Load from: gbPSXCD_init_pos (80077D74)
     if (v0 == 0) goto loc_8003FF98;
     v1 = *gPSXCD_cur_io_loc;
     v0 = lw(s1 + 0x18);
@@ -954,7 +956,7 @@ loc_8003FF98:
     v0 = lwl(v0, s1 + 0x1B);
     v0 = lwr(v0, s1 + 0x18);    
     *gPSXCD_cur_io_loc = v0;
-    sw(fp, gp + 0x794);                                 // Store to: gPSXCD_init_pos (80077D74)
+    sw(fp, gp + 0x794);                                 // Store to: gbPSXCD_init_pos (80077D74)
     v0 = 0x800;                                         // Result = 00000800
 loc_8003FFF8:
     a3 = v0 - t0;
@@ -1046,7 +1048,7 @@ loc_80040174:
 loc_80040178:
     s3 = s2 >> 11;
     if (v0 != 0) goto loc_8004031C;
-    v0 = lw(gp + 0x794);                                // Load from: gPSXCD_init_pos (80077D74)
+    v0 = lw(gp + 0x794);                                // Load from: gbPSXCD_init_pos (80077D74)
     s0 = s3 << 11;
     if (v0 == 0) goto loc_800401A4;
     v1 = *gPSXCD_cur_io_loc;
@@ -1074,7 +1076,7 @@ loc_800401A4:
     v0 = lwl(v0, s1 + 0x1B);
     v0 = lwr(v0, s1 + 0x18);
     *gPSXCD_cur_io_loc = v0;
-    sw(fp, gp + 0x794);                                 // Store to: gPSXCD_init_pos (80077D74)
+    sw(fp, gp + 0x794);                                 // Store to: gbPSXCD_init_pos (80077D74)
 loc_8004021C:
     v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
     v0 = v1 << 2;
@@ -1130,7 +1132,7 @@ loc_80040294:
     swr(v0, s1 + 0x18);
 loc_8004031C:
     if (s2 == 0) goto loc_8004047C;
-    v0 = lw(gp + 0x794);                                // Load from: gPSXCD_init_pos (80077D74)
+    v0 = lw(gp + 0x794);                                // Load from: gbPSXCD_init_pos (80077D74)
     if (v0 == 0) goto loc_80040348;
     v1 = *gPSXCD_cur_io_loc;
     v0 = lw(s1 + 0x18);
@@ -1157,7 +1159,7 @@ loc_80040348:
     v0 = lwl(v0, s1 + 0x1B);
     v0 = lwr(v0, s1 + 0x18);
     *gPSXCD_cur_io_loc = v0;
-    sw(fp, gp + 0x794);                                 // Store to: gPSXCD_init_pos (80077D74)
+    sw(fp, gp + 0x794);                                 // Store to: gbPSXCD_init_pos (80077D74)
 loc_800403C0:
     v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
     v0 = v1 << 2;
@@ -1500,7 +1502,7 @@ loc_80040864:
     v0 = 7;                                             // Result = 00000007
     sb(v0, gp + 0x7BC);                                 // Store to: gPSXCD_cd_param[0] (80077D9C)
     v0 = 0xE;                                           // Result = 0000000E
-    sw(0, gp + 0x794);                                  // Store to: gPSXCD_init_pos (80077D74)
+    sw(0, gp + 0x794);                                  // Store to: gbPSXCD_init_pos (80077D74)
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
     a2 = 0;                                             // Result = 00000000
     LIBCD_CdControl();
@@ -1541,7 +1543,7 @@ loc_800408E8:
     sw(s6, sp + 0x28);
     s6 = lw(sp + 0x4C);
     v0 = 0x80080000;                                    // Result = 80080000
-    v0 -= 0x7C08;                                       // Result = gCdlLOCArray[0] (800783F8)
+    v0 -= 0x7C08;                                       // Result = gTrackCdlLOC[0] (800783F8)
     sw(s7, sp + 0x2C);
     s7 = lw(sp + 0x50);
     a0 <<= 2;
@@ -1619,7 +1621,7 @@ loc_80040A48:
     sw(s1, sp + 0x14);
     s1 = a1;
     v0 = 0x80080000;                                    // Result = 80080000
-    v0 -= 0x7C08;                                       // Result = gCdlLOCArray[0] (800783F8)
+    v0 -= 0x7C08;                                       // Result = gTrackCdlLOC[0] (800783F8)
     a0 <<= 2;
     sw(s0, sp + 0x10);
     s0 = a0 + v0;
@@ -1691,7 +1693,7 @@ void psxcd_seek_for_play_at() noexcept {
 loc_80040B8C:
     sp -= 0x20;
     v0 = 0x80080000;                                    // Result = 80080000
-    v0 -= 0x7C08;                                       // Result = gCdlLOCArray[0] (800783F8)
+    v0 -= 0x7C08;                                       // Result = gTrackCdlLOC[0] (800783F8)
     a0 <<= 2;
     sw(s0, sp + 0x10);
     s0 = a0 + v0;

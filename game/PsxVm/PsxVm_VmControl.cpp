@@ -69,6 +69,9 @@ const std::string gPadBtnKey_R2 = "controller/1/r2";
 const std::string gPadBtnKey_L1 = "controller/1/l1";
 const std::string gPadBtnKey_R1 = "controller/1/r1";
 
+// A mapping from native functions to a VM address
+static std::map<void*, Uint32> gNativeFuncToVmAddr;
+
 // TODO: temp function to check for game controller connection/disconnection.
 // Eventually should live elsewhere and be broken up into separate close / rescan functions.
 static void rescanGameControllers() noexcept {
@@ -150,9 +153,16 @@ static void setupVmPointers() noexcept {
     gpReg_ra = &gpCpu->reg[31];
     gpReg_hi = &gpCpu->hi;
     gpReg_lo = &gpCpu->lo;
+
+    // Native function to VM addresses
+    for (const auto& addrFuncPair : PsxVm::gFuncTable) {
+        gNativeFuncToVmAddr[addrFuncPair.second] = addrFuncPair.first;
+    }
 }
 
 static void clearVmPointers() noexcept {
+    gNativeFuncToVmAddr.clear();
+
     gpReg_lo = nullptr;
     gpReg_hi = nullptr;
     gpReg_ra = nullptr;
@@ -469,6 +479,11 @@ void PsxVm::submitGpuPrimitive(const void* const pPrim) noexcept {
 VmFunc PsxVm::getVmFuncForAddr(const uint32_t addr) noexcept {
     auto iter = gFuncTable.find(addr);
     return (iter != gFuncTable.end()) ? iter->second : nullptr;
+}
+
+uint32_t PsxVm::getNativeFuncVmAddr(void* const pFunc) noexcept {
+    auto iter = gNativeFuncToVmAddr.find(pFunc);
+    return (iter != gNativeFuncToVmAddr.end()) ? iter->second : 0;
 }
 
 bool PsxVm::isEmulatorAtExitPoint() noexcept {
