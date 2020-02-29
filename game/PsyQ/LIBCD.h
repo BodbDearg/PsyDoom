@@ -70,8 +70,13 @@ void LIBCD_CdDataCallback() noexcept;
 void LIBCD_CdDataSync() noexcept;
 void LIBCD_CdReadSync() noexcept;
 void LIBCD_CdRead() noexcept;
-void LIBCD_CdIntToPos() noexcept;
-void LIBCD_CdPosToInt() noexcept;
+
+CdlLOC& LIBCD_CdIntToPos(const int32_t sectorNum, CdlLOC& pos) noexcept;
+void _thunk_LIBCD_CdIntToPos() noexcept;
+
+int32_t LIBCD_CdPosToInt(const CdlLOC& pos) noexcept;
+void _thunk_LIBCD_CdPosToInt() noexcept;
+
 void LIBCD_BIOS_getintr() noexcept;
 void LIBCD_CD_sync() noexcept;
 void LIBCD_CD_ready() noexcept;

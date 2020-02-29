@@ -285,8 +285,6 @@ extern void psxcd_sync() noexcept;
 extern void psxcd_critical_sync() noexcept;
 extern void PSXCD_cbcomplete() noexcept;
 extern void PSXCD_cbready() noexcept;
-extern void psxcd_disable_callbacks() noexcept;
-extern void psxcd_enable_callbacks() noexcept;
 extern void psxcd_init() noexcept;
 extern void psxcd_exit() noexcept;
 extern void psxcd_set_data_mode() noexcept;
@@ -627,8 +625,8 @@ extern void LIBCD_CdDataCallback() noexcept;
 extern void LIBCD_CdDataSync() noexcept;
 extern void LIBCD_CdReadSync() noexcept;
 extern void LIBCD_CdRead() noexcept;
-extern void LIBCD_CdIntToPos() noexcept;
-extern void LIBCD_CdPosToInt() noexcept;
+extern void _thunk_LIBCD_CdIntToPos() noexcept;
+extern void _thunk_LIBCD_CdPosToInt() noexcept;
 extern void LIBCD_BIOS_getintr() noexcept;
 extern void LIBCD_CD_sync() noexcept;
 extern void LIBCD_CD_ready() noexcept;
@@ -948,8 +946,6 @@ namespace PsxVm {
         { 0x8003F2F0, &psxcd_critical_sync },
         { 0x8003F3AC, &PSXCD_cbcomplete },
         { 0x8003F490, &PSXCD_cbready },
-        { 0x8003F894, &psxcd_disable_callbacks },
-        { 0x8003F8A0, &psxcd_enable_callbacks },
         { 0x8003F8B0, &psxcd_init },
         { 0x8003F98C, &psxcd_exit },
         { 0x8003F9BC, &psxcd_set_data_mode },
@@ -1289,8 +1285,8 @@ namespace PsxVm {
         { 0x8005515C, &LIBCD_CdDataSync },
         { 0x8005517C, &LIBCD_CdReadSync },
         { 0x8005519C, &LIBCD_CdRead },
-        { 0x8005521C, &LIBCD_CdIntToPos },
-        { 0x80055320, &LIBCD_CdPosToInt },
+        { 0x8005521C, &_thunk_LIBCD_CdIntToPos },
+        { 0x80055320, &_thunk_LIBCD_CdPosToInt },
         { 0x800553A0, &LIBCD_BIOS_getintr },
         { 0x800558DC, &LIBCD_CD_sync },
         { 0x80055B50, &LIBCD_CD_ready },

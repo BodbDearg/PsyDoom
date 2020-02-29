@@ -11,6 +11,10 @@ BEGIN_THIRD_PARTY_INCLUDES
 
 END_THIRD_PARTY_INCLUDES
 
+// CD-ROM constants
+static constexpr int32_t CD_SECTORS_PER_SEC      = 75;       // The number of CD sectors per second of audio
+static constexpr int32_t CD_LEAD_SECTORS   = 150;      // How many sectors are assigned to the lead in track, which has the TOC for the disc
+
 // N.B: must be done LAST due to MIPS register macros
 #include "PsxVm/PsxVm.h"
 
@@ -556,105 +560,45 @@ loc_800551F8:
     return;
 }
 
-void LIBCD_CdIntToPos() noexcept {
-    v1 = 0x1B4E0000;                                    // Result = 1B4E0000
-    v1 |= 0x81B5;                                       // Result = 1B4E81B5
-    a0 += 0x96;
-    mult(a0, v1);
-    v0 = a1;
-    a3 = 0x66660000;                                    // Result = 66660000
-    a3 |= 0x6667;                                       // Result = 66666667
-    v1 = u32(i32(a0) >> 31);
-    a2 = hi;
-    a2 = u32(i32(a2) >> 3);
-    a2 -= v1;
-    a1 = a2 << 2;
-    a1 += a2;
-    v1 = a1 << 4;
-    v1 -= a1;
-    a0 -= v1;
-    mult(a0, a3);
-    t0 = hi;
-    v1 = 0x88880000;                                    // Result = 88880000
-    v1 |= 0x8889;                                       // Result = 88888889
-    mult(a2, v1);
-    v1 = u32(i32(a2) >> 31);
-    t1 = hi;
-    t1 += a2;
-    t1 = u32(i32(t1) >> 5);
-    t1 -= v1;
-    v1 = t1 << 4;
-    v1 -= t1;
-    v1 <<= 2;
-    a2 -= v1;
-    mult(a2, a3);
-    t0 = u32(i32(t0) >> 2);
-    v1 = u32(i32(a0) >> 31);
-    t0 -= v1;
-    v1 = t0 << 2;
-    v1 += t0;
-    v1 <<= 1;
-    a1 = hi;
-    a0 -= v1;
-    v1 = u32(i32(a2) >> 31);
-    mult(t1, a3);
-    a3 = t0 << 4;
-    a3 += a0;
-    a1 = u32(i32(a1) >> 2);
-    a1 -= v1;
-    a0 = a1 << 4;
-    v1 = a1 << 2;
-    v1 += a1;
-    v1 <<= 1;
-    a2 -= v1;
-    a0 += a2;
-    sb(a0, v0 + 0x1);
-    a0 = u32(i32(t1) >> 31);
-    sb(a3, v0 + 0x2);
-    v1 = hi;
-    v1 = u32(i32(v1) >> 2);
-    v1 -= a0;
-    a1 = v1 << 4;
-    a0 = v1 << 2;
-    a0 += v1;
-    a0 <<= 1;
-    t1 -= a0;
-    a1 += t1;
-    sb(a1, v0);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Convert from a CD position in terms of an absolute sector to a binary coded decimal CD position in terms of minutes,
+// seconds and sector number. Note that the given sector number is assumed to NOT include the lead in track, so that will be added to the
+// returned BCD minute, second and sector number.
+//------------------------------------------------------------------------------------------------------------------------------------------
+CdlLOC& LIBCD_CdIntToPos(const int32_t sectorNum, CdlLOC& pos) noexcept {
+    const int32_t totalSeconds = (sectorNum + CD_LEAD_SECTORS) / CD_SECTORS_PER_SEC;
+    const int32_t sector = (sectorNum + CD_LEAD_SECTORS) % CD_SECTORS_PER_SEC;
+    const int32_t minute = totalSeconds / 60;
+    const int32_t second = totalSeconds % 60;
+
+    // For more about this particular way of doing decimal to BCD conversion, see:
+    // https://stackoverflow.com/questions/45655484/bcd-to-decimal-and-decimal-to-bcd
+    pos.second = (uint8_t) second + (uint8_t)(second / 10) * 6;
+    pos.sector = (uint8_t) sector + (uint8_t)(sector / 10) * 6;
+    pos.minute = (uint8_t) minute + (uint8_t)(minute / 10) * 6;
+    return pos;
 }
 
-void LIBCD_CdPosToInt() noexcept {
-    v1 = lbu(a0);
-    a2 = lbu(a0 + 0x1);
-    a1 = v1 >> 4;
-    v0 = a1 << 2;
-    v0 += a1;
-    v0 <<= 1;
-    v1 &= 0xF;
-    v0 += v1;
-    a1 = v0 << 4;
-    a1 -= v0;
-    a1 <<= 2;
-    v1 = a2 >> 4;
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 1;
-    a2 &= 0xF;
-    v0 += a2;
-    a1 += v0;
-    v1 = a1 << 2;
-    v1 += a1;
-    v0 = v1 << 4;
-    a1 = lbu(a0 + 0x2);
-    v0 -= v1;
-    a0 = a1 >> 4;
-    v1 = a0 << 2;
-    v1 += a0;
-    v1 <<= 1;
-    a1 &= 0xF;
-    v1 += a1;
-    v0 += v1;
-    v0 -= 0x96;
+void _thunk_LIBCD_CdIntToPos() noexcept {
+    v0 = LIBCD_CdIntToPos(a0, *vmAddrToPtr<CdlLOC>(a1));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Convert from a CD position in terms of seconds, minutes to an absolute sector number.
+// Note: the hidden 'lead in' track is discounted from the returned absolute sector number.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t LIBCD_CdPosToInt(const CdlLOC& pos) noexcept {
+    // Convert minute, second and sector counts from BCD to decimal
+    const uint32_t minute = (uint32_t)(pos.minute >> 4) * 10 + (pos.minute & 0xF);
+    const uint32_t second = (uint32_t)(pos.second >> 4) * 10 + (pos.second & 0xF);
+    const uint32_t sector = (uint32_t)(pos.sector >> 4) * 10 + (pos.sector & 0xF);
+
+    // Figure out the absolute sector number and exclude the hidden lead in track which contains the TOC
+    return (minute * 60 + second) * CD_SECTORS_PER_SEC + sector - CD_LEAD_SECTORS;
+}
+
+void _thunk_LIBCD_CdPosToInt() noexcept {
+    v0 = LIBCD_CdPosToInt(*vmAddrToPtr<CdlLOC>(a0));
 }
 
 void LIBCD_BIOS_getintr() noexcept {

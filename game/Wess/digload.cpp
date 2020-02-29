@@ -416,11 +416,11 @@ loc_8004949C:
     }
     s1 = lw(s0 + 0x4);
     a0 = s0;
-    LIBCD_CdPosToInt();
+    _thunk_LIBCD_CdPosToInt();
     a0 = v0;
     s0 += 0x18;
     a1 = s0;
-    LIBCD_CdIntToPos();
+    _thunk_LIBCD_CdIntToPos();
     a0 = 2;                                             // Result = 00000002
     a1 = s0;
     a2 = 0;                                             // Result = 00000000

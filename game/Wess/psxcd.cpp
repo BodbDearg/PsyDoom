@@ -8,12 +8,13 @@
 #include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBCD.h"
 
-static const VmPtr<bool32_t>                gbPSXCD_IsCdInit(0x80077D70);       // If true then the 'psxcd' module has been initialized
-static const VmPtr<bool32_t>                gbPSXCD_init_pos(0x80077D74);       // Set to true when we know the current position of the CD, false otherwise
-static const VmPtr<bool32_t>                gbPSXCD_async_on(0x80077D64);       // True when there is an asynchronous read happening
-static const VmPtr<PsxCd_File>              gPSXCD_cdfile(0x8007831C);          // Used to hold a file temporarily after opening
-static const VmPtr<CdlLOC>                  gPSXCD_cur_io_loc(0x80077D78);      // Last IO location on disc
-static const VmPtr<CdlLOC[CdlMAXTOC]>       gTrackCdlLOC(0x800783F8);           // Locations on the disc for all CD tracks
+static const VmPtr<bool32_t>                gbPSXCD_IsCdInit(0x80077D70);           // If true then the 'psxcd' module has been initialized
+static const VmPtr<bool32_t>                gbPSXCD_init_pos(0x80077D74);           // Set to true when we know the current position of the CD, false otherwise
+static const VmPtr<bool32_t>                gbPSXCD_async_on(0x80077D64);           // True when there is an asynchronous read happening
+static const VmPtr<PsxCd_File>              gPSXCD_cdfile(0x8007831C);              // Used to hold a file temporarily after opening
+static const VmPtr<CdlLOC>                  gPSXCD_cur_io_loc(0x80077D78);          // Last IO location on disc
+static const VmPtr<CdlLOC[CdlMAXTOC]>       gTrackCdlLOC(0x800783F8);               // Locations on the disc for all CD tracks
+static const VmPtr<int32_t>                 gbPSXCD_cb_enable_flag(0x80077D7C);     // Non zero (true) if callbacks are currently enabled
 
 // Previous 'CdReadyCallback' and 'CDSyncCallback' functions used by LIBCD prior to initializing this module.
 // Used for restoring once we shutdown this module.
@@ -148,7 +149,7 @@ loc_8003F398:
 }
 
 void PSXCD_cbcomplete() noexcept {
-    v0 = lw(gp + 0x79C);                                // Load from: gbPSXCD_cb_enable_flag (80077D7C)
+    v0 = *gbPSXCD_cb_enable_flag;
     sp -= 0x18;
     sw(ra, sp + 0x10);
     if (v0 == 0) goto loc_8003F480;
@@ -209,7 +210,7 @@ loc_8003F480:
 }
 
 void PSXCD_cbready() noexcept {
-    v0 = lw(gp + 0x79C);                                // Load from: gbPSXCD_cb_enable_flag (80077D7C)
+    v0 = *gbPSXCD_cb_enable_flag;
     sp -= 0x30;
     sw(s0, sp + 0x20);
     s0 = a0;
@@ -457,17 +458,18 @@ loc_8003F878:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Disable/ignore internal cd related callbacks
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_disable_callbacks() noexcept {
-loc_8003F894:
-    sw(0, gp + 0x79C);                                  // Store to: gbPSXCD_cb_enable_flag (80077D7C)
-    return;
+    *gbPSXCD_cb_enable_flag = 0;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Enable internal cd related callbacks
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_enable_callbacks() noexcept {
-loc_8003F8A0:
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0x79C);                                 // Store to: gbPSXCD_cb_enable_flag (80077D7C)
-    return;
+    *gbPSXCD_cb_enable_flag = 1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -612,11 +614,7 @@ PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept {
 
     // Figure out where the file is on disc and save it's size
     const PsxCd_MapTblEntry& fileTableEntry = CD_MAP_TBL[(uint32_t) discFile];
-
-    a0 = fileTableEntry.startSector;
-    a1 = ptrToVmAddr(&gPSXCD_cdfile->file.pos);
-    LIBCD_CdIntToPos();
-
+    LIBCD_CdIntToPos(fileTableEntry.startSector, gPSXCD_cdfile->file.pos);
     gPSXCD_cdfile->file.size = fileTableEntry.size;
 
     // Initialize file IO position and status
@@ -1030,10 +1028,10 @@ loc_8004011C:
     sw(v1, s1 + 0x1C);
     if (v1 != v0) goto loc_80040174;
     a0 = gPSXCD_cur_io_loc;
-    LIBCD_CdPosToInt();
+    _thunk_LIBCD_CdPosToInt();
     a1 = gPSXCD_cur_io_loc;
     a0 = v0 + 1;
-    LIBCD_CdIntToPos();
+    _thunk_LIBCD_CdIntToPos();
     a1 = gPSXCD_cur_io_loc;
     v0 = *gPSXCD_cur_io_loc;
     swl(v0, s1 + 0x1B);
@@ -1095,12 +1093,12 @@ loc_8004021C:
     s4 += s0;
     if (v0 == 0) goto loc_80040294;
     a0 = gPSXCD_cur_io_loc;
-    LIBCD_CdPosToInt();
+    _thunk_LIBCD_CdPosToInt();
     v0 += s3;
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7D68;                                       // Result = gPSXCD_sectorbuf_contents (80077D68)
     a0 = v0 - 1;
-    LIBCD_CdIntToPos();
+    _thunk_LIBCD_CdIntToPos();
 loc_80040294:
     s2 -= s0;
     v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
@@ -1117,10 +1115,10 @@ loc_80040294:
     v0++;
     sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
     a0 = s0;                                            // Result = gPSXCD_cur_io_loc (80077D78)
-    LIBCD_CdPosToInt();
+    _thunk_LIBCD_CdPosToInt();
     a0 = v0 + s3;
     a1 = s0;                                            // Result = gPSXCD_cur_io_loc (80077D78)
-    LIBCD_CdIntToPos();
+    _thunk_LIBCD_CdIntToPos();
     sw(0, s1 + 0x1C);
     a1 = gPSXCD_cur_io_loc;
     v0 = *gPSXCD_cur_io_loc;
@@ -1367,52 +1365,31 @@ int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) 
         return 0;
 
     if (mode == PsxCd_SeekMode::SET) {
-        // Seek to an absolute position in the file: first get the start sector for the file
-        a0 = ptrToVmAddr(&file.file.pos);
-        LIBCD_CdPosToInt();
-        const int32_t fileStartSec = v0;
-
-        // Figure out the disc sector to go to for the requested location within the file
+        // Seek to an absolute position in the file: figure out the sector for the requested location within the file
+        const int32_t fileStartSec = LIBCD_CdPosToInt(file.file.pos);
         const int32_t sectorInFile = ((offset < 0) ? offset + (CD_SECTOR_SIZE - 1) : offset) / CD_SECTOR_SIZE;
         const int32_t newDiscSector = fileStartSec + sectorInFile;
-
-        a0 = newDiscSector;
-        a1 = ptrToVmAddr(&file.new_io_loc);
-        LIBCD_CdIntToPos();
+        LIBCD_CdIntToPos(newDiscSector, file.new_io_loc);
 
         // Figure out the offset within the destination sector we want to go to
         file.io_block_offset = (uint32_t)(offset - sectorInFile * CD_SECTOR_SIZE);
     } 
     else if (mode == PsxCd_SeekMode::CUR) {
-        // Seek relative to the current IO position: first get the current IO sector
-        a0 = gPSXCD_cur_io_loc;
-        LIBCD_CdPosToInt();
-        const int32_t curIoSec = v0;
-
-        // Figure out the disc sector to go to for the requested relative offset
+        // Seek relative to the current IO position: figure out the sector for the requested relative offset
+        const int32_t curIoSec = LIBCD_CdPosToInt(*gPSXCD_cur_io_loc);
         const int32_t secOffset = (file.io_block_offset + offset) / CD_SECTOR_SIZE;
-        const int32_t newDiscSector = secOffset + curIoSec;
-
-        a0 = newDiscSector;
-        a1 = ptrToVmAddr(&file.new_io_loc);
-        LIBCD_CdIntToPos();
+        const int32_t newDiscSector = curIoSec + secOffset;
+        LIBCD_CdIntToPos(newDiscSector, file.new_io_loc);
         
         // Figure out the offset within the destination sector we want to go to
         file.io_block_offset = ((uint32_t)(file.io_block_offset + offset)) % CD_SECTOR_SIZE;
     }
     else {
-        // Seek relative to the end: first get the start sector for the file
-        a0 = ptrToVmAddr(&file.file.pos);
-        LIBCD_CdPosToInt();
-        const int32_t fileStartSec = v0;
-
-        // Figure out the disc sector to go to for the requested location within the file
+        // Seek relative to the end: figure out the disc sector to go to for the requested location within the file
+        const int32_t fileStartSec = LIBCD_CdPosToInt(file.file.pos);
         const int32_t sectorInFile = (file.file.size - offset) / CD_SECTOR_SIZE;
         const int32_t newDiscSector = fileStartSec + sectorInFile;
-
-        a0 = newDiscSector;
-        a1 = ptrToVmAddr(&file.new_io_loc);
-        LIBCD_CdIntToPos();
+        LIBCD_CdIntToPos(newDiscSector, file.new_io_loc);
 
         // Figure out the offset within the destination sector we want to go to
         file.io_block_offset = ((uint32_t)(file.file.size - offset) % CD_SECTOR_SIZE);
@@ -1440,15 +1417,9 @@ int32_t psxcd_tell(PsxCd_File& file) noexcept {
 
     // Is this a real file descriptor or just a dummy one?
     // If it's real figure out the current io offset within the file, otherwise just return '0':
-    if (file.file.pos != 0) {       
-        a0 = ptrToVmAddr(&file.new_io_loc);
-        LIBCD_CdPosToInt();
-        const int32_t curSec = v0;
-
-        a0 = ptrToVmAddr(&file.file.pos);
-        LIBCD_CdPosToInt();
-        const int32_t fileStartSec = v0;
-
+    if (file.file.pos != 0) {
+        const int32_t curSec = LIBCD_CdPosToInt(file.new_io_loc);
+        const int32_t fileStartSec = LIBCD_CdPosToInt(file.file.pos);
         const int32_t sectorInFile = curSec - fileStartSec;
         const int32_t curOffset = sectorInFile * CD_SECTOR_SIZE + file.io_block_offset;
         return curOffset;
@@ -1554,11 +1525,11 @@ loc_800408E8:
     psxcd_set_audio_mode();
     sw(s1, gp + 0x7EC);                                 // Store to: gPSXCD_playvol (80077DCC)
     a0 = s0;
-    LIBCD_CdPosToInt();
+    _thunk_LIBCD_CdPosToInt();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
     a0 = v0 + s2;
-    LIBCD_CdIntToPos();
+    _thunk_LIBCD_CdIntToPos();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
     v0 = 1;                                             // Result = 00000001
@@ -1632,11 +1603,11 @@ loc_80040A48:
     psxcd_set_audio_mode();
     sw(s1, gp + 0x7EC);                                 // Store to: gPSXCD_playvol (80077DCC)
     a0 = s0;
-    LIBCD_CdPosToInt();
+    _thunk_LIBCD_CdPosToInt();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
     a0 = v0 + s2;
-    LIBCD_CdIntToPos();
+    _thunk_LIBCD_CdIntToPos();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
     v0 = 1;                                             // Result = 00000001
@@ -1703,11 +1674,11 @@ loc_80040B8C:
     sw(0, gp + 0x77C);                                  // Store to: gbPSXCD_seeking_for_play (80077D5C)
     psxcd_set_audio_mode();
     a0 = s0;
-    LIBCD_CdPosToInt();
+    _thunk_LIBCD_CdPosToInt();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
     a0 = v0 + s1;
-    LIBCD_CdIntToPos();
+    _thunk_LIBCD_CdIntToPos();
     a0 = 0x16;                                          // Result = 00000016
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
@@ -1923,11 +1894,11 @@ loc_80040EFC:
     if (v0 == 0) goto loc_80040F38;
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7DF0;                                       // Result = gPSXCD_newloc (80077DF0)
-    LIBCD_CdPosToInt();
+    _thunk_LIBCD_CdPosToInt();
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7DF8;                                       // Result = gPSXCD_beginloc (80077DF8)
     s0 = v0;
-    LIBCD_CdPosToInt();
+    _thunk_LIBCD_CdPosToInt();
     v0 = s0 - v0;
     goto loc_80040F3C;
 loc_80040F38:

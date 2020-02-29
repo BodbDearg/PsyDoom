@@ -1,5 +1,10 @@
 #include "cdmaptbl.h"
 
+// The start sector index and size of each file in the game on the CD-ROM.
+//
+// Note that the start sector DOES NOT include the 150 sector 'lead-in/toc' track on the CD-ROM.
+// Therefore you must add 150 sectors to this count to get the actual physical sector number.
+//
 const PsxCd_MapTblEntry CD_MAP_TBL[] = {
     { 0x0018, 0x44     },   // SYSTEM_CNF
     { 0x0019, 0xDD800  },   // SLUS_000_77
