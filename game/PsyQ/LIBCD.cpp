@@ -41,9 +41,6 @@ loc_80054B10:
     a0 = 0x80050000;                                    // Result = 80050000
     a0 += 0x4BB8;                                       // Result = LIBCD_EVENT_def_cbready (80054BB8)
     LIBCD_CdReadyCallback();
-    a0 = 0x80050000;                                    // Result = 80050000
-    a0 += 0x4BE0;                                       // Result = LIBCD_EVENT_def_cbread (80054BE0)
-    LIBCD_CdReadCallback();
     v0 = 1;                                             // Result = 00000001
     goto loc_80054B7C;
 loc_80054B5C:
@@ -73,18 +70,6 @@ void LIBCD_EVENT_def_cbsync() noexcept {
 }
 
 void LIBCD_EVENT_def_cbready() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a0 = 0xF0000000;                                    // Result = F0000000
-    a0 |= 3;                                            // Result = F0000003
-    a1 = 0x40;                                          // Result = 00000040
-    LIBAPI_DeliverEvent();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-}
-
-void LIBCD_EVENT_def_cbread() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
     a0 = 0xF0000000;                                    // Result = F0000000
@@ -168,15 +153,6 @@ loc_80054D78:
     v0 = lw(v0 + 0x71F8);                               // Load from: gpLIBCD_CD_cbready (800771F8)
     at = 0x80070000;                                    // Result = 80070000
     sw(a0, at + 0x71F8);                                // Store to: gpLIBCD_CD_cbready (800771F8)
-    return;
-}
-
-void LIBCD_CdReadCallback() noexcept {
-loc_80054D90:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x71FC);                               // Load from: gpLIBCD_CD_cbread (800771FC)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x71FC);                                // Store to: gpLIBCD_CD_cbread (800771FC)
     return;
 }
 

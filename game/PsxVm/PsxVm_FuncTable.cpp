@@ -603,14 +603,12 @@ extern void LIBSPU_SpuGetAllKeysStatus() noexcept;
 extern void LIBCD_CdInit() noexcept;
 extern void LIBCD_EVENT_def_cbsync() noexcept;
 extern void LIBCD_EVENT_def_cbready() noexcept;
-extern void LIBCD_EVENT_def_cbread() noexcept;
 extern void LIBCD_CdReset() noexcept;
 extern void LIBCD_CdFlush() noexcept;
 extern void LIBCD_CdSync() noexcept;
 extern void LIBCD_CdReady() noexcept;
 extern void LIBCD_CdSyncCallback() noexcept;
 extern void LIBCD_CdReadyCallback() noexcept;
-extern void LIBCD_CdReadCallback() noexcept;
 extern void LIBCD_CdControl() noexcept;
 extern void LIBCD_CdControlF() noexcept;
 extern void LIBCD_CdMix() noexcept;
@@ -1246,14 +1244,12 @@ namespace PsxVm {
         { 0x80054B00, &LIBCD_CdInit },
         { 0x80054B90, &LIBCD_EVENT_def_cbsync },
         { 0x80054BB8, &LIBCD_EVENT_def_cbready },
-        { 0x80054BE0, &LIBCD_EVENT_def_cbread },
         { 0x80054C28, &LIBCD_CdReset },
         { 0x80054C78, &LIBCD_CdFlush },
         { 0x80054D20, &LIBCD_CdSync },
         { 0x80054D40, &LIBCD_CdReady },
         { 0x80054D60, &LIBCD_CdSyncCallback },
         { 0x80054D78, &LIBCD_CdReadyCallback },
-        { 0x80054D90, &LIBCD_CdReadCallback },
         { 0x80054DA8, &LIBCD_CdControl },
         { 0x80054EC0, &LIBCD_CdControlF },
         { 0x800550F0, &LIBCD_CdMix },
