@@ -2933,7 +2933,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077200, 0x80077204, "gLIBCD_CD_debug",                        ProgElemType::UINT32 },
     { 0x80077204, 0x80077208, "gLIBCD_CD_status",                       ProgElemType::UINT32 },
     { 0x80077208, 0x8007720C, "gLIBCD_CD_status1",                      ProgElemType::UINT32 },
-    { 0x8007720C, 0x80077210, "gLIBCD_CD_nopen",                        ProgElemType::UINT32 },
+    { 0x8007720C, 0x80077210, "gLIBCD_CD_nopen",                        ProgElemType::ARRAY, ProgElemType::UINT8 },
     { 0x80077210, 0x80077214, "gLIBCD_CD_com",                          ProgElemType::UINT32 },    
     { 0x80077214, 0x80077294, "gLIBCD_CD_comstr",                       ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80077294, 0x800772B4, "gLIBCD_CD_intstr",                       ProgElemType::ARRAY, ProgElemType::PTR32 },

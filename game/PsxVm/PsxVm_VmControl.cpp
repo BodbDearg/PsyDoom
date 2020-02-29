@@ -7,27 +7,20 @@
 #include "PsxVm.h"
 
 #include "PcPsx/FatalErrors.h"
-#include <map>
-
-// Disabling certain Avocado warnings for MSVC
-#ifdef _MSC_VER
-    #pragma warning(push)
-    #pragma warning(disable: 4201)
-    #pragma warning(disable: 4244)
-#endif
-
 #include "PcPsx/Macros.h"
+
+BEGIN_THIRD_PARTY_INCLUDES
+
 #include <disc/format/cue.h>
 #include <disc/load.h>
 #include <input/input_manager.h>
+#include <map>
 #include <memory>
 #include <SDL.h>
 #include <sound/sound.h>
 #include <system.h>
 
-#ifdef _MSC_VER
-    #pragma warning(pop)
-#endif
+END_THIRD_PARTY_INCLUDES
 
 using namespace PsxVm;
 

@@ -9,8 +9,12 @@
 #define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
+BEGIN_THIRD_PARTY_INCLUDES
+
 #include <cstdarg>
 #include <device/gpu/gpu.h>
+
+END_THIRD_PARTY_INCLUDES
 
 // The CLUT and texture page for the debug font
 static uint16_t gDFontClutId;
@@ -581,7 +585,7 @@ int32_t LIBGPU_FntOpen(
     const int32_t dispY,
     const int32_t dispW,
     const int32_t dispH,
-    const bool bClearBg,
+    [[maybe_unused]] const bool bClearBg,
     [[maybe_unused]] const int32_t maxChars
 ) noexcept {    
     gDFontDispX = (int16_t) dispX;

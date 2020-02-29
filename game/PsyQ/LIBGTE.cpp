@@ -8,8 +8,12 @@
 #define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
+BEGIN_THIRD_PARTY_INCLUDES
+
 #include <cpu/cpu.h>
 #include <cpu/gte/gte.h>
+
+END_THIRD_PARTY_INCLUDES
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Helper: makes a 32-bit unsigned integer from the 2 given 16-bit unsigned integers.

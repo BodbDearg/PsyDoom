@@ -483,8 +483,6 @@ void psxcd_init() noexcept {
     *gbPSXCD_IsCdInit = true;
 
     // Clear the locations for all CD tracks
-    int32_t trackOffset = 0;
-        
     for (int32_t trackIdx = 0; trackIdx < CdlMAXTOC; ++trackIdx) {
         CdlLOC& trackpos = gTrackCdlLOC[trackIdx];
         trackpos.minute = 0;
@@ -497,9 +495,7 @@ void psxcd_init() noexcept {
     psxspu_init();
 
     // Get the locations of all CD tracks
-    a0 = ptrToVmAddr(gTrackCdlLOC.get());
-    LIBCD_CdGetToc();
-    const int32_t trackCount = v0;
+    const int32_t trackCount = LIBCD_CdGetToc(gTrackCdlLOC.get());
 
     if (trackCount != 0) {
         *gbPSXCD_init_pos = false;

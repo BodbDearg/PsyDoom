@@ -3,6 +3,15 @@
 #include "LIBAPI.h"
 #include "LIBC2.h"
 #include "LIBETC.h"
+
+BEGIN_THIRD_PARTY_INCLUDES
+
+#include <device/cdrom/cdrom.h>
+#include <disc/disc.h>
+
+END_THIRD_PARTY_INCLUDES
+
+// N.B: must be done LAST due to MIPS register macros
 #include "PsxVm/PsxVm.h"
 
 void LIBCD_CdInit() noexcept {
@@ -2615,151 +2624,40 @@ loc_80057248:
     return;
 }
 
-void LIBCD_CdGetToc() noexcept {
-loc_80057260:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a1 = a0;
-    a0 = 1;                                             // Result = 00000001
-    LIBCD_CdGetToc2();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Retrieve the table of contents for the disc (tack positions) and return the number of tracks.
+// If there is an error then '0' or less will be returned.
+// The 0th track points past the last track on the disc.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t LIBCD_CdGetToc(CdlLOC trackLocs[CdlMAXTOC]) noexcept {    
+    // Get the disc: if there is none then we can't provide a TOC
+    device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
+    disc::Disc* const pDisc = cdrom.disc.get();
 
-void LIBCD_CdGetToc2() noexcept {
-loc_80057284:
-    sp -= 0x40;
-    sw(s4, sp + 0x30);
-    s4 = a1;
-    v0 = 1;                                             // Result = 00000001
-    a0 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x38);
-    sw(s5, sp + 0x34);
-    sw(s3, sp + 0x2C);
-    sw(s2, sp + 0x28);
-    sw(s1, sp + 0x24);
-    sw(s0, sp + 0x20);
-    sb(v0, sp + 0x10);
-    LIBCD_CdSyncCallback();
-    a0 = 0x13;                                          // Result = 00000013
-    a1 = 0;                                             // Result = 00000000
-    s1 = sp + 0x18;
-    a2 = s1;
-    s5 = v0;
-    LIBCD_CdControlB();
-    if (v0 == 0) goto loc_80057450;
-    a0 = lbu(sp + 0x19);
-    a1 = lbu(sp + 0x1A);
-    v1 = a0 >> 4;
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 1;
-    a0 &= 0xF;
-    s0 = v0 + a0;
-    v0 = a1 >> 4;
-    v1 = v0 << 2;
-    v1 += v0;
-    v1 <<= 1;
-    a1 &= 0xF;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7200);                               // Load from: gLIBCD_CD_debug (80077200)
-    v0 = (i32(v0) < 2);
-    s3 = v1 + a1;
-    if (v0 != 0) goto loc_80057338;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x21B4;                                       // Result = STR_Sys_track_Msg[0] (800121B4)
-    a1 = s0;
-    a2 = s3;
-    LIBC2_printf();
-loc_80057338:
-    sb(0, sp + 0x10);
-    a0 = 0x14;                                          // Result = 00000014
-    a1 = sp + 0x10;
-    a2 = s1;
-    LIBCD_CdControlB();
-    if (v0 == 0) goto loc_80057450;
-    v0 = lbu(sp + 0x19);
-    sb(v0, s4);
-    v0 = lbu(sp + 0x1A);
-    sb(0, s4 + 0x2);
-    sb(v0, s4 + 0x1);
-    v0 = (i32(s3) < i32(s0));
-    s2 = 1;                                             // Result = 00000001
-    if (v0 != 0) goto loc_800573F4;
-    s1 = s4 + 4;
-loc_8005737C:
-    v0 = 0x66660000;                                    // Result = 66660000
-    v0 |= 0x6667;                                       // Result = 66666667
-    mult(s0, v0);
-    a0 = 0x14;                                          // Result = 00000014
-    a1 = sp + 0x10;
-    a2 = sp + 0x18;
-    v0 = u32(i32(s0) >> 31);
-    v1 = hi;
-    v1 = u32(i32(v1) >> 2);
-    v1 -= v0;
-    a3 = v1 << 4;
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 1;
-    v0 = s0 - v0;
-    a3 += v0;
-    sb(a3, sp + 0x10);
-    LIBCD_CdControlB();
-    s2++;
-    if (v0 == 0) goto loc_80057450;
-    v0 = lbu(sp + 0x19);
-    sb(v0, s1);
-    v0 = lbu(sp + 0x1A);
-    s0++;
-    sb(0, s1 + 0x2);
-    sb(v0, s1 + 0x1);
-    v0 = (i32(s3) < i32(s0));
-    s1 += 4;
-    if (v0 == 0) goto loc_8005737C;
-loc_800573F4:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7200);                               // Load from: gLIBCD_CD_debug (80077200)
-    v0 = (i32(v0) < 2);
-    s1 = s2 - 1;
-    if (v0 != 0) goto loc_80057440;
-    s2 = 0;                                             // Result = 00000000
-    if (i32(s1) < 0) goto loc_80057440;
-    s0 = s4;
-loc_80057418:
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x21C4;                                       // Result = STR_Sys_CdGetToc_Msg[0] (800121C4)
-    a1 = lbu(s0);
-    a2 = lbu(s0 + 0x1);
-    s0 += 4;
-    s2++;
-    LIBC2_printf();
-    v0 = (i32(s1) < i32(s2));
-    if (v0 == 0) goto loc_80057418;
-loc_80057440:
-    a0 = s5;
-    LIBCD_CdSyncCallback();
-    v0 = s1;                                            // Result = 00000000
-    goto loc_80057480;
-loc_80057450:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7200);                               // Load from: gLIBCD_CD_debug (80077200)
-    if (v0 == 0) goto loc_80057474;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x21E0;                                       // Result = STR_Sys_CdGetToc_Err[0] (800121E0)
-    LIBC2_printf();
-loc_80057474:
-    a0 = s5;
-    LIBCD_CdSyncCallback();
-    v0 = 0;                                             // Result = 00000000
-loc_80057480:
-    ra = lw(sp + 0x38);
-    s5 = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x40;
-    return;
+    if (!pDisc)
+        return 0;
+    
+    // Retrieve the info for each track.
+    // Note that if the 'empty' disc is being used then the count will be '0', which is regarded as an error when returned.
+    const int32_t numTracks = (int32_t) pDisc->getTrackCount();
+
+    for (int32_t trackNum = 1; trackNum <= numTracks; ++trackNum) {
+        const disc::Position discPos = pDisc->getTrackStart(trackNum);
+        
+        CdlLOC& loc = trackLocs[trackNum];
+        loc.minute = bcd::toBcd((uint8_t) discPos.mm);
+        loc.second = bcd::toBcd((uint8_t) discPos.ss);
+        loc.sector = 0;     // Sector number is not provided by the underlying CD-ROM command to query track location (0x14)
+        loc.track = 0;      // Should always be '0' in this PsyQ version - unused
+    }
+
+    // The first track entry (0th index) should point to the end of the disk
+    const disc::Position discEndPos = pDisc->getDiskSize();
+
+    trackLocs[0].minute = bcd::toBcd((uint8_t) discEndPos.mm);
+    trackLocs[0].second = bcd::toBcd((uint8_t) discEndPos.ss);
+    trackLocs[0].sector = 0;
+    trackLocs[0].track = 0;
+
+    return numTracks;
 }

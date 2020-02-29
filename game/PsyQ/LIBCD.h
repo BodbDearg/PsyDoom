@@ -8,10 +8,10 @@ static constexpr int32_t CdlMAXTOC = 100;
 // Describes a track location or file position on a CD.
 // The location is described in audio terms.
 struct CdlLOC {
-    uint8_t minute;
-    uint8_t second;
-    uint8_t sector;
-    uint8_t track;      // Unused
+    uint8_t minute;     // Note: in binary coded decimal form
+    uint8_t second;     // Note: in binary coded decimal form
+    uint8_t sector;     // Note: in binary coded decimal form
+    uint8_t track;      // Unused in this PsyQ SDK version: normally '0'
     
     // Conversion to and from a single 32-bit int
     void operator = (const uint32_t loc32) noexcept {
@@ -89,5 +89,4 @@ void LIBCD_CD_getsector() noexcept;
 void LIBCD_CD_set_test_parmnum() noexcept;
 void LIBCD_BIOS_callback() noexcept;
 void LIBCD_BIOS_cb_read() noexcept;
-void LIBCD_CdGetToc() noexcept;
-void LIBCD_CdGetToc2() noexcept;
+int32_t LIBCD_CdGetToc(CdlLOC trackLocs[CdlMAXTOC]) noexcept;

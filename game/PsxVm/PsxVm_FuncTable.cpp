@@ -646,8 +646,6 @@ extern void LIBCD_CD_getsector() noexcept;
 extern void LIBCD_CD_set_test_parmnum() noexcept;
 extern void LIBCD_BIOS_callback() noexcept;
 extern void LIBCD_BIOS_cb_read() noexcept;
-extern void LIBCD_CdGetToc() noexcept;
-extern void LIBCD_CdGetToc2() noexcept;
 extern void LIBCOMB_UNKNOWN_func_1() noexcept;
 extern void LIBCOMB_UNKNOWN_func_2() noexcept;
 extern void LIBCOMB_UNKNOWN_func_3() noexcept;
@@ -1310,8 +1308,6 @@ namespace PsxVm {
         { 0x8005700C, &LIBCD_CD_set_test_parmnum },
         { 0x8005701C, &LIBCD_BIOS_callback },
         { 0x800570FC, &LIBCD_BIOS_cb_read },
-        { 0x80057260, &LIBCD_CdGetToc },
-        { 0x80057284, &LIBCD_CdGetToc2 },
         { 0x800574A8, &LIBCOMB_UNKNOWN_func_1 },
         { 0x800575E8, &LIBCOMB_UNKNOWN_func_2 },
         { 0x80057728, &LIBCOMB_UNKNOWN_func_3 },
