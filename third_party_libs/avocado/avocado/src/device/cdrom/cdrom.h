@@ -11,6 +11,10 @@ namespace device {
 namespace cdrom {
 
 class CDROM {
+// DOOM: allow public access
+#if DOOM_AVOCADO_MODS
+public:
+#endif
     union StatusCode {
         enum class Mode { None, Reading, Seeking, Playing };
         struct {

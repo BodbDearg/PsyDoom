@@ -447,7 +447,7 @@ loc_80049540:
     s0 -= 0x6AE8;                                       // Result = gPSXCD_sectorbuf[0] (800A9518)
     a0 = s0;                                            // Result = gPSXCD_sectorbuf[0] (800A9518)
     a1 = 0x200;                                         // Result = 00000200
-    LIBCD_CdGetSector();
+    _thunk_LIBCD_CdGetSector();
     v0 = lhu(s0);                                       // Load from: gPSXCD_sectorbuf[0] (800A9518)
     at = 0x80070000;                                    // Result = 80070000
     sh(v0, at + 0x5AE8);                                // Store to: 80075AE8
@@ -487,7 +487,7 @@ loc_800495DC:
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
     a1 = 0x200;                                         // Result = 00000200
-    LIBCD_CdGetSector();
+    _thunk_LIBCD_CdGetSector();
     v0 = (i32(s1) < 0x800);
     s1 -= 0x800;
     if (v0 == 0) goto loc_80049610;
@@ -522,7 +522,7 @@ loc_8004966C:
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x6D7C;                                       // Result = gWess_data_read_chunk2[0] (80096D7C)
     a1 = 0x200;                                         // Result = 00000200
-    LIBCD_CdGetSector();
+    _thunk_LIBCD_CdGetSector();
     v0 = (i32(s1) < 0x800);
     s1 -= 0x800;
     if (v0 == 0) goto loc_800496A0;
@@ -556,7 +556,7 @@ loc_800496F8:
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
     a1 = 0x200;                                         // Result = 00000200
-    LIBCD_CdGetSector();
+    _thunk_LIBCD_CdGetSector();
     v0 = (i32(s1) < 0x800);
     s1 -= 0x800;
     if (v0 == 0) goto loc_8004972C;

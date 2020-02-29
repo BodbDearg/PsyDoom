@@ -614,7 +614,7 @@ extern void LIBCD_CdReadCallback() noexcept;
 extern void LIBCD_CdControl() noexcept;
 extern void LIBCD_CdControlF() noexcept;
 extern void LIBCD_CdMix() noexcept;
-extern void LIBCD_CdGetSector() noexcept;
+extern void _thunk_LIBCD_CdGetSector() noexcept;
 extern void _thunk_LIBCD_CdIntToPos() noexcept;
 extern void _thunk_LIBCD_CdPosToInt() noexcept;
 extern void LIBCD_BIOS_getintr() noexcept;
@@ -1261,7 +1261,7 @@ namespace PsxVm {
         { 0x80054DA8, &LIBCD_CdControl },
         { 0x80054EC0, &LIBCD_CdControlF },
         { 0x800550F0, &LIBCD_CdMix },
-        { 0x80055114, &LIBCD_CdGetSector },
+        { 0x80055114, &_thunk_LIBCD_CdGetSector },
         { 0x8005521C, &_thunk_LIBCD_CdIntToPos },
         { 0x80055320, &_thunk_LIBCD_CdPosToInt },
         { 0x800553A0, &LIBCD_BIOS_getintr },

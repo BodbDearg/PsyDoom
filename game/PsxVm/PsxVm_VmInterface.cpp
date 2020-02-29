@@ -502,7 +502,7 @@ void emulate_cdrom() noexcept {
 
     // This speeds up things a bit
     for (uint32_t i = 0; i < 16; ++i) {
-        system.cdrom->step();        
+        system.cdrom->step();
     }
 
     // If interrupts were generated, handle them.

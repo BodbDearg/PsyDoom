@@ -59,7 +59,9 @@ void LIBCD_CdReadCallback() noexcept;
 void LIBCD_CdControl() noexcept;
 void LIBCD_CdControlF() noexcept;
 void LIBCD_CdMix() noexcept;
-void LIBCD_CdGetSector() noexcept;
+
+int32_t LIBCD_CdGetSector(void* const pDst, const int32_t sizeInWords) noexcept;
+void _thunk_LIBCD_CdGetSector() noexcept;
 
 CdlLOC& LIBCD_CdIntToPos(const int32_t sectorNum, CdlLOC& pos) noexcept;
 void _thunk_LIBCD_CdIntToPos() noexcept;

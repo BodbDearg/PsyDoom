@@ -1,3 +1,8 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Module containing a partial reimplementation of the PSY-Q 'LIBCD' library.
+// These functions are not neccesarily faithful to the original code, and are reworked to make the game run in it's new environment.
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 #include "LIBCD.h"
 
 #include "LIBAPI.h"
@@ -12,8 +17,8 @@ BEGIN_THIRD_PARTY_INCLUDES
 END_THIRD_PARTY_INCLUDES
 
 // CD-ROM constants
-static constexpr int32_t CD_SECTORS_PER_SEC      = 75;       // The number of CD sectors per second of audio
-static constexpr int32_t CD_LEAD_SECTORS   = 150;      // How many sectors are assigned to the lead in track, which has the TOC for the disc
+static constexpr int32_t CD_SECTORS_PER_SEC     = 75;       // The number of CD sectors per second of audio
+static constexpr int32_t CD_LEAD_SECTORS        = 150;      // How many sectors are assigned to the lead in track, which has the TOC for the disc
 
 // N.B: must be done LAST due to MIPS register macros
 #include "PsxVm/PsxVm.h"
@@ -342,15 +347,74 @@ loc_800550F0:
     return;
 }
 
-void LIBCD_CdGetSector() noexcept {
-loc_80055114:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    LIBCD_CD_getsector();
-    v0 = (v0 < 1);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads the requested number of 32-bit words from the CDROM's sector data buffer.
+// Returns '1' if successful, which will be always.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t LIBCD_CdGetSector(void* const pDst, const int32_t readSizeInWords) noexcept {
+    device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
+    
+    // Figure out the size in bytes we want (request is for words)
+    const int32_t readSizeInBytes = readSizeInWords * sizeof(uint32_t);
+    uint8_t* const pDstBytes = (uint8_t*) pDst;
+
+    // The previous PSYQ code wrote '0x80' 'to 0x1F801803' (The 'CD Request' register).
+    // This means that we want data and if the data FIFO is at the end then we should reset it.
+    if (cdrom.isBufferEmpty()) {
+        cdrom.dataBuffer = cdrom.rawSector;
+        cdrom.dataBufferPointer = 0;
+        cdrom.status.dataFifoEmpty = 1;
+    }
+
+    // From Avocado, figure out the offset of the data in the sector buffer. 12 bytes are for sector header.
+    //  Mode 0 - 2048 byte sectors
+    //  Mode 1 - 2340 byte sectors (no sync bytes also)
+    //
+    const int32_t dataStart = (cdrom.mode.sectorSize == 0) ? 24 : 12;
+
+    // Read the bytes: note that reading past the end of the buffer on the real hardware would do the following:
+    //  "The PSX will repeat the byte at index [800h-8] or [924h-4] as padding value."
+    // See: 
+    //  https://problemkaputt.de/psx-spx.htm#cdromcontrollerioports
+    //
+    const int32_t sectorSize = (cdrom.mode.sectorSize == 0) ? 2048 : 2340;
+    const int32_t sectorBytesLeft = (cdrom.dataBufferPointer < sectorSize) ? sectorSize - cdrom.dataBufferPointer : 0;
+
+    const uint8_t* const pSrcBytes = cdrom.dataBuffer.data() + cdrom.dataBufferPointer + dataStart;
+
+    if (readSizeInBytes <= sectorBytesLeft) {
+        // Usual case: there is enough data in the cdrom buffer: just do a memcpy and move along the pointer
+        std::memcpy(pDstBytes, pSrcBytes, readSizeInBytes);
+        cdrom.dataBufferPointer += readSizeInBytes;
+    }
+    else {
+        // Note enough bytes in the FIFO to complete the read, will read what we can then use the repeated byte value for the rest
+        std::memcpy(pDstBytes, pSrcBytes, sectorBytesLeft);
+        cdrom.dataBufferPointer = sectorSize;
+
+        const std::uint8_t fillByte = (cdrom.mode.sectorSize == 0) ?
+            cdrom.dataBuffer[dataStart + sectorSize - 8] :
+            cdrom.dataBuffer[dataStart + sectorSize - 4];
+
+        const int32_t bytesToFill = readSizeInBytes - sectorBytesLeft;
+        std::memset(pDstBytes + sectorBytesLeft, fillByte, bytesToFill);
+    }
+
+    // Set this flag if the CDROM data FIFO has been drained
+    if (cdrom.dataBufferPointer >= sectorSize) {
+        cdrom.status.dataFifoEmpty = 0;
+    }
+
+    // No emulated command was issued for this read, clear the params and reponse FIFOs
+    cdrom.CDROM_params.clear();
+    cdrom.CDROM_response.clear();
+
+    // According to the PsyQ docs this always returns 1 for success (never fails)
+    return 1;
+}
+
+void _thunk_LIBCD_CdGetSector() noexcept {
+    v0 = LIBCD_CdGetSector(vmAddrToPtr<void>(a0), a1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

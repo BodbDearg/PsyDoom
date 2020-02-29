@@ -266,7 +266,7 @@ loc_8003F550:
     s0 -= 0x6AE8;                                       // Result = gPSXCD_sectorbuf[0] (800A9518)
     a0 = s0;                                            // Result = gPSXCD_sectorbuf[0] (800A9518)
     a1 = 0x200;                                         // Result = 00000200
-    LIBCD_CdGetSector();
+    _thunk_LIBCD_CdGetSector();
     v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
     a1 = s0;                                            // Result = gPSXCD_sectorbuf[0] (800A9518)
     v0 = v1 << 2;
@@ -281,7 +281,7 @@ loc_8003F550:
     goto loc_8003F5C0;
 loc_8003F5B8:
     a1 = 0x200;                                         // Result = 00000200
-    LIBCD_CdGetSector();
+    _thunk_LIBCD_CdGetSector();
 loc_8003F5C0:
     a1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
     v0 = a1 << 2;
@@ -313,7 +313,7 @@ loc_8003F630:
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 -= 0x6AE8;                                       // Result = gPSXCD_sectorbuf[0] (800A9518)
     a1 = 0x200;                                         // Result = 00000200
-    LIBCD_CdGetSector();
+    _thunk_LIBCD_CdGetSector();
     v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
     v1 = v0 << 2;
     v1 += v0;
