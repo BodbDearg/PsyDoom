@@ -626,11 +626,7 @@ extern void LIBCD_CD_shell() noexcept;
 extern void LIBCD_CD_flush() noexcept;
 extern void LIBCD_CD_init() noexcept;
 extern void LIBCD_CD_initvol() noexcept;
-extern void LIBCD_BIOS_cd_read_retry() noexcept;
-extern void LIBCD_CD_datasync() noexcept;
-extern void LIBCD_CD_getsector() noexcept;
 extern void LIBCD_BIOS_callback() noexcept;
-extern void LIBCD_BIOS_cb_read() noexcept;
 extern void LIBCOMB_UNKNOWN_func_1() noexcept;
 extern void LIBCOMB_UNKNOWN_func_2() noexcept;
 extern void LIBCOMB_UNKNOWN_func_3() noexcept;
@@ -1273,11 +1269,7 @@ namespace PsxVm {
         { 0x80056330, &LIBCD_CD_flush },
         { 0x80056410, &LIBCD_CD_init },
         { 0x80056664, &LIBCD_CD_initvol },
-        { 0x80056758, &LIBCD_BIOS_cd_read_retry },
-        { 0x80056DBC, &LIBCD_CD_datasync },
-        { 0x80056F18, &LIBCD_CD_getsector },
         { 0x8005701C, &LIBCD_BIOS_callback },
-        { 0x800570FC, &LIBCD_BIOS_cb_read },
         { 0x800574A8, &LIBCOMB_UNKNOWN_func_1 },
         { 0x800575E8, &LIBCOMB_UNKNOWN_func_2 },
         { 0x80057728, &LIBCOMB_UNKNOWN_func_3 },
