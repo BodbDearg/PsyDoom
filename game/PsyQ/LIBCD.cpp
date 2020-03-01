@@ -216,37 +216,15 @@ static bool handleCdCmd(const CdlCmd cmd, const uint8_t* const pArgs, uint8_t re
     return false;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the cdrom handling library: should be called before use
+//------------------------------------------------------------------------------------------------------------------------------------------
 void LIBCD_CdInit() noexcept {
-loc_80054B00:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = 4;                                             // Result = 00000004
-    sw(ra, sp + 0x14);
-loc_80054B10:
-    a0 = 1;                                             // Result = 00000001
-    v0 = LIBCD_CdReset(1);
-    v1 = 1;                                             // Result = 00000001
-    s0--;
-    if (v0 != v1) goto loc_80054B5C;
-
+    // Note: the original code checked whether the reset operation succeeded here and retried up to 4x times.
+    // In this emulated environment however we can simplify a bit and just assume that it works.
+    LIBCD_CdReset(1);
     LIBCD_CdSyncCallback(nullptr);
     LIBCD_CdReadyCallback(nullptr);
-
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80054B7C;
-loc_80054B5C:
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (s0 != v0) goto loc_80054B10;
-    a0 = 0x80010000;                                    // Result = 80010000
-    a0 += 0x1F54;                                       // Result = STR_LIBCD_CdInit_Failed_Err[0] (80011F54)
-    LIBC2_printf();
-    v0 = 0;                                             // Result = 00000000
-loc_80054B7C:
-
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -258,8 +236,9 @@ bool LIBCD_CdReset(const int32_t mode) noexcept {
         return false;
 
     if (mode == 1) {
-        if (LIBCD_CD_initvol() != 0)
+        if (LIBCD_CD_initvol() != 0) {
             return false;
+        }
     }
 
     return true;

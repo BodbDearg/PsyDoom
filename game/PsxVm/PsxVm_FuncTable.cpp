@@ -598,7 +598,6 @@ extern void LIBSPU_SpuSetKeyOnWithAttr() noexcept;
 extern void LIBSPU_SpuSetKey() noexcept;
 extern void LIBSPU_SpuRGetAllKeysStatus() noexcept;
 extern void LIBSPU_SpuGetAllKeysStatus() noexcept;
-extern void LIBCD_CdInit() noexcept;
 extern void _thunk_LIBCD_CdSync() noexcept;
 extern void _thunk_LIBCD_CdReady() noexcept;
 extern void _thunk_LIBCD_CdControl() noexcept;
@@ -1221,7 +1220,6 @@ namespace PsxVm {
         { 0x80054928, &LIBSPU_SpuSetKey },
         { 0x800549A8, &LIBSPU_SpuRGetAllKeysStatus },
         { 0x80054A78, &LIBSPU_SpuGetAllKeysStatus },
-        { 0x80054B00, &LIBCD_CdInit },
         { 0x80054D20, &_thunk_LIBCD_CdSync },
         { 0x80054D40, &_thunk_LIBCD_CdReady },
         { 0x80054DA8, &_thunk_LIBCD_CdControl },
