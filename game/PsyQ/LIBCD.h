@@ -110,14 +110,7 @@ void _thunk_LIBCD_CdIntToPos() noexcept;
 int32_t LIBCD_CdPosToInt(const CdlLOC& pos) noexcept;
 void _thunk_LIBCD_CdPosToInt() noexcept;
 
-void LIBCD_BIOS_getintr() noexcept;
-void LIBCD_CD_sync() noexcept;
-void LIBCD_CD_ready() noexcept;
-void LIBCD_CD_cw() noexcept;
 void LIBCD_CD_vol() noexcept;
-void LIBCD_CD_shell() noexcept;
-void LIBCD_CD_flush() noexcept;
 void LIBCD_CD_init() noexcept;
 void LIBCD_CD_initvol() noexcept;
-void LIBCD_BIOS_callback() noexcept;
 int32_t LIBCD_CdGetToc(CdlLOC trackLocs[CdlMAXTOC]) noexcept;
