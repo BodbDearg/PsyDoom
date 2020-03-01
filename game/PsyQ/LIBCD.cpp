@@ -34,9 +34,9 @@ static CdlCB gpLIBCD_CD_cbready;
 // Result bytes for the most recent CD command
 static uint8_t gLastCdCmdResult[8];
 
-// These are local to this module: forward declare here
-void LIBCD_EVENT_def_cbsync(const CdlStatus status, const uint8_t pResult[8]) noexcept;
-void LIBCD_EVENT_def_cbready(const CdlStatus status, const uint8_t pResult[8]) noexcept;
+// Internal LIBCD function prototypes
+int32_t LIBCD_CD_init() noexcept;
+int32_t LIBCD_CD_initvol() noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Call a libcd callback ('sync' or 'ready' callbacks)
@@ -224,13 +224,13 @@ loc_80054B00:
     sw(ra, sp + 0x14);
 loc_80054B10:
     a0 = 1;                                             // Result = 00000001
-    LIBCD_CdReset();
+    v0 = LIBCD_CdReset(1);
     v1 = 1;                                             // Result = 00000001
     s0--;
     if (v0 != v1) goto loc_80054B5C;
 
-    LIBCD_CdSyncCallback(LIBCD_EVENT_def_cbsync);
-    LIBCD_CdReadyCallback(LIBCD_EVENT_def_cbready);
+    LIBCD_CdSyncCallback(nullptr);
+    LIBCD_CdReadyCallback(nullptr);
 
     v0 = 1;                                             // Result = 00000001
     goto loc_80054B7C;
@@ -242,52 +242,27 @@ loc_80054B5C:
     LIBC2_printf();
     v0 = 0;                                             // Result = 00000000
 loc_80054B7C:
+
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
     return;
 }
 
-void LIBCD_EVENT_def_cbsync([[maybe_unused]] const CdlStatus status, [[maybe_unused]] const uint8_t pResult[8]) noexcept {
-    // TODO: remove/replace this
-    a0 = 0xF0000003;
-    a1 = 0x20;
-    LIBAPI_DeliverEvent();
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reset the CD rom handling library.
+// If mode is '1' then CD audio stuff is reset also, otherwise just the CD handling stuff is initialized.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool LIBCD_CdReset(const int32_t mode) noexcept {
+    if (LIBCD_CD_init() != 0)
+        return false;
 
-void LIBCD_EVENT_def_cbready([[maybe_unused]] const CdlStatus status, [[maybe_unused]] const uint8_t pResult[8]) noexcept {
-    // TODO: remove/replace this
-    a0 = 0xF0000003;
-    a1 = 0x40;
-    LIBAPI_DeliverEvent();
-}
+    if (mode == 1) {
+        if (LIBCD_CD_initvol() != 0)
+            return false;
+    }
 
-void LIBCD_CdReset() noexcept {
-loc_80054C28:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x14);
-    s0 = a0;
-    LIBCD_CD_init();
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80054C64;
-    }
-    v0 = 1;                                             // Result = 00000001
-    if (s0 != v0) goto loc_80054C64;
-    LIBCD_CD_initvol();
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80054C64;
-    }
-    v0 = 1;                                             // Result = 00000001
-loc_80054C64:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -533,7 +508,7 @@ void _thunk_LIBCD_CdPosToInt() noexcept {
     v0 = LIBCD_CdPosToInt(*vmAddrToPtr<CdlLOC>(a0));
 }
 
-void LIBCD_CD_init() noexcept {
+int32_t LIBCD_CD_init() noexcept {
     sp -= 0x18;
 
     a0 = 0x80012168;            // Result = STR_Sys_CD_init_Msg[0] (80012168)
@@ -547,59 +522,59 @@ void LIBCD_CD_init() noexcept {
     gpLIBCD_CD_cbready = nullptr;
     gpLIBCD_CD_cbsync = nullptr;
 
-    sw(0, 0x80077204);          // Store to: gLIBCD_CD_status (80077204)
-
     do {
         sw(0, v1);
         v0--;
         v1 += 4;
     } while (v0 != a0);
 
-    v1 = lw(0x800774B4);                // Load from: 800774B4
+    v1 = lw(0x800774B4);                // Load from: PTR_CDROM_REG0_800774b4 (800774B4)
     v0 = 1;
     sb(v0, v1);
-    v0 = lw(0x800774C0);                // Load from: 800774C0
+    v0 = lw(0x800774C0);                // Load from: PTR_CDROM_REG3_800774c0 (800774C0)
     v0 = lbu(v0);
     v0 &= 7;
     a0 = 1;
     v1 = 7;
 
     while (v0 != 0) {
-        v0 = lw(0x800774B4);            // Load from: 800774B4
+        v0 = lw(0x800774B4);            // Load from: PTR_CDROM_REG0_800774b4 (800774B4)
         sb(a0, v0);
-        v0 = lw(0x800774C0);            // Load from: 800774C0
+        v0 = lw(0x800774C0);            // Load from: PTR_CDROM_REG3_800774c0 (800774C0)
         sb(v1, v0);
-        v0 = lw(0x800774BC);            // Load from: 800774BC
+        v0 = lw(0x800774BC);            // Load from: PTR_CDROM_REG2_800774bc (800774BC)
         sb(v1, v0);
-        v0 = lw(0x800774C0);            // Load from: 800774C0
+        v0 = lw(0x800774C0);            // Load from: PTR_CDROM_REG3_800774c0 (800774C0)
         v0 = lbu(v0);
         v0 &= 7;
     }
 
     sb(0, 0x800774CF);              // Store to: 800774CF
     v1 = lbu(0x800774CF);           // Load from: 800774CF
+    
     v0 = 0x800774CE;                // Result = 800774CE
     sb(v1, v0);                     // Store to: 800774CE
-    v1 = lw(0x800774B4);            // Load from: 800774B4
+
+    v1 = lw(0x800774B4);            // Load from: PTR_CDROM_REG0_800774b4 (800774B4)
     v0 = 2;
     sb(v0, 0x800774CD);             // Store to: 800774CD
     sb(0, v1);
-    v0 = lw(0x800774C0);            // Load from: 800774C0
+    v0 = lw(0x800774C0);            // Load from: PTR_CDROM_REG3_800774c0 (800774C0)
     sb(0, v0);
     v1 = lw(0x800774C4);            // Load from: 800774C4
     v0 = 0x132C;
     sw(v0, v1);
 
-    v0 = 0;
     sp += 0x18;
+    return 0;
 }
 
-void LIBCD_CD_initvol() noexcept {
-loc_80056664:
+int32_t LIBCD_CD_initvol() noexcept {
+    // TODO: convert this code
     v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74C8);                               // Load from: 800774C8
+    v1 = lw(v1 + 0x74C8);                               // Load from: PTR_VOICE_00_LEFT_RIGHT_800774c8 (800774C8)
     v0 = lhu(v1 + 0x1B8);
-    sp -= 8;
+    
     if (v0 != 0) goto loc_800566A0;
     v0 = lhu(v1 + 0x1BA);
     {
@@ -610,7 +585,7 @@ loc_80056664:
     sh(v0, v1 + 0x180);
     sh(v0, v1 + 0x182);
     v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74C8);                               // Load from: 800774C8
+    v1 = lw(v1 + 0x74C8);                               // Load from: PTR_VOICE_00_LEFT_RIGHT_800774c8 (800774C8)
 loc_800566A0:
     v0 = 0x3FFF;                                        // Result = 00003FFF
 loc_800566A4:
@@ -618,42 +593,17 @@ loc_800566A4:
     sh(v0, v1 + 0x1B2);
     v0 = 0xC001;                                        // Result = 0000C001
     sh(v0, v1 + 0x1AA);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74B4);                               // Load from: 800774B4
-    v0 = 0x80;                                          // Result = 00000080
-    sb(v0, sp + 0x2);
-    sb(v0, sp);
-    v0 = 2;                                             // Result = 00000002
-    sb(0, sp + 0x3);
-    sb(0, sp + 0x1);
-    sb(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74BC);                               // Load from: 800774BC
-    v0 = lbu(sp);
-    sb(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74C0);                               // Load from: 800774C0
-    v0 = lbu(sp + 0x1);
-    sb(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74B4);                               // Load from: 800774B4
-    v0 = 3;                                             // Result = 00000003
-    sb(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74B8);                               // Load from: 800774B8
-    v0 = lbu(sp + 0x2);
-    sb(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74BC);                               // Load from: 800774BC
-    v0 = lbu(sp + 0x3);
-    sb(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74C0);                               // Load from: 800774C0
-    v0 = 0x20;                                          // Result = 00000020
-    sb(v0, v1);
-    v0 = 0;                                             // Result = 00000000
-    sp += 8;
-    return;
+
+    // Set the default CD to SPU mixing parameters
+    {
+        CdlATV vol = {};
+        vol.l_to_l = 128;
+        vol.r_to_r = 128;
+
+        LIBCD_CdMix(vol);
+    }
+
+    return 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

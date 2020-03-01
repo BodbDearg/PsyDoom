@@ -599,8 +599,6 @@ extern void LIBSPU_SpuSetKey() noexcept;
 extern void LIBSPU_SpuRGetAllKeysStatus() noexcept;
 extern void LIBSPU_SpuGetAllKeysStatus() noexcept;
 extern void LIBCD_CdInit() noexcept;
-extern void LIBCD_CdReset() noexcept;
-extern void LIBCD_CdFlush() noexcept;
 extern void _thunk_LIBCD_CdSync() noexcept;
 extern void _thunk_LIBCD_CdReady() noexcept;
 extern void _thunk_LIBCD_CdControl() noexcept;
@@ -609,8 +607,6 @@ extern void _thunk_LIBCD_CdMix() noexcept;
 extern void _thunk_LIBCD_CdGetSector() noexcept;
 extern void _thunk_LIBCD_CdIntToPos() noexcept;
 extern void _thunk_LIBCD_CdPosToInt() noexcept;
-extern void LIBCD_CD_init() noexcept;
-extern void LIBCD_CD_initvol() noexcept;
 extern void LIBCOMB_UNKNOWN_func_1() noexcept;
 extern void LIBCOMB_UNKNOWN_func_2() noexcept;
 extern void LIBCOMB_UNKNOWN_func_3() noexcept;
@@ -1226,8 +1222,6 @@ namespace PsxVm {
         { 0x800549A8, &LIBSPU_SpuRGetAllKeysStatus },
         { 0x80054A78, &LIBSPU_SpuGetAllKeysStatus },
         { 0x80054B00, &LIBCD_CdInit },
-        { 0x80054C28, &LIBCD_CdReset },
-        { 0x80054C78, &LIBCD_CdFlush },
         { 0x80054D20, &_thunk_LIBCD_CdSync },
         { 0x80054D40, &_thunk_LIBCD_CdReady },
         { 0x80054DA8, &_thunk_LIBCD_CdControl },
@@ -1236,8 +1230,6 @@ namespace PsxVm {
         { 0x80055114, &_thunk_LIBCD_CdGetSector },
         { 0x8005521C, &_thunk_LIBCD_CdIntToPos },
         { 0x80055320, &_thunk_LIBCD_CdPosToInt },
-        { 0x80056410, &LIBCD_CD_init },
-        { 0x80056664, &LIBCD_CD_initvol },
         { 0x800574A8, &LIBCOMB_UNKNOWN_func_1 },
         { 0x800575E8, &LIBCOMB_UNKNOWN_func_2 },
         { 0x80057728, &LIBCOMB_UNKNOWN_func_3 },

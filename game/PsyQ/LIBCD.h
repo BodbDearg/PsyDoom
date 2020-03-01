@@ -81,15 +81,15 @@ enum CdlStatus : uint8_t {
 struct CdlATV {
     uint8_t     l_to_l;     // Mix of CD left channel to SPU left channel
     uint8_t     l_to_r;     // Mix of CD left channel to SPU right channel
-    uint8_t     r_to_l;     // Mix of CD right channel to SPU left channel
-    uint8_t     r_to_r;     // Mix of CD right channel to SPU right channel
+    uint8_t     r_to_r;     // Mix of CD right channel to SPU left channel
+    uint8_t     r_to_l;     // Mix of CD right channel to SPU right channel
 };
 
 // Callback type for 'CdReadyCallback', and 'CdSyncCallback'
 typedef void (*CdlCB)(const CdlStatus status, const uint8_t pResult[8]);
 
 void LIBCD_CdInit() noexcept;
-void LIBCD_CdReset() noexcept;
+bool LIBCD_CdReset(const int32_t mode) noexcept;
 void LIBCD_CdFlush() noexcept;
 
 CdlStatus LIBCD_CdSync([[maybe_unused]] const int32_t mode, uint8_t pResult[8]) noexcept;
@@ -107,6 +107,7 @@ void _thunk_LIBCD_CdControl() noexcept;
 bool LIBCD_CdControlF(const CdlCmd cmd, const uint8_t* const pArgs) noexcept;
 void _thunk_LIBCD_CdControlF() noexcept;
 
+bool LIBCD_CdMix(const CdlATV& vol) noexcept;
 void _thunk_LIBCD_CdMix() noexcept;
 
 bool LIBCD_CdGetSector(void* const pDst, const int32_t sizeInWords) noexcept;
@@ -118,6 +119,4 @@ void _thunk_LIBCD_CdIntToPos() noexcept;
 int32_t LIBCD_CdPosToInt(const CdlLOC& pos) noexcept;
 void _thunk_LIBCD_CdPosToInt() noexcept;
 
-void LIBCD_CD_init() noexcept;
-void LIBCD_CD_initvol() noexcept;
 int32_t LIBCD_CdGetToc(CdlLOC trackLocs[CdlMAXTOC]) noexcept;
