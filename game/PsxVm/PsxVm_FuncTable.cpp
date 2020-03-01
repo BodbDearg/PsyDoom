@@ -519,38 +519,19 @@ extern void LIBC2_strlen() noexcept;
 extern void LIBETC_ResetCallback() noexcept;
 extern void LIBETC_InterruptCallback() noexcept;
 extern void LIBETC_DMACallback() noexcept;
-extern void LIBETC_CheckCallback() noexcept;
 extern void LIBETC_SetIntrMask() noexcept;
-extern void LIBETC_INTR_startIntr() noexcept;
-extern void LIBETC_INTR_trapIntr() noexcept;
-extern void LIBETC_INTR_setIntr() noexcept;
-extern void LIBETC_INTR_stopIntr() noexcept;
-extern void LIBETC_INTR_memclr() noexcept;
-extern void LIBAPI_HookEntryInt() noexcept;
-extern void LIBAPI_ResetEntryInt() noexcept;
 extern void LIBAPI_ChangeClearRCnt() noexcept;
-extern void LIBAPI__96_remove() noexcept;
 extern void LIBAPI_ReturnFromException() noexcept;
 extern void LIBC2_printf() noexcept;
 extern void LIBC2_setjmp() noexcept;
 extern void LIBC2_longjmp() noexcept;
 extern void LIBC2_prnt() noexcept;
 extern void LIBC2_putchar() noexcept;
-extern void LIBETC_startIntrVSync() noexcept;
-extern void LIBETC_INTR_stopIntr_UNKNOWN_Helper2() noexcept;
-extern void LIBETC_INTR_VB_trapIntrVSync() noexcept;
 extern void LIBETC_INTR_VB_setIntrVSync() noexcept;
-extern void LIBETC_INTR_VB_memclr() noexcept;
-extern void LIBETC_startIntrDMA() noexcept;
-extern void LIBETC_INTR_stopIntr_UNKNOWN_Helper1() noexcept;
-extern void LIBETC_INTR_DMA_trapIntrDMA() noexcept;
-extern void LIBETC_INTR_DMA_setIntrDMA() noexcept;
-extern void LIBETC_INTR_DMA_memclr() noexcept;
 extern void _thunk_LIBETC_VSync() noexcept;
 extern void _thunk_LIBETC_v_wait() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
 extern void LIBSN__main() noexcept;
-extern void LIBSN___do_global_dtors() noexcept;
 extern void LIBAPI_InitHeap() noexcept;
 extern void LIBSPU_SpuSetVoiceAttr() noexcept;
 extern void LIBSPU__SpuSetVoiceAttr() noexcept;
@@ -1141,38 +1122,19 @@ namespace PsxVm {
         { 0x8004A7AC, &LIBETC_ResetCallback },
         { 0x8004A7DC, &LIBETC_InterruptCallback },
         { 0x8004A80C, &LIBETC_DMACallback },
-        { 0x8004A89C, &LIBETC_CheckCallback },
         { 0x8004A8C8, &LIBETC_SetIntrMask },
-        { 0x8004A8E4, &LIBETC_INTR_startIntr },
-        { 0x8004A9A4, &LIBETC_INTR_trapIntr },
-        { 0x8004AB74, &LIBETC_INTR_setIntr },
-        { 0x8004ACA4, &LIBETC_INTR_stopIntr },
-        { 0x8004AD14, &LIBETC_INTR_memclr },
-        { 0x8004AD40, &LIBAPI_HookEntryInt },
-        { 0x8004AD50, &LIBAPI_ResetEntryInt },
         { 0x8004AD60, &LIBAPI_ChangeClearRCnt },
-        { 0x8004AD70, &LIBAPI__96_remove },
         { 0x8004AD80, &LIBAPI_ReturnFromException },
         { 0x8004AD90, &LIBC2_printf },
         { 0x8004ADD0, &LIBC2_setjmp },
         { 0x8004AE0C, &LIBC2_longjmp },
         { 0x8004AE50, &LIBC2_prnt },
         { 0x8004B530, &LIBC2_putchar },
-        { 0x8004B5F0, &LIBETC_startIntrVSync },
-        { 0x8004B654, &LIBETC_INTR_stopIntr_UNKNOWN_Helper2 },
-        { 0x8004B69C, &LIBETC_INTR_VB_trapIntrVSync },
         { 0x8004B800, &LIBETC_INTR_VB_setIntrVSync },
-        { 0x8004B908, &LIBETC_INTR_VB_memclr },
-        { 0x8004B934, &LIBETC_startIntrDMA },
-        { 0x8004B9AC, &LIBETC_INTR_stopIntr_UNKNOWN_Helper1 },
-        { 0x8004B9E4, &LIBETC_INTR_DMA_trapIntrDMA },
-        { 0x8004BA30, &LIBETC_INTR_DMA_setIntrDMA },
-        { 0x8004BA68, &LIBETC_INTR_DMA_memclr },
         { 0x8004BA94, &_thunk_LIBETC_VSync },
         { 0x8004BBDC, &_thunk_LIBETC_v_wait },
         { 0x80050454, &LIBAPI_FlushCache },
         { 0x800507AC, &LIBSN__main },
-        { 0x8005081C, &LIBSN___do_global_dtors },
         { 0x80050884, &LIBAPI_InitHeap },
         { 0x80050894, &LIBSPU_SpuSetVoiceAttr },
         { 0x800508BC, &LIBSPU__SpuSetVoiceAttr },

@@ -230,31 +230,10 @@ loc_80049E4C:
     emu_call(t2);
 }
 
-void LIBAPI_HookEntryInt() noexcept {
-loc_8004AD40:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0x19;                                          // Result = 00000019
-    emu_call(t2);
-}
-
-void LIBAPI_ResetEntryInt() noexcept {
-loc_8004AD50:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0x18;                                          // Result = 00000018
-    emu_call(t2);
-}
-
 void LIBAPI_ChangeClearRCnt() noexcept {
 loc_8004AD60:
     t2 = 0xC0;                                          // Result = 000000C0
     t1 = 0xA;                                           // Result = 0000000A
-    emu_call(t2);
-}
-
-void LIBAPI__96_remove() noexcept {
-loc_8004AD70:
-    t2 = 0xA0;                                          // Result = 000000A0
-    t1 = 0x72;                                          // Result = 00000072
     emu_call(t2);
 }
 
