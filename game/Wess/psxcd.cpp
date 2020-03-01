@@ -1947,7 +1947,7 @@ loc_80040F78:
 loc_80040F8C:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 += 0x7DEC;                                       // Result = gPSXCD_cdatv[0] (80077DEC)
-    LIBCD_CdMix();
+    _thunk_LIBCD_CdMix();
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;

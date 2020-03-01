@@ -405,15 +405,22 @@ void _thunk_LIBCD_CdControlF() noexcept {
     v0 = LIBCD_CdControlF((CdlCmd) a0, vmAddrToPtr<const uint8_t>(a1));
 }
 
-void LIBCD_CdMix() noexcept {
-loc_800550F0:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    LIBCD_CD_vol();
-    v0 = 1;                                             // Result = 00000001
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the volume for CD audio going to the SPU
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool LIBCD_CdMix(const CdlATV& vol) noexcept {
+    device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
+
+    cdrom.volumeLeftToLeft = vol.l_to_l;
+    cdrom.volumeLeftToRight = vol.l_to_r;
+    cdrom.volumeRightToLeft = vol.r_to_l;
+    cdrom.volumeRightToRight = vol.r_to_r;
+
+    return true;    // Always successful
+}
+
+void _thunk_LIBCD_CdMix() noexcept {
+    v0 = LIBCD_CdMix(*vmAddrToPtr<const CdlATV>(a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -524,40 +531,6 @@ int32_t LIBCD_CdPosToInt(const CdlLOC& pos) noexcept {
 
 void _thunk_LIBCD_CdPosToInt() noexcept {
     v0 = LIBCD_CdPosToInt(*vmAddrToPtr<CdlLOC>(a0));
-}
-
-void LIBCD_CD_vol() noexcept {
-loc_8005621C:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74B4);                               // Load from: 800774B4
-    v0 = 2;                                             // Result = 00000002
-    sb(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74BC);                               // Load from: 800774BC
-    v0 = lbu(a0);
-    sb(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74C0);                               // Load from: 800774C0
-    v0 = lbu(a0 + 0x1);
-    sb(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74B4);                               // Load from: 800774B4
-    v0 = 3;                                             // Result = 00000003
-    sb(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74B8);                               // Load from: 800774B8
-    v0 = lbu(a0 + 0x2);
-    sb(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74BC);                               // Load from: 800774BC
-    v0 = lbu(a0 + 0x3);
-    sb(v0, v1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74C0);                               // Load from: 800774C0
-    v0 = 0x20;                                          // Result = 00000020
-    sb(v0, v1);
-    v0 = 0;                                             // Result = 00000000
-    return;
 }
 
 void LIBCD_CD_init() noexcept {

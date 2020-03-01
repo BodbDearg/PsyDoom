@@ -605,11 +605,10 @@ extern void _thunk_LIBCD_CdSync() noexcept;
 extern void _thunk_LIBCD_CdReady() noexcept;
 extern void _thunk_LIBCD_CdControl() noexcept;
 extern void _thunk_LIBCD_CdControlF() noexcept;
-extern void LIBCD_CdMix() noexcept;
+extern void _thunk_LIBCD_CdMix() noexcept;
 extern void _thunk_LIBCD_CdGetSector() noexcept;
 extern void _thunk_LIBCD_CdIntToPos() noexcept;
 extern void _thunk_LIBCD_CdPosToInt() noexcept;
-extern void LIBCD_CD_vol() noexcept;
 extern void LIBCD_CD_init() noexcept;
 extern void LIBCD_CD_initvol() noexcept;
 extern void LIBCOMB_UNKNOWN_func_1() noexcept;
@@ -1233,11 +1232,10 @@ namespace PsxVm {
         { 0x80054D40, &_thunk_LIBCD_CdReady },
         { 0x80054DA8, &_thunk_LIBCD_CdControl },
         { 0x80054EC0, &_thunk_LIBCD_CdControlF },
-        { 0x800550F0, &LIBCD_CdMix },
+        { 0x800550F0, &_thunk_LIBCD_CdMix },
         { 0x80055114, &_thunk_LIBCD_CdGetSector },
         { 0x8005521C, &_thunk_LIBCD_CdIntToPos },
         { 0x80055320, &_thunk_LIBCD_CdPosToInt },
-        { 0x8005621C, &LIBCD_CD_vol },
         { 0x80056410, &LIBCD_CD_init },
         { 0x80056664, &LIBCD_CD_initvol },
         { 0x800574A8, &LIBCOMB_UNKNOWN_func_1 },
