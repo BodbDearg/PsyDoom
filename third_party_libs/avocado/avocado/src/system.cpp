@@ -341,7 +341,13 @@ void System::singleStep() {
     state = State::pause;
 
     dma->step();
-    cdrom->step();
+
+    // DOOM: the host program now has complete control over when and how the CDROM logic is executed.
+    // This is no longer part of the emulation.
+    #if !DOOM_AVOCADO_MODS
+        cdrom->step();
+    #endif
+
     timer[0]->step(3);
     timer[1]->step(3);
     timer[2]->step(3);
@@ -381,7 +387,13 @@ void System::emulateFrame() {
         #endif
 
         dma->step();
-        cdrom->step();
+
+        // DOOM: the host program now has complete control over when and how the CDROM logic is executed.
+        // This is no longer part of the emulation.
+        #if !DOOM_AVOCADO_MODS
+            cdrom->step();
+        #endif
+
         timer[0]->step(systemCycles);
         timer[1]->step(systemCycles);
         timer[2]->step(systemCycles);
@@ -394,6 +406,10 @@ void System::emulateFrame() {
             // Note - this overclocks SPU clock, bugs might appear.
             magicNumber *= 50.f / 60.f;
         }
+
+        // DOOM: the host program now has complete control over when and how the SPU logic is executed.
+        // This is no longer part of the emulation.
+        #if !DOOM_AVOCADO_MODS
         spuCounter += (float)systemCycles / magicNumber / (float)0x300;
         if (spuCounter >= 1.f) {
             spu->step(cdrom.get());
@@ -404,6 +420,7 @@ void System::emulateFrame() {
             spu->bufferReady = false;
             Sound::appendBuffer(spu->audioBuffer.begin(), spu->audioBuffer.end());
         }
+        #endif
 
         controller->step();
 

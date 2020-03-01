@@ -38,8 +38,10 @@ static_assert(sizeof(PsxCd_MapTblEntry) == 8);
 void PSXCD_psxcd_memcpy() noexcept;
 void psxcd_sync() noexcept;
 void psxcd_critical_sync() noexcept;
-void PSXCD_cbcomplete() noexcept;
-void PSXCD_cbready() noexcept;
+
+void PSXCD_cbcomplete(const CdlStatus status, const uint8_t pResult[8]) noexcept;
+void PSXCD_cbready(const CdlStatus status, const uint8_t pResult[8]) noexcept;
+
 void psxcd_disable_callbacks() noexcept;
 void psxcd_enable_callbacks() noexcept;
 void psxcd_init() noexcept;

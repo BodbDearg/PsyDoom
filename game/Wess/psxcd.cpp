@@ -6,6 +6,7 @@
 #include "psxspu.h"
 #include "PsxVm/PsxVm.h"
 #include "PsxVm/VmPtr.h"
+#include "PsxVm/VmSVal.h"
 #include "PsyQ/LIBCD.h"
 
 static const VmPtr<bool32_t>                gbPSXCD_IsCdInit(0x80077D70);           // If true then the 'psxcd' module has been initialized
@@ -18,8 +19,8 @@ static const VmPtr<int32_t>                 gbPSXCD_cb_enable_flag(0x80077D7C); 
 
 // Previous 'CdReadyCallback' and 'CDSyncCallback' functions used by LIBCD prior to initializing this module.
 // Used for restoring once we shutdown this module.
-static const VmPtr<CdlCB> gPSXCD_cbsyncsave(0x80077E30);
-static const VmPtr<CdlCB> gPSXCD_cbreadysave(0x80077E34);
+static CdlCB gPSXCD_cbsyncsave;
+static CdlCB gPSXCD_cbreadysave;
 
 // Function forward declarations
 void psxcd_async_read_cancel() noexcept;
@@ -61,7 +62,7 @@ loc_8003F264:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DA8;                                       // Result = gPSXCD_sync_result[0] (80077DA8)
     a0 = 1;                                             // Result = 00000001
-    LIBCD_CdSync();
+    _thunk_LIBCD_CdSync();
     sw(v0, gp + 0x7C4);                                 // Store to: gPSXCD_sync_intr (80077DA4)
     if (v0 != s1) goto loc_8003F2B0;
     LIBCD_CdFlush();
@@ -107,7 +108,7 @@ loc_8003F318:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DA8;                                       // Result = gPSXCD_sync_result[0] (80077DA8)
     a0 = 1;                                             // Result = 00000001
-    LIBCD_CdSync();
+    _thunk_LIBCD_CdSync();
     v1 = v0;
     sw(v1, gp + 0x7C4);                                 // Store to: gPSXCD_sync_intr (80077DA4)
     v0 = 5;                                             // Result = 00000005
@@ -148,7 +149,23 @@ loc_8003F398:
     return;
 }
 
-void PSXCD_cbcomplete() noexcept {
+void PSXCD_cbcomplete(const CdlStatus status, const uint8_t pResult[8]) noexcept {
+    // TEMP until this is converted to C++
+    struct ResultBytes {
+        char bytes[8];
+    };
+
+    a0 = status;
+    VmSVal<ResultBytes> resultBytesVmStack;
+
+    for (int32_t i = 0; i < 8; ++i) {
+        resultBytesVmStack->bytes[i] = pResult[i];
+    }
+    
+    a1 = resultBytesVmStack.addr();
+
+    //---------------------
+
     v0 = *gbPSXCD_cb_enable_flag;
     sp -= 0x18;
     sw(ra, sp + 0x10);
@@ -188,7 +205,7 @@ loc_8003F434:
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
     a0 = 3;                                             // Result = 00000003
     a1 = 0;                                             // Result = 00000000
-    LIBCD_CdControlF();
+    _thunk_LIBCD_CdControlF();
     goto loc_8003F480;
 loc_8003F44C:
     if (v1 != v0) goto loc_8003F480;
@@ -209,7 +226,23 @@ loc_8003F480:
     return;
 }
 
-void PSXCD_cbready() noexcept {
+void PSXCD_cbready(const CdlStatus status, const uint8_t pResult[8]) noexcept {
+    // TEMP until this is converted to C++
+    struct ResultBytes {
+        char bytes[8];
+    };
+
+    a0 = status;
+    VmSVal<ResultBytes> resultBytesVmStack;
+
+    for (int32_t i = 0; i < 8; ++i) {
+        resultBytesVmStack->bytes[i] = pResult[i];
+    }
+    
+    a1 = resultBytesVmStack.addr();
+
+    //---------------------
+
     v0 = *gbPSXCD_cb_enable_flag;
     sp -= 0x30;
     sw(s0, sp + 0x20);
@@ -361,7 +394,7 @@ loc_8003F6C8:
     sw(v0, gp + 0x780);                                 // Store to: gbPSXCD_waiting_for_pause (80077D60)
     v0 = 9;                                             // Result = 00000009
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    LIBCD_CdControlF();
+    _thunk_LIBCD_CdControlF();
     goto loc_8003F878;
 loc_8003F720:
     if (s0 != v0) goto loc_8003F734;
@@ -501,30 +534,23 @@ void psxcd_init() noexcept {
 
     if (trackCount != 0) {
         *gbPSXCD_init_pos = false;
-        *gbPSXCD_async_on = false;
+        *gbPSXCD_async_on = false;     
         
-        a0 = PsxVm::getNativeFuncVmAddr(PSXCD_cbcomplete);
-        LIBCD_CdSyncCallback();
-        *gPSXCD_cbsyncsave = v0;
-
-        a0 = PsxVm::getNativeFuncVmAddr(PSXCD_cbready);
-        LIBCD_CdReadyCallback();
-        *gPSXCD_cbreadysave = v0;
+        // Set command complete and data callbacks and save the old ones for later restoring
+        gPSXCD_cbsyncsave = LIBCD_CdSyncCallback(PSXCD_cbcomplete);
+        gPSXCD_cbreadysave = LIBCD_CdReadyCallback(PSXCD_cbready);
 
         psxcd_enable_callbacks();
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shut down the WESS (Williams Entertainment Sound System) CD handling module
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_exit() noexcept {
-    a0 = lw(gp + 0x850);                                // Load from: gPSXCD_cbsyncsave (80077E30)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    LIBCD_CdSyncCallback();
-    a0 = lw(gp + 0x854);                                // Load from: gPSXCD_cbreadysave (80077E34)
-    LIBCD_CdReadyCallback();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    // Restore these previous callbacks
+    LIBCD_CdSyncCallback(gPSXCD_cbsyncsave);
+    LIBCD_CdReadyCallback(gPSXCD_cbreadysave);
 }
 
 void psxcd_set_data_mode() noexcept {
@@ -556,7 +582,7 @@ loc_8003FA04:
     v0 = 0xE;                                           // Result = 0000000E
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
     a2 = 0;                                             // Result = 00000000
-    LIBCD_CdControl();
+    _thunk_LIBCD_CdControl();
     v0 = 1;                                             // Result = 00000001
     sw(v0, gp + 0x78C);                                 // Store to: gPSXCD_psxcd_mode (80077D6C)
     psxcd_sync();
@@ -581,7 +607,7 @@ loc_8003FA78:
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
 loc_8003FAA4:
-    LIBCD_CdControl();
+    _thunk_LIBCD_CdControl();
 loc_8003FAAC:
     psxcd_sync();
     LIBCD_CdFlush();
@@ -652,7 +678,7 @@ loc_8003FBBC:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DB4;                                       // Result = gPSXCD_check_result[0] (80077DB4)
     a0 = 1;                                             // Result = 00000001
-    LIBCD_CdSync();
+    _thunk_LIBCD_CdSync();
     v1 = lw(gp + 0x7A0);                                // Load from: gbPSXCD_critical_error (80077D80)
     a0 = v0;
     sw(a0, gp + 0x7D0);                                 // Store to: gPSXCD_check_intr (80077DB0)
@@ -724,7 +750,7 @@ loc_8003FCC4:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DB4;                                       // Result = gPSXCD_check_result[0] (80077DB4)
     a0 = 1;                                             // Result = 00000001
-    LIBCD_CdSync();
+    _thunk_LIBCD_CdSync();
     sw(v0, gp + 0x7D0);                                 // Store to: gPSXCD_check_intr (80077DB0)
     v1 = 5;                                             // Result = 00000005
     if (v0 == v1) goto loc_8003FD08;
@@ -749,7 +775,7 @@ loc_8003FD08:
     v0 = 0x16;                                          // Result = 00000016
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
     a0 = 0x16;                                          // Result = 00000016
-    LIBCD_CdControlF();
+    _thunk_LIBCD_CdControlF();
 loc_8003FD58:
     v0 = 1;                                             // Result = 00000001
     goto loc_8003FD64;
@@ -769,7 +795,7 @@ void psxcd_waiting_for_pause() noexcept {
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DB4;                                       // Result = gPSXCD_check_result[0] (80077DB4)
     a0 = 1;                                             // Result = 00000001
-    LIBCD_CdSync();
+    _thunk_LIBCD_CdSync();
     sw(v0, gp + 0x7D0);                                 // Store to: gPSXCD_check_intr (80077DB0)
     v1 = 5;                                             // Result = 00000005
     if (v0 == v1) goto loc_8003FDB8;
@@ -793,7 +819,7 @@ loc_8003FDB8:
     v0 = 9;                                             // Result = 00000009
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
     a1 = 0;                                             // Result = 00000000
-    LIBCD_CdControlF();
+    _thunk_LIBCD_CdControlF();
 loc_8003FE04:
     v0 = 1;                                             // Result = 00000001
     goto loc_8003FE10;
@@ -829,13 +855,6 @@ int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexce
     bool bIsDoingAsyncRead = true;
 
     do {
-        // Need to emulate the cdrom so the read actually happens!
-        // Also move along sound emulation if required.
-        #if PC_PSX_DOOM_MODS
-            emulate_cdrom();
-            emulate_sound_if_required();
-        #endif
-
         psxcd_async_on();
         bIsDoingAsyncRead = (v0 != 0);
     } while (bIsDoingAsyncRead);
@@ -862,7 +881,7 @@ loc_8003FE58:
     a0 = 9;                                             // Result = 00000009
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
     a1 = 0;                                             // Result = 00000000
-    LIBCD_CdControlF();
+    _thunk_LIBCD_CdControlF();
 loc_8003FE94:
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -1246,7 +1265,7 @@ loc_80040508:
     a1 += v0;
     a1 <<= 2;
     a1 += s7;
-    LIBCD_CdControl();
+    _thunk_LIBCD_CdControl();
     v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
     v1++;
     v0 = v1 << 2;
@@ -1295,7 +1314,7 @@ loc_8004059C:
     a1 += v1;
     a1 <<= 2;
     a1 += s7;
-    LIBCD_CdControl();
+    _thunk_LIBCD_CdControl();
     psxcd_critical_sync();
     if (v0 != 0) goto loc_80040630;
 loc_80040628:
@@ -1472,7 +1491,7 @@ loc_80040864:
     sw(0, gp + 0x794);                                  // Store to: gbPSXCD_init_pos (80077D74)
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
     a2 = 0;                                             // Result = 00000000
-    LIBCD_CdControl();
+    _thunk_LIBCD_CdControl();
     sw(0, gp + 0x78C);                                  // Store to: gPSXCD_psxcd_mode (80077D6C)
     psxcd_sync();
     a0 = 9;                                             // Result = 00000009
@@ -1480,7 +1499,7 @@ loc_80040864:
     v0 = 9;                                             // Result = 00000009
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
     a2 = 0;                                             // Result = 00000000
-    LIBCD_CdControl();
+    _thunk_LIBCD_CdControl();
     psxcd_sync();
     LIBCD_CdFlush();
     goto loc_800408CC;
@@ -1545,7 +1564,7 @@ loc_800408E8:
     sw(s3, gp + 0x7F0);                                 // Store to: gPSXCD_playfadeuptime (80077DD0)
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
     a0 = 0x16;                                          // Result = 00000016
-    LIBCD_CdControlF();
+    _thunk_LIBCD_CdControlF();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
     v0 = lwl(v0, s0 + 0x3);
@@ -1619,7 +1638,7 @@ loc_80040A48:
     sw(0, gp + 0x7F0);                                  // Store to: gPSXCD_playfadeuptime (80077DD0)
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
     a0 = 0x16;                                          // Result = 00000016
-    LIBCD_CdControlF();
+    _thunk_LIBCD_CdControlF();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
     v0 = lwl(v0, s0 + 0x3);
@@ -1689,7 +1708,7 @@ loc_80040B8C:
     sw(0, gp + 0x7E8);                                  // Store to: gbPSXCD_playflag (80077DC8)
     sw(0, gp + 0x7F8);                                  // Store to: gbPSXCD_loopflag (80077DD8)
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    LIBCD_CdControlF();
+    _thunk_LIBCD_CdControlF();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
     v0 = lwl(v0, s0 + 0x3);
@@ -1746,7 +1765,7 @@ loc_80040CE0:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7DB4;                                       // Result = gPSXCD_check_result[0] (80077DB4)
     a0 = 1;                                             // Result = 00000001
-    LIBCD_CdSync();
+    _thunk_LIBCD_CdSync();
     sw(v0, gp + 0x7D0);                                 // Store to: gPSXCD_check_intr (80077DB0)
     v1 = 5;                                             // Result = 00000005
     if (v0 == v1) goto loc_80040D14;
@@ -1800,7 +1819,7 @@ loc_80040D98:
     sw(v0, gp + 0x780);                                 // Store to: gbPSXCD_waiting_for_pause (80077D60)
     v0 = 9;                                             // Result = 00000009
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    LIBCD_CdControlF();
+    _thunk_LIBCD_CdControlF();
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -1838,7 +1857,7 @@ loc_80040E3C:
     sw(v0, gp + 0x780);                                 // Store to: gbPSXCD_waiting_for_pause (80077D60)
     v0 = 9;                                             // Result = 00000009
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    LIBCD_CdControlF();
+    _thunk_LIBCD_CdControlF();
 loc_80040E64:
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -1872,7 +1891,7 @@ loc_80040E74:
     sw(0, gp + 0x7B8);                                  // Store to: gPSXCD_playcount (80077D98)
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
     a0 = 0x16;                                          // Result = 00000016
-    LIBCD_CdControlF();
+    _thunk_LIBCD_CdControlF();
 loc_80040EE8:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -1881,10 +1900,9 @@ loc_80040EE8:
 }
 
 void psxcd_elapsed_sectors() noexcept {
-    // Emulate the cdrom a bit in case this function is polled in a loop
-    #if PC_PSX_DOOM_MODS
-        emulate_cdrom();
-    #endif
+    // FIXME: returning 1 so some loops don't get stuck
+    v0 = 1;
+    return;
 
 loc_80040EFC:
     v0 = lw(gp + 0x818);                                // Load from: gPSXCD_beginloc (80077DF8)

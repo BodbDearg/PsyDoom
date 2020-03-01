@@ -8,6 +8,7 @@
 #include "LIBAPI.h"
 #include "LIBC2.h"
 #include "LIBETC.h"
+#include "PcPsx/Finally.h"
 
 BEGIN_THIRD_PARTY_INCLUDES
 
@@ -16,12 +17,204 @@ BEGIN_THIRD_PARTY_INCLUDES
 
 END_THIRD_PARTY_INCLUDES
 
-// CD-ROM constants
-static constexpr int32_t CD_SECTORS_PER_SEC     = 75;       // The number of CD sectors per second of audio
-static constexpr int32_t CD_LEAD_SECTORS        = 150;      // How many sectors are assigned to the lead in track, which has the TOC for the disc
-
 // N.B: must be done LAST due to MIPS register macros
 #include "PsxVm/PsxVm.h"
+
+// CD-ROM constants
+static constexpr int32_t CD_SECTORS_PER_SEC = 75;       // The number of CD sectors per second of audio
+static constexpr int32_t CD_LEAD_SECTORS    = 150;      // How many sectors are assigned to the lead in track, which has the TOC for the disc
+
+// This is the 'readcnt' cdrom amount that Avocado will read data on
+static constexpr int AVOCADO_DATA_READ_CNT = 1150;
+
+// Callbacks for when a command completes and when a data sector is ready
+static CdlCB gpLIBCD_CD_cbsync;
+static CdlCB gpLIBCD_CD_cbready;
+
+// Result bytes for the most recent CD command
+static uint8_t gLastCdCmdResult[8];
+
+// These are local to this module: forward declare here
+void LIBCD_EVENT_def_cbsync(const CdlStatus status, const uint8_t pResult[8]) noexcept;
+void LIBCD_EVENT_def_cbready(const CdlStatus status, const uint8_t pResult[8]) noexcept;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Call a libcd callback ('sync' or 'ready' callbacks)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void invokeCallback(
+    const CdlCB callback,
+    const CdlStatus status,
+    const uint8_t resultBytes[8]
+) noexcept {
+    if (callback) {
+        callback(status, resultBytes);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Read a byte from the cdrom's result fifo buffer
+//------------------------------------------------------------------------------------------------------------------------------------------
+static uint8_t readCdCmdResultByte() noexcept {
+    device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
+    fifo<uint8_t, 16>& cmdResultFifo = cdrom.CDROM_response;
+    uint8_t resultByte = 0;
+
+    if (!cmdResultFifo.empty()) {
+        resultByte = cmdResultFifo.get();
+
+        if (cmdResultFifo.empty()) {
+            cdrom.status.responseFifoEmpty = 0;
+        }
+    } else {
+        cdrom.status.responseFifoEmpty = 0;
+    }
+
+    return resultByte;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Step the CD-ROM and invoke 'data ready' callbacks if a new sector was read
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void stepCdromWithCallbacks() noexcept {
+    // Determine if a new sector will be read
+    device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
+
+    const bool bWillReadNewSector = (
+        (cdrom.stat.read || cdrom.stat.play) &&
+        (cdrom.readcnt == AVOCADO_DATA_READ_CNT)
+    );
+
+    // Clear the data buffers if a new sector is about to be read
+    if (bWillReadNewSector) {
+        cdrom.rawSector.clear();
+        cdrom.dataBuffer.clear();
+        cdrom.dataBufferPointer = 0;
+        cdrom.status.dataFifoEmpty = 0;
+    }
+
+    // Advance the cdrom emulation
+    cdrom.step();
+
+    // If we read a new sector then setup the data buffer fifo and let the callback know
+    if (bWillReadNewSector) {
+        ASSERT(!cdrom.rawSector.empty());
+        cdrom.dataBuffer = cdrom.rawSector;
+        cdrom.dataBufferPointer = 0;
+        cdrom.status.dataFifoEmpty = 1;
+        
+        invokeCallback(gpLIBCD_CD_cbready, CdlDataReady, gLastCdCmdResult);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Handle executing a command to the cdrom drive.
+// Note: only a subset of the available commands are supported, just the ones needed for DOOM.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool handleCdCmd(const CdlCmd cmd, const uint8_t* const pArgs, uint8_t resultBytesOut[8]) noexcept {    
+    device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
+
+    // Save the result globally and for the caller on exit
+    uint8_t cmdResult[8] = {};
+    static_assert(sizeof(cmdResult) == sizeof(gLastCdCmdResult));
+
+    const auto exitActions = finally([&](){
+        std::memcpy(gLastCdCmdResult, cmdResult, sizeof(cmdResult));
+
+        if (resultBytesOut) {
+            std::memcpy(resultBytesOut, cmdResult, sizeof(cmdResult));
+        }
+    });
+
+    // Handle the command    
+    fifo<uint8_t, 16>& cdparams = cdrom.CDROM_params;
+    
+    switch (cmd) {
+        case CdlPause:
+            cdrom.handleCommand(cmd);
+            cmdResult[0] = readCdCmdResultByte();   // Status bits
+            invokeCallback(gpLIBCD_CD_cbsync, CdlComplete, cmdResult);
+            return true;
+
+        case CdlSetloc:
+            cdparams.add(pArgs[0]);     // CdlLOC.minute
+            cdparams.add(pArgs[1]);     // CdlLOC.second
+            cdparams.add(pArgs[2]);     // CdlLOC.sector
+            cdrom.handleCommand(cmd);
+            cmdResult[0] = readCdCmdResultByte();   // Status bits
+
+            // Goto the desired sector immediately and invoke the callback
+            cdrom.readSector = cdrom.seekSector;
+            invokeCallback(gpLIBCD_CD_cbsync, CdlComplete, cmdResult);
+            return true;
+
+        case CdlSeekP:
+            if (pArgs) {
+                // Set the current read/seek position if specified
+                disc::Position pos;
+                pos.mm = bcd::toBinary(pArgs[0]);   // CdlLOC.minute
+                pos.ss = bcd::toBinary(pArgs[1]);   // CdlLOC.second
+                pos.ff = bcd::toBinary(pArgs[2]);   // CdlLOC.sector
+
+                const int sector = pos.toLba();
+                cdrom.seekSector = sector;
+                cdrom.readSector = sector;
+            }
+
+            cdrom.handleCommand(cmd);
+            cmdResult[0] = readCdCmdResultByte();   // Status bits
+            cmdResult[1] = readCdCmdResultByte();   // Location: minute (BCD)
+            cmdResult[2] = readCdCmdResultByte();   // Location: second (BCD)
+            invokeCallback(gpLIBCD_CD_cbsync, CdlComplete, cmdResult);
+            return true;
+
+        case CdlSetmode:
+            cdparams.add(pArgs[0]);                 // Mode
+            cdrom.handleCommand(cmd);
+            cmdResult[0] = readCdCmdResultByte();   // Status bits
+            invokeCallback(gpLIBCD_CD_cbsync, CdlComplete, cmdResult);
+            return true;
+
+        case CdlReadN:
+        case CdlReadS:
+            // Set the location to read and issue the read command
+            if (pArgs) {
+                cdparams.add(pArgs[0]);     // CdlLOC.minute
+                cdparams.add(pArgs[1]);     // CdlLOC.second
+                cdparams.add(pArgs[2]);     // CdlLOC.sector
+            }
+
+            cdrom.handleCommand(cmd);
+            cmdResult[0] = readCdCmdResultByte();   // Status bits
+            invokeCallback(gpLIBCD_CD_cbsync, CdlComplete, cmdResult);
+
+            // Set the read location immediately
+            {
+                const uint32_t minute = bcd::toBinary(pArgs[0]);
+                const uint32_t second = bcd::toBinary(pArgs[1]);
+                const uint32_t sector = bcd::toBinary(pArgs[2]);
+
+                cdrom.seekSector = sector + (second * 75) + (minute * 60 * 75);
+                cdrom.readSector = cdrom.seekSector;
+            }
+            
+            return true;
+
+        case CdlPlay:
+            if (pArgs) {
+                cdparams.add(pArgs[0]);     // CdlLOC.track
+            }
+
+            cdrom.handleCommand(cmd);
+            cmdResult[0] = readCdCmdResultByte();   // Status bits
+            return true;
+
+        default:
+            ASSERT_FAIL("Unhandled or unknown cd command!");
+            break;
+    }
+
+    return false;
+}
 
 void LIBCD_CdInit() noexcept {
 loc_80054B00:
@@ -35,12 +228,10 @@ loc_80054B10:
     v1 = 1;                                             // Result = 00000001
     s0--;
     if (v0 != v1) goto loc_80054B5C;
-    a0 = 0x80050000;                                    // Result = 80050000
-    a0 += 0x4B90;                                       // Result = LIBCD_EVENT_def_cbsync (80054B90)
-    LIBCD_CdSyncCallback();
-    a0 = 0x80050000;                                    // Result = 80050000
-    a0 += 0x4BB8;                                       // Result = LIBCD_EVENT_def_cbready (80054BB8)
-    LIBCD_CdReadyCallback();
+
+    LIBCD_CdSyncCallback(LIBCD_EVENT_def_cbsync);
+    LIBCD_CdReadyCallback(LIBCD_EVENT_def_cbready);
+
     v0 = 1;                                             // Result = 00000001
     goto loc_80054B7C;
 loc_80054B5C:
@@ -57,28 +248,18 @@ loc_80054B7C:
     return;
 }
 
-void LIBCD_EVENT_def_cbsync() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a0 = 0xF0000000;                                    // Result = F0000000
-    a0 |= 3;                                            // Result = F0000003
-    a1 = 0x20;                                          // Result = 00000020
+void LIBCD_EVENT_def_cbsync([[maybe_unused]] const CdlStatus status, [[maybe_unused]] const uint8_t pResult[8]) noexcept {
+    // TODO: remove/replace this
+    a0 = 0xF0000003;
+    a1 = 0x20;
     LIBAPI_DeliverEvent();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
-void LIBCD_EVENT_def_cbready() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a0 = 0xF0000000;                                    // Result = F0000000
-    a0 |= 3;                                            // Result = F0000003
-    a1 = 0x40;                                          // Result = 00000040
+void LIBCD_EVENT_def_cbready([[maybe_unused]] const CdlStatus status, [[maybe_unused]] const uint8_t pResult[8]) noexcept {
+    // TODO: remove/replace this
+    a0 = 0xF0000003;
+    a1 = 0x40;
     LIBAPI_DeliverEvent();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void LIBCD_CdReset() noexcept {
@@ -109,7 +290,15 @@ loc_80054C64:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Cancel the current cd command which is in-flight
+//------------------------------------------------------------------------------------------------------------------------------------------
 void LIBCD_CdFlush() noexcept {
+    // This doesn't need to do anything for this LIBCD reimplementation.
+    // All commands are executed synchronously!
+    
+    // TODO: REMOVE
+    #if 0
 loc_80054C78:
     sp -= 0x18;
     sw(ra, sp + 0x10);
@@ -117,46 +306,102 @@ loc_80054C78:
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
+    #endif
 }
 
-void LIBCD_CdSync() noexcept {
-loc_80054D20:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    LIBCD_CD_sync();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Check for a cd command's completion or wait for it to complete.
+// If 'mode' is '0' then that indicates 'wait for completion'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+CdlStatus LIBCD_CdSync([[maybe_unused]] const int32_t mode, uint8_t pResult[8]) noexcept {
+    // Just step the CDROM a little in case this is being polled
+    stepCdromWithCallbacks();
+
+    // Give the caller the result of the last cd operation if required
+    if (pResult) {
+        std::memcpy(pResult, gLastCdCmdResult, sizeof(gLastCdCmdResult));
+    }
+
+    return CdlComplete;
 }
 
-void LIBCD_CdReady() noexcept {
+void _thunk_LIBCD_CdSync() noexcept {
+    v0 = LIBCD_CdSync(a0, vmAddrToPtr<uint8_t>(a1));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Wait for cdrom data to be ready or check if it is ready.
+// Mode '0' means block until data is ready, otherwise we simply return the current status.
+//------------------------------------------------------------------------------------------------------------------------------------------
+CdlStatus LIBCD_CdReady(const int32_t mode, uint8_t pResult[8]) noexcept {
+    device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
+
+    const auto exitActions = finally([&](){
+        // Copy the last command result on exit if the caller wants it
+        if (pResult) {
+            std::memcpy(pResult, gLastCdCmdResult, sizeof(gLastCdCmdResult));
+        }
+    });
+
+    if (mode == 0) {
+        // Block until there is data: see if there is some
+        if (!cdrom.isBufferEmpty()) {
+            return CdlDataReady;
+        } else {
+            // No data: issue a command to read some
+            ASSERT_FAIL("TODO");
+            return CdlDataReady;
+        }
+    }
+    else {
+        // Just querying whether there is data or not.
+        // Emulate the CD a little in case this is being polled in a loop and return the status.
+        stepCdromWithCallbacks();
+        return (!cdrom.isBufferEmpty()) ? CdlDataReady : CdlNoIntr;
+    }
+
+    // TODO: REMOVE THIS
+    #if 0
     // Speed up the emulation of the CD
     #if PC_PSX_DOOM_MODS
         emulate_cdrom();
     #endif
 
     LIBCD_CD_ready();
+    #endif
 }
 
-void LIBCD_CdSyncCallback() noexcept {
-loc_80054D60:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x71F4);                               // Load from: gpLIBCD_CD_cbsync (800771F4)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x71F4);                                // Store to: gpLIBCD_CD_cbsync (800771F4)
-    return;
+void _thunk_LIBCD_CdReady() noexcept {
+    v0 = LIBCD_CdReady(a0, vmAddrToPtr<uint8_t>(a1));
 }
 
-void LIBCD_CdReadyCallback() noexcept {
-loc_80054D78:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x71F8);                               // Load from: gpLIBCD_CD_cbready (800771F8)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x71F8);                                // Store to: gpLIBCD_CD_cbready (800771F8)
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the callback for when a cd command completes and return the previous one
+//------------------------------------------------------------------------------------------------------------------------------------------
+CdlCB LIBCD_CdSyncCallback(const CdlCB syncCallback) noexcept {
+    const CdlCB oldCallback = gpLIBCD_CD_cbsync;
+    gpLIBCD_CD_cbsync = syncCallback;
+    return oldCallback;
 }
 
-void LIBCD_CdControl() noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the callback for when a cd data sector is ready and return the previous one
+//------------------------------------------------------------------------------------------------------------------------------------------
+CdlCB LIBCD_CdReadyCallback(const CdlCB readyCallback) noexcept {
+    const CdlCB oldCallback = gpLIBCD_CD_cbready;
+    gpLIBCD_CD_cbready = readyCallback;
+    return oldCallback;
+}
+
+bool LIBCD_CdControl(const CdlCmd cmd, const uint8_t* const pArgs, uint8_t pResult[8]) noexcept {
+    return handleCdCmd(cmd, pArgs, pResult);
+
+    // TODO : REMOVE
+    #if 0
+    a0 = cmd;
+    a1 = ptrToVmAddr(pArgs);
+    a2 = ptrToVmAddr(pResult);
+
 loc_80054DA8:
     sp -= 0x38;
     sw(s1, sp + 0x14);
@@ -171,9 +416,9 @@ loc_80054DA8:
     s3 = s4 & 0xFF;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 += 0x7174;                                       // Result = 80077174
-    sw(s5, sp + 0x24);
-    s5 = 0x80070000;                                    // Result = 80070000
-    s5 = lw(s5 + 0x71F4);                               // Load from: gpLIBCD_CD_cbsync (800771F4)
+    
+    const CdlCB oldCbSync = gpLIBCD_CD_cbsync;
+
     v0 = s3 << 2;
     sw(s6, sp + 0x28);
     s6 = v0 + v1;
@@ -184,8 +429,7 @@ loc_80054DA8:
 loc_80054E04:
     a0 = s4 & 0xFF;
     if (s3 == v0) goto loc_80054E58;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x71F4);                                 // Store to: gpLIBCD_CD_cbsync (800771F4)
+    gpLIBCD_CD_cbsync = nullptr;
     LIBCD_CD_shell();
     if (s1 == 0) goto loc_80054E4C;
     v0 = lw(s6);
@@ -197,8 +441,7 @@ loc_80054E04:
     LIBCD_CD_cw();
     if (v0 != 0) goto loc_80054E70;
 loc_80054E4C:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s5, at + 0x71F4);                                // Store to: gpLIBCD_CD_cbsync (800771F4)
+    gpLIBCD_CD_cbsync = oldCbSync;
     a0 = s4 & 0xFF;
 loc_80054E58:
     a1 = s1;
@@ -218,25 +461,35 @@ loc_80054E70:
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80054E04;
     }
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s5, at + 0x71F4);                                // Store to: gpLIBCD_CD_cbsync (800771F4)
+    gpLIBCD_CD_cbsync = oldCbSync;
     s7 = -1;                                            // Result = FFFFFFFF
     v0 = s7 + 1;                                        // Result = 00000000
 loc_80054E90:
     ra = lw(sp + 0x30);
     s7 = lw(sp + 0x2C);
     s6 = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
     s4 = lw(sp + 0x20);
     s3 = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x38;
-    return;
+    return (v0 != 0);
+    #endif
 }
 
-void LIBCD_CdControlF() noexcept {
+void _thunk_LIBCD_CdControl() noexcept {
+    v0 = LIBCD_CdControl((CdlCmd) a0, vmAddrToPtr<const uint8_t>(a1), vmAddrToPtr<uint8_t>(a2));
+}
+
+bool LIBCD_CdControlF(const CdlCmd cmd, const uint8_t* const pArgs) noexcept {
+    return handleCdCmd(cmd, pArgs, nullptr);
+
+    // TODO : REMOVE
+    #if 0
+    a0 = cmd;
+    a1 = ptrToVmAddr(pArgs);
+
 loc_80054EC0:
     sp -= 0x30;
     sw(s1, sp + 0x14);
@@ -249,9 +502,9 @@ loc_80054EC0:
     s2 = s3 & 0xFF;
     v1 = 0x80070000;                                    // Result = 80070000
     v1 += 0x7174;                                       // Result = 80077174
-    sw(s4, sp + 0x20);
-    s4 = 0x80070000;                                    // Result = 80070000
-    s4 = lw(s4 + 0x71F4);                               // Load from: gpLIBCD_CD_cbsync (800771F4)
+
+    const CdlCB oldCbSync = gpLIBCD_CD_cbsync;
+
     v0 = s2 << 2;
     sw(s5, sp + 0x24);
     s5 = v0 + v1;
@@ -262,8 +515,7 @@ loc_80054EC0:
 loc_80054F14:
     a0 = s3 & 0xFF;
     if (s2 == v0) goto loc_80054F68;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x71F4);                                 // Store to: gpLIBCD_CD_cbsync (800771F4)
+    gpLIBCD_CD_cbsync = nullptr;
     LIBCD_CD_shell();
     if (s1 == 0) goto loc_80054F5C;
     v0 = lw(s5);
@@ -275,8 +527,7 @@ loc_80054F14:
     LIBCD_CD_cw();
     if (v0 != 0) goto loc_80054F80;
 loc_80054F5C:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s4, at + 0x71F4);                                // Store to: gpLIBCD_CD_cbsync (800771F4)
+    gpLIBCD_CD_cbsync = oldCbSync;
     a0 = s3 & 0xFF;
 loc_80054F68:
     a1 = s1;
@@ -296,20 +547,24 @@ loc_80054F80:
         v0 = 1;                                         // Result = 00000001
         if (bJump) goto loc_80054F14;
     }
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s4, at + 0x71F4);                                // Store to: gpLIBCD_CD_cbsync (800771F4)
+    gpLIBCD_CD_cbsync = oldCbSync;
     s6 = -1;                                            // Result = FFFFFFFF
     v0 = s6 + 1;                                        // Result = 00000000
 loc_80054FA0:
     ra = lw(sp + 0x2C);
     s6 = lw(sp + 0x28);
     s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
     s3 = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x30;
+    return (v0 != 0);
+    #endif
+}
+
+void _thunk_LIBCD_CdControlF() noexcept {
+    v0 = LIBCD_CdControlF((CdlCmd) a0, vmAddrToPtr<const uint8_t>(a1));
 }
 
 void LIBCD_CdMix() noexcept {
@@ -325,9 +580,9 @@ loc_800550F0:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads the requested number of 32-bit words from the CDROM's sector data buffer.
-// Returns '1' if successful, which will be always.
+// Returns 'true' if successful, which will be always.
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t LIBCD_CdGetSector(void* const pDst, const int32_t readSizeInWords) noexcept {
+bool LIBCD_CdGetSector(void* const pDst, const int32_t readSizeInWords) noexcept {
     device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
     
     // Figure out the size in bytes we want (request is for words)
@@ -385,8 +640,7 @@ int32_t LIBCD_CdGetSector(void* const pDst, const int32_t readSizeInWords) noexc
     cdrom.CDROM_params.clear();
     cdrom.CDROM_response.clear();
 
-    // According to the PsyQ docs this always returns 1 for success (never fails)
-    return 1;
+    return true;    // According to the PsyQ docs this always returns '1' or 'true' for success (never fails)
 }
 
 void _thunk_LIBCD_CdGetSector() noexcept {
@@ -893,24 +1147,20 @@ loc_80055A2C:
         v0 = s0 & 2;
         if (bJump) goto loc_80055A74;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x71F8);                               // Load from: gpLIBCD_CD_cbready (800771F8)
-    if (v0 == 0) goto loc_80055A70;
+    if (gpLIBCD_CD_cbready == nullptr) goto loc_80055A70;
     a0 = lbu(s4);                                       // Load from: 800774CE
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6110;                                       // Result = LIBCD_BIOS_result[2] (80086110)
-    ptr_call(v0);
+    gpLIBCD_CD_cbready((CdlStatus) a0, vmAddrToPtr<const uint8_t>(a1));
 loc_80055A70:
     v0 = s0 & 2;
 loc_80055A74:
     if (v0 == 0) goto loc_80055A2C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x71F4);                               // Load from: gpLIBCD_CD_cbsync (800771F4)
-    if (v0 == 0) goto loc_80055A2C;
+    if (gpLIBCD_CD_cbsync == nullptr) goto loc_80055A2C;
     a0 = lbu(s2);                                       // Load from: 800774CD
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6108;                                       // Result = LIBCD_BIOS_result[0] (80086108)
-    ptr_call(v0);
+    gpLIBCD_CD_cbsync((CdlStatus) a0, vmAddrToPtr<const uint8_t>(a1));
     goto loc_80055A2C;
 loc_80055AAC:
     v0 = 0x80070000;                                    // Result = 80070000
@@ -1055,24 +1305,20 @@ loc_80055CA8:
         v0 = s0 & 2;
         if (bJump) goto loc_80055CF0;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x71F8);                               // Load from: gpLIBCD_CD_cbready (800771F8)
-    if (v0 == 0) goto loc_80055CEC;
+    if (gpLIBCD_CD_cbready == nullptr) goto loc_80055CEC;
     a0 = lbu(s6);                                       // Load from: 800774CE
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6110;                                       // Result = LIBCD_BIOS_result[2] (80086110)
-    ptr_call(v0);
+    gpLIBCD_CD_cbready((CdlStatus) a0, vmAddrToPtr<const uint8_t>(a1));
 loc_80055CEC:
     v0 = s0 & 2;
 loc_80055CF0:
     if (v0 == 0) goto loc_80055CA8;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x71F4);                               // Load from: gpLIBCD_CD_cbsync (800771F4)
-    if (v0 == 0) goto loc_80055CA8;
+    if (gpLIBCD_CD_cbsync == nullptr) goto loc_80055CA8;
     a0 = lbu(s2);                                       // Load from: 800774CD
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6108;                                       // Result = LIBCD_BIOS_result[0] (80086108)
-    ptr_call(v0);
+    gpLIBCD_CD_cbsync((CdlStatus) a0, vmAddrToPtr<const uint8_t>(a1));
     goto loc_80055CA8;
 loc_80055D28:
     v0 = 0x80070000;                                    // Result = 80070000
@@ -1320,12 +1566,10 @@ void LIBCD_CD_cw() noexcept {
                             break;
 
                         if (v0 != 0) {
-                            v0 = lw(0x800771F8);            // Load from: gpLIBCD_CD_cbready (800771F8)
-
-                            if (v0 != 0) {
+                            if (gpLIBCD_CD_cbready) {
                                 a0 = lbu(s4);               // Load from: 800774CE
                                 a1 = 0x80086110;            // Result = LIBCD_BIOS_result[2] (80086110)
-                                ptr_call(v0);
+                                gpLIBCD_CD_cbready((CdlStatus) a0, vmAddrToPtr<const uint8_t>(a1));
                             }
                         }
 
@@ -1333,15 +1577,13 @@ void LIBCD_CD_cw() noexcept {
 
                         if (v0 == 0)
                             continue;
-                    
-                        v0 = lw(0x800771F4);        // Load from: gpLIBCD_CD_cbsync (800771F4)
-
-                        if (v0 == 0)
+                        
+                        if (gpLIBCD_CD_cbsync == nullptr)
                             continue;
 
                         a0 = lbu(s2);               // Load from: 800774CD
                         a1 = 0x80086108;            // Result = LIBCD_BIOS_result[0] (80086108)
-                        ptr_call(v0);
+                        gpLIBCD_CD_cbsync((CdlStatus) a0, vmAddrToPtr<const uint8_t>(a1));
                     }
 
                     v0 = lw(0x800774B4);            // Load from: 800774B4
@@ -1424,17 +1666,13 @@ loc_800562A4:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lw(a1 + 0x7204);                               // Load from: gLIBCD_CD_status (80077204)
     sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 = lw(s0 + 0x71F4);                               // Load from: gpLIBCD_CD_cbsync (800771F4)
+    const CdlCB oldCbSync = gpLIBCD_CD_cbsync;
     v0 = a1 & 0x10;
-    sw(ra, sp + 0x14);
     if (v0 == 0) goto loc_80056318;
 loc_800562C8:
     a0 = 0x80010000;                                    // Result = 80010000
     a0 += 0x2154;                                       // Result = STR_Sys_CD_open_Msg[0] (80012154)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x71F4);                                 // Store to: gpLIBCD_CD_cbsync (800771F4)
+    gpLIBCD_CD_cbsync = nullptr;
     LIBC2_printf();
     a0 = 1;                                             // Result = 00000001
     a1 = 0;                                             // Result = 00000000
@@ -1445,14 +1683,11 @@ loc_800562C8:
     _thunk_LIBETC_VSync();
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lw(a1 + 0x7204);                               // Load from: gLIBCD_CD_status (80077204)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x71F4);                                // Store to: gpLIBCD_CD_cbsync (800771F4)
+    gpLIBCD_CD_cbsync = oldCbSync;
     v0 = a1 & 0x10;
     if (v0 != 0) goto loc_800562C8;
 loc_80056318:
     v0 = 0;                                             // Result = 00000000
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
     sp += 0x18;
 }
 
@@ -1510,7 +1745,6 @@ loc_800563B4:
 
 void LIBCD_CD_init() noexcept {
     sp -= 0x18;
-    sw(s0, sp + 0x10);
 
     a0 = 0x80012168;            // Result = STR_Sys_CD_init_Msg[0] (80012168)
     a1 = 0x800774F8;            // Result = 800774F8
@@ -1519,8 +1753,10 @@ void LIBCD_CD_init() noexcept {
     v1 = 0x800774D0;            // Result = 800774D0
     v0 = 9;
     a0 = -1;
-    sw(0, 0x800771F8);          // Store to: gpLIBCD_CD_cbready (800771F8)
-    sw(0, 0x800771F4);          // Store to: gpLIBCD_CD_cbsync (800771F4)
+
+    gpLIBCD_CD_cbready = nullptr;
+    gpLIBCD_CD_cbsync = nullptr;
+
     sw(0, 0x80077204);          // Store to: gLIBCD_CD_status (80077204)
 
     do {
@@ -1529,11 +1765,16 @@ void LIBCD_CD_init() noexcept {
         v1 += 4;
     } while (v0 != a0);
 
+    // TODO: REMOVE THIS
+    v0 = 0;
+
+    #if 0
     LIBETC_ResetCallback();
 
     a0 = 2;
     a1 = 0x8005701C;                    // Result = LIBCD_BIOS_callback (8005701C)    
     LIBETC_InterruptCallback();
+    
 
     v1 = lw(0x800774B4);                // Load from: 800774B4
     v0 = 1;
@@ -1588,12 +1829,12 @@ void LIBCD_CD_init() noexcept {
     }
 
     a1 = lw(0x80077204);            // Load from: gLIBCD_CD_status (80077204)
-    s0 = lw(0x800771F4);            // Load from: gpLIBCD_CD_cbsync (800771F4)
+    const CdlCB oldCbSync = gpLIBCD_CD_cbsync;
     v0 = a1 & 0x10;
 
     while (v0 != 0) {
         a0 = 0x80012154;                // Result = STR_Sys_CD_open_Msg[0] (80012154)
-        sw(0, 0x800771F4);              // Store to: gpLIBCD_CD_cbsync (800771F4)
+        gpLIBCD_CD_cbsync = nullptr;
         LIBC2_printf();
 
         a0 = 1;
@@ -1606,7 +1847,7 @@ void LIBCD_CD_init() noexcept {
         _thunk_LIBETC_VSync();
 
         a1 = lw(0x80077204);            // Load from: gLIBCD_CD_status (80077204)
-        sw(s0, 0x800771F4);             // Store to: gpLIBCD_CD_cbsync (800771F4)
+        gpLIBCD_CD_cbsync = oldCbSync;
         v0 = a1 & 0x10;
     }
 
@@ -1637,7 +1878,8 @@ void LIBCD_CD_init() noexcept {
         v0 = -1;
     }
 
-    s0 = lw(sp + 0x10);
+    #endif
+
     sp += 0x18;
 }
 
@@ -1725,26 +1967,22 @@ loc_80057048:
         v0 = s0 & 2;
         if (bJump) goto loc_80057090;
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x71F8);                               // Load from: gpLIBCD_CD_cbready (800771F8)
-    if (v0 == 0) goto loc_8005708C;
+    if (gpLIBCD_CD_cbready == nullptr) goto loc_8005708C;
     a0 = lbu(s2);                                       // Load from: 800774CE
     a1 = 0x80080000;                                    // Result = 80080000
     a1 += 0x6110;                                       // Result = LIBCD_BIOS_result[2] (80086110)
-    ptr_call(v0);
+    gpLIBCD_CD_cbready((CdlStatus) a0, vmAddrToPtr<const uint8_t>(a1));
 loc_8005708C:
     v0 = s0 & 2;
 loc_80057090:
     if (v0 == 0) goto loc_80057048;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x71F4);                               // Load from: gpLIBCD_CD_cbsync (800771F4)
-    if (v1 == 0) goto loc_80057048;
+    if (gpLIBCD_CD_cbsync == nullptr) goto loc_80057048;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x74CD;                                       // Result = 800774CD
     a0 = lbu(v0);                                       // Load from: 800774CD
     a1 = 0x80080000;                                    // Result = 80080000
-    a1 += 0x6108;                                       // Result = LIBCD_BIOS_result[0] (80086108)
-    ptr_call(v1);
+    a1 += 0x6108;                                       // Result = LIBCD_BIOS_result[0] (80086108)    
+    gpLIBCD_CD_cbsync((CdlStatus) a0, vmAddrToPtr<const uint8_t>(a1));
     goto loc_80057048;
 loc_800570D0:
     v0 = 0x80070000;                                    // Result = 80070000

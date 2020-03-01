@@ -477,6 +477,13 @@ void emulate_sound_if_required() noexcept {
         device::cdrom::CDROM& cdrom = *gpCdrom;
 
         while (!spu.bufferReady) {
+            // Read more CD data if we are playing music
+            if (cdrom.stat.play && cdrom.audio.empty()) {
+                cdrom.readcnt = 1150;   // This forces an immediate read
+                cdrom.step();
+            }
+
+            // Step the spu and interrupts
             spu.step(&cdrom);
             gpSystem->interrupt->step();
 
@@ -494,26 +501,6 @@ void emulate_sound_if_required() noexcept {
 
         restoreMipsRegisters();
     }
-}
-
-void emulate_cdrom() noexcept {
-    saveMipsRegisters();
-    System& system = *gpSystem;
-
-    // This speeds up things a bit
-    for (uint32_t i = 0; i < 16; ++i) {
-        system.cdrom->step();
-    }
-
-    // If interrupts were generated, handle them.
-    // Expect there to be no interrupts always upon entering the emulator:
-    system.interrupt->step();
-
-    while (!canExitEmulator()) {
-        gpSystem->emulateFrame();
-    }
-
-    restoreMipsRegisters();
 }
 
 uint32_t ptrToVmAddr(const void* const ptr) noexcept {

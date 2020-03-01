@@ -283,8 +283,6 @@ extern void _thunk_FixedDiv() noexcept;
 extern void PSXCD_psxcd_memcpy() noexcept;
 extern void psxcd_sync() noexcept;
 extern void psxcd_critical_sync() noexcept;
-extern void PSXCD_cbcomplete() noexcept;
-extern void PSXCD_cbready() noexcept;
 extern void psxcd_init() noexcept;
 extern void psxcd_exit() noexcept;
 extern void psxcd_set_data_mode() noexcept;
@@ -601,16 +599,12 @@ extern void LIBSPU_SpuSetKey() noexcept;
 extern void LIBSPU_SpuRGetAllKeysStatus() noexcept;
 extern void LIBSPU_SpuGetAllKeysStatus() noexcept;
 extern void LIBCD_CdInit() noexcept;
-extern void LIBCD_EVENT_def_cbsync() noexcept;
-extern void LIBCD_EVENT_def_cbready() noexcept;
 extern void LIBCD_CdReset() noexcept;
 extern void LIBCD_CdFlush() noexcept;
-extern void LIBCD_CdSync() noexcept;
-extern void LIBCD_CdReady() noexcept;
-extern void LIBCD_CdSyncCallback() noexcept;
-extern void LIBCD_CdReadyCallback() noexcept;
-extern void LIBCD_CdControl() noexcept;
-extern void LIBCD_CdControlF() noexcept;
+extern void _thunk_LIBCD_CdSync() noexcept;
+extern void _thunk_LIBCD_CdReady() noexcept;
+extern void _thunk_LIBCD_CdControl() noexcept;
+extern void _thunk_LIBCD_CdControlF() noexcept;
 extern void LIBCD_CdMix() noexcept;
 extern void _thunk_LIBCD_CdGetSector() noexcept;
 extern void _thunk_LIBCD_CdIntToPos() noexcept;
@@ -925,8 +919,6 @@ namespace PsxVm {
         { 0x8003F200, &PSXCD_psxcd_memcpy },
         { 0x8003F234, &psxcd_sync },
         { 0x8003F2F0, &psxcd_critical_sync },
-        { 0x8003F3AC, &PSXCD_cbcomplete },
-        { 0x8003F490, &PSXCD_cbready },
         { 0x8003F8B0, &psxcd_init },
         { 0x8003F98C, &psxcd_exit },
         { 0x8003F9BC, &psxcd_set_data_mode },
@@ -1242,16 +1234,12 @@ namespace PsxVm {
         { 0x800549A8, &LIBSPU_SpuRGetAllKeysStatus },
         { 0x80054A78, &LIBSPU_SpuGetAllKeysStatus },
         { 0x80054B00, &LIBCD_CdInit },
-        { 0x80054B90, &LIBCD_EVENT_def_cbsync },
-        { 0x80054BB8, &LIBCD_EVENT_def_cbready },
         { 0x80054C28, &LIBCD_CdReset },
         { 0x80054C78, &LIBCD_CdFlush },
-        { 0x80054D20, &LIBCD_CdSync },
-        { 0x80054D40, &LIBCD_CdReady },
-        { 0x80054D60, &LIBCD_CdSyncCallback },
-        { 0x80054D78, &LIBCD_CdReadyCallback },
-        { 0x80054DA8, &LIBCD_CdControl },
-        { 0x80054EC0, &LIBCD_CdControlF },
+        { 0x80054D20, &_thunk_LIBCD_CdSync },
+        { 0x80054D40, &_thunk_LIBCD_CdReady },
+        { 0x80054DA8, &_thunk_LIBCD_CdControl },
+        { 0x80054EC0, &_thunk_LIBCD_CdControlF },
         { 0x800550F0, &LIBCD_CdMix },
         { 0x80055114, &_thunk_LIBCD_CdGetSector },
         { 0x8005521C, &_thunk_LIBCD_CdIntToPos },

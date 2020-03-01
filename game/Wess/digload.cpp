@@ -347,7 +347,7 @@ loc_800493E4:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x5AF8;                                       // Result = 80075AF8
     a0 = 1;                                             // Result = 00000001
-    LIBCD_CdSync();
+    _thunk_LIBCD_CdSync();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5AF4);                                // Store to: 80075AF4
     if (v0 != s2) goto loc_80049414;
@@ -424,15 +424,15 @@ loc_8004949C:
     a0 = 2;                                             // Result = 00000002
     a1 = s0;
     a2 = 0;                                             // Result = 00000000
-    LIBCD_CdControl();
+    _thunk_LIBCD_CdControl();
     a0 = 6;                                             // Result = 00000006
     a1 = s0;
     a2 = 0;                                             // Result = 00000000
-    LIBCD_CdControl();
+    _thunk_LIBCD_CdControl();
     a0 = 1;                                             // Result = 00000001
 loc_80049518:
     a1 = 0;                                             // Result = 00000000
-    LIBCD_CdReady();
+    _thunk_LIBCD_CdReady();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5AF0);                                // Store to: 80075AF0
     if (v0 == s5) goto loc_80049540;
@@ -473,7 +473,7 @@ loc_800495AC:
     if (s0 == 0) goto loc_8004963C;
 loc_800495B4:
     a1 = 0;                                             // Result = 00000000
-    LIBCD_CdReady();
+    _thunk_LIBCD_CdReady();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5AF0);                                // Store to: 80075AF0
     if (v0 == s5) goto loc_800495DC;
@@ -508,7 +508,7 @@ loc_8004963C:
     if (v0 == 0) goto loc_800496D0;
 loc_80049644:
     a1 = 0;                                             // Result = 00000000
-    LIBCD_CdReady();
+    _thunk_LIBCD_CdReady();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5AF0);                                // Store to: 80075AF0
     if (v0 == s5) goto loc_8004966C;
@@ -542,7 +542,7 @@ loc_800496A0:
     goto loc_80049758;
 loc_800496D0:
     a1 = 0;                                             // Result = 00000000
-    LIBCD_CdReady();
+    _thunk_LIBCD_CdReady();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5AF0);                                // Store to: 80075AF0
     if (v0 == s5) goto loc_800496F8;
@@ -582,7 +582,7 @@ loc_80049760:
     if (v0 == s4) goto loc_8004949C;
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
-    LIBCD_CdControl();
+    _thunk_LIBCD_CdControl();
     lcd_close();
     if (v0 != 0) goto loc_8004949C;
     a0 = 1;                                             // Result = 00000001
