@@ -1388,35 +1388,6 @@ loc_80051DF4:
     return;
 }
 
-void LIBSPU__spu_close() noexcept {
-loc_80051E38:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    at = 0x80090000;                                    // Result = 80090000
-    sw(0, at + 0x7C20);                                 // Store to: gLIBSPU__spu_transferCallback (80097C20)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at + 0x652C);                                 // Store to: 8008652C
-    a0 = 0;                                             // Result = 00000000
-    LIBSPU__SpuDataCallback();
-    v0 = 1;                                             // Result = 00000001
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-}
-
-void LIBSPU__spu_open() noexcept {
-loc_80051E6C:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a0 = 0x80050000;                                    // Result = 80050000
-    a0 += 0x21DC;                                       // Result = LIBSPU__spu_FiDMA (800521DC)
-    LIBSPU__SpuDataCallback();
-    v0 = 3;                                             // Result = 00000003
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-}
-
 void LIBSPU__spu_writeByIO() noexcept {
 loc_80051E98:
     v1 = 0x80070000;                                    // Result = 80070000
@@ -1599,73 +1570,6 @@ loc_800521B8:
     s1 = lw(sp + 0x24);
     s0 = lw(sp + 0x20);
     sp += 0x38;
-    return;
-}
-
-void LIBSPU__spu_FiDMA() noexcept {
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 + 0x60F4);                               // Load from: 800860F4
-    sp -= 0x20;
-    sw(ra, sp + 0x18);
-    if (v0 != 0) goto loc_80052294;
-    v0 = 0xD;                                           // Result = 0000000D
-    sw(v0, sp + 0x14);
-    sw(0, sp + 0x10);
-    goto loc_8005222C;
-loc_80052204:
-    v1 = lw(sp + 0x14);
-    v0 = v1 << 1;
-    v0 += v1;
-    sw(v0, sp + 0x14);
-    v0 = lw(sp + 0x10);
-    v0++;
-    sw(v0, sp + 0x10);
-    v0 = lw(sp + 0x10);
-loc_8005222C:
-    v0 = lw(sp + 0x10);
-    v0 = (i32(v0) < 0xF0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0xD;                                       // Result = 0000000D
-        if (bJump) goto loc_80052204;
-    }
-    sw(v0, sp + 0x14);
-    sw(0, sp + 0x10);
-    goto loc_8005227C;
-loc_80052254:
-    v1 = lw(sp + 0x14);
-    v0 = v1 << 1;
-    v0 += v1;
-    sw(v0, sp + 0x14);
-    v0 = lw(sp + 0x10);
-    v0++;
-    sw(v0, sp + 0x10);
-    v0 = lw(sp + 0x10);
-loc_8005227C:
-    v0 = lw(sp + 0x10);
-    v0 = (i32(v0) < 0xF0);
-    if (v0 != 0) goto loc_80052254;
-loc_80052294:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A08);                               // Load from: gLIBSPU__spu_RXX (80076A08)
-    v1 = lhu(v0 + 0x1AA);
-    v1 &= 0xFFCF;
-    sh(v1, v0 + 0x1AA);
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7C20);                               // Load from: gLIBSPU__spu_transferCallback (80097C20)
-    a0 = 0xF0000000;                                    // Result = F0000000
-    if (v0 == 0) goto loc_800522E0;
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7C20);                               // Load from: gLIBSPU__spu_transferCallback (80097C20)
-    ptr_call(v0);
-    goto loc_800522EC;
-loc_800522E0:
-    a0 |= 9;                                            // Result = F0000009
-    a1 = 0x20;                                          // Result = 00000020
-    LIBAPI_DeliverEvent();
-loc_800522EC:
-    ra = lw(sp + 0x18);
-    sp += 0x20;
     return;
 }
 
@@ -3234,18 +3138,6 @@ loc_80053BD4:
     return;
 }
 
-void LIBSPU__SpuDataCallback() noexcept {
-loc_80053D58:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a1 = a0;
-    a0 = 4;                                             // Result = 00000004
-    LIBETC_DMACallback();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-}
-
 void LIBSPU__SpuCallback() noexcept {
 loc_80053D7C:
     sp -= 0x18;
@@ -3621,37 +3513,12 @@ loc_80054334:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Begin SPU processing. Note: this is called automatically by 'LIBSPU_SpuInit'.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void LIBSPU_SpuStart() noexcept {
-loc_80054418:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6E6C);                               // Load from: gbLIBSPU__spu_isCalled (80076E6C)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 != 0) goto loc_80054488;
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x6E6C);                                // Store to: gbLIBSPU__spu_isCalled (80076E6C)
-    LIBAPI_EnterCriticalSection();
-    a0 = 0;                                             // Result = 00000000
-    a1 = 3;                                             // Result = 00000003
-    LIBSPU__spu_open();
-    a0 = 0xF0000000;                                    // Result = F0000000
-    a0 |= 9;                                            // Result = F0000009
-    a1 = 0x20;                                          // Result = 00000020
-    a2 = 0x2000;                                        // Result = 00002000
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x6A44);                                // Store to: gLIBSPU__spu_fd (80076A44)
-    a3 = 0;                                             // Result = 00000000
-    LIBAPI_OpenEvent();
-    a0 = v0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x6A5C);                                // Store to: gLIBSPU__spu_EVdma (80076A5C)
-    LIBAPI_EnableEvent();
-    LIBAPI_ExitCriticalSection();
-loc_80054488:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    // Doesn't need to do anything in this LIBSPU reimplementation.
+    // This previously setup DMA related events, but now since we have no more DMA there is nothing do be done...
 }
 
 void LIBSPU_SpuSetReverbDepth() noexcept {
@@ -3783,31 +3650,12 @@ loc_80054654:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Terminate SPU processing and release any resources used
+//------------------------------------------------------------------------------------------------------------------------------------------
 void LIBSPU_SpuQuit() noexcept {
-loc_80054670:
-    sp -= 0x18;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6E6C);                               // Load from: gbLIBSPU__spu_isCalled (80076E6C)
-    v0 = 1;                                             // Result = 00000001
-    sw(ra, sp + 0x10);
-    if (v1 != v0) goto loc_800546D0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x6E6C);                                 // Store to: gbLIBSPU__spu_isCalled (80076E6C)
-    LIBAPI_EnterCriticalSection();
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    LIBSPU__spu_close();
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A5C);                               // Load from: gLIBSPU__spu_EVdma (80076A5C)
-    LIBAPI_CloseEvent();
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A5C);                               // Load from: gLIBSPU__spu_EVdma (80076A5C)
-    LIBAPI_DisableEvent();
-    LIBAPI_ExitCriticalSection();
-loc_800546D0:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    // Doesn't need to do anything in this LIBSPU reimplementation.
+    // This previously cleaned up DMA related events, but now since we have no more DMA there is nothing do be done...
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

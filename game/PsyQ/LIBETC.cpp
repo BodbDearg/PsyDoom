@@ -35,13 +35,6 @@ loc_8004A7DC:
     return;
 }
 
-void LIBETC_DMACallback() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5B90);                               // Load from: gpLIBETC_INTR_interruptsListPtr (80075B90)
-    v0 = lw(v0 + 0x4);
-    ptr_call(v0);
-}
-
 void LIBETC_SetIntrMask() noexcept {
 loc_8004A8C8:
     v1 = 0x80070000;                                    // Result = 80070000
