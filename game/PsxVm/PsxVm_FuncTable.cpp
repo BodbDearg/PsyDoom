@@ -545,7 +545,6 @@ extern void LIBSPU__spu_writeByIO() noexcept;
 extern void LIBSPU__spu_FiDMA() noexcept;
 extern void LIBSPU__spu_r() noexcept;
 extern void LIBSPU__spu_t() noexcept;
-extern void LIBSPU__spu_write() noexcept;
 extern void LIBSPU__spu_ioctl() noexcept;
 extern void LIBSPU__spu_setVoiceAttr() noexcept;
 extern void LIBSPU__spu_setReverbAttr() noexcept;
@@ -565,11 +564,11 @@ extern void LIBSPU_SpuSetReverbVoice() noexcept;
 extern void LIBSPU_SpuInit() noexcept;
 extern void LIBSPU_SpuSetReverb() noexcept;
 extern void LIBSPU_SpuQuit() noexcept;
-extern void LIBSPU_SpuIsTransferCompleted() noexcept;
+extern void _thunk_LIBSPU_SpuIsTransferCompleted() noexcept;
 extern void LIBSPU_SpuInitMalloc() noexcept;
 extern void LIBSPU_SpuSetTransferMode() noexcept;
-extern void LIBSPU_SpuSetTransferStartAddr() noexcept;
-extern void LIBSPU_SpuWrite() noexcept;
+extern void _thunk_LIBSPU_SpuSetTransferStartAddr() noexcept;
+extern void _thunk_LIBSPU_SpuWrite() noexcept;
 extern void LIBSPU_SpuSetKeyOnWithAttr() noexcept;
 extern void LIBSPU_SpuSetKey() noexcept;
 extern void LIBSPU_SpuGetAllKeysStatus() noexcept;
@@ -1142,7 +1141,6 @@ namespace PsxVm {
         { 0x800521DC, &LIBSPU__spu_FiDMA },
         { 0x800522FC, &LIBSPU__spu_r },
         { 0x80052524, &LIBSPU__spu_t },
-        { 0x8005280C, &LIBSPU__spu_write },
         { 0x80052900, &LIBSPU__spu_ioctl },
         { 0x800531EC, &LIBSPU__spu_setVoiceAttr },
         { 0x8005336C, &LIBSPU__spu_setReverbAttr },
@@ -1162,11 +1160,11 @@ namespace PsxVm {
         { 0x80054580, &LIBSPU_SpuInit },
         { 0x800545A0, &LIBSPU_SpuSetReverb },
         { 0x80054670, &LIBSPU_SpuQuit },
-        { 0x800546E0, &LIBSPU_SpuIsTransferCompleted },
+        { 0x800546E0, &_thunk_LIBSPU_SpuIsTransferCompleted },
         { 0x80054788, &LIBSPU_SpuInitMalloc },
         { 0x800547DC, &LIBSPU_SpuSetTransferMode },
-        { 0x80054830, &LIBSPU_SpuSetTransferStartAddr },
-        { 0x80054894, &LIBSPU_SpuWrite },
+        { 0x80054830, &_thunk_LIBSPU_SpuSetTransferStartAddr },
+        { 0x80054894, &_thunk_LIBSPU_SpuWrite },
         { 0x800548F4, &LIBSPU_SpuSetKeyOnWithAttr },
         { 0x80054928, &LIBSPU_SpuSetKey },
         { 0x80054A78, &LIBSPU_SpuGetAllKeysStatus },

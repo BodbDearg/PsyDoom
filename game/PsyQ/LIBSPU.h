@@ -1,5 +1,13 @@
 #pragma once
 
+#include <cstdint>
+
+// Mode of operation for 'LIBSPU_SpuIsTransferCompleted'
+enum SpuTransferQuery : uint32_t {
+    SPU_TRANSFER_PEEK = 0,      // Only check whether the transfer has completed, do not block
+    SPU_TRANSFER_WAIT = 1       // Wait until the transfer completes
+};
+
 void LIBSPU_SpuSetVoiceAttr() noexcept;
 void LIBSPU__SpuSetVoiceAttr() noexcept;
 void LIBSPU__spu_note2pitch() noexcept;
@@ -12,7 +20,6 @@ void LIBSPU__spu_writeByIO() noexcept;
 void LIBSPU__spu_FiDMA() noexcept;
 void LIBSPU__spu_r() noexcept;
 void LIBSPU__spu_t() noexcept;
-void LIBSPU__spu_write() noexcept;
 void LIBSPU__spu_ioctl() noexcept;
 void LIBSPU__spu_setVoiceAttr() noexcept;
 void LIBSPU__spu_setReverbAttr() noexcept;
@@ -30,11 +37,19 @@ void LIBSPU_SpuSetReverbVoice() noexcept;
 void LIBSPU_SpuInit() noexcept;
 void LIBSPU_SpuSetReverb() noexcept;
 void LIBSPU_SpuQuit() noexcept;
-void LIBSPU_SpuIsTransferCompleted() noexcept;
+
+bool LIBSPU_SpuIsTransferCompleted(const SpuTransferQuery mode) noexcept;
+void _thunk_LIBSPU_SpuIsTransferCompleted() noexcept;
+
 void LIBSPU_SpuInitMalloc() noexcept;
 void LIBSPU_SpuSetTransferMode() noexcept;
-void LIBSPU_SpuSetTransferStartAddr() noexcept;
-void LIBSPU_SpuWrite() noexcept;
+
+uint32_t LIBSPU_SpuSetTransferStartAddr(const uint32_t addr) noexcept;
+void _thunk_LIBSPU_SpuSetTransferStartAddr() noexcept;
+
+uint32_t LIBSPU_SpuWrite(const void* const pData, const uint32_t size) noexcept;
+void _thunk_LIBSPU_SpuWrite() noexcept;
+
 void LIBSPU_SpuSetKeyOnWithAttr() noexcept;
 void LIBSPU_SpuSetKey() noexcept;
 void LIBSPU_SpuGetAllKeysStatus() noexcept;

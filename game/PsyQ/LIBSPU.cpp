@@ -1,9 +1,26 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Module containing a partial reimplementation of the PSY-Q 'LIBSPU' library.
+// These functions are not neccesarily faithful to the original code, and are reworked to make the game run in it's new environment.
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 #include "LIBSPU.h"
 
 #include "LIBAPI.h"
 #include "LIBC2.h"
 #include "LIBETC.h"
+#include "PcPsx/Macros.h"
+
+BEGIN_THIRD_PARTY_INCLUDES
+
+#include <device/spu/spu.h>
+
+END_THIRD_PARTY_INCLUDES
+
+// N.B: must be done LAST due to MIPS register macros
 #include "PsxVm/PsxVm.h"
+
+// How big the sound RAM is available to the SPU
+static constexpr uint32_t SPU_RAM_SIZE = 512 * 1024;
 
 void LIBSPU_SpuSetVoiceAttr() noexcept {
 loc_80050894:
@@ -1980,46 +1997,6 @@ loc_800527F0:
     sw(a0, v0);
     v0 = 0;                                             // Result = 00000000
 loc_80052804:
-    return;
-}
-
-void LIBSPU__spu_write() noexcept {
-loc_8005280C:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s0, sp + 0x10);
-    s0 = a1;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 + 0x60EC);                               // Load from: gLIBSPU__spu_transMode (800860EC)
-    v0 = 1;                                             // Result = 00000001
-    sw(ra, sp + 0x18);
-    if (v1 != v0) goto loc_80052870;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lhu(v0 + 0x60E8);                              // Load from: gLIBSPU__spu_tsa[0] (800860E8)
-    a1 = 0x800B0000;                                    // Result = 800B0000
-    a1 = lw(a1 - 0x6E60);                               // Load from: gLIBSPU__spu_mem_mode_plus (800A91A0)
-    a0 = 2;                                             // Result = 00000002
-    a1 = v0 << a1;
-    LIBSPU__spu_t();
-    a0 = 1;                                             // Result = 00000001
-    LIBSPU__spu_t();
-    a0 = 3;                                             // Result = 00000003
-    a1 = s1;
-    a2 = s0;
-    LIBSPU__spu_t();
-    v0 = s0;
-    goto loc_80052880;
-loc_80052870:
-    a0 = s1;
-    a1 = s0;
-    LIBSPU__spu_writeByIO();
-    v0 = s0;
-loc_80052880:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
     return;
 }
 
@@ -4144,53 +4121,17 @@ loc_800546D0:
     return;
 }
 
-void LIBSPU_SpuIsTransferCompleted() noexcept {
-loc_800546E0:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A48);                               // Load from: gLIBSPU__spu_trans_mode (80076A48)
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s0, sp + 0x10);
-    s0 = 1;                                             // Result = 00000001
-    sw(ra, sp + 0x18);
-    if (v0 == s0) goto loc_80054718;
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x655C);                               // Load from: gLIBSPU__spu_inTransfer (8009655C)
-    if (v0 != s0) goto loc_80054720;
-loc_80054718:
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80054770;
-loc_80054720:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A5C);                               // Load from: gLIBSPU__spu_EVdma (80076A5C)
-    LIBAPI_TestEvent();
-    if (s1 != s0) goto loc_80054760;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80054768;
-    }
-loc_80054740:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A5C);                               // Load from: gLIBSPU__spu_EVdma (80076A5C)
-    LIBAPI_TestEvent();
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80054740;
-    }
-    goto loc_80054768;
-loc_80054760:
-    if (v0 != s0) goto loc_80054770;
-loc_80054768:
-    at = 0x80090000;                                    // Result = 80090000
-    sw(v0, at + 0x655C);                                // Store to: gLIBSPU__spu_inTransfer (8009655C)
-loc_80054770:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Query if there is any ongoing transfers to SPU RAM
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool LIBSPU_SpuIsTransferCompleted([[maybe_unused]] const SpuTransferQuery mode) noexcept {
+    // The answer to this question is always 'yes' for this LIBSPU reimplementation.
+    // All transfer operations are now completely synchronous.
+    return true;
+}
+
+void _thunk_LIBSPU_SpuIsTransferCompleted() noexcept {
+    v0 = LIBSPU_SpuIsTransferCompleted((SpuTransferQuery) a0);
 }
 
 void LIBSPU_SpuInitMalloc() noexcept {
@@ -4245,66 +4186,49 @@ loc_80054804:
     return;
 }
 
-void LIBSPU_SpuSetTransferStartAddr() noexcept {
-loc_80054830:
-    sp -= 0x18;
-    v0 = 0x70000;                                       // Result = 00070000
-    v0 |= 0xFFF8;                                       // Result = 0007FFF8
-    v0 = (v0 < a0);
-    sw(ra, sp + 0x10);
-    sw(a0, sp + 0x18);
-    if (v0 == 0) goto loc_80054854;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80054884;
-loc_80054854:
-    v0 = a0 & 7;
-    a1 = 0x2B;                                          // Result = 0000002B
-    if (v0 == 0) goto loc_80054870;
-    v0 = a0 + 8;
-    v1 = -8;                                            // Result = FFFFFFF8
-    v0 &= v1;
-    sw(v0, sp + 0x18);
-loc_80054870:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = sp + 0x18;
-    LIBSPU__spu_ioctl();
-    v0 = lw(sp + 0x18);
-loc_80054884:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set where in SPU RAM the next transfer of data will be to.
+// The given address must be in range and is rounded up to the next 8 byte boundary.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t LIBSPU_SpuSetTransferStartAddr(const uint32_t addr) noexcept {
+    spu::SPU& spu = *PsxVm::gpSpu;
+
+    // Per PsyQ docs the address given is rounded up to the next 8-byte boundary.
+    // It also must be in range or the instruction is ignored and '0' returned.
+    const uint32_t alignedAddr = (addr + 7) & (~7u);
+
+    if (alignedAddr < SPU_RAM_SIZE) {
+        spu.dataAddress._reg = (uint16_t)(alignedAddr / 8);
+        spu.currentDataAddress = alignedAddr;
+        return alignedAddr;
+    } else {
+        return 0;
+    }
 }
 
-void LIBSPU_SpuWrite() noexcept {
-loc_80054894:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a1;
-    v0 = 0x70000;                                       // Result = 00070000
-    v0 |= 0xF000;                                       // Result = 0007F000
-    v0 = (v0 < s0);
-    sw(ra, sp + 0x14);
-    if (v0 == 0) goto loc_800548BC;
-    s0 = 0x70000;                                       // Result = 00070000
-    s0 |= 0xF000;                                       // Result = 0007F000
-loc_800548BC:
-    a1 = s0;
-    LIBSPU__spu_write();
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7C20);                               // Load from: gLIBSPU__spu_transferCallback (80097C20)
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s0;
-        if (bJump) goto loc_800548E0;
-    }
-    at = 0x80090000;                                    // Result = 80090000
-    sw(0, at + 0x655C);                                 // Store to: gLIBSPU__spu_inTransfer (8009655C)
-loc_800548E0:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+void _thunk_LIBSPU_SpuSetTransferStartAddr() noexcept {
+    v0 = LIBSPU_SpuSetTransferStartAddr(a0);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Write the specified number of bytes to SPU RAM at the previously set transfer address.
+// Returns the number of bytes written, which may be less than the request if it is out of bounds.
+//
+// Note: unlike the original PsyQ SDK, the write here happens SYNCHRONOUSLY and immediately.
+// Originally this operation would be done via DMA and would have have taken some time...
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t LIBSPU_SpuWrite(const void* const pData, const uint32_t size) noexcept {
+    // Figure out how much data we can copy to SPU RAM, do the write and then return what we did
+    spu::SPU& spu = *PsxVm::gpSpu;
+    const uint32_t maxWriteSize = (spu.currentDataAddress < SPU_RAM_SIZE) ? SPU_RAM_SIZE - spu.currentDataAddress : 0;
+    const uint32_t thisWriteSize = (size <= maxWriteSize) ? size : maxWriteSize;
+
+    std::memcpy(spu.ram.data() + spu.currentDataAddress, pData, thisWriteSize);
+    return thisWriteSize;
+}
+
+void _thunk_LIBSPU_SpuWrite() noexcept {
+    v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
 }
 
 void LIBSPU_SpuSetKeyOnWithAttr() noexcept {
