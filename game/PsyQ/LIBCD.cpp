@@ -34,9 +34,9 @@ static CdlCB gpLIBCD_CD_cbready;
 // Result bytes for the most recent CD command
 static uint8_t gLastCdCmdResult[8];
 
-// Internal LIBCD function prototypes
-int32_t LIBCD_CD_init() noexcept;
-int32_t LIBCD_CD_initvol() noexcept;
+// Internal LIBCD init function prototypes
+void LIBCD_CD_init() noexcept;
+void LIBCD_CD_initvol() noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Call a libcd callback ('sync' or 'ready' callbacks)
@@ -232,13 +232,10 @@ void LIBCD_CdInit() noexcept {
 // If mode is '1' then CD audio stuff is reset also, otherwise just the CD handling stuff is initialized.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool LIBCD_CdReset(const int32_t mode) noexcept {
-    if (LIBCD_CD_init() != 0)
-        return false;
+    LIBCD_CD_init();
 
     if (mode == 1) {
-        if (LIBCD_CD_initvol() != 0) {
-            return false;
-        }
+        LIBCD_CD_initvol();
     }
 
     return true;
@@ -487,68 +484,23 @@ void _thunk_LIBCD_CdPosToInt() noexcept {
     v0 = LIBCD_CdPosToInt(*vmAddrToPtr<CdlLOC>(a0));
 }
 
-int32_t LIBCD_CD_init() noexcept {
-    sp -= 0x18;
-
-    a0 = 0x80012168;            // Result = STR_Sys_CD_init_Msg[0] (80012168)
-    a1 = 0x800774F8;            // Result = 800774F8
-    LIBC2_printf();
-
-    v1 = 0x800774D0;            // Result = 800774D0
-    v0 = 9;
-    a0 = -1;
-
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Internal initialization function: init the CDROM handling system
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBCD_CD_init() noexcept {
+    // Clear callbacks
     gpLIBCD_CD_cbready = nullptr;
     gpLIBCD_CD_cbsync = nullptr;
 
-    do {
-        sw(0, v1);
-        v0--;
-        v1 += 4;
-    } while (v0 != a0);
+    // Clear the data FIFO
+    device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
 
-    v1 = lw(0x800774B4);                // Load from: PTR_CDROM_REG0_800774b4 (800774B4)
-    v0 = 1;
-    sb(v0, v1);
-    v0 = lw(0x800774C0);                // Load from: PTR_CDROM_REG3_800774c0 (800774C0)
-    v0 = lbu(v0);
-    v0 &= 7;
-    a0 = 1;
-    v1 = 7;
-
-    while (v0 != 0) {
-        v0 = lw(0x800774B4);            // Load from: PTR_CDROM_REG0_800774b4 (800774B4)
-        sb(a0, v0);
-        v0 = lw(0x800774C0);            // Load from: PTR_CDROM_REG3_800774c0 (800774C0)
-        sb(v1, v0);
-        v0 = lw(0x800774BC);            // Load from: PTR_CDROM_REG2_800774bc (800774BC)
-        sb(v1, v0);
-        v0 = lw(0x800774C0);            // Load from: PTR_CDROM_REG3_800774c0 (800774C0)
-        v0 = lbu(v0);
-        v0 &= 7;
-    }
-
-    sb(0, 0x800774CF);              // Store to: 800774CF
-    v1 = lbu(0x800774CF);           // Load from: 800774CF
-    
-    v0 = 0x800774CE;                // Result = 800774CE
-    sb(v1, v0);                     // Store to: 800774CE
-
-    v1 = lw(0x800774B4);            // Load from: PTR_CDROM_REG0_800774b4 (800774B4)
-    v0 = 2;
-    sb(v0, 0x800774CD);             // Store to: 800774CD
-    sb(0, v1);
-    v0 = lw(0x800774C0);            // Load from: PTR_CDROM_REG3_800774c0 (800774C0)
-    sb(0, v0);
-    v1 = lw(0x800774C4);            // Load from: 800774C4
-    v0 = 0x132C;
-    sw(v0, v1);
-
-    sp += 0x18;
-    return 0;
+    cdrom.status.dataFifoEmpty = 0;
+    cdrom.dataBuffer.clear();
+    cdrom.dataBufferPointer = 0;
 }
 
-int32_t LIBCD_CD_initvol() noexcept {
+void LIBCD_CD_initvol() noexcept {
     // TODO: convert this code
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x74C8);                               // Load from: PTR_VOICE_00_LEFT_RIGHT_800774c8 (800774C8)
@@ -574,15 +526,10 @@ loc_800566A4:
     sh(v0, v1 + 0x1AA);
 
     // Set the default CD to SPU mixing parameters
-    {
-        CdlATV vol = {};
-        vol.l_to_l = 128;
-        vol.r_to_r = 128;
-
-        LIBCD_CdMix(vol);
-    }
-
-    return 0;
+    CdlATV cdAudioVol = {};
+    cdAudioVol.l_to_l = 128;
+    cdAudioVol.r_to_r = 128;
+    LIBCD_CdMix(cdAudioVol);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
