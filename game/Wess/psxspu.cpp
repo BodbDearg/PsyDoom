@@ -44,7 +44,7 @@ loc_80045328:
 loc_800453BC:
     a0 = 1;                                             // Result = 00000001
     LIBSPU_SpuSetReverb();
-    LIBSPU_SpuGetReverbOffsetAddr();
+    v0 = LIBSPU_SpuGetReverbOffsetAddr();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x598C);                                // Store to: 8007598C
     a0 = 1;                                             // Result = 00000001

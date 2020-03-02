@@ -544,7 +544,6 @@ extern void LIBSPU__spu_open() noexcept;
 extern void LIBSPU__spu_writeByIO() noexcept;
 extern void LIBSPU__spu_FiDMA() noexcept;
 extern void LIBSPU__spu_r() noexcept;
-extern void LIBSPU__spu_t() noexcept;
 extern void LIBSPU__spu_ioctl() noexcept;
 extern void LIBSPU__spu_setVoiceAttr() noexcept;
 extern void LIBSPU__spu_setReverbAttr() noexcept;
@@ -554,9 +553,6 @@ extern void LIBAPI_DeliverEvent() noexcept;
 extern void LIBSPU__SpuDataCallback() noexcept;
 extern void LIBSPU__SpuCallback() noexcept;
 extern void LIBSPU_SpuSetCommonAttr() noexcept;
-extern void LIBSPU_SpuGetReverbOffsetAddr() noexcept;
-extern void LIBSPU_SpuClearReverbWorkArea() noexcept;
-extern void LIBAPI_WaitEvent() noexcept;
 extern void LIBSPU__SpuInit() noexcept;
 extern void LIBSPU_SpuStart() noexcept;
 extern void LIBSPU_SpuSetReverbDepth() noexcept;
@@ -1140,7 +1136,6 @@ namespace PsxVm {
         { 0x80051E98, &LIBSPU__spu_writeByIO },
         { 0x800521DC, &LIBSPU__spu_FiDMA },
         { 0x800522FC, &LIBSPU__spu_r },
-        { 0x80052524, &LIBSPU__spu_t },
         { 0x80052900, &LIBSPU__spu_ioctl },
         { 0x800531EC, &LIBSPU__spu_setVoiceAttr },
         { 0x8005336C, &LIBSPU__spu_setReverbAttr },
@@ -1150,9 +1145,6 @@ namespace PsxVm {
         { 0x80053D58, &LIBSPU__SpuDataCallback },
         { 0x80053D7C, &LIBSPU__SpuCallback },
         { 0x80053DA0, &LIBSPU_SpuSetCommonAttr },
-        { 0x80054134, &LIBSPU_SpuGetReverbOffsetAddr },
-        { 0x80054164, &LIBSPU_SpuClearReverbWorkArea },
-        { 0x80054324, &LIBAPI_WaitEvent },
         { 0x80054334, &LIBSPU__SpuInit },
         { 0x80054418, &LIBSPU_SpuStart },
         { 0x80054498, &LIBSPU_SpuSetReverbDepth },

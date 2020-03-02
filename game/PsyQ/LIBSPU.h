@@ -8,6 +8,10 @@ enum SpuTransferQuery : uint32_t {
     SPU_TRANSFER_WAIT = 1       // Wait until the transfer completes
 };
 
+// Return codes for some functions
+static constexpr int32_t SPU_SUCCESS    = 0;
+static constexpr int32_t SPU_ERROR      = -1;
+
 void LIBSPU_SpuSetVoiceAttr() noexcept;
 void LIBSPU__SpuSetVoiceAttr() noexcept;
 void LIBSPU__spu_note2pitch() noexcept;
@@ -19,7 +23,6 @@ void LIBSPU__spu_open() noexcept;
 void LIBSPU__spu_writeByIO() noexcept;
 void LIBSPU__spu_FiDMA() noexcept;
 void LIBSPU__spu_r() noexcept;
-void LIBSPU__spu_t() noexcept;
 void LIBSPU__spu_ioctl() noexcept;
 void LIBSPU__spu_setVoiceAttr() noexcept;
 void LIBSPU__spu_setReverbAttr() noexcept;
@@ -28,8 +31,8 @@ void LIBSPU__spu_getCommonAttr() noexcept;
 void LIBSPU__SpuDataCallback() noexcept;
 void LIBSPU__SpuCallback() noexcept;
 void LIBSPU_SpuSetCommonAttr() noexcept;
-void LIBSPU_SpuGetReverbOffsetAddr() noexcept;
-void LIBSPU_SpuClearReverbWorkArea() noexcept;
+uint32_t LIBSPU_SpuGetReverbOffsetAddr() noexcept;
+int32_t LIBSPU_SpuClearReverbWorkArea() noexcept;
 void LIBSPU__SpuInit() noexcept;
 void LIBSPU_SpuStart() noexcept;
 void LIBSPU_SpuSetReverbDepth() noexcept;

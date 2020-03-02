@@ -1795,211 +1795,6 @@ loc_80052468:
     return;
 }
 
-void LIBSPU__spu_t() noexcept {
-loc_80052524:
-    sw(a2, sp + 0x8);
-    a2 = sp + 4;
-    sw(a3, sp + 0xC);
-    a3 = 1;                                             // Result = 00000001
-    sw(a0, sp);
-    sw(a1, sp + 0x4);
-    sw(a0, sp);
-    if (a0 == a3) goto loc_800525A8;
-    v0 = (i32(a0) < 2);
-    if (v0 == 0) goto loc_80052560;
-    v0 = 0;                                             // Result = 00000000
-    if (a0 == 0) goto loc_80052618;
-    goto loc_80052804;
-loc_80052560:
-    v0 = 2;                                             // Result = 00000002
-    {
-        const bool bJump = (a0 == v0);
-        v0 = 3;                                         // Result = 00000003
-        if (bJump) goto loc_8005257C;
-    }
-    {
-        const bool bJump = (a0 == v0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80052684;
-    }
-    goto loc_80052804;
-loc_8005257C:
-    a0 = lw(sp + 0x4);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6E60);                               // Load from: gLIBSPU__spu_mem_mode_plus (800A91A0)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6A08);                               // Load from: gLIBSPU__spu_RXX (80076A08)
-    v0 = a0 >> v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at + 0x60E8);                                // Store to: gLIBSPU__spu_tsa[0] (800860E8)
-    sh(v0, v1 + 0x1A6);
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80052804;
-loc_800525A8:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x6A08);                               // Load from: gLIBSPU__spu_RXX (80076A08)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lhu(a0 + 0x60E8);                              // Load from: gLIBSPU__spu_tsa[0] (800860E8)
-    v0 = lhu(a1 + 0x1A6);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at + 0x60F4);                                 // Store to: 800860F4
-    v0 &= 0xFFFF;
-    v1 = 0;                                             // Result = 00000000
-    if (v0 == a0) goto loc_800525F0;
-    v1++;                                               // Result = 00000001
-loc_800525D4:
-    v0 = (i32(v1) < 0xF01);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = -2;                                        // Result = FFFFFFFE
-        if (bJump) goto loc_80052804;
-    }
-    v0 = lhu(a1 + 0x1A6);
-    v1++;
-    if (v0 != a0) goto loc_800525D4;
-loc_800525F0:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6A08);                               // Load from: gLIBSPU__spu_RXX (80076A08)
-    a0 = lhu(v1 + 0x1AA);
-    v0 = a0 & 0xFFCF;
-    a0 = v0 | 0x20;
-    sh(a0, v1 + 0x1AA);
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80052804;
-loc_80052618:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x6A08);                               // Load from: gLIBSPU__spu_RXX (80076A08)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lhu(a0 + 0x60E8);                              // Load from: gLIBSPU__spu_tsa[0] (800860E8)
-    v0 = lhu(a1 + 0x1A6);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a3, at + 0x60F4);                                // Store to: 800860F4
-    v0 &= 0xFFFF;
-    v1 = 0;                                             // Result = 00000000
-    if (v0 == a0) goto loc_80052660;
-    v1++;                                               // Result = 00000001
-loc_80052644:
-    v0 = (i32(v1) < 0xF01);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = -2;                                        // Result = FFFFFFFE
-        if (bJump) goto loc_80052804;
-    }
-    v0 = lhu(a1 + 0x1A6);
-    v1++;
-    if (v0 != a0) goto loc_80052644;
-loc_80052660:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A08);                               // Load from: gLIBSPU__spu_RXX (80076A08)
-    a0 = lhu(v0 + 0x1AA);
-    a0 |= 0x30;
-    sh(a0, v0 + 0x1AA);
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80052804;
-loc_80052684:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 + 0x60F4);                               // Load from: 800860F4
-    a0 = 0x20;                                          // Result = 00000020
-    if (v0 != a3) goto loc_8005269C;
-    a0 = 0x30;                                          // Result = 00000030
-loc_8005269C:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x6A08);                               // Load from: gLIBSPU__spu_RXX (80076A08)
-    v1 = 0;                                             // Result = 00000000
-    v0 = lhu(a1 + 0x1AA);
-    a0 &= 0xFFFF;
-    v0 &= 0x30;
-    v1++;                                               // Result = 00000001
-    if (v0 == a0) goto loc_800526DC;
-loc_800526BC:
-    v0 = (i32(v1) < 0xF01);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = -2;                                        // Result = FFFFFFFE
-        if (bJump) goto loc_80052804;
-    }
-    v0 = lhu(a1 + 0x1AA);
-    v0 &= 0x30;
-    v1++;
-    if (v0 != a0) goto loc_800526BC;
-loc_800526DC:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 + 0x60F4);                               // Load from: 800860F4
-    v0 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (v1 != v0);
-        v1 = 0xF0FF0000;                                // Result = F0FF0000
-        if (bJump) goto loc_80052710;
-    }
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A20);                               // Load from: 80076A20
-    v0 = lw(a0);
-    v1 |= 0xFFFF;                                       // Result = F0FFFFFF
-    v0 &= v1;
-    v1 = 0x22000000;                                    // Result = 22000000
-    goto loc_8005272C;
-loc_80052710:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A20);                               // Load from: 80076A20
-    v0 = lw(a0);
-    v1 |= 0xFFFF;                                       // Result = F0FFFFFF
-    v0 &= v1;
-    v1 = 0x20000000;                                    // Result = 20000000
-loc_8005272C:
-    v0 |= v1;
-    sw(v0, a0);
-    a2 += 4;
-    a0 = lw(a2 - 0x4);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at + 0x60F8);                                // Store to: 800860F8
-    a0 = lw(a2);
-    v1 = a0 >> 6;
-    v0 = a0 & 0x3F;
-    v0 = (v0 > 0);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A1C);                               // Load from: 80076A1C
-    v1 += v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at + 0x60FC);                                // Store to: 800860FC
-    v0 = lw(a0);
-    v1 = 0x900000;                                      // Result = 00900000
-    v0 |= v1;
-    sw(v0, a0);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A18);                               // Load from: 80076A18
-    v0 = lw(a0);
-    v1 = 0x80000;                                       // Result = 00080000
-    v0 |= v1;
-    sw(v0, a0);
-    a0 = 0x1000000;                                     // Result = 01000000
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6A0C);                               // Load from: 80076A0C
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 + 0x60F8);                               // Load from: 800860F8
-    a0 |= 0x201;                                        // Result = 01000201
-    sw(v0, v1);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 + 0x60FC);                               // Load from: 800860FC
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6A10);                               // Load from: 80076A10
-    v0 <<= 16;
-    v0 |= 0x10;
-    sw(v0, v1);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 + 0x60F4);                               // Load from: 800860F4
-    v0 = 1;                                             // Result = 00000001
-    if (v1 != v0) goto loc_800527F0;
-    a0 = 0x1000000;                                     // Result = 01000000
-    a0 |= 0x200;                                        // Result = 01000200
-loc_800527F0:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A14);                               // Load from: 80076A14
-    sw(a0, v0);
-    v0 = 0;                                             // Result = 00000000
-loc_80052804:
-    return;
-}
-
 void LIBSPU__spu_ioctl() noexcept {
 loc_80052900:
     sp -= 0x18;
@@ -3736,141 +3531,35 @@ loc_80054128:
     return;
 }
 
-void LIBSPU_SpuGetReverbOffsetAddr() noexcept {
-loc_80054134:
-    sp -= 0x20;
-    a1 = 0x69;                                          // Result = 00000069
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    sw(ra, sp + 0x18);
-    a2 = sp + 0x10;
-    LIBSPU__spu_ioctl();
-    v0 = lw(sp + 0x10);
-    ra = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the address in SPU RAM where reverb effects are performed.
+// Any bytes past this address are used for reverb.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t LIBSPU_SpuGetReverbOffsetAddr() noexcept {
+    spu::SPU& spu = *PsxVm::gpSpu;
+    return spu.reverbCurrentAddress;
 }
 
-void LIBSPU_SpuClearReverbWorkArea() noexcept {
-loc_80054164:
-    sp -= 0x38;
-    sw(s0, sp + 0x20);
-    s0 = a0;
-    sw(s4, sp + 0x30);
-    v0 = (s0 < 0xA);
-    sw(ra, sp + 0x34);
-    sw(s3, sp + 0x2C);
-    sw(s2, sp + 0x28);
-    sw(s1, sp + 0x24);
-    sw(0, sp + 0x10);
-    s4 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_800541B8;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 += 0x6E78;                                       // Result = 80076E78
-    v0 = s0 << 2;
-    s1 = v0 + v1;
-    a0 = lw(s1);
-    LIBSPU__SpuIsInAllocateArea_();
-    if (v0 == 0) goto loc_800541C0;
-loc_800541B8:
-    v0 = -1;                                            // Result = FFFFFFFF
-    goto loc_80054300;
-loc_800541C0:
-    v0 = 0x10000;                                       // Result = 00010000
-    if (s0 != 0) goto loc_800541E4;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6E60);                               // Load from: gLIBSPU__spu_mem_mode_plus (800A91A0)
-    v1 = 0x10;                                          // Result = 00000010
-    s1 = v1 << v0;
-    v1 = 0xFFF0;                                        // Result = 0000FFF0
-    s2 = v1 << v0;
-    goto loc_800541FC;
-loc_800541E4:
-    a0 = lw(s1);
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x6E60);                               // Load from: gLIBSPU__spu_mem_mode_plus (800A91A0)
-    v0 -= a0;
-    s1 = v0 << v1;
-    s2 = a0 << v1;
-loc_800541FC:
-    a1 = 0x2F;                                          // Result = 0000002F
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = sp + 0x14;
-    LIBSPU__spu_ioctl();
-    v0 = lw(sp + 0x14);
-    a1 = 0x2E;                                          // Result = 0000002E
-    if (v0 != 0) goto loc_8005423C;
-    a2 = sp + 0x18;
-    s4 = 1;                                             // Result = 00000001
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, sp + 0x18);
-    LIBSPU__spu_ioctl();
-loc_8005423C:
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7C20);                               // Load from: gLIBSPU__spu_transferCallback (80097C20)
-    s3 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_80054268;
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7C20);                               // Load from: gLIBSPU__spu_transferCallback (80097C20)
-    sw(v0, sp + 0x10);
-    at = 0x80090000;                                    // Result = 80090000
-    sw(0, at + 0x7C20);                                 // Store to: gLIBSPU__spu_transferCallback (80097C20)
-loc_80054268:
-    v0 = (s1 < 0x401);
-loc_8005426C:
-    s0 = s1;
-    if (v0 != 0) goto loc_8005427C;
-    s0 = 0x400;                                         // Result = 00000400
-    goto loc_80054280;
-loc_8005427C:
-    s3 = 0;                                             // Result = 00000000
-loc_80054280:
-    a0 = 2;                                             // Result = 00000002
-    a1 = s2;
-    LIBSPU__spu_t();
-    a0 = 1;                                             // Result = 00000001
-    LIBSPU__spu_t();
-    a0 = 3;                                             // Result = 00000003
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x6A6C;                                       // Result = 80076A6C
-    a2 = s0;
-    LIBSPU__spu_t();
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A5C);                               // Load from: gLIBSPU__spu_EVdma (80076A5C)
-    s1 -= 0x400;
-    s2 += 0x400;
-    LIBAPI_WaitEvent();
-    v0 = (s1 < 0x401);
-    if (s3 != 0) goto loc_8005426C;
-    a1 = 0x2E;                                          // Result = 0000002E
-    if (s4 == 0) goto loc_800542DC;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = sp + 0x14;
-    LIBSPU__spu_ioctl();
-loc_800542DC:
-    v0 = lw(sp + 0x10);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80054300;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Zero out the area used for reverb effects.
+// Will return 'SPU_ERROR' if that area is currently in use, otherwise 'SPU_SUCCESS'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t LIBSPU_SpuClearReverbWorkArea() noexcept {
+    spu::SPU& spu = *PsxVm::gpSpu;
+
+    // Can't clear the reverb area if reverb is active!
+    // Also can't clear if no reverb address is set:
+    if (spu.control.masterReverb || (spu.reverbCurrentAddress == 0)) {
+        return SPU_ERROR;
     }
-    v0 = lw(sp + 0x10);
-    at = 0x80090000;                                    // Result = 80090000
-    sw(v0, at + 0x7C20);                                // Store to: gLIBSPU__spu_transferCallback (80097C20)
-    v0 = 0;                                             // Result = 00000000
-loc_80054300:
-    ra = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x38;
-    return;
+
+    // Zero the reverb area
+    if (spu.reverbCurrentAddress < SPU_RAM_SIZE) {
+        const uint32_t reverbAreaSize = SPU_RAM_SIZE - spu.reverbCurrentAddress;
+        std::memset(spu.ram.data() + spu.reverbCurrentAddress, 0, reverbAreaSize);
+    }
+
+    return SPU_SUCCESS;
 }
 
 void LIBSPU__SpuInit() noexcept {

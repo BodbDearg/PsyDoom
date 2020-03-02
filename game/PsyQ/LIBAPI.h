@@ -23,7 +23,6 @@ void LIBAPI_ReturnFromException() noexcept;
 void LIBAPI_FlushCache() noexcept;
 void LIBAPI_InitHeap() noexcept;
 void LIBAPI_DeliverEvent() noexcept;
-void LIBAPI_WaitEvent() noexcept;
 void LIBAPI_SysEnqIntRP() noexcept;
 void LIBAPI_AddDrv() noexcept;
 void LIBAPI_DelDrv() noexcept;

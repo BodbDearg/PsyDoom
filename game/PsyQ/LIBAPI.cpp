@@ -265,13 +265,6 @@ loc_80053D48:
     emu_call(t2);
 }
 
-void LIBAPI_WaitEvent() noexcept {
-loc_80054324:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0xA;                                           // Result = 0000000A
-    emu_call(t2);
-}
-
 void LIBAPI_SysEnqIntRP() noexcept {
 loc_80058A18:
     t2 = 0xC0;                                          // Result = 000000C0
