@@ -536,11 +536,8 @@ extern void LIBAPI_InitHeap() noexcept;
 extern void LIBSPU_SpuSetVoiceAttr() noexcept;
 extern void LIBSPU__SpuSetVoiceAttr() noexcept;
 extern void LIBSPU__spu_note2pitch() noexcept;
-extern void LIBSPU__spu_pitch2note() noexcept;
 extern void LIBSPU_SpuSetReverbModeParam() noexcept;
-extern void LIBSPU__SpuIsInAllocateArea() noexcept;
 extern void LIBSPU__SpuIsInAllocateArea_() noexcept;
-extern void LIBSPU__spu_reset() noexcept;
 extern void LIBSPU__spu_init() noexcept;
 extern void LIBSPU__spu_close() noexcept;
 extern void LIBSPU__spu_open() noexcept;
@@ -549,13 +546,11 @@ extern void LIBSPU__spu_FiDMA() noexcept;
 extern void LIBSPU__spu_r() noexcept;
 extern void LIBSPU__spu_t() noexcept;
 extern void LIBSPU__spu_write() noexcept;
-extern void LIBSPU__spu_read() noexcept;
 extern void LIBSPU__spu_ioctl() noexcept;
 extern void LIBSPU__spu_setVoiceAttr() noexcept;
 extern void LIBSPU__spu_setReverbAttr() noexcept;
 extern void LIBSPU__spu_setCommonAttr() noexcept;
 extern void LIBSPU__spu_getCommonAttr() noexcept;
-extern void LIBSPU_SysSpu_setRegister() noexcept;
 extern void LIBAPI_DeliverEvent() noexcept;
 extern void LIBSPU__SpuDataCallback() noexcept;
 extern void LIBSPU__SpuCallback() noexcept;
@@ -577,7 +572,6 @@ extern void LIBSPU_SpuSetTransferStartAddr() noexcept;
 extern void LIBSPU_SpuWrite() noexcept;
 extern void LIBSPU_SpuSetKeyOnWithAttr() noexcept;
 extern void LIBSPU_SpuSetKey() noexcept;
-extern void LIBSPU_SpuRGetAllKeysStatus() noexcept;
 extern void LIBSPU_SpuGetAllKeysStatus() noexcept;
 extern void _thunk_LIBCD_CdSync() noexcept;
 extern void _thunk_LIBCD_CdReady() noexcept;
@@ -1139,11 +1133,8 @@ namespace PsxVm {
         { 0x80050894, &LIBSPU_SpuSetVoiceAttr },
         { 0x800508BC, &LIBSPU__SpuSetVoiceAttr },
         { 0x80050FBC, &LIBSPU__spu_note2pitch },
-        { 0x800510B0, &LIBSPU__spu_pitch2note },
         { 0x80051208, &LIBSPU_SpuSetReverbModeParam },
-        { 0x8005171C, &LIBSPU__SpuIsInAllocateArea },
         { 0x8005178C, &LIBSPU__SpuIsInAllocateArea_ },
-        { 0x80051804, &LIBSPU__spu_reset },
         { 0x80051894, &LIBSPU__spu_init },
         { 0x80051E38, &LIBSPU__spu_close },
         { 0x80051E6C, &LIBSPU__spu_open },
@@ -1152,13 +1143,11 @@ namespace PsxVm {
         { 0x800522FC, &LIBSPU__spu_r },
         { 0x80052524, &LIBSPU__spu_t },
         { 0x8005280C, &LIBSPU__spu_write },
-        { 0x80052898, &LIBSPU__spu_read },
         { 0x80052900, &LIBSPU__spu_ioctl },
         { 0x800531EC, &LIBSPU__spu_setVoiceAttr },
         { 0x8005336C, &LIBSPU__spu_setReverbAttr },
         { 0x8005383C, &LIBSPU__spu_setCommonAttr },
         { 0x80053BD4, &LIBSPU__spu_getCommonAttr },
-        { 0x80053D00, &LIBSPU_SysSpu_setRegister },
         { 0x80053D48, &LIBAPI_DeliverEvent },
         { 0x80053D58, &LIBSPU__SpuDataCallback },
         { 0x80053D7C, &LIBSPU__SpuCallback },
@@ -1180,7 +1169,6 @@ namespace PsxVm {
         { 0x80054894, &LIBSPU_SpuWrite },
         { 0x800548F4, &LIBSPU_SpuSetKeyOnWithAttr },
         { 0x80054928, &LIBSPU_SpuSetKey },
-        { 0x800549A8, &LIBSPU_SpuRGetAllKeysStatus },
         { 0x80054A78, &LIBSPU_SpuGetAllKeysStatus },
         { 0x80054D20, &_thunk_LIBCD_CdSync },
         { 0x80054D40, &_thunk_LIBCD_CdReady },
