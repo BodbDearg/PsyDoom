@@ -13,6 +13,7 @@
 BEGIN_THIRD_PARTY_INCLUDES
 
 #include <device/cdrom/cdrom.h>
+#include <device/spu/spu.h>
 #include <disc/disc.h>
 
 END_THIRD_PARTY_INCLUDES
@@ -188,7 +189,7 @@ static bool handleCdCmd(const CdlCmd cmd, const uint8_t* const pArgs, uint8_t re
             invokeCallback(gpLIBCD_CD_cbsync, CdlComplete, cmdResult);
 
             // Set the read location immediately
-            {
+            if (pArgs) {
                 const uint32_t minute = bcd::toBinary(pArgs[0]);
                 const uint32_t second = bcd::toBinary(pArgs[1]);
                 const uint32_t sector = bcd::toBinary(pArgs[2]);
@@ -500,30 +501,26 @@ void LIBCD_CD_init() noexcept {
     cdrom.dataBufferPointer = 0;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Internal initialization function: sound stuff related to CD audio
+//------------------------------------------------------------------------------------------------------------------------------------------
 void LIBCD_CD_initvol() noexcept {
-    // TODO: convert this code
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74C8);                               // Load from: PTR_VOICE_00_LEFT_RIGHT_800774c8 (800774C8)
-    v0 = lhu(v1 + 0x1B8);
-    
-    if (v0 != 0) goto loc_800566A0;
-    v0 = lhu(v1 + 0x1BA);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x3FFF;                                    // Result = 00003FFF
-        if (bJump) goto loc_800566A4;
+    // Set volume levels
+    spu::SPU& spu = *PsxVm::gpSpu;
+
+    if ((spu.mainVolume.left == 0) && (spu.mainVolume.right == 0)) {
+        spu.mainVolume.left = 0x3FFF;
+        spu.mainVolume.right = 0x3FFF;
     }
-    sh(v0, v1 + 0x180);
-    sh(v0, v1 + 0x182);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x74C8);                               // Load from: PTR_VOICE_00_LEFT_RIGHT_800774c8 (800774C8)
-loc_800566A0:
-    v0 = 0x3FFF;                                        // Result = 00003FFF
-loc_800566A4:
-    sh(v0, v1 + 0x1B0);
-    sh(v0, v1 + 0x1B2);
-    v0 = 0xC001;                                        // Result = 0000C001
-    sh(v0, v1 + 0x1AA);
+    
+    spu.cdVolume.left = 0x3FFF;
+    spu.cdVolume.right = 0x3FFF;
+
+    // Set SPU status flags
+    spu.control = {};
+    spu.control.spuEnable = true;
+    spu.control.unmute = true;
+    spu.control.cdEnable = true;
 
     // Set the default CD to SPU mixing parameters
     CdlATV cdAudioVol = {};
