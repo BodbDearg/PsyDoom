@@ -100,8 +100,7 @@ loc_80045450:
     sw(s0, at + 0x5984);                                // Store to: 80075984
     a0 = 1;                                             // Result = 00000001
     LIBSPU_SpuInitMalloc();
-    a0 = 0;                                             // Result = 00000000
-    LIBSPU_SpuSetTransferMode();
+    LIBSPU_SpuSetTransferMode(SPU_TRANSFER_BY_DMA);
     a0 = 0;                                             // Result = 00000000
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000

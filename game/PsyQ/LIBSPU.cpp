@@ -3494,11 +3494,9 @@ loc_80054334:
     a1 = 0x61;                                          // Result = 00000061
     LIBSPU__spu_ioctl();
     a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
+    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44) 
     a2 = 0x80070000;                                    // Result = 80070000
     a2 += 0x6A48;                                       // Result = gLIBSPU__spu_trans_mode (80076A48)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x6A48);                                 // Store to: gLIBSPU__spu_trans_mode (80076A48)
     a1 = 0x21;                                          // Result = 00000021
     LIBSPU__spu_ioctl();
     at = 0x80070000;                                    // Result = 80070000
@@ -3697,30 +3695,11 @@ loc_800547D4:
     return;
 }
 
-void LIBSPU_SpuSetTransferMode() noexcept {
-loc_800547DC:
-    sp -= 0x20;
-    sw(ra, sp + 0x18);
-    if (a0 == 0) goto loc_800547FC;
-    v0 = 1;                                             // Result = 00000001
-    if (a0 != v0) goto loc_80054800;
-    sw(0, sp + 0x10);
-    goto loc_80054804;
-loc_800547FC:
-    v0 = 1;                                             // Result = 00000001
-loc_80054800:
-    sw(v0, sp + 0x10);
-loc_80054804:
-    a1 = 0x21;                                          // Result = 00000021
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x6A48);                                // Store to: gLIBSPU__spu_trans_mode (80076A48)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = sp + 0x10;
-    LIBSPU__spu_ioctl();
-    ra = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the mode of transfer from main RAM to SPU RAM
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBSPU_SpuSetTransferMode([[maybe_unused]] const SpuTransferMode mode) noexcept {
+    // Don't need to do anything in the emulated environment - we always do a straight 'memcpy' to SPU RAM...
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
