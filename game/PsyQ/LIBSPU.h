@@ -18,6 +18,14 @@ enum SpuTransferMode : uint32_t {
 static constexpr int32_t SPU_SUCCESS    = 0;
 static constexpr int32_t SPU_ERROR      = -1;
 
+// Generic on/off or true/false values
+static constexpr int32_t SPU_OFF    = 0;
+static constexpr int32_t SPU_ON     = 1;
+
+// Parameter for various functions.
+// It means make changes to ALL voices indicated by a bitmask, not just voices for enabled or disabled bits.
+static constexpr int32_t SPU_BIT    = 8;
+
 void LIBSPU_SpuSetVoiceAttr() noexcept;
 void LIBSPU__SpuSetVoiceAttr() noexcept;
 void LIBSPU__spu_note2pitch() noexcept;
@@ -38,9 +46,9 @@ int32_t LIBSPU_SpuClearReverbWorkArea() noexcept;
 void LIBSPU__SpuInit() noexcept;
 void LIBSPU_SpuStart() noexcept;
 void LIBSPU_SpuSetReverbDepth() noexcept;
-void LIBSPU_SpuSetReverbVoice() noexcept;
+int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) noexcept;
 void LIBSPU_SpuInit() noexcept;
-bool LIBSPU_SpuSetReverb(const bool bEnable) noexcept;
+int32_t LIBSPU_SpuSetReverb(const int32_t onOff) noexcept;
 void LIBSPU_SpuQuit() noexcept;
 
 bool LIBSPU_SpuIsTransferCompleted(const SpuTransferQuery mode) noexcept;

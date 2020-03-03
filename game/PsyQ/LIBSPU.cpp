@@ -3557,36 +3557,44 @@ loc_80054510:
     return;
 }
 
-void LIBSPU_SpuSetReverbVoice() noexcept {
-loc_80054518:
-    sp -= 0x20;
-    sw(ra, sp + 0x18);
-    sw(a1, sp + 0x24);
-    if (a0 == 0) goto loc_80054544;
-    v0 = 1;                                             // Result = 00000001
-    a1 = 0x66;                                          // Result = 00000066
-    if (a0 != v0) goto loc_8005455C;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a1 = 0x65;                                          // Result = 00000065
-    goto loc_80054550;
-loc_80054544:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a1 = 0x67;                                          // Result = 00000067
-loc_80054550:
-    a2 = sp + 0x24;
-    LIBSPU__spu_ioctl();
-    a1 = 0x66;                                          // Result = 00000066
-loc_8005455C:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = sp + 0x10;
-    LIBSPU__spu_ioctl();
-    v0 = lw(sp + 0x10);
-    ra = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Enable or disable reverb for specific voices, or set the reverb enabled/disabled status for ALL voices.
+// Returns a bit mask indicating which voices have reverb enabled, upon return.
+//
+// The meaning of 'onOff' is as follows:
+//  SPU_OFF : disable reverb for voices with set bits in 'voiceBits'
+//  SPU_ON  : enable reverb for voices with set bits in 'voiceBits'
+//  SPU_BIT : enable or disable reverb for ALL voices based on whether the corresponding voice bit is set in 'voiceBits'.
+//            If the bit is set then reverb is enabled.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) noexcept {
+    spu::SPU& spu = *PsxVm::gpSpu;
+    
+    // Enabling/disabling reverb for every single voice with the bit mask?
+    if (onOff == SPU_BIT) {
+        for (int32_t voiceIdx = 0; voiceIdx < 24; ++voiceIdx) {
+            spu::Voice& voice = spu.voices[voiceIdx];
+            voice.reverb = ((voiceBits & (1 << voiceIdx)) != 0);
+        }
+
+        return voiceBits;
+    }
+    
+    // Enable or disable reverb for specific voices and return the reverb status of all voices after
+    const bool bEnableReverb = (onOff != SPU_OFF) || true;
+    int32_t enabledVoiceBits = 0;
+
+    for (int32_t voiceIdx = 0; voiceIdx < 24; ++voiceIdx) {
+        spu::Voice& voice = spu.voices[voiceIdx];
+
+        if (voiceBits & (1 << voiceIdx)) {
+            voice.reverb = bEnableReverb;
+        }
+
+        enabledVoiceBits |= (voice.reverb) ? (1 << voiceIdx) : 0;
+    }
+
+    return enabledVoiceBits;
 }
 
 void LIBSPU_SpuInit() noexcept {
@@ -3605,10 +3613,11 @@ loc_80054580:
 // In the real LIBSPU, this could fail due to 'SpuMalloc' occupying the work area required for reverb.
 // Since DOOM does not use SpuMalloc, this can never fail.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool LIBSPU_SpuSetReverb(const bool bEnable) noexcept {    
+int32_t LIBSPU_SpuSetReverb(const int32_t onOff) noexcept {
+    const bool bEnable = (onOff != SPU_OFF);
     spu::SPU& spu = *PsxVm::gpSpu;
     spu.control.masterReverb = bEnable;
-    return bEnable;
+    return (bEnable) ? SPU_ON : SPU_OFF;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

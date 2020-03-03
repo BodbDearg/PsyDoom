@@ -33,7 +33,7 @@ loc_80045328:
     a0 = s0;                                            // Result = 8007F080
     LIBSPU_SpuSetReverbDepth();
     if (s1 != 0) goto loc_800453BC;
-    LIBSPU_SpuSetReverb(false);
+    LIBSPU_SpuSetReverb(SPU_OFF);
     v0 = 0x70000;                                       // Result = 00070000
     v0 |= 0xF000;                                       // Result = 0007F000
     at = 0x80070000;                                    // Result = 80070000
@@ -41,7 +41,7 @@ loc_80045328:
     a0 = 0;                                             // Result = 00000000
     goto loc_800453D8;
 loc_800453BC:
-    LIBSPU_SpuSetReverb(true);
+    LIBSPU_SpuSetReverb(SPU_ON);
     v0 = LIBSPU_SpuGetReverbOffsetAddr();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x598C);                                // Store to: 8007598C
@@ -49,7 +49,7 @@ loc_800453BC:
 loc_800453D8:
     a1 = 0xFF0000;                                      // Result = 00FF0000
     a1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    LIBSPU_SpuSetReverbVoice();
+    LIBSPU_SpuSetReverbVoice(a0, a1);
     v0 = 1;                                             // Result = 00000001
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5988);                                // Store to: 80075988

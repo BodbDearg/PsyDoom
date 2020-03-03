@@ -121,7 +121,7 @@ loc_80045B0C:
     v0 = lbu(at);
     if (v0 != 0) goto loc_80045C0C;
     a0 = 1;                                             // Result = 00000001
-    LIBSPU_SpuSetReverbVoice();
+    LIBSPU_SpuSetReverbVoice(a0, a1);
     v1 = lbu(s0 + 0x2);
     v0 = 0x7F;                                          // Result = 0000007F
     at = 0x80080000;                                    // Result = 80080000
@@ -137,7 +137,7 @@ loc_80045BC8:
     v0 = lbu(at);
     if (v0 == 0) goto loc_80045C0C;
     a0 = 0;                                             // Result = 00000000
-    LIBSPU_SpuSetReverbVoice();
+    LIBSPU_SpuSetReverbVoice(a0, a1);
     v0 = lbu(s0 + 0x2);
     at = 0x80080000;                                    // Result = 80080000
     at -= 0xE18;                                        // Result = 8007F1E8
