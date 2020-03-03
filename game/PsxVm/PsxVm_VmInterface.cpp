@@ -479,7 +479,7 @@ void emulate_sound_if_required() noexcept {
         while (!spu.bufferReady) {
             // Read more CD data if we are playing music
             if (cdrom.stat.play && cdrom.audio.empty()) {
-                cdrom.readcnt = 1150;   // This forces an immediate read
+                cdrom.bForceSectorRead = true;  // Force an immediate read on step()
                 cdrom.step();
             }
 

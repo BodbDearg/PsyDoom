@@ -87,6 +87,12 @@ void SPU::step(device::cdrom::CDROM* cdrom) {
         }
     }
 
+    if (!control.unmute) {
+        sumLeft = 0;
+        sumRight = 0;
+    }
+    // TODO: Check if SPU mute affect sumReverb for voices
+
     // Mix with cd
     Sample cdLeft = 0, cdRight = 0;
     if (!cdrom->audio.empty()) {
@@ -106,23 +112,14 @@ void SPU::step(device::cdrom::CDROM* cdrom) {
         }
     }
 
-    if (!forceReverbOff && control.masterReverb) {
-        static int16_t reverbLeft = 0, reverbRight = 0;
-        static int reverbCounter = 0;
-        if (reverbCounter++ % 2 == 0) {
-            std::tie(reverbLeft, reverbRight) = doReverb(this, std::make_tuple(sumReverbLeft, sumReverbRight));
-        }
-        sumLeft += reverbLeft;
-        sumRight += reverbRight;
+    if (reverbCounter++ % 2 == 0) {
+        std::tie(reverbLeft, reverbRight) = doReverb(this, std::make_tuple(sumReverbLeft, sumReverbRight));
     }
+    sumLeft += reverbLeft;
+    sumRight += reverbRight;
 
     sumLeft *= std::min<int16_t>(0x3fff, mainVolume.getLeft()) * 2;
     sumRight *= std::min<int16_t>(0x3fff, mainVolume.getRight()) * 2;
-
-    if (!control.unmute) {
-        sumLeft = 0;
-        sumRight = 0;
-    }
 
     audioBuffer[audioBufferPos] = sumLeft;
     audioBuffer[audioBufferPos + 1] = sumRight;
@@ -262,6 +259,10 @@ uint8_t SPU::read(uint32_t address) {
         return mainVolume.read(address - 0x1f801d80);
     }
 
+    if (address >= 0x1f801d84 && address <= 0x1f801d87) {  // Reverb Volume L/R
+        return reverbVolume.read(address - 0x1f801d84);
+    }
+
     if (address >= 0x1f801da4 && address <= 0x1f801da5) {  // IRQ (used by Vib-Ribbon)
         return irqAddress.read(address - 0x1f801da4);
     }
@@ -311,6 +312,14 @@ uint8_t SPU::read(uint32_t address) {
     if (address >= 0x1F801DA2 && address <= 0x1F801DA3) {  // Reverb Work area start
         // TODO: Breaks Doom if returning correct value, why ?
         return reverbBase.read(address - 0x1F801DA2);
+    }
+
+    if (address >= 0x1f801da8 && address <= 0x1f801da9) {  // SPU RAM read
+        if (currentDataAddress >= RAM_SIZE) {
+            currentDataAddress %= RAM_SIZE;
+        }
+
+        return memoryRead8(currentDataAddress++);
     }
 
     if (address >= 0x1f801dac && address <= 0x1f801dad) {  // Data Transfer Control
@@ -374,7 +383,7 @@ void SPU::write(uint32_t address, uint8_t data) {
 
     if (address >= 0x1f801d88 && address <= 0x1f801d8b) {  // Voices Key On
         FOR_EACH_VOICE(address - 0x1f801d88, [&](int v, bool bit) {
-            if (bit) voices[v].keyOn(sys->cycles);
+            if (control.spuEnable && bit) voices[v].keyOn(sys->cycles);
             if (bit && verbose) fmt::print("[SPU] W Voice {:2d}, KeyOn\n", v + 1);
         });
         return;
@@ -382,7 +391,7 @@ void SPU::write(uint32_t address, uint8_t data) {
 
     if (address >= 0x1f801d8c && address <= 0x1f801d8f) {  // Voices Key Off
         FOR_EACH_VOICE(address - 0x1f801d8c, [&](int v, bool bit) {
-            if (bit) voices[v].keyOff(sys->cycles);
+            if (control.spuEnable && bit) voices[v].keyOff(sys->cycles);
             if (bit && verbose) fmt::print("[SPU] W Voice {:2d}, KeyOff\n", v + 1);
         });
         return;
@@ -448,6 +457,11 @@ void SPU::write(uint32_t address, uint8_t data) {
         if (!control.irqEnable) {
             status.irqFlag = false;
         }
+        if (!control.spuEnable) {
+            for (auto& v : voices) {
+                v.adsrVolume._reg = 0;
+            }
+        }
         return;
     }
 
@@ -474,6 +488,15 @@ void SPU::write(uint32_t address, uint8_t data) {
     }
 
     fmt::print("[SPU] Unhandled write at 0x{:08x}: 0x{:02x}\n", address, data);
+}
+
+uint8_t SPU::memoryRead8(uint32_t address) {
+    if (control.irqEnable && address == irqAddress._reg * 8) {
+        status.irqFlag = true;
+        sys->interrupt->trigger(interrupt::SPU);
+    }
+
+    return ram[address];
 }
 
 void SPU::memoryWrite8(uint32_t address, uint8_t data) {

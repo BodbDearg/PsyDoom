@@ -24,7 +24,16 @@ void CDROM::step() {
         }
     }
 
-    if ((stat.read || stat.play) && readcnt++ == 1150) {  // FIXME: yey, magic numbers
+    // TODO: Calculate correct interval using delta cycles
+    int MAGIC_NUMBER = 1150;  // FIXME: yey, magic numbers
+    if (!mode.speed) MAGIC_NUMBER *= 2;
+
+#if DOOM_AVOCADO_MODS
+    if (bForceSectorRead || ((stat.read || stat.play) && readcnt++ == MAGIC_NUMBER)) {
+        bForceSectorRead = false;
+#else
+    if ((stat.read || stat.play) && readcnt++ == MAGIC_NUMBER) {
+#endif
         readcnt = 0;
         const std::array<uint8_t, 12> sync = {{0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00}};
 

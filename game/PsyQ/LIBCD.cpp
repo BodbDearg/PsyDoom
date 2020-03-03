@@ -25,9 +25,6 @@ END_THIRD_PARTY_INCLUDES
 static constexpr int32_t CD_SECTORS_PER_SEC = 75;       // The number of CD sectors per second of audio
 static constexpr int32_t CD_LEAD_SECTORS    = 150;      // How many sectors are assigned to the lead in track, which has the TOC for the disc
 
-// This is the 'readcnt' cdrom amount that Avocado will read data on
-static constexpr int AVOCADO_DATA_READ_CNT = 1150;
-
 // Callbacks for when a command completes and when a data sector is ready
 static CdlCB gpLIBCD_CD_cbsync;
 static CdlCB gpLIBCD_CD_cbready;
@@ -77,27 +74,13 @@ static uint8_t readCdCmdResultByte() noexcept {
 // Step the CD-ROM and invoke 'data ready' callbacks if a new sector was read
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void stepCdromWithCallbacks() noexcept {
-    // Determine if a new sector will be read
+    // Advance the cdrom emulation: this may result in a sector being read
     device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
-
-    const bool bWillReadNewSector = (
-        (cdrom.stat.read || cdrom.stat.play) &&
-        (cdrom.readcnt == AVOCADO_DATA_READ_CNT)
-    );
-
-    // Clear the data buffers if a new sector is about to be read
-    if (bWillReadNewSector) {
-        cdrom.rawSector.clear();
-        cdrom.dataBuffer.clear();
-        cdrom.dataBufferPointer = 0;
-        cdrom.status.dataFifoEmpty = 0;
-    }
-
-    // Advance the cdrom emulation
+    const int32_t oldReadSector = cdrom.readSector;
     cdrom.step();
 
     // If we read a new sector then setup the data buffer fifo and let the callback know
-    if (bWillReadNewSector) {
+    if (cdrom.readSector != oldReadSector) {
         ASSERT(!cdrom.rawSector.empty());
         cdrom.dataBuffer = cdrom.rawSector;
         cdrom.dataBufferPointer = 0;
@@ -290,7 +273,7 @@ CdlStatus LIBCD_CdReady(const int32_t mode, uint8_t pResult[8]) noexcept {
             return CdlDataReady;
         } else {
             // No data: make a read of some happen immediately
-            cdrom.readcnt = AVOCADO_DATA_READ_CNT;
+            cdrom.bForceSectorRead = true;
             stepCdromWithCallbacks();
             ASSERT(!cdrom.isBufferEmpty());
 

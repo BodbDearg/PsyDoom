@@ -43,10 +43,12 @@ struct SPU {
 
     std::array<uint8_t, RAM_SIZE> ram;
 
-    bool forceReverbOff = false;  // Debug use
     Reg16 reverbBase;
     std::array<Reg16, 32> reverbRegisters;
     uint32_t reverbCurrentAddress;
+    int16_t reverbLeft = 0;
+    int16_t reverbRight = 0;
+    int reverbCounter = 0;
 
     bool bufferReady = false;
     size_t audioBufferPos;
@@ -62,6 +64,7 @@ struct SPU {
     uint8_t read(uint32_t address);
     void write(uint32_t address, uint8_t data);
 
+    uint8_t memoryRead8(uint32_t address);
     void memoryWrite8(uint32_t address, uint8_t data);
     void memoryWrite16(uint32_t address, uint16_t data);
     std::array<uint8_t, 16> readBlock(uint32_t address);
