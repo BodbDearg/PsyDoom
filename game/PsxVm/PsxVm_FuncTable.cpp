@@ -552,7 +552,6 @@ extern void LIBSPU__SpuInit() noexcept;
 extern void LIBSPU_SpuSetReverbDepth() noexcept;
 extern void LIBSPU_SpuSetReverbVoice() noexcept;
 extern void LIBSPU_SpuInit() noexcept;
-extern void LIBSPU_SpuSetReverb() noexcept;
 extern void _thunk_LIBSPU_SpuIsTransferCompleted() noexcept;
 extern void _thunk_LIBSPU_SpuSetTransferStartAddr() noexcept;
 extern void _thunk_LIBSPU_SpuWrite() noexcept;
@@ -1135,7 +1134,6 @@ namespace PsxVm {
         { 0x80054498, &LIBSPU_SpuSetReverbDepth },
         { 0x80054518, &LIBSPU_SpuSetReverbVoice },
         { 0x80054580, &LIBSPU_SpuInit },
-        { 0x800545A0, &LIBSPU_SpuSetReverb },
         { 0x800546E0, &_thunk_LIBSPU_SpuIsTransferCompleted },
         { 0x80054830, &_thunk_LIBSPU_SpuSetTransferStartAddr },
         { 0x80054894, &_thunk_LIBSPU_SpuWrite },

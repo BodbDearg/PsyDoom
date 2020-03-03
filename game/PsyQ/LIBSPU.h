@@ -40,7 +40,7 @@ void LIBSPU_SpuStart() noexcept;
 void LIBSPU_SpuSetReverbDepth() noexcept;
 void LIBSPU_SpuSetReverbVoice() noexcept;
 void LIBSPU_SpuInit() noexcept;
-void LIBSPU_SpuSetReverb() noexcept;
+bool LIBSPU_SpuSetReverb(const bool bEnable) noexcept;
 void LIBSPU_SpuQuit() noexcept;
 
 bool LIBSPU_SpuIsTransferCompleted(const SpuTransferQuery mode) noexcept;

@@ -1019,7 +1019,11 @@ loc_800516E8:
     return;
 }
 
+// TODO: REMOVE
 void LIBSPU__SpuIsInAllocateArea_() noexcept {
+    v0 = 0;
+    return;
+
 loc_8005178C:
     t0 = 0x80000000;                                    // Result = 80000000
     a3 = 0x40000000;                                    // Result = 40000000
@@ -3429,7 +3433,7 @@ loc_80054128:
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint32_t LIBSPU_SpuGetReverbOffsetAddr() noexcept {
     spu::SPU& spu = *PsxVm::gpSpu;
-    return spu.reverbCurrentAddress;
+    return (uint32_t) spu.reverbBase._reg * 8;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -3441,14 +3445,16 @@ int32_t LIBSPU_SpuClearReverbWorkArea() noexcept {
 
     // Can't clear the reverb area if reverb is active!
     // Also can't clear if no reverb address is set:
-    if (spu.control.masterReverb || (spu.reverbCurrentAddress == 0)) {
+    const uint32_t reverbBaseAddr = (uint32_t) spu.reverbBase._reg * 8;
+
+    if (spu.control.masterReverb || (reverbBaseAddr == 0)) {
         return SPU_ERROR;
     }
 
     // Zero the reverb area
-    if (spu.reverbCurrentAddress < SPU_RAM_SIZE) {
-        const uint32_t reverbAreaSize = SPU_RAM_SIZE - spu.reverbCurrentAddress;
-        std::memset(spu.ram.data() + spu.reverbCurrentAddress, 0, reverbAreaSize);
+    if (reverbBaseAddr < SPU_RAM_SIZE) {
+        const uint32_t reverbAreaSize = SPU_RAM_SIZE - reverbBaseAddr;
+        std::memset(spu.ram.data() + reverbBaseAddr, 0, reverbAreaSize);
     }
 
     return SPU_SUCCESS;
@@ -3594,58 +3600,15 @@ loc_80054580:
     return;
 }
 
-void LIBSPU_SpuSetReverb() noexcept {
-loc_800545A0:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    if (s0 == 0) goto loc_800545C8;
-    v0 = 1;                                             // Result = 00000001
-    if (s0 == v0) goto loc_800545E8;
-    goto loc_80054654;
-loc_800545C8:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x6A4C;                                       // Result = gLIBSPU__spu_rev_flag (80076A4C)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x6A4C);                                 // Store to: gLIBSPU__spu_rev_flag (80076A4C)
-    a1 = 0x60;                                          // Result = 00000060
-    goto loc_8005464C;
-loc_800545E8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A50);                               // Load from: gLIBSPU__spu_rev_reserve_wa (80076A50)
-    a1 = 0x60;                                          // Result = 00000060
-    if (v0 == s0) goto loc_80054634;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A54);                               // Load from: gLIBSPU__spu_rev_offsetaddr (80076A54)
-    LIBSPU__SpuIsInAllocateArea_();
-    a1 = 0x60;                                          // Result = 00000060
-    if (v0 == 0) goto loc_80054634;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x6A4C;                                       // Result = gLIBSPU__spu_rev_flag (80076A4C)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x6A4C);                                 // Store to: gLIBSPU__spu_rev_flag (80076A4C)
-    goto loc_8005464C;
-loc_80054634:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x6A4C;                                       // Result = gLIBSPU__spu_rev_flag (80076A4C)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x6A4C);                                // Store to: gLIBSPU__spu_rev_flag (80076A4C)
-loc_8005464C:
-    LIBSPU__spu_ioctl();
-loc_80054654:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A4C);                               // Load from: gLIBSPU__spu_rev_flag (80076A4C)
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Turn reverb on or off and return the new reverb on/off setting.
+// In the real LIBSPU, this could fail due to 'SpuMalloc' occupying the work area required for reverb.
+// Since DOOM does not use SpuMalloc, this can never fail.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool LIBSPU_SpuSetReverb(const bool bEnable) noexcept {    
+    spu::SPU& spu = *PsxVm::gpSpu;
+    spu.control.masterReverb = bEnable;
+    return bEnable;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
