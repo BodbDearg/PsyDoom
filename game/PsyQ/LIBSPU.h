@@ -46,7 +46,7 @@ void LIBSPU_SpuQuit() noexcept;
 bool LIBSPU_SpuIsTransferCompleted(const SpuTransferQuery mode) noexcept;
 void _thunk_LIBSPU_SpuIsTransferCompleted() noexcept;
 
-void LIBSPU_SpuInitMalloc() noexcept;
+void LIBSPU_SpuInitMalloc(const int32_t maxAllocs, uint8_t* const pMemMangementTbl) noexcept;
 void LIBSPU_SpuSetTransferMode(const SpuTransferMode mode) noexcept;
 
 uint32_t LIBSPU_SpuSetTransferStartAddr(const uint32_t addr) noexcept;

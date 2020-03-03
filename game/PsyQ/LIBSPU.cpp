@@ -3669,30 +3669,12 @@ void _thunk_LIBSPU_SpuIsTransferCompleted() noexcept {
     v0 = LIBSPU_SpuIsTransferCompleted((SpuTransferQuery) a0);
 }
 
-void LIBSPU_SpuInitMalloc() noexcept {
-loc_80054788:
-    v0 = a0;
-    v1 = 0x40000000;                                    // Result = 40000000
-    if (i32(v0) > 0) goto loc_8005479C;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_800547D4;
-loc_8005479C:
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x6E60);                               // Load from: gLIBSPU__spu_mem_mode_plus (800A91A0)
-    v1 |= 0x1010;                                       // Result = 40001010
-    sw(v1, a1);
-    v1 = 0x10000;                                       // Result = 00010000
-    at = 0x80090000;                                    // Result = 80090000
-    sw(a1, at + 0x7784);                                // Store to: gLIBSPU__spu_memList (80097784)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x6A38);                                 // Store to: gLIBSPU__spu_AllocLastNum (80076A38)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x6A34);                                // Store to: gLIBSPU__spu_AllocBlockNum (80076A34)
-    v1 = v1 << a0;
-    v1 -= 0x1010;
-    sw(v1, a1 + 0x4);
-loc_800547D4:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize SPU memory management.
+// This call is now a NO-OP because DOOM does not use 'SpuMalloc' - hence no need to implement this.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBSPU_SpuInitMalloc([[maybe_unused]] const int32_t maxAllocs, [[maybe_unused]] uint8_t* const pMemMangementTbl) noexcept {
+    // Ignore because DOOM doesn't use 'SpuMalloc'...
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
