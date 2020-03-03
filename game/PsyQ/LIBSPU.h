@@ -14,6 +14,21 @@ enum SpuTransferMode : uint32_t {
     SPU_TRANSFER_BY_IO  = 1     // Transfer data to the SPU using synchronous writes by the CPU (slower)
 };
 
+// Holds volume levels for left and right channels
+struct SpuVolume {
+    int16_t     left;
+    int16_t     right;
+};
+
+// Structure holding various reverb related settings
+struct SpuReverbAttr {
+    uint32_t    mask;           // Which reverb properties to set for commands that use this structure (e.g 'SPU_REV_DEPTHL' or 'SPU_REV_MODE')
+    int32_t     mode;           // What type of reverb to use
+    SpuVolume   depth;          // Depth/loudness of reverb echo
+    int32_t     delay;          // Delay in reverb echo
+    int32_t     feedback;       // Reverb echo feedback
+};
+
 // Return codes for some functions
 static constexpr int32_t SPU_SUCCESS    = 0;
 static constexpr int32_t SPU_ERROR      = -1;
@@ -25,6 +40,13 @@ static constexpr int32_t SPU_ON     = 1;
 // Parameter for various functions.
 // It means make changes to ALL voices indicated by a bitmask, not just voices for enabled or disabled bits.
 static constexpr int32_t SPU_BIT    = 8;
+
+// Which attributes in 'SpuReverbAttr' to use
+static constexpr uint32_t SPU_REV_MODE      = 0x01;
+static constexpr uint32_t SPU_REV_DEPTHL    = 0x02;
+static constexpr uint32_t SPU_REV_DEPTHR    = 0x04;
+static constexpr uint32_t SPU_REV_DELAYTIME = 0x08;
+static constexpr uint32_t SPU_REV_FEEDBACK  = 0x10;
 
 void LIBSPU_SpuSetVoiceAttr() noexcept;
 void LIBSPU__SpuSetVoiceAttr() noexcept;
@@ -45,7 +67,7 @@ uint32_t LIBSPU_SpuGetReverbOffsetAddr() noexcept;
 int32_t LIBSPU_SpuClearReverbWorkArea() noexcept;
 void LIBSPU__SpuInit() noexcept;
 void LIBSPU_SpuStart() noexcept;
-void LIBSPU_SpuSetReverbDepth() noexcept;
+void LIBSPU_SpuSetReverbDepth(const SpuReverbAttr& reverb) noexcept;
 int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) noexcept;
 void LIBSPU_SpuInit() noexcept;
 int32_t LIBSPU_SpuSetReverb(const int32_t onOff) noexcept;

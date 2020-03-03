@@ -30,8 +30,7 @@ loc_80045328:
     sw(v1, at - 0xF70);                                 // Store to: 8007F090
     a0 = s0;                                            // Result = 8007F080
     LIBSPU_SpuSetReverbModeParam();
-    a0 = s0;                                            // Result = 8007F080
-    LIBSPU_SpuSetReverbDepth();
+    LIBSPU_SpuSetReverbDepth(*vmAddrToPtr<const SpuReverbAttr>(s0));
     if (s1 != 0) goto loc_800453BC;
     LIBSPU_SpuSetReverb(SPU_OFF);
     v0 = 0x70000;                                       // Result = 00070000
@@ -71,7 +70,7 @@ void psxspu_set_reverb_depth() noexcept {
     at = 0x80080000;                                    // Result = 80080000
     sh(a1, at - 0xF76);                                 // Store to: 8007F08A
     a0 = v0 - 8;                                        // Result = 8007F080
-    LIBSPU_SpuSetReverbDepth();
+    LIBSPU_SpuSetReverbDepth(*vmAddrToPtr<const SpuReverbAttr>(a0));
     v0 = 1;                                             // Result = 00000001
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5988);                                // Store to: 80075988

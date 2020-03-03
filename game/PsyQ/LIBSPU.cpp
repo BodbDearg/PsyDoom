@@ -3525,36 +3525,20 @@ void LIBSPU_SpuStart() noexcept {
     // This previously setup DMA related events, but now since we have no more DMA there is nothing do be done...
 }
 
-void LIBSPU_SpuSetReverbDepth() noexcept {
-loc_80054498:
-    a1 = lw(a0);
-    a2 = (a1 < 1);
-    v0 = a1 & 2;
-    if (a2 != 0) goto loc_800544B4;
-    if (v0 == 0) goto loc_800544D8;
-loc_800544B4:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6E70);                               // Load from: gLIBSPU__spu_RXX (80076E70)
-    v1 = lhu(a0 + 0x8);
-    sh(v1, v0 + 0x184);
-    v0 = lhu(a0 + 0x8);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sh(v0, at - 0x6E6C);                                // Store to: gLIBSPU__spu_rev_attr[4] (800A9194)
-loc_800544D8:
-    if (a2 != 0) goto loc_800544EC;
-    v0 = a1 & 4;
-    if (v0 == 0) goto loc_80054510;
-loc_800544EC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6E70);                               // Load from: gLIBSPU__spu_RXX (80076E70)
-    v1 = lhu(a0 + 0xA);
-    sh(v1, v0 + 0x186);
-    v0 = lhu(a0 + 0xA);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sh(v0, at - 0x6E6A);                                // Store to: gLIBSPU__spu_rev_attr[5] (800A9196)
-loc_80054510:
-    v0 = 0;                                             // Result = 00000000
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the depth of reverb using the settings in the given structure.
+// By default both left and right channels are set, but you can set independently using 'SPU_REV_DEPTHL' and 'SPU_REV_DEPTHR' mask flags.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBSPU_SpuSetReverbDepth(const SpuReverbAttr& reverb) noexcept {
+    spu::SPU& spu = *PsxVm::gpSpu;
+
+    if ((reverb.mask == 0) || (reverb.mask & SPU_REV_DEPTHL)) {
+        spu.reverbVolume.left = reverb.depth.left;
+    }
+
+    if ((reverb.mask == 0) || (reverb.mask & SPU_REV_DEPTHR)) {
+        spu.reverbVolume.right = reverb.depth.right;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
