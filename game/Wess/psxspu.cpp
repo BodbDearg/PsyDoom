@@ -29,7 +29,7 @@ loc_80045328:
     at = 0x80080000;                                    // Result = 80080000
     sw(v1, at - 0xF70);                                 // Store to: 8007F090
     a0 = s0;                                            // Result = 8007F080
-    LIBSPU_SpuSetReverbModeParam();
+    LIBSPU_SpuSetReverbModeParam(*vmAddrToPtr<const SpuReverbAttr>(s0));
     LIBSPU_SpuSetReverbDepth(*vmAddrToPtr<const SpuReverbAttr>(s0));
     if (s1 != 0) goto loc_800453BC;
     LIBSPU_SpuSetReverb(SPU_OFF);

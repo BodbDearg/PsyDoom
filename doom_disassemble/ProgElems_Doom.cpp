@@ -2926,7 +2926,8 @@ static const ProgElem ELEMS[] = {
     { 0x80076A5C, 0x80076A60, "gLIBSPU__spu_EVdma",                     ProgElemType::UINT32 },
     { 0x80076E6C, 0x80076E70, "gbLIBSPU__spu_isCalled",                 ProgElemType::UINT32 },
     { 0x80076E70, 0x80076E74, "gLIBSPU__spu_RXX",                       ProgElemType::PTR32 },
-    { 0x80076E74, 0x80076E78, "gLIBSPU__spu_RXX",                       ProgElemType::PTR32 },    
+    { 0x80076E74, 0x80076E78, "gLIBSPU__spu_RXX",                       ProgElemType::PTR32 },
+    { 0x80076e78, 0x80076EA0, "gLIBSPU_ReverbWorkAreaBaseAddrs",        ProgElemType::ARRAY, ProgElemType::UINT32 },
     { 0x800771F4, 0x800771F8, "gpLIBCD_CD_cbsync",                      ProgElemType::PTR32 },
     { 0x800771F8, 0x800771FC, "gpLIBCD_CD_cbready",                     ProgElemType::PTR32 },
     { 0x800771FC, 0x80077200, "gpLIBCD_CD_cbread",                      ProgElemType::PTR32 },
@@ -3700,7 +3701,7 @@ static const ProgElem ELEMS[] = {
     { 0x800A8918, 0x800A8A44, "gPlayer2",                               ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x800A8A44, 0x800A8A4C, "gThingLine_tv1",                         ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x800A8A60, 0x800A8A68, "gThingLine_tv2",                         ProgElemType::ARRAY, ProgElemType::INT32, 0 },
-    { 0x800A8A7C, 0x800A8E7C, "gVisSprites",                            ProgElemType::ARRAY, ProgElemType::INT32, 0 },    
+    { 0x800A8A7C, 0x800A8E7C, "gVisSprites",                            ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x800A8E7C, 0x800A8E86, "gPlayerStarts_1",                        ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x800A8E86, 0x800A8E90, "gPlayerStarts_2",                        ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x800A8E90, 0x800A8F24, "gMObjHead",                              ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
@@ -3735,6 +3736,11 @@ static const ProgElem ELEMS[] = {
     { 0x800A9164, 0x800A9178, "gDispEnv1",                              ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x800A9178, 0x800A918C, "gDispEnv2",                              ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x800A918C, 0x800A91A0, "gLIBSPU__spu_rev_attr",                  ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
+    { 0x800A9190, 0x800A9194, "gLIBSPU_ReverbMode",                     ProgElemType::UINT32 },
+    { 0x800A9194, 0x800A9196, "gLIBSPU_ReverbLeftDepth",                ProgElemType::INT16 },
+    { 0x800A9196, 0x800A9198, "gLIBSPU_ReverbRightDepth",               ProgElemType::INT16 },
+    { 0x800A9198, 0x800A919C, "gLIBSPU_ReverbDelay",                    ProgElemType::INT32 },
+    { 0x800A919C, 0x800A91A0, "gLIBSPU_ReverbFeedback",                 ProgElemType::INT32 },
     { 0x800A91A0, 0x800A91A4, "gLIBSPU__spu_mem_mode_plus",             ProgElemType::UINT32 },
     { 0x800A91A4, 0x800A91B4, "gCheatSequenceBtns",                     ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x800A91B4, 0x800A94B4, "gpDrawSubsectors",                       ProgElemType::ARRAY, ProgElemType::PTR32, 0 },
@@ -3743,7 +3749,7 @@ static const ProgElem ELEMS[] = {
     { 0x800A9518, 0x800A9D18, "gPSXCD_sectorbuf",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800A9D18, 0x800A9D90, "gpActiveCeilings",                       ProgElemType::ARRAY, ProgElemType::PTR32, 0 },
     { 0x800A9D90, 0x800A9E30, "gOpenPsxCdFiles",                        ProgElemType::ARRAY, ProgElemType::UINT32, 0 },  // Max of 4 (40 bytes each)
-    { 0x800A9E30, 0x800A9EC4, "gEmptyMObj",                             ProgElemType::ARRAY, ProgElemType::UINT32, 0 },    
+    { 0x800A9E30, 0x800A9EC4, "gEmptyMObj",                             ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
 };
 
 static const JRInstHandler JR_INST_HANDLERS[] = {

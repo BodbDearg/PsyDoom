@@ -22,6 +22,9 @@ END_THIRD_PARTY_INCLUDES
 // How big the sound RAM is available to the SPU
 static constexpr uint32_t SPU_RAM_SIZE = 512 * 1024;
 
+// The current reverb mode in use
+static SpuReverbMode gReverbMode = SPU_REV_MODE_OFF;
+
 void LIBSPU_SpuSetVoiceAttr() noexcept {
 loc_80050894:
     sp -= 0x18;
@@ -669,402 +672,158 @@ loc_800510A8:
     return;
 }
 
-void LIBSPU_SpuSetReverbModeParam() noexcept {
-loc_80051208:
-    sp -= 0x90;
-    sw(s2, sp + 0x70);
-    s2 = a0;
-    sw(fp, sp + 0x88);
-    fp = 0;                                             // Result = 00000000
-    sw(s4, sp + 0x78);
-    s4 = 0;                                             // Result = 00000000
-    sw(s6, sp + 0x80);
-    s6 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x8C);
-    sw(s7, sp + 0x84);
-    sw(s5, sp + 0x7C);
-    sw(s3, sp + 0x74);
-    sw(s1, sp + 0x6C);
-    sw(s0, sp + 0x68);
-    s3 = lw(s2);
-    s7 = 0;                                             // Result = 00000000
-    s5 = (s3 < 1);
-    sw(0, sp + 0x10);
-    if (s5 != 0) goto loc_80051264;
-    v0 = s3 & 1;
-    if (v0 == 0) goto loc_80051384;
-loc_80051264:
-    s0 = lw(s2 + 0x4);
-    v0 = s0 & 0x100;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = -0x101;                                    // Result = FFFFFEFF
-        if (bJump) goto loc_80051280;
-    }
-    s0 &= v0;
-    fp = 1;                                             // Result = 00000001
-loc_80051280:
-    v0 = (s0 < 0xA);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 << 2;
-        if (bJump) goto loc_800512B4;
-    }
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x6E78;                                       // Result = 80076E78
-    at += v0;
-    a0 = lw(at);
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x6E78;                                       // Result = 80076E78
-    LIBSPU__SpuIsInAllocateArea_();
-    s4 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_800512BC;
-loc_800512B4:
-    v0 = -1;                                            // Result = FFFFFFFF
-    goto loc_800516E8;
-loc_800512BC:
-    a2 = sp + 0x10;
-    a1 = 0x43;                                          // Result = 00000043
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(s0, at - 0x6E70);                                // Store to: gLIBSPU__spu_rev_attr[2] (800A9190)
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x6E70);                               // Load from: gLIBSPU__spu_rev_attr[2] (800A9190)
-    a3 = -1;                                            // Result = FFFFFFFF
-    a0 = v1 << 2;
-    a0 += s1;
-    v0 = v1 << 4;
-    v0 += v1;
-    v0 <<= 2;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 += 0x6EC8;                                       // Result = 80076EC8
-    a0 = lw(a0);
-    v1 += v0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x6A54);                                // Store to: gLIBSPU__spu_rev_offsetaddr (80076A54)
-loc_80051304:
-    v0 = lbu(v1);
-    v1++;
-    a1--;
-    sb(v0, a2);
-    a2++;
-    if (a1 != a3) goto loc_80051304;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x6E70);                               // Load from: gLIBSPU__spu_rev_attr[2] (800A9190)
-    v0 = 7;                                             // Result = 00000007
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_80051340;
-    }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0xFF;                                      // Result = 000000FF
-        if (bJump) goto loc_8005135C;
-    }
-    goto loc_80051374;
-loc_80051340:
-    v0 = 0xFF;                                          // Result = 000000FF
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(v0, at - 0x6E64);                                // Store to: gLIBSPU__spu_rev_attr[8] (800A919C)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(v0, at - 0x6E68);                                // Store to: gLIBSPU__spu_rev_attr[6] (800A9198)
-    goto loc_80051384;
-loc_8005135C:
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(0, at - 0x6E64);                                 // Store to: gLIBSPU__spu_rev_attr[8] (800A919C)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(v0, at - 0x6E68);                                // Store to: gLIBSPU__spu_rev_attr[6] (800A9198)
-    goto loc_80051384;
-loc_80051374:
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(0, at - 0x6E64);                                 // Store to: gLIBSPU__spu_rev_attr[8] (800A919C)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(0, at - 0x6E68);                                 // Store to: gLIBSPU__spu_rev_attr[6] (800A9198)
-loc_80051384:
-    v0 = s3 & 8;
-    if (s5 != 0) goto loc_80051394;
-    if (v0 == 0) goto loc_800514AC;
-loc_80051394:
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x6E70);                               // Load from: gLIBSPU__spu_rev_attr[2] (800A9190)
-    v0 = (i32(v1) < 9);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < 7);
-        if (bJump) goto loc_800514A4;
-    }
-    if (v0 != 0) goto loc_800514A4;
-    s6 = 1;                                             // Result = 00000001
-    if (s4 != 0) goto loc_8005140C;
-    a1 = sp + 0x10;
-    a0 = 0x43;                                          // Result = 00000043
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6E70);                               // Load from: gLIBSPU__spu_rev_attr[2] (800A9190)
-    a2 = -1;                                            // Result = FFFFFFFF
-    v1 = v0 << 4;
-    v1 += v0;
-    v1 <<= 2;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x6EC8;                                       // Result = 80076EC8
-    v1 += v0;
-loc_800513E8:
-    v0 = lbu(v1);
-    v1++;
-    a0--;
-    sb(v0, a1);
-    a1++;
-    if (a0 != a2) goto loc_800513E8;
-    v0 = 0xC010000;                                     // Result = 0C010000
-    v0 |= 0x1C00;                                       // Result = 0C011C00
-    sw(v0, sp + 0x10);
-loc_8005140C:
-    a2 = 0x81020000;                                    // Result = 81020000
-    a0 = lw(s2 + 0xC);
-    a2 |= 0x409;                                        // Result = 81020409
-    v1 = a0 << 13;
-    mult(v1, a2);
-    v0 = hi;
-    a1 = a0 << 12;
-    mult(a1, a2);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a0, at - 0x6E68);                                // Store to: gLIBSPU__spu_rev_attr[6] (800A9198)
-    a0 = lhu(sp + 0x14);
-    v0 += v1;
-    v0 = u32(i32(v0) >> 6);
-    v1 = u32(i32(v1) >> 31);
-    v0 -= v1;
-    v0 -= a0;
-    sh(v0, sp + 0x28);
-    v0 = lhu(sp + 0x16);
-    a0 = lhu(sp + 0x36);
-    v1 = hi;
-    v1 += a1;
-    v1 = u32(i32(v1) >> 6);
-    a1 = u32(i32(a1) >> 31);
-    v1 -= a1;
-    v0 = v1 - v0;
-    sh(v0, sp + 0x2A);
-    v0 = lhu(sp + 0x2E);
-    a0 += v1;
-    sh(a0, sp + 0x34);
-    v0 += v1;
-    sh(v0, sp + 0x2C);
-    v0 = lhu(sp + 0x4C);
-    a0 = lhu(sp + 0x4E);
-    v0 += v1;
-    v1 += a0;
-    sh(v0, sp + 0x48);
-    sh(v1, sp + 0x4A);
-    goto loc_800514AC;
-loc_800514A4:
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(0, at - 0x6E68);                                 // Store to: gLIBSPU__spu_rev_attr[6] (800A9198)
-loc_800514AC:
-    v0 = s3 & 0x10;
-    if (s5 != 0) goto loc_800514BC;
-    if (v0 == 0) goto loc_8005158C;
-loc_800514BC:
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x6E70);                               // Load from: gLIBSPU__spu_rev_attr[2] (800A9190)
-    v0 = (i32(v1) < 9);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < 7);
-        if (bJump) goto loc_80051584;
-    }
-    if (v0 != 0) goto loc_80051584;
-    s7 = 1;                                             // Result = 00000001
-    if (s4 != 0) goto loc_80051544;
-    a1 = sp + 0x10;
-    if (s6 != 0) goto loc_80051534;
-    a0 = 0x43;                                          // Result = 00000043
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6E70);                               // Load from: gLIBSPU__spu_rev_attr[2] (800A9190)
-    a2 = -1;                                            // Result = FFFFFFFF
-    v1 = v0 << 4;
-    v1 += v0;
-    v1 <<= 2;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x6EC8;                                       // Result = 80076EC8
-    v1 += v0;
-loc_80051514:
-    v0 = lbu(v1);
-    v1++;
-    a0--;
-    sb(v0, a1);
-    a1++;
-    if (a0 != a2) goto loc_80051514;
-    v0 = 0x80;                                          // Result = 00000080
-    goto loc_80051540;
-loc_80051534:
-    v0 = lw(sp + 0x10);
-    v0 |= 0x80;
-loc_80051540:
-    sw(v0, sp + 0x10);
-loc_80051544:
-    a0 = 0x81020000;                                    // Result = 81020000
-    v0 = lw(s2 + 0x10);
-    a0 |= 0x409;                                        // Result = 81020409
-    v1 = v0 << 7;
-    v1 += v0;
-    v1 <<= 8;
-    mult(v1, a0);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(v0, at - 0x6E64);                                // Store to: gLIBSPU__spu_rev_attr[8] (800A919C)
-    v0 = hi;
-    v0 += v1;
-    v0 = u32(i32(v0) >> 6);
-    v1 = u32(i32(v1) >> 31);
-    v0 -= v1;
-    sh(v0, sp + 0x22);
-    goto loc_8005158C;
-loc_80051584:
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(0, at - 0x6E64);                                 // Store to: gLIBSPU__spu_rev_attr[8] (800A919C)
-loc_8005158C:
-    a1 = 0x6A;                                          // Result = 0000006A
-    if (s4 == 0) goto loc_800515D0;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = sp + 0x58;
-    LIBSPU__spu_ioctl();
-    v0 = lw(sp + 0x58);
-    a1 = 0x60;                                          // Result = 00000060
-    if (v0 == 0) goto loc_80051640;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = sp + 0x5C;
-    sw(0, sp + 0x5C);
-    LIBSPU__spu_ioctl();
-    goto loc_80051640;
-loc_800515D0:
-    v0 = s3 & 2;
-    if (s5 != 0) goto loc_800515E0;
-    if (v0 == 0) goto loc_80051604;
-loc_800515E0:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A04);                               // Load from: 80076A04
-    v1 = lhu(s2 + 0x8);
-    sh(v1, v0 + 0x184);
-    v0 = lhu(s2 + 0x8);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sh(v0, at - 0x6E6C);                                // Store to: gLIBSPU__spu_rev_attr[4] (800A9194)
-loc_80051604:
-    v0 = s3 & 4;
-    if (s5 != 0) goto loc_80051614;
-    if (v0 == 0) goto loc_80051664;
-loc_80051614:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A04);                               // Load from: 80076A04
-    v1 = lhu(s2 + 0xA);
-    sh(v1, v0 + 0x186);
-    v0 = lhu(s2 + 0xA);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sh(v0, at - 0x6E6A);                                // Store to: gLIBSPU__spu_rev_attr[5] (800A9196)
-    goto loc_80051664;
-loc_80051640:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A04);                               // Load from: 80076A04
-    sh(0, v0 + 0x184);
-    sh(0, v0 + 0x186);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sh(0, at - 0x6E6C);                                 // Store to: gLIBSPU__spu_rev_attr[4] (800A9194)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sh(0, at - 0x6E6A);                                 // Store to: gLIBSPU__spu_rev_attr[5] (800A9196)
-loc_80051664:
-    a1 = 0x63;                                          // Result = 00000063
-    if (s4 != 0) goto loc_8005167C;
-    if (s6 != 0) goto loc_8005167C;
-    if (s7 == 0) goto loc_8005168C;
-loc_8005167C:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = sp + 0x10;
-    LIBSPU__spu_ioctl();
-loc_8005168C:
-    if (fp == 0) goto loc_800516A4;
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x6E70);                               // Load from: gLIBSPU__spu_rev_attr[2] (800A9190)
-    LIBSPU_SpuClearReverbWorkArea();
-loc_800516A4:
-    v0 = 0;                                             // Result = 00000000
-    if (s4 == 0) goto loc_800516E8;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x6A54;                                       // Result = gLIBSPU__spu_rev_offsetaddr (80076A54)
-    a1 = 0x61;                                          // Result = 00000061
-    LIBSPU__spu_ioctl();
-    v0 = lw(sp + 0x58);
-    a1 = 0x60;                                          // Result = 00000060
-    if (v0 == 0) goto loc_800516E4;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = sp + 0x58;
-    LIBSPU__spu_ioctl();
-loc_800516E4:
-    v0 = 0;                                             // Result = 00000000
-loc_800516E8:
-    ra = lw(sp + 0x8C);
-    fp = lw(sp + 0x88);
-    s7 = lw(sp + 0x84);
-    s6 = lw(sp + 0x80);
-    s5 = lw(sp + 0x7C);
-    s4 = lw(sp + 0x78);
-    s3 = lw(sp + 0x74);
-    s2 = lw(sp + 0x70);
-    s1 = lw(sp + 0x6C);
-    s0 = lw(sp + 0x68);
-    sp += 0x90;
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update one or more reverb parameters, including reverb mode.
+// Note that if the reverb mode is changed, then the reverb depth is cleared to '0'.
+// Returns 'SPU_ERROR' on failure, otherwise 'SPU_SUCCESS'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
+    spu::SPU& spu = *PsxVm::gpSpu;
 
-// TODO: REMOVE
-void LIBSPU__SpuIsInAllocateArea_() noexcept {
-    v0 = 0;
-    return;
+    // If no attributes are set in the mask then the behavior is that ALL attributes are being updated
+    const uint32_t attribMask = reverbAttr.mask;
+    const bool bSetAllAttribs = (attribMask == 0);
 
-loc_8005178C:
-    t0 = 0x80000000;                                    // Result = 80000000
-    a3 = 0x40000000;                                    // Result = 40000000
-    a2 = 0xFFF0000;                                     // Result = 0FFF0000
-    a2 |= 0xFFFF;                                       // Result = 0FFFFFFF
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6E60);                               // Load from: gLIBSPU__spu_mem_mode_plus (800A91A0)
-    a1 = 0x80090000;                                    // Result = 80090000
-    a1 = lw(a1 + 0x7784);                               // Load from: gLIBSPU__spu_memList (80097784)
-    a0 = a0 << v0;
-loc_800517B0:
-    v1 = lw(a1);
-    v0 = v1 & t0;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = v1 & a3;
-        if (bJump) goto loc_800517F0;
+    // Figure out what we are changing
+    const bool bSetReverbMode           = (bSetAllAttribs || (attribMask & SPU_REV_MODE));
+    const bool bSetReverbLeftDepth      = (bSetAllAttribs || (attribMask & SPU_REV_DEPTHL));
+    const bool bSetReverbRightDepth     = (bSetAllAttribs || (attribMask & SPU_REV_DEPTHR));
+    const bool bSetReverbDelay          = (bSetAllAttribs || (attribMask & SPU_REV_DELAYTIME));
+    const bool bSetReverbFeedback       = (bSetAllAttribs || (attribMask & SPU_REV_FEEDBACK));
+    const bool bClearReverbWorkingArea  = (reverbAttr.mode & SPU_REV_MODE_CLEAR_WA);
+
+    // Set the new reverb mode (if changing) and grab the default reverb settings for whatever mode is now current
+    if (bSetReverbMode) {
+        const SpuReverbMode reverbMode = (SpuReverbMode)(reverbAttr.mode & (~SPU_REV_MODE_CLEAR_WA));   // Must remove the 'CLEAR_WA' (clear working area flag)
+
+        if (reverbMode < SPU_REV_MODE_MAX) {
+            gReverbMode = reverbMode;
+            spu.reverbBase._reg = gReverbWorkAreaBaseAddrs[gReverbMode];    // Update the reverb working area base address when changing mode
+        } else {
+            // Bad reverb mode - this causes the call to fail!
+            return SPU_ERROR;
+        }
     }
-    v1 &= a2;
-    if (v0 != 0) goto loc_800517F8;
-    v0 = (v1 < a0);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_800517FC;
+
+    SpuReverbDef reverbDef = gReverbDefs[gReverbMode];
+
+    // Initially we send all the fields to the SPU
+    reverbDef.fieldBits = 0;
+
+    // Manually adjust reverb delay time if the reverb mode allows it
+    if (bSetReverbDelay) {
+        if ((gReverbMode == SPU_REV_MODE_ECHO) || (gReverbMode == SPU_REV_MODE_DELAY)) {
+            // Be more selective about what changes we make to SPU registers if we can
+            if (!bSetReverbMode) {
+                reverbDef.fieldBits = (
+                    SPU_SAME_SIDE_REFRACT_ADDR_1_LEFT |
+                    SPU_SAME_SIDE_REFRACT_ADDR_1_RIGHT |
+                    SPU_COMB_ADDR_1_LEFT |
+                    SPU_SAME_SIDE_REFRACT_ADDR_2_LEFT |
+                    SPU_APF_ADDR_1_LEFT |
+                    SPU_APF_ADDR_1_RIGHT
+                );
+            }
+
+            // These are the tweaks that the original PsyQ SDK used by DOOM did based on custom delay parameters:
+            const int32_t delay = reverbAttr.delay;
+            const int16_t addrOffset = (int16_t)((delay * 4096) / 127);
+
+            reverbDef.sameSideRefractAddr1Left = (int16_t)((delay * 8192) / 127) - reverbDef.apfOffset1;
+            reverbDef.sameSideRefractAddr1Right = addrOffset - reverbDef.apfOffset2;
+            reverbDef.sameSideRefractAddr2Left = addrOffset + reverbDef.sameSideRefractAddr2Right;
+            reverbDef.combAddr1Left = addrOffset + reverbDef.combAddr1Right;
+            reverbDef.apfAddr1Left = addrOffset + reverbDef.apfAddr2Left;
+            reverbDef.apfAddr1Right = addrOffset + reverbDef.apfAddr2Right;
+        }
     }
-    v0 = lw(a1 + 0x4);
-    v0 += v1;
-    v0 = (a0 < v0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_800517FC;
+
+    // Manually adjust reverb feedback if the reverb mode allows it
+    if (bSetReverbFeedback) {
+        if ((gReverbMode == SPU_REV_MODE_ECHO) || (gReverbMode == SPU_REV_MODE_DELAY)) {
+            // Be more selective about what changes we make to SPU registers if we can
+            if (!bSetReverbMode) {
+                reverbDef.fieldBits |= SPU_REVF_REFLECTION_VOLUME_2;
+            }
+
+            reverbDef.reflectionVolume2 = (uint16_t)((reverbAttr.feedback * 33024) / 127);
+        }
     }
-loc_800517F0:
-    a1 += 8;
-    goto loc_800517B0;
-loc_800517F8:
-    v0 = 0;                                             // Result = 00000000
-loc_800517FC:
-    return;
+
+    // If the reverb mode is being set then we must disable master temporarily
+    const bool bPrevMasterReverbEnabled = spu.control.masterReverb;
+    spu.control.masterReverb = false;
+
+    // Update the reverb depth.
+    // Note that if the reverb mode is being set then LIBSPU must also set reverb depth temporarily to '0', as per the docs.
+    // It's up to callers in that situation to call 'LIBSPU_SpuSetReverbDepth' to set the depth again after that...
+    if (bSetReverbMode) {
+        spu.reverbVolume.left = 0;
+        spu.reverbVolume.right = 0;
+    } else {
+        if (bSetReverbLeftDepth) {
+            spu.reverbVolume.left = reverbAttr.depth.left;
+        }
+
+        if (bSetReverbRightDepth) {
+            spu.reverbVolume.right = reverbAttr.depth.right;
+        }
+    }
+    
+    // Update the SPU reverb registers if setting reverb mode, delay time or feedback.
+    // If we are just updating the left/right reverb depth however, then we can skip this.
+    if (bSetReverbMode || bSetReverbDelay || bSetReverbFeedback) {        
+        const uint32_t regBits = reverbDef.fieldBits;
+        const bool bSetAllRegs = (regBits == 0);
+        
+        const auto updateReg = [&](const uint32_t idx, const uint16_t value) noexcept {
+            if (bSetAllRegs || (regBits & (1 << idx))) {
+                spu.reverbRegisters[idx]._reg = value;
+            }
+        };
+
+        updateReg(0,  reverbDef.apfOffset1);
+        updateReg(1,  reverbDef.apfOffset2);
+        updateReg(2,  reverbDef.reflectionVolume1);
+        updateReg(3,  reverbDef.combVolume1);
+        updateReg(4,  reverbDef.combVolume2);
+        updateReg(5,  reverbDef.combVolume3);
+        updateReg(6,  reverbDef.combVolume4);
+        updateReg(7,  reverbDef.reflectionVolume2);
+        updateReg(8,  reverbDef.apfVolume1);
+        updateReg(9,  reverbDef.apfVolume2);
+        updateReg(10, reverbDef.sameSideRefractAddr1Left);
+        updateReg(11, reverbDef.sameSideRefractAddr1Right);
+        updateReg(12, reverbDef.combAddr1Left);
+        updateReg(13, reverbDef.combAddr1Right);
+        updateReg(14, reverbDef.combAddr2Left);
+        updateReg(15, reverbDef.combAddr2Right);
+        updateReg(16, reverbDef.sameSideRefractAddr2Left);
+        updateReg(17, reverbDef.sameSideRefractAddr2Right);
+        updateReg(18, reverbDef.diffSideReflectAddr1Left);
+        updateReg(19, reverbDef.diffSideReflectAddr1Right);
+        updateReg(20, reverbDef.combAddr3Left);
+        updateReg(21, reverbDef.combAddr3Right);
+        updateReg(22, reverbDef.combAddr4Left);
+        updateReg(23, reverbDef.combAddr4Right);
+        updateReg(24, reverbDef.diffSideReflectAddr2Left);
+        updateReg(25, reverbDef.diffSideReflectAddr2Right);
+        updateReg(26, reverbDef.apfAddr1Left);
+        updateReg(27, reverbDef.apfAddr1Right);
+        updateReg(28, reverbDef.apfAddr2Left);
+        updateReg(29, reverbDef.apfAddr2Right);
+        updateReg(30, reverbDef.inputVolLeft);
+        updateReg(31, reverbDef.inputVolRight);
+    }
+    
+    // Clear the reverb working area if that was specified
+    if (bClearReverbWorkingArea) {
+        LIBSPU_SpuClearReverbWorkArea();
+    }
+
+    // Restore master reverb if we disabled it and return success
+    spu.control.masterReverb = bPrevMasterReverbEnabled;
+    return SPU_SUCCESS;
 }
 
 void LIBSPU__spu_init() noexcept {
@@ -3470,6 +3229,7 @@ loc_80054334:
     a0 = s0;
     LIBSPU__spu_init();
     LIBSPU_SpuStart();
+
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
     at = 0x800B0000;                                    // Result = 800B0000
@@ -3499,6 +3259,7 @@ loc_80054334:
     sw(v0, at + 0x6A54);                                // Store to: gLIBSPU__spu_rev_offsetaddr (80076A54)
     a1 = 0x61;                                          // Result = 00000061
     LIBSPU__spu_ioctl();
+
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44) 
     a2 = 0x80070000;                                    // Result = 80070000

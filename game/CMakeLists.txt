@@ -167,6 +167,7 @@ set(SOURCE_FILES
     "PsyQ/LIBSN.h"
     "PsyQ/LIBSPU.cpp"
     "PsyQ/LIBSPU.h"
+    "PsyQ/LIBSPU_Resources.cpp"
     "Wess/digload.cpp"
     "Wess/digload.h"
     "Wess/psxcd.cpp"

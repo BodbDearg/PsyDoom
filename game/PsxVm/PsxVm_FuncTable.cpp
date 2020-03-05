@@ -535,8 +535,6 @@ extern void LIBAPI_InitHeap() noexcept;
 extern void LIBSPU_SpuSetVoiceAttr() noexcept;
 extern void LIBSPU__SpuSetVoiceAttr() noexcept;
 extern void LIBSPU__spu_note2pitch() noexcept;
-extern void LIBSPU_SpuSetReverbModeParam() noexcept;
-extern void LIBSPU__SpuIsInAllocateArea_() noexcept;
 extern void LIBSPU__spu_init() noexcept;
 extern void LIBSPU__spu_writeByIO() noexcept;
 extern void LIBSPU__spu_r() noexcept;
@@ -1115,8 +1113,6 @@ namespace PsxVm {
         { 0x80050894, &LIBSPU_SpuSetVoiceAttr },
         { 0x800508BC, &LIBSPU__SpuSetVoiceAttr },
         { 0x80050FBC, &LIBSPU__spu_note2pitch },
-        { 0x80051208, &LIBSPU_SpuSetReverbModeParam },
-        { 0x8005178C, &LIBSPU__SpuIsInAllocateArea_ },
         { 0x80051894, &LIBSPU__spu_init },
         { 0x80051E98, &LIBSPU__spu_writeByIO },
         { 0x800522FC, &LIBSPU__spu_r },
