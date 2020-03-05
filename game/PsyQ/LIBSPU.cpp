@@ -3220,62 +3220,23 @@ int32_t LIBSPU_SpuClearReverbWorkArea() noexcept {
 }
 
 void LIBSPU__SpuInit() noexcept {
-loc_80054334:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x14);
-    s0 = a0;
+    spu::SPU& spu = *PsxVm::gpSpu;
+
     LIBETC_ResetCallback();
-    a0 = s0;
+    
+    a0 = 0;
     LIBSPU__spu_init();
+    
     LIBSPU_SpuStart();
 
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(0, at - 0x6E70);                                 // Store to: gLIBSPU__spu_rev_attr[2] (800A9190)
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6E70);                               // Load from: gLIBSPU__spu_rev_attr[2] (800A9190)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sh(0, at - 0x6E6C);                                 // Store to: gLIBSPU__spu_rev_attr[4] (800A9194)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sh(0, at - 0x6E6A);                                 // Store to: gLIBSPU__spu_rev_attr[5] (800A9196)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(0, at - 0x6E68);                                 // Store to: gLIBSPU__spu_rev_attr[6] (800A9198)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(0, at - 0x6E64);                                 // Store to: gLIBSPU__spu_rev_attr[8] (800A919C)
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x6E78;                                       // Result = 80076E78
-    at += v0;
-    v0 = lw(at);
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x6A54;                                       // Result = gLIBSPU__spu_rev_offsetaddr (80076A54)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x6A4C);                                 // Store to: gLIBSPU__spu_rev_flag (80076A4C)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x6A50);                                 // Store to: gLIBSPU__spu_rev_reserve_wa (80076A50)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x6A54);                                // Store to: gLIBSPU__spu_rev_offsetaddr (80076A54)
-    a1 = 0x61;                                          // Result = 00000061
-    LIBSPU__spu_ioctl();
-
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44) 
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x6A48;                                       // Result = gLIBSPU__spu_trans_mode (80076A48)
-    a1 = 0x21;                                          // Result = 00000021
-    LIBSPU__spu_ioctl();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x6A58);                                 // Store to: 80076A58
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x6A64);                                 // Store to: 80076A64
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x6A68);                                 // Store to: 80076A68
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    // Ensure the reverb work area address is correct
+    if (gReverbMode < SPU_REV_MODE_MAX) {
+        spu.reverbBase._reg = gReverbWorkAreaBaseAddrs[gReverbMode];
+    } else {
+        spu.reverbBase._reg = gReverbWorkAreaBaseAddrs[0];
+    }
+    
+    sw(0, 0x80076A58);      // Store to: 80076A58
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
