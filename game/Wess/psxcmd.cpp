@@ -602,7 +602,7 @@ loc_80046374:
     a1 = lw(a1 - 0xF30);                                // Load from: 8007F0D0
     if (a1 == 0) goto loc_80046398;
     a0 = 0;                                             // Result = 00000000
-    LIBSPU_SpuSetKey();
+    LIBSPU_SpuSetKey(a0, a1);
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0xF30);                                  // Store to: 8007F0D0
 loc_80046398:

@@ -13,6 +13,7 @@
 BEGIN_THIRD_PARTY_INCLUDES
 
 #include <device/spu/spu.h>
+#include <system.h>
 
 END_THIRD_PARTY_INCLUDES
 
@@ -3416,49 +3417,39 @@ loc_800548F4:
     LIBSPU_SpuSetVoiceAttr();
     a1 = lw(s0);
     a0 = 1;                                             // Result = 00000001
-    LIBSPU_SpuSetKey();
+    LIBSPU_SpuSetKey(a0, a1);
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
     return;
 }
 
-void LIBSPU_SpuSetKey() noexcept {
-loc_80054928:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    sw(a1, sp + 0x1C);
-    if (a0 == 0) goto loc_80054968;
-    v0 = 1;                                             // Result = 00000001
-    a1 = 0x204;                                         // Result = 00000204
-    if (a0 != v0) goto loc_80054998;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = sp + 0x1C;
-    LIBSPU__spu_ioctl();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A58);                               // Load from: 80076A58
-    v1 = lw(sp + 0x1C);
-    v0 |= v1;
-    goto loc_80054990;
-loc_80054968:
-    a1 = 0x203;                                         // Result = 00000203
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A44);                               // Load from: gLIBSPU__spu_fd (80076A44)
-    a2 = sp + 0x1C;
-    LIBSPU__spu_ioctl();
-    v0 = lw(sp + 0x1C);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6A58);                               // Load from: 80076A58
-    v0 = ~v0;
-    v0 &= v1;
-loc_80054990:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x6A58);                                // Store to: 80076A58
-loc_80054998:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Begin voices ramp up (attack phase or 'key on') or begin voice ramp down (release phase or 'key off').
+// The voices affected are specified by the given voice bit mask.
+// The on/off action to perform must be either 'SPU_OFF' or 'SPU_ON'
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept {
+    spu::SPU& spu = *PsxVm::gpSpu;
+    
+    if (onOff == SPU_OFF) {
+        for (uint32_t voiceIdx = 0; voiceIdx < spu::SPU::VOICE_COUNT; ++voiceIdx) {
+            if (voiceBits & (1 << voiceIdx)) {
+                spu::Voice& voice = spu.voices[voiceIdx];
+                voice.keyOff();
+            }
+        }
+    }
+    else if (onOff == SPU_ON) {
+        const uint64_t sysCycles = PsxVm::gpSystem->cycles;
+
+        for (uint32_t voiceIdx = 0; voiceIdx < spu::SPU::VOICE_COUNT; ++voiceIdx) {
+            if (voiceBits & (1 << voiceIdx)) {
+                spu::Voice& voice = spu.voices[voiceIdx];
+                voice.keyOn(sysCycles);     // TODO: is sys cycles still needed?
+            }
+        }
+    }
 }
 
 void LIBSPU_SpuGetAllKeysStatus() noexcept {
