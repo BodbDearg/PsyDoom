@@ -2,6 +2,10 @@
 
 #include <cstdint>
 
+// The number of hardware SPU voices.
+// Note: this is not an original PsyQ constant - this is one I've made up.
+static constexpr uint32_t SPU_NUM_VOICES = 24;
+
 // Mode of operation for 'LIBSPU_SpuIsTransferCompleted'
 enum SpuTransferQuery : uint32_t {
     SPU_TRANSFER_PEEK = 0,      // Only check whether the transfer has completed, do not block
@@ -130,6 +134,10 @@ static constexpr int32_t SPU_ERROR      = -1;
 static constexpr int32_t SPU_OFF    = 0;
 static constexpr int32_t SPU_ON     = 1;
 
+// Returned for each voice by 'LIBSPU_SpuGetAllKeysStatus' to indicate a voice + envelope status
+static constexpr int32_t SPU_OFF_ENV_ON = 2;
+static constexpr int32_t SPU_ON_ENV_OFF = 3;
+
 // Parameter for various functions.
 // It means make changes to ALL voices indicated by a bitmask, not just voices for enabled or disabled bits.
 static constexpr int32_t SPU_BIT    = 8;
@@ -187,4 +195,4 @@ void _thunk_LIBSPU_SpuWrite() noexcept;
 
 void LIBSPU_SpuSetKeyOnWithAttr() noexcept;
 void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept;
-void LIBSPU_SpuGetAllKeysStatus() noexcept;
+void LIBSPU_SpuGetAllKeysStatus(uint8_t statuses[SPU_NUM_VOICES]) noexcept;

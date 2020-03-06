@@ -3279,7 +3279,7 @@ int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) n
     
     // Enabling/disabling reverb for every single voice with the bit mask?
     if (onOff == SPU_BIT) {
-        for (int32_t voiceIdx = 0; voiceIdx < 24; ++voiceIdx) {
+        for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
             spu::Voice& voice = spu.voices[voiceIdx];
             voice.reverb = ((voiceBits & (1 << voiceIdx)) != 0);
         }
@@ -3291,7 +3291,7 @@ int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) n
     const bool bEnableReverb = (onOff != SPU_OFF) || true;
     int32_t enabledVoiceBits = 0;
 
-    for (int32_t voiceIdx = 0; voiceIdx < 24; ++voiceIdx) {
+    for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
         spu::Voice& voice = spu.voices[voiceIdx];
 
         if (voiceBits & (1 << voiceIdx)) {
@@ -3430,10 +3430,11 @@ loc_800548F4:
 // The on/off action to perform must be either 'SPU_OFF' or 'SPU_ON'
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept {
+    static_assert(SPU_NUM_VOICES == spu::SPU::VOICE_COUNT);
     spu::SPU& spu = *PsxVm::gpSpu;
     
     if (onOff == SPU_OFF) {
-        for (uint32_t voiceIdx = 0; voiceIdx < spu::SPU::VOICE_COUNT; ++voiceIdx) {
+        for (uint32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
             if (voiceBits & (1 << voiceIdx)) {
                 spu::Voice& voice = spu.voices[voiceIdx];
                 voice.keyOff();
@@ -3443,50 +3444,48 @@ void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept {
     else if (onOff == SPU_ON) {
         const uint64_t sysCycles = PsxVm::gpSystem->cycles;
 
-        for (uint32_t voiceIdx = 0; voiceIdx < spu::SPU::VOICE_COUNT; ++voiceIdx) {
+        for (uint32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
             if (voiceBits & (1 << voiceIdx)) {
                 spu::Voice& voice = spu.voices[voiceIdx];
-                voice.keyOn(sysCycles);     // TODO: is sys cycles still needed?
+                voice.keyOn(0);
             }
         }
     }
 }
 
-void LIBSPU_SpuGetAllKeysStatus() noexcept {
-loc_80054A78:
-    t2 = 0x18;                                          // Result = 00000018
-    a2 = 0;                                             // Result = 00000000
-    a3 = 1;                                             // Result = 00000001
-    t1 = 3;                                             // Result = 00000003
-    t0 = 2;                                             // Result = 00000002
-    a1 = a0;
-loc_80054A90:
-    v1 = a2 << 4;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7170);                               // Load from: 80077170
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x6A58);                               // Load from: 80076A58
-    v1 += v0;
-    v0 = a3 << a2;
-    v0 &= a0;
-    v1 = lhu(v1 + 0xC);
-    if (v0 == 0) goto loc_80054AD4;
-    if (v1 == 0) goto loc_80054ACC;
-    sb(a3, a1);
-    goto loc_80054AE8;
-loc_80054ACC:
-    sb(t1, a1);
-    goto loc_80054AE8;
-loc_80054AD4:
-    if (v1 == 0) goto loc_80054AE4;
-    sb(t0, a1);
-    goto loc_80054AE8;
-loc_80054AE4:
-    sb(0, a1);
-loc_80054AE8:
-    a2++;
-    v0 = (i32(a2) < i32(t2));
-    a1++;
-    if (v0 != 0) goto loc_80054A90;
-    return;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the state of all SPU voices. The following return values mean the following:
+//
+//  SPU_OFF         : Key off status,   Envelope is '0'         (silent)
+//  SPU_ON          : Key on status,    Envelope is != '0'      (attack/decay)
+//  SPU_OFF_ENV_ON  : Key off status,   Envelope is != '0'      (release)
+//  SPU_ON_ENV_OFF  : Key on status,    Envelope is '0'         (sustain)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBSPU_SpuGetAllKeysStatus(uint8_t statuses[SPU_NUM_VOICES]) noexcept {
+    spu::SPU& spu = *PsxVm::gpSpu;
+
+    for (uint32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
+        const spu::Voice::State voiceState = spu.voices[voiceIdx].state;
+
+        switch (voiceState) {
+            case spu::Voice::State::Attack:
+            case spu::Voice::State::Decay:
+                statuses[voiceIdx] = SPU_ON;
+                break;
+
+            case spu::Voice::State::Sustain:
+                statuses[voiceIdx] = SPU_ON_ENV_OFF;
+                break;
+
+            case spu::Voice::State::Release:
+                statuses[voiceIdx] = SPU_OFF_ENV_ON;
+                break;
+
+            case spu::Voice::State::Off:
+            default:
+                statuses[voiceIdx] = SPU_OFF;
+                break;
+        }
+    }
 }

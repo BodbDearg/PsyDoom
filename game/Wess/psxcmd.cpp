@@ -609,7 +609,7 @@ loc_80046398:
     s0 = 0x80080000;                                    // Result = 80080000
     s0 -= 0xE30;                                        // Result = 8007F1D0
     a0 = s0;                                            // Result = 8007F1D0
-    LIBSPU_SpuGetAllKeysStatus();
+    LIBSPU_SpuGetAllKeysStatus(vmAddrToPtr<uint8_t>(a0));
     s1 = s0;                                            // Result = 8007F1D0
     s0 = -1;                                            // Result = FFFFFFFF
     v1 = 0x80080000;                                    // Result = 80080000

@@ -2923,6 +2923,7 @@ static const ProgElem ELEMS[] = {
     { 0x80076A4C, 0x80076A50, "gLIBSPU__spu_rev_flag",                  ProgElemType::UINT32 },
     { 0x80076A50, 0x80076A54, "gLIBSPU__spu_rev_reserve_wa",            ProgElemType::UINT32 },
     { 0x80076A54, 0x80076A58, "gLIBSPU__spu_rev_offsetaddr",            ProgElemType::PTR32 },
+    { 0x80076A58, 0x80076A5C, "gLIBSPU__key_on_voice_bits",             ProgElemType::UINT32 },
     { 0x80076A5C, 0x80076A60, "gLIBSPU__spu_EVdma",                     ProgElemType::UINT32 },
     { 0x80076E6C, 0x80076E70, "gbLIBSPU__spu_isCalled",                 ProgElemType::UINT32 },
     { 0x80076E70, 0x80076E74, "gLIBSPU__spu_RXX",                       ProgElemType::PTR32 },
