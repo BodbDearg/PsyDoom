@@ -206,25 +206,10 @@ void _thunk_LIBETC_VSync() noexcept {
 // Waits for the specified target vblank amount with a specified timeout.
 // This is an internal PSYQ function and not documented.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept {
-    uint32_t timeoutLeft = (uint32_t) timeout << 15;
+void LIBETC_v_wait(const int32_t targetVCount, [[maybe_unused]] const uint16_t timeout) noexcept {
     int32_t vcount = (int32_t) lw(0x80075CCC);          // Load from: gLIBETC_Vcount (80075CCC)  
 
     while (vcount < targetVCount) {
-        --timeoutLeft;
-
-        if (timeoutLeft == 0xFFFFFFFF) {
-            std::puts("VSync: timeout\n");
-
-            a0 = 0;
-            LIBAPI_ChangeClearPAD();
-            
-            a0 = 3;
-            a1 = 0;
-            LIBAPI_ChangeClearRCnt();
-            break;
-        }
-
         #if PC_PSX_DOOM_MODS
             emulate_frame();
         #endif

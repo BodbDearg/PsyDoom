@@ -184,6 +184,10 @@ void emulate_timers(const int numCycles) noexcept;
 // Emulate sound until we have enough samples to handle an upcoming buffer request
 void emulate_sound_if_required() noexcept;
 
+// Fire timer (root counter) related events if appropriate.
+// Note: this is implemented in LIBAPI, where timers are handled.
+void generate_timer_events() noexcept;
+
 // Returns the 32-bit address in PSX RAM (in the 0x80000000 space/segment) of the given real pointer.
 // Used to convert real pointers/addresses back to VM ones.
 // May exit the application with an error if an invalid pointer is given.

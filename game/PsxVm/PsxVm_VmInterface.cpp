@@ -414,6 +414,7 @@ void emulate_a_little() noexcept {
     saveMipsRegisters();
 
     do {
+        emulate_sound_if_required();
         gpSystem->emulateFrame();
     } while (!canExitEmulator());
     
@@ -460,6 +461,9 @@ void emulate_timers(const int numCycles) noexcept {
 }
 
 void emulate_sound_if_required() noexcept {
+    // Update timer events while we are at it - that might affect the sound sequencer
+    generate_timer_events();
+
     while (true) {
         size_t soundBufferSize;
 

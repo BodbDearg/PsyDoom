@@ -253,23 +253,21 @@ void I_PSXInit() noexcept {
     a0 |= 0xB;                                          // Result = F000000B
     a1 = 0x400;                                         // Result = 00000400
     a2 = 0x2000;                                        // Result = 00002000
-    a3 = 0;                                             // Result = 00000000
-    LIBAPI_OpenEvent();    
+    v0 = LIBAPI_OpenEvent(a0, a1, a2, nullptr);
     a0 = v0;
     sw(a0, gp + 0x944);                                 // Store to: gSioErrorEvent (80077F24)
     
-    LIBAPI_EnableEvent();
+    v0 = LIBAPI_EnableEvent(a0);
     
     a0 = 0xF0000000;                                    // Result = F0000000
     a0 |= 0xB;                                          // Result = F000000B
     a1 = 0x800;                                         // Result = 00000800
     a2 = 0x2000;                                        // Result = 00002000
-    a3 = 0;                                             // Result = 00000000
-    LIBAPI_OpenEvent();
+    v0 = LIBAPI_OpenEvent(a0, a1, a2, nullptr);
     a0 = v0;
     sw(a0, gp + 0xA60);                                 // Store to: gSioWriteDoneEvent (80078040)
     
-    LIBAPI_EnableEvent();
+    v0 = LIBAPI_EnableEvent(a0);
     
     s0 = 0x80070000;                                    // Result = 80070000
     s0 += 0x7C1C;                                       // Result = STR_sio_3[0] (80077C1C)

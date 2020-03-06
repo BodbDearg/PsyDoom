@@ -83,25 +83,16 @@ loc_80043C1C:
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x5948);                                 // Store to: gbWess_SeqOn (80075948)
     LIBAPI_EnterCriticalSection();
-    a0 = 0xF2000000;                                    // Result = F2000000
-    a0 |= 2;                                            // Result = F2000002
-    a1 = 2;                                             // Result = 00000002
-    a3 = 0x80040000;                                    // Result = 80040000
-    a3 += 0x3B88;                                       // Result = WessInterruptHandler (80043B88)
-    a2 = 0x1000;                                        // Result = 00001000
-    LIBAPI_OpenEvent();
-    a0 = v0;
+    
+    const int32_t rcnt2Event = LIBAPI_OpenEvent(RCntCNT2, EvSpINT, EvMdINTR, WessInterruptHandler);
+
     at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x595C);                                // Store to: gWess_EV2 (8007595C)
-    LIBAPI_EnableEvent();
-    a0 = 0xF2000000;                                    // Result = F2000000
-    a0 |= 2;                                            // Result = F2000002
-    a1 = 0x87A2;                                        // Result = 000087A2
-    a2 = 0x1000;                                        // Result = 00001000
-    LIBAPI_SetRCnt();
-    a0 = 0xF2000000;                                    // Result = F2000000
-    a0 |= 2;                                            // Result = F2000002
-    LIBAPI_StartRCnt();
+    sw(rcnt2Event, at + 0x595C);                        // Store to: gWess_EV2 (8007595C)
+
+    LIBAPI_EnableEvent(rcnt2Event);
+    LIBAPI_SetRCnt(RCntCNT2, 34722, RCntMdINTR);        // This generates interrupts at about 121.9284 Hz
+    LIBAPI_StartRCnt(RCntCNT2);
+
     v0 = 1;                                             // Result = 00000001
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x594C);                                // Store to: gbWess_WessTimerActive (8007594C)
@@ -126,10 +117,10 @@ loc_80043CA8:
     a0 = lw(a0 + 0x595C);                               // Load from: gWess_EV2 (8007595C)
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x594C);                                 // Store to: gbWess_WessTimerActive (8007594C)
-    LIBAPI_DisableEvent();
+    LIBAPI_DisableEvent(a0);
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x595C);                               // Load from: gWess_EV2 (8007595C)
-    LIBAPI_CloseEvent();
+    LIBAPI_CloseEvent(a0);
     LIBAPI_ExitCriticalSection();
     ra = lw(sp + 0x10);
     sp += 0x18;
