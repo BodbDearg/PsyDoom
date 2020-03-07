@@ -65,7 +65,17 @@ void Voice::processEnvelope() {
             cycles *= 4;
         }
         if (e.direction == Dir::Decrease) {
-            step = step * adsrVolume._reg / 0x8000;
+            // DOOM: fix music not stopping fully when the game is paused, despite the game stopping all voices.
+            // It seems as though the ADSR envelope was not fully completing, resulting in some of the music voices
+            // playing at a low volume when the game was paused. This issue was introduced in an Avocado update.
+            // Previously this worked due to floating point operations and a 'ceil()' being done.
+            #if DOOM_AVOCADO_MODS
+                int stepMul = adsrVolume._reg / 0x8000;
+                stepMul += ((adsrVolume._reg & 0x7FFF) != 0) ? 1 : 0;   // Round this up to the next whole number (ceil)
+                step *= stepMul;
+            #else
+                step = step * adsrVolume._reg / 0x8000;
+            #endif
         }
     }
 
