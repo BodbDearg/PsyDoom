@@ -14,9 +14,6 @@ static inline void* LIBETC_getScratchAddr(const uint32_t word) {
 }
 
 void LIBETC_ResetCallback() noexcept;
-void LIBETC_InterruptCallback() noexcept;
-void LIBETC_SetIntrMask() noexcept;
-void LIBETC_INTR_VB_setIntrVSync() noexcept;
 
 int32_t LIBETC_VSync(const int32_t mode) noexcept;
 void _thunk_LIBETC_VSync() noexcept;

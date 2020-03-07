@@ -508,15 +508,10 @@ extern void LIBAPI_open() noexcept;
 extern void LIBC2_memchr() noexcept;
 extern void LIBC2_strlen() noexcept;
 extern void LIBETC_ResetCallback() noexcept;
-extern void LIBETC_InterruptCallback() noexcept;
-extern void LIBETC_SetIntrMask() noexcept;
 extern void LIBAPI_ReturnFromException() noexcept;
 extern void LIBC2_printf() noexcept;
-extern void LIBC2_setjmp() noexcept;
-extern void LIBC2_longjmp() noexcept;
 extern void LIBC2_prnt() noexcept;
 extern void LIBC2_putchar() noexcept;
-extern void LIBETC_INTR_VB_setIntrVSync() noexcept;
 extern void _thunk_LIBETC_VSync() noexcept;
 extern void _thunk_LIBETC_v_wait() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
@@ -526,14 +521,8 @@ extern void LIBSPU_SpuSetVoiceAttr() noexcept;
 extern void LIBSPU__SpuSetVoiceAttr() noexcept;
 extern void LIBSPU__spu_init() noexcept;
 extern void LIBSPU__spu_writeByIO() noexcept;
-extern void LIBSPU__spu_r() noexcept;
-extern void LIBSPU__spu_ioctl() noexcept;
 extern void LIBSPU__spu_setVoiceAttr() noexcept;
-extern void LIBSPU__spu_setReverbAttr() noexcept;
-extern void LIBSPU__spu_setCommonAttr() noexcept;
-extern void LIBSPU__spu_getCommonAttr() noexcept;
 extern void LIBAPI_DeliverEvent() noexcept;
-extern void LIBSPU__SpuCallback() noexcept;
 extern void LIBSPU_SpuSetCommonAttr() noexcept;
 extern void LIBSPU__SpuInit() noexcept;
 extern void LIBSPU_SpuInit() noexcept;
@@ -1073,15 +1062,10 @@ namespace PsxVm {
         { 0x8004A6BC, &LIBC2_memchr },
         { 0x8004A70C, &LIBC2_strlen },
         { 0x8004A7AC, &LIBETC_ResetCallback },
-        { 0x8004A7DC, &LIBETC_InterruptCallback },
-        { 0x8004A8C8, &LIBETC_SetIntrMask },
         { 0x8004AD80, &LIBAPI_ReturnFromException },
         { 0x8004AD90, &LIBC2_printf },
-        { 0x8004ADD0, &LIBC2_setjmp },
-        { 0x8004AE0C, &LIBC2_longjmp },
         { 0x8004AE50, &LIBC2_prnt },
         { 0x8004B530, &LIBC2_putchar },
-        { 0x8004B800, &LIBETC_INTR_VB_setIntrVSync },
         { 0x8004BA94, &_thunk_LIBETC_VSync },
         { 0x8004BBDC, &_thunk_LIBETC_v_wait },
         { 0x80050454, &LIBAPI_FlushCache },
@@ -1091,14 +1075,8 @@ namespace PsxVm {
         { 0x800508BC, &LIBSPU__SpuSetVoiceAttr },
         { 0x80051894, &LIBSPU__spu_init },
         { 0x80051E98, &LIBSPU__spu_writeByIO },
-        { 0x800522FC, &LIBSPU__spu_r },
-        { 0x80052900, &LIBSPU__spu_ioctl },
         { 0x800531EC, &LIBSPU__spu_setVoiceAttr },
-        { 0x8005336C, &LIBSPU__spu_setReverbAttr },
-        { 0x8005383C, &LIBSPU__spu_setCommonAttr },
-        { 0x80053BD4, &LIBSPU__spu_getCommonAttr },
         { 0x80053D48, &LIBAPI_DeliverEvent },
-        { 0x80053D7C, &LIBSPU__SpuCallback },
         { 0x80053DA0, &LIBSPU_SpuSetCommonAttr },
         { 0x80054334, &LIBSPU__SpuInit },
         { 0x80054580, &LIBSPU_SpuInit },

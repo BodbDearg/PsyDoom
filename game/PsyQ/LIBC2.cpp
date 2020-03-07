@@ -64,41 +64,6 @@ loc_8004AD90:
     return;
 }
 
-void LIBC2_setjmp() noexcept {
-loc_8004ADD0:
-    sw(ra, a0);
-    sw(gp, a0 + 0x2C);
-    sw(sp, a0 + 0x4);
-    sw(fp, a0 + 0x8);
-    sw(s0, a0 + 0xC);
-    sw(s1, a0 + 0x10);
-    sw(s2, a0 + 0x14);
-    sw(s3, a0 + 0x18);
-    sw(s4, a0 + 0x1C);
-    sw(s5, a0 + 0x20);
-    sw(s6, a0 + 0x24);
-    sw(s7, a0 + 0x28);
-    v0 = 0;                                             // Result = 00000000
-    return;
-}
-
-void LIBC2_longjmp() noexcept {
-    ra = lw(a0);
-    gp = lw(a0 + 0x2C);
-    sp = lw(a0 + 0x4);
-    fp = lw(a0 + 0x8);
-    s0 = lw(a0 + 0xC);
-    s1 = lw(a0 + 0x10);
-    s2 = lw(a0 + 0x14);
-    s3 = lw(a0 + 0x18);
-    s4 = lw(a0 + 0x1C);
-    s5 = lw(a0 + 0x20);
-    s6 = lw(a0 + 0x24);
-    s7 = lw(a0 + 0x28);
-    v0 = a1;
-    return;
-}
-
 void LIBC2_prnt() noexcept {
 loc_8004AE50:
     sp -= 0x1C0;
