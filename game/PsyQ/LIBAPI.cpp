@@ -46,8 +46,10 @@ void generate_timer_events() noexcept {
         return;
 
     // Figure out how much over the interval we are.
-    // Generate one event per every single interval passed.
-    const int32_t numEvents = std::max((int32_t)(elapsedSecs / gRootCnt2.interruptIntervalSecs), 1);
+    // Generate one event per every single interval passed up to a certain max (skip the rest).
+    constexpr int32_t MAX_EVENTS = 8;
+
+    const int32_t numEvents = std::min((int32_t)(elapsedSecs / gRootCnt2.interruptIntervalSecs), MAX_EVENTS);
     const double spilloverSecs = std::max(elapsedSecs - (double) numEvents * gRootCnt2.interruptIntervalSecs, 0.0);
 
     // Save the time of the last interrupt and spillover amount

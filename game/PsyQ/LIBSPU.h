@@ -24,6 +24,52 @@ struct SpuVolume {
     int16_t     right;
 };
 
+// Structure used for specifying voice attributes
+struct SpuVoiceAttr {
+    uint32_t    voice_bits;     // Which voices to set the attributes for. 1-bit per voice, starting with the lowest bit.
+    uint32_t    attr_mask;      // Which attributes to modify? 1-bit per attribute, starting with the lowest bit.
+    SpuVolume   volume;         // Volume
+    SpuVolume   volmode;        // Volume mode
+    SpuVolume   volumex;        // Current volume
+    uint16_t    pitch;          // Tone: pitch setting
+    uint16_t    note;           // Tone: note setting
+    uint16_t    sample_note;    // Waveform data: note setting
+    int16_t     envx;           // Envelope volume
+    uint32_t    addr;           // Start address in SPU RAM for waveform data
+    uint32_t    loop_addr;      // Start address in SPU RAM for loop
+    int32_t     a_mode;         // Attack rate mode
+    int32_t     s_mode;         // Sustain rate mode
+    int32_t     r_mode;         // Release rate mode
+    uint16_t    ar;             // Attack rate
+    uint16_t    dr;             // Decay rate
+    uint16_t    sr;             // Sustain rate
+    uint16_t    rr;             // Release rate
+    uint16_t    sl;             // Sustain level
+    uint16_t    adsr1;          // Envelope 1 adsr
+    uint16_t    adsr2;          // Envelope 2 adsr
+};
+
+// Flags for specifying fields in 'SpuVoiceAttr'
+static constexpr uint32_t SPU_VOICE_VOLL        = 0x00000001;
+static constexpr uint32_t SPU_VOICE_VOLR        = 0x00000002;
+static constexpr uint32_t SPU_VOICE_VOLMODEL    = 0x00000004;
+static constexpr uint32_t SPU_VOICE_VOLMODER    = 0x00000008;
+static constexpr uint32_t SPU_VOICE_PITCH       = 0x00000010;
+static constexpr uint32_t SPU_VOICE_NOTE        = 0x00000020;
+static constexpr uint32_t SPU_VOICE_SAMPLE_NOTE = 0x00000040;
+static constexpr uint32_t SPU_VOICE_WDSA        = 0x00000080;
+static constexpr uint32_t SPU_VOICE_ADSR_AMODE  = 0x00000100;
+static constexpr uint32_t SPU_VOICE_ADSR_SMODE  = 0x00000200;
+static constexpr uint32_t SPU_VOICE_ADSR_RMODE  = 0x00000400;
+static constexpr uint32_t SPU_VOICE_ADSR_AR     = 0x00000800;
+static constexpr uint32_t SPU_VOICE_ADSR_DR     = 0x00001000;
+static constexpr uint32_t SPU_VOICE_ADSR_SR     = 0x00002000;
+static constexpr uint32_t SPU_VOICE_ADSR_RR     = 0x00004000;
+static constexpr uint32_t SPU_VOICE_ADSR_SL     = 0x00008000;
+static constexpr uint32_t SPU_VOICE_LSAX        = 0x00010000;
+static constexpr uint32_t SPU_VOICE_ADSR_ADSR1  = 0x00020000;
+static constexpr uint32_t SPU_VOICE_ADSR_ADSR2  = 0x00040000;
+
 // Spu reverb modes
 enum SpuReverbMode : uint32_t {
     SPU_REV_MODE_OFF        = 0,
@@ -159,7 +205,6 @@ extern const uint16_t gReverbWorkAreaBaseAddrs[SPU_REV_MODE_MAX];
 
 void LIBSPU_SpuSetVoiceAttr() noexcept;
 void LIBSPU__SpuSetVoiceAttr() noexcept;
-void LIBSPU__spu_note2pitch() noexcept;
 int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept;
 void LIBSPU__spu_init() noexcept;
 void LIBSPU__spu_writeByIO() noexcept;

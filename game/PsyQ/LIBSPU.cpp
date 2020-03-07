@@ -12,6 +12,7 @@
 
 BEGIN_THIRD_PARTY_INCLUDES
 
+#include <cstdint>
 #include <device/spu/spu.h>
 #include <system.h>
 
@@ -25,6 +26,15 @@ static constexpr uint32_t SPU_RAM_SIZE = 512 * 1024;
 
 // The current reverb mode in use
 static SpuReverbMode gReverbMode = SPU_REV_MODE_OFF;
+
+// Internal LIBSPU function: convert a note to a pitch.
+// See definition for details.
+uint16_t LIBSPU__spu_note2pitch(
+    const int32_t centerNote,
+    const int32_t centerNoteFrac,
+    const int32_t offsetNote,
+    const int32_t offsetNoteFrac
+) noexcept;
 
 void LIBSPU_SpuSetVoiceAttr() noexcept {
 loc_80050894:
@@ -130,7 +140,7 @@ loc_800509C0:
     a1 &= 0xFF;
     a2 = a3 >> 8;
     a3 &= 0xFF;
-    LIBSPU__spu_note2pitch();
+    v0 = LIBSPU__spu_note2pitch(a0, a1, a2, a3);
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
     v1 = s3 << 1;
@@ -604,73 +614,43 @@ loc_80050F88:
     return;
 }
 
-void LIBSPU__spu_note2pitch() noexcept {
-loc_80050FBC:
-    a3 &= 0xFFFF;
-    a1 &= 0xFFFF;
-    v0 = a3 + a1;
-    t0 = a0;
-    if (i32(v0) >= 0) goto loc_80050FD4;
-    v0 += 7;
-loc_80050FD4:
-    v0 = u32(i32(v0) >> 3);
-    a1 = v0;
-    v0 = (i32(v0) < 0x10);
-    v1 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_80051004;
-loc_80050FE8:
-    v0 = a1 - 0x10;
-    a1 = v0;
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    v0 = (i32(v0) < 0x10);
-    v1++;
-    if (v0 == 0) goto loc_80050FE8;
-loc_80051004:
-    v0 = a1 << 16;
-    a0 = 0x2AAA0000;                                    // Result = 2AAA0000
-    if (i32(v0) >= 0) goto loc_80051014;
-    a1 = 0;                                             // Result = 00000000
-loc_80051014:
-    a0 |= 0xAAAB;                                       // Result = 2AAAAAAB
-    v0 = a2 + 0x3C;
-    v0 -= t0;
-    v0 += v1;
-    v0 <<= 16;
-    v1 = u32(i32(v0) >> 16);
-    mult(v1, a0);
-    v0 = u32(i32(v0) >> 31);
-    a0 = hi;
-    a0 = u32(i32(a0) >> 1);
-    a0 -= v0;
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 2;
-    v1 -= v0;
-    v1 <<= 16;
-    v1 = u32(i32(v1) >> 12);
-    v0 = a1 << 16;
-    v0 = u32(i32(v0) >> 16);
-    v1 += v0;
-    v1 <<= 1;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x6880;                                       // Result = 80076880
-    at += v1;
-    v1 = lhu(at);
-    a0 -= 5;
-    a0 <<= 16;
-    v0 = u32(i32(a0) >> 16);
-    if (i32(v0) <= 0) goto loc_80051094;
-    v1 = v1 << v0;
-    goto loc_800510A8;
-loc_80051094:
-    if (i32(v0) >= 0) goto loc_800510A8;
-    v1 &= 0xFFFF;
-    v0 = -v0;
-    v1 = i32(v1) >> v0;
-loc_800510A8:
-    v0 = v1 & 0xFFFF;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Internal LIBSPU function which converts a musical note to a frequency that can be set on a voice.
+// The returned integer frequency is such that 4,096 units = 44,100 Hz.
+// 
+// Params:
+//  baseNote:       Note at which the frequency is considered 44,100 Hz.
+//                  For example '60' would be A5 (12 semitones per octave, 1st note of 5th octave).
+//  baseNoteFrac:   Fractional offset to 'baseNote' in 1/128 units.
+//  note:           The note to get the frequency for.
+//  noteFrac:       Fractional offset to 'note' in 1/128 units.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t LIBSPU__spu_note2pitch(
+    const int32_t baseNote,
+    const int32_t baseNoteFrac,
+    const int32_t note,
+    const int32_t noteFrac
+) noexcept {
+    // Note: this implementation is COMPLETELY different to the original LIBSPU version.
+    // That version used lookup tables of some sort to figure out the calculation.
+    //
+    // This re-implementation produces almost identical results, but is much easier to comprehend.
+    // The trade off is that it's a good bit slower due to use of 'pow' - but that's not really a concern on modern systems.
+    // I could take the time to fully understand and reverse the original method, but it's probably not worth it..
+    const float baseNoteF   = baseNote + (float) baseNoteFrac / 128.0f;
+    const float noteF       = note + (float) noteFrac / 128.0f;
+    const float noteOffsetF = noteF - baseNoteF;
+
+    // For a good explantion of the conversion from note to frequency, see:
+    //  https://www.translatorscafe.com/unit-converter/en-US/calculator/note-frequency/
+    // Note that the '4096.0' here represents 44,100 Hz - the base note frequency.
+    const float freq = 4096.0f * std::powf(2.0f, noteOffsetF / 12.0f);
+
+    if (freq > (float) UINT16_MAX) {
+        return UINT16_MAX;
+    }
+
+    return (uint16_t) freq;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -3452,7 +3432,6 @@ void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept {
         }
     }
 }
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the state of all SPU voices. The following return values mean the following:
