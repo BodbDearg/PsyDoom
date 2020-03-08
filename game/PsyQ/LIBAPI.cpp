@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 
 // Include LAST due to potential conflicts with the MIPS macros
 #include "PsxVm/PsxVm.h"
@@ -45,12 +46,12 @@ void generate_timer_events() noexcept {
     if (elapsedSecs < gRootCnt2.interruptIntervalSecs)
         return;
 
-    // Figure out how much over the interval we are.
     // Generate one event per every single interval passed up to a certain max (skip the rest).
-    constexpr int32_t MAX_EVENTS = 8;
+    const int32_t numEvents = std::max((int32_t)(elapsedSecs / gRootCnt2.interruptIntervalSecs), 1);
+    const int32_t numEventsToFire = std::min(numEvents, 16);
 
-    const int32_t numEvents = std::min((int32_t)(elapsedSecs / gRootCnt2.interruptIntervalSecs), MAX_EVENTS);
-    const double spilloverSecs = std::max(elapsedSecs - (double) numEvents * gRootCnt2.interruptIntervalSecs, 0.0);
+    // Figure out how far we are towards the next event
+    const double spilloverSecs = std::fmod(elapsedSecs, gRootCnt2.interruptIntervalSecs);
 
     // Save the time of the last interrupt and spillover amount
     gRootCnt2.lastInterruptTime = now;
@@ -58,7 +59,7 @@ void generate_timer_events() noexcept {
 
     // Generate the interrupts if possible
     if (gRootCnt2.bIsEventOpened && gRootCnt2.bIsEventEnabled) {
-        for (int32_t i = 0; i < numEvents; ++i) {
+        for (int32_t i = 0; i < numEventsToFire; ++i) {
             gRootCnt2.pHandler();
         }
     }

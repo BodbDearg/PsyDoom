@@ -31,22 +31,22 @@ struct SpuVoiceAttr {
     SpuVolume   volume;         // Volume
     SpuVolume   volmode;        // Volume mode
     SpuVolume   volumex;        // Current volume
-    uint16_t    pitch;          // Tone: pitch setting
-    uint16_t    note;           // Tone: note setting
-    uint16_t    sample_note;    // Waveform data: note setting
+    uint16_t    pitch;          // Tone: pitch setting (set pitch/sample-rate directly)
+    uint16_t    note;           // Tone: note setting (pitch is computed using this and the base note)
+    uint16_t    sample_note;    // Waveform data: base note setting (the note which is regarded to be at 44,100 Hz)
     int16_t     envx;           // Envelope volume
-    uint32_t    addr;           // Start address in SPU RAM for waveform data
-    uint32_t    loop_addr;      // Start address in SPU RAM for loop
-    int32_t     a_mode;         // Attack rate mode
-    int32_t     s_mode;         // Sustain rate mode
-    int32_t     r_mode;         // Release rate mode
+    uint32_t    addr;           // Start address in SPU RAM for waveform data (note: this is rounded up to the next 8 byte boundary upon setting)
+    uint32_t    loop_addr;      // Start address in SPU RAM for loop  (note: this is rounded up to the next 8 byte boundary upon setting)
+    int32_t     a_mode;         // Attack rate volume mode
+    int32_t     s_mode;         // Sustain rate volume mode
+    int32_t     r_mode;         // Release rate volume mode
     uint16_t    ar;             // Attack rate
     uint16_t    dr;             // Decay rate
     uint16_t    sr;             // Sustain rate
     uint16_t    rr;             // Release rate
     uint16_t    sl;             // Sustain level
-    uint16_t    adsr1;          // Envelope 1 adsr
-    uint16_t    adsr2;          // Envelope 2 adsr
+    uint16_t    adsr1;          // Envelope adsr (1st 16-bits)
+    uint16_t    adsr2;          // Envelope adsr (2nd 16-bits)
 };
 
 // Flags for specifying fields in 'SpuVoiceAttr'
@@ -56,8 +56,8 @@ static constexpr uint32_t SPU_VOICE_VOLMODEL    = 0x00000004;
 static constexpr uint32_t SPU_VOICE_VOLMODER    = 0x00000008;
 static constexpr uint32_t SPU_VOICE_PITCH       = 0x00000010;
 static constexpr uint32_t SPU_VOICE_NOTE        = 0x00000020;
-static constexpr uint32_t SPU_VOICE_SAMPLE_NOTE = 0x00000040;
-static constexpr uint32_t SPU_VOICE_WDSA        = 0x00000080;
+static constexpr uint32_t SPU_VOICE_SAMPLE_NOTE = 0x00000040;   // Set the base note (the 44,100 Hz note)
+static constexpr uint32_t SPU_VOICE_WDSA        = 0x00000080;   // Waveform data start address
 static constexpr uint32_t SPU_VOICE_ADSR_AMODE  = 0x00000100;
 static constexpr uint32_t SPU_VOICE_ADSR_SMODE  = 0x00000200;
 static constexpr uint32_t SPU_VOICE_ADSR_RMODE  = 0x00000400;
@@ -203,8 +203,17 @@ extern const SpuReverbDef gReverbDefs[SPU_REV_MODE_MAX];
 // Note that everything past that address in SPU RAM is reserved for reverb.
 extern const uint16_t gReverbWorkAreaBaseAddrs[SPU_REV_MODE_MAX];
 
-void LIBSPU_SpuSetVoiceAttr() noexcept;
-void LIBSPU__SpuSetVoiceAttr() noexcept;
+// Volume change modes or rates of change for volume envelopes
+static constexpr int32_t SPU_VOICE_DIRECT     = 0;      // Directly set volume to a fixed amount. If amount is negative then the phase for the wave is inverted.
+static constexpr int32_t SPU_VOICE_LINEARIncN = 1;      // Linear increase (normal phase): when volume is positive, increase linearly to the maximum amount.
+static constexpr int32_t SPU_VOICE_LINEARIncR = 2;      // Linear increase (revese phase): when volume is negative, increase linearly to the maximum amount (with phase inverted)
+static constexpr int32_t SPU_VOICE_LINEARDecN = 3;      // Linear decrease (normal phase): when volume is positive, decrease linearly to the minimum amount.
+static constexpr int32_t SPU_VOICE_LINEARDecR = 4;      // Linear decrease (revese phase): when volume is negative, decrease linearly to the minimum amount (with phase inverted)
+static constexpr int32_t SPU_VOICE_EXPIncN    = 5;      // Exponential increase (normal phase): when volume is positive, increase exponentially to the maximum amount.
+static constexpr int32_t SPU_VOICE_EXPIncR    = 6;      // Exponential increase (reverse phase): when volume is negative, increase exponentially to the maximum amount.
+static constexpr int32_t SPU_VOICE_EXPDec     = 7;      // Exponential decrease: when volume is positive or negative, decrease exponentially to the mininum amount.
+
+void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept;
 int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept;
 void LIBSPU__spu_init() noexcept;
 void LIBSPU__spu_writeByIO() noexcept;

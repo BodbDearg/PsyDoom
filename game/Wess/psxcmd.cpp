@@ -587,7 +587,7 @@ loc_80046300:
     sw(v0, at - 0xE44);                                 // Store to: 8007F1BC
     at = 0x80080000;                                    // Result = 80080000
     sh(v1, at - 0xE3A);                                 // Store to: 8007F1C6
-    LIBSPU_SpuSetVoiceAttr();
+    LIBSPU_SpuSetVoiceAttr(*vmAddrToPtr<SpuVoiceAttr>(a0));
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0xF30);                                // Load from: 8007F0D0
     v1 = 0x80070000;                                    // Result = 80070000
@@ -953,7 +953,7 @@ loc_800468FC:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 -= 0xE70;                                        // Result = 8007F190
     sh(v0, s1 + 0x16);                                  // Store to: 8007F1A6
-    LIBSPU_SpuSetVoiceAttr();
+    LIBSPU_SpuSetVoiceAttr(*vmAddrToPtr<SpuVoiceAttr>(a0));
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0xF14);                                // Load from: 8007F0EC
     v0--;
@@ -1157,7 +1157,7 @@ loc_80046BE8:
 loc_80046C24:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 -= 0xE70;                                        // Result = 8007F190
-    LIBSPU_SpuSetVoiceAttr();
+    LIBSPU_SpuSetVoiceAttr(*vmAddrToPtr<SpuVoiceAttr>(a0));
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0xEF8);                                // Load from: 8007F108
     v0--;
@@ -1329,7 +1329,7 @@ loc_80046EC0:
 loc_80046F00:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 -= 0xE70;                                        // Result = 8007F190
-    LIBSPU_SpuSetVoiceAttr();
+    LIBSPU_SpuSetVoiceAttr(*vmAddrToPtr<SpuVoiceAttr>(a0));
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0xEE4);                                // Load from: 8007F11C
     v0--;

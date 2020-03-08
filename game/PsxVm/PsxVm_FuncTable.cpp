@@ -517,8 +517,6 @@ extern void _thunk_LIBETC_v_wait() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
 extern void LIBSN__main() noexcept;
 extern void LIBAPI_InitHeap() noexcept;
-extern void LIBSPU_SpuSetVoiceAttr() noexcept;
-extern void LIBSPU__SpuSetVoiceAttr() noexcept;
 extern void LIBSPU__spu_init() noexcept;
 extern void LIBSPU__spu_writeByIO() noexcept;
 extern void LIBSPU__spu_setVoiceAttr() noexcept;
@@ -1071,8 +1069,6 @@ namespace PsxVm {
         { 0x80050454, &LIBAPI_FlushCache },
         { 0x800507AC, &LIBSN__main },
         { 0x80050884, &LIBAPI_InitHeap },
-        { 0x80050894, &LIBSPU_SpuSetVoiceAttr },
-        { 0x800508BC, &LIBSPU__SpuSetVoiceAttr },
         { 0x80051894, &LIBSPU__spu_init },
         { 0x80051E98, &LIBSPU__spu_writeByIO },
         { 0x800531EC, &LIBSPU__spu_setVoiceAttr },

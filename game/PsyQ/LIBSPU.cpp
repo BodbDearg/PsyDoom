@@ -27,6 +27,13 @@ static constexpr uint32_t SPU_RAM_SIZE = 512 * 1024;
 // The current reverb mode in use
 static SpuReverbMode gReverbMode = SPU_REV_MODE_OFF;
 
+// The 'base' note for each voice: this is the musical note at which the sample rate is considered to be 44,100 Hz.
+// The actual semitone is encoded in the top 8-bits, the 1/128 semitone fraction is encoded in the low 8-bits.
+//
+// LIBSPU keeps track of this because it needs this reference note when converting notes to pitch.
+// See the implementation of 'LIBSPU__spu_note2pitch' for more details on that.
+static uint16_t gVoiceBaseNotes[SPU_NUM_VOICES] = {};
+
 // Internal LIBSPU function: convert a note to a pitch.
 // See definition for details.
 uint16_t LIBSPU__spu_note2pitch(
@@ -36,582 +43,191 @@ uint16_t LIBSPU__spu_note2pitch(
     const int32_t offsetNoteFrac
 ) noexcept;
 
-void LIBSPU_SpuSetVoiceAttr() noexcept {
-loc_80050894:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x17;                                          // Result = 00000017
-    a3 = 0;                                             // Result = 00000000
-    LIBSPU__SpuSetVoiceAttr();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set one or more (or all) properties on a voice or voices using the information in the given struct
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept {
+    spu::SPU& spu = *PsxVm::gpSpu;
 
-void LIBSPU__SpuSetVoiceAttr() noexcept {
-loc_800508BC:
-    sp -= 0x50;
-    sw(s0, sp + 0x28);
-    s0 = a0;
-    sw(s7, sp + 0x44);
-    s7 = a2;
-    sw(ra, sp + 0x4C);
-    sw(fp, sp + 0x48);
-    sw(s6, sp + 0x40);
-    sw(s5, sp + 0x3C);
-    sw(s4, sp + 0x38);
-    sw(s3, sp + 0x34);
-    sw(s2, sp + 0x30);
-    sw(s1, sp + 0x2C);
-    s1 = lw(s0 + 0x4);
-    fp = a3;
-    s2 = (s1 < 1);
-    if (i32(a1) >= 0) goto loc_80050904;
-    a1 = 0;                                             // Result = 00000000
-loc_80050904:
-    v0 = (i32(a1) < 0x18);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(s7) < 0x18);
-        if (bJump) goto loc_8005092C;
+    // Figure out what attributes to set for the specified voices
+    const uint32_t attribMask = attribs.attr_mask;
+    
+    const bool bSetAllAttribs   = (attribMask == 0);
+    const bool bSetPitch        = (bSetAllAttribs || (attribMask & SPU_VOICE_PITCH));
+    const bool bSetBaseNote     = (bSetAllAttribs || (attribMask & SPU_VOICE_SAMPLE_NOTE));
+    const bool bSetNote         = (bSetAllAttribs || (attribMask & SPU_VOICE_NOTE));
+    const bool bSetWaveAddr     = (bSetAllAttribs || (attribMask & SPU_VOICE_WDSA));
+    const bool bSetAttackRate   = (bSetAllAttribs || (attribMask & SPU_VOICE_ADSR_AR));
+    const bool bSetAttackMode   = (bSetAllAttribs || (attribMask & SPU_VOICE_ADSR_AMODE));
+    const bool bSetDecayRate    = (bSetAllAttribs || (attribMask & SPU_VOICE_ADSR_DR));
+    const bool bSetSustainLevel = (bSetAllAttribs || (attribMask & SPU_VOICE_ADSR_SL));
+    const bool bSetSustainRate  = (bSetAllAttribs || (attribMask & SPU_VOICE_ADSR_SR));
+    const bool bSetSustainMode  = (bSetAllAttribs || (attribMask & SPU_VOICE_ADSR_SMODE));
+    const bool bSetReleaseRate  = (bSetAllAttribs || (attribMask & SPU_VOICE_ADSR_RR));
+    const bool bSetReleaseMode  = (bSetAllAttribs || (attribMask & SPU_VOICE_ADSR_RMODE));
+    const bool bSetAdsrPart1    = (bSetAllAttribs || (attribMask & SPU_VOICE_ADSR_ADSR1));
+    const bool bSetAdsrPart2    = (bSetAllAttribs || (attribMask & SPU_VOICE_ADSR_ADSR2));
+    const bool bSetWaveLoopAddr = (bSetAllAttribs || (attribMask & SPU_VOICE_LSAX));
+    const bool bSetVolL         = (bSetAllAttribs || (attribMask & SPU_VOICE_VOLL));
+    const bool bSetVolModeL     = (bSetAllAttribs || (attribMask & SPU_VOICE_VOLMODEL));
+    const bool bSetVolR         = (bSetAllAttribs || (attribMask & SPU_VOICE_VOLR));
+    const bool bSetVolModeR     = (bSetAllAttribs || (attribMask & SPU_VOICE_VOLMODER));
+
+    // Set the required attributes for all specified voices
+    const uint32_t voiceBits = attribs.voice_bits;
+
+    for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
+        // Skip this voice if we're not setting its attributes
+        if ((voiceBits & (1 << voiceIdx)) == 0)
+            continue;
+
+        // Set: voice 'pitch' or sample rate. Note that '4,096' = '44,100 Hz'.
+        spu::Voice& voice = spu.voices[voiceIdx];
+
+        if (bSetPitch) {
+            voice.sampleRate._reg = attribs.pitch;
+        }
+
+        // Set: voice 'base' note at which the sample rate is regarded to be '44,100 Hz'
+        if (bSetBaseNote) {
+            gVoiceBaseNotes[voiceIdx] = attribs.sample_note;
+        }
+
+        // Set: voice pitch or sample rate from a musical note
+        if (bSetNote) {
+            // Note: the high 8 bits of these 'note' fields contain the actual semitone, the low 8-bits are 1/128 semitone increments
+            const uint16_t baseNote = gVoiceBaseNotes[voiceIdx];
+            const uint16_t note = attribs.note;
+            const uint16_t sampleRate = LIBSPU__spu_note2pitch(baseNote >> 8, baseNote & 0xFF, note >> 8, note & 0xFF);
+            voice.sampleRate._reg = sampleRate;
+        }
+
+        // Set: the start address (64-bit word index) for the voice wave data.
+        // If the given address is not 64-bit aligned then it is aligned up to the next 64-bit boundary.
+        if (bSetWaveAddr) {
+            const uint32_t addr = (attribs.addr + 7) / 8;
+            voice.startAddress._reg = (uint16_t) addr;
+        }
+
+        // Set: attack rate
+        if (bSetAttackRate) {
+            const uint32_t attackRate = (attribs.ar < 0x7F) ? attribs.ar : 0x7F;
+            voice.adsr.attackStep = (attackRate & 0b0000'0011);
+            voice.adsr.releaseShift = (attackRate & 0b0111'1100) >> 2;
+
+            // Set: attack rate mode (exponential or not).
+            // If not specified then default to 'linear' increase mode.
+            if (bSetAttackMode) {
+                voice.adsr.attackMode = (attribs.a_mode == SPU_VOICE_EXPIncN) ? 1 : 0;
+            } else {
+                voice.adsr.attackMode = 0;
+            }
+        }
+
+        // Set: decay rate
+        if (bSetDecayRate) {
+            voice.adsr.decayShift = (attribs.dr < 0xF) ? attribs.dr : 0xF;
+        }
+
+        // Set: sustain level
+        if (bSetSustainLevel) {
+            voice.adsr.sustainLevel = (attribs.sl < 0xF) ? attribs.sl : 0xF;
+        }
+
+        // Set: sustain rate
+        if (bSetSustainRate) {
+            const uint32_t sustainRate = (attribs.sr < 0x7F) ? attribs.sr : 0x7F;
+            voice.adsr.sustainStep = (sustainRate & 0b0000'0011);
+            voice.adsr.sustainShift = (sustainRate & 0b0111'1100) >> 2;
+
+            // Set: sustain rate mode (increase and exponential or not).
+            // If not specified then default to 'increase' and NOT 'exponential' mode.
+            if (bSetSustainMode) {
+                uint8_t dir     = 0;    // 0, 1: increase / decrease
+                uint8_t mode    = 0;    // 0, 1: linear / exponential
+
+                // Some of this doesn't make sense to me, but it's what I observed in the original machine code for this function...
+                switch (attribs.s_mode) {
+                    case SPU_VOICE_DIRECT:      dir = 1;    mode = 0; break;
+                    case SPU_VOICE_LINEARIncN:  dir = 0;    mode = 0; break;
+                    case SPU_VOICE_LINEARIncR:  dir = 1;    mode = 0; break;
+                    case SPU_VOICE_LINEARDecN:  dir = 1;    mode = 0; break;
+                    case SPU_VOICE_LINEARDecR:  dir = 1;    mode = 0; break;
+                    case SPU_VOICE_EXPIncN:     dir = 0;    mode = 1; break;
+                    case SPU_VOICE_EXPIncR:     dir = 1;    mode = 0; break;
+                    case SPU_VOICE_EXPDec:      dir = 1;    mode = 1; break;
+
+                    default: break;
+                }
+
+                voice.adsr.sustainDirection = dir;
+                voice.adsr.sustainMode = mode;
+            } else {
+                voice.adsr.sustainDirection = 0;
+                voice.adsr.sustainMode = 0;
+            }
+        }
+
+        // Set: release rate
+        if (bSetReleaseRate) {
+            const uint32_t releaseRate = (attribs.rr < 0x1F) ? attribs.rr : 0x1F;
+            voice.adsr.releaseShift = releaseRate;
+
+            // Set: release rate mode (exponential or not).
+            // If not specified then default to 'linear' mode.
+            voice.adsr.releaseMode = 0;
+
+            if (bSetReleaseMode) {
+                if (attribs.r_mode == SPU_VOICE_EXPDec) {
+                    voice.adsr.releaseMode = 1;
+                }
+            }
+        }
+
+        // Set: envelope ADSR directly (1st and 2nd 16-bits)
+        if (bSetAdsrPart1) {
+            voice.adsr._reg &= 0xFFFF0000;
+            voice.adsr._reg |= (uint32_t) attribs.adsr1;
+        }
+
+        if (bSetAdsrPart2) {
+            voice.adsr._reg &= 0x0000FFFF;
+            voice.adsr._reg |= ((uint32_t) attribs.adsr2) << 16;
+        }
+
+        // Set: wave loop address (64-bit word index).
+        // If the given address is not 64-bit aligned then it is aligned up to the next 64-bit boundary.
+        if (bSetWaveLoopAddr) {
+            const uint32_t addr = (attribs.loop_addr + 7) / 8;
+            voice.repeatAddress._reg = (uint16_t) addr;
+        }
+
+        // Set: left volume and mode
+        if (bSetVolL) {
+            const uint16_t mode = (bSetVolModeL) ? attribs.volmode.left : 0;
+
+            if (mode == 0) {
+                voice.volume.left = attribs.volume.left & 0x7FFF;
+            } else {
+                const uint16_t volBits = (attribs.volume.left < 0x7F) ? attribs.volume.left : 0x7F;
+                const uint16_t modeBits = 0x8000 | (mode << 12);
+                voice.volume.left = modeBits | volBits;
+            }
+        }
+
+        // Set: right volume and mode
+        if (bSetVolR) {
+            const uint16_t mode = (bSetVolModeR) ? attribs.volmode.right : 0;
+
+            if (mode == 0) {
+                voice.volume.right = attribs.volume.right & 0x7FFF;
+            } else {
+                const uint16_t volBits = (attribs.volume.right < 0x7F) ? attribs.volume.right : 0x7F;
+                const uint16_t modeBits = 0x8000 | (mode << 12);
+                voice.volume.right = modeBits | volBits;
+            }
+        }
     }
-    if (v0 != 0) goto loc_8005091C;
-    s7 = 0x17;                                          // Result = 00000017
-loc_8005091C:
-    v0 = (i32(s7) < i32(a1));
-    if (i32(s7) < 0) goto loc_8005092C;
-    s7++;
-    if (v0 == 0) goto loc_80050934;
-loc_8005092C:
-    v0 = -3;                                            // Result = FFFFFFFD
-    goto loc_80050F88;
-loc_80050934:
-    s4 = a1;
-    v0 = (i32(s4) < i32(s7));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80050F24;
-    }
-loc_80050944:
-    v1 = lw(s0);
-    v0 = v0 << s4;
-    v0 &= v1;
-    if (v0 == 0) goto loc_80050F14;
-    s3 = s4 << 3;
-    if (s2 != 0) goto loc_8005096C;
-    v0 = s1 & 0x10;
-    if (v0 == 0) goto loc_80050984;
-loc_8005096C:
-    v0 = s4 << 4;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    a0 = lhu(s0 + 0x14);
-    v0 += v1;
-    sh(a0, v0 + 0x4);
-loc_80050984:
-    v0 = s1 & 0x40;
-    if (s2 != 0) goto loc_80050994;
-    if (v0 == 0) goto loc_800509AC;
-loc_80050994:
-    v1 = lhu(s0 + 0x18);
-    v0 = s4 << 1;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7CBC;                                       // Result = LIBSPU__spu_voice_centerNote[0] (80097CBC)
-    at += v0;
-    sh(v1, at);
-loc_800509AC:
-    v0 = s4 << 1;
-    if (s2 != 0) goto loc_800509C0;
-    v0 = s1 & 0x20;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s4 << 1;
-        if (bJump) goto loc_800509FC;
-    }
-loc_800509C0:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7CBC;                                       // Result = LIBSPU__spu_voice_centerNote[0] (80097CBC)
-    at += v0;
-    a1 = lhu(at);
-    a3 = lhu(s0 + 0x16);
-    a0 = a1 >> 8;
-    a1 &= 0xFF;
-    a2 = a3 >> 8;
-    a3 &= 0xFF;
-    v0 = LIBSPU__spu_note2pitch(a0, a1, a2, a3);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    v1 = s3 << 1;
-    v1 += a0;
-    sh(v0, v1 + 0x4);
-loc_800509FC:
-    v0 = s1 & 0x80;
-    if (s2 != 0) goto loc_80050A0C;
-    if (v0 == 0) goto loc_80050A64;
-loc_80050A0C:
-    a1 = 0x800B0000;                                    // Result = 800B0000
-    a1 = lw(a1 - 0x70DC);                               // Load from: gLIBSPU__spu_mem_mode (800A8F24)
-    a0 = lw(s0 + 0x1C);
-    if (a1 == 0) goto loc_80050A44;
-    divu(a0, a1);
-    if (a1 != 0) goto loc_80050A30;
-    _break(0x1C00);
-loc_80050A30:
-    v0 = hi;
-    if (v0 == 0) goto loc_80050A44;
-    a0 += a1;
-loc_80050A44:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6E60);                               // Load from: gLIBSPU__spu_mem_mode_plus (800A91A0)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    a0 = a0 >> v0;
-    v0 = s3 << 1;
-    v0 += v1;
-    sh(a0, v0 + 0x6);
-loc_80050A64:
-    v0 = s1 & 0x800;
-    if (s2 != 0) goto loc_80050A7C;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s1 & 0x100;
-        if (bJump) goto loc_80050AE4;
-    }
-    a1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_80050AA0;
-loc_80050A7C:
-    v1 = lw(s0 + 0x24);
-    v0 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 5;                                         // Result = 00000005
-        if (bJump) goto loc_80050A9C;
-    }
-    a1 = 0;                                             // Result = 00000000
-    if (v1 != v0) goto loc_80050AA0;
-    a1 = 0x80;                                          // Result = 00000080
-    goto loc_80050AA0;
-loc_80050A9C:
-    a1 = 0;                                             // Result = 00000000
-loc_80050AA0:
-    v0 = lhu(s0 + 0x30);
-    v0 = (v0 < 0x80);
-    a2 = 0x7F;                                          // Result = 0000007F
-    if (v0 == 0) goto loc_80050AB8;
-    a2 = lhu(s0 + 0x30);
-loc_80050AB8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    v1 = s3 << 1;
-    v1 += v0;
-    v0 = lhu(v1 + 0x8);
-    a0 = v0 & 0xFF;
-    v0 = a2 | a1;
-    v0 <<= 8;
-    v0 |= a0;
-    sh(v0, v1 + 0x8);
-loc_80050AE4:
-    v0 = s1 & 0x1000;
-    if (s2 != 0) goto loc_80050AF4;
-    if (v0 == 0) goto loc_80050B34;
-loc_80050AF4:
-    v0 = lhu(s0 + 0x32);
-    v0 = (v0 < 0x10);
-    a2 = 0xF;                                           // Result = 0000000F
-    if (v0 == 0) goto loc_80050B0C;
-    a2 = lhu(s0 + 0x32);
-loc_80050B0C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    v1 = s3 << 1;
-    v1 += v0;
-    v0 = lhu(v1 + 0x8);
-    a0 = v0 & 0xFF0F;
-    v0 = a2 << 4;
-    v0 |= a0;
-    sh(v0, v1 + 0x8);
-loc_80050B34:
-    v0 = s1 & 0x8000;
-    if (s2 != 0) goto loc_80050B44;
-    if (v0 == 0) goto loc_80050B80;
-loc_80050B44:
-    v0 = lhu(s0 + 0x38);
-    v0 = (v0 < 0x10);
-    a2 = 0xF;                                           // Result = 0000000F
-    if (v0 == 0) goto loc_80050B5C;
-    a2 = lhu(s0 + 0x38);
-loc_80050B5C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    v1 = s3 << 1;
-    v1 += v0;
-    v0 = lhu(v1 + 0x8);
-    v0 &= 0xFFF0;
-    v0 |= a2;
-    sh(v0, v1 + 0x8);
-loc_80050B80:
-    v0 = s1 & 0x2000;
-    if (s2 != 0) goto loc_80050B98;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s1 & 0x200;
-        if (bJump) goto loc_80050C2C;
-    }
-    a1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_80050BE8;
-loc_80050B98:
-    v1 = lw(s0 + 0x28);
-    v0 = 3;                                             // Result = 00000003
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 4);
-        if (bJump) goto loc_80050BE4;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80050BC0;
-    }
-    a1 = 0;                                             // Result = 00000000
-    if (v1 == v0) goto loc_80050BE8;
-    a1 = 0x100;                                         // Result = 00000100
-    goto loc_80050BE8;
-loc_80050BC0:
-    v0 = 5;                                             // Result = 00000005
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 7;                                         // Result = 00000007
-        if (bJump) goto loc_80050BDC;
-    }
-    a1 = 0x300;                                         // Result = 00000300
-    if (v1 == v0) goto loc_80050BE8;
-    a1 = 0x100;                                         // Result = 00000100
-    goto loc_80050BE8;
-loc_80050BDC:
-    a1 = 0x200;                                         // Result = 00000200
-    goto loc_80050BE8;
-loc_80050BE4:
-    a1 = 0x100;                                         // Result = 00000100
-loc_80050BE8:
-    v0 = lhu(s0 + 0x34);
-    v0 = (v0 < 0x80);
-    a2 = 0x7F;                                          // Result = 0000007F
-    if (v0 == 0) goto loc_80050C00;
-    a2 = lhu(s0 + 0x34);
-loc_80050C00:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    v1 = s3 << 1;
-    v1 += v0;
-    v0 = lhu(v1 + 0xA);
-    a0 = v0 & 0x3F;
-    v0 = a2 | a1;
-    v0 <<= 6;
-    v0 |= a0;
-    sh(v0, v1 + 0xA);
-loc_80050C2C:
-    v0 = s1 & 0x4000;
-    if (s2 != 0) goto loc_80050C44;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s1 & 0x400;
-        if (bJump) goto loc_80050CA8;
-    }
-    a1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_80050C68;
-loc_80050C44:
-    v1 = lw(s0 + 0x2C);
-    v0 = 3;                                             // Result = 00000003
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 7;                                         // Result = 00000007
-        if (bJump) goto loc_80050C64;
-    }
-    a1 = 0;                                             // Result = 00000000
-    if (v1 != v0) goto loc_80050C68;
-    a1 = 0x20;                                          // Result = 00000020
-    goto loc_80050C68;
-loc_80050C64:
-    a1 = 0;                                             // Result = 00000000
-loc_80050C68:
-    v0 = lhu(s0 + 0x36);
-    v0 = (v0 < 0x20);
-    a2 = 0x1F;                                          // Result = 0000001F
-    if (v0 == 0) goto loc_80050C80;
-    a2 = lhu(s0 + 0x36);
-loc_80050C80:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    v1 = s3 << 1;
-    v1 += v0;
-    v0 = lhu(v1 + 0xA);
-    a0 = v0 & 0xFFC0;
-    v0 = a2 | a1;
-    v0 |= a0;
-    sh(v0, v1 + 0xA);
-loc_80050CA8:
-    v0 = s3 << 1;
-    if (s2 != 0) goto loc_80050CC0;
-    v0 = 0x20000;                                       // Result = 00020000
-    v0 &= s1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s3 << 1;
-        if (bJump) goto loc_80050CD4;
-    }
-loc_80050CC0:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    a0 = lhu(s0 + 0x3A);
-    v0 += v1;
-    sh(a0, v0 + 0x8);
-loc_80050CD4:
-    v0 = s3 << 1;
-    if (s2 != 0) goto loc_80050CEC;
-    v0 = 0x40000;                                       // Result = 00040000
-    v0 &= s1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s3 << 1;
-        if (bJump) goto loc_80050D00;
-    }
-loc_80050CEC:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    a0 = lhu(s0 + 0x3C);
-    v0 += v1;
-    sh(a0, v0 + 0xA);
-loc_80050D00:
-    v0 = 0x10000;                                       // Result = 00010000
-    if (s2 != 0) goto loc_80050D14;
-    v0 &= s1;
-    if (v0 == 0) goto loc_80050D6C;
-loc_80050D14:
-    a1 = 0x800B0000;                                    // Result = 800B0000
-    a1 = lw(a1 - 0x70DC);                               // Load from: gLIBSPU__spu_mem_mode (800A8F24)
-    a0 = lw(s0 + 0x20);
-    if (a1 == 0) goto loc_80050D4C;
-    divu(a0, a1);
-    if (a1 != 0) goto loc_80050D38;
-    _break(0x1C00);
-loc_80050D38:
-    v0 = hi;
-    if (v0 == 0) goto loc_80050D4C;
-    a0 += a1;
-loc_80050D4C:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6E60);                               // Load from: gLIBSPU__spu_mem_mode_plus (800A91A0)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    a0 = a0 >> v0;
-    v0 = s3 << 1;
-    v0 += v1;
-    sh(a0, v0 + 0xE);
-loc_80050D6C:
-    v0 = s1 & 1;
-    if (s2 != 0) goto loc_80050D84;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s1 & 4;
-        if (bJump) goto loc_80050E40;
-    }
-    if (v0 == 0) goto loc_80050DEC;
-loc_80050D84:
-    v1 = lh(s0 + 0xC);
-    v0 = (v1 < 8);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80050DEC;
-    }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x1E78;                                       // Result = JumpTable_LIBSPU_SpuSetCommonAttr_1[0] (80011E78)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80050DEC: goto loc_80050DEC;
-        case 0x80050DB4: goto loc_80050DB4;
-        case 0x80050DBC: goto loc_80050DBC;
-        case 0x80050DC4: goto loc_80050DC4;
-        case 0x80050DCC: goto loc_80050DCC;
-        case 0x80050DD4: goto loc_80050DD4;
-        case 0x80050DDC: goto loc_80050DDC;
-        case 0x80050DE4: goto loc_80050DE4;
-        default: jump_table_err(); break;
-    }
-loc_80050DB4:
-    a1 = 0x8000;                                        // Result = 00008000
-    goto loc_80050DF4;
-loc_80050DBC:
-    a1 = 0x9000;                                        // Result = 00009000
-    goto loc_80050DF4;
-loc_80050DC4:
-    a1 = 0xA000;                                        // Result = 0000A000
-    goto loc_80050DF4;
-loc_80050DCC:
-    a1 = 0xB000;                                        // Result = 0000B000
-    goto loc_80050DF4;
-loc_80050DD4:
-    a1 = 0xC000;                                        // Result = 0000C000
-    goto loc_80050DF4;
-loc_80050DDC:
-    a1 = 0xD000;                                        // Result = 0000D000
-    goto loc_80050DF4;
-loc_80050DE4:
-    a1 = 0xE000;                                        // Result = 0000E000
-    goto loc_80050DF4;
-loc_80050DEC:
-    s5 = lhu(s0 + 0x8);
-    a1 = 0;                                             // Result = 00000000
-loc_80050DF4:
-    v0 = s5 & 0x7FFF;
-    if (a1 == 0) goto loc_80050E28;
-    a0 = lh(s0 + 0x8);
-    v0 = (i32(a0) < 0x80);
-    v1 = a0;
-    if (v0 != 0) goto loc_80050E18;
-    s5 = 0x7F;                                          // Result = 0000007F
-    goto loc_80050E24;
-loc_80050E18:
-    s5 = v1;
-    if (i32(a0) >= 0) goto loc_80050E24;
-    s5 = 0;                                             // Result = 00000000
-loc_80050E24:
-    v0 = s5 & 0x7FFF;
-loc_80050E28:
-    v1 = s3 << 1;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    v0 |= a1;
-    v1 += a0;
-    sh(v0, v1);
-loc_80050E40:
-    v0 = s1 & 2;
-    if (s2 != 0) goto loc_80050E58;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s1 & 8;
-        if (bJump) goto loc_80050F14;
-    }
-    if (v0 == 0) goto loc_80050EC0;
-loc_80050E58:
-    v1 = lh(s0 + 0xE);
-    v0 = (v1 < 8);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80050EC0;
-    }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x1E98;                                       // Result = JumpTable_LIBSPU_SpuSetCommonAttr_2[0] (80011E98)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80050EC0: goto loc_80050EC0;
-        case 0x80050E88: goto loc_80050E88;
-        case 0x80050E90: goto loc_80050E90;
-        case 0x80050E98: goto loc_80050E98;
-        case 0x80050EA0: goto loc_80050EA0;
-        case 0x80050EA8: goto loc_80050EA8;
-        case 0x80050EB0: goto loc_80050EB0;
-        case 0x80050EB8: goto loc_80050EB8;
-        default: jump_table_err(); break;
-    }
-loc_80050E88:
-    a1 = 0x8000;                                        // Result = 00008000
-    goto loc_80050EC8;
-loc_80050E90:
-    a1 = 0x9000;                                        // Result = 00009000
-    goto loc_80050EC8;
-loc_80050E98:
-    a1 = 0xA000;                                        // Result = 0000A000
-    goto loc_80050EC8;
-loc_80050EA0:
-    a1 = 0xB000;                                        // Result = 0000B000
-    goto loc_80050EC8;
-loc_80050EA8:
-    a1 = 0xC000;                                        // Result = 0000C000
-    goto loc_80050EC8;
-loc_80050EB0:
-    a1 = 0xD000;                                        // Result = 0000D000
-    goto loc_80050EC8;
-loc_80050EB8:
-    a1 = 0xE000;                                        // Result = 0000E000
-    goto loc_80050EC8;
-loc_80050EC0:
-    s6 = lhu(s0 + 0xA);
-    a1 = 0;                                             // Result = 00000000
-loc_80050EC8:
-    v0 = s6 & 0x7FFF;
-    if (a1 == 0) goto loc_80050EFC;
-    a0 = lh(s0 + 0xA);
-    v0 = (i32(a0) < 0x80);
-    v1 = a0;
-    if (v0 != 0) goto loc_80050EEC;
-    s6 = 0x7F;                                          // Result = 0000007F
-    goto loc_80050EF8;
-loc_80050EEC:
-    s6 = v1;
-    if (i32(a0) >= 0) goto loc_80050EF8;
-    s6 = 0;                                             // Result = 00000000
-loc_80050EF8:
-    v0 = s6 & 0x7FFF;
-loc_80050EFC:
-    v1 = s3 << 1;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x687C);                               // Load from: gLIBSPU__spu_RXX (8007687C)
-    v0 |= a1;
-    v1 += a0;
-    sh(v0, v1 + 0x2);
-loc_80050F14:
-    s4++;
-    v0 = (i32(s4) < i32(s7));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80050944;
-    }
-loc_80050F24:
-    v0 = 0;                                             // Result = 00000000
-    if (fp != 0) goto loc_80050F88;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, sp + 0x14);
-    sw(0, sp + 0x10);
-    goto loc_80050F70;
-loc_80050F40:
-    v1 = lw(sp + 0x14);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 += v1;
-    sw(v0, sp + 0x14);
-    v0 = lw(sp + 0x10);
-    v0++;
-    sw(v0, sp + 0x10);
-    v0 = lw(sp + 0x10);
-loc_80050F70:
-    v0 = lw(sp + 0x10);
-    v0 = (i32(v0) < 2);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80050F40;
-    }
-loc_80050F88:
-    ra = lw(sp + 0x4C);
-    fp = lw(sp + 0x48);
-    s7 = lw(sp + 0x44);
-    s6 = lw(sp + 0x40);
-    s5 = lw(sp + 0x3C);
-    s4 = lw(sp + 0x38);
-    s3 = lw(sp + 0x34);
-    s2 = lw(sp + 0x30);
-    s1 = lw(sp + 0x2C);
-    s0 = lw(sp + 0x28);
-    sp += 0x50;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1940,7 +1556,7 @@ loc_800548F4:
     sw(s0, sp + 0x10);
     sw(ra, sp + 0x14);
     s0 = a0;
-    LIBSPU_SpuSetVoiceAttr();
+    LIBSPU_SpuSetVoiceAttr(*vmAddrToPtr<SpuVoiceAttr>(a0));
     a1 = lw(s0);
     a0 = 1;                                             // Result = 00000001
     LIBSPU_SpuSetKey(a0, a1);
