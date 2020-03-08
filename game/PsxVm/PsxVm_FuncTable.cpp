@@ -510,7 +510,6 @@ extern void LIBAPI_ReturnFromException() noexcept;
 extern void _thunk_LIBETC_VSync() noexcept;
 extern void _thunk_LIBETC_v_wait() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
-extern void LIBSN__main() noexcept;
 extern void LIBAPI_InitHeap() noexcept;
 extern void LIBAPI_DeliverEvent() noexcept;
 extern void _thunk_LIBCD_CdSync() noexcept;
@@ -1047,7 +1046,6 @@ namespace PsxVm {
         { 0x8004BA94, &_thunk_LIBETC_VSync },
         { 0x8004BBDC, &_thunk_LIBETC_v_wait },
         { 0x80050454, &LIBAPI_FlushCache },
-        { 0x800507AC, &LIBSN__main },
         { 0x80050884, &LIBAPI_InitHeap },
         { 0x80053D48, &LIBAPI_DeliverEvent },
         { 0x80054D20, &_thunk_LIBCD_CdSync },
