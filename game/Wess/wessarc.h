@@ -1,5 +1,9 @@
 #pragma once
 
+#include "PsxVm/VmPtr.h"
+
+extern const VmPtr<uint32_t> gWess_Millicount;
+
 void GetIntsPerSec() noexcept;
 void CalcPartsPerInt() noexcept;
 void WessInterruptHandler() noexcept;

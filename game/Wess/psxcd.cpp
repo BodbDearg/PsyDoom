@@ -8,14 +8,22 @@
 #include "PsxVm/VmPtr.h"
 #include "PsxVm/VmSVal.h"
 #include "PsyQ/LIBCD.h"
+#include "wessarc.h"
 
 static const VmPtr<bool32_t>                gbPSXCD_IsCdInit(0x80077D70);           // If true then the 'psxcd' module has been initialized
+static const VmPtr<CdlLOC[CdlMAXTOC]>       gTrackCdlLOC(0x800783F8);               // Locations on the disc for all CD tracks
 static const VmPtr<bool32_t>                gbPSXCD_init_pos(0x80077D74);           // Set to true when we know the current position of the CD, false otherwise
 static const VmPtr<bool32_t>                gbPSXCD_async_on(0x80077D64);           // True when there is an asynchronous read happening
 static const VmPtr<PsxCd_File>              gPSXCD_cdfile(0x8007831C);              // Used to hold a file temporarily after opening
 static const VmPtr<CdlLOC>                  gPSXCD_cur_io_loc(0x80077D78);          // Last IO location on disc
-static const VmPtr<CdlLOC[CdlMAXTOC]>       gTrackCdlLOC(0x800783F8);               // Locations on the disc for all CD tracks
 static const VmPtr<int32_t>                 gbPSXCD_cb_enable_flag(0x80077D7C);     // Non zero (true) if callbacks are currently enabled
+static const VmPtr<uint8_t>                 gPSXCD_cdl_com(0x80077D92);             // The last command issued to the cdrom via 'LIBCD_CdControl'
+static const VmPtr<uint8_t>                 gPSXCD_cdl_errcom(0x80077D93);          // The last command issued to the cdrom via 'LIBCD_CdControl' which was an error
+static const VmPtr<int32_t>                 gPSXCD_sync_intr(0x80077DA4);           // Int result of last 'LIBCD_CdSync' call
+static const VmPtr<int32_t>                 gPSXCD_cdl_errintr(0x80077D88);         // Int result of last 'LIBCD_CdSync' call with an error
+static const VmPtr<uint8_t[8]>              gPSXCD_sync_result(0x80077DA8);         // Result bytes for last 'LIBCD_CdSync' call
+static const VmPtr<int32_t>                 gPSXCD_cdl_errcount(0x80077D8C);        // A count of how many cd errors that occurred
+static const VmPtr<uint8_t>                 gPSXCD_cdl_errstat(0x80077D91);         // The first result byte (status byte) for when the last error which occurred
 
 // Previous 'CdReadyCallback' and 'CDSyncCallback' functions used by LIBCD prior to initializing this module.
 // Used for restoring once we shutdown this module.
@@ -38,52 +46,30 @@ static void PSXCD_psxcd_memcpy(void* const pDst, const void* const pSrc, uint32_
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Wait until the current CD command has completed successfully (with a timeout)
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_sync() noexcept {
-loc_8003F234:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 = lw(s0 + 0x5954);                               // Load from: gWess_Millicount (80075954)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5954);                               // Load from: gWess_Millicount (80075954)
-    sw(ra, sp + 0x18);
-    s0 += 0x1F40;
-    v0 = (v0 < s0);
-    sw(s1, sp + 0x14);
-    if (v0 == 0) goto loc_8003F2D8;
-    s1 = 5;                                             // Result = 00000005
-loc_8003F264:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DA8;                                       // Result = gPSXCD_sync_result[0] (80077DA8)
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBCD_CdSync();
-    sw(v0, gp + 0x7C4);                                 // Store to: gPSXCD_sync_intr (80077DA4)
-    if (v0 != s1) goto loc_8003F2B0;
-    LIBCD_CdFlush();
-    v0 = lw(gp + 0x7C4);                                // Load from: gPSXCD_sync_intr (80077DA4)
-    a0 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
-    a1 = lbu(gp + 0x7C8);                               // Load from: gPSXCD_sync_result[0] (80077DA8)
-    v1 = lw(gp + 0x7AC);                                // Load from: gPSXCD_cdl_errcount (80077D8C)
-    v0 += 0x50;
-    v1++;
-    sw(v0, gp + 0x7A8);                                 // Store to: gPSXCD_cdl_errintr (80077D88)
-    sb(a0, gp + 0x7B3);                                 // Store to: gPSXCD_cdl_errcom (80077D93)
-    sb(a1, gp + 0x7B1);                                 // Store to: gPSXCD_cdl_errstat (80077D91)
-    sw(v1, gp + 0x7AC);                                 // Store to: gPSXCD_cdl_errcount (80077D8C)
-loc_8003F2B0:
-    v1 = lw(gp + 0x7C4);                                // Load from: gPSXCD_sync_intr (80077DA4)
-    v0 = 2;                                             // Result = 00000002
-    if (v1 == v0) goto loc_8003F2D8;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5954);                               // Load from: gWess_Millicount (80075954)
-    v0 = (v0 < s0);
-    if (v0 != 0) goto loc_8003F264;
-loc_8003F2D8:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    // PC-PSX: this logic is no longer neccessary.
+    // Our reimplementation of LIBCD executes everything synchronously.
+    #if !PC_PSX_DOOM_MODS
+        const uint32_t timeoutMs = *gWess_Millicount + 8000;
+
+        while (*gWess_Millicount < timeoutMs) {
+            *gPSXCD_sync_intr = LIBCD_CdSync(1, gPSXCD_sync_result.get());
+
+            if (*gPSXCD_sync_intr == CdlDiskError) {
+                LIBCD_CdFlush();
+                *gPSXCD_cdl_errintr = *gPSXCD_sync_intr + 80;
+                *gPSXCD_cdl_errcount += 1;
+                *gPSXCD_cdl_errcom = *gPSXCD_cdl_com;
+                *gPSXCD_cdl_errstat = gPSXCD_sync_result[0];
+            }
+
+            if (*gPSXCD_sync_intr == CdlComplete)
+                break;
+        }
+    #endif
 }
 
 void psxcd_critical_sync() noexcept {
