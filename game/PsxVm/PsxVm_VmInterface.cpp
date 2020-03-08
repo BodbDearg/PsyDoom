@@ -507,6 +507,10 @@ void emulate_sound_if_required() noexcept {
     }
 }
 
+void emulate_cdrom() noexcept {
+    gpCdrom->step();
+}
+
 uint32_t ptrToVmAddr(const void* const ptr) noexcept {
     // Null is allowed to convert back to '0' always
     if (ptr) {

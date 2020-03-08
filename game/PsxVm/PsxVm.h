@@ -184,6 +184,9 @@ void emulate_timers(const int numCycles) noexcept;
 // Emulate sound until we have enough samples to handle an upcoming buffer request
 void emulate_sound_if_required() noexcept;
 
+// Emulate the cdrom a little
+void emulate_cdrom() noexcept;
+
 // Fire timer (root counter) related events if appropriate.
 // Note: this is implemented in LIBAPI, where timers are handled.
 void generate_timer_events() noexcept;
