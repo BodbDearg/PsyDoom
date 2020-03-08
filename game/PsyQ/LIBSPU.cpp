@@ -1550,20 +1550,13 @@ void _thunk_LIBSPU_SpuWrite() noexcept {
     v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
 }
 
-void LIBSPU_SpuSetKeyOnWithAttr() noexcept {
-loc_800548F4:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x14);
-    s0 = a0;
-    LIBSPU_SpuSetVoiceAttr(*vmAddrToPtr<SpuVoiceAttr>(a0));
-    a1 = lw(s0);
-    a0 = 1;                                             // Result = 00000001
-    LIBSPU_SpuSetKey(a0, a1);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the specified attributes for the specified voices in the data structure.
+// Also 'key on' (begin playing) the specified voices.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBSPU_SpuSetKeyOnWithAttr(const SpuVoiceAttr& attribs) noexcept {
+    LIBSPU_SpuSetVoiceAttr(attribs);
+    LIBSPU_SpuSetKey(1, attribs.voice_bits);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

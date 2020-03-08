@@ -527,7 +527,6 @@ extern void LIBSPU_SpuInit() noexcept;
 extern void _thunk_LIBSPU_SpuIsTransferCompleted() noexcept;
 extern void _thunk_LIBSPU_SpuSetTransferStartAddr() noexcept;
 extern void _thunk_LIBSPU_SpuWrite() noexcept;
-extern void LIBSPU_SpuSetKeyOnWithAttr() noexcept;
 extern void _thunk_LIBCD_CdSync() noexcept;
 extern void _thunk_LIBCD_CdReady() noexcept;
 extern void _thunk_LIBCD_CdControl() noexcept;
@@ -1079,7 +1078,6 @@ namespace PsxVm {
         { 0x800546E0, &_thunk_LIBSPU_SpuIsTransferCompleted },
         { 0x80054830, &_thunk_LIBSPU_SpuSetTransferStartAddr },
         { 0x80054894, &_thunk_LIBSPU_SpuWrite },
-        { 0x800548F4, &LIBSPU_SpuSetKeyOnWithAttr },
         { 0x80054D20, &_thunk_LIBCD_CdSync },
         { 0x80054D40, &_thunk_LIBCD_CdReady },
         { 0x80054DA8, &_thunk_LIBCD_CdControl },

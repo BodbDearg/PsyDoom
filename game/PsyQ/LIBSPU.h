@@ -241,6 +241,6 @@ void _thunk_LIBSPU_SpuSetTransferStartAddr() noexcept;
 uint32_t LIBSPU_SpuWrite(const void* const pData, const uint32_t size) noexcept;
 void _thunk_LIBSPU_SpuWrite() noexcept;
 
-void LIBSPU_SpuSetKeyOnWithAttr() noexcept;
+void LIBSPU_SpuSetKeyOnWithAttr(const SpuVoiceAttr& attribs) noexcept;
 void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept;
 void LIBSPU_SpuGetAllKeysStatus(uint8_t statuses[SPU_NUM_VOICES]) noexcept;

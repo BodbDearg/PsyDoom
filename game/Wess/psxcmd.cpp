@@ -350,7 +350,7 @@ loc_80045EFC:
     at = 0x80080000;                                    // Result = 80080000
     sh(v0, at - 0xE34);                                 // Store to: 8007F1CC
     a0 -= 0x18;                                         // Result = 8007F190
-    LIBSPU_SpuSetKeyOnWithAttr();
+    LIBSPU_SpuSetKeyOnWithAttr(*vmAddrToPtr<SpuVoiceAttr>(a0));
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
