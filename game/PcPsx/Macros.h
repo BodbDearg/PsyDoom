@@ -116,5 +116,5 @@
         __pragma(warning(pop))
 #else
     // Unhandled compiler
-    #define BT_THIRD_PARTY_INCLUDES_END
+    #define END_THIRD_PARTY_INCLUDES
 #endif

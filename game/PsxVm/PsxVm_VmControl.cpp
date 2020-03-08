@@ -149,7 +149,7 @@ static void setupVmPointers() noexcept {
 
     // Native function to VM addresses
     for (const auto& addrFuncPair : PsxVm::gFuncTable) {
-        gNativeFuncToVmAddr[addrFuncPair.second] = addrFuncPair.first;
+        gNativeFuncToVmAddr[(void*) addrFuncPair.second] = addrFuncPair.first;
     }
 }
 

@@ -228,7 +228,7 @@ int32_t LIBAPI_OpenEvent(const int32_t cause, const int32_t type, const int32_t 
     a0 = cause;
     a1 = type;
     a2 = mode;
-    a3 = PsxVm::getNativeFuncVmAddr(pHandler);
+    a3 = PsxVm::getNativeFuncVmAddr((void*) pHandler);
 
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 8;                                             // Result = 00000008
