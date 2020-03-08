@@ -518,9 +518,6 @@ extern void LIBAPI_FlushCache() noexcept;
 extern void LIBSN__main() noexcept;
 extern void LIBAPI_InitHeap() noexcept;
 extern void LIBAPI_DeliverEvent() noexcept;
-extern void _thunk_LIBSPU_SpuIsTransferCompleted() noexcept;
-extern void _thunk_LIBSPU_SpuSetTransferStartAddr() noexcept;
-extern void _thunk_LIBSPU_SpuWrite() noexcept;
 extern void _thunk_LIBCD_CdSync() noexcept;
 extern void _thunk_LIBCD_CdReady() noexcept;
 extern void _thunk_LIBCD_CdControl() noexcept;
@@ -1063,9 +1060,6 @@ namespace PsxVm {
         { 0x800507AC, &LIBSN__main },
         { 0x80050884, &LIBAPI_InitHeap },
         { 0x80053D48, &LIBAPI_DeliverEvent },
-        { 0x800546E0, &_thunk_LIBSPU_SpuIsTransferCompleted },
-        { 0x80054830, &_thunk_LIBSPU_SpuSetTransferStartAddr },
-        { 0x80054894, &_thunk_LIBSPU_SpuWrite },
         { 0x80054D20, &_thunk_LIBCD_CdSync },
         { 0x80054D40, &_thunk_LIBCD_CdReady },
         { 0x80054DA8, &_thunk_LIBCD_CdControl },

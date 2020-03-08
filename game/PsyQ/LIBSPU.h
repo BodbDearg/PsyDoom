@@ -257,19 +257,11 @@ int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) n
 void LIBSPU_SpuInit() noexcept;
 int32_t LIBSPU_SpuSetReverb(const int32_t onOff) noexcept;
 void LIBSPU_SpuQuit() noexcept;
-
 bool LIBSPU_SpuIsTransferCompleted(const SpuTransferQuery mode) noexcept;
-void _thunk_LIBSPU_SpuIsTransferCompleted() noexcept;
-
 void LIBSPU_SpuInitMalloc(const int32_t maxAllocs, uint8_t* const pMemMangementTbl) noexcept;
 void LIBSPU_SpuSetTransferMode(const SpuTransferMode mode) noexcept;
-
 uint32_t LIBSPU_SpuSetTransferStartAddr(const uint32_t addr) noexcept;
-void _thunk_LIBSPU_SpuSetTransferStartAddr() noexcept;
-
 uint32_t LIBSPU_SpuWrite(const void* const pData, const uint32_t size) noexcept;
-void _thunk_LIBSPU_SpuWrite() noexcept;
-
 void LIBSPU_SpuSetKeyOnWithAttr(const SpuVoiceAttr& attribs) noexcept;
 void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept;
 void LIBSPU_SpuGetAllKeysStatus(uint8_t statuses[SPU_NUM_VOICES]) noexcept;

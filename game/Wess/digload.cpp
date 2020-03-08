@@ -252,13 +252,12 @@ loc_80049234:
     if (v0 == 0) goto loc_8004928C;
     if (s5 == 0) goto loc_800492AC;
 loc_8004928C:
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBSPU_SpuIsTransferCompleted();
+    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
     a0 = s4 + s1;
-    _thunk_LIBSPU_SpuSetTransferStartAddr();
+    v0 = LIBSPU_SpuSetTransferStartAddr(a0);
     a0 = s6 + s1;
     a1 = s0;
-    _thunk_LIBSPU_SpuWrite();
+    v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
     s2 += s0;
 loc_800492AC:
     v0 = 0x80070000;                                    // Result = 80070000
@@ -287,14 +286,13 @@ loc_800492CC:
     if (v0 == 0) goto loc_8004931C;
     if (s5 == 0) goto loc_8004934C;
 loc_8004931C:
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBSPU_SpuIsTransferCompleted();
+    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
     a0 = s4 + s1;
-    _thunk_LIBSPU_SpuSetTransferStartAddr();
+    v0 = LIBSPU_SpuSetTransferStartAddr(a0);
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lw(a1 + 0x5AE4);                               // Load from: 80075AE4
     a0 = s6 + s1;
-    _thunk_LIBSPU_SpuWrite();
+    v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5AE4);                               // Load from: 80075AE4
     s2 += v0;
@@ -528,8 +526,7 @@ loc_8004966C:
     if (v0 == 0) goto loc_800496A0;
     s1 = 0;                                             // Result = 00000000
 loc_800496A0:
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBSPU_SpuIsTransferCompleted();
+    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x6D7C;                                       // Result = gWess_data_read_chunk2[0] (80096D7C)
     a1 = s2;
@@ -562,8 +559,7 @@ loc_800496F8:
     if (v0 == 0) goto loc_8004972C;
     s1 = 0;                                             // Result = 00000000
 loc_8004972C:
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBSPU_SpuIsTransferCompleted();
+    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
     a1 = s2;
@@ -585,8 +581,7 @@ loc_80049760:
     _thunk_LIBCD_CdControl();
     lcd_close();
     if (v0 != 0) goto loc_8004949C;
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBSPU_SpuIsTransferCompleted();
+    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
     psxcd_enable_callbacks();
     v0 = s3;
 loc_800497A4:

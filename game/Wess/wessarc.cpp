@@ -259,10 +259,10 @@ loc_80043E90:
     a2 = v1;
     _thunk_psxcd_read();
     a0 = s2;
-    _thunk_LIBSPU_SpuSetTransferStartAddr();
+    v0 = LIBSPU_SpuSetTransferStartAddr(a0);
     a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
     a1 = s1;
-    _thunk_LIBSPU_SpuWrite();
+    v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
     v0 = 1;                                             // Result = 00000001
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0x1008);                                // Store to: 8007EFF8
@@ -279,13 +279,12 @@ loc_80043F00:
     a0 = s0;                                            // Result = gWess_data_read_chunk2[0] (80096D7C)
     a2 = v1;
     _thunk_psxcd_read();
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBSPU_SpuIsTransferCompleted();
+    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
     a0 = s2;
-    _thunk_LIBSPU_SpuSetTransferStartAddr();
+    v0 = LIBSPU_SpuSetTransferStartAddr(a0);
     a0 = s0;                                            // Result = gWess_data_read_chunk2[0] (80096D7C)
     a1 = s1;
-    _thunk_LIBSPU_SpuWrite();
+    v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0x1008);                                 // Store to: 8007EFF8
     goto loc_80043F90;
@@ -295,13 +294,12 @@ loc_80043F54:
     a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
     a2 = v1;
     _thunk_psxcd_read();
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBSPU_SpuIsTransferCompleted();
+    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
     a0 = s2;
-    _thunk_LIBSPU_SpuSetTransferStartAddr();
+    v0 = LIBSPU_SpuSetTransferStartAddr(a0);
     a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
     a1 = s1;
-    _thunk_LIBSPU_SpuWrite();
+    v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
     v0 = 1;                                             // Result = 00000001
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0x1008);                                // Store to: 8007EFF8
@@ -358,8 +356,7 @@ loc_80044038:
     a2 = s1;
     data_read_chunk();
 loc_8004404C:
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBSPU_SpuIsTransferCompleted();
+    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
     v0 = s3;
 loc_80044058:
     ra = lw(sp + 0x20);

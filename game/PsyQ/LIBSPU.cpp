@@ -10,6 +10,9 @@
 #include "LIBETC.h"
 #include "PcPsx/Macros.h"
 
+#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PsxVm/PsxVm.h"
+
 BEGIN_THIRD_PARTY_INCLUDES
 
 #include <algorithm>
@@ -18,9 +21,6 @@ BEGIN_THIRD_PARTY_INCLUDES
 #include <system.h>
 
 END_THIRD_PARTY_INCLUDES
-
-// N.B: must be done LAST due to MIPS register macros
-#include "PsxVm/PsxVm.h"
 
 // How big the sound RAM is available to the SPU
 static constexpr uint32_t SPU_RAM_SIZE = 512 * 1024;
@@ -678,10 +678,6 @@ bool LIBSPU_SpuIsTransferCompleted([[maybe_unused]] const SpuTransferQuery mode)
     return true;
 }
 
-void _thunk_LIBSPU_SpuIsTransferCompleted() noexcept {
-    v0 = LIBSPU_SpuIsTransferCompleted((SpuTransferQuery) a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize SPU memory management.
 // This call is now a NO-OP because DOOM does not use 'SpuMalloc' - hence no need to implement this.
@@ -717,10 +713,6 @@ uint32_t LIBSPU_SpuSetTransferStartAddr(const uint32_t addr) noexcept {
     }
 }
 
-void _thunk_LIBSPU_SpuSetTransferStartAddr() noexcept {
-    v0 = LIBSPU_SpuSetTransferStartAddr(a0);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Write the specified number of bytes to SPU RAM at the previously set transfer address.
 // Returns the number of bytes written, which may be less than the request if it is out of bounds.
@@ -736,10 +728,6 @@ uint32_t LIBSPU_SpuWrite(const void* const pData, const uint32_t size) noexcept 
 
     std::memcpy(spu.ram.data() + spu.currentDataAddress, pData, thisWriteSize);
     return thisWriteSize;
-}
-
-void _thunk_LIBSPU_SpuWrite() noexcept {
-    v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
