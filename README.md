@@ -1,13 +1,13 @@
 # PsyDoom
 *(Note: formerly known as 'StationDoom')*
 
-This project is a reverse engineering attempt to backport PSX Doom to PC. The code is derived directly from the original machine code (see commit history for a timeline of its transformation) and currently runs in a semi-native, semi-emulated environment. The 'Avocado' PlayStation emulator is used to handle the specifics of the PSX hardware and emulate couple of small functions that don't yet work correctly in C++. Eventually the goal is reach 100% native status and remove all dependencies on emulation entirely.
+This project is a reverse engineering attempt to backport PlayStation Doom to PC. The code is derived directly from the original machine code (see commit history for a timeline of its transformation) and currently runs in a semi-native, semi-emulated environment. The [Avocado](https://github.com/JaCzekanski/Avocado) PlayStation emulator is used to handle the specifics of the PSX hardware and emulate a couple of small functions that don't work correctly yet in C++. Eventually the goal is reach 100% native status for all game code, remove all dependencies on the BIOS and original game .EXE, and use the emulator only to replicate the specific behavior of some hardware elements such as the spu and gpu.
 
 A sister project, [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE), by [Erick Vásquez García (Erick194)](https://github.com/Erick194) also completely recreates the Doom source code for the actual PlayStation hardware and 'PsyQ' SDK. The reverse engineering work in that project is used to accelerate the incremental transition to native C++ for this project, and also interpretation of the code. Going forward, both projects will likely share improvements and refinements and collaborate even more.
 
 Will add more details here later and eventually 'official' binary builds once it is stable enough for general release. If you want to try/experiment with this for now, you will need to build from source or use one of the occasional binaries that I will put up - see details below.
 
-As of right now the game mostly runs correctly, with some sound syncing issues and a few other problems. Here is a brief video demonstration showing the project in action:
+As of right now the game mostly runs correctly, with a few minor issues. Here is a brief video demonstration showing the project in action:
 
 [![Alt text](https://img.youtube.com/vi/o7t7w1YjjSw/0.jpg)](https://www.youtube.com/watch?v=o7t7w1YjjSw)
 
