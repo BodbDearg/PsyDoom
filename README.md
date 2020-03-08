@@ -68,9 +68,7 @@ Longer term goals include support for Final Doom, proper modding support (I adde
     - Nonetheless you can enable to get an idea of how a high FPS PSX DOOM might feel.
         - Add the `-highfps` command line switch to enable it.
 ## Current limitations/bugs
-- Sound is frequently out of sync with gameplay - not severely but sometimes it can be noticed. Probably due to emulation being either advanced too much or too little. Should eventually be fixed once sound engine advancement is tied to real-time.
-- Occasionally the game will freeze when loading maps.
+- Some occasional sound issues, sound is mostly OK at this point though.
 - Only the 'Greatest Hits' US version of PSX DOOM is supported, not Final DOOM or any other SKU.
 - Multiplayer does not work and will freeze the game.
 - The intro movie does not play yet.
-- Probably other lots of other stuff not mentioned here...
