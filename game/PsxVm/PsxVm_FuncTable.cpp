@@ -280,8 +280,6 @@ extern void O_Init() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
 
-extern void psxcd_sync() noexcept;
-extern void psxcd_critical_sync() noexcept;
 extern void psxcd_init() noexcept;
 extern void psxcd_exit() noexcept;
 extern void psxcd_set_data_mode() noexcept;
@@ -816,8 +814,6 @@ namespace PsxVm {
         { 0x8003E910, &O_Init },
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },
-        { 0x8003F234, &psxcd_sync },
-        { 0x8003F2F0, &psxcd_critical_sync },
         { 0x8003F8B0, &psxcd_init },
         { 0x8003F98C, &psxcd_exit },
         { 0x8003F9BC, &psxcd_set_data_mode },

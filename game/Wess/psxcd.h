@@ -36,7 +36,7 @@ struct PsxCd_MapTblEntry {
 static_assert(sizeof(PsxCd_MapTblEntry) == 8);
 
 void psxcd_sync() noexcept;
-void psxcd_critical_sync() noexcept;
+bool psxcd_critical_sync() noexcept;
 
 void PSXCD_cbcomplete(const CdlStatus status, const uint8_t pResult[8]) noexcept;
 void PSXCD_cbready(const CdlStatus status, const uint8_t pResult[8]) noexcept;

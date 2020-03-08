@@ -51,7 +51,7 @@ static void PSXCD_psxcd_memcpy(void* const pDst, const void* const pSrc, uint32_
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_sync() noexcept {
     // PC-PSX: this logic is no longer neccessary.
-    // Our reimplementation of LIBCD executes everything synchronously.
+    // The reimplementation of LIBCD executes everything synchronously.
     #if !PC_PSX_DOOM_MODS
         const uint32_t timeoutMs = *gWess_Millicount + 8000;
 
@@ -59,9 +59,10 @@ void psxcd_sync() noexcept {
             *gPSXCD_sync_intr = LIBCD_CdSync(1, gPSXCD_sync_result.get());
 
             if (*gPSXCD_sync_intr == CdlDiskError) {
+                // Cancel the current command if there was a problem and try again
                 LIBCD_CdFlush();
-                *gPSXCD_cdl_errintr = *gPSXCD_sync_intr + 80;
                 *gPSXCD_cdl_errcount += 1;
+                *gPSXCD_cdl_errintr = *gPSXCD_sync_intr + 80;   // Just to make the codes more unique, so their source is known
                 *gPSXCD_cdl_errcom = *gPSXCD_cdl_com;
                 *gPSXCD_cdl_errstat = gPSXCD_sync_result[0];
             }
@@ -72,61 +73,39 @@ void psxcd_sync() noexcept {
     #endif
 }
 
-void psxcd_critical_sync() noexcept {
-loc_8003F2F0:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 = lw(s0 + 0x5954);                               // Load from: gWess_Millicount (80075954)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5954);                               // Load from: gWess_Millicount (80075954)
-    s0 += 0x1F40;
-    v0 = (v0 < s0);
-    sw(ra, sp + 0x14);
-    if (v0 == 0) goto loc_8003F394;
-loc_8003F318:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DA8;                                       // Result = gPSXCD_sync_result[0] (80077DA8)
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBCD_CdSync();
-    v1 = v0;
-    sw(v1, gp + 0x7C4);                                 // Store to: gPSXCD_sync_intr (80077DA4)
-    v0 = 5;                                             // Result = 00000005
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_8003F374;
-    }
-    LIBCD_CdFlush();
-    v1 = lw(gp + 0x7C4);                                // Load from: gPSXCD_sync_intr (80077DA4)
-    a1 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
-    a2 = lbu(gp + 0x7C8);                               // Load from: gPSXCD_sync_result[0] (80077DA8)
-    a0 = lw(gp + 0x7AC);                                // Load from: gPSXCD_cdl_errcount (80077D8C)
-    v1 += 0x46;
-    a0++;
-    sw(v1, gp + 0x7A8);                                 // Store to: gPSXCD_cdl_errintr (80077D88)
-    sb(a1, gp + 0x7B3);                                 // Store to: gPSXCD_cdl_errcom (80077D93)
-    sb(a2, gp + 0x7B1);                                 // Store to: gPSXCD_cdl_errstat (80077D91)
-    sw(a0, gp + 0x7AC);                                 // Store to: gPSXCD_cdl_errcount (80077D8C)
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8003F398;
-loc_8003F374:
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8003F398;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5954);                               // Load from: gWess_Millicount (80075954)
-    v0 = (v0 < s0);
-    if (v0 != 0) goto loc_8003F318;
-loc_8003F394:
-    v0 = 0;                                             // Result = 00000000
-loc_8003F398:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Wait until the current CD command has completed successfully.
+// Do so with a timeout, or give up if there is an error.
+// Return 'true' if the CD command succeeded.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool psxcd_critical_sync() noexcept {
+    // PC-PSX: this logic is no longer neccessary.
+    // The reimplementation of LIBCD executes everything synchronously.
+    #if PC_PSX_DOOM_MODS
+        return true;
+    #else
+        const uint32_t timeoutMs = *gWess_Millicount + 8000;
+
+        while (*gWess_Millicount < timeoutMs) {
+            *gPSXCD_sync_intr = LIBCD_CdSync(1, gPSXCD_sync_result.get());
+
+            if (*gPSXCD_sync_intr == CdlDiskError) {
+                // Cancel the current command if there was a problem
+                LIBCD_CdFlush();
+                *gPSXCD_cdl_errcount += 1;
+                *gPSXCD_cdl_errintr = *gPSXCD_sync_intr + 70;   // Just to make the codes more unique, so their source is known
+                *gPSXCD_cdl_errcom = *gPSXCD_cdl_com;
+                *gPSXCD_cdl_errstat = gPSXCD_sync_result[0];
+
+                return false;   // Give up if an error happens!
+            }
+
+            if (*gPSXCD_sync_intr == CdlComplete)
+                return true;
+        }
+
+        return false;   // Timeout!
+    #endif
 }
 
 void PSXCD_cbcomplete(const CdlStatus status, const uint8_t pResult[8]) noexcept {
@@ -1283,7 +1262,7 @@ loc_8004059C:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_800406A0;
     }
-    psxcd_critical_sync();
+    v0 = psxcd_critical_sync();
     a0 = 6;                                             // Result = 00000006
     if (v0 == 0) goto loc_80040628;
     a2 = 0;                                             // Result = 00000000
@@ -1295,7 +1274,7 @@ loc_8004059C:
     a1 <<= 2;
     a1 += s7;
     _thunk_LIBCD_CdControl();
-    psxcd_critical_sync();
+    v0 = psxcd_critical_sync();
     if (v0 != 0) goto loc_80040630;
 loc_80040628:
     s6 = 1;                                             // Result = 00000001
