@@ -42,6 +42,16 @@ PsyDoom contributors (sorted alphabetically)
             https://github.com/BodbDearg/PsyDoom/commit/53219ed02236d96b3a628bc8db43233928954f8d
             https://github.com/Erick194/PSXDOOM-RE/commit/7d1a37385c32c5c8f3026c3d8164647c8e67ff00
 
+* **[Jakub Czekański (JaCzekanski)](https://github.com/JaCzekanski)**
+
+    * Author of the excellent Avocado emulator, which PsyDoom uses to replicate PSX hardware such as the GPU and SPU:
+    https://github.com/JaCzekanski/Avocado
+
+* **Martin Korth**
+   
+   * Author of the NO$PSX emulator and also of the NO$PSX specs, which have been extremely helpful during development:
+   https://problemkaputt.de/psx-spx.htm
+
 * **[Samuel Villarreal (svkaiser)](https://github.com/svkaiser)**
 
     * Console DOOM reverse engineering, specs & tools:
