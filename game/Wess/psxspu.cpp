@@ -113,7 +113,7 @@ loc_80045450:
     sh(v0, sp + 0x2A);
     sw(0, sp + 0x2C);
     sw(s0, sp + 0x30);
-    LIBSPU_SpuSetCommonAttr();
+    LIBSPU_SpuSetCommonAttr(*vmAddrToPtr<SpuCommonAttr>(a0));
     at = 0x80070000;                                    // Result = 80070000
     sw(s0, at + 0x5988);                                // Store to: 80075988
 loc_800454E8:
@@ -134,7 +134,7 @@ loc_800454FC:
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x5988);                                 // Store to: 80075988
     sw(v0, sp + 0x10);
-    LIBSPU_SpuSetCommonAttr();
+    LIBSPU_SpuSetCommonAttr(*vmAddrToPtr<SpuCommonAttr>(a0));
     v0 = 1;                                             // Result = 00000001
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5988);                                // Store to: 80075988
@@ -154,7 +154,7 @@ loc_80045540:
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x5988);                                 // Store to: 80075988
     sw(v0, sp + 0x10);
-    LIBSPU_SpuSetCommonAttr();
+    LIBSPU_SpuSetCommonAttr(*vmAddrToPtr<SpuCommonAttr>(a0));
     v0 = 1;                                             // Result = 00000001
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5988);                                // Store to: 80075988
@@ -175,7 +175,7 @@ loc_80045584:
     sw(0, at + 0x5988);                                 // Store to: 80075988
     sw(v0, sp + 0x10);
     sw(s0, sp + 0x28);
-    LIBSPU_SpuSetCommonAttr();
+    LIBSPU_SpuSetCommonAttr(*vmAddrToPtr<SpuCommonAttr>(a0));
     at = 0x80070000;                                    // Result = 80070000
     sw(s0, at + 0x5988);                                // Store to: 80075988
     ra = lw(sp + 0x3C);
@@ -194,7 +194,7 @@ loc_800455CC:
     sw(0, at + 0x5988);                                 // Store to: 80075988
     sw(v0, sp + 0x10);
     sw(0, sp + 0x28);
-    LIBSPU_SpuSetCommonAttr();
+    LIBSPU_SpuSetCommonAttr(*vmAddrToPtr<SpuCommonAttr>(a0));
     v0 = 1;                                             // Result = 00000001
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5988);                                // Store to: 80075988

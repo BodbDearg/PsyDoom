@@ -12,6 +12,7 @@
 
 BEGIN_THIRD_PARTY_INCLUDES
 
+#include <algorithm>
 #include <cstdint>
 #include <device/spu/spu.h>
 #include <system.h>
@@ -210,7 +211,7 @@ void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept {
                 voice.volume.left = attribs.volume.left & 0x7FFF;
             } else {
                 const uint16_t volBits = (attribs.volume.left < 0x7F) ? attribs.volume.left : 0x7F;
-                const uint16_t modeBits = 0x8000 | (mode << 12);
+                const uint16_t modeBits = 0x8000 | ((mode - 1) << 12);
                 voice.volume.left = modeBits | volBits;
             }
         }
@@ -223,7 +224,7 @@ void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept {
                 voice.volume.right = attribs.volume.right & 0x7FFF;
             } else {
                 const uint16_t volBits = (attribs.volume.right < 0x7F) ? attribs.volume.right : 0x7F;
-                const uint16_t modeBits = 0x8000 | (mode << 12);
+                const uint16_t modeBits = 0x8000 | ((mode - 1) << 12);
                 voice.volume.right = modeBits | volBits;
             }
         }
@@ -1056,277 +1057,90 @@ loc_80053354:
     return;
 }
 
-void LIBSPU_SpuSetCommonAttr() noexcept {
-loc_80053DA0:
-    t0 = lw(a0);
-    t1 = (t0 < 1);
-    sp -= 0x10;
-    if (t1 != 0) goto loc_80053DC8;
-    v0 = t0 & 1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = t0 & 4;
-        if (bJump) goto loc_80053E7C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the specified common/master sound settings using the given stuct
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBSPU_SpuSetCommonAttr(const SpuCommonAttr& attribs) noexcept {
+    spu::SPU& spu = *PsxVm::gpSpu;
+
+    // Figure out what attributes we are setting
+    const uint32_t attribMask = attribs.mask;
+    
+    const bool bSetAllAttribs   = (attribMask == 0);
+    const bool bSetMVolL        = (bSetAllAttribs || (attribMask & SPU_COMMON_MVOLL));
+    const bool bSetMVolModeL    = (bSetAllAttribs || (attribMask & SPU_COMMON_MVOLMODEL));
+    const bool bSetMVolR        = (bSetAllAttribs || (attribMask & SPU_COMMON_MVOLR));
+    const bool bSetMVolModeR    = (bSetAllAttribs || (attribMask & SPU_COMMON_MVOLMODER));
+    const bool bSetCdVolL       = (bSetAllAttribs || (attribMask & SPU_COMMON_CDVOLL));
+    const bool bSetCdVolR       = (bSetAllAttribs || (attribMask & SPU_COMMON_CDVOLR));
+    const bool bSetCdReverb     = (bSetAllAttribs || (attribMask & SPU_COMMON_CDREV));
+    const bool bSetCdMix        = (bSetAllAttribs || (attribMask & SPU_COMMON_CDMIX));
+    const bool bSetExtVolL      = (bSetAllAttribs || (attribMask & SPU_COMMON_EXTVOLL));
+    const bool bSetExtVolR      = (bSetAllAttribs || (attribMask & SPU_COMMON_EXTVOLR));
+    const bool bSetExtReverb    = (bSetAllAttribs || (attribMask & SPU_COMMON_EXTREV));
+    const bool bSetExtMix       = (bSetAllAttribs || (attribMask & SPU_COMMON_EXTMIX));
+
+    // Set: master volume and mode (left)
+    if (bSetMVolL) {
+        const uint16_t mode = (bSetMVolModeL) ? attribs.mvolmode.left : 0;
+
+        if (mode == 0) {
+            spu.mainVolume.left = attribs.mvol.left & 0x7FFF;
+        } else {
+            const uint16_t volBits = std::max(std::min(attribs.mvol.left, (int16_t) 0x7F), (int16_t) 0);
+            const uint16_t modeBits = 0x8000 | ((mode - 1) << 12);
+            spu.mainVolume.left = modeBits | volBits;
+        }
     }
-    if (v0 == 0) goto loc_80053E30;
-loc_80053DC8:
-    v1 = lh(a0 + 0x8);
-    v0 = (v1 < 8);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80053E30;
+
+    // Set: master volume and mode (right)
+    if (bSetMVolR) {
+        const uint16_t mode = (bSetMVolModeR) ? attribs.mvolmode.right : 0;
+
+        if (mode == 0) {
+            spu.mainVolume.right = attribs.mvol.right & 0x7FFF;
+        } else {
+            const uint16_t volBits = std::max(std::min(attribs.mvol.right, (int16_t) 0x7F), (int16_t) 0);
+            const uint16_t modeBits = 0x8000 | ((mode - 1) << 12);
+            spu.mainVolume.right = modeBits | volBits;
+        }
     }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x1F14;                                       // Result = JumpTable_LIBSPU_SpuSetCommonAttr_1[0] (80011F14)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80053E30: goto loc_80053E30;
-        case 0x80053DF8: goto loc_80053DF8;
-        case 0x80053E00: goto loc_80053E00;
-        case 0x80053E08: goto loc_80053E08;
-        case 0x80053E10: goto loc_80053E10;
-        case 0x80053E18: goto loc_80053E18;
-        case 0x80053E20: goto loc_80053E20;
-        case 0x80053E28: goto loc_80053E28;
-        default: jump_table_err(); break;
+
+    // Set: cd volume left and right
+    if (bSetCdVolL) {
+        spu.cdVolume.left = attribs.cd.volume.left;
     }
-loc_80053DF8:
-    a1 = 0x8000;                                        // Result = 00008000
-    goto loc_80053E38;
-loc_80053E00:
-    a1 = 0x9000;                                        // Result = 00009000
-    goto loc_80053E38;
-loc_80053E08:
-    a1 = 0xA000;                                        // Result = 0000A000
-    goto loc_80053E38;
-loc_80053E10:
-    a1 = 0xB000;                                        // Result = 0000B000
-    goto loc_80053E38;
-loc_80053E18:
-    a1 = 0xC000;                                        // Result = 0000C000
-    goto loc_80053E38;
-loc_80053E20:
-    a1 = 0xD000;                                        // Result = 0000D000
-    goto loc_80053E38;
-loc_80053E28:
-    a1 = 0xE000;                                        // Result = 0000E000
-    goto loc_80053E38;
-loc_80053E30:
-    a3 = lhu(a0 + 0x4);
-    a1 = 0;                                             // Result = 00000000
-loc_80053E38:
-    v0 = a3 & 0x7FFF;
-    if (a1 == 0) goto loc_80053E6C;
-    a2 = lh(a0 + 0x4);
-    v0 = (i32(a2) < 0x80);
-    v1 = a2;
-    if (v0 != 0) goto loc_80053E5C;
-    a3 = 0x7F;                                          // Result = 0000007F
-    goto loc_80053E68;
-loc_80053E5C:
-    a3 = v1;
-    if (i32(a2) >= 0) goto loc_80053E68;
-    a3 = 0;                                             // Result = 00000000
-loc_80053E68:
-    v0 = a3 & 0x7FFF;
-loc_80053E6C:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v0 |= a1;
-    sh(v0, v1 + 0x180);
-loc_80053E7C:
-    v0 = t0 & 2;
-    if (t1 != 0) goto loc_80053E94;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = t0 & 8;
-        if (bJump) goto loc_80053F48;
+
+    if (bSetCdVolR) {
+        spu.cdVolume.right = attribs.cd.volume.right;
     }
-    if (v0 == 0) goto loc_80053EFC;
-loc_80053E94:
-    v1 = lh(a0 + 0xA);
-    v0 = (v1 < 8);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80053EFC;
+
+    // Set: cd reverb and mix enabled
+    if (bSetCdReverb) {
+        spu.control.cdReverb = (attribs.cd.reverb != 0);
     }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x1F34;                                       // Result = JumpTable_LIBSPU_SpuSetCommonAttr_2[0] (80011F34)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80053EFC: goto loc_80053EFC;
-        case 0x80053EC4: goto loc_80053EC4;
-        case 0x80053ECC: goto loc_80053ECC;
-        case 0x80053ED4: goto loc_80053ED4;
-        case 0x80053EDC: goto loc_80053EDC;
-        case 0x80053EE4: goto loc_80053EE4;
-        case 0x80053EEC: goto loc_80053EEC;
-        case 0x80053EF4: goto loc_80053EF4;
-        default: jump_table_err(); break;
+
+    if (bSetCdMix) {
+        spu.control.cdEnable = (attribs.cd.mix != 0);
     }
-loc_80053EC4:
-    a1 = 0x8000;                                        // Result = 00008000
-    goto loc_80053F04;
-loc_80053ECC:
-    a1 = 0x9000;                                        // Result = 00009000
-    goto loc_80053F04;
-loc_80053ED4:
-    a1 = 0xA000;                                        // Result = 0000A000
-    goto loc_80053F04;
-loc_80053EDC:
-    a1 = 0xB000;                                        // Result = 0000B000
-    goto loc_80053F04;
-loc_80053EE4:
-    a1 = 0xC000;                                        // Result = 0000C000
-    goto loc_80053F04;
-loc_80053EEC:
-    a1 = 0xD000;                                        // Result = 0000D000
-    goto loc_80053F04;
-loc_80053EF4:
-    a1 = 0xE000;                                        // Result = 0000E000
-    goto loc_80053F04;
-loc_80053EFC:
-    t2 = lhu(a0 + 0x6);
-    a1 = 0;                                             // Result = 00000000
-loc_80053F04:
-    v0 = t2 & 0x7FFF;
-    if (a1 == 0) goto loc_80053F38;
-    a2 = lh(a0 + 0x6);
-    v0 = (i32(a2) < 0x80);
-    v1 = a2;
-    if (v0 != 0) goto loc_80053F28;
-    t2 = 0x7F;                                          // Result = 0000007F
-    goto loc_80053F34;
-loc_80053F28:
-    t2 = v1;
-    if (i32(a2) >= 0) goto loc_80053F34;
-    t2 = 0;                                             // Result = 00000000
-loc_80053F34:
-    v0 = t2 & 0x7FFF;
-loc_80053F38:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v0 |= a1;
-    sh(v0, v1 + 0x182);
-loc_80053F48:
-    v0 = t0 & 0x40;
-    if (t1 != 0) goto loc_80053F58;
-    if (v0 == 0) goto loc_80053F6C;
-loc_80053F58:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v0 = lhu(a0 + 0x10);
-    sh(v0, v1 + 0x1B0);
-loc_80053F6C:
-    v0 = t0 & 0x80;
-    if (t1 != 0) goto loc_80053F7C;
-    if (v0 == 0) goto loc_80053F90;
-loc_80053F7C:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v0 = lhu(a0 + 0x12);
-    sh(v0, v1 + 0x1B2);
-loc_80053F90:
-    v0 = t0 & 0x100;
-    if (t1 != 0) goto loc_80053FA0;
-    if (v0 == 0) goto loc_80053FE4;
-loc_80053FA0:
-    v0 = lw(a0 + 0x14);
-    if (v0 != 0) goto loc_80053FC8;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v1 = lhu(v0 + 0x1AA);
-    v1 &= 0xFFFB;
-    goto loc_80053FE0;
-loc_80053FC8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v1 = lhu(v0 + 0x1AA);
-    v1 |= 4;
-loc_80053FE0:
-    sh(v1, v0 + 0x1AA);
-loc_80053FE4:
-    v0 = t0 & 0x200;
-    if (t1 != 0) goto loc_80053FF4;
-    if (v0 == 0) goto loc_80054038;
-loc_80053FF4:
-    v0 = lw(a0 + 0x18);
-    if (v0 != 0) goto loc_8005401C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v1 = lhu(v0 + 0x1AA);
-    v1 &= 0xFFFE;
-    goto loc_80054034;
-loc_8005401C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v1 = lhu(v0 + 0x1AA);
-    v1 |= 1;
-loc_80054034:
-    sh(v1, v0 + 0x1AA);
-loc_80054038:
-    v0 = t0 & 0x400;
-    if (t1 != 0) goto loc_80054048;
-    if (v0 == 0) goto loc_8005405C;
-loc_80054048:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v0 = lhu(a0 + 0x1C);
-    sh(v0, v1 + 0x1B4);
-loc_8005405C:
-    v0 = t0 & 0x800;
-    if (t1 != 0) goto loc_8005406C;
-    if (v0 == 0) goto loc_80054080;
-loc_8005406C:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v0 = lhu(a0 + 0x1E);
-    sh(v0, v1 + 0x1B6);
-loc_80054080:
-    v0 = t0 & 0x1000;
-    if (t1 != 0) goto loc_80054090;
-    if (v0 == 0) goto loc_800540D4;
-loc_80054090:
-    v0 = lw(a0 + 0x20);
-    if (v0 != 0) goto loc_800540B8;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v1 = lhu(v0 + 0x1AA);
-    v1 &= 0xFFF7;
-    goto loc_800540D0;
-loc_800540B8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v1 = lhu(v0 + 0x1AA);
-    v1 |= 8;
-loc_800540D0:
-    sh(v1, v0 + 0x1AA);
-loc_800540D4:
-    v0 = t0 & 0x2000;
-    if (t1 != 0) goto loc_800540E4;
-    if (v0 == 0) goto loc_80054128;
-loc_800540E4:
-    v0 = lw(a0 + 0x24);
-    if (v0 != 0) goto loc_8005410C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v1 = lhu(v0 + 0x1AA);
-    v1 &= 0xFFFD;
-    goto loc_80054124;
-loc_8005410C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x6A3C);                               // Load from: gLIBSPU__spu_RXX (80076A3C)
-    v1 = lhu(v0 + 0x1AA);
-    v1 |= 2;
-loc_80054124:
-    sh(v1, v0 + 0x1AA);
-loc_80054128:
-    sp += 0x10;
-    return;
+
+    // Set: extern volume left and right
+    if (bSetExtVolL) {
+        spu.extVolume.left = attribs.ext.volume.left;
+    }
+
+    if (bSetExtVolR) {
+        spu.extVolume.right = attribs.ext.volume.right;
+    }
+    
+    // Set: external reverb and mix enabled
+    if (bSetExtReverb) {
+        spu.control.externalReverb = (attribs.ext.reverb != 0);
+    }
+
+    if (bSetExtMix) {
+        spu.control.externalEnable = (attribs.ext.mix != 0);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

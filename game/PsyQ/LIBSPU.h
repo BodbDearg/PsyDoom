@@ -24,6 +24,39 @@ struct SpuVolume {
     int16_t     right;
 };
 
+// Settings for an external input
+struct SpuExtAttr {
+    SpuVolume   volume;     // Volume level
+    int32_t     reverb;     // Reverb enabled/disabled
+    int32_t     mix;        // Mix enabled/disabled
+};
+
+// Common sound attributes/settings
+struct SpuCommonAttr {
+    uint32_t    mask;       // Bitmask for what attributes are being set/applied
+    SpuVolume   mvol;       // Master volume setting
+    SpuVolume   mvolmode;   // Master volume mode
+    SpuVolume   mvolx;      // The current master volume level
+    SpuExtAttr  cd;         // CD input settings
+    SpuExtAttr  ext;        // External digital input settings
+};
+
+// Flags for specifying fields or sub-fields in 'SpuCommonAttr'
+static constexpr uint32_t SPU_COMMON_MVOLL      = 0x00000001;   // Master volume (left channel)
+static constexpr uint32_t SPU_COMMON_MVOLR		= 0x00000002;   // Master volume (right channel)
+static constexpr uint32_t SPU_COMMON_MVOLMODEL	= 0x00000004;   // Master volume mode (left channel)
+static constexpr uint32_t SPU_COMMON_MVOLMODER	= 0x00000008;   // Master volume mode (right channel)
+static constexpr uint32_t SPU_COMMON_RVOLL		= 0x00000010;   // Reverb volume (left channel)
+static constexpr uint32_t SPU_COMMON_RVOLR		= 0x00000020;   // Reverb volume (right channel)
+static constexpr uint32_t SPU_COMMON_CDVOLL		= 0x00000040;   // CD input volume (left channel)
+static constexpr uint32_t SPU_COMMON_CDVOLR		= 0x00000080;   // CD input volume (right channel)
+static constexpr uint32_t SPU_COMMON_CDREV		= 0x00000100;   // Whether CD input reverb is enabled
+static constexpr uint32_t SPU_COMMON_CDMIX		= 0x00000200;   // Whether CD input can be heard (is mixed with all other sounds)
+static constexpr uint32_t SPU_COMMON_EXTVOLL	= 0x00000400;   // External input volume (left channel)
+static constexpr uint32_t SPU_COMMON_EXTVOLR	= 0x00000800;   // External input volume (right channel)
+static constexpr uint32_t SPU_COMMON_EXTREV		= 0x00001000;   // Whether reverb is enabled for external input
+static constexpr uint32_t SPU_COMMON_EXTMIX		= 0x00002000;   // Whether external input can be heard (is mixed with all other sounds)
+
 // Structure used for specifying voice attributes
 struct SpuVoiceAttr {
     uint32_t    voice_bits;     // Which voices to set the attributes for. 1-bit per voice, starting with the lowest bit.
@@ -49,7 +82,7 @@ struct SpuVoiceAttr {
     uint16_t    adsr2;          // Envelope adsr (2nd 16-bits)
 };
 
-// Flags for specifying fields in 'SpuVoiceAttr'
+// Flags for specifying fields or sub-fields in 'SpuVoiceAttr'
 static constexpr uint32_t SPU_VOICE_VOLL        = 0x00000001;
 static constexpr uint32_t SPU_VOICE_VOLR        = 0x00000002;
 static constexpr uint32_t SPU_VOICE_VOLMODEL    = 0x00000004;
@@ -66,7 +99,7 @@ static constexpr uint32_t SPU_VOICE_ADSR_DR     = 0x00001000;
 static constexpr uint32_t SPU_VOICE_ADSR_SR     = 0x00002000;
 static constexpr uint32_t SPU_VOICE_ADSR_RR     = 0x00004000;
 static constexpr uint32_t SPU_VOICE_ADSR_SL     = 0x00008000;
-static constexpr uint32_t SPU_VOICE_LSAX        = 0x00010000;
+static constexpr uint32_t SPU_VOICE_LSAX        = 0x00010000;   // Loop address
 static constexpr uint32_t SPU_VOICE_ADSR_ADSR1  = 0x00020000;
 static constexpr uint32_t SPU_VOICE_ADSR_ADSR2  = 0x00040000;
 
@@ -218,7 +251,7 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept;
 void LIBSPU__spu_init() noexcept;
 void LIBSPU__spu_writeByIO() noexcept;
 void LIBSPU__spu_setVoiceAttr() noexcept;
-void LIBSPU_SpuSetCommonAttr() noexcept;
+void LIBSPU_SpuSetCommonAttr(const SpuCommonAttr& attribs) noexcept;
 uint32_t LIBSPU_SpuGetReverbOffsetAddr() noexcept;
 int32_t LIBSPU_SpuClearReverbWorkArea() noexcept;
 void LIBSPU__SpuInit() noexcept;
