@@ -26,22 +26,16 @@ static CdlCB gPSXCD_cbreadysave;
 void psxcd_async_read_cancel() noexcept;
 void psxcd_async_read() noexcept;
 
-void PSXCD_psxcd_memcpy() noexcept {
-loc_8003F200:
-    sp -= 8;
-    v1 = a2 - 1;
-    if (a2 == 0) goto loc_8003F228;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_8003F210:
-    v0 = lbu(a1);
-    a1++;
-    v1--;
-    sb(v0, a0);
-    a0++;
-    if (v1 != a2) goto loc_8003F210;
-loc_8003F228:
-    sp += 8;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Simple memcpy() operation
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void PSXCD_psxcd_memcpy(void* const pDst, const void* const pSrc, uint32_t count) noexcept {
+    uint8_t* const pDstBytes = (uint8_t*) pDst;
+    const uint8_t* const pSrcBytes = (const uint8_t*) pSrc;
+
+    for (uint32_t i = 0; i < count; ++i) {
+        pDstBytes[i] = pSrcBytes[i];
+    }
 }
 
 void psxcd_sync() noexcept {
@@ -310,7 +304,7 @@ loc_8003F550:
     at += v0;
     a0 = lw(at);
     a2 = 0x800;                                         // Result = 00000800
-    PSXCD_psxcd_memcpy();
+    PSXCD_psxcd_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
     goto loc_8003F5C0;
 loc_8003F5B8:
     a1 = 0x200;                                         // Result = 00000200
@@ -363,7 +357,7 @@ loc_8003F630:
     at -= 0x7CB8;                                       // Result = gPSXCD_psxcd_cmd_1[1] (80078348)
     at += v1;
     a2 = lw(at);
-    PSXCD_psxcd_memcpy();
+    PSXCD_psxcd_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
     v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
     v0++;
     sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
@@ -1231,7 +1225,7 @@ loc_8004047C:
     a1 = lw(a1 - 0x7CB0);                               // Load from: gPSXCD_psxcd_cmd_1[3] (80078350)
     a2 = 0x80080000;                                    // Result = 80080000
     a2 = lw(a2 - 0x7CB8);                               // Load from: gPSXCD_psxcd_cmd_1[1] (80078348)
-    PSXCD_psxcd_memcpy();
+    PSXCD_psxcd_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
     v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
     v0++;
     v1 = v0 << 2;

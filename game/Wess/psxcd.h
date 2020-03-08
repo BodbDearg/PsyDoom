@@ -35,7 +35,6 @@ struct PsxCd_MapTblEntry {
 
 static_assert(sizeof(PsxCd_MapTblEntry) == 8);
 
-void PSXCD_psxcd_memcpy() noexcept;
 void psxcd_sync() noexcept;
 void psxcd_critical_sync() noexcept;
 
