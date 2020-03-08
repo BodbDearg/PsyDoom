@@ -6,7 +6,6 @@
 #include "LIBCD.h"
 
 #include "LIBAPI.h"
-#include "LIBC2.h"
 #include "LIBETC.h"
 #include "PcPsx/Finally.h"
 

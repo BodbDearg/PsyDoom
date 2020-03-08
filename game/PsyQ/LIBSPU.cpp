@@ -6,7 +6,6 @@
 #include "LIBSPU.h"
 
 #include "LIBAPI.h"
-#include "LIBC2.h"
 #include "LIBETC.h"
 #include "PcPsx/Macros.h"
 

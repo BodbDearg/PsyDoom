@@ -12,7 +12,6 @@
 #include "Doom/Renderer/r_data.h"
 #include "in_main.h"
 #include "PcPsx/Finally.h"
-#include "PsyQ/LIBC2.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include <cstdio>

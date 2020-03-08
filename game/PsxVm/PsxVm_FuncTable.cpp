@@ -505,13 +505,8 @@ extern void LIBAPI_read() noexcept;
 extern void LIBAPI_TestEvent() noexcept;
 extern void LIBAPI_ExitCriticalSection() noexcept;
 extern void LIBAPI_open() noexcept;
-extern void LIBC2_memchr() noexcept;
-extern void LIBC2_strlen() noexcept;
 extern void LIBETC_ResetCallback() noexcept;
 extern void LIBAPI_ReturnFromException() noexcept;
-extern void LIBC2_printf() noexcept;
-extern void LIBC2_prnt() noexcept;
-extern void LIBC2_putchar() noexcept;
 extern void _thunk_LIBETC_VSync() noexcept;
 extern void _thunk_LIBETC_v_wait() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
@@ -1047,13 +1042,8 @@ namespace PsxVm {
         { 0x80049E2C, &LIBAPI_TestEvent },
         { 0x80049E3C, &LIBAPI_ExitCriticalSection },
         { 0x80049E4C, &LIBAPI_open },
-        { 0x8004A6BC, &LIBC2_memchr },
-        { 0x8004A70C, &LIBC2_strlen },
         { 0x8004A7AC, &LIBETC_ResetCallback },
         { 0x8004AD80, &LIBAPI_ReturnFromException },
-        { 0x8004AD90, &LIBC2_printf },
-        { 0x8004AE50, &LIBC2_prnt },
-        { 0x8004B530, &LIBC2_putchar },
         { 0x8004BA94, &_thunk_LIBETC_VSync },
         { 0x8004BBDC, &_thunk_LIBETC_v_wait },
         { 0x80050454, &LIBAPI_FlushCache },

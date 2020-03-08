@@ -1,7 +1,6 @@
 #include "LIBETC.h"
 
 #include "LIBAPI.h"
-#include "LIBC2.h"
 #include "PsxVm/PsxVm.h"
 
 void LIBETC_ResetCallback() noexcept {

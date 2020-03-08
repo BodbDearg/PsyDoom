@@ -150,8 +150,6 @@ set(SOURCE_FILES
     "PsxVm/VmSVal.h"
     "PsyQ/LIBAPI.cpp"
     "PsyQ/LIBAPI.h"
-    "PsyQ/LIBC2.cpp"
-    "PsyQ/LIBC2.h"
     "PsyQ/LIBCD.cpp"
     "PsyQ/LIBCD.h"
     "PsyQ/LIBCOMB.cpp"
