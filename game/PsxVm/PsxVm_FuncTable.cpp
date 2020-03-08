@@ -517,12 +517,7 @@ extern void _thunk_LIBETC_v_wait() noexcept;
 extern void LIBAPI_FlushCache() noexcept;
 extern void LIBSN__main() noexcept;
 extern void LIBAPI_InitHeap() noexcept;
-extern void LIBSPU__spu_init() noexcept;
-extern void LIBSPU__spu_writeByIO() noexcept;
-extern void LIBSPU__spu_setVoiceAttr() noexcept;
 extern void LIBAPI_DeliverEvent() noexcept;
-extern void LIBSPU__SpuInit() noexcept;
-extern void LIBSPU_SpuInit() noexcept;
 extern void _thunk_LIBSPU_SpuIsTransferCompleted() noexcept;
 extern void _thunk_LIBSPU_SpuSetTransferStartAddr() noexcept;
 extern void _thunk_LIBSPU_SpuWrite() noexcept;
@@ -1067,12 +1062,7 @@ namespace PsxVm {
         { 0x80050454, &LIBAPI_FlushCache },
         { 0x800507AC, &LIBSN__main },
         { 0x80050884, &LIBAPI_InitHeap },
-        { 0x80051894, &LIBSPU__spu_init },
-        { 0x80051E98, &LIBSPU__spu_writeByIO },
-        { 0x800531EC, &LIBSPU__spu_setVoiceAttr },
         { 0x80053D48, &LIBAPI_DeliverEvent },
-        { 0x80054334, &LIBSPU__SpuInit },
-        { 0x80054580, &LIBSPU_SpuInit },
         { 0x800546E0, &_thunk_LIBSPU_SpuIsTransferCompleted },
         { 0x80054830, &_thunk_LIBSPU_SpuSetTransferStartAddr },
         { 0x80054894, &_thunk_LIBSPU_SpuWrite },

@@ -248,13 +248,9 @@ static constexpr int32_t SPU_VOICE_EXPDec     = 7;      // Exponential decrease:
 
 void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept;
 int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept;
-void LIBSPU__spu_init() noexcept;
-void LIBSPU__spu_writeByIO() noexcept;
-void LIBSPU__spu_setVoiceAttr() noexcept;
 void LIBSPU_SpuSetCommonAttr(const SpuCommonAttr& attribs) noexcept;
 uint32_t LIBSPU_SpuGetReverbOffsetAddr() noexcept;
 int32_t LIBSPU_SpuClearReverbWorkArea() noexcept;
-void LIBSPU__SpuInit() noexcept;
 void LIBSPU_SpuStart() noexcept;
 void LIBSPU_SpuSetReverbDepth(const SpuReverbAttr& reverb) noexcept;
 int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) noexcept;
