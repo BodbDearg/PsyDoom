@@ -394,8 +394,6 @@ extern void wess_seq_free() noexcept;
 extern void psxspu_init_reverb() noexcept;
 extern void psxspu_set_reverb_depth() noexcept;
 extern void psxspu_init() noexcept;
-extern void psxspu_update_master_vol() noexcept;
-extern void psxspu_update_master_vol_mode() noexcept;
 extern void psxspu_fadeengine() noexcept;
 extern void psxspu_set_cd_vol() noexcept;
 extern void psxspu_get_cd_vol() noexcept;
@@ -924,8 +922,6 @@ namespace PsxVm {
         { 0x80045328, &psxspu_init_reverb },
         { 0x80045408, &psxspu_set_reverb_depth },
         { 0x80045450, &psxspu_init },
-        { 0x800454FC, &psxspu_update_master_vol },
-        { 0x80045540, &psxspu_update_master_vol_mode },
         { 0x8004560C, &psxspu_fadeengine },
         { 0x80045720, &psxspu_set_cd_vol },
         { 0x8004577C, &psxspu_get_cd_vol },

@@ -137,44 +137,34 @@ loc_800454E8:
     return;
 }
 
-void psxspu_update_master_vol() noexcept {
-loc_800454FC:
-    sp -= 0x40;
-    v0 = 3;                                             // Result = 00000003
-    sh(a0, sp + 0x14);
-    sh(a0, sp + 0x16);
-    a0 = sp + 0x10;
-    sw(ra, sp + 0x38);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    sw(v0, sp + 0x10);
-    LIBSPU_SpuSetCommonAttr(*vmAddrToPtr<SpuCommonAttr>(a0));
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5988);                                // Store to: 80075988
-    ra = lw(sp + 0x38);
-    sp += 0x40;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Internal function: set the master volume for the SPU (directly)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void psxspu_set_master_volume(const int32_t vol) noexcept {
+    *gbPsxSpu_timer_callback_enabled = false;
+    
+    SpuCommonAttr attribs;
+    attribs.mask = SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
+    attribs.mvol.left = (int16_t) vol;
+    attribs.mvol.right = (int16_t) vol;
+    LIBSPU_SpuSetCommonAttr(attribs);
+
+    *gbPsxSpu_timer_callback_enabled = true;
 }
 
-void psxspu_update_master_vol_mode() noexcept {
-loc_80045540:
-    sp -= 0x40;
-    v0 = 0xC0;                                          // Result = 000000C0
-    sh(a0, sp + 0x20);
-    sh(a0, sp + 0x22);
-    a0 = sp + 0x10;
-    sw(ra, sp + 0x38);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    sw(v0, sp + 0x10);
-    LIBSPU_SpuSetCommonAttr(*vmAddrToPtr<SpuCommonAttr>(a0));
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5988);                                // Store to: 80075988
-    ra = lw(sp + 0x38);
-    sp += 0x40;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Internal function: set the master volume for cd audio on the SPU (directly)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void psxspu_set_cd_volume(const int32_t vol) noexcept {
+    *gbPsxSpu_timer_callback_enabled = false;
+    
+    SpuCommonAttr attribs;
+    attribs.mask = 0xc0;
+    attribs.cd.volume.left = (int16_t) vol;
+    attribs.cd.volume.right = (int16_t) vol;
+    LIBSPU_SpuSetCommonAttr(attribs);
+
+    *gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -240,7 +230,7 @@ loc_80045674:
     sw(v0, at + 0x59A4);                                // Store to: 800759A4
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lh(a0 + 0x59A4);                               // Load from: 800759A4
-    psxspu_update_master_vol_mode();
+    psxspu_set_cd_volume(a0);
 loc_80045698:
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x5994);                               // Load from: 80075994
@@ -270,7 +260,7 @@ loc_800456EC:
     sw(v0, at + 0x5990);                                // Store to: 80075990
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lh(a0 + 0x5990);                               // Load from: 80075990
-    psxspu_update_master_vol();
+    psxspu_set_master_volume(a0);
 loc_80045710:
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -293,7 +283,7 @@ loc_80045720:
     sw(v0, at + 0x59AC);                                // Store to: 800759AC
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x59A8);                                 // Store to: 800759A8
-    psxspu_update_master_vol_mode();
+    psxspu_set_cd_volume(a0);
     v0 = 1;                                             // Result = 00000001
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5988);                                // Store to: 80075988
@@ -403,7 +393,7 @@ loc_80045880:
     sw(v0, at + 0x5998);                                // Store to: 80075998
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x5994);                                 // Store to: 80075994
-    psxspu_update_master_vol();
+    psxspu_set_master_volume(a0);
     v0 = 1;                                             // Result = 00000001
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5988);                                // Store to: 80075988

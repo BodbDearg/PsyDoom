@@ -3,8 +3,6 @@
 void psxspu_init_reverb() noexcept;
 void psxspu_set_reverb_depth() noexcept;
 void psxspu_init() noexcept;
-void psxspu_update_master_vol() noexcept;
-void psxspu_update_master_vol_mode() noexcept;
 void psxspu_setcdmixon() noexcept;
 void psxspu_setcdmixoff() noexcept;
 void psxspu_fadeengine() noexcept;

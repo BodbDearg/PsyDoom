@@ -6,7 +6,7 @@
 // On PC this would be the same data that you would edit via 'DeHackEd' patches.
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-#include "PsxVm/VmPtr.h"
+#include "Doom/doomdef.h"
 
 enum sfxenum_t : uint32_t;
 
@@ -1084,8 +1084,8 @@ struct mobjinfo_t {
     statenum_t      deathstate;
     statenum_t      xdeathstate;
     sfxenum_t       deathsound;
-    int32_t         speed;
-    int32_t         radius;
+    fixed_t         speed;
+    fixed_t         radius;
     int32_t         height;
     int32_t         mass;
     int32_t         damage;
