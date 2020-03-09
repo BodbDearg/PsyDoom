@@ -407,7 +407,6 @@ extern void psxspu_get_cd_fade_status() noexcept;
 extern void psxspu_set_master_vol() noexcept;
 extern void psxspu_get_master_vol() noexcept;
 extern void psxspu_start_master_fade() noexcept;
-extern void psxspu_stop_master_fade() noexcept;
 extern void psxspu_get_master_fade_status() noexcept;
 extern void start_record_music_mute() noexcept;
 extern void end_record_music_mute() noexcept;
@@ -941,7 +940,6 @@ namespace PsxVm {
         { 0x80045880, &psxspu_set_master_vol },
         { 0x800458DC, &psxspu_get_master_vol },
         { 0x800458EC, &psxspu_start_master_fade },
-        { 0x800459A4, &psxspu_stop_master_fade },
         { 0x800459C8, &psxspu_get_master_fade_status },
         { 0x800459E0, &start_record_music_mute },
         { 0x800459FC, &end_record_music_mute },

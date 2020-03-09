@@ -1,7 +1,16 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Williams Entertainment Sound System (WESS): PlayStation SPU utilities.
+// Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
+//------------------------------------------------------------------------------------------------------------------------------------------
 #include "PSXSPU.h"
 
+#include "PcPsx/Types.h"
 #include "PsxVm/PsxVm.h"
+#include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBSPU.h"
+
+static const VmPtr<bool32_t>    gbPsxSpu_timer_callback_enabled(0x80075988);    // If true then we process master fades done via a hardware timer callback, otherwise the callback is ignored
+static const VmPtr<int32_t>     gPsxSpu_master_fade_ticks_left(0x80075994);     // How many ticks for master fade out remaining. Each tick is approximately 1/120 seconds (not exactly though).
 
 void psxspu_init_reverb() noexcept {
 loc_80045328:
@@ -470,15 +479,14 @@ loc_80045994:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Stop doing a fade out of the master volume
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_stop_master_fade() noexcept {
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5994);                                 // Store to: 80075994
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5988);                                // Store to: 80075988
-    return;
+    // Note: disabling callback processing before setting the tick count - in case an interrupt happens
+    *gbPsxSpu_timer_callback_enabled = false;
+    *gPsxSpu_master_fade_ticks_left = 0;
+    *gbPsxSpu_timer_callback_enabled = true;
 }
 
 void psxspu_get_master_fade_status() noexcept {
