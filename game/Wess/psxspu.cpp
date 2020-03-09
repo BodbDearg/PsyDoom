@@ -9,8 +9,13 @@
 #include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBSPU.h"
 
-static const VmPtr<bool32_t>    gbPsxSpu_timer_callback_enabled(0x80075988);    // If true then we process master fades done via a hardware timer callback, otherwise the callback is ignored
-static const VmPtr<int32_t>     gPsxSpu_master_fade_ticks_left(0x80075994);     // How many ticks for master fade out remaining. Each tick is approximately 1/120 seconds (not exactly though).
+// If true then we process the 'psxspu_fadeengine' timer callback, otherwise the callback is ignored.
+// The timer callback was originally triggered via periodic timer interrupts, so this flag was used to temporarily ignore interrupts.
+static const VmPtr<bool32_t> gbPsxSpu_timer_callback_enabled(0x80075988);
+
+// How many ticks for master fade out remaining, with a tick being decremented each time the timer callback is triggered.
+// Each tick is approximately 1/120 seconds - not precisely though.
+static const VmPtr<int32_t> gPsxSpu_master_fade_ticks_left(0x80075994);
 
 void psxspu_init_reverb() noexcept {
 loc_80045328:
@@ -172,44 +177,32 @@ loc_80045540:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Enable mixing of cd audio into the sound output
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_setcdmixon() noexcept {
-loc_80045584:
-    sp -= 0x40;
-    v0 = 0x200;                                         // Result = 00000200
-    sw(s0, sp + 0x38);
-    s0 = 1;                                             // Result = 00000001
-    a0 = sp + 0x10;
-    sw(ra, sp + 0x3C);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    sw(v0, sp + 0x10);
-    sw(s0, sp + 0x28);
-    LIBSPU_SpuSetCommonAttr(*vmAddrToPtr<SpuCommonAttr>(a0));
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x5988);                                // Store to: 80075988
-    ra = lw(sp + 0x3C);
-    s0 = lw(sp + 0x38);
-    sp += 0x40;
-    return;
+    *gbPsxSpu_timer_callback_enabled = false;
+  
+    SpuCommonAttr attribs;
+    attribs.mask = SPU_COMMON_CDMIX;
+    attribs.cd.mix = true;
+    LIBSPU_SpuSetCommonAttr(attribs);
+  
+    *gbPsxSpu_timer_callback_enabled =  true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Disable mixing of cd audio into the sound output
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_setcdmixoff() noexcept {
-loc_800455CC:
-    sp -= 0x40;
-    v0 = 0x200;                                         // Result = 00000200
-    a0 = sp + 0x10;
-    sw(ra, sp + 0x38);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    sw(v0, sp + 0x10);
-    sw(0, sp + 0x28);
-    LIBSPU_SpuSetCommonAttr(*vmAddrToPtr<SpuCommonAttr>(a0));
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5988);                                // Store to: 80075988
-    ra = lw(sp + 0x38);
-    sp += 0x40;
-    return;
+    *gbPsxSpu_timer_callback_enabled = false;
+
+    SpuCommonAttr attribs;
+    attribs.mask = SPU_COMMON_CDMIX;
+    attribs.cd.mix = false;
+    LIBSPU_SpuSetCommonAttr(attribs);
+
+    *gbPsxSpu_timer_callback_enabled = true;
 }
 
 void psxspu_fadeengine() noexcept {
