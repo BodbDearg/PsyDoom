@@ -391,7 +391,6 @@ extern void wess_seq_loader_exit() noexcept;
 extern void wess_seq_sizeof() noexcept;
 extern void wess_seq_load() noexcept;
 extern void wess_seq_free() noexcept;
-extern void psxspu_init() noexcept;
 extern void psxspu_fadeengine() noexcept;
 extern void psxspu_set_cd_vol() noexcept;
 extern void psxspu_start_cd_fade() noexcept;
@@ -913,7 +912,6 @@ namespace PsxVm {
         { 0x80045164, &wess_seq_sizeof },
         { 0x800451F4, &wess_seq_load },
         { 0x80045298, &wess_seq_free },
-        { 0x80045450, &psxspu_init },
         { 0x8004560C, &psxspu_fadeengine },
         { 0x80045720, &psxspu_set_cd_vol },
         { 0x8004578C, &psxspu_start_cd_fade },

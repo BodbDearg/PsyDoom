@@ -9,8 +9,19 @@
 #include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBSPU.h"
 
+// Is this module initialized?
+static const VmPtr<bool32_t> gbPsxSpu_initialized(0x80075984);
+
+// Dummy memory manager book keeping area used by 'LIBSPU_SpuInitMalloc' and LIBSPU malloc functions.
+// The SPU malloc functions are not used at all in DOOM, so this area will be unused.
+static constexpr uint32_t MAX_SPU_ALLOCS = 1;
+static constexpr uint32_t SPU_MALLOC_RECORDS_SIZE = SPU_MALLOC_RECSIZ * (MAX_SPU_ALLOCS + 1);
+
+static const VmPtr<uint8_t[SPU_MALLOC_RECORDS_SIZE]> gPsxSpu_SpuMallocRecords(0x800A9508);
+
 // If true then we process the 'psxspu_fadeengine' timer callback, otherwise the callback is ignored.
 // The timer callback was originally triggered via periodic timer interrupts, so this flag was used to temporarily ignore interrupts.
+// It's seen throughout this code guarding sections where we do not want interrupts.
 static const VmPtr<bool32_t> gbPsxSpu_timer_callback_enabled(0x80075988);
 
 // How many ticks for master and cd fade out are remaining, with a tick being decremented each time the timer callback is triggered.
@@ -78,48 +89,40 @@ void psxspu_set_reverb_depth(const int16_t depthLeft, const int16_t depthRight) 
     *gbPsxSpu_timer_callback_enabled = true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the PlayStation SPU and the SPU handling module
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_init() noexcept {
-loc_80045450:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5984);                               // Load from: 80075984
-    sp -= 0x48;
-    sw(ra, sp + 0x44);
-    sw(s0, sp + 0x40);
-    if (v0 != 0) goto loc_800454E8;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    s0 = 1;                                             // Result = 00000001
+    if (*gbPsxSpu_initialized)
+        return;
+    
+    *gbPsxSpu_timer_callback_enabled = false;
+
     LIBSPU_SpuInit();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x5984);                                // Store to: 80075984
-        
-    LIBSPU_SpuInitMalloc(1, vmAddrToPtr<uint8_t>(0x800A9508));
+    *gbPsxSpu_initialized = true;
+
+    // Note: 'SpuMalloc' is not used AT ALL, so this call could have probably been removed...
+    LIBSPU_SpuInitMalloc(MAX_SPU_ALLOCS, gPsxSpu_SpuMallocRecords.get());
     LIBSPU_SpuSetTransferMode(SPU_TRANSFER_BY_DMA);
-    a0 = 0;                                             // Result = 00000000
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0;                                             // Result = 00000000
-    sw(0, sp + 0x10);
-    psxspu_init_reverb((SpuReverbMode) a0, (int16_t) a1, (int16_t) a2, a3, lw(sp + 0x10));
-    a0 = sp + 0x18;
-    v0 = 0x3C3;                                         // Result = 000003C3
-    sw(v0, sp + 0x18);
-    v0 = 0x3FFF;                                        // Result = 00003FFF
-    sh(v0, sp + 0x1C);
-    sh(v0, sp + 0x1E);
-    v0 = 0x3CFF;                                        // Result = 00003CFF
-    sh(v0, sp + 0x28);
-    sh(v0, sp + 0x2A);
-    sw(0, sp + 0x2C);
-    sw(s0, sp + 0x30);
-    LIBSPU_SpuSetCommonAttr(*vmAddrToPtr<SpuCommonAttr>(a0));
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x5988);                                // Store to: 80075988
-loc_800454E8:
-    ra = lw(sp + 0x44);
-    s0 = lw(sp + 0x40);
-    sp += 0x48;
-    return;
+    psxspu_init_reverb(SPU_REV_MODE_OFF, 0, 0, 0, 0);
+
+    // Set default volume levels and mixing settings
+    SpuCommonAttr soundAttribs;
+    soundAttribs.mask = (
+        SPU_COMMON_MVOLL | SPU_COMMON_MVOLR |
+        SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR |
+        SPU_COMMON_CDREV | SPU_COMMON_CDMIX
+    );
+    soundAttribs.mvol.left = MAX_MASTER_VOL;
+    soundAttribs.mvol.right = MAX_MASTER_VOL;
+    soundAttribs.cd.volume.left = MAX_CD_VOL;
+    soundAttribs.cd.volume.right = MAX_CD_VOL;
+    soundAttribs.cd.reverb = false;
+    soundAttribs.cd.mix = true;
+
+    LIBSPU_SpuSetCommonAttr(soundAttribs);
+
+    *gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

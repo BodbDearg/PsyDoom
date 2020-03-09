@@ -2875,6 +2875,7 @@ static const ProgElem ELEMS[] = {
     { 0x80075964, 0x80075968, "gWess_seq_loader_fileName",              ProgElemType::PTR32 },
     { 0x80075968, 0x8007596C, "gpWess_seq_loader_pm_stat",              ProgElemType::PTR32 },
     { 0x8007596C, 0x80075970, "gWess_max_sequences",                    ProgElemType::UINT32 },
+    { 0x80075984, 0x80075988, "gbPsxSpu_initialized",                   ProgElemType::UINT32 },
     { 0x80075988, 0x8007598C, "gbPsxSpu_timer_callback_enabled",        ProgElemType::UINT32 },
     { 0x8007598C, 0x80075990, "gPsxSpu_sram_end",                       ProgElemType::UINT32 },
     { 0x80075990, 0x80075994, "gPsxSpu_master_vol",                     ProgElemType::INT32 },
@@ -3755,6 +3756,7 @@ static const ProgElem ELEMS[] = {
     { 0x800A91B4, 0x800A94B4, "gpDrawSubsectors",                       ProgElemType::ARRAY, ProgElemType::PTR32, 0 },
     { 0x800A94B4, 0x800A94E4, "gFlashCards",                            ProgElemType::ARRAY, ProgElemType::UINT16, 4 },
     { 0x800A94E8, 0x800A9508, "gTex_STATUS",                            ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x800A9508, 0x800A9518, "gPsxSpu_SpuMallocRecords",               ProgElemType::ARRAY, ProgElemType::UINT8, 0 },
     { 0x800A9518, 0x800A9D18, "gPSXCD_sectorbuf",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800A9D18, 0x800A9D90, "gpActiveCeilings",                       ProgElemType::ARRAY, ProgElemType::PTR32, 0 },
     { 0x800A9D90, 0x800A9E30, "gOpenPsxCdFiles",                        ProgElemType::ARRAY, ProgElemType::UINT32, 0 },  // Max of 4 (40 bytes each)

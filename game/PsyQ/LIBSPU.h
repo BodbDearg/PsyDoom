@@ -249,6 +249,9 @@ static constexpr int32_t SPU_VOICE_EXPDec     = 7;      // Exponential decrease:
 // A bitmask representing the bits for all 24 channels
 static constexpr int32_t SPU_ALLCH = 0x00FFFFFF;
 
+// Size of a malloc record for 'LIBSPU_SpuMalloc' (function which is not present here)
+static constexpr int32_t SPU_MALLOC_RECSIZ = 8;
+
 void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept;
 int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept;
 void LIBSPU_SpuSetCommonAttr(const SpuCommonAttr& attribs) noexcept;
