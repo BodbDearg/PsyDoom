@@ -3588,6 +3588,7 @@ static const ProgElem ELEMS[] = {
     { 0x8007EE30, 0x8007EFC4, "gMapMusSfxLoadedSamples",                ProgElemType::ARRAY, ProgElemType::UINT16, 0 },    
     { 0x8007EFFC, 0x8007F00C, "gWess_module_fileref",                   ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x8007F024, 0x8007F034, "gWess_data_fileref",                     ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x8007F080, 0x8007f094, "gPsxSpu_rev_attr",                       ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x8007F0E8, 0x8007F0EC, "gWess_Dvr_thepatch",                     ProgElemType::UINT32 },
     { 0x8007F168, 0x8007F16c, "gWess_Dvr_pss",                          ProgElemType::UINT32 },
     { 0x8007F200, 0x8007F204, "gWess_Read_Vlq_v",                       ProgElemType::UINT32 },

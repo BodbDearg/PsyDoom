@@ -23,6 +23,9 @@ static const VmPtr<int32_t> gPsxSpu_master_vol(0x80075990);
 static const VmPtr<int32_t> gPsxSpu_master_vol_fixed(0x80075998);
 static const VmPtr<int32_t> gPsxSpu_cd_vol(0x800759A4);
 
+// Current reverb settings
+static const VmPtr<SpuReverbAttr> gPsxSpu_rev_attr(0x8007f080);
+
 void psxspu_init_reverb() noexcept {
 loc_80045328:
     sp -= 0x20;
@@ -79,24 +82,17 @@ loc_800453D8:
     return;
 }
 
-void psxspu_set_reverb_depth() noexcept {
-    sp -= 0x18;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 -= 0xF78;                                        // Result = 8007F088
-    sw(ra, sp + 0x10);
-    sh(a0, v0);                                         // Store to: 8007F088
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    at = 0x80080000;                                    // Result = 80080000
-    sh(a1, at - 0xF76);                                 // Store to: 8007F08A
-    a0 = v0 - 8;                                        // Result = 8007F080
-    LIBSPU_SpuSetReverbDepth(*vmAddrToPtr<const SpuReverbAttr>(a0));
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5988);                                // Store to: 80075988
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the reverb strength for the left and right channels
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxspu_set_reverb_depth(const int16_t leftDepth, const int16_t rightDepth) noexcept {
+    *gbPsxSpu_timer_callback_enabled = false;
+
+    gPsxSpu_rev_attr->depth.left = leftDepth;
+    gPsxSpu_rev_attr->depth.right = rightDepth;
+    LIBSPU_SpuSetReverbDepth(*gPsxSpu_rev_attr);
+
+    *gbPsxSpu_timer_callback_enabled = true;
 }
 
 void psxspu_init() noexcept {
