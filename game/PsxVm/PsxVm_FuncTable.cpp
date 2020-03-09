@@ -396,10 +396,8 @@ extern void psxspu_set_reverb_depth() noexcept;
 extern void psxspu_init() noexcept;
 extern void psxspu_fadeengine() noexcept;
 extern void psxspu_set_cd_vol() noexcept;
-extern void psxspu_get_cd_vol() noexcept;
 extern void psxspu_start_cd_fade() noexcept;
 extern void psxspu_stop_cd_fade() noexcept;
-extern void psxspu_get_cd_fade_status() noexcept;
 extern void psxspu_set_master_vol() noexcept;
 extern void psxspu_get_master_vol() noexcept;
 extern void psxspu_start_master_fade() noexcept;
@@ -924,10 +922,8 @@ namespace PsxVm {
         { 0x80045450, &psxspu_init },
         { 0x8004560C, &psxspu_fadeengine },
         { 0x80045720, &psxspu_set_cd_vol },
-        { 0x8004577C, &psxspu_get_cd_vol },
         { 0x8004578C, &psxspu_start_cd_fade },
         { 0x80045844, &psxspu_stop_cd_fade },
-        { 0x80045868, &psxspu_get_cd_fade_status },
         { 0x80045880, &psxspu_set_master_vol },
         { 0x800458DC, &psxspu_get_master_vol },
         { 0x800458EC, &psxspu_start_master_fade },

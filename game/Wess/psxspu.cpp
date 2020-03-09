@@ -13,9 +13,13 @@
 // The timer callback was originally triggered via periodic timer interrupts, so this flag was used to temporarily ignore interrupts.
 static const VmPtr<bool32_t> gbPsxSpu_timer_callback_enabled(0x80075988);
 
-// How many ticks for master fade out remaining, with a tick being decremented each time the timer callback is triggered.
+// How many ticks for master and cd fade out are remaining, with a tick being decremented each time the timer callback is triggered.
 // Each tick is approximately 1/120 seconds - not precisely though.
 static const VmPtr<int32_t> gPsxSpu_master_fade_ticks_left(0x80075994);
+static const VmPtr<int32_t> gPsxSpu_cd_fade_ticks_left(0x800759A8);
+
+// Current cd audio volume (integer)
+static const VmPtr<int32_t> gPsxSpu_cd_vol(0x800759A4);
 
 void psxspu_init_reverb() noexcept {
 loc_80045328:
@@ -292,11 +296,11 @@ loc_80045720:
     return;
 }
 
-void psxspu_get_cd_vol() noexcept {
-loc_8004577C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x59A4);                               // Load from: 800759A4
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the current (integer) volume for cd audio
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t psxspu_get_cd_vol() noexcept {
+    return *gPsxSpu_cd_vol;
 }
 
 void psxspu_start_cd_fade() noexcept {
@@ -364,17 +368,16 @@ void psxspu_stop_cd_fade() noexcept {
     return;
 }
 
-void psxspu_get_cd_fade_status() noexcept {
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns 'true' if the cd audio fade out is still ongoing, 'false' otherwise
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool psxspu_get_cd_fade_status() noexcept {
     // Emulate sound a little in case calling code is polling in a loop waiting for changed spu status
     #if PC_PSX_DOOM_MODS
         emulate_sound_if_required();
     #endif
 
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x59A8);                               // Load from: 800759A8
-    v0 = (i32(v0) < 2);
-    v0 ^= 1;
-    return;
+    return (*gPsxSpu_cd_fade_ticks_left > 1);
 }
 
 void psxspu_set_master_vol() noexcept {
