@@ -246,6 +246,9 @@ static constexpr int32_t SPU_VOICE_EXPIncN    = 5;      // Exponential increase 
 static constexpr int32_t SPU_VOICE_EXPIncR    = 6;      // Exponential increase (reverse phase): when volume is negative, increase exponentially to the maximum amount.
 static constexpr int32_t SPU_VOICE_EXPDec     = 7;      // Exponential decrease: when volume is positive or negative, decrease exponentially to the mininum amount.
 
+// A bitmask representing the bits for all 24 channels
+static constexpr int32_t SPU_ALLCH = 0x00FFFFFF;
+
 void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept;
 int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept;
 void LIBSPU_SpuSetCommonAttr(const SpuCommonAttr& attribs) noexcept;

@@ -221,7 +221,7 @@ loc_80041204:
     a2 = lh(at);
     a3 = 0;                                             // Result = 00000000
     sw(0, sp + 0x10);
-    psxspu_init_reverb();
+    psxspu_init_reverb((SpuReverbMode) a0, (int16_t) a1, (int16_t) a2, a3, lw(sp + 0x10));
     v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
     a1 = lw(gp + 0x83C);                                // Load from: gpMusSequencesEnd (80077E1C)
     v0 <<= 4;
@@ -249,7 +249,7 @@ loc_800412B8:
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
     a3 = 0;                                             // Result = 00000000
-    psxspu_init_reverb();
+    psxspu_init_reverb((SpuReverbMode) a0, (int16_t) a1, (int16_t) a2, a3, lw(sp + 0x10));
 loc_800412D0:
     v0 = s1 << 3;
     at = 0x80070000;                                    // Result = 80070000

@@ -2,8 +2,17 @@
 
 #include <cstdint>
 
-void psxspu_init_reverb() noexcept;
-void psxspu_set_reverb_depth(const int16_t leftDepth, const int16_t rightDepth) noexcept;
+enum SpuReverbMode : uint32_t;
+
+void psxspu_init_reverb(
+    const SpuReverbMode reverbMode,
+    const int16_t depthLeft,
+    const int16_t depthRight,
+    const int32_t delay,
+    const int32_t feedback
+) noexcept;
+
+void psxspu_set_reverb_depth(const int16_t depthLeft, const int16_t depthRight) noexcept;
 void psxspu_init() noexcept;
 
 void psxspu_setcdmixon() noexcept;

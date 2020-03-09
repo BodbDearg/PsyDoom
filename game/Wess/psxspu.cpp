@@ -26,70 +26,53 @@ static const VmPtr<int32_t> gPsxSpu_cd_vol(0x800759A4);
 // Current reverb settings
 static const VmPtr<SpuReverbAttr> gPsxSpu_rev_attr(0x8007f080);
 
-void psxspu_init_reverb() noexcept {
-loc_80045328:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s0, sp + 0x10);
-    s0 = 0x80080000;                                    // Result = 80080000
-    s0 -= 0xF80;                                        // Result = 8007F080
-    v1 = lw(sp + 0x30);
-    v0 = 0x1F;                                          // Result = 0000001F
-    sw(ra, sp + 0x18);
-    sw(v0, s0);                                         // Store to: 8007F080
-    v0 = s1 | 0x100;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF7C);                                 // Store to: 8007F084
-    at = 0x80080000;                                    // Result = 80080000
-    sh(a1, at - 0xF78);                                 // Store to: 8007F088
-    at = 0x80080000;                                    // Result = 80080000
-    sh(a2, at - 0xF76);                                 // Store to: 8007F08A
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a3, at - 0xF74);                                 // Store to: 8007F08C
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF70);                                 // Store to: 8007F090
-    a0 = s0;                                            // Result = 8007F080
-    LIBSPU_SpuSetReverbModeParam(*vmAddrToPtr<const SpuReverbAttr>(s0));
-    LIBSPU_SpuSetReverbDepth(*vmAddrToPtr<const SpuReverbAttr>(s0));
-    if (s1 != 0) goto loc_800453BC;
-    LIBSPU_SpuSetReverb(SPU_OFF);
-    v0 = 0x70000;                                       // Result = 00070000
-    v0 |= 0xF000;                                       // Result = 0007F000
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x598C);                                // Store to: 8007598C
-    a0 = 0;                                             // Result = 00000000
-    goto loc_800453D8;
-loc_800453BC:
-    LIBSPU_SpuSetReverb(SPU_ON);
-    v0 = LIBSPU_SpuGetReverbOffsetAddr();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x598C);                                // Store to: 8007598C
-    a0 = 1;                                             // Result = 00000001
-loc_800453D8:
-    a1 = 0xFF0000;                                      // Result = 00FF0000
-    a1 |= 0xFFFF;                                       // Result = 00FFFFFF
-    LIBSPU_SpuSetReverbVoice(a0, a1);
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5988);                                // Store to: 80075988
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+// The end address of usable SPU RAM.
+// This can vary depending on the reverb mode - some reverb modes require more RAM than others.
+static const VmPtr<uint32_t> gPsxSpu_sram_end(0x8007598C);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize reverb to the specified settings
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxspu_init_reverb(
+    const SpuReverbMode reverbMode,
+    const int16_t depthLeft,
+    const int16_t depthRight,
+    const int32_t delay,
+    const int32_t feedback
+) noexcept {
+    *gbPsxSpu_timer_callback_enabled = false;
+
+    gPsxSpu_rev_attr->mask = SPU_REV_MODE | SPU_REV_DEPTHL | SPU_REV_DEPTHR | SPU_REV_DELAYTIME | SPU_REV_FEEDBACK;
+    gPsxSpu_rev_attr->mode = (SpuReverbMode)(reverbMode | SPU_REV_MODE_CLEAR_WA);    
+    gPsxSpu_rev_attr->depth.left = depthLeft;
+    gPsxSpu_rev_attr->depth.right = depthRight;
+    gPsxSpu_rev_attr->delay = delay;
+    gPsxSpu_rev_attr->feedback = feedback;
+
+    LIBSPU_SpuSetReverbModeParam(*gPsxSpu_rev_attr);
+    LIBSPU_SpuSetReverbDepth(*gPsxSpu_rev_attr);
+    const bool bReverbEnabled = (reverbMode != SPU_REV_MODE_OFF);
+
+    if (bReverbEnabled) {
+        LIBSPU_SpuSetReverb(SPU_ON);
+        *gPsxSpu_sram_end = LIBSPU_SpuGetReverbOffsetAddr();
+    } else {
+        LIBSPU_SpuSetReverb(SPU_OFF);
+        *gPsxSpu_sram_end = 0x7F000;
+    }
+
+    LIBSPU_SpuSetReverbVoice(bReverbEnabled, SPU_ALLCH);
+    *gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set the reverb strength for the left and right channels
 //------------------------------------------------------------------------------------------------------------------------------------------
-void psxspu_set_reverb_depth(const int16_t leftDepth, const int16_t rightDepth) noexcept {
+void psxspu_set_reverb_depth(const int16_t depthLeft, const int16_t depthRight) noexcept {
     *gbPsxSpu_timer_callback_enabled = false;
 
-    gPsxSpu_rev_attr->depth.left = leftDepth;
-    gPsxSpu_rev_attr->depth.right = rightDepth;
+    gPsxSpu_rev_attr->depth.left = depthLeft;
+    gPsxSpu_rev_attr->depth.right = depthRight;
     LIBSPU_SpuSetReverbDepth(*gPsxSpu_rev_attr);
 
     *gbPsxSpu_timer_callback_enabled = true;
@@ -117,7 +100,7 @@ loc_80045450:
     a2 = 0;                                             // Result = 00000000
     a3 = 0;                                             // Result = 00000000
     sw(0, sp + 0x10);
-    psxspu_init_reverb();
+    psxspu_init_reverb((SpuReverbMode) a0, (int16_t) a1, (int16_t) a2, a3, lw(sp + 0x10));
     a0 = sp + 0x18;
     v0 = 0x3C3;                                         // Result = 000003C3
     sw(v0, sp + 0x18);

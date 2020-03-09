@@ -2876,6 +2876,7 @@ static const ProgElem ELEMS[] = {
     { 0x80075968, 0x8007596C, "gpWess_seq_loader_pm_stat",              ProgElemType::PTR32 },
     { 0x8007596C, 0x80075970, "gWess_max_sequences",                    ProgElemType::UINT32 },
     { 0x80075988, 0x8007598C, "gbPsxSpu_timer_callback_enabled",        ProgElemType::UINT32 },
+    { 0x8007598C, 0x80075990, "gPsxSpu_sram_end",                       ProgElemType::UINT32 },
     { 0x80075990, 0x80075994, "gPsxSpu_master_vol",                     ProgElemType::INT32 },
     { 0x80075994, 0x80075998, "gPsxSpu_master_fade_ticks_left",         ProgElemType::INT32 },
     { 0x80075998, 0x8007599C, "gPsxSpu_master_vol_fixed",               ProgElemType::INT32 },
