@@ -17,4 +17,4 @@ void psxspu_set_master_vol() noexcept;
 void psxspu_get_master_vol() noexcept;
 void psxspu_start_master_fade() noexcept;
 void psxspu_stop_master_fade() noexcept;
-void psxspu_get_master_fade_status() noexcept;
+bool psxspu_get_master_fade_status() noexcept;

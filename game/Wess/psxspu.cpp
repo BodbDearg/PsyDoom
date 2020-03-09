@@ -489,10 +489,9 @@ void psxspu_stop_master_fade() noexcept {
     *gbPsxSpu_timer_callback_enabled = true;
 }
 
-void psxspu_get_master_fade_status() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5994);                               // Load from: 80075994
-    v0 = (i32(v0) < 2);
-    v0 ^= 1;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns 'true' if the master volume fade out is still ongoing, 'false' otherwise
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool psxspu_get_master_fade_status() noexcept {    
+    return (*gPsxSpu_master_fade_ticks_left > 1);
 }
