@@ -109,10 +109,10 @@ void exit_WessTimer() noexcept {
 loc_80043CA8:
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    psxspu_get_master_vol();
+    v0 = psxspu_get_master_vol();
     a0 = v0;
-    psxspu_set_master_vol();
-    psxspu_get_cd_vol();
+    psxspu_set_master_vol(a0);
+    v0 = psxspu_get_cd_vol();
     a0 = v0;
     psxspu_set_cd_vol();
     LIBAPI_EnterCriticalSection();

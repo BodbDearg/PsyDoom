@@ -18,7 +18,9 @@ static const VmPtr<bool32_t> gbPsxSpu_timer_callback_enabled(0x80075988);
 static const VmPtr<int32_t> gPsxSpu_master_fade_ticks_left(0x80075994);
 static const VmPtr<int32_t> gPsxSpu_cd_fade_ticks_left(0x800759A8);
 
-// Current cd audio volume (integer)
+// Master and cdrom audio volume levels (integer and fixed point)
+static const VmPtr<int32_t> gPsxSpu_master_vol(0x80075990);
+static const VmPtr<int32_t> gPsxSpu_master_vol_fixed(0x80075998);
 static const VmPtr<int32_t> gPsxSpu_cd_vol(0x800759A4);
 
 void psxspu_init_reverb() noexcept {
@@ -380,36 +382,25 @@ bool psxspu_get_cd_fade_status() noexcept {
     return (*gPsxSpu_cd_fade_ticks_left > 1);
 }
 
-void psxspu_set_master_vol() noexcept {
-loc_80045880:
-    sp -= 0x18;
-    v0 = a0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5990);                                // Store to: 80075990
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lh(a0 + 0x5990);                               // Load from: 80075990
-    v0 <<= 16;
-    sw(ra, sp + 0x10);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5998);                                // Store to: 80075998
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5994);                                 // Store to: 80075994
-    psxspu_set_master_volume(a0);
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5988);                                // Store to: 80075988
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets the master volume level
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxspu_set_master_vol(const int32_t vol) noexcept {
+    *gbPsxSpu_timer_callback_enabled = 0;
+    
+    *gPsxSpu_master_vol = vol;
+    *gPsxSpu_master_vol_fixed = vol << 0x10;
+    *gPsxSpu_master_fade_ticks_left = 0;
+    psxspu_set_master_volume(*gPsxSpu_master_vol);
+
+    *gbPsxSpu_timer_callback_enabled = 1;
 }
 
-void psxspu_get_master_vol() noexcept {
-loc_800458DC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5990);                               // Load from: 80075990
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gets the master volume level
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t psxspu_get_master_vol() noexcept {
+    return *gPsxSpu_master_vol;
 }
 
 void psxspu_start_master_fade() noexcept {

@@ -522,13 +522,13 @@ loc_8003F9BC:
     sw(0, gp + 0x7E8);                                  // Store to: gbPSXCD_playflag (80077DC8)
     sw(0, gp + 0x7F8);                                  // Store to: gbPSXCD_loopflag (80077DD8)
     sw(0, gp + 0x77C);                                  // Store to: gbPSXCD_seeking_for_play (80077D5C)
-    psxspu_get_cd_vol();
+    v0 = psxspu_get_cd_vol();
     a0 = 0xFA;                                          // Result = 000000FA
     if (v0 == 0) goto loc_8003FA04;
     a1 = 0;                                             // Result = 00000000
     psxspu_start_cd_fade();
 loc_8003F9F4:
-    psxspu_get_cd_fade_status();
+    v0 = psxspu_get_cd_fade_status();
     if (v0 != 0) goto loc_8003F9F4;
 loc_8003FA04:
     psxspu_setcdmixoff();
@@ -1762,13 +1762,13 @@ loc_80040D58:
     sw(0, gp + 0x7F8);                                  // Store to: gbPSXCD_loopflag (80077DD8)
     sw(0, gp + 0x77C);                                  // Store to: gbPSXCD_seeking_for_play (80077D5C)
     sw(0, gp + 0x814);                                  // Store to: gPSXCD_lastloc (80077DF4)
-    psxspu_get_cd_vol();
+    v0 = psxspu_get_cd_vol();
     a0 = 0xFA;                                          // Result = 000000FA
     if (v0 == 0) goto loc_80040D98;
     a1 = 0;                                             // Result = 00000000
     psxspu_start_cd_fade();
 loc_80040D88:
-    psxspu_get_cd_fade_status();
+    v0 = psxspu_get_cd_fade_status();
     if (v0 != 0) goto loc_80040D88;
 loc_80040D98:
     psxcd_sync();
@@ -1800,13 +1800,13 @@ loc_80040DD0:
     v0 = lwr(v0, a1);                                   // Load from: gPSXCD_newloc (80077DF0)
     swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
     swr(v0, a0);                                        // Store to: gPSXCD_lastloc (80077DF4)
-    psxspu_get_cd_vol();
+    v0 = psxspu_get_cd_vol();
     a0 = 0xFA;                                          // Result = 000000FA
     if (v0 == 0) goto loc_80040E3C;
     a1 = 0;                                             // Result = 00000000
     psxspu_start_cd_fade();
 loc_80040E2C:
-    psxspu_get_cd_fade_status();
+    v0 = psxspu_get_cd_fade_status();
     if (v0 != 0) goto loc_80040E2C;
 loc_80040E3C:
     psxcd_sync();
