@@ -203,9 +203,10 @@ void P_CheckCheats() noexcept {
             a0 = 0;
             psxcd_restart();
 
-            do {
-                psxcd_seeking_for_play();
-            } while (v0 != 0);
+            while (psxcd_seeking_for_play()) {
+                // Wait until the cdrom has stopped seeking to the current audio location. 
+                // Note: should NEVER be in here in this emulated environment: seek happens instantly!
+            }
 
             psxspu_start_cd_fade(500, *gCdMusicVol);
             S_Resume();
