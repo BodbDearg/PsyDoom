@@ -261,29 +261,18 @@ loc_80045710:
     return;
 }
 
-void psxspu_set_cd_vol() noexcept {
-loc_80045720:
-    sp -= 0x18;
-    v0 = a0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x59A4);                                // Store to: 800759A4
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lh(a0 + 0x59A4);                               // Load from: 800759A4
-    v0 <<= 16;
-    sw(ra, sp + 0x10);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x59AC);                                // Store to: 800759AC
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x59A8);                                 // Store to: 800759A8
-    psxspu_set_cd_volume(a0);
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5988);                                // Store to: 80075988
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the current cd audio volume and disable any fades on cd volume that are active
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxspu_set_cd_vol(const int32_t vol) noexcept {
+    *gbPsxSpu_timer_callback_enabled = false;
+
+    *gPsxSpu_cd_vol = vol;
+    *gPsxSpu_cd_vol_fixed = vol << 16;
+    *gPsxSpu_cd_fade_ticks_left = 0;    
+    psxspu_set_cd_volume(vol);
+
+    *gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -342,7 +331,7 @@ void psxspu_set_master_vol(const int32_t vol) noexcept {
     *gbPsxSpu_timer_callback_enabled = 0;
     
     *gPsxSpu_master_vol = vol;
-    *gPsxSpu_master_vol_fixed = vol << 0x10;
+    *gPsxSpu_master_vol_fixed = vol << 16;
     *gPsxSpu_master_fade_ticks_left = 0;
     psxspu_set_master_volume(*gPsxSpu_master_vol);
 

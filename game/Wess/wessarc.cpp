@@ -114,7 +114,7 @@ loc_80043CA8:
     psxspu_set_master_vol(a0);
     v0 = psxspu_get_cd_vol();
     a0 = v0;
-    psxspu_set_cd_vol();
+    psxspu_set_cd_vol(a0);
     LIBAPI_EnterCriticalSection();
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x595C);                               // Load from: gWess_EV2 (8007595C)

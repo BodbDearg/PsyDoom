@@ -149,7 +149,7 @@ void PSXCD_cbcomplete(const CdlStatus status, const uint8_t pResult[8]) noexcept
     v0 = lw(gp + 0x7F0);                                // Load from: gPSXCD_playfadeuptime (80077DD0)
     if (v0 == 0) goto loc_8003F424;
     a0 = 0;                                             // Result = 00000000
-    psxspu_set_cd_vol();
+    psxspu_set_cd_vol(a0);
     a0 = lw(gp + 0x7F0);                                // Load from: gPSXCD_playfadeuptime (80077DD0)
     a1 = lw(gp + 0x7EC);                                // Load from: gPSXCD_playvol (80077DCC)
     psxspu_start_cd_fade(a0, a1);
@@ -158,7 +158,7 @@ void PSXCD_cbcomplete(const CdlStatus status, const uint8_t pResult[8]) noexcept
     goto loc_8003F434;
 loc_8003F424:
     a0 = lw(gp + 0x7EC);                                // Load from: gPSXCD_playvol (80077DCC)
-    psxspu_set_cd_vol();
+    psxspu_set_cd_vol(a0);
     v0 = 3;                                             // Result = 00000003
 loc_8003F434:
     sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)

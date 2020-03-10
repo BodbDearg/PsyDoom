@@ -49,7 +49,7 @@ loc_80040FCC:
     if (v0 != 0) goto loc_80040FF8;
     a0 = 0x3CFF;                                        // Result = 00003CFF
 loc_80040FF8:
-    psxspu_set_cd_vol();
+    psxspu_set_cd_vol(a0);
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;

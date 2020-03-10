@@ -24,7 +24,7 @@ void psxspu_setcdmixoff() noexcept;
 
 void psxspu_fadeengine() noexcept;
 
-void psxspu_set_cd_vol() noexcept;
+void psxspu_set_cd_vol(const int32_t vol) noexcept;
 int32_t psxspu_get_cd_vol() noexcept;
 void psxspu_start_cd_fade(const int32_t fadeTimeMs, const int32_t destVol) noexcept;
 void psxspu_stop_cd_fade() noexcept;
