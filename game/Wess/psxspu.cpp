@@ -191,76 +191,43 @@ void psxspu_setcdmixoff() noexcept {
     *gbPsxSpu_timer_callback_enabled = true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// A callback that is invoked periodically (at approximately at 120 Hz intervals) in PSX DOOM to do audio fades.
+// For the real PlayStation DOOM this callback is triggered via interrupts coming from hardware timers.
+// In this emulated environment we simply ensure it is called periodically.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_fadeengine() noexcept {
-loc_8004560C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5988);                               // Load from: 80075988
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 == 0) goto loc_80045710;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x59A8);                               // Load from: 800759A8
-    {
-        const bool bJump = (i32(v1) <= 0);
-        v1--;
-        if (bJump) goto loc_80045698;
+    // Ignore this callback if temporarily disabled
+    if (!*gbPsxSpu_timer_callback_enabled)
+        return;
+
+    // Do cd audio fades
+    if (*gPsxSpu_cd_fade_ticks_left > 0) {
+        *gPsxSpu_cd_fade_ticks_left -= 1;
+        *gPsxSpu_cd_vol_fixed += *gPsxSpu_cd_fadestep_fixed;
+
+        // If we've reached the end ensure we haven't gone past the desired value by just setting explicitly
+        if (*gPsxSpu_cd_fade_ticks_left == 0) {
+            *gPsxSpu_cd_vol_fixed = *gPsxSpu_cd_destvol_fixed;
+        }
+
+        *gPsxSpu_cd_vol = *gPsxSpu_cd_vol_fixed >> 16;        
+        psxspu_set_cd_volume(*gPsxSpu_cd_vol);
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x59AC);                               // Load from: 800759AC
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x59B4);                               // Load from: 800759B4
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x59A8);                                // Store to: 800759A8
-    v0 += a0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x59AC);                                // Store to: 800759AC
-    if (v1 != 0) goto loc_80045674;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x59B0);                               // Load from: 800759B0
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x59AC);                                // Store to: 800759AC
-loc_80045674:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lh(v0 + 0x59AE);                               // Load from: 800759AE
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x59A4);                                // Store to: 800759A4
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lh(a0 + 0x59A4);                               // Load from: 800759A4
-    psxspu_set_cd_volume(a0);
-loc_80045698:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5994);                               // Load from: 80075994
-    {
-        const bool bJump = (i32(v1) <= 0);
-        v1--;
-        if (bJump) goto loc_80045710;
+
+    // Do master volume fades
+    if (*gPsxSpu_master_fade_ticks_left > 0) {
+        *gPsxSpu_master_fade_ticks_left -= 1;
+        *gPsxSpu_master_vol_fixed += *gPsxSpu_master_fadestep_fixed;
+
+        // If we've reached the end ensure we haven't gone past the desired value by just setting explicitly
+        if (*gPsxSpu_master_fade_ticks_left == 0) {
+            *gPsxSpu_master_vol_fixed = *gPsxSpu_master_destvol_fixed;
+        }
+
+        *gPsxSpu_master_vol = *gPsxSpu_master_vol_fixed >> 16;        
+        psxspu_set_master_volume(*gPsxSpu_master_vol);
     }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5998);                               // Load from: 80075998
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x59A0);                               // Load from: 800759A0
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5994);                                // Store to: 80075994
-    v0 += a0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5998);                                // Store to: 80075998
-    if (v1 != 0) goto loc_800456EC;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x599C);                               // Load from: 8007599C
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5998);                                // Store to: 80075998
-loc_800456EC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lh(v0 + 0x599A);                               // Load from: 8007599A
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5990);                                // Store to: 80075990
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lh(a0 + 0x5990);                               // Load from: 80075990
-    psxspu_set_master_volume(a0);
-loc_80045710:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
