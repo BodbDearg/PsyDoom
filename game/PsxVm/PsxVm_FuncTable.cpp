@@ -392,7 +392,6 @@ extern void wess_seq_sizeof() noexcept;
 extern void wess_seq_load() noexcept;
 extern void wess_seq_free() noexcept;
 extern void psxspu_fadeengine() noexcept;
-extern void psxspu_start_master_fade() noexcept;
 extern void start_record_music_mute() noexcept;
 extern void end_record_music_mute() noexcept;
 extern void add_music_mute_note() noexcept;
@@ -910,7 +909,6 @@ namespace PsxVm {
         { 0x800451F4, &wess_seq_load },
         { 0x80045298, &wess_seq_free },
         { 0x8004560C, &psxspu_fadeengine },
-        { 0x800458EC, &psxspu_start_master_fade },
         { 0x800459E0, &start_record_music_mute },
         { 0x800459FC, &end_record_music_mute },
         { 0x80045A0C, &add_music_mute_note },

@@ -36,7 +36,9 @@ static const VmPtr<int32_t> gPsxSpu_master_vol_fixed(0x80075998);
 static const VmPtr<int32_t> gPsxSpu_cd_vol(0x800759A4);
 static const VmPtr<int32_t> gPsxSpu_cd_vol_fixed(0x800759AC);
 
-// Destination volume levels and increment/decerement stepping for fading
+// Master and cdrom destination volume levels and increment/decerement stepping for fading
+static const VmPtr<int32_t> gPsxSpu_master_destvol_fixed(0x8007599C);
+static const VmPtr<int32_t> gPsxSpu_master_fadestep_fixed(0x800759A0);
 static const VmPtr<int32_t> gPsxSpu_cd_destvol_fixed(0x800759B0);
 static const VmPtr<int32_t> gPsxSpu_cd_fadestep_fixed(0x800759B4);
 
@@ -292,9 +294,7 @@ void psxspu_start_cd_fade(const int32_t fadeTimeMs, const int32_t destVol) noexc
         // Note: the timer callback fires at approximately 120 Hz, hence convert from MS to a 120 Hz tick count here
         *gPsxSpu_cd_fade_ticks_left = (fadeTimeMs * 120) / 1000 + 1;
         *gPsxSpu_cd_destvol_fixed = destVol * 0x10000;
-        *gPsxSpu_cd_fadestep_fixed = (gPsxSpu_cd_destvol_fixed - gPsxSpu_cd_vol_fixed) / gPsxSpu_cd_fade_ticks_left;
-
-        
+        *gPsxSpu_cd_fadestep_fixed = (*gPsxSpu_cd_destvol_fixed - *gPsxSpu_cd_vol_fixed) / *gPsxSpu_cd_fade_ticks_left;
     } else {
         // If the timer callback is not active then skip doing any fade since there is no means of doing it
         *gPsxSpu_cd_fade_ticks_left = 0;
@@ -345,57 +345,23 @@ int32_t psxspu_get_master_vol() noexcept {
     return *gPsxSpu_master_vol;
 }
 
-void psxspu_start_master_fade() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x594C);                               // Load from: gbWess_WessTimerActive (8007594C)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    v1 = 0x10620000;                                    // Result = 10620000
-    if (v0 == 0) goto loc_80045988;
-    v1 |= 0x4DD3;                                       // Result = 10624DD3
-    v0 = a0 << 4;
-    v0 -= a0;
-    v0 <<= 3;
-    mult(v0, v1);
-    v0 = u32(i32(v0) >> 31);
-    a0 = a1 << 16;
-    v1 = hi;
-    v1 = u32(i32(v1) >> 6);
-    v1 -= v0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5998);                               // Load from: 80075998
-    v1++;
-    v0 = a0 - v0;
-    div(v0, v1);
-    if (v1 != 0) goto loc_8004594C;
-    _break(0x1C00);
-loc_8004594C:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_80045964;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Begin doing a fade of master volume to the specified volume in the specified amount of time
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxspu_start_master_fade(const int32_t fadeTimeMs, const int32_t destVol) noexcept {
+    *gbPsxSpu_timer_callback_enabled = false;
+
+    if (*gbWess_WessTimerActive) {
+        // Note: the timer callback fires at approximately 120 Hz, hence convert from MS to a 120 Hz tick count here
+        *gPsxSpu_master_fade_ticks_left = (fadeTimeMs * 120) / 1000 + 1;
+        *gPsxSpu_master_destvol_fixed = destVol * 0x10000;
+        *gPsxSpu_master_fadestep_fixed = (*gPsxSpu_master_destvol_fixed - *gPsxSpu_master_vol_fixed) / *gPsxSpu_master_fade_ticks_left;
+    } else {
+        // If the timer callback is not active then skip doing any fade since there is no means of doing it
+        *gPsxSpu_master_fade_ticks_left = 0;
     }
-    if (v0 != at) goto loc_80045964;
-    _break(0x1800);
-loc_80045964:
-    v0 = lo;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x599C);                                // Store to: 8007599C
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5994);                                // Store to: 80075994
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x59A0);                                // Store to: 800759A0
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80045994;
-loc_80045988:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5994);                                 // Store to: 80075994
-    v0 = 1;                                             // Result = 00000001
-loc_80045994:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5988);                                // Store to: 80075988
-    return;
+
+    *gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
