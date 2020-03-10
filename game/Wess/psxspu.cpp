@@ -5,10 +5,12 @@
 #include "PSXSPU.h"
 
 #include "PcPsx/Types.h"
-#include "PsxVm/PsxVm.h"
 #include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessarc.h"
+
+#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PsxVm/PsxVm.h"
 
 // Is this module initialized?
 static const VmPtr<bool32_t> gbPsxSpu_initialized(0x80075984);

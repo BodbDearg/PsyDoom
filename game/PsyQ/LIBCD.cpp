@@ -40,7 +40,7 @@ void LIBCD_CD_initvol() noexcept;
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void invokeCallback(
     const CdlCB callback,
-    const CdlStatus status,
+    const CdlSyncStatus status,
     const uint8_t resultBytes[8]
 ) noexcept {
     if (callback) {
@@ -236,7 +236,7 @@ void LIBCD_CdFlush() noexcept {
 // Check for a cd command's completion or wait for it to complete.
 // If 'mode' is '0' then that indicates 'wait for completion'.
 //------------------------------------------------------------------------------------------------------------------------------------------
-CdlStatus LIBCD_CdSync([[maybe_unused]] const int32_t mode, uint8_t pResult[8]) noexcept {
+CdlSyncStatus LIBCD_CdSync([[maybe_unused]] const int32_t mode, uint8_t pResult[8]) noexcept {
     // Just step the CDROM a little in case this is being polled
     stepCdromWithCallbacks();
 
@@ -256,7 +256,7 @@ void _thunk_LIBCD_CdSync() noexcept {
 // Wait for cdrom data to be ready or check if it is ready.
 // Mode '0' means block until data is ready, otherwise we simply return the current status.
 //------------------------------------------------------------------------------------------------------------------------------------------
-CdlStatus LIBCD_CdReady(const int32_t mode, uint8_t pResult[8]) noexcept {
+CdlSyncStatus LIBCD_CdReady(const int32_t mode, uint8_t pResult[8]) noexcept {
     device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
 
     const auto exitActions = finally([&](){

@@ -67,14 +67,37 @@ enum CdlCmd : uint8_t {
     CdlReadS        = 0x1B,     // Read some data (no retry)
 };
 
+// Bit flags for the cdrom mode register when setting via the 'CdlSetmode' command
+enum CdlModeBits : uint8_t {
+    CdlModeSpeed    = 0x80,     // If set cdrom speed is 2x, otherwise 1x
+    CdlModeRT       = 0x40,     // If set then XA-ADPCM audio sectors are input to the SPU
+    CdlModeSize1    = 0x20,     // If set sector data size is: 2340 bytes, otherwise 2048 bytes
+    CdlModeSize0    = 0x10,     // If set then ignore 'CdlModeSize1' and have sector size as '2328' bytes
+    CdlModeSF       = 0x08,     // If set then only process XA-ADPCM audio sectors that match the set filter
+    CdlModeRept     = 0x04,     // If set then report interrupts during audio playback
+    CdlModeAP       = 0x02,     // If set then auto pause at the end of the current audio track
+    CdlModeDA       = 0x01      // If set then CD-DA playblack is active
+};
+
 // Status code sent to callback functions and returned by 'LIBCD_CdSync'
-enum CdlStatus : uint8_t {
+enum CdlSyncStatus : uint8_t {
     CdlNoIntr       = 0x00,     // No result or currently executing a cd operation
     CdlDataReady    = 0x01,     // There is data ready for reading
     CdlComplete     = 0x02,     // The cd operation completed successfully
     CdlAcknowledge  = 0x03,     // Unused/reserved
     CdlDataEnd      = 0x04,     // Reached the end of data
     CdlDiskError    = 0x05      // An error occurred
+};
+
+// Status code byte returned by 'CdControl' functions
+enum CdlStatusBits : uint8_t {
+    CdlStatPlay         = 0x80,     // Currently playing cdrom digital audio (CD-DA)
+    CdlStatSeek         = 0x40,     // Currently seeking to a location
+    CdlStatRead         = 0x20,     // Currently reading data sectors
+    CdlStatShellOpen    = 0x10,     // The user has opened the cdrom shell
+    CdlStatSeekError    = 0x04,     // An error happened while seeking
+    CdlStatStandby      = 0x02,     // The cdrom motor is rotating
+    CdlStatError        = 0x01      // An error occurred issuing a command
 };
 
 // Holds the volume mixing levels for CD audio to the SPU
@@ -86,16 +109,16 @@ struct CdlATV {
 };
 
 // Callback type for 'CdReadyCallback', and 'CdSyncCallback'
-typedef void (*CdlCB)(const CdlStatus status, const uint8_t pResult[8]);
+typedef void (*CdlCB)(const CdlSyncStatus status, const uint8_t pResult[8]);
 
 void LIBCD_CdInit() noexcept;
 bool LIBCD_CdReset(const int32_t mode) noexcept;
 void LIBCD_CdFlush() noexcept;
 
-CdlStatus LIBCD_CdSync([[maybe_unused]] const int32_t mode, uint8_t pResult[8]) noexcept;
+CdlSyncStatus LIBCD_CdSync([[maybe_unused]] const int32_t mode, uint8_t pResult[8]) noexcept;
 void _thunk_LIBCD_CdSync() noexcept;
 
-CdlStatus LIBCD_CdReady(const int32_t mode, uint8_t pResult[8]) noexcept;
+CdlSyncStatus LIBCD_CdReady(const int32_t mode, uint8_t pResult[8]) noexcept;
 void _thunk_LIBCD_CdReady() noexcept;
 
 CdlCB LIBCD_CdSyncCallback(const CdlCB syncCallback) noexcept;
