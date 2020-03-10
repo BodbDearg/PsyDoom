@@ -2883,6 +2883,8 @@ static const ProgElem ELEMS[] = {
     { 0x80075998, 0x8007599C, "gPsxSpu_master_vol_fixed",               ProgElemType::INT32 },
     { 0x800759A8, 0x800759AC, "gPsxSpu_cd_fade_ticks_left",             ProgElemType::INT32 },
     { 0x800759AC, 0x800759B0, "gPsxSpu_cd_vol_fixed",                   ProgElemType::INT32 },
+    { 0x800759B0, 0x800759B4, "gPsxSpu_cd_destvol_fixed",               ProgElemType::INT32 },
+    { 0x800759B4, 0x800759B8, "gPsxSpu_cd_fadestep_fixed",              ProgElemType::INT32 },
     { 0x800759B8, 0x80075A04, "gWess_drv_cmds",                         ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80075A04, 0x80075A05, "gWess_master_sfx_volume",                ProgElemType::UINT8 },
     { 0x80075A05, 0x80075A06, "gWess_master_mus_volume",                ProgElemType::UINT8 },

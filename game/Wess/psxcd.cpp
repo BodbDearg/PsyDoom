@@ -152,7 +152,7 @@ void PSXCD_cbcomplete(const CdlStatus status, const uint8_t pResult[8]) noexcept
     psxspu_set_cd_vol();
     a0 = lw(gp + 0x7F0);                                // Load from: gPSXCD_playfadeuptime (80077DD0)
     a1 = lw(gp + 0x7EC);                                // Load from: gPSXCD_playvol (80077DCC)
-    psxspu_start_cd_fade();
+    psxspu_start_cd_fade(a0, a1);
     sw(0, gp + 0x7F0);                                  // Store to: gPSXCD_playfadeuptime (80077DD0)
     v0 = 3;                                             // Result = 00000003
     goto loc_8003F434;
@@ -526,7 +526,7 @@ loc_8003F9BC:
     a0 = 0xFA;                                          // Result = 000000FA
     if (v0 == 0) goto loc_8003FA04;
     a1 = 0;                                             // Result = 00000000
-    psxspu_start_cd_fade();
+    psxspu_start_cd_fade(a0, a1);
 loc_8003F9F4:
     v0 = psxspu_get_cd_fade_status();
     if (v0 != 0) goto loc_8003F9F4;
@@ -1766,7 +1766,7 @@ loc_80040D58:
     a0 = 0xFA;                                          // Result = 000000FA
     if (v0 == 0) goto loc_80040D98;
     a1 = 0;                                             // Result = 00000000
-    psxspu_start_cd_fade();
+    psxspu_start_cd_fade(a0, a1);
 loc_80040D88:
     v0 = psxspu_get_cd_fade_status();
     if (v0 != 0) goto loc_80040D88;
@@ -1804,7 +1804,7 @@ loc_80040DD0:
     a0 = 0xFA;                                          // Result = 000000FA
     if (v0 == 0) goto loc_80040E3C;
     a1 = 0;                                             // Result = 00000000
-    psxspu_start_cd_fade();
+    psxspu_start_cd_fade(a0, a1);
 loc_80040E2C:
     v0 = psxspu_get_cd_fade_status();
     if (v0 != 0) goto loc_80040E2C;

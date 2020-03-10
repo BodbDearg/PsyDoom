@@ -7,8 +7,8 @@
 #include "PsyQ/LIBSPU.h"
 #include "wessseq.h"
 
-// Keeps track of global time (MS) for the sequencer and other operations
-const VmPtr<uint32_t> gWess_Millicount(0x80075954);
+const VmPtr<uint32_t>   gWess_Millicount(0x80075954);           // Keeps track of global time (MS) for the sequencer and other operations
+const VmPtr<bool32_t>   gbWess_WessTimerActive(0x8007594C);     // True if the 'WessInterruptHandler' function is active and receiving periodic callbacks
 
 void GetIntsPerSec() noexcept {
 loc_80043B30:

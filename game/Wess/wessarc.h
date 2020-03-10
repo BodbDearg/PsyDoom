@@ -1,8 +1,10 @@
 #pragma once
 
+#include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 
-extern const VmPtr<uint32_t> gWess_Millicount;
+extern const VmPtr<uint32_t>    gWess_Millicount;
+extern const VmPtr<bool32_t>    gbWess_WessTimerActive;
 
 void GetIntsPerSec() noexcept;
 void CalcPartsPerInt() noexcept;

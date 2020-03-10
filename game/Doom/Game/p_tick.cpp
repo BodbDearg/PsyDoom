@@ -207,10 +207,7 @@ void P_CheckCheats() noexcept {
                 psxcd_seeking_for_play();
             } while (v0 != 0);
 
-            a0 = 500;
-            a1 = *gCdMusicVol;
-            psxspu_start_cd_fade();
-
+            psxspu_start_cd_fade(500, *gCdMusicVol);
             S_Resume();
 
             // When the pause menu is opened the warp menu and vram viewer are initially disabled

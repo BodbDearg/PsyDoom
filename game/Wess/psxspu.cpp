@@ -8,6 +8,7 @@
 #include "PsxVm/PsxVm.h"
 #include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBSPU.h"
+#include "wessarc.h"
 
 // Is this module initialized?
 static const VmPtr<bool32_t> gbPsxSpu_initialized(0x80075984);
@@ -33,6 +34,11 @@ static const VmPtr<int32_t> gPsxSpu_cd_fade_ticks_left(0x800759A8);
 static const VmPtr<int32_t> gPsxSpu_master_vol(0x80075990);
 static const VmPtr<int32_t> gPsxSpu_master_vol_fixed(0x80075998);
 static const VmPtr<int32_t> gPsxSpu_cd_vol(0x800759A4);
+static const VmPtr<int32_t> gPsxSpu_cd_vol_fixed(0x800759AC);
+
+// Destination volume levels and increment/decerement stepping for fading
+static const VmPtr<int32_t> gPsxSpu_cd_destvol_fixed(0x800759B0);
+static const VmPtr<int32_t> gPsxSpu_cd_fadestep_fixed(0x800759B4);
 
 // Current reverb settings
 static const VmPtr<SpuReverbAttr> gPsxSpu_rev_attr(0x8007f080);
@@ -147,7 +153,7 @@ static void psxspu_set_cd_volume(const int32_t vol) noexcept {
     *gbPsxSpu_timer_callback_enabled = false;
     
     SpuCommonAttr attribs;
-    attribs.mask = 0xc0;
+    attribs.mask = SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR;
     attribs.cd.volume.left = (int16_t) vol;
     attribs.cd.volume.right = (int16_t) vol;
     LIBSPU_SpuSetCommonAttr(attribs);
@@ -287,69 +293,34 @@ int32_t psxspu_get_cd_vol() noexcept {
     return *gPsxSpu_cd_vol;
 }
 
-void psxspu_start_cd_fade() noexcept {
-loc_8004578C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x594C);                               // Load from: gbWess_WessTimerActive (8007594C)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    v1 = 0x10620000;                                    // Result = 10620000
-    if (v0 == 0) goto loc_80045828;
-    v1 |= 0x4DD3;                                       // Result = 10624DD3
-    v0 = a0 << 4;
-    v0 -= a0;
-    v0 <<= 3;
-    mult(v0, v1);
-    v0 = u32(i32(v0) >> 31);
-    a0 = a1 << 16;
-    v1 = hi;
-    v1 = u32(i32(v1) >> 6);
-    v1 -= v0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x59AC);                               // Load from: 800759AC
-    v1++;
-    v0 = a0 - v0;
-    div(v0, v1);
-    if (v1 != 0) goto loc_800457EC;
-    _break(0x1C00);
-loc_800457EC:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_80045804;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Begin doing a fade of cd music to the specified volume in the specified amount of time
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxspu_start_cd_fade(const int32_t fadeTimeMs, const int32_t destVol) noexcept {
+    *gbPsxSpu_timer_callback_enabled = false;
+
+    if (*gbWess_WessTimerActive) {
+        // Note: the timer callback fires at approximately 120 Hz, hence convert from MS to a 120 Hz tick count here
+        *gPsxSpu_cd_fade_ticks_left = (fadeTimeMs * 120) / 1000 + 1;
+        *gPsxSpu_cd_destvol_fixed = destVol * 0x10000;
+        *gPsxSpu_cd_fadestep_fixed = (gPsxSpu_cd_destvol_fixed - gPsxSpu_cd_vol_fixed) / gPsxSpu_cd_fade_ticks_left;
+
+        
+    } else {
+        // If the timer callback is not active then skip doing any fade since there is no means of doing it
+        *gPsxSpu_cd_fade_ticks_left = 0;
     }
-    if (v0 != at) goto loc_80045804;
-    _break(0x1800);
-loc_80045804:
-    v0 = lo;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x59B0);                                // Store to: 800759B0
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x59A8);                                // Store to: 800759A8
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x59B4);                                // Store to: 800759B4
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80045834;
-loc_80045828:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x59A8);                                 // Store to: 800759A8
-    v0 = 1;                                             // Result = 00000001
-loc_80045834:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5988);                                // Store to: 80075988
-    return;
+
+    *gbPsxSpu_timer_callback_enabled = true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Stop doing a fade of cd music
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_stop_cd_fade() noexcept {
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5988);                                 // Store to: 80075988
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x59A8);                                 // Store to: 800759A8
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5988);                                // Store to: 80075988
-    return;
+    *gbPsxSpu_timer_callback_enabled = false;
+    *gPsxSpu_cd_fade_ticks_left = 0;
+    *gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
