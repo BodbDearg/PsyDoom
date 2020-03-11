@@ -53,7 +53,7 @@ void _thunk_psxcd_open() noexcept;
 void psxcd_init_pos() noexcept;
 void psxcd_async_on() noexcept;
 bool psxcd_seeking_for_play() noexcept;
-void psxcd_waiting_for_pause() noexcept;
+bool psxcd_waiting_for_pause() noexcept;
 
 int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept;
 void _thunk_psxcd_read() noexcept;

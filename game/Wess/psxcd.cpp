@@ -738,7 +738,7 @@ bool psxcd_seeking_for_play() noexcept {
     
     // PC-PSX: this fancy error handling is not necessary in this emulated environment
     #if !PC_PSX_DOOM_MODS
-        // The cdrom is still busy: check to make sure there was not an error
+        // The cdrom is still busy seeking: check to make sure there was not an error
         *gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result.get());
     
         if ((*gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
@@ -760,48 +760,36 @@ bool psxcd_seeking_for_play() noexcept {
     return true;
 }
 
-void psxcd_waiting_for_pause() noexcept {
-    v0 = lw(gp + 0x780);                                // Load from: gbPSXCD_waiting_for_pause (80077D60)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 == 0) goto loc_8003FE0C;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DB4;                                       // Result = gPSXCD_check_result[0] (80077DB4)
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBCD_CdSync();
-    sw(v0, gp + 0x7D0);                                 // Store to: gPSXCD_check_intr (80077DB0)
-    v1 = 5;                                             // Result = 00000005
-    if (v0 == v1) goto loc_8003FDB8;
-    v0 = lbu(gp + 0x7D4);                               // Load from: gPSXCD_check_result[0] (80077DB4)
-    v0 &= 2;
-    if (v0 != 0) goto loc_8003FE04;
-loc_8003FDB8:
-    LIBCD_CdFlush();
-    v0 = lw(gp + 0x7D0);                                // Load from: gPSXCD_check_intr (80077DB0)
-    a0 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
-    a1 = lbu(gp + 0x7D4);                               // Load from: gPSXCD_check_result[0] (80077DB4)
-    v1 = lw(gp + 0x7AC);                                // Load from: gPSXCD_cdl_errcount (80077D8C)
-    v0 += 0x78;
-    v1++;
-    sw(v0, gp + 0x7A8);                                 // Store to: gPSXCD_cdl_errintr (80077D88)
-    sb(a0, gp + 0x7B3);                                 // Store to: gPSXCD_cdl_errcom (80077D93)
-    sb(a1, gp + 0x7B1);                                 // Store to: gPSXCD_cdl_errstat (80077D91)
-    sw(v1, gp + 0x7AC);                                 // Store to: gPSXCD_cdl_errcount (80077D8C)
-    psxcd_sync();
-    a0 = 9;                                             // Result = 00000009
-    v0 = 9;                                             // Result = 00000009
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    a1 = 0;                                             // Result = 00000000
-    _thunk_LIBCD_CdControlF();
-loc_8003FE04:
-    v0 = 1;                                             // Result = 00000001
-    goto loc_8003FE10;
-loc_8003FE0C:
-    v0 = 0;                                             // Result = 00000000
-loc_8003FE10:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the cdrom is currently in the process of pausing
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool psxcd_waiting_for_pause() noexcept {
+    // If we are not pausing then the answer is simple
+    if (!*gbPSXCD_waiting_for_pause)
+        return false;
+
+    // PC-PSX: this fancy error handling is not necessary in this emulated environment
+    #if !PC_PSX_DOOM_MODS
+        // The cdrom is still busy pausing: check to make sure there was not an error
+        *gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result.get());
+
+        if ((*gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
+            // Some sort of error happened and not on standby: cancel the current command and record the command details
+            LIBCD_CdFlush();
+
+            *gPSXCD_cdl_err_count += 1;
+            *gPSXCD_cdl_err_intr = *gPSXCD_check_intr + 120;    // '+': Just to make the codes more unique, so their source is known
+            *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
+            *gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
+
+            // Retry the pause command
+            psxcd_sync();
+            *gPSXCD_cdl_com = CdlPause;
+            LIBCD_CdControlF(CdlPause, nullptr);
+        }
+    #endif
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
