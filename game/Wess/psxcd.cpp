@@ -38,6 +38,7 @@ static const VmPtr<CdlLOC>          gPSXCD_cur_io_loc(0x80077D78);          // C
 // Audio mode stuff
 static const VmPtr<CdlLOC>          gPSXCD_lastloc(0x80077DF4);             // The last valid intended cd-audio disc seek location
 static const VmPtr<CdlLOC>          gPSXCD_newloc(0x80077DF0);              // Last known location for cd audio playback, this gets continously saved to so we can restore if we want to pause
+static const VmPtr<CdlLOC>          gPSXCD_beginloc(0x80077DF8);            // Start sector of the current audio track
 static const VmPtr<CdlLOC>          gPSXCD_cdloc(0x80077DE8);               // Temporary CdlLOC variable used in various places
 static const VmPtr<int32_t>         gPSXCD_playvol(0x80077DCC);             // Specified playback volume for cd audio
 static const VmPtr<CdlATV>          gPSXCD_cdatv(0x80077DEC);               // The volume mixing levels of cd audio sent to the SPU for output
@@ -1639,78 +1640,46 @@ void psxcd_play() noexcept {
     psxcd_play_at();
 }
 
-void psxcd_seek_for_play_at() noexcept {
-loc_80040B8C:
-    sp -= 0x20;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 -= 0x7C08;                                       // Result = gTrackCdlLOC[0] (800783F8)
-    a0 <<= 2;
-    sw(s0, sp + 0x10);
-    s0 = a0 + v0;
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = lw(s0);
-    s1 = a1;
-    if (v0 == 0) goto loc_80040C88;
-    sw(0, gp + 0x7E8);                                  // Store to: gbPSXCD_playflag (80077DC8)
-    sw(0, gp + 0x7F8);                                  // Store to: gbPSXCD_loopflag (80077DD8)
-    sw(0, gp + 0x77C);                                  // Store to: gbPSXCD_seeking_for_play (80077D5C)
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Seek to the specified offset within a cd audio track in preparation for playback
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxcd_seek_for_play_at(const int32_t track, const int32_t sectorOffset) noexcept {
+    // If this is an invalid track then do nothing
+    const CdlLOC& trackLoc = gTrackCdlLOC[track];
+
+    if (trackLoc == 0)
+        return;
+
+    // Ensure we are in audio mode before doing the seek
+    *gbPSXCD_playflag = false;
+    *gbPSXCD_loopflag = false;
+    *gbPSXCD_seeking_for_play = false;
     psxcd_set_audio_mode();
-    a0 = s0;
-    _thunk_LIBCD_CdPosToInt();
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
-    a0 = v0 + s1;
-    _thunk_LIBCD_CdIntToPos();
-    a0 = 0x16;                                          // Result = 00000016
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0x77C);                                 // Store to: gbPSXCD_seeking_for_play (80077D5C)
-    v0 = 0x16;                                          // Result = 00000016
-    sw(0, gp + 0x7B8);                                  // Store to: gPSXCD_playcount (80077D98)
-    sw(0, gp + 0x7E8);                                  // Store to: gbPSXCD_playflag (80077DC8)
-    sw(0, gp + 0x7F8);                                  // Store to: gbPSXCD_loopflag (80077DD8)
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    _thunk_LIBCD_CdControlF();
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    v0 = lwl(v0, s0 + 0x3);
-    v0 = lwr(v0, s0);
-    swl(v0, a1 + 0x3);                                  // Store to: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    swr(v0, a1);                                        // Store to: gPSXCD_lastloc (80077DF4)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7DF8;                                       // Result = gPSXCD_beginloc (80077DF8)
-    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
-    swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_beginloc + 3 (80077DFB) (80077DFB)
-    swr(v0, a0);                                        // Store to: gPSXCD_beginloc (80077DF8)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7DF0;                                       // Result = gPSXCD_newloc (80077DF0)
-    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
-    swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_newloc + 3 (80077DF3) (80077DF3)
-    swr(v0, a0);                                        // Store to: gPSXCD_newloc (80077DF0)
-loc_80040C88:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Figure out the position to go to
+    const uint32_t trackBegSector = LIBCD_CdPosToInt(trackLoc);
+    LIBCD_CdIntToPos(trackBegSector + sectorOffset, *gPSXCD_cdloc);
+
+    // Init some playback stats and begin seeking to the specified track location    
+    *gPSXCD_playcount = 0;
+    *gbPSXCD_playflag = false;
+    *gbPSXCD_loopflag = false;
+    *gbPSXCD_seeking_for_play = true;
+
+    *gPSXCD_cdl_com = CdlSeekP;
+    LIBCD_CdControlF(CdlSeekP, (const uint8_t*) &gPSXCD_cdloc);
+
+    // Remember the track start location as the begin, current and last valid intended location
+    *gPSXCD_newloc = trackLoc;
+    *gPSXCD_lastloc = trackLoc;
+    *gPSXCD_beginloc = trackLoc;
 }
 
-void psxcd_seek_for_play() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a1 = 0;                                             // Result = 00000000
-    psxcd_seek_for_play_at();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Seek to the beginning of a cd audio track in preparation for playback
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxcd_seek_for_play(const int32_t track) noexcept {
+    psxcd_seek_for_play_at(track, 0);
 }
 
 void psxcd_play_status() noexcept {
