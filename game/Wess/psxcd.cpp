@@ -26,6 +26,7 @@ static const VmPtr<bool32_t>    gbPSXCD_playflag(0x80077DC8);               // I
 static const VmPtr<bool32_t>    gbPSXCD_loopflag(0x80077DD8);               // If true then the currently played cd audio track will be looped
 static const VmPtr<bool32_t>    gbPSXCD_seeking_for_play(0x80077D5C);       // If true then we are currently seeking to the location where the cd audio track being played will start
 static const VmPtr<bool32_t>    gbPSXCD_waiting_for_pause(0x80077D60);      // If true then we are waiting for a cd 'pause' operation to complete
+static const VmPtr<bool32_t>    gbPSXCD_critical_error(0x80077D80);         // True if a critical error occurred
 
 // Whether the cdrom is currently in data or audio mode.
 // 0 = audio mode, 1 = data mode, -1 = undefined.
@@ -645,15 +646,16 @@ void _thunk_psxcd_open() noexcept {
     v0 = ptrToVmAddr(psxcd_open((CdMapTbl_File) a0));
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes some positional related variables
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_init_pos() noexcept {
-loc_8003FB9C:
-    sw(0, gp + 0x794);                                  // Store to: gbPSXCD_init_pos (80077D74)
-    sw(0, gp + 0x7E8);                                  // Store to: gbPSXCD_playflag (80077DC8)
-    sw(0, gp + 0x7F8);                                  // Store to: gbPSXCD_loopflag (80077DD8)
-    sw(0, gp + 0x77C);                                  // Store to: gbPSXCD_seeking_for_play (80077D5C)
-    sw(0, gp + 0x780);                                  // Store to: gbPSXCD_waiting_for_pause (80077D60)
-    sw(0, gp + 0x7A0);                                  // Store to: gbPSXCD_critical_error (80077D80)
-    return;
+    *gbPSXCD_seeking_for_play = false;
+    *gbPSXCD_waiting_for_pause = false;
+    *gbPSXCD_init_pos = false;
+    *gbPSXCD_critical_error = false;
+    *gbPSXCD_playflag = false;
+    *gbPSXCD_loopflag = false;
 }
 
 void psxcd_async_on() noexcept {

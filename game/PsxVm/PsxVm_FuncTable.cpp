@@ -283,7 +283,6 @@ extern void _thunk_FixedDiv() noexcept;
 extern void psxcd_init() noexcept;
 extern void psxcd_exit() noexcept;
 extern void _thunk_psxcd_open() noexcept;
-extern void psxcd_init_pos() noexcept;
 extern void psxcd_async_on() noexcept;
 extern void _thunk_psxcd_read() noexcept;
 extern void psxcd_async_read_cancel() noexcept;
@@ -787,7 +786,6 @@ namespace PsxVm {
         { 0x8003F8B0, &psxcd_init },
         { 0x8003F98C, &psxcd_exit },
         { 0x8003FACC, &_thunk_psxcd_open },
-        { 0x8003FB9C, &psxcd_init_pos },
         { 0x8003FBBC, &psxcd_async_on },
         { 0x8003FE20, &_thunk_psxcd_read },
         { 0x8003FE58, &psxcd_async_read_cancel },
