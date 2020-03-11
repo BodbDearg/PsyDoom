@@ -353,10 +353,6 @@ bool LIBCD_CdMix(const CdlATV& vol) noexcept {
     return true;    // Always successful
 }
 
-void _thunk_LIBCD_CdMix() noexcept {
-    v0 = LIBCD_CdMix(*vmAddrToPtr<const CdlATV>(a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads the requested number of 32-bit words from the CDROM's sector data buffer.
 // Returns 'true' if successful, which will be always.

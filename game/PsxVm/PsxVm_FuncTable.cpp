@@ -285,7 +285,6 @@ extern void psxcd_exit() noexcept;
 extern void _thunk_psxcd_open() noexcept;
 extern void psxcd_async_on() noexcept;
 extern void _thunk_psxcd_read() noexcept;
-extern void psxcd_async_read_cancel() noexcept;
 extern void psxcd_async_read() noexcept;
 extern void _thunk_psxcd_seek() noexcept;
 extern void _thunk_psxcd_tell() noexcept;
@@ -482,7 +481,6 @@ extern void _thunk_LIBCD_CdSync() noexcept;
 extern void _thunk_LIBCD_CdReady() noexcept;
 extern void _thunk_LIBCD_CdControl() noexcept;
 extern void _thunk_LIBCD_CdControlF() noexcept;
-extern void _thunk_LIBCD_CdMix() noexcept;
 extern void _thunk_LIBCD_CdGetSector() noexcept;
 extern void _thunk_LIBCD_CdIntToPos() noexcept;
 extern void _thunk_LIBCD_CdPosToInt() noexcept;
@@ -788,7 +786,6 @@ namespace PsxVm {
         { 0x8003FACC, &_thunk_psxcd_open },
         { 0x8003FBBC, &psxcd_async_on },
         { 0x8003FE20, &_thunk_psxcd_read },
-        { 0x8003FE58, &psxcd_async_read_cancel },
         { 0x8003FEA4, &psxcd_async_read },
         { 0x800406D4, &_thunk_psxcd_seek },
         { 0x800407C8, &_thunk_psxcd_tell },
@@ -984,7 +981,6 @@ namespace PsxVm {
         { 0x80054D40, &_thunk_LIBCD_CdReady },
         { 0x80054DA8, &_thunk_LIBCD_CdControl },
         { 0x80054EC0, &_thunk_LIBCD_CdControlF },
-        { 0x800550F0, &_thunk_LIBCD_CdMix },
         { 0x80055114, &_thunk_LIBCD_CdGetSector },
         { 0x8005521C, &_thunk_LIBCD_CdIntToPos },
         { 0x80055320, &_thunk_LIBCD_CdPosToInt },

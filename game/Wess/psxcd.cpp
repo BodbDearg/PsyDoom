@@ -829,26 +829,23 @@ void _thunk_psxcd_read() noexcept {
     v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Cancels the currently active async read, if any
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_async_read_cancel() noexcept {
-loc_8003FE58:
-    v0 = lw(gp + 0x784);                                // Load from: gbPSXCD_async_on (80077D64)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 == 0) goto loc_8003FE94;
-    sw(0, gp + 0x784);                                  // Store to: gbPSXCD_async_on (80077D64)
-    sw(0, gp + 0x794);                                  // Store to: gbPSXCD_init_pos (80077D74)
+    // If we are not doing an async read then there is nothing to do
+    if (!*gbPSXCD_async_on)
+        return;
+
+    // Finish up any current commands and mark the data position as uninitialized
+    *gbPSXCD_async_on = false;
+    *gbPSXCD_init_pos = false;
     psxcd_sync();
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0x780);                                 // Store to: gbPSXCD_waiting_for_pause (80077D60)
-    v0 = 9;                                             // Result = 00000009
-    a0 = 9;                                             // Result = 00000009
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    a1 = 0;                                             // Result = 00000000
-    _thunk_LIBCD_CdControlF();
-loc_8003FE94:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Pause the cdrom
+    *gbPSXCD_waiting_for_pause = true;
+    *gPSXCD_cdl_com = CdlPause;
+    LIBCD_CdControlF(CdlPause, nullptr);
 }
 
 void psxcd_async_read() noexcept {

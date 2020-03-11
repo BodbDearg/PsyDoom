@@ -131,7 +131,6 @@ bool LIBCD_CdControlF(const CdlCmd cmd, const uint8_t* const pArgs) noexcept;
 void _thunk_LIBCD_CdControlF() noexcept;
 
 bool LIBCD_CdMix(const CdlATV& vol) noexcept;
-void _thunk_LIBCD_CdMix() noexcept;
 
 bool LIBCD_CdGetSector(void* const pDst, const int32_t sizeInWords) noexcept;
 void _thunk_LIBCD_CdGetSector() noexcept;
