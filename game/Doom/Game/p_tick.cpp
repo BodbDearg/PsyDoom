@@ -199,9 +199,8 @@ void P_CheckCheats() noexcept {
                 return;
             }
 
-            // Otherwise restart audio
-            a0 = 0;
-            psxcd_restart();
+            // Otherwise restart cd handling and fade out cd audio
+            psxcd_restart(0);
 
             while (psxcd_seeking_for_play()) {
                 // Wait until the cdrom has stopped seeking to the current audio location. 

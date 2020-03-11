@@ -33,6 +33,12 @@ static const VmPtr<CdlLOC>          gPSXCD_cur_io_loc(0x80077D78);          // C
 
 // Audio mode stuff
 static const VmPtr<CdlLOC>          gPSXCD_lastloc(0x80077DF4);             // The last valid intended cd-audio disc seek location
+static const VmPtr<CdlLOC>          gPSXCD_cdloc(0x80077DE8);               // Temporary CdlLOC variable used in various places
+static const VmPtr<int32_t>         gPSXCD_playvol(0x80077DCC);             // Specified playback volume for cd audio
+
+// Number of sectors read in data and audio mode respectively
+static const VmPtr<int32_t>         gPSXCD_readcount(0x80077D94);           // Number of data sectors read
+static const VmPtr<int32_t>         gPSXCD_playcount(0x80077D98);           // Number of audio sectors read
 
 // CD commands issued and results
 static const VmPtr<uint8_t>         gPSXCD_cdl_com(0x80077D92);             // The last command issued to the cdrom via 'LIBCD_CdControl'
@@ -1823,39 +1829,27 @@ loc_80040E64:
     return;
 }
 
-void psxcd_restart() noexcept {
-loc_80040E74:
-    v0 = lw(gp + 0x814);                                // Load from: gPSXCD_lastloc (80077DF4)
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    if (v0 == 0) goto loc_80040EE8;
-    psxcd_set_audio_mode();
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
-    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
-    swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_cdloc + 3 (80077DEB) (80077DEB)
-    swr(v0, a0);                                        // Store to: gPSXCD_cdloc (80077DE8)
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0x7E8);                                 // Store to: gbPSXCD_playflag (80077DC8)
-    sw(v0, gp + 0x77C);                                 // Store to: gbPSXCD_seeking_for_play (80077D5C)
-    v0 = 0x16;                                          // Result = 00000016
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
-    sw(s0, gp + 0x7EC);                                 // Store to: gPSXCD_playvol (80077DCC)
-    sw(0, gp + 0x7B8);                                  // Store to: gPSXCD_playcount (80077D98)
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    a0 = 0x16;                                          // Result = 00000016
-    _thunk_LIBCD_CdControlF();
-loc_80040EE8:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reinitialize cdrom handling and switch into audio mode.
+// The cdrom is positioned at the last intended location.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxcd_restart(const int32_t vol) noexcept {
+    // Only if we had issued some sort of seek command before (have used the cd a bit)
+    if (*gPSXCD_lastloc != 0) {
+        // Switch to audio mode
+        psxcd_set_audio_mode();
+
+        // Reset all these variables
+        *gPSXCD_cdloc = *gPSXCD_lastloc;
+        *gbPSXCD_playflag = true;
+        *gbPSXCD_seeking_for_play = true;
+        *gPSXCD_playcount = 0;
+        *gPSXCD_playvol = vol;
+
+        // Seek to the last intended cd location
+        *gPSXCD_cdl_com = CdlSeekP;        
+        LIBCD_CdControlF(CdlSeekP, (const uint8_t*) gPSXCD_cdloc.get());
+    }
 }
 
 void psxcd_elapsed_sectors() noexcept {
