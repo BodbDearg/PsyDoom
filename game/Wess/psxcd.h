@@ -79,4 +79,4 @@ void psxcd_stop() noexcept;
 void psxcd_pause() noexcept;
 void psxcd_restart(const int32_t vol) noexcept;
 void psxcd_elapsed_sectors() noexcept;
-void psxcd_set_stereo() noexcept;
+void psxcd_set_stereo(const bool bStereo) noexcept;

@@ -40,6 +40,7 @@ static const VmPtr<CdlLOC>          gPSXCD_lastloc(0x80077DF4);             // T
 static const VmPtr<CdlLOC>          gPSXCD_newloc(0x80077DF0);              // Last known location for cd audio playback, this gets continously saved to so we can restore if we want to pause
 static const VmPtr<CdlLOC>          gPSXCD_cdloc(0x80077DE8);               // Temporary CdlLOC variable used in various places
 static const VmPtr<int32_t>         gPSXCD_playvol(0x80077DCC);             // Specified playback volume for cd audio
+static const VmPtr<CdlATV>          gPSXCD_cdatv(0x80077DEC);               // The volume mixing levels of cd audio sent to the SPU for output
 
 // Number of sectors read in data and audio mode respectively
 static const VmPtr<int32_t>         gPSXCD_readcount(0x80077D94);           // Number of data sectors read
@@ -1878,27 +1879,21 @@ loc_80040F3C:
     return;
 }
 
-void psxcd_set_stereo() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (a0 == 0) goto loc_80040F78;
-    v0 = 0x7F;                                          // Result = 0000007F
-    sb(v0, gp + 0x80C);                                 // Store to: gPSXCD_cdatv[0] (80077DEC)
-    sb(0, gp + 0x80D);                                  // Store to: gPSXCD_cdatv[1] (80077DED)
-    sb(v0, gp + 0x80E);                                 // Store to: gPSXCD_cdatv[2] (80077DEE)
-    sb(0, gp + 0x80F);                                  // Store to: gPSXCD_cdatv[3] (80077DEF)
-    goto loc_80040F8C;
-loc_80040F78:
-    v0 = 0x3F;                                          // Result = 0000003F
-    sb(v0, gp + 0x80C);                                 // Store to: gPSXCD_cdatv[0] (80077DEC)
-    sb(v0, gp + 0x80D);                                 // Store to: gPSXCD_cdatv[1] (80077DED)
-    sb(v0, gp + 0x80E);                                 // Store to: gPSXCD_cdatv[2] (80077DEE)
-    sb(v0, gp + 0x80F);                                 // Store to: gPSXCD_cdatv[3] (80077DEF)
-loc_80040F8C:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7DEC;                                       // Result = gPSXCD_cdatv[0] (80077DEC)
-    _thunk_LIBCD_CdMix();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set whether cd audio is mixed as stereo or mono
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxcd_set_stereo(const bool bStereo) noexcept {
+    if (bStereo) {
+        gPSXCD_cdatv->l_to_l = 127;
+        gPSXCD_cdatv->l_to_r = 0;
+        gPSXCD_cdatv->r_to_r = 127;
+        gPSXCD_cdatv->r_to_l = 0;
+    } else {
+        gPSXCD_cdatv->l_to_l = 63;
+        gPSXCD_cdatv->l_to_r = 63;
+        gPSXCD_cdatv->r_to_r = 63;
+        gPSXCD_cdatv->r_to_l = 63;
+    }
+
+    LIBCD_CdMix(*gPSXCD_cdatv);
 }
