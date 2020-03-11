@@ -3293,7 +3293,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077DC4, 0x80077DC8, "gPSXCD_lastreadbytes",                   ProgElemType::UINT32 },
     { 0x80077DC8, 0x80077DCC, "gbPSXCD_playflag",                       ProgElemType::UINT32 },
     { 0x80077DCC, 0x80077DD0, "gPSXCD_playvol",                         ProgElemType::UINT32 },
-    { 0x80077DD0, 0x80077DD4, "gPSXCD_playfadeuptime",                  ProgElemType::UINT32 },
+    { 0x80077DD0, 0x80077DD4, "gPSXCD_playfadeuptime",                  ProgElemType::INT32 },
     { 0x80077DD4, 0x80077DD8, "gPSXCD_looptrack",                       ProgElemType::UINT32 },
     { 0x80077DD8, 0x80077DDC, "gbPSXCD_loopflag",                       ProgElemType::UINT32 },
     { 0x80077DDC, 0x80077DE0, "gPSXCD_loopvol",                         ProgElemType::UINT32 },

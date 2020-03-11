@@ -74,9 +74,7 @@ void START_Title() noexcept {
     *gTitleScreenSpriteY = SCREEN_H + 10;
 
     // Play the music for the title screen
-    a0 = gCDTrackNum[cdmusic_title_screen];
-    a1 = *gCdMusicVol;
-    psxcd_play();
+    psxcd_play(gCDTrackNum[cdmusic_title_screen], *gCdMusicVol);
     
     // TODO: comment on elapsed sector stuff here
     do {

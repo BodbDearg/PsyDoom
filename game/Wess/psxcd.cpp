@@ -29,39 +29,40 @@ static const VmPtr<bool32_t>    gbPSXCD_waiting_for_pause(0x80077D60);      // I
 
 // Whether the cdrom is currently in data or audio mode.
 // 0 = audio mode, 1 = data mode, -1 = undefined.
-static const VmPtr<int32_t>         gPSXCD_psxcd_mode(0x80077D6C);
+static const VmPtr<int32_t>     gPSXCD_psxcd_mode(0x80077D6C);
 
 // Data mode: currently open file and I/O location
-static const VmPtr<PsxCd_File>      gPSXCD_cdfile(0x8007831C);              // Used to hold a file temporarily after opening
-static const VmPtr<CdlLOC>          gPSXCD_cur_io_loc(0x80077D78);          // Current IO location on disc
+static const VmPtr<PsxCd_File>  gPSXCD_cdfile(0x8007831C);              // Used to hold a file temporarily after opening
+static const VmPtr<CdlLOC>      gPSXCD_cur_io_loc(0x80077D78);          // Current IO location on disc
 
 // Audio mode stuff
-static const VmPtr<CdlLOC>          gPSXCD_lastloc(0x80077DF4);             // The last valid intended cd-audio disc seek location
-static const VmPtr<CdlLOC>          gPSXCD_newloc(0x80077DF0);              // Last known location for cd audio playback, this gets continously saved to so we can restore if we want to pause
-static const VmPtr<CdlLOC>          gPSXCD_beginloc(0x80077DF8);            // Start sector of the current audio track
-static const VmPtr<CdlLOC>          gPSXCD_cdloc(0x80077DE8);               // Temporary CdlLOC variable used in various places
-static const VmPtr<int32_t>         gPSXCD_playvol(0x80077DCC);             // Specified playback volume for cd audio
-static const VmPtr<CdlATV>          gPSXCD_cdatv(0x80077DEC);               // The volume mixing levels of cd audio sent to the SPU for output
+static const VmPtr<CdlLOC>      gPSXCD_lastloc(0x80077DF4);             // The last valid intended cd-audio disc seek location
+static const VmPtr<CdlLOC>      gPSXCD_newloc(0x80077DF0);              // Last known location for cd audio playback, this gets continously saved to so we can restore if we want to pause
+static const VmPtr<CdlLOC>      gPSXCD_beginloc(0x80077DF8);            // Start sector of the current audio track
+static const VmPtr<CdlLOC>      gPSXCD_cdloc(0x80077DE8);               // Temporary CdlLOC variable used in various places
+static const VmPtr<int32_t>     gPSXCD_playvol(0x80077DCC);             // Specified playback volume for cd audio
+static const VmPtr<CdlATV>      gPSXCD_cdatv(0x80077DEC);               // The volume mixing levels of cd audio sent to the SPU for output
+static const VmPtr<int32_t>     gPSXCD_playfadeuptime(0x80077DD0);      // If > 0 then fade up cd audio volume in this amount of time (MS) when beginning playback
 
 // Number of sectors read in data and audio mode respectively
-static const VmPtr<int32_t>         gPSXCD_readcount(0x80077D94);           // Number of data sectors read
-static const VmPtr<int32_t>         gPSXCD_playcount(0x80077D98);           // Number of audio sectors read
+static const VmPtr<int32_t>     gPSXCD_readcount(0x80077D94);           // Number of data sectors read
+static const VmPtr<int32_t>     gPSXCD_playcount(0x80077D98);           // Number of audio sectors read
 
 // CD commands issued and results
-static const VmPtr<uint8_t>         gPSXCD_cdl_com(0x80077D92);             // The last command issued to the cdrom via 'LIBCD_CdControl'
-static const VmPtr<uint8_t>         gPSXCD_cdl_err_com(0x80077D93);         // The last command issued to the cdrom via 'LIBCD_CdControl' which was an error
+static const VmPtr<uint8_t>     gPSXCD_cdl_com(0x80077D92);             // The last command issued to the cdrom via 'LIBCD_CdControl'
+static const VmPtr<uint8_t>     gPSXCD_cdl_err_com(0x80077D93);         // The last command issued to the cdrom via 'LIBCD_CdControl' which was an error
 
-static const VmPtr<uint8_t[8]>      gPSXCD_cd_param(0x80077D9C);            // Parameters for the last command issued to the cdrom via 'LIBCD_CdControl' (if there were parameters)
+static const VmPtr<uint8_t[8]>  gPSXCD_cd_param(0x80077D9C);            // Parameters for the last command issued to the cdrom via 'LIBCD_CdControl' (if there were parameters)
 
-static const VmPtr<int32_t>         gPSXCD_sync_intr(0x80077DA4);           // Int result of the last 'LIBCD_CdSync' call when waiting until command completion
-static const VmPtr<int32_t>         gPSXCD_check_intr(0x80077DB0);          // Int result of the last 'LIBCD_CdSync' call when querying the status of something
-static const VmPtr<int32_t>         gPSXCD_cdl_err_intr(0x80077D88);        // Int result of the last 'LIBCD_CdSync' call with an error
+static const VmPtr<int32_t>     gPSXCD_sync_intr(0x80077DA4);           // Int result of the last 'LIBCD_CdSync' call when waiting until command completion
+static const VmPtr<int32_t>     gPSXCD_check_intr(0x80077DB0);          // Int result of the last 'LIBCD_CdSync' call when querying the status of something
+static const VmPtr<int32_t>     gPSXCD_cdl_err_intr(0x80077D88);        // Int result of the last 'LIBCD_CdSync' call with an error
 
-static const VmPtr<uint8_t[8]>      gPSXCD_sync_result(0x80077DA8);         // Result bytes for the last 'LIBCD_CdSync' call when waiting until command completion
-static const VmPtr<uint8_t[8]>      gPSXCD_check_result(0x80077DB4);        // Result bytes for the last 'LIBCD_CdSync' call when querying the status of something
+static const VmPtr<uint8_t[8]>  gPSXCD_sync_result(0x80077DA8);         // Result bytes for the last 'LIBCD_CdSync' call when waiting until command completion
+static const VmPtr<uint8_t[8]>  gPSXCD_check_result(0x80077DB4);        // Result bytes for the last 'LIBCD_CdSync' call when querying the status of something
 
-static const VmPtr<int32_t>         gPSXCD_cdl_err_count(0x80077D8C);       // A count of how many cd errors that occurred
-static const VmPtr<uint8_t>         gPSXCD_cdl_err_stat(0x80077D91);        // The first result byte (status byte) for when the last error which occurred
+static const VmPtr<int32_t>     gPSXCD_cdl_err_count(0x80077D8C);       // A count of how many cd errors that occurred
+static const VmPtr<uint8_t>     gPSXCD_cdl_err_stat(0x80077D91);        // The first result byte (status byte) for when the last error which occurred
 
 // Previous 'CdReadyCallback' and 'CDSyncCallback' functions used by LIBCD prior to initializing this module.
 // Used for restoring once we shutdown this module.
@@ -1566,78 +1567,52 @@ loc_80040A18:
     return;
 }
 
-void psxcd_play_at() noexcept {
-loc_80040A48:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a1;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 -= 0x7C08;                                       // Result = gTrackCdlLOC[0] (800783F8)
-    a0 <<= 2;
-    sw(s0, sp + 0x10);
-    s0 = a0 + v0;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    v0 = lw(s0);
-    s2 = a2;
-    if (v0 == 0) goto loc_80040B50;
-    sw(0, gp + 0x7E8);                                  // Store to: gbPSXCD_playflag (80077DC8)
-    sw(0, gp + 0x7F8);                                  // Store to: gbPSXCD_loopflag (80077DD8)
-    sw(0, gp + 0x77C);                                  // Store to: gbPSXCD_seeking_for_play (80077D5C)
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Begin playint the specified cd track at the given volume level.
+// A sector offset can also be specified to begin from a certain location in the track.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxcd_play_at(const int32_t track, const int32_t vol, const int32_t sectorOffset) noexcept {
+    // If this is an invalid track then do nothing
+    const CdlLOC& trackLoc = gTrackCdlLOC[track];
+
+    if (trackLoc == 0)
+        return;
+    
+    // Ensure we are in audio mode before beginning playback
+    *gbPSXCD_playflag = false;
+    *gbPSXCD_loopflag = false;
+    *gbPSXCD_seeking_for_play = 0;
     psxcd_set_audio_mode();
-    sw(s1, gp + 0x7EC);                                 // Store to: gPSXCD_playvol (80077DCC)
-    a0 = s0;
-    _thunk_LIBCD_CdPosToInt();
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
-    a0 = v0 + s2;
-    _thunk_LIBCD_CdIntToPos();
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0x7E8);                                 // Store to: gbPSXCD_playflag (80077DC8)
-    sw(v0, gp + 0x77C);                                 // Store to: gbPSXCD_seeking_for_play (80077D5C)
-    v0 = 0x16;                                          // Result = 00000016
-    sw(0, gp + 0x7B8);                                  // Store to: gPSXCD_playcount (80077D98)
-    sw(0, gp + 0x7F8);                                  // Store to: gbPSXCD_loopflag (80077DD8)
-    sw(0, gp + 0x7F0);                                  // Store to: gPSXCD_playfadeuptime (80077DD0)
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    a0 = 0x16;                                          // Result = 00000016
-    _thunk_LIBCD_CdControlF();
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    v0 = lwl(v0, s0 + 0x3);
-    v0 = lwr(v0, s0);
-    swl(v0, a1 + 0x3);                                  // Store to: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    swr(v0, a1);                                        // Store to: gPSXCD_lastloc (80077DF4)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7DF8;                                       // Result = gPSXCD_beginloc (80077DF8)
-    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
-    swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_beginloc + 3 (80077DFB) (80077DFB)
-    swr(v0, a0);                                        // Store to: gPSXCD_beginloc (80077DF8)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7DF0;                                       // Result = gPSXCD_newloc (80077DF0)
-    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
-    swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_newloc + 3 (80077DF3) (80077DF3)
-    swr(v0, a0);                                        // Store to: gPSXCD_newloc (80077DF0)
-loc_80040B50:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Figure out the position to begin playback from
+    const int32_t trackBegSector = LIBCD_CdPosToInt(trackLoc);
+    LIBCD_CdIntToPos(trackBegSector + sectorOffset, *gPSXCD_cdloc);
+
+    // Init some playback stats and begin seeking to the specified track location
+    *gbPSXCD_playflag = true;
+    *gPSXCD_playvol = vol;
+    *gbPSXCD_seeking_for_play = true;
+    *gPSXCD_playcount = 0;
+    *gbPSXCD_loopflag = false;      // Don't loop
+    *gPSXCD_playfadeuptime = 0;     // Don't fade in
+
+    *gPSXCD_cdl_com = CdlSeekP;
+    LIBCD_CdControlF(CdlSeekP, (const uint8_t*) gPSXCD_cdloc.get());
+
+    // Remember the track start location as the begin, current and last valid intended location.
+    //
+    // This looks like a BUG in the original code to me? Should it not be saving 'gPSXCD_cdloc'?
+    // Otherwise the sector offset specified is forgotten about...
+    *gPSXCD_newloc = trackLoc;
+    *gPSXCD_lastloc = trackLoc;
+    *gPSXCD_beginloc = trackLoc;
 }
 
-void psxcd_play() noexcept {
-    a2 = 0;
-    psxcd_play_at();
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Play the given audio track at the specified volume level
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxcd_play(const int32_t track, const int32_t vol) noexcept {
+    psxcd_play_at(track, vol, 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1661,15 +1636,18 @@ void psxcd_seek_for_play_at(const int32_t track, const int32_t sectorOffset) noe
     LIBCD_CdIntToPos(trackBegSector + sectorOffset, *gPSXCD_cdloc);
 
     // Init some playback stats and begin seeking to the specified track location    
-    *gPSXCD_playcount = 0;
     *gbPSXCD_playflag = false;
+    *gPSXCD_playcount = 0;    
     *gbPSXCD_loopflag = false;
     *gbPSXCD_seeking_for_play = true;
 
     *gPSXCD_cdl_com = CdlSeekP;
     LIBCD_CdControlF(CdlSeekP, (const uint8_t*) &gPSXCD_cdloc);
 
-    // Remember the track start location as the begin, current and last valid intended location
+    // Remember the track start location as the begin, current and last valid intended location.
+    //
+    // This looks like a BUG in the original code to me? Should it not be saving 'gPSXCD_cdloc'?
+    // Otherwise the sector offset specified is forgotten about...
     *gPSXCD_newloc = trackLoc;
     *gPSXCD_lastloc = trackLoc;
     *gPSXCD_beginloc = trackLoc;
