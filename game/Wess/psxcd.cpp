@@ -10,18 +10,22 @@
 #include "PsyQ/LIBCD.h"
 #include "wessarc.h"
 
+// Time it takes to fade out CD audio (milliseconds)
+static constexpr int32_t FADE_TIME_MS = 250;
+
 // Locations on the disc for all CD tracks.
 // This is used to determine where to seek to for cd audio playback.
 static const VmPtr<CdlLOC[CdlMAXTOC]>   gTrackCdlLOC(0x800783F8);
 
 // Various flags
-static const VmPtr<bool32_t>    gbPSXCD_IsCdInit(0x80077D70);           // If true then the 'psxcd' module has been initialized
-static const VmPtr<bool32_t>    gbPSXCD_init_pos(0x80077D74);           // Set to true when we know the current position of the CD, false otherwise
-static const VmPtr<bool32_t>    gbPSXCD_async_on(0x80077D64);           // True when there is an asynchronous read happening
-static const VmPtr<int32_t>     gbPSXCD_cb_enable_flag(0x80077D7C);     // Non zero (true) if callbacks are currently enabled
-static const VmPtr<bool32_t>    gbPSXCD_playflag(0x80077DC8);           // If true then we are playing cd audio
-static const VmPtr<bool32_t>    gbPSXCD_loopflag(0x80077DD8);           // If true then the currently played cd audio track will be looped
-static const VmPtr<bool32_t>    gbPSXCD_seeking_for_play(0x80077D5C);   // If true then we are currently seeking to the location where the cd audio track being played will start
+static const VmPtr<bool32_t>    gbPSXCD_IsCdInit(0x80077D70);               // If true then the 'psxcd' module has been initialized
+static const VmPtr<bool32_t>    gbPSXCD_init_pos(0x80077D74);               // Set to true when we know the current position of the CD, false otherwise
+static const VmPtr<bool32_t>    gbPSXCD_async_on(0x80077D64);               // True when there is an asynchronous read happening
+static const VmPtr<int32_t>     gbPSXCD_cb_enable_flag(0x80077D7C);         // Non zero (true) if callbacks are currently enabled
+static const VmPtr<bool32_t>    gbPSXCD_playflag(0x80077DC8);               // If true then we are playing cd audio
+static const VmPtr<bool32_t>    gbPSXCD_loopflag(0x80077DD8);               // If true then the currently played cd audio track will be looped
+static const VmPtr<bool32_t>    gbPSXCD_seeking_for_play(0x80077D5C);       // If true then we are currently seeking to the location where the cd audio track being played will start
+static const VmPtr<bool32_t>    gbPSXCD_waiting_for_pause(0x80077D60);      // If true then we are waiting for a cd 'pause' operation to complete
 
 // Whether the cdrom is currently in data or audio mode.
 // 0 = audio mode, 1 = data mode, -1 = undefined.
@@ -33,6 +37,7 @@ static const VmPtr<CdlLOC>          gPSXCD_cur_io_loc(0x80077D78);          // C
 
 // Audio mode stuff
 static const VmPtr<CdlLOC>          gPSXCD_lastloc(0x80077DF4);             // The last valid intended cd-audio disc seek location
+static const VmPtr<CdlLOC>          gPSXCD_newloc(0x80077DF0);              // Last known location for cd audio playback, this gets continously saved to so we can restore if we want to pause
 static const VmPtr<CdlLOC>          gPSXCD_cdloc(0x80077DE8);               // Temporary CdlLOC variable used in various places
 static const VmPtr<int32_t>         gPSXCD_playvol(0x80077DCC);             // Specified playback volume for cd audio
 
@@ -556,7 +561,7 @@ void psxcd_set_data_mode() noexcept {
         const int32_t cdVol = psxspu_get_cd_vol();
 
         if (cdVol != 0) {
-            psxspu_start_cd_fade(250, 0);
+            psxspu_start_cd_fade(FADE_TIME_MS, 0);
 
             while (psxspu_get_cd_fade_status()) {
                 // Wait for the fade to complete...
@@ -1790,66 +1795,62 @@ loc_80040D98:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Pause cd audio playback and make a note of where we paused at
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_pause() noexcept {
-loc_80040DD0:
-    v0 = lw(gp + 0x814);                                // Load from: gPSXCD_lastloc (80077DF4)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    sw(0, gp + 0x7E8);                                  // Store to: gbPSXCD_playflag (80077DC8)
-    sw(0, gp + 0x77C);                                  // Store to: gbPSXCD_seeking_for_play (80077D5C)
-    if (v0 == 0) goto loc_80040E64;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DF0;                                       // Result = gPSXCD_newloc (80077DF0)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_newloc + 3 (80077DF3) (80077DF3)
-    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_newloc (80077DF0)
-    swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    swr(v0, a0);                                        // Store to: gPSXCD_lastloc (80077DF4)
-    v0 = psxspu_get_cd_vol();
-    a0 = 0xFA;                                          // Result = 000000FA
-    if (v0 == 0) goto loc_80040E3C;
-    a1 = 0;                                             // Result = 00000000
-    psxspu_start_cd_fade(a0, a1);
-loc_80040E2C:
-    v0 = psxspu_get_cd_fade_status();
-    if (v0 != 0) goto loc_80040E2C;
-loc_80040E3C:
+    // No longer playing anything
+    *gbPSXCD_playflag = false;
+    *gbPSXCD_seeking_for_play = false;
+
+    // If we did not start playback of anything (never set a sector location) then we don't need to do anything else
+    if (*gPSXCD_lastloc == 0)
+        return;
+
+    // Save the last location we read from so we can restore in 'psxcd_restart'
+    *gPSXCD_lastloc = *gPSXCD_newloc;
+
+    // Quickly fade out cd audio if playing
+    const int32_t startCdVol = psxspu_get_cd_vol();
+
+    if (startCdVol != 0) {
+        psxspu_start_cd_fade(FADE_TIME_MS, 0);
+
+        while (psxspu_get_cd_fade_status()) {
+            // Wait for the fade to complete...
+            // TODO: PC-PSX: yield CPU cycles here and handle window events if pausing.
+        }
+    }
+    
+    // Ensure no active commands, and issue the pause command
     psxcd_sync();
-    a0 = 9;                                             // Result = 00000009
-    a1 = 0;                                             // Result = 00000000
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0x780);                                 // Store to: gbPSXCD_waiting_for_pause (80077D60)
-    v0 = 9;                                             // Result = 00000009
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    _thunk_LIBCD_CdControlF();
-loc_80040E64:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    *gbPSXCD_waiting_for_pause = true;
+    *gPSXCD_cdl_com = CdlPause;
+    LIBCD_CdControlF(CdlPause, nullptr);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Reinitialize cdrom handling and switch into audio mode.
-// The cdrom is positioned at the last intended location.
+// Restart cd audio playback: playback resumes from where the cd was last paused
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_restart(const int32_t vol) noexcept {
-    // Only if we had issued some sort of seek command before (have used the cd a bit)
-    if (*gPSXCD_lastloc != 0) {
-        // Switch to audio mode
-        psxcd_set_audio_mode();
+    // Only do the restart if we had paused previously (have a saved sector position)
+    if (*gPSXCD_lastloc == 0)
+        return;
 
-        // Reset all these variables
-        *gPSXCD_cdloc = *gPSXCD_lastloc;
-        *gbPSXCD_playflag = true;
-        *gbPSXCD_seeking_for_play = true;
-        *gPSXCD_playcount = 0;
-        *gPSXCD_playvol = vol;
+    // Switch to audio mode
+    psxcd_set_audio_mode();
 
-        // Seek to the last intended cd location
-        *gPSXCD_cdl_com = CdlSeekP;        
-        LIBCD_CdControlF(CdlSeekP, (const uint8_t*) gPSXCD_cdloc.get());
-    }
+    // Reset all these variables
+    *gPSXCD_cdloc = *gPSXCD_lastloc;
+    *gbPSXCD_playflag = true;
+    *gbPSXCD_seeking_for_play = true;
+    *gPSXCD_playcount = 0;
+    *gPSXCD_playvol = vol;
+
+    // Seek to the last intended cd location
+    *gPSXCD_cdl_com = CdlSeekP;        
+    LIBCD_CdControlF(CdlSeekP, (const uint8_t*) gPSXCD_cdloc.get());
 }
 
 void psxcd_elapsed_sectors() noexcept {
