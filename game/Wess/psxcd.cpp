@@ -19,7 +19,7 @@ static const VmPtr<CdlLOC[CdlMAXTOC]>   gTrackCdlLOC(0x800783F8);
 
 // Various flags
 static const VmPtr<bool32_t>    gbPSXCD_IsCdInit(0x80077D70);               // If true then the 'psxcd' module has been initialized
-static const VmPtr<bool32_t>    gbPSXCD_init_pos(0x80077D74);               // Set to true when we know the current position of the CD, false otherwise
+static const VmPtr<bool32_t>    gbPSXCD_init_pos(0x80077D74);               // If this flag is false then we need to initialize the cd position for data reading (we don't know it), true if we initialized the cd position
 static const VmPtr<bool32_t>    gbPSXCD_async_on(0x80077D64);               // True when there is an asynchronous read happening
 static const VmPtr<int32_t>     gbPSXCD_cb_enable_flag(0x80077D7C);         // Non zero (true) if callbacks are currently enabled
 static const VmPtr<bool32_t>    gbPSXCD_playflag(0x80077DC8);               // If true then we are playing cd audio
@@ -1441,44 +1441,37 @@ void _thunk_psxcd_close() noexcept {
     psxcd_close(*vmAddrToPtr<PsxCd_File>(a0));
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Switches the cdrom into audio playback mode if in data mode
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_set_audio_mode() noexcept {
-loc_80040838:
-    v0 = lw(gp + 0x78C);                                // Load from: gPSXCD_psxcd_mode (80077D6C)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 == 0) goto loc_800408C4;
-    v0 = lw(gp + 0x784);                                // Load from: gbPSXCD_async_on (80077D64)
-    a0 = 0xE;                                           // Result = 0000000E
-    if (v0 == 0) goto loc_80040864;
-    psxcd_async_read_cancel();
-    a0 = 0xE;                                           // Result = 0000000E
-loc_80040864:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7D9C;                                       // Result = gPSXCD_cd_param[0] (80077D9C)
-    v0 = 7;                                             // Result = 00000007
-    sb(v0, gp + 0x7BC);                                 // Store to: gPSXCD_cd_param[0] (80077D9C)
-    v0 = 0xE;                                           // Result = 0000000E
-    sw(0, gp + 0x794);                                  // Store to: gbPSXCD_init_pos (80077D74)
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_LIBCD_CdControl();
-    sw(0, gp + 0x78C);                                  // Store to: gPSXCD_psxcd_mode (80077D6C)
-    psxcd_sync();
-    a0 = 9;                                             // Result = 00000009
-    a1 = 0;                                             // Result = 00000000
-    v0 = 9;                                             // Result = 00000009
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    a2 = 0;                                             // Result = 00000000
-    _thunk_LIBCD_CdControl();
-    psxcd_sync();
-    LIBCD_CdFlush();
-    goto loc_800408CC;
-loc_800408C4:
-    psxcd_sync();
-loc_800408CC:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    if (*gPSXCD_psxcd_mode != 0) {
+        // Currently in data mode: cancel any async reads
+        if (*gbPSXCD_async_on) {
+            psxcd_async_read_cancel();
+        }
+
+        // No longer know what position the cdrom is on for data reading
+        *gbPSXCD_init_pos = false;
+
+        // Switch to audio mode
+        gPSXCD_cd_param[0] = CdlModeRept | CdlModeAP | CdlModeDA;
+        *gPSXCD_cdl_com = CdlSetmode;
+        LIBCD_CdControl(CdlSetmode, gPSXCD_cd_param.get(), nullptr);
+        *gPSXCD_psxcd_mode = 0;
+
+        // Finish up the last command and pause
+        psxcd_sync();
+        *gPSXCD_cdl_com = CdlPause;
+        LIBCD_CdControl(CdlPause, nullptr, nullptr);
+        psxcd_sync();
+
+        // Cancel any other commands in flight
+        LIBCD_CdFlush();
+    } else {
+        // Already in audio mode: just complete any pending commands
+        psxcd_sync();
+    }
 }
 
 void psxcd_set_loop_volume() noexcept {
