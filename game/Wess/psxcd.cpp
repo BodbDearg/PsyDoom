@@ -1765,34 +1765,37 @@ loc_80040D48:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Stop playback of cd audio.
+// Unlike 'psxcd_pause' playback CANNOT be resumed by calling 'psxcd_restart' afterwards.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_stop() noexcept {
-loc_80040D58:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    sw(0, gp + 0x7E8);                                  // Store to: gbPSXCD_playflag (80077DC8)
-    sw(0, gp + 0x7F8);                                  // Store to: gbPSXCD_loopflag (80077DD8)
-    sw(0, gp + 0x77C);                                  // Store to: gbPSXCD_seeking_for_play (80077D5C)
-    sw(0, gp + 0x814);                                  // Store to: gPSXCD_lastloc (80077DF4)
-    v0 = psxspu_get_cd_vol();
-    a0 = 0xFA;                                          // Result = 000000FA
-    if (v0 == 0) goto loc_80040D98;
-    a1 = 0;                                             // Result = 00000000
-    psxspu_start_cd_fade(a0, a1);
-loc_80040D88:
-    v0 = psxspu_get_cd_fade_status();
-    if (v0 != 0) goto loc_80040D88;
-loc_80040D98:
+    // No longer playing anything
+    *gbPSXCD_playflag = false;
+    *gbPSXCD_loopflag = false;
+    *gbPSXCD_seeking_for_play = false;
+
+    // Unlike 'psxcd_pause' DON'T remember where to resume playback from, this is a 'stop' command
+    *gPSXCD_lastloc = 0;
+
+    // Quickly fade out cd audio if playing
+    const int32_t startCdVol = psxspu_get_cd_vol();
+
+    if (startCdVol != 0) {
+        psxspu_start_cd_fade(FADE_TIME_MS, 0);
+
+        while (psxspu_get_cd_fade_status()) {
+            // Wait for the fade to complete...
+            // TODO: PC-PSX: yield CPU cycles here and handle window events if pausing.
+        }
+    }
+
+    // Ensure no active commands, and issue the pause command
     psxcd_sync();
-    a0 = 9;                                             // Result = 00000009
-    a1 = 0;                                             // Result = 00000000
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0x780);                                 // Store to: gbPSXCD_waiting_for_pause (80077D60)
-    v0 = 9;                                             // Result = 00000009
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    _thunk_LIBCD_CdControlF();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    *gbPSXCD_waiting_for_pause = true;
+    *gPSXCD_cdl_com = CdlPause;
+    LIBCD_CdControlF(CdlPause, nullptr);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
