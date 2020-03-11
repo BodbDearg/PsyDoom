@@ -25,8 +25,6 @@ static const VmPtr<int32_t> gVBlanksUntilCreditScreenUpdate(0x80077CCC);
 // Startup/init logic for the credits screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void START_Credits() noexcept {
-    sp -= 0x28;
-    
     // Cache required textures and set initial screen state
     I_LoadAndCacheTexLump(*gTex_IDCRED1, "IDCRED1", 0);
     I_LoadAndCacheTexLump(*gTex_IDCRED2, "IDCRED2", 0);
@@ -37,23 +35,21 @@ void START_Credits() noexcept {
     *gCreditsPage = 0;
     
     // Play the credits music
-    a0 = gCDTrackNum[cdmusic_credits_demo];
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = *gCdMusicVol;
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0;                                             // Result = 00000000
-    sw(gCDTrackNum[cdmusic_credits_demo], sp + 0x10);
-    sw(*gCdMusicVol, sp + 0x14);
-    sw(0, sp + 0x18);
-    sw(0, sp + 0x1C);
-    psxcd_play_at_andloop();
+    psxcd_play_at_andloop(
+        gCDTrackNum[cdmusic_credits_demo],
+        *gCdMusicVol,
+        0,
+        0,
+        gCDTrackNum[cdmusic_credits_demo],
+        *gCdMusicVol,
+        0,
+        0
+    );
     
     // TODO: comment on elapsed sector stuff here
     do {
         psxcd_elapsed_sectors();
     } while (v0 == 0);
-    
-    sp += 0x28;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

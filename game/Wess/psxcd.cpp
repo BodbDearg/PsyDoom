@@ -42,8 +42,12 @@ static const VmPtr<CdlLOC>      gPSXCD_newloc(0x80077DF0);              // Last 
 static const VmPtr<CdlLOC>      gPSXCD_beginloc(0x80077DF8);            // Start sector of the current audio track
 static const VmPtr<CdlLOC>      gPSXCD_cdloc(0x80077DE8);               // Temporary CdlLOC variable used in various places
 static const VmPtr<int32_t>     gPSXCD_playvol(0x80077DCC);             // Specified playback volume for cd audio
+static const VmPtr<int32_t>     gPSXCD_loopvol(0x80077DDC);             // Volume to playback cd audio when looping around again
 static const VmPtr<CdlATV>      gPSXCD_cdatv(0x80077DEC);               // The volume mixing levels of cd audio sent to the SPU for output
 static const VmPtr<int32_t>     gPSXCD_playfadeuptime(0x80077DD0);      // If > 0 then fade up cd audio volume in this amount of time (MS) when beginning playback
+static const VmPtr<int32_t>     gPSXCD_loopfadeuptime(0x80077DE4);      // Same as the regular 'fade up time', but used when we loop
+static const VmPtr<int32_t>     gPSXCD_looptrack(0x80077DD4);           // What track to loop after the current one ends
+static const VmPtr<int32_t>     gPSXCD_loopsectoroffset(0x80077DE0);    // The sector offset to begin the loop track at
 
 // Number of sectors read in data and audio mode respectively
 static const VmPtr<int32_t>     gPSXCD_readcount(0x80077D94);           // Number of data sectors read
@@ -460,7 +464,7 @@ loc_8003F7DC:
     sw(a1, sp + 0x14);
     sw(a2, sp + 0x18);
     sw(a3, sp + 0x1C);
-    psxcd_play_at_andloop();
+    psxcd_play_at_andloop(a0, a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14), lw(sp + 0x18), lw(sp + 0x1C));
     goto loc_8003F878;
 loc_8003F838:
     if (s0 != v0) goto loc_8003F848;
@@ -1444,94 +1448,73 @@ void psxcd_set_audio_mode() noexcept {
     }
 }
 
-void psxcd_set_loop_volume() noexcept {
-    sw(a0, gp + 0x7FC);                                 // Store to: gPSXCD_loopvol (80077DDC)
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the volume to playback cd audio when looping around again
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxcd_set_loop_volume(const int32_t vol) noexcept {
+    *gPSXCD_loopvol = vol;
 }
 
-void psxcd_play_at_andloop() noexcept {
-loc_800408E8:
-    sp -= 0x38;
-    sw(s5, sp + 0x24);
-    s5 = lw(sp + 0x48);
-    sw(s1, sp + 0x14);
-    s1 = a1;
-    sw(s2, sp + 0x18);
-    s2 = a2;
-    sw(s3, sp + 0x1C);
-    sw(s6, sp + 0x28);
-    s6 = lw(sp + 0x4C);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 -= 0x7C08;                                       // Result = gTrackCdlLOC[0] (800783F8)
-    sw(s7, sp + 0x2C);
-    s7 = lw(sp + 0x50);
-    a0 <<= 2;
-    sw(s0, sp + 0x10);
-    s0 = a0 + v0;
-    sw(ra, sp + 0x30);
-    sw(s4, sp + 0x20);
-    v0 = lw(s0);
-    s4 = lw(sp + 0x54);
-    s3 = a3;
-    if (v0 == 0) goto loc_80040A18;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Play the given cd track and loop another track afterwards using the specified parameters.
+//
+//  track:              The track to play
+//  vol:                Track volume
+//  sectorOffset:       To start past the normal track start
+//  fadeUpTime:         Milliseconds to fade in the track, or '0' if instant play
+//  loopTrack:          What track to play in loop after this track ends
+//  loopVol:            What volume to play that looped track at
+//  loopSectorOffest:   What sector offset to use for the looped track
+//  loopFadeUpTime:     Fade up time for the looped track
+//------------------------------------------------------------------------------------------------------------------------------------------
+void psxcd_play_at_andloop(
+    const int32_t track,
+    const int32_t vol,
+    const int32_t sectorOffset,
+    const int32_t fadeUpTime,
+    const int32_t loopTrack,
+    const int32_t loopVol,
+    const int32_t loopSectorOffest,
+    const int32_t loopFadeUpTime
+) noexcept {
+    // If this is an invalid track then do nothing
+    const CdlLOC& trackLoc = gTrackCdlLOC[track];
+
+    if (trackLoc == 0)
+        return;
+
+    // Ensure we are in audio mode before beginning playback
     psxcd_set_audio_mode();
-    sw(s1, gp + 0x7EC);                                 // Store to: gPSXCD_playvol (80077DCC)
-    a0 = s0;
-    _thunk_LIBCD_CdPosToInt();
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
-    a0 = v0 + s2;
-    _thunk_LIBCD_CdIntToPos();
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DE8;                                       // Result = gPSXCD_cdloc (80077DE8)
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0x7E8);                                 // Store to: gbPSXCD_playflag (80077DC8)
-    sw(v0, gp + 0x7F8);                                 // Store to: gbPSXCD_loopflag (80077DD8)
-    sw(v0, gp + 0x77C);                                 // Store to: gbPSXCD_seeking_for_play (80077D5C)
-    v0 = 0x16;                                          // Result = 00000016
-    sw(0, gp + 0x7B8);                                  // Store to: gPSXCD_playcount (80077D98)
-    sw(s5, gp + 0x7F4);                                 // Store to: gPSXCD_looptrack (80077DD4)
-    sw(s6, gp + 0x7FC);                                 // Store to: gPSXCD_loopvol (80077DDC)
-    sw(s7, gp + 0x800);                                 // Store to: gPSXCD_loopsectoroffset (80077DE0)
-    sw(s4, gp + 0x804);                                 // Store to: gPSXCD_loopfadeuptime (80077DE4)
-    sw(s3, gp + 0x7F0);                                 // Store to: gPSXCD_playfadeuptime (80077DD0)
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    a0 = 0x16;                                          // Result = 00000016
-    _thunk_LIBCD_CdControlF();
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    v0 = lwl(v0, s0 + 0x3);
-    v0 = lwr(v0, s0);
-    swl(v0, a1 + 0x3);                                  // Store to: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    swr(v0, a1);                                        // Store to: gPSXCD_lastloc (80077DF4)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7DF8;                                       // Result = gPSXCD_beginloc (80077DF8)
-    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
-    swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_beginloc + 3 (80077DFB) (80077DFB)
-    swr(v0, a0);                                        // Store to: gPSXCD_beginloc (80077DF8)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DF4;                                       // Result = gPSXCD_lastloc (80077DF4)
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7DF0;                                       // Result = gPSXCD_newloc (80077DF0)
-    v0 = lwl(v0, a1 + 0x3);                             // Load from: gPSXCD_lastloc + 3 (80077DF7) (80077DF7)
-    v0 = lwr(v0, a1);                                   // Load from: gPSXCD_lastloc (80077DF4)
-    swl(v0, a0 + 0x3);                                  // Store to: gPSXCD_newloc + 3 (80077DF3) (80077DF3)
-    swr(v0, a0);                                        // Store to: gPSXCD_newloc (80077DF0)
-loc_80040A18:
-    ra = lw(sp + 0x30);
-    s7 = lw(sp + 0x2C);
-    s6 = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x38;
-    return;
+
+    // Figure out the position to begin playback from
+    const int32_t trackBegSector = LIBCD_CdPosToInt(trackLoc);
+    LIBCD_CdIntToPos(trackBegSector + sectorOffset, *gPSXCD_cdloc);
+
+    // Init playback stats
+    *gbPSXCD_playflag = true;
+    *gbPSXCD_loopflag = true;    
+    *gPSXCD_playvol = vol;
+    *gPSXCD_playfadeuptime = fadeUpTime;
+    *gPSXCD_playcount = 0;
+    
+    // Save the parameters for when we loop
+    *gPSXCD_looptrack = loopTrack;
+    *gPSXCD_loopvol = loopVol;
+    *gPSXCD_loopsectoroffset = loopSectorOffest;
+    *gPSXCD_loopfadeuptime = loopFadeUpTime;
+
+    // Seek to the track start
+    *gbPSXCD_seeking_for_play = true;
+    *gPSXCD_cdl_com = CdlSeekP;
+    LIBCD_CdControlF(CdlSeekP, (const uint8_t*) gPSXCD_cdloc.get());
+
+    // Remember the track start location as the begin, current and last valid intended location.
+    //
+    // This looks like a BUG in the original code to me? Should it not be saving 'gPSXCD_cdloc'?
+    // Otherwise the sector offset specified is forgotten about...
+    *gPSXCD_newloc = trackLoc;
+    *gPSXCD_lastloc = trackLoc;
+    *gPSXCD_beginloc = trackLoc;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

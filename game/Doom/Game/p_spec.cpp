@@ -839,7 +839,8 @@ loc_80026ABC:
     a3 = 0;                                             // Result = 00000000
     sw(v0, sp + 0x10);
     sw(a1, sp + 0x14);
-    psxcd_play_at_andloop();
+    psxcd_play_at_andloop(a0, a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14), lw(sp + 0x18), lw(sp + 0x1C));
+
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_80026B00:

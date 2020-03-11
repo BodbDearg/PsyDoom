@@ -284,8 +284,6 @@ extern void psxcd_init() noexcept;
 extern void psxcd_exit() noexcept;
 extern void psxcd_async_on() noexcept;
 extern void psxcd_async_read() noexcept;
-extern void psxcd_set_loop_volume() noexcept;
-extern void psxcd_play_at_andloop() noexcept;
 extern void psxcd_play_status() noexcept;
 extern void psxcd_elapsed_sectors() noexcept;
 extern void S_SetSfxVolume() noexcept;
@@ -780,8 +778,6 @@ namespace PsxVm {
         { 0x8003F98C, &psxcd_exit },
         { 0x8003FBBC, &psxcd_async_on },
         { 0x8003FEA4, &psxcd_async_read },
-        { 0x800408DC, &psxcd_set_loop_volume },
-        { 0x800408E8, &psxcd_play_at_andloop },
         { 0x80040CC0, &psxcd_play_status },
         { 0x80040EFC, &psxcd_elapsed_sectors },
         { 0x80040FAC, &S_SetSfxVolume },

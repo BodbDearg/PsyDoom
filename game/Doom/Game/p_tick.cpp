@@ -572,16 +572,17 @@ void P_Start() noexcept {
     // Otherwise play some sequencer music for the level.
     if (!*gbDemoPlayback) {
         S_StartMusicSequence();
-    } else {
-        a0 = gCDTrackNum[cdmusic_credits_demo];
-        a1 = *gCdMusicVol;
-        a2 = 0;
-        a3 = 0;
-        sw(gCDTrackNum[cdmusic_credits_demo], sp + 0x10);
-        sw(*gCdMusicVol, sp + 0x14);
-        sw(0, sp + 0x18);
-        sw(0, sp + 0x1C);    
-        psxcd_play_at_andloop();
+    } else {  
+        psxcd_play_at_andloop(
+            gCDTrackNum[cdmusic_credits_demo],
+            *gCdMusicVol,
+            0,
+            0,
+            gCDTrackNum[cdmusic_credits_demo],
+            *gCdMusicVol,
+            0,
+            0
+        );
     }
 }
 

@@ -54,8 +54,19 @@ int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) 
 int32_t psxcd_tell(PsxCd_File& file) noexcept;
 void psxcd_close(PsxCd_File& file) noexcept;
 void psxcd_set_audio_mode() noexcept;
-void psxcd_set_loop_volume() noexcept;
-void psxcd_play_at_andloop() noexcept;
+void psxcd_set_loop_volume(const int32_t vol) noexcept;
+
+void psxcd_play_at_andloop(
+    const int32_t track,
+    const int32_t vol,
+    const int32_t sectorOffset,
+    const int32_t fadeUpTime,
+    const int32_t loopTrack,
+    const int32_t loopVol,
+    const int32_t loopSectorOffest,
+    const int32_t loopFadeUpTime
+) noexcept;
+
 void psxcd_play_at(const int32_t track, const int32_t vol, const int32_t sectorOffset) noexcept;
 void psxcd_play(const int32_t track, const int32_t vol) noexcept;
 void psxcd_seek_for_play_at(const int32_t track, const int32_t sectorOffset) noexcept;

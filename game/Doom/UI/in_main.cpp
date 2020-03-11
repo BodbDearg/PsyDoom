@@ -10,7 +10,6 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
-#include "PcPsx/Finally.h"
 #include "PcPsx/Macros.h"
 #include "PsxVm/PsxVm.h"
 #include "pw_main.h"
@@ -107,10 +106,6 @@ static const VmPtr<int32_t[MAXPLAYERS]>     gIntermissionStage(0x800782DC);
 // Initialization/setup logic for the intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_Start() noexcept {
-    // TODO: clean this up once we no longer use the VM stack
-    sp -= 0x28;
-    auto cleanupStackFrame = finally([](){ sp += 0x28; });
-
     // Clear out purgable textures and cache the background for the intermission
     I_PurgeTexCache();
     I_LoadAndCacheTexLump(*gTex_BACK, "BACK", 0);
@@ -160,15 +155,16 @@ void IN_Start() noexcept {
     }
     
     // Play the intermission cd track
-    a0 = gCDTrackNum[cdmusic_intermission];
-    a1 = *gCdMusicVol;
-    a2 = 0;
-    a3 = 0;
-    sw(gCDTrackNum[cdmusic_intermission], sp + 0x10);
-    sw(*gCdMusicVol, sp + 0x14);
-    sw(0, sp + 0x18);
-    sw(0, sp + 0x1C);
-    psxcd_play_at_andloop();
+    psxcd_play_at_andloop(
+        gCDTrackNum[cdmusic_intermission],
+        *gCdMusicVol,
+        0,
+        0,
+        gCDTrackNum[cdmusic_intermission],
+        *gCdMusicVol,
+        0,
+        0
+    );
 
     // TODO: comment on elapsed sector stuff here
     do {

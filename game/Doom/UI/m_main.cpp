@@ -10,7 +10,6 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
-#include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
@@ -107,10 +106,6 @@ gameaction_t RunMenu() noexcept {
 // Setup/init logic for the main menu
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Start() noexcept {
-    // TODO: remove once there is no more VM stack use!
-    sp -= 0x28;
-    auto cleanupStackFrame = finally([]{ sp += 0x28; });
-
     // Assume no networked game initially
     *gNetGame = gt_single;
     *gCurPlayerIndex = 0;
@@ -155,15 +150,16 @@ void M_Start() noexcept {
     }
 
     // Play the main menu music
-    a0 = gCDTrackNum[cdmusic_main_menu];
-    a1 = *gCdMusicVol;
-    a2 = 0;
-    a3 = 0;
-    sw(gCDTrackNum[cdmusic_main_menu], sp + 0x10);
-    sw(*gCdMusicVol, sp + 0x14);
-    sw(0, sp + 0x18);
-    sw(0, sp + 0x1C);
-    psxcd_play_at_andloop();
+    psxcd_play_at_andloop(
+        gCDTrackNum[cdmusic_main_menu],
+        *gCdMusicVol,
+        0,
+        0,
+        gCDTrackNum[cdmusic_main_menu],
+        *gCdMusicVol,
+        0,
+        0
+    );
 
     // TODO: comment on elapsed sector stuff here
     do {

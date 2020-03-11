@@ -13,7 +13,6 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "m_main.h"
-#include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -99,10 +98,6 @@ static const VmPtr<texture_t>       gTex_DEMON(0x80097BB0);             // The d
 // Initializes the Ultimate DOOM finale screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Start() noexcept {
-    // TODO: remove this eventually when no more VM stack is being used
-    sp -= 0x28;
-    auto cleanupStackFrame = finally([](){ sp += 0x28; });
-
     // Draw the loading plaque, purge the texture cache and load up the background needed
     I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
     I_PurgeTexCache();
@@ -114,15 +109,16 @@ void F1_Start() noexcept {
     gFinIncomingLine[0] = 0;
 
     // Play the finale cd track
-    a0 = gCDTrackNum[cdmusic_finale_doom1];
-    a1 = *gCdMusicVol;
-    a2 = 0;
-    a3 = 0;
-    sw(gCDTrackNum[cdmusic_credits_demo], sp + 0x10);
-    sw(*gCdMusicVol, sp + 0x14);
-    sw(0, sp + 0x18);
-    sw(0, sp + 0x1C);
-    psxcd_play_at_andloop();
+    psxcd_play_at_andloop(
+        gCDTrackNum[cdmusic_finale_doom1],
+        *gCdMusicVol,
+        0,
+        0,
+        gCDTrackNum[cdmusic_credits_demo],
+        *gCdMusicVol,
+        0,
+        0
+    );
 
     // TODO: comment on elapsed sector stuff here
     do {
@@ -214,10 +210,6 @@ void F1_Drawer() noexcept {
 // Initializes the DOOM II finale screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Start() noexcept {
-    // TODO: remove this eventually when no more VM stack is being used
-    sp -= 0x68;
-    auto cleanupStackFrame = finally([](){ sp += 0x68; });
-    
     // Show the loading plaque and purge the texture cache
     I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);    
     I_PurgeTexCache();
@@ -249,15 +241,16 @@ void F2_Start() noexcept {
     S_LoadSoundAndMusic();
 
     // Play the finale cd track
-    a0 = gCDTrackNum[cdmusic_finale_doom2];
-    a1 = *gCdMusicVol;
-    a2 = 0;
-    a3 = 0;
-    sw(gCDTrackNum[cdmusic_credits_demo], sp + 0x10);
-    sw(*gCdMusicVol, sp + 0x14);
-    sw(0, sp + 0x18);
-    sw(0, sp + 0x1C);
-    psxcd_play_at_andloop();
+    psxcd_play_at_andloop(
+        gCDTrackNum[cdmusic_finale_doom2],
+        *gCdMusicVol,
+        0,
+        0,
+        gCDTrackNum[cdmusic_credits_demo],
+        *gCdMusicVol,
+        0,
+        0
+    );
 
     // TODO: comment on elapsed sector stuff here
     do {
