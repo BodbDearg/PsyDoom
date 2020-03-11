@@ -282,13 +282,8 @@ extern void _thunk_FixedDiv() noexcept;
 
 extern void psxcd_init() noexcept;
 extern void psxcd_exit() noexcept;
-extern void _thunk_psxcd_open() noexcept;
 extern void psxcd_async_on() noexcept;
-extern void _thunk_psxcd_read() noexcept;
 extern void psxcd_async_read() noexcept;
-extern void _thunk_psxcd_seek() noexcept;
-extern void _thunk_psxcd_tell() noexcept;
-extern void _thunk_psxcd_close() noexcept;
 extern void psxcd_set_loop_volume() noexcept;
 extern void psxcd_play_at_andloop() noexcept;
 extern void psxcd_play_status() noexcept;
@@ -783,13 +778,8 @@ namespace PsxVm {
         { 0x8003F180, &_thunk_FixedDiv },
         { 0x8003F8B0, &psxcd_init },
         { 0x8003F98C, &psxcd_exit },
-        { 0x8003FACC, &_thunk_psxcd_open },
         { 0x8003FBBC, &psxcd_async_on },
-        { 0x8003FE20, &_thunk_psxcd_read },
         { 0x8003FEA4, &psxcd_async_read },
-        { 0x800406D4, &_thunk_psxcd_seek },
-        { 0x800407C8, &_thunk_psxcd_tell },
-        { 0x80040830, &_thunk_psxcd_close },
         { 0x800408DC, &psxcd_set_loop_volume },
         { 0x800408E8, &psxcd_play_at_andloop },
         { 0x80040CC0, &psxcd_play_status },

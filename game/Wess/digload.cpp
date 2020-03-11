@@ -83,7 +83,7 @@ void lcd_open() noexcept {
 loc_80048FF8:
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    _thunk_psxcd_open();
+    v0 = ptrToVmAddr(psxcd_open((CdMapTbl_File) a0));
     a3 = 0x80080000;                                    // Result = 80080000
     a3 -= 0xD20;                                        // Result = 8007F2E0
     a2 = v0;

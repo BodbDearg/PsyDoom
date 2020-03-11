@@ -23,14 +23,14 @@ loc_800415EC:
     wess_init();
     psxcd_init();
     a0 = 0xC9;                                          // Result = 000000C9
-    _thunk_psxcd_open();
+    v0 = ptrToVmAddr(psxcd_open((CdMapTbl_File) a0));
     a0 = s1;
     s0 = v0;
     a1 = lw(s0 + 0x4);
     a2 = s0;
-    _thunk_psxcd_read();
+    v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
     a0 = s0;
-    _thunk_psxcd_close();
+    psxcd_close(*vmAddrToPtr<PsxCd_File>(a0));
     s2 = 0x80080000;                                    // Result = 80080000
     s2 -= 0x1364;                                       // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
     a0 = s2;                                            // Result = gDoomSfxLoadedSamples[0] (8007EC9C)

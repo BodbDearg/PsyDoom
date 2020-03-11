@@ -642,10 +642,6 @@ PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept {
     return gPSXCD_cdfile.get();
 }
 
-void _thunk_psxcd_open() noexcept {
-    v0 = ptrToVmAddr(psxcd_open((CdMapTbl_File) a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes some positional related variables
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -823,10 +819,6 @@ int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexce
     } while (bIsDoingAsyncRead);
     
     return retBytesRead;
-}
-
-void _thunk_psxcd_read() noexcept {
-    v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1379,10 +1371,6 @@ int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) 
     return 0;
 }
 
-void _thunk_psxcd_seek() noexcept {
-    v0 = psxcd_seek(*vmAddrToPtr<PsxCd_File>(a0), a1, (PsxCd_SeekMode) a2);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Returns the current IO offset within the given file
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1407,10 +1395,6 @@ int32_t psxcd_tell(PsxCd_File& file) noexcept {
     }
 }
 
-void _thunk_psxcd_tell() noexcept {
-    v0 = psxcd_tell(*vmAddrToPtr<PsxCd_File>(a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Placeholder for 'closing' a cd file - didn't need to do anything for retail PSX DOOM.
 // In the retail .exe an open cd file is simply a struct describing the current IO location, filename etc.
@@ -1425,10 +1409,6 @@ void psxcd_close([[maybe_unused]] PsxCd_File& file) noexcept {
     #endif
 
     // Nothing to do if this is an ordinary game file...
-}
-
-void _thunk_psxcd_close() noexcept {
-    psxcd_close(*vmAddrToPtr<PsxCd_File>(a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

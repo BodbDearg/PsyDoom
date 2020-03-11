@@ -139,7 +139,7 @@ void module_open() noexcept {
 loc_80043D20:
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    _thunk_psxcd_open();
+    v0 = ptrToVmAddr(psxcd_open((CdMapTbl_File) a0));
     a3 = 0x80080000;                                    // Result = 80080000
     a3 -= 0x1004;                                       // Result = gWess_module_fileref[0] (8007EFFC)
     a2 = v0;
@@ -171,7 +171,7 @@ void module_read() noexcept {
 loc_80043D94:
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    _thunk_psxcd_read();
+    v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -181,7 +181,7 @@ void module_seek() noexcept {
 loc_80043DB4:
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    _thunk_psxcd_seek();
+    v0 = psxcd_seek(*vmAddrToPtr<PsxCd_File>(a0), a1, (PsxCd_SeekMode) a2);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -190,7 +190,7 @@ loc_80043DB4:
 void module_tell() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    _thunk_psxcd_tell();
+    v0 = psxcd_tell(*vmAddrToPtr<PsxCd_File>(a0));
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -200,7 +200,7 @@ void module_close() noexcept {
 loc_80043DF4:
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    _thunk_psxcd_close();
+    psxcd_close(*vmAddrToPtr<PsxCd_File>(a0));
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -215,7 +215,7 @@ loc_80043E14:
 void data_open() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    _thunk_psxcd_open();
+    v0 = ptrToVmAddr(psxcd_open((CdMapTbl_File) a0));
     a3 = 0x80080000;                                    // Result = 80080000
     a3 -= 0xFDC;                                        // Result = gWess_data_fileref[0] (8007F024)
     a2 = v0;
@@ -260,7 +260,7 @@ loc_80043E90:
     s0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
     a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
     a2 = v1;
-    _thunk_psxcd_read();
+    v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
     a0 = s2;
     v0 = LIBSPU_SpuSetTransferStartAddr(a0);
     a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
@@ -281,7 +281,7 @@ loc_80043F00:
     s0 += 0x6D7C;                                       // Result = gWess_data_read_chunk2[0] (80096D7C)
     a0 = s0;                                            // Result = gWess_data_read_chunk2[0] (80096D7C)
     a2 = v1;
-    _thunk_psxcd_read();
+    v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
     v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
     a0 = s2;
     v0 = LIBSPU_SpuSetTransferStartAddr(a0);
@@ -296,7 +296,7 @@ loc_80043F54:
     s0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
     a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
     a2 = v1;
-    _thunk_psxcd_read();
+    v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
     v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
     a0 = s2;
     v0 = LIBSPU_SpuSetTransferStartAddr(a0);
@@ -337,7 +337,7 @@ void data_read() noexcept {
 loc_80043FF4:
     a0 = s2;
     a2 = 0;                                             // Result = 00000000
-    _thunk_psxcd_seek();
+    v0 = psxcd_seek(*vmAddrToPtr<PsxCd_File>(a0), a1, (PsxCd_SeekMode) a2);
     v0 = 1;                                             // Result = 00000001
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0xFB4);                                 // Store to: 8007F04C
@@ -374,7 +374,7 @@ loc_80044058:
 void data_close() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    _thunk_psxcd_close();
+    psxcd_close(*vmAddrToPtr<PsxCd_File>(a0));
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;

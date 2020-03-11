@@ -37,36 +37,22 @@ static_assert(sizeof(PsxCd_MapTblEntry) == 8);
 
 void psxcd_sync() noexcept;
 bool psxcd_critical_sync() noexcept;
-
 void PSXCD_cbcomplete(const CdlSyncStatus status, const uint8_t pResult[8]) noexcept;
 void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcept;
-
 void psxcd_disable_callbacks() noexcept;
 void psxcd_enable_callbacks() noexcept;
 void psxcd_init() noexcept;
 void psxcd_exit() noexcept;
 void psxcd_set_data_mode() noexcept;
-
 PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept;
-void _thunk_psxcd_open() noexcept;
-
 void psxcd_init_pos() noexcept;
 void psxcd_async_on() noexcept;
 bool psxcd_seeking_for_play() noexcept;
 bool psxcd_waiting_for_pause() noexcept;
-
 int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept;
-void _thunk_psxcd_read() noexcept;
-
 int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept;
-void _thunk_psxcd_seek() noexcept;
-
 int32_t psxcd_tell(PsxCd_File& file) noexcept;
-void _thunk_psxcd_tell() noexcept;
-
 void psxcd_close(PsxCd_File& file) noexcept;
-void _thunk_psxcd_close() noexcept;
-
 void psxcd_set_audio_mode() noexcept;
 void psxcd_set_loop_volume() noexcept;
 void psxcd_play_at_andloop() noexcept;
