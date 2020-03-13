@@ -10,6 +10,24 @@
 #include "PsyQ/LIBCD.h"
 #include "wessarc.h"
 
+// PSXCD module commands within PsxCd_Command
+enum PsxCd_CmdOp : int32_t {
+    PSXCD_COMMAND_END       = 0,    // Finish up the async read
+    PSXCD_COMMAND_COPY      = 1,
+    PSXCD_COMMAND_SEEK      = 2,
+    PSXCD_COMMAND_READ      = 3,
+    PSXCD_COMMAND_READCOPY  = 4
+};
+
+// Holds a command to read sector data
+struct PsxCd_Command {
+    PsxCd_CmdOp     command;        // What command was executed
+    int32_t         amount;         // Number of bytes involved in the read/copy operation
+    VmPtr<uint8_t>  pdest;          // Destination to save bytes to (if required by command type)
+    VmPtr<uint8_t>  psrc;           // Source to get bytes from (if required by command type)
+    CdlLOC          io_loc;         // I/O location for the command
+};
+
 // Time it takes to fade out CD audio (milliseconds)
 static constexpr int32_t FADE_TIME_MS = 250;
 
@@ -32,9 +50,18 @@ static const VmPtr<bool32_t>    gbPSXCD_critical_error(0x80077D80);         // T
 // 0 = audio mode, 1 = data mode, -1 = undefined.
 static const VmPtr<int32_t>     gPSXCD_psxcd_mode(0x80077D6C);
 
-// Data mode: currently open file and I/O location
-static const VmPtr<PsxCd_File>  gPSXCD_cdfile(0x8007831C);              // Used to hold a file temporarily after opening
-static const VmPtr<CdlLOC>      gPSXCD_cur_io_loc(0x80077D78);          // Current IO location on disc
+// Data reading mode stuff
+static const VmPtr<PsxCd_File>      gPSXCD_cdfile(0x8007831C);              // Used to hold a file temporarily after opening
+static const VmPtr<CdlLOC>          gPSXCD_cur_io_loc(0x80077D78);          // Current IO location on disc
+static const VmPtr<CdlLOC>          gPSXCD_sectorbuf_contents(0x80077D68);  // Where the current sector buffer contents came from on disc
+static const VmPtr<VmPtr<void>>     gpPSXCD_lastdestptr(0x80077DC0);        // Async read: destination memory chunk being written to
+static const VmPtr<int32_t>         gPSXCD_lastreadbytes(0x80077DC4);       // Async read: number of bytes being read
+static const VmPtr<PsxCd_File>      gPSXCD_lastfilestruct(0x800783D0);      // Async read: details for the file being read
+static const VmPtr<int32_t>         gPSXCD_cur_cmd(0x80077DBC);             // Async read: index of the current command being issued in the loop iteration
+static const VmPtr<PsxCd_Command>   gPSXCD_psxcd_cmds(0x80078344);          // Async read: commands issued to the cd
+
+// Sector buffer for when we are reading data
+static const VmPtr<uint8_t[CD_SECTOR_SIZE]> gPSXCD_sectorbuf(0x800A9518);
 
 // Audio mode stuff
 static const VmPtr<CdlLOC>      gPSXCD_lastloc(0x80077DF4);             // The last valid intended cd-audio disc seek location
@@ -76,7 +103,7 @@ static CdlCB gPSXCD_cbreadysave;
 
 // Function forward declarations
 void psxcd_async_read_cancel() noexcept;
-void psxcd_async_read() noexcept;
+static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd_File& file) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Simple memcpy() operation
@@ -719,7 +746,7 @@ loc_8003FC54:
     a1 = lw(gp + 0x7E4);                                // Load from: gPSXCD_lastreadbytes (80077DC4)
     a2 = 0x80080000;                                    // Result = 80080000
     a2 -= 0x7C58;                                       // Result = gPSXCD_newfilestruct[0] (800783A8)
-    psxcd_async_read();
+    v0 = psxcd_async_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
     v0 = 1;                                             // Result = 00000001
     goto loc_8003FCB4;
 loc_8003FCB0:
@@ -808,11 +835,7 @@ int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexce
 
     // Kick off the async read.
     // Note: number of bytes read will not match request if there was an error!
-    a0 = ptrToVmAddr(pDest);
-    a1 = numBytes;
-    a2 = ptrToVmAddr(&file);
-    psxcd_async_read();
-    const int32_t retBytesRead = v0;
+    const int32_t retBytesRead = psxcd_async_read(pDest, numBytes, file);
 
     // Continue reading until done
     bool bIsDoingAsyncRead = true;
@@ -844,483 +867,221 @@ void psxcd_async_read_cancel() noexcept {
     LIBCD_CdControlF(CdlPause, nullptr);
 }
 
-void psxcd_async_read() noexcept {
-loc_8003FEA4:
-    sp -= 0x40;
-    sw(s5, sp + 0x2C);
-    s5 = a1;
-    sw(s1, sp + 0x1C);
-    s1 = a2;
-    sw(ra, sp + 0x3C);
-    sw(fp, sp + 0x38);
-    sw(s7, sp + 0x34);
-    sw(s6, sp + 0x30);
-    sw(s4, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s0, sp + 0x18);
-    sw(a0, sp + 0x10);
-    if (s5 == 0) goto loc_8004063C;
-    v0 = lw(s1);
-    fp = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_8004063C;
-    s7 = 0x80080000;                                    // Result = 80080000
-    s7 -= 0x7CAC;                                       // Result = gPSXCD_psxcd_cmd_1[4] (80078354)
-loc_8003FEF8:
-    s6 = 0;                                             // Result = 00000000
-    psxcd_set_data_mode();
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 -= 0x7C30;                                       // Result = gPSXCD_lastfilestruct[0] (800783D0)
-    a2 = s1;
-    t1 = lw(sp + 0x10);
-    t0 = s1 + 0x20;
-    sw(s5, gp + 0x7E4);                                 // Store to: gPSXCD_lastreadbytes (80077DC4)
-    sw(t1, gp + 0x7E0);                                 // Store to: gpPSXCD_lastdestptr (80077DC0)
-loc_8003FF1C:
-    v0 = lw(a2);
-    v1 = lw(a2 + 0x4);
-    a0 = lw(a2 + 0x8);
-    a1 = lw(a2 + 0xC);
-    sw(v0, a3);
-    sw(v1, a3 + 0x4);
-    sw(a0, a3 + 0x8);
-    sw(a1, a3 + 0xC);
-    a2 += 0x10;
-    a3 += 0x10;
-    if (a2 != t0) goto loc_8003FF1C;
-    v0 = lw(a2);
-    v1 = lw(a2 + 0x4);
-    sw(v0, a3);
-    sw(v1, a3 + 0x4);
-    s4 = lw(sp + 0x10);
-    t0 = lw(s1 + 0x1C);
-    sw(0, gp + 0x7DC);                                  // Store to: gPSXCD_cur_cmd (80077DBC)
-    s2 = s5;
-    if (t0 == 0) goto loc_80040174;
-    v0 = (s2 < 0x800);
-    if (s5 == 0) goto loc_80040178;
-    v0 = lw(gp + 0x794);                                // Load from: gbPSXCD_init_pos (80077D74)
-    if (v0 == 0) goto loc_8003FF98;
-    v1 = *gPSXCD_cur_io_loc;
-    v0 = lw(s1 + 0x18);
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0x800;                                     // Result = 00000800
-        if (bJump) goto loc_8003FFF8;
-    }
-loc_8003FF98:
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    t1 = 2;                                             // Result = 00000002
-    at = 0x80080000;                                    // Result = 80080000
-    sw(t1, at - 0x7CBC);                                // Store to: gPSXCD_psxcd_cmd_1[0] (80078344)
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7CAC;                                       // Result = gPSXCD_psxcd_cmd_1[4] (80078354)
-    v1 = lwl(v1, s1 + 0x1B);
-    v1 = lwr(v1, s1 + 0x18);
-    swl(v1, a2 + 0x3);                                  // Store to: gPSXCD_psxcd_cmd_1[4] (80078357)
-    swr(v1, a2);                                        // Store to: gPSXCD_psxcd_cmd_1[4] (80078354)
-    v0++;
-    sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
-    a1 = gPSXCD_cur_io_loc;
-    v0 = lwl(v0, s1 + 0x1B);
-    v0 = lwr(v0, s1 + 0x18);    
-    *gPSXCD_cur_io_loc = v0;
-    sw(fp, gp + 0x794);                                 // Store to: gbPSXCD_init_pos (80077D74)
-    v0 = 0x800;                                         // Result = 00000800
-loc_8003FFF8:
-    a3 = v0 - t0;
-    v0 = (s2 < a3);
-    if (v0 == 0) goto loc_8004000C;
-    a3 = s2;
-loc_8004000C:
-    a0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v1 = a0 << 2;
-    if (a0 != 0) goto loc_80040030;
-    v1 = lw(gp + 0x788);                                // Load from: gPSXCD_sectorbuf_contents (80077D68)
-    v0 = *gPSXCD_cur_io_loc;
-    {
-        const bool bJump = (v1 == v0);
-        v1 = a0 << 2;
-        if (bJump) goto loc_800400E8;
-    }
-loc_80040030:
-    v1 += a0;
-    v1 <<= 2;
-    v0 = 4;                                             // Result = 00000004
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v1;
-    sw(v0, at);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x6AE8;                                       // Result = gPSXCD_sectorbuf[0] (800A9518)
-    v0 += t0;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB8;                                       // Result = gPSXCD_psxcd_cmd_1[1] (80078348)
-    at += v1;
-    sw(a3, at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB4;                                       // Result = gPSXCD_psxcd_cmd_1[2] (8007834C)
-    at += v1;
-    sw(s4, at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB0;                                       // Result = gPSXCD_psxcd_cmd_1[3] (80078350)
-    at += v1;
-    sw(v0, at);
-    v1 += s7;
-    a2 = gPSXCD_cur_io_loc;
-    v0 = *gPSXCD_cur_io_loc;
-    swl(v0, v1 + 0x3);
-    swr(v0, v1);
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    a2 = gPSXCD_cur_io_loc;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7D68;                                       // Result = gPSXCD_sectorbuf_contents (80077D68)
-    v1 = *gPSXCD_cur_io_loc;
-    swl(v1, a1 + 0x3);                                  // Store to: gPSXCD_sectorbuf_contents + 3 (80077D6B) (80077D6B)
-    swr(v1, a1);                                        // Store to: gPSXCD_sectorbuf_contents (80077D68)
-    v0++;
-    sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
-    s2 -= a3;
-    goto loc_8004011C;
-loc_800400E8:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x6AE8;                                       // Result = gPSXCD_sectorbuf[0] (800A9518)
-    v0 += t0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(fp, at - 0x7CBC);                                // Store to: gPSXCD_psxcd_cmd_1[0] (80078344)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a3, at - 0x7CB8);                                // Store to: gPSXCD_psxcd_cmd_1[1] (80078348)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(s4, at - 0x7CB4);                                // Store to: gPSXCD_psxcd_cmd_1[2] (8007834C)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x7CB0);                                // Store to: gPSXCD_psxcd_cmd_1[3] (80078350)
-    sw(fp, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
-    s2 -= a3;
-loc_8004011C:
-    s4 += a3;
-    v1 = t0 + a3;
-    v0 = 0x800;                                         // Result = 00000800
-    sw(v1, s1 + 0x1C);
-    if (v1 != v0) goto loc_80040174;
-    a0 = gPSXCD_cur_io_loc;
-    _thunk_LIBCD_CdPosToInt();
-    a1 = gPSXCD_cur_io_loc;
-    a0 = v0 + 1;
-    _thunk_LIBCD_CdIntToPos();
-    a1 = gPSXCD_cur_io_loc;
-    v0 = *gPSXCD_cur_io_loc;
-    swl(v0, s1 + 0x1B);
-    swr(v0, s1 + 0x18);
-    sw(0, s1 + 0x1C);
-loc_80040174:
-    v0 = (s2 < 0x800);
-loc_80040178:
-    s3 = s2 >> 11;
-    if (v0 != 0) goto loc_8004031C;
-    v0 = lw(gp + 0x794);                                // Load from: gbPSXCD_init_pos (80077D74)
-    s0 = s3 << 11;
-    if (v0 == 0) goto loc_800401A4;
-    v1 = *gPSXCD_cur_io_loc;
-    v0 = lw(s1 + 0x18);
-    if (v1 == v0) goto loc_8004021C;
-loc_800401A4:
-    v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    t1 = 2;                                             // Result = 00000002
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v0;
-    sw(t1, at);
-    v0 += s7;
-    v1 = lwl(v1, s1 + 0x1B);
-    v1 = lwr(v1, s1 + 0x18);
-    swl(v1, v0 + 0x3);
-    swr(v1, v0);
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0++;
-    sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
-    a1 = gPSXCD_cur_io_loc;
-    v0 = lwl(v0, s1 + 0x1B);
-    v0 = lwr(v0, s1 + 0x18);
-    *gPSXCD_cur_io_loc = v0;
-    sw(fp, gp + 0x794);                                 // Store to: gbPSXCD_init_pos (80077D74)
-loc_8004021C:
-    v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    v1 = 3;                                             // Result = 00000003
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v0;
-    sw(v1, at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB8;                                       // Result = gPSXCD_psxcd_cmd_1[1] (80078348)
-    at += v0;
-    sw(s3, at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB4;                                       // Result = gPSXCD_psxcd_cmd_1[2] (8007834C)
-    at += v0;
-    sw(s4, at);
-    v0 = s4 & 3;
-    s4 += s0;
-    if (v0 == 0) goto loc_80040294;
-    a0 = gPSXCD_cur_io_loc;
-    _thunk_LIBCD_CdPosToInt();
-    v0 += s3;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7D68;                                       // Result = gPSXCD_sectorbuf_contents (80077D68)
-    a0 = v0 - 1;
-    _thunk_LIBCD_CdIntToPos();
-loc_80040294:
-    s2 -= s0;
-    v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    s0 = gPSXCD_cur_io_loc;
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    v0 += s7;
-    a2 = gPSXCD_cur_io_loc;
-    v1 = *gPSXCD_cur_io_loc;
-    swl(v1, v0 + 0x3);
-    swr(v1, v0);
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0++;
-    sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
-    a0 = s0;                                            // Result = gPSXCD_cur_io_loc (80077D78)
-    _thunk_LIBCD_CdPosToInt();
-    a0 = v0 + s3;
-    a1 = s0;                                            // Result = gPSXCD_cur_io_loc (80077D78)
-    _thunk_LIBCD_CdIntToPos();
-    sw(0, s1 + 0x1C);
-    a1 = gPSXCD_cur_io_loc;
-    v0 = *gPSXCD_cur_io_loc;
-    swl(v0, s1 + 0x1B);
-    swr(v0, s1 + 0x18);
-loc_8004031C:
-    if (s2 == 0) goto loc_8004047C;
-    v0 = lw(gp + 0x794);                                // Load from: gbPSXCD_init_pos (80077D74)
-    if (v0 == 0) goto loc_80040348;
-    v1 = *gPSXCD_cur_io_loc;
-    v0 = lw(s1 + 0x18);
-    if (v1 == v0) goto loc_800403C0;
-loc_80040348:
-    v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    t1 = 2;                                             // Result = 00000002
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v0;
-    sw(t1, at);
-    v0 += s7;
-    v1 = lwl(v1, s1 + 0x1B);
-    v1 = lwr(v1, s1 + 0x18);
-    swl(v1, v0 + 0x3);
-    swr(v1, v0);
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0++;
-    sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
-    a1 = gPSXCD_cur_io_loc;
-    v0 = lwl(v0, s1 + 0x1B);
-    v0 = lwr(v0, s1 + 0x18);
-    *gPSXCD_cur_io_loc = v0;
-    sw(fp, gp + 0x794);                                 // Store to: gbPSXCD_init_pos (80077D74)
-loc_800403C0:
-    v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    v1 = 4;                                             // Result = 00000004
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v0;
-    sw(v1, at);
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x6AE8;                                       // Result = gPSXCD_sectorbuf[0] (800A9518)
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB8;                                       // Result = gPSXCD_psxcd_cmd_1[1] (80078348)
-    at += v0;
-    sw(s2, at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB4;                                       // Result = gPSXCD_psxcd_cmd_1[2] (8007834C)
-    at += v0;
-    sw(s4, at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB0;                                       // Result = gPSXCD_psxcd_cmd_1[3] (80078350)
-    at += v0;
-    sw(v1, at);
-    v0 += s7;
-    a2 = gPSXCD_cur_io_loc;
-    v1 = *gPSXCD_cur_io_loc;
-    swl(v1, v0 + 0x3);
-    swr(v1, v0);
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    a2 = gPSXCD_cur_io_loc;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7D68;                                       // Result = gPSXCD_sectorbuf_contents (80077D68)
-    v1 = *gPSXCD_cur_io_loc;
-    swl(v1, a1 + 0x3);                                  // Store to: gPSXCD_sectorbuf_contents + 3 (80077D6B) (80077D6B)
-    swr(v1, a1);                                        // Store to: gPSXCD_sectorbuf_contents (80077D68)
-    sw(s2, s1 + 0x1C);
-    v0++;
-    sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
-loc_8004047C:
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v1 = v0 << 2;
-    v1 += v0;
-    v1 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v1;
-    sw(0, at);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7CBC);                               // Load from: gPSXCD_psxcd_cmd_1[0] (80078344)
-    sw(0, gp + 0x7DC);                                  // Store to: gPSXCD_cur_cmd (80077DBC)
-    if (v0 != fp) goto loc_80040508;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7CB4);                               // Load from: gPSXCD_psxcd_cmd_1[2] (8007834C)
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7CB0);                               // Load from: gPSXCD_psxcd_cmd_1[3] (80078350)
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7CB8);                               // Load from: gPSXCD_psxcd_cmd_1[1] (80078348)
-    PSXCD_psxcd_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0++;
-    v1 = v0 << 2;
-    v1 += v0;
-    v1 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v1;
-    v1 = lw(at);
-    sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
-    v0 = s5;
-    if (v1 == 0) goto loc_800406A0;
-loc_80040508:
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v1 = v0 << 2;
-    v1 += v0;
-    v1 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v1;
-    v0 = lw(at);
-    t1 = 2;                                             // Result = 00000002
-    if (v0 != t1) goto loc_8004059C;
-    psxcd_sync();
-    a0 = 2;                                             // Result = 00000002
-    a2 = 0;                                             // Result = 00000000
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    t1 = 2;                                             // Result = 00000002
-    sb(t1, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    a1 = v0 << 2;
-    a1 += v0;
-    a1 <<= 2;
-    a1 += s7;
-    _thunk_LIBCD_CdControl();
-    v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v1++;
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v0;
-    v0 = lw(at);
-    sw(v1, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s5;
-        if (bJump) goto loc_800406A0;
-    }
-loc_8004059C:
-    v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v0;
-    v1 = lw(at);
-    if (v1 == 0) goto loc_8004069C;
-    v0 = (i32(v1) < 5);
-    if (i32(v1) < 0) goto loc_8004063C;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < 3);
-        if (bJump) goto loc_8004063C;
-    }
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_800406A0;
-    }
-    v0 = psxcd_critical_sync();
-    a0 = 6;                                             // Result = 00000006
-    if (v0 == 0) goto loc_80040628;
-    a2 = 0;                                             // Result = 00000000
-    v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0 = 6;                                             // Result = 00000006
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    a1 = v1 << 2;
-    a1 += v1;
-    a1 <<= 2;
-    a1 += s7;
-    _thunk_LIBCD_CdControl();
-    v0 = psxcd_critical_sync();
-    if (v0 != 0) goto loc_80040630;
-loc_80040628:
-    s6 = 1;                                             // Result = 00000001
-    goto loc_80040644;
-loc_80040630:
-    sw(fp, gp + 0x784);                                 // Store to: gbPSXCD_async_on (80077D64)
-    goto loc_80040644;
-loc_8004063C:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_800406A0;
-loc_80040644:
-    v0 = s5;
-    if (s6 == 0) goto loc_800406A0;
-    a3 = s1;
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7C30;                                       // Result = gPSXCD_lastfilestruct[0] (800783D0)
-    t0 = a2 + 0x20;                                     // Result = gPSXCD_lastfilestruct[8] (800783F0)
-loc_8004065C:
-    v0 = lw(a2);
-    v1 = lw(a2 + 0x4);
-    a0 = lw(a2 + 0x8);
-    a1 = lw(a2 + 0xC);
-    sw(v0, a3);
-    sw(v1, a3 + 0x4);
-    sw(a0, a3 + 0x8);
-    sw(a1, a3 + 0xC);
-    a2 += 0x10;
-    a3 += 0x10;
-    if (a2 != t0) goto loc_8004065C;
-    v0 = lw(a2);
-    v1 = lw(a2 + 0x4);
-    sw(v0, a3);
-    sw(v1, a3 + 0x4);
-    if (s6 != 0) goto loc_8003FEF8;
-loc_8004069C:
-    v0 = s5;
-loc_800406A0:
-    ra = lw(sp + 0x3C);
-    fp = lw(sp + 0x38);
-    s7 = lw(sp + 0x34);
-    s6 = lw(sp + 0x30);
-    s5 = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x40;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Submit commands to the cdrom to do an asynchronous read of the specified number of bytes
+//------------------------------------------------------------------------------------------------------------------------------------------
+static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd_File& file) noexcept {
+    // If no bytes are being read or the file is invalid then there is nothing to do
+    if ((numBytes == 0) || (file.file.pos == 0))
+        return 0;
+
+    bool bReadError;
+
+    do {
+        // Clear the error flag and ensure we are in data mode
+        bReadError = false;
+        psxcd_set_data_mode();
+        
+        // Save read details
+        *gpPSXCD_lastdestptr = pDest;
+        *gPSXCD_lastreadbytes = numBytes;
+        *gPSXCD_lastfilestruct = file;
+
+        // We start putting commands at the beginning of the command list
+        *gPSXCD_cur_cmd = 0;
+
+        // First handle the read location being misaligned with sector boundaries and queue read/copy commands for up until the end of the start sector.
+        // This is done to get I/O to sector align so we can read a series of whole sectors in one continous operation (below).
+        int32_t numBytesLeft = numBytes;
+        uint8_t* pDestBytes = (uint8_t*) pDest;
+
+        if ((file.io_block_offset != 0) && (numBytesLeft != 0)) {
+            // Do we need to seek to the read location in the file? If so then queue up a seek command
+            if ((!*gbPSXCD_init_pos) || (*gPSXCD_cur_io_loc != file.new_io_loc)) {
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command = PSXCD_COMMAND_SEEK;
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].io_loc = file.new_io_loc;
+                *gPSXCD_cur_cmd += 1;
+
+                // We know where we are going to be now
+                *gPSXCD_cur_io_loc = file.new_io_loc;
+                *gbPSXCD_init_pos = true;
+            }
+            
+            // Decide how many bytes do we want to read from the sector
+            const int32_t sectorBytesLeft = CD_SECTOR_SIZE - file.io_block_offset;
+            const int32_t bytesToCopy = (numBytesLeft <= sectorBytesLeft) ? numBytesLeft : sectorBytesLeft;
+
+            // Do we already have the required sector in the sector buffer?
+            // If that is the case we can just copy the buffer contents, otherwise we need to read from the CD and then copy.
+            if ((*gPSXCD_cur_cmd == PSXCD_COMMAND_END) && (*gPSXCD_sectorbuf_contents == *gPSXCD_cur_io_loc)) {
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command = PSXCD_COMMAND_COPY;                    
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].psrc = gPSXCD_sectorbuf.get() + file.io_block_offset;
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest = pDestBytes;
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].amount = bytesToCopy;
+
+                *gPSXCD_cur_cmd += 1;
+            } else {
+                // Haven't got the sector buffered, need to read first before we can copy
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command = PSXCD_COMMAND_READCOPY;
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].psrc = gPSXCD_sectorbuf.get() + file.io_block_offset;
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest = pDestBytes;
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].amount = bytesToCopy;
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].io_loc = *gPSXCD_cur_io_loc;
+
+                *gPSXCD_sectorbuf_contents = *gPSXCD_cur_io_loc;
+                *gPSXCD_cur_cmd += 1;
+            }
+
+            // Move along past the bytes read
+            numBytesLeft -= bytesToCopy;
+            pDestBytes += bytesToCopy;
+            file.io_block_offset = file.io_block_offset + bytesToCopy;
+
+            // Move onto a new sector if required
+            if (file.io_block_offset == CD_SECTOR_SIZE) {
+                const int32_t curSector = LIBCD_CdPosToInt(*gPSXCD_cur_io_loc);
+                LIBCD_CdIntToPos(curSector + 1, *gPSXCD_cur_io_loc);
+                file.new_io_loc = *gPSXCD_cur_io_loc;
+                file.io_block_offset = 0;
+            }
+        }
+        
+        // Next queue commands to read as many whole sectors as we can in one read operation.
+        const int32_t wholeSectorsToRead = numBytesLeft / CD_SECTOR_SIZE;
+
+        if (wholeSectorsToRead > 0) {
+            // Do we need to seek to the read location in the file? If so then queue up a seek command
+            if ((!*gbPSXCD_init_pos) || (*gPSXCD_cur_io_loc != file.new_io_loc)) {
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command = PSXCD_COMMAND_SEEK;
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].io_loc = file.new_io_loc;
+                *gPSXCD_cur_cmd += 1;
+
+                // We know where we are going to be now
+                *gPSXCD_cur_io_loc = file.new_io_loc;
+                *gbPSXCD_init_pos = true;
+            }
+
+            // How many bytes would be read by this operation?
+            const int32_t wholeSectorBytes = wholeSectorsToRead * CD_SECTOR_SIZE;
+            
+            // Queue the read command
+            gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command = PSXCD_COMMAND_READ;
+            gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].amount = wholeSectorsToRead;
+            gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest = pDestBytes;
+
+            // TODO: what is this check trying to do?
+            if ((uintptr_t) pDestBytes & 3) {
+                const int32_t curSector = LIBCD_CdPosToInt(*gPSXCD_cur_io_loc);
+                LIBCD_CdIntToPos(curSector + wholeSectorsToRead - 1, *gPSXCD_sectorbuf_contents);
+            }
+
+            gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].io_loc = *gPSXCD_cur_io_loc;
+            *gPSXCD_cur_cmd += 1;
+
+            // Move along in the ouput
+            pDestBytes += wholeSectorBytes;
+            numBytesLeft -= wholeSectorBytes;
+
+            // Figure out which sector to go to next
+            {
+                const int32_t curSector = LIBCD_CdPosToInt(*gPSXCD_cur_io_loc);
+                LIBCD_CdIntToPos(curSector + wholeSectorsToRead, *gPSXCD_cur_io_loc);
+            }
+
+            file.io_block_offset = 0;
+            file.new_io_loc = *gPSXCD_cur_io_loc;
+        }
+
+        // Queue commands to read the remaining few bits of data
+        if (numBytesLeft != 0) {
+            // Do we need to seek to the read location in the file? If so then queue up a seek command
+            if ((!*gbPSXCD_init_pos) || (*gPSXCD_cur_io_loc != file.new_io_loc)) {
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command = PSXCD_COMMAND_SEEK;
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].io_loc = file.new_io_loc;
+                *gPSXCD_cur_cmd += 1;
+
+                // We know where we are going to be now
+                *gPSXCD_cur_io_loc = file.new_io_loc;
+                *gbPSXCD_init_pos = true;
+            }
+
+            // Queue the read and copy command
+            gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command = PSXCD_COMMAND_READCOPY;
+            gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].psrc = gPSXCD_sectorbuf.get();
+            gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest = pDestBytes;
+            gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].amount = numBytesLeft;
+            gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].io_loc = *gPSXCD_cur_io_loc;
+            *gPSXCD_cur_cmd += 1;
+
+            // Move along the I/O location
+            *gPSXCD_sectorbuf_contents = *gPSXCD_cur_io_loc;
+            file.io_block_offset = numBytesLeft;
+        }
+
+        // Terminate the command list.
+        // After this all 'commands' are queued and we can begin issuing them to the CDROM via LIBCD.
+        gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command = PSXCD_COMMAND_END;
+        *gPSXCD_cur_cmd = 0;
+
+        // Issue command: are we to copy bytes to the destination buffer?
+        if (gPSXCD_psxcd_cmds[0].command == PSXCD_COMMAND_COPY) {            
+            PSXCD_psxcd_memcpy(gPSXCD_psxcd_cmds[0].pdest.get(), gPSXCD_psxcd_cmds[0].psrc.get(), gPSXCD_psxcd_cmds[0].amount);
+            *gPSXCD_cur_cmd += 1;
+
+            // No more commands?
+            if (gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command == PSXCD_COMMAND_END)
+                return numBytes;
+        }
+
+        // Issue command: are we to seek to a location?
+        if (gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command == PSXCD_COMMAND_SEEK) {
+            psxcd_sync();
+            *gPSXCD_cdl_com = CdlSetloc;
+            LIBCD_CdControl(CdlSetloc, (const uint8_t*) &gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].io_loc, nullptr);
+            *gPSXCD_cur_cmd += 1;
+
+            // No more commands?
+            if (gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command == PSXCD_COMMAND_END)
+                return numBytes;
+        }
+
+        // Issue whatever remains in the command list at this point
+        switch (gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command) {
+            // No more commands?
+            case PSXCD_COMMAND_END:
+                return numBytes;
+
+            // Are we to read? If so then kick that off
+            case PSXCD_COMMAND_READ:
+            case PSXCD_COMMAND_READCOPY: {
+                if (psxcd_critical_sync()) {
+                    *gPSXCD_cdl_com = CdlReadN;
+                    LIBCD_CdControl(CdlReadN, (const uint8_t*) &gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].io_loc, nullptr);
+                    
+                    if (psxcd_critical_sync()) {
+                        // We are now doing an asynchronous read.
+                        // The flag won't be cleared until it is done or cancelled.
+                        *gbPSXCD_async_on = true; 
+                    } else {
+                        bReadError = true;
+                    }
+                } else {
+                    bReadError = true;
+                }
+            }   break;
+
+            // Unknown/unexpected command here: read failed!
+            default:
+                return 0;
+        }
+
+        // If a read error happened then try redo the entire read
+        if (bReadError) {
+            file = *gPSXCD_lastfilestruct;
+        }
+    } while (bReadError);
+    
+    return numBytes;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
