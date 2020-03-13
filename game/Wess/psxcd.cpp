@@ -4,11 +4,11 @@
 #include "PcPsx/ModMgr.h"
 #include "PcPsx/Types.h"
 #include "psxspu.h"
-#include "PsxVm/PsxVm.h"
 #include "PsxVm/VmPtr.h"
-#include "PsxVm/VmSVal.h"
 #include "PsyQ/LIBCD.h"
-#include "wessarc.h"
+
+#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PsxVm/PsxVm.h"
 
 // PSXCD module commands within PsxCd_Command
 enum PsxCd_CmdOp : int32_t {
@@ -1296,33 +1296,23 @@ void psxcd_restart(const int32_t vol) noexcept {
     LIBCD_CdControlF(CdlSeekP, (const uint8_t*) gPSXCD_cdloc.get());
 }
 
-void psxcd_elapsed_sectors() noexcept {
-    // FIXME: returning 1 so some loops don't get stuck
-    v0 = 1;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells how many sectors have elapsed during cd playback
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t psxcd_elapsed_sectors() noexcept {
+    // PC-PSX: Update audio: this will also advance cdrom playback in case this is being polled in a loop
+    #if PC_PSX_DOOM_MODS
+        emulate_sound_if_required();
+    #endif
 
-loc_80040EFC:
-    v0 = lw(gp + 0x818);                                // Load from: gPSXCD_beginloc (80077DF8)
-    sp -= 0x18;
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
-    if (v0 == 0) goto loc_80040F38;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7DF0;                                       // Result = gPSXCD_newloc (80077DF0)
-    _thunk_LIBCD_CdPosToInt();
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7DF8;                                       // Result = gPSXCD_beginloc (80077DF8)
-    s0 = v0;
-    _thunk_LIBCD_CdPosToInt();
-    v0 = s0 - v0;
-    goto loc_80040F3C;
-loc_80040F38:
-    v0 = 0;                                             // Result = 00000000
-loc_80040F3C:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    // If we haven't started playback then no sectors are elapsed
+    if (*gPSXCD_beginloc == 0)
+        return 0;
+
+    // Return the difference between the current and the track start sector
+    const int32_t begSector = LIBCD_CdPosToInt(*gPSXCD_beginloc);
+    const int32_t curSector = LIBCD_CdPosToInt(*gPSXCD_newloc);
+    return curSector - begSector;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

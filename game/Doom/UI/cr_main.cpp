@@ -46,10 +46,8 @@ void START_Credits() noexcept {
         0
     );
     
-    // TODO: comment on elapsed sector stuff here
-    do {
-        psxcd_elapsed_sectors();
-    } while (v0 == 0);
+    // Wait until some cd audio has been read
+    while (psxcd_elapsed_sectors() == 0) {}
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

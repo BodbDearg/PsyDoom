@@ -161,10 +161,8 @@ void M_Start() noexcept {
         0
     );
 
-    // TODO: comment on elapsed sector stuff here
-    do {
-        psxcd_elapsed_sectors();
-    } while (v0 == 0);
+    // Wait until some cd audio has been read
+    while (psxcd_elapsed_sectors() == 0) {}
 
     // Don't clear the screen when setting a new draw environment.
     // Need to preserve the screen contents for the cross fade:

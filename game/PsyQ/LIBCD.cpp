@@ -70,9 +70,10 @@ static uint8_t readCdCmdResultByte() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Step the CD-ROM and invoke 'data ready' callbacks if a new sector was read
+// NEW for PC-PSX: step the CD-ROM and invoke 'data ready' callbacks if a new sector was read.
+// This method is CRUCIAL for correct functionality (to invoke callbacks) because I do not use emulated interrupts at all.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void stepCdromWithCallbacks() noexcept {
+void stepCdromWithCallbacks() noexcept {
     // Advance the cdrom emulation: this may result in a sector being read
     device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
     const int32_t oldReadSector = cdrom.readSector;
@@ -84,7 +85,9 @@ static void stepCdromWithCallbacks() noexcept {
         cdrom.dataBuffer = cdrom.rawSector;
         cdrom.dataBufferPointer = 0;
         cdrom.status.dataFifoEmpty = 1;
-        
+
+        // Note update the status byte with the latest cdrom status before we invoke the callback
+        gLastCdCmdResult[0] = cdrom.stat._reg;
         invokeCallback(gpLIBCD_CD_cbready, CdlDataReady, gLastCdCmdResult);
     }
 }

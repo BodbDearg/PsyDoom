@@ -24,6 +24,11 @@
     #pragma warning(pop)
 #endif
 
+// External function required from LIBCD.
+// This is a slight layering violation (this module should not know app code) but is required for correct functionality.
+// This steps the cdrom drive and invokes any data callbacks that would be invoked by new sectors being available.
+void stepCdromWithCallbacks() noexcept;
+
 using namespace PsxVm;
 
 namespace PsxVm {
@@ -483,8 +488,8 @@ void emulate_sound_if_required() noexcept {
         while (!spu.bufferReady) {
             // Read more CD data if we are playing music
             if (cdrom.stat.play && cdrom.audio.empty()) {
-                cdrom.bForceSectorRead = true;  // Force an immediate read on step()
-                cdrom.step();
+                cdrom.bForceSectorRead = true;  // Force an immediate read on the next step
+                stepCdromWithCallbacks();
             }
 
             // Step the spu and interrupts
@@ -508,7 +513,7 @@ void emulate_sound_if_required() noexcept {
 }
 
 void emulate_cdrom() noexcept {
-    gpCdrom->step();
+    stepCdromWithCallbacks();
 }
 
 uint32_t ptrToVmAddr(const void* const ptr) noexcept {

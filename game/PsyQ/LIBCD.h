@@ -115,7 +115,7 @@ void LIBCD_CdInit() noexcept;
 bool LIBCD_CdReset(const int32_t mode) noexcept;
 void LIBCD_CdFlush() noexcept;
 
-CdlSyncStatus LIBCD_CdSync([[maybe_unused]] const int32_t mode, uint8_t pResult[8]) noexcept;
+CdlSyncStatus LIBCD_CdSync(const int32_t mode, uint8_t pResult[8]) noexcept;
 void _thunk_LIBCD_CdSync() noexcept;
 
 CdlSyncStatus LIBCD_CdReady(const int32_t mode, uint8_t pResult[8]) noexcept;
