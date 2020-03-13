@@ -71,7 +71,7 @@ void psxcd_play_at(const int32_t track, const int32_t vol, const int32_t sectorO
 void psxcd_play(const int32_t track, const int32_t vol) noexcept;
 void psxcd_seek_for_play_at(const int32_t track, const int32_t sectorOffset) noexcept;
 void psxcd_seek_for_play(const int32_t track) noexcept;
-void psxcd_play_status() noexcept;
+bool psxcd_play_status() noexcept;
 void psxcd_stop() noexcept;
 void psxcd_pause() noexcept;
 void psxcd_restart(const int32_t vol) noexcept;

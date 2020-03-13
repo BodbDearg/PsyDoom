@@ -547,8 +547,8 @@ bool psxcd_async_on() noexcept {
         LIBCD_CdFlush();
 
         *gPSXCD_cdl_err_count += 1;        
-        *gPSXCD_cdl_err_intr = *gPSXCD_check_intr + 100;    // '+': Just to make the codes more unique, so their source is known
         *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
+        *gPSXCD_cdl_err_intr = *gPSXCD_check_intr + 100;    // '+': Just to make the codes more unique, so their source is known
         *gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
 
         // Clear the error flag and retry the last read command
@@ -1177,50 +1177,32 @@ void psxcd_seek_for_play(const int32_t track) noexcept {
     psxcd_seek_for_play_at(track, 0);
 }
 
-void psxcd_play_status() noexcept {
-    sp -= 0x18;
-    v1 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
-    v0 = 3;                                             // Result = 00000003
-    sw(ra, sp + 0x10);
-    if (v1 == v0) goto loc_80040CE0;
-    v0 = 0x16;                                          // Result = 00000016
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80040D48;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if cd audio is currently playing, returning 'true' if that is the case
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool psxcd_play_status() noexcept {
+    // Was the last command to play or to seek to a physical (audio) location?
+    // If not then we cannot be playing:
+    if ((*gPSXCD_cdl_com == CdlPlay) || (*gPSXCD_cdl_com == CdlSeekP)) {        
+        *gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result.get());
+
+        // Make sure playback is ok: if there was an error or the motor stopped then stop current commands and record the error
+        if ((*gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {            
+            LIBCD_CdFlush();
+
+            *gPSXCD_cdl_err_count += 1;
+            *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
+            *gPSXCD_cdl_err_intr = *gPSXCD_check_intr + 90;     // '+': Just to make the codes more unique, so their source is known
+            *gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
+
+            return false;   // Bah... Take better care of your discs! :P
+        }
+
+        // Playing cd audio without any issues! 
+        return true;
     }
-loc_80040CE0:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DB4;                                       // Result = gPSXCD_check_result[0] (80077DB4)
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBCD_CdSync();
-    sw(v0, gp + 0x7D0);                                 // Store to: gPSXCD_check_intr (80077DB0)
-    v1 = 5;                                             // Result = 00000005
-    if (v0 == v1) goto loc_80040D14;
-    v0 = lbu(gp + 0x7D4);                               // Load from: gPSXCD_check_result[0] (80077DB4)
-    v0 &= 2;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80040D48;
-    }
-loc_80040D14:
-    LIBCD_CdFlush();
-    v1 = lw(gp + 0x7D0);                                // Load from: gPSXCD_check_intr (80077DB0)
-    a1 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
-    a2 = lbu(gp + 0x7D4);                               // Load from: gPSXCD_check_result[0] (80077DB4)
-    a0 = lw(gp + 0x7AC);                                // Load from: gPSXCD_cdl_errcount (80077D8C)
-    v1 += 0x5A;
-    a0++;
-    sw(v1, gp + 0x7A8);                                 // Store to: gPSXCD_cdl_errintr (80077D88)
-    sb(a1, gp + 0x7B3);                                 // Store to: gPSXCD_cdl_errcom (80077D93)
-    sb(a2, gp + 0x7B1);                                 // Store to: gPSXCD_cdl_errstat (80077D91)
-    sw(a0, gp + 0x7AC);                                 // Store to: gPSXCD_cdl_errcount (80077D8C)
-    v0 = 0;                                             // Result = 00000000
-loc_80040D48:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
