@@ -356,6 +356,8 @@ bool LIBCD_CdMix(const CdlATV& vol) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads the requested number of 32-bit words from the CDROM's sector data buffer.
 // Returns 'true' if successful, which will be always.
+//
+// N.B: this function originally required that the dest pointer be 32-bit aligned, but I'm not requiring that for this reimplmentation.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool LIBCD_CdGetSector(void* const pDst, const int32_t readSizeInWords) noexcept {
     device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;

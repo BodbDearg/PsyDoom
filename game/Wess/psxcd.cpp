@@ -13,10 +13,10 @@
 // PSXCD module commands within PsxCd_Command
 enum PsxCd_CmdOp : int32_t {
     PSXCD_COMMAND_END       = 0,    // Finish up the async read
-    PSXCD_COMMAND_COPY      = 1,
-    PSXCD_COMMAND_SEEK      = 2,
-    PSXCD_COMMAND_READ      = 3,
-    PSXCD_COMMAND_READCOPY  = 4
+    PSXCD_COMMAND_COPY      = 1,    // Copy from the sector buffer to the destination
+    PSXCD_COMMAND_SEEK      = 2,    // Seek to a location
+    PSXCD_COMMAND_READ      = 3,    // Read a number of whole sectors to the destination
+    PSXCD_COMMAND_READCOPY  = 4     // Read a partial sector to the destination, using the sector buffer as an intermediate location
 };
 
 // Holds a command to read sector data
@@ -86,6 +86,7 @@ static const VmPtr<CdlCmd>      gPSXCD_cdl_err_com(0x80077D93);         // The l
 
 static const VmPtr<uint8_t[8]>  gPSXCD_cd_param(0x80077D9C);            // Parameters for the last command issued to the cdrom via 'LIBCD_CdControl' (if there were parameters)
 
+static const VmPtr<int32_t>     gPSXCD_cdl_intr(0x80077D84);            // Int result of the last read command issued to the cdrom
 static const VmPtr<int32_t>     gPSXCD_sync_intr(0x80077DA4);           // Int result of the last 'LIBCD_CdSync' call when waiting until command completion
 static const VmPtr<int32_t>     gPSXCD_check_intr(0x80077DB0);          // Int result of the last 'LIBCD_CdSync' call when querying the status of something
 static const VmPtr<int32_t>     gPSXCD_cdl_err_intr(0x80077D88);        // Int result of the last 'LIBCD_CdSync' call with an error
@@ -94,6 +95,8 @@ static const VmPtr<uint8_t[8]>  gPSXCD_sync_result(0x80077DA8);         // Resul
 static const VmPtr<uint8_t[8]>  gPSXCD_check_result(0x80077DB4);        // Result bytes for the last 'LIBCD_CdSync' call when querying the status of something
 
 static const VmPtr<int32_t>     gPSXCD_cdl_err_count(0x80077D8C);       // A count of how many cd errors that occurred
+
+static const VmPtr<uint8_t>     gPSXCD_cdl_stat(0x80077D90);            // The first result byte (status byte) for the last read command
 static const VmPtr<uint8_t>     gPSXCD_cdl_err_stat(0x80077D91);        // The first result byte (status byte) for when the last error which occurred
 
 // Previous 'CdReadyCallback' and 'CDSyncCallback' functions used by LIBCD prior to initializing this module.
@@ -221,269 +224,143 @@ void PSXCD_cbcomplete(const CdlSyncStatus status, const uint8_t pResult[8]) noex
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Callback invoked by the PsyQ SDK (and ultimately by the hardware) for when we are finished reading a cd sector
+//------------------------------------------------------------------------------------------------------------------------------------------
 void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcept {
-    // TEMP until this is converted to C++
-    struct ResultBytes {
-        char bytes[8];
-    };
-
-    a0 = status;
-    VmSVal<ResultBytes> resultBytesVmStack;
-
-    for (int32_t i = 0; i < 8; ++i) {
-        resultBytesVmStack->bytes[i] = pResult[i];
-    }
+    // Are callbacks disabled currently? If so then ignore...
+    if (!*gbPSXCD_cb_enable_flag)
+        return;
     
-    a1 = resultBytesVmStack.addr();
+    // Save the status bits and int results for the command
+    *gPSXCD_cdl_stat = pResult[0];
+    *gPSXCD_cdl_intr = status;
+    
+    if ((pResult[0] & CdlStatRead) && (*gbPSXCD_async_on) && (*gPSXCD_cdl_com == CdlReadN)) {
+        // Update read stats
+        *gPSXCD_readcount += 1;
+        
+        // Is there data ready for reading?
+        if (status == CdlDataReady) {
+            if (gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command == PSXCD_COMMAND_READ) {
+                // Executing a command to read an entire sector to the output/destination location.
+                //
+                // Optimization: if the destination pointer is 32-bit aligned then we can just copy directly to the output location.
+                // If the pointer is 32-bit aligned also then we assume the data is padded to at least 32-bit boundaries.
+                if (((uintptr_t) gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest.get() & 3) == 0) {
+                    // Yay, it's all aligned: we can copy the data directly to the output location!
+                    LIBCD_CdGetSector(gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest.get(), CD_SECTOR_SIZE / sizeof(uint32_t));
+                } else {
+                    // Unaligned destination: have to take the scenic route...
+                    LIBCD_CdGetSector(gPSXCD_sectorbuf.get(), CD_SECTOR_SIZE / sizeof(uint32_t));
+                    PSXCD_psxcd_memcpy(gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest.get(), gPSXCD_sectorbuf.get(), CD_SECTOR_SIZE);
+                }
 
-    //---------------------
+                // One less sector to read
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest = gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest.get() + CD_SECTOR_SIZE;
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].amount -= 1;
 
-    v0 = *gbPSXCD_cb_enable_flag;
-    sp -= 0x30;
-    sw(s0, sp + 0x20);
-    s0 = a0;
-    sw(s1, sp + 0x24);
-    s1 = a1;
-    sw(ra, sp + 0x2C);
-    sw(s2, sp + 0x28);
-    if (v0 == 0) goto loc_8003F878;
-    sw(s0, gp + 0x7A4);                                 // Store to: gPSXCD_cdl_intr (80077D84)
-    v0 = lbu(s1);
-    sb(v0, gp + 0x7B0);                                 // Store to: gPSXCD_cdl_stat (80077D90)
-    v0 = lbu(s1);
-    v0 &= 0x20;
-    if (v0 == 0) goto loc_8003F74C;
-    v0 = lw(gp + 0x784);                                // Load from: gbPSXCD_async_on (80077D64)
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 6;                                         // Result = 00000006
-        if (bJump) goto loc_8003F74C;
+                // If there are no more sectors to read for this command then move onto the next command
+                if (gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].amount == 0) {
+                    *gPSXCD_cur_cmd += 1;
+                }
+            } 
+            else if (gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command == PSXCD_COMMAND_READCOPY) {
+                // Executing a command to read a partial sector.
+                // Copy the entire sector to the sector buffer, then just copy out the bits we need:
+                LIBCD_CdGetSector(gPSXCD_sectorbuf.get(), CD_SECTOR_SIZE / sizeof(uint32_t));
+                PSXCD_psxcd_memcpy(
+                    gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest.get(),
+                    gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].psrc.get(),
+                    gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].amount
+                );
+
+                // This command is just one read sector operation, move onto the next
+                *gPSXCD_cur_cmd += 1;
+            } 
+            else {
+                // Don't know what this command is, so terminate the command list
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command = PSXCD_COMMAND_END;
+            }
+            
+            // Are we finishing up the command list? If so then pause the cdrom:
+            if (gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command == PSXCD_COMMAND_END) {
+                *gbPSXCD_async_on = false;
+                *gbPSXCD_waiting_for_pause = true;
+                *gPSXCD_cdl_com = CdlPause;
+                LIBCD_CdControlF(CdlPause, nullptr);
+            }
+
+            return;
+        }
+        
+        // Did an error happen? If so then cancel the current command
+        if (status == CdlDiskError) {
+            LIBCD_CdFlush();
+            *gbPSXCD_critical_error = true;     // This is a bad one!
+        }
+
+        *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
+        *gPSXCD_cdl_err_intr = status;
+    } 
+    else if (pResult[0] & CdlStatPlay) {
+        // If we are playing cd audio and there is new data ready then record the updated cd location
+        if (status == CdlDataReady) {
+            // I'm not sure what the hell this flag is - I couldn't find any mention of it anywhere.
+            // This bit shouldn't be set even when the encoding is BCD because second count shouldn't exceed 60?
+            if ((pResult[4] & 0x80) == 0) {                
+                *gPSXCD_playcount += 1;
+                gPSXCD_newloc->minute = pResult[3];
+                gPSXCD_newloc->second = pResult[4];
+                gPSXCD_newloc->sector = pResult[5];
+                gPSXCD_newloc->track = (pResult[1] >> 4) * 10 + (pResult[1] & 0x0F);    // Convert from BCD to binary
+            }
+
+            return;
+        }
+        
+        // If we have reached the end then we might want to loop around again
+        if (status == CdlDataEnd) {
+            // Clear the command and location if we have reached the end
+            *gPSXCD_cdl_com = CdlNop;
+            *gPSXCD_lastloc = 0;
+
+            // Are we to loop and play again?
+            if ((*gbPSXCD_playflag) || (*gbPSXCD_loopflag)) {
+                psxcd_play_at_andloop(
+                    gPSXCD_looptrack,
+                    gPSXCD_loopvol,
+                    gPSXCD_loopsectoroffset,
+                    gPSXCD_loopfadeuptime,
+                    gPSXCD_looptrack,
+                    gPSXCD_loopvol,
+                    gPSXCD_loopsectoroffset,
+                    gPSXCD_loopfadeuptime
+                );
+            }
+
+            return;
+        }
+        
+        // If there is a disk error cancel any current command
+        if (status == CdlDiskError) {
+            LIBCD_CdFlush();
+        }
+
+        // Error or unknown situation:
+        *gPSXCD_cdl_err_intr = status + 20;         // '+': Just to make the codes more unique, so their source is known
+        *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
+    } 
+    else {
+        // Error or unknown situation:
+        *gPSXCD_cdl_err_intr = status + 30;         // '+': Just to make the codes more unique, so their source is known
+        *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
     }
-    v1 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
-    s2 = 1;                                             // Result = 00000001
-    if (v1 != v0) goto loc_8003F74C;
-    v0 = lw(gp + 0x7B4);                                // Load from: gPSXCD_readcount (80077D94)
-    v0++;
-    sw(v0, gp + 0x7B4);                                 // Store to: gPSXCD_readcount (80077D94)
-    v0 = 5;                                             // Result = 00000005
-    if (s0 != s2) goto loc_8003F720;
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v1 = v0 << 2;
-    v1 += v0;
-    v1 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v1;
-    a0 = lw(at);
-    v0 = 3;                                             // Result = 00000003
-    {
-        const bool bJump = (a0 == v0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_8003F550;
-    }
-    if (a0 == v0) goto loc_8003F630;
-    goto loc_8003F6A4;
-loc_8003F550:
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB4;                                       // Result = gPSXCD_psxcd_cmd_1[2] (8007834C)
-    at += v1;
-    a0 = lw(at);
-    v0 = a0 & 3;
-    if (v0 == 0) goto loc_8003F5B8;
-    s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 -= 0x6AE8;                                       // Result = gPSXCD_sectorbuf[0] (800A9518)
-    a0 = s0;                                            // Result = gPSXCD_sectorbuf[0] (800A9518)
-    a1 = 0x200;                                         // Result = 00000200
-    _thunk_LIBCD_CdGetSector();
-    v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    a1 = s0;                                            // Result = gPSXCD_sectorbuf[0] (800A9518)
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB4;                                       // Result = gPSXCD_psxcd_cmd_1[2] (8007834C)
-    at += v0;
-    a0 = lw(at);
-    a2 = 0x800;                                         // Result = 00000800
-    PSXCD_psxcd_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
-    goto loc_8003F5C0;
-loc_8003F5B8:
-    a1 = 0x200;                                         // Result = 00000200
-    _thunk_LIBCD_CdGetSector();
-loc_8003F5C0:
-    a1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0 = a1 << 2;
-    v0 += a1;
-    v0 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB4;                                       // Result = gPSXCD_psxcd_cmd_1[2] (8007834C)
-    at += v0;
-    v1 = lw(at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB8;                                       // Result = gPSXCD_psxcd_cmd_1[1] (80078348)
-    at += v0;
-    a0 = lw(at);
-    v1 += 0x800;
-    a0--;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB4;                                       // Result = gPSXCD_psxcd_cmd_1[2] (8007834C)
-    at += v0;
-    sw(v1, at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB8;                                       // Result = gPSXCD_psxcd_cmd_1[1] (80078348)
-    at += v0;
-    sw(a0, at);
-    v0 = a1 + 1;
-    if (a0 != 0) goto loc_8003F6C8;
-    sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
-    goto loc_8003F6C8;
-loc_8003F630:
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 -= 0x6AE8;                                       // Result = gPSXCD_sectorbuf[0] (800A9518)
-    a1 = 0x200;                                         // Result = 00000200
-    _thunk_LIBCD_CdGetSector();
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v1 = v0 << 2;
-    v1 += v0;
-    v1 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB4;                                       // Result = gPSXCD_psxcd_cmd_1[2] (8007834C)
-    at += v1;
-    a0 = lw(at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB0;                                       // Result = gPSXCD_psxcd_cmd_1[3] (80078350)
-    at += v1;
-    a1 = lw(at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CB8;                                       // Result = gPSXCD_psxcd_cmd_1[1] (80078348)
-    at += v1;
-    a2 = lw(at);
-    PSXCD_psxcd_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0++;
-    sw(v0, gp + 0x7DC);                                 // Store to: gPSXCD_cur_cmd (80077DBC)
-    goto loc_8003F6C8;
-loc_8003F6A4:
-    v1 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v0;
-    sw(0, at);
-loc_8003F6C8:
-    v0 = lw(gp + 0x7DC);                                // Load from: gPSXCD_cur_cmd (80077DBC)
-    v1 = v0 << 2;
-    v1 += v0;
-    v1 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7CBC;                                       // Result = gPSXCD_psxcd_cmd_1[0] (80078344)
-    at += v1;
-    v0 = lw(at);
-    a0 = 9;                                             // Result = 00000009
-    if (v0 != 0) goto loc_8003F878;
-    a1 = 0;                                             // Result = 00000000
-    v0 = 1;                                             // Result = 00000001
-    sw(0, gp + 0x784);                                  // Store to: gbPSXCD_async_on (80077D64)
-    sw(v0, gp + 0x780);                                 // Store to: gbPSXCD_waiting_for_pause (80077D60)
-    v0 = 9;                                             // Result = 00000009
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    _thunk_LIBCD_CdControlF();
-    goto loc_8003F878;
-loc_8003F720:
-    if (s0 != v0) goto loc_8003F734;
-    LIBCD_CdFlush();
-    sw(s2, gp + 0x7A0);                                 // Store to: gbPSXCD_critical_error (80077D80)
-loc_8003F734:
-    v0 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
-    sw(s0, gp + 0x7A8);                                 // Store to: gPSXCD_cdl_errintr (80077D88)
-    sb(v0, gp + 0x7B3);                                 // Store to: gPSXCD_cdl_errcom (80077D93)
-    v0 = lw(gp + 0x7AC);                                // Load from: gPSXCD_cdl_errcount (80077D8C)
-    goto loc_8003F868;
-loc_8003F74C:
-    v0 = lbu(s1);
-    v0 &= 0x80;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8003F854;
-    }
-    {
-        const bool bJump = (s0 != v0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_8003F7DC;
-    }
-    v0 = lbu(s1 + 0x4);
-    v0 &= 0x80;
-    if (v0 != 0) goto loc_8003F878;
-    v0 = lw(gp + 0x7B8);                                // Load from: gPSXCD_playcount (80077D98)
-    v0++;
-    sw(v0, gp + 0x7B8);                                 // Store to: gPSXCD_playcount (80077D98)
-    v1 = lbu(s1 + 0x1);
-    a0 = v1 >> 4;
-    v0 = a0 << 2;
-    v0 += a0;
-    v0 <<= 1;
-    v1 &= 0xF;
-    v0 += v1;
-    sb(v0, gp + 0x813);                                 // Store to: gPSXCD_newloc + 3 (80077DF3) (80077DF3)
-    v0 = lbu(s1 + 0x3);
-    sb(v0, gp + 0x810);                                 // Store to: gPSXCD_newloc (80077DF0)
-    v0 = lbu(s1 + 0x4);
-    sb(v0, gp + 0x811);                                 // Store to: gPSXCD_newloc + 1 (80077DF1) (80077DF1)
-    v0 = lbu(s1 + 0x5);
-    sb(v0, gp + 0x812);                                 // Store to: gPSXCD_newloc + 2 (80077DF2) (80077DF2)
-    goto loc_8003F878;
-loc_8003F7DC:
-    {
-        const bool bJump = (s0 != v0);
-        v0 = 5;                                         // Result = 00000005
-        if (bJump) goto loc_8003F838;
-    }
-    v1 = lw(gp + 0x7E8);                                // Load from: gbPSXCD_playflag (80077DC8)
-    v0 = 1;                                             // Result = 00000001
-    sw(0, gp + 0x814);                                  // Store to: gPSXCD_lastloc (80077DF4)
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    if (v1 == 0) goto loc_8003F878;
-    v0 = lw(gp + 0x7F8);                                // Load from: gbPSXCD_loopflag (80077DD8)
-    if (v0 == 0) goto loc_8003F878;
-    a0 = lw(gp + 0x7F4);                                // Load from: gPSXCD_looptrack (80077DD4)
-    a1 = lw(gp + 0x7FC);                                // Load from: gPSXCD_loopvol (80077DDC)
-    a2 = lw(gp + 0x800);                                // Load from: gPSXCD_loopsectoroffset (80077DE0)
-    a3 = lw(gp + 0x804);                                // Load from: gPSXCD_loopfadeuptime (80077DE4)
-    sw(a0, sp + 0x10);
-    sw(a1, sp + 0x14);
-    sw(a2, sp + 0x18);
-    sw(a3, sp + 0x1C);
-    psxcd_play_at_andloop(a0, a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14), lw(sp + 0x18), lw(sp + 0x1C));
-    goto loc_8003F878;
-loc_8003F838:
-    if (s0 != v0) goto loc_8003F848;
-    LIBCD_CdFlush();
-loc_8003F848:
-    v1 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
-    v0 = s0 + 0x14;
-    goto loc_8003F85C;
-loc_8003F854:
-    v1 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
-    v0 = s0 + 0x1E;
-loc_8003F85C:
-    sw(v0, gp + 0x7A8);                                 // Store to: gPSXCD_cdl_errintr (80077D88)
-    v0 = lw(gp + 0x7AC);                                // Load from: gPSXCD_cdl_errcount (80077D8C)
-    sb(v1, gp + 0x7B3);                                 // Store to: gPSXCD_cdl_errcom (80077D93)
-loc_8003F868:
-    v1 = lbu(s1);
-    v0++;
-    sw(v0, gp + 0x7AC);                                 // Store to: gPSXCD_cdl_errcount (80077D8C)
-    sb(v1, gp + 0x7B1);                                 // Store to: gPSXCD_cdl_errstat (80077D91)
-loc_8003F878:
-    ra = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x30;
-    return;
+
+    // This point is only reached if there is an error!
+    *gPSXCD_cdl_err_count += 1;
+    *gPSXCD_cdl_err_stat = pResult[0];
+    *gPSXCD_cdl_com = *gPSXCD_cdl_err_com;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -934,7 +811,12 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
             gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].amount = wholeSectorsToRead;
             gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest = pDestBytes;
 
-            // TODO: what is this check trying to do?
+            // If the destination pointer is not 32-bit aligned then when reading it we must first take the extra step of copying the sector
+            // data to the PSXCD sector buffer and THEN copy from there to the intended destination. This is because 'LIBCD_CdGetSector'
+            // works on 32-bit word units only and requires 32-bit aligned pointers. Note: if the output data is 32-bit aligned then it is
+            // assumed to be padded to at least 32-bits in size.
+            //
+            // So... if we are going to be dealing with unaligned data, make a note of what CD location will be going into the sector buffer:
             if ((uintptr_t) pDestBytes & 3) {
                 const int32_t curSector = LIBCD_CdPosToInt(*gPSXCD_cur_io_loc);
                 LIBCD_CdIntToPos(curSector + wholeSectorsToRead - 1, *gPSXCD_sectorbuf_contents);
