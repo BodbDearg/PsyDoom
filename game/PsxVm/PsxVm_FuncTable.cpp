@@ -282,7 +282,6 @@ extern void _thunk_FixedDiv() noexcept;
 
 extern void psxcd_init() noexcept;
 extern void psxcd_exit() noexcept;
-extern void psxcd_async_on() noexcept;
 extern void psxcd_play_status() noexcept;
 extern void psxcd_elapsed_sectors() noexcept;
 extern void S_SetSfxVolume() noexcept;
@@ -775,7 +774,6 @@ namespace PsxVm {
         { 0x8003F180, &_thunk_FixedDiv },
         { 0x8003F8B0, &psxcd_init },
         { 0x8003F98C, &psxcd_exit },
-        { 0x8003FBBC, &psxcd_async_on },
         { 0x80040CC0, &psxcd_play_status },
         { 0x80040EFC, &psxcd_elapsed_sectors },
         { 0x80040FAC, &S_SetSfxVolume },

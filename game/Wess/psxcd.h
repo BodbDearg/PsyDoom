@@ -46,7 +46,7 @@ void psxcd_exit() noexcept;
 void psxcd_set_data_mode() noexcept;
 PsxCd_File* psxcd_open(const CdMapTbl_File discFile) noexcept;
 void psxcd_init_pos() noexcept;
-void psxcd_async_on() noexcept;
+bool psxcd_async_on() noexcept;
 bool psxcd_seeking_for_play() noexcept;
 bool psxcd_waiting_for_pause() noexcept;
 int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept;

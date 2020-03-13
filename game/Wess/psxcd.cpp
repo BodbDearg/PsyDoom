@@ -57,6 +57,7 @@ static const VmPtr<CdlLOC>          gPSXCD_sectorbuf_contents(0x80077D68);  // W
 static const VmPtr<VmPtr<void>>     gpPSXCD_lastdestptr(0x80077DC0);        // Async read: destination memory chunk being written to
 static const VmPtr<int32_t>         gPSXCD_lastreadbytes(0x80077DC4);       // Async read: number of bytes being read
 static const VmPtr<PsxCd_File>      gPSXCD_lastfilestruct(0x800783D0);      // Async read: details for the file being read
+static const VmPtr<PsxCd_File>      gPSXCD_newfilestruct(0x800783A8);       // Async read: details for the file for which read is being retried
 static const VmPtr<int32_t>         gPSXCD_cur_cmd(0x80077DBC);             // Async read: index of the current command being issued in the loop iteration
 static const VmPtr<PsxCd_Command>   gPSXCD_psxcd_cmds(0x80078344);          // Async read: commands issued to the cd
 
@@ -527,76 +528,37 @@ void psxcd_init_pos() noexcept {
     *gbPSXCD_loopflag = false;
 }
 
-void psxcd_async_on() noexcept {
-loc_8003FBBC:
-    v0 = lw(gp + 0x784);                                // Load from: gbPSXCD_async_on (80077D64)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 == 0) goto loc_8003FCB0;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7DB4;                                       // Result = gPSXCD_check_result[0] (80077DB4)
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBCD_CdSync();
-    v1 = lw(gp + 0x7A0);                                // Load from: gbPSXCD_critical_error (80077D80)
-    a0 = v0;
-    sw(a0, gp + 0x7D0);                                 // Store to: gPSXCD_check_intr (80077DB0)
-    v0 = 5;                                             // Result = 00000005
-    if (v1 != 0) goto loc_8003FC0C;
-    if (a0 == v0) goto loc_8003FC0C;
-    v0 = lbu(gp + 0x7D4);                               // Load from: gPSXCD_check_result[0] (80077DB4)
-    v0 &= 2;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8003FCB4;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Queries if there is an asynchronous read still happening and returns 'true' if that is the case.
+// Also retries the current async read, if there is an error detected.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool psxcd_async_on() noexcept {
+    // If we are not doing any async reading then the answer is simple
+    if (!*gbPSXCD_async_on)
+        return false;
+
+    // Otherwise do a status check on the health of the read to make sure it is going ok
+    *gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result.get());
+
+    // If a problem happened then retry the current read.
+    // Retry if we encounter a critical error, a disk error or the motor stops rotating - which can happen if the shell is opened.
+    if ((*gbPSXCD_critical_error) || (*gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
+        // A problem happened! Record the details of the error and stop any executing cd commands:
+        LIBCD_CdFlush();
+
+        *gPSXCD_cdl_err_count += 1;        
+        *gPSXCD_cdl_err_intr = *gPSXCD_check_intr + 100;    // '+': Just to make the codes more unique, so their source is known
+        *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
+        *gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
+
+        // Clear the error flag and retry the last read command
+        *gbPSXCD_critical_error = false;
+        *gPSXCD_newfilestruct = *gPSXCD_lastfilestruct;
+        psxcd_async_read(gpPSXCD_lastdestptr->get(), *gPSXCD_lastreadbytes, *gPSXCD_newfilestruct);
     }
-loc_8003FC0C:
-    LIBCD_CdFlush();
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 -= 0x7C58;                                       // Result = gPSXCD_newfilestruct[0] (800783A8)
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7C30;                                       // Result = gPSXCD_lastfilestruct[0] (800783D0)
-    v0 = lw(gp + 0x7D0);                                // Load from: gPSXCD_check_intr (80077DB0)
-    a0 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
-    a1 = lbu(gp + 0x7D4);                               // Load from: gPSXCD_check_result[0] (80077DB4)
-    v1 = lw(gp + 0x7AC);                                // Load from: gPSXCD_cdl_errcount (80077D8C)
-    t0 = a2 + 0x20;                                     // Result = gPSXCD_lastfilestruct[8] (800783F0)
-    sw(0, gp + 0x7A0);                                  // Store to: gbPSXCD_critical_error (80077D80)
-    v0 += 0x64;
-    v1++;
-    sw(v0, gp + 0x7A8);                                 // Store to: gPSXCD_cdl_errintr (80077D88)
-    sb(a0, gp + 0x7B3);                                 // Store to: gPSXCD_cdl_errcom (80077D93)
-    sb(a1, gp + 0x7B1);                                 // Store to: gPSXCD_cdl_errstat (80077D91)
-    sw(v1, gp + 0x7AC);                                 // Store to: gPSXCD_cdl_errcount (80077D8C)
-loc_8003FC54:
-    v0 = lw(a2);
-    v1 = lw(a2 + 0x4);
-    a0 = lw(a2 + 0x8);
-    a1 = lw(a2 + 0xC);
-    sw(v0, a3);
-    sw(v1, a3 + 0x4);
-    sw(a0, a3 + 0x8);
-    sw(a1, a3 + 0xC);
-    a2 += 0x10;
-    a3 += 0x10;
-    if (a2 != t0) goto loc_8003FC54;
-    v0 = lw(a2);
-    v1 = lw(a2 + 0x4);
-    sw(v0, a3);
-    sw(v1, a3 + 0x4);
-    a0 = lw(gp + 0x7E0);                                // Load from: gpPSXCD_lastdestptr (80077DC0)
-    a1 = lw(gp + 0x7E4);                                // Load from: gPSXCD_lastreadbytes (80077DC4)
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x7C58;                                       // Result = gPSXCD_newfilestruct[0] (800783A8)
-    v0 = psxcd_async_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
-    v0 = 1;                                             // Result = 00000001
-    goto loc_8003FCB4;
-loc_8003FCB0:
-    v0 = 0;                                             // Result = 00000000
-loc_8003FCB4:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Still reading...
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -680,12 +642,9 @@ int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexce
     const int32_t retBytesRead = psxcd_async_read(pDest, numBytes, file);
 
     // Continue reading until done
-    bool bIsDoingAsyncRead = true;
-
-    do {
-        psxcd_async_on();
-        bIsDoingAsyncRead = (v0 != 0);
-    } while (bIsDoingAsyncRead);
+    while (psxcd_async_on()) {
+        // TODO: PC-PSX: update the window and sound while this is happening
+    }
     
     return retBytesRead;
 }
