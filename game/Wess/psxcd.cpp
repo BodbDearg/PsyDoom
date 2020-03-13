@@ -81,8 +81,8 @@ static const VmPtr<int32_t>     gPSXCD_readcount(0x80077D94);           // Numbe
 static const VmPtr<int32_t>     gPSXCD_playcount(0x80077D98);           // Number of audio sectors read
 
 // CD commands issued and results
-static const VmPtr<uint8_t>     gPSXCD_cdl_com(0x80077D92);             // The last command issued to the cdrom via 'LIBCD_CdControl'
-static const VmPtr<uint8_t>     gPSXCD_cdl_err_com(0x80077D93);         // The last command issued to the cdrom via 'LIBCD_CdControl' which was an error
+static const VmPtr<CdlCmd>      gPSXCD_cdl_com(0x80077D92);             // The last command issued to the cdrom via 'LIBCD_CdControl'
+static const VmPtr<CdlCmd>      gPSXCD_cdl_err_com(0x80077D93);         // The last command issued to the cdrom via 'LIBCD_CdControl' which was an error
 
 static const VmPtr<uint8_t[8]>  gPSXCD_cd_param(0x80077D9C);            // Parameters for the last command issued to the cdrom via 'LIBCD_CdControl' (if there were parameters)
 
@@ -179,81 +179,46 @@ bool psxcd_critical_sync() noexcept {
     #endif
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Callback invoked by the PsyQ libraries when a command to the CDROM is complete
+//------------------------------------------------------------------------------------------------------------------------------------------
 void PSXCD_cbcomplete(const CdlSyncStatus status, const uint8_t pResult[8]) noexcept {
-    // TEMP until this is converted to C++
-    struct ResultBytes {
-        char bytes[8];
-    };
+    if (!*gbPSXCD_cb_enable_flag)
+        return;
 
-    a0 = status;
-    VmSVal<ResultBytes> resultBytesVmStack;
+    // Did the command complete OK?
+    if (status == CdlComplete) {
+        if (*gPSXCD_cdl_com == CdlSeekP) {
+            // Just finished a seek
+            *gbPSXCD_seeking_for_play = false;
 
-    for (int32_t i = 0; i < 8; ++i) {
-        resultBytesVmStack->bytes[i] = pResult[i];
+            // Intending to play cd music? If so then start mixing in the audio and begin fading (if required)
+            if (*gbPSXCD_playflag) {
+                psxspu_setcdmixon();
+
+                if (*gPSXCD_playfadeuptime == 0) {
+                    psxspu_set_cd_vol(*gPSXCD_playvol);
+                } else {
+                    psxspu_set_cd_vol(0);
+                    psxspu_start_cd_fade(*gPSXCD_playfadeuptime, *gPSXCD_playvol);
+                    *gPSXCD_playfadeuptime = 0;
+                }
+
+                // Begin playback of the cd audio
+                *gPSXCD_cdl_com = CdlPlay;
+                LIBCD_CdControlF(CdlPlay, nullptr);
+            }
+        } else if (*gPSXCD_cdl_com == CdlPause) {
+            // Just finished a pause
+            *gbPSXCD_waiting_for_pause = false;
+        }
+    } else {
+        // An error happened - record the details
+        *gPSXCD_cdl_err_count += 1;
+        *gPSXCD_cdl_err_intr = status + 10;     // '+': Just to make the codes more unique, so their source is known
+        *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
+        *gPSXCD_cdl_err_stat = *pResult;
     }
-    
-    a1 = resultBytesVmStack.addr();
-
-    //---------------------
-
-    v0 = *gbPSXCD_cb_enable_flag;
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 == 0) goto loc_8003F480;
-    v0 = 2;                                             // Result = 00000002
-    {
-        const bool bJump = (a0 != v0);
-        v0 = a0 + 0xA;
-        if (bJump) goto loc_8003F460;
-    }
-    v1 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
-    v0 = 0x16;                                          // Result = 00000016
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 9;                                         // Result = 00000009
-        if (bJump) goto loc_8003F44C;
-    }
-    v0 = lw(gp + 0x7E8);                                // Load from: gbPSXCD_playflag (80077DC8)
-    sw(0, gp + 0x77C);                                  // Store to: gbPSXCD_seeking_for_play (80077D5C)
-    if (v0 == 0) goto loc_8003F480;
-    psxspu_setcdmixon();
-    v0 = lw(gp + 0x7F0);                                // Load from: gPSXCD_playfadeuptime (80077DD0)
-    if (v0 == 0) goto loc_8003F424;
-    a0 = 0;                                             // Result = 00000000
-    psxspu_set_cd_vol(a0);
-    a0 = lw(gp + 0x7F0);                                // Load from: gPSXCD_playfadeuptime (80077DD0)
-    a1 = lw(gp + 0x7EC);                                // Load from: gPSXCD_playvol (80077DCC)
-    psxspu_start_cd_fade(a0, a1);
-    sw(0, gp + 0x7F0);                                  // Store to: gPSXCD_playfadeuptime (80077DD0)
-    v0 = 3;                                             // Result = 00000003
-    goto loc_8003F434;
-loc_8003F424:
-    a0 = lw(gp + 0x7EC);                                // Load from: gPSXCD_playvol (80077DCC)
-    psxspu_set_cd_vol(a0);
-    v0 = 3;                                             // Result = 00000003
-loc_8003F434:
-    sb(v0, gp + 0x7B2);                                 // Store to: gPSXCD_cdl_com (80077D92)
-    a0 = 3;                                             // Result = 00000003
-    a1 = 0;                                             // Result = 00000000
-    _thunk_LIBCD_CdControlF();
-    goto loc_8003F480;
-loc_8003F44C:
-    if (v1 != v0) goto loc_8003F480;
-    sw(0, gp + 0x780);                                  // Store to: gbPSXCD_waiting_for_pause (80077D60)
-    goto loc_8003F480;
-loc_8003F460:
-    v1 = lbu(gp + 0x7B2);                               // Load from: gPSXCD_cdl_com (80077D92)
-    sw(v0, gp + 0x7A8);                                 // Store to: gPSXCD_cdl_errintr (80077D88)
-    v0 = lw(gp + 0x7AC);                                // Load from: gPSXCD_cdl_errcount (80077D8C)
-    sb(v1, gp + 0x7B3);                                 // Store to: gPSXCD_cdl_errcom (80077D93)
-    v1 = lbu(a1);
-    v0++;
-    sw(v0, gp + 0x7AC);                                 // Store to: gPSXCD_cdl_errcount (80077D8C)
-    sb(v1, gp + 0x7B1);                                 // Store to: gPSXCD_cdl_errstat (80077D91)
-loc_8003F480:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcept {
