@@ -86,8 +86,22 @@ void stepCdromWithCallbacks() noexcept {
         cdrom.dataBufferPointer = 0;
         cdrom.status.dataFifoEmpty = 1;
 
-        // Note update the status byte with the latest cdrom status before we invoke the callback
-        gLastCdCmdResult[0] = cdrom.stat._reg;
+        // Note update the status bytes with the latest cdrom info before we invoke the callback.
+        // This code is largely copied from the Avocado 'cdrom::step()' function.
+        {
+            const disc::Position discPos = disc::Position::fromLba(cdrom.readSector);
+            const int track = cdrom.disc->getTrackByPosition(discPos);
+
+            gLastCdCmdResult[0] = cdrom.stat._reg;
+            gLastCdCmdResult[1] = bcd::toBcd((uint8_t) track);          // track
+            gLastCdCmdResult[2] = 0x01;                                 // index (I don't know what the meaning of this is, but we don't use anyway...)
+            gLastCdCmdResult[3] = bcd::toBcd((uint8_t) discPos.mm);     // minute (disc)
+            gLastCdCmdResult[4] = bcd::toBcd((uint8_t) discPos.ss);     // second (disc)
+            gLastCdCmdResult[5] = bcd::toBcd((uint8_t) discPos.ff);     // sector (disc)
+            gLastCdCmdResult[6] = bcd::toBcd(0);                        // peaklo
+            gLastCdCmdResult[7] = bcd::toBcd(0);                        // peakhi
+        }
+
         invokeCallback(gpLIBCD_CD_cbready, CdlDataReady, gLastCdCmdResult);
     }
 }

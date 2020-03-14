@@ -221,7 +221,7 @@ void PSXCD_cbcomplete(const CdlSyncStatus status, const uint8_t pResult[8]) noex
         *gPSXCD_cdl_err_count += 1;
         *gPSXCD_cdl_err_intr = status + 10;     // '+': Just to make the codes more unique, so their source is known
         *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
-        *gPSXCD_cdl_err_stat = *pResult;
+        *gPSXCD_cdl_err_stat = pResult[0];
     }
 }
 
