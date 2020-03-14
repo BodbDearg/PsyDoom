@@ -33,7 +33,14 @@ Position Cue::getTrackStart(int track) const {
     }
 #endif
 
+// DOOM: fix the track start being incorrectly determined. The calculation here should include the size of the track before
+// the one we want... The previous code was causing issues with the looping cd audio in the 'CLUB DOOM' secret level because
+// the track boundaries (and track end) were being computed incorrectly, causing the looping audio track to end prematurely...
+#if DOOM_AVOCADO_MODS
+    for (int i = 0; i < track; i++) {
+#else
     for (int i = 0; i < track - 1; i++) {
+#endif
         total += tracks.at(i).frames;
     }
     return Position::fromLba(total);

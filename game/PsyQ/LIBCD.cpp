@@ -559,14 +559,18 @@ int32_t LIBCD_CdGetToc(CdlLOC trackLocs[CdlMAXTOC]) noexcept {
     // Note that if the 'empty' disc is being used then the count will be '0', which is regarded as an error when returned.
     const int32_t numTracks = (int32_t) pDisc->getTrackCount();
 
-    for (int32_t trackNum = 1; trackNum <= numTracks; ++trackNum) {
-        const disc::Position discPos = pDisc->getTrackStart(trackNum);
+    for (int32_t trackIdx = 0; trackIdx < numTracks; ++trackIdx) {
+        const disc::Position discPos = pDisc->getTrackStart(trackIdx);
         
-        CdlLOC& loc = trackLocs[trackNum];
+        // N.B: the original PsyQ SDK did not provide a sector number here (was always '0') but I am providing that in order to
+        // work around issues with determining a track number from an absolute sector number. That stuff was causing problems
+        // for cd audio playback for me...
+        CdlLOC& loc = trackLocs[trackIdx + 1];
         loc.minute = bcd::toBcd((uint8_t) discPos.mm);
         loc.second = bcd::toBcd((uint8_t) discPos.ss);
-        loc.sector = 0;     // Sector number is not provided by the underlying CD-ROM command to query track location (0x14)
-        loc.track = 0;      // Should always be '0' in this PsyQ version - unused
+        loc.sector = bcd::toBcd((uint8_t) discPos.ff);
+        
+        loc.track = 0;  // Should always be '0' in this PsyQ version - unused!
     }
 
     // The first track entry (0th index) should point to the end of the disk
