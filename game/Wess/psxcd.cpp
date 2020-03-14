@@ -329,14 +329,14 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
             // Are we to loop and play again?
             if ((*gbPSXCD_playflag) || (*gbPSXCD_loopflag)) {
                 psxcd_play_at_andloop(
-                    gPSXCD_looptrack,
-                    gPSXCD_loopvol,
-                    gPSXCD_loopsectoroffset,
-                    gPSXCD_loopfadeuptime,
-                    gPSXCD_looptrack,
-                    gPSXCD_loopvol,
-                    gPSXCD_loopsectoroffset,
-                    gPSXCD_loopfadeuptime
+                    *gPSXCD_looptrack,
+                    *gPSXCD_loopvol,
+                    *gPSXCD_loopsectoroffset,
+                    *gPSXCD_loopfadeuptime,
+                    *gPSXCD_looptrack,
+                    *gPSXCD_loopvol,
+                    *gPSXCD_loopsectoroffset,
+                    *gPSXCD_loopfadeuptime
                 );
             }
 

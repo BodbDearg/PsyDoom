@@ -76,33 +76,49 @@ static uint8_t readCdCmdResultByte() noexcept {
 void stepCdromWithCallbacks() noexcept {
     // Advance the cdrom emulation: this may result in a sector being read
     device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
-    const int32_t oldReadSector = cdrom.readSector;
-    cdrom.step();
 
-    // If we read a new sector then setup the data buffer fifo and let the callback know
-    if (cdrom.readSector != oldReadSector) {
+    const int32_t oldReadSector = cdrom.readSector;    
+    cdrom.step();
+    const int32_t newReadSector = cdrom.readSector;
+
+    // See if we read a new sector
+    if (newReadSector != oldReadSector) {
+        // Read a new sector: setup the data buffer fifo
         ASSERT(!cdrom.rawSector.empty());
+
         cdrom.dataBuffer = cdrom.rawSector;
         cdrom.dataBufferPointer = 0;
         cdrom.status.dataFifoEmpty = 1;
 
-        // Note update the status bytes with the latest cdrom info before we invoke the callback.
+        // Update the status bytes with the latest cdrom info before we invoke the callback.
         // This code is largely copied from the Avocado 'cdrom::step()' function.
-        {
-            const disc::Position discPos = disc::Position::fromLba(cdrom.readSector);
-            const int track = cdrom.disc->getTrackByPosition(discPos);
+        const disc::Position oldDiscPos = disc::Position::fromLba(oldReadSector);
+        const disc::Position newDiscPos = disc::Position::fromLba(newReadSector);
 
+        const disc::Disc& disc = *cdrom.disc.get();
+        const int oldTrack = disc.getTrackByPosition(oldDiscPos);
+        const int newTrack = disc.getTrackByPosition(newDiscPos);
+
+        {
             gLastCdCmdResult[0] = cdrom.stat._reg;
-            gLastCdCmdResult[1] = bcd::toBcd((uint8_t) track);          // track
+            gLastCdCmdResult[1] = bcd::toBcd((uint8_t) newTrack);       // track
             gLastCdCmdResult[2] = 0x01;                                 // index (I don't know what the meaning of this is, but we don't use anyway...)
-            gLastCdCmdResult[3] = bcd::toBcd((uint8_t) discPos.mm);     // minute (disc)
-            gLastCdCmdResult[4] = bcd::toBcd((uint8_t) discPos.ss);     // second (disc)
-            gLastCdCmdResult[5] = bcd::toBcd((uint8_t) discPos.ff);     // sector (disc)
+            gLastCdCmdResult[3] = bcd::toBcd((uint8_t) newDiscPos.mm);  // minute (disc)
+            gLastCdCmdResult[4] = bcd::toBcd((uint8_t) newDiscPos.ss);  // second (disc)
+            gLastCdCmdResult[5] = bcd::toBcd((uint8_t) newDiscPos.ff);  // sector (disc)
             gLastCdCmdResult[6] = bcd::toBcd(0);                        // peaklo
             gLastCdCmdResult[7] = bcd::toBcd(0);                        // peakhi
         }
 
-        invokeCallback(gpLIBCD_CD_cbready, CdlDataReady, gLastCdCmdResult);
+        // Determine if we've reached the end of the current track and use that to adjust the status code accordingly
+        const bool bReachedTrackEnd = (
+            (oldReadSector + 1 == newReadSector) &&
+            (oldTrack != newTrack) &&
+            (oldTrack >= 1)
+        );
+
+        const CdlSyncStatus status = (bReachedTrackEnd) ? CdlDataEnd : CdlDataReady;
+        invokeCallback(gpLIBCD_CD_cbready, status, gLastCdCmdResult);
     }
 }
 
