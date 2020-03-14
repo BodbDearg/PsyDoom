@@ -332,7 +332,6 @@ extern void wess_low_level_init() noexcept;
 extern void wess_low_level_exit() noexcept;
 extern void wess_malloc() noexcept;
 extern void wess_free() noexcept;
-extern void GetIntsPerSec() noexcept;
 extern void CalcPartsPerInt() noexcept;
 extern void WessInterruptHandler() noexcept;
 extern void init_WessTimer() noexcept;
@@ -434,7 +433,7 @@ extern void Eng_NullEvent() noexcept;
 extern void SeqEngine() noexcept;
 extern void wess_dig_lcd_loader_init() noexcept;
 extern void wess_dig_set_sample_position() noexcept;
-extern void lcd_upload_spu_samples() noexcept;
+extern void wess_dig_lcd_data_read() noexcept;
 extern void wess_dig_lcd_psxcd_sync() noexcept;
 extern void wess_dig_lcd_load() noexcept;
 extern void wess_master_sfx_volume_get() noexcept;
@@ -819,7 +818,6 @@ namespace PsxVm {
         { 0x80043B18, &wess_low_level_exit },
         { 0x80043B20, &wess_malloc },
         { 0x80043B28, &wess_free },
-        { 0x80043B30, &GetIntsPerSec },
         { 0x80043B38, &CalcPartsPerInt },
         { 0x80043B88, &WessInterruptHandler },
         { 0x80043C1C, &init_WessTimer },
@@ -921,7 +919,7 @@ namespace PsxVm {
         { 0x80048B94, &SeqEngine },
         { 0x80048EE4, &wess_dig_lcd_loader_init },
         { 0x80048FCC, &wess_dig_set_sample_position },
-        { 0x8004906C, &lcd_upload_spu_samples },
+        { 0x8004906C, &wess_dig_lcd_data_read },
         { 0x800493AC, &wess_dig_lcd_psxcd_sync },
         { 0x80049454, &wess_dig_lcd_load },
         { 0x800497D8, &wess_master_sfx_volume_get },

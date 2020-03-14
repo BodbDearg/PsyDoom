@@ -162,7 +162,7 @@ loc_800442FC:
     }
     v0 = lhu(s1 + 0xC);
     sh(v0, s0 + 0x16);
-    GetIntsPerSec();
+    v0 = GetIntsPerSec();
     v0 <<= 16;
     a1 = lh(s0 + 0x14);
     a2 = lh(s0 + 0x16);

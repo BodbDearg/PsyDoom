@@ -1794,7 +1794,7 @@ loc_80043284:
     v0 = lhu(s2 + 0x10);
 loc_80043288:
     sh(v0, s0 + 0x16);
-    GetIntsPerSec();
+    v0 = GetIntsPerSec();
     v0 <<= 16;
     a1 = lh(s0 + 0x14);
     a2 = lh(s0 + 0x16);

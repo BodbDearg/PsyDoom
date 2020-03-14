@@ -1,12 +1,14 @@
 #pragma once
 
+#include "psxcd.h"
 #include "PcPsx/Types.h"
-#include "PsxVm/VmPtr.h"
 
-extern const VmPtr<uint32_t>    gWess_Millicount;
-extern const VmPtr<bool32_t>    gbWess_WessTimerActive;
+extern const VmPtr<uint32_t>                    gWess_Millicount;
+extern const VmPtr<bool32_t>                    gbWess_WessTimerActive;
+extern const VmPtr<uint8_t[CD_SECTOR_SIZE]>     gWess_sectorBuffer1;
+extern const VmPtr<uint8_t[CD_SECTOR_SIZE]>     gWess_sectorBuffer2;
 
-void GetIntsPerSec() noexcept;
+int16_t GetIntsPerSec() noexcept;
 void CalcPartsPerInt() noexcept;
 void WessInterruptHandler() noexcept;
 void init_WessTimer() noexcept;

@@ -96,7 +96,7 @@ static PsxCd_File* wess_dig_lcd_data_open(const CdMapTbl_File file) noexcept {
     return gWess_open_lcd_file.get();
 }
 
-void lcd_upload_spu_samples() noexcept {
+void wess_dig_lcd_data_read() noexcept {
 loc_8004906C:
     sp -= 0x30;
     sw(s6, sp + 0x28);
@@ -481,7 +481,7 @@ loc_80049610:
     a1 = s2;
     a2 = s6;
     a3 = s7;
-    lcd_upload_spu_samples();
+    wess_dig_lcd_data_read();
     s3 += v0;
     s2 += v0;
     v0 = 1;                                             // Result = 00000001
@@ -517,7 +517,7 @@ loc_800496A0:
     a1 = s2;
     a2 = s6;
     a3 = s7;
-    lcd_upload_spu_samples();
+    wess_dig_lcd_data_read();
     s3 += v0;
     s2 += v0;
     v0 = 0;                                             // Result = 00000000
@@ -550,7 +550,7 @@ loc_8004972C:
     a1 = s2;
     a2 = s6;
     a3 = s7;
-    lcd_upload_spu_samples();
+    wess_dig_lcd_data_read();
     s3 += v0;
     s2 += v0;
     v0 = 1;                                             // Result = 00000001

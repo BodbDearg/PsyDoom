@@ -7,13 +7,22 @@
 #include "PsyQ/LIBSPU.h"
 #include "wessseq.h"
 
-const VmPtr<uint32_t>   gWess_Millicount(0x80075954);           // Keeps track of global time (MS) for the sequencer and other operations
-const VmPtr<bool32_t>   gbWess_WessTimerActive(0x8007594C);     // True if the 'WessInterruptHandler' function is active and receiving periodic callbacks
+// Keeps track of global time (MS) for the sequencer and other operations
+const VmPtr<uint32_t> gWess_Millicount(0x80075954);
 
-void GetIntsPerSec() noexcept {
-loc_80043B30:
-    v0 = 0x78;                                          // Result = 00000078
-    return;
+// True if the 'WessInterruptHandler' function is active and receiving periodic callbacks
+const VmPtr<bool32_t> gbWess_WessTimerActive(0x8007594C);
+
+// Temporary buffers used for holding a sector worth of data
+const VmPtr<uint8_t[CD_SECTOR_SIZE]> gWess_sectorBuffer1(0x8009656C);
+const VmPtr<uint8_t[CD_SECTOR_SIZE]> gWess_sectorBuffer2(0x80096D7C);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gives the number of ticks or interrupts per second the music system uses.
+// In PSX DOOM the sequencer runs at roughly 120 Hz intervals.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int16_t GetIntsPerSec() noexcept {
+    return 120;
 }
 
 void CalcPartsPerInt() noexcept {

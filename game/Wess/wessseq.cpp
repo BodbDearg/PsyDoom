@@ -728,7 +728,7 @@ loc_80048074:
     v0 <<= 8;
     v1 |= v0;
     sh(v1, a0 + 0x16);
-    GetIntsPerSec();
+    v0 = GetIntsPerSec();
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 - 0xD98);                                // Load from: 8007F268
     v0 <<= 16;
@@ -1241,7 +1241,7 @@ loc_800488D4:
     v0 <<= 8;
     v1 |= v0;
     sh(v1, s0 + 0x16);
-    GetIntsPerSec();
+    v0 = GetIntsPerSec();
     v0 <<= 16;
     a1 = lh(s0 + 0x14);
     a2 = lh(s0 + 0x16);
