@@ -1,9 +1,17 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Williams Entertainment Sound System (WESS): LCD (sound samples file) loading code.
+// Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 #include "digload.h"
 
 #include "psxcd.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBCD.h"
 #include "PsyQ/LIBSPU.h"
+
+// The currently open LCD file
+static const VmPtr<PsxCd_File> gWess_open_lcd_file(0x8007F2E0);
 
 void wess_dig_lcd_loader_init() noexcept {
 loc_80048EE4:
@@ -79,36 +87,13 @@ loc_80048FF0:
     return;
 }
 
-void lcd_open() noexcept {
-loc_80048FF8:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = ptrToVmAddr(psxcd_open((CdMapTbl_File) a0));
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 -= 0xD20;                                        // Result = 8007F2E0
-    a2 = v0;
-    t0 = a2 + 0x20;
-loc_80049018:
-    v0 = lw(a2);
-    v1 = lw(a2 + 0x4);
-    a0 = lw(a2 + 0x8);
-    a1 = lw(a2 + 0xC);
-    sw(v0, a3);
-    sw(v1, a3 + 0x4);
-    sw(a0, a3 + 0x8);
-    sw(a1, a3 + 0xC);
-    a2 += 0x10;
-    a3 += 0x10;
-    if (a2 != t0) goto loc_80049018;
-    v0 = lw(a2);
-    v1 = lw(a2 + 0x4);
-    sw(v0, a3);
-    sw(v1, a3 + 0x4);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 -= 0xD20;                                        // Result = 8007F2E0
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Opens the specified file for the LCD loader
+//------------------------------------------------------------------------------------------------------------------------------------------
+static PsxCd_File* wess_dig_lcd_data_open(const CdMapTbl_File file) noexcept {
+    const PsxCd_File* const pFile = psxcd_open(file);
+    *gWess_open_lcd_file = *pFile;
+    return gWess_open_lcd_file.get();
 }
 
 void lcd_upload_spu_samples() noexcept {
@@ -325,7 +310,7 @@ loc_80049380:
     return;
 }
 
-void lcd_close() noexcept {
+void wess_dig_lcd_psxcd_sync() noexcept {
 loc_800493AC:
     sp -= 0x20;
     sw(s0, sp + 0x10);
@@ -403,7 +388,7 @@ loc_8004949C:
     psxcd_init_pos();
     psxcd_set_data_mode();
     a0 = fp;
-    lcd_open();
+    v0 = ptrToVmAddr(wess_dig_lcd_data_open((CdMapTbl_File) a0));
     s0 = v0;
     v0 = lw(s0);
     s2 = lw(sp + 0x10);
@@ -579,7 +564,7 @@ loc_80049760:
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
     _thunk_LIBCD_CdControl();
-    lcd_close();
+    wess_dig_lcd_psxcd_sync();
     if (v0 != 0) goto loc_8004949C;
     v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
     psxcd_enable_callbacks();

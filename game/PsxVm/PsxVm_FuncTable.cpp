@@ -434,9 +434,8 @@ extern void Eng_NullEvent() noexcept;
 extern void SeqEngine() noexcept;
 extern void wess_dig_lcd_loader_init() noexcept;
 extern void wess_dig_set_sample_position() noexcept;
-extern void lcd_open() noexcept;
 extern void lcd_upload_spu_samples() noexcept;
-extern void lcd_close() noexcept;
+extern void wess_dig_lcd_psxcd_sync() noexcept;
 extern void wess_dig_lcd_load() noexcept;
 extern void wess_master_sfx_volume_get() noexcept;
 extern void wess_master_mus_volume_get() noexcept;
@@ -922,9 +921,8 @@ namespace PsxVm {
         { 0x80048B94, &SeqEngine },
         { 0x80048EE4, &wess_dig_lcd_loader_init },
         { 0x80048FCC, &wess_dig_set_sample_position },
-        { 0x80048FF8, &lcd_open },
         { 0x8004906C, &lcd_upload_spu_samples },
-        { 0x800493AC, &lcd_close },
+        { 0x800493AC, &wess_dig_lcd_psxcd_sync },
         { 0x80049454, &wess_dig_lcd_load },
         { 0x800497D8, &wess_master_sfx_volume_get },
         { 0x80049808, &wess_master_mus_volume_get },
