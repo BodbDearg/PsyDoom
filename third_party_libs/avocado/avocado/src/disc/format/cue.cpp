@@ -17,9 +17,22 @@ size_t Cue::getTrackCount() const { return tracks.size(); }
 
 Position Cue::getTrackStart(int track) const {
     size_t total = 0;
+
+// DOOM: fix the first two seconds of cd audio being skipped.
+// Only the data track needs the 2 second offset added: audio tracks are addressed using actual
+// physical disc minutes and seconds and that amount which includes the disc header already...
+//
+// This issue was most noticable when entering the main menu and also on the finale screens.
+#if DOOM_AVOCADO_MODS
+    if ((track == 0) && tracks.at(0).type == disc::TrackType::DATA) {
+        total += 75 * 2;
+    }
+#else
     if (tracks.at(0).type == disc::TrackType::DATA) {
         total += 75 * 2;
     }
+#endif
+
     for (int i = 0; i < track - 1; i++) {
         total += tracks.at(i).frames;
     }
