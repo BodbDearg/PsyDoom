@@ -628,34 +628,27 @@ bool wess_init() noexcept {
     return true;
 }
 
-void wess_exit() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x14);
-    s0 = a0;
-    v0 = Is_System_Active();
-    if (v0 == 0) goto loc_80042088;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58F4);                               // Load from: gbWess_sysinit (800758F4)
-    if (v0 == 0) goto loc_80042088;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58F8);                               // Load from: gbWess_module_loaded (800758F8)
-    if (v0 == 0) goto loc_8004205C;
-    wess_unload_module();
-loc_8004205C:
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shuts down the WESS API
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_exit(bool bForceRestoreTimerHandler) noexcept {
+    // Must be initialized to shut down
+    if ((!Is_System_Active()) || (!*gbWess_sysinit))
+        return;
+
+    // Unload the current module and do hardware specific shutdown
+    if (*gbWess_module_loaded) {
+        wess_unload_module();
+    }
+
     wess_low_level_exit();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x594C);                               // Load from: gbWess_WessTimerActive (8007594C)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x58F4);                                 // Store to: gbWess_sysinit (800758F4)
-    v0 |= s0;
-    if (v0 == 0) goto loc_80042088;
-    wess_restore_handler();
-loc_80042088:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Mark the API as not initialized and restore the previous timer handler if appropriate
+    *gbWess_sysinit = false;
+
+    if (bForceRestoreTimerHandler || *gbWess_WessTimerActive) {
+        wess_restore_handler();
+    }
 }
 
 void wess_get_wmd_start() noexcept {
