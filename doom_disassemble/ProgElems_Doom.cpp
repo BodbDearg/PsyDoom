@@ -2870,6 +2870,7 @@ static const ProgElem ELEMS[] = {
     { 0x8007594C, 0x80075950, "gbWess_WessTimerActive",                 ProgElemType::UINT32 },
     { 0x80075950, 0x80075954, "gWess_T2counter",                        ProgElemType::UINT32 },
     { 0x80075954, 0x80075958, "gWess_Millicount",                       ProgElemType::UINT32 },
+    { 0x80075958, 0x8007595C, "gWess_Millicount_Frac",                  ProgElemType::UINT32 },
     { 0x8007595C, 0x80075960, "gWess_EV2",                              ProgElemType::UINT32 },
     { 0x80075960, 0x80075964, "gbWess_seq_loader_enable",               ProgElemType::UINT32 },
     { 0x80075964, 0x80075968, "gWess_seq_loader_fileName",              ProgElemType::PTR32 },

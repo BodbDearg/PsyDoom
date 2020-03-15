@@ -7,8 +7,13 @@
 #include "PsyQ/LIBSPU.h"
 #include "wessseq.h"
 
-// Keeps track of global time (MS) for the sequencer and other operations
-const VmPtr<uint32_t> gWess_Millicount(0x80075954);
+// Keeps track of global time (MS) for the sequencer and other operations.
+// The fractional part is used for greater precision in carrying over fractional parts of milliseconds.
+const VmPtr<uint32_t>   gWess_Millicount(0x80075954);
+const VmPtr<uint32_t>   gWess_Millicount_Frac(0x80075958);
+
+// Tracks the number of interrupts or calls to 'WessInterruptHandler'
+const VmPtr<uint32_t>   gWess_T2counter(0x80075950);
 
 // True if the 'WessInterruptHandler' function is active and receiving periodic callbacks
 const VmPtr<bool32_t> gbWess_WessTimerActive(0x8007594C);
@@ -51,44 +56,36 @@ loc_80043B6C:
     return;
 }
 
-void WessInterruptHandler() noexcept {
-    sp -= 0x18;
-    a0 = 0x80000;                                       // Result = 00080000
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5950);                               // Load from: gWess_T2counter (80075950)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5958);                               // Load from: 80075958
-    a0 |= 0x5555;                                       // Result = 00085555
-    sw(ra, sp + 0x10);
-    v1 += a0;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5954);                               // Load from: gWess_Millicount (80075954)
-    v0++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5950);                                // Store to: gWess_T2counter (80075950)
-    v0 = v1 >> 16;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5958);                                // Store to: 80075958
-    v1 &= 0xFFFF;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5958);                                // Store to: 80075958
-    v0 += a0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5954);                                // Store to: gWess_Millicount (80075954)
+//------------------------------------------------------------------------------------------------------------------------------------------
+// This is the root update/step function for the music and sound sequencer.
+// Originally on the actual PlayStation this would have been triggered via hardware timer interrupts at approximately 121.9284 Hz.
+// For all code dealing with the timer however, it's just assumed to be firing at 120 Hz.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t WessInterruptHandler() noexcept {
+    // Increment the number of interrupts
+    *gWess_T2counter += 1;
+
+    // How much to step the millicount each time, in 16.16 format.
+    // This is approximately 1000/120 or 8.33333...
+    constexpr uint32_t MS_FRAC_STEP = 0x85555;
+
+    // Advance the millicount, both the whole and fractional parts
+    const uint32_t elapsedMillicount_Frac = *gWess_Millicount_Frac + MS_FRAC_STEP;
+    
+    *gWess_Millicount += elapsedMillicount_Frac >> 16;
+    *gWess_Millicount_Frac = elapsedMillicount_Frac & 0xFFFF;
+
+    // Update SPU volume fades
     psxspu_fadeengine();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5948);                               // Load from: gbWess_SeqOn (80075948)
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80043C0C;
+
+    // Execute the sequencer engine if it is enabled
+    if (*gbWess_SeqOn) {
+        SeqEngine();
     }
-    SeqEngine();
-    v0 = 0;                                             // Result = 00000000
-loc_80043C0C:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Not sure what the return value is used for, I couldn't find any documentation on it anywhere.
+    // It may have been unused and certainly IS unused in this port...
+    return 0;
 }
 
 void init_WessTimer() noexcept {

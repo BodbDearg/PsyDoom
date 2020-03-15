@@ -4,6 +4,8 @@
 #include "PcPsx/Types.h"
 
 extern const VmPtr<uint32_t>                    gWess_Millicount;
+extern const VmPtr<uint32_t>                    gWess_Millicount_Frac;
+extern const VmPtr<uint32_t>                    gWess_T2counter;
 extern const VmPtr<bool32_t>                    gbWess_WessTimerActive;
 extern const VmPtr<uint8_t[CD_SECTOR_SIZE]>     gWess_sectorBuffer1;
 extern const VmPtr<uint8_t[CD_SECTOR_SIZE]>     gWess_sectorBuffer2;
@@ -11,7 +13,7 @@ extern const VmPtr<bool32_t>                    gbWess_SeqOn;
 
 int16_t GetIntsPerSec() noexcept;
 void CalcPartsPerInt() noexcept;
-void WessInterruptHandler() noexcept;
+int32_t WessInterruptHandler() noexcept;
 void init_WessTimer() noexcept;
 void exit_WessTimer() noexcept;
 void Wess_init_for_LoadFileData() noexcept;
