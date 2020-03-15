@@ -11,7 +11,7 @@ void queue_wess_seq_pause() noexcept;
 void queue_wess_seq_restart() noexcept;
 void queue_wess_seq_pauseall() noexcept;
 void queue_wess_seq_restartall() noexcept;
-void zeroset() noexcept;
+void zeroset(void* const pDest, const uint32_t size) noexcept;
 void wess_install_error_handler() noexcept;
 void wess_get_master_status() noexcept;
 void Is_System_Active() noexcept;

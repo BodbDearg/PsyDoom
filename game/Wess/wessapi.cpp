@@ -508,20 +508,18 @@ loc_80041E44:
     return;
 }
 
-void zeroset() noexcept {
-loc_80041E78:
-    sp -= 8;
-    v0 = a1 - 1;
-    if (a1 == 0) goto loc_80041E98;
-    v1 = -1;                                            // Result = FFFFFFFF
-loc_80041E88:
-    sb(0, a0);
-    v0--;
-    a0++;
-    if (v0 != v1) goto loc_80041E88;
-loc_80041E98:
-    sp += 8;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Zero fill a region of memory
+//------------------------------------------------------------------------------------------------------------------------------------------
+void zeroset(void* const pDest, const uint32_t size) noexcept {
+    uint32_t remaining = size;
+    uint8_t* pDstByte = (uint8_t*) pDest;
+
+    while (remaining > 0) {
+        *pDstByte = 0;
+        --remaining;
+        ++pDstByte;        
+    }
 }
 
 void wess_install_error_handler() noexcept {
@@ -876,7 +874,7 @@ loc_8004239C:
     a1 = s0;
     at = 0x80070000;                                    // Result = 80070000
     sw(a1, at + 0x5914);                                // Store to: gWess_wmd_size (80075914)
-    zeroset();
+    zeroset(vmAddrToPtr<void>(a0), a1);
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x5900);                                 // Store to: gWess_max_seq_num (80075900)
     Is_System_Active();
