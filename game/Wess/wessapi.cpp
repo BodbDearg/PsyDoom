@@ -537,12 +537,11 @@ loc_80041EBC:
     return;
 }
 
-void Is_System_Active() noexcept {
-loc_80041ECC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58F4);                               // Load from: gbWess_sysinit (800758F4)
-    v0 = (v0 > 0);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the WESS API has been initialized
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool Is_System_Active() noexcept {
+    return *gbWess_sysinit;
 }
 
 // TODO: COMMENT
@@ -634,7 +633,7 @@ void wess_exit() noexcept {
     sw(s0, sp + 0x10);
     sw(ra, sp + 0x14);
     s0 = a0;
-    Is_System_Active();
+    v0 = Is_System_Active();
     if (v0 == 0) goto loc_80042088;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x58F4);                               // Load from: gbWess_sysinit (800758F4)
@@ -862,7 +861,7 @@ loc_8004239C:
     zeroset(vmAddrToPtr<void>(a0), a1);
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x5900);                                 // Store to: gWess_max_seq_num (80075900)
-    Is_System_Active();
+    v0 = Is_System_Active();
     if (v0 == 0) goto loc_800423D8;
     t3 = 4;                                             // Result = 00000004
     if (s2 != 0) goto loc_800423F0;
