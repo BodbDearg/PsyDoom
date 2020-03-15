@@ -9,7 +9,8 @@
 const VmPtr<bool32_t>   gbWess_module_loaded(0x800758F8);       // TODO: COMMENT
 
 
-static const VmPtr<bool32_t>    gbWess_sysinit(0x800758F4);     // Set to true once the WESS API has been initialized
+static const VmPtr<bool32_t>    gbWess_sysinit(0x800758F4);         // Set to true once the WESS API has been initialized
+static const VmPtr<bool32_t>    gbWess_early_exit(0x800758FC);      // Unused flag in PSX DOOM, I think to request the API to exit?
 
 void trackstart() noexcept {
 loc_80041734:
@@ -577,18 +578,14 @@ loc_80041F40:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Not sure what this function is for, but it appears unused in the retail game.
+// I think it is to request the WESS API to finish up early, possibly a leftover from PC code?
+//------------------------------------------------------------------------------------------------------------------------------------------
 void Register_Early_Exit() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58FC);                               // Load from: gbWess_early_exit (800758FC)
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80041F64;
+    if (!*gbWess_early_exit) {
+        *gbWess_early_exit = true;
     }
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x58FC);                                // Store to: gbWess_early_exit (800758FC)
-loc_80041F64:
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
