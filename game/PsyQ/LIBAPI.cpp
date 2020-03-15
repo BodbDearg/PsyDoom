@@ -88,14 +88,11 @@ bool LIBAPI_CloseEvent(const int32_t event) noexcept {
     return (v0 != 0);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Disables hardware interrupts
+//------------------------------------------------------------------------------------------------------------------------------------------
 void LIBAPI_EnterCriticalSection() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x80049C2C);
-#else
-    a0 = 1;
-    syscall(0x0);
-#endif
+    // Not using interrupts in this port/environment anymore - just ignore the call...
 }
 
 void LIBAPI_write() noexcept {
@@ -251,14 +248,11 @@ loc_80049E2C:
     emu_call(t2);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Re-enables hardware interrupts
+//------------------------------------------------------------------------------------------------------------------------------------------
 void LIBAPI_ExitCriticalSection() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x80049E3C);
-#else
-    a0 = 2;
-    syscall(0x0);
-#endif
+    // Not using interrupts in this port/environment anymore - just ignore the call...
 }
 
 void LIBAPI_open() noexcept {
