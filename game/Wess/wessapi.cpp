@@ -511,14 +511,11 @@ loc_80041E44:
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Zero fill a region of memory
 //------------------------------------------------------------------------------------------------------------------------------------------
-void zeroset(void* const pDest, const uint32_t size) noexcept {
-    uint32_t remaining = size;
-    uint8_t* pDstByte = (uint8_t*) pDest;
+void zeroset(void* const pDest, const uint32_t numBytes) noexcept {
+    uint8_t* const pDestBytes = (uint8_t*) pDest;
 
-    while (remaining > 0) {
-        *pDstByte = 0;
-        --remaining;
-        ++pDstByte;        
+    for (uint32_t byteIdx = 0; byteIdx < numBytes; ++byteIdx) {
+        pDestBytes[byteIdx] = 0;
     }
 }
 
@@ -764,22 +761,16 @@ loc_800421F8:
     return;
 }
 
-void wess_memcpy() noexcept {
-loc_80042218:
-    sp -= 8;
-    v1 = a2 - 1;
-    if (a2 == 0) goto loc_80042240;
-    a2 = -1;                                            // Result = FFFFFFFF
-loc_80042228:
-    v0 = lbu(a1);
-    a1++;
-    v1--;
-    sb(v0, a0);
-    a0++;
-    if (v1 != a2) goto loc_80042228;
-loc_80042240:
-    sp += 8;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does what it says on the tin...
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void wess_memcpy(void* const pDst, const void* const pSrc, const uint32_t numBytes) noexcept {
+    const uint8_t* const pSrcBytes = (const uint8_t*) pSrc;
+    uint8_t* const pDstBytes = (uint8_t*) pDst;
+
+    for (uint32_t byteIdx = 0; byteIdx < numBytes; ++byteIdx) {
+        pDstBytes[byteIdx] = pSrcBytes[byteIdx];
+    }
 }
 
 void conditional_read() noexcept {
@@ -794,7 +785,7 @@ loc_8004224C:
     a0 = lw(s1);
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    wess_memcpy();
+    wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
     v0 += s0;
@@ -912,7 +903,7 @@ loc_800423F0:
     sw(v1, v0);
     v0 += 0x4C;
     sw(v0, sp + 0x10);
-    wess_memcpy();
+    wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
     a1 = 0x800B0000;                                    // Result = 800B0000
     a1 = lw(a1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     v0 = 0x80070000;                                    // Result = 80070000
@@ -1116,7 +1107,7 @@ loc_80042750:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
     a2 = 0x1C;                                          // Result = 0000001C
-    wess_memcpy();
+    wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
     v1 = 0x800B0000;                                    // Result = 800B0000
@@ -1333,7 +1324,7 @@ loc_80042AD4:
     a0 = lw(v0 + 0x10);
     s6 = a1 - v1;
     a0 += s5;
-    wess_memcpy();
+    wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     s3 = 0;                                             // Result = 00000000
@@ -1354,7 +1345,7 @@ loc_80042B48:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
     a2 = 0x18;                                          // Result = 00000018
-    wess_memcpy();
+    wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
     v1 = lbu(fp);                                       // Load from: 8007EFE0
