@@ -688,7 +688,7 @@ loc_800420BC:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x590C);                               // Load from: gpWess_wmd_mem (8007590C)
     if (a0 == 0) goto loc_800420F4;
-    wess_free();
+    wess_free(vmAddrToPtr<void>(a0));
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x590C);                                 // Store to: gpWess_wmd_mem (8007590C)
 loc_800420F4:
@@ -847,7 +847,7 @@ loc_80042344:
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5908);                                // Store to: gbWess_wmd_mem_is_mine (80075908)
     a0 = s0;
-    wess_malloc();
+    v0 = ptrToVmAddr(wess_malloc());
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x590C);                                // Store to: gpWess_wmd_mem (8007590C)
     if (v0 != 0) goto loc_8004239C;

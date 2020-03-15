@@ -325,10 +325,6 @@ extern void wess_seq_trigger_special() noexcept;
 extern void wess_seq_status() noexcept;
 extern void wess_seq_stop() noexcept;
 extern void wess_seq_stopall() noexcept;
-extern void wess_low_level_init() noexcept;
-extern void wess_low_level_exit() noexcept;
-extern void wess_malloc() noexcept;
-extern void wess_free() noexcept;
 extern void CalcPartsPerInt() noexcept;
 extern void WessInterruptHandler() noexcept;
 extern void init_WessTimer() noexcept;
@@ -808,10 +804,6 @@ namespace PsxVm {
         { 0x8004371C, &wess_seq_status },
         { 0x800437F0, &wess_seq_stop },
         { 0x8004397C, &wess_seq_stopall },
-        { 0x80043AF8, &wess_low_level_init },
-        { 0x80043B18, &wess_low_level_exit },
-        { 0x80043B20, &wess_malloc },
-        { 0x80043B28, &wess_free },
         { 0x80043B38, &CalcPartsPerInt },
         { 0x80043B88, &WessInterruptHandler },
         { 0x80043C1C, &init_WessTimer },
