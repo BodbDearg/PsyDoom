@@ -5,6 +5,7 @@
 
 const VmPtr<uint8_t>    gWess_master_sfx_volume(0x80075A04);
 const VmPtr<uint8_t>    gWess_master_mus_volume(0x80075A05);
+const VmPtr<uint8_t>    gWess_pan_status(0x80075A06);           // If panning is disabled: 0 if disabled, 1 if enabled
 
 void Read_Vlq() noexcept {
 loc_80047664:

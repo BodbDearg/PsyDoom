@@ -80,8 +80,7 @@ enum finalestage_t : int32_t {
     F_STAGE_CAST,
 };
 
-static const VmPtr<finalestage_t> gFinaleStage(0x8007816C);
-
+static const VmPtr<finalestage_t>   gFinaleStage(0x8007816C);           // What stage of the finale we are on
 static const VmPtr<int32_t>         gFinTextYPos(0x80077F10);           // Current y position of the top finale line
 static const VmPtr<char[28]>        gFinIncomingLine(0x800A9048);       // Text for the incoming line
 static const VmPtr<int32_t>         gFinIncomingLineLen(0x80077F58);    // How many characters are being displayed for the incomming text line

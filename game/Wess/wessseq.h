@@ -4,6 +4,7 @@
 
 extern const VmPtr<uint8_t>     gWess_master_sfx_volume;
 extern const VmPtr<uint8_t>     gWess_master_mus_volume;
+extern const VmPtr<uint8_t>     gWess_pan_status;
 
 void Read_Vlq() noexcept;
 void Write_Vlq() noexcept;
