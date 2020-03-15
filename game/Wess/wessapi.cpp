@@ -589,24 +589,20 @@ loc_80041F64:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Install the timing handler used by the sound system.
+// This handler steps the sequencer periodically.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void wess_install_handler() noexcept {
-loc_80041F6C:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
     init_WessTimer();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Removes the timing handler used by the sound system.
+// Timing handling is restored to the system.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void wess_restore_handler() noexcept {
-loc_80041F8C:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
     exit_WessTimer();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void wess_init() noexcept {
