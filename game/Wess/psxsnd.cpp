@@ -20,7 +20,7 @@ loc_800415EC:
     sw(ra, sp + 0x24);
     sw(s2, sp + 0x18);
     sw(s0, sp + 0x10);
-    wess_init();
+    v0 = wess_init();
     psxcd_init();
     a0 = 0xC9;                                          // Result = 000000C9
     v0 = ptrToVmAddr(psxcd_open((CdMapTbl_File) a0));

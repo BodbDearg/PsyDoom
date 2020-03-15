@@ -17,6 +17,9 @@ const VmPtr<bool32_t> gbWess_WessTimerActive(0x8007594C);
 const VmPtr<uint8_t[CD_SECTOR_SIZE]> gWess_sectorBuffer1(0x8009656C);
 const VmPtr<uint8_t[CD_SECTOR_SIZE]> gWess_sectorBuffer2(0x80096D7C);
 
+// TODO: COMMENT
+const VmPtr<bool32_t> gbWess_SeqOn(0x80075948);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Gives the number of ticks or interrupts per second the music system uses.
 // In PSX DOOM the sequencer runs at roughly 120 Hz intervals.
@@ -414,6 +417,6 @@ void* wess_malloc() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Free memory for the sound system
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_free(void* const pMem) noexcept {
+void wess_free([[maybe_unused]] void* const pMem) noexcept {
     // Not implemented in PSX DOOM because 'wess_malloc' wasn't implemented...
 }

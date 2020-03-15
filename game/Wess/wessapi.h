@@ -20,7 +20,7 @@ void Is_Seq_Num_Valid() noexcept;
 void Register_Early_Exit() noexcept;
 void wess_install_handler() noexcept;
 void wess_restore_handler() noexcept;
-void wess_init() noexcept;
+bool wess_init() noexcept;
 void wess_exit() noexcept;
 void wess_get_wmd_start() noexcept;
 void wess_get_wmd_end() noexcept;

@@ -8,6 +8,9 @@
 
 const VmPtr<bool32_t>   gbWess_module_loaded(0x800758F8);       // TODO: COMMENT
 
+
+static const VmPtr<bool32_t>    gbWess_sysinit(0x800758F4);     // Set to true once the WESS API has been initialized
+
 void trackstart() noexcept {
 loc_80041734:
     v1 = lw(a0);
@@ -605,30 +608,25 @@ void wess_restore_handler() noexcept {
     exit_WessTimer();
 }
 
-void wess_init() noexcept {
-loc_80041FAC:
-    sp -= 0x18;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58F4);                               // Load from: gbWess_sysinit (800758F4)
-    v1 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x10);
-    if (v0 != 0) goto loc_80041FFC;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x594C);                               // Load from: gbWess_WessTimerActive (8007594C)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5948);                                 // Store to: gbWess_SeqOn (80075948)
-    if (v0 != 0) goto loc_80041FE4;
-    wess_install_handler();
-loc_80041FE4:
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the WESS API and returns 'true' if an initialization was actually done
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool wess_init() noexcept {
+    // If we don't need to initialize then don't...
+    if (*gbWess_sysinit)
+        return false;
+
+    // Ensure the sequencer is initially disabled
+    *gbWess_SeqOn = false;
+
+    // Install the timing handler/callback, init hardware specific stuff and mark the module as initialized
+    if (!*gbWess_WessTimerActive) {
+        wess_install_handler();
+    }
+    
     wess_low_level_init();
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x58F4);                                // Store to: gbWess_sysinit (800758F4)
-    v1 = 1;                                             // Result = 00000001
-loc_80041FFC:
-    v0 = v1;
-    ra = lw(sp + 0x10);
-    sp += 0x18;
+    *gbWess_sysinit = true;
+    return true;
 }
 
 void wess_exit() noexcept {
