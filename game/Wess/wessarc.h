@@ -5,7 +5,6 @@
 
 extern const VmPtr<uint32_t>                    gWess_Millicount;
 extern const VmPtr<uint32_t>                    gWess_Millicount_Frac;
-extern const VmPtr<uint32_t>                    gWess_T2counter;
 extern const VmPtr<bool32_t>                    gbWess_WessTimerActive;
 extern const VmPtr<uint8_t[CD_SECTOR_SIZE]>     gWess_sectorBuffer1;
 extern const VmPtr<uint8_t[CD_SECTOR_SIZE]>     gWess_sectorBuffer2;
