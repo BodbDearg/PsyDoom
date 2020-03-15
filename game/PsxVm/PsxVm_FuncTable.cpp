@@ -423,7 +423,6 @@ extern void wess_dig_set_sample_position() noexcept;
 extern void wess_dig_lcd_data_read() noexcept;
 extern void wess_dig_lcd_psxcd_sync() noexcept;
 extern void wess_dig_lcd_load() noexcept;
-extern void wess_master_sfx_vol_set() noexcept;
 extern void wess_master_mus_vol_set() noexcept;
 extern void wess_pan_mode_get() noexcept;
 extern void wess_pan_mode_set() noexcept;
@@ -891,7 +890,6 @@ namespace PsxVm {
         { 0x8004906C, &wess_dig_lcd_data_read },
         { 0x800493AC, &wess_dig_lcd_psxcd_sync },
         { 0x80049454, &wess_dig_lcd_load },
-        { 0x80049838, &wess_master_sfx_vol_set },
         { 0x80049870, &wess_master_mus_vol_set },
         { 0x80049A30, &wess_pan_mode_get },
         { 0x80049A40, &wess_pan_mode_set },

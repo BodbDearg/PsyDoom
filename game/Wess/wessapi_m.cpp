@@ -2,7 +2,6 @@
 // Williams Entertainment Sound System (WESS): master sequencer parameters manipulation.
 // Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 #include "wessapi_m.h"
 
 #include "PsxVm/PsxVm.h"
@@ -23,21 +22,13 @@ uint8_t wess_master_mus_volume_get() noexcept {
     return (Is_Module_Loaded()) ? *gWess_master_mus_volume : 0;
 }
 
-void wess_master_sfx_vol_set() noexcept {
-loc_80049838:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x14);
-    s0 = a0;
-    v0 = Is_Module_Loaded();
-    if (v0 == 0) goto loc_8004985C;
-    at = 0x80070000;                                    // Result = 80070000
-    sb(s0, at + 0x5A04);                                // Store to: gWess_master_sfx_volume (80075A04)
-loc_8004985C:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the master volume for sound effects
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_master_sfx_vol_set(const uint8_t vol) noexcept {
+    if (Is_Module_Loaded()) {
+        *gWess_master_sfx_volume = vol;
+    }
 }
 
 void wess_master_mus_vol_set() noexcept {

@@ -30,7 +30,7 @@ loc_80040FAC:
     sp -= 0x18;
     sw(ra, sp + 0x10);
     a0 &= 0xFF;
-    wess_master_sfx_vol_set();
+    wess_master_sfx_vol_set((uint8_t) a0);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
