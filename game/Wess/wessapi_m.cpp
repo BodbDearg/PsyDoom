@@ -1,40 +1,26 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Williams Entertainment Sound System (WESS): master sequencer parameters manipulation.
+// Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 #include "wessapi_m.h"
 
 #include "PsxVm/PsxVm.h"
 #include "wessapi.h"
+#include "wessseq.h"
 
-void wess_master_sfx_volume_get() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = Is_Module_Loaded();
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_800497F8;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x5A04);                              // Load from: gWess_master_sfx_volume (80075A04)
-loc_800497F8:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the master volume for sound effects
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint8_t wess_master_sfx_volume_get() noexcept {   
+    return (Is_Module_Loaded()) ? *gWess_master_sfx_volume : 0;
 }
 
-void wess_master_mus_volume_get() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = Is_Module_Loaded();
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80049828;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x5A05);                              // Load from: gWess_master_mus_volume (80075A05)
-loc_80049828:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the master volume for music
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint8_t wess_master_mus_volume_get() noexcept {
+    return (Is_Module_Loaded()) ? *gWess_master_mus_volume : 0;
 }
 
 void wess_master_sfx_vol_set() noexcept {

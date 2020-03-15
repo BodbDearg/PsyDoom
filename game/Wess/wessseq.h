@@ -1,5 +1,10 @@
 #pragma once
 
+#include "PsxVm/VmPtr.h"
+
+extern const VmPtr<uint8_t>     gWess_master_sfx_volume;
+extern const VmPtr<uint8_t>     gWess_master_mus_volume;
+
 void Read_Vlq() noexcept;
 void Write_Vlq() noexcept;
 void Len_Vlq() noexcept;

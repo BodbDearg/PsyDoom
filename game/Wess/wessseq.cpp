@@ -3,6 +3,9 @@
 #include "PsxVm/PsxVm.h"
 #include "wessarc.h"
 
+const VmPtr<uint8_t>    gWess_master_sfx_volume(0x80075A04);
+const VmPtr<uint8_t>    gWess_master_mus_volume(0x80075A05);
+
 void Read_Vlq() noexcept {
 loc_80047664:
     a2 = a0;
