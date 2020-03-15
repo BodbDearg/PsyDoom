@@ -113,29 +113,25 @@ void init_WessTimer() noexcept {
     LIBAPI_ExitCriticalSection();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shut down the timer interrupts powering the sequencer system
+//------------------------------------------------------------------------------------------------------------------------------------------
 void exit_WessTimer() noexcept {
-loc_80043CA8:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = psxspu_get_master_vol();
-    a0 = v0;
-    psxspu_set_master_vol(a0);
-    v0 = psxspu_get_cd_vol();
-    a0 = v0;
-    psxspu_set_cd_vol(a0);
+    // Make sure volume levels are actually what we think they are
+    const int32_t masterVol = psxspu_get_master_vol();
+    psxspu_set_master_vol(masterVol);
+
+    const int32_t cdVol = psxspu_get_cd_vol();
+    psxspu_set_cd_vol(cdVol);
+
+    // Disable interrupts, remove the timer event and renable interrupts
     LIBAPI_EnterCriticalSection();
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x595C);                               // Load from: gWess_EV2 (8007595C)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x594C);                                 // Store to: gbWess_WessTimerActive (8007594C)
-    LIBAPI_DisableEvent(a0);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x595C);                               // Load from: gWess_EV2 (8007595C)
-    LIBAPI_CloseEvent(a0);
+
+    *gbWess_WessTimerActive =  false;
+    LIBAPI_DisableEvent(*gWess_EV2);
+    LIBAPI_CloseEvent(*gWess_EV2);
+    
     LIBAPI_ExitCriticalSection();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void Wess_init_for_LoadFileData() noexcept {
