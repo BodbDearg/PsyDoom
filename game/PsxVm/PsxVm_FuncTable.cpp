@@ -306,7 +306,6 @@ extern void zeroset() noexcept;
 extern void wess_install_error_handler() noexcept;
 extern void wess_get_master_status() noexcept;
 extern void Is_System_Active() noexcept;
-extern void Is_Module_Loaded() noexcept;
 extern void Is_Seq_Num_Valid() noexcept;
 extern void Register_Early_Exit() noexcept;
 extern void wess_install_handler() noexcept;
@@ -792,7 +791,6 @@ namespace PsxVm {
         { 0x80041EA4, &wess_install_error_handler },
         { 0x80041EBC, &wess_get_master_status },
         { 0x80041ECC, &Is_System_Active },
-        { 0x80041EDC, &Is_Module_Loaded },
         { 0x80041EEC, &Is_Seq_Num_Valid },
         { 0x80041F48, &Register_Early_Exit },
         { 0x80041F6C, &wess_install_handler },

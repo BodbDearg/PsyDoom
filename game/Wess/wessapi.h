@@ -1,5 +1,10 @@
 #pragma once
 
+#include "PcPsx/Types.h"
+#include "PsxVm/VmPtr.h"
+
+extern const VmPtr<bool32_t>    gbWess_module_loaded;
+
 void trackstart() noexcept;
 void trackstop() noexcept;
 void queue_wess_seq_pause() noexcept;
@@ -10,7 +15,7 @@ void zeroset() noexcept;
 void wess_install_error_handler() noexcept;
 void wess_get_master_status() noexcept;
 void Is_System_Active() noexcept;
-void Is_Module_Loaded() noexcept;
+bool Is_Module_Loaded() noexcept;
 void Is_Seq_Num_Valid() noexcept;
 void Register_Early_Exit() noexcept;
 void wess_install_handler() noexcept;

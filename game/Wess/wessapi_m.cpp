@@ -6,7 +6,7 @@
 void wess_master_sfx_volume_get() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    Is_Module_Loaded();
+    v0 = Is_Module_Loaded();
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -23,7 +23,7 @@ loc_800497F8:
 void wess_master_mus_volume_get() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    Is_Module_Loaded();
+    v0 = Is_Module_Loaded();
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -43,7 +43,7 @@ loc_80049838:
     sw(s0, sp + 0x10);
     sw(ra, sp + 0x14);
     s0 = a0;
-    Is_Module_Loaded();
+    v0 = Is_Module_Loaded();
     if (v0 == 0) goto loc_8004985C;
     at = 0x80070000;                                    // Result = 80070000
     sb(s0, at + 0x5A04);                                // Store to: gWess_master_sfx_volume (80075A04)
@@ -68,7 +68,7 @@ loc_80049870:
     sw(s3, sp + 0x2C);
     sw(s2, sp + 0x28);
     sw(s1, sp + 0x24);
-    Is_Module_Loaded();
+    v0 = Is_Module_Loaded();
     if (v0 == 0) goto loc_800499FC;
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)

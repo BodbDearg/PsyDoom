@@ -260,7 +260,7 @@ void queue_wess_seq_update_type_special() noexcept {
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
     sw(a0, sp + 0x10);
-    Is_Module_Loaded();
+    v0 = Is_Module_Loaded();
     if (v0 == 0) goto loc_80044578;
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
@@ -362,7 +362,7 @@ loc_800445AC:
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
     sw(a0, sp + 0x10);
-    Is_Module_Loaded();
+    v0 = Is_Module_Loaded();
     if (v0 == 0) goto loc_8004470C;
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)

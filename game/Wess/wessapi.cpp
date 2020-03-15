@@ -6,6 +6,8 @@
 #include "wessarc.h"
 #include "wessseq.h"
 
+const VmPtr<bool32_t>   gbWess_module_loaded(0x800758F8);       // TODO: COMMENT
+
 void trackstart() noexcept {
 loc_80041734:
     v1 = lw(a0);
@@ -277,7 +279,7 @@ loc_80041ACC:
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
     sw(a0, sp + 0x10);
-    Is_Module_Loaded();
+    v0 = Is_Module_Loaded();
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -394,7 +396,7 @@ loc_80041C88:
     sw(s2, sp + 0x38);
     sw(s1, sp + 0x34);
     sw(s0, sp + 0x30);
-    Is_Module_Loaded();
+    v0 = Is_Module_Loaded();
     if (v0 == 0) goto loc_80041E44;
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
@@ -545,12 +547,9 @@ loc_80041ECC:
     return;
 }
 
-void Is_Module_Loaded() noexcept {
-loc_80041EDC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58F8);                               // Load from: gbWess_module_loaded (800758F8)
-    v0 = (v0 > 0);
-    return;
+// TODO: COMMENT
+bool Is_Module_Loaded() noexcept {
+    return *gbWess_module_loaded;
 }
 
 void Is_Seq_Num_Valid() noexcept {
@@ -2283,7 +2282,7 @@ loc_8004397C:
     sw(s2, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
-    Is_Module_Loaded();
+    v0 = Is_Module_Loaded();
     if (v0 == 0) goto loc_80043AC4;
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
