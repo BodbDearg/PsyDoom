@@ -822,7 +822,7 @@ loc_800422EC:
     wess_unload_module();
 loc_80042344:
     a0 = s3;
-    get_num_Wess_Sound_Drivers();
+    v0 = get_num_Wess_Sound_Drivers();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x58E4);                                // Store to: gWess_num_sd (800758E4)
     v0 = 1;                                             // Result = 00000001

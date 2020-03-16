@@ -949,7 +949,7 @@ int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Returns the current IO offset within the given file
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t psxcd_tell(PsxCd_File& file) noexcept {
+int32_t psxcd_tell(const PsxCd_File& file) noexcept {
     // Modding mechanism: allow files to be overriden with user files in a specified directory
     #if PC_PSX_DOOM_MODS
         if (ModMgr::isFileOverriden(file)) {

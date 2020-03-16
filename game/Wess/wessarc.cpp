@@ -25,6 +25,9 @@ const VmPtr<bool32_t> gbWess_SeqOn(0x80075948);
 static const VmPtr<uint32_t>   gWess_T2counter(0x80075950);     // Tracks the number of interrupts or calls to 'WessInterruptHandler'
 static const VmPtr<uint32_t>   gWess_EV2(0x8007595C);           // Hardware event handle for the timer interrupt event which drives the music system
 
+// Holds the current file open by the module loader
+static const VmPtr<PsxCd_File> gWess_module_fileref(0x8007EFFC);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Gives the number of ticks or interrupts per second the music system uses.
 // In PSX DOOM the sequencer runs at roughly 120 Hz intervals.
@@ -134,86 +137,58 @@ void exit_WessTimer() noexcept {
     LIBAPI_ExitCriticalSection();
 }
 
-void Wess_init_for_LoadFileData() noexcept {
-    v0 = 1;                                             // Result = 00000001
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do platform specific initialization for loading files and return 'true' if initialization was successful.
+// This did nothing for PSX DOOM and was never called...
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool Wess_init_for_LoadFileData() noexcept {
+    return true;
 }
 
-void module_open() noexcept {
-loc_80043D20:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = ptrToVmAddr(psxcd_open((CdMapTbl_File) a0));
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 -= 0x1004;                                       // Result = gWess_module_fileref[0] (8007EFFC)
-    a2 = v0;
-    t0 = a2 + 0x20;
-loc_80043D40:
-    v0 = lw(a2);
-    v1 = lw(a2 + 0x4);
-    a0 = lw(a2 + 0x8);
-    a1 = lw(a2 + 0xC);
-    sw(v0, a3);
-    sw(v1, a3 + 0x4);
-    sw(a0, a3 + 0x8);
-    sw(a1, a3 + 0xC);
-    a2 += 0x10;
-    a3 += 0x10;
-    if (a2 != t0) goto loc_80043D40;
-    v0 = lw(a2);
-    v1 = lw(a2 + 0x4);
-    sw(v0, a3);
-    sw(v1, a3 + 0x4);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 -= 0x1004;                                       // Result = gWess_module_fileref[0] (8007EFFC)
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Perform I/O while reading a module file: open the specified module file for reading and return it's pointer
+//------------------------------------------------------------------------------------------------------------------------------------------
+PsxCd_File* module_open(const CdMapTbl_File fileId) noexcept {
+    PsxCd_File* const pFile = psxcd_open(fileId);
+    *gWess_module_fileref = *pFile;
+    return gWess_module_fileref.get();
 }
 
-void module_read() noexcept {
-loc_80043D94:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Perform I/O while reading a module file: read the specified number of bytes from the given file.
+// Returns the number of bytes read.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t module_read(void* const pDest, const int32_t numBytes, PsxCd_File& file) noexcept {
+    return psxcd_read(pDest, numBytes, file);
 }
 
-void module_seek() noexcept {
-loc_80043DB4:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = psxcd_seek(*vmAddrToPtr<PsxCd_File>(a0), a1, (PsxCd_SeekMode) a2);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Perform I/O while reading a module file: seek to the specified position in the given file.
+// Returns '0' on success, any other value on failure.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t module_seek(PsxCd_File& file, const int32_t seekPos, const PsxCd_SeekMode seekMode) noexcept {
+    return psxcd_seek(file, seekPos, seekMode);
 }
 
-void module_tell() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = psxcd_tell(*vmAddrToPtr<PsxCd_File>(a0));
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Perform I/O while reading a module file: returns the current IO offset within the given file
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t module_tell(const PsxCd_File& file) noexcept {
+    return psxcd_tell(file);
 }
 
-void module_close() noexcept {
-loc_80043DF4:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    psxcd_close(*vmAddrToPtr<PsxCd_File>(a0));
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Perform I/O while reading a module file: close up the given file
+//------------------------------------------------------------------------------------------------------------------------------------------
+void module_close(PsxCd_File& file) noexcept {
+    psxcd_close(file);
 }
 
-void get_num_Wess_Sound_Drivers() noexcept {
-loc_80043E14:
-    v0 = 1;                                             // Result = 00000001
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the number of sound drivers available
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t get_num_Wess_Sound_Drivers() noexcept {
+    return 1;
 }
 
 void data_open() noexcept {

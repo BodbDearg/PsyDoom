@@ -51,7 +51,7 @@ bool psxcd_seeking_for_play() noexcept;
 bool psxcd_waiting_for_pause() noexcept;
 int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept;
 int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept;
-int32_t psxcd_tell(PsxCd_File& file) noexcept;
+int32_t psxcd_tell(const PsxCd_File& file) noexcept;
 void psxcd_close(PsxCd_File& file) noexcept;
 void psxcd_set_audio_mode() noexcept;
 void psxcd_set_loop_volume(const int32_t vol) noexcept;

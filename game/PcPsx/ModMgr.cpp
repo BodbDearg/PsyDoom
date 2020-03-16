@@ -217,7 +217,7 @@ int32_t ModMgr::seekForOverridenFile(PsxCd_File& file, int32_t offset, const Psx
     }
 }
 
-int32_t ModMgr::tellForOverridenFile(PsxCd_File& file) noexcept {
+int32_t ModMgr::tellForOverridenFile(const PsxCd_File& file) noexcept {
     ASSERT(isValidOverridenFile(file));
     std::FILE* const pFile = gOpenFileSlots[file.file.pos.minute];
     return (int32_t) std::ftell(pFile);

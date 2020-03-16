@@ -320,13 +320,6 @@ extern void wess_seq_status() noexcept;
 extern void wess_seq_stop() noexcept;
 extern void wess_seq_stopall() noexcept;
 extern void CalcPartsPerInt() noexcept;
-extern void Wess_init_for_LoadFileData() noexcept;
-extern void module_open() noexcept;
-extern void module_read() noexcept;
-extern void module_seek() noexcept;
-extern void module_tell() noexcept;
-extern void module_close() noexcept;
-extern void get_num_Wess_Sound_Drivers() noexcept;
 extern void data_open() noexcept;
 extern void data_read_chunk() noexcept;
 extern void data_read() noexcept;
@@ -756,6 +749,7 @@ namespace PsxVm {
         { 0x800413A8, &I_StartSound },
         { 0x800415B4, &_thunk_S_StartSound },
         { 0x800415D4, &S_UpdateSounds },
+
         { 0x800415EC, &PsxSoundInit },
         { 0x8004172C, &PsxSoundExit },
         { 0x80041734, &trackstart },
@@ -782,13 +776,6 @@ namespace PsxVm {
         { 0x800437F0, &wess_seq_stop },
         { 0x8004397C, &wess_seq_stopall },
         { 0x80043B38, &CalcPartsPerInt },
-        { 0x80043D18, &Wess_init_for_LoadFileData },
-        { 0x80043D20, &module_open },
-        { 0x80043D94, &module_read },
-        { 0x80043DB4, &module_seek },
-        { 0x80043DD4, &module_tell },
-        { 0x80043DF4, &module_close },
-        { 0x80043E14, &get_num_Wess_Sound_Drivers },
         { 0x80043E1C, &data_open },
         { 0x80043E90, &data_read_chunk },
         { 0x80043FAC, &data_read },
@@ -886,6 +873,7 @@ namespace PsxVm {
         { 0x80049A50, &wess_seq_range_sizeof },
         { 0x80049ADC, &wess_seq_range_load },
         { 0x80049B90, &wess_seq_range_free },
+
         { 0x80049C3C, &LIBAPI_write },
         { 0x80049C5C, &LIBAPI_InitPAD },
         { 0x80049DEC, &LIBAPI_StartPAD },

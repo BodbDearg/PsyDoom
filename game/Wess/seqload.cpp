@@ -54,7 +54,7 @@ loc_800447BC:
     if (v0 != 0) goto loc_80044800;
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x5964);                               // Load from: gWess_seq_loader_fileName (80075964)
-    module_open();
+    v0 = ptrToVmAddr(module_open((CdMapTbl_File) a0));
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5980);                                // Store to: 80075980
     if (v0 != 0) goto loc_80044800;
@@ -85,7 +85,7 @@ loc_80044828:
     if (v1 != v0) goto loc_80044850;
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x5980);                               // Load from: 80075980
-    module_close();
+    module_close(*vmAddrToPtr<PsxCd_File>(a0));
 loc_80044850:
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5974);                               // Load from: 80075974
@@ -156,7 +156,7 @@ loc_80044928:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x5980);                               // Load from: 80075980
     a2 = 0;                                             // Result = 00000000
-    module_seek();
+    v0 = module_seek(*vmAddrToPtr<PsxCd_File>(a0), a1, (PsxCd_SeekMode) a2);
     s0 = 4;                                             // Result = 00000004
     if (v0 != 0) goto loc_80044E98;
     a1 = 4;                                             // Result = 00000004
@@ -170,7 +170,7 @@ loc_80044928:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 = lw(a2 + 0x5980);                               // Load from: 80075980
     a0 += s2;
-    module_read();
+    v0 = module_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
     a0 = 2;                                             // Result = 00000002
     if (v0 != s0) goto loc_80044E9C;
     v0 = 0x80070000;                                    // Result = 80070000
@@ -192,7 +192,7 @@ loc_800449BC:
     a2 = 0x80070000;                                    // Result = 80070000
     a2 = lw(a2 + 0x5980);                               // Load from: 80075980
     a1 = 0x18;                                          // Result = 00000018
-    module_read();
+    v0 = module_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
     a0 = 2;                                             // Result = 00000002
     if (v0 != s0) goto loc_80044E9C;
     v1 = lbu(s6);                                       // Load from: 8007F050
@@ -417,7 +417,7 @@ loc_80044D28:
     s1 += v1;
     s0 = v1;
     a1 = s0;
-    module_read();
+    v0 = module_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
     a0 = 2;                                             // Result = 00000002
     if (s0 != v0) goto loc_80044E9C;
     v1 = 0x80070000;                                    // Result = 80070000
@@ -444,7 +444,7 @@ loc_80044D28:
     s1 += v0;
     s0 = v1;
     a1 = s0;
-    module_read();
+    v0 = module_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
     s2 += 0x20;                                         // Result = 00000020
     if (s0 != v0) goto loc_80044E90;
     s4--;
@@ -458,7 +458,7 @@ loc_80044E24:
     v0 = lw(v0 - 0xF9C);                                // Load from: 8007F064
     a1 <<= 2;
     a1 += v0;
-    module_seek();
+    v0 = module_seek(*vmAddrToPtr<PsxCd_File>(a0), a1, (PsxCd_SeekMode) a2);
     a0 = 3;                                             // Result = 00000003
     if (v0 != 0) goto loc_80044E9C;
     s4--;
