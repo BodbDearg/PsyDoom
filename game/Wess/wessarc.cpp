@@ -1,4 +1,7 @@
-#include "WESSARC.h"
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Williams Entertainment Sound System (WESS): platform specific utilities
+//------------------------------------------------------------------------------------------------------------------------------------------
+#include "wessarc.h"
 
 #include "psxcd.h"
 #include "psxspu.h"
@@ -19,14 +22,15 @@ const VmPtr<bool32_t>   gbWess_WessTimerActive(0x8007594C);
 const VmPtr<uint8_t[CD_SECTOR_SIZE]> gWess_sectorBuffer1(0x8009656C);
 const VmPtr<uint8_t[CD_SECTOR_SIZE]> gWess_sectorBuffer2(0x80096D7C);
 
-// TODO: COMMENT
+// True when the sequencer is enabled and can tick
 const VmPtr<bool32_t> gbWess_SeqOn(0x80075948);
 
-static const VmPtr<uint32_t>   gWess_T2counter(0x80075950);     // Tracks the number of interrupts or calls to 'WessInterruptHandler'
-static const VmPtr<uint32_t>   gWess_EV2(0x8007595C);           // Hardware event handle for the timer interrupt event which drives the music system
-
-// Holds the current file open by the module loader
-static const VmPtr<PsxCd_File> gWess_module_fileref(0x8007EFFC);
+static const VmPtr<uint32_t>    gWess_T2counter(0x80075950);            // Tracks the number of interrupts or calls to 'WessInterruptHandler'
+static const VmPtr<uint32_t>    gWess_EV2(0x8007595C);                  // Hardware event handle for the timer interrupt event which drives the music system
+static const VmPtr<PsxCd_File>  gWess_module_fileref(0x8007EFFC);       // Holds the current file open by the module loader
+static const VmPtr<PsxCd_File>  gWess_data_fileref(0x8007F024);         // Holds the current file open by the data loader
+static const VmPtr<bool32_t>    gbWess_ReadChunk1(0x8007F04C);          // If true we can read data to sector buffer 1
+static const VmPtr<bool32_t>    gbWess_ReadChunk2(0x8007EFF8);          // If true we can read data to sector buffer 2
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Gives the number of ticks or interrupts per second the music system uses.
@@ -191,172 +195,88 @@ int32_t get_num_Wess_Sound_Drivers() noexcept {
     return 1;
 }
 
-void data_open() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = ptrToVmAddr(psxcd_open((CdMapTbl_File) a0));
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 -= 0xFDC;                                        // Result = gWess_data_fileref[0] (8007F024)
-    a2 = v0;
-    t0 = a2 + 0x20;
-loc_80043E3C:
-    v0 = lw(a2);
-    v1 = lw(a2 + 0x4);
-    a0 = lw(a2 + 0x8);
-    a1 = lw(a2 + 0xC);
-    sw(v0, a3);
-    sw(v1, a3 + 0x4);
-    sw(a0, a3 + 0x8);
-    sw(a1, a3 + 0xC);
-    a2 += 0x10;
-    a3 += 0x10;
-    if (a2 != t0) goto loc_80043E3C;
-    v0 = lw(a2);
-    v1 = lw(a2 + 0x4);
-    sw(v0, a3);
-    sw(v1, a3 + 0x4);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 -= 0xFDC;                                        // Result = gWess_data_fileref[0] (8007F024)
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Open the given sound file for reading
+//------------------------------------------------------------------------------------------------------------------------------------------
+PsxCd_File* data_open(const CdMapTbl_File fileId) noexcept {
+    const PsxCd_File* const pFile = psxcd_open(fileId);
+    *gWess_data_fileref = *pFile;
+    return gWess_data_fileref.get();
 }
 
-void data_read_chunk() noexcept {
-loc_80043E90:
-    sp -= 0x20;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xFB4);                                // Load from: 8007F04C
-    v1 = a0;
-    sw(s1, sp + 0x14);
-    s1 = a1;
-    sw(s2, sp + 0x18);
-    s2 = a2;
-    sw(ra, sp + 0x1C);
-    sw(s0, sp + 0x10);
-    if (v0 == 0) goto loc_80043F00;
-    s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
-    a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
-    a2 = v1;
-    v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
-    a0 = s2;
-    v0 = LIBSPU_SpuSetTransferStartAddr(a0);
-    a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
-    a1 = s1;
-    v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x1008);                                // Store to: 8007EFF8
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0xFB4);                                  // Store to: 8007F04C
-    goto loc_80043F90;
-loc_80043F00:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x1008);                               // Load from: 8007EFF8
-    a1 = s1;
-    if (v0 == 0) goto loc_80043F54;
-    s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x6D7C;                                       // Result = gWess_data_read_chunk2[0] (80096D7C)
-    a0 = s0;                                            // Result = gWess_data_read_chunk2[0] (80096D7C)
-    a2 = v1;
-    v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
-    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
-    a0 = s2;
-    v0 = LIBSPU_SpuSetTransferStartAddr(a0);
-    a0 = s0;                                            // Result = gWess_data_read_chunk2[0] (80096D7C)
-    a1 = s1;
-    v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x1008);                                 // Store to: 8007EFF8
-    goto loc_80043F90;
-loc_80043F54:
-    s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
-    a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
-    a2 = v1;
-    v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
-    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
-    a0 = s2;
-    v0 = LIBSPU_SpuSetTransferStartAddr(a0);
-    a0 = s0;                                            // Result = gWess_data_read_chunk1[0] (8009656C)
-    a1 = s1;
-    v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0x1008);                                // Store to: 8007EFF8
-loc_80043F90:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Read a chunk of sound data from the given file and upload to the spu at the given address
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void data_read_chunk(PsxCd_File& file, const int32_t chunkSize, const uint32_t spuDestAddr) noexcept {
+    // This code alternates between reading to sector buffers 1 & 2.
+    // While it is reading from the CD it is hoped that other data is uploading to the SPU.
+    // In all cases after switching buffers and writing the new data to the SPU, wait for the previous transfer to complete (if there is one).
+    if (*gbWess_ReadChunk1) {
+        // Reading to chunk 1: very first read.
+        // Don't need to wait on a previous transfer in this case because there is none.
+        psxcd_read(gWess_sectorBuffer1.get(), chunkSize, file);
+        LIBSPU_SpuSetTransferStartAddr(spuDestAddr);
+        LIBSPU_SpuWrite(gWess_sectorBuffer1.get(), chunkSize);
+        *gbWess_ReadChunk2 = true;
+        *gbWess_ReadChunk1 = false;
+    } else {
+        if (*gbWess_ReadChunk2) {
+            // Reading to chunk 2
+            psxcd_read(gWess_sectorBuffer2.get(), chunkSize, file);
+            LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
+            LIBSPU_SpuSetTransferStartAddr(spuDestAddr);
+            LIBSPU_SpuWrite(gWess_sectorBuffer2.get(), chunkSize);
+            *gbWess_ReadChunk2 = false;
+        } else {
+            // Reading to chunk 1: not the first read
+            psxcd_read(gWess_sectorBuffer1.get(), chunkSize, file);
+            LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
+            LIBSPU_SpuSetTransferStartAddr(spuDestAddr);
+            LIBSPU_SpuWrite(gWess_sectorBuffer1.get(), chunkSize);
+            *gbWess_ReadChunk2 = true;
+        }
+    }
 }
 
-void data_read() noexcept {
-    sp -= 0x28;
-    sw(s2, sp + 0x18);
-    s2 = a0;
-    sw(s3, sp + 0x1C);
-    s3 = a2;
-    sw(s0, sp + 0x10);
-    s0 = s3;
-    sw(s1, sp + 0x14);
-    s1 = a1;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x598C);                               // Load from: 8007598C
-    a1 = a3;
-    v0 -= s1;
-    v0 = (v0 < s3);
-    sw(ra, sp + 0x20);
-    if (v0 == 0) goto loc_80043FF4;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80044058;
-loc_80043FF4:
-    a0 = s2;
-    a2 = 0;                                             // Result = 00000000
-    v0 = psxcd_seek(*vmAddrToPtr<PsxCd_File>(a0), a1, (PsxCd_SeekMode) a2);
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xFB4);                                 // Store to: 8007F04C
-    v0 = (i32(s3) < 0x800);
-    if (v0 != 0) goto loc_80044038;
-loc_80044018:
-    a0 = s2;
-    a1 = 0x800;                                         // Result = 00000800
-    a2 = s1;
-    data_read_chunk();
-    s0 -= 0x800;
-    v0 = (i32(s0) < 0x800);
-    s1 += 0x800;
-    if (v0 == 0) goto loc_80044018;
-loc_80044038:
-    a0 = s2;
-    if (s0 == 0) goto loc_8004404C;
-    a1 = s0;
-    a2 = s1;
-    data_read_chunk();
-loc_8004404C:
-    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
-    v0 = s3;
-loc_80044058:
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Read a number of bytes from the given sound file to the specified address in SPU RAM.
+// Returns the number of bytes that were written to SPU RAM.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t data_read(PsxCd_File& file, const int32_t destSpuAddr, const int32_t numBytes, const int32_t fileOffset) noexcept {
+    // Will the transfer fit? Ignore if it doesn't...
+    const int32_t maxBytes = *gPsxSpu_sram_end - destSpuAddr;
+
+    if (numBytes > maxBytes)
+        return 0;
+
+    // Seek to the specified location and begin reading sector sized chunks
+    psxcd_seek(file, fileOffset, PsxCd_SeekMode::SET);
+
+    *gbWess_ReadChunk1 = true;
+    uint32_t numBytesLeft = numBytes;
+    uint32_t curDestSpuAddr = destSpuAddr;
+
+    while (numBytesLeft >= CD_SECTOR_SIZE) {
+        data_read_chunk(file, CD_SECTOR_SIZE, curDestSpuAddr);
+        numBytesLeft -= CD_SECTOR_SIZE;
+        curDestSpuAddr += CD_SECTOR_SIZE;
+    }
+
+    // Read what remains, if anything
+    if (numBytesLeft > 0) {
+        data_read_chunk(file, numBytesLeft, curDestSpuAddr);
+    }
+
+    // Wait for the SPU transfer to finish before exiting
+    LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);    
+    return numBytes;
 }
 
-void data_close() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    psxcd_close(*vmAddrToPtr<PsxCd_File>(a0));
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Close the given sound file that was opened for reading
+//------------------------------------------------------------------------------------------------------------------------------------------
+void data_close(PsxCd_File& file) noexcept {
+    psxcd_close(file);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

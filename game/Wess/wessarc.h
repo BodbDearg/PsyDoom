@@ -22,10 +22,9 @@ int32_t module_seek(PsxCd_File& file, const int32_t seekPos, const PsxCd_SeekMod
 int32_t module_tell(const PsxCd_File& file) noexcept;
 void module_close(PsxCd_File& file) noexcept;
 int32_t get_num_Wess_Sound_Drivers() noexcept;
-void data_open() noexcept;
-void data_read_chunk() noexcept;
-void data_read() noexcept;
-void data_close() noexcept;
+PsxCd_File* data_open(const CdMapTbl_File fileId) noexcept;
+int32_t data_read(PsxCd_File& file, const int32_t destSpuAddr, const int32_t numBytes, const int32_t fileOffset) noexcept;
+void data_close(PsxCd_File& file) noexcept;
 void wess_low_level_init() noexcept;
 void wess_low_level_exit() noexcept;
 void* wess_malloc() noexcept;

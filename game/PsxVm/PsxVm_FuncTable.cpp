@@ -320,10 +320,6 @@ extern void wess_seq_status() noexcept;
 extern void wess_seq_stop() noexcept;
 extern void wess_seq_stopall() noexcept;
 extern void CalcPartsPerInt() noexcept;
-extern void data_open() noexcept;
-extern void data_read_chunk() noexcept;
-extern void data_read() noexcept;
-extern void data_close() noexcept;
 extern void updatetrackstat() noexcept;
 extern void wess_seq_trigger_type() noexcept;
 extern void wess_seq_trigger_type_special() noexcept;
@@ -776,10 +772,6 @@ namespace PsxVm {
         { 0x800437F0, &wess_seq_stop },
         { 0x8004397C, &wess_seq_stopall },
         { 0x80043B38, &CalcPartsPerInt },
-        { 0x80043E1C, &data_open },
-        { 0x80043E90, &data_read_chunk },
-        { 0x80043FAC, &data_read },
-        { 0x80044078, &data_close },
         { 0x80044098, &updatetrackstat },
         { 0x8004438C, &wess_seq_trigger_type },
         { 0x800443DC, &wess_seq_trigger_type_special },

@@ -1,12 +1,14 @@
 #pragma once
 
-#include <cstdint>
+#include "PsxVm/VmPtr.h"
 
 enum SpuReverbMode : uint32_t;
 
 // Maximum volume levels
 static constexpr int16_t MAX_MASTER_VOL = 0x3FFF;
 static constexpr int16_t MAX_CD_VOL     = 0x3CFF;
+
+extern const VmPtr<uint32_t> gPsxSpu_sram_end;
 
 void psxspu_init_reverb(
     const SpuReverbMode reverbMode,

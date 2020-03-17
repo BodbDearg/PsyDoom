@@ -8,7 +8,6 @@
 
 const VmPtr<bool32_t>   gbWess_module_loaded(0x800758F8);       // TODO: COMMENT
 
-
 static const VmPtr<bool32_t>    gbWess_sysinit(0x800758F4);         // Set to true once the WESS API has been initialized
 static const VmPtr<bool32_t>    gbWess_early_exit(0x800758FC);      // Unused flag in PSX DOOM, I think to request the API to exit?
 

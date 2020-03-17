@@ -12,6 +12,10 @@
 #define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
+// The end address of usable SPU RAM.
+// This can vary depending on the reverb mode - some reverb modes require more RAM than others.
+const VmPtr<uint32_t> gPsxSpu_sram_end(0x8007598C);
+
 // Is this module initialized?
 static const VmPtr<bool32_t> gbPsxSpu_initialized(0x80075984);
 
@@ -46,10 +50,6 @@ static const VmPtr<int32_t> gPsxSpu_cd_fadestep_fixed(0x800759B4);
 
 // Current reverb settings
 static const VmPtr<SpuReverbAttr> gPsxSpu_rev_attr(0x8007f080);
-
-// The end address of usable SPU RAM.
-// This can vary depending on the reverb mode - some reverb modes require more RAM than others.
-static const VmPtr<uint32_t> gPsxSpu_sram_end(0x8007598C);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize reverb to the specified settings
