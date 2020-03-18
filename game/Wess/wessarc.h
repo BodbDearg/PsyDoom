@@ -27,5 +27,5 @@ int32_t data_read(PsxCd_File& file, const int32_t destSpuAddr, const int32_t num
 void data_close(PsxCd_File& file) noexcept;
 void wess_low_level_init() noexcept;
 void wess_low_level_exit() noexcept;
-void* wess_malloc() noexcept;
+void* wess_malloc(const int32_t size) noexcept;
 void wess_free(void* const pMem) noexcept;

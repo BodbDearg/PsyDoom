@@ -296,7 +296,7 @@ void wess_low_level_exit() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Allocate memory for the sound system
 //------------------------------------------------------------------------------------------------------------------------------------------
-void* wess_malloc() noexcept {
+void* wess_malloc([[maybe_unused]] const int32_t size) noexcept {
     // Not implemented in PSX DOOM - always returned 'null'
     return nullptr;
 }

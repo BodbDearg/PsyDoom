@@ -829,7 +829,7 @@ loc_80042344:
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x5908);                                // Store to: gbWess_wmd_mem_is_mine (80075908)
     a0 = s0;
-    v0 = ptrToVmAddr(wess_malloc());
+    v0 = ptrToVmAddr(wess_malloc(a0));
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x590C);                                // Store to: gpWess_wmd_mem (8007590C)
     if (v0 != 0) goto loc_8004239C;
