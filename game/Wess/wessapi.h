@@ -27,7 +27,14 @@ void wess_get_wmd_end() noexcept;
 void free_mem_if_mine() noexcept;
 void wess_unload_module() noexcept;
 void conditional_read() noexcept;
-void wess_load_module() noexcept;
+
+int32_t wess_load_module(
+    const void* const pWmd,
+    void* const pDestMem,
+    const int32_t memoryAllowance,
+    VmPtr<int32_t>* pSettingTagLists
+) noexcept;
+
 void filltrackstat() noexcept;
 void assigntrackstat() noexcept;
 void wess_seq_structrig() noexcept;

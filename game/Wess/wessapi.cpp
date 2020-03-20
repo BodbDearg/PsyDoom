@@ -1,15 +1,18 @@
 #include "wessapi.h"
 
+#include "PcPsx/Finally.h"
 #include "psxcmd.h"
 #include "PsxVm/PsxVm.h"
 #include "wessapi_t.h"
 #include "wessarc.h"
 #include "wessseq.h"
 
-const VmPtr<bool32_t>   gbWess_module_loaded(0x800758F8);       // TODO: COMMENT
+const VmPtr<bool32_t>   gbWess_module_loaded(0x800758F8);       // If true then a WMD file (module) has been loaded
 
-static const VmPtr<bool32_t>    gbWess_sysinit(0x800758F4);         // Set to true once the WESS API has been initialized
-static const VmPtr<bool32_t>    gbWess_early_exit(0x800758FC);      // Unused flag in PSX DOOM, I think to request the API to exit?
+static const VmPtr<bool32_t>    gbWess_sysinit(0x800758F4);             // Set to true once the WESS API has been initialized
+static const VmPtr<bool32_t>    gbWess_early_exit(0x800758FC);          // Unused flag in PSX DOOM, I think to request the API to exit?
+static const VmPtr<int32_t>     gWess_num_sd(0x800758E4);               // The number of sound drivers available
+static const VmPtr<bool32_t>    gbWess_wmd_mem_is_mine(0x80075908);     // TODO: COMMENT
 
 void trackstart() noexcept {
 loc_80041734:
@@ -661,9 +664,7 @@ loc_800420AC:
 }
 
 void free_mem_if_mine() noexcept {
-loc_800420BC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5908);                               // Load from: gbWess_wmd_mem_is_mine (80075908)
+    v0 = *gbWess_wmd_mem_is_mine;
     sp -= 0x18;
     sw(ra, sp + 0x10);
     if (v0 == 0) goto loc_800420FC;
@@ -674,8 +675,7 @@ loc_800420BC:
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x590C);                                 // Store to: gpWess_wmd_mem (8007590C)
 loc_800420F4:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5908);                                 // Store to: gbWess_wmd_mem_is_mine (80075908)
+    *gbWess_wmd_mem_is_mine = 0;
 loc_800420FC:
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -683,9 +683,7 @@ loc_800420FC:
 }
 
 void wess_unload_module() noexcept {
-loc_8004210C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58F8);                               // Load from: gbWess_module_loaded (800758F8)
+    v0 = *gbWess_module_loaded;
     sp -= 0x30;
     sw(ra, sp + 0x28);
     sw(s3, sp + 0x24);
@@ -731,8 +729,7 @@ loc_800421D8:
     if (v0 != 0) goto loc_80042184;
 loc_800421E8:
     free_mem_if_mine();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x58F8);                                 // Store to: gbWess_module_loaded (800758F8)
+    *gbWess_module_loaded = false;
 loc_800421F8:
     ra = lw(sp + 0x28);
     s3 = lw(sp + 0x24);
@@ -796,70 +793,89 @@ loc_800422D0:
     return;
 }
 
-void wess_load_module() noexcept {
-loc_800422EC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58F8);                               // Load from: gbWess_module_loaded (800758F8)
+int32_t wess_load_module(
+    const void* const pWmd,
+    void* const pDestMem,
+    const int32_t memoryAllowance,
+    VmPtr<int32_t>* pSettingTagLists
+) noexcept {
+    a0 = ptrToVmAddr(pWmd);
+    a1 = ptrToVmAddr(pDestMem);
+    a2 = memoryAllowance;
+    a3 = ptrToVmAddr(pSettingTagLists);
+
     sp -= 0x80;
     sw(s2, sp + 0x60);
-    s2 = a0;
     sw(s1, sp + 0x5C);
-    s1 = a1;
     sw(s0, sp + 0x58);
-    s0 = a2;
     sw(s3, sp + 0x64);
-    sw(ra, sp + 0x7C);
     sw(fp, sp + 0x78);
     sw(s7, sp + 0x74);
     sw(s6, sp + 0x70);
     sw(s5, sp + 0x6C);
     sw(s4, sp + 0x68);
+
+    auto cleanupStackFrame = finally([]() {
+        fp = lw(sp + 0x78);
+        s7 = lw(sp + 0x74);
+        s6 = lw(sp + 0x70);
+        s5 = lw(sp + 0x6C);
+        s4 = lw(sp + 0x68);
+        s3 = lw(sp + 0x64);
+        s2 = lw(sp + 0x60);
+        s1 = lw(sp + 0x5C);
+        s0 = lw(sp + 0x58);
+        sp += 0x80;
+    });
+
+    s2 = a0;
+    s1 = a1;    
+    s0 = a2;
+
     at = 0x80070000;                                    // Result = 80070000
     sw(s0, at + 0x5904);                                // Store to: gWess_mem_limit (80075904)
     s3 = a3;
-    if (v0 == 0) goto loc_80042344;
-    wess_unload_module();
-loc_80042344:
+
+    if (*gbWess_module_loaded) {
+        wess_unload_module();
+    }
+
     a0 = s3;
-    v0 = get_num_Wess_Sound_Drivers();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x58E4);                                // Store to: gWess_num_sd (800758E4)
-    v0 = 1;                                             // Result = 00000001
-    if (s1 != 0) goto loc_8004238C;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5908);                                // Store to: gbWess_wmd_mem_is_mine (80075908)
-    a0 = s0;
-    v0 = ptrToVmAddr(wess_malloc(a0));
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x590C);                                // Store to: gpWess_wmd_mem (8007590C)
-    if (v0 != 0) goto loc_8004239C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58F8);                               // Load from: gbWess_module_loaded (800758F8)
-    goto loc_80043090;
-loc_8004238C:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5908);                                 // Store to: gbWess_wmd_mem_is_mine (80075908)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s1, at + 0x590C);                                // Store to: gpWess_wmd_mem (8007590C)
-loc_8004239C:
+    *gWess_num_sd = get_num_Wess_Sound_Drivers();
+    
+    if (s1 == 0) {
+        *gbWess_wmd_mem_is_mine = true;
+        a0 = s0;
+        v0 = ptrToVmAddr(wess_malloc(a0));
+        at = 0x80070000;                                    // Result = 80070000
+        sw(v0, at + 0x590C);                                // Store to: gpWess_wmd_mem (8007590C)
+
+        if (v0 == 0) {
+            return *gbWess_module_loaded;
+        }
+    } else {
+        *gbWess_wmd_mem_is_mine = false;
+        at = 0x80070000;                                    // Result = 80070000
+        sw(s1, at + 0x590C);                                // Store to: gpWess_wmd_mem (8007590C)
+    }
+    
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x590C);                               // Load from: gpWess_wmd_mem (8007590C)
     a1 = s0;
     at = 0x80070000;                                    // Result = 80070000
     sw(a1, at + 0x5914);                                // Store to: gWess_wmd_size (80075914)
+    
     zeroset(vmAddrToPtr<void>(a0), a1);
+
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x5900);                                 // Store to: gWess_max_seq_num (80075900)
-    v0 = Is_System_Active();
-    if (v0 == 0) goto loc_800423D8;
-    t3 = 4;                                             // Result = 00000004
-    if (s2 != 0) goto loc_800423F0;
-loc_800423D8:
-    free_mem_if_mine();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58F8);                               // Load from: gbWess_module_loaded (800758F8)
-    goto loc_80043090;
-loc_800423F0:
+    
+    if ((!Is_System_Active()) || (!pWmd)) {
+        free_mem_if_mine();
+        return *gbWess_module_loaded;
+    }
+
+    t3 = 4;
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x590C);                               // Load from: gpWess_wmd_mem (8007590C)
     a3 = 0x80070000;                                    // Result = 80070000
@@ -870,7 +886,7 @@ loc_800423F0:
     v1 = v0 + 0x38;
     sw(v1, v0 + 0xC);
     a0 = lw(v0 + 0xC);
-    a2 = 0x10;                                          // Result = 00000010
+    a2 = 0x10;
     at = 0x80070000;                                    // Result = 80070000
     sw(a1, at + 0x58EC);                                // Store to: gpWess_tmp_fp_wmd_file_2 (800758EC)
     at = 0x80070000;                                    // Result = 80070000
@@ -885,7 +901,9 @@ loc_800423F0:
     sw(v1, v0);
     v0 += 0x4C;
     sw(v0, sp + 0x10);
+
     wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
+
     a1 = 0x800B0000;                                    // Result = 800B0000
     a1 = lw(a1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     v0 = 0x80070000;                                    // Result = 80070000
@@ -898,16 +916,13 @@ loc_800423F0:
     v0 += 0x10;
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    v0 = 1;                                             // Result = 00000001
-    if (a0 != v1) goto loc_800424A0;
-    v1 = lw(a2 + 0x4);
-    if (v1 == v0) goto loc_800424B0;
-loc_800424A0:
-    free_mem_if_mine();
-loc_800424A8:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80043090;
-loc_800424B0:
+    v0 = 1;
+
+    if ((a0 != v1) || (lw(a2 + 0x4) != v0)) {
+        free_mem_if_mine();
+        return 0;
+    }
+    
     v1 = lw(sp + 0x10);
     v0 = lw(a1 + 0xC);
     sw(v1, a1 + 0x20);
@@ -923,8 +938,7 @@ loc_800424B0:
     v0 = a0 << 2;
     v0 += a0;
     v0 <<= 4;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lbu(a0 + 0x58E4);                              // Load from: gWess_num_sd (800758E4)
+    a0 = *gWess_num_sd;
     v1 += v0;
     sw(v1, sp + 0x10);
     sb(a0, a1 + 0x8);
@@ -939,18 +953,18 @@ loc_800424B0:
     v1 = v0 & 2;
     v0 += v1;
     sw(v0, sp + 0x10);
-    v0 = -1;                                            // Result = FFFFFFFF
+    v0 = -1;
     v1 = lbu(a0 + 0x8);
     a1 = lw(a0 + 0x14);
     v1--;
-    a0 = 0x80;                                          // Result = 00000080
-    if (v1 == v0) goto loc_8004255C;
-loc_8004254C:
-    sb(a0, a1);
-    v1--;
-    a1++;
-    if (v1 != v0) goto loc_8004254C;
-loc_8004255C:
+    a0 = 0x80;
+
+    while (v1 != v0) {
+        sb(a0, a1);
+        v1--;
+        a1++;
+    }
+    
     a2 = 0x800B0000;                                    // Result = 800B0000
     a2 = lw(a2 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     a0 = lw(sp + 0x10);
@@ -963,112 +977,102 @@ loc_8004255C:
     v0 <<= 2;
     a0 += v0;
     sw(a0, sp + 0x10);
-    if (s3 == 0) goto loc_80042708;
-    a1 = lbu(a2 + 0x8);
-    v0 = -1;                                            // Result = FFFFFFFF
-    a1--;
-    {
-        const bool bJump = (a1 == v0);
+
+    if (s3 != 0) {
+        a1 = lbu(a2 + 0x8);
+        a1--;
         v0 = a1 << 2;
-        if (bJump) goto loc_80042708;
+
+        if (a1 != -1) {
+            t2 = a2;
+            t1 = v0 + s3;
+            v0 += a1;
+            v0 <<= 2;
+            v0 += a1;
+            t0 = v0 << 2;
+
+            do {
+                v0 = lw(t1);
+                v0 = lw(v0);
+                a3 = 0;
+
+                while (v0 != 0) {
+                    v0 = lw(t2 + 0x18);
+                    v1 = lw(t1);
+                    v0 += t0;
+                    v1 += a3;
+                    v1 = lw(v1);
+                    v0 += a3;
+                    sw(v1, v0 + 0x24);
+                    v0 = lw(t2 + 0x18);
+                    v1 = lw(t1);
+                    v0 += t0;
+                    v1 += a3;
+                    v1 = lw(v1 + 0x4);
+                    v0 += a3;
+                    sw(v1, v0 + 0x28);
+                    v0 = lw(t2 + 0x18);
+                    a2 = t0 + v0;
+                    a0 = a3 + a2;
+                    v1 = lw(a0 + 0x24);
+                    
+                    if (v1 == 1) {
+                        v0 = lw(a0 + 0x28);
+                        sw(v0, a2 + 0x4C);
+                    }
+                    else if (v1 == 2) {
+                        v1 = -2;
+                        v0 = lw(a2 + 0x50);
+                        a0 = lw(a0 + 0x28);
+                        v1 &= v0;
+                        v0 &= 1;
+                        v0 |= a0;
+                        v0 &= 1;
+                        v1 |= v0;
+                        sw(v1, a2 + 0x50);
+                    }
+                    else if (v1 == 3) {
+                        v1 = -3;
+                        v0 = lw(a2 + 0x50);
+                        a0 = lw(a0 + 0x28);
+                        v1 &= v0;
+                        v0 >>= 1;
+                        v0 &= 1;
+                        v0 |= a0;
+                        v0 &= 1;
+                        v0 <<= 1;
+                        v1 |= v0;
+                        sw(v1, a2 + 0x50);
+                    }
+                    else if (v1 == 4) {
+                        v1 = -5;
+                        v0 = lw(a2 + 0x50);
+                        a0 = lw(a0 + 0x28);
+                        v1 &= v0;
+                        v0 >>= 2;
+                        v0 &= 1;
+                        v0 |= a0;
+                        v0 &= 1;
+                        v0 <<= 2;
+                        v1 |= v0;
+                        sw(v1, a2 + 0x50);
+                    }
+                
+                    v0 = a1 << 2;
+                    v0 += s3;
+                    v0 = lw(v0);
+                    a3 += 8;
+                    v0 += a3;
+                    v0 = lw(v0);
+                }
+
+                t1 -= 4;
+                a1--;
+                t0 -= 0x54;
+            } while (a1 != -1);
+        }
     }
-    t2 = a2;
-    t1 = v0 + s3;
-    v0 += a1;
-    v0 <<= 2;
-    v0 += a1;
-    t0 = v0 << 2;
-loc_800425BC:
-    v0 = lw(t1);
-    v0 = lw(v0);
-    if (v0 == 0) goto loc_800426F4;
-    a3 = 0;                                             // Result = 00000000
-loc_800425D8:
-    v0 = lw(t2 + 0x18);
-    v1 = lw(t1);
-    v0 += t0;
-    v1 += a3;
-    v1 = lw(v1);
-    v0 += a3;
-    sw(v1, v0 + 0x24);
-    v0 = lw(t2 + 0x18);
-    v1 = lw(t1);
-    v0 += t0;
-    v1 += a3;
-    v1 = lw(v1 + 0x4);
-    v0 += a3;
-    sw(v1, v0 + 0x28);
-    v0 = lw(t2 + 0x18);
-    a2 = t0 + v0;
-    a0 = a3 + a2;
-    v1 = lw(a0 + 0x24);
-    v0 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_8004263C;
-    }
-    v0 = lw(a0 + 0x28);
-    sw(v0, a2 + 0x4C);
-    goto loc_800426D0;
-loc_8004263C:
-    if (v1 != v0) goto loc_80042664;
-    v1 = -2;                                            // Result = FFFFFFFE
-    v0 = lw(a2 + 0x50);
-    a0 = lw(a0 + 0x28);
-    v1 &= v0;
-    v0 &= 1;
-    v0 |= a0;
-    v0 &= 1;
-    goto loc_800426C8;
-loc_80042664:
-    v0 = 3;                                             // Result = 00000003
-    if (v1 != v0) goto loc_80042698;
-    v1 = -3;                                            // Result = FFFFFFFD
-    v0 = lw(a2 + 0x50);
-    a0 = lw(a0 + 0x28);
-    v1 &= v0;
-    v0 >>= 1;
-    v0 &= 1;
-    v0 |= a0;
-    v0 &= 1;
-    v0 <<= 1;
-    goto loc_800426C8;
-loc_80042698:
-    v0 = 4;                                             // Result = 00000004
-    {
-        const bool bJump = (v1 != v0);
-        v0 = a1 << 2;
-        if (bJump) goto loc_800426D4;
-    }
-    v1 = -5;                                            // Result = FFFFFFFB
-    v0 = lw(a2 + 0x50);
-    a0 = lw(a0 + 0x28);
-    v1 &= v0;
-    v0 >>= 2;
-    v0 &= 1;
-    v0 |= a0;
-    v0 &= 1;
-    v0 <<= 2;
-loc_800426C8:
-    v1 |= v0;
-    sw(v1, a2 + 0x50);
-loc_800426D0:
-    v0 = a1 << 2;
-loc_800426D4:
-    v0 += s3;
-    v0 = lw(v0);
-    a3 += 8;
-    v0 += a3;
-    v0 = lw(v0);
-    if (v0 != 0) goto loc_800425D8;
-loc_800426F4:
-    t1 -= 4;
-    a1--;
-    v0 = -1;                                            // Result = FFFFFFFF
-    t0 -= 0x54;
-    if (a1 != v0) goto loc_800425BC;
-loc_80042708:
+
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     sb(0, v0 + 0x7);
@@ -1078,129 +1082,151 @@ loc_80042708:
     s1 = lbu(v0 + 0xA);
     v0 = -1;                                            // Result = FFFFFFFF
     s1--;
-    if (s1 == v0) goto loc_80042934;
-    s2 = -1;                                            // Result = FFFFFFFF
-    s0 = 0x80080000;                                    // Result = 80080000
-    s0 -= 0x1038;                                       // Result = 8007EFC8
-    s3 = s0 - 4;                                        // Result = 8007EFC4
-loc_80042750:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0x103C;                                       // Result = 8007EFC4
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    a2 = 0x1C;                                          // Result = 0000001C
-    wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 += 0x1C;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    a1 = lbu(v1 + 0x8);
-    a1--;
-    v0 = a1 << 2;
-    if (a1 == s2) goto loc_80042928;
-    v0 += a1;
-    v0 <<= 2;
-    v0 += a1;
-    a3 = v0 << 2;
-loc_800427A8:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(v0 + 0x18);
-    v1 = lbu(s0);                                       // Load from: 8007EFC8
-    a2 = a3 + v0;
-    v0 = lw(a2 + 0x4C);
-    a1--;
-    if (v1 != v0) goto loc_80042920;
-    v0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
-    v1 = lw(s0);                                        // Load from: 8007EFC8
-    a0 = lw(s0 + 0x4);                                  // Load from: 8007EFCC
-    a1 = lw(s0 + 0x8);                                  // Load from: 8007EFD0
-    sw(v0, a2);
-    sw(v1, a2 + 0x4);
-    sw(a0, a2 + 0x8);
-    sw(a1, a2 + 0xC);
-    v0 = lw(s0 + 0xC);                                  // Load from: 8007EFD4
-    v1 = lw(s0 + 0x10);                                 // Load from: 8007EFD8
-    a0 = lw(s0 + 0x14);                                 // Load from: 8007EFDC
-    sw(v0, a2 + 0x10);
-    sw(v1, a2 + 0x14);
-    sw(a0, a2 + 0x18);
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v1 = lbu(s0 + 0x1);                                 // Load from: 8007EFC9
-    v0 = lbu(a0 + 0x7);
-    v0 += v1;
-    sb(v0, a0 + 0x7);
-    a1 = 0x800B0000;                                    // Result = 800B0000
-    a1 = lw(a1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v1 = lw(sp + 0x10);
-    v0 = lw(a1 + 0x18);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    v0 += a3;
-    sw(v1, v0 + 0x1C);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x58EC);                               // Load from: gpWess_tmp_fp_wmd_file_2 (800758EC)
-    v0 = lw(a1 + 0x18);
-    s6 = a0 - v1;
-    v0 += a3;
-    sw(s6, v0 + 0x20);
-    v1 = lh(s0 + 0x4);                                  // Load from: 8007EFCC
-    v0 = lh(s0 + 0x6);                                  // Load from: 8007EFCE
-    mult(v1, v0);
-    a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
-    a1 = sp + 0x10;
-    a2 = lo;
-    a0 &= 1;
-    conditional_read();
-    a1 = sp + 0x10;
-    if (v0 == 0) goto loc_800424A8;
-    v0 = lh(s0 + 0x8);                                  // Load from: 8007EFD0
-    v1 = lh(s0 + 0xA);                                  // Load from: 8007EFD2
-    mult(v0, v1);
-    a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
-    a2 = lo;
-    a0 &= 2;
-    conditional_read();
-    a1 = sp + 0x10;
-    if (v0 == 0) goto loc_800424A8;
-    v0 = lh(s0 + 0xC);                                  // Load from: 8007EFD4
-    v1 = lh(s0 + 0xE);                                  // Load from: 8007EFD6
-    mult(v0, v1);
-    a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
-    a2 = lo;
-    a0 &= 4;
-    conditional_read();
-    a1 = sp + 0x10;
-    if (v0 == 0) goto loc_800424A8;
-    v0 = lh(s0 + 0x10);                                 // Load from: 8007EFD8
-    v1 = lh(s0 + 0x12);                                 // Load from: 8007EFDA
-    mult(v0, v1);
-    a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
-    a2 = lo;
-    a0 &= 8;
-    conditional_read();
-    a1 = sp + 0x10;
-    if (v0 == 0) goto loc_800424A8;
-    a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
-    a2 = lw(s3 + 0x18);                                 // Load from: 8007EFDC
-    a0 &= 0x10;
-    conditional_read();
-    s1--;
-    if (v0 != 0) goto loc_8004292C;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80043090;
-loc_80042920:
-    a3 -= 0x54;
-    if (a1 != s2) goto loc_800427A8;
-loc_80042928:
-    s1--;
-loc_8004292C:
-    if (s1 != s2) goto loc_80042750;
-loc_80042934:
+
+    if (s1 != v0) {
+        s2 = -1;                                            // Result = FFFFFFFF
+        s0 = 0x80080000;                                    // Result = 80080000
+        s0 -= 0x1038;                                       // Result = 8007EFC8
+        s3 = s0 - 4;                                        // Result = 8007EFC4
+
+        do {
+            a0 = 0x80080000;                                    // Result = 80080000
+            a0 -= 0x103C;                                       // Result = 8007EFC4
+            a1 = 0x80070000;                                    // Result = 80070000
+            a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+            a2 = 0x1C;
+            
+            wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
+
+            v0 = 0x80070000;                                    // Result = 80070000
+            v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+            v1 = 0x800B0000;                                    // Result = 800B0000
+            v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+            v0 += 0x1C;
+            at = 0x80070000;                                    // Result = 80070000
+            sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
+            a1 = lbu(v1 + 0x8);
+            a1--;
+            v0 = a1 << 2;
+
+            if (a1 != s2) {
+                v0 += a1;
+                v0 <<= 2;
+                v0 += a1;
+                a3 = v0 << 2;
+
+                do {
+                    v0 = 0x800B0000;                                    // Result = 800B0000
+                    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+                    v0 = lw(v0 + 0x18);
+                    v1 = lbu(s0);                                       // Load from: 8007EFC8
+                    a2 = a3 + v0;
+                    v0 = lw(a2 + 0x4C);
+                    a1--;
+
+                    if (v1 == v0) {
+                        v0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
+                        v1 = lw(s0);                                        // Load from: 8007EFC8
+                        a0 = lw(s0 + 0x4);                                  // Load from: 8007EFCC
+                        a1 = lw(s0 + 0x8);                                  // Load from: 8007EFD0
+                        sw(v0, a2);
+                        sw(v1, a2 + 0x4);
+                        sw(a0, a2 + 0x8);
+                        sw(a1, a2 + 0xC);
+                        v0 = lw(s0 + 0xC);                                  // Load from: 8007EFD4
+                        v1 = lw(s0 + 0x10);                                 // Load from: 8007EFD8
+                        a0 = lw(s0 + 0x14);                                 // Load from: 8007EFDC
+                        sw(v0, a2 + 0x10);
+                        sw(v1, a2 + 0x14);
+                        sw(a0, a2 + 0x18);
+                        a0 = 0x800B0000;                                    // Result = 800B0000
+                        a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+                        v1 = lbu(s0 + 0x1);                                 // Load from: 8007EFC9
+                        v0 = lbu(a0 + 0x7);
+                        v0 += v1;
+                        sb(v0, a0 + 0x7);
+                        a1 = 0x800B0000;                                    // Result = 800B0000
+                        a1 = lw(a1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+                        v1 = lw(sp + 0x10);
+                        v0 = lw(a1 + 0x18);
+                        a0 = 0x80070000;                                    // Result = 80070000
+                        a0 = lw(a0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+                        v0 += a3;
+                        sw(v1, v0 + 0x1C);
+                        v1 = 0x80070000;                                    // Result = 80070000
+                        v1 = lw(v1 + 0x58EC);                               // Load from: gpWess_tmp_fp_wmd_file_2 (800758EC)
+                        v0 = lw(a1 + 0x18);
+                        s6 = a0 - v1;
+                        v0 += a3;
+                        sw(s6, v0 + 0x20);
+                        v1 = lh(s0 + 0x4);                                  // Load from: 8007EFCC
+                        v0 = lh(s0 + 0x6);                                  // Load from: 8007EFCE
+                        mult(v1, v0);
+                        a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
+                        a1 = sp + 0x10;
+                        a2 = lo;
+                        a0 &= 1;
+                        conditional_read();
+                        a1 = sp + 0x10;
+
+                        if (v0 == 0)
+                            return 0;
+
+                        v0 = lh(s0 + 0x8);                                  // Load from: 8007EFD0
+                        v1 = lh(s0 + 0xA);                                  // Load from: 8007EFD2
+                        mult(v0, v1);
+                        a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
+                        a2 = lo;
+                        a0 &= 2;
+                        conditional_read();
+                        a1 = sp + 0x10;
+
+                        if (v0 == 0)
+                            return 0;
+
+                        v0 = lh(s0 + 0xC);                                  // Load from: 8007EFD4
+                        v1 = lh(s0 + 0xE);                                  // Load from: 8007EFD6
+                        mult(v0, v1);
+                        a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
+                        a2 = lo;
+                        a0 &= 4;
+                        conditional_read();
+                        a1 = sp + 0x10;
+    
+                        if (v0 == 0)
+                            return 0;
+    
+                        v0 = lh(s0 + 0x10);                                 // Load from: 8007EFD8
+                        v1 = lh(s0 + 0x12);                                 // Load from: 8007EFDA
+                        mult(v0, v1);
+                        a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
+                        a2 = lo;
+                        a0 &= 8;
+                        conditional_read();
+                        a1 = sp + 0x10;
+
+                        if (v0 == 0)
+                            return 0;
+
+                        a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
+                        a2 = lw(s3 + 0x18);                                 // Load from: 8007EFDC
+                        a0 &= 0x10;
+                        conditional_read();
+                        
+                        if (v0 == 0)
+                            return 0;
+
+                        break;
+                    }
+
+                    a3 -= 0x54;
+                } while (a1 != s2);
+            }
+            
+            s1--;
+        } while (s1 != s2);
+    }
+    
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     v0 = lbu(a0 + 0x7);
@@ -1212,67 +1238,77 @@ loc_80042934:
     sw(v1, sp + 0x10);
     v1 = lbu(a0 + 0x8);
     sw(v0, a0 + 0x30);
-    if (v1 == 0) goto loc_80042A78;
-    t1 = v1;
-    a3 = 0;                                             // Result = 00000000
-    v0 = lw(a0 + 0x18);
-    v1 = lbu(a0 + 0x7);
-    a1 = lbu(v0 + 0x5);
-    s2 = 0;                                             // Result = 00000000
-    if (i32(v1) <= 0) goto loc_80042A78;
-    t2 = -1;                                            // Result = FFFFFFFF
-    a2 = 0;                                             // Result = 00000000
-    t0 = 0;                                             // Result = 00000000
-loc_80042998:
-    if (t1 == 0) goto loc_80042A58;
-    a1--;
-    if (a1 == t2) goto loc_800429F4;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(v1 + 0x18);
-    v1 = lw(v1 + 0x30);
-    v0 += t0;
-    v0 = lbu(v0 + 0x4);
-    v1 += a2;
-    sb(v0, v1 + 0x1);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(v0 + 0x30);
-    v0 += a2;
-    sb(a3, v0 + 0x2);
-    a3++;                                               // Result = 00000001
-    goto loc_80042A58;
-loc_800429F4:
-    t1--;
-    t0 += 0x54;                                         // Result = 00000054
-    if (t1 == 0) goto loc_80042A58;
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(a0 + 0x18);
-    v1 = t0 + v0;
-    a1 = lbu(v1 + 0x5);
-    a1--;
-    a3 = 0;                                             // Result = 00000000
-    if (a1 == t2) goto loc_80042A58;
-    v0 = lw(a0 + 0x30);
-    v1 = lbu(v1 + 0x4);
-    v0 += a2;
-    sb(v1, v0 + 0x1);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(v0 + 0x30);
-    a3 = 1;                                             // Result = 00000001
-    v0 += a2;
-    sb(0, v0 + 0x2);
-loc_80042A58:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lbu(v0 + 0x7);
-    s2++;
-    v0 = (i32(s2) < i32(v0));
-    a2 += 0x18;
-    if (v0 != 0) goto loc_80042998;
-loc_80042A78:
+
+    if (v1 != 0) {
+        t1 = v1;
+        a3 = 0;
+        v0 = lw(a0 + 0x18);
+        v1 = lbu(a0 + 0x7);
+        a1 = lbu(v0 + 0x5);
+        s2 = 0;
+
+        if (i32(v1) > 0) {
+            t2 = -1;                                            // Result = FFFFFFFF
+            a2 = 0;
+            t0 = 0;
+
+            do {
+                if (t1 != 0) {
+                    a1--;
+
+                    if (a1 != t2) {
+                        v1 = 0x800B0000;                                    // Result = 800B0000
+                        v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+                        v0 = lw(v1 + 0x18);
+                        v1 = lw(v1 + 0x30);
+                        v0 += t0;
+                        v0 = lbu(v0 + 0x4);
+                        v1 += a2;
+                        sb(v0, v1 + 0x1);
+                        v0 = 0x800B0000;                                    // Result = 800B0000
+                        v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+                        v0 = lw(v0 + 0x30);
+                        v0 += a2;
+                        sb(a3, v0 + 0x2);
+                        a3++;
+                    } else {
+                        t1--;
+                        t0 += 0x54;
+
+                        if (t1 != 0) {
+                            a0 = 0x800B0000;                                    // Result = 800B0000
+                            a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+                            v0 = lw(a0 + 0x18);
+                            v1 = t0 + v0;
+                            a1 = lbu(v1 + 0x5);
+                            a1--;
+                            a3 = 0;
+
+                            if (a1 != t2) {
+                                v0 = lw(a0 + 0x30);
+                                v1 = lbu(v1 + 0x4);
+                                v0 += a2;
+                                sb(v1, v0 + 0x1);
+                                v0 = 0x800B0000;                                    // Result = 800B0000
+                                v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+                                v0 = lw(v0 + 0x30);
+                                a3 = 1;
+                                v0 += a2;
+                                sb(0, v0 + 0x2);
+                            }
+                        }
+                    }
+                }
+
+                v0 = 0x800B0000;                                    // Result = 800B0000
+                v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+                v0 = lbu(v0 + 0x7);
+                s2++;
+                a2 += 0x18;
+            } while (i32(s2) < i32(v0));
+        }
+    }
+
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     a1 = lw(sp + 0x10);
@@ -1280,7 +1316,7 @@ loc_80042A78:
     sw(a1, v0 + 0x10);
     v0 = lw(a0 + 0xC);
     v1 = lh(v0 + 0x8);
-    s2 = 0;                                             // Result = 00000000
+    s2 = 0;
     v0 = v1 << 2;
     v0 += v1;
     v1 = lw(a0 + 0xC);
@@ -1288,183 +1324,207 @@ loc_80042A78:
     v1 = lh(v1 + 0x8);
     v0 += a1;
     sw(v0, sp + 0x10);
-    if (i32(v1) <= 0) goto loc_80042DB0;
-    s7 = -1;                                            // Result = FFFFFFFF
-    fp = 0x80080000;                                    // Result = 80080000
-    fp -= 0x1020;                                       // Result = 8007EFE0
-    s4 = fp + 0x12;                                     // Result = 8007EFF2
-    s5 = 0;                                             // Result = 00000000
-loc_80042AD4:
-    a2 = 4;                                             // Result = 00000004
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    v0 = lw(v0 + 0xC);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x58EC);                               // Load from: gpWess_tmp_fp_wmd_file_2 (800758EC)
-    a0 = lw(v0 + 0x10);
-    s6 = a1 - v1;
-    a0 += s5;
-    wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    s3 = 0;                                             // Result = 00000000
-    v0 = lw(v0 + 0xC);
-    v1 = lw(v0 + 0x10);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    v1 += s5;
-    s1 = lh(v1);
-    v0 += 4;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    s1--;
-    s0 = 0;                                             // Result = 00000000
-    if (s1 == s7) goto loc_80042D1C;
-    a0 = fp;                                            // Result = 8007EFE0
-loc_80042B48:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    a2 = 0x18;                                          // Result = 00000018
-    wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    v1 = lbu(fp);                                       // Load from: 8007EFE0
-    v0 += 0x18;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    t0 = 0;                                             // Result = 00000000
-    if (v1 == 0) goto loc_80042C60;
-    v0 = 0x32;                                          // Result = 00000032
-    if (v1 == v0) goto loc_80042C60;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    a1 = lbu(v0 + 0x8);
-    a1--;
-    if (a1 == s7) goto loc_80042C78;
-    t1 = v1;
-    a3 = v0;
-    v1 = lw(v0 + 0x18);
-    v0 = a1 << 2;
-    v0 += a1;
-    v0 <<= 2;
-    v0 += a1;
-    a0 = v0 << 2;
-    a2 = a0 + v1;
-loc_80042BC8:
-    v0 = lw(a2 + 0x4C);
-    if (t1 != v0) goto loc_80042C68;
-    v1 = lbu(fp + 0x4);                                 // Load from: 8007EFE4
-    v0 = 3;                                             // Result = 00000003
-    if (v1 == 0) goto loc_80042BF0;
-    if (v1 != v0) goto loc_80042C04;
-loc_80042BF0:
-    v0 = lw(a2 + 0x50);
-    v0 &= 1;
-    if (v0 != 0) goto loc_80042C60;
-loc_80042C04:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lbu(v1 - 0x101C);                              // Load from: 8007EFE4
-    v0 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_80042C38;
+
+    if (i32(v1) > 0) {
+        s7 = -1;                                            // Result = FFFFFFFF
+        fp = 0x80080000;                                    // Result = 80080000
+        fp -= 0x1020;                                       // Result = 8007EFE0
+        s4 = fp + 0x12;                                     // Result = 8007EFF2
+        s5 = 0;
+
+        do {
+            a2 = 4;
+            v0 = 0x800B0000;                                    // Result = 800B0000
+            v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+            a1 = 0x80070000;                                    // Result = 80070000
+            a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+            v0 = lw(v0 + 0xC);
+            v1 = 0x80070000;                                    // Result = 80070000
+            v1 = lw(v1 + 0x58EC);                               // Load from: gpWess_tmp_fp_wmd_file_2 (800758EC)
+            a0 = lw(v0 + 0x10);
+            s6 = a1 - v1;
+            a0 += s5;
+            
+            wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
+
+            v0 = 0x800B0000;                                    // Result = 800B0000
+            v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+            s3 = 0;
+            v0 = lw(v0 + 0xC);
+            v1 = lw(v0 + 0x10);
+            v0 = 0x80070000;                                    // Result = 80070000
+            v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+            v1 += s5;
+            s1 = lh(v1);
+            v0 += 4;
+            at = 0x80070000;                                    // Result = 80070000
+            sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
+            s1--;
+            s0 = 0;
+            a0 = fp;                                            // Result = 8007EFE0
+
+            while (s1 != s7) {
+                a1 = 0x80070000;                                    // Result = 80070000
+                a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+                a2 = 0x18;                                          // Result = 00000018
+
+                wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
+
+                v0 = 0x80070000;                                    // Result = 80070000
+                v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+                v1 = lbu(fp);                                       // Load from: 8007EFE0
+                v0 += 0x18;
+                at = 0x80070000;                                    // Result = 80070000
+                sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
+                t0 = 0;
+
+                if ((v1 == 0) || (v1 == 0x32)) {
+                    t0 = 1;
+                } 
+                else {
+                    v0 = 0x800B0000;                                    // Result = 800B0000
+                    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+                    a1 = lbu(v0 + 0x8);
+                    a1--;
+
+                    if (a1 != s7) {
+                        t1 = v1;
+                        a3 = v0;
+                        v1 = lw(v0 + 0x18);
+                        v0 = a1 << 2;
+                        v0 += a1;
+                        v0 <<= 2;
+                        v0 += a1;
+                        a0 = v0 << 2;
+                        a2 = a0 + v1;
+
+                        while (a1 != s7) {
+                            v0 = lw(a2 + 0x4C);
+
+                            if (t1 == v0) {
+                                v1 = lbu(fp + 0x4);                                 // Load from: 8007EFE4
+                                
+                                if ((v1 == 0) || (v1 == 3)) {
+                                    v0 = lw(a2 + 0x50);
+                                    v0 &= 1;
+                                
+                                    if (v0 != 0) {
+                                        t0 = 1;
+                                        break;
+                                    }
+                                }
+
+                                v1 = 0x80080000;                                    // Result = 80080000
+                                v1 = lbu(v1 - 0x101C);                              // Load from: 8007EFE4
+                                
+                                if (v1 == 1) {
+                                    v0 = lw(a3 + 0x18);
+                                    v0 += a0;
+                                    v0 = lw(v0 + 0x50);
+                                    v0 &= 2;
+                                    
+                                    if (v0 != 0) {
+                                        t0 = 1;
+                                        break;
+                                    }
+                                }
+
+                                if (v1 == 2) {
+                                    v0 = lw(a3 + 0x18);
+                                    v0 += a0;
+                                    v0 = lw(v0 + 0x50);
+                                    v0 &= 4;
+
+                                    if (v0 != 0) {
+                                        t0 = 1;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            a0 -= 0x54;
+                            a1--;
+                            a2 -= 0x54;
+                        }
+                    }
+                }
+
+                if (t0 != 0) {
+                    v0 = lh(s4);                                        // Load from: 8007EFF2
+                    v1 = lw(s4 + 0x2);                                  // Load from: 8007EFF4
+                    t3 = lbu(sp + 0x20);
+                    v0 <<= 2;
+                    v1 += 0x20;
+                    v0 += v1;
+                    s0 += v0;
+                    v0 = s0 & 1;
+                    s0 += v0;
+                    v1 = s0 & 2;
+                    v0 = lbu(s4 - 0x11);                                // Load from: 8007EFE1
+                    v0 = (t3 < v0);
+                    s0 += v1;
+
+                    if (v0 != 0) {
+                        t3 = lbu(s4 - 0x11);                            // Load from: 8007EFE1
+                        sb(t3, sp + 0x20);
+                    }
+
+                    v0 = lbu(s4 - 0x6);                                 // Load from: 8007EFEC
+                    t3 = lbu(sp + 0x28);
+                    v0 = (t3 < v0);
+                    s3++;
+
+                    if (v0 != 0) {
+                        t3 = lbu(s4 - 0x6);                             // Load from: 8007EFEC
+                        sb(t3, sp + 0x28);
+                    }
+                }
+
+                s1--;
+                v0 = lh(s4);                                        // Load from: 8007EFF2
+                v1 = lw(s4 + 0x2);                                  // Load from: 8007EFF4
+                a0 = 0x80070000;                                    // Result = 80070000
+                a0 = lw(a0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+                v0 <<= 2;
+                v0 += v1;
+                v0 += a0;
+                at = 0x80070000;                                    // Result = 80070000
+                sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
+                a0 = fp;                                            // Result = 8007EFE0
+            }
+            
+            v0 = lbu(sp + 0x18);
+            
+            if (i32(v0) < i32(s3)) {
+                sb(s3, sp + 0x18);
+            }
+
+            s2++;
+            
+            if (s3 == 0) {
+                s0 = 0x24;
+            }
+
+            v1 = 0x800B0000;                                    // Result = 800B0000
+            v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+            v0 = lw(v1 + 0xC);
+            v0 = lw(v0 + 0x10);
+            v0 += s5;
+            sw(s3, v0 + 0x10);
+            v0 = lw(v1 + 0xC);
+            v0 = lw(v0 + 0x10);
+            v0 += s5;
+            sw(s0, v0 + 0xC);
+            v0 = lw(v1 + 0xC);
+            v0 = lw(v0 + 0x10);
+            v0 += s5;
+            sw(s6, v0 + 0x8);
+            v0 = lw(v1 + 0xC);
+            v0 = lh(v0 + 0x8);
+            s5 += 0x14;
+        } while (i32(s2) < i32(v0));
     }
-    v0 = lw(a3 + 0x18);
-    v0 += a0;
-    v0 = lw(v0 + 0x50);
-    v0 &= 2;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_80042C60;
-    }
-loc_80042C38:
-    if (v1 != v0) goto loc_80042C68;
-    v0 = lw(a3 + 0x18);
-    v0 += a0;
-    v0 = lw(v0 + 0x50);
-    v0 &= 4;
-    if (v0 == 0) goto loc_80042C68;
-loc_80042C60:
-    t0 = 1;                                             // Result = 00000001
-    goto loc_80042C78;
-loc_80042C68:
-    a0 -= 0x54;
-    a1--;
-    a2 -= 0x54;
-    if (a1 != s7) goto loc_80042BC8;
-loc_80042C78:
-    if (t0 == 0) goto loc_80042CEC;
-    v0 = lh(s4);                                        // Load from: 8007EFF2
-    v1 = lw(s4 + 0x2);                                  // Load from: 8007EFF4
-    t3 = lbu(sp + 0x20);
-    v0 <<= 2;
-    v1 += 0x20;
-    v0 += v1;
-    s0 += v0;
-    v0 = s0 & 1;
-    s0 += v0;
-    v1 = s0 & 2;
-    v0 = lbu(s4 - 0x11);                                // Load from: 8007EFE1
-    v0 = (t3 < v0);
-    s0 += v1;
-    if (v0 == 0) goto loc_80042CC8;
-    t3 = lbu(s4 - 0x11);                                // Load from: 8007EFE1
-    sb(t3, sp + 0x20);
-loc_80042CC8:
-    v0 = lbu(s4 - 0x6);                                 // Load from: 8007EFEC
-    t3 = lbu(sp + 0x28);
-    v0 = (t3 < v0);
-    s3++;                                               // Result = 00000001
-    if (v0 == 0) goto loc_80042CEC;
-    t3 = lbu(s4 - 0x6);                                 // Load from: 8007EFEC
-    sb(t3, sp + 0x28);
-loc_80042CEC:
-    s1--;
-    v0 = lh(s4);                                        // Load from: 8007EFF2
-    v1 = lw(s4 + 0x2);                                  // Load from: 8007EFF4
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    v0 <<= 2;
-    v0 += v1;
-    v0 += a0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    a0 = fp;                                            // Result = 8007EFE0
-    if (s1 != s7) goto loc_80042B48;
-loc_80042D1C:
-    v0 = lbu(sp + 0x18);
-    v0 = (i32(v0) < i32(s3));
-    if (v0 == 0) goto loc_80042D34;
-    sb(s3, sp + 0x18);
-loc_80042D34:
-    s2++;
-    if (s3 != 0) goto loc_80042D40;
-    s0 = 0x24;                                          // Result = 00000024
-loc_80042D40:
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(v1 + 0xC);
-    v0 = lw(v0 + 0x10);
-    v0 += s5;
-    sw(s3, v0 + 0x10);
-    v0 = lw(v1 + 0xC);
-    v0 = lw(v0 + 0x10);
-    v0 += s5;
-    sw(s0, v0 + 0xC);
-    v0 = lw(v1 + 0xC);
-    v0 = lw(v0 + 0x10);
-    v0 += s5;
-    sw(s6, v0 + 0x8);
-    v0 = lw(v1 + 0xC);
-    v0 = lh(v0 + 0x8);
-    v0 = (i32(s2) < i32(v0));
-    s5 += 0x14;
-    if (v0 != 0) goto loc_80042AD4;
-loc_80042DB0:
+
     v1 = 0x800B0000;                                    // Result = 800B0000
     v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     a0 = lw(sp + 0x10);
@@ -1480,63 +1540,65 @@ loc_80042DB0:
     a2 = lw(a2 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     v0 = lw(a2 + 0xC);
     v0 = lbu(v0 + 0xB);
-    s2 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80042EE0;
-    t0 = 0xFF;                                          // Result = 000000FF
-    a3 = 0;                                             // Result = 00000000
-loc_80042E08:
-    v0 = lw(a2 + 0x20);
-    v1 = lw(sp + 0x10);
-    v0 += a3;
-    sw(v1, v0 + 0x10);
-    v0 = lw(a2 + 0xC);
-    v0 = lbu(v0 + 0xD);
-    v0 += v1;
-    v1 = v0 & 1;
-    v1 += v0;
-    a0 = v1 & 2;
-    v0 = lw(a2 + 0x20);
-    a0 += v1;
-    v0 += a3;
-    sw(a0, v0 + 0x14);
-    v0 = lw(a2 + 0xC);
-    sw(a0, sp + 0x10);
-    v0 = lbu(v0 + 0xE);
-    s1 = lbu(sp + 0x18);
-    v0 += a0;
-    v1 = v0 & 1;
-    v1 += v0;
-    v0 = v1 & 2;
-    v0 += v1;
-    a1 = v0;
-    a0 = s1 + a1;
-    s1--;
-    v1 = a0 & 1;
-    v0 = lw(a2 + 0x20);
-    v1 += a0;
-    sw(a1, sp + 0x10);
-    v0 += a3;
-    sw(a1, v0 + 0xC);
-    v0 = v1 & 2;
-    v0 += v1;
-    sw(v0, sp + 0x10);
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (s1 == v0) goto loc_80042EB8;
-loc_80042EA8:
-    sb(t0, a1);
-    s1--;
-    a1++;
-    if (s1 != v0) goto loc_80042EA8;
-loc_80042EB8:
-    a2 = 0x800B0000;                                    // Result = 800B0000
-    a2 = lw(a2 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(a2 + 0xC);
-    v0 = lbu(v0 + 0xB);
-    s2++;
-    v0 = (i32(s2) < i32(v0));
-    a3 += 0x18;
-    if (v0 != 0) goto loc_80042E08;
-loc_80042EE0:
+    s2 = 0;
+
+    if (i32(v0) > 0) {
+        t0 = 0xFF;
+        a3 = 0;
+
+        do {
+            v0 = lw(a2 + 0x20);
+            v1 = lw(sp + 0x10);
+            v0 += a3;
+            sw(v1, v0 + 0x10);
+            v0 = lw(a2 + 0xC);
+            v0 = lbu(v0 + 0xD);
+            v0 += v1;
+            v1 = v0 & 1;
+            v1 += v0;
+            a0 = v1 & 2;
+            v0 = lw(a2 + 0x20);
+            a0 += v1;
+            v0 += a3;
+            sw(a0, v0 + 0x14);
+            v0 = lw(a2 + 0xC);
+            sw(a0, sp + 0x10);
+            v0 = lbu(v0 + 0xE);
+            s1 = lbu(sp + 0x18);
+            v0 += a0;
+            v1 = v0 & 1;
+            v1 += v0;
+            v0 = v1 & 2;
+            v0 += v1;
+            a1 = v0;
+            a0 = s1 + a1;
+            s1--;
+            v1 = a0 & 1;
+            v0 = lw(a2 + 0x20);
+            v1 += a0;
+            sw(a1, sp + 0x10);
+            v0 += a3;
+            sw(a1, v0 + 0xC);
+            v0 = v1 & 2;
+            v0 += v1;
+            sw(v0, sp + 0x10);
+            v0 = -1;                                            // Result = FFFFFFFF
+
+            while (s1 != v0) {
+                sb(t0, a1);
+                s1--;
+                a1++;
+            }
+
+            a2 = 0x800B0000;                                    // Result = 800B0000
+            a2 = lw(a2 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+            v0 = lw(a2 + 0xC);
+            v0 = lbu(v0 + 0xB);
+            s2++;
+            a3 += 0x18;
+        } while (i32(s2) < i32(v0));
+    }
+
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     t3 = lbu(sp + 0x20);
@@ -1549,80 +1611,78 @@ loc_80042EE0:
     a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     v0 = lw(a0 + 0xC);
     v0 = lbu(v0 + 0xC);
-    s2 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80042F94;
-    a2 = 0;                                             // Result = 00000000
-loc_80042F30:
-    v0 = lw(a0 + 0x28);
-    v0 += a2;
-    sb(s2, v0 + 0x1);
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(a0 + 0x28);
-    a1 = lw(sp + 0x10);
-    v0 += a2;
-    sw(a1, v0 + 0x3C);
-    v1 = lbu(a0 + 0x24);
-    v0 = lw(a0 + 0x28);
-    v1 <<= 2;
-    v1 += a1;
-    v0 += a2;
-    sw(v1, v0 + 0x44);
-    v0 = lw(a0 + 0xC);
-    s2++;
-    sw(v1, sp + 0x10);
-    v0 = lbu(v0 + 0xC);
-    v0 = (i32(s2) < i32(v0));
-    a2 += 0x50;
-    if (v0 != 0) goto loc_80042F30;
-loc_80042F94:
+    s2 = 0;
+
+    if (i32(v0) > 0) {
+        a2 = 0;
+
+        do {
+            v0 = lw(a0 + 0x28);
+            v0 += a2;
+            sb(s2, v0 + 0x1);
+            a0 = 0x800B0000;                                    // Result = 800B0000
+            a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+            v0 = lw(a0 + 0x28);
+            a1 = lw(sp + 0x10);
+            v0 += a2;
+            sw(a1, v0 + 0x3C);
+            v1 = lbu(a0 + 0x24);
+            v0 = lw(a0 + 0x28);
+            v1 <<= 2;
+            v1 += a1;
+            v0 += a2;
+            sw(v1, v0 + 0x44);
+            v0 = lw(a0 + 0xC);
+            s2++;
+            sw(v1, sp + 0x10);
+            v0 = lbu(v0 + 0xC);
+            a2 += 0x50;
+        } while (i32(s2) < i32(v0));
+    }
+
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5920);                               // Load from: gWess_CmdFuncArr[0] (80075920)
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
     v0 = lw(v0);
-    s2 = 0;                                             // Result = 00000000
+    s2 = 0;
+
     ptr_call(v0);
+
     a0 = 0x800B0000;                                    // Result = 800B0000
     a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lbu(a0 + 0x8);
-    {
-        const bool bJump = (i32(v0) <= 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80043044;
+    
+    if (i32(lbu(a0 + 0x8)) > 0) {
+        s1 = 0x80070000;                                    // Result = 80070000
+        s1 += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
+        s0 = 0;
+
+        do {
+            v0 = lw(a0 + 0x18);
+            v1 = s0 + v0;
+            v0 = lw(v1 + 0x50);
+            v0 &= 7;
+            s0 += 0x54;
+
+            if (v0 != 0) {
+                v0 = lw(v1 + 0x4C);
+                v0 <<= 2;
+                v0 += s1;
+                v0 = lw(v0);
+                v0 = lw(v0);
+                ptr_call(v0);
+            }
+
+            a0 = 0x800B0000;                                    // Result = 800B0000
+            a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+            v0 = lbu(a0 + 0x8);
+            s2++;
+        } while (i32(s2) < i32(v0));
     }
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-    s0 = 0;                                             // Result = 00000000
-loc_80042FDC:
-    v0 = lw(a0 + 0x18);
-    v1 = s0 + v0;
-    v0 = lw(v1 + 0x50);
-    v0 &= 7;
-    s0 += 0x54;
-    if (v0 == 0) goto loc_80043024;
-    v0 = lw(v1 + 0x4C);
-    v0 <<= 2;
-    v0 += s1;
-    v0 = lw(v0);
-    v0 = lw(v0);
-    ptr_call(v0);
-loc_80043024:
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lbu(a0 + 0x8);
-    s2++;
-    v0 = (i32(s2) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80042FDC;
-    }
-loc_80043044:
-    a1 = lw(sp + 0x10);
-    v1 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x58F8);                                // Store to: gbWess_module_loaded (800758F8)
+
+    a1 = lw(sp + 0x10);    
+    *gbWess_module_loaded = true;
+    v1 = 1;
     at = 0x80070000;                                    // Result = 80070000
     sw(v1, at + 0x5948);                                // Store to: gbWess_SeqOn (80075948)
     v1 = 0x800B0000;                                    // Result = 800B0000
@@ -1638,19 +1698,8 @@ loc_80043044:
     sw(v1, sp + 0x10);
     at = 0x80070000;                                    // Result = 80070000
     sw(a1, at + 0x5900);                                // Store to: gWess_max_seq_num (80075900)
-loc_80043090:
-    ra = lw(sp + 0x7C);
-    fp = lw(sp + 0x78);
-    s7 = lw(sp + 0x74);
-    s6 = lw(sp + 0x70);
-    s5 = lw(sp + 0x6C);
-    s4 = lw(sp + 0x68);
-    s3 = lw(sp + 0x64);
-    s2 = lw(sp + 0x60);
-    s1 = lw(sp + 0x5C);
-    s0 = lw(sp + 0x58);
-    sp += 0x80;
-    return;
+
+    return 1;
 }
 
 void filltrackstat() noexcept {

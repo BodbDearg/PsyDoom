@@ -38,13 +38,21 @@ loc_800415EC:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 -= 0x11D0;                                       // Result = gMapMusSfxLoadedSamples[0] (8007EE30)
     ZeroHalfWord();
+
+    a0 = s1;
     a1 = 0x80080000;                                    // Result = 80080000
     a1 -= 0x7A78;                                       // Result = gPSXSND_wmdMemBuffer[0] (80078588)
     a2 = lw(gp + 0x824);                                // Load from: gPSXSND_maxWmdSize (80077E04)
     a3 = 0x80070000;                                    // Result = 80070000
     a3 += 0x7E08;                                       // Result = gPSXSND_soundSettingsLists[0] (80077E08)
-    a0 = s1;
-    wess_load_module();
+    
+    v0 = wess_load_module(
+        vmAddrToPtr<void>(a0),
+        vmAddrToPtr<void>(a1),
+        a2,
+        vmAddrToPtr<VmPtr<int32_t>>(a3)
+    );
+
     wess_get_master_status();
     a0 = v0;
     wess_dig_lcd_loader_init();
