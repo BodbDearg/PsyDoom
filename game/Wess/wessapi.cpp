@@ -3,16 +3,28 @@
 #include "PcPsx/Finally.h"
 #include "psxcmd.h"
 #include "PsxVm/PsxVm.h"
+#include "PcPsx/Endian.h"
 #include "wessapi_t.h"
 #include "wessarc.h"
 #include "wessseq.h"
 
+static constexpr uint32_t WESS_MODULE_ID    = Endian::littleToHost(0x58535053);     // 4 byte identifier for WMD (Williams Module) files: says 'SPSX'
+static constexpr uint32_t WESS_MODULE_VER   = 1;                                    // Expected WMD (module) file version
+
 const VmPtr<bool32_t>   gbWess_module_loaded(0x800758F8);       // If true then a WMD file (module) has been loaded
 
-static const VmPtr<bool32_t>    gbWess_sysinit(0x800758F4);             // Set to true once the WESS API has been initialized
-static const VmPtr<bool32_t>    gbWess_early_exit(0x800758FC);          // Unused flag in PSX DOOM, I think to request the API to exit?
-static const VmPtr<int32_t>     gWess_num_sd(0x800758E4);               // The number of sound drivers available
-static const VmPtr<bool32_t>    gbWess_wmd_mem_is_mine(0x80075908);     // TODO: COMMENT
+static const VmPtr<bool32_t>                            gbWess_sysinit(0x800758F4);             // Set to true once the WESS API has been initialized
+static const VmPtr<bool32_t>                            gbWess_early_exit(0x800758FC);          // Unused flag in PSX DOOM, I think to request the API to exit?
+static const VmPtr<int32_t>                             gWess_num_sd(0x800758E4);               // The number of sound drivers available
+static const VmPtr<bool32_t>                            gbWess_wmd_mem_is_mine(0x80075908);     // TODO: COMMENT
+static const VmPtr<int32_t>                             gWess_mem_limit(0x80075904);            // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>                      gpWess_wmd_mem(0x8007590C);             // TODO: COMMENT
+static const VmPtr<int32_t>                             gWess_wmd_size(0x80075914);             // TODO: COMMENT
+static const VmPtr<uint8_t>                             gWess_max_seq_num(0x80075900);          // TODO: COMMENT
+static const VmPtr<VmPtr<PsxCd_File>>                   gpWess_fp_wmd_file(0x800758F0);         // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>                      gpWess_tmp_fp_wmd_file_1(0x800758E8);   // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>                      gpWess_tmp_fp_wmd_file_2(0x800758EC);   // TODO: COMMENT
+static const VmPtr<VmPtr<master_status_structure>>      gpWess_pm_stat(0x800A8758);             // TODO: COMMENT
 
 void trackstart() noexcept {
 loc_80041734:
@@ -797,13 +809,8 @@ int32_t wess_load_module(
     const void* const pWmd,
     void* const pDestMem,
     const int32_t memoryAllowance,
-    VmPtr<int32_t>* pSettingTagLists
+    VmPtr<int32_t>* const pSettingTagLists
 ) noexcept {
-    a0 = ptrToVmAddr(pWmd);
-    a1 = ptrToVmAddr(pDestMem);
-    a2 = memoryAllowance;
-    a3 = ptrToVmAddr(pSettingTagLists);
-
     sp -= 0x80;
     sw(s2, sp + 0x60);
     sw(s1, sp + 0x5C);
@@ -828,248 +835,120 @@ int32_t wess_load_module(
         sp += 0x80;
     });
 
-    s2 = a0;
-    s1 = a1;    
-    s0 = a2;
-
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x5904);                                // Store to: gWess_mem_limit (80075904)
-    s3 = a3;
-
+    *gWess_mem_limit = memoryAllowance;
+    
     if (*gbWess_module_loaded) {
         wess_unload_module();
     }
 
-    a0 = s3;
-    *gWess_num_sd = get_num_Wess_Sound_Drivers();
+    const int32_t numSoundDrivers = get_num_Wess_Sound_Drivers(pSettingTagLists);
+    *gWess_num_sd = numSoundDrivers;
     
-    if (s1 == 0) {
+    if (pDestMem) {
+        *gbWess_wmd_mem_is_mine = false;
+        *gpWess_wmd_mem = ptrToVmAddr(pDestMem);
+    } else {
         *gbWess_wmd_mem_is_mine = true;
-        a0 = s0;
-        v0 = ptrToVmAddr(wess_malloc(a0));
-        at = 0x80070000;                                    // Result = 80070000
-        sw(v0, at + 0x590C);                                // Store to: gpWess_wmd_mem (8007590C)
+        *gpWess_wmd_mem = ptrToVmAddr(wess_malloc(memoryAllowance));
 
-        if (v0 == 0) {
+        if (!*gpWess_wmd_mem) {
             return *gbWess_module_loaded;
         }
-    } else {
-        *gbWess_wmd_mem_is_mine = false;
-        at = 0x80070000;                                    // Result = 80070000
-        sw(s1, at + 0x590C);                                // Store to: gpWess_wmd_mem (8007590C)
     }
     
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x590C);                               // Load from: gpWess_wmd_mem (8007590C)
-    a1 = s0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a1, at + 0x5914);                                // Store to: gWess_wmd_size (80075914)
-    
-    zeroset(vmAddrToPtr<void>(a0), a1);
+    *gWess_wmd_size = memoryAllowance;
+    zeroset(gpWess_wmd_mem->get(), memoryAllowance);
 
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5900);                                 // Store to: gWess_max_seq_num (80075900)
+    *gWess_max_seq_num = 0;
     
     if ((!Is_System_Active()) || (!pWmd)) {
         free_mem_if_mine();
         return *gbWess_module_loaded;
     }
+   
+    *gpWess_tmp_fp_wmd_file_1 = ptrToVmAddr(pWmd);
+    *gpWess_tmp_fp_wmd_file_2 = ptrToVmAddr(pWmd);
 
-    t3 = 4;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x590C);                               // Load from: gpWess_wmd_mem (8007590C)
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 = lw(a3 + 0x58F0);                               // Load from: gpWess_fp_wmd_file (800758F0)
-    a1 = s2;
-    sb(t3, sp + 0x18);
-    sb(0, sp + 0x20);
-    v1 = v0 + 0x38;
-    sw(v1, v0 + 0xC);
-    a0 = lw(v0 + 0xC);
-    a2 = 0x10;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a1, at + 0x58EC);                                // Store to: gpWess_tmp_fp_wmd_file_2 (800758EC)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a1, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    sw(v0, sp + 0x10);
-    sw(v1, sp + 0x10);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 += 0x5954;                                       // Result = gWess_Millicount (80075954)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(v0, at - 0x78A8);                                // Store to: gpWess_pm_stat (800A8758)
-    sw(a3, v0 + 0x34);
-    sw(v1, v0);
-    v0 += 0x4C;
-    sw(v0, sp + 0x10);
+    uint8_t* pCurDestBytes = (uint8_t*) pDestMem;
 
-    wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
+    // Alloc the root master status structure
+    master_status_structure& mstat = *(master_status_structure*) pCurDestBytes;
+    pCurDestBytes += sizeof(master_status_structure);
+    *gpWess_pm_stat = &mstat;
 
-    a1 = 0x800B0000;                                    // Result = 800B0000
-    a1 = lw(a1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    sb(0, sp + 0x28);
-    a2 = lw(a1 + 0xC);
-    v1 = 0x80010000;                                    // Result = 80010000
-    v1 = lw(v1 + 0x1760);                               // Load from: STR_SPSX[0] (80011760)
-    a0 = lw(a2);
-    v0 += 0x10;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    v0 = 1;
+    // Master status: setting up various fields
+    mstat.fp_module = *gpWess_fp_wmd_file;
+    mstat.pabstime = gWess_Millicount.get();
+    mstat.patch_types_loaded = (uint8_t) numSoundDrivers;
 
-    if ((a0 != v1) || (lw(a2 + 0x4) != v0)) {
+    // Alloc the module data struct and link to the master status struct
+    module_data& mod_info = *(module_data*) pCurDestBytes;
+    pCurDestBytes += sizeof(module_data);
+    mstat.pmod_info = ptrToVmAddr(&mod_info);
+
+    // Read the module header and verify it has the expected id and version.
+    // If this operation fails then free any memory allocated (if owned):
+    module_header& mod_hdr = mod_info.mod_hdr;
+    wess_memcpy(&mod_hdr, gpWess_tmp_fp_wmd_file_1->get(), sizeof(module_header));
+    *gpWess_tmp_fp_wmd_file_1 += sizeof(module_header);
+
+    if ((mod_hdr.module_id_text != WESS_MODULE_ID) || (mod_hdr.module_version != WESS_MODULE_VER)) {
         free_mem_if_mine();
-        return 0;
+        return false;
     }
     
-    v1 = lw(sp + 0x10);
-    v0 = lw(a1 + 0xC);
-    sw(v1, a1 + 0x20);
-    a0 = lbu(v0 + 0xB);
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    a0 = lw(a1 + 0xC);
-    v1 += v0;
-    sw(v1, sp + 0x10);
-    sw(v1, a1 + 0x28);
-    a0 = lbu(a0 + 0xC);
-    v0 = a0 << 2;
-    v0 += a0;
-    v0 <<= 4;
-    a0 = *gWess_num_sd;
-    v1 += v0;
-    sw(v1, sp + 0x10);
-    sb(a0, a1 + 0x8);
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(sp + 0x10);
-    v1 = lbu(a0 + 0x8);
-    sw(v0, a0 + 0x14);
-    v0 += v1;
-    v1 = v0 & 1;
-    v0 += v1;
-    v1 = v0 & 2;
-    v0 += v1;
-    sw(v0, sp + 0x10);
-    v0 = -1;
-    v1 = lbu(a0 + 0x8);
-    a1 = lw(a0 + 0x14);
-    v1--;
-    a0 = 0x80;
+    // Alloc the sequence status structs and link to the master status struct
+    sequence_status* const pSeqStat = (sequence_status*) pCurDestBytes;
+    mstat.pseqstattbl = pSeqStat;
+    pCurDestBytes += sizeof(sequence_status) * mod_hdr.seq_work_areas;
 
-    while (v1 != v0) {
-        sb(a0, a1);
-        v1--;
-        a1++;
+    // Alloc the track status struct and link to the master status struct
+    track_status* const pTrackStat = (track_status*) pCurDestBytes;
+    mstat.ptrkstattbl = pTrackStat;
+    pCurDestBytes += sizeof(track_status) * mod_hdr.trk_work_areas;
+
+    // Alloc the list of master volumes for each sound driver and link to the master status struct.
+    // Note that the pointer must be 32-bit aligned afterwords, as it might end up on an odd address:
+    uint8_t* const pMasterVols = (uint8_t*) pCurDestBytes;
+    mstat.pmaster_volume = pMasterVols;
+    pCurDestBytes += sizeof(uint8_t) * numSoundDrivers;
+    pCurDestBytes += (uintptr_t) pCurDestBytes & 1;                 // Align to the next 32-bit boundary...
+    pCurDestBytes += (uintptr_t) pCurDestBytes & 2;                 // Align to the next 32-bit boundary...
+
+    // Initialize master volumes for each sound driver
+    for (int32_t drvIdx = numSoundDrivers - 1; drvIdx >= 0; --drvIdx) {
+        pMasterVols[drvIdx] = 128;
     }
-    
-    a2 = 0x800B0000;                                    // Result = 800B0000
-    a2 = lw(a2 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    a0 = lw(sp + 0x10);
-    v1 = lbu(a2 + 0x8);
-    sw(a0, a2 + 0x18);
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    v0 += v1;
-    v0 <<= 2;
-    a0 += v0;
-    sw(a0, sp + 0x10);
 
-    if (s3 != 0) {
-        a1 = lbu(a2 + 0x8);
-        a1--;
-        v0 = a1 << 2;
+    // Alloc the list of 'patch group data' structs for each sound driver and link to the master status struct
+    patch_group_data* const pPatchGrpData = (patch_group_data*) pCurDestBytes;
+    pCurDestBytes += sizeof(patch_group_data) * numSoundDrivers;
+    mstat.ppat_info = pPatchGrpData;
 
-        if (a1 != -1) {
-            t2 = a2;
-            t1 = v0 + s3;
-            v0 += a1;
-            v0 <<= 2;
-            v0 += a1;
-            t0 = v0 << 2;
+    // Load the settings for each sound driver (if given)
+    if (pSettingTagLists) {
+        for (int32_t drvIdx = numSoundDrivers - 1; drvIdx >= 0; --drvIdx) {
+            // Iterate through the key/value pairs of setting types and values for this driver
+            for (int32_t kvpIdx = 0; pSettingTagLists[drvIdx][kvpIdx] != 0; kvpIdx += 2) {
+                // Save the key value pair in the patch group info
+                patch_group_data& patch_info = mstat.ppat_info[drvIdx];
+                patch_info.sndhw_tags[kvpIdx + 0] = pSettingTagLists[drvIdx][kvpIdx + 0];
+                patch_info.sndhw_tags[kvpIdx + 1] = pSettingTagLists[drvIdx][kvpIdx + 1];
 
-            do {
-                v0 = lw(t1);
-                v0 = lw(v0);
-                a3 = 0;
+                // Process this key/value settings pair
+                const int32_t key = patch_info.sndhw_tags[kvpIdx + 0];
+                const int32_t value = patch_info.sndhw_tags[kvpIdx + 1];
 
-                while (v0 != 0) {
-                    v0 = lw(t2 + 0x18);
-                    v1 = lw(t1);
-                    v0 += t0;
-                    v1 += a3;
-                    v1 = lw(v1);
-                    v0 += a3;
-                    sw(v1, v0 + 0x24);
-                    v0 = lw(t2 + 0x18);
-                    v1 = lw(t1);
-                    v0 += t0;
-                    v1 += a3;
-                    v1 = lw(v1 + 0x4);
-                    v0 += a3;
-                    sw(v1, v0 + 0x28);
-                    v0 = lw(t2 + 0x18);
-                    a2 = t0 + v0;
-                    a0 = a3 + a2;
-                    v1 = lw(a0 + 0x24);
-                    
-                    if (v1 == 1) {
-                        v0 = lw(a0 + 0x28);
-                        sw(v0, a2 + 0x4C);
-                    }
-                    else if (v1 == 2) {
-                        v1 = -2;
-                        v0 = lw(a2 + 0x50);
-                        a0 = lw(a0 + 0x28);
-                        v1 &= v0;
-                        v0 &= 1;
-                        v0 |= a0;
-                        v0 &= 1;
-                        v1 |= v0;
-                        sw(v1, a2 + 0x50);
-                    }
-                    else if (v1 == 3) {
-                        v1 = -3;
-                        v0 = lw(a2 + 0x50);
-                        a0 = lw(a0 + 0x28);
-                        v1 &= v0;
-                        v0 >>= 1;
-                        v0 &= 1;
-                        v0 |= a0;
-                        v0 &= 1;
-                        v0 <<= 1;
-                        v1 |= v0;
-                        sw(v1, a2 + 0x50);
-                    }
-                    else if (v1 == 4) {
-                        v1 = -5;
-                        v0 = lw(a2 + 0x50);
-                        a0 = lw(a0 + 0x28);
-                        v1 &= v0;
-                        v0 >>= 2;
-                        v0 &= 1;
-                        v0 |= a0;
-                        v0 &= 1;
-                        v0 <<= 2;
-                        v1 |= v0;
-                        sw(v1, a2 + 0x50);
-                    }
-                
-                    v0 = a1 << 2;
-                    v0 += s3;
-                    v0 = lw(v0);
-                    a3 += 8;
-                    v0 += a3;
-                    v0 = lw(v0);
+                if (key == SNDHW_TAG_DRIVER_ID) {
+                    patch_info.hw_tl_list.hardware_ID = value;
+                } else if (key == SNDHW_TAG_SOUND_EFFECTS) {
+                    patch_info.hw_tl_list.sfxload |= (value & 1);
+                } else if (key == SNDHW_TAG_MUSIC) {
+                    patch_info.hw_tl_list.musload |= (value & 1);
+                } else if (key == SNDHW_TAG_DRUMS) {
+                    patch_info.hw_tl_list.drmload |= (value & 1);
                 }
-
-                t1 -= 4;
-                a1--;
-                t0 -= 0x54;
-            } while (a1 != -1);
+            }
         }
     }
 
@@ -1082,6 +961,8 @@ int32_t wess_load_module(
     s1 = lbu(v0 + 0xA);
     v0 = -1;                                            // Result = FFFFFFFF
     s1--;
+
+    sw(ptrToVmAddr(pCurDestBytes), sp + 0x10);
 
     if (s1 != v0) {
         s2 = -1;                                            // Result = FFFFFFFF
@@ -1324,6 +1205,11 @@ int32_t wess_load_module(
     v1 = lh(v1 + 0x8);
     v0 += a1;
     sw(v0, sp + 0x10);
+
+    // --
+    sb(4, sp + 0x18);
+    sb(0, sp + 0x20);
+    sb(0, sp + 0x28);
 
     if (i32(v1) > 0) {
         s7 = -1;                                            // Result = FFFFFFFF

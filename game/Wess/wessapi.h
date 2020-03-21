@@ -32,7 +32,7 @@ int32_t wess_load_module(
     const void* const pWmd,
     void* const pDestMem,
     const int32_t memoryAllowance,
-    VmPtr<int32_t>* pSettingTagLists
+    VmPtr<int32_t>* const pSettingTagLists
 ) noexcept;
 
 void filltrackstat() noexcept;

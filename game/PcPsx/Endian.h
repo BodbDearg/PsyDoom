@@ -20,16 +20,16 @@ namespace Endian {
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Swap bytes of integer types
     //--------------------------------------------------------------------------------------------------------------------------------------
-    inline uint8_t byteSwap(const uint8_t num) noexcept { return num; }
+    inline constexpr uint8_t byteSwap(const uint8_t num) noexcept { return num; }
 
-    inline uint16_t byteSwap(const uint16_t num) noexcept {
+    inline constexpr uint16_t byteSwap(const uint16_t num) noexcept {
         return (
             (uint16_t)((num & 0x00FFu) << 8) |
             (uint16_t)((num & 0xFF00u) >> 8)
         );
     }
 
-    inline uint32_t byteSwap(const uint32_t num) noexcept {
+    inline constexpr uint32_t byteSwap(const uint32_t num) noexcept {
         return (
             ((num & 0x000000FFu) << 24) |
             ((num & 0x0000FF00u) << 8) |
@@ -38,15 +38,15 @@ namespace Endian {
         );
     }
 
-    inline int8_t byteSwap(const int8_t num) noexcept { return num; }
-    inline int16_t byteSwap(const int16_t num) noexcept { return (int16_t) byteSwap((uint16_t) num); }
-    inline int32_t byteSwap(const int32_t num) noexcept { return (int32_t) byteSwap((uint32_t) num); }
+    inline constexpr int8_t byteSwap(const int8_t num) noexcept { return num; }
+    inline constexpr int16_t byteSwap(const int16_t num) noexcept { return (int16_t) byteSwap((uint16_t) num); }
+    inline constexpr int32_t byteSwap(const int32_t num) noexcept { return (int32_t) byteSwap((uint32_t) num); }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Convert from little endian to host endian and visa versa
     //--------------------------------------------------------------------------------------------------------------------------------------
     template <class T>
-    inline T littleToHost(const T num) noexcept {
+    inline constexpr T littleToHost(const T num) noexcept {
         if constexpr (isLittle()) {
             return num;
         } else {
@@ -55,7 +55,7 @@ namespace Endian {
     }
 
     template <class T>
-    inline T bigToHost(const T num) noexcept {
+    inline constexpr T bigToHost(const T num) noexcept {
         if constexpr (isLittle()) {
             return byteSwap(num);
         } else {
@@ -64,7 +64,7 @@ namespace Endian {
     }
 
     template <class T>
-    inline T hostToLittle(const T num) noexcept {
+    inline constexpr T hostToLittle(const T num) noexcept {
         if constexpr (isLittle()) {
             return num;
         } else {
@@ -73,7 +73,7 @@ namespace Endian {
     }
 
     template <class T>
-    inline T hostToBig(const T num) noexcept {
+    inline constexpr T hostToBig(const T num) noexcept {
         if constexpr (isLittle()) {
             return byteSwap(num);
         } else {

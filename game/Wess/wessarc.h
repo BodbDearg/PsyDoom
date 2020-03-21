@@ -3,6 +3,16 @@
 #include "psxcd.h"
 #include "PcPsx/Types.h"
 
+// Setting ids for sound hardware
+enum SoundHardwareTags : uint32_t {
+    SNDHW_TAG_END               = 0,
+    SNDHW_TAG_DRIVER_ID         = 1,
+    SNDHW_TAG_SOUND_EFFECTS     = 2,
+    SNDHW_TAG_MUSIC             = 3,
+    SNDHW_TAG_DRUMS             = 4,
+    SNDHW_TAG_MAX               = 5
+};
+
 // TODO: COMMENT
 struct patches_header {
     uint16_t    patchmap_cnt;       // 0x000    TODO: COMMENT
@@ -146,19 +156,22 @@ static_assert(sizeof(patch_group_header) == 28);
 
 // TODO: COMMENT
 struct hardware_table_list {
-    int32_t     hardware_ID;        // 0x000    TODO: COMMENT
-    int32_t     flags_load;         // 0x004    TODO: COMMENT
+    int32_t     hardware_ID;            // 0x000    TODO: COMMENT
+    int32_t     sfxload : 1;            // 0x004    TODO: COMMENT
+    int32_t     musload : 1;            // 0x004    TODO: COMMENT
+    int32_t     drmload : 1;            // 0x004    TODO: COMMENT
+    int32_t     _unused_flags : 29;     // 0x004    TODO: COMMENT
 };
 
 static_assert(sizeof(hardware_table_list) == 8);
 
 // TODO: COMMENT
 struct patch_group_data {
-    patch_group_header      pat_grp_hdr;            // 0x000    TODO: COMMENT
-    VmPtr<char>             ppat_data;              // 0x01C    TODO: COMMENT
-    int32_t                 data_fileposition;      // 0x020    TODO: COMMENT
-    int32_t                 sndhw_tags[10];         // 0x024    TODO: COMMENT
-    hardware_table_list     hw_tl_list;             // 0x04C    TODO: COMMENT
+    patch_group_header      pat_grp_hdr;                        // 0x000    TODO: COMMENT
+    VmPtr<char>             ppat_data;                          // 0x01C    TODO: COMMENT
+    int32_t                 data_fileposition;                  // 0x020    TODO: COMMENT
+    int32_t                 sndhw_tags[SNDHW_TAG_MAX * 2];      // 0x024    TODO: COMMENT
+    hardware_table_list     hw_tl_list;                         // 0x04C    TODO: COMMENT
 };
 
 static_assert(sizeof(patch_group_data) == 84);
@@ -249,7 +262,7 @@ struct master_status_structure {
     uint8_t                     unk3;                       // 0x00B    TODO: COMMENT
     VmPtr<module_data>          pmod_info;                  // 0x00C    TODO: COMMENT
     VmPtr<callback_status>      pcalltable;                 // 0x010    TODO: COMMENT
-    VmPtr<char>                 pmaster_volume;             // 0x014    TODO: COMMENT
+    VmPtr<uint8_t>              pmaster_volume;             // 0x014    TODO: COMMENT
     VmPtr<patch_group_data>     ppat_info;                  // 0x018    TODO: COMMENT
     uint32_t                    max_trks_perseq;            // 0x01C    TODO: COMMENT
     VmPtr<sequence_status>      pseqstattbl;                // 0x020    TODO: COMMENT
@@ -280,7 +293,7 @@ int32_t module_read(void* const pDest, const int32_t numBytes, PsxCd_File& file)
 int32_t module_seek(PsxCd_File& file, const int32_t seekPos, const PsxCd_SeekMode seekMode) noexcept;
 int32_t module_tell(const PsxCd_File& file) noexcept;
 void module_close(PsxCd_File& file) noexcept;
-int32_t get_num_Wess_Sound_Drivers() noexcept;
+int32_t get_num_Wess_Sound_Drivers(VmPtr<int32_t>* const pSettingsTagLists) noexcept;
 PsxCd_File* data_open(const CdMapTbl_File fileId) noexcept;
 int32_t data_read(PsxCd_File& file, const int32_t destSpuAddr, const int32_t numBytes, const int32_t fileOffset) noexcept;
 void data_close(PsxCd_File& file) noexcept;
