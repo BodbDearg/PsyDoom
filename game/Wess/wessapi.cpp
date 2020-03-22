@@ -14,6 +14,9 @@ static constexpr uint32_t WESS_MODULE_ID = Endian::littleToHost(0x58535053);
 // Expected WMD (module) file version
 static constexpr uint32_t WESS_MODULE_VER = 1;
 
+// Minimum tracks in a sequence
+static constexpr uint8_t MINIMUM_TRACK_INDXS_FOR_A_SEQUENCE = 4;
+
 // Flags specifying what types of patch group data gets loaded
 enum patch_grp_load_flags : uint32_t {
     LOAD_PATCHES    = 0x01,
@@ -21,6 +24,14 @@ enum patch_grp_load_flags : uint32_t {
     LOAD_PATCHINFO  = 0x04,
     LOAD_DRUMMAPS   = 0x08,
     LOAD_EXTRADATA  = 0x10
+};
+
+// Voice classes
+enum voice_class : uint8_t {
+    SNDFX_CLASS     = 0,
+    MUSIC_CLASS     = 1,
+    DRUMS_CLASS     = 2,
+    SFXDRUMS_CLASS  = 3
 };
 
 const VmPtr<bool32_t>   gbWess_module_loaded(0x800758F8);       // If true then a WMD file (module) has been loaded
@@ -38,6 +49,7 @@ static const VmPtr<VmPtr<uint8_t>>                      gpWess_tmp_fp_wmd_file_1
 static const VmPtr<VmPtr<uint8_t>>                      gpWess_tmp_fp_wmd_file_2(0x800758EC);       // TODO: COMMENT
 static const VmPtr<VmPtr<master_status_structure>>      gpWess_pm_stat(0x800A8758);                 // TODO: COMMENT
 static const VmPtr<patch_group_header>                  gWess_scratch_pat_grp_hdr(0x8007EFC4);      // TODO: COMMENT
+static const VmPtr<track_header>                        gWess_scratch_trk_hdr(0x8007EFE0);          // TODO: COMMENT
 
 void trackstart() noexcept {
 loc_80041734:
@@ -807,18 +819,12 @@ int32_t wess_load_module(
     sw(s1, sp + 0x5C);
     sw(s0, sp + 0x58);
     sw(s3, sp + 0x64);
-    sw(fp, sp + 0x78);
-    sw(s7, sp + 0x74);
     sw(s6, sp + 0x70);
     sw(s5, sp + 0x6C);
-    sw(s4, sp + 0x68);
 
     auto cleanupStackFrame = finally([]() {
-        fp = lw(sp + 0x78);
-        s7 = lw(sp + 0x74);
         s6 = lw(sp + 0x70);
         s5 = lw(sp + 0x6C);
-        s4 = lw(sp + 0x68);
         s3 = lw(sp + 0x64);
         s2 = lw(sp + 0x60);
         s1 = lw(sp + 0x5C);
@@ -1080,222 +1086,126 @@ int32_t wess_load_module(
         }
     }
 
-    sw(ptrToVmAddr(pCurDestBytes), sp + 0x10);
+    // Alloc the list of sequence info structs and link to the master status struct
+    sequence_data* const pSeqInfo = (sequence_data*) pCurDestBytes;
+    pCurDestBytes += sizeof(sequence_data) * mod_info.mod_hdr.sequences;
+    mod_info.pseq_info = pSeqInfo;
 
-    a0 = ptrToVmAddr(&mstat);
-    a1 = lw(sp + 0x10);
-    v0 = lw(a0 + 0xC);
-    sw(a1, v0 + 0x10);
-    v0 = lw(a0 + 0xC);
-    v1 = lh(v0 + 0x8);
-    s2 = 0;
-    v0 = v1 << 2;
-    v0 += v1;
-    v1 = lw(a0 + 0xC);
-    v0 <<= 2;
-    v1 = lh(v1 + 0x8);
-    v0 += a1;
-    sw(v0, sp + 0x10);
+    // These stats hold the maximums for all sequences
+    uint8_t maxSeqTracks = MINIMUM_TRACK_INDXS_FOR_A_SEQUENCE;
+    uint8_t maxSeqVoices = 0;
+    uint8_t maxSeqSubstackCount = 0;
+    
+    // Determine track stats and sequence headers for all sequences
+    for (int32_t seqIdx = 0; seqIdx < mod_info.mod_hdr.sequences; ++seqIdx) {
+        // Read the sequence header, save the sequence position in the file and move past it
+        sequence_data& seq_info = mod_info.pseq_info[seqIdx];
+        wess_memcpy(&seq_info.seq_hdr, gpWess_tmp_fp_wmd_file_1->get(), sizeof(seq_header));
 
-    // --
-    sb(4, sp + 0x18);
-    sb(0, sp + 0x20);
-    sb(0, sp + 0x28);
+        seq_info.fileposition = (uint32_t)(gpWess_tmp_fp_wmd_file_1->get() - gpWess_tmp_fp_wmd_file_2->get());
+        *gpWess_tmp_fp_wmd_file_1 += sizeof(seq_header);
 
-    if (i32(v1) > 0) {
-        s7 = -1;                                            // Result = FFFFFFFF
-        fp = 0x80080000;                                    // Result = 80080000
-        fp -= 0x1020;                                       // Result = 8007EFE0
-        s4 = fp + 0x12;                                     // Result = 8007EFF2
-        s5 = 0;
+        // Run through all tracks in the sequence and figure out the stats (size etc.) for what will be loaded
+        uint8_t numTracksToload = 0;
+        uint32_t tracksTotalSize = 0;
 
-        do {
-            a2 = 4;
-            v0 = ptrToVmAddr(&mstat);
-            a1 = *gpWess_tmp_fp_wmd_file_1;
-            v0 = lw(v0 + 0xC);
-            v1 = 0x80070000;                                    // Result = 80070000
-            v1 = lw(v1 + 0x58EC);                               // Load from: gpWess_tmp_fp_wmd_file_2 (800758EC)
-            a0 = lw(v0 + 0x10);
-            s6 = a1 - v1;
-            a0 += s5;
-            
-            wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
+        for (int32_t numTracksRemaining = seq_info.seq_hdr.tracks; numTracksRemaining > 0; --numTracksRemaining) {
+            // Read the track header and move on in the file
+            track_header& track_hdr = *gWess_scratch_trk_hdr;
+            wess_memcpy(&track_hdr, gpWess_tmp_fp_wmd_file_1->get(), sizeof(track_header));
+            *gpWess_tmp_fp_wmd_file_1 += sizeof(track_header);
 
-            v0 = ptrToVmAddr(&mstat);
-            s3 = 0;
-            v0 = lw(v0 + 0xC);
-            v1 = lw(v0 + 0x10);
-            v0 = *gpWess_tmp_fp_wmd_file_1;
-            v1 += s5;
-            s1 = lh(v1);
-            v0 += 4;
-            *gpWess_tmp_fp_wmd_file_1 = v0;
-            s1--;
-            s0 = 0;
-            a0 = fp;                                            // Result = 8007EFE0
+            // Decide whether the track is to be loaded for this sound driver
+            bool bLoadTrack = false;
 
-            while (s1 != s7) {
-                a1 = *gpWess_tmp_fp_wmd_file_1;
-                a2 = 0x18;                                          // Result = 00000018
+            if ((track_hdr.voices_type == NoSound_ID) || (track_hdr.voices_type == GENERIC_ID)) {
+                // This track is not associated with any sound driver or works with any sound driver: load always
+                bLoadTrack = true;
+            } 
+            else {
+                // Not doing an unconditional load of this track.
+                // Only load it if it is for one of the loaded sound drivers and loading this track type is allowed:
+                for (int32_t sndDrvIdx = (int32_t) mstat.patch_types_loaded - 1; sndDrvIdx >= 0; --sndDrvIdx) {
+                    patch_group_data& patch_grp = mstat.ppat_info[sndDrvIdx];
 
-                wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
+                    // Is the track for this sound driver?
+                    if (track_hdr.voices_type != patch_grp.hw_tl_list.hardware_ID)
+                        continue;
 
-                v0 = *gpWess_tmp_fp_wmd_file_1;
-                v1 = lbu(fp);                                       // Load from: 8007EFE0
-                v0 += 0x18;
-                *gpWess_tmp_fp_wmd_file_1 = v0;
-                t0 = 0;
+                    // Only load the track if it's a known voice class and the driver wants to load that voice class
+                    if ((track_hdr.voices_class == SNDFX_CLASS) || (track_hdr.voices_class == SFXDRUMS_CLASS)) {
+                        if (patch_grp.hw_tl_list.sfxload) {
+                            bLoadTrack = true;
+                            break;
+                        }
+                    }
 
-                if ((v1 == 0) || (v1 == 0x32)) {
-                    t0 = 1;
-                } 
-                else {
-                    v0 = ptrToVmAddr(&mstat);
-                    a1 = lbu(v0 + 0x8);
-                    a1--;
+                    if (track_hdr.voices_class == MUSIC_CLASS) {
+                        if (patch_grp.hw_tl_list.musload) {
+                            bLoadTrack = true;
+                            break;
+                        }
+                    }
 
-                    if (a1 != s7) {
-                        t1 = v1;
-                        a3 = v0;
-                        v1 = lw(v0 + 0x18);
-                        v0 = a1 << 2;
-                        v0 += a1;
-                        v0 <<= 2;
-                        v0 += a1;
-                        a0 = v0 << 2;
-                        a2 = a0 + v1;
-
-                        while (a1 != s7) {
-                            v0 = lw(a2 + 0x4C);
-
-                            if (t1 == v0) {
-                                v1 = lbu(fp + 0x4);                                 // Load from: 8007EFE4
-                                
-                                if ((v1 == 0) || (v1 == 3)) {
-                                    v0 = lw(a2 + 0x50);
-                                    v0 &= 1;
-                                
-                                    if (v0 != 0) {
-                                        t0 = 1;
-                                        break;
-                                    }
-                                }
-
-                                v1 = 0x80080000;                                    // Result = 80080000
-                                v1 = lbu(v1 - 0x101C);                              // Load from: 8007EFE4
-                                
-                                if (v1 == 1) {
-                                    v0 = lw(a3 + 0x18);
-                                    v0 += a0;
-                                    v0 = lw(v0 + 0x50);
-                                    v0 &= 2;
-                                    
-                                    if (v0 != 0) {
-                                        t0 = 1;
-                                        break;
-                                    }
-                                }
-
-                                if (v1 == 2) {
-                                    v0 = lw(a3 + 0x18);
-                                    v0 += a0;
-                                    v0 = lw(v0 + 0x50);
-                                    v0 &= 4;
-
-                                    if (v0 != 0) {
-                                        t0 = 1;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            a0 -= 0x54;
-                            a1--;
-                            a2 -= 0x54;
+                    if (track_hdr.voices_class == DRUMS_CLASS) {
+                        if (patch_grp.hw_tl_list.drmload) {
+                            bLoadTrack = true;
+                            break;
                         }
                     }
                 }
+            }
 
-                if (t0 != 0) {
-                    v0 = lh(s4);                                        // Load from: 8007EFF2
-                    v1 = lw(s4 + 0x2);                                  // Load from: 8007EFF4
-                    t3 = lbu(sp + 0x20);
-                    v0 <<= 2;
-                    v1 += 0x20;
-                    v0 += v1;
-                    s0 += v0;
-                    v0 = s0 & 1;
-                    s0 += v0;
-                    v1 = s0 & 2;
-                    v0 = lbu(s4 - 0x11);                                // Load from: 8007EFE1
-                    v0 = (t3 < v0);
-                    s0 += v1;
+            // If the track is to be loaded figure out how much memory it would use and add to the total for the sequence.
+            // Also update the maximum number of voices required for all sequences.
+            if (bLoadTrack) {
+                ++numTracksToload;
 
-                    if (v0 != 0) {
-                        t3 = lbu(s4 - 0x11);                            // Load from: 8007EFE1
-                        sb(t3, sp + 0x20);
-                    }
+                // Track is to be loaded: incorporate this track's size into the total size for the sequence and 32-bit align size
+                tracksTotalSize += sizeof(track_data);
+                tracksTotalSize += (uint32_t) track_hdr.labellist_count * sizeof(uint32_t);
+                tracksTotalSize += track_hdr.data_size;
+                tracksTotalSize += tracksTotalSize & 1;     // Added size due to 32-bit align..
+                tracksTotalSize += tracksTotalSize & 2;     // Added size due to 32-bit align..
 
-                    v0 = lbu(s4 - 0x6);                                 // Load from: 8007EFEC
-                    t3 = lbu(sp + 0x28);
-                    v0 = (t3 < v0);
-                    s3++;
-
-                    if (v0 != 0) {
-                        t3 = lbu(s4 - 0x6);                             // Load from: 8007EFEC
-                        sb(t3, sp + 0x28);
-                    }
+                // Incorporate track stats into the maximum for all sequences
+                if (track_hdr.voices_max > maxSeqVoices) {
+                    maxSeqVoices = track_hdr.voices_max;
                 }
 
-                s1--;
-                v0 = lh(s4);                                        // Load from: 8007EFF2
-                v1 = lw(s4 + 0x2);                                  // Load from: 8007EFF4
-                a0 = *gpWess_tmp_fp_wmd_file_1;
-                v0 <<= 2;
-                v0 += v1;
-                v0 += a0;
-                *gpWess_tmp_fp_wmd_file_1 = v0;
-                a0 = fp;                                            // Result = 8007EFE0
-            }
-            
-            v0 = lbu(sp + 0x18);
-            
-            if (i32(v0) < i32(s3)) {
-                sb(s3, sp + 0x18);
+                if (track_hdr.substack_count > maxSeqSubstackCount) {
+                    maxSeqSubstackCount = track_hdr.substack_count;
+                }
             }
 
-            s2++;
-            
-            if (s3 == 0) {
-                s0 = 0x24;
-            }
+            // Move past this track in the WMD file
+            *gpWess_tmp_fp_wmd_file_1 += (uint32_t) track_hdr.labellist_count * sizeof(uint32_t);
+            *gpWess_tmp_fp_wmd_file_1 += track_hdr.data_size;
+        }
+        
+        // Incorporate track count into the global max
+        if (numTracksToload > maxSeqTracks) {
+            maxSeqTracks = numTracksToload;
+        }
 
-            v1 = ptrToVmAddr(&mstat);
-            v0 = lw(v1 + 0xC);
-            v0 = lw(v0 + 0x10);
-            v0 += s5;
-            sw(s3, v0 + 0x10);
-            v0 = lw(v1 + 0xC);
-            v0 = lw(v0 + 0x10);
-            v0 += s5;
-            sw(s0, v0 + 0xC);
-            v0 = lw(v1 + 0xC);
-            v0 = lw(v0 + 0x10);
-            v0 += s5;
-            sw(s6, v0 + 0x8);
-            v0 = lw(v1 + 0xC);
-            v0 = lh(v0 + 0x8);
-            s5 += 0x14;
-        } while (i32(s2) < i32(v0));
+        // If no tracks are in the sequence then we still allocate a small amount of track info
+        if (numTracksToload == 0) {
+            tracksTotalSize = sizeof(track_data) + 4;   // TODO: what is the extra 4 bytes for?
+        }
+
+        // Save sequence stats
+        seq_info.trkstoload = numTracksToload;
+        seq_info.trkinfolength = tracksTotalSize;
     }
+
+    sw(ptrToVmAddr(pCurDestBytes), sp + 0x10);
 
     v1 = ptrToVmAddr(&mstat);
     a0 = lw(sp + 0x10);
     v0 = lw(v1 + 0xC);
     sw(a0, v1 + 0x10);
     v0 = lbu(v0 + 0xF);
-    t3 = lbu(sp + 0x18);
+    t3 = maxSeqTracks;
     v0 <<= 3;
     v0 += a0;
     sw(v0, sp + 0x10);
@@ -1327,7 +1237,7 @@ int32_t wess_load_module(
             v0 = lw(a2 + 0xC);
             sw(a0, sp + 0x10);
             v0 = lbu(v0 + 0xE);
-            s1 = lbu(sp + 0x18);
+            s1 = maxSeqTracks;
             v0 += a0;
             v1 = v0 & 1;
             v1 += v0;
@@ -1362,10 +1272,10 @@ int32_t wess_load_module(
     }
 
     v0 = ptrToVmAddr(&mstat);
-    t3 = lbu(sp + 0x20);
+    t3 = maxSeqVoices;
     sb(t3, v0 + 0x2C);
     v0 = ptrToVmAddr(&mstat);
-    t3 = lbu(sp + 0x28);
+    t3 = maxSeqSubstackCount;
     sb(t3, v0 + 0x24);
     a0 = ptrToVmAddr(&mstat);
     v0 = lw(a0 + 0xC);

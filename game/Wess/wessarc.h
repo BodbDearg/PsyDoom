@@ -13,6 +13,13 @@ enum SoundHardwareTags : uint32_t {
     SNDHW_TAG_MAX               = 5
 };
 
+// Sound driver ids
+enum SoundDriverIds : uint8_t {
+    NoSound_ID  = 0,        // No sound driver
+    PSX_ID      = 1,        // Sony PlayStation sound driver
+    GENERIC_ID  = 50        // Generic hardware agnostic sound driver
+};
+
 // TODO: COMMENT
 struct patches_header {
     uint16_t    patchmap_cnt;       // 0x000    TODO: COMMENT
