@@ -8,23 +8,36 @@
 #include "wessarc.h"
 #include "wessseq.h"
 
-static constexpr uint32_t WESS_MODULE_ID    = Endian::littleToHost(0x58535053);     // 4 byte identifier for WMD (Williams Module) files: says 'SPSX'
-static constexpr uint32_t WESS_MODULE_VER   = 1;                                    // Expected WMD (module) file version
+// 4 byte identifier for WMD (Williams Module) files: says 'SPSX'
+static constexpr uint32_t WESS_MODULE_ID = Endian::littleToHost(0x58535053);
+
+// Expected WMD (module) file version
+static constexpr uint32_t WESS_MODULE_VER = 1;
+
+// Flags specifying what types of patch group data gets loaded
+enum patch_grp_load_flags : uint32_t {
+    LOAD_PATCHES    = 0x01,
+    LOAD_PATCHMAPS  = 0x02,
+    LOAD_PATCHINFO  = 0x04,
+    LOAD_DRUMMAPS   = 0x08,
+    LOAD_EXTRADATA  = 0x10
+};
 
 const VmPtr<bool32_t>   gbWess_module_loaded(0x800758F8);       // If true then a WMD file (module) has been loaded
 
-static const VmPtr<bool32_t>                            gbWess_sysinit(0x800758F4);             // Set to true once the WESS API has been initialized
-static const VmPtr<bool32_t>                            gbWess_early_exit(0x800758FC);          // Unused flag in PSX DOOM, I think to request the API to exit?
-static const VmPtr<int32_t>                             gWess_num_sd(0x800758E4);               // The number of sound drivers available
-static const VmPtr<bool32_t>                            gbWess_wmd_mem_is_mine(0x80075908);     // TODO: COMMENT
-static const VmPtr<int32_t>                             gWess_mem_limit(0x80075904);            // TODO: COMMENT
-static const VmPtr<VmPtr<uint8_t>>                      gpWess_wmd_mem(0x8007590C);             // TODO: COMMENT
-static const VmPtr<int32_t>                             gWess_wmd_size(0x80075914);             // TODO: COMMENT
-static const VmPtr<uint8_t>                             gWess_max_seq_num(0x80075900);          // TODO: COMMENT
-static const VmPtr<VmPtr<PsxCd_File>>                   gpWess_fp_wmd_file(0x800758F0);         // TODO: COMMENT
-static const VmPtr<VmPtr<uint8_t>>                      gpWess_tmp_fp_wmd_file_1(0x800758E8);   // TODO: COMMENT
-static const VmPtr<VmPtr<uint8_t>>                      gpWess_tmp_fp_wmd_file_2(0x800758EC);   // TODO: COMMENT
-static const VmPtr<VmPtr<master_status_structure>>      gpWess_pm_stat(0x800A8758);             // TODO: COMMENT
+static const VmPtr<bool32_t>                            gbWess_sysinit(0x800758F4);                 // Set to true once the WESS API has been initialized
+static const VmPtr<bool32_t>                            gbWess_early_exit(0x800758FC);              // Unused flag in PSX DOOM, I think to request the API to exit?
+static const VmPtr<int32_t>                             gWess_num_sd(0x800758E4);                   // The number of sound drivers available
+static const VmPtr<bool32_t>                            gbWess_wmd_mem_is_mine(0x80075908);         // TODO: COMMENT
+static const VmPtr<int32_t>                             gWess_mem_limit(0x80075904);                // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>                      gpWess_wmd_mem(0x8007590C);                 // TODO: COMMENT
+static const VmPtr<int32_t>                             gWess_wmd_size(0x80075914);                 // TODO: COMMENT
+static const VmPtr<uint8_t>                             gWess_max_seq_num(0x80075900);              // TODO: COMMENT
+static const VmPtr<VmPtr<PsxCd_File>>                   gpWess_fp_wmd_file(0x800758F0);             // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>                      gpWess_tmp_fp_wmd_file_1(0x800758E8);       // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>                      gpWess_tmp_fp_wmd_file_2(0x800758EC);       // TODO: COMMENT
+static const VmPtr<VmPtr<master_status_structure>>      gpWess_pm_stat(0x800A8758);                 // TODO: COMMENT
+static const VmPtr<patch_group_header>                  gWess_scratch_pat_grp_hdr(0x8007EFC4);      // TODO: COMMENT
 
 void trackstart() noexcept {
 loc_80041734:
@@ -764,45 +777,23 @@ static void wess_memcpy(void* const pDst, const void* const pSrc, const uint32_t
     }
 }
 
-void conditional_read() noexcept {
-loc_8004224C:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a1;
-    sw(s0, sp + 0x10);
-    s0 = a2;
-    sw(ra, sp + 0x18);
-    if (a0 == 0) goto loc_800422B8;
-    a0 = lw(s1);
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    v0 += s0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    v0 = lw(s1);
-    v0 += s0;
-    v1 = v0 & 1;
-    v1 += v0;
-    v0 = v1 & 2;
-    v0 += v1;
-    sw(v0, s1);
-    goto loc_800422D0;
-loc_800422B8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-    v0 += s0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
-loc_800422D0:
-    v0 = 1;                                             // Result = 00000001
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads a certain number of bytes (or skips over it) from the currently open module file.
+// After the read, the location of the destination pointer is 32-bit aligned.
+// Returns 'false' if the read fails.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool conditional_read(const uint32_t readFlag, uint8_t*& pDstMemPtr, const int32_t readSize) noexcept {
+    // Either skip over the memory block or read it
+    if (readFlag) {
+        wess_memcpy(pDstMemPtr, gpWess_tmp_fp_wmd_file_1->get(), readSize);
+        
+        pDstMemPtr += readSize;
+        pDstMemPtr += (uintptr_t) pDstMemPtr & 1;       // 32-bit align the pointer after the read...
+        pDstMemPtr += (uintptr_t) pDstMemPtr & 2;       // 32-bit align the pointer after the read...
+    }
+
+    *gpWess_tmp_fp_wmd_file_1 += readSize;
+    return true;
 }
 
 int32_t wess_load_module(
@@ -912,8 +903,8 @@ int32_t wess_load_module(
     uint8_t* const pMasterVols = (uint8_t*) pCurDestBytes;
     mstat.pmaster_volume = pMasterVols;
     pCurDestBytes += sizeof(uint8_t) * numSoundDrivers;
-    pCurDestBytes += (uintptr_t) pCurDestBytes & 1;                 // Align to the next 32-bit boundary...
-    pCurDestBytes += (uintptr_t) pCurDestBytes & 2;                 // Align to the next 32-bit boundary...
+    pCurDestBytes += (uintptr_t) pCurDestBytes & 1;         // Align to the next 32-bit boundary...
+    pCurDestBytes += (uintptr_t) pCurDestBytes & 2;         // Align to the next 32-bit boundary...
 
     // Initialize master volumes for each sound driver
     for (int32_t drvIdx = numSoundDrivers - 1; drvIdx >= 0; --drvIdx) {
@@ -952,246 +943,146 @@ int32_t wess_load_module(
         }
     }
 
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    sb(0, v0 + 0x7);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(v0 + 0xC);
-    s1 = lbu(v0 + 0xA);
-    v0 = -1;                                            // Result = FFFFFFFF
-    s1--;
+    // Read patch group data for each sound driver and figure out the total number of voices for all patch groups
+    mstat.voices_total = 0;
 
-    sw(ptrToVmAddr(pCurDestBytes), sp + 0x10);
+    for (int32_t fpatchIdx = mod_info.mod_hdr.patch_types_infile - 1; fpatchIdx >= 0; --fpatchIdx) {
+        // Read the patch group header
+        patch_group_header& patch_grp_hdr = *gWess_scratch_pat_grp_hdr;
+        wess_memcpy(&patch_grp_hdr, gpWess_tmp_fp_wmd_file_1->get(), sizeof(patch_group_header));
+        *gpWess_tmp_fp_wmd_file_1 += sizeof(patch_group_header);
 
-    if (s1 != v0) {
-        s2 = -1;                                            // Result = FFFFFFFF
-        s0 = 0x80080000;                                    // Result = 80080000
-        s0 -= 0x1038;                                       // Result = 8007EFC8
-        s3 = s0 - 4;                                        // Result = 8007EFC4
+        // Try to match against one of the sound drivers loaded
+        for (int32_t sndDrvIdx = (int32_t) mstat.patch_types_loaded - 1; sndDrvIdx >= 0; --sndDrvIdx) {
+            // This this patch group play with this sound hardware? If it doesn't then skip over it:
+            patch_group_data& patch_grp = mstat.ppat_info[sndDrvIdx];
 
-        do {
-            a0 = 0x80080000;                                    // Result = 80080000
-            a0 -= 0x103C;                                       // Result = 8007EFC4
-            a1 = 0x80070000;                                    // Result = 80070000
-            a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-            a2 = 0x1C;
+            if (patch_grp_hdr.patch_id != patch_grp.hw_tl_list.hardware_ID)
+                continue;
             
-            wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
+            // Save the header, pointer to patch data and offset, and increment the total voice count
+            patch_grp.pat_grp_hdr = patch_grp_hdr;            
+            patch_grp.ppat_data = pCurDestBytes;
+            patch_grp.data_fileposition = (int32_t)(gpWess_tmp_fp_wmd_file_1->get() - gpWess_tmp_fp_wmd_file_2->get());
 
-            v0 = 0x80070000;                                    // Result = 80070000
-            v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-            v1 = 0x800B0000;                                    // Result = 800B0000
-            v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-            v0 += 0x1C;
-            at = 0x80070000;                                    // Result = 80070000
-            sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
-            a1 = lbu(v1 + 0x8);
-            a1--;
-            v0 = a1 << 2;
+            mstat.voices_total += patch_grp_hdr.hw_voice_limit;
 
-            if (a1 != s2) {
-                v0 += a1;
-                v0 <<= 2;
-                v0 += a1;
-                a3 = v0 << 2;
+            // Load the various types of patch group data
+            {
+                const bool bReadSuccess = conditional_read(
+                    patch_grp_hdr.load_flags & LOAD_PATCHES,
+                    pCurDestBytes,
+                    (int32_t) patch_grp_hdr.patches * patch_grp_hdr.patch_size
+                );
 
-                do {
-                    v0 = 0x800B0000;                                    // Result = 800B0000
-                    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-                    v0 = lw(v0 + 0x18);
-                    v1 = lbu(s0);                                       // Load from: 8007EFC8
-                    a2 = a3 + v0;
-                    v0 = lw(a2 + 0x4C);
-                    a1--;
+                if (!bReadSuccess)
+                    return false;
+            }
 
-                    if (v1 == v0) {
-                        v0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
-                        v1 = lw(s0);                                        // Load from: 8007EFC8
-                        a0 = lw(s0 + 0x4);                                  // Load from: 8007EFCC
-                        a1 = lw(s0 + 0x8);                                  // Load from: 8007EFD0
-                        sw(v0, a2);
-                        sw(v1, a2 + 0x4);
-                        sw(a0, a2 + 0x8);
-                        sw(a1, a2 + 0xC);
-                        v0 = lw(s0 + 0xC);                                  // Load from: 8007EFD4
-                        v1 = lw(s0 + 0x10);                                 // Load from: 8007EFD8
-                        a0 = lw(s0 + 0x14);                                 // Load from: 8007EFDC
-                        sw(v0, a2 + 0x10);
-                        sw(v1, a2 + 0x14);
-                        sw(a0, a2 + 0x18);
-                        a0 = 0x800B0000;                                    // Result = 800B0000
-                        a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-                        v1 = lbu(s0 + 0x1);                                 // Load from: 8007EFC9
-                        v0 = lbu(a0 + 0x7);
-                        v0 += v1;
-                        sb(v0, a0 + 0x7);
-                        a1 = 0x800B0000;                                    // Result = 800B0000
-                        a1 = lw(a1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-                        v1 = lw(sp + 0x10);
-                        v0 = lw(a1 + 0x18);
-                        a0 = 0x80070000;                                    // Result = 80070000
-                        a0 = lw(a0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
-                        v0 += a3;
-                        sw(v1, v0 + 0x1C);
-                        v1 = 0x80070000;                                    // Result = 80070000
-                        v1 = lw(v1 + 0x58EC);                               // Load from: gpWess_tmp_fp_wmd_file_2 (800758EC)
-                        v0 = lw(a1 + 0x18);
-                        s6 = a0 - v1;
-                        v0 += a3;
-                        sw(s6, v0 + 0x20);
-                        v1 = lh(s0 + 0x4);                                  // Load from: 8007EFCC
-                        v0 = lh(s0 + 0x6);                                  // Load from: 8007EFCE
-                        mult(v1, v0);
-                        a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
-                        a1 = sp + 0x10;
-                        a2 = lo;
-                        a0 &= 1;
-                        conditional_read();
-                        a1 = sp + 0x10;
+            {
+                const bool bReadSuccess = conditional_read(
+                    patch_grp_hdr.load_flags & LOAD_PATCHMAPS,
+                    pCurDestBytes,
+                    (int32_t) patch_grp_hdr.patchmaps * patch_grp_hdr.patchmap_size
+                );
 
-                        if (v0 == 0)
-                            return 0;
-
-                        v0 = lh(s0 + 0x8);                                  // Load from: 8007EFD0
-                        v1 = lh(s0 + 0xA);                                  // Load from: 8007EFD2
-                        mult(v0, v1);
-                        a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
-                        a2 = lo;
-                        a0 &= 2;
-                        conditional_read();
-                        a1 = sp + 0x10;
-
-                        if (v0 == 0)
-                            return 0;
-
-                        v0 = lh(s0 + 0xC);                                  // Load from: 8007EFD4
-                        v1 = lh(s0 + 0xE);                                  // Load from: 8007EFD6
-                        mult(v0, v1);
-                        a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
-                        a2 = lo;
-                        a0 &= 4;
-                        conditional_read();
-                        a1 = sp + 0x10;
-    
-                        if (v0 == 0)
-                            return 0;
-    
-                        v0 = lh(s0 + 0x10);                                 // Load from: 8007EFD8
-                        v1 = lh(s0 + 0x12);                                 // Load from: 8007EFDA
-                        mult(v0, v1);
-                        a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
-                        a2 = lo;
-                        a0 &= 8;
-                        conditional_read();
-                        a1 = sp + 0x10;
-
-                        if (v0 == 0)
-                            return 0;
-
-                        a0 = lw(s0 - 0x4);                                  // Load from: 8007EFC4
-                        a2 = lw(s3 + 0x18);                                 // Load from: 8007EFDC
-                        a0 &= 0x10;
-                        conditional_read();
-                        
-                        if (v0 == 0)
-                            return 0;
-
-                        break;
-                    }
-
-                    a3 -= 0x54;
-                } while (a1 != s2);
+                if (!bReadSuccess)
+                    return false;
             }
             
-            s1--;
-        } while (s1 != s2);
-    }
-    
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lbu(a0 + 0x7);
-    v1 = v0 << 1;
-    v1 += v0;
-    v0 = lw(sp + 0x10);
-    v1 <<= 3;
-    v1 += v0;
-    sw(v1, sp + 0x10);
-    v1 = lbu(a0 + 0x8);
-    sw(v0, a0 + 0x30);
+            {
+                const bool bReadSuccess = conditional_read(
+                    patch_grp_hdr.load_flags & LOAD_PATCHINFO,
+                    pCurDestBytes,
+                    (int32_t) patch_grp_hdr.patchinfo * patch_grp_hdr.patchinfo_size
+                );
+                
+                if (!bReadSuccess)
+                    return false;
+            }
+            
+            {
+                const bool bReadSuccess = conditional_read(
+                    patch_grp_hdr.load_flags & LOAD_DRUMMAPS,
+                    pCurDestBytes,
+                    (int32_t) patch_grp_hdr.drummaps * patch_grp_hdr.drummap_size
+                );
+                
+                if (!bReadSuccess)
+                    return false;
+            }
 
-    if (v1 != 0) {
-        t1 = v1;
-        a3 = 0;
-        v0 = lw(a0 + 0x18);
-        v1 = lbu(a0 + 0x7);
-        a1 = lbu(v0 + 0x5);
-        s2 = 0;
+            {
+                const bool bReadSuccess = conditional_read(
+                    patch_grp_hdr.load_flags & LOAD_EXTRADATA,
+                    pCurDestBytes,
+                    patch_grp_hdr.extra_data_size
+                );
+                
+                if (!bReadSuccess)
+                    return false;
+            }
 
-        if (i32(v1) > 0) {
-            t2 = -1;                                            // Result = FFFFFFFF
-            a2 = 0;
-            t0 = 0;
-
-            do {
-                if (t1 != 0) {
-                    a1--;
-
-                    if (a1 != t2) {
-                        v1 = 0x800B0000;                                    // Result = 800B0000
-                        v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-                        v0 = lw(v1 + 0x18);
-                        v1 = lw(v1 + 0x30);
-                        v0 += t0;
-                        v0 = lbu(v0 + 0x4);
-                        v1 += a2;
-                        sb(v0, v1 + 0x1);
-                        v0 = 0x800B0000;                                    // Result = 800B0000
-                        v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-                        v0 = lw(v0 + 0x30);
-                        v0 += a2;
-                        sb(a3, v0 + 0x2);
-                        a3++;
-                    } else {
-                        t1--;
-                        t0 += 0x54;
-
-                        if (t1 != 0) {
-                            a0 = 0x800B0000;                                    // Result = 800B0000
-                            a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-                            v0 = lw(a0 + 0x18);
-                            v1 = t0 + v0;
-                            a1 = lbu(v1 + 0x5);
-                            a1--;
-                            a3 = 0;
-
-                            if (a1 != t2) {
-                                v0 = lw(a0 + 0x30);
-                                v1 = lbu(v1 + 0x4);
-                                v0 += a2;
-                                sb(v1, v0 + 0x1);
-                                v0 = 0x800B0000;                                    // Result = 800B0000
-                                v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-                                v0 = lw(v0 + 0x30);
-                                a3 = 1;
-                                v0 += a2;
-                                sb(0, v0 + 0x2);
-                            }
-                        }
-                    }
-                }
-
-                v0 = 0x800B0000;                                    // Result = 800B0000
-                v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-                v0 = lbu(v0 + 0x7);
-                s2++;
-                a2 += 0x18;
-            } while (i32(s2) < i32(v0));
+            // Found the sound driver for this patch group, don't need to search the rest
+            break;
         }
     }
 
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+    // Alloc the list of voice status structs and link to the master status struct
+    voice_status* const pVoiceStat = (voice_status*) pCurDestBytes;
+    mstat.pvoicestattbl = pVoiceStat;
+    pCurDestBytes += sizeof(voice_status) * mstat.voices_total;
+
+    // Assign hardware voices for each sound driver to the voice status structures allocated previously
+    if (mstat.patch_types_loaded > 0) {
+        int32_t patchGrpsLeft = mstat.patch_types_loaded;
+        const patch_group_data* pPatchGrp = mstat.ppat_info.get();
+
+        int32_t hwVoicesLeft = pPatchGrp->pat_grp_hdr.hw_voice_limit;
+        uint8_t hwVoiceIdx = 0;
+
+        for (int32_t voiceIdx = 0; voiceIdx < mstat.voices_total;) {
+            // Have we assigned voices for all drivers? If so then we are done...
+            if (patchGrpsLeft <= 0)
+                break;
+
+            // Move onto the next sound driver if all voices for this driver have been assigned
+            if (hwVoicesLeft <= 0) {
+                if (patchGrpsLeft > 0) {
+                    --patchGrpsLeft;
+                    ++pPatchGrp;
+                    hwVoicesLeft = pPatchGrp->pat_grp_hdr.hw_voice_limit;
+                    hwVoiceIdx = 0;
+                }
+            }
+
+            // If there are any hardware voices left to be assigned then assign them to this status struct
+            voice_status& voice = mstat.pvoicestattbl[voiceIdx];
+
+            if (hwVoicesLeft > 0) {
+                --hwVoicesLeft;
+                voice.patchtype = pPatchGrp->pat_grp_hdr.patch_id;
+                voice.refindx = hwVoiceIdx;
+                ++hwVoiceIdx;
+
+                // PC-PSX: fix a small logic issue, which shouldn't be a problem in practice.
+                // Only move onto the next voice status struct if we actually assigned it to a hardware voice.
+                // Previously, if a driver had '0' hardware voices then we might leak or leave unused one 'voice status' struct:
+                #if PC_PSX_DOOM_MODS
+                    ++voiceIdx;
+                #endif
+            }
+
+            // PC-PSX: part of the fix mentioned above, only preform this increment conditionally now
+            #if !PC_PSX_DOOM_MODS
+                ++voiceIdx;
+            #endif
+        }
+    }
+
+    sw(ptrToVmAddr(pCurDestBytes), sp + 0x10);
+
+    a0 = ptrToVmAddr(&mstat);
     a1 = lw(sp + 0x10);
     v0 = lw(a0 + 0xC);
     sw(a1, v0 + 0x10);
@@ -1220,10 +1111,8 @@ int32_t wess_load_module(
 
         do {
             a2 = 4;
-            v0 = 0x800B0000;                                    // Result = 800B0000
-            v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-            a1 = 0x80070000;                                    // Result = 80070000
-            a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+            v0 = ptrToVmAddr(&mstat);
+            a1 = *gpWess_tmp_fp_wmd_file_1;
             v0 = lw(v0 + 0xC);
             v1 = 0x80070000;                                    // Result = 80070000
             v1 = lw(v1 + 0x58EC);                               // Load from: gpWess_tmp_fp_wmd_file_2 (800758EC)
@@ -1233,43 +1122,36 @@ int32_t wess_load_module(
             
             wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
 
-            v0 = 0x800B0000;                                    // Result = 800B0000
-            v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+            v0 = ptrToVmAddr(&mstat);
             s3 = 0;
             v0 = lw(v0 + 0xC);
             v1 = lw(v0 + 0x10);
-            v0 = 0x80070000;                                    // Result = 80070000
-            v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+            v0 = *gpWess_tmp_fp_wmd_file_1;
             v1 += s5;
             s1 = lh(v1);
             v0 += 4;
-            at = 0x80070000;                                    // Result = 80070000
-            sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
+            *gpWess_tmp_fp_wmd_file_1 = v0;
             s1--;
             s0 = 0;
             a0 = fp;                                            // Result = 8007EFE0
 
             while (s1 != s7) {
-                a1 = 0x80070000;                                    // Result = 80070000
-                a1 = lw(a1 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+                a1 = *gpWess_tmp_fp_wmd_file_1;
                 a2 = 0x18;                                          // Result = 00000018
 
                 wess_memcpy(vmAddrToPtr<void>(a0), vmAddrToPtr<void>(a1), a2);
 
-                v0 = 0x80070000;                                    // Result = 80070000
-                v0 = lw(v0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+                v0 = *gpWess_tmp_fp_wmd_file_1;
                 v1 = lbu(fp);                                       // Load from: 8007EFE0
                 v0 += 0x18;
-                at = 0x80070000;                                    // Result = 80070000
-                sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
+                *gpWess_tmp_fp_wmd_file_1 = v0;
                 t0 = 0;
 
                 if ((v1 == 0) || (v1 == 0x32)) {
                     t0 = 1;
                 } 
                 else {
-                    v0 = 0x800B0000;                                    // Result = 800B0000
-                    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+                    v0 = ptrToVmAddr(&mstat);
                     a1 = lbu(v0 + 0x8);
                     a1--;
 
@@ -1369,13 +1251,11 @@ int32_t wess_load_module(
                 s1--;
                 v0 = lh(s4);                                        // Load from: 8007EFF2
                 v1 = lw(s4 + 0x2);                                  // Load from: 8007EFF4
-                a0 = 0x80070000;                                    // Result = 80070000
-                a0 = lw(a0 + 0x58E8);                               // Load from: gpWess_tmp_fp_wmd_file_1 (800758E8)
+                a0 = *gpWess_tmp_fp_wmd_file_1;
                 v0 <<= 2;
                 v0 += v1;
                 v0 += a0;
-                at = 0x80070000;                                    // Result = 80070000
-                sw(v0, at + 0x58E8);                                // Store to: gpWess_tmp_fp_wmd_file_1 (800758E8)
+                *gpWess_tmp_fp_wmd_file_1 = v0;
                 a0 = fp;                                            // Result = 8007EFE0
             }
             
@@ -1391,8 +1271,7 @@ int32_t wess_load_module(
                 s0 = 0x24;
             }
 
-            v1 = 0x800B0000;                                    // Result = 800B0000
-            v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+            v1 = ptrToVmAddr(&mstat);
             v0 = lw(v1 + 0xC);
             v0 = lw(v0 + 0x10);
             v0 += s5;
@@ -1411,8 +1290,7 @@ int32_t wess_load_module(
         } while (i32(s2) < i32(v0));
     }
 
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+    v1 = ptrToVmAddr(&mstat);
     a0 = lw(sp + 0x10);
     v0 = lw(v1 + 0xC);
     sw(a0, v1 + 0x10);
@@ -1422,8 +1300,7 @@ int32_t wess_load_module(
     v0 += a0;
     sw(v0, sp + 0x10);
     sb(t3, v1 + 0x1C);
-    a2 = 0x800B0000;                                    // Result = 800B0000
-    a2 = lw(a2 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+    a2 = ptrToVmAddr(&mstat);
     v0 = lw(a2 + 0xC);
     v0 = lbu(v0 + 0xB);
     s2 = 0;
@@ -1476,8 +1353,7 @@ int32_t wess_load_module(
                 a1++;
             }
 
-            a2 = 0x800B0000;                                    // Result = 800B0000
-            a2 = lw(a2 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+            a2 = ptrToVmAddr(&mstat);
             v0 = lw(a2 + 0xC);
             v0 = lbu(v0 + 0xB);
             s2++;
@@ -1485,16 +1361,13 @@ int32_t wess_load_module(
         } while (i32(s2) < i32(v0));
     }
 
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+    v0 = ptrToVmAddr(&mstat);
     t3 = lbu(sp + 0x20);
     sb(t3, v0 + 0x2C);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+    v0 = ptrToVmAddr(&mstat);
     t3 = lbu(sp + 0x28);
     sb(t3, v0 + 0x24);
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+    a0 = ptrToVmAddr(&mstat);
     v0 = lw(a0 + 0xC);
     v0 = lbu(v0 + 0xC);
     s2 = 0;
@@ -1506,8 +1379,7 @@ int32_t wess_load_module(
             v0 = lw(a0 + 0x28);
             v0 += a2;
             sb(s2, v0 + 0x1);
-            a0 = 0x800B0000;                                    // Result = 800B0000
-            a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+            a0 = ptrToVmAddr(&mstat);
             v0 = lw(a0 + 0x28);
             a1 = lw(sp + 0x10);
             v0 += a2;
@@ -1528,15 +1400,13 @@ int32_t wess_load_module(
 
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x5920);                               // Load from: gWess_CmdFuncArr[0] (80075920)
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+    a0 = ptrToVmAddr(&mstat);
     v0 = lw(v0);
     s2 = 0;
 
     ptr_call(v0);
 
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+    a0 = ptrToVmAddr(&mstat);
     
     if (i32(lbu(a0 + 0x8)) > 0) {
         s1 = 0x80070000;                                    // Result = 80070000
@@ -1559,8 +1429,7 @@ int32_t wess_load_module(
                 ptr_call(v0);
             }
 
-            a0 = 0x800B0000;                                    // Result = 800B0000
-            a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+            a0 = ptrToVmAddr(&mstat);
             v0 = lbu(a0 + 0x8);
             s2++;
         } while (i32(s2) < i32(v0));
@@ -1571,8 +1440,7 @@ int32_t wess_load_module(
     v1 = 1;
     at = 0x80070000;                                    // Result = 80070000
     sw(v1, at + 0x5948);                                // Store to: gbWess_SeqOn (80075948)
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
+    v1 = ptrToVmAddr(&mstat);
     a0 = a1 & 1;
     a0 += a1;
     a1 = lw(v1 + 0xC);

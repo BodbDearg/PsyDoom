@@ -309,7 +309,6 @@ extern void wess_get_wmd_start() noexcept;
 extern void wess_get_wmd_end() noexcept;
 extern void free_mem_if_mine() noexcept;
 extern void wess_unload_module() noexcept;
-extern void conditional_read() noexcept;
 extern void filltrackstat() noexcept;
 extern void assigntrackstat() noexcept;
 extern void wess_seq_structrig() noexcept;
@@ -760,7 +759,6 @@ namespace PsxVm {
         { 0x800420AC, &wess_get_wmd_end },
         { 0x800420BC, &free_mem_if_mine },
         { 0x8004210C, &wess_unload_module },
-        { 0x8004224C, &conditional_read },
         { 0x800430C4, &filltrackstat },
         { 0x80043350, &assigntrackstat },
         { 0x800433B4, &wess_seq_structrig },

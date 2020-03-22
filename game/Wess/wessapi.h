@@ -26,7 +26,6 @@ void wess_get_wmd_start() noexcept;
 void wess_get_wmd_end() noexcept;
 void free_mem_if_mine() noexcept;
 void wess_unload_module() noexcept;
-void conditional_read() noexcept;
 
 int32_t wess_load_module(
     const void* const pWmd,

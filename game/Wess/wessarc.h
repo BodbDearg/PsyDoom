@@ -90,7 +90,7 @@ static_assert(sizeof(track_header) == 24);
 struct track_data {
     track_header        trk_hdr;        // 0x000    TODO: COMMENT
     VmPtr<uint32_t>     plabellist;     // 0x018    TODO: COMMENT
-    VmPtr<char>         ptrk_data;      // 0x01C    TODO: COMMENT
+    VmPtr<uint8_t>      ptrk_data;      // 0x01C    TODO: COMMENT
 };
 
 static_assert(sizeof(track_data) == 32);
@@ -168,7 +168,7 @@ static_assert(sizeof(hardware_table_list) == 8);
 // TODO: COMMENT
 struct patch_group_data {
     patch_group_header      pat_grp_hdr;                        // 0x000    TODO: COMMENT
-    VmPtr<char>             ppat_data;                          // 0x01C    TODO: COMMENT
+    VmPtr<uint8_t>          ppat_data;                          // 0x01C    TODO: COMMENT
     int32_t                 data_fileposition;                  // 0x020    TODO: COMMENT
     int32_t                 sndhw_tags[SNDHW_TAG_MAX * 2];      // 0x024    TODO: COMMENT
     hardware_table_list     hw_tl_list;                         // 0x04C    TODO: COMMENT
