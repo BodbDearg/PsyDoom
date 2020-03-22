@@ -203,9 +203,14 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
         // If the level loading is done then we should NOT be loading lumps during gameplay.
         // Because CD-ROM I/O is so slow, this would cause very serious stalls and slowdowns during gameplay, so consider it a fatal error.
         // Unlike PC DOOM the PSX version cannot simply stream in lumps on the fly...
-        if (*gbIsLevelDataCached) {
-            I_Error("cache miss on lump %i", lumpNum);
-        }
+        //
+        // PC-PSX: waive this restriction and allow lumps to be loaded in on the fly.
+        // This change means that levels no longer need to ship with 'MAPSPR--.IMG' and 'MAPTEX--.IMG' files.
+        #if !PC_PSX_DOOM_MODS
+            if (*gbIsLevelDataCached) {
+                I_Error("cache miss on lump %i", lumpNum);
+            }
+        #endif
     
         // Figure out how much data we will need to allocate. If we are decompressing then this will be the decompressed size, otherwise
         // it will be the actual size of the lump before decompression is applied:
