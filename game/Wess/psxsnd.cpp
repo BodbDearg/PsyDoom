@@ -53,10 +53,10 @@ loc_800415EC:
         vmAddrToPtr<VmPtr<int32_t>>(a3)
     );
 
-    wess_get_master_status();
+    v0 = ptrToVmAddr(wess_get_master_status());
     a0 = v0;
     wess_dig_lcd_loader_init();
-    wess_get_master_status();
+    v0 = ptrToVmAddr(wess_get_master_status());
     a0 = v0;
     a1 = 0xC9;                                          // Result = 000000C9
     a2 = 1;                                             // Result = 00000001

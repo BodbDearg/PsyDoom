@@ -3,6 +3,8 @@
 #include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 
+struct master_status_structure;
+
 extern const VmPtr<bool32_t>    gbWess_module_loaded;
 
 void trackstart() noexcept;
@@ -13,7 +15,7 @@ void queue_wess_seq_pauseall() noexcept;
 void queue_wess_seq_restartall() noexcept;
 void zeroset(void* const pDest, const uint32_t numBytes) noexcept;
 void wess_install_error_handler() noexcept;
-void wess_get_master_status() noexcept;
+master_status_structure* wess_get_master_status() noexcept;
 bool Is_System_Active() noexcept;
 bool Is_Module_Loaded() noexcept;
 bool Is_Seq_Num_Valid(const int32_t seqNum) noexcept;

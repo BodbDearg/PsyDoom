@@ -571,11 +571,11 @@ void wess_install_error_handler() noexcept {
     return;
 }
 
-void wess_get_master_status() noexcept {
-loc_80041EBC:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return a pointer to the master status structure for the loaded module
+//------------------------------------------------------------------------------------------------------------------------------------------
+master_status_structure* wess_get_master_status() noexcept {
+    return gpWess_pm_stat->get();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
