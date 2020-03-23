@@ -687,23 +687,18 @@ uint8_t* wess_get_wmd_end() noexcept {
     return gpWess_wmd_end->get();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Frees all memory used by the currently loaded module, if the memory was allocated by the WESS API
+//------------------------------------------------------------------------------------------------------------------------------------------
 void free_mem_if_mine() noexcept {
-    v0 = *gbWess_wmd_mem_is_mine;
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 == 0) goto loc_800420FC;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x590C);                               // Load from: gpWess_wmd_mem (8007590C)
-    if (a0 == 0) goto loc_800420F4;
-    wess_free(vmAddrToPtr<void>(a0));
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x590C);                                 // Store to: gpWess_wmd_mem (8007590C)
-loc_800420F4:
-    *gbWess_wmd_mem_is_mine = 0;
-loc_800420FC:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    if (*gbWess_wmd_mem_is_mine) {
+        if (gpWess_wmd_mem->get()) {
+            wess_free(gpWess_wmd_mem->get());
+            *gpWess_wmd_mem = nullptr;
+        }
+
+        *gbWess_wmd_mem_is_mine = false;
+    }
 }
 
 void wess_unload_module() noexcept {
