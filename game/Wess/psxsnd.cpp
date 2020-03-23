@@ -61,13 +61,13 @@ loc_800415EC:
     a1 = 0xC9;                                          // Result = 000000C9
     a2 = 1;                                             // Result = 00000001
     wess_seq_loader_init();
-    wess_get_wmd_end();
+    v0 = ptrToVmAddr(wess_get_wmd_end());
     a0 = 0;                                             // Result = 00000000
     a1 = 0x5A;                                          // Result = 0000005A
     a2 = v0;
     wess_seq_range_load();
     s0 = v0;
-    wess_get_wmd_end();
+    v0 = ptrToVmAddr(wess_get_wmd_end());
     v0 += s0;
     sw(v0, gp + 0x83C);                                 // Store to: gpMusSequencesEnd (80077E1C)
     a0 = s3;

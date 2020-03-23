@@ -22,8 +22,8 @@ void wess_install_handler() noexcept;
 void wess_restore_handler() noexcept;
 bool wess_init() noexcept;
 void wess_exit(bool bForceRestoreTimerHandler) noexcept;
-void wess_get_wmd_start() noexcept;
-void wess_get_wmd_end() noexcept;
+uint8_t* wess_get_wmd_start() noexcept;
+uint8_t* wess_get_wmd_end() noexcept;
 void free_mem_if_mine() noexcept;
 void wess_unload_module() noexcept;
 

@@ -673,17 +673,18 @@ void wess_exit(bool bForceRestoreTimerHandler) noexcept {
     }
 }
 
-void wess_get_wmd_start() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x590C);                               // Load from: gpWess_wmd_mem (8007590C)
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return a pointer to the start of memory used by the loaded .WMD (Williams module) file
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint8_t* wess_get_wmd_start() noexcept {
+    return gpWess_wmd_mem->get();
 }
 
-void wess_get_wmd_end() noexcept {
-loc_800420AC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5910);                               // Load from: gpWess_wmd_end (80075910)
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return a pointer to the end of memory used by the loaded .WMD (Williams module) file
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint8_t* wess_get_wmd_end() noexcept {
+    return gpWess_wmd_end->get();
 }
 
 void free_mem_if_mine() noexcept {
