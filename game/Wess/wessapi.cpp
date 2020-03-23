@@ -707,62 +707,46 @@ void free_mem_if_mine() noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// If a module is currently loaded, unloads it and frees any memory allocated during module load.
+// This also shuts down the sequencer.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void wess_unload_module() noexcept {
-    v0 = *gbWess_module_loaded;
-    sp -= 0x30;
-    sw(ra, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    if (v0 == 0) goto loc_800421F8;
-    s0 = 0;                                             // Result = 00000000
+    // If nothing is loaded then there is nothing to do
+    if (!*gbWess_module_loaded)
+        return;
+
+    // Shutdown the sequencer engine
     wess_seq_stopall();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5920);                               // Load from: gWess_CmdFuncArr[0] (80075920)
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(v0 + 0x4);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5948);                                 // Store to: gbWess_SeqOn (80075948)
-    ptr_call(v0);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    s2 = lbu(v0 + 0x8);
-    if (s2 == 0) goto loc_800421E8;
-    s3 = 0x80070000;                                    // Result = 80070000
-    s3 += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-    s1 = 0;                                             // Result = 00000000
-loc_80042184:
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(a0 + 0x18);
-    v1 = s1 + v0;
-    v0 = lw(v1 + 0x50);
-    v0 &= 7;
-    s1 += 0x54;
-    if (v0 == 0) goto loc_800421D8;
-    v0 = lw(v1 + 0x4C);
-    v0 <<= 2;
-    v0 += s3;
-    v0 = lw(v0);
-    v0 = lw(v0 + 0x4);
-    ptr_call(v0);
-loc_800421D8:
-    s0++;
-    v0 = (i32(s0) < i32(s2));
-    if (v0 != 0) goto loc_80042184;
-loc_800421E8:
+    *gbWess_SeqOn = false;
+
+    master_status_structure& mstat = *gpWess_pm_stat->get();
+    // FIXME: convert to native function call
+    a0 = ptrToVmAddr(&mstat);
+    gWess_CmdFuncArr[NoSound_ID][DriverExit]();
+
+    // Shutdown loaded sound drivers
+    const int32_t numSndDrv = (*gpWess_pm_stat)->patch_types_loaded;
+
+    for (int32_t drvIdx = 0; drvIdx < numSndDrv; ++drvIdx) {
+        patch_group_data& patch_grp = mstat.ppat_info[drvIdx];
+
+        const bool bWasDriverInitialized = (
+            patch_grp.hw_tl_list.sfxload ||
+            patch_grp.hw_tl_list.musload ||
+            patch_grp.hw_tl_list.drmload
+        );
+
+        if (bWasDriverInitialized) {
+            // FIXME: convert to native function call
+            a0 = ptrToVmAddr(&mstat);
+            gWess_CmdFuncArr[patch_grp.hw_tl_list.hardware_ID][DriverExit]();
+        }
+    }
+
+    // Free any module memory allocated and mark unloaded
     free_mem_if_mine();
     *gbWess_module_loaded = false;
-loc_800421F8:
-    ra = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
