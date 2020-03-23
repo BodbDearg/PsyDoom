@@ -2864,7 +2864,7 @@ static const ProgElem ELEMS[] = {
     { 0x80075910, 0x80075914, "gpWess_wmd_end",                         ProgElemType::PTR32 },
     { 0x80075914, 0x80075918, "gWess_wmd_size",                         ProgElemType::INT32 },
     { 0x80075918, 0x8007591C, "gpWess_Error_func",                      ProgElemType::PTR32 },
-    { 0x8007591C, 0x80075920, "gpWess_Error_module",                    ProgElemType::UINT32 },
+    { 0x8007591C, 0x80075920, "gWess_Error_module",                     ProgElemType::INT32 },
     { 0x80075920, 0x80075948, "gWess_CmdFuncArr",                       ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80075948, 0x8007594C, "gbWess_SeqOn",                           ProgElemType::UINT32 },
     { 0x8007594C, 0x80075950, "gbWess_WessTimerActive",                 ProgElemType::UINT32 },

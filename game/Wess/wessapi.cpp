@@ -52,6 +52,11 @@ static const VmPtr<VmPtr<master_status_structure>>      gpWess_pm_stat(0x800A875
 static const VmPtr<patch_group_header>                  gWess_scratch_pat_grp_hdr(0x8007EFC4);      // TODO: COMMENT
 static const VmPtr<track_header>                        gWess_scratch_trk_hdr(0x8007EFE0);          // TODO: COMMENT
 
+// Unused error handling stuff.
+// May have only been used in debug builds.
+static int32_t (*gpWess_Error_func)(int32_t, int32_t) = nullptr;
+static int32_t gWess_Error_module = 0;
+
 void trackstart() noexcept {
 loc_80041734:
     v1 = lw(a0);
@@ -563,12 +568,13 @@ void zeroset(void* const pDest, const uint32_t numBytes) noexcept {
     }
 }
 
-void wess_install_error_handler() noexcept {
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x5918);                                // Store to: gpWess_Error_func (80075918)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a1, at + 0x591C);                                // Store to: gpWess_Error_module (8007591C)
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unused function in the retail PSX DOOM - possibly only called in debug builds: install and save an error handling function.
+// Again, this error handler is unused in this build but may have been used in non-release builds.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_install_error_handler(int32_t (* const pErrorFunc)(int32_t, int32_t), const int32_t module) noexcept {
+    gpWess_Error_func = pErrorFunc;
+    gWess_Error_module = module;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
