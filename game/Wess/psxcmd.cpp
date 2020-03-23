@@ -5,6 +5,28 @@
 #include "PsyQ/LIBSPU.h"
 #include "wessseq.h"
 
+void (* const gWess_drv_cmds[19])() = {
+    PSX_DriverInit,         // 00
+    PSX_DriverExit,         // 01
+    PSX_DriverEntry1,       // 02
+    PSX_DriverEntry2,       // 03
+    PSX_DriverEntry3,       // 04
+    PSX_TrkOff,             // 05
+    PSX_TrkMute,            // 06
+    PSX_PatchChg,           // 07
+    PSX_PatchMod,           // 08
+    PSX_PitchMod,           // 09
+    PSX_ZeroMod,            // 10
+    PSX_ModuMod,            // 11
+    PSX_VolumeMod,          // 12
+    PSX_PanMod,             // 13
+    PSX_PedalMod,           // 14
+    PSX_ReverbMod,          // 15
+    PSX_ChorusMod,          // 16
+    PSX_NoteOn,             // 17
+    PSX_NoteOff             // 18
+};
+
 void start_record_music_mute() noexcept {
 loc_800459E0:
     at = 0x80070000;                                    // Result = 80070000

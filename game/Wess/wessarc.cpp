@@ -4,11 +4,25 @@
 #include "wessarc.h"
 
 #include "psxcd.h"
+#include "psxcmd.h"
 #include "psxspu.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBAPI.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessseq.h"
+
+extern void (* const * const gWess_CmdFuncArr[10])() = {
+    gWess_DrvFunctions,
+    gWess_drv_cmds,
+    gWess_DrvFunctions,
+    gWess_DrvFunctions,
+    gWess_DrvFunctions,
+    gWess_DrvFunctions,
+    gWess_DrvFunctions,
+    gWess_DrvFunctions,
+    gWess_DrvFunctions,
+    gWess_DrvFunctions 
+};
 
 // Keeps track of global time (MS) for the sequencer and other operations.
 // The fractional part is used for greater precision in carrying over fractional parts of milliseconds.

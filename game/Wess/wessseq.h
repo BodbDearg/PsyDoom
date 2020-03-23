@@ -2,9 +2,18 @@
 
 #include "PsxVm/VmPtr.h"
 
+struct track_status;
+
 extern const VmPtr<uint8_t>     gWess_master_sfx_volume;
 extern const VmPtr<uint8_t>     gWess_master_mus_volume;
 extern const VmPtr<uint8_t>     gWess_pan_status;
+
+// Sequencer command functions.
+//
+// FIXME: Change to:
+//  extern void (* const gWess_DrvFunctions[36])(track_status&)
+//
+extern void (* const gWess_DrvFunctions[36])();
 
 void Read_Vlq() noexcept;
 void Write_Vlq() noexcept;

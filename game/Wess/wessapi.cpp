@@ -42,11 +42,12 @@ static const VmPtr<int32_t>                             gWess_num_sd(0x800758E4)
 static const VmPtr<bool32_t>                            gbWess_wmd_mem_is_mine(0x80075908);         // TODO: COMMENT
 static const VmPtr<int32_t>                             gWess_mem_limit(0x80075904);                // TODO: COMMENT
 static const VmPtr<VmPtr<uint8_t>>                      gpWess_wmd_mem(0x8007590C);                 // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>                      gpWess_wmd_end(0x80075910);                 // TODO: COMMENT
 static const VmPtr<int32_t>                             gWess_wmd_size(0x80075914);                 // TODO: COMMENT
-static const VmPtr<uint8_t>                             gWess_max_seq_num(0x80075900);              // TODO: COMMENT
+static const VmPtr<int32_t>                             gWess_max_seq_num(0x80075900);              // TODO: COMMENT
 static const VmPtr<VmPtr<PsxCd_File>>                   gpWess_fp_wmd_file(0x800758F0);             // TODO: COMMENT
-static const VmPtr<VmPtr<uint8_t>>                      gpWess_tmp_fp_wmd_file_1(0x800758E8);       // TODO: COMMENT
-static const VmPtr<VmPtr<uint8_t>>                      gpWess_tmp_fp_wmd_file_2(0x800758EC);       // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>                      gpWess_curWmdFileBytes(0x800758E8);       // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>                      gpWess_wmdFileBytesBeg(0x800758EC);       // TODO: COMMENT
 static const VmPtr<VmPtr<master_status_structure>>      gpWess_pm_stat(0x800A8758);                 // TODO: COMMENT
 static const VmPtr<patch_group_header>                  gWess_scratch_pat_grp_hdr(0x8007EFC4);      // TODO: COMMENT
 static const VmPtr<track_header>                        gWess_scratch_trk_hdr(0x8007EFE0);          // TODO: COMMENT
@@ -797,50 +798,44 @@ static void wess_memcpy(void* const pDst, const void* const pSrc, const uint32_t
 static bool conditional_read(const uint32_t readFlag, uint8_t*& pDstMemPtr, const int32_t readSize) noexcept {
     // Either skip over the memory block or read it
     if (readFlag) {
-        wess_memcpy(pDstMemPtr, gpWess_tmp_fp_wmd_file_1->get(), readSize);
+        wess_memcpy(pDstMemPtr, gpWess_curWmdFileBytes->get(), readSize);
         
         pDstMemPtr += readSize;
         pDstMemPtr += (uintptr_t) pDstMemPtr & 1;       // 32-bit align the pointer after the read...
         pDstMemPtr += (uintptr_t) pDstMemPtr & 2;       // 32-bit align the pointer after the read...
     }
 
-    *gpWess_tmp_fp_wmd_file_1 += readSize;
+    *gpWess_curWmdFileBytes += readSize;
     return true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Loads a .WMD (Williams module file) from the given buffer in RAM.
+//
+// Params:
+//  (1) pWmdFile            : The module file to load from, which has been buffered into RAM.
+//  (2) pDestMem            : The memory block to use for the loaded WMD file.
+//  (3) memoryAllowance     : The size of the given memory block to use for the loaded WMD.
+//  (4) pSettingTagLists    : Lists of key value pairs of settings for each sound driver.
+//------------------------------------------------------------------------------------------------------------------------------------------
 int32_t wess_load_module(
-    const void* const pWmd,
+    const void* const pWmdFile,
     void* const pDestMem,
     const int32_t memoryAllowance,
     VmPtr<int32_t>* const pSettingTagLists
 ) noexcept {
-    sp -= 0x80;
-    sw(s2, sp + 0x60);
-    sw(s1, sp + 0x5C);
-    sw(s0, sp + 0x58);
-    sw(s3, sp + 0x64);
-    sw(s6, sp + 0x70);
-    sw(s5, sp + 0x6C);
-
-    auto cleanupStackFrame = finally([]() {
-        s6 = lw(sp + 0x70);
-        s5 = lw(sp + 0x6C);
-        s3 = lw(sp + 0x64);
-        s2 = lw(sp + 0x60);
-        s1 = lw(sp + 0x5C);
-        s0 = lw(sp + 0x58);
-        sp += 0x80;
-    });
-
+    // Save the maximum memory limit and unload the current module (if loaded)
     *gWess_mem_limit = memoryAllowance;
     
     if (*gbWess_module_loaded) {
         wess_unload_module();
     }
 
+    // Figure out how many sound drivers are available
     const int32_t numSoundDrivers = get_num_Wess_Sound_Drivers(pSettingTagLists);
     *gWess_num_sd = numSoundDrivers;
     
+    // Allocate the required amount of memory or just save what we were given (if given memory)
     if (pDestMem) {
         *gbWess_wmd_mem_is_mine = false;
         *gpWess_wmd_mem = ptrToVmAddr(pDestMem);
@@ -848,24 +843,31 @@ int32_t wess_load_module(
         *gbWess_wmd_mem_is_mine = true;
         *gpWess_wmd_mem = ptrToVmAddr(wess_malloc(memoryAllowance));
 
+        // If malloc failed then we can't load the module
         if (!*gpWess_wmd_mem) {
             return *gbWess_module_loaded;
         }
     }
     
+    // Zero initialize the loaded module memory
     *gWess_wmd_size = memoryAllowance;
     zeroset(gpWess_wmd_mem->get(), memoryAllowance);
 
+    // No sequences initially
     *gWess_max_seq_num = 0;
     
-    if ((!Is_System_Active()) || (!pWmd)) {
+    // If the WESS API has not been initialized or an input WMD file is not supplied then we can't load the module
+    if ((!Is_System_Active()) || (!pWmdFile)) {
         free_mem_if_mine();
         return *gbWess_module_loaded;
     }
    
-    *gpWess_tmp_fp_wmd_file_1 = ptrToVmAddr(pWmd);
-    *gpWess_tmp_fp_wmd_file_2 = ptrToVmAddr(pWmd);
+    // Input file pointers
+    *gpWess_curWmdFileBytes = ptrToVmAddr(pWmdFile);
+    *gpWess_wmdFileBytesBeg = ptrToVmAddr(pWmdFile);
 
+    // Destination pointer to allocate from in the loaded WMD memory block.
+    // The code below allocates from this chunk linearly.
     uint8_t* pCurDestBytes = (uint8_t*) pDestMem;
 
     // Alloc the root master status structure
@@ -878,16 +880,16 @@ int32_t wess_load_module(
     mstat.pabstime = gWess_Millicount.get();
     mstat.patch_types_loaded = (uint8_t) numSoundDrivers;
 
-    // Alloc the module data struct and link to the master status struct
+    // Alloc the module info struct and link to the master status struct
     module_data& mod_info = *(module_data*) pCurDestBytes;
     pCurDestBytes += sizeof(module_data);
-    mstat.pmod_info = ptrToVmAddr(&mod_info);
+    mstat.pmod_info = &mod_info;
 
     // Read the module header and verify it has the expected id and version.
     // If this operation fails then free any memory allocated (if owned):
     module_header& mod_hdr = mod_info.mod_hdr;
-    wess_memcpy(&mod_hdr, gpWess_tmp_fp_wmd_file_1->get(), sizeof(module_header));
-    *gpWess_tmp_fp_wmd_file_1 += sizeof(module_header);
+    wess_memcpy(&mod_hdr, gpWess_curWmdFileBytes->get(), sizeof(module_header));
+    *gpWess_curWmdFileBytes += sizeof(module_header);
 
     if ((mod_hdr.module_id_text != WESS_MODULE_ID) || (mod_hdr.module_version != WESS_MODULE_VER)) {
         free_mem_if_mine();
@@ -899,7 +901,7 @@ int32_t wess_load_module(
     mstat.pseqstattbl = pSeqStat;
     pCurDestBytes += sizeof(sequence_status) * mod_hdr.seq_work_areas;
 
-    // Alloc the track status struct and link to the master status struct
+    // Alloc the array of track status structs and link to the master status struct
     track_status* const pTrackStat = (track_status*) pCurDestBytes;
     mstat.ptrkstattbl = pTrackStat;
     pCurDestBytes += sizeof(track_status) * mod_hdr.trk_work_areas;
@@ -913,22 +915,22 @@ int32_t wess_load_module(
     pCurDestBytes += (uintptr_t) pCurDestBytes & 2;         // Align to the next 32-bit boundary...
 
     // Initialize master volumes for each sound driver
-    for (int32_t drvIdx = numSoundDrivers - 1; drvIdx >= 0; --drvIdx) {
+    for (int32_t drvIdx = 0; drvIdx < numSoundDrivers; ++drvIdx) {
         pMasterVols[drvIdx] = 128;
     }
 
-    // Alloc the list of 'patch group data' structs for each sound driver and link to the master status struct
-    patch_group_data* const pPatchGrpData = (patch_group_data*) pCurDestBytes;
+    // Alloc the list of patch group info structs for each sound driver and link to the master status struct
+    patch_group_data* const pPatchGrpInfo = (patch_group_data*) pCurDestBytes;
     pCurDestBytes += sizeof(patch_group_data) * numSoundDrivers;
-    mstat.ppat_info = pPatchGrpData;
+    mstat.ppat_info = pPatchGrpInfo;
 
     // Load the settings for each sound driver (if given)
     if (pSettingTagLists) {
-        for (int32_t drvIdx = numSoundDrivers - 1; drvIdx >= 0; --drvIdx) {
+        for (int32_t drvIdx = 0; drvIdx < numSoundDrivers; ++drvIdx) {
             // Iterate through the key/value pairs of setting types and values for this driver
-            for (int32_t kvpIdx = 0; pSettingTagLists[drvIdx][kvpIdx] != 0; kvpIdx += 2) {
+            for (int32_t kvpIdx = 0; pSettingTagLists[drvIdx][kvpIdx + 0] != SNDHW_TAG_END; kvpIdx += 2) {
                 // Save the key value pair in the patch group info
-                patch_group_data& patch_info = mstat.ppat_info[drvIdx];
+                patch_group_data& patch_info = pPatchGrpInfo[drvIdx];
                 patch_info.sndhw_tags[kvpIdx + 0] = pSettingTagLists[drvIdx][kvpIdx + 0];
                 patch_info.sndhw_tags[kvpIdx + 1] = pSettingTagLists[drvIdx][kvpIdx + 1];
 
@@ -949,19 +951,19 @@ int32_t wess_load_module(
         }
     }
 
-    // Read patch group data for each sound driver and figure out the total number of voices for all patch groups
+    // Read patch group info for each sound driver and figure out the total number of voices for all patch groups
     mstat.voices_total = 0;
 
-    for (int32_t fpatchIdx = mod_info.mod_hdr.patch_types_infile - 1; fpatchIdx >= 0; --fpatchIdx) {
+    for (int32_t patchIdx = 0; patchIdx < mod_info.mod_hdr.patch_types_infile; ++patchIdx) {
         // Read the patch group header
         patch_group_header& patch_grp_hdr = *gWess_scratch_pat_grp_hdr;
-        wess_memcpy(&patch_grp_hdr, gpWess_tmp_fp_wmd_file_1->get(), sizeof(patch_group_header));
-        *gpWess_tmp_fp_wmd_file_1 += sizeof(patch_group_header);
+        wess_memcpy(&patch_grp_hdr, gpWess_curWmdFileBytes->get(), sizeof(patch_group_header));
+        *gpWess_curWmdFileBytes += sizeof(patch_group_header);
 
         // Try to match against one of the sound drivers loaded
-        for (int32_t sndDrvIdx = (int32_t) mstat.patch_types_loaded - 1; sndDrvIdx >= 0; --sndDrvIdx) {
+        for (int32_t drvIdx = 0; drvIdx < mstat.patch_types_loaded; ++drvIdx) {
             // This this patch group play with this sound hardware? If it doesn't then skip over it:
-            patch_group_data& patch_grp = mstat.ppat_info[sndDrvIdx];
+            patch_group_data& patch_grp = pPatchGrpInfo[drvIdx];
 
             if (patch_grp_hdr.patch_id != patch_grp.hw_tl_list.hardware_ID)
                 continue;
@@ -969,7 +971,7 @@ int32_t wess_load_module(
             // Save the header, pointer to patch data and offset, and increment the total voice count
             patch_grp.pat_grp_hdr = patch_grp_hdr;            
             patch_grp.ppat_data = pCurDestBytes;
-            patch_grp.data_fileposition = (int32_t)(gpWess_tmp_fp_wmd_file_1->get() - gpWess_tmp_fp_wmd_file_2->get());
+            patch_grp.data_fileposition = (int32_t)(gpWess_curWmdFileBytes->get() - gpWess_wmdFileBytesBeg->get());
 
             mstat.voices_total += patch_grp_hdr.hw_voice_limit;
 
@@ -1042,7 +1044,7 @@ int32_t wess_load_module(
     // Assign hardware voices for each sound driver to the voice status structures allocated previously
     if (mstat.patch_types_loaded > 0) {
         int32_t patchGrpsLeft = mstat.patch_types_loaded;
-        const patch_group_data* pPatchGrp = mstat.ppat_info.get();
+        const patch_group_data* pPatchGrp = pPatchGrpInfo;
 
         int32_t hwVoicesLeft = pPatchGrp->pat_grp_hdr.hw_voice_limit;
         uint8_t hwVoiceIdx = 0;
@@ -1072,7 +1074,7 @@ int32_t wess_load_module(
                 ++hwVoiceIdx;
 
                 // PC-PSX: fix a small logic issue, which shouldn't be a problem in practice.
-                // Only move onto the next voice status struct if we actually assigned it to a hardware voice.
+                // Move onto the next voice status struct *ONLY* if we actually assigned it to a hardware voice.
                 // Previously, if a driver had '0' hardware voices then we might leak or leave unused one 'voice status' struct:
                 #if PC_PSX_DOOM_MODS
                     ++voiceIdx;
@@ -1100,20 +1102,20 @@ int32_t wess_load_module(
     for (int32_t seqIdx = 0; seqIdx < mod_info.mod_hdr.sequences; ++seqIdx) {
         // Read the sequence header, save the sequence position in the file and move past it
         sequence_data& seq_info = mod_info.pseq_info[seqIdx];
-        wess_memcpy(&seq_info.seq_hdr, gpWess_tmp_fp_wmd_file_1->get(), sizeof(seq_header));
+        wess_memcpy(&seq_info.seq_hdr, gpWess_curWmdFileBytes->get(), sizeof(seq_header));
 
-        seq_info.fileposition = (uint32_t)(gpWess_tmp_fp_wmd_file_1->get() - gpWess_tmp_fp_wmd_file_2->get());
-        *gpWess_tmp_fp_wmd_file_1 += sizeof(seq_header);
+        seq_info.fileposition = (uint32_t)(gpWess_curWmdFileBytes->get() - gpWess_wmdFileBytesBeg->get());
+        *gpWess_curWmdFileBytes += sizeof(seq_header);
 
         // Run through all tracks in the sequence and figure out the stats (size etc.) for what will be loaded
         uint8_t numTracksToload = 0;
         uint32_t tracksTotalSize = 0;
 
-        for (int32_t numTracksRemaining = seq_info.seq_hdr.tracks; numTracksRemaining > 0; --numTracksRemaining) {
+        for (int32_t trackIdx = 0; trackIdx < seq_info.seq_hdr.tracks; ++trackIdx) {
             // Read the track header and move on in the file
             track_header& track_hdr = *gWess_scratch_trk_hdr;
-            wess_memcpy(&track_hdr, gpWess_tmp_fp_wmd_file_1->get(), sizeof(track_header));
-            *gpWess_tmp_fp_wmd_file_1 += sizeof(track_header);
+            wess_memcpy(&track_hdr, gpWess_curWmdFileBytes->get(), sizeof(track_header));
+            *gpWess_curWmdFileBytes += sizeof(track_header);
 
             // Decide whether the track is to be loaded for this sound driver
             bool bLoadTrack = false;
@@ -1125,8 +1127,8 @@ int32_t wess_load_module(
             else {
                 // Not doing an unconditional load of this track.
                 // Only load it if it is for one of the loaded sound drivers and loading this track type is allowed:
-                for (int32_t sndDrvIdx = (int32_t) mstat.patch_types_loaded - 1; sndDrvIdx >= 0; --sndDrvIdx) {
-                    patch_group_data& patch_grp = mstat.ppat_info[sndDrvIdx];
+                for (int32_t drvIdx = 0; drvIdx < mstat.patch_types_loaded; ++drvIdx) {
+                    patch_group_data& patch_grp = pPatchGrpInfo[drvIdx];
 
                     // Is the track for this sound driver?
                     if (track_hdr.voices_type != patch_grp.hw_tl_list.hardware_ID)
@@ -1179,8 +1181,8 @@ int32_t wess_load_module(
             }
 
             // Move past this track in the WMD file
-            *gpWess_tmp_fp_wmd_file_1 += (uint32_t) track_hdr.labellist_count * sizeof(uint32_t);
-            *gpWess_tmp_fp_wmd_file_1 += track_hdr.data_size;
+            *gpWess_curWmdFileBytes += (uint32_t) track_hdr.labellist_count * sizeof(uint32_t);
+            *gpWess_curWmdFileBytes += track_hdr.data_size;
         }
         
         // Incorporate track count into the global max
@@ -1198,172 +1200,103 @@ int32_t wess_load_module(
         seq_info.trkinfolength = tracksTotalSize;
     }
 
-    sw(ptrToVmAddr(pCurDestBytes), sp + 0x10);
+    // Save the sequence & track limits figured out in the loop above
+    mstat.max_trks_perseq = maxSeqTracks;
+    mstat.max_voices_pertrk = maxSeqVoices;
+    mstat.max_substack_pertrk = maxSeqSubstackCount;
 
-    v1 = ptrToVmAddr(&mstat);
-    a0 = lw(sp + 0x10);
-    v0 = lw(v1 + 0xC);
-    sw(a0, v1 + 0x10);
-    v0 = lbu(v0 + 0xF);
-    t3 = maxSeqTracks;
-    v0 <<= 3;
-    v0 += a0;
-    sw(v0, sp + 0x10);
-    sb(t3, v1 + 0x1C);
-    a2 = ptrToVmAddr(&mstat);
-    v0 = lw(a2 + 0xC);
-    v0 = lbu(v0 + 0xB);
-    s2 = 0;
+    // Alloc the list of callback status structs and link to the master status struct
+    callback_status* const pCallbackStat = (callback_status*) pCurDestBytes;
+    pCurDestBytes += sizeof(callback_status) * mod_info.mod_hdr.callback_areas;
+    mstat.pcalltable = pCallbackStat;
 
-    if (i32(v0) > 0) {
-        t0 = 0xFF;
-        a3 = 0;
+    // Allocate the sequence work areas
+    for (int32_t seqIdx = 0; seqIdx < mod_info.mod_hdr.seq_work_areas; ++seqIdx) {
+        sequence_status& seq_stat = mstat.pseqstattbl[seqIdx];
 
-        do {
-            v0 = lw(a2 + 0x20);
-            v1 = lw(sp + 0x10);
-            v0 += a3;
-            sw(v1, v0 + 0x10);
-            v0 = lw(a2 + 0xC);
-            v0 = lbu(v0 + 0xD);
-            v0 += v1;
-            v1 = v0 & 1;
-            v1 += v0;
-            a0 = v1 & 2;
-            v0 = lw(a2 + 0x20);
-            a0 += v1;
-            v0 += a3;
-            sw(a0, v0 + 0x14);
-            v0 = lw(a2 + 0xC);
-            sw(a0, sp + 0x10);
-            v0 = lbu(v0 + 0xE);
-            s1 = maxSeqTracks;
-            v0 += a0;
-            v1 = v0 & 1;
-            v1 += v0;
-            v0 = v1 & 2;
-            v0 += v1;
-            a1 = v0;
-            a0 = s1 + a1;
-            s1--;
-            v1 = a0 & 1;
-            v0 = lw(a2 + 0x20);
-            v1 += a0;
-            sw(a1, sp + 0x10);
-            v0 += a3;
-            sw(a1, v0 + 0xC);
-            v0 = v1 & 2;
-            v0 += v1;
-            sw(v0, sp + 0x10);
-            v0 = -1;                                            // Result = FFFFFFFF
+        // Allocate the gates array for this sequence and 32-bit align afterwards        
+        seq_stat.pgates = (uint8_t*) pCurDestBytes;
 
-            while (s1 != v0) {
-                sb(t0, a1);
-                s1--;
-                a1++;
-            }
+        pCurDestBytes += sizeof(uint8_t) * mod_info.mod_hdr.gates_per_seq;
+        pCurDestBytes += (uintptr_t) pCurDestBytes & 1;     // Added size due to 32-bit align..
+        pCurDestBytes += (uintptr_t) pCurDestBytes & 2;     // Added size due to 32-bit align..
 
-            a2 = ptrToVmAddr(&mstat);
-            v0 = lw(a2 + 0xC);
-            v0 = lbu(v0 + 0xB);
-            s2++;
-            a3 += 0x18;
-        } while (i32(s2) < i32(v0));
+        // Alloc the iters array for this sequence and 32-bit align afterwards
+        seq_stat.piters = (uint8_t*) pCurDestBytes;
+
+        pCurDestBytes += sizeof(uint8_t) * mod_info.mod_hdr.iters_per_seq;
+        pCurDestBytes += (uintptr_t) pCurDestBytes & 1;     // Added size due to 32-bit align..
+        pCurDestBytes += (uintptr_t) pCurDestBytes & 2;     // Added size due to 32-bit align..
+
+        // Alloc the track indexes array for this sequence and 32-bit align afterwards
+        seq_stat.ptrk_indxs = (uint8_t*) pCurDestBytes;
+
+        pCurDestBytes += sizeof(uint8_t) * maxSeqTracks;
+        pCurDestBytes += (uintptr_t) pCurDestBytes & 1;     // Added size due to 32-bit align..
+        pCurDestBytes += (uintptr_t) pCurDestBytes & 2;     // Added size due to 32-bit align..
+
+        // Initialize the track indexes array for the sequence
+        for (int32_t trackIdx = 0; trackIdx < maxSeqTracks; ++trackIdx) {
+            seq_stat.ptrk_indxs[trackIdx] = 0xFF;
+        }
     }
 
-    v0 = ptrToVmAddr(&mstat);
-    t3 = maxSeqVoices;
-    sb(t3, v0 + 0x2C);
-    v0 = ptrToVmAddr(&mstat);
-    t3 = maxSeqSubstackCount;
-    sb(t3, v0 + 0x24);
-    a0 = ptrToVmAddr(&mstat);
-    v0 = lw(a0 + 0xC);
-    v0 = lbu(v0 + 0xC);
-    s2 = 0;
+    // Allocate the sub-stacks for each track work area
+    for (uint8_t trackIdx = 0; trackIdx < mod_info.mod_hdr.trk_work_areas; ++trackIdx) {
+        track_status& track_stat = pTrackStat[trackIdx];
 
-    if (i32(v0) > 0) {
-        a2 = 0;
+        track_stat.refindx = trackIdx;
+        track_stat.psubstack = (uint32_t*) pCurDestBytes;
 
-        do {
-            v0 = lw(a0 + 0x28);
-            v0 += a2;
-            sb(s2, v0 + 0x1);
-            a0 = ptrToVmAddr(&mstat);
-            v0 = lw(a0 + 0x28);
-            a1 = lw(sp + 0x10);
-            v0 += a2;
-            sw(a1, v0 + 0x3C);
-            v1 = lbu(a0 + 0x24);
-            v0 = lw(a0 + 0x28);
-            v1 <<= 2;
-            v1 += a1;
-            v0 += a2;
-            sw(v1, v0 + 0x44);
-            v0 = lw(a0 + 0xC);
-            s2++;
-            sw(v1, sp + 0x10);
-            v0 = lbu(v0 + 0xC);
-            a2 += 0x50;
-        } while (i32(s2) < i32(v0));
+        pCurDestBytes += sizeof(uint32_t) * mstat.max_substack_pertrk;
+        track_stat.pstackend = (uint32_t*) pCurDestBytes;
     }
 
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5920);                               // Load from: gWess_CmdFuncArr[0] (80075920)
+    // Initialize the sequencer
+    //
+    // FIXME: use the real function prototype.
     a0 = ptrToVmAddr(&mstat);
-    v0 = lw(v0);
-    s2 = 0;
-
-    ptr_call(v0);
-
-    a0 = ptrToVmAddr(&mstat);
+    gWess_CmdFuncArr[NoSound_ID][DriverInit]();
     
-    if (i32(lbu(a0 + 0x8)) > 0) {
-        s1 = 0x80070000;                                    // Result = 80070000
-        s1 += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-        s0 = 0;
+    // Initialize loaded drivers
+    for (int32_t drvIdx = 0; drvIdx < mstat.patch_types_loaded; ++ drvIdx) {
+        patch_group_data& patch_grp = pPatchGrpInfo[drvIdx];
+        
+        // Initialize the driver if we are loading any voices and tracks relating to it
+        const bool bInitDriver = (
+            patch_grp.hw_tl_list.sfxload ||
+            patch_grp.hw_tl_list.musload ||
+            patch_grp.hw_tl_list.drmload
+        );
 
-        do {
-            v0 = lw(a0 + 0x18);
-            v1 = s0 + v0;
-            v0 = lw(v1 + 0x50);
-            v0 &= 7;
-            s0 += 0x54;
-
-            if (v0 != 0) {
-                v0 = lw(v1 + 0x4C);
-                v0 <<= 2;
-                v0 += s1;
-                v0 = lw(v0);
-                v0 = lw(v0);
-                ptr_call(v0);
-            }
-
+        if (bInitDriver) {
+            // Initialize the driver
+            //
+            // FIXME: use the real function prototype.
             a0 = ptrToVmAddr(&mstat);
-            v0 = lbu(a0 + 0x8);
-            s2++;
-        } while (i32(s2) < i32(v0));
+            gWess_CmdFuncArr[patch_grp.hw_tl_list.hardware_ID][DriverInit]();
+        }
     }
 
-    a1 = lw(sp + 0x10);    
+    // The module is now loaded and the sequencer is enabled
     *gbWess_module_loaded = true;
-    v1 = 1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5948);                                // Store to: gbWess_SeqOn (80075948)
-    v1 = ptrToVmAddr(&mstat);
-    a0 = a1 & 1;
-    a0 += a1;
-    a1 = lw(v1 + 0xC);
-    v1 = a0 & 2;
-    a1 = lh(a1 + 0x8);
-    v1 += a0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5910);                                // Store to: gpWess_wmd_end (80075910)
-    sw(v1, sp + 0x10);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a1, at + 0x5900);                                // Store to: gWess_max_seq_num (80075900)
+    *gbWess_SeqOn = true;
 
-    return 1;
+    // Save the end pointer for the loaded module and ensure 32-bit aligned
+    pCurDestBytes += (uintptr_t) pCurDestBytes & 1;
+    pCurDestBytes += (uintptr_t) pCurDestBytes & 2;
+    *gpWess_wmd_end = pCurDestBytes;
+
+    // This is maximum sequence number that can be triggered
+    *gWess_max_seq_num = mod_info.mod_hdr.sequences;
+
+    // PC-PSX: sanity check we haven't overflowed module memory
+    #if PC_PSX_DOOM_MODS
+        ASSERT(gpWess_wmd_end->get() - gpWess_wmd_mem->get() <= *gWess_mem_limit);
+    #endif
+    
+    // Load was a success!
+    return true;
 }
 
 void filltrackstat() noexcept {

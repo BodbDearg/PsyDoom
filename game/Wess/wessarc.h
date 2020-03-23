@@ -20,6 +20,46 @@ enum SoundDriverIds : uint8_t {
     GENERIC_ID  = 50        // Generic hardware agnostic sound driver
 };
 
+// Driver/sequencer command ids
+enum DriverCmd : uint8_t {
+    DriverInit          = 0,
+    DriverExit          = 1,
+    DriverEntry1        = 2,
+    DriverEntry2        = 3,
+    DriverEntry3        = 4,
+    TrkOff              = 5,
+    TrkMute             = 6,
+    PatchChg            = 7,
+    PatchMod            = 8,
+    PitchMod            = 9,
+    ZeroMod             = 10,
+    ModuMod             = 11,
+    VolumeMod           = 12,
+    PanMod              = 13,
+    PedalMod            = 14,
+    ReverbMod           = 15,
+    ChorusMod           = 16,
+    NoteOn              = 17,
+    NoteOff             = 18,
+    StatusMark          = 19,
+    GateJump            = 20,
+    IterJump            = 21,
+    ResetGates          = 22,
+    ResetIters          = 23,
+    WriteIterBox        = 24,
+    SeqTempo            = 25,
+    SeqGosub            = 26,
+    SeqJump             = 27,
+    SeqRet              = 28,
+    SeqEnd              = 29,
+    TrkTempo            = 30,
+    TrkGosub            = 31,
+    TrkJump             = 32,
+    TrkRet              = 33,
+    TrkEnd              = 34,
+    NullEvent           = 35
+};
+
 // TODO: COMMENT
 struct patches_header {
     uint16_t    patchmap_cnt;       // 0x000    TODO: COMMENT
@@ -193,9 +233,9 @@ struct sequence_status {
     uint8_t         volume;                 // 0x006    TODO: COMMENT
     uint8_t         pan;                    // 0x007    TODO: COMMENT
     uint32_t        seq_type;               // 0x008    TODO: COMMENT
-    VmPtr<char>     ptrk_indxs;             // 0x00C    TODO: COMMENT
-    VmPtr<char>     pgates;                 // 0x010    TODO: COMMENT
-    VmPtr<char>     piters;                 // 0x014    TODO: COMMENT
+    VmPtr<uint8_t>  ptrk_indxs;             // 0x00C    TODO: COMMENT
+    VmPtr<uint8_t>  pgates;                 // 0x010    TODO: COMMENT
+    VmPtr<uint8_t>  piters;                 // 0x014    TODO: COMMENT
 };
 
 static_assert(sizeof(sequence_status) == 24);
@@ -288,6 +328,14 @@ extern const VmPtr<bool32_t>                    gbWess_WessTimerActive;
 extern const VmPtr<uint8_t[CD_SECTOR_SIZE]>     gWess_sectorBuffer1;
 extern const VmPtr<uint8_t[CD_SECTOR_SIZE]>     gWess_sectorBuffer2;
 extern const VmPtr<bool32_t>                    gbWess_SeqOn;
+
+// Lists of command handling functions for each driver.
+// Up to 10 driver slots are available.
+//
+// FIXME: Change to:
+//  extern void (* const * const gWess_CmdFuncArr[10])(track_status&)
+//
+extern void (* const * const gWess_CmdFuncArr[10])();
 
 int16_t GetIntsPerSec() noexcept;
 void CalcPartsPerInt() noexcept;

@@ -28,7 +28,7 @@ void free_mem_if_mine() noexcept;
 void wess_unload_module() noexcept;
 
 int32_t wess_load_module(
-    const void* const pWmd,
+    const void* const pWmdFile,
     void* const pDestMem,
     const int32_t memoryAllowance,
     VmPtr<int32_t>* const pSettingTagLists

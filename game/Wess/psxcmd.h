@@ -1,5 +1,12 @@
 #pragma once
 
+// PlayStation sound driver command functions.
+//
+// FIXME: Change to:
+//  extern void (* const gWess_drv_cmds[19])(track_status&)
+//
+extern void (* const gWess_drv_cmds[19])();
+
 void start_record_music_mute() noexcept;
 void end_record_music_mute() noexcept;
 void add_music_mute_note() noexcept;

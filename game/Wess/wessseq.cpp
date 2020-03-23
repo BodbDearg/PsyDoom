@@ -3,6 +3,47 @@
 #include "PsxVm/PsxVm.h"
 #include "wessarc.h"
 
+void (* const gWess_DrvFunctions[36])() = {
+    // Driver cmds
+    Eng_DriverInit,         // 00
+    Eng_DriverExit,         // 01
+    Eng_DriverEntry1,       // 02
+    Eng_DriverEntry2,       // 03
+    Eng_DriverEntry3,       // 04
+    Eng_TrkOff,             // 05
+    Eng_TrkMute,            // 06
+    Eng_PatchChg,           // 07
+    Eng_PatchMod,           // 08
+    Eng_PitchMod,           // 09
+    Eng_ZeroMod,            // 10
+    Eng_ModuMod,            // 11
+    Eng_VolumeMod,          // 12
+    Eng_PanMod,             // 13
+    Eng_PedalMod,           // 14
+    Eng_ReverbMod,          // 15
+    Eng_ChorusMod,          // 16
+    Eng_NoteOn,             // 17
+    Eng_NoteOff,            // 18
+    // Sequencer cmds
+    Eng_StatusMark,         // 19
+    Eng_GateJump,           // 20
+    Eng_IterJump,           // 21
+    Eng_ResetGates,         // 22
+    Eng_ResetIters,         // 23
+    Eng_WriteIterBox,       // 24
+    Eng_SeqTempo,           // 25
+    Eng_SeqGosub,           // 26
+    Eng_SeqJump,            // 27
+    Eng_SeqRet,             // 28
+    Eng_SeqEnd,             // 29
+    Eng_TrkTempo,           // 30
+    Eng_TrkGosub,           // 31
+    Eng_TrkJump,            // 32
+    Eng_TrkRet,             // 33
+    Eng_TrkEnd,             // 34
+    Eng_NullEvent           // 35
+};
+
 const VmPtr<uint8_t>    gWess_master_sfx_volume(0x80075A04);
 const VmPtr<uint8_t>    gWess_master_mus_volume(0x80075A05);
 const VmPtr<uint8_t>    gWess_pan_status(0x80075A06);           // If panning is disabled: 0 if disabled, 1 if enabled
