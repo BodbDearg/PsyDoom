@@ -220,10 +220,9 @@ void wess_unload_module() noexcept {
     wess_seq_stopall();
     *gbWess_SeqOn = false;
 
-    master_status_structure& mstat = *gpWess_pm_stat->get();
-    // FIXME: convert to native function call
+    master_status_structure& mstat = *gpWess_pm_stat->get();    
     a0 = ptrToVmAddr(&mstat);
-    gWess_CmdFuncArr[NoSound_ID][DriverExit]();
+    gWess_CmdFuncArr[NoSound_ID][DriverExit]();     // FIXME: convert to native function call
 
     // Shutdown loaded sound drivers
     const int32_t numSndDrv = (*gpWess_pm_stat)->patch_types_loaded;
@@ -238,9 +237,8 @@ void wess_unload_module() noexcept {
         );
 
         if (bWasDriverInitialized) {
-            // FIXME: convert to native function call
             a0 = ptrToVmAddr(&mstat);
-            gWess_CmdFuncArr[patch_grp.hw_tl_list.hardware_ID][DriverExit]();
+            gWess_CmdFuncArr[patch_grp.hw_tl_list.hardware_ID][DriverExit]();   // FIXME: convert to native function call
         }
     }
 
@@ -1253,108 +1251,65 @@ loc_800437DC:
     return;
 }
 
-void wess_seq_stop() noexcept {
-loc_800437F0:
-    sp -= 0x38;
-    sw(s7, sp + 0x2C);
-    s7 = a0;
-    sw(ra, sp + 0x34);
-    sw(fp, sp + 0x30);
-    sw(s6, sp + 0x28);
-    sw(s5, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v0 = Is_Seq_Num_Valid(a0);
-    if (v0 == 0) goto loc_80043948;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5948);                                 // Store to: gbWess_SeqOn (80075948)
-    s6 = lbu(v0 + 0x4);
-    v1 = lw(v0 + 0xC);
-    s5 = lw(v0 + 0x20);
-    s4 = lbu(v1 + 0xB);
-    v0 = s4;
-    if (s6 == 0) goto loc_8004393C;
-    v0 &= 0xFF;
-    s4--;
-    if (v0 == 0) goto loc_8004393C;
-    fp = -1;                                            // Result = FFFFFFFF
-    s3 = s5 + 0xC;
-loc_80043868:
-    v0 = lw(s5);
-    v0 &= 1;
-    if (v0 == 0) goto loc_80043924;
-    v0 = lh(s3 - 0xA);
-    if (v0 != s7) goto loc_80043914;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    s2 = lbu(s3 - 0x8);
-    s0 = lbu(v0 + 0x1C);
-    s1 = lw(s3);
-    s0--;
-    if (s0 == fp) goto loc_80043914;
-loc_800438AC:
-    v1 = lbu(s1);
-    a1 = 0xFF;                                          // Result = 000000FF
-    a0 = v1 << 2;
-    if (v1 == a1) goto loc_80043908;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    a0 += v1;
-    v0 = lw(v0 + 0x28);
-    a0 <<= 4;
-    a0 += v0;
-    v0 = lbu(a0 + 0x3);
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-    v0 <<= 2;
-    v0 += a1;
-    v0 = lw(v0);
-    v0 = lw(v0 + 0x14);
-    s2--;
-    ptr_call(v0);
-    if (s2 == 0) goto loc_80043914;
-loc_80043908:
-    s0--;
-    s1++;
-    if (s0 != fp) goto loc_800438AC;
-loc_80043914:
-    s6--;
-    v0 = s6 & 0xFF;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80043940;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Stops the specified sequence number
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_seq_stop(const int32_t seqNum) noexcept {
+    // Don't bother if the sequence number is not valid
+    if (!Is_Seq_Num_Valid(seqNum))
+        return;
+
+    // Temporarily disable the sequencer while we do this.
+    // It was originally fired by hardware timer interrupts, so this step was required.
+    *gbWess_SeqOn = false;
+    
+    // Run through all of the sequences searching for the one we are interested in
+    master_status_structure& mstat = *gpWess_pm_stat->get();
+
+    uint32_t numActiveSeqsToVisit = mstat.seqs_active;
+    const uint8_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
+
+    for (int32_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
+        // If there are no more active sequences to visit then we are done
+        if (numActiveSeqsToVisit == 0)
+            break;
+
+        // Only bother if the sequence is loaded/active
+        sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
+
+        if (!seqStat.active)
+            continue;
+        
+        if (seqStat.seq_num == seqNum) {
+            // This is the sequence we want, go through all the tracks and stop each one
+            uint32_t numSeqTracksActive = seqStat.tracks_active;
+            uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+
+            for (uint32_t i = 0; i < mstat.max_trks_perseq; ++i) {
+                // Is this track index valid and in use?
+                const uint8_t trackIdx = pSeqTrackIndexes[i];
+
+                if (trackIdx == 0xFF)
+                    continue;
+                
+                // Call the driver function to turn off the track
+                track_status& trackStat = mstat.ptrkstattbl[trackIdx];                
+                a0 = ptrToVmAddr(&trackStat);
+                gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native call
+
+                // If there are no more tracks left active then we are done
+                --numSeqTracksActive;
+
+                if (numSeqTracksActive == 0)
+                    break;
+            }
+        }
+
+        --numActiveSeqsToVisit;
     }
-loc_80043924:
-    s3 += 0x18;
-    s5 += 0x18;
-    v0 = s4;
-    v0 &= 0xFF;
-    s4--;
-    if (v0 != 0) goto loc_80043868;
-loc_8004393C:
-    v0 = 1;                                             // Result = 00000001
-loc_80043940:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5948);                                // Store to: gbWess_SeqOn (80075948)
-loc_80043948:
-    ra = lw(sp + 0x34);
-    fp = lw(sp + 0x30);
-    s7 = lw(sp + 0x2C);
-    s6 = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x38;
-    return;
+
+    // Re-enable the sequencer
+    *gbWess_SeqOn = true;
 }
 
 void wess_seq_stopall() noexcept {

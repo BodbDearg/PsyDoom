@@ -225,9 +225,11 @@ static_assert(sizeof(patch_group_data) == 84);
 
 // TODO: COMMENT
 struct sequence_status {
-    uint8_t         flags;                  // 0x000    TODO: COMMENT
+    uint8_t         active : 1;             // 0x000    TODO: COMMENT
+    uint8_t         handle : 1;             // 0x000    TODO: COMMENT
+    uint8_t         _unusedFlagBits : 6;    // 0x000    TODO: COMMENT
     uint8_t         playmode;               // 0x001    TODO: COMMENT
-    uint16_t        seq_num;                // 0x002    TODO: COMMENT
+    int16_t         seq_num;                // 0x002    TODO: COMMENT
     uint8_t         tracks_active;          // 0x004    TODO: COMMENT
     uint8_t         tracks_playing;         // 0x005    TODO: COMMENT
     uint8_t         volume;                 // 0x006    TODO: COMMENT

@@ -36,5 +36,5 @@ void wess_seq_structrig() noexcept;
 void wess_seq_trigger() noexcept;
 void wess_seq_trigger_special() noexcept;
 void wess_seq_status() noexcept;
-void wess_seq_stop() noexcept;
+void wess_seq_stop(const int32_t seqNum) noexcept;
 void wess_seq_stopall() noexcept;
