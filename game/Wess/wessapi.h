@@ -16,7 +16,7 @@ void wess_install_error_handler() noexcept;
 void wess_get_master_status() noexcept;
 bool Is_System_Active() noexcept;
 bool Is_Module_Loaded() noexcept;
-void Is_Seq_Num_Valid() noexcept;
+bool Is_Seq_Num_Valid(const int32_t seqNum) noexcept;
 void Register_Early_Exit() noexcept;
 void wess_install_handler() noexcept;
 void wess_restore_handler() noexcept;

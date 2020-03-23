@@ -112,7 +112,7 @@ void queue_wess_seq_pause() noexcept {
     sw(s1, sp + 0x24);
     sw(s0, sp + 0x20);
     sw(a1, sp + 0x18);
-    Is_Seq_Num_Valid();
+    v0 = Is_Seq_Num_Valid(a0);
     if (v0 == 0) goto loc_8004192C;
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
@@ -224,7 +224,7 @@ void queue_wess_seq_restart() noexcept {
     sw(s2, sp + 0x20);
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
-    Is_Seq_Num_Valid();
+    v0 = Is_Seq_Num_Valid(a0);
     if (v0 == 0) goto loc_80041A98;
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
@@ -585,37 +585,22 @@ bool Is_System_Active() noexcept {
     return *gbWess_sysinit;
 }
 
-// TODO: COMMENT
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if a module file (.WMD) file has been loaded
+//------------------------------------------------------------------------------------------------------------------------------------------
 bool Is_Module_Loaded() noexcept {
     return *gbWess_module_loaded;
 }
 
-void Is_Seq_Num_Valid() noexcept {
-loc_80041EEC:
-    v0 = 0;                                             // Result = 00000000
-    if (i32(a0) < 0) goto loc_80041F40;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5900);                               // Load from: gWess_max_seq_num (80075900)
-    v0 = (i32(a0) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a0 << 2;
-        if (bJump) goto loc_80041F14;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the given sequence number is valid
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool Is_Seq_Num_Valid(const int32_t seqNum) noexcept {
+    if ((seqNum >= 0) && (seqNum < *gWess_max_seq_num)) {
+        return ((*gpWess_pm_stat)->pmod_info->pseq_info[seqNum].ptrk_info != nullptr);
     }
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80041F40;
-loc_80041F14:
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v1 = lw(v1 + 0xC);
-    v0 += a0;
-    v1 = lw(v1 + 0x10);
-    v0 <<= 2;
-    v0 += v1;
-    v0 = lw(v0 + 0x4);
-    v0 = (v0 > 0);
-loc_80041F40:
-    return;
+
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1506,7 +1491,7 @@ loc_800433B4:
     sw(s0, sp + 0x30);
     sw(a2, sp + 0x20);
     sw(a3, sp + 0x28);
-    Is_Seq_Num_Valid();
+    v0 = Is_Seq_Num_Valid(a0);
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -1731,7 +1716,7 @@ loc_8004371C:
     sw(s0, sp + 0x10);
     sw(ra, sp + 0x14);
     s0 = a0;
-    Is_Seq_Num_Valid();
+    v0 = Is_Seq_Num_Valid(a0);
     a2 = 1;                                             // Result = 00000001
     if (v0 != 0) goto loc_80043748;
     v0 = 0;                                             // Result = 00000000
@@ -1796,7 +1781,7 @@ loc_800437F0:
     sw(s2, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
-    Is_Seq_Num_Valid();
+    v0 = Is_Seq_Num_Valid(a0);
     if (v0 == 0) goto loc_80043948;
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
