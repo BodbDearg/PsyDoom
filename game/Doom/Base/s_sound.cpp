@@ -9,6 +9,7 @@
 #include "Wess/seqload_r.h"
 #include "Wess/wessapi.h"
 #include "Wess/wessapi_m.h"
+#include "Wess/wessapi_p.h"
 #include "Wess/wessapi_t.h"
 
 // What track each piece of music uses

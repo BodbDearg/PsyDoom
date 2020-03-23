@@ -184,6 +184,8 @@ set(SOURCE_FILES
     "Wess/wessapi.h"
     "Wess/wessapi_m.cpp"
     "Wess/wessapi_m.h"
+    "Wess/wessapi_p.cpp"
+    "Wess/wessapi_p.h"
     "Wess/wessapi_t.cpp"
     "Wess/wessapi_t.h"
     "Wess/wessarc.cpp"

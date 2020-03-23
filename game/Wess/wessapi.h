@@ -7,12 +7,6 @@ struct master_status_structure;
 
 extern const VmPtr<bool32_t>    gbWess_module_loaded;
 
-void trackstart() noexcept;
-void trackstop() noexcept;
-void queue_wess_seq_pause() noexcept;
-void queue_wess_seq_restart() noexcept;
-void queue_wess_seq_pauseall() noexcept;
-void queue_wess_seq_restartall() noexcept;
 void zeroset(void* const pDest, const uint32_t numBytes) noexcept;
 void wess_install_error_handler(int32_t (* const pErrorFunc)(int32_t, int32_t), const int32_t module) noexcept;
 master_status_structure* wess_get_master_status() noexcept;
