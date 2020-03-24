@@ -1189,66 +1189,42 @@ void wess_seq_trigger_special() noexcept {
     return;
 }
 
-void wess_seq_status() noexcept {
-loc_8004371C:
-    // Emulate a little in case calling code is polling in a loop waiting for status to change
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the current state of the specified sequence
+//------------------------------------------------------------------------------------------------------------------------------------------
+SequenceStatus wess_seq_status(const int32_t seqNum) noexcept {
+    // Emulate sound a little in case calling code is polling in a loop waiting for status to change
     #if PC_PSX_DOOM_MODS
-        emulate_a_little();
+        emulate_sound_if_required();
     #endif
 
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x14);
-    s0 = a0;
-    v0 = Is_Seq_Num_Valid(a0);
-    a2 = 1;                                             // Result = 00000001
-    if (v0 != 0) goto loc_80043748;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_800437DC;
-loc_80043740:
-    a2 = 2;                                             // Result = 00000002
-    goto loc_800437D8;
-loc_80043748:
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(v1 + 0xC);
-    a0 = lbu(v0 + 0xB);
-    a1 = lw(v1 + 0x20);
-    v0 = a0;
-    v0 &= 0xFF;
-    a0--;
-    if (v0 == 0) goto loc_800437D8;
-    a3 = 1;                                             // Result = 00000001
-    v1 = a1 + 1;
-loc_8004377C:
-    v0 = lw(a1);
-    v0 &= 1;
-    if (v0 == 0) goto loc_800437C0;
-    v0 = lh(v1 + 0x1);
-    if (v0 != s0) goto loc_800437C0;
-    v0 = lbu(v1);
-    if (v0 == 0) goto loc_80043740;
-    {
-        const bool bJump = (v0 != a3);
-        v0 = a2;                                        // Result = 00000001
-        if (bJump) goto loc_800437DC;
+    // Is the sequence number a valid one?
+    if (!Is_Seq_Num_Valid(seqNum))
+        return SEQUENCE_INVALID;
+    
+    // Try to find the specified sequence number among all the sequences
+    master_status_structure& mstat = *gpWess_pm_stat->get();
+    const int32_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
+
+    for (uint8_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
+        sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
+
+        // Make sure this sequence is in use and that it's the one we want
+        if ((!seqStat.active) || (seqStat.seq_num != seqNum))
+            continue;
+
+        // Determine status from play mode
+        if (seqStat.playmode == SEQ_STATE_STOPPED) {
+            return SEQUENCE_STOPPED;
+        } else if (seqStat.playmode == SEQ_STATE_PLAYING) {
+            return SEQUENCE_PLAYING;
+        } else {
+            return SEQUENCE_INACTIVE;   // Invalid/unknown play mode!
+        }
     }
-    a2 = 3;                                             // Result = 00000003
-    goto loc_800437D8;
-loc_800437C0:
-    v1 += 0x18;
-    a1 += 0x18;
-    v0 = a0;
-    v0 &= 0xFF;
-    a0--;
-    if (v0 != 0) goto loc_8004377C;
-loc_800437D8:
-    v0 = a2;
-loc_800437DC:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    
+    // If the sequence number was not found assume not playing and not paused
+    return SEQUENCE_INACTIVE;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

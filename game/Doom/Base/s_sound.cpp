@@ -158,7 +158,7 @@ loc_80041154:
     at += 0x54E0;                                       // Result = MapMusicDefs[1] (800754E0)
     at += v0;
     a0 = lw(at);
-    wess_seq_status();
+    v0 = wess_seq_status(a0);
     a0 = 0x5A;                                          // Result = 0000005A
     if (v0 != s0) goto loc_80041154;
     a1 = 0x14;                                          // Result = 00000014

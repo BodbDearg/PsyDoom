@@ -5,6 +5,14 @@
 
 struct master_status_structure;
 
+// Enum representing the current high level state of a sequence
+enum SequenceStatus : uint8_t {
+    SEQUENCE_INVALID    = 0,    // Invalid sequence number
+    SEQUENCE_INACTIVE   = 1,    // Not paused or playing
+    SEQUENCE_STOPPED    = 2,    // Paused
+    SEQUENCE_PLAYING    = 3     // Playing
+};
+
 extern const VmPtr<bool32_t>    gbWess_module_loaded;
 
 void zeroset(void* const pDest, const uint32_t numBytes) noexcept;
@@ -35,6 +43,6 @@ void assigntrackstat() noexcept;
 void wess_seq_structrig() noexcept;
 void wess_seq_trigger() noexcept;
 void wess_seq_trigger_special() noexcept;
-void wess_seq_status() noexcept;
+SequenceStatus wess_seq_status(const int32_t seqNum) noexcept;
 void wess_seq_stop(const int32_t seqNum) noexcept;
 void wess_seq_stopall() noexcept;

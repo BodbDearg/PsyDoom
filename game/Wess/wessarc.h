@@ -20,6 +20,12 @@ enum SoundDriverIds : uint8_t {
     GENERIC_ID  = 50        // Generic hardware agnostic sound driver
 };
 
+// Sequence play mode
+enum SeqPlayMode : uint8_t {
+    SEQ_STATE_STOPPED   = 0,
+    SEQ_STATE_PLAYING   = 1
+};
+
 // Driver/sequencer command ids
 enum DriverCmd : uint8_t {
     DriverInit          = 0,
@@ -228,7 +234,7 @@ struct sequence_status {
     uint8_t         active : 1;             // 0x000    TODO: COMMENT
     uint8_t         handle : 1;             // 0x000    TODO: COMMENT
     uint8_t         _unusedFlagBits : 6;    // 0x000    TODO: COMMENT
-    uint8_t         playmode;               // 0x001    TODO: COMMENT
+    SeqPlayMode     playmode;               // Is the sequence playing or stopped?
     int16_t         seq_num;                // 0x002    TODO: COMMENT
     uint8_t         tracks_active;          // 0x004    TODO: COMMENT
     uint8_t         tracks_playing;         // 0x005    TODO: COMMENT

@@ -69,17 +69,10 @@ void G_DoLoadLevel() noexcept {
     // Draw the loading plaque
     I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
 
-    // TODO: what is this waiting on?
-    do {
-        a0 = 5;
-        wess_seq_status();
-        if (v0 == 3) continue;
-    
-        a0 = 7;
-        wess_seq_status();    
-        if (v0 == 3) continue;
-
-    } while (false);
+    // Wait for the pistol and barrel explode menu sounds to stop playing
+    while ((wess_seq_status(sfx_barexp) == SEQUENCE_PLAYING) || (wess_seq_status(sfx_pistol) == SEQUENCE_PLAYING)) {
+        // TODO: PC-PSX: update the window, emulate sounds etc. here while we wait..
+    }
 
     // Loading sound and music
     a0 = *gGameMap;
