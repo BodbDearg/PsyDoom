@@ -6,7 +6,6 @@
 #include "psxcd.h"
 #include "psxcmd.h"
 #include "psxspu.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBAPI.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessseq.h"
@@ -54,27 +53,22 @@ int16_t GetIntsPerSec() noexcept {
     return 120;
 }
 
-void CalcPartsPerInt() noexcept {
-loc_80043B38:
-    a2 <<= 16;
-    a0 <<= 16;
-    a0 = u32(i32(a0) >> 16);
-    v0 = a0 << 4;
-    v0 -= a0;
-    v1 = v0 << 1;
-    a2 += v1;
-    a2 += 0x1E;
-    v0 <<= 2;
-    divu(a2, v0);
-    if (v0 != 0) goto loc_80043B6C;
-    _break(0x1C00);
-loc_80043B6C:
-    a2 = lo;
-    a1 <<= 16;
-    a1 = u32(i32(a1) >> 16);
-    mult(a2, a1);
-    v0 = lo;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Calculates the number of quarter note parts per hardware interrupt.
+// This is used to determine how fast to pace/advance the sequencer.
+//
+// Params:
+//  intsPerSec      :   How many hardware interrupts happen a second. Approx '120' for PSX DOOM.
+//  partsPerQNote   :   How many parts to subdivide each quarter note into. Affects timing precision.
+//  qnotesPerMin    :   Track tempo in quarter notes per minute. This typically known as 'beats per minute'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t CalcPartsPerInt(const int16_t intsPerSec, const int16_t partsPerQNote, const int16_t qnotesPerMin) noexcept {
+    const uint32_t intsPerMin = intsPerSec * 60;                                                // Number of interrupts per minute
+    const uint32_t qnotePerMinFrac = (uint32_t) qnotesPerMin << 16;                             // Number of quarter notes per minute in 16.16 format
+    const uint32_t qnotesPerIntRoundUp = intsPerSec * 30 + 30;                                  // Helps round up the number of quarter notes per interrupt (ceil)
+    const uint32_t qnotesPerIntFrac = (qnotePerMinFrac + qnotesPerIntRoundUp) / intsPerMin;     // Number of quarter notes per interrupt (16.16)
+    const uint32_t partsPerInt = qnotesPerIntFrac * partsPerQNote;                              // Number of quarter note 'parts' per interrupt (16.16)
+    return partsPerInt;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

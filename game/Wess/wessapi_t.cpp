@@ -167,7 +167,7 @@ loc_800442FC:
     a1 = lh(s0 + 0x14);
     a2 = lh(s0 + 0x16);
     a0 = u32(i32(v0) >> 16);
-    CalcPartsPerInt();
+    v0 = CalcPartsPerInt(a0, a1, a2);
     sw(v0, s0 + 0x1C);
     v0 = s3 & 0x40;
 loc_8004432C:

@@ -306,7 +306,6 @@ extern void assigntrackstat() noexcept;
 extern void wess_seq_structrig() noexcept;
 extern void wess_seq_trigger() noexcept;
 extern void wess_seq_trigger_special() noexcept;
-extern void CalcPartsPerInt() noexcept;
 extern void updatetrackstat() noexcept;
 extern void wess_seq_trigger_type() noexcept;
 extern void wess_seq_trigger_type_special() noexcept;
@@ -745,7 +744,6 @@ namespace PsxVm {
         { 0x800433B4, &wess_seq_structrig },
         { 0x800436AC, &wess_seq_trigger },
         { 0x800436CC, &wess_seq_trigger_special },
-        { 0x80043B38, &CalcPartsPerInt },
         { 0x80044098, &updatetrackstat },
         { 0x8004438C, &wess_seq_trigger_type },
         { 0x800443DC, &wess_seq_trigger_type_special },

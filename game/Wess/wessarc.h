@@ -346,7 +346,7 @@ extern const VmPtr<bool32_t>                    gbWess_SeqOn;
 extern void (* const * const gWess_CmdFuncArr[10])();
 
 int16_t GetIntsPerSec() noexcept;
-void CalcPartsPerInt() noexcept;
+uint32_t CalcPartsPerInt(const int16_t ips, const int16_t ppq, const int16_t qpm) noexcept;
 int32_t WessInterruptHandler() noexcept;
 void init_WessTimer() noexcept;
 void exit_WessTimer() noexcept;

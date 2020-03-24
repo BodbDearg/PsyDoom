@@ -884,7 +884,7 @@ loc_80043288:
     a1 = lh(s0 + 0x14);
     a2 = lh(s0 + 0x16);
     a0 = u32(i32(v0) >> 16);
-    CalcPartsPerInt();
+    v0 = CalcPartsPerInt(a0, a1, a2);
     sw(v0, s0 + 0x1C);
     v0 = s1 & 0x40;                                     // Result = 00000000
     v1 = -0x11;                                         // Result = FFFFFFEF
