@@ -760,7 +760,7 @@ static const ProgElem ELEMS[] = {
     { 0x80041318, 0x80041340, "S_Pause",                                ProgElemType::FUNCTION },
     { 0x80041340, 0x80041368, "S_Resume",                               ProgElemType::FUNCTION },
     { 0x80041368, 0x80041388, "S_StopSound",                            ProgElemType::FUNCTION },
-    { 0x80041388, 0x800413A8, "S_Clear",                                ProgElemType::FUNCTION },
+    { 0x80041388, 0x800413A8, "S_StopAll",                              ProgElemType::FUNCTION },
     { 0x800413A8, 0x800415B4, "I_StartSound",                           ProgElemType::FUNCTION },
     { 0x800415B4, 0x800415D4, "S_StartSound",                           ProgElemType::FUNCTION },
     { 0x800415D4, 0x800415EC, "S_UpdateSounds",                         ProgElemType::FUNCTION },

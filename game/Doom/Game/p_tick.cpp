@@ -588,7 +588,7 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     LIBGPU_DrawSync(0);
     
     // Stop all sounds and music
-    S_Clear();
+    S_StopAll();
     psxcd_stop();
     S_StopMusicSequence();
 

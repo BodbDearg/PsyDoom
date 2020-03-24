@@ -290,7 +290,6 @@ extern void S_LoadSoundAndMusic() noexcept;
 extern void S_Pause() noexcept;
 extern void S_Resume() noexcept;
 extern void S_StopSound() noexcept;
-extern void S_Clear() noexcept;
 extern void I_StartSound() noexcept;
 extern void _thunk_S_StartSound() noexcept;
 extern void S_UpdateSounds() noexcept;
@@ -308,7 +307,6 @@ extern void wess_seq_structrig() noexcept;
 extern void wess_seq_trigger() noexcept;
 extern void wess_seq_trigger_special() noexcept;
 extern void wess_seq_status() noexcept;
-extern void wess_seq_stopall() noexcept;
 extern void CalcPartsPerInt() noexcept;
 extern void updatetrackstat() noexcept;
 extern void wess_seq_trigger_type() noexcept;
@@ -731,7 +729,6 @@ namespace PsxVm {
         { 0x80041318, &S_Pause },
         { 0x80041340, &S_Resume },
         { 0x80041368, &S_StopSound },
-        { 0x80041388, &S_Clear },
         { 0x800413A8, &I_StartSound },
         { 0x800415B4, &_thunk_S_StartSound },
         { 0x800415D4, &S_UpdateSounds },
@@ -750,7 +747,6 @@ namespace PsxVm {
         { 0x800436AC, &wess_seq_trigger },
         { 0x800436CC, &wess_seq_trigger_special },
         { 0x8004371C, &wess_seq_status },
-        { 0x8004397C, &wess_seq_stopall },
         { 0x80043B38, &CalcPartsPerInt },
         { 0x80044098, &updatetrackstat },
         { 0x8004438C, &wess_seq_trigger_type },

@@ -31,7 +31,7 @@ void S_LoadSoundAndMusic() noexcept;
 void S_Pause() noexcept;
 void S_Resume() noexcept;
 void S_StopSound() noexcept;
-void S_Clear() noexcept;
+void S_StopAll() noexcept;
 void I_StartSound() noexcept;
 
 void S_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept;
