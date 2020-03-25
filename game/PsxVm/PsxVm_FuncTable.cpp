@@ -349,7 +349,6 @@ extern void PSX_voicerelease() noexcept;
 extern void PSX_voicenote() noexcept;
 extern void PSX_NoteOn() noexcept;
 extern void PSX_NoteOff() noexcept;
-extern void Read_Vlq() noexcept;
 extern void Write_Vlq() noexcept;
 extern void Len_Vlq() noexcept;
 extern void Eng_DriverInit() noexcept;
@@ -786,7 +785,6 @@ namespace PsxVm {
         { 0x80047180, &PSX_voicenote },
         { 0x80047394, &PSX_NoteOn },
         { 0x80047578, &PSX_NoteOff },
-        { 0x80047664, &Read_Vlq },
         { 0x800476DC, &Write_Vlq },
         { 0x8004773C, &Len_Vlq },
         { 0x800477A8, &Eng_DriverInit },

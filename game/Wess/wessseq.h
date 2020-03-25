@@ -15,7 +15,7 @@ extern const VmPtr<uint8_t>     gWess_pan_status;
 //
 extern void (* const gWess_DrvFunctions[36])();
 
-void Read_Vlq() noexcept;
+uint8_t* Read_Vlq(uint8_t* const pTrackBytes, uint32_t& deltaTimeOut) noexcept;
 void Write_Vlq() noexcept;
 void Len_Vlq() noexcept;
 void Eng_DriverInit() noexcept;

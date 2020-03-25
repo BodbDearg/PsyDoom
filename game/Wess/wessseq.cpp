@@ -44,42 +44,39 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_NullEvent           // 35
 };
 
-const VmPtr<uint8_t>    gWess_master_sfx_volume(0x80075A04);
-const VmPtr<uint8_t>    gWess_master_mus_volume(0x80075A05);
+const VmPtr<uint8_t>    gWess_master_sfx_volume(0x80075A04);    // TODO: COMMENT
+const VmPtr<uint8_t>    gWess_master_mus_volume(0x80075A05);    // TODO: COMMENT
 const VmPtr<uint8_t>    gWess_pan_status(0x80075A06);           // If panning is disabled: 0 if disabled, 1 if enabled
 
-void Read_Vlq() noexcept {
-loc_80047664:
-    a2 = a0;
-    v1 = lbu(a2);
-    v0 = v1 & 0x80;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xE00);                                 // Store to: gWess_Read_Vlq_v (8007F200)
-    a2++;
-    if (v0 == 0) goto loc_800476C4;
-    v0 = v1 & 0x7F;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xE00);                                 // Store to: gWess_Read_Vlq_v (8007F200)
-loc_80047690:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE00);                                // Load from: gWess_Read_Vlq_v (8007F200)
-    a0 = lbu(a2);
-    v0 <<= 7;
-    v1 = a0 & 0x7F;
-    v0 += v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sb(a0, at - 0xDFC);                                 // Store to: gWess_Read_Vlq_c (8007F204)
-    a0 &= 0x80;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xE00);                                 // Store to: gWess_Read_Vlq_v (8007F200)
-    a2++;
-    if (a0 != 0) goto loc_80047690;
-loc_800476C4:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE00);                                // Load from: gWess_Read_Vlq_v (8007F200)
-    sw(v0, a1);
-    v0 = a2;
-    return;
+static const VmPtr<uint32_t>    gWess_Read_Vlq_v(0x8007F200);       // Temp accumulated delta time value used in 'Read_Vlq'
+static const VmPtr<uint8_t>     gWess_Read_Vlq_c(0x8007F204);       // Temp accumulated current byte value used in 'Read_Vlq'
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads from track data the delta time (relative to the previous sequencer command) for when the next sequencer command is to be executed.
+// Returns the pointer after reading the time amount, which may be incremented an arbitrary amount.
+//
+// The delta time amount returned is in terms of quarter note 'parts'.
+// How many parts/divisions per quarter note there are depends on the timing setup of track, but a value of '120' is typical.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint8_t* Read_Vlq(uint8_t* const pTrackBytes, uint32_t& deltaTimeOut) noexcept {
+    uint8_t* pCurTrackByte = pTrackBytes;
+    *gWess_Read_Vlq_v = *pCurTrackByte;
+    ++pCurTrackByte;
+
+    // The top bit set on each byte means there is another byte to follow.
+    // Each byte can therefore only encode 7 bits, so we need 5 of them to encode 32-bits:
+    if (pTrackBytes[0] & 0x80) {
+        *gWess_Read_Vlq_v &= 0x7F;  // Top bit is not data
+
+        do {
+            *gWess_Read_Vlq_c = *pCurTrackByte;
+            *gWess_Read_Vlq_v = (*gWess_Read_Vlq_v << 7) + (*gWess_Read_Vlq_c & 0x7F);  // Incorporate another 7 bits to the output time value
+            ++pCurTrackByte;
+        } while (*gWess_Read_Vlq_c & 0x80);     // Is there another byte to follow?
+    }
+
+    deltaTimeOut = *gWess_Read_Vlq_v;
+    return pCurTrackByte;
 }
 
 void Write_Vlq() noexcept {
@@ -1379,7 +1376,7 @@ loc_80048A34:
     a0 = lw(v1 - 0x4);
     a1 = s0 + 4;
     sw(a0, s0 + 0x34);
-    Read_Vlq();
+    v0 = ptrToVmAddr(Read_Vlq(vmAddrToPtr<uint8_t>(a0), *vmAddrToPtr<uint32_t>(a1)));
     v1 = lw(s0);
     sw(v0, s0 + 0x34);
     v1 |= 0x40;
@@ -1430,7 +1427,7 @@ loc_80048B1C:
     v0 = v1 | 0x40;
     sw(v0, s0);
     sw(a0, s0 + 0x34);
-    Read_Vlq();
+    v0 = ptrToVmAddr(Read_Vlq(vmAddrToPtr<uint8_t>(a0), *vmAddrToPtr<uint32_t>(a1)));
     sw(v0, s0 + 0x34);
     goto loc_80048B78;
 loc_80048B38:
@@ -1599,7 +1596,7 @@ loc_80048D6C:
     a0 += v0;
     sw(a0, a2 + 0x34);
 loc_80048DD8:
-    Read_Vlq();
+    v0 = ptrToVmAddr(Read_Vlq(vmAddrToPtr<uint8_t>(a0), *vmAddrToPtr<uint32_t>(a1)));
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lw(v1 - 0xD30);                                // Load from: 8007F2D0
     sw(v0, v1 + 0x34);

@@ -871,7 +871,7 @@ loc_80043350:
     a0 = lw(s1 + 0x1C);
     a1 = s0 + 4;
     sw(a0, s0 + 0x30);
-    Read_Vlq();
+    v0 = ptrToVmAddr(Read_Vlq(vmAddrToPtr<uint8_t>(a0), *vmAddrToPtr<uint32_t>(a1)));
     sw(v0, s0 + 0x34);
     v0 = lw(s1 + 0x18);
     sw(v0, s0 + 0x38);
