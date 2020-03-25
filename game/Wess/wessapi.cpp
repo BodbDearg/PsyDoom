@@ -768,167 +768,92 @@ int32_t wess_load_module(
     return true;
 }
 
-void filltrackstat() noexcept {
-loc_800430C4:
-    sp -= 0x28;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(s2, sp + 0x18);
-    s2 = a1;
-    sw(ra, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s1, sp + 0x14);
-    v0 = lw(s0);
-    v1 = -0x11;                                         // Result = FFFFFFEF
-    v0 |= 1;
-    v0 &= v1;
-    v1 = -0x21;                                         // Result = FFFFFFDF
-    v0 &= v1;
-    v1 = -0x41;                                         // Result = FFFFFFBF
-    v0 &= v1;
-    v1 = -0x81;                                         // Result = FFFFFF7F
-    v0 &= v1;
-    sw(v0, s0);
-    v0 = lbu(s2);
-    sb(v0, s0 + 0x3);
-    v0 = lbu(s2 + 0x2);
-    sb(v0, s0 + 0x8);
-    v0 = lbu(s2 + 0x4);
-    sb(0, s0 + 0x10);
-    sb(v0, s0 + 0x13);
-    v0 = lbu(s2 + 0x1);
-    sb(v0, s0 + 0x11);
-    v1 = lhu(s2 + 0xE);
-    v0 = lw(s0 + 0x3C);
-    sw(0, s0 + 0x20);
-    sw(0, s0 + 0x24);
-    sw(0, s0 + 0x28);
-    sw(v0, s0 + 0x40);
-    sh(v1, s0 + 0x14);
-    v0 = lhu(s2 + 0x12);
-    sh(v0, s0 + 0x18);
-    v0 = lw(s2 + 0x14);
-    sw(v0, s0 + 0x48);
-    v0 = lbu(s2 + 0xD);
-    s3 = a2;
-    sb(v0, s0 + 0x12);
-    if (s3 == 0) goto loc_80043194;
-    v0 = lw(s3);
-    s1 = v0;
-    if (v0 != 0) goto loc_80043198;
-loc_80043194:
-    s1 = 0;                                             // Result = 00000000
-loc_80043198:
-    v0 = s1 & 1;
-    if (v0 == 0) goto loc_800431B0;
-    v0 = lbu(s3 + 0x4);
-    sb(v0, s0 + 0xC);
-    goto loc_800431BC;
-loc_800431B0:
-    v0 = lbu(s2 + 0xA);
-    sb(v0, s0 + 0xC);
-loc_800431BC:
-    v0 = s1 & 2;
-    if (v0 == 0) goto loc_800431D4;
-    v0 = lbu(s3 + 0x5);
-    sb(v0, s0 + 0xD);
-    goto loc_800431E0;
-loc_800431D4:
-    v0 = lbu(s2 + 0xB);
-    sb(v0, s0 + 0xD);
-loc_800431E0:
-    v0 = s1 & 4;
-    if (v0 == 0) goto loc_800431F8;
-    v0 = lhu(s3 + 0x6);
-    sh(v0, s0 + 0xA);
-    goto loc_80043204;
-loc_800431F8:
-    v0 = lhu(s2 + 0x6);
-    sh(v0, s0 + 0xA);
-loc_80043204:
-    v0 = s1 & 8;                                        // Result = 00000000
-    if (v0 == 0) goto loc_8004321C;
-    v0 = lhu(s3 + 0x8);
-    sh(v0, s0 + 0xE);
-    goto loc_80043228;
-loc_8004321C:
-    v0 = lhu(s2 + 0x8);
-    sh(v0, s0 + 0xE);
-loc_80043228:
-    v0 = s1 & 0x10;                                     // Result = 00000000
-    if (v0 == 0) goto loc_8004325C;
-    v0 = lbu(s0 + 0x12);
-    v1 = lbu(s3 + 0xA);
-    v0 = i32(v0) >> v1;
-    v0 &= 1;
-    if (v0 == 0) goto loc_8004325C;
-    v0 = lw(s0);
-    v0 |= 2;
-    goto loc_80043268;
-loc_8004325C:
-    v0 = lw(s0);
-    v1 = -3;                                            // Result = FFFFFFFD
-    v0 &= v1;
-loc_80043268:
-    sw(v0, s0);
-    v0 = s1 & 0x20;                                     // Result = 00000000
-    if (v0 == 0) goto loc_80043284;
-    v0 = lhu(s3 + 0xC);
-    goto loc_80043288;
-loc_80043284:
-    v0 = lhu(s2 + 0x10);
-loc_80043288:
-    sh(v0, s0 + 0x16);
-    v0 = GetIntsPerSec();
-    v0 <<= 16;
-    a1 = lh(s0 + 0x14);
-    a2 = lh(s0 + 0x16);
-    a0 = u32(i32(v0) >> 16);
-    v0 = CalcPartsPerInt(a0, a1, a2);
-    sw(v0, s0 + 0x1C);
-    v0 = s1 & 0x40;                                     // Result = 00000000
-    v1 = -0x11;                                         // Result = FFFFFFEF
-    if (v0 == 0) goto loc_800432D4;
-    v0 = lw(s0 + 0x28);
-    a0 = lw(s3 + 0x10);
-    v1 = lw(s0);
-    v0 += a0;
-    v1 |= 0x10;
-    sw(v0, s0 + 0x2C);
-    sw(v1, s0);
-    goto loc_800432E4;
-loc_800432D4:
-    v0 = lw(s0);
-    v0 &= v1;
-    sw(v0, s0);
-loc_800432E4:
-    v0 = s1 & 0x80;                                     // Result = 00000000
-    v1 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_800432FC;
-    v0 = lw(s0);
-    v0 |= 0x20;
-    goto loc_80043308;
-loc_800432FC:
-    v0 = lw(s0);
-    v0 &= v1;
-loc_80043308:
-    sw(v0, s0);
-    v0 = s1 & 0x100;                                    // Result = 00000000
-    if (v0 == 0) goto loc_80043324;
-    v0 = lbu(s3 + 0xB);
-    sb(v0, s0 + 0x9);
-    goto loc_80043330;
-loc_80043324:
-    v0 = lbu(s2 + 0x5);
-    sb(v0, s0 + 0x9);
-loc_80043330:
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Performs initialization of most of the track status struct, given the specified track info and optional play attributes
+//------------------------------------------------------------------------------------------------------------------------------------------
+void filltrackstat(track_status& trackStat, const track_data& trackInfo, const TriggerPlayAttr* const pAttribs) noexcept {
+    // Basic track status initialization
+    trackStat.active = true;
+    trackStat.timed = false;
+    trackStat.looped = false;
+    trackStat.skip = false;
+    trackStat.off = false;
+
+    trackStat.patchtype = trackInfo.trk_hdr.voices_type;
+    trackStat.priority = trackInfo.trk_hdr.priority;
+    trackStat.sndclass = trackInfo.trk_hdr.voices_class;
+    trackStat.voices_active = 0;
+    trackStat.voices_max = trackInfo.trk_hdr.voices_max;
+    trackStat.ppq = trackInfo.trk_hdr.initppq;
+    trackStat.starppi = 0;
+    trackStat.accppi = 0;
+    trackStat.totppi = 0;
+    trackStat.psp = trackStat.psubstack;
+    trackStat.labellist_count = trackInfo.trk_hdr.labellist_count;
+    trackStat.data_size = trackInfo.trk_hdr.data_size;
+    trackStat.mutemask = trackInfo.trk_hdr.mutebits;
+
+    // If no play attributes are given then the attribute mask to customize is simply zero
+    const uint32_t attribsMask = (pAttribs) ? pAttribs->mask : 0;
+
+    // Set all of the track attributes that can be customized, using any customizations given
+    if (attribsMask & TRIGGER_VOLUME) {
+        trackStat.volume_cntrl = pAttribs->volume;
+    } else {
+        trackStat.volume_cntrl = trackInfo.trk_hdr.initvolume_cntrl;
+    }
+    
+    if (attribsMask & TRIGGER_PAN) {
+        trackStat.pan_cntrl = pAttribs->pan;
+    } else {
+        trackStat.pan_cntrl = trackInfo.trk_hdr.initpan_cntrl;
+    }
+    
+    if (attribsMask & TRIGGER_PATCH) {
+        trackStat.patchnum = pAttribs->patch;
+    } else {
+        trackStat.patchnum = trackInfo.trk_hdr.initpatchnum;
+    }
+    
+    if (attribsMask & TRIGGER_PITCH) {
+        trackStat.pitch_cntrl = pAttribs->pitch;
+    } else {
+        trackStat.pitch_cntrl = trackInfo.trk_hdr.initpitch_cntrl;
+    }
+    
+    if ((attribsMask & TRIGGER_MUTEMODE) && (trackStat.mutemask & (1 << pAttribs->mutemode))) {
+        trackStat.mute = true;
+    } else {
+        trackStat.mute = false;
+    }
+    
+    if (attribsMask & TRIGGER_TEMPO) {
+        trackStat.qpm = pAttribs->tempo;
+    } else {
+        trackStat.qpm = trackInfo.trk_hdr.initqpm;
+    }
+
+    const int16_t interruptsPerSec = GetIntsPerSec();
+    trackStat.ppi = CalcPartsPerInt(interruptsPerSec, trackStat.ppq, trackStat.qpm);    // Compute how much to advance the track's timing for each hardware timer interrupt
+
+    if (attribsMask & TRIGGER_TIMED) {
+        trackStat.timed = true;
+        trackStat.endppi = pAttribs->timeppq;
+    } else {
+        trackStat.timed = false;
+    }
+
+    if (attribsMask & TRIGGER_LOOPED) {
+        trackStat.looped = true;   
+    } else {
+        trackStat.looped = false;
+    }
+    
+    if (attribsMask & TRIGGER_REVERB) {
+        trackStat.reverb = pAttribs->reverb;
+    } else {
+        trackStat.reverb = trackInfo.trk_hdr.reverb;
+    }
 }
 
 void assigntrackstat() noexcept {
@@ -1054,7 +979,7 @@ loc_800434C8:
     a2 = lw(sp + 0x68);
     s0 += v0;
     a1 = s0;
-    filltrackstat();
+    filltrackstat(*vmAddrToPtr<track_status>(a0), *vmAddrToPtr<track_data>(a1), vmAddrToPtr<TriggerPlayAttr>(a2));
     a0 = s1;
     a1 = s0;
     assigntrackstat();

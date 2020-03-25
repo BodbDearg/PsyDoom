@@ -250,7 +250,14 @@ static_assert(sizeof(sequence_status) == 24);
 
 // TODO: COMMENT
 struct track_status {
-    uint8_t             flags;                  // 0x000    TODO: COMMENT
+    uint8_t             active : 1;             // 0x000    TODO: COMMENT
+    uint8_t             mute : 1;               // 0x000    TODO: COMMENT
+    uint8_t             handled : 1;            // 0x000    TODO: COMMENT
+    uint8_t             stopped : 1;            // 0x000    TODO: COMMENT
+    uint8_t             timed : 1;              // 0x000    TODO: COMMENT
+    uint8_t             looped : 1;             // 0x000    TODO: COMMENT
+    uint8_t             skip : 1;               // 0x000    TODO: COMMENT
+    uint8_t             off : 1;                // 0x000    TODO: COMMENT
     uint8_t             refindx;                // 0x001    TODO: COMMENT
     uint8_t             seq_owner;              // 0x002    TODO: COMMENT
     uint8_t             patchtype;              // 0x003    TODO: COMMENT

@@ -4,6 +4,8 @@
 #include "PsxVm/VmPtr.h"
 
 struct master_status_structure;
+struct track_data;
+struct track_status;
 
 // Enum representing the current high level state of a sequence
 enum SequenceStatus : uint8_t {
@@ -12,6 +14,34 @@ enum SequenceStatus : uint8_t {
     SEQUENCE_STOPPED    = 2,    // Paused
     SEQUENCE_PLAYING    = 3     // Playing
 };
+
+// Mask flags for 'TriggerPlayAttr': defines which fields are to be used from that struct
+static constexpr uint32_t TRIGGER_VOLUME    = 0x1;
+static constexpr uint32_t TRIGGER_PAN       = 0x2;
+static constexpr uint32_t TRIGGER_PATCH     = 0x4;
+static constexpr uint32_t TRIGGER_PITCH     = 0x8;
+static constexpr uint32_t TRIGGER_MUTEMODE  = 0x10;
+static constexpr uint32_t TRIGGER_TEMPO     = 0x20;
+static constexpr uint32_t TRIGGER_TIMED     = 0x40;
+static constexpr uint32_t TRIGGER_LOOPED    = 0x80;
+static constexpr uint32_t TRIGGER_REVERB    = 0x100;
+
+// Struct defining custom parameters for when triggering a sequence.
+// The 'mask' field determines what parameters are customized.
+struct TriggerPlayAttr {
+    uint32_t    mask;
+    uint8_t     volume;         // Range: 0-127
+    uint8_t     pan;            // Range: 0-127, with '64' being the center
+    int16_t     patch;          // Range: 0-32767
+    int16_t     pitch;          // Range: -8192 to 8191
+    uint8_t     mutemode;       // Range: 0-7
+    uint8_t     reverb;
+    uint16_t    tempo;
+    uint16_t    _padding;
+    uint32_t    timeppq;
+};
+
+static_assert(sizeof(TriggerPlayAttr) == 20);
 
 extern const VmPtr<bool32_t>    gbWess_module_loaded;
 
@@ -38,7 +68,7 @@ int32_t wess_load_module(
     VmPtr<int32_t>* const pSettingTagLists
 ) noexcept;
 
-void filltrackstat() noexcept;
+void filltrackstat(track_status& trackStat, const track_data& trackInfo, const TriggerPlayAttr* const pAttribs) noexcept;
 void assigntrackstat() noexcept;
 void wess_seq_structrig() noexcept;
 void wess_seq_trigger() noexcept;

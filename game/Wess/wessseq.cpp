@@ -780,7 +780,7 @@ loc_80048074:
     a1 = lh(v1 + 0x14);
     a2 = lh(v1 + 0x16);
     a0 = u32(i32(v0) >> 16);
-    v0 = CalcPartsPerInt(a0, a1, a2);
+    v0 = CalcPartsPerInt((int16_t) a0, (int16_t) a1, (int16_t) a2);
     v1 = 0x80080000;                                    // Result = 80080000
     v1 = lbu(v1 - 0xDA0);                               // Load from: 8007F260
     a0 = 0x80080000;                                    // Result = 80080000
@@ -1291,7 +1291,7 @@ loc_800488D4:
     a1 = lh(s0 + 0x14);
     a2 = lh(s0 + 0x16);
     a0 = u32(i32(v0) >> 16);
-    v0 = CalcPartsPerInt(a0, a1, a2);
+    v0 = CalcPartsPerInt((int16_t) a0, (int16_t) a1, (int16_t) a2);
     sw(v0, s0 + 0x1C);
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
