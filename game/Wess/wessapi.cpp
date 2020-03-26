@@ -856,30 +856,16 @@ void filltrackstat(track_status& trackStat, const track_data& trackInfo, const T
     }
 }
 
-void assigntrackstat() noexcept {
-loc_80043350:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a1;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x14);
-    s0 = a0;
-    sw(v0, s0 + 0x4C);
-    v0 = lhu(s1 + 0x12);
-    sh(v0, s0 + 0x1A);
-    a0 = lw(s1 + 0x1C);
-    a1 = s0 + 4;
-    sw(a0, s0 + 0x30);
-    v0 = ptrToVmAddr(Read_Vlq(vmAddrToPtr<uint8_t>(a0), *vmAddrToPtr<uint32_t>(a1)));
-    sw(v0, s0 + 0x34);
-    v0 = lw(s1 + 0x18);
-    sw(v0, s0 + 0x38);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets up some basic position and count related info for the given track status using the track info.
+// Determines the time until the 1st sequencer command also.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void assigntrackstat(track_status& trackStat, const track_data& trackInfo) noexcept {
+    trackStat.data_space = trackInfo.trk_hdr.data_size;
+    trackStat.labellist_max = trackInfo.trk_hdr.labellist_count;
+    trackStat.pstart = trackInfo.ptrk_data.get();
+    trackStat.ppos = Read_Vlq(trackInfo.ptrk_data.get(), trackStat.deltatime);
+    trackStat.plabellist = trackInfo.plabellist;
 }
 
 void wess_seq_structrig() noexcept {
@@ -982,7 +968,7 @@ loc_800434C8:
     filltrackstat(*vmAddrToPtr<track_status>(a0), *vmAddrToPtr<track_data>(a1), vmAddrToPtr<TriggerPlayAttr>(a2));
     a0 = s1;
     a1 = s0;
-    assigntrackstat();
+    assigntrackstat(*vmAddrToPtr<track_status>(a0), *vmAddrToPtr<track_data>(a1));
     t0 = lw(sp + 0x28);
     v0 = -5;                                            // Result = FFFFFFFB
     if (t0 == 0) goto loc_8004354C;

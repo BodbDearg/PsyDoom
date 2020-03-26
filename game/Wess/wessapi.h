@@ -69,7 +69,7 @@ int32_t wess_load_module(
 ) noexcept;
 
 void filltrackstat(track_status& trackStat, const track_data& trackInfo, const TriggerPlayAttr* const pAttribs) noexcept;
-void assigntrackstat() noexcept;
+void assigntrackstat(track_status& trackStat, const track_data& trackInfo) noexcept;
 void wess_seq_structrig() noexcept;
 void wess_seq_trigger() noexcept;
 void wess_seq_trigger_special() noexcept;
