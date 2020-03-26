@@ -216,7 +216,7 @@ loc_8004438C:
     a3 = 0;                                             // Result = 00000000
     sw(0, sp + 0x10);
     a0 += v0;
-    wess_seq_structrig();
+    v0 = wess_seq_structrig(*vmAddrToPtr<sequence_data>(a0), a1, a2, a3, vmAddrToPtr<TriggerPlayAttr>(lw(sp + 0x10)));
     ra = lw(sp + 0x18);
     sp += 0x20;
     return;
@@ -240,7 +240,7 @@ loc_800443DC:
     a2 = a3;
     a3 = 0;                                             // Result = 00000000
     a0 += v0;
-    wess_seq_structrig();
+    v0 = wess_seq_structrig(*vmAddrToPtr<sequence_data>(a0), a1, a2, a3, vmAddrToPtr<TriggerPlayAttr>(lw(sp + 0x10)));
     ra = lw(sp + 0x18);
     sp += 0x20;
     return;

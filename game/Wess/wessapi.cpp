@@ -868,203 +868,116 @@ void assigntrackstat(track_status& trackStat, const track_data& trackInfo) noexc
     trackStat.plabellist = trackInfo.plabellist;
 }
 
-void wess_seq_structrig() noexcept {
-loc_800433B4:
-    sp -= 0x58;
-    sw(a0, sp + 0x10);
-    sw(a1, sp + 0x18);
-    a0 = lw(sp + 0x18);
-    sw(ra, sp + 0x54);
-    sw(fp, sp + 0x50);
-    sw(s7, sp + 0x4C);
-    sw(s6, sp + 0x48);
-    sw(s5, sp + 0x44);
-    sw(s4, sp + 0x40);
-    sw(s3, sp + 0x3C);
-    sw(s2, sp + 0x38);
-    sw(s1, sp + 0x34);
-    sw(s0, sp + 0x30);
-    sw(a2, sp + 0x20);
-    sw(a3, sp + 0x28);
-    v0 = Is_Seq_Num_Valid(a0);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80043678;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Allocates and sets up sequence and track status structs for the sequence to be played.
+// The given play attributes etc. can be used to customize sequence playback.
+// On success the index of the sequence allocated (+1) is returned, otherwise '0' is returned.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t wess_seq_structrig(
+    const sequence_data& seqInfo,
+    const int32_t seqNum,
+    const int32_t seqType,
+    const int32_t getHandle,
+    const TriggerPlayAttr* pPlayAttribs
+) noexcept {
+    // Can't play the sequence if the number is not valid
+    if (!Is_Seq_Num_Valid(seqNum))
+        return 0;
+
+    // Disable sequencer ticking temporarily (to avoid hardware timer interrupts) while we setup all this
+    *gbWess_SeqOn = false;
+
+    master_status_structure& mstat = *gpWess_pm_stat->get();
+    module_data& modInfo = *mstat.pmod_info;
+
+    const uint8_t maxSeqs = modInfo.mod_hdr.seq_work_areas;
+    const uint8_t maxTracks = modInfo.mod_hdr.trk_work_areas;
+
+    // Find a free sequence status structure that we can use to play this sequence
+    uint8_t allocSeqIdx = 0;
+
+    while ((allocSeqIdx < maxSeqs) && (mstat.pseqstattbl[allocSeqIdx].active)) {
+        ++allocSeqIdx;
     }
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 = lw(v1 + 0xC);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5948);                                 // Store to: gbWess_SeqOn (80075948)
-    s7 = lbu(v0 + 0xB);
-    a0 = s7 & 0xFF;
-    s4 = 0;                                             // Result = 00000000
-    if (a0 == 0) goto loc_8004346C;
-    a1 = lw(v1 + 0x20);
-    v0 = s4 & 0xFF;                                     // Result = 00000000
-loc_80043434:
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 3;
-    v1 += a1;
-    v0 = lw(v1);
-    v0 &= 1;
-    if (v0 == 0) goto loc_8004346C;
-    s4++;
-    v0 = s4 & 0xFF;
-    v0 = (v0 < a0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s4 & 0xFF;
-        if (bJump) goto loc_80043434;
+
+    // If we failed to allocate a sequence status structure then we can't play anything
+    if (allocSeqIdx >= maxSeqs) {
+        *gbWess_SeqOn = true;
+        return 0;
     }
-loc_8004346C:
-    a0 = s4 & 0xFF;
-    s5 = 0;                                             // Result = 00000000
-    if (a0 != s7) goto loc_8004348C;
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5948);                                // Store to: gbWess_SeqOn (80075948)
-loc_80043484:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80043678;
-loc_8004348C:
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    t0 = lw(sp + 0x10);
-    v0 = lw(v1 + 0xC);
-    fp = lhu(t0);
-    v1 = lw(v1 + 0x20);
-    s7 = lbu(v0 + 0xC);
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    s2 = v0 + v1;
-    s6 = lw(s2 + 0xC);
-    s3 = 0;                                             // Result = 00000000
-    if (s7 == 0) goto loc_800435C4;
-    v1 = s3 & 0xFF;                                     // Result = 00000000
-loc_800434C8:
-    v0 = v1 << 2;
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 += v1;
-    v1 = lw(a0 + 0x28);
-    v0 <<= 4;
-    s1 = v0 + v1;
-    v0 = lw(s1);
-    v0 &= 1;
-    a0 = s1;
-    if (v0 != 0) goto loc_800435B0;
-    t0 = lw(sp + 0x10);
-    s0 = s5 & 0xFF;                                     // Result = 00000000
-    v0 = lw(t0 + 0x4);
-    s0 <<= 5;                                           // Result = 00000000
-    sb(s4, s1 + 0x2);
-    a2 = lw(sp + 0x68);
-    s0 += v0;
-    a1 = s0;
-    filltrackstat(*vmAddrToPtr<track_status>(a0), *vmAddrToPtr<track_data>(a1), vmAddrToPtr<TriggerPlayAttr>(a2));
-    a0 = s1;
-    a1 = s0;
-    assigntrackstat(*vmAddrToPtr<track_status>(a0), *vmAddrToPtr<track_data>(a1));
-    t0 = lw(sp + 0x28);
-    v0 = -5;                                            // Result = FFFFFFFB
-    if (t0 == 0) goto loc_8004354C;
-    v0 = lw(s1);
-    v0 |= 0xC;
-    sw(v0, s1);
-    goto loc_80043574;
-loc_8004354C:
-    v1 = lw(s1);
-    v1 &= v0;
-    v0 = -9;                                            // Result = FFFFFFF7
-    v1 &= v0;
-    sw(v1, s1);
-    v0 = lbu(s2 + 0x5);
-    v0++;
-    sb(v0, s2 + 0x5);
-loc_80043574:
-    s5++;                                               // Result = 00000001
-    v0 = lbu(s2 + 0x4);
-    v1 = fp - 1;
-    v0++;
-    sb(v0, s2 + 0x4);
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    fp = v1;
-    v0 = lbu(a0 + 0x5);
-    v1 <<= 16;
-    v0++;
-    sb(v0, a0 + 0x5);
-    sb(s3, s6);
-    s6++;
-    if (v1 == 0) goto loc_800435C4;
-loc_800435B0:
-    s3++;
-    v0 = s3 & 0xFF;
-    v0 = (v0 < s7);
-    v1 = s3 & 0xFF;
-    if (v0 != 0) goto loc_800434C8;
-loc_800435C4:
-    v0 = s5 & 0xFF;
-    if (v0 == 0) goto loc_8004365C;
-    t0 = lhu(sp + 0x18);
-    sh(t0, s2 + 0x2);
-    t0 = lw(sp + 0x20);
-    sw(t0, s2 + 0x8);
-    t0 = lw(sp + 0x28);
-    v1 = -3;                                            // Result = FFFFFFFD
-    if (t0 == 0) goto loc_80043610;
-    v0 = lw(s2);
-    v0 |= 2;
-    sw(v0, s2);
-    sb(0, s2 + 0x1);
-    goto loc_80043628;
-loc_80043610:
-    v0 = lw(s2);
-    v0 &= v1;
-    sw(v0, s2);
-    v0 = 1;                                             // Result = 00000001
-    sb(v0, s2 + 0x1);
-loc_80043628:
-    v0 = 0x80;                                          // Result = 00000080
-    sb(v0, s2 + 0x6);
-    v0 = 0x40;                                          // Result = 00000040
-    sb(v0, s2 + 0x7);
-    v0 = lw(s2);
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 |= 1;
-    sw(v0, s2);
-    v0 = lbu(v1 + 0x4);
-    v0++;
-    sb(v0, v1 + 0x4);
-loc_8004365C:
-    v0 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5948);                                // Store to: gbWess_SeqOn (80075948)
-    v0 = s5 & 0xFF;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s4 & 0xFF;                                 // Result = 00000000
-        if (bJump) goto loc_80043484;
+
+    // Try to allocate free tracks for all of the tracks that the sequence needs to play.
+    // Note that this loop assumes each sequence will always have at least 1 track to play.
+    sequence_status& seqStat = mstat.pseqstattbl[allocSeqIdx];
+    uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+
+    uint8_t numTracksPlayed = 0;
+    uint8_t numTracksToPlay = (uint8_t) seqInfo.seq_hdr.tracks;
+
+    for (uint8_t trackIdx = 0; trackIdx < maxTracks; ++trackIdx) {
+        // Ensure this track is not in use before we do anything
+        track_status& trackStat = mstat.ptrkstattbl[trackIdx];
+
+        if (trackStat.active)
+            continue;
+
+        // Great! We can use this track for one of the sequence tracks.
+        // Set it's owner and start filling in the track status:
+        trackStat.seq_owner = allocSeqIdx;
+
+        track_data& trackInfo = seqInfo.ptrk_info[numTracksPlayed];
+        filltrackstat(trackStat, trackInfo, pPlayAttribs);
+        assigntrackstat(trackStat, trackInfo);
+
+        if (getHandle) {
+            trackStat.handled = true;
+            trackStat.stopped = true;
+        } else {
+            trackStat.handled = false;
+            trackStat.stopped = false;
+            seqStat.tracks_playing++;
+        }
+
+        // There is one more track playing the sequence and globally
+        seqStat.tracks_active += 1;
+        mstat.trks_active += 1;
+
+        // Remember what track is being used on the sequence
+        pSeqTrackIndexes[numTracksPlayed] = trackIdx;
+        numTracksPlayed++;
+
+        // If we have allocated all the tracks in the sequence then we are done
+        if (numTracksPlayed >= numTracksToPlay)
+            break;
     }
-    v0++;                                               // Result = 00000001
-loc_80043678:
-    ra = lw(sp + 0x54);
-    fp = lw(sp + 0x50);
-    s7 = lw(sp + 0x4C);
-    s6 = lw(sp + 0x48);
-    s5 = lw(sp + 0x44);
-    s4 = lw(sp + 0x40);
-    s3 = lw(sp + 0x3C);
-    s2 = lw(sp + 0x38);
-    s1 = lw(sp + 0x34);
-    s0 = lw(sp + 0x30);
-    sp += 0x58;
-    return;
+
+    // Setup various sequence bits if we actually started playing some tracks
+    if (numTracksPlayed > 0) {
+        seqStat.seq_num = (int16_t) seqNum;
+        seqStat.seq_type = seqType;
+
+        if (getHandle) {
+            seqStat.handle = true;
+            seqStat.playmode = SEQ_STATE_STOPPED;
+        } else {
+            seqStat.handle = false;
+            seqStat.playmode = SEQ_STATE_PLAYING;
+        }
+
+        seqStat.volume = 128;
+        seqStat.pan = 64;
+        seqStat.active = true;
+        mstat.seqs_active += 1;
+    }
+
+    // Renable the sequencer's timer interrupts/updates and return what sequence index we started playing (if any)
+    *gbWess_SeqOn = true;
+
+    if (numTracksPlayed > 0) {
+        return (int32_t) allocSeqIdx + 1;
+    } else {
+        return 0;
+    }
 }
 
 void wess_seq_trigger() noexcept {
@@ -1094,7 +1007,7 @@ void wess_seq_trigger_special() noexcept {
     sw(a1, sp + 0x10);
     a1 = v1;
     a0 += v0;
-    wess_seq_structrig();
+    v0 = wess_seq_structrig(*vmAddrToPtr<sequence_data>(a0), a1, a2, a3, vmAddrToPtr<TriggerPlayAttr>(lw(sp + 0x10)));
     ra = lw(sp + 0x18);
     sp += 0x20;
     return;

@@ -4,6 +4,7 @@
 #include "PsxVm/VmPtr.h"
 
 struct master_status_structure;
+struct sequence_data;
 struct track_data;
 struct track_status;
 
@@ -70,7 +71,15 @@ int32_t wess_load_module(
 
 void filltrackstat(track_status& trackStat, const track_data& trackInfo, const TriggerPlayAttr* const pAttribs) noexcept;
 void assigntrackstat(track_status& trackStat, const track_data& trackInfo) noexcept;
-void wess_seq_structrig() noexcept;
+
+int32_t wess_seq_structrig(
+    const sequence_data& seqInfo,
+    const int32_t seqNum,
+    const int32_t seqType,
+    const int32_t getHandle,
+    const TriggerPlayAttr* pPlayAttribs
+) noexcept;
+
 void wess_seq_trigger() noexcept;
 void wess_seq_trigger_special() noexcept;
 SequenceStatus wess_seq_status(const int32_t seqNum) noexcept;
