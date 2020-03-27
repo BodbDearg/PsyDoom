@@ -1126,7 +1126,7 @@ void wess_seq_stopall() noexcept {
             if (!seqStat.active)
                 continue;
 
-            // Run through all of the active tracks in the sequence and turn them all off
+            // Run through all of the active tracks in the sequence and stop them all
             uint32_t numSeqTracksActive = seqStat.tracks_active;
             uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
 
