@@ -34,7 +34,8 @@ enum voice_class : uint8_t {
     SFXDRUMS_CLASS  = 3
 };
 
-const VmPtr<bool32_t>   gbWess_module_loaded(0x800758F8);       // If true then a WMD file (module) has been loaded
+const VmPtr<bool32_t>                           gbWess_module_loaded(0x800758F8);       // If true then a WMD file (module) has been loaded
+const VmPtr<VmPtr<master_status_structure>>     gpWess_pm_stat(0x800A8758);             // TODO: COMMENT
 
 static const VmPtr<bool32_t>                            gbWess_sysinit(0x800758F4);                 // Set to true once the WESS API has been initialized
 static const VmPtr<bool32_t>                            gbWess_early_exit(0x800758FC);              // Unused flag in PSX DOOM, I think to request the API to exit?
@@ -46,9 +47,8 @@ static const VmPtr<VmPtr<uint8_t>>                      gpWess_wmd_end(0x8007591
 static const VmPtr<int32_t>                             gWess_wmd_size(0x80075914);                 // TODO: COMMENT
 static const VmPtr<int32_t>                             gWess_max_seq_num(0x80075900);              // TODO: COMMENT
 static const VmPtr<VmPtr<PsxCd_File>>                   gpWess_fp_wmd_file(0x800758F0);             // TODO: COMMENT
-static const VmPtr<VmPtr<uint8_t>>                      gpWess_curWmdFileBytes(0x800758E8);       // TODO: COMMENT
-static const VmPtr<VmPtr<uint8_t>>                      gpWess_wmdFileBytesBeg(0x800758EC);       // TODO: COMMENT
-static const VmPtr<VmPtr<master_status_structure>>      gpWess_pm_stat(0x800A8758);                 // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>                      gpWess_curWmdFileBytes(0x800758E8);         // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>                      gpWess_wmdFileBytesBeg(0x800758EC);         // TODO: COMMENT
 static const VmPtr<patch_group_header>                  gWess_scratch_pat_grp_hdr(0x8007EFC4);      // TODO: COMMENT
 static const VmPtr<track_header>                        gWess_scratch_trk_hdr(0x8007EFE0);          // TODO: COMMENT
 
@@ -877,7 +877,7 @@ int32_t wess_seq_structrig(
     const sequence_data& seqInfo,
     const int32_t seqNum,
     const int32_t seqType,
-    const int32_t getHandle,
+    const bool bGetHandle,
     const TriggerPlayAttr* pPlayAttribs
 ) noexcept {
     // Can't play the sequence if the number is not valid
@@ -929,7 +929,7 @@ int32_t wess_seq_structrig(
         filltrackstat(trackStat, trackInfo, pPlayAttribs);
         assigntrackstat(trackStat, trackInfo);
 
-        if (getHandle) {
+        if (bGetHandle) {
             trackStat.handled = true;
             trackStat.stopped = true;
         } else {
@@ -956,7 +956,7 @@ int32_t wess_seq_structrig(
         seqStat.seq_num = (int16_t) seqNum;
         seqStat.seq_type = seqType;
 
-        if (getHandle) {
+        if (bGetHandle) {
             seqStat.handle = true;
             seqStat.playmode = SEQ_STATE_STOPPED;
         } else {
@@ -985,7 +985,7 @@ loc_800436AC:
     sp -= 0x18;
     sw(ra, sp + 0x10);
     a1 = 0;                                             // Result = 00000000
-    wess_seq_trigger_type();
+    wess_seq_trigger_type(a0, a1);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;

@@ -199,27 +199,12 @@ loc_8004436C:
     return;
 }
 
-void wess_seq_trigger_type() noexcept {
-loc_8004438C:
-    sp -= 0x20;
-    v1 = a0;
-    a2 = a1;
-    a0 = v1 << 2;
-    a0 += v1;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    a0 <<= 2;
-    sw(ra, sp + 0x18);
-    v0 = lw(v0 + 0xC);
-    a1 = v1;
-    v0 = lw(v0 + 0x10);
-    a3 = 0;                                             // Result = 00000000
-    sw(0, sp + 0x10);
-    a0 += v0;
-    v0 = wess_seq_structrig(*vmAddrToPtr<sequence_data>(a0), a1, a2, a3, vmAddrToPtr<TriggerPlayAttr>(lw(sp + 0x10)));
-    ra = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Trigger the specified sequence number and assign it the given type number
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_seq_trigger_type(const int32_t seqNum, const int32_t seqType) noexcept {
+    master_status_structure& mstat = *gpWess_pm_stat->get();
+    wess_seq_structrig(mstat.pmod_info->pseq_info[seqNum], seqNum, seqType, false, nullptr);
 }
 
 void wess_seq_trigger_type_special() noexcept {

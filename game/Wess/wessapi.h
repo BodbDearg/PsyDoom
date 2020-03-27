@@ -44,7 +44,8 @@ struct TriggerPlayAttr {
 
 static_assert(sizeof(TriggerPlayAttr) == 20);
 
-extern const VmPtr<bool32_t>    gbWess_module_loaded;
+extern const VmPtr<bool32_t>                            gbWess_module_loaded;
+extern const VmPtr<VmPtr<master_status_structure>>      gpWess_pm_stat;
 
 void zeroset(void* const pDest, const uint32_t numBytes) noexcept;
 void wess_install_error_handler(int32_t (* const pErrorFunc)(int32_t, int32_t), const int32_t module) noexcept;
@@ -76,7 +77,7 @@ int32_t wess_seq_structrig(
     const sequence_data& seqInfo,
     const int32_t seqNum,
     const int32_t seqType,
-    const int32_t getHandle,
+    const bool bGetHandle,
     const TriggerPlayAttr* pPlayAttribs
 ) noexcept;
 

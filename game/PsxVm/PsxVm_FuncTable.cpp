@@ -304,7 +304,6 @@ extern void queue_wess_seq_restartall() noexcept;
 extern void wess_seq_trigger() noexcept;
 extern void wess_seq_trigger_special() noexcept;
 extern void updatetrackstat() noexcept;
-extern void wess_seq_trigger_type() noexcept;
 extern void wess_seq_trigger_type_special() noexcept;
 extern void queue_wess_seq_update_type_special() noexcept;
 extern void wess_seq_stoptype() noexcept;
@@ -738,7 +737,6 @@ namespace PsxVm {
         { 0x800436AC, &wess_seq_trigger },
         { 0x800436CC, &wess_seq_trigger_special },
         { 0x80044098, &updatetrackstat },
-        { 0x8004438C, &wess_seq_trigger_type },
         { 0x800443DC, &wess_seq_trigger_type_special },
         { 0x80044430, &queue_wess_seq_update_type_special },
         { 0x800445AC, &wess_seq_stoptype },
