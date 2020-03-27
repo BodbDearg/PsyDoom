@@ -1,202 +1,135 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Williams Entertainment Sound System (WESS): manipulating tracks with a given integer 'type'.
+// Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
+//------------------------------------------------------------------------------------------------------------------------------------------
 #include "wessapi_t.h"
 
 #include "PsxVm/PsxVm.h"
+#include "PsxVm/VmSVal.h"
 #include "wessapi.h"
 #include "wessarc.h"
 
-void updatetrackstat() noexcept {
-loc_80044098:
-    sp -= 0x30;
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(s1, sp + 0x1C);
-    s1 = a1;
-    sw(ra, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    if (s1 == 0) goto loc_8004436C;
-    v0 = lw(s1);
-    s3 = v0;
-    if (v0 == 0) goto loc_8004436C;
-    a0 = s3 & 1;
-    v1 = s3 & 2;
-    if (a0 == 0) goto loc_800440E4;
-    v0 = lbu(s1 + 0x4);
-    sb(v0, s0 + 0xC);
-loc_800440E4:
-    v0 = s3 & 3;
-    if (v1 == 0) goto loc_800440FC;
-    v0 = lbu(s1 + 0x5);
-    sb(v0, s0 + 0xD);
-    v0 = s3 & 3;
-loc_800440FC:
-    if (v0 == 0) goto loc_80044164;
-    v0 = lbu(s1 + 0x4);
-    s2 = lw(s0 + 0x34);
-    sb(v0, s0 + 0xC);
-    v1 = lbu(s1 + 0x5);
-    v0 = sp + 0x10;
-    sw(v0, s0 + 0x34);
-    v0 = 0xC;                                           // Result = 0000000C
-    sb(v1, s0 + 0xD);
-    sb(v0, sp + 0x10);
-    v1 = lw(s0 + 0x34);
-    v0 = lbu(s0 + 0xC);
-    sb(v0, v1 + 0x1);
-    v0 = lbu(s0 + 0x3);
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-    at += v0;
-    v0 = lw(at);
-    v0 = lw(v0 + 0x30);
-    goto loc_80044214;
-loc_80044164:
-    v0 = sp + 0x10;
-    if (a0 == 0) goto loc_800441C0;
-    s2 = lw(s0 + 0x34);
-    v1 = lbu(s1 + 0x4);
-    sw(v0, s0 + 0x34);
-    v0 = 0xC;                                           // Result = 0000000C
-    sb(v1, s0 + 0xC);
-    sb(v0, sp + 0x10);
-    v1 = lw(s0 + 0x34);
-    v0 = lbu(s0 + 0xC);
-    sb(v0, v1 + 0x1);
-    v0 = lbu(s0 + 0x3);
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-    at += v0;
-    v0 = lw(at);
-    v0 = lw(v0 + 0x30);
-    goto loc_80044214;
-loc_800441C0:
-    if (v1 == 0) goto loc_80044224;
-    s2 = lw(s0 + 0x34);
-    v1 = lbu(s1 + 0x5);
-    sw(v0, s0 + 0x34);
-    v0 = 0xD;                                           // Result = 0000000D
-    sb(v1, s0 + 0xD);
-    sb(v0, sp + 0x10);
-    v1 = lw(s0 + 0x34);
-    v0 = lbu(s0 + 0xD);
-    sb(v0, v1 + 0x1);
-    v0 = lbu(s0 + 0x3);
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-    at += v0;
-    v0 = lw(at);
-    v0 = lw(v0 + 0x34);
-loc_80044214:
-    a0 = s0;
-    ptr_call(v0);
-    sw(s2, s0 + 0x34);
-loc_80044224:
-    v0 = s3 & 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s3 & 8;
-        if (bJump) goto loc_80044240;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update one or more playback attributes for the given sequencer track
+//------------------------------------------------------------------------------------------------------------------------------------------
+void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlayAttribs) noexcept {
+    // If no attributes were given or none are being set then just exit now - nothing to do
+    if (!pPlayAttribs)
+        return;
+    
+    const uint32_t attribMask = pPlayAttribs->mask;
+
+    if (attribMask == 0)
+        return;
+
+    // TODO: TEMP MEASURE FOR NOW - REMOVE EVENTUALLY: need a stack buffer in VM space for now
+    struct Cmd {
+        uint8_t bytes[8];
+    };
+
+    VmSVal<Cmd> cmd;
+    uint8_t* const cmdBytes = cmd->bytes;
+    
+    // Set all of the specified attributes, issuing sequencer commands where required to perform the change
+    if (attribMask & TRIGGER_VOLUME) {
+        trackStat.volume_cntrl = pPlayAttribs->volume;
     }
-    v0 = lhu(s1 + 0x6);
-    sh(v0, s0 + 0xA);
-    v0 = s3 & 8;
-loc_80044240:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = sp + 0x10;
-        if (bJump) goto loc_800442B4;
+
+    if (attribMask & TRIGGER_PAN) {
+        trackStat.pan_cntrl = pPlayAttribs->pan;
     }
-    s2 = lw(s0 + 0x34);
-    v1 = lhu(s1 + 0x8);
-    sw(v0, s0 + 0x34);
-    v0 = 9;                                             // Result = 00000009
-    sh(v1, s0 + 0xE);
-    sb(v0, sp + 0x10);
-    v1 = lw(s0 + 0x34);
-    v0 = lbu(s0 + 0xE);
-    sb(v0, v1 + 0x1);
-    v0 = lhu(s0 + 0xE);
-    v1 = lw(s0 + 0x34);
-    v0 >>= 8;
-    sb(v0, v1 + 0x2);
-    v0 = lbu(s0 + 0x3);
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-    at += v0;
-    v0 = lw(at);
-    v0 = lw(v0 + 0x24);
-    a0 = s0;
-    ptr_call(v0);
-    sw(s2, s0 + 0x34);
-loc_800442B4:
-    v0 = s3 & 0x10;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s3 & 0x20;
-        if (bJump) goto loc_800442FC;
+
+    if (attribMask & (TRIGGER_VOLUME | TRIGGER_PAN)) {
+        // Set the volume and pan on the track
+        trackStat.volume_cntrl = pPlayAttribs->volume;
+        trackStat.pan_cntrl = pPlayAttribs->pan;
+
+        // Issue a sequencer command to to update the volume levels: change the track command stream temporarily also to do this
+        uint8_t* const pOldCmdBytes = trackStat.ppos.get();        
+        trackStat.ppos = cmdBytes;
+
+        cmdBytes[0] = VolumeMod;
+        cmdBytes[1] = trackStat.volume_cntrl;        
+        a0 = ptrToVmAddr(&trackStat);
+        gWess_CmdFuncArr[trackStat.patchtype][VolumeMod]();     // FIXME: convert to native function call
+        
+        trackStat.ppos = pOldCmdBytes;
     }
-    v0 = lbu(s0 + 0x12);
-    v1 = lbu(s1 + 0xA);
-    v0 = i32(v0) >> v1;
-    v0 &= 1;
-    v1 = -3;                                            // Result = FFFFFFFD
-    if (v0 == 0) goto loc_800442E8;
-    v0 = lw(s0);
-    v0 |= 2;
-    goto loc_800442F4;
-loc_800442E8:
-    v0 = lw(s0);
-    v0 &= v1;
-loc_800442F4:
-    sw(v0, s0);
-    v0 = s3 & 0x20;
-loc_800442FC:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s3 & 0x40;
-        if (bJump) goto loc_8004432C;
+    else {
+        if (attribMask & TRIGGER_VOLUME) {
+            // Set the volume on the track
+            trackStat.volume_cntrl = pPlayAttribs->volume;
+
+            // Issue a sequencer command to to update the volume: change the track command stream temporarily also to do this
+            uint8_t* const pOldCmdBytes = trackStat.ppos.get();
+            trackStat.ppos = cmdBytes;
+
+            cmdBytes[0] = VolumeMod;
+            cmdBytes[1] = trackStat.volume_cntrl;
+            a0 = ptrToVmAddr(&trackStat);
+            gWess_CmdFuncArr[trackStat.patchtype][VolumeMod]();     // FIXME: convert to native function call
+
+            trackStat.ppos = pOldCmdBytes;
+        }
+        else if (attribMask & TRIGGER_PAN) {
+            // Set the pan on the track
+            trackStat.pan_cntrl = pPlayAttribs->pan;
+
+            // Issue a sequencer command to to update the pan: change the track command stream temporarily also to do this
+            uint8_t* const pOldCmdBytes = trackStat.ppos.get();
+            trackStat.ppos = cmdBytes;
+
+            cmdBytes[0] = PanMod;
+            cmdBytes[1] = trackStat.pan_cntrl;
+            a0 = ptrToVmAddr(&trackStat);
+            gWess_CmdFuncArr[trackStat.patchtype][PanMod]();        // FIXME: convert to native function call
+            
+            trackStat.ppos = pOldCmdBytes;
+        }
     }
-    v0 = lhu(s1 + 0xC);
-    sh(v0, s0 + 0x16);
-    v0 = GetIntsPerSec();
-    v0 <<= 16;
-    a1 = lh(s0 + 0x14);
-    a2 = lh(s0 + 0x16);
-    a0 = u32(i32(v0) >> 16);
-    v0 = CalcPartsPerInt((int16_t) a0, (int16_t) a1, (int16_t) a2);
-    sw(v0, s0 + 0x1C);
-    v0 = s3 & 0x40;
-loc_8004432C:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s3 & 0x80;
-        if (bJump) goto loc_80044354;
+
+    if (attribMask & TRIGGER_PATCH) {
+        trackStat.patchnum = pPlayAttribs->patch;
     }
-    v0 = lw(s0 + 0x28);
-    a0 = lw(s1 + 0x10);
-    v1 = lw(s0);
-    v0 += a0;
-    v1 |= 0x10;
-    sw(v0, s0 + 0x2C);
-    sw(v1, s0);
-    v0 = s3 & 0x80;
-loc_80044354:
-    if (v0 == 0) goto loc_8004436C;
-    v0 = lw(s0);
-    v0 |= 0x20;
-    sw(v0, s0);
-loc_8004436C:
-    ra = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
+
+    if (attribMask & TRIGGER_PITCH) {
+        // Set the pitch on the track
+        trackStat.pitch_cntrl = pPlayAttribs->pitch;
+
+        // Issue a sequencer command to update the patch: change the track command stream temporarily also to do this
+        uint8_t* const pOldCmdBytes = trackStat.ppos.get();
+        trackStat.ppos = cmd->bytes;
+        
+        cmdBytes[0] = PitchMod;
+        cmdBytes[1] = (uint8_t)(trackStat.pitch_cntrl >> 0);
+        cmdBytes[2] = (uint8_t)(trackStat.pitch_cntrl >> 8);
+        a0 = ptrToVmAddr(&trackStat);
+        gWess_CmdFuncArr[trackStat.patchtype][PitchMod]();          // FIXME: convert to native function call
+
+        trackStat.ppos = pOldCmdBytes;
+    }
+
+    if (attribMask & TRIGGER_MUTEMODE) {
+        if (trackStat.mutemask & (1 << pPlayAttribs->mutemode)) {
+            trackStat.mute = true;
+        } else {
+            trackStat.mute = false;
+        }
+    }
+
+    if (attribMask & TRIGGER_TEMPO) {
+        trackStat.qpm = pPlayAttribs->tempo;
+        trackStat.ppi = CalcPartsPerInt(GetIntsPerSec(), trackStat.ppq, trackStat.qpm);
+    }
+
+    if (attribMask & TRIGGER_TIMED) {
+        trackStat.endppi = trackStat.totppi + pPlayAttribs->timeppq;
+        trackStat.timed = true;
+    }
+
+    if (attribMask & TRIGGER_LOOPED) {
+        trackStat.looped = true;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -274,7 +207,7 @@ loc_800444F8:
     a0 = v0 + v1;
     if (fp == 0) goto loc_8004452C;
     a1 = fp;
-    updatetrackstat();
+    updatetrackstat(*vmAddrToPtr<track_status>(a0), vmAddrToPtr<TriggerPlayAttr>(a1));
 loc_8004452C:
     s2--;
     if (s2 == 0) goto loc_80044544;

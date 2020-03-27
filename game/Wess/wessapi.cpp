@@ -1,3 +1,6 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Williams Entertainment Sound System (WESS): mostly core API functions, including module (.WMD) file loading
+//------------------------------------------------------------------------------------------------------------------------------------------
 #include "wessapi.h"
 
 #include "PcPsx/Finally.h"
@@ -37,20 +40,20 @@ enum voice_class : uint8_t {
 const VmPtr<bool32_t>                           gbWess_module_loaded(0x800758F8);       // If true then a WMD file (module) has been loaded
 const VmPtr<VmPtr<master_status_structure>>     gpWess_pm_stat(0x800A8758);             // TODO: COMMENT
 
-static const VmPtr<bool32_t>                            gbWess_sysinit(0x800758F4);                 // Set to true once the WESS API has been initialized
-static const VmPtr<bool32_t>                            gbWess_early_exit(0x800758FC);              // Unused flag in PSX DOOM, I think to request the API to exit?
-static const VmPtr<int32_t>                             gWess_num_sd(0x800758E4);                   // The number of sound drivers available
-static const VmPtr<bool32_t>                            gbWess_wmd_mem_is_mine(0x80075908);         // TODO: COMMENT
-static const VmPtr<int32_t>                             gWess_mem_limit(0x80075904);                // TODO: COMMENT
-static const VmPtr<VmPtr<uint8_t>>                      gpWess_wmd_mem(0x8007590C);                 // TODO: COMMENT
-static const VmPtr<VmPtr<uint8_t>>                      gpWess_wmd_end(0x80075910);                 // TODO: COMMENT
-static const VmPtr<int32_t>                             gWess_wmd_size(0x80075914);                 // TODO: COMMENT
-static const VmPtr<int32_t>                             gWess_max_seq_num(0x80075900);              // TODO: COMMENT
-static const VmPtr<VmPtr<PsxCd_File>>                   gpWess_fp_wmd_file(0x800758F0);             // TODO: COMMENT
-static const VmPtr<VmPtr<uint8_t>>                      gpWess_curWmdFileBytes(0x800758E8);         // TODO: COMMENT
-static const VmPtr<VmPtr<uint8_t>>                      gpWess_wmdFileBytesBeg(0x800758EC);         // TODO: COMMENT
-static const VmPtr<patch_group_header>                  gWess_scratch_pat_grp_hdr(0x8007EFC4);      // TODO: COMMENT
-static const VmPtr<track_header>                        gWess_scratch_trk_hdr(0x8007EFE0);          // TODO: COMMENT
+static const VmPtr<bool32_t>                gbWess_sysinit(0x800758F4);                 // Set to true once the WESS API has been initialized
+static const VmPtr<bool32_t>                gbWess_early_exit(0x800758FC);              // Unused flag in PSX DOOM, I think to request the API to exit?
+static const VmPtr<int32_t>                 gWess_num_sd(0x800758E4);                   // The number of sound drivers available
+static const VmPtr<bool32_t>                gbWess_wmd_mem_is_mine(0x80075908);         // TODO: COMMENT
+static const VmPtr<int32_t>                 gWess_mem_limit(0x80075904);                // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>          gpWess_wmd_mem(0x8007590C);                 // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>          gpWess_wmd_end(0x80075910);                 // TODO: COMMENT
+static const VmPtr<int32_t>                 gWess_wmd_size(0x80075914);                 // TODO: COMMENT
+static const VmPtr<int32_t>                 gWess_max_seq_num(0x80075900);              // TODO: COMMENT
+static const VmPtr<VmPtr<PsxCd_File>>       gpWess_fp_wmd_file(0x800758F0);             // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>          gpWess_curWmdFileBytes(0x800758E8);         // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>          gpWess_wmdFileBytesBeg(0x800758EC);         // TODO: COMMENT
+static const VmPtr<patch_group_header>      gWess_scratch_pat_grp_hdr(0x8007EFC4);      // TODO: COMMENT
+static const VmPtr<track_header>            gWess_scratch_trk_hdr(0x8007EFE0);          // TODO: COMMENT
 
 // Unused error handling stuff.
 // May have only been used in debug builds.
