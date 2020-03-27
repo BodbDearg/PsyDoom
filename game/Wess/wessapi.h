@@ -81,8 +81,8 @@ int32_t wess_seq_structrig(
     const TriggerPlayAttr* pPlayAttribs
 ) noexcept;
 
-void wess_seq_trigger() noexcept;
-void wess_seq_trigger_special() noexcept;
+void wess_seq_trigger(const int32_t seqNum) noexcept;
+void wess_seq_trigger_special(const int32_t seqNum, const TriggerPlayAttr* const pPlayAttribs) noexcept;
 SequenceStatus wess_seq_status(const int32_t seqNum) noexcept;
 void wess_seq_stop(const int32_t seqNum) noexcept;
 void wess_seq_stopall() noexcept;

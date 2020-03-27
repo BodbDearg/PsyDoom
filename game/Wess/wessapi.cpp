@@ -980,37 +980,20 @@ int32_t wess_seq_structrig(
     }
 }
 
-void wess_seq_trigger() noexcept {
-loc_800436AC:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a1 = 0;                                             // Result = 00000000
-    wess_seq_trigger_type(a0, a1);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Trigger the specified sequence number and assign it the type number '0'
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_seq_trigger(const int32_t seqNum) noexcept {
+    wess_seq_trigger_type(seqNum, 0);
 }
 
-void wess_seq_trigger_special() noexcept {
-    sp -= 0x20;
-    v1 = a0;
-    a0 = v1 << 2;
-    a0 += v1;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    a0 <<= 2;
-    sw(ra, sp + 0x18);
-    v0 = lw(v0 + 0xC);
-    a2 = 0;                                             // Result = 00000000
-    v0 = lw(v0 + 0x10);
-    a3 = 0;                                             // Result = 00000000
-    sw(a1, sp + 0x10);
-    a1 = v1;
-    a0 += v0;
-    v0 = wess_seq_structrig(*vmAddrToPtr<sequence_data>(a0), a1, a2, a3, vmAddrToPtr<TriggerPlayAttr>(lw(sp + 0x10)));
-    ra = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Trigger the specified sequence number with the specified custom play attributes.
+// The sequence is assigned the type number '0'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_seq_trigger_special(const int32_t seqNum, const TriggerPlayAttr* const pPlayAttribs) noexcept {
+    master_status_structure& mstat = *gpWess_pm_stat->get();
+    wess_seq_structrig(mstat.pmod_info->pseq_info[seqNum], seqNum, 0, false, pPlayAttribs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1157,7 +1140,7 @@ void wess_seq_stopall() noexcept {
             // Call the driver function to turn off the track
             track_status& trackStat = mstat.ptrkstattbl[trackIdx];
             a0 = ptrToVmAddr(&trackStat);
-            gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();
+            gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native function call
 
             // If there are no more tracks left active then we are done
             --numSeqTracksActive;

@@ -90,7 +90,7 @@ loc_80041050:
     at += 0x54E0;                                       // Result = MapMusicDefs[1] (800754E0)
     at += v0;
     a0 = lw(at);
-    wess_seq_trigger();
+    wess_seq_trigger(a0);
 loc_80041088:
     ra = lw(sp + 0x10);
     sp += 0x18;
