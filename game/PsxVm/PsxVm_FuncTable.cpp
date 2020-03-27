@@ -295,8 +295,6 @@ extern void _thunk_S_StartSound() noexcept;
 extern void S_UpdateSounds() noexcept;
 extern void PsxSoundInit() noexcept;
 extern void PsxSoundExit() noexcept;
-extern void trackstart() noexcept;
-extern void trackstop() noexcept;
 extern void queue_wess_seq_pause() noexcept;
 extern void queue_wess_seq_restart() noexcept;
 extern void queue_wess_seq_pauseall() noexcept;
@@ -722,8 +720,6 @@ namespace PsxVm {
 
         { 0x800415EC, &PsxSoundInit },
         { 0x8004172C, &PsxSoundExit },
-        { 0x80041734, &trackstart },
-        { 0x80041778, &trackstop },
         { 0x800417B8, &queue_wess_seq_pause },
         { 0x80041960, &queue_wess_seq_restart },
         { 0x80041ACC, &queue_wess_seq_pauseall },

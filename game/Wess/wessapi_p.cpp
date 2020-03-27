@@ -3,50 +3,34 @@
 #include "psxcmd.h"
 #include "PsxVm/PsxVm.h"
 #include "wessapi.h"
+#include "wessarc.h"
 
-void trackstart() noexcept {
-loc_80041734:
-    v1 = lw(a0);
-    v0 = v1 & 8;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = -9;                                        // Result = FFFFFFF7
-        if (bJump) goto loc_80041770;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unpause the specified track in the given sequence
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void trackstart(track_status& trackStat, sequence_status& seqStat) noexcept {
+    if (trackStat.stopped) {
+        trackStat.stopped = false;
+        seqStat.tracks_playing += 1;
+
+        if (seqStat.tracks_playing > 0) {
+            seqStat.playmode = SEQ_STATE_PLAYING;
+        }
     }
-    v0 &= v1;
-    sw(v0, a0);
-    v0 = lbu(a1 + 0x5);
-    v0++;
-    sb(v0, a1 + 0x5);
-    v0 &= 0xFF;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80041770;
-    }
-    sb(v0, a1 + 0x1);
-loc_80041770:
-    return;
 }
 
-void trackstop() noexcept {
-loc_80041778:
-    v1 = lw(a0);
-    v0 = v1 & 8;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = v1 | 8;
-        if (bJump) goto loc_800417B0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Pause the specified track in the given sequence
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void trackstop(track_status& trackStat, sequence_status& seqStat) noexcept {
+    if (!trackStat.stopped) {
+        trackStat.stopped = true;
+        seqStat.tracks_playing -= 1;
+
+        if (seqStat.tracks_playing == 0) {
+            seqStat.playmode = SEQ_STATE_STOPPED;
+        }
     }
-    sw(v0, a0);
-    v0 = lbu(a1 + 0x5);
-    v0--;
-    sb(v0, a1 + 0x5);
-    v0 &= 0xFF;
-    if (v0 != 0) goto loc_800417B0;
-    sb(0, a1 + 0x1);
-loc_800417B0:
-    return;
 }
 
 void queue_wess_seq_pause() noexcept {
@@ -114,7 +98,7 @@ loc_80041880:
     a1 = s5;
     s0 = v0 + v1;
     a0 = s0;
-    trackstop();
+    trackstop(*vmAddrToPtr<track_status>(a0), *vmAddrToPtr<sequence_status>(a1));
     a2 = lw(sp + 0x18);
     v0 = 1;                                             // Result = 00000001
     s3--;
@@ -224,7 +208,7 @@ loc_80041A20:
     v0 = lw(v0 + 0x28);
     sw(a2, sp + 0x10);
     a0 += v0;
-    trackstart();
+    trackstart(*vmAddrToPtr<track_status>(a0), *vmAddrToPtr<sequence_status>(a1));
     a2 = lw(sp + 0x10);
     if (s2 == 0) goto loc_80041A70;
 loc_80041A64:
@@ -341,7 +325,7 @@ loc_80041B94:
 loc_80041BF8:
     a0 = s0;
     a1 = s4;
-    trackstop();
+    trackstop(*vmAddrToPtr<track_status>(a0), *vmAddrToPtr<sequence_status>(a1));
     if (s3 == 0) goto loc_80041C18;
 loc_80041C0C:
     s1--;
@@ -434,7 +418,7 @@ loc_80041D38:
     sw(t0, sp + 0x28);
     s3 = v0 + v1;
     a0 = s3;
-    trackstart();
+    trackstart(*vmAddrToPtr<track_status>(a0), *vmAddrToPtr<sequence_status>(a1));
     t0 = lw(sp + 0x28);
     if (s5 == 0) goto loc_80041DEC;
     v0 = lw(s5);
