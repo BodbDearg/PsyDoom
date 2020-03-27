@@ -443,7 +443,7 @@ loc_8004156C:
     sb(t0, sp + 0x15);
     sw(t0, gp + 0x848);                                 // Store to: gLastSoundVol (80077E28)
     a2 = sp + 0x10;
-    wess_seq_trigger_type_special();
+    wess_seq_trigger_type_special(a0, a1, vmAddrToPtr<TriggerPlayAttr>(a2));
 loc_80041594:
     ra = lw(sp + 0x38);
     s3 = lw(sp + 0x34);
