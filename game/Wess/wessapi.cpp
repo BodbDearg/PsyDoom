@@ -1111,48 +1111,50 @@ void wess_seq_stopall() noexcept {
     // It was originally fired by hardware timer interrupts, so this step was required.
     *gbWess_SeqOn = false;
 
-    // Run through all of the active sequences and stop them all
+    // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat->get();
 
     const uint8_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
     const uint32_t maxTracksPerSeq = mstat.max_trks_perseq;
     uint8_t numActiveSeqsToVisit = mstat.seqs_active;
 
-    for (uint8_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
-        // If there are no more active sequences to visit then we are done
-        if (numActiveSeqsToVisit == 0)
-            break;
+    if (numActiveSeqsToVisit > 0) {
+        // Run through all of the active sequences and stop them all
+        for (uint8_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
+            sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
 
-        // Only bother if the sequence is loaded/active
-        sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
-
-        if (!seqStat.active)
-            continue;
-
-        // Run through all of the tracks in the sequence and turn them all off
-        uint32_t numSeqTracksActive = seqStat.tracks_active;
-        uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
-
-        for (uint32_t i = 0; i < maxTracksPerSeq; ++i) {
-            // Is this track index valid and in use?
-            const uint8_t trackIdx = pSeqTrackIndexes[i];
-
-            if (trackIdx == 0xFF)
+            if (!seqStat.active)
                 continue;
 
-            // Call the driver function to turn off the track
-            track_status& trackStat = mstat.ptrkstattbl[trackIdx];
-            a0 = ptrToVmAddr(&trackStat);
-            gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native function call
+            // Run through all of the active tracks in the sequence and turn them all off
+            uint32_t numSeqTracksActive = seqStat.tracks_active;
+            uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
 
-            // If there are no more tracks left active then we are done
-            --numSeqTracksActive;
+            for (uint32_t i = 0; i < maxTracksPerSeq; ++i) {
+                // Is this sequence track slot actually in use? Skip if not:
+                const uint8_t trackIdx = pSeqTrackIndexes[i];
 
-            if (numSeqTracksActive == 0)
+                if (trackIdx == 0xFF)
+                    continue;
+                
+                // Call the driver function to turn off the track
+                track_status& trackStat = mstat.ptrkstattbl[trackIdx];
+                a0 = ptrToVmAddr(&trackStat);
+                gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native function call
+
+                // If there are no more tracks left active then we are done
+                --numSeqTracksActive;
+
+                if (numSeqTracksActive == 0)
+                    break;
+            }
+
+            // If there are no more active sequences to visit then we are done
+            --numActiveSeqsToVisit;
+
+            if (numActiveSeqsToVisit == 0)
                 break;
         }
-
-        --numActiveSeqsToVisit;
     }
 
     // Re-enable the sequencer

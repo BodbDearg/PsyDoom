@@ -821,7 +821,7 @@ static const ProgElem ELEMS[] = {
     { 0x80044098, 0x8004438C, "updatetrackstat",                        ProgElemType::FUNCTION },
     { 0x8004438C, 0x800443DC, "wess_seq_trigger_type",                  ProgElemType::FUNCTION },
     { 0x800443DC, 0x80044430, "wess_seq_trigger_type_special",          ProgElemType::FUNCTION },
-    { 0x80044430, 0x800445AC, "queue_wess_seq_update_type_special",     ProgElemType::FUNCTION },
+    { 0x80044430, 0x800445AC, "wess_seq_update_type_special",           ProgElemType::FUNCTION },
     { 0x800445AC, 0x80044740, "wess_seq_stoptype",                      ProgElemType::FUNCTION },
     { 0x80044740, 0x80044778, "wess_seq_load_err",                      ProgElemType::FUNCTION },
     { 0x80044778, 0x80044790, "wess_seq_loader_install_error_handler",  ProgElemType::FUNCTION },

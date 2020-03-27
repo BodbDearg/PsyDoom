@@ -148,106 +148,69 @@ void wess_seq_trigger_type_special(const int32_t seqNum, const uint32_t seqType,
     wess_seq_structrig(mstat.pmod_info->pseq_info[seqNum], seqNum, seqType, false, pPlayAttribs);
 }
 
-void queue_wess_seq_update_type_special() noexcept {
-    sp -= 0x40;
-    sw(fp, sp + 0x38);
-    fp = a1;
-    sw(ra, sp + 0x3C);
-    sw(s7, sp + 0x34);
-    sw(s6, sp + 0x30);
-    sw(s5, sp + 0x2C);
-    sw(s4, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    sw(a0, sp + 0x10);
-    v0 = Is_Module_Loaded();
-    if (v0 == 0) goto loc_80044578;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5948);                                 // Store to: gbWess_SeqOn (80075948)
-    s6 = lbu(v0 + 0x4);
-    v1 = lw(v0 + 0xC);
-    s5 = lw(v0 + 0x20);
-    s4 = lbu(v1 + 0xB);
-    v0 = s4;
-    if (s6 == 0) goto loc_8004456C;
-    v0 &= 0xFF;
-    s4--;
-    if (v0 == 0) goto loc_8004456C;
-    s3 = s5 + 0xC;
-loc_800444A8:
-    v0 = lw(s5);
-    v0 &= 1;
-    if (v0 == 0) goto loc_80044554;
-    v0 = lw(s3 - 0x4);
-    a2 = lw(sp + 0x10);
-    if (v0 != a2) goto loc_80044544;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    s2 = lbu(s3 - 0x8);
-    s1 = lw(s3);
-    s0 = lbu(v0 + 0x1C);
-    v0 = -1;                                            // Result = FFFFFFFF
-    s0--;
-    if (s0 == v0) goto loc_80044544;
-    s7 = -1;                                            // Result = FFFFFFFF
-loc_800444F8:
-    a0 = lbu(s1);
-    a2 = 0xFF;                                          // Result = 000000FF
-    v0 = a0 << 2;
-    if (a0 == a2) goto loc_80044538;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78A8);                               // Load from: gpWess_pm_stat (800A8758)
-    v0 += a0;
-    v1 = lw(v1 + 0x28);
-    v0 <<= 4;
-    a0 = v0 + v1;
-    if (fp == 0) goto loc_8004452C;
-    a1 = fp;
-    updatetrackstat(*vmAddrToPtr<track_status>(a0), vmAddrToPtr<TriggerPlayAttr>(a1));
-loc_8004452C:
-    s2--;
-    if (s2 == 0) goto loc_80044544;
-loc_80044538:
-    s0--;
-    s1++;
-    if (s0 != s7) goto loc_800444F8;
-loc_80044544:
-    s6--;
-    v0 = s6 & 0xFF;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80044570;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update sequences of the specified type with the given play attributes
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_seq_update_type_special(const uint32_t seqType, const TriggerPlayAttr* const pPlayAttribs) noexcept {
+    // Don't bother if there is no module loaded
+    if (!Is_Module_Loaded())
+        return;
+
+    // Temporarily disable the sequencer while we do this.
+    // It was originally fired by hardware timer interrupts, so this step was required.
+    *gbWess_SeqOn = false;
+
+    // Grab some basic info from the master status
+    master_status_structure& mstat = *gpWess_pm_stat->get();
+
+    const uint8_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
+    const uint32_t maxTracksPerSeq = mstat.max_trks_perseq;
+    uint8_t numActiveSeqsToVisit = mstat.seqs_active;
+
+    if (numActiveSeqsToVisit > 0) {
+        // Run through all of the active sequences of the specified type and update them all
+        for (uint8_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
+            sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
+
+            if (!seqStat.active)
+                continue;
+
+            if (seqStat.seq_type == seqType) {
+                // This is the sequence type we want: tun through all of the active tracks in the sequence and update them all
+                uint32_t numActiveSeqTracksToVisit = seqStat.tracks_active;
+                uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+
+                for (uint32_t i = 0; i < maxTracksPerSeq; ++i) {
+                    // Is this sequence track slot actually in use? Skip if not:
+                    const uint8_t trackIdx = pSeqTrackIndexes[i];
+
+                    if (trackIdx == 0xFF)
+                        continue;
+                    
+                    // Only bother with this call if there are actually attributes to set.
+                    // This check should have probably been done on function entry? This is somewhat wasteful doing it here:
+                    if (pPlayAttribs) {
+                        updatetrackstat(mstat.ptrkstattbl[trackIdx], pPlayAttribs);
+                    }
+
+                    // If there are no more active tracks left to visit then we are done
+                    --numActiveSeqTracksToVisit;
+
+                    if (numActiveSeqTracksToVisit == 0)
+                        break;
+                }
+            }
+
+            // If there are no more active sequences to visit then we are done
+            --numActiveSeqsToVisit;
+
+            if (numActiveSeqsToVisit == 0)
+                break;
+        }
     }
-loc_80044554:
-    s3 += 0x18;
-    s5 += 0x18;
-    v0 = s4;
-    v0 &= 0xFF;
-    s4--;
-    if (v0 != 0) goto loc_800444A8;
-loc_8004456C:
-    v0 = 1;                                             // Result = 00000001
-loc_80044570:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5948);                                // Store to: gbWess_SeqOn (80075948)
-loc_80044578:
-    ra = lw(sp + 0x3C);
-    fp = lw(sp + 0x38);
-    s7 = lw(sp + 0x34);
-    s6 = lw(sp + 0x30);
-    s5 = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x40;
-    return;
+
+    // Re-enable the sequencer
+    *gbWess_SeqOn = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -258,15 +221,15 @@ void wess_seq_stoptype(const uint32_t seqType) noexcept {
     if (!Is_Module_Loaded())
         return;
 
-    // Disable sequencer timer interrupts temporarily while we stop tracks
+    // Temporarily disable the sequencer while we do this.
+    // It was originally fired by hardware timer interrupts, so this step was required.
     *gbWess_SeqOn = false;
 
-    // Grab some basic stats from the master status
+    // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat->get();
 
     const uint8_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
-    const uint32_t maxTracks = mstat.max_trks_perseq;
-
+    const uint32_t maxTracksPerSeq = mstat.max_trks_perseq;
     uint8_t numActiveSeqsToVisit = mstat.seqs_active;
 
     if (numActiveSeqsToVisit > 0) {
@@ -282,19 +245,19 @@ void wess_seq_stoptype(const uint32_t seqType) noexcept {
                 uint8_t numActiveTracks = seqStat.tracks_active;
                 const uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
 
-                for (uint8_t i = 0; i < maxTracks; ++i) {
-                    // Is this sequence track not active?
+                for (uint8_t i = 0; i < maxTracksPerSeq; ++i) {
+                    // Is this sequence track slot actually in use? Skip if not:
                     const uint8_t trackIdx = pSeqTrackIndexes[i];
 
                     if (trackIdx == 0xFF)
                         continue;
 
-                    // Stop the track
+                    // Call the driver function to turn off the track
                     track_status& trackStat = mstat.ptrkstattbl[trackIdx];
                     a0 = ptrToVmAddr(&trackStat);
                     gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native function call
 
-                    // If there are no more active tracks left then we are done
+                    // If there are no more tracks left active then we are done
                     numActiveTracks--;
 
                     if (numActiveTracks == 0)
@@ -302,7 +265,7 @@ void wess_seq_stoptype(const uint32_t seqType) noexcept {
                 }
             }
             
-            // If there are no more active sequences left to visit then we can bail early
+            // If there are no more active sequences to visit then we are done
             numActiveSeqsToVisit--;
 
             if (numActiveSeqsToVisit == 0)
@@ -310,6 +273,6 @@ void wess_seq_stoptype(const uint32_t seqType) noexcept {
         }
     }
 
-    // Re-enable the sequencer timer
+    // Re-enable the sequencer
     *gbWess_SeqOn = true;
 }
