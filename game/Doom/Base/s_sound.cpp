@@ -301,7 +301,7 @@ void S_StopSound() noexcept {
 loc_80041368:
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    wess_seq_stoptype();
+    wess_seq_stoptype(a0);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;

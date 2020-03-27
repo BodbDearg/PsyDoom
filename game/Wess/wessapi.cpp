@@ -876,7 +876,7 @@ void assigntrackstat(track_status& trackStat, const track_data& trackInfo) noexc
 int32_t wess_seq_structrig(
     const sequence_data& seqInfo,
     const int32_t seqNum,
-    const int32_t seqType,
+    const uint32_t seqType,
     const bool bGetHandle,
     const TriggerPlayAttr* pPlayAttribs
 ) noexcept {
