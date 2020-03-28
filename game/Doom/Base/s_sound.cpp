@@ -44,7 +44,7 @@ loc_80040FCC:
     s0 = a0;
     sw(ra, sp + 0x14);
     a0 = s0 & 0xFF;
-    wess_master_mus_vol_set();
+    wess_master_mus_vol_set((uint8_t) a0);
     a0 = s0 << 7;
     v0 = (i32(a0) < 0x3D00);
     if (v0 != 0) goto loc_80040FF8;

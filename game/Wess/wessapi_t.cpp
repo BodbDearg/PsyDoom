@@ -45,15 +45,15 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
         trackStat.pan_cntrl = pPlayAttribs->pan;
 
         // Issue a sequencer command to to update the volume levels: change the track command stream temporarily also to do this
-        uint8_t* const pOldCmdBytes = trackStat.ppos.get();        
+        uint8_t* const pPrevCmdBytes = trackStat.ppos.get();
         trackStat.ppos = cmdBytes;
 
         cmdBytes[0] = VolumeMod;
-        cmdBytes[1] = trackStat.volume_cntrl;        
+        cmdBytes[1] = trackStat.volume_cntrl;
         a0 = ptrToVmAddr(&trackStat);
         gWess_CmdFuncArr[trackStat.patchtype][VolumeMod]();     // FIXME: convert to native function call
         
-        trackStat.ppos = pOldCmdBytes;
+        trackStat.ppos = pPrevCmdBytes;
     }
     else {
         if (attribMask & TRIGGER_VOLUME) {
