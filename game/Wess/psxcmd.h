@@ -1,6 +1,9 @@
 #pragma once
 
+#include <cstdint>
+
 struct NoteState;
+struct voice_status;
 
 // PlayStation sound driver command functions.
 //
@@ -13,7 +16,7 @@ void start_record_music_mute(NoteState* const pNoteState) noexcept;
 void end_record_music_mute() noexcept;
 void add_music_mute_note() noexcept;
 void PSX_UNKNOWN_DrvFunc() noexcept;
-void TriggerPSXVoice() noexcept;
+void TriggerPSXVoice(const voice_status& voiceStat, const uint8_t voiceNote, const uint8_t voiceVol) noexcept;
 void PSX_DriverInit() noexcept;
 void PSX_DriverExit() noexcept;
 void PSX_DriverEntry1() noexcept;

@@ -4,6 +4,7 @@
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessapi.h"
+#include "wessarc.h"
 #include "wessseq.h"
 
 void (* const gWess_drv_cmds[19])() = {
@@ -27,6 +28,10 @@ void (* const gWess_drv_cmds[19])() = {
     PSX_NoteOn,             // 17
     PSX_NoteOff             // 18
 };
+
+static const VmPtr<SpuVoiceAttr>                gWess_spuVoiceAttr(0x8007F190);             // Temporary used for setting voice parameters with LIBSPU
+static const VmPtr<VmPtr<track_status>>         gpWess_drv_trackStats(0x8007F16C);          // Pointer to the array of track statuses for all tracks
+static const VmPtr<uint8_t[SPU_NUM_VOICES]>     gWess_drv_chanReverbAmt(0x8007F1E8);        // Current reverb levels for each channel/voice
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the location where we will start recording note/voice details before temporarily muting
@@ -110,276 +115,128 @@ loc_80045B04:
     return;
 }
 
-void TriggerPSXVoice() noexcept {
-loc_80045B0C:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = 0x60000;                                       // Result = 00060000
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v1 = lbu(s0 + 0x2);
-    v0 |= 0xE3;                                         // Result = 000600E3
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xE6C);                                 // Store to: 8007F194
-    v0 = 1;                                             // Result = 00000001
-    a1 = v0 << v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a1, at - 0xE70);                                 // Store to: 8007F190
-    v1 = lbu(s0 + 0x3);
-    v0 = v1 << 2;
-    v0 += v1;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE94);                                // Load from: 8007F16C
-    v0 <<= 4;
-    v0 += v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF5C);                                 // Store to: 8007F0A4
-    v0 = lbu(v0 + 0x9);
-    s1 = a2;
-    if (v0 == 0) goto loc_80045BC8;
-    v0 = lbu(s0 + 0x2);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0xE18;                                        // Result = 8007F1E8
-    at += v0;
-    v0 = lbu(at);
-    if (v0 != 0) goto loc_80045C0C;
-    a0 = 1;                                             // Result = 00000001
-    LIBSPU_SpuSetReverbVoice(a0, a1);
-    v1 = lbu(s0 + 0x2);
-    v0 = 0x7F;                                          // Result = 0000007F
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0xE18;                                        // Result = 8007F1E8
-    at += v1;
-    sb(v0, at);
-    goto loc_80045C0C;
-loc_80045BC8:
-    v0 = lbu(s0 + 0x2);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0xE18;                                        // Result = 8007F1E8
-    at += v0;
-    v0 = lbu(at);
-    if (v0 == 0) goto loc_80045C0C;
-    a0 = 0;                                             // Result = 00000000
-    LIBSPU_SpuSetReverbVoice(a0, a1);
-    v0 = lbu(s0 + 0x2);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0xE18;                                        // Result = 8007F1E8
-    at += v0;
-    sb(0, at);
-loc_80045C0C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x5A06);                              // Load from: gWess_pan_status (80075A06)
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x40;                                      // Result = 00000040
-        if (bJump) goto loc_80045C88;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Trigger a sound to play with the specified volume and using the information in the voice status struct.
+// Note: the note setting was apparently ignored by this function? Instead it is sourced from the voice status.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void TriggerPSXVoice(const voice_status& voiceStat, [[maybe_unused]] const uint8_t voiceNote, const uint8_t voiceVol) noexcept {
+    // Get the track status and LIBSPU struct we use to setup the voice
+    SpuVoiceAttr& spuVoiceAttr = *gWess_spuVoiceAttr;
+    track_status& trackStat = gpWess_drv_trackStats->get()[voiceStat.track];
+
+    // These are the attributes we will set
+    spuVoiceAttr.attr_mask = (
+        SPU_VOICE_VOLL | SPU_VOICE_VOLR |
+        SPU_VOICE_NOTE | SPU_VOICE_SAMPLE_NOTE |
+        SPU_VOICE_WDSA |
+        SPU_VOICE_ADSR_ADSR1 | SPU_VOICE_ADSR_ADSR2
+    );
+
+    // This is the voice we are manipulating
+    spuVoiceAttr.voice_bits = 1 << (voiceStat.refindx % 32);
+
+    // Setup reverb
+    if (trackStat.reverb == 0) {
+        if (gWess_drv_chanReverbAmt[voiceStat.refindx] != 0) {
+            LIBSPU_SpuSetReverbVoice(0, spuVoiceAttr.voice_bits);
+            gWess_drv_chanReverbAmt[voiceStat.refindx] = 0;
+        }
+    } else {
+        if (gWess_drv_chanReverbAmt[voiceStat.refindx] == 0) {
+            LIBSPU_SpuSetReverbVoice(1, spuVoiceAttr.voice_bits);
+            gWess_drv_chanReverbAmt[voiceStat.refindx] = 127;
+        }
     }
-    v0 = lw(s0 + 0x8);
-    v1 = lbu(v0 + 0x3);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF5C);                                // Load from: 8007F0A4
-    v1 <<= 24;
-    v0 = lbu(v0 + 0xD);
-    v1 = u32(i32(v1) >> 24);
-    v0 += v1;
-    v0 -= 0x40;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xF58);                                 // Store to: 8007F0A8
-    v0 = (i32(v0) < 0x80);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x7F;                                      // Result = 0000007F
-        if (bJump) goto loc_80045C64;
+
+    // Figure out pan amount
+    int16_t triggerPan;
+
+    if (*gWess_pan_status == PAN_OFF) {
+        triggerPan = 64;
+    } else {
+        triggerPan = (int16_t) trackStat.pan_cntrl + (int16_t) voiceStat.patchmaps->pan - 64;
+        
+        if (triggerPan > 127) {
+            triggerPan = 127;
+        }
+
+        if (triggerPan < 0) {
+            triggerPan = 0;
+        }
     }
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xF58);                                 // Store to: 8007F0A8
-loc_80045C64:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lh(v0 - 0xF58);                                // Load from: 8007F0A8
-    if (i32(v0) >= 0) goto loc_80045C90;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(0, at - 0xF58);                                  // Store to: 8007F0A8
-    goto loc_80045C90;
-loc_80045C88:
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xF58);                                 // Store to: 8007F0A8
-loc_80045C90:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xF5C);                                // Load from: 8007F0A4
-    v0 = lbu(a0 + 0x13);
-    if (v0 != 0) goto loc_80045CE4;
-    v0 = lw(s0 + 0x8);
-    v1 = lbu(v0 + 0x2);
-    v0 = s1 & 0xFF;
-    mult(v0, v1);
-    v1 = lo;
-    v0 = lbu(a0 + 0xC);
-    mult(v1, v0);
-    v1 = lo;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x5A04);                              // Load from: gWess_master_sfx_volume (80075A04)
-    mult(v1, v0);
-    goto loc_80045D1C;
-loc_80045CE4:
-    v0 = lw(s0 + 0x8);
-    v1 = lbu(v0 + 0x2);
-    v0 = s1 & 0xFF;
-    mult(v0, v1);
-    v1 = lo;
-    v0 = lbu(a0 + 0xC);
-    mult(v1, v0);
-    v1 = lo;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x5A05);                              // Load from: gWess_master_mus_volume (80075A05)
-    mult(v1, v0);
-loc_80045D1C:
-    v0 = lo;
-    v0 = u32(i32(v0) >> 21);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF60);                                 // Store to: 8007F0A0
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lbu(v1 + 0x5A06);                              // Load from: gWess_pan_status (80075A06)
-    v0 = 1;                                             // Result = 00000001
-    if (v1 != 0) goto loc_80045D68;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lhu(v0 - 0xF60);                               // Load from: 8007F0A0
-    v0 <<= 6;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xE68);                                 // Store to: 8007F198
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xE66);                                 // Store to: 8007F19A
-    goto loc_80045E00;
-loc_80045D68:
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 0x80;                                      // Result = 00000080
-        if (bJump) goto loc_80045DBC;
+
+    // Figure out the trigger volume for the note (0-2047)
+    uint32_t triggerVol = voiceVol;
+    triggerVol *= voiceStat.patchmaps->volume;
+    triggerVol *= trackStat.volume_cntrl;
+
+    if (trackStat.sndclass == SNDFX_CLASS) {
+        triggerVol *= (*gWess_master_sfx_volume);
+    } else {
+        triggerVol *= (*gWess_master_mus_volume);
     }
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xF60);                                // Load from: 8007F0A0
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lh(v1 - 0xF58);                                // Load from: 8007F0A8
-    a0 <<= 7;
-    v0 -= v1;
-    mult(a0, v0);
-    v0 = lo;
-    v1++;
-    mult(a0, v1);
-    v0 = u32(i32(v0) >> 7);
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xE68);                                 // Store to: 8007F198
-    v0 = lo;
-    v0 = u32(i32(v0) >> 7);
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xE66);                                 // Store to: 8007F19A
-    goto loc_80045E00;
-loc_80045DBC:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xF60);                                // Load from: 8007F0A0
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lh(v1 - 0xF58);                                // Load from: 8007F0A8
-    a0 <<= 7;
-    v0 -= v1;
-    mult(a0, v0);
-    v0 = lo;
-    v1++;
-    mult(a0, v1);
-    v0 = u32(i32(v0) >> 7);
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xE66);                                 // Store to: 8007F19A
-    v0 = lo;
-    v0 = u32(i32(v0) >> 7);
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xE68);                                 // Store to: 8007F198
-loc_80045E00:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF5C);                                // Load from: 8007F0A4
-    v1 = lh(v0 + 0xE);
-    if (v1 != 0) goto loc_80045E28;
-    v0 = lbu(s0 + 0x5);
-    v0 <<= 8;
-    goto loc_80045EFC;
-loc_80045E28:
-    if (i32(v1) <= 0) goto loc_80045E84;
-    v0 = lw(s0 + 0x8);
-    v0 = lb(v0 + 0x9);
-    mult(v1, v0);
-    v0 = lo;
-    v0 += 0x20;
-    v1 = u32(i32(v0) >> 13);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF6C);                                 // Store to: 8007F094
-    v0 &= 0x1FFF;
-    v0 = u32(i32(v0) >> 6);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF68);                                 // Store to: 8007F098
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF64);                                 // Store to: 8007F09C
-    v0 = lbu(s0 + 0x5);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lhu(v1 - 0xF68);                               // Load from: 8007F098
-    v0 += v1;
-    goto loc_80045EE8;
-loc_80045E84:
-    v0 = lw(s0 + 0x8);
-    v0 = lb(v0 + 0x8);
-    mult(v1, v0);
-    v1 = 0x20;                                          // Result = 00000020
-    v0 = lo;
-    v1 -= v0;
-    v0 = u32(i32(v1) >> 13);
-    v0++;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF6C);                                 // Store to: 8007F094
-    v1 &= 0x1FFF;
-    v1 = u32(i32(v1) >> 6);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF68);                                 // Store to: 8007F098
-    v0 = 0x80;                                          // Result = 00000080
-    v0 -= v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF64);                                 // Store to: 8007F09C
-    v0 = lbu(s0 + 0x5);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lhu(v1 - 0xF68);                               // Load from: 8007F098
-    v0 -= v1;
-loc_80045EE8:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lhu(v1 - 0xF64);                               // Load from: 8007F09C
-    v0 <<= 8;
-    v1 &= 0x7F;
-    v0 |= v1;
-loc_80045EFC:
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xE5A);                                 // Store to: 8007F1A6
-    v1 = lw(s0 + 0x8);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0xE58;                                        // Result = 8007F1A8
-    v0 = lbu(v1 + 0x4);
-    v1 = lbu(v1 + 0x5);
-    v0 <<= 8;
-    v0 |= v1;
-    sh(v0, a0);                                         // Store to: 8007F1A8
-    v0 = lw(s0 + 0xC);
-    v0 = lw(v0 + 0x8);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xE54);                                 // Store to: 8007F1AC
-    v0 = lw(s0 + 0x8);
-    v0 = lhu(v0 + 0xC);
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xE36);                                 // Store to: 8007F1CA
-    v0 = lw(s0 + 0x8);
-    v0 = lhu(v0 + 0xE);
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xE34);                                 // Store to: 8007F1CC
-    a0 -= 0x18;                                         // Result = 8007F190
-    LIBSPU_SpuSetKeyOnWithAttr(*vmAddrToPtr<SpuVoiceAttr>(a0));
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    triggerVol >>= 21;
+    
+    // Set volume using trigger volume and pan
+    if (*gWess_pan_status == PAN_OFF) {
+        const uint16_t spuVol = (int16_t) triggerVol * 64;
+        spuVoiceAttr.volume.left = spuVol;
+        spuVoiceAttr.volume.right = spuVol;
+    } else {
+        const int16_t spuVolL = (int16_t)(((int32_t) triggerVol * 128 * (128 - triggerPan)) / 128);
+        const int16_t spuVolR = (int16_t)(((int32_t) triggerVol * 128 * (triggerPan + 1  )) / 128);
+
+        if (*gWess_pan_status == PAN_ON) {
+            spuVoiceAttr.volume.left = spuVolL;
+            spuVoiceAttr.volume.right = spuVolR;
+        } else {
+            // PAN_ON_REV: reverse the channels when panning
+            spuVoiceAttr.volume.left = spuVolR;
+            spuVoiceAttr.volume.right = spuVolL;
+        }
+    }
+    
+    // Set the note to play and the base note
+    if (trackStat.pitch_cntrl == 0) {
+        // Not doing any pitch shifting
+        spuVoiceAttr.note = (uint16_t) voiceStat.keynum << 8;
+    } else {
+        if (trackStat.pitch_cntrl >= 1) {
+            // Pitch shifting: up
+            const uint32_t pitchShiftFrac = trackStat.pitch_cntrl * voiceStat.patchmaps->pitchstep_max;
+            const uint16_t pitchShiftNote = (uint16_t)((32 + pitchShiftFrac) >> 13);
+            const uint16_t pitchShiftFine = (pitchShiftFrac & 0x1FFF) >> 6;
+
+            // Possible bug? Should the fine mask here be '0xFF' instead?
+            // This code is never triggered from what I can see, so maybe it does not matter... 
+            spuVoiceAttr.note = (voiceStat.keynum + pitchShiftNote) << 8;
+            spuVoiceAttr.note |= pitchShiftFine & 0x7F;
+        }
+        else {
+            // Pitch shifting: down
+            const uint32_t pitchShiftFrac = trackStat.pitch_cntrl * voiceStat.patchmaps->pitchstep_min;
+            const uint16_t pitchShiftNote = (uint16_t)(((32 - pitchShiftFrac) >> 13) + 1);
+            const uint16_t pitchShiftFine = 128 - ((pitchShiftFrac & 0x1FFF) >> 6);
+
+            // Possible bug? Should the fine mask here be '0xFF' instead?
+            // This code is never triggered from what I can see, so maybe it does not matter...
+            spuVoiceAttr.note = (voiceStat.keynum - pitchShiftNote) << 8;
+            spuVoiceAttr.note |= pitchShiftFine & 0x7F;
+        }
+    }
+
+    spuVoiceAttr.sample_note = ((uint16_t) voiceStat.patchmaps->root_key << 8) | voiceStat.patchmaps->fine_adj;
+
+    // Set the SPU address of the sound data
+    spuVoiceAttr.addr = voiceStat.patchinfo->sample_pos;
+
+    // Setup volume envelope
+    spuVoiceAttr.adsr1 = voiceStat.patchmaps->adsr1;
+    spuVoiceAttr.adsr2 = voiceStat.patchmaps->adsr2;
+
+    // Trigger the note!
+    LIBSPU_SpuSetKeyOnWithAttr(spuVoiceAttr);
 }
 
 void PSX_DriverInit() noexcept {
@@ -1449,7 +1306,7 @@ loc_80047024:
     a1 = t0;
     v0++;
     sb(v0, v1 + 0x6);
-    TriggerPSXVoice();
+    TriggerPSXVoice(*vmAddrToPtr<voice_status>(a0), (uint8_t) a1, (uint8_t) a2);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;

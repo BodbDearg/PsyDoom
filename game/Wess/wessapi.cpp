@@ -29,14 +29,6 @@ enum patch_grp_load_flags : uint32_t {
     LOAD_EXTRADATA  = 0x10
 };
 
-// Voice classes
-enum voice_class : uint8_t {
-    SNDFX_CLASS     = 0,
-    MUSIC_CLASS     = 1,
-    DRUMS_CLASS     = 2,
-    SFXDRUMS_CLASS  = 3
-};
-
 const VmPtr<bool32_t>                           gbWess_module_loaded(0x800758F8);       // If true then a WMD file (module) has been loaded
 const VmPtr<VmPtr<master_status_structure>>     gpWess_pm_stat(0x800A8758);             // TODO: COMMENT
 

@@ -117,13 +117,21 @@ struct module_header {
 
 static_assert(sizeof(module_header) == 16);
 
+// Classes of sounds/voices
+enum SoundClass : uint8_t {
+    SNDFX_CLASS     = 0,    // TODO: COMMENT
+    MUSIC_CLASS     = 1,    // TODO: COMMENT
+    DRUMS_CLASS     = 2,    // TODO: COMMENT
+    SFXDRUMS_CLASS  = 3     // TODO: COMMENT
+};
+
 // TODO: COMMENT
 struct track_header {
     uint8_t     voices_type;            // 0x000    TODO: COMMENT
     uint8_t     voices_max;             // 0x001    TODO: COMMENT
     uint8_t     priority;               // 0x002    TODO: COMMENT
     uint8_t     lockchannel;            // 0x003    TODO: COMMENT
-    uint8_t     voices_class;           // 0x004    TODO: COMMENT
+    SoundClass  voices_class;           // 0x004    TODO: COMMENT
     uint8_t     reverb;                 // 0x005    TODO: COMMENT
     uint16_t    initpatchnum;           // 0x006    TODO: COMMENT
     uint16_t    initpitch_cntrl;        // 0x008    TODO: COMMENT
@@ -271,7 +279,7 @@ struct track_status {
     uint8_t             voices_active;          // 0x010    TODO: COMMENT
     uint8_t             voices_max;             // 0x011    TODO: COMMENT
     uint8_t             mutemask;               // 0x012    TODO: COMMENT
-    uint8_t             sndclass;               // 0x013    TODO: COMMENT
+    SoundClass          sndclass;               // 0x013    TODO: COMMENT
     uint16_t            ppq;                    // 0x014    TODO: COMMENT
     uint16_t            qpm;                    // 0x016    TODO: COMMENT
     uint16_t            labellist_count;        // 0x018    TODO: COMMENT

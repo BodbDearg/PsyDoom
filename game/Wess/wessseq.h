@@ -5,9 +5,16 @@
 struct NoteState;
 struct track_status;
 
+// Pan mode
+enum PanMode : uint8_t {
+    PAN_OFF,        // No pan
+    PAN_ON,         // Pan is on
+    PAN_ON_REV      // Pan is on (reverse channels)
+};
+
 extern const VmPtr<uint8_t>             gWess_master_sfx_volume;
 extern const VmPtr<uint8_t>             gWess_master_mus_volume;
-extern const VmPtr<uint8_t>             gWess_pan_status;
+extern const VmPtr<PanMode>             gWess_pan_status;
 extern const VmPtr<VmPtr<NoteState>>    gpWess_pnotestate;
 
 // Sequencer command functions.
