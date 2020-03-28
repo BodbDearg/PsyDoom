@@ -310,22 +310,13 @@ extern void wess_seq_free() noexcept;
 extern void add_music_mute_note() noexcept;
 extern void PSX_UNKNOWN_DrvFunc() noexcept;
 extern void PSX_DriverInit() noexcept;
-extern void PSX_DriverExit() noexcept;
 extern void PSX_DriverEntry1() noexcept;
-extern void PSX_DriverEntry2() noexcept;
-extern void PSX_DriverEntry3() noexcept;
 extern void PSX_TrkOff() noexcept;
 extern void PSX_TrkMute() noexcept;
 extern void PSX_PatchChg() noexcept;
-extern void PSX_PatchMod() noexcept;
 extern void PSX_PitchMod() noexcept;
-extern void PSX_ZeroMod() noexcept;
-extern void PSX_ModuMod() noexcept;
 extern void PSX_VolumeMod() noexcept;
 extern void PSX_PanMod() noexcept;
-extern void PSX_PedalMod() noexcept;
-extern void PSX_ReverbMod() noexcept;
-extern void PSX_ChorusMod() noexcept;
 extern void PSX_voiceon() noexcept;
 extern void PSX_voiceparmoff() noexcept;
 extern void PSX_voicerelease() noexcept;
@@ -697,6 +688,7 @@ namespace PsxVm {
         { 0x8003E910, &O_Init },
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },
+
         { 0x80040FAC, &S_SetSfxVolume },
         { 0x80040FCC, &S_SetMusicVolume },
         { 0x80041014, &S_StopMusicSequence },
@@ -710,7 +702,6 @@ namespace PsxVm {
         { 0x800413A8, &I_StartSound },
         { 0x800415B4, &_thunk_S_StartSound },
         { 0x800415D4, &S_UpdateSounds },
-
         { 0x800415EC, &PsxSoundInit },
         { 0x8004172C, &PsxSoundExit },
         { 0x80041C88, &queue_wess_seq_restartall },
@@ -728,22 +719,13 @@ namespace PsxVm {
         { 0x80045A0C, &add_music_mute_note },
         { 0x80045ACC, &PSX_UNKNOWN_DrvFunc },
         { 0x80045F8C, &PSX_DriverInit },
-        { 0x800461B4, &PSX_DriverExit },
         { 0x800461D4, &PSX_DriverEntry1 },
-        { 0x80046484, &PSX_DriverEntry2 },
-        { 0x8004648C, &PSX_DriverEntry3 },
         { 0x80046494, &PSX_TrkOff },
         { 0x80046540, &PSX_TrkMute },
         { 0x800466FC, &PSX_PatchChg },
-        { 0x80046724, &PSX_PatchMod },
         { 0x8004672C, &PSX_PitchMod },
-        { 0x8004697C, &PSX_ZeroMod },
-        { 0x80046984, &PSX_ModuMod },
         { 0x8004698C, &PSX_VolumeMod },
         { 0x80046CA4, &PSX_PanMod },
-        { 0x80046F80, &PSX_PedalMod },
-        { 0x80046F88, &PSX_ReverbMod },
-        { 0x80046F90, &PSX_ChorusMod },
         { 0x80046F98, &PSX_voiceon },
         { 0x8004706C, &PSX_voiceparmoff },
         { 0x80047134, &PSX_voicerelease },

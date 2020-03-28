@@ -7,26 +7,45 @@
 #include "wessarc.h"
 #include "wessseq.h"
 
+// TODO: REMOVE
+void _thunk_PSX_DriverExit() noexcept { PSX_DriverExit(*vmAddrToPtr<master_status_structure>(a0)); }
+// TODO: REMOVE
+void _thunk_PSX_DriverEntry2() noexcept { PSX_DriverEntry2(*vmAddrToPtr<master_status_structure>(a0)); }
+// TODO: REMOVE
+void _thunk_PSX_DriverEntry3() noexcept { PSX_DriverEntry3(*vmAddrToPtr<master_status_structure>(a0)); }
+// TODO: REMOVE
+void _thunk_PSX_PedalMod() noexcept { PSX_PedalMod(*vmAddrToPtr<track_status>(a0)); }
+// TODO: REMOVE
+void _thunk_PSX_ReverbMod() noexcept { PSX_ReverbMod(*vmAddrToPtr<track_status>(a0)); }
+// TODO: REMOVE
+void _thunk_PSX_ChorusMod() noexcept { PSX_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
+// TODO: REMOVE
+void _thunk_PSX_ZeroMod() noexcept { PSX_ZeroMod(*vmAddrToPtr<track_status>(a0)); }
+// TODO: REMOVE
+void _thunk_PSX_ModuMod() noexcept { PSX_ModuMod(*vmAddrToPtr<track_status>(a0)); }
+// TODO: REMOVE
+void _thunk_PSX_PatchMod() noexcept { PSX_PatchMod(*vmAddrToPtr<track_status>(a0)); }
+
 void (* const gWess_drv_cmds[19])() = {
-    PSX_DriverInit,         // 00
-    PSX_DriverExit,         // 01
-    PSX_DriverEntry1,       // 02
-    PSX_DriverEntry2,       // 03
-    PSX_DriverEntry3,       // 04
-    PSX_TrkOff,             // 05
-    PSX_TrkMute,            // 06
-    PSX_PatchChg,           // 07
-    PSX_PatchMod,           // 08
-    PSX_PitchMod,           // 09
-    PSX_ZeroMod,            // 10
-    PSX_ModuMod,            // 11
-    PSX_VolumeMod,          // 12
-    PSX_PanMod,             // 13
-    PSX_PedalMod,           // 14
-    PSX_ReverbMod,          // 15
-    PSX_ChorusMod,          // 16
-    PSX_NoteOn,             // 17
-    PSX_NoteOff             // 18
+    PSX_DriverInit,             // 00
+    _thunk_PSX_DriverExit,      // 01
+    PSX_DriverEntry1,           // 02
+    _thunk_PSX_DriverEntry2,    // 03
+    _thunk_PSX_DriverEntry3,    // 04
+    PSX_TrkOff,                 // 05
+    PSX_TrkMute,                // 06
+    PSX_PatchChg,               // 07
+    _thunk_PSX_PatchMod,        // 08
+    PSX_PitchMod,               // 09
+    _thunk_PSX_ZeroMod,         // 10
+    _thunk_PSX_ModuMod,         // 11
+    PSX_VolumeMod,              // 12
+    PSX_PanMod,                 // 13
+    _thunk_PSX_PedalMod,        // 14
+    _thunk_PSX_ReverbMod,       // 15
+    _thunk_PSX_ChorusMod,       // 16
+    PSX_NoteOn,                 // 17
+    PSX_NoteOff                 // 18
 };
 
 static const VmPtr<SpuVoiceAttr>                gWess_spuVoiceAttr(0x8007F190);             // Temporary used for setting voice parameters with LIBSPU
@@ -375,14 +394,12 @@ loc_8004616C:
     return;
 }
 
-void PSX_DriverExit() noexcept {
-loc_800461B4:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shut down the PlayStation sound driver.
+// I don't think there's any way for this to be called in the retail game...
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_DriverExit([[maybe_unused]] master_status_structure& mstat) noexcept {
     LIBSPU_SpuQuit();
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void PSX_DriverEntry1() noexcept {
@@ -541,15 +558,17 @@ loc_80046428:
     return;
 }
 
-void PSX_DriverEntry2() noexcept {
-loc_80046484:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unused/implemented driver initialization function.
+// Doesn't seem to be called for the PSX sound driver.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_DriverEntry2([[maybe_unused]] master_status_structure& mstat) noexcept {}
 
-void PSX_DriverEntry3() noexcept {
-loc_8004648C:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unused/implemented driver initialization function.
+// Doesn't seem to be called for the PSX sound driver.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_DriverEntry3([[maybe_unused]] master_status_structure& mstat) noexcept {}
 
 void PSX_TrkOff() noexcept {
 loc_80046494:
@@ -715,10 +734,10 @@ loc_800466FC:
     return;
 }
 
-void PSX_PatchMod() noexcept {
-loc_80046724:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unimplemented mod/effect for the PSX sound driver: doesn't appear to be ever called
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_PatchMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
 void PSX_PitchMod() noexcept {
 loc_8004672C:
@@ -863,15 +882,15 @@ loc_80046960:
     return;
 }
 
-void PSX_ZeroMod() noexcept {
-loc_8004697C:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unimplemented mod/effect for the PSX sound driver: doesn't appear to be ever called
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_ZeroMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
-void PSX_ModuMod() noexcept {
-loc_80046984:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unimplemented mod/effect for the PSX sound driver: doesn't appear to be ever called
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_ModuMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
 void PSX_VolumeMod() noexcept {
 loc_8004698C:
@@ -1239,20 +1258,20 @@ loc_80046F64:
     return;
 }
 
-void PSX_PedalMod() noexcept {
-loc_80046F80:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unimplemented mod/effect for the PSX sound driver: doesn't appear to be ever called
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_PedalMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
-void PSX_ReverbMod() noexcept {
-loc_80046F88:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unimplemented mod/effect for the PSX sound driver: doesn't appear to be ever called
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_ReverbMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
-void PSX_ChorusMod() noexcept {
-loc_80046F90:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unimplemented mod/effect for the PSX sound driver: doesn't appear to be ever called
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_ChorusMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
 void PSX_voiceon() noexcept {
 loc_80046F98:
