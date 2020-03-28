@@ -45,6 +45,7 @@ static const VmPtr<SpuVoiceAttr>                        gWess_spuVoiceAttr(0x800
 static const VmPtr<VmPtr<track_status>>                 gpWess_drv_trackStats(0x8007F16C);          // Pointer to the array of track statuses for all tracks
 static const VmPtr<uint8_t[SPU_NUM_VOICES]>             gWess_drv_chanReverbAmt(0x8007F1E8);        // Current reverb levels for each channel/voice
 static const VmPtr<VmPtr<uint32_t>>                     gpWess_drv_curabstime(0x8007F17C);          // Pointer to the current absolute time for the sequencer system: TODO: COMMENT on what the time value is
+static const VmPtr<uint32_t>                            gWess_drv_releasedVoices(0x80075A08);       // TODO: COMMENT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the location where we will start recording note/voice details before temporarily muting
@@ -678,7 +679,7 @@ loc_8004664C:
     v0 = 0x10000000;                                    // Result = 10000000
     v0 = i32(v0) >> v1;
     sw(v0, a0 + 0x14);
-    PSX_voicerelease();
+    PSX_voicerelease(*vmAddrToPtr<voice_status>(a0));
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0xF20);                                // Load from: 8007F0E0
     a0 = 0x80080000;                                    // Result = 80080000
@@ -1353,26 +1354,15 @@ loc_80047108:
     return;
 }
 
-void PSX_voicerelease() noexcept {
-loc_80047134:
-    v0 = 1;                                             // Result = 00000001
-    v1 = lbu(a0 + 0x2);
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x5A08);                               // Load from: 80075A08
-    v0 = v0 << v1;
-    v0 |= a1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5A08);                                // Store to: 80075A08
-    v0 = lw(a0);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE84);                                // Load from: 8007F17C
-    v0 |= 2;
-    sw(v0, a0);
-    v0 = lw(v1);
-    v1 = lw(a0 + 0x14);
-    v0 += v1;
-    sw(v0, a0 + 0x10);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Move the given voice to the 'release' state so it can begin to fade out
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_voicerelease(voice_status& voiceStat) noexcept {
+    const uint32_t curAbsTime = *gpWess_drv_curabstime->get();
+    *gWess_drv_releasedVoices |= 1 << (voiceStat.refindx & 0x1F);
+
+    voiceStat.release = true;
+    voiceStat.pabstime = curAbsTime + voiceStat.adsr2;      // TODO: is ADSR2 actually time?
 }
 
 void PSX_voicenote() noexcept {
@@ -1668,7 +1658,7 @@ loc_800475C4:
     v1 = lbu(a0 + 0x3);
     v0 = lbu(s0 + 0x1);
     if (v1 != v0) goto loc_80047618;
-    PSX_voicerelease();
+    PSX_voicerelease(*vmAddrToPtr<voice_status>(a0));
 loc_80047618:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0xEA0);                                // Load from: 8007F160
