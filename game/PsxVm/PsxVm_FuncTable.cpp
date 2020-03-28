@@ -310,13 +310,21 @@ extern void wess_seq_free() noexcept;
 extern void add_music_mute_note() noexcept;
 extern void PSX_UNKNOWN_DrvFunc() noexcept;
 extern void PSX_DriverInit() noexcept;
-extern void PSX_DriverEntry1() noexcept;
+extern void _thunk_PSX_DriverExit() noexcept;
+extern void _thunk_PSX_DriverEntry2() noexcept;
+extern void _thunk_PSX_DriverEntry3() noexcept;
 extern void PSX_TrkOff() noexcept;
 extern void PSX_TrkMute() noexcept;
 extern void PSX_PatchChg() noexcept;
+extern void _thunk_PSX_PatchMod() noexcept;
 extern void PSX_PitchMod() noexcept;
+extern void _thunk_PSX_ZeroMod() noexcept;
+extern void _thunk_PSX_ModuMod() noexcept;
 extern void PSX_VolumeMod() noexcept;
 extern void PSX_PanMod() noexcept;
+extern void _thunk_PSX_PedalMod() noexcept;
+extern void _thunk_PSX_ReverbMod() noexcept;
+extern void _thunk_PSX_ChorusMod() noexcept;
 extern void PSX_voiceon() noexcept;
 extern void PSX_voiceparmoff() noexcept;
 extern void PSX_voicerelease() noexcept;
@@ -719,13 +727,21 @@ namespace PsxVm {
         { 0x80045A0C, &add_music_mute_note },
         { 0x80045ACC, &PSX_UNKNOWN_DrvFunc },
         { 0x80045F8C, &PSX_DriverInit },
-        { 0x800461D4, &PSX_DriverEntry1 },
+        { 0x800461B4, &_thunk_PSX_DriverExit },
+        { 0x800461D4, &_thunk_PSX_DriverEntry2 },
+        { 0x8004648C, &_thunk_PSX_DriverEntry3 },
         { 0x80046494, &PSX_TrkOff },
         { 0x80046540, &PSX_TrkMute },
         { 0x800466FC, &PSX_PatchChg },
+        { 0x80046724, &_thunk_PSX_PatchMod },
         { 0x8004672C, &PSX_PitchMod },
+        { 0x8004697C, &_thunk_PSX_ZeroMod },
+        { 0x80046984, &_thunk_PSX_ModuMod },
         { 0x8004698C, &PSX_VolumeMod },
         { 0x80046CA4, &PSX_PanMod },
+        { 0x80046F80, &_thunk_PSX_PedalMod },
+        { 0x80046F88, &_thunk_PSX_ReverbMod },
+        { 0x80046F90, &_thunk_PSX_ChorusMod },
         { 0x80046F98, &PSX_voiceon },
         { 0x8004706C, &PSX_voiceparmoff },
         { 0x80047134, &PSX_voicerelease },

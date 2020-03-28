@@ -7,23 +7,15 @@
 #include "wessarc.h"
 #include "wessseq.h"
 
-// TODO: REMOVE
+// TODO: REMOVE ALL OF THESE
 void _thunk_PSX_DriverExit() noexcept { PSX_DriverExit(*vmAddrToPtr<master_status_structure>(a0)); }
-// TODO: REMOVE
 void _thunk_PSX_DriverEntry2() noexcept { PSX_DriverEntry2(*vmAddrToPtr<master_status_structure>(a0)); }
-// TODO: REMOVE
 void _thunk_PSX_DriverEntry3() noexcept { PSX_DriverEntry3(*vmAddrToPtr<master_status_structure>(a0)); }
-// TODO: REMOVE
 void _thunk_PSX_PedalMod() noexcept { PSX_PedalMod(*vmAddrToPtr<track_status>(a0)); }
-// TODO: REMOVE
 void _thunk_PSX_ReverbMod() noexcept { PSX_ReverbMod(*vmAddrToPtr<track_status>(a0)); }
-// TODO: REMOVE
 void _thunk_PSX_ChorusMod() noexcept { PSX_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
-// TODO: REMOVE
 void _thunk_PSX_ZeroMod() noexcept { PSX_ZeroMod(*vmAddrToPtr<track_status>(a0)); }
-// TODO: REMOVE
 void _thunk_PSX_ModuMod() noexcept { PSX_ModuMod(*vmAddrToPtr<track_status>(a0)); }
-// TODO: REMOVE
 void _thunk_PSX_PatchMod() noexcept { PSX_PatchMod(*vmAddrToPtr<track_status>(a0)); }
 
 void (* const gWess_drv_cmds[19])() = {
@@ -735,7 +727,7 @@ loc_800466FC:
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Unimplemented mod/effect for the PSX sound driver: doesn't appear to be ever called
+// Unimplemented mod/effect for the PSX sound driver
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_PatchMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
@@ -883,12 +875,12 @@ loc_80046960:
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Unimplemented mod/effect for the PSX sound driver: doesn't appear to be ever called
+// Unimplemented mod/effect for the PSX sound driver
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_ZeroMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Unimplemented mod/effect for the PSX sound driver: doesn't appear to be ever called
+// Unimplemented mod/effect for the PSX sound driver
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_ModuMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
@@ -1259,17 +1251,17 @@ loc_80046F64:
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Unimplemented mod/effect for the PSX sound driver: doesn't appear to be ever called
+// Unimplemented mod/effect for the PSX sound driver
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_PedalMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Unimplemented mod/effect for the PSX sound driver: doesn't appear to be ever called
+// Unimplemented mod/effect for the PSX sound driver
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_ReverbMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Unimplemented mod/effect for the PSX sound driver: doesn't appear to be ever called
+// Unimplemented mod/effect for the PSX sound driver
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_ChorusMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
