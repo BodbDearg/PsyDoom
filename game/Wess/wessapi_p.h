@@ -2,7 +2,9 @@
 
 #include <cstdint>
 
+struct NoteState;
+
 void wess_seq_pause(const int32_t seqNum, const bool bMute) noexcept;
 void wess_seq_restart(const int32_t seqNum) noexcept;
-void queue_wess_seq_pauseall() noexcept;
+void wess_seq_pauseall(const bool bMute, NoteState* const pNoteState) noexcept;
 void queue_wess_seq_restartall() noexcept;

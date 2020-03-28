@@ -44,9 +44,10 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_NullEvent           // 35
 };
 
-const VmPtr<uint8_t>    gWess_master_sfx_volume(0x80075A04);    // TODO: COMMENT
-const VmPtr<uint8_t>    gWess_master_mus_volume(0x80075A05);    // TODO: COMMENT
-const VmPtr<uint8_t>    gWess_pan_status(0x80075A06);           // If panning is disabled: 0 if disabled, 1 if enabled
+const VmPtr<uint8_t>            gWess_master_sfx_volume(0x80075A04);    // TODO: COMMENT
+const VmPtr<uint8_t>            gWess_master_mus_volume(0x80075A05);    // TODO: COMMENT
+const VmPtr<uint8_t>            gWess_pan_status(0x80075A06);           // If panning is disabled: 0 if disabled, 1 if enabled
+const VmPtr<VmPtr<NoteState>>   gpWess_pnotestate(0x80075A10);          // TODO: COMMENT
 
 static const VmPtr<uint32_t>    gWess_Read_Vlq_v(0x8007F200);       // Temp accumulated delta time value used in 'Read_Vlq'
 static const VmPtr<uint8_t>     gWess_Read_Vlq_c(0x8007F204);       // Temp accumulated current byte value used in 'Read_Vlq'

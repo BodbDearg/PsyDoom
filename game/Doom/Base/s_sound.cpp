@@ -279,7 +279,7 @@ loc_80041318:
     a1 = 0x80080000;                                    // Result = 80080000
     a1 -= 0x14E8;                                       // Result = gSavedMusVoiceState[0] (8007EB18)
     a0 = 1;                                             // Result = 00000001
-    queue_wess_seq_pauseall();
+    wess_seq_pauseall(a0, vmAddrToPtr<NoteState>(a1));
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;

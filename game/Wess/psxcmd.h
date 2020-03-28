@@ -1,5 +1,7 @@
 #pragma once
 
+struct NoteState;
+
 // PlayStation sound driver command functions.
 //
 // FIXME: Change to:
@@ -7,7 +9,7 @@
 //
 extern void (* const gWess_drv_cmds[19])();
 
-void start_record_music_mute() noexcept;
+void start_record_music_mute(NoteState* const pNoteState) noexcept;
 void end_record_music_mute() noexcept;
 void add_music_mute_note() noexcept;
 void PSX_UNKNOWN_DrvFunc() noexcept;

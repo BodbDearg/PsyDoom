@@ -295,7 +295,6 @@ extern void _thunk_S_StartSound() noexcept;
 extern void S_UpdateSounds() noexcept;
 extern void PsxSoundInit() noexcept;
 extern void PsxSoundExit() noexcept;
-extern void queue_wess_seq_pauseall() noexcept;
 extern void queue_wess_seq_restartall() noexcept;
 extern void wess_seq_load_err() noexcept;
 extern void wess_seq_loader_install_error_handler() noexcept;
@@ -308,8 +307,6 @@ extern void wess_seq_loader_exit() noexcept;
 extern void wess_seq_sizeof() noexcept;
 extern void wess_seq_load() noexcept;
 extern void wess_seq_free() noexcept;
-extern void start_record_music_mute() noexcept;
-extern void end_record_music_mute() noexcept;
 extern void add_music_mute_note() noexcept;
 extern void PSX_UNKNOWN_DrvFunc() noexcept;
 extern void TriggerPSXVoice() noexcept;
@@ -718,7 +715,6 @@ namespace PsxVm {
 
         { 0x800415EC, &PsxSoundInit },
         { 0x8004172C, &PsxSoundExit },
-        { 0x80041ACC, &queue_wess_seq_pauseall },
         { 0x80041C88, &queue_wess_seq_restartall },
         { 0x80044740, &wess_seq_load_err },
         { 0x80044778, &wess_seq_loader_install_error_handler },
@@ -731,8 +727,6 @@ namespace PsxVm {
         { 0x80045164, &wess_seq_sizeof },
         { 0x800451F4, &wess_seq_load },
         { 0x80045298, &wess_seq_free },
-        { 0x800459E0, &start_record_music_mute },
-        { 0x800459FC, &end_record_music_mute },
         { 0x80045A0C, &add_music_mute_note },
         { 0x80045ACC, &PSX_UNKNOWN_DrvFunc },
         { 0x80045B0C, &TriggerPSXVoice },

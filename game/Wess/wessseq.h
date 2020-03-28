@@ -2,11 +2,13 @@
 
 #include "PsxVm/VmPtr.h"
 
+struct NoteState;
 struct track_status;
 
-extern const VmPtr<uint8_t>     gWess_master_sfx_volume;
-extern const VmPtr<uint8_t>     gWess_master_mus_volume;
-extern const VmPtr<uint8_t>     gWess_pan_status;
+extern const VmPtr<uint8_t>             gWess_master_sfx_volume;
+extern const VmPtr<uint8_t>             gWess_master_mus_volume;
+extern const VmPtr<uint8_t>             gWess_pan_status;
+extern const VmPtr<VmPtr<NoteState>>    gpWess_pnotestate;
 
 // Sequencer command functions.
 //

@@ -2,8 +2,11 @@
 
 #include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
+#include "PsyQ/LIBSPU.h"
 
 struct master_status_structure;
+struct patchinfo_header;
+struct patchmaps_header;
 struct sequence_data;
 struct track_data;
 struct track_status;
@@ -43,6 +46,27 @@ struct TriggerPlayAttr {
 };
 
 static_assert(sizeof(TriggerPlayAttr) == 20);
+
+// Records state for an individual note: used by pause/resume functionality
+struct NoteData {
+    int16_t                     seq_num;        // 0x000    TODO: COMMENT
+	int16_t                     track;          // 0x002    TODO: COMMENT
+	int8_t                      keynum;         // 0x004    TODO: COMMENT
+	int8_t                      velnum;         // 0x005    TODO: COMMENT
+	int16_t                     _pad;           // 0x006    TODO: COMMENT
+	VmPtr<patchmaps_header>     patchmap;	    // 0x008    TODO: COMMENT
+	VmPtr<patchinfo_header>     patchinfo;      // 0x00C    TODO: COMMENT
+};
+
+static_assert(sizeof(NoteData) == 16);
+
+// Records state for all notes: used by pause/resume functionality
+struct NoteState {
+    int32_t     numnotes;
+    NoteData    nd[SPU_NUM_VOICES];
+};
+
+static_assert(sizeof(NoteState) == 388);
 
 extern const VmPtr<bool32_t>                            gbWess_module_loaded;
 extern const VmPtr<VmPtr<master_status_structure>>      gpWess_pm_stat;

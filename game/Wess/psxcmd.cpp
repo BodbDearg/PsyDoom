@@ -3,6 +3,7 @@
 #include "psxspu.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBSPU.h"
+#include "wessapi.h"
 #include "wessseq.h"
 
 void (* const gWess_drv_cmds[19])() = {
@@ -27,21 +28,22 @@ void (* const gWess_drv_cmds[19])() = {
     PSX_NoteOff             // 18
 };
 
-void start_record_music_mute() noexcept {
-loc_800459E0:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x5A10);                                // Store to: gpWess_pnotestate (80075A10)
-    if (a0 == 0) goto loc_800459F4;
-    sw(0, a0);
-loc_800459F4:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets the location where we will start recording note/voice details before temporarily muting
+//------------------------------------------------------------------------------------------------------------------------------------------
+void start_record_music_mute(NoteState* const pNoteState) noexcept {
+    *gpWess_pnotestate = pNoteState;
+
+    if (pNoteState) {
+        pNoteState->numnotes = 0;
+    }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Clears the location where we will record note/voice details while temporarily muting
+//------------------------------------------------------------------------------------------------------------------------------------------
 void end_record_music_mute() noexcept {
-loc_800459FC:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5A10);                                 // Store to: gpWess_pnotestate (80075A10)
-    return;
+    *gpWess_pnotestate = nullptr;
 }
 
 void add_music_mute_note() noexcept {
