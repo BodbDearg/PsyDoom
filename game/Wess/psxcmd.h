@@ -4,6 +4,8 @@
 
 struct master_status_structure;
 struct NoteState;
+struct patchinfo_header;
+struct patchmaps_header;
 struct track_status;
 struct voice_status;
 
@@ -36,7 +38,16 @@ void PSX_PanMod() noexcept;
 void PSX_PedalMod(track_status& trackStat) noexcept;
 void PSX_ReverbMod(track_status& trackStat) noexcept;
 void PSX_ChorusMod(track_status& trackStat) noexcept;
-void PSX_voiceon() noexcept;
+
+void PSX_voiceon(
+    voice_status& voiceStat,
+    track_status& trackStat,
+    patchmaps_header* const pPatchmapHdr,
+    patchinfo_header* const pPatchInfoHdr,
+    const uint8_t voiceNote,
+    const uint8_t voiceVol
+) noexcept;
+
 void PSX_voiceparmoff() noexcept;
 void PSX_voicerelease() noexcept;
 void PSX_voicenote() noexcept;

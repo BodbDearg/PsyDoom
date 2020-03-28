@@ -326,7 +326,6 @@ extern void PSX_PanMod() noexcept;
 extern void _thunk_PSX_PedalMod() noexcept;
 extern void _thunk_PSX_ReverbMod() noexcept;
 extern void _thunk_PSX_ChorusMod() noexcept;
-extern void PSX_voiceon() noexcept;
 extern void PSX_voiceparmoff() noexcept;
 extern void PSX_voicerelease() noexcept;
 extern void PSX_voicenote() noexcept;
@@ -744,7 +743,6 @@ namespace PsxVm {
         { 0x80046F80, &_thunk_PSX_PedalMod },
         { 0x80046F88, &_thunk_PSX_ReverbMod },
         { 0x80046F90, &_thunk_PSX_ChorusMod },
-        { 0x80046F98, &PSX_voiceon },
         { 0x8004706C, &PSX_voiceparmoff },
         { 0x80047134, &PSX_voicerelease },
         { 0x80047180, &PSX_voicenote },

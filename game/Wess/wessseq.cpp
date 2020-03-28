@@ -1,3 +1,7 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Williams Entertainment Sound System (WESS): core sequencer driver commands and sequencer functions.
+// Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
+//------------------------------------------------------------------------------------------------------------------------------------------
 #include "wessseq.h"
 
 #include "PsxVm/PsxVm.h"

@@ -40,9 +40,11 @@ void (* const gWess_drv_cmds[19])() = {
     PSX_NoteOff                 // 18
 };
 
-static const VmPtr<SpuVoiceAttr>                gWess_spuVoiceAttr(0x8007F190);             // Temporary used for setting voice parameters with LIBSPU
-static const VmPtr<VmPtr<track_status>>         gpWess_drv_trackStats(0x8007F16C);          // Pointer to the array of track statuses for all tracks
-static const VmPtr<uint8_t[SPU_NUM_VOICES]>     gWess_drv_chanReverbAmt(0x8007F1E8);        // Current reverb levels for each channel/voice
+static const VmPtr<VmPtr<master_status_structure>>      gpWess_drv_mstat(0x8007F164);               // Pointer to the master status structure being used by the sequencer
+static const VmPtr<SpuVoiceAttr>                        gWess_spuVoiceAttr(0x8007F190);             // Temporary used for setting voice parameters with LIBSPU
+static const VmPtr<VmPtr<track_status>>                 gpWess_drv_trackStats(0x8007F16C);          // Pointer to the array of track statuses for all tracks
+static const VmPtr<uint8_t[SPU_NUM_VOICES]>             gWess_drv_chanReverbAmt(0x8007F1E8);        // Current reverb levels for each channel/voice
+static const VmPtr<VmPtr<uint32_t>>                     gpWess_drv_curabstime(0x8007F17C);          // Pointer to the current absolute time for the sequencer system: TODO: COMMENT on what the time value is
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the location where we will start recording note/voice details before temporarily muting
@@ -1265,62 +1267,44 @@ void PSX_ReverbMod([[maybe_unused]] track_status& trackStat) noexcept {}
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_ChorusMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
-void PSX_voiceon() noexcept {
-loc_80046F98:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = lw(a0);
-    v1 = -3;                                            // Result = FFFFFFFD
-    v0 |= 1;
-    v0 &= v1;
-    sw(v0, a0);
-    v0 = lbu(a1 + 0x1);
-    t0 = lbu(sp + 0x28);
-    t1 = lbu(sp + 0x2C);
-    sb(v0, a0 + 0x3);
-    v0 = lbu(a1 + 0x8);
-    sb(t0, a0 + 0x5);
-    sb(t1, a0 + 0x6);
-    sb(0, a0 + 0x7);
-    sb(v0, a0 + 0x4);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE84);                                // Load from: 8007F17C
-    sw(a2, a0 + 0x8);
-    sw(a3, a0 + 0xC);
-    v0 = lw(v0);
-    sw(v0, a0 + 0x10);
-    v1 = lhu(a2 + 0xE);
-    v0 = v1 & 0x20;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 & 0x1F;
-        if (bJump) goto loc_80047018;
-    }
-    v1 = 0x1F;                                          // Result = 0000001F
-    v1 -= v0;
-    v0 = 0x10000000;                                    // Result = 10000000
-    goto loc_80047024;
-loc_80047018:
-    v1 = 0x1F;                                          // Result = 0000001F
-    v1 -= v0;
-    v0 = 0x5DC0000;                                     // Result = 05DC0000
-loc_80047024:
-    v0 = i32(v0) >> v1;
-    sw(v0, a0 + 0x14);
-    v0 = lbu(a1 + 0x10);
-    v0++;
-    sb(v0, a1 + 0x10);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE9C);                                // Load from: 8007F164
-    a2 = t1;
-    v0 = lbu(v1 + 0x6);
-    a1 = t0;
-    v0++;
-    sb(v0, v1 + 0x6);
-    TriggerPSXVoice(*vmAddrToPtr<voice_status>(a0), (uint8_t) a1, (uint8_t) a2);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Triggers the given voice using the given params and fills in part of it's allocated status structure
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_voiceon(
+    voice_status& voiceStat,
+    track_status& trackStat,
+    patchmaps_header* const pPatchmapHdr,
+    patchinfo_header* const pPatchInfoHdr,
+    const uint8_t voiceNote,
+    const uint8_t voiceVol
+) noexcept {
+    master_status_structure& mstat = *gpWess_drv_mstat->get();
+
+    // Fill in basic fields on the voice status
+    voiceStat.active = true;
+    voiceStat.release = false;
+    voiceStat.track = trackStat.refindx;
+    voiceStat.keynum = voiceNote;
+    voiceStat.velnum = voiceVol;
+    voiceStat.sndtype = 0;
+    voiceStat.priority = trackStat.priority;
+    voiceStat.patchmaps = pPatchmapHdr;
+    voiceStat.patchinfo = pPatchInfoHdr;
+    voiceStat.pabstime = *gpWess_drv_curabstime->get();
+    
+    // Setting ADSR parameters on the voice.
+    //
+    // TODO: what exactly does this mean here? Find out more.
+    const int32_t adsr = (pPatchmapHdr->adsr2 & 0x20) ? 0x10000000 : 0x05DC0000;
+    const uint32_t adsrShift = (0x1F - (pPatchmapHdr->adsr2 & 0x1F)) & 0x1F;
+    voiceStat.adsr2 = adsr >> adsrShift;
+
+    // Inc voice count stats
+    trackStat.voices_active++;
+    mstat.voices_active++;
+
+    // Actually trigger the voice with the hardware
+    TriggerPSXVoice(voiceStat, voiceNote, voiceVol);
 }
 
 void PSX_voiceparmoff() noexcept {
@@ -1431,7 +1415,16 @@ loc_800471E8:
     v0 = s1 & 0xFF;
     sw(v0, sp + 0x10);
     sw(s4, sp + 0x14);
-    PSX_voiceon();
+
+    PSX_voiceon(
+        *vmAddrToPtr<voice_status>(a0),
+        *vmAddrToPtr<track_status>(a1),
+        vmAddrToPtr<patchmaps_header>(a2),
+        vmAddrToPtr<patchinfo_header>(a3),
+        (uint8_t) v0,
+        (uint8_t) s4
+    );
+
     at = 0x80080000;                                    // Result = 80080000
     sw(0, at - 0xEC8);                                  // Store to: 8007F138
     goto loc_80047328;
@@ -1506,7 +1499,16 @@ loc_80047328:
     v0 = s1 & 0xFF;
     sw(v0, sp + 0x10);
     sw(s4, sp + 0x14);
-    PSX_voiceon();
+
+    PSX_voiceon(
+        *vmAddrToPtr<voice_status>(a0),
+        *vmAddrToPtr<track_status>(a1),
+        vmAddrToPtr<patchmaps_header>(a2),
+        vmAddrToPtr<patchinfo_header>(a3),
+        (uint8_t) v0,
+        (uint8_t) s4
+    );
+
 loc_80047370:
     ra = lw(sp + 0x2C);
     s4 = lw(sp + 0x28);
