@@ -12,6 +12,7 @@ void _thunk_PSX_DriverInit() noexcept { PSX_DriverInit(*vmAddrToPtr<master_statu
 void _thunk_PSX_DriverExit() noexcept { PSX_DriverExit(*vmAddrToPtr<master_status_structure>(a0)); }
 void _thunk_PSX_DriverEntry2() noexcept { PSX_DriverEntry2(*vmAddrToPtr<master_status_structure>(a0)); }
 void _thunk_PSX_DriverEntry3() noexcept { PSX_DriverEntry3(*vmAddrToPtr<master_status_structure>(a0)); }
+void _thunk_PSX_TrkOff() noexcept { PSX_TrkOff(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_TrkMute() noexcept { PSX_TrkMute(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_PatchMod() noexcept { PSX_PatchMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_ZeroMod() noexcept { PSX_ZeroMod(*vmAddrToPtr<track_status>(a0)); }
@@ -27,7 +28,7 @@ void (* const gWess_drv_cmds[19])() = {
     PSX_DriverEntry1,           // 02
     _thunk_PSX_DriverEntry2,    // 03
     _thunk_PSX_DriverEntry3,    // 04
-    PSX_TrkOff,                 // 05
+    _thunk_PSX_TrkOff,          // 05
     _thunk_PSX_TrkMute,         // 06
     PSX_PatchChg,               // 07
     _thunk_PSX_PatchMod,        // 08
@@ -502,46 +503,28 @@ void PSX_DriverEntry2([[maybe_unused]] master_status_structure& mstat) noexcept 
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_DriverEntry3([[maybe_unused]] master_status_structure& mstat) noexcept {}
 
-void PSX_TrkOff() noexcept {
-loc_80046494:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v1 = lbu(s0 + 0x2);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE98);                                // Load from: gWess_Dvr_pss (8007F168)
-    v0 <<= 3;
-    v0 += v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF2C);                                 // Store to: 8007F0D4
-    PSX_TrkMute(*vmAddrToPtr<track_status>(a0));
-    v0 = lbu(s0 + 0x10);
-    if (v0 == 0) goto loc_80046524;
-    v0 = lw(s0);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xF2C);                                // Load from: 8007F0D4
-    v0 |= 0x88;
-    sw(v0, s0);
-    v0 = lbu(v1 + 0x5);
-    v0--;
-    sb(v0, v1 + 0x5);
-    v0 &= 0xFF;
-    if (v0 != 0) goto loc_8004652C;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF2C);                                // Load from: 8007F0D4
-    sb(0, v0 + 0x1);
-    goto loc_8004652C;
-loc_80046524:
-    a0 = s0;
-    Eng_TrkOff(*vmAddrToPtr<track_status>(a0));
-loc_8004652C:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Stops the given track
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_TrkOff(track_status& trackStat) noexcept {
+    // Mute the track
+    PSX_TrkMute(trackStat);
+
+    if (trackStat.voices_active == 0) {
+        // If there are no voices left active in the track then stop in the sequencer
+        Eng_TrkOff(trackStat);
+    } else {
+        // Otherwise decrement the number of sequence tracks playing and update state
+        trackStat.off = true;
+        trackStat.stopped = true;
+
+        sequence_status& seqStat = gpWess_drv_seqStats->get()[trackStat.seq_owner];
+        seqStat.tracks_playing--;
+
+        if (seqStat.tracks_playing == 0) {
+            seqStat.playmode = SEQ_STATE_STOPPED;
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
