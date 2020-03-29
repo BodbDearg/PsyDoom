@@ -55,7 +55,7 @@ void (* const gWess_DrvFunctions[36])() = {
 const VmPtr<uint8_t>            gWess_master_sfx_volume(0x80075A04);    // TODO: COMMENT
 const VmPtr<uint8_t>            gWess_master_mus_volume(0x80075A05);    // TODO: COMMENT
 const VmPtr<PanMode>            gWess_pan_status(0x80075A06);           // Pan mode: '0' if disabled, '1' if enabled, '2' if enabled (reverse)
-const VmPtr<VmPtr<NoteState>>   gpWess_pnotestate(0x80075A10);          // TODO: COMMENT
+const VmPtr<VmPtr<NoteState>>   gpWess_notestate(0x80075A10);           // TODO: COMMENT
 
 static const VmPtr<VmPtr<master_status_structure>>      gpWess_eng_mstat(0x80075AC0);           // TODO: COMMENT
 static const VmPtr<VmPtr<sequence_status>>              gpWess_eng_seqStats(0x80075ABC);        // TODO: COMMENT

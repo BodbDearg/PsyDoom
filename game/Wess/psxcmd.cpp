@@ -64,7 +64,7 @@ static const VmPtr<SpuVoiceAttr>                        gWess_spuVoiceAttr(0x800
 // Sets the location where we will start recording note/voice details before temporarily muting
 //------------------------------------------------------------------------------------------------------------------------------------------
 void start_record_music_mute(NoteState* const pNoteState) noexcept {
-    *gpWess_pnotestate = pNoteState;
+    *gpWess_notestate = pNoteState;
 
     if (pNoteState) {
         pNoteState->numnotes = 0;
@@ -75,49 +75,37 @@ void start_record_music_mute(NoteState* const pNoteState) noexcept {
 // Clears the location where we will record note/voice details while temporarily muting
 //------------------------------------------------------------------------------------------------------------------------------------------
 void end_record_music_mute() noexcept {
-    *gpWess_pnotestate = nullptr;
+    *gpWess_notestate = nullptr;
 }
 
-void add_music_mute_note() noexcept {
-loc_80045A0C:
-    t0 = lw(sp + 0x10);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5A10);                               // Load from: gpWess_pnotestate (80075A10)
-    t1 = lw(sp + 0x14);
-    if (v1 == 0) goto loc_80045AC4;
-    v0 = lw(v1);
-    v0 <<= 4;
-    v0 += v1;
-    sh(a0, v0 + 0x4);
-    v0 = lw(v1);
-    v0 <<= 4;
-    v0 += v1;
-    sh(a1, v0 + 0x6);
-    v0 = lw(v1);
-    v0 <<= 4;
-    v0 += v1;
-    sb(a2, v0 + 0x8);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5A10);                               // Load from: gpWess_pnotestate (80075A10)
-    v0 = lw(v1);
-    v0 <<= 4;
-    v1 += v0;
-    sb(a3, v1 + 0x9);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5A10);                               // Load from: gpWess_pnotestate (80075A10)
-    v0 = lw(v1);
-    v0 <<= 4;
-    v0 += v1;
-    sw(t0, v0 + 0xC);
-    v0 = lw(v1);
-    v0 <<= 4;
-    v0 += v1;
-    sw(t1, v0 + 0x10);
-    v0 = lw(v1);
-    v0++;
-    sw(v0, v1);
-loc_80045AC4:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Records details about a playing note for later un-pausing
+//------------------------------------------------------------------------------------------------------------------------------------------
+void add_music_mute_note(
+    const int16_t seqNum,
+    const int16_t track,
+    const uint8_t note,
+    const uint8_t noteVol,
+    patchmaps_header& patchmap,
+    patchinfo_header& patchInfo
+) noexcept {
+    NoteState* const pNoteState = gpWess_notestate->get();
+
+    if (pNoteState) {
+        // PC-PSX: sanity check we haven't exceeded the bounds of the saved notes array.
+        // This shouldn't be called more times than there are hardware voices available!
+        ASSERT(pNoteState->numnotes < SPU_NUM_VOICES);
+
+        NoteData& noteData = pNoteState->nd[pNoteState->numnotes];
+        noteData.seq_num = seqNum;
+        noteData.track = track;
+        noteData.keynum = note;
+        noteData.velnum = noteVol;
+        noteData.patchmap = &patchmap;
+        noteData.patchinfo = &patchInfo;
+
+        pNoteState->numnotes++;
+    }
 }
 
 void PSX_UNKNOWN_DrvFunc() noexcept {
@@ -611,7 +599,16 @@ loc_8004659C:
     sw(v1, sp + 0x10);
     v0 = lw(t0 + 0xC);
     sw(v0, sp + 0x14);
-    add_music_mute_note();
+
+    add_music_mute_note(
+        (int16_t) a0,
+        (int16_t) a1,
+        (uint8_t) a2,
+        (uint8_t) a3,
+        *vmAddrToPtr<patchmaps_header>(lw(sp + 0x10)),
+        *vmAddrToPtr<patchinfo_header>(lw(sp + 0x14))
+    );
+
 loc_80046648:
     v1 = 0x1F;                                          // Result = 0000001F
 loc_8004664C:

@@ -2894,7 +2894,7 @@ static const ProgElem ELEMS[] = {
     { 0x80075A06, 0x80075A07, "gWess_pan_status",                       ProgElemType::UINT8 },
     { 0x80075A07, 0x80075A08, "gWess_UNKNOWN_status_byte",              ProgElemType::UINT8 },
     { 0x80075A08, 0x80075A0C, "gWess_drv_releasedVoices",               ProgElemType::UINT32 },
-    { 0x80075A10, 0x80075A14, "gpWess_pnotestate",                      ProgElemType::PTR32 },
+    { 0x80075A10, 0x80075A14, "gpWess_notestate",                       ProgElemType::PTR32 },
     { 0x80075A20, 0x80075AB0, "gWess_DrvFunctions",                     ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80075AB4, 0x80075AB5, "gWess_eng_maxTracks",                    ProgElemType::UINT8 },
     { 0x80075AB8, 0x80075ABC, "gpWess_eng_trackStats",                  ProgElemType::PTR32 },

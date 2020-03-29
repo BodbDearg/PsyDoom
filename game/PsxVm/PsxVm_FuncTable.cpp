@@ -307,7 +307,6 @@ extern void wess_seq_loader_exit() noexcept;
 extern void wess_seq_sizeof() noexcept;
 extern void wess_seq_load() noexcept;
 extern void wess_seq_free() noexcept;
-extern void add_music_mute_note() noexcept;
 extern void PSX_UNKNOWN_DrvFunc() noexcept;
 extern void _thunk_PSX_DriverInit() noexcept;
 extern void _thunk_PSX_DriverExit() noexcept;
@@ -722,7 +721,6 @@ namespace PsxVm {
         { 0x80045164, &wess_seq_sizeof },
         { 0x800451F4, &wess_seq_load },
         { 0x80045298, &wess_seq_free },
-        { 0x80045A0C, &add_music_mute_note },
         { 0x80045ACC, &PSX_UNKNOWN_DrvFunc },
         { 0x80045F8C, &_thunk_PSX_DriverInit },
         { 0x800461B4, &_thunk_PSX_DriverExit },

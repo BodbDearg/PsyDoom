@@ -16,7 +16,7 @@ enum PanMode : uint8_t {
 extern const VmPtr<uint8_t>             gWess_master_sfx_volume;
 extern const VmPtr<uint8_t>             gWess_master_mus_volume;
 extern const VmPtr<PanMode>             gWess_pan_status;
-extern const VmPtr<VmPtr<NoteState>>    gpWess_pnotestate;
+extern const VmPtr<VmPtr<NoteState>>    gpWess_notestate;
 
 // Sequencer command functions.
 //
