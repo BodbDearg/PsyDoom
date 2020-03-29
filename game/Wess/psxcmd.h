@@ -48,7 +48,7 @@ void PSX_voiceon(
     const uint8_t voiceVol
 ) noexcept;
 
-void PSX_voiceparmoff() noexcept;
+void PSX_voiceparmoff(voice_status& voiceStat) noexcept;
 void PSX_voicerelease(voice_status& voiceStat) noexcept;
 void PSX_voicenote() noexcept;
 void PSX_NoteOn() noexcept;

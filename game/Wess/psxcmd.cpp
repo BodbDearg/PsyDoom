@@ -377,7 +377,7 @@ loc_80046238:
     v0 = lw(a0 + 0x10);
     v0 = (v0 < v1);
     if (v0 == 0) goto loc_800462A4;
-    PSX_voiceparmoff();
+    PSX_voiceparmoff(*vmAddrToPtr<voice_status>(a0));
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0xF44);                                // Load from: 8007F0BC
     v0--;
@@ -472,7 +472,7 @@ loc_800463E0:
     v0 += s1;
     v0 = lbu(v0);
     if (v0 != 0) goto loc_80046428;
-    PSX_voiceparmoff();
+    PSX_voiceparmoff(*vmAddrToPtr<voice_status>(a0));
 loc_80046428:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0xF38);                                // Load from: 8007F0C8
@@ -1253,50 +1253,26 @@ void PSX_voiceon(
     TriggerPSXVoice(voiceStat, voiceNote, voiceVol);
 }
 
-void PSX_voiceparmoff() noexcept {
-loc_8004706C:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v1 = lbu(s0 + 0x3);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xE9C);                                // Load from: 8007F164
-    v0 = v1 << 2;
-    v0 += v1;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE94);                                // Load from: 8007F16C
-    v0 <<= 4;
-    v0 += v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xED0);                                 // Store to: 8007F130
-    v0 = lbu(a0 + 0x6);
-    v0--;
-    sb(v0, a0 + 0x6);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xED0);                                // Load from: 8007F130
-    v0 = lbu(v1 + 0x10);
-    v0--;
-    sb(v0, v1 + 0x10);
-    v0 &= 0xFF;
-    if (v0 != 0) goto loc_80047108;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xED0);                                // Load from: 8007F130
-    v0 = lw(a0);
-    v0 &= 0x80;
-    if (v0 == 0) goto loc_80047108;
-    Eng_TrkOff(*vmAddrToPtr<track_status>(a0));
-loc_80047108:
-    v0 = lw(s0);
-    v1 = -2;                                            // Result = FFFFFFFE
-    v0 &= v1;
-    v1 = -3;                                            // Result = FFFFFFFD
-    v0 &= v1;
-    sw(v0, s0);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Free up the given voice, and potentially the parent track if it has no more voices active
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_voiceparmoff(voice_status& voiceStat) noexcept {
+    master_status_structure& mstat = *gpWess_drv_mstat->get();
+    track_status& trackStat = gpWess_drv_trackStats->get()[voiceStat.track];
+
+    // Update track and global voice stats
+    mstat.voices_active--;
+    trackStat.voices_active--;
+
+    // Turn off the track if there's no more voices active and it's allowed
+    if ((trackStat.voices_active == 0) && trackStat.off) {
+        Eng_TrkOff(trackStat);
+    }
+
+    // Voice is not active and not in the release phase
+    voiceStat.active = false;
+    voiceStat.release = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1425,7 +1401,7 @@ loc_80047328:
     if (v0 == 0) goto loc_80047370;
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x5A14);                               // Load from: 80075A14
-    PSX_voiceparmoff();
+    PSX_voiceparmoff(*vmAddrToPtr<voice_status>(a0));
     a1 = s0;
     a2 = s2;
     a3 = s3;
