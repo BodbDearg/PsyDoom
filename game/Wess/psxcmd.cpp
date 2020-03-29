@@ -12,12 +12,13 @@ void _thunk_PSX_DriverInit() noexcept { PSX_DriverInit(*vmAddrToPtr<master_statu
 void _thunk_PSX_DriverExit() noexcept { PSX_DriverExit(*vmAddrToPtr<master_status_structure>(a0)); }
 void _thunk_PSX_DriverEntry2() noexcept { PSX_DriverEntry2(*vmAddrToPtr<master_status_structure>(a0)); }
 void _thunk_PSX_DriverEntry3() noexcept { PSX_DriverEntry3(*vmAddrToPtr<master_status_structure>(a0)); }
+void _thunk_PSX_TrkMute() noexcept { PSX_TrkMute(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_PSX_PatchMod() noexcept { PSX_PatchMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_PSX_ZeroMod() noexcept { PSX_ZeroMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_PSX_ModuMod() noexcept { PSX_ModuMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_PedalMod() noexcept { PSX_PedalMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_ReverbMod() noexcept { PSX_ReverbMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_ChorusMod() noexcept { PSX_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_ZeroMod() noexcept { PSX_ZeroMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_ModuMod() noexcept { PSX_ModuMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_PatchMod() noexcept { PSX_PatchMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_NoteOff() noexcept { PSX_NoteOff(*vmAddrToPtr<track_status>(a0)); }
 
 void (* const gWess_drv_cmds[19])() = {
@@ -27,7 +28,7 @@ void (* const gWess_drv_cmds[19])() = {
     _thunk_PSX_DriverEntry2,    // 03
     _thunk_PSX_DriverEntry3,    // 04
     PSX_TrkOff,                 // 05
-    PSX_TrkMute,                // 06
+    _thunk_PSX_TrkMute,         // 06
     PSX_PatchChg,               // 07
     _thunk_PSX_PatchMod,        // 08
     PSX_PitchMod,               // 09
@@ -41,6 +42,9 @@ void (* const gWess_drv_cmds[19])() = {
     PSX_NoteOn,                 // 17
     _thunk_PSX_NoteOff          // 18
 };
+
+// TODO: COMMENT
+static constexpr uint8_t VOICE_RELEASE_RATE = 13;
 
 static const VmPtr<VmPtr<master_status_structure>>      gpWess_drv_mstat(0x8007F164);               // Pointer to the master status structure being used by the sequencer
 static const VmPtr<VmPtr<sequence_status>>              gpWess_drv_seqStats(0x8007F168);            // TODO: COMMENT
@@ -58,6 +62,7 @@ static const VmPtr<uint32_t>                            gWess_drv_hwVoiceLimit(0
 static const VmPtr<VmPtr<uint32_t>>                     gpWess_drv_curabstime(0x8007F17C);          // Pointer to the current absolute time for the sequencer system: TODO: COMMENT on what the time value is
 static const VmPtr<uint8_t[SPU_NUM_VOICES]>             gWess_drv_chanReverbAmt(0x8007F1E8);        // Current reverb levels for each channel/voice
 static const VmPtr<uint32_t>                            gWess_drv_releasedVoices(0x80075A08);       // TODO: COMMENT
+static const VmPtr<uint32_t>                            gWess_drv_mutedVoices(0x80075A0C);          // TODO: COMMENT
 static const VmPtr<SpuVoiceAttr>                        gWess_spuVoiceAttr(0x8007F190);             // Temporary used for setting voice parameters with LIBSPU
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -512,7 +517,7 @@ loc_80046494:
     v0 += v1;
     at = 0x80080000;                                    // Result = 80080000
     sw(v0, at - 0xF2C);                                 // Store to: 8007F0D4
-    PSX_TrkMute();
+    PSX_TrkMute(*vmAddrToPtr<track_status>(a0));
     v0 = lbu(s0 + 0x10);
     if (v0 == 0) goto loc_80046524;
     v0 = lw(s0);
@@ -539,122 +544,52 @@ loc_8004652C:
     return;
 }
 
-void PSX_TrkMute() noexcept {
-loc_80046540:
-    sp -= 0x28;
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(ra, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    v0 = lbu(s0 + 0x10);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF28);                                 // Store to: 8007F0D8
-    if (v0 == 0) goto loc_800466E4;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE8C);                                // Load from: 8007F174
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE90);                                // Load from: 8007F170
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF20);                                 // Store to: 8007F0E0
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF24);                                 // Store to: 8007F0DC
-    s1 = 1;                                             // Result = 00000001
-    if (v1 == v0) goto loc_800466E4;
-loc_8004659C:
-    t0 = 0x80080000;                                    // Result = 80080000
-    t0 = lw(t0 - 0xF20);                                // Load from: 8007F0E0
-    a0 = lw(t0);
-    v0 = a0 & 1;
-    if (v0 == 0) goto loc_800466B0;
-    v1 = lbu(t0 + 0x3);
-    v0 = lbu(s0 + 0x1);
-    if (v1 != v0) goto loc_800466B0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5A10);                               // Load from: gpWess_pnotestate (80075A10)
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 & 2;
-        if (bJump) goto loc_80046648;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Command that mutes the given track
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_TrkMute(track_status& trackStat) noexcept {    
+    // If there are no voices active in the track then there is nothing to do
+    uint32_t numActiveTrackVoices = trackStat.voices_active;
+
+    if (numActiveTrackVoices == 0)
+        return;
+
+    // Run through all PSX hardware voices and mute the ones belonging to this track
+    uint32_t numHwVoices = *gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoices = gpWess_drv_psxVoiceStats->get();
+
+    for (uint32_t voiceIdx = 0; voiceIdx < numHwVoices; ++voiceIdx) {
+        voice_status& voiceStat = pHwVoices[voiceIdx];
+
+        // Only mute this voice if active and belonging to this track, ignore otherwise
+        if ((!voiceStat.active) || (voiceStat.track != trackStat.refindx))
+            continue;
+        
+        // If the voice is not being killed, is a music voice and we are recording note state then save for later un-pause
+        if (gpWess_notestate->get() && (!voiceStat.release) && (trackStat.sndclass == MUSIC_CLASS)) {
+            sequence_status& seqStat = gpWess_drv_seqStats->get()[trackStat.seq_owner];
+
+            add_music_mute_note(
+                seqStat.seq_num,
+                voiceStat.track,
+                voiceStat.keynum,
+                voiceStat.velnum,
+                *voiceStat.patchmaps,
+                *voiceStat.patchinfo
+            );
+        }
+
+        // Begin releasing the voice
+        voiceStat.adsr2 = 0x10000000 >> (31 - (VOICE_RELEASE_RATE % 32));   // TODO: what is this doing here?
+        PSX_voicerelease(voiceStat);
+        *gWess_drv_mutedVoices |= 1 << (voiceStat.refindx % 32);
+
+        // If there are no more active voices in the track then we are done
+        numActiveTrackVoices--;
+
+        if (numActiveTrackVoices == 0)
+            return;
     }
-    if (v0 != 0) goto loc_80046648;
-    v0 = lbu(s0 + 0x13);
-    v1 = 0x1F;                                          // Result = 0000001F
-    if (v0 != s1) goto loc_8004664C;
-    v1 = lbu(s0 + 0x2);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE98);                                // Load from: gWess_Dvr_pss (8007F168)
-    v0 <<= 3;
-    v0 += v1;
-    v1 = lw(t0 + 0x8);
-    a0 = lh(v0 + 0x2);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF1C);                                 // Store to: 8007F0E4
-    a1 = lbu(t0 + 0x3);
-    a2 = lbu(t0 + 0x5);
-    a3 = lbu(t0 + 0x6);
-    sw(v1, sp + 0x10);
-    v0 = lw(t0 + 0xC);
-    sw(v0, sp + 0x14);
-
-    add_music_mute_note(
-        (int16_t) a0,
-        (int16_t) a1,
-        (uint8_t) a2,
-        (uint8_t) a3,
-        *vmAddrToPtr<patchmaps_header>(lw(sp + 0x10)),
-        *vmAddrToPtr<patchinfo_header>(lw(sp + 0x14))
-    );
-
-loc_80046648:
-    v1 = 0x1F;                                          // Result = 0000001F
-loc_8004664C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x5A07);                              // Load from: gWess_UNKNOWN_status_byte (80075A07)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xF20);                                // Load from: 8007F0E0
-    v1 -= v0;
-    v0 = 0x10000000;                                    // Result = 10000000
-    v0 = i32(v0) >> v1;
-    sw(v0, a0 + 0x14);
-    PSX_voicerelease(*vmAddrToPtr<voice_status>(a0));
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF20);                                // Load from: 8007F0E0
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xF28);                                // Load from: 8007F0D8
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5A0C);                               // Load from: 80075A0C
-    v0 = lbu(v0 + 0x2);
-    a0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xF28);                                 // Store to: 8007F0D8
-    v0 = s1 << v0;
-    v0 |= v1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5A0C);                                // Store to: 80075A0C
-    if (a0 == 0) goto loc_800466E4;
-loc_800466B0:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF20);                                // Load from: 8007F0E0
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xF24);                                // Load from: 8007F0DC
-    v0 += 0x18;
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF20);                                 // Store to: 8007F0E0
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF24);                                 // Store to: 8007F0DC
-    if (v1 != v0) goto loc_8004659C;
-loc_800466E4:
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
 }
 
 void PSX_PatchChg() noexcept {
@@ -1250,7 +1185,6 @@ void PSX_voiceon(
     TriggerPSXVoice(voiceStat, voiceNote, voiceVol);
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Free up the given voice, and potentially the parent track if it has no more voices active
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1277,7 +1211,7 @@ void PSX_voiceparmoff(voice_status& voiceStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_voicerelease(voice_status& voiceStat) noexcept {
     const uint32_t curAbsTime = *gpWess_drv_curabstime->get();
-    *gWess_drv_releasedVoices |= 1 << (voiceStat.refindx & 0x1F);
+    *gWess_drv_releasedVoices |= 1 << (voiceStat.refindx % 32);
 
     voiceStat.release = true;
     voiceStat.pabstime = curAbsTime + voiceStat.adsr2;      // TODO: is ADSR2 actually time?

@@ -36,7 +36,7 @@ void PSX_DriverEntry1() noexcept;
 void PSX_DriverEntry2(master_status_structure& mstat) noexcept;
 void PSX_DriverEntry3(master_status_structure& mstat) noexcept;
 void PSX_TrkOff() noexcept;
-void PSX_TrkMute() noexcept;
+void PSX_TrkMute(track_status& trackStat) noexcept;
 void PSX_PatchChg() noexcept;
 void PSX_PatchMod(track_status& trackStat) noexcept;
 void PSX_PitchMod() noexcept;
