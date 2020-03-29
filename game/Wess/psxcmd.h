@@ -52,4 +52,4 @@ void PSX_voiceparmoff() noexcept;
 void PSX_voicerelease(voice_status& voiceStat) noexcept;
 void PSX_voicenote() noexcept;
 void PSX_NoteOn() noexcept;
-void PSX_NoteOff() noexcept;
+void PSX_NoteOff(track_status& trackStat) noexcept;

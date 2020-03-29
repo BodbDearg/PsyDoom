@@ -18,6 +18,7 @@ void _thunk_PSX_ChorusMod() noexcept { PSX_ChorusMod(*vmAddrToPtr<track_status>(
 void _thunk_PSX_ZeroMod() noexcept { PSX_ZeroMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_ModuMod() noexcept { PSX_ModuMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_PatchMod() noexcept { PSX_PatchMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_PSX_NoteOff() noexcept { PSX_NoteOff(*vmAddrToPtr<track_status>(a0)); }
 
 void (* const gWess_drv_cmds[19])() = {
     _thunk_PSX_DriverInit,      // 00
@@ -38,7 +39,7 @@ void (* const gWess_drv_cmds[19])() = {
     _thunk_PSX_ReverbMod,       // 15
     _thunk_PSX_ChorusMod,       // 16
     PSX_NoteOn,                 // 17
-    PSX_NoteOff                 // 18
+    _thunk_PSX_NoteOff          // 18
 };
 
 static const VmPtr<VmPtr<master_status_structure>>      gpWess_drv_mstat(0x8007F164);               // Pointer to the master status structure being used by the sequencer
@@ -1568,58 +1569,26 @@ loc_80047564:
     return;
 }
 
-void PSX_NoteOff() noexcept {
-loc_80047578:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE90);                                // Load from: 8007F170
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE8C);                                // Load from: 8007F174
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xEA0);                                 // Store to: 8007F160
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xEA4);                                 // Store to: 8007F15C
-    s0 = a0;
-    if (v1 == v0) goto loc_80047648;
-    s2 = 1;                                             // Result = 00000001
-    s1 = -1;                                            // Result = FFFFFFFF
-loc_800475C4:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xEA0);                                // Load from: 8007F160
-    v0 = lw(a0);
-    v0 &= 3;
-    if (v0 != s2) goto loc_80047618;
-    v0 = lw(s0 + 0x34);
-    v1 = lbu(a0 + 0x5);
-    v0 = lbu(v0 + 0x1);
-    if (v1 != v0) goto loc_80047618;
-    v1 = lbu(a0 + 0x3);
-    v0 = lbu(s0 + 0x1);
-    if (v1 != v0) goto loc_80047618;
-    PSX_voicerelease(*vmAddrToPtr<voice_status>(a0));
-loc_80047618:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xEA0);                                // Load from: 8007F160
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xEA4);                                // Load from: 8007F15C
-    v0 += 0x18;
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xEA0);                                 // Store to: 8007F160
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xEA4);                                 // Store to: 8007F15C
-    if (v1 != s1) goto loc_800475C4;
-loc_80047648:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sequencer command that turns off a specified note for the specified track
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_NoteOff(track_status& trackStat) noexcept {
+    // Grab some stuff we'll need in the loop
+    const uint32_t numHwVoices = *gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats->get();
+
+    const uint8_t cmdNote = trackStat.ppos[1];
+    const uint8_t cmdTrackIdx = trackStat.refindx;
+    
+    // Run through all the hardware voices and disable the requested note for this track
+    for (uint32_t hwVoiceIdx = 0; hwVoiceIdx < numHwVoices; ++hwVoiceIdx) {
+        voice_status& voiceStat = pHwVoiceStats[hwVoiceIdx];
+
+        // Only disable if the voice is playing and not already releasing
+        if (voiceStat.active && (!voiceStat.release)) {
+            if ((voiceStat.keynum == cmdNote) && (voiceStat.track == cmdTrackIdx)) {
+                PSX_voicerelease(voiceStat);
+            }
+        }
+    }
 }
