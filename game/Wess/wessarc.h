@@ -14,7 +14,7 @@ enum SoundHardwareTags : uint32_t {
 };
 
 // Sound driver ids
-enum SoundDriverIds : uint8_t {
+enum SoundDriverId : uint8_t {
     NoSound_ID  = 0,        // No sound driver
     PSX_ID      = 1,        // Sony PlayStation sound driver
     GENERIC_ID  = 50        // Generic hardware agnostic sound driver
@@ -102,6 +102,14 @@ struct patchinfo_header {
 
 static_assert(sizeof(patchinfo_header) == 12);
 
+// Defines a drum type in a drunk track
+struct drumpmaps_header {
+    uint16_t    patchnum;       // Watch patch to use for this drum
+    uint16_t    note;           // What note/pitch to play the drum at
+};
+
+static_assert(sizeof(drumpmaps_header) == 4);
+
 // TODO: COMMENT
 struct module_header {
     int32_t     module_id_text;         // 0x000    TODO: COMMENT
@@ -127,22 +135,22 @@ enum SoundClass : uint8_t {
 
 // TODO: COMMENT
 struct track_header {
-    uint8_t     voices_type;            // 0x000    TODO: COMMENT
-    uint8_t     voices_max;             // 0x001    TODO: COMMENT
-    uint8_t     priority;               // 0x002    TODO: COMMENT
-    uint8_t     lockchannel;            // 0x003    TODO: COMMENT
-    SoundClass  voices_class;           // 0x004    TODO: COMMENT
-    uint8_t     reverb;                 // 0x005    TODO: COMMENT
-    uint16_t    initpatchnum;           // 0x006    TODO: COMMENT
-    uint16_t    initpitch_cntrl;        // 0x008    TODO: COMMENT
-    uint8_t     initvolume_cntrl;       // 0x00A    TODO: COMMENT
-    uint8_t     initpan_cntrl;          // 0x00B    TODO: COMMENT
-    uint8_t     substack_count;         // 0x00C    TODO: COMMENT
-    uint8_t     mutebits;               // 0x00D    TODO: COMMENT
-    uint16_t    initppq;                // 0x00E    TODO: COMMENT
-    uint16_t    initqpm;                // 0x010    TODO: COMMENT
-    uint16_t    labellist_count;        // 0x012    TODO: COMMENT
-    uint32_t    data_size;              // 0x014    TODO: COMMENT
+    SoundDriverId   voices_type;            // 0x000    TODO: COMMENT
+    uint8_t         voices_max;             // 0x001    TODO: COMMENT
+    uint8_t         priority;               // 0x002    TODO: COMMENT
+    uint8_t         lockchannel;            // 0x003    TODO: COMMENT
+    SoundClass      voices_class;           // 0x004    TODO: COMMENT
+    uint8_t         reverb;                 // 0x005    TODO: COMMENT
+    uint16_t        initpatchnum;           // 0x006    TODO: COMMENT
+    uint16_t        initpitch_cntrl;        // 0x008    TODO: COMMENT
+    uint8_t         initvolume_cntrl;       // 0x00A    TODO: COMMENT
+    uint8_t         initpan_cntrl;          // 0x00B    TODO: COMMENT
+    uint8_t         substack_count;         // 0x00C    TODO: COMMENT
+    uint8_t         mutebits;               // 0x00D    TODO: COMMENT
+    uint16_t        initppq;                // 0x00E    TODO: COMMENT
+    uint16_t        initqpm;                // 0x010    TODO: COMMENT
+    uint16_t        labellist_count;        // 0x012    TODO: COMMENT
+    uint32_t        data_size;              // 0x014    TODO: COMMENT
 };
 
 static_assert(sizeof(track_header) == 24);
@@ -198,19 +206,19 @@ static_assert(sizeof(callback_status) == 8);
 
 // TODO: COMMENT
 struct patch_group_header {
-    uint32_t    load_flags;         // 0x000    TODO: COMMENT
-    uint8_t     patch_id;           // 0x004    TODO: COMMENT
-    uint8_t     hw_voice_limit;     // 0x005    TODO: COMMENT
-    uint16_t    pad1;               // 0x006    TODO: COMMENT
-    uint16_t    patches;            // 0x008    TODO: COMMENT
-    uint16_t    patch_size;         // 0x00A    TODO: COMMENT
-    uint16_t    patchmaps;          // 0x00C    TODO: COMMENT
-    uint16_t    patchmap_size;      // 0x00E    TODO: COMMENT
-    uint16_t    patchinfo;          // 0x010    TODO: COMMENT
-    uint16_t    patchinfo_size;     // 0x012    TODO: COMMENT
-    uint16_t    drummaps;           // 0x014    TODO: COMMENT
-    uint16_t    drummap_size;       // 0x016    TODO: COMMENT
-    uint32_t    extra_data_size;    // 0x018    TODO: COMMENT
+    uint32_t        load_flags;         // 0x000    TODO: COMMENT
+    SoundDriverId   patch_id;           // 0x004    TODO: COMMENT
+    uint8_t         hw_voice_limit;     // 0x005    TODO: COMMENT
+    uint16_t        pad1;               // 0x006    TODO: COMMENT
+    uint16_t        patches;            // 0x008    TODO: COMMENT
+    uint16_t        patch_size;         // 0x00A    TODO: COMMENT
+    uint16_t        patchmaps;          // 0x00C    TODO: COMMENT
+    uint16_t        patchmap_size;      // 0x00E    TODO: COMMENT
+    uint16_t        patchinfo;          // 0x010    TODO: COMMENT
+    uint16_t        patchinfo_size;     // 0x012    TODO: COMMENT
+    uint16_t        drummaps;           // 0x014    TODO: COMMENT
+    uint16_t        drummap_size;       // 0x016    TODO: COMMENT
+    uint32_t        extra_data_size;    // 0x018    TODO: COMMENT
 };
 
 static_assert(sizeof(patch_group_header) == 28);
@@ -268,7 +276,7 @@ struct track_status {
     uint8_t             off : 1;                // 0x000    TODO: COMMENT
     uint8_t             refindx;                // 0x001    TODO: COMMENT
     uint8_t             seq_owner;              // 0x002    TODO: COMMENT
-    uint8_t             patchtype;              // 0x003    TODO: COMMENT
+    SoundDriverId       patchtype;              // 0x003    TODO: COMMENT
     uint32_t            deltatime;              // 0x004    TODO: COMMENT
     uint8_t             priority;               // 0x008    TODO: COMMENT
     uint8_t             reverb;                 // 0x009    TODO: COMMENT
@@ -306,7 +314,7 @@ struct voice_status {
     uint8_t                     active : 1;             // 0x000    TODO: COMMENT
     uint8_t                     release : 1;            // 0x000    TODO: COMMENT
     uint8_t                     _unusedFlagBits : 6;    // 0x000    TODO: COMMENT
-    uint8_t                     patchtype;              // 0x001    TODO: COMMENT
+    SoundDriverId               patchtype;              // 0x001    TODO: COMMENT
     uint8_t                     refindx;                // 0x002    TODO: COMMENT
     uint8_t                     track;                  // 0x003    TODO: COMMENT
     uint8_t                     priority;               // 0x004    TODO: COMMENT

@@ -21,7 +21,7 @@ void end_record_music_mute() noexcept;
 void add_music_mute_note() noexcept;
 void PSX_UNKNOWN_DrvFunc() noexcept;
 void TriggerPSXVoice(const voice_status& voiceStat, const uint8_t voiceNote, const uint8_t voiceVol) noexcept;
-void PSX_DriverInit() noexcept;
+void PSX_DriverInit(master_status_structure& mstat) noexcept;
 void PSX_DriverExit(master_status_structure& mstat) noexcept;
 void PSX_DriverEntry1() noexcept;
 void PSX_DriverEntry2(master_status_structure& mstat) noexcept;

@@ -8,6 +8,7 @@
 #include "wessseq.h"
 
 // TODO: REMOVE ALL OF THESE
+void _thunk_PSX_DriverInit() noexcept { PSX_DriverInit(*vmAddrToPtr<master_status_structure>(a0)); }
 void _thunk_PSX_DriverExit() noexcept { PSX_DriverExit(*vmAddrToPtr<master_status_structure>(a0)); }
 void _thunk_PSX_DriverEntry2() noexcept { PSX_DriverEntry2(*vmAddrToPtr<master_status_structure>(a0)); }
 void _thunk_PSX_DriverEntry3() noexcept { PSX_DriverEntry3(*vmAddrToPtr<master_status_structure>(a0)); }
@@ -19,7 +20,7 @@ void _thunk_PSX_ModuMod() noexcept { PSX_ModuMod(*vmAddrToPtr<track_status>(a0))
 void _thunk_PSX_PatchMod() noexcept { PSX_PatchMod(*vmAddrToPtr<track_status>(a0)); }
 
 void (* const gWess_drv_cmds[19])() = {
-    PSX_DriverInit,             // 00
+    _thunk_PSX_DriverInit,      // 00
     _thunk_PSX_DriverExit,      // 01
     PSX_DriverEntry1,           // 02
     _thunk_PSX_DriverEntry2,    // 03
@@ -41,11 +42,22 @@ void (* const gWess_drv_cmds[19])() = {
 };
 
 static const VmPtr<VmPtr<master_status_structure>>      gpWess_drv_mstat(0x8007F164);               // Pointer to the master status structure being used by the sequencer
-static const VmPtr<SpuVoiceAttr>                        gWess_spuVoiceAttr(0x8007F190);             // Temporary used for setting voice parameters with LIBSPU
+static const VmPtr<VmPtr<sequence_status>>              gpWess_drv_seqStats(0x8007F168);            // TODO: COMMENT
 static const VmPtr<VmPtr<track_status>>                 gpWess_drv_trackStats(0x8007F16C);          // Pointer to the array of track statuses for all tracks
-static const VmPtr<uint8_t[SPU_NUM_VOICES]>             gWess_drv_chanReverbAmt(0x8007F1E8);        // Current reverb levels for each channel/voice
+static const VmPtr<VmPtr<voice_status>>                 gpWess_drv_voiceStats(0x8007F0B8);          // TODO: COMMENT
+static const VmPtr<VmPtr<voice_status>>                 gpWess_drv_psxVoiceStats(0x8007F170);       // TODO: COMMENT
+static const VmPtr<VmPtr<patch_group_data>>             gpWess_drv_patchGrpInfo(0x8007F178);        // TODO: COMMENT
+static const VmPtr<VmPtr<patches_header>>               gpWess_drv_patchHeaders(0x8007F180);        // TODO: COMMENT
+static const VmPtr<VmPtr<patchmaps_header>>             gpWess_drv_patchmaps(0x8007F184);           // TODO: COMMENT
+static const VmPtr<VmPtr<patchinfo_header>>             gpWess_drv_patchInfos(0x8007F188);          // TODO: COMMENT
+static const VmPtr<VmPtr<drumpmaps_header>>             gpWess_drv_drummaps(0x8007F18C);            // TODO: COMMENT
+static const VmPtr<uint8_t>                             gWess_drv_numPatchTypes(0x8007F0B0);        // TODO: COMMENT
+static const VmPtr<uint8_t>                             gWess_drv_totalVoices(0x8007F0AC);          // TODO: COMMENT
+static const VmPtr<uint32_t>                            gWess_drv_hwVoiceLimit(0x8007F174);         // TODO: COMMENT
 static const VmPtr<VmPtr<uint32_t>>                     gpWess_drv_curabstime(0x8007F17C);          // Pointer to the current absolute time for the sequencer system: TODO: COMMENT on what the time value is
+static const VmPtr<uint8_t[SPU_NUM_VOICES]>             gWess_drv_chanReverbAmt(0x8007F1E8);        // Current reverb levels for each channel/voice
 static const VmPtr<uint32_t>                            gWess_drv_releasedVoices(0x80075A08);       // TODO: COMMENT
+static const VmPtr<SpuVoiceAttr>                        gWess_spuVoiceAttr(0x8007F190);             // Temporary used for setting voice parameters with LIBSPU
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the location where we will start recording note/voice details before temporarily muting
@@ -253,140 +265,71 @@ void TriggerPSXVoice(const voice_status& voiceStat, [[maybe_unused]] const uint8
     LIBSPU_SpuSetKeyOnWithAttr(spuVoiceAttr);
 }
 
-void PSX_DriverInit() noexcept {
-loc_80045F8C:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = lw(a0);
-    v1 = lw(a0 + 0x20);
-    a1 = lw(a0 + 0x28);
-    a2 = lw(a0 + 0x30);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xE9C);                                 // Store to: 8007F164
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xE84);                                 // Store to: 8007F17C
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xE98);                                 // Store to: gWess_Dvr_pss (8007F168)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a1, at - 0xE94);                                 // Store to: 8007F16C
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a2, at - 0xF48);                                 // Store to: 8007F0B8
-    v0 = lbu(a0 + 0x7);
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xF54);                                 // Store to: 8007F0AC
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 - 0xF54);                               // Load from: 8007F0AC
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0xF4C);                                  // Store to: 8007F0B4
-    if (v0 == 0) goto loc_8004604C;
-    a3 = 1;                                             // Result = 00000001
-    a1 = v0;
-loc_80045FFC:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xF4C);                                // Load from: 8007F0B4
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    a0 = v0 + a2;
-    v0 = lbu(a0 + 0x1);
-    {
-        const bool bJump = (v0 != a3);
-        v0 = v1 + 1;
-        if (bJump) goto loc_80046038;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does initialization for the PSX sound driver
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_DriverInit(master_status_structure& mstat) noexcept {
+    // Save pointers to various master status fields and stats
+    const uint8_t numPatchTypes = mstat.pmod_info->mod_hdr.patch_types_infile;
+
+    *gpWess_drv_mstat = &mstat;
+    *gpWess_drv_seqStats = mstat.pseqstattbl;
+    *gpWess_drv_trackStats = mstat.ptrkstattbl;
+    *gpWess_drv_voiceStats = mstat.pvoicestattbl;
+    *gWess_drv_numPatchTypes = numPatchTypes;
+    *gWess_drv_totalVoices = mstat.voices_total;
+    *gpWess_drv_curabstime = mstat.pabstime;
+    
+    // Determine the start of the PSX hardware voices in the voices list
+    *gpWess_drv_psxVoiceStats = gpWess_drv_voiceStats->get();
+
+    for (uint8_t voiceIdx = 0; voiceIdx < mstat.voices_total; ++voiceIdx) {
+        voice_status& voiceStat = gpWess_drv_voiceStats->get()[voiceIdx];
+
+        if (voiceStat.patchtype == PSX_ID) {
+            *gpWess_drv_psxVoiceStats = &voiceStat;
+            break;
+        }
     }
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xE90);                                 // Store to: 8007F170
-    goto loc_8004604C;
-loc_80046038:
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF4C);                                 // Store to: 8007F0B4
-    v0 = (i32(v0) < i32(a1));
-    if (v0 != 0) goto loc_80045FFC;
-loc_8004604C:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE9C);                                // Load from: 8007F164
-    v0 = lw(v1 + 0xC);
-    v0 = lbu(v0 + 0xA);
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xF50);                                 // Store to: 8007F0B0
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 - 0xF50);                               // Load from: 8007F0B0
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0xF4C);                                  // Store to: 8007F0B4
-    a3 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_800460E8;
-    a2 = lw(v1 + 0x18);
-    a1 = v0;
-loc_80046090:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xF4C);                                // Load from: 8007F0B4
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    v0 += v1;
-    v0 <<= 2;
-    a0 = v0 + a2;
-    v0 = lbu(a0 + 0x4);
-    {
-        const bool bJump = (v0 != a3);
-        v0 = v1 + 1;
-        if (bJump) goto loc_800460D4;
+
+    // Determine the patch group info for the PSX hardware driver
+    *gpWess_drv_patchGrpInfo = nullptr;
+
+    for (uint8_t patchGrpIdx = 0; patchGrpIdx < numPatchTypes; ++patchGrpIdx) {
+        patch_group_data& patchGrpInfo = mstat.ppat_info[patchGrpIdx];
+
+        if (patchGrpInfo.pat_grp_hdr.patch_id == PSX_ID) {
+            *gpWess_drv_patchGrpInfo = &patchGrpInfo;
+            break;
+        }
     }
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xE88);                                 // Store to: 8007F178
-    goto loc_800460E8;
-loc_800460D4:
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF4C);                                 // Store to: 8007F0B4
-    v0 = (i32(v0) < i32(a1));
-    if (v0 != 0) goto loc_80046090;
-loc_800460E8:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xE88);                                // Load from: 8007F178
-    v1 = lbu(a0 + 0x5);
-    v0 = lh(a0 + 0x8);
-    a1 = lw(a0 + 0x1C);
-    v0 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xE8C);                                 // Store to: 8007F174
-    v1 = lh(a0 + 0xC);
-    a0 = lh(a0 + 0x10);
-    v0 += a1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a1, at - 0xE80);                                 // Store to: 8007F180
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xE7C);                                 // Store to: 8007F184
-    v1 <<= 4;
-    v1 += v0;
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 2;
-    v0 += v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xE78);                                 // Store to: 8007F188
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xE74);                                 // Store to: 8007F18C
+
+    // Save various bits of patch group information and pointers for the PSX patch group
+    patch_group_data& patchGrp = *gpWess_drv_patchGrpInfo->get();
+    *gWess_drv_hwVoiceLimit = patchGrp.pat_grp_hdr.hw_voice_limit;
+
+    {
+        uint8_t* pPatchData = patchGrp.ppat_data.get();
+
+        *gpWess_drv_patchHeaders = (patches_header*) pPatchData;
+        pPatchData += sizeof(patches_header) * patchGrp.pat_grp_hdr.patches;
+
+        *gpWess_drv_patchmaps = (patchmaps_header*) pPatchData;
+        pPatchData += sizeof(patchmaps_header) * patchGrp.pat_grp_hdr.patchmaps;
+
+        *gpWess_drv_patchInfos = (patchinfo_header*) pPatchData;
+        pPatchData += sizeof(patchinfo_header) * patchGrp.pat_grp_hdr.patchinfo;
+
+        *gpWess_drv_drummaps = (drumpmaps_header*) pPatchData;
+    }
+    
+    // Do low level SPU initialization
     psxspu_init();
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0xE18;                                        // Result = 8007F1E8
-    v1 = 0x7F;                                          // Result = 0000007F
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0xF4C);                                  // Store to: 8007F0B4
-loc_8004616C:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF4C);                                // Load from: 8007F0B4
-    v0 += a0;
-    sb(v1, v0);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF4C);                                // Load from: 8007F0B4
-    v0++;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF4C);                                 // Store to: 8007F0B4
-    v0 = (i32(v0) < 0x18);
-    if (v0 != 0) goto loc_8004616C;
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Init reverb levels for all channels
+    for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
+        gWess_drv_chanReverbAmt[voiceIdx] = 127;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1296,6 +1239,7 @@ void PSX_voiceon(
     // Setting ADSR parameters on the voice.
     //
     // TODO: what exactly does this mean here? Find out more.
+    // TODO: is ADSR2 actually time?
     const int32_t adsr = (pPatchmapHdr->adsr2 & 0x20) ? 0x10000000 : 0x05DC0000;
     const uint32_t adsrShift = (0x1F - (pPatchmapHdr->adsr2 & 0x1F)) & 0x1F;
     voiceStat.adsr2 = adsr >> adsrShift;
