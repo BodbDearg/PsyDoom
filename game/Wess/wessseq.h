@@ -33,7 +33,7 @@ void Eng_DriverExit() noexcept;
 void Eng_DriverEntry1() noexcept;
 void Eng_DriverEntry2() noexcept;
 void Eng_DriverEntry3() noexcept;
-void Eng_TrkOff() noexcept;
+void Eng_TrkOff(track_status& trackStat) noexcept;
 void Eng_TrkMute() noexcept;
 void Eng_PatchChg() noexcept;
 void Eng_PatchMod() noexcept;

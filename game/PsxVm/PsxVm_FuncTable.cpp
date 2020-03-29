@@ -337,7 +337,7 @@ extern void Eng_DriverExit() noexcept;
 extern void Eng_DriverEntry1() noexcept;
 extern void Eng_DriverEntry2() noexcept;
 extern void Eng_DriverEntry3() noexcept;
-extern void Eng_TrkOff() noexcept;
+extern void _thunk_Eng_TrkOff() noexcept;
 extern void Eng_TrkMute() noexcept;
 extern void Eng_PatchChg() noexcept;
 extern void Eng_PatchMod() noexcept;
@@ -753,7 +753,7 @@ namespace PsxVm {
         { 0x800477EC, &Eng_DriverEntry1 },
         { 0x800477F4, &Eng_DriverEntry2 },
         { 0x800477FC, &Eng_DriverEntry3 },
-        { 0x80047804, &Eng_TrkOff },
+        { 0x80047804, &_thunk_Eng_TrkOff },
         { 0x800479B0, &Eng_TrkMute },
         { 0x800479B8, &Eng_PatchChg },
         { 0x800479E0, &Eng_PatchMod },

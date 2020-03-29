@@ -543,7 +543,7 @@ loc_80046494:
     goto loc_8004652C;
 loc_80046524:
     a0 = s0;
-    Eng_TrkOff();
+    Eng_TrkOff(*vmAddrToPtr<track_status>(a0));
 loc_8004652C:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -1285,7 +1285,7 @@ loc_8004706C:
     v0 = lw(a0);
     v0 &= 0x80;
     if (v0 == 0) goto loc_80047108;
-    Eng_TrkOff();
+    Eng_TrkOff(*vmAddrToPtr<track_status>(a0));
 loc_80047108:
     v0 = lw(s0);
     v1 = -2;                                            // Result = FFFFFFFE

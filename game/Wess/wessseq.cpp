@@ -9,6 +9,7 @@
 
 // TODO: REMOVE ALL OF THESE
 void _thunk_Eng_DriverInit() noexcept { Eng_DriverInit(*vmAddrToPtr<master_status_structure>(a0)); }
+void _thunk_Eng_TrkOff() noexcept { Eng_TrkOff(*vmAddrToPtr<track_status>(a0)); }
 
 void (* const gWess_DrvFunctions[36])() = {
     // Driver cmds
@@ -17,7 +18,7 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_DriverEntry1,               // 02
     Eng_DriverEntry2,               // 03
     Eng_DriverEntry3,               // 04
-    Eng_TrkOff,                     // 05
+    _thunk_Eng_TrkOff,              // 05
     Eng_TrkMute,                    // 06
     Eng_PatchChg,                   // 07
     Eng_PatchMod,                   // 08
@@ -175,112 +176,55 @@ loc_800477FC:
     return;
 }
 
-void Eng_TrkOff() noexcept {
-loc_80047804:
-    a1 = a0;
-    v1 = lbu(a1 + 0x2);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    a0 = lw(a1);
-    v1 = lw(v1 + 0x20);
-    v0 <<= 3;
-    v1 += v0;
-    v0 = a0 & 8;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xDF8);                                 // Store to: 8007F208
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a0 | 8;
-        if (bJump) goto loc_80047874;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Mark the given track as not playing and update the track and parent sequence accordingly
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_TrkOff(track_status& trackStat) noexcept {
+    master_status_structure& mstat = *gpWess_eng_mstat->get();
+    sequence_status& seqStat = mstat.pseqstattbl[trackStat.seq_owner];
+
+    // Mark the track as not playing anymore
+    if (!trackStat.stopped) {
+        trackStat.stopped = true;
+        seqStat.tracks_playing--;
+
+        if (seqStat.tracks_playing == 0) {
+            seqStat.playmode = SEQ_STATE_STOPPED;
+        }
     }
-    sw(v0, a1);
-    v0 = lbu(v1 + 0x5);
-    v0--;
-    sb(v0, v1 + 0x5);
-    v0 &= 0xFF;
-    if (v0 != 0) goto loc_80047874;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xDF8);                                // Load from: 8007F208
-    sb(0, v0 + 0x1);
-loc_80047874:
-    v0 = lw(a1);
-    v0 &= 4;
-    if (v0 != 0) goto loc_8004799C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xDF8);                                // Load from: 8007F208
-    v1 = lbu(v0 + 0x1C);
-    v0 = lw(a0 + 0xC);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xDF0);                                 // Store to: 8007F210
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xDF4);                                 // Store to: 8007F20C
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xDF0);                                 // Store to: 8007F210
-    a2 = -1;                                            // Result = FFFFFFFF
-    if (v1 == v0) goto loc_8004791C;
-    a3 = 0xFF;                                          // Result = 000000FF
-loc_800478CC:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xDF4);                                // Load from: 8007F20C
-    v0 = lbu(a1 + 0x1);
-    v1 = lbu(a0);
-    {
-        const bool bJump = (v1 != v0);
-        v0 = a0 + 1;
-        if (bJump) goto loc_800478F8;
+
+    // Mark the track as inactive
+    // TODO: what is the 'handled' flag here doing?
+    if (!trackStat.handled) {
+        // Clear the parent sequence's index slot for the track being disabled.
+        // This marks the track is no longer active in the parent sequence:
+        {
+            const uint32_t maxSeqTracks = mstat.max_trks_perseq;
+            uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+
+            for (uint32_t i = 0; i < maxSeqTracks; ++i) {
+                // Is this the track being turned off? If so then mark it as inactive and stop search:
+                if (pSeqTrackIndexes[i] == trackStat.refindx) {
+                    pSeqTrackIndexes[i] = 0xFF;
+                    break;
+                }
+            }
+        }
+
+        // Mark the track as inactive and update all stat counts
+        trackStat.active = false;
+        mstat.trks_active--;
+        seqStat.tracks_active--;
+        
+        // If the sequence has no more tracks active then it too is now inactive
+        if (seqStat.tracks_active == 0) {
+            seqStat.active = false;
+            mstat.seqs_active--;
+        }
     }
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xDF4);                                 // Store to: 8007F20C
-    sb(a3, a0);
-    goto loc_8004791C;
-loc_800478F8:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xDF0);                                // Load from: 8007F210
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xDF4);                                 // Store to: 8007F20C
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xDF0);                                 // Store to: 8007F210
-    if (v1 != a2) goto loc_800478CC;
-loc_8004791C:
-    a2 = -2;                                            // Result = FFFFFFFE
-    v0 = lw(a1);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    v0 &= a2;
-    sw(v0, a1);
-    v0 = lbu(v1 + 0x5);
-    v0--;
-    sb(v0, v1 + 0x5);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xDF8);                                // Load from: 8007F208
-    v0 = lbu(v1 + 0x4);
-    v0--;
-    sb(v0, v1 + 0x4);
-    v0 &= 0xFF;
-    if (v0 != 0) goto loc_8004799C;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xDF8);                                // Load from: 8007F208
-    v0 = lw(v1);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    v0 &= a2;
-    sw(v0, v1);
-    v0 = lbu(a0 + 0x4);
-    v0--;
-    sb(v0, a0 + 0x4);
-loc_8004799C:
-    v0 = lw(a1);
-    v1 = -0x11;                                         // Result = FFFFFFEF
-    v0 &= v1;
-    sw(v0, a1);
-    return;
+    
+    // TODO: What is this flag for?
+    trackStat.timed = false;
 }
 
 void Eng_TrkMute() noexcept {
