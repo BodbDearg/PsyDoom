@@ -2,6 +2,7 @@
 
 #include "PsxVm/VmPtr.h"
 
+struct master_status_structure;
 struct NoteState;
 struct track_status;
 
@@ -27,7 +28,7 @@ extern void (* const gWess_DrvFunctions[36])();
 uint8_t* Read_Vlq(uint8_t* const pTrackBytes, uint32_t& deltaTimeOut) noexcept;
 void Write_Vlq() noexcept;
 void Len_Vlq() noexcept;
-void Eng_DriverInit() noexcept;
+void Eng_DriverInit(master_status_structure& mstat) noexcept;
 void Eng_DriverExit() noexcept;
 void Eng_DriverEntry1() noexcept;
 void Eng_DriverEntry2() noexcept;

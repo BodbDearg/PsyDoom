@@ -7,45 +7,48 @@
 #include "PsxVm/PsxVm.h"
 #include "wessarc.h"
 
+// TODO: REMOVE ALL OF THESE
+void _thunk_Eng_DriverInit() noexcept { Eng_DriverInit(*vmAddrToPtr<master_status_structure>(a0)); }
+
 void (* const gWess_DrvFunctions[36])() = {
     // Driver cmds
-    Eng_DriverInit,         // 00
-    Eng_DriverExit,         // 01
-    Eng_DriverEntry1,       // 02
-    Eng_DriverEntry2,       // 03
-    Eng_DriverEntry3,       // 04
-    Eng_TrkOff,             // 05
-    Eng_TrkMute,            // 06
-    Eng_PatchChg,           // 07
-    Eng_PatchMod,           // 08
-    Eng_PitchMod,           // 09
-    Eng_ZeroMod,            // 10
-    Eng_ModuMod,            // 11
-    Eng_VolumeMod,          // 12
-    Eng_PanMod,             // 13
-    Eng_PedalMod,           // 14
-    Eng_ReverbMod,          // 15
-    Eng_ChorusMod,          // 16
-    Eng_NoteOn,             // 17
-    Eng_NoteOff,            // 18
-    // Sequencer cmds
-    Eng_StatusMark,         // 19
-    Eng_GateJump,           // 20
-    Eng_IterJump,           // 21
-    Eng_ResetGates,         // 22
-    Eng_ResetIters,         // 23
-    Eng_WriteIterBox,       // 24
-    Eng_SeqTempo,           // 25
-    Eng_SeqGosub,           // 26
-    Eng_SeqJump,            // 27
-    Eng_SeqRet,             // 28
-    Eng_SeqEnd,             // 29
-    Eng_TrkTempo,           // 30
-    Eng_TrkGosub,           // 31
-    Eng_TrkJump,            // 32
-    Eng_TrkRet,             // 33
-    Eng_TrkEnd,             // 34
-    Eng_NullEvent           // 35
+    _thunk_Eng_DriverInit,          // 00
+    Eng_DriverExit,                 // 01
+    Eng_DriverEntry1,               // 02
+    Eng_DriverEntry2,               // 03
+    Eng_DriverEntry3,               // 04
+    Eng_TrkOff,                     // 05
+    Eng_TrkMute,                    // 06
+    Eng_PatchChg,                   // 07
+    Eng_PatchMod,                   // 08
+    Eng_PitchMod,                   // 09
+    Eng_ZeroMod,                    // 10
+    Eng_ModuMod,                    // 11
+    Eng_VolumeMod,                  // 12
+    Eng_PanMod,                     // 13
+    Eng_PedalMod,                   // 14
+    Eng_ReverbMod,                  // 15
+    Eng_ChorusMod,                  // 16
+    Eng_NoteOn,                     // 17
+    Eng_NoteOff,                    // 18
+    // Sequencer cmds               
+    Eng_StatusMark,                 // 19
+    Eng_GateJump,                   // 20
+    Eng_IterJump,                   // 21
+    Eng_ResetGates,                 // 22
+    Eng_ResetIters,                 // 23
+    Eng_WriteIterBox,               // 24
+    Eng_SeqTempo,                   // 25
+    Eng_SeqGosub,                   // 26
+    Eng_SeqJump,                    // 27
+    Eng_SeqRet,                     // 28
+    Eng_SeqEnd,                     // 29
+    Eng_TrkTempo,                   // 30
+    Eng_TrkGosub,                   // 31
+    Eng_TrkJump,                    // 32
+    Eng_TrkRet,                     // 33
+    Eng_TrkEnd,                     // 34
+    Eng_NullEvent                   // 35
 };
 
 const VmPtr<uint8_t>            gWess_master_sfx_volume(0x80075A04);    // TODO: COMMENT
@@ -53,8 +56,10 @@ const VmPtr<uint8_t>            gWess_master_mus_volume(0x80075A05);    // TODO:
 const VmPtr<PanMode>            gWess_pan_status(0x80075A06);           // Pan mode: '0' if disabled, '1' if enabled, '2' if enabled (reverse)
 const VmPtr<VmPtr<NoteState>>   gpWess_pnotestate(0x80075A10);          // TODO: COMMENT
 
-static const VmPtr<uint32_t>    gWess_Read_Vlq_v(0x8007F200);       // Temp accumulated delta time value used in 'Read_Vlq'
-static const VmPtr<uint8_t>     gWess_Read_Vlq_c(0x8007F204);       // Temp accumulated current byte value used in 'Read_Vlq'
+static const VmPtr<VmPtr<master_status_structure>>      gpWess_eng_mstat(0x80075AC0);           // TODO: COMMENT
+static const VmPtr<VmPtr<sequence_status>>              gpWess_eng_seqStats(0x80075ABC);        // TODO: COMMENT
+static const VmPtr<VmPtr<track_status>>                 gpWess_eng_trackStats(0x80075AB8);      // TODO: COMMENT
+static const VmPtr<uint8_t>                             gWess_eng_maxTracks(0x80075AB4);        // TODO: COMMENT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads from track data the delta time (relative to the previous sequencer command) for when the next sequencer command is to be executed.
@@ -65,22 +70,23 @@ static const VmPtr<uint8_t>     gWess_Read_Vlq_c(0x8007F204);       // Temp accu
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t* Read_Vlq(uint8_t* const pTrackBytes, uint32_t& deltaTimeOut) noexcept {
     uint8_t* pCurTrackByte = pTrackBytes;
-    *gWess_Read_Vlq_v = *pCurTrackByte;
+    uint32_t decodedTimeVal = *pCurTrackByte;
     ++pCurTrackByte;
 
     // The top bit set on each byte means there is another byte to follow.
     // Each byte can therefore only encode 7 bits, so we need 5 of them to encode 32-bits:
     if (pTrackBytes[0] & 0x80) {
-        *gWess_Read_Vlq_v &= 0x7F;  // Top bit is not data
+        decodedTimeVal &= 0x7F;   // Top bit is not data
+        uint8_t curByte;
 
         do {
-            *gWess_Read_Vlq_c = *pCurTrackByte;
-            *gWess_Read_Vlq_v = (*gWess_Read_Vlq_v << 7) + (*gWess_Read_Vlq_c & 0x7F);  // Incorporate another 7 bits to the output time value
+            curByte = *pCurTrackByte;
+            decodedTimeVal = (decodedTimeVal << 7) + (curByte & 0x7F);  // Incorporate another 7 bits to the output time value
             ++pCurTrackByte;
-        } while (*gWess_Read_Vlq_c & 0x80);     // Is there another byte to follow?
+        } while (curByte & 0x80);   // Is there another byte to follow?
     }
 
-    deltaTimeOut = *gWess_Read_Vlq_v;
+    deltaTimeOut = decodedTimeVal;
     return pCurTrackByte;
 }
 
@@ -139,21 +145,14 @@ loc_8004776C:
     return;
 }
 
-void Eng_DriverInit() noexcept {
-loc_800477A8:
-    v0 = lw(a0 + 0x28);
-    v1 = lw(a0 + 0x20);
-    a1 = lw(a0 + 0xC);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x5AC0);                                // Store to: gWess_SeqEngine_pm_stat (80075AC0)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5AB8);                                // Store to: 80075AB8
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5ABC);                                // Store to: gWess_Eng_piter (80075ABC)
-    v0 = lbu(a1 + 0xC);
-    at = 0x80070000;                                    // Result = 80070000
-    sb(v0, at + 0x5AB4);                                // Store to: 80075AB4
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do initialization for the sequencer engine
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_DriverInit(master_status_structure& mstat) noexcept {
+    *gpWess_eng_mstat = &mstat;
+    *gpWess_eng_seqStats = mstat.pseqstattbl;
+    *gpWess_eng_trackStats = mstat.ptrkstattbl;
+    *gWess_eng_maxTracks = mstat.pmod_info->mod_hdr.trk_work_areas;
 }
 
 void Eng_DriverExit() noexcept {
