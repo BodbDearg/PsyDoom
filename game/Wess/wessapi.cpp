@@ -1135,14 +1135,14 @@ void wess_seq_stopall() noexcept {
                 gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native function call
 
                 // If there are no more tracks left active then we are done
-                --numSeqTracksActive;
+                numSeqTracksActive--;
 
                 if (numSeqTracksActive == 0)
                     break;
             }
 
             // If there are no more active sequences to visit then we are done
-            --numActiveSeqsToVisit;
+            numActiveSeqsToVisit--;
 
             if (numActiveSeqsToVisit == 0)
                 break;

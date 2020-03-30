@@ -771,7 +771,7 @@ static const ProgElem ELEMS[] = {
     { 0x800417B8, 0x80041960, "wess_seq_pause",                         ProgElemType::FUNCTION },
     { 0x80041960, 0x80041ACC, "wess_seq_restart",                       ProgElemType::FUNCTION },
     { 0x80041ACC, 0x80041C88, "wess_seq_pauseall",                      ProgElemType::FUNCTION },
-    { 0x80041C88, 0x80041E78, "queue_wess_seq_restartall",              ProgElemType::FUNCTION },
+    { 0x80041C88, 0x80041E78, "wess_seq_restartall",                    ProgElemType::FUNCTION },
     { 0x80041E78, 0x80041EA4, "zeroset",                                ProgElemType::FUNCTION },
     { 0x80041EA4, 0x80041EBC, "wess_install_error_handler",             ProgElemType::FUNCTION },
     { 0x80041EBC, 0x80041ECC, "wess_get_master_status",                 ProgElemType::FUNCTION },

@@ -295,7 +295,6 @@ extern void _thunk_S_StartSound() noexcept;
 extern void S_UpdateSounds() noexcept;
 extern void PsxSoundInit() noexcept;
 extern void PsxSoundExit() noexcept;
-extern void queue_wess_seq_restartall() noexcept;
 extern void wess_seq_load_err() noexcept;
 extern void wess_seq_loader_install_error_handler() noexcept;
 extern void Is_Seq_Seq_Num_Valid() noexcept;
@@ -708,7 +707,6 @@ namespace PsxVm {
         { 0x800415D4, &S_UpdateSounds },
         { 0x800415EC, &PsxSoundInit },
         { 0x8004172C, &PsxSoundExit },
-        { 0x80041C88, &queue_wess_seq_restartall },
         { 0x80044740, &wess_seq_load_err },
         { 0x80044778, &wess_seq_loader_install_error_handler },
         { 0x80044790, &Is_Seq_Seq_Num_Valid },
