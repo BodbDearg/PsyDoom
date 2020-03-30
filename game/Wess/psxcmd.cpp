@@ -10,8 +10,9 @@
 // TODO: REMOVE ALL OF THESE
 void _thunk_PSX_DriverInit() noexcept { PSX_DriverInit(*vmAddrToPtr<master_status_structure>(a0)); }
 void _thunk_PSX_DriverExit() noexcept { PSX_DriverExit(*vmAddrToPtr<master_status_structure>(a0)); }
-void _thunk_PSX_DriverEntry2() noexcept { PSX_DriverEntry2(*vmAddrToPtr<master_status_structure>(a0)); }
-void _thunk_PSX_DriverEntry3() noexcept { PSX_DriverEntry3(*vmAddrToPtr<master_status_structure>(a0)); }
+void _thunk_PSX_DriverEntry1() noexcept { PSX_DriverEntry1(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_PSX_DriverEntry2() noexcept { PSX_DriverEntry2(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_PSX_DriverEntry3() noexcept { PSX_DriverEntry3(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_TrkOff() noexcept { PSX_TrkOff(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_TrkMute() noexcept { PSX_TrkMute(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_PatchMod() noexcept { PSX_PatchMod(*vmAddrToPtr<track_status>(a0)); }
@@ -26,7 +27,7 @@ void _thunk_PSX_NoteOff() noexcept { PSX_NoteOff(*vmAddrToPtr<track_status>(a0))
 void (* const gWess_drv_cmds[19])() = {
     _thunk_PSX_DriverInit,      // 00
     _thunk_PSX_DriverExit,      // 01
-    PSX_DriverEntry1,           // 02
+    _thunk_PSX_DriverEntry1,    // 02
     _thunk_PSX_DriverEntry2,    // 03
     _thunk_PSX_DriverEntry3,    // 04
     _thunk_PSX_TrkOff,          // 05
@@ -66,6 +67,7 @@ static const VmPtr<uint8_t[SPU_NUM_VOICES]>             gWess_drv_chanReverbAmt(
 static const VmPtr<uint32_t>                            gWess_drv_releasedVoices(0x80075A08);       // TODO: COMMENT
 static const VmPtr<uint32_t>                            gWess_drv_mutedVoices(0x80075A0C);          // TODO: COMMENT
 static const VmPtr<SpuVoiceAttr>                        gWess_spuVoiceAttr(0x8007F190);             // Temporary used for setting voice parameters with LIBSPU
+static const VmPtr<uint8_t[SPU_NUM_VOICES]>             gWess_spuKeyStatuses(0x8007F1D0);             // Temporary used for setting voice parameters with LIBSPU
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the location where we will start recording note/voice details before temporarily muting
@@ -336,173 +338,98 @@ void PSX_DriverExit([[maybe_unused]] master_status_structure& mstat) noexcept {
     LIBSPU_SpuQuit();
 }
 
-void PSX_DriverEntry1() noexcept {
-loc_800461D4:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE9C);                                // Load from: 8007F164
-    sp -= 0x20;
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v0 = lbu(v0 + 0x6);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF44);                                 // Store to: 8007F0BC
-    if (v0 == 0) goto loc_800462D8;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE8C);                                // Load from: 8007F174
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE90);                                // Load from: 8007F170
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF34);                                 // Store to: 8007F0CC
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF40);                                 // Store to: 8007F0C0
-    if (v1 == v0) goto loc_800462D8;
-    s0 = 3;                                             // Result = 00000003
-loc_80046238:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xF34);                                // Load from: 8007F0CC
-    v0 = lw(a0);
-    v0 &= 3;
-    if (v0 != s0) goto loc_800462A4;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE84);                                // Load from: 8007F17C
-    v1 = lw(v0);
-    v0 = lw(a0 + 0x10);
-    v0 = (v0 < v1);
-    if (v0 == 0) goto loc_800462A4;
-    PSX_voiceparmoff(*vmAddrToPtr<voice_status>(a0));
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF44);                                // Load from: 8007F0BC
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF44);                                 // Store to: 8007F0BC
-    if (v0 == 0) goto loc_800462D8;
-loc_800462A4:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF34);                                // Load from: 8007F0CC
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xF40);                                // Load from: 8007F0C0
-    v0 += 0x18;
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF34);                                 // Store to: 8007F0CC
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF40);                                 // Store to: 8007F0C0
-    if (v1 != v0) goto loc_80046238;
-loc_800462D8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5A08);                               // Load from: 80075A08
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0xF30);                                  // Store to: 8007F0D0
-    if (v0 == 0) goto loc_80046300;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF30);                                 // Store to: 8007F0D0
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5A08);                                 // Store to: 80075A08
-loc_80046300:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5A0C);                               // Load from: 80075A0C
-    if (v0 == 0) goto loc_80046374;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lbu(v1 + 0x5A07);                              // Load from: gWess_UNKNOWN_status_byte (80075A07)
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0xE70;                                        // Result = 8007F190
-    sw(v0, a0);                                         // Store to: 8007F190
-    v0 = 0x4400;                                        // Result = 00004400
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xE6C);                                 // Store to: 8007F194
-    v0 = 7;                                             // Result = 00000007
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xE44);                                 // Store to: 8007F1BC
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v1, at - 0xE3A);                                 // Store to: 8007F1C6
-    LIBSPU_SpuSetVoiceAttr(*vmAddrToPtr<SpuVoiceAttr>(a0));
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF30);                                // Load from: 8007F0D0
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5A0C);                               // Load from: 80075A0C
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5A0C);                                 // Store to: 80075A0C
-    v0 |= v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF30);                                 // Store to: 8007F0D0
-loc_80046374:
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0xF30);                                // Load from: 8007F0D0
-    if (a1 == 0) goto loc_80046398;
-    a0 = 0;                                             // Result = 00000000
-    LIBSPU_SpuSetKey(a0, a1);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0xF30);                                  // Store to: 8007F0D0
-loc_80046398:
-    s0 = 0x80080000;                                    // Result = 80080000
-    s0 -= 0xE30;                                        // Result = 8007F1D0
-    a0 = s0;                                            // Result = 8007F1D0
-    LIBSPU_SpuGetAllKeysStatus(vmAddrToPtr<uint8_t>(a0));
-    s1 = s0;                                            // Result = 8007F1D0
-    s0 = -1;                                            // Result = FFFFFFFF
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE90);                                // Load from: 8007F170
-    v0 = 0x18;                                          // Result = 00000018
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF3C);                                 // Store to: 8007F0C4
-    v0 = 0x17;                                          // Result = 00000017
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0xF38);                                  // Store to: 8007F0C8
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF3C);                                 // Store to: 8007F0C4
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF34);                                 // Store to: 8007F0CC
-loc_800463E0:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xF34);                                // Load from: 8007F0CC
-    v0 = lw(a0);
-    v0 &= 1;
-    if (v0 == 0) goto loc_80046428;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF38);                                // Load from: 8007F0C8
-    v0 += s1;
-    v0 = lbu(v0);
-    if (v0 != 0) goto loc_80046428;
-    PSX_voiceparmoff(*vmAddrToPtr<voice_status>(a0));
-loc_80046428:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF38);                                // Load from: 8007F0C8
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xF3C);                                // Load from: 8007F0C4
-    v0++;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF38);                                 // Store to: 8007F0C8
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF34);                                // Load from: 8007F0CC
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF3C);                                 // Store to: 8007F0C4
-    v0 += 0x18;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF34);                                 // Store to: 8007F0CC
-    if (v1 != s0) goto loc_800463E0;
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update function for the PSX sound driver: invoked for each hardware timer interrupt updating the sequencer system.
+// Releases or mutes voices that were requested to be released/muted and frees up voices that are no longer in use by the SPU.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_DriverEntry1([[maybe_unused]] track_status& trackStat) noexcept {
+    // Grab the list of available hardware voice statuses and how many voices are available
+    const uint32_t maxHwVoices = *gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats->get();
+
+    // Stop all currently active voices that are releasing and past their end time for release
+    {
+        // Grab some stuff needed in the loop
+        master_status_structure& mstat = *gpWess_drv_mstat->get();
+
+        uint8_t numActiveVoicesToVisit = mstat.voices_active;
+        const uint32_t curAbsTime = *gpWess_drv_curabstime->get();
+
+        // Turn off all applicable voices
+        if (numActiveVoicesToVisit > 0) {
+            for (uint32_t hwVoiceIdx = 0; hwVoiceIdx < maxHwVoices; ++hwVoiceIdx) {
+                voice_status& voiceStat = pHwVoiceStats[hwVoiceIdx];
+                
+                // Only stop the voice if active, releasing and if the time is past when it should be released
+                if (voiceStat.active && voiceStat.release && (curAbsTime > voiceStat.pabstime)) {
+                    PSX_voiceparmoff(voiceStat);
+
+                    // If there are no active more voices left active then we are done
+                    numActiveVoicesToVisit--;
+
+                    if (numActiveVoicesToVisit == 0)
+                        break;
+                }
+            }
+        }
+    }
+    
+    // Key off any voices that were requested to be released or muted
+    {
+        // Figure out what voices to key off (turn off)
+        uint32_t voicesToTurnOff = 0;
+    
+        if (*gWess_drv_releasedVoices != 0) {
+            // Some voices are requested to be released (key off) - incorporate those and clear the command
+            voicesToTurnOff = *gWess_drv_releasedVoices;
+            *gWess_drv_releasedVoices = 0;
+        }
+
+        if (*gWess_drv_mutedVoices != 0) {
+            // Some voices are requested to be muted, quickly ramp those down exponetially.
+            // This code here ensures that they fade out rapidly.
+            SpuVoiceAttr& spuVoiceAttr = *gWess_spuVoiceAttr;
+
+            spuVoiceAttr.voice_bits = *gWess_drv_mutedVoices;
+            spuVoiceAttr.attr_mask = SPU_VOICE_ADSR_RMODE | SPU_VOICE_ADSR_RR;
+            spuVoiceAttr.r_mode = SPU_VOICE_EXPDec;
+            spuVoiceAttr.rr = VOICE_RELEASE_RATE;
+            LIBSPU_SpuSetVoiceAttr(spuVoiceAttr);
+
+            // Include these voices in the voices that will be keyed off and clear the command
+            voicesToTurnOff |= *gWess_drv_mutedVoices;
+            *gWess_drv_mutedVoices = 0;
+        }
+    
+        // Key off the voices requested to be keyed off
+        if (voicesToTurnOff != 0) {
+            LIBSPU_SpuSetKey(0, voicesToTurnOff);
+        }
+    }
+    
+    // Release any voices that the SPU says are now off
+    LIBSPU_SpuGetAllKeysStatus(gWess_spuKeyStatuses.get());
+
+    for (uint32_t hwVoiceIdx = 0; hwVoiceIdx < maxHwVoices; ++hwVoiceIdx) {
+        voice_status& voiceStat = pHwVoiceStats[hwVoiceIdx];
+
+        if (voiceStat.active && (gWess_spuKeyStatuses[hwVoiceIdx] == SPU_OFF)) {
+            PSX_voiceparmoff(voiceStat);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Unused/implemented driver initialization function.
+// Unused/implemented driver update function.
 // Doesn't seem to be called for the PSX sound driver.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PSX_DriverEntry2([[maybe_unused]] master_status_structure& mstat) noexcept {}
+void PSX_DriverEntry2([[maybe_unused]] track_status& trackStat) noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Unused/implemented driver initialization function.
+// Unused/implemented driver update function.
 // Doesn't seem to be called for the PSX sound driver.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PSX_DriverEntry3([[maybe_unused]] master_status_structure& mstat) noexcept {}
+void PSX_DriverEntry3([[maybe_unused]] track_status& trackStat) noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Stops the given track

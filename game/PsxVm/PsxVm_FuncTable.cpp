@@ -309,7 +309,7 @@ extern void wess_seq_free() noexcept;
 extern void PSX_UNKNOWN_DrvFunc() noexcept;
 extern void _thunk_PSX_DriverInit() noexcept;
 extern void _thunk_PSX_DriverExit() noexcept;
-extern void PSX_DriverEntry1() noexcept;
+extern void _thunk_PSX_DriverEntry1() noexcept;
 extern void _thunk_PSX_DriverEntry2() noexcept;
 extern void _thunk_PSX_DriverEntry3() noexcept;
 extern void _thunk_PSX_TrkOff() noexcept;
@@ -721,7 +721,7 @@ namespace PsxVm {
         { 0x80045ACC, &PSX_UNKNOWN_DrvFunc },
         { 0x80045F8C, &_thunk_PSX_DriverInit },
         { 0x800461B4, &_thunk_PSX_DriverExit },
-        { 0x800461D4, &PSX_DriverEntry1 },
+        { 0x800461D4, &_thunk_PSX_DriverEntry1 },
         { 0x80046484, &_thunk_PSX_DriverEntry2 },
         { 0x8004648C, &_thunk_PSX_DriverEntry3 },
         { 0x80046494, &_thunk_PSX_TrkOff },

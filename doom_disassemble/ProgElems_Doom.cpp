@@ -3626,6 +3626,7 @@ static const ProgElem ELEMS[] = {
     { 0x8007F188, 0x8007F18C, "gpWess_drv_patchInfos",                  ProgElemType::PTR32 },
     { 0x8007F18C, 0x8007F190, "gpWess_drv_drummaps",                    ProgElemType::PTR32 },
     { 0x8007F190, 0x8007F1D0, "gWess_spuVoiceAttr",                     ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
+    { 0x8007F1D0, 0x8007F1E8, "gWess_spuKeyStatuses",                   ProgElemType::ARRAY, ProgElemType::UINT8, 0 },
     { 0x8007F1E8, 0x8007F200, "gWess_drv_chanReverbAmt",                ProgElemType::ARRAY, ProgElemType::UINT8, 0 },
     { 0x8007F200, 0x8007F204, "gWess_Read_Vlq_v",                       ProgElemType::UINT32 },
     { 0x8007F204, 0x8007F208, "gWess_Read_Vlq_c",                       ProgElemType::UINT32 },
