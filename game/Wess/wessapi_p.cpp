@@ -325,7 +325,15 @@ loc_80041D90:
     a1 = lw(s0 + 0xC);
     a2 = lw(s0 + 0x10);
     sw(t0, sp + 0x28);
-    PSX_voicenote();
+
+    PSX_voicenote(
+        *vmAddrToPtr<track_status>(a0),
+        *vmAddrToPtr<patchmaps_header>(a1),
+        *vmAddrToPtr<patchinfo_header>(a2),
+        (uint8_t) a3,
+        (uint8_t) lw(sp + 0x10)
+    );
+
     t0 = lw(sp + 0x28);
 loc_80041DD8:
     v0 = lw(s5);

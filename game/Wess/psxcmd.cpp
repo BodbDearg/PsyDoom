@@ -1133,8 +1133,8 @@ void PSX_ChorusMod([[maybe_unused]] track_status& trackStat) noexcept {}
 void PSX_voiceon(
     voice_status& voiceStat,
     track_status& trackStat,
-    patchmaps_header* const pPatchmapHdr,
-    patchinfo_header* const pPatchInfoHdr,
+    patchmaps_header& patchmap,
+    patchinfo_header& patchInfo,
     const uint8_t voiceNote,
     const uint8_t voiceVol
 ) noexcept {
@@ -1148,16 +1148,16 @@ void PSX_voiceon(
     voiceStat.velnum = voiceVol;
     voiceStat.sndtype = 0;
     voiceStat.priority = trackStat.priority;
-    voiceStat.patchmaps = pPatchmapHdr;
-    voiceStat.patchinfo = pPatchInfoHdr;
+    voiceStat.patchmaps = &patchmap;
+    voiceStat.patchinfo = &patchInfo;
     voiceStat.pabstime = *gpWess_drv_curabstime->get();
     
     // Setting ADSR parameters on the voice.
     //
     // TODO: what exactly does this mean here? Find out more.
     // TODO: is ADSR2 actually time?
-    const int32_t adsr = (pPatchmapHdr->adsr2 & 0x20) ? 0x10000000 : 0x05DC0000;
-    const uint32_t adsrShift = (0x1F - (pPatchmapHdr->adsr2 & 0x1F)) & 0x1F;
+    const int32_t adsr = (patchmap.adsr2 & 0x20) ? 0x10000000 : 0x05DC0000;
+    const uint32_t adsrShift = (0x1F - (patchmap.adsr2 & 0x1F)) & 0x1F;
     voiceStat.adsr2 = adsr >> adsrShift;
 
     // Inc voice count stats
@@ -1200,149 +1200,92 @@ void PSX_voicerelease(voice_status& voiceStat) noexcept {
     voiceStat.pabstime = curAbsTime + voiceStat.adsr2;      // TODO: is ADSR2 actually time?
 }
 
-void PSX_voicenote() noexcept {
-loc_80047180:
-    sp -= 0x30;
-    sw(s4, sp + 0x28);
-    s4 = lbu(sp + 0x40);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE90);                                // Load from: 8007F170
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE8C);                                // Load from: 8007F174
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(s2, sp + 0x20);
-    s2 = a1;
-    sw(s3, sp + 0x24);
-    s3 = a2;
-    sw(s1, sp + 0x1C);
-    sw(ra, sp + 0x2C);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0xEC8);                                  // Store to: 8007F138
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xEC4);                                 // Store to: 8007F13C
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xECC);                                 // Store to: 8007F134
-    s1 = a3;
-    if (v1 == v0) goto loc_80047328;
-    a2 = 1;                                             // Result = 00000001
-loc_800471E8:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xEC4);                                // Load from: 8007F13C
-    a1 = lw(a0);
-    v0 = a1 & 1;
-    a3 = s3;
-    if (v0 != 0) goto loc_80047230;
-    a1 = s0;
-    a2 = s2;
-    v0 = s1 & 0xFF;
-    sw(v0, sp + 0x10);
-    sw(s4, sp + 0x14);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Allocate a voice for a note to play and play it back it if possible
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_voicenote(
+    track_status& trackStat,
+    patchmaps_header& patchmap,
+    patchinfo_header& patchInfo,
+    const uint8_t voiceNote,
+    const uint8_t voiceVol
+) noexcept {
+    // PC-PSX: these were previously globals in the original code, but only used in this function.
+    // I've converted them to first to statics so they don't pollute global scope and can be seen only where they are used.
+    //
+    // Next I decided to make them locals, since the previous leftover values might cause a voice not to be triggered in very rare cases.
+    // I would rather have a sound play and steal another voice than not if we are at the hardware voice limit (which is exceedingly rare).
+    #if PC_PSX_DOOM_MODS
+        voice_status* pStolenVoiceStat = nullptr;
+        uint32_t stolenVoicePriority = 256;                 // N.B: max priority is 255 (UINT8_MAX), so this guarantees we steal the first active voice we run into
+        uint32_t stolenVoiceAbsTime = 0xFFFFFFFF;
+    #else
+        static voice_status* pStolenVoiceStat = nullptr;
+        static uint32_t stolenVoicePriority = 256;          // N.B: max priority is 255 (UINT8_MAX), so this guarantees we steal the first active voice we run into
+        static uint32_t stolenVoiceAbsTime = 0xFFFFFFFF;
+    #endif
 
-    PSX_voiceon(
-        *vmAddrToPtr<voice_status>(a0),
-        *vmAddrToPtr<track_status>(a1),
-        vmAddrToPtr<patchmaps_header>(a2),
-        vmAddrToPtr<patchinfo_header>(a3),
-        (uint8_t) v0,
-        (uint8_t) s4
-    );
+    // Run through all the hardware voices and try to find one that is free to play the sound.
+    // If none are available, try to steal a currently active voice and prioritize which one we steal according to certain rules.
+    const uint32_t numHwVoices = *gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoices = gpWess_drv_psxVoiceStats->get();
 
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0xEC8);                                  // Store to: 8007F138
-    goto loc_80047328;
-loc_80047230:
-    v1 = lbu(a0 + 0x4);
-    v0 = lbu(s0 + 0x8);
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_800472F4;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5A18);                               // Load from: 80075A18
-    v0 = (i32(v1) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a1 & 2;
-        if (bJump) goto loc_800472CC;
+    bool bStealVoice = false;
+
+    for (uint32_t voiceIdx = 0; voiceIdx < numHwVoices; ++voiceIdx) {
+        voice_status& voiceStat = pHwVoices[voiceIdx];
+
+        // If this voice is not in use then we can just use it
+        if (!voiceStat.active) {
+            // Use the voice now and finish up
+            PSX_voiceon(voiceStat, trackStat, patchmap, patchInfo, voiceNote, voiceVol);
+            bStealVoice = false;
+            break;
+        }
+
+        // Only consider stealing the voice if the track is higher priority than the voice
+        if (trackStat.priority < voiceStat.priority)
+            continue;
+
+        // If this voice is lower priority than the previously stolen voice then just steal it.
+        //
+        // PC-PSX: also added a null check here for the previously stolen voice just to be safe.
+        // The initial assignment of 'stolenVoicePriority' should mean that we always have a valid voice
+        // status for the stolen voice, but this makes that a little more obvious at least.
+        #if PC_PSX_DOOM_MODS
+            bStealVoice = ((!pStolenVoiceStat) || (voiceStat.priority < stolenVoicePriority));
+        #else
+            bStealVoice = (voiceStat.priority < stolenVoicePriority);
+        #endif
+
+        // If this voice is higher (or equal) priority to the one we stole previously then only steal under certain circumstances
+        if (!bStealVoice) {            
+            if (voiceStat.release) {
+                // TODO: what is this prioritization trying to achieve?
+                if ((stolenVoiceAbsTime > voiceStat.pabstime) || pStolenVoiceStat->release) {
+                    bStealVoice = true;
+                }
+            } else {
+                // TODO: what is this prioritization trying to achieve?
+                if ((stolenVoiceAbsTime > voiceStat.pabstime) && (!pStolenVoiceStat->release)) {
+                    bStealVoice = true;
+                }
+            }
+        }
+
+        // Use this voice for playback, unless we find a better option
+        if (bStealVoice) {
+            stolenVoicePriority = voiceStat.priority;
+            stolenVoiceAbsTime = voiceStat.pabstime;
+            pStolenVoiceStat = &voiceStat;
+        }
     }
-    if (v0 == 0) goto loc_80047290;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5A14);                               // Load from: 80075A14
-    v0 = lw(v0);
-    v0 &= 2;
-    if (v0 == 0) goto loc_800472CC;
-    goto loc_800472B0;
-loc_80047290:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5A14);                               // Load from: 80075A14
-    v0 = lw(v0);
-    v0 &= 2;
-    if (v0 != 0) goto loc_800472F4;
-loc_800472B0:
-    v0 = lw(a0 + 0x10);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5A1C);                               // Load from: 80075A1C
-    v0 = (v0 < v1);
-    if (v0 == 0) goto loc_800472F4;
-loc_800472CC:
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a2, at - 0xEC8);                                 // Store to: 8007F138
-    v0 = lbu(a0 + 0x4);
-    v1 = lw(a0 + 0x10);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x5A14);                                // Store to: 80075A14
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5A18);                                // Store to: 80075A18
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5A1C);                                // Store to: 80075A1C
-loc_800472F4:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xEC4);                                // Load from: 8007F13C
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xECC);                                // Load from: 8007F134
-    v0 += 0x18;
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xEC4);                                 // Store to: 8007F13C
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xECC);                                 // Store to: 8007F134
-    if (v1 != v0) goto loc_800471E8;
-loc_80047328:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xEC8);                                // Load from: 8007F138
-    if (v0 == 0) goto loc_80047370;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5A14);                               // Load from: 80075A14
-    PSX_voiceparmoff(*vmAddrToPtr<voice_status>(a0));
-    a1 = s0;
-    a2 = s2;
-    a3 = s3;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5A14);                               // Load from: 80075A14
-    v0 = s1 & 0xFF;
-    sw(v0, sp + 0x10);
-    sw(s4, sp + 0x14);
 
-    PSX_voiceon(
-        *vmAddrToPtr<voice_status>(a0),
-        *vmAddrToPtr<track_status>(a1),
-        vmAddrToPtr<patchmaps_header>(a2),
-        vmAddrToPtr<patchinfo_header>(a3),
-        (uint8_t) v0,
-        (uint8_t) s4
-    );
-
-loc_80047370:
-    ra = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
+    // Steal a currently active voice and begin playback if we decided to do that
+    if (bStealVoice) {
+        PSX_voiceparmoff(*pStolenVoiceStat);
+        PSX_voiceon(*pStolenVoiceStat, trackStat, patchmap, patchInfo, voiceNote, voiceVol);
+    }
 }
 
 void PSX_NoteOn() noexcept {
@@ -1437,7 +1380,15 @@ loc_80047480:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lbu(v0 - 0xEB8);                               // Load from: 8007F148
     sw(v0, sp + 0x10);
-    PSX_voicenote();
+
+    PSX_voicenote(
+        *vmAddrToPtr<track_status>(a0),
+        *vmAddrToPtr<patchmaps_header>(a1),
+        *vmAddrToPtr<patchinfo_header>(a2),
+        (uint8_t) a3,
+        (uint8_t) lw(sp + 0x10)
+    );
+
 loc_8004752C:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lbu(v0 - 0xEB4);                               // Load from: 8007F14C

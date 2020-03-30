@@ -51,14 +51,22 @@ void PSX_ChorusMod(track_status& trackStat) noexcept;
 void PSX_voiceon(
     voice_status& voiceStat,
     track_status& trackStat,
-    patchmaps_header* const pPatchmapHdr,
-    patchinfo_header* const pPatchInfoHdr,
+    patchmaps_header& patchmap,
+    patchinfo_header& patchInfo,
     const uint8_t voiceNote,
     const uint8_t voiceVol
 ) noexcept;
 
 void PSX_voiceparmoff(voice_status& voiceStat) noexcept;
 void PSX_voicerelease(voice_status& voiceStat) noexcept;
-void PSX_voicenote() noexcept;
+
+void PSX_voicenote(
+    track_status& trackStat,
+    patchmaps_header& patchmap,
+    patchinfo_header& patchInfo,
+    const uint8_t voiceNote,
+    const uint8_t voiceVol
+) noexcept;
+
 void PSX_NoteOn() noexcept;
 void PSX_NoteOff(track_status& trackStat) noexcept;
