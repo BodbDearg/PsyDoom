@@ -311,20 +311,20 @@ static_assert(sizeof(track_status) == 80);
 
 // TODO: COMMENT
 struct voice_status {
-    uint8_t                     active : 1;             // 0x000    TODO: COMMENT
-    uint8_t                     release : 1;            // 0x000    TODO: COMMENT
-    uint8_t                     _unusedFlagBits : 6;    // 0x000    TODO: COMMENT
-    SoundDriverId               patchtype;              // 0x001    TODO: COMMENT
-    uint8_t                     refindx;                // 0x002    TODO: COMMENT
-    uint8_t                     track;                  // 0x003    TODO: COMMENT
-    uint8_t                     priority;               // 0x004    TODO: COMMENT
-    uint8_t                     keynum;                 // 0x005    TODO: COMMENT
-    uint8_t                     velnum;                 // 0x006    TODO: COMMENT
-    uint8_t                     sndtype;                // 0x007    TODO: COMMENT
-    VmPtr<patchmaps_header>     patchmaps;              // 0x008    TODO: COMMENT
-    VmPtr<patchinfo_header>     patchinfo;              // 0x00C    TODO: COMMENT
-    uint32_t                    pabstime;               // 0x010    TODO: COMMENT
-    uint32_t                    adsr2;                  // 0x014    TODO: COMMENT
+    uint8_t                         active : 1;             // 0x000    TODO: COMMENT
+    uint8_t                         release : 1;            // 0x000    TODO: COMMENT
+    uint8_t                         _unusedFlagBits : 6;    // 0x000    TODO: COMMENT
+    SoundDriverId                   patchtype;              // 0x001    TODO: COMMENT
+    uint8_t                         refindx;                // 0x002    TODO: COMMENT
+    uint8_t                         track;                  // 0x003    TODO: COMMENT
+    uint8_t                         priority;               // 0x004    TODO: COMMENT
+    uint8_t                         keynum;                 // 0x005    TODO: COMMENT
+    uint8_t                         velnum;                 // 0x006    TODO: COMMENT
+    uint8_t                         sndtype;                // 0x007    TODO: COMMENT
+    VmPtr<const patchmaps_header>   patchmaps;              // 0x008    TODO: COMMENT
+    VmPtr<const patchinfo_header>   patchinfo;              // 0x00C    TODO: COMMENT
+    uint32_t                        pabstime;               // 0x010    TODO: COMMENT
+    uint32_t                        adsr2;                  // 0x014    TODO: COMMENT
 };
 
 static_assert(sizeof(voice_status) == 24);

@@ -49,13 +49,13 @@ static_assert(sizeof(TriggerPlayAttr) == 20);
 
 // Records state for an individual note: used by pause/resume functionality
 struct NoteData {
-    int16_t                     seq_num;        // 0x000    TODO: COMMENT
-	int16_t                     track;          // 0x002    TODO: COMMENT
-	int8_t                      keynum;         // 0x004    TODO: COMMENT
-	int8_t                      velnum;         // 0x005    TODO: COMMENT
-	int16_t                     _pad;           // 0x006    TODO: COMMENT
-	VmPtr<patchmaps_header>     patchmap;	    // 0x008    TODO: COMMENT
-	VmPtr<patchinfo_header>     patchinfo;      // 0x00C    TODO: COMMENT
+    int16_t                         seq_num;        // 0x000    TODO: COMMENT
+    int16_t                         track;          // 0x002    TODO: COMMENT
+    int8_t                          keynum;         // 0x004    TODO: COMMENT
+    int8_t                          velnum;         // 0x005    TODO: COMMENT
+    int16_t                         _pad;           // 0x006    TODO: COMMENT
+    VmPtr<const patchmaps_header>   patchmap;       // 0x008    TODO: COMMENT
+    VmPtr<const patchinfo_header>   patchinfo;      // 0x00C    TODO: COMMENT
 };
 
 static_assert(sizeof(NoteData) == 16);

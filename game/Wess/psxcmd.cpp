@@ -20,6 +20,7 @@ void _thunk_PSX_ModuMod() noexcept { PSX_ModuMod(*vmAddrToPtr<track_status>(a0))
 void _thunk_PSX_PedalMod() noexcept { PSX_PedalMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_ReverbMod() noexcept { PSX_ReverbMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_ChorusMod() noexcept { PSX_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_PSX_NoteOn() noexcept { PSX_NoteOn(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_NoteOff() noexcept { PSX_NoteOff(*vmAddrToPtr<track_status>(a0)); }
 
 void (* const gWess_drv_cmds[19])() = {
@@ -40,7 +41,7 @@ void (* const gWess_drv_cmds[19])() = {
     _thunk_PSX_PedalMod,        // 14
     _thunk_PSX_ReverbMod,       // 15
     _thunk_PSX_ChorusMod,       // 16
-    PSX_NoteOn,                 // 17
+    _thunk_PSX_NoteOn,          // 17
     _thunk_PSX_NoteOff          // 18
 };
 
@@ -92,8 +93,8 @@ void add_music_mute_note(
     const int16_t track,
     const uint8_t note,
     const uint8_t noteVol,
-    patchmaps_header& patchmap,
-    patchinfo_header& patchInfo
+    const patchmaps_header& patchmap,
+    const patchinfo_header& patchInfo
 ) noexcept {
     NoteState* const pNoteState = gpWess_notestate->get();
 
@@ -1133,8 +1134,8 @@ void PSX_ChorusMod([[maybe_unused]] track_status& trackStat) noexcept {}
 void PSX_voiceon(
     voice_status& voiceStat,
     track_status& trackStat,
-    patchmaps_header& patchmap,
-    patchinfo_header& patchInfo,
+    const patchmaps_header& patchmap,
+    const patchinfo_header& patchInfo,
     const uint8_t voiceNote,
     const uint8_t voiceVol
 ) noexcept {
@@ -1205,8 +1206,8 @@ void PSX_voicerelease(voice_status& voiceStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_voicenote(
     track_status& trackStat,
-    patchmaps_header& patchmap,
-    patchinfo_header& patchInfo,
+    const patchmaps_header& patchmap,
+    const patchinfo_header& patchInfo,
     const uint8_t voiceNote,
     const uint8_t voiceVol
 ) noexcept {
@@ -1288,126 +1289,47 @@ void PSX_voicenote(
     }
 }
 
-void PSX_NoteOn() noexcept {
-loc_80047394:
-    sp -= 0x20;
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(ra, sp + 0x1C);
-    v0 = lw(s0 + 0x34);
-    v1 = lw(s0 + 0x34);
-    v0 = lbu(v0 + 0x1);
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xEBC);                                 // Store to: 8007F144
-    v0 = lbu(v1 + 0x2);
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xEB8);                                 // Store to: 8007F148
-    v1 = lbu(s0 + 0x13);
-    v0 = 2;                                             // Result = 00000002
-    if (v1 != v0) goto loc_80047428;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lbu(v1 - 0xEBC);                               // Load from: 8007F144
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE74);                                // Load from: 8007F18C
-    v1 <<= 2;
-    v1 += v0;
-    v0 = lh(v1);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xE80);                                // Load from: 8007F180
-    v0 <<= 2;
-    v0 += a0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xEB0);                                 // Store to: 8007F150
-    v0 = lbu(v1 + 0x2);
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xEBC);                                 // Store to: 8007F144
-    goto loc_80047444;
-loc_80047428:
-    v0 = lh(s0 + 0xA);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE80);                                // Load from: 8007F180
-    v0 <<= 2;
-    v0 += v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xEB0);                                 // Store to: 8007F150
-loc_80047444:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xEB0);                                // Load from: 8007F150
-    v1 = lbu(v0);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0xEC0);                                  // Store to: 8007F140
-    v0 = v1 - 1;
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v1, at - 0xEB4);                                 // Store to: 8007F14C
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xEB4);                                 // Store to: 8007F14C
-    v0 &= 0xFF;
-    v1 = 0xFF;                                          // Result = 000000FF
-    if (v0 == v1) goto loc_80047564;
-loc_80047480:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xEB0);                                // Load from: 8007F150
-    v1 = lh(v0 + 0x2);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xEC0);                                // Load from: 8007F140
-    v1 += v0;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE7C);                                // Load from: 8007F184
-    v1 <<= 4;
-    a1 = v1 + v0;
-    v1 = lh(a1 + 0xA);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE78);                                // Load from: 8007F188
-    v0 <<= 2;
-    a2 = v0 + v1;
-    v0 = lw(a2 + 0x8);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a1, at - 0xEAC);                                 // Store to: 8007F154
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a2, at - 0xEA8);                                 // Store to: 8007F158
-    if (v0 == 0) goto loc_8004752C;
-    v0 = lbu(a1 + 0x6);
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 = lbu(a3 - 0xEBC);                               // Load from: 8007F144
-    v0 = (a3 < v0);
-    if (v0 != 0) goto loc_8004752C;
-    v0 = lbu(a1 + 0x7);
-    v0 = (v0 < a3);
-    a0 = s0;
-    if (v0 != 0) goto loc_8004752C;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 - 0xEB8);                               // Load from: 8007F148
-    sw(v0, sp + 0x10);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Plays a note for the audio sequencer.
+// Reads the patch, musical note and volume to play at from the sequence data.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_NoteOn(track_status& trackStat) noexcept {
+    // Figure out the patch, musical note (i.e pitch) and volume to use for this note being played
+    uint16_t patchNum;
+    uint8_t voiceNote;
+    
+    if (trackStat.sndclass == DRUMS_CLASS) {
+        // For drums the pitch and patch is determined by the drum type
+        const uint8_t drumTypeIdx = trackStat.ppos[1];
+        const drumpmaps_header& drumType = gpWess_drv_drummaps->get()[drumTypeIdx];
 
-    PSX_voicenote(
-        *vmAddrToPtr<track_status>(a0),
-        *vmAddrToPtr<patchmaps_header>(a1),
-        *vmAddrToPtr<patchinfo_header>(a2),
-        (uint8_t) a3,
-        (uint8_t) lw(sp + 0x10)
-    );
+        patchNum = drumType.patchnum;
+        voiceNote = (uint8_t) drumType.note;
+    } else {
+        patchNum = trackStat.patchnum;
+        voiceNote = trackStat.ppos[1];
+    }
 
-loc_8004752C:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 - 0xEB4);                               // Load from: 8007F14C
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xEC0);                                // Load from: 8007F140
-    v0--;
-    v1++;
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xEB4);                                 // Store to: 8007F14C
-    v0 &= 0xFF;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xEC0);                                 // Store to: 8007F140
-    v1 = 0xFF;                                          // Result = 000000FF
-    if (v0 != v1) goto loc_80047480;
-loc_80047564:
-    ra = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x20;
-    return;
+    const uint8_t voiceVol = trackStat.ppos[2];
+    
+    // Play all of the sounds for the patch
+    const patches_header& patch = gpWess_drv_patchHeaders->get()[patchNum];
+    const uint16_t patchSndCount = patch.patchmap_cnt;
+
+    for (uint16_t patchSndIdx = 0; patchSndIdx < patchSndCount; ++patchSndIdx) {
+        // Grab the details for this particular patch sound
+        const patchmaps_header& patchmap = gpWess_drv_patchmaps->get()[patch.patchmap_idx + patchSndIdx];
+        const patchinfo_header& patchInfo = gpWess_drv_patchInfos->get()[patchmap.sample_id];
+
+        // Is this sound actually loaded? Do not play anything if it's not in SPU RAM:
+        if (patchInfo.sample_pos == 0)
+            continue;
+
+        // Only play the sound if the musical note is within the allowed range for the sound
+        if ((voiceNote >= patchmap.note_min) && (voiceNote <= patchmap.note_max)) {
+            PSX_voicenote(trackStat, patchmap, patchInfo, voiceNote, voiceVol);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

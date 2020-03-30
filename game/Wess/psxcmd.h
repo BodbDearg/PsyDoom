@@ -24,8 +24,8 @@ void add_music_mute_note(
     const int16_t track,
     const uint8_t note,
     const uint8_t noteVol,
-    patchmaps_header& patchmap,
-    patchinfo_header& patchInfo
+    const patchmaps_header& patchmap,
+    const patchinfo_header& patchInfo
 ) noexcept;
 
 void PSX_UNKNOWN_DrvFunc() noexcept;
@@ -51,8 +51,8 @@ void PSX_ChorusMod(track_status& trackStat) noexcept;
 void PSX_voiceon(
     voice_status& voiceStat,
     track_status& trackStat,
-    patchmaps_header& patchmap,
-    patchinfo_header& patchInfo,
+    const patchmaps_header& patchmap,
+    const patchinfo_header& patchInfo,
     const uint8_t voiceNote,
     const uint8_t voiceVol
 ) noexcept;
@@ -62,11 +62,11 @@ void PSX_voicerelease(voice_status& voiceStat) noexcept;
 
 void PSX_voicenote(
     track_status& trackStat,
-    patchmaps_header& patchmap,
-    patchinfo_header& patchInfo,
+    const patchmaps_header& patchmap,
+    const patchinfo_header& patchInfo,
     const uint8_t voiceNote,
     const uint8_t voiceVol
 ) noexcept;
 
-void PSX_NoteOn() noexcept;
+void PSX_NoteOn(track_status& trackStat) noexcept;
 void PSX_NoteOff(track_status& trackStat) noexcept;
