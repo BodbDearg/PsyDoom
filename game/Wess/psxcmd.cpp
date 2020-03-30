@@ -969,7 +969,14 @@ void PSX_voiceon(
     voiceStat.track = trackStat.refindx;
     voiceStat.keynum = voiceNote;
     voiceStat.velnum = voiceVol;
-    voiceStat.sndtype = 0;
+
+    #if PC_PSX_DOOM_MODS
+        // PC-PSX: this field was always being set to SFX, it should be using the track sound class
+        voiceStat.sndtype = trackStat.sndclass;
+    #else
+        voiceStat.sndtype = SNDFX_CLASS;
+    #endif
+
     voiceStat.priority = trackStat.priority;
     voiceStat.patchmaps = &patchmap;
     voiceStat.patchinfo = &patchInfo;

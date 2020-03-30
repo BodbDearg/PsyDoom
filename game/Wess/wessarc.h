@@ -320,7 +320,7 @@ struct voice_status {
     uint8_t                         priority;               // 0x004    TODO: COMMENT
     uint8_t                         keynum;                 // 0x005    TODO: COMMENT
     uint8_t                         velnum;                 // 0x006    TODO: COMMENT
-    uint8_t                         sndtype;                // 0x007    TODO: COMMENT
+    SoundClass                      sndtype;                // 0x007    TODO: COMMENT
     VmPtr<const patchmaps_header>   patchmaps;              // 0x008    TODO: COMMENT
     VmPtr<const patchinfo_header>   patchinfo;              // 0x00C    TODO: COMMENT
     uint32_t                        pabstime;               // 0x010    TODO: COMMENT
