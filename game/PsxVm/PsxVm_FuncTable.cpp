@@ -364,7 +364,6 @@ extern void Eng_TrkRet() noexcept;
 extern void Eng_TrkEnd() noexcept;
 extern void Eng_NullEvent() noexcept;
 extern void SeqEngine() noexcept;
-extern void wess_dig_lcd_loader_init() noexcept;
 extern void wess_dig_set_sample_position() noexcept;
 extern void wess_dig_lcd_data_read() noexcept;
 extern void wess_dig_lcd_psxcd_sync() noexcept;
@@ -775,7 +774,6 @@ namespace PsxVm {
         { 0x80048A88, &Eng_TrkEnd },
         { 0x80048B8C, &Eng_NullEvent },
         { 0x80048B94, &SeqEngine },
-        { 0x80048EE4, &wess_dig_lcd_loader_init },
         { 0x80048FCC, &wess_dig_set_sample_position },
         { 0x8004906C, &wess_dig_lcd_data_read },
         { 0x800493AC, &wess_dig_lcd_psxcd_sync },

@@ -2,75 +2,65 @@
 // Williams Entertainment Sound System (WESS): LCD (sound samples file) loading code.
 // Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 #include "lcdload.h"
 
 #include "psxcd.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBCD.h"
 #include "PsyQ/LIBSPU.h"
+#include "wessarc.h"
 
-// The currently open LCD file
-static const VmPtr<PsxCd_File> gWess_open_lcd_file(0x8007F2E0);
+static const VmPtr<PsxCd_File>                      gWess_open_lcd_file(0x8007F2E0);            // The currently open LCD file
+static const VmPtr<VmPtr<patch_group_data>>         gpWess_lcd_load_patchGrp(0x80075AD8);
+static const VmPtr<VmPtr<patches_header>>           gpWess_lcd_load_patches(0x80075AC8);
+static const VmPtr<VmPtr<patchmaps_header>>         gpWess_lcd_load_patchmaps(0x80075ACC);
+static const VmPtr<VmPtr<patchinfo_header>>         gpWess_lcd_load_patchInfos(0x80075AD0);
+static const VmPtr<VmPtr<drumpmaps_header>>         gpWess_lcd_load_drummaps(0x80075AD4);
 
-void wess_dig_lcd_loader_init() noexcept {
-loc_80048EE4:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5AC4);                                 // Store to: 80075AC4
-    a2 = 0;                                             // Result = 00000000
-    if (a0 != 0) goto loc_80048F0C;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80048FC4;
-loc_80048EFC:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x5AD8);                                // Store to: 80075AD8
-    goto loc_80048F50;
-loc_80048F0C:
-    v0 = lw(a0 + 0xC);
-    a1 = lbu(v0 + 0xA);
-    v0 = (i32(a2) < i32(a1));
-    v1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_80048F50;
-    a3 = 1;                                             // Result = 00000001
-    a0 = lw(a0 + 0x18);
-loc_80048F30:
-    v0 = lbu(a0 + 0x4);
-    v1++;
-    if (v0 == a3) goto loc_80048EFC;
-    v0 = (i32(v1) < i32(a1));
-    a0 += 0x54;
-    if (v0 != 0) goto loc_80048F30;
-loc_80048F50:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x5AD8);                               // Load from: 80075AD8
-    v0 = a2;                                            // Result = 00000000
-    if (a1 == 0) goto loc_80048FC4;
-    a0 = lw(a1 + 0x1C);
-    v0 = lh(a1 + 0x8);
-    v1 = lh(a1 + 0xC);
-    a2 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a2, at + 0x5AC4);                                // Store to: 80075AC4
-    v0 <<= 2;
-    v0 += a0;
-    v1 <<= 4;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x5AC8);                                // Store to: 80075AC8
-    a0 = lh(a1 + 0x10);
-    v1 += v0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5ACC);                                // Store to: 80075ACC
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5AD0);                                // Store to: 80075AD0
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 2;
-    v0 += v1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5AD4);                                // Store to: 80075AD4
-    v0 = a2;                                            // Result = 00000001
-loc_80048FC4:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the LCD loader with the specified master status struct
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool wess_dig_lcd_loader_init(master_status_structure* const pMStat) noexcept {
+    // If there is no master status struct then we cannot initialize
+    if (!pMStat)
+        return false;
+    
+    // Try to find the patch group in the currently loaded module for the PlayStation
+    module_data& mod_info = *pMStat->pmod_info;
+    patch_group_data* pPatchGrp = nullptr;
+
+    for (uint8_t patchGrpIdx = 0; patchGrpIdx < mod_info.mod_hdr.patch_types_infile; ++patchGrpIdx) {
+        patch_group_data& patchGrp = pMStat->ppat_info[patchGrpIdx];
+
+        if (patchGrp.pat_grp_hdr.patch_id == PSX_ID) {
+            pPatchGrp = &patchGrp;
+            break;
+        }
+    }
+
+    // If we didn't find the patch group for the PSX driver then initialization failed
+    *gpWess_lcd_load_patchGrp = pPatchGrp;
+
+    if (!pPatchGrp)
+        return false;
+
+    // Save pointers to the various data structures for the patch group
+    {
+        uint8_t* pPatchData = pPatchGrp->ppat_data.get();
+
+        *gpWess_lcd_load_patches = (patches_header*) pPatchData;
+        pPatchData += sizeof(patches_header) * pPatchGrp->pat_grp_hdr.patches;
+        
+        *gpWess_lcd_load_patchmaps = (patchmaps_header*) pPatchData;
+        pPatchData += sizeof (patchmaps_header) * pPatchGrp->pat_grp_hdr.patchmaps;
+
+        *gpWess_lcd_load_patchInfos = (patchinfo_header*) pPatchData;
+        pPatchData += sizeof(patchinfo_header) * pPatchGrp->pat_grp_hdr.patchinfo;
+
+        *gpWess_lcd_load_drummaps = (drumpmaps_header*) pPatchData;
+    }
+
+    return true;
 }
 
 void wess_dig_set_sample_position() noexcept {
