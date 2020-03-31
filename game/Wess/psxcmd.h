@@ -43,7 +43,7 @@ void PSX_PitchMod() noexcept;
 void PSX_ZeroMod(track_status& trackStat) noexcept;
 void PSX_ModuMod(track_status& trackStat) noexcept;
 void PSX_VolumeMod(track_status& trackStat) noexcept;
-void PSX_PanMod() noexcept;
+void PSX_PanMod(track_status& trackStat) noexcept;
 void PSX_PedalMod(track_status& trackStat) noexcept;
 void PSX_ReverbMod(track_status& trackStat) noexcept;
 void PSX_ChorusMod(track_status& trackStat) noexcept;

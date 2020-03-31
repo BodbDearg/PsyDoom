@@ -19,6 +19,7 @@ void _thunk_PSX_PatchMod() noexcept { PSX_PatchMod(*vmAddrToPtr<track_status>(a0
 void _thunk_PSX_ZeroMod() noexcept { PSX_ZeroMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_ModuMod() noexcept { PSX_ModuMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_VolumeMod() noexcept { PSX_VolumeMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_PSX_PanMod() noexcept { PSX_PanMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_PedalMod() noexcept { PSX_PedalMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_ReverbMod() noexcept { PSX_ReverbMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_ChorusMod() noexcept { PSX_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
@@ -39,7 +40,7 @@ void (* const gWess_drv_cmds[19])() = {
     _thunk_PSX_ZeroMod,         // 10
     _thunk_PSX_ModuMod,         // 11
     _thunk_PSX_VolumeMod,       // 12
-    PSX_PanMod,                 // 13
+    _thunk_PSX_PanMod,          // 13
     _thunk_PSX_PedalMod,        // 14
     _thunk_PSX_ReverbMod,       // 15
     _thunk_PSX_ChorusMod,       // 16
@@ -687,252 +688,162 @@ void PSX_VolumeMod(track_status& trackStat) noexcept {
     // Update the track volume with the amount in the sequencer command
     trackStat.volume_cntrl = trackStat.ppos[1];
 
-    // Update the volume for all active voices used by the track        
+    // Update the volume for all active voices used by the track. If there are none then we can just stop here:
     uint8_t numActiveVoicesToVisit = trackStat.voices_active;
 
-    if (numActiveVoicesToVisit > 0) {
-        for (uint32_t hwVoiceIdx = 0; hwVoiceIdx < numHwVoices; ++hwVoiceIdx) {            
-            // Only update this voice if it's for this track and active, otherwise ignore
-            voice_status& voiceStat = pHwVoiceStats[hwVoiceIdx];
+    if (numActiveVoicesToVisit == 0)
+        return;
+    
+    for (uint32_t hwVoiceIdx = 0; hwVoiceIdx < numHwVoices; ++hwVoiceIdx) {
+        // Only update this voice if it's for this track and active, otherwise ignore
+        voice_status& voiceStat = pHwVoiceStats[hwVoiceIdx];
 
-            if ((!voiceStat.active) || (voiceStat.track != trackStat.refindx))
-                continue;
+        if ((!voiceStat.active) || (voiceStat.track != trackStat.refindx))
+            continue;
 
-            // Figure out the current pan amount (0-127)
-            int16_t currentPan;
+        // Figure out the current pan amount (0-127)
+        int16_t currentPan;
 
-            if (*gWess_pan_status == PAN_OFF) {
-                currentPan = 64;
-            } else {
-                currentPan = (int16_t) trackStat.pan_cntrl + (int16_t) voiceStat.patchmaps->pan - 64;
+        if (*gWess_pan_status == PAN_OFF) {
+            currentPan = 64;
+        } else {
+            currentPan = (int16_t) trackStat.pan_cntrl + (int16_t) voiceStat.patchmaps->pan - 64;
                 
-                if (currentPan > 127) {
-                    currentPan = 127;
-                }
-
-                if (currentPan < 0) {
-                    currentPan = 0;
-                }
+            if (currentPan > 127) {
+                currentPan = 127;
             }
 
-            // Figure out the updated volume level (0-2047)
-            uint32_t updatedVol = (uint32_t) voiceStat.velnum;
-            updatedVol *= voiceStat.patchmaps->volume;
-            updatedVol *= trackStat.volume_cntrl;
-            
-            if (trackStat.sndclass == SNDFX_CLASS) {
-                updatedVol *= (*gWess_master_sfx_volume);
-            } else {
-                updatedVol *= (gWess_master_mus_volume);
+            if (currentPan < 0) {
+                currentPan = 0;
             }
-
-            updatedVol >>= 21;
-
-            // Figure out the left/right volume using the computed volume and pan
-            if (*gWess_pan_status == PAN_OFF) {
-                const uint16_t spuVol = (int16_t) updatedVol * 64;
-                spuVoiceAttr.volume.left = spuVol;
-                spuVoiceAttr.volume.right = spuVol;
-            } else {
-                const int16_t spuVolL = (int16_t)(((int32_t) updatedVol * 128 * (128 - currentPan)) / 128);
-                const int16_t spuVolR = (int16_t)(((int32_t) updatedVol * 128 * (currentPan + 1  )) / 128);                
-
-                if (*gWess_pan_status == PAN_ON) {
-                    spuVoiceAttr.volume.left = spuVolL;
-                    spuVoiceAttr.volume.right = spuVolR;
-                } else {
-                    // PAN_ON_REV: reverse the channels when panning
-                    spuVoiceAttr.volume.left = spuVolR;
-                    spuVoiceAttr.volume.right = spuVolL;
-                }
-            }
-
-            // These are the attributes and voices to update on the SPU
-            spuVoiceAttr.attr_mask = SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
-            spuVoiceAttr.voice_bits = 1 << (voiceStat.refindx % 32);
-
-            // Update the voice attributes on the SPU
-            LIBSPU_SpuSetVoiceAttr(spuVoiceAttr);
-
-            // If there are no more active voices to visit then we are done
-            numActiveVoicesToVisit--;
-
-            if (numActiveVoicesToVisit == 0)
-                break;
         }
+
+        // Figure out the updated volume level (0-2047)
+        uint32_t updatedVol = (uint32_t) voiceStat.velnum;
+        updatedVol *= voiceStat.patchmaps->volume;
+        updatedVol *= trackStat.volume_cntrl;
+            
+        if (trackStat.sndclass == SNDFX_CLASS) {
+            updatedVol *= (*gWess_master_sfx_volume);
+        } else {
+            updatedVol *= (*gWess_master_mus_volume);
+        }
+
+        updatedVol >>= 21;
+
+        // Figure out the left/right volume using the computed volume and pan
+        if (*gWess_pan_status == PAN_OFF) {
+            const uint16_t spuVol = (int16_t) updatedVol * 64;
+            spuVoiceAttr.volume.left = spuVol;
+            spuVoiceAttr.volume.right = spuVol;
+        } else {
+            const int16_t spuVolL = (int16_t)(((int32_t) updatedVol * 128 * (128 - currentPan)) / 128);
+            const int16_t spuVolR = (int16_t)(((int32_t) updatedVol * 128 * (currentPan + 1  )) / 128);
+
+            if (*gWess_pan_status == PAN_ON) {
+                spuVoiceAttr.volume.left = spuVolL;
+                spuVoiceAttr.volume.right = spuVolR;
+            } else {
+                // PAN_ON_REV: reverse the channels when panning
+                spuVoiceAttr.volume.left = spuVolR;
+                spuVoiceAttr.volume.right = spuVolL;
+            }
+        }
+
+        // These are the attributes and voices to update on the SPU
+        spuVoiceAttr.attr_mask = SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
+        spuVoiceAttr.voice_bits = 1 << (voiceStat.refindx % 32);
+
+        // Update the voice attributes on the SPU
+        LIBSPU_SpuSetVoiceAttr(spuVoiceAttr);
+
+        // If there are no more active voices to visit then we are done
+        numActiveVoicesToVisit--;
+
+        if (numActiveVoicesToVisit == 0)
+            break;
     }
 }
 
-void PSX_PanMod() noexcept {
-loc_80046CA4:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = lw(s0 + 0x34);
-    v0 = lbu(v0 + 0x1);
-    sb(v0, s0 + 0xD);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x5A06);                              // Load from: gWess_pan_status (80075A06)
-    if (v0 == 0) goto loc_80046F64;
-    v0 = lbu(s0 + 0x10);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xEE4);                                 // Store to: 8007F11C
-    if (v0 == 0) goto loc_80046F64;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE8C);                                // Load from: 8007F174
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE90);                                // Load from: 8007F170
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xED8);                                 // Store to: 8007F128
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xEE0);                                 // Store to: 8007F120
-    s2 = 1;                                             // Result = 00000001
-    if (v1 == v0) goto loc_80046F64;
-    s1 = 0x80080000;                                    // Result = 80080000
-    s1 -= 0xE70;                                        // Result = 8007F190
-loc_80046D34:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xED8);                                // Load from: 8007F128
-    v0 = lw(a0);
-    v0 &= 1;
-    if (v0 == 0) goto loc_80046F30;
-    v1 = lbu(a0 + 0x3);
-    v0 = lbu(s0 + 0x1);
-    if (v1 != v0) goto loc_80046F30;
-    v0 = lw(a0 + 0x8);
-    v1 = lbu(v0 + 0x3);
-    v0 = lbu(s0 + 0xD);
-    v1 <<= 24;
-    v1 = u32(i32(v1) >> 24);
-    v0 += v1;
-    v0 -= 0x40;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xED4);                                 // Store to: 8007F12C
-    v0 = (i32(v0) < 0x80);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x7F;                                      // Result = 0000007F
-        if (bJump) goto loc_80046DA4;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sequencer command that updates the pan setting for a track and all of it's active voices
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_PanMod(track_status& trackStat) noexcept {
+    // Cache these for the loop
+    SpuVoiceAttr& spuVoiceAttr = *gWess_spuVoiceAttr;
+    const uint32_t numHwVoices = *gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats->get();
+
+    // Update the track pan setting with the amount in the sequencer command
+    trackStat.pan_cntrl = trackStat.ppos[1];
+
+    // If panning is disabled then there is nothing further to do
+    if (*gWess_pan_status == PAN_OFF)
+        return;
+
+    // Update the pan for all active voices used by the track. If there are no active voices then we can stop here:
+    uint8_t numActiveVoicesToVisit = trackStat.voices_active;
+
+    if (numActiveVoicesToVisit == 0)
+        return;
+
+    for (uint32_t hwVoiceIdx = 0; hwVoiceIdx < numHwVoices; ++hwVoiceIdx) {
+        // Only update this voice if it's for this track and active, otherwise ignore
+        voice_status& voiceStat = pHwVoiceStats[hwVoiceIdx];
+
+        if ((!voiceStat.active) || (voiceStat.track != trackStat.refindx))
+            continue;
+
+        // Figure out the updated pan amount (0-127)
+        int16_t updatedPan = (int16_t) trackStat.pan_cntrl + (int16_t) voiceStat.patchmaps->pan - 64;
+        
+        if (updatedPan > 127) {
+            updatedPan = 127;
+        }
+
+        if (updatedPan < 0) {
+            updatedPan = 0;
+        }
+
+        // Figure out the current volume level (0-2047)
+        uint32_t currentVol = (uint32_t) voiceStat.velnum;
+        currentVol *= voiceStat.patchmaps->volume;
+        currentVol *= trackStat.volume_cntrl;
+
+        if (trackStat.sndclass == SNDFX_CLASS) {
+            currentVol *= (*gWess_master_sfx_volume);
+        } else {
+            currentVol *= (*gWess_master_mus_volume);
+        }
+
+        currentVol >>= 21;
+
+        // Figure out the left/right volume using the computed volume and pan
+        const int16_t spuVolL = (int16_t)(((int32_t) currentVol * 128 * (128 - updatedPan)) / 128);
+        const int16_t spuVolR = (int16_t)(((int32_t) currentVol * 128 * (updatedPan + 1  )) / 128);
+
+        if (*gWess_pan_status == PAN_ON) {
+            spuVoiceAttr.volume.left = spuVolL;
+            spuVoiceAttr.volume.right = spuVolR;
+        } else {
+            // PAN_ON_REV: reverse the channels when panning
+            spuVoiceAttr.volume.left = spuVolR;
+            spuVoiceAttr.volume.right = spuVolL;
+        }
+
+        // These are the attributes and voices to update on the SPU
+        spuVoiceAttr.attr_mask = SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
+        spuVoiceAttr.voice_bits = 1 << (voiceStat.refindx % 32);
+
+        // Update the voice attributes on the SPU
+        LIBSPU_SpuSetVoiceAttr(spuVoiceAttr);
+                
+        // If there are no more active voices to visit then we are done
+        numActiveVoicesToVisit--;
+
+        if (numActiveVoicesToVisit == 0)
+            break;
     }
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xED4);                                 // Store to: 8007F12C
-loc_80046DA4:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lh(v0 - 0xED4);                                // Load from: 8007F12C
-    if (i32(v0) >= 0) goto loc_80046DC0;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(0, at - 0xED4);                                  // Store to: 8007F12C
-loc_80046DC0:
-    v0 = lbu(s0 + 0x13);
-    if (v0 != 0) goto loc_80046E08;
-    v0 = lw(a0 + 0x8);
-    v1 = lbu(a0 + 0x6);
-    v0 = lbu(v0 + 0x2);
-    mult(v1, v0);
-    v1 = lo;
-    v0 = lbu(s0 + 0xC);
-    mult(v1, v0);
-    v1 = lo;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x5A04);                              // Load from: gWess_master_sfx_volume (80075A04)
-    mult(v1, v0);
-    goto loc_80046E40;
-loc_80046E08:
-    v0 = lw(a0 + 0x8);
-    v1 = lbu(a0 + 0x6);
-    v0 = lbu(v0 + 0x2);
-    mult(v1, v0);
-    v1 = lo;
-    v0 = lbu(s0 + 0xC);
-    mult(v1, v0);
-    v1 = lo;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x5A05);                              // Load from: gWess_master_mus_volume (80075A05)
-    mult(v1, v0);
-loc_80046E40:
-    v0 = lo;
-    v0 = u32(i32(v0) >> 21);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xEDC);                                 // Store to: 8007F124
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xED8);                                // Load from: 8007F128
-    v1 = lbu(v0 + 0x2);
-    v0 = 3;                                             // Result = 00000003
-    sw(v0, s1 + 0x4);                                   // Store to: 8007F194
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x5A06);                              // Load from: gWess_pan_status (80075A06)
-    v1 = s2 << v1;
-    sw(v1, s1);                                         // Store to: 8007F190
-    if (v0 != s2) goto loc_80046EC0;
-    v0 = 0x80;                                          // Result = 00000080
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xEDC);                                // Load from: 8007F124
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lh(v1 - 0xED4);                                // Load from: 8007F12C
-    a0 <<= 7;
-    v0 -= v1;
-    mult(a0, v0);
-    v0 = lo;
-    v1++;
-    mult(a0, v1);
-    v0 = u32(i32(v0) >> 7);
-    sh(v0, s1 + 0x8);                                   // Store to: 8007F198
-    v0 = lo;
-    v0 = u32(i32(v0) >> 7);
-    sh(v0, s1 + 0xA);                                   // Store to: 8007F19A
-    goto loc_80046F00;
-loc_80046EC0:
-    v0 = 0x80;                                          // Result = 00000080
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xEDC);                                // Load from: 8007F124
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lh(v1 - 0xED4);                                // Load from: 8007F12C
-    a0 <<= 7;
-    v0 -= v1;
-    mult(a0, v0);
-    v0 = lo;
-    v1++;
-    mult(a0, v1);
-    v0 = u32(i32(v0) >> 7);
-    sh(v0, s1 + 0xA);                                   // Store to: 8007F19A
-    v0 = lo;
-    v0 = u32(i32(v0) >> 7);
-    sh(v0, s1 + 0x8);                                   // Store to: 8007F198
-loc_80046F00:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0xE70;                                        // Result = 8007F190
-    LIBSPU_SpuSetVoiceAttr(*vmAddrToPtr<SpuVoiceAttr>(a0));
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xEE4);                                // Load from: 8007F11C
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xEE4);                                 // Store to: 8007F11C
-    if (v0 == 0) goto loc_80046F64;
-loc_80046F30:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xED8);                                // Load from: 8007F128
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xEE0);                                // Load from: 8007F120
-    v0 += 0x18;
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xED8);                                 // Store to: 8007F128
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xEE0);                                 // Store to: 8007F120
-    if (v1 != v0) goto loc_80046D34;
-loc_80046F64:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

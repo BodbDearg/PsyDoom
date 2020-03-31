@@ -320,7 +320,7 @@ extern void PSX_PitchMod() noexcept;
 extern void _thunk_PSX_ZeroMod() noexcept;
 extern void _thunk_PSX_ModuMod() noexcept;
 extern void _thunk_PSX_VolumeMod() noexcept;
-extern void PSX_PanMod() noexcept;
+extern void _thunk_PSX_PanMod() noexcept;
 extern void _thunk_PSX_PedalMod() noexcept;
 extern void _thunk_PSX_ReverbMod() noexcept;
 extern void _thunk_PSX_ChorusMod() noexcept;
@@ -732,7 +732,7 @@ namespace PsxVm {
         { 0x8004697C, &_thunk_PSX_ZeroMod },
         { 0x80046984, &_thunk_PSX_ModuMod },
         { 0x8004698C, &_thunk_PSX_VolumeMod },
-        { 0x80046CA4, &PSX_PanMod },
+        { 0x80046CA4, &_thunk_PSX_PanMod },
         { 0x80046F80, &_thunk_PSX_PedalMod },
         { 0x80046F88, &_thunk_PSX_ReverbMod },
         { 0x80046F90, &_thunk_PSX_ChorusMod },
