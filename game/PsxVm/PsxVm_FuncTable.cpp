@@ -306,7 +306,6 @@ extern void wess_seq_loader_exit() noexcept;
 extern void wess_seq_sizeof() noexcept;
 extern void wess_seq_load() noexcept;
 extern void wess_seq_free() noexcept;
-extern void PSX_UNKNOWN_DrvFunc() noexcept;
 extern void _thunk_PSX_DriverInit() noexcept;
 extern void _thunk_PSX_DriverExit() noexcept;
 extern void _thunk_PSX_DriverEntry1() noexcept;
@@ -314,7 +313,7 @@ extern void _thunk_PSX_DriverEntry2() noexcept;
 extern void _thunk_PSX_DriverEntry3() noexcept;
 extern void _thunk_PSX_TrkOff() noexcept;
 extern void _thunk_PSX_TrkMute() noexcept;
-extern void PSX_PatchChg() noexcept;
+extern void _thunk_PSX_PatchChg() noexcept;
 extern void _thunk_PSX_PatchMod() noexcept;
 extern void _thunk_PSX_PitchMod() noexcept;
 extern void _thunk_PSX_ZeroMod() noexcept;
@@ -718,7 +717,6 @@ namespace PsxVm {
         { 0x80045164, &wess_seq_sizeof },
         { 0x800451F4, &wess_seq_load },
         { 0x80045298, &wess_seq_free },
-        { 0x80045ACC, &PSX_UNKNOWN_DrvFunc },
         { 0x80045F8C, &_thunk_PSX_DriverInit },
         { 0x800461B4, &_thunk_PSX_DriverExit },
         { 0x800461D4, &_thunk_PSX_DriverEntry1 },
@@ -726,7 +724,7 @@ namespace PsxVm {
         { 0x8004648C, &_thunk_PSX_DriverEntry3 },
         { 0x80046494, &_thunk_PSX_TrkOff },
         { 0x80046540, &_thunk_PSX_TrkMute },
-        { 0x800466FC, &PSX_PatchChg },
+        { 0x800466FC, &_thunk_PSX_PatchChg },
         { 0x80046724, &_thunk_PSX_PatchMod },
         { 0x8004672C, &_thunk_PSX_PitchMod },
         { 0x8004697C, &_thunk_PSX_ZeroMod },

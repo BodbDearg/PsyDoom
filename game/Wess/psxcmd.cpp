@@ -15,6 +15,7 @@ void _thunk_PSX_DriverEntry2() noexcept { PSX_DriverEntry2(*vmAddrToPtr<track_st
 void _thunk_PSX_DriverEntry3() noexcept { PSX_DriverEntry3(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_TrkOff() noexcept { PSX_TrkOff(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_TrkMute() noexcept { PSX_TrkMute(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_PSX_PatchChg() noexcept { PSX_PatchChg(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_PatchMod() noexcept { PSX_PatchMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_PitchMod() noexcept { PSX_PitchMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_ZeroMod() noexcept { PSX_ZeroMod(*vmAddrToPtr<track_status>(a0)); }
@@ -35,7 +36,7 @@ void (* const gWess_drv_cmds[19])() = {
     _thunk_PSX_DriverEntry3,    // 04
     _thunk_PSX_TrkOff,          // 05
     _thunk_PSX_TrkMute,         // 06
-    PSX_PatchChg,               // 07
+    _thunk_PSX_PatchChg,        // 07
     _thunk_PSX_PatchMod,        // 08
     _thunk_PSX_PitchMod,        // 09
     _thunk_PSX_ZeroMod,         // 10
@@ -48,9 +49,6 @@ void (* const gWess_drv_cmds[19])() = {
     _thunk_PSX_NoteOn,          // 17
     _thunk_PSX_NoteOff          // 18
 };
-
-// TODO: COMMENT
-static constexpr uint8_t VOICE_RELEASE_RATE = 13;
 
 static const VmPtr<VmPtr<master_status_structure>>      gpWess_drv_mstat(0x8007F164);               // Pointer to the master status structure being used by the sequencer
 static const VmPtr<VmPtr<sequence_status>>              gpWess_drv_seqStats(0x8007F168);            // TODO: COMMENT
@@ -69,6 +67,7 @@ static const VmPtr<VmPtr<uint32_t>>                     gpWess_drv_curabstime(0x
 static const VmPtr<uint8_t[SPU_NUM_VOICES]>             gWess_drv_chanReverbAmt(0x8007F1E8);        // Current reverb levels for each channel/voice
 static const VmPtr<uint32_t>                            gWess_drv_releasedVoices(0x80075A08);       // TODO: COMMENT
 static const VmPtr<uint32_t>                            gWess_drv_mutedVoices(0x80075A0C);          // TODO: COMMENT
+static const VmPtr<uint8_t>                             gWess_drv_releaseRate(0x80075A07);          // TODO: COMMENT
 static const VmPtr<SpuVoiceAttr>                        gWess_spuVoiceAttr(0x8007F190);             // Temporary used for setting voice parameters with LIBSPU
 static const VmPtr<uint8_t[SPU_NUM_VOICES]>             gWess_spuKeyStatuses(0x8007F1D0);           // TODO: COMMENT
 
@@ -120,26 +119,18 @@ void add_music_mute_note(
     }
 }
 
-void PSX_UNKNOWN_DrvFunc() noexcept {
-    v1 = 0x10000000;                                    // Result = 10000000
-    v0 = 0x1F;                                          // Result = 0000001F
-    goto loc_80045AF0;
-loc_80045AD8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x5A07);                              // Load from: gWess_UNKNOWN_status_byte (80075A07)
-    {
-        const bool bJump = (v0 == 0);
-        v0 += 0xFF;
-        if (bJump) goto loc_80045B04;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the release rate or how fast fade out occurs when muting voices
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_set_mute_release(const int32_t newReleaseRate) noexcept {
+    int32_t maxRate = 0x10000000;
+    *gWess_drv_releaseRate = 31;
+
+    // Note that the max release rate is '31' and minimum is '2' with this scheme
+    while ((maxRate > newReleaseRate) && (*gWess_drv_releaseRate != 0)) {
+        maxRate >>= 1;
+        *gWess_drv_releaseRate -= 1;
     }
-    v1 = u32(i32(v1) >> 1);
-loc_80045AF0:
-    at = 0x80070000;                                    // Result = 80070000
-    sb(v0, at + 0x5A07);                                // Store to: gWess_UNKNOWN_status_byte (80075A07)
-    v0 = (i32(a0) < i32(v1));
-    if (v0 != 0) goto loc_80045AD8;
-loc_80045B04:
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -396,7 +387,7 @@ void PSX_DriverEntry1([[maybe_unused]] track_status& trackStat) noexcept {
             spuVoiceAttr.voice_bits = *gWess_drv_mutedVoices;
             spuVoiceAttr.attr_mask = SPU_VOICE_ADSR_RMODE | SPU_VOICE_ADSR_RR;
             spuVoiceAttr.r_mode = SPU_VOICE_EXPDec;
-            spuVoiceAttr.rr = VOICE_RELEASE_RATE;
+            spuVoiceAttr.rr = *gWess_drv_releaseRate;
             LIBSPU_SpuSetVoiceAttr(spuVoiceAttr);
 
             // Include these voices in the voices that will be keyed off and clear the command
@@ -494,7 +485,7 @@ void PSX_TrkMute(track_status& trackStat) noexcept {
         }
 
         // Begin releasing the voice
-        voiceStat.adsr2 = 0x10000000 >> (31 - (VOICE_RELEASE_RATE % 32));   // TODO: what is this doing here?
+        voiceStat.adsr2 = 0x10000000 >> (31 - (*gWess_drv_releaseRate % 32));   // TODO: what is this doing here?
         PSX_voicerelease(voiceStat);
         *gWess_drv_mutedVoices |= 1 << (voiceStat.refindx % 32);
 
@@ -506,17 +497,12 @@ void PSX_TrkMute(track_status& trackStat) noexcept {
     }
 }
 
-void PSX_PatchChg() noexcept {
-loc_800466FC:
-    v1 = lw(a0 + 0x34);
-    v0 = lbu(v1 + 0x2);
-    v1 = lbu(v1 + 0x1);
-    v0 <<= 8;
-    v1 |= v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v1, at - 0xF18);                                 // Store to: gWess_Dvr_thepatch (8007F0E8)
-    sh(v1, a0 + 0xA);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Command that changes the patch for a track
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_PatchChg(track_status& trackStat) noexcept {
+    // Read the new patch number from the sequencer command and save on the track
+    trackStat.patchnum = trackStat.ppos[1];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

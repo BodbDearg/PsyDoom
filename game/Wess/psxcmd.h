@@ -28,7 +28,7 @@ void add_music_mute_note(
     const patchinfo_header& patchInfo
 ) noexcept;
 
-void PSX_UNKNOWN_DrvFunc() noexcept;
+void wess_set_mute_release(const int32_t newReleaseRate) noexcept;
 void TriggerPSXVoice(const voice_status& voiceStat, const uint8_t voiceNote, const uint8_t voiceVol) noexcept;
 void PSX_DriverInit(master_status_structure& mstat) noexcept;
 void PSX_DriverExit(master_status_structure& mstat) noexcept;
@@ -37,7 +37,7 @@ void PSX_DriverEntry2(track_status& trackStat) noexcept;
 void PSX_DriverEntry3(track_status& trackStat) noexcept;
 void PSX_TrkOff(track_status& trackStat) noexcept;
 void PSX_TrkMute(track_status& trackStat) noexcept;
-void PSX_PatchChg() noexcept;
+void PSX_PatchChg(track_status& trackStat) noexcept;
 void PSX_PatchMod(track_status& trackStat) noexcept;
 void PSX_PitchMod(track_status& trackStat) noexcept;
 void PSX_ZeroMod(track_status& trackStat) noexcept;
