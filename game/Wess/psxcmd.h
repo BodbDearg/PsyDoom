@@ -39,7 +39,7 @@ void PSX_TrkOff(track_status& trackStat) noexcept;
 void PSX_TrkMute(track_status& trackStat) noexcept;
 void PSX_PatchChg() noexcept;
 void PSX_PatchMod(track_status& trackStat) noexcept;
-void PSX_PitchMod() noexcept;
+void PSX_PitchMod(track_status& trackStat) noexcept;
 void PSX_ZeroMod(track_status& trackStat) noexcept;
 void PSX_ModuMod(track_status& trackStat) noexcept;
 void PSX_VolumeMod(track_status& trackStat) noexcept;

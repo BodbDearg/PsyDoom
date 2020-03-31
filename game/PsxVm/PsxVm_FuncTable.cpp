@@ -316,7 +316,7 @@ extern void _thunk_PSX_TrkOff() noexcept;
 extern void _thunk_PSX_TrkMute() noexcept;
 extern void PSX_PatchChg() noexcept;
 extern void _thunk_PSX_PatchMod() noexcept;
-extern void PSX_PitchMod() noexcept;
+extern void _thunk_PSX_PitchMod() noexcept;
 extern void _thunk_PSX_ZeroMod() noexcept;
 extern void _thunk_PSX_ModuMod() noexcept;
 extern void _thunk_PSX_VolumeMod() noexcept;
@@ -728,7 +728,7 @@ namespace PsxVm {
         { 0x80046540, &_thunk_PSX_TrkMute },
         { 0x800466FC, &PSX_PatchChg },
         { 0x80046724, &_thunk_PSX_PatchMod },
-        { 0x8004672C, &PSX_PitchMod },
+        { 0x8004672C, &_thunk_PSX_PitchMod },
         { 0x8004697C, &_thunk_PSX_ZeroMod },
         { 0x80046984, &_thunk_PSX_ModuMod },
         { 0x8004698C, &_thunk_PSX_VolumeMod },

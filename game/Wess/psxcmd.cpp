@@ -16,6 +16,7 @@ void _thunk_PSX_DriverEntry3() noexcept { PSX_DriverEntry3(*vmAddrToPtr<track_st
 void _thunk_PSX_TrkOff() noexcept { PSX_TrkOff(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_TrkMute() noexcept { PSX_TrkMute(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_PatchMod() noexcept { PSX_PatchMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_PSX_PitchMod() noexcept { PSX_PitchMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_ZeroMod() noexcept { PSX_ZeroMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_ModuMod() noexcept { PSX_ModuMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_VolumeMod() noexcept { PSX_VolumeMod(*vmAddrToPtr<track_status>(a0)); }
@@ -36,7 +37,7 @@ void (* const gWess_drv_cmds[19])() = {
     _thunk_PSX_TrkMute,         // 06
     PSX_PatchChg,               // 07
     _thunk_PSX_PatchMod,        // 08
-    PSX_PitchMod,               // 09
+    _thunk_PSX_PitchMod,        // 09
     _thunk_PSX_ZeroMod,         // 10
     _thunk_PSX_ModuMod,         // 11
     _thunk_PSX_VolumeMod,       // 12
@@ -523,147 +524,78 @@ loc_800466FC:
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_PatchMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
-void PSX_PitchMod() noexcept {
-loc_8004672C:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = lw(s0 + 0x34);
-    v1 = lbu(v0 + 0x2);
-    v0 = lbu(v0 + 0x1);
-    v1 <<= 8;
-    v0 |= v1;
-    a0 = v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xEFC);                                 // Store to: 8007F104
-    v0 <<= 16;
-    v1 = lh(s0 + 0xE);
-    v0 = u32(i32(v0) >> 16);
-    if (v1 == v0) goto loc_80046960;
-    v0 = lbu(s0 + 0x10);
-    sh(a0, s0 + 0xE);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF14);                                 // Store to: 8007F0EC
-    if (v0 == 0) goto loc_80046960;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xE8C);                                // Load from: 8007F174
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xE90);                                // Load from: 8007F170
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF00);                                 // Store to: 8007F100
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF10);                                 // Store to: 8007F0F0
-    s2 = 0x20;                                          // Result = 00000020
-    if (v1 == v0) goto loc_80046960;
-    s1 = 0x80080000;                                    // Result = 80080000
-    s1 -= 0xE70;                                        // Result = 8007F190
-loc_800467CC:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xF00);                                // Load from: 8007F100
-    v0 = lw(a0);
-    v0 &= 1;
-    if (v0 == 0) goto loc_8004692C;
-    v1 = lbu(a0 + 0x3);
-    v0 = lbu(s0 + 0x1);
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8004692C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sequencer command that updates the pitch modification for a track and all of it's active voices
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PSX_PitchMod(track_status& trackStat) noexcept {
+    // Cache these for the loop
+    SpuVoiceAttr& spuVoiceAttr = *gWess_spuVoiceAttr;
+    const uint32_t numHwVoices = *gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats->get();
+
+    // Read the pitch modification amount from the command: don't do anything if it's unchanged
+    const int16_t pitchMod = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
+
+    if (trackStat.pitch_cntrl == pitchMod)
+        return;
+
+    trackStat.pitch_cntrl = pitchMod;
+
+    // Update the pan for all active voices used by the track. If there are no active voices then we can stop here:
+    uint8_t numActiveVoicesToVisit = trackStat.voices_active;
+
+    if (numActiveVoicesToVisit == 0)
+        return;
+    
+    for (uint32_t hwVoiceIdx = 0; hwVoiceIdx < numHwVoices; ++hwVoiceIdx) {
+        // Only update this voice if it's for this track and active, otherwise ignore
+        voice_status& voiceStat = pHwVoiceStats[hwVoiceIdx];
+
+        if ((!voiceStat.active) || (voiceStat.track != trackStat.refindx))
+            continue;
+        
+        // Set the note to play
+        if (trackStat.pitch_cntrl == 0) {
+            // Not doing any pitch shifting
+            spuVoiceAttr.note = (uint16_t) voiceStat.keynum << 8;
+        } else {
+            if (trackStat.pitch_cntrl >= 1) {
+                // Pitch shifting: up
+                const uint32_t pitchShiftFrac = trackStat.pitch_cntrl * voiceStat.patchmaps->pitchstep_max;
+                const uint16_t pitchShiftNote = (uint16_t)((32 + pitchShiftFrac) >> 13);
+                const uint16_t pitchShiftFine = (pitchShiftFrac & 0x1FFF) >> 6;
+
+                // Possible bug? Should the fine mask here be '0xFF' instead?
+                // This code is never triggered from what I can see, so maybe it does not matter... 
+                spuVoiceAttr.note = (voiceStat.keynum + pitchShiftNote) << 8;
+                spuVoiceAttr.note |= pitchShiftFine & 0x7F;
+            }
+            else {
+                // Pitch shifting: down
+                const uint32_t pitchShiftFrac = trackStat.pitch_cntrl * voiceStat.patchmaps->pitchstep_min;
+                const uint16_t pitchShiftNote = (uint16_t)(((32 - pitchShiftFrac) >> 13) + 1);
+                const uint16_t pitchShiftFine = 128 - ((pitchShiftFrac & 0x1FFF) >> 6);
+
+                // Possible bug? Should the fine mask here be '0xFF' instead?
+                // This code is never triggered from what I can see, so maybe it does not matter...
+                spuVoiceAttr.note = (voiceStat.keynum - pitchShiftNote) << 8;
+                spuVoiceAttr.note |= pitchShiftFine & 0x7F;
+            }
+        }
+
+        // These are the attributes and voices to update on the SPU
+        spuVoiceAttr.attr_mask = SPU_VOICE_NOTE;
+        spuVoiceAttr.voice_bits = 1 << (voiceStat.refindx % 32);
+        
+        // Update the voice attributes on the SPU
+        LIBSPU_SpuSetVoiceAttr(spuVoiceAttr);
+
+        // If there are no more active voices to visit then we are done
+        numActiveVoicesToVisit--;
+
+        if (numActiveVoicesToVisit == 0)
+            return;
     }
-    v1 = lbu(a0 + 0x2);
-    sw(s2, s1 + 0x4);                                   // Store to: 8007F194
-    v0 = v0 << v1;
-    sw(v0, s1);                                         // Store to: 8007F190
-    v1 = lh(s0 + 0xE);
-    if (v1 != 0) goto loc_8004682C;
-    v0 = lbu(a0 + 0x5);
-    v0 <<= 8;
-    goto loc_800468FC;
-loc_8004682C:
-    if (i32(v1) <= 0) goto loc_80046888;
-    v0 = lw(a0 + 0x8);
-    v0 = lb(v0 + 0x9);
-    mult(v1, v0);
-    v0 = lo;
-    v0 += 0x20;
-    v1 = u32(i32(v0) >> 13);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF0C);                                 // Store to: 8007F0F4
-    v0 &= 0x1FFF;
-    v0 = u32(i32(v0) >> 6);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF08);                                 // Store to: 8007F0F8
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF04);                                 // Store to: 8007F0FC
-    v0 = lbu(a0 + 0x5);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lhu(v1 - 0xF08);                               // Load from: 8007F0F8
-    v0 += v1;
-    goto loc_800468E8;
-loc_80046888:
-    v0 = lw(a0 + 0x8);
-    v0 = lb(v0 + 0x8);
-    mult(v1, v0);
-    v1 = lo;
-    v1 = s2 - v1;
-    v0 = u32(i32(v1) >> 13);
-    v0++;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF0C);                                 // Store to: 8007F0F4
-    v1 &= 0x1FFF;
-    v1 = u32(i32(v1) >> 6);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF08);                                 // Store to: 8007F0F8
-    v0 = 0x80;                                          // Result = 00000080
-    v0 -= v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF04);                                 // Store to: 8007F0FC
-    v0 = lbu(a0 + 0x5);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lhu(v1 - 0xF08);                               // Load from: 8007F0F8
-    v0 -= v1;
-loc_800468E8:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lhu(v1 - 0xF04);                               // Load from: 8007F0FC
-    v0 <<= 8;
-    v1 &= 0x7F;
-    v0 |= v1;
-loc_800468FC:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0xE70;                                        // Result = 8007F190
-    sh(v0, s1 + 0x16);                                  // Store to: 8007F1A6
-    LIBSPU_SpuSetVoiceAttr(*vmAddrToPtr<SpuVoiceAttr>(a0));
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF14);                                // Load from: 8007F0EC
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF14);                                 // Store to: 8007F0EC
-    if (v0 == 0) goto loc_80046960;
-loc_8004692C:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xF00);                                // Load from: 8007F100
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xF10);                                // Load from: 8007F0F0
-    v0 += 0x18;
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xF00);                                 // Store to: 8007F100
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xF10);                                 // Store to: 8007F0F0
-    if (v1 != v0) goto loc_800467CC;
-loc_80046960:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
