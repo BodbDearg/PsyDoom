@@ -1,7 +1,7 @@
 #include "PSXSND.h"
 
-#include "digload.h"
 #include "Doom/Base/s_sound.h"
+#include "lcdload.h"
 #include "psxcd.h"
 #include "PsxVm/PsxVm.h"
 #include "seqload.h"

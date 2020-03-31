@@ -1,3 +1,7 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Williams Entertainment Sound System (WESS): PSX sequencer commands.
+// Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
+//------------------------------------------------------------------------------------------------------------------------------------------
 #include "psxcmd.h"
 
 #include "psxspu.h"

@@ -3,7 +3,7 @@
 // Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-#include "digload.h"
+#include "lcdload.h"
 
 #include "psxcd.h"
 #include "PsxVm/PsxVm.h"

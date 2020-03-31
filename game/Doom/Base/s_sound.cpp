@@ -3,7 +3,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
-#include "Wess/digload.h"
+#include "Wess/lcdload.h"
 #include "Wess/psxspu.h"
 #include "Wess/seqload.h"
 #include "Wess/seqload_r.h"
