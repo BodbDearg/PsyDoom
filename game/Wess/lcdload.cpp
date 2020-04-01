@@ -5,17 +5,23 @@
 #include "lcdload.h"
 
 #include "psxcd.h"
+#include "psxspu.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBCD.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessarc.h"
 
-static const VmPtr<PsxCd_File>                      gWess_open_lcd_file(0x8007F2E0);            // The currently open LCD file
-static const VmPtr<VmPtr<patch_group_data>>         gpWess_lcd_load_patchGrp(0x80075AD8);
-static const VmPtr<VmPtr<patches_header>>           gpWess_lcd_load_patches(0x80075AC8);
-static const VmPtr<VmPtr<patchmaps_header>>         gpWess_lcd_load_patchmaps(0x80075ACC);
-static const VmPtr<VmPtr<patchinfo_header>>         gpWess_lcd_load_patchInfos(0x80075AD0);
-static const VmPtr<VmPtr<drumpmaps_header>>         gpWess_lcd_load_drummaps(0x80075AD4);
+static const VmPtr<PsxCd_File>                      gWess_open_lcd_file(0x8007F2E0);                // The currently open LCD file
+static const VmPtr<VmPtr<patch_group_data>>         gpWess_lcd_load_patchGrp(0x80075AD8);           // TODO: COMMENT
+static const VmPtr<VmPtr<patches_header>>           gpWess_lcd_load_patches(0x80075AC8);            // TODO: COMMENT
+static const VmPtr<VmPtr<patchmaps_header>>         gpWess_lcd_load_patchmaps(0x80075ACC);          // TODO: COMMENT
+static const VmPtr<VmPtr<patchinfo_header>>         gpWess_lcd_load_patchInfos(0x80075AD0);         // TODO: COMMENT
+static const VmPtr<VmPtr<drumpmaps_header>>         gpWess_lcd_load_drummaps(0x80075AD4);           // TODO: COMMENT
+static const VmPtr<int32_t>                         gWess_lcd_load_soundBytesLeft(0x80075AE4);      // TODO: COMMENT
+static const VmPtr<uint32_t>                        gWess_lcd_load_soundNum(0x80075AE0);            // TODO: COMMENT
+static const VmPtr<uint16_t>                        gWess_lcd_load_numSounds(0x80075AE8);           // TODO: COMMENT
+static const VmPtr<VmPtr<uint8_t>>                  gpWess_lcd_load_headerBuf(0x80075AEC);          // TODO: COMMENT
+static const VmPtr<uint32_t>                        gWess_lcd_load_samplePos(0x80075ADC);           // TODO: COMMENT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the LCD loader with the specified master status struct
@@ -86,218 +92,99 @@ static PsxCd_File* wess_dig_lcd_data_open(const CdMapTbl_File file) noexcept {
     return gWess_open_lcd_file.get();
 }
 
-void wess_dig_lcd_data_read() noexcept {
-loc_8004906C:
-    sp -= 0x30;
-    sw(s6, sp + 0x28);
-    s6 = a0;
-    sw(s4, sp + 0x20);
-    s4 = a1;
-    sw(s3, sp + 0x1C);
-    s3 = a2;
-    sw(s5, sp + 0x24);
-    s5 = a3;
-    sw(s1, sp + 0x14);
-    s1 = 0;                                             // Result = 00000000
-    sw(s2, sp + 0x18);
-    s2 = 0;                                             // Result = 00000000
-    sw(s0, sp + 0x10);
-    s0 = 0x800;                                         // Result = 00000800
-    sw(ra, sp + 0x2C);
-loc_800490AC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AE4);                               // Load from: 80075AE4
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(v0) < i32(s0));
-        if (bJump) goto loc_80049234;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Uploads sound data from a CD sized sector (2048 bytes) to the SPU at the specified address.
+// Also handles transitioning from one sound in the LCD file to the next as each sound upload is completed.
+// Optionally, details about the uploaded sound(s) are saved to the given sample block upon successful upload.
+// The details for previous (still valid) uploads can also be forcefully overwritten by the 'bOverride' flag.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t wess_dig_lcd_data_read(uint8_t* const pSectorData, const uint32_t destSpuAddr, SampleBlock* const pSampleBlock, const bool bOverride) noexcept {
+    // Some helpers to make the code easier below
+    patchinfo_header* const pPatchInfos = gpWess_lcd_load_patchInfos->get();
+    const uint16_t* pSampleIndexes = (const uint16_t*) gpWess_lcd_load_headerBuf->get();
+
+    // Loop vars: number of bytes left to read from the input sector buffer, number of bytes written to the SPU and offset in the sector data
+    uint32_t sectorBytesLeft = CD_SECTOR_SIZE;
+    int32_t bytesWritten = 0;
+    uint32_t sndDataOffset = 0;
+    
+    // Continue uploading sound bytes to the SPU until we have exhausted all bytes in the given input sector buffer
+    while (sectorBytesLeft > 0) {
+        // Do we need to switch over to uploading a new sound?
+        // If we've uploaded all the bytes from the current sound then do that:
+        if (*gWess_lcd_load_soundBytesLeft == 0) {
+            // Commit the details for the sound we just finished uploading, unless we haven't yet started on uploading a sound.
+            // Sound number '0' is invalid and the LCD file header at this location contains the number of sounds, not the patch index for a sound.
+            if (*gWess_lcd_load_soundNum > 0) {
+                const uint16_t patchIdx = pSampleIndexes[*gWess_lcd_load_soundNum];
+                patchinfo_header& patchInfo = pPatchInfos[patchIdx];
+
+                // Only save the details of the sound if there was not a previous sound saved, or if we are forcing it
+                if ((patchInfo.sample_pos == 0) || bOverride) {
+                    patchInfo.sample_pos = *gWess_lcd_load_samplePos;
+
+                    // Save the details of the sound to the sample block also, if it's given
+                    if (pSampleBlock) {
+                        pSampleBlock->sampindx[pSampleBlock->numsamps] = patchIdx;
+                        pSampleBlock->samppos[pSampleBlock->numsamps] = (uint16_t)(patchInfo.sample_pos / 8);
+                        pSampleBlock->numsamps++;
+                    }
+                }
+            }
+
+            // If we have finished uploading all sounds then we are done
+            if (*gWess_lcd_load_soundNum >= *gWess_lcd_load_numSounds)
+                return bytesWritten;
+            
+            // Otherwise switch over to reading and uploading the next sound.
+            // Set the number of bytes to read, and where to upload it to in SPU ram when we are done.
+            *gWess_lcd_load_soundNum += 1;
+
+            const int32_t nextPatchIdx = pSampleIndexes[*gWess_lcd_load_soundNum];
+            patchinfo_header& nextPatchInfo = pPatchInfos[nextPatchIdx];
+
+            *gWess_lcd_load_soundBytesLeft = nextPatchInfo.sample_size;
+            *gWess_lcd_load_samplePos = destSpuAddr + sndDataOffset;
+
+            // If uploading this sound would cause us to go beyond the bounds of SPU ram then do not try to upload this sound
+            #if PC_PSX_DOOM_MODS
+                // PC-PSX: I think this condition was slightly wrong?
+                const bool bOutOfSpuRam = ((int32_t) destSpuAddr + nextPatchInfo.sample_size + sndDataOffset > (int32_t) *gPsxSpu_sram_end);
+            #else
+                const bool bOutOfSpuRam = ((int32_t) destSpuAddr + nextPatchInfo.sample_size > (int32_t)(*gPsxSpu_sram_end + sndDataOffset));
+            #endif
+
+            if (bOutOfSpuRam) {
+                *gWess_lcd_load_soundBytesLeft = 0;
+                return bytesWritten;
+            }
+
+            // If there are no more bytes left to read then we are done: this check here is actually not neccessary?
+            if (sectorBytesLeft == 0)
+                return bytesWritten;
+        }
+
+        // Upload to the SPU whatever samples we can from the sector.
+        // Either upload the whole sector or just a part of it (if it's bigger than the rest of thhe sound)
+        const uint16_t sampleIdx = pSampleIndexes[*gWess_lcd_load_soundNum];
+        const patchinfo_header& patchInfo = pPatchInfos[sampleIdx];
+
+        const uint32_t sndBytesLeft = (uint32_t) *gWess_lcd_load_soundBytesLeft;
+        const uint32_t writeSize = (sectorBytesLeft > sndBytesLeft) ? sndBytesLeft : sectorBytesLeft;
+
+        if ((patchInfo.sample_pos == 0) || bOverride) {
+            LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
+            LIBSPU_SpuSetTransferStartAddr(destSpuAddr + sndDataOffset);
+            LIBSPU_SpuWrite(pSectorData + sndDataOffset, writeSize);
+            bytesWritten += writeSize;
+        }
+
+        *gWess_lcd_load_soundBytesLeft -= writeSize;
+        sndDataOffset += writeSize;
+        sectorBytesLeft -= writeSize;
     }
-loc_800490C0:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AE0);                               // Load from: 80075AE0
-    {
-        const bool bJump = (i32(v0) <= 0);
-        v0 <<= 1;
-        if (bJump) goto loc_80049178;
-    }
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5AEC);                               // Load from: 80075AEC
-    a1 = v0 + v1;
-    v1 = lhu(a1);
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x5AD0);                               // Load from: 80075AD0
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v1 = v0 + a2;
-    v0 = lw(v1 + 0x8);
-    if (v0 == 0) goto loc_80049118;
-    if (s5 == 0) goto loc_80049178;
-loc_80049118:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5ADC);                               // Load from: 80075ADC
-    sw(v0, v1 + 0x8);
-    if (s3 == 0) goto loc_80049178;
-    v0 = lhu(s3);
-    v1 = lhu(a1);
-    v0 <<= 1;
-    v0 += s3;
-    sh(v1, v0 + 0x2);
-    a0 = lhu(s3);
-    v1 = lhu(a1);
-    a0 <<= 1;
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 += a2;
-    v0 = lw(v0 + 0x8);
-    a0 += s3;
-    v0 >>= 3;
-    sh(v0, a0 + 0xCA);
-    v0 = lhu(s3);
-    v0++;
-    sh(v0, s3);
-loc_80049178:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lhu(v0 + 0x5AE8);                              // Load from: 80075AE8
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x5AE0);                               // Load from: 80075AE0
-    v0 = (i32(a1) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s2;
-        if (bJump) goto loc_80049380;
-    }
-    a0 = a1 + 1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5AEC);                               // Load from: 80075AEC
-    v0 = a0 << 1;
-    v0 += v1;
-    v1 = lhu(v0);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x5AE0);                                // Store to: 80075AE0
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5AD0);                               // Load from: 80075AD0
-    v0 <<= 2;
-    v0 += v1;
-    a0 = lw(v0 + 0x4);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x598C);                               // Load from: 8007598C
-    v1 = s4 + s1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5ADC);                                // Store to: 80075ADC
-    v0 -= s4;
-    v0 += s1;
-    v0 = (v0 < a0);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x5AE4);                                // Store to: 80075AE4
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s2;
-        if (bJump) goto loc_8004921C;
-    }
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a1, at + 0x5AE0);                                // Store to: 80075AE0
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5AE4);                                 // Store to: 80075AE4
-    goto loc_80049380;
-loc_8004921C:
-    if (s0 == 0) goto loc_80049380;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AE4);                               // Load from: 80075AE4
-    v0 = (i32(v0) < i32(s0));
-loc_80049234:
-    if (v0 != 0) goto loc_800492CC;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AE0);                               // Load from: 80075AE0
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5AEC);                               // Load from: 80075AEC
-    v0 <<= 1;
-    v0 += v1;
-    v1 = lhu(v0);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5AD0);                               // Load from: 80075AD0
-    v0 <<= 2;
-    v0 += v1;
-    v0 = lw(v0 + 0x8);
-    if (v0 == 0) goto loc_8004928C;
-    if (s5 == 0) goto loc_800492AC;
-loc_8004928C:
-    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
-    a0 = s4 + s1;
-    v0 = LIBSPU_SpuSetTransferStartAddr(a0);
-    a0 = s6 + s1;
-    a1 = s0;
-    v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
-    s2 += s0;
-loc_800492AC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AE4);                               // Load from: 80075AE4
-    s1 += s0;
-    v0 -= s0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5AE4);                                // Store to: 80075AE4
-    s0 = 0;                                             // Result = 00000000
-    goto loc_80049364;
-loc_800492CC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AE0);                               // Load from: 80075AE0
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5AEC);                               // Load from: 80075AEC
-    v0 <<= 1;
-    v0 += v1;
-    v1 = lhu(v0);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5AD0);                               // Load from: 80075AD0
-    v0 <<= 2;
-    v0 += v1;
-    v0 = lw(v0 + 0x8);
-    if (v0 == 0) goto loc_8004931C;
-    if (s5 == 0) goto loc_8004934C;
-loc_8004931C:
-    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
-    a0 = s4 + s1;
-    v0 = LIBSPU_SpuSetTransferStartAddr(a0);
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x5AE4);                               // Load from: 80075AE4
-    a0 = s6 + s1;
-    v0 = LIBSPU_SpuWrite(vmAddrToPtr<void>(a0), a1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AE4);                               // Load from: 80075AE4
-    s2 += v0;
-loc_8004934C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AE4);                               // Load from: 80075AE4
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5AE4);                                 // Store to: 80075AE4
-    s1 += v0;
-    s0 -= v0;
-loc_80049364:
-    if (s0 != 0) goto loc_800490AC;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AE4);                               // Load from: 80075AE4
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s2;
-        if (bJump) goto loc_800490C0;
-    }
-loc_80049380:
-    ra = lw(sp + 0x2C);
-    s6 = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x30;
-    return;
+
+    return bytesWritten;
 }
 
 void wess_dig_lcd_psxcd_sync() noexcept {
@@ -471,7 +358,7 @@ loc_80049610:
     a1 = s2;
     a2 = s6;
     a3 = s7;
-    wess_dig_lcd_data_read();
+    v0 = wess_dig_lcd_data_read(vmAddrToPtr<uint8_t>(a0), a1, vmAddrToPtr<SampleBlock>(a2), (a3 != 0));
     s3 += v0;
     s2 += v0;
     v0 = 1;                                             // Result = 00000001
@@ -507,7 +394,7 @@ loc_800496A0:
     a1 = s2;
     a2 = s6;
     a3 = s7;
-    wess_dig_lcd_data_read();
+    v0 = wess_dig_lcd_data_read(vmAddrToPtr<uint8_t>(a0), a1, vmAddrToPtr<SampleBlock>(a2), (a3 != 0));
     s3 += v0;
     s2 += v0;
     v0 = 0;                                             // Result = 00000000
@@ -540,7 +427,7 @@ loc_8004972C:
     a1 = s2;
     a2 = s6;
     a3 = s7;
-    wess_dig_lcd_data_read();
+    v0 = wess_dig_lcd_data_read(vmAddrToPtr<uint8_t>(a0), a1, vmAddrToPtr<SampleBlock>(a2), (a3 != 0));
     s3 += v0;
     s2 += v0;
     v0 = 1;                                             // Result = 00000001
