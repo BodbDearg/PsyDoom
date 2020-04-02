@@ -122,7 +122,7 @@ loc_800410C4:
     v0 += s0;
     a0 = lhu(v0 + 0x2);
     a1 = 0;                                             // Result = 00000000
-    wess_dig_set_sample_position();
+    wess_dig_set_sample_position(a0, a1);
     v0 = lhu(s0);
     if (v0 != 0) goto loc_800410C4;
 loc_80041100:

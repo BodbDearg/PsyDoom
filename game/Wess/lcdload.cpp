@@ -1,5 +1,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Williams Entertainment Sound System (WESS): LCD (sound samples file) loading code.
+// Williams Entertainment Sound System (WESS): LCD (Linear CD sound samples file) loading code.
+// These are the files which contain all of the sounds used for the game and for music instruments.
+// 
 // Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "lcdload.h"
@@ -7,7 +9,6 @@
 #include "Doom/cdmaptbl.h"
 #include "psxcd.h"
 #include "psxspu.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBCD.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessarc.h"
@@ -70,18 +71,14 @@ bool wess_dig_lcd_loader_init(master_status_structure* const pMStat) noexcept {
     return true;
 }
 
-void wess_dig_set_sample_position() noexcept {
-loc_80048FCC:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5AD0);                               // Load from: 80075AD0
-    v0 = a0 << 1;
-    if (v1 == 0) goto loc_80048FF0;
-    v0 += a0;
-    v0 <<= 2;
-    v0 += v1;
-    sw(a1, v0 + 0x8);
-loc_80048FF0:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets the SPU address for the given patch.
+// This is used by DOOM to 'unload' sounds by setting them to address '0'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_dig_set_sample_position(const int32_t patchIdx, const uint32_t spuAddr) noexcept {
+    if (gpWess_lcd_load_patchInfos) {
+        gpWess_lcd_load_patchInfos->get()[patchIdx].sample_pos = spuAddr;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
