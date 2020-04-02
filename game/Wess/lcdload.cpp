@@ -14,6 +14,10 @@
 #include "PsyQ/LIBSPU.h"
 #include "wessarc.h"
 
+BEGIN_THIRD_PARTY_INCLUDES
+    #include <cstring>
+END_THIRD_PARTY_INCLUDES
+
 // Maximum number of sounds that can be in an LCD file
 static constexpr uint32_t MAX_LCD_SOUNDS = 100;
 
@@ -293,13 +297,18 @@ int32_t wess_dig_lcd_load(
     int32_t numSpuBytesWritten = 0;
 
     while (lcdBytesLeft > 0) {
+        // Read this sector from the LCD file and the number of bytes left is smaller then read that amount instead
         uint8_t* const sectorBuffer = gWess_sectorBuffer2.get();
+        const int32_t readSize = (lcdBytesLeft < CD_SECTOR_SIZE) ? lcdBytesLeft : CD_SECTOR_SIZE;
+        psxcd_read(sectorBuffer, readSize, *pLcdFile);
 
-        if (psxcd_read(sectorBuffer, CD_SECTOR_SIZE, *pLcdFile) != CD_SECTOR_SIZE)
-            return 0;
+        if (readSize < CD_SECTOR_SIZE) {
+            // When we are not filling part of the buffer then zero it out just for consistency
+            std::memset(sectorBuffer + readSize, 0, (size_t) CD_SECTOR_SIZE - readSize);
+        }
 
         numSpuBytesWritten += wess_dig_lcd_data_read(sectorBuffer, destSpuAddr + numSpuBytesWritten, pSampleBlock, bOverride);
-        lcdBytesLeft -= CD_SECTOR_SIZE;
+        lcdBytesLeft -= readSize;
     }
 
     return numSpuBytesWritten;
