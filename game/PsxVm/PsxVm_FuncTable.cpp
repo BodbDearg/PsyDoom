@@ -365,8 +365,6 @@ extern void Eng_TrkEnd() noexcept;
 extern void Eng_NullEvent() noexcept;
 extern void SeqEngine() noexcept;
 extern void wess_dig_set_sample_position() noexcept;
-extern void wess_dig_lcd_psxcd_sync() noexcept;
-extern void wess_dig_lcd_load() noexcept;
 extern void wess_seq_range_sizeof() noexcept;
 extern void wess_seq_range_load() noexcept;
 extern void wess_seq_range_free() noexcept;
@@ -774,8 +772,6 @@ namespace PsxVm {
         { 0x80048B8C, &Eng_NullEvent },
         { 0x80048B94, &SeqEngine },
         { 0x80048FCC, &wess_dig_set_sample_position },
-        { 0x800493AC, &wess_dig_lcd_psxcd_sync },
-        { 0x80049454, &wess_dig_lcd_load },
         { 0x80049A50, &wess_seq_range_sizeof },
         { 0x80049ADC, &wess_seq_range_load },
         { 0x80049B90, &wess_seq_range_free },

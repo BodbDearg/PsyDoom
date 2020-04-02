@@ -4,6 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "lcdload.h"
 
+#include "Doom/cdmaptbl.h"
 #include "psxcd.h"
 #include "psxspu.h"
 #include "PsxVm/PsxVm.h"
@@ -87,18 +88,25 @@ loc_80048FF0:
 // Opens the specified file for the LCD loader
 //------------------------------------------------------------------------------------------------------------------------------------------
 static PsxCd_File* wess_dig_lcd_data_open(const CdMapTbl_File file) noexcept {
-    const PsxCd_File* const pFile = psxcd_open(file);
+    PsxCd_File* const pFile = psxcd_open(file);
     *gWess_open_lcd_file = *pFile;
-    return gWess_open_lcd_file.get();
+    return pFile;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Uploads sound data from a CD sized sector (2048 bytes) to the SPU at the specified address.
+// The name of this function is somewhat confusing...
+// Uploads/writes sound data from a buffered CD sector (2048 bytes) to SPU RAM at the specified address.
+//
 // Also handles transitioning from one sound in the LCD file to the next as each sound upload is completed.
 // Optionally, details about the uploaded sound(s) are saved to the given sample block upon successful upload.
 // The details for previous (still valid) uploads can also be forcefully overwritten by the 'bOverride' flag.
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t wess_dig_lcd_data_read(uint8_t* const pSectorData, const uint32_t destSpuAddr, SampleBlock* const pSampleBlock, const bool bOverride) noexcept {
+int32_t wess_dig_lcd_data_read(
+    uint8_t* const pSectorData,
+    const uint32_t destSpuAddr,
+    SampleBlock* const pSampleBlock,
+    const bool bOverride
+) noexcept {
     // Some helpers to make the code easier below
     patchinfo_header* const pPatchInfos = gpWess_lcd_load_patchInfos->get();
     const uint16_t* pSampleIndexes = (const uint16_t*) gpWess_lcd_load_headerBuf->get();
@@ -149,12 +157,12 @@ int32_t wess_dig_lcd_data_read(uint8_t* const pSectorData, const uint32_t destSp
             // If uploading this sound would cause us to go beyond the bounds of SPU ram then do not try to upload this sound
             #if PC_PSX_DOOM_MODS
                 // PC-PSX: I think this condition was slightly wrong?
-                const bool bOutOfSpuRam = ((int32_t) destSpuAddr + nextPatchInfo.sample_size + sndDataOffset > (int32_t) *gPsxSpu_sram_end);
+                const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + nextPatchInfo.sample_size + sndDataOffset > (int32_t) *gPsxSpu_sram_end);
             #else
-                const bool bOutOfSpuRam = ((int32_t) destSpuAddr + nextPatchInfo.sample_size > (int32_t)(*gPsxSpu_sram_end + sndDataOffset));
+                const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + nextPatchInfo.sample_size > (int32_t)(*gPsxSpu_sram_end + sndDataOffset));
             #endif
 
-            if (bOutOfSpuRam) {
+            if (bInsufficientSpuRam) {
                 *gWess_lcd_load_soundBytesLeft = 0;
                 return bytesWritten;
             }
@@ -187,276 +195,167 @@ int32_t wess_dig_lcd_data_read(uint8_t* const pSectorData, const uint32_t destSp
     return bytesWritten;
 }
 
-void wess_dig_lcd_psxcd_sync() noexcept {
-loc_800493AC:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 = lw(s0 + 0x5954);                               // Load from: gWess_Millicount (80075954)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5954);                               // Load from: gWess_Millicount (80075954)
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    s0 += 0x1F40;
-    v0 = (v0 < s0);
-    sw(s1, sp + 0x14);
-    if (v0 == 0) goto loc_80049434;
-    s2 = 5;                                             // Result = 00000005
-    s1 = 2;                                             // Result = 00000002
-loc_800493E4:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x5AF8;                                       // Result = 80075AF8
-    a0 = 1;                                             // Result = 00000001
-    _thunk_LIBCD_CdSync();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5AF4);                                // Store to: 80075AF4
-    if (v0 != s2) goto loc_80049414;
-    LIBCD_CdFlush();
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80049438;
-loc_80049414:
-    {
-        const bool bJump = (v0 == s1);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80049438;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5954);                               // Load from: gWess_Millicount (80075954)
-    v0 = (v0 < s0);
-    if (v0 != 0) goto loc_800493E4;
-loc_80049434:
-    v0 = 1;                                             // Result = 00000001
-loc_80049438:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Wait for up to 8 seconds for all CDROM commands to finish executing.
+// Returns '1' if there was an error or timeout waiting for all commands to finish up, '0' otherwise.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t wess_dig_lcd_psxcd_sync() noexcept {
+    // PC-PSX: don't need to sync with the CDROM anymore since all commands execute synchronously.
+    // Just no-op and return '0' for success...
+    #if PC_PSX_DOOM_MODS
+        return 0;
+    #else
+        const uint32_t timeoutMs = *gWess_Millicount + 8000;
+    
+        while (*gWess_Millicount < timeoutMs) {
+            // Note: the sync result was a global but it wasn't used anywhere else so I made it local instead...
+            uint8_t syncResult[8];
+            const CdlSyncStatus status = LIBCD_CdSync(1, syncResult);
+
+            if (status == CdlDiskError) {
+                LIBCD_CdFlush();
+                return 1;
+            }
+
+            if (status == CdlComplete)
+                return 0;
+        }
+
+        return 1;
+    #endif
 }
 
-void wess_dig_lcd_load() noexcept {
-loc_80049454:
-    sp -= 0x40;
-    sw(fp, sp + 0x38);
-    fp = a0;
-    sw(s6, sp + 0x30);
-    s6 = a2;
-    sw(s7, sp + 0x34);
-    s7 = a3;
-    sw(ra, sp + 0x3C);
-    sw(s5, sp + 0x2C);
-    sw(s4, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    sw(a1, sp + 0x10);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Loads the specified LCD sound file to SPU RAM starting at the given address.
+// Returns the number of bytes uploaded to the SPU or '0' on failure.
+// Optionally, details for the uploaded sounds can be saved to the given sample block.
+// The 'override' flag also specifies whether existing sound patches are to have their details overwritten or not.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t wess_dig_lcd_load(
+    const CdMapTbl_File lcdFileToLoad,
+    const uint32_t destSpuAddr,
+    SampleBlock* const pSampleBlock,
+    const bool bOverride
+) noexcept {
+    // Turn off internal cd related callbacks temporarily while this is happening
     psxcd_disable_callbacks();
-loc_80049494:
-    s5 = 1;                                             // Result = 00000001
-    s4 = 5;                                             // Result = 00000005
-loc_8004949C:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5AE0);                                 // Store to: 80075AE0
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x5AE4);                                 // Store to: 80075AE4
-    s3 = 0;                                             // Result = 00000000
-    psxcd_init_pos();
-    psxcd_set_data_mode();
-    a0 = fp;
-    v0 = ptrToVmAddr(wess_dig_lcd_data_open((CdMapTbl_File) a0));
-    s0 = v0;
-    v0 = lw(s0);
-    s2 = lw(sp + 0x10);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_800497A4;
+
+    // Keep trying to read the LCD file until there is success
+    while (true) {
+        // Try to read the header sector for the LCD file: begin by opening the requested LCD file and initializing sound related variables
+        uint16_t* const pLcdHeader = (uint16_t*) gPSXCD_sectorbuf.get();
+
+        *gWess_lcd_load_soundNum = 0;
+        *gWess_lcd_load_soundBytesLeft = 0;
+        
+        psxcd_init_pos();
+        psxcd_set_data_mode();
+        PsxCd_File* const pLcdFile = wess_dig_lcd_data_open(lcdFileToLoad);
+
+        // If the file returned is not present (PC-PSX added check) or invalid then just stop now
+        #if PC_PSX_DOOM_MODS
+            if ((!pLcdFile) || (pLcdFile->file.pos == 0))
+                return 0;
+        #else
+            if (pLcdFile->file.pos == 0)
+                return 0;
+        #endif
+        
+        // Begin reading the LCD file, starting with the first sector, which contains the header.
+        // Also initialize the I/O location before the read.
+        const int32_t lcdFileSize = pLcdFile->file.size;
+
+        LIBCD_CdIntToPos(LIBCD_CdPosToInt(pLcdFile->file.pos), pLcdFile->new_io_loc);
+        LIBCD_CdControl(CdlSetloc, (uint8_t*) &pLcdFile->new_io_loc, nullptr);
+        LIBCD_CdControl(CdlReadN, (uint8_t*) &pLcdFile->new_io_loc, nullptr);
+
+        // Wait until the header sector is read or an error occurs.
+        // If there was an error then abort all active CDROM commands and try everything again.
+        CdlSyncStatus cdStatus = CdlNoIntr;
+
+        do {
+            cdStatus = LIBCD_CdReady(1, nullptr);
+        } while ((cdStatus != CdlDataReady) && (cdStatus != CdlDiskError));
+
+        if (cdStatus == CdlDiskError) {
+            LIBCD_CdFlush();
+            continue;
+        }
+
+        // Grab the sector buffer and get the number of sounds to load from it
+        LIBCD_CdGetSector(gPSXCD_sectorbuf.get(), CD_SECTOR_SIZE / sizeof(uint32_t));
+        *gWess_lcd_load_numSounds = pLcdHeader[0];
+        *gpWess_lcd_load_headerBuf = gPSXCD_sectorbuf.get();
+
+        // If the number of sounds exceeds 100 then a read error must have happened.
+        // In this case retry the read again...
+        if (*gWess_lcd_load_numSounds > 100)
+            continue;
+
+        // Figure out how many sound bytes there is to read.
+        // The first sector is discounted, as that is the LCD header sector:
+        int32_t lcdSoundBytesLeft = lcdFileSize - CD_SECTOR_SIZE;
+        
+        if (lcdSoundBytesLeft < 0) {
+            lcdSoundBytesLeft = 0;
+        }
+
+        // Main sound reading loop:
+        // Reads all of the sectors in the LCD file and uploads all of the sound data to the SPU.
+        int32_t totalBytesUploadedToSpu = 0;
+        uint32_t curDestSpuAddr = destSpuAddr;
+
+        bool bDidPrevUploadToSpu = false;
+        bool bUseSectorBuffer2 = false;
+
+        while (lcdSoundBytesLeft != 0) {
+            // Wait until a data sector is read or an error occurs.
+            // If there was an error then abort all active CDROM commands and try everything all over again (header included).
+            do {
+                cdStatus = LIBCD_CdReady(1, nullptr);
+            } while ((cdStatus != CdlDataReady) && (cdStatus != CdlDiskError));
+
+            if (cdStatus == CdlDiskError) {
+                LIBCD_CdFlush();
+                break;
+            }
+            
+            // Grab the contents of this CD sector
+            uint8_t* const pSectorBuffer = (bUseSectorBuffer2) ? gWess_sectorBuffer2.get() : gWess_sectorBuffer1.get();
+            LIBCD_CdGetSector(pSectorBuffer, CD_SECTOR_SIZE / sizeof(uint32_t));
+            lcdSoundBytesLeft -= CD_SECTOR_SIZE;
+            
+            if (lcdSoundBytesLeft < 0) {
+                lcdSoundBytesLeft = 0;
+            }
+
+            // If we previously started a transfer to the SPU, wait for it to finish before we do another one
+            if (bDidPrevUploadToSpu) {
+                LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
+            }
+
+            // Upload the sound contents of this data sector to the SPU
+            const int32_t bytesUploadedToSpu = wess_dig_lcd_data_read(pSectorBuffer, curDestSpuAddr, pSampleBlock, bOverride);
+            totalBytesUploadedToSpu += bytesUploadedToSpu;
+            curDestSpuAddr += bytesUploadedToSpu;
+
+            // Flip sector buffers and set the flag indicating we've uploaded something to the SPU
+            bUseSectorBuffer2 = (!bUseSectorBuffer2);
+            bDidPrevUploadToSpu = true;
+        }
+
+        // If all of the LCD bytes were read successfully then we can finish up, otherwise let the loop try again
+        if (cdStatus != CdlDiskError) {
+            LIBCD_CdControl(CdlPause, nullptr, nullptr);
+            
+            if (wess_dig_lcd_psxcd_sync() == 0) {
+                LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
+                psxcd_enable_callbacks();
+                return totalBytesUploadedToSpu;
+            }
+        }
     }
-    s1 = lw(s0 + 0x4);
-    a0 = s0;
-    _thunk_LIBCD_CdPosToInt();
-    a0 = v0;
-    s0 += 0x18;
-    a1 = s0;
-    _thunk_LIBCD_CdIntToPos();
-    a0 = 2;                                             // Result = 00000002
-    a1 = s0;
-    a2 = 0;                                             // Result = 00000000
-    _thunk_LIBCD_CdControl();
-    a0 = 6;                                             // Result = 00000006
-    a1 = s0;
-    a2 = 0;                                             // Result = 00000000
-    _thunk_LIBCD_CdControl();
-    a0 = 1;                                             // Result = 00000001
-loc_80049518:
-    a1 = 0;                                             // Result = 00000000
-    _thunk_LIBCD_CdReady();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5AF0);                                // Store to: 80075AF0
-    if (v0 == s5) goto loc_80049540;
-    a0 = 1;                                             // Result = 00000001
-    if (v0 != s4) goto loc_80049518;
-    LIBCD_CdFlush();
-loc_80049540:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AF0);                               // Load from: 80075AF0
-    if (v0 == s4) goto loc_8004949C;
-    s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 -= 0x6AE8;                                       // Result = gPSXCD_sectorbuf[0] (800A9518)
-    a0 = s0;                                            // Result = gPSXCD_sectorbuf[0] (800A9518)
-    a1 = 0x200;                                         // Result = 00000200
-    _thunk_LIBCD_CdGetSector();
-    v0 = lhu(s0);                                       // Load from: gPSXCD_sectorbuf[0] (800A9518)
-    at = 0x80070000;                                    // Result = 80070000
-    sh(v0, at + 0x5AE8);                                // Store to: 80075AE8
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lhu(v0 + 0x5AE8);                              // Load from: 80075AE8
-    at = 0x80070000;                                    // Result = 80070000
-    sw(s0, at + 0x5AEC);                                // Store to: 80075AEC
-    v0 = (v0 < 0x65);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(s1) < 0x800);
-        if (bJump) goto loc_8004949C;
-    }
-    s1 -= 0x800;
-    if (v0 == 0) goto loc_800495A0;
-    s1 = 0;                                             // Result = 00000000
-loc_800495A0:
-    s0 = 1;                                             // Result = 00000001
-    v0 = 1;                                             // Result = 00000001
-    if (s1 == 0) goto loc_80049760;
-loc_800495AC:
-    a0 = 1;                                             // Result = 00000001
-    if (s0 == 0) goto loc_8004963C;
-loc_800495B4:
-    a1 = 0;                                             // Result = 00000000
-    _thunk_LIBCD_CdReady();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5AF0);                                // Store to: 80075AF0
-    if (v0 == s5) goto loc_800495DC;
-    a0 = 1;                                             // Result = 00000001
-    if (v0 != s4) goto loc_800495B4;
-    LIBCD_CdFlush();
-loc_800495DC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AF0);                               // Load from: 80075AF0
-    if (v0 == s4) goto loc_80049494;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
-    a1 = 0x200;                                         // Result = 00000200
-    _thunk_LIBCD_CdGetSector();
-    v0 = (i32(s1) < 0x800);
-    s1 -= 0x800;
-    if (v0 == 0) goto loc_80049610;
-    s1 = 0;                                             // Result = 00000000
-loc_80049610:
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
-    a1 = s2;
-    a2 = s6;
-    a3 = s7;
-    v0 = wess_dig_lcd_data_read(vmAddrToPtr<uint8_t>(a0), a1, vmAddrToPtr<SampleBlock>(a2), (a3 != 0));
-    s3 += v0;
-    s2 += v0;
-    v0 = 1;                                             // Result = 00000001
-    s0 = 0;                                             // Result = 00000000
-    goto loc_80049758;
-loc_8004963C:
-    if (v0 == 0) goto loc_800496D0;
-loc_80049644:
-    a1 = 0;                                             // Result = 00000000
-    _thunk_LIBCD_CdReady();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5AF0);                                // Store to: 80075AF0
-    if (v0 == s5) goto loc_8004966C;
-    a0 = 1;                                             // Result = 00000001
-    if (v0 != s4) goto loc_80049644;
-    LIBCD_CdFlush();
-loc_8004966C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AF0);                               // Load from: 80075AF0
-    if (v0 == s4) goto loc_80049494;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x6D7C;                                       // Result = gWess_data_read_chunk2[0] (80096D7C)
-    a1 = 0x200;                                         // Result = 00000200
-    _thunk_LIBCD_CdGetSector();
-    v0 = (i32(s1) < 0x800);
-    s1 -= 0x800;
-    if (v0 == 0) goto loc_800496A0;
-    s1 = 0;                                             // Result = 00000000
-loc_800496A0:
-    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x6D7C;                                       // Result = gWess_data_read_chunk2[0] (80096D7C)
-    a1 = s2;
-    a2 = s6;
-    a3 = s7;
-    v0 = wess_dig_lcd_data_read(vmAddrToPtr<uint8_t>(a0), a1, vmAddrToPtr<SampleBlock>(a2), (a3 != 0));
-    s3 += v0;
-    s2 += v0;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80049758;
-loc_800496D0:
-    a1 = 0;                                             // Result = 00000000
-    _thunk_LIBCD_CdReady();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5AF0);                                // Store to: 80075AF0
-    if (v0 == s5) goto loc_800496F8;
-    a0 = 1;                                             // Result = 00000001
-    if (v0 != s4) goto loc_800496D0;
-    LIBCD_CdFlush();
-loc_800496F8:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AF0);                               // Load from: 80075AF0
-    if (v0 == s4) goto loc_80049494;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
-    a1 = 0x200;                                         // Result = 00000200
-    _thunk_LIBCD_CdGetSector();
-    v0 = (i32(s1) < 0x800);
-    s1 -= 0x800;
-    if (v0 == 0) goto loc_8004972C;
-    s1 = 0;                                             // Result = 00000000
-loc_8004972C:
-    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x656C;                                       // Result = gWess_data_read_chunk1[0] (8009656C)
-    a1 = s2;
-    a2 = s6;
-    a3 = s7;
-    v0 = wess_dig_lcd_data_read(vmAddrToPtr<uint8_t>(a0), a1, vmAddrToPtr<SampleBlock>(a2), (a3 != 0));
-    s3 += v0;
-    s2 += v0;
-    v0 = 1;                                             // Result = 00000001
-loc_80049758:
-    if (s1 != 0) goto loc_800495AC;
-loc_80049760:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AF0);                               // Load from: 80075AF0
-    a0 = 9;                                             // Result = 00000009
-    if (v0 == s4) goto loc_8004949C;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    _thunk_LIBCD_CdControl();
-    wess_dig_lcd_psxcd_sync();
-    if (v0 != 0) goto loc_8004949C;
-    v0 = LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
-    psxcd_enable_callbacks();
-    v0 = s3;
-loc_800497A4:
-    ra = lw(sp + 0x3C);
-    fp = lw(sp + 0x38);
-    s7 = lw(sp + 0x34);
-    s6 = lw(sp + 0x30);
-    s5 = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x40;
-    return;
+
+    // Should never reach this point, but if we do then consider it a failure!
+    return 0;
 }

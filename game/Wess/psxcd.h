@@ -10,10 +10,10 @@ static constexpr int32_t CD_SECTOR_SIZE = 2048;
 // Tracks an open file on the CD-ROM.
 // Contains info about the file as well as the current IO location and status.
 struct PsxCd_File {
-    CdlFILE     file;
-    CdlLOC      new_io_loc;
-    uint32_t    io_block_offset;
-    uint8_t     io_result[8];
+    CdlFILE     file;               // Details about the file itself
+    CdlLOC      new_io_loc;         // Current I/O location
+    uint32_t    io_block_offset;    // Offset within the current sector for IO
+    uint8_t     io_result[8];       // Result bytes from LIBCD for the last CD operation
 };
 
 static_assert(sizeof(PsxCd_File) == 40);
@@ -34,6 +34,9 @@ struct PsxCd_MapTblEntry {
 };
 
 static_assert(sizeof(PsxCd_MapTblEntry) == 8);
+
+// Sector buffer for when we are reading data
+extern const VmPtr<uint8_t[CD_SECTOR_SIZE]> gPSXCD_sectorbuf;
 
 void psxcd_sync() noexcept;
 bool psxcd_critical_sync() noexcept;

@@ -2912,6 +2912,7 @@ static const ProgElem ELEMS[] = {
     { 0x80075AE8, 0x80075AEA, "gWess_lcd_load_numSounds",               ProgElemType::UINT16 },
     { 0x80075AEC, 0x80075AF0, "gpWess_lcd_load_headerBuf",              ProgElemType::PTR32 },
     { 0x80075AF0, 0x80075AF4, "gWess_lcd_load_cdStatus",                ProgElemType::INT32 },
+    { 0x80075AF4, 0x80075AF8, "gWess_lcd_cdsync_intr",                  ProgElemType::INT32 },
     { 0x80075B00, 0x80075B20, "gWess_CmdLength",                        ProgElemType::ARRAY, ProgElemType::UINT8, 4 },
     { 0x80075B78, 0x80075B90, "gLIBETC_INTR_interruptsList",            ProgElemType::ARRAY, ProgElemType::PTR32 },
     { 0x80075B90, 0x80075B94, "gpLIBETC_INTR_interruptsListPtr",        ProgElemType::PTR32 },

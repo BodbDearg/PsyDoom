@@ -31,6 +31,9 @@ struct PsxCd_Command {
     CdlLOC          io_loc;         // I/O location for the command
 };
 
+// Sector buffer for when we are reading data
+const VmPtr<uint8_t[CD_SECTOR_SIZE]> gPSXCD_sectorbuf(0x800A9518);
+
 // Time it takes to fade out CD audio (milliseconds)
 static constexpr int32_t FADE_TIME_MS = 250;
 
@@ -63,9 +66,6 @@ static const VmPtr<PsxCd_File>      gPSXCD_lastfilestruct(0x800783D0);      // A
 static const VmPtr<PsxCd_File>      gPSXCD_newfilestruct(0x800783A8);       // Async read: details for the file for which read is being retried
 static const VmPtr<int32_t>         gPSXCD_cur_cmd(0x80077DBC);             // Async read: index of the current command being issued in the loop iteration
 static const VmPtr<PsxCd_Command>   gPSXCD_psxcd_cmds(0x80078344);          // Async read: commands issued to the cd
-
-// Sector buffer for when we are reading data
-static const VmPtr<uint8_t[CD_SECTOR_SIZE]> gPSXCD_sectorbuf(0x800A9518);
 
 // Audio mode stuff
 static const VmPtr<CdlLOC>      gPSXCD_lastloc(0x80077DF4);             // The last valid intended cd-audio disc seek location

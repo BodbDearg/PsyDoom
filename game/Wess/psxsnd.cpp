@@ -77,7 +77,7 @@ loc_800415EC:
     a2 = s2;                                            // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
     sw(0, gp + 0x840);                                  // Store to: gbDidLoadDoomSfxLcd (80077E20)
     a3 = 0;                                             // Result = 00000000
-    wess_dig_lcd_load();
+    v0 = wess_dig_lcd_load((CdMapTbl_File) a0, a1, vmAddrToPtr<SampleBlock>(a2), a3);
     v0 += 0x1010;
     sw(v0, gp + 0x838);                                 // Store to: gNextSoundUploadAddr (80077E18)
     v0 = 1;                                             // Result = 00000001

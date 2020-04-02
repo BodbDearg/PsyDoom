@@ -190,7 +190,7 @@ loc_800411C8:
     a2 = 0x80080000;                                    // Result = 80080000
     a2 -= 0x1364;                                       // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
     a3 = 0;                                             // Result = 00000000
-    wess_dig_lcd_load();
+    v0 = wess_dig_lcd_load((CdMapTbl_File) a0, a1, vmAddrToPtr<SampleBlock>(a2), a3);
     v0 += 0x1010;
     sw(v0, gp + 0x838);                                 // Store to: gNextSoundUploadAddr (80077E18)
     v0 = 1;                                             // Result = 00000001
@@ -241,7 +241,7 @@ loc_80041204:
     at += v0;
     a0 = lw(at);
     a3 = 0;                                             // Result = 00000000
-    wess_dig_lcd_load();
+    v0 = wess_dig_lcd_load((CdMapTbl_File) a0, a1, vmAddrToPtr<SampleBlock>(a2), a3);
     s0 += v0;
     goto loc_800412D0;
 loc_800412B8:
@@ -263,7 +263,7 @@ loc_800412D0:
     a2 = 0x80080000;                                    // Result = 80080000
     a2 -= 0x11D0;                                       // Result = gMapMusSfxLoadedSamples[0] (8007EE30)
     a3 = 0;                                             // Result = 00000000
-    wess_dig_lcd_load();
+    v0 = wess_dig_lcd_load((CdMapTbl_File) a0, a1, vmAddrToPtr<SampleBlock>(a2), a3);
 loc_80041300:
     ra = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);
