@@ -170,9 +170,11 @@ bool ModMgr::openOverridenFile(const CdMapTbl_File discFile, PsxCd_File& fileOut
         FATAL_ERROR("ModMgr::openOverridenFile: invalid file specified!");
     }
 
+    const char* const filename = CD_MAP_FILENAMES[(uint32_t) discFile];
+
     std::string filePath = gDataDirPath;
     filePath.push_back('/');
-    filePath += CD_MAP_FILENAMES[(uint32_t) discFile];
+    filePath += filename;
     
     // Open the file and save it in the file slot index
     std::FILE* const pFile = std::fopen(filePath.c_str(), "rb");
@@ -180,13 +182,38 @@ bool ModMgr::openOverridenFile(const CdMapTbl_File discFile, PsxCd_File& fileOut
     if (!pFile) {
         return false;
     }
-    
+
+    // Figure out the size of the file:
+    if (std::fseek(pFile, 0, SEEK_END) != 0) {
+        std::fclose(pFile);
+        return false;
+    }
+
+    const int32_t fileSize = (int32_t) std::ftell(pFile);
+
+    if (fileSize < 0) {
+        std::fclose(pFile);
+        return false;
+    }
+
+    // Seek to the start of the file by default
+    if (std::fseek(pFile, 0, SEEK_SET) != 0) {
+        std::fclose(pFile);
+        return false;
+    }
+
+    // Save this in the open file slot
     gOpenFileSlots[fileSlotIdx] = pFile;
 
     // Save file details and return 'true' for success
-    fileOut = {};
+    fileOut = {};    
     fileOut.file.pos.minute = fileSlotIdx;      // Save the index of the open file in this field
     fileOut.file.pos.track = 255u;              // Special marker to indicate that the file is overriden
+    fileOut.file.size = fileSize;
+
+    std::strncpy(fileOut.file.name, filename, C_ARRAY_SIZE(fileOut.file.name) - 1);
+    fileOut.file.name[C_ARRAY_SIZE(fileOut.file.name) - 1] = 0;
+
     return true;
 }
 

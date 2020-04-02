@@ -284,21 +284,12 @@ int32_t wess_dig_lcd_load(
     *gWess_lcd_load_samplePos = destSpuAddr;
     *gWess_lcd_load_soundBytesLeft = 0;
 
-    // Figure out the size of the entire LCD file
-    if (psxcd_seek(*pLcdFile, CD_SECTOR_SIZE, PsxCd_SeekMode::END) != 0)
-        return 0;
-
-    const int32_t lcdFileSize = psxcd_tell(*pLcdFile);
-
-    if (lcdFileSize <= 0)
-        return 0;
-
     // Seek to the first sound data sector in the file and continue reading sound data until we are done
     if (psxcd_seek(*pLcdFile, CD_SECTOR_SIZE, PsxCd_SeekMode::SET) != 0)
         return 0;
 
     // Read all of the sound data and upload to the SPU using sector buffer 2 as a temporary
-    int32_t lcdBytesLeft = lcdFileSize;
+    int32_t lcdBytesLeft = pLcdFile->file.size;
     int32_t numSpuBytesWritten = 0;
 
     while (lcdBytesLeft > 0) {
