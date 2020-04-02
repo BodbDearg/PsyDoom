@@ -114,31 +114,14 @@ typedef void (*CdlCB)(const CdlSyncStatus status, const uint8_t pResult[8]);
 void LIBCD_CdInit() noexcept;
 bool LIBCD_CdReset(const int32_t mode) noexcept;
 void LIBCD_CdFlush() noexcept;
-
 CdlSyncStatus LIBCD_CdSync(const int32_t mode, uint8_t pResult[8]) noexcept;
-void _thunk_LIBCD_CdSync() noexcept;
-
 CdlSyncStatus LIBCD_CdReady(const int32_t mode, uint8_t pResult[8]) noexcept;
-void _thunk_LIBCD_CdReady() noexcept;
-
 CdlCB LIBCD_CdSyncCallback(const CdlCB syncCallback) noexcept;
 CdlCB LIBCD_CdReadyCallback(const CdlCB readyCallback) noexcept;
-
 bool LIBCD_CdControl(const CdlCmd cmd, const uint8_t* const pArgs, uint8_t pResult[8]) noexcept;
-void _thunk_LIBCD_CdControl() noexcept;
-
 bool LIBCD_CdControlF(const CdlCmd cmd, const uint8_t* const pArgs) noexcept;
-void _thunk_LIBCD_CdControlF() noexcept;
-
 bool LIBCD_CdMix(const CdlATV& vol) noexcept;
-
 bool LIBCD_CdGetSector(void* const pDst, const int32_t sizeInWords) noexcept;
-void _thunk_LIBCD_CdGetSector() noexcept;
-
 CdlLOC& LIBCD_CdIntToPos(const int32_t sectorNum, CdlLOC& pos) noexcept;
-void _thunk_LIBCD_CdIntToPos() noexcept;
-
 int32_t LIBCD_CdPosToInt(const CdlLOC& pos) noexcept;
-void _thunk_LIBCD_CdPosToInt() noexcept;
-
 int32_t LIBCD_CdGetToc(CdlLOC trackLocs[CdlMAXTOC]) noexcept;

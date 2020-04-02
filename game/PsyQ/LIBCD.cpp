@@ -9,6 +9,9 @@
 #include "LIBETC.h"
 #include "PcPsx/Finally.h"
 
+#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PsxVm/PsxVm.h"
+
 BEGIN_THIRD_PARTY_INCLUDES
 
 #include <device/cdrom/cdrom.h>
@@ -16,9 +19,6 @@ BEGIN_THIRD_PARTY_INCLUDES
 #include <disc/disc.h>
 
 END_THIRD_PARTY_INCLUDES
-
-// N.B: must be done LAST due to MIPS register macros
-#include "PsxVm/PsxVm.h"
 
 // CD-ROM constants
 static constexpr int32_t CD_SECTORS_PER_SEC = 75;       // The number of CD sectors per second of audio
@@ -281,10 +281,6 @@ CdlSyncStatus LIBCD_CdSync([[maybe_unused]] const int32_t mode, uint8_t pResult[
     return CdlComplete;
 }
 
-void _thunk_LIBCD_CdSync() noexcept {
-    v0 = LIBCD_CdSync(a0, vmAddrToPtr<uint8_t>(a1));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Wait for cdrom data to be ready or check if it is ready.
 // Mode '0' means block until data is ready, otherwise we simply return the current status.
@@ -320,10 +316,6 @@ CdlSyncStatus LIBCD_CdReady(const int32_t mode, uint8_t pResult[8]) noexcept {
     }
 }
 
-void _thunk_LIBCD_CdReady() noexcept {
-    v0 = LIBCD_CdReady(a0, vmAddrToPtr<uint8_t>(a1));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set the callback for when a cd command completes and return the previous one
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -353,10 +345,6 @@ bool LIBCD_CdControl(const CdlCmd cmd, const uint8_t* const pArgs, uint8_t pResu
     return handleCdCmd(cmd, pArgs, pResult);
 }
 
-void _thunk_LIBCD_CdControl() noexcept {
-    v0 = LIBCD_CdControl((CdlCmd) a0, vmAddrToPtr<const uint8_t>(a1), vmAddrToPtr<uint8_t>(a2));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Issue a command to the CDROM system and return 'true' if successful.
 //
@@ -366,10 +354,6 @@ void _thunk_LIBCD_CdControl() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool LIBCD_CdControlF(const CdlCmd cmd, const uint8_t* const pArgs) noexcept {
     return handleCdCmd(cmd, pArgs, nullptr);
-}
-
-void _thunk_LIBCD_CdControlF() noexcept {
-    v0 = LIBCD_CdControlF((CdlCmd) a0, vmAddrToPtr<const uint8_t>(a1));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -453,10 +437,6 @@ bool LIBCD_CdGetSector(void* const pDst, const int32_t readSizeInWords) noexcept
     return true;    // According to the PsyQ docs this always returns '1' or 'true' for success (never fails)
 }
 
-void _thunk_LIBCD_CdGetSector() noexcept {
-    v0 = LIBCD_CdGetSector(vmAddrToPtr<void>(a0), a1);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Convert from a CD position in terms of an absolute sector to a binary coded decimal CD position in terms of minutes,
 // seconds and sector number. Note that the given sector number is assumed to NOT include the lead in track, so that will be added to the
@@ -476,10 +456,6 @@ CdlLOC& LIBCD_CdIntToPos(const int32_t sectorNum, CdlLOC& pos) noexcept {
     return pos;
 }
 
-void _thunk_LIBCD_CdIntToPos() noexcept {
-    v0 = LIBCD_CdIntToPos(a0, *vmAddrToPtr<CdlLOC>(a1));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Convert from a CD position in terms of seconds, minutes to an absolute sector number.
 // Note: the hidden 'lead in' track is discounted from the returned absolute sector number.
@@ -492,10 +468,6 @@ int32_t LIBCD_CdPosToInt(const CdlLOC& pos) noexcept {
 
     // Figure out the absolute sector number and exclude the hidden lead in track which contains the TOC
     return (minute * 60 + second) * CD_SECTORS_PER_SEC + sector - CD_LEAD_SECTORS;
-}
-
-void _thunk_LIBCD_CdPosToInt() noexcept {
-    v0 = LIBCD_CdPosToInt(*vmAddrToPtr<CdlLOC>(a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
