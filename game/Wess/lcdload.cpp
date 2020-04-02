@@ -7,11 +7,15 @@
 #include "lcdload.h"
 
 #include "Doom/cdmaptbl.h"
+#include "PcPsx/Finally.h"
 #include "psxcd.h"
 #include "psxspu.h"
 #include "PsyQ/LIBCD.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessarc.h"
+
+// Maximum number of sounds that can be in an LCD file
+static constexpr uint32_t MAX_LCD_SOUNDS = 100;
 
 static const VmPtr<PsxCd_File>                      gWess_open_lcd_file(0x8007F2E0);                // The currently open LCD file
 static const VmPtr<VmPtr<patch_group_data>>         gpWess_lcd_load_patchGrp(0x80075AD8);           // TODO: COMMENT
@@ -82,13 +86,16 @@ void wess_dig_set_sample_position(const int32_t patchIdx, const uint32_t spuAddr
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Opens the specified file for the LCD loader
+// Opens the specified file for the LCD loader.
+// PC-PSX: removed to fix compiler warnings as it is unreferenced and no longer used.
 //------------------------------------------------------------------------------------------------------------------------------------------
+#if !PC_PSX_DOOM_MODS
 static PsxCd_File* wess_dig_lcd_data_open(const CdMapTbl_File file) noexcept {
     PsxCd_File* const pFile = psxcd_open(file);
     *gWess_open_lcd_file = *pFile;
     return pFile;
 }
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // The name of this function is somewhat confusing...
@@ -227,7 +234,89 @@ int32_t wess_dig_lcd_psxcd_sync() noexcept {
 // Returns the number of bytes uploaded to the SPU or '0' on failure.
 // Optionally, details for the uploaded sounds can be saved to the given sample block.
 // The 'override' flag also specifies whether existing sound patches are to have their details overwritten or not.
+// 
+// Note: I've completely rewritten this function for PsyDoom to get rid of all the low level I/O stuff.
+// The goal of the rewrite is to enable modding of the game with new .LCD files for custom maps, since the 'psxcd' I/O functions support 
+// replacing original game files with alternate versions on the user's computer.
 //------------------------------------------------------------------------------------------------------------------------------------------
+#if PC_PSX_DOOM_MODS
+
+int32_t wess_dig_lcd_load(
+    const CdMapTbl_File lcdFileToLoad,
+    const uint32_t destSpuAddr,
+    SampleBlock* const pSampleBlock,
+    const bool bOverride
+) noexcept {   
+    // Open the LCD file firstly and abort if that fails or the file handle returned is invalid
+    PsxCd_File* const pLcdFile = psxcd_open(lcdFileToLoad);
+
+    if (!pLcdFile)
+        return 0;
+
+    auto closeLcdFileOnExit = finally([&]() noexcept {
+        psxcd_close(*pLcdFile);
+    });
+
+    if (pLcdFile->file.pos == 0)
+        return 0;
+
+    // Read the LCD file header to sector buffer 1
+    struct LCDHeader {
+        uint16_t    numPatches;
+        uint16_t    patchIndexes[MAX_LCD_SOUNDS];
+    };
+
+    LCDHeader* const pLcdHeader = (LCDHeader*) gWess_sectorBuffer1.get();
+
+    if (psxcd_read(pLcdHeader, sizeof(LCDHeader), *pLcdFile) != sizeof(LCDHeader))
+        return 0;
+
+    // If the number of sounds is not valid then abort
+    if (pLcdHeader->numPatches > MAX_LCD_SOUNDS)
+        return 0;
+
+    // Set the number of sounds to load globally and which buffer contains the LCD header.
+    // Also initialize other variables used by 'wess_dig_lcd_data_read':
+    *gWess_lcd_load_numSounds = pLcdHeader->numPatches;
+    *gpWess_lcd_load_headerBuf = gWess_sectorBuffer1.get();
+
+    *gWess_lcd_load_soundNum = 0;
+    *gWess_lcd_load_samplePos = destSpuAddr;
+    *gWess_lcd_load_soundBytesLeft = 0;
+
+    // Figure out the size of the entire LCD file
+    if (psxcd_seek(*pLcdFile, CD_SECTOR_SIZE, PsxCd_SeekMode::END) != 0)
+        return 0;
+
+    const int32_t lcdFileSize = psxcd_tell(*pLcdFile);
+
+    if (lcdFileSize <= 0)
+        return 0;
+
+    // Seek to the first sound data sector in the file and continue reading sound data until we are done
+    if (psxcd_seek(*pLcdFile, CD_SECTOR_SIZE, PsxCd_SeekMode::SET) != 0)
+        return 0;
+
+    // Read all of the sound data and upload to the SPU using sector buffer 2 as a temporary
+    int32_t lcdBytesLeft = lcdFileSize;
+    int32_t numSpuBytesWritten = 0;
+
+    while (lcdBytesLeft > 0) {
+        uint8_t* const sectorBuffer = gWess_sectorBuffer2.get();
+
+        if (psxcd_read(sectorBuffer, CD_SECTOR_SIZE, *pLcdFile) != CD_SECTOR_SIZE)
+            return 0;
+
+        numSpuBytesWritten += wess_dig_lcd_data_read(sectorBuffer, destSpuAddr + numSpuBytesWritten, pSampleBlock, bOverride);
+        lcdBytesLeft -= CD_SECTOR_SIZE;
+    }
+
+    return numSpuBytesWritten;
+}
+#endif  // #if PC_PSX_DOOM_MODS
+
+#if !PC_PSX_DOOM_MODS
+// This is the original version of this function, which is much more complex and contains a lot of low-level IO
 int32_t wess_dig_lcd_load(
     const CdMapTbl_File lcdFileToLoad,
     const uint32_t destSpuAddr,
@@ -284,9 +373,9 @@ int32_t wess_dig_lcd_load(
         *gWess_lcd_load_numSounds = pLcdHeader[0];
         *gpWess_lcd_load_headerBuf = gPSXCD_sectorbuf.get();
 
-        // If the number of sounds exceeds 100 then a read error must have happened.
+        // If the number of sounds exceeds the max then a read error must have happened.
         // In this case retry the read again...
-        if (*gWess_lcd_load_numSounds > 100)
+        if (*gWess_lcd_load_numSounds > MAX_LCD_SOUNDS)
             continue;
 
         // Figure out how many sound bytes there is to read.
@@ -299,7 +388,7 @@ int32_t wess_dig_lcd_load(
 
         // Main sound reading loop:
         // Reads all of the sectors in the LCD file and uploads all of the sound data to the SPU.
-        int32_t totalBytesUploadedToSpu = 0;
+        int32_t numSpuBytesWritten = 0;
         uint32_t curDestSpuAddr = destSpuAddr;
 
         bool bDidPrevUploadToSpu = false;
@@ -333,7 +422,7 @@ int32_t wess_dig_lcd_load(
 
             // Upload the sound contents of this data sector to the SPU
             const int32_t bytesUploadedToSpu = wess_dig_lcd_data_read(pSectorBuffer, curDestSpuAddr, pSampleBlock, bOverride);
-            totalBytesUploadedToSpu += bytesUploadedToSpu;
+            numSpuBytesWritten += bytesUploadedToSpu;
             curDestSpuAddr += bytesUploadedToSpu;
 
             // Flip sector buffers and set the flag indicating we've uploaded something to the SPU
@@ -348,7 +437,7 @@ int32_t wess_dig_lcd_load(
             if (wess_dig_lcd_psxcd_sync() == 0) {
                 LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
                 psxcd_enable_callbacks();
-                return totalBytesUploadedToSpu;
+                return numSpuBytesWritten;
             }
         }
     }
@@ -356,3 +445,4 @@ int32_t wess_dig_lcd_load(
     // Should never reach this point, but if we do then consider it a failure!
     return 0;
 }
+#endif  // #if !PC_PSX_DOOM_MODS
