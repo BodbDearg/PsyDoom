@@ -23,5 +23,5 @@ void close_sequence_data() noexcept;
 bool wess_seq_loader_init(master_status_structure* const pMStat, const CdMapTbl_File moduleFileId, const bool bOpenModuleFile) noexcept;
 void wess_seq_loader_exit() noexcept;
 int32_t wess_seq_sizeof(const int32_t seqIdx) noexcept;
-void wess_seq_load() noexcept;
+int32_t wess_seq_load(const int32_t seqIdx, void* const pSeqMem) noexcept;
 bool wess_seq_free(const int32_t seqIdx) noexcept;

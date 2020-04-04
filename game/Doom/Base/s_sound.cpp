@@ -230,7 +230,7 @@ loc_80041204:
     at += 0x54E0;                                       // Result = MapMusicDefs[1] (800754E0)
     at += v0;
     a0 = lw(at);
-    wess_seq_load();
+    v0 = wess_seq_load(a0, vmAddrToPtr<void>(a1));
     a1 = s0;
     v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
     a2 = 0x80080000;                                    // Result = 80080000

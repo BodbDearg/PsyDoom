@@ -336,54 +336,19 @@ int32_t wess_seq_sizeof(const int32_t seqIdx) noexcept {
     return 0;
 }
 
-void wess_seq_load() noexcept {
-loc_800451F4:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5960);                               // Load from: gbWess_seq_loader_enable (80075960)
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(s2, sp + 0x18);
-    s2 = a1;
-    sw(s1, sp + 0x14);
-    s1 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x1C);
-    if (v0 == 0) goto loc_80045278;
-    v0 = Is_Seq_Seq_Num_Valid(a0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s0 << 2;
-        if (bJump) goto loc_80045238;
-    }
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8004527C;
-loc_80045238:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5968);                               // Load from: gpWess_seq_loader_pm_stat (80075968)
-    v1 = lw(v1 + 0xC);
-    v0 += s0;
-    v1 = lw(v1 + 0x10);
-    v0 <<= 2;
-    v0 += v1;
-    v0 = lw(v0 + 0x4);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s1;                                        // Result = 00000000
-        if (bJump) goto loc_8004527C;
-    }
-    a0 = s0;
-    a1 = s2;
-    v0 = load_sequence_data(a0, vmAddrToPtr<void>(a1));
-    s1 = v0;
-loc_80045278:
-    v0 = s1;
-loc_8004527C:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load the given sequence index into the given memory buffer, which is expected to be big enough to hold the sequence.
+// Returns the number of bytes used from the given buffer, or '0' on failure or if the sequence is already loaded.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t wess_seq_load(const int32_t seqIdx, void* const pSeqMem) noexcept {
+    // Don't load if the sequence index is invalid or the sequence loader not initialized
+    if ((!*gbWess_seq_loader_enable) || (!Is_Seq_Seq_Num_Valid(seqIdx)))
+        return 0;
+
+    // Only load the sequence if not already loaded, otherwise we return '0' for using zero bytes from the given buffer
+    master_status_structure& mstat = *gpWess_seqld_mstat->get();
+    sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqIdx];
+    return (!seqInfo.ptrk_info) ? load_sequence_data(seqIdx, pSeqMem) : 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

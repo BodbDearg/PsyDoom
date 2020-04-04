@@ -80,7 +80,7 @@ loc_80049B34:
 loc_80049B44:
     a0 = s2;
     a1 = s4 + s1;
-    wess_seq_load();
+    v0 = wess_seq_load(a0, vmAddrToPtr<void>(a1));
     s1 += v0;
     s0--;
     s2++;

@@ -295,7 +295,6 @@ extern void _thunk_S_StartSound() noexcept;
 extern void S_UpdateSounds() noexcept;
 extern void PsxSoundInit() noexcept;
 extern void PsxSoundExit() noexcept;
-extern void wess_seq_load() noexcept;
 extern void _thunk_PSX_DriverInit() noexcept;
 extern void _thunk_PSX_DriverExit() noexcept;
 extern void _thunk_PSX_DriverEntry1() noexcept;
@@ -684,7 +683,6 @@ namespace PsxVm {
         { 0x800415D4, &S_UpdateSounds },
         { 0x800415EC, &PsxSoundInit },
         { 0x8004172C, &PsxSoundExit },
-        { 0x800451F4, &wess_seq_load },
         { 0x80045F8C, &_thunk_PSX_DriverInit },
         { 0x800461B4, &_thunk_PSX_DriverExit },
         { 0x800461D4, &_thunk_PSX_DriverEntry1 },
