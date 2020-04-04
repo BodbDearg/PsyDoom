@@ -3,48 +3,21 @@
 #include "PsxVm/PsxVm.h"
 #include "seqload.h"
 
-void wess_seq_range_sizeof() noexcept {
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5960);                               // Load from: gbWess_seq_loader_enable (80075960)
-    sp -= 0x28;
-    sw(s0, sp + 0x10);
-    s0 = a1;
-    sw(s2, sp + 0x18);
-    s2 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s1, sp + 0x14);
-    if (v0 == 0) goto loc_80049AB8;
-    s1 = a0;
-    if (s0 != 0) goto loc_80049A8C;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80049ABC;
-loc_80049A8C:
-    s0--;
-    v0 = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (s0 == v0);
-        v0 = s2;                                        // Result = 00000000
-        if (bJump) goto loc_80049ABC;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the total size of a range of sequences, starting at the given index
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t wess_seq_range_sizeof(const int32_t firstSeqIdx, const int32_t numSeqs) noexcept {
+    if ((!*gbWess_seq_loader_enable) || (numSeqs == 0))
+        return 0;
+
+    const int32_t endSeqIdx = firstSeqIdx + numSeqs;
+    int32_t totalSize = 0;
+
+    for (int32_t seqIdx = 0; seqIdx < endSeqIdx; ++seqIdx) {
+        totalSize += wess_seq_sizeof(seqIdx);
     }
-    s3 = -1;                                            // Result = FFFFFFFF
-loc_80049AA0:
-    a0 = s1;
-    v0 = wess_seq_sizeof(a0);
-    s2 += v0;
-    s0--;
-    s1++;
-    if (s0 != s3) goto loc_80049AA0;
-loc_80049AB8:
-    v0 = s2;
-loc_80049ABC:
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+
+    return totalSize;
 }
 
 void wess_seq_range_load() noexcept {

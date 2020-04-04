@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstdint>
+#include "PcPsx/Types.h"
+#include "PsxVm/VmPtr.h"
 
 enum class CdMapTbl_File : uint32_t;
 struct master_status_structure;
@@ -13,7 +14,10 @@ enum Seq_Load_Error : int32_t {
     SEQLOAD_FSEEK
 };
 
+// Form for a function which is called when a sequence loading error happens
 typedef void (*SeqLoaderErrorHandler)(const int32_t module, const Seq_Load_Error errorCode) noexcept;
+
+extern const VmPtr<bool32_t>    gbWess_seq_loader_enable;
 
 void wess_seq_loader_install_error_handler(const SeqLoaderErrorHandler handler, const int32_t module) noexcept;
 bool Is_Seq_Seq_Num_Valid(const int32_t seqIdx) noexcept;

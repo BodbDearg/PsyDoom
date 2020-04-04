@@ -6,11 +6,13 @@
 
 #include "wessarc.h"
 
+// Has the sequence loader been initialized?
+const VmPtr<bool32_t>   gbWess_seq_loader_enable(0x80075960);
+
 static const VmPtr<int32_t>                             gWess_num_sequences(0x8007596C);            // TODO: COMMENT
 static const VmPtr<int32_t>                             gWess_seqld_moduleRefCount(0x80075974);     // TODO: COMMENT
 static const VmPtr<VmPtr<PsxCd_File>>                   gpWess_seqld_moduleFile(0x80075980);        // TODO: COMMENT
 static const VmPtr<CdMapTbl_File>                       gWess_seqld_moduleFileId(0x80075964);       // TODO: COMMENT
-static const VmPtr<bool32_t>                            gbWess_seq_loader_enable(0x80075960);       // TODO: COMMENT
 static const VmPtr<VmPtr<master_status_structure>>      gpWess_seqld_mstat(0x80075968);             // TODO: COMMENT
 static const VmPtr<track_header>                        gWess_seqld_seqTrackHdr(0x8007F050);        // TODO: COMMENT
 static const VmPtr<track_header>                        gWess_seqld_emptyTrackHdr(0x8007F068);      // TODO: COMMENT
