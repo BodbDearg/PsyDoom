@@ -1,7 +1,13 @@
-#include "SEQLOAD.h"
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Williams Entertainment Sound System (WESS): sequence/song loader.
+// Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
+//------------------------------------------------------------------------------------------------------------------------------------------
+#include "seqload.h"
 
 #include "PsxVm/PsxVm.h"
 #include "wessarc.h"
+
+static const VmPtr<int32_t>     gWess_num_sequences(0x8007596C);        // TODO: COMMENT
 
 void wess_seq_load_err() noexcept {
 loc_80044740:
@@ -28,21 +34,11 @@ void wess_seq_loader_install_error_handler() noexcept {
     return;
 }
 
-void Is_Seq_Seq_Num_Valid() noexcept {
-loc_80044790:
-    v0 = 0;                                             // Result = 00000000
-    if (i32(a0) < 0) goto loc_800447B4;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x596C);                               // Load from: gWess_max_sequences (8007596C)
-    v0 = (i32(a0) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_800447B4;
-    }
-    v0 = 0;                                             // Result = 00000000
-loc_800447B4:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the given sequence index is valid for the open module (.WMD) file
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool Is_Seq_Seq_Num_Valid(const int32_t seqIdx) noexcept {
+    return ((seqIdx >= 0) && (seqIdx < *gWess_num_sequences));
 }
 
 void open_sequence_data() noexcept {
@@ -121,7 +117,7 @@ loc_8004487C:
     sw(s2, sp + 0x30);
     sw(s0, sp + 0x28);
     if (v0 == 0) goto loc_80044FF0;
-    Is_Seq_Seq_Num_Valid();
+    v0 = Is_Seq_Seq_Num_Valid(a0);
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -671,7 +667,7 @@ loc_80045164:
     s1 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x18);
     if (v0 == 0) goto loc_800451D4;
-    Is_Seq_Seq_Num_Valid();
+    v0 = Is_Seq_Seq_Num_Valid(a0);
     {
         const bool bJump = (v0 != 0);
         v0 = s0 << 2;
@@ -717,7 +713,7 @@ loc_800451F4:
     s1 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x1C);
     if (v0 == 0) goto loc_80045278;
-    Is_Seq_Seq_Num_Valid();
+    v0 = Is_Seq_Seq_Num_Valid(a0);
     {
         const bool bJump = (v0 != 0);
         v0 = s0 << 2;
@@ -765,7 +761,7 @@ loc_80045298:
     s1 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x18);
     if (v0 == 0) goto loc_8004530C;
-    Is_Seq_Seq_Num_Valid();
+    v0 = Is_Seq_Seq_Num_Valid(a0);
     {
         const bool bJump = (v0 != 0);
         v0 = s0 << 2;

@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cstdint>
+
 void wess_seq_load_err() noexcept;
 void wess_seq_loader_install_error_handler() noexcept;
-void Is_Seq_Seq_Num_Valid() noexcept;
+bool Is_Seq_Seq_Num_Valid(const int32_t seqIdx) noexcept;
 void open_sequence_data() noexcept;
 void close_sequence_data() noexcept;
 void load_sequence_data() noexcept;
