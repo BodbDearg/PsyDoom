@@ -1,6 +1,7 @@
 #include "PSXSND.h"
 
 #include "Doom/Base/s_sound.h"
+#include "Doom/cdmaptbl.h"
 #include "lcdload.h"
 #include "psxcd.h"
 #include "PsxVm/PsxVm.h"
@@ -54,11 +55,7 @@ loc_800415EC:
     );
 
     wess_dig_lcd_loader_init(wess_get_master_status());
-    v0 = ptrToVmAddr(wess_get_master_status());
-    a0 = v0;
-    a1 = 0xC9;                                          // Result = 000000C9
-    a2 = 1;                                             // Result = 00000001
-    wess_seq_loader_init();
+    v0 = wess_seq_loader_init(wess_get_master_status(), CdMapTbl_File::DOOMSFX_WMD, true);
     v0 = ptrToVmAddr(wess_get_wmd_end());
     a0 = 0;                                             // Result = 00000000
     a1 = 0x5A;                                          // Result = 0000005A

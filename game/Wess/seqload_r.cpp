@@ -30,7 +30,7 @@ loc_80049A8C:
     s3 = -1;                                            // Result = FFFFFFFF
 loc_80049AA0:
     a0 = s1;
-    wess_seq_sizeof();
+    v0 = wess_seq_sizeof(a0);
     s2 += v0;
     s0--;
     s1++;
