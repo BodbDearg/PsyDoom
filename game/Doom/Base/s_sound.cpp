@@ -162,7 +162,7 @@ loc_80041154:
     a0 = 0x5A;                                          // Result = 0000005A
     if (v0 != s0) goto loc_80041154;
     a1 = 0x14;                                          // Result = 00000014
-    wess_seq_range_free();
+    v0 = wess_seq_range_free(a0, a1);
 loc_80041188:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 -= 0x11D0;                                       // Result = gMapMusSfxLoadedSamples[0] (8007EE30)

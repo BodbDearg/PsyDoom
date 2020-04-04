@@ -353,7 +353,6 @@ extern void Eng_TrkRet() noexcept;
 extern void Eng_TrkEnd() noexcept;
 extern void Eng_NullEvent() noexcept;
 extern void SeqEngine() noexcept;
-extern void wess_seq_range_free() noexcept;
 
 extern void LIBAPI_write() noexcept;
 extern void LIBAPI_InitPAD() noexcept;
@@ -739,7 +738,6 @@ namespace PsxVm {
         { 0x80048A88, &Eng_TrkEnd },
         { 0x80048B8C, &Eng_NullEvent },
         { 0x80048B94, &SeqEngine },
-        { 0x80049B90, &wess_seq_range_free },
 
         { 0x80049C3C, &LIBAPI_write },
         { 0x80049C5C, &LIBAPI_InitPAD },
