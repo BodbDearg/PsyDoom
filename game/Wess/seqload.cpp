@@ -4,7 +4,6 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "seqload.h"
 
-#include "PsxVm/PsxVm.h"
 #include "wessarc.h"
 
 static const VmPtr<int32_t>                             gWess_num_sequences(0x8007596C);            // TODO: COMMENT
@@ -22,7 +21,7 @@ static int32_t                  gWess_seqld_errorModule;        // Module value 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Invokes the sequence loader error handler with the given error code
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_load_err(const Seq_Load_Error errorCode) noexcept {
+static void wess_seq_load_err(const Seq_Load_Error errorCode) noexcept {
     if (gpWess_seqld_errorHandler) {
         gpWess_seqld_errorHandler(gWess_seqld_errorModule, errorCode);
     }
