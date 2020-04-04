@@ -60,7 +60,7 @@ loc_800415EC:
     a0 = 0;                                             // Result = 00000000
     a1 = 0x5A;                                          // Result = 0000005A
     a2 = v0;
-    wess_seq_range_load();
+    v0 = wess_seq_range_load(a0, a1, vmAddrToPtr<void>(a2));
     s0 = v0;
     v0 = ptrToVmAddr(wess_get_wmd_end());
     v0 += s0;

@@ -20,57 +20,29 @@ int32_t wess_seq_range_sizeof(const int32_t firstSeqIdx, const int32_t numSeqs) 
     return totalSize;
 }
 
-void wess_seq_range_load() noexcept {
-loc_80049ADC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5960);                               // Load from: gbWess_seq_loader_enable (80075960)
-    sp -= 0x28;
-    sw(s2, sp + 0x18);
-    s2 = a0;
-    sw(s0, sp + 0x10);
-    s0 = a1;
-    sw(s4, sp + 0x20);
-    s4 = a2;
-    sw(s1, sp + 0x14);
-    s1 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x24);
-    sw(s3, sp + 0x1C);
-    if (v0 == 0) goto loc_80049B68;
-    v0 = open_sequence_data();
-    if (v0 == 0) goto loc_80049B2C;
-    {
-        const bool bJump = (s0 != 0);
-        s0--;
-        if (bJump) goto loc_80049B34;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Load a range of sequences into the given memory block, which is expected to be big enough, and return how much memory was used
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t wess_seq_range_load(const int32_t firstSeqIdx, const int32_t numSeqs, void* const pSeqMem) noexcept {
+    // If the sequencer loader is not intialized or we can't open the module file containing sequences then loading fails
+    if ((!*gbWess_seq_loader_enable) || (!open_sequence_data()))
+        return 0;
+
+    // Try load all of the sequences specified
+    const int32_t endSeqIdx = firstSeqIdx + numSeqs;
+    
+    int32_t totalBytesUsed = 0;
+    uint8_t* pSeqMemBytes = (uint8_t*) pSeqMem;
+
+    for (int32_t seqIdx = firstSeqIdx; seqIdx < endSeqIdx; ++seqIdx) {
+        const int32_t seqBytesUsed = wess_seq_load(seqIdx, pSeqMemBytes);
+        totalBytesUsed += seqBytesUsed;
+        pSeqMemBytes += seqBytesUsed;
     }
-loc_80049B2C:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80049B6C;
-loc_80049B34:
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (s0 == v0) goto loc_80049B60;
-    s3 = -1;                                            // Result = FFFFFFFF
-loc_80049B44:
-    a0 = s2;
-    a1 = s4 + s1;
-    v0 = wess_seq_load(a0, vmAddrToPtr<void>(a1));
-    s1 += v0;
-    s0--;
-    s2++;
-    if (s0 != s3) goto loc_80049B44;
-loc_80049B60:
+
+    // Cleanup by closing the module file and return how much memory was used
     close_sequence_data();
-loc_80049B68:
-    v0 = s1;
-loc_80049B6C:
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+    return totalBytesUsed;
 }
 
 void wess_seq_range_free() noexcept {
