@@ -63,7 +63,7 @@ loc_80049ADC:
     sw(ra, sp + 0x24);
     sw(s3, sp + 0x1C);
     if (v0 == 0) goto loc_80049B68;
-    open_sequence_data();
+    v0 = open_sequence_data();
     if (v0 == 0) goto loc_80049B2C;
     {
         const bool bJump = (s0 != 0);

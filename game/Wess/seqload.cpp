@@ -7,31 +7,29 @@
 #include "PsxVm/PsxVm.h"
 #include "wessarc.h"
 
-static const VmPtr<int32_t>     gWess_num_sequences(0x8007596C);        // TODO: COMMENT
+static const VmPtr<int32_t>             gWess_num_sequences(0x8007596C);            // TODO: COMMENT
+static const VmPtr<int32_t>             gWess_seqld_moduleRefCount(0x80075974);     // TODO: COMMENT
+static const VmPtr<VmPtr<PsxCd_File>>   gpWess_seqld_moduleFile(0x80075980);        // TODO: COMMENT
+static const VmPtr<CdMapTbl_File>       gWess_seqld_moduleFileId(0x80075964);       // TODO: COMMENT
 
-void wess_seq_load_err() noexcept {
-loc_80044740:
-    sp -= 0x18;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5978);                               // Load from: 80075978
-    a1 = a0;
-    sw(ra, sp + 0x10);
-    if (v0 == 0) goto loc_80044768;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x597C);                               // Load from: 8007597C
-    ptr_call(v0);
-loc_80044768:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+static SeqLoaderErrorHandler    gpWess_seqld_errorHandler;      // Callback invoked if there are problems loading sequences
+static int32_t                  gWess_seqld_errorModule;        // Module value passed to the error handling callback
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Invokes the sequence loader error handler with the given error code
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_seq_load_err(const int32_t errorCode) noexcept {
+    if (gpWess_seqld_errorHandler) {
+        gpWess_seqld_errorHandler(gWess_seqld_errorModule, errorCode);
+    }
 }
 
-void wess_seq_loader_install_error_handler() noexcept {
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x5978);                                // Store to: 80075978
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a1, at + 0x597C);                                // Store to: 8007597C
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Install an error callback which can be invoked if errors occur with the sequence loader
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wess_seq_loader_install_error_handler(const SeqLoaderErrorHandler handler, const int32_t module) noexcept {
+    gpWess_seqld_errorHandler = handler;
+    gWess_seqld_errorModule = module;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -41,61 +39,37 @@ bool Is_Seq_Seq_Num_Valid(const int32_t seqIdx) noexcept {
     return ((seqIdx >= 0) && (seqIdx < *gWess_num_sequences));
 }
 
-void open_sequence_data() noexcept {
-loc_800447BC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5974);                               // Load from: 80075974
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 != 0) goto loc_80044800;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5964);                               // Load from: gWess_seq_loader_fileName (80075964)
-    v0 = ptrToVmAddr(module_open((CdMapTbl_File) a0));
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5980);                                // Store to: 80075980
-    if (v0 != 0) goto loc_80044800;
-    a0 = 1;                                             // Result = 00000001
-    wess_seq_load_err();
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80044818;
-loc_80044800:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5974);                               // Load from: 80075974
-    v0 = 1;                                             // Result = 00000001
-    v1++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x5974);                                // Store to: 80075974
-loc_80044818:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Retain or add a reference to the open module file used to load sequences.
+// If the file is not opened yet then it is opened.
+// Returns 'true' if the file is successfully opened.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool open_sequence_data() noexcept {
+    if (*gWess_seqld_moduleRefCount == 0) {
+        *gpWess_seqld_moduleFile = module_open(*gWess_seqld_moduleFileId);
+
+        if (!gpWess_seqld_moduleFile->get()) {
+            wess_seq_load_err(1);
+            return false;
+        }
+    }
+
+    *gWess_seqld_moduleRefCount += 1;
+    return true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Release a reference to the open module file used to load sequences.
+// If the reference count falls to '0' then the file is closed.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void close_sequence_data() noexcept {
-loc_80044828:
-    sp -= 0x18;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5974);                               // Load from: 80075974
-    v0 = 1;                                             // Result = 00000001
-    sw(ra, sp + 0x10);
-    if (v1 != v0) goto loc_80044850;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5980);                               // Load from: 80075980
-    module_close(*vmAddrToPtr<PsxCd_File>(a0));
-loc_80044850:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5974);                               // Load from: 80075974
-    {
-        const bool bJump = (i32(v0) <= 0);
-        v0--;
-        if (bJump) goto loc_8004486C;
+    if (*gWess_seqld_moduleRefCount == 1) {
+        module_close(*gpWess_seqld_moduleFile->get());
     }
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x5974);                                // Store to: 80075974
-loc_8004486C:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    if (*gWess_seqld_moduleRefCount > 0) {
+        *gWess_seqld_moduleRefCount -= 1;
+    }
 }
 
 void load_sequence_data() noexcept {
@@ -123,7 +97,7 @@ loc_8004487C:
         v0 = 0;                                         // Result = 00000000
         if (bJump) goto loc_80044FF4;
     }
-    open_sequence_data();
+    v0 = open_sequence_data();
     {
         const bool bJump = (v0 != 0);
         v0 = s5 << 2;
@@ -480,7 +454,7 @@ loc_80044E90:
 loc_80044E98:
     a0 = 3;                                             // Result = 00000003
 loc_80044E9C:
-    wess_seq_load_err();
+    wess_seq_load_err(a0);
     v0 = 0;                                             // Result = 00000000
     goto loc_80044FF4;
 loc_80044EAC:
@@ -626,14 +600,14 @@ loc_80045028:
     sw(v1, at + 0x596C);                                // Store to: gWess_max_sequences (8007596C)
     v0 = s0;                                            // Result = 00000001
     if (a2 != s0) goto loc_80045128;
-    open_sequence_data();
+    v0 = open_sequence_data();
     {
         const bool bJump = (v0 != 0);
         v0 = s0;                                        // Result = 00000001
         if (bJump) goto loc_80045128;
     }
     a0 = 1;                                             // Result = 00000001
-    wess_seq_load_err();
+    wess_seq_load_err(a0);
     v0 = 0;                                             // Result = 00000000
     goto loc_80045128;
 loc_80045124:
