@@ -25,4 +25,4 @@ bool wess_seq_loader_init(master_status_structure* const pMStat, const CdMapTbl_
 void wess_seq_loader_exit() noexcept;
 int32_t wess_seq_sizeof(const int32_t seqIdx) noexcept;
 void wess_seq_load() noexcept;
-void wess_seq_free() noexcept;
+bool wess_seq_free(const int32_t seqIdx) noexcept;

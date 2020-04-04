@@ -129,7 +129,7 @@ loc_80049BCC:
     s2 = -1;                                            // Result = FFFFFFFF
 loc_80049BE4:
     a0 = s1;
-    wess_seq_free();
+    v0 = wess_seq_free(a0);
     s0--;
     s1++;
     if (s0 != s2) goto loc_80049BE4;

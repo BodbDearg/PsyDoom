@@ -665,47 +665,21 @@ loc_8004527C:
     return;
 }
 
-void wess_seq_free() noexcept {
-loc_80045298:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5960);                               // Load from: gbWess_seq_loader_enable (80075960)
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(s1, sp + 0x14);
-    s1 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x18);
-    if (v0 == 0) goto loc_8004530C;
-    v0 = Is_Seq_Seq_Num_Valid(a0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s0 << 2;
-        if (bJump) goto loc_800452D4;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Clear the reference to the specified sequence's data and return 'true' if a reference was actually cleared.
+// Depsite what the name implies, this does not actually free any memory - it just clears a pointer reference to the sequence data.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool wess_seq_free(const int32_t seqIdx) noexcept {    
+    if ((!*gbWess_seq_loader_enable) || (!Is_Seq_Seq_Num_Valid(seqIdx)))
+        return false;
+
+    master_status_structure& mstat = *gpWess_seqld_mstat->get();
+    sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqIdx];
+
+    if (seqInfo.ptrk_info) {
+        seqInfo.ptrk_info = nullptr;
+        return true;
     }
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80045310;
-loc_800452D4:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5968);                               // Load from: gpWess_seq_loader_pm_stat (80075968)
-    v1 = lw(v1 + 0xC);
-    v0 += s0;
-    v1 = lw(v1 + 0x10);
-    v0 <<= 2;
-    v1 += v0;
-    v0 = lw(v1 + 0x4);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s1;                                        // Result = 00000000
-        if (bJump) goto loc_80045310;
-    }
-    sw(0, v1 + 0x4);
-    s1 = 1;                                             // Result = 00000001
-loc_8004530C:
-    v0 = s1;
-loc_80045310:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    return false;
 }
