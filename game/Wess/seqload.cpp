@@ -80,7 +80,7 @@ void close_sequence_data() noexcept {
 // Loads the given sequence into the given memory block, which is expected to be big enough.
 // Returns the number of bytes used from the given memory block, or '0' on failure.
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t load_sequence_data(const int32_t seqNum, void* const pSeqMem) noexcept {
+static int32_t load_sequence_data(const int32_t seqNum, void* const pSeqMem) noexcept {
     // Can't load if the sequence loader wasn't initialized or the sequence index is invalid
     if ((!*gbWess_seq_loader_enable) || (!Is_Seq_Seq_Num_Valid(seqNum)))
         return 0;

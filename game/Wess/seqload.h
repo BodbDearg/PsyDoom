@@ -20,7 +20,6 @@ void wess_seq_loader_install_error_handler(const SeqLoaderErrorHandler handler, 
 bool Is_Seq_Seq_Num_Valid(const int32_t seqIdx) noexcept;
 bool open_sequence_data() noexcept;
 void close_sequence_data() noexcept;
-int32_t load_sequence_data(const int32_t seqNum, void* const pSeqMem) noexcept;
 bool wess_seq_loader_init(master_status_structure* const pMStat, const CdMapTbl_File moduleFileId, const bool bOpenModuleFile) noexcept;
 void wess_seq_loader_exit() noexcept;
 int32_t wess_seq_sizeof(const int32_t seqIdx) noexcept;
