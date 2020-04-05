@@ -24,6 +24,7 @@ void _thunk_Eng_ReverbMod() noexcept { Eng_ReverbMod(*vmAddrToPtr<track_status>(
 void _thunk_Eng_ChorusMod() noexcept { Eng_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOn() noexcept { Eng_NoteOn(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOff() noexcept { Eng_NoteOff(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_ResetIters() noexcept { Eng_ResetIters(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_WriteIterBox() noexcept { Eng_WriteIterBox(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkJump() noexcept { Eng_TrkJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkEnd() noexcept { Eng_TrkEnd(*vmAddrToPtr<track_status>(a0)); }
@@ -56,7 +57,7 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_GateJump,                   // 20
     Eng_IterJump,                   // 21
     Eng_ResetGates,                 // 22
-    Eng_ResetIters,                 // 23
+    _thunk_Eng_ResetIters,          // 23
     _thunk_Eng_WriteIterBox,        // 24
     Eng_SeqTempo,                   // 25
     Eng_SeqGosub,                   // 26
@@ -621,67 +622,23 @@ loc_80047E88:
     return;
 }
 
-void Eng_ResetIters() noexcept {
-loc_80047E90:
-    v1 = a0;
-    v0 = lw(v1 + 0x34);
-    a0 = lbu(v0 + 0x1);
-    v0 = 0xFF;                                          // Result = 000000FF
-    if (a0 != v0) goto loc_80047F54;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    v0 = lw(v0 + 0xC);
-    a0 = lbu(v0 + 0xE);
-    at = 0x80080000;                                    // Result = 80080000
-    sb(a0, at - 0xDB0);                                 // Store to: 8007F250
-    v1 = lbu(v1 + 0x2);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5ABC);                               // Load from: gWess_Eng_piter (80075ABC)
-    v0 <<= 3;
-    v0 += v1;
-    v1 = lw(v0 + 0x14);
-    v0 = a0 + 0xFF;
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xDB0);                                 // Store to: 8007F250
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xDAC);                                 // Store to: 8007F254
-    {
-        const bool bJump = (a0 == 0);
-        a0 = 0xFF;                                      // Result = 000000FF
-        if (bJump) goto loc_80047F8C;
+// TODO: what is this doing?
+void Eng_ResetIters(track_status& trackStat) noexcept {
+    master_status_structure& mstat = *gpWess_eng_mstat->get();
+    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
+
+    // Either reset all iters (iter index '0xFF') or reset a specific one
+    const uint8_t iterIdx = trackStat.ppos[1];
+
+    if (iterIdx == 0xff) {
+        const uint8_t itersPerSeq = mstat.pmod_info->mod_hdr.iters_per_seq;
+
+        for (uint8_t i = 0; i < itersPerSeq; ++i) {
+            seqStat.piters[i] = 0xFF;
+        }
+    } else {
+        seqStat.piters[iterIdx] = 0xFF;
     }
-loc_80047F10:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xDAC);                                // Load from: 8007F254
-    v0 = v1 + 1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xDAC);                                 // Store to: 8007F254
-    sb(a0, v1);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lbu(v1 - 0xDB0);                               // Load from: 8007F250
-    v0 = v1 + 0xFF;
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xDB0);                                 // Store to: 8007F250
-    if (v1 == 0) goto loc_80047F8C;
-    goto loc_80047F10;
-loc_80047F54:
-    v1 = lbu(v1 + 0x2);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5ABC);                               // Load from: gWess_Eng_piter (80075ABC)
-    v0 <<= 3;
-    v0 += v1;
-    v0 = lw(v0 + 0x14);
-    v1 = 0xFF;                                          // Result = 000000FF
-    v0 += a0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xDAC);                                 // Store to: 8007F254
-    sb(v1, v0);
-loc_80047F8C:
-    return;
 }
 
 // TODO: what is this doing?
