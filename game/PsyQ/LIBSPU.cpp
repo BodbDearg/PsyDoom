@@ -2,7 +2,6 @@
 // Module containing a partial reimplementation of the PSY-Q 'LIBSPU' library.
 // These functions are not neccesarily faithful to the original code, and are reworked to make the game run in it's new environment.
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 #include "LIBSPU.h"
 
 #include "LIBAPI.h"

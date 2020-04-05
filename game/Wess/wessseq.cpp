@@ -52,6 +52,48 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_NullEvent                   // 35
 };
 
+// The size in bytes of each sequencer command
+static constexpr uint8_t gWess_seq_CmdLength[36] = {
+    0,  // DriverInit       (This command should NEVER be in a sequence)
+    0,  // DriverExit       (This command should NEVER be in a sequence)
+    0,  // DriverEntry1     (This command should NEVER be in a sequence)
+    0,  // DriverEntry2     (This command should NEVER be in a sequence)
+    0,  // DriverEntry3     (This command should NEVER be in a sequence)
+    0,  // TrkOff           (This command should NEVER be in a sequence)
+    0,  // TrkMute          (This command should NEVER be in a sequence)
+    3,  // PatchChg
+    2,  // PatchMod
+    3,  // PitchMod
+    2,  // ZeroMod
+    2,  // ModuMod
+    2,  // VolumeMod
+    2,  // PanMod
+    2,  // PedalMod
+    2,  // ReverbMod
+    2,  // ChorusMod
+    3,  // NoteOn
+    2,  // NoteOff
+    4,  // StatusMark
+    5,  // GateJump
+    5,  // IterJump
+    2,  // ResetGates
+    2,  // ResetIters
+    3,  // WriteIterBox
+    3,  // SeqTempo
+    3,  // SeqGosub
+    3,  // SeqJump
+    1,  // SeqRet
+    1,  // SeqEnd
+    3,  // TrkTempo
+    3,  // TrkGosub
+    3,  // TrkJump
+    1,  // TrkRet
+    1,  // TrkEnd
+    1   // NullEvent
+};
+
+static_assert(C_ARRAY_SIZE(gWess_seq_CmdLength) == C_ARRAY_SIZE(gWess_DrvFunctions));
+
 const VmPtr<uint8_t>            gWess_master_sfx_volume(0x80075A04);    // TODO: COMMENT
 const VmPtr<uint8_t>            gWess_master_mus_volume(0x80075A05);    // TODO: COMMENT
 const VmPtr<PanMode>            gWess_pan_status(0x80075A06);           // Pan mode: '0' if disabled, '1' if enabled, '2' if enabled (reverse)
@@ -1403,204 +1445,96 @@ loc_80048B8C:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// The main sequencer tick/update update function which is called approximately 120 times a second.
+// This is what drives sequencer timing and executes sequencer commands.
+// Originally this was driven via interrupts coming from the PlayStation's hardware timers.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void SeqEngine() noexcept {
-loc_80048B94:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    sp -= 0x20;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v0 = lbu(v0 + 0x5);
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xD2C);                                 // Store to: gWess_SeqEngine_tmpNumTracks (8007F2D4)
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 - 0xD2C);                               // Load from: gWess_SeqEngine_tmpNumTracks (8007F2D4)
-    if (v0 == 0) goto loc_80048E8C;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lbu(v1 + 0x5AB4);                              // Load from: 80075AB4
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AB8);                               // Load from: 80075AB8
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD30);                                 // Store to: 8007F2D0
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD28);                                 // Store to: 8007F2D8
-    if (v1 == v0) goto loc_80048E8C;
-    s2 = 0x80070000;                                    // Result = 80070000
-    s2 += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x5B00;                                       // Result = gWess_CmdLength[0] (80075B00)
-loc_80048C14:
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0xD30);                                // Load from: 8007F2D0
-    v1 = lw(a2);
-    v0 = v1 & 1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 & 8;
-        if (bJump) goto loc_80048E58;
+    // Some helper variables for the loop
+    master_status_structure& mstat = *gpWess_eng_mstat->get();
+    track_status* const pTrackStats = gpWess_eng_trackStats->get();
+    const uint8_t maxTracks = *gWess_eng_maxTracks;
+
+    // Run through all of the active tracks and run sequencer commands for them
+    uint8_t numActiveTracksToVisit = mstat.trks_active;
+
+    if (numActiveTracksToVisit > 0) {
+        for (uint8_t trackIdx = 0; trackIdx < maxTracks; ++trackIdx) {
+            track_status& trackStat = pTrackStats[trackIdx];
+
+            // Skip past tracks that are not playing
+            if (!trackStat.active)
+                continue;
+
+            // Only run sequencer commands for the track if it isn't paused
+            if (!trackStat.stopped) {
+                // Advance the track's time markers
+                trackStat.starppi += trackStat.ppi;                 // Advance elapsed fractional quarter note 'parts' (16.16 fixed point format)
+                trackStat.totppi += trackStat.starppi >> 16;        // Advance track total time in whole quarter note parts
+                trackStat.accppi += trackStat.starppi >> 16;        // Advance track delta time till the next command in whole quarter note parts
+                trackStat.starppi &= 0xFFFF;                        // We've advanced time by the whole part of this number: discount that part
+
+                // Is it time to turn off a timed track?
+                if (trackStat.timed && (trackStat.totppi >= trackStat.endppi)) {
+                    // Turn off the timed track
+                    a0 = ptrToVmAddr(&trackStat);
+                    gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native call
+                }
+                else {
+                    // Not a timed track or not reached the end. Continue executing sequencer commands while the track's time marker is >=
+                    // to when the next command happens and while the track remains active and not stopped:
+                    while ((trackStat.accppi >= trackStat.deltatime) && trackStat.active && (!trackStat.stopped)) {                                                
+                        // Time to execute a new sequencer command: read that command firstly
+                        const uint8_t seqCmd = trackStat.ppos[0];
+
+                        // We have passed the required amount of delay/time until this sequencer command executes.
+                        // Do not count that elapsed amount towards the next command delay/delta-time:
+                        trackStat.accppi -= trackStat.deltatime;
+
+                        // Decide what executes this command, the sequencer engine or the hardware driver
+                        if ((seqCmd >= PatchChg) && (seqCmd <= NoteOff)) {
+                            // The hardware sound driver executes this command: do it!
+                            a0 = ptrToVmAddr(&trackStat);
+                            gWess_CmdFuncArr[trackStat.patchtype][seqCmd]();    // FIXME: convert to native call
+
+                            // Skip past the command bytes and read the delta time until the next command
+                            trackStat.ppos += gWess_seq_CmdLength[seqCmd];
+                            trackStat.ppos = Read_Vlq(trackStat.ppos.get(), trackStat.deltatime);
+                        } 
+                        else if ((seqCmd >= StatusMark) && (seqCmd <= NullEvent)) {
+                            // The sequencer executes this command: do it!
+                            a0 = ptrToVmAddr(&trackStat);
+                            gWess_DrvFunctions[seqCmd]();   // FIXME: convert to native call
+
+                            // Go onto the next command or maybe re-execute this command again in future if the 'skip' flag is set
+                            if (trackStat.active && (!trackStat.skip)) {
+                                // Skip past the command bytes and read the delta time until the next command
+                                trackStat.ppos += gWess_seq_CmdLength[seqCmd];
+                                trackStat.ppos = Read_Vlq(trackStat.ppos.get(), trackStat.deltatime);
+                            } else {
+                                // May try to execute this command once more again in the future: clear this flag until something requests a repeat again
+                                trackStat.skip = false;
+                            }
+                        } else {
+                            // This is an unknown command or a command that should NOT be in a sequence.
+                            // Since we don't know what to do, just stop the track.
+                            a0 = ptrToVmAddr(&trackStat);
+                            Eng_SeqEnd();   // FIXME: convert to native call
+                        }
+                    }
+                }
+            }
+
+            // If there are no more tracks to process then stop now
+            numActiveTracksToVisit--;
+
+            if (numActiveTracksToVisit == 0)
+                break;
+        }
     }
-    if (v0 != 0) goto loc_80048E34;
-    v0 = lw(a2 + 0x20);
-    v1 = lw(a2 + 0x1C);
-    a0 = lw(a2 + 0x24);
-    v0 += v1;
-    sw(v0, a2 + 0x20);
-    v0 >>= 16;
-    v1 = lw(a2 + 0x28);
-    a1 = lhu(a2 + 0x20);
-    v0 += v1;
-    sw(v0, a2 + 0x28);
-    v0 = lhu(a2 + 0x22);
-    v1 = lw(a2);
-    sw(a1, a2 + 0x20);
-    v0 += a0;
-    v1 &= 0x10;
-    sw(v0, a2 + 0x24);
-    if (v1 == 0) goto loc_80048E10;
-    v1 = lw(a2 + 0x2C);
-    v0 = lw(a2 + 0x28);
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_80048E10;
-    v0 = lbu(a2 + 0x3);
-    v0 <<= 2;
-    v0 += s2;
-    v0 = lw(v0);
-    v0 = lw(v0 + 0x14);
-    a0 = a2;
-    ptr_call(v0);
-    goto loc_80048E34;
-loc_80048CC8:
-    v0 = lw(a1);
-    s0 = v0 & 9;
-    v0 = 1;                                             // Result = 00000001
-    if (s0 != v0) goto loc_80048E34;
-    v0 = lw(a1 + 0x24);
-    v1 = lw(a1 + 0x4);
-    a0 = lw(a1 + 0x34);
-    v0 -= v1;
-    sw(v0, a1 + 0x24);
-    a0 = lbu(a0);
-    v0 = a0 - 7;
-    v0 = (v0 < 0xC);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xD24);                                 // Store to: 8007F2DC
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 - 0x13;
-        if (bJump) goto loc_80048D6C;
-    }
-    v0 = lbu(a1 + 0x3);
-    v0 <<= 2;
-    v0 += s2;
-    v1 = lw(v0);
-    v0 = a0 << 2;
-    v0 += v1;
-    v0 = lw(v0);
-    a0 = a1;
-    ptr_call(v0);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xD24);                                // Load from: 8007F2DC
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xD30);                                // Load from: 8007F2D0
-    v0 += s1;
-    a0 = lbu(v0);
-    v0 = lw(v1 + 0x34);
-    a1 = v1 + 4;
-    a0 += v0;
-    sw(a0, v1 + 0x34);
-    goto loc_80048DD8;
-loc_80048D6C:
-    v0 = (v0 < 0x11);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 << 2;
-        if (bJump) goto loc_80048DFC;
-    }
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5A20;                                       // Result = gWess_DrvFunctions[0] (80075A20)
-    at += v0;
-    v0 = lw(at);
-    a0 = a1;
-    ptr_call(v0);
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0xD30);                                // Load from: 8007F2D0
-    v1 = lw(a2);
-    v0 = v1 & 0x41;
-    {
-        const bool bJump = (v0 != s0);
-        v0 = -0x41;                                     // Result = FFFFFFBF
-        if (bJump) goto loc_80048DF0;
-    }
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xD24);                                // Load from: 8007F2DC
-    v0 += s1;
-    a0 = lbu(v0);
-    v0 = lw(a2 + 0x34);
-    a1 = a2 + 4;
-    a0 += v0;
-    sw(a0, a2 + 0x34);
-loc_80048DD8:
-    v0 = ptrToVmAddr(Read_Vlq(vmAddrToPtr<uint8_t>(a0), *vmAddrToPtr<uint32_t>(a1)));
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xD30);                                // Load from: 8007F2D0
-    sw(v0, v1 + 0x34);
-    goto loc_80048E10;
-loc_80048DF0:
-    v0 &= v1;
-    sw(v0, a2);
-    goto loc_80048E10;
-loc_80048DFC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5A94);                               // Load from: gWess_SeqFunctions[A] (80075A94)
-    a0 = a1;
-    ptr_call(v0);
-loc_80048E10:
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0xD30);                                // Load from: 8007F2D0
-    v1 = lw(a1 + 0x4);
-    v0 = lw(a1 + 0x24);
-    v0 = (v0 < v1);
-    if (v0 == 0) goto loc_80048CC8;
-loc_80048E34:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 - 0xD2C);                               // Load from: gWess_SeqEngine_tmpNumTracks (8007F2D4)
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xD2C);                                 // Store to: gWess_SeqEngine_tmpNumTracks (8007F2D4)
-    v0 &= 0xFF;
-    if (v0 == 0) goto loc_80048E8C;
-loc_80048E58:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xD30);                                // Load from: 8007F2D0
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xD28);                                // Load from: 8007F2D8
-    v0 += 0x50;
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD30);                                 // Store to: 8007F2D0
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD28);                                 // Store to: 8007F2D8
-    if (v1 != v0) goto loc_80048C14;
-loc_80048E8C:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5AB8);                               // Load from: 80075AB8
-    v0 = lbu(a0 + 0x3);
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-    at += v0;
-    v0 = lw(at);
-    v0 = lw(v0 + 0x8);
-    ptr_call(v0);
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Call the 'update' function for the sound driver: this does management, such as freeing up unused hardware voices
+    track_status& firstTrack = pTrackStats[0];
+    gWess_CmdFuncArr[firstTrack.patchtype][DriverEntry1]();
 }

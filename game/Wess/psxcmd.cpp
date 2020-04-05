@@ -14,9 +14,9 @@
 // TODO: REMOVE ALL OF THESE
 void _thunk_PSX_DriverInit() noexcept { PSX_DriverInit(*vmAddrToPtr<master_status_structure>(a0)); }
 void _thunk_PSX_DriverExit() noexcept { PSX_DriverExit(*vmAddrToPtr<master_status_structure>(a0)); }
-void _thunk_PSX_DriverEntry1() noexcept { PSX_DriverEntry1(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_DriverEntry2() noexcept { PSX_DriverEntry2(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_DriverEntry3() noexcept { PSX_DriverEntry3(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_PSX_DriverEntry1() noexcept { PSX_DriverEntry1(); }
+void _thunk_PSX_DriverEntry2() noexcept { PSX_DriverEntry2(); }
+void _thunk_PSX_DriverEntry3() noexcept { PSX_DriverEntry3(); }
 void _thunk_PSX_TrkOff() noexcept { PSX_TrkOff(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_TrkMute() noexcept { PSX_TrkMute(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_PatchChg() noexcept { PSX_PatchChg(*vmAddrToPtr<track_status>(a0)); }
@@ -340,7 +340,7 @@ void PSX_DriverExit([[maybe_unused]] master_status_structure& mstat) noexcept {
 // Update function for the PSX sound driver: invoked for each hardware timer interrupt updating the sequencer system.
 // Releases or mutes voices that were requested to be released/muted and frees up voices that are no longer in use by the SPU.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PSX_DriverEntry1([[maybe_unused]] track_status& trackStat) noexcept {
+void PSX_DriverEntry1() noexcept {
     // Grab the list of available hardware voice statuses and how many voices are available
     const uint32_t maxHwVoices = *gWess_drv_hwVoiceLimit;
     voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats->get();
@@ -421,13 +421,13 @@ void PSX_DriverEntry1([[maybe_unused]] track_status& trackStat) noexcept {
 // Unused/implemented driver update function.
 // Doesn't seem to be called for the PSX sound driver.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PSX_DriverEntry2([[maybe_unused]] track_status& trackStat) noexcept {}
+void PSX_DriverEntry2() noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Unused/implemented driver update function.
 // Doesn't seem to be called for the PSX sound driver.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PSX_DriverEntry3([[maybe_unused]] track_status& trackStat) noexcept {}
+void PSX_DriverEntry3() noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Stops the given track
