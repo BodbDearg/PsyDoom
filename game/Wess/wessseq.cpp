@@ -24,6 +24,7 @@ void _thunk_Eng_ReverbMod() noexcept { Eng_ReverbMod(*vmAddrToPtr<track_status>(
 void _thunk_Eng_ChorusMod() noexcept { Eng_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOn() noexcept { Eng_NoteOn(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOff() noexcept { Eng_NoteOff(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_TrkEnd() noexcept { Eng_TrkEnd(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NullEvent() noexcept { Eng_NullEvent(*vmAddrToPtr<track_status>(a0)); }
 
 void (* const gWess_DrvFunctions[36])() = {
@@ -64,7 +65,7 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_TrkGosub,                   // 31
     Eng_TrkJump,                    // 32
     Eng_TrkRet,                     // 33
-    Eng_TrkEnd,                     // 34
+    _thunk_Eng_TrkEnd,              // 34
     _thunk_Eng_NullEvent            // 35
 };
 
@@ -1386,67 +1387,27 @@ loc_80048A34:
     return;
 }
 
-void Eng_TrkEnd() noexcept {
-loc_80048A88:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v1 = lw(s0);
-    v0 = v1 & 4;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = v1 & 0x20;
-        if (bJump) goto loc_80048B00;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sequencer command for the end of a track: mute the track or repeat it (if looped)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_TrkEnd(track_status& trackStat) noexcept {
+    if (trackStat.looped && (trackStat.totppi >= 16)) {
+        // Repeat the track when looped (and if a small amount of time has elapsed) and go back to the start.
+        // Also set the 'skip' flag so the sequencer does not try to goto the next command automatically.
+        trackStat.skip = true;
+        trackStat.ppos = trackStat.pstart;
+        trackStat.ppos = Read_Vlq(trackStat.pstart.get(), trackStat.deltatime);
     }
-    if (v0 == 0) goto loc_80048AC8;
-    v0 = lw(s0 + 0x28);
-    v0 = (v0 < 0x10);
-    a1 = s0 + 4;
-    if (v0 == 0) goto loc_80048B1C;
-loc_80048AC8:
-    v0 = lbu(s0 + 0x3);
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-    at += v0;
-    v0 = lw(at);
-    v0 = lw(v0 + 0x14);
-    a0 = s0;
-    ptr_call(v0);
-    goto loc_80048B78;
-loc_80048B00:
-    if (v0 == 0) goto loc_80048B38;
-    v0 = lw(s0 + 0x28);
-    v0 = (v0 < 0x10);
-    a1 = s0 + 4;
-    if (v0 != 0) goto loc_80048B38;
-loc_80048B1C:
-    a0 = lw(s0 + 0x30);
-    v0 = v1 | 0x40;
-    sw(v0, s0);
-    sw(a0, s0 + 0x34);
-    v0 = ptrToVmAddr(Read_Vlq(vmAddrToPtr<uint8_t>(a0), *vmAddrToPtr<uint32_t>(a1)));
-    sw(v0, s0 + 0x34);
-    goto loc_80048B78;
-loc_80048B38:
-    v0 = lbu(s0 + 0x3);
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-    at += v0;
-    v0 = lw(at);
-    v0 = lw(v0 + 0x14);
-    a0 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    v0 |= 0x40;
-    sw(v0, s0);
-loc_80048B78:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    else {
+        // Not repeating: mute the track
+        a0 = ptrToVmAddr(&trackStat);
+        gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();
+
+        // TODO: what is this trying to do?
+        if (trackStat.handled) {
+            trackStat.skip = true;
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1518,13 +1479,14 @@ void SeqEngine() noexcept {
                             a0 = ptrToVmAddr(&trackStat);
                             gWess_DrvFunctions[seqCmd]();   // FIXME: convert to native call
 
-                            // Go onto the next command or maybe re-execute this command again in future if the 'skip' flag is set
+                            // Automatically go onto the next sequencer command unless we are instructed to skip doing that.
+                            // Some commands which change the control flow will set the 'skip' flag so that they may set where to go to next.
                             if (trackStat.active && (!trackStat.skip)) {
                                 // Skip past the command bytes and read the delta time until the next command
                                 trackStat.ppos += gWess_seq_CmdLength[seqCmd];
                                 trackStat.ppos = Read_Vlq(trackStat.ppos.get(), trackStat.deltatime);
                             } else {
-                                // May try to execute this command once more again in the future: clear this flag until something requests a repeat again
+                                // Clear this instruction: 'skip' is just done once when requested
                                 trackStat.skip = false;
                             }
                         } else {
