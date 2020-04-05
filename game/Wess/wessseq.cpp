@@ -24,6 +24,7 @@ void _thunk_Eng_ReverbMod() noexcept { Eng_ReverbMod(*vmAddrToPtr<track_status>(
 void _thunk_Eng_ChorusMod() noexcept { Eng_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOn() noexcept { Eng_NoteOn(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOff() noexcept { Eng_NoteOff(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_WriteIterBox() noexcept { Eng_WriteIterBox(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkJump() noexcept { Eng_TrkJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkEnd() noexcept { Eng_TrkEnd(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NullEvent() noexcept { Eng_NullEvent(*vmAddrToPtr<track_status>(a0)); }
@@ -56,7 +57,7 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_IterJump,                   // 21
     Eng_ResetGates,                 // 22
     Eng_ResetIters,                 // 23
-    Eng_WriteIterBox,               // 24
+    _thunk_Eng_WriteIterBox,        // 24
     Eng_SeqTempo,                   // 25
     Eng_SeqGosub,                   // 26
     Eng_SeqJump,                    // 27
@@ -683,25 +684,11 @@ loc_80047F8C:
     return;
 }
 
-void Eng_WriteIterBox() noexcept {
-loc_80047F94:
-    v1 = lbu(a0 + 0x2);
-    a1 = lw(a0 + 0x34);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5ABC);                               // Load from: gWess_Eng_piter (80075ABC)
-    v0 <<= 3;
-    v0 += v1;
-    v1 = lbu(a1 + 0x1);
-    v0 = lw(v0 + 0x14);
-    a0 = lw(a0 + 0x34);
-    v1 += v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xDA8);                                 // Store to: 8007F258
-    v0 = lbu(a0 + 0x2);
-    sb(v0, v1);
-    return;
+// TODO: what is this doing?
+void Eng_WriteIterBox(track_status& trackStat) noexcept {
+    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
+    const uint8_t iterIdx = trackStat.ppos[1];
+    seqStat.piters[iterIdx] = trackStat.ppos[2];
 }
 
 void Eng_SeqTempo() noexcept {

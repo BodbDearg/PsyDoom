@@ -340,7 +340,7 @@ extern void Eng_GateJump() noexcept;
 extern void Eng_IterJump() noexcept;
 extern void Eng_ResetGates() noexcept;
 extern void Eng_ResetIters() noexcept;
-extern void Eng_WriteIterBox() noexcept;
+extern void _thunk_Eng_WriteIterBox() noexcept;
 extern void Eng_SeqTempo() noexcept;
 extern void Eng_SeqGosub() noexcept;
 extern void Eng_SeqJump() noexcept;
@@ -725,7 +725,7 @@ namespace PsxVm {
         { 0x80047C90, &Eng_IterJump },
         { 0x80047D8C, &Eng_ResetGates },
         { 0x80047E90, &Eng_ResetIters },
-        { 0x80047F94, &Eng_WriteIterBox },
+        { 0x80047F94, &_thunk_Eng_WriteIterBox },
         { 0x80047FD8, &Eng_SeqTempo },
         { 0x80048158, &Eng_SeqGosub },
         { 0x80048334, &Eng_SeqJump },
