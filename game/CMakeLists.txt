@@ -172,8 +172,6 @@ set(SOURCE_FILES
     "Wess/psxcd.h"
     "Wess/psxcmd.cpp"
     "Wess/psxcmd.h"
-    "Wess/psxsnd.cpp"
-    "Wess/psxsnd.h"
     "Wess/psxspu.cpp"
     "Wess/psxspu.h"
     "Wess/seqload.cpp"

@@ -38,3 +38,5 @@ void S_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept;
 void _thunk_S_StartSound() noexcept;
 
 void S_UpdateSounds() noexcept;
+void PsxSoundInit() noexcept;
+void PsxSoundExit() noexcept;
