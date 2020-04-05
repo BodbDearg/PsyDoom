@@ -9,30 +9,46 @@
 
 // TODO: REMOVE ALL OF THESE
 void _thunk_Eng_DriverInit() noexcept { Eng_DriverInit(*vmAddrToPtr<master_status_structure>(a0)); }
+void _thunk_Eng_DriverExit() noexcept { Eng_DriverExit(*vmAddrToPtr<master_status_structure>(a0)); }
 void _thunk_Eng_TrkOff() noexcept { Eng_TrkOff(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_TrkMute() noexcept { Eng_TrkMute(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_PatchChg() noexcept { Eng_PatchChg(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_PatchMod() noexcept { Eng_PatchMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_PitchMod() noexcept { Eng_PitchMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_ZeroMod() noexcept { Eng_ZeroMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_ModuMod() noexcept { Eng_ModuMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_VolumeMod() noexcept { Eng_VolumeMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_PanMod() noexcept { Eng_PanMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_PedalMod() noexcept { Eng_PedalMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_ReverbMod() noexcept { Eng_ReverbMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_ChorusMod() noexcept { Eng_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_NoteOn() noexcept { Eng_NoteOn(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_NoteOff() noexcept { Eng_NoteOff(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_NullEvent() noexcept { Eng_NullEvent(*vmAddrToPtr<track_status>(a0)); }
 
 void (* const gWess_DrvFunctions[36])() = {
-    // Driver cmds
+    // Manually called commands
     _thunk_Eng_DriverInit,          // 00
-    Eng_DriverExit,                 // 01
+    _thunk_Eng_DriverExit,          // 01
     Eng_DriverEntry1,               // 02
     Eng_DriverEntry2,               // 03
     Eng_DriverEntry3,               // 04
     _thunk_Eng_TrkOff,              // 05
-    Eng_TrkMute,                    // 06
-    Eng_PatchChg,                   // 07
-    Eng_PatchMod,                   // 08
-    Eng_PitchMod,                   // 09
-    Eng_ZeroMod,                    // 10
-    Eng_ModuMod,                    // 11
-    Eng_VolumeMod,                  // 12
-    Eng_PanMod,                     // 13
-    Eng_PedalMod,                   // 14
-    Eng_ReverbMod,                  // 15
-    Eng_ChorusMod,                  // 16
-    Eng_NoteOn,                     // 17
-    Eng_NoteOff,                    // 18
-    // Sequencer cmds               
+    _thunk_Eng_TrkMute,             // 06
+    // Hardware driver commands
+    _thunk_Eng_PatchChg,            // 07
+    _thunk_Eng_PatchMod,            // 08
+    _thunk_Eng_PitchMod,            // 09
+    _thunk_Eng_ZeroMod,             // 10
+    _thunk_Eng_ModuMod,             // 11
+    _thunk_Eng_VolumeMod,           // 12
+    _thunk_Eng_PanMod,              // 13
+    _thunk_Eng_PedalMod,            // 14
+    _thunk_Eng_ReverbMod,           // 15
+    _thunk_Eng_ChorusMod,           // 16
+    _thunk_Eng_NoteOn,              // 17
+    _thunk_Eng_NoteOff,             // 18
+    // Sequencer commands
     Eng_StatusMark,                 // 19
     Eng_GateJump,                   // 20
     Eng_IterJump,                   // 21
@@ -49,7 +65,7 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_TrkJump,                    // 32
     Eng_TrkRet,                     // 33
     Eng_TrkEnd,                     // 34
-    Eng_NullEvent                   // 35
+    _thunk_Eng_NullEvent            // 35
 };
 
 // The size in bytes of each sequencer command
@@ -198,25 +214,26 @@ void Eng_DriverInit(master_status_structure& mstat) noexcept {
     *gWess_eng_maxTracks = mstat.pmod_info->mod_hdr.trk_work_areas;
 }
 
-void Eng_DriverExit() noexcept {
-loc_800477E4:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sequencer shutdown: does nothing
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_DriverExit([[maybe_unused]] master_status_structure& mstat) noexcept {}
 
-void Eng_DriverEntry1() noexcept {
-loc_800477EC:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sequencer tick/update function: does nothing.
+// Sometimes called when there is nothing else playing.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_DriverEntry1() noexcept {}
 
-void Eng_DriverEntry2() noexcept {
-loc_800477F4:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sequencer tick/update function: never called
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_DriverEntry2() noexcept {}
 
-void Eng_DriverEntry3() noexcept {
-loc_800477FC:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sequencer tick/update function: never called
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_DriverEntry3() noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Mark the given track as not playing and update the track and parent sequence accordingly
@@ -269,95 +286,87 @@ void Eng_TrkOff(track_status& trackStat) noexcept {
     trackStat.timed = false;
 }
 
-void Eng_TrkMute() noexcept {
-loc_800479B0:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_TrkMute([[maybe_unused]] track_status& trackStat) noexcept {}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_PatchChg([[maybe_unused]] track_status& trackStat) noexcept {
+    // Note: this code originally updated an unreferenced/unused global with the new patch/sound number.
+    // I've omitted that here (since it's not needed) to reduce the number of globals.
+    trackStat.patchnum = trackStat.ppos[1];
 }
 
-void Eng_PatchChg() noexcept {
-loc_800479B8:
-    v0 = lw(a0 + 0x34);
-    v0 = lbu(v0 + 0x1);
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xDEC);                                 // Store to: gWess_Eng_thepatch (8007F214)
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 - 0xDEC);                               // Load from: gWess_Eng_thepatch (8007F214)
-    sh(v0, a0 + 0xA);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_PatchMod([[maybe_unused]] track_status& trackStat) noexcept {}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_PitchMod([[maybe_unused]] track_status& trackStat) noexcept {
+    // Note: this code originally updated an unreferenced/unused global with the new pitch modifier.
+    // I've omitted that here (since it's not needed) to reduce the number of globals.
+    const int16_t pitchMod = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
+    trackStat.pitch_cntrl = pitchMod;
 }
 
-void Eng_PatchMod() noexcept {
-loc_800479E0:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_ZeroMod([[maybe_unused]] track_status& trackStat) noexcept {}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_ModuMod([[maybe_unused]] track_status& trackStat) noexcept {}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_VolumeMod([[maybe_unused]] track_status& trackStat) noexcept {
+    // Note: this code originally updated an unreferenced/unused global with the new volume amount.
+    // I've omitted that here (since it's not needed) to reduce the number of globals.
+    trackStat.volume_cntrl = trackStat.ppos[1];
 }
 
-void Eng_PitchMod() noexcept {
-loc_800479E8:
-    v1 = lw(a0 + 0x34);
-    v0 = lbu(v1 + 0x2);
-    v1 = lbu(v1 + 0x1);
-    v0 <<= 8;
-    v1 |= v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v1, at - 0xDE8);                                 // Store to: gWess_Eng_thepitchmod (8007F218)
-    sh(v1, a0 + 0xE);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_PanMod([[maybe_unused]] track_status& trackStat) noexcept {
+    // Note: this code originally updated an unreferenced/unused global with the new pan amount.
+    // I've omitted that here (since it's not needed) to reduce the number of globals.
+    trackStat.pan_cntrl = trackStat.ppos[1];
 }
 
-void Eng_ZeroMod() noexcept {
-loc_80047A10:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_PedalMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
-void Eng_ModuMod() noexcept {
-loc_80047A18:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_ReverbMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
-void Eng_VolumeMod() noexcept {
-loc_80047A20:
-    v0 = lw(a0 + 0x34);
-    v0 = lbu(v0 + 0x1);
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xDE4);                                 // Store to: gWess_Eng_thevolume (8007F21C)
-    sb(v0, a0 + 0xC);
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_ChorusMod([[maybe_unused]] track_status& trackStat) noexcept {}
 
-void Eng_PanMod() noexcept {
-loc_80047A40:
-    v0 = lw(a0 + 0x34);
-    v0 = lbu(v0 + 0x1);
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xDE0);                                 // Store to: gWess_Eng_thepan (8007F220)
-    sb(v0, a0 + 0xD);
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_NoteOn([[maybe_unused]] track_status& trackStat) noexcept {}
 
-void Eng_PedalMod() noexcept {
-loc_80047A60:
-    return;
-}
-
-void Eng_ReverbMod() noexcept {
-loc_80047A68:
-    return;
-}
-
-void Eng_ChorusMod() noexcept {
-loc_80047A70:
-    return;
-}
-
-void Eng_NoteOn() noexcept {
-loc_80047A78:
-    return;
-}
-
-void Eng_NoteOff() noexcept {
-loc_80047A80:
-    return;
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Should never be called - implemented by the hardware sound driver instead. See the equivalent function in 'psxcmd.cpp' for more details.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_NoteOff([[maybe_unused]] track_status& trackStat) noexcept {}
 
 void Eng_StatusMark() noexcept {
 loc_80047A88:
@@ -1440,9 +1449,11 @@ loc_80048B78:
     return;
 }
 
-void Eng_NullEvent() noexcept {
-loc_80048B8C:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sequencer command that does nothing
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_NullEvent([[maybe_unused]] track_status& trackStat) noexcept {
+    // This command does nothing...
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

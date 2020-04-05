@@ -297,9 +297,9 @@ extern void PsxSoundInit() noexcept;
 extern void PsxSoundExit() noexcept;
 extern void _thunk_PSX_DriverInit() noexcept;
 extern void _thunk_PSX_DriverExit() noexcept;
-extern void _thunk_PSX_DriverEntry1() noexcept;
-extern void _thunk_PSX_DriverEntry2() noexcept;
-extern void _thunk_PSX_DriverEntry3() noexcept;
+extern void PSX_DriverEntry1() noexcept;
+extern void PSX_DriverEntry2() noexcept;
+extern void PSX_DriverEntry3() noexcept;
 extern void _thunk_PSX_TrkOff() noexcept;
 extern void _thunk_PSX_TrkMute() noexcept;
 extern void _thunk_PSX_PatchChg() noexcept;
@@ -317,24 +317,24 @@ extern void _thunk_PSX_NoteOff() noexcept;
 extern void Write_Vlq() noexcept;
 extern void Len_Vlq() noexcept;
 extern void _thunk_Eng_DriverInit() noexcept;
-extern void Eng_DriverExit() noexcept;
+extern void _thunk_Eng_DriverExit() noexcept;
 extern void Eng_DriverEntry1() noexcept;
 extern void Eng_DriverEntry2() noexcept;
 extern void Eng_DriverEntry3() noexcept;
 extern void _thunk_Eng_TrkOff() noexcept;
-extern void Eng_TrkMute() noexcept;
-extern void Eng_PatchChg() noexcept;
-extern void Eng_PatchMod() noexcept;
-extern void Eng_PitchMod() noexcept;
-extern void Eng_ZeroMod() noexcept;
-extern void Eng_ModuMod() noexcept;
-extern void Eng_VolumeMod() noexcept;
-extern void Eng_PanMod() noexcept;
-extern void Eng_PedalMod() noexcept;
-extern void Eng_ReverbMod() noexcept;
-extern void Eng_ChorusMod() noexcept;
-extern void Eng_NoteOn() noexcept;
-extern void Eng_NoteOff() noexcept;
+extern void _thunk_Eng_TrkMute() noexcept;
+extern void _thunk_Eng_PatchChg() noexcept;
+extern void _thunk_Eng_PatchMod() noexcept;
+extern void _thunk_Eng_PitchMod() noexcept;
+extern void _thunk_Eng_ZeroMod() noexcept;
+extern void _thunk_Eng_ModuMod() noexcept;
+extern void _thunk_Eng_VolumeMod() noexcept;
+extern void _thunk_Eng_PanMod() noexcept;
+extern void _thunk_Eng_PedalMod() noexcept;
+extern void _thunk_Eng_ReverbMod() noexcept;
+extern void _thunk_Eng_ChorusMod() noexcept;
+extern void _thunk_Eng_NoteOn() noexcept;
+extern void _thunk_Eng_NoteOff() noexcept;
 extern void Eng_StatusMark() noexcept;
 extern void Eng_GateJump() noexcept;
 extern void Eng_IterJump() noexcept;
@@ -351,7 +351,7 @@ extern void Eng_TrkGosub() noexcept;
 extern void Eng_TrkJump() noexcept;
 extern void Eng_TrkRet() noexcept;
 extern void Eng_TrkEnd() noexcept;
-extern void Eng_NullEvent() noexcept;
+extern void _thunk_Eng_NullEvent() noexcept;
 extern void SeqEngine() noexcept;
 
 extern void LIBAPI_write() noexcept;
@@ -682,9 +682,9 @@ namespace PsxVm {
         { 0x8004172C, &PsxSoundExit },
         { 0x80045F8C, &_thunk_PSX_DriverInit },
         { 0x800461B4, &_thunk_PSX_DriverExit },
-        { 0x800461D4, &_thunk_PSX_DriverEntry1 },
-        { 0x80046484, &_thunk_PSX_DriverEntry2 },
-        { 0x8004648C, &_thunk_PSX_DriverEntry3 },
+        { 0x800461D4, &PSX_DriverEntry1 },
+        { 0x80046484, &PSX_DriverEntry2 },
+        { 0x8004648C, &PSX_DriverEntry3 },
         { 0x80046494, &_thunk_PSX_TrkOff },
         { 0x80046540, &_thunk_PSX_TrkMute },
         { 0x800466FC, &_thunk_PSX_PatchChg },
@@ -702,24 +702,24 @@ namespace PsxVm {
         { 0x800476DC, &Write_Vlq },
         { 0x8004773C, &Len_Vlq },
         { 0x800477A8, &_thunk_Eng_DriverInit },
-        { 0x800477E4, &Eng_DriverExit },
+        { 0x800477E4, &_thunk_Eng_DriverExit },
         { 0x800477EC, &Eng_DriverEntry1 },
         { 0x800477F4, &Eng_DriverEntry2 },
         { 0x800477FC, &Eng_DriverEntry3 },
         { 0x80047804, &_thunk_Eng_TrkOff },
-        { 0x800479B0, &Eng_TrkMute },
-        { 0x800479B8, &Eng_PatchChg },
-        { 0x800479E0, &Eng_PatchMod },
-        { 0x800479E8, &Eng_PitchMod },
-        { 0x80047A10, &Eng_ZeroMod },
-        { 0x80047A18, &Eng_ModuMod },
-        { 0x80047A20, &Eng_VolumeMod },
-        { 0x80047A40, &Eng_PanMod },
-        { 0x80047A60, &Eng_PedalMod },
-        { 0x80047A68, &Eng_ReverbMod },
-        { 0x80047A70, &Eng_ChorusMod },
-        { 0x80047A78, &Eng_NoteOn },
-        { 0x80047A80, &Eng_NoteOff },
+        { 0x800479B0, &_thunk_Eng_TrkMute },
+        { 0x800479B8, &_thunk_Eng_PatchChg },
+        { 0x800479E0, &_thunk_Eng_PatchMod },
+        { 0x800479E8, &_thunk_Eng_PitchMod },
+        { 0x80047A10, &_thunk_Eng_ZeroMod },
+        { 0x80047A18, &_thunk_Eng_ModuMod },
+        { 0x80047A20, &_thunk_Eng_VolumeMod },
+        { 0x80047A40, &_thunk_Eng_PanMod },
+        { 0x80047A60, &_thunk_Eng_PedalMod },
+        { 0x80047A68, &_thunk_Eng_ReverbMod },
+        { 0x80047A70, &_thunk_Eng_ChorusMod },
+        { 0x80047A78, &_thunk_Eng_NoteOn },
+        { 0x80047A80, &_thunk_Eng_NoteOff },
         { 0x80047A88, &Eng_StatusMark },
         { 0x80047BA4, &Eng_GateJump },
         { 0x80047C90, &Eng_IterJump },
@@ -736,7 +736,7 @@ namespace PsxVm {
         { 0x800489C4, &Eng_TrkJump },
         { 0x80048A34, &Eng_TrkRet },
         { 0x80048A88, &Eng_TrkEnd },
-        { 0x80048B8C, &Eng_NullEvent },
+        { 0x80048B8C, &_thunk_Eng_NullEvent },
         { 0x80048B94, &SeqEngine },
 
         { 0x80049C3C, &LIBAPI_write },

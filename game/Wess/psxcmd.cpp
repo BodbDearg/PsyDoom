@@ -14,9 +14,6 @@
 // TODO: REMOVE ALL OF THESE
 void _thunk_PSX_DriverInit() noexcept { PSX_DriverInit(*vmAddrToPtr<master_status_structure>(a0)); }
 void _thunk_PSX_DriverExit() noexcept { PSX_DriverExit(*vmAddrToPtr<master_status_structure>(a0)); }
-void _thunk_PSX_DriverEntry1() noexcept { PSX_DriverEntry1(); }
-void _thunk_PSX_DriverEntry2() noexcept { PSX_DriverEntry2(); }
-void _thunk_PSX_DriverEntry3() noexcept { PSX_DriverEntry3(); }
 void _thunk_PSX_TrkOff() noexcept { PSX_TrkOff(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_TrkMute() noexcept { PSX_TrkMute(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_PSX_PatchChg() noexcept { PSX_PatchChg(*vmAddrToPtr<track_status>(a0)); }
@@ -35,9 +32,9 @@ void _thunk_PSX_NoteOff() noexcept { PSX_NoteOff(*vmAddrToPtr<track_status>(a0))
 void (* const gWess_drv_cmds[19])() = {
     _thunk_PSX_DriverInit,      // 00
     _thunk_PSX_DriverExit,      // 01
-    _thunk_PSX_DriverEntry1,    // 02
-    _thunk_PSX_DriverEntry2,    // 03
-    _thunk_PSX_DriverEntry3,    // 04
+    PSX_DriverEntry1,           // 02
+    PSX_DriverEntry2,           // 03
+    PSX_DriverEntry3,           // 04
     _thunk_PSX_TrkOff,          // 05
     _thunk_PSX_TrkMute,         // 06
     _thunk_PSX_PatchChg,        // 07
