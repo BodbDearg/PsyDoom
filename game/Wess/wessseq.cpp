@@ -24,6 +24,7 @@ void _thunk_Eng_ReverbMod() noexcept { Eng_ReverbMod(*vmAddrToPtr<track_status>(
 void _thunk_Eng_ChorusMod() noexcept { Eng_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOn() noexcept { Eng_NoteOn(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOff() noexcept { Eng_NoteOff(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_TrkJump() noexcept { Eng_TrkJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkEnd() noexcept { Eng_TrkEnd(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NullEvent() noexcept { Eng_NullEvent(*vmAddrToPtr<track_status>(a0)); }
 
@@ -63,7 +64,7 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_SeqEnd,                     // 29
     Eng_TrkTempo,                   // 30
     Eng_TrkGosub,                   // 31
-    Eng_TrkJump,                    // 32
+    _thunk_Eng_TrkJump,             // 32
     Eng_TrkRet,                     // 33
     _thunk_Eng_TrkEnd,              // 34
     _thunk_Eng_NullEvent            // 35
@@ -1332,36 +1333,21 @@ loc_800489BC:
     return;
 }
 
-void Eng_TrkJump() noexcept {
-loc_800489C4:
-    a1 = a0;
-    v0 = lw(a1 + 0x34);
-    v1 = lbu(v0 + 0x2);
-    v0 = lbu(v0 + 0x1);
-    v1 <<= 8;
-    v0 |= v1;
-    v0 <<= 16;
-    a0 = u32(i32(v0) >> 16);
-    if (i32(a0) < 0) goto loc_80048A2C;
-    v0 = lh(a1 + 0x18);
-    v0 = (i32(a0) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 << 2;
-        if (bJump) goto loc_80048A2C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sequencer command that jumps to a specified label
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_TrkJump(track_status& trackStat) noexcept {
+    const int32_t labelIdx = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
+
+    // Ignore the command if the label is invalid
+    if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.labellist_count)) {
+        const uint32_t targetOffset = trackStat.plabellist[labelIdx];
+
+        // Goto the destination offset and set the 'skip' flag so the sequencer doesn't try to load the next command automatically
+        trackStat.ppos = trackStat.pstart.get() + targetOffset;
+        trackStat.deltatime = 0;
+        trackStat.skip = true;
     }
-    v1 = lw(a1 + 0x38);
-    a0 = lw(a1 + 0x30);
-    v0 += v1;
-    v1 = lw(v0);
-    v0 = lw(a1);
-    sw(0, a1 + 0x4);
-    v0 |= 0x40;
-    v1 += a0;
-    sw(v0, a1);
-    sw(v1, a1 + 0x34);
-loc_80048A2C:
-    return;
 }
 
 void Eng_TrkRet() noexcept {

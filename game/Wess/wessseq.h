@@ -60,7 +60,7 @@ void Eng_SeqRet() noexcept;
 void Eng_SeqEnd() noexcept;
 void Eng_TrkTempo() noexcept;
 void Eng_TrkGosub() noexcept;
-void Eng_TrkJump() noexcept;
+void Eng_TrkJump(track_status& trackStat) noexcept;
 void Eng_TrkRet() noexcept;
 void Eng_TrkEnd(track_status& trackStat) noexcept;
 void Eng_NullEvent(track_status& trackStat) noexcept;
