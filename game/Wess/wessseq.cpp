@@ -25,6 +25,7 @@ void _thunk_Eng_ChorusMod() noexcept { Eng_ChorusMod(*vmAddrToPtr<track_status>(
 void _thunk_Eng_NoteOn() noexcept { Eng_NoteOn(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOff() noexcept { Eng_NoteOff(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_IterJump() noexcept { Eng_IterJump(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_ResetGates() noexcept { Eng_ResetGates(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_ResetIters() noexcept { Eng_ResetIters(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_WriteIterBox() noexcept { Eng_WriteIterBox(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkJump() noexcept { Eng_TrkJump(*vmAddrToPtr<track_status>(a0)); }
@@ -57,7 +58,7 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_StatusMark,                 // 19
     Eng_GateJump,                   // 20
     _thunk_Eng_IterJump,            // 21
-    Eng_ResetGates,                 // 22
+    _thunk_Eng_ResetGates,          // 22
     _thunk_Eng_ResetIters,          // 23
     _thunk_Eng_WriteIterBox,        // 24
     Eng_SeqTempo,                   // 25
@@ -498,7 +499,8 @@ loc_80047C7C:
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Jump while the specicied iteration count (iter) is > 0, up to a maximum number of times
+// Jump to a label while the specicied iteration count (iter) is > 0, up to a maximum number of times.
+// The number of items is initialized on the first jump to the specified amount if the iteration count was previously reset (0xFF).
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_IterJump(track_status& trackStat) noexcept {
     sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
@@ -529,67 +531,23 @@ void Eng_IterJump(track_status& trackStat) noexcept {
     trackStat.skip = true;  // Tell the sequencer to not automatically determine the next command
 }
 
-void Eng_ResetGates() noexcept {
-loc_80047D8C:
-    v1 = a0;
-    v0 = lw(v1 + 0x34);
-    a0 = lbu(v0 + 0x1);
-    v0 = 0xFF;                                          // Result = 000000FF
-    if (a0 != v0) goto loc_80047E50;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    v0 = lw(v0 + 0xC);
-    a0 = lbu(v0 + 0xD);
-    at = 0x80080000;                                    // Result = 80080000
-    sb(a0, at - 0xDB8);                                 // Store to: 8007F248
-    v1 = lbu(v1 + 0x2);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5ABC);                               // Load from: gWess_Eng_piter (80075ABC)
-    v0 <<= 3;
-    v0 += v1;
-    v1 = lw(v0 + 0x10);
-    v0 = a0 + 0xFF;
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xDB8);                                 // Store to: 8007F248
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xDB4);                                 // Store to: 8007F24C
-    {
-        const bool bJump = (a0 == 0);
-        a0 = 0xFF;                                      // Result = 000000FF
-        if (bJump) goto loc_80047E88;
+// TODO: what is this doing?
+void Eng_ResetGates(track_status& trackStat) noexcept {
+    master_status_structure& mstat = *gpWess_eng_mstat->get();
+    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
+
+    // Either reset all gates (gate index '0xFF') or reset a specific one
+    const uint8_t gateIdx = trackStat.ppos[1];
+
+    if (gateIdx == 0xFF) {
+        const uint8_t gatesPerSeq = mstat.pmod_info->mod_hdr.gates_per_seq;
+
+        for (uint8_t i = 0; i < gatesPerSeq; ++i) {
+            seqStat.pgates[i] = 0xFF;
+        }
+    } else {
+        seqStat.pgates[gateIdx] = 0xFF;
     }
-loc_80047E0C:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xDB4);                                // Load from: 8007F24C
-    v0 = v1 + 1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xDB4);                                 // Store to: 8007F24C
-    sb(a0, v1);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lbu(v1 - 0xDB8);                               // Load from: 8007F248
-    v0 = v1 + 0xFF;
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xDB8);                                 // Store to: 8007F248
-    if (v1 == 0) goto loc_80047E88;
-    goto loc_80047E0C;
-loc_80047E50:
-    v1 = lbu(v1 + 0x2);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5ABC);                               // Load from: gWess_Eng_piter (80075ABC)
-    v0 <<= 3;
-    v0 += v1;
-    v0 = lw(v0 + 0x10);
-    v1 = 0xFF;                                          // Result = 000000FF
-    v0 += a0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xDB4);                                 // Store to: 8007F24C
-    sb(v1, v0);
-loc_80047E88:
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
