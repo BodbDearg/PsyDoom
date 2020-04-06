@@ -32,6 +32,7 @@ void _thunk_Eng_ResetIters() noexcept { Eng_ResetIters(*vmAddrToPtr<track_status
 void _thunk_Eng_WriteIterBox() noexcept { Eng_WriteIterBox(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_SeqTempo() noexcept { Eng_SeqTempo(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_SeqJump() noexcept { Eng_SeqJump(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_SeqEnd() noexcept { Eng_SeqEnd(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkTempo() noexcept { Eng_TrkTempo(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkJump() noexcept { Eng_TrkJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkEnd() noexcept { Eng_TrkEnd(*vmAddrToPtr<track_status>(a0)); }
@@ -70,7 +71,7 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_SeqGosub,                   // 26
     _thunk_Eng_SeqJump,             // 27
     Eng_SeqRet,                     // 28
-    Eng_SeqEnd,                     // 29
+    _thunk_Eng_SeqEnd,              // 29
     _thunk_Eng_TrkTempo,            // 30
     Eng_TrkGosub,                   // 31
     _thunk_Eng_TrkJump,             // 32
@@ -823,158 +824,40 @@ loc_80048618:
     return;
 }
 
-void Eng_SeqEnd() noexcept {
-loc_8004862C:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = lw(s0);
-    v0 &= 4;
-    if (v0 != 0) goto loc_80048784;
-    v1 = lbu(s0 + 0x2);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = lw(a0 + 0x20);
-    v0 <<= 3;
-    v0 += v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD44);                                 // Store to: 8007F2BC
-    v1 = lbu(v0 + 0x4);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD38);                                 // Store to: 8007F2C8
-    v1 = lw(v0 + 0xC);
-    v0 = lbu(a0 + 0x1C);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD34);                                 // Store to: 8007F2CC
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD3C);                                 // Store to: 8007F2C4
-    v1 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD34);                                 // Store to: 8007F2CC
-    if (v0 == v1) goto loc_800488BC;
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-loc_800486C8:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xD3C);                                // Load from: 8007F2C4
-    v1 = lbu(v0);
-    v0 = 0xFF;                                          // Result = 000000FF
-    a0 = v1 << 2;
-    if (v1 == v0) goto loc_80048748;
-    a0 += v1;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AB8);                               // Load from: 80075AB8
-    a0 <<= 4;
-    a0 += v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xD40);                                 // Store to: 8007F2C0
-    v0 = lbu(a0 + 0x3);
-    v0 <<= 2;
-    v0 += s0;
-    v0 = lw(v0);
-    v0 = lw(v0 + 0x14);
-    ptr_call(v0);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xD38);                                // Load from: 8007F2C8
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD38);                                 // Store to: 8007F2C8
-    if (v0 == 0) goto loc_800488BC;
-loc_80048748:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xD3C);                                // Load from: 8007F2C4
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xD34);                                // Load from: 8007F2CC
-    v0++;
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD3C);                                 // Store to: 8007F2C4
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD34);                                 // Store to: 8007F2CC
-    if (v1 == v0) goto loc_800488BC;
-    goto loc_800486C8;
-loc_80048784:
-    v1 = lbu(s0 + 0x2);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = lw(a0 + 0x20);
-    v0 <<= 3;
-    v0 += v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD44);                                 // Store to: 8007F2BC
-    v1 = lbu(v0 + 0x4);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD38);                                 // Store to: 8007F2C8
-    v1 = lw(v0 + 0xC);
-    v0 = lbu(a0 + 0x1C);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD34);                                 // Store to: 8007F2CC
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD3C);                                 // Store to: 8007F2C4
-    v1 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD34);                                 // Store to: 8007F2CC
-    if (v0 == v1) goto loc_800488AC;
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x5920;                                       // Result = gWess_CmdFuncArr[0] (80075920)
-loc_800487F8:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xD3C);                                // Load from: 8007F2C4
-    v1 = lbu(v0);
-    v0 = 0xFF;                                          // Result = 000000FF
-    a0 = v1 << 2;
-    if (v1 == v0) goto loc_80048878;
-    a0 += v1;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AB8);                               // Load from: 80075AB8
-    a0 <<= 4;
-    a0 += v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xD40);                                 // Store to: 8007F2C0
-    v0 = lbu(a0 + 0x3);
-    v0 <<= 2;
-    v0 += s1;
-    v0 = lw(v0);
-    v0 = lw(v0 + 0x14);
-    ptr_call(v0);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xD38);                                // Load from: 8007F2C8
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD38);                                 // Store to: 8007F2C8
-    if (v0 == 0) goto loc_800488AC;
-loc_80048878:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xD3C);                                // Load from: 8007F2C4
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xD34);                                // Load from: 8007F2CC
-    v0++;
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD3C);                                 // Store to: 8007F2C4
-    v0 = -1;                                            // Result = FFFFFFFF
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD34);                                 // Store to: 8007F2CC
-    if (v1 != v0) goto loc_800487F8;
-loc_800488AC:
-    v0 = lw(s0);
-    v0 |= 0x40;
-    sw(v0, s0);
-loc_800488BC:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Ends/mutes all tracks in the given track's parent sequence
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_SeqEnd(track_status& trackStat) noexcept {
+    // Helper variables for the loop
+    master_status_structure& mstat = *gpWess_eng_mstat->get();
+    sequence_status& seqStat = mstat.pseqstattbl[trackStat.seq_owner];
+
+    // Run through all of the active tracks in the sequence and mute them all
+    uint8_t activeTracksLeft = seqStat.tracks_active;
+
+    for (uint32_t i = 0; i < mstat.max_trks_perseq; ++i) {
+        // Ignore this track if not active
+        const uint8_t trackIdx = seqStat.ptrk_indxs[i];
+
+        if (trackIdx == 0xFF)
+            continue;
+
+        // Mute the track
+        track_status& trackStat = gpWess_eng_trackStats->get()[trackIdx];
+        a0 = ptrToVmAddr(&trackStat);
+        gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native call
+
+        // If there are no more tracks left then we are done
+        activeTracksLeft--;
+
+        if (activeTracksLeft == 0)
+            break;
+    }
+
+    // TODO: what is this trying to do?
+    if (trackStat.handled) {
+        trackStat.skip = true;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1170,8 +1053,7 @@ void SeqEngine() noexcept {
                         } else {
                             // This is an unknown command or a command that should NOT be in a sequence.
                             // Since we don't know what to do, just stop the track.
-                            a0 = ptrToVmAddr(&trackStat);
-                            Eng_SeqEnd();   // FIXME: convert to native call
+                            Eng_SeqEnd(trackStat);
                         }
                     }
                 }
