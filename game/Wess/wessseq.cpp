@@ -30,6 +30,7 @@ void _thunk_Eng_IterJump() noexcept { Eng_IterJump(*vmAddrToPtr<track_status>(a0
 void _thunk_Eng_ResetGates() noexcept { Eng_ResetGates(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_ResetIters() noexcept { Eng_ResetIters(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_WriteIterBox() noexcept { Eng_WriteIterBox(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_SeqTempo() noexcept { Eng_SeqTempo(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkTempo() noexcept { Eng_TrkTempo(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkJump() noexcept { Eng_TrkJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkEnd() noexcept { Eng_TrkEnd(*vmAddrToPtr<track_status>(a0)); }
@@ -64,7 +65,7 @@ void (* const gWess_DrvFunctions[36])() = {
     _thunk_Eng_ResetGates,          // 22
     _thunk_Eng_ResetIters,          // 23
     _thunk_Eng_WriteIterBox,        // 24
-    Eng_SeqTempo,                   // 25
+    _thunk_Eng_SeqTempo,            // 25
     Eng_SeqGosub,                   // 26
     Eng_SeqJump,                    // 27
     Eng_SeqRet,                     // 28
@@ -79,49 +80,49 @@ void (* const gWess_DrvFunctions[36])() = {
 
 // The size in bytes of each sequencer command
 static constexpr uint8_t gWess_seq_CmdLength[36] = {
-    0,  // DriverInit       (This command should NEVER be in a sequence)
-    0,  // DriverExit       (This command should NEVER be in a sequence)
-    0,  // DriverEntry1     (This command should NEVER be in a sequence)
-    0,  // DriverEntry2     (This command should NEVER be in a sequence)
-    0,  // DriverEntry3     (This command should NEVER be in a sequence)
-    0,  // TrkOff           (This command should NEVER be in a sequence)
-    0,  // TrkMute          (This command should NEVER be in a sequence)
-    3,  // PatchChg
-    2,  // PatchMod
-    3,  // PitchMod
-    2,  // ZeroMod
-    2,  // ModuMod
-    2,  // VolumeMod
-    2,  // PanMod
-    2,  // PedalMod
-    2,  // ReverbMod
-    2,  // ChorusMod
-    3,  // NoteOn
-    2,  // NoteOff
-    4,  // StatusMark
-    5,  // GateJump
-    5,  // IterJump
-    2,  // ResetGates
-    2,  // ResetIters
-    3,  // WriteIterBox
-    3,  // SeqTempo
-    3,  // SeqGosub
-    3,  // SeqJump
-    1,  // SeqRet
-    1,  // SeqEnd
-    3,  // TrkTempo
-    3,  // TrkGosub
-    3,  // TrkJump
-    1,  // TrkRet
-    1,  // TrkEnd
-    1   // NullEvent
+    0,      // DriverInit       (This command should NEVER be in a sequence)
+    0,      // DriverExit       (This command should NEVER be in a sequence)
+    0,      // DriverEntry1     (This command should NEVER be in a sequence)
+    0,      // DriverEntry2     (This command should NEVER be in a sequence)
+    0,      // DriverEntry3     (This command should NEVER be in a sequence)
+    0,      // TrkOff           (This command should NEVER be in a sequence)
+    0,      // TrkMute          (This command should NEVER be in a sequence)
+    3,      // PatchChg
+    2,      // PatchMod
+    3,      // PitchMod
+    2,      // ZeroMod
+    2,      // ModuMod
+    2,      // VolumeMod
+    2,      // PanMod
+    2,      // PedalMod
+    2,      // ReverbMod
+    2,      // ChorusMod
+    3,      // NoteOn
+    2,      // NoteOff
+    4,      // StatusMark
+    5,      // GateJump
+    5,      // IterJump
+    2,      // ResetGates
+    2,      // ResetIters
+    3,      // WriteIterBox
+    3,      // SeqTempo
+    3,      // SeqGosub
+    3,      // SeqJump
+    1,      // SeqRet
+    1,      // SeqEnd
+    3,      // TrkTempo
+    3,      // TrkGosub
+    3,      // TrkJump
+    1,      // TrkRet
+    1,      // TrkEnd
+    1       // NullEvent
 };
 
 static_assert(C_ARRAY_SIZE(gWess_seq_CmdLength) == C_ARRAY_SIZE(gWess_DrvFunctions));
 
 const VmPtr<uint8_t>            gWess_master_sfx_volume(0x80075A04);    // TODO: COMMENT
 const VmPtr<uint8_t>            gWess_master_mus_volume(0x80075A05);    // TODO: COMMENT
-const VmPtr<PanMode>            gWess_pan_status(0x80075A06);           // Pan mode: '0' if disabled, '1' if enabled, '2' if enabled (reverse)
+const VmPtr<PanMode>            gWess_pan_status(0x80075A06);           // Current pan mode
 const VmPtr<VmPtr<NoteState>>   gpWess_notestate(0x80075A10);           // TODO: COMMENT
 
 static const VmPtr<VmPtr<master_status_structure>>      gpWess_eng_mstat(0x80075AC0);           // TODO: COMMENT
@@ -533,106 +534,46 @@ void Eng_WriteIterBox(track_status& trackStat) noexcept {
     seqStat.piters[iterIdx] = trackStat.ppos[2];
 }
 
-void Eng_SeqTempo() noexcept {
-loc_80047FD8:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v0 = lbu(s0 + 0x2);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 3;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5ABC);                               // Load from: gWess_Eng_piter (80075ABC)
-    a0 = lw(a0 + 0xC);
-    v1 += v0;
-    a1 = lh(v1 + 0x2);
-    a0 = lw(a0 + 0x10);
-    v0 = a1 << 2;
-    v0 += a1;
-    v0 <<= 2;
-    v0 += a0;
-    v0 = lhu(v0);
-    a0 = lw(v1 + 0xC);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD94);                                 // Store to: 8007F26C
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xDA4);                                 // Store to: 8007F25C
-    v1 = lbu(v1 + 0x4);
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xDA4);                                 // Store to: 8007F25C
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xD9C);                                 // Store to: 8007F264
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v1, at - 0xDA0);                                 // Store to: 8007F260
-    v1 = -1;                                            // Result = FFFFFFFF
-    if (v0 == v1) goto loc_80048144;
-loc_80048074:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xD9C);                                // Load from: 8007F264
-    v1 = lbu(a0);
-    v0 = 0xFF;                                          // Result = 000000FF
-    {
-        const bool bJump = (v1 == v0);
-        v0 = a0 + 1;
-        if (bJump) goto loc_8004811C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Command which updates the tempo for all tracks in the sequence
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_SeqTempo(track_status& trackStat) noexcept {
+    // Helper variables for the loop
+    master_status_structure& mstat = *gpWess_eng_mstat->get();
+    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
+    sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_num];
+
+    const uint16_t numSeqTracks = seqInfo.seq_hdr.tracks;
+    uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+
+    // Read the new quarter notes per minute (BPM) amount from the command
+    const uint16_t newQpm = ((uint16_t) trackStat.ppos[1]) | ((uint16_t) trackStat.ppos[2] << 8);
+    
+    // Set the tempo for all active tracks in this track's sequence
+    uint8_t activeTracksLeft = seqStat.tracks_active;
+    
+    for (uint16_t i = 0; i < numSeqTracks; ++i) {
+        // See if this sequence track slot is in use, if not then ignore.
+        //
+        // BUG FIX: in the original code there was a bug here where it would not be able advance onto the next sequence track
+        // slot once it encountered an unused one, thus some tracks in the sequence might not have had their tempo set as intended.
+        // This bug is fixed however with this re-implementation, because of the way the loop is written.
+        const uint8_t trackIdx = pSeqTrackIndexes[i];
+
+        if (trackIdx == 0xFF)
+            continue;
+
+        // Update the quarter notes per minute and parts per interrupt (16.16) advancement for this track
+        track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackIdx];
+        thisTrackStat.qpm = newQpm;
+        thisTrackStat.ppi = CalcPartsPerInt(GetIntsPerSec(), thisTrackStat.ppq, thisTrackStat.qpm);
+
+        // If there are no more active tracks left to update then we are done
+        activeTracksLeft--;
+        
+        if (activeTracksLeft == 0) 
+            break;
     }
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD9C);                                 // Store to: 8007F264
-    v0 = lbu(a0);
-    v1 = lw(s0 + 0x34);
-    a0 = v0 << 2;
-    a0 += v0;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5AB8);                               // Load from: 80075AB8
-    a0 <<= 4;
-    a0 += v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xD98);                                 // Store to: 8007F268
-    v0 = lbu(v1 + 0x2);
-    v1 = lbu(v1 + 0x1);
-    v0 <<= 8;
-    v1 |= v0;
-    sh(v1, a0 + 0x16);
-    v0 = GetIntsPerSec();
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xD98);                                // Load from: 8007F268
-    v0 <<= 16;
-    a1 = lh(v1 + 0x14);
-    a2 = lh(v1 + 0x16);
-    a0 = u32(i32(v0) >> 16);
-    v0 = CalcPartsPerInt((int16_t) a0, (int16_t) a1, (int16_t) a2);
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lbu(v1 - 0xDA0);                               // Load from: 8007F260
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0xD98);                                // Load from: 8007F268
-    v1--;
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v1, at - 0xDA0);                                 // Store to: 8007F260
-    v1 &= 0xFF;
-    sw(v0, a0 + 0x1C);
-    if (v1 == 0) goto loc_80048144;
-loc_8004811C:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lhu(v0 - 0xDA4);                               // Load from: 8007F25C
-    v1 = -1;                                            // Result = FFFFFFFF
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xDA4);                                 // Store to: 8007F25C
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    if (v0 != v1) goto loc_80048074;
-loc_80048144:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void Eng_SeqGosub() noexcept {
