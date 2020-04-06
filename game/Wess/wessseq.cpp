@@ -30,6 +30,7 @@ void _thunk_Eng_IterJump() noexcept { Eng_IterJump(*vmAddrToPtr<track_status>(a0
 void _thunk_Eng_ResetGates() noexcept { Eng_ResetGates(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_ResetIters() noexcept { Eng_ResetIters(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_WriteIterBox() noexcept { Eng_WriteIterBox(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_TrkTempo() noexcept { Eng_TrkTempo(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkJump() noexcept { Eng_TrkJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkEnd() noexcept { Eng_TrkEnd(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NullEvent() noexcept { Eng_NullEvent(*vmAddrToPtr<track_status>(a0)); }
@@ -68,7 +69,7 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_SeqJump,                    // 27
     Eng_SeqRet,                     // 28
     Eng_SeqEnd,                     // 29
-    Eng_TrkTempo,                   // 30
+    _thunk_Eng_TrkTempo,            // 30
     Eng_TrkGosub,                   // 31
     _thunk_Eng_TrkJump,             // 32
     Eng_TrkRet,                     // 33
@@ -1100,29 +1101,16 @@ loc_800488BC:
     return;
 }
 
-void Eng_TrkTempo() noexcept {
-loc_800488D4:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v1 = lw(s0 + 0x34);
-    v0 = lbu(v1 + 0x2);
-    v1 = lbu(v1 + 0x1);
-    v0 <<= 8;
-    v1 |= v0;
-    sh(v1, s0 + 0x16);
-    v0 = GetIntsPerSec();
-    v0 <<= 16;
-    a1 = lh(s0 + 0x14);
-    a2 = lh(s0 + 0x16);
-    a0 = u32(i32(v0) >> 16);
-    v0 = CalcPartsPerInt((int16_t) a0, (int16_t) a1, (int16_t) a2);
-    sw(v0, s0 + 0x1C);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets the tempo or beats per minute for a track
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_TrkTempo(track_status& trackStat) noexcept {
+    // Set the new quarter notes per second (BPM) amount
+    const uint16_t qpm = ((uint16_t) trackStat.ppos[1]) | ((uint16_t) trackStat.ppos[2] << 8);
+    trackStat.qpm = qpm;
+
+    // Update how many quarter note parts to advance the track by, per hardware interrupt (16.16 format)
+    trackStat.ppi = CalcPartsPerInt(GetIntsPerSec(), trackStat.ppq, trackStat.qpm);
 }
 
 void Eng_TrkGosub() noexcept {

@@ -54,7 +54,7 @@ int16_t GetIntsPerSec() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Calculates the number of quarter note parts per hardware interrupt.
+// Calculates the number of quarter note per hardware timer interrupt, in 16.16 fixed point format.
 // This is used to determine how fast to pace/advance the sequencer.
 //
 // Params:
