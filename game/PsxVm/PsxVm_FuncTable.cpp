@@ -335,7 +335,7 @@ extern void _thunk_Eng_ReverbMod() noexcept;
 extern void _thunk_Eng_ChorusMod() noexcept;
 extern void _thunk_Eng_NoteOn() noexcept;
 extern void _thunk_Eng_NoteOff() noexcept;
-extern void Eng_StatusMark() noexcept;
+extern void _thunk_Eng_StatusMark() noexcept;
 extern void _thunk_Eng_GateJump() noexcept;
 extern void _thunk_Eng_IterJump() noexcept;
 extern void _thunk_Eng_ResetGates() noexcept;
@@ -720,7 +720,7 @@ namespace PsxVm {
         { 0x80047A70, &_thunk_Eng_ChorusMod },
         { 0x80047A78, &_thunk_Eng_NoteOn },
         { 0x80047A80, &_thunk_Eng_NoteOff },
-        { 0x80047A88, &Eng_StatusMark },
+        { 0x80047A88, &_thunk_Eng_StatusMark },
         { 0x80047BA4, &_thunk_Eng_GateJump },
         { 0x80047C90, &_thunk_Eng_IterJump },
         { 0x80047D8C, &_thunk_Eng_ResetGates },

@@ -47,7 +47,7 @@ void Eng_ReverbMod(track_status& trackStat) noexcept;
 void Eng_ChorusMod(track_status& trackStat) noexcept;
 void Eng_NoteOn(track_status& trackStat) noexcept;
 void Eng_NoteOff(track_status& trackStat) noexcept;
-void Eng_StatusMark() noexcept;
+void Eng_StatusMark(track_status& trackStat) noexcept;
 void Eng_GateJump(track_status& trackStat) noexcept;
 void Eng_IterJump(track_status& trackStat) noexcept;
 void Eng_ResetGates(track_status& trackStat) noexcept;

@@ -24,6 +24,7 @@ void _thunk_Eng_ReverbMod() noexcept { Eng_ReverbMod(*vmAddrToPtr<track_status>(
 void _thunk_Eng_ChorusMod() noexcept { Eng_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOn() noexcept { Eng_NoteOn(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOff() noexcept { Eng_NoteOff(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_StatusMark() noexcept { Eng_StatusMark(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_GateJump() noexcept { Eng_GateJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_IterJump() noexcept { Eng_IterJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_ResetGates() noexcept { Eng_ResetGates(*vmAddrToPtr<track_status>(a0)); }
@@ -56,7 +57,7 @@ void (* const gWess_DrvFunctions[36])() = {
     _thunk_Eng_NoteOn,              // 17
     _thunk_Eng_NoteOff,             // 18
     // Sequencer commands
-    Eng_StatusMark,                 // 19
+    _thunk_Eng_StatusMark,          // 19
     _thunk_Eng_GateJump,            // 20
     _thunk_Eng_IterJump,            // 21
     _thunk_Eng_ResetGates,          // 22
@@ -375,70 +376,48 @@ void Eng_NoteOn([[maybe_unused]] track_status& trackStat) noexcept {}
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_NoteOff([[maybe_unused]] track_status& trackStat) noexcept {}
 
-void Eng_StatusMark() noexcept {
-loc_80047A88:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = lbu(v1 + 0xA);
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xDD8);                                 // Store to: 8007F228
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 - 0xDD8);                               // Load from: 8007F228
-    if (v0 == 0) goto loc_80047B94;
-    v0 = lw(v1 + 0x10);
-    v1 = lw(v1 + 0xC);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xDD4);                                 // Store to: 8007F22C
-    v1 = lbu(v1 + 0xF);
-    v0 = v1 + 0xFF;
-    goto loc_80047B84;
-loc_80047AD8:
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0xDD4);                                // Load from: 8007F22C
-    v0 = lbu(a2);
-    if (v0 == 0) goto loc_80047B64;
-    a1 = lw(a0 + 0x34);
-    v1 = lbu(a2 + 0x1);
-    v0 = lbu(a1 + 0x1);
-    if (v1 != v0) goto loc_80047B40;
-    v0 = lbu(a1 + 0x3);
-    a1 = lbu(a1 + 0x2);
-    a0 = lbu(a2 + 0x1);
-    v0 <<= 8;
-    a1 |= v0;
-    sh(a1, a2 + 0x2);
-    a1 <<= 16;
-    v0 = lw(a2 + 0x4);
-    a1 = u32(i32(a1) >> 16);
-    ptr_call(v0);
-    goto loc_80047B94;
-loc_80047B40:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 - 0xDD8);                               // Load from: 8007F228
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xDD8);                                 // Store to: 8007F228
-    v0 &= 0xFF;
-    if (v0 == 0) goto loc_80047B94;
-loc_80047B64:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0xDD4);                                // Load from: 8007F22C
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lbu(v1 - 0xDDC);                               // Load from: 8007F224
-    v0 += 8;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xDD4);                                 // Store to: 8007F22C
-    v0 = v1 + 0xFF;
-loc_80047B84:
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xDDC);                                 // Store to: 8007F224
-    if (v1 != 0) goto loc_80047AD8;
-loc_80047B94:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Invoke a single (only!) registered sequencer callback matching the type specified in the command, with the value specified in the command
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_StatusMark(track_status& trackStat) noexcept {
+    // If there are no callbacks active then there is nothing to do
+    master_status_structure& mstat = *gpWess_eng_mstat->get();
+    uint8_t activeCallbacksLeft = mstat.callbacks_active;
+
+    if (activeCallbacksLeft <= 0)
+        return;
+
+    // Try to find a matching active callback type to invoke
+    const uint8_t maxCallbacks = mstat.pmod_info->mod_hdr.callback_areas;
+        
+    for (uint8_t callbackIdx = 0; callbackIdx < maxCallbacks; ++callbackIdx) {
+        callback_status& callbackStat = mstat.pcalltable[callbackIdx];
+
+        // Ignore this callback if it's not active
+        if (!callbackStat.active)
+            continue;
+
+        // Only invoke the callback if it matches the type in the command
+        const uint8_t callbackType = trackStat.ppos[1];
+
+        if (callbackStat.type == callbackType) {
+            // TODO: remove this once real function pointers are used
+            typedef void (*CallbackFunc)(uint8_t callbackType, int16_t value);
+            const CallbackFunc callback = (CallbackFunc) PsxVm::getVmFuncForAddr(callbackStat.callfunc.addr());
+
+            // Invoke the callback with the value specified in the command
+            const int16_t callbackVal = ((int16_t) trackStat.ppos[2]) | ((int16_t) trackStat.ppos[3] << 8);
+            callbackStat.curval = callbackVal;
+            callback(callbackType, callbackVal);
+            break;
+        }
+            
+        // If there are no more callbacks left to visit then we are done searching
+        activeCallbacksLeft--;
+
+        if (activeCallbacksLeft == 0)
+            break;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

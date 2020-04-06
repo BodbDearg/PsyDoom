@@ -192,7 +192,7 @@ struct module_data {
 static_assert(sizeof(module_data) == 20);
 
 // TODO: COMMENT
-typedef VmPtr<void()> callfunc_t;
+typedef VmPtr<void(uint8_t callbackType, int16_t value)> callfunc_t;
 
 // TODO: COMMENT
 struct callback_status {
