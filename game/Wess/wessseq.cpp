@@ -34,6 +34,7 @@ void _thunk_Eng_SeqTempo() noexcept { Eng_SeqTempo(*vmAddrToPtr<track_status>(a0
 void _thunk_Eng_SeqJump() noexcept { Eng_SeqJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_SeqEnd() noexcept { Eng_SeqEnd(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkTempo() noexcept { Eng_TrkTempo(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_TrkGosub() noexcept { Eng_TrkGosub(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkJump() noexcept { Eng_TrkJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkEnd() noexcept { Eng_TrkEnd(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NullEvent() noexcept { Eng_NullEvent(*vmAddrToPtr<track_status>(a0)); }
@@ -73,7 +74,7 @@ void (* const gWess_DrvFunctions[36])() = {
     Eng_SeqRet,                     // 28
     _thunk_Eng_SeqEnd,              // 29
     _thunk_Eng_TrkTempo,            // 30
-    Eng_TrkGosub,                   // 31
+    _thunk_Eng_TrkGosub,            // 31
     _thunk_Eng_TrkJump,             // 32
     Eng_TrkRet,                     // 33
     _thunk_Eng_TrkEnd,              // 34
@@ -843,9 +844,9 @@ void Eng_SeqEnd(track_status& trackStat) noexcept {
             continue;
 
         // Mute the track
-        track_status& trackStat = gpWess_eng_trackStats->get()[trackIdx];
-        a0 = ptrToVmAddr(&trackStat);
-        gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native call
+        track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackIdx];
+        a0 = ptrToVmAddr(&thisTrackStat);
+        gWess_CmdFuncArr[thisTrackStat.patchtype][TrkOff]();    // FIXME: convert to native call
 
         // If there are no more tracks left then we are done
         activeTracksLeft--;
@@ -872,40 +873,31 @@ void Eng_TrkTempo(track_status& trackStat) noexcept {
     trackStat.ppi = CalcPartsPerInt(GetIntsPerSec(), trackStat.ppq, trackStat.qpm);
 }
 
-void Eng_TrkGosub() noexcept {
-loc_80048930:
-    a1 = a0;
-    v0 = lw(a1 + 0x34);
-    v1 = lbu(v0 + 0x2);
-    v0 = lbu(v0 + 0x1);
-    v1 <<= 8;
-    v0 |= v1;
-    v0 <<= 16;
-    a2 = u32(i32(v0) >> 16);
-    if (i32(a2) < 0) goto loc_800489BC;
-    v0 = lh(a1 + 0x18);
-    v0 = (i32(a2) < i32(v0));
-    if (v0 == 0) goto loc_800489BC;
-    a0 = lw(a1 + 0x40);
-    v1 = lw(a1 + 0x34);
-    v0 = a0 + 4;
-    sw(v0, a1 + 0x40);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x5B1A);                              // Load from: gWess_CmdLength[1A] (80075B1A)
-    v0 += v1;
-    sw(v0, a0);
-    v1 = lw(a1 + 0x38);
-    v0 = a2 << 2;
-    v0 += v1;
-    v1 = lw(v0);
-    v0 = lw(a1);
-    a0 = lw(a1 + 0x30);
-    v0 |= 0x40;
-    v1 += a0;
-    sw(v0, a1);
-    sw(v1, a1 + 0x34);
-loc_800489BC:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Jump to a specified label and remember the current location (after this command) in the track's location stack.
+// The remembered location can be returned to later.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_TrkGosub(track_status& trackStat) noexcept {
+    // Ignore the command if the label is invalid
+    const int32_t labelIdx = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
+  
+    if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.labellist_count)) {
+        // Save the return location to after this command in the track's location stack.
+        // PC-PSX: small correction here, though makes no difference - the command length taken should be 'TrkGosub' instead of 'SeqGosub'.
+        #if PC_PSX_DOOM_MODS
+            *trackStat.psp = trackStat.ppos.get() + gWess_seq_CmdLength[TrkGosub];
+        #else
+            *trackStat.psp = trackStat.ppos.get() + gWess_seq_CmdLength[SeqGosub];
+        #endif
+
+        // Used up one slot in the location stack
+        trackStat.psp += 1;
+        
+        // Jump to the specified label
+        const uint32_t targetOffset = trackStat.plabellist[labelIdx];
+        trackStat.ppos = trackStat.pstart.get() + targetOffset;
+        trackStat.skip = true;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

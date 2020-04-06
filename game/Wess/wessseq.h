@@ -59,7 +59,7 @@ void Eng_SeqJump(track_status& trackStat) noexcept;
 void Eng_SeqRet() noexcept;
 void Eng_SeqEnd(track_status& trackStat) noexcept;
 void Eng_TrkTempo(track_status& trackStat) noexcept;
-void Eng_TrkGosub() noexcept;
+void Eng_TrkGosub(track_status& trackStat) noexcept;
 void Eng_TrkJump(track_status& trackStat) noexcept;
 void Eng_TrkRet() noexcept;
 void Eng_TrkEnd(track_status& trackStat) noexcept;

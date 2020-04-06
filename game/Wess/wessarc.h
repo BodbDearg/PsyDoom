@@ -266,45 +266,45 @@ static_assert(sizeof(sequence_status) == 24);
 
 // TODO: COMMENT
 struct track_status {
-    uint8_t             active : 1;             // 0x000    TODO: COMMENT
-    uint8_t             mute : 1;               // 0x000    TODO: COMMENT
-    uint8_t             handled : 1;            // 0x000    TODO: COMMENT
-    uint8_t             stopped : 1;            // 0x000    TODO: COMMENT
-    uint8_t             timed : 1;              // 0x000    TODO: COMMENT
-    uint8_t             looped : 1;             // 0x000    TODO: COMMENT
-    uint8_t             skip : 1;               // 0x000    TODO: COMMENT
-    uint8_t             off : 1;                // 0x000    TODO: COMMENT
-    uint8_t             refindx;                // 0x001    TODO: COMMENT
-    uint8_t             seq_owner;              // 0x002    TODO: COMMENT
-    SoundDriverId       patchtype;              // 0x003    TODO: COMMENT
-    uint32_t            deltatime;              // 0x004    TODO: COMMENT
-    uint8_t             priority;               // 0x008    TODO: COMMENT
-    uint8_t             reverb;                 // 0x009    TODO: COMMENT
-    uint16_t            patchnum;               // 0x00A    TODO: COMMENT
-    uint8_t             volume_cntrl;           // 0x00C    TODO: COMMENT
-    uint8_t             pan_cntrl;              // 0x00D    TODO: COMMENT
-    int16_t             pitch_cntrl;            // 0x00E    TODO: COMMENT
-    uint8_t             voices_active;          // 0x010    TODO: COMMENT
-    uint8_t             voices_max;             // 0x011    TODO: COMMENT
-    uint8_t             mutemask;               // 0x012    TODO: COMMENT
-    SoundClass          sndclass;               // 0x013    TODO: COMMENT
-    uint16_t            ppq;                    // 0x014    TODO: COMMENT
-    uint16_t            qpm;                    // 0x016    TODO: COMMENT
-    uint16_t            labellist_count;        // 0x018    TODO: COMMENT
-    uint16_t            labellist_max;          // 0x01A    TODO: COMMENT
-    uint32_t            ppi;                    // 0x01C    TODO: COMMENT
-    uint32_t            starppi;                // 0x020    TODO: COMMENT
-    uint32_t            accppi;                 // 0x024    TODO: COMMENT
-    uint32_t            totppi;                 // 0x028    TODO: COMMENT
-    uint32_t            endppi;                 // 0x02C    TODO: COMMENT
-    VmPtr<uint8_t>      pstart;                 // 0x030    TODO: COMMENT
-    VmPtr<uint8_t>      ppos;                   // 0x034    TODO: COMMENT
-    VmPtr<uint32_t>     plabellist;             // 0x038    TODO: COMMENT
-    VmPtr<uint32_t>     psubstack;              // 0x03C    TODO: COMMENT
-    VmPtr<uint32_t>     psp;                    // 0x040    TODO: COMMENT
-    VmPtr<uint32_t>     pstackend;              // 0x044    TODO: COMMENT
-    uint32_t            data_size;              // 0x048    TODO: COMMENT
-    uint32_t            data_space;             // 0x04C    TODO: COMMENT
+    uint8_t                 active : 1;             // 0x000    TODO: COMMENT
+    uint8_t                 mute : 1;               // 0x000    TODO: COMMENT
+    uint8_t                 handled : 1;            // 0x000    TODO: COMMENT
+    uint8_t                 stopped : 1;            // 0x000    TODO: COMMENT
+    uint8_t                 timed : 1;              // 0x000    TODO: COMMENT
+    uint8_t                 looped : 1;             // 0x000    TODO: COMMENT
+    uint8_t                 skip : 1;               // 0x000    TODO: COMMENT
+    uint8_t                 off : 1;                // 0x000    TODO: COMMENT
+    uint8_t                 refindx;                // 0x001    TODO: COMMENT
+    uint8_t                 seq_owner;              // 0x002    TODO: COMMENT
+    SoundDriverId           patchtype;              // 0x003    TODO: COMMENT
+    uint32_t                deltatime;              // 0x004    TODO: COMMENT
+    uint8_t                 priority;               // 0x008    TODO: COMMENT
+    uint8_t                 reverb;                 // 0x009    TODO: COMMENT
+    uint16_t                patchnum;               // 0x00A    TODO: COMMENT
+    uint8_t                 volume_cntrl;           // 0x00C    TODO: COMMENT
+    uint8_t                 pan_cntrl;              // 0x00D    TODO: COMMENT
+    int16_t                 pitch_cntrl;            // 0x00E    TODO: COMMENT
+    uint8_t                 voices_active;          // 0x010    TODO: COMMENT
+    uint8_t                 voices_max;             // 0x011    TODO: COMMENT
+    uint8_t                 mutemask;               // 0x012    TODO: COMMENT
+    SoundClass              sndclass;               // 0x013    TODO: COMMENT
+    uint16_t                ppq;                    // 0x014    TODO: COMMENT
+    uint16_t                qpm;                    // 0x016    TODO: COMMENT
+    uint16_t                labellist_count;        // 0x018    TODO: COMMENT
+    uint16_t                labellist_max;          // 0x01A    TODO: COMMENT
+    uint32_t                ppi;                    // 0x01C    TODO: COMMENT
+    uint32_t                starppi;                // 0x020    TODO: COMMENT
+    uint32_t                accppi;                 // 0x024    TODO: COMMENT
+    uint32_t                totppi;                 // 0x028    TODO: COMMENT
+    uint32_t                endppi;                 // 0x02C    TODO: COMMENT
+    VmPtr<uint8_t>          pstart;                 // 0x030    TODO: COMMENT
+    VmPtr<uint8_t>          ppos;                   // 0x034    TODO: COMMENT
+    VmPtr<uint32_t>         plabellist;             // 0x038    TODO: COMMENT
+    VmPtr<uint32_t>         psubstack;              // 0x03C    TODO: COMMENT
+    VmPtr<VmPtr<uint8_t>>   psp;                    // 0x040    TODO: COMMENT
+    VmPtr<uint32_t>         pstackend;              // 0x044    TODO: COMMENT
+    uint32_t                data_size;              // 0x048    TODO: COMMENT
+    uint32_t                data_space;             // 0x04C    TODO: COMMENT
 };
 
 static_assert(sizeof(track_status) == 80);
