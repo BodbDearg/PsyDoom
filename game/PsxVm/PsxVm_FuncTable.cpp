@@ -343,7 +343,7 @@ extern void _thunk_Eng_ResetIters() noexcept;
 extern void _thunk_Eng_WriteIterBox() noexcept;
 extern void _thunk_Eng_SeqTempo() noexcept;
 extern void Eng_SeqGosub() noexcept;
-extern void Eng_SeqJump() noexcept;
+extern void _thunk_Eng_SeqJump() noexcept;
 extern void Eng_SeqRet() noexcept;
 extern void Eng_SeqEnd() noexcept;
 extern void _thunk_Eng_TrkTempo() noexcept;
@@ -728,7 +728,7 @@ namespace PsxVm {
         { 0x80047F94, &_thunk_Eng_WriteIterBox },
         { 0x80047FD8, &_thunk_Eng_SeqTempo },
         { 0x80048158, &Eng_SeqGosub },
-        { 0x80048334, &Eng_SeqJump },
+        { 0x80048334, &_thunk_Eng_SeqJump },
         { 0x800484DC, &Eng_SeqRet },
         { 0x8004862C, &Eng_SeqEnd },
         { 0x800488D4, &_thunk_Eng_TrkTempo },

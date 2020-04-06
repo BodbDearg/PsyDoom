@@ -31,6 +31,7 @@ void _thunk_Eng_ResetGates() noexcept { Eng_ResetGates(*vmAddrToPtr<track_status
 void _thunk_Eng_ResetIters() noexcept { Eng_ResetIters(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_WriteIterBox() noexcept { Eng_WriteIterBox(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_SeqTempo() noexcept { Eng_SeqTempo(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_SeqJump() noexcept { Eng_SeqJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkTempo() noexcept { Eng_TrkTempo(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkJump() noexcept { Eng_TrkJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkEnd() noexcept { Eng_TrkEnd(*vmAddrToPtr<track_status>(a0)); }
@@ -67,7 +68,7 @@ void (* const gWess_DrvFunctions[36])() = {
     _thunk_Eng_WriteIterBox,        // 24
     _thunk_Eng_SeqTempo,            // 25
     Eng_SeqGosub,                   // 26
-    Eng_SeqJump,                    // 27
+    _thunk_Eng_SeqJump,             // 27
     Eng_SeqRet,                     // 28
     Eng_SeqEnd,                     // 29
     _thunk_Eng_TrkTempo,            // 30
@@ -543,22 +544,19 @@ void Eng_SeqTempo(track_status& trackStat) noexcept {
     sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
     sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_num];
 
-    const uint16_t numSeqTracks = seqInfo.seq_hdr.tracks;
-    uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
-
     // Read the new quarter notes per minute (BPM) amount from the command
     const uint16_t newQpm = ((uint16_t) trackStat.ppos[1]) | ((uint16_t) trackStat.ppos[2] << 8);
     
     // Set the tempo for all active tracks in this track's sequence
     uint8_t activeTracksLeft = seqStat.tracks_active;
     
-    for (uint16_t i = 0; i < numSeqTracks; ++i) {
+    for (uint16_t i = 0; i < seqInfo.seq_hdr.tracks; ++i) {
         // See if this sequence track slot is in use, if not then ignore.
         //
         // BUG FIX: in the original code there was a bug here where it would not be able advance onto the next sequence track
         // slot once it encountered an unused one, thus some tracks in the sequence might not have had their tempo set as intended.
         // This bug is fixed however with this re-implementation, because of the way the loop is written.
-        const uint8_t trackIdx = pSeqTrackIndexes[i];
+        const uint8_t trackIdx = seqStat.ptrk_indxs[i];
 
         if (trackIdx == 0xFF)
             continue;
@@ -695,110 +693,47 @@ loc_80048320:
     return;
 }
 
-void Eng_SeqJump() noexcept {
-loc_80048334:
-    a3 = a0;
-    v0 = lw(a3 + 0x34);
-    v1 = lbu(v0 + 0x2);
-    v0 = lbu(v0 + 0x1);
-    v1 <<= 8;
-    v0 |= v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xD74);                                 // Store to: 8007F28C
-    v0 <<= 16;
-    a2 = u32(i32(v0) >> 16);
-    if (i32(a2) < 0) goto loc_800484C8;
-    v0 = lh(a3 + 0x18);
-    v0 = (i32(a2) < i32(v0));
-    if (v0 == 0) goto loc_800484C8;
-    v0 = lbu(a3 + 0x2);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 3;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5ABC);                               // Load from: gWess_Eng_piter (80075ABC)
-    a0 = lw(a0 + 0xC);
-    v1 += v0;
-    a1 = lh(v1 + 0x2);
-    a0 = lw(a0 + 0x10);
-    v0 = a1 << 2;
-    v0 += a1;
-    v0 <<= 2;
-    v0 += a0;
-    v0 = lhu(v0);
-    a0 = lw(v1 + 0xC);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD5C);                                 // Store to: 8007F2A4
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xD70);                                 // Store to: 8007F290
-    v1 = lbu(v1 + 0x4);
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xD70);                                 // Store to: 8007F290
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xD64);                                 // Store to: 8007F29C
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v1, at - 0xD68);                                 // Store to: 8007F298
-    v1 = -1;                                            // Result = FFFFFFFF
-    if (v0 == v1) goto loc_800484C8;
-    t1 = 0xFF;                                          // Result = 000000FF
-    t0 = 0x80070000;                                    // Result = 80070000
-    t0 = lw(t0 + 0x5AB8);                               // Load from: 80075AB8
-    a2 <<= 2;
-loc_80048418:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xD64);                                // Load from: 8007F29C
-    v0 = lbu(v1);
-    {
-        const bool bJump = (v0 == t1);
-        v0 = v1 + 1;
-        if (bJump) goto loc_800484A0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Command which makes all tracks in the sequence jump to a specified label
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_SeqJump(track_status& trackStat) noexcept {    
+    // Some useful stuff for the loop below
+    master_status_structure& mstat = *gpWess_eng_mstat->get();
+    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
+    const sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_num];
+    
+    // Get the label to jump to from the command and do not do any jump if the label index is invalid
+    const int32_t labelIdx = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
+
+    if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.labellist_count)) {
+        // Update the current position for all active tracks in the sequence
+        uint8_t activeTracksLeft = seqStat.tracks_active;
+
+        for (uint16_t i = 0; i < seqInfo.seq_hdr.tracks; ++i) {
+            // See if this sequence track slot is in use, if not then ignore.
+            //
+            // BUG FIX: in the original code there was a bug here where it would not be able advance onto the next sequence track
+            // slot once it encountered an unused one, thus some tracks in the sequence might not have had their position set as intended.
+            // This bug is fixed however with this re-implementation, because of the way the loop is written.
+            const uint8_t trackIdx = seqStat.ptrk_indxs[i];
+
+            if (trackIdx == 0xFF)
+                continue;
+
+            // Update the current position of the track
+            track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackIdx];
+            const uint32_t targetOffset = thisTrackStat.plabellist[labelIdx];
+            thisTrackStat.ppos = thisTrackStat.pstart.get() + targetOffset;
+
+            // If there are no more active tracks then we are done
+            activeTracksLeft--;
+
+            if (activeTracksLeft == 0)
+                break;
+        }
     }
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD64);                                 // Store to: 8007F29C
-    v0 = lbu(v1);
-    v1 = v0 << 2;
-    v1 += v0;
-    v1 <<= 4;
-    v1 += t0;
-    v0 = lw(v1 + 0x38);
-    a1 = lw(v1 + 0x30);
-    v0 += a2;
-    a0 = lw(v0);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 - 0xD68);                               // Load from: 8007F298
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD60);                                 // Store to: 8007F2A0
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xD6C);                                 // Store to: 8007F294
-    a0 += a1;
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xD68);                                 // Store to: 8007F298
-    v0 &= 0xFF;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xD6C);                                 // Store to: 8007F294
-    sw(a0, v1 + 0x34);
-    if (v0 == 0) goto loc_800484C8;
-loc_800484A0:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lhu(v0 - 0xD70);                               // Load from: 8007F290
-    v1 = -1;                                            // Result = FFFFFFFF
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xD70);                                 // Store to: 8007F290
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    if (v0 != v1) goto loc_80048418;
-loc_800484C8:
-    v0 = lw(a3);
-    v0 |= 0x40;
-    sw(v0, a3);
-    return;
+
+    trackStat.skip = true;      // Tell the sequencer not to determine the next sequencer command automatically
 }
 
 void Eng_SeqRet() noexcept {
