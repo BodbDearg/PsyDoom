@@ -24,6 +24,7 @@ void _thunk_Eng_ReverbMod() noexcept { Eng_ReverbMod(*vmAddrToPtr<track_status>(
 void _thunk_Eng_ChorusMod() noexcept { Eng_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOn() noexcept { Eng_NoteOn(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NoteOff() noexcept { Eng_NoteOff(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_IterJump() noexcept { Eng_IterJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_ResetIters() noexcept { Eng_ResetIters(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_WriteIterBox() noexcept { Eng_WriteIterBox(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkJump() noexcept { Eng_TrkJump(*vmAddrToPtr<track_status>(a0)); }
@@ -55,7 +56,7 @@ void (* const gWess_DrvFunctions[36])() = {
     // Sequencer commands
     Eng_StatusMark,                 // 19
     Eng_GateJump,                   // 20
-    Eng_IterJump,                   // 21
+    _thunk_Eng_IterJump,            // 21
     Eng_ResetGates,                 // 22
     _thunk_Eng_ResetIters,          // 23
     _thunk_Eng_WriteIterBox,        // 24
@@ -496,67 +497,36 @@ loc_80047C7C:
     return;
 }
 
-void Eng_IterJump() noexcept {
-loc_80047C90:
-    a1 = a0;
-    v1 = lbu(a1 + 0x2);
-    a0 = lw(a1 + 0x34);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5ABC);                               // Load from: gWess_Eng_piter (80075ABC)
-    v0 <<= 3;
-    v0 += v1;
-    v1 = lbu(a0 + 0x1);
-    v0 = lw(v0 + 0x14);
-    v1 += v0;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xDBC);                                 // Store to: 8007F244
-    a0 = lbu(v1);
-    v0 = 0xFF;                                          // Result = 000000FF
-    if (a0 == 0) goto loc_80047D78;
-    if (a0 != v0) goto loc_80047CF8;
-    v0 = lw(a1 + 0x34);
-    v0 = lbu(v0 + 0x2);
-    sb(v0, v1);
-    goto loc_80047D08;
-loc_80047CF8:
-    v0 = lbu(v1);
-    v0--;
-    sb(v0, v1);
-loc_80047D08:
-    v0 = lw(a1 + 0x34);
-    v1 = lbu(v0 + 0x4);
-    v0 = lbu(v0 + 0x3);
-    v1 <<= 8;
-    v0 |= v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xDC4);                                 // Store to: 8007F23C
-    v0 <<= 16;
-    a0 = u32(i32(v0) >> 16);
-    if (i32(a0) < 0) goto loc_80047D78;
-    v0 = lh(a1 + 0x18);
-    v0 = (i32(a0) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 << 2;
-        if (bJump) goto loc_80047D78;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Jump while the specicied iteration count (iter) is > 0, up to a maximum number of times
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_IterJump(track_status& trackStat) noexcept {
+    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
+
+    // Get the specified iteration count
+    const uint8_t iterIdx = trackStat.ppos[1];    
+    const uint8_t iterVal = seqStat.piters[iterIdx];
+
+    // Only do the jump if it's not zero
+    if (iterVal != 0) {
+        // If the count has not been intialized yet then it's value is initialized from the command.
+        // Otherwise we decrement the iteration count.
+        if (iterVal == 0xFF) {
+            seqStat.piters[iterIdx] = trackStat.ppos[2];
+        } else {
+            seqStat.piters[iterIdx] = iterVal - 1;
+        }
+
+        // Goto the track label specified in the command (if valid)
+        const int32_t labelIdx = ((int16_t) trackStat.ppos[3]) | ((int16_t) trackStat.ppos[4] << 8);
+
+        if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.labellist_count)) {
+            const uint32_t targetOffset = trackStat.plabellist[labelIdx];
+            trackStat.ppos = trackStat.pstart.get() + targetOffset;
+        }
     }
-    v1 = lw(a1 + 0x38);
-    v0 += v1;
-    v0 = lw(v0);
-    v1 = lw(a1 + 0x30);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xDC0);                                 // Store to: 8007F240
-    v0 += v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xDC0);                                 // Store to: 8007F240
-    sw(v0, a1 + 0x34);
-loc_80047D78:
-    v0 = lw(a1);
-    v0 |= 0x40;
-    sw(v0, a1);
-    return;
+
+    trackStat.skip = true;  // Tell the sequencer to not automatically determine the next command
 }
 
 void Eng_ResetGates() noexcept {
@@ -622,7 +592,9 @@ loc_80047E88:
     return;
 }
 
-// TODO: what is this doing?
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Clear the specified iteration (iter) count for a track, or clear all iteration counts
+//------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_ResetIters(track_status& trackStat) noexcept {
     master_status_structure& mstat = *gpWess_eng_mstat->get();
     sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
@@ -630,7 +602,7 @@ void Eng_ResetIters(track_status& trackStat) noexcept {
     // Either reset all iters (iter index '0xFF') or reset a specific one
     const uint8_t iterIdx = trackStat.ppos[1];
 
-    if (iterIdx == 0xff) {
+    if (iterIdx == 0xFF) {
         const uint8_t itersPerSeq = mstat.pmod_info->mod_hdr.iters_per_seq;
 
         for (uint8_t i = 0; i < itersPerSeq; ++i) {
@@ -641,7 +613,9 @@ void Eng_ResetIters(track_status& trackStat) noexcept {
     }
 }
 
-// TODO: what is this doing?
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the value for a specified iteration count in a track
+//------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_WriteIterBox(track_status& trackStat) noexcept {
     sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
     const uint8_t iterIdx = trackStat.ppos[1];

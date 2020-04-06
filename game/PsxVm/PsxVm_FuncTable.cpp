@@ -337,7 +337,7 @@ extern void _thunk_Eng_NoteOn() noexcept;
 extern void _thunk_Eng_NoteOff() noexcept;
 extern void Eng_StatusMark() noexcept;
 extern void Eng_GateJump() noexcept;
-extern void Eng_IterJump() noexcept;
+extern void _thunk_Eng_IterJump() noexcept;
 extern void Eng_ResetGates() noexcept;
 extern void _thunk_Eng_ResetIters() noexcept;
 extern void _thunk_Eng_WriteIterBox() noexcept;
@@ -722,7 +722,7 @@ namespace PsxVm {
         { 0x80047A80, &_thunk_Eng_NoteOff },
         { 0x80047A88, &Eng_StatusMark },
         { 0x80047BA4, &Eng_GateJump },
-        { 0x80047C90, &Eng_IterJump },
+        { 0x80047C90, &_thunk_Eng_IterJump },
         { 0x80047D8C, &Eng_ResetGates },
         { 0x80047E90, &_thunk_Eng_ResetIters },
         { 0x80047F94, &_thunk_Eng_WriteIterBox },

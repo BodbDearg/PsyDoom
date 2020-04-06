@@ -49,7 +49,7 @@ void Eng_NoteOn(track_status& trackStat) noexcept;
 void Eng_NoteOff(track_status& trackStat) noexcept;
 void Eng_StatusMark() noexcept;
 void Eng_GateJump() noexcept;
-void Eng_IterJump() noexcept;
+void Eng_IterJump(track_status& trackStat) noexcept;
 void Eng_ResetGates() noexcept;
 void Eng_ResetIters(track_status& trackStat) noexcept;
 void Eng_WriteIterBox(track_status& trackStat) noexcept;
