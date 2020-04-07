@@ -31,6 +31,7 @@ void _thunk_Eng_ResetGates() noexcept { Eng_ResetGates(*vmAddrToPtr<track_status
 void _thunk_Eng_ResetIters() noexcept { Eng_ResetIters(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_WriteIterBox() noexcept { Eng_WriteIterBox(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_SeqTempo() noexcept { Eng_SeqTempo(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_SeqGosub() noexcept { Eng_SeqGosub(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_SeqJump() noexcept { Eng_SeqJump(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_SeqEnd() noexcept { Eng_SeqEnd(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkTempo() noexcept { Eng_TrkTempo(*vmAddrToPtr<track_status>(a0)); }
@@ -70,7 +71,7 @@ void (* const gWess_DrvFunctions[36])() = {
     _thunk_Eng_ResetIters,          // 23
     _thunk_Eng_WriteIterBox,        // 24
     _thunk_Eng_SeqTempo,            // 25
-    Eng_SeqGosub,                   // 26
+    _thunk_Eng_SeqGosub,            // 26
     _thunk_Eng_SeqJump,             // 27
     Eng_SeqRet,                     // 28
     _thunk_Eng_SeqEnd,              // 29
@@ -577,123 +578,51 @@ void Eng_SeqTempo(track_status& trackStat) noexcept {
     }
 }
 
-void Eng_SeqGosub() noexcept {
-loc_80048158:
-    a2 = a0;
-    v0 = lw(a2 + 0x34);
-    v1 = lbu(v0 + 0x2);
-    v0 = lbu(v0 + 0x1);
-    v1 <<= 8;
-    v0 |= v1;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xD90);                                 // Store to: 8007F270
-    v0 <<= 16;
-    v1 = u32(i32(v0) >> 16);
-    if (i32(v1) < 0) goto loc_80048320;
-    v0 = lh(a2 + 0x18);
-    v0 = (i32(v1) < i32(v0));
-    if (v0 == 0) goto loc_80048320;
-    v0 = lbu(a2 + 0x2);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x5AC0);                               // Load from: gWess_SeqEngine_pm_stat (80075AC0)
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 3;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5ABC);                               // Load from: gWess_Eng_piter (80075ABC)
-    a0 = lw(a0 + 0xC);
-    v1 += v0;
-    a1 = lh(v1 + 0x2);
-    a0 = lw(a0 + 0x10);
-    v0 = a1 << 2;
-    v0 += a1;
-    v0 <<= 2;
-    v0 += a0;
-    v0 = lhu(v0);
-    a0 = lw(v1 + 0xC);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD78);                                 // Store to: 8007F288
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xD8C);                                 // Store to: 8007F274
-    v1 = lbu(v1 + 0x4);
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xD8C);                                 // Store to: 8007F274
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0xD80);                                 // Store to: 8007F280
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v1, at - 0xD84);                                 // Store to: 8007F27C
-    v1 = -1;                                            // Result = FFFFFFFF
-    if (v0 == v1) goto loc_80048320;
-    t0 = 0xFF;                                          // Result = 000000FF
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 += 0x5B1A;                                       // Result = gWess_CmdLength[1A] (80075B1A)
-loc_80048238:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0xD80);                                // Load from: 8007F280
-    v0 = lbu(v1);
-    {
-        const bool bJump = (v0 == t0);
-        v0 = v1 + 1;
-        if (bJump) goto loc_800482F8;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Similar to 'Eng_TrkGosub' but for all tracks in a given track's sequence.
+// Makes all the tracks jump to the specified label and remembers the return location (past the current command) in each track's stack.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_SeqGosub(track_status& trackStat) noexcept {
+    // Some useful stuff for the loop below
+    master_status_structure& mstat = *gpWess_eng_mstat->get();
+    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
+    const sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_num];
+
+    // Get the label to jump to from the command and do not do any jump if the label index is invalid
+    const int32_t labelIdx = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
+
+    if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.labellist_count)) {
+        // Update the current position for all active tracks in the sequence
+        uint8_t activeTracksLeft = seqStat.tracks_active;
+
+        for (uint16_t i = 0; i < seqInfo.seq_hdr.tracks; ++i) {
+            // See if this sequence track slot is in use, if not then ignore.
+            //
+            // BUG FIX: in the original code there was a bug here where it would not be able advance onto the next sequence track
+            // slot once it encountered an unused one, thus some tracks in the sequence might not have had their position set as intended.
+            // This bug is fixed however with this re-implementation, because of the way the loop is written.
+            const uint8_t trackIdx = seqStat.ptrk_indxs[i];
+
+            if (trackIdx == 0xFF)
+                continue;
+
+            // Save the current location in the track's location stack and use up a location stack slot
+            track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackIdx];
+            *thisTrackStat.psp = thisTrackStat.ppos.get() + gWess_seq_CmdLength[SeqGosub];
+            thisTrackStat.psp += 1;
+            
+            // Update the track to the new location
+            thisTrackStat.ppos = thisTrackStat.pstart.get() + thisTrackStat.plabellist[labelIdx];
+
+            // If there are no more active tracks then we are done
+            activeTracksLeft--;
+
+            if (activeTracksLeft == 0)
+                break;
+        }
     }
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD80);                                 // Store to: 8007F280
-    v1 = lbu(v1);
-    v0 = v1 << 2;
-    v0 += v1;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x5AB8);                               // Load from: 80075AB8
-    v0 <<= 4;
-    v0 += v1;
-    a1 = lw(v0 + 0x40);
-    a0 = lw(v0 + 0x34);
-    v1 = a1 + 4;
-    sw(v1, v0 + 0x40);
-    v1 = lbu(a3);                                       // Load from: gWess_CmdLength[1A] (80075B1A)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v0, at - 0xD7C);                                 // Store to: 8007F284
-    v1 += a0;
-    sw(v1, a1);
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0xD7C);                                // Load from: 8007F284
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lh(v0 - 0xD90);                                // Load from: 8007F270
-    v1 = lw(a1 + 0x38);
-    v0 <<= 2;
-    v0 += v1;
-    v1 = lw(v0);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lbu(v0 - 0xD84);                               // Load from: 8007F27C
-    a0 = lw(a1 + 0x30);
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD88);                                 // Store to: 8007F278
-    v1 += a0;
-    at = 0x80080000;                                    // Result = 80080000
-    sb(v0, at - 0xD84);                                 // Store to: 8007F27C
-    v0 &= 0xFF;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0xD88);                                 // Store to: 8007F278
-    sw(v1, a1 + 0x34);
-    if (v0 == 0) goto loc_80048320;
-loc_800482F8:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lhu(v0 - 0xD8C);                               // Load from: 8007F274
-    v1 = -1;                                            // Result = FFFFFFFF
-    v0--;
-    at = 0x80080000;                                    // Result = 80080000
-    sh(v0, at - 0xD8C);                                 // Store to: 8007F274
-    v0 <<= 16;
-    v0 = u32(i32(v0) >> 16);
-    if (v0 != v1) goto loc_80048238;
-loc_80048320:
-    v0 = lw(a2);
-    v0 |= 0x40;
-    sw(v0, a2);
-    return;
+
+    trackStat.skip = true;      // Tell the sequencer not to determine the next sequencer command automatically
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
