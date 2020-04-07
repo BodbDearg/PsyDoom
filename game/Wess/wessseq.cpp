@@ -36,6 +36,7 @@ void _thunk_Eng_SeqEnd() noexcept { Eng_SeqEnd(*vmAddrToPtr<track_status>(a0)); 
 void _thunk_Eng_TrkTempo() noexcept { Eng_TrkTempo(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkGosub() noexcept { Eng_TrkGosub(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkJump() noexcept { Eng_TrkJump(*vmAddrToPtr<track_status>(a0)); }
+void _thunk_Eng_TrkRet() noexcept { Eng_TrkRet(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_TrkEnd() noexcept { Eng_TrkEnd(*vmAddrToPtr<track_status>(a0)); }
 void _thunk_Eng_NullEvent() noexcept { Eng_NullEvent(*vmAddrToPtr<track_status>(a0)); }
 
@@ -76,7 +77,7 @@ void (* const gWess_DrvFunctions[36])() = {
     _thunk_Eng_TrkTempo,            // 30
     _thunk_Eng_TrkGosub,            // 31
     _thunk_Eng_TrkJump,             // 32
-    Eng_TrkRet,                     // 33
+    _thunk_Eng_TrkRet,              // 33
     _thunk_Eng_TrkEnd,              // 34
     _thunk_Eng_NullEvent            // 35
 };
@@ -917,27 +918,18 @@ void Eng_TrkJump(track_status& trackStat) noexcept {
     }
 }
 
-void Eng_TrkRet() noexcept {
-loc_80048A34:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v1 = lw(s0 + 0x40);
-    v0 = v1 - 4;
-    sw(v0, s0 + 0x40);
-    a0 = lw(v1 - 0x4);
-    a1 = s0 + 4;
-    sw(a0, s0 + 0x34);
-    v0 = ptrToVmAddr(Read_Vlq(vmAddrToPtr<uint8_t>(a0), *vmAddrToPtr<uint32_t>(a1)));
-    v1 = lw(s0);
-    sw(v0, s0 + 0x34);
-    v1 |= 0x40;
-    sw(v1, s0);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the track to the location previously saved by a 'TrkGosub' command.
+// Reads the location to return to from the track's location stack.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void Eng_TrkRet(track_status& trackStat) noexcept {
+    // Restore the previously saved track location and free up the location stack slot
+    trackStat.psp -= 1;
+    trackStat.ppos = *trackStat.psp;
+
+    // Read the time until when the next command executes and instruct the sequencer not to automatically determine this
+    trackStat.ppos = Read_Vlq(trackStat.ppos.get(), trackStat.deltatime);
+    trackStat.skip = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

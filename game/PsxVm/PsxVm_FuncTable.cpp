@@ -299,7 +299,6 @@ extern void Write_Vlq() noexcept;
 extern void Len_Vlq() noexcept;
 extern void Eng_SeqGosub() noexcept;
 extern void Eng_SeqRet() noexcept;
-extern void Eng_TrkRet() noexcept;
 
 extern void LIBAPI_write() noexcept;
 extern void LIBAPI_InitPAD() noexcept;
@@ -631,7 +630,6 @@ namespace PsxVm {
         { 0x8004773C, &Len_Vlq },
         { 0x80048158, &Eng_SeqGosub },
         { 0x800484DC, &Eng_SeqRet },
-        { 0x80048A34, &Eng_TrkRet },
 
         { 0x80049C3C, &LIBAPI_write },
         { 0x80049C5C, &LIBAPI_InitPAD },
