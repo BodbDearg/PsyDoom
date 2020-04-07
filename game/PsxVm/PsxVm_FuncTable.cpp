@@ -295,7 +295,6 @@ extern void _thunk_S_StartSound() noexcept;
 extern void S_UpdateSounds() noexcept;
 extern void PsxSoundInit() noexcept;
 extern void PsxSoundExit() noexcept;
-extern void Write_Vlq() noexcept;
 extern void Len_Vlq() noexcept;
 
 extern void LIBAPI_write() noexcept;
@@ -624,7 +623,6 @@ namespace PsxVm {
         { 0x800415D4, &S_UpdateSounds },
         { 0x800415EC, &PsxSoundInit },
         { 0x8004172C, &PsxSoundExit },
-        { 0x800476DC, &Write_Vlq },
         { 0x8004773C, &Len_Vlq },
 
         { 0x80049C3C, &LIBAPI_write },

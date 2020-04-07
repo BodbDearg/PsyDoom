@@ -138,7 +138,7 @@ static const VmPtr<uint8_t>                             gWess_eng_maxTracks(0x80
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads from track data the delta time (relative to the previous sequencer command) for when the next sequencer command is to be executed.
-// Returns the pointer after reading the time amount, which may be incremented an arbitrary amount.
+// Returns the pointer after reading the time amount, which may be incremented an variable/arbitrary amount.
 //
 // The delta time amount returned is in terms of quarter note 'parts'.
 // How many parts/divisions per quarter note there are depends on the timing setup of track, but a value of '120' is typical.
@@ -165,59 +165,49 @@ uint8_t* Read_Vlq(uint8_t* const pTrackBytes, uint32_t& deltaTimeOut) noexcept {
     return pCurTrackByte;
 }
 
-void Write_Vlq() noexcept {
-    sp -= 0x10;
-    v0 = a1 & 0x7F;
-    sb(v0, sp);
-    a1 >>= 7;
-    v1 = sp + 1;
-    if (a1 == 0) goto loc_80047708;
-loc_800476F4:
-    v0 = a1 | 0x80;
-    sb(v0, v1);
-    a1 >>= 7;
-    v1++;
-    if (a1 != 0) goto loc_800476F4;
-loc_80047708:
-    v1--;
-    v0 = lbu(v1);
-    sb(v0, a0);
-    v0 = lbu(v1);
-    v0 &= 0x80;
-    a0++;
-    if (v0 != 0) goto loc_80047708;
-    v0 = a0;
-    sp += 0x10;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// The opposite function to 'Read_Vlq': not used by the game but probably used by music generation tools.
+// Write a variable length delta time value for a track to the given byte stream, using up to 5 bytes to encode it.
+// Returns the pointer after the written value.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint8_t* Write_Vlq(uint8_t* const pTrackBytes, const uint32_t deltaTime) noexcept {
+    // Encode the given value into a stack buffer, writing a '0x80' bit flag whenever more bytes follow
+    uint8_t encodedBytes[8];
+    uint8_t* pEncodedByte = encodedBytes;
+
+    {
+        *pEncodedByte = (uint8_t)(deltaTime & 0x7F);
+        pEncodedByte++;
+        uint32_t bitsToEncode = deltaTime >> 7;
+
+        while (bitsToEncode != 0) {
+            *pEncodedByte = (uint8_t)(bitsToEncode | 0x80);
+            bitsToEncode >>= 7;
+            pEncodedByte++;
+        }
+    }
+    
+    // Copy the encoded value to the given output buffer.
+    // Note that the ordering here gets reversed, so it winds up being read in the correct order.
+    uint8_t* pOutputByte = pTrackBytes;
+
+    do {
+        pEncodedByte--;
+        *pOutputByte = *pEncodedByte;
+        pOutputByte++;
+    } while (*pEncodedByte & 0x80);
+
+    return pOutputByte;
 }
 
-void Len_Vlq() noexcept {
-    sp -= 0x20;
-    a1 = sp + 0x10;
-    v0 = a0 & 0x7F;
-    sb(v0, sp);
-    a0 >>= 7;
-    v1 = sp + 1;
-    if (a0 == 0) goto loc_8004776C;
-loc_80047758:
-    v0 = a0 | 0x80;
-    sb(v0, v1);
-    a0 >>= 7;
-    v1++;
-    if (a0 != 0) goto loc_80047758;
-loc_8004776C:
-    v1--;
-    v0 = lbu(v1);
-    sb(v0, a1);
-    v0 = lbu(v1);
-    v0 &= 0x80;
-    a1++;
-    if (v0 != 0) goto loc_8004776C;
-    v0 = sp + 0x10;
-    v0 = a1 - v0;
-    v0 &= 0xFF;
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Figures out the size in bytes of the given track delta time value when encoded into a track
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t Len_Vlq(const uint32_t deltaTime) noexcept {
+    // Do a dummy encoding to find out the length
+    uint8_t encodedBytes[8];
+    uint8_t* pEncodedBytesEnd = Write_Vlq(encodedBytes, deltaTime);
+    return (int32_t)(pEncodedBytesEnd - encodedBytes);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

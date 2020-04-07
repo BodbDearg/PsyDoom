@@ -26,7 +26,7 @@ extern const VmPtr<VmPtr<NoteState>>    gpWess_notestate;
 extern void (* const gWess_DrvFunctions[36])();
 
 uint8_t* Read_Vlq(uint8_t* const pTrackBytes, uint32_t& deltaTimeOut) noexcept;
-void Write_Vlq() noexcept;
+uint8_t* Write_Vlq(uint8_t* const pTrackBytes, const uint32_t deltaTime) noexcept;
 void Len_Vlq() noexcept;
 void Eng_DriverInit(master_status_structure& mstat) noexcept;
 void Eng_DriverExit(master_status_structure& mstat) noexcept;
