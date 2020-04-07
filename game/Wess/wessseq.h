@@ -56,7 +56,7 @@ void Eng_WriteIterBox(track_status& trackStat) noexcept;
 void Eng_SeqTempo(track_status& trackStat) noexcept;
 void Eng_SeqGosub(track_status& trackStat) noexcept;
 void Eng_SeqJump(track_status& trackStat) noexcept;
-void Eng_SeqRet() noexcept;
+void Eng_SeqRet(track_status& trackStat) noexcept;
 void Eng_SeqEnd(track_status& trackStat) noexcept;
 void Eng_TrkTempo(track_status& trackStat) noexcept;
 void Eng_TrkGosub(track_status& trackStat) noexcept;
