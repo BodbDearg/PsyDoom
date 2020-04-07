@@ -28,35 +28,28 @@ const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS] = {
 // Current volume cd music is played back at
 const VmPtr<int32_t> gCdMusicVol(0x800775F8);
 
-void S_SetSfxVolume() noexcept {
-loc_80040FAC:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a0 &= 0xFF;
-    wess_master_sfx_vol_set((uint8_t) a0);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets the master sound effects volume
+//------------------------------------------------------------------------------------------------------------------------------------------
+void S_SetSfxVolume(int32_t sfxVol) noexcept {
+    wess_master_sfx_vol_set((uint8_t) sfxVol);
 }
 
-void S_SetMusicVolume() noexcept {
-loc_80040FCC:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    a0 = s0 & 0xFF;
-    wess_master_mus_vol_set((uint8_t) a0);
-    a0 = s0 << 7;
-    v0 = (i32(a0) < 0x3D00);
-    if (v0 != 0) goto loc_80040FF8;
-    a0 = 0x3CFF;                                        // Result = 00003CFF
-loc_80040FF8:
-    psxspu_set_cd_vol(a0);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets the master music volume
+//------------------------------------------------------------------------------------------------------------------------------------------
+void S_SetMusicVolume(const int32_t musVol) noexcept {
+    // Set the volume for both the sound sequencer and for cd audio
+    wess_master_mus_vol_set((uint8_t) musVol);
+
+    // TODO: where does the '0x3CFF' constant come from?
+    int32_t cdVol = musVol * 128;
+
+    if (cdVol > 0x3CFF) {
+        cdVol = 0x3CFF;
+    }
+
+    psxspu_set_cd_vol(cdVol);
 }
 
 void S_StopMusicSequence() noexcept {
@@ -99,10 +92,11 @@ loc_80041088:
     return;
 }
 
-void ZeroHalfWord() noexcept {
-loc_80041098:
-    sh(0, a0);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the given sample block
+//------------------------------------------------------------------------------------------------------------------------------------------
+void S_InitBlock(SampleBlock& block) noexcept {
+    block.numsamps = 0;
 }
 
 void S_UnloadSamples() noexcept {
@@ -505,10 +499,10 @@ loc_800415EC:
     s2 = 0x80080000;                                    // Result = 80080000
     s2 -= 0x1364;                                       // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
     a0 = s2;                                            // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
-    ZeroHalfWord();
+    S_InitBlock(*vmAddrToPtr<SampleBlock>(a0));
     a0 = 0x80080000;                                    // Result = 80080000
     a0 -= 0x11D0;                                       // Result = gMapMusSfxLoadedSamples[0] (8007EE30)
-    ZeroHalfWord();
+    S_InitBlock(*vmAddrToPtr<SampleBlock>(a0));
 
     a0 = s1;
     a1 = 0x80080000;                                    // Result = 80080000
@@ -536,9 +530,9 @@ loc_800415EC:
     v0 += s0;
     sw(v0, gp + 0x83C);                                 // Store to: gpMusSequencesEnd (80077E1C)
     a0 = s3;
-    S_SetSfxVolume();
+    S_SetSfxVolume(a0);
     a0 = s4;
-    S_SetMusicVolume();
+    S_SetMusicVolume(a0);
     a0 = 0xC8;                                          // Result = 000000C8
     a1 = 0x1010;                                        // Result = 00001010
     a2 = s2;                                            // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
@@ -558,6 +552,10 @@ loc_800415EC:
     sp += 0x28;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Shutdown the PlayStation sound system
+//------------------------------------------------------------------------------------------------------------------------------------------
 void PsxSoundExit() noexcept {
-    return;
+    // Did nothing - not required for a PS1 game...
+    // TODO: PC-PSX should cleanup logic be considered here?
 }

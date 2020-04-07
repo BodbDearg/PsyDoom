@@ -10,7 +10,6 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
-#include "PsxVm/PsxVm.h"
 #include "pw_main.h"
 
 // Available options and their names
@@ -191,15 +190,14 @@ gameaction_t O_Control() noexcept {
                         if (*gOptionsMusVol > 100) {
                             *gOptionsMusVol = 100;  // TODO: make a constant for '100'
                         } else {
-                            a0 = ((*gOptionsMusVol) * 127) / 100;   // TODO: make a constant for '127'
-                            S_SetMusicVolume();
+                            S_SetMusicVolume(((*gOptionsMusVol) * 127) / 100);      // TODO: make a constant for '127', '100'
 
                             if (*gOptionsMusVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
 
-                        *gCdMusicVol = ((*gOptionsMusVol) * 0x3CFF) / 100;      // TODO: where does the '0x3CFF' constant come from?
+                        *gCdMusicVol = ((*gOptionsMusVol) * 0x3CFF) / 100;          // TODO: where does the '0x3CFF' constant come from?
                     }
                     else if (ticButtons & PAD_LEFT) {
                         *gOptionsMusVol -= 1;
@@ -207,15 +205,14 @@ gameaction_t O_Control() noexcept {
                         if (*gOptionsMusVol < 0) {
                             *gOptionsMusVol = 0;
                         } else {
-                            a0 = ((*gOptionsMusVol) * 127) / 100;
-                            S_SetMusicVolume();
+                            S_SetMusicVolume(((*gOptionsMusVol) * 127) / 100);      // TODO: make a constant for '127', '100'
 
                             if (*gOptionsMusVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
 
-                        *gCdMusicVol = ((*gOptionsMusVol) * 0x3CFF) / 100;      // TODO: where does the '0x3CFF' constant come from?
+                        *gCdMusicVol = ((*gOptionsMusVol) * 0x3CFF) / 100;          // TODO: where does the '0x3CFF' constant come from?
                     }
                 }
             }   break;
@@ -228,10 +225,9 @@ gameaction_t O_Control() noexcept {
                         *gOptionsSndVol += 1;
 
                         if (*gOptionsSndVol > 100) {
-                            *gOptionsSndVol = 100;
+                            *gOptionsSndVol = 100;  // TODO: make a constant for '100'
                         } else {
-                            a0 = ((*gOptionsSndVol) * 127) / 100;
-                            S_SetSfxVolume();
+                            S_SetSfxVolume(((*gOptionsSndVol) * 127) / 100);        // TODO: make a constant for '127', '100'
                             
                             if (*gOptionsSndVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);
@@ -244,8 +240,7 @@ gameaction_t O_Control() noexcept {
                         if (*gOptionsSndVol < 0) {
                             *gOptionsSndVol = 0;
                         } else {
-                            a0 = ((*gOptionsSndVol) * 127) / 100;
-                            S_SetSfxVolume();
+                            S_SetSfxVolume(((*gOptionsSndVol) * 127) / 100);        // TODO: make a constant for '127', '100'
                             
                             if (*gOptionsSndVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);

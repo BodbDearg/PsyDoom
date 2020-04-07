@@ -144,7 +144,7 @@ void ST_InitEveryLevel() noexcept {
 
     *gbDrawSBFace = true;
     *gFaceTics = 0;
-    *gpCurSBFaceSprite = 0x80073E68;                    // TODO: StatusBarFaceSpriteInfo[0] (80073E68)
+    *gpCurSBFaceSprite = 0x80073E68;    // FIXME: StatusBarFaceSpriteInfo[0] (80073E68)
     *gbGibDraw = false;
     *gbDoSpclFace = false;
 
@@ -281,7 +281,7 @@ void ST_Ticker() noexcept {
     }
     
     // Save the sprite info for the face that will be drawn
-    *gpCurSBFaceSprite = 0x80073E68 + gStatusBar->face * sizeof(facesprite_t);  // TODO: StatusBarFaceSpriteInfo[0] (80073E68)
+    *gpCurSBFaceSprite = 0x80073E68 + gStatusBar->face * sizeof(facesprite_t);  // FIXME: StatusBarFaceSpriteInfo[0] (80073E68)
 
     // Update the current palette in use
     I_UpdatePalette();
