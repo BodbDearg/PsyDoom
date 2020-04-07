@@ -50,8 +50,7 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
 
         cmdBytes[0] = VolumeMod;
         cmdBytes[1] = trackStat.volume_cntrl;
-        a0 = ptrToVmAddr(&trackStat);
-        gWess_CmdFuncArr[trackStat.patchtype][VolumeMod]();     // FIXME: convert to native function call
+        gWess_CmdFuncArr[trackStat.patchtype][VolumeMod](trackStat);
         
         trackStat.ppos = pPrevCmdBytes;
     }
@@ -66,8 +65,7 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
 
             cmdBytes[0] = VolumeMod;
             cmdBytes[1] = trackStat.volume_cntrl;
-            a0 = ptrToVmAddr(&trackStat);
-            gWess_CmdFuncArr[trackStat.patchtype][VolumeMod]();     // FIXME: convert to native function call
+            gWess_CmdFuncArr[trackStat.patchtype][VolumeMod](trackStat);
 
             trackStat.ppos = pOldCmdBytes;
         }
@@ -81,8 +79,7 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
 
             cmdBytes[0] = PanMod;
             cmdBytes[1] = trackStat.pan_cntrl;
-            a0 = ptrToVmAddr(&trackStat);
-            gWess_CmdFuncArr[trackStat.patchtype][PanMod]();        // FIXME: convert to native function call
+            gWess_CmdFuncArr[trackStat.patchtype][PanMod](trackStat);
             
             trackStat.ppos = pOldCmdBytes;
         }
@@ -103,8 +100,7 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
         cmdBytes[0] = PitchMod;
         cmdBytes[1] = (uint8_t)(trackStat.pitch_cntrl >> 0);
         cmdBytes[2] = (uint8_t)(trackStat.pitch_cntrl >> 8);
-        a0 = ptrToVmAddr(&trackStat);
-        gWess_CmdFuncArr[trackStat.patchtype][PitchMod]();          // FIXME: convert to native function call
+        gWess_CmdFuncArr[trackStat.patchtype][PitchMod](trackStat);
 
         trackStat.ppos = pOldCmdBytes;
     }
@@ -254,8 +250,7 @@ void wess_seq_stoptype(const uint32_t seqType) noexcept {
 
                     // Call the driver function to turn off the track
                     track_status& trackStat = mstat.ptrkstattbl[trackIdx];
-                    a0 = ptrToVmAddr(&trackStat);
-                    gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native function call
+                    gWess_CmdFuncArr[trackStat.patchtype][TrkOff](trackStat);
 
                     // If there are no more tracks left active then we are done
                     numActiveTracks--;

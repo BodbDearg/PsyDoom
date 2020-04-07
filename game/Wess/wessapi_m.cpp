@@ -92,8 +92,7 @@ void wess_master_mus_vol_set(const uint8_t musicVol) noexcept {
 
                     cmdBytes[0] = VolumeMod;
                     cmdBytes[1] = trackStat.volume_cntrl;
-                    a0 = ptrToVmAddr(&trackStat);
-                    gWess_CmdFuncArr[trackStat.patchtype][VolumeMod]();     // FIXME: convert to native function call
+                    gWess_CmdFuncArr[trackStat.patchtype][VolumeMod](trackStat);
 
                     trackStat.ppos = pPrevCmdBytes;
                 }

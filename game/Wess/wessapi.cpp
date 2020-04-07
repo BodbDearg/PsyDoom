@@ -215,9 +215,8 @@ void wess_unload_module() noexcept {
     wess_seq_stopall();
     *gbWess_SeqOn = false;
 
-    master_status_structure& mstat = *gpWess_pm_stat->get();    
-    a0 = ptrToVmAddr(&mstat);
-    gWess_CmdFuncArr[NoSound_ID][DriverExit]();     // FIXME: convert to native function call
+    master_status_structure& mstat = *gpWess_pm_stat->get();
+    gWess_CmdFuncArr[NoSound_ID][DriverExit](mstat);
 
     // Shutdown loaded sound drivers
     const int32_t numSndDrv = (*gpWess_pm_stat)->patch_types_loaded;
@@ -232,8 +231,7 @@ void wess_unload_module() noexcept {
         );
 
         if (bWasDriverInitialized) {
-            a0 = ptrToVmAddr(&mstat);
-            gWess_CmdFuncArr[patch_grp.hw_tl_list.hardware_ID][DriverExit]();   // FIXME: convert to native function call
+            gWess_CmdFuncArr[patch_grp.hw_tl_list.hardware_ID][DriverExit](mstat);
         }
     }
 
@@ -717,10 +715,7 @@ int32_t wess_load_module(
     }
 
     // Initialize the sequencer
-    //
-    // FIXME: use the real function prototype.
-    a0 = ptrToVmAddr(&mstat);
-    gWess_CmdFuncArr[NoSound_ID][DriverInit]();
+    gWess_CmdFuncArr[NoSound_ID][DriverInit](mstat);
     
     // Initialize loaded drivers
     for (int32_t drvIdx = 0; drvIdx < mstat.patch_types_loaded; ++ drvIdx) {
@@ -735,10 +730,7 @@ int32_t wess_load_module(
 
         if (bInitDriver) {
             // Initialize the driver
-            //
-            // FIXME: use the real function prototype.
-            a0 = ptrToVmAddr(&mstat);
-            gWess_CmdFuncArr[patch_grp.hw_tl_list.hardware_ID][DriverInit]();
+            gWess_CmdFuncArr[patch_grp.hw_tl_list.hardware_ID][DriverInit](mstat);
         }
     }
 
@@ -1073,8 +1065,7 @@ void wess_seq_stop(const int32_t seqNum) noexcept {
                 
                 // Call the driver function to turn off the track
                 track_status& trackStat = mstat.ptrkstattbl[trackIdx];
-                a0 = ptrToVmAddr(&trackStat);
-                gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native call
+                gWess_CmdFuncArr[trackStat.patchtype][TrkOff](trackStat);
 
                 // If there are no more tracks left active then we are done
                 --numSeqTracksActive;
@@ -1131,8 +1122,7 @@ void wess_seq_stopall() noexcept {
                 
                 // Call the driver function to turn off the track
                 track_status& trackStat = mstat.ptrkstattbl[trackIdx];
-                a0 = ptrToVmAddr(&trackStat);
-                gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native function call
+                gWess_CmdFuncArr[trackStat.patchtype][TrkOff](trackStat);
 
                 // If there are no more tracks left active then we are done
                 numSeqTracksActive--;

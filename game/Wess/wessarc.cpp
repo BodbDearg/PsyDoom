@@ -10,7 +10,7 @@
 #include "PsyQ/LIBSPU.h"
 #include "wessseq.h"
 
-extern void (* const * const gWess_CmdFuncArr[10])() = {
+const WessDriverFunc* const gWess_CmdFuncArr[10] = {
     gWess_DrvFunctions,
     gWess_drv_cmds,
     gWess_DrvFunctions,

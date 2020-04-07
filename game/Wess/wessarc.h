@@ -362,13 +362,29 @@ extern const VmPtr<uint8_t[CD_SECTOR_SIZE]>     gWess_sectorBuffer1;
 extern const VmPtr<uint8_t[CD_SECTOR_SIZE]>     gWess_sectorBuffer2;
 extern const VmPtr<bool32_t>                    gbWess_SeqOn;
 
+// Type for a driver or sequencer command function.
+// The format of the function depends on the particular command function invoked.
+struct WessDriverFunc {
+    // These are the three acceptable formats for the driver function
+    union {
+        void (*pNoArg)() noexcept;
+        void (*pMasterStatArg)(master_status_structure& mstat) noexcept;
+        void (*pTrackStatArg)(track_status& trackStat) noexcept;
+    };
+
+    inline WessDriverFunc(void (*pNoArg)() noexcept) noexcept : pNoArg(pNoArg) {}
+    inline WessDriverFunc(void (*pMasterStatArg)(master_status_structure&) noexcept) noexcept : pMasterStatArg(pMasterStatArg) {}
+    inline WessDriverFunc(void (*pTrackStatArg)(track_status&) noexcept) noexcept : pTrackStatArg(pTrackStatArg) {}
+
+    // Invoke the function using one of the following overloads
+    inline void operator()() const noexcept { pNoArg(); }
+    inline void operator()(master_status_structure& mstat) const noexcept { pMasterStatArg(mstat); }
+    inline void operator()(track_status& trackStat) const noexcept { pTrackStatArg(trackStat); }
+};
+
 // Lists of command handling functions for each driver.
 // Up to 10 driver slots are available.
-//
-// FIXME: Change to:
-//  extern void (* const * const gWess_CmdFuncArr[10])(track_status&)
-//
-extern void (* const * const gWess_CmdFuncArr[10])();
+extern const WessDriverFunc* const gWess_CmdFuncArr[10];
 
 int16_t GetIntsPerSec() noexcept;
 uint32_t CalcPartsPerInt(const int16_t intsPerSec, const int16_t partsPerQNote, const int16_t qnotesPerMin) noexcept;

@@ -4,84 +4,51 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "wessseq.h"
 
-#include "PsxVm/PsxVm.h"
 #include "wessarc.h"
 
-// TODO: REMOVE ALL OF THESE
-void _thunk_Eng_DriverInit() noexcept { Eng_DriverInit(*vmAddrToPtr<master_status_structure>(a0)); }
-void _thunk_Eng_DriverExit() noexcept { Eng_DriverExit(*vmAddrToPtr<master_status_structure>(a0)); }
-void _thunk_Eng_TrkOff() noexcept { Eng_TrkOff(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_TrkMute() noexcept { Eng_TrkMute(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_PatchChg() noexcept { Eng_PatchChg(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_PatchMod() noexcept { Eng_PatchMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_PitchMod() noexcept { Eng_PitchMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_ZeroMod() noexcept { Eng_ZeroMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_ModuMod() noexcept { Eng_ModuMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_VolumeMod() noexcept { Eng_VolumeMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_PanMod() noexcept { Eng_PanMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_PedalMod() noexcept { Eng_PedalMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_ReverbMod() noexcept { Eng_ReverbMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_ChorusMod() noexcept { Eng_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_NoteOn() noexcept { Eng_NoteOn(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_NoteOff() noexcept { Eng_NoteOff(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_StatusMark() noexcept { Eng_StatusMark(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_GateJump() noexcept { Eng_GateJump(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_IterJump() noexcept { Eng_IterJump(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_ResetGates() noexcept { Eng_ResetGates(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_ResetIters() noexcept { Eng_ResetIters(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_WriteIterBox() noexcept { Eng_WriteIterBox(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_SeqTempo() noexcept { Eng_SeqTempo(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_SeqGosub() noexcept { Eng_SeqGosub(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_SeqJump() noexcept { Eng_SeqJump(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_SeqRet() noexcept { Eng_SeqRet(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_SeqEnd() noexcept { Eng_SeqEnd(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_TrkTempo() noexcept { Eng_TrkTempo(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_TrkGosub() noexcept { Eng_TrkGosub(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_TrkJump() noexcept { Eng_TrkJump(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_TrkRet() noexcept { Eng_TrkRet(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_TrkEnd() noexcept { Eng_TrkEnd(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_Eng_NullEvent() noexcept { Eng_NullEvent(*vmAddrToPtr<track_status>(a0)); }
+#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PsxVm/PsxVm.h"
 
-void (* const gWess_DrvFunctions[36])() = {
+const WessDriverFunc gWess_DrvFunctions[36] = {
     // Manually called commands
-    _thunk_Eng_DriverInit,          // 00
-    _thunk_Eng_DriverExit,          // 01
+    Eng_DriverInit,                 // 00
+    Eng_DriverExit,                 // 01
     Eng_DriverEntry1,               // 02
     Eng_DriverEntry2,               // 03
     Eng_DriverEntry3,               // 04
-    _thunk_Eng_TrkOff,              // 05
-    _thunk_Eng_TrkMute,             // 06
+    Eng_TrkOff,                     // 05
+    Eng_TrkMute,                    // 06
     // Hardware driver commands
-    _thunk_Eng_PatchChg,            // 07
-    _thunk_Eng_PatchMod,            // 08
-    _thunk_Eng_PitchMod,            // 09
-    _thunk_Eng_ZeroMod,             // 10
-    _thunk_Eng_ModuMod,             // 11
-    _thunk_Eng_VolumeMod,           // 12
-    _thunk_Eng_PanMod,              // 13
-    _thunk_Eng_PedalMod,            // 14
-    _thunk_Eng_ReverbMod,           // 15
-    _thunk_Eng_ChorusMod,           // 16
-    _thunk_Eng_NoteOn,              // 17
-    _thunk_Eng_NoteOff,             // 18
+    Eng_PatchChg,                   // 07
+    Eng_PatchMod,                   // 08
+    Eng_PitchMod,                   // 09
+    Eng_ZeroMod,                    // 10
+    Eng_ModuMod,                    // 11
+    Eng_VolumeMod,                  // 12
+    Eng_PanMod,                     // 13
+    Eng_PedalMod,                   // 14
+    Eng_ReverbMod,                  // 15
+    Eng_ChorusMod,                  // 16
+    Eng_NoteOn,                     // 17
+    Eng_NoteOff,                    // 18
     // Sequencer commands
-    _thunk_Eng_StatusMark,          // 19
-    _thunk_Eng_GateJump,            // 20
-    _thunk_Eng_IterJump,            // 21
-    _thunk_Eng_ResetGates,          // 22
-    _thunk_Eng_ResetIters,          // 23
-    _thunk_Eng_WriteIterBox,        // 24
-    _thunk_Eng_SeqTempo,            // 25
-    _thunk_Eng_SeqGosub,            // 26
-    _thunk_Eng_SeqJump,             // 27
-    _thunk_Eng_SeqRet,              // 28
-    _thunk_Eng_SeqEnd,              // 29
-    _thunk_Eng_TrkTempo,            // 30
-    _thunk_Eng_TrkGosub,            // 31
-    _thunk_Eng_TrkJump,             // 32
-    _thunk_Eng_TrkRet,              // 33
-    _thunk_Eng_TrkEnd,              // 34
-    _thunk_Eng_NullEvent            // 35
+    Eng_StatusMark,                 // 19
+    Eng_GateJump,                   // 20
+    Eng_IterJump,                   // 21
+    Eng_ResetGates,                 // 22
+    Eng_ResetIters,                 // 23
+    Eng_WriteIterBox,               // 24
+    Eng_SeqTempo,                   // 25
+    Eng_SeqGosub,                   // 26
+    Eng_SeqJump,                    // 27
+    Eng_SeqRet,                     // 28
+    Eng_SeqEnd,                     // 29
+    Eng_TrkTempo,                   // 30
+    Eng_TrkGosub,                   // 31
+    Eng_TrkJump,                    // 32
+    Eng_TrkRet,                     // 33
+    Eng_TrkEnd,                     // 34
+    Eng_NullEvent                   // 35
 };
 
 // The size in bytes of each sequencer command
@@ -399,7 +366,7 @@ void Eng_StatusMark(track_status& trackStat) noexcept {
         const uint8_t callbackType = trackStat.ppos[1];
 
         if (callbackStat.type == callbackType) {
-            // TODO: remove this once real function pointers are used
+            // FIXME: remove this once real function pointers are used
             typedef void (*CallbackFunc)(uint8_t callbackType, int16_t value);
             const CallbackFunc callback = (CallbackFunc) PsxVm::getVmFuncForAddr(callbackStat.callfunc.addr());
 
@@ -718,8 +685,7 @@ void Eng_SeqEnd(track_status& trackStat) noexcept {
 
         // Mute the track
         track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackIdx];
-        a0 = ptrToVmAddr(&thisTrackStat);
-        gWess_CmdFuncArr[thisTrackStat.patchtype][TrkOff]();    // FIXME: convert to native call
+        gWess_CmdFuncArr[thisTrackStat.patchtype][TrkOff](thisTrackStat);
 
         // If there are no more tracks left then we are done
         activeTracksLeft--;
@@ -817,8 +783,7 @@ void Eng_TrkEnd(track_status& trackStat) noexcept {
     }
     else {
         // Not repeating: mute the track
-        a0 = ptrToVmAddr(&trackStat);
-        gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();
+        gWess_CmdFuncArr[trackStat.patchtype][TrkOff](trackStat);
 
         // TODO: what is this trying to do?
         if (trackStat.handled) {
@@ -867,8 +832,7 @@ void SeqEngine() noexcept {
                 // Is it time to turn off a timed track?
                 if (trackStat.timed && (trackStat.totppi >= trackStat.endppi)) {
                     // Turn off the timed track
-                    a0 = ptrToVmAddr(&trackStat);
-                    gWess_CmdFuncArr[trackStat.patchtype][TrkOff]();    // FIXME: convert to native call
+                    gWess_CmdFuncArr[trackStat.patchtype][TrkOff](trackStat);
                 }
                 else {
                     // Not a timed track or not reached the end. Continue executing sequencer commands while the track's time marker is >=
@@ -884,8 +848,7 @@ void SeqEngine() noexcept {
                         // Decide what executes this command, the sequencer engine or the hardware driver
                         if ((seqCmd >= PatchChg) && (seqCmd <= NoteOff)) {
                             // The hardware sound driver executes this command: do it!
-                            a0 = ptrToVmAddr(&trackStat);
-                            gWess_CmdFuncArr[trackStat.patchtype][seqCmd]();    // FIXME: convert to native call
+                            gWess_CmdFuncArr[trackStat.patchtype][seqCmd](trackStat);
 
                             // Skip past the command bytes and read the delta time until the next command
                             trackStat.ppos += gWess_seq_CmdLength[seqCmd];
@@ -893,8 +856,7 @@ void SeqEngine() noexcept {
                         } 
                         else if ((seqCmd >= StatusMark) && (seqCmd <= NullEvent)) {
                             // The sequencer executes this command: do it!
-                            a0 = ptrToVmAddr(&trackStat);
-                            gWess_DrvFunctions[seqCmd]();   // FIXME: convert to native call
+                            gWess_DrvFunctions[seqCmd](trackStat);
 
                             // Automatically go onto the next sequencer command unless we are instructed to skip doing that.
                             // Some commands which change the control flow will set the 'skip' flag so that they may set where to go to next.

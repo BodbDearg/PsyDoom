@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PsxVm/VmPtr.h"
+#include "wessarc.h"
 
 struct master_status_structure;
 struct NoteState;
@@ -18,16 +18,12 @@ extern const VmPtr<uint8_t>             gWess_master_mus_volume;
 extern const VmPtr<PanMode>             gWess_pan_status;
 extern const VmPtr<VmPtr<NoteState>>    gpWess_notestate;
 
-// Sequencer command functions.
-//
-// FIXME: Change to:
-//  extern void (* const gWess_DrvFunctions[36])(track_status&)
-//
-extern void (* const gWess_DrvFunctions[36])();
+// Sequencer command functions
+extern const WessDriverFunc gWess_DrvFunctions[36];
 
 uint8_t* Read_Vlq(uint8_t* const pTrackBytes, uint32_t& deltaTimeOut) noexcept;
 uint8_t* Write_Vlq(uint8_t* const pTrackBytes, const uint32_t deltaTime) noexcept;
-void Len_Vlq() noexcept;
+int32_t Len_Vlq(const uint32_t deltaTime) noexcept;
 void Eng_DriverInit(master_status_structure& mstat) noexcept;
 void Eng_DriverExit(master_status_structure& mstat) noexcept;
 void Eng_DriverEntry1() noexcept;

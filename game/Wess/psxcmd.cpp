@@ -5,50 +5,31 @@
 #include "psxcmd.h"
 
 #include "psxspu.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessapi.h"
 #include "wessarc.h"
 #include "wessseq.h"
 
-// TODO: REMOVE ALL OF THESE
-void _thunk_PSX_DriverInit() noexcept { PSX_DriverInit(*vmAddrToPtr<master_status_structure>(a0)); }
-void _thunk_PSX_DriverExit() noexcept { PSX_DriverExit(*vmAddrToPtr<master_status_structure>(a0)); }
-void _thunk_PSX_TrkOff() noexcept { PSX_TrkOff(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_TrkMute() noexcept { PSX_TrkMute(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_PatchChg() noexcept { PSX_PatchChg(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_PatchMod() noexcept { PSX_PatchMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_PitchMod() noexcept { PSX_PitchMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_ZeroMod() noexcept { PSX_ZeroMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_ModuMod() noexcept { PSX_ModuMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_VolumeMod() noexcept { PSX_VolumeMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_PanMod() noexcept { PSX_PanMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_PedalMod() noexcept { PSX_PedalMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_ReverbMod() noexcept { PSX_ReverbMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_ChorusMod() noexcept { PSX_ChorusMod(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_NoteOn() noexcept { PSX_NoteOn(*vmAddrToPtr<track_status>(a0)); }
-void _thunk_PSX_NoteOff() noexcept { PSX_NoteOff(*vmAddrToPtr<track_status>(a0)); }
-
-void (* const gWess_drv_cmds[19])() = {
-    _thunk_PSX_DriverInit,      // 00
-    _thunk_PSX_DriverExit,      // 01
-    PSX_DriverEntry1,           // 02
-    PSX_DriverEntry2,           // 03
-    PSX_DriverEntry3,           // 04
-    _thunk_PSX_TrkOff,          // 05
-    _thunk_PSX_TrkMute,         // 06
-    _thunk_PSX_PatchChg,        // 07
-    _thunk_PSX_PatchMod,        // 08
-    _thunk_PSX_PitchMod,        // 09
-    _thunk_PSX_ZeroMod,         // 10
-    _thunk_PSX_ModuMod,         // 11
-    _thunk_PSX_VolumeMod,       // 12
-    _thunk_PSX_PanMod,          // 13
-    _thunk_PSX_PedalMod,        // 14
-    _thunk_PSX_ReverbMod,       // 15
-    _thunk_PSX_ChorusMod,       // 16
-    _thunk_PSX_NoteOn,          // 17
-    _thunk_PSX_NoteOff          // 18
+const WessDriverFunc gWess_drv_cmds[19] = {
+    PSX_DriverInit,         // 00
+    PSX_DriverExit,         // 01
+    PSX_DriverEntry1,       // 02
+    PSX_DriverEntry2,       // 03
+    PSX_DriverEntry3,       // 04
+    PSX_TrkOff,             // 05
+    PSX_TrkMute,            // 06
+    PSX_PatchChg,           // 07
+    PSX_PatchMod,           // 08
+    PSX_PitchMod,           // 09
+    PSX_ZeroMod,            // 10
+    PSX_ModuMod,            // 11
+    PSX_VolumeMod,          // 12
+    PSX_PanMod,             // 13
+    PSX_PedalMod,           // 14
+    PSX_ReverbMod,          // 15
+    PSX_ChorusMod,          // 16
+    PSX_NoteOn,             // 17
+    PSX_NoteOff             // 18
 };
 
 static const VmPtr<VmPtr<master_status_structure>>      gpWess_drv_mstat(0x8007F164);               // Pointer to the master status structure being used by the sequencer

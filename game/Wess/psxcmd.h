@@ -1,20 +1,11 @@
 #pragma once
 
-#include <cstdint>
+#include "wessarc.h"
 
-struct master_status_structure;
 struct NoteState;
-struct patchinfo_header;
-struct patchmaps_header;
-struct track_status;
-struct voice_status;
 
-// PlayStation sound driver command functions.
-//
-// FIXME: Change to:
-//  extern void (* const gWess_drv_cmds[19])(track_status&)
-//
-extern void (* const gWess_drv_cmds[19])();
+// PlayStation sound driver command functions
+extern const WessDriverFunc gWess_drv_cmds[19];
 
 void start_record_music_mute(NoteState* const pNoteState) noexcept;
 void end_record_music_mute() noexcept;

@@ -82,8 +82,7 @@ void wess_seq_pause(const int32_t seqNum, const bool bMute) noexcept {
                     
                     // If muting then call the driver function to mute the track
                     if (bMute) {
-                        a0 = ptrToVmAddr(&trackStat);
-                        gWess_CmdFuncArr[trackStat.patchtype][TrkMute]();       // FIXME: convert to native function call
+                        gWess_CmdFuncArr[trackStat.patchtype][TrkMute](trackStat);
                     }
 
                     // If there are no more tracks left active to visit then we are done
@@ -217,8 +216,7 @@ void wess_seq_pauseall(const bool bMute, NoteState* const pNoteState) noexcept {
                 track_status& trackStat = mstat.ptrkstattbl[trackIdx];
                 
                 if (bMute == 1) {
-                    a0 = ptrToVmAddr(&trackStat);
-                    gWess_CmdFuncArr[trackStat.patchtype][TrkMute]();   // FIXME: convert to native function call
+                    gWess_CmdFuncArr[trackStat.patchtype][TrkMute](trackStat);
                 }
 
                 trackstop(trackStat, seqStat);
