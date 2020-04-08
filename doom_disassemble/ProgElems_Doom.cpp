@@ -3609,7 +3609,7 @@ static const ProgElem ELEMS[] = {
     { 0x800783D0, 0x800783F8, "gPSXCD_lastfilestruct",                  ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x800783F8, 0x80078588, "gTrackCdlLOC",                           ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80078588, 0x8007EB18, "gSound_WmdMem",                          ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
-    { 0x8007EB18, 0x8007EC9C, "gSavedMusVoiceState",                    ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
+    { 0x8007EB18, 0x8007EC9C, "gPausedMusVoiceState",                   ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x8007EC9C, 0x8007EE30, "gDoomSndBlock",                          ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x8007EE30, 0x8007EFC4, "gMapSndBlock",                           ProgElemType::ARRAY, ProgElemType::UINT16, 0 },
     { 0x8007EFC4, 0x8007EFE0, "gWess_scratch_pat_grp_hdr",              ProgElemType::ARRAY, ProgElemType::UINT32, 0 },

@@ -66,6 +66,9 @@ static const VmPtr<SampleBlock>     gMapSndBlock(0x8007EE30);
 // Is the DOOMSFX.LCD file loaded? (main sound effect samples)
 static const VmPtr<bool32_t>    gbDidLoadDoomSfxLcd(0x80077E20);
 
+// Used to save the state of voices when pausing
+static const VmPtr<NoteState>   gPausedMusVoiceState(0x8007EB18);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the master sound effects volume
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -306,39 +309,25 @@ loc_80041300:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Stops all playing sounds and sequencer music: music state is also saved for later restoring
+//------------------------------------------------------------------------------------------------------------------------------------------
 void S_Pause() noexcept {
-loc_80041318:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 -= 0x14E8;                                       // Result = gSavedMusVoiceState[0] (8007EB18)
-    a0 = 1;                                             // Result = 00000001
-    wess_seq_pauseall(a0, vmAddrToPtr<NoteState>(a1));
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    wess_seq_pauseall(true, gPausedMusVoiceState.get());
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Resume playing previously paused music
+//------------------------------------------------------------------------------------------------------------------------------------------
 void S_Resume() noexcept {
-loc_80041340:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0x14E8;                                       // Result = gSavedMusVoiceState[0] (8007EB18)
-    wess_seq_restartall(vmAddrToPtr<NoteState>(a0));
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    wess_seq_restartall(gPausedMusVoiceState.get());
 }
 
-void S_StopSound() noexcept {
-loc_80041368:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    wess_seq_stoptype(a0);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Stop playing the specified sound
+//------------------------------------------------------------------------------------------------------------------------------------------
+void S_StopSound(const VmPtr<mobj_t> origin) noexcept {
+    wess_seq_stoptype(origin.addr());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

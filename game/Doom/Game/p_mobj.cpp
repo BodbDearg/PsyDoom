@@ -355,7 +355,7 @@ loc_8001CC0C:
     v0 = lw(v1 + 0x38);
     if (v0 == 0) goto loc_8001CC54;
     a0 = lw(s0 + 0x74);
-    S_StopSound();
+    S_StopSound((sfxenum_t) a0);
     v0 = lw(s0 + 0x58);
     a1 = lw(v0 + 0x38);
     a0 = s0;
@@ -1314,7 +1314,7 @@ loc_8001DC38:
     v0 = lw(v1 + 0x38);
     if (v0 == 0) goto loc_8001DC80;
     a0 = lw(s0 + 0x74);
-    S_StopSound();
+    S_StopSound((sfxenum_t) a0);
     v0 = lw(s0 + 0x58);
     a1 = lw(v0 + 0x38);
     a0 = s0;
@@ -1578,7 +1578,7 @@ loc_8001E07C:
         if (bJump) goto loc_8001E0C8;
     }
     a0 = lw(s1 + 0x74);
-    S_StopSound();
+    S_StopSound((sfxenum_t) a0);
     v0 = lw(s1 + 0x58);
     a1 = lw(v0 + 0x38);
     a0 = s1;
@@ -1814,7 +1814,7 @@ loc_8001E47C:
     v0 = lw(v1 + 0x38);
     if (v0 == 0) goto loc_8001E4C4;
     a0 = lw(s2 + 0x74);
-    S_StopSound();
+    S_StopSound((sfxenum_t) a0);
     v0 = lw(s2 + 0x58);
     a1 = lw(v0 + 0x38);
     a0 = s2;

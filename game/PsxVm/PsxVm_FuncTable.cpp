@@ -283,9 +283,6 @@ extern void S_StopMusic() noexcept;
 extern void S_StartMusic() noexcept;
 extern void S_UnloadSamples() noexcept;
 extern void S_LoadSoundAndMusic() noexcept;
-extern void S_Pause() noexcept;
-extern void S_Resume() noexcept;
-extern void S_StopSound() noexcept;
 extern void I_StartSound() noexcept;
 extern void _thunk_S_StartSound() noexcept;
 extern void S_UpdateSounds() noexcept;
@@ -604,9 +601,6 @@ namespace PsxVm {
         { 0x80041050, &S_StartMusic },
         { 0x800410A0, &S_UnloadSamples },
         { 0x80041118, &S_LoadSoundAndMusic },
-        { 0x80041318, &S_Pause },
-        { 0x80041340, &S_Resume },
-        { 0x80041368, &S_StopSound },
         { 0x800413A8, &I_StartSound },
         { 0x800415B4, &_thunk_S_StartSound },
         { 0x800415D4, &S_UpdateSounds },

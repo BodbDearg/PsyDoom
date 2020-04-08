@@ -36,7 +36,7 @@ void S_UnloadSamples() noexcept;
 void S_LoadSoundAndMusic() noexcept;
 void S_Pause() noexcept;
 void S_Resume() noexcept;
-void S_StopSound() noexcept;
+void S_StopSound(const VmPtr<mobj_t> origin) noexcept;
 void S_StopAll() noexcept;
 void I_StartSound() noexcept;
 
