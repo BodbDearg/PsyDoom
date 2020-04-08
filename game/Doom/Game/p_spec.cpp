@@ -827,7 +827,7 @@ loc_80026AAC:
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_80026ABC:
-    S_StopMusicSequence();
+    S_StopMusic();
     v0 = 0x80070000;                                    // Result = 80070000
     v0 += 0x3E5C;                                       // Result = CDTrackNum_ClubDoom (80073E5C)
     a0 = lw(v0);                                        // Load from: CDTrackNum_ClubDoom (80073E5C)

@@ -8,6 +8,10 @@ enum SpuReverbMode : uint32_t;
 static constexpr int16_t MAX_MASTER_VOL = 0x3FFF;
 static constexpr int16_t MAX_CD_VOL     = 0x3CFF;
 
+// This is the first usable address in SPU RAM for the application.
+// Memory before this is reserved by the PlayStation for things like mixing CD Audio, audio input buffers and so on.
+static constexpr uint32_t SPU_RAM_APP_BASE = 0x1010;
+
 extern const VmPtr<uint32_t> gPsxSpu_sram_end;
 
 void psxspu_init_reverb(

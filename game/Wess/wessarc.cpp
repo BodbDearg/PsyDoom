@@ -199,7 +199,7 @@ void module_close(PsxCd_File& file) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Return the number of sound drivers available
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t get_num_Wess_Sound_Drivers([[maybe_unused]] VmPtr<int32_t>* const pSettingsTagLists) noexcept {
+int32_t get_num_Wess_Sound_Drivers(const int32_t* const* const pSettingTagLists) noexcept {
     return 1;
 }
 

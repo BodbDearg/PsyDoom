@@ -4,6 +4,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
+#include "sounds.h"
 #include "Wess/lcdload.h"
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
@@ -13,6 +14,22 @@
 #include "Wess/wessapi_m.h"
 #include "Wess/wessapi_p.h"
 #include "Wess/wessapi_t.h"
+#include "Wess/wessarc.h"
+
+// Sound settings for the WESS PSX sound driver
+static const int32_t gSound_PSXSettings[SNDHW_TAG_MAX * 2] = {
+    SNDHW_TAG_DRIVER_ID,        PSX_ID,
+    SNDHW_TAG_SOUND_EFFECTS,    1,
+    SNDHW_TAG_MUSIC,            1,
+    SNDHW_TAG_DRUMS,            1,
+    SNDHW_TAG_END,              0
+};
+
+// What sound settings to use to when loading the .WMD file
+static const int32_t* gSound_SettingsLists[2] = {
+    gSound_PSXSettings,
+    nullptr
+};
 
 // What track each piece of music uses
 const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS] = {
@@ -27,6 +44,27 @@ const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS] = {
 
 // Current volume cd music is played back at
 const VmPtr<int32_t> gCdMusicVol(0x800775F8);
+
+// The size of the WMD buffer
+static constexpr uint32_t WMD_MEM_SIZE = 26000;
+
+// The buffer used to hold the master status structure created by loading the .WMD file.
+// Also holds sequence data for current level music.
+static const VmPtr<uint8_t[WMD_MEM_SIZE]> gSound_WmdMem(0x80078588);
+
+// The start pointer within 'gSound_WmdMem' where map music sequences can be loaded to.
+// Anything at this address or after in the buffer can be used for that purpose.
+static const VmPtr<VmPtr<uint8_t>> gpSound_MusicSeqData(0x80077E1C);
+
+// The next address in SPU RAM to upload sounds to
+static const VmPtr<uint32_t>    gSound_CurSpuAddr(0x80077E18);
+
+// Sample blocks for general DOOM sounds and map specific music and sfx sounds
+static const VmPtr<SampleBlock>     gDoomSndBlock(0x8007EC9C);
+static const VmPtr<SampleBlock>     gMapSndBlock(0x8007EE30);
+
+// Is the DOOMSFX.LCD file loaded? (main sound effect samples)
+static const VmPtr<bool32_t>    gbDidLoadDoomSfxLcd(0x80077E20);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the master sound effects volume
@@ -52,7 +90,7 @@ void S_SetMusicVolume(const int32_t musVol) noexcept {
     psxspu_set_cd_vol(cdVol);
 }
 
-void S_StopMusicSequence() noexcept {
+void S_StopMusic() noexcept {
 loc_80041014:
     v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
     sp -= 0x18;
@@ -70,11 +108,11 @@ loc_80041040:
     return;
 }
 
-void S_StartMusicSequence() noexcept {
+void S_StartMusic() noexcept {
 loc_80041050:
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    S_StopMusicSequence();
+    S_StopMusic();
     v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
     {
         const bool bJump = (v0 == 0);
@@ -146,7 +184,7 @@ loc_80041118:
     v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
     if (v0 == 0) goto loc_80041188;
     s0 = 1;                                             // Result = 00000001
-    S_StopMusicSequence();
+    S_StopMusic();
 loc_80041154:
     v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
     v0 <<= 4;
@@ -473,83 +511,56 @@ loc_800415D4:
     return;
 }
 
-void PsxSoundInit() noexcept {
-loc_800415EC:
-    sp -= 0x28;
-    sw(s3, sp + 0x1C);
-    s3 = a0;
-    sw(s4, sp + 0x20);
-    s4 = a1;
-    sw(s1, sp + 0x14);
-    s1 = a2;
-    sw(ra, sp + 0x24);
-    sw(s2, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = wess_init();
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the PlayStation sound system.
+// The given temporary buffer is used to hold the .WMD file while it is being processed.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWmdLoadBuffer) noexcept {    
+    // Initialize the WESS API and low level CDROM utilities
+    wess_init();
     psxcd_init();
-    a0 = 0xC9;                                          // Result = 000000C9
-    v0 = ptrToVmAddr(psxcd_open((CdMapTbl_File) a0));
-    a0 = s1;
-    s0 = v0;
-    a1 = lw(s0 + 0x4);
-    a2 = s0;
-    v0 = psxcd_read(vmAddrToPtr<void>(a0), a1, *vmAddrToPtr<PsxCd_File>(a2));
-    a0 = s0;
-    psxcd_close(*vmAddrToPtr<PsxCd_File>(a0));
-    s2 = 0x80080000;                                    // Result = 80080000
-    s2 -= 0x1364;                                       // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
-    a0 = s2;                                            // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
-    S_InitBlock(*vmAddrToPtr<SampleBlock>(a0));
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0x11D0;                                       // Result = gMapMusSfxLoadedSamples[0] (8007EE30)
-    S_InitBlock(*vmAddrToPtr<SampleBlock>(a0));
 
-    a0 = s1;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 -= 0x7A78;                                       // Result = gPSXSND_wmdMemBuffer[0] (80078588)
-    a2 = lw(gp + 0x824);                                // Load from: gPSXSND_maxWmdSize (80077E04)
-    a3 = 0x80070000;                                    // Result = 80070000
-    a3 += 0x7E08;                                       // Result = gPSXSND_soundSettingsLists[0] (80077E08)
-    
-    v0 = wess_load_module(
-        vmAddrToPtr<void>(a0),
-        vmAddrToPtr<void>(a1),
-        a2,
-        vmAddrToPtr<VmPtr<int32_t>>(a3)
-    );
+    // Read the WMD file into the given buffer (assumes it is big enough)
+    PsxCd_File* const pFile = psxcd_open(CdMapTbl_File::DOOMSFX_WMD);
 
-    wess_dig_lcd_loader_init(wess_get_master_status());
-    v0 = wess_seq_loader_init(wess_get_master_status(), CdMapTbl_File::DOOMSFX_WMD, true);
-    v0 = ptrToVmAddr(wess_get_wmd_end());
-    a0 = 0;                                             // Result = 00000000
-    a1 = 0x5A;                                          // Result = 0000005A
-    a2 = v0;
-    v0 = wess_seq_range_load(a0, a1, vmAddrToPtr<void>(a2));
-    s0 = v0;
-    v0 = ptrToVmAddr(wess_get_wmd_end());
-    v0 += s0;
-    sw(v0, gp + 0x83C);                                 // Store to: gpMusSequencesEnd (80077E1C)
-    a0 = s3;
-    S_SetSfxVolume(a0);
-    a0 = s4;
-    S_SetMusicVolume(a0);
-    a0 = 0xC8;                                          // Result = 000000C8
-    a1 = 0x1010;                                        // Result = 00001010
-    a2 = s2;                                            // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
-    sw(0, gp + 0x840);                                  // Store to: gbDidLoadDoomSfxLcd (80077E20)
-    a3 = 0;                                             // Result = 00000000
-    v0 = wess_dig_lcd_load((CdMapTbl_File) a0, a1, vmAddrToPtr<SampleBlock>(a2), a3);
-    v0 += 0x1010;
-    sw(v0, gp + 0x838);                                 // Store to: gNextSoundUploadAddr (80077E18)
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0x840);                                 // Store to: gbDidLoadDoomSfxLcd (80077E20)
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
+    #if PC_PSX_DOOM_MODS
+        if (!pFile) {
+            FATAL_ERROR("Failed to open DOOMSFX.WMD!");
+        }
+    #endif
+
+    psxcd_read(pTmpWmdLoadBuffer, pFile->file.size, *pFile);
+    psxcd_close(*pFile);
+
+    // Initialize the sample blocks used to keep track what sounds are uploaded to where in SPU RAM
+    S_InitBlock(*gDoomSndBlock);
+    S_InitBlock(*gMapSndBlock);
+
+    // Load the main module (.WMD) file.
+    // This initializes common stuff used for all music and sounds played in the game.
+    wess_load_module(pTmpWmdLoadBuffer, gSound_WmdMem.get(), WMD_MEM_SIZE, gSound_SettingsLists);
+
+    // Initialize the music sequence and LCD (samples file) loaders
+    master_status_structure& mstat = *wess_get_master_status();
+    wess_dig_lcd_loader_init(&mstat);
+    wess_seq_loader_init(&mstat, CdMapTbl_File::DOOMSFX_WMD, true);
+
+    // Load all of the very simple 'music sequences' for sound effects in the game.
+    // These are kept loaded at all times since they are small.
+    const int32_t sfxSequenceBytes = wess_seq_range_load(0, NUMSFX, wess_get_wmd_end());
+
+    // We load map music sequences to the start of the remaining bytes in WMD memory buffer
+    *gpSound_MusicSeqData = wess_get_wmd_end() + sfxSequenceBytes;
+
+    // Init master volume levels
+    S_SetSfxVolume(sfxVol);
+    S_SetMusicVolume(musVol);
+
+    // Load the main SFX LCD: this is required for the main menu.
+    // Also set the next location to upload to SPU RAM at after the load finishes.
+    *gbDidLoadDoomSfxLcd = false;
+    *gSound_CurSpuAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdMapTbl_File::DOOMSFX_LCD, SPU_RAM_APP_BASE, gDoomSndBlock.get(), false);
+    *gbDidLoadDoomSfxLcd = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

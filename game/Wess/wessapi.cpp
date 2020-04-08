@@ -284,7 +284,7 @@ int32_t wess_load_module(
     const void* const pWmdFile,
     void* const pDestMem,
     const int32_t memoryAllowance,
-    VmPtr<int32_t>* const pSettingTagLists
+    const int32_t* const* const pSettingTagLists
 ) noexcept {
     // Save the maximum memory limit and unload the current module (if loaded)
     *gWess_mem_limit = memoryAllowance;

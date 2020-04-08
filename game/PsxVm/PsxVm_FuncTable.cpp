@@ -279,8 +279,8 @@ extern void F2_Start() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
 
-extern void S_StopMusicSequence() noexcept;
-extern void S_StartMusicSequence() noexcept;
+extern void S_StopMusic() noexcept;
+extern void S_StartMusic() noexcept;
 extern void S_UnloadSamples() noexcept;
 extern void S_LoadSoundAndMusic() noexcept;
 extern void S_Pause() noexcept;
@@ -289,7 +289,6 @@ extern void S_StopSound() noexcept;
 extern void I_StartSound() noexcept;
 extern void _thunk_S_StartSound() noexcept;
 extern void S_UpdateSounds() noexcept;
-extern void PsxSoundInit() noexcept;
 
 extern void LIBAPI_write() noexcept;
 extern void LIBAPI_InitPAD() noexcept;
@@ -601,8 +600,8 @@ namespace PsxVm {
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },
 
-        { 0x80041014, &S_StopMusicSequence },
-        { 0x80041050, &S_StartMusicSequence },
+        { 0x80041014, &S_StopMusic },
+        { 0x80041050, &S_StartMusic },
         { 0x800410A0, &S_UnloadSamples },
         { 0x80041118, &S_LoadSoundAndMusic },
         { 0x80041318, &S_Pause },
@@ -611,7 +610,6 @@ namespace PsxVm {
         { 0x800413A8, &I_StartSound },
         { 0x800415B4, &_thunk_S_StartSound },
         { 0x800415D4, &S_UpdateSounds },
-        { 0x800415EC, &PsxSoundInit },
 
         { 0x80049C3C, &LIBAPI_write },
         { 0x80049C5C, &LIBAPI_InitPAD },

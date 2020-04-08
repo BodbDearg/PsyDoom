@@ -565,7 +565,7 @@ void P_Start() noexcept {
     // Play music: for demos play the credits music cd track.
     // Otherwise play some sequencer music for the level.
     if (!*gbDemoPlayback) {
-        S_StartMusicSequence();
+        S_StartMusic();
     } else {  
         psxcd_play_at_andloop(
             gCDTrackNum[cdmusic_credits_demo],
@@ -590,7 +590,7 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     // Stop all sounds and music
     S_StopAll();
     psxcd_stop();
-    S_StopMusicSequence();
+    S_StopMusic();
 
     // Game is no longer paused and level data no longer cached
     *gbGamePaused = false;

@@ -22,10 +22,15 @@ extern const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS];
 
 extern const VmPtr<int32_t> gCdMusicVol;
 
+// PC-PSX Helper: converts from a DOOM volume level (0-100) to a PSX volume level (0-127)
+inline constexpr int32_t doomToPsxVol(const int32_t vol) noexcept {
+    return (vol * 127) / 100;
+}
+
 void S_SetSfxVolume(int32_t sfxVol) noexcept;
 void S_SetMusicVolume(const int32_t musVol) noexcept;
-void S_StopMusicSequence() noexcept;
-void S_StartMusicSequence() noexcept;
+void S_StopMusic() noexcept;
+void S_StartMusic() noexcept;
 void S_InitBlock(SampleBlock& block) noexcept;
 void S_UnloadSamples() noexcept;
 void S_LoadSoundAndMusic() noexcept;
@@ -39,5 +44,5 @@ void S_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept;
 void _thunk_S_StartSound() noexcept;
 
 void S_UpdateSounds() noexcept;
-void PsxSoundInit() noexcept;
+void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWmdLoadBuffer) noexcept;
 void PsxSoundExit() noexcept;

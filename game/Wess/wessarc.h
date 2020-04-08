@@ -4,13 +4,13 @@
 #include "PcPsx/Types.h"
 
 // Setting ids for sound hardware
-enum SoundHardwareTags : uint32_t {
-    SNDHW_TAG_END               = 0,
-    SNDHW_TAG_DRIVER_ID         = 1,
-    SNDHW_TAG_SOUND_EFFECTS     = 2,
-    SNDHW_TAG_MUSIC             = 3,
-    SNDHW_TAG_DRUMS             = 4,
-    SNDHW_TAG_MAX               = 5
+enum SoundHardwareTags : int32_t {
+    SNDHW_TAG_END               = 0,    // Marks the end of the list
+    SNDHW_TAG_DRIVER_ID         = 1,    // What driver to use
+    SNDHW_TAG_SOUND_EFFECTS     = 2,    // Sound effects enabled?
+    SNDHW_TAG_MUSIC             = 3,    // Music enabled?
+    SNDHW_TAG_DRUMS             = 4,    // Drums enabled?
+    SNDHW_TAG_MAX               = 5     // Length of this list
 };
 
 // Sound driver ids
@@ -397,7 +397,7 @@ int32_t module_read(void* const pDest, const int32_t numBytes, PsxCd_File& file)
 int32_t module_seek(PsxCd_File& file, const int32_t seekPos, const PsxCd_SeekMode seekMode) noexcept;
 int32_t module_tell(const PsxCd_File& file) noexcept;
 void module_close(PsxCd_File& file) noexcept;
-int32_t get_num_Wess_Sound_Drivers(VmPtr<int32_t>* const pSettingsTagLists) noexcept;
+int32_t get_num_Wess_Sound_Drivers(const int32_t* const* const pSettingTagLists) noexcept;
 PsxCd_File* data_open(const CdMapTbl_File fileId) noexcept;
 int32_t data_read(PsxCd_File& file, const int32_t destSpuAddr, const int32_t numBytes, const int32_t fileOffset) noexcept;
 void data_close(PsxCd_File& file) noexcept;
