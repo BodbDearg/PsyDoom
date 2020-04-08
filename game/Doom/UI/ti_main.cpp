@@ -14,7 +14,6 @@
 #include "Doom/Renderer/r_sky.h"
 #include "m_main.h"
 #include "o_main.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
@@ -42,9 +41,8 @@ void START_Title() noexcept {
     I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
     I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
     
-    // TODO
-    a0 = 0;
-    S_LoadSoundAndMusic();
+    // Load sounds for the menu
+    S_LoadMapSoundAndMusic(0);
     
     // Cache commonly used UI lumps for fast access and upload them to VRAM
     W_CacheLumpName("MARB01", PU_STATIC, false);

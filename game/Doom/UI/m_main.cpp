@@ -10,7 +10,6 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 
@@ -119,9 +118,8 @@ void M_Start() noexcept {
     I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
     I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
     
-    // TODO
-    a0 = 0;
-    S_LoadSoundAndMusic();
+    // Load sounds for the menu
+    S_LoadMapSoundAndMusic(0);
     
     // Load and cache some commonly used UI textures
     I_LoadAndCacheTexLump(*gTex_BACK, "BACK", 0);

@@ -75,8 +75,7 @@ void G_DoLoadLevel() noexcept {
     }
 
     // Loading sound and music
-    a0 = *gGameMap;
-    S_LoadSoundAndMusic();
+    S_LoadMapSoundAndMusic(*gGameMap);
 
     // Initialize the state of each player if required
     {

@@ -266,7 +266,6 @@ extern void I_LocalButtonsToNet() noexcept;
 extern void I_NetButtonsToLocal() noexcept;
 extern void START_Legals() noexcept;
 extern void START_Title() noexcept;
-extern void M_Start() noexcept;
 extern void START_PasswordScreen() noexcept;
 extern void START_ControlsScreen() noexcept;
 extern void P_ComputePassword() noexcept;
@@ -274,14 +273,9 @@ extern void P_ProcessPassword() noexcept;
 extern void ST_InitEveryLevel() noexcept;
 extern void ST_Ticker() noexcept;
 extern void IN_Start() noexcept;
-extern void F1_Start() noexcept;
-extern void F2_Start() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
 
-extern void S_StopMusic() noexcept;
-extern void S_StartMusic() noexcept;
-extern void S_LoadSoundAndMusic() noexcept;
 extern void I_StartSound() noexcept;
 extern void _thunk_S_StartSound() noexcept;
 
@@ -582,7 +576,6 @@ namespace PsxVm {
         { 0x80034F04, &I_NetButtonsToLocal },
         { 0x80034F54, &START_Legals },
         { 0x80035098, &START_Title },
-        { 0x80035C94, &M_Start },
         { 0x80036E1C, &START_PasswordScreen },
         { 0x8003793C, &START_ControlsScreen },
         { 0x80037DBC, &P_ComputePassword },
@@ -590,14 +583,9 @@ namespace PsxVm {
         { 0x80038610, &ST_InitEveryLevel },
         { 0x80038688, &ST_Ticker },
         { 0x8003C758, &IN_Start },
-        { 0x8003D6D0, &F1_Start },
-        { 0x8003D9C4, &F2_Start },
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },
-
-        { 0x80041014, &S_StopMusic },
-        { 0x80041050, &S_StartMusic },
-        { 0x80041118, &S_LoadSoundAndMusic },
+        
         { 0x800413A8, &I_StartSound },
         { 0x800415B4, &_thunk_S_StartSound },
 

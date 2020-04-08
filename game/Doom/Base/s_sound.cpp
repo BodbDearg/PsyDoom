@@ -31,7 +31,7 @@ static const int32_t* gSound_SettingsLists[2] = {
     nullptr
 };
 
-// What track each piece of music uses
+// What CD audio track each piece of CD music uses
 const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS] = {
     2,      // cdmusic_title_screen
     3,      // cdmusic_main_menu
@@ -40,6 +40,126 @@ const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS] = {
     6,      // cdmusic_club_doom
     7,      // cdmusic_finale_doom1
     8       // cdmusic_finale_doom2
+};
+
+// Defines the settings for one music sequencer track
+struct musicseq_t {
+    CdMapTbl_File   lcdFile;            // LCD file containing the samples used by the music track
+    int32_t         seqIdx;             // What sequence to trigger for the track (from the module file)
+    SpuReverbMode   reverbMode;         // What type of reverb to use
+    int16_t         reverbDepthL;       // Reverb depth: left
+    int16_t         reverbDepthR;       // Reverb depth: right
+};
+
+// Definitions for all of the available music sequences in the game.
+// Note that not all of these are unique songs, some of the tracks are simply with different reverb settings.
+static const musicseq_t gMusicSeqDefs[31] = {
+    { CdMapTbl_File{},          0,      SPU_REV_MODE_OFF,       0x0000, 0x0000 },
+    { CdMapTbl_File::MUSLEV1,   90,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
+    { CdMapTbl_File::MUSLEV2,   91,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
+    { CdMapTbl_File::MUSLEV3,   92,     SPU_REV_MODE_STUDIO_B,  0x27FF, 0x27FF },
+    { CdMapTbl_File::MUSLEV4,   93,     SPU_REV_MODE_HALL,      0x17FF, 0x17FF },
+    { CdMapTbl_File::MUSLEV5,   94,     SPU_REV_MODE_STUDIO_A,  0x23FF, 0x23FF },
+    { CdMapTbl_File::MUSLEV6,   95,     SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdMapTbl_File::MUSLEV7,   96,     SPU_REV_MODE_STUDIO_C,  0x26FF, 0x26FF },
+    { CdMapTbl_File::MUSLEV8,   97,     SPU_REV_MODE_STUDIO_B,  0x2DFF, 0x2DFF },
+    { CdMapTbl_File::MUSLEV9,   98,     SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
+    { CdMapTbl_File::MUSLEV10,  99,     SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
+    { CdMapTbl_File::MUSLEV11,  100,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdMapTbl_File::MUSLEV12,  101,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdMapTbl_File::MUSLEV13,  102,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
+    { CdMapTbl_File::MUSLEV14,  103,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdMapTbl_File::MUSLEV15,  104,    SPU_REV_MODE_STUDIO_B,  0x27FF, 0x27FF },
+    { CdMapTbl_File::MUSLEV16,  105,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
+    { CdMapTbl_File::MUSLEV17,  106,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdMapTbl_File::MUSLEV18,  107,    SPU_REV_MODE_SPACE,     0x0FFF, 0x0FFF },
+    { CdMapTbl_File::MUSLEV19,  108,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdMapTbl_File::MUSLEV20,  109,    SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
+    { CdMapTbl_File::MUSLEV19,  108,    SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
+    { CdMapTbl_File::MUSLEV2,   91,     SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdMapTbl_File::MUSLEV1,   90,     SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdMapTbl_File::MUSLEV13,  102,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdMapTbl_File::MUSLEV7,   96,     SPU_REV_MODE_STUDIO_B,  0x27FF, 0x27FF },
+    { CdMapTbl_File::MUSLEV16,  105,    SPU_REV_MODE_HALL,      0x1FFF, 0x1FFF },
+    { CdMapTbl_File::MUSLEV5,   94,     SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
+    { CdMapTbl_File::MUSLEV1,   90,     SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
+    { CdMapTbl_File::MUSLEV17,  106,    SPU_REV_MODE_STUDIO_C,  0x2FFF, 0x2FFF },
+    { CdMapTbl_File{},          0,      SPU_REV_MODE_OFF,       0x0000, 0x0000 }
+};
+
+// How many music sequence tracks there are in the game
+static constexpr uint32_t NUM_MUSIC_SEQS = 20;
+
+// Defines what LCD file to load for a map and what music sequence definition to use
+struct mapaudiodef_t {
+    CdMapTbl_File   sfxLcdFile;     // LCD file SFX for monsters on the map
+    uint32_t        musicSeqIdx;    // Index of the music sequence to use
+};
+
+// What sound LCD file and music track to use for all maps in the game
+static const mapaudiodef_t gMapAudioDefs[62] = {
+    { CdMapTbl_File{},              0   },
+    { CdMapTbl_File::MAP01_LCD,     1   },
+    { CdMapTbl_File::MAP02_LCD,     2   },
+    { CdMapTbl_File::MAP03_LCD,     3   },
+    { CdMapTbl_File::MAP04_LCD,     4   },
+    { CdMapTbl_File::MAP05_LCD,     5   },
+    { CdMapTbl_File::MAP06_LCD,     6   },
+    { CdMapTbl_File::MAP07_LCD,     7   },
+    { CdMapTbl_File::MAP08_LCD,     8   },
+    { CdMapTbl_File::MAP09_LCD,     11  },
+    { CdMapTbl_File::MAP10_LCD,     9   },
+    { CdMapTbl_File::MAP11_LCD,     15  },
+    { CdMapTbl_File::MAP12_LCD,     10  },
+    { CdMapTbl_File::MAP13_LCD,     21  },
+    { CdMapTbl_File::MAP14_LCD,     22  },
+    { CdMapTbl_File::MAP15_LCD,     23  },
+    { CdMapTbl_File::MAP16_LCD,     12  },
+    { CdMapTbl_File::MAP17_LCD,     16  },
+    { CdMapTbl_File::MAP18_LCD,     17  },
+    { CdMapTbl_File::MAP19_LCD,     6   },
+    { CdMapTbl_File::MAP20_LCD,     18  },
+    { CdMapTbl_File::MAP21_LCD,     24  },
+    { CdMapTbl_File::MAP22_LCD,     14  },
+    { CdMapTbl_File::MAP23_LCD,     3   },
+    { CdMapTbl_File::MAP24_LCD,     20  },
+    { CdMapTbl_File::MAP25_LCD,     11  },
+    { CdMapTbl_File::MAP26_LCD,     25  },
+    { CdMapTbl_File::MAP27_LCD,     4   },
+    { CdMapTbl_File::MAP28_LCD,     5   },
+    { CdMapTbl_File::MAP29_LCD,     10  },
+    { CdMapTbl_File::MAP30_LCD,     19  },
+    { CdMapTbl_File::MAP31_LCD,     1   },
+    { CdMapTbl_File::MAP32_LCD,     9   },
+    { CdMapTbl_File::MAP33_LCD,     14  },
+    { CdMapTbl_File::MAP34_LCD,     12  },
+    { CdMapTbl_File::MAP35_LCD,     8   },
+    { CdMapTbl_File::MAP36_LCD,     13  },
+    { CdMapTbl_File::MAP37_LCD,     18  },
+    { CdMapTbl_File::MAP38_LCD,     20  },
+    { CdMapTbl_File::MAP39_LCD,     15  },
+    { CdMapTbl_File::MAP40_LCD,     19  },
+    { CdMapTbl_File::MAP41_LCD,     11  },
+    { CdMapTbl_File::MAP42_LCD,     26  },
+    { CdMapTbl_File::MAP43_LCD,     12  },
+    { CdMapTbl_File::MAP44_LCD,     29  },
+    { CdMapTbl_File::MAP45_LCD,     6   },
+    { CdMapTbl_File::MAP46_LCD,     27  },
+    { CdMapTbl_File::MAP47_LCD,     9   },
+    { CdMapTbl_File::MAP48_LCD,     22  },
+    { CdMapTbl_File::MAP49_LCD,     3   },
+    { CdMapTbl_File::MAP50_LCD,     28  },
+    { CdMapTbl_File::MAP51_LCD,     7   },
+    { CdMapTbl_File::MAP52_LCD,     8   },
+    { CdMapTbl_File::MAP53_LCD,     15  },
+    { CdMapTbl_File::MAP54_LCD,     4   },
+    { CdMapTbl_File::MAP55_LCD,     17  },
+    { CdMapTbl_File::MAP56_LCD,     18  },
+    { CdMapTbl_File::MAP57_LCD,     10  },
+    { CdMapTbl_File::MAP58_LCD,     16  },
+    { CdMapTbl_File::MAP59_LCD,     13  },
+    { CdMapTbl_File::MAP60_LCD,     0   },
+    { CdMapTbl_File{},              0   }
 };
 
 // Current volume cd music is played back at
@@ -56,7 +176,14 @@ static const VmPtr<uint8_t[WMD_MEM_SIZE]> gSound_WmdMem(0x80078588);
 // Anything at this address or after in the buffer can be used for that purpose.
 static const VmPtr<VmPtr<uint8_t>> gpSound_MusicSeqData(0x80077E1C);
 
-// The next address in SPU RAM to upload sounds to
+// Which of the music sequence definitions is currently playing
+static const VmPtr<uint32_t> gCurMusicSeqIdx(0x80077E14);
+
+// What map we have sound and music currently loaded for
+static const VmPtr<uint32_t> gLoadedSoundAndMusMapNum(0x80077E10);
+
+// The next address in SPU RAM to upload sounds to.
+// TODO: rename - this is really where to upload map stuff to.
 static const VmPtr<uint32_t>    gSound_CurSpuAddr(0x80077E18);
 
 // Sample blocks for general DOOM sounds and map specific music and sfx sounds
@@ -96,44 +223,24 @@ void S_SetMusicVolume(const int32_t musVol) noexcept {
     psxspu_set_cd_vol(cdVol);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Stop the currently playing music track
+//------------------------------------------------------------------------------------------------------------------------------------------
 void S_StopMusic() noexcept {
-loc_80041014:
-    v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 == 0) goto loc_80041040;
-    v0 <<= 4;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x54E0;                                       // Result = MapMusicDefs[1] (800754E0)
-    at += v0;
-    a0 = lw(at);
-    wess_seq_stop(a0);
-loc_80041040:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    if (*gCurMusicSeqIdx != 0) {
+        wess_seq_stop(gMusicSeqDefs[*gCurMusicSeqIdx].seqIdx);
+    }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Start playing the selected music track (stops if currently playing)
+//------------------------------------------------------------------------------------------------------------------------------------------
 void S_StartMusic() noexcept {
-loc_80041050:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
     S_StopMusic();
-    v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
-    {
-        const bool bJump = (v0 == 0);
-        v0 <<= 4;
-        if (bJump) goto loc_80041088;
+
+    if (*gCurMusicSeqIdx != 0) {
+        wess_seq_trigger(gMusicSeqDefs[*gCurMusicSeqIdx].seqIdx);
     }
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x54E0;                                       // Result = MapMusicDefs[1] (800754E0)
-    at += v0;
-    a0 = lw(at);
-    wess_seq_trigger(a0);
-loc_80041088:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -155,143 +262,66 @@ void S_UnloadSampleBlock(SampleBlock& sampleBlock) noexcept {
     }
 }
 
-void S_LoadSoundAndMusic() noexcept {
-loc_80041118:
-    v0 = lw(gp + 0x830);                                // Load from: gLoadedSoundsMapNum (80077E10)
-    sp -= 0x28;
-    sw(s1, sp + 0x1C);
-    s1 = a0;
-    sw(ra, sp + 0x20);
-    sw(s0, sp + 0x18);
-    if (v0 == s1) goto loc_80041300;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x3C;                                      // Result = 0000003C
-        if (bJump) goto loc_8004119C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Loads all sound and music for the given map number (Note: '0' if menu, '60' if finale)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
+    // If sound and music is already loaded then bail out
+    if (*gLoadedSoundAndMusMapNum == mapIdx)
+        return;
+
+    // Stop current map music, free all music sequences and unload map SFX
+    if (*gLoadedSoundAndMusMapNum != 0) {
+        if (*gCurMusicSeqIdx != 0) {
+            S_StopMusic();
+
+            while (wess_seq_status(gMusicSeqDefs[*gCurMusicSeqIdx].seqIdx) != SequenceStatus::SEQUENCE_INACTIVE) {
+                // TODO: PC-PSX - update the window etc. here?
+            }
+
+            wess_seq_range_free(0 + NUMSFX, NUM_MUSIC_SEQS);
+        }
+
+        S_UnloadSampleBlock(*gMapSndBlock);
     }
-    v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
-    if (v0 == 0) goto loc_80041188;
-    s0 = 1;                                             // Result = 00000001
-    S_StopMusic();
-loc_80041154:
-    v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
-    v0 <<= 4;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x54E0;                                       // Result = MapMusicDefs[1] (800754E0)
-    at += v0;
-    a0 = lw(at);
-    v0 = wess_seq_status(a0);
-    a0 = 0x5A;                                          // Result = 0000005A
-    if (v0 != s0) goto loc_80041154;
-    a1 = 0x14;                                          // Result = 00000014
-    v0 = wess_seq_range_free(a0, a1);
-loc_80041188:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0x11D0;                                       // Result = gMapMusSfxLoadedSamples[0] (8007EE30)
-    S_UnloadSampleBlock(*vmAddrToPtr<SampleBlock>(a0));
-    v0 = 0x3C;                                          // Result = 0000003C
-loc_8004119C:
-    if (s1 != v0) goto loc_800411C8;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 -= 0x1364;                                       // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
-    S_UnloadSampleBlock(*vmAddrToPtr<SampleBlock>(a0));
-    v0 = 0x1010;                                        // Result = 00001010
-    sw(0, gp + 0x840);                                  // Store to: gbDidLoadDoomSfxLcd (80077E20)
-    sw(v0, gp + 0x838);                                 // Store to: gNextSoundUploadAddr (80077E18)
-    v0 = s1 << 3;
-    goto loc_80041204;
-loc_800411C8:
-    v0 = lw(gp + 0x840);                                // Load from: gbDidLoadDoomSfxLcd (80077E20)
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s1 << 3;
-        if (bJump) goto loc_80041204;
+
+    // Either load or unload the main Doom SFX LCD
+    if (mapIdx == 60) {
+        // For the finale unload the LCD to free up RAM
+        S_UnloadSampleBlock(*gDoomSndBlock);
+        *gbDidLoadDoomSfxLcd = false;
+        *gSound_CurSpuAddr = SPU_RAM_APP_BASE;
+    } else {
+        // In all other cases ensure it is loaded
+        if (!*gbDidLoadDoomSfxLcd) {
+            *gSound_CurSpuAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdMapTbl_File::DOOMSFX_LCD, SPU_RAM_APP_BASE, gDoomSndBlock.get(), false);
+            *gbDidLoadDoomSfxLcd = true;
+        }
     }
-    a0 = 0xC8;                                          // Result = 000000C8
-    a1 = 0x1010;                                        // Result = 00001010
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x1364;                                       // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
-    a3 = 0;                                             // Result = 00000000
-    v0 = wess_dig_lcd_load((CdMapTbl_File) a0, a1, vmAddrToPtr<SampleBlock>(a2), a3);
-    v0 += 0x1010;
-    sw(v0, gp + 0x838);                                 // Store to: gNextSoundUploadAddr (80077E18)
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, gp + 0x840);                                 // Store to: gbDidLoadDoomSfxLcd (80077E20)
-    v0 = s1 << 3;
-loc_80041204:
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x56D0;                                       // Result = gMapSndLcdFileAndMusNum[1] (800756D0)
-    at += v0;
-    v0 = lw(at);
-    s0 = lw(gp + 0x838);                                // Load from: gNextSoundUploadAddr (80077E18)
-    sw(v0, gp + 0x834);                                 // Store to: gCurMapMusicNum (80077E14)
-    {
-        const bool bJump = (v0 == 0);
-        v0 <<= 4;
-        if (bJump) goto loc_800412B8;
+
+    // Load the music sequence and lcd file for the map music.
+    // Also initialize the reverb mode depending on the music.
+    *gCurMusicSeqIdx = gMapAudioDefs[mapIdx].musicSeqIdx;
+    uint32_t destSpuAddr = *gSound_CurSpuAddr;
+
+    if (*gCurMusicSeqIdx == 0) {
+        // No music sequences for this map - turn off reverb
+        psxspu_init_reverb(SPU_REV_MODE_OFF, 0, 0, 0, 0);
+    } else {
+        // Normal case: playing a map music sequence
+        const musicseq_t& musicseq = gMusicSeqDefs[*gCurMusicSeqIdx];
+        psxspu_init_reverb(musicseq.reverbMode, musicseq.reverbDepthL, musicseq.reverbDepthR, 0, 0);
+        wess_seq_load(musicseq.seqIdx, gpSound_MusicSeqData->get());
+        destSpuAddr += wess_dig_lcd_load(musicseq.lcdFile, destSpuAddr, gMapSndBlock.get(), false);
     }
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x54E4;                                       // Result = MapMusicDefs[2] (800754E4)
-    at += v0;
-    a0 = lw(at);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x54E8;                                       // Result = MapMusicDefs[3] (800754E8)
-    at += v0;
-    a1 = lh(at);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x54EA;                                       // Result = MapMusicDefs[3] (800754EA)
-    at += v0;
-    a2 = lh(at);
-    a3 = 0;                                             // Result = 00000000
-    sw(0, sp + 0x10);
-    psxspu_init_reverb((SpuReverbMode) a0, (int16_t) a1, (int16_t) a2, a3, lw(sp + 0x10));
-    v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
-    a1 = lw(gp + 0x83C);                                // Load from: gpMusSequencesEnd (80077E1C)
-    v0 <<= 4;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x54E0;                                       // Result = MapMusicDefs[1] (800754E0)
-    at += v0;
-    a0 = lw(at);
-    v0 = wess_seq_load(a0, vmAddrToPtr<void>(a1));
-    a1 = s0;
-    v0 = lw(gp + 0x834);                                // Load from: gCurMapMusicNum (80077E14)
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x11D0;                                       // Result = gMapMusSfxLoadedSamples[0] (8007EE30)
-    v0 <<= 4;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x54DC;                                       // Result = MapMusicDefs[0] (800754DC)
-    at += v0;
-    a0 = lw(at);
-    a3 = 0;                                             // Result = 00000000
-    v0 = wess_dig_lcd_load((CdMapTbl_File) a0, a1, vmAddrToPtr<SampleBlock>(a2), a3);
-    s0 += v0;
-    goto loc_800412D0;
-loc_800412B8:
-    sw(0, sp + 0x10);
-    a0 = 0;                                             // Result = 00000000
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0;                                             // Result = 00000000
-    psxspu_init_reverb((SpuReverbMode) a0, (int16_t) a1, (int16_t) a2, a3, lw(sp + 0x10));
-loc_800412D0:
-    v0 = s1 << 3;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x56CC;                                       // Result = gMapSndLcdFileAndMusNum[0] (800756CC)
-    at += v0;
-    a0 = lw(at);
-    sw(s1, gp + 0x830);                                 // Store to: gLoadedSoundsMapNum (80077E10)
-    a1 = s0;
-    if (a0 == 0) goto loc_80041300;
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 -= 0x11D0;                                       // Result = gMapMusSfxLoadedSamples[0] (8007EE30)
-    a3 = 0;                                             // Result = 00000000
-    v0 = wess_dig_lcd_load((CdMapTbl_File) a0, a1, vmAddrToPtr<SampleBlock>(a2), a3);
-loc_80041300:
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+
+    // Remember what map we have loaded sound and music for
+    *gLoadedSoundAndMusMapNum = mapIdx;
+
+    // Load the sound LCD file for the map
+    if (gMapAudioDefs[mapIdx].sfxLcdFile != CdMapTbl_File{}) {
+        wess_dig_lcd_load(gMapAudioDefs[mapIdx].sfxLcdFile, destSpuAddr, gMapSndBlock.get(), false);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

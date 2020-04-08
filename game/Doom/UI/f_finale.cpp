@@ -13,7 +13,6 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "m_main.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
@@ -233,9 +232,8 @@ void F2_Start() noexcept {
     *gCastFrames = 0;
     *gCastOnMelee = 0;
     
-    // TODO: explain
-    a0 = 60;
-    S_LoadSoundAndMusic();
+    // Load sound for the finale
+    S_LoadMapSoundAndMusic(60);
 
     // Play the finale cd track
     psxcd_play_at_andloop(
