@@ -69,6 +69,9 @@ static const VmPtr<bool32_t>    gbDidLoadDoomSfxLcd(0x80077E20);
 // Used to save the state of voices when pausing
 static const VmPtr<NoteState>   gPausedMusVoiceState(0x8007EB18);
 
+// Unused tick count for how many sound 'updates' ticks were done
+static const VmPtr<uint32_t>    gNumSoundTics(0x80077E2C);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the master sound effects volume
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,38 +139,20 @@ loc_80041088:
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the given sample block
 //------------------------------------------------------------------------------------------------------------------------------------------
-void S_InitBlock(SampleBlock& block) noexcept {
+void S_InitSampleBlock(SampleBlock& block) noexcept {
     block.numsamps = 0;
 }
 
-void S_UnloadSamples() noexcept {
-loc_800410A0:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = lhu(s0);
-    s1 = 0xFFFF;                                        // Result = 0000FFFF
-    if (v0 == 0) goto loc_80041100;
-loc_800410C4:
-    v0 = lhu(s0);
-    v0 += s1;
-    sh(v0, s0);
-    v0 = lhu(s0);
-    v0 <<= 1;
-    v0 += s0;
-    a0 = lhu(v0 + 0x2);
-    a1 = 0;                                             // Result = 00000000
-    wess_dig_set_sample_position(a0, a1);
-    v0 = lhu(s0);
-    if (v0 != 0) goto loc_800410C4;
-loc_80041100:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unload all loaded samples in the given sample block
+//------------------------------------------------------------------------------------------------------------------------------------------
+void S_UnloadSampleBlock(SampleBlock& sampleBlock) noexcept {
+    // Zero the patch address in SPU RAM for every single loaded sample:
+    while (sampleBlock.numsamps > 0) {
+        sampleBlock.numsamps--;
+        const uint32_t patchIdx = sampleBlock.sampindx[sampleBlock.numsamps];
+        wess_dig_set_sample_position(patchIdx, 0);
+    }
 }
 
 void S_LoadSoundAndMusic() noexcept {
@@ -203,13 +188,13 @@ loc_80041154:
 loc_80041188:
     a0 = 0x80080000;                                    // Result = 80080000
     a0 -= 0x11D0;                                       // Result = gMapMusSfxLoadedSamples[0] (8007EE30)
-    S_UnloadSamples();
+    S_UnloadSampleBlock(*vmAddrToPtr<SampleBlock>(a0));
     v0 = 0x3C;                                          // Result = 0000003C
 loc_8004119C:
     if (s1 != v0) goto loc_800411C8;
     a0 = 0x80080000;                                    // Result = 80080000
     a0 -= 0x1364;                                       // Result = gDoomSfxLoadedSamples[0] (8007EC9C)
-    S_UnloadSamples();
+    S_UnloadSampleBlock(*vmAddrToPtr<SampleBlock>(a0));
     v0 = 0x1010;                                        // Result = 00001010
     sw(0, gp + 0x840);                                  // Store to: gbDidLoadDoomSfxLcd (80077E20)
     sw(v0, gp + 0x838);                                 // Store to: gNextSoundUploadAddr (80077E18)
@@ -492,12 +477,13 @@ void _thunk_S_StartSound() noexcept {
     S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Placeholder where sound update logic per tick can be done
+//------------------------------------------------------------------------------------------------------------------------------------------
 void S_UpdateSounds() noexcept {
-loc_800415D4:
-    v0 = lw(gp + 0x84C);                                // Load from: gNumSoundTics (80077E2C)
-    v0++;
-    sw(v0, gp + 0x84C);                                 // Store to: gNumSoundTics (80077E2C)
-    return;
+    // This didn't do anything for PSX DOOM other than incrementing this global sound tick counter.
+    // Updates to the sequencer system were instead driven by hardware timer interrupts, firing approximately 120 times a second.
+    *gNumSoundTics += 1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -522,8 +508,8 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     psxcd_close(*pFile);
 
     // Initialize the sample blocks used to keep track what sounds are uploaded to where in SPU RAM
-    S_InitBlock(*gDoomSndBlock);
-    S_InitBlock(*gMapSndBlock);
+    S_InitSampleBlock(*gDoomSndBlock);
+    S_InitSampleBlock(*gMapSndBlock);
 
     // Load the main module (.WMD) file.
     // This initializes common stuff used for all music and sounds played in the game.

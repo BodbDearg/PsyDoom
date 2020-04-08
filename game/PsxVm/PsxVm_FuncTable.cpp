@@ -281,11 +281,9 @@ extern void _thunk_FixedDiv() noexcept;
 
 extern void S_StopMusic() noexcept;
 extern void S_StartMusic() noexcept;
-extern void S_UnloadSamples() noexcept;
 extern void S_LoadSoundAndMusic() noexcept;
 extern void I_StartSound() noexcept;
 extern void _thunk_S_StartSound() noexcept;
-extern void S_UpdateSounds() noexcept;
 
 extern void LIBAPI_write() noexcept;
 extern void LIBAPI_InitPAD() noexcept;
@@ -599,11 +597,9 @@ namespace PsxVm {
 
         { 0x80041014, &S_StopMusic },
         { 0x80041050, &S_StartMusic },
-        { 0x800410A0, &S_UnloadSamples },
         { 0x80041118, &S_LoadSoundAndMusic },
         { 0x800413A8, &I_StartSound },
         { 0x800415B4, &_thunk_S_StartSound },
-        { 0x800415D4, &S_UpdateSounds },
 
         { 0x80049C3C, &LIBAPI_write },
         { 0x80049C5C, &LIBAPI_InitPAD },
