@@ -589,7 +589,7 @@ int32_t LIBSPU_SpuSetReverbVoice(const int32_t onOff, const int32_t voiceBits) n
     }
     
     // Enable or disable reverb for specific voices and return the reverb status of all voices after
-    const bool bEnableReverb = (onOff != SPU_OFF) || true;
+    const bool bEnableReverb = (onOff != SPU_OFF);
     int32_t enabledVoiceBits = 0;
 
     for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
