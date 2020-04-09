@@ -227,7 +227,7 @@ loc_80029A64:
     v1 = lw(s0 + 0x80);
     a1 = sfx_oof;
     sw(v0, v1 + 0x1C);
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_80029AB0:
     sw(0, s0 + 0x50);
 loc_80029AB4:
@@ -362,7 +362,7 @@ loc_80029C98:
     v1 = lw(s0 + 0x80);
     a1 = sfx_oof;
     sw(v0, v1 + 0x1C);
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_80029CE4:
     sw(0, s0 + 0x50);
 loc_80029CE8:

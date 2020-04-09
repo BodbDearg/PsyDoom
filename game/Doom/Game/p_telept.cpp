@@ -215,7 +215,7 @@ loc_80028AEC:
     P_SpawnMObj();
     a0 = v0;
     a1 = sfx_telept;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     a3 = 0x1D;
     v1 = lw(s2 + 0x24);
     v0 = 0x80070000;                                    // Result = 80070000
@@ -242,7 +242,7 @@ loc_80028AEC:
     P_SpawnMObj();
     a0 = v0;
     a1 = sfx_telept;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v0 = lw(s1 + 0x80);
     {
         const bool bJump = (v0 == 0);

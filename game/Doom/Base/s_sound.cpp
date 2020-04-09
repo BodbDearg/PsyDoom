@@ -1,8 +1,11 @@
 #include "s_sound.h"
 
 #include "Doom/cdmaptbl.h"
+#include "Doom/Game/g_game.h"
+#include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "i_main.h"
+#include "m_fixed.h"
 #include "PsxVm/PsxVm.h"
 #include "sounds.h"
 #include "Wess/lcdload.h"
@@ -15,6 +18,10 @@
 #include "Wess/wessapi_p.h"
 #include "Wess/wessapi_t.h"
 #include "Wess/wessarc.h"
+
+BEGIN_THIRD_PARTY_INCLUDES
+    #include <algorithm>
+END_THIRD_PARTY_INCLUDES
 
 // Sound settings for the WESS PSX sound driver
 static const int32_t gSound_PSXSettings[SNDHW_TAG_MAX * 2] = {
@@ -162,6 +169,13 @@ static const mapaudiodef_t gMapAudioDefs[62] = {
     { CdMapTbl_File{},              0   }
 };
 
+static constexpr fixed_t S_CLIPPING_DIST    = 1124 * FRACUNIT;      // Distance at which (or after) sounds stop playing
+static constexpr fixed_t S_CLOSE_DIST       = 100 * FRACUNIT;       // When sounds get this close, play them at max volume
+static constexpr fixed_t S_STEREO_SWING     = 96 * FRACUNIT;        // Stereo separation amount
+
+// Divider for figuring out how fast sound fades
+static constexpr int32_t S_ATTENUATOR = ((S_CLIPPING_DIST - S_CLOSE_DIST) >> FRACBITS);
+
 // Current volume cd music is played back at
 const VmPtr<int32_t> gCdMusicVol(0x800775F8);
 
@@ -180,7 +194,7 @@ static const VmPtr<VmPtr<uint8_t>> gpSound_MusicSeqData(0x80077E1C);
 static const VmPtr<uint32_t> gCurMusicSeqIdx(0x80077E14);
 
 // What map we have sound and music currently loaded for
-static const VmPtr<uint32_t> gLoadedSoundAndMusMapNum(0x80077E10);
+static const VmPtr<int32_t> gLoadedSoundAndMusMapNum(0x80077E10);
 
 // The next address in SPU RAM to upload sounds to.
 // TODO: rename - this is really where to upload map stuff to.
@@ -352,144 +366,80 @@ void S_StopAll() noexcept {
     wess_seq_stopall();
 }
 
-void I_StartSound() noexcept {
-loc_800413A8:
-    sp -= 0x40;
-    sw(s3, sp + 0x34);
-    s3 = a1;
-    v0 = (i32(s3) < 0x5A);
-    sw(ra, sp + 0x38);
-    sw(s2, sp + 0x30);
-    sw(s1, sp + 0x2C);
-    sw(s0, sp + 0x28);
-    if (v0 == 0) goto loc_80041594;
-    v0 = *gCurPlayerIndex;
-    s0 = a0;
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    at += v0;
-    s2 = lw(at);
-    a3 = 0x7F;                                          // Result = 0000007F
-    if (s0 == 0) goto loc_80041530;
-    t0 = 0x40;                                          // Result = 00000040
-    if (s0 == s2) goto loc_80041534;
-    a0 = lw(s2);
-    a2 = lw(s0);
-    a1 = lw(s2 + 0x4);
-    a3 = lw(s0 + 0x4);
-    v0 = a0 - a2;
-    if (i32(v0) >= 0) goto loc_8004142C;
-    v0 = -v0;
-loc_8004142C:
-    t0 = v0;
-    v0 = a1 - a3;
-    v1 = v0;
-    if (i32(v0) >= 0) goto loc_80041440;
-    v1 = -v1;
-loc_80041440:
-    v0 = (i32(v1) < i32(t0));
-    t1 = t0 + v1;
-    if (v0 == 0) goto loc_80041450;
-    t0 = v1;
-loc_80041450:
-    v0 = u32(i32(t0) >> 1);
-    s1 = t1 - v0;
-    v0 = 0x4640000;                                     // Result = 04640000
-    v0 = (i32(v0) < i32(s1));
-    if (v0 != 0) goto loc_80041594;
-    _thunk_R_PointToAngle2();
-    a0 = lw(s2 + 0x24);
-    v1 = v0;
-    v0 = (a0 < v1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 - 1;
-        if (bJump) goto loc_8004148C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Platform implementation for starting a sound.
+//
+// Note: this function originally took 3 parameters, but since the 3rd param was completely unused we cannnot infer what it was.
+// I've just removed this unknown 3rd param here for this reimplementation, since it serves no purpose.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept {
+    // Ignore the request if the sound sequence number is invalid
+    if (soundId >= NUMSFX)
+        return;
+
+    // Grab the listener (player) and default the pan/volume for now
+    mobj_t* pListener = gPlayers[*gCurPlayerIndex].mo.get();
+    int32_t vol = 127;
+    int32_t pan = 64;
+    
+    if (pOrigin && (pOrigin != pListener)) {
+        // Figure out the approximate distance to the sound source and don't play if too far away
+        const fixed_t dx = std::abs(pListener->x - pOrigin->x);
+        const fixed_t dy = std::abs(pListener->y - pOrigin->y);
+        const fixed_t approxDist = dx + dy - std::min(dx, dy) / 2;
+
+        if (approxDist > S_CLIPPING_DIST)
+            return;
+
+        // Figure out the relative angle to the player.
+        // Not sure what the addition of UINT32_MAX is about, was in Linux Doom also but not commented.
+        angle_t angle = R_PointToAngle2(pListener->x, pListener->y, pOrigin->x, pOrigin->y);
+        
+        if (angle <= pListener->angle) {
+            angle += UINT32_MAX;
+        }
+
+        angle -= pListener->angle;
+
+        // Figure out pan amount based on the angle
+        {
+            const fixed_t sina = gFineSine[angle >> ANGLETOFINESHIFT];
+            pan = (128 - (FixedMul(sina, S_STEREO_SWING) >> FRACBITS)) / 2;
+        }
+        
+        // Figure out volume level
+        if (approxDist < S_CLOSE_DIST) {
+            vol = 127;
+        } else {
+            vol = (((S_CLIPPING_DIST - approxDist) >> FRACBITS) * 127) / S_ATTENUATOR;
+        }
+
+        // If the origin is exactly where the player is then do no pan
+        if ((pOrigin->x == pListener->x) && (pOrigin->y == pListener->y)) {
+            pan = 64;
+        }
+
+        // If volume is zero then don't play
+        if (vol <= 0)
+            return;
     }
-    v1 -= a0;
-    goto loc_80041490;
-loc_8004148C:
-    v1 = v0 - a0;
-loc_80041490:
-    v1 >>= 19;
-    a0 = 0x630000;                                      // Result = 00630000
-    v0 = v1 << 2;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += v0;
-    v1 = lw(at);
-    a0 |= 0xFFFF;                                       // Result = 0063FFFF
-    a0 = (i32(a0) < i32(s1));
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 5;
-    v0 = u32(i32(v0) >> 16);
-    v1 = 0x80;                                          // Result = 00000080
-    t0 = v1 - v0;
-    t0 = u32(i32(t0) >> 1);
-    if (a0 != 0) goto loc_800414DC;
-    a3 = 0x7F;                                          // Result = 0000007F
-    goto loc_800414F4;
-loc_800414DC:
-    v1 = 0x4640000;                                     // Result = 04640000
-    v1 -= s1;
-    v1 = u32(i32(v1) >> 16);
-    v0 = v1 << 7;
-    v0 -= v1;
-    a3 = u32(i32(v0) >> 10);
-loc_800414F4:
-    v1 = lw(s0);
-    v0 = lw(s2);
-    if (v1 != v0) goto loc_80041520;
-    v1 = lw(s0 + 0x4);
-    v0 = lw(s2 + 0x4);
-    if (v1 != v0) goto loc_80041520;
-    t0 = 0x40;                                          // Result = 00000040
-loc_80041520:
-    if (i32(a3) <= 0) goto loc_80041594;
-    goto loc_80041534;
-loc_80041530:
-    t0 = 0x40;                                          // Result = 00000040
-loc_80041534:
-    v0 = 0x7F;                                          // Result = 0000007F
-    if (s0 == 0) goto loc_80041568;
-    v0 = lw(s0 + 0xC);
-    v0 = lw(v0);
-    v0 = lw(v0 + 0x24);
-    v0 &= 1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x7F;                                      // Result = 0000007F
-        if (bJump) goto loc_80041568;
+
+    // Do reverb if the origin is in a sector which supports reverb
+    TriggerPlayAttr sndAttribs;
+
+    if ((!pOrigin) || ((pOrigin->subsector->sector->flags & 1) == 0)) {
+        sndAttribs.reverb = 127;
+    } else {
+        sndAttribs.reverb = 0;
     }
-    sb(0, sp + 0x1B);
-    goto loc_8004156C;
-loc_80041568:
-    sb(v0, sp + 0x1B);
-loc_8004156C:
-    a0 = s3;
-    a1 = s0;
-    v0 = 0x103;                                         // Result = 00000103
-    sw(v0, sp + 0x10);
-    sb(a3, sp + 0x14);
-    sw(a3, gp + 0x844);                                 // Store to: gLastSoundPan (80077E24)
-    sb(t0, sp + 0x15);
-    sw(t0, gp + 0x848);                                 // Store to: gLastSoundVol (80077E28)
-    a2 = sp + 0x10;
-    wess_seq_trigger_type_special(a0, a1, vmAddrToPtr<TriggerPlayAttr>(a2));
-loc_80041594:
-    ra = lw(sp + 0x38);
-    s3 = lw(sp + 0x34);
-    s2 = lw(sp + 0x30);
-    s1 = lw(sp + 0x2C);
-    s0 = lw(sp + 0x28);
-    sp += 0x40;
-    return;
+
+    // Set the other sound attributes and play the sound.
+    // Note that the original code also wrote volume and pan to unused globals here but I've omitted that code since it is useless:
+    sndAttribs.mask = TRIGGER_VOLUME | TRIGGER_PAN | TRIGGER_REVERB;
+    sndAttribs.volume = (uint8_t) vol;
+    sndAttribs.pan = (uint8_t) pan;
+
+    wess_seq_trigger_type_special(soundId, ptrToVmAddr(pOrigin), &sndAttribs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -497,14 +447,7 @@ loc_80041594:
 // The origin parameter is optional and helps determine panning/attenuation.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept {
-    a0 = ptrToVmAddr(pOrigin);
-    a1 = soundId;
-    a2 = 0;
-    I_StartSound();
-}
-
-void _thunk_S_StartSound() noexcept {    
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
+    I_StartSound(pOrigin, soundId);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

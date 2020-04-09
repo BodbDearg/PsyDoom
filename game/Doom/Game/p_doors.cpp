@@ -121,7 +121,7 @@ loc_8001548C:
     sw(v1, s0 + 0x1C);
 loc_80015498:
     a0 += 0x38;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     goto loc_80015528;
 loc_800154A8:
     sw(v1, sp + 0x10);
@@ -218,7 +218,7 @@ loc_80015598:
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x30;                                         // Result = STR_BlueKeyNeededMsg[0] (80010030)
     sw(v0, s0 + 0xD4);
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v0 = *gCurPlayerIndex;
     v1 = v0 << 2;
     v1 += v0;
@@ -261,7 +261,7 @@ loc_8001562C:
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x48;                                         // Result = STR_YellowKeyNeededMsg[0] (80010048)
     sw(v0, s0 + 0xD4);
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v0 = *gCurPlayerIndex;
     v1 = v0 << 2;
     v1 += v0;
@@ -304,7 +304,7 @@ loc_800156C0:
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x60;                                         // Result = STR_RedKeyNeededMsg[0] (80010060)
     sw(v0, s0 + 0xD4);
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v0 = *gCurPlayerIndex;
     v1 = v0 << 2;
     v1 += v0;
@@ -432,7 +432,7 @@ loc_800158A8:
     sw(s6, s0 + 0x1C);
     a0 += 0x38;
     sw(v0, s0 + 0x14);
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     a0 = s7;
     goto loc_800157B4;
 loc_800158CC:
@@ -466,7 +466,7 @@ loc_8001590C:
     a1 = sfx_doropn;
 loc_80015940:
     a0 += 0x38;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     a0 = s7;
     goto loc_800157B4;
 loc_80015950:
@@ -556,7 +556,7 @@ loc_80015A64:
     a0 = s2 + 0x38;
     a1 = sfx_doropn;
 loc_80015A6C:
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     a1 = 0x28;                                          // Result = 00000028
     a2 = 4;                                             // Result = 00000004
     a0 = *gpMainMemZone;

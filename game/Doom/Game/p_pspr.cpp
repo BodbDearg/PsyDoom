@@ -295,7 +295,7 @@ loc_8001FC50:
     if (v0 == 0) goto loc_8001FC78;
     a0 = lw(s1);
     a1 = sfx_sawup;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_8001FC78:
     v1 = lw(s1 + 0x70);
     v0 = v1 << 1;
@@ -717,7 +717,7 @@ void A_WeaponReady() noexcept {
     if (v1 != v0) goto loc_800202DC;
     a0 = lw(s1);
     a1 = sfx_sawidl;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_800202DC:
     v1 = lw(s1 + 0x70);
     v0 = 0xA;                                           // Result = 0000000A
@@ -907,7 +907,7 @@ loc_800205B0:
     }
     a0 = lw(s1);
     a1 = sfx_sawup;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v1 = lw(s1 + 0x70);
 loc_800205E4:
     v0 = v1 << 1;
@@ -1111,7 +1111,7 @@ loc_800208BC:
     if (v0 == 0) goto loc_8002094C;
     a0 = lw(s3);
     a1 = sfx_punch;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v0 = lw(s3);
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
@@ -1165,12 +1165,12 @@ void A_Saw() noexcept {
     if (v0 != 0) goto loc_80020A04;
     a0 = lw(s3);
     a1 = sfx_sawful;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     goto loc_80020AC4;
 loc_80020A04:
     a0 = lw(s3);
     a1 = sfx_sawhit;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v0 = lw(s3);
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
@@ -1437,7 +1437,7 @@ void A_FirePistol() noexcept {
     sw(s0, sp + 0x18);
     a0 = lw(s1);
     a1 = sfx_pistol;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v1 = lw(s1 + 0x6C);
     v0 = v1 << 1;
     v0 += v1;
@@ -1534,7 +1534,7 @@ void A_FireShotgun() noexcept {
     sw(s0, sp + 0x18);
     a0 = lw(s3);
     a1 = sfx_shotgn;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v1 = lw(s3 + 0x6C);
     v0 = v1 << 1;
     v0 += v1;
@@ -1636,7 +1636,7 @@ void A_FireShotgun2() noexcept {
     sw(s0, sp + 0x18);
     a0 = lw(s3);
     a1 = sfx_dshtgn;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     a0 = lw(s3);
     a1 = 0xA0;
     P_SetMObjState();
@@ -1777,7 +1777,7 @@ void A_FireCGun() noexcept {
     sw(s2, sp + 0x20);
     a0 = lw(s1);
     a1 = sfx_pistol;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v0 = lw(s1 + 0x6C);
     v1 = v0 << 1;
     v1 += v0;
@@ -1968,19 +1968,19 @@ loc_8002162C:
 void A_BFGsound() noexcept {
     a0 = lw(a0);
     a1 = sfx_bfg;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 }
 
 void A_OpenShotgun2() noexcept {
     a0 = lw(a0);
     a1 = sfx_dbopn;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 }
 
 void A_LoadShotgun2() noexcept {
     a0 = lw(a0);
     a1 = sfx_dbload;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 }
 
 void A_CloseShotgun2() noexcept {
@@ -1990,7 +1990,7 @@ void A_CloseShotgun2() noexcept {
     sw(ra, sp + 0x14);
     a0 = lw(s0);
     a1 = sfx_dbcls;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v0 = *gPlayerNum;
     v0 <<= 2;
     at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
@@ -2072,7 +2072,7 @@ loc_80021808:
     }
     a0 = lw(s1);
     a1 = sfx_sawup;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v1 = lw(s1 + 0x70);
 loc_8002183C:
     v0 = v1 << 1;

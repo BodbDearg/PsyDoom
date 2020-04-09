@@ -206,7 +206,7 @@ void T_MoveFloor() noexcept {
     a0 = lw(s0 + 0x14);
     a1 = sfx_stnmov;
     a0 += 0x38;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_80019074:
     v0 = 2;                                             // Result = 00000002
     if (s1 != v0) goto loc_800190E8;

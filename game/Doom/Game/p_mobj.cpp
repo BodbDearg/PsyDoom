@@ -157,7 +157,7 @@ loc_8001C880:
     P_SpawnMObj();
     a0 = v0;
     a1 = sfx_itmbk;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     a3 = 0;
     v1 = 0;
     a0 = lh(s0 + 0x6);
@@ -359,7 +359,7 @@ loc_8001CC0C:
     v0 = lw(s0 + 0x58);
     a1 = lw(v0 + 0x38);
     a0 = s0;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_8001CC54:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -1318,7 +1318,7 @@ loc_8001DC38:
     v0 = lw(s0 + 0x58);
     a1 = lw(v0 + 0x38);
     a0 = s0;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_8001DC80:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -1434,7 +1434,7 @@ loc_8001DE2C:
     a1 = lw(v0 + 0x10);
     if (a1 == 0) goto loc_8001DE80;
     a0 = s4;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_8001DE80:
     sw(s4, s1 + 0x74);
     a0 = lw(s4);
@@ -1582,7 +1582,7 @@ loc_8001E07C:
     v0 = lw(s1 + 0x58);
     a1 = lw(v0 + 0x38);
     a0 = s1;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v0 = s1;
 loc_8001E0C8:
     ra = lw(sp + 0x2C);
@@ -1736,7 +1736,7 @@ loc_8001E310:
     v1 = s4 >> 19;
     if (a1 == 0) goto loc_8001E368;
     a0 = s3;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     v1 = s4 >> 19;
 loc_8001E368:
     v0 = 0x80070000;                                    // Result = 80070000
@@ -1818,7 +1818,7 @@ loc_8001E47C:
     v0 = lw(s2 + 0x58);
     a1 = lw(v0 + 0x38);
     a0 = s2;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_8001E4C4:
     ra = lw(sp + 0x30);
     s7 = lw(sp + 0x2C);

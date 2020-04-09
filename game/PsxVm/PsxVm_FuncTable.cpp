@@ -276,9 +276,6 @@ extern void IN_Start() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
 
-extern void I_StartSound() noexcept;
-extern void _thunk_S_StartSound() noexcept;
-
 extern void LIBAPI_write() noexcept;
 extern void LIBAPI_InitPAD() noexcept;
 extern void LIBAPI_StartPAD() noexcept;
@@ -585,9 +582,6 @@ namespace PsxVm {
         { 0x8003C758, &IN_Start },
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },
-        
-        { 0x800413A8, &I_StartSound },
-        { 0x800415B4, &_thunk_S_StartSound },
 
         { 0x80049C3C, &LIBAPI_write },
         { 0x80049C5C, &LIBAPI_InitPAD },

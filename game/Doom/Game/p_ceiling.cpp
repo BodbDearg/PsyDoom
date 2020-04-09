@@ -47,7 +47,7 @@ loc_80014A70:
     if (v1 == v0) goto loc_80014AD0;
     a0 = lw(s0 + 0x10);
     a0 += 0x38;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_80014AD0:
     v0 = 2;                                             // Result = 00000002
     if (s1 != v0) goto loc_80014C2C;
@@ -71,7 +71,7 @@ loc_80014B08:
     if (v1 != v0) goto loc_80014C2C;
     a0 = lw(s0 + 0x10);
     a0 += 0x38;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_80014B20:
     v0 = -1;                                            // Result = FFFFFFFF
     sw(v0, s0 + 0x24);
@@ -95,7 +95,7 @@ loc_80014B2C:
     if (v1 == v0) goto loc_80014B88;
     a0 = lw(s0 + 0x10);
     a0 += 0x38;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_80014B88:
     v0 = 2;                                             // Result = 00000002
     {
@@ -125,7 +125,7 @@ loc_80014BC4:
     a0 = lw(s0 + 0x10);
     a1 = sfx_pstop;
     a0 += 0x38;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_80014BD4:
     v0 = 0x20000;                                       // Result = 00020000
     sw(v0, s0 + 0x1C);

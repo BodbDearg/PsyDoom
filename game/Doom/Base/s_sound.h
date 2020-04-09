@@ -38,11 +38,7 @@ void S_Pause() noexcept;
 void S_Resume() noexcept;
 void S_StopSound(const VmPtr<mobj_t> origin) noexcept;
 void S_StopAll() noexcept;
-void I_StartSound() noexcept;
-
 void S_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept;
-void _thunk_S_StartSound() noexcept;
-
 void S_UpdateSounds() noexcept;
 void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWmdLoadBuffer) noexcept;
 void PsxSoundExit() noexcept;

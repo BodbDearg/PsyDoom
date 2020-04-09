@@ -1423,7 +1423,7 @@ loc_800273D0:
     at += s0;
     a0 = lw(at);
     a1 = sfx_swtchn;
-    _thunk_S_StartSound();
+    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     a0 = 0x80090000;                                    // Result = 80090000
     a0 += 0x77AC;                                       // Result = gButtonList_1[0] (800977AC)
     a0 += s0;
