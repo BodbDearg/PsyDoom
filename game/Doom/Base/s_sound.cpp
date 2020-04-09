@@ -431,13 +431,13 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
             return;
     }
 
-    // Do reverb if the origin is in a sector which supports reverb
+    // Disable reverb if the origin is in a sector that forbids it
     TriggerPlayAttr sndAttribs;
 
-    if ((!pOrigin) || ((pOrigin->subsector->sector->flags & 1) == 0)) {
-        sndAttribs.reverb = 127;
-    } else {
+    if (pOrigin && (pOrigin->subsector->sector->flags & SF_NO_REVERB)) {
         sndAttribs.reverb = 0;
+    } else {
+        sndAttribs.reverb = 127;
     }
 
     // Set the other sound attributes and play the sound.

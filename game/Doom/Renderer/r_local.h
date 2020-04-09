@@ -36,6 +36,9 @@ struct vertex_t {
 
 static_assert(sizeof(vertex_t) == 28);
 
+// PSX sector flags: just 1 defined - to disable reverb on a sector
+static constexpr uint32_t SF_NO_REVERB = 0x1; 
+
 // Describes a sector or collection of lines and subsectors
 struct sector_t {
     fixed_t                 floorheight;
@@ -48,7 +51,7 @@ struct sector_t {
     int32_t                 tag;
     int32_t                 soundtraversed;
     VmPtr<mobj_t>           soundtarget;
-    uint32_t                flags;              // TODO: CONFIRM LAYOUT
+    uint32_t                flags;              // Sector flags: new for PSX
     int32_t                 blockbox[4];        // TODO: CONFIRM LAYOUT
     degenmobj_t             soundorg;           // TODO: CONFIRM LAYOUT
     int32_t                 validcount;
