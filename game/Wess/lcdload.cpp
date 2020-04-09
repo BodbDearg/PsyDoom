@@ -21,17 +21,17 @@ END_THIRD_PARTY_INCLUDES
 // Maximum number of sounds that can be in an LCD file
 static constexpr uint32_t MAX_LCD_SOUNDS = 100;
 
-static const VmPtr<PsxCd_File>                      gWess_open_lcd_file(0x8007F2E0);                // The currently open LCD file
-static const VmPtr<VmPtr<patch_group_data>>         gpWess_lcd_load_patchGrp(0x80075AD8);           // TODO: COMMENT
-static const VmPtr<VmPtr<patches_header>>           gpWess_lcd_load_patches(0x80075AC8);            // TODO: COMMENT
-static const VmPtr<VmPtr<patchmaps_header>>         gpWess_lcd_load_patchmaps(0x80075ACC);          // TODO: COMMENT
-static const VmPtr<VmPtr<patchinfo_header>>         gpWess_lcd_load_patchInfos(0x80075AD0);         // TODO: COMMENT
-static const VmPtr<VmPtr<drumpmaps_header>>         gpWess_lcd_load_drummaps(0x80075AD4);           // TODO: COMMENT
-static const VmPtr<int32_t>                         gWess_lcd_load_soundBytesLeft(0x80075AE4);      // TODO: COMMENT
-static const VmPtr<uint32_t>                        gWess_lcd_load_soundNum(0x80075AE0);            // TODO: COMMENT
-static const VmPtr<uint16_t>                        gWess_lcd_load_numSounds(0x80075AE8);           // TODO: COMMENT
-static const VmPtr<VmPtr<uint8_t>>                  gpWess_lcd_load_headerBuf(0x80075AEC);          // TODO: COMMENT
-static const VmPtr<uint32_t>                        gWess_lcd_load_samplePos(0x80075ADC);           // TODO: COMMENT
+static const VmPtr<PsxCd_File>                  gWess_open_lcd_file(0x8007F2E0);                // The currently open LCD file
+static const VmPtr<VmPtr<patch_group_data>>     gpWess_lcd_load_patchGrp(0x80075AD8);           // Saved reference to the PSX driver patch group
+static const VmPtr<VmPtr<patches_header>>       gpWess_lcd_load_patches(0x80075AC8);            // Saved reference to the master status patches list
+static const VmPtr<VmPtr<patchmaps_header>>     gpWess_lcd_load_patchmaps(0x80075ACC);          // Saved reference to the master status patchmaps list
+static const VmPtr<VmPtr<patchinfo_header>>     gpWess_lcd_load_patchInfos(0x80075AD0);         // Saved reference to the master status patchinfo list
+static const VmPtr<VmPtr<drumpmaps_header>>     gpWess_lcd_load_drummaps(0x80075AD4);           // Saved reference to the master status drummaps list
+static const VmPtr<int32_t>                     gWess_lcd_load_soundBytesLeft(0x80075AE4);      // How many bytes there are to left to upload to the SPU for the current sound being loaded
+static const VmPtr<uint32_t>                    gWess_lcd_load_soundNum(0x80075AE0);            // Which sound number in the LCD file is being loaded
+static const VmPtr<uint16_t>                    gWess_lcd_load_numSounds(0x80075AE8);           // How many sounds are being loaded in total from the LCD file
+static const VmPtr<VmPtr<uint8_t>>              gpWess_lcd_load_headerBuf(0x80075AEC);          // This buffer contains the LCD file header (2048 bytes max)
+static const VmPtr<uint32_t>                    gWess_lcd_load_samplePos(0x80075ADC);           // This is the current address in SPU RAM to upload sound to: incremented as we load
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the LCD loader with the specified master status struct
