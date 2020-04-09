@@ -382,7 +382,14 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
     int32_t vol = 127;
     int32_t pan = 64;
     
-    if (pOrigin && (pOrigin != pListener)) {
+    #if PC_PSX_DOOM_MODS
+        // PC-PSX: adding an extra safety check here
+        const bool bAttenuateSound = (pOrigin && pListener && (pOrigin != pListener));
+    #else
+        const bool bAttenuateSound = (pOrigin && (pOrigin != pListener));
+    #endif
+
+    if (bAttenuateSound) {
         // Figure out the approximate distance to the sound source and don't play if too far away
         const fixed_t dx = std::abs(pListener->x - pOrigin->x);
         const fixed_t dy = std::abs(pListener->y - pOrigin->y);
