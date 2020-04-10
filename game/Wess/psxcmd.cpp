@@ -886,14 +886,14 @@ void PSX_voicenote(
         #endif
 
         // If this voice is higher (or equal) priority to the one we stole previously then only steal under certain circumstances
-        if (!bStealVoice) {            
+        if (!bStealVoice) {
             if (voiceStat.release) {
-                // TODO: what is this prioritization trying to achieve?
-                if ((stolenVoiceAbsTime > voiceStat.pabstime) || pStolenVoiceStat->release) {
+                // Steal this voice instead if it ends sooner or if the currently chosen voice to steal is NOT being released
+                if ((stolenVoiceAbsTime > voiceStat.pabstime) || (!pStolenVoiceStat->release)) {
                     bStealVoice = true;
                 }
             } else {
-                // TODO: what is this prioritization trying to achieve?
+                // Steal this voice instead if it ends sooner and the currently chosen voice to steal is also NOT being released
                 if ((stolenVoiceAbsTime > voiceStat.pabstime) && (!pStolenVoiceStat->release)) {
                     bStealVoice = true;
                 }
