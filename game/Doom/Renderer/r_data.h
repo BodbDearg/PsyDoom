@@ -26,16 +26,16 @@ static constexpr uint32_t WCREDITS1PAL          = 19;   // PSX Doom: williams cr
 
 // Stores information about a texture, including it's dimensions, lump info and texture cache info
 struct texture_t {
-    int16_t                     offsetX;
-    int16_t                     offsetY;
-    int16_t                     width;                  // TODO: is this signed or unsigned?
-    int16_t                     height;                 // TODO: is this signed or unsigned?
-    uint8_t                     texPageCoordX;          // TODO: COMMENT
-    uint8_t                     texPageCoordY;          // TODO: COMMENT
+    int16_t                     offsetX;                // Used for anchoring/offsetting in some UIs
+    int16_t                     offsetY;                // Used for anchoring/offsetting in some UIs
+    int16_t                     width;                  // Pixel width of texture
+    int16_t                     height;                 // Pixel height of texture
+    uint8_t                     texPageCoordX;          // Texture coordinate (X/U) inside the current texture page
+    uint8_t                     texPageCoordY;          // Texture coordinate (Y/V) inside the current texture page
     uint16_t                    texPageId;              // Hardware specific field corresonding to the texture page in VRAM where the texture is held. '0' when not resident in VRAM.
     uint16_t                    width16;                // Width of the texture in 16 pixel units (rounded up). Base unit for a texture cache cell.
     uint16_t                    height16;               // Height of the texture in 16 pixel units (rounded up). Base unit for a texture cache cell.
-    uint16_t                    lumpNum;
+    uint16_t                    lumpNum;                // Which WAD lump this texture was loaded from
     uint16_t                    _pad1;                  // Unused
     VmPtr<VmPtr<texture_t>>     ppTexCacheEntries;      // Points to the top left cell in the texture cache where this texture is placed.
     uint32_t                    _pad2;                  // Unused
@@ -44,7 +44,7 @@ struct texture_t {
 
 static_assert(sizeof(texture_t) == 32);
 
-// Stores info about the size of a texture in WAD lump
+// Stores info about the size and anchor point (offsetting) for a texture in WAD lump
 struct patch_t {
     int16_t     offsetX;
     int16_t     offsetY;

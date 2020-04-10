@@ -6,6 +6,9 @@ enum sfxenum_t : uint32_t;
 struct mobj_t;
 struct SampleBlock;
 
+// Max DOOM volume level (0-100)
+const int32_t S_MAX_VOL = 100;
+
 // Enum for a CD music piece and also an index into the 'gCDTrackNum' array to get an actual track number
 enum cdmusic_t : uint32_t {
     cdmusic_title_screen,
@@ -22,10 +25,8 @@ extern const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS];
 
 extern const VmPtr<int32_t> gCdMusicVol;
 
-// PC-PSX Helper: converts from a DOOM volume level (0-100) to a PSX volume level (0-127)
-inline constexpr int32_t doomToPsxVol(const int32_t vol) noexcept {
-    return (vol * 127) / 100;
-}
+int32_t doomToWessVol(const int32_t doomVol) noexcept;
+int32_t doomToPsxSpuVol(const int32_t doomVol) noexcept;
 
 void S_SetSfxVolume(int32_t sfxVol) noexcept;
 void S_SetMusicVolume(const int32_t musVol) noexcept;

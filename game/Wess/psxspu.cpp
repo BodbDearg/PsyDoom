@@ -76,10 +76,10 @@ void psxspu_init_reverb(
 
     if (bReverbEnabled) {
         LIBSPU_SpuSetReverb(SPU_ON);
-        *gPsxSpu_sram_end = LIBSPU_SpuGetReverbOffsetAddr();
+        *gPsxSpu_sram_end = LIBSPU_SpuGetReverbOffsetAddr();    // Reverb reduces the available SPU RAM because it needs a work area
     } else {
         LIBSPU_SpuSetReverb(SPU_OFF);
-        *gPsxSpu_sram_end = 0x7F000;
+        *gPsxSpu_sram_end = 0x7F000;    // A few KiB short of the 512 KiB max - I guess held back in case reverb is wanted later?
     }
 
     LIBSPU_SpuSetReverbVoice(bReverbEnabled, SPU_ALLCH);
@@ -123,10 +123,10 @@ void psxspu_init() noexcept {
         SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR |
         SPU_COMMON_CDREV | SPU_COMMON_CDMIX
     );
-    soundAttribs.mvol.left = MAX_MASTER_VOL;
-    soundAttribs.mvol.right = MAX_MASTER_VOL;
-    soundAttribs.cd.volume.left = MAX_CD_VOL;
-    soundAttribs.cd.volume.right = MAX_CD_VOL;
+    soundAttribs.mvol.left = PSXSPU_MAX_MASTER_VOL;
+    soundAttribs.mvol.right = PSXSPU_MAX_MASTER_VOL;
+    soundAttribs.cd.volume.left = PSXSPU_MAX_CD_VOL;
+    soundAttribs.cd.volume.right = PSXSPU_MAX_CD_VOL;
     soundAttribs.cd.reverb = false;
     soundAttribs.cd.mix = true;
 

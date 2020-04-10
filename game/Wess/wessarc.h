@@ -167,7 +167,7 @@ static_assert(sizeof(track_data) == 32);
 // TODO: COMMENT
 struct seq_header {
     uint16_t    tracks;     // 0x000    TODO: COMMENT
-    uint16_t    unk1;       // 0x002    TODO: COMMENT
+    uint16_t    _unused1;       // 0x002    TODO: COMMENT
 };
 
 static_assert(sizeof(seq_header) == 4);
@@ -268,7 +268,7 @@ static_assert(sizeof(sequence_status) == 24);
 struct track_status {
     uint8_t                 active : 1;             // 0x000    TODO: COMMENT
     uint8_t                 mute : 1;               // 0x000    TODO: COMMENT
-    uint8_t                 handled : 1;            // 0x000    TODO: COMMENT
+    uint8_t                 handled : 1;            // When set the track has to be manually started, and manually deallocated
     uint8_t                 stopped : 1;            // 0x000    TODO: COMMENT
     uint8_t                 timed : 1;              // 0x000    TODO: COMMENT
     uint8_t                 looped : 1;             // 0x000    TODO: COMMENT
@@ -309,48 +309,50 @@ struct track_status {
 
 static_assert(sizeof(track_status) == 80);
 
-// TODO: COMMENT
+// Holds state for one hardware voice in the sequencer system
 struct voice_status {
-    uint8_t                         active : 1;             // 0x000    TODO: COMMENT
-    uint8_t                         release : 1;            // 0x000    TODO: COMMENT
-    uint8_t                         _unusedFlagBits : 6;    // 0x000    TODO: COMMENT
-    SoundDriverId                   patchtype;              // 0x001    TODO: COMMENT
-    uint8_t                         refindx;                // 0x002    TODO: COMMENT
-    uint8_t                         track;                  // 0x003    TODO: COMMENT
-    uint8_t                         priority;               // 0x004    TODO: COMMENT
-    uint8_t                         keynum;                 // 0x005    TODO: COMMENT
-    uint8_t                         velnum;                 // 0x006    TODO: COMMENT
-    SoundClass                      sndtype;                // 0x007    TODO: COMMENT
+    uint8_t                         active : 1;             // '1' if the voice has been allocated
+    uint8_t                         release : 1;            // '1' if the voice is being released or 'keyed off'
+    uint8_t                         _unusedFlagBits : 6;    // These flag fields are unused
+    SoundDriverId                   patchtype;              // Which sound driver this voice is used with
+    uint8_t                         refindx;                // Index of the voice in it's sound driver
+    uint8_t                         track;                  // What track is using the voice
+    uint8_t                         priority;               // Inherited from the parent track: used to determine when voices are 'stolen' or not when the voice limit is reached
+    uint8_t                         keynum;                 // Which note (semitone) the voice is to play
+    uint8_t                         velnum;                 // Volume the voice is to play at
+    SoundClass                      sndtype;                // What broad class of sound the voice is being used for (MUSIC, SFX etc.)
     VmPtr<const patchmaps_header>   patchmaps;              // 0x008    TODO: COMMENT
     VmPtr<const patchinfo_header>   patchinfo;              // 0x00C    TODO: COMMENT
-    uint32_t                        pabstime;               // 0x010    TODO: COMMENT
+    uint32_t                        pabstime;               // When the voice should be released and fully shut off (in absolute time)
     uint32_t                        adsr2;                  // 0x014    TODO: COMMENT
 };
 
 static_assert(sizeof(voice_status) == 24);
 
-// TODO: COMMENT
+// The master status structure: this is the root data structure for the entire sequencer system, holding most of it's state.
+// It's populated with information from the module file (.WMD) and contains state for all of the active sequences,
+// tracks within sequences and individual voices. It also holds volume levels, driver info and callbacks etc.
 struct master_status_structure {
-    VmPtr<uint32_t>             pabstime;                   // 0x000    TODO: COMMENT
-    uint8_t                     seqs_active;                // 0x004    TODO: COMMENT
-    uint8_t                     trks_active;                // 0x005    TODO: COMMENT
-    uint8_t                     voices_active;              // 0x006    TODO: COMMENT
-    uint8_t                     voices_total;               // 0x007    TODO: COMMENT
-    uint8_t                     patch_types_loaded;         // 0x008    TODO: COMMENT
-    uint8_t                     unk1;                       // 0x009    TODO: COMMENT
-    uint8_t                     callbacks_active;           // 0x00A    TODO: COMMENT
-    uint8_t                     unk3;                       // 0x00B    TODO: COMMENT
+    VmPtr<uint32_t>             pabstime;                   // Pointer to the current absolute sequencer time (MS)
+    uint8_t                     seqs_active;                // How many sequences are currently in allocated
+    uint8_t                     trks_active;                // How many tracks are currently allocated among all sequences
+    uint8_t                     voices_active;              // How many voices are currently allocated among all tracks
+    uint8_t                     voices_total;               // The total number of voice statuses (max active voices)
+    uint8_t                     patch_types_loaded;         // How many sound drivers there are - should just be '1' (PSX) for DOOM
+    uint8_t                     _unused1;                   // An unused field: its purpose cannot be inferred as it is never used
+    uint8_t                     callbacks_active;           // How many user callbacks are allocated: never written to in DOOM, other than zero initialized
+    uint8_t                     _unused2;                   // An unused field: its purpose cannot be inferred as it is never used
     VmPtr<module_data>          pmod_info;                  // 0x00C    TODO: COMMENT
-    VmPtr<callback_status>      pcalltable;                 // 0x010    TODO: COMMENT
-    VmPtr<uint8_t>              pmaster_volume;             // 0x014    TODO: COMMENT
+    VmPtr<callback_status>      pcalltable;                 // A list of user callbacks which can be invoked by 'Eng_StatusMark' commands
+    VmPtr<uint8_t>              pmaster_volume;             // Master volume level for the sequencer: written to but appears otherwise unused
     VmPtr<patch_group_data>     ppat_info;                  // 0x018    TODO: COMMENT
-    uint32_t                    max_trks_perseq;            // 0x01C    TODO: COMMENT
-    VmPtr<sequence_status>      pseqstattbl;                // 0x020    TODO: COMMENT
-    uint32_t                    max_substack_pertrk;        // 0x024    TODO: COMMENT
-    VmPtr<track_status>         ptrkstattbl;                // 0x028    TODO: COMMENT
-    uint32_t                    max_voices_pertrk;          // 0x02C    TODO: COMMENT
-    VmPtr<voice_status>         pvoicestattbl;              // 0x030    TODO: COMMENT
-    uint32_t                    fp_module;                  // 0x034    TODO: COMMENT
+    uint32_t                    max_trks_perseq;            // Maximum number of tracks per sequence for all sequences in the module
+    VmPtr<sequence_status>      pseqstattbl;                // Status structures or 'work areas' for tracker sequences. The size of this list is specified by the module header.
+    uint32_t                    max_substack_pertrk;        // Maximum number of track data locations that can be saved per track for later restoring (location stack)
+    VmPtr<track_status>         ptrkstattbl;                // Track statuses or 'work areas' for all tracks in the sequencer. The size of this list is specified by the module header.
+    uint32_t                    max_voices_pertrk;          // Maximum number of voices used by any track in any sequence
+    VmPtr<voice_status>         pvoicestattbl;              // Status structures or 'work areas' for voices sequences. The size of this list is determined by sound drivers.
+    VmPtr<PsxCd_File>           fp_module;                  // Pointer to the module file itself
 };
 
 static_assert(sizeof(master_status_structure) == 56);

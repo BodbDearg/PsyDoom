@@ -2857,7 +2857,7 @@ static const ProgElem ELEMS[] = {
     { 0x800758F4, 0x800758F8, "gbWess_sysinit",                         ProgElemType::UINT32 },
     { 0x800758F8, 0x800758FC, "gbWess_module_loaded",                   ProgElemType::UINT32 },
     { 0x800758FC, 0x80075900, "gbWess_early_exit",                      ProgElemType::UINT32 },
-    { 0x80075900, 0x80075904, "gWess_max_seq_num",                      ProgElemType::INT32 },
+    { 0x80075900, 0x80075904, "gWess_end_seq_num",                      ProgElemType::INT32 },
     { 0x80075904, 0x80075908, "gWess_mem_limit",                        ProgElemType::INT32 },
     { 0x80075908, 0x8007590C, "gbWess_wmd_mem_is_mine",                 ProgElemType::UINT32 },
     { 0x8007590C, 0x80075910, "gpWess_wmd_mem",                         ProgElemType::PTR32 },

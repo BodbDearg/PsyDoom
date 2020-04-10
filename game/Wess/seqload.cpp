@@ -9,13 +9,13 @@
 // Has the sequence loader been initialized?
 const VmPtr<bool32_t>   gbWess_seq_loader_enable(0x80075960);
 
-static const VmPtr<int32_t>                             gWess_num_sequences(0x8007596C);            // TODO: COMMENT
-static const VmPtr<int32_t>                             gWess_seqld_moduleRefCount(0x80075974);     // TODO: COMMENT
-static const VmPtr<VmPtr<PsxCd_File>>                   gpWess_seqld_moduleFile(0x80075980);        // TODO: COMMENT
-static const VmPtr<CdMapTbl_File>                       gWess_seqld_moduleFileId(0x80075964);       // TODO: COMMENT
-static const VmPtr<VmPtr<master_status_structure>>      gpWess_seqld_mstat(0x80075968);             // TODO: COMMENT
-static const VmPtr<track_header>                        gWess_seqld_seqTrackHdr(0x8007F050);        // TODO: COMMENT
-static const VmPtr<track_header>                        gWess_seqld_emptyTrackHdr(0x8007F068);      // TODO: COMMENT
+static const VmPtr<int32_t>                             gWess_num_sequences(0x8007596C);            // The number of sequences in the loaded module file
+static const VmPtr<int32_t>                             gWess_seqld_moduleRefCount(0x80075974);     // Reference count for the opened module file - closed upon reaching '0'
+static const VmPtr<VmPtr<PsxCd_File>>                   gpWess_seqld_moduleFile(0x80075980);        // The module file from which sequences are loaded
+static const VmPtr<CdMapTbl_File>                       gWess_seqld_moduleFileId(0x80075964);       // File id for the module file
+static const VmPtr<VmPtr<master_status_structure>>      gpWess_seqld_mstat(0x80075968);             // Saved reference to the master status structure
+static const VmPtr<track_header>                        gWess_seqld_seqTrackHdr(0x8007F050);        // Track header for the current sequence track being loaded
+static const VmPtr<track_header>                        gWess_seqld_emptyTrackHdr(0x8007F068);      // Track header for a generated dummy track for empty sequences with no tracks
 
 static SeqLoaderErrorHandler    gpWess_seqld_errorHandler;      // Callback invoked if there are problems loading sequences
 static int32_t                  gWess_seqld_errorModule;        // Module value passed to the error handling callback
@@ -284,9 +284,8 @@ bool wess_seq_loader_init(master_status_structure* const pMStat, const CdMapTbl_
     *gbWess_seq_loader_enable = true;
     *gWess_num_sequences = pMStat->pmod_info->mod_hdr.sequences;
 
-    // Fill in the header for the default empty track (used for when a sequence has no tracks).
-    //
-    // TODO: is this what is used for game SFX?
+    // Fill in the header for the default empty track.
+    // This is used to create a 'dummy' track when a sequence contains no tracks - so a sequence always has 1 track.
     track_header& emptyTrackHdr = *gWess_seqld_emptyTrackHdr;
     emptyTrackHdr.priority = 128;
     emptyTrackHdr.initvolume_cntrl = 127;

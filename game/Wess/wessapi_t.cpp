@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Williams Entertainment Sound System (WESS): manipulating tracks with a given integer 'type'.
+// Williams Entertainment Sound System (WESS): sequence triggering and stopping.
 // Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "wessapi_t.h"

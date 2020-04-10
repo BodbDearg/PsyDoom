@@ -11,6 +11,17 @@ struct sequence_data;
 struct track_data;
 struct track_status;
 
+// Maximum volume level that should be used for voices
+static constexpr uint8_t WESS_MAX_MASTER_VOL = 127;
+
+// Pan levels
+static constexpr uint8_t WESS_PAN_LEFT      = 0;
+static constexpr uint8_t WESS_PAN_CENTER    = 64;
+static constexpr uint8_t WESS_PAN_RIGHT     = 127;
+
+// Maximum reverb depth that should be applied to voices
+static constexpr uint8_t WESS_MAX_REVERB_DEPTH = 127;
+
 // Enum representing the current high level state of a sequence
 enum SequenceStatus : uint8_t {
     SEQUENCE_INVALID    = 0,    // Invalid sequence number
@@ -33,27 +44,27 @@ static constexpr uint32_t TRIGGER_REVERB    = 0x100;
 // Struct defining custom parameters for when triggering a sequence.
 // The 'mask' field determines what parameters are customized.
 struct TriggerPlayAttr {
-    uint32_t    mask;
+    uint32_t    mask;           // Which of the fields are to be used
     uint8_t     volume;         // Range: 0-127
     uint8_t     pan;            // Range: 0-127, with '64' being the center
     int16_t     patch;          // Range: 0-32767
     int16_t     pitch;          // Range: -8192 to 8191
     uint8_t     mutemode;       // Range: 0-7
-    uint8_t     reverb;
-    uint16_t    tempo;
-    uint16_t    _padding;
-    uint32_t    timeppq;
+    uint8_t     reverb;         // Reverb depth to use
+    uint16_t    tempo;          // Tempo to play at
+    uint16_t    _padding;       // Unused/padding bytes
+    uint32_t    timeppq;        // For timed voices when the voice will stop relative to the current track time (in quarter note parts)
 };
 
 static_assert(sizeof(TriggerPlayAttr) == 20);
 
 // Records state for an individual note: used by pause/resume functionality
 struct NoteData {
-    int16_t                         seq_num;        // 0x000    TODO: COMMENT
-    int16_t                         track;          // 0x002    TODO: COMMENT
-    int8_t                          keynum;         // 0x004    TODO: COMMENT
-    int8_t                          velnum;         // 0x005    TODO: COMMENT
-    int16_t                         _pad;           // 0x006    TODO: COMMENT
+    int16_t                         seq_num;        // What sequence index the note belongs to
+    int16_t                         track;          // What track index the note belongs to
+    int8_t                          keynum;         // What note was being played
+    int8_t                          velnum;         // What volume the note was being played at
+    int16_t                         _pad;           // Unused/padding bytes
     VmPtr<const patchmaps_header>   patchmap;       // 0x008    TODO: COMMENT
     VmPtr<const patchinfo_header>   patchinfo;      // 0x00C    TODO: COMMENT
 };

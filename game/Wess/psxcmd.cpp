@@ -10,6 +10,10 @@
 #include "wessarc.h"
 #include "wessseq.h"
 
+BEGIN_THIRD_PARTY_INCLUDES
+    #include <algorithm>
+END_THIRD_PARTY_INCLUDES
+
 const WessDriverFunc gWess_drv_cmds[19] = {
     PSX_DriverInit,         // 00
     PSX_DriverExit,         // 01
@@ -152,17 +156,11 @@ void TriggerPSXVoice(const voice_status& voiceStat, [[maybe_unused]] const uint8
     int16_t triggerPan;
 
     if (*gWess_pan_status == PAN_OFF) {
-        triggerPan = 64;
+        triggerPan = WESS_PAN_CENTER;
     } else {
-        triggerPan = (int16_t) trackStat.pan_cntrl + (int16_t) voiceStat.patchmaps->pan - 64;
-        
-        if (triggerPan > 127) {
-            triggerPan = 127;
-        }
-
-        if (triggerPan < 0) {
-            triggerPan = 0;
-        }
+        triggerPan = (int16_t) trackStat.pan_cntrl + (int16_t) voiceStat.patchmaps->pan - WESS_PAN_CENTER;
+        triggerPan = std::min(triggerPan, (int16_t) WESS_PAN_RIGHT);
+        triggerPan = std::max(triggerPan, (int16_t) WESS_PAN_LEFT);
     }
 
     // Figure out the trigger volume for the note (0-2047)
@@ -302,7 +300,7 @@ void PSX_DriverInit(master_status_structure& mstat) noexcept {
 
     // Init reverb levels for all channels
     for (int32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
-        gWess_drv_chanReverbAmt[voiceIdx] = 127;
+        gWess_drv_chanReverbAmt[voiceIdx] = WESS_MAX_REVERB_DEPTH;
     }
 }
 
@@ -605,17 +603,11 @@ void PSX_VolumeMod(track_status& trackStat) noexcept {
         int16_t currentPan;
 
         if (*gWess_pan_status == PAN_OFF) {
-            currentPan = 64;
+            currentPan = WESS_PAN_CENTER;
         } else {
-            currentPan = (int16_t) trackStat.pan_cntrl + (int16_t) voiceStat.patchmaps->pan - 64;
-                
-            if (currentPan > 127) {
-                currentPan = 127;
-            }
-
-            if (currentPan < 0) {
-                currentPan = 0;
-            }
+            currentPan = (int16_t) trackStat.pan_cntrl + (int16_t) voiceStat.patchmaps->pan - WESS_PAN_CENTER;
+            currentPan = std::min(currentPan, (int16_t) WESS_PAN_RIGHT);
+            currentPan = std::max(currentPan, (int16_t) WESS_PAN_LEFT);
         }
 
         // Figure out the updated volume level (0-2047)
@@ -695,15 +687,9 @@ void PSX_PanMod(track_status& trackStat) noexcept {
             continue;
 
         // Figure out the updated pan amount (0-127)
-        int16_t updatedPan = (int16_t) trackStat.pan_cntrl + (int16_t) voiceStat.patchmaps->pan - 64;
-        
-        if (updatedPan > 127) {
-            updatedPan = 127;
-        }
-
-        if (updatedPan < 0) {
-            updatedPan = 0;
-        }
+        int16_t updatedPan = (int16_t) trackStat.pan_cntrl + (int16_t) voiceStat.patchmaps->pan - WESS_PAN_CENTER;
+        updatedPan = std::min(updatedPan, (int16_t) WESS_PAN_RIGHT);
+        updatedPan = std::max(updatedPan, (int16_t) WESS_PAN_LEFT);
 
         // Figure out the current volume level (0-2047)
         uint32_t currentVol = (uint32_t) voiceStat.velnum;

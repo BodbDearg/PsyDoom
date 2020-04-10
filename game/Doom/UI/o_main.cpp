@@ -190,13 +190,13 @@ gameaction_t O_Control() noexcept {
                         if (*gOptionsMusVol > 100) {
                             *gOptionsMusVol = 100;  // TODO: make a constant for '100'
                         } else {
-                            S_SetMusicVolume(((*gOptionsMusVol) * 127) / 100);      // TODO: make a constant for '127', '100'
+                            S_SetMusicVolume(doomToWessVol(*gOptionsMusVol));
 
                             if (*gOptionsMusVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
-
+                        
                         *gCdMusicVol = ((*gOptionsMusVol) * 0x3CFF) / 100;          // TODO: where does the '0x3CFF' constant come from?
                     }
                     else if (ticButtons & PAD_LEFT) {
@@ -205,7 +205,7 @@ gameaction_t O_Control() noexcept {
                         if (*gOptionsMusVol < 0) {
                             *gOptionsMusVol = 0;
                         } else {
-                            S_SetMusicVolume(((*gOptionsMusVol) * 127) / 100);      // TODO: make a constant for '127', '100'
+                            S_SetMusicVolume(doomToWessVol(*gOptionsMusVol));
 
                             if (*gOptionsMusVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);
@@ -227,7 +227,7 @@ gameaction_t O_Control() noexcept {
                         if (*gOptionsSndVol > 100) {
                             *gOptionsSndVol = 100;  // TODO: make a constant for '100'
                         } else {
-                            S_SetSfxVolume(((*gOptionsSndVol) * 127) / 100);        // TODO: make a constant for '127', '100'
+                            S_SetSfxVolume(doomToWessVol(*gOptionsSndVol));
                             
                             if (*gOptionsSndVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);
@@ -240,7 +240,7 @@ gameaction_t O_Control() noexcept {
                         if (*gOptionsSndVol < 0) {
                             *gOptionsSndVol = 0;
                         } else {
-                            S_SetSfxVolume(((*gOptionsSndVol) * 127) / 100);        // TODO: make a constant for '127', '100'
+                            S_SetSfxVolume(doomToWessVol(*gOptionsSndVol));
                             
                             if (*gOptionsSndVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);

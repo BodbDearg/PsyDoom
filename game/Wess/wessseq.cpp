@@ -93,15 +93,15 @@ static constexpr uint8_t gWess_seq_CmdLength[36] = {
 
 static_assert(C_ARRAY_SIZE(gWess_seq_CmdLength) == C_ARRAY_SIZE(gWess_DrvFunctions));
 
-const VmPtr<uint8_t>            gWess_master_sfx_volume(0x80075A04);    // TODO: COMMENT
-const VmPtr<uint8_t>            gWess_master_mus_volume(0x80075A05);    // TODO: COMMENT
+const VmPtr<uint8_t>            gWess_master_sfx_volume(0x80075A04);    // Master volume level for all sfx patches/sounds
+const VmPtr<uint8_t>            gWess_master_mus_volume(0x80075A05);    // Master volume level for all music patches/sounds
 const VmPtr<PanMode>            gWess_pan_status(0x80075A06);           // Current pan mode
-const VmPtr<VmPtr<NoteState>>   gpWess_notestate(0x80075A10);           // TODO: COMMENT
+const VmPtr<VmPtr<NoteState>>   gpWess_notestate(0x80075A10);           // Used to save and restore note state when pausing or un-pausing voices
 
-static const VmPtr<VmPtr<master_status_structure>>      gpWess_eng_mstat(0x80075AC0);           // TODO: COMMENT
-static const VmPtr<VmPtr<sequence_status>>              gpWess_eng_seqStats(0x80075ABC);        // TODO: COMMENT
-static const VmPtr<VmPtr<track_status>>                 gpWess_eng_trackStats(0x80075AB8);      // TODO: COMMENT
-static const VmPtr<uint8_t>                             gWess_eng_maxTracks(0x80075AB4);        // TODO: COMMENT
+static const VmPtr<VmPtr<master_status_structure>>      gpWess_eng_mstat(0x80075AC0);           // Saved reference to the master status structure
+static const VmPtr<VmPtr<sequence_status>>              gpWess_eng_seqStats(0x80075ABC);        // Saved reference to the list of sequence statuses
+static const VmPtr<VmPtr<track_status>>                 gpWess_eng_trackStats(0x80075AB8);      // Saved reference to the list of track statuses
+static const VmPtr<uint8_t>                             gWess_eng_maxTracks(0x80075AB4);        // The maximum number of tracks in the sequencer
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads from track data the delta time (relative to the previous sequencer command) for when the next sequencer command is to be executed.
@@ -225,8 +225,7 @@ void Eng_TrkOff(track_status& trackStat) noexcept {
         }
     }
 
-    // Mark the track as inactive
-    // TODO: what is the 'handled' flag here doing?
+    // Mark the track as inactive unless it is manually deallocated
     if (!trackStat.handled) {
         // Clear the parent sequence's index slot for the track being disabled.
         // This marks the track is no longer active in the parent sequence:
@@ -255,7 +254,7 @@ void Eng_TrkOff(track_status& trackStat) noexcept {
         }
     }
     
-    // TODO: What is this flag for?
+    // If the track is being switched off then it is no longer on a manual time limit
     trackStat.timed = false;
 }
 
@@ -694,7 +693,7 @@ void Eng_SeqEnd(track_status& trackStat) noexcept {
             break;
     }
 
-    // TODO: what is this trying to do?
+    // If the track is manually deallocated skip automatically determining the next command
     if (trackStat.handled) {
         trackStat.skip = true;
     }
@@ -785,7 +784,7 @@ void Eng_TrkEnd(track_status& trackStat) noexcept {
         // Not repeating: mute the track
         gWess_CmdFuncArr[trackStat.patchtype][TrkOff](trackStat);
 
-        // TODO: what is this trying to do?
+        // If the track is manually deallocated skip automatically determining the next command
         if (trackStat.handled) {
             trackStat.skip = true;
         }

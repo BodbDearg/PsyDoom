@@ -214,6 +214,20 @@ static const VmPtr<NoteState>   gPausedMusVoiceState(0x8007EB18);
 static const VmPtr<uint32_t>    gNumSoundTics(0x80077E2C);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX Helper: converts from a DOOM volume level (0-100) to a WESS API volume level (0-127)
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t doomToWessVol(const int32_t doomVol) noexcept {
+    return (doomVol * WESS_MAX_MASTER_VOL) / S_MAX_VOL;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX Helper: converts from a DOOM volume level (0-100) to a WESS PSXSPU API volume level (0-127)
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t doomToPsxSpuVol(const int32_t doomVol) noexcept {
+    return (doomVol * WESS_MAX_MASTER_VOL) / S_MAX_VOL;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the master sound effects volume
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_SetSfxVolume(int32_t sfxVol) noexcept {
@@ -226,14 +240,7 @@ void S_SetSfxVolume(int32_t sfxVol) noexcept {
 void S_SetMusicVolume(const int32_t musVol) noexcept {
     // Set the volume for both the sound sequencer and for cd audio
     wess_master_mus_vol_set((uint8_t) musVol);
-
-    // TODO: where does the '0x3CFF' constant come from?
-    int32_t cdVol = musVol * 128;
-
-    if (cdVol > 0x3CFF) {
-        cdVol = 0x3CFF;
-    }
-
+    const int32_t cdVol = std::min(musVol * 128, (int32_t) PSXSPU_MAX_CD_VOL);
     psxspu_set_cd_vol(cdVol);
 }
 
@@ -379,8 +386,8 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
 
     // Grab the listener (player) and default the pan/volume for now
     mobj_t* pListener = gPlayers[*gCurPlayerIndex].mo.get();
-    int32_t vol = 127;
-    int32_t pan = 64;
+    int32_t vol = WESS_MAX_MASTER_VOL;
+    int32_t pan = WESS_PAN_CENTER;
     
     #if PC_PSX_DOOM_MODS
         // PC-PSX: adding an extra safety check here
@@ -411,19 +418,19 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
         // Figure out pan amount based on the angle
         {
             const fixed_t sina = gFineSine[angle >> ANGLETOFINESHIFT];
-            pan = (128 - (FixedMul(sina, S_STEREO_SWING) >> FRACBITS)) / 2;
+            pan = WESS_PAN_CENTER - (FixedMul(sina, S_STEREO_SWING) >> FRACBITS) / 2;
         }
         
         // Figure out volume level
         if (approxDist < S_CLOSE_DIST) {
-            vol = 127;
+            vol = WESS_MAX_MASTER_VOL;
         } else {
-            vol = (((S_CLIPPING_DIST - approxDist) >> FRACBITS) * 127) / S_ATTENUATOR;
+            vol = (((S_CLIPPING_DIST - approxDist) >> FRACBITS) * WESS_MAX_MASTER_VOL) / S_ATTENUATOR;
         }
 
         // If the origin is exactly where the player is then do no pan
         if ((pOrigin->x == pListener->x) && (pOrigin->y == pListener->y)) {
-            pan = 64;
+            pan = WESS_PAN_CENTER;
         }
 
         // If volume is zero then don't play
@@ -437,7 +444,7 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
     if (pOrigin && (pOrigin->subsector->sector->flags & SF_NO_REVERB)) {
         sndAttribs.reverb = 0;
     } else {
-        sndAttribs.reverb = 127;
+        sndAttribs.reverb = WESS_MAX_REVERB_DEPTH;
     }
 
     // Set the other sound attributes and play the sound.
