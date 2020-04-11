@@ -167,14 +167,23 @@ void AM_Drawer() noexcept {
         const line_t* pLine = gpLines->get();
 
         for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx, ++pLine) {
-            // See whether we should skip drawing the line.
-            // Skip if not seen (mapped) or marked as "Don't draw" when we don't have the 'all map' powerup or similar cheats activated.
-            if (((pLine->flags & ML_MAPPED) == 0) || (pLine->flags & ML_DONTDRAW)) {
-                if (curPlayer.powers[pw_allmap] == 0) {
-                    if ((curPlayer.cheats & CF_ALLLINES) == 0)
-                        continue;
-                }
-            }
+            // See whether we should draw the automap line or not
+            const bool bHiddenLine = (pLine->flags & ML_DONTDRAW);
+            const bool bLineSeen = ((pLine->flags & ML_MAPPED) && (!bHiddenLine));
+
+            #if PC_PSX_DOOM_MODS
+                // PC-PSX: bug fix: if the line is marked as invisible then the allmap powerup shouldn't reveal it.
+                // This change makes the behavior consistent with Linux Doom.
+                const bool bLineMapped = ((curPlayer.powers[pw_allmap]) && (!bHiddenLine));
+            #else
+                const bool bLineMapped = (curPlayer.powers[pw_allmap]);
+            #endif
+
+            const bool bAllLinesCheatOn = (curPlayer.cheats & CF_ALLLINES);
+            const bool bDraw = (bLineSeen || bLineMapped || bAllLinesCheatOn);
+
+            if (!bDraw)
+                continue;
 
             // Compute the line points in viewspace
             const int32_t x1 = (((pLine->vertex1->x - ox) / SCREEN_W) * scale) >> FRACBITS;
