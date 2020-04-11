@@ -464,8 +464,9 @@ void PSX_TrkMute(track_status& trackStat) noexcept {
             );
         }
 
-        // Begin releasing the voice
-        voiceStat.adsr2 = 0x10000000 >> (31 - (*gWess_drv_muteReleaseRate % 32));   // TODO: what is this doing here?
+        // Begin releasing the voice and figure out how long it will take to fade based on the release rate.
+        // The release rate is exponential, hence the shifts here:
+        voiceStat.adsr2 = 0x10000000 >> (31 - (*gWess_drv_muteReleaseRate % 32));
         PSX_voicerelease(voiceStat);
         *gWess_drv_voicesToMute |= 1 << (voiceStat.refindx % 32);
 
@@ -531,8 +532,6 @@ void PSX_PitchMod(track_status& trackStat) noexcept {
                 const uint16_t pitchShiftNote = (uint16_t)((32 + pitchShiftFrac) >> 13);
                 const uint16_t pitchShiftFine = (pitchShiftFrac & 0x1FFF) >> 6;
 
-                // Possible bug? Should the fine mask here be '0xFF' instead?
-                // This code is never triggered from what I can see, so maybe it does not matter... 
                 spuVoiceAttr.note = (voiceStat.keynum + pitchShiftNote) << 8;
                 spuVoiceAttr.note |= pitchShiftFine & 0x7F;
             }
@@ -542,8 +541,6 @@ void PSX_PitchMod(track_status& trackStat) noexcept {
                 const uint16_t pitchShiftNote = (uint16_t)(((32 - pitchShiftFrac) >> 13) + 1);
                 const uint16_t pitchShiftFine = 128 - ((pitchShiftFrac & 0x1FFF) >> 6);
 
-                // Possible bug? Should the fine mask here be '0xFF' instead?
-                // This code is never triggered from what I can see, so maybe it does not matter...
                 spuVoiceAttr.note = (voiceStat.keynum - pitchShiftNote) << 8;
                 spuVoiceAttr.note |= pitchShiftFine & 0x7F;
             }
@@ -779,12 +776,12 @@ void PSX_voiceon(
     voiceStat.patchinfo = &patchInfo;
     voiceStat.pabstime = *gpWess_drv_curabstime->get();
     
-    // Setting ADSR parameters on the voice.
+    // Figure out how long it takes for the voice to fade out.
+    // The low 5 bits affect the exponential falloff, the 6th bit controls how that falloff is scaled.
     //
-    // TODO: what exactly does this mean here? Find out more.
-    // TODO: is ADSR2 actually time?
+    // TODO: make constants for the flag and these two scale values.
     const int32_t adsr = (patchmap.adsr2 & 0x20) ? 0x10000000 : 0x05DC0000;
-    const uint32_t adsrShift = (0x1F - (patchmap.adsr2 & 0x1F)) & 0x1F;
+    const uint32_t adsrShift = 31 - (patchmap.adsr2 % 32);
     voiceStat.adsr2 = adsr >> adsrShift;
 
     // Inc voice count stats
@@ -824,7 +821,7 @@ void PSX_voicerelease(voice_status& voiceStat) noexcept {
     *gWess_drv_voicesToRelease |= 1 << (voiceStat.refindx % 32);
 
     voiceStat.release = true;
-    voiceStat.pabstime = curAbsTime + voiceStat.adsr2;      // TODO: is ADSR2 actually time?
+    voiceStat.pabstime = curAbsTime + voiceStat.adsr2;      // Compute when the voice is to be turned off or deallocated
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

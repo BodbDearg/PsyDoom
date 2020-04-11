@@ -65,8 +65,8 @@ struct NoteData {
     int8_t                          keynum;         // What note was being played
     int8_t                          velnum;         // What volume the note was being played at
     int16_t                         _pad;           // Unused/padding bytes
-    VmPtr<const patchmaps_header>   patchmap;       // 0x008    TODO: COMMENT
-    VmPtr<const patchinfo_header>   patchinfo;      // 0x00C    TODO: COMMENT
+    VmPtr<const patchmaps_header>   patchmap;       // Which patch voice was being used for this note
+    VmPtr<const patchinfo_header>   patchinfo;      // Which patch sound sample was being used for this note
 };
 
 static_assert(sizeof(NoteData) == 16);

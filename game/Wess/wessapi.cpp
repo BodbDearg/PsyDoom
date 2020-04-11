@@ -20,15 +20,6 @@ static constexpr uint32_t WESS_MODULE_VER = 1;
 // Minimum tracks in a sequence
 static constexpr uint8_t MINIMUM_TRACK_INDXS_FOR_A_SEQUENCE = 4;
 
-// Flags specifying what types of patch group data gets loaded
-enum patch_grp_load_flags : uint32_t {
-    LOAD_PATCHES    = 0x01,
-    LOAD_PATCHMAPS  = 0x02,
-    LOAD_PATCHINFO  = 0x04,
-    LOAD_DRUMMAPS   = 0x08,
-    LOAD_EXTRADATA  = 0x10
-};
-
 const VmPtr<bool32_t>                           gbWess_module_loaded(0x800758F8);       // If true then a WMD file (module) has been loaded
 const VmPtr<VmPtr<master_status_structure>>     gpWess_pm_stat(0x800A8758);             // Master status structure for the entire sequencer system
 
@@ -399,7 +390,7 @@ int32_t wess_load_module(
                 const int32_t value = patch_info.sndhw_tags[kvpIdx + 1];
 
                 if (key == SNDHW_TAG_DRIVER_ID) {
-                    patch_info.hw_tl_list.hardware_ID = value;
+                    patch_info.hw_tl_list.hardware_ID = (SoundDriverId) value;
                 } else if (key == SNDHW_TAG_SOUND_EFFECTS) {
                     patch_info.hw_tl_list.sfxload |= (value & 1);
                 } else if (key == SNDHW_TAG_MUSIC) {

@@ -61,7 +61,20 @@ static constexpr uint32_t SPU_COMMON_EXTVOLR    = 0x00000800;   // External inpu
 static constexpr uint32_t SPU_COMMON_EXTREV     = 0x00001000;   // Whether reverb is enabled for external input
 static constexpr uint32_t SPU_COMMON_EXTMIX     = 0x00002000;   // Whether external input can be heard (is mixed with all other sounds)
 
-// Structure used for specifying voice attributes
+// Structure used for specifying voice attributes.
+//
+// ADSR envelope bit meanings (32-bits):
+//  0-4     Sustain level
+//  5-8     Decay rate
+//  9-14    Attack rate
+//  15      Attack rate mode (0 = linear, 1 = exponential)
+//  16-20   Release rate
+//  21      Release rate mode (0 = linear, 1 = exponential)
+//  22-28   Sustain rate
+//  29      Unused
+//  30      Sustain rate sign (0 = positive, 1 = negative)
+//  31      Sustain rate mode (0 = linear, 1 = exponential)
+//
 struct SpuVoiceAttr {
     uint32_t    voice_bits;     // Which voices to set the attributes for. 1-bit per voice, starting with the lowest bit.
     uint32_t    attr_mask;      // Which attributes to modify? 1-bit per attribute, starting with the lowest bit.
@@ -82,8 +95,8 @@ struct SpuVoiceAttr {
     uint16_t    sr;             // Sustain rate
     uint16_t    rr;             // Release rate
     uint16_t    sl;             // Sustain level
-    uint16_t    adsr1;          // Envelope adsr (1st 16-bits)
-    uint16_t    adsr2;          // Envelope adsr (2nd 16-bits)
+    uint16_t    adsr1;          // Envelope adsr (1st 16-bits, see above)
+    uint16_t    adsr2;          // Envelope adsr (2nd 16-bits, see above)
 };
 
 static_assert(sizeof(SpuVoiceAttr) == 64);
