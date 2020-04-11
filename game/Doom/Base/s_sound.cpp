@@ -208,7 +208,7 @@ static const VmPtr<SampleBlock>     gMapSndBlock(0x8007EE30);
 static const VmPtr<bool32_t>    gbDidLoadDoomSfxLcd(0x80077E20);
 
 // Used to save the state of voices when pausing
-static const VmPtr<NoteState>   gPausedMusVoiceState(0x8007EB18);
+static const VmPtr<SavedVoiceList>  gPausedMusVoiceState(0x8007EB18);
 
 // Unused tick count for how many sound 'updates' ticks were done
 static const VmPtr<uint32_t>    gNumSoundTics(0x80077E2C);

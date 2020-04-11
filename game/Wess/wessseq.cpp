@@ -93,10 +93,10 @@ static constexpr uint8_t gWess_seq_CmdLength[36] = {
 
 static_assert(C_ARRAY_SIZE(gWess_seq_CmdLength) == C_ARRAY_SIZE(gWess_DrvFunctions));
 
-const VmPtr<uint8_t>            gWess_master_sfx_volume(0x80075A04);    // Master volume level for all sfx patches/sounds
-const VmPtr<uint8_t>            gWess_master_mus_volume(0x80075A05);    // Master volume level for all music patches/sounds
-const VmPtr<PanMode>            gWess_pan_status(0x80075A06);           // Current pan mode
-const VmPtr<VmPtr<NoteState>>   gpWess_notestate(0x80075A10);           // Used to save and restore note state when pausing or un-pausing voices
+const VmPtr<uint8_t>                    gWess_master_sfx_volume(0x80075A04);    // Master volume level for all sfx patches/sounds
+const VmPtr<uint8_t>                    gWess_master_mus_volume(0x80075A05);    // Master volume level for all music patches/sounds
+const VmPtr<PanMode>                    gWess_pan_status(0x80075A06);           // Current pan mode
+const VmPtr<VmPtr<SavedVoiceList>>      gpWess_savedVoices(0x80075A10);         // Used to save and restore voice state when pausing or resuming sound playback
 
 static const VmPtr<VmPtr<master_status_structure>>      gpWess_eng_mstat(0x80075AC0);           // Saved reference to the master status structure
 static const VmPtr<VmPtr<sequence_status>>              gpWess_eng_seqStats(0x80075ABC);        // Saved reference to the list of sequence statuses
@@ -503,7 +503,7 @@ void Eng_SeqTempo(track_status& trackStat) noexcept {
     // Helper variables for the loop
     master_status_structure& mstat = *gpWess_eng_mstat->get();
     sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
-    sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_num];
+    sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_idx];
 
     // Read the new quarter notes per minute (BPM) amount from the command
     const uint16_t newQpm = ((uint16_t) trackStat.ppos[1]) | ((uint16_t) trackStat.ppos[2] << 8);
@@ -543,7 +543,7 @@ void Eng_SeqGosub(track_status& trackStat) noexcept {
     // Some useful stuff for the loop below
     master_status_structure& mstat = *gpWess_eng_mstat->get();
     sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
-    const sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_num];
+    const sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_idx];
 
     // Get the label to jump to from the command and do not do any jump if the label index is invalid
     const int32_t labelIdx = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
@@ -589,7 +589,7 @@ void Eng_SeqJump(track_status& trackStat) noexcept {
     // Some useful stuff for the loop below
     master_status_structure& mstat = *gpWess_eng_mstat->get();
     sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
-    const sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_num];
+    const sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_idx];
     
     // Get the label to jump to from the command and do not do any jump if the label index is invalid
     const int32_t labelIdx = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
@@ -633,7 +633,7 @@ void Eng_SeqRet(track_status& trackStat) noexcept {
     // Some useful stuff for the loop below
     master_status_structure& mstat = *gpWess_eng_mstat->get();
     sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
-    const sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_num];
+    const sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_idx];
     
     // Restore the previous location for all active tracks in the sequence
     uint8_t activeTracksLeft = seqStat.tracks_active;

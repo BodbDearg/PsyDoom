@@ -85,9 +85,9 @@ bool Is_Module_Loaded() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if the given sequence number is valid
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool Is_Seq_Num_Valid(const int32_t seqNum) noexcept {
-    if ((seqNum >= 0) && (seqNum < *gWess_end_seq_num)) {
-        return ((*gpWess_pm_stat)->pmod_info->pseq_info[seqNum].ptrk_info != nullptr);
+bool Is_Seq_Num_Valid(const int32_t seqIdx) noexcept {
+    if ((seqIdx >= 0) && (seqIdx < *gWess_end_seq_num)) {
+        return ((*gpWess_pm_stat)->pmod_info->pseq_info[seqIdx].ptrk_info != nullptr);
     }
 
     return false;
@@ -855,13 +855,13 @@ void assigntrackstat(track_status& trackStat, const track_data& trackInfo) noexc
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t wess_seq_structrig(
     const sequence_data& seqInfo,
-    const int32_t seqNum,
+    const int32_t seqIdx,
     const uint32_t seqType,
     const bool bGetHandle,
     const TriggerPlayAttr* pPlayAttribs
 ) noexcept {
     // Can't play the sequence if the number is not valid
-    if (!Is_Seq_Num_Valid(seqNum))
+    if (!Is_Seq_Num_Valid(seqIdx))
         return 0;
 
     // Disable sequencer ticking temporarily (to avoid hardware timer interrupts) while we setup all this
@@ -933,7 +933,7 @@ int32_t wess_seq_structrig(
 
     // Setup various sequence bits if we actually started playing some tracks
     if (numTracksPlayed > 0) {
-        seqStat.seq_num = (int16_t) seqNum;
+        seqStat.seq_idx = (int16_t) seqIdx;
         seqStat.seq_type = seqType;
 
         if (bGetHandle) {
@@ -963,41 +963,41 @@ int32_t wess_seq_structrig(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Trigger the specified sequence number and assign it the type number '0'
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_trigger(const int32_t seqNum) noexcept {
-    wess_seq_trigger_type(seqNum, 0);
+void wess_seq_trigger(const int32_t seqIdx) noexcept {
+    wess_seq_trigger_type(seqIdx, 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Trigger the specified sequence number with the specified custom play attributes.
 // The sequence is assigned the type number '0'.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_trigger_special(const int32_t seqNum, const TriggerPlayAttr* const pPlayAttribs) noexcept {
+void wess_seq_trigger_special(const int32_t seqIdx, const TriggerPlayAttr* const pPlayAttribs) noexcept {
     master_status_structure& mstat = *gpWess_pm_stat->get();
-    wess_seq_structrig(mstat.pmod_info->pseq_info[seqNum], seqNum, 0, false, pPlayAttribs);
+    wess_seq_structrig(mstat.pmod_info->pseq_info[seqIdx], seqIdx, 0, false, pPlayAttribs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Returns the current state of the specified sequence
 //------------------------------------------------------------------------------------------------------------------------------------------
-SequenceStatus wess_seq_status(const int32_t seqNum) noexcept {
+SequenceStatus wess_seq_status(const int32_t seqIdx) noexcept {
     // Emulate sound a little in case calling code is polling in a loop waiting for status to change
     #if PC_PSX_DOOM_MODS
         emulate_sound_if_required();
     #endif
 
     // Is the sequence number a valid one?
-    if (!Is_Seq_Num_Valid(seqNum))
+    if (!Is_Seq_Num_Valid(seqIdx))
         return SEQUENCE_INVALID;
     
     // Try to find the specified sequence number among all the sequences
     master_status_structure& mstat = *gpWess_pm_stat->get();
     const int32_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
 
-    for (uint8_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
-        sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
+    for (uint8_t statIdx = 0; statIdx < maxSeqs; ++statIdx) {
+        sequence_status& seqStat = mstat.pseqstattbl[statIdx];
 
         // Make sure this sequence is in use and that it's the one we want
-        if ((!seqStat.active) || (seqStat.seq_num != seqNum))
+        if ((!seqStat.active) || (seqStat.seq_idx != seqIdx))
             continue;
 
         // Determine status from play mode
@@ -1017,9 +1017,9 @@ SequenceStatus wess_seq_status(const int32_t seqNum) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Stops the specified sequence number
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_stop(const int32_t seqNum) noexcept {
+void wess_seq_stop(const int32_t seqIdx) noexcept {
     // Don't bother if the sequence number is not valid
-    if (!Is_Seq_Num_Valid(seqNum))
+    if (!Is_Seq_Num_Valid(seqIdx))
         return;
 
     // Temporarily disable the sequencer while we do this.
@@ -1033,18 +1033,18 @@ void wess_seq_stop(const int32_t seqNum) noexcept {
     const uint32_t maxTracksPerSeq = mstat.max_trks_perseq;
     uint8_t numActiveSeqsToVisit = mstat.seqs_active;
 
-    for (uint8_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
+    for (uint8_t statIdx = 0; statIdx < maxSeqs; ++statIdx) {
         // If there are no more active sequences to visit then we are done
         if (numActiveSeqsToVisit == 0)
             break;
 
         // Only bother if the sequence is loaded/active
-        sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
+        sequence_status& seqStat = mstat.pseqstattbl[statIdx];
 
         if (!seqStat.active)
             continue;
         
-        if (seqStat.seq_num == seqNum) {
+        if (seqStat.seq_idx == seqIdx) {
             // This is the sequence we want, go through all the tracks and stop each one
             uint32_t numSeqTracksActive = seqStat.tracks_active;
             uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();

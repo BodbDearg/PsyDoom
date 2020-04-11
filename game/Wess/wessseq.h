@@ -3,7 +3,7 @@
 #include "wessarc.h"
 
 struct master_status_structure;
-struct NoteState;
+struct SavedVoiceList;
 struct track_status;
 
 // Pan mode
@@ -13,10 +13,10 @@ enum PanMode : uint8_t {
     PAN_ON_REV      // Pan is on (reverse channels)
 };
 
-extern const VmPtr<uint8_t>             gWess_master_sfx_volume;
-extern const VmPtr<uint8_t>             gWess_master_mus_volume;
-extern const VmPtr<PanMode>             gWess_pan_status;
-extern const VmPtr<VmPtr<NoteState>>    gpWess_notestate;
+extern const VmPtr<uint8_t>                 gWess_master_sfx_volume;
+extern const VmPtr<uint8_t>                 gWess_master_mus_volume;
+extern const VmPtr<PanMode>                 gWess_pan_status;
+extern const VmPtr<VmPtr<SavedVoiceList>>   gpWess_savedVoices;
 
 // Sequencer command functions
 extern const WessDriverFunc gWess_DrvFunctions[36];

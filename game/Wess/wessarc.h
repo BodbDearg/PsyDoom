@@ -266,7 +266,7 @@ struct sequence_status {
     uint8_t         handle : 1;             // If set then the sequence must manually be started at a later time after it is allocated
     uint8_t         _unusedFlagBits : 6;    // Unused flag bits
     SeqPlayMode     playmode;               // Is the sequence playing or stopped?
-    int16_t         seq_num;                // The index of the sequence using this status structure
+    int16_t         seq_idx;                // The index of the sequence using this status structure
     uint8_t         tracks_active;          // How many track statuses this sequence currently has allocated
     uint8_t         tracks_playing;         // How many tracks this sequence is currently playing
     uint8_t         volume;                 // Default initialized to upon allocating the sequence status but doesn't seem to be used appart from that?
@@ -331,10 +331,10 @@ struct voice_status {
     uint8_t                         _unusedFlagBits : 6;    // These flag fields are unused
     SoundDriverId                   patchtype;              // Which sound driver this voice is used with
     uint8_t                         refindx;                // Index of the voice in it's sound driver
-    uint8_t                         track;                  // What track is using the voice
+    uint8_t                         track_idx;              // What track index is using the voice
     uint8_t                         priority;               // Inherited from the parent track: used to determine when voices are 'stolen' or not when the voice limit is reached
-    uint8_t                         keynum;                 // Which note (semitone) the voice is to play
-    uint8_t                         velnum;                 // Volume the voice is to play at
+    uint8_t                         note;                   // Which note (semitone) the voice is to play
+    uint8_t                         volume;                 // Volume the voice is to play at
     SoundClass                      sndtype;                // What broad class of sound the voice is being used for (MUSIC, SFX etc.)
     VmPtr<const patchmaps_header>   patchmaps;              // The patch voice which uses this voice
     VmPtr<const patchinfo_header>   patchinfo;              // Details for the actual sound sample to use for the voice

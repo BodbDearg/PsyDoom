@@ -40,9 +40,9 @@ static void trackstop(track_status& trackStat, sequence_status& seqStat) noexcep
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Pause the specified sequence and optionally mute it immediately
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_pause(const int32_t seqNum, const bool bMute) noexcept {
+void wess_seq_pause(const int32_t seqIdx, const bool bMute) noexcept {
     // Don't bother if the sequence number is not valid
-    if (!Is_Seq_Num_Valid(seqNum))
+    if (!Is_Seq_Num_Valid(seqIdx))
         return;
 
     // Temporarily disable the sequencer while we do this.
@@ -58,14 +58,14 @@ void wess_seq_pause(const int32_t seqNum, const bool bMute) noexcept {
 
     if (numActiveSeqsToVisit > 0) {
         // Run through all of the active sequences with the given number and stop them all
-        for (uint8_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
-            sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
+        for (uint8_t statIdx = 0; statIdx < maxSeqs; ++statIdx) {
+            sequence_status& seqStat = mstat.pseqstattbl[statIdx];
 
             if (!seqStat.active)
                 continue;
 
             // If this is the sequence number we are interested in then run through all of it's tracks and stop each of them
-            if (seqStat.seq_num == seqNum) {
+            if (seqStat.seq_idx == seqIdx) {
                 uint32_t numActiveSeqTracksToVisit = seqStat.tracks_active;
                 uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
 
@@ -108,9 +108,9 @@ void wess_seq_pause(const int32_t seqNum, const bool bMute) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Unpause the specified sequence
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_restart(const int32_t seqNum) noexcept {
+void wess_seq_restart(const int32_t seqIdx) noexcept {
     // Don't bother if the sequence number is not valid
-    if (!Is_Seq_Num_Valid(seqNum))
+    if (!Is_Seq_Num_Valid(seqIdx))
         return;
 
     // Temporarily disable the sequencer while we do this.
@@ -126,14 +126,14 @@ void wess_seq_restart(const int32_t seqNum) noexcept {
 
     if (numActiveSeqsToVisit > 0) {
         // Run through all of the active sequences and stop them all
-        for (uint8_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
-            sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
+        for (uint8_t statIdx = 0; statIdx < maxSeqs; ++statIdx) {
+            sequence_status& seqStat = mstat.pseqstattbl[statIdx];
 
             if (!seqStat.active)
                 continue;
             
             // If this is the sequence number we are interested in then run through all of it's tracks and pause each of them
-            if (seqStat.seq_num == seqNum) {
+            if (seqStat.seq_idx == seqIdx) {
                 uint32_t numActiveSeqTracksToVisit = seqStat.tracks_active;
                 uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
 
@@ -169,9 +169,9 @@ void wess_seq_restart(const int32_t seqNum) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Pause all currently playing sequences.
-// If muting completely, the current note state can optionally be recorded to the given state struct for later restoration.
+// If muting completely, the current state for all voices can optionally be recorded to the given state struct for later restoration.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_pauseall(const bool bMute, NoteState* const pNoteState) noexcept {
+void wess_seq_pauseall(const bool bMute, SavedVoiceList* const pSavedVoices) noexcept {
     // Don't bother if there is no module loaded
     if (!Is_Module_Loaded())
         return;
@@ -180,10 +180,10 @@ void wess_seq_pauseall(const bool bMute, NoteState* const pNoteState) noexcept {
     // It was originally fired by hardware timer interrupts, so this step was required.
     *gbWess_SeqOn = false;
     
-    // If muting temporarily, then save the state of all notes to the given state struct (if given).
-    // This allows the notes to be restored to what they were previously.
+    // If muting temporarily, then save the state of all voices to the given state struct (if given).
+    // This allows the voices to be restored to what they were previously.
     if (bMute) {
-        start_record_music_mute(pNoteState);
+        start_record_music_mute(pSavedVoices);
     }
 
     // Grab some basic info from the master status
@@ -236,7 +236,7 @@ void wess_seq_pauseall(const bool bMute, NoteState* const pNoteState) noexcept {
         }
     }
 
-    // Not recording any more note details while pausing
+    // Not recording any more voice details while pausing
     if (bMute) {
         end_record_music_mute();
     }
@@ -245,12 +245,11 @@ void wess_seq_pauseall(const bool bMute, NoteState* const pNoteState) noexcept {
     *gbWess_SeqOn = true;
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Restart all previously paused sequences.
-// Individual notes can also be restored to their previous states using the saved note state struct.
+// Individual voices can also be restored to their previous states using the saved voice state struct.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_restartall(NoteState* const pPrevNoteState) noexcept {
+void wess_seq_restartall(SavedVoiceList* const pPrevVoiceState) noexcept {
     // Don't bother if there is no module loaded
     if (!Is_Module_Loaded())
         return;
@@ -288,14 +287,14 @@ void wess_seq_restartall(NoteState* const pPrevNoteState) noexcept {
                 track_status& trackStat = mstat.ptrkstattbl[trackIdx];
                 trackstart(trackStat, seqStat);
 
-                // If notes were previously saved for restoring then replay them now
-                if (pPrevNoteState) {
-                    for (int32_t noteIdx = 0; noteIdx < pPrevNoteState->numnotes; ++noteIdx) {
-                        NoteData& noteData = pPrevNoteState->nd[noteIdx];
+                // If voices were previously saved for restoring then replay them now
+                if (pPrevVoiceState) {
+                    for (int32_t noteIdx = 0; noteIdx < pPrevVoiceState->size; ++noteIdx) {
+                        SavedVoice& voice = pPrevVoiceState->voices[noteIdx];
 
-                        // Only restart the note if it is for this track and sequence
-                        if ((noteData.track == trackIdx) && (noteData.seq_num == seqStat.seq_num)) {
-                            PSX_voicenote(trackStat, *noteData.patchmap, *noteData.patchinfo, noteData.keynum, noteData.velnum);
+                        // Only restart the voice if it is for this track and sequence
+                        if ((voice.track_idx == trackIdx) && (voice.seq_idx == seqStat.seq_idx)) {
+                            PSX_voicenote(trackStat, *voice.patchmap, *voice.patchinfo, voice.note, voice.volume);
                         }
                     }
                 }
@@ -315,9 +314,9 @@ void wess_seq_restartall(NoteState* const pPrevNoteState) noexcept {
         }
     }
     
-    // Clear the storage in the note state struct for re-use again
-    if (pPrevNoteState) {
-        pPrevNoteState->numnotes = 0;
+    // Clear storage in the list of saved voices for re-use again
+    if (pPrevVoiceState) {
+        pPrevVoiceState->size = 0;
     }
 
     // Re-enable the sequencer

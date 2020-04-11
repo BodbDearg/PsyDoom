@@ -58,26 +58,26 @@ struct TriggerPlayAttr {
 
 static_assert(sizeof(TriggerPlayAttr) == 20);
 
-// Records state for an individual note: used by pause/resume functionality
-struct NoteData {
-    int16_t                         seq_num;        // What sequence index the note belongs to
-    int16_t                         track;          // What track index the note belongs to
-    int8_t                          keynum;         // What note was being played
-    int8_t                          velnum;         // What volume the note was being played at
+// Records state for a voice in a track: used by pause/resume functionality
+struct SavedVoice {
+    int16_t                         seq_idx;        // What sequence index the voice belongs to
+    int16_t                         track_idx;      // What track index the voice belongs to
+    int8_t                          note;           // What note (semitone) was being played by the voice
+    int8_t                          volume;         // What volume the voice was being played at
     int16_t                         _pad;           // Unused/padding bytes
-    VmPtr<const patchmaps_header>   patchmap;       // Which patch voice was being used for this note
-    VmPtr<const patchinfo_header>   patchinfo;      // Which patch sound sample was being used for this note
+    VmPtr<const patchmaps_header>   patchmap;       // Settings for the patch voice being used
+    VmPtr<const patchinfo_header>   patchinfo;      // Details about the sound sample being used by the voice
 };
 
-static_assert(sizeof(NoteData) == 16);
+static_assert(sizeof(SavedVoice) == 16);
 
-// Records state for all notes: used by pause/resume functionality
-struct NoteState {
-    int32_t     numnotes;
-    NoteData    nd[SPU_NUM_VOICES];
+// Records state for all voices: used by pause/resume functionality
+struct SavedVoiceList {
+    int32_t     size;
+    SavedVoice  voices[SPU_NUM_VOICES];
 };
 
-static_assert(sizeof(NoteState) == 388);
+static_assert(sizeof(SavedVoiceList) == 388);
 
 extern const VmPtr<bool32_t>                            gbWess_module_loaded;
 extern const VmPtr<VmPtr<master_status_structure>>      gpWess_pm_stat;
@@ -87,7 +87,7 @@ void wess_install_error_handler(int32_t (* const pErrorFunc)(int32_t, int32_t), 
 master_status_structure* wess_get_master_status() noexcept;
 bool Is_System_Active() noexcept;
 bool Is_Module_Loaded() noexcept;
-bool Is_Seq_Num_Valid(const int32_t seqNum) noexcept;
+bool Is_Seq_Num_Valid(const int32_t seqIdx) noexcept;
 void Register_Early_Exit() noexcept;
 void wess_install_handler() noexcept;
 void wess_restore_handler() noexcept;
@@ -110,14 +110,14 @@ void assigntrackstat(track_status& trackStat, const track_data& trackInfo) noexc
 
 int32_t wess_seq_structrig(
     const sequence_data& seqInfo,
-    const int32_t seqNum,
+    const int32_t seqIdx,
     const uint32_t seqType,
     const bool bGetHandle,
     const TriggerPlayAttr* pPlayAttribs
 ) noexcept;
 
-void wess_seq_trigger(const int32_t seqNum) noexcept;
-void wess_seq_trigger_special(const int32_t seqNum, const TriggerPlayAttr* const pPlayAttribs) noexcept;
-SequenceStatus wess_seq_status(const int32_t seqNum) noexcept;
-void wess_seq_stop(const int32_t seqNum) noexcept;
+void wess_seq_trigger(const int32_t seqIdx) noexcept;
+void wess_seq_trigger_special(const int32_t seqIdx, const TriggerPlayAttr* const pPlayAttribs) noexcept;
+SequenceStatus wess_seq_status(const int32_t seqIdx) noexcept;
+void wess_seq_stop(const int32_t seqIdx) noexcept;
 void wess_seq_stopall() noexcept;

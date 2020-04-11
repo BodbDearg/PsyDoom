@@ -2,19 +2,19 @@
 
 #include "wessarc.h"
 
-struct NoteState;
+struct SavedVoiceList;
 
 // PlayStation sound driver command functions
 extern const WessDriverFunc gWess_drv_cmds[19];
 
-void start_record_music_mute(NoteState* const pNoteState) noexcept;
+void start_record_music_mute(SavedVoiceList* const pVoices) noexcept;
 void end_record_music_mute() noexcept;
 
 void add_music_mute_note(
-    const int16_t seqNum,
-    const int16_t track,
+    const int16_t seqIdx,
+    const int16_t trackIdx,
     const uint8_t note,
-    const uint8_t noteVol,
+    const uint8_t volume,
     const patchmaps_header& patchmap,
     const patchinfo_header& patchInfo
 ) noexcept;

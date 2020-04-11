@@ -131,17 +131,17 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Trigger the specified sequence number and assign it the given type number
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_trigger_type(const int32_t seqNum, const uint32_t seqType) noexcept {
+void wess_seq_trigger_type(const int32_t seqIdx, const uint32_t seqType) noexcept {
     master_status_structure& mstat = *gpWess_pm_stat->get();
-    wess_seq_structrig(mstat.pmod_info->pseq_info[seqNum], seqNum, seqType, false, nullptr);
+    wess_seq_structrig(mstat.pmod_info->pseq_info[seqIdx], seqIdx, seqType, false, nullptr);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Trigger the specified sequence number with custom play attributes and assign it the given type number
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_trigger_type_special(const int32_t seqNum, const uint32_t seqType, const TriggerPlayAttr* const pPlayAttribs) noexcept {
+void wess_seq_trigger_type_special(const int32_t seqIdx, const uint32_t seqType, const TriggerPlayAttr* const pPlayAttribs) noexcept {
     master_status_structure& mstat = *gpWess_pm_stat->get();
-    wess_seq_structrig(mstat.pmod_info->pseq_info[seqNum], seqNum, seqType, false, pPlayAttribs);
+    wess_seq_structrig(mstat.pmod_info->pseq_info[seqIdx], seqIdx, seqType, false, pPlayAttribs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
