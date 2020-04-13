@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 project(PsyDoom)
 
 # Current game version string
-set(GAME_VERSION_STR "0.1.1")
+set(GAME_VERSION_STR "0.2.0")
 
 # Where CMake will search for .cmake module files
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
