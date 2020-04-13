@@ -1,6 +1,5 @@
 #pragma once
 #include <array>
-#include <cereal/access.hpp>
 #include <glm/glm.hpp>
 #include <vector>
 #include "primitive.h"
@@ -27,7 +26,6 @@ class GPU {
 public:
 #endif
 
-    friend class cereal::access;
     friend struct ::System;
     friend class ::Render;
     friend class ::OpenGL;

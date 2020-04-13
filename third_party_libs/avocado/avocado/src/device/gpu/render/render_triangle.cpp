@@ -138,7 +138,6 @@ void rasterizeTriangle(GPU* gpu, const primitive::Triangle& triangle) {
     ivec2 p;
     for (p.y = min.y; p.y <= max.y; p.y++) {
         ivec3 CX = ivec3(CY[0], CY[1], CY[2]);
-
         for (p.x = min.x; p.x <= max.x; p.x++) {
             if ((CX[0] | CX[1] | CX[2]) > 0) {
                 // Bias is subtracted to remove error from texture sampling.
@@ -180,7 +179,7 @@ void rasterizeTriangle(GPU* gpu, const primitive::Triangle& triangle) {
                     c = PSXColor::blend(bg, c, transparency);
                 }
 
-                c.k |= bg.k | setMaskWhileDrawing;
+                c.k |= setMaskWhileDrawing;
 
                 VRAM[p.y][p.x] = c.raw;
 

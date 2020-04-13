@@ -24,9 +24,9 @@ GPU::GPU(System* sys) : sys(sys) {
 GPU::~GPU() { bus.unlistenAll(busToken); }
 
 void GPU::reload() {
-    verbose = config["debug"]["log"]["gpu"];
-    forceNtsc = config["options"]["graphics"]["forceNtsc"];
-    auto mode = config["options"]["graphics"]["rendering_mode"].get<RenderingMode>();
+    verbose = config.debug.log.gpu;
+    forceNtsc = config.options.graphics.forceNtsc;
+    auto mode = config.options.graphics.renderingMode;
     softwareRendering = (mode & RenderingMode::software) != 0;
     hardwareRendering = (mode & RenderingMode::hardware) != 0;
 }
@@ -389,6 +389,8 @@ void GPU::cmdRectangle(RectangleArgs arg) {
         rect.bits = 8;
     } else if (gp0_e1.texturePageColors == Bits::bit15) {
         rect.bits = 16;
+    } else if (gp0_e1.texturePageColors == Bits::reserved) {
+        rect.bits = 16;
     }
     rect.isSemiTransparent = arg.semiTransparency;
     rect.isRawTexture = arg.isRawTexture;
@@ -524,8 +526,15 @@ void GPU::cmdVramToVram() {
     int w = MaskCopy::w(arguments[3] & 0xffff);
     int h = MaskCopy::h((arguments[3] & 0xffff0000) >> 16);
 
+    // Note: VramToVram copy is always Top-to-Bottom
+    // but it might be Left-to-Right or Right-to-Left depending whether srcX < dstX
+    // See gpu/vram-to-vram-overlap test
+    bool dir = srcX < dstX;
+
     for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
+        for (int _x = 0; _x < w; _x++) {
+            int x = (!dir) ? _x : w - 1 - _x;
+
             uint16_t src = VRAM[(srcY + y) % VRAM_HEIGHT][(srcX + x) % VRAM_WIDTH];
             maskedWrite(dstX + x, dstY + y, src);
         }
