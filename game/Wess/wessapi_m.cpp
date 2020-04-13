@@ -13,7 +13,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Return the master volume for sound effects
 //------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t wess_master_sfx_volume_get() noexcept {   
+uint8_t wess_master_sfx_volume_get() noexcept {
     return (Is_Module_Loaded()) ? *gWess_master_sfx_volume : 0;
 }
 
@@ -59,48 +59,48 @@ void wess_master_mus_vol_set(const uint8_t musicVol) noexcept {
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat->get();
 
-    const uint8_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
-    const uint32_t maxTracksPerSeq = mstat.max_trks_perseq;
-    uint8_t numActiveSeqsToVisit = mstat.seqs_active;
+    const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
+    const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
+    uint8_t numActiveSeqsToVisit = mstat.num_active_seqs;
 
     if (numActiveSeqsToVisit > 0) {
         // Run through all of the active sequences and stop them all
-        for (uint8_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
-            sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
+        for (uint8_t seqStatIdx = 0; seqStatIdx < maxSeqs; ++seqStatIdx) {
+            sequence_status& seqStat = mstat.psequence_stats[seqStatIdx];
 
             if (!seqStat.active)
                 continue;
 
             // Run through all of the active tracks in the sequence and stop them all
-            uint32_t numActiveSeqTracksLeft = seqStat.tracks_active;
-            uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+            uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
+            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
 
-            for (uint32_t i = 0; i < maxTracksPerSeq; ++i) {
+            for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                 // Is this sequence track slot actually in use? Skip if not:
-                const uint8_t trackIdx = pSeqTrackIndexes[i];
+                const uint8_t trackStatIdx = pTrackStatIndices[trackSlotIdx];
 
-                if (trackIdx == 0xFF)
+                if (trackStatIdx == 0xFF)
                     continue;
 
                 // See if this track is music, if so then set its volume
-                track_status& trackStat = mstat.ptrkstattbl[trackIdx];
+                track_status& trackStat = mstat.ptrack_stats[trackStatIdx];
                 
-                if (trackStat.sndclass == MUSIC_CLASS) {
+                if (trackStat.sound_class == MUSIC_CLASS) {
                     // Issue a sequencer command to to update the volume levels: change the track command stream temporarily also to do this
-                    uint8_t* const pPrevCmdBytes = trackStat.ppos.get();
-                    trackStat.ppos = cmdBytes;
+                    uint8_t* const pPrevCmdBytes = trackStat.pcur_cmd.get();
+                    trackStat.pcur_cmd = cmdBytes;
 
                     cmdBytes[0] = VolumeMod;
                     cmdBytes[1] = trackStat.volume_cntrl;
-                    gWess_CmdFuncArr[trackStat.patchtype][VolumeMod](trackStat);
+                    gWess_CmdFuncArr[trackStat.driver_id][VolumeMod](trackStat);
 
-                    trackStat.ppos = pPrevCmdBytes;
+                    trackStat.pcur_cmd = pPrevCmdBytes;
                 }
 
-                // If there are no more tracks left active then we are done
-                numActiveSeqTracksLeft--;
+                // If there are no more active tracks left to visit in the sequence then we are done
+                numActiveTracksToVisit--;
 
-                if (numActiveSeqTracksLeft == 0)
+                if (numActiveTracksToVisit == 0)
                     break;
             }
 

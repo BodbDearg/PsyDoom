@@ -64,7 +64,7 @@ void psxspu_init_reverb(
     *gbPsxSpu_timer_callback_enabled = false;
 
     gPsxSpu_rev_attr->mask = SPU_REV_MODE | SPU_REV_DEPTHL | SPU_REV_DEPTHR | SPU_REV_DELAYTIME | SPU_REV_FEEDBACK;
-    gPsxSpu_rev_attr->mode = (SpuReverbMode)(reverbMode | SPU_REV_MODE_CLEAR_WA);    
+    gPsxSpu_rev_attr->mode = (SpuReverbMode)(reverbMode | SPU_REV_MODE_CLEAR_WA);
     gPsxSpu_rev_attr->depth.left = depthLeft;
     gPsxSpu_rev_attr->depth.right = depthRight;
     gPsxSpu_rev_attr->delay = delay;
@@ -213,7 +213,7 @@ void psxspu_fadeengine() noexcept {
             *gPsxSpu_cd_vol_fixed = *gPsxSpu_cd_destvol_fixed;
         }
 
-        *gPsxSpu_cd_vol = *gPsxSpu_cd_vol_fixed >> 16;        
+        *gPsxSpu_cd_vol = *gPsxSpu_cd_vol_fixed >> 16;
         psxspu_set_cd_volume(*gPsxSpu_cd_vol);
     }
 
@@ -227,7 +227,7 @@ void psxspu_fadeengine() noexcept {
             *gPsxSpu_master_vol_fixed = *gPsxSpu_master_destvol_fixed;
         }
 
-        *gPsxSpu_master_vol = *gPsxSpu_master_vol_fixed >> 16;        
+        *gPsxSpu_master_vol = *gPsxSpu_master_vol_fixed >> 16;
         psxspu_set_master_volume(*gPsxSpu_master_vol);
     }
 }
@@ -240,7 +240,7 @@ void psxspu_set_cd_vol(const int32_t vol) noexcept {
 
     *gPsxSpu_cd_vol = vol;
     *gPsxSpu_cd_vol_fixed = vol << 16;
-    *gPsxSpu_cd_fade_ticks_left = 0;    
+    *gPsxSpu_cd_fade_ticks_left = 0;
     psxspu_set_cd_volume(vol);
 
     *gbPsxSpu_timer_callback_enabled = true;
@@ -346,6 +346,6 @@ void psxspu_stop_master_fade() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Returns 'true' if the master volume fade out is still ongoing, 'false' otherwise
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool psxspu_get_master_fade_status() noexcept {    
+bool psxspu_get_master_fade_status() noexcept {
     return (*gPsxSpu_master_fade_ticks_left > 1);
 }

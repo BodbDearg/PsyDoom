@@ -20,7 +20,7 @@ const WessDriverFunc* const gWess_CmdFuncArr[10] = {
     gWess_DrvFunctions,
     gWess_DrvFunctions,
     gWess_DrvFunctions,
-    gWess_DrvFunctions 
+    gWess_DrvFunctions
 };
 
 // Keeps track of global time (MS) for the sequencer and other operations.
@@ -38,8 +38,8 @@ const VmPtr<uint8_t[CD_SECTOR_SIZE]> gWess_sectorBuffer2(0x80096D7C);
 // True when the sequencer is enabled and can tick
 const VmPtr<bool32_t> gbWess_SeqOn(0x80075948);
 
-static const VmPtr<uint32_t>    gWess_T2counter(0x80075950);            // Tracks the number of interrupts or calls to 'WessInterruptHandler'
-static const VmPtr<uint32_t>    gWess_EV2(0x8007595C);                  // Hardware event handle for the timer interrupt event which drives the music system
+static const VmPtr<uint32_t>    gWess_T2counter(0x80075950);            // Tracks the number of PSX timer 2 interrupts or calls to 'WessInterruptHandler'
+static const VmPtr<uint32_t>    gWess_EV2(0x8007595C);                  // Hardware event handle for the PSX timer 2 interrupt event which drives the music system
 static const VmPtr<PsxCd_File>  gWess_module_fileref(0x8007EFFC);       // Holds the current file open by the module loader
 static const VmPtr<PsxCd_File>  gWess_data_fileref(0x8007F024);         // Holds the current file open by the data loader
 static const VmPtr<bool32_t>    gbWess_ReadChunk1(0x8007F04C);          // If true we can read data to sector buffer 1
@@ -276,7 +276,7 @@ int32_t data_read(PsxCd_File& file, const int32_t destSpuAddr, const int32_t num
     }
 
     // Wait for the SPU transfer to finish before exiting
-    LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);    
+    LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
     return numBytes;
 }
 

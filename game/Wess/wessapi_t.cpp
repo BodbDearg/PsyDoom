@@ -17,9 +17,9 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
     if (!pPlayAttribs)
         return;
     
-    const uint32_t attribMask = pPlayAttribs->mask;
+    const uint32_t attribsMask = pPlayAttribs->attribs_mask;
 
-    if (attribMask == 0)
+    if (attribsMask == 0)
         return;
 
     // TODO: TEMP MEASURE FOR NOW - REMOVE EVENTUALLY: need a stack buffer in VM space for now
@@ -31,99 +31,99 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
     uint8_t* const cmdBytes = cmd->bytes;
     
     // Set all of the specified attributes, issuing sequencer commands where required to perform the change
-    if (attribMask & TRIGGER_VOLUME) {
-        trackStat.volume_cntrl = pPlayAttribs->volume;
+    if (attribsMask & TRIGGER_VOLUME) {
+        trackStat.volume_cntrl = pPlayAttribs->volume_cntrl;
     }
 
-    if (attribMask & TRIGGER_PAN) {
-        trackStat.pan_cntrl = pPlayAttribs->pan;
+    if (attribsMask & TRIGGER_PAN) {
+        trackStat.pan_cntrl = pPlayAttribs->pan_cntrl;
     }
 
-    if (attribMask & (TRIGGER_VOLUME | TRIGGER_PAN)) {
+    if (attribsMask & (TRIGGER_VOLUME | TRIGGER_PAN)) {
         // Set the volume and pan on the track
-        trackStat.volume_cntrl = pPlayAttribs->volume;
-        trackStat.pan_cntrl = pPlayAttribs->pan;
+        trackStat.volume_cntrl = pPlayAttribs->volume_cntrl;
+        trackStat.pan_cntrl = pPlayAttribs->pan_cntrl;
 
         // Issue a sequencer command to to update the volume levels: change the track command stream temporarily also to do this
-        uint8_t* const pPrevCmdBytes = trackStat.ppos.get();
-        trackStat.ppos = cmdBytes;
+        uint8_t* const pPrevCmd = trackStat.pcur_cmd.get();
+        trackStat.pcur_cmd = cmdBytes;
 
         cmdBytes[0] = VolumeMod;
         cmdBytes[1] = trackStat.volume_cntrl;
-        gWess_CmdFuncArr[trackStat.patchtype][VolumeMod](trackStat);
+        gWess_CmdFuncArr[trackStat.driver_id][VolumeMod](trackStat);
         
-        trackStat.ppos = pPrevCmdBytes;
+        trackStat.pcur_cmd = pPrevCmd;
     }
     else {
-        if (attribMask & TRIGGER_VOLUME) {
+        if (attribsMask & TRIGGER_VOLUME) {
             // Set the volume on the track
-            trackStat.volume_cntrl = pPlayAttribs->volume;
+            trackStat.volume_cntrl = pPlayAttribs->volume_cntrl;
 
             // Issue a sequencer command to to update the volume: change the track command stream temporarily also to do this
-            uint8_t* const pOldCmdBytes = trackStat.ppos.get();
-            trackStat.ppos = cmdBytes;
+            uint8_t* const pPrevCmd = trackStat.pcur_cmd.get();
+            trackStat.pcur_cmd = cmdBytes;
 
             cmdBytes[0] = VolumeMod;
             cmdBytes[1] = trackStat.volume_cntrl;
-            gWess_CmdFuncArr[trackStat.patchtype][VolumeMod](trackStat);
+            gWess_CmdFuncArr[trackStat.driver_id][VolumeMod](trackStat);
 
-            trackStat.ppos = pOldCmdBytes;
+            trackStat.pcur_cmd = pPrevCmd;
         }
-        else if (attribMask & TRIGGER_PAN) {
+        else if (attribsMask & TRIGGER_PAN) {
             // Set the pan on the track
-            trackStat.pan_cntrl = pPlayAttribs->pan;
+            trackStat.pan_cntrl = pPlayAttribs->pan_cntrl;
 
             // Issue a sequencer command to to update the pan: change the track command stream temporarily also to do this
-            uint8_t* const pOldCmdBytes = trackStat.ppos.get();
-            trackStat.ppos = cmdBytes;
+            uint8_t* const pPrevCmd = trackStat.pcur_cmd.get();
+            trackStat.pcur_cmd = cmdBytes;
 
             cmdBytes[0] = PanMod;
             cmdBytes[1] = trackStat.pan_cntrl;
-            gWess_CmdFuncArr[trackStat.patchtype][PanMod](trackStat);
+            gWess_CmdFuncArr[trackStat.driver_id][PanMod](trackStat);
             
-            trackStat.ppos = pOldCmdBytes;
+            trackStat.pcur_cmd = pPrevCmd;
         }
     }
 
-    if (attribMask & TRIGGER_PATCH) {
-        trackStat.patchnum = pPlayAttribs->patch;
+    if (attribsMask & TRIGGER_PATCH) {
+        trackStat.patch_idx = pPlayAttribs->patch_idx;
     }
 
-    if (attribMask & TRIGGER_PITCH) {
+    if (attribsMask & TRIGGER_PITCH) {
         // Set the pitch on the track
-        trackStat.pitch_cntrl = pPlayAttribs->pitch;
+        trackStat.pitch_cntrl = pPlayAttribs->pitch_cntrl;
 
         // Issue a sequencer command to update the patch: change the track command stream temporarily also to do this
-        uint8_t* const pOldCmdBytes = trackStat.ppos.get();
-        trackStat.ppos = cmd->bytes;
+        uint8_t* const pPrevCmd = trackStat.pcur_cmd.get();
+        trackStat.pcur_cmd = cmd->bytes;
         
         cmdBytes[0] = PitchMod;
         cmdBytes[1] = (uint8_t)(trackStat.pitch_cntrl >> 0);
         cmdBytes[2] = (uint8_t)(trackStat.pitch_cntrl >> 8);
-        gWess_CmdFuncArr[trackStat.patchtype][PitchMod](trackStat);
+        gWess_CmdFuncArr[trackStat.driver_id][PitchMod](trackStat);
 
-        trackStat.ppos = pOldCmdBytes;
+        trackStat.pcur_cmd = pPrevCmd;
     }
 
-    if (attribMask & TRIGGER_MUTEMODE) {
-        if (trackStat.mutemask & (1 << pPlayAttribs->mutemode)) {
+    if (attribsMask & TRIGGER_MUTEMODE) {
+        if (trackStat.mutegroups_mask & (1 << pPlayAttribs->mutegroup)) {
             trackStat.mute = true;
         } else {
             trackStat.mute = false;
         }
     }
 
-    if (attribMask & TRIGGER_TEMPO) {
-        trackStat.qpm = pPlayAttribs->tempo;
-        trackStat.ppi = CalcPartsPerInt(GetIntsPerSec(), trackStat.ppq, trackStat.qpm);
+    if (attribsMask & TRIGGER_TEMPO) {
+        trackStat.tempo_qpm = pPlayAttribs->tempo_qpm;
+        trackStat.tempo_ppi_frac = CalcPartsPerInt(GetIntsPerSec(), trackStat.tempo_ppq, trackStat.tempo_qpm);
     }
 
-    if (attribMask & TRIGGER_TIMED) {
-        trackStat.endppi = trackStat.totppi + pPlayAttribs->timeppq;
+    if (attribsMask & TRIGGER_TIMED) {
+        trackStat.end_abstime_qnp = trackStat.abstime_qnp + pPlayAttribs->playtime_qnp;
         trackStat.timed = true;
     }
 
-    if (attribMask & TRIGGER_LOOPED) {
+    if (attribsMask & TRIGGER_LOOPED) {
         trackStat.looped = true;
     }
 }
@@ -133,7 +133,7 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
 //------------------------------------------------------------------------------------------------------------------------------------------
 void wess_seq_trigger_type(const int32_t seqIdx, const uint32_t seqType) noexcept {
     master_status_structure& mstat = *gpWess_pm_stat->get();
-    wess_seq_structrig(mstat.pmod_info->pseq_info[seqIdx], seqIdx, seqType, false, nullptr);
+    wess_seq_structrig(mstat.pmodule->psequences[seqIdx], seqIdx, seqType, false, nullptr);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -141,7 +141,7 @@ void wess_seq_trigger_type(const int32_t seqIdx, const uint32_t seqType) noexcep
 //------------------------------------------------------------------------------------------------------------------------------------------
 void wess_seq_trigger_type_special(const int32_t seqIdx, const uint32_t seqType, const TriggerPlayAttr* const pPlayAttribs) noexcept {
     master_status_structure& mstat = *gpWess_pm_stat->get();
-    wess_seq_structrig(mstat.pmod_info->pseq_info[seqIdx], seqIdx, seqType, false, pPlayAttribs);
+    wess_seq_structrig(mstat.pmodule->psequences[seqIdx], seqIdx, seqType, false, pPlayAttribs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -159,40 +159,40 @@ void wess_seq_update_type_special(const uint32_t seqType, const TriggerPlayAttr*
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat->get();
 
-    const uint8_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
-    const uint32_t maxTracksPerSeq = mstat.max_trks_perseq;
-    uint8_t numActiveSeqsToVisit = mstat.seqs_active;
+    const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
+    const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
+    uint8_t numActiveSeqsToVisit = mstat.num_active_seqs;
 
     if (numActiveSeqsToVisit > 0) {
         // Run through all of the active sequences of the specified type and update them all
-        for (uint8_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
-            sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
+        for (uint8_t seqStatIdx = 0; seqStatIdx < maxSeqs; ++seqStatIdx) {
+            sequence_status& seqStat = mstat.psequence_stats[seqStatIdx];
 
             if (!seqStat.active)
                 continue;
 
-            if (seqStat.seq_type == seqType) {
+            if (seqStat.type == seqType) {
                 // This is the sequence type we want: tun through all of the active tracks in the sequence and update them all
-                uint32_t numActiveSeqTracksToVisit = seqStat.tracks_active;
-                uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+                uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
+                uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
 
-                for (uint32_t i = 0; i < maxTracksPerSeq; ++i) {
+                for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                     // Is this sequence track slot actually in use? Skip if not:
-                    const uint8_t trackIdx = pSeqTrackIndexes[i];
+                    const uint8_t trackStatIdx = pTrackStatIndices[trackSlotIdx];
 
-                    if (trackIdx == 0xFF)
+                    if (trackStatIdx == 0xFF)
                         continue;
                     
                     // Only bother with this call if there are actually attributes to set.
                     // This check should have probably been done on function entry? This is somewhat wasteful doing it here:
                     if (pPlayAttribs) {
-                        updatetrackstat(mstat.ptrkstattbl[trackIdx], pPlayAttribs);
+                        updatetrackstat(mstat.ptrack_stats[trackStatIdx], pPlayAttribs);
                     }
 
-                    // If there are no more active tracks left to visit then we are done
-                    --numActiveSeqTracksToVisit;
+                    // If there are no more active tracks left to visit in the sequence then we are done
+                    --numActiveTracksToVisit;
 
-                    if (numActiveSeqTracksToVisit == 0)
+                    if (numActiveTracksToVisit == 0)
                         break;
                 }
             }
@@ -224,38 +224,38 @@ void wess_seq_stoptype(const uint32_t seqType) noexcept {
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat->get();
 
-    const uint8_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
-    const uint32_t maxTracksPerSeq = mstat.max_trks_perseq;
-    uint8_t numActiveSeqsToVisit = mstat.seqs_active;
+    const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
+    const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
+    uint8_t numActiveSeqsToVisit = mstat.num_active_seqs;
 
     if (numActiveSeqsToVisit > 0) {
         // Run through all the sequences that are active looking for a sequence of a given type
-        for (uint32_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
-            sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
+        for (uint32_t seqStatIdx = 0; seqStatIdx < maxSeqs; ++seqStatIdx) {
+            sequence_status& seqStat = mstat.psequence_stats[seqStatIdx];
 
             if (!seqStat.active)
                 continue;
             
-            if (seqStat.seq_type == seqType) {
+            if (seqStat.type == seqType) {
                 // This is the sequence type we want to stop: run through all its active tracks and stop them all
-                uint8_t numActiveTracks = seqStat.tracks_active;
-                const uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+                uint8_t numActiveTracksToVisit = seqStat.num_tracks_active;
+                const uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
 
-                for (uint8_t i = 0; i < maxTracksPerSeq; ++i) {
+                for (uint8_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                     // Is this sequence track slot actually in use? Skip if not:
-                    const uint8_t trackIdx = pSeqTrackIndexes[i];
+                    const uint8_t trackStatIdx = pTrackStatIndices[trackSlotIdx];
 
-                    if (trackIdx == 0xFF)
+                    if (trackStatIdx == 0xFF)
                         continue;
 
                     // Call the driver function to turn off the track
-                    track_status& trackStat = mstat.ptrkstattbl[trackIdx];
-                    gWess_CmdFuncArr[trackStat.patchtype][TrkOff](trackStat);
+                    track_status& trackStat = mstat.ptrack_stats[trackStatIdx];
+                    gWess_CmdFuncArr[trackStat.driver_id][TrkOff](trackStat);
 
-                    // If there are no more tracks left active then we are done
-                    numActiveTracks--;
+                    // If there are no more active tracks left to visit in the sequence then we are done
+                    numActiveTracksToVisit--;
 
-                    if (numActiveTracks == 0)
+                    if (numActiveTracksToVisit == 0)
                         break;
                 }
             }

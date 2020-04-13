@@ -449,9 +449,9 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
 
     // Set the other sound attributes and play the sound.
     // Note that the original code also wrote volume and pan to unused globals here but I've omitted that code since it is useless:
-    sndAttribs.mask = TRIGGER_VOLUME | TRIGGER_PAN | TRIGGER_REVERB;
-    sndAttribs.volume = (uint8_t) vol;
-    sndAttribs.pan = (uint8_t) pan;
+    sndAttribs.attribs_mask = TRIGGER_VOLUME | TRIGGER_PAN | TRIGGER_REVERB;
+    sndAttribs.volume_cntrl = (uint8_t) vol;
+    sndAttribs.pan_cntrl = (uint8_t) pan;
 
     wess_seq_trigger_type_special(soundId, ptrToVmAddr(pOrigin), &sndAttribs);
 }
@@ -477,7 +477,7 @@ void S_UpdateSounds() noexcept {
 // Initialize the PlayStation sound system.
 // The given temporary buffer is used to hold the .WMD file while it is being processed.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWmdLoadBuffer) noexcept {    
+void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWmdLoadBuffer) noexcept {
     // Initialize the WESS API and low level CDROM utilities
     wess_init();
     psxcd_init();

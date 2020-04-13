@@ -312,7 +312,7 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
         if (status == CdlDataReady) {
             // I'm not sure what the hell this flag is - I couldn't find any mention of it anywhere.
             // This bit shouldn't be set even when the encoding is BCD because second count shouldn't exceed 60?
-            if ((pResult[4] & 0x80) == 0) {                
+            if ((pResult[4] & 0x80) == 0) {
                 *gPSXCD_playcount += 1;
                 gPSXCD_newloc->minute = pResult[3];
                 gPSXCD_newloc->second = pResult[4];
@@ -549,7 +549,7 @@ bool psxcd_async_on() noexcept {
         // A problem happened! Record the details of the error and stop any executing cd commands:
         LIBCD_CdFlush();
 
-        *gPSXCD_cdl_err_count += 1;        
+        *gPSXCD_cdl_err_count += 1;
         *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
         *gPSXCD_cdl_err_intr = *gPSXCD_check_intr + 100;    // '+': Just to make the codes more unique, so their source is known
         *gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
@@ -718,7 +718,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
             // Do we already have the required sector in the sector buffer?
             // If that is the case we can just copy the buffer contents, otherwise we need to read from the CD and then copy.
             if ((*gPSXCD_cur_cmd == PSXCD_COMMAND_END) && (*gPSXCD_sectorbuf_contents == *gPSXCD_cur_io_loc)) {
-                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command = PSXCD_COMMAND_COPY;                    
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command = PSXCD_COMMAND_COPY;
                 gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].psrc = gPSXCD_sectorbuf.get() + file.io_block_offset;
                 gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest = pDestBytes;
                 gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].amount = bytesToCopy;
@@ -833,7 +833,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
         *gPSXCD_cur_cmd = 0;
 
         // Issue command: are we to copy bytes to the destination buffer?
-        if (gPSXCD_psxcd_cmds[0].command == PSXCD_COMMAND_COPY) {            
+        if (gPSXCD_psxcd_cmds[0].command == PSXCD_COMMAND_COPY) {
             PSXCD_psxcd_memcpy(gPSXCD_psxcd_cmds[0].pdest.get(), gPSXCD_psxcd_cmds[0].psrc.get(), gPSXCD_psxcd_cmds[0].amount);
             *gPSXCD_cur_cmd += 1;
 
@@ -870,7 +870,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
                     if (psxcd_critical_sync()) {
                         // We are now doing an asynchronous read.
                         // The flag won't be cleared until it is done or cancelled.
-                        *gbPSXCD_async_on = true; 
+                        *gbPSXCD_async_on = true;
                     } else {
                         bReadError = true;
                     }
@@ -1062,7 +1062,7 @@ void psxcd_play_at_andloop(
 
     // Init playback stats
     *gbPSXCD_playflag = true;
-    *gbPSXCD_loopflag = true;    
+    *gbPSXCD_loopflag = true;
     *gPSXCD_playvol = vol;
     *gPSXCD_playfadeuptime = fadeUpTime;
     *gPSXCD_playcount = 0;
@@ -1155,9 +1155,9 @@ void psxcd_seek_for_play_at(const int32_t track, const int32_t sectorOffset) noe
     const uint32_t trackBegSector = LIBCD_CdPosToInt(trackLoc);
     LIBCD_CdIntToPos(trackBegSector + sectorOffset, *gPSXCD_cdloc);
 
-    // Init some playback stats and begin seeking to the specified track location    
+    // Init some playback stats and begin seeking to the specified track location
     *gbPSXCD_playflag = false;
-    *gPSXCD_playcount = 0;    
+    *gPSXCD_playcount = 0;
     *gbPSXCD_loopflag = false;
     *gbPSXCD_seeking_for_play = true;
 
@@ -1186,11 +1186,11 @@ void psxcd_seek_for_play(const int32_t track) noexcept {
 bool psxcd_play_status() noexcept {
     // Was the last command to play or to seek to a physical (audio) location?
     // If not then we cannot be playing:
-    if ((*gPSXCD_cdl_com == CdlPlay) || (*gPSXCD_cdl_com == CdlSeekP)) {        
+    if ((*gPSXCD_cdl_com == CdlPlay) || (*gPSXCD_cdl_com == CdlSeekP)) {
         *gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result.get());
 
         // Make sure playback is ok: if there was an error or the motor stopped then stop current commands and record the error
-        if ((*gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {            
+        if ((*gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
             LIBCD_CdFlush();
 
             *gPSXCD_cdl_err_count += 1;
@@ -1201,7 +1201,7 @@ bool psxcd_play_status() noexcept {
             return false;   // Bah... Take better care of your discs! :P
         }
 
-        // Playing cd audio without any issues! 
+        // Playing cd audio without any issues!
         return true;
     }
 
@@ -1295,7 +1295,7 @@ void psxcd_restart(const int32_t vol) noexcept {
     *gPSXCD_playvol = vol;
 
     // Seek to the last intended cd location
-    *gPSXCD_cdl_com = CdlSeekP;        
+    *gPSXCD_cdl_com = CdlSeekP;
     LIBCD_CdControlF(CdlSeekP, (const uint8_t*) gPSXCD_cdloc.get());
 }
 

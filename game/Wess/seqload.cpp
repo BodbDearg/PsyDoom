@@ -81,9 +81,9 @@ void close_sequence_data() noexcept {
 // Loads the given sequence into the given memory block, which is expected to be big enough.
 // Returns the number of bytes used from the given memory block, or '0' on failure.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static int32_t load_sequence_data(const int32_t seqNum, void* const pSeqMem) noexcept {
+static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noexcept {
     // Can't load if the sequence loader wasn't initialized or the sequence index is invalid
-    if ((!*gbWess_seq_loader_enable) || (!Is_Seq_Seq_Num_Valid(seqNum)))
+    if ((!*gbWess_seq_loader_enable) || (!Is_Seq_Seq_Num_Valid(seqIdx)))
         return 0;
 
     // Make sure the module file containing the sequence is open
@@ -95,34 +95,34 @@ static int32_t load_sequence_data(const int32_t seqNum, void* const pSeqMem) noe
     // Allocate room for all the track infos in the sequence.
     // If there are no tracks in the sequence then alloc room for one default empty track:
     master_status_structure& mstat = *gpWess_seqld_mstat->get();
-    module_data& modInfo = *mstat.pmod_info;
-    sequence_data& seqInfo = modInfo.pseq_info[seqNum];
+    module_data& module = *mstat.pmodule;
+    sequence_data& sequence = module.psequences[seqIdx];
     
     uint8_t* pCurSeqMem = (uint8_t*) pSeqMem;
-    seqInfo.ptrk_info = (track_data*) pSeqMem;
+    sequence.ptracks = (track_data*) pSeqMem;
 
-    if (seqInfo.trkstoload == 0) {
+    if (sequence.num_tracks == 0) {
         pCurSeqMem += sizeof(track_data);
     } else {
-        pCurSeqMem += sizeof(track_data) * seqInfo.trkstoload;
+        pCurSeqMem += sizeof(track_data) * sequence.num_tracks;
     }
 
     // Go to where the sequence is located in the module file
     PsxCd_File& moduleFile = *gpWess_seqld_moduleFile->get();
 
-    if (module_seek(moduleFile, seqInfo.fileposition, PsxCd_SeekMode::SET) != 0) {
+    if (module_seek(moduleFile, sequence.modfile_offset, PsxCd_SeekMode::SET) != 0) {
         wess_seq_load_err(SEQLOAD_FSEEK);
         return 0;
     }
 
     // Read the sequence header
-    if (module_read(&seqInfo.seq_hdr, sizeof(seq_header), moduleFile) != sizeof(seq_header)) {
+    if (module_read(&sequence.hdr, sizeof(sequence_header), moduleFile) != sizeof(sequence_header)) {
         wess_seq_load_err(SEQLOAD_FREAD);
         return 0;
     }
 
     // Read all of the tracks in the sequence
-    for (uint16_t trackIdx = 0; trackIdx < seqInfo.seq_hdr.tracks; ++trackIdx) {
+    for (uint16_t trackIdx = 0; trackIdx < sequence.hdr.num_tracks; ++trackIdx) {
         // Read the track header firstly
         track_header& trackHdr = *gWess_seqld_seqTrackHdr;
 
@@ -134,24 +134,24 @@ static int32_t load_sequence_data(const int32_t seqNum, void* const pSeqMem) noe
         // Determine whether we want to load the track or not depending on what driver it is for or what sound classes we want to load
         bool bLoadTrack = false;
 
-        if ((trackHdr.voices_type == NoSound_ID) || (trackHdr.voices_type == GENERIC_ID)) {
+        if ((trackHdr.driver_id == NoSound_ID) || (trackHdr.driver_id == GENERIC_ID)) {
             // Track is for no particular sound driver or a generic one: always load
             bLoadTrack = true;
         } else {
             // Track is for a hardware sound driver: determine if it matches any of the drivers loaded and if those drivers want this track:
-            for (uint32_t driverIdx = 0; driverIdx < mstat.patch_types_loaded; ++driverIdx) {
-                patch_group_data& patchGrp = mstat.ppat_info[driverIdx];
+            for (uint32_t patchGroupIdx = 0; patchGroupIdx < mstat.num_patch_groups; ++patchGroupIdx) {
+                patch_group_data& patchGroup = mstat.ppatch_groups[patchGroupIdx];
 
                 // Don't load if it's not for this driver
-                if (trackHdr.voices_type != patchGrp.hw_tl_list.hardware_ID)
+                if (trackHdr.driver_id != patchGroup.hw_table_list.driver_id)
                     continue;
 
                 // Only load if the flags specify to for whatever voice class it is
-                if (patchGrp.hw_tl_list.sfxload && ((trackHdr.voices_class == SNDFX_CLASS) || (trackHdr.voices_class == SFXDRUMS_CLASS))) {
+                if (patchGroup.hw_table_list.sfxload && ((trackHdr.sound_class == SNDFX_CLASS) || (trackHdr.sound_class == SFXDRUMS_CLASS))) {
                     bLoadTrack = true;
-                } else if (patchGrp.hw_tl_list.musload && (trackHdr.voices_class == MUSIC_CLASS)) {
+                } else if (patchGroup.hw_table_list.musload && (trackHdr.sound_class == MUSIC_CLASS)) {
                     bLoadTrack = true;
-                } else if (patchGrp.hw_tl_list.drmload && (trackHdr.voices_class == DRUMS_CLASS)) {
+                } else if (patchGroup.hw_table_list.drmload && (trackHdr.sound_class == DRUMS_CLASS)) {
                     bLoadTrack = true;
                 }
             }
@@ -159,7 +159,7 @@ static int32_t load_sequence_data(const int32_t seqNum, void* const pSeqMem) noe
 
         // If we are not loading the track try to skip past it
         if (!bLoadTrack) {
-            const uint32_t bytesToSkip = trackHdr.labellist_count * sizeof(uint32_t) + trackHdr.data_size;
+            const uint32_t bytesToSkip = trackHdr.num_labels * sizeof(uint32_t) + trackHdr.cmd_stream_size;
 
             if (module_seek(moduleFile, bytesToSkip, PsxCd_SeekMode::CUR) != 0) {
                 wess_seq_load_err(SEQLOAD_FSEEK);
@@ -170,42 +170,42 @@ static int32_t load_sequence_data(const int32_t seqNum, void* const pSeqMem) noe
         }
 
         // Loading the track: save the header
-        track_data& trackInfo = seqInfo.ptrk_info[trackIdx];
-        trackInfo.trk_hdr = trackHdr;
+        track_data& track = sequence.ptracks[trackIdx];
+        track.hdr = trackHdr;
 
         // Assign the sound driver to use for this track
-        if (trackHdr.voices_type == GENERIC_ID) {
-            trackInfo.trk_hdr.voices_type = SoundDriverId::NoSound_ID;
+        if (trackHdr.driver_id == GENERIC_ID) {
+            track.hdr.driver_id = SoundDriverId::NoSound_ID;
 
-            if ((trackHdr.voices_class == SNDFX_CLASS) || (trackHdr.voices_class == SFXDRUMS_CLASS)) {
+            if ((trackHdr.sound_class == SNDFX_CLASS) || (trackHdr.sound_class == SFXDRUMS_CLASS)) {
                 // Track is SFX: find a driver which wants to load SFX
-                for (uint32_t driverIdx = 0; driverIdx < mstat.patch_types_loaded; ++driverIdx) {
-                    patch_group_data& patchGrp = mstat.ppat_info[driverIdx];
+                for (uint32_t patchGroupIdx = 0; patchGroupIdx < mstat.num_patch_groups; ++patchGroupIdx) {
+                    patch_group_data& patchGroup = mstat.ppatch_groups[patchGroupIdx];
                     
-                    if (patchGrp.hw_tl_list.sfxload) {
-                        trackInfo.trk_hdr.voices_type = (SoundDriverId) patchGrp.hw_tl_list.hardware_ID;
+                    if (patchGroup.hw_table_list.sfxload) {
+                        track.hdr.driver_id = (SoundDriverId) patchGroup.hw_table_list.driver_id;
                         break;
                     }
                 }
-            } 
-            else if (trackHdr.voices_class == MUSIC_CLASS) {
+            }
+            else if (trackHdr.sound_class == MUSIC_CLASS) {
                 // Track is music: find a driver which wants to load music
-                for (uint32_t driverIdx = 0; driverIdx < mstat.patch_types_loaded; ++driverIdx) {
-                    patch_group_data& patchGrp = mstat.ppat_info[driverIdx];
+                for (uint32_t patchGroupIdx = 0; patchGroupIdx < mstat.num_patch_groups; ++patchGroupIdx) {
+                    patch_group_data& patchGroup = mstat.ppatch_groups[patchGroupIdx];
                     
-                    if (patchGrp.hw_tl_list.musload) {
-                        trackInfo.trk_hdr.voices_type = (SoundDriverId) patchGrp.hw_tl_list.hardware_ID;
+                    if (patchGroup.hw_table_list.musload) {
+                        track.hdr.driver_id = (SoundDriverId) patchGroup.hw_table_list.driver_id;
                         break;
                     }
                 }
             } 
-            else if (trackHdr.voices_class == 2) {
+            else if (trackHdr.sound_class == 2) {
                 // Track is drums: find a driver which wants to load drums
-                for (uint32_t driverIdx = 0; driverIdx < mstat.patch_types_loaded; ++driverIdx) {
-                    patch_group_data& patchGrp = mstat.ppat_info[driverIdx];
+                for (uint32_t patchGroupIdx = 0; patchGroupIdx < mstat.num_patch_groups; ++patchGroupIdx) {
+                    patch_group_data& patchGroup = mstat.ppatch_groups[patchGroupIdx];
                     
-                    if (patchGrp.hw_tl_list.drmload) {
-                        trackInfo.trk_hdr.voices_type = (SoundDriverId) patchGrp.hw_tl_list.hardware_ID;
+                    if (patchGroup.hw_table_list.drmload) {
+                        track.hdr.driver_id = (SoundDriverId) patchGroup.hw_table_list.driver_id;
                         break;
                     }
                 }
@@ -213,52 +213,52 @@ static int32_t load_sequence_data(const int32_t seqNum, void* const pSeqMem) noe
         }
 
         // Alloc the label list and read it
-        const uint16_t labelListCount = trackInfo.trk_hdr.labellist_count;
-        const int32_t labelListSize = labelListCount * sizeof(uint32_t);
+        const uint16_t numLabels = track.hdr.num_labels;
+        const int32_t labelListSize = numLabels * sizeof(uint32_t);
 
-        trackInfo.plabellist = (uint32_t*) pCurSeqMem;
+        track.plabels = (uint32_t*) pCurSeqMem;
         pCurSeqMem += labelListSize;
 
-        if (module_read(trackInfo.plabellist.get(), labelListSize, moduleFile) != labelListSize) {
+        if (module_read(track.plabels.get(), labelListSize, moduleFile) != labelListSize) {
             wess_seq_load_err(SEQLOAD_FREAD);
             return 0;
         }
 
-        // Alloc the track data and 32-bit align the pointer afterwords since the track data might not be dword size aligned
-        trackInfo.ptrk_data = pCurSeqMem;
-        const int32_t trackDataSize = trackInfo.trk_hdr.data_size;
+        // Alloc the track command stream and 32-bit align the pointer afterwords since the track data might not be dword size aligned
+        track.pcmd_stream = pCurSeqMem;
+        const int32_t trackCmdStreamSize = track.hdr.cmd_stream_size;
 
-        pCurSeqMem += trackDataSize;
+        pCurSeqMem += trackCmdStreamSize;
         pCurSeqMem += ((uintptr_t) pCurSeqMem) & 1;
         pCurSeqMem += ((uintptr_t) pCurSeqMem) & 2;
         
-        // Read the track data
-        if (module_read(trackInfo.ptrk_data.get(), trackDataSize, moduleFile) != trackDataSize) {
+        // Read the track command stream
+        if (module_read(track.pcmd_stream.get(), trackCmdStreamSize, moduleFile) != trackCmdStreamSize) {
             wess_seq_load_err(SEQLOAD_FREAD);
             return 0;
         }
     }
 
     // If the sequence did not contain any tracks then initialize the default empty track we allocated earlier
-    if (seqInfo.trkstoload == 0) {
+    if (sequence.num_tracks == 0) {
         // Set the track header and label list pointer
-        track_data& trackInfo = seqInfo.ptrk_info[0];
-        trackInfo.trk_hdr = *gWess_seqld_emptyTrackHdr;
-        trackInfo.plabellist = (uint32_t*) pCurSeqMem;
+        track_data& track = sequence.ptracks[0];
+        track.hdr = *gWess_seqld_emptyTrackHdr;
+        track.plabels = (uint32_t*) pCurSeqMem;
         
-        // Init and alloc the track data with two commands.
+        // Init and alloc the track command stream with two commands.
         // Note that the memory pointer must be aligned after because it could wind up on an unaligned address.
-        seqInfo.seq_hdr.tracks = 1;
+        sequence.hdr.num_tracks = 1;
 
-        trackInfo.ptrk_data = pCurSeqMem;
+        track.pcmd_stream = pCurSeqMem;
         pCurSeqMem[0] = DriverInit;
         pCurSeqMem[1] = ResetGates;
 
-        pCurSeqMem += trackInfo.trk_hdr.data_size;
+        pCurSeqMem += track.hdr.cmd_stream_size;
         pCurSeqMem += ((uintptr_t) pCurSeqMem) & 1;
         pCurSeqMem += ((uintptr_t) pCurSeqMem) & 2;
     } else {
-        seqInfo.seq_hdr.tracks = (uint16_t) seqInfo.trkstoload;
+        sequence.hdr.num_tracks = (uint16_t) sequence.num_tracks;
     }
 
     // Finish up the load by closing the module file and return the amount of memory used for the sequence
@@ -270,7 +270,7 @@ static int32_t load_sequence_data(const int32_t seqNum, void* const pSeqMem) noe
 // Initializes the sequencer loader using the given master status structure and module file, returns 'true' on success.
 // Optionally the module file can be pre-opened in preparation for access later.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool wess_seq_loader_init(master_status_structure* const pMStat, const CdMapTbl_File moduleFileId, const bool bOpenModuleFile) noexcept {    
+bool wess_seq_loader_init(master_status_structure* const pMStat, const CdMapTbl_File moduleFileId, const bool bOpenModuleFile) noexcept {
     // Some very basic initialization
     *gbWess_seq_loader_enable = false;
     *gWess_seqld_moduleFileId = moduleFileId;
@@ -282,26 +282,26 @@ bool wess_seq_loader_init(master_status_structure* const pMStat, const CdMapTbl_
 
     // Save the number of sequences in the module
     *gbWess_seq_loader_enable = true;
-    *gWess_num_sequences = pMStat->pmod_info->mod_hdr.sequences;
+    *gWess_num_sequences = pMStat->pmodule->hdr.num_sequences;
 
     // Fill in the header for the default empty track.
     // This is used to create a 'dummy' track when a sequence contains no tracks - so a sequence always has 1 track.
     track_header& emptyTrackHdr = *gWess_seqld_emptyTrackHdr;
     emptyTrackHdr.priority = 128;
-    emptyTrackHdr.initvolume_cntrl = 127;
-    emptyTrackHdr.initpan_cntrl = 64;
-    emptyTrackHdr.initppq = 120;
-    emptyTrackHdr.initqpm = 120;
-    emptyTrackHdr.voices_type = SoundDriverId::NoSound_ID;
-    emptyTrackHdr.voices_max = 0;
-    emptyTrackHdr.reverb = 0;
-    emptyTrackHdr.voices_class = SoundClass::SNDFX_CLASS;
-    emptyTrackHdr.initpatchnum = 0;
-    emptyTrackHdr.initpitch_cntrl = 0;
-    emptyTrackHdr.substack_count = 0;
-    emptyTrackHdr.mutebits = 0;
-    emptyTrackHdr.labellist_count = 0;
-    emptyTrackHdr.data_size = 2;            // 2 commands of a single byte each in the default track
+    emptyTrackHdr.init_volume_cntrl = 127;
+    emptyTrackHdr.init_pan_cntrl = 64;
+    emptyTrackHdr.init_ppq = 120;
+    emptyTrackHdr.init_qpm = 120;
+    emptyTrackHdr.driver_id = SoundDriverId::NoSound_ID;
+    emptyTrackHdr.max_voices = 0;
+    emptyTrackHdr.init_reverb = 0;
+    emptyTrackHdr.sound_class = SoundClass::SNDFX_CLASS;
+    emptyTrackHdr.init_patch_idx = 0;
+    emptyTrackHdr.init_pitch_cntrl = 0;
+    emptyTrackHdr.loc_stack_size = 0;
+    emptyTrackHdr.init_mutegroups_mask = 0;
+    emptyTrackHdr.num_labels = 0;
+    emptyTrackHdr.cmd_stream_size = 2;      // 2 commands of a single byte each in the default track
     
     // If requested, pre-open the module file also to have it ready
     if (bOpenModuleFile) {
@@ -329,8 +329,8 @@ void wess_seq_loader_exit() noexcept {
 int32_t wess_seq_sizeof(const int32_t seqIdx) noexcept {
     if ((*gbWess_seq_loader_enable) && Is_Seq_Seq_Num_Valid(seqIdx)) {
         master_status_structure& mstat = *gpWess_seqld_mstat->get();
-        sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqIdx];
-        return (seqInfo.ptrk_info) ? 0 : seqInfo.trkinfolength;
+        sequence_data& sequence = mstat.pmodule->psequences[seqIdx];
+        return (sequence.ptracks) ? 0 : sequence.track_data_size;
     }
 
     return 0;
@@ -347,23 +347,23 @@ int32_t wess_seq_load(const int32_t seqIdx, void* const pSeqMem) noexcept {
 
     // Only load the sequence if not already loaded, otherwise we return '0' for using zero bytes from the given buffer
     master_status_structure& mstat = *gpWess_seqld_mstat->get();
-    sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqIdx];
-    return (!seqInfo.ptrk_info) ? load_sequence_data(seqIdx, pSeqMem) : 0;
+    sequence_data& sequence = mstat.pmodule->psequences[seqIdx];
+    return (!sequence.ptracks) ? load_sequence_data(seqIdx, pSeqMem) : 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Clear the reference to the specified sequence's data and return 'true' if a reference was actually cleared.
 // Depsite what the name implies, this does not actually free any memory - it just clears a pointer reference to the sequence data.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool wess_seq_free(const int32_t seqIdx) noexcept {    
+bool wess_seq_free(const int32_t seqIdx) noexcept {
     if ((!*gbWess_seq_loader_enable) || (!Is_Seq_Seq_Num_Valid(seqIdx)))
         return false;
 
     master_status_structure& mstat = *gpWess_seqld_mstat->get();
-    sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqIdx];
+    sequence_data& sequence = mstat.pmodule->psequences[seqIdx];
 
-    if (seqInfo.ptrk_info) {
-        seqInfo.ptrk_info = nullptr;
+    if (sequence.ptracks) {
+        sequence.ptracks = nullptr;
         return true;
     }
 

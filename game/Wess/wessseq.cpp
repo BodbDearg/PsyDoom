@@ -98,14 +98,14 @@ const VmPtr<uint8_t>                    gWess_master_mus_volume(0x80075A05);    
 const VmPtr<PanMode>                    gWess_pan_status(0x80075A06);           // Current pan mode
 const VmPtr<VmPtr<SavedVoiceList>>      gpWess_savedVoices(0x80075A10);         // Used to save and restore voice state when pausing or resuming sound playback
 
-static const VmPtr<VmPtr<master_status_structure>>      gpWess_eng_mstat(0x80075AC0);           // Saved reference to the master status structure
-static const VmPtr<VmPtr<sequence_status>>              gpWess_eng_seqStats(0x80075ABC);        // Saved reference to the list of sequence statuses
-static const VmPtr<VmPtr<track_status>>                 gpWess_eng_trackStats(0x80075AB8);      // Saved reference to the list of track statuses
-static const VmPtr<uint8_t>                             gWess_eng_maxTracks(0x80075AB4);        // The maximum number of tracks in the sequencer
+static const VmPtr<VmPtr<master_status_structure>>      gpWess_eng_mstat(0x80075AC0);               // Saved reference to the master status structure
+static const VmPtr<VmPtr<sequence_status>>              gpWess_eng_sequenceStats(0x80075ABC);       // Saved reference to the list of sequence statuses
+static const VmPtr<VmPtr<track_status>>                 gpWess_eng_trackStats(0x80075AB8);          // Saved reference to the list of track statuses
+static const VmPtr<uint8_t>                             gWess_eng_maxActiveTracks(0x80075AB4);      // The maximum number of active tracks in the sequencer
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Reads from track data the delta time (relative to the previous sequencer command) for when the next sequencer command is to be executed.
-// Returns the pointer after reading the time amount, which may be incremented an variable/arbitrary amount.
+// Reads from track data a variable length delta time (relative to the previous sequencer command) for when the next sequencer command
+// is to be executed. Returns the pointer after reading the time amount, which may be incremented an variable/arbitrary amount.
 //
 // The delta time amount returned is in terms of quarter note 'parts'.
 // How many parts/divisions per quarter note there are depends on the timing setup of track, but a value of '120' is typical.
@@ -182,9 +182,9 @@ int32_t Len_Vlq(const uint32_t deltaTime) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_DriverInit(master_status_structure& mstat) noexcept {
     *gpWess_eng_mstat = &mstat;
-    *gpWess_eng_seqStats = mstat.pseqstattbl;
-    *gpWess_eng_trackStats = mstat.ptrkstattbl;
-    *gWess_eng_maxTracks = mstat.pmod_info->mod_hdr.trk_work_areas;
+    *gpWess_eng_sequenceStats = mstat.psequence_stats;
+    *gpWess_eng_trackStats = mstat.ptrack_stats;
+    *gWess_eng_maxActiveTracks = mstat.pmodule->hdr.max_active_tracks;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -213,14 +213,14 @@ void Eng_DriverEntry3() noexcept {}
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_TrkOff(track_status& trackStat) noexcept {
     master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = mstat.pseqstattbl[trackStat.seq_owner];
+    sequence_status& seqStat = mstat.psequence_stats[trackStat.seqstat_idx];
 
     // Mark the track as not playing anymore
     if (!trackStat.stopped) {
         trackStat.stopped = true;
-        seqStat.tracks_playing--;
+        seqStat.num_tracks_playing--;
 
-        if (seqStat.tracks_playing == 0) {
+        if (seqStat.num_tracks_playing == 0) {
             seqStat.playmode = SEQ_STATE_STOPPED;
         }
     }
@@ -230,13 +230,13 @@ void Eng_TrkOff(track_status& trackStat) noexcept {
         // Clear the parent sequence's index slot for the track being disabled.
         // This marks the track is no longer active in the parent sequence:
         {
-            const uint32_t maxSeqTracks = mstat.max_trks_perseq;
-            uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+            const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
+            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
 
-            for (uint32_t i = 0; i < maxSeqTracks; ++i) {
+            for (uint32_t i = 0; i < maxTracksPerSeq; ++i) {
                 // Is this the track being turned off? If so then mark it as inactive and stop search:
-                if (pSeqTrackIndexes[i] == trackStat.refindx) {
-                    pSeqTrackIndexes[i] = 0xFF;
+                if (pTrackStatIndices[i] == trackStat.ref_idx) {
+                    pTrackStatIndices[i] = 0xFF;
                     break;
                 }
             }
@@ -244,13 +244,13 @@ void Eng_TrkOff(track_status& trackStat) noexcept {
 
         // Mark the track as inactive and update all stat counts
         trackStat.active = false;
-        mstat.trks_active--;
-        seqStat.tracks_active--;
+        mstat.num_active_tracks--;
+        seqStat.num_tracks_active--;
         
         // If the sequence has no more tracks active then it too is now inactive
-        if (seqStat.tracks_active == 0) {
+        if (seqStat.num_tracks_active == 0) {
             seqStat.active = false;
-            mstat.seqs_active--;
+            mstat.num_active_seqs--;
         }
     }
     
@@ -269,7 +269,7 @@ void Eng_TrkMute([[maybe_unused]] track_status& trackStat) noexcept {}
 void Eng_PatchChg([[maybe_unused]] track_status& trackStat) noexcept {
     // Note: this code originally updated an unreferenced/unused global with the new patch/sound number.
     // I've omitted that here (since it's not needed) to reduce the number of globals.
-    trackStat.patchnum = trackStat.ppos[1];
+    trackStat.patch_idx = trackStat.pcur_cmd[1];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -283,7 +283,7 @@ void Eng_PatchMod([[maybe_unused]] track_status& trackStat) noexcept {}
 void Eng_PitchMod([[maybe_unused]] track_status& trackStat) noexcept {
     // Note: this code originally updated an unreferenced/unused global with the new pitch modifier.
     // I've omitted that here (since it's not needed) to reduce the number of globals.
-    const int16_t pitchMod = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
+    const int16_t pitchMod = ((int16_t) trackStat.pcur_cmd[1]) | ((int16_t) trackStat.pcur_cmd[2] << 8);
     trackStat.pitch_cntrl = pitchMod;
 }
 
@@ -303,7 +303,7 @@ void Eng_ModuMod([[maybe_unused]] track_status& trackStat) noexcept {}
 void Eng_VolumeMod([[maybe_unused]] track_status& trackStat) noexcept {
     // Note: this code originally updated an unreferenced/unused global with the new volume amount.
     // I've omitted that here (since it's not needed) to reduce the number of globals.
-    trackStat.volume_cntrl = trackStat.ppos[1];
+    trackStat.volume_cntrl = trackStat.pcur_cmd[1];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -312,7 +312,7 @@ void Eng_VolumeMod([[maybe_unused]] track_status& trackStat) noexcept {
 void Eng_PanMod([[maybe_unused]] track_status& trackStat) noexcept {
     // Note: this code originally updated an unreferenced/unused global with the new pan amount.
     // I've omitted that here (since it's not needed) to reduce the number of globals.
-    trackStat.pan_cntrl = trackStat.ppos[1];
+    trackStat.pan_cntrl = trackStat.pcur_cmd[1];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -346,40 +346,40 @@ void Eng_NoteOff([[maybe_unused]] track_status& trackStat) noexcept {}
 void Eng_StatusMark(track_status& trackStat) noexcept {
     // If there are no callbacks active then there is nothing to do
     master_status_structure& mstat = *gpWess_eng_mstat->get();
-    uint8_t activeCallbacksLeft = mstat.callbacks_active;
+    uint8_t activeCallbacksLeftToVisit = mstat.num_active_callbacks;
 
-    if (activeCallbacksLeft <= 0)
+    if (activeCallbacksLeftToVisit <= 0)
         return;
 
     // Try to find a matching active callback type to invoke
-    const uint8_t maxCallbacks = mstat.pmod_info->mod_hdr.callback_areas;
+    const uint8_t maxCallbacks = mstat.pmodule->hdr.max_callbacks;
         
-    for (uint8_t callbackIdx = 0; callbackIdx < maxCallbacks; ++callbackIdx) {
-        callback_status& callbackStat = mstat.pcalltable[callbackIdx];
+    for (uint8_t callbackStatIdx = 0; callbackStatIdx < maxCallbacks; ++callbackStatIdx) {
+        callback_status& callbackStat = mstat.pcallback_stats[callbackStatIdx];
 
         // Ignore this callback if it's not active
         if (!callbackStat.active)
             continue;
 
         // Only invoke the callback if it matches the type in the command
-        const uint8_t callbackType = trackStat.ppos[1];
+        const uint8_t callbackType = trackStat.pcur_cmd[1];
 
         if (callbackStat.type == callbackType) {
             // FIXME: remove this once real function pointers are used
             typedef void (*CallbackFunc)(uint8_t callbackType, int16_t value);
-            const CallbackFunc callback = (CallbackFunc) PsxVm::getVmFuncForAddr(callbackStat.callfunc.addr());
+            const CallbackFunc callback = (CallbackFunc) PsxVm::getVmFuncForAddr(callbackStat.pfunc.addr());
 
             // Invoke the callback with the value specified in the command
-            const int16_t callbackVal = ((int16_t) trackStat.ppos[2]) | ((int16_t) trackStat.ppos[3] << 8);
-            callbackStat.curval = callbackVal;
+            const int16_t callbackVal = ((int16_t) trackStat.pcur_cmd[2]) | ((int16_t) trackStat.pcur_cmd[3] << 8);
+            callbackStat.cur_value = callbackVal;
             callback(callbackType, callbackVal);
             break;
         }
             
         // If there are no more callbacks left to visit then we are done searching
-        activeCallbacksLeft--;
+        activeCallbacksLeftToVisit--;
 
-        if (activeCallbacksLeft == 0)
+        if (activeCallbacksLeftToVisit == 0)
             break;
     }
 }
@@ -389,23 +389,23 @@ void Eng_StatusMark(track_status& trackStat) noexcept {
 // If the gate is reset (value 0xFF) then it's value is also set to the value specified by the command.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_GateJump(track_status& trackStat) noexcept {
-    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
+    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
 
     // Get the specified gate value
-    const uint8_t gateIdx = trackStat.ppos[1];    
+    const uint8_t gateIdx = trackStat.pcur_cmd[1];
     const uint8_t gateVal = seqStat.pgates[gateIdx];
 
     if (gateVal != 0) {
         if (gateVal == 0xFF) {
-            seqStat.pgates[gateIdx] = trackStat.ppos[2];
+            seqStat.pgates[gateIdx] = trackStat.pcur_cmd[2];
         }
 
         // Goto the track label specified in the command (if valid)
-        const int32_t labelIdx = ((int16_t) trackStat.ppos[3]) | ((int16_t) trackStat.ppos[4] << 8);
+        const int32_t labelIdx = ((int16_t) trackStat.pcur_cmd[3]) | ((int16_t) trackStat.pcur_cmd[4] << 8);
         
-        if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.labellist_count)) {
-            const uint32_t targetOffset = trackStat.plabellist[labelIdx];
-            trackStat.ppos = trackStat.pstart.get() + targetOffset;
+        if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.num_labels)) {
+            const uint32_t targetOffset = trackStat.plabels[labelIdx];
+            trackStat.pcur_cmd = trackStat.pcmds_start.get() + targetOffset;
         }
     }
 
@@ -417,10 +417,10 @@ void Eng_GateJump(track_status& trackStat) noexcept {
 // The number of items is initialized on the first jump to the specified amount if the iteration count was previously reset (0xFF).
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_IterJump(track_status& trackStat) noexcept {
-    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
+    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
 
     // Get the specified iteration count
-    const uint8_t iterIdx = trackStat.ppos[1];    
+    const uint8_t iterIdx = trackStat.pcur_cmd[1];
     const uint8_t iterVal = seqStat.piters[iterIdx];
 
     // Only do the jump if it's not zero
@@ -428,17 +428,17 @@ void Eng_IterJump(track_status& trackStat) noexcept {
         // If the count has not been intialized yet then it's value is initialized from the command.
         // Otherwise we decrement the iteration count.
         if (iterVal == 0xFF) {
-            seqStat.piters[iterIdx] = trackStat.ppos[2];
+            seqStat.piters[iterIdx] = trackStat.pcur_cmd[2];
         } else {
             seqStat.piters[iterIdx] = iterVal - 1;
         }
 
         // Goto the track label specified in the command (if valid)
-        const int32_t labelIdx = ((int16_t) trackStat.ppos[3]) | ((int16_t) trackStat.ppos[4] << 8);
+        const int32_t labelIdx = ((int16_t) trackStat.pcur_cmd[3]) | ((int16_t) trackStat.pcur_cmd[4] << 8);
 
-        if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.labellist_count)) {
-            const uint32_t targetOffset = trackStat.plabellist[labelIdx];
-            trackStat.ppos = trackStat.pstart.get() + targetOffset;
+        if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.num_labels)) {
+            const uint32_t targetOffset = trackStat.plabels[labelIdx];
+            trackStat.pcur_cmd = trackStat.pcmds_start.get() + targetOffset;
         }
     }
 
@@ -450,13 +450,13 @@ void Eng_IterJump(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_ResetGates(track_status& trackStat) noexcept {
     master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
+    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
 
     // Either reset all gates (gate index '0xFF') or reset a specific one
-    const uint8_t gateIdx = trackStat.ppos[1];
+    const uint8_t gateIdx = trackStat.pcur_cmd[1];
 
     if (gateIdx == 0xFF) {
-        const uint8_t gatesPerSeq = mstat.pmod_info->mod_hdr.gates_per_seq;
+        const uint8_t gatesPerSeq = mstat.pmodule->hdr.max_gates_per_seq;
 
         for (uint8_t i = 0; i < gatesPerSeq; ++i) {
             seqStat.pgates[i] = 0xFF;
@@ -471,13 +471,13 @@ void Eng_ResetGates(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_ResetIters(track_status& trackStat) noexcept {
     master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
+    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
 
     // Either reset all iters (iter index '0xFF') or reset a specific one
-    const uint8_t iterIdx = trackStat.ppos[1];
+    const uint8_t iterIdx = trackStat.pcur_cmd[1];
 
     if (iterIdx == 0xFF) {
-        const uint8_t itersPerSeq = mstat.pmod_info->mod_hdr.iters_per_seq;
+        const uint8_t itersPerSeq = mstat.pmodule->hdr.max_iters_per_seq;
 
         for (uint8_t i = 0; i < itersPerSeq; ++i) {
             seqStat.piters[i] = 0xFF;
@@ -491,9 +491,9 @@ void Eng_ResetIters(track_status& trackStat) noexcept {
 // Set the value for a specified iteration count in a track
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_WriteIterBox(track_status& trackStat) noexcept {
-    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
-    const uint8_t iterIdx = trackStat.ppos[1];
-    seqStat.piters[iterIdx] = trackStat.ppos[2];
+    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    const uint8_t iterIdx = trackStat.pcur_cmd[1];
+    seqStat.piters[iterIdx] = trackStat.pcur_cmd[2];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -502,35 +502,35 @@ void Eng_WriteIterBox(track_status& trackStat) noexcept {
 void Eng_SeqTempo(track_status& trackStat) noexcept {
     // Helper variables for the loop
     master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
-    sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_idx];
+    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    sequence_data& sequence = mstat.pmodule->psequences[seqStat.seq_idx];
 
     // Read the new quarter notes per minute (BPM) amount from the command
-    const uint16_t newQpm = ((uint16_t) trackStat.ppos[1]) | ((uint16_t) trackStat.ppos[2] << 8);
+    const uint16_t newQpm = ((uint16_t) trackStat.pcur_cmd[1]) | ((uint16_t) trackStat.pcur_cmd[2] << 8);
     
     // Set the tempo for all active tracks in this track's sequence
-    uint8_t activeTracksLeft = seqStat.tracks_active;
+    uint8_t activeTracksLeftToVisit = seqStat.num_tracks_active;
     
-    for (uint16_t i = 0; i < seqInfo.seq_hdr.tracks; ++i) {
+    for (uint16_t i = 0; i < sequence.hdr.num_tracks; ++i) {
         // See if this sequence track slot is in use, if not then ignore.
         //
         // BUG FIX: in the original code there was a bug here where it would not be able advance onto the next sequence track
         // slot once it encountered an unused one, thus some tracks in the sequence might not have had their tempo set as intended.
         // This bug is fixed however with this re-implementation, because of the way the loop is written.
-        const uint8_t trackIdx = seqStat.ptrk_indxs[i];
+        const uint8_t trackStatIdx = seqStat.ptrackstat_indices[i];
 
-        if (trackIdx == 0xFF)
+        if (trackStatIdx == 0xFF)
             continue;
 
         // Update the quarter notes per minute and parts per interrupt (16.16) advancement for this track
-        track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackIdx];
-        thisTrackStat.qpm = newQpm;
-        thisTrackStat.ppi = CalcPartsPerInt(GetIntsPerSec(), thisTrackStat.ppq, thisTrackStat.qpm);
+        track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackStatIdx];
+        thisTrackStat.tempo_qpm = newQpm;
+        thisTrackStat.tempo_ppi_frac = CalcPartsPerInt(GetIntsPerSec(), thisTrackStat.tempo_ppq, thisTrackStat.tempo_qpm);
 
-        // If there are no more active tracks left to update then we are done
-        activeTracksLeft--;
+        // If there are no more active tracks left to visit in the sequence then we are done
+        activeTracksLeftToVisit--;
         
-        if (activeTracksLeft == 0) 
+        if (activeTracksLeftToVisit == 0)
             break;
     }
 }
@@ -542,39 +542,39 @@ void Eng_SeqTempo(track_status& trackStat) noexcept {
 void Eng_SeqGosub(track_status& trackStat) noexcept {
     // Some useful stuff for the loop below
     master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
-    const sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_idx];
+    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    const sequence_data& sequence = mstat.pmodule->psequences[seqStat.seq_idx];
 
     // Get the label to jump to from the command and do not do any jump if the label index is invalid
-    const int32_t labelIdx = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
+    const int32_t labelIdx = ((int16_t) trackStat.pcur_cmd[1]) | ((int16_t) trackStat.pcur_cmd[2] << 8);
 
-    if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.labellist_count)) {
+    if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.num_labels)) {
         // Update the current position for all active tracks in the sequence
-        uint8_t activeTracksLeft = seqStat.tracks_active;
+        uint8_t activeTracksLeftToVisit = seqStat.num_tracks_active;
 
-        for (uint16_t i = 0; i < seqInfo.seq_hdr.tracks; ++i) {
+        for (uint16_t i = 0; i < sequence.hdr.num_tracks; ++i) {
             // See if this sequence track slot is in use, if not then ignore.
             //
             // BUG FIX: in the original code there was a bug here where it would not be able advance onto the next sequence track
             // slot once it encountered an unused one, thus some tracks in the sequence might not have had their position set as intended.
             // This bug is fixed however with this re-implementation, because of the way the loop is written.
-            const uint8_t trackIdx = seqStat.ptrk_indxs[i];
+            const uint8_t trackStatIdx = seqStat.ptrackstat_indices[i];
 
-            if (trackIdx == 0xFF)
+            if (trackStatIdx == 0xFF)
                 continue;
 
             // Save the current location in the track's location stack and use up a location stack slot
-            track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackIdx];
-            *thisTrackStat.psp = thisTrackStat.ppos.get() + gWess_seq_CmdLength[SeqGosub];
-            thisTrackStat.psp += 1;
+            track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackStatIdx];
+            *thisTrackStat.ploc_stack_cur = thisTrackStat.pcur_cmd.get() + gWess_seq_CmdLength[SeqGosub];
+            thisTrackStat.ploc_stack_cur += 1;
             
             // Update the track to the new location
-            thisTrackStat.ppos = thisTrackStat.pstart.get() + thisTrackStat.plabellist[labelIdx];
+            thisTrackStat.pcur_cmd = thisTrackStat.pcmds_start.get() + thisTrackStat.plabels[labelIdx];
 
-            // If there are no more active tracks then we are done
-            activeTracksLeft--;
+            // If there are no more active tracks left to visit in the sequence then we are done
+            activeTracksLeftToVisit--;
 
-            if (activeTracksLeft == 0)
+            if (activeTracksLeftToVisit == 0)
                 break;
         }
     }
@@ -585,39 +585,39 @@ void Eng_SeqGosub(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Command which makes all tracks in the sequence jump to a specified label
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Eng_SeqJump(track_status& trackStat) noexcept {    
+void Eng_SeqJump(track_status& trackStat) noexcept {
     // Some useful stuff for the loop below
     master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
-    const sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_idx];
+    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    const sequence_data& sequence = mstat.pmodule->psequences[seqStat.seq_idx];
     
     // Get the label to jump to from the command and do not do any jump if the label index is invalid
-    const int32_t labelIdx = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
+    const int32_t labelIdx = ((int16_t) trackStat.pcur_cmd[1]) | ((int16_t) trackStat.pcur_cmd[2] << 8);
 
-    if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.labellist_count)) {
+    if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.num_labels)) {
         // Update the current position for all active tracks in the sequence
-        uint8_t activeTracksLeft = seqStat.tracks_active;
+        uint8_t activeTracksLeftToVisit = seqStat.num_tracks_active;
 
-        for (uint16_t i = 0; i < seqInfo.seq_hdr.tracks; ++i) {
+        for (uint16_t i = 0; i < sequence.hdr.num_tracks; ++i) {
             // See if this sequence track slot is in use, if not then ignore.
             //
             // BUG FIX: in the original code there was a bug here where it would not be able advance onto the next sequence track
             // slot once it encountered an unused one, thus some tracks in the sequence might not have had their position set as intended.
             // This bug is fixed however with this re-implementation, because of the way the loop is written.
-            const uint8_t trackIdx = seqStat.ptrk_indxs[i];
+            const uint8_t trackStatIdx = seqStat.ptrackstat_indices[i];
 
-            if (trackIdx == 0xFF)
+            if (trackStatIdx == 0xFF)
                 continue;
 
             // Update the current position of the track
-            track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackIdx];
-            const uint32_t targetOffset = thisTrackStat.plabellist[labelIdx];
-            thisTrackStat.ppos = thisTrackStat.pstart.get() + targetOffset;
+            track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackStatIdx];
+            const uint32_t targetOffset = thisTrackStat.plabels[labelIdx];
+            thisTrackStat.pcur_cmd = thisTrackStat.pcmds_start.get() + targetOffset;
 
-            // If there are no more active tracks then we are done
-            activeTracksLeft--;
+            // If there are no more active tracks left to visit in the sequence then we are done
+            activeTracksLeftToVisit--;
 
-            if (activeTracksLeft == 0)
+            if (activeTracksLeftToVisit == 0)
                 break;
         }
     }
@@ -632,32 +632,32 @@ void Eng_SeqJump(track_status& trackStat) noexcept {
 void Eng_SeqRet(track_status& trackStat) noexcept {
     // Some useful stuff for the loop below
     master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = gpWess_eng_seqStats->get()[trackStat.seq_owner];
-    const sequence_data& seqInfo = mstat.pmod_info->pseq_info[seqStat.seq_idx];
+    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    const sequence_data& sequence = mstat.pmodule->psequences[seqStat.seq_idx];
     
     // Restore the previous location for all active tracks in the sequence
-    uint8_t activeTracksLeft = seqStat.tracks_active;
+    uint8_t activeTracksLeftToVisit = seqStat.num_tracks_active;
 
-    for (uint16_t i = 0; i < seqInfo.seq_hdr.tracks; ++i) {
+    for (uint16_t i = 0; i < sequence.hdr.num_tracks; ++i) {
         // See if this sequence track slot is in use, if not then ignore.
         //
         // BUG FIX: in the original code there was a bug here where it would not be able advance onto the next sequence track
         // slot once it encountered an unused one, thus some tracks in the sequence might not have had their position set as intended.
         // This bug is fixed however with this re-implementation, because of the way the loop is written.
-        const uint8_t trackIdx = seqStat.ptrk_indxs[i];
+        const uint8_t trackStatIdx = seqStat.ptrackstat_indices[i];
 
-        if (trackIdx == 0xFF)
+        if (trackStatIdx == 0xFF)
             continue;
 
         // Restore the previously saved track location and free up the location stack slot
-        track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackIdx];
-        thisTrackStat.psp -= 1;
-        thisTrackStat.ppos = *thisTrackStat.psp;
+        track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackStatIdx];
+        thisTrackStat.ploc_stack_cur -= 1;
+        thisTrackStat.pcur_cmd = *thisTrackStat.ploc_stack_cur;
 
-        // If there are no more active tracks then we are done
-        activeTracksLeft--;
+        // If there are no more active tracks left to visit in the sequence then we are done
+        activeTracksLeftToVisit--;
 
-        if (activeTracksLeft == 0)
+        if (activeTracksLeftToVisit == 0)
             break;
     }
 
@@ -670,26 +670,26 @@ void Eng_SeqRet(track_status& trackStat) noexcept {
 void Eng_SeqEnd(track_status& trackStat) noexcept {
     // Helper variables for the loop
     master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = mstat.pseqstattbl[trackStat.seq_owner];
+    sequence_status& seqStat = mstat.psequence_stats[trackStat.seqstat_idx];
 
     // Run through all of the active tracks in the sequence and mute them all
-    uint8_t activeTracksLeft = seqStat.tracks_active;
+    uint8_t activeTracksLeftToVisit = seqStat.num_tracks_active;
 
-    for (uint32_t i = 0; i < mstat.max_trks_perseq; ++i) {
+    for (uint32_t trackSlotIdx = 0; trackSlotIdx < mstat.max_tracks_per_seq; ++trackSlotIdx) {
         // Ignore this track if not active
-        const uint8_t trackIdx = seqStat.ptrk_indxs[i];
+        const uint8_t trackStatIdx = seqStat.ptrackstat_indices[trackSlotIdx];
 
-        if (trackIdx == 0xFF)
+        if (trackStatIdx == 0xFF)
             continue;
 
         // Mute the track
-        track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackIdx];
-        gWess_CmdFuncArr[thisTrackStat.patchtype][TrkOff](thisTrackStat);
+        track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackStatIdx];
+        gWess_CmdFuncArr[thisTrackStat.driver_id][TrkOff](thisTrackStat);
 
-        // If there are no more tracks left then we are done
-        activeTracksLeft--;
+        // If there are no more active tracks left to visit in the sequence then we are done
+        activeTracksLeftToVisit--;
 
-        if (activeTracksLeft == 0)
+        if (activeTracksLeftToVisit == 0)
             break;
     }
 
@@ -704,11 +704,11 @@ void Eng_SeqEnd(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_TrkTempo(track_status& trackStat) noexcept {
     // Set the new quarter notes per second (BPM) amount
-    const uint16_t qpm = ((uint16_t) trackStat.ppos[1]) | ((uint16_t) trackStat.ppos[2] << 8);
-    trackStat.qpm = qpm;
+    const uint16_t tempo_qpm = ((uint16_t) trackStat.pcur_cmd[1]) | ((uint16_t) trackStat.pcur_cmd[2] << 8);
+    trackStat.tempo_qpm = tempo_qpm;
 
     // Update how many quarter note parts to advance the track by, per hardware interrupt (16.16 format)
-    trackStat.ppi = CalcPartsPerInt(GetIntsPerSec(), trackStat.ppq, trackStat.qpm);
+    trackStat.tempo_ppi_frac = CalcPartsPerInt(GetIntsPerSec(), trackStat.tempo_ppq, trackStat.tempo_qpm);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -717,23 +717,23 @@ void Eng_TrkTempo(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_TrkGosub(track_status& trackStat) noexcept {
     // Ignore the command if the label is invalid
-    const int32_t labelIdx = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
+    const int32_t labelIdx = ((int16_t) trackStat.pcur_cmd[1]) | ((int16_t) trackStat.pcur_cmd[2] << 8);
   
-    if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.labellist_count)) {
+    if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.num_labels)) {
         // Save the return location to after this command in the track's location stack.
         // PC-PSX: small correction here, though makes no difference - the command length taken should be 'TrkGosub' instead of 'SeqGosub'.
         #if PC_PSX_DOOM_MODS
-            *trackStat.psp = trackStat.ppos.get() + gWess_seq_CmdLength[TrkGosub];
+            *trackStat.ploc_stack_cur = trackStat.pcur_cmd.get() + gWess_seq_CmdLength[TrkGosub];
         #else
-            *trackStat.psp = trackStat.ppos.get() + gWess_seq_CmdLength[SeqGosub];
+            *trackStat.ploc_stack_cur = trackStat.pcur_cmd.get() + gWess_seq_CmdLength[SeqGosub];
         #endif
 
         // Used up one slot in the location stack
-        trackStat.psp += 1;
+        trackStat.ploc_stack_cur += 1;
         
         // Jump to the specified label
-        const uint32_t targetOffset = trackStat.plabellist[labelIdx];
-        trackStat.ppos = trackStat.pstart.get() + targetOffset;
+        const uint32_t targetOffset = trackStat.plabels[labelIdx];
+        trackStat.pcur_cmd = trackStat.pcmds_start.get() + targetOffset;
         trackStat.skip = true;
     }
 }
@@ -742,15 +742,15 @@ void Eng_TrkGosub(track_status& trackStat) noexcept {
 // Sequencer command that jumps to a specified label
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_TrkJump(track_status& trackStat) noexcept {
-    const int32_t labelIdx = ((int16_t) trackStat.ppos[1]) | ((int16_t) trackStat.ppos[2] << 8);
+    const int32_t labelIdx = ((int16_t) trackStat.pcur_cmd[1]) | ((int16_t) trackStat.pcur_cmd[2] << 8);
 
     // Ignore the command if the label is invalid
-    if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.labellist_count)) {
-        const uint32_t targetOffset = trackStat.plabellist[labelIdx];
+    if ((labelIdx >= 0) && (labelIdx < (int32_t) trackStat.num_labels)) {
+        const uint32_t targetOffset = trackStat.plabels[labelIdx];
 
         // Goto the destination offset and set the 'skip' flag so the sequencer doesn't try to load the next command automatically
-        trackStat.ppos = trackStat.pstart.get() + targetOffset;
-        trackStat.deltatime = 0;
+        trackStat.pcur_cmd = trackStat.pcmds_start.get() + targetOffset;
+        trackStat.qnp_till_next_cmd = 0;
         trackStat.skip = true;
     }
 }
@@ -761,11 +761,11 @@ void Eng_TrkJump(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_TrkRet(track_status& trackStat) noexcept {
     // Restore the previously saved track location and free up the location stack slot
-    trackStat.psp -= 1;
-    trackStat.ppos = *trackStat.psp;
+    trackStat.ploc_stack_cur -= 1;
+    trackStat.pcur_cmd = *trackStat.ploc_stack_cur;
 
     // Read the time until when the next command executes and instruct the sequencer not to automatically determine this
-    trackStat.ppos = Read_Vlq(trackStat.ppos.get(), trackStat.deltatime);
+    trackStat.pcur_cmd = Read_Vlq(trackStat.pcur_cmd.get(), trackStat.qnp_till_next_cmd);
     trackStat.skip = true;
 }
 
@@ -773,16 +773,16 @@ void Eng_TrkRet(track_status& trackStat) noexcept {
 // Sequencer command for the end of a track: mute the track or repeat it (if looped)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_TrkEnd(track_status& trackStat) noexcept {
-    if (trackStat.looped && (trackStat.totppi >= 16)) {
+    if (trackStat.looped && (trackStat.abstime_qnp >= 16)) {
         // Repeat the track when looped (and if a small amount of time has elapsed) and go back to the start.
         // Also set the 'skip' flag so the sequencer does not try to goto the next command automatically.
         trackStat.skip = true;
-        trackStat.ppos = trackStat.pstart;
-        trackStat.ppos = Read_Vlq(trackStat.pstart.get(), trackStat.deltatime);
+        trackStat.pcur_cmd = trackStat.pcmds_start;
+        trackStat.pcur_cmd = Read_Vlq(trackStat.pcmds_start.get(), trackStat.qnp_till_next_cmd);
     }
     else {
         // Not repeating: mute the track
-        gWess_CmdFuncArr[trackStat.patchtype][TrkOff](trackStat);
+        gWess_CmdFuncArr[trackStat.driver_id][TrkOff](trackStat);
 
         // If the track is manually deallocated skip automatically determining the next command
         if (trackStat.handled) {
@@ -807,10 +807,10 @@ void SeqEngine() noexcept {
     // Some helper variables for the loop
     master_status_structure& mstat = *gpWess_eng_mstat->get();
     track_status* const pTrackStats = gpWess_eng_trackStats->get();
-    const uint8_t maxTracks = *gWess_eng_maxTracks;
+    const uint8_t maxTracks = *gWess_eng_maxActiveTracks;
 
     // Run through all of the active tracks and run sequencer commands for them
-    uint8_t numActiveTracksToVisit = mstat.trks_active;
+    uint8_t numActiveTracksToVisit = mstat.num_active_tracks;
 
     if (numActiveTracksToVisit > 0) {
         for (uint8_t trackIdx = 0; trackIdx < maxTracks; ++trackIdx) {
@@ -823,35 +823,35 @@ void SeqEngine() noexcept {
             // Only run sequencer commands for the track if it isn't paused
             if (!trackStat.stopped) {
                 // Advance the track's time markers
-                trackStat.starppi += trackStat.ppi;                 // Advance elapsed fractional quarter note 'parts' (16.16 fixed point format)
-                trackStat.totppi += trackStat.starppi >> 16;        // Advance track total time in whole quarter note parts
-                trackStat.accppi += trackStat.starppi >> 16;        // Advance track delta time till the next command in whole quarter note parts
-                trackStat.starppi &= 0xFFFF;                        // We've advanced time by the whole part of this number: discount that part
+                trackStat.deltatime_qnp_frac += trackStat.tempo_ppi_frac;           // Advance elapsed fractional quarter note 'parts' (16.16 fixed point format)
+                trackStat.abstime_qnp += trackStat.deltatime_qnp_frac >> 16;        // Advance track total time in whole quarter note parts
+                trackStat.deltatime_qnp += trackStat.deltatime_qnp_frac >> 16;      // Advance track delta time till the next command in whole quarter note parts
+                trackStat.deltatime_qnp_frac &= 0xFFFF;                             // We've advanced time by the whole part of this number: discount that part
 
                 // Is it time to turn off a timed track?
-                if (trackStat.timed && (trackStat.totppi >= trackStat.endppi)) {
+                if (trackStat.timed && (trackStat.abstime_qnp >= trackStat.end_abstime_qnp)) {
                     // Turn off the timed track
-                    gWess_CmdFuncArr[trackStat.patchtype][TrkOff](trackStat);
+                    gWess_CmdFuncArr[trackStat.driver_id][TrkOff](trackStat);
                 }
                 else {
                     // Not a timed track or not reached the end. Continue executing sequencer commands while the track's time marker is >=
                     // to when the next command happens and while the track remains active and not stopped:
-                    while ((trackStat.accppi >= trackStat.deltatime) && trackStat.active && (!trackStat.stopped)) {                                                
+                    while ((trackStat.deltatime_qnp >= trackStat.qnp_till_next_cmd) && trackStat.active && (!trackStat.stopped)) {
                         // Time to execute a new sequencer command: read that command firstly
-                        const uint8_t seqCmd = trackStat.ppos[0];
+                        const uint8_t seqCmd = trackStat.pcur_cmd[0];
 
                         // We have passed the required amount of delay/time until this sequencer command executes.
                         // Do not count that elapsed amount towards the next command delay/delta-time:
-                        trackStat.accppi -= trackStat.deltatime;
+                        trackStat.deltatime_qnp -= trackStat.qnp_till_next_cmd;
 
                         // Decide what executes this command, the sequencer engine or the hardware driver
                         if ((seqCmd >= PatchChg) && (seqCmd <= NoteOff)) {
                             // The hardware sound driver executes this command: do it!
-                            gWess_CmdFuncArr[trackStat.patchtype][seqCmd](trackStat);
+                            gWess_CmdFuncArr[trackStat.driver_id][seqCmd](trackStat);
 
                             // Skip past the command bytes and read the delta time until the next command
-                            trackStat.ppos += gWess_seq_CmdLength[seqCmd];
-                            trackStat.ppos = Read_Vlq(trackStat.ppos.get(), trackStat.deltatime);
+                            trackStat.pcur_cmd += gWess_seq_CmdLength[seqCmd];
+                            trackStat.pcur_cmd = Read_Vlq(trackStat.pcur_cmd.get(), trackStat.qnp_till_next_cmd);
                         } 
                         else if ((seqCmd >= StatusMark) && (seqCmd <= NullEvent)) {
                             // The sequencer executes this command: do it!
@@ -861,8 +861,8 @@ void SeqEngine() noexcept {
                             // Some commands which change the control flow will set the 'skip' flag so that they may set where to go to next.
                             if (trackStat.active && (!trackStat.skip)) {
                                 // Skip past the command bytes and read the delta time until the next command
-                                trackStat.ppos += gWess_seq_CmdLength[seqCmd];
-                                trackStat.ppos = Read_Vlq(trackStat.ppos.get(), trackStat.deltatime);
+                                trackStat.pcur_cmd += gWess_seq_CmdLength[seqCmd];
+                                trackStat.pcur_cmd = Read_Vlq(trackStat.pcur_cmd.get(), trackStat.qnp_till_next_cmd);
                             } else {
                                 // Clear this instruction: 'skip' is just done once when requested
                                 trackStat.skip = false;
@@ -886,5 +886,5 @@ void SeqEngine() noexcept {
 
     // Call the 'update' function for the sound driver: this does management, such as freeing up unused hardware voices
     track_status& firstTrack = pTrackStats[0];
-    gWess_CmdFuncArr[firstTrack.patchtype][DriverEntry1]();
+    gWess_CmdFuncArr[firstTrack.driver_id][DriverEntry1]();
 }

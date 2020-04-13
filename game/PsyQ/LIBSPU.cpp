@@ -368,7 +368,7 @@ int32_t LIBSPU_SpuSetReverbModeParam(const SpuReverbAttr& reverbAttr) noexcept {
     
     // Update the SPU reverb registers if setting reverb mode, delay time or feedback.
     // If we are just updating the left/right reverb depth however, then we can skip this.
-    if (bSetReverbMode || bSetReverbDelay || bSetReverbFeedback) {        
+    if (bSetReverbMode || bSetReverbDelay || bSetReverbFeedback) {
         const uint32_t regBits = reverbDef.fieldBits;
         const bool bSetAllRegs = (regBits == 0);
         

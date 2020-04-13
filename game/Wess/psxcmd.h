@@ -12,11 +12,11 @@ void end_record_music_mute() noexcept;
 
 void add_music_mute_note(
     const int16_t seqIdx,
-    const int16_t trackIdx,
+    const int16_t trackStatIdx,
     const uint8_t note,
     const uint8_t volume,
-    const patchmaps_header& patchmap,
-    const patchinfo_header& patchInfo
+    const patch_voice& patchVoice,
+    const patch_sample& patchSample
 ) noexcept;
 
 void wess_set_mute_release(const int32_t newReleaseRate) noexcept;
@@ -42,8 +42,8 @@ void PSX_ChorusMod(track_status& trackStat) noexcept;
 void PSX_voiceon(
     voice_status& voiceStat,
     track_status& trackStat,
-    const patchmaps_header& patchmap,
-    const patchinfo_header& patchInfo,
+    const patch_voice& patchVoice,
+    const patch_sample& patchSample,
     const uint8_t voiceNote,
     const uint8_t voiceVol
 ) noexcept;
@@ -53,8 +53,8 @@ void PSX_voicerelease(voice_status& voiceStat) noexcept;
 
 void PSX_voicenote(
     track_status& trackStat,
-    const patchmaps_header& patchmap,
-    const patchinfo_header& patchInfo,
+    const patch_voice& patchVoice,
+    const patch_sample& patchSample,
     const uint8_t voiceNote,
     const uint8_t voiceVol
 ) noexcept;

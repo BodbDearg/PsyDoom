@@ -22,11 +22,11 @@ END_THIRD_PARTY_INCLUDES
 static constexpr uint32_t MAX_LCD_SOUNDS = 100;
 
 static const VmPtr<PsxCd_File>                  gWess_open_lcd_file(0x8007F2E0);                // The currently open LCD file
-static const VmPtr<VmPtr<patch_group_data>>     gpWess_lcd_load_patchGrp(0x80075AD8);           // Saved reference to the PSX driver patch group
-static const VmPtr<VmPtr<patches_header>>       gpWess_lcd_load_patches(0x80075AC8);            // Saved reference to the master status patches list
-static const VmPtr<VmPtr<patchmaps_header>>     gpWess_lcd_load_patchmaps(0x80075ACC);          // Saved reference to the master status patchmaps list
-static const VmPtr<VmPtr<patchinfo_header>>     gpWess_lcd_load_patchInfos(0x80075AD0);         // Saved reference to the master status patchinfo list
-static const VmPtr<VmPtr<drumpmaps_header>>     gpWess_lcd_load_drummaps(0x80075AD4);           // Saved reference to the master status drummaps list
+static const VmPtr<VmPtr<patch_group_data>>     gpWess_lcd_load_patchGroup(0x80075AD8);         // Saved reference to the PSX driver patch group
+static const VmPtr<VmPtr<patch>>                gpWess_lcd_load_patches(0x80075AC8);            // Saved reference to the master status patches list
+static const VmPtr<VmPtr<patch_voice>>          gpWess_lcd_load_patchVoices(0x80075ACC);        // Saved reference to the master status patch voices list
+static const VmPtr<VmPtr<patch_sample>>         gpWess_lcd_load_patchSamples(0x80075AD0);       // Saved reference to the master status patch samples list
+static const VmPtr<VmPtr<drum_patch>>           gpWess_lcd_load_drumPatches(0x80075AD4);        // Saved reference to the master status drum patches list
 static const VmPtr<int32_t>                     gWess_lcd_load_soundBytesLeft(0x80075AE4);      // How many bytes there are to left to upload to the SPU for the current sound being loaded
 static const VmPtr<uint32_t>                    gWess_lcd_load_soundNum(0x80075AE0);            // Which sound number in the LCD file is being loaded
 static const VmPtr<uint16_t>                    gWess_lcd_load_numSounds(0x80075AE8);           // How many sounds are being loaded in total from the LCD file
@@ -42,38 +42,38 @@ bool wess_dig_lcd_loader_init(master_status_structure* const pMStat) noexcept {
         return false;
     
     // Try to find the patch group in the currently loaded module for the PlayStation
-    module_data& mod_info = *pMStat->pmod_info;
-    patch_group_data* pPatchGrp = nullptr;
+    module_data& module = *pMStat->pmodule;
+    patch_group_data* pPatchGroup = nullptr;
 
-    for (uint8_t patchGrpIdx = 0; patchGrpIdx < mod_info.mod_hdr.patch_types_infile; ++patchGrpIdx) {
-        patch_group_data& patchGrp = pMStat->ppat_info[patchGrpIdx];
+    for (uint8_t patchGrpIdx = 0; patchGrpIdx < module.hdr.num_patch_groups; ++patchGrpIdx) {
+        patch_group_data& patchGrp = pMStat->ppatch_groups[patchGrpIdx];
 
-        if (patchGrp.pat_grp_hdr.patch_id == PSX_ID) {
-            pPatchGrp = &patchGrp;
+        if (patchGrp.hdr.driver_id == PSX_ID) {
+            pPatchGroup = &patchGrp;
             break;
         }
     }
 
     // If we didn't find the patch group for the PSX driver then initialization failed
-    *gpWess_lcd_load_patchGrp = pPatchGrp;
+    *gpWess_lcd_load_patchGroup = pPatchGroup;
 
-    if (!pPatchGrp)
+    if (!pPatchGroup)
         return false;
 
     // Save pointers to the various data structures for the patch group
     {
-        uint8_t* pPatchData = pPatchGrp->ppat_data.get();
+        uint8_t* pPatchesData = pPatchGroup->pdata.get();
 
-        *gpWess_lcd_load_patches = (patches_header*) pPatchData;
-        pPatchData += sizeof(patches_header) * pPatchGrp->pat_grp_hdr.patches;
+        *gpWess_lcd_load_patches = (patch*) pPatchesData;
+        pPatchesData += sizeof(patch) * pPatchGroup->hdr.num_patches;
         
-        *gpWess_lcd_load_patchmaps = (patchmaps_header*) pPatchData;
-        pPatchData += sizeof (patchmaps_header) * pPatchGrp->pat_grp_hdr.patchmaps;
+        *gpWess_lcd_load_patchVoices = (patch_voice*) pPatchesData;
+        pPatchesData += sizeof (patch_voice) * pPatchGroup->hdr.num_patch_voices;
 
-        *gpWess_lcd_load_patchInfos = (patchinfo_header*) pPatchData;
-        pPatchData += sizeof(patchinfo_header) * pPatchGrp->pat_grp_hdr.patchinfo;
+        *gpWess_lcd_load_patchSamples = (patch_sample*) pPatchesData;
+        pPatchesData += sizeof(patch_sample) * pPatchGroup->hdr.num_patch_samples;
 
-        *gpWess_lcd_load_drummaps = (drumpmaps_header*) pPatchData;
+        *gpWess_lcd_load_drumPatches = (drum_patch*) pPatchesData;
     }
 
     return true;
@@ -84,8 +84,8 @@ bool wess_dig_lcd_loader_init(master_status_structure* const pMStat) noexcept {
 // This is used by DOOM to 'unload' sounds by setting them to address '0'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void wess_dig_set_sample_position(const int32_t patchIdx, const uint32_t spuAddr) noexcept {
-    if (gpWess_lcd_load_patchInfos) {
-        gpWess_lcd_load_patchInfos->get()[patchIdx].sample_pos = spuAddr;
+    if (gpWess_lcd_load_patchSamples) {
+        gpWess_lcd_load_patchSamples->get()[patchIdx].spu_addr = spuAddr;
     }
 }
 
@@ -116,7 +116,7 @@ int32_t wess_dig_lcd_data_read(
     const bool bOverride
 ) noexcept {
     // Some helpers to make the code easier below
-    patchinfo_header* const pPatchInfos = gpWess_lcd_load_patchInfos->get();
+    patch_sample* const pPatchSamples = gpWess_lcd_load_patchSamples->get();
     const uint16_t* pSampleIndexes = (const uint16_t*) gpWess_lcd_load_headerBuf->get();
 
     // Loop vars: number of bytes left to read from the input sector buffer, number of bytes written to the SPU and offset in the sector data
@@ -133,16 +133,16 @@ int32_t wess_dig_lcd_data_read(
             // Sound number '0' is invalid and the LCD file header at this location contains the number of sounds, not the patch index for a sound.
             if (*gWess_lcd_load_soundNum > 0) {
                 const uint16_t patchIdx = pSampleIndexes[*gWess_lcd_load_soundNum];
-                patchinfo_header& patchInfo = pPatchInfos[patchIdx];
+                patch_sample& patchSample = pPatchSamples[patchIdx];
 
                 // Only save the details of the sound if there was not a previous sound saved, or if we are forcing it
-                if ((patchInfo.sample_pos == 0) || bOverride) {
-                    patchInfo.sample_pos = *gWess_lcd_load_samplePos;
+                if ((patchSample.spu_addr == 0) || bOverride) {
+                    patchSample.spu_addr = *gWess_lcd_load_samplePos;
 
                     // Save the details of the sound to the sample block also, if it's given
                     if (pSampleBlock) {
                         pSampleBlock->sampindx[pSampleBlock->numsamps] = patchIdx;
-                        pSampleBlock->samppos[pSampleBlock->numsamps] = (uint16_t)(patchInfo.sample_pos / 8);
+                        pSampleBlock->samppos[pSampleBlock->numsamps] = (uint16_t)(patchSample.spu_addr / 8);
                         pSampleBlock->numsamps++;
                     }
                 }
@@ -157,17 +157,17 @@ int32_t wess_dig_lcd_data_read(
             *gWess_lcd_load_soundNum += 1;
 
             const int32_t nextPatchIdx = pSampleIndexes[*gWess_lcd_load_soundNum];
-            patchinfo_header& nextPatchInfo = pPatchInfos[nextPatchIdx];
+            patch_sample& nextPatchSample = pPatchSamples[nextPatchIdx];
 
-            *gWess_lcd_load_soundBytesLeft = nextPatchInfo.sample_size;
+            *gWess_lcd_load_soundBytesLeft = nextPatchSample.size;
             *gWess_lcd_load_samplePos = destSpuAddr + sndDataOffset;
 
             // If uploading this sound would cause us to go beyond the bounds of SPU ram then do not try to upload this sound
             #if PC_PSX_DOOM_MODS
                 // PC-PSX: I think this condition was slightly wrong?
-                const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + nextPatchInfo.sample_size + sndDataOffset > (int32_t) *gPsxSpu_sram_end);
+                const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + nextPatchSample.size + sndDataOffset > (int32_t) *gPsxSpu_sram_end);
             #else
-                const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + nextPatchInfo.sample_size > (int32_t)(*gPsxSpu_sram_end + sndDataOffset));
+                const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + nextPatchSample.size > (int32_t)(*gPsxSpu_sram_end + sndDataOffset));
             #endif
 
             if (bInsufficientSpuRam) {
@@ -183,12 +183,12 @@ int32_t wess_dig_lcd_data_read(
         // Upload to the SPU whatever samples we can from the sector.
         // Either upload the whole sector or just a part of it (if it's bigger than the rest of thhe sound)
         const uint16_t sampleIdx = pSampleIndexes[*gWess_lcd_load_soundNum];
-        const patchinfo_header& patchInfo = pPatchInfos[sampleIdx];
+        const patch_sample& patchSample = pPatchSamples[sampleIdx];
 
         const uint32_t sndBytesLeft = (uint32_t) *gWess_lcd_load_soundBytesLeft;
         const uint32_t writeSize = (sectorBytesLeft > sndBytesLeft) ? sndBytesLeft : sectorBytesLeft;
 
-        if ((patchInfo.sample_pos == 0) || bOverride) {
+        if ((patchSample.spu_addr == 0) || bOverride) {
             LIBSPU_SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
             LIBSPU_SpuSetTransferStartAddr(destSpuAddr + sndDataOffset);
             LIBSPU_SpuWrite(pSectorData + sndDataOffset, writeSize);
@@ -240,7 +240,7 @@ int32_t wess_dig_lcd_psxcd_sync() noexcept {
 // The 'override' flag also specifies whether existing sound patches are to have their details overwritten or not.
 // 
 // Note: I've completely rewritten this function for PsyDoom to get rid of all the low level I/O stuff.
-// The goal of the rewrite is to enable modding of the game with new .LCD files for custom maps, since the 'psxcd' I/O functions support 
+// The goal of the rewrite is to enable modding of the game with new .LCD files for custom maps, since the 'psxcd' I/O functions support
 // replacing original game files with alternate versions on the user's computer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #if PC_PSX_DOOM_MODS
@@ -250,7 +250,7 @@ int32_t wess_dig_lcd_load(
     const uint32_t destSpuAddr,
     SampleBlock* const pSampleBlock,
     const bool bOverride
-) noexcept {   
+) noexcept {
     // Open the LCD file firstly and abort if that fails or the file handle returned is invalid
     PsxCd_File* const pLcdFile = psxcd_open(lcdFileToLoad);
 

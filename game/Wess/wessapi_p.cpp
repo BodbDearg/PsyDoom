@@ -15,9 +15,9 @@
 static void trackstart(track_status& trackStat, sequence_status& seqStat) noexcept {
     if (trackStat.stopped) {
         trackStat.stopped = false;
-        seqStat.tracks_playing += 1;
+        seqStat.num_tracks_playing += 1;
 
-        if (seqStat.tracks_playing > 0) {
+        if (seqStat.num_tracks_playing > 0) {
             seqStat.playmode = SEQ_STATE_PLAYING;
         }
     }
@@ -29,9 +29,9 @@ static void trackstart(track_status& trackStat, sequence_status& seqStat) noexce
 static void trackstop(track_status& trackStat, sequence_status& seqStat) noexcept {
     if (!trackStat.stopped) {
         trackStat.stopped = true;
-        seqStat.tracks_playing -= 1;
+        seqStat.num_tracks_playing -= 1;
 
-        if (seqStat.tracks_playing == 0) {
+        if (seqStat.num_tracks_playing == 0) {
             seqStat.playmode = SEQ_STATE_STOPPED;
         }
     }
@@ -52,43 +52,43 @@ void wess_seq_pause(const int32_t seqIdx, const bool bMute) noexcept {
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat->get();
 
-    const uint8_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
-    const uint32_t maxTracksPerSeq = mstat.max_trks_perseq;
-    uint8_t numActiveSeqsToVisit = mstat.seqs_active;
+    const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
+    const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
+    uint8_t numActiveSeqsToVisit = mstat.num_active_seqs;
 
     if (numActiveSeqsToVisit > 0) {
         // Run through all of the active sequences with the given number and stop them all
-        for (uint8_t statIdx = 0; statIdx < maxSeqs; ++statIdx) {
-            sequence_status& seqStat = mstat.pseqstattbl[statIdx];
+        for (uint8_t seqStatIdx = 0; seqStatIdx < maxSeqs; ++seqStatIdx) {
+            sequence_status& seqStat = mstat.psequence_stats[seqStatIdx];
 
             if (!seqStat.active)
                 continue;
 
             // If this is the sequence number we are interested in then run through all of it's tracks and stop each of them
             if (seqStat.seq_idx == seqIdx) {
-                uint32_t numActiveSeqTracksToVisit = seqStat.tracks_active;
-                uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+                uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
+                uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
 
-                for (uint32_t i = 0; i < maxTracksPerSeq; ++i) {
+                for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                     // Is this sequence track slot actually in use? Skip if not:
-                    const uint8_t trackIdx = pSeqTrackIndexes[i];
+                    const uint8_t trackStatIdx = pTrackStatIndices[trackSlotIdx];
 
-                    if (trackIdx == 0xFF)
+                    if (trackStatIdx == 0xFF)
                         continue;
 
                     // Pause the track
-                    track_status& trackStat = mstat.ptrkstattbl[trackIdx];
+                    track_status& trackStat = mstat.ptrack_stats[trackStatIdx];
                     trackstop(trackStat, seqStat);
                     
                     // If muting then call the driver function to mute the track
                     if (bMute) {
-                        gWess_CmdFuncArr[trackStat.patchtype][TrkMute](trackStat);
+                        gWess_CmdFuncArr[trackStat.driver_id][TrkMute](trackStat);
                     }
 
-                    // If there are no more tracks left active to visit then we are done
-                    --numActiveSeqTracksToVisit;
+                    // If there are no more active tracks left to visit in the sequence then we are done
+                    --numActiveTracksToVisit;
 
-                    if (numActiveSeqTracksToVisit == 0)
+                    if (numActiveTracksToVisit == 0)
                         break;
                 }
             }
@@ -120,37 +120,37 @@ void wess_seq_restart(const int32_t seqIdx) noexcept {
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat->get();
 
-    const uint8_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
-    const uint32_t maxTracksPerSeq = mstat.max_trks_perseq;
-    uint8_t numActiveSeqsToVisit = mstat.seqs_active;
+    const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
+    const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
+    uint8_t numActiveSeqsToVisit = mstat.num_active_seqs;
 
     if (numActiveSeqsToVisit > 0) {
         // Run through all of the active sequences and stop them all
-        for (uint8_t statIdx = 0; statIdx < maxSeqs; ++statIdx) {
-            sequence_status& seqStat = mstat.pseqstattbl[statIdx];
+        for (uint8_t seqStatIdx = 0; seqStatIdx < maxSeqs; ++seqStatIdx) {
+            sequence_status& seqStat = mstat.psequence_stats[seqStatIdx];
 
             if (!seqStat.active)
                 continue;
             
             // If this is the sequence number we are interested in then run through all of it's tracks and pause each of them
             if (seqStat.seq_idx == seqIdx) {
-                uint32_t numActiveSeqTracksToVisit = seqStat.tracks_active;
-                uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+                uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
+                uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
 
-                for (uint32_t i = 0; i < maxTracksPerSeq; ++i) {
+                for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                     // Is this sequence track slot actually in use? Skip if not:
-                    const uint8_t trackIdx = pSeqTrackIndexes[i];
+                    const uint8_t trackStatIdx = pTrackStatIndices[trackSlotIdx];
 
-                    if (trackIdx == 0xFF)
+                    if (trackStatIdx == 0xFF)
                         continue;
 
                     // Unpause the track
-                    trackstart(mstat.ptrkstattbl[trackIdx], seqStat);
+                    trackstart(mstat.ptrack_stats[trackStatIdx], seqStat);
 
-                    // If there are no more tracks left active to visit then we are done
-                    --numActiveSeqTracksToVisit;
+                    // If there are no more active tracks left to visit in the sequence then we are done
+                    --numActiveTracksToVisit;
 
-                    if (numActiveSeqTracksToVisit == 0)
+                    if (numActiveTracksToVisit == 0)
                         break;
                 }
             }
@@ -189,49 +189,49 @@ void wess_seq_pauseall(const bool bMute, SavedVoiceList* const pSavedVoices) noe
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat->get();
 
-    const uint8_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
-    const uint32_t maxTracksPerSeq = mstat.max_trks_perseq;
-    uint8_t numActiveSeqs = mstat.seqs_active;
+    const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
+    const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
+    uint8_t numActiveSeqsToVisit = mstat.num_active_seqs;
 
-    if (numActiveSeqs > 0) {
+    if (numActiveSeqsToVisit > 0) {
         // Run through all of the active sequences and pause them all
-        for (uint8_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
-            sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
+        for (uint8_t seqStatIdx = 0; seqStatIdx < maxSeqs; ++seqStatIdx) {
+            sequence_status& seqStat = mstat.psequence_stats[seqStatIdx];
 
             if (!seqStat.active)
                 continue;
 
             // Run through all of the active tracks in the sequence and pause them all
-            uint32_t numActiveSeqTracks = seqStat.tracks_active;
-            uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+            uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
+            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
 
-            for (uint32_t i = 0; i < maxTracksPerSeq; ++i) {
+            for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                 // Is this sequence track slot actually in use? Skip if not:
-                const uint8_t trackIdx = pSeqTrackIndexes[i];
+                const uint8_t trackStatIdx = pTrackStatIndices[trackSlotIdx];
 
-                if (trackIdx == 0xFF)
+                if (trackStatIdx == 0xFF)
                     continue;
 
                 // Issue a driver command to mute the track (if required) and then pause the track
-                track_status& trackStat = mstat.ptrkstattbl[trackIdx];
+                track_status& trackStat = mstat.ptrack_stats[trackStatIdx];
                 
                 if (bMute == 1) {
-                    gWess_CmdFuncArr[trackStat.patchtype][TrkMute](trackStat);
+                    gWess_CmdFuncArr[trackStat.driver_id][TrkMute](trackStat);
                 }
 
                 trackstop(trackStat, seqStat);
 
-                // If there are no more tracks left active then we are done
-                numActiveSeqTracks--;
+                // If there are no more active tracks left to visit in the sequence then we are done
+                numActiveTracksToVisit--;
 
-                if (numActiveSeqTracks == 0)
+                if (numActiveTracksToVisit == 0)
                     break;
             }
             
             // If there are no more active sequences to visit then we are done
-            numActiveSeqs--;
+            numActiveSeqsToVisit--;
 
-            if (numActiveSeqs == 0)
+            if (numActiveSeqsToVisit == 0)
                 break;
         }
     }
@@ -249,7 +249,7 @@ void wess_seq_pauseall(const bool bMute, SavedVoiceList* const pSavedVoices) noe
 // Restart all previously paused sequences.
 // Individual voices can also be restored to their previous states using the saved voice state struct.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_restartall(SavedVoiceList* const pPrevVoiceState) noexcept {
+void wess_seq_restartall(SavedVoiceList* const pSavedVoices) noexcept {
     // Don't bother if there is no module loaded
     if (!Is_Module_Loaded())
         return;
@@ -261,48 +261,48 @@ void wess_seq_restartall(SavedVoiceList* const pPrevVoiceState) noexcept {
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat->get();
 
-    const uint8_t maxSeqs = mstat.pmod_info->mod_hdr.seq_work_areas;
-    const uint32_t maxTracksPerSeq = mstat.max_trks_perseq;
-    uint8_t numActiveSeqsToVisit = mstat.seqs_active;
+    const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
+    const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
+    uint8_t numActiveSeqsToVisit = mstat.num_active_seqs;
 
     if (numActiveSeqsToVisit > 0) {
-        for (uint8_t seqIdx = 0; seqIdx < maxSeqs; ++seqIdx) {
-            sequence_status& seqStat = mstat.pseqstattbl[seqIdx];
+        for (uint8_t seqStatIdx = 0; seqStatIdx < maxSeqs; ++seqStatIdx) {
+            sequence_status& seqStat = mstat.psequence_stats[seqStatIdx];
 
             if (!seqStat.active)
                 continue;
 
             // Run through all of the active tracks in the sequence and restart them all
-            uint32_t numSeqTracksActive = seqStat.tracks_active;
-            uint8_t* const pSeqTrackIndexes = seqStat.ptrk_indxs.get();
+            uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
+            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
 
-            for (uint32_t i = 0; i < maxTracksPerSeq; ++i) {
+            for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                 // Is this sequence track slot actually in use? Skip if not:
-                const uint8_t trackIdx = pSeqTrackIndexes[i];
+                const uint8_t trackStatIdx = pTrackStatIndices[trackSlotIdx];
 
-                if (trackIdx == 0xFF)
+                if (trackStatIdx == 0xFF)
                     continue;
 
                 // Unpause this track
-                track_status& trackStat = mstat.ptrkstattbl[trackIdx];
+                track_status& trackStat = mstat.ptrack_stats[trackStatIdx];
                 trackstart(trackStat, seqStat);
 
                 // If voices were previously saved for restoring then replay them now
-                if (pPrevVoiceState) {
-                    for (int32_t noteIdx = 0; noteIdx < pPrevVoiceState->size; ++noteIdx) {
-                        SavedVoice& voice = pPrevVoiceState->voices[noteIdx];
+                if (pSavedVoices) {
+                    for (int32_t noteIdx = 0; noteIdx < pSavedVoices->size; ++noteIdx) {
+                        SavedVoice& voice = pSavedVoices->voices[noteIdx];
 
                         // Only restart the voice if it is for this track and sequence
-                        if ((voice.track_idx == trackIdx) && (voice.seq_idx == seqStat.seq_idx)) {
-                            PSX_voicenote(trackStat, *voice.patchmap, *voice.patchinfo, voice.note, voice.volume);
+                        if ((voice.trackstat_idx == trackStatIdx) && (voice.seq_idx == seqStat.seq_idx)) {
+                            PSX_voicenote(trackStat, *voice.ppatch_voice, *voice.ppatch_sample, voice.note, voice.volume);
                         }
                     }
                 }
 
-                // If there are no more tracks left active then we are done
-                numSeqTracksActive--;
+                // If there are no more active tracks left to visit in the sequence then we are done
+                numActiveTracksToVisit--;
 
-                if (numSeqTracksActive == 0)
+                if (numActiveTracksToVisit == 0)
                     break;
             }
 
@@ -315,8 +315,8 @@ void wess_seq_restartall(SavedVoiceList* const pPrevVoiceState) noexcept {
     }
     
     // Clear storage in the list of saved voices for re-use again
-    if (pPrevVoiceState) {
-        pPrevVoiceState->size = 0;
+    if (pSavedVoices) {
+        pSavedVoices->size = 0;
     }
 
     // Re-enable the sequencer

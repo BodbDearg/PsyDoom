@@ -5,8 +5,8 @@
 #include "PsyQ/LIBSPU.h"
 
 struct master_status_structure;
-struct patchinfo_header;
-struct patchmaps_header;
+struct patch_sample;
+struct patch_voice;
 struct sequence_data;
 struct track_data;
 struct track_status;
@@ -44,29 +44,29 @@ static constexpr uint32_t TRIGGER_REVERB    = 0x100;
 // Struct defining custom parameters for when triggering a sequence.
 // The 'mask' field determines what parameters are customized.
 struct TriggerPlayAttr {
-    uint32_t    mask;           // Which of the fields are to be used
-    uint8_t     volume;         // Range: 0-127
-    uint8_t     pan;            // Range: 0-127, with '64' being the center
-    int16_t     patch;          // Range: 0-32767
-    int16_t     pitch;          // Range: -8192 to 8191
-    uint8_t     mutemode;       // Range: 0-7
-    uint8_t     reverb;         // Reverb depth to use
-    uint16_t    tempo;          // Tempo to play at
-    uint16_t    _padding;       // Unused/padding bytes
-    uint32_t    timeppq;        // For timed voices when the voice will stop relative to the current track time (in quarter note parts)
+    uint32_t    attribs_mask;       // Which of the fields in this struct are to be used (see TRIGGER_XXX bit flags)
+    uint8_t     volume_cntrl;       // Volume control setting. Range: 0-127
+    uint8_t     pan_cntrl;          // Pan control setting. Range: 0-127, with '64' being the center.
+    int16_t     patch_idx;          // Patch setting. Range: 0-32767
+    int16_t     pitch_cntrl;        // Pitch control/shift setting. Range: -8192 to 8191
+    uint8_t     mutegroup;          // Which group to mute - doesn't seem to affect anything. Range: 0-7
+    uint8_t     reverb;             // Reverb depth to use
+    uint16_t    tempo_qpm;          // Tempo to play at in quarter note parts per minute (beats per minute)
+    uint16_t    _padding;           // Unused/padding bytes
+    uint32_t    playtime_qnp;       // For timed voices when the voice will stop relative to the current track time (in quarter note parts)
 };
 
 static_assert(sizeof(TriggerPlayAttr) == 20);
 
 // Records state for a voice in a track: used by pause/resume functionality
 struct SavedVoice {
-    int16_t                         seq_idx;        // What sequence index the voice belongs to
-    int16_t                         track_idx;      // What track index the voice belongs to
-    int8_t                          note;           // What note (semitone) was being played by the voice
-    int8_t                          volume;         // What volume the voice was being played at
-    int16_t                         _pad;           // Unused/padding bytes
-    VmPtr<const patchmaps_header>   patchmap;       // Settings for the patch voice being used
-    VmPtr<const patchinfo_header>   patchinfo;      // Details about the sound sample being used by the voice
+    int16_t                         seq_idx;            // What sequence index the voice belongs to
+    int16_t                         trackstat_idx;      // What track index the voice belongs to
+    int8_t                          note;               // What note (semitone) was being played by the voice
+    int8_t                          volume;             // What volume the voice was being played at
+    int16_t                         _pad;               // Unused/padding bytes
+    VmPtr<const patch_voice>        ppatch_voice;       // Settings for the patch voice being used
+    VmPtr<const patch_sample>       ppatch_sample;      // Details about the sound sample being used by the voice
 };
 
 static_assert(sizeof(SavedVoice) == 16);
@@ -105,11 +105,11 @@ int32_t wess_load_module(
     const int32_t* const* const pSettingTagLists
 ) noexcept;
 
-void filltrackstat(track_status& trackStat, const track_data& trackInfo, const TriggerPlayAttr* const pAttribs) noexcept;
-void assigntrackstat(track_status& trackStat, const track_data& trackInfo) noexcept;
+void filltrackstat(track_status& trackStat, const track_data& track, const TriggerPlayAttr* const pAttribs) noexcept;
+void assigntrackstat(track_status& trackStat, const track_data& track) noexcept;
 
 int32_t wess_seq_structrig(
-    const sequence_data& seqInfo,
+    const sequence_data& sequence,
     const int32_t seqIdx,
     const uint32_t seqType,
     const bool bGetHandle,
