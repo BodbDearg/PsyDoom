@@ -1,6 +1,0 @@
-Note: I have stripped out some stuff which is not needed to use this library.
-The full version is available at the link below.
-
-Commit:
-    https://github.com/nlohmann/json/tree/bccc8f0577bf7a5a98d1a7f62adfddf3f43b8a3e
-    (Dec 1, 2019, 2:53 AM PST)

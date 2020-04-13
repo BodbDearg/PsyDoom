@@ -1,6 +1,0 @@
-Note: I have stripped out some stuff which is not needed to use this library.
-The full version is available at the link below.
-
-Commit:
-    https://github.com/USCiLab/cereal/tree/075c44feef7cfe497b205aece079f5b842b3ffc0
-    (Nov 17, 2019, 5:55 PM PST)
