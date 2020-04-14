@@ -23,7 +23,10 @@
 #include "UI/o_main.h"
 #include "UI/st_main.h"
 #include "UI/ti_main.h"
-#include <cstdio>
+
+BEGIN_THIRD_PARTY_INCLUDES
+    #include <cstdio>
+END_THIRD_PARTY_INCLUDES
 
 // The current number of 60Hz ticks
 const VmPtr<int32_t> gTicCon(0x8007814C);
@@ -32,8 +35,14 @@ const VmPtr<int32_t> gTicCon(0x8007814C);
 const VmPtr<int32_t[MAXPLAYERS]> gPlayersElapsedVBlanks(0x80077FBC);
 
 // Pointer to a buffer holding the demo and the current pointer within the buffer for playback/recording
-const VmPtr<VmPtr<uint32_t>> gpDemoBuffer(0x800775E8);
-const VmPtr<VmPtr<uint32_t>> gpDemo_p(0x800775EC);
+uint32_t* gpDemoBuffer;
+uint32_t* gpDemo_p;
+
+#if PC_PSX_DOOM_MODS
+    // PC-PSX: save the end pointer for the buffer, so we know when to end the demo.
+    // Do this instead of hardcoding the end.
+    uint32_t*   gpDemoBufferEnd;
+#endif
 
 // Game start parameters
 const VmPtr<skill_t>        gStartSkill(0x800775FC);
@@ -120,18 +129,24 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
         I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
     #endif
 
-    // Read the demo file contents (up to 16 KiB)
-    constexpr uint32_t DEMO_BUFFER_SIZE = 16 * 1024;
-    *gpDemoBuffer = (uint32_t*) Z_EndMalloc(**gpMainMemZone, DEMO_BUFFER_SIZE, PU_STATIC, nullptr);
+    // Open the demo file
     const uint32_t openFileIdx = OpenFile(file);
 
-    // PC-PSX: determine the file size to read and only read the actual size of the demo
+    // PC-PSX: determine the file size to read and only read the actual size of the demo rather than assuming it's 16 KiB.
+    // Also allocate the demo buffer on the native host heap, so as to allow very large demos without affecting zone memory.
     #if PC_PSX_DOOM_MODS
-        // TODO: support larger demos by using native host memory
-        const int32_t fileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
+        const int32_t demoFileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
+
+        uint8_t* const pDemoBuffer(new uint8_t[demoFileSize]);      // TODO: use std::unique_ptr<> eventually: can't at the minute due to issues with the MIPS register macros
+        gpDemoBuffer = (uint32_t*) pDemoBuffer;
+        gpDemoBufferEnd = (uint32_t*)(pDemoBuffer + demoFileSize);
+
         SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::SET);
-        ReadFile(openFileIdx, gpDemoBuffer->get(), (fileSize < DEMO_BUFFER_SIZE) ? fileSize : DEMO_BUFFER_SIZE);
+        ReadFile(openFileIdx, gpDemoBuffer, demoFileSize);
     #else
+        // Read the demo file contents (up to 16 KiB)
+        constexpr uint32_t DEMO_BUFFER_SIZE = 16 * 1024;
+        gpDemoBuffer = (uint32_t*) Z_EndMalloc(**gpMainMemZone, DEMO_BUFFER_SIZE, PU_STATIC, nullptr);        
         ReadFile(openFileIdx, gpDemoBuffer->get(), 16 * 1024);
     #endif
     
@@ -139,7 +154,17 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
     
     // Play the demo, free the demo buffer and return the exit action
     const gameaction_t exitAction = G_PlayDemoPtr();
-    Z_Free2(**gpMainMemZone, gpDemoBuffer->get());
+
+    // PC-PSX: the demo buffer is no longer allocated through the zone memory system.
+    // Also cleanup the buffer pointers when we're done.
+    #if PC_PSX_DOOM_MODS
+        delete[] pDemoBuffer;   // TODO: remove this once we use std::unique_ptr<>
+        gpDemoBuffer = nullptr;
+        gpDemoBufferEnd = nullptr;
+    #else
+        Z_Free2(**gpMainMemZone, gpDemoBuffer);
+    #endif
+
     return exitAction;
 }
 
@@ -416,14 +441,14 @@ gameaction_t MiniLoop(
 
                 // Read inputs from the demo buffer and advance the demo.
                 // N.B: Demo inputs override everything else from here on in.
-                padBtns = (*gpDemo_p)[0];
+                padBtns = *gpDemo_p;
                 gTicButtons[*gCurPlayerIndex] = padBtns;
-                *gpDemo_p += 1;
+                gpDemo_p++;
             }
             else {
                 // Demo recording: record pad inputs to the buffer
-                (*gpDemo_p)[0] = padBtns;
-                *gpDemo_p += 1;
+                *gpDemo_p = padBtns;
+                gpDemo_p++;
             }
 
             // Abort demo recording?
@@ -432,12 +457,17 @@ gameaction_t MiniLoop(
             if (padBtns & PAD_START)
                 break;
             
-            // Is the demo recording too big or are we at the end of the largest possible demo size?
-            // If so then stop right now...
-            const int32_t demoTicksElapsed = (int32_t)(gpDemo_p->get() - gpDemoBuffer->get());
-            
-            if (demoTicksElapsed >= MAX_DEMO_TICKS)
-                break;
+            // PC-PSX: use the demo buffer end pointer to determine the actual demo end, rather than hardcoding:
+            #if PC_PSX_DOOM_MODS
+                if (gpDemo_p >= gpDemoBufferEnd)
+                    break;
+            #else
+                // Is the demo recording too big or are we at the end of the largest possible demo size? If so then stop right now... 
+                const int32_t demoTicksElapsed = (int32_t)(gpDemo_p - gpDemoBuffer);
+
+                if (demoTicksElapsed >= MAX_DEMO_TICKS)
+                    break;
+            #endif
         }
 
         // Advance the number of 60 Hz ticks passed

@@ -410,18 +410,18 @@ void G_RunGame() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t G_PlayDemoPtr() noexcept {
     // Read the demo skill and map number
-    *gpDemo_p = *gpDemoBuffer;
+    gpDemo_p = gpDemoBuffer;
 
-    const skill_t skill = (skill_t) Endian::littleToHost((*gpDemo_p)[0]);
-    const int32_t mapNum = (int32_t) Endian::littleToHost((*gpDemo_p)[1]);
+    const skill_t skill = (skill_t) Endian::littleToHost(gpDemo_p[0]);
+    const int32_t mapNum = (int32_t) Endian::littleToHost(gpDemo_p[1]);
 
-    *gpDemo_p += 2;
+    gpDemo_p += 2;
 
     // Read the control bindings for the demo and save the previous ones before that
     padbuttons_t prevCtrlBindings[NUM_BINDABLE_BTNS];
     
     D_memcpy(prevCtrlBindings, gCtrlBindings.get(), sizeof(prevCtrlBindings));
-    D_memcpy(gCtrlBindings.get(), gpDemo_p->get(), sizeof(prevCtrlBindings));
+    D_memcpy(gCtrlBindings.get(), gpDemo_p, sizeof(prevCtrlBindings));
 
     #if PC_PSX_DOOM_MODS
         // PC-PSX: endian correct the controls written to the demo also
@@ -433,7 +433,7 @@ gameaction_t G_PlayDemoPtr() noexcept {
     #endif
 
     static_assert(sizeof(prevCtrlBindings) == 32);
-    *gpDemo_p += 8;
+    gpDemo_p += 8;
     
     // Initialize the demo pointer, game and load the level
     G_InitNew(skill, mapNum, gt_single);
@@ -448,6 +448,11 @@ gameaction_t G_PlayDemoPtr() noexcept {
     D_memcpy(gCtrlBindings.get(), prevCtrlBindings, sizeof(prevCtrlBindings));
     *gLockedTexPagesMask &= 1;
     Z_FreeTags(**gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
+
+    // PC-PSX: cleanup the demo pointer when we're done
+    #if PC_PSX_DOOM_MODS
+        gpDemo_p = nullptr;
+    #endif
 
     return exitAction;
 }

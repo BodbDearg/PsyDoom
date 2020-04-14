@@ -8,8 +8,14 @@ enum class CdMapTbl_File : uint32_t;
 
 extern const VmPtr<int32_t>                 gTicCon;
 extern const VmPtr<int32_t[MAXPLAYERS]>     gPlayersElapsedVBlanks;
-extern const VmPtr<VmPtr<uint32_t>>         gpDemoBuffer;
-extern const VmPtr<VmPtr<uint32_t>>         gpDemo_p;
+
+extern uint32_t*    gpDemoBuffer;
+extern uint32_t*    gpDemo_p;
+
+#if PC_PSX_DOOM_MODS
+    extern uint32_t*    gpDemoBufferEnd;
+#endif
+
 extern const VmPtr<skill_t>                 gStartSkill;
 extern const VmPtr<int32_t>                 gStartMapOrEpisode;
 extern const VmPtr<gametype_t>              gStartGameType;
