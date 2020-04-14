@@ -1,0 +1,1 @@
+Demos recorded using the original PlayStation Doom, Greatest Hits edition. Used for verification of PsyDoom, to ensure identical behavior given the exact same set of inputs.
