@@ -27,4 +27,4 @@ void G_CompleteLevel() noexcept;
 void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameType) noexcept;
 void G_RunGame() noexcept;
 gameaction_t G_PlayDemoPtr() noexcept;
-void G_BeginDemoRecording() noexcept;
+void G_EndDemoRecording() noexcept;

@@ -357,7 +357,7 @@ void G_RunGame() noexcept {
         *gbIsLevelBeingRestarted = false;
     
         if (*gGameAction == ga_recorddemo) {
-            G_BeginDemoRecording();
+            G_EndDemoRecording();
         }
         
         if (*gGameAction == ga_warped)
@@ -453,10 +453,9 @@ gameaction_t G_PlayDemoPtr() noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// An empty function called when a level is being started while a demo is being recorded.
-// Does nothing in the retail version of the game, but likely did stuff in debug builds.
-// My guess is that this did something relating to saving or allocating space for the demo to be recorded.
+// An empty function called when a level is ended while a demo is being recorded.
+// Does nothing in the retail version of the game, but likely did stuff in debug builds - perhaps saving the demo file somewhere.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void G_BeginDemoRecording() noexcept {
+void G_EndDemoRecording() noexcept {
     // Who knows what this did...
 }

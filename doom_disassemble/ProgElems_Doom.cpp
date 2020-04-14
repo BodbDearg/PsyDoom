@@ -304,7 +304,7 @@ static const ProgElem ELEMS[] = {
     { 0x80013394, 0x80013528, "G_InitNew",                              ProgElemType::FUNCTION },
     { 0x80013528, 0x80013714, "G_RunGame",                              ProgElemType::FUNCTION },
     { 0x80013714, 0x80013838, "G_PlayDemoPtr",                          ProgElemType::FUNCTION },
-    { 0x80013838, 0x80013840, "G_BeginDemoRecording",                   ProgElemType::FUNCTION },
+    { 0x80013838, 0x80013840, "G_EndDemoRecording",                     ProgElemType::FUNCTION },
     { 0x80013840, 0x800138D8, "P_RunMobjBase",                          ProgElemType::FUNCTION },
     { 0x800138D8, 0x80013B38, "P_XYMovement",                           ProgElemType::FUNCTION },
     { 0x80013B38, 0x80013C00, "P_FloatChange",                          ProgElemType::FUNCTION },
