@@ -80,12 +80,12 @@ bool wess_dig_lcd_loader_init(master_status_structure* const pMStat) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Sets the SPU address for the given patch.
+// Sets the SPU address for the given patch sample.
 // This is used by DOOM to 'unload' sounds by setting them to address '0'.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_dig_set_sample_position(const int32_t patchIdx, const uint32_t spuAddr) noexcept {
+void wess_dig_set_sample_position(const int32_t patchSampleIdx, const uint32_t spuAddr) noexcept {
     if (gpWess_lcd_load_patchSamples) {
-        gpWess_lcd_load_patchSamples->get()[patchIdx].spu_addr = spuAddr;
+        gpWess_lcd_load_patchSamples->get()[patchSampleIdx].spu_addr = spuAddr;
     }
 }
 
@@ -117,7 +117,7 @@ int32_t wess_dig_lcd_data_read(
 ) noexcept {
     // Some helpers to make the code easier below
     patch_sample* const pPatchSamples = gpWess_lcd_load_patchSamples->get();
-    const uint16_t* pSampleIndexes = (const uint16_t*) gpWess_lcd_load_headerBuf->get();
+    const uint16_t* pPatchSampleIndices = (const uint16_t*) gpWess_lcd_load_headerBuf->get();
 
     // Loop vars: number of bytes left to read from the input sector buffer, number of bytes written to the SPU and offset in the sector data
     uint32_t sectorBytesLeft = CD_SECTOR_SIZE;
@@ -132,8 +132,8 @@ int32_t wess_dig_lcd_data_read(
             // Commit the details for the sound we just finished uploading, unless we haven't yet started on uploading a sound.
             // Sound number '0' is invalid and the LCD file header at this location contains the number of sounds, not the patch index for a sound.
             if (*gWess_lcd_load_soundNum > 0) {
-                const uint16_t patchIdx = pSampleIndexes[*gWess_lcd_load_soundNum];
-                patch_sample& patchSample = pPatchSamples[patchIdx];
+                const uint16_t patchSampleIdx = pPatchSampleIndices[*gWess_lcd_load_soundNum];
+                patch_sample& patchSample = pPatchSamples[patchSampleIdx];
 
                 // Only save the details of the sound if there was not a previous sound saved, or if we are forcing it
                 if ((patchSample.spu_addr == 0) || bOverride) {
@@ -141,9 +141,9 @@ int32_t wess_dig_lcd_data_read(
 
                     // Save the details of the sound to the sample block also, if it's given
                     if (pSampleBlock) {
-                        pSampleBlock->sampindx[pSampleBlock->numsamps] = patchIdx;
-                        pSampleBlock->samppos[pSampleBlock->numsamps] = (uint16_t)(patchSample.spu_addr / 8);
-                        pSampleBlock->numsamps++;
+                        pSampleBlock->patch_sample_idx[pSampleBlock->num_samples] = patchSampleIdx;
+                        pSampleBlock->sample_spu_addr_8[pSampleBlock->num_samples] = (uint16_t)(patchSample.spu_addr / 8);
+                        pSampleBlock->num_samples++;
                     }
                 }
             }
@@ -156,8 +156,8 @@ int32_t wess_dig_lcd_data_read(
             // Set the number of bytes to read, and where to upload it to in SPU ram when we are done.
             *gWess_lcd_load_soundNum += 1;
 
-            const int32_t nextPatchIdx = pSampleIndexes[*gWess_lcd_load_soundNum];
-            patch_sample& nextPatchSample = pPatchSamples[nextPatchIdx];
+            const int32_t nextPatchSampleIdx = pPatchSampleIndices[*gWess_lcd_load_soundNum];
+            patch_sample& nextPatchSample = pPatchSamples[nextPatchSampleIdx];
 
             *gWess_lcd_load_soundBytesLeft = nextPatchSample.size;
             *gWess_lcd_load_samplePos = destSpuAddr + sndDataOffset;
@@ -165,7 +165,7 @@ int32_t wess_dig_lcd_data_read(
             // If uploading this sound would cause us to go beyond the bounds of SPU ram then do not try to upload this sound
             #if PC_PSX_DOOM_MODS
                 // PC-PSX: I think this condition was slightly wrong?
-                const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + nextPatchSample.size + sndDataOffset > (int32_t) *gPsxSpu_sram_end);
+                const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + sndDataOffset + nextPatchSample.size  > (int32_t) *gPsxSpu_sram_end);
             #else
                 const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + nextPatchSample.size > (int32_t)(*gPsxSpu_sram_end + sndDataOffset));
             #endif
@@ -181,9 +181,9 @@ int32_t wess_dig_lcd_data_read(
         }
 
         // Upload to the SPU whatever samples we can from the sector.
-        // Either upload the whole sector or just a part of it (if it's bigger than the rest of thhe sound)
-        const uint16_t sampleIdx = pSampleIndexes[*gWess_lcd_load_soundNum];
-        const patch_sample& patchSample = pPatchSamples[sampleIdx];
+        // Either upload the whole sector or just a part of it (if it's bigger than the rest of the sound)
+        const uint16_t patchSampleIdx = pPatchSampleIndices[*gWess_lcd_load_soundNum];
+        const patch_sample& patchSample = pPatchSamples[patchSampleIdx];
 
         const uint32_t sndBytesLeft = (uint32_t) *gWess_lcd_load_soundBytesLeft;
         const uint32_t writeSize = (sectorBytesLeft > sndBytesLeft) ? sndBytesLeft : sectorBytesLeft;
@@ -266,8 +266,8 @@ int32_t wess_dig_lcd_load(
 
     // Read the LCD file header to sector buffer 1
     struct LCDHeader {
-        uint16_t    numPatches;
-        uint16_t    patchIndexes[MAX_LCD_SOUNDS];
+        uint16_t    numPatchSamples;
+        uint16_t    patchSampleIndices[MAX_LCD_SOUNDS];
     };
 
     LCDHeader* const pLcdHeader = (LCDHeader*) gWess_sectorBuffer1.get();
@@ -276,12 +276,12 @@ int32_t wess_dig_lcd_load(
         return 0;
 
     // If the number of sounds is not valid then abort
-    if (pLcdHeader->numPatches > MAX_LCD_SOUNDS)
+    if (pLcdHeader->numPatchSamples > MAX_LCD_SOUNDS)
         return 0;
 
     // Set the number of sounds to load globally and which buffer contains the LCD header.
     // Also initialize other variables used by 'wess_dig_lcd_data_read':
-    *gWess_lcd_load_numSounds = pLcdHeader->numPatches;
+    *gWess_lcd_load_numSounds = pLcdHeader->numPatchSamples;
     *gpWess_lcd_load_headerBuf = gWess_sectorBuffer1.get();
 
     *gWess_lcd_load_soundNum = 0;

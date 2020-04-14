@@ -93,8 +93,8 @@ static constexpr uint8_t gWess_seq_CmdLength[36] = {
 
 static_assert(C_ARRAY_SIZE(gWess_seq_CmdLength) == C_ARRAY_SIZE(gWess_DrvFunctions));
 
-const VmPtr<uint8_t>                    gWess_master_sfx_volume(0x80075A04);    // Master volume level for all sfx patches/sounds
-const VmPtr<uint8_t>                    gWess_master_mus_volume(0x80075A05);    // Master volume level for all music patches/sounds
+const VmPtr<uint8_t>                    gWess_master_sfx_volume(0x80075A04);    // Master volume level for all sfx voices
+const VmPtr<uint8_t>                    gWess_master_mus_volume(0x80075A05);    // Master volume level for all music voices
 const VmPtr<PanMode>                    gWess_pan_status(0x80075A06);           // Current pan mode
 const VmPtr<VmPtr<SavedVoiceList>>      gpWess_savedVoices(0x80075A10);         // Used to save and restore voice state when pausing or resuming sound playback
 
@@ -354,8 +354,8 @@ void Eng_StatusMark(track_status& trackStat) noexcept {
     // Try to find a matching active callback type to invoke
     const uint8_t maxCallbacks = mstat.pmodule->hdr.max_callbacks;
         
-    for (uint8_t callbackStatIdx = 0; callbackStatIdx < maxCallbacks; ++callbackStatIdx) {
-        callback_status& callbackStat = mstat.pcallback_stats[callbackStatIdx];
+    for (uint8_t i = 0; i < maxCallbacks; ++i) {
+        callback_status& callbackStat = mstat.pcallback_stats[i];
 
         // Ignore this callback if it's not active
         if (!callbackStat.active)
@@ -386,7 +386,7 @@ void Eng_StatusMark(track_status& trackStat) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Jump to a label if a specified boolean gate is set (value > 0).
-// If the gate is reset (value 0xFF) then it's value is also set to the value specified by the command.
+// If the gate is not initialized or 'reset' (value 0xFF) then it's value is also set to the value specified by the command.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_GateJump(track_status& trackStat) noexcept {
     sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
@@ -675,9 +675,9 @@ void Eng_SeqEnd(track_status& trackStat) noexcept {
     // Run through all of the active tracks in the sequence and mute them all
     uint8_t activeTracksLeftToVisit = seqStat.num_tracks_active;
 
-    for (uint32_t trackSlotIdx = 0; trackSlotIdx < mstat.max_tracks_per_seq; ++trackSlotIdx) {
+    for (uint32_t i = 0; i < mstat.max_tracks_per_seq; ++i) {
         // Ignore this track if not active
-        const uint8_t trackStatIdx = seqStat.ptrackstat_indices[trackSlotIdx];
+        const uint8_t trackStatIdx = seqStat.ptrackstat_indices[i];
 
         if (trackStatIdx == 0xFF)
             continue;

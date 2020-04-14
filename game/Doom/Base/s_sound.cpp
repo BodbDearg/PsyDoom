@@ -268,7 +268,7 @@ void S_StartMusic() noexcept {
 // Initializes the given sample block
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_InitSampleBlock(SampleBlock& block) noexcept {
-    block.numsamps = 0;
+    block.num_samples = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -276,10 +276,10 @@ void S_InitSampleBlock(SampleBlock& block) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_UnloadSampleBlock(SampleBlock& sampleBlock) noexcept {
     // Zero the patch address in SPU RAM for every single loaded sample:
-    while (sampleBlock.numsamps > 0) {
-        sampleBlock.numsamps--;
-        const uint32_t patchIdx = sampleBlock.sampindx[sampleBlock.numsamps];
-        wess_dig_set_sample_position(patchIdx, 0);
+    while (sampleBlock.num_samples > 0) {
+        sampleBlock.num_samples--;
+        const uint32_t patchSampleIdx = sampleBlock.patch_sample_idx[sampleBlock.num_samples];
+        wess_dig_set_sample_position(patchSampleIdx, 0);
     }
 }
 

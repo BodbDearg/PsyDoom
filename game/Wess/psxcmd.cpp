@@ -109,6 +109,7 @@ void add_music_mute_note(
 // Set the release rate or how fast fade out occurs when muting voices
 //------------------------------------------------------------------------------------------------------------------------------------------
 void wess_set_mute_release(const int32_t newReleaseRate) noexcept {
+    // TODO: make a constant for the scale value
     int32_t maxRate = 0x10000000;
     *gWess_drv_muteReleaseRate = 31;
 
@@ -158,6 +159,7 @@ void TriggerPSXVoice(const voice_status& voiceStat, [[maybe_unused]] const uint8
     if (*gWess_pan_status == PAN_OFF) {
         triggerPan = WESS_PAN_CENTER;
     } else {
+        // Note: deduct 'WESS_PAN_CENTER' since panning should be centered when both these settings are at the center
         triggerPan = (int16_t) trackStat.pan_cntrl + (int16_t) voiceStat.ppatch_voice->pan - WESS_PAN_CENTER;
         triggerPan = std::min(triggerPan, (int16_t) WESS_PAN_RIGHT);
         triggerPan = std::max(triggerPan, (int16_t) WESS_PAN_LEFT);
@@ -263,8 +265,8 @@ void PSX_DriverInit(master_status_structure& mstat) noexcept {
     // Determine the patch group info for the PSX hardware driver
     *gpWess_drv_patchGroup = nullptr;
 
-    for (uint8_t patchGrpIdx = 0; patchGrpIdx < numPatchGroups; ++patchGrpIdx) {
-        patch_group_data& patchGroup = mstat.ppatch_groups[patchGrpIdx];
+    for (uint8_t patchGroupIdx = 0; patchGroupIdx < numPatchGroups; ++patchGroupIdx) {
+        patch_group_data& patchGroup = mstat.ppatch_groups[patchGroupIdx];
 
         if (patchGroup.hdr.driver_id == PSX_ID) {
             *gpWess_drv_patchGroup = &patchGroup;
@@ -322,11 +324,11 @@ void PSX_DriverEntry1() noexcept {
         // Grab some stuff needed in the loop
         master_status_structure& mstat = *gpWess_drv_mstat->get();
 
-        uint8_t numActiveVoicesToVisit = mstat.num_active_voices;
+        uint8_t numActiveVoicesLeftToVisit = mstat.num_active_voices;
         const uint32_t curAbsTime = *gpWess_drv_cur_abstime_ms->get();
 
         // Turn off all applicable voices
-        if (numActiveVoicesToVisit > 0) {
+        if (numActiveVoicesLeftToVisit > 0) {
             for (uint32_t hwVoiceIdx = 0; hwVoiceIdx < maxHwVoices; ++hwVoiceIdx) {
                 voice_status& voiceStat = pHwVoiceStats[hwVoiceIdx];
                 
@@ -335,9 +337,9 @@ void PSX_DriverEntry1() noexcept {
                     PSX_voiceparmoff(voiceStat);
 
                     // If there are no active more voices left active then we are done
-                    numActiveVoicesToVisit--;
+                    numActiveVoicesLeftToVisit--;
 
-                    if (numActiveVoicesToVisit == 0)
+                    if (numActiveVoicesLeftToVisit == 0)
                         break;
                 }
             }
@@ -430,9 +432,9 @@ void PSX_TrkOff(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_TrkMute(track_status& trackStat) noexcept {
     // If there are no voices active in the track then there is nothing to do
-    uint32_t numActiveTrackVoices = trackStat.num_active_voices;
+    uint32_t numActiveVoicesToVisit = trackStat.num_active_voices;
 
-    if (numActiveTrackVoices == 0)
+    if (numActiveVoicesToVisit == 0)
         return;
 
     // Run through all PSX hardware voices and mute the ones belonging to this track
@@ -468,10 +470,10 @@ void PSX_TrkMute(track_status& trackStat) noexcept {
         PSX_voicerelease(voiceStat);
         *gWess_drv_voicesToMute |= 1 << (voiceStat.ref_idx % 32);
 
-        // If there are no more active voices in the track then we are done
-        numActiveTrackVoices--;
+        // If there are no more active voices to visit then we are done
+        numActiveVoicesToVisit--;
 
-        if (numActiveTrackVoices == 0)
+        if (numActiveVoicesToVisit == 0)
             return;
     }
 }
@@ -600,6 +602,7 @@ void PSX_VolumeMod(track_status& trackStat) noexcept {
         if (*gWess_pan_status == PAN_OFF) {
             currentPan = WESS_PAN_CENTER;
         } else {
+            // Note: deduct 'WESS_PAN_CENTER' since panning should be centered when both these settings are at the center
             currentPan = (int16_t) trackStat.pan_cntrl + (int16_t) voiceStat.ppatch_voice->pan - WESS_PAN_CENTER;
             currentPan = std::min(currentPan, (int16_t) WESS_PAN_RIGHT);
             currentPan = std::max(currentPan, (int16_t) WESS_PAN_LEFT);
