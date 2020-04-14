@@ -115,10 +115,26 @@ gameaction_t RunTitle() noexcept {
 // The maximum allowed demo size to be handled by this function is 16 KiB.
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
+    // PC-PSX: ensure this required graphic is loaded before starting the demo
+    #if PC_PSX_DOOM_MODS    
+        I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
+    #endif
+
     // Read the demo file contents (up to 16 KiB)
-    *gpDemoBuffer = (uint32_t*) Z_EndMalloc(**gpMainMemZone, 16 * 1024, PU_STATIC, nullptr);
+    constexpr uint32_t DEMO_BUFFER_SIZE = 16 * 1024;
+    *gpDemoBuffer = (uint32_t*) Z_EndMalloc(**gpMainMemZone, DEMO_BUFFER_SIZE, PU_STATIC, nullptr);
     const uint32_t openFileIdx = OpenFile(file);
-    ReadFile(openFileIdx, gpDemoBuffer->get(), 16 * 1024);
+
+    // PC-PSX: determine the file size to read and only read the actual size of the demo
+    #if PC_PSX_DOOM_MODS
+        // TODO: support larger demos by using native host memory
+        const int32_t fileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
+        SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::SET);
+        ReadFile(openFileIdx, gpDemoBuffer->get(), (fileSize < DEMO_BUFFER_SIZE) ? fileSize : DEMO_BUFFER_SIZE);
+    #else
+        ReadFile(openFileIdx, gpDemoBuffer->get(), 16 * 1024);
+    #endif
+    
     CloseFile(openFileIdx);
     
     // Play the demo, free the demo buffer and return the exit action
