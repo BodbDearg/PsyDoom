@@ -12,7 +12,7 @@
 #include "doomdef.h"
 #include "Game/g_game.h"
 #include "Game/p_tick.h"
-#include "PcPsx/Finally.h"
+#include "PcPsx/FileUtils.h"
 #include "PcPsx/ProgArgs.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
@@ -190,60 +190,26 @@ gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
         I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
     }
 
-    // TODO: make a separate utility function to read an entire file.
-    // Might need such logic elsewhere.
+    // Read the demo file into memory
+    std::byte* pDemoFileBytes = nullptr;    // TODO: use std::unique_ptr<> eventually: can't at the minute due to issues with the MIPS register macros
+    size_t demoFileSize = 0;
 
-    // Read the file into a buffer
-    FILE* const pFile = std::fopen(filePath, "rb");
-    uint8_t* pFileData = nullptr;   // TODO: use std::unique_ptr<> eventually: can't at the minute due to issues with the MIPS register macros
-
-    auto cleanupOnExit = finally([&]() noexcept {
-        if (pFile) {
-            std::fclose(pFile);
-        }
-
-        if (pFileData) {
-            delete[] pFileData;     // TODO: use std::unique_ptr<> eventually: can't at the minute due to issues with the MIPS register macros
-        }
-    });
-
-    if (!pFile) {
-        FATAL_ERROR_F("Unable to open demo file '%s'! Is the file path valid?", filePath);
-    }
-
-    // Read the entire demo file into a buffer
-    if (std::fseek(pFile, 0, SEEK_END) != 0) {
-        FATAL_ERROR_F("Error reading demo file '%s'!", filePath);
-    }
-
-    const int32_t fileSize = std::ftell(pFile);
-
-    if (fileSize <= 40) {
-        FATAL_ERROR_F("Invalid demo file '%s' - too small! Should be > 40 bytes!", filePath);
-    }
-
-    if (std::fseek(pFile, 0, SEEK_SET) != 0) {
-        FATAL_ERROR_F("Error reading demo file '%s'!", filePath);
-    }
-
-    pFileData = new uint8_t[fileSize];
-
-    if (std::fread(pFileData, fileSize, 1, pFile) != 1) {
-        FATAL_ERROR_F("Error reading demo file '%s'!", filePath);
+    if (!FileUtils::getContentsOfFile(filePath, pDemoFileBytes, demoFileSize)) {
+        FATAL_ERROR_F("Unable to read demo file '%s'! Is the file path valid?", filePath);
     }
 
     // Setup the demo buffers and play the demo file
-    gpDemoBuffer = (uint32_t*) pFileData;
-    gpDemoBufferEnd = (uint32_t*)(pFileData + fileSize);
+    gpDemoBuffer = (uint32_t*) pDemoFileBytes;
+    gpDemoBufferEnd = (uint32_t*)(pDemoFileBytes + demoFileSize);
 
     const gameaction_t exitAction = G_PlayDemoPtr();
 
     gpDemoBuffer = nullptr;
     gpDemoBufferEnd = nullptr;
-    
+    delete[] pDemoFileBytes;        // TODO: use std::unique_ptr<> eventually: can't at the minute due to issues with the MIPS register macros
+
     return exitAction;
 }
-
 #endif  // #if PC_PSX_DOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
