@@ -125,8 +125,10 @@ gameaction_t RunTitle() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
     // PC-PSX: ensure this required graphic is loaded before starting the demo
-    #if PC_PSX_DOOM_MODS    
-        I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
+    #if PC_PSX_DOOM_MODS
+        if (gTex_LOADING->texPageId == 0) {
+            I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
+        }
     #endif
 
     // Open the demo file
