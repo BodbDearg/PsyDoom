@@ -27,6 +27,7 @@ set(LIBSDL_TGT_NAME             SDL)
 set(MAGIC_ENUM_TGT_NAME         MagicEnum)
 set(PSXEXE_SIGMATCH_TGT_NAME    PSXExeSigMatcher)
 set(PSXOBJ_SIGGEN_TGT_NAME      PSXObjSigGen)
+set(RAPID_JSON_TGT_NAME         RapidJson)
 set(REVERSING_COMMON_TGT_NAME   ReversingCommon)
 
 # Adding individual projects and libraries
@@ -41,3 +42,4 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/fmt")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/glm")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/libsdl")
 add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/magic_enum")
+add_subdirectory("${PROJECT_SOURCE_DIR}/third_party_libs/rapidjson")
