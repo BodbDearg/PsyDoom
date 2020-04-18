@@ -1,5 +1,6 @@
 #pragma once
 
+// TODO: use BEGIN_NAMESPACE
 namespace FatalErrors {
     // Functions that can be called to handle fatal errors like out of memory.
     // The program will terminate after each fatal error type.

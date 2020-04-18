@@ -7,7 +7,7 @@
 #include "i_drawcmds.h"
 #include "PcPsx/Endian.h"
 #include "PcPsx/Finally.h"
-#include "PcPsx/ModMgr.h"
+#include "PcPsx/ProgArgs.h"
 #include "PcPsx/Video.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBAPI.h"
@@ -507,7 +507,7 @@ void I_DrawPresent() noexcept {
 
     // FIXME: remove the high fps hack eventually
     #if PC_PSX_DOOM_MODS
-        if (ModMgr::useHighFpsHack()) {
+        if (ProgArgs::gbUseHighFpsHack) {
     #endif
             // Hack/experiment with high frame rates - needs a lot of work
             {

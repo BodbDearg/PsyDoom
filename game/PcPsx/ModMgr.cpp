@@ -1,21 +1,22 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Mod manager: provides modding functionality for PSX DOOM.
+// Mod manager: provides modding functionality for PSX DOOM
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "ModMgr.h"
 
-#include "Macros.h"
-#include <cstdio>
-#include <cstring>
-#include <filesystem>
-#include <map>
-#include <string>
-#include <vector>
+#include "ProgArgs.h"
+
+BEGIN_THIRD_PARTY_INCLUDES
+    #include <cstdio>
+    #include <cstring>
+    #include <filesystem>
+    #include <map>
+    #include <vector>
+END_THIRD_PARTY_INCLUDES
+
+BEGIN_NAMESPACE(ModMgr)
 
 // Maximum number of files that can be open at once by the mod manager
 static constexpr uint8_t MAX_OPEN_FILES = 16;
-
-// The data dir to pull file overrides from
-static std::string gDataDirPath;
 
 // A list of booleans indicating whether each file in the game can be overriden by a file in the user given 'datadir'.
 // The list is indexed by a 'CdMapTbl_File' value. 
@@ -24,27 +25,6 @@ static std::vector<bool> gbFileHasOverrides;
 // A list of currently open files.
 // Only a certain amount are allowed at a time:
 static std::FILE* gOpenFileSlots[MAX_OPEN_FILES] = {};
-
-// TODO: replace with a proper config mechanism
-static bool gbUseHighFpsHack = false;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Parse the user supplied data directory command line argument.
-// This is specified as:
-//  -datadir <MY_DIRECTORY_PATH>
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void parseUserDataDirCommandLineArg(const int argc, const char** const argv) noexcept {
-    gDataDirPath.clear();
-
-    for (int argIdx = 1; argIdx < argc; ++argIdx) {        
-        if (std::strcmp("-datadir", argv[argIdx]) == 0) {
-            if (argIdx + 1 < argc) {
-                gDataDirPath = argv[argIdx + 1];
-                break;
-            }
-        }
-    }
-}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Determines what files in the game are overriden with files in a user supplied 'data directory', if any.
@@ -56,7 +36,7 @@ static void determineFileOverridesInUserDataDir() noexcept {
     gbFileHasOverrides.clear();
     gbFileHasOverrides.resize((uint32_t) CdMapTbl_File::END);
 
-    if (gDataDirPath.empty())
+    if (!ProgArgs::gDataDirPath[0])
         return;
     
     // Build a map from filename to file index
@@ -71,7 +51,7 @@ static void determineFileOverridesInUserDataDir() noexcept {
     try {
         typedef std::filesystem::directory_iterator DirIter;
 
-        DirIter dirIter(gDataDirPath);
+        DirIter dirIter(ProgArgs::gDataDirPath);
         const DirIter dirEndIter;
 
         while (dirIter != dirEndIter) {
@@ -88,7 +68,7 @@ static void determineFileOverridesInUserDataDir() noexcept {
         }
     }
     catch (...) {
-        FATAL_ERROR_F("Failed to search the given data/file overrides directory '%s'! Does this directory exist?", gDataDirPath.c_str());
+        FATAL_ERROR_F("Failed to search the given data/file overrides directory '%s'! Does this directory exist?", ProgArgs::gDataDirPath);
     }
 #endif
 }
@@ -117,20 +97,11 @@ static bool isValidOverridenFile(const PsxCd_File& file) noexcept {
     );
 }
 
-void ModMgr::init(const int argc, const char** const argv) noexcept {
-    parseUserDataDirCommandLineArg(argc, argv);
-
-    // TODO: remove this eventually
-    for (int32_t i = 1; i < argc; ++i) {
-        if (std::strcmp(argv[i], "-highfps") == 0) {
-            gbUseHighFpsHack = true;
-        }
-    }
-
+void init() noexcept {
     determineFileOverridesInUserDataDir();
 }
 
-void ModMgr::shutdown() noexcept {
+void shutdown() noexcept {
     // Close all open files
     for (std::FILE*& pFile : gOpenFileSlots) {
         if (pFile) {
@@ -142,26 +113,20 @@ void ModMgr::shutdown() noexcept {
     // Clear all data
     gbFileHasOverrides.clear();
     gbFileHasOverrides.shrink_to_fit();
-    gDataDirPath.clear();
-    gDataDirPath.shrink_to_fit();
 }
 
-bool ModMgr::useHighFpsHack() noexcept {
-    return gbUseHighFpsHack;
-}
-
-bool ModMgr::areOverridesAvailableForFile(const CdMapTbl_File discFile) noexcept {
+bool areOverridesAvailableForFile(const CdMapTbl_File discFile) noexcept {
     const uint32_t fileIdx = (uint32_t) discFile;
     return (fileIdx < gbFileHasOverrides.size() && gbFileHasOverrides[fileIdx]);
 }
 
-bool ModMgr::isFileOverriden(const PsxCd_File& file) noexcept {
+bool isFileOverriden(const PsxCd_File& file) noexcept {
     // The opened file is overriden if the track is set to 255.
     // This is how we mark the file as overriden.
     return (file.file.pos.track == 255);
 }
 
-bool ModMgr::openOverridenFile(const CdMapTbl_File discFile, PsxCd_File& fileOut) noexcept {
+bool openOverridenFile(const CdMapTbl_File discFile, PsxCd_File& fileOut) noexcept {
     // Grab a free open file slot index
     const uint8_t fileSlotIdx = findFreeOpenFileSlotIndex();
 
@@ -172,7 +137,7 @@ bool ModMgr::openOverridenFile(const CdMapTbl_File discFile, PsxCd_File& fileOut
 
     const char* const filename = CD_MAP_FILENAMES[(uint32_t) discFile];
 
-    std::string filePath = gDataDirPath;
+    std::string filePath = ProgArgs::gDataDirPath;
     filePath.push_back('/');
     filePath += filename;
     
@@ -217,7 +182,7 @@ bool ModMgr::openOverridenFile(const CdMapTbl_File discFile, PsxCd_File& fileOut
     return true;
 }
 
-void ModMgr::closeOverridenFile(PsxCd_File& file) noexcept {
+void closeOverridenFile(PsxCd_File& file) noexcept {
     ASSERT(isValidOverridenFile(file));
     std::FILE* const pFile = gOpenFileSlots[file.file.pos.minute];
     std::fclose(pFile);
@@ -225,13 +190,13 @@ void ModMgr::closeOverridenFile(PsxCd_File& file) noexcept {
     file = {};
 }
 
-int32_t ModMgr::readFromOverridenFile(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept {
+int32_t readFromOverridenFile(void* const pDest, int32_t numBytes, PsxCd_File& file) noexcept {
     ASSERT(isValidOverridenFile(file));
     std::FILE* const pFile = gOpenFileSlots[file.file.pos.minute];
     return (std::fread(pDest, (size_t) numBytes, 1, pFile) == 1) ? numBytes : -1;
 }
 
-int32_t ModMgr::seekForOverridenFile(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept {
+int32_t seekForOverridenFile(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) noexcept {
     ASSERT(isValidOverridenFile(file));
     std::FILE* const pFile = gOpenFileSlots[file.file.pos.minute];
     
@@ -244,8 +209,10 @@ int32_t ModMgr::seekForOverridenFile(PsxCd_File& file, int32_t offset, const Psx
     }
 }
 
-int32_t ModMgr::tellForOverridenFile(const PsxCd_File& file) noexcept {
+int32_t tellForOverridenFile(const PsxCd_File& file) noexcept {
     ASSERT(isValidOverridenFile(file));
     std::FILE* const pFile = gOpenFileSlots[file.file.pos.minute];
     return (int32_t) std::ftell(pFile);
 }
+
+END_NAMESPACE(ModMgr)
