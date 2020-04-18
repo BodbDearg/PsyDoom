@@ -16,7 +16,7 @@ As mentioned above the eventual goal of this project is convert the entire game 
 Longer term goals include support for Final Doom, proper modding support (I added some basic support so far!) and PSX DOOM engine limit removal. Once all those things have been done this project can also be forked to provide an 'enhanced' version of game with support for higher resolution, fixing of graphical glitches, support for widescreen and so on.
 
 ## How to build
-- Requires a recent CMake to generate the project (3.14 or higher)
+- Requires a recent CMake to generate the project (3.15 or higher)
 - Builds with Visual Studio 2017/2019 (Windows 64-bit) and also Xcode 11 on MacOS. Other platforms & IDEs not yet supported/tested.
 
 ## Running
@@ -54,7 +54,7 @@ Longer term goals include support for Final Doom, proper modding support (I adde
     - F7: Show all map lines
     - F8: VRAM Viewer (functionality hidden in retail)
 - Hacky/temp 'mods' system.
-    - You can override some files (currently .WAD and .IMG files only) by supplying the game with a directory containing those overrides.
+    - You can override any game files by supplying the game with a directory containing those overrides.
     - Specify the directory using the `-datadir <MY_DIRECTORY_PATH>` command line argument.
     - Put files in this folder (note: not in any child folders!) that you wish to override, e.g 'MAP01.WAD'.
     - If the game goes to load a file such as 'MAP01.WAD' and it is present in the overrides dir, then the on-disk version will be used instead.
