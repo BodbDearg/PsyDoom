@@ -25,6 +25,11 @@ void D_DoomMain() noexcept;
 gameaction_t RunLegals() noexcept;
 gameaction_t RunTitle() noexcept;
 gameaction_t RunDemo(const CdMapTbl_File file) noexcept;
+
+#if PC_PSX_DOOM_MODS
+    gameaction_t RunDemoAtPath(const char* const filePath) noexcept;
+#endif
+
 gameaction_t RunCredits() noexcept;
 void I_SetDebugDrawStringPos(const int32_t x, const int32_t y) noexcept;
 void I_DebugDrawString(const char* const fmtMsg, ...) noexcept;

@@ -16,8 +16,10 @@ bool gbUseHighFpsHack = false;
 
 // The data directory to pull file overrides for the file modding mechanism, empty string when there is none.
 // Any files placed in this directory matching original game file names will override the original game files.
-// Note: stored as a C-String since it's gotten directly from program arguments, which will always be valid for the lifetime of the program.
 const char* gDataDirPath = "";
+
+// The demo file to play and exit
+const char* gPlayDemoFile = "";
 
 // Format for a function that parses an argument.
 // Takes in the current arguments list pointer and the number of arguments left, which is always expected to be at least '1'.
@@ -42,10 +44,20 @@ static int parseArg_dataDir(const int argc, const char** const argv) {
     return 0;
 }
 
+static int parseArg_playDemoFile(const int argc, const char** const argv) {
+    if ((argc >= 2) && (std::strcmp(argv[0], "-playdemo") == 0)) {
+        gPlayDemoFile = argv[1];
+        return 2;
+    } 
+
+    return 0;
+}
+
 // A list of all the argument parsing functions
 static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_highFpsHack,
-    parseArg_dataDir
+    parseArg_dataDir,
+    parseArg_playDemoFile
 };
 
 void init(const int argc, const char** const argv) noexcept {

@@ -12,6 +12,8 @@
 #include "doomdef.h"
 #include "Game/g_game.h"
 #include "Game/p_tick.h"
+#include "PcPsx/Finally.h"
+#include "PcPsx/ProgArgs.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
@@ -82,6 +84,14 @@ void D_DoomMain() noexcept {
         gTicButtons[playerIdx] = 0;
         gOldTicButtons[playerIdx] = 0;
     }
+
+    // PC-PSX: play a single demo file and exit if commanded
+    #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gPlayDemoFile[0]) {
+            RunDemoAtPath(ProgArgs::gPlayDemoFile);
+            return;
+        }
+    #endif
 
     // TODO: PC-PSX: allow this loop to exit if the application is quit
     //
@@ -169,6 +179,72 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
 
     return exitAction;
 }
+
+#if PC_PSX_DOOM_MODS
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX: load and run the specified demo file at the specified path on the host machine
+//------------------------------------------------------------------------------------------------------------------------------------------
+gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
+    // Ensure this required graphic is loaded before starting the demo
+    if (gTex_LOADING->texPageId == 0) {
+        I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
+    }
+
+    // TODO: make a separate utility function to read an entire file.
+    // Might need such logic elsewhere.
+
+    // Read the file into a buffer
+    FILE* const pFile = std::fopen(filePath, "rb");
+    uint8_t* pFileData = nullptr;   // TODO: use std::unique_ptr<> eventually: can't at the minute due to issues with the MIPS register macros
+
+    auto cleanupOnExit = finally([&]() noexcept {
+        if (pFile) {
+            std::fclose(pFile);
+        }
+
+        if (pFileData) {
+            delete[] pFileData;     // TODO: use std::unique_ptr<> eventually: can't at the minute due to issues with the MIPS register macros
+        }
+    });
+
+    if (!pFile) {
+        FATAL_ERROR_F("Unable to open demo file '%s'! Is the file path valid?", filePath);
+    }
+
+    // Read the entire demo file into a buffer
+    if (std::fseek(pFile, 0, SEEK_END) != 0) {
+        FATAL_ERROR_F("Error reading demo file '%s'!", filePath);
+    }
+
+    const int32_t fileSize = std::ftell(pFile);
+
+    if (fileSize <= 40) {
+        FATAL_ERROR_F("Invalid demo file '%s' - too small! Should be > 40 bytes!", filePath);
+    }
+
+    if (std::fseek(pFile, 0, SEEK_SET) != 0) {
+        FATAL_ERROR_F("Error reading demo file '%s'!", filePath);
+    }
+
+    pFileData = new uint8_t[fileSize];
+
+    if (std::fread(pFileData, fileSize, 1, pFile) != 1) {
+        FATAL_ERROR_F("Error reading demo file '%s'!", filePath);
+    }
+
+    // Setup the demo buffers and play the demo file
+    gpDemoBuffer = (uint32_t*) pFileData;
+    gpDemoBufferEnd = (uint32_t*)(pFileData + fileSize);
+
+    const gameaction_t exitAction = G_PlayDemoPtr();
+
+    gpDemoBuffer = nullptr;
+    gpDemoBufferEnd = nullptr;
+    
+    return exitAction;
+}
+
+#endif  // #if PC_PSX_DOOM_MODS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Runs the credits screen
