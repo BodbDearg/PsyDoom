@@ -14,6 +14,12 @@ demosets = {
     "doom" : [
         [ "MAP01_01.LMP", "MAP01_01.result.json" ],
         [ "MAP02_01.LMP", "MAP02_01.result.json" ],
+        [ "MAP03_01.LMP", "MAP03_01.result.json" ],
+        [ "MAP04_01.LMP", "MAP04_01.result.json" ],
+        [ "MAP05_01.LMP", "MAP05_01.result.json" ],
+        [ "MAP06_01.LMP", "MAP06_01.result.json" ],
+        [ "MAP07_01.LMP", "MAP07_01.result.json" ],
+        [ "MAP08_01.LMP", "MAP08_01.result.json" ],
     ]
 }
 
