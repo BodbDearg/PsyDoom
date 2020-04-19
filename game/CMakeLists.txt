@@ -130,6 +130,8 @@ set(SOURCE_FILES
     "Doom/UI/st_main.h"
     "Doom/UI/ti_main.cpp"
     "Doom/UI/ti_main.h"
+    "PcPsx/DemoResult.cpp"
+    "PcPsx/DemoResult.h"
     "PcPsx/Endian.h"
     "PcPsx/FatalErrors.cpp"
     "PcPsx/FatalErrors.h"
@@ -224,8 +226,8 @@ target_compile_definitions(${GAME_TGT_NAME} PRIVATE
 # Specify include dirs
 include_directories(${INCLUDE_PATHS})
     
-# Link against Avocado
-target_link_libraries(${GAME_TGT_NAME} ${AVOCADO_TGT_NAME})
+# Required libraries
+target_link_libraries(${GAME_TGT_NAME} ${AVOCADO_TGT_NAME} ${RAPID_JSON_TGT_NAME})
 
 # MSVC use a lower warning level for this project temporarily
 if (COMPILER_MSVC)

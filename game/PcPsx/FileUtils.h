@@ -9,7 +9,7 @@ END_THIRD_PARTY_INCLUDES
 BEGIN_NAMESPACE(FileUtils)
 
 bool getContentsOfFile(
-    const char* const pFilePath,
+    const char* const filePath,
     std::byte*& pOutputMem,
     size_t& outputSize,
     const size_t numExtraBytes = 0,
@@ -17,7 +17,7 @@ bool getContentsOfFile(
 ) noexcept;
 
 bool writeDataToFile(
-    const char* const pFilePath,
+    const char* const filePath,
     const std::byte* const pData,
     const size_t dataSize,
     const bool bAppend = false

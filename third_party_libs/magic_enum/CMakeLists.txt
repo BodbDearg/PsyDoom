@@ -1,17 +1,3 @@
-set(BASE_DIR "magic_enum")
-set(INC_DIR "${BASE_DIR}/include")
-
-set(INCLUDE_PATHS
-    ${INC_DIR}
-)
-
-set(SOURCE_FILES
-    "${INC_DIR}/magic_enum.hpp"
-)
-
-set(OTHER_FILES
-)
-
+# Header only library: just need to define an include path
 add_library(${MAGIC_ENUM_TGT_NAME} INTERFACE)
-target_sources(${MAGIC_ENUM_TGT_NAME} INTERFACE ${SOURCE_FILES})
-target_include_directories(${MAGIC_ENUM_TGT_NAME} INTERFACE ${INCLUDE_PATHS})
+target_include_directories(${MAGIC_ENUM_TGT_NAME} INTERFACE "magic_enum/include")

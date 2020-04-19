@@ -6,7 +6,8 @@ BEGIN_NAMESPACE(ProgArgs)
 
 extern bool         gbUseHighFpsHack;
 extern const char*  gDataDirPath;
-extern const char*  gPlayDemoFile;
+extern const char*  gPlayDemoFilePath;
+extern const char*  gSaveDemoResultFilePath;
 
 void init(const int argc, const char** const argv) noexcept;
 void shutdown() noexcept;

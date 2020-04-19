@@ -18,15 +18,15 @@ bool gbUseHighFpsHack = false;
 // Any files placed in this directory matching original game file names will override the original game files.
 const char* gDataDirPath = "";
 
-// The demo file to play and exit
-const char* gPlayDemoFile = "";
+const char* gPlayDemoFilePath = "";         // Path to a file to save the demo result to
+const char* gSaveDemoResultFilePath = "";   // The demo file to play and exit
 
 // Format for a function that parses an argument.
 // Takes in the current arguments list pointer and the number of arguments left, which is always expected to be at least '1'.
 // Returns the number of arguments consumed.
 typedef int (*ArgParser)(const int argc, const char** const argv);
 
-static int parseArg_highFpsHack([[maybe_unused]] const int argc, const char** const argv) {
+static int parseArg_highfps([[maybe_unused]] const int argc, const char** const argv) {
     if (std::strcmp(argv[0], "-highfps") == 0) {
         gbUseHighFpsHack = true;
         return 1;
@@ -35,7 +35,7 @@ static int parseArg_highFpsHack([[maybe_unused]] const int argc, const char** co
     return 0;
 }
 
-static int parseArg_dataDir(const int argc, const char** const argv) {
+static int parseArg_datadir(const int argc, const char** const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-datadir") == 0)) {
         gDataDirPath = argv[1];
         return 2;
@@ -44,9 +44,18 @@ static int parseArg_dataDir(const int argc, const char** const argv) {
     return 0;
 }
 
-static int parseArg_playDemoFile(const int argc, const char** const argv) {
+static int parseArg_playdemo(const int argc, const char** const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-playdemo") == 0)) {
-        gPlayDemoFile = argv[1];
+        gPlayDemoFilePath = argv[1];
+        return 2;
+    } 
+
+    return 0;
+}
+
+static int parseArg_saveresult(const int argc, const char** const argv) {
+    if ((argc >= 2) && (std::strcmp(argv[0], "-saveresult") == 0)) {
+        gSaveDemoResultFilePath = argv[1];
         return 2;
     } 
 
@@ -55,9 +64,10 @@ static int parseArg_playDemoFile(const int argc, const char** const argv) {
 
 // A list of all the argument parsing functions
 static constexpr ArgParser ARG_PARSERS[] = {
-    parseArg_highFpsHack,
-    parseArg_dataDir,
-    parseArg_playDemoFile
+    parseArg_highfps,
+    parseArg_datadir,
+    parseArg_playdemo,
+    parseArg_saveresult
 };
 
 void init(const int argc, const char** const argv) noexcept {

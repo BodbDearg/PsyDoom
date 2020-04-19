@@ -18,6 +18,8 @@
 #include "p_sight.h"
 #include "p_spec.h"
 #include "p_user.h"
+#include "PcPsx/DemoResult.h"
+#include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
@@ -586,6 +588,15 @@ void P_Start() noexcept {
 void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     // Finish up any GPU related work
     LIBGPU_DrawSync(0);
+
+    // PC-PSX: save/check demo result if requested
+    #if PC_PSX_DOOM_MODS
+        if ((*gbDemoPlayback) || (*gbDemoRecording)) {
+            if (ProgArgs::gSaveDemoResultFilePath[0]) {
+                DemoResult::saveToJsonFile(ProgArgs::gSaveDemoResultFilePath);
+            }
+        }
+    #endif
     
     // Stop all sounds and music
     S_StopAll();

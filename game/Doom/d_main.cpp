@@ -87,8 +87,8 @@ void D_DoomMain() noexcept {
 
     // PC-PSX: play a single demo file and exit if commanded
     #if PC_PSX_DOOM_MODS
-        if (ProgArgs::gPlayDemoFile[0]) {
-            RunDemoAtPath(ProgArgs::gPlayDemoFile);
+        if (ProgArgs::gPlayDemoFilePath[0]) {
+            RunDemoAtPath(ProgArgs::gPlayDemoFilePath);
             return;
         }
     #endif

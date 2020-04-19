@@ -20,20 +20,20 @@ BEGIN_NAMESPACE(FileUtils)
 //  (3) The output size does NOT include the extra bytes added.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool getContentsOfFile(
-    const char* const pFilePath,
+    const char* const filePath,
     std::byte*& pOutputMem,
     size_t& outputSize,
     const size_t numExtraBytes,
     const std::byte extraBytesValue
 ) noexcept {
-    ASSERT(pFilePath);
+    ASSERT(filePath);
 
     // Clear output firstly
     pOutputMem = nullptr;
     outputSize = 0;
 
     // Open the file firstly and ensure it will be closed on exit    
-    FILE* pFile = std::fopen(pFilePath, "rb");
+    FILE* pFile = std::fopen(filePath, "rb");
 
     if (!pFile) {
         return false;
@@ -79,15 +79,15 @@ bool getContentsOfFile(
 // Returns 'true' on success.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool writeDataToFile(
-    const char* const pFilePath,
+    const char* const filePath,
     const std::byte* const pData,
     const size_t dataSize,
     const bool bAppend
 ) noexcept {
-    ASSERT(pFilePath);
+    ASSERT(filePath);
 
     // Open the file firstly and ensure it will be closed on exit    
-    FILE* pFile = std::fopen(pFilePath, bAppend ? "ab" : "wb");
+    FILE* pFile = std::fopen(filePath, bAppend ? "ab" : "wb");
 
     if (!pFile) {
         return false;
