@@ -14,6 +14,10 @@ BEGIN_NAMESPACE(ProgArgs)
 // TODO: Eventually support any framerate and interpolate.
 bool gbUseHighFpsHack = false;
 
+// If true then run the game without sound or graphics.
+// Can only be used for single demo playback, the main game won't run in this mode;
+bool gbHeadlessMode = false;
+
 // The data directory to pull file overrides for the file modding mechanism, empty string when there is none.
 // Any files placed in this directory matching original game file names will override the original game files.
 const char* gDataDirPath = "";
@@ -30,6 +34,15 @@ typedef int (*ArgParser)(const int argc, const char** const argv);
 static int parseArg_highfps([[maybe_unused]] const int argc, const char** const argv) {
     if (std::strcmp(argv[0], "-highfps") == 0) {
         gbUseHighFpsHack = true;
+        return 1;
+    } 
+
+    return 0;
+}
+
+static int parseArg_headless([[maybe_unused]] const int argc, const char** const argv) {
+    if (std::strcmp(argv[0], "-headless") == 0) {
+        gbHeadlessMode = true;
         return 1;
     } 
 
@@ -75,6 +88,7 @@ static int parseArg_checkresult(const int argc, const char** const argv) {
 // A list of all the argument parsing functions
 static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_highfps,
+    parseArg_headless,
     parseArg_datadir,
     parseArg_playdemo,
     parseArg_saveresult,

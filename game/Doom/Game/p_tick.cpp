@@ -537,6 +537,17 @@ gameaction_t P_Ticker() noexcept {
 // Does all drawing for main gameplay
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_Drawer() noexcept {
+    // PC-PSX: no drawing in headless mode, but do advance the elapsed time.
+    // Keep the framerate at 15-Hz for consistent demo playback (4 60Hz vblanks).
+    #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gbHeadlessMode) {
+            *gTotalVBlanks += 4;
+            *gLastTotalVBlanks = *gTotalVBlanks;
+            *gElapsedVBlanks = 4;
+            return;
+        }
+    #endif
+
     I_IncDrawnFrameCount();
 
     // Draw either the automap or 3d view, depending on whether the automap is active or not

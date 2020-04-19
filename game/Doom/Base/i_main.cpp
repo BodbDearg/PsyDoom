@@ -462,6 +462,12 @@ void I_DrawSprite(
 // Useful for drawing a loading message before doing a long running load or connect operation.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos, const int16_t clutId) noexcept {
+    // PC-PSX: ignore in headless mdoe
+    #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gbHeadlessMode)
+            return;
+    #endif
+
     // Make sure the GPU is idle and copy the front buffer to the back buffer, will draw over that
     LIBGPU_DrawSync(0);
 

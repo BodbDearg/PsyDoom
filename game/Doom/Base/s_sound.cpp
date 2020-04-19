@@ -6,6 +6,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "i_main.h"
 #include "m_fixed.h"
+#include "PcPsx/ProgArgs.h"
 #include "PsxVm/PsxVm.h"
 #include "sounds.h"
 #include "Wess/lcdload.h"
@@ -257,6 +258,12 @@ void S_StopMusic() noexcept {
 // Start playing the selected music track (stops if currently playing)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_StartMusic() noexcept {
+    // PC-PSX: ignore this command in headless mode
+    #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gbHeadlessMode)
+            return;
+    #endif
+
     S_StopMusic();
 
     if (*gCurMusicSeqIdx != 0) {
@@ -287,6 +294,12 @@ void S_UnloadSampleBlock(SampleBlock& sampleBlock) noexcept {
 // Loads all sound and music for the given map number (Note: '0' if menu, '60' if finale)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
+    // PC-PSX: ignore this command in headless mode
+    #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gbHeadlessMode)
+            return;
+    #endif
+
     // If sound and music is already loaded then bail out
     if (*gLoadedSoundAndMusMapNum == mapIdx)
         return;
@@ -380,6 +393,12 @@ void S_StopAll() noexcept {
 // I've just removed this unknown 3rd param here for this reimplementation, since it serves no purpose.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept {
+    // PC-PSX: ignore this command in headless mode
+    #if PC_PSX_DOOM_MODS    
+        if (ProgArgs::gbHeadlessMode)
+            return;
+    #endif
+
     // Ignore the request if the sound sequence number is invalid
     if (soundId >= NUMSFX)
         return;

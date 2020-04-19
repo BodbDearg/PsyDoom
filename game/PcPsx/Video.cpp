@@ -1,5 +1,7 @@
 #include "Video.h"
 
+#include "ProgArgs.h"
+
 #define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
@@ -123,8 +125,12 @@ static void copyPsxToSdlFramebuffer() noexcept {
 }
 
 void handleSdlWindowEvents() noexcept {
+    // Ignore call in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
     // TODO: handle events and maybe move this elsewhere
-    SDL_Event event = {};    
+    SDL_Event event = {};
 
     while (SDL_PollEvent(&event) != 0) {
         // TODO: temp hack to allow quitting
@@ -136,6 +142,10 @@ void handleSdlWindowEvents() noexcept {
 }
 
 void doFrameRateLimiting() noexcept {
+    // Ignore call in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
     // Make sure sound is up to date on entry
     emulate_sound_if_required();
 
@@ -164,6 +174,10 @@ void doFrameRateLimiting() noexcept {
 }
 
 void initVideo() noexcept {
+    // Ignore call in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
     // Initialize SDL subsystems
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
         FATAL_ERROR("Unable to initialize SDL!");
@@ -235,6 +249,11 @@ void initVideo() noexcept {
 }
 
 void shutdownVideo() noexcept {
+    // Ignore call in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
+    // Do the cleanup
     gpFrameBuffer = nullptr;
     
     if (gRenderer) {
@@ -252,8 +271,13 @@ void shutdownVideo() noexcept {
     gOutputRect = {};
 }
 
-void displayFramebuffer() noexcept {    
-    handleSdlWindowEvents();    
+void displayFramebuffer() noexcept {
+    // Ignore call in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
+    // Otherwise handle
+    handleSdlWindowEvents();
     copyPsxToSdlFramebuffer();
     presentSdlFramebuffer();
     emulate_sound_if_required();

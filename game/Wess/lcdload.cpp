@@ -8,6 +8,7 @@
 
 #include "Doom/cdmaptbl.h"
 #include "PcPsx/Finally.h"
+#include "PcPsx/ProgArgs.h"
 #include "psxcd.h"
 #include "psxspu.h"
 #include "PsyQ/LIBCD.h"
@@ -251,6 +252,10 @@ int32_t wess_dig_lcd_load(
     SampleBlock* const pSampleBlock,
     const bool bOverride
 ) noexcept {
+    // Ignore this command in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return 0;
+
     // Open the LCD file firstly and abort if that fails or the file handle returned is invalid
     PsxCd_File* const pLcdFile = psxcd_open(lcdFileToLoad);
 

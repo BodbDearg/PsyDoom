@@ -85,12 +85,16 @@ void D_DoomMain() noexcept {
         gOldTicButtons[playerIdx] = 0;
     }
 
-    // PC-PSX: play a single demo file and exit if commanded
+    // PC-PSX: play a single demo file and exit if commanded.
+    // Also, if in headless mode then don't run the main game - only single demo playback is allowed.
     #if PC_PSX_DOOM_MODS
         if (ProgArgs::gPlayDemoFilePath[0]) {
             RunDemoAtPath(ProgArgs::gPlayDemoFilePath);
             return;
         }
+
+        if (ProgArgs::gbHeadlessMode)
+            return;
     #endif
 
     // TODO: PC-PSX: allow this loop to exit if the application is quit
