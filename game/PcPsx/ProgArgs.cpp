@@ -18,8 +18,9 @@ bool gbUseHighFpsHack = false;
 // Any files placed in this directory matching original game file names will override the original game files.
 const char* gDataDirPath = "";
 
-const char* gPlayDemoFilePath = "";         // Path to a file to save the demo result to
-const char* gSaveDemoResultFilePath = "";   // The demo file to play and exit
+const char* gPlayDemoFilePath = "";             // The demo file to play and exit
+const char* gSaveDemoResultFilePath = "";       // Path to a json file to save the demo result to
+const char* gCheckDemoResultFilePath = "";      // Path to a json file to read the demo result from and verify a match with
 
 // Format for a function that parses an argument.
 // Takes in the current arguments list pointer and the number of arguments left, which is always expected to be at least '1'.
@@ -62,12 +63,22 @@ static int parseArg_saveresult(const int argc, const char** const argv) {
     return 0;
 }
 
+static int parseArg_checkresult(const int argc, const char** const argv) {
+    if ((argc >= 2) && (std::strcmp(argv[0], "-checkresult") == 0)) {
+        gCheckDemoResultFilePath = argv[1];
+        return 2;
+    } 
+
+    return 0;
+}
+
 // A list of all the argument parsing functions
 static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_highfps,
     parseArg_datadir,
     parseArg_playdemo,
-    parseArg_saveresult
+    parseArg_saveresult,
+    parseArg_checkresult
 };
 
 void init(const int argc, const char** const argv) noexcept {

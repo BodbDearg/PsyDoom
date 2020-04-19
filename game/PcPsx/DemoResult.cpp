@@ -12,6 +12,7 @@
 #include "DemoResult.h"
 
 #include "Doom/Game/g_game.h"
+#include "FileUtils.h"
 #include "Finally.h"
 
 BEGIN_THIRD_PARTY_INCLUDES
@@ -22,6 +23,13 @@ END_THIRD_PARTY_INCLUDES
 
 BEGIN_NAMESPACE(DemoResult)
 
+// Default 'null' value that can be returned when looking up json fields
+static const rapidjson::Value JSON_NULL(rapidjson::kNullType);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Save the demo result consisting of the the player's main attributes to the given json file.
+// Returns 'false' on failure to save.
+//------------------------------------------------------------------------------------------------------------------------------------------
 bool saveToJsonFile(const char* const jsonFilePath) noexcept {
     // Create the json document
     rapidjson::Document document;
@@ -65,22 +73,22 @@ bool saveToJsonFile(const char* const jsonFilePath) noexcept {
             rapidjson::Value cardsJson(rapidjson::kArrayType);
 
             for (int32_t i = 0; i < NUMCARDS; ++i) {
-                cardsJson.PushBack((player.cards[i] != 0), allocator);
+                cardsJson.PushBack(player.cards[i], allocator);
             }
 
             playerJson.AddMember("cards", cardsJson, allocator);
         }
 
         // Backpack ownership and equipped weapon
-        playerJson.AddMember("backpack", (player.backpack != 0), allocator);
+        playerJson.AddMember("backpack", player.backpack, allocator);
         playerJson.AddMember("readyweapon", player.readyweapon, allocator);
 
         // Which weapons are owned
         {
             rapidjson::Value weaponownedJson(rapidjson::kArrayType);
 
-            for (int32_t i = 0; i < NUMCARDS; ++i) {
-                weaponownedJson.PushBack((player.weaponowned[i] != 0), allocator);
+            for (int32_t i = 0; i < NUMWEAPONS; ++i) {
+                weaponownedJson.PushBack(player.weaponowned[i], allocator);
             }
 
             playerJson.AddMember("weaponowned", weaponownedJson, allocator);
@@ -90,7 +98,7 @@ bool saveToJsonFile(const char* const jsonFilePath) noexcept {
         {
             rapidjson::Value ammoJson(rapidjson::kArrayType);
 
-            for (int32_t i = 0; i < NUMCARDS; ++i) {
+            for (int32_t i = 0; i < NUMAMMO; ++i) {
                 ammoJson.PushBack(player.ammo[i], allocator);
             }
 
@@ -130,7 +138,111 @@ bool saveToJsonFile(const char* const jsonFilePath) noexcept {
     return true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the specified field from the given json object.
+// Returns a 'null' json value on failure.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static const rapidjson::Value& getJsonFieldOrNull(const rapidjson::Value& jsonObj, const char* const fieldName) noexcept {
+    if (!jsonObj.IsObject())
+        return JSON_NULL;
+
+    auto iter = jsonObj.FindMember(fieldName);
+
+    if (iter == jsonObj.MemberEnd())
+        return JSON_NULL;
+    
+    return iter->value;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Verify a single field inside the given json object matches the expected value
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static bool verifyJsonFieldMatches(const rapidjson::Value& jsonObj, const char* const fieldName, const T expectedVal) noexcept {
+    const rapidjson::Value& field = getJsonFieldOrNull(jsonObj, fieldName);
+    return (field.Is<T>() && (field.Get<T>() == expectedVal));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Verify an array field inside the given json object matches the expected value
+//------------------------------------------------------------------------------------------------------------------------------------------
+template <class T>
+static bool verifyJsonArrayFieldMatches(
+    const rapidjson::Value& jsonObj,
+    const char* const arrayFieldName,
+    const T* const expectedValues,
+    const unsigned arraySize
+) {
+    const rapidjson::Value& field = getJsonFieldOrNull(jsonObj, arrayFieldName);
+
+    if ((!field.IsArray()) || (field.Size() != arraySize))
+        return false;
+
+    for (unsigned i = 0; i < arraySize; ++i) {
+        const rapidjson::Value& arrayValue = field[i];
+        
+        if ((!arrayValue.Is<T>()) || (arrayValue.Get<T>() != expectedValues[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Verify the current demo result consisting of the the player's main attributes matches the one stored in the given json file.
+// Returns 'true' if the result matches.
+//------------------------------------------------------------------------------------------------------------------------------------------
 bool verifyMatchesJsonFileResult(const char* const jsonFilePath) noexcept {
+    // Read the input json file
+    std::byte* pJsonFileBytes = nullptr;
+    size_t jsonFileSize = 0;
+
+    if (!FileUtils::getContentsOfFile(jsonFilePath, pJsonFileBytes, jsonFileSize, 8, (std::byte) 0))
+        return false;
+
+    auto freeJsonMem = finally([&]() noexcept {
+        delete[] pJsonFileBytes;
+    });
+
+    // Parse the json
+    rapidjson::Document document;
+
+    if (document.ParseInsitu((char*) pJsonFileBytes).HasParseError())
+        return false;
+
+    // Validate everything
+    if (!document.HasMember("player"))
+        return false;
+
+    // Validate the demo result
+    player_t& player = gPlayers[0];
+    mobj_t& mobj = *player.mo;
+
+    rapidjson::Value& playerJson = document["player"];
+
+    return (
+        verifyJsonFieldMatches(playerJson, "x", mobj.x) &&
+        verifyJsonFieldMatches(playerJson, "y", mobj.y) &&
+        verifyJsonFieldMatches(playerJson, "z", mobj.z) &&
+        verifyJsonFieldMatches(playerJson, "angle", mobj.angle) &&
+        verifyJsonFieldMatches(playerJson, "momx", mobj.momx) &&
+        verifyJsonFieldMatches(playerJson, "momy", mobj.momy) &&
+        verifyJsonFieldMatches(playerJson, "momz", mobj.momz) &&
+        verifyJsonFieldMatches(playerJson, "health", mobj.health) &&
+        verifyJsonFieldMatches(playerJson, "armorpoints", player.armorpoints) &&
+        verifyJsonFieldMatches(playerJson, "armortype", player.armortype) &&
+        verifyJsonArrayFieldMatches(playerJson, "powers", player.powers, NUMPOWERS) &&
+        verifyJsonArrayFieldMatches(playerJson, "cards", player.cards, NUMCARDS) &&
+        verifyJsonFieldMatches(playerJson, "backpack", player.backpack) &&
+        verifyJsonFieldMatches(playerJson, "readyweapon", (int32_t) player.readyweapon) &&
+        verifyJsonArrayFieldMatches(playerJson, "weaponowned", player.weaponowned, NUMWEAPONS) &&
+        verifyJsonArrayFieldMatches(playerJson, "ammo", player.ammo, NUMAMMO) &&
+        verifyJsonFieldMatches(playerJson, "killcount", player.killcount) &&
+        verifyJsonFieldMatches(playerJson, "itemcount", player.itemcount) &&
+        verifyJsonFieldMatches(playerJson, "secretcount", player.secretcount)
+    );
+
     return true;
 }
 

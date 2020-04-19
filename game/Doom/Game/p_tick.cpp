@@ -596,6 +596,13 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
                 DemoResult::saveToJsonFile(ProgArgs::gSaveDemoResultFilePath);
             }
         }
+
+        if ((*gbDemoPlayback) && ProgArgs::gCheckDemoResultFilePath[0]) {
+            if (!DemoResult::verifyMatchesJsonFileResult(ProgArgs::gCheckDemoResultFilePath)) {
+                // If checking the demo result fails, return code '1' to indicate a failure
+                std::exit(1);
+            }
+        }
     #endif
     
     // Stop all sounds and music

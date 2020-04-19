@@ -34,15 +34,16 @@
             true,
             false,
             true,
+            false,
+            false,
+            false,
             false
         ],
         "ammo": [
             110,
             49,
             0,
-            0,
-            200,
-            50
+            0
         ],
         "killcount": 37,
         "itemcount": 12,
