@@ -19,25 +19,25 @@
             0
         ],
         "cards": [
-            false,
-            false,
-            false,
-            false,
-            false,
-            false
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
         ],
-        "backpack": false,
+        "backpack": 0,
         "readyweapon": 2,
         "weaponowned": [
-            true,
-            true,
-            true,
-            false,
-            true,
-            false,
-            false,
-            false,
-            false
+            1,
+            1,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
         ],
         "ammo": [
             110,
