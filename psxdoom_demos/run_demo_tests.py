@@ -58,6 +58,10 @@ demosets = {
         [ "MAP44_01.LMP", "MAP44_01.result.json" ],
         [ "MAP45_01.LMP", "MAP45_01.result.json" ],
         [ "MAP46_01.LMP", "MAP46_01.result.json" ],
+        [ "MAP47_01.LMP", "MAP47_01.result.json" ],
+        [ "MAP48_01.LMP", "MAP48_01.result.json" ],
+        [ "MAP49_01.LMP", "MAP49_01.result.json" ],
+        [ "MAP50_01.LMP", "MAP50_01.result.json" ],
     ]
 }
 
