@@ -22,7 +22,17 @@ std::vector<int16_t> decode(uint8_t buffer[16], int32_t prevSample[2]) {
     auto filter = (buffer[0] & 0x70) >> 4;  // 0x40 for xa adpcm
     if (shift > 12) shift = 9;
 
-    assert(filter <= 4);
+    // DOOM: this assert was firing on very rare occasions and terminating the game in debug - disable.
+    // The assert triggers on MAP46 "The Courtyard" on killing Cacodemons, when the game tries to trigger the Caco death sound.
+    // If I disable the assert the Caco death sound simply doesn't play or is silent. This also appears to be the behavior of the
+    // game on real hardware from videos I've seen of the level on YouTube.
+    // 
+    // I'm not sure what is wrong with that particular level in the game, and why it is triggering this assert.
+    // Perhaps it has some junk sound data or something like that?
+    #if !DOOM_AVOCADO_MODS
+        assert(filter <= 4);
+    #endif
+
     if (filter > 4) filter = 4;  // TODO: Not sure, check behaviour on real HW
 
     auto filterPos = filterTablePos[filter];
