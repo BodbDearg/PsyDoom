@@ -7,22 +7,14 @@
 #include "PsxVm.h"
 
 #include "PcPsx/Macros.h"
-#include <cstdlib>
+#include "PcPsx/ProgArgs.h"
 
-// Disabling certain Avocado warnings for MSVC
-#ifdef _MSC_VER
-    #pragma warning(push)
-    #pragma warning(disable: 4201)
-    #pragma warning(disable: 4244)
-#endif
-
-#include <cpu/instructions.h>
-#include <sound/sound.h>
-#include <system.h>
-
-#ifdef _MSC_VER
-    #pragma warning(pop)
-#endif
+BEGIN_THIRD_PARTY_INCLUDES
+    #include <cpu/instructions.h>
+    #include <cstdlib>
+    #include <sound/sound.h>
+    #include <system.h>
+END_THIRD_PARTY_INCLUDES
 
 // External function required from LIBCD.
 // This is a slight layering violation (this module should not know app code) but is required for correct functionality.
@@ -466,6 +458,10 @@ void emulate_timers(const int numCycles) noexcept {
 }
 
 void emulate_sound_if_required() noexcept {
+    // Do no sound emulation in headless mode
+    if (ProgArgs::gbHeadlessMode)
+        return;
+
     // Update timer events while we are at it - that might affect the sound sequencer
     generate_timer_events();
 

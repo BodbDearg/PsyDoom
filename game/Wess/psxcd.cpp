@@ -5,6 +5,7 @@
 
 #include "Doom/cdmaptbl.h"
 #include "PcPsx/ModMgr.h"
+#include "PcPsx/ProgArgs.h"
 #include "PcPsx/Types.h"
 #include "psxspu.h"
 #include "PsxVm/VmPtr.h"
@@ -1047,6 +1048,12 @@ void psxcd_play_at_andloop(
     const int32_t loopSectorOffest,
     const int32_t loopFadeUpTime
 ) noexcept {
+    // PC-PSX: ignore command in headless mode
+    #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gbHeadlessMode)
+            return;
+    #endif
+
     // If this is an invalid track then do nothing
     const CdlLOC& trackLoc = gTrackCdlLOC[track];
 
@@ -1092,6 +1099,12 @@ void psxcd_play_at_andloop(
 // A sector offset can also be specified to begin from a certain location in the track.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_play_at(const int32_t track, const int32_t vol, const int32_t sectorOffset) noexcept {
+    // PC-PSX: ignore command in headless mode
+    #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gbHeadlessMode)
+            return;
+    #endif
+
     // If this is an invalid track then do nothing
     const CdlLOC& trackLoc = gTrackCdlLOC[track];
 
@@ -1139,6 +1152,12 @@ void psxcd_play(const int32_t track, const int32_t vol) noexcept {
 // Seek to the specified offset within a cd audio track in preparation for playback
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_seek_for_play_at(const int32_t track, const int32_t sectorOffset) noexcept {
+    // PC-PSX: ignore command in headless mode
+    #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gbHeadlessMode)
+            return;
+    #endif
+
     // If this is an invalid track then do nothing
     const CdlLOC& trackLoc = gTrackCdlLOC[track];
 

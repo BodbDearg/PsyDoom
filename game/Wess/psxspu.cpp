@@ -4,6 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "PSXSPU.h"
 
+#include "PcPsx/ProgArgs.h"
 #include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBSPU.h"
@@ -257,6 +258,12 @@ int32_t psxspu_get_cd_vol() noexcept {
 // Begin doing a fade of cd music to the specified volume in the specified amount of time
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_start_cd_fade(const int32_t fadeTimeMs, const int32_t destVol) noexcept {
+    // PC-PSX: ignore the command in headless mode
+    #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gbHeadlessMode)
+            return;
+    #endif
+
     *gbPsxSpu_timer_callback_enabled = false;
 
     if (*gbWess_WessTimerActive) {
@@ -285,11 +292,15 @@ void psxspu_stop_cd_fade() noexcept {
 // Returns 'true' if the cd audio fade out is still ongoing, 'false' otherwise
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool psxspu_get_cd_fade_status() noexcept {
-    // Emulate sound a little in case calling code is polling in a loop waiting for changed spu status
+    // PC-PSX: never fade in headless mode.
+    // Also emulate sound a little in case calling code is polling in a loop waiting for changed spu status.
     #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gbHeadlessMode)
+            return false;
+
         emulate_sound_if_required();
     #endif
-
+    
     return (*gPsxSpu_cd_fade_ticks_left > 1);
 }
 
