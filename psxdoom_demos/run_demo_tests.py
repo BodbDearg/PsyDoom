@@ -8,6 +8,10 @@
 import os
 import subprocess
 import sys
+import time
+
+# Start execution time
+start_time = time.time()
 
 # These are the lists of demo sets and expected result files
 demosets = {
@@ -62,3 +66,7 @@ if all_tests_passed:
     print("All tests executed successfully!")
 else:
     print("Some tests FAILED! Overall result is FAIL!")
+
+# Print time taken
+time_taken = time.time() - start_time
+print("Time taken: {0:f} seconds".format(time_taken))
