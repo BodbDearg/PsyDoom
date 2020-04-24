@@ -17,7 +17,7 @@
 #include "r_things.h"
 
 // Incremented whenever checks are made
-const VmPtr<uint32_t>   gValidCount(0x80077BC4);
+const VmPtr<int32_t>    gValidCount(0x80077BC4);
 
 // View properties
 const VmPtr<VmPtr<player_t>>    gpViewPlayer(0x80077F34);

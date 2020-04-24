@@ -10,9 +10,20 @@
 #include "p_shoot.h"
 #include "PsxVm/PsxVm.h"
 
-static const VmPtr<divline_t>   gSTrace(0x80097C00);    // The start point and vector for sight checking
-static const VmPtr<fixed_t>     gT2x(0x80078100);       // End point for sight checking: x
-static const VmPtr<fixed_t>     gT2y(0x80078108);       // End point for sight checking: y
+BEGIN_THIRD_PARTY_INCLUDES
+    #include <algorithm>
+END_THIRD_PARTY_INCLUDES
+
+static const VmPtr<fixed_t>     gSightZStart(0x80078020);   // Z position of thing looking
+static const VmPtr<fixed_t>     gTopSlope(0x800781E0);      // Maximum/top unblocked viewing slope (clipped against upper walls)
+static const VmPtr<fixed_t>     gBottomSlope(0x80078008);   // Minimum/bottom unblocked viewing slope (clipped against lower walls)
+static const VmPtr<divline_t>   gSTrace(0x80097C00);        // The start point and vector for sight checking
+static const VmPtr<fixed_t>     gT2x(0x80078100);           // End point for sight checking: x
+static const VmPtr<fixed_t>     gT2y(0x80078108);           // End point for sight checking: y
+static const VmPtr<int32_t>     gT1xs(0x800781F8);          // Sight line start, whole coords: x 
+static const VmPtr<int32_t>     gT1ys(0x80078208);          // Sight line start, whole coords: y
+static const VmPtr<int32_t>     gT2xs(0x80078204);          // Sight line end, whole coords: x
+static const VmPtr<int32_t>     gT2ys(0x80078210);          // Sight line end, whole coords: y
 
 void P_CheckSights() noexcept {
 loc_80024908:
@@ -163,238 +174,127 @@ loc_80024B2C:
     return;
 }
 
-void PS_SightCrossLine() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v1 = lw(a0 + 0x4);
-    a1 = lw(gp + 0xC28);                                // Load from: gT1ys (80078208)
-    t8 = lw(gp + 0xC30);                                // Load from: gT2ys (80078210)
-    v0 = lw(gp + 0xC18);                                // Load from: gT1xs (800781F8)
-    t7 = lh(v1 + 0x2);
-    a2 = t8 - a1;
-    t0 = t7 - v0;
-    mult(a2, t0);
-    t6 = lw(gp + 0xC24);                                // Load from: gT2xs (80078204)
-    t5 = lh(v1 + 0x6);
-    t4 = lo;
-    t1 = t6 - v0;
-    a3 = t5 - a1;
-    mult(a3, t1);
-    a0 = lw(a0);
-    t3 = lh(a0 + 0x2);
-    v1 = lo;
-    t0 = t3 - v0;
-    mult(a2, t0);
-    t2 = lh(a0 + 0x6);
-    a2 = lo;
-    a3 = t2 - a1;
-    mult(a3, t1);
-    v1 = (i32(t4) < i32(v1));
-    v0 = lo;
-    v0 = (i32(a2) < i32(v0));
-    t1 = t2 - t5;
-    if (v1 == v0) goto loc_80024C00;
-    mult(t1, t0);
-    a0 = lo;
-    a2 = t7 - t3;
-    mult(a2, a3);
-    v0 = lo;
-    t0 = t6 - t3;
-    mult(t1, t0);
-    v1 = lo;
-    a3 = t8 - t2;
-    mult(a2, a3);
-    t4 = a0 + v0;
-    a0 = t4;
-    v0 = lo;
-    a2 = v1 + v0;
-    a1 = a0 + a2;
-    _thunk_FixedDiv();
-    goto loc_80024C04;
-loc_80024C00:
-    v0 = -1;                                            // Result = FFFFFFFF
-loc_80024C04:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Intersects the given line against the current sight line and returns the fraction of intersection along the sight line.
+// When the intersect ratio is > 0.0 and < 1.0 then there is a valid intersection with the sight line, otherwise there is no
+// intersection or the intersection occurs beyond the range of the line.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static fixed_t PS_SightCrossLine(line_t& line) noexcept {
+    // Get the integer coordinates of the line and the sight line
+    const int32_t lineX1 = line.vertex1->x >> FRACBITS;
+    const int32_t lineY1 = line.vertex1->y >> FRACBITS;
+    const int32_t lineX2 = line.vertex2->x >> FRACBITS;
+    const int32_t lineY2 = line.vertex2->y >> FRACBITS;
+    const int32_t sightX1 = *gT1xs;
+    const int32_t sightY1 = *gT1ys;
+    const int32_t sightX2 = *gT2xs;
+    const int32_t sightY2 = *gT2ys;
+
+    // Compute which sides of the sight line the line points are on.
+    // Use the same cross product trick found in 'PA_DivlineSide' and 'R_PointOnSide'.
+    {
+        const int32_t sightDx = sightX2 - sightX1;
+        const int32_t sightDy = sightY2 - sightY1;
+        const int32_t side1 = ((lineY1 - sightY1) * sightDx > (lineX1 - sightX1) * sightDy);
+        const int32_t side2 = ((lineY2 - sightY1) * sightDx > (lineX2 - sightX1) * sightDy);
+
+        // If both line points are on the same side of the sight line then there is no intersection
+        if (side1 == side2)
+            return -1;
+    }
+    
+    // Compute the normal vector for the line
+    const int32_t lineNx = lineY1 - lineY2;
+    const int32_t lineNy = lineX2 - lineX1;
+
+    // Compute the distance magnitude of the sight points from the line using vector dot product with the normal.
+    // Note that after these multiplies we can reinterpret the results as fixed point numbers for the intersect ratio calculation.
+    // The relative ratios are what is important, not the actual numbers.
+    const fixed_t dist1 = (lineX1 - sightX1) * lineNx + (lineY1 - sightY1) * lineNy;
+    const fixed_t dist2 = (lineX1 - sightX2) * lineNx + (lineY1 - sightY2) * lineNy;
+
+    // Use the distance magnitudes to figure out the intersection ratio.
+    // Note: distance sign correction is being done here also, so the distance on both sides of the line has the same sign.
+    const fixed_t totalDist = dist1 - dist2;
+    return FixedDiv(dist1, totalDist);
 }
 
-bool PS_CrossSubsector(const subsector_t& subsec) noexcept {
-loc_80024C14:
-    a0 = ptrToVmAddr(&subsec);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Checks the current sight line against lines in the given subsector.
+// Returns 'true' if the sight line is unobstructed, returns 'false' otherwise.
+// This function also updates/narrows the allowed vertical view range.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
+    // Check the sight line against the lines for all segs in the subsector
+    const int32_t numSegs = subsec.numsegs;
+    seg_t* const pSegs = &gpSegs->get()[subsec.firstseg];
 
-    sp -= 0x20;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v1 = lh(a0 + 0x6);
-    s1 = lh(a0 + 0x4);
-    v0 = v1 << 2;
-    v0 += v1;
-    v1 = *gpSegs;
-    v0 <<= 3;
-    s2 = v0 + v1;
-    if (s1 == 0) goto loc_80024EA0;
-loc_80024C4C:
-    s0 = lw(s2 + 0x14);
-    v1 = *gValidCount;
-    v0 = lw(s0 + 0x40);
-    if (v0 == v1) goto loc_80024E94;
-    v0 = lw(s0 + 0x4);
-    a0 = lw(gp + 0xC28);                                // Load from: gT1ys (80078208)
-    t8 = lw(gp + 0xC30);                                // Load from: gT2ys (80078210)
-    sw(v1, s0 + 0x40);
-    v1 = lw(gp + 0xC18);                                // Load from: gT1xs (800781F8)
-    t7 = lh(v0 + 0x2);
-    t1 = t8 - a0;
-    a3 = t7 - v1;
-    mult(t1, a3);
-    t6 = lw(gp + 0xC24);                                // Load from: gT2xs (80078204)
-    t5 = lh(v0 + 0x6);
-    t2 = lo;
-    t0 = t6 - v1;
-    a2 = t5 - a0;
-    mult(a2, t0);
-    v0 = lw(s0);
-    t4 = lh(v0 + 0x2);
-    a1 = lo;
-    a3 = t4 - v1;
-    mult(t1, a3);
-    t3 = lh(v0 + 0x6);
-    v1 = lo;
-    a2 = t3 - a0;
-    mult(a2, t0);
-    t2 = (i32(t2) < i32(a1));
-    v0 = lo;
-    v1 = (i32(v1) < i32(v0));
-    t0 = t3 - t5;
-    if (t2 != v1) goto loc_80024CE8;
-    a1 = -1;                                            // Result = FFFFFFFF
-    goto loc_80024D2C;
-loc_80024CE8:
-    mult(t0, a3);
-    a0 = lo;
-    t1 = t7 - t4;
-    mult(t1, a2);
-    v0 = lo;
-    a3 = t6 - t4;
-    mult(t0, a3);
-    v1 = lo;
-    a2 = t8 - t3;
-    mult(t1, a2);
-    t2 = a0 + v0;
-    a0 = t2;
-    v0 = lo;
-    v1 += v0;
-    a1 = a0 + v1;
-    _thunk_FixedDiv();
-    a1 = v0;
-loc_80024D2C:
-    v1 = a1 - 4;
-    v0 = 0xFFFC;                                        // Result = 0000FFFC
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_80024E94;
-    t0 = lw(s0 + 0x3C);
-    if (t0 == 0) goto loc_80024E8C;
-    t1 = lw(s0 + 0x38);
-    a0 = lw(t0);
-    a2 = lw(t1);
-    if (a2 != a0) goto loc_80024D7C;
-    v1 = lw(t1 + 0x4);
-    v0 = lw(t0 + 0x4);
-    if (v1 == v0) goto loc_80024E94;
-loc_80024D7C:
-    v0 = lw(t0 + 0x4);
-    v1 = lw(t1 + 0x4);
-    a3 = v0;
-    v0 = (i32(v1) < i32(a3));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(a0) < i32(a2));
-        if (bJump) goto loc_80024D98;
+    for (int32_t segIdx = 0; segIdx < numSegs; ++segIdx) {
+        seg_t& seg = pSegs[segIdx];
+        line_t& line = *seg.linedef;
+
+        // Skip past this seg's line if we've already done it this sight check.
+        // Multiple segs might reference the same line, so this saves redundant work:
+        if (line.validcount == *gValidCount)
+            continue;
+        
+        // Don't check the line again until the next sight check
+        line.validcount = *gValidCount;
+
+        // If the sight line does not intersect along the actual line points then ignore.
+        // Not sure where the magics here came from, probably through hacking/experimentation?
+        const fixed_t intersectFrac = PS_SightCrossLine(line);
+
+        if ((intersectFrac < 4) || (intersectFrac > FRACUNIT))
+            continue;
+
+        // The sight line crosses the subsector line.
+        // If the line is impassible (no back sector) then it blocks sight:
+        if (!line.backsector)
+            return false;
+        
+        // If there is no height difference between the front and back sectors then the line can't block.
+        // In this case it has no upper or lower walls:
+        sector_t& bsec = *line.backsector.get();
+        sector_t& fsec = *line.frontsector.get();
+
+        if ((fsec.floorheight == bsec.floorheight) && (fsec.ceilingheight == bsec.ceilingheight))
+            continue;
+
+        // If there is no vertical gap in the two sided line then sight is completely obscured
+        const fixed_t lowestCeil = std::min(fsec.ceilingheight, bsec.ceilingheight);
+        const fixed_t highestFloor = std::max(fsec.floorheight, bsec.floorheight);
+        
+        if (lowestCeil <= highestFloor)
+            return false;
+        
+        // Narrow the allowed vertical sight range: against bottom wall
+        if (fsec.floorheight != bsec.floorheight) {
+            const fixed_t dz = highestFloor - *gSightZStart;
+            const int32_t slope = ((dz << 6) / (intersectFrac >> 2)) << 8;      // Note: chops off the low 8 bits of computed intersect slope
+
+            if (slope > *gBottomSlope) {
+                *gBottomSlope = slope;
+            }
+        }
+
+        // Narrow the allowed vertical sight range: against top wall
+        if (fsec.ceilingheight != bsec.ceilingheight) {
+            const fixed_t dz = lowestCeil - *gSightZStart;
+            const int32_t slope = ((dz << 6) / (intersectFrac >> 2)) << 8;      // Note: chops off the low 8 bits of computed intersect slope
+
+            if (slope < *gTopSlope) {
+                *gTopSlope = slope;
+            }
+        }
+
+        // If the allowed vertical sight range has become completely closed then sight is blocked
+        if (*gTopSlope <= *gBottomSlope)
+            return false;
     }
-    a3 = v1;
-loc_80024D98:
-    v1 = a0;
-    if (v0 == 0) goto loc_80024DA4;
-    v1 = a2;
-loc_80024DA4:
-    v0 = (i32(v1) < i32(a3));
-    if (v0 == 0) goto loc_80024E8C;
-    a1 = u32(i32(a1) >> 2);
-    if (a2 == a0) goto loc_80024E0C;
-    v0 = lw(gp + 0xA40);                                // Load from: gSightZStart (80078020)
-    v0 = v1 - v0;
-    v0 <<= 6;
-    div(v0, a1);
-    if (a1 != 0) goto loc_80024DD8;
-    _break(0x1C00);
-loc_80024DD8:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_80024DF0;
-    }
-    if (v0 != at) goto loc_80024DF0;
-    tge(zero, zero, 0x5D);
-loc_80024DF0:
-    v0 = lo;
-    v1 = lw(gp + 0xA28);                                // Load from: gBottomSlope (80078008)
-    v0 <<= 8;
-    v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_80024E0C;
-    sw(v0, gp + 0xA28);                                 // Store to: gBottomSlope (80078008)
-loc_80024E0C:
-    v1 = lw(t1 + 0x4);
-    v0 = lw(t0 + 0x4);
-    if (v1 == v0) goto loc_80024E74;
-    v0 = lw(gp + 0xA40);                                // Load from: gSightZStart (80078020)
-    v0 = a3 - v0;
-    v0 <<= 6;
-    div(v0, a1);
-    if (a1 != 0) goto loc_80024E40;
-    _break(0x1C00);
-loc_80024E40:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_80024E58;
-    }
-    if (v0 != at) goto loc_80024E58;
-    tge(zero, zero, 0x5D);
-loc_80024E58:
-    v0 = lo;
-    v1 = lw(gp + 0xC00);                                // Load from: gTopSlope (800781E0)
-    v0 <<= 8;
-    v1 = (i32(v0) < i32(v1));
-    if (v1 == 0) goto loc_80024E74;
-    sw(v0, gp + 0xC00);                                 // Store to: gTopSlope (800781E0)
-loc_80024E74:
-    v1 = lw(gp + 0xC00);                                // Load from: gTopSlope (800781E0)
-    v0 = lw(gp + 0xA28);                                // Load from: gBottomSlope (80078008)
-    v0 = (i32(v0) < i32(v1));
-    s1--;
-    if (v0 != 0) goto loc_80024E98;
-loc_80024E8C:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80024EA4;
-loc_80024E94:
-    s1--;
-loc_80024E98:
-    s2 += 0x28;
-    if (s1 != 0) goto loc_80024C4C;
-loc_80024EA0:
-    v0 = 1;                                             // Result = 00000001
-loc_80024EA4:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return (v0 != 0);
+
+    // The sight line does not cross any blocking lines in the subsector
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

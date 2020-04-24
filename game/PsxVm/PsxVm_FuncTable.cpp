@@ -196,7 +196,6 @@ extern void PointOnVectorSide() noexcept;
 extern void PA_CrossBSPNode() noexcept;
 extern void P_CheckSights() noexcept;
 extern void P_CheckSight() noexcept;
-extern void PS_SightCrossLine() noexcept;
 extern void P_SlideMove() noexcept;
 extern void P_CompletableFrac() noexcept;
 extern void SL_PointOnSide() noexcept;
@@ -501,7 +500,6 @@ namespace PsxVm {
         { 0x8002479C, &PA_CrossBSPNode },
         { 0x80024908, &P_CheckSights },
         { 0x800249B4, &P_CheckSight },
-        { 0x80024B3C, &PS_SightCrossLine },
         { 0x8002502C, &P_SlideMove },
         { 0x800251BC, &P_CompletableFrac },
         { 0x80025460, &SL_PointOnSide },
