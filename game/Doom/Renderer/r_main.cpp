@@ -237,28 +237,28 @@ void _thunk_R_PointToAngle2() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t R_PointOnSide(const fixed_t x, const fixed_t y, const node_t& node) noexcept {
     // Special case shortcut for vertical lines
-    if (node.dx == 0) {
-        if (x <= node.x) {
-            return (node.dy > 0);
+    if (node.line.dx == 0) {
+        if (x <= node.line.x) {
+            return (node.line.dy > 0);
         } else {
-            return (node.dy < 0);
+            return (node.line.dy < 0);
         }
     }
 
     // Special case shortcut for horizontal lines
-    if (node.dy == 0) {
-        if (y <= node.y) {
-            return (node.dx < 0);
+    if (node.line.dy == 0) {
+        if (y <= node.line.y) {
+            return (node.line.dx < 0);
         } else {
-            return (node.dx > 0);
+            return (node.line.dx > 0);
         }
     }
 
     // Compute which side of the line the point is on using the cross product
-    const fixed_t dx = x - node.x;
-    const fixed_t dy = y - node.y;
-    const int32_t lprod = (node.dy >> FRACBITS) * (dx >> FRACBITS);
-    const int32_t rprod = (node.dx >> FRACBITS) * (dy >> FRACBITS);
+    const fixed_t dx = x - node.line.x;
+    const fixed_t dy = y - node.line.y;
+    const int32_t lprod = (dx >> FRACBITS) * (node.line.dy >> FRACBITS);
+    const int32_t rprod = (dy >> FRACBITS) * (node.line.dx >> FRACBITS);
     return (rprod >= lprod);
 }
 

@@ -117,14 +117,19 @@ struct subsector_t {
 
 static_assert(sizeof(subsector_t) == 16);
 
-// Descrbes a node in the bsp tree
-struct node_t {
-    fixed_t     x;                  // The partition line
+// The partition/dividing line for a bsp tree node: stores a position and line vector
+struct divline_t {
+    fixed_t     x;
     fixed_t     y;
     fixed_t     dx;
     fixed_t     dy;
-    fixed_t     bbox[2][4];         // Bounding box for both child nodes
-    int32_t     children[2];        // When 'NF_SUBSECTOR' is set then it means it's a subsector number
+};
+
+// Descrbes a node in the bsp tree
+struct node_t {
+    divline_t   line;           // The partition line for the node
+    fixed_t     bbox[2][4];     // Bounding box for both child nodes
+    int32_t     children[2];    // When 'NF_SUBSECTOR' is set then it means it's a subsector number
 };
 
 static_assert(sizeof(node_t) == 56);

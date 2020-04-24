@@ -3550,7 +3550,7 @@ static const ProgElem ELEMS[] = {
     { 0x80078214, 0x8007821C, "gOldTicButtons",                         ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x8007821C, 0x80078220, "gMapRedKeyType",                         ProgElemType::UINT32 },
     { 0x80078220, 0x80078224, "gNumNewClipVerts",                       ProgElemType::INT32 },
-    { 0x80078224, 0x80078228, "gNumSubsectors",                         ProgElemType::UINT32 },
+    { 0x80078224, 0x80078228, "gNumSubsectors",                         ProgElemType::INT32 },
     { 0x80078228, 0x8007822C, "gBlockFrac",                             ProgElemType::INT32 },
     { 0x80078230, 0x80078234, "gpCurSBFaceSprite",                      ProgElemType::PTR32 },
     { 0x80078234, 0x80078238, "gNetInputFd",                            ProgElemType::UINT32 },

@@ -1,7 +1,11 @@
 #pragma once
 
+#include <cstdint>
+
+struct subsector_t;
+
 void P_CheckSights() noexcept;
 void P_CheckSight() noexcept;
 void PS_SightCrossLine() noexcept;
-void PS_CrossSubsector() noexcept;
-void PS_CrossBSPNode() noexcept;
+bool PS_CrossSubsector(const subsector_t& subsec) noexcept;
+bool PS_CrossBSPNode(const int32_t nodeNum) noexcept;

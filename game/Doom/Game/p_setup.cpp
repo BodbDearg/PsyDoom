@@ -292,10 +292,10 @@ static void P_LoadNodes(const int32_t lumpNum) noexcept {
     node_t* pDstNode = gpBspNodes->get();
 
     for (int32_t nodeIdx = 0; nodeIdx < *gNumBspNodes; ++nodeIdx) {
-        pDstNode->x = (fixed_t) Endian::littleToHost(pSrcNode->x) << FRACBITS;
-        pDstNode->y = (fixed_t) Endian::littleToHost(pSrcNode->y) << FRACBITS;
-        pDstNode->dx = (fixed_t) Endian::littleToHost(pSrcNode->dx) << FRACBITS;
-        pDstNode->dy = (fixed_t) Endian::littleToHost(pSrcNode->dy) << FRACBITS;
+        pDstNode->line.x = (fixed_t) Endian::littleToHost(pSrcNode->x) << FRACBITS;
+        pDstNode->line.y = (fixed_t) Endian::littleToHost(pSrcNode->y) << FRACBITS;
+        pDstNode->line.dx = (fixed_t) Endian::littleToHost(pSrcNode->dx) << FRACBITS;
+        pDstNode->line.dy = (fixed_t) Endian::littleToHost(pSrcNode->dy) << FRACBITS;
 
         for (int32_t childIdx = 0; childIdx < 2; ++childIdx) {
             pDstNode->children[childIdx] = Endian::littleToHost(pSrcNode->children[childIdx]);

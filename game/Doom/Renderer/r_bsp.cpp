@@ -67,10 +67,10 @@ void R_RenderBSPNode(const int32_t bspnum) noexcept {
 
         // Compute which side of the line the point is on using the cross product.
         // This is pretty much the same code found in 'R_PointOnSide':
-        const int32_t dx = *gViewX - node.x;
-        const int32_t dy = *gViewY - node.y;
-        const int32_t lprod = (node.dx >> FRACBITS) * (dy >> FRACBITS);
-        const int32_t rprod = (node.dy >> FRACBITS) * (dx >> FRACBITS);
+        const int32_t dx = *gViewX - node.line.x;
+        const int32_t dy = *gViewY - node.line.y;
+        const int32_t lprod = (node.line.dx >> FRACBITS) * (dy >> FRACBITS);
+        const int32_t rprod = (node.line.dy >> FRACBITS) * (dx >> FRACBITS);
 
         // Depending on which side of the halfspace we are on, reverse the traversal order:
         if (lprod < rprod) {
