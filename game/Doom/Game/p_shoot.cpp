@@ -7,6 +7,11 @@
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
+static const VmPtr<int32_t>     gSsx1(0x800781F0);          // Sight line start, whole coords: x 
+static const VmPtr<int32_t>     gSsy1(0x80078200);          // Sight line start, whole coords: y
+static const VmPtr<int32_t>     gSsx2(0x800781FC);          // Sight line end, whole coords: x
+static const VmPtr<int32_t>     gSsy2(0x8007820C);          // Sight line end, whole coords: y
+
 void P_Shoot2() noexcept {
 loc_80023C34:
     t0 = 0x80080000;                                    // Result = 80080000
@@ -402,60 +407,49 @@ loc_8002423C:
     return;
 }
 
-void PA_SightCrossLine() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v1 = lw(a0 + 0x4);
-    a1 = lw(gp + 0xC20);                                // Load from: gSsy1 (80078200)
-    t8 = lw(gp + 0xC2C);                                // Load from: gSsy2 (8007820C)
-    v0 = lw(gp + 0xC10);                                // Load from: gSsx1 (800781F0)
-    t7 = lh(v1 + 0x2);
-    a2 = t8 - a1;
-    t0 = t7 - v0;
-    mult(a2, t0);
-    t6 = lw(gp + 0xC1C);                                // Load from: gSsx2 (800781FC)
-    t5 = lh(v1 + 0x6);
-    t4 = lo;
-    t1 = t6 - v0;
-    a3 = t5 - a1;
-    mult(a3, t1);
-    a0 = lw(a0);
-    t3 = lh(a0 + 0x2);
-    v1 = lo;
-    t0 = t3 - v0;
-    mult(a2, t0);
-    t2 = lh(a0 + 0x6);
-    a2 = lo;
-    a3 = t2 - a1;
-    mult(a3, t1);
-    v1 = (i32(t4) < i32(v1));
-    v0 = lo;
-    v0 = (i32(a2) < i32(v0));
-    t1 = t2 - t5;
-    if (v1 == v0) goto loc_80024320;
-    mult(t1, t0);
-    a0 = lo;
-    a2 = t7 - t3;
-    mult(a2, a3);
-    v0 = lo;
-    t0 = t6 - t3;
-    mult(t1, t0);
-    v1 = lo;
-    a3 = t8 - t2;
-    mult(a2, a3);
-    t4 = a0 + v0;
-    a0 = t4;
-    v0 = lo;
-    a2 = v1 + v0;
-    a1 = a0 + a2;
-    _thunk_FixedDiv();
-    goto loc_80024324;
-loc_80024320:
-    v0 = -1;                                            // Result = FFFFFFFF
-loc_80024324:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Intersects the given line against the current sight line and returns the fraction of intersection along the sight line.
+// When the intersect ratio is > 0.0 and < 1.0 then there is a valid intersection with the sight line, otherwise there is no
+// intersection or the intersection occurs beyond the range of the line.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static fixed_t PA_SightCrossLine(const line_t& line) noexcept {
+    // Get the integer coordinates of the line and the sight line
+    const int32_t lineX1 = line.vertex1->x >> FRACBITS;
+    const int32_t lineY1 = line.vertex1->y >> FRACBITS;
+    const int32_t lineX2 = line.vertex2->x >> FRACBITS;
+    const int32_t lineY2 = line.vertex2->y >> FRACBITS;
+    const int32_t sightX1 = *gSsx1;
+    const int32_t sightY1 = *gSsy1;
+    const int32_t sightX2 = *gSsx2;
+    const int32_t sightY2 = *gSsy2;
+
+    // Compute which sides of the sight line the line points are on.
+    // Use the same cross product trick found in 'PA_DivlineSide' and 'R_PointOnSide'.
+    {
+        const int32_t sightDx = sightX2 - sightX1;
+        const int32_t sightDy = sightY2 - sightY1;
+        const int32_t side1 = ((lineY1 - sightY1) * sightDx > (lineX1 - sightX1) * sightDy);
+        const int32_t side2 = ((lineY2 - sightY1) * sightDx > (lineX2 - sightX1) * sightDy);
+
+        // If both line points are on the same side of the sight line then there is no intersection
+        if (side1 == side2)
+            return -1;
+    }
+    
+    // Compute the normal vector for the line
+    const int32_t lineNx = lineY1 - lineY2;
+    const int32_t lineNy = lineX2 - lineX1;
+
+    // Compute the distance magnitude of the sight points from the line using vector dot product with the normal.
+    // Note that after these multiplies we can reinterpret the results as fixed point numbers for the intersect ratio calculation.
+    // The relative ratios are what is important, not the actual numbers.
+    const fixed_t dist1 = (lineX1 - sightX1) * lineNx + (lineY1 - sightY1) * lineNy;
+    const fixed_t dist2 = (lineX1 - sightX2) * lineNx + (lineY1 - sightY2) * lineNy;
+
+    // Use the distance magnitudes to figure out the intersection ratio.
+    // Note: distance sign correction is being done here also, so the distance on both sides of the line has the same sign.
+    const fixed_t totalDist = dist1 - dist2;
+    return FixedDiv(dist1, totalDist);
 }
 
 void PA_CrossSubsector() noexcept {
