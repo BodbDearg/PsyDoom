@@ -3386,7 +3386,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077F44, 0x80077F4C, "gTicButtons",                            ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80077F4C, 0x80077F50, "gShootSlope",                            ProgElemType::PTR32 },
     { 0x80077F50, 0x80077F54, "gNumLinespecials",                       ProgElemType::UINT32 },
-    { 0x80077F54, 0x80077F58, "gNumSectors",                            ProgElemType::UINT32 },
+    { 0x80077F54, 0x80077F58, "gNumSectors",                            ProgElemType::INT32 },
     { 0x80077F58, 0x80077F5C, "gFinIncomingLineLen",                    ProgElemType::INT32 },
     { 0x80077F5C, 0x80077F60, "gNumSpriteLumps",                        ProgElemType::UINT32 },
     { 0x80077F60, 0x80077F64, "gpFlatTranslation",                      ProgElemType::PTR32 },

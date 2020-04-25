@@ -1230,7 +1230,7 @@ loc_80016DFC:
     v0 = lw(a1 + 0x68);
     if (i32(v0) <= 0) goto loc_80016E40;
     a0 = s1;
-    P_CheckSight();
+    v0 = P_CheckSight(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1));
     if (v0 != 0) goto loc_80016E54;
 loc_80016E40:
     v0 = lw(s1 + 0x58);

@@ -57,7 +57,7 @@ loc_80024930:
     sw(v0, s0 + 0x64);
     if (a1 == 0) goto loc_80024988;
     a0 = s0;
-    P_CheckSight();
+    v0 = P_CheckSight(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1));
     v1 = 0x4000000;                                     // Result = 04000000
     if (v0 == 0) goto loc_80024988;
     v0 = lw(s0 + 0x64);
@@ -76,102 +76,56 @@ loc_8002499C:
     return;
 }
 
-void P_CheckSight() noexcept {
-loc_800249B4:
-    sp -= 0x18;
-    t0 = a0;
-    t1 = a1;
-    a1 = 0xE9BD0000;                                    // Result = E9BD0000
-    sw(ra, sp + 0x10);
-    v0 = lw(t0 + 0xC);
-    a0 = *gpSectors;
-    v0 = lw(v0);
-    a1 |= 0x37A7;                                       // Result = E9BD37A7
-    v0 -= a0;
-    mult(v0, a1);
-    v0 = lw(t1 + 0xC);
-    v0 = lw(v0);
-    v1 = lo;
-    v0 -= a0;
-    mult(v0, a1);
-    v0 = lo;
-    a0 = *gNumSectors;
-    v1 = u32(i32(v1) >> 2);
-    mult(v1, a0);
-    v0 = u32(i32(v0) >> 2);
-    v1 = 1;                                             // Result = 00000001
-    a0 = lo;
-    a0 += v0;
-    a1 = u32(i32(a0) >> 3);
-    v0 = *gpRejectMatrix;
-    a0 &= 7;
-    v0 += a1;
-    v0 = lbu(v0);
-    v1 = v1 << a0;
-    v0 &= v1;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80024B2C;
-    }
-    a3 = 0xFFFE0000;                                    // Result = FFFE0000
-    a2 = 0x10000;                                       // Result = 00010000
-    a1 = lw(t0);
-    v0 = *gValidCount;
-    a1 &= a3;
-    a1 |= a2;
-    at = 0x80090000;                                    // Result = 80090000
-    sw(a1, at + 0x7C00);                                // Store to: gSTrace[0] (80097C00)
-    a0 = lw(t0 + 0x4);
-    v0++;
-    *gValidCount = v0;
-    v0 = u32(i32(a1) >> 16);
-    sw(v0, gp + 0xC18);                                 // Store to: gT1xs (800781F8)
-    a0 &= a3;
-    a0 |= a2;
-    at = 0x80090000;                                    // Result = 80090000
-    sw(a0, at + 0x7C04);                                // Store to: gSTrace[1] (80097C04)
-    v0 = lw(t1);
-    v1 = u32(i32(a0) >> 16);
-    sw(v1, gp + 0xC28);                                 // Store to: gT1ys (80078208)
-    v1 = lw(t1 + 0x4);
-    v0 &= a3;
-    v0 |= a2;
-    v1 &= a3;
-    v1 |= a2;
-    a1 = v0 - a1;
-    a0 = v1 - a0;
-    at = 0x80090000;                                    // Result = 80090000
-    sw(a1, at + 0x7C08);                                // Store to: gSTrace[2] (80097C08)
-    at = 0x80090000;                                    // Result = 80090000
-    sw(a0, at + 0x7C0C);                                // Store to: gSTrace[3] (80097C0C)
-    a1 = lw(t0 + 0x8);
-    a0 = lw(t0 + 0x44);
-    sw(v0, gp + 0xB20);                                 // Store to: gT2x (80078100)
-    v0 = u32(i32(v0) >> 16);
-    sw(v0, gp + 0xC24);                                 // Store to: gT2xs (80078204)
-    v0 = lw(t1 + 0x8);
-    sw(v1, gp + 0xB28);                                 // Store to: gT2y (80078108)
-    v1 = u32(i32(v1) >> 16);
-    sw(v1, gp + 0xC30);                                 // Store to: gT2ys (80078210)
-    v1 = lw(t1 + 0x44);
-    a1 += a0;
-    a0 = u32(i32(a0) >> 2);
-    a1 -= a0;
-    v0 += v1;
-    v0 -= a1;
-    sw(v0, gp + 0xC00);                                 // Store to: gTopSlope (800781E0)
-    v0 = lw(t1 + 0x8);
-    a0 = *gNumBspNodes;
-    sw(a1, gp + 0xA40);                                 // Store to: gSightZStart (80078020)
-    v0 -= a1;
-    sw(v0, gp + 0xA28);                                 // Store to: gBottomSlope (80078008)
-    a0--;
-    v0 = PS_CrossBSPNode(a0);
-loc_80024B2C:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if 'mobj1' can see 'mobj2'. Returns 'true' if that is the case.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
+    // Figure out the reject matrix entry to lookup
+    const int32_t secnum1 = (int32_t)(mobj1.subsector->sector.get() - gpSectors->get());
+    const int32_t secnum2 = (int32_t)(mobj2.subsector->sector.get() - gpSectors->get());
+    const int32_t rejectMapEntry = secnum1 * (*gNumSectors) + secnum2;
+
+    // Lookup the reject matrix to see if these two sectors can possibly see each other.
+    // If they can't then we can early out here.
+    const int32_t rejectMapByte = rejectMapEntry / 8;
+    const int32_t rejectMapBit = rejectMapEntry & 7;
+
+    if ((gpRejectMatrix->get()[rejectMapByte] & (1 << rejectMapBit)) != 0)
+        return false;
+    
+    // Store the start and end points of the sight line.
+    // Note that the coordinates are truncated to be on odd integer coordinates.
+    // Not sure why this is done, or what it's trying to avoid - it's in the 3DO and Jag Doom sources but not explained.
+    const int32_t COORD_MASK = 0xFFFE0000;
+    gSTrace->x = (mobj1.x & COORD_MASK) | FRACUNIT;
+    gSTrace->y = (mobj1.y & COORD_MASK) | FRACUNIT;
+    *gT2x = (mobj2.x & COORD_MASK) | FRACUNIT;
+    *gT2y = (mobj2.y & COORD_MASK) | FRACUNIT;
+
+    // Precalculate the vector for the sight line
+    gSTrace->dx = *gT2x - gSTrace->x;
+    gSTrace->dy = *gT2y - gSTrace->y;
+    
+    // Precalculate the truncated start and end points for the sight line for later use
+    *gT1xs = gSTrace->x >> FRACBITS;
+    *gT1ys = gSTrace->y >> FRACBITS;
+    *gT2xs = *gT2x >> FRACBITS;
+    *gT2ys = *gT2y >> FRACBITS;
+
+    // This is how high the sight point is at (eyeball level -1/4 height down from the top)
+    const fixed_t sightZStart = mobj1.z + mobj1.height - mobj1.height / 4;
+    *gSightZStart = sightZStart;
+
+    // Figure out the initial top and bottom slopes for the the vertical sight range
+    *gTopSlope = mobj2.z + mobj2.height - sightZStart;
+    *gBottomSlope = mobj2.z - sightZStart;
+
+    // Doing a new raycast so update the visitation mark which tells us if stuff has already been processed
+    *gValidCount += 1;
+
+    // Do a raycast against the BSP tree and return if sight is unobstructed.
+    // Also narrows the vertical sight range with each lower and upper wall encountered.    
+    return PS_CrossBSPNode(*gNumBspNodes - 1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

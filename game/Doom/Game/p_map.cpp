@@ -475,7 +475,7 @@ loc_8001BCD0:
         if (bJump) goto loc_8001BD0C;
     }
     a0 = s1;
-    P_CheckSight();
+    v0 = P_CheckSight(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1));
     a0 = s1;
     if (v0 == 0) goto loc_8001BD08;
     a1 = lw(gp + 0xBC0);                                // Load from: gpBombSpot (800781A0)
