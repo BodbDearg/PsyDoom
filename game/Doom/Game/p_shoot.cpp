@@ -8,16 +8,26 @@
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
-static const VmPtr<divline_t>       gShootDiv(0x800A9074);      // The start point and vector for shooting sight checking
-static const VmPtr<fixed_t>         gShootX2(0x80078038);       // End point for shooting sight checking: x
-static const VmPtr<fixed_t>         gShootY2(0x80078044);       // End point for shooting sight checking: y
-static const VmPtr<int32_t>         gSsx1(0x800781F0);          // Shooting sight line start, whole coords: x 
-static const VmPtr<int32_t>         gSsy1(0x80078200);          // Shooting sight line start, whole coords: y
-static const VmPtr<int32_t>         gSsx2(0x800781FC);          // Shooting sight line end, whole coords: x
-static const VmPtr<int32_t>         gSsy2(0x8007820C);          // Shooting sight line end, whole coords: y
-static const VmPtr<VmPtr<void>>     gpOldValue(0x80078260);     // Intercept testing: previous closest line or thing
-static const VmPtr<fixed_t>         gOldFrac(0x8007812C);       // Intercept testing: previous closest hit fractional distance (along line of sight)
-static const VmPtr<bool32_t>        gbOldIsLine(0x80077EC8);    // Intercept testing: previous closest hit - was the hit against a line? (Was a thing if 'false')
+// The vertices used for the partial 'line_t' used for the shooters shoot line
+struct thingline_t {
+    vertex_t    p1;
+    vertex_t    p2;
+};
+
+static const VmPtr<divline_t>           gShootDiv(0x800A9074);              // The start point and vector for shooting sight checking
+static const VmPtr<fixed_t>             gShootX2(0x80078038);               // End point for shooting sight checking: x
+static const VmPtr<fixed_t>             gShootY2(0x80078044);               // End point for shooting sight checking: y
+static const VmPtr<int32_t>             gSsx1(0x800781F0);                  // Shooting sight line start, whole coords: x 
+static const VmPtr<int32_t>             gSsy1(0x80078200);                  // Shooting sight line start, whole coords: y
+static const VmPtr<int32_t>             gSsx2(0x800781FC);                  // Shooting sight line end, whole coords: x
+static const VmPtr<int32_t>             gSsy2(0x8007820C);                  // Shooting sight line end, whole coords: y
+static const VmPtr<VmPtr<void>>         gpOldValue(0x80078260);             // Intercept testing: previous closest line or thing
+static const VmPtr<fixed_t>             gOldFrac(0x8007812C);               // Intercept testing: previous closest hit fractional distance (along line of sight)
+static const VmPtr<bool32_t>            gbOldIsLine(0x80077EC8);            // Intercept testing: previous closest hit - was the hit against a line? (Was a thing if 'false')
+static const VmPtr<bool32_t>            gbShootDivPositive(0x8007806C);     // True if the slope for the shooters shoot direction is positive
+static const VmPtr<thingline_t>         gThingLineVerts(0x800A8A44);        // The vertices for the shooters shoot line
+static const VmPtr<VmPtr<vertex_t>>     gPartialThingLine(0x80077B14);      // A partial/degenerate 'line_t' for the shooters line (just the two vertex pointer fields defined)
+
 
 void P_Shoot2() noexcept {
 loc_80023C34:
@@ -471,267 +481,69 @@ static fixed_t PA_SightCrossLine(const line_t& line) noexcept {
     return FixedDiv(dist1, totalDist);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Test the shooting 'sight' line against lines and things in the given subsector.
+// Returns 'false' if there was a hit (sight obstructed) and remembers what was hit for later logic to act upon. 
+//------------------------------------------------------------------------------------------------------------------------------------------
 static bool PA_CrossSubsector(subsector_t& subsec) noexcept {
-loc_80024334:
-    a0 = ptrToVmAddr(&subsec);
-    sp -= 0x28;
-    sw(s3, sp + 0x1C);
-    s3 = a0;
-    sw(ra, sp + 0x20);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v0 = lw(s3);
-    s0 = lw(v0 + 0x4C);
-    if (s0 == 0) goto loc_80024594;
-    s2 = 0x800B0000;                                    // Result = 800B0000
-    s2 -= 0x75BC;                                       // Result = gThingLine_tv1[0] (800A8A44)
-    s1 = 0x800B0000;                                    // Result = 800B0000
-    s1 -= 0x75A0;                                       // Result = gThingLine_tv2[0] (800A8A60)
-loc_80024378:
-    v0 = lw(s0 + 0xC);
-    if (v0 != s3) goto loc_80024584;
-    v0 = lw(gp + 0xA8C);                                // Load from: gbShootDivPositive (8007806C)
-    if (v0 == 0) goto loc_800243E4;
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x40);
-    v0 -= v1;
-    sw(v0, s2);                                         // Store to: gThingLine_tv1[0] (800A8A44)
-    v0 = lw(s0 + 0x4);
-    v1 = lw(s0 + 0x40);
-    v0 += v1;
-    sw(v0, s2 + 0x4);                                   // Store to: gThingLine_tv1[1] (800A8A48)
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x40);
-    v0 += v1;
-    sw(v0, s1);                                         // Store to: gThingLine_tv2[0] (800A8A60)
-    v0 = lw(s0 + 0x4);
-    v1 = lw(s0 + 0x40);
-    v0 -= v1;
-    goto loc_80024430;
-loc_800243E4:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x40);
-    v0 -= v1;
-    sw(v0, s2);                                         // Store to: gThingLine_tv1[0] (800A8A44)
-    v0 = lw(s0 + 0x4);
-    v1 = lw(s0 + 0x40);
-    v0 -= v1;
-    sw(v0, s2 + 0x4);                                   // Store to: gThingLine_tv1[1] (800A8A48)
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x40);
-    v0 += v1;
-    sw(v0, s1);                                         // Store to: gThingLine_tv2[0] (800A8A60)
-    v0 = lw(s0 + 0x4);
-    v1 = lw(s0 + 0x40);
-    v0 += v1;
-loc_80024430:
-    sw(v0, s1 + 0x4);                                   // Store to: gThingLine_tv2[1] (800A8A64)
-    v0 = lw(gp + 0x538);                                // Load from: gpThingLine_tv2 (80077B18)
-    a0 = lw(gp + 0xC20);                                // Load from: gSsy1 (80078200)
-    t8 = lw(gp + 0xC2C);                                // Load from: gSsy2 (8007820C)
-    v1 = lw(gp + 0xC10);                                // Load from: gSsx1 (800781F0)
-    t7 = lh(v0 + 0x2);
-    t2 = t8 - a0;
-    a3 = t7 - v1;
-    mult(t2, a3);
-    t6 = lw(gp + 0xC1C);                                // Load from: gSsx2 (800781FC)
-    t5 = lh(v0 + 0x6);
-    t1 = lo;
-    t0 = t6 - v1;
-    a2 = t5 - a0;
-    mult(a2, t0);
-    v0 = lw(gp + 0x534);                                // Load from: gpThingLine_tv1 (80077B14)
-    t4 = lh(v0 + 0x2);
-    a1 = lo;
-    a3 = t4 - v1;
-    mult(t2, a3);
-    t3 = lh(v0 + 0x6);
-    v1 = lo;
-    a2 = t3 - a0;
-    mult(a2, t0);
-    t1 = (i32(t1) < i32(a1));
-    v0 = lo;
-    v1 = (i32(v1) < i32(v0));
-    t0 = t3 - t5;
-    if (t1 != v1) goto loc_800244B0;
-    a1 = -1;                                            // Result = FFFFFFFF
-    goto loc_800244F4;
-loc_800244B0:
-    mult(t0, a3);
-    a0 = lo;
-    t2 = t7 - t4;
-    mult(t2, a2);
-    v0 = lo;
-    a3 = t6 - t4;
-    mult(t0, a3);
-    v1 = lo;
-    a2 = t8 - t3;
-    mult(t2, a2);
-    t1 = a0 + v0;
-    a0 = t1;
-    v0 = lo;
-    v1 += v0;
-    a1 = a0 + v1;
-    _thunk_FixedDiv();
-    a1 = v0;
-loc_800244F4:
-    v0 = 0x10000;                                       // Result = 00010000
-    v0 = (v0 < a1);
-    a0 = s0;
-    if (v0 != 0) goto loc_80024584;
-    a3 = 0;                                             // Result = 00000000
-    a2 = lw(gp + 0xB4C);                                // Load from: gOldFrac (8007812C)
-    v0 = (i32(a2) < i32(a1));
-    v1 = a1;
-    if (v0 == 0) goto loc_80024540;
-    v0 = lw(gp + 0xC80);                                // Load from: gpOldValue (80078260)
-    a0 = v0;
-    v0 = lw(gp + 0x8E8);                                // Load from: gbOld_isLine (80077EC8)
-    v1 = a2;
-    sw(s0, gp + 0xC80);                                 // Store to: gpOldValue (80078260)
-    sw(a1, gp + 0xB4C);                                 // Store to: gOldFrac (8007812C)
-    sw(0, gp + 0x8E8);                                  // Store to: gbOld_isLine (80077EC8)
-    a3 = v0;
-loc_80024540:
-    v0 = 0xFFFF;                                        // Result = 0000FFFF
-    if (v1 == 0) goto loc_80024554;
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8002455C;
-loc_80024554:
-    v0 = 1;                                             // Result = 00000001
-    goto loc_8002457C;
-loc_8002455C:
-    if (a3 == 0) goto loc_80024574;
-    a1 = v1;
-    v0 = PA_ShootLine(*vmAddrToPtr<line_t>(a0), a1);
-    goto loc_8002457C;
-loc_80024574:
-    a1 = v1;
-    v0 = PA_ShootThing(*vmAddrToPtr<mobj_t>(a0), a1);
-loc_8002457C:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80024738;
+    // Check for hit against all things in the subsector
+    for (mobj_t* pmobj = subsec.sector->thinglist.get(); pmobj != nullptr; pmobj = pmobj->snext.get()) {
+        // Ignore the thing if its not in this subsector
+        if (pmobj->subsector.get() != &subsec)
+            continue;
+
+        // Setup the shooters degenerate 'line_t' for the shoot line.
+        // This creates a line between the two corners of the hit box.
+        if (*gbShootDivPositive) {
+            gThingLineVerts->p1.x = pmobj->x - pmobj->radius;
+            gThingLineVerts->p1.y = pmobj->y + pmobj->radius;
+            gThingLineVerts->p2.x = pmobj->x + pmobj->radius;
+            gThingLineVerts->p2.y = pmobj->y - pmobj->radius;
+        } else {
+            gThingLineVerts->p1.x = pmobj->x - pmobj->radius;
+            gThingLineVerts->p1.y = pmobj->y - pmobj->radius;
+            gThingLineVerts->p2.x = pmobj->x + pmobj->radius;
+            gThingLineVerts->p2.y = pmobj->y + pmobj->radius;
+        }
+        
+        // See if the thing line intersects the sight/shoot line, ignore if it doesn't
+        const fixed_t hitFrac = PA_SightCrossLine(*(line_t*) gPartialThingLine.get());
+
+        if ((hitFrac < 0) || (hitFrac > FRACUNIT))
+            continue;
+
+        // Register a hit against this thing or the current closest object hit (returns 'false' if sight obstructed)
+        if (!PA_DoIntercept(pmobj, false, hitFrac))
+            return false;
     }
-loc_80024584:
-    s0 = lw(s0 + 0x1C);
-    if (s0 != 0) goto loc_80024378;
-loc_80024594:
-    v0 = lh(s3 + 0x6);
-    s1 = lh(s3 + 0x4);
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = *gpSegs;
-    v1 <<= 3;
-    s2 = v1 + v0;
-    if (s1 == 0) goto loc_80024734;
-loc_800245B8:
-    s0 = lw(s2 + 0x14);
-    v1 = *gValidCount;
-    v0 = lw(s0 + 0x40);
-    if (v0 == v1) goto loc_80024728;
-    v0 = lw(s0 + 0x4);
-    a0 = lw(gp + 0xC20);                                // Load from: gSsy1 (80078200)
-    t8 = lw(gp + 0xC2C);                                // Load from: gSsy2 (8007820C)
-    sw(v1, s0 + 0x40);
-    v1 = lw(gp + 0xC10);                                // Load from: gSsx1 (800781F0)
-    t7 = lh(v0 + 0x2);
-    t2 = t8 - a0;
-    a3 = t7 - v1;
-    mult(t2, a3);
-    t6 = lw(gp + 0xC1C);                                // Load from: gSsx2 (800781FC)
-    t5 = lh(v0 + 0x6);
-    t1 = lo;
-    t0 = t6 - v1;
-    a2 = t5 - a0;
-    mult(a2, t0);
-    v0 = lw(s0);
-    t4 = lh(v0 + 0x2);
-    a1 = lo;
-    a3 = t4 - v1;
-    mult(t2, a3);
-    t3 = lh(v0 + 0x6);
-    v1 = lo;
-    a2 = t3 - a0;
-    mult(a2, t0);
-    t1 = (i32(t1) < i32(a1));
-    v0 = lo;
-    v1 = (i32(v1) < i32(v0));
-    t0 = t3 - t5;
-    if (t1 != v1) goto loc_80024654;
-    a1 = -1;                                            // Result = FFFFFFFF
-    goto loc_80024698;
-loc_80024654:
-    mult(t0, a3);
-    a0 = lo;
-    t2 = t7 - t4;
-    mult(t2, a2);
-    v0 = lo;
-    a3 = t6 - t4;
-    mult(t0, a3);
-    v1 = lo;
-    a2 = t8 - t3;
-    mult(t2, a2);
-    t1 = a0 + v0;
-    a0 = t1;
-    v0 = lo;
-    v1 += v0;
-    a1 = a0 + v1;
-    _thunk_FixedDiv();
-    a1 = v0;
-loc_80024698:
-    v0 = 0x10000;                                       // Result = 00010000
-    v0 = (v0 < a1);
-    a0 = s0;
-    if (v0 != 0) goto loc_80024728;
-    a2 = lw(gp + 0xB4C);                                // Load from: gOldFrac (8007812C)
-    v0 = (i32(a2) < i32(a1));
-    v1 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_800246DC;
-    v0 = lw(gp + 0xC80);                                // Load from: gpOldValue (80078260)
-    sw(a0, gp + 0xC80);                                 // Store to: gpOldValue (80078260)
-    sw(a1, gp + 0xB4C);                                 // Store to: gOldFrac (8007812C)
-    a0 = v0;
-    v0 = lw(gp + 0x8E8);                                // Load from: gbOld_isLine (80077EC8)
-    a1 = a2;
-    sw(v1, gp + 0x8E8);                                 // Store to: gbOld_isLine (80077EC8)
-    v1 = v0;
-loc_800246DC:
-    v0 = 0xFFFF;                                        // Result = 0000FFFF
-    if (a1 == 0) goto loc_800246F0;
-    v0 = (i32(v0) < i32(a1));
-    if (v0 == 0) goto loc_800246F8;
-loc_800246F0:
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80024718;
-loc_800246F8:
-    if (v1 == 0) goto loc_80024710;
-    v0 = PA_ShootLine(*vmAddrToPtr<line_t>(a0), a1);
-    goto loc_80024718;
-loc_80024710:
-    v0 = PA_ShootThing(*vmAddrToPtr<mobj_t>(a0), a1);
-loc_80024718:
-    s1--;
-    if (v0 != 0) goto loc_8002472C;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80024738;
-loc_80024728:
-    s1--;
-loc_8002472C:
-    s2 += 0x28;
-    if (s1 != 0) goto loc_800245B8;
-loc_80024734:
-    v0 = 1;                                             // Result = 00000001
-loc_80024738:
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return (v0 != 0);
+
+    // Check for hits against all segs in the subsector
+    const int32_t curValidCount = *gValidCount;
+    seg_t* const pSegs = gpSegs->get() + subsec.firstseg;
+    const int16_t numSegs = subsec.numsegs;
+    
+    for (int32_t segIdx = 0; segIdx < numSegs; ++segIdx) {
+        // Don't check this line if we already checked for this sight check
+        seg_t& seg = pSegs[segIdx];
+        line_t& line = *seg.linedef;
+
+        if (line.validcount == curValidCount)
+            continue;
+
+        // Don't check again for this sight test (mark) and get where the line intersects the sight line
+        line.validcount = curValidCount;
+        const fixed_t hitFrac = PA_SightCrossLine(line);
+            
+        // Ignore the intersection if it's not along the sight line
+        if ((hitFrac < 0) || (hitFrac > FRACUNIT))
+            continue;
+
+        // Register a hit against this line or the current closest object hit (returns 'false' if sight obstructed)
+        if (!PA_DoIntercept(&line, true, hitFrac))
+            return false;
+    }
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
