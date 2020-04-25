@@ -3354,7 +3354,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077EBC, 0x80077EC0, "gbNofit",                                ProgElemType::UINT32 },
     { 0x80077EC0, 0x80077EC4, "gbGamePaused",                           ProgElemType::UINT32 },
     { 0x80077EC4, 0x80077EC8, "gpSpriteTextures",                       ProgElemType::PTR32 },
-    { 0x80077EC8, 0x80077ECC, "gbOld_isLine",                           ProgElemType::UINT32 },
+    { 0x80077EC8, 0x80077ECC, "gbOldIsLine",                            ProgElemType::UINT32 },
     { 0x80077ECC, 0x80077ED0, "gbDoSpclFace",                           ProgElemType::UINT32 },
     { 0x80077ED0, 0x80077ED4, "gCastTics",                              ProgElemType::INT32 },
     { 0x80077ED4, 0x80077ED8, "gVramViewerTexPage",                     ProgElemType::UINT32 },

@@ -8,13 +8,16 @@
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
-static const VmPtr<divline_t>   gShootDiv(0x800A9074);      // The start point and vector for shooting sight checking
-static const VmPtr<fixed_t>     gShootX2(0x80078038);       // End point for shooting sight checking: x
-static const VmPtr<fixed_t>     gShootY2(0x80078044);       // End point for shooting sight checking: y
-static const VmPtr<int32_t>     gSsx1(0x800781F0);          // Shooting sight line start, whole coords: x 
-static const VmPtr<int32_t>     gSsy1(0x80078200);          // Shooting sight line start, whole coords: y
-static const VmPtr<int32_t>     gSsx2(0x800781FC);          // Shooting sight line end, whole coords: x
-static const VmPtr<int32_t>     gSsy2(0x8007820C);          // Shooting sight line end, whole coords: y
+static const VmPtr<divline_t>       gShootDiv(0x800A9074);      // The start point and vector for shooting sight checking
+static const VmPtr<fixed_t>         gShootX2(0x80078038);       // End point for shooting sight checking: x
+static const VmPtr<fixed_t>         gShootY2(0x80078044);       // End point for shooting sight checking: y
+static const VmPtr<int32_t>         gSsx1(0x800781F0);          // Shooting sight line start, whole coords: x 
+static const VmPtr<int32_t>         gSsy1(0x80078200);          // Shooting sight line start, whole coords: y
+static const VmPtr<int32_t>         gSsx2(0x800781FC);          // Shooting sight line end, whole coords: x
+static const VmPtr<int32_t>         gSsy2(0x8007820C);          // Shooting sight line end, whole coords: y
+static const VmPtr<VmPtr<void>>     gpOldValue(0x80078260);     // Intercept testing: previous closest line or thing
+static const VmPtr<fixed_t>         gOldFrac(0x8007812C);       // Intercept testing: previous closest hit fractional distance (along line of sight)
+static const VmPtr<bool32_t>        gbOldIsLine(0x80077EC8);    // Intercept testing: previous closest hit - was the hit against a line? (Was a thing if 'false')
 
 void P_Shoot2() noexcept {
 loc_80023C34:
@@ -96,7 +99,7 @@ loc_80023C34:
     if (v0 != 0) goto loc_80023E28;
     a1 = 0;                                             // Result = 00000000
     a2 = 0x10000;                                       // Result = 00010000
-    PA_DoIntercept();
+    v0 = PA_DoIntercept(vmAddrToPtr<void>(a0), a1, a2);
     v0 = lw(gp + 0xCF4);                                // Load from: gpShootMObj (800782D4)
     if (v0 != 0) goto loc_80023E28;
     v0 = lw(gp + 0xCF0);                                // Load from: gpShootLine (800782D0)
@@ -139,44 +142,53 @@ loc_80023E28:
     return;
 }
 
-void PA_DoIntercept() noexcept {
-loc_80023E3C:
-    v1 = a1;
-    a1 = a2;
-    a2 = lw(gp + 0xB4C);                                // Load from: gOldFrac (8007812C)
-    sp -= 0x18;
-    v0 = (i32(a2) < i32(a1));
-    sw(ra, sp + 0x10);
-    if (v0 == 0) goto loc_80023E78;
-    v0 = lw(gp + 0xC80);                                // Load from: gpOldValue (80078260)
-    sw(a0, gp + 0xC80);                                 // Store to: gpOldValue (80078260)
-    sw(a1, gp + 0xB4C);                                 // Store to: gOldFrac (8007812C)
-    a0 = v0;
-    v0 = lw(gp + 0x8E8);                                // Load from: gbOld_isLine (80077EC8)
-    a1 = a2;
-    sw(v1, gp + 0x8E8);                                 // Store to: gbOld_isLine (80077EC8)
-    v1 = v0;
-loc_80023E78:
-    v0 = 0xFFFF;                                        // Result = 0000FFFF
-    if (a1 == 0) goto loc_80023E8C;
-    v0 = (i32(v0) < i32(a1));
-    if (v0 == 0) goto loc_80023E94;
-loc_80023E8C:
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80023EB4;
-loc_80023E94:
-    if (v1 != 0) goto loc_80023EAC;
-    PA_ShootThing();
-    goto loc_80023EB4;
-loc_80023EAC:
-    PA_ShootLine();
-loc_80023EB4:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Test for a hit against the given line or thing if it's closer than the previous closest line or thing we checked against.
+// Otherwise, if there was something previously closer - test against that first and remember this line or thing for later potential tests.
+//
+// This function essentially tries to ensure intersection tests are performed against the closest things first.
+// I don't think it can neccesarily guarantee that is the case, although it's probably good enough for most gameplay scenarios?
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool PA_DoIntercept(void* const pObj, const bool bIsLine, const fixed_t hitFrac) noexcept {
+    // Initially, the input is what we will test against
+    void* test_pObj = pObj;
+    bool test_bIsLine = bIsLine;
+    fixed_t test_hitFrac = hitFrac;
+
+    // But if the previous thing we remembered is closer, test against that instead and remember this input for later
+    if (hitFrac > *gOldFrac) {
+        test_pObj = gpOldValue->get();
+        test_bIsLine = *gbOldIsLine;
+        test_hitFrac = *gOldFrac;
+
+        *gpOldValue = pObj;
+        *gbOldIsLine = bIsLine;
+        *gOldFrac = hitFrac;
+    }
+
+    // If the test is beyond the range (or at the ends) of the shoot sight line then there is no hit
+    if ((test_hitFrac == 0) || (test_hitFrac >= FRACUNIT))
+        return true;
+
+    // PC-PSX: added safety - just in case.
+    // I don't think it's ever possible to get into a scenario where the test object is null here, but I'm going to guarantee it anyhow...
+    #if PC_PSX_DOOM_MODS
+        if (!test_pObj)
+            return true;
+    #endif
+    
+    // Otherwise do the test against the line or thing
+    if (test_bIsLine) {
+        return PA_ShootLine(*(line_t*) test_pObj, test_hitFrac);
+    } else {
+        return PA_ShootThing(*(mobj_t*) test_pObj, test_hitFrac);
+    }
 }
 
-void PA_ShootLine() noexcept {
+bool PA_ShootLine(line_t& line, fixed_t hitFrac) noexcept {
+    a0 = ptrToVmAddr(&line);
+    a1 = hitFrac;
+
 loc_80023EC4:
     sp -= 0x20;
     sw(s0, sp + 0x10);
@@ -291,10 +303,13 @@ loc_800240A0:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-    return;
+    return (v0 != 0);
 }
 
-void PA_ShootThing() noexcept {
+bool PA_ShootThing(mobj_t& thing, const fixed_t hitFrac) noexcept {
+    a0 = ptrToVmAddr(&thing);
+    a1 = hitFrac;    
+
 loc_800240BC:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7F4C);                               // Load from: gpShooter (800780B4)
@@ -408,7 +423,7 @@ loc_8002423C:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x28;
-    return;
+    return (v0 != 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -589,11 +604,11 @@ loc_80024554:
 loc_8002455C:
     if (a3 == 0) goto loc_80024574;
     a1 = v1;
-    PA_ShootLine();
+    v0 = PA_ShootLine(*vmAddrToPtr<line_t>(a0), a1);
     goto loc_8002457C;
 loc_80024574:
     a1 = v1;
-    PA_ShootThing();
+    v0 = PA_ShootThing(*vmAddrToPtr<mobj_t>(a0), a1);
 loc_8002457C:
     {
         const bool bJump = (v0 == 0);
@@ -693,10 +708,10 @@ loc_800246F0:
     goto loc_80024718;
 loc_800246F8:
     if (v1 == 0) goto loc_80024710;
-    PA_ShootLine();
+    v0 = PA_ShootLine(*vmAddrToPtr<line_t>(a0), a1);
     goto loc_80024718;
 loc_80024710:
-    PA_ShootThing();
+    v0 = PA_ShootThing(*vmAddrToPtr<mobj_t>(a0), a1);
 loc_80024718:
     s1--;
     if (v0 != 0) goto loc_8002472C;
