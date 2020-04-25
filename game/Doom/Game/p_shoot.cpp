@@ -714,22 +714,18 @@ loc_80024738:
     return;
 }
 
-void PointOnVectorSide() noexcept {
-    v0 = lw(a2);
-    a0 -= v0;
-    v0 = lh(a2 + 0xE);
-    a0 = u32(i32(a0) >> 16);
-    mult(v0, a0);
-    v0 = lw(a2 + 0x4);
-    a1 -= v0;
-    v1 = lo;
-    v0 = lh(a2 + 0xA);
-    a1 = u32(i32(a1) >> 16);
-    mult(a1, v0);
-    v0 = lo;
-    v0 = (i32(v0) < i32(v1));
-    v0 ^= 1;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells what side of the given divline the given point is on.
+// Returns '0' if the point is on the 'front' side of the line, otherwise '1' if on the back side.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t PA_DivlineSide(const fixed_t x, const fixed_t y, const divline_t& line) noexcept {
+    // This is pretty much the same cross product method as found in 'R_PointOnSide', without the special cases
+    const int32_t dx1 = (x - line.x) >> FRACBITS;
+    const int32_t dy1 = (y - line.y) >> FRACBITS;
+    const int32_t dx2 = line.dx >> FRACBITS;
+    const int32_t dy2 = line.dy >> FRACBITS;
+    const int32_t sideNum = (dx1 * dy2 <= dy1 * dx2);
+    return sideNum;
 }
 
 void PA_CrossBSPNode() noexcept {
@@ -825,19 +821,4 @@ loc_800248EC:
     s0 = lw(sp + 0x10);
     sp += 0x20;
     return;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// This function was not found directly in the original PSX Doom, but appeared to be inlined in a lot of places.
-// Tells what side of the given divline the given point is on.
-// Returns '0' if the point is on the 'front' side of the line, otherwise '1' if on the back side.
-//------------------------------------------------------------------------------------------------------------------------------------------
-int32_t PA_DivlineSide(const fixed_t x, const fixed_t y, const divline_t& line) noexcept {
-    // This is pretty much the same cross product method as found in 'R_PointOnSide', without the special cases
-    const int32_t dx1 = (x - line.x) >> FRACBITS;
-    const int32_t dy1 = (y - line.y) >> FRACBITS;
-    const int32_t dx2 = line.dx >> FRACBITS;
-    const int32_t dy2 = line.dy >> FRACBITS;
-    const int32_t sideNum = (dx1 * dy2 <= dy1 * dx2);
-    return sideNum;
 }
