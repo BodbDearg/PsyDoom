@@ -190,8 +190,6 @@ extern void P_Shoot2() noexcept;
 extern void PA_DoIntercept() noexcept;
 extern void PA_ShootLine() noexcept;
 extern void PA_ShootThing() noexcept;
-extern void PA_CrossSubsector() noexcept;
-extern void PA_CrossBSPNode() noexcept;
 extern void P_SlideMove() noexcept;
 extern void P_CompletableFrac() noexcept;
 extern void SL_PointOnSide() noexcept;
@@ -490,8 +488,6 @@ namespace PsxVm {
         { 0x80023E3C, &PA_DoIntercept },
         { 0x80023EC4, &PA_ShootLine },
         { 0x800240BC, &PA_ShootThing },
-        { 0x80024334, &PA_CrossSubsector },
-        { 0x8002479C, &PA_CrossBSPNode },
         { 0x8002502C, &P_SlideMove },
         { 0x800251BC, &P_CompletableFrac },
         { 0x80025460, &SL_PointOnSide },

@@ -4,13 +4,17 @@
 #include "Doom/Base/m_fixed.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "doomdata.h"
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
-static const VmPtr<int32_t>     gSsx1(0x800781F0);          // Sight line start, whole coords: x 
-static const VmPtr<int32_t>     gSsy1(0x80078200);          // Sight line start, whole coords: y
-static const VmPtr<int32_t>     gSsx2(0x800781FC);          // Sight line end, whole coords: x
-static const VmPtr<int32_t>     gSsy2(0x8007820C);          // Sight line end, whole coords: y
+static const VmPtr<divline_t>   gShootDiv(0x800A9074);      // The start point and vector for shooting sight checking
+static const VmPtr<fixed_t>     gShootX2(0x80078038);       // End point for shooting sight checking: x
+static const VmPtr<fixed_t>     gShootY2(0x80078044);       // End point for shooting sight checking: y
+static const VmPtr<int32_t>     gSsx1(0x800781F0);          // Shooting sight line start, whole coords: x 
+static const VmPtr<int32_t>     gSsy1(0x80078200);          // Shooting sight line start, whole coords: y
+static const VmPtr<int32_t>     gSsx2(0x800781FC);          // Shooting sight line end, whole coords: x
+static const VmPtr<int32_t>     gSsy2(0x8007820C);          // Shooting sight line end, whole coords: y
 
 void P_Shoot2() noexcept {
 loc_80023C34:
@@ -86,7 +90,7 @@ loc_80023C34:
     v0 += v1;
     sw(v0, gp + 0x9F4);                                 // Store to: gShootZ (80077FD4)
     a0--;
-    PA_CrossBSPNode();
+    v0 = PA_CrossBSPNode(a0);
     v0 = lw(gp + 0xCF4);                                // Load from: gpShootMObj (800782D4)
     a0 = 0;                                             // Result = 00000000
     if (v0 != 0) goto loc_80023E28;
@@ -452,8 +456,9 @@ static fixed_t PA_SightCrossLine(const line_t& line) noexcept {
     return FixedDiv(dist1, totalDist);
 }
 
-void PA_CrossSubsector() noexcept {
+static bool PA_CrossSubsector(subsector_t& subsec) noexcept {
 loc_80024334:
+    a0 = ptrToVmAddr(&subsec);
     sp -= 0x28;
     sw(s3, sp + 0x1C);
     s3 = a0;
@@ -711,7 +716,7 @@ loc_80024738:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x28;
-    return;
+    return (v0 != 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -728,97 +733,36 @@ int32_t PA_DivlineSide(const fixed_t x, const fixed_t y, const divline_t& line) 
     return sideNum;
 }
 
-void PA_CrossBSPNode() noexcept {
-loc_8002479C:
-    sp -= 0x20;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v0 = a0 & 0x8000;
-loc_800247B4:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xFFFF0000;                                // Result = FFFF0000
-        if (bJump) goto loc_80024804;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Recursive sight checking: tells if the 'gShootDiv' line is blocked by the BSP tree halfspace represented by the given node.
+// Returns 'true' if the shooting sight line is unobstructed.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool PA_CrossBSPNode(const int32_t nodeNum) noexcept {
+    // Is this bsp node actually a subsector? (leaf node) If so then do sight checks against that:
+    if (nodeNum & NF_SUBSECTOR) {
+        const int32_t subsecNum = nodeNum & (~NF_SUBSECTOR);
+        
+        if (subsecNum < *gNumSubsectors) {
+            return PA_CrossSubsector(gpSubsectors->get()[subsecNum]);
+        } else {
+            I_Error("PA_CrossSubsector: ss %i with numss = %i", subsecNum, *gNumSubsectors);    // Bad subsector number!
+            return false;
+        }
     }
-    v0 |= 0x7FFF;                                       // Result = FFFF7FFF
-    a2 = *gNumSubsectors;
-    s0 = a0 & v0;
-    v0 = (i32(s0) < i32(a2));
-    if (v0 != 0) goto loc_800247E8;
-    I_Error("PA_CrossSubsector: ss %i with numss = %i", (int32_t) s0, (int32_t) a2);
-loc_800247E8:
-    v0 = *gpSubsectors;
-    a0 = s0 << 4;
-    a0 += v0;
-    PA_CrossSubsector();
-    goto loc_800248EC;
-loc_80024804:
-    v0 = a0 << 3;
-    v0 -= a0;
-    v1 = *gpBspNodes;
-    v0 <<= 3;
-    s0 = v0 + v1;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6F8C);                               // Load from: gShootDiv[0] (800A9074)
-    v1 = lw(s0);
-    v0 -= v1;
-    v1 = lh(s0 + 0xE);
-    v0 = u32(i32(v0) >> 16);
-    mult(v1, v0);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6F88);                               // Load from: gShootDiv[1] (800A9078)
-    v1 = lw(s0 + 0x4);
-    v0 -= v1;
-    a0 = lo;
-    v1 = lh(s0 + 0xA);
-    v0 = u32(i32(v0) >> 16);
-    mult(v0, v1);
-    v0 = lo;
-    s2 = (i32(v0) < i32(a0));
-    s1 = s2 ^ 1;
-    v0 = s1 << 2;
-    v0 += s0;
-    a0 = lw(v0 + 0x30);
-    PA_CrossBSPNode();
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_800248EC;
-    }
-    v0 = lw(gp + 0xA58);                                // Load from: gShootX2 (80078038)
-    v1 = lw(s0);
-    v0 -= v1;
-    v1 = lh(s0 + 0xE);
-    v0 = u32(i32(v0) >> 16);
-    mult(v1, v0);
-    v0 = lw(gp + 0xA64);                                // Load from: gShootY2 (80078044)
-    v1 = lw(s0 + 0x4);
-    v0 -= v1;
-    a0 = lo;
-    v1 = lh(s0 + 0xA);
-    v0 = u32(i32(v0) >> 16);
-    mult(v0, v1);
-    v0 = lo;
-    v0 = (i32(v0) < i32(a0));
-    v0 ^= 1;
-    {
-        const bool bJump = (s1 == v0);
-        v0 = s2 << 2;
-        if (bJump) goto loc_800248E8;
-    }
-    v0 += s0;
-    a0 = lw(v0 + 0x30);
-    v0 = a0 & 0x8000;
-    goto loc_800247B4;
-loc_800248E8:
-    v0 = 1;                                             // Result = 00000001
-loc_800248EC:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // See what side of the bsp split the point is on: will check to see if the sight line is blocked by that half-space first
+    node_t& bspNode = gpBspNodes->get()[nodeNum];
+    const int32_t sideNum = PA_DivlineSide(gShootDiv->x, gShootDiv->y, bspNode.line);
+
+    // If the sight line cannot cross the closest half-space then we are done: sight is obstructed
+    if (!PA_CrossBSPNode(bspNode.children[sideNum]))
+        return false;
+    
+    // Check to see what side of the bsp split the end point for sight checking is on.
+    // If it's in the same half-space we just raycasted against then we are done - sight is unobstructed. 
+    if (sideNum == PA_DivlineSide(*gShootX2, *gShootY2, bspNode.line))
+        return true;
+
+    // Failing that recurse into the opposite side of the BSP split and raycast against that, returning the result
+    return PA_CrossBSPNode(bspNode.children[sideNum ^ 1]);
 }
