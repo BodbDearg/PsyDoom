@@ -8,7 +8,7 @@
 #include "p_local.h"
 #include "p_setup.h"
 #include "p_shoot.h"
-#include "PsxVm/PsxVm.h"
+#include "p_tick.h"
 
 BEGIN_THIRD_PARTY_INCLUDES
     #include <algorithm>
@@ -25,55 +25,28 @@ static const VmPtr<int32_t>     gT1ys(0x80078208);          // Sight line start,
 static const VmPtr<int32_t>     gT2xs(0x80078204);          // Sight line end, whole coords: x
 static const VmPtr<int32_t>     gT2ys(0x80078210);          // Sight line end, whole coords: y
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Updates target visibility checking for all map objects that are due an update
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_CheckSights() noexcept {
-loc_80024908:
-    sp -= 0x20;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x715C;                                       // Result = gMObjHead[5] (800A8EA4)
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    s0 = lw(v0);                                        // Load from: gMObjHead[5] (800A8EA4)
-    v0 -= 0x14;                                         // Result = gMObjHead[0] (800A8E90)
-    s1 = 0x400000;                                      // Result = 00400000
-    if (s0 == v0) goto loc_8002499C;
-loc_80024930:
-    a0 = lw(s0 + 0x64);
-    v0 = a0 & s1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80024988;
+    mobj_t& mobjHead = *gMObjHead;
+
+    for (mobj_t* pmobj = mobjHead.next.get(); pmobj != &mobjHead; pmobj = pmobj->next.get()) {
+        // Must be killable (enemy) to do sight checking
+		if ((pmobj->flags & MF_COUNTKILL) == 0)
+			continue;
+
+        // Must be about to change states for up-to-date sight info to be useful
+        if (pmobj->tics == 1) {
+            // See if we can see the target - if any.
+            // Add or remove the visibility flag based on this:
+            if (pmobj->target && P_CheckSight(*pmobj, *pmobj->target)) {
+                pmobj->flags |= MF_SEETARGET;
+            } else {
+                pmobj->flags &= (~MF_SEETARGET);    // No longer can see target
+            }
+        }
     }
-    v1 = lw(s0 + 0x5C);
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 0xFBFF0000;                                // Result = FBFF0000
-        if (bJump) goto loc_80024988;
-    }
-    v0 |= 0xFFFF;                                       // Result = FBFFFFFF
-    a1 = lw(s0 + 0x74);
-    v0 &= a0;
-    sw(v0, s0 + 0x64);
-    if (a1 == 0) goto loc_80024988;
-    a0 = s0;
-    v0 = P_CheckSight(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1));
-    v1 = 0x4000000;                                     // Result = 04000000
-    if (v0 == 0) goto loc_80024988;
-    v0 = lw(s0 + 0x64);
-    v0 |= v1;
-    sw(v0, s0 + 0x64);
-loc_80024988:
-    s0 = lw(s0 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7170;                                       // Result = gMObjHead[0] (800A8E90)
-    if (s0 != v0) goto loc_80024930;
-loc_8002499C:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
