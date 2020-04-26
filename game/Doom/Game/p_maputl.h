@@ -2,10 +2,11 @@
 
 #include "Doom/doomdef.h"
 
+struct line_t;
 struct mobj_t;
 
 fixed_t P_AproxDistance(const fixed_t dx, const fixed_t dy) noexcept;
-void P_PointOnLineSide() noexcept;
+int32_t P_PointOnLineSide(const fixed_t x, const fixed_t y, const line_t& line) noexcept;
 void P_PointOnDivlineSide() noexcept;
 void P_MakeDivline() noexcept;
 void P_LineOpening() noexcept;

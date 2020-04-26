@@ -2,6 +2,7 @@
 
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
+#include "Doom/Renderer/r_local.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
@@ -95,7 +96,7 @@ loc_80028918:
     a0 = lw(s1);
     a1 = lw(s1 + 0x4);
     a2 = s0;
-    P_PointOnLineSide();
+    v0 = P_PointOnLineSide(a0, a1, *vmAddrToPtr<line_t>(a2));
     a0 = (v0 < 1);
     v0 = lw(s1 + 0x64);
     v1 = 0x10000;                                       // Result = 00010000

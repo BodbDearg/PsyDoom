@@ -135,12 +135,12 @@ loc_8001E694:
     s1 = lw(v1);
     a1 = lw(v0 + 0x4);
     a2 = s1;
-    P_PointOnLineSide();
+    v0 = P_PointOnLineSide(a0, a1, *vmAddrToPtr<line_t>(a2));
     a2 = s1;
     a0 = lw(gp + 0xC60);                                // Load from: gOldX (80078240)
     a1 = lw(gp + 0xC64);                                // Load from: gOldY (80078244)
     s0 = v0;
-    P_PointOnLineSide();
+    v0 = P_PointOnLineSide(a0, a1, *vmAddrToPtr<line_t>(a2));
     if (s0 == v0) goto loc_8001E6E8;
     a1 = 0x80080000;                                    // Result = 80080000
     a1 = lw(a1 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)

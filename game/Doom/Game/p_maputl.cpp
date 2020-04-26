@@ -21,53 +21,38 @@ fixed_t P_AproxDistance(const fixed_t dx, const fixed_t dy) noexcept {
     return udx + udy - std::min(udx, udy) / 2;
 }
 
-void P_PointOnLineSide() noexcept {
-loc_8001C068:
-    a3 = lw(a2 + 0x8);
-    t0 = a0;
-    if (a3 != 0) goto loc_8001C0AC;
-    v0 = lw(a2);
-    v0 = lw(v0);
-    v0 = (i32(v0) < i32(t0));
-    if (v0 != 0) goto loc_8001C0A0;
-    v0 = lw(a2 + 0xC);
-    v0 = (i32(v0) > 0);
-    goto loc_8001C120;
-loc_8001C0A0:
-    v0 = lw(a2 + 0xC);
-    v0 >>= 31;
-    goto loc_8001C120;
-loc_8001C0AC:
-    v1 = lw(a2 + 0xC);
-    if (v1 != 0) goto loc_8001C0E0;
-    v0 = lw(a2);
-    v0 = lw(v0 + 0x4);
-    v0 = (i32(v0) < i32(a1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(a3) > 0);
-        if (bJump) goto loc_8001C120;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tell what side of a line a point is on.
+// Returns '0' if on the front side, '1' if on the back side.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t P_PointOnLineSide(const fixed_t x, const fixed_t y, const line_t& line) noexcept {
+    // Easy case: north/south wall.
+    // Check what side of the line we are on, then return the answer based on what way the wall is winding.
+    if (line.dx == 0) {
+        if (x > line.vertex1->x) {
+            return (line.dy < 0);
+        } else {
+            return (line.dy > 0);
+        }
     }
-    v0 = a3 >> 31;
-    goto loc_8001C120;
-loc_8001C0E0:
-    a0 = lw(a2);
-    v0 = lw(a0);
-    v1 = u32(i32(v1) >> 16);
-    v0 = t0 - v0;
-    v0 = u32(i32(v0) >> 16);
-    mult(v1, v0);
-    v1 = u32(i32(a3) >> 16);
-    v0 = lw(a0 + 0x4);
-    a0 = lo;
-    v0 = a1 - v0;
-    v0 = u32(i32(v0) >> 16);
-    mult(v0, v1);
-    v0 = lo;
-    v0 = (i32(v0) < i32(a0));
-    v0 ^= 1;
-loc_8001C120:
-    return;
+
+    // Easy case: east/west wall.
+    // Check what side of the line we are on, then return the answer based on what way the wall is winding.
+    if (line.dy == 0) {
+        if (y > line.vertex1->y) {
+            return (line.dx > 0);
+        } else {
+            return (line.dx < 0);
+        }
+    }
+
+    // Harder case: use the same cross product trick found in places like 'R_PointOnSide' to tell what side of the line we are on
+    const int32_t vdx = (x - line.vertex1->x) >> FRACBITS;
+    const int32_t vdy = (y - line.vertex1->y) >> FRACBITS;
+    const int32_t ldx = line.dx >> FRACBITS;
+    const int32_t ldy = line.dy >> FRACBITS;
+
+    return (vdx * ldy <= vdy * ldx);
 }
 
 void P_PointOnDivlineSide() noexcept {
