@@ -5,8 +5,13 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
+#include "p_map.h"
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
+
+BEGIN_THIRD_PARTY_INCLUDES
+    #include <algorithm>
+END_THIRD_PARTY_INCLUDES
 
 // The vertices used for the partial 'line_t' used for the shooters shoot line
 struct thingline_t {
@@ -27,7 +32,11 @@ static const VmPtr<bool32_t>            gbOldIsLine(0x80077EC8);            // I
 static const VmPtr<bool32_t>            gbShootDivPositive(0x8007806C);     // True if the slope for the shooters shoot direction is positive
 static const VmPtr<thingline_t>         gThingLineVerts(0x800A8A44);        // The vertices for the shooters shoot line
 static const VmPtr<VmPtr<vertex_t>>     gPartialThingLine(0x80077B14);      // A partial/degenerate 'line_t' for the shooters line (just the two vertex pointer fields defined)
-
+static const VmPtr<fixed_t>             gShootX(0x80077FC4);                // The point in space (X) that was hit when shooting (used for puff, blood spawn)
+static const VmPtr<fixed_t>             gShootY(0x80077FD0);                // The point in space (Y) that was hit when shooting (used for puff, blood spawn)
+static const VmPtr<fixed_t>             gShootZ(0x80077FD4);                // The point in space (Z) that was hit when shooting (used for puff, blood spawn)
+static const VmPtr<fixed_t>             gShootSlope(0x80077F4C);            // The Z slope for the line from the shooter origin to the hit point
+static const VmPtr<VmPtr<mobj_t>>       gpShootMObj(0x800782D4);            // The thing that is being shot
 
 void P_Shoot2() noexcept {
 loc_80023C34:
@@ -316,124 +325,55 @@ loc_800240A0:
     return (v0 != 0);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tries to shoot a thing assuming an unobstructed line of sight from the shooter to the thing.
+// Returns 'false' if the thing was shot and saves the details of the hit thing and the hit point etc.
+//------------------------------------------------------------------------------------------------------------------------------------------
 bool PA_ShootThing(mobj_t& thing, const fixed_t hitFrac) noexcept {
-    a0 = ptrToVmAddr(&thing);
-    a1 = hitFrac;    
+    // A shooter cannot shoot itself
+    if (&thing == gpShooter->get())
+        return true;
 
-loc_800240BC:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F4C);                               // Load from: gpShooter (800780B4)
-    sp -= 0x28;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s3, sp + 0x1C);
-    s3 = a1;
-    sw(ra, sp + 0x20);
-    sw(s2, sp + 0x18);
-    sw(s0, sp + 0x10);
-    if (s1 == v0) goto loc_80024170;
-    v0 = lw(s1 + 0x64);
-    v0 &= 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8002423C;
-    }
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7F98);                               // Load from: gAttackRange (80077F98)
-    a1 = s3;
-    _thunk_FixedMul();
-    s2 = v0;
-    a1 = s2;
-    a0 = lw(s1 + 0x8);
-    v0 = lw(s1 + 0x44);
-    v1 = lw(gp + 0x9F4);                                // Load from: gShootZ (80077FD4)
-    a0 += v0;
-    a0 -= v1;
-    _thunk_FixedDiv();
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D08);                               // Load from: gAimBottomSlope (800782F8)
-    s0 = v0;
-    v1 = (i32(s0) < i32(v1));
-    v0 = 1;                                             // Result = 00000001
-    if (v1 != 0) goto loc_8002423C;
-    v0 = lw(s1 + 0x8);
-    a0 = lw(gp + 0x9F4);                                // Load from: gShootZ (80077FD4)
-    a1 = s2;
-    a0 = v0 - a0;
-    _thunk_FixedDiv();
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7FF8);                               // Load from: gAimTopSlope (80077FF8)
-    a2 = v0;
-    v0 = (i32(v1) < i32(a2));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < i32(s0));
-        if (bJump) goto loc_80024178;
-    }
-loc_80024170:
-    v0 = 1;                                             // Result = 00000001
-    goto loc_8002423C;
-loc_80024178:
-    if (v0 == 0) goto loc_80024184;
-    s0 = v1;
-loc_80024184:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D08);                               // Load from: gAimBottomSlope (800782F8)
-    v0 = (i32(a2) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s0 + a2;
-        if (bJump) goto loc_800241A4;
-    }
-    a2 = v1;
-    v0 = s0 + a2;
-loc_800241A4:
-    v1 = v0 >> 31;
-    v0 += v1;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7F98);                               // Load from: gAttackRange (80077F98)
-    v0 = u32(i32(v0) >> 1);
-    sw(v0, gp + 0x96C);                                 // Store to: gShootSlope (80077F4C)
-    sw(s1, gp + 0xCF4);                                 // Store to: gpShootMObj (800782D4)
-    a0 = 0xA0000;                                       // Result = 000A0000
-    _thunk_FixedDiv();
-    s0 = s3 - v0;
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x6F84);                               // Load from: gShootDiv[2] (800A907C)
-    a1 = s0;
-    _thunk_FixedMul();
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x6F8C);                               // Load from: gShootDiv[0] (800A9074)
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x6F80);                               // Load from: gShootDiv[3] (800A9080)
-    v0 += v1;
-    sw(v0, gp + 0x9E4);                                 // Store to: gShootX (80077FC4)
-    a1 = s0;
-    _thunk_FixedMul();
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x6F88);                               // Load from: gShootDiv[1] (800A9078)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7F98);                               // Load from: gAttackRange (80077F98)
-    v0 += v1;
-    sw(v0, gp + 0x9F0);                                 // Store to: gShootY (80077FD0)
-    a0 = s0;
-    _thunk_FixedMul();
-    a0 = lw(gp + 0x96C);                                // Load from: gShootSlope (80077F4C)
-    a1 = v0;
-    _thunk_FixedMul();
-    v1 = lw(gp + 0x9F4);                                // Load from: gShootZ (80077FD4)
-    v1 += v0;
-    v0 = 0;                                             // Result = 00000000
-    sw(v1, gp + 0x9F4);                                 // Store to: gShootZ (80077FD4)
-loc_8002423C:
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return (v0 != 0);
+    // Can't shoot the thing if it's not shootable (corpse etc.)
+    if ((thing.flags & MF_SHOOTABLE) == 0)
+        return true;
+    
+    // How far is the hit point away?
+    const fixed_t hitDist = FixedMul(*gAttackRange, hitFrac);
+
+    // Are we shooting over the thing? If so then it cannot be hit.
+    // Check the allowed shooting vertical range against the top of the thing's bounding box.
+    fixed_t thingTopSlope = FixedDiv(thing.z + thing.height - *gShootZ, hitDist);
+    
+    if (*gAimBottomSlope > thingTopSlope)
+        return true;
+
+    // Are we shooting under over the thing? If so then it cannot be hit.
+    // Check the allowed shooting vertical range against the bottom of the thing's bounding box.
+    fixed_t thingBottomSlope = FixedDiv(thing.z - *gShootZ, hitDist);
+
+    if (*gAimTopSlope < thingBottomSlope)
+        return true;
+    
+    // Clamp the parts of the thing we can hit to the allowed ranges for shooting
+    thingTopSlope = std::min(thingTopSlope, *gAimTopSlope);
+    thingBottomSlope = std::max(thingBottomSlope, *gAimBottomSlope);
+
+    // Shoot the thing midway along the visible parts of it and remember what is being shot
+    *gShootSlope = (thingTopSlope + thingBottomSlope) / 2;
+    *gpShootMObj = &thing;
+
+    // Adjust the hit point so it is a little closer - move away from thing center by 10.0 units.
+    // Done so blood drops are spawned in front of the thing.
+    const fixed_t adjustedHitFrac = hitFrac - FixedDiv(10 * FRACUNIT, *gAttackRange);
+
+    // Figure out the hit point
+    *gShootX = gShootDiv->x + FixedMul(gShootDiv->dx, adjustedHitFrac);
+    *gShootY = gShootDiv->y + FixedMul(gShootDiv->dy, adjustedHitFrac);
+    *gShootZ += FixedMul(*gShootSlope, FixedMul(adjustedHitFrac, *gAttackRange));
+
+    // We hit something so the shooting ray has been obstructed
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

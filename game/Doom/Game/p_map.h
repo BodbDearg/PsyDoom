@@ -1,5 +1,12 @@
 #pragma once
 
+#include "Doom/doomdef.h"
+
+extern const VmPtr<VmPtr<mobj_t>>       gpShooter;
+extern const VmPtr<fixed_t>             gAttackRange;
+extern const VmPtr<fixed_t>             gAimTopSlope;
+extern const VmPtr<fixed_t>             gAimBottomSlope;
+
 void P_CheckPosition() noexcept;
 void P_TryMove() noexcept;
 void P_InterceptVector() noexcept;
