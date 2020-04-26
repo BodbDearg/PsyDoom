@@ -156,7 +156,9 @@ loc_8001B840:
     return;
 }
 
-void PIT_UseLines() noexcept {
+bool PIT_UseLines(line_t& line) noexcept {
+    a0 = ptrToVmAddr(&line);
+
     v1 = 0x800B0000;                                    // Result = 800B0000
     v1 = lw(v1 - 0x7898);                               // Load from: gUseBBox[3] (800A8768)
     sp -= 0x30;
@@ -276,7 +278,7 @@ loc_8001B9DC:
     s1 = lw(sp + 0x24);
     s0 = lw(sp + 0x20);
     sp += 0x30;
-    return;
+    return (v0 != 0);
 }
 
 void P_UseLines() noexcept {
@@ -388,7 +390,7 @@ loc_8001BB98:
     a2 = 0x80020000;                                    // Result = 80020000
     a2 -= 0x47B8;                                       // Result = PIT_UseLines (8001B848)
     a1 = s1;
-    P_BlockLinesIterator();
+    v0 = P_BlockLinesIterator(a0, a1, PIT_UseLines);
     s0++;
     v0 = (i32(s2) < i32(s0));
     a0 = s0;

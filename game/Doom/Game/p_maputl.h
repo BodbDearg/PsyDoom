@@ -18,5 +18,5 @@ void P_MakeDivline(const line_t& line, divline_t& divline) noexcept;
 void P_LineOpening(const line_t& line) noexcept;
 void P_UnsetThingPosition(mobj_t& thing) noexcept;
 void P_SetThingPosition(mobj_t& thing) noexcept;
-void P_BlockLinesIterator() noexcept;
+bool P_BlockLinesIterator(const int32_t x, const int32_t y, bool (*pFunc)(line_t&)) noexcept;
 void P_BlockThingsIterator() noexcept;

@@ -168,11 +168,11 @@ void P_UnsetThingPosition(mobj_t& thing) noexcept {
             #if PC_PSX_DOOM_MODS
                 if (blockx >= 0 && blockx < *gBlockmapWidth) {
                     if (blocky >= 0 && blocky < *gBlockmapHeight) {
-                        (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+                        gppBlockLinks->get()[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
                     }
                 }
             #else
-                (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+                gppBlockLinks->get()[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
             #endif
         }
     }
@@ -222,85 +222,39 @@ void P_SetThingPosition(mobj_t& thing) noexcept {
     }
 }
 
-void P_BlockLinesIterator() noexcept {
-loc_8001C540:
-    sp -= 0x30;
-    sw(s2, sp + 0x28);
-    s2 = a2;
-    sw(ra, sp + 0x2C);
-    sw(s1, sp + 0x24);
-    sw(s0, sp + 0x20);
-    if (i32(a0) < 0) goto loc_8001C640;
-    v0 = 1;                                             // Result = 00000001
-    if (i32(a1) < 0) goto loc_8001C644;
-    v1 = *gBlockmapWidth;
-    v0 = (i32(a0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001C644;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Visit all unvisited lines in the specified blockmap cell, calling the given function for each line in the cell.
+// The called function can abort iteration by returning 'false'.
+// This function returns 'false' if iteration was aborted.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_BlockLinesIterator(const int32_t x, const int32_t y, bool (*pFunc)(line_t&)) noexcept {
+    // If the blockmap block is out of range then there is nothing to do
+    if ((x < 0) || (y < 0) || (x >= *gBlockmapWidth) || (y >= *gBlockmapHeight))
+        return true;
+    
+    // Get the line list offset for this blockmap cell in the blockmap lump.
+    // Note that the offset to the line list is in terms of 16-bit words, not bytes.
+    const uint16_t lineListOffset = gpBlockmap->get()[x + y * (*gBlockmapWidth)];
+
+    // Visit all the lines in the block unless the callee asks to quit
+    const int16_t* pLineIdx = (int16_t*)(gpBlockmapLump->get() + lineListOffset);
+    line_t* const pLines = gpLines->get();
+
+    while (*pLineIdx != -1) {
+        line_t& line = pLines[*pLineIdx];
+        pLineIdx++;
+
+        // Only visit the line if not already visited for this set of checks
+        if (line.validcount != *gValidCount) {
+            line.validcount = *gValidCount;
+
+            // Call the function and stop if requested
+            if (!pFunc(line))
+                return false;
+        }
     }
-    v0 = *gBlockmapHeight;
-    v0 = (i32(a1) < i32(v0));
-    mult(a1, v1);
-    if (v0 != 0) goto loc_8001C59C;
-    v0 = 1;                                             // Result = 00000001
-    goto loc_8001C644;
-loc_8001C59C:
-    v1 = *gpBlockmap;
-    v0 = lo;
-    v0 += a0;
-    v0 <<= 1;
-    v0 += v1;
-    v0 = lh(v0);
-    v1 = *gpBlockmapLump;
-    v0 <<= 1;
-    s0 = v0 + v1;
-    v0 = -1;                                            // Result = FFFFFFFF
-    v1 = lh(s0);
-    a0 = lhu(s0);
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 1;
-        if (bJump) goto loc_8001C644;
-    }
-    s1 = -1;                                            // Result = FFFFFFFF
-    v1 = a0 << 16;
-loc_8001C5E4:
-    v1 = u32(i32(v1) >> 16);
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v1 = *gpLines;
-    v0 <<= 2;
-    a0 = v0 + v1;
-    v0 = lw(a0 + 0x40);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
-    s0 += 2;
-    if (v0 == v1) goto loc_8001C630;
-    sw(v1, a0 + 0x40);
-    ptr_call(s2);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8001C644;
-    }
-loc_8001C630:
-    v0 = lh(s0);
-    a0 = lhu(s0);
-    v1 = a0 << 16;
-    if (v0 != s1) goto loc_8001C5E4;
-loc_8001C640:
-    v0 = 1;                                             // Result = 00000001
-loc_8001C644:
-    ra = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x30;
-    return;
+
+    return true;
 }
 
 void P_BlockThingsIterator() noexcept {
