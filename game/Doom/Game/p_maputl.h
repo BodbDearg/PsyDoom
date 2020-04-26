@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Doom/doomdef.h"
+
 struct mobj_t;
 
-void P_AproxDistance() noexcept;
+fixed_t P_AproxDistance(const fixed_t dx, const fixed_t dy) noexcept;
 void P_PointOnLineSide() noexcept;
 void P_PointOnDivlineSide() noexcept;
 void P_MakeDivline() noexcept;

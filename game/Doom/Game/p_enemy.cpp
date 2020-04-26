@@ -40,7 +40,7 @@ loc_80015CE0:
     a1 = lw(a1 + 0x4);
     a0 = v1 - a0;
     a1 = v0 - a1;
-    P_AproxDistance();
+    v0 = P_AproxDistance(a0, a1);
     v1 = 0x450000;                                      // Result = 00450000
     v1 |= 0xFFFF;                                       // Result = 0045FFFF
     v1 = (i32(v1) < i32(v0));
@@ -88,7 +88,7 @@ loc_80015D74:
     a1 = lw(v0 + 0x4);
     a0 = a2 - a0;
     a1 = v1 - a1;
-    P_AproxDistance();
+    v0 = P_AproxDistance(a0, a1);
     v1 = lw(s1 + 0x58);
     a0 = 0xFFC00000;                                    // Result = FFC00000
     v1 = lw(v1 + 0x28);
@@ -601,7 +601,7 @@ loc_80016424:
     a1 = lw(s1 + 0x4);
     a0 = v1 - a0;
     a1 = v0 - a1;
-    P_AproxDistance();
+    v0 = P_AproxDistance(a0, a1);
     v1 = 0x460000;                                      // Result = 00460000
     v1 = (i32(v1) < i32(v0));
     v0 = 0;                                             // Result = 00000000
@@ -785,7 +785,7 @@ loc_800166D8:
     a1 = lw(s1 + 0x4);
     a0 = v1 - a0;
     a1 = v0 - a1;
-    P_AproxDistance();
+    v0 = P_AproxDistance(a0, a1);
     v1 = 0x450000;                                      // Result = 00450000
     v1 |= 0xFFFF;                                       // Result = 0045FFFF
     v1 = (i32(v1) < i32(v0));
@@ -852,7 +852,7 @@ loc_800167EC:
     a1 = lw(v0 + 0x4);
     a0 = a2 - a0;
     a1 = v1 - a1;
-    P_AproxDistance();
+    v0 = P_AproxDistance(a0, a1);
     v1 = lw(s1 + 0x58);
     a0 = 0xFFC00000;                                    // Result = FFC00000
     v1 = lw(v1 + 0x28);
@@ -1476,7 +1476,7 @@ loc_800171FC:
     a1 = lw(s1 + 0x4);
     a0 = v1 - a0;
     a1 = v0 - a1;
-    P_AproxDistance();
+    v0 = P_AproxDistance(a0, a1);
     v1 = 0x450000;                                      // Result = 00450000
     v1 |= 0xFFFF;                                       // Result = 0045FFFF
     v1 = (i32(v1) < i32(v0));
@@ -1605,7 +1605,7 @@ loc_8001740C:
     a1 = lw(s1 + 0x4);
     a0 = v1 - a0;
     a1 = v0 - a1;
-    P_AproxDistance();
+    v0 = P_AproxDistance(a0, a1);
     v1 = 0x450000;                                      // Result = 00450000
     v1 |= 0xFFFF;                                       // Result = 0045FFFF
     v1 = (i32(v1) < i32(v0));
@@ -1698,7 +1698,7 @@ void A_BruisAttack() noexcept {
     a1 = lw(s0 + 0x4);
     a0 = v1 - a0;
     a1 = v0 - a1;
-    P_AproxDistance();
+    v0 = P_AproxDistance(a0, a1);
     v1 = 0x450000;                                      // Result = 00450000
     v1 |= 0xFFFF;                                       // Result = 0045FFFF
     v1 = (i32(v1) < i32(v0));
@@ -1889,7 +1889,7 @@ loc_80017850:
     a1 = lw(s1 + 0x4);
     a0 = v1 - a0;
     a1 = v0 - a1;
-    P_AproxDistance();
+    v0 = P_AproxDistance(a0, a1);
     v1 = lw(s1 + 0x58);
     v1 = lw(v1 + 0x3C);
     div(v0, v1);
@@ -2038,7 +2038,7 @@ loc_80017ABC:
     a1 = lw(s1 + 0x4);
     a0 = v1 - a0;
     a1 = v0 - a1;
-    P_AproxDistance();
+    v0 = P_AproxDistance(a0, a1);
     v1 = 0x450000;                                      // Result = 00450000
     v1 |= 0xFFFF;                                       // Result = 0045FFFF
     v1 = (i32(v1) < i32(v0));
@@ -2443,7 +2443,7 @@ loc_80018108:
     a1 = lw(s1 + 0x4);
     a0 = v1 - a0;
     a1 = v0 - a1;
-    P_AproxDistance();
+    v0 = P_AproxDistance(a0, a1);
     a1 = v0;
     v0 = 0x66660000;                                    // Result = 66660000
     v0 |= 0x6667;                                       // Result = 66666667

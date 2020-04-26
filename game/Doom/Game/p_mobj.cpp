@@ -1479,7 +1479,7 @@ loc_8001DED0:
     a1 = lw(s4 + 0x4);
     a0 = v1 - a0;
     a1 = v0 - a1;
-    P_AproxDistance();
+    v0 = P_AproxDistance(a0, a1);
     v1 = lw(s1 + 0x58);
     v1 = lw(v1 + 0x3C);
     div(v0, v1);

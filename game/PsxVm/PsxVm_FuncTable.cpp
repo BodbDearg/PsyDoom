@@ -116,7 +116,6 @@ extern void PIT_RadiusAttack() noexcept;
 extern void P_RadiusAttack() noexcept;
 extern void P_AimLineAttack() noexcept;
 extern void P_LineAttack() noexcept;
-extern void P_AproxDistance() noexcept;
 extern void P_PointOnLineSide() noexcept;
 extern void P_PointOnDivlineSide() noexcept;
 extern void P_MakeDivline() noexcept;
@@ -410,7 +409,6 @@ namespace PsxVm {
         { 0x8001BD24, &P_RadiusAttack },
         { 0x8001BE04, &P_AimLineAttack },
         { 0x8001BE78, &P_LineAttack },
-        { 0x8001C030, &P_AproxDistance },
         { 0x8001C068, &P_PointOnLineSide },
         { 0x8001C128, &P_PointOnDivlineSide },
         { 0x8001C21C, &P_MakeDivline },

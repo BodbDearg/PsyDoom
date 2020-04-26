@@ -7,24 +7,18 @@
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
-void P_AproxDistance() noexcept {
-loc_8001C030:
-    if (i32(a0) >= 0) goto loc_8001C03C;
-    a0 = -a0;
-loc_8001C03C:
-    if (i32(a1) >= 0) goto loc_8001C048;
-    a1 = -a1;
-loc_8001C048:
-    v0 = (i32(a0) < i32(a1));
-    v1 = a0 + a1;
-    if (v0 != 0) goto loc_8001C05C;
-    v0 = u32(i32(a1) >> 1);
-    goto loc_8001C060;
-loc_8001C05C:
-    v0 = u32(i32(a0) >> 1);
-loc_8001C060:
-    v0 = v1 - v0;
-    return;
+BEGIN_THIRD_PARTY_INCLUDES
+    #include <algorithm>
+    #include <cmath>
+END_THIRD_PARTY_INCLUDES
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gives a cheap approximate/estimated length for the given vector
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t P_AproxDistance(const fixed_t dx, const fixed_t dy) noexcept {
+    const fixed_t udx = std::abs(dx);
+    const fixed_t udy = std::abs(dy);
+    return udx + udy - std::min(udx, udy) / 2;
 }
 
 void P_PointOnLineSide() noexcept {
