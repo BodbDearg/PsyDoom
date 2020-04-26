@@ -18,12 +18,12 @@ struct thingline_t {
     vertex_t    p2;
 };
 
-const VmPtr<VmPtr<mobj_t>>      gpShootMObj(0x800782D4);    // The thing that is being shot (if hit a thing)
-const VmPtr<VmPtr<line_t>>      gpShootLine(0x800782D0);    // The line that is being shot (if hit a line)
-const VmPtr<fixed_t>            gShootSlope(0x80077F4C);    // The Z slope for the line from the shooter origin to the hit point
-const VmPtr<fixed_t>            gShootX(0x80077FC4);        // The point in space (X) that was hit when shooting (used for puff, blood spawn)
-const VmPtr<fixed_t>            gShootY(0x80077FD0);        // The point in space (Y) that was hit when shooting (used for puff, blood spawn)
-const VmPtr<fixed_t>            gShootZ(0x80077FD4);        // The point in space (Z) that was hit when shooting (used for puff, blood spawn)
+const VmPtr<VmPtr<mobj_t>>  gpShootMObj(0x800782D4);        // The thing that is being shot (if hit a thing)
+const VmPtr<VmPtr<line_t>>  gpShootLine(0x800782D0);        // The line that is being shot (if hit a line)
+const VmPtr<fixed_t>        gShootSlope(0x80077F4C);        // The Z slope for the line from the shooter origin to the hit point
+const VmPtr<fixed_t>        gShootX(0x80077FC4);            // The point in space (X) that was hit when shooting (used for puff, blood spawn)
+const VmPtr<fixed_t>        gShootY(0x80077FD0);            // The point in space (Y) that was hit when shooting (used for puff, blood spawn)
+const VmPtr<fixed_t>        gShootZ(0x80077FD4);            // The point in space (Z) that was hit when shooting (used for puff, blood spawn)
 
 static const VmPtr<fixed_t>             gAimMidSlope(0x80077FAC);           // The slope for the middle/center of the vertical aim range for the shooter: used to determine if we are hitting lower or upper walls
 static const VmPtr<divline_t>           gShootDiv(0x800A9074);              // The start point and vector for shooting sight checking
