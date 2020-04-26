@@ -10,7 +10,9 @@
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/pw_main.h"
 #include "Doom/UI/st_main.h"
+#include "doomdata.h"
 #include "g_game.h"
+#include "info.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_password.h"
@@ -19,83 +21,54 @@
 #include "PsxVm/PsxVm.h"
 
 // Item respawn queue
-const VmPtr<int32_t> gItemRespawnQueueHead(0x80078138);
-const VmPtr<int32_t> gItemRespawnQueueTail(0x80078180);
+static constexpr int32_t ITEMQUESIZE = 64;
+
+const VmPtr<int32_t>    gItemRespawnQueueHead(0x80078138);      // Head of the circular queue
+const VmPtr<int32_t>    gItemRespawnQueueTail(0x80078180);      // Tail of the circular queue
+
+static const VmPtr<int32_t[ITEMQUESIZE]>        gItemRespawnTime(0x80097910);       // When each item in the respawn queue began the wait to respawn
+static const VmPtr<mapthing_t[ITEMQUESIZE]>     gItemRespawnQueue(0x8008612C);      // Details for the things to be respawned
 
 // Object kill tracking
 const VmPtr<int32_t> gNumMObjKilled(0x80078010);
 
-void P_RemoveMObj() noexcept {
-loc_8001C724:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v0 = 0x20000;                                       // Result = 00020000
-    sw(ra, sp + 0x14);
-    v1 = lw(s0 + 0x64);
-    v0 |= 1;                                            // Result = 00020001
-    v1 &= v0;
-    v0 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 0x2E;                                      // Result = 0000002E
-        if (bJump) goto loc_8001C7F4;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Removes the given map object from the game
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_RemoveMObj(mobj_t& mobj) noexcept {  
+    // Respawn the item later it's the right type
+    const bool bRespawn = (
+        (mobj.flags & MF_SPECIAL) && 
+        ((mobj.flags & MF_DROPPED) == 0) &&
+        (mobj.type != MT_INV) &&
+        (mobj.type != MT_INS)
+    );
+
+    if (bRespawn) {
+        // Remember the item details for later respawning and occupy one queue slot
+        const int32_t slotIdx = (*gItemRespawnQueueHead) & (ITEMQUESIZE - 1);
+
+        gItemRespawnTime[slotIdx] = *gTicCon;
+        gItemRespawnQueue[slotIdx].x = mobj.spawnx;
+        gItemRespawnQueue[slotIdx].y = mobj.spawny;
+        gItemRespawnQueue[slotIdx].type = mobj.spawntype;
+        gItemRespawnQueue[slotIdx].angle = mobj.spawnangle;
+
+        *gItemRespawnQueueHead += 1;
     }
-    v1 = lw(s0 + 0x54);
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0x30;                                      // Result = 00000030
-        if (bJump) goto loc_8001C7F4;
-    }
-    if (v1 == v0) goto loc_8001C7F4;
-    a1 = *gItemRespawnQueueHead;
-    v1 = *gTicCon;
-    a0 = a1 & 0x3F;
-    v0 = a0 << 2;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7910;                                       // Result = gItemRespawnTime[0] (80097910)
-    at += v0;
-    sw(v1, at);
-    v0 += a0;
-    v1 = lhu(s0 + 0x88);
-    v0 <<= 1;
-    at = 0x80080000;                                    // Result = 80080000
-    at += 0x612C;                                       // Result = gItemRespawnQueue[0] (8008612C)
-    at += v0;
-    sh(v1, at);
-    v1 = lhu(s0 + 0x8A);
-    at = 0x80080000;                                    // Result = 80080000
-    at += 0x612E;                                       // Result = gItemRespawnQueue[1] (8008612E)
-    at += v0;
-    sh(v1, at);
-    v1 = lhu(s0 + 0x8C);
-    at = 0x80080000;                                    // Result = 80080000
-    at += 0x6132;                                       // Result = gItemRespawnQueue[3] (80086132)
-    at += v0;
-    sh(v1, at);
-    v1 = lhu(s0 + 0x8E);
-    a1++;
-    *gItemRespawnQueueHead = a1;
-    at = 0x80080000;                                    // Result = 80080000
-    at += 0x6130;                                       // Result = gItemRespawnQueue[2] (80086130)
-    at += v0;
-    sh(v1, at);
-loc_8001C7F4:
-    a0 = s0;
-    P_UnsetThingPosition(*vmAddrToPtr<mobj_t>(a0));
-    v1 = lw(s0 + 0x14);
-    v0 = lw(s0 + 0x10);
-    a0 = *gpMainMemZone;
-    sw(v0, v1 + 0x10);
-    v1 = lw(s0 + 0x10);
-    v0 = lw(s0 + 0x14);
-    a1 = s0;
-    sw(v0, v1 + 0x14);
-    _thunk_Z_Free2();
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Remove the thing from sector thing lists and the blockmap
+    P_UnsetThingPosition(mobj);
+
+    // Remove from the global linked list of things and deallocate
+    mobj.next->prev = mobj.prev;
+    mobj.prev->next = mobj.next;
+    Z_Free2(*gpMainMemZone->get(), &mobj);
+}
+
+// TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
+void _thunk_P_RemoveMObj() noexcept {
+    P_RemoveMObj(*vmAddrToPtr<mobj_t>(a0));
 }
 
 void P_RespawnSpecials() noexcept {
