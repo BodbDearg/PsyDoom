@@ -3,6 +3,7 @@
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
+#include "Doom/Renderer/r_local.h"
 #include "p_inter.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
@@ -195,7 +196,7 @@ void PIT_UseLines() noexcept {
     a0 = s1;
     if (v0 == 0) goto loc_8001B9CC;
     a1 = sp + 0x10;
-    P_MakeDivline();
+    P_MakeDivline(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<divline_t>(a1));
     a0 = lh(sp + 0x1E);
     v0 = 0x800B0000;                                    // Result = 800B0000
     v0 = lh(v0 - 0x78AE);                               // Load from: gUseLine[2] (800A8752)

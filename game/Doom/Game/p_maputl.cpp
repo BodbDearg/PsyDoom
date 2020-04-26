@@ -55,84 +55,55 @@ int32_t P_PointOnLineSide(const fixed_t x, const fixed_t y, const line_t& line) 
     return (vdx * ldy <= vdy * ldx);
 }
 
-void P_PointOnDivlineSide() noexcept {
-    sp -= 0x28;
-    a3 = a0;
-    sw(s0, sp + 0x18);
-    s0 = a2;
-    sw(ra, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    a2 = lw(s0 + 0x8);
-    t0 = a1;
-    if (a2 != 0) goto loc_8001C17C;
-    v0 = lw(s0);
-    v0 = (i32(v0) < i32(a3));
-    if (v0 != 0) goto loc_8001C170;
-    v0 = lw(s0 + 0xC);
-    v0 = (i32(v0) > 0);
-    goto loc_8001C204;
-loc_8001C170:
-    v0 = lw(s0 + 0xC);
-    v0 >>= 31;
-    goto loc_8001C204;
-loc_8001C17C:
-    a0 = lw(s0 + 0xC);
-    if (a0 != 0) goto loc_8001C1A8;
-    v0 = lw(s0 + 0x4);
-    v0 = (i32(v0) < i32(t0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(a2) > 0);
-        if (bJump) goto loc_8001C204;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tell what side of a dividing line a point is on.
+// Returns '0' if on the front side, '1' if on the back side.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t P_PointOnDivlineSide(const fixed_t x, const fixed_t y, const divline_t& divline) noexcept {
+    // Easy case: north/south wall.
+    // Check what side of the line we are on, then return the answer based on what way the wall is winding.
+    if (divline.dx == 0) {
+        if (x > divline.x) {
+            return (divline.dy < 0);
+        } else {
+            return (divline.dy > 0);
+        }
     }
-    v0 = a2 >> 31;
-    goto loc_8001C204;
-loc_8001C1A8:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a1 = a3 - v0;
-    s1 = t0 - v1;
-    v0 = a0 ^ a2;
-    v0 ^= a1;
-    v0 ^= s1;
-    v1 = 0x80000000;                                    // Result = 80000000
-    if (i32(v0) >= 0) goto loc_8001C1DC;
-    v0 = a1 ^ a0;
-    v0 &= v1;
-    v0 = (v0 > 0);
-    goto loc_8001C204;
-loc_8001C1DC:
-    a0 = u32(i32(a0) >> 8);
-    a1 = u32(i32(a1) >> 8);
-    _thunk_FixedMul();
-    a1 = lw(s0 + 0x8);
-    a0 = u32(i32(s1) >> 8);
-    s0 = v0;
-    a1 = u32(i32(a1) >> 8);
-    _thunk_FixedMul();
-    v0 = (i32(v0) < i32(s0));
-    v0 ^= 1;
-loc_8001C204:
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+
+    // Easy case: east/west wall.
+    // Check what side of the line we are on, then return the answer based on what way the wall is winding.
+    if (divline.dy == 0) {
+        if (y > divline.y) {
+            return (divline.dx > 0);
+        } else {
+            return (divline.dx < 0);
+        }
+    }
+
+    // Try to decide based on the sign bits if there is a sign difference between the left and right products.
+    // The comparsion below is ultimately 'lprod <= rprod' and if we can tell just by examining signs, do that now:
+    const fixed_t vdx = x - divline.x;
+    const fixed_t vdy = y - divline.y;
+
+    if ((divline.dy ^ divline.dx ^ vdx ^ vdy) < 0) {
+        // Sign difference: use the left product sign to decide - it must be the opposite of the right product sign (see below)
+        return ((vdx ^ divline.dy) < 0);
+    }
+
+    // Finally fallback to using the 2d vector cross product to decide what side we are on
+    const fixed_t lprod = FixedMul(vdx >> 8, divline.dy >> 8);
+    const fixed_t rprod = FixedMul(vdy >> 8, divline.dx >> 8);
+    return (lprod <= rprod);
 }
 
-void P_MakeDivline() noexcept {
-loc_8001C21C:
-    v0 = lw(a0);
-    v0 = lw(v0);
-    sw(v0, a1);
-    v0 = lw(a0);
-    v0 = lw(v0 + 0x4);
-    sw(v0, a1 + 0x4);
-    v0 = lw(a0 + 0x8);
-    sw(v0, a1 + 0x8);
-    v0 = lw(a0 + 0xC);
-    sw(v0, a1 + 0xC);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility: populate a divline struct from the given line
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_MakeDivline(const line_t& line, divline_t& divline) noexcept {
+    divline.x = line.vertex1->x;
+    divline.y = line.vertex1->y;
+    divline.dx = line.dx;
+    divline.dy = line.dy;
 }
 
 void P_LineOpening() noexcept {
@@ -220,10 +191,6 @@ void P_UnsetThingPosition(mobj_t& thing) noexcept {
     }
 }
 
-void _thunk_P_UnsetThingPosition() noexcept {
-    P_UnsetThingPosition(*vmAddrToPtr<mobj_t>(a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Update the subsector for the thing.
 // Also add the thing to sector and blockmap thing lists if applicable.
@@ -266,10 +233,6 @@ void P_SetThingPosition(mobj_t& thing) noexcept {
             thing.bnext = nullptr;
         }
     }
-}
-
-void _thunk_P_SetThingPosition() noexcept {
-    P_SetThingPosition(*vmAddrToPtr<mobj_t>(a0));
 }
 
 void P_BlockLinesIterator() noexcept {
