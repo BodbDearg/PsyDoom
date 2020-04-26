@@ -12,6 +12,11 @@ BEGIN_THIRD_PARTY_INCLUDES
     #include <cmath>
 END_THIRD_PARTY_INCLUDES
 
+const VmPtr<fixed_t>    gOpenBottom(0x80077F30);    // Line opening (floor/ceiling gap) info: bottom Z value of the opening
+const VmPtr<fixed_t>    gOpenTop(0x800780BC);       // Line opening (floor/ceiling gap) info: top Z value of the opening
+const VmPtr<fixed_t>    gOpenRange(0x8007827C);     // Line opening (floor/ceiling gap) info: Z size of the opening
+const VmPtr<fixed_t>    gLowFloor(0x800781DC);      // Line opening (floor/ceiling gap) info: the lowest (front/back sector) floor of the opening
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Gives a cheap approximate/estimated length for the given vector
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -106,43 +111,25 @@ void P_MakeDivline(const line_t& line, divline_t& divline) noexcept {
     divline.dy = line.dy;
 }
 
-void P_LineOpening() noexcept {
-loc_8001C25C:
-    v1 = lw(a0 + 0x20);
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (v1 != v0) goto loc_8001C278;
-    sw(0, gp + 0xC9C);                                  // Store to: gOpenRange (8007827C)
-    goto loc_8001C2F0;
-loc_8001C278:
-    a2 = lw(a0 + 0x38);
-    a0 = lw(a0 + 0x3C);
-    a1 = lw(a2 + 0x4);
-    v1 = lw(a0 + 0x4);
-    v0 = (i32(a1) < i32(v1));
-    if (v0 == 0) goto loc_8001C2A4;
-    sw(a1, gp + 0xADC);                                 // Store to: gOpenTop (800780BC)
-    goto loc_8001C2A8;
-loc_8001C2A4:
-    sw(v1, gp + 0xADC);                                 // Store to: gOpenTop (800780BC)
-loc_8001C2A8:
-    a1 = lw(a2);
-    v1 = lw(a0);
-    v0 = (i32(v1) < i32(a1));
-    if (v0 == 0) goto loc_8001C2D0;
-    v0 = lw(a0);
-    sw(a1, gp + 0x950);                                 // Store to: gOpenBottom (80077F30)
-    goto loc_8001C2D8;
-loc_8001C2D0:
-    v0 = lw(a2);
-    sw(v1, gp + 0x950);                                 // Store to: gOpenBottom (80077F30)
-loc_8001C2D8:
-    sw(v0, gp + 0xBFC);                                 // Store to: gLowFloor (800781DC)
-    v0 = lw(gp + 0xADC);                                // Load from: gOpenTop (800780BC)
-    v1 = lw(gp + 0x950);                                // Load from: gOpenBottom (80077F30)
-    v0 -= v1;
-    sw(v0, gp + 0xC9C);                                 // Store to: gOpenRange (8007827C)
-loc_8001C2F0:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility: figures out the size of the opening (floor/ceiling gap) for the given line and saves the info to globals.
+// Also saves the lowest floor of the opening.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_LineOpening(const line_t& line) noexcept {
+    // If the line is 1-sided (a solid wall) then there is no opening
+    if (line.sidenum[1] == -1) {
+        *gOpenRange = 0;
+        return;
+    }
+
+    // Otherwise compute the opening values
+    const sector_t& fsec = *line.frontsector;
+    const sector_t& bsec = *line.backsector;
+
+    *gOpenTop = std::min(fsec.ceilingheight, bsec.ceilingheight);
+    *gOpenBottom = std::max(fsec.floorheight, bsec.floorheight);
+    *gLowFloor = std::min(fsec.floorheight, bsec.floorheight);
+    *gOpenRange = *gOpenTop - *gOpenBottom;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

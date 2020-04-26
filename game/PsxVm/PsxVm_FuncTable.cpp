@@ -116,8 +116,6 @@ extern void PIT_RadiusAttack() noexcept;
 extern void P_RadiusAttack() noexcept;
 extern void P_AimLineAttack() noexcept;
 extern void P_LineAttack() noexcept;
-extern void P_LineOpening() noexcept;
-extern void _thunk_P_SetThingPosition() noexcept;
 extern void P_BlockLinesIterator() noexcept;
 extern void P_BlockThingsIterator() noexcept;
 extern void P_RemoveMObj() noexcept;
@@ -405,7 +403,6 @@ namespace PsxVm {
         { 0x8001BD24, &P_RadiusAttack },
         { 0x8001BE04, &P_AimLineAttack },
         { 0x8001BE78, &P_LineAttack },
-        { 0x8001C25C, &P_LineOpening },
         { 0x8001C540, &P_BlockLinesIterator },
         { 0x8001C660, &P_BlockThingsIterator },
         { 0x8001C724, &P_RemoveMObj },

@@ -257,7 +257,7 @@ loc_8001B980:
         if (bJump) goto loc_8001B9D4;
     }
     a0 = s1;
-    P_LineOpening();
+    P_LineOpening(*vmAddrToPtr<line_t>(a0));
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7D84);                               // Load from: gOpenRange (8007827C)
     {
