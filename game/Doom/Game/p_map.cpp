@@ -427,7 +427,9 @@ loc_8001BC08:
     return;
 }
 
-void PIT_RadiusAttack() noexcept {
+bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
+    a0 = ptrToVmAddr(&mobj);
+
     sp -= 0x20;
     sw(s1, sp + 0x14);
     s1 = a0;
@@ -499,7 +501,8 @@ loc_8001BD0C:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-    return;
+
+    return (v0 != 0);
 }
 
 void P_RadiusAttack() noexcept {
@@ -542,7 +545,7 @@ loc_8001BDB0:
     a2 = 0x80020000;                                    // Result = 80020000
     a2 -= 0x43D0;                                       // Result = PIT_RadiusAttack (8001BC30)
     a1 = s1;
-    P_BlockThingsIterator();
+    P_BlockThingsIterator(a0, a1, PIT_RadiusAttack);
     s0++;
     v0 = (i32(s2) < i32(s0));
     a0 = s0;

@@ -5,7 +5,6 @@
 #include "Doom/Renderer/r_main.h"
 #include "p_local.h"
 #include "p_setup.h"
-#include "PsxVm/PsxVm.h"
 
 BEGIN_THIRD_PARTY_INCLUDES
     #include <algorithm>
@@ -257,53 +256,26 @@ bool P_BlockLinesIterator(const int32_t x, const int32_t y, bool (*pFunc)(line_t
     return true;
 }
 
-void P_BlockThingsIterator() noexcept {
-loc_8001C660:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a2;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    if (i32(a0) < 0) goto loc_8001C708;
-    v0 = 1;                                             // Result = 00000001
-    if (i32(a1) < 0) goto loc_8001C70C;
-    v1 = *gBlockmapWidth;
-    v0 = (i32(a0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001C70C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Visit all things in the specified blockmap cell, calling the given function for each line in the cell.
+// The called function can abort iteration by returning 'false'.
+// This function returns 'false' if iteration was aborted.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_BlockThingsIterator(const int32_t x, const int32_t y, bool (*pFunc)(mobj_t&)) noexcept {
+    // If the blockmap block is out of range then there is nothing to do
+    if ((x < 0) || (y < 0) || (x >= *gBlockmapWidth) || (y >= *gBlockmapHeight))
+        return true;
+    
+    // Visit all of the things in this blockmap cell unless the callee asks to quit
+    mobj_t* pmobj = gppBlockLinks->get()[x + y * (*gBlockmapWidth)].get();
+        
+    while (pmobj) {
+        // Call the function and stop if requested
+        if (!pFunc(*pmobj))
+            return false;
+        
+        pmobj = pmobj->bnext.get();
     }
-    v0 = *gBlockmapHeight;
-    v0 = (i32(a1) < i32(v0));
-    mult(a1, v1);
-    if (v0 != 0) goto loc_8001C6C0;
-    v0 = 1;                                             // Result = 00000001
-    goto loc_8001C70C;
-loc_8001C6B8:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8001C70C;
-loc_8001C6C0:
-    v1 = *gppBlockLinks;
-    v0 = lo;
-    v0 += a0;
-    v0 <<= 2;
-    v0 += v1;
-    s0 = lw(v0);
-    v0 = 1;                                             // Result = 00000001
-    if (s0 == 0) goto loc_8001C70C;
-loc_8001C6E8:
-    a0 = s0;
-    ptr_call(s1);
-    if (v0 == 0) goto loc_8001C6B8;
-    s0 = lw(s0 + 0x30);
-    if (s0 != 0) goto loc_8001C6E8;
-loc_8001C708:
-    v0 = 1;                                             // Result = 00000001
-loc_8001C70C:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    
+    return true;
 }

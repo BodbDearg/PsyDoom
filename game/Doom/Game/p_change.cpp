@@ -59,7 +59,9 @@ loc_8001501C:
     return;
 }
 
-void PIT_ChangeSector() noexcept {
+bool PIT_ChangeSector(mobj_t& mobj) noexcept {
+    a0 = ptrToVmAddr(&mobj);
+
     sp -= 0x20;
     sw(s1, sp + 0x14);
     s1 = a0;
@@ -197,7 +199,7 @@ loc_80015220:
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x20;
-    return;
+    return (v0 != 0);
 }
 
 void P_ChangeSector() noexcept {
@@ -232,7 +234,7 @@ loc_800152A4:
     a2 = 0x80010000;                                    // Result = 80010000
     a2 += 0x504C;                                       // Result = PIT_ChangeSector (8001504C)
     a1 = s0;
-    P_BlockThingsIterator();
+    P_BlockThingsIterator(a0, a1, PIT_ChangeSector);
     v0 = lw(s2 + 0x28);
     s0++;
     v0 = (i32(v0) < i32(s0));

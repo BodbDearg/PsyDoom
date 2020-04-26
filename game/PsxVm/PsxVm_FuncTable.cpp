@@ -8,8 +8,6 @@ extern void _thunk_D_memcpy() noexcept;
 extern void _thunk_D_strncasecmp() noexcept;
 extern void _thunk_P_Random() noexcept;
 extern void M_AddPointToBox() noexcept;
-extern void G_DoLoadLevel() noexcept;
-extern void G_CompleteLevel() noexcept;
 extern void P_RunMobjBase() noexcept;
 extern void P_XYMovement() noexcept;
 extern void P_FloatChange() noexcept;
@@ -30,7 +28,6 @@ extern void P_RemoveActiveCeiling() noexcept;
 extern void P_ActivateInStasisCeiling() noexcept;
 extern void EV_CeilingCrushStop() noexcept;
 extern void P_ThingHeightClip() noexcept;
-extern void PIT_ChangeSector() noexcept;
 extern void P_ChangeSector() noexcept;
 extern void T_VerticalDoor() noexcept;
 extern void EV_DoLockedDoor() noexcept;
@@ -111,11 +108,9 @@ extern void P_CheckPosition() noexcept;
 extern void P_TryMove() noexcept;
 extern void P_InterceptVector() noexcept;
 extern void P_UseLines() noexcept;
-extern void PIT_RadiusAttack() noexcept;
 extern void P_RadiusAttack() noexcept;
 extern void P_AimLineAttack() noexcept;
 extern void P_LineAttack() noexcept;
-extern void P_BlockThingsIterator() noexcept;
 extern void P_RemoveMObj() noexcept;
 extern void P_RespawnSpecials() noexcept;
 extern void P_SetMObjState() noexcept;
@@ -216,8 +211,6 @@ extern void _thunk_P_AddThinker() noexcept;
 extern void _thunk_P_RemoveThinker() noexcept;
 extern void P_RunThinkers() noexcept;
 extern void P_RunMobjLate() noexcept;
-extern void P_CheckCheats() noexcept;
-extern void P_Start() noexcept;
 extern void P_PlayerMove() noexcept;
 extern void P_PlayerXYMovement() noexcept;
 extern void P_PlayerZMovement() noexcept;
@@ -242,15 +235,8 @@ extern void I_NetSendRecv() noexcept;
 extern void I_SubmitGpuCmds() noexcept;
 extern void I_LocalButtonsToNet() noexcept;
 extern void I_NetButtonsToLocal() noexcept;
-extern void START_Legals() noexcept;
-extern void START_Title() noexcept;
-extern void START_PasswordScreen() noexcept;
-extern void START_ControlsScreen() noexcept;
 extern void P_ComputePassword() noexcept;
 extern void P_ProcessPassword() noexcept;
-extern void ST_InitEveryLevel() noexcept;
-extern void ST_Ticker() noexcept;
-extern void IN_Start() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
 
@@ -293,8 +279,6 @@ namespace PsxVm {
         { 0x8001297C, &_thunk_D_strncasecmp },
         { 0x80012A18, &_thunk_P_Random },
         { 0x80012B10, &M_AddPointToBox },
-        { 0x80012E04, &G_DoLoadLevel },
-        { 0x80013384, &G_CompleteLevel },
         { 0x80013840, &P_RunMobjBase },
         { 0x800138D8, &P_XYMovement },
         { 0x80013B38, &P_FloatChange },
@@ -315,7 +299,6 @@ namespace PsxVm {
         { 0x80014EBC, &P_ActivateInStasisCeiling },
         { 0x80014F30, &EV_CeilingCrushStop },
         { 0x80014FA4, &P_ThingHeightClip },
-        { 0x8001504C, &PIT_ChangeSector },
         { 0x80015238, &P_ChangeSector },
         { 0x800152FC, &T_VerticalDoor },
         { 0x80015540, &EV_DoLockedDoor },
@@ -396,11 +379,9 @@ namespace PsxVm {
         { 0x8001B67C, &P_TryMove },
         { 0x8001B7A4, &P_InterceptVector },
         { 0x8001B9F4, &P_UseLines },
-        { 0x8001BC30, &PIT_RadiusAttack },
         { 0x8001BD24, &P_RadiusAttack },
         { 0x8001BE04, &P_AimLineAttack },
         { 0x8001BE78, &P_LineAttack },
-        { 0x8001C660, &P_BlockThingsIterator },
         { 0x8001C724, &P_RemoveMObj },
         { 0x8001C838, &P_RespawnSpecials },
         { 0x8001CA18, &P_SetMObjState },
@@ -501,8 +482,6 @@ namespace PsxVm {
         { 0x80028C68, &_thunk_P_RemoveThinker },
         { 0x80028C74, &P_RunThinkers },
         { 0x80028D30, &P_RunMobjLate },
-        { 0x80028D94, &P_CheckCheats },
-        { 0x80029684, &P_Start },
         { 0x800297A0, &P_PlayerMove },
         { 0x80029918, &P_PlayerXYMovement },
         { 0x80029A08, &P_PlayerZMovement },
@@ -527,15 +506,8 @@ namespace PsxVm {
         { 0x80034E58, &I_SubmitGpuCmds },
         { 0x80034EA4, &I_LocalButtonsToNet },
         { 0x80034F04, &I_NetButtonsToLocal },
-        { 0x80034F54, &START_Legals },
-        { 0x80035098, &START_Title },
-        { 0x80036E1C, &START_PasswordScreen },
-        { 0x8003793C, &START_ControlsScreen },
         { 0x80037DBC, &P_ComputePassword },
         { 0x800381B0, &P_ProcessPassword },
-        { 0x80038610, &ST_InitEveryLevel },
-        { 0x80038688, &ST_Ticker },
-        { 0x8003C758, &IN_Start },
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },
 

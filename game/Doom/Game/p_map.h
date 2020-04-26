@@ -15,7 +15,7 @@ void P_TryMove() noexcept;
 void P_InterceptVector() noexcept;
 bool PIT_UseLines(line_t& line) noexcept;
 void P_UseLines() noexcept;
-void PIT_RadiusAttack() noexcept;
+bool PIT_RadiusAttack(mobj_t& mobj) noexcept;
 void P_RadiusAttack() noexcept;
 void P_AimLineAttack() noexcept;
 void P_LineAttack() noexcept;
