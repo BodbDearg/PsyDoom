@@ -4,6 +4,7 @@
 
 extern const VmPtr<VmPtr<mobj_t>>       gpShooter;
 extern const VmPtr<fixed_t>             gAttackRange;
+extern const VmPtr<angle_t>             gAttackAngle;
 extern const VmPtr<fixed_t>             gAimTopSlope;
 extern const VmPtr<fixed_t>             gAimBottomSlope;
 

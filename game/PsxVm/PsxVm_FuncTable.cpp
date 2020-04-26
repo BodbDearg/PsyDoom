@@ -186,7 +186,6 @@ extern void A_LoadShotgun2() noexcept;
 extern void A_CloseShotgun2() noexcept;
 extern void P_SetupPsprites() noexcept;
 extern void P_MovePsprites() noexcept;
-extern void P_Shoot2() noexcept;
 extern void P_SlideMove() noexcept;
 extern void P_CompletableFrac() noexcept;
 extern void SL_PointOnSide() noexcept;
@@ -481,7 +480,6 @@ namespace PsxVm {
         { 0x800216D8, &A_CloseShotgun2 },
         { 0x80021794, &P_SetupPsprites },
         { 0x8002190C, &P_MovePsprites },
-        { 0x80023C34, &P_Shoot2 },
         { 0x8002502C, &P_SlideMove },
         { 0x800251BC, &P_CompletableFrac },
         { 0x80025460, &SL_PointOnSide },

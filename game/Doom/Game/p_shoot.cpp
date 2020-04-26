@@ -7,7 +7,6 @@
 #include "doomdata.h"
 #include "p_map.h"
 #include "p_setup.h"
-#include "PsxVm/PsxVm.h"
 
 BEGIN_THIRD_PARTY_INCLUDES
     #include <algorithm>
@@ -26,7 +25,7 @@ const VmPtr<fixed_t>            gShootX(0x80077FC4);        // The point in spac
 const VmPtr<fixed_t>            gShootY(0x80077FD0);        // The point in space (Y) that was hit when shooting (used for puff, blood spawn)
 const VmPtr<fixed_t>            gShootZ(0x80077FD4);        // The point in space (Z) that was hit when shooting (used for puff, blood spawn)
 
-static const VmPtr<fixed_t>             gAimMidSlope(0x80077FAC);           // TODO: COMMENT
+static const VmPtr<fixed_t>             gAimMidSlope(0x80077FAC);           // The slope for the middle/center of the vertical aim range for the shooter: used to determine if we are hitting lower or upper walls
 static const VmPtr<divline_t>           gShootDiv(0x800A9074);              // The start point and vector for shooting sight checking
 static const VmPtr<fixed_t>             gShootX2(0x80078038);               // End point for shooting sight checking: x
 static const VmPtr<fixed_t>             gShootY2(0x80078044);               // End point for shooting sight checking: y
@@ -42,127 +41,60 @@ static const VmPtr<thingline_t>         gThingLineVerts(0x800A8A44);        // T
 static const VmPtr<VmPtr<vertex_t>>     gPartialThingLine(0x80077B14);      // A partial/degenerate 'line_t' for the shooters line (just the two vertex pointer fields defined)
 static const VmPtr<fixed_t>             gFirstLineFrac(0x800781D0);         // Fractional distance along the shooting line of the first/closest wall hit
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does a raycast for the current shooter taking a shot and determines what is hit.
+// Saves the wall or thing which is hit, and the hit point etc.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_Shoot2() noexcept {
-loc_80023C34:
-    t0 = 0x80080000;                                    // Result = 80080000
-    t0 = lw(t0 - 0x7F4C);                               // Load from: gpShooter (800780B4)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7F80);                               // Load from: gAttackAngle (80077F80)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    t1 = 0x80070000;                                    // Result = 80070000
-    t1 = lh(t1 + 0x7F9A);                               // Load from: gAttackRange + 2 (80077F9A) (80077F9A)
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 -= 0x6F8C;                                       // Result = gShootDiv[0] (800A9074)
-    sw(ra, sp + 0x14);
-    a1 >>= 19;
-    a2 = lw(t0);
-    a1 <<= 2;
-    sw(a2, s0);                                         // Store to: gShootDiv[0] (800A9074)
-    a3 = lw(t0 + 0x4);
-    v0 += a1;
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a3, at - 0x6F88);                                // Store to: gShootDiv[1] (800A9078)
-    v0 = lw(v0);
-    mult(t1, v0);
-    a0 = *gNumBspNodes;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7D08);                               // Load from: gAimBottomSlope (800782F8)
-    sw(0, gp + 0xCF0);                                  // Store to: gpShootLine (800782D0)
-    sw(0, gp + 0xCF4);                                  // Store to: gpShootMObj (800782D4)
-    sw(0, gp + 0xB4C);                                  // Store to: gOldFrac (8007812C)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FF8);                               // Load from: gAimTopSlope (80077FF8)
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += a1;
-    a1 = lw(at);
-    v0 += v1;
-    v0 = u32(i32(v0) >> 1);
-    v1 = lo;
-    sw(v0, gp + 0x9CC);                                 // Store to: gAimMidSlope (80077FAC)
-    v0 = u32(i32(a2) >> 16);
-    mult(t1, a1);
-    sw(v0, gp + 0xC10);                                 // Store to: gSsx1 (800781F0)
-    a1 = lw(t0);
-    v0 = u32(i32(a3) >> 16);
-    sw(v0, gp + 0xC20);                                 // Store to: gSsy1 (80078200)
-    v1 += a1;
-    a1 = lw(t0 + 0x4);
-    a2 = v1 - a2;
-    sw(v1, gp + 0xA58);                                 // Store to: gShootX2 (80078038)
-    v1 = u32(i32(v1) >> 16);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a2, at - 0x6F84);                                // Store to: gShootDiv[2] (800A907C)
-    sw(v1, gp + 0xC1C);                                 // Store to: gSsx2 (800781FC)
-    v0 = lo;
-    v0 += a1;
-    a3 = v0 - a3;
-    a2 ^= a3;
-    sw(v0, gp + 0xA64);                                 // Store to: gShootY2 (80078044)
-    v0 = u32(i32(v0) >> 16);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a3, at - 0x6F80);                                // Store to: gShootDiv[3] (800A9080)
-    sw(v0, gp + 0xC2C);                                 // Store to: gSsy2 (8007820C)
-    v0 = lw(t0 + 0x44);
-    v1 = lw(t0 + 0x8);
-    a2 = (i32(a2) > 0);
-    sw(a2, gp + 0xA8C);                                 // Store to: gbShootDivPositive (8007806C)
-    v0 = u32(i32(v0) >> 1);
-    v0 += v1;
-    v1 = 0x80000;                                       // Result = 00080000
-    v0 += v1;
-    sw(v0, gp + 0x9F4);                                 // Store to: gShootZ (80077FD4)
-    a0--;
-    v0 = PA_CrossBSPNode(a0);
-    v0 = lw(gp + 0xCF4);                                // Load from: gpShootMObj (800782D4)
-    a0 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_80023E28;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x10000;                                       // Result = 00010000
-    v0 = PA_DoIntercept(vmAddrToPtr<void>(a0), a1, a2);
-    v0 = lw(gp + 0xCF4);                                // Load from: gpShootMObj (800782D4)
-    if (v0 != 0) goto loc_80023E28;
-    v0 = lw(gp + 0xCF0);                                // Load from: gpShootLine (800782D0)
-    if (v0 == 0) goto loc_80023E28;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7F98);                               // Load from: gAttackRange (80077F98)
-    a0 = 0x40000;                                       // Result = 00040000
-    _thunk_FixedDiv();
-    a1 = lw(gp + 0xBF0);                                // Load from: gFirstLineFrac (800781D0)
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x6F84);                               // Load from: gShootDiv[2] (800A907C)
-    a1 -= v0;
-    sw(a1, gp + 0xBF0);                                 // Store to: gFirstLineFrac (800781D0)
-    _thunk_FixedMul();
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x6F80);                               // Load from: gShootDiv[3] (800A9080)
-    v1 = lw(s0);                                        // Load from: gShootDiv[0] (800A9074)
-    a1 = lw(gp + 0xBF0);                                // Load from: gFirstLineFrac (800781D0)
-    v0 += v1;
-    sw(v0, gp + 0x9E4);                                 // Store to: gShootX (80077FC4)
-    _thunk_FixedMul();
-    a0 = lw(gp + 0xBF0);                                // Load from: gFirstLineFrac (800781D0)
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x6F88);                               // Load from: gShootDiv[1] (800A9078)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7F98);                               // Load from: gAttackRange (80077F98)
-    v0 += v1;
-    sw(v0, gp + 0x9F0);                                 // Store to: gShootY (80077FD0)
-    _thunk_FixedMul();
-    a0 = lw(gp + 0x9CC);                                // Load from: gAimMidSlope (80077FAC)
-    a1 = v0;
-    _thunk_FixedMul();
-    v1 = lw(gp + 0x9F4);                                // Load from: gShootZ (80077FD4)
-    v0 += v1;
-    sw(v0, gp + 0x9F4);                                 // Store to: gShootZ (80077FD4)
-loc_80023E28:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    // Save the start and precompute the end point for the shot line
+    mobj_t& shooter = *gpShooter->get();
+
+    gShootDiv->x = shooter.x;
+    gShootDiv->y = shooter.y;
+    
+    const int32_t attackRangeInt = (*gAttackRange) >> FRACBITS;
+    const uint32_t attackFineAngle = (*gAttackAngle) >> ANGLETOFINESHIFT;
+
+    *gShootX2 = shooter.x + attackRangeInt * gFineCosine[attackFineAngle];
+    *gShootY2 = shooter.y + attackRangeInt * gFineSine[attackFineAngle];
+    
+    // Precompute the line vector for the shot line and whether it's slope is positive
+    gShootDiv->dx = *gShootX2 - gShootDiv->x;
+    gShootDiv->dy = *gShootY2 - gShootDiv->y;
+    *gbShootDivPositive = ((gShootDiv->dx ^ gShootDiv->dy) > 0);
+
+    // Figure out the shot height and shot center line slope
+    *gShootZ = shooter.z + shooter.height / 2 + (8 * FRACUNIT);
+    *gAimMidSlope = (*gAimTopSlope + *gAimBottomSlope) / 2;
+
+    // Precompute the start and end points for the shot line (integer/whole coords)
+    *gSsx1 = gShootDiv->x >> FRACBITS;
+    *gSsy1 = gShootDiv->y >> FRACBITS;
+    *gSsx2 = *gShootX2 >> FRACBITS;
+    *gSsy2 = *gShootY2 >> FRACBITS;
+
+    // Initially nothing is hit
+    *gpShootLine = nullptr;
+    *gpShootMObj = nullptr;
+    *gOldFrac = 0;
+
+    // Test against all lines and things in the BSP tree
+    PA_CrossBSPNode(*gNumBspNodes - 1);
+
+    // If we didn't hit a thing then try check against the saved previous closest thing (if any)
+    if (!gpShootMObj->get()) {
+        PA_DoIntercept(nullptr, false, FRACUNIT);
+    }
+    
+    // If we hit a wall then adjust the hit spot slightly so the puff isn't in the wall - move it out
+    if ((!gpShootMObj->get()) && gpShootLine->get()) {
+        const fixed_t hitFracAdjust = FixedDiv(4 * FRACUNIT, *gAttackRange);
+        *gFirstLineFrac -= hitFracAdjust;
+
+        *gShootX = gShootDiv->x + FixedMul(gShootDiv->dx, *gFirstLineFrac);
+        *gShootY = gShootDiv->y + FixedMul(gShootDiv->dy, *gFirstLineFrac);
+        *gShootZ += FixedMul(*gAimMidSlope, FixedMul(*gFirstLineFrac, *gAttackRange));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

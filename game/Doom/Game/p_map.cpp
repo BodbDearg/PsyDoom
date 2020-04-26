@@ -15,7 +15,8 @@
 #include "PsxVm/PsxVm.h"
 
 const VmPtr<VmPtr<mobj_t>>      gpShooter(0x800780B4);          // The map object currently taking a shot
-const VmPtr<fixed_t>            gAttackRange(0x80077F98);       // Maximum attack range for the shooter
+const VmPtr<fixed_t>            gAttackRange(0x80077F98);       // Maximum attack range for an attacker
+const VmPtr<angle_t>            gAttackAngle(0x80077F80);       // Angle of attack for an attacker
 const VmPtr<fixed_t>            gAimTopSlope(0x80077FF8);       // Maximum Z slope for shooting (defines Z range that stuff can be hit within)
 const VmPtr<fixed_t>            gAimBottomSlope(0x800782F8);    // Minimum Z slope for shooting (defines Z range that stuff can be hit within)
 
