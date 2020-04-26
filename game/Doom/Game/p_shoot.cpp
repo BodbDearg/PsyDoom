@@ -19,6 +19,14 @@ struct thingline_t {
     vertex_t    p2;
 };
 
+const VmPtr<VmPtr<mobj_t>>      gpShootMObj(0x800782D4);    // The thing that is being shot (if hit a thing)
+const VmPtr<VmPtr<line_t>>      gpShootLine(0x800782D0);    // The line that is being shot (if hit a line)
+const VmPtr<fixed_t>            gShootSlope(0x80077F4C);    // The Z slope for the line from the shooter origin to the hit point
+const VmPtr<fixed_t>            gShootX(0x80077FC4);        // The point in space (X) that was hit when shooting (used for puff, blood spawn)
+const VmPtr<fixed_t>            gShootY(0x80077FD0);        // The point in space (Y) that was hit when shooting (used for puff, blood spawn)
+const VmPtr<fixed_t>            gShootZ(0x80077FD4);        // The point in space (Z) that was hit when shooting (used for puff, blood spawn)
+
+static const VmPtr<fixed_t>             gAimMidSlope(0x80077FAC);           // TODO: COMMENT
 static const VmPtr<divline_t>           gShootDiv(0x800A9074);              // The start point and vector for shooting sight checking
 static const VmPtr<fixed_t>             gShootX2(0x80078038);               // End point for shooting sight checking: x
 static const VmPtr<fixed_t>             gShootY2(0x80078044);               // End point for shooting sight checking: y
@@ -32,11 +40,7 @@ static const VmPtr<bool32_t>            gbOldIsLine(0x80077EC8);            // I
 static const VmPtr<bool32_t>            gbShootDivPositive(0x8007806C);     // True if the slope for the shooters shoot direction is positive
 static const VmPtr<thingline_t>         gThingLineVerts(0x800A8A44);        // The vertices for the shooters shoot line
 static const VmPtr<VmPtr<vertex_t>>     gPartialThingLine(0x80077B14);      // A partial/degenerate 'line_t' for the shooters line (just the two vertex pointer fields defined)
-static const VmPtr<fixed_t>             gShootX(0x80077FC4);                // The point in space (X) that was hit when shooting (used for puff, blood spawn)
-static const VmPtr<fixed_t>             gShootY(0x80077FD0);                // The point in space (Y) that was hit when shooting (used for puff, blood spawn)
-static const VmPtr<fixed_t>             gShootZ(0x80077FD4);                // The point in space (Z) that was hit when shooting (used for puff, blood spawn)
-static const VmPtr<fixed_t>             gShootSlope(0x80077F4C);            // The Z slope for the line from the shooter origin to the hit point
-static const VmPtr<VmPtr<mobj_t>>       gpShootMObj(0x800782D4);            // The thing that is being shot
+static const VmPtr<fixed_t>             gFirstLineFrac(0x800781D0);         // Fractional distance along the shooting line of the first/closest wall hit
 
 void P_Shoot2() noexcept {
 loc_80023C34:
@@ -204,125 +208,62 @@ bool PA_DoIntercept(void* const pObj, const bool bIsLine, const fixed_t hitFrac)
     }
 }
 
-bool PA_ShootLine(line_t& line, fixed_t hitFrac) noexcept {
-    a0 = ptrToVmAddr(&line);
-    a1 = hitFrac;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Try to shoot a line assuming an unobstructed line of sight from the shooter to the line.
+// Returns 'false' if no other lines should be tested against.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool PA_ShootLine(line_t& line, const fixed_t hitFrac) noexcept {
+    // If the line is not two sided (solid/impassible) then it blocks shots always
+    if ((line.flags & ML_TWOSIDED) == 0) {
+        // Save this as the first line hit if there already isn't one
+        if (!gpShootLine->get()) {
+            *gFirstLineFrac = hitFrac;
+            *gpShootLine = &line;
+        }
 
-loc_80023EC4:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = lw(s0 + 0x10);
-    v0 &= 4;
-    s1 = a1;
-    if (v0 != 0) goto loc_80023F14;
-    v0 = lw(gp + 0xCF0);                                // Load from: gpShootLine (800782D0)
-    if (v0 != 0) goto loc_80023F08;
-    sw(s0, gp + 0xCF0);                                 // Store to: gpShootLine (800782D0)
-    sw(s1, gp + 0xBF0);                                 // Store to: gFirstLineFrac (800781D0)
-loc_80023F08:
-    sw(0, gp + 0xB4C);                                  // Store to: gOldFrac (8007812C)
-    v0 = 0;                                             // Result = 00000000
-    goto loc_800240A0;
-loc_80023F14:
-    a1 = lw(s0 + 0x38);
-    a2 = lw(s0 + 0x3C);
-    a0 = lw(a1 + 0x4);
-    v1 = lw(a2 + 0x4);
-    v0 = (i32(a0) < i32(v1));
-    if (v0 == 0) goto loc_80023F44;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0x7F44);                                // Store to: gOpenTop (800780BC)
-    goto loc_80023F4C;
-loc_80023F44:
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7F44);                                // Store to: gOpenTop (800780BC)
-loc_80023F4C:
-    a0 = lw(a1);
-    v1 = lw(a2);
-    v0 = (i32(v1) < i32(a0));
-    if (v0 == 0) goto loc_80023F74;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x7F30);                                // Store to: gOpenBottom (80077F30)
-    goto loc_80023F7C;
-loc_80023F74:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x7F30);                                // Store to: gOpenBottom (80077F30)
-loc_80023F7C:
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7F98);                               // Load from: gAttackRange (80077F98)
-    a1 = s1;
-    _thunk_FixedMul();
-    v1 = lw(s0 + 0x38);
-    a0 = lw(s0 + 0x3C);
-    a1 = lw(v1);
-    v1 = lw(a0);
-    s2 = v0;
-    if (a1 == v1) goto loc_8002400C;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F30);                               // Load from: gOpenBottom (80077F30)
-    a0 = lw(gp + 0x9F4);                                // Load from: gShootZ (80077FD4)
-    a1 = s2;
-    a0 = v0 - a0;
-    _thunk_FixedDiv();
-    v1 = lw(gp + 0x9CC);                                // Load from: gAimMidSlope (80077FAC)
-    a0 = v0;
-    v1 = (i32(a0) < i32(v1));
-    if (v1 != 0) goto loc_80023FEC;
-    v0 = lw(gp + 0xCF0);                                // Load from: gpShootLine (800782D0)
-    if (v0 != 0) goto loc_80023FEC;
-    sw(s0, gp + 0xCF0);                                 // Store to: gpShootLine (800782D0)
-    sw(s1, gp + 0xBF0);                                 // Store to: gFirstLineFrac (800781D0)
-loc_80023FEC:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D08);                               // Load from: gAimBottomSlope (800782F8)
-    v0 = (i32(v0) < i32(a0));
-    if (v0 == 0) goto loc_8002400C;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a0, at - 0x7D08);                                // Store to: gAimBottomSlope (800782F8)
-loc_8002400C:
-    v0 = lw(s0 + 0x38);
-    v1 = lw(s0 + 0x3C);
-    a0 = lw(v0 + 0x4);
-    v0 = lw(v1 + 0x4);
-    a1 = s2;
-    if (a0 == v0) goto loc_80024088;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F44);                               // Load from: gOpenTop (800780BC)
-    a0 = lw(gp + 0x9F4);                                // Load from: gShootZ (80077FD4)
-    a0 = v0 - a0;
-    _thunk_FixedDiv();
-    v1 = lw(gp + 0x9CC);                                // Load from: gAimMidSlope (80077FAC)
-    a0 = v0;
-    v1 = (i32(v1) < i32(a0));
-    if (v1 != 0) goto loc_80024068;
-    v0 = lw(gp + 0xCF0);                                // Load from: gpShootLine (800782D0)
-    if (v0 != 0) goto loc_80024068;
-    sw(s0, gp + 0xCF0);                                 // Store to: gpShootLine (800782D0)
-    sw(s1, gp + 0xBF0);                                 // Store to: gFirstLineFrac (800781D0)
-loc_80024068:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FF8);                               // Load from: gAimTopSlope (80077FF8)
-    v0 = (i32(a0) < i32(v0));
-    if (v0 == 0) goto loc_80024088;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x7FF8);                                // Store to: gAimTopSlope (80077FF8)
-loc_80024088:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7FF8);                               // Load from: gAimTopSlope (80077FF8)
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D08);                               // Load from: gAimBottomSlope (800782F8)
-    v0 = (i32(v0) < i32(v1));
-loc_800240A0:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return (v0 != 0);
+        *gOldFrac = 0;      // Don't shoot anything past this line
+        return false;
+    }
+
+    // Figure out the extent of the gap that can be shot through (area between the highest floor and lowest ceiling)
+    const sector_t& fsec = *line.frontsector;
+    const sector_t& bsec = *line.backsector;
+    const fixed_t highestFloorHeight = std::max(fsec.floorheight, bsec.floorheight);        
+    const fixed_t lowestCeilHeight = std::min(fsec.ceilingheight, bsec.ceilingheight);
+
+    // How far away is the hit point?
+    const fixed_t hitDist = FixedMul(*gAttackRange, hitFrac);
+    
+    // Is there a lower wall which can be hit?
+    if (fsec.floorheight != bsec.floorheight) {
+        const fixed_t slopeToFloor = FixedDiv(highestFloorHeight - *gShootZ, hitDist);
+        
+        // The lower wall can be hit if its top is above the aim line and nothing else has been hit
+        if ((!gpShootLine->get()) && (slopeToFloor >= *gAimMidSlope)) {
+            *gFirstLineFrac = hitFrac;
+            *gpShootLine = &line;
+        }
+
+        // Narrow the allowed vertical aim range by this lower wall - can only shoot above it now 
+        *gAimBottomSlope = std::max(*gAimBottomSlope, slopeToFloor);
+    }
+    
+    // Is there an upper wall which can be hit?
+    if (fsec.ceilingheight != bsec.ceilingheight) {
+        const fixed_t slopeToCeiling = FixedDiv(lowestCeilHeight - *gShootZ, hitDist);
+
+        // The upper wall can be hit if its bottom is below the aim line and nothing else has been hit
+        if ((!gpShootLine->get()) && (slopeToCeiling <= *gAimMidSlope)) {
+            *gFirstLineFrac = hitFrac;
+            *gpShootLine = &line;
+        }
+        
+        // Narrow the allowed vertical aim range by this upper wall - can only shoot below it now
+        *gAimTopSlope = std::min(*gAimTopSlope, slopeToCeiling);
+    }
+
+    // If the opening is fully closed then the shot stops here
+    return (*gAimTopSlope > *gAimBottomSlope);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
