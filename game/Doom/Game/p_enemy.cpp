@@ -1807,7 +1807,7 @@ void A_Tracer() noexcept {
     a0 = lw(s1);
     a1 = lw(s1 + 0x4);
     a2 = lw(s1 + 0x8);
-    P_SpawnPuff();
+    P_SpawnPuff(a0, a1, a2);
     a3 = 5;                                             // Result = 00000005
     a2 = lw(s1 + 0x8);
     v1 = lw(s1);

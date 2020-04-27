@@ -116,8 +116,6 @@ extern void P_RespawnSpecials() noexcept;
 extern void _thunk_P_ExplodeMissile() noexcept;
 extern void P_SpawnPlayer() noexcept;
 extern void P_SpawnMapThing() noexcept;
-extern void P_SpawnPuff() noexcept;
-extern void P_SpawnBlood() noexcept;
 extern void P_CheckMissileSpawn() noexcept;
 extern void P_SpawnMissile() noexcept;
 extern void P_SpawnPlayerMissile() noexcept;
@@ -386,8 +384,6 @@ namespace PsxVm {
         { 0x8001CB9C, &_thunk_P_ExplodeMissile },
         { 0x8001CE40, &P_SpawnPlayer },
         { 0x8001D184, &P_SpawnMapThing },
-        { 0x8001D704, &P_SpawnPuff },
-        { 0x8001D930, &P_SpawnBlood },
         { 0x8001DB78, &P_CheckMissileSpawn },
         { 0x8001DC94, &P_SpawnMissile },
         { 0x8001E0F4, &P_SpawnPlayerMissile },

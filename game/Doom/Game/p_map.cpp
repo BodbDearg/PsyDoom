@@ -658,13 +658,13 @@ loc_8001BEE4:
     if (v0 == 0) goto loc_8001BF60;
     a1 = s3;
     a2 = s1;
-    P_SpawnPuff();
+    P_SpawnPuff(a0, a1, a2);
     goto loc_8001BF70;
 loc_8001BF60:
     a1 = s3;
     a2 = s1;
     a3 = s5;
-    P_SpawnBlood();
+    P_SpawnBlood(a0, a1, a2, a3);
 loc_8001BF70:
     a0 = lw(gp + 0x908);                                // Load from: gpLineTarget (80077EE8)
     a1 = s4;
@@ -695,7 +695,7 @@ loc_8001BFF8:
     a0 = s2;
     a1 = s3;
     a2 = s1;
-    P_SpawnPuff();
+    P_SpawnPuff(a0, a1, a2);
 loc_8001C008:
     ra = lw(sp + 0x28);
     s5 = lw(sp + 0x24);

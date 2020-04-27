@@ -830,272 +830,50 @@ loc_8001D6D8:
     return;
 }
 
-void P_SpawnPuff() noexcept {
-loc_8001D704:
-    sp -= 0x28;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s2, sp + 0x18);
-    s2 = a1;
-    sw(s3, sp + 0x1C);
-    s3 = a2;
-    sw(ra, sp + 0x20);
-    sw(s0, sp + 0x10);
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    s0 <<= 10;
-    s3 += s0;
-    a1 = 0x94;                                          // Result = 00000094
-    a2 = 2;                                             // Result = 00000002
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x94;                                          // Result = 00000094
-    _thunk_D_memset();
-    v0 = 0x1B;                                          // Result = 0000001B
-    sw(v0, s0 + 0x54);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 -= 0x167C;                                       // Result = MObjInfo_MT_PUFF[0] (8005E984)
-    sw(v0, s0 + 0x58);
-    sw(s1, s0);
-    sw(s2, s0 + 0x4);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x163C);                               // Load from: MObjInfo_MT_PUFF[10] (8005E9C4)
-    sw(v0, s0 + 0x40);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x1638);                               // Load from: MObjInfo_MT_PUFF[11] (8005E9C8)
-    sw(v0, s0 + 0x44);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x1628);                               // Load from: MObjInfo_MT_PUFF[15] (8005E9D8)
-    sw(v0, s0 + 0x64);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x1674);                               // Load from: MObjInfo_MT_PUFF[2] (8005E98C)
-    sw(v0, s0 + 0x68);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x1668);                               // Load from: MObjInfo_MT_PUFF[5] (8005E998)
-    sw(v0, s0 + 0x78);
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 = lw(v1 - 0x1678);                               // Load from: MObjInfo_MT_PUFF[1] (8005E988)
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0 + 0x60);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x5C);
-    v1 = lw(v0);
-    sw(v1, s0 + 0x28);
-    v0 = lw(v0 + 0x4);
-    a0 = s0;
-    sw(v0, s0 + 0x2C);
-    P_SetThingPosition(*vmAddrToPtr<mobj_t>(a0));
-    v0 = lw(s0 + 0xC);
-    v0 = lw(v0);
-    v1 = lw(s0 + 0xC);
-    v0 = lw(v0);
-    sw(v0, s0 + 0x38);
-    v0 = lw(v1);
-    v1 = lw(v0 + 0x4);
-    v0 = 0x80000000;                                    // Result = 80000000
-    sw(v1, s0 + 0x3C);
-    if (s3 != v0) goto loc_8001D868;
-    v0 = lw(s0 + 0x38);
-    sw(v0, s0 + 0x8);
-    goto loc_8001D898;
-loc_8001D868:
-    v0 = 0x7FFF0000;                                    // Result = 7FFF0000
-    v0 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    if (s3 != v0) goto loc_8001D894;
-    v0 = lw(s0 + 0x58);
-    v0 = lw(v0 + 0x44);
-    v0 = v1 - v0;
-    sw(v0, s0 + 0x8);
-    goto loc_8001D898;
-loc_8001D894:
-    sw(s3, s0 + 0x8);
-loc_8001D898:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    sw(s0, v0 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7170;                                       // Result = gMObjHead[0] (800A8E90)
-    sw(v0, s0 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    sw(v0, s0 + 0x10);
-    v0 = 0x10000;                                       // Result = 00010000
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(s0, at - 0x7160);                                // Store to: gMObjHead[4] (800A8EA0)
-    sw(v0, s0 + 0x50);
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x5C);
-    v0 &= 1;
-    v1 -= v0;
-    sw(v1, s0 + 0x5C);
-    if (i32(v1) > 0) goto loc_8001D8F4;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s0 + 0x5C);
-loc_8001D8F4:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F98);                               // Load from: gAttackRange (80077F98)
-    v0 = 0x460000;                                      // Result = 00460000
-    a0 = s0;
-    if (v1 != v0) goto loc_8001D910;
-    a1 = 0x5F;                                          // Result = 0000005F
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-loc_8001D910:
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawns a puff particle effect at the given location
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept {
+    // Spawn the puff and randomly adjust its height
+    const fixed_t spawnZ = z + ((P_Random() - P_Random()) << 10);
+    mobj_t& mobj = *P_SpawnMObj(x, y, spawnZ, MT_PUFF);
+
+    // Give some upward momentum and randomly adjust tics left
+    mobj.momz = FRACUNIT;
+    mobj.tics -= P_Random() & 1;
+
+    if (mobj.tics < 1) {
+        mobj.tics = 1;
+    }
+    
+    // Don't do sparks if punching the wall
+    if (*gAttackRange == MELEERANGE) {
+        P_SetMObjState(mobj, S_PUFF3);
+    }
 }
 
-void P_SpawnBlood() noexcept {
-loc_8001D930:
-    sp -= 0x28;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s2, sp + 0x18);
-    s2 = a1;
-    sw(s3, sp + 0x1C);
-    s3 = a2;
-    sw(s4, sp + 0x20);
-    s4 = a3;
-    sw(ra, sp + 0x24);
-    sw(s0, sp + 0x10);
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    s0 <<= 10;
-    s3 += s0;
-    a1 = 0x94;                                          // Result = 00000094
-    a2 = 2;                                             // Result = 00000002
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x94;                                          // Result = 00000094
-    _thunk_D_memset();
-    v0 = 0x1C;                                          // Result = 0000001C
-    sw(v0, s0 + 0x54);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 -= 0x1624;                                       // Result = MObjInfo_MT_BLOOD[0] (8005E9DC)
-    sw(v0, s0 + 0x58);
-    sw(s1, s0);
-    sw(s2, s0 + 0x4);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x15E4);                               // Load from: MObjInfo_MT_BLOOD[10] (8005EA1C)
-    sw(v0, s0 + 0x40);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x15E0);                               // Load from: MObjInfo_MT_BLOOD[11] (8005EA20)
-    sw(v0, s0 + 0x44);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x15D0);                               // Load from: MObjInfo_MT_BLOOD[15] (8005EA30)
-    sw(v0, s0 + 0x64);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x161C);                               // Load from: MObjInfo_MT_BLOOD[2] (8005E9E4)
-    sw(v0, s0 + 0x68);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x1610);                               // Load from: MObjInfo_MT_BLOOD[5] (8005E9F0)
-    sw(v0, s0 + 0x78);
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 = lw(v1 - 0x1620);                               // Load from: MObjInfo_MT_BLOOD[1] (8005E9E0)
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0 + 0x60);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x5C);
-    v1 = lw(v0);
-    sw(v1, s0 + 0x28);
-    v0 = lw(v0 + 0x4);
-    a0 = s0;
-    sw(v0, s0 + 0x2C);
-    P_SetThingPosition(*vmAddrToPtr<mobj_t>(a0));
-    v0 = lw(s0 + 0xC);
-    v0 = lw(v0);
-    v1 = lw(s0 + 0xC);
-    v0 = lw(v0);
-    sw(v0, s0 + 0x38);
-    v0 = lw(v1);
-    v1 = lw(v0 + 0x4);
-    v0 = 0x80000000;                                    // Result = 80000000
-    sw(v1, s0 + 0x3C);
-    if (s3 != v0) goto loc_8001DA9C;
-    v0 = lw(s0 + 0x38);
-    sw(v0, s0 + 0x8);
-    goto loc_8001DACC;
-loc_8001DA9C:
-    v0 = 0x7FFF0000;                                    // Result = 7FFF0000
-    v0 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    if (s3 != v0) goto loc_8001DAC8;
-    v0 = lw(s0 + 0x58);
-    v0 = lw(v0 + 0x44);
-    v0 = v1 - v0;
-    sw(v0, s0 + 0x8);
-    goto loc_8001DACC;
-loc_8001DAC8:
-    sw(s3, s0 + 0x8);
-loc_8001DACC:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    sw(s0, v0 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7170;                                       // Result = gMObjHead[0] (800A8E90)
-    sw(v0, s0 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    sw(v0, s0 + 0x10);
-    v0 = 0x20000;                                       // Result = 00020000
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(s0, at - 0x7160);                                // Store to: gMObjHead[4] (800A8EA0)
-    sw(v0, s0 + 0x50);
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x5C);
-    v0 &= 1;
-    v1 -= v0;
-    sw(v1, s0 + 0x5C);
-    if (i32(v1) > 0) goto loc_8001DB28;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s0 + 0x5C);
-loc_8001DB28:
-    v0 = s4 - 9;
-    v0 = (v0 < 4);
-    a0 = s0;
-    if (v0 == 0) goto loc_8001DB40;
-    a1 = 0x5B;                                          // Result = 0000005B
-    goto loc_8001DB4C;
-loc_8001DB40:
-    v0 = (i32(s4) < 9);
-    a1 = 0x5C;                                          // Result = 0000005C
-    if (v0 == 0) goto loc_8001DB54;
-loc_8001DB4C:
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-loc_8001DB54:
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawns a blood particle effect at the given location
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SpawnBlood(const fixed_t x, const fixed_t y, const fixed_t z, const int32_t damage) noexcept {
+    // Spawn the puff and randomly adjust its height
+    const fixed_t spawnZ = z + ((P_Random() - P_Random()) << 10);
+    mobj_t& mobj = *P_SpawnMObj(x, y, spawnZ, MT_BLOOD);
+
+    // Give some upward momentum and randomly adjust tics left
+    mobj.momz = 2 * FRACUNIT;
+    mobj.tics -= P_Random() & 1;
+    
+    if (mobj.tics < 1) {
+        mobj.tics = 1;
+    }
+    
+    // Adjust the type of blood, based on the damage amount
+    if ((damage >= 9) && (damage <= 12)) {
+        P_SetMObjState(mobj, S_BLOOD2);
+    } else if (damage < 9) {
+        P_SetMObjState(mobj, S_BLOOD3);
+    }
 }
 
 void P_CheckMissileSpawn() noexcept {

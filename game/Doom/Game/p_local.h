@@ -21,3 +21,6 @@ static constexpr int32_t MAXHEALTH = 100;
 // Special Z values to instruct the game to spawn a thing anchored to the floor or the ceiling
 static constexpr fixed_t ONFLOORZ   = INT32_MIN;
 static constexpr fixed_t ONCEILINGZ = INT32_MAX;
+
+// Range for melee attacks
+static constexpr fixed_t MELEERANGE = 70 * FRACUNIT;
