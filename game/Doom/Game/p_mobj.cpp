@@ -25,6 +25,7 @@
 
 // Item respawn queue
 static constexpr int32_t ITEMQUESIZE = 64;
+static constexpr int32_t ITEMQUESIZE_MASK = ITEMQUESIZE - 1;    // Convenience constant for wrapping
 
 const VmPtr<int32_t>    gItemRespawnQueueHead(0x80078138);      // Head of the circular queue
 const VmPtr<int32_t>    gItemRespawnQueueTail(0x80078180);      // Tail of the circular queue
@@ -49,7 +50,7 @@ void P_RemoveMObj(mobj_t& mobj) noexcept {
 
     if (bRespawn) {
         // Remember the item details for later respawning and occupy one queue slot
-        const int32_t slotIdx = (*gItemRespawnQueueHead) & (ITEMQUESIZE - 1);
+        const int32_t slotIdx = (*gItemRespawnQueueHead) & ITEMQUESIZE_MASK;
 
         gItemRespawnTime[slotIdx] = *gTicCon;
         gItemRespawnQueue[slotIdx].x = mobj.spawnx;
@@ -74,130 +75,66 @@ void _thunk_P_RemoveMObj() noexcept {
     P_RemoveMObj(*vmAddrToPtr<mobj_t>(a0));
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Respawns a single item (if one is due to respawn) in deathmatch mode
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_RespawnSpecials() noexcept {
-loc_8001C838:
-    sp -= 0x20;
-    v1 = *gNetGame;
-    v0 = 2;                                             // Result = 00000002
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    if (v1 != v0) goto loc_8001C9FC;
-    v1 = *gItemRespawnQueueHead;
-    v0 = *gItemRespawnQueueTail;
-    {
-        const bool bJump = (v1 == v0);
-        v0 = v1 - v0;
-        if (bJump) goto loc_8001C9FC;
+    // Only respawn in deathmatch
+    if (*gNetGame != gt_deathmatch)
+        return;
+    
+    // No respawning if there is nothing to respawn
+    if (*gItemRespawnQueueHead == *gItemRespawnQueueTail)
+        return;
+
+    // If the queue has overflowed in (stated) size then adjust it's size back to the limit
+    if (*gItemRespawnQueueHead - *gItemRespawnQueueTail > ITEMQUESIZE) {
+        *gItemRespawnQueueTail = *gItemRespawnQueueHead - ITEMQUESIZE;
     }
-    v0 = (i32(v0) < 0x41);
+
+    // Wait 120 seconds before respawning things
+    const int32_t slotIdx = (*gItemRespawnQueueTail) & ITEMQUESIZE_MASK;
+    
+    if (*gTicCon - gItemRespawnTime[slotIdx] < 120 * TICRATE)
+        return;
+
+    // Get the spawn location and sector
+    const mapthing_t& mapthing = gItemRespawnQueue[slotIdx];        
+    const fixed_t x = (fixed_t) mapthing.x << FRACBITS;
+    const fixed_t y = (fixed_t) mapthing.y << FRACBITS;
+
+    subsector_t& subsec = *R_PointInSubsector(x, y);
+    sector_t& sec = *subsec.sector;
+
+    // Spawn an item appear fog (like teleport fog)
     {
-        const bool bJump = (v0 != 0);
-        v0 = v1 - 0x40;
-        if (bJump) goto loc_8001C880;
+        mobj_t& mobj = *P_SpawnMObj(x, y, sec.floorheight, MT_IFOG);
+        S_StartSound(&mobj, sfx_itmbk);
     }
-    *gItemRespawnQueueTail = v0;
-loc_8001C880:
-    v0 = *gItemRespawnQueueTail;
-    a1 = v0 & 0x3F;
-    a0 = a1 << 2;
-    v0 = *gTicCon;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7910;                                       // Result = gItemRespawnTime[0] (80097910)
-    at += a0;
-    v1 = lw(at);
-    v0 -= v1;
-    v0 = (i32(v0) < 0x708);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a0 + a1;
-        if (bJump) goto loc_8001C9FC;
+    
+    // Try to find the type enum for the thing to be spawned
+    int32_t mobjTypeIdx = 0;
+    
+    for (; mobjTypeIdx < NUMMOBJTYPES; mobjTypeIdx++) {
+        if (mapthing.type == gMObjInfo[mobjTypeIdx].doomednum)  // Is this the mobj definition we want?
+            break;
     }
-    v0 <<= 1;
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 += 0x612C;                                       // Result = gItemRespawnQueue[0] (8008612C)
-    s0 = v0 + v1;
-    v0 = lh(s0);
-    s2 = v0 << 16;
-    v0 = lh(s0 + 0x2);
-    a0 = s2;
-    s1 = v0 << 16;
-    a1 = s1;
-    _thunk_R_PointInSubsector();
-    a0 = s2;
-    v0 = lw(v0);
-    a1 = s1;
-    a2 = lw(v0);
-    a3 = 0x1E;
-    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
-    a0 = v0;
-    a1 = sfx_itmbk;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    a3 = 0;
-    v1 = 0;
-    a0 = lh(s0 + 0x6);
-loc_8001C91C:
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1FC4;                                       // Result = MObjInfo_MT_PLAYER[0] (8005E03C)
-    at += v1;
-    v0 = lw(at);
-    a2 = 0x80000000;                                    // Result = 80000000
-    if (a0 == v0) goto loc_8001C948;
-    a3++;
-    v0 = (i32(a3) < 0x7F);
-    v1 += 0x58;
-    if (v0 != 0) goto loc_8001C91C;
-loc_8001C948:
-    v0 = a3 << 1;
-    v0 += a3;
-    v0 <<= 2;
-    v0 -= a3;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F70;                                       // Result = MObjInfo_MT_PLAYER[15] (8005E090)
-    at += v0;
-    v0 = lw(at);
-    v0 &= 0x100;
-    a0 = s2;
-    if (v0 == 0) goto loc_8001C984;
-    a2 = 0x7FFF0000;                                    // Result = 7FFF0000
-    a2 |= 0xFFFF;                                       // Result = 7FFFFFFF
-loc_8001C984:
-    a1 = s1;
-    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
-    a1 = 0xB60B0000;                                    // Result = B60B0000
-    v1 = lhu(s0 + 0x4);
-    a1 |= 0x60B7;                                       // Result = B60B60B7
-    v1 <<= 16;
-    a0 = u32(i32(v1) >> 16);
-    mult(a0, a1);
-    a1 = v0;
-    v1 = u32(i32(v1) >> 31);
-    v0 = hi;
-    v0 += a0;
-    v0 = u32(i32(v0) >> 5);
-    v0 -= v1;
-    v0 <<= 29;
-    sw(v0, a1 + 0x24);
-    v0 = lhu(s0);
-    sh(v0, a1 + 0x88);
-    v0 = lhu(s0 + 0x2);
-    sh(v0, a1 + 0x8A);
-    v0 = lhu(s0 + 0x6);
-    sh(v0, a1 + 0x8C);
-    v0 = *gItemRespawnQueueTail;
-    v1 = lhu(s0 + 0x4);
-    v0++;
-    *gItemRespawnQueueTail = v0;
-    sh(v1, a1 + 0x8E);
-loc_8001C9FC:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Decide on the z position for the thing being spawned, either spawn it on the floor or ceiling
+    const mobjtype_t mobjType = (mobjtype_t) mobjTypeIdx;
+    const mobjinfo_t& mobjinfo = gMObjInfo[mobjType];
+    const fixed_t z = (mobjinfo.flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
+
+    // Spawn the item itself
+    mobj_t& mobj = *P_SpawnMObj(x, y, z, mobjType);
+    mobj.angle = (mapthing.angle / 45) * ANG45;
+    mobj.spawnx = mapthing.x;
+    mobj.spawny = mapthing.y;
+    mobj.spawntype = mapthing.type;
+    mobj.spawnangle = mapthing.angle;
+
+    // This thing has now been spawned, free up the queue slot
+    *gItemRespawnQueueTail += 1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

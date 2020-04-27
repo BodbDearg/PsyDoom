@@ -3511,7 +3511,7 @@ static const ProgElem ELEMS[] = {
     { 0x80078170, 0x80078174, "gLastFlatLumpNum",                       ProgElemType::UINT32 },
     { 0x80078174, 0x80078178, "gCurPasswordCharIdx",                    ProgElemType::INT32 },
     { 0x8007817C, 0x80078180, "gMaxStartEpisodeOrMap",                  ProgElemType::UINT32 },
-    { 0x80078180, 0x80078184, "gItemRespawnQueueTail",                  ProgElemType::UINT32 },
+    { 0x80078180, 0x80078184, "gItemRespawnQueueTail",                  ProgElemType::INT32 },
     { 0x80078184, 0x80078188, "gpHitThing",                             ProgElemType::PTR32 },
     { 0x8007818C, 0x80078190, "gBlockmapOriginX",                       ProgElemType::INT32 },
     { 0x80078190, 0x80078194, "gTitleScreenSpriteY",                    ProgElemType::INT32 },
