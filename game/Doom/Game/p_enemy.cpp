@@ -1816,7 +1816,7 @@ void A_Tracer() noexcept {
     a1 = lw(s1 + 0x4C);
     a0 = v1 - a0;
     a1 = v0 - a1;
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
     s0 = v0;
     v0 = 0x10000;                                       // Result = 00010000
     sw(v0, s0 + 0x50);
@@ -2544,7 +2544,7 @@ loc_80018270:
     v0 = lw(s2 + 0x8);
     a2 = 0x80000;                                       // Result = 00080000
     a2 += v0;
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
     s0 = v0;
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
@@ -2657,7 +2657,7 @@ loc_80018440:
     v0 = lw(s2 + 0x8);
     a2 = 0x80000;                                       // Result = 00080000
     a2 += v0;
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
     s0 = v0;
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
@@ -2746,7 +2746,7 @@ loc_800185A4:
     v0 = lw(s2 + 0x8);
     a2 = 0x80000;                                       // Result = 00080000
     a2 += v0;
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
     s0 = v0;
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
@@ -2821,7 +2821,7 @@ loc_800186D0:
     v0 = lw(s2 + 0x8);
     a2 = 0x80000;                                       // Result = 00080000
     a2 += v0;
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
     s0 = v0;
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
@@ -2896,7 +2896,7 @@ loc_800187FC:
     v0 = lw(s2 + 0x8);
     a2 = 0x80000;                                       // Result = 00080000
     a2 += v0;
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
     s0 = v0;
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);

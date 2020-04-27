@@ -178,7 +178,7 @@ loc_8001517C:
     v0 = lw(s1 + 0x8);
     a2 = u32(i32(a2) >> 1);
     a2 += v0;
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
     s1 = v0;
     _thunk_P_Random();
     s0 = v0;

@@ -1232,7 +1232,7 @@ loc_8001A868:
     a0 = lw(s0);
     a1 = lw(s0 + 0x4);
     a2 = 0x80000000;                                    // Result = 80000000
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
     v1 = lw(v0 + 0x64);
     a0 = 0x20000;                                       // Result = 00020000
     v1 |= a0;

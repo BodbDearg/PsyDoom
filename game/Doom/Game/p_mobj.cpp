@@ -7,17 +7,20 @@
 #include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
+#include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/pw_main.h"
 #include "Doom/UI/st_main.h"
 #include "doomdata.h"
 #include "g_game.h"
 #include "info.h"
+#include "p_local.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_password.h"
 #include "p_pspr.h"
 #include "p_setup.h"
+#include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 
 // Item respawn queue
@@ -127,7 +130,7 @@ loc_8001C880:
     a1 = s1;
     a2 = lw(v0);
     a3 = 0x1E;
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
     a0 = v0;
     a1 = sfx_itmbk;
     S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
@@ -162,7 +165,7 @@ loc_8001C948:
     a2 |= 0xFFFF;                                       // Result = 7FFFFFFF
 loc_8001C984:
     a1 = s1;
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
     a1 = 0xB60B0000;                                    // Result = B60B0000
     v1 = lhu(s0 + 0x4);
     a1 |= 0x60B7;                                       // Result = B60B60B7
@@ -261,112 +264,56 @@ void _thunk_P_ExplodeMissile() noexcept {
     P_ExplodeMissile(*vmAddrToPtr<mobj_t>(a0));
 }
 
-void P_SpawnMObj() noexcept {
-loc_8001CC68:
-    sp -= 0x28;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s2, sp + 0x18);
-    s2 = a1;
-    sw(s4, sp + 0x20);
-    s4 = a2;
-    sw(s0, sp + 0x10);
-    s0 = a3;
-    a1 = 0x94;                                          // Result = 00000094
-    a2 = 2;                                             // Result = 00000002
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x24);
-    sw(s3, sp + 0x1C);
-    _thunk_Z_Malloc();
-    s3 = v0;
-    a0 = s3;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x94;                                          // Result = 00000094
-    _thunk_D_memset();
-    v0 = s0 << 1;
-    v0 += s0;
-    v0 <<= 2;
-    v0 -= s0;
-    v0 <<= 3;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x1FC4;                                       // Result = MObjInfo_MT_PLAYER[0] (8005E03C)
-    v0 += v1;
-    sw(s0, s3 + 0x54);
-    sw(v0, s3 + 0x58);
-    sw(s1, s3);
-    sw(s2, s3 + 0x4);
-    v1 = lw(v0 + 0x40);
-    sw(v1, s3 + 0x40);
-    v1 = lw(v0 + 0x44);
-    sw(v1, s3 + 0x44);
-    v1 = lw(v0 + 0x54);
-    sw(v1, s3 + 0x64);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s3 + 0x68);
-    v1 = lw(v0 + 0x14);
-    sw(v1, s3 + 0x78);
-    v1 = lw(v0 + 0x4);
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s3 + 0x60);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s3 + 0x5C);
-    v1 = lw(v0);
-    sw(v1, s3 + 0x28);
-    v0 = lw(v0 + 0x4);
-    a0 = s3;
-    sw(v0, s3 + 0x2C);
-    P_SetThingPosition(*vmAddrToPtr<mobj_t>(a0));
-    v0 = lw(s3 + 0xC);
-    v0 = lw(v0);
-    v1 = lw(s3 + 0xC);
-    v0 = lw(v0);
-    sw(v0, s3 + 0x38);
-    v0 = lw(v1);
-    v1 = lw(v0 + 0x4);
-    v0 = 0x80000000;                                    // Result = 80000000
-    sw(v1, s3 + 0x3C);
-    if (s4 != v0) goto loc_8001CDB8;
-    v0 = lw(s3 + 0x38);
-    sw(v0, s3 + 0x8);
-    goto loc_8001CDE8;
-loc_8001CDB8:
-    v0 = 0x7FFF0000;                                    // Result = 7FFF0000
-    v0 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    if (s4 != v0) goto loc_8001CDE4;
-    v0 = lw(s3 + 0x58);
-    v0 = lw(v0 + 0x44);
-    v0 = v1 - v0;
-    sw(v0, s3 + 0x8);
-    goto loc_8001CDE8;
-loc_8001CDE4:
-    sw(s4, s3 + 0x8);
-loc_8001CDE8:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    sw(s3, v0 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7170;                                       // Result = gMObjHead[0] (800A8E90)
-    sw(v0, s3 + 0x14);
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    v0 = s3;
-    sw(v1, v0 + 0x10);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(v0, at - 0x7160);                                // Store to: gMObjHead[4] (800A8EA0)
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawn a thing with the specified type at the given location in space
+//------------------------------------------------------------------------------------------------------------------------------------------
+mobj_t* P_SpawnMObj(const fixed_t x, const fixed_t y, const fixed_t z, const mobjtype_t type) noexcept {
+    // Alloc and zero initialize the map object
+    mobj_t& mobj = *(mobj_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(mobj_t), PU_LEVEL, nullptr);
+    D_memset(&mobj, (std::byte) 0, sizeof(mobj_t));
+
+    // Fill in basic fields
+    mobjinfo_t& info = gMObjInfo[type];
+    mobj.type = type;
+    mobj.info = &info;
+    mobj.x = x;
+    mobj.y = y;
+    mobj.radius = info.radius;
+    mobj.height = info.height;
+    mobj.flags = info.flags;
+    mobj.health = info.spawnhealth;
+    mobj.reactiontime = info.reactiontime;
+
+    // Set initial state and state related stuff.
+    // Note: can't set state with P_SetMobjState, because actions can't be called yet (thing not fully initialized).
+    state_t& state = gStates[info.spawnstate];
+    mobj.state = &state;
+    mobj.tics = state.tics;
+    mobj.sprite = state.sprite;
+    mobj.frame = state.frame;
+    
+    // Add to the sector thing list and the blockmap
+    P_SetThingPosition(mobj);
+    
+    // Decide on the z position for the thing (specified z, or floor/ceiling)
+    sector_t& sec = *mobj.subsector->sector.get();
+    mobj.floorz = sec.floorheight;
+    mobj.ceilingz = sec.ceilingheight;
+    
+    if (z == ONFLOORZ) {
+        mobj.z = mobj.floorz;
+    } else if (z == ONCEILINGZ) {
+        mobj.z = sec.ceilingheight - mobj.info->height;
+    } else {
+        mobj.z = z;
+    }
+
+    // Add into the linked list of things
+    gMObjHead->prev->next = &mobj;
+    mobj.next = gMObjHead.get();
+    mobj.prev = gMObjHead->prev;
+    gMObjHead->prev = &mobj;
+    return &mobj;
 }
 
 void P_SpawnPlayer() noexcept {

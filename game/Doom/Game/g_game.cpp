@@ -254,14 +254,12 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
     const uint32_t fineAngle = (((uint32_t) pSpawnPt->angle * FINEANGLES) / 360) & FINE_ANGLE_MASK;
     
     // Spawn teleport fog a bit away from the player in the direction the player is facing (clamped to 8 directions)
-    const fixed_t spawnZ = pSubsec->sector->floorheight;
-
-    a0 = spawnX + gFineCosine[fineAngle] * 20;
-    a1 = spawnY + gFineSine[fineAngle] * 20;
-    a2 = spawnZ;
-    a3 = MT_TFOG;
-    P_SpawnMObj();
-    mobj_t* const pSpawnedThing = vmAddrToPtr<mobj_t>(v0);
+    mobj_t* const pSpawnedThing = P_SpawnMObj(
+        spawnX + gFineCosine[fineAngle] * 20,
+        spawnY + gFineSine[fineAngle] * 20,
+        pSubsec->sector->floorheight,
+        MT_TFOG
+    );
     
     // Play the teleport sound
     S_StartSound(pSpawnedThing, sfx_telept);

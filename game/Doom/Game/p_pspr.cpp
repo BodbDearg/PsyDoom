@@ -1932,7 +1932,7 @@ loc_800215A8:
     v0 = lw(v0 + 0x8);
     a2 = u32(i32(a2) >> 2);
     a2 += v0;
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
 loc_800215F8:
     s0++;
     _thunk_P_Random();

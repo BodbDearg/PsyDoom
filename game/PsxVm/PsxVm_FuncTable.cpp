@@ -114,7 +114,6 @@ extern void P_LineAttack() noexcept;
 extern void _thunk_P_RemoveMObj() noexcept;
 extern void P_RespawnSpecials() noexcept;
 extern void _thunk_P_ExplodeMissile() noexcept;
-extern void P_SpawnMObj() noexcept;
 extern void P_SpawnPlayer() noexcept;
 extern void P_SpawnMapThing() noexcept;
 extern void P_SpawnPuff() noexcept;
@@ -238,6 +237,7 @@ extern void P_ComputePassword() noexcept;
 extern void P_ProcessPassword() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
+extern void G_CompleteLevel() noexcept;     // TODO: remove eventually - still required because it's called via a thinker function in 'G_BeginExitLevel'.
 
 extern void LIBAPI_write() noexcept;
 extern void LIBAPI_InitPAD() noexcept;
@@ -384,7 +384,6 @@ namespace PsxVm {
         { 0x8001C724, &_thunk_P_RemoveMObj },
         { 0x8001C838, &P_RespawnSpecials },
         { 0x8001CB9C, &_thunk_P_ExplodeMissile },
-        { 0x8001CC68, &P_SpawnMObj },
         { 0x8001CE40, &P_SpawnPlayer },
         { 0x8001D184, &P_SpawnMapThing },
         { 0x8001D704, &P_SpawnPuff },
@@ -508,7 +507,8 @@ namespace PsxVm {
         { 0x800381B0, &P_ProcessPassword },
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },
-
+        { 0x80013384, &G_CompleteLevel },   // TODO: remove eventually - still required because it's called via a thinker function in 'G_BeginExitLevel'.
+        
         { 0x80049C3C, &LIBAPI_write },
         { 0x80049C5C, &LIBAPI_InitPAD },
         { 0x80049DEC, &LIBAPI_StartPAD },

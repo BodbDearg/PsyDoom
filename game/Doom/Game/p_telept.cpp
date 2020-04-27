@@ -213,7 +213,7 @@ loc_80028AEC:
     v0 = lw(s1 + 0x38);
     a3 = 0x1D;                                          // Result = 0000001D
     sw(v0, s1 + 0x8);
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
     a0 = v0;
     a1 = sfx_telept;
     S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
@@ -240,7 +240,7 @@ loc_80028AEC:
     v0 = lw(s2 + 0x4);
     a1 <<= 2;
     a1 += v0;
-    P_SpawnMObj();
+    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
     a0 = v0;
     a1 = sfx_telept;
     S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);

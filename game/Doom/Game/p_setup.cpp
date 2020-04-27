@@ -1004,16 +1004,16 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         // Randomly spawn players in different locations - this logic is a little strange.
         // We spawn all players in the same location but immediately respawn and remove the old 'mobj_t' to get the random starts.
         for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
-            a0 = (int32_t) gPlayerStarts[0].x << FRACBITS;
-            a1 = (int32_t) gPlayerStarts[0].y << FRACBITS;
-            a2 = 0; // Z
-            a3 = MT_PLAYER;
-            P_SpawnMObj();
-            mobj_t* const pMObj = vmAddrToPtr<mobj_t>(v0);
-            
-            gPlayers[playerIdx].mo = pMObj;
+            mobj_t* const pPlayerThing = P_SpawnMObj(
+                (int32_t) gPlayerStarts[0].x << FRACBITS,
+                (int32_t) gPlayerStarts[0].y << FRACBITS,
+                0,
+                MT_PLAYER
+            );
+
+            gPlayers[playerIdx].mo = pPlayerThing;
             G_DoReborn(playerIdx);
-            P_RemoveMObj(*pMObj);
+            P_RemoveMObj(*pPlayerThing);
         }
     }
     else {
