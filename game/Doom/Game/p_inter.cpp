@@ -1196,7 +1196,7 @@ loc_8001A7F0:
     a1 = lw(v0 + 0x30);
 loc_8001A7FC:
     a0 = s0;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
     _thunk_P_Random();
     v1 = lw(s0 + 0x5C);
     v0 &= 1;
@@ -1530,7 +1530,7 @@ loc_8001AC98:
     sw(v0, s0 + 0x64);
     a1 = lw(v1 + 0x1C);
     a0 = s0;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
 loc_8001ACE4:
     v0 = lw(s0 + 0x7C);
     sw(0, s0 + 0x78);
@@ -1552,7 +1552,7 @@ loc_8001ACE4:
     a1 = lw(a1 + 0xC);
     if (a1 == 0) goto loc_8001AD48;
     a0 = s0;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
 loc_8001AD48:
     ra = lw(sp + 0x2C);
     s6 = lw(sp + 0x28);

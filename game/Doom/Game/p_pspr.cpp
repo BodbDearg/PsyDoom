@@ -539,7 +539,7 @@ loc_8001FFBC:
     if (v0 == 0) goto loc_800201AC;
     a0 = lw(s1);
     a1 = 0x9F;                                          // Result = 0000009F
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
     v1 = lw(s1 + 0x6C);
     v0 = 0x10000;                                       // Result = 00010000
     sw(v0, s1 + 0xF8);
@@ -1639,7 +1639,7 @@ void A_FireShotgun2() noexcept {
     S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     a0 = lw(s3);
     a1 = 0xA0;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
     v1 = lw(s3 + 0x6C);
     v0 = v1 << 1;
     v0 += v1;

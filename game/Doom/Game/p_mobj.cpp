@@ -197,147 +197,68 @@ loc_8001C9FC:
     return;
 }
 
-void P_SetMObjState() noexcept {
-loc_8001CA18:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    if (a1 != 0) goto loc_8001CB28;
-    v0 = 0x20000;                                       // Result = 00020000
-    v1 = lw(s0 + 0x64);
-    v0 |= 1;                                            // Result = 00020001
-    v1 &= v0;
-    v0 = 1;                                             // Result = 00000001
-    sw(0, s0 + 0x60);
-    if (v1 != v0) goto loc_8001CAF0;
-    v1 = lw(s0 + 0x54);
-    v0 = 0x2E;                                          // Result = 0000002E
-    if (v1 == v0) goto loc_8001CAF0;
-    v0 = 0x30;                                          // Result = 00000030
-    if (v1 == v0) goto loc_8001CAF0;
-    a1 = *gItemRespawnQueueHead;
-    v1 = *gTicCon;
-    a0 = a1 & 0x3F;
-    v0 = a0 << 2;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x7910;                                       // Result = gItemRespawnTime[0] (80097910)
-    at += v0;
-    sw(v1, at);
-    v0 += a0;
-    v1 = lhu(s0 + 0x88);
-    v0 <<= 1;
-    at = 0x80080000;                                    // Result = 80080000
-    at += 0x612C;                                       // Result = gItemRespawnQueue[0] (8008612C)
-    at += v0;
-    sh(v1, at);
-    v1 = lhu(s0 + 0x8A);
-    at = 0x80080000;                                    // Result = 80080000
-    at += 0x612E;                                       // Result = gItemRespawnQueue[1] (8008612E)
-    at += v0;
-    sh(v1, at);
-    v1 = lhu(s0 + 0x8C);
-    at = 0x80080000;                                    // Result = 80080000
-    at += 0x6132;                                       // Result = gItemRespawnQueue[3] (80086132)
-    at += v0;
-    sh(v1, at);
-    v1 = lhu(s0 + 0x8E);
-    a1++;
-    *gItemRespawnQueueHead = a1;
-    at = 0x80080000;                                    // Result = 80080000
-    at += 0x6130;                                       // Result = gItemRespawnQueue[2] (80086130)
-    at += v0;
-    sh(v1, at);
-loc_8001CAF0:
-    a0 = s0;
-    P_UnsetThingPosition(*vmAddrToPtr<mobj_t>(a0));
-    v1 = lw(s0 + 0x14);
-    v0 = lw(s0 + 0x10);
-    a0 = *gpMainMemZone;
-    sw(v0, v1 + 0x10);
-    v1 = lw(s0 + 0x10);
-    v0 = lw(s0 + 0x14);
-    a1 = s0;
-    sw(v0, v1 + 0x14);
-    _thunk_Z_Free2();
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8001CB88;
-loc_8001CB28:
-    v0 = a1 << 3;
-    v0 -= a1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0 + 0x60);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x5C);
-    v1 = lw(v0);
-    sw(v1, s0 + 0x28);
-    v1 = lw(v0 + 0x4);
-    sw(v1, s0 + 0x2C);
-    v0 = lw(v0 + 0xC);
-    if (v0 == 0) goto loc_8001CB80;
-    a0 = s0;
-    ptr_call(v0);
-loc_8001CB80:
-    sw(0, s0 + 0x18);
-    v0 = 1;                                             // Result = 00000001
-loc_8001CB88:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sets the state for the given map object.
+// Returns 'true' if the map object is still present and hasn't been removed - it's removed if the state switch is to 'S_NULL'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_SetMObjState(mobj_t& mobj, const statenum_t stateNum) noexcept {
+    // Remove the map object if the state is null
+    if (stateNum == S_NULL) {
+        mobj.state = nullptr;
+        P_RemoveMObj(mobj);
+        return false;
+    }
+
+    // Set the new state and call the action function for the state (if any)
+    state_t& state = gStates[stateNum];
+
+    mobj.state = &state;
+    mobj.tics = state.tics;
+    mobj.sprite = state.sprite;
+    mobj.frame = state.frame;
+
+    if (state.action) {
+        // FIXME: convert to native call
+        const VmFunc func = PsxVm::getVmFuncForAddr(state.action);
+        a0 = ptrToVmAddr(&mobj);
+        func();
+    }
+
+    // This request gets cleared on state switch
+    mobj.latecall = nullptr;
+    return true;
 }
 
-void P_ExplodeMissile() noexcept {
-loc_8001CB9C:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v1 = lw(s0 + 0x54);
-    sw(0, s0 + 0x50);
-    sw(0, s0 + 0x4C);
-    sw(0, s0 + 0x48);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F94;                                       // Result = MObjInfo_MT_PLAYER[C] (8005E06C)
-    at += v0;
-    a1 = lw(at);
-    P_SetMObjState();
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x5C);
-    v0 &= 1;
-    v1 -= v0;
-    sw(v1, s0 + 0x5C);
-    if (i32(v1) > 0) goto loc_8001CC0C;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s0 + 0x5C);
-loc_8001CC0C:
-    a0 = 0xFFFE0000;                                    // Result = FFFE0000
-    a0 |= 0xFFFF;                                       // Result = FFFEFFFF
-    v0 = lw(s0 + 0x64);
-    v1 = lw(s0 + 0x58);
-    v0 &= a0;
-    sw(v0, s0 + 0x64);
-    v0 = lw(v1 + 0x38);
-    if (v0 == 0) goto loc_8001CC54;
-    a0 = lw(s0 + 0x74);
-    S_StopSound((sfxenum_t) a0);
-    v0 = lw(s0 + 0x58);
-    a1 = lw(v0 + 0x38);
-    a0 = s0;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_8001CC54:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Explodes the given missile: sends it into the death state, plays the death sound and removes the MF_MISSILE flag
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_ExplodeMissile(mobj_t& mobj) noexcept {
+    // Kill all momentum and enter death state
+    mobj.momz = 0;
+    mobj.momy = 0;
+    mobj.momx = 0;
+    P_SetMObjState(mobj, gMObjInfo[mobj.type].deathstate);
+
+    // Some random state tic variation
+    mobj.tics -= P_Random() & 1;
+    
+    if (mobj.tics < 1) {
+        mobj.tics = 1;
+    }
+
+    // No longer a missile
+    mobj.flags &= (~MF_MISSILE);
+
+    // Stop the missile sound and start the explode sound
+    if (mobj.info->deathsound != sfx_None) {
+        S_StopSound(mobj.target);
+        S_StartSound(&mobj, mobj.info->deathsound);
+    }
+}
+
+// TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
+void _thunk_P_ExplodeMissile() noexcept {
+    P_ExplodeMissile(*vmAddrToPtr<mobj_t>(a0));
 }
 
 void P_SpawnMObj() noexcept {
@@ -1081,7 +1002,7 @@ loc_8001D8F4:
     a0 = s0;
     if (v1 != v0) goto loc_8001D910;
     a1 = 0x5F;                                          // Result = 0000005F
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
 loc_8001D910:
     ra = lw(sp + 0x20);
     s3 = lw(sp + 0x1C);
@@ -1218,7 +1139,7 @@ loc_8001DB40:
     a1 = 0x5C;                                          // Result = 0000005C
     if (v0 == 0) goto loc_8001DB54;
 loc_8001DB4C:
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
 loc_8001DB54:
     ra = lw(sp + 0x24);
     s4 = lw(sp + 0x20);
@@ -1268,7 +1189,7 @@ void P_CheckMissileSpawn() noexcept {
     at += v0;
     a1 = lw(at);
     a0 = s0;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
     _thunk_P_Random();
     v1 = lw(s0 + 0x5C);
     v0 &= 1;
@@ -1528,7 +1449,7 @@ loc_8001DFC4:
     at += v0;
     a1 = lw(at);
     a0 = s1;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
     _thunk_P_Random();
     v1 = lw(s1 + 0x5C);
     v0 &= 1;
@@ -1768,7 +1689,7 @@ loc_8001E368:
     at += v0;
     a1 = lw(at);
     a0 = s2;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
     _thunk_P_Random();
     v1 = lw(s2 + 0x5C);
     v0 &= 1;

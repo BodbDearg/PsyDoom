@@ -749,7 +749,7 @@ loc_8002A22C:
     if (v1 != v0) goto loc_8002A2A8;
 loc_8002A2A0:
     a1 = 0x9A;                                          // Result = 0000009A
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
 loc_8002A2A8:
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -990,7 +990,7 @@ loc_8002A66C:
     v0 -= 0x619C;                                       // Result = State_S_PLAY[0] (80059E64)
     if (v1 != v0) goto loc_8002A690;
     a1 = 0x9B;                                          // Result = 0000009B
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
 loc_8002A690:
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -1309,7 +1309,7 @@ loc_8002AB44:
     if (v0 == 0) goto loc_8002ABC8;
     a0 = lw(s0);
     a1 = 0x9F;                                          // Result = 0000009F
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
     v0 = lw(s0 + 0xB8);
     v0++;
     sw(v0, s0 + 0xB8);

@@ -98,7 +98,7 @@ loc_8001B708:
     sw(v0, s0 + 0x64);
     a1 = lw(v1 + 0x4);
     a0 = s0;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
     goto loc_8001B788;
 loc_8001B780:
     a1 = s0;

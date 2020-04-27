@@ -115,7 +115,7 @@ loc_800150C4:
     }
     a0 = s1;
     a1 = 0x29F;                                         // Result = 0000029F
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
     a0 = s1;
     a1 = sfx_slop;
     S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);

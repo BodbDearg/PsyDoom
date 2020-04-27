@@ -688,7 +688,7 @@ loc_800165B8:
     v0 = lw(s0 + 0x58);
     a1 = lw(v0 + 0xC);
     a0 = s0;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
 loc_800165CC:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -802,7 +802,7 @@ loc_80016754:
     a1 = lw(v0 + 0x28);
 loc_8001675C:
     a0 = s1;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
     goto loc_80016910;
 loc_8001676C:
     v1 = *gGameSkill;
@@ -879,7 +879,7 @@ loc_80016860:
     v0 = lw(s1 + 0x58);
     a1 = lw(v0 + 0x2C);
     a0 = s1;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
     v1 = *gGameSkill;
     v0 = 4;                                             // Result = 00000004
     if (v1 == v0) goto loc_80016910;
@@ -1236,7 +1236,7 @@ loc_80016E40:
     v0 = lw(s1 + 0x58);
     a1 = lw(v0 + 0xC);
     a0 = s1;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
 loc_80016E54:
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -1375,7 +1375,7 @@ loc_80017090:
     v0 = lw(s1 + 0x58);
     a1 = lw(v0 + 0xC);
     a0 = s1;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
 loc_800170A4:
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -3242,7 +3242,7 @@ void L_MissileHit() noexcept {
     P_DamageMObj();
 loc_80018D34:
     a0 = s0;
-    P_ExplodeMissile();
+    P_ExplodeMissile(*vmAddrToPtr<mobj_t>(a0));
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -3282,7 +3282,7 @@ loc_80018DAC:
     sw(v1, s0 + 0x64);
     a1 = lw(a0 + 0x4);
     a0 = s0;
-    P_SetMObjState();
+    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
