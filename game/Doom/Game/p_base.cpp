@@ -6,8 +6,12 @@
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
-static const VmPtr<int32_t>                 gTestFlags(0x800782B4);         // Used in place of 'mobj_t' flags in 'PB_UnsetThingPosition' and 'PB_SetThingPosition' etc.
-static const VmPtr<VmPtr<subsector_t>>      gpTestSubSec(0x80077F28);       // Used instead of computing the thing subsector in 'PB_SetThingPosition'
+static const VmPtr<VmPtr<mobj_t>>           gpBaseThing(0x8007824C);        // The current thing that is doing collision testing against other stuff: used by various functions in the module
+static const VmPtr<fixed_t>                 gTestX(0x80077EF4);             // The thing position to use for collision testing - X
+static const VmPtr<fixed_t>                 gTestY(0x80077F00);             // The thing position to use for collision testing - Y
+static const VmPtr<uint32_t>                gTestFlags(0x800782B4);         // Used in place of 'mobj_t' flags for various functions in this module
+static const VmPtr<VmPtr<subsector_t>>      gpTestSubSec(0x80077F28);       // Current cached thing subsector: input and output for some functions in this module
+static const VmPtr<VmPtr<mobj_t>>           gpHitThing(0x80078184);         // The thing that was collided against during collision testing
 
 void P_RunMobjBase() noexcept {
 loc_80013840:
@@ -703,7 +707,7 @@ loc_80014358:
     a0 = s1;
     if (v0 == 0) goto loc_80014378;
     a1 = s0;
-    PB_BlockThingsIterator();
+    v0 = PB_BlockThingsIterator(a0, a1);
     s0++;
     if (v0 != 0) goto loc_80014380;
 loc_80014378:
@@ -879,101 +883,74 @@ loc_800145BC:
     return;
 }
 
-void PB_CheckThing() noexcept {
-loc_800145C4:
-    a2 = a0;
-    t0 = lw(a2 + 0x64);
-    v0 = t0 & 2;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_800146E8;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does collision testing for the current thing doing collision testing against the given thing.
+// Returns 'false' if there is a collision and hence a blockage.
+// If a collision occurs the hit thing is saved in most cases, except where damage is not desired for missiles.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool PB_CheckThing(mobj_t& mobj) noexcept {    
+    // If the thing is not solid you can't collide against it
+    if ((mobj.flags & MF_SOLID) == 0)
+        return true;
+    
+    // Get the thing which is doing the collision test and see if it is close enough to this thing.
+    // If it isn't then we can early out here and return 'true' for no collision:
+    mobj_t& baseThing = *gpBaseThing->get();
+    const fixed_t totalRadius = mobj.radius + baseThing.radius;
+    
+    const fixed_t dx = std::abs(mobj.x - *gTestX);
+    const fixed_t dy = std::abs(mobj.y - *gTestY);
+
+    if ((dx >= totalRadius) || (dy >= totalRadius))
+        return true;
+    
+    // The thing can't collide with itself
+    if (&mobj == &baseThing)
+        return true;
+
+    // Check for a lost soul slamming into things
+    const int32_t testFlags = *gTestFlags;
+
+    if (testFlags & MF_SKULLFLY) {
+        *gpHitThing = &mobj;
+        return false;
     }
-    a3 = lw(gp + 0xC6C);                                // Load from: gpCurMObj (8007824C)
-    a1 = lw(a2 + 0x40);
-    a0 = lw(a2);
-    v0 = lw(gp + 0x914);                                // Load from: gTestX (80077EF4)
-    v1 = lw(a3 + 0x40);
-    v0 = a0 - v0;
-    a1 += v1;
-    if (i32(v0) >= 0) goto loc_80014600;
-    v0 = -v0;
-loc_80014600:
-    v0 = (i32(v0) < i32(a1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_800146E8;
+
+    // Missiles are special and are allowed to fly over and under things.
+    // Most things have 'infinite' height in DOOM with regard to collision detection.
+    if (testFlags & MF_MISSILE) {
+        // Is the missile flying over this thing?
+        if (baseThing.z > mobj.z + mobj.height)
+            return true;
+        
+        // Is the missile flying under this thing?
+        if (baseThing.z + baseThing.height < mobj.z)
+            return true;
+
+        // Is the missile hitting the same species that it came from?
+        const mobjtype_t sourceObjType = baseThing.target->type;
+
+        if (sourceObjType == mobj.type) {
+            // Colliding with the same species type: don't explode the missile if it's hitting the shooter of the missile
+            if (&mobj == baseThing.target.get())
+                return true;
+            
+            // If it's hitting anything other than the player, explode the missile but do no damage (set no 'hit' thing).
+            // Players can still damage each other with missiles however, hence the exception.
+            if (sourceObjType != MT_PLAYER)
+                return false;
+        }
+        
+        // So long as the thing is shootable then the missile can hit it
+        if (mobj.flags & MF_SHOOTABLE) {
+            *gpHitThing = &mobj;
+            return false;
+        }
     }
-    v1 = lw(a2 + 0x4);
-    v0 = lw(gp + 0x920);                                // Load from: gTestY (80077F00)
-    v0 = v1 - v0;
-    if (i32(v0) >= 0) goto loc_80014628;
-    v0 = -v0;
-loc_80014628:
-    v0 = (i32(v0) < i32(a1));
-    if (v0 == 0) goto loc_800146B0;
-    v0 = 0x1000000;                                     // Result = 01000000
-    if (a2 == a3) goto loc_800146B0;
-    v1 = *gTestFlags;
-    v0 &= v1;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x10000;                                   // Result = 00010000
-        if (bJump) goto loc_800146D4;
-    }
-    v0 &= v1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = t0 >> 1;
-        if (bJump) goto loc_800146E0;
-    }
-    a0 = lw(a2 + 0x8);
-    v0 = lw(a2 + 0x44);
-    v1 = lw(a3 + 0x8);
-    v0 += a0;
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_800146E8;
-    }
-    v0 = lw(a3 + 0x44);
-    v0 += v1;
-    v0 = (i32(v0) < i32(a0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_800146E8;
-    }
-    v1 = lw(a3 + 0x74);
-    v0 = lw(a2 + 0x54);
-    a0 = lw(v1 + 0x54);
-    if (a0 != v0) goto loc_800146C0;
-    if (a2 != v1) goto loc_800146B8;
-loc_800146B0:
-    v0 = 1;                                             // Result = 00000001
-    goto loc_800146E8;
-loc_800146B8:
-    v0 = 0;                                             // Result = 00000000
-    if (a0 != 0) goto loc_800146E8;
-loc_800146C0:
-    v1 = lw(a2 + 0x64);
-    v0 = v1 & 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 >> 1;
-        if (bJump) goto loc_800146E0;
-    }
-loc_800146D4:
-    sw(a2, gp + 0xBA4);                                 // Store to: gpHitThing (80078184)
-    v0 = 0;                                             // Result = 00000000
-    goto loc_800146E8;
-loc_800146E0:
-    v0 ^= 1;
-    v0 &= 1;
-loc_800146E8:
-    return;
+
+    // Non missile: the collider is colliding against this thing if it is solid.
+    // Set no hit thing here however because this is not a missile that can potentially do damage.
+    return ((mobj.flags & MF_SOLID) == 0);
 }
 
 void PB_BlockLinesIterator() noexcept {
@@ -1161,35 +1138,19 @@ loc_800149AC:
     return;
 }
 
-void PB_BlockThingsIterator() noexcept {
-loc_800149B8:
-    v0 = *gBlockmapWidth;
-    mult(a1, v0);
-    v1 = *gppBlockLinks;
-    sp -= 0x18;
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v0 = lo;
-    v0 += a0;
-    v0 <<= 2;
-    v0 += v1;
-    s0 = lw(v0);
-    v0 = 1;                                             // Result = 00000001
-    if (s0 == 0) goto loc_80014A1C;
-loc_800149FC:
-    a0 = s0;
-    PB_CheckThing();
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80014A1C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does collision detection against all things in the specified blockmap cell's linked list of things.
+// Stops when a collision is detected and returns 'false', otherwise returns 'true' for no collision.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
+    mobj_t* pmobj = gppBlockLinks->get()[x + y * (*gBlockmapWidth)].get();
+
+    while (pmobj) {
+        if (!PB_CheckThing(*pmobj))
+            return false;   // Hit something!
+
+        pmobj = pmobj->bnext.get();
     }
-    s0 = lw(s0 + 0x30);
-    v0 = 1;                                             // Result = 00000001
-    if (s0 != 0) goto loc_800149FC;
-loc_80014A1C:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    return true;    // No collision
 }

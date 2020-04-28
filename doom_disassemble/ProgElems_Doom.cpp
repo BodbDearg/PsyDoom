@@ -3559,7 +3559,7 @@ static const ProgElem ELEMS[] = {
     { 0x80078240, 0x80078244, "gOldX",                                  ProgElemType::INT32 },
     { 0x80078244, 0x80078248, "gOldY",                                  ProgElemType::INT32 },
     { 0x80078248, 0x8007824C, "gpBlockLine",                            ProgElemType::PTR32 },
-    { 0x8007824C, 0x80078250, "gpCurMObj",                              ProgElemType::PTR32 },
+    { 0x8007824C, 0x80078250, "gpBaseThing",                            ProgElemType::PTR32 },
     { 0x80078250, 0x80078254, "gpBlockmapLineNum",                      ProgElemType::PTR32 },
     { 0x80078254, 0x80078258, "gMainWadFileIdx",                        ProgElemType::UINT32 },
     { 0x80078258, 0x8007825C, "gGameSkill",                             ProgElemType::UINT32 },

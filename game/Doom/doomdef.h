@@ -212,7 +212,7 @@ struct mobj_t {
     int32_t                 health;
     int32_t                 movedir;            // Diagonal directions: 0-7
     int32_t                 movecount;          // When this reaches 0 a new dir is selected
-    VmPtr<mobj_t>           target;             // The current map object being chased or attacked (if any)
+    VmPtr<mobj_t>           target;             // The current map object being chased or attacked (if any), or for missiles the source object
     int32_t                 reactiontime;       // Time left until an attack is allowed
     int32_t                 threshold;          // Time left chasing the current target
     VmPtr<player_t>         player;             // Associated player, if any

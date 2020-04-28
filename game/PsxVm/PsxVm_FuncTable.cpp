@@ -17,9 +17,7 @@ extern void PB_TryMove() noexcept;
 extern void PB_CheckPosition() noexcept;
 extern void PB_BoxCrossLine() noexcept;
 extern void PB_CheckLine() noexcept;
-extern void PB_CheckThing() noexcept;
 extern void PB_BlockLinesIterator() noexcept;
-extern void PB_BlockThingsIterator() noexcept;
 extern void T_MoveCeiling() noexcept;
 extern void EV_DoCeiling() noexcept;
 extern void P_AddActiveCeiling() noexcept;
@@ -282,9 +280,7 @@ namespace PsxVm {
         { 0x800141DC, &PB_CheckPosition },
         { 0x800143C0, &PB_BoxCrossLine },
         { 0x800144D8, &PB_CheckLine },
-        { 0x800145C4, &PB_CheckThing },
         { 0x800146F0, &PB_BlockLinesIterator },
-        { 0x800149B8, &PB_BlockThingsIterator },
         { 0x80014A30, &T_MoveCeiling },
         { 0x80014C44, &EV_DoCeiling },
         { 0x80014E18, &P_AddActiveCeiling },
