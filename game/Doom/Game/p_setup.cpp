@@ -330,18 +330,14 @@ static void P_LoadThings(const int32_t lumpNum) noexcept {
     mapthing_t* pSrcThing = (mapthing_t*) gTmpBuffer.get();
 
     for (int32_t thingIdx = 0; thingIdx < numThings; ++thingIdx) {
-        // Endian correct the map thing
+        // Endian correct the map thing and then spawn it
         pSrcThing->x = Endian::littleToHost(pSrcThing->x);
         pSrcThing->y = Endian::littleToHost(pSrcThing->y);
         pSrcThing->angle = Endian::littleToHost(pSrcThing->angle);
         pSrcThing->type = Endian::littleToHost(pSrcThing->type);
         pSrcThing->options = Endian::littleToHost(pSrcThing->options);
 
-        // Spawn the map thing
-        a0 = ptrToVmAddr(pSrcThing);
-        a1 = pSrcThing->type;
-        a2 = pSrcThing->options;
-        P_SpawnMapThing();
+        P_SpawnMapThing(*pSrcThing);
 
         // Not sure why this check is being done AFTER we try and spawn the thing, surely it would make more sense to do before?
         // Regardless if the 'DoomEd' number is too big then throw an error:

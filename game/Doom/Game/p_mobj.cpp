@@ -448,323 +448,112 @@ loc_8001D15C:
     return;
 }
 
-void P_SpawnMapThing() noexcept {
-loc_8001D184:
-    sp -= 0x30;
-    sw(s2, sp + 0x18);
-    s2 = a0;
-    sw(ra, sp + 0x2C);
-    sw(s6, sp + 0x28);
-    sw(s5, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v1 = lh(s2 + 0x6);
-    v0 = (i32(v1) < 3);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_8001D23C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawns a thing using the information in the given 'mapthing_t' struct
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
+    // Remember player starts for single player and co-op games
+    if (mapthing.type <= MAXPLAYERS) {
+        gPlayerStarts[mapthing.type - 1] = mapthing;
+        return;
     }
-    v0 += v1;
-    v0 <<= 1;
-    v1 = lwl(v1, s2 + 0x3);
-    v1 = lwr(v1, s2);
-    a0 = lwl(a0, s2 + 0x7);
-    a0 = lwr(a0, s2 + 0x4);
-    a1 = lh(s2 + 0x8);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x718B;                                       // Result = gPlayerStarts_-1[1] (800A8E75)
-    at += v0;
-    swl(v1, at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x718E;                                       // Result = gPlayerStarts_-1[0] (800A8E72)
-    at += v0;
-    swr(v1, at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7187;                                       // Result = gPlayerStarts_-1[3] (800A8E79)
-    at += v0;
-    swl(a0, at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x718A;                                       // Result = gPlayerStarts_-1[2] (800A8E76)
-    at += v0;
-    swr(a0, at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7186;                                       // Result = gPlayerStarts_-1[4] (800A8E7A)
-    at += v0;
-    sh(a1, at);
-    goto loc_8001D6D8;
-loc_8001D23C:
-    v0 = 0xB;                                           // Result = 0000000B
-    a0 = 2;                                             // Result = 00000002
-    if (v1 != v0) goto loc_8001D28C;
-    a0 = *gpDeathmatchP;
-    v0 = 0x800A0000;                                    // Result = 800A0000
-    v0 -= 0x7F30;                                       // Result = 800980D0
-    v0 = (a0 < v0);
-    a1 = s2;
-    if (v0 == 0) goto loc_8001D6D8;
-    a2 = 0xA;                                           // Result = 0000000A
-    _thunk_D_memcpy();
-    v0 = *gpDeathmatchP;
-    v0 += 0xA;
-    *gpDeathmatchP = v0;
-    goto loc_8001D6D8;
-loc_8001D28C:
-    v0 = *gNetGame;
-    if (v0 == a0) goto loc_8001D2B4;
-    v0 = lhu(s2 + 0x8);
-    v0 &= 0x10;
-    if (v0 != 0) goto loc_8001D6D8;
-loc_8001D2B4:
-    v1 = *gGameSkill;
-    v0 = (v1 < 2);
-    if (v0 == 0) goto loc_8001D2D4;
-    a1 = 1;                                             // Result = 00000001
-    goto loc_8001D2F4;
-loc_8001D2D4:
-    v0 = v1 - 3;
-    if (v1 != a0) goto loc_8001D2E4;
-    a1 = 2;                                             // Result = 00000002
-    goto loc_8001D2F4;
-loc_8001D2E4:
-    v0 = (v0 < 2);
-    if (v0 == 0) goto loc_8001D2F4;
-    a1 = 4;                                             // Result = 00000004
-loc_8001D2F4:
-    v0 = lh(s2 + 0x8);
-    v0 &= a1;
-    s1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_8001D6D8;
-    a1 = lh(s2 + 0x6);
-    v1 = 0;                                             // Result = 00000000
-loc_8001D310:
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1FC4;                                       // Result = MObjInfo_MT_PLAYER[0] (8005E03C)
-    at += v1;
-    v0 = lw(at);
-    {
-        const bool bJump = (a1 == v0);
-        v0 = 0x7F;                                      // Result = 0000007F
-        if (bJump) goto loc_8001D340;
+
+    // Remember deathmatch starts for deathmatch games
+    if (mapthing.type == 11) {
+        if (gpDeathmatchP->get() < &gDeathmatchStarts[MAX_DEATHMATCH_STARTS]) {
+            D_memcpy(gpDeathmatchP->get(), &mapthing, sizeof(mapthing_t));
+            *gpDeathmatchP += 1;
+        }
+
+        return;
     }
-    s1++;
-    v0 = (i32(s1) < 0x7F);
-    v1 += 0x58;
-    if (v0 != 0) goto loc_8001D310;
-    v0 = 0x7F;                                          // Result = 0000007F
-loc_8001D340:
-    if (s1 != v0) goto loc_8001D360;
-    I_Error("P_SpawnMapThing: Unknown doomednum %d at (%d, %d)", (int32_t) a1, (int32_t) a2, (int32_t) a3);
-loc_8001D360:
-    v1 = *gNetGame;
-    v0 = 2;
-    s3 = 0x80000000;
-    if (v1 != v0) goto loc_8001D3A8;
-    v0 = s1 << 1;
-    v0 += s1;
-    v0 <<= 2;
-    v0 -= s1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F70;                                       // Result = MObjInfo_MT_PLAYER[15] (8005E090)
-    at += v0;
-    v0 = lw(at);
-    v1 = 0x2400000;                                     // Result = 02400000
-    v0 &= v1;
-    if (v0 != 0) goto loc_8001D6D8;
-loc_8001D3A8:
-    v0 = lh(s2);
-    v1 = lh(s2 + 0x2);
-    s6 = v0 << 16;
-    v0 = s1 << 1;
-    v0 += s1;
-    v0 <<= 2;
-    v0 -= s1;
-    s4 = v0 << 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F70;                                       // Result = MObjInfo_MT_PLAYER[15] (8005E090)
-    at += s4;
-    v0 = lw(at);
-    v0 &= 0x100;
-    s5 = v1 << 16;
-    if (v0 == 0) goto loc_8001D3F0;
-    s3 = 0x7FFF0000;                                    // Result = 7FFF0000
-    s3 |= 0xFFFF;                                       // Result = 7FFFFFFF
-loc_8001D3F0:
-    a1 = 0x94;                                          // Result = 00000094
-    a2 = 2;                                             // Result = 00000002
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x94;                                          // Result = 00000094
-    _thunk_D_memset();
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 -= 0x1FC4;                                       // Result = MObjInfo_MT_PLAYER[0] (8005E03C)
-    v0 += s4;                                           // Result = MObjInfo_MT_PLAYER[0] (8005E03C)
-    sw(s1, s0 + 0x54);
-    sw(v0, s0 + 0x58);
-    sw(s6, s0);
-    sw(s5, s0 + 0x4);
-    v1 = lw(v0 + 0x40);                                 // Load from: MObjInfo_MT_PLAYER[10] (8005E07C)
-    sw(v1, s0 + 0x40);
-    v1 = lw(v0 + 0x44);                                 // Load from: MObjInfo_MT_PLAYER[11] (8005E080)
-    sw(v1, s0 + 0x44);
-    v1 = lw(v0 + 0x54);                                 // Load from: MObjInfo_MT_PLAYER[15] (8005E090)
-    sw(v1, s0 + 0x64);
-    v1 = lw(v0 + 0x8);                                  // Load from: MObjInfo_MT_PLAYER[2] (8005E044)
-    sw(v1, s0 + 0x68);
-    v1 = lw(v0 + 0x14);                                 // Load from: MObjInfo_MT_PLAYER[5] (8005E050)
-    sw(v1, s0 + 0x78);
-    v1 = lw(v0 + 0x4);                                  // Load from: MObjInfo_MT_PLAYER[1] (8005E040)
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0 + 0x60);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x5C);
-    v1 = lw(v0);
-    sw(v1, s0 + 0x28);
-    v0 = lw(v0 + 0x4);
-    a0 = s0;
-    sw(v0, s0 + 0x2C);
-    P_SetThingPosition(*vmAddrToPtr<mobj_t>(a0));
-    v0 = lw(s0 + 0xC);
-    v0 = lw(v0);
-    v1 = lw(s0 + 0xC);
-    v0 = lw(v0);
-    sw(v0, s0 + 0x38);
-    v0 = lw(v1);
-    v1 = lw(v0 + 0x4);
-    v0 = 0x80000000;                                    // Result = 80000000
-    sw(v1, s0 + 0x3C);
-    if (s3 != v0) goto loc_8001D500;
-    v0 = lw(s0 + 0x38);
-    sw(v0, s0 + 0x8);
-    goto loc_8001D530;
-loc_8001D500:
-    v0 = 0x7FFF0000;                                    // Result = 7FFF0000
-    v0 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    if (s3 != v0) goto loc_8001D52C;
-    v0 = lw(s0 + 0x58);
-    v0 = lw(v0 + 0x44);
-    v0 = v1 - v0;
-    sw(v0, s0 + 0x8);
-    goto loc_8001D530;
-loc_8001D52C:
-    sw(s3, s0 + 0x8);
-loc_8001D530:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    sw(s0, v0 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7170;                                       // Result = gMObjHead[0] (800A8E90)
-    sw(v0, s0 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    sw(v0, s0 + 0x10);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(s0, at - 0x7160);                                // Store to: gMObjHead[4] (800A8EA0)
-    v0 = lw(s0 + 0x5C);
-    if (i32(v0) <= 0) goto loc_8001D5BC;
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x5C);
-    div(v0, v1);
-    if (v1 != 0) goto loc_8001D594;
-    _break(0x1C00);
-loc_8001D594:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8001D5AC;
+    
+    // Ignore if it's a deathmatch only thing and this is not deathmatch
+    if ((mapthing.options & MTF_DEATHMATCH) && (*gNetGame != gt_deathmatch))
+        return;
+    
+    // Ignore the thing if it's not for this skill level.
+    // Note: 'bSkillMatch' was undefined in the original code if the game skill was greater than nightmare but I'm defaulting it here.
+    bool bSkillMatch = false;
+
+    if (*gGameSkill <= sk_easy) {
+        bSkillMatch = (mapthing.options & MTF_EASY);
+    } else if (*gGameSkill == sk_medium) {
+        bSkillMatch = (mapthing.options & MTF_NORMAL);
+    } else if (*gGameSkill <= sk_nightmare) {
+        bSkillMatch = (mapthing.options & MTF_HARD);
     }
-    if (v0 != at) goto loc_8001D5AC;
-    tge(zero, zero, 0x5D);
-loc_8001D5AC:
-    v1 = hi;
-    v1++;
-    sw(v1, s0 + 0x5C);
-loc_8001D5BC:
-    v0 = lw(s0 + 0x64);
-    v1 = 0x400000;                                      // Result = 00400000
-    v0 &= v1;
-    v1 = 0x800000;                                      // Result = 00800000
-    if (v0 == 0) goto loc_8001D5E8;
-    v0 = *gTotalKills;
-    v0++;
-    *gTotalKills = v0;
-loc_8001D5E8:
-    v0 = lw(s0 + 0x64);
-    v0 &= v1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xB60B0000;                                // Result = B60B0000
-        if (bJump) goto loc_8001D618;
+    
+    if (!bSkillMatch)
+        return;
+    
+    // Try to figure out the thing type using the DoomEd num.
+    // If that fails then issue a fatal error.
+    mobjtype_t thingType = NUMMOBJTYPES;
+
+    for (int32_t thingTypeIdx = 0; thingTypeIdx < NUMMOBJTYPES; ++thingTypeIdx) {
+        if (gMObjInfo[thingTypeIdx].doomednum == mapthing.type) {
+            thingType = (mobjtype_t) thingTypeIdx;
+            break;
+        }
     }
-    v0 = *gTotalItems;
-    v0++;
-    *gTotalItems = v0;
-    v0 = 0xB60B0000;                                    // Result = B60B0000
-loc_8001D618:
-    v1 = lhu(s2 + 0x4);
-    v0 |= 0x60B7;                                       // Result = B60B60B7
-    v1 <<= 16;
-    a0 = u32(i32(v1) >> 16);
-    mult(a0, v0);
-    v1 = u32(i32(v1) >> 31);
-    v0 = hi;
-    v0 += a0;
-    v0 = u32(i32(v0) >> 5);
-    v0 -= v1;
-    v0 <<= 29;
-    sw(v0, s0 + 0x24);
-    v0 = lhu(s2);
-    sh(v0, s0 + 0x88);
-    v0 = lhu(s2 + 0x2);
-    sh(v0, s0 + 0x8A);
-    v0 = lhu(s2 + 0x6);
-    sh(v0, s0 + 0x8C);
-    v0 = lhu(s2 + 0x4);
-    sh(v0, s0 + 0x8E);
-    v0 = lhu(s2 + 0x8);
-    v0 &= 8;
-    if (v0 == 0) goto loc_8001D69C;
-    v0 = lw(s0 + 0x64);
-    v0 |= 0x20;
-    sw(v0, s0 + 0x64);
-loc_8001D69C:
-    v0 = lhu(s2 + 0x8);
-    v1 = lw(s0 + 0x64);
-    v0 &= 0xE0;
-    v0 <<= 23;
-    v0 |= v1;
-    v1 = 0x70000000;                                    // Result = 70000000
-    sw(v0, s0 + 0x64);
-    v0 &= v1;
-    v1 = 0x50000000;                                    // Result = 50000000
-    if (v0 != v1) goto loc_8001D6D8;
-    v0 = lw(s0 + 0x68);
-    v0 <<= 1;
-    sw(v0, s0 + 0x68);
-loc_8001D6D8:
-    ra = lw(sp + 0x2C);
-    s6 = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x30;
-    return;
+    
+    if (thingType == NUMMOBJTYPES) {
+        I_Error("P_SpawnMapThing: Unknown doomednum %d at (%d, %d)", (int) mapthing.type, (int) mapthing.x, (int) mapthing.y);
+        return;
+    }   
+
+    // Do not spawn monsters and keycards in deathmatch
+    const mobjinfo_t& info = gMObjInfo[thingType];
+
+    if ((*gNetGame == gt_deathmatch) && info.flags & (MF_NOTDMATCH|MF_COUNTKILL))
+        return;
+
+    // Decide whether the thing spawns on the ceiling or floor and spawn it
+    const fixed_t z = (info.flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
+
+    mobj_t& mobj = *P_SpawnMObj(
+        (fixed_t) mapthing.x << FRACBITS,
+        (fixed_t) mapthing.y << FRACBITS,
+        z,
+        thingType
+    );
+
+    // Randomly vary starting state tics amount
+    if (mobj.tics > 0) {
+        mobj.tics = 1 + (P_Random() % mobj.tics);
+    }
+
+    // Include the thing in kill and item stats if applicable
+    if (mobj.flags & MF_COUNTKILL) {
+        *gTotalKills += 1;
+    }
+    
+    if (mobj.flags & MF_COUNTITEM) {
+        *gTotalItems += 1;
+    }
+    
+    // Set thing angle
+    mobj.angle = ANG45 * (mapthing.angle / 45);
+
+    // Save the mapthing fields in case we want to respawn (for items)
+    mobj.spawnx = mapthing.x;
+    mobj.spawny = mapthing.y;
+    mobj.spawntype = mapthing.type;
+    mobj.spawnangle = mapthing.angle;
+
+    // Set the ambush flag (no activate on sound) if specified
+    mobj.flags |= (mapthing.options & MTF_AMBUSH) ? MF_AMBUSH : 0;
+
+    // PSX specific blending flags: set them on the thing if specified
+    mobj.flags |= (mapthing.options & MTF_BLENDMASK1) ? MF_BLENDMASK1 : 0;
+    mobj.flags |= (mapthing.options & MTF_BLENDMASK2) ? MF_BLENDMASK2 : 0;
+    mobj.flags |= (mapthing.options & MTF_BLENDMASK3) ? MF_BLENDMASK3 : 0;
+
+    // Double health for nightmare blended monsters
+    if ((mobj.flags & MF_ALL_BLEND_MASKS) == (MF_BLENDMASK1 | MF_BLENDMASK3)) {
+        mobj.health *= 2;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -42,6 +42,7 @@ static constexpr int16_t MTF_EASY           = 0x1;      // Difficulty flags, det
 static constexpr int16_t MTF_NORMAL         = 0x2;
 static constexpr int16_t MTF_HARD           = 0x4;
 static constexpr int16_t MTF_AMBUSH         = 0x8;      // Monster flag: activate only on sight, ignore noise
+static constexpr int16_t MTF_DEATHMATCH     = 0x10;     // Un-named flag in all DOOM versions that I'm giving a name: thing is for deathmatch only
 static constexpr int16_t MTF_BLENDMASK1     = 0x20;     // PSX DOOM: TODO: comment/explain
 static constexpr int16_t MTF_BLENDMASK2     = 0x40;     // PSX DOOM: TODO: comment/explain
 static constexpr int16_t MTF_BLENDMASK3     = 0x80;     // PSX DOOM: TODO: comment/explain
@@ -160,7 +161,7 @@ struct mapthing_t {
     int16_t     x;
     int16_t     y;
     int16_t     angle;
-    int16_t     type;
+    int16_t     type;           // DoomEd number for the thing
     int16_t     options;        // MTF_XXX map thing flags
 };
 
