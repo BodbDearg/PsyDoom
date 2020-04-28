@@ -6,8 +6,8 @@
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
-// Used in place of 'mobj_t' flags in 'PB_UnsetThingPosition' and 'PB_SetThingPosition' etc.
-static const VmPtr<int32_t> gTestFlags(0x800782B4);
+static const VmPtr<int32_t>                 gTestFlags(0x800782B4);         // Used in place of 'mobj_t' flags in 'PB_UnsetThingPosition' and 'PB_SetThingPosition' etc.
+static const VmPtr<VmPtr<subsector_t>>      gpTestSubSec(0x80077F28);       // Used instead of computing the thing subsector in 'PB_SetThingPosition'
 
 void P_RunMobjBase() noexcept {
 loc_80013840:
@@ -505,7 +505,7 @@ loc_80013F98:
     sw(v1, a0 + 0x3C);
     sw(a1, a0);
     sw(a2, a0 + 0x4);
-    PB_SetThingPosition();
+    PB_SetThingPosition(*vmAddrToPtr<mobj_t>(a0));
     v0 = 1;                                             // Result = 00000001
 loc_80013FD0:
     ra = lw(sp + 0x10);
@@ -556,59 +556,50 @@ void PB_UnsetThingPosition(mobj_t& thing) noexcept {
     }
 }
 
-void PB_SetThingPosition() noexcept {
-loc_800140DC:
-    v0 = lw(gp + 0x948);                                // Load from: gpTestSubSec (80077F28)
-    a1 = a0;
-    sw(v0, a1 + 0xC);
-    v1 = lw(v0);
-    sw(0, a1 + 0x20);
-    v0 = lw(v1 + 0x4C);
-    sw(v0, a1 + 0x1C);
-    v0 = lw(v1 + 0x4C);
-    if (v0 == 0) goto loc_80014110;
-    sw(a1, v0 + 0x20);
-loc_80014110:
-    v0 = *gTestFlags;
-    v0 &= 0x10;
-    sw(a1, v1 + 0x4C);
-    if (v0 != 0) goto loc_800141D4;
-    v1 = lw(a1);
-    v0 = *gBlockmapOriginX;
-    a0 = *gBlockmapOriginY;
-    v1 -= v0;
-    v0 = lw(a1 + 0x4);
-    v1 = u32(i32(v1) >> 23);
-    v0 -= a0;
-    a0 = u32(i32(v0) >> 23);
-    if (i32(v1) < 0) goto loc_800141CC;
-    a2 = *gBlockmapWidth;
-    v0 = (i32(v1) < i32(a2));
-    if (v0 == 0) goto loc_800141CC;
-    if (i32(a0) < 0) goto loc_800141CC;
-    v0 = *gBlockmapHeight;
-    v0 = (i32(a0) < i32(v0));
-    mult(a0, a2);
-    if (v0 == 0) goto loc_800141CC;
-    sw(0, a1 + 0x34);
-    v0 = lo;
-    v0 += v1;
-    v1 = *gppBlockLinks;
-    v0 <<= 2;
-    v1 += v0;
-    v0 = lw(v1);
-    sw(v0, a1 + 0x30);
-    v0 = lw(v1);
-    if (v0 == 0) goto loc_800141C4;
-    sw(a1, v0 + 0x34);
-loc_800141C4:
-    sw(a1, v1);
-    goto loc_800141D4;
-loc_800141CC:
-    sw(0, a1 + 0x34);
-    sw(0, a1 + 0x30);
-loc_800141D4:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Links the given thing to sector thing lists and the blockmap. Very similar to 'P_SetThingPosition' except the thing is always linked
+// to sectors and thing flags and the current subsector are taken from globals set elsewhere.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void PB_SetThingPosition(mobj_t& mobj) noexcept {
+    // Add the thing into the sector thing linked list
+    subsector_t& subsec = *gpTestSubSec->get();
+    sector_t& sec = *subsec.sector;
+
+    mobj.subsector = &subsec;    
+    mobj.sprev = nullptr;
+    mobj.snext = sec.thinglist;
+    
+    if (sec.thinglist) {
+        sec.thinglist->sprev = &mobj;
+    }
+    
+    sec.thinglist = &mobj;
+
+    // Add the thing into the blockmap unless the thing flags specify otherwise (inert things)
+    if ((*gTestFlags & MF_NOBLOCKMAP) == 0) {
+        // Compute the blockmap cell and see if it's in range for the blockmap
+        const int32_t bmapX = (mobj.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
+        const int32_t bmapY = (mobj.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+        
+        if ((bmapX >= 0) && (bmapY >= 0) && (bmapX < *gBlockmapWidth) && (bmapY < *gBlockmapHeight)) {
+            // In range: link the thing into the blockmap list for this blockmap cell
+            VmPtr<mobj_t>& blockmapList = gppBlockLinks->get()[bmapX + bmapY * (*gBlockmapWidth)];
+            mobj_t* const pPrevListHead = blockmapList.get();
+            
+            mobj.bprev = nullptr;
+            mobj.bnext = pPrevListHead;
+
+            if (pPrevListHead) {
+                pPrevListHead->bprev = &mobj;
+            }
+
+            blockmapList = &mobj;
+        } else {
+            // Thing is outside the blockmap
+            mobj.bprev = nullptr;
+            mobj.bnext = nullptr;
+        }
+    }
 }
 
 void PB_CheckPosition() noexcept {

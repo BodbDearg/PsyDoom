@@ -9,7 +9,7 @@ void P_ZMovement() noexcept;
 void P_MobjThinker() noexcept;
 void PB_TryMove() noexcept;
 void PB_UnsetThingPosition(mobj_t& thing) noexcept;
-void PB_SetThingPosition() noexcept;
+void PB_SetThingPosition(mobj_t& mobj) noexcept;
 void PB_CheckPosition() noexcept;
 void PB_BoxCrossLine() noexcept;
 void PB_CheckLine() noexcept;
