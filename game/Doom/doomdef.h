@@ -136,39 +136,46 @@ struct thinker_t {
 };
 
 // Flags for 'mobj_t'
-static constexpr uint32_t MF_SPECIAL        = 0x1;          // TODO: CONFIRM
-static constexpr uint32_t MF_SOLID          = 0x2;          // TODO: CONFIRM
-static constexpr uint32_t MF_SHOOTABLE      = 0x4;          // TODO: CONFIRM
-static constexpr uint32_t MF_NOSECTOR       = 0x8;          // Thing is not present in sector thing lists
-static constexpr uint32_t MF_NOBLOCKMAP     = 0x10;         // Thing is not present in the blockmap
-static constexpr uint32_t MF_AMBUSH         = 0x20;         // TODO: CONFIRM
-static constexpr uint32_t MF_JUSTHIT        = 0x40;         // TODO: CONFIRM
-static constexpr uint32_t MF_JUSTATTACKED   = 0x80;         // TODO: CONFIRM
-static constexpr uint32_t MF_SPAWNCEILING   = 0x100;        // TODO: CONFIRM
-static constexpr uint32_t MF_NOGRAVITY      = 0x200;        // TODO: CONFIRM
-static constexpr uint32_t MF_DROPOFF        = 0x400;        // TODO: CONFIRM
-static constexpr uint32_t MF_PICKUP         = 0x800;        // TODO: CONFIRM
-static constexpr uint32_t MF_NOCLIP         = 0x1000;       // Cheat that disables collision on the player
-static constexpr uint32_t MF_SLIDE          = 0x2000;       // TODO: CONFIRM
-static constexpr uint32_t MF_FLOAT          = 0x4000;       // TODO: CONFIRM
-static constexpr uint32_t MF_TELEPORT       = 0x8000;       // TODO: CONFIRM
-static constexpr uint32_t MF_MISSILE        = 0x10000;      // TODO: CONFIRM
-static constexpr uint32_t MF_DROPPED        = 0x20000;      // TODO: CONFIRM
-static constexpr uint32_t MF_SHADOW         = 0x40000;      // TODO: CONFIRM
-static constexpr uint32_t MF_NOBLOOD        = 0x80000;      // TODO: CONFIRM
-static constexpr uint32_t MF_CORPSE         = 0x100000;     // TODO: CONFIRM
-static constexpr uint32_t MF_INFLOAT        = 0x200000;     // TODO: CONFIRM
-static constexpr uint32_t MF_COUNTKILL      = 0x400000;     // TODO: CONFIRM
-static constexpr uint32_t MF_COUNTITEM      = 0x800000;     // TODO: CONFIRM
-static constexpr uint32_t MF_SKULLFLY       = 0x1000000;    // TODO: CONFIRM
-static constexpr uint32_t MF_NOTDMATCH      = 0x2000000;    // TODO: CONFIRM
-static constexpr uint32_t MF_SEETARGET      = 0x4000000;    // TODO: CONFIRM
-static constexpr uint32_t MF_BLENDMASK1     = 0x10000000;   // TODO: CONFIRM
-static constexpr uint32_t MF_BLENDMASK2     = 0x20000000;   // TODO: CONFIRM
-static constexpr uint32_t MF_BLENDMASK3     = 0x40000000;   // TODO: CONFIRM
+static constexpr uint32_t MF_SPECIAL            = 0x1;          // TODO: CONFIRM
+static constexpr uint32_t MF_SOLID              = 0x2;          // TODO: CONFIRM
+static constexpr uint32_t MF_SHOOTABLE          = 0x4;          // TODO: CONFIRM
+static constexpr uint32_t MF_NOSECTOR           = 0x8;          // Thing is not present in sector thing lists
+static constexpr uint32_t MF_NOBLOCKMAP         = 0x10;         // Thing is not present in the blockmap
+static constexpr uint32_t MF_AMBUSH             = 0x20;         // TODO: CONFIRM
+static constexpr uint32_t MF_JUSTHIT            = 0x40;         // TODO: CONFIRM
+static constexpr uint32_t MF_JUSTATTACKED       = 0x80;         // TODO: CONFIRM
+static constexpr uint32_t MF_SPAWNCEILING       = 0x100;        // TODO: CONFIRM
+static constexpr uint32_t MF_NOGRAVITY          = 0x200;        // TODO: CONFIRM
+static constexpr uint32_t MF_DROPOFF            = 0x400;        // TODO: CONFIRM
+static constexpr uint32_t MF_PICKUP             = 0x800;        // TODO: CONFIRM
+static constexpr uint32_t MF_NOCLIP             = 0x1000;       // Cheat that disables collision on the player
+static constexpr uint32_t MF_SLIDE              = 0x2000;       // TODO: CONFIRM
+static constexpr uint32_t MF_FLOAT              = 0x4000;       // TODO: CONFIRM
+static constexpr uint32_t MF_TELEPORT           = 0x8000;       // TODO: CONFIRM
+static constexpr uint32_t MF_MISSILE            = 0x10000;      // TODO: CONFIRM
+static constexpr uint32_t MF_DROPPED            = 0x20000;      // TODO: CONFIRM
+static constexpr uint32_t MF_SHADOW             = 0x40000;      // TODO: CONFIRM
+static constexpr uint32_t MF_NOBLOOD            = 0x80000;      // TODO: CONFIRM
+static constexpr uint32_t MF_CORPSE             = 0x100000;     // TODO: CONFIRM
+static constexpr uint32_t MF_INFLOAT            = 0x200000;     // TODO: CONFIRM
+static constexpr uint32_t MF_COUNTKILL          = 0x400000;     // TODO: CONFIRM
+static constexpr uint32_t MF_COUNTITEM          = 0x800000;     // TODO: CONFIRM
+static constexpr uint32_t MF_SKULLFLY           = 0x1000000;    // TODO: CONFIRM
+static constexpr uint32_t MF_NOTDMATCH          = 0x2000000;    // TODO: CONFIRM
+static constexpr uint32_t MF_SEETARGET          = 0x4000000;    // TODO: CONFIRM
+static constexpr uint32_t MF_BLEND_ON           = 0x10000000;   // PSX DOOM: PSX DOOM: if set then blending is enabled for the object (alpha, additive or subtractive)
+static constexpr uint32_t MF_BLEND_MODE_BIT1    = 0x20000000;   // PSX DOOM: 1 of 2 bits determining blend mode if blending is enabled. See 'MF_BLEND' flag combos below for more details.
+static constexpr uint32_t MF_BLEND_MODE_BIT2    = 0x40000000;   // PSX DOOM: 1 of 2 bits determining blend mode if blending is enabled. See 'MF_BLEND' flag combos below for more details.
 
-static constexpr uint32_t MF_ALL_BLEND_MASKS = (
-    MF_BLENDMASK1 | MF_BLENDMASK2 | MF_BLENDMASK3
+// Blend modes - when thing flags are masked by 'MF_ALL_BLEND_FLAGS':
+static constexpr uint32_t MF_BLEND_ALPHA_50 = MF_BLEND_ON;                                              // 50% opacity alpha blend
+static constexpr uint32_t MF_BLEND_ADD      = MF_BLEND_ON | MF_BLEND_MODE_BIT1;                         // Additive blend at 100% opacity
+static constexpr uint32_t MF_BLEND_SUBTRACT = MF_BLEND_ON | MF_BLEND_MODE_BIT2;                         // Subtractive blend at 100% opacity (also makes monsters 'nightmare' and have 2x hit points)
+static constexpr uint32_t MF_BLEND_ADD_25   = MF_BLEND_ON | MF_BLEND_MODE_BIT1 | MF_BLEND_MODE_BIT2;    // Additive blend at 25% opacity
+
+// Convenience flag combo: used for masking out the bits/flags specifying blend mode 
+static constexpr uint32_t MF_ALL_BLEND_FLAGS = (
+    MF_BLEND_ON | MF_BLEND_MODE_BIT1 | MF_BLEND_MODE_BIT2
 );
 
 // A function which gets called after regular map object updating is done

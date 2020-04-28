@@ -546,12 +546,12 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     mobj.flags |= (mapthing.options & MTF_AMBUSH) ? MF_AMBUSH : 0;
 
     // PSX specific blending flags: set them on the thing if specified
-    mobj.flags |= (mapthing.options & MTF_BLENDMASK1) ? MF_BLENDMASK1 : 0;
-    mobj.flags |= (mapthing.options & MTF_BLENDMASK2) ? MF_BLENDMASK2 : 0;
-    mobj.flags |= (mapthing.options & MTF_BLENDMASK3) ? MF_BLENDMASK3 : 0;
+    mobj.flags |= (mapthing.options & MTF_BLEND_ON) ? MF_BLEND_ON : 0;
+    mobj.flags |= (mapthing.options & MTF_BLEND_MODE_BIT1) ? MF_BLEND_MODE_BIT1 : 0;
+    mobj.flags |= (mapthing.options & MTF_BLEND_MODE_BIT2) ? MF_BLEND_MODE_BIT2 : 0;
 
     // Double health for nightmare blended monsters
-    if ((mobj.flags & MF_ALL_BLEND_MASKS) == (MF_BLENDMASK1 | MF_BLENDMASK3)) {
+    if ((mobj.flags & MF_ALL_BLEND_FLAGS) == MF_BLEND_SUBTRACT) {
         mobj.health *= 2;
     }
 }

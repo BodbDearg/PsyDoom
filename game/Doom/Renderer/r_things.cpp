@@ -159,15 +159,15 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         I_CacheTex(tex);
 
         // Get the 3 blending flags and set whether the sprite is semi transparent
-        const int32_t blendFlags = (thing.flags & MF_ALL_BLEND_MASKS) >> 28;
+        const int32_t blendFlags = (thing.flags & MF_ALL_BLEND_FLAGS) >> 28;
         
-        if (blendFlags != 0) {
+        if (blendFlags != 0) {  // Minor logic bug? Should be testing against 'MF_BLEND_ON' instead?
             LIBGPU_SetSemiTrans(&polyPrim, true);
         } else {
             LIBGPU_SetSemiTrans(&polyPrim, false);
         }
 
-        // Apply the desired semi transparency mode.
+        // Apply the desired semi transparency mode and discard the 'MF_BLEND_ON' bit since it is not defining a blend mode.
         // Note: this is encoded/packed into the texture page id.
         polyPrim.tpage = tex.texPageId | LIBGPU_getTPage(0, blendFlags >> 1, 0, 0);
 
@@ -279,7 +279,7 @@ void R_DrawWeapon() noexcept {
 
         {
             RECT texWin = { 0, 0, 0, 0 };
-            bIsTransparent = ((player.mo->flags & MF_ALL_BLEND_MASKS) != 0);
+            bIsTransparent = ((player.mo->flags & MF_ALL_BLEND_FLAGS) != 0);    // Minor logic bug? Should be testing against 'MF_BLEND_ON' instead?
             const uint16_t texPageId = tex.texPageId | LIBGPU_getTPage(0, (bIsTransparent) ? 1 : 0, 0, 0);
 
             DR_MODE& drawMode = *(DR_MODE*) LIBETC_getScratchAddr(128);

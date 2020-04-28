@@ -111,7 +111,7 @@ void G_PlayerFinishLevel(int32_t playerIdx) noexcept {
     // Clear blending flags on the player.
     // PC-PSX: preserve the noclip cheat also, if active.
     mobj_t& mobj = *gPlayers[playerIdx].mo;
-    mobj.flags &= ~(MF_BLENDMASK1 | MF_BLENDMASK2 | MF_BLENDMASK3);
+    mobj.flags &= (~MF_ALL_BLEND_FLAGS);
 
     // Clearing out a few other fields
     gPlayers[playerIdx].extralight = 0;
