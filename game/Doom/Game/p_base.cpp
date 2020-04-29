@@ -23,6 +23,12 @@ static const VmPtr<fixed_t>                 gTestCeilingz(0x80078104);      // C
 static const VmPtr<fixed_t>                 gTestFloorZ(0x80077F68);        // Collision testing: the Z value for the highest floor the collider is in contact with
 static const VmPtr<fixed_t>                 gTestDropoffZ(0x80078120);      // Collision testing: the Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
 
+// Private to this module
+static bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept;
+static bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;
+static void PB_UnsetThingPosition(mobj_t& thing) noexcept;
+static void PB_SetThingPosition(mobj_t& mobj) noexcept;
+
 void P_RunMobjBase() noexcept {
 loc_80013840:
     sp -= 0x18;
@@ -105,7 +111,7 @@ loc_8001396C:
     a1 = lw(s0 + 0x4);
     a0 += s2;
     a1 += s1;
-    PB_TryMove();
+    v0 = PB_TryMove(a0, a1);
     v1 = 0x1000000;                                     // Result = 01000000
     if (v0 != 0) goto loc_80013A1C;
     v0 = lw(s0 + 0x64);
@@ -456,82 +462,62 @@ loc_80013EEC:
     return;
 }
 
-void PB_TryMove() noexcept {
-loc_80013F00:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    sw(a0, gp + 0x914);                                 // Store to: gTestX (80077EF4)
-    sw(a1, gp + 0x920);                                 // Store to: gTestY (80077F00)
-    v0 = PB_CheckPosition();
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80013FD0;
-    }
-    a2 = lw(gp + 0xB24);                                // Load from: gTestCeilingz (80078104)
-    v1 = lw(gp + 0xC6C);                                // Load from: gpCurMObj (8007824C)
-    a0 = lw(gp + 0x988);                                // Load from: gTestFloorZ (80077F68)
-    a1 = lw(v1 + 0x44);
-    v0 = a2 - a0;
-    v0 = (i32(v0) < i32(a1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80013FD0;
-    }
-    v1 = lw(v1 + 0x8);
-    v0 = a2 - v1;
-    v0 = (i32(v0) < i32(a1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80013FD0;
-    }
-    v0 = a0 - v1;
-    v1 = 0x180000;                                      // Result = 00180000
-    v0 = (i32(v1) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80013FD0;
-    }
-    v0 = *gTestFlags;
-    v0 &= 0x4400;
-    if (v0 != 0) goto loc_80013F98;
-    v0 = lw(gp + 0xB40);                                // Load from: gTestDropoffZ (80078120)
-    v0 = a0 - v0;
-    v0 = (i32(v1) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80013FD0;
-    }
-loc_80013F98:
-    a0 = lw(gp + 0xC6C);                                // Load from: gpCurMObj (8007824C)
-    PB_UnsetThingPosition(*vmAddrToPtr<mobj_t>(a0));
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Try to move 'gpBaseThing' to the specified x/y position.
+// Returns 'true' if the move was successful and updates the thing position.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool PB_TryMove(const fixed_t tryX, const fixed_t tryY) noexcept {
+    // Save the position we are attempting to move to
+    *gTestX = tryX;
+    *gTestY = tryY;
 
-    a0 = lw(gp + 0xC6C);                                // Load from: gpCurMObj (8007824C)
-    v0 = lw(gp + 0x988);                                // Load from: gTestFloorZ (80077F68)
-    v1 = lw(gp + 0xB24);                                // Load from: gTestCeilingz (80078104)
-    a1 = lw(gp + 0x914);                                // Load from: gTestX (80077EF4)
-    a2 = lw(gp + 0x920);                                // Load from: gTestY (80077F00)
-    sw(v0, a0 + 0x38);
-    sw(v1, a0 + 0x3C);
-    sw(a1, a0);
-    sw(a2, a0 + 0x4);
-    PB_SetThingPosition(*vmAddrToPtr<mobj_t>(a0));
-    v0 = 1;                                             // Result = 00000001
-loc_80013FD0:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    // If we collided for sure with something (ignoring height) then stop now
+    if (!PB_CheckPosition())
+        return false;
+
+    // If the floor/ceiling height gap is too small to move through then the move cannot happen
+    mobj_t& baseThing = *gpBaseThing->get();
+
+    if (*gTestCeilingz - *gTestFloorZ < baseThing.height)
+        return false;
+
+    // If the thing is too high up in the air to pass under the upper wall then the move cannot happen
+    if (*gTestCeilingz - baseThing.z < baseThing.height)
+        return false;
+    
+    // If the step up is too big for a step then the move cannot happen
+    if (*gTestFloorZ - baseThing.z > 24 * FRACUNIT)
+        return false;
+
+    // See if the fall is too large (monsters).
+    // Only do this test for things that don't float and which care about falling off cliffs.
+    if ((*gTestFlags & (MF_DROPOFF|MF_FLOAT)) == 0) {
+        if (*gTestFloorZ - *gTestDropoffZ > 24 * FRACUNIT) {
+            // Drop is too large for this thing!
+            return false;
+        }
+    }
+
+    // If we've gotten to here then we have cleared all height check hurdles.
+    // Remove the thing from the sector thing lists and the blockmap, update it's position etc. and then re-add.
+    PB_UnsetThingPosition(baseThing);
+
+    baseThing.floorz = *gTestFloorZ;
+    baseThing.ceilingz = *gTestCeilingz;
+    baseThing.x = *gTestX;
+    baseThing.y = *gTestY;
+
+    PB_SetThingPosition(baseThing);
+
+    // This move was successful
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Unlinks the given thing from sector thing lists and the blockmap.
 // Very similar to 'P_UnsetThingPosition' except the thing is always unlinked from sectors and thing flags are read from a global.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PB_UnsetThingPosition(mobj_t& thing) noexcept {
+static void PB_UnsetThingPosition(mobj_t& thing) noexcept {
     // Remove the thing from sector thing lists
     if (thing.snext) {
         thing.snext->sprev = thing.sprev;
@@ -574,7 +560,7 @@ void PB_UnsetThingPosition(mobj_t& thing) noexcept {
 // Links the given thing to sector thing lists and the blockmap. Very similar to 'P_SetThingPosition' except the thing is always linked
 // to sectors and thing flags and the current subsector are taken from globals set elsewhere.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PB_SetThingPosition(mobj_t& mobj) noexcept {
+static void PB_SetThingPosition(mobj_t& mobj) noexcept {
     // Add the thing into the sector thing linked list
     subsector_t& subsec = *gpTestSubSec->get();
     sector_t& sec = *subsec.sector;
@@ -860,7 +846,7 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
 // Check for potential collisions against all lines in the given blockmap cell, ignoring height differences.
 // Returns 'false' if there is a definite collision, 'true' otherwise.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
+static bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
     // Get the line list for this blockmap cell
     const int16_t* pLineNum = (int16_t*)(gpBlockmapLump->get() + gpBlockmap->get()[y * (*gBlockmapWidth) + x]);
 
@@ -886,7 +872,7 @@ bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
 // Does collision detection against all things in the specified blockmap cell's linked list of things.
 // Stops when a collision is detected and returns 'false', otherwise returns 'true' for no collision.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
+static bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
     mobj_t* pmobj = gppBlockLinks->get()[x + y * (*gBlockmapWidth)].get();
 
     while (pmobj) {
