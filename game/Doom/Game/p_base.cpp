@@ -21,7 +21,7 @@ static const VmPtr<VmPtr<mobj_t>>           gpHitThing(0x80078184);         // T
 static const VmPtr<VmPtr<line_t>>           gpCeilingLine(0x80077F8C);      // Collision testing: the line for the lowest ceiling edge the collider is in contact with
 static const VmPtr<fixed_t>                 gTestCeilingz(0x80078104);      // Collision testing: the Z value for the lowest ceiling the collider is in contact with
 static const VmPtr<fixed_t>                 gTestFloorZ(0x80077F68);        // Collision testing: the Z value for the highest floor the collider is in contact with
-static const VmPtr<fixed_t>                 gTestDropoffZ(0x80078120);      // Collision testing: the Z value for the lowest floor the collider is in contact with
+static const VmPtr<fixed_t>                 gTestDropoffZ(0x80078120);      // Collision testing: the Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
 
 void P_RunMobjBase() noexcept {
 loc_80013840:
@@ -462,7 +462,7 @@ loc_80013F00:
     sw(ra, sp + 0x10);
     sw(a0, gp + 0x914);                                 // Store to: gTestX (80077EF4)
     sw(a1, gp + 0x920);                                 // Store to: gTestY (80077F00)
-    PB_CheckPosition();
+    v0 = PB_CheckPosition();
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -616,134 +616,79 @@ void PB_SetThingPosition(mobj_t& mobj) noexcept {
     }
 }
 
-void PB_CheckPosition() noexcept {
-loc_800141DC:
-    a0 = lw(gp + 0x914);                                // Load from: gTestX (80077EF4)
-    v1 = lw(gp + 0xC6C);                                // Load from: gpCurMObj (8007824C)
-    a1 = lw(gp + 0x920);                                // Load from: gTestY (80077F00)
-    sp -= 0x28;
-    sw(ra, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v0 = lw(v1 + 0x64);
-    v1 = lw(v1 + 0x40);
-    s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 -= 0x6F9C;                                       // Result = gTestBBox[0] (800A9064)
-    *gTestFlags = v0;
-    v0 = v1 + a1;
-    sw(v0, s0);                                         // Store to: gTestBBox[0] (800A9064)
-    v0 = a1 - v1;
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(v0, at - 0x6F98);                                // Store to: gTestBBox[1] (800A9068)
-    v0 = v1 + a0;
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(v0, at - 0x6F90);                                // Store to: gTestBBox[3] (800A9070)
-    v0 = a0 - v1;
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(v0, at - 0x6F94);                                // Store to: gTestBBox[2] (800A906C)
-    _thunk_R_PointInSubsector();
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x6F94);                               // Load from: gTestBBox[2] (800A906C)
-    a1 = *gBlockmapOriginX;
-    a2 = *gBlockmapOriginY;
-    v1 = 0xFFE00000;                                    // Result = FFE00000
-    sw(v0, gp + 0x948);                                 // Store to: gpTestSubSec (80077F28)
-    sw(0, gp + 0x9AC);                                  // Store to: gpCeilingLine (80077F8C)
-    sw(0, gp + 0xBA4);                                  // Store to: gpHitThing (80078184)
-    a0 -= a1;
-    a0 += v1;
-    a3 = u32(i32(a0) >> 23);
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x6F90);                               // Load from: gTestBBox[3] (800A9070)
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x6F98);                               // Load from: gTestBBox[1] (800A9068)
-    v1 -= a1;
-    a1 = 0x200000;                                      // Result = 00200000
-    v1 += a1;
-    s3 = u32(i32(v1) >> 23);
-    a0 -= a2;
-    a0 -= a1;
-    s4 = u32(i32(a0) >> 23);
-    v1 = lw(s0);                                        // Load from: gTestBBox[0] (800A9064)
-    a0 = lw(v0);
-    v1 -= a2;
-    v1 += a1;
-    s2 = u32(i32(v1) >> 23);
-    a0 = lw(a0);
-    v1 = lw(v0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
-    v1 = lw(v1 + 0x4);
-    v0++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7BC4);                                // Store to: gValidCount (80077BC4)
-    sw(a0, gp + 0xB40);                                 // Store to: gTestDropoffZ (80078120)
-    sw(a0, gp + 0x988);                                 // Store to: gTestFloorZ (80077F68)
-    sw(v1, gp + 0xB24);                                 // Store to: gTestCeilingz (80078104)
-    if (i32(a3) >= 0) goto loc_800142F8;
-    a3 = 0;                                             // Result = 00000000
-loc_800142F8:
-    if (i32(s4) >= 0) goto loc_80014304;
-    s4 = 0;                                             // Result = 00000000
-loc_80014304:
-    v1 = *gBlockmapWidth;
-    v0 = (i32(s3) < i32(v1));
-    if (v0 != 0) goto loc_80014320;
-    s3 = v1 - 1;
-loc_80014320:
-    v1 = *gBlockmapHeight;
-    v0 = (i32(s2) < i32(v1));
-    s1 = a3;
-    if (v0 != 0) goto loc_8001433C;
-    s2 = v1 - 1;
-loc_8001433C:
-    v0 = (i32(s3) < i32(s1));
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do a collision test for a thing against lines and other things, ignoring height differences.
+// Returns 'false' if there was a collision, 'true' if there was no collision when height differences are ignored.
+// Note: height difference blocking logic is handled externally to this function.
+//
+// Inputs:
+//  gpBaseThing     : The thing doing the collision test
+//  gTestX, gTestY  : Position to use for the thing for the collision test (can be set different to actual pos to test a move)
+//
+// Outputs:
+//  gTestBBox       : The bounding box for the thing
+//  gpTestSubSec    : The subsector the thing is in
+//  gpHitThing      : The thing collided with
+//  gpCeilingLine   : The upper wall line for the lowest ceiling touched
+//  gTestCeilingz   : The Z value for the lowest ceiling touched
+//  gTestFloorZ     : The Z value for the highest floor touched
+//  gTestDropoffZ   : The Z value for the lowest floor touched
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool PB_CheckPosition() noexcept {
+    // Save the bounding box, flags and subsector for the thing having collision testing done
+    mobj_t& baseThing = *gpBaseThing->get();
+    *gTestFlags = baseThing.flags;
+
     {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001439C;
+        const fixed_t radius = baseThing.radius;
+        gTestBBox[0] = *gTestY + radius;
+        gTestBBox[1] = *gTestY - radius;
+        gTestBBox[3] = *gTestX + radius;
+        gTestBBox[2] = *gTestX - radius;
     }
-loc_80014348:
-    v0 = (i32(s2) < i32(s4));
-    s0 = s4;
-    if (v0 != 0) goto loc_8001438C;
-    a0 = s1;
-loc_80014358:
-    a1 = s0;
-    v0 = PB_BlockLinesIterator(a0, a1);
-    a0 = s1;
-    if (v0 == 0) goto loc_80014378;
-    a1 = s0;
-    v0 = PB_BlockThingsIterator(a0, a1);
-    s0++;
-    if (v0 != 0) goto loc_80014380;
-loc_80014378:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8001439C;
-loc_80014380:
-    v0 = (i32(s2) < i32(s0));
-    a0 = s1;
-    if (v0 == 0) goto loc_80014358;
-loc_8001438C:
-    s1++;
-    v0 = (i32(s3) < i32(s1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80014348;
+
+    subsector_t& testSubsec = *R_PointInSubsector(*gTestX, *gTestY);
+    sector_t& testSec = *testSubsec.sector;
+    *gpTestSubSec = &testSubsec;
+
+    // Initially have collided with nothing
+    *gpCeilingLine = nullptr;
+    *gpHitThing = nullptr;
+
+    // Initialize the lowest ceiling, and highest/lowest floor values to that of the initial subsector
+    *gTestFloorZ = testSec.floorheight;
+    *gTestDropoffZ = testSec.floorheight;
+    *gTestCeilingz = testSec.ceilingheight;
+
+    // Determine the blockmap extents (left/right, top/bottom) to be tested against for collision and clamp to a valid range
+    int32_t bmapLx = (gTestBBox[2] - *gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT;
+    int32_t bmapRx = (gTestBBox[3] - *gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT;
+    int32_t bmapTy = (gTestBBox[0] - *gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT;
+    int32_t bmapBy = (gTestBBox[1] - *gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT;
+
+    bmapLx = std::max(bmapLx, 0);
+    bmapBy = std::max(bmapBy, 0);
+    bmapRx = std::min(bmapRx, *gBlockmapWidth - 1);
+    bmapTy = std::min(bmapTy, *gBlockmapHeight - 1);
+
+    // This is a new collision test so increment this stamp
+    *gValidCount += 1;
+
+    // Test against everything in this blockmap range.
+    // Stop and return 'false' for a definite collision if that happens.
+    for (int32_t x = bmapLx; x <= bmapRx; ++x) {
+        for (int32_t y = bmapBy; y <= bmapTy; ++y) {
+            // Test against lines first then things
+            if (!PB_BlockLinesIterator(x, y))
+                return false;
+            
+            if (!PB_BlockThingsIterator(x, y))
+                return false;
+        }
     }
-loc_8001439C:
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+
+    // No definite collision, there may still be collisions due to height differences however
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

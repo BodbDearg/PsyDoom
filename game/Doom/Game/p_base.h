@@ -12,6 +12,6 @@ void P_MobjThinker() noexcept;
 void PB_TryMove() noexcept;
 void PB_UnsetThingPosition(mobj_t& thing) noexcept;
 void PB_SetThingPosition(mobj_t& mobj) noexcept;
-void PB_CheckPosition() noexcept;
+bool PB_CheckPosition() noexcept;
 bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept;
 bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;

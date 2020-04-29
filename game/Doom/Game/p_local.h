@@ -12,7 +12,9 @@ static constexpr fixed_t    MAPBLOCKSIZE    = MAPBLOCKUNITS * FRACUNIT;     // S
 static constexpr uint32_t   MAPBLOCKSHIFT   = FRACBITS + 7;                 // How many bits to chop off to convert a 16.16 into blockmap units
 static constexpr uint32_t   MAPBMASK        = MAPBLOCKSIZE - 1;             // A mask to restrict a 16.16 coordinate to 1 block
 
-// The maximum 'radius' around sectors when determining blockmap extents
+// The maximum 'radius' around sectors when determining blockmap extents.
+// Determines how many blockmap blocks we should sweep in, when doing collision testing for a thing.
+// Large enough most of the time but can cause issues sometimes, see: https://doomwiki.org/wiki/Flawed_collision_detection
 static constexpr fixed_t MAXRADIUS = 32 * FRACUNIT;
 
 // Default maximum health for the player
