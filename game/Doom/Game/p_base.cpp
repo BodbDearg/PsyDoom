@@ -2,9 +2,14 @@
 
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "doomdata.h"
 #include "p_local.h"
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
+
+BEGIN_THIRD_PARTY_INCLUDES
+    #include <algorithm>
+END_THIRD_PARTY_INCLUDES
 
 static const VmPtr<VmPtr<mobj_t>>           gpBaseThing(0x8007824C);        // The current thing that is doing collision testing against other stuff: used by various functions in the module
 static const VmPtr<fixed_t>                 gTestX(0x80077EF4);             // The thing position to use for collision testing - X
@@ -13,6 +18,10 @@ static const VmPtr<fixed_t[4]>              gTestBBox(0x800A9064);          // B
 static const VmPtr<uint32_t>                gTestFlags(0x800782B4);         // Used in place of 'mobj_t' flags for various functions in this module
 static const VmPtr<VmPtr<subsector_t>>      gpTestSubSec(0x80077F28);       // Current cached thing subsector: input and output for some functions in this module
 static const VmPtr<VmPtr<mobj_t>>           gpHitThing(0x80078184);         // The thing that was collided against during collision testing
+static const VmPtr<VmPtr<line_t>>           gpCeilingLine(0x80077F8C);      // Collision testing: the line for the lowest ceiling edge the collider is in contact with
+static const VmPtr<fixed_t>                 gTestCeilingz(0x80078104);      // Collision testing: the Z value for the lowest ceiling the collider is in contact with
+static const VmPtr<fixed_t>                 gTestFloorZ(0x80077F68);        // Collision testing: the Z value for the highest floor the collider is in contact with
+static const VmPtr<fixed_t>                 gTestDropoffZ(0x80078120);      // Collision testing: the Z value for the lowest floor the collider is in contact with
 
 void P_RunMobjBase() noexcept {
 loc_80013840:
@@ -704,7 +713,7 @@ loc_80014348:
     a0 = s1;
 loc_80014358:
     a1 = s0;
-    PB_BlockLinesIterator();
+    v0 = PB_BlockLinesIterator(a0, a1);
     a0 = s1;
     if (v0 == 0) goto loc_80014378;
     a1 = s0;
@@ -740,7 +749,7 @@ loc_8001439C:
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Test if 'gTestBBox' intersects the given line: returns 'true' if there is an intersection
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool PB_BoxCrossLine(line_t& line) noexcept {
+static bool PB_BoxCrossLine(line_t& line) noexcept {
     // Check if the test bounding box is outside the bounding box of the line: if it is then early out
     const bool bTestBBOutsideLineBB = (
         (gTestBBox[BOXTOP] <= line.bbox[BOXBOTTOM]) ||
@@ -785,66 +794,51 @@ bool PB_BoxCrossLine(line_t& line) noexcept {
     return (side1 != side2);
 }
 
-void PB_CheckLine() noexcept {
-    v0 = lw(a0 + 0x3C);
-    v1 = 0x10000;                                       // Result = 00010000
-    if (v0 == 0) goto loc_80014524;
-    v0 = *gTestFlags;
-    v0 &= v1;
-    if (v0 != 0) goto loc_80014510;
-    v0 = lw(a0 + 0x10);
-    v0 &= 3;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_800145BC;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Assuming a collider intersects the given line, tells if the given line will potentially block - ignoring height differences.
+// Returns 'false' if the line is considered blocking ignoring height differences.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool PB_CheckLine(line_t& line) noexcept {
+    // A 1 sided line cannot be crossed: register a collision against this
+    if (!line.backsector)
+        return false;
+
+    // If not a projectile and the line is marked as explicitly blocking then block
+    if ((*gTestFlags & MF_MISSILE) == 0) {
+        if (line.flags & (ML_BLOCKING | ML_BLOCKMONSTERS)) {
+            return false;
+        }
     }
-loc_80014510:
-    v0 = lw(a0 + 0x10);
-    v0 &= 0x800;
-    if (v0 == 0) goto loc_8001452C;
-loc_80014524:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_800145BC;
-loc_8001452C:
-    a3 = lw(a0 + 0x3C);
-    a1 = lw(a0 + 0x38);
-    v0 = lw(a3 + 0x4);
-    v1 = lw(a1 + 0x4);
-    a2 = v0;
-    v0 = (i32(v1) < i32(a2));
-    if (v0 == 0) goto loc_80014550;
-    a2 = v1;
-loc_80014550:
-    a1 = lw(a1);
-    v1 = lw(a3);
-    v0 = (i32(v1) < i32(a1));
-    a3 = a1;
-    if (v0 != 0) goto loc_80014570;
-    a3 = v1;
-    v1 = a1;
-loc_80014570:
-    v0 = lw(gp + 0xB24);                                // Load from: gTestCeilingz (80078104)
-    v0 = (i32(a2) < i32(v0));
-    if (v0 == 0) goto loc_8001458C;
-    sw(a2, gp + 0xB24);                                 // Store to: gTestCeilingz (80078104)
-    sw(a0, gp + 0x9AC);                                 // Store to: gpCeilingLine (80077F8C)
-loc_8001458C:
-    v0 = lw(gp + 0x988);                                // Load from: gTestFloorZ (80077F68)
-    v0 = (i32(v0) < i32(a3));
-    if (v0 == 0) goto loc_800145A4;
-    sw(a3, gp + 0x988);                                 // Store to: gTestFloorZ (80077F68)
-loc_800145A4:
-    v0 = lw(gp + 0xB40);                                // Load from: gTestDropoffZ (80078120)
-    v0 = (i32(v1) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_800145BC;
+
+    // PSX Doom addition: block always if the line blocks projectiles
+    if (line.flags & ML_BLOCKPRJECTILE) 
+        return false;
+
+    // Get the top and bottom height of the opening/gap and the lowest floor
+    sector_t& fsec = *line.frontsector;
+    sector_t& bsec = *line.backsector;
+
+    const fixed_t openTop = std::min(fsec.ceilingheight, bsec.ceilingheight);
+    const fixed_t openBottom = std::max(fsec.floorheight, bsec.floorheight);
+    const fixed_t lowFloor = std::min(fsec.floorheight, bsec.floorheight);
+
+    // Adjust the global low ceiling, high floor and lowest floor values
+    if (openTop < *gTestCeilingz) {
+        *gTestCeilingz = openTop;
+        *gpCeilingLine = &line;
     }
-    sw(v1, gp + 0xB40);                                 // Store to: gTestDropoffZ (80078120)
-loc_800145BC:
-    return;
+
+    if (openBottom > *gTestFloorZ) {
+        *gTestFloorZ = openBottom;
+    }
+
+    if (lowFloor < *gTestDropoffZ) {
+        *gTestDropoffZ = lowFloor;
+    }
+
+    // This line does not block, ignoring height differences.
+    // Tthis function does NOT check whether the thing can pass the line due to height differences!
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -917,189 +911,30 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
     return ((mobj.flags & MF_SOLID) == 0);
 }
 
-void PB_BlockLinesIterator() noexcept {
-loc_800146F0:
-    v0 = *gBlockmapWidth;
-    mult(a1, v0);
-    v1 = *gpBlockmap;
-    v0 = lo;
-    v0 += a0;
-    v0 <<= 1;
-    v0 += v1;
-    v0 = lh(v0);
-    v1 = *gpBlockmapLump;
-    v0 <<= 1;
-    t3 = v0 + v1;
-    v0 = -1;                                            // Result = FFFFFFFF
-    v1 = lh(t3);
-    a0 = lhu(t3);
-    sp -= 0x10;
-    if (v1 == v0) goto loc_800149A8;
-    v1 = *gTestFlags;
-    v0 = 0x10000;
-    t4 = v1 & v0;
-    v1 = a0 << 16;
-loc_80014750:
-    v1 = u32(i32(v1) >> 16);
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v1 = *gpLines;
-    v0 <<= 2;
-    t1 = v0 + v1;
-    v0 = lw(t1 + 0x40);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
-    if (v0 == v1) goto loc_80014990;
-    sw(v1, t1 + 0x40);
-    a1 = 0x800B0000;                                    // Result = 800B0000
-    a1 = lw(a1 - 0x6F90);                               // Load from: gTestBBox[3] (800A9070)
-    v0 = lw(t1 + 0x2C);
-    v0 = (i32(v0) < i32(a1));
-    a0 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_800148A0;
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x6F94);                               // Load from: gTestBBox[2] (800A906C)
-    v0 = lw(t1 + 0x30);
-    v0 = (i32(a0) < i32(v0));
-    if (v0 == 0) goto loc_80014800;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x6F9C);                               // Load from: gTestBBox[0] (800A9064)
-    v0 = lw(t1 + 0x28);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_80014800;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6F98);                               // Load from: gTestBBox[1] (800A9068)
-    v1 = lw(t1 + 0x24);
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_80014808;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Check for potential collisions against all lines in the given blockmap cell, ignoring height differences.
+// Returns 'false' if there is a definite collision, 'true' otherwise.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
+    // Get the line list for this blockmap cell
+    const int16_t* pLineNum = (int16_t*)(gpBlockmapLump->get() + gpBlockmap->get()[y * (*gBlockmapWidth) + x]);
+
+    // Visit all lines in the cell, checking for intersection and potential collision.
+    // Stop when there is a definite collision.
+    for (; *pLineNum != -1; ++pLineNum) {
+        line_t& line = gpLines->get()[*pLineNum];
+
+        // Only check the line if not already checked this test
+        if (line.validcount != *gValidCount) {
+            line.validcount = *gValidCount;
+
+            // If it's collided with and definitely blocking then stop
+            if (PB_BoxCrossLine(line) && (!PB_CheckLine(line)))
+                return false;
+        }
     }
-loc_80014800:
-    a0 = 0;                                             // Result = 00000000
-    goto loc_800148A0;
-loc_80014808:
-    v1 = lw(t1 + 0x34);
-    {
-        const bool bJump = (v1 != v0);
-        v0 = a1;
-        if (bJump) goto loc_80014824;
-    }
-    v0 = a0;
-    t2 = a1;
-    goto loc_80014828;
-loc_80014824:
-    t2 = a0;
-loc_80014828:
-    a0 = lw(t1);
-    v1 = lw(a0);
-    a2 = lh(t1 + 0xE);
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 16);
-    mult(a2, v0);
-    a1 = lh(t1 + 0xA);
-    a3 = lw(a0 + 0x4);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6F9C);                               // Load from: gTestBBox[0] (800A9064)
-    a0 = lo;
-    v0 -= a3;
-    v0 = u32(i32(v0) >> 16);
-    mult(v0, a1);
-    t0 = lo;
-    v1 = t2 - v1;
-    v1 = u32(i32(v1) >> 16);
-    mult(a2, v1);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x6F98);                               // Load from: gTestBBox[1] (800A9068)
-    v1 = lo;
-    v0 -= a3;
-    v0 = u32(i32(v0) >> 16);
-    mult(v0, a1);
-    a0 = (i32(a0) < i32(t0));
-    v0 = lo;
-    v1 = (i32(v1) < i32(v0));
-    a0 ^= v1;
-    a0 = (a0 > 0);
-loc_800148A0:
-    if (a0 == 0) goto loc_80014990;
-    v0 = lw(t1 + 0x3C);
-    if (v0 == 0) goto loc_800148E8;
-    if (t4 != 0) goto loc_800148D4;
-    v0 = lw(t1 + 0x10);
-    v0 &= 3;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80014980;
-    }
-loc_800148D4:
-    v0 = lw(t1 + 0x10);
-    v0 &= 0x800;
-    if (v0 == 0) goto loc_800148F0;
-loc_800148E8:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80014980;
-loc_800148F0:
-    a2 = lw(t1 + 0x3C);
-    a0 = lw(t1 + 0x38);
-    v0 = lw(a2 + 0x4);
-    v1 = lw(a0 + 0x4);
-    a1 = v0;
-    v0 = (i32(v1) < i32(a1));
-    if (v0 == 0) goto loc_80014914;
-    a1 = v1;
-loc_80014914:
-    a0 = lw(a0);
-    v1 = lw(a2);
-    v0 = (i32(v1) < i32(a0));
-    a2 = a0;
-    if (v0 != 0) goto loc_80014934;
-    a2 = v1;
-    v1 = a0;
-loc_80014934:
-    v0 = lw(gp + 0xB24);                                // Load from: gTestCeilingz (80078104)
-    v0 = (i32(a1) < i32(v0));
-    if (v0 == 0) goto loc_80014950;
-    sw(a1, gp + 0xB24);                                 // Store to: gTestCeilingz (80078104)
-    sw(t1, gp + 0x9AC);                                 // Store to: gpCeilingLine (80077F8C)
-loc_80014950:
-    v0 = lw(gp + 0x988);                                // Load from: gTestFloorZ (80077F68)
-    v0 = (i32(v0) < i32(a2));
-    if (v0 == 0) goto loc_80014968;
-    sw(a2, gp + 0x988);                                 // Store to: gTestFloorZ (80077F68)
-loc_80014968:
-    v0 = lw(gp + 0xB40);                                // Load from: gTestDropoffZ (80078120)
-    v0 = (i32(v1) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80014980;
-    }
-    sw(v1, gp + 0xB40);                                 // Store to: gTestDropoffZ (80078120)
-loc_80014980:
-    t3 += 2;
-    if (v0 != 0) goto loc_80014994;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_800149AC;
-loc_80014990:
-    t3 += 2;
-loc_80014994:
-    v0 = -1;                                            // Result = FFFFFFFF
-    v1 = lh(t3);
-    a0 = lhu(t3);
-    {
-        const bool bJump = (v1 != v0);
-        v1 = a0 << 16;
-        if (bJump) goto loc_80014750;
-    }
-loc_800149A8:
-    v0 = 1;                                             // Result = 00000001
-loc_800149AC:
-    sp += 0x10;
-    return;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1111,10 +946,10 @@ bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
 
     while (pmobj) {
         if (!PB_CheckThing(*pmobj))
-            return false;   // Hit something!
+            return false;
 
         pmobj = pmobj->bnext.get();
     }
 
-    return true;    // No collision
+    return true;
 }
