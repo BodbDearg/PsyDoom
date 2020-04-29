@@ -15,7 +15,6 @@ extern void P_ZMovement() noexcept;
 extern void P_MobjThinker() noexcept;
 extern void PB_TryMove() noexcept;
 extern void PB_CheckPosition() noexcept;
-extern void PB_BoxCrossLine() noexcept;
 extern void PB_CheckLine() noexcept;
 extern void PB_BlockLinesIterator() noexcept;
 extern void T_MoveCeiling() noexcept;
@@ -278,7 +277,6 @@ namespace PsxVm {
         { 0x80013DE0, &P_MobjThinker },
         { 0x80013F00, &PB_TryMove },
         { 0x800141DC, &PB_CheckPosition },
-        { 0x800143C0, &PB_BoxCrossLine },
         { 0x800144D8, &PB_CheckLine },
         { 0x800146F0, &PB_BlockLinesIterator },
         { 0x80014A30, &T_MoveCeiling },
