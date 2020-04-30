@@ -1,3 +1,7 @@
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Module responsible for non player map object movement and collision, as well as state advancement.
+// Note: state transition action functions are NOT performed here, they are instead performed during the 'latecall' phase.
+//------------------------------------------------------------------------------------------------------------------------------------------
 #include "p_base.h"
 
 #include "Doom/Renderer/r_local.h"
