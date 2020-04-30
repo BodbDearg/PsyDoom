@@ -27,8 +27,8 @@ enum PsxCd_CmdOp : int32_t {
 struct PsxCd_Command {
     PsxCd_CmdOp     command;        // What command was executed
     int32_t         amount;         // Number of bytes involved in the read/copy operation
-    VmPtr<uint8_t>  pdest;          // Destination to save bytes to (if required by command type)
-    VmPtr<uint8_t>  psrc;           // Source to get bytes from (if required by command type)
+    uint8_t*        pdest;          // Destination to save bytes to (if required by command type)
+    uint8_t*        psrc;           // Source to get bytes from (if required by command type)
     CdlLOC          io_loc;         // I/O location for the command
 };
 
@@ -61,12 +61,12 @@ static const VmPtr<int32_t>     gPSXCD_psxcd_mode(0x80077D6C);
 static const VmPtr<PsxCd_File>      gPSXCD_cdfile(0x8007831C);              // Used to hold a file temporarily after opening
 static const VmPtr<CdlLOC>          gPSXCD_cur_io_loc(0x80077D78);          // Current IO location on disc
 static const VmPtr<CdlLOC>          gPSXCD_sectorbuf_contents(0x80077D68);  // Where the current sector buffer contents came from on disc
-static const VmPtr<VmPtr<void>>     gpPSXCD_lastdestptr(0x80077DC0);        // Async read: destination memory chunk being written to
+static void*                        gpPSXCD_lastdestptr;                    // Async read: destination memory chunk being written to
 static const VmPtr<int32_t>         gPSXCD_lastreadbytes(0x80077DC4);       // Async read: number of bytes being read
 static const VmPtr<PsxCd_File>      gPSXCD_lastfilestruct(0x800783D0);      // Async read: details for the file being read
 static const VmPtr<PsxCd_File>      gPSXCD_newfilestruct(0x800783A8);       // Async read: details for the file for which read is being retried
 static const VmPtr<int32_t>         gPSXCD_cur_cmd(0x80077DBC);             // Async read: index of the current command being issued in the loop iteration
-static const VmPtr<PsxCd_Command>   gPSXCD_psxcd_cmds(0x80078344);          // Async read: commands issued to the cd
+static PsxCd_Command                gPSXCD_psxcd_cmds[5];                   // Async read: commands issued to the cd
 
 // Audio mode stuff
 static const VmPtr<CdlLOC>      gPSXCD_lastloc(0x80077DF4);             // The last valid intended cd-audio disc seek location
@@ -252,17 +252,17 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
                 //
                 // Optimization: if the destination pointer is 32-bit aligned then we can just copy directly to the output location.
                 // If the pointer is 32-bit aligned also then we assume the data is padded to at least 32-bit boundaries.
-                if (((uintptr_t) gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest.get() & 3) == 0) {
+                if (((uintptr_t) gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest & 3) == 0) {
                     // Yay, it's all aligned: we can copy the data directly to the output location!
-                    LIBCD_CdGetSector(gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest.get(), CD_SECTOR_SIZE / sizeof(uint32_t));
+                    LIBCD_CdGetSector(gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest, CD_SECTOR_SIZE / sizeof(uint32_t));
                 } else {
                     // Unaligned destination: have to take the scenic route...
                     LIBCD_CdGetSector(gPSXCD_sectorbuf.get(), CD_SECTOR_SIZE / sizeof(uint32_t));
-                    PSXCD_psxcd_memcpy(gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest.get(), gPSXCD_sectorbuf.get(), CD_SECTOR_SIZE);
+                    PSXCD_psxcd_memcpy(gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest, gPSXCD_sectorbuf.get(), CD_SECTOR_SIZE);
                 }
 
                 // One less sector to read
-                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest = gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest.get() + CD_SECTOR_SIZE;
+                gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest = gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest + CD_SECTOR_SIZE;
                 gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].amount -= 1;
 
                 // If there are no more sectors to read for this command then move onto the next command
@@ -275,8 +275,8 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
                 // Copy the entire sector to the sector buffer, then just copy out the bits we need:
                 LIBCD_CdGetSector(gPSXCD_sectorbuf.get(), CD_SECTOR_SIZE / sizeof(uint32_t));
                 PSXCD_psxcd_memcpy(
-                    gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest.get(),
-                    gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].psrc.get(),
+                    gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].pdest,
+                    gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].psrc,
                     gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].amount
                 );
 
@@ -558,7 +558,7 @@ bool psxcd_async_on() noexcept {
         // Clear the error flag and retry the last read command
         *gbPSXCD_critical_error = false;
         *gPSXCD_newfilestruct = *gPSXCD_lastfilestruct;
-        psxcd_async_read(gpPSXCD_lastdestptr->get(), *gPSXCD_lastreadbytes, *gPSXCD_newfilestruct);
+        psxcd_async_read(gpPSXCD_lastdestptr, *gPSXCD_lastreadbytes, *gPSXCD_newfilestruct);
     }
 
     // Still reading...
@@ -688,7 +688,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
         psxcd_set_data_mode();
         
         // Save read details
-        *gpPSXCD_lastdestptr = pDest;
+        gpPSXCD_lastdestptr = pDest;
         *gPSXCD_lastreadbytes = numBytes;
         *gPSXCD_lastfilestruct = file;
 
@@ -835,7 +835,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
 
         // Issue command: are we to copy bytes to the destination buffer?
         if (gPSXCD_psxcd_cmds[0].command == PSXCD_COMMAND_COPY) {
-            PSXCD_psxcd_memcpy(gPSXCD_psxcd_cmds[0].pdest.get(), gPSXCD_psxcd_cmds[0].psrc.get(), gPSXCD_psxcd_cmds[0].amount);
+            PSXCD_psxcd_memcpy(gPSXCD_psxcd_cmds[0].pdest, gPSXCD_psxcd_cmds[0].psrc, gPSXCD_psxcd_cmds[0].amount);
             *gPSXCD_cur_cmd += 1;
 
             // No more commands?
