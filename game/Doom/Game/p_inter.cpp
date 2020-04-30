@@ -10,158 +10,101 @@
 #include "p_pspr.h"
 #include "PsxVm/PsxVm.h"
 
+BEGIN_THIRD_PARTY_INCLUDES
+    #include <algorithm>
+END_THIRD_PARTY_INCLUDES
+
 // The maximum amount of ammo for each ammo type and how much ammo each clip type gives
 const VmPtr<int32_t[NUMAMMO]>   gMaxAmmo(0x800670D4);
 const VmPtr<int32_t[NUMAMMO]>   gClipAmmo(0x800670E4);
 
-void P_GiveAmmo() noexcept {
-loc_800197A4:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(s2, sp + 0x18);
-    s2 = a1;
-    sw(s1, sp + 0x14);
-    s1 = a2;
-    v0 = 5;                                             // Result = 00000005
-    sw(ra, sp + 0x1C);
-    if (s2 == v0) goto loc_80019804;
-    v0 = (s2 < 5);
-    a0 = s2 << 2;
-    if (v0 != 0) goto loc_800197EC;
-    I_Error("P_GiveAmmo: bad type %i", (int32_t) s2);
-    a0 = s2 << 2;
-loc_800197EC:
-    v0 = a0 + s0;
-    v1 = lw(v0 + 0x98);
-    v0 = lw(v0 + 0xA8);
-    if (v1 != v0) goto loc_8001980C;
-loc_80019804:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80019970;
-loc_8001980C:
-    if (s1 == 0) goto loc_80019838;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70E4;                                       // Result = gClipAmmo[0] (800670E4)
-    at += a0;
-    v0 = lw(at);
-    mult(s1, v0);
-    s1 = lo;
-    goto loc_80019858;
-loc_80019838:
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70E4;                                       // Result = gClipAmmo[0] (800670E4)
-    at += a0;
-    v0 = lw(at);
-    v1 = v0 >> 31;
-    v0 += v1;
-    s1 = u32(i32(v0) >> 1);
-loc_80019858:
-    v0 = *gGameSkill;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s2 << 2;
-        if (bJump) goto loc_80019870;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Try to give the specified player the specified number of ammo clips of the given type.
+// If the clip count is '0' then a half clip is given instead.
+// Returns 'true' if ammo was actually given, 'false' if giving failed.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_GiveAmmo(player_t& player, const ammotype_t ammoType, const int32_t numClips) noexcept {
+    // Can't give no ammo
+    if (ammoType == am_noammo)
+        return false;
+    
+    // Sanity check ammo type.
+    // PC-PSX: don't accept 'NUMAMMO' as a valid ammo type here, that's not valid either.
+    #if PC_PSX_DOOM_MODS
+        const bool bValidAmmoType = (ammoType < NUMAMMO);
+    #else
+        const bool bValidAmmoType = (ammoType < am_noammo);
+    #endif
+
+    if (!bValidAmmoType) {
+        I_Error("P_GiveAmmo: bad type %i", ammoType);
+        return false;
     }
-    s1 <<= 1;
-loc_80019870:
-    v1 = v0 + s0;
-    a1 = lw(v1 + 0x98);
-    a0 = lw(v1 + 0xA8);
-    v0 = s1 + a1;
-    sw(v0, v1 + 0x98);
-    v0 = (i32(a0) < i32(v0));
-    if (v0 == 0) goto loc_80019894;
-    sw(a0, v1 + 0x98);
-loc_80019894:
-    v0 = 1;                                             // Result = 00000001
-    if (a1 != 0) goto loc_80019970;
-    v1 = 1;                                             // Result = 00000001
-    if (s2 == v1) goto loc_800198F0;
-    v0 = 2;                                             // Result = 00000002
-    if (s2 == 0) goto loc_800198C8;
-    {
-        const bool bJump = (s2 == v0);
-        v0 = 3;                                         // Result = 00000003
-        if (bJump) goto loc_8001991C;
+
+    // If you're already maxed out then you cannot pickup
+    if (player.ammo[ammoType] == player.maxammo[ammoType])
+        return false;
+
+    // How much actual ammo are we adding?
+    // If '0' clips is specified then interpret that as a half clip.
+    // Double the ammo amount also for the lowest difficulty level...
+    int32_t ammoToAdd;
+
+    if (numClips == 0) {
+        ammoToAdd = gClipAmmo[ammoType] / 2;
+    } else {
+        ammoToAdd = numClips * gClipAmmo[ammoType];
     }
-    {
-        const bool bJump = (s2 == v0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80019948;
+
+    if (*gGameSkill == sk_baby) {
+        ammoToAdd *= 2;
     }
-    goto loc_80019970;
-loc_800198C8:
-    v0 = lw(s0 + 0x6C);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80019970;
+
+    // Add the new ammo amount and cap at the max
+    const int32_t oldAmmoAmt = player.ammo[ammoType];
+    player.ammo[ammoType] += ammoToAdd;
+    player.ammo[ammoType] = std::min(player.ammo[ammoType], player.maxammo[ammoType]);
+
+    // Do weapon auto-switching logic if we just got some ammo for a weapon where we previously had none
+    if (oldAmmoAmt != 0)
+        return true;
+
+    switch (ammoType) {
+        case am_clip: {
+            if (player.readyweapon == wp_fist) {
+                player.pendingweapon = (player.weaponowned[wp_chaingun]) ? wp_chaingun : wp_pistol;
+            }
+        }   break;
+
+        case am_shell: {
+            if ((player.readyweapon == wp_fist) || (player.readyweapon == wp_pistol)) {
+                if (player.weaponowned[wp_shotgun]) {
+                    player.pendingweapon = wp_shotgun;
+                }
+            }
+        }   break;
+
+        case am_cell: {
+            if ((player.readyweapon == wp_fist) || (player.readyweapon == wp_pistol)) {
+                if (player.weaponowned[wp_plasma]) {
+                    player.pendingweapon = wp_plasma;
+                }
+            }
+        }   break;
+
+        case am_misl: {
+            if (player.readyweapon == wp_fist) {
+                if (player.weaponowned[wp_missile]) {
+                    player.pendingweapon = wp_missile;
+                }
+            }
+        }   break;
+
+        default:
+            break;
     }
-    v0 = lw(s0 + 0x84);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_80019968;
-    }
-    sw(v1, s0 + 0x70);
-    goto loc_8001996C;
-loc_800198F0:
-    v0 = lw(s0 + 0x6C);
-    v0 = (v0 < 2);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80019970;
-    }
-    v0 = lw(s0 + 0x7C);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_8001996C;
-    }
-    sw(v0, s0 + 0x70);
-    goto loc_8001996C;
-loc_8001991C:
-    v0 = lw(s0 + 0x6C);
-    v0 = (v0 < 2);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80019970;
-    }
-    v0 = lw(s0 + 0x8C);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 6;                                         // Result = 00000006
-        if (bJump) goto loc_8001996C;
-    }
-    sw(v0, s0 + 0x70);
-    goto loc_8001996C;
-loc_80019948:
-    v0 = lw(s0 + 0x6C);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80019970;
-    }
-    v0 = lw(s0 + 0x88);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 5;                                         // Result = 00000005
-        if (bJump) goto loc_8001996C;
-    }
-loc_80019968:
-    sw(v0, s0 + 0x70);
-loc_8001996C:
-    v0 = 1;                                             // Result = 00000001
-loc_80019970:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    return true;
 }
 
 void P_GiveWeapon() noexcept {
@@ -194,7 +137,7 @@ loc_800199DC:
     at += v0;
     a1 = lw(at);
     a2 = 2;                                             // Result = 00000002
-    P_GiveAmmo();
+    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
     a0 = lw(s1);
     a1 = sfx_wpnup;
     sw(s0, s1 + 0x70);
@@ -219,7 +162,7 @@ loc_80019A20:
 loc_80019A54:
     a2 = 2;                                             // Result = 00000002
 loc_80019A58:
-    P_GiveAmmo();
+    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
     a1 = v0;
     goto loc_80019A6C;
 loc_80019A68:
@@ -569,7 +512,7 @@ loc_80019E38:
     a1 = 0;                                             // Result = 00000000
     a2 = 1;                                             // Result = 00000001
 loc_80019E40:
-    P_GiveAmmo();
+    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x440;                                        // Result = STR_ClipPickedUpMsg[0] (80010440)
@@ -579,7 +522,7 @@ loc_80019E60:
     a0 = s1;
     a1 = 0;                                             // Result = 00000000
     a2 = 5;                                             // Result = 00000005
-    P_GiveAmmo();
+    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x454;                                        // Result = STR_BoxOfBulletsPickedUpMsg[0] (80010454)
@@ -589,7 +532,7 @@ loc_80019E88:
     a0 = s1;
     a1 = 3;                                             // Result = 00000003
     a2 = 1;                                             // Result = 00000001
-    P_GiveAmmo();
+    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x470;                                        // Result = STR_RocketPickedUpMsg[0] (80010470)
@@ -599,7 +542,7 @@ loc_80019EB0:
     a0 = s1;
     a1 = 3;                                             // Result = 00000003
     a2 = 5;                                             // Result = 00000005
-    P_GiveAmmo();
+    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x484;                                        // Result = STR_BoxOfRocketsPickedUpMsg[0] (80010484)
@@ -609,7 +552,7 @@ loc_80019ED8:
     a0 = s1;
     a1 = 2;                                             // Result = 00000002
     a2 = 1;                                             // Result = 00000001
-    P_GiveAmmo();
+    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x4A0;                                        // Result = STR_EnergyCellPickedUpMsg[0] (800104A0)
@@ -619,7 +562,7 @@ loc_80019F00:
     a0 = s1;
     a1 = 2;                                             // Result = 00000002
     a2 = 5;                                             // Result = 00000005
-    P_GiveAmmo();
+    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x4BC;                                        // Result = STR_EnergyCellPackPickedUpMsg[0] (800104BC)
@@ -629,7 +572,7 @@ loc_80019F28:
     a0 = s1;
     a1 = 1;                                             // Result = 00000001
     a2 = 1;                                             // Result = 00000001
-    P_GiveAmmo();
+    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x4DC;                                        // Result = STR_FourShotgunShellsPickedUpMsg[0] (800104DC)
@@ -639,7 +582,7 @@ loc_80019F50:
     a0 = s1;
     a1 = 1;                                             // Result = 00000001
     a2 = 5;                                             // Result = 00000005
-    P_GiveAmmo();
+    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x4F8;                                        // Result = STR_BoxOfShotgunShellsPickedUpMsg[0] (800104F8)
@@ -666,7 +609,7 @@ loc_80019FB4:
 loc_80019FB8:
     a1 = s0;
     a2 = 1;                                             // Result = 00000001
-    P_GiveAmmo();
+    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
     s0++;
     v0 = (i32(s0) < 4);
     a0 = s1;
