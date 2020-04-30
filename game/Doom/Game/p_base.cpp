@@ -34,6 +34,7 @@ static const VmPtr<fixed_t>                 gTestDropoffZ(0x80078120);      // C
 
 // Not required externally: making private to this module
 static void P_MobjThinker(mobj_t& mobj) noexcept;
+static bool PB_TryMove(const fixed_t tryX, const fixed_t tryY) noexcept;
 static void PB_UnsetThingPosition(mobj_t& thing) noexcept;
 static void PB_SetThingPosition(mobj_t& mobj) noexcept;
 static bool PB_CheckPosition() noexcept;
@@ -272,7 +273,7 @@ static void P_MobjThinker(mobj_t& mobj) noexcept {
 // Try to move 'gpBaseThing' to the specified x/y position.
 // Returns 'true' if the move was successful and updates the thing position.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool PB_TryMove(const fixed_t tryX, const fixed_t tryY) noexcept {
+static bool PB_TryMove(const fixed_t tryX, const fixed_t tryY) noexcept {
     // Save the position we are attempting to move to
     *gTestX = tryX;
     *gTestY = tryY;
