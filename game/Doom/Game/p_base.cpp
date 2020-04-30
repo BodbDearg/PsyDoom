@@ -8,11 +8,17 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_setup.h"
+#include "p_tick.h"
+
+#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
 BEGIN_THIRD_PARTY_INCLUDES
     #include <algorithm>
 END_THIRD_PARTY_INCLUDES
+
+static constexpr fixed_t STOPSPEED  = 0x1000;   // Speed under which to stop a thing fully
+static constexpr fixed_t FRICTION   = 0xD200;   // Friction amount to apply (note: 0xD240 in Jaguar Doom)
 
 static const VmPtr<VmPtr<mobj_t>>           gpBaseThing(0x8007824C);        // The current thing that is doing collision testing against other stuff: used by various functions in the module
 static const VmPtr<fixed_t>                 gTestX(0x80077EF4);             // The thing position to use for collision testing - X
@@ -26,54 +32,35 @@ static const VmPtr<fixed_t>                 gTestCeilingz(0x80078104);      // C
 static const VmPtr<fixed_t>                 gTestFloorZ(0x80077F68);        // Collision testing: the Z value for the highest floor the collider is in contact with
 static const VmPtr<fixed_t>                 gTestDropoffZ(0x80078120);      // Collision testing: the Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
 
-// Speed under which to stop a thing fully
-static constexpr fixed_t STOPSPEED = 0x1000;
-
-// Friction amount to apply (note: 0xD240 in Jaguar Doom)
-static constexpr fixed_t FRICTION = 0xD200;
-
 // Not required externally: making private to this module
-static bool PB_CheckPosition() noexcept;
-static void PB_SetThingPosition(mobj_t& mobj) noexcept;
+static void P_MobjThinker(mobj_t& mobj) noexcept;
 static void PB_UnsetThingPosition(mobj_t& thing) noexcept;
+static void PB_SetThingPosition(mobj_t& mobj) noexcept;
+static bool PB_CheckPosition() noexcept;
 static bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept;
 static bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does movement and state ticking for all map objects except players
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_RunMobjBase() noexcept {
-loc_80013840:
-    sp -= 0x18;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x715C;                                       // Result = gMObjHead[5] (800A8EA4)
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v1 = lw(v0);                                        // Load from: gMObjHead[5] (800A8EA4)
-    v0 -= 0x14;                                         // Result = gMObjHead[0] (800A8E90)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7FB8);                                 // Store to: gCurMObjIdx (80077FB8)
-    sw(v1, gp + 0xC6C);                                 // Store to: gpCurMObj (8007824C)
-    s0 = v0;                                            // Result = gMObjHead[0] (800A8E90)
-    if (v1 == v0) goto loc_800138C4;
-loc_80013870:
-    a0 = lw(gp + 0xC6C);                                // Load from: gpCurMObj (8007824C)
-    v0 = lw(a0 + 0x80);
-    if (v0 != 0) goto loc_800138A8;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7FB8);                               // Load from: gCurMObjIdx (80077FB8)
-    sw(0, a0 + 0x18);
-    v0++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7FB8);                                // Store to: gCurMObjIdx (80077FB8)
-    P_MobjThinker();
-loc_800138A8:
-    v0 = lw(gp + 0xC6C);                                // Load from: gpCurMObj (8007824C)
-    v0 = lw(v0 + 0x14);
-    sw(v0, gp + 0xC6C);                                 // Store to: gpCurMObj (8007824C)
-    if (v0 != s0) goto loc_80013870;
-loc_800138C4:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    mobj_t& mobjHead = *gMObjHead;
+    *gpBaseThing = mobjHead.next.get();
+
+    // Run through all the map objects
+    while (gpBaseThing->get() != &mobjHead) {
+        mobj_t& mobj = *gpBaseThing->get();
+
+        // Only run the think logic if it's not the player.
+        if (!mobj.player) {
+            // Note: clear the latecall here to signify (initially) no mobj action to execute during the 'latecall' phase.
+            // The think function might set an action though, typically for a state transition or sometimes a missile explosion etc.
+            mobj.latecall = nullptr;
+            P_MobjThinker(mobj);
+        }
+
+        *gpBaseThing = mobj.next.get();
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -233,70 +220,52 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
     }
 }
 
-void P_MobjThinker() noexcept {
-loc_80013DE0:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v0 = lw(s0 + 0x48);
-    if (v0 != 0) goto loc_80013E10;
-    v0 = lw(s0 + 0x4C);
-    if (v0 == 0) goto loc_80013E28;
-loc_80013E10:
-    a0 = s0;
-    P_XYMovement(*vmAddrToPtr<mobj_t>(a0));
-    v0 = lw(s0 + 0x18);
-    if (v0 != 0) goto loc_80013EEC;
-loc_80013E28:
-    v1 = lw(s0 + 0x8);
-    v0 = lw(s0 + 0x38);
-    if (v1 != v0) goto loc_80013E4C;
-    v0 = lw(s0 + 0x50);
-    if (v0 == 0) goto loc_80013E64;
-loc_80013E4C:
-    a0 = s0;
-    P_ZMovement(*vmAddrToPtr<mobj_t>(a0));
-    v0 = lw(s0 + 0x18);
-    if (v0 != 0) goto loc_80013EEC;
-loc_80013E64:
-    v1 = lw(s0 + 0x5C);
-    v0 = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 == v0);
-        v0 = v1 - 1;
-        if (bJump) goto loc_80013EEC;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does movement and state ticking for the specified map object.
+// Note: doesn't run state functions, that's done during the phase for running map object late calls.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_MobjThinker(mobj_t& mobj) noexcept {
+    // Do xy plane movement if there is current velocity
+    if ((mobj.momx != 0) || (mobj.momy != 0)) {
+        P_XYMovement(mobj);
+
+        // Stop if the object is being removed via a latecall or has some other special action to perform
+        if (mobj.latecall)
+            return;
     }
-    sw(v0, s0 + 0x5C);
-    if (i32(v0) > 0) goto loc_80013EEC;
-    v0 = lw(s0 + 0x60);
-    v1 = lw(v0 + 0x10);
-    v0 = v1 << 3;
-    if (v1 != 0) goto loc_80013EA4;
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0x38DC;                                       // Result = P_RemoveMObj (8001C724)
-    sw(v0, s0 + 0x18);
-    goto loc_80013EEC;
-loc_80013EA4:
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0 + 0x60);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x5C);
-    v1 = lw(v0);
-    sw(v1, s0 + 0x28);
-    v1 = lw(v0 + 0x4);
-    sw(v1, s0 + 0x2C);
-    v0 = lw(v0 + 0xC);
-    sw(v0, s0 + 0x18);
-loc_80013EEC:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Do up/down movement if there is current velocity or if the thing is in the air
+    if ((mobj.momz != 0) || (mobj.z != mobj.floorz)) {
+        P_ZMovement(mobj);
+
+        // Stop if the object is being removed via a latecall or has some other special action to perform
+        if (mobj.latecall)
+            return;
+    }
+
+    // Do state advancement if this state does not last forever (-1 tics duration)
+    if (mobj.tics != -1) {
+        mobj.tics--;
+        
+        // Is it time to change to the next state?
+        if (mobj.tics <= 0) {            
+            const statenum_t nextStateNum = mobj.state->nextstate;
+            
+            // Is there a next state?
+            if (nextStateNum != S_NULL) {
+                // There is a next state: setup the map object's sprite, pending action and remaining state tics for this state
+                state_t& nextState = gStates[nextStateNum];
+                mobj.state = &nextState;
+                mobj.tics = nextState.tics;         
+                mobj.sprite = nextState.sprite;
+                mobj.frame = nextState.frame;
+                mobj.latecall = nextState.action;
+            } else {
+                // No next state: schedule a removal for this map object
+                mobj.latecall = PsxVm::getNativeFuncVmAddr(_thunk_P_RemoveMobj);
+            }
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
