@@ -3,7 +3,9 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
+#include "p_enemy.h"
 #include "p_local.h"
+#include "p_mobj.h"
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
 
@@ -23,11 +25,18 @@ static const VmPtr<fixed_t>                 gTestCeilingz(0x80078104);      // C
 static const VmPtr<fixed_t>                 gTestFloorZ(0x80077F68);        // Collision testing: the Z value for the highest floor the collider is in contact with
 static const VmPtr<fixed_t>                 gTestDropoffZ(0x80078120);      // Collision testing: the Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
 
-// Private to this module
+// Speed under which to stop a thing fully
+static constexpr fixed_t STOPSPEED = 0x1000;
+
+// Friction amount to apply (note: 0xD240 in Jaguar Doom)
+static constexpr fixed_t FRICTION = 0xD200;
+
+// Not required externally: making private to this module
+static bool PB_CheckPosition() noexcept;
+static void PB_SetThingPosition(mobj_t& mobj) noexcept;
+static void PB_UnsetThingPosition(mobj_t& thing) noexcept;
 static bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept;
 static bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;
-static void PB_UnsetThingPosition(mobj_t& thing) noexcept;
-static void PB_SetThingPosition(mobj_t& mobj) noexcept;
 
 void P_RunMobjBase() noexcept {
 loc_80013840:
@@ -66,156 +75,84 @@ loc_800138C4:
     return;
 }
 
-void P_XYMovement() noexcept {
-loc_800138D8:
-    sp -= 0x28;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    v1 = -8;                                            // Result = FFFFFFF8
-    sw(ra, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = lw(s0 + 0x48);
-    a0 = 0x100000;                                      // Result = 00100000
-    s4 = v0 & v1;
-    v0 = lw(s0 + 0x4C);
-    s2 = s4;
-    s3 = v0 & v1;
-    v0 = s4 + a0;
-    v1 = 0x200000;                                      // Result = 00200000
-    v0 = (v1 < v0);
-    s1 = s3;
-    if (v0 != 0) goto loc_80013938;
-    v0 = s3 + a0;
-    v0 = (v1 < v0);
-    if (v0 == 0) goto loc_80013A1C;
-loc_80013938:
-    s2 = u32(i32(s2) >> 1);
-    a0 = 0x100000;                                      // Result = 00100000
-loc_80013940:
-    v0 = s2 + a0;
-    v1 = 0x200000;                                      // Result = 00200000
-    v0 = (v1 < v0);
-    s1 = u32(i32(s1) >> 1);
-    if (v0 != 0) goto loc_80013938;
-    v0 = s1 + a0;
-    v0 = (v1 < v0);
-    if (v0 == 0) goto loc_80013A1C;
-    s2 = u32(i32(s2) >> 1);
-    goto loc_80013940;
-loc_8001396C:
-    s3 -= s1;
-    a0 = lw(s0);
-    a1 = lw(s0 + 0x4);
-    a0 += s2;
-    a1 += s1;
-    v0 = PB_TryMove(a0, a1);
-    v1 = 0x1000000;                                     // Result = 01000000
-    if (v0 != 0) goto loc_80013A1C;
-    v0 = lw(s0 + 0x64);
-    v0 &= v1;
-    if (v0 == 0) goto loc_800139B4;
-    v1 = lw(gp + 0xBA4);                                // Load from: gpHitThing (80078184)
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0x72AC;                                       // Result = L_SkullBash (80018D54)
-    sw(v0, s0 + 0x18);
-    sw(v1, s0 + 0x84);
-loc_800139B4:
-    v0 = lw(s0 + 0x64);
-    v1 = 0x10000;                                       // Result = 00010000
-    v0 &= v1;
-    if (v0 == 0) goto loc_80013A10;
-    v0 = lw(gp + 0x9AC);                                // Load from: gpCeilingLine (80077F8C)
-    if (v0 == 0) goto loc_800139F8;
-    v0 = lw(v0 + 0x3C);
-    if (v0 == 0) goto loc_800139F8;
-    v1 = lw(v0 + 0xC);
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (v1 == v0) goto loc_80013AC4;
-loc_800139F8:
-    v1 = lw(gp + 0xBA4);                                // Load from: gpHitThing (80078184)
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0x7320;                                       // Result = L_MissileHit (80018CE0)
-    sw(v0, s0 + 0x18);
-    sw(v1, s0 + 0x84);
-    goto loc_80013B14;
-loc_80013A10:
-    sw(0, s0 + 0x4C);
-    sw(0, s0 + 0x48);
-    goto loc_80013B14;
-loc_80013A1C:
-    {
-        const bool bJump = (s4 != 0);
-        s4 -= s2;
-        if (bJump) goto loc_8001396C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does movement along the xy plane for the specified map object
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_XYMovement(mobj_t& mobj) noexcept {
+    // How much movement is left to do: chop off the lowest 3 bits also
+    fixed_t xleft = mobj.momx & (~7);
+    fixed_t yleft = mobj.momy & (~7);
+
+    // The size of each movement step: find an acceptable amount
+    fixed_t xuse = xleft;
+    fixed_t yuse = yleft;
+
+    while ((std::abs(xuse) > MAXMOVE) || (std::abs(yuse) > MAXMOVE)) {
+        xuse /= 2;
+        yuse /= 2;
     }
-    s4 += s2;
-    s4 -= s2;
-    if (s3 != 0) goto loc_8001396C;
-    v1 = lw(s0 + 0x64);
-    v0 = 0x1010000;                                     // Result = 01010000
-    v0 &= v1;
-    s4 += s2;
-    if (v0 != 0) goto loc_80013B14;
-    v0 = lw(s0 + 0x8);
-    a0 = lw(s0 + 0x38);
-    v0 = (i32(a0) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x100000;                                  // Result = 00100000
-        if (bJump) goto loc_80013B14;
+
+    // Continue moving until we are done
+    while ((xleft != 0) || (yleft != 0)) {
+        xleft -= xuse;
+        yleft -= yuse;
+        
+        // Try to do this move step
+        if (!PB_TryMove(mobj.x + xuse, mobj.y + yuse)) {
+            // Move failed: if it's a skull flying then do the skull bash
+            if (mobj.flags & MF_SKULLFLY) {
+                mobj.latecall = PsxVm::getNativeFuncVmAddr(L_SkullBash);
+                mobj.extradata = ptrToVmAddr(gpHitThing->get());
+            }
+
+            // If it's a missile explode or remove, otherwise stop momentum fully
+            if (mobj.flags & MF_MISSILE) {
+                // Missile: if the missile hit the sky then just remove it rather than exploding
+                const bool bHitSky = (
+                    gpCeilingLine->get() &&
+                    gpCeilingLine->get()->backsector.get() &&
+                    (gpCeilingLine->get()->backsector->ceilingpic == -1)
+                );
+
+                if (bHitSky) {
+                    // Hit the sky: just remove quietly
+                    mobj.latecall = PsxVm::getNativeFuncVmAddr(_thunk_P_RemoveMobj);
+                } else {
+                    // Usual case: exploding on hitting a wall or thing
+                    mobj.latecall = PsxVm::getNativeFuncVmAddr(L_MissileHit);
+                    mobj.extradata = ptrToVmAddr(gpHitThing->get());
+                }
+            } else {
+                // Remove all momentum since the thing cannot move
+                mobj.momx = 0;
+                mobj.momy = 0;
+            }
+
+            // We are done: no more movement
+            return;
+        }
     }
-    v0 &= v1;
-    if (v0 == 0) goto loc_80013A88;
-    v0 = lw(s0 + 0xC);
-    v0 = lw(v0);
-    v0 = lw(v0);
-    if (a0 != v0) goto loc_80013B14;
-loc_80013A88:
-    v0 = lw(s0 + 0x48);
-    v0 += 0xFFF;
-    v0 = (v0 < 0x1FFF);
-    if (v0 == 0) goto loc_80013AD4;
-    v0 = lw(s0 + 0x4C);
-    v0 += 0xFFF;
-    v0 = (v0 < 0x1FFF);
-    if (v0 == 0) goto loc_80013AD4;
-    sw(0, s0 + 0x48);
-    sw(0, s0 + 0x4C);
-    goto loc_80013B14;
-loc_80013AC4:
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0x38DC;                                       // Result = P_RemoveMObj (8001C724)
-    sw(v0, s0 + 0x18);
-    goto loc_80013B14;
-loc_80013AD4:
-    v0 = lw(s0 + 0x48);
-    a0 = lw(s0 + 0x4C);
-    v0 = u32(i32(v0) >> 8);
-    v1 = v0 << 3;
-    v1 -= v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 1;
-    a0 = u32(i32(a0) >> 8);
-    v1 = a0 << 3;
-    v1 -= a0;
-    sw(v0, s0 + 0x48);
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 1;
-    sw(v0, s0 + 0x4C);
-loc_80013B14:
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+
+    // Missiles and lost souls do not have friction
+    if (mobj.flags & (MF_MISSILE | MF_SKULLFLY))
+        return;
+    
+    // No friction when airborne
+    if (mobj.z > mobj.floorz)
+        return;
+    
+    // Don't stop corpses sliding until they hit the floor
+    if ((mobj.flags & MF_CORPSE) && (mobj.floorz != mobj.subsector->sector->floorheight))
+        return;
+    
+    // Stop the thing fully if it's now slow enough, otherwise apply friction
+    if ((std::abs(mobj.momx) < STOPSPEED) && (std::abs(mobj.momy) < STOPSPEED)) {
+        mobj.momx = 0;
+        mobj.momy = 0;
+    } else {
+        mobj.momx = (mobj.momx >> 8) * (FRICTION >> 8);
+        mobj.momy = (mobj.momy >> 8) * (FRICTION >> 8);
+    }
 }
 
 void P_FloatChange() noexcept {
@@ -408,7 +345,7 @@ loc_80013DE0:
     if (v0 == 0) goto loc_80013E28;
 loc_80013E10:
     a0 = s0;
-    P_XYMovement();
+    P_XYMovement(*vmAddrToPtr<mobj_t>(a0));
     v0 = lw(s0 + 0x18);
     if (v0 != 0) goto loc_80013EEC;
 loc_80013E28:
@@ -491,7 +428,7 @@ bool PB_TryMove(const fixed_t tryX, const fixed_t tryY) noexcept {
 
     // See if the fall is too large (monsters).
     // Only do this test for things that don't float and which care about falling off cliffs.
-    if ((*gTestFlags & (MF_DROPOFF|MF_FLOAT)) == 0) {
+    if ((*gTestFlags & (MF_DROPOFF | MF_FLOAT)) == 0) {
         if (*gTestFloorZ - *gTestDropoffZ > 24 * FRACUNIT) {
             // Drop is too large for this thing!
             return false;
@@ -620,7 +557,7 @@ static void PB_SetThingPosition(mobj_t& mobj) noexcept {
 //  gTestFloorZ     : The Z value for the highest floor touched
 //  gTestDropoffZ   : The Z value for the lowest floor touched
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool PB_CheckPosition() noexcept {
+static bool PB_CheckPosition() noexcept {
     // Save the bounding box, flags and subsector for the thing having collision testing done
     mobj_t& baseThing = *gpBaseThing->get();
     *gTestFlags = baseThing.flags;

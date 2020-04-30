@@ -9,7 +9,9 @@ extern const VmPtr<int32_t>     gItemRespawnQueueHead;
 extern const VmPtr<int32_t>     gItemRespawnQueueTail;
 extern const VmPtr<int32_t>     gNumMObjKilled;
 
-void P_RemoveMObj(mobj_t& mobj) noexcept;
+void P_RemoveMobj(mobj_t& mobj) noexcept;
+void _thunk_P_RemoveMobj() noexcept; // TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
+
 void P_RespawnSpecials() noexcept;
 bool P_SetMObjState(mobj_t& mobj, const statenum_t stateNum) noexcept;
 void P_ExplodeMissile(mobj_t& mobj) noexcept;

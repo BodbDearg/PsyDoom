@@ -145,7 +145,7 @@ loc_80015158:
         if (bJump) goto loc_8001517C;
     }
     a0 = s1;
-    P_RemoveMObj(*vmAddrToPtr<mobj_t>(a0));
+    P_RemoveMobj(*vmAddrToPtr<mobj_t>(a0));
     v0 = 1;                                             // Result = 00000001
     goto loc_80015220;
 loc_8001517C:

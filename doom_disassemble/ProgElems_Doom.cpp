@@ -421,7 +421,7 @@ static const ProgElem ELEMS[] = {
     { 0x8001C408, 0x8001C540, "P_SetThingPosition",                     ProgElemType::FUNCTION },
     { 0x8001C540, 0x8001C660, "P_BlockLinesIterator",                   ProgElemType::FUNCTION },
     { 0x8001C660, 0x8001C724, "P_BlockThingsIterator",                  ProgElemType::FUNCTION },
-    { 0x8001C724, 0x8001C838, "P_RemoveMObj",                           ProgElemType::FUNCTION },
+    { 0x8001C724, 0x8001C838, "P_RemoveMobj",                           ProgElemType::FUNCTION },
     { 0x8001C838, 0x8001CA18, "P_RespawnSpecials",                      ProgElemType::FUNCTION },
     { 0x8001CA18, 0x8001CB9C, "P_SetMObjState",                         ProgElemType::FUNCTION },
     { 0x8001CB9C, 0x8001CC68, "P_ExplodeMissile",                       ProgElemType::FUNCTION },

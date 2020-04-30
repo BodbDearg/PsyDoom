@@ -1009,7 +1009,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 
             gPlayers[playerIdx].mo = pPlayerThing;
             G_DoReborn(playerIdx);
-            P_RemoveMObj(*pPlayerThing);
+            P_RemoveMobj(*pPlayerThing);
         }
     }
     else {

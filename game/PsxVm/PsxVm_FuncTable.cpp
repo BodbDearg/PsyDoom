@@ -9,7 +9,6 @@ extern void _thunk_D_strncasecmp() noexcept;
 extern void _thunk_P_Random() noexcept;
 extern void M_AddPointToBox() noexcept;
 extern void P_RunMobjBase() noexcept;
-extern void P_XYMovement() noexcept;
 extern void P_FloatChange() noexcept;
 extern void P_ZMovement() noexcept;
 extern void P_MobjThinker() noexcept;
@@ -103,7 +102,7 @@ extern void P_UseLines() noexcept;
 extern void P_RadiusAttack() noexcept;
 extern void P_AimLineAttack() noexcept;
 extern void P_LineAttack() noexcept;
-extern void _thunk_P_RemoveMObj() noexcept;
+extern void _thunk_P_RemoveMobj() noexcept;
 extern void _thunk_P_ExplodeMissile() noexcept;
 extern void P_SpawnPlayer() noexcept;
 extern void P_CheckMissileSpawn() noexcept;
@@ -267,7 +266,6 @@ namespace PsxVm {
         { 0x80012A18, &_thunk_P_Random },
         { 0x80012B10, &M_AddPointToBox },
         { 0x80013840, &P_RunMobjBase },
-        { 0x800138D8, &P_XYMovement },
         { 0x80013B38, &P_FloatChange },
         { 0x80013C00, &P_ZMovement },
         { 0x80013DE0, &P_MobjThinker },
@@ -361,7 +359,7 @@ namespace PsxVm {
         { 0x8001BD24, &P_RadiusAttack },
         { 0x8001BE04, &P_AimLineAttack },
         { 0x8001BE78, &P_LineAttack },
-        { 0x8001C724, &_thunk_P_RemoveMObj },
+        { 0x8001C724, &_thunk_P_RemoveMobj },
         { 0x8001CB9C, &_thunk_P_ExplodeMissile },
         { 0x8001CE40, &P_SpawnPlayer },
         { 0x8001DB78, &P_CheckMissileSpawn },

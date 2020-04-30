@@ -39,7 +39,7 @@ const VmPtr<int32_t> gNumMObjKilled(0x80078010);
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Removes the given map object from the game
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_RemoveMObj(mobj_t& mobj) noexcept {  
+void P_RemoveMobj(mobj_t& mobj) noexcept {
     // Respawn the item later it's the right type
     const bool bRespawn = (
         (mobj.flags & MF_SPECIAL) && 
@@ -71,8 +71,8 @@ void P_RemoveMObj(mobj_t& mobj) noexcept {
 }
 
 // TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
-void _thunk_P_RemoveMObj() noexcept {
-    P_RemoveMObj(*vmAddrToPtr<mobj_t>(a0));
+void _thunk_P_RemoveMobj() noexcept {
+    P_RemoveMobj(*vmAddrToPtr<mobj_t>(a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -145,7 +145,7 @@ bool P_SetMObjState(mobj_t& mobj, const statenum_t stateNum) noexcept {
     // Remove the map object if the state is null
     if (stateNum == S_NULL) {
         mobj.state = nullptr;
-        P_RemoveMObj(mobj);
+        P_RemoveMobj(mobj);
         return false;
     }
 

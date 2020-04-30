@@ -26,3 +26,6 @@ static constexpr fixed_t ONCEILINGZ = INT32_MAX;
 
 // Range for melee attacks
 static constexpr fixed_t MELEERANGE = 70 * FRACUNIT;
+
+// Maximum movement amount in one go: larger moves must be split up unto multiple smaller moves
+static constexpr fixed_t MAXMOVE = 16 * FRACUNIT;

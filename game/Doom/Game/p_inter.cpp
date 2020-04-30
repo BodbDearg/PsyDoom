@@ -1024,7 +1024,7 @@ loc_8001A4EC:
     sw(v0, s1 + 0xCC);
 loc_8001A510:
     a0 = s3;
-    P_RemoveMObj(*vmAddrToPtr<mobj_t>(a0));
+    P_RemoveMobj(*vmAddrToPtr<mobj_t>(a0));
     v0 = lw(s1 + 0xDC);
     a0 = *gCurPlayerIndex;
     v0 += 4;
@@ -1143,7 +1143,7 @@ loc_8001A6BC:
     at -= 0x7894;                                       // Result = gMObjPendingRemovalQueue[0] (800A876C)
     at += v0;
     a0 = lw(at);
-    P_RemoveMObj(*vmAddrToPtr<mobj_t>(a0));
+    P_RemoveMobj(*vmAddrToPtr<mobj_t>(a0));
     v1 = *gNumMObjKilled;
     v0 = v1 & 0x1F;
 loc_8001A708:
