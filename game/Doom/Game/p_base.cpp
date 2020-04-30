@@ -5,6 +5,7 @@
 #include "doomdata.h"
 #include "p_enemy.h"
 #include "p_local.h"
+#include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
@@ -78,7 +79,7 @@ loc_800138C4:
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Does movement along the xy plane for the specified map object
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_XYMovement(mobj_t& mobj) noexcept {
+static void P_XYMovement(mobj_t& mobj) noexcept {
     // How much movement is left to do: chop off the lowest 3 bits also
     fixed_t xleft = mobj.momx & (~7);
     fixed_t yleft = mobj.momy & (~7);
@@ -155,182 +156,81 @@ void P_XYMovement(mobj_t& mobj) noexcept {
     }
 }
 
-void P_FloatChange() noexcept {
-    a1 = lw(a0 + 0x74);
-    v0 = lw(a0);
-    v1 = lw(a1);
-    a2 = v1 - v0;
-    if (i32(a2) >= 0) goto loc_80013B58;
-    a2 = -a2;
-loc_80013B58:
-    v1 = lw(a1 + 0x4);
-    v0 = lw(a0 + 0x4);
-    a1 = v1 - v0;
-    v0 = (i32(a2) < i32(a1));
-    if (i32(a1) >= 0) goto loc_80013B78;
-    a1 = -a1;
-    v0 = (i32(a2) < i32(a1));
-loc_80013B78:
-    v1 = a2 + a1;
-    if (v0 == 0) goto loc_80013B88;
-    v0 = u32(i32(a2) >> 1);
-    goto loc_80013B8C;
-loc_80013B88:
-    v0 = u32(i32(a1) >> 1);
-loc_80013B8C:
-    a1 = v1 - v0;
-    v0 = lw(a0 + 0x44);
-    v1 = lw(a0 + 0x74);
-    a2 = lw(a0 + 0x8);
-    v1 = lw(v1 + 0x8);
-    v0 = u32(i32(v0) >> 1);
-    v0 += v1;
-    v1 = v0 - a2;
-    v0 = v1 << 1;
-    if (i32(v1) >= 0) goto loc_80013BD0;
-    v0 += v1;
-    v0 = -v0;
-    v0 = (i32(a1) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xFFF80000;                                // Result = FFF80000
-        if (bJump) goto loc_80013BD0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does upward and downward floating towards the target for the given map object which is a floating monster.
+// Assumes the map object has a target.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_FloatChange(mobj_t& mobj) noexcept {
+    // Get the approximate distance to the target
+    mobj_t& target = *mobj.target;
+    const fixed_t approxDist = P_AproxDistance(target.x - mobj.x, target.y - mobj.y);
+
+    // Get the height difference to the target and multiply by 3 for an apparent fudge factor. Not sure why the fudge was added in...
+    // I'm wondering also should this have been getting the (vertical) center to center height difference instead?
+    const fixed_t dz = (mobj.height / 2 + target.z - mobj.z) * 3;
+    
+    if (dz < 0) {
+        if (approxDist < -dz) {     // N.B: 'dz' is signed difference and negative here, need to adjust
+            mobj.z -= FLOATSPEED;
+        }
     }
-    v0 += a2;
-    goto loc_80013BF4;
-loc_80013BD0:
-    v0 = v1 << 1;
-    if (i32(v1) <= 0) goto loc_80013BF8;
-    v0 += v1;
-    v0 = (i32(a1) < i32(v0));
-    v1 = 0x80000;                                       // Result = 00080000
-    if (v0 == 0) goto loc_80013BF8;
-    v0 = lw(a0 + 0x8);
-    v0 += v1;
-loc_80013BF4:
-    sw(v0, a0 + 0x8);
-loc_80013BF8:
-    return;
+    else if (dz > 0) {
+        if (approxDist < dz) {
+            mobj.z += FLOATSPEED;
+        }
+    }
 }
 
-void P_ZMovement() noexcept {
-loc_80013C00:
-    a2 = a0;
-    v0 = lw(a2 + 0x8);
-    a0 = lw(a2 + 0x50);
-    v1 = lw(a2 + 0x64);
-    v0 += a0;
-    v1 &= 0x4000;
-    sw(v0, a2 + 0x8);
-    if (v1 == 0) goto loc_80013CEC;
-    a0 = lw(a2 + 0x74);
-    if (a0 == 0) goto loc_80013CEC;
-    v1 = lw(a0);
-    v0 = lw(a2);
-    a1 = v1 - v0;
-    if (i32(a1) >= 0) goto loc_80013C4C;
-    a1 = -a1;
-loc_80013C4C:
-    v1 = lw(a0 + 0x4);
-    v0 = lw(a2 + 0x4);
-    a0 = v1 - v0;
-    v0 = (i32(a1) < i32(a0));
-    if (i32(a0) >= 0) goto loc_80013C6C;
-    a0 = -a0;
-    v0 = (i32(a1) < i32(a0));
-loc_80013C6C:
-    v1 = a1 + a0;
-    if (v0 == 0) goto loc_80013C7C;
-    v0 = u32(i32(a1) >> 1);
-    goto loc_80013C80;
-loc_80013C7C:
-    v0 = u32(i32(a0) >> 1);
-loc_80013C80:
-    a0 = v1 - v0;
-    v0 = lw(a2 + 0x44);
-    v1 = lw(a2 + 0x74);
-    a1 = lw(a2 + 0x8);
-    v1 = lw(v1 + 0x8);
-    v0 = u32(i32(v0) >> 1);
-    v0 += v1;
-    v1 = v0 - a1;
-    v0 = v1 << 1;
-    if (i32(v1) >= 0) goto loc_80013CC4;
-    v0 += v1;
-    v0 = -v0;
-    v0 = (i32(a0) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xFFF80000;                                // Result = FFF80000
-        if (bJump) goto loc_80013CC4;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does upwards and downwards movement for the given map object, including applying gravity and floating up/down for floating monsters
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_ZMovement(mobj_t& mobj) noexcept {
+    // Advance Z position by current Z motion
+    mobj.z += mobj.momz;
+
+    // Do floating up and down to meet the target for floating monsters
+    if ((mobj.flags & MF_FLOAT) && mobj.target) {    
+        P_FloatChange(mobj);
     }
-    v0 += a1;
-    goto loc_80013CE8;
-loc_80013CC4:
-    v0 = v1 << 1;
-    if (i32(v1) <= 0) goto loc_80013CEC;
-    v0 += v1;
-    v0 = (i32(a0) < i32(v0));
-    v1 = 0x80000;                                       // Result = 00080000
-    if (v0 == 0) goto loc_80013CEC;
-    v0 = lw(a2 + 0x8);
-    v0 += v1;
-loc_80013CE8:
-    sw(v0, a2 + 0x8);
-loc_80013CEC:
-    v1 = lw(a2 + 0x8);
-    v0 = lw(a2 + 0x38);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 != 0) goto loc_80013D40;
-    v0 = lw(a2 + 0x50);
-    v1 = 0x10000;                                       // Result = 00010000
-    if (i32(v0) >= 0) goto loc_80013D18;
-    sw(0, a2 + 0x50);
-loc_80013D18:
-    v0 = lw(a2 + 0x38);
-    sw(v0, a2 + 0x8);
-    v0 = lw(a2 + 0x64);
-    v0 &= v1;
-    if (v0 == 0) goto loc_80013D74;
-    goto loc_80013DCC;
-loc_80013D40:
-    v0 = lw(a2 + 0x64);
-    v0 &= 0x200;
-    if (v0 != 0) goto loc_80013D74;
-    v1 = lw(a2 + 0x50);
-    v0 = 0xFFFE0000;                                    // Result = FFFE0000
-    if (v1 != 0) goto loc_80013D6C;
-    v0 = 0xFFFC0000;                                    // Result = FFFC0000
-    goto loc_80013D70;
-loc_80013D6C:
-    v0 += v1;
-loc_80013D70:
-    sw(v0, a2 + 0x50);
-loc_80013D74:
-    v0 = lw(a2 + 0x8);
-    a0 = lw(a2 + 0x44);
-    v1 = lw(a2 + 0x3C);
-    v0 += a0;
-    v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_80013DD8;
-    v0 = lw(a2 + 0x50);
-    if (i32(v0) <= 0) goto loc_80013DA4;
-    sw(0, a2 + 0x50);
-loc_80013DA4:
-    v0 = lw(a2 + 0x3C);
-    v1 = lw(a2 + 0x44);
-    v0 -= v1;
-    sw(v0, a2 + 0x8);
-    v0 = lw(a2 + 0x64);
-    v1 = 0x10000;                                       // Result = 00010000
-    v0 &= v1;
-    if (v0 == 0) goto loc_80013DD8;
-loc_80013DCC:
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0x3464;                                       // Result = P_ExplodeMissile (8001CB9C)
-    sw(v0, a2 + 0x18);
-loc_80013DD8:
-    return;
+
+    // Collide with the floor, or if no collision then do gravity
+    if (mobj.z <= mobj.floorz) {
+        // Hitting the floor: stop all downwards momentum
+        if (mobj.momz < 0) {
+            mobj.momz = 0;
+        }
+
+        // Clamp to the floor and if we're a missile, explode:
+        mobj.z = mobj.floorz;
+
+        if (mobj.flags & MF_MISSILE) {
+            mobj.latecall = PsxVm::getNativeFuncVmAddr(_thunk_P_ExplodeMissile);    // BOOM!
+            return;
+        }
+    }
+    else if ((mobj.flags & MF_NOGRAVITY) == 0) {
+        // Not hitting the floor and gravity is enabled, so apply it:
+        if (mobj.momz == 0) {
+            mobj.momz = -GRAVITY;
+        } else {
+            mobj.momz -= GRAVITY / 2;
+        }
+    }
+    
+    // Check for a collision against the ceiling
+    if (mobj.z + mobj.height > mobj.ceilingz) {    
+        // Hitting the ceiling: stop all upwards momentum
+        if (mobj.momz > 0) {
+            mobj.momz = 0;
+        }
+        
+        // Clamp to the ceiling and if we're a missile, explode:
+        mobj.z = mobj.ceilingz - mobj.height;
+
+        if (mobj.flags & MF_MISSILE) {
+            mobj.latecall = PsxVm::getNativeFuncVmAddr(_thunk_P_ExplodeMissile);
+        }
+    }
 }
 
 void P_MobjThinker() noexcept {
@@ -356,7 +256,7 @@ loc_80013E28:
     if (v0 == 0) goto loc_80013E64;
 loc_80013E4C:
     a0 = s0;
-    P_ZMovement();
+    P_ZMovement(*vmAddrToPtr<mobj_t>(a0));
     v0 = lw(s0 + 0x18);
     if (v0 != 0) goto loc_80013EEC;
 loc_80013E64:

@@ -17,15 +17,12 @@ static constexpr uint32_t   MAPBMASK        = MAPBLOCKSIZE - 1;             // A
 // Large enough most of the time but can cause issues sometimes, see: https://doomwiki.org/wiki/Flawed_collision_detection
 static constexpr fixed_t MAXRADIUS = 32 * FRACUNIT;
 
-// Default maximum health for the player
-static constexpr int32_t MAXHEALTH = 100;
-
 // Special Z values to instruct the game to spawn a thing anchored to the floor or the ceiling
 static constexpr fixed_t ONFLOORZ   = INT32_MIN;
 static constexpr fixed_t ONCEILINGZ = INT32_MAX;
 
-// Range for melee attacks
-static constexpr fixed_t MELEERANGE = 70 * FRACUNIT;
-
-// Maximum movement amount in one go: larger moves must be split up unto multiple smaller moves
-static constexpr fixed_t MAXMOVE = 16 * FRACUNIT;
+static constexpr int32_t    MAXHEALTH   = 100;              // Default maximum health for the player
+static constexpr fixed_t    GRAVITY     = 4 * FRACUNIT;     // Gravity strength: same as Jaguar Doom
+static constexpr fixed_t    MELEERANGE  = 70 * FRACUNIT;    // Range for melee attacks
+static constexpr fixed_t    MAXMOVE     = 16 * FRACUNIT;    // Maximum movement amount in one go: larger moves must be split up unto multiple smaller moves
+static constexpr fixed_t    FLOATSPEED  = 8 * FRACUNIT;     // Speed of floating up or down to meet the player for floating monsters
