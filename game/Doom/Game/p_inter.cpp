@@ -200,83 +200,47 @@ void P_GiveCard(player_t& player, const card_t card) noexcept {
     }
 }
 
-void P_GivePower() noexcept {
-    v0 = (a1 < 6);
-    if (v0 == 0) goto loc_80019C84;
-    v0 = a1 << 2;
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x7B8;                                        // Result = JumpTable_P_GivePower[0] (800107B8)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80019BD4: goto loc_80019BD4;
-        case 0x80019C28: goto loc_80019C28;
-        case 0x80019BE4: goto loc_80019BE4;
-        case 0x80019C18: goto loc_80019C18;
-        case 0x80019C6C: goto loc_80019C6C;
-        case 0x80019C08: goto loc_80019C08;
-        default: jump_table_err(); break;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Give the specified power to the player and return 'true' if successful
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_GivePower(player_t& player, const powertype_t power) noexcept {
+    switch (power) {
+        case pw_invulnerability:
+            player.powers[power] = INVULNTICS;
+            return true;
+
+        case pw_strength:
+            if (player.health < MAXHEALTH) {
+                player.health = std::min(player.health + 100, MAXHEALTH);
+                player.mo->health = player.health;
+            }
+
+            player.powers[power] = 1;
+            return true;
+
+        case pw_invisibility:
+            player.powers[power] = INVISTICS;
+            player.mo->flags |= MF_BLEND_ADD_25;
+            return true;
+
+        case pw_ironfeet:
+            player.powers[power] = IRONTICS;
+            return true;
+
+        case pw_allmap: {
+            if (player.powers[power])
+                return false;
+
+            player.powers[power] = 1;
+            return true;
+        }
+
+        case pw_infrared:
+            player.powers[power] = INFRATICS;
+            return true;
     }
-loc_80019BD4:
-    v0 = 0x1C2;                                         // Result = 000001C2
-    sw(v0, a0 + 0x30);
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80019C84;
-loc_80019BE4:
-    v0 = 1;                                             // Result = 00000001
-    a1 = lw(a0);
-    v1 = 0x384;                                         // Result = 00000384
-    sw(v1, a0 + 0x38);
-    v1 = lw(a1 + 0x64);
-    a0 = 0x70000000;                                    // Result = 70000000
-    v1 |= a0;
-    sw(v1, a1 + 0x64);
-    goto loc_80019C84;
-loc_80019C08:
-    v0 = 0x708;                                         // Result = 00000708
-    sw(v0, a0 + 0x44);
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80019C84;
-loc_80019C18:
-    v0 = 0x384;                                         // Result = 00000384
-    sw(v0, a0 + 0x3C);
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80019C84;
-loc_80019C28:
-    v1 = lw(a0 + 0x24);
-    v0 = (i32(v1) < 0x64);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 + 0x64;
-        if (bJump) goto loc_80019C60;
-    }
-    sw(v0, a0 + 0x24);
-    v0 = (i32(v0) < 0x65);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x64;                                      // Result = 00000064
-        if (bJump) goto loc_80019C50;
-    }
-    sw(v0, a0 + 0x24);
-loc_80019C50:
-    v1 = lw(a0);
-    v0 = lw(a0 + 0x24);
-    sw(v0, v1 + 0x68);
-loc_80019C60:
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, a0 + 0x34);
-    goto loc_80019C84;
-loc_80019C6C:
-    v0 = lw(a0 + 0x40);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80019C84;
-    }
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, a0 + 0x40);
-loc_80019C84:
-    return;
+
+    return false;   // Invalid power
 }
 
 void P_TouchSpecialThing() noexcept {

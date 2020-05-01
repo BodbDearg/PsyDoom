@@ -10,7 +10,7 @@ bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bDropp
 bool P_GiveBody(player_t& player, const int32_t healthAmt) noexcept;
 bool P_GiveArmor(player_t& player, const int32_t armorType) noexcept;
 void P_GiveCard(player_t& player, const card_t card) noexcept;
-void P_GivePower() noexcept;
+bool P_GivePower(player_t& player, const powertype_t power) noexcept;
 void P_TouchSpecialThing() noexcept;
 void P_KillMObj() noexcept;
 void P_DamageMObj() noexcept;
