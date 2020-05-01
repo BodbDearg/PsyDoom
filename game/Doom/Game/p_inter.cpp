@@ -7,6 +7,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/st_main.h"
 #include "g_game.h"
+#include "p_local.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
 #include "PsxVm/PsxVm.h"
@@ -14,6 +15,9 @@
 BEGIN_THIRD_PARTY_INCLUDES
     #include <algorithm>
 END_THIRD_PARTY_INCLUDES
+
+// How much to add to the 'bonus' effect strength counter anytime a bonus is picked up
+static constexpr uint32_t BONUSADD = 4;
 
 // The maximum amount of ammo for each ammo type and how much ammo each clip type gives
 const VmPtr<int32_t[NUMAMMO]>   gMaxAmmo(0x800670D4);
@@ -157,68 +161,43 @@ bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bDropp
     return (bGaveWeapon || bGaveAmmo);
 }
 
-void P_GiveBody() noexcept {
-    v1 = a0;
-    a0 = lw(v1 + 0x24);
-    v0 = (i32(a0) < 0x64);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a1 + a0;
-        if (bJump) goto loc_80019B14;
-    }
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80019B38;
-loc_80019B14:
-    sw(v0, v1 + 0x24);
-    v0 = (i32(v0) < 0x65);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x64;                                      // Result = 00000064
-        if (bJump) goto loc_80019B28;
-    }
-    sw(v0, v1 + 0x24);
-loc_80019B28:
-    a0 = lw(v1);
-    v1 = lw(v1 + 0x24);
-    v0 = 1;                                             // Result = 00000001
-    sw(v1, a0 + 0x68);
-loc_80019B38:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Try to give the specified amount of health to the player: returns 'true' if that is possible/allowed
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_GiveBody(player_t& player, const int32_t healthAmt) noexcept {
+    // Can't give health if already maxed out
+    if (player.health >= MAXHEALTH)
+        return false;
+
+    player.health = std::min(player.health + healthAmt, MAXHEALTH);
+    player.mo->health = player.health;
+    return true;
 }
 
-void P_GiveArmor() noexcept {
-    v0 = a1 << 1;
-    v0 += a1;
-    v0 <<= 3;
-    v0 += a1;
-    v1 = lw(a0 + 0x28);
-    a2 = v0 << 2;
-    v1 = (i32(v1) < i32(a2));
-    v0 = 1;                                             // Result = 00000001
-    if (v1 == 0) goto loc_80019B70;
-    sw(a1, a0 + 0x2C);
-    sw(a2, a0 + 0x28);
-    goto loc_80019B74;
-loc_80019B70:
-    v0 = 0;                                             // Result = 00000000
-loc_80019B74:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Try to give the specified armor type (1 = regular armor, 2 = mega armor) to the player.
+// Returns 'true' if that is allowed/possible to do.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_GiveArmor(player_t& player, const int32_t armorType) noexcept {
+    const int32_t armorAmt = armorType * 100;
+    
+    // Can only give the armor if it's more than the current armor amount
+    if (armorAmt <= player.armorpoints)
+        return false;
+    
+    player.armortype = armorType;
+    player.armorpoints = armorAmt;
+    return true;
 }
 
-void P_GiveCard() noexcept {
-    a1 <<= 2;
-    a1 += a0;
-    v0 = lw(a1 + 0x48);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_80019BA0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Gives the specified keycard to the player if the key is not already owned
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_GiveCard(player_t& player, const card_t card) noexcept {
+    if (!player.cards[card]) {
+        player.bonuscount = BONUSADD;
+        player.cards[card] = true;
     }
-    sw(v0, a0 + 0xDC);
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, a1 + 0x48);
-loc_80019BA0:
-    return;
 }
 
 void P_GivePower() noexcept {

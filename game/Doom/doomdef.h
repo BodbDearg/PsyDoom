@@ -353,9 +353,9 @@ struct player_t {
     fixed_t             viewheight;
     fixed_t             deltaviewheight;
     fixed_t             bob;
-    uint32_t            health;
-    uint32_t            armorpoints;
-    uint32_t            armortype;                          // 0 = no armor, 1 = regular armor, 2 = mega armor
+    int32_t             health;
+    int32_t             armorpoints;
+    int32_t             armortype;                          // 0 = no armor, 1 = regular armor, 2 = mega armor
     int32_t             powers[NUMPOWERS];                  // How many ticks left for each power
     bool32_t            cards[NUMCARDS];                    // Which keycards the player has
     bool32_t            backpack;
