@@ -1,12 +1,17 @@
 #pragma once
 
+#include <cstdint>
+
+enum statenum_t : uint32_t;
+struct player_t;
+
 void P_RecursiveSound() noexcept;
 void P_NoiseAlert() noexcept;
-void P_SetPsprite() noexcept;
+void P_SetPsprite(player_t& player, const int32_t spriteIdx, const statenum_t stateNum) noexcept;
 void P_BringUpWeapon() noexcept;
 void P_CheckAmmo() noexcept;
 void P_FireWeapon() noexcept;
-void P_DropWeapon() noexcept;
+void P_DropWeapon(player_t& player) noexcept;
 void A_WeaponReady() noexcept;
 void A_ReFire() noexcept;
 void A_CheckReload() noexcept;

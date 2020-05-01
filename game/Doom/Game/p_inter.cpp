@@ -701,7 +701,7 @@ loc_8001A634:
     v0 = 1;                                             // Result = 00000001
     sw(v0, v1 + 0x4);
     a0 = lw(s0 + 0x80);
-    P_DropWeapon();
+    P_DropWeapon(*vmAddrToPtr<player_t>(a0));
     v0 = lw(s0 + 0x68);
     v0 = (i32(v0) < -0x32);
     a0 = s0;

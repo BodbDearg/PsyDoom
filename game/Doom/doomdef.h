@@ -12,6 +12,7 @@ struct state_t;
 struct subsector_t;
 
 enum mobjtype_t : uint32_t;
+enum statenum_t : uint32_t;
 
 // Screen resolution (NTSC)
 static constexpr int32_t SCREEN_W = 256;
@@ -300,11 +301,11 @@ enum ammotype_t : uint32_t {
 // Describes the state transitions for a weapon and the ammo it uses
 struct weaponinfo_t {
     ammotype_t  ammo;
-    int32_t     upstate;
-    int32_t     downstate;
-    int32_t     readystate;
-    int32_t     atkstate;
-    int32_t     flashstate;
+    statenum_t  upstate;
+    statenum_t  downstate;
+    statenum_t  readystate;
+    statenum_t  atkstate;
+    statenum_t  flashstate;
 };
 
 static_assert(sizeof(weaponinfo_t) == 24);

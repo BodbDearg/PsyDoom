@@ -1,5 +1,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Module responsible for non player map object movement and collision, as well as state advancement.
+// Module responsible for non player map object movement (and collision) due to velocity, as well as state advancement/ticking.
+// The movement handled here is physics based and caused by velocity - it is NOT the manual movement done by the AI code.
+//
 // Note: state transition action functions are NOT performed here, they are instead performed during the 'latecall' phase.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "p_base.h"

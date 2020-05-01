@@ -114,11 +114,9 @@ extern void P_AddActivePlat() noexcept;
 extern void P_RemoveActivePlat() noexcept;
 extern void P_RecursiveSound() noexcept;
 extern void P_NoiseAlert() noexcept;
-extern void P_SetPsprite() noexcept;
 extern void P_BringUpWeapon() noexcept;
 extern void P_CheckAmmo() noexcept;
 extern void P_FireWeapon() noexcept;
-extern void P_DropWeapon() noexcept;
 extern void A_WeaponReady() noexcept;
 extern void A_ReFire() noexcept;
 extern void A_CheckReload() noexcept;
@@ -360,11 +358,9 @@ namespace PsxVm {
         { 0x8001F8A0, &P_RemoveActivePlat },
         { 0x8001F918, &P_RecursiveSound },
         { 0x8001FA34, &P_NoiseAlert },
-        { 0x8001FB70, &P_SetPsprite },
         { 0x8001FC18, &P_BringUpWeapon },
         { 0x8001FD4C, &P_CheckAmmo },
         { 0x8001FFBC, &P_FireWeapon },
-        { 0x800201C4, &P_DropWeapon },
         { 0x80020298, &A_WeaponReady },
         { 0x80020480, &A_ReFire },
         { 0x8002051C, &A_CheckReload },

@@ -228,47 +228,43 @@ loc_8001FB58:
     return;
 }
 
-void P_SetPsprite() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    a1 <<= 4;
-    a1 += 0xF0;
-    sw(s0, sp + 0x10);
-    s0 = s1 + a1;
-    sw(ra, sp + 0x18);
-    goto loc_8001FBF4;
-loc_8001FB94:
-    v0 -= a2;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_8001FBE0;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_8001FC00;
-loc_8001FBE0:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a2 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_8001FC00;
-loc_8001FBF4:
-    v0 = a2 << 3;
-    if (a2 != 0) goto loc_8001FB94;
-    sw(0, s0);
-loc_8001FC00:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the specified player sprite to the given state and invoke the state action.
+// Note that if the state is over in an instant, multiple states might be transitioned to.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SetPsprite(player_t& player, const int32_t spriteIdx, const statenum_t stateNum) noexcept {
+    pspdef_t& sprite = player.psprites[spriteIdx];
+    statenum_t nextStateNum = stateNum;
+
+    do {
+        // Did the object remove itself?
+        if (nextStateNum == S_NULL) {
+            sprite.state = nullptr;
+            return;
+        }
+
+        // Advance to the next state
+        state_t& state = gStates[nextStateNum];
+        sprite.state = &state;
+        sprite.tics = state.tics;
+
+        // Perform the state action
+        if (state.action) {
+            // FIXME: convert to native function call
+            a0 = ptrToVmAddr(&player);
+            a1 = ptrToVmAddr(&sprite);
+            void (* const pActionFunc)() = PsxVm::getVmFuncForAddr(state.action);
+            pActionFunc();
+
+            // Finish if we no longer have a state
+            if (!sprite.state)
+                break;
+        }
+        
+        // Execute the next state if the tics left is zero (state is an instant cycle through)
+        nextStateNum = sprite.state->nextstate;
+
+    }  while (sprite.tics == 0);
 }
 
 void P_BringUpWeapon() noexcept {
@@ -648,57 +644,11 @@ loc_800201AC:
     return;
 }
 
-void P_DropWeapon() noexcept {
-loc_800201C4:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v1 = lw(s1 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70FC;                                       // Result = WeaponInfo_Fist[2] (800670FC)
-    at += v0;
-    a0 = lw(at);
-    s0 = s1 + 0xF0;
-    if (a0 != 0) goto loc_80020210;
-    sw(0, s1 + 0xF0);
-    goto loc_80020280;
-loc_80020210:
-    v0 = a0 << 3;
-loc_80020214:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_80020260;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_80020280;
-loc_80020260:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_80020280;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_80020214;
-    sw(0, s0);
-loc_80020280:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Drops down the player's currently equipped weapon: used when the player dies
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_DropWeapon(player_t& player) noexcept {
+    P_SetPsprite(player, ps_weapon, gWeaponInfo[player.readyweapon].downstate);
 }
 
 void A_WeaponReady() noexcept {
