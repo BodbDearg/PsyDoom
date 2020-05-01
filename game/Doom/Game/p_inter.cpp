@@ -5,6 +5,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
 #include "Doom/Renderer/r_main.h"
+#include "Doom/UI/st_main.h"
 #include "g_game.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
@@ -107,100 +108,53 @@ bool P_GiveAmmo(player_t& player, const ammotype_t ammoType, const int32_t numCl
     return true;
 }
 
-void P_GiveWeapon() noexcept {
-loc_8001998C:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s0, sp + 0x10);
-    s0 = a1;
-    a1 = *gNetGame;
-    v0 = 1;                                             // Result = 00000001
-    sw(ra, sp + 0x18);
-    if (a1 != v0) goto loc_80019A1C;
-    v0 = s0 << 1;
-    if (a2 != 0) goto loc_80019A20;
-    v0 = s0 << 2;
-    v1 = v0 + s1;
-    v0 = lw(v1 + 0x74);
-    a0 = s1;
-    if (v0 == 0) goto loc_800199DC;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80019ADC;
-loc_800199DC:
-    v0 = s0 << 1;
-    v0 += s0;
-    v0 <<= 3;
-    sw(a1, v1 + 0x74);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F4;                                       // Result = WeaponInfo_Fist[0] (800670F4)
-    at += v0;
-    a1 = lw(at);
-    a2 = 2;                                             // Result = 00000002
-    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
-    a0 = lw(s1);
-    a1 = sfx_wpnup;
-    sw(s0, s1 + 0x70);
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = 0;
-    goto loc_80019ADC;
-loc_80019A1C:
-    v0 = s0 << 1;
-loc_80019A20:
-    v0 += s0;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F4;                                       // Result = WeaponInfo_Fist[0] (800670F4)
-    at += v0;
-    a1 = lw(at);
-    v0 = 5;                                             // Result = 00000005
-    if (a1 == v0) goto loc_80019A68;
-    a0 = s1;
-    if (a2 == 0) goto loc_80019A54;
-    a2 = 1;                                             // Result = 00000001
-    goto loc_80019A58;
-loc_80019A54:
-    a2 = 2;                                             // Result = 00000002
-loc_80019A58:
-    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
-    a1 = v0;
-    goto loc_80019A6C;
-loc_80019A68:
-    a1 = 0;                                             // Result = 00000000
-loc_80019A6C:
-    v0 = s0 << 2;
-    v1 = v0 + s1;
-    v0 = lw(v1 + 0x74);
-    a0 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_80019AC8;
-    v0 = *gCurPlayerIndex;
-    a0 = 1;                                             // Result = 00000001
-    sw(a0, v1 + 0x74);
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    v0 += v1;
-    sw(s0, s1 + 0x70);
-    if (s1 != v0) goto loc_80019AC8;
-    v0 = 6;                                             // Result = 00000006
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v0, at - 0x78E8);                                // Store to: gStatusBar[0] (80098718)
-loc_80019AC8:
-    v0 = 0;                                             // Result = 00000000
-    if (a0 != 0) goto loc_80019AD8;
-    if (a1 == 0) goto loc_80019ADC;
-loc_80019AD8:
-    v0 = 1;                                             // Result = 00000001
-loc_80019ADC:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Attempts to give the weapon type to the specified player, along with any ammo that results from picking up the weapon.
+// The weapon type may be 'dropped' by monsters or placed in the level at the start, dropped weapons yield less ammo.
+// Returns 'true' if the pickup succeeded, 'false' if pickup is not allowed. 
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bDropped) noexcept {
+    // In co-op mode only allow placed weapons to be picked up if not already owned
+    if ((*gNetGame == gt_coop) && (!bDropped)) {
+        if (player.weaponowned[weapon])
+            return false;
+        
+        player.weaponowned[weapon] = true;
+        P_GiveAmmo(player, gWeaponInfo[weapon].ammo, 2);
+        player.pendingweapon = weapon;
+        S_StartSound(player.mo.get(), sfx_wpnup);
+        return false;
+    }
+
+    // Give ammo for the weapon pickup if possible
+    bool bGaveAmmo = false;
+
+    if (gWeaponInfo[weapon].ammo != am_noammo) {
+        // Placed weapons give 2 clips, dropped weapons only give 1 clip
+        if (bDropped) {
+            bGaveAmmo = P_GiveAmmo(player, gWeaponInfo[weapon].ammo, 1);
+        } else {
+            bGaveAmmo = P_GiveAmmo(player, gWeaponInfo[weapon].ammo, 2);
+        }
+    }
+    
+    // Give the weapon if not already owned
+    bool bGaveWeapon = false;
+
+    if (!player.weaponowned[weapon]) {
+        // Giving a new weapon: mark the weapon as owned and switch to it
+        bGaveWeapon = true;
+        player.weaponowned[weapon] = true;
+        player.pendingweapon = weapon;
+
+        // If this player is picking up the gun then switch to the evil grin status bar face
+        if (&player == &gPlayers[*gCurPlayerIndex]) {
+            gStatusBar->specialFace = f_gotgat;
+        }
+    }
+
+    // Pickup was successful if ammo or a new weapon resulted from the pickup
+    return (bGaveWeapon || bGaveAmmo);
 }
 
 void P_GiveBody() noexcept {
@@ -622,7 +576,7 @@ loc_80019FE4:
     a0 = s1;
     a1 = 7;                                             // Result = 00000007
     a2 = 0;                                             // Result = 00000000
-    P_GiveWeapon();
+    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x52C;                                        // Result = STR_BfgPickedUpMsg[0] (8001052C)
@@ -634,7 +588,7 @@ loc_8001A00C:
     v0 = lw(s3 + 0x64);
     a2 = 0x20000;                                       // Result = 00020000
     a2 &= v0;
-    P_GiveWeapon();
+    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x54C;                                        // Result = STR_ChaingunPickedUpMsg[0] (8001054C)
@@ -644,7 +598,7 @@ loc_8001A03C:
     a0 = s1;
     a1 = 8;                                             // Result = 00000008
     a2 = 0;                                             // Result = 00000000
-    P_GiveWeapon();
+    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x564;                                        // Result = STR_ChainsawPickedUpMsg[0] (80010564)
@@ -654,7 +608,7 @@ loc_8001A064:
     a0 = s1;
     a1 = 5;                                             // Result = 00000005
     a2 = 0;                                             // Result = 00000000
-    P_GiveWeapon();
+    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x584;                                        // Result = STR_RocketLauncherPickedUpMsg[0] (80010584)
@@ -664,7 +618,7 @@ loc_8001A08C:
     a0 = s1;
     a1 = 6;                                             // Result = 00000006
     a2 = 0;                                             // Result = 00000000
-    P_GiveWeapon();
+    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x5A4;                                        // Result = STR_PlasmaGunPickedUpMsg[0] (800105A4)
@@ -676,7 +630,7 @@ loc_8001A0B4:
     v0 = lw(s3 + 0x64);
     a2 = 0x20000;                                       // Result = 00020000
     a2 &= v0;
-    P_GiveWeapon();
+    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x5BC;                                        // Result = STR_ShotgunPickedUpMsg[0] (800105BC)
@@ -688,7 +642,7 @@ loc_8001A0E4:
     v0 = lw(s3 + 0x64);
     a2 = 0x20000;                                       // Result = 00020000
     a2 &= v0;
-    P_GiveWeapon();
+    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
     if (v0 == 0) goto loc_8001A55C;
     v0 = 0x80010000;                                    // Result = 80010000
     v0 += 0x5D4;                                        // Result = STR_SuperShotgunPickedUpMsg[0] (800105D4)

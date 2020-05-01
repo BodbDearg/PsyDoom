@@ -6,7 +6,7 @@ extern const VmPtr<int32_t[NUMAMMO]>   gMaxAmmo;
 extern const VmPtr<int32_t[NUMAMMO]>   gClipAmmo;
 
 bool P_GiveAmmo(player_t& player, const ammotype_t ammoType, const int32_t numClips) noexcept;
-void P_GiveWeapon() noexcept;
+bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bDropped) noexcept;
 void P_GiveBody() noexcept;
 void P_GiveArmor() noexcept;
 void P_GiveCard() noexcept;

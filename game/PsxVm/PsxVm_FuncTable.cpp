@@ -70,7 +70,6 @@ extern void T_MovePlane() noexcept;
 extern void T_MoveFloor() noexcept;
 extern void EV_DoFloor() noexcept;
 extern void EV_BuildStairs() noexcept;
-extern void P_GiveWeapon() noexcept;
 extern void P_GiveBody() noexcept;
 extern void P_GiveArmor() noexcept;
 extern void P_GiveCard() noexcept;
@@ -322,7 +321,6 @@ namespace PsxVm {
         { 0x80019010, &T_MoveFloor },
         { 0x80019100, &EV_DoFloor },
         { 0x80019548, &EV_BuildStairs },
-        { 0x8001998C, &P_GiveWeapon },
         { 0x80019AF4, &P_GiveBody },
         { 0x80019B40, &P_GiveArmor },
         { 0x80019B7C, &P_GiveCard },
