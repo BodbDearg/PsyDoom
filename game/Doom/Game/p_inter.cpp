@@ -7,6 +7,7 @@
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/st_main.h"
 #include "g_game.h"
+#include "info.h"
 #include "p_local.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
@@ -22,6 +23,48 @@ static constexpr uint32_t BONUSADD = 4;
 // The maximum amount of ammo for each ammo type and how much ammo each clip type gives
 const VmPtr<int32_t[NUMAMMO]>   gMaxAmmo(0x800670D4);
 const VmPtr<int32_t[NUMAMMO]>   gClipAmmo(0x800670E4);
+
+// Item message pickup strings.
+//
+// TODO: eventually make these be actual C++ string constants.
+// Can't to do that at the moment since these pointers need to be referenced by a 'VmPtr<T>', hence must be inside the executable itself.
+static const VmPtr<const char> STR_HealthBonusPickedUpMsg(0x800103E8);
+static const VmPtr<const char> STR_ArmorBonusPickedUpMsg(0x80010404);
+static const VmPtr<const char> STR_SuperChargePickedUpMsg(0x80010420);
+static const VmPtr<const char> STR_MegaSpherePickedUpMsg(0x80010430);
+static const VmPtr<const char> STR_ClipPickedUpMsg(0x80010440);
+static const VmPtr<const char> STR_BoxOfBulletsPickedUpMsg(0x80010454);
+static const VmPtr<const char> STR_RocketPickedUpMsg(0x80010470);
+static const VmPtr<const char> STR_BoxOfRocketsPickedUpMsg(0x80010484);
+static const VmPtr<const char> STR_EnergyCellPickedUpMsg(0x800104A0);
+static const VmPtr<const char> STR_EnergyCellPackPickedUpMsg(0x800104BC);
+static const VmPtr<const char> STR_FourShotgunShellsPickedUpMsg(0x800104DC);
+static const VmPtr<const char> STR_BoxOfShotgunShellsPickedUpMsg(0x800104F8);
+static const VmPtr<const char> STR_BackpackPickedUpMsg(0x80010514);
+static const VmPtr<const char> STR_BfgPickedUpMsg(0x8001052C);
+static const VmPtr<const char> STR_ChaingunPickedUpMsg(0x8001054C);
+static const VmPtr<const char> STR_ChainsawPickedUpMsg(0x80010564);
+static const VmPtr<const char> STR_RocketLauncherPickedUpMsg(0x80010584);
+static const VmPtr<const char> STR_PlasmaGunPickedUpMsg(0x800105A4);
+static const VmPtr<const char> STR_ShotgunPickedUpMsg(0x800105BC);
+static const VmPtr<const char> STR_SuperShotgunPickedUpMsg(0x800105D4);
+static const VmPtr<const char> STR_ArmorPickedUpMsg(0x800105F0);
+static const VmPtr<const char> STR_MegaArmorPickedUpMsg(0x80010608);
+static const VmPtr<const char> STR_BlueKeycardPickedUpMsg(0x80010620);
+static const VmPtr<const char> STR_YellowKeycardPickedUpMsg(0x8001063C);
+static const VmPtr<const char> STR_RedKeycardPickedUpMsg(0x8001065C);
+static const VmPtr<const char> STR_BlueSkullKeyPickedUpMsg(0x80010678);
+static const VmPtr<const char> STR_YellowSkullKeyPickedUpMsg(0x80010698);
+static const VmPtr<const char> STR_RedSkullKeyPickedUpMsg(0x800106B8);
+static const VmPtr<const char> STR_StimpackPickedUpMsg(0x800106D8);
+static const VmPtr<const char> STR_NeededMedKitPickedUpMsg(0x800106F0);
+static const VmPtr<const char> STR_MedKitPickedUpMsg(0x8001071C);
+static const VmPtr<const char> STR_InvunerabilityPickedUpMsg(0x80010734);
+static const VmPtr<const char> STR_BerserkPickedUpMsg(0x80010748);
+static const VmPtr<const char> STR_PartialInvisibilityPickedUpMsg(0x80010754);
+static const VmPtr<const char> STR_RadSuitPickedUpMsg(0x8001076C);
+static const VmPtr<const char> STR_ComputerAreaMapPickedUpMsg(0x80010788);
+static const VmPtr<const char> STR_LightAmplificationGogglesUpMsg(0x8001079C);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Try to give the specified player the specified number of ammo clips of the given type.
@@ -243,652 +286,366 @@ bool P_GivePower(player_t& player, const powertype_t power) noexcept {
     return false;   // Invalid power
 }
 
-void P_TouchSpecialThing() noexcept {
-loc_80019C8C:
-    sp -= 0x28;
-    sw(s3, sp + 0x1C);
-    s3 = a0;
-    sw(ra, sp + 0x20);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    a0 = lw(s3 + 0x8);
-    v1 = lw(a1 + 0x8);
-    v0 = lw(a1 + 0x44);
-    a0 -= v1;
-    v0 = (i32(v0) < i32(a0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0xFFF80000;                                // Result = FFF80000
-        if (bJump) goto loc_8001A55C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does logic for touching items that can be picked up.
+// Tries to make the given touching object pickup the special object.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
+    // See if the thing is out of reach vertically: do not pickup if that is the case
+    const fixed_t dz = special.z - toucher.z;
+
+    if ((dz > toucher.height) || (dz < -8 * FRACUNIT))
+        return;
+
+    // Touching object cannot pickup if it is dead
+    if (toucher.health <= 0)
+        return;
+    
+    // See what was picked up and play the item pickup sound by default
+    player_t& player = *toucher.player.get();
+    sfxenum_t soundId = sfx_itemup;
+
+    switch (special.sprite) {
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // Keys
+        //----------------------------------------------------------------------------------------------------------------------------------
+        case SPR_BKEY: {
+            if (!player.cards[it_bluecard]) {
+                player.message = STR_BlueKeycardPickedUpMsg;
+                P_GiveCard(player, it_bluecard);
+            }
+
+		    if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+                return;
+
+        }   break;
+
+        case SPR_RKEY: {
+            if (!player.cards[it_redcard]) {
+                player.message = STR_RedKeycardPickedUpMsg;
+                P_GiveCard(player, it_redcard);
+            }
+
+		    if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+                return;
+
+        }   break;
+
+        case SPR_YKEY: {
+            if (!player.cards[it_yellowcard]) {
+                player.message = STR_YellowKeycardPickedUpMsg;
+                P_GiveCard(player, it_yellowcard);
+            }
+
+		    if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+                return;
+
+        }   break;
+
+        case SPR_BSKU: {
+            if (!player.cards[it_blueskull]) {
+                player.message = STR_BlueSkullKeyPickedUpMsg;
+                P_GiveCard(player, it_blueskull);
+            }
+
+		    if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+                return;
+
+        }   break;
+
+        case SPR_RSKU: {
+            if (!player.cards[it_redskull]) {
+                player.message = STR_RedSkullKeyPickedUpMsg;
+                P_GiveCard(player, it_redskull);
+            }
+
+		    if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+                return;
+
+        }   break;
+
+        case SPR_YSKU: {
+            if (!player.cards[it_yellowskull]) {
+                player.message = STR_YellowSkullKeyPickedUpMsg;
+                P_GiveCard(player, it_yellowskull);
+            }
+
+		    if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+                return;
+
+        }   break;
+
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // Health
+        //----------------------------------------------------------------------------------------------------------------------------------
+        case SPR_STIM: {
+            if (!P_GiveBody(player, 10))
+                return;
+
+            player.message = STR_StimpackPickedUpMsg;
+        }   break;
+
+        case SPR_MEDI: {
+            if (!P_GiveBody(player, 25))
+                return;
+
+            // Bug: the < 25 health case would never trigger here, because we've just given 25 health.
+            // Looks like the same issue is in Linux Doom and probably other versions too...
+            if (player.health < 25) {
+                player.message = STR_NeededMedKitPickedUpMsg;
+            } else {
+                player.message = STR_MedKitPickedUpMsg;
+            }
+        }   break;
+
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // Armors
+        //----------------------------------------------------------------------------------------------------------------------------------
+        case SPR_ARM1: {
+            if (!P_GiveArmor(player, 1))
+                return;
+                
+            player.message = STR_ArmorPickedUpMsg;
+        }   break;
+
+        case SPR_ARM2: {
+            if (!P_GiveArmor(player, 2))
+                return;
+
+            player.message = STR_MegaArmorPickedUpMsg;
+        }   break;
+
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // Bonus items
+        //----------------------------------------------------------------------------------------------------------------------------------
+        case SPR_BON1: {
+            player.health = std::min(player.health + 2, 200);
+            player.mo->health = player.health;
+            player.message = STR_HealthBonusPickedUpMsg;
+        }   break;
+
+        case SPR_BON2: {
+            player.armorpoints = std::min(player.armorpoints + 2, 200);
+            
+            if (player.armortype == 0) {
+                player.armortype = 1;
+            }
+
+            player.message = STR_ArmorBonusPickedUpMsg;
+        }   break;
+
+        case SPR_SOUL: {
+            player.health = std::min(player.health + 100, 200);
+            player.mo->health = player.health;
+            player.message = STR_SuperChargePickedUpMsg;
+            soundId = sfx_getpow;
+        }   break;
+
+        case SPR_MEGA: {
+            player.health = 200;
+            player.mo->health = 200;
+            P_GiveArmor(player, 2);
+            player.message = STR_MegaSpherePickedUpMsg;
+            soundId = sfx_getpow;
+        }   break;
+
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // Powerups
+        //----------------------------------------------------------------------------------------------------------------------------------
+        case SPR_PINV: {
+            P_GivePower(player, pw_invulnerability);
+            player.message = STR_InvunerabilityPickedUpMsg;
+            soundId = sfx_getpow;
+        }   break;
+
+        case SPR_PSTR: {
+            P_GivePower(player, pw_strength);
+
+            if (player.readyweapon != wp_fist) {
+                player.pendingweapon = wp_fist;
+            }
+
+            player.message = STR_BerserkPickedUpMsg;
+            soundId = sfx_getpow;
+        }   break;
+
+        case SPR_PINS: {
+            P_GivePower(player, pw_invisibility);
+            player.message = STR_PartialInvisibilityPickedUpMsg;
+            soundId = sfx_getpow;
+        }   break;
+
+        case SPR_SUIT: {
+            P_GivePower(player, pw_ironfeet);
+            player.message = STR_RadSuitPickedUpMsg;
+            soundId = sfx_getpow;
+        }   break;
+
+        case SPR_PMAP: {
+		    if (!P_GivePower(player, pw_allmap))
+			    return;
+            
+            player.message = STR_ComputerAreaMapPickedUpMsg;
+            soundId = sfx_getpow;
+        }   break;
+
+        case SPR_PVIS: {
+            P_GivePower(player, pw_infrared);
+            player.message = STR_LightAmplificationGogglesUpMsg;
+            soundId = sfx_getpow;
+        }   break;
+
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // Ammo
+        //----------------------------------------------------------------------------------------------------------------------------------
+        case SPR_CLIP: {
+            if (!P_GiveAmmo(player, am_clip, (special.flags & MF_DROPPED) ? 0 : 1))
+                return;
+
+            player.message = STR_ClipPickedUpMsg;
+        }   break;
+
+        case SPR_AMMO: {
+            if (!P_GiveAmmo(player, am_clip, 5))
+                return;
+
+            player.message = STR_BoxOfBulletsPickedUpMsg;
+        }   break;
+        
+        case SPR_ROCK: {
+            if (!P_GiveAmmo(player, am_misl, 1))
+                return;
+
+            player.message = STR_RocketPickedUpMsg;
+        }   break;
+
+        case SPR_BROK: {
+            if (!P_GiveAmmo(player, am_misl, 5))
+                return;
+
+            player.message = STR_BoxOfRocketsPickedUpMsg;
+        }   break;
+
+        case SPR_CELL: {
+            if (!P_GiveAmmo(player, am_cell, 1))
+                return;
+            
+            player.message = STR_EnergyCellPickedUpMsg;
+        }   break;
+
+        case SPR_CELP: {
+            if (!P_GiveAmmo(player, am_cell, 5))
+                return;
+            
+            player.message = STR_EnergyCellPackPickedUpMsg;
+        }   break;
+
+        case SPR_SHEL: {
+            if (!P_GiveAmmo(player, am_shell, 1))
+                return;
+            
+            player.message = STR_FourShotgunShellsPickedUpMsg;
+        }   break;
+
+        case SPR_SBOX: {
+            if (!P_GiveAmmo(player, am_shell, 5))
+                return;
+            
+            player.message = STR_BoxOfShotgunShellsPickedUpMsg;
+        }   break;
+
+        case SPR_BPAK: {
+            // A backpack doubles your ammo capacity the first time you get it
+            if (!player.backpack) {
+                for (uint32_t ammoTypeIdx = 0; ammoTypeIdx < NUMAMMO; ++ammoTypeIdx) {
+                    player.maxammo[ammoTypeIdx] *= 2;
+                }
+
+                player.backpack = true;
+            }
+
+            // Give one clip of each ammo type
+            for (uint32_t ammoTypeIdx = 0; ammoTypeIdx < NUMAMMO; ++ammoTypeIdx) {
+                P_GiveAmmo(player, (ammotype_t) ammoTypeIdx, 1);
+            }
+
+            player.message = STR_BackpackPickedUpMsg;
+        }   break;
+
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // Weapons
+        //----------------------------------------------------------------------------------------------------------------------------------
+        case SPR_BFUG: {
+            if (!P_GiveWeapon(player, wp_bfg, false))
+                return;
+            
+            player.message = STR_BfgPickedUpMsg;
+            soundId = sfx_wpnup;
+        }   break;
+
+        case SPR_MGUN: {
+            if (!P_GiveWeapon(player, wp_chaingun, (special.flags & MF_DROPPED)))
+                return;
+            
+            player.message = STR_ChaingunPickedUpMsg;
+            soundId = sfx_wpnup;
+        }   break;
+
+        case SPR_CSAW: {
+            if (!P_GiveWeapon(player, wp_chainsaw, false))
+                return;
+            
+            player.message = STR_ChainsawPickedUpMsg;
+            soundId = sfx_wpnup;
+        }   break;
+
+        case SPR_LAUN: {
+            if (!P_GiveWeapon(player, wp_missile, false))
+                return;
+            
+            player.message = STR_RocketLauncherPickedUpMsg;
+            soundId = sfx_wpnup;
+        }   break;
+
+        case SPR_PLAS: {
+            if (!P_GiveWeapon(player, wp_plasma, false))
+                return;
+
+            player.message = STR_PlasmaGunPickedUpMsg;
+            soundId = sfx_wpnup;
+        }   break;
+
+        case SPR_SHOT: {
+            if (!P_GiveWeapon(player, wp_shotgun, (special.flags & MF_DROPPED)))
+                return;
+            
+            player.message = STR_ShotgunPickedUpMsg;
+            soundId = sfx_wpnup;
+        }   break;
+
+        case SPR_SGN2: {
+            if (!P_GiveWeapon(player, wp_supershotgun, (special.flags & MF_DROPPED)))
+                return;
+
+            player.message = STR_SuperShotgunPickedUpMsg;
+            soundId = sfx_wpnup;
+        }   break;
     }
-    v0 = (i32(a0) < i32(v0));
-    if (v0 != 0) goto loc_8001A55C;
-    v0 = lw(a1 + 0x68);
-    s1 = lw(a1 + 0x80);
-    s2 = 0x18;                                          // Result = 00000018
-    if (i32(v0) <= 0) goto loc_8001A55C;
-    v0 = lw(s3 + 0x28);
-    v1 = v0 - 0x31;
-    v0 = (v1 < 0x27);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_8001A4EC;
+    
+    // Include the item in item count stats if the flags allow it
+    if (special.flags & MF_COUNTITEM) {
+        player.itemcount++;
     }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x7D0;                                        // Result = JumpTable_P_TouchSpecialThing[0] (800107D0)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x8001A118: goto loc_8001A118;
-        case 0x8001A15C: goto loc_8001A15C;
-        case 0x8001A4EC: goto loc_8001A4EC;
-        case 0x80019D14: goto loc_80019D14;
-        case 0x80019D54: goto loc_80019D54;
-        case 0x8001A1A0: goto loc_8001A1A0;
-        case 0x8001A210: goto loc_8001A210;
-        case 0x8001A1D8: goto loc_8001A1D8;
-        case 0x8001A248: goto loc_8001A248;
-        case 0x8001A2B8: goto loc_8001A2B8;
-        case 0x8001A280: goto loc_8001A280;
-        case 0x8001A308: goto loc_8001A308;
-        case 0x8001A364: goto loc_8001A364;
-        case 0x80019D98: goto loc_80019D98;
-        case 0x8001A3E4: goto loc_8001A3E4;
-        case 0x8001A3FC: goto loc_8001A3FC;
-        case 0x8001A45C: goto loc_8001A45C;
-        case 0x80019DDC: goto loc_80019DDC;
-        case 0x8001A488: goto loc_8001A488;
-        case 0x8001A4A0: goto loc_8001A4A0;
-        case 0x8001A4D4: goto loc_8001A4D4;
-        case 0x80019E18: goto loc_80019E18;
-        case 0x80019E60: goto loc_80019E60;
-        case 0x80019E88: goto loc_80019E88;
-        case 0x80019EB0: goto loc_80019EB0;
-        case 0x80019ED8: goto loc_80019ED8;
-        case 0x80019F00: goto loc_80019F00;
-        case 0x80019F28: goto loc_80019F28;
-        case 0x80019F50: goto loc_80019F50;
-        case 0x80019F78: goto loc_80019F78;
-        case 0x80019FE4: goto loc_80019FE4;
-        case 0x8001A00C: goto loc_8001A00C;
-        case 0x8001A03C: goto loc_8001A03C;
-        case 0x8001A064: goto loc_8001A064;
-        case 0x8001A08C: goto loc_8001A08C;
-        case 0x8001A0B4: goto loc_8001A0B4;
-        case 0x8001A0E4: goto loc_8001A0E4;
-        default: jump_table_err(); break;
+    
+    // Remove the item on pickup and increase the bonus flash amount
+    P_RemoveMobj(special);
+    player.bonuscount += BONUSADD;
+
+    // Note: because no sound origin is passed in here, the item pickup sound will ALWAYS play with reverb.
+    // This is regardless of the reverb enabled setting of the sector. Unclear if this is a bug or if this intentional...
+    if (&player == &gPlayers[*gCurPlayerIndex]) {
+        S_StartSound(nullptr, soundId);
     }
-loc_80019D14:
-    v0 = lw(s1 + 0x24);
-    v0 += 2;
-    sw(v0, s1 + 0x24);
-    v0 = (i32(v0) < 0xC9);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0xC8;                                      // Result = 000000C8
-        if (bJump) goto loc_80019D34;
-    }
-    sw(v0, s1 + 0x24);
-loc_80019D34:
-    v0 = lw(s1);
-    v1 = lw(s1 + 0x24);
-    sw(v1, v0 + 0x68);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x3E8;                                        // Result = STR_HealthBonusPickedUpMsg[0] (800103E8)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_80019D54:
-    v0 = lw(s1 + 0x28);
-    v0 += 2;
-    sw(v0, s1 + 0x28);
-    v0 = (i32(v0) < 0xC9);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0xC8;                                      // Result = 000000C8
-        if (bJump) goto loc_80019D74;
-    }
-    sw(v0, s1 + 0x28);
-loc_80019D74:
-    v0 = lw(s1 + 0x2C);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80019D88;
-    }
-    sw(v0, s1 + 0x2C);
-loc_80019D88:
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x404;                                        // Result = STR_ArmorBonusPickedUpMsg[0] (80010404)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_80019D98:
-    v0 = lw(s1 + 0x24);
-    v0 += 0x64;
-    sw(v0, s1 + 0x24);
-    v0 = (i32(v0) < 0xC9);
-    s2 = 0x59;                                          // Result = 00000059
-    if (v0 != 0) goto loc_80019DBC;
-    v0 = 0xC8;                                          // Result = 000000C8
-    sw(v0, s1 + 0x24);
-loc_80019DBC:
-    v1 = lw(s1);
-    v0 = lw(s1 + 0x24);
-    sw(v0, v1 + 0x68);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x420;                                        // Result = STR_SuperChargePickedUpMsg[0] (80010420)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_80019DDC:
-    v0 = lw(s1);
-    v1 = 0xC8;                                          // Result = 000000C8
-    sw(v1, s1 + 0x24);
-    sw(v1, v0 + 0x68);
-    v0 = lw(s1 + 0x28);
-    v0 = (i32(v0) < 0xC8);
-    a0 = 2;                                             // Result = 00000002
-    if (v0 == 0) goto loc_80019E08;
-    sw(a0, s1 + 0x2C);
-    sw(v1, s1 + 0x28);
-loc_80019E08:
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x430;                                        // Result = STR_MegaSpherePickedUpMsg[0] (80010430)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4CC;
-loc_80019E18:
-    v0 = lw(s3 + 0x64);
-    v1 = 0x20000;                                       // Result = 00020000
-    v0 &= v1;
-    a0 = s1;
-    if (v0 == 0) goto loc_80019E38;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    goto loc_80019E40;
-loc_80019E38:
-    a1 = 0;                                             // Result = 00000000
-    a2 = 1;                                             // Result = 00000001
-loc_80019E40:
-    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x440;                                        // Result = STR_ClipPickedUpMsg[0] (80010440)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_80019E60:
-    a0 = s1;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 5;                                             // Result = 00000005
-    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x454;                                        // Result = STR_BoxOfBulletsPickedUpMsg[0] (80010454)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_80019E88:
-    a0 = s1;
-    a1 = 3;                                             // Result = 00000003
-    a2 = 1;                                             // Result = 00000001
-    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x470;                                        // Result = STR_RocketPickedUpMsg[0] (80010470)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_80019EB0:
-    a0 = s1;
-    a1 = 3;                                             // Result = 00000003
-    a2 = 5;                                             // Result = 00000005
-    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x484;                                        // Result = STR_BoxOfRocketsPickedUpMsg[0] (80010484)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_80019ED8:
-    a0 = s1;
-    a1 = 2;                                             // Result = 00000002
-    a2 = 1;                                             // Result = 00000001
-    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x4A0;                                        // Result = STR_EnergyCellPickedUpMsg[0] (800104A0)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_80019F00:
-    a0 = s1;
-    a1 = 2;                                             // Result = 00000002
-    a2 = 5;                                             // Result = 00000005
-    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x4BC;                                        // Result = STR_EnergyCellPackPickedUpMsg[0] (800104BC)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_80019F28:
-    a0 = s1;
-    a1 = 1;                                             // Result = 00000001
-    a2 = 1;                                             // Result = 00000001
-    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x4DC;                                        // Result = STR_FourShotgunShellsPickedUpMsg[0] (800104DC)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_80019F50:
-    a0 = s1;
-    a1 = 1;                                             // Result = 00000001
-    a2 = 5;                                             // Result = 00000005
-    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x4F8;                                        // Result = STR_BoxOfShotgunShellsPickedUpMsg[0] (800104F8)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_80019F78:
-    v0 = lw(s1 + 0x60);
-    s0 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_80019FB4;
-    v1 = s1;
-loc_80019F8C:
-    v0 = lw(v1 + 0xA8);
-    s0++;
-    v0 <<= 1;
-    sw(v0, v1 + 0xA8);
-    v0 = (i32(s0) < 4);
-    v1 += 4;
-    if (v0 != 0) goto loc_80019F8C;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s1 + 0x60);
-    s0 = 0;                                             // Result = 00000000
-loc_80019FB4:
-    a0 = s1;
-loc_80019FB8:
-    a1 = s0;
-    a2 = 1;                                             // Result = 00000001
-    v0 = P_GiveAmmo(*vmAddrToPtr<player_t>(a0), (ammotype_t) a1, a2);
-    s0++;
-    v0 = (i32(s0) < 4);
-    a0 = s1;
-    if (v0 != 0) goto loc_80019FB8;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x514;                                        // Result = STR_BackpackPickedUpMsg[0] (80010514)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_80019FE4:
-    a0 = s1;
-    a1 = 7;                                             // Result = 00000007
-    a2 = 0;                                             // Result = 00000000
-    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x52C;                                        // Result = STR_BfgPickedUpMsg[0] (8001052C)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A110;
-loc_8001A00C:
-    a0 = s1;
-    a1 = 4;                                             // Result = 00000004
-    v0 = lw(s3 + 0x64);
-    a2 = 0x20000;                                       // Result = 00020000
-    a2 &= v0;
-    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x54C;                                        // Result = STR_ChaingunPickedUpMsg[0] (8001054C)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A110;
-loc_8001A03C:
-    a0 = s1;
-    a1 = 8;                                             // Result = 00000008
-    a2 = 0;                                             // Result = 00000000
-    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x564;                                        // Result = STR_ChainsawPickedUpMsg[0] (80010564)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A110;
-loc_8001A064:
-    a0 = s1;
-    a1 = 5;                                             // Result = 00000005
-    a2 = 0;                                             // Result = 00000000
-    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x584;                                        // Result = STR_RocketLauncherPickedUpMsg[0] (80010584)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A110;
-loc_8001A08C:
-    a0 = s1;
-    a1 = 6;                                             // Result = 00000006
-    a2 = 0;                                             // Result = 00000000
-    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x5A4;                                        // Result = STR_PlasmaGunPickedUpMsg[0] (800105A4)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A110;
-loc_8001A0B4:
-    a0 = s1;
-    a1 = 2;                                             // Result = 00000002
-    v0 = lw(s3 + 0x64);
-    a2 = 0x20000;                                       // Result = 00020000
-    a2 &= v0;
-    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x5BC;                                        // Result = STR_ShotgunPickedUpMsg[0] (800105BC)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A110;
-loc_8001A0E4:
-    a0 = s1;
-    a1 = 3;                                             // Result = 00000003
-    v0 = lw(s3 + 0x64);
-    a2 = 0x20000;                                       // Result = 00020000
-    a2 &= v0;
-    v0 = P_GiveWeapon(*vmAddrToPtr<player_t>(a0), (weapontype_t) a1, (a2 != 0));
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x5D4;                                        // Result = STR_SuperShotgunPickedUpMsg[0] (800105D4)
-    sw(v0, s1 + 0xD4);
-loc_8001A110:
-    s2 = 0x19;                                          // Result = 00000019
-    goto loc_8001A4EC;
-loc_8001A118:
-    a0 = 1;                                             // Result = 00000001
-    v0 = lw(s1 + 0x28);
-    v0 = (i32(v0) < 0x64);
-    v1 = 0x64;                                          // Result = 00000064
-    if (v0 != 0) goto loc_8001A138;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8001A144;
-loc_8001A138:
-    v0 = 1;                                             // Result = 00000001
-    sw(a0, s1 + 0x2C);
-    sw(v1, s1 + 0x28);
-loc_8001A144:
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x5F0;                                        // Result = STR_ArmorPickedUpMsg[0] (800105F0)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_8001A15C:
-    a0 = 2;                                             // Result = 00000002
-    v0 = lw(s1 + 0x28);
-    v0 = (i32(v0) < 0xC8);
-    v1 = 0xC8;                                          // Result = 000000C8
-    if (v0 != 0) goto loc_8001A17C;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8001A188;
-loc_8001A17C:
-    v0 = 1;                                             // Result = 00000001
-    sw(a0, s1 + 0x2C);
-    sw(v1, s1 + 0x28);
-loc_8001A188:
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x608;                                        // Result = STR_MegaArmorPickedUpMsg[0] (80010608)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_8001A1A0:
-    v0 = lw(s1 + 0x4C);
-    if (v0 != 0) goto loc_8001A2EC;
-    v1 = lw(s1 + 0x4C);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x620;                                        // Result = STR_BlueKeycardPickedUpMsg[0] (80010620)
-    sw(v0, s1 + 0xD4);
-    if (v1 != 0) goto loc_8001A2EC;
-    v0 = 4;                                             // Result = 00000004
-    sw(v0, s1 + 0xDC);
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s1 + 0x4C);
-    goto loc_8001A2EC;
-loc_8001A1D8:
-    v0 = lw(s1 + 0x50);
-    if (v0 != 0) goto loc_8001A2EC;
-    v1 = lw(s1 + 0x50);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x63C;                                        // Result = STR_YellowKeycardPickedUpMsg[0] (8001063C)
-    sw(v0, s1 + 0xD4);
-    if (v1 != 0) goto loc_8001A2EC;
-    v0 = 4;                                             // Result = 00000004
-    sw(v0, s1 + 0xDC);
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s1 + 0x50);
-    goto loc_8001A2EC;
-loc_8001A210:
-    v0 = lw(s1 + 0x48);
-    if (v0 != 0) goto loc_8001A2EC;
-    v1 = lw(s1 + 0x48);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x65C;                                        // Result = STR_RedKeycardPickedUpMsg[0] (8001065C)
-    sw(v0, s1 + 0xD4);
-    if (v1 != 0) goto loc_8001A2EC;
-    v0 = 4;                                             // Result = 00000004
-    sw(v0, s1 + 0xDC);
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s1 + 0x48);
-    goto loc_8001A2EC;
-loc_8001A248:
-    v0 = lw(s1 + 0x58);
-    if (v0 != 0) goto loc_8001A2EC;
-    v1 = lw(s1 + 0x58);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x678;                                        // Result = STR_BlueSkullKeyPickedUpMsg[0] (80010678)
-    sw(v0, s1 + 0xD4);
-    if (v1 != 0) goto loc_8001A2EC;
-    v0 = 4;                                             // Result = 00000004
-    sw(v0, s1 + 0xDC);
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s1 + 0x58);
-    goto loc_8001A2EC;
-loc_8001A280:
-    v0 = lw(s1 + 0x5C);
-    if (v0 != 0) goto loc_8001A2EC;
-    v1 = lw(s1 + 0x5C);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x698;                                        // Result = STR_YellowSkullKeyPickedUpMsg[0] (80010698)
-    sw(v0, s1 + 0xD4);
-    if (v1 != 0) goto loc_8001A2EC;
-    v0 = 4;                                             // Result = 00000004
-    sw(v0, s1 + 0xDC);
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s1 + 0x5C);
-    goto loc_8001A2EC;
-loc_8001A2B8:
-    v0 = lw(s1 + 0x54);
-    if (v0 != 0) goto loc_8001A2EC;
-    v1 = lw(s1 + 0x54);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x6B8;                                        // Result = STR_RedSkullKeyPickedUpMsg[0] (800106B8)
-    sw(v0, s1 + 0xD4);
-    if (v1 != 0) goto loc_8001A2EC;
-    v0 = 4;                                             // Result = 00000004
-    sw(v0, s1 + 0xDC);
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s1 + 0x54);
-loc_8001A2EC:
-    v0 = *gNetGame;
-    if (v0 == gt_single) goto loc_8001A4EC;
-    goto loc_8001A55C;
-loc_8001A308:
-    v1 = lw(s1 + 0x24);
-    v0 = (i32(v1) < 0x64);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = v1 + 0xA;
-        if (bJump) goto loc_8001A324;
-    }
-    a0 = 0;                                             // Result = 00000000
-    goto loc_8001A34C;
-loc_8001A324:
-    sw(v0, s1 + 0x24);
-    v0 = (i32(v0) < 0x65);
-    a0 = 1;                                             // Result = 00000001
-    if (v0 != 0) goto loc_8001A33C;
-    v0 = 0x64;                                          // Result = 00000064
-    sw(v0, s1 + 0x24);
-loc_8001A33C:
-    v1 = lw(s1);
-    v0 = lw(s1 + 0x24);
-    sw(v0, v1 + 0x68);
-loc_8001A34C:
-    if (a0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x6D8;                                        // Result = STR_StimpackPickedUpMsg[0] (800106D8)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_8001A364:
-    v1 = lw(s1 + 0x24);
-    v0 = (i32(v1) < 0x64);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = v1 + 0x19;
-        if (bJump) goto loc_8001A380;
-    }
-    a0 = 0;                                             // Result = 00000000
-    goto loc_8001A3A8;
-loc_8001A380:
-    sw(v0, s1 + 0x24);
-    v0 = (i32(v0) < 0x65);
-    a0 = 1;                                             // Result = 00000001
-    if (v0 != 0) goto loc_8001A398;
-    v0 = 0x64;                                          // Result = 00000064
-    sw(v0, s1 + 0x24);
-loc_8001A398:
-    v1 = lw(s1);
-    v0 = lw(s1 + 0x24);
-    sw(v0, v1 + 0x68);
-loc_8001A3A8:
-    if (a0 == 0) goto loc_8001A55C;
-    v0 = lw(s1 + 0x24);
-    v0 = (i32(v0) < 0x19);
-    if (v0 == 0) goto loc_8001A3D4;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x6F0;                                        // Result = STR_NeededMedKitPickedUpMsg[0] (800106F0)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_8001A3D4:
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x71C;                                        // Result = STR_MedKitPickedUpMsg[0] (8001071C)
-    sw(v0, s1 + 0xD4);
-    goto loc_8001A4EC;
-loc_8001A3E4:
-    v0 = 0x1C2;                                         // Result = 000001C2
-    sw(v0, s1 + 0x30);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x734;                                        // Result = STR_InvunerabilityPickedUpMsg[0] (80010734)
-    s2 = 0x59;                                          // Result = 00000059
-    goto loc_8001A4E8;
-loc_8001A3FC:
-    v1 = lw(s1 + 0x24);
-    v0 = (i32(v1) < 0x64);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 + 0x64;
-        if (bJump) goto loc_8001A434;
-    }
-    sw(v0, s1 + 0x24);
-    v0 = (i32(v0) < 0x65);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x64;                                      // Result = 00000064
-        if (bJump) goto loc_8001A424;
-    }
-    sw(v0, s1 + 0x24);
-loc_8001A424:
-    v1 = lw(s1);
-    v0 = lw(s1 + 0x24);
-    sw(v0, v1 + 0x68);
-loc_8001A434:
-    s2 = 0x59;                                          // Result = 00000059
-    v1 = lw(s1 + 0x6C);
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s1 + 0x34);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x748;                                        // Result = STR_BerserkPickedUpMsg[0] (80010748)
-    sw(v0, s1 + 0xD4);
-    if (v1 == 0) goto loc_8001A4EC;
-    sw(0, s1 + 0x70);
-    goto loc_8001A4EC;
-loc_8001A45C:
-    a0 = lw(s1);
-    v0 = 0x384;                                         // Result = 00000384
-    sw(v0, s1 + 0x38);
-    v0 = lw(a0 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 |= v1;
-    sw(v0, a0 + 0x64);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x754;                                        // Result = STR_PartialInvisibilityPickedUpMsg[0] (80010754)
-    s2 = 0x59;                                          // Result = 00000059
-    goto loc_8001A4E8;
-loc_8001A488:
-    v0 = 0x384;                                         // Result = 00000384
-    sw(v0, s1 + 0x3C);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x76C;                                        // Result = STR_RadSuitPickedUpMsg[0] (8001076C)
-    s2 = 0x59;                                          // Result = 00000059
-    goto loc_8001A4E8;
-loc_8001A4A0:
-    v0 = lw(s1 + 0x40);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8001A4B8;
-    }
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s1 + 0x40);
-loc_8001A4B8:
-    if (v0 == 0) goto loc_8001A55C;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x788;                                        // Result = STR_ComputerAreaMapPickedUpMsg[0] (80010788)
-    sw(v0, s1 + 0xD4);
-loc_8001A4CC:
-    s2 = 0x59;                                          // Result = 00000059
-    goto loc_8001A4EC;
-loc_8001A4D4:
-    s2 = 0x59;                                          // Result = 00000059
-    v0 = 0x708;                                         // Result = 00000708
-    sw(v0, s1 + 0x44);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x79C;                                        // Result = STR_LightAmplificationGogglesUpMsg[0] (8001079C)
-loc_8001A4E8:
-    sw(v0, s1 + 0xD4);
-loc_8001A4EC:
-    v0 = lw(s3 + 0x64);
-    v1 = 0x800000;                                      // Result = 00800000
-    v0 &= v1;
-    if (v0 == 0) goto loc_8001A510;
-    v0 = lw(s1 + 0xCC);
-    v0++;
-    sw(v0, s1 + 0xCC);
-loc_8001A510:
-    a0 = s3;
-    P_RemoveMobj(*vmAddrToPtr<mobj_t>(a0));
-    v0 = lw(s1 + 0xDC);
-    a0 = *gCurPlayerIndex;
-    v0 += 4;
-    v1 = a0 << 2;
-    v1 += a0;
-    sw(v0, s1 + 0xDC);
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    v0 += v1;
-    a0 = 0;                                             // Result = 00000000
-    if (s1 != v0) goto loc_8001A55C;
-    a1 = s2;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_8001A55C:
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
 }
 
 void P_KillMObj() noexcept {

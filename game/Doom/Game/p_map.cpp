@@ -102,7 +102,7 @@ loc_8001B708:
     goto loc_8001B788;
 loc_8001B780:
     a1 = s0;
-    P_TouchSpecialThing();
+    P_TouchSpecialThing(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1));
 loc_8001B788:
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7EC4);                               // Load from: gbTryMove2 (8007813C)
