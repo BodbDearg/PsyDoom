@@ -867,7 +867,7 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
         // Apply the damage to the player, set the attacker and increase the damage palette effect
         pTargetPlayer->health = std::max(pTargetPlayer->health - damageAmt, 0);
         pTargetPlayer->attacker = pSource;
-        pTargetPlayer->damagecount += 1 + (damageAmt / 2);
+        pTargetPlayer->damagecount += 1 + (damageAmt / 2);  // Tweak made in PSX version: add '1' here so that all damage causes a palette flash
     }
 
     // Decrease the map object health
