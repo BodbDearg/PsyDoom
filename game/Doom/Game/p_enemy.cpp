@@ -3008,7 +3008,7 @@ void A_Explode() noexcept {
     sw(ra, sp + 0x10);
     a1 = lw(a0 + 0x74);
     a2 = 0x80;                                          // Result = 00000080
-    P_RadiusAttack();
+    P_RadiusAttack(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), a2);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;

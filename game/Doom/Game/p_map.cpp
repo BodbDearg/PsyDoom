@@ -6,6 +6,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "p_inter.h"
+#include "p_local.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_move.h"
@@ -468,65 +469,38 @@ bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
     return true;
 }
 
-void P_RadiusAttack() noexcept {
-loc_8001BD24:
-    sp -= 0x28;
-    sw(ra, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v1 = lw(a0 + 0x4);
-    sw(a1, gp + 0x910);                                 // Store to: gpBombSource (80077EF0)
-    a1 = *gBlockmapOriginY;
-    sw(a2, gp + 0x8B4);                                 // Store to: gBombDamage (80077E94)
-    a2 <<= 16;
-    sw(a0, gp + 0xBC0);                                 // Store to: gpBombSpot (800781A0)
-    v0 = v1 - a2;
-    v0 -= a1;
-    s1 = u32(i32(v0) >> 23);
-    v1 += a2;
-    v1 -= a1;
-    s3 = u32(i32(v1) >> 23);
-    v1 = lw(a0);
-    a0 = *gBlockmapOriginX;
-    v0 = a2 + v1;
-    v0 -= a0;
-    s2 = u32(i32(v0) >> 23);
-    v1 -= a2;
-    v1 -= a0;
-    v0 = (i32(s3) < i32(s1));
-    s4 = u32(i32(v1) >> 23);
-    if (v0 != 0) goto loc_8001BDE0;
-    s0 = s4;
-loc_8001BDA4:
-    v0 = (i32(s2) < i32(s0));
-    a0 = s0;
-    if (v0 != 0) goto loc_8001BDD0;
-loc_8001BDB0:
-    a2 = 0x80020000;                                    // Result = 80020000
-    a2 -= 0x43D0;                                       // Result = PIT_RadiusAttack (8001BC30)
-    a1 = s1;
-    P_BlockThingsIterator(a0, a1, PIT_RadiusAttack);
-    s0++;
-    v0 = (i32(s2) < i32(s0));
-    a0 = s0;
-    if (v0 == 0) goto loc_8001BDB0;
-loc_8001BDD0:
-    s1++;
-    v0 = (i32(s3) < i32(s1));
-    s0 = s4;
-    if (v0 == 0) goto loc_8001BDA4;
-loc_8001BDE0:
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do an explosion at the given bomb spot, doing the specified amount of damage. The damage falls off linearly over distance.
+// The given 'source' object (optional) is the thing responsible for causing the explosion.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_RadiusAttack(mobj_t& bombSpot, mobj_t* const pSource, const int32_t damage) noexcept {    
+    // Compute the range of the blockmap to search based on the damage amount.
+    // Splash damage falls off linearly, so the damage amount is also pretty much the distance range:
+    const fixed_t blastDist = damage << FRACBITS;
+
+    #if PC_PSX_DOOM_MODS
+        // PC-PSX: clamp these coords to the valid range of the blockmap to avoid potential undefined behavior near map edges
+        const int32_t bmapLx = std::max((bombSpot.x - blastDist - *gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
+        const int32_t bmapRx = std::min((bombSpot.x + blastDist - *gBlockmapOriginX) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
+        const int32_t bmapBy = std::max((bombSpot.y - blastDist - *gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
+        const int32_t bmapTy = std::min((bombSpot.y + blastDist - *gBlockmapOriginY) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);
+    #else
+        const int32_t bmapLx = (bombSpot.x - blastDist - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
+        const int32_t bmapRx = (bombSpot.x + blastDist - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
+        const int32_t bmapBy = (bombSpot.y - blastDist - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+        const int32_t bmapTy = (bombSpot.y + blastDist - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+    #endif
+
+    // Save bomb properties globally and apply the blast damage (where possible) to things within the blockmap search range
+    *gpBombSpot = &bombSpot;
+    *gpBombSource = pSource;
+    *gBombDamage = damage;
+
+    for (int32_t y = bmapBy; y <= bmapTy; ++y) {
+        for (int32_t x = bmapLx; x <= bmapRx; ++x) {
+            P_BlockThingsIterator(x, y, PIT_RadiusAttack);
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
