@@ -15,6 +15,7 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "PsxVm/PsxVm.h"
+#include <algorithm>
 
 const VmPtr<VmPtr<mobj_t>>      gpShooter(0x800780B4);          // The map object currently taking a shot
 const VmPtr<fixed_t>            gAttackRange(0x80077F98);       // Maximum attack range for an attacker
@@ -23,6 +24,9 @@ const VmPtr<fixed_t>            gAimTopSlope(0x80077FF8);       // Maximum Z slo
 const VmPtr<fixed_t>            gAimBottomSlope(0x800782F8);    // Minimum Z slope for shooting (defines Z range that stuff can be hit within)
 
 static const VmPtr<VmPtr<mobj_t>>   gpLineTarget(0x80077EE8);       // The thing being shot at in 'P_AimLineAttack' and 'P_LineAttack'.
+static const VmPtr<VmPtr<mobj_t>>   gpBombSource(0x80077EF0);       // Radius attacks: the thing responsible for the explosion (player, monster)
+static const VmPtr<VmPtr<mobj_t>>   gpBombSpot(0x800781A0);         // Radius attacks: the object exploding and it's position (barrel, missile etc.)
+static const VmPtr<int32_t>         gBombDamage(0x80077E94);        // Radius attacks: how much damage the explosion does before falloff
 
 void P_CheckPosition() noexcept {
 loc_8001B640:
@@ -430,82 +434,38 @@ loc_8001BC08:
     return;
 }
 
-bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
-    a0 = ptrToVmAddr(&mobj);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Apply splash/bomb damage to the given thing from the current explosion, if applicable and in range etc.
+// Note: the 'bomb source' is the thing that caused the explosion, not the projectile itself ('bomb spot').
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool PIT_RadiusAttack(mobj_t& mobj) noexcept {    
+    // Non shootable things get no splash damage
+    if ((mobj.flags & MF_SHOOTABLE) == 0)
+        return true;
 
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x64);
-    v0 &= 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x11;                                      // Result = 00000011
-        if (bJump) goto loc_8001BD08;
-    }
-    v1 = lw(s1 + 0x54);
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0xF;                                       // Result = 0000000F
-        if (bJump) goto loc_8001BD08;
-    }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001BD0C;
-    }
-    a1 = lw(gp + 0xBC0);                                // Load from: gpBombSpot (800781A0)
-    v1 = lw(s1);
-    v0 = lw(a1);
-    a0 = lw(a1 + 0x4);
-    v1 -= v0;
-    v0 = lw(s1 + 0x4);
-    s0 = v1;
-    if (i32(v1) >= 0) goto loc_8001BC94;
-    s0 = -s0;
-loc_8001BC94:
-    v0 -= a0;
-    v1 = v0;
-    if (i32(v0) >= 0) goto loc_8001BCA4;
-    v1 = -v1;
-loc_8001BCA4:
-    v0 = (i32(s0) < i32(v1));
-    if (v0 == 0) goto loc_8001BCB4;
-    s0 = v1;
-loc_8001BCB4:
-    v0 = lw(s1 + 0x40);
-    v0 = s0 - v0;
-    s0 = u32(i32(v0) >> 16);
-    if (i32(s0) >= 0) goto loc_8001BCD0;
-    s0 = 0;                                             // Result = 00000000
-loc_8001BCD0:
-    v0 = lw(gp + 0x8B4);                                // Load from: gBombDamage (80077E94)
-    v0 = (i32(s0) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001BD0C;
-    }
-    a0 = s1;
-    v0 = P_CheckSight(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1));
-    a0 = s1;
-    if (v0 == 0) goto loc_8001BD08;
-    a1 = lw(gp + 0xBC0);                                // Load from: gpBombSpot (800781A0)
-    a3 = lw(gp + 0x8B4);                                // Load from: gBombDamage (80077E94)
-    a2 = lw(gp + 0x910);                                // Load from: gpBombSource (80077EF0)
-    a3 -= s0;
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-loc_8001BD08:
-    v0 = 1;                                             // Result = 00000001
-loc_8001BD0C:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
+    // Cyberdemons and Masterminds don't get splash damage
+    if ((mobj.type == MT_CYBORG) || (mobj.type == MT_SPIDER))
+        return true;
 
-    return (v0 != 0);
+    // Get a distance estimate to the source of the blast
+    mobj_t& bombSpot = *gpBombSpot->get();
+    
+    const fixed_t dx = std::abs(mobj.x - bombSpot.x);
+    const fixed_t dy = std::abs(mobj.y - bombSpot.y);
+    const int32_t approxDist = std::max(dx, dy);
+
+    // Compute how much to fade out damage based on the approx distance
+    const int32_t damageFade = std::max((approxDist - mobj.radius) >> FRACBITS, 0);
+
+    // Apply the actual damage if > 0 and if the thing has a line of sight to the explosion
+    const int32_t bombBaseDamage = *gBombDamage;
+    mobj_t* pBombSource = gpBombSource->get();
+
+    if ((bombBaseDamage > damageFade) && P_CheckSight(mobj, bombSpot)) {
+        P_DamageMObj(mobj, &bombSpot, pBombSource, bombBaseDamage - damageFade);
+    }
+
+    return true;
 }
 
 void P_RadiusAttack() noexcept {
