@@ -11,7 +11,6 @@
 #include "p_local.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
-#include "PsxVm/PsxVm.h"
 
 BEGIN_THIRD_PARTY_INCLUDES
     #include <algorithm>
@@ -755,323 +754,148 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
     }
 }
 
-void P_DamageMObj() noexcept {
-loc_8001A8A0:
-    sp -= 0x30;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(s5, sp + 0x24);
-    s5 = a1;
-    sw(s6, sp + 0x28);
-    s6 = a2;
-    sw(ra, sp + 0x2C);
-    sw(s4, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v1 = lw(s0 + 0x64);
-    v0 = v1 & 4;
-    s3 = a3;
-    if (v0 == 0) goto loc_8001AD48;
-    v0 = lw(s0 + 0x68);
-    {
-        const bool bJump = (i32(v0) <= 0);
-        v0 = 0x1000000;                                 // Result = 01000000
-        if (bJump) goto loc_8001AD48;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Try to damage the specified map object by the given amount.
+// Inflictor is the map object where the damage is coming from, the source is the player etc. that is responsible.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSource, const int32_t baseDamageAmt) noexcept {
+    // Ignore if the target is not shootable (shouldn't hit this case in practice)
+    if ((target.flags & MF_SHOOTABLE) == 0)
+        return;
+
+    // Ignore if the target is already dead
+    if (target.health <= 0)
+        return;
+    
+    // Shooting a lost soul kills all it's velocity
+    if (target.flags & MF_SKULLFLY) {
+        target.momz = 0;
+        target.momy = 0;
+        target.momx = 0;
     }
-    v0 &= v1;
-    if (v0 == 0) goto loc_8001A90C;
-    sw(0, s0 + 0x50);
-    sw(0, s0 + 0x4C);
-    sw(0, s0 + 0x48);
-loc_8001A90C:
-    s2 = lw(s0 + 0x80);
-    if (s2 == 0) goto loc_8001A97C;
-    v0 = *gGameSkill;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(s3) < 0x1F);
-        if (bJump) goto loc_8001A938;
+    
+    // Do adjustments to damage for the player based on skill and special faces due to damage
+    player_t* const pTargetPlayer = target.player.get();
+    player_t& curPlayer = gPlayers[*gCurPlayerIndex];
+
+    int32_t damageAmt = baseDamageAmt;
+    
+    if (pTargetPlayer) {
+        // In the lowest skill mode only half damage is applied
+        if (*gGameSkill == sk_baby) {
+            damageAmt /= 2;
+        }
+
+        // If more than 30 HP are taken then do the special shocked face for that
+        if ((damageAmt > 30) && (pTargetPlayer == &curPlayer)) {
+            gStatusBar->specialFace = f_hurtbad;
+        }
     }
-    s3 = u32(i32(s3) >> 1);
-    v0 = (i32(s3) < 0x1F);
-loc_8001A938:
-    if (v0 != 0) goto loc_8001A97C;
-    v0 = *gCurPlayerIndex;
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    v0 += v1;
-    {
-        const bool bJump = (s2 != v0);
-        v0 = 5;                                         // Result = 00000005
-        if (bJump) goto loc_8001A97C;
+
+    // Apply force to the object being attacked, unless the attacker is the player and using a chainsaw
+    const bool bPlayerChainsawAttack = (pSource && pSource->player && (pSource->player->readyweapon == wp_chainsaw));
+    angle_t forceAngle;
+
+    if (pInflictor && (!bPlayerChainsawAttack)) {
+        // Figure out the angle and thrust to apply for the damage based on angle to attacker, mass and damage amount
+        forceAngle = R_PointToAngle2(pInflictor->x, pInflictor->y, target.x, target.y);
+        constexpr fixed_t FORCE_SCALE = 25 * FRACUNIT;
+        fixed_t thrust = (damageAmt * FORCE_SCALE) / target.info->mass;
+        
+        // Randomly make enemies fall forward off ledges sometimes, if enough damage is done and its up above
+        if ((damageAmt < 40) && (damageAmt > target.health) && (target.z - pInflictor->z > 64 * FRACUNIT)) {
+            if (P_Random() & 1) {
+                forceAngle += ANG180;
+                thrust *= 4;
+            }
+        }
+
+        // Apply the thrust
+        const int32_t thrustInt = thrust >> FRACBITS;
+        const uint32_t fineAngle = forceAngle >> ANGLETOFINESHIFT;
+
+        target.momx += thrustInt * gFineCosine[fineAngle];
+        target.momy += thrustInt * gFineSine[fineAngle];
+        
+        // PSX new logic: if it is the player then cap the accumulated velocity amount
+        if (target.player) {
+            constexpr fixed_t MAX_VELOCITY = 16 * FRACUNIT;
+            target.momx = std::clamp(target.momx, -MAX_VELOCITY, MAX_VELOCITY);
+            target.momy = std::clamp(target.momy, -MAX_VELOCITY, MAX_VELOCITY);
+        }
+    } else {
+        forceAngle = target.angle;
     }
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v0, at - 0x78E8);                                // Store to: gStatusBar[0] (80098718)
-loc_8001A97C:
-    if (s5 == 0) goto loc_8001AB20;
-    if (s6 == 0) goto loc_8001A9AC;
-    v0 = lw(s6 + 0x80);
-    if (v0 == 0) goto loc_8001A9AC;
-    v1 = lw(v0 + 0x6C);
-    v0 = 8;                                             // Result = 00000008
-    if (v1 == v0) goto loc_8001AB20;
-loc_8001A9AC:
-    a0 = lw(s5);
-    a1 = lw(s5 + 0x4);
-    a2 = lw(s0);
-    a3 = lw(s0 + 0x4);
-    _thunk_R_PointToAngle2();
-    s4 = v0;
-    v0 = s3 << 1;
-    v0 += s3;
-    v0 <<= 3;
-    v1 = lw(s0 + 0x58);
-    v0 += s3;
-    v1 = lw(v1 + 0x48);
-    v0 <<= 16;
-    div(v0, v1);
-    if (v1 != 0) goto loc_8001A9F4;
-    _break(0x1C00);
-loc_8001A9F4:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8001AA0C;
+
+    // Player specific logic
+    if (pTargetPlayer) {
+        // No damage to the player if god mode or invulnerability is active
+        if ((pTargetPlayer->cheats & CF_GODMODE) || pTargetPlayer->powers[pw_invulnerability])
+            return;
+
+        // Make the player face look towards the direction of damage
+        if (pTargetPlayer == &curPlayer) {
+            const angle_t angleToAttacker = forceAngle - target.angle;
+
+            if ((angleToAttacker > ANG45 + ANG45 / 2) && (angleToAttacker < ANG180)) {
+                gStatusBar->specialFace = f_faceright;
+            }
+            else if ((angleToAttacker > ANG180) && (angleToAttacker < ANG270 + ANG45 / 2)) {
+                gStatusBar->specialFace = f_faceleft;
+            }
+        }
+
+        // Do armor soaking up damage and being worn by damage
+        if (pTargetPlayer->armortype != 0) {
+            // Mega armor soaks up a bit more damage
+            int32_t armorDamage = (pTargetPlayer->armortype == 1) ? damageAmt / 3 : damageAmt / 2;
+
+            // Is the armor now exhausted? Cap the damage soakage if so and remove the armor:
+            if (armorDamage >= pTargetPlayer->armorpoints) {
+                pTargetPlayer->armortype = 0;
+                armorDamage = pTargetPlayer->armorpoints;
+            }
+
+            // Decrease damage amount and apply to armor instead
+            damageAmt -= armorDamage;
+            pTargetPlayer->armorpoints -= armorDamage;
+        }
+        
+        // Do player pain sound
+        S_StartSound(&target, sfx_plpain);
+
+        // Apply the damage to the player, set the attacker and increase the damage palette effect
+        pTargetPlayer->health = std::max(pTargetPlayer->health - damageAmt, 0);
+        pTargetPlayer->attacker = pSource;
+        pTargetPlayer->damagecount += 1 + (damageAmt / 2);
     }
-    if (v0 != at) goto loc_8001AA0C;
-    tge(zero, zero, 0x5D);
-loc_8001AA0C:
-    s1 = lo;
-    v0 = (i32(s3) < 0x28);
-    a0 = s4 >> 19;
-    if (v0 == 0) goto loc_8001AA70;
-    v0 = lw(s0 + 0x68);
-    v0 = (i32(v0) < i32(s3));
-    if (v0 == 0) goto loc_8001AA70;
-    v0 = lw(s0 + 0x8);
-    v1 = lw(s5 + 0x8);
-    v0 -= v1;
-    v1 = 0x400000;                                      // Result = 00400000
-    v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_8001AA70;
-    _thunk_P_Random();
-    v0 &= 1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8001AA6C;
+
+    // Decrease the map object health
+    target.health -= damageAmt;
+
+    if (target.health <= 0) {
+        // Map object is now dead - kill it
+        P_KillMObj(pSource, target);
+    } else {
+        // Map object still alive: do the pain state for the thing randomly
+        if ((target.info->painchance > P_Random()) && ((target.flags & MF_SKULLFLY) == 0)) {
+            // Doing pain: make the monster fight back and go into the pain state
+            target.flags |= MF_JUSTHIT; 
+            P_SetMObjState(target, target.info->painstate);
+        }
+        
+        // Monster is fully awake now
+        target.reactiontime = 0;
+
+        // If not intent on another player target this attacking one
+        if ((target.threshold == 0) && pSource) {
+            target.target = pSource;
+            target.threshold = BASETHRESHOLD;
+
+            // Go into the see state if just woken
+            if ((target.state == &gStates[target.info->spawnstate]) && (target.info->seestate != S_NULL)) {
+                P_SetMObjState(target, target.info->seestate);
+            }
+        }
     }
-    s4 -= v0;
-    s1 <<= 2;
-loc_8001AA6C:
-    a0 = s4 >> 19;
-loc_8001AA70:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    a0 <<= 2;
-    v0 += a0;
-    v0 = lw(v0);
-    s1 = u32(i32(s1) >> 16);
-    mult(s1, v0);
-    v1 = lw(s0 + 0x48);
-    v0 = lo;
-    v0 += v1;
-    sw(v0, s0 + 0x48);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += a0;
-    v0 = lw(at);
-    mult(s1, v0);
-    v1 = lw(s0 + 0x4C);
-    a0 = lw(s0 + 0x80);
-    v0 = lo;
-    v0 += v1;
-    sw(v0, s0 + 0x4C);
-    if (a0 == 0) goto loc_8001AB24;
-    v1 = lw(s0 + 0x48);
-    a0 = 0x100000;                                      // Result = 00100000
-    v0 = (i32(a0) < i32(v1));
-    if (v0 != 0) goto loc_8001AAF0;
-    a0 = 0xFFF00000;                                    // Result = FFF00000
-    v0 = (i32(v1) < i32(a0));
-    if (v0 == 0) goto loc_8001AAF4;
-loc_8001AAF0:
-    sw(a0, s0 + 0x48);
-loc_8001AAF4:
-    v1 = lw(s0 + 0x4C);
-    a0 = 0x100000;                                      // Result = 00100000
-    v0 = (i32(a0) < i32(v1));
-    if (v0 != 0) goto loc_8001AB18;
-    a0 = 0xFFF00000;                                    // Result = FFF00000
-    v0 = (i32(v1) < i32(a0));
-    if (v0 == 0) goto loc_8001AB24;
-loc_8001AB18:
-    sw(a0, s0 + 0x4C);
-    goto loc_8001AB24;
-loc_8001AB20:
-    s4 = lw(s0 + 0x24);
-loc_8001AB24:
-    if (s2 == 0) goto loc_8001AC70;
-    v0 = lw(s2 + 0xC0);
-    v0 &= 2;
-    if (v0 != 0) goto loc_8001AD48;
-    v0 = lw(s2 + 0x30);
-    if (i32(v0) > 0) goto loc_8001AD48;
-    v0 = *gCurPlayerIndex;
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    v0 += v1;
-    {
-        const bool bJump = (s2 != v0);
-        v0 = 0xCFFF0000;                                // Result = CFFF0000
-        if (bJump) goto loc_8001ABCC;
-    }
-    v0 |= 0xFFFF;                                       // Result = CFFFFFFF
-    a0 = 0x4FFF0000;                                    // Result = 4FFF0000
-    v1 = lw(s0 + 0x24);
-    a0 |= 0xFFFE;                                       // Result = 4FFFFFFE
-    s4 -= v1;
-    v0 += s4;
-    v0 = (a0 < v0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x7FFF0000;                                // Result = 7FFF0000
-        if (bJump) goto loc_8001ABB0;
-    }
-    v0 = 4;                                             // Result = 00000004
-    goto loc_8001ABC4;
-loc_8001ABB0:
-    v0 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    v0 += s4;
-    v0 = (a0 < v0);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 3;                                         // Result = 00000003
-        if (bJump) goto loc_8001ABCC;
-    }
-loc_8001ABC4:
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v0, at - 0x78E8);                                // Store to: gStatusBar[0] (80098718)
-loc_8001ABCC:
-    v1 = lw(s2 + 0x2C);
-    v0 = 1;                                             // Result = 00000001
-    if (v1 == 0) goto loc_8001AC34;
-    {
-        const bool bJump = (v1 != v0);
-        v0 = s3 >> 31;
-        if (bJump) goto loc_8001AC00;
-    }
-    v0 = 0x55550000;                                    // Result = 55550000
-    v0 |= 0x5556;                                       // Result = 55555556
-    mult(s3, v0);
-    v1 = u32(i32(s3) >> 31);
-    v0 = hi;
-    v1 = v0 - v1;
-    goto loc_8001AC08;
-loc_8001AC00:
-    v0 += s3;
-    v1 = u32(i32(v0) >> 1);
-loc_8001AC08:
-    a0 = lw(s2 + 0x28);
-    v0 = (i32(v1) < i32(a0));
-    if (v0 != 0) goto loc_8001AC24;
-    v1 = a0;
-    sw(0, s2 + 0x2C);
-loc_8001AC24:
-    v0 = lw(s2 + 0x28);
-    s3 -= v1;
-    v0 -= v1;
-    sw(v0, s2 + 0x28);
-loc_8001AC34:
-    a0 = s0;
-    a1 = sfx_plpain;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = lw(s2 + 0x24);
-    v0 -= s3;
-    sw(v0, s2 + 0x24);
-    if (i32(v0) >= 0) goto loc_8001AC58;
-    sw(0, s2 + 0x24);
-loc_8001AC58:
-    v0 = lw(s2 + 0xD8);
-    v1 = u32(i32(s3) >> 1);
-    sw(s6, s2 + 0xE0);
-    v0++;
-    v0 += v1;
-    sw(v0, s2 + 0xD8);
-loc_8001AC70:
-    v0 = lw(s0 + 0x68);
-    v0 -= s3;
-    sw(v0, s0 + 0x68);
-    if (i32(v0) > 0) goto loc_8001AC98;
-    a0 = s6;
-    a1 = s0;
-    P_KillMObj(vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1));
-    goto loc_8001AD48;
-loc_8001AC98:
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x58);
-    v1 = lw(v1 + 0x20);
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x1000000;                                 // Result = 01000000
-        if (bJump) goto loc_8001ACE4;
-    }
-    a0 = lw(s0 + 0x64);
-    v0 &= a0;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a0 | 0x40;
-        if (bJump) goto loc_8001ACE4;
-    }
-    v1 = lw(s0 + 0x58);
-    sw(v0, s0 + 0x64);
-    a1 = lw(v1 + 0x1C);
-    a0 = s0;
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-loc_8001ACE4:
-    v0 = lw(s0 + 0x7C);
-    sw(0, s0 + 0x78);
-    if (v0 != 0) goto loc_8001AD48;
-    v0 = 0x64;                                          // Result = 00000064
-    if (s6 == 0) goto loc_8001AD48;
-    a1 = lw(s0 + 0x58);
-    sw(s6, s0 + 0x74);
-    sw(v0, s0 + 0x7C);
-    v1 = lw(a1 + 0x4);
-    a0 = lw(s0 + 0x60);
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    if (a0 != v0) goto loc_8001AD48;
-    a1 = lw(a1 + 0xC);
-    if (a1 == 0) goto loc_8001AD48;
-    a0 = s0;
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-loc_8001AD48:
-    ra = lw(sp + 0x2C);
-    s6 = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x30;
-    return;
 }

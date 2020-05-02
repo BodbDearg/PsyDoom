@@ -1494,7 +1494,7 @@ loc_8001724C:
     v0++;
     a3 = v0 << 1;
     a3 += v0;
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     goto loc_80017298;
 loc_8001728C:
     a1 = lw(a0 + 0x74);
@@ -1620,7 +1620,7 @@ loc_8001745C:
     v0 &= 7;
     v0++;
     a3 = v0 << 3;
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     goto loc_8001749C;
 loc_80017490:
     a1 = lw(a0 + 0x74);
@@ -1718,7 +1718,7 @@ loc_800175C8:
     a3 += v0;
     a3 <<= 2;
     a3 -= v0;
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     goto loc_8001761C;
 loc_80017610:
     a1 = lw(a0 + 0x74);
@@ -2068,7 +2068,7 @@ loc_80017B0C:
     a1 = s1;
     a2 = a1;
     a3 = s0;
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
 loc_80017B78:
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -2555,7 +2555,7 @@ loc_80018270:
     a1 = s2;
     a2 = a1;
     a3 = 0x2710;                                        // Result = 00002710
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     goto loc_80018334;
 loc_80018328:
     v0 = lw(s2 + 0x74);
@@ -2668,7 +2668,7 @@ loc_80018440:
     a1 = s2;
     a2 = a1;
     a3 = 0x2710;                                        // Result = 00002710
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     goto loc_80018504;
 loc_800184F8:
     v0 = lw(s2 + 0x74);
@@ -2757,7 +2757,7 @@ loc_800185A4:
     a1 = s2;
     a2 = s2;
     a3 = 0x2710;                                        // Result = 00002710
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     v0 = 0x80000000;                                    // Result = 80000000
     goto loc_8001866C;
 loc_8001865C:
@@ -2832,7 +2832,7 @@ loc_800186D0:
     a1 = s2;
     a2 = s2;
     a3 = 0x2710;                                        // Result = 00002710
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     v0 = 0xC0000000;                                    // Result = C0000000
     goto loc_80018798;
 loc_80018788:
@@ -2907,7 +2907,7 @@ loc_800187FC:
     a1 = s2;
     a2 = a1;
     a3 = 0x2710;                                        // Result = 00002710
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     goto loc_800188C0;
 loc_800188B4:
     v0 = lw(s2 + 0x74);
@@ -3239,7 +3239,7 @@ void L_MissileHit() noexcept {
     a2 = lw(s0 + 0x74);
     a3 = lo;
     a1 = s0;
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
 loc_80018D34:
     a0 = s0;
     P_ExplodeMissile(*vmAddrToPtr<mobj_t>(a0));
@@ -3269,7 +3269,7 @@ void L_SkullBash() noexcept {
     a1 = s0;
     a3 = lo;
     a2 = s0;
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     v0 = 0xFEFF0000;                                    // Result = FEFF0000
 loc_80018DAC:
     v1 = lw(s0 + 0x64);

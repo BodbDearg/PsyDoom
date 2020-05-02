@@ -1896,7 +1896,7 @@ loc_800215F8:
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     a2 = a1;
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
 loc_8002162C:
     v0 = 0x1990000;                                     // Result = 01990000
     v0 |= 0x9999;                                       // Result = 01999999

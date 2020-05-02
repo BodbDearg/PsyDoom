@@ -70,7 +70,7 @@ loc_8001B67C:
     a0 = lw(a0 - 0x7D3C);                               // Load from: gpMoveThing (800782C4)
     a2 = lw(a1 + 0x74);
     a3 = lo;
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     goto loc_8001B788;
 loc_8001B708:
     v0 &= v1;
@@ -86,7 +86,7 @@ loc_8001B708:
     a0 = lw(a0 - 0x7D3C);                               // Load from: gpMoveThing (800782C4)
     a3 = lo;
     a2 = s0;
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     a0 = 0xFEFF0000;                                    // Result = FEFF0000
     v0 = lw(s0 + 0x64);
     v1 = lw(s0 + 0x58);
@@ -493,7 +493,7 @@ loc_8001BCD0:
     a3 = lw(gp + 0x8B4);                                // Load from: gBombDamage (80077E94)
     a2 = lw(gp + 0x910);                                // Load from: gpBombSource (80077EF0)
     a3 -= s0;
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
 loc_8001BD08:
     v0 = 1;                                             // Result = 00000001
 loc_8001BD0C:
@@ -670,7 +670,7 @@ loc_8001BF70:
     a1 = s4;
     a2 = a1;
     a3 = s5;
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     goto loc_8001C008;
 loc_8001BF8C:
     if (s0 == 0) goto loc_8001C008;

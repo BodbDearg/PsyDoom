@@ -1105,7 +1105,7 @@ loc_80026E74:
     a0 = lw(s0);
     a2 = 0;                                             // Result = 00000000
     a3 = 0xA;                                           // Result = 0000000A
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     goto loc_80026FB4;
 loc_80026EC8:
     v0 = lw(s0 + 0x3C);
@@ -1126,7 +1126,7 @@ loc_80026EC8:
     a0 = lw(s0);
     a2 = 0;                                             // Result = 00000000
     a3 = 5;                                             // Result = 00000005
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     goto loc_80026FB4;
 loc_80026F1C:
     v0 = lw(s0 + 0x3C);
@@ -1151,7 +1151,7 @@ loc_80026F40:
     a0 = lw(s0);
     a2 = 0;                                             // Result = 00000000
     a3 = 0x14;                                          // Result = 00000014
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     goto loc_80026FB4;
 loc_80026F88:
     v0 = lw(s0 + 0xD0);

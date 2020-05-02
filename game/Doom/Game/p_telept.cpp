@@ -58,7 +58,7 @@ loc_8002885C:
     a1 = s1;
     a2 = s1;
     a3 = 0x2710;                                        // Result = 00002710
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     v0 = lw(s0 + 0x64);
     v1 = -7;                                            // Result = FFFFFFF9
     v0 &= v1;
@@ -188,7 +188,7 @@ loc_80028A54:
     a1 = s1;
     a2 = s1;
     a3 = 0x2710;                                        // Result = 00002710
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     v1 = lw(s0 + 0x64);
     v0 = -7;                                            // Result = FFFFFFF9
     v1 &= v0;

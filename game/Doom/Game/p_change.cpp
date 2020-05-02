@@ -168,7 +168,7 @@ loc_8001517C:
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
     a3 = 0xA;                                           // Result = 0000000A
-    P_DamageMObj();
+    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
     a3 = 0x1C;                                          // Result = 0000001C
     a0 = lw(s1);
     a2 = lw(s1 + 0x44);
