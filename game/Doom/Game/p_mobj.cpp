@@ -959,7 +959,7 @@ loc_8001E0F4:
     s4 = lw(s3 + 0x24);
     a2 = 0x4000000;                                     // Result = 04000000
     a1 = s4;
-    P_AimLineAttack();
+    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     s7 = v0;
@@ -969,7 +969,7 @@ loc_8001E0F4:
     a0 = s3;
     a1 = s4;
     a2 = 0x4000000;                                     // Result = 04000000
-    P_AimLineAttack();
+    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     s7 = v0;
@@ -979,7 +979,7 @@ loc_8001E0F4:
     a0 = s3;
     a1 = s4;
     a2 = 0x4000000;                                     // Result = 04000000
-    P_AimLineAttack();
+    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     s7 = v0;

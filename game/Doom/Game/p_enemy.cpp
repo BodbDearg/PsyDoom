@@ -1151,7 +1151,7 @@ loc_80016CD4:
     s1 = lw(s3 + 0x24);
     a2 = 0x8000000;                                     // Result = 08000000
     a1 = s1;
-    P_AimLineAttack();
+    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     s2 = v0;
     _thunk_P_Random();
     s0 = v0;

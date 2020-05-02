@@ -87,7 +87,6 @@ extern void P_TryMove() noexcept;
 extern void P_InterceptVector() noexcept;
 extern void P_UseLines() noexcept;
 extern void P_RadiusAttack() noexcept;
-extern void P_AimLineAttack() noexcept;
 extern void P_LineAttack() noexcept;
 extern void _thunk_P_RemoveMobj() noexcept;
 extern void _thunk_P_ExplodeMissile() noexcept;
@@ -329,7 +328,6 @@ namespace PsxVm {
         { 0x8001B7A4, &P_InterceptVector },
         { 0x8001B9F4, &P_UseLines },
         { 0x8001BD24, &P_RadiusAttack },
-        { 0x8001BE04, &P_AimLineAttack },
         { 0x8001BE78, &P_LineAttack },
         { 0x8001C724, &_thunk_P_RemoveMobj },
         { 0x8001CB9C, &_thunk_P_ExplodeMissile },

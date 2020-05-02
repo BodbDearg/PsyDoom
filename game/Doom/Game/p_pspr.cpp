@@ -1310,7 +1310,7 @@ void P_BulletSlope() noexcept {
     s0 = lw(s1 + 0x24);
     a2 = 0x4000000;                                     // Result = 04000000
     a1 = s0;
-    P_AimLineAttack();
+    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
@@ -1320,7 +1320,7 @@ void P_BulletSlope() noexcept {
     a0 = s1;
     a1 = s0;
     a2 = 0x4000000;                                     // Result = 04000000
-    P_AimLineAttack();
+    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
@@ -1329,7 +1329,7 @@ void P_BulletSlope() noexcept {
     a1 = 0xF8000000;                                    // Result = F8000000
     a1 += s0;
     a2 = 0x4000000;                                     // Result = 04000000
-    P_AimLineAttack();
+    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
 loc_80020D48:
     ra = lw(sp + 0x18);
@@ -1541,7 +1541,7 @@ loc_80021094:
     a2 = 0x8000000;                                     // Result = 08000000
     a1 = lw(a0 + 0x24);
     s4 = 0;                                             // Result = 00000000
-    P_AimLineAttack();
+    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     s5 = v0;
 loc_800210AC:
     s4++;
@@ -1647,7 +1647,7 @@ loc_8002124C:
     s0 = lw(s1 + 0x24);
     a0 = s1;
     a1 = s0;
-    P_AimLineAttack();
+    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
@@ -1658,7 +1658,7 @@ loc_8002124C:
     a0 = s1;
     a1 = s0;
     a2 = 0x4000000;                                     // Result = 04000000
-    P_AimLineAttack();
+    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     v1 = 0x80070000;                                    // Result = 80070000
     v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
@@ -1667,7 +1667,7 @@ loc_8002124C:
     a1 = 0xF8000000;                                    // Result = F8000000
     a1 += s0;
     a2 = 0x4000000;                                     // Result = 04000000
-    P_AimLineAttack();
+    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
 loc_800212B8:
     s4++;
@@ -1869,7 +1869,7 @@ loc_800215A8:
     v0 = lw(s3 + 0x24);
     a0 = lw(s3 + 0x74);
     a1 += v0;
-    P_AimLineAttack();
+    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     a3 = 0x20;                                          // Result = 00000020

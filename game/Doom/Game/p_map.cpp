@@ -4,6 +4,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
 #include "Doom/Renderer/r_local.h"
+#include "Doom/Renderer/r_main.h"
 #include "p_inter.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
@@ -20,6 +21,8 @@ const VmPtr<fixed_t>            gAttackRange(0x80077F98);       // Maximum attac
 const VmPtr<angle_t>            gAttackAngle(0x80077F80);       // Angle of attack for an attacker
 const VmPtr<fixed_t>            gAimTopSlope(0x80077FF8);       // Maximum Z slope for shooting (defines Z range that stuff can be hit within)
 const VmPtr<fixed_t>            gAimBottomSlope(0x800782F8);    // Minimum Z slope for shooting (defines Z range that stuff can be hit within)
+
+static const VmPtr<VmPtr<mobj_t>>   gpLineTarget(0x80077EE8);       // The thing being shot at in 'P_AimLineAttack' and 'P_LineAttack'.
 
 void P_CheckPosition() noexcept {
 loc_8001B640:
@@ -566,38 +569,26 @@ loc_8001BDE0:
     return;
 }
 
-void P_AimLineAttack() noexcept {
-loc_8001BE04:
-    sp -= 0x18;
-    a3 = 0xFFFF0000;                                    // Result = FFFF0000
-    a3 |= 0x6000;                                       // Result = FFFF6000
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
-    v0 = 0xA000;                                        // Result = 0000A000
-    sw(ra, sp + 0x10);
-    sw(a0, gp + 0xAD4);                                 // Store to: gpShooter (800780B4)
-    sw(a2, gp + 0x9B8);                                 // Store to: gAttackRange (80077F98)
-    sw(a1, gp + 0x9A0);                                 // Store to: gAttackAngle (80077F80)
-    sw(v0, gp + 0xA18);                                 // Store to: gAimTopSlope (80077FF8)
-    sw(a3, gp + 0xD18);                                 // Store to: gAimBottomSlope (800782F8)
-    v1++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x7BC4);                                // Store to: gValidCount (80077BC4)
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Figures out the vertical slope (up/down auto-aiming) for a shot to be taken by the given shooter.
+// Returns the slope to use for the shot.
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t P_AimLineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist) noexcept {
+    // Can't shoot outside view angles: set the allowed Z slope range for the shot
+    *gAimTopSlope = (100 * FRACUNIT) / 160;
+    *gAimBottomSlope = (-100 * FRACUNIT) / 160;
+
+    // Setup for shot simulation and see what this shot would hit
+    *gValidCount += 1;
+    *gAttackAngle = angle;
+    *gAttackRange = maxDist;
+    *gpShooter = &shooter;
     P_Shoot2();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D2C);                               // Load from: gpShootMObj (800782D4)
-    sw(v0, gp + 0x908);                                 // Store to: gpLineTarget (80077EE8)
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8001BE68;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F4C);                               // Load from: gShootSlope (80077F4C)
-loc_8001BE68:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Save what thing is being targeted and return the computed slope.
+    // If we hit a thing then use the slope to the thing, otherwise shoot level ahead (slope 0).
+    *gpLineTarget = gpShootMObj->get();
+    return (gpShootMObj->get()) ? *gShootSlope : 0;
 }
 
 void P_LineAttack() noexcept {
