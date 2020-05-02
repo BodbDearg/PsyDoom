@@ -70,7 +70,6 @@ extern void T_MovePlane() noexcept;
 extern void T_MoveFloor() noexcept;
 extern void EV_DoFloor() noexcept;
 extern void EV_BuildStairs() noexcept;
-extern void P_KillMObj() noexcept;
 extern void P_DamageMObj() noexcept;
 extern void T_FireFlicker() noexcept;
 extern void P_SpawnFireFlicker() noexcept;
@@ -314,7 +313,6 @@ namespace PsxVm {
         { 0x80019010, &T_MoveFloor },
         { 0x80019100, &EV_DoFloor },
         { 0x80019548, &EV_BuildStairs },
-        { 0x8001A57C, &P_KillMObj },
         { 0x8001A8A0, &P_DamageMObj },
         { 0x8001AD74, &T_FireFlicker },
         { 0x8001AE00, &P_SpawnFireFlicker },

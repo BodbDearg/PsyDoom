@@ -12,5 +12,5 @@ bool P_GiveArmor(player_t& player, const int32_t armorType) noexcept;
 void P_GiveCard(player_t& player, const card_t card) noexcept;
 bool P_GivePower(player_t& player, const powertype_t power) noexcept;
 void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept;
-void P_KillMObj() noexcept;
+void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept;
 void P_DamageMObj() noexcept;

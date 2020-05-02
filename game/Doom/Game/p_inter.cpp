@@ -17,12 +17,14 @@ BEGIN_THIRD_PARTY_INCLUDES
     #include <algorithm>
 END_THIRD_PARTY_INCLUDES
 
-// How much to add to the 'bonus' effect strength counter anytime a bonus is picked up
-static constexpr uint32_t BONUSADD = 4;
 
-// The maximum amount of ammo for each ammo type and how much ammo each clip type gives
-const VmPtr<int32_t[NUMAMMO]>   gMaxAmmo(0x800670D4);
-const VmPtr<int32_t[NUMAMMO]>   gClipAmmo(0x800670E4);
+static constexpr uint32_t BONUSADD          = 4;    // How much to add to the 'bonus' effect strength counter anytime a bonus is picked up
+static constexpr uint32_t MAX_DEAD_PLAYERS  = 32;   // Maximum number of dead player corpses to leave lying around (deathmatch)
+
+const VmPtr<int32_t[NUMAMMO]>                   gMaxAmmo(0x800670D4);                       // The maximum amount of ammo for each ammo type
+const VmPtr<int32_t[NUMAMMO]>                   gClipAmmo(0x800670E4);                      // How much ammo a clip for each ammo type gives
+const VmPtr<uint32_t>                           gDeadPlayerRemovalQueueIdx(0x80078010);     // Next index in the dead player removal queue to use (this index is wrapped)
+const VmPtr<VmPtr<mobj_t>[MAX_DEAD_PLAYERS]>    gDeadPlayerMobjRemovalQueue(0x800A876C);    // A queue of player corpses that eventually get removed from the game when a new corpse uses an occupied queue slot
 
 // Item message pickup strings.
 //
@@ -648,198 +650,109 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
     }
 }
 
-void P_KillMObj() noexcept {
-loc_8001A57C:
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a1;
-    v1 = 0xFEFF0000;                                    // Result = FEFF0000
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = lw(s0 + 0x64);
-    v1 |= 0xBFFB;                                       // Result = FEFFBFFB
-    a1 = v0 & v1;
-    v1 = lw(s0 + 0x54);
-    v0 = 0xE;                                           // Result = 0000000E
-    sw(a1, s0 + 0x64);
-    if (v1 == v0) goto loc_8001A5BC;
-    v0 = -0x201;                                        // Result = FFFFFDFF
-    v0 &= a1;
-    sw(v0, s0 + 0x64);
-loc_8001A5BC:
-    v0 = 0x100000;                                      // Result = 00100000
-    v1 = lw(s0 + 0x64);
-    v0 |= 0x400;                                        // Result = 00100400
-    v1 |= v0;
-    v0 = lw(s0 + 0x44);
-    s1 = 0;                                             // Result = 00000000
-    sw(v1, s0 + 0x64);
-    v1 = lw(s0 + 0x80);
-    v0 = u32(i32(v0) >> 2);
-    sw(v0, s0 + 0x44);
-    if (v1 == 0) goto loc_8001A730;
-    if (a0 == 0) goto loc_8001A608;
-    a0 = lw(a0 + 0x80);
-    if (a0 == 0) goto loc_8001A608;
-    if (a0 != v1) goto loc_8001A624;
-loc_8001A608:
-    v1 = lw(s0 + 0x80);
-    v0 = lw(v1 + 0x64);
-    v0--;
-    sw(v0, v1 + 0x64);
-    goto loc_8001A634;
-loc_8001A624:
-    v0 = lw(a0 + 0x64);
-    v0++;
-    sw(v0, a0 + 0x64);
-loc_8001A634:
-    v0 = lw(s0 + 0x64);
-    v1 = -3;                                            // Result = FFFFFFFD
-    v0 &= v1;
-    v1 = lw(s0 + 0x80);
-    sw(v0, s0 + 0x64);
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, v1 + 0x4);
-    a0 = lw(s0 + 0x80);
-    P_DropWeapon(*vmAddrToPtr<player_t>(a0));
-    v0 = lw(s0 + 0x68);
-    v0 = (i32(v0) < -0x32);
-    a0 = s0;
-    if (v0 == 0) goto loc_8001A6B8;
-    v0 = *gCurPlayerIndex;
-    a0 = lw(s0 + 0x80);
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    v0 += v1;
-    s1 = 1;                                             // Result = 00000001
-    if (a0 != v0) goto loc_8001A6AC;
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(s1, at - 0x78CC);                                // Store to: gStatusBar[7] (80098734)
-loc_8001A6AC:
-    a0 = s0;
-    a1 = 0x23;                                          // Result = 00000023
-    goto loc_8001A6BC;
-loc_8001A6B8:
-    a1 = sfx_pldeth;
-loc_8001A6BC:
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v1 = *gNumMObjKilled;
-    v0 = (i32(v1) < 0x20);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = v1 & 0x1F;
-        if (bJump) goto loc_8001A708;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Kill the specified map object and put it into the dead/gibbed state.
+// Optionally a killer can be specified, for frag and kill stat tracking purposes.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
+    // Target can no longer be shot, float or fly
+    target.flags &= ~(MF_SHOOTABLE | MF_FLOAT | MF_SKULLFLY);
+    
+    // Gravity is now always applied to the thing's corpse, except for lost souls
+    if (target.type != MT_SKULL) {
+        target.flags &= ~MF_NOGRAVITY;
     }
-    v0 <<= 2;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7894;                                       // Result = gMObjPendingRemovalQueue[0] (800A876C)
-    at += v0;
-    a0 = lw(at);
-    P_RemoveMobj(*vmAddrToPtr<mobj_t>(a0));
-    v1 = *gNumMObjKilled;
-    v0 = v1 & 0x1F;
-loc_8001A708:
-    v0 <<= 2;
-    v1++;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7894;                                       // Result = gMObjPendingRemovalQueue[0] (800A876C)
-    at += v0;
-    sw(s0, at);
-    *gNumMObjKilled = v1;
-    goto loc_8001A7B0;
-loc_8001A730:
-    if (a0 == 0) goto loc_8001A770;
-    a0 = lw(a0 + 0x80);
-    v1 = 0x400000;                                      // Result = 00400000
-    if (a0 == 0) goto loc_8001A770;
-    v0 = lw(s0 + 0x64);
-    v0 &= v1;
-    if (v0 == 0) goto loc_8001A770;
-    v0 = lw(a0 + 0xC8);
-    v0++;
-    sw(v0, a0 + 0xC8);
-    goto loc_8001A7B0;
-loc_8001A770:
-    v0 = *gNetGame;
-    v1 = 0x400000;
-    if (v0 != gt_single) goto loc_8001A7B0;
-    v0 = lw(s0 + 0x64);
-    v0 &= v1;
-    if (v0 == 0) goto loc_8001A7B0;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x774C;                                       // Result = gPlayer1[32] (800A88B4)
-    v0 = lw(v1);                                        // Load from: gPlayer1[32] (800A88B4)
-    v0++;
-    sw(v0, v1);                                         // Store to: gPlayer1[32] (800A88B4)
-loc_8001A7B0:
-    if (s1 != 0) goto loc_8001A7D8;
-    v0 = lw(s0 + 0x58);
-    v0 = lw(v0 + 0x8);
-    v1 = lw(s0 + 0x68);
-    v0 = -v0;
-    v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_8001A7F0;
-loc_8001A7D8:
-    v0 = lw(s0 + 0x58);
-    a1 = lw(v0 + 0x34);
-    if (a1 != 0) goto loc_8001A7FC;
-loc_8001A7F0:
-    v0 = lw(s0 + 0x58);
-    a1 = lw(v0 + 0x30);
-loc_8001A7FC:
-    a0 = s0;
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x5C);
-    v0 &= 1;
-    v1 -= v0;
-    sw(v1, s0 + 0x5C);
-    if (i32(v1) > 0) goto loc_8001A828;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s0 + 0x5C);
-loc_8001A828:
-    v1 = lw(s0 + 0x54);
-    v0 = 2;                                             // Result = 00000002
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (v1 < 3);
-        if (bJump) goto loc_8001A864;
+
+    // Target is now a corpse and can fall off cliffs.
+    // Also reduce bounding box height considerably - not sure why that matters now though.
+    target.flags |= MF_CORPSE | MF_DROPOFF;
+    target.height /= 4;
+    
+    // Do stat counting adjustments for the kill
+    player_t* const pTargetPlayer = target.player.get();
+    player_t* const pKillerPlayer = (pKiller) ? pKiller->player.get() : nullptr;
+    
+    if (pTargetPlayer) {
+        // A player was killed: someone must get or lose a frag for this
+        if (pKillerPlayer && (pKillerPlayer != pTargetPlayer)) {
+            // Target killed by another player: credit the killer with a frag
+            pKiller->player->frags++;            
+        } else {
+            // The target killed itself somehow, or was killed by something else other than a player: therefore loses a frag
+            pTargetPlayer->frags--;
+        }
     }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001A850;
+    else if (pKillerPlayer && (target.flags & MF_COUNTKILL)) {
+        // A killable thing (monster) killed by a player deliberately: add to that player's kill count
+        pKillerPlayer->killcount += 1;
     }
-    a3 = 0x35;                                          // Result = 00000035
-    if (v1 == v0) goto loc_8001A868;
-    goto loc_8001A888;
-loc_8001A850:
-    v0 = 8;                                             // Result = 00000008
-    a3 = 0x3F;                                          // Result = 0000003F
-    if (v1 == v0) goto loc_8001A868;
-    goto loc_8001A888;
-loc_8001A864:
-    a3 = 0x43;                                          // Result = 00000043
-loc_8001A868:
-    a0 = lw(s0);
-    a1 = lw(s0 + 0x4);
-    a2 = 0x80000000;                                    // Result = 80000000
-    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
-    v1 = lw(v0 + 0x64);
-    a0 = 0x20000;                                       // Result = 00020000
-    v1 |= a0;
-    sw(v1, v0 + 0x64);
-loc_8001A888:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    else if ((*gNetGame == gt_single) && (target.flags & MF_COUNTKILL)) {
+        // In single player all monster deaths are credited towards the player.
+        // This is true even for kills caused by other monsters (infighting) and environmental stuff.
+        gPlayers[0].killcount += 1;
+    }
+    
+    // Player specific death logic
+    bool bDoGibbing = false;
+
+    if (pTargetPlayer) {
+        // Player is no longer blocking and now dead: also drop whatever weapon is held
+        target.flags &= ~MF_SOLID;
+        pTargetPlayer->playerstate = PST_DEAD;
+        P_DropWeapon(*pTargetPlayer);
+
+        // Do gibbing if the damage if the player was killed by a large amount of damage.
+        // Also play the player death sound.
+        if (target.health < -50) {
+            bDoGibbing = true;
+
+            if (pTargetPlayer == &gPlayers[*gCurPlayerIndex]) {
+                gStatusBar->gotgibbed = true;
+            }
+
+            S_StartSound(&target, sfx_slop);    // Gib death sound
+        } else {
+            S_StartSound(&target, sfx_pldeth);  // Normal death sound
+        }
+        
+        // New for PSX: Remove a player corpse if too many are lying around, to help memory usage.
+        // Save this new corpse in a circular queue also for later removal.
+        if (*gDeadPlayerRemovalQueueIdx >= MAX_DEAD_PLAYERS) {
+            P_RemoveMobj(*gDeadPlayerMobjRemovalQueue[*gDeadPlayerRemovalQueueIdx % MAX_DEAD_PLAYERS]);
+        }
+
+        gDeadPlayerMobjRemovalQueue[*gDeadPlayerRemovalQueueIdx % MAX_DEAD_PLAYERS] = &target;
+        *gDeadPlayerRemovalQueueIdx += 1;
+    }
+
+    // Monster gib triggering: trigger if end health is less than the negative amount of starting health
+    if (target.health < -target.info->spawnhealth) {
+        bDoGibbing = true;
+    }
+
+    // Switch to the next map object state (dead, or gibbed) and randomly vary the tics in the state
+    const bool bUseGibState = (bDoGibbing && (target.info->xdeathstate != S_NULL));
+    const statenum_t nextStateNum = (bUseGibState) ? target.info->xdeathstate : target.info->deathstate;
+    P_SetMObjState(target, nextStateNum);
+
+    target.tics = std::max(target.tics - (P_Random() & 1), 1);
+    
+    // Do item dropping for the dead thing
+    mobjtype_t dropItemType = {};
+
+    switch (target.type) {
+        case MT_SHOTGUY:    dropItemType = MT_SHOTGUN;  break;
+        case MT_POSSESSED:  dropItemType = MT_CLIP;     break;
+        case MT_CHAINGUY:   dropItemType = MT_CHAINGUN; break;
+
+        default:
+            break;
+    }
+
+    if (dropItemType != mobjtype_t{}) {
+        mobj_t& droppedItem = *P_SpawnMObj(target.x, target.y, ONFLOORZ, dropItemType);
+        droppedItem.flags |= MF_DROPPED;    // Less ammo for picking up dropped items
+    }
 }
 
 void P_DamageMObj() noexcept {
@@ -1104,7 +1017,7 @@ loc_8001AC70:
     if (i32(v0) > 0) goto loc_8001AC98;
     a0 = s6;
     a1 = s0;
-    P_KillMObj();
+    P_KillMObj(vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1));
     goto loc_8001AD48;
 loc_8001AC98:
     _thunk_P_Random();
