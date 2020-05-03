@@ -38,7 +38,7 @@ int32_t P_FindSectorFromLineTag(line_t& line, const int32_t searchStart) noexcep
 int32_t P_FindMinSurroundingLight(sector_t& sector, const int32_t maxLightLevel) noexcept;
 void P_CrossSpecialLine() noexcept;
 void P_ShootSpecialLine() noexcept;
-void P_PlayerInSpecialSector() noexcept;
+void P_PlayerInSpecialSector(player_t& player) noexcept;
 void P_UpdateSpecials() noexcept;
 void EV_DoDonut() noexcept;
 void G_ScheduleExitLevel() noexcept;

@@ -1286,7 +1286,7 @@ loc_8002AAC0:
     v0 = lw(v0 + 0x14);
     if (v0 == 0) goto loc_8002AB08;
     a0 = s0;
-    P_PlayerInSpecialSector();
+    P_PlayerInSpecialSector(*vmAddrToPtr<player_t>(a0));
     v1 = lw(s0 + 0x4);
     v0 = 1;                                             // Result = 00000001
     if (v1 == v0) goto loc_8002ACCC;

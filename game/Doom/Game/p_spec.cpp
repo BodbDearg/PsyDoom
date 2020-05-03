@@ -10,6 +10,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "Doom/UI/st_main.h"
 #include "doomdata.h"
 #include "g_game.h"
 #include "p_ceiling.h"
@@ -884,119 +885,63 @@ loc_80026DF4:
     return;
 }
 
-void P_PlayerInSpecialSector() noexcept {
-loc_80026E08:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v1 = lw(s0);
-    v0 = lw(v1 + 0xC);
-    a0 = lw(v0);
-    v1 = lw(v1 + 0x8);
-    v0 = lw(a0);
-    if (v1 != v0) goto loc_80026FB4;
-    v0 = lw(a0 + 0x14);
-    v1 = v0 - 4;
-    v0 = (v1 < 0xD);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80026FA0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called every game tic that the player position is in a sector which has a special.
+// Credits secrets found by entering sectors and damage taken from floors (lava, slime etc.).
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_PlayerInSpecialSector(player_t& player) noexcept {
+    sector_t& sector = *player.mo->subsector->sector;
+
+    // Logic only runs when the player is on the floor
+    if (player.mo->z != sector.floorheight)
+        return;
+    
+    switch (sector.special) {
+        // Hellslime damage
+        case 5: {
+            if (!player.powers[pw_ironfeet]) {
+                gStatusBar->specialFace = f_mowdown;
+
+                if ((*gGameTic > *gPrevGameTic) && (*gGameTic % 16 == 0)) {     // Apply roughly every 1 second
+                    P_DamageMObj(*player.mo, nullptr, nullptr, 10);
+                }
+            }
+        }   break;
+
+        // Nukage damage
+        case 7: {
+            if (!player.powers[pw_ironfeet]) {
+                gStatusBar->specialFace = f_mowdown;
+
+                if ((*gGameTic > *gPrevGameTic) && (*gGameTic % 16 == 0)) {     // Apply roughly every 1 second
+                    P_DamageMObj(*player.mo, nullptr, nullptr, 5);
+                }
+            }
+        }   break;
+
+        // Strobe hurt
+        case 4:
+        // Super hellslime damage
+        case 16: {
+            if ((!player.powers[pw_ironfeet]) || (P_Random() < 5)) {    // Occasionally damages even if a radiation suit is worn
+                gStatusBar->specialFace = f_mowdown;
+
+                if ((*gGameTic > *gPrevGameTic) && (*gGameTic % 16 == 0)) {     // Apply roughly every 1 second
+                    P_DamageMObj(*player.mo, nullptr, nullptr, 20);
+                }
+            }
+        }   break;
+
+        // Secret sector
+        case 9: {
+            player.secretcount += 1;
+            sector.special = 0;         // Consume the special so it's only counted once!
+        }   break;
+
+        default:
+            I_Error("P_PlayerInSpecialSector: unknown special %i", sector.special);
+            return;
     }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0xDE4;                                        // Result = JumpTable_P_PlayerInSpecialSector[0] (80010DE4)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80026F1C: goto loc_80026F1C;
-        case 0x80026E74: goto loc_80026E74;
-        case 0x80026FA0: goto loc_80026FA0;
-        case 0x80026EC8: goto loc_80026EC8;
-        case 0x80026F88: goto loc_80026F88;
-        default: jump_table_err(); break;
-    }
-loc_80026E74:
-    v0 = lw(s0 + 0x3C);
-    v1 = 7;                                             // Result = 00000007
-    if (v0 != 0) goto loc_80026FB4;
-    a0 = *gGameTic;
-    v0 = *gPrevGameTic;
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v1, at - 0x78E8);                                // Store to: gStatusBar[0] (80098718)
-    v0 = (i32(v0) < i32(a0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 & 0xF;
-        if (bJump) goto loc_80026FB4;
-    }
-    a1 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_80026FB4;
-    a0 = lw(s0);
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0xA;                                           // Result = 0000000A
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    goto loc_80026FB4;
-loc_80026EC8:
-    v0 = lw(s0 + 0x3C);
-    v1 = 7;                                             // Result = 00000007
-    if (v0 != 0) goto loc_80026FB4;
-    a0 = *gGameTic;
-    v0 = *gPrevGameTic;
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v1, at - 0x78E8);                                // Store to: gStatusBar[0] (80098718)
-    v0 = (i32(v0) < i32(a0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 & 0xF;
-        if (bJump) goto loc_80026FB4;
-    }
-    a1 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_80026FB4;
-    a0 = lw(s0);
-    a2 = 0;                                             // Result = 00000000
-    a3 = 5;                                             // Result = 00000005
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    goto loc_80026FB4;
-loc_80026F1C:
-    v0 = lw(s0 + 0x3C);
-    if (v0 == 0) goto loc_80026F40;
-    _thunk_P_Random();
-    v0 = (i32(v0) < 5);
-    if (v0 == 0) goto loc_80026FB4;
-loc_80026F40:
-    a0 = *gGameTic;
-    v0 = *gPrevGameTic;
-    v1 = 7;                                             // Result = 00000007
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v1, at - 0x78E8);                                // Store to: gStatusBar[0] (80098718)
-    v0 = (i32(v0) < i32(a0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 & 0xF;
-        if (bJump) goto loc_80026FB4;
-    }
-    a1 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_80026FB4;
-    a0 = lw(s0);
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0x14;                                          // Result = 00000014
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    goto loc_80026FB4;
-loc_80026F88:
-    v0 = lw(s0 + 0xD0);
-    v0++;
-    sw(v0, s0 + 0xD0);
-    sw(0, a0 + 0x14);
-    goto loc_80026FB4;
-loc_80026FA0:
-    a1 = lw(a0 + 0x14);
-    I_Error("P_PlayerInSpecialSector: unknown special %i", (int32_t) a1);
-loc_80026FB4:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void P_UpdateSpecials() noexcept {

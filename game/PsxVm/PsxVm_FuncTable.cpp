@@ -151,7 +151,6 @@ extern void SL_PointOnSide2() noexcept;
 extern void SL_CheckSpecialLines() noexcept;
 extern void P_CrossSpecialLine() noexcept;
 extern void P_ShootSpecialLine() noexcept;
-extern void P_PlayerInSpecialSector() noexcept;
 extern void P_UpdateSpecials() noexcept;
 extern void EV_DoDonut() noexcept;
 extern void G_ScheduleExitLevel() noexcept;
@@ -380,7 +379,6 @@ namespace PsxVm {
         { 0x80025AFC, &SL_CheckSpecialLines },
         { 0x80026794, &P_CrossSpecialLine },
         { 0x80026D40, &P_ShootSpecialLine },
-        { 0x80026E08, &P_PlayerInSpecialSector },
         { 0x80026FC8, &P_UpdateSpecials },
         { 0x8002745C, &EV_DoDonut },
         { 0x800276A8, &G_ScheduleExitLevel },
