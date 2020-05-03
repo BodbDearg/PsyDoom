@@ -94,7 +94,6 @@ extern void P_SpawnMissile() noexcept;
 extern void P_SpawnPlayerMissile() noexcept;
 extern void P_TryMove2() noexcept;
 extern void PM_PointOnDivlineSide() noexcept;
-extern void PM_SetThingPosition() noexcept;
 extern void PM_CheckPosition() noexcept;
 extern void PM_BoxCrossLine() noexcept;
 extern void PIT_CheckLine() noexcept;
@@ -321,7 +320,6 @@ namespace PsxVm {
         { 0x8001E0F4, &P_SpawnPlayerMissile },
         { 0x8001E4F4, &P_TryMove2 },
         { 0x8001E720, &PM_PointOnDivlineSide },
-        { 0x8001E868, &PM_SetThingPosition },
         { 0x8001E978, &PM_CheckPosition },
         { 0x8001EC68, &PM_BoxCrossLine },
         { 0x8001ED74, &PIT_CheckLine },

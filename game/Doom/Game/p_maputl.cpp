@@ -171,7 +171,7 @@ void P_UnsetThingPosition(mobj_t& thing) noexcept {
                     }
                 }
             #else
-                gppBlockLinks->get()[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+                gppBlockLinks->get()[blockY * (*gBlockmapWidth) + blockX] = mobj.bnext;
             #endif
         }
     }
@@ -181,42 +181,43 @@ void P_UnsetThingPosition(mobj_t& thing) noexcept {
 // Update the subsector for the thing.
 // Also add the thing to sector and blockmap thing lists if applicable.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_SetThingPosition(mobj_t& thing) noexcept {
+void P_SetThingPosition(mobj_t& mobj) noexcept {
     // First update what subsector the thing is in
-    subsector_t* const pSubsec = R_PointInSubsector(thing.x, thing.y);
-    thing.subsector = pSubsec;
+    subsector_t* const pSubsec = R_PointInSubsector(mobj.x, mobj.y);
+    mobj.subsector = pSubsec;
 
     // Add the thing to sector thing lists, if the thing flags allow it
-    if ((thing.flags & MF_NOSECTOR) == 0) {
+    if ((mobj.flags & MF_NOSECTOR) == 0) {
         sector_t& sec = *pSubsec->sector;
-        thing.sprev = nullptr;
-        thing.snext = sec.thinglist;
+        mobj.sprev = nullptr;
+        mobj.snext = sec.thinglist;
     
         if (sec.thinglist) {
-            sec.thinglist->sprev = &thing;
+            sec.thinglist->sprev = &mobj;
         }
 
-        sec.thinglist = &thing;
+        sec.thinglist = &mobj;
     }
 
     // Add the thing to blockmap thing lists, if the thing flags allow it
-    if ((thing.flags & MF_NOBLOCKMAP) == 0) {
-        const int32_t blockx = (thing.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
-        const int32_t blocky = (thing.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+    if ((mobj.flags & MF_NOBLOCKMAP) == 0) {
+        const int32_t blockX = (mobj.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
+        const int32_t blockY = (mobj.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
 
-        if (blockx >= 0 && blockx < *gBlockmapWidth && blocky >= 0 && blocky < *gBlockmapHeight) {
-            VmPtr<mobj_t>& blockmapEntry = (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx];
-            thing.bprev = nullptr;
-            thing.bnext = blockmapEntry;
+        // Make sure the thing is bounds for the blockmap: if not then just don't add it to the blockmap
+        if ((blockX >= 0) && (blockY >= 0) && (blockX < *gBlockmapWidth) && (blockY < *gBlockmapHeight)) {
+            VmPtr<mobj_t>& blockList = (*gppBlockLinks)[blockY * (*gBlockmapWidth) + blockX];
+            mobj.bprev = nullptr;
+            mobj.bnext = blockList;
 
-            if (blockmapEntry) {
-                blockmapEntry->bprev = &thing;
+            if (blockList) {
+                blockList->bprev = &mobj;
             }
 
-            blockmapEntry = &thing;
+            blockList = &mobj;
         } else {
-            thing.bprev = nullptr;
-            thing.bnext = nullptr;
+            mobj.bprev = nullptr;
+            mobj.bnext = nullptr;
         }
     }
 }
