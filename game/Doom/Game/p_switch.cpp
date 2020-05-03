@@ -443,7 +443,7 @@ loc_800282D0:
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 6;                                             // Result = 00000006
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -458,7 +458,7 @@ loc_800282FC:
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 6;                                             // Result = 00000006
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -469,7 +469,7 @@ loc_800282FC:
 loc_80028328:
     a0 = s0;
     a1 = 5;                                             // Result = 00000005
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -477,7 +477,7 @@ loc_80028328:
 loc_80028344:
     a0 = s0;
     a1 = 6;                                             // Result = 00000006
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -485,7 +485,7 @@ loc_80028344:
 loc_80028360:
     a0 = s0;
     a1 = 7;                                             // Result = 00000007
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -493,7 +493,7 @@ loc_80028360:
 loc_8002837C:
     a0 = s0;
     a1 = 5;                                             // Result = 00000005
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -504,7 +504,7 @@ loc_8002837C:
 loc_80028398:
     a0 = s0;
     a1 = 6;                                             // Result = 00000006
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -515,7 +515,7 @@ loc_80028398:
 loc_800283B4:
     a0 = s0;
     a1 = 7;                                             // Result = 00000007
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -555,7 +555,7 @@ loc_80028410:
 loc_8002842C:
     a0 = s0;
     a1 = 2;                                             // Result = 00000002
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -599,7 +599,7 @@ loc_80028480:
 loc_8002849C:
     a0 = s0;
     a1 = 3;                                             // Result = 00000003
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -622,7 +622,7 @@ loc_800284B8:
 loc_800284D8:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -785,7 +785,7 @@ loc_800286A8:
 loc_800286C4:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -817,7 +817,7 @@ loc_80028718:
 loc_80028734:
     a0 = s0;
     a1 = 2;                                             // Result = 00000002
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -855,7 +855,7 @@ loc_800287A0:
 loc_800287BC:
     a0 = s0;
     a1 = 3;                                             // Result = 00000003
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000

@@ -620,7 +620,7 @@ loc_80026A28:
     a0 = s0;
     a1 = 7;                                             // Result = 00000007
 loc_80026A30:
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_80026A40:
@@ -691,12 +691,12 @@ loc_80026B28:
 loc_80026B38:
     a0 = s0;
     a1 = 2;                                             // Result = 00000002
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     goto loc_80026D2C;
 loc_80026B4C:
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     goto loc_80026D2C;
 loc_80026B60:
     a0 = s0;
@@ -736,7 +736,7 @@ loc_80026BD8:
 loc_80026BEC:
     a0 = s0;
     a1 = 3;                                             // Result = 00000003
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     goto loc_80026D2C;
 loc_80026C00:
     a0 = s0;
@@ -753,7 +753,7 @@ loc_80026C18:
 loc_80026C28:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     goto loc_80026D2C;
 loc_80026C3C:
     a0 = s0;
@@ -792,17 +792,17 @@ loc_80026CAC:
 loc_80026CC0:
     a0 = s0;
     a1 = 5;                                             // Result = 00000005
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     goto loc_80026D2C;
 loc_80026CD4:
     a0 = s0;
     a1 = 6;                                             // Result = 00000006
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     goto loc_80026D2C;
 loc_80026CE8:
     a0 = s0;
     a1 = 7;                                             // Result = 00000007
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     goto loc_80026D2C;
 loc_80026CFC:
     a0 = s0;
@@ -863,7 +863,7 @@ loc_80026DA8:
 loc_80026DB8:
     a0 = s0;
     a1 = 3;                                             // Result = 00000003
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80026DF4;
     a1 = 1;                                             // Result = 00000001

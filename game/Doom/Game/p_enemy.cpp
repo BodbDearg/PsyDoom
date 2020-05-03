@@ -3157,7 +3157,7 @@ loc_80018BE0:
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7F88);                                // Store to: gMapBossSpecialFlags (80077F88)
     a1 = 3;                                             // Result = 00000003
-    EV_DoDoor();
+    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
     goto loc_80018C34;
 loc_80018C0C:
     a0 = sp + 0x10;

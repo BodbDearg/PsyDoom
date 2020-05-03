@@ -4,11 +4,15 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
+#include "Doom/Renderer/r_local.h"
 #include "p_floor.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
+
+static constexpr fixed_t VDOORSPEED = FRACUNIT * 6;     // Regular speed of vertical doors
+static constexpr int32_t VDOORWAIT  = 70;               // How long vertical doors normally wait before closing (game tics)
 
 void T_VerticalDoor() noexcept {
     sp -= 0x28;
@@ -335,154 +339,86 @@ loc_80015750:
     return;
 }
 
-void EV_DoDoor() noexcept {
-loc_80015764:
-    sp -= 0x38;
-    sw(s7, sp + 0x2C);
-    s7 = a0;
-    sw(s3, sp + 0x1C);
-    s3 = a1;
-    sw(s2, sp + 0x18);
-    s2 = -1;                                            // Result = FFFFFFFF
-    sw(s5, sp + 0x24);
-    s5 = 0;                                             // Result = 00000000
-    sw(fp, sp + 0x30);
-    fp = 0x80010000;                                    // Result = 80010000
-    fp += 0x278;                                        // Result = JumpTable_EV_DoDoor[0] (80010278)
-    sw(s4, sp + 0x20);
-    s4 = 0xFFFC0000;                                    // Result = FFFC0000
-    sw(s6, sp + 0x28);
-    s6 = -1;                                            // Result = FFFFFFFF
-    sw(ra, sp + 0x34);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-loc_800157B0:
-    a0 = s7;
-loc_800157B4:
-    a1 = s2;
-    v0 = P_FindSectorFromLineTag(*vmAddrToPtr<line_t>(a0), a1);
-    s2 = v0;
-    v0 = s2 << 1;
-    if (i32(s2) < 0) goto loc_80015950;
-    v0 += s2;
-    v0 <<= 3;
-    v0 -= s2;
-    v1 = *gpSectors;
-    v0 <<= 2;
-    s1 = v0 + v1;
-    v0 = lw(s1 + 0x50);
-    a1 = 0x28;                                          // Result = 00000028
-    if (v0 != 0) goto loc_800157B0;
-    s5 = 1;                                             // Result = 00000001
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x52FC;                                       // Result = T_VerticalDoor (800152FC)
-    sw(s0, s1 + 0x50);
-    sw(v0, s0 + 0x8);
-    v0 = 0x46;                                          // Result = 00000046
-    sw(v0, s0 + 0x20);
-    v0 = 0x60000;                                       // Result = 00060000
-    sw(v0, s0 + 0x18);
-    v0 = (s3 < 8);
-    sw(s1, s0 + 0x10);
-    sw(s3, s0 + 0xC);
-    if (v0 == 0) goto loc_800157B0;
-    v0 = s3 << 2;
-    v0 += fp;
-    v0 = lw(v0);
-    switch (v0) {
-        case 0x8001590C: goto loc_8001590C;
-        case 0x800158A8: goto loc_800158A8;
-        case 0x80015888: goto loc_80015888;
-        case 0x800157B0: goto loc_800157B0;
-        case 0x800158CC: goto loc_800158CC;
-        case 0x80015860: goto loc_80015860;
-        default: jump_table_err(); break;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// For each sector matching the given line's tag, spawn a door thinker/process of the given door type.
+// Note that if a sector already has some special action going on, then a door thinker will NOT be added to the sector.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool EV_DoDoor(line_t& line, const vldoor_e doorType) noexcept {
+    bool bActivatedADoor = false;
+
+    // Create door thinkers for all sectors matching the given line tag
+    for (int32_t secIdx = P_FindSectorFromLineTag(line, -1); secIdx >= 0; secIdx = P_FindSectorFromLineTag(line, secIdx)) {
+        // Only spawn the door if there isn't already a special operating on this sector
+        sector_t& sector = gpSectors->get()[secIdx];
+
+        if (sector.specialdata)
+            continue;
+
+        // Create the door thinker and populate its state/settings
+        bActivatedADoor = true;
+
+        vldoor_t& door = *(vldoor_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(vldoor_t), PU_LEVSPEC, nullptr);
+        P_AddThinker(door.thinker);
+
+        door.thinker.function = PsxVm::getNativeFuncVmAddr(T_VerticalDoor);
+        door.type = doorType;
+        door.sector = &sector;
+        door.speed = VDOORSPEED;
+        door.topwait = VDOORWAIT;
+
+        // This thinker is now the special for the sector
+        sector.specialdata = ptrToVmAddr(&door);
+
+        // Door specific setup and sounds
+        switch (doorType) {
+            case BlazeClose:
+                door.topheight = P_FindLowestCeilingSurrounding(sector) -4 * FRACUNIT;
+                door.direction = -1;
+                door.speed = VDOORSPEED * 4;
+                S_StartSound((mobj_t*) &sector.soundorg, sfx_bdcls);
+                break;
+
+            case Close:
+                door.topheight = P_FindLowestCeilingSurrounding(sector) -4 * FRACUNIT;
+                door.direction = -1;
+                S_StartSound((mobj_t*) &sector.soundorg, sfx_dorcls);
+                break;
+
+            case Close30ThenOpen:
+                door.topheight = sector.ceilingheight;
+                door.direction = -1;
+                S_StartSound((mobj_t*) &door.sector->soundorg, sfx_dorcls);
+                break;
+
+            case BlazeRaise:
+            case BlazeOpen: {
+                door.topheight = P_FindLowestCeilingSurrounding(sector) -4 * FRACUNIT;
+                door.direction = 1;
+                door.speed = VDOORSPEED * 4;
+
+                // Only play a sound if not already fully open
+                if (door.topheight != sector.ceilingheight) {
+                    S_StartSound((mobj_t*) &sector.soundorg, sfx_bdopn);
+                }
+            }   break;
+
+            case Normal:
+            case Open: {
+                door.topheight = P_FindLowestCeilingSurrounding(sector) -4 * FRACUNIT;
+                door.direction = 1;
+
+                // Only play a sound if not already fully open
+                if (door.topheight != sector.ceilingheight) {
+                    S_StartSound((mobj_t*) &sector.soundorg, sfx_doropn);
+                }
+            }   break;
+
+            default:
+                break;
+        }
     }
-loc_80015860:
-    a0 = s1;
-    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
-    a1 = 0x58;                                          // Result = 00000058
-    a0 = lw(s0 + 0x10);
-    v0 += s4;
-    sw(v0, s0 + 0x14);
-    v0 = 0x180000;                                      // Result = 00180000
-    sw(s6, s0 + 0x1C);
-    sw(v0, s0 + 0x18);
-    goto loc_80015940;
-loc_80015888:
-    a0 = s1;
-    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
-    a1 = 0x14;                                          // Result = 00000014
-    a0 = lw(s0 + 0x10);
-    v0 += s4;
-    sw(v0, s0 + 0x14);
-    sw(s6, s0 + 0x1C);
-    goto loc_80015940;
-loc_800158A8:
-    v0 = lw(s1 + 0x4);
-    a0 = lw(s0 + 0x10);
-    a1 = sfx_dorcls;
-    sw(s6, s0 + 0x1C);
-    a0 += 0x38;
-    sw(v0, s0 + 0x14);
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    a0 = s7;
-    goto loc_800157B4;
-loc_800158CC:
-    a0 = s1;
-    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
-    v0 += s4;
-    sw(v0, s0 + 0x14);
-    v1 = lw(s0 + 0x14);
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s0 + 0x1C);
-    v0 = 0x180000;                                      // Result = 00180000
-    sw(v0, s0 + 0x18);
-    v0 = lw(s1 + 0x4);
-    a0 = s7;
-    if (v1 == v0) goto loc_800157B4;
-    a0 = lw(s0 + 0x10);
-    a1 = 0x57;                                          // Result = 00000057
-    goto loc_80015940;
-loc_8001590C:
-    a0 = s1;
-    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
-    v0 += s4;
-    sw(v0, s0 + 0x14);
-    v1 = lw(s0 + 0x14);
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s0 + 0x1C);
-    v0 = lw(s1 + 0x4);
-    a0 = s7;
-    if (v1 == v0) goto loc_800157B4;
-    a0 = lw(s0 + 0x10);
-    a1 = sfx_doropn;
-loc_80015940:
-    a0 += 0x38;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    a0 = s7;
-    goto loc_800157B4;
-loc_80015950:
-    v0 = s5;
-    ra = lw(sp + 0x34);
-    fp = lw(sp + 0x30);
-    s7 = lw(sp + 0x2C);
-    s6 = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x38;
-    return;
+
+    return bActivatedADoor;
 }
 
 void EV_VerticalDoor() noexcept {

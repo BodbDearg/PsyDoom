@@ -18,7 +18,6 @@ extern void P_ThingHeightClip() noexcept;
 extern void P_ChangeSector() noexcept;
 extern void T_VerticalDoor() noexcept;
 extern void EV_DoLockedDoor() noexcept;
-extern void EV_DoDoor() noexcept;
 extern void EV_VerticalDoor() noexcept;
 extern void P_SpawnDoorCloseIn30() noexcept;
 extern void P_SpawnDoorRaiseIn5Mins() noexcept;
@@ -246,7 +245,6 @@ namespace PsxVm {
         { 0x80015238, &P_ChangeSector },
         { 0x800152FC, &T_VerticalDoor },
         { 0x80015540, &EV_DoLockedDoor },
-        { 0x80015764, &EV_DoDoor },
         { 0x80015988, &EV_VerticalDoor },
         { 0x80015B84, &P_SpawnDoorCloseIn30 },
         { 0x80015C04, &P_SpawnDoorRaiseIn5Mins },

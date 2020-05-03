@@ -136,6 +136,8 @@ struct thinker_t {
     think_t             function;
 };
 
+static_assert(sizeof(thinker_t) == 12);
+
 // Flags for 'mobj_t'
 static constexpr uint32_t MF_SPECIAL            = 0x1;          // TODO: CONFIRM
 static constexpr uint32_t MF_SOLID              = 0x2;          // TODO: CONFIRM
