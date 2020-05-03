@@ -169,23 +169,16 @@ loc_8001E704:
     return;
 }
 
-void PM_PointOnDivlineSide() noexcept {
-    v1 = lw(a2);
-    v0 = lw(v1);
-    a0 -= v0;
-    v0 = lh(a2 + 0xE);
-    a0 = u32(i32(a0) >> 16);
-    mult(v0, a0);
-    v0 = lw(v1 + 0x4);
-    a1 -= v0;
-    v1 = lo;
-    v0 = lh(a2 + 0xA);
-    a1 = u32(i32(a1) >> 16);
-    mult(a1, v0);
-    v0 = lo;
-    v0 = (i32(v0) < i32(v1));
-    v0 ^= 1;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tell what side of the given line a point is on: returns '0' if on the front side, '1' if on the back side.
+// Same logic as 'R_PointOnSide' pretty much, but without the special optimized cases.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t PM_PointOnDivlineSide(const fixed_t x, const fixed_t y, const line_t& line) noexcept {
+    const int32_t dx = x - line.vertex1->x;
+    const int32_t dy = y - line.vertex1->y;
+    const int32_t lprod = (dx >> FRACBITS) * (line.dy >> FRACBITS);
+    const int32_t rprod = (dy >> FRACBITS) * (line.dx >> FRACBITS);
+    return (rprod >= lprod);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -220,8 +213,8 @@ void PM_UnsetThingPosition(mobj_t& thing) noexcept {
             // PC-PSX: prevent buffer overflow if the map object is out of bounds.
             // This is part of the fix for the famous 'linedef deletion' bug.
             #if PC_PSX_DOOM_MODS
-                if (blockx >= 0 && blockx < *gBlockmapWidth) {
-                    if (blocky >= 0 && blocky < *gBlockmapHeight) {
+                if ((blockx >= 0) && (blockx < *gBlockmapWidth)) {
+                    if ((blocky >= 0) && (blocky < *gBlockmapHeight)) {
                         (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
                     }
                 }

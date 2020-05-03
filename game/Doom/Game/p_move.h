@@ -1,9 +1,11 @@
 #pragma once
 
-struct mobj_t;
+#include "Doom/doomdef.h"
+
+struct line_t;
 
 void P_TryMove2() noexcept;
-void PM_PointOnDivlineSide() noexcept;
+int32_t PM_PointOnDivlineSide(const fixed_t x, const fixed_t y, const line_t& line) noexcept;
 void PM_UnsetThingPosition(mobj_t& thing) noexcept;
 void PM_SetThingPosition(mobj_t& mobj) noexcept;
 void PM_CheckPosition() noexcept;
