@@ -24,6 +24,7 @@
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
+#include <algorithm>
 
 // Definition for a flat or texture animation
 struct animdef_t {
@@ -193,69 +194,57 @@ fixed_t P_FindHighestFloorSurrounding(sector_t& sector) noexcept {
     return highestFloor;
 }
 
-void P_FindNextHighestFloor() noexcept {
-loc_80026480:
-    sp -= 0x58;
-    a3 = 0;                                             // Result = 00000000
-    v0 = lw(a0 + 0x54);
-    a2 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80026518;
-    t0 = sp;
-loc_8002649C:
-    v0 = lw(a0 + 0x58);
-    v1 = a2 << 2;
-    v1 += v0;
-    v1 = lw(v1);
-    v0 = lw(v1 + 0x10);
-    v0 &= 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_800264D8;
-    }
-    v0 = lw(v1 + 0x38);
-    if (v0 != a0) goto loc_800264D8;
-    v0 = lw(v1 + 0x3C);
-loc_800264D8:
-    a2++;
-    if (v0 == 0) goto loc_80026504;
-    v1 = lw(v0);                                        // Load from: 00000000
-    v0 = (i32(a1) < i32(v1));
-    if (v0 == 0) goto loc_80026504;
-    sw(v1, t0);
-    t0 += 4;
-    a3++;                                               // Result = 00000001
-loc_80026504:
-    v0 = lw(a0 + 0x54);
-    v0 = (i32(a2) < i32(v0));
-    if (v0 != 0) goto loc_8002649C;
-loc_80026518:
-    a1 = lw(sp);
-    a2 = 1;                                             // Result = 00000001
-    v0 = (i32(a2) < i32(a3));                           // Result = 00000000
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a1;
-        if (bJump) goto loc_80026558;
-    }
-    a0 = sp + 4;
-loc_80026530:
-    v1 = lw(a0);
-    v0 = (i32(v1) < i32(a1));
-    a0 += 4;
-    if (v0 == 0) goto loc_80026548;
-    a1 = v1;
-loc_80026548:
-    a2++;
-    v0 = (i32(a2) < i32(a3));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a1;
-        if (bJump) goto loc_80026530;
-    }
-loc_80026558:
-    sp += 0x58;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Find the lowest floor height in the sectors surrounding a given sector which is higher than the given input 'base' height.
+// 
+// PC-PSX: if there is no such sector, the input base height will be returned rather than an undefined/garbage height value.
+// It also no longer overflows buffers when checking > 20 adjoining sectors.
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexcept {
+    // PC-PSX: rewrite this to eliminate potential buffer overflow and also an undefined answer when there is no next higher floor
+    #if PC_PSX_DOOM_MODS
+        fixed_t nextHighestFloor = INT32_MAX;
+
+        for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+            line_t& line = *sector.lines[lineIdx].get();
+            sector_t* const pNextSector = getNextSector(line, sector);
+
+            if (!pNextSector)
+                continue;
+
+            const fixed_t floorH = pNextSector->floorheight;
+
+            if ((floorH > baseHeight) && (floorH < nextHighestFloor)) {
+                nextHighestFloor = floorH;
+            }
+        }
+        
+        // If there is no next highest floor return the input height rather than something undefined
+        return (nextHighestFloor != INT32_MAX) ? nextHighestFloor : baseHeight;
+    #else
+        // Build a list of sector heights that are higher than the given height (20 max)
+        fixed_t higherHeights[20];
+        int32_t numHigherHeights = 0;
+
+        for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+            line_t& line = *sector.lines[lineIdx].get();
+            sector_t* const pNextSector = getNextSector(line, sector);
+
+            if (pNextSector && (pNextSector->floorheight > baseHeight)) {
+                higherHeights[numHigherHeights] = pNextSector->floorheight;
+                numHigherHeights++;
+            }
+        }
+
+        // Return the minimum of those sector heights that are higher
+        fixed_t minHigherHeight = higherHeights[0];
+
+        for (int32_t i = 1; i < numHigherHeights; ++i) {
+            minHigherHeight = std::min(minHigherHeight, higherHeights[i]);
+        }
+
+        return minHigherHeight;
+    #endif
 }
 
 void P_FindLowestCeilingSurrounding() noexcept {

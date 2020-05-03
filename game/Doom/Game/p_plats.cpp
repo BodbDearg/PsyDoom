@@ -227,7 +227,7 @@ loc_8001F56C:
     v0 = lw(v0 + 0x8);
     a0 = s1;
     sw(v0, s1 + 0x8);
-    P_FindNextHighestFloor();
+    v0 = P_FindNextHighestFloor(*vmAddrToPtr<sector_t>(a0), a1);
     a0 = s1 + 0x38;
     a1 = 0x15;                                          // Result = 00000015
     sw(v0, s0 + 0x18);

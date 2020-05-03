@@ -77,7 +77,7 @@ int32_t W_CheckNumForName(const char* const name) noexcept {
     D_memset(nameUpper, (std::byte) 0, sizeof(nameUpper));
     D_strncpy(nameUpper, name, MAXLUMPNAME);
     nameUpper[MAXLUMPNAME] = 0;
-    strupr(nameUpper);
+    D_strupr(nameUpper);
 
     // Get the two words of the name for faster comparison
     const uint32_t findNameW1 = (uint32_t&) nameUpper[0];
@@ -307,7 +307,7 @@ int32_t W_MapCheckNumForName(const char* const name) noexcept {
     D_memset(nameUpper, (std::byte) 0, sizeof(nameUpper));
     D_strncpy(nameUpper, name, MAXLUMPNAME);
     nameUpper[MAXLUMPNAME] = 0;
-    strupr(nameUpper);
+    D_strupr(nameUpper);
 
     // Get the two words of the name for faster comparison
     const uint32_t findNameW1 = (uint32_t&) nameUpper[0];

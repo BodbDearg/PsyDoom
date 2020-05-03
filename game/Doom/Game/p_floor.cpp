@@ -385,7 +385,7 @@ loc_800192C0:
     sw(s5, s0 + 0x28);
     a1 = lw(s2);
     a0 = s2;
-    P_FindNextHighestFloor();
+    v0 = P_FindNextHighestFloor(*vmAddrToPtr<sector_t>(a0), a1);
     sw(v0, s0 + 0x24);
     goto loc_80019144;
 loc_800192E0:

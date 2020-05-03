@@ -288,7 +288,7 @@ static const ProgElem ELEMS[] = {
     { 0x8001290C, 0x80012940, "D_memcpy",                               ProgElemType::FUNCTION },
     { 0x80012940, 0x8001297C, "D_strncpy",                              ProgElemType::FUNCTION },
     { 0x8001297C, 0x800129D4, "D_strncasecmp",                          ProgElemType::FUNCTION },
-    { 0x800129D4, 0x80012A18, "strupr",                                 ProgElemType::FUNCTION },
+    { 0x800129D4, 0x80012A18, "D_strupr",                               ProgElemType::FUNCTION },
     { 0x80012A18, 0x80012A44, "P_Random",                               ProgElemType::FUNCTION },
     { 0x80012A44, 0x80012A70, "M_Random",                               ProgElemType::FUNCTION },
     { 0x80012A70, 0x80012A80, "M_ClearRandom",                          ProgElemType::FUNCTION },

@@ -31,7 +31,7 @@ bool twoSided(const int32_t sectorIdx, const int32_t lineIdx) noexcept;
 sector_t* getNextSector(line_t& line, sector_t& sector) noexcept;
 fixed_t P_FindLowestFloorSurrounding(sector_t& sector) noexcept;
 fixed_t P_FindHighestFloorSurrounding(sector_t& sector) noexcept;
-void P_FindNextHighestFloor() noexcept;
+fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexcept;
 void P_FindLowestCeilingSurrounding() noexcept;
 void P_FindHighestCeilingSurrounding() noexcept;
 void P_FindSectorFromLineTag() noexcept;
