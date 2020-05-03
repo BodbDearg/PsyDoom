@@ -271,7 +271,7 @@ loc_80019144:
     a0 = fp;
 loc_80019148:
     a1 = s4;
-    P_FindSectorFromLineTag();
+    v0 = P_FindSectorFromLineTag(*vmAddrToPtr<line_t>(a0), a1);
     s4 = v0;
     v0 = s4 << 1;
     if (i32(s4) < 0) goto loc_80019510;
@@ -562,7 +562,7 @@ loc_80019548:
 loc_8001958C:
     a0 = lw(sp + 0x10);
     a1 = s3;
-    P_FindSectorFromLineTag();
+    v0 = P_FindSectorFromLineTag(*vmAddrToPtr<line_t>(a0), a1);
     s3 = v0;
     v0 = s3 << 1;
     if (i32(s3) < 0) goto loc_8001976C;

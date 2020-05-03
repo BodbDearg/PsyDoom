@@ -67,7 +67,7 @@ loc_8001AE00:
     sw(v0, s0 + 0x14);
     a1 = lh(s1 + 0x12);
     a0 = s1;
-    P_FindMinSurroundingLight();
+    v0 = P_FindMinSurroundingLight(*vmAddrToPtr<sector_t>(a0), a1);
     v0 += 0x10;
     sw(v0, s0 + 0x18);
     v0 = 3;                                             // Result = 00000003
@@ -138,7 +138,7 @@ loc_8001AF14:
     sw(v0, s0 + 0x14);
     a1 = lh(s1 + 0x12);
     a0 = s1;
-    P_FindMinSurroundingLight();
+    v0 = P_FindMinSurroundingLight(*vmAddrToPtr<sector_t>(a0), a1);
     sw(v0, s0 + 0x18);
     v0 = 0x40;                                          // Result = 00000040
     sw(v0, s0 + 0x1C);
@@ -204,7 +204,7 @@ loc_8001B020:
     sw(v0, s1 + 0x20);
     a1 = lh(s2 + 0x12);
     a0 = s2;
-    P_FindMinSurroundingLight();
+    v0 = P_FindMinSurroundingLight(*vmAddrToPtr<sector_t>(a0), a1);
     sw(v0, s1 + 0x14);
     v0 = lh(s2 + 0x12);
     a0 = lw(s1 + 0x14);
@@ -290,7 +290,7 @@ loc_8001B188:
 loc_8001B1B0:
     a0 = s3;
     a1 = s2;
-    P_FindSectorFromLineTag();
+    v0 = P_FindSectorFromLineTag(*vmAddrToPtr<line_t>(a0), a1);
     s2 = v0;
     v0 = s2 << 1;
     if (i32(s2) < 0) goto loc_8001B274;
@@ -316,7 +316,7 @@ loc_8001B1B0:
     sw(v0, s0 + 0x20);
     a1 = lh(s1 + 0x12);
     a0 = s1;
-    P_FindMinSurroundingLight();
+    v0 = P_FindMinSurroundingLight(*vmAddrToPtr<sector_t>(a0), a1);
     sw(v0, s0 + 0x14);
     v0 = lh(s1 + 0x12);
     a0 = lw(s0 + 0x14);
@@ -550,7 +550,7 @@ loc_8001B5CC:
 loc_8001B5E0:
     a1 = lh(s1 + 0x12);
     a0 = s1;
-    P_FindMinSurroundingLight();
+    v0 = P_FindMinSurroundingLight(*vmAddrToPtr<sector_t>(a0), a1);
     sw(v0, s0 + 0x10);
     goto loc_8001B5FC;
 loc_8001B5F4:

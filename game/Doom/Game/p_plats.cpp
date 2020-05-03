@@ -168,7 +168,7 @@ loc_8001F4B4:
     a0 = s3;
 loc_8001F4B8:
     a1 = s2;
-    P_FindSectorFromLineTag();
+    v0 = P_FindSectorFromLineTag(*vmAddrToPtr<line_t>(a0), a1);
     s2 = v0;
     v0 = s2 << 1;
     if (i32(s2) < 0) goto loc_8001F72C;

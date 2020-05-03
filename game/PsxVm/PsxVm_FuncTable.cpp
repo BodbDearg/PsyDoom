@@ -149,8 +149,6 @@ extern void ClipToLine() noexcept;
 extern void SL_CheckLine() noexcept;
 extern void SL_PointOnSide2() noexcept;
 extern void SL_CheckSpecialLines() noexcept;
-extern void P_FindSectorFromLineTag() noexcept;
-extern void P_FindMinSurroundingLight() noexcept;
 extern void P_CrossSpecialLine() noexcept;
 extern void P_ShootSpecialLine() noexcept;
 extern void P_PlayerInSpecialSector() noexcept;
@@ -380,8 +378,6 @@ namespace PsxVm {
         { 0x80025840, &SL_CheckLine },
         { 0x80025A8C, &SL_PointOnSide2 },
         { 0x80025AFC, &SL_CheckSpecialLines },
-        { 0x80026698, &P_FindSectorFromLineTag },
-        { 0x80026700, &P_FindMinSurroundingLight },
         { 0x80026794, &P_CrossSpecialLine },
         { 0x80026D40, &P_ShootSpecialLine },
         { 0x80026E08, &P_PlayerInSpecialSector },

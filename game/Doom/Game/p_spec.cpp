@@ -285,76 +285,43 @@ fixed_t P_FindHighestCeilingSurrounding(sector_t& sector) noexcept {
     return highestHeight;
 }
 
-void P_FindSectorFromLineTag() noexcept {
-loc_80026698:
-    v1 = *gNumSectors;
-    a1++;
-    v0 = (i32(a1) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a1 << 1;
-        if (bJump) goto loc_800266F4;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Find the next sector in the global sectors list with a tag matching the given line's tag.
+// The search starts at the given index + 1.
+// Returns the index of the next matching sector found, or '-1' if there was no next matching sector.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t P_FindSectorFromLineTag(line_t& line, const int32_t searchStart) noexcept {
+    const int32_t lineTag = line.tag;
+    sector_t* const pSectors = gpSectors->get();
+    const int32_t numSectors = *gNumSectors;
+
+    for (int32_t sectorIdx = searchStart + 1; sectorIdx < numSectors; ++sectorIdx) {
+        sector_t& sector = pSectors[sectorIdx];
+
+        if (sector.tag == lineTag)
+            return sectorIdx;
     }
-    a2 = v1;
-    v0 += a1;
-    v0 <<= 3;
-    v0 -= a1;
-    v0 <<= 2;
-    v1 = *gpSectors;
-    a0 = lw(a0 + 0x18);
-    v1 += v0;
-loc_800266D4:
-    v0 = lw(v1 + 0x18);
-    {
-        const bool bJump = (v0 == a0);
-        v0 = a1;
-        if (bJump) goto loc_800266F8;
-    }
-    a1++;
-    v0 = (i32(a1) < i32(a2));
-    v1 += 0x5C;
-    if (v0 != 0) goto loc_800266D4;
-loc_800266F4:
-    v0 = -1;                                            // Result = FFFFFFFF
-loc_800266F8:
-    return;
+
+    return -1;
 }
 
-void P_FindMinSurroundingLight() noexcept {
-loc_80026700:
-    sp -= 8;
-    v0 = lw(a0 + 0x54);
-    a2 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80026784;
-    t0 = v0;
-    a3 = lw(a0 + 0x58);
-loc_8002671C:
-    v1 = lw(a3);
-    v0 = lw(v1 + 0x10);
-    v0 &= 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80026750;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Find the minimum light level in the sectors surrounding the given sector which is less than the given max light level.
+// If there is no light level less than the given max, then the max value is returned.
+//------------------------------------------------------------------------------------------------------------------------------------------
+int32_t P_FindMinSurroundingLight(sector_t& sector, const int32_t maxLightLevel) noexcept {
+    int32_t minLightLevel = maxLightLevel;
+    
+    for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+        line_t& line = *sector.lines[lineIdx].get();
+        sector_t* const pNextSector = getNextSector(line, sector);
+
+        if (pNextSector && (pNextSector->lightlevel < minLightLevel)) {
+            minLightLevel = pNextSector->lightlevel;
+        }
     }
-    v0 = lw(v1 + 0x38);
-    if (v0 != a0) goto loc_80026750;
-    v0 = lw(v1 + 0x3C);
-loc_80026750:
-    a3 += 4;
-    if (v0 == 0) goto loc_80026774;
-    v1 = lh(v0 + 0x12);                                 // Load from: 00000012
-    v0 = (i32(v1) < i32(a1));
-    if (v0 == 0) goto loc_80026774;
-    a1 = v1;
-loc_80026774:
-    a2++;
-    v0 = (i32(a2) < i32(t0));
-    if (v0 != 0) goto loc_8002671C;
-loc_80026784:
-    v0 = a1;
-    sp += 8;
-    return;
+
+    return minLightLevel;
 }
 
 void P_CrossSpecialLine() noexcept {
