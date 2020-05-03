@@ -29,8 +29,8 @@ side_t* getSide(const int32_t sectorIdx, const int32_t lineIdx, const int32_t si
 sector_t* getSector(const int32_t sectorIdx, const int32_t lineIdx, const int32_t sideIdx) noexcept;
 bool twoSided(const int32_t sectorIdx, const int32_t lineIdx) noexcept;
 sector_t* getNextSector(line_t& line, sector_t& sector) noexcept;
-void P_FindLowestFloorSurrounding() noexcept;
-void P_FindHighestFloorSurrounding() noexcept;
+fixed_t P_FindLowestFloorSurrounding(sector_t& sector) noexcept;
+fixed_t P_FindHighestFloorSurrounding(sector_t& sector) noexcept;
 void P_FindNextHighestFloor() noexcept;
 void P_FindLowestCeilingSurrounding() noexcept;
 void P_FindHighestCeilingSurrounding() noexcept;

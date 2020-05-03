@@ -329,7 +329,7 @@ loc_800191FC:
     sw(t0, s0 + 0x18);
     sw(a0, s0 + 0x14);
     sw(s5, s0 + 0x28);
-    P_FindHighestFloorSurrounding();
+    v0 = P_FindHighestFloorSurrounding(*vmAddrToPtr<sector_t>(a0));
     sw(v0, s0 + 0x24);
     goto loc_80019144;
 loc_8001921C:
@@ -338,7 +338,7 @@ loc_8001921C:
     sw(t0, s0 + 0x18);
     sw(a0, s0 + 0x14);
     sw(s5, s0 + 0x28);
-    P_FindLowestFloorSurrounding();
+    v0 = P_FindLowestFloorSurrounding(*vmAddrToPtr<sector_t>(a0));
     sw(v0, s0 + 0x24);
     goto loc_80019144;
 loc_8001923C:
@@ -348,7 +348,7 @@ loc_8001923C:
     sw(t0, s0 + 0x18);
     sw(s2, s0 + 0x14);
     sw(v0, s0 + 0x28);
-    P_FindHighestFloorSurrounding();
+    v0 = P_FindHighestFloorSurrounding(*vmAddrToPtr<sector_t>(a0));
     v1 = v0;
     sw(v1, s0 + 0x24);
     v0 = lw(s2);
@@ -481,7 +481,7 @@ loc_80019444:
     sw(t0, s0 + 0x18);
     sw(s2, s0 + 0x14);
     sw(s5, s0 + 0x28);
-    P_FindLowestFloorSurrounding();
+    v0 = P_FindLowestFloorSurrounding(*vmAddrToPtr<sector_t>(a0));
     sw(v0, s0 + 0x24);
     v0 = lhu(s2 + 0x8);
     sh(v0, s0 + 0x20);

@@ -156,80 +156,41 @@ sector_t* getNextSector(line_t& line, sector_t& sector) noexcept {
     return (&sector == pFrontSec) ? line.backsector.get() : pFrontSec;
 }
 
-void P_FindLowestFloorSurrounding() noexcept {
-loc_80026354:
-    sp -= 8;
-    v0 = lw(a0 + 0x54);
-    a3 = lw(a0);
-    a1 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_800263D8;
-    t0 = v0;
-    a2 = lw(a0 + 0x58);
-loc_80026370:
-    v1 = lw(a2);
-    v0 = lw(v1 + 0x10);
-    v0 &= 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_800263A4;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the lowest floor height for sectors surrounding the given sector, and including the input sector itself
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t P_FindLowestFloorSurrounding(sector_t& sector) noexcept {
+    fixed_t lowestFloor = sector.floorheight;
+
+    for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+        line_t& line = *sector.lines[lineIdx].get();
+        sector_t* const pNextSector = getNextSector(line, sector);
+        
+        if (pNextSector && (pNextSector->floorheight < lowestFloor)) {
+            lowestFloor = pNextSector->floorheight;
+        }
     }
-    v0 = lw(v1 + 0x38);
-    if (v0 != a0) goto loc_800263A4;
-    v0 = lw(v1 + 0x3C);
-loc_800263A4:
-    a2 += 4;
-    if (v0 == 0) goto loc_800263C8;
-    v1 = lw(v0);                                        // Load from: 00000000
-    v0 = (i32(v1) < i32(a3));
-    if (v0 == 0) goto loc_800263C8;
-    a3 = v1;
-loc_800263C8:
-    a1++;
-    v0 = (i32(a1) < i32(t0));
-    if (v0 != 0) goto loc_80026370;
-loc_800263D8:
-    v0 = a3;
-    sp += 8;
-    return;
+
+    return lowestFloor;
 }
 
-void P_FindHighestFloorSurrounding() noexcept {
-loc_800263E8:
-    sp -= 8;
-    a3 = 0xFE0C0000;                                    // Result = FE0C0000
-    v0 = lw(a0 + 0x54);
-    a1 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80026470;
-    t0 = v0;
-    a2 = lw(a0 + 0x58);
-loc_80026408:
-    v1 = lw(a2);
-    v0 = lw(v1 + 0x10);
-    v0 &= 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8002643C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the highest floor height for sectors surrounding the given sector, NOT including the sector itself.
+// The minimum height returned is -500.0.
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t P_FindHighestFloorSurrounding(sector_t& sector) noexcept {
+    fixed_t highestFloor = -500 * FRACUNIT;
+    
+    for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+        line_t& line = *sector.lines[lineIdx].get();
+        sector_t* const pNextSector = getNextSector(line, sector);
+
+        if (pNextSector && (pNextSector->floorheight > highestFloor)) {
+            highestFloor = pNextSector->floorheight;
+        }
     }
-    v0 = lw(v1 + 0x38);
-    if (v0 != a0) goto loc_8002643C;
-    v0 = lw(v1 + 0x3C);
-loc_8002643C:
-    a2 += 4;
-    if (v0 == 0) goto loc_80026460;
-    v1 = lw(v0);                                        // Load from: 00000000
-    v0 = (i32(a3) < i32(v1));
-    if (v0 == 0) goto loc_80026460;
-    a3 = v1;
-loc_80026460:
-    a1++;
-    v0 = (i32(a1) < i32(t0));
-    if (v0 != 0) goto loc_80026408;
-loc_80026470:
-    v0 = a3;                                            // Result = FE0C0000
-    sp += 8;
-    return;
+
+    return highestFloor;
 }
 
 void P_FindNextHighestFloor() noexcept {
