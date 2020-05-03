@@ -247,81 +247,42 @@ fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexc
     #endif
 }
 
-void P_FindLowestCeilingSurrounding() noexcept {
-loc_80026564:
-    sp -= 8;
-    a3 = 0x7FFF0000;                                    // Result = 7FFF0000
-    a3 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    v0 = lw(a0 + 0x54);
-    a1 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_800265F0;
-    t0 = v0;
-    a2 = lw(a0 + 0x58);
-loc_80026588:
-    v1 = lw(a2);
-    v0 = lw(v1 + 0x10);
-    v0 &= 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_800265BC;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Find the lowest ceiling height in sectors surrounding the given sector.
+// If there are no sectors surrounding the given sector, the highest possible height is returned.
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t P_FindLowestCeilingSurrounding(sector_t& sector) noexcept {
+    fixed_t lowestHeight = INT32_MAX;
+    
+    for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+        line_t& line = *sector.lines[lineIdx].get();
+        sector_t* const pNextSector = getNextSector(line, sector);
+
+        if (pNextSector && (pNextSector->ceilingheight < lowestHeight)) {
+            lowestHeight = pNextSector->ceilingheight;
+        }
     }
-    v0 = lw(v1 + 0x38);
-    if (v0 != a0) goto loc_800265BC;
-    v0 = lw(v1 + 0x3C);
-loc_800265BC:
-    a2 += 4;
-    if (v0 == 0) goto loc_800265E0;
-    v1 = lw(v0 + 0x4);                                  // Load from: 00000004
-    v0 = (i32(v1) < i32(a3));
-    if (v0 == 0) goto loc_800265E0;
-    a3 = v1;
-loc_800265E0:
-    a1++;
-    v0 = (i32(a1) < i32(t0));
-    if (v0 != 0) goto loc_80026588;
-loc_800265F0:
-    v0 = a3;                                            // Result = 7FFFFFFF
-    sp += 8;
-    return;
+
+    return lowestHeight;
 }
 
-void P_FindHighestCeilingSurrounding() noexcept {
-loc_80026600:
-    sp -= 8;
-    a3 = 0;                                             // Result = 00000000
-    v0 = lw(a0 + 0x54);
-    a2 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80026688;
-    t0 = v0;
-    a1 = lw(a0 + 0x58);
-loc_80026620:
-    v1 = lw(a1);
-    v0 = lw(v1 + 0x10);
-    v0 &= 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80026654;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Find the highest ceiling height in sectors surrounding the given sector.
+// Note: the minimum value returned by this function is '0'; this is also returned when there are no surrounding sectors.
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t P_FindHighestCeilingSurrounding(sector_t& sector) noexcept {
+    fixed_t highestHeight = 0;
+
+    for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+        line_t& line = *sector.lines[lineIdx].get();
+        sector_t* const pNextSector = getNextSector(line, sector);
+
+        if (pNextSector && (pNextSector->ceilingheight > highestHeight)) {
+            highestHeight = pNextSector->ceilingheight;
+        }
     }
-    v0 = lw(v1 + 0x38);
-    if (v0 != a0) goto loc_80026654;
-    v0 = lw(v1 + 0x3C);
-loc_80026654:
-    a1 += 4;
-    if (v0 == 0) goto loc_80026678;
-    v1 = lw(v0 + 0x4);                                  // Load from: 00000004
-    v0 = (i32(a2) < i32(v1));
-    if (v0 == 0) goto loc_80026678;
-    a2 = v1;
-loc_80026678:
-    a3++;
-    v0 = (i32(a3) < i32(t0));
-    if (v0 != 0) goto loc_80026620;
-loc_80026688:
-    v0 = a2;                                            // Result = 00000000
-    sp += 8;
-    return;
+
+    return highestHeight;
 }
 
 void P_FindSectorFromLineTag() noexcept {

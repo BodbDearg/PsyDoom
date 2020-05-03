@@ -266,7 +266,7 @@ loc_80014DA0:
     goto loc_80014DC4;
 loc_80014DB0:
     a0 = s1;
-    P_FindHighestCeilingSurrounding();
+    v0 = P_FindHighestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
     sw(v0, s0 + 0x18);
     v0 = 0x20000;                                       // Result = 00020000
     sw(s4, s0 + 0x24);

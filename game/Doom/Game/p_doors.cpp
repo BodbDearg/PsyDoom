@@ -407,7 +407,7 @@ loc_800157B4:
     }
 loc_80015860:
     a0 = s1;
-    P_FindLowestCeilingSurrounding();
+    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
     a1 = 0x58;                                          // Result = 00000058
     a0 = lw(s0 + 0x10);
     v0 += s4;
@@ -418,7 +418,7 @@ loc_80015860:
     goto loc_80015940;
 loc_80015888:
     a0 = s1;
-    P_FindLowestCeilingSurrounding();
+    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
     a1 = 0x14;                                          // Result = 00000014
     a0 = lw(s0 + 0x10);
     v0 += s4;
@@ -437,7 +437,7 @@ loc_800158A8:
     goto loc_800157B4;
 loc_800158CC:
     a0 = s1;
-    P_FindLowestCeilingSurrounding();
+    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
     v0 += s4;
     sw(v0, s0 + 0x14);
     v1 = lw(s0 + 0x14);
@@ -453,7 +453,7 @@ loc_800158CC:
     goto loc_80015940;
 loc_8001590C:
     a0 = s1;
-    P_FindLowestCeilingSurrounding();
+    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
     v0 += s4;
     sw(v0, s0 + 0x14);
     v1 = lw(s0 + 0x14);
@@ -627,7 +627,7 @@ loc_80015B50:
     sw(v0, s0 + 0x18);
 loc_80015B54:
     a0 = s2;
-    P_FindLowestCeilingSurrounding();
+    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
     v1 = 0xFFFC0000;                                    // Result = FFFC0000
     v0 += v1;
     sw(v0, s0 + 0x14);
@@ -702,7 +702,7 @@ loc_80015C04:
     v0 = 0x60000;                                       // Result = 00060000
     sw(a0, s0 + 0x10);
     sw(v0, s0 + 0x18);
-    P_FindLowestCeilingSurrounding();
+    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
     v1 = 0xFFFC0000;                                    // Result = FFFC0000
     v0 += v1;
     sw(v0, s0 + 0x14);

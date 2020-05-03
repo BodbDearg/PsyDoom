@@ -363,7 +363,7 @@ loc_8001927C:
     sw(s7, s0 + 0x18);
     sw(s2, s0 + 0x14);
     sw(s5, s0 + 0x28);
-    P_FindLowestCeilingSurrounding();
+    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
     sw(v0, s0 + 0x24);
     a0 = lw(s2 + 0x4);
     v0 = (i32(a0) < i32(v0));
