@@ -375,7 +375,7 @@ loc_8001B2FC:
     v0 += v1;
     a0 = lw(v0);
     a1 = s3;
-    getNextSector();
+    v0 = ptrToVmAddr(getNextSector(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<sector_t>(a1)));
     s0++;
     if (v0 == 0) goto loc_8001B334;
     v1 = lh(v0 + 0x12);
@@ -439,7 +439,7 @@ loc_8001B408:
     v0 += v1;
     a0 = lw(v0);
     a1 = s3;
-    getNextSector();
+    v0 = ptrToVmAddr(getNextSector(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<sector_t>(a1)));
     s0++;
     if (v0 == 0) goto loc_8001B440;
     v1 = lh(v0 + 0x12);

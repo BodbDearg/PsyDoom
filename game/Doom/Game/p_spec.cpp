@@ -8,7 +8,9 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "doomdata.h"
 #include "g_game.h"
 #include "p_ceiling.h"
 #include "p_doors.h"
@@ -121,87 +123,37 @@ void P_InitPicAnims() noexcept {
     }
 }
 
-void getSide() noexcept {
-loc_80026224:
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    v0 -= a0;
-    v1 = *gpSectors;
-    v0 <<= 2;
-    v0 += v1;
-    v0 = lw(v0 + 0x58);
-    a1 <<= 2;
-    a1 += v0;
-    v0 = lw(a1);
-    a2 <<= 2;
-    a2 += v0;
-    v1 = lw(a2 + 0x1C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = *gpSides;
-    v0 <<= 3;
-    v0 += v1;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the specified side of a line in the given sector
+//------------------------------------------------------------------------------------------------------------------------------------------
+side_t* getSide(const int32_t sectorIdx, const int32_t lineIdx, const int32_t sideIdx) noexcept {
+    return gpSides->get() + gpSectors->get()[sectorIdx].lines[lineIdx]->sidenum[sideIdx];
 }
 
-void getSector() noexcept {
-loc_80026280:
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    v0 -= a0;
-    v1 = *gpSectors;
-    v0 <<= 2;
-    v0 += v1;
-    v0 = lw(v0 + 0x58);
-    a1 <<= 2;
-    a1 += v0;
-    v0 = lw(a1);
-    a2 <<= 2;
-    a2 += v0;
-    v1 = lw(a2 + 0x1C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = *gpSides;
-    v0 <<= 3;
-    v0 += v1;
-    v0 = lw(v0 + 0x14);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Get the sector on the specified side of a line in the given sector
+//------------------------------------------------------------------------------------------------------------------------------------------
+sector_t* getSector(const int32_t sectorIdx, const int32_t lineIdx, const int32_t sideIdx) noexcept {
+    return gpSides->get()[gpSectors->get()[sectorIdx].lines[lineIdx]->sidenum[sideIdx]].sector.get();
 }
 
-void twoSided() noexcept {
-loc_800262E4:
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    v0 -= a0;
-    v1 = *gpSectors;
-    v0 <<= 2;
-    v0 += v1;
-    v0 = lw(v0 + 0x58);
-    a1 <<= 2;
-    a1 += v0;
-    v0 = lw(a1);
-    v0 = lw(v0 + 0x10);
-    v0 &= 4;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility: tell if a line in sector is two sided
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool twoSided(const int32_t sectorIdx, const int32_t lineIdx) noexcept {
+    return (gpSectors->get()[sectorIdx].lines[lineIdx]->flags & ML_TWOSIDED);
 }
 
-void getNextSector() noexcept {
-loc_80026324:
-    v0 = lw(a0 + 0x10);
-    v0 &= 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8002634C;
-    }
-    v0 = lw(a0 + 0x38);
-    if (v0 != a1) goto loc_8002634C;
-    v0 = lw(a0 + 0x3C);
-loc_8002634C:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the sector on the opposite side of the line to the given sector.
+// Returns 'nullptr' if the line is single sided.
+//------------------------------------------------------------------------------------------------------------------------------------------
+sector_t* getNextSector(line_t& line, sector_t& sector) noexcept {
+    if ((line.flags & ML_TWOSIDED) == 0)
+        return nullptr;
+
+    sector_t* const pFrontSec = line.frontsector.get();
+    return (&sector == pFrontSec) ? line.backsector.get() : pFrontSec;
 }
 
 void P_FindLowestFloorSurrounding() noexcept {

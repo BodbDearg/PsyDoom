@@ -149,10 +149,6 @@ extern void ClipToLine() noexcept;
 extern void SL_CheckLine() noexcept;
 extern void SL_PointOnSide2() noexcept;
 extern void SL_CheckSpecialLines() noexcept;
-extern void getSide() noexcept;
-extern void getSector() noexcept;
-extern void twoSided() noexcept;
-extern void getNextSector() noexcept;
 extern void P_FindLowestFloorSurrounding() noexcept;
 extern void P_FindHighestFloorSurrounding() noexcept;
 extern void P_FindNextHighestFloor() noexcept;
@@ -389,10 +385,6 @@ namespace PsxVm {
         { 0x80025840, &SL_CheckLine },
         { 0x80025A8C, &SL_PointOnSide2 },
         { 0x80025AFC, &SL_CheckSpecialLines },
-        { 0x80026224, &getSide },
-        { 0x80026280, &getSector },
-        { 0x800262E4, &twoSided },
-        { 0x80026324, &getNextSector },
         { 0x80026354, &P_FindLowestFloorSurrounding },
         { 0x800263E8, &P_FindHighestFloorSurrounding },
         { 0x80026480, &P_FindNextHighestFloor },

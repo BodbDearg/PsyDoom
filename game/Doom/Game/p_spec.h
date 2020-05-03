@@ -2,6 +2,9 @@
 
 #include "Doom/doomdef.h"
 
+struct line_t;
+struct side_t;
+
 // Holds state for an animated texture or flat.
 // Note that only one of these exists per texture - individual walls & floors do not have unique anims.
 struct anim_t {
@@ -22,10 +25,10 @@ extern const VmPtr<anim_t[MAXANIMS]>    gAnims;
 extern const VmPtr<VmPtr<anim_t>>       gpLastAnim;
 
 void P_InitPicAnims() noexcept;
-void getSide() noexcept;
-void getSector() noexcept;
-void twoSided() noexcept;
-void getNextSector() noexcept;
+side_t* getSide(const int32_t sectorIdx, const int32_t lineIdx, const int32_t sideIdx) noexcept;
+sector_t* getSector(const int32_t sectorIdx, const int32_t lineIdx, const int32_t sideIdx) noexcept;
+bool twoSided(const int32_t sectorIdx, const int32_t lineIdx) noexcept;
+sector_t* getNextSector(line_t& line, sector_t& sector) noexcept;
 void P_FindLowestFloorSurrounding() noexcept;
 void P_FindHighestFloorSurrounding() noexcept;
 void P_FindNextHighestFloor() noexcept;

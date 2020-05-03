@@ -427,12 +427,12 @@ loc_8001934C:
     a0 = s4;
 loc_80019374:
     a1 = s1;
-    twoSided();
+    v0 = twoSided(a0, a1);
     a0 = s4;
     if (v0 == 0) goto loc_80019414;
     a1 = s1;
     a2 = 0;                                             // Result = 00000000
-    getSide();
+    v0 = ptrToVmAddr(getSide(a0, a1, a2));
     v0 = lw(v0 + 0xC);
     a0 = s4;
     if (i32(v0) < 0) goto loc_800193CC;
@@ -449,7 +449,7 @@ loc_800193CC:
     a1 = s1;
 loc_800193D0:
     a2 = 1;                                             // Result = 00000001
-    getSide();
+    v0 = ptrToVmAddr(getSide(a0, a1, a2));
     v0 = lw(v0 + 0xC);
     {
         const bool bJump = (i32(v0) < 0);
@@ -491,12 +491,12 @@ loc_80019444:
     a0 = s4;
 loc_80019480:
     a1 = s1;
-    twoSided();
+    v0 = twoSided(a0, a1);
     a0 = s4;
     if (v0 == 0) goto loc_800194F4;
     a1 = s1;
     a2 = 0;                                             // Result = 00000000
-    getSide();
+    v0 = ptrToVmAddr(getSide(a0, a1, a2));
     a0 = 0xE9BD0000;                                    // Result = E9BD0000
     v0 = lw(v0 + 0x14);
     v1 = *gpSectors;
@@ -510,7 +510,7 @@ loc_80019480:
     a1 = s1;
     a2 = 0;                                             // Result = 00000000
 loc_800194D0:
-    getSector();
+    v0 = ptrToVmAddr(getSector(a0, a1, a2));
     s2 = v0;
     v0 = lhu(s2 + 0x8);
     sh(v0, s0 + 0x20);
