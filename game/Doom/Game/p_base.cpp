@@ -426,7 +426,7 @@ static void PB_SetThingPosition(mobj_t& mobj) noexcept {
 //
 // Outputs:
 //  gTestBBox       : The bounding box for the thing
-//  gpTestSubSec    : The subsector the thing is in
+//  gpTestSubSec    : The new subsector the thing would be in at the given position
 //  gpHitThing      : The thing collided with
 //  gpCeilingLine   : The upper wall line for the lowest ceiling touched
 //  gTestCeilingz   : The Z value for the lowest ceiling touched
@@ -443,7 +443,7 @@ static bool PB_CheckPosition() noexcept {
         gTestBBox[0] = *gTestY + radius;
         gTestBBox[1] = *gTestY - radius;
         gTestBBox[3] = *gTestX + radius;
-        gTestBBox[2] = *gTestX - radius;
+        gTestBBox[BOXLEFT] = *gTestX - radius;
     }
 
     subsector_t& testSubsec = *R_PointInSubsector(*gTestX, *gTestY);
@@ -460,15 +460,10 @@ static bool PB_CheckPosition() noexcept {
     *gTestCeilingz = testSec.ceilingheight;
 
     // Determine the blockmap extents (left/right, top/bottom) to be tested against for collision and clamp to a valid range
-    int32_t bmapLx = (gTestBBox[2] - *gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT;
-    int32_t bmapRx = (gTestBBox[3] - *gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT;
-    int32_t bmapTy = (gTestBBox[0] - *gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT;
-    int32_t bmapBy = (gTestBBox[1] - *gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT;
-
-    bmapLx = std::max(bmapLx, 0);
-    bmapBy = std::max(bmapBy, 0);
-    bmapRx = std::min(bmapRx, *gBlockmapWidth - 1);
-    bmapTy = std::min(bmapTy, *gBlockmapHeight - 1);
+    const int32_t bmapLx = std::max((gTestBBox[BOXLEFT] - *gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
+    const int32_t bmapRx = std::min((gTestBBox[BOXRIGHT] - *gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
+    const int32_t bmapTy = std::min((gTestBBox[BOXTOP] - *gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);
+    const int32_t bmapBy = std::max((gTestBBox[BOXBOTTOM] - *gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
 
     // This is a new collision test so increment this stamp
     *gValidCount += 1;

@@ -13,6 +13,8 @@
 
 static constexpr int32_t MAX_CROSS_LINES = 8;
 
+const VmPtr<bool32_t>   gbTryMove2(0x8007813C);     // Whether the move attempt by 'P_TryMove2' was successful or not ('true' if move allowed)
+
 static const VmPtr<VmPtr<subsector_t>>              gpNewSubsec(0x800782BC);            // Destination subsector for the current move: set by 'PM_CheckPosition'
 static const VmPtr<uint32_t>                        gTmFlags(0x80078078);               // Flags for the thing being moved
 static const VmPtr<fixed_t[4]>                      gTestTmBBox(0x80097C10);            // Bounding box for the current thing being collision tested. Set in 'PM_CheckPosition'.
@@ -27,6 +29,7 @@ static const VmPtr<VmPtr<line_t>[MAX_CROSS_LINES]>  gpCrossCheckLines(0x800A8F28
 // Not required externally: making private to this module
 static void PM_UnsetThingPosition(mobj_t& thing) noexcept;
 static void PM_SetThingPosition(mobj_t& mobj) noexcept;
+static void PM_CheckPosition() noexcept;
 static bool PM_BlockLinesIterator(const int32_t x, const int32_t y) noexcept;
 static bool PM_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;
 
@@ -296,206 +299,98 @@ static void PM_SetThingPosition(mobj_t& mobj) noexcept {
     }
 }
 
-void PM_CheckPosition() noexcept {
-loc_8001E978:
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7EAC);                               // Load from: gTryMoveY (80078154)
-    sp -= 0x28;
-    sw(s0, sp + 0x10);
-    s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7C10;                                       // Result = gtTmbBox[0] (80097C10)
-    sw(ra, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = lw(v1 + 0x40);
-    a2 = lw(v1 + 0x64);
-    v0 += a1;
-    sw(v0, s0);                                         // Store to: gtTmbBox[0] (80097C10)
-    v0 = lw(v1 + 0x40);
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7EB0);                               // Load from: gTryMoveX (80078150)
-    v0 = a1 - v0;
-    at = 0x80090000;                                    // Result = 80090000
-    sw(v0, at + 0x7C14);                                // Store to: gtTmbBox[1] (80097C14)
-    v0 = lw(v1 + 0x40);
-    v0 += a0;
-    at = 0x80090000;                                    // Result = 80090000
-    sw(v0, at + 0x7C1C);                                // Store to: gtTmbBox[3] (80097C1C)
-    v0 = lw(v1 + 0x40);
-    sw(a2, gp + 0xA98);                                 // Store to: gTmFlags (80078078)
-    v0 = a0 - v0;
-    at = 0x80090000;                                    // Result = 80090000
-    sw(v0, at + 0x7C18);                                // Store to: gtTmbBox[2] (80097C18)
-    _thunk_R_PointInSubsector();
-    v1 = lw(v0);
-    sw(v0, gp + 0xCDC);                                 // Store to: gpNewSubsec (800782BC)
-    v0 = lw(v0);
-    sw(0, gp + 0xAE0);                                  // Store to: gNumCrossCheckLines (800780C0)
-    sw(0, gp + 0xCE4);                                  // Store to: gpMoveThing (800782C4)
-    sw(0, gp + 0xC68);                                  // Store to: gpBlockLine (80078248)
-    a0 = lw(v1);
-    a1 = lw(v0 + 0x4);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
-    v1 = lw(gp + 0xA98);                                // Load from: gTmFlags (80078078)
-    v0++;
-    v1 &= 0x1000;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7BC4);                                // Store to: gValidCount (80077BC4)
-    sw(a0, gp + 0x95C);                                 // Store to: gTmDropoffZ (80077F3C)
-    sw(a0, gp + 0xC08);                                 // Store to: gTmFloorZ (800781E8)
-    sw(a1, gp + 0x924);                                 // Store to: gTmCeilingZ (80077F04)
-    {
-        const bool bJump = (v1 == 0);
-        v1 = 0xFFE00000;                                // Result = FFE00000
-        if (bJump) goto loc_8001EA68;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do a collision test for a thing against lines and other things, ignoring height differences.
+// Sets 'gbTryMove2' to 'false' if there was a collision, 'true' if there was no collision when height differences are ignored.
+// Note: height difference blocking logic is handled externally to this function.
+//
+// Inputs:
+//  gpTryMoveThing          : The thing doing the collision test
+//  gTryMoveX, gTryMoveY    : Position to use for the thing for the collision test (can be set different to actual pos to test a move)
+//
+// Outputs:
+//  gTestTmBBox             : The bounding box for the thing
+//  gpNewSubsec             : The new subsector the thing would be in at the given position 
+//  gpMoveThing             : The thing collided with
+//  gpBlockLine             : The line collided with (only set for certain line collisions though)
+//  gTmCeilingZ             : The Z value for the lowest ceiling touched
+//  gTmFloorZ               : The Z value for the highest floor touched
+//  gTmDropoffZ             : The Z value for the lowest floor touched
+//  gNumCrossCheckLines     : The number of lines to test for the thing crossing (for specials/line activation)
+//  gpCrossCheckLines       : The pointers to the lines to test for the thing crossing
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void PM_CheckPosition() noexcept {
+    // Save the flags for the thing being moved and precompute it's bounding box
+    mobj_t& tryMoveThing = *gpTryMoveThing->get();
+
+    *gTmFlags = tryMoveThing.flags;
+    gTestTmBBox[0] = *gTryMoveY + tryMoveThing.radius;
+    gTestTmBBox[1] = *gTryMoveY - tryMoveThing.radius;
+    gTestTmBBox[3] = *gTryMoveX + tryMoveThing.radius;
+    gTestTmBBox[2] = *gTryMoveX - tryMoveThing.radius;
+
+    // Precompute the subsector for the thing being moved
+    subsector_t& newSubsec = *R_PointInSubsector(*gTryMoveX, *gTryMoveY);
+    sector_t& newSector = *newSubsec.sector;
+    *gpNewSubsec = &newSubsec;
+
+    // Initialize various movement checking variables
+    *gpMoveThing = nullptr;
+    *gpBlockLine = nullptr;
+    *gTmFloorZ = newSector.floorheight;         // Initial value: lowered as collision testing touches lines
+    *gTmCeilingZ = newSector.ceilingheight;     // Initial value: raised as collision testing touches lines
+    *gTmDropoffZ = newSector.floorheight;       // Initial value: Lowered as collision testing touches lines
+    *gNumCrossCheckLines = 0;
+
+    // Prep for new collision tests: increment this marker
+    *gValidCount += 1;
+
+    // If the thing is no-clipping then we can just exit and allow the move
+    if (*gTmFlags & MF_NOCLIP) {
+        *gbTryMove2 = true;
+        return;
     }
-    v0 = 1;                                             // Result = 00000001
-    goto loc_8001EC40;
-loc_8001EA5C:
-    sw(0, gp + 0xB5C);                                  // Store to: gbTryMove2 (8007813C)
-    goto loc_8001EC44;
-loc_8001EA68:
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gtTmbBox[2] (80097C18)
-    a1 = *gBlockmapOriginX;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 = lw(a0 + 0x7C1C);                               // Load from: gtTmbBox[3] (80097C1C)
-    a2 = *gBlockmapOriginY;
-    v0 -= a1;
-    v0 += v1;
-    a3 = u32(i32(v0) >> 23);
-    a0 -= a1;
-    a1 = 0x200000;                                      // Result = 00200000
-    a0 += a1;
-    s3 = u32(i32(a0) >> 23);
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gtTmbBox[1] (80097C14)
-    v0 = lw(s0);                                        // Load from: gtTmbBox[0] (80097C10)
-    v1 -= a2;
-    v1 -= a1;
-    s4 = u32(i32(v1) >> 23);
-    v0 -= a2;
-    v0 += a1;
-    s2 = u32(i32(v0) >> 23);
-    if (i32(a3) >= 0) goto loc_8001EAD0;
-    a3 = 0;                                             // Result = 00000000
-loc_8001EAD0:
-    if (i32(s4) >= 0) goto loc_8001EADC;
-    s4 = 0;                                             // Result = 00000000
-loc_8001EADC:
-    v1 = *gBlockmapWidth;
-    v0 = (i32(s3) < i32(v1));
-    if (v0 != 0) goto loc_8001EAF8;
-    s3 = v1 - 1;
-loc_8001EAF8:
-    v1 = *gBlockmapHeight;
-    v0 = (i32(s2) < i32(v1));
-    s1 = a3;
-    if (v0 != 0) goto loc_8001EB14;
-    s2 = v1 - 1;
-loc_8001EB14:
-    v0 = (i32(s3) < i32(s1));
-    if (v0 != 0) goto loc_8001EB5C;
-    v0 = (i32(s2) < i32(s4));
-loc_8001EB24:
-    s0 = s4;
-    if (v0 != 0) goto loc_8001EB4C;
-    a0 = s1;
-loc_8001EB30:
-    a1 = s0;
-    v0 = PM_BlockThingsIterator(a0, a1);
-    s0++;
-    if (v0 == 0) goto loc_8001EA5C;
-    v0 = (i32(s2) < i32(s0));
-    a0 = s1;
-    if (v0 == 0) goto loc_8001EB30;
-loc_8001EB4C:
-    s1++;
-    v0 = (i32(s3) < i32(s1));
+
+    // Do collisions against things
     {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(s2) < i32(s4));
-        if (bJump) goto loc_8001EB24;
+        // Compute the blockmap extents to check for collisions against other things and clamp to a valid range.
+        // 
+        const int32_t bmapLx = std::max((gTestTmBBox[BOXLEFT] - *gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
+        const int32_t bmapRx = std::min((gTestTmBBox[BOXRIGHT] - *gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
+        const int32_t bmapTy = std::min((gTestTmBBox[BOXTOP] - *gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);
+        const int32_t bmapBy = std::max((gTestTmBBox[BOXBOTTOM] - *gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
+    
+        // Test against everything in this blockmap range; stop and set the result 'false' if a definite collision happens
+        for (int32_t x = bmapLx; x <= bmapRx; ++x) {
+            for (int32_t y = bmapBy; y <= bmapTy; ++y) {
+                if (!PM_BlockThingsIterator(x, y)) {
+                    *gbTryMove2 = false;
+                    return;
+                }
+            }
+        }
     }
-loc_8001EB5C:
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7C18);                               // Load from: gtTmbBox[2] (80097C18)
-    a0 = *gBlockmapOriginX;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 = lw(v1 + 0x7C1C);                               // Load from: gtTmbBox[3] (80097C1C)
-    a1 = *gBlockmapOriginY;
-    v0 -= a0;
-    a3 = u32(i32(v0) >> 23);
-    v1 -= a0;
-    s3 = u32(i32(v1) >> 23);
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gtTmbBox[1] (80097C14)
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7C10);                               // Load from: gtTmbBox[0] (80097C10)
-    a0 -= a1;
-    s4 = u32(i32(a0) >> 23);
-    v0 -= a1;
-    s2 = u32(i32(v0) >> 23);
-    if (i32(a3) >= 0) goto loc_8001EBB4;
-    a3 = 0;                                             // Result = 00000000
-loc_8001EBB4:
-    if (i32(s4) >= 0) goto loc_8001EBC0;
-    s4 = 0;                                             // Result = 00000000
-loc_8001EBC0:
-    v1 = *gBlockmapWidth;
-    v0 = (i32(s3) < i32(v1));
-    if (v0 != 0) goto loc_8001EBDC;
-    s3 = v1 - 1;
-loc_8001EBDC:
-    v1 = *gBlockmapHeight;
-    v0 = (i32(s2) < i32(v1));
-    s1 = a3;
-    if (v0 != 0) goto loc_8001EBF8;
-    s2 = v1 - 1;
-loc_8001EBF8:
-    v0 = (i32(s3) < i32(s1));
+    
+    // Do collision against lines
     {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001EC40;
+        const int32_t bmapLx = std::max((gTestTmBBox[BOXLEFT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
+        const int32_t bmapRx = std::min((gTestTmBBox[BOXRIGHT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
+        const int32_t bmapTy = std::min((gTestTmBBox[BOXTOP] - *gBlockmapOriginY) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);
+        const int32_t bmapBy = std::max((gTestTmBBox[BOXBOTTOM] - *gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
+
+        // Test against everything in this blockmap range; stop and set the result 'false' if a definite collision happens
+        for (int32_t x = bmapLx; x <= bmapRx; ++x) {
+            for (int32_t y = bmapBy; y <= bmapTy; ++y) {
+                if (!PM_BlockLinesIterator(x, y)) {
+                    *gbTryMove2 = false;
+                    return;
+                }
+            }
+        }
     }
-loc_8001EC04:
-    v0 = (i32(s2) < i32(s4));
-    s0 = s4;
-    if (v0 != 0) goto loc_8001EC30;
-    a0 = s1;
-loc_8001EC14:
-    a1 = s0;
-    v0 = PM_BlockLinesIterator(a0, a1);
-    s0++;
-    if (v0 == 0) goto loc_8001EA5C;
-    v0 = (i32(s2) < i32(s0));
-    a0 = s1;
-    if (v0 == 0) goto loc_8001EC14;
-loc_8001EC30:
-    s1++;
-    v0 = (i32(s3) < i32(s1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001EC04;
-    }
-loc_8001EC40:
-    sw(v0, gp + 0xB5C);                                 // Store to: gbTryMove2 (8007813C)
-loc_8001EC44:
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+
+    // If we get to here then the collision test detected no collision: movement can be a success
+    *gbTryMove2 = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
