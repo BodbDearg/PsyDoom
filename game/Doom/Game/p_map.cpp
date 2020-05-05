@@ -23,6 +23,9 @@ const VmPtr<fixed_t>            gAttackRange(0x80077F98);       // Maximum attac
 const VmPtr<angle_t>            gAttackAngle(0x80077F80);       // Angle of attack for an attacker
 const VmPtr<fixed_t>            gAimTopSlope(0x80077FF8);       // Maximum Z slope for shooting (defines Z range that stuff can be hit within)
 const VmPtr<fixed_t>            gAimBottomSlope(0x800782F8);    // Minimum Z slope for shooting (defines Z range that stuff can be hit within)
+const VmPtr<fixed_t>            gTryMoveX(0x80078150);          // Try move: position we're attempting to move to (X)
+const VmPtr<fixed_t>            gTryMoveY(0x80078154);          // Try move: position we're attempting to move to (Y)
+const VmPtr<VmPtr<mobj_t>>      gpTryMoveThing(0x8007808C);     // Try move: the thing being moved
 
 static const VmPtr<VmPtr<mobj_t>>   gpLineTarget(0x80077EE8);       // The thing being shot at in 'P_AimLineAttack' and 'P_LineAttack'.
 static const VmPtr<VmPtr<mobj_t>>   gpBombSource(0x80077EF0);       // Radius attacks: the thing responsible for the explosion (player, monster)

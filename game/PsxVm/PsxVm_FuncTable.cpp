@@ -96,9 +96,7 @@ extern void P_TryMove2() noexcept;
 extern void PM_CheckPosition() noexcept;
 extern void PM_BoxCrossLine() noexcept;
 extern void PIT_CheckLine() noexcept;
-extern void PIT_CheckThing() noexcept;
 extern void PM_BlockLinesIterator() noexcept;
-extern void PM_BlockThingsIterator() noexcept;
 extern void T_PlatRaise() noexcept;
 extern void EV_DoPlat() noexcept;
 extern void P_ActivateInStasis() noexcept;
@@ -321,9 +319,7 @@ namespace PsxVm {
         { 0x8001E978, &PM_CheckPosition },
         { 0x8001EC68, &PM_BoxCrossLine },
         { 0x8001ED74, &PIT_CheckLine },
-        { 0x8001EEC4, &PIT_CheckThing },
         { 0x8001F028, &PM_BlockLinesIterator },
-        { 0x8001F208, &PM_BlockThingsIterator },
         { 0x8001F280, &T_PlatRaise },
         { 0x8001F464, &EV_DoPlat },
         { 0x8001F760, &P_ActivateInStasis },

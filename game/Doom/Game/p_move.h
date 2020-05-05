@@ -11,6 +11,6 @@ void PM_SetThingPosition(mobj_t& mobj) noexcept;
 void PM_CheckPosition() noexcept;
 void PM_BoxCrossLine() noexcept;
 void PIT_CheckLine() noexcept;
-void PIT_CheckThing() noexcept;
+bool PIT_CheckThing(mobj_t& mobj) noexcept;
 void PM_BlockLinesIterator() noexcept;
-void PM_BlockThingsIterator() noexcept;
+bool PM_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;

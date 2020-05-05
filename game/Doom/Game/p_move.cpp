@@ -3,12 +3,15 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "p_local.h"
+#include "p_map.h"
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "PsxVm/PsxVm.h"
 
-static const VmPtr<VmPtr<subsector_t>>      gpNewSubsec(0x800782BC);        // Destination subsector for the current move: set by 'PM_CheckPosition'
+static const VmPtr<VmPtr<subsector_t>>  gpNewSubsec(0x800782BC);    // Destination subsector for the current move: set by 'PM_CheckPosition'
+static const VmPtr<uint32_t>            gTmFlags(0x80078078);       // Try move: flags for the thing being moved
+static const VmPtr<VmPtr<mobj_t>>       gpMoveThing(0x800782C4);    // Try move: the thing collided with (for code doing interactions with the thing)
 
 void P_TryMove2() noexcept {
 loc_8001E4F4:
@@ -382,7 +385,7 @@ loc_8001EB24:
     a0 = s1;
 loc_8001EB30:
     a1 = s0;
-    PM_BlockThingsIterator();
+    v0 = PM_BlockThingsIterator(a0, a1);
     s0++;
     if (v0 == 0) goto loc_8001EA5C;
     v0 = (i32(s2) < i32(s0));
@@ -644,112 +647,79 @@ loc_8001EEBC:
     return;
 }
 
-void PIT_CheckThing() noexcept {
-loc_8001EEC4:
-    a2 = a0;
-    t0 = lw(a2 + 0x64);
-    v0 = t0 & 7;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001F020;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Check for a collision for the current thing being moved (in it's test position) against the input thing to this function.
+// Returns 'false' if there was a collision and saves the thing globally, if it is to be interacted with (damage, pickup).
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool PIT_CheckThing(mobj_t& mobj) noexcept {    
+    // If it's not a special, blocking or shootable then we can't collide with it
+    if ((mobj.flags & (MF_SPECIAL | MF_SOLID | MF_SHOOTABLE)) == 0)
+        return true;
+    
+    // The thing cannot collide with itself
+    mobj_t& tryMoveThing = *gpTryMoveThing->get();
+
+    if (&mobj == &tryMoveThing)
+        return true;
+
+    // See if the thing is within range: exit with no collision if it isn't
+    const fixed_t totalRadius = mobj.radius + tryMoveThing.radius;
+    const fixed_t dx = std::abs(mobj.x - *gTryMoveX);
+    const fixed_t dy = std::abs(mobj.y - *gTryMoveY);
+
+    if ((dx >= totalRadius) || (dy >= totalRadius))
+        return true;
+    
+    // Is the thing being moved a skull which is slamming into this thing?
+    if (tryMoveThing.flags & MF_SKULLFLY) {
+        *gpMoveThing = &mobj;
+        return false;
     }
-    a3 = 0x80080000;                                    // Result = 80080000
-    a3 = lw(a3 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
-    a1 = lw(a2 + 0x40);
-    a0 = lw(a2);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EB0);                               // Load from: gTryMoveX (80078150)
-    v1 = lw(a3 + 0x40);
-    v0 = a0 - v0;
-    a1 += v1;
-    if (i32(v0) >= 0) goto loc_8001EF08;
-    v0 = -v0;
-loc_8001EF08:
-    v0 = (i32(v0) < i32(a1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001F020;
+
+    // Special logic for missiles: unlike most other things, they can pass over/under things
+    if (tryMoveThing.flags & MF_MISSILE) {
+        // Is the missile flying above the thing? If so then no collision:
+        if (tryMoveThing.z > mobj.z + mobj.height)
+            return true;
+        
+        // Is the missile flying below the thing? If so then no collision:
+        if (tryMoveThing.z + tryMoveThing.height < mobj.z)
+            return true;
+        
+        // If we are colliding with the same species which fired the missile in most cases explode/collide the missile, but don't damage what was hit.
+        // The firing thing is in the 'target' field for missiles.
+        mobj_t& firingThing = *tryMoveThing.target.get();
+
+        if (mobj.type == firingThing.type) {
+            // Missiles don't collide with the things which fired them
+            if (&mobj == &firingThing)
+                return true;
+            
+            // Explode, but do no damage by just returning 'false' and not saving what was hit.
+            // The exception to this is if the thing type is a player; players can splash damage other players with rockets...
+            if (mobj.type != MT_PLAYER)
+                return false;
+        }
+
+        // If the thing hit is shootable then save it for damage purposes and return 'false' for a collision
+        if (mobj.flags & MF_SHOOTABLE) {
+            *gpMoveThing = &mobj;
+            return false;
+        }
+
+        // Otherwise just explode the missile (but do no damage) if the thing hit was solid
+        return ((mobj.flags & MF_SOLID) == 0);
     }
-    v1 = lw(a2 + 0x4);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EAC);                               // Load from: gTryMoveY (80078154)
-    v0 = v1 - v0;
-    if (i32(v0) >= 0) goto loc_8001EF34;
-    v0 = -v0;
-loc_8001EF34:
-    v0 = (i32(v0) < i32(a1));
-    if (v0 == 0) goto loc_8001F004;
-    v0 = 0x1000000;                                     // Result = 01000000
-    if (a2 == a3) goto loc_8001F004;
-    v1 = lw(a3 + 0x64);
-    v0 &= v1;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x10000;                                   // Result = 00010000
-        if (bJump) goto loc_8001EFD8;
+    
+    // Are we colliding with an item that can be picked up?
+    // If so then save it but return 'true' for no collision (pickups do not block).
+    if ((mobj.flags & MF_SPECIAL) && (*gTmFlags & MF_PICKUP)) {
+        *gpMoveThing = &mobj;
+        return true;
     }
-    v0 &= v1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = t0 & 1;
-        if (bJump) goto loc_8001EFE4;
-    }
-    a0 = lw(a2 + 0x8);
-    v0 = lw(a2 + 0x44);
-    v1 = lw(a3 + 0x8);
-    v0 += a0;
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001F020;
-    }
-    v0 = lw(a3 + 0x44);
-    v0 += v1;
-    v0 = (i32(v0) < i32(a0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001F020;
-    }
-    v1 = lw(a3 + 0x74);
-    v0 = lw(a2 + 0x54);
-    a0 = lw(v1 + 0x54);
-    if (a0 != v0) goto loc_8001EFC4;
-    if (a2 == v1) goto loc_8001F004;
-    v0 = 0;                                             // Result = 00000000
-    if (a0 != 0) goto loc_8001F020;
-loc_8001EFC4:
-    v1 = lw(a2 + 0x64);
-    v0 = v1 & 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 >> 1;
-        if (bJump) goto loc_8001F018;
-    }
-loc_8001EFD8:
-    sw(a2, gp + 0xCE4);                                 // Store to: gpMoveThing (800782C4)
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8001F020;
-loc_8001EFE4:
-    if (v0 == 0) goto loc_8001F00C;
-    v0 = lw(gp + 0xA98);                                // Load from: gTmFlags (80078078)
-    v0 &= 0x800;
-    if (v0 == 0) goto loc_8001F00C;
-    sw(a2, gp + 0xCE4);                                 // Store to: gpMoveThing (800782C4)
-loc_8001F004:
-    v0 = 1;                                             // Result = 00000001
-    goto loc_8001F020;
-loc_8001F00C:
-    v0 = lw(a2 + 0x64);
-    v0 >>= 1;
-loc_8001F018:
-    v0 ^= 1;
-    v0 &= 1;
-loc_8001F020:
-    return;
+
+    // In all other cases there is a collision if the item collided with is solid
+    return ((mobj.flags & MF_SOLID) == 0);
 }
 
 void PM_BlockLinesIterator() noexcept {
@@ -872,35 +842,15 @@ loc_8001F1F4:
     return;
 }
 
-void PM_BlockThingsIterator() noexcept {
-loc_8001F208:
-    v0 = *gBlockmapWidth;
-    mult(a1, v0);
-    v1 = *gppBlockLinks;
-    sp -= 0x18;
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v0 = lo;
-    v0 += a0;
-    v0 <<= 2;
-    v0 += v1;
-    s0 = lw(v0);
-    v0 = 1;                                             // Result = 00000001
-    if (s0 == 0) goto loc_8001F26C;
-loc_8001F24C:
-    a0 = s0;
-    PIT_CheckThing();
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8001F26C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Check for collisions against all things in the given blockmap cell. Returns 'true' if there were no collisions, 'false' otherwise.
+// In some cases the thing collided with is saved in 'gpMoveThing' for futher interactions like pickups and damaging.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool PM_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
+    for (mobj_t* pmobj = gppBlockLinks->get()[x + y * (*gBlockmapWidth)].get(); pmobj; pmobj = pmobj->bnext.get()) {
+        if (!PIT_CheckThing(*pmobj))
+            return false;
     }
-    s0 = lw(s0 + 0x30);
-    v0 = 1;                                             // Result = 00000001
-    if (s0 != 0) goto loc_8001F24C;
-loc_8001F26C:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    return true;
 }
