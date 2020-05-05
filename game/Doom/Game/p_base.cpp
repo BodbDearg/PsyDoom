@@ -581,7 +581,7 @@ static bool PB_CheckLine(line_t& line) noexcept {
     }
 
     // This line does not block, ignoring height differences.
-    // Tthis function does NOT check whether the thing can pass the line due to height differences!
+    // This function does NOT check whether the thing can pass the line due to height differences!
     return true;
 }
 

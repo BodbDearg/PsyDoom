@@ -2,17 +2,27 @@
 
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "doomdata.h"
 #include "p_local.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "PsxVm/PsxVm.h"
+#include <algorithm>
 
-static const VmPtr<VmPtr<subsector_t>>  gpNewSubsec(0x800782BC);    // Destination subsector for the current move: set by 'PM_CheckPosition'
-static const VmPtr<uint32_t>            gTmFlags(0x80078078);       // Try move: flags for the thing being moved
-static const VmPtr<VmPtr<mobj_t>>       gpMoveThing(0x800782C4);    // Try move: the thing collided with (for code doing interactions with the thing)
-static const VmPtr<fixed_t[4]>          gTestTmBBox(0x80097C10);    // Bounding box for the current thing being collision tested. Set in 'PM_CheckPosition'.
+static constexpr int32_t MAX_CROSS_LINES = 8;
+
+static const VmPtr<VmPtr<subsector_t>>              gpNewSubsec(0x800782BC);            // Destination subsector for the current move: set by 'PM_CheckPosition'
+static const VmPtr<uint32_t>                        gTmFlags(0x80078078);               // Flags for the thing being moved
+static const VmPtr<fixed_t[4]>                      gTestTmBBox(0x80097C10);            // Bounding box for the current thing being collision tested. Set in 'PM_CheckPosition'.
+static const VmPtr<VmPtr<mobj_t>>                   gpMoveThing(0x800782C4);            // The thing collided with (for code doing interactions with the thing)
+static const VmPtr<VmPtr<line_t>>                   gpBlockLine(0x80078248);            // The line collided with
+static const VmPtr<fixed_t>                         gTmCeilingZ(0x80077F04);            // The Z value for the lowest ceiling the collider is in contact with
+static const VmPtr<fixed_t>                         gTmFloorZ(0x800781E8);              // The Z value for the highest floor the collider is in contact with
+static const VmPtr<fixed_t>                         gTmDropoffZ(0x80077F3C);            // The Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
+static const VmPtr<int32_t>                         gNumCrossCheckLines(0x800780C0);    // How many lines to test for whether the thing crossed them or not: for determining when to trigger line specials
+static const VmPtr<VmPtr<line_t>[MAX_CROSS_LINES]>  gpCrossCheckLines(0x800A8F28);      // Lines to test for whether the thing crossed them or not: for determining when to trigger line specials
 
 void P_TryMove2() noexcept {
 loc_8001E4F4:
@@ -524,106 +534,74 @@ static bool PM_BoxCrossLine(line_t& line) noexcept {
     return (side1 != side2);
 }
 
-void PIT_CheckLine() noexcept {
-loc_8001ED74:
-    v0 = lw(a0 + 0x3C);
-    v1 = 0x10000;                                       // Result = 00010000
-    if (v0 == 0) goto loc_8001EE04;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
-    v0 = lw(a1 + 0x64);
-    v0 &= v1;
-    if (v0 != 0) goto loc_8001EDD0;
-    v1 = lw(a0 + 0x10);
-    v0 = v1 & 1;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8001EEBC;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Assuming a collider intersects the given line, tells if the given line will potentially block - ignoring height differences.
+// Returns 'false' if the line is considered blocking ignoring height differences.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool PIT_CheckLine(line_t& line) noexcept {
+    // A 1 sided line cannot be crossed: register a collision against this
+    if (!line.backsector)
+        return false;
+    
+    // If not a projectile and the line is marked as explicitly blocking then block
+    mobj_t& tryMoveThing = *gpTryMoveThing->get();
+
+    if ((tryMoveThing.flags & MF_MISSILE) == 0) {
+        // If the line blocks everything then register a collision
+        if (line.flags & ML_BLOCKING)
+            return false;
+        
+        // If the line blocks monsters and the thing is not a player then block
+        if ((line.flags & ML_BLOCKMONSTERS) && (!tryMoveThing.player))
+            return false;
     }
-    v0 = lw(a1 + 0x80);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = v1 & 2;
-        if (bJump) goto loc_8001EDD0;
+
+    // Is the line adjoining a sector that is fully closed up (probably a door)? If so then it always blocks:
+    sector_t& fsec = *line.frontsector;
+    sector_t& bsec = *line.backsector;
+
+    if ((fsec.floorheight == fsec.ceilingheight) || (bsec.floorheight == bsec.ceilingheight)) {
+        *gpBlockLine = &line;
+        return false;
     }
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8001EEBC;
+
+    // Get the top and bottom height of the opening/gap and the lowest floor
+    const fixed_t openTop = std::min(fsec.ceilingheight, bsec.ceilingheight);
+    const fixed_t openBottom = std::max(fsec.floorheight, bsec.floorheight);
+    const fixed_t lowFloor = std::min(fsec.floorheight, bsec.floorheight);
+
+    // Adjust the global low ceiling, high floor and lowest floor values
+    if (openTop < *gTmCeilingZ) {
+        *gTmCeilingZ = openTop;
     }
-loc_8001EDD0:
-    v0 = lw(a0 + 0x38);
-    a1 = lw(v0 + 0x4);
-    t0 = lw(v0);
-    v0 = lw(a0 + 0x3C);
-    if (a1 == t0) goto loc_8001EE00;
-    v1 = lw(v0 + 0x4);
-    a2 = lw(v0);
-    a3 = v1;
-    if (v1 != a2) goto loc_8001EE0C;
-loc_8001EE00:
-    sw(a0, gp + 0xC68);                                 // Store to: gpBlockLine (80078248)
-loc_8001EE04:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8001EEBC;
-loc_8001EE0C:
-    v0 = (i32(a1) < i32(a3));
-    v1 = t0;
-    if (v0 == 0) goto loc_8001EE1C;
-    a3 = a1;
-loc_8001EE1C:
-    a1 = a2;
-    v0 = (i32(a1) < i32(v1));
-    if (v0 != 0) goto loc_8001EE34;
-    v1 = a2;
-    a1 = t0;
-loc_8001EE34:
-    v0 = lw(gp + 0x924);                                // Load from: gTmCeilingZ (80077F04)
-    v0 = (i32(a3) < i32(v0));
-    if (v0 == 0) goto loc_8001EE4C;
-    sw(a3, gp + 0x924);                                 // Store to: gTmCeilingZ (80077F04)
-loc_8001EE4C:
-    v0 = lw(gp + 0xC08);                                // Load from: gTmFloorZ (800781E8)
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8001EE64;
-    sw(v1, gp + 0xC08);                                 // Store to: gTmFloorZ (800781E8)
-loc_8001EE64:
-    v0 = lw(gp + 0x95C);                                // Load from: gTmDropoffZ (80077F3C)
-    v0 = (i32(a1) < i32(v0));
-    if (v0 == 0) goto loc_8001EE7C;
-    sw(a1, gp + 0x95C);                                 // Store to: gTmDropoffZ (80077F3C)
-loc_8001EE7C:
-    v0 = lw(a0 + 0x14);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001EEBC;
+
+    if (openBottom > *gTmFloorZ) {
+        *gTmFloorZ = openBottom;
     }
-    v1 = lw(gp + 0xAE0);                                // Load from: gNumCrossCheckLines (800780C0)
-    v0 = (i32(v1) < 8);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_8001EEB8;
+
+    if (lowFloor < *gTmDropoffZ) {
+        *gTmDropoffZ = lowFloor;
     }
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x70D8;                                       // Result = gpCrossCheckLines[0] (800A8F28)
-    at += v0;
-    sw(a0, at);
-    v0 = v1 + 1;
-    sw(v0, gp + 0xAE0);                                 // Store to: gNumCrossCheckLines (800780C0)
-loc_8001EEB8:
-    v0 = 1;                                             // Result = 00000001
-loc_8001EEBC:
-    return;
+
+    // PSX new addition: if the line has a special then save it for later testing to determine if the thing has crossed it and thus should trigger it.
+    // This was added so that monsters could use teleporters again, since that ability was lost in the Jaguar version of the game.
+    if (line.special) {
+        if (*gNumCrossCheckLines < MAX_CROSS_LINES) {
+            gpCrossCheckLines[*gNumCrossCheckLines] = &line;
+            *gNumCrossCheckLines += 1;
+        }
+    }
+
+    // This line does not block, ignoring height differences.
+    // This function does NOT check whether the thing can pass the line due to height differences!
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Check for a collision for the current thing being moved (in it's test position) against the input thing to this function.
 // Returns 'false' if there was a collision and saves the thing globally, if it is to be interacted with (damage, pickup).
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool PIT_CheckThing(mobj_t& mobj) noexcept {    
+static bool PIT_CheckThing(mobj_t& mobj) noexcept {
     // If it's not a special, blocking or shootable then we can't collide with it
     if ((mobj.flags & (MF_SPECIAL | MF_SOLID | MF_SHOOTABLE)) == 0)
         return true;
@@ -790,7 +768,7 @@ loc_8001F150:
 loc_8001F1B8:
     if (a1 == 0) goto loc_8001F1D8;
     a0 = t0;
-    PIT_CheckLine();
+    v0 = PIT_CheckLine(*vmAddrToPtr<line_t>(a0));
     s0 += 2;
     if (v0 != 0) goto loc_8001F1DC;
     v0 = 0;                                             // Result = 00000000
