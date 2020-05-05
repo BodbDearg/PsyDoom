@@ -434,7 +434,7 @@ static const ProgElem ELEMS[] = {
     { 0x8001DC94, 0x8001E0F4, "P_SpawnMissile",                         ProgElemType::FUNCTION },
     { 0x8001E0F4, 0x8001E4F4, "P_SpawnPlayerMissile",                   ProgElemType::FUNCTION },
     { 0x8001E4F4, 0x8001E720, "P_TryMove2",                             ProgElemType::FUNCTION },
-    { 0x8001E720, 0x8001E76C, "PM_PointOnDivlineSide",                  ProgElemType::FUNCTION },
+    { 0x8001E720, 0x8001E76C, "PM_PointOnLineSide",                     ProgElemType::FUNCTION },
     { 0x8001E76C, 0x8001E868, "PM_UnsetThingPosition",                  ProgElemType::FUNCTION },
     { 0x8001E868, 0x8001E978, "PM_SetThingPosition",                    ProgElemType::FUNCTION },
     { 0x8001E978, 0x8001EC68, "PM_CheckPosition",                       ProgElemType::FUNCTION },

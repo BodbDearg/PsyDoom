@@ -662,11 +662,13 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
 static bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
     // Get the line list for this blockmap cell
     const int16_t* pLineNum = (int16_t*)(gpBlockmapLump->get() + gpBlockmap->get()[y * (*gBlockmapWidth) + x]);
-
+    
     // Visit all lines in the cell, checking for intersection and potential collision.
     // Stop when there is a definite collision.
+    line_t* const pLines = gpLines->get();
+
     for (; *pLineNum != -1; ++pLineNum) {
-        line_t& line = gpLines->get()[*pLineNum];
+        line_t& line = pLines[*pLineNum];
 
         // Only check the line if not already checked this test
         if (line.validcount != *gValidCount) {

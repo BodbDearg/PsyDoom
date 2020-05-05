@@ -24,6 +24,12 @@ static const VmPtr<fixed_t>                         gTmDropoffZ(0x80077F3C);    
 static const VmPtr<int32_t>                         gNumCrossCheckLines(0x800780C0);    // How many lines to test for whether the thing crossed them or not: for determining when to trigger line specials
 static const VmPtr<VmPtr<line_t>[MAX_CROSS_LINES]>  gpCrossCheckLines(0x800A8F28);      // Lines to test for whether the thing crossed them or not: for determining when to trigger line specials
 
+// Not required externally: making private to this module
+static void PM_UnsetThingPosition(mobj_t& thing) noexcept;
+static void PM_SetThingPosition(mobj_t& mobj) noexcept;
+static bool PM_BlockLinesIterator(const int32_t x, const int32_t y) noexcept;
+static bool PM_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;
+
 void P_TryMove2() noexcept {
 loc_8001E4F4:
     v0 = 0x80080000;                                    // Result = 80080000
@@ -186,8 +192,12 @@ loc_8001E704:
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tell what side of the given line a point is on: returns '0' if on the front side, '1' if on the back side.
 // Same logic as 'R_PointOnSide' pretty much, but without the special optimized cases.
+//
+// PC-PSX: not compiling this as it is unused, and generates an unused warning.
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t PM_PointOnDivlineSide(const fixed_t x, const fixed_t y, const line_t& line) noexcept {
+#if !PC_PSX_DOOM_MODS
+
+static int32_t PM_PointOnLineSide(const fixed_t x, const fixed_t y, const line_t& line) noexcept {
     const int32_t dx = x - line.vertex1->x;
     const int32_t dy = y - line.vertex1->y;
     const int32_t lprod = (dx >> FRACBITS) * (line.dy >> FRACBITS);
@@ -195,11 +205,13 @@ int32_t PM_PointOnDivlineSide(const fixed_t x, const fixed_t y, const line_t& li
     return (rprod >= lprod);
 }
 
+#endif  // !PC_PSX_DOOM_MODS
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Unlinks the given thing from sector thing lists and the blockmap.
 // Very similar to 'P_UnsetThingPosition' except the thing is always unlinked from sectors.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PM_UnsetThingPosition(mobj_t& thing) noexcept {
+static void PM_UnsetThingPosition(mobj_t& thing) noexcept {
     // Remove the thing from sector thing lists
     if (thing.snext) {
         thing.snext->sprev = thing.sprev;
@@ -243,7 +255,7 @@ void PM_UnsetThingPosition(mobj_t& thing) noexcept {
 // Update the subsector for the thing. Also add the thing to sector and blockmap thing lists if applicable.
 // Almost the exact same as 'P_SetThingPosition' except the subsector for the thing must be precomputed first by 'PM_CheckPosition'.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void PM_SetThingPosition(mobj_t& mobj) noexcept {
+static void PM_SetThingPosition(mobj_t& mobj) noexcept {
     // Note: this function needs the subsector precomputed externally
     subsector_t& newSubsec = *gpNewSubsec->get();
     mobj.subsector = &newSubsec;
@@ -459,7 +471,7 @@ loc_8001EC04:
     a0 = s1;
 loc_8001EC14:
     a1 = s0;
-    PM_BlockLinesIterator();
+    v0 = PM_BlockLinesIterator(a0, a1);
     s0++;
     if (v0 == 0) goto loc_8001EA5C;
     v0 = (i32(s2) < i32(s0));
@@ -672,131 +684,39 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
     return ((mobj.flags & MF_SOLID) == 0);
 }
 
-void PM_BlockLinesIterator() noexcept {
-loc_8001F028:
-    v0 = *gBlockmapWidth;
-    mult(a1, v0);
-    v1 = *gpBlockmap;
-    sp -= 0x28;
-    sw(ra, sp + 0x24);
-    sw(s0, sp + 0x20);
-    v0 = lo;
-    v0 += a0;
-    v0 <<= 1;
-    v0 += v1;
-    v0 = lh(v0);
-    v1 = *gpBlockmapLump;
-    v0 <<= 1;
-    s0 = v0 + v1;
-    goto loc_8001F1DC;
-loc_8001F074:
-    v1 = u32(i32(v1) >> 16);
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v1 = *gpLines;
-    v0 <<= 2;
-    t0 = v0 + v1;
-    v0 = lw(t0 + 0x40);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
-    if (v0 == v1) goto loc_8001F1D8;
-    sw(v1, t0 + 0x40);
-    a2 = 0x80090000;                                    // Result = 80090000
-    a2 = lw(a2 + 0x7C1C);                               // Load from: gtTmbBox[3] (80097C1C)
-    v0 = lw(t0 + 0x2C);
-    v0 = (i32(v0) < i32(a2));
-    a1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_8001F1B8;
-    a1 = 0x80090000;                                    // Result = 80090000
-    a1 = lw(a1 + 0x7C18);                               // Load from: gtTmbBox[2] (80097C18)
-    v0 = lw(t0 + 0x30);
-    v0 = (i32(a1) < i32(v0));
-    if (v0 == 0) goto loc_8001F124;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 = lw(v1 + 0x7C10);                               // Load from: gtTmbBox[0] (80097C10)
-    v0 = lw(t0 + 0x28);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8001F124;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 = lw(a0 + 0x7C14);                               // Load from: gtTmbBox[1] (80097C14)
-    v0 = lw(t0 + 0x24);
-    v0 = (i32(a0) < i32(v0));
-    t2 = v1;
-    if (v0 != 0) goto loc_8001F12C;
-loc_8001F124:
-    a1 = 0;                                             // Result = 00000000
-    goto loc_8001F1B8;
-loc_8001F12C:
-    v1 = lw(t0 + 0x34);
-    v0 = 2;                                             // Result = 00000002
-    t3 = a0;
-    if (v1 != v0) goto loc_8001F148;
-    v0 = a1;
-    t1 = a2;
-    goto loc_8001F150;
-loc_8001F148:
-    v0 = a2;
-    t1 = a1;
-loc_8001F150:
-    a0 = lw(t0);
-    v1 = lw(a0);
-    a3 = lh(t0 + 0xE);
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 16);
-    mult(a3, v0);
-    a2 = lh(t0 + 0xA);
-    a0 = lw(a0 + 0x4);
-    a1 = lo;
-    v0 = t2 - a0;
-    v0 = u32(i32(v0) >> 16);
-    mult(v0, a2);
-    v0 = lo;
-    v1 = t1 - v1;
-    v1 = u32(i32(v1) >> 16);
-    mult(a3, v1);
-    v1 = lo;
-    a0 = t3 - a0;
-    a0 = u32(i32(a0) >> 16);
-    mult(a0, a2);
-    a1 = (i32(a1) < i32(v0));
-    v0 = lo;
-    v1 = (i32(v1) < i32(v0));
-    a1 ^= v1;
-    a1 = (a1 > 0);
-loc_8001F1B8:
-    if (a1 == 0) goto loc_8001F1D8;
-    a0 = t0;
-    v0 = PIT_CheckLine(*vmAddrToPtr<line_t>(a0));
-    s0 += 2;
-    if (v0 != 0) goto loc_8001F1DC;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8001F1F4;
-loc_8001F1D8:
-    s0 += 2;
-loc_8001F1DC:
-    v0 = -1;                                            // Result = FFFFFFFF
-    v1 = lh(s0);
-    a0 = lhu(s0);
-    {
-        const bool bJump = (v1 != v0);
-        v1 = a0 << 16;
-        if (bJump) goto loc_8001F074;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Check for potential collisions against all lines in the given blockmap cell, ignoring height differences.
+// Returns 'false' if there is a definite collision, 'true' otherwise.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool PM_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
+    // Get the line list for this blockmap cell
+    const int16_t* pLineNum = (int16_t*)(gpBlockmapLump->get() + gpBlockmap->get()[y * (*gBlockmapWidth) + x]);
+
+    // Visit all lines in the cell, checking for intersection and potential collision.
+    // Stop when there is a definite collision.
+    line_t* const pLines = gpLines->get();
+
+    for (; *pLineNum != -1; ++pLineNum) {
+        line_t& line = pLines[*pLineNum];
+
+        // Only check the line if not already checked this test
+        if (line.validcount != *gValidCount) {
+            line.validcount = *gValidCount;
+            
+            // If it's collided with and definitely blocking then stop
+            if (PM_BoxCrossLine(line) && (!PIT_CheckLine(line)))
+                return false;
+        }
     }
-    v0 = 1;                                             // Result = 00000001
-loc_8001F1F4:
-    ra = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x28;
-    return;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Check for collisions against all things in the given blockmap cell. Returns 'true' if there were no collisions, 'false' otherwise.
 // In some cases the thing collided with is saved in 'gpMoveThing' for futher interactions like pickups and damaging.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool PM_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
+static bool PM_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
     for (mobj_t* pmobj = gppBlockLinks->get()[x + y * (*gBlockmapWidth)].get(); pmobj; pmobj = pmobj->bnext.get()) {
         if (!PIT_CheckThing(*pmobj))
             return false;

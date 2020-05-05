@@ -94,7 +94,6 @@ extern void P_SpawnMissile() noexcept;
 extern void P_SpawnPlayerMissile() noexcept;
 extern void P_TryMove2() noexcept;
 extern void PM_CheckPosition() noexcept;
-extern void PM_BlockLinesIterator() noexcept;
 extern void T_PlatRaise() noexcept;
 extern void EV_DoPlat() noexcept;
 extern void P_ActivateInStasis() noexcept;
@@ -315,7 +314,6 @@ namespace PsxVm {
         { 0x8001E0F4, &P_SpawnPlayerMissile },
         { 0x8001E4F4, &P_TryMove2 },
         { 0x8001E978, &PM_CheckPosition },
-        { 0x8001F028, &PM_BlockLinesIterator },
         { 0x8001F280, &T_PlatRaise },
         { 0x8001F464, &EV_DoPlat },
         { 0x8001F760, &P_ActivateInStasis },
