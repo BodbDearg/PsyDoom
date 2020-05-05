@@ -3746,7 +3746,7 @@ static const ProgElem ELEMS[] = {
     { 0x80097BD0, 0x80097BF0, "gTex_LEGALS",                            ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80097BF0, 0x80097C00, "gEndBox",                                ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x80097C00, 0x80097C10, "gSTrace",                                ProgElemType::ARRAY, ProgElemType::INT32, 0 },
-    { 0x80097C10, 0x80097C20, "gtTmbBox",                               ProgElemType::ARRAY, ProgElemType::INT32, 0 },
+    { 0x80097C10, 0x80097C20, "gTestTmBBox",                            ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x80097C20, 0x80097C24, "gLIBSPU__spu_transferCallback",          ProgElemType::PTR32 },
     { 0x80097C24, 0x80097C34, "gPstats_Player1",                        ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x80097C34, 0x80097C44, "gPstats_Player2",                        ProgElemType::ARRAY, ProgElemType::INT32, 0 },

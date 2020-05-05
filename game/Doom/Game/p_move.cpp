@@ -12,6 +12,7 @@
 static const VmPtr<VmPtr<subsector_t>>  gpNewSubsec(0x800782BC);    // Destination subsector for the current move: set by 'PM_CheckPosition'
 static const VmPtr<uint32_t>            gTmFlags(0x80078078);       // Try move: flags for the thing being moved
 static const VmPtr<VmPtr<mobj_t>>       gpMoveThing(0x800782C4);    // Try move: the thing collided with (for code doing interactions with the thing)
+static const VmPtr<fixed_t[4]>          gTestTmBBox(0x80097C10);    // Bounding box for the current thing being collision tested. Set in 'PM_CheckPosition'.
 
 void P_TryMove2() noexcept {
 loc_8001E4F4:
@@ -475,81 +476,52 @@ loc_8001EC44:
     return;
 }
 
-void PM_BoxCrossLine() noexcept {
-    a2 = a0;
-    a1 = 0x80090000;                                    // Result = 80090000
-    a1 = lw(a1 + 0x7C1C);                               // Load from: gtTmbBox[3] (80097C1C)
-    v0 = lw(a2 + 0x2C);
-    v0 = (i32(v0) < i32(a1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8001ED6C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Test if 'gTestTmBBox' intersects the given line: returns 'true' if there is an intersection
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool PM_BoxCrossLine(line_t& line) noexcept {
+    // Check if the test bounding box is outside the bounding box of the line: if it is then early out
+    const bool bTestBBOutsideLineBB = (
+        (gTestTmBBox[BOXTOP] <= line.bbox[BOXBOTTOM]) ||
+        (gTestTmBBox[BOXBOTTOM] >= line.bbox[BOXTOP]) ||
+        (gTestTmBBox[BOXLEFT] >= line.bbox[BOXRIGHT]) ||
+        (gTestTmBBox[BOXRIGHT] <= line.bbox[BOXLEFT])
+    );
+
+    if (bTestBBOutsideLineBB)
+        return false;
+    
+    // Choose what line diagonal in the test box to test for crossing the line.
+    // This code is trying to get a box diagonal that is as perpendicular to the line as possible.
+    // Some lines for instance might run at 45 degrees and be parallel to the opposite box diagonal...
+    fixed_t x1;
+    fixed_t x2;
+
+    if (line.slopetype == ST_POSITIVE) {
+        x1 = gTestTmBBox[BOXLEFT];
+        x2 = gTestTmBBox[BOXRIGHT];
+    } else {
+        x1 = gTestTmBBox[BOXRIGHT];
+        x2 = gTestTmBBox[BOXLEFT];
     }
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 = lw(a0 + 0x7C18);                               // Load from: gtTmbBox[2] (80097C18)
-    v0 = lw(a2 + 0x30);
-    v0 = (i32(a0) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8001ED6C;
-    }
-    a3 = 0x80090000;                                    // Result = 80090000
-    a3 = lw(a3 + 0x7C10);                               // Load from: gtTmbBox[0] (80097C10)
-    v0 = lw(a2 + 0x28);
-    v0 = (i32(v0) < i32(a3));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8001ED6C;
-    }
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 = lw(v1 + 0x7C14);                               // Load from: gtTmbBox[1] (80097C14)
-    v0 = lw(a2 + 0x24);
-    v0 = (i32(v1) < i32(v0));
-    t2 = v1;
-    if (v0 != 0) goto loc_8001ECE4;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8001ED6C;
-loc_8001ECE4:
-    v1 = lw(a2 + 0x34);
-    v0 = 2;                                             // Result = 00000002
-    t0 = a3;
-    if (v1 != v0) goto loc_8001ED00;
-    v0 = a0;
-    t1 = a1;
-    goto loc_8001ED08;
-loc_8001ED00:
-    v0 = a1;
-    t1 = a0;
-loc_8001ED08:
-    v1 = lw(a2);
-    a0 = lw(v1);
-    a3 = lh(a2 + 0xE);
-    v0 -= a0;
-    v0 = u32(i32(v0) >> 16);
-    mult(a3, v0);
-    a2 = lh(a2 + 0xA);
-    v1 = lw(v1 + 0x4);
-    a1 = lo;
-    v0 = t0 - v1;
-    v0 = u32(i32(v0) >> 16);
-    mult(v0, a2);
-    t0 = lo;
-    a0 = t1 - a0;
-    a0 = u32(i32(a0) >> 16);
-    mult(a3, a0);
-    v0 = lo;
-    v1 = t2 - v1;
-    v1 = u32(i32(v1) >> 16);
-    mult(v1, a2);
-    a1 = (i32(a1) < i32(t0));
-    v1 = lo;
-    v0 = (i32(v0) < i32(v1));
-    v0 ^= a1;
-loc_8001ED6C:
-    return;
+
+    // Use the cross product trick found in many functions such as 'R_PointOnSide' to determine what side of the line
+    // both points of the test bounding box diagonal lie on.
+    const fixed_t lx = line.vertex1->x;
+    const fixed_t ly = line.vertex1->y;
+    const int32_t ldx = line.dx >> FRACBITS;
+    const int32_t ldy = line.dy >> FRACBITS;
+
+    const int32_t dx1 = (x1 - lx) >> FRACBITS;
+    const int32_t dy1 = (gTestTmBBox[BOXTOP] - ly) >> FRACBITS;
+    const int32_t dx2 = (x2 - lx) >> FRACBITS;
+    const int32_t dy2 = (gTestTmBBox[BOXBOTTOM] - ly) >> FRACBITS;
+
+    const uint32_t side1 = (ldy * dx1 < dy1 * ldx);
+    const uint32_t side2 = (ldy * dx2 < dy2 * ldx);
+
+    // If the bounding box diagonal line points are on opposite sides of the line, then the box crosses the line
+    return (side1 != side2);
 }
 
 void PIT_CheckLine() noexcept {
