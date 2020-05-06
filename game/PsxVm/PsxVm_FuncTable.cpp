@@ -81,7 +81,6 @@ extern void EV_TurnTagLightsOff() noexcept;
 extern void EV_LightTurnOn() noexcept;
 extern void T_Glow() noexcept;
 extern void P_SpawnGlowingLight() noexcept;
-extern void P_CheckPosition() noexcept;
 extern void P_TryMove() noexcept;
 extern void P_InterceptVector() noexcept;
 extern void P_UseLines() noexcept;
@@ -300,7 +299,6 @@ namespace PsxVm {
         { 0x8001B394, &EV_LightTurnOn },
         { 0x8001B4A0, &T_Glow },
         { 0x8001B558, &P_SpawnGlowingLight },
-        { 0x8001B640, &P_CheckPosition },
         { 0x8001B67C, &P_TryMove },
         { 0x8001B7A4, &P_InterceptVector },
         { 0x8001B9F4, &P_UseLines },

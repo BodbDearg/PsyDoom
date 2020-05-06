@@ -23,30 +23,29 @@ const VmPtr<fixed_t>            gAttackRange(0x80077F98);       // Maximum attac
 const VmPtr<angle_t>            gAttackAngle(0x80077F80);       // Angle of attack for an attacker
 const VmPtr<fixed_t>            gAimTopSlope(0x80077FF8);       // Maximum Z slope for shooting (defines Z range that stuff can be hit within)
 const VmPtr<fixed_t>            gAimBottomSlope(0x800782F8);    // Minimum Z slope for shooting (defines Z range that stuff can be hit within)
+const VmPtr<VmPtr<mobj_t>>      gpTryMoveThing(0x8007808C);     // Try move: the thing being moved
 const VmPtr<fixed_t>            gTryMoveX(0x80078150);          // Try move: position we're attempting to move to (X)
 const VmPtr<fixed_t>            gTryMoveY(0x80078154);          // Try move: position we're attempting to move to (Y)
-const VmPtr<VmPtr<mobj_t>>      gpTryMoveThing(0x8007808C);     // Try move: the thing being moved
+const VmPtr<bool32_t>           gbCheckPosOnly(0x800780E8);     // Try move: if 'true' then check if the position is valid to move to only, don't actually move there
 
 static const VmPtr<VmPtr<mobj_t>>   gpLineTarget(0x80077EE8);       // The thing being shot at in 'P_AimLineAttack' and 'P_LineAttack'.
 static const VmPtr<VmPtr<mobj_t>>   gpBombSource(0x80077EF0);       // Radius attacks: the thing responsible for the explosion (player, monster)
 static const VmPtr<VmPtr<mobj_t>>   gpBombSpot(0x800781A0);         // Radius attacks: the object exploding and it's position (barrel, missile etc.)
 static const VmPtr<int32_t>         gBombDamage(0x80077E94);        // Radius attacks: how much damage the explosion does before falloff
 
-void P_CheckPosition() noexcept {
-loc_8001B640:
-    sp -= 0x18;
-    v0 = 1;                                             // Result = 00000001
-    sw(ra, sp + 0x10);
-    sw(a0, gp + 0xAAC);                                 // Store to: gpTryMoveThing (8007808C)
-    sw(a1, gp + 0xB70);                                 // Store to: gTryMoveX (80078150)
-    sw(a2, gp + 0xB74);                                 // Store to: gTryMoveY (80078154)
-    sw(v0, gp + 0xB08);                                 // Store to: gbCheckPosOnly (800780E8)
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Test if the given x/y position can be moved to for the given map object and return 'true' if the move is allowed
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_CheckPosition(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
+    // Save inputs for P_TryMove2
+    *gbCheckPosOnly = true;
+    *gpTryMoveThing = &mobj;
+    *gTryMoveX = x;
+    *gTryMoveY = y;
+
+    // Check if the move can be done and return the output result
     P_TryMove2();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EC4);                               // Load from: gbTryMove2 (8007813C)
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    return *gbTryMove2;
 }
 
 void P_TryMove() noexcept {

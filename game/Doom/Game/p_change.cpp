@@ -23,7 +23,7 @@ void P_ThingHeightClip() noexcept {
     a2 = lw(s1 + 0x4);
     s0 ^= v0;
     s0 = (s0 < 1);
-    P_CheckPosition();
+    v0 = P_CheckPosition(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7E18);                               // Load from: gTmFloorZ (800781E8)
     v1 = 0x80070000;                                    // Result = 80070000
@@ -73,7 +73,7 @@ bool PIT_ChangeSector(mobj_t& mobj) noexcept {
     a2 = lw(s1 + 0x4);
     s0 ^= v0;
     s0 = (s0 < 1);
-    P_CheckPosition();
+    v0 = P_CheckPosition(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     v0 = 0x80080000;                                    // Result = 80080000
     v0 = lw(v0 - 0x7E18);                               // Load from: gTmFloorZ (800781E8)
     v1 = 0x80070000;                                    // Result = 80070000

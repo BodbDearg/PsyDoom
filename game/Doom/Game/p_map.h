@@ -9,11 +9,12 @@ extern const VmPtr<fixed_t>             gAttackRange;
 extern const VmPtr<angle_t>             gAttackAngle;
 extern const VmPtr<fixed_t>             gAimTopSlope;
 extern const VmPtr<fixed_t>             gAimBottomSlope;
+extern const VmPtr<VmPtr<mobj_t>>       gpTryMoveThing;
 extern const VmPtr<fixed_t>             gTryMoveX;
 extern const VmPtr<fixed_t>             gTryMoveY;
-extern const VmPtr<VmPtr<mobj_t>>       gpTryMoveThing;
+extern const VmPtr<bool32_t>            gbCheckPosOnly;
 
-void P_CheckPosition() noexcept;
+bool P_CheckPosition(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept;
 void P_TryMove() noexcept;
 void P_InterceptVector() noexcept;
 bool PIT_UseLines(line_t& line) noexcept;

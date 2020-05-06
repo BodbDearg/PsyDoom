@@ -170,56 +170,39 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
     }
 
     // Try and pick a point to spawn at
-    mapthing_t* pSpawnPt = nullptr;
+    mobj_t& playerMobj = *gPlayers[playerIdx].mo;
+    mapthing_t* pChosenSpawnPt = nullptr;
 
     if (*gNetGame == gt_deathmatch) {
         // Deathmatch game: try to choose a random spawn point that's good
         const int32_t numSpawnPts = (int32_t)(gpDeathmatchP->get() - gDeathmatchStarts.get());
 
         for (int32_t attemptNum = 0; attemptNum < 16; ++attemptNum) {
-            mapthing_t* const pCandidateSpawnPt = &gDeathmatchStarts[P_Random() % numSpawnPts];
-
-            a0 = gPlayers[playerIdx].mo;
-            a1 = (fixed_t) pCandidateSpawnPt->x << FRACBITS;
-            a2 = (fixed_t) pCandidateSpawnPt->y << FRACBITS;
-            P_CheckPosition();
-            const bool bPositionOk = v0;
-
+            mapthing_t& spawnPt = gDeathmatchStarts[P_Random() % numSpawnPts];
+            
             // If we found a good position we can stop.
             // Make sure the map object type is correct for this player index also.
-            if (bPositionOk) {
-                pSpawnPt = pCandidateSpawnPt;
-                pSpawnPt->type = 1 + (int16_t) playerIdx;
+            if (P_CheckPosition(playerMobj, (fixed_t) spawnPt.x << FRACBITS, (fixed_t) spawnPt.y << FRACBITS)) {
+                pChosenSpawnPt = &spawnPt;
+                pChosenSpawnPt->type = 1 + (int16_t) playerIdx;
                 break;
             }
         }
     }
     else {
-        // Cooperative game: try to spawn at this player's assigned spawn point first
-        mapthing_t* pCandidateSpawnPt = &gPlayerStarts[playerIdx];
-
-        a0 = gPlayers[playerIdx].mo;
-        a1 = (fixed_t) pCandidateSpawnPt->x << FRACBITS;
-        a2 = (fixed_t) pCandidateSpawnPt->y << FRACBITS;
-        P_CheckPosition();
-        bool bPositionOk = v0;
+        // Cooperative game: try to spawn at this player's preferred/assigned spawn point first
+        mapthing_t& prefSpawnPt = gPlayerStarts[playerIdx];
 
         // If that didn't work out try another player's spawn point
-        if (!bPositionOk) {
+        if (!P_CheckPosition(playerMobj, (fixed_t) prefSpawnPt.x << FRACBITS, (fixed_t) prefSpawnPt.y << FRACBITS)) {
             for (int32_t spawnPtIdx = 0; spawnPtIdx < MAXPLAYERS; ++spawnPtIdx) {
-                pCandidateSpawnPt = &gPlayerStarts[spawnPtIdx];
-                
-                a0 = gPlayers[playerIdx].mo;
-                a1 = (fixed_t) pCandidateSpawnPt->x << FRACBITS;
-                a2 = (fixed_t) pCandidateSpawnPt->y << FRACBITS;
-                P_CheckPosition();
-                bPositionOk = v0;
+                mapthing_t& otherSpawnPt = gPlayerStarts[spawnPtIdx];
 
                 // If we found a good position we can stop.
                 // Make sure the map object type is correct for this player index also.
-                if (bPositionOk) {
-                    pSpawnPt = pCandidateSpawnPt;
-                    pSpawnPt->type = 1 + (int16_t) playerIdx;
+                if (P_CheckPosition(playerMobj, (fixed_t) otherSpawnPt.x << FRACBITS, (fixed_t) otherSpawnPt.y << FRACBITS)) {
+                    pChosenSpawnPt = &otherSpawnPt;
+                    pChosenSpawnPt->type = 1 + (int16_t) playerIdx;
                     break;
                 }
             }
@@ -227,12 +210,12 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
     }
 
     // If we didn't find any good spawn point then just use the default start for this player
-    if (!pSpawnPt) {
-        pSpawnPt = &gPlayerStarts[playerIdx];
+    if (!pChosenSpawnPt) {
+        pChosenSpawnPt = &gPlayerStarts[playerIdx];
     }
 
     // Spawn the player
-    a0 = ptrToVmAddr(pSpawnPt);
+    a0 = ptrToVmAddr(pChosenSpawnPt);
     P_SpawnPlayer();
 
     // Restore all cooperative starts back to having their previous type, if we modified them.
@@ -242,8 +225,8 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
     }
     
     // Figure out what subsector the player will spawn in
-    const fixed_t spawnX = (fixed_t) pSpawnPt->x << FRACBITS;
-    const fixed_t spawnY = (fixed_t) pSpawnPt->y << FRACBITS;
+    const fixed_t spawnX = (fixed_t) pChosenSpawnPt->x << FRACBITS;
+    const fixed_t spawnY = (fixed_t) pChosenSpawnPt->y << FRACBITS;
     subsector_t* const pSubsec = R_PointInSubsector(spawnX, spawnY);
 
     // This mask wraps the fine angle for the map thing and restricts it to the 8 diagonal directions
@@ -251,7 +234,7 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
 
     // Compute the fine angle for the map thing and wrap + restrict to 8 directions.
     // The angle in the wad is from 0-360, so we must scale and adjust accordingly.
-    const uint32_t fineAngle = (((uint32_t) pSpawnPt->angle * FINEANGLES) / 360) & FINE_ANGLE_MASK;
+    const uint32_t fineAngle = (((uint32_t) pChosenSpawnPt->angle * FINEANGLES) / 360) & FINE_ANGLE_MASK;
     
     // Spawn teleport fog a bit away from the player in the direction the player is facing (clamped to 8 directions)
     mobj_t* const pSpawnedThing = P_SpawnMObj(
