@@ -200,7 +200,7 @@ loc_80028AEC:
     a1 = lw(s2);
     a2 = lw(s2 + 0x4);
     a0 = s1;
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     a0 = 0xFFFF0000;                                    // Result = FFFF0000
     v1 = lw(s1 + 0x64);
     a0 |= 0x7FFF;                                       // Result = FFFF7FFF

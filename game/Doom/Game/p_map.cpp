@@ -48,78 +48,48 @@ bool P_CheckPosition(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
     return *gbTryMove2;
 }
 
-void P_TryMove() noexcept {
-loc_8001B67C:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    sw(s0, gp + 0xAAC);                                 // Store to: gpTryMoveThing (8007808C)
-    sw(a1, gp + 0xB70);                                 // Store to: gTryMoveX (80078150)
-    sw(a2, gp + 0xB74);                                 // Store to: gTryMoveY (80078154)
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Try move the given map object to the x/y position and return 'true' if the move is allowed.
+// This function will also do direct damage interactions for missiles, and item pickups if a player map object is being moved.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_TryMove(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
+    // Save inputs for P_TryMove2 and attempt to do the move
+    *gpTryMoveThing = &mobj;
+    *gTryMoveX = x;
+    *gTryMoveY = y;
     P_TryMove2();
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7D3C);                               // Load from: gpMoveThing (800782C4)
-    v0 = 0x10000;                                       // Result = 00010000
-    if (a0 == 0) goto loc_8001B788;
-    v1 = lw(s0 + 0x64);
-    v0 &= v1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x1000000;                                 // Result = 01000000
-        if (bJump) goto loc_8001B708;
+
+    // If we collided with something then try and interact with it it
+    mobj_t* const pCollideThing = gpMoveThing->get();
+
+    if (pCollideThing) {
+        if (mobj.flags & MF_MISSILE) {
+            // This thing being moved is a missile bashing into something: damage the thing hit
+            const int32_t damage = ((P_Random() & 7) + 1) * mobj.info->damage;
+            P_DamageMObj(*pCollideThing, &mobj, mobj.target.get(), damage);
+        } 
+        else if (mobj.flags & MF_SKULLFLY) {
+            // This thing being moved is a skull which has based into something: damage the thing hit
+            const int32_t damage = ((P_Random() & 7) + 1) * mobj.info->damage;
+            P_DamageMObj(*pCollideThing, &mobj, &mobj, damage);
+
+            // Kill the skull velocity and stop it flying
+            mobj.momz = 0;
+            mobj.momy = 0;
+            mobj.momx = 0;
+            mobj.flags &= ~MF_SKULLFLY;
+
+            // Skull goes back to it's idle state on hitting something
+            P_SetMObjState(mobj, mobj.info->spawnstate);
+        }
+        else {
+            // In all other cases try to pickup the item collided with if possible.
+            // Note: if we are hitting this case then the thing being moved MUST be a player.
+            P_TouchSpecialThing(*pCollideThing, mobj);
+        }
     }
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x58);
-    v0 &= 7;
-    v1 = lw(v1 + 0x4C);
-    v0++;
-    mult(v0, v1);
-    a1 = s0;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7D3C);                               // Load from: gpMoveThing (800782C4)
-    a2 = lw(a1 + 0x74);
-    a3 = lo;
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    goto loc_8001B788;
-loc_8001B708:
-    v0 &= v1;
-    if (v0 == 0) goto loc_8001B780;
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x58);
-    v0 &= 7;
-    v1 = lw(v1 + 0x4C);
-    v0++;
-    mult(v0, v1);
-    a1 = s0;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7D3C);                               // Load from: gpMoveThing (800782C4)
-    a3 = lo;
-    a2 = s0;
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    a0 = 0xFEFF0000;                                    // Result = FEFF0000
-    v0 = lw(s0 + 0x64);
-    v1 = lw(s0 + 0x58);
-    a0 |= 0xFFFF;                                       // Result = FEFFFFFF
-    sw(0, s0 + 0x50);
-    sw(0, s0 + 0x4C);
-    sw(0, s0 + 0x48);
-    v0 &= a0;
-    sw(v0, s0 + 0x64);
-    a1 = lw(v1 + 0x4);
-    a0 = s0;
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-    goto loc_8001B788;
-loc_8001B780:
-    a1 = s0;
-    P_TouchSpecialThing(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1));
-loc_8001B788:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7EC4);                               // Load from: gbTryMove2 (8007813C)
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    return *gbTryMove2;     // Was the move a success?
 }
 
 void P_InterceptVector() noexcept {

@@ -54,7 +54,7 @@ void P_PlayerMove() noexcept {
     }
 loc_80029838:
     a0 = s0;
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     {
         const bool bJump = (v0 != 0);
         v0 = 0x100000;                                  // Result = 00100000
@@ -99,7 +99,7 @@ loc_80029898:
     a2 = lw(s0 + 0x4);
     a1 = lw(s0);
     a2 += s1;
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     a0 = s0;
     if (v0 == 0) goto loc_800298BC;
     sw(0, s0 + 0x48);
@@ -109,7 +109,7 @@ loc_800298BC:
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
     a1 += s2;
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     if (v0 == 0) goto loc_800298E0;
     sw(s2, s0 + 0x48);
     sw(0, s0 + 0x4C);

@@ -292,6 +292,9 @@ bool P_GivePower(player_t& player, const powertype_t power) noexcept {
 // Tries to make the given touching object pickup the special object.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
+    // PC-PSX: document/assert usage assumptions: should only be called for player things!
+    ASSERT(mobj.player);
+
     // See if the thing is out of reach vertically: do not pickup if that is the case
     const fixed_t dz = special.z - toucher.z;
 

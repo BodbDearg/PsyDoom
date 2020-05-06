@@ -624,7 +624,7 @@ void P_CheckMissileSpawn() noexcept {
     a2 = lw(s0 + 0x4);
     v1 += v0;
     sw(v1, s0 + 0x8);
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     if (v0 != 0) goto loc_8001DC80;
     v1 = lw(s0 + 0x54);
     sw(0, s0 + 0x50);
@@ -880,7 +880,7 @@ loc_8001DFC4:
     v0 = u32(i32(v0) >> 1);
     v0 += v1;
     sw(v0, s1 + 0x8);
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     {
         const bool bJump = (v0 != 0);
         v0 = s1;
@@ -1124,7 +1124,7 @@ loc_8001E368:
     v0 = u32(i32(v0) >> 1);
     v0 += v1;
     sw(v0, s2 + 0x8);
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     if (v0 != 0) goto loc_8001E4C4;
     v1 = lw(s2 + 0x54);
     sw(0, s2 + 0x50);

@@ -13,12 +13,12 @@
 
 static constexpr int32_t MAX_CROSS_LINES = 8;
 
-const VmPtr<bool32_t>   gbTryMove2(0x8007813C);     // Whether the move attempt by 'P_TryMove2' was successful or not ('true' if move allowed)
+const VmPtr<bool32_t>           gbTryMove2(0x8007813C);     // Whether the move attempt by 'P_TryMove2' was successful or not ('true' if move allowed)
+const VmPtr<VmPtr<mobj_t>>      gpMoveThing(0x800782C4);    // The thing collided with (for code doing interactions with the thing)
 
 static const VmPtr<VmPtr<subsector_t>>              gpNewSubsec(0x800782BC);            // Destination subsector for the current move: set by 'PM_CheckPosition'
 static const VmPtr<uint32_t>                        gTmFlags(0x80078078);               // Flags for the thing being moved
 static const VmPtr<fixed_t[4]>                      gTestTmBBox(0x80097C10);            // Bounding box for the current thing being collision tested. Set in 'PM_CheckPosition'.
-static const VmPtr<VmPtr<mobj_t>>                   gpMoveThing(0x800782C4);            // The thing collided with (for code doing interactions with the thing)
 static const VmPtr<VmPtr<line_t>>                   gpBlockLine(0x80078248);            // The line collided with
 static const VmPtr<fixed_t>                         gTmCeilingZ(0x80077F04);            // The Z value for the lowest ceiling the collider is in contact with
 static const VmPtr<fixed_t>                         gTmFloorZ(0x800781E8);              // The Z value for the highest floor the collider is in contact with

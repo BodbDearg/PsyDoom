@@ -15,7 +15,7 @@ extern const VmPtr<fixed_t>             gTryMoveY;
 extern const VmPtr<bool32_t>            gbCheckPosOnly;
 
 bool P_CheckPosition(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept;
-void P_TryMove() noexcept;
+bool P_TryMove(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept;
 void P_InterceptVector() noexcept;
 bool PIT_UseLines(line_t& line) noexcept;
 void P_UseLines() noexcept;

@@ -150,7 +150,7 @@ loc_80015E00:
     v0 = lw(s0 + 0x4);
     a2 = lo;
     a2 += v0;
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     {
         const bool bJump = (v0 != 0);
         v0 = 0xFFDF0000;                                // Result = FFDF0000
@@ -2549,7 +2549,7 @@ loc_80018270:
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
     a0 = s0;
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     a0 = s0;
     if (v0 != 0) goto loc_80018328;
     a1 = s2;
@@ -2662,7 +2662,7 @@ loc_80018440:
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
     a0 = s0;
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     a0 = s0;
     if (v0 != 0) goto loc_800184F8;
     a1 = s2;
@@ -2751,7 +2751,7 @@ loc_800185A4:
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
     a0 = s0;
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     a0 = s0;
     if (v0 != 0) goto loc_8001865C;
     a1 = s2;
@@ -2826,7 +2826,7 @@ loc_800186D0:
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
     a0 = s0;
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     a0 = s0;
     if (v0 != 0) goto loc_80018788;
     a1 = s2;
@@ -2901,7 +2901,7 @@ loc_800187FC:
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
     a0 = s0;
-    P_TryMove();
+    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
     a0 = s0;
     if (v0 != 0) goto loc_800188B4;
     a1 = s2;
