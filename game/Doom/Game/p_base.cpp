@@ -83,8 +83,8 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
     fixed_t yuse = yleft;
 
     while ((std::abs(xuse) > MAXMOVE) || (std::abs(yuse) > MAXMOVE)) {
-        xuse /= 2;
-        yuse /= 2;
+        xuse >>= 1;
+        yuse >>= 1;
     }
 
     // Continue moving until we are done
@@ -161,7 +161,7 @@ static void P_FloatChange(mobj_t& mobj) noexcept {
 
     // Get the height difference to the target and multiply by 3 for an apparent fudge factor. Not sure why the fudge was added in...
     // I'm wondering also should this have been getting the (vertical) center to center height difference instead?
-    const fixed_t dz = (mobj.height / 2 + target.z - mobj.z) * 3;
+    const fixed_t dz = ((mobj.height >> 1) + target.z - mobj.z) * 3;
     
     if (dz < 0) {
         if (approxDist < -dz) {     // N.B: 'dz' is signed difference and negative here, need to adjust

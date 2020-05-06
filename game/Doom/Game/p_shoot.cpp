@@ -64,9 +64,9 @@ void P_Shoot2() noexcept {
     *gbShootDivPositive = ((gShootDiv->dx ^ gShootDiv->dy) > 0);
 
     // Figure out the shot height and shot center line slope
-    *gShootZ = shooter.z + shooter.height / 2 + (8 * FRACUNIT);
-    *gAimMidSlope = (*gAimTopSlope + *gAimBottomSlope) / 2;
-
+    *gShootZ = shooter.z + (shooter.height >> 1) + (8 * FRACUNIT);
+    *gAimMidSlope = (*gAimTopSlope + *gAimBottomSlope) >> 1;
+    
     // Precompute the start and end points for the shot line (integer/whole coords)
     *gSsx1 = gShootDiv->x >> FRACBITS;
     *gSsy1 = gShootDiv->y >> FRACBITS;
@@ -233,7 +233,7 @@ bool PA_ShootThing(mobj_t& thing, const fixed_t hitFrac) noexcept {
     thingBottomSlope = std::max(thingBottomSlope, *gAimBottomSlope);
 
     // Shoot the thing midway along the visible parts of it and remember what is being shot
-    *gShootSlope = (thingTopSlope + thingBottomSlope) / 2;
+    *gShootSlope = (thingTopSlope + thingBottomSlope) >> 1;
     *gpShootMObj = &thing;
 
     // Adjust the hit point so it is a little closer - move away from thing center by 10.0 units.

@@ -250,7 +250,7 @@ void I_UpdatePalette() noexcept {
     int32_t redAmount = player.damagecount;
 
     if (player.powers[pw_strength] != 0) {
-        const int32_t berserkAmount = 12 - player.powers[pw_strength] / 64;
+        const int32_t berserkAmount = 12 - (player.powers[pw_strength] >> 6);
         
         if (berserkAmount > redAmount) {
             redAmount = berserkAmount;
@@ -271,7 +271,7 @@ void I_UpdatePalette() noexcept {
         paletteIdx = INVULNERABILITYPAL;
     }
     else if (redAmount != 0) {
-        int32_t redPalIdx = (redAmount + 7) / 8;
+        int32_t redPalIdx = (redAmount + 7) >> 3;
         
         if (redPalIdx >= NUMREDPALS) {
             redPalIdx = NUMREDPALS - 1;
@@ -283,7 +283,7 @@ void I_UpdatePalette() noexcept {
         paletteIdx = RADIATIONPAL;
     }
     else if (player.bonuscount != 0) {
-        int32_t bonusPalIdx = (player.bonuscount + 7) / 8;
+        int32_t bonusPalIdx = (player.bonuscount + 7) >> 3;
         
         if (bonusPalIdx >= NUMBONUSPALS) {
             bonusPalIdx = NUMBONUSPALS - 1;

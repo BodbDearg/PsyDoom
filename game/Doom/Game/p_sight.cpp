@@ -86,13 +86,13 @@ bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
     *gT2ys = *gT2y >> FRACBITS;
 
     // This is how high the sight point is at (eyeball level -1/4 height down from the top)
-    const fixed_t sightZStart = mobj1.z + mobj1.height - mobj1.height / 4;
+    const fixed_t sightZStart = mobj1.z + mobj1.height - (mobj1.height >> 2);
     *gSightZStart = sightZStart;
-
+    
     // Figure out the initial top and bottom slopes for the the vertical sight range
     *gTopSlope = mobj2.z + mobj2.height - sightZStart;
     *gBottomSlope = mobj2.z - sightZStart;
-
+    
     // Doing a new raycast so update the visitation mark which tells us if stuff has already been processed
     *gValidCount += 1;
 

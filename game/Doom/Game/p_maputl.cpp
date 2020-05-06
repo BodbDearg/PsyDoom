@@ -22,7 +22,7 @@ const VmPtr<fixed_t>    gLowFloor(0x800781DC);      // Line opening (floor/ceili
 fixed_t P_AproxDistance(const fixed_t dx, const fixed_t dy) noexcept {
     const fixed_t udx = std::abs(dx);
     const fixed_t udy = std::abs(dy);
-    return udx + udy - std::min(udx, udy) / 2;
+    return udx + udy - (std::min(udx, udy) >> 1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -668,7 +668,7 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
     // Target is now a corpse and can fall off cliffs.
     // Also reduce bounding box height considerably - not sure why that matters now though.
     target.flags |= MF_CORPSE | MF_DROPOFF;
-    target.height /= 4;
+    target.height >>= 2;
     
     // Do stat counting adjustments for the kill
     player_t* const pTargetPlayer = target.player.get();
@@ -786,7 +786,7 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
     if (pTargetPlayer) {
         // In the lowest skill mode only half damage is applied
         if (*gGameSkill == sk_baby) {
-            damageAmt /= 2;
+            damageAmt >>= 1;
         }
 
         // If more than 30 HP are taken then do the special shocked face for that

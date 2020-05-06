@@ -253,7 +253,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
         }
 
         uStepPerX /= HALF_SCREEN_W;
-        vStepPerX /= HALF_SCREEN_W;        
+        vStepPerX /= HALF_SCREEN_W;
 
         // Compute the uv coordinates for the left and right of the span
         const int32_t spanViewL = spanL - HALF_SCREEN_W;
@@ -294,8 +294,8 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
             int32_t r, g, b;
 
             if (*gbDoViewLighting) {
-                int32_t lightIntensity = LIGHT_INTENSTIY_MAX - dist / 2;
-            
+                int32_t lightIntensity = LIGHT_INTENSTIY_MAX - (dist >> 1);
+                
                 if (lightIntensity < LIGHT_INTENSTIY_MIN) {
                     lightIntensity = LIGHT_INTENSTIY_MIN;
                 } 

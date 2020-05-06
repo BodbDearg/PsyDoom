@@ -211,7 +211,7 @@ void P_CheckCheats() noexcept {
 
             // Restore previous tick counters on unpause
             *gTicCon = *gTicConOnPause;
-            *gLastTgtGameTicCount = *gTicConOnPause / (REFRESHRATE / TICRATE);
+            *gLastTgtGameTicCount = *gTicConOnPause >> VBLANK_TO_TIC_SHIFT;
         }
 
         // Showing the options menu if the game is paused and the options button has just been pressed.

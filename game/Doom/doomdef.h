@@ -63,6 +63,7 @@ static constexpr int32_t MAXPLAYERS = 2;
 static constexpr int32_t TICRATE = 15;
 static constexpr int32_t DRAWRATE = 60;
 static constexpr int32_t REFRESHRATE = 60;
+static constexpr int32_t VBLANK_TO_TIC_SHIFT = 2;   // How many bits to shift right to get from vblanks to to tics
 
 // What type of game is being played
 enum gametype_t : uint32_t {

@@ -419,7 +419,7 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
         // Figure out the approximate distance to the sound source and don't play if too far away
         const fixed_t dx = std::abs(pListener->x - pOrigin->x);
         const fixed_t dy = std::abs(pListener->y - pOrigin->y);
-        const fixed_t approxDist = dx + dy - std::min(dx, dy) / 2;
+        const fixed_t approxDist = dx + dy - (std::min(dx, dy) >> 1);
 
         if (approxDist > S_CLIPPING_DIST)
             return;
@@ -437,7 +437,7 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
         // Figure out pan amount based on the angle
         {
             const fixed_t sina = gFineSine[angle >> ANGLETOFINESHIFT];
-            pan = WESS_PAN_CENTER - (FixedMul(sina, S_STEREO_SWING) >> FRACBITS) / 2;
+            pan = WESS_PAN_CENTER - ((FixedMul(sina, S_STEREO_SWING) >> FRACBITS) >> 1);
         }
         
         // Figure out volume level
