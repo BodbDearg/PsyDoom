@@ -425,7 +425,7 @@ static const ProgElem ELEMS[] = {
     { 0x8001C838, 0x8001CA18, "P_RespawnSpecials",                      ProgElemType::FUNCTION },
     { 0x8001CA18, 0x8001CB9C, "P_SetMObjState",                         ProgElemType::FUNCTION },
     { 0x8001CB9C, 0x8001CC68, "P_ExplodeMissile",                       ProgElemType::FUNCTION },
-    { 0x8001CC68, 0x8001CE40, "P_SpawnMObj",                            ProgElemType::FUNCTION },
+    { 0x8001CC68, 0x8001CE40, "P_SpawnMobj",                            ProgElemType::FUNCTION },
     { 0x8001CE40, 0x8001D184, "P_SpawnPlayer",                          ProgElemType::FUNCTION },
     { 0x8001D184, 0x8001D704, "P_SpawnMapThing",                        ProgElemType::FUNCTION },
     { 0x8001D704, 0x8001D930, "P_SpawnPuff",                            ProgElemType::FUNCTION },

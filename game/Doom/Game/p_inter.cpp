@@ -293,7 +293,7 @@ bool P_GivePower(player_t& player, const powertype_t power) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
     // PC-PSX: document/assert usage assumptions: should only be called for player things!
-    ASSERT(mobj.player);
+    ASSERT(toucher.player);
 
     // See if the thing is out of reach vertically: do not pickup if that is the case
     const fixed_t dz = special.z - toucher.z;
@@ -752,7 +752,7 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
     }
 
     if (dropItemType != mobjtype_t{}) {
-        mobj_t& droppedItem = *P_SpawnMObj(target.x, target.y, ONFLOORZ, dropItemType);
+        mobj_t& droppedItem = *P_SpawnMobj(target.x, target.y, ONFLOORZ, dropItemType);
         droppedItem.flags |= MF_DROPPED;    // Less ammo for picking up dropped items
     }
 }

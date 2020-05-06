@@ -4,6 +4,7 @@
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/Renderer/r_local.h"
 #include "p_ceiling.h"
 #include "p_doors.h"
 #include "p_floor.h"

@@ -22,6 +22,7 @@
 #include "p_setup.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
+#include <algorithm>
 
 // Item respawn queue
 static constexpr int32_t ITEMQUESIZE = 64;
@@ -108,7 +109,7 @@ void P_RespawnSpecials() noexcept {
 
     // Spawn an item appear fog (like teleport fog)
     {
-        mobj_t& mobj = *P_SpawnMObj(x, y, sec.floorheight, MT_IFOG);
+        mobj_t& mobj = *P_SpawnMobj(x, y, sec.floorheight, MT_IFOG);
         S_StartSound(&mobj, sfx_itmbk);
     }
     
@@ -126,7 +127,7 @@ void P_RespawnSpecials() noexcept {
     const fixed_t z = (mobjinfo.flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
 
     // Spawn the item itself
-    mobj_t& mobj = *P_SpawnMObj(x, y, z, mobjType);
+    mobj_t& mobj = *P_SpawnMobj(x, y, z, mobjType);
     mobj.angle = (mapthing.angle / 45) * ANG45;
     mobj.spawnx = mapthing.x;
     mobj.spawny = mapthing.y;
@@ -174,25 +175,21 @@ bool P_SetMObjState(mobj_t& mobj, const statenum_t stateNum) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_ExplodeMissile(mobj_t& mobj) noexcept {
     // Kill all momentum and enter death state
-    mobj.momz = 0;
-    mobj.momy = 0;
     mobj.momx = 0;
-    P_SetMObjState(mobj, gMObjInfo[mobj.type].deathstate);
+    mobj.momy = 0;
+    mobj.momz = 0;
 
-    // Some random state tic variation
-    mobj.tics -= P_Random() & 1;
-    
-    if (mobj.tics < 1) {
-        mobj.tics = 1;
-    }
+    mobjinfo_t& mobjInfo = *mobj.info;
+    P_SetMObjState(mobj, mobjInfo.deathstate);
 
-    // No longer a missile
+    // Some random state tic variation and make no longer a missile
+    mobj.tics = std::max(mobj.tics - (P_Random() & 1), 1);
     mobj.flags &= (~MF_MISSILE);
 
     // Stop the missile sound and start the explode sound
-    if (mobj.info->deathsound != sfx_None) {
+    if (mobjInfo.deathsound != sfx_None) {
         S_StopSound(mobj.target);
-        S_StartSound(&mobj, mobj.info->deathsound);
+        S_StartSound(&mobj, mobjInfo.deathsound);
     }
 }
 
@@ -204,10 +201,10 @@ void _thunk_P_ExplodeMissile() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Spawn a thing with the specified type at the given location in space
 //------------------------------------------------------------------------------------------------------------------------------------------
-mobj_t* P_SpawnMObj(const fixed_t x, const fixed_t y, const fixed_t z, const mobjtype_t type) noexcept {
+mobj_t* P_SpawnMobj(const fixed_t x, const fixed_t y, const fixed_t z, const mobjtype_t type) noexcept {
     // Alloc and zero initialize the map object
     mobj_t& mobj = *(mobj_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(mobj_t), PU_LEVEL, nullptr);
-    D_memset(&mobj, (std::byte) 0, sizeof(mobj_t));
+    D_memset(&mobj, std::byte(0), sizeof(mobj_t));
 
     // Fill in basic fields
     mobjinfo_t& info = gMObjInfo[type];
@@ -512,7 +509,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     // Decide whether the thing spawns on the ceiling or floor and spawn it
     const fixed_t z = (info.flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
 
-    mobj_t& mobj = *P_SpawnMObj(
+    mobj_t& mobj = *P_SpawnMobj(
         (fixed_t) mapthing.x << FRACBITS,
         (fixed_t) mapthing.y << FRACBITS,
         z,
@@ -562,7 +559,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
 void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept {
     // Spawn the puff and randomly adjust its height
     const fixed_t spawnZ = z + ((P_Random() - P_Random()) << 10);
-    mobj_t& mobj = *P_SpawnMObj(x, y, spawnZ, MT_PUFF);
+    mobj_t& mobj = *P_SpawnMobj(x, y, spawnZ, MT_PUFF);
 
     // Give some upward momentum and randomly adjust tics left
     mobj.momz = FRACUNIT;
@@ -584,7 +581,7 @@ void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept {
 void P_SpawnBlood(const fixed_t x, const fixed_t y, const fixed_t z, const int32_t damage) noexcept {
     // Spawn the puff and randomly adjust its height
     const fixed_t spawnZ = z + ((P_Random() - P_Random()) << 10);
-    mobj_t& mobj = *P_SpawnMObj(x, y, spawnZ, MT_BLOOD);
+    mobj_t& mobj = *P_SpawnMobj(x, y, spawnZ, MT_BLOOD);
 
     // Give some upward momentum and randomly adjust tics left
     mobj.momz = 2 * FRACUNIT;
@@ -602,344 +599,65 @@ void P_SpawnBlood(const fixed_t x, const fixed_t y, const fixed_t z, const int32
     }
 }
 
-void P_CheckMissileSpawn() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v0 = lw(s0 + 0x48);
-    v1 = lw(s0);
-    a2 = lw(s0 + 0x4);
-    v0 = u32(i32(v0) >> 1);
-    v0 += v1;
-    sw(v0, s0);
-    v0 = lw(s0 + 0x4C);
-    a1 = lw(s0);
-    v1 = lw(s0 + 0x50);
-    v0 = u32(i32(v0) >> 1);
-    v0 += a2;
-    v1 = u32(i32(v1) >> 1);
-    sw(v0, s0 + 0x4);
-    v0 = lw(s0 + 0x8);
-    a2 = lw(s0 + 0x4);
-    v1 += v0;
-    sw(v1, s0 + 0x8);
-    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    if (v0 != 0) goto loc_8001DC80;
-    v1 = lw(s0 + 0x54);
-    sw(0, s0 + 0x50);
-    sw(0, s0 + 0x4C);
-    sw(0, s0 + 0x48);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F94;                                       // Result = MObjInfo_MT_PLAYER[C] (8005E06C)
-    at += v0;
-    a1 = lw(at);
-    a0 = s0;
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x5C);
-    v0 &= 1;
-    v1 -= v0;
-    sw(v1, s0 + 0x5C);
-    if (i32(v1) > 0) goto loc_8001DC38;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s0 + 0x5C);
-loc_8001DC38:
-    a0 = 0xFFFE0000;                                    // Result = FFFE0000
-    a0 |= 0xFFFF;                                       // Result = FFFEFFFF
-    v0 = lw(s0 + 0x64);
-    v1 = lw(s0 + 0x58);
-    v0 &= a0;
-    sw(v0, s0 + 0x64);
-    v0 = lw(v1 + 0x38);
-    if (v0 == 0) goto loc_8001DC80;
-    a0 = lw(s0 + 0x74);
-    S_StopSound((sfxenum_t) a0);
-    v0 = lw(s0 + 0x58);
-    a1 = lw(v0 + 0x38);
-    a0 = s0;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_8001DC80:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Moves a missile a little after spawning to see if it spawned in a wall or something, and explodes it immediately if so
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_CheckMissileSpawn(mobj_t& mobj) noexcept {
+    // Note: using division by '2' here yields a slightly different result in some cases, such as with the number '0x80000001'.
+    // Shifts are required for demo accurate behavior!
+    mobj.x += mobj.momx >> 1;
+    mobj.y += mobj.momy >> 1;
+    mobj.z += mobj.momz >> 1;
+    
+    if (!P_TryMove(mobj, mobj.x, mobj.y)) {
+        P_ExplodeMissile(mobj);
+    }
 }
 
-void P_SpawnMissile() noexcept {
-loc_8001DC94:
-    sp -= 0x30;
-    sw(s4, sp + 0x20);
-    s4 = a0;
-    sw(s6, sp + 0x28);
-    s6 = a1;
-    sw(s0, sp + 0x10);
-    s0 = a2;
-    a1 = 0x94;                                          // Result = 00000094
-    a2 = 2;                                             // Result = 00000002
-    a3 = 0;                                             // Result = 00000000
-    a0 = *gpMainMemZone;
-    v0 = 0x200000;                                      // Result = 00200000
-    sw(ra, sp + 0x2C);
-    sw(s5, sp + 0x24);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v1 = lw(s4 + 0x8);
-    s1 = lw(s4);
-    s2 = lw(s4 + 0x4);
-    s5 = v1 + v0;
-    _thunk_Z_Malloc();
-    s3 = v0;
-    a0 = s3;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x94;                                          // Result = 00000094
-    _thunk_D_memset();
-    v0 = s0 << 1;
-    v0 += s0;
-    v0 <<= 2;
-    v0 -= s0;
-    v0 <<= 3;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x1FC4;                                       // Result = MObjInfo_MT_PLAYER[0] (8005E03C)
-    v0 += v1;
-    sw(s0, s3 + 0x54);
-    sw(v0, s3 + 0x58);
-    sw(s1, s3);
-    sw(s2, s3 + 0x4);
-    v1 = lw(v0 + 0x40);
-    sw(v1, s3 + 0x40);
-    v1 = lw(v0 + 0x44);
-    sw(v1, s3 + 0x44);
-    v1 = lw(v0 + 0x54);
-    sw(v1, s3 + 0x64);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s3 + 0x68);
-    v1 = lw(v0 + 0x14);
-    sw(v1, s3 + 0x78);
-    v1 = lw(v0 + 0x4);
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s3 + 0x60);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s3 + 0x5C);
-    v1 = lw(v0);
-    sw(v1, s3 + 0x28);
-    v0 = lw(v0 + 0x4);
-    a0 = s3;
-    sw(v0, s3 + 0x2C);
-    P_SetThingPosition(*vmAddrToPtr<mobj_t>(a0));
-    v0 = lw(s3 + 0xC);
-    v0 = lw(v0);
-    v1 = lw(s3 + 0xC);
-    v0 = lw(v0);
-    sw(v0, s3 + 0x38);
-    v0 = lw(v1);
-    v1 = lw(v0 + 0x4);
-    v0 = 0x80000000;                                    // Result = 80000000
-    sw(v1, s3 + 0x3C);
-    if (s5 != v0) goto loc_8001DDFC;
-    v0 = lw(s3 + 0x38);
-    sw(v0, s3 + 0x8);
-    goto loc_8001DE2C;
-loc_8001DDFC:
-    v0 = 0x7FFF0000;                                    // Result = 7FFF0000
-    v0 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    if (s5 != v0) goto loc_8001DE28;
-    v0 = lw(s3 + 0x58);
-    v0 = lw(v0 + 0x44);
-    v0 = v1 - v0;
-    sw(v0, s3 + 0x8);
-    goto loc_8001DE2C;
-loc_8001DE28:
-    sw(s5, s3 + 0x8);
-loc_8001DE2C:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    sw(s3, v0 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7170;                                       // Result = gMObjHead[0] (800A8E90)
-    sw(v0, s3 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    s1 = s3;
-    sw(v0, s3 + 0x10);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(s3, at - 0x7160);                                // Store to: gMObjHead[4] (800A8EA0)
-    v0 = lw(s1 + 0x58);
-    a1 = lw(v0 + 0x10);
-    if (a1 == 0) goto loc_8001DE80;
-    a0 = s4;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_8001DE80:
-    sw(s4, s1 + 0x74);
-    a0 = lw(s4);
-    a1 = lw(s4 + 0x4);
-    a2 = lw(s6);
-    a3 = lw(s6 + 0x4);
-    _thunk_R_PointToAngle2();
-    s2 = v0;
-    v0 = lw(s6 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    if (v0 == 0) goto loc_8001DED0;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    s0 <<= 20;
-    s2 += s0;
-loc_8001DED0:
-    sw(s2, s1 + 0x24);
-    s2 >>= 19;
-    a0 = s2 << 2;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 = lw(s1 + 0x58);
-    v0 += a0;
-    v1 = lh(v1 + 0x3E);
-    v0 = lw(v0);
-    mult(v1, v0);
-    v0 = lo;
-    sw(v0, s1 + 0x48);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += a0;
-    v0 = lw(at);
-    mult(v1, v0);
-    v0 = lo;
-    sw(v0, s1 + 0x4C);
-    v1 = lw(s6);
-    a0 = lw(s4);
-    v0 = lw(s6 + 0x4);
-    a1 = lw(s4 + 0x4);
-    a0 = v1 - a0;
-    a1 = v0 - a1;
-    v0 = P_AproxDistance(a0, a1);
-    v1 = lw(s1 + 0x58);
-    v1 = lw(v1 + 0x3C);
-    div(v0, v1);
-    if (v1 != 0) goto loc_8001DF60;
-    _break(0x1C00);
-loc_8001DF60:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8001DF78;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawn a missile of the specified type going from the given source object to the destination object.
+// Returns the missile spawned.
+//------------------------------------------------------------------------------------------------------------------------------------------
+mobj_t* P_SpawnMissile(mobj_t& source, mobj_t& dest, const mobjtype_t type) noexcept {
+    // Spawn the missile
+    mobj_t& missile = *P_SpawnMobj(source.x, source.y, source.z + 32 * FRACUNIT, type);
+    mobjinfo_t& missileInfo = *missile.info;
+
+    // Play the initial spawning sound
+    if (missileInfo.seesound != sfx_None) {
+        S_StartSound(&source, missileInfo.seesound);
     }
-    if (v0 != at) goto loc_8001DF78;
-    tge(zero, zero, 0x5D);
-loc_8001DF78:
-    v1 = lo;
-    a0 = s1;
-    if (i32(v1) > 0) goto loc_8001DF8C;
-    v1 = 1;                                             // Result = 00000001
-loc_8001DF8C:
-    a3 = lw(s6 + 0x8);
-    v0 = lw(s4 + 0x8);
-    a3 -= v0;
-    div(a3, v1);
-    if (v1 != 0) goto loc_8001DFAC;
-    _break(0x1C00);
-loc_8001DFAC:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8001DFC4;
+    
+    // Remember who fired the missile (for enemy AI, damage logic etc.)
+    missile.target = &source;
+
+    // Decide on the angle/direction to fire the missile in.
+    // If the target thing has the invsibility powerup also, then randomize it's direction a bit for bad aim.
+    angle_t angle = R_PointToAngle2(source.x, source.y, dest.x, dest.y);
+    
+    if (dest.flags & MF_ALL_BLEND_FLAGS) {
+        angle += (P_Random() - P_Random()) << 20;
     }
-    if (a3 != at) goto loc_8001DFC4;
-    tge(zero, zero, 0x5D);
-loc_8001DFC4:
-    a3 = lo;
-    v0 = lw(s1 + 0x48);
-    v1 = lw(s1);
-    v0 = u32(i32(v0) >> 1);
-    v0 += v1;
-    sw(v0, s1);
-    a1 = lw(s1);
-    v0 = lw(s1 + 0x4C);
-    v1 = lw(s1 + 0x4);
-    v0 = u32(i32(v0) >> 1);
-    v0 += v1;
-    sw(v0, s1 + 0x4);
-    a2 = lw(s1 + 0x4);
-    sw(a3, s1 + 0x50);
-    v0 = lw(s1 + 0x50);
-    v1 = lw(s1 + 0x8);
-    v0 = u32(i32(v0) >> 1);
-    v0 += v1;
-    sw(v0, s1 + 0x8);
-    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = s1;
-        if (bJump) goto loc_8001E0C8;
-    }
-    v1 = lw(s1 + 0x54);
-    sw(0, s1 + 0x50);
-    sw(0, s1 + 0x4C);
-    sw(0, s1 + 0x48);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F94;                                       // Result = MObjInfo_MT_PLAYER[C] (8005E06C)
-    at += v0;
-    a1 = lw(at);
-    a0 = s1;
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-    _thunk_P_Random();
-    v1 = lw(s1 + 0x5C);
-    v0 &= 1;
-    v1 -= v0;
-    sw(v1, s1 + 0x5C);
-    if (i32(v1) > 0) goto loc_8001E07C;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s1 + 0x5C);
-loc_8001E07C:
-    a0 = 0xFFFE0000;                                    // Result = FFFE0000
-    a0 |= 0xFFFF;                                       // Result = FFFEFFFF
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x58);
-    v0 &= a0;
-    sw(v0, s1 + 0x64);
-    v0 = lw(v1 + 0x38);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = s1;
-        if (bJump) goto loc_8001E0C8;
-    }
-    a0 = lw(s1 + 0x74);
-    S_StopSound((sfxenum_t) a0);
-    v0 = lw(s1 + 0x58);
-    a1 = lw(v0 + 0x38);
-    a0 = s1;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = s1;
-loc_8001E0C8:
-    ra = lw(sp + 0x2C);
-    s6 = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x30;
-    return;
+    
+    missile.angle = angle;
+
+    // Set the missile velocity based on the direction it's going in
+    const uint32_t fineAngle = angle >> ANGLETOFINESHIFT;
+    const int32_t speedInt = missileInfo.speed >> FRACBITS;
+
+    missile.momx = gFineCosine[fineAngle] * speedInt;
+    missile.momy = gFineSine[fineAngle] * speedInt;
+
+    // Figure out the z velocity based on how many tics it would take to reach the destination and z delta
+    const fixed_t distToTarget = P_AproxDistance(dest.x - source.x, dest.y - source.y);
+    const int32_t flyTics = std::max(distToTarget / missileInfo.speed, 1);
+    const fixed_t deltaZ = dest.z - source.z;
+
+    missile.momz = deltaZ / flyTics;
+
+    // Explode the missile intially if it's already in a wall, and return the missile created
+    P_CheckMissileSpawn(missile);
+    return &missile;
 }
 
 void P_SpawnPlayerMissile() noexcept {

@@ -74,7 +74,7 @@ void W_Init() noexcept {
 int32_t W_CheckNumForName(const char* const name) noexcept {
     // Copy the given name and uppercase for case insensitivity
     char nameUpper[MAXLUMPNAME + 1];
-    D_memset(nameUpper, (std::byte) 0, sizeof(nameUpper));
+    D_memset(nameUpper, std::byte(0), sizeof(nameUpper));
     D_strncpy(nameUpper, name, MAXLUMPNAME);
     nameUpper[MAXLUMPNAME] = 0;
     D_strupr(nameUpper);
@@ -304,7 +304,7 @@ int32_t W_MapLumpLength(const int32_t lumpNum) noexcept {
 int32_t W_MapCheckNumForName(const char* const name) noexcept {
     // Copy the given name and uppercase for case insensitivity
     char nameUpper[MAXLUMPNAME + 1];
-    D_memset(nameUpper, (std::byte) 0, sizeof(nameUpper));
+    D_memset(nameUpper, std::byte(0), sizeof(nameUpper));
     D_strncpy(nameUpper, name, MAXLUMPNAME);
     nameUpper[MAXLUMPNAME] = 0;
     D_strupr(nameUpper);

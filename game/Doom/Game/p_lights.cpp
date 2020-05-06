@@ -2,6 +2,7 @@
 
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/z_zone.h"
+#include "Doom/Renderer/r_local.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"

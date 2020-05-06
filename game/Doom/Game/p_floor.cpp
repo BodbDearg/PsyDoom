@@ -4,6 +4,7 @@
 #include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/Renderer/r_data.h"
+#include "Doom/Renderer/r_local.h"
 #include "g_game.h"
 #include "p_change.h"
 #include "p_setup.h"

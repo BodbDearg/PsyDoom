@@ -588,7 +588,7 @@ void I_VsyncCallback() noexcept {
 void I_Init() noexcept {
     // Alloc the texture cache, zero initialize and do a 'purge' to initialize tracking/management state
     *gpTexCache = (tcache_t*) Z_Malloc(**gpMainMemZone, sizeof(tcache_t), PU_STATIC, nullptr);
-    D_memset(gpTexCache->get(), (std::byte) 0, sizeof(tcache_t));
+    D_memset(gpTexCache->get(), std::byte(0), sizeof(tcache_t));
     I_PurgeTexCache();
 }
 

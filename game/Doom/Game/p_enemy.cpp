@@ -5,6 +5,7 @@
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
+#include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "g_game.h"
 #include "p_doors.h"
@@ -1421,7 +1422,7 @@ void A_BspiAttack() noexcept {
 loc_8001714C:
     a1 = lw(a0 + 0x74);
     a2 = 0x1A;                                          // Result = 0000001A
-    P_SpawnMissile();
+    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
 loc_80017158:
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -1499,7 +1500,7 @@ loc_8001724C:
 loc_8001728C:
     a1 = lw(a0 + 0x74);
     a2 = 0x14;                                          // Result = 00000014
-    P_SpawnMissile();
+    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
 loc_80017298:
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -1625,7 +1626,7 @@ loc_8001745C:
 loc_80017490:
     a1 = lw(a0 + 0x74);
     a2 = 0x15;                                          // Result = 00000015
-    P_SpawnMissile();
+    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
 loc_8001749C:
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -1671,7 +1672,7 @@ void A_CyberAttack() noexcept {
 loc_80017544:
     a1 = lw(a0 + 0x74);
     a2 = 0x17;                                          // Result = 00000017
-    P_SpawnMissile();
+    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
 loc_80017550:
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
@@ -1723,7 +1724,7 @@ loc_800175C8:
 loc_80017610:
     a1 = lw(a0 + 0x74);
     a2 = 0x16;                                          // Result = 00000016
-    P_SpawnMissile();
+    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
 loc_8001761C:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
@@ -1772,7 +1773,7 @@ loc_800176C0:
     a1 = lw(s1 + 0x74);
     v0 += s0;
     sw(v0, s1 + 0x8);
-    P_SpawnMissile();
+    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
     v1 = lw(s1 + 0x8);
     v1 -= s0;
     sw(v1, s1 + 0x8);
@@ -1816,7 +1817,7 @@ void A_Tracer() noexcept {
     a1 = lw(s1 + 0x4C);
     a0 = v1 - a0;
     a1 = v0 - a1;
-    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
+    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
     s0 = v0;
     v0 = 0x10000;                                       // Result = 00010000
     sw(v0, s0 + 0x50);
@@ -2165,11 +2166,11 @@ loc_80017CD8:
     a1 = lw(s1 + 0x74);
     v0 += s2;
     sw(v0, s1 + 0x24);
-    P_SpawnMissile();
+    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
     a0 = s1;
     a1 = lw(a0 + 0x74);
     a2 = 7;                                             // Result = 00000007
-    P_SpawnMissile();
+    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
     s1 = v0;
     s0 = lw(s1 + 0x24);
     v0 = lw(s1 + 0x58);
@@ -2242,11 +2243,11 @@ loc_80017E10:
     a1 = lw(s1 + 0x74);
     v0 += v1;
     sw(v0, s1 + 0x24);
-    P_SpawnMissile();
+    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
     a0 = s1;
     a1 = lw(a0 + 0x74);
     a2 = 7;                                             // Result = 00000007
-    P_SpawnMissile();
+    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
     s1 = v0;
     v0 = 0xF0000000;                                    // Result = F0000000
     s0 = lw(s1 + 0x24);
@@ -2316,7 +2317,7 @@ loc_80017F48:
 loc_80017F4C:
     a1 = lw(s2 + 0x74);
     a2 = 7;                                             // Result = 00000007
-    P_SpawnMissile();
+    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
     s1 = v0;
     v0 = lw(s1 + 0x24);
     v1 = 0xFC000000;                                    // Result = FC000000
@@ -2343,7 +2344,7 @@ loc_80017F4C:
     sw(v0, s1 + 0x4C);
     a1 = lw(a0 + 0x74);
     a2 = 7;                                             // Result = 00000007
-    P_SpawnMissile();
+    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
     s1 = v0;
     v0 = lw(s1 + 0x24);
     v1 = 0x4000000;                                     // Result = 04000000
@@ -2544,7 +2545,7 @@ loc_80018270:
     v0 = lw(s2 + 0x8);
     a2 = 0x80000;                                       // Result = 00080000
     a2 += v0;
-    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
+    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
     s0 = v0;
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
@@ -2657,7 +2658,7 @@ loc_80018440:
     v0 = lw(s2 + 0x8);
     a2 = 0x80000;                                       // Result = 00080000
     a2 += v0;
-    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
+    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
     s0 = v0;
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
@@ -2746,7 +2747,7 @@ loc_800185A4:
     v0 = lw(s2 + 0x8);
     a2 = 0x80000;                                       // Result = 00080000
     a2 += v0;
-    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
+    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
     s0 = v0;
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
@@ -2821,7 +2822,7 @@ loc_800186D0:
     v0 = lw(s2 + 0x8);
     a2 = 0x80000;                                       // Result = 00080000
     a2 += v0;
-    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
+    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
     s0 = v0;
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);
@@ -2896,7 +2897,7 @@ loc_800187FC:
     v0 = lw(s2 + 0x8);
     a2 = 0x80000;                                       // Result = 00080000
     a2 += v0;
-    v0 = ptrToVmAddr(P_SpawnMObj(a0, a1, a2, (mobjtype_t) a3));
+    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
     s0 = v0;
     a1 = lw(s0);
     a2 = lw(s0 + 0x4);

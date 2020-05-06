@@ -116,7 +116,7 @@ static void P_LoadSegs(const int32_t lumpNum) noexcept {
     // Alloc ram for the runtime segs and zero initialize
     *gNumSegs = lumpSize / sizeof(mapseg_t);
     *gpSegs = (seg_t*) Z_Malloc(**gpMainMemZone, *gNumSegs * sizeof(seg_t), PU_LEVEL, nullptr);
-    D_memset(gpSegs->get(), (std::byte) 0, *gNumSegs * sizeof(seg_t));
+    D_memset(gpSegs->get(), std::byte(0), *gNumSegs * sizeof(seg_t));
 
     // Read the map lump containing the segs into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
@@ -175,7 +175,7 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     // Alloc ram for the runtime subsectors and zero initialize
     *gNumSubsectors = lumpSize / sizeof(mapsubsector_t);
     *gpSubsectors = (subsector_t*) Z_Malloc(**gpMainMemZone, *gNumSubsectors * sizeof(subsector_t), PU_LEVEL, nullptr);
-    D_memset(gpSubsectors->get(), (std::byte) 0, *gNumSubsectors * sizeof(subsector_t));
+    D_memset(gpSubsectors->get(), std::byte(0), *gNumSubsectors * sizeof(subsector_t));
 
     // Read the map lump containing the subsectors into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
@@ -216,7 +216,7 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     // Alloc ram for the runtime sectors and zero initialize
     *gNumSectors = lumpSize / sizeof(mapsector_t);
     *gpSectors = (sector_t*) Z_Malloc(**gpMainMemZone, *gNumSectors * sizeof(sector_t), PU_LEVEL, nullptr);
-    D_memset(gpSectors->get(), (std::byte) 0, *gNumSectors * sizeof(sector_t));
+    D_memset(gpSectors->get(), std::byte(0), *gNumSectors * sizeof(sector_t));
 
     // Read the map lump containing the sectors into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
@@ -363,7 +363,7 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
     // Alloc ram for the runtime linedefs and zero initialize
     *gNumLines = lumpSize / sizeof(maplinedef_t);
     *gpLines = (line_t*) Z_Malloc(**gpMainMemZone, *gNumLines * sizeof(line_t), PU_LEVEL, nullptr);
-    D_memset(gpLines->get(), (std::byte) 0, *gNumLines * sizeof(line_t));
+    D_memset(gpLines->get(), std::byte(0), *gNumLines * sizeof(line_t));
 
     // Read the map lump containing the sidedefs into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
@@ -456,7 +456,7 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
     // Alloc ram for the runtime sidedefs and zero initialize
     *gNumSides = lumpSize / sizeof(mapsidedef_t);
     *gpSides = (side_t*) Z_Malloc(**gpMainMemZone, *gNumSides * sizeof(side_t), PU_LEVEL, nullptr);
-    D_memset(gpSides->get(), (std::byte) 0, *gNumSides  * sizeof(side_t));
+    D_memset(gpSides->get(), std::byte(0), *gNumSides  * sizeof(side_t));
 
     // Read the map lump containing the sidedefs into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
@@ -530,7 +530,7 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     // Alloc and null initialize the list of map objects for each block
     const int32_t blockLinksSize = (int32_t) blockmapHeader.width * (int32_t) blockmapHeader.height * sizeof(VmPtr<mobj_t>);
     *gppBlockLinks = (VmPtr<mobj_t>*) Z_Malloc(**gpMainMemZone, blockLinksSize, PU_LEVEL, nullptr);
-    D_memset(gppBlockLinks->get(), (std::byte) 0, blockLinksSize);
+    D_memset(gppBlockLinks->get(), std::byte(0), blockLinksSize);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1000,7 +1000,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         // Randomly spawn players in different locations - this logic is a little strange.
         // We spawn all players in the same location but immediately respawn and remove the old 'mobj_t' to get the random starts.
         for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
-            mobj_t* const pPlayerThing = P_SpawnMObj(
+            mobj_t* const pPlayerThing = P_SpawnMobj(
                 (int32_t) gPlayerStarts[0].x << FRACBITS,
                 (int32_t) gPlayerStarts[0].y << FRACBITS,
                 0,

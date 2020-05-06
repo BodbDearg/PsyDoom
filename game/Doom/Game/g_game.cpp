@@ -105,8 +105,8 @@ void G_DoLoadLevel() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_PlayerFinishLevel(int32_t playerIdx) noexcept {
     // Remove cards and powerups
-    D_memset(gPlayers[playerIdx].powers, (std::byte) 0, sizeof(player_t::powers));
-    D_memset(gPlayers[playerIdx].cards, (std::byte) 0, sizeof(player_t::cards));
+    D_memset(gPlayers[playerIdx].powers, std::byte(0), sizeof(player_t::powers));
+    D_memset(gPlayers[playerIdx].cards, std::byte(0), sizeof(player_t::cards));
 
     // Clear blending flags on the player.
     // PC-PSX: preserve the noclip cheat also, if active.
@@ -132,7 +132,7 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
     const uint32_t itemcount = player.itemcount;
     const uint32_t secretcount = player.secretcount;
 
-    D_memset(&player, (std::byte) 0, sizeof(player_t));
+    D_memset(&player, std::byte(0), sizeof(player_t));
 
     // Initialize player state and restore the previously saved stats
     player.health = MAXHEALTH;
@@ -237,7 +237,7 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
     const uint32_t fineAngle = (((uint32_t) pChosenSpawnPt->angle * FINEANGLES) / 360) & FINE_ANGLE_MASK;
     
     // Spawn teleport fog a bit away from the player in the direction the player is facing (clamped to 8 directions)
-    mobj_t* const pSpawnedThing = P_SpawnMObj(
+    mobj_t* const pSpawnedThing = P_SpawnMobj(
         spawnX + gFineCosine[fineAngle] * 20,
         spawnY + gFineSine[fineAngle] * 20,
         pSubsec->sector->floorheight,
@@ -285,7 +285,7 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
 
     // Clear the empty map object and assign to both players initially.
     // This is used for network consistency checks:
-    D_memset(gEmptyMObj.get(), (std::byte) 0, sizeof(mobj_t));
+    D_memset(gEmptyMObj.get(), std::byte(0), sizeof(mobj_t));
     gPlayers[0].mo = gEmptyMObj;
     gPlayers[1].mo = gEmptyMObj;
 
