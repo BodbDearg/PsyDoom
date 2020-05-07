@@ -12,178 +12,136 @@
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 
-void T_MovePlane() noexcept {
-loc_80018DF0:
-    sp -= 0x28;
-    sw(s4, sp + 0x20);
-    s4 = lw(sp + 0x38);
-    sw(s3, sp + 0x1C);
-    s3 = lw(sp + 0x3C);
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(s2, sp + 0x18);
-    s2 = a3;
-    sw(ra, sp + 0x24);
-    sw(s1, sp + 0x14);
-    if (s4 == 0) goto loc_80018E34;
-    v0 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (s4 == v0);
-        v0 = -1;                                        // Result = FFFFFFFF
-        if (bJump) goto loc_80018F10;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Attempts to move a floor or ceiling up or down, potentially crushing things contained within.
+// Returns the high level result of the movement.
+//------------------------------------------------------------------------------------------------------------------------------------------
+result_e T_MovePlane(
+    sector_t& sector,                   // The sector to move up/down
+    const fixed_t speed,                // Speed of plane movement
+    const fixed_t destHeight,           // Height that the floor or ceiling wants to get to
+    const bool bCrush,                  // If true then damage things contained within when they are being crushed (not fitting vertically)
+    const int32_t floorOrCeiling,       // 0 = floor, 1 = ceiling
+    const int32_t direction             // -1 = down, 1 = up
+) noexcept {
+    // What are we moving?
+    if (floorOrCeiling == 0) {
+        // Moving a floor
+        if (direction == -1) {
+            // Moving a floor down
+            const fixed_t prevFloorH = sector.floorheight;
+
+            if (sector.floorheight - speed < destHeight) {
+                // Reached destination: allow move if not crushing stuff, otherwise restore previous height
+                sector.floorheight = destHeight;
+                
+                if (P_ChangeSector(sector, bCrush)) {
+                    sector.floorheight = prevFloorH;
+                    P_ChangeSector(sector, bCrush);     // Need to run again after restoring floor height (I won't repeat this comment for the other similar cases)
+                }
+
+                return pastdest;
+            } 
+            else {
+                // Move ongoing: allow move if not crushing stuff, otherwise restore previous height
+                sector.floorheight -= speed;
+                
+                if (P_ChangeSector(sector, bCrush)) {
+                    sector.floorheight = prevFloorH;
+                    P_ChangeSector(sector, bCrush);
+                    return crushed;
+                }
+            }
+        } 
+        else if (direction == 1) {
+            // Moving a floor up
+            const fixed_t prevFloorH = sector.floorheight;
+
+            if (sector.floorheight + speed > destHeight) {
+                // Reached destination: allow move if not crushing stuff, otherwise restore previous height
+                sector.floorheight = destHeight;
+                
+                if (P_ChangeSector(sector, bCrush)) {
+                    sector.floorheight = prevFloorH;
+                    P_ChangeSector(sector, bCrush);
+                    return crushed;
+                }
+
+                return pastdest;
+            }
+            else {
+                // Move ongoing: allow move if not crushing stuff, otherwise restore previous height
+                sector.floorheight += speed;
+
+                if (P_ChangeSector(sector, bCrush)) {
+                    // For floors moving up allow the move if the crush flag is set, otherwise we need to restore
+                    if (!bCrush) {
+                        sector.floorheight = prevFloorH;
+                        P_ChangeSector(sector, bCrush);
+                    }
+
+                    return crushed;
+                }
+            }
+        }
     }
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80018FEC;
-loc_80018E34:
-    v0 = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (s3 == v0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80018E50;
+    else if (floorOrCeiling == 1) {
+        // Moving a ceiling
+        if (direction == -1) {
+            // Moving a ceiling down
+            const fixed_t prevCeilH = sector.ceilingheight;
+
+            if (sector.ceilingheight - speed < destHeight) {
+                // Reached destination: allow move if not crushing stuff, otherwise restore previous height
+                sector.ceilingheight = destHeight;
+                
+                if (P_ChangeSector(sector, bCrush)) {
+                    sector.ceilingheight = prevCeilH;
+                    P_ChangeSector(sector, bCrush);
+                }
+
+                return pastdest;
+            }
+            else {
+                // Move ongoing: allow move if not crushing stuff, otherwise restore previous height
+                sector.ceilingheight -= speed;
+                
+                if (P_ChangeSector(sector, bCrush)) {
+                    // For ceilings moving down allow the move if the crush flag is set, otherwise we need to restore
+                    if (!bCrush) {
+                        sector.ceilingheight = prevCeilH;
+                        P_ChangeSector(sector, bCrush);
+                    }
+
+                    return crushed;
+                }
+            }
+        } 
+        else if (direction == 1) {
+            // Moving a ceiling up
+            const fixed_t prevCeilH = sector.ceilingheight;
+            
+            if (speed + sector.ceilingheight > destHeight) {
+                // Reached destination: allow move if not crushing stuff, otherwise restore previous height
+                sector.ceilingheight = destHeight;
+                
+                if (P_ChangeSector(sector, bCrush)) {
+                    sector.ceilingheight = prevCeilH;
+                    P_ChangeSector(sector, bCrush);
+                }
+
+                return pastdest;
+            }
+            else {
+                // Move ongoing: allow move in all cases for a ceiling going up
+                sector.ceilingheight += speed;
+                P_ChangeSector(sector, bCrush);
+            }
+        }
     }
-    {
-        const bool bJump = (s3 == v0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80018EB0;
-    }
-    goto loc_80018FEC;
-loc_80018E50:
-    v1 = lw(s0);
-    a1 = v1 - a1;
-    v0 = (i32(a1) < i32(a2));
-    s1 = v1;
-    if (v0 == 0) goto loc_80018E8C;
-    sw(a2, s0);
-    a0 = s0;
-    a1 = s2;
-    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
-    v1 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (v0 != v1);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_80018FEC;
-    }
-    sw(s1, s0);
-    goto loc_80018FC8;
-loc_80018E8C:
-    sw(a1, s0);
-    a0 = s0;
-    a1 = s2;
-    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
-    v1 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (v0 != v1);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80018FEC;
-    }
-    sw(s1, s0);
-    goto loc_80018F84;
-loc_80018EB0:
-    v1 = lw(s0);
-    a1 += v1;
-    v0 = (i32(a2) < i32(a1));
-    s1 = v1;
-    if (v0 == 0) goto loc_80018EE8;
-    sw(a2, s0);
-    a0 = s0;
-    a1 = s2;
-    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
-    {
-        const bool bJump = (v0 != s3);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_80018FEC;
-    }
-    sw(s1, s0);
-    goto loc_80018F84;
-loc_80018EE8:
-    sw(a1, s0);
-    a0 = s0;
-    a1 = s2;
-    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
-    if (v0 != s3) goto loc_80018FE8;
-    {
-        const bool bJump = (s2 == v0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80018FEC;
-    }
-    sw(s1, s0);
-    goto loc_80018F84;
-loc_80018F10:
-    if (s3 == v0) goto loc_80018F28;
-    v0 = 0;                                             // Result = 00000000
-    if (s3 == s4) goto loc_80018F98;
-    goto loc_80018FEC;
-loc_80018F28:
-    v1 = lw(s0 + 0x4);
-    a1 = v1 - a1;
-    v0 = (i32(a1) < i32(a2));
-    s1 = v1;
-    if (v0 == 0) goto loc_80018F60;
-    sw(a2, s0 + 0x4);
-    a0 = s0;
-    a1 = s2;
-    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
-    {
-        const bool bJump = (v0 != s4);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_80018FEC;
-    }
-    sw(s1, s0 + 0x4);
-    goto loc_80018FC8;
-loc_80018F60:
-    sw(a1, s0 + 0x4);
-    a0 = s0;
-    a1 = s2;
-    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
-    if (v0 != s4) goto loc_80018FE8;
-    {
-        const bool bJump = (s2 == v0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80018FEC;
-    }
-    sw(s1, s0 + 0x4);
-loc_80018F84:
-    a0 = s0;
-    a1 = s2;
-    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80018FEC;
-loc_80018F98:
-    s1 = lw(s0 + 0x4);
-    a1 += s1;
-    v0 = (i32(a2) < i32(a1));
-    a0 = s0;
-    if (v0 == 0) goto loc_80018FDC;
-    sw(a2, s0 + 0x4);
-    a1 = s2;
-    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
-    {
-        const bool bJump = (v0 != s3);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_80018FEC;
-    }
-    sw(s1, s0 + 0x4);
-loc_80018FC8:
-    a0 = s0;
-    a1 = s2;
-    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
-    v0 = 2;                                             // Result = 00000002
-    goto loc_80018FEC;
-loc_80018FDC:
-    sw(a1, s0 + 0x4);
-    a1 = s2;
-    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
-loc_80018FE8:
-    v0 = 0;                                             // Result = 00000000
-loc_80018FEC:
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+
+    // Movement was OK
+    return ok;
 }
 
 void T_MoveFloor() noexcept {
@@ -199,7 +157,7 @@ void T_MoveFloor() noexcept {
     a1 = lw(s0 + 0x28);
     a2 = lw(s0 + 0x24);
     a3 = lw(s0 + 0x10);
-    T_MovePlane();
+    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
     v1 = *gGameTic;
     v1 &= 3;
     s1 = v0;

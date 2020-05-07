@@ -77,7 +77,7 @@ loc_800153E0:
     a1 = lw(s0 + 0x18);
     a2 = lw(v1);
     a3 = 0;                                             // Result = 00000000
-    T_MovePlane();
+    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
     v1 = v0;
     v0 = 2;                                             // Result = 00000002
     if (v1 != v0) goto loc_8001546C;
@@ -135,7 +135,7 @@ loc_800154A8:
     a1 = lw(s0 + 0x18);
     a2 = lw(s0 + 0x14);
     a3 = 0;                                             // Result = 00000000
-    T_MovePlane();
+    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
     v1 = 2;                                             // Result = 00000002
     if (v0 != v1) goto loc_80015528;
     v1 = lw(s0 + 0xC);

@@ -37,7 +37,7 @@ loc_80014A70:
     a1 = lw(s0 + 0x1C);
     a2 = lw(s0 + 0x18);
     a3 = 0;                                             // Result = 00000000
-    T_MovePlane();
+    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
     v1 = *gGameTic;
     v1 &= 7;
     s1 = v0;
@@ -85,7 +85,7 @@ loc_80014B2C:
     a1 = lw(s0 + 0x1C);
     a2 = lw(s0 + 0x14);
     a3 = lw(s0 + 0x20);
-    T_MovePlane();
+    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
     v1 = *gGameTic;
     v1 &= 7;
     s1 = v0;

@@ -34,7 +34,7 @@ loc_8001F2BC:
     a1 = lw(s0 + 0x10);
     a2 = lw(s0 + 0x18);
     a3 = lw(s0 + 0x2C);
-    T_MovePlane();
+    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
     v1 = lw(s0 + 0x34);
     v1 -= 2;
     v1 = (v1 < 2);
@@ -105,7 +105,7 @@ loc_8001F3B8:
     a1 = lw(s0 + 0x10);
     a2 = lw(s0 + 0x14);
     a3 = 0;
-    T_MovePlane();
+    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
     s1 = v0;
     v0 = 2;
     a1 = sfx_pstop;
