@@ -56,7 +56,7 @@ loc_80018E50:
     sw(a2, s0);
     a0 = s0;
     a1 = s2;
-    P_ChangeSector();
+    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
     v1 = 1;                                             // Result = 00000001
     {
         const bool bJump = (v0 != v1);
@@ -69,7 +69,7 @@ loc_80018E8C:
     sw(a1, s0);
     a0 = s0;
     a1 = s2;
-    P_ChangeSector();
+    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
     v1 = 1;                                             // Result = 00000001
     {
         const bool bJump = (v0 != v1);
@@ -87,7 +87,7 @@ loc_80018EB0:
     sw(a2, s0);
     a0 = s0;
     a1 = s2;
-    P_ChangeSector();
+    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
     {
         const bool bJump = (v0 != s3);
         v0 = 2;                                         // Result = 00000002
@@ -99,7 +99,7 @@ loc_80018EE8:
     sw(a1, s0);
     a0 = s0;
     a1 = s2;
-    P_ChangeSector();
+    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
     if (v0 != s3) goto loc_80018FE8;
     {
         const bool bJump = (s2 == v0);
@@ -122,7 +122,7 @@ loc_80018F28:
     sw(a2, s0 + 0x4);
     a0 = s0;
     a1 = s2;
-    P_ChangeSector();
+    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
     {
         const bool bJump = (v0 != s4);
         v0 = 2;                                         // Result = 00000002
@@ -134,7 +134,7 @@ loc_80018F60:
     sw(a1, s0 + 0x4);
     a0 = s0;
     a1 = s2;
-    P_ChangeSector();
+    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
     if (v0 != s4) goto loc_80018FE8;
     {
         const bool bJump = (s2 == v0);
@@ -145,7 +145,7 @@ loc_80018F60:
 loc_80018F84:
     a0 = s0;
     a1 = s2;
-    P_ChangeSector();
+    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
     v0 = 1;                                             // Result = 00000001
     goto loc_80018FEC;
 loc_80018F98:
@@ -156,7 +156,7 @@ loc_80018F98:
     if (v0 == 0) goto loc_80018FDC;
     sw(a2, s0 + 0x4);
     a1 = s2;
-    P_ChangeSector();
+    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
     {
         const bool bJump = (v0 != s3);
         v0 = 2;                                         // Result = 00000002
@@ -166,13 +166,13 @@ loc_80018F98:
 loc_80018FC8:
     a0 = s0;
     a1 = s2;
-    P_ChangeSector();
+    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
     v0 = 2;                                             // Result = 00000002
     goto loc_80018FEC;
 loc_80018FDC:
     sw(a1, s0 + 0x4);
     a1 = s2;
-    P_ChangeSector();
+    v0 = P_ChangeSector(*vmAddrToPtr<sector_t>(a0), a1);
 loc_80018FE8:
     v0 = 0;                                             // Result = 00000000
 loc_80018FEC:

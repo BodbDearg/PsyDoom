@@ -4,6 +4,7 @@
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
+#include "Doom/Renderer/r_local.h"
 #include "Doom/UI/st_main.h"
 #include "g_game.h"
 #include "info.h"
@@ -12,7 +13,6 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_move.h"
-#include "PsxVm/PsxVm.h"
 
 const VmPtr<bool32_t>   gbNofit(0x80077EBC);            // If 'true' then one or more things in the test sector undergoing height changes do not fit
 const VmPtr<bool32_t>   gbCrushChange(0x80077FA0);      // If 'true' then the current sector undergoing height changes should crush/damage things when they do not fit
@@ -94,55 +94,34 @@ bool PIT_ChangeSector(mobj_t& mobj) noexcept {
     return true;    // Continue iterating through things in the blockmap
 }
 
-void P_ChangeSector() noexcept {
-loc_80015238:
-    sp -= 0x20;
-    sw(s2, sp + 0x18);
-    s2 = a0;
-    v0 = 0x12C;                                         // Result = 0000012C
-    sw(ra, sp + 0x1C);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-loc_80015254:
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7700;                                       // Result = gPlayer1[45] (800A8900)
-    at += v0;
-    sw(0, at);
-    v0 -= 0x12C;
-    if (i32(v0) >= 0) goto loc_80015254;
-    s1 = lw(s2 + 0x30);
-    v0 = lw(s2 + 0x34);
-    sw(0, gp + 0x8DC);                                  // Store to: gbNofit (80077EBC)
-    sw(a1, gp + 0x9C0);                                 // Store to: gbCrushChange (80077FA0)
-    v0 = (i32(v0) < i32(s1));
-    if (v0 != 0) goto loc_800152DC;
-loc_8001528C:
-    s0 = lw(s2 + 0x2C);
-    v0 = lw(s2 + 0x28);
-    v0 = (i32(v0) < i32(s0));
-    a0 = s1;
-    if (v0 != 0) goto loc_800152C8;
-loc_800152A4:
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0x504C;                                       // Result = PIT_ChangeSector (8001504C)
-    a1 = s0;
-    P_BlockThingsIterator(a0, a1, PIT_ChangeSector);
-    v0 = lw(s2 + 0x28);
-    s0++;
-    v0 = (i32(v0) < i32(s0));
-    a0 = s1;
-    if (v0 == 0) goto loc_800152A4;
-loc_800152C8:
-    v0 = lw(s2 + 0x34);
-    s1++;
-    v0 = (i32(v0) < i32(s1));
-    if (v0 == 0) goto loc_8001528C;
-loc_800152DC:
-    v0 = lw(gp + 0x8DC);                                // Load from: gbNofit (80077EBC)
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called after the height of the given sector changes, either by it's floor or ceiling moving up or down.
+// Clips all things contained in the sector to the new height range, and crushes things also (if desired).
+// Returns 'true' if one or more things in the sector did not fit into it's height range.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_ChangeSector(sector_t& sector, const bool bCrunch) noexcept {
+    // Force all players to do a noise alert again next time they fire.
+    // Because of the height change with this sector, new gaps might have opened...
+    for (int32_t i = MAXPLAYERS - 1; i >= 0; --i) {
+        gPlayers[i].lastsoundsector = nullptr;
+    }
+
+    // Initially everything fits in the sector and save whether to crush for the blockmap iterator
+    *gbNofit = false;
+    *gbCrushChange = bCrunch;
+
+    // Clip the heights of all things in the updated sector and crush things where appropriate.
+    // Note that this crude test may pull in things in other sectors, which could be included in the results also. Generally that's okay however!
+    const int32_t bmapLx = sector.blockbox[BOXLEFT];
+    const int32_t bmapRx = sector.blockbox[BOXRIGHT];
+    const int32_t bmapTy = sector.blockbox[BOXTOP];
+    const int32_t bmapBy = sector.blockbox[BOXBOTTOM];
+
+    for (int32_t x = bmapLx; x <= bmapRx; ++x) {
+        for (int32_t y = bmapBy; y <= bmapTy; ++y) {
+            P_BlockThingsIterator(x, y, PIT_ChangeSector);
+        }
+    }
+    
+    return *gbNofit;    // Did all the things in the sector fit?
 }
