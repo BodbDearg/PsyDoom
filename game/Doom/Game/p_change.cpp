@@ -4,202 +4,94 @@
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
+#include "Doom/UI/st_main.h"
 #include "g_game.h"
+#include "info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_move.h"
 #include "PsxVm/PsxVm.h"
 
-void P_ThingHeightClip() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    s0 = lw(s1 + 0x8);
-    v0 = lw(s1 + 0x38);
-    a1 = lw(s1);
-    a2 = lw(s1 + 0x4);
-    s0 ^= v0;
-    s0 = (s0 < 1);
-    v0 = P_CheckPosition(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E18);                               // Load from: gTmFloorZ (800781E8)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F04);                               // Load from: gTmCeilingZ (80077F04)
-    sw(v0, s1 + 0x38);
-    sw(v1, s1 + 0x3C);
-    if (s0 == 0) goto loc_80014FFC;
-    v0 = lw(s1 + 0x38);
-    sw(v0, s1 + 0x8);
-    goto loc_8001501C;
-loc_80014FFC:
-    v0 = lw(s1 + 0x8);
-    a0 = lw(s1 + 0x44);
-    v0 += a0;
-    v0 = (i32(v1) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 - a0;
-        if (bJump) goto loc_8001501C;
+const VmPtr<bool32_t>   gbNofit(0x80077EBC);            // If 'true' then one or more things in the test sector undergoing height changes do not fit
+const VmPtr<bool32_t>   gbCrushChange(0x80077FA0);      // If 'true' then the current sector undergoing height changes should crush/damage things when they do not fit
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Clamps the map object's z position to be in a valid range for the sector it is within using the current floor/ceiling height.
+// Returns 'true' if the object can fit vertically in it's current sector, 'false' otherwise (should be crushed). 
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_ThingHeightClip(mobj_t& mobj) noexcept {
+    // Is the thing currently on the floor?
+    const bool bWasOnFloor = (mobj.floorz == mobj.z);
+
+    // Get the current floor/ceiling Z values for the thing and update
+    P_CheckPosition(mobj, mobj.x, mobj.y);
+    mobj.floorz = *gTmFloorZ;
+    mobj.ceilingz = *gTmCeilingZ;
+
+    // Things that were on the floor previously rise and fall as the sector floor rises and falls.
+    // Otherwise, if a floating thing, clip against the ceiling.
+    if (bWasOnFloor) {
+        mobj.z = mobj.floorz;
+    } else if (mobj.z + mobj.height > mobj.ceilingz) {
+        mobj.z = mobj.ceilingz - mobj.height;
     }
-    sw(v0, s1 + 0x8);
-loc_8001501C:
-    v0 = lw(s1 + 0x3C);
-    v1 = lw(s1 + 0x38);
-    a0 = lw(s1 + 0x44);
-    v0 -= v1;
-    v0 = (i32(v0) < i32(a0));
-    v0 ^= 1;
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    return (mobj.height <= mobj.ceilingz - mobj.floorz);    // Is there enough vertical room for the thing?
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does updates for one map object after the sector it is contained within has had it's floor or ceiling height changed.
+// Clips the map object to the valid height range of the sector, and applies crushing where required.
+// Sets 'gbNofit' to 'false' also if the thing does not fit in the height range of the sector.
+//------------------------------------------------------------------------------------------------------------------------------------------
 bool PIT_ChangeSector(mobj_t& mobj) noexcept {
-    a0 = ptrToVmAddr(&mobj);
+    // Clip the thing to the height range of the sector: if it fits then we have nothing else to do
+    if (P_ThingHeightClip(mobj))
+        return true;
 
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    a1 = lw(s1);
-    s0 = lw(s1 + 0x8);
-    v0 = lw(s1 + 0x38);
-    a2 = lw(s1 + 0x4);
-    s0 ^= v0;
-    s0 = (s0 < 1);
-    v0 = P_CheckPosition(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E18);                               // Load from: gTmFloorZ (800781E8)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7F04);                               // Load from: gTmCeilingZ (80077F04)
-    sw(v0, s1 + 0x38);
-    sw(v1, s1 + 0x3C);
-    if (s0 == 0) goto loc_800150A4;
-    v0 = lw(s1 + 0x38);
-    sw(v0, s1 + 0x8);
-    goto loc_800150C4;
-loc_800150A4:
-    v0 = lw(s1 + 0x8);
-    a0 = lw(s1 + 0x44);
-    v0 += a0;
-    v0 = (i32(v1) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 - a0;
-        if (bJump) goto loc_800150C4;
+    // Turn bodies into gibs
+    if (mobj.health <= 0) {
+        P_SetMObjState(mobj, S_GIBS);
+        S_StartSound(&mobj, sfx_slop);
+
+        mobj.height = 0;    // This prevents the height clip test from failing again and triggering more crushing
+        mobj.radius = 0;
+
+        // If it is the player being gibbed then make the status bar head gib
+        if (mobj.player.get() == &gPlayers[*gCurPlayerIndex]) {
+            gStatusBar->gotgibbed = true;
+        }
+
+        return true;
     }
-    sw(v0, s1 + 0x8);
-loc_800150C4:
-    v0 = lw(s1 + 0x3C);
-    v1 = lw(s1 + 0x38);
-    a0 = lw(s1 + 0x44);
-    v0 -= v1;
-    v0 = (i32(v0) < i32(a0));
-    v0 ^= 1;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80015220;
+
+    // Crush and destroy dropped items
+    if (mobj.flags & MF_DROPPED) {
+        P_RemoveMobj(mobj);
+        return true;
+    }      
+    
+    // If the thing is not shootable then don't do anything more to it.
+    // This will be the case for decorative things etc.
+    if ((mobj.flags & MF_SHOOTABLE) == 0)
+        return true;
+    
+    // Things in the current sector do not fit into it's height range
+    *gbNofit = true;
+
+    // If the sector crushes and it's every 4th tic then do some damage to the thing
+    if (*gbCrushChange && ((*gGameTic & 3) == 0)) {
+        P_DamageMObj(mobj, nullptr, nullptr, 10);
+
+        // Spawn some blood and randomly send it off in different directions
+        mobj_t& blood = *P_SpawnMobj(mobj.x, mobj.y, mobj.height / 2 + mobj.z, MT_BLOOD);
+        blood.momx = (P_Random() - P_Random()) * (FRACUNIT / 16);
+        blood.momy = (P_Random() - P_Random()) * (FRACUNIT / 16);
     }
-    v0 = lw(s1 + 0x68);
-    {
-        const bool bJump = (i32(v0) > 0);
-        v0 = 0x20000;                                   // Result = 00020000
-        if (bJump) goto loc_80015158;
-    }
-    a0 = s1;
-    a1 = 0x29F;                                         // Result = 0000029F
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-    a0 = s1;
-    a1 = sfx_slop;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = *gCurPlayerIndex;
-    a0 = lw(s1 + 0x80);
-    sw(0, s1 + 0x44);
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    v0 += v1;
-    sw(0, s1 + 0x40);
-    if (a0 != v0) goto loc_8001521C;
-    v0 = 1;                                             // Result = 00000001
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v0, at - 0x78CC);                                // Store to: gStatusBar[7] (80098734)
-    goto loc_80015220;
-loc_80015158:
-    v1 = lw(s1 + 0x64);
-    v0 &= v1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 & 4;
-        if (bJump) goto loc_8001517C;
-    }
-    a0 = s1;
-    P_RemoveMobj(*vmAddrToPtr<mobj_t>(a0));
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80015220;
-loc_8001517C:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001521C;
-    }
-    v1 = lw(gp + 0x9C0);                                // Load from: gbCrushChange (80077FA0)
-    sw(v0, gp + 0x8DC);                                 // Store to: gbNofit (80077EBC)
-    if (v1 == 0) goto loc_80015220;
-    v0 = *gGameTic;
-    v0 &= 3;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80015220;
-    }
-    a0 = s1;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0xA;                                           // Result = 0000000A
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    a3 = 0x1C;                                          // Result = 0000001C
-    a0 = lw(s1);
-    a2 = lw(s1 + 0x44);
-    a1 = lw(s1 + 0x4);
-    v0 = a2 >> 31;
-    a2 += v0;
-    v0 = lw(s1 + 0x8);
-    a2 = u32(i32(a2) >> 1);
-    a2 += v0;
-    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
-    s1 = v0;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    s0 <<= 12;
-    sw(s0, s1 + 0x48);
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    s0 <<= 12;
-    sw(s0, s1 + 0x4C);
-loc_8001521C:
-    v0 = 1;                                             // Result = 00000001
-loc_80015220:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return (v0 != 0);
+
+    return true;    // Continue iterating through things in the blockmap
 }
 
 void P_ChangeSector() noexcept {
