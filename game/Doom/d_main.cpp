@@ -100,7 +100,7 @@ void D_DoomMain() noexcept {
     // TODO: PC-PSX: allow this loop to exit if the application is quit
     //
     // The main intro and demo scenes flow.
-    // Continue looping until there is input and then execute the main menu until it times out.    
+    // Continue looping until there is input and then execute the main menu until it times out.
     while (true) {
         if (RunTitle() != ga_exit) {
             if (RunDemo(CdMapTbl_File::DEMO1_LMP) != ga_exit) {
@@ -162,7 +162,7 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
     #else
         // Read the demo file contents (up to 16 KiB)
         constexpr uint32_t DEMO_BUFFER_SIZE = 16 * 1024;
-        gpDemoBuffer = (uint32_t*) Z_EndMalloc(**gpMainMemZone, DEMO_BUFFER_SIZE, PU_STATIC, nullptr);        
+        gpDemoBuffer = (uint32_t*) Z_EndMalloc(**gpMainMemZone, DEMO_BUFFER_SIZE, PU_STATIC, nullptr);
         ReadFile(openFileIdx, gpDemoBuffer->get(), 16 * 1024);
     #endif
     
@@ -256,7 +256,7 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         LIBGPU_SetSprt(spritePrim);
         LIBGPU_SetSemiTrans(&spritePrim, false);
         LIBGPU_SetShadeTex(&spritePrim, false);
-        LIBGPU_setRGB0(spritePrim, 128, 128, 128);    
+        LIBGPU_setRGB0(spritePrim, 128, 128, 128);
         spritePrim.clut = gPaletteClutIds[MAINPAL];
     }
     
@@ -510,7 +510,7 @@ gameaction_t MiniLoop(
                 if (gpDemo_p >= gpDemoBufferEnd)
                     break;
             #else
-                // Is the demo recording too big or are we at the end of the largest possible demo size? If so then stop right now... 
+                // Is the demo recording too big or are we at the end of the largest possible demo size? If so then stop right now...
                 const int32_t demoTicksElapsed = (int32_t)(gpDemo_p - gpDemoBuffer);
 
                 if (demoTicksElapsed >= MAX_DEMO_TICKS)

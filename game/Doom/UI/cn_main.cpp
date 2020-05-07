@@ -91,7 +91,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
                 }
 
                 S_StartSound(nullptr, sfx_pstop);
-            } 
+            }
             else if (ticButtons & PAD_UP) {
                 // Up is pressed and movement is allowed: move, wraparound (if required) and play a sound
                 gCursorPos[0]--;
@@ -110,11 +110,11 @@ gameaction_t TIC_ControlsScreen() noexcept {
         return ga_exit;
 
     // Check for inputs to change control bindings if no new buttons are pressed just finish up now
-    if (ticButtons == gOldTicButtons[0]) 
+    if (ticButtons == gOldTicButtons[0])
         return ga_nothing;
     
     if (gCursorPos[0] < 8) {
-        // Skull cursor is over a bindable action slot. 
+        // Skull cursor is over a bindable action slot.
         // See if any of the buttons which are bindable have been pressed:
         for (int16_t btnIdx = 0; btnIdx < NUM_BINDABLE_BTNS; ++btnIdx) {
             const uint32_t btnMask = gBtnMasks[btnIdx];
@@ -128,7 +128,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
                 break;
             }
         }
-    } 
+    }
     else if (ticButtons & PAD_ACTION_BTNS) {
         // One of the right action buttons is pressed on the default configuration slot.
         // Restore the control bindings to their defaults and play a sound to acknowledge the change:
@@ -181,7 +181,7 @@ void DRAW_ControlsScreen() noexcept {
                 const padbuttons_t* pBtnMask = gBtnMasks;
 
                 while (bindableBtnIdx < NUM_BINDABLE_BTNS) {
-                    if (bindingButton == *pBtnMask) 
+                    if (bindingButton == *pBtnMask)
                         break;
                     
                     ++pBtnMask;
@@ -206,7 +206,7 @@ void DRAW_ControlsScreen() noexcept {
             }
 
             ypos += 20;
-        } 
+        }
     }
 
     // Draw the control binding names

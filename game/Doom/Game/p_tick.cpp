@@ -199,7 +199,7 @@ void P_CheckCheats() noexcept {
             psxcd_restart(0);
 
             while (psxcd_seeking_for_play()) {
-                // Wait until the cdrom has stopped seeking to the current audio location. 
+                // Wait until the cdrom has stopped seeking to the current audio location.
                 // Note: should NEVER be in here in this emulated environment: seek happens instantly!
             }
 
@@ -493,7 +493,7 @@ void P_CheckCheats() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // High level tick/update logic for main gameplay
 //------------------------------------------------------------------------------------------------------------------------------------------
-gameaction_t P_Ticker() noexcept {    
+gameaction_t P_Ticker() noexcept {
     *gGameAction = ga_nothing;
 
     // Check for pause and cheats
@@ -579,7 +579,7 @@ void P_Start() noexcept {
     // Otherwise play some sequencer music for the level.
     if (!*gbDemoPlayback) {
         S_StartMusic();
-    } else {  
+    } else {
         psxcd_play_at_andloop(
             gCDTrackNum[cdmusic_credits_demo],
             *gCdMusicVol,

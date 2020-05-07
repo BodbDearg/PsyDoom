@@ -219,7 +219,7 @@ void swl(const uint32_t r1, const uint32_t addr) noexcept {
 void swr(const uint32_t r1, const uint32_t addr) noexcept {
     // This code is largely based on Avocado's implementation of the same instruction
     System& sys = *gpCpu->sys;
-    const uint32_t alignedAddr = addr & 0xFFFFFFFC;    
+    const uint32_t alignedAddr = addr & 0xFFFFFFFC;
     const uint32_t mem = sys.readMemory32(alignedAddr);
     uint32_t result;
 
@@ -309,7 +309,7 @@ static void restoreMipsRegistersExceptReturnRegs() noexcept {
     restoreMipsRegisters();
 
     cpu.reg[2] = retReg1;
-    cpu.reg[3] = retReg2;    
+    cpu.reg[3] = retReg2;
 }
 
 void syscall(const uint32_t i) noexcept {
@@ -378,7 +378,7 @@ void emu_call(const uint32_t func) noexcept {
     System& system = *gpSystem;
 
     saveMipsRegisters();
-    setupForEmulatorCall();    
+    setupForEmulatorCall();
     emulateUntilCanExit();      // Deal with any unhandled interrupts before we change the program flow
     cpu.setPC(func);
 
@@ -398,7 +398,7 @@ void jump_table_err() noexcept {
 
 void emulate_frame() noexcept {
     saveMipsRegisters();
-    gpSystem->vblankCounter = 0;    
+    gpSystem->vblankCounter = 0;
 
     while (gpSystem->vblankCounter < 1 || (!canExitEmulator())) {
         gpSystem->emulateFrame();

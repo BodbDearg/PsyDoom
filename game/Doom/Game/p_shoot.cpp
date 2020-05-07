@@ -29,7 +29,7 @@ static const VmPtr<fixed_t>             gAimMidSlope(0x80077FAC);           // T
 static const VmPtr<divline_t>           gShootDiv(0x800A9074);              // The start point and vector for shooting sight checking
 static const VmPtr<fixed_t>             gShootX2(0x80078038);               // End point for shooting sight checking: x
 static const VmPtr<fixed_t>             gShootY2(0x80078044);               // End point for shooting sight checking: y
-static const VmPtr<int32_t>             gSsx1(0x800781F0);                  // Shooting sight line start, whole coords: x 
+static const VmPtr<int32_t>             gSsx1(0x800781F0);                  // Shooting sight line start, whole coords: x
 static const VmPtr<int32_t>             gSsy1(0x80078200);                  // Shooting sight line start, whole coords: y
 static const VmPtr<int32_t>             gSsx2(0x800781FC);                  // Shooting sight line end, whole coords: x
 static const VmPtr<int32_t>             gSsy2(0x8007820C);                  // Shooting sight line end, whole coords: y
@@ -160,7 +160,7 @@ bool PA_ShootLine(line_t& line, const fixed_t hitFrac) noexcept {
     // Figure out the extent of the gap that can be shot through (area between the highest floor and lowest ceiling)
     const sector_t& fsec = *line.frontsector;
     const sector_t& bsec = *line.backsector;
-    const fixed_t highestFloorHeight = std::max(fsec.floorheight, bsec.floorheight);        
+    const fixed_t highestFloorHeight = std::max(fsec.floorheight, bsec.floorheight);
     const fixed_t lowestCeilHeight = std::min(fsec.ceilingheight, bsec.ceilingheight);
 
     // How far away is the hit point?
@@ -176,7 +176,7 @@ bool PA_ShootLine(line_t& line, const fixed_t hitFrac) noexcept {
             *gpShootLine = &line;
         }
 
-        // Narrow the allowed vertical aim range by this lower wall - can only shoot above it now 
+        // Narrow the allowed vertical aim range by this lower wall - can only shoot above it now
         *gAimBottomSlope = std::max(*gAimBottomSlope, slopeToFloor);
     }
     
@@ -296,7 +296,7 @@ static fixed_t PA_SightCrossLine(const line_t& line) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Test the shooting 'sight' line against lines and things in the given subsector.
-// Returns 'false' if there was a hit (sight obstructed) and remembers what was hit for later logic to act upon. 
+// Returns 'false' if there was a hit (sight obstructed) and remembers what was hit for later logic to act upon.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool PA_CrossSubsector(subsector_t& subsec) noexcept {
     // Check for hit against all things in the subsector
@@ -399,7 +399,7 @@ bool PA_CrossBSPNode(const int32_t nodeNum) noexcept {
         return false;
     
     // Check to see what side of the bsp split the end point for sight checking is on.
-    // If it's in the same half-space we just raycasted against then we are done - sight is unobstructed. 
+    // If it's in the same half-space we just raycasted against then we are done - sight is unobstructed.
     if (sideNum == PA_DivlineSide(*gShootX2, *gShootY2, bspNode.line))
         return true;
 

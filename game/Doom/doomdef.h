@@ -177,7 +177,7 @@ static constexpr uint32_t MF_BLEND_ADD      = MF_BLEND_ON | MF_BLEND_MODE_BIT1; 
 static constexpr uint32_t MF_BLEND_SUBTRACT = MF_BLEND_ON | MF_BLEND_MODE_BIT2;                         // Subtractive blend at 100% opacity (also makes monsters 'nightmare' and have 2x hit points)
 static constexpr uint32_t MF_BLEND_ADD_25   = MF_BLEND_ON | MF_BLEND_MODE_BIT1 | MF_BLEND_MODE_BIT2;    // Additive blend at 25% opacity
 
-// Convenience flag combo: used for masking out the bits/flags specifying blend mode 
+// Convenience flag combo: used for masking out the bits/flags specifying blend mode
 static constexpr uint32_t MF_ALL_BLEND_FLAGS = (
     MF_BLEND_ON | MF_BLEND_MODE_BIT1 | MF_BLEND_MODE_BIT2
 );
@@ -200,7 +200,7 @@ struct mobj_t {
     uint32_t                sprite;             // Current sprite displayed
     uint32_t                frame;              // Current sprite frame displayed. Must use 'FF_FRAMEMASK' to get the actual frame number.
     VmPtr<mobj_t>           bnext;              // Linked list of things in this blockmap block
-    VmPtr<mobj_t>           bprev;          
+    VmPtr<mobj_t>           bprev;
     fixed_t                 floorz;             // Highest floor in contact with map object
     fixed_t                 ceilingz;           // Lowest floor in contact with map object
     fixed_t                 radius;             // For collision detection
@@ -232,7 +232,7 @@ static_assert(sizeof(mobj_t) == 148);
 
 // A degenerate map object with most of it's fields chopped out.
 // Used to store a sound origin within sector structures.
-struct degenmobj_t {            
+struct degenmobj_t {
     fixed_t                 x;
     fixed_t                 y;
     fixed_t                 z;

@@ -27,17 +27,17 @@ static constexpr int32_t LIGHT_INTENSTIY_MAX = 160;
 struct vertex_t {
     fixed_t     x;
     fixed_t     y;
-    fixed_t     scale;              // Scaling due to perspective. Higher values mean the vertex is closer.    
-    int32_t     viewx;              // X position after view translation + rotation.
-    int32_t     viewy;              // Y position after view translation + rotation.
-    int32_t     screenx;            // X location on screen.
-    uint32_t    frameUpdated;       // When (in game frames) the vertex was last transformed: used to avoid unnecessary transforms.
+    fixed_t     scale;              // Scaling due to perspective. Higher values mean the vertex is closer
+    int32_t     viewx;              // X position after view translation + rotation
+    int32_t     viewy;              // Y position after view translation + rotation
+    int32_t     screenx;            // X location on screen
+    uint32_t    frameUpdated;       // When (in game frames) the vertex was last transformed: used to avoid unnecessary transforms
 };
 
 static_assert(sizeof(vertex_t) == 28);
 
 // PSX sector flags: just 1 defined - to disable reverb on a sector
-static constexpr uint32_t SF_NO_REVERB = 0x1; 
+static constexpr uint32_t SF_NO_REVERB = 0x1;
 
 // Describes a sector or collection of lines and subsectors
 struct sector_t {
@@ -76,7 +76,7 @@ struct side_t {
 static_assert(sizeof(side_t) == 24);
 
 // What type of slope a line has
-enum slopetype_t : uint32_t { 
+enum slopetype_t : uint32_t {
     ST_HORIZONTAL,
     ST_VERTICAL,
     ST_POSITIVE,
@@ -184,7 +184,7 @@ struct spriteframe_t {
 };
 
 // Holds information for a sequence of sprite frames
-struct spritedef_t { 
+struct spritedef_t {
     int32_t                 numframes;
     const spriteframe_t*    spriteframes;
 };

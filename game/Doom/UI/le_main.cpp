@@ -21,8 +21,8 @@ static const VmPtr<texture_t> gTex_LEGALS(0x80097BD0);
 // Startup/init logic for the 'legals' screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void START_Legals() noexcept {
-    I_PurgeTexCache();    
-    I_LoadAndCacheTexLump(*gTex_LEGALS, "LEGALS", 0);    
+    I_PurgeTexCache();
+    I_LoadAndCacheTexLump(*gTex_LEGALS, "LEGALS", 0);
     
     S_StartSound(nullptr, sfx_sgcock);
     *gTitleScreenSpriteY = SCREEN_H;
@@ -52,7 +52,7 @@ gameaction_t TIC_Legals() noexcept {
         const int32_t waitTicsElapsed = *gTicCon - *gMenuTimeoutStartTicCon;
         
         if (waitTicsElapsed > 120) {
-            if (waitTicsElapsed >= 180) 
+            if (waitTicsElapsed >= 180)
                 return ga_timeout;
             
             if (gTicButtons[0] != 0)
@@ -67,7 +67,7 @@ gameaction_t TIC_Legals() noexcept {
 // Does drawing for the 'legals' screen - very simple, just a single sprite
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DRAW_Legals() noexcept {
-    I_IncDrawnFrameCount();    
+    I_IncDrawnFrameCount();
     I_CacheAndDrawSprite(*gTex_LEGALS, 0, (int16_t) *gTitleScreenSpriteY, gPaletteClutIds[UIPAL]);
 
     I_SubmitGpuCmds();

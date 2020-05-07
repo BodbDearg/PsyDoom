@@ -122,7 +122,7 @@ void I_AddPrim(const void* const pPrim) noexcept {
         // Copy the rest of the primitive data words
         uint32_t* pSrcWord = (uint32_t*) pPrim + 1;
 
-        for (uint32_t numWordsLeft = numPrimDataWords; numWordsLeft > 0; --numWordsLeft) {            
+        for (uint32_t numWordsLeft = numPrimDataWords; numWordsLeft > 0; --numWordsLeft) {
             *pDstWord = *pSrcWord;
             ++pDstWord;
             ++pSrcWord;

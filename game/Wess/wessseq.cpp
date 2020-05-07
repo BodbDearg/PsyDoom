@@ -852,7 +852,7 @@ void SeqEngine() noexcept {
                             // Skip past the command bytes and read the delta time until the next command
                             trackStat.pcur_cmd += gWess_seq_CmdLength[seqCmd];
                             trackStat.pcur_cmd = Read_Vlq(trackStat.pcur_cmd.get(), trackStat.qnp_till_next_cmd);
-                        } 
+                        }
                         else if ((seqCmd >= StatusMark) && (seqCmd <= NullEvent)) {
                             // The sequencer executes this command: do it!
                             gWess_DrvFunctions[seqCmd](trackStat);

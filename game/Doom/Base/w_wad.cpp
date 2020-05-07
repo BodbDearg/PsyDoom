@@ -59,7 +59,7 @@ void W_Init() noexcept {
     ReadFile(*gMainWadFileIdx, gpLumpInfo->get(), *gNumLumps * sizeof(lumpinfo_t));
 
     // Alloc and zero init the lump cache pointers list and an array of bools to say whether each lump is compressed or not.
-    static_assert(sizeof(bool) == 1, "Expect bool to be 1 byte!");    
+    static_assert(sizeof(bool) == 1, "Expect bool to be 1 byte!");
 
     *gpLumpCache = (VmPtr<void>*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(VmPtr<void>), PU_STATIC, nullptr);
     *gpbIsUncompressedLump = (bool*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(bool), PU_STATIC, nullptr);
@@ -161,7 +161,7 @@ void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress
 
     if (bDecompress && (((uint8_t) lump.name.chars[0] & 0x80u) != 0)) {
         // Decompression needed, must alloc a temp buffer for the compressed data before reading and decompressing!
-        void* const pTmpBuffer = Z_EndMalloc(**gpMainMemZone, lump.size, PU_STATIC, nullptr);        
+        void* const pTmpBuffer = Z_EndMalloc(**gpMainMemZone, lump.size, PU_STATIC, nullptr);
         
         SeekAndTellFile(*gMainWadFileIdx, lump.filepos, PsxCd_SeekMode::SET);
         ReadFile(*gMainWadFileIdx, pTmpBuffer, sizeToRead);
@@ -270,7 +270,7 @@ void* W_OpenMapWad(const CdMapTbl_File discFile) noexcept {
 
     const bool bIsValidWad = (
         #if PC_PSX_DOOM_MODS
-            D_strncasecmp(wadinfo.fileid, "PWAD", sizeof(wadinfo.fileid) != 0) || 
+            D_strncasecmp(wadinfo.fileid, "PWAD", sizeof(wadinfo.fileid) != 0) ||
         #endif
             D_strncasecmp(wadinfo.fileid, "IWAD", sizeof(wadinfo.fileid) != 0)
     );

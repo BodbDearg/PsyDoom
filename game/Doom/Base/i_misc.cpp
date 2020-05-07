@@ -91,7 +91,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
         // Set these primitive properties prior to drawing rather than allowing them to be undefined as in the original code.
         // I think this drawing code just happened to work because of the types of operations which occurred just before it.
         // They must have produced primitive state changes that we actually desired for this function...
-        // Relying on external draw code and ordering however is brittle, so be explicit here and set exactly what we need:    
+        // Relying on external draw code and ordering however is brittle, so be explicit here and set exactly what we need:
         {
             // Set the draw mode to disable wrapping (zero sized text window) and texture page to the STATUS graphic
             DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);

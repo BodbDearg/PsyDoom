@@ -232,7 +232,7 @@ void LIBSPU_SpuSetVoiceAttr(const SpuVoiceAttr& attribs) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Internal LIBSPU function which converts a musical note to a frequency that can be set on a voice.
 // The returned integer frequency is such that 4,096 units = 44,100 Hz.
-// 
+//
 // Params:
 //  baseNote:       Note at which the frequency is considered 44,100 Hz.
 //                  For example '60' would be A5 (12 semitones per octave, 1st note of 5th octave).

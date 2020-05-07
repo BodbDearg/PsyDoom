@@ -183,7 +183,7 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
     mobj.z += mobj.momz;
 
     // Do floating up and down to meet the target for floating monsters
-    if ((mobj.flags & MF_FLOAT) && mobj.target) {    
+    if ((mobj.flags & MF_FLOAT) && mobj.target) {
         P_FloatChange(mobj);
     }
 
@@ -212,7 +212,7 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
     }
     
     // Check for a collision against the ceiling
-    if (mobj.z + mobj.height > mobj.ceilingz) {    
+    if (mobj.z + mobj.height > mobj.ceilingz) {
         // Hitting the ceiling: stop all upwards momentum
         if (mobj.momz > 0) {
             mobj.momz = 0;
@@ -255,7 +255,7 @@ static void P_MobjThinker(mobj_t& mobj) noexcept {
         mobj.tics--;
         
         // Is it time to change to the next state?
-        if (mobj.tics <= 0) {            
+        if (mobj.tics <= 0) {
             const statenum_t nextStateNum = mobj.state->nextstate;
             
             // Is there a next state?
@@ -263,7 +263,7 @@ static void P_MobjThinker(mobj_t& mobj) noexcept {
                 // There is a next state: setup the map object's sprite, pending action and remaining state tics for this state
                 state_t& nextState = gStates[nextStateNum];
                 mobj.state = &nextState;
-                mobj.tics = nextState.tics;         
+                mobj.tics = nextState.tics;
                 mobj.sprite = nextState.sprite;
                 mobj.frame = nextState.frame;
                 mobj.latecall = nextState.action;
@@ -378,7 +378,7 @@ static void PB_SetThingPosition(mobj_t& mobj) noexcept {
     subsector_t& subsec = *gpTestSubSec->get();
     sector_t& sec = *subsec.sector;
 
-    mobj.subsector = &subsec;    
+    mobj.subsector = &subsec;
     mobj.sprev = nullptr;
     mobj.snext = sec.thinglist;
     
@@ -550,7 +550,7 @@ static bool PB_CheckLine(line_t& line) noexcept {
     }
 
     // PSX Doom addition: block always if the line blocks projectiles
-    if (line.flags & ML_BLOCKPRJECTILE) 
+    if (line.flags & ML_BLOCKPRJECTILE)
         return false;
 
     // Get the top and bottom height of the opening/gap and the lowest floor
@@ -585,7 +585,7 @@ static bool PB_CheckLine(line_t& line) noexcept {
 // Returns 'false' if there is a collision and hence a blockage.
 // If a collision occurs the hit thing is saved in most cases, except where damage is not desired for missiles.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool PB_CheckThing(mobj_t& mobj) noexcept {    
+static bool PB_CheckThing(mobj_t& mobj) noexcept {
     // If the thing is not solid you can't collide against it
     if ((mobj.flags & MF_SOLID) == 0)
         return true;

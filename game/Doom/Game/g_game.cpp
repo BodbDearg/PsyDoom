@@ -262,7 +262,7 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     // Resetting memory management related stuff and RNGs
     *gbIsLevelBeingRestarted = false;
     *gLockedTexPagesMask &= 1;
-    I_PurgeTexCache();    
+    I_PurgeTexCache();
 
     Z_FreeTags(**gpMainMemZone, PU_CACHE|PU_ANIMATION|PU_LEVSPEC|PU_LEVEL);
     M_ClearRandom();
@@ -295,7 +295,7 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     if (gameType == gt_single) {
         gpPlayerCtrlBindings[0] = gCtrlBindings;
         gbPlayerInGame[1] = false;
-    } 
+    }
     else if (gameType == gt_deathmatch || gameType == gt_coop) {
         gbPlayerInGame[2] = true;
     }
@@ -308,7 +308,7 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     if (skill == sk_nightmare) {
         gStates[S_SARG_ATK1].tics = 2;
         gStates[S_SARG_ATK2].tics = 2;
-        gStates[S_SARG_ATK3].tics = 2;        
+        gStates[S_SARG_ATK3].tics = 2;
         gMObjInfo[MT_SERGEANT].speed = 15;
         gMObjInfo[MT_BRUISERSHOT].speed = 40 * FRACUNIT;
         gMObjInfo[MT_HEADSHOT].speed = 40 * FRACUNIT;
@@ -360,7 +360,7 @@ void G_RunGame() noexcept {
         MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
 
         // Should we do the Ultimate DOOM finale?
-        if (*gNetGame == gt_single && *gGameMap == 30 && *gNextMap == 31) {    
+        if (*gNetGame == gt_single && *gGameMap == 30 && *gNextMap == 31) {
             MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
 
             if (*gGameAction == ga_warped || *gGameAction == ga_restart)

@@ -139,7 +139,7 @@ gameaction_t TIC_PasswordScreen() noexcept {
             *gNumPasswordCharsEntered += 1;
             
             // If the password sequence is not yet complete then there is nothing more to do
-            if (*gNumPasswordCharsEntered < PW_SEQ_LEN) 
+            if (*gNumPasswordCharsEntered < PW_SEQ_LEN)
                 return ga_nothing;
         }
         
@@ -162,7 +162,7 @@ gameaction_t TIC_PasswordScreen() noexcept {
             *gStartSkill = (skill_t) a1;
 
             return ga_warped;
-        } 
+        }
         else {
             // Invalid password entered, flash the message for a bit
             *gInvalidPasswordFlashTicsLeft = 16;
@@ -246,10 +246,10 @@ void DRAW_PasswordScreen() noexcept {
         if (pwChar >= 'a' && pwChar <= 'z') {
             bigFontCharIdx = BIG_FONT_LCASE_ALPHA + (pwChar - 'a');
             charY = (int16_t)((charRow * CHAR_SPACING) + 63);           // Tweak y position for smaller lowercase chars
-        } 
+        }
         else if (pwChar >= '0' && pwChar <= '9') {
             bigFontCharIdx = BIG_FONT_DIGITS + (pwChar - '0');
-        } 
+        }
         else if (pwChar == '!') {
             bigFontCharIdx = BIG_FONT_EXCLAMATION;
         }

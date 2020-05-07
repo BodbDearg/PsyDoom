@@ -78,7 +78,7 @@ bool LIBAPI_CloseEvent(const int32_t event) noexcept {
         else {
             return false;   // Already closed!
         }
-    }    
+    }
 
     // TODO: REMOVE BIOS CALL
     a0 = event;
@@ -221,7 +221,7 @@ int32_t LIBAPI_OpenEvent(const int32_t cause, const int32_t type, const int32_t 
         }
     }
 
-    // TODO: REMOVE THIS    
+    // TODO: REMOVE THIS
     a0 = cause;
     a1 = type;
     a2 = mode;

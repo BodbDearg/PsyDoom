@@ -92,7 +92,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
                 // Bottom of texture is at bottom of lower wall.
                 //
                 // This seems to do a weird wrapping as well every 128 units - not sure why that is...
-                // This could maybe cause some weirdness in some cases with lower walls! 
+                // This could maybe cause some weirdness in some cases with lower walls!
                 const int32_t wall_h = bsec_by - fsec_ty;
                 vt = ((side.rowoffset >> FRACBITS) + wall_h) & (~128);
             } else {
@@ -196,7 +196,7 @@ void R_DrawWallPiece(
         LIBGPU_setRECT(texRect, tex.texPageCoordX, tex.texPageCoordY, tex.width, tex.height);
 
         DR_TWIN* const texWinPrim = (DR_TWIN*) LIBETC_getScratchAddr(128);
-        LIBGPU_SetTexWindow(*texWinPrim, texRect);        
+        LIBGPU_SetTexWindow(*texWinPrim, texRect);
         I_AddPrim(texWinPrim);
     }
 
@@ -249,7 +249,7 @@ void R_DrawWallPiece(
     // of intersections of a line against another line in order to determine the 'u' texture coordinate for each column.
     // In the loop, one of the lines is advanced along the wall and intersected against another line, which presumably has
     // some sort of relation to the front view plane.
-    // 
+    //
     // Basically given the equations of two lines:
     //      a1x + b1y = d1
     //      a2x + b2y = d2
@@ -263,8 +263,8 @@ void R_DrawWallPiece(
     //
     // Filling in the blanks, the game defines the dividend and divisor as follows:
     //      isectNum = (x1 - HALF_SCREEN_W) * isectNumStep + (segViewSin * 8 * segViewDot)
-    //      isectDiv = (x1 - HALF_SCREEN_W) * isectDivStep - (segViewCos * 8)   
-    // 
+    //      isectDiv = (x1 - HALF_SCREEN_W) * isectDivStep - (segViewCos * 8)
+    //
     // Where:
     //      isectNumStep = (segViewDot * segViewCos) >> 4
     //      isectDivStep = segViewSin >> 4
@@ -335,7 +335,7 @@ void R_DrawWallPiece(
             // Some hacky-ish code to clamp the column height to the screen bounds if it gets too big, and to adjust the 'v' texture coords.
             // For the most part the engine relies on the hardware to do it's clipping for vertical columns, but if the offscreen distance
             // becomes too great then problems can start occurring and columns don't render. I'm not sure if this is a PSX limitation or
-            // some sort of numeric overflow, but this code attempts to fix it. 
+            // some sort of numeric overflow, but this code attempts to fix it.
             //
             // Note: the value '510' appears to be the maximum we can here use without encountering issues.
             // If you reduce this any more, then sometimes columns will not draw when you get close enough.
@@ -346,7 +346,7 @@ void R_DrawWallPiece(
             int32_t vtCur = vt;
             int32_t vbCur = vb;
 
-            if (colHeight >= 510) { 
+            if (colHeight >= 510) {
                 // Compute the amount of 'v' coordinate from the top of the column to the center of the screen
                 const int32_t vHeight = vbCur - vtCur;
                 const fixed_t vTopToCenterFrac = ((HALF_VIEW_3D_H - ytCur) << FRACBITS) / colHeight;

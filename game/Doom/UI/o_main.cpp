@@ -92,7 +92,7 @@ void O_Init() noexcept {
     if (*gNetGame != gt_single) {
         gpOptionsMenuItems = gOptMenuItems_NetGame;
         gOptionsMenuSize = 4;
-    }    
+    }
     else if (*gbGamePaused) {
         gpOptionsMenuItems = gOptMenuItems_Single;
         gOptionsMenuSize = 6;

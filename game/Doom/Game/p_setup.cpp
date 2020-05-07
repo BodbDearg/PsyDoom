@@ -488,7 +488,7 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     *gpBlockmapLump = (uint16_t*) Z_Malloc(**gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
     W_ReadMapLump(lumpNum, gpBlockmapLump->get(), true);
 
-    // The first 8 bytes of the blockmap are it's header.    
+    // The first 8 bytes of the blockmap are it's header
     struct blockmap_hdr_t {
         int16_t     originx;
         int16_t     originy;
@@ -610,7 +610,7 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
 
             // Set leaf vertex reference
             if (srcEdge.vertexnum >= *gNumVertexes) {
-                I_Error("P_LoadLeafs: vertex out of range\n");                        
+                I_Error("P_LoadLeafs: vertex out of range\n");
             }
 
             pDstEdge->vertex = &(*gpVertexes)[srcEdge.vertexnum];
@@ -644,7 +644,7 @@ static void P_GroupLines() noexcept {
         subsector_t* pSubsec = gpSubsectors->get();
         
         for (int32_t subsecIdx = 0; subsecIdx < *gNumSubsectors; ++subsecIdx) {
-            const seg_t& seg = (*gpSegs)[pSubsec->firstseg];            
+            const seg_t& seg = (*gpSegs)[pSubsec->firstseg];
             pSubsec->sector = seg.sidedef->sector;
             ++pSubsec;
         }
@@ -853,7 +853,7 @@ void P_Init() noexcept {
     
     // Some more hardcoded limits and memory arrangement for textures, this time for wall textures.
     // Lock down the texture pages used by wall textures and set the cache to start filling immediately after that (on the 6th page).
-    // 
+    //
     // Basically only the 3rd, 4th and 5th texture pages can be used for wall textures.
     // This gives a maximum wall texture area of 768x256 - everything else after that is reserved for sprites.
     // Even if the code above fills in more textures, they will eventually be evicted from the cache in favor of sprites.

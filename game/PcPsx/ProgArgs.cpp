@@ -35,7 +35,7 @@ static int parseArg_highfps([[maybe_unused]] const int argc, const char** const 
     if (std::strcmp(argv[0], "-highfps") == 0) {
         gbUseHighFpsHack = true;
         return 1;
-    } 
+    }
 
     return 0;
 }
@@ -44,7 +44,7 @@ static int parseArg_headless([[maybe_unused]] const int argc, const char** const
     if (std::strcmp(argv[0], "-headless") == 0) {
         gbHeadlessMode = true;
         return 1;
-    } 
+    }
 
     return 0;
 }
@@ -53,7 +53,7 @@ static int parseArg_datadir(const int argc, const char** const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-datadir") == 0)) {
         gDataDirPath = argv[1];
         return 2;
-    } 
+    }
 
     return 0;
 }
@@ -62,7 +62,7 @@ static int parseArg_playdemo(const int argc, const char** const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-playdemo") == 0)) {
         gPlayDemoFilePath = argv[1];
         return 2;
-    } 
+    }
 
     return 0;
 }
@@ -71,7 +71,7 @@ static int parseArg_saveresult(const int argc, const char** const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-saveresult") == 0)) {
         gSaveDemoResultFilePath = argv[1];
         return 2;
-    } 
+    }
 
     return 0;
 }
@@ -80,7 +80,7 @@ static int parseArg_checkresult(const int argc, const char** const argv) {
     if ((argc >= 2) && (std::strcmp(argv[0], "-checkresult") == 0)) {
         gCheckDemoResultFilePath = argv[1];
         return 2;
-    } 
+    }
 
     return 0;
 }

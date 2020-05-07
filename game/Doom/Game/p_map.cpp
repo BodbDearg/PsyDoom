@@ -67,7 +67,7 @@ bool P_TryMove(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
             // This thing being moved is a missile bashing into something: damage the thing hit
             const int32_t damage = ((P_Random() & 7) + 1) * mobj.info->damage;
             P_DamageMObj(*pCollideThing, &mobj, mobj.target.get(), damage);
-        } 
+        }
         else if (mobj.flags & MF_SKULLFLY) {
             // This thing being moved is a skull which has based into something: damage the thing hit
             const int32_t damage = ((P_Random() & 7) + 1) * mobj.info->damage;
@@ -411,7 +411,7 @@ loc_8001BC08:
 // Apply splash/bomb damage to the given thing from the current explosion, if applicable and in range etc.
 // Note: the 'bomb source' is the thing that caused the explosion, not the projectile itself ('bomb spot').
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool PIT_RadiusAttack(mobj_t& mobj) noexcept {    
+bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
     // Non shootable things get no splash damage
     if ((mobj.flags & MF_SHOOTABLE) == 0)
         return true;
@@ -445,7 +445,7 @@ bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
 // Do an explosion at the given bomb spot, doing the specified amount of damage. The damage falls off linearly over distance.
 // The given 'source' object (optional) is the thing responsible for causing the explosion.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_RadiusAttack(mobj_t& bombSpot, mobj_t* const pSource, const int32_t damage) noexcept {    
+void P_RadiusAttack(mobj_t& bombSpot, mobj_t* const pSource, const int32_t damage) noexcept {
     // Compute the range of the blockmap to search based on the damage amount.
     // Splash damage falls off linearly, so the damage amount is also pretty much the distance range:
     const fixed_t blastDist = damage << FRACBITS;

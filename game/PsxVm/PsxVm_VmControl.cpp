@@ -84,16 +84,16 @@ static void rescanGameControllers() noexcept {
         for (int joyIdx = 0; joyIdx < numJoysticks; ++joyIdx) {
             // If we find a valid game controller then try to open it.
             // If we succeed then our work is done!
-            if (SDL_IsGameController(joyIdx)) {           
+            if (SDL_IsGameController(joyIdx)) {
                 gpGameController = SDL_GameControllerOpen(joyIdx);
 
                 if (gpGameController) {
                     gpJoystick = SDL_GameControllerGetJoystick(gpGameController);
                     gJoystickId = SDL_JoystickInstanceID(gpJoystick);
                     break;
-                }       
+                }
             }
-        }        
+        }
     }
 }
 
@@ -453,7 +453,7 @@ void PsxVm::submitGpuPrimitive(const void* const pPrim) noexcept {
     
     // Get the primitive tag and consequently how many data words there are in the primitive
     const uint32_t* pCurWord = (const uint32_t*) pPrim;
-    const uint32_t tag = pCurWord[0];    
+    const uint32_t tag = pCurWord[0];
     const uint32_t numDataWords = tag >> 24;
 
     ++pCurWord;

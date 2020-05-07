@@ -13,7 +13,7 @@ BEGIN_NAMESPACE(FileUtils)
 // Read data for the given file path on disk and store it in the given pointer, returning 'true' on success.
 // Optionally an additional number of bytes at the end of the data can be allocated and set to the given value.
 // This can be useful to null terminate a text file that has been read, for example.
-// 
+//
 // Notes:
 //  (1) If the file is not read successfully, the given filepath will be set to null and output size set to '0'.
 //  (2) The output memory is allocated with C++ 'new[]' so should be deallocated with C++ 'delete[]'.
@@ -32,7 +32,7 @@ bool getContentsOfFile(
     pOutputMem = nullptr;
     outputSize = 0;
 
-    // Open the file firstly and ensure it will be closed on exit    
+    // Open the file firstly and ensure it will be closed on exit
     FILE* pFile = std::fopen(filePath, "rb");
 
     if (!pFile) {
@@ -86,7 +86,7 @@ bool writeDataToFile(
 ) noexcept {
     ASSERT(filePath);
 
-    // Open the file firstly and ensure it will be closed on exit    
+    // Open the file firstly and ensure it will be closed on exit
     FILE* pFile = std::fopen(filePath, bAppend ? "ab" : "wb");
 
     if (!pFile) {
@@ -95,7 +95,7 @@ bool writeDataToFile(
 
     auto closeFile = finally([&]() noexcept {
         std::fclose(pFile);
-    });    
+    });
 
     // Do the write and return the result
     return (std::fwrite(pData, dataSize, 1, pFile) == 1);

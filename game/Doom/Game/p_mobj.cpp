@@ -43,7 +43,7 @@ const VmPtr<int32_t> gNumMObjKilled(0x80078010);
 void P_RemoveMobj(mobj_t& mobj) noexcept {
     // Respawn the item later it's the right type
     const bool bRespawn = (
-        (mobj.flags & MF_SPECIAL) && 
+        (mobj.flags & MF_SPECIAL) &&
         ((mobj.flags & MF_DROPPED) == 0) &&
         (mobj.type != MT_INV) &&
         (mobj.type != MT_INS)
@@ -100,7 +100,7 @@ void P_RespawnSpecials() noexcept {
         return;
 
     // Get the spawn location and sector
-    const mapthing_t& mapthing = gItemRespawnQueue[slotIdx];        
+    const mapthing_t& mapthing = gItemRespawnQueue[slotIdx];
     const fixed_t x = (fixed_t) mapthing.x << FRACBITS;
     const fixed_t y = (fixed_t) mapthing.y << FRACBITS;
 
@@ -498,7 +498,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     if (thingType == NUMMOBJTYPES) {
         I_Error("P_SpawnMapThing: Unknown doomednum %d at (%d, %d)", (int) mapthing.type, (int) mapthing.x, (int) mapthing.y);
         return;
-    }   
+    }
 
     // Do not spawn monsters and keycards in deathmatch
     const mobjinfo_t& info = gMObjInfo[thingType];

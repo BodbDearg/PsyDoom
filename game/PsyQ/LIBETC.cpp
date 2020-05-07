@@ -33,7 +33,7 @@ loc_8004A7AC:
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t LIBETC_VSync(const int32_t mode) noexcept {
     v0 = lw(0x80075D04);            // Load from: GPU_REG_GP1 (80075D04)
-    v1 = lw(0x80075D08);            // Load from: TIMER_REG_ROOT_CNT_1 (80075D08)    
+    v1 = lw(0x80075D08);            // Load from: TIMER_REG_ROOT_CNT_1 (80075D08)
     uint32_t x0 = lw(v0);
     v0 = lw(v1);
 
@@ -80,7 +80,7 @@ int32_t LIBETC_VSync(const int32_t mode) noexcept {
                     }
                 }
 
-                v0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)                
+                v0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)
                 sw(v0, 0x80075D10);         // Store to: gLIBETC_VSync_UNKNOWN_VAR_3 (80075D10)
 
                 v1 = lw(0x80075D08);        // Load from: TIMER_REG_ROOT_CNT_1 (80075D08)
@@ -112,7 +112,7 @@ void _thunk_LIBETC_VSync() noexcept {
 // This is an internal PSYQ function and not documented.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBETC_v_wait(const int32_t targetVCount, [[maybe_unused]] const uint16_t timeout) noexcept {
-    int32_t vcount = (int32_t) lw(0x80075CCC);          // Load from: gLIBETC_Vcount (80075CCC)  
+    int32_t vcount = (int32_t) lw(0x80075CCC);          // Load from: gLIBETC_Vcount (80075CCC)
 
     while (vcount < targetVCount) {
         #if PC_PSX_DOOM_MODS

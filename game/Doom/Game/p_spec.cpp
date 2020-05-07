@@ -197,7 +197,7 @@ fixed_t P_FindHighestFloorSurrounding(sector_t& sector) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Find the lowest floor height in the sectors surrounding a given sector which is higher than the given input 'base' height.
-// 
+//
 // PC-PSX: if there is no such sector, the input base height will be returned rather than an undefined/garbage height value.
 // It also no longer overflows buffers when checking > 20 adjoining sectors.
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1211,7 +1211,7 @@ loc_80027400:
     s0 += 0x14;
     if (v0 != 0) goto loc_8002726C;
     
-    if (*gbIsSkyVisible && gUpdateFireSkyFunc) {    
+    if (*gbIsSkyVisible && gUpdateFireSkyFunc) {
         gUpdateFireSkyFunc(**gpSkyTexture);
     }
     
@@ -1448,7 +1448,7 @@ void G_SecretExitLevel() noexcept {
 loc_800277E0:
     sp -= 0x18;
     a1 = 0x14;
-    a2 = 4;    
+    a2 = 4;
     *gNextMap = a0;
     a0 = *gpMainMemZone;
     a3 = 0;

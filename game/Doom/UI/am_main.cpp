@@ -36,7 +36,7 @@ static const VmPtr<fixed_t> gAutomapYMax(0x80078298);
 void AM_Start() noexcept {
     *gAutomapXMin = *gBlockmapOriginX;
     *gAutomapYMin = *gBlockmapOriginY;
-    *gAutomapXMax = (*gBlockmapWidth  << MAPBLOCKSHIFT) + *gBlockmapOriginX;    
+    *gAutomapXMax = (*gBlockmapWidth  << MAPBLOCKSHIFT) + *gBlockmapOriginX;
     *gAutomapYMax = (*gBlockmapHeight << MAPBLOCKSHIFT) + *gBlockmapOriginY;
 }
 
@@ -127,7 +127,7 @@ void AM_Control(player_t& player) noexcept {
         if (player.automapscale < MINSCALE) {
             player.automapscale = MINSCALE;
         }
-    } 
+    }
     else if (ticButtons & PAD_L1) {
         player.automapscale += SCALESTEP;
 
@@ -198,7 +198,7 @@ void AM_Drawer() noexcept {
                 ((pLine->flags & ML_MAPPED) == 0)
             ) {
                 color = COLOR_GREY;     // A known line (due to all map cheat/powerup) but unseen
-            }            
+            }
             else if (pLine->flags & ML_SECRET) {
                 color = COLOR_RED;      // Secret
             }
@@ -306,7 +306,7 @@ void AM_Drawer() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draw an automap line in the specified color
 //------------------------------------------------------------------------------------------------------------------------------------------
-void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const int32_t x2, const int32_t y2) noexcept {    
+void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const int32_t x2, const int32_t y2) noexcept {
     // Reject the line quickly using the 'Cohen-Sutherland' algorithm.
     // Note: no clipping is done since that is handled by the hardware.
     enum OutFlags : uint32_t {
@@ -327,7 +327,7 @@ void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const in
     if (y2 < -100) { outcode2 |= BOTTOM;    }
     if (y2 >  100) { outcode2 |= TOP;       }
     
-    if (outcode1 & outcode2) 
+    if (outcode1 & outcode2)
         return;
 
     // Setup the map line primitive and draw it.

@@ -352,7 +352,7 @@ void R_InitPalette() noexcept {
 //
 // Given the specified texture object which is assumed to be 8-bits per pixel (i.e color indexed), returns the 'RECT' in VRAM where the
 // texture would be placed. Useful for getting the texture's VRAM position prior to uploading to the GPU.
-// 
+//
 // I decided to make this a helper rather than duplicate the same code everywhere.
 // Produces the same result as the original inline logic, but cleaner.
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -576,7 +576,7 @@ int32_t wess_load_module(
             if ((trackHdr.driver_id == NoSound_ID) || (trackHdr.driver_id == GENERIC_ID)) {
                 // This track is not associated with any sound driver or works with any sound driver: load always
                 bLoadTrack = true;
-            } 
+            }
             else {
                 // Not doing an unconditional load of this track.
                 // Only load it if it is for one of the loaded sound drivers and loading this track type is allowed:

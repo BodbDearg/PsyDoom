@@ -159,7 +159,7 @@ bool P_GiveAmmo(player_t& player, const ammotype_t ammoType, const int32_t numCl
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Attempts to give the weapon type to the specified player, along with any ammo that results from picking up the weapon.
 // The weapon type may be 'dropped' by monsters or placed in the level at the start, dropped weapons yield less ammo.
-// Returns 'true' if the pickup succeeded, 'false' if pickup is not allowed. 
+// Returns 'true' if the pickup succeeded, 'false' if pickup is not allowed.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bDropped) noexcept {
     // In co-op mode only allow placed weapons to be picked up if not already owned
@@ -319,7 +319,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_bluecard);
             }
 
-		    if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+            if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
                 return;
 
         }   break;
@@ -330,7 +330,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_redcard);
             }
 
-		    if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+            if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
                 return;
 
         }   break;
@@ -341,7 +341,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_yellowcard);
             }
 
-		    if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+            if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
                 return;
 
         }   break;
@@ -352,7 +352,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_blueskull);
             }
 
-		    if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+            if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
                 return;
 
         }   break;
@@ -363,7 +363,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_redskull);
             }
 
-		    if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+            if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
                 return;
 
         }   break;
@@ -374,7 +374,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_yellowskull);
             }
 
-		    if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+            if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
                 return;
 
         }   break;
@@ -486,8 +486,8 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         }   break;
 
         case SPR_PMAP: {
-		    if (!P_GivePower(player, pw_allmap))
-			    return;
+            if (!P_GivePower(player, pw_allmap))
+                return;
             
             player.message = STR_ComputerAreaMapPickedUpMsg;
             soundId = sfx_getpow;
@@ -678,7 +678,7 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
         // A player was killed: someone must get or lose a frag for this
         if (pKillerPlayer && (pKillerPlayer != pTargetPlayer)) {
             // Target killed by another player: credit the killer with a frag
-            pKiller->player->frags++;            
+            pKiller->player->frags++;
         } else {
             // The target killed itself somehow, or was killed by something else other than a player: therefore loses a frag
             pTargetPlayer->frags--;
@@ -883,7 +883,7 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
         // Map object still alive: do the pain state for the thing randomly
         if ((target.info->painchance > P_Random()) && ((target.flags & MF_SKULLFLY) == 0)) {
             // Doing pain: make the monster fight back and go into the pain state
-            target.flags |= MF_JUSTHIT; 
+            target.flags |= MF_JUSTHIT;
             P_SetMObjState(target, target.info->painstate);
         }
         

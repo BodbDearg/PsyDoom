@@ -235,7 +235,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
         const fixed_t viewCos = *gViewCos;
         const fixed_t viewSin = *gViewSin;
         const fixed_t viewX = *gViewX;
-        const fixed_t viewY = *gViewY;        
+        const fixed_t viewY = *gViewY;
         const fixed_t spanUOffset = dist * viewCos + viewX;
         const fixed_t spanVOffset = dist * viewSin + viewY;
 
@@ -298,7 +298,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                 
                 if (lightIntensity < LIGHT_INTENSTIY_MIN) {
                     lightIntensity = LIGHT_INTENSTIY_MIN;
-                } 
+                }
                 else if (lightIntensity > LIGHT_INTENSTIY_MAX) {
                     lightIntensity = LIGHT_INTENSTIY_MAX;
                 }

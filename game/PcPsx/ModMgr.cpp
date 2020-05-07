@@ -19,7 +19,7 @@ BEGIN_NAMESPACE(ModMgr)
 static constexpr uint8_t MAX_OPEN_FILES = 16;
 
 // A list of booleans indicating whether each file in the game can be overriden by a file in the user given 'datadir'.
-// The list is indexed by a 'CdMapTbl_File' value. 
+// The list is indexed by a 'CdMapTbl_File' value.
 static std::vector<bool> gbFileHasOverrides;
 
 // A list of currently open files.
@@ -171,7 +171,7 @@ bool openOverridenFile(const CdMapTbl_File discFile, PsxCd_File& fileOut) noexce
     gOpenFileSlots[fileSlotIdx] = pFile;
 
     // Save file details and return 'true' for success
-    fileOut = {};    
+    fileOut = {};
     fileOut.file.pos.minute = fileSlotIdx;      // Save the index of the open file in this field
     fileOut.file.pos.track = 255u;              // Special marker to indicate that the file is overriden
     fileOut.file.size = fileSize;

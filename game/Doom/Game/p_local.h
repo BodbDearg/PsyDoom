@@ -26,4 +26,4 @@ static constexpr fixed_t    GRAVITY         = 4 * FRACUNIT;     // Gravity stren
 static constexpr fixed_t    MELEERANGE      = 70 * FRACUNIT;    // Range for melee attacks
 static constexpr fixed_t    MAXMOVE         = 16 * FRACUNIT;    // Maximum movement amount in one go: larger moves must be split up unto multiple smaller moves
 static constexpr fixed_t    FLOATSPEED      = 8 * FRACUNIT;     // Speed of floating up or down to meet the player for floating monsters
-static constexpr int32_t    BASETHRESHOLD   = 100;		        // How long for an AI to follow a target for (tics) - was about 3 seconds on PC, much longer on PSX. Conversion bug?
+static constexpr int32_t    BASETHRESHOLD   = 100;              // How long for an AI to follow a target for (tics) - was about 3 seconds on PC, much longer on PSX. Conversion bug?

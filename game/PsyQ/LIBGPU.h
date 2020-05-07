@@ -92,7 +92,7 @@ struct POLY_FT4 {
     uint8_t     tv1;
     uint16_t    tpage;      // Texture page id
     int16_t     x2;         // Vertex 3: position
-    int16_t     y2;    
+    int16_t     y2;
     uint8_t     tu2;        // Vertex 3: texture coords
     uint8_t     tv2;
     uint16_t    pad1;       // Not used

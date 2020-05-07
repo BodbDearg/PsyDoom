@@ -167,7 +167,7 @@ void LIBGPU_LoadImage(const RECT& dstRect, const uint16_t* const pImageData) noe
         //  https://problemkaputt.de/psx-spx.htm#graphicsprocessingunitgpu
         // Under "GPU Memory Transfer Commands" and "Wrapping".
         // If a load operation happens to exceed the bounds of VRAM, then it will wrap around to the opposite side of VRAM.
-        // 
+        //
         // If we detect this situation then we need to split the copy up into two parts.
         // The 2nd copy part will begin at the left edge of VRAM.
         //
@@ -587,7 +587,7 @@ int32_t LIBGPU_FntOpen(
     const int32_t dispH,
     [[maybe_unused]] const bool bClearBg,
     [[maybe_unused]] const int32_t maxChars
-) noexcept {    
+) noexcept {
     gDFontDispX = (int16_t) dispX;
     gDFontDispY = (int16_t) dispY;
     gDFontDispW = (int16_t) dispW;
@@ -726,14 +726,14 @@ uint16_t LIBGPU_LoadTPage(
     const int32_t imgH
 ) noexcept {
     // Figure out the destination RECT in VRAM in terms of 16-bit pixels
-    RECT dstRect;  
+    RECT dstRect;
     dstRect.x = (int16_t) dstX;
     dstRect.y = (int16_t) dstY;
     dstRect.h = (int16_t) imgH;
     
     if (bitDepth == 0) {
         dstRect.w = (int16_t)(imgW / 4);    // 4-bits per pixel mode
-    } else if (bitDepth == 1) {        
+    } else if (bitDepth == 1) {
         dstRect.w = (int16_t)(imgW / 2);    // 8-bits per pixel mode
     } else if (bitDepth == 2) {
         dstRect.w = (int16_t) imgW;         // 16-bits per pixel mode
@@ -782,7 +782,7 @@ DRAWENV& LIBGPU_SetDefDrawEnv(DRAWENV& env, const int32_t x, const int32_t y, co
 
   env.r0 = 0;
   env.g0 = 0;
-  env.b0 = 0;  
+  env.b0 = 0;
   
   env.isbg = 0;
   return env;

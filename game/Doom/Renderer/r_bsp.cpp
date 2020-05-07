@@ -205,12 +205,12 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     //--------------------------------------------------------------------------------------------------------------------------------------
 
     // Is the node BB fully outside the view frustrum to the left?
-    if ((-vx1 > vy1) && (-vx2 > vy2)) {        
-        return false;   
+    if ((-vx1 > vy1) && (-vx2 > vy2)) {
+        return false;
     }
     
     // Is the node BB fully outside the view frustrum to the right?
-    if ((vx1 > vy1) && (vx2 > vy2)) {        
+    if ((vx1 > vy1) && (vx2 > vy2)) {
         return false;
     }
 

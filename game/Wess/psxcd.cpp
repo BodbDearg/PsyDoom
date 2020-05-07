@@ -269,7 +269,7 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
                 if (gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].amount == 0) {
                     *gPSXCD_cur_cmd += 1;
                 }
-            } 
+            }
             else if (gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command == PSXCD_COMMAND_READCOPY) {
                 // Executing a command to read a partial sector.
                 // Copy the entire sector to the sector buffer, then just copy out the bits we need:
@@ -282,7 +282,7 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
 
                 // This command is just one read sector operation, move onto the next
                 *gPSXCD_cur_cmd += 1;
-            } 
+            }
             else {
                 // Don't know what this command is, so terminate the command list
                 gPSXCD_psxcd_cmds[*gPSXCD_cur_cmd].command = PSXCD_COMMAND_END;
@@ -307,7 +307,7 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
 
         *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
         *gPSXCD_cdl_err_intr = status;
-    } 
+    }
     else if (pResult[0] & CdlStatPlay) {
         // If we are playing cd audio and there is new data ready then record the updated cd location
         if (status == CdlDataReady) {
@@ -355,7 +355,7 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
         // Error or unknown situation:
         *gPSXCD_cdl_err_intr = status + 20;         // '+': Just to make the codes more unique, so their source is known
         *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
-    } 
+    }
     else {
         // Error or unknown situation:
         *gPSXCD_cdl_err_intr = status + 30;         // '+': Just to make the codes more unique, so their source is known
@@ -919,7 +919,7 @@ int32_t psxcd_seek(PsxCd_File& file, int32_t offset, const PsxCd_SeekMode mode) 
 
         // Figure out the offset within the destination sector we want to go to
         file.io_block_offset = (uint32_t)(offset - sectorInFile * CD_SECTOR_SIZE);
-    } 
+    }
     else if (mode == PsxCd_SeekMode::CUR) {
         // Seek relative to the current IO position: figure out the sector for the requested relative offset
         const int32_t curIoSec = LIBCD_CdPosToInt(*gPSXCD_cur_io_loc);

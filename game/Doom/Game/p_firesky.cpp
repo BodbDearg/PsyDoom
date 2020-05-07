@@ -32,7 +32,7 @@ void P_UpdateFireSky(texture_t& skyTex) noexcept {
     for (int32_t x = 0; x < FIRESKY_W; ++x) {
         for (int32_t y = 1; y < FIRESKY_H; ++y) {
             // Destination row is 1 above the source
-            uint8_t* const pDstRow = pSrcRow - FIRESKY_W;   
+            uint8_t* const pDstRow = pSrcRow - FIRESKY_W;
             
             // Sample the 'temperature' in the source row.
             // If it's a dead pixel then just output a zero (black) pixel in the destination row:

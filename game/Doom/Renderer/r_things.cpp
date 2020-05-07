@@ -212,7 +212,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         int32_t drawX;
 
         if (!bFlipSpr) {
-            LIBGPU_setUV4(polyPrim, 
+            LIBGPU_setUV4(polyPrim,
                 tex_ul, tex_vt,
                 tex_ur, tex_vt,
                 tex_ul, tex_vb,
@@ -222,7 +222,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
             drawX = ((pSpr->viewx - texOffsetX) * scale) >> FRACBITS;
             drawX += HALF_SCREEN_W;
         } else {
-            LIBGPU_setUV4(polyPrim, 
+            LIBGPU_setUV4(polyPrim,
                 tex_ur, tex_vt,
                 tex_ul, tex_vt,
                 tex_ur, tex_vb,
@@ -308,7 +308,7 @@ void R_DrawWeapon() noexcept {
         if (state.frame & FF_FULLBRIGHT) {
             // Note: these magic 5/8 multipliers correspond VERY closely to 'LIGHT_INTENSTIY_MAX / 255'.
             // The resulting values are sometimes not quite the same however.
-            const light_t& light = **gpCurLight;            
+            const light_t& light = **gpCurLight;
             LIBGPU_setRGB0(spr,
                 (uint8_t)(((uint32_t) light.r * 5) / 8),
                 (uint8_t)(((uint32_t) light.g * 5) / 8),

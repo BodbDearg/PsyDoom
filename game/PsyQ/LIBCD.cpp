@@ -76,7 +76,7 @@ void stepCdromWithCallbacks() noexcept {
     // Advance the cdrom emulation: this may result in a sector being read
     device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
 
-    const int32_t oldReadSector = cdrom.readSector;    
+    const int32_t oldReadSector = cdrom.readSector;
     cdrom.step();
     const int32_t newReadSector = cdrom.readSector;
 
@@ -125,7 +125,7 @@ void stepCdromWithCallbacks() noexcept {
 // Handle executing a command to the cdrom drive.
 // Note: only a subset of the available commands are supported, just the ones needed for DOOM.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static bool handleCdCmd(const CdlCmd cmd, const uint8_t* const pArgs, uint8_t resultBytesOut[8]) noexcept {    
+static bool handleCdCmd(const CdlCmd cmd, const uint8_t* const pArgs, uint8_t resultBytesOut[8]) noexcept {
     device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
 
     // Save the result globally and for the caller on exit
@@ -140,7 +140,7 @@ static bool handleCdCmd(const CdlCmd cmd, const uint8_t* const pArgs, uint8_t re
         }
     });
 
-    // Handle the command    
+    // Handle the command
     fifo<uint8_t, 16>& cdparams = cdrom.CDROM_params;
     
     switch (cmd) {
@@ -398,7 +398,7 @@ bool LIBCD_CdGetSector(void* const pDst, const int32_t readSizeInWords) noexcept
 
     // Read the bytes: note that reading past the end of the buffer on the real hardware would do the following:
     //  "The PSX will repeat the byte at index [800h-8] or [924h-4] as padding value."
-    // See: 
+    // See:
     //  https://problemkaputt.de/psx-spx.htm#cdromcontrollerioports
     //
     const int32_t sectorSize = (cdrom.mode.sectorSize == 0) ? 2048 : 2340;
@@ -518,7 +518,7 @@ void LIBCD_CD_initvol() noexcept {
 // If there is an error then '0' or less will be returned.
 // The 0th track points past the last track on the disc.
 //------------------------------------------------------------------------------------------------------------------------------------------
-int32_t LIBCD_CdGetToc(CdlLOC trackLocs[CdlMAXTOC]) noexcept {    
+int32_t LIBCD_CdGetToc(CdlLOC trackLocs[CdlMAXTOC]) noexcept {
     // Get the disc: if there is none then we can't provide a TOC
     device::cdrom::CDROM& cdrom = *PsxVm::gpCdrom;
     disc::Disc* const pDisc = cdrom.disc.get();

@@ -207,7 +207,7 @@ void F1_Drawer() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Start() noexcept {
     // Show the loading plaque and purge the texture cache
-    I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);    
+    I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
     I_PurgeTexCache();
 
     // Load the background and sprites needed
@@ -488,14 +488,14 @@ void F2_Drawer() noexcept {
         if (!spriteFrame.flip[0]) {
             polyPrim.tu0 = spriteTex.texPageCoordX;
             polyPrim.tu1 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
-            polyPrim.tu2 = spriteTex.texPageCoordX;            
+            polyPrim.tu2 = spriteTex.texPageCoordX;
             polyPrim.tu3 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
 
             xpos = HALF_SCREEN_W - spriteTex.offsetX;
         } else {
             polyPrim.tu0 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
             polyPrim.tu1 = spriteTex.texPageCoordX;
-            polyPrim.tu2 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;            
+            polyPrim.tu2 = spriteTex.texPageCoordX + (uint8_t) spriteTex.width - 1;
             polyPrim.tu3 = spriteTex.texPageCoordX;
             
             xpos = HALF_SCREEN_W + spriteTex.offsetX - spriteTex.width;

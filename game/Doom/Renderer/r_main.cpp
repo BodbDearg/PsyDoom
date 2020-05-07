@@ -79,7 +79,7 @@ void R_RenderPlayerView() noexcept {
     if (!*gbDoViewLighting) {
         *gCurLightValR = 128;
         *gCurLightValG = 128;
-        *gCurLightValB = 128;        
+        *gCurLightValB = 128;
         *gpCurLight = &(*gpLightsLump)[0];
     }
 
@@ -141,7 +141,7 @@ void R_RenderPlayerView() noexcept {
                 *gCurLightValB += player.extralight;
 
                 if (*gCurLightValR > 255) { *gCurLightValR = 255; }
-                if (*gCurLightValG > 255) { *gCurLightValG = 255; }                
+                if (*gCurLightValG > 255) { *gCurLightValG = 255; }
                 if (*gCurLightValB > 255) { *gCurLightValB = 255; }
             }
         }
@@ -172,7 +172,7 @@ void R_RenderPlayerView() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t R_SlopeDiv(const uint32_t num, const uint32_t den) noexcept {
     // If we're going to be dividing by 1 (or zero) then just return the max angle index (45 degrees)
-    if (den < 512) 
+    if (den < 512)
         return SLOPERANGE;
 
     // Otherwise figure out the lookup index from the table and clamp to the max range
@@ -190,7 +190,7 @@ angle_t R_PointToAngle2(const fixed_t x1, const fixed_t y1, const fixed_t x2, co
     if (dx == 0 && dy == 0)
         return 0;
 
-    if (dx >= 0) {        
+    if (dx >= 0) {
         if (dy >= 0) {
             if (dx > dy) {
                 return gTanToAngle[R_SlopeDiv(dy, dx)];                 // Octant 0

@@ -19,7 +19,7 @@ const VmPtr<bool32_t>   gbCrushChange(0x80077FA0);      // If 'true' then the cu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Clamps the map object's z position to be in a valid range for the sector it is within using the current floor/ceiling height.
-// Returns 'true' if the object can fit vertically in it's current sector, 'false' otherwise (should be crushed). 
+// Returns 'true' if the object can fit vertically in it's current sector, 'false' otherwise (should be crushed).
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_ThingHeightClip(mobj_t& mobj) noexcept {
     // Is the thing currently on the floor?
@@ -71,7 +71,7 @@ bool PIT_ChangeSector(mobj_t& mobj) noexcept {
     if (mobj.flags & MF_DROPPED) {
         P_RemoveMobj(mobj);
         return true;
-    }      
+    }
     
     // If the thing is not shootable then don't do anything more to it.
     // This will be the case for decorative things etc.

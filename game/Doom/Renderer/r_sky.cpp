@@ -24,7 +24,7 @@ void R_DrawSky() noexcept {
     // This code only executes for the fire sky - the regular sky is already in VRAM at this point.
     texture_t& skytex = *gpSkyTexture->get();
 
-    if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {        
+    if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         const void* const pLumpData = (*gpLumpCache)[skytex.lumpNum].get();
         const uint16_t* const pTexData = (const std::uint16_t*) pLumpData + 4;      // TODO: find out why it is skipping two words and comment
         RECT vramRect = getTextureVramRect(skytex);

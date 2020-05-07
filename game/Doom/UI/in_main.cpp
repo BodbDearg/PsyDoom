@@ -185,7 +185,7 @@ void IN_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 gameaction_t IN_Ticker() noexcept {
     // Intermission pauses for 1 second (60 vblanks) initially to stop accidental button presses
     if (*gTicCon - *gMenuTimeoutStartTicCon <= 60)
-        return ga_nothing;   
+        return ga_nothing;
 
     // Checking for inputs from all players to speed up the intermission
     for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {

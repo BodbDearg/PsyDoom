@@ -47,7 +47,7 @@ const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
         S_DSGUN,                // readystate
         S_DSGUN1,               // atkstate
         S_DSGUNFLASH1           // flashstate
-    },    
+    },
     {   // Chaingun
         am_clip,                // ammo
         S_CHAINUP,              // upstate

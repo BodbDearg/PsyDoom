@@ -310,7 +310,7 @@ static void PM_SetThingPosition(mobj_t& mobj) noexcept {
 //
 // Outputs:
 //  gTestTmBBox             : The bounding box for the thing
-//  gpNewSubsec             : The new subsector the thing would be in at the given position 
+//  gpNewSubsec             : The new subsector the thing would be in at the given position
 //  gpMoveThing             : The thing collided with
 //  gpBlockLine             : The line collided with (only set for certain line collisions though)
 //  gTmCeilingZ             : The Z value for the lowest ceiling touched
@@ -353,8 +353,7 @@ static void PM_CheckPosition() noexcept {
 
     // Do collisions against things
     {
-        // Compute the blockmap extents to check for collisions against other things and clamp to a valid range.
-        // 
+        // Compute the blockmap extents to check for collisions against other things and clamp to a valid range
         const int32_t bmapLx = std::max((gTestTmBBox[BOXLEFT] - *gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
         const int32_t bmapRx = std::min((gTestTmBBox[BOXRIGHT] - *gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
         const int32_t bmapTy = std::min((gTestTmBBox[BOXTOP] - *gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);

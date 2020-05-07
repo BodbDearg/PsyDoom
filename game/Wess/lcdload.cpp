@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Williams Entertainment Sound System (WESS): LCD (Linear CD sound samples file) loading code.
 // These are the files which contain all of the sounds used for the game and for music instruments.
-// 
+//
 // Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "lcdload.h"
@@ -239,7 +239,7 @@ int32_t wess_dig_lcd_psxcd_sync() noexcept {
 // Returns the number of bytes uploaded to the SPU or '0' on failure.
 // Optionally, details for the uploaded sounds can be saved to the given sample block.
 // The 'override' flag also specifies whether existing sound patches are to have their details overwritten or not.
-// 
+//
 // Note: I've completely rewritten this function for PsyDoom to get rid of all the low level I/O stuff.
 // The goal of the rewrite is to enable modding of the game with new .LCD files for custom maps, since the 'psxcd' I/O functions support
 // replacing original game files with alternate versions on the user's computer.

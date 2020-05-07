@@ -20,7 +20,7 @@ static const VmPtr<fixed_t>     gBottomSlope(0x80078008);   // Minimum/bottom un
 static const VmPtr<divline_t>   gSTrace(0x80097C00);        // The start point and vector for sight checking
 static const VmPtr<fixed_t>     gT2x(0x80078100);           // End point for sight checking: x
 static const VmPtr<fixed_t>     gT2y(0x80078108);           // End point for sight checking: y
-static const VmPtr<int32_t>     gT1xs(0x800781F8);          // Sight line start, whole coords: x 
+static const VmPtr<int32_t>     gT1xs(0x800781F8);          // Sight line start, whole coords: x
 static const VmPtr<int32_t>     gT1ys(0x80078208);          // Sight line start, whole coords: y
 static const VmPtr<int32_t>     gT2xs(0x80078204);          // Sight line end, whole coords: x
 static const VmPtr<int32_t>     gT2ys(0x80078210);          // Sight line end, whole coords: y
@@ -33,8 +33,8 @@ void P_CheckSights() noexcept {
 
     for (mobj_t* pmobj = mobjHead.next.get(); pmobj != &mobjHead; pmobj = pmobj->next.get()) {
         // Must be killable (enemy) to do sight checking
-		if ((pmobj->flags & MF_COUNTKILL) == 0)
-			continue;
+        if ((pmobj->flags & MF_COUNTKILL) == 0)
+            continue;
 
         // Must be about to change states for up-to-date sight info to be useful
         if (pmobj->tics == 1) {
@@ -97,7 +97,7 @@ bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
     *gValidCount += 1;
 
     // Do a raycast against the BSP tree and return if sight is unobstructed.
-    // Also narrows the vertical sight range with each lower and upper wall encountered.    
+    // Also narrows the vertical sight range with each lower and upper wall encountered.
     return PS_CrossBSPNode(*gNumBspNodes - 1);
 }
 
@@ -250,7 +250,7 @@ bool PS_CrossBSPNode(const int32_t nodeNum) noexcept {
         return false;
     
     // Check to see what side of the bsp split the end point for sight checking is on.
-    // If it's in the same half-space we just raycasted against then we are done - sight is unobstructed. 
+    // If it's in the same half-space we just raycasted against then we are done - sight is unobstructed.
     if (sideNum == PA_DivlineSide(*gT2x, *gT2y, bspNode.line))
         return true;
 

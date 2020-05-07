@@ -32,7 +32,7 @@ void Z_Init() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets up the given block of memory as a memory zone
 //------------------------------------------------------------------------------------------------------------------------------------------
-memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept {    
+memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept {
     memzone_t* const pZone = (memzone_t*) pBase;
 
     pZone->size = size;
@@ -45,7 +45,7 @@ memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept {
     // This field was not being initialized in PSX DOOM.
     // It was not serving any useful purpose anyway so probably doesn't matter? Just initialize here though for good measure:
     #if PC_PSX_DOOM_MODS
-        pZone->blocklist.lockframe = -1;    
+        pZone->blocklist.lockframe = -1;
     #endif
 
     pZone->blocklist.next = nullptr;
@@ -62,7 +62,7 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<voi
     const int32_t allocSize = (size + sizeof(memblock_t) + 3) & 0xFFFFFFFC;
 
     // Scan through the block list looking for the first free block of sufficient size.
-    // Also throw out any purgable blocks along the way.    
+    // Also throw out any purgable blocks along the way.
     memblock_t* pBase = zone.rover.get();
     memblock_t* const pStart = pBase;
 
@@ -135,7 +135,7 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<voi
     }
 
     // Setup the links on the memory block back to the pointer referencing it.
-    // Also populate the pointer referencing it (if given):    
+    // Also populate the pointer referencing it (if given):
     if (ppUser) {
         pBase->user = VmPtr<VmPtr<void>>(ppUser);
         *ppUser = &pBase[1];
@@ -225,7 +225,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
 
     // If there are enough free bytes following the allocation then make a new memory block and add it into the linked list of blocks.
     // Unlike the regular Z_Malloc, the new block is added BEFORE the allocated memory.
-    const int32_t numUnusedBytes = pBase->size - allocSize;    
+    const int32_t numUnusedBytes = pBase->size - allocSize;
     memblock_t& freeBlock = *pBase;
 
     if (numUnusedBytes > MINFRAGMENT) {
@@ -238,14 +238,14 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
             freeBlock.next->prev = pBase;
         }
 
-        freeBlock.next = pBase;        
+        freeBlock.next = pBase;
         freeBlock.size = numUnusedBytes;
         freeBlock.user = nullptr;
         freeBlock.tag = 0;
     }
 
     // Setup the links on the memory block back to the pointer referencing it.
-    // Also populate the pointer referencing it (if given):    
+    // Also populate the pointer referencing it (if given):
     if (ppUser) {
         pBase->user = VmPtr<VmPtr<void>>(ppUser);
         *ppUser = &pBase[1];

@@ -394,7 +394,7 @@ void S_StopAll() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept {
     // PC-PSX: ignore this command in headless mode
-    #if PC_PSX_DOOM_MODS    
+    #if PC_PSX_DOOM_MODS
         if (ProgArgs::gbHeadlessMode)
             return;
     #endif

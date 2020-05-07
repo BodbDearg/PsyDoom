@@ -116,7 +116,7 @@ gameaction_t TIC_Title() noexcept {
     // Update the fire sky if it is time to do that
     *gVBlanksUntilTitleFireMove -= elapsedVBlanks;
     
-    if (*gVBlanksUntilTitleFireMove <= 0) {        
+    if (*gVBlanksUntilTitleFireMove <= 0) {
         *gVBlanksUntilTitleFireMove = 2;
 
         // Once the title screen sprite is above a certain height, begin to fizzle out the fire.

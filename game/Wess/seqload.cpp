@@ -198,7 +198,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
                         break;
                     }
                 }
-            } 
+            }
             else if (trackHdr.sound_class == 2) {
                 // Track is drums: find a driver which wants to load drums
                 for (uint32_t patchGroupIdx = 0; patchGroupIdx < mstat.num_patch_groups; ++patchGroupIdx) {

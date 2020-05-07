@@ -12,11 +12,11 @@ cheatseq_t getDevCheatSequenceToExec() noexcept {
     } else if (pKbState[SDL_SCANCODE_F2] != 0) {
         return CHT_SEQ_NOCLIP;
     } else if (pKbState[SDL_SCANCODE_F3] != 0) {
-        return CHT_SEQ_WEAPONS_AND_AMMO;   
+        return CHT_SEQ_WEAPONS_AND_AMMO;
     } else if (pKbState[SDL_SCANCODE_F4] != 0) {
-        return CHT_SEQ_LEVEL_WARP;   
+        return CHT_SEQ_LEVEL_WARP;
     } else if (pKbState[SDL_SCANCODE_F5] != 0) {
-        return CHT_SEQ_XRAY_VISION;   
+        return CHT_SEQ_XRAY_VISION;
     } else if (pKbState[SDL_SCANCODE_F6] != 0) {
         return CHT_SEQ_SHOW_ALL_MAP_THINGS;
     } else if (pKbState[SDL_SCANCODE_F7] != 0) {
@@ -25,5 +25,5 @@ cheatseq_t getDevCheatSequenceToExec() noexcept {
         return CHT_SEQ_VRAM_VIEWER;
     }
 
-    return (cheatseq_t) UINT32_MAX;  
+    return (cheatseq_t) UINT32_MAX;
 }

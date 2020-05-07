@@ -68,7 +68,7 @@ gameaction_t TIC_Credits() noexcept {
     // We only update/scroll this screen periodically, see if it is time
     *gVBlanksUntilCreditScreenUpdate -= gPlayersElapsedVBlanks[0];
 
-    if (*gVBlanksUntilCreditScreenUpdate > 0) 
+    if (*gVBlanksUntilCreditScreenUpdate > 0)
         return ga_nothing;
     
     *gVBlanksUntilCreditScreenUpdate = 2;
@@ -102,7 +102,7 @@ void DRAW_Credits() noexcept {
     if (*gCreditsPage == 0) {
         I_CacheAndDrawSprite(*gTex_IDCRED1, 0, 0, gPaletteClutIds[IDCREDITS1PAL]);
         I_CacheAndDrawSprite(*gTex_IDCRED2, 9, (int16_t) *gCreditsScrollYPos, gPaletteClutIds[UIPAL]);
-    } 
+    }
     else if (*gCreditsPage == 1) {
         I_CacheAndDrawSprite(*gTex_WMSCRED1, 0, 0, gPaletteClutIds[WCREDITS1PAL]);
         I_CacheAndDrawSprite(*gTex_WMSCRED2, 7, (int16_t) *gCreditsScrollYPos, gPaletteClutIds[UIPAL]);

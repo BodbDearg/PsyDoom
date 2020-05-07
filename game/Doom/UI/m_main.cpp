@@ -68,10 +68,10 @@ gameaction_t RunMenu() noexcept {
             return ga_timeout;
 
         // If we're not timing out draw the background and DOOM logo to prep for a 'loading' or 'connecting' plaque being drawn
-        I_IncDrawnFrameCount();    
+        I_IncDrawnFrameCount();
         I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
         I_CacheAndDrawSprite(*gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
-        I_SubmitGpuCmds();    
+        I_SubmitGpuCmds();
         I_DrawPresent();
 
         // If the game type is singleplayer then we can just go straight to initializing and running the game.
@@ -85,7 +85,7 @@ gameaction_t RunMenu() noexcept {
         // Once the net connection has been established, re-draw the background in prep for a loading or error plaque
         I_IncDrawnFrameCount();
         I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
-        I_CacheAndDrawSprite(*gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);    
+        I_CacheAndDrawSprite(*gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
         I_SubmitGpuCmds();
         I_DrawPresent();
         
@@ -238,7 +238,7 @@ gameaction_t M_Ticker() noexcept {
     }
 
     // Check for movement with the DPAD direction buttons.
-    // If there is none then we can just stop here:    
+    // If there is none then we can just stop here:
     if ((ticButtons & PAD_DIRECTION_BTNS) == 0) {
         gVBlanksUntilMenuMove[0] = 0;
         return ga_nothing;
@@ -284,7 +284,7 @@ gameaction_t M_Ticker() noexcept {
 
                 S_StartSound(nullptr, sfx_swtchx);
             }
-        } 
+        }
         else if (ticButtons & PAD_LEFT) {
             if (*gStartGameType != gt_single) {
                 *gStartGameType = (gametype_t)((uint32_t) *gStartGameType -1);
@@ -308,7 +308,7 @@ gameaction_t M_Ticker() noexcept {
         }
 
         return ga_nothing;
-    }    
+    }
     else if (gCursorPos[0] == level) {
         // Menu left/right movements: level/episode select
         if (ticButtons & PAD_RIGHT) {
@@ -319,7 +319,7 @@ gameaction_t M_Ticker() noexcept {
             } else {
                 *gStartMapOrEpisode = *gMaxStartEpisodeOrMap;
             }
-        } 
+        }
         else if (ticButtons & PAD_LEFT) {
             *gStartMapOrEpisode -= 1;
             
@@ -346,7 +346,7 @@ gameaction_t M_Ticker() noexcept {
                 *gStartSkill = (skill_t)((uint32_t) *gStartSkill + 1);
                 S_StartSound(nullptr, sfx_swtchx);
             }
-        } 
+        }
         else if (ticButtons & PAD_LEFT) {
             if (*gStartSkill != sk_baby) {
                 *gStartSkill = (skill_t)((uint32_t) *gStartSkill - 1);

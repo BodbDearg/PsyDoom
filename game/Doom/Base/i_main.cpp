@@ -67,7 +67,7 @@ static_assert(sizeof(tcache_t) == 1024 * 11);
 // The first 4 pages are reserved for the framebuffer!
 static constexpr uint32_t TCACHE_BASE_PAGE = 4;
 
-// The texture coordinates of each texture cache page in VRAM. 
+// The texture coordinates of each texture cache page in VRAM.
 // Notes:
 //  (1) Since the PsyQ SDK expects these coordinates to be in terms of a 16-bit texture, X is halved here
 //      because Doom's textures are actually 8 bit.
@@ -156,7 +156,7 @@ const VmPtr<texture_t>  gTex_CONNECT(0x80097B10);
 //------------------------------------------------------------------------------------------------------------------------------------------
 // User/client entrypoint for PlayStation DOOM.
 // This was probably the actual 'main()' function in the real source code.
-// I'm just calling 'I_Main()' so as not to confuse it with this port's 'main()'... 
+// I'm just calling 'I_Main()' so as not to confuse it with this port's 'main()'...
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_Main() noexcept {
     // PsyQ SDK initialization stuff
@@ -190,7 +190,7 @@ void I_PSXInit() noexcept {
     a2 = 0x80090000;                                    // Result = 80090000
     a2 += 0x78EC;                                       // Result = gPadInputBuffer_2[0] (800978EC)
     a3 = 0x22;                                          // Result = 00000022
-    LIBAPI_InitPAD();    
+    LIBAPI_InitPAD();
     LIBAPI_StartPAD();
 
     a0 = 0;                                             // Result = 00000000
@@ -203,7 +203,7 @@ void I_PSXInit() noexcept {
 
     s0 = 0xF0;                                          // Result = 000000F0
     s1 = 0x800B0000;                                    // Result = 800B0000
-    s1 -= 0x6F54;                                       // Result = gDrawEnv1[0] (800A90AC)    
+    s1 -= 0x6F54;                                       // Result = gDrawEnv1[0] (800A90AC)
     a0 = s1;                                            // Result = gDrawEnv1[0] (800A90AC)
     a1 = 0;                                             // Result = 00000000
     a2 = 0;                                             // Result = 00000000
@@ -618,7 +618,7 @@ void I_CacheTex(texture_t& tex) noexcept {
         
         // Move onto another page in the texture cache if this page can't accomodate the texture.
         // Find one that is not locked and which is available for modification.
-        if (*gTCacheFillCellY + tex.height16 > TCACHE_CELLS_Y) {            
+        if (*gTCacheFillCellY + tex.height16 > TCACHE_CELLS_Y) {
             const uint32_t lockedTPages = *gLockedTexPagesMask;
 
             // PC-PSX: if all the pages are locked this code will loop forever.
@@ -1256,7 +1256,7 @@ loc_80034B44:
 
     I_SubmitGpuCmds();
     I_DrawPresent();
-    I_NetHandshake();    
+    I_NetHandshake();
     at = 0x80070000;                                    // Result = 80070000
     sw(0, at + 0x7F48);                                 // Store to: gTicButtons[1] (80077F48)
     at = 0x80080000;                                    // Result = 80080000
@@ -1413,7 +1413,7 @@ loc_80034E58:
     if (v0 == v1) goto loc_80034E84;
     v0 = 0xFF0000;                                      // Result = 00FF0000
     v0 |= 0xFFFF;                                       // Result = 00FFFFFF
-    sw(v0, v1);    
+    sw(v0, v1);
     LIBGPU_DrawOTag(gpGpuPrimsBeg->get());
 loc_80034E84:
     v0 = 0x80080000;                                    // Result = 80080000
