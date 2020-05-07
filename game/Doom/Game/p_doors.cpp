@@ -14,164 +14,138 @@
 static constexpr fixed_t VDOORSPEED = FRACUNIT * 6;     // Regular speed of vertical doors
 static constexpr int32_t VDOORWAIT  = 70;               // How long vertical doors normally wait before closing (game tics)
 
-void T_VerticalDoor() noexcept {
-    sp -= 0x28;
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(ra, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    v1 = lw(s0 + 0x1C);
-    if (v1 == 0) goto loc_80015354;
-    a2 = 1;                                             // Result = 00000001
-    if (i32(v1) > 0) goto loc_8001533C;
-    v0 = -1;                                            // Result = FFFFFFFF
-    s1 = 1;                                             // Result = 00000001
-    if (v1 == v0) goto loc_800153E0;
-    goto loc_80015528;
-loc_8001533C:
-    v0 = 2;                                             // Result = 00000002
-    if (v1 == a2) goto loc_800154A8;
-    if (v1 == v0) goto loc_800153AC;
-    goto loc_80015528;
-loc_80015354:
-    v0 = lw(s0 + 0x24);
-    v0--;
-    sw(v0, s0 + 0x24);
-    if (v0 != 0) goto loc_80015528;
-    v1 = lw(s0 + 0xC);
-    v0 = 1;                                             // Result = 00000001
-    if (v1 == v0) goto loc_8001548C;
-    v0 = 5;                                             // Result = 00000005
-    if (v1 == 0) goto loc_80015398;
-    a1 = 0x58;                                          // Result = 00000058
-    if (v1 != v0) goto loc_80015528;
-    a0 = lw(s0 + 0x10);
-    v0 = -1;                                            // Result = FFFFFFFF
-    sw(v0, s0 + 0x1C);
-    goto loc_80015498;
-loc_80015398:
-    a1 = 0x14;                                          // Result = 00000014
-    a0 = lw(s0 + 0x10);
-    v0 = -1;                                            // Result = FFFFFFFF
-    sw(v0, s0 + 0x1C);
-    goto loc_80015498;
-loc_800153AC:
-    v0 = lw(s0 + 0x24);
-    v0--;
-    sw(v0, s0 + 0x24);
-    if (v0 != 0) goto loc_80015528;
-    v1 = lw(s0 + 0xC);
-    v0 = 4;                                             // Result = 00000004
-    a1 = 0x13;                                          // Result = 00000013
-    if (v1 != v0) goto loc_80015528;
-    a0 = lw(s0 + 0x10);
-    sw(a2, s0 + 0x1C);
-    sw(0, s0 + 0xC);
-    goto loc_80015498;
-loc_800153E0:
-    v1 = lw(s0 + 0x10);
-    sw(s1, sp + 0x10);
-    v0 = lw(s0 + 0x1C);
-    sw(v0, sp + 0x14);
-    a0 = lw(s0 + 0x10);
-    a1 = lw(s0 + 0x18);
-    a2 = lw(v1);
-    a3 = 0;                                             // Result = 00000000
-    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
-    v1 = v0;
-    v0 = 2;                                             // Result = 00000002
-    if (v1 != v0) goto loc_8001546C;
-    v1 = lw(s0 + 0xC);
-    v0 = (v1 < 8);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80015528;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Thinker/update logic for a door: moves the door, does door state transitions and sounds etc.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void T_VerticalDoor(vldoor_t& door) noexcept {
+    // Which way is the door moving?
+    switch (door.direction) {
+        // Door is waiting
+        case 0: {
+            if (--door.topcountdown != 0)
+                break;
+            
+            switch (door.type) {
+                case BlazeRaise:
+                    door.direction = -1;
+                    S_StartSound((mobj_t*) &door.sector->soundorg, sfx_bdcls);
+                    break;
+
+                case Normal:
+                    door.direction = -1;
+                    S_StartSound((mobj_t*) &door.sector->soundorg, sfx_dorcls);
+                    break;
+
+                case Close30ThenOpen:
+                    door.direction = 1;     // Opens after waiting, unlike the other doors (which normally close)
+                    S_StartSound((mobj_t*) &door.sector->soundorg, sfx_doropn);     
+                    break;
+
+                default:
+                    break;
+            }
+        }   break;
+
+        // Door is doing initial wait
+        case 2: {
+            if (--door.topcountdown != 0)
+                break;
+            
+            switch (door.type) {
+                case RaiseIn5Mins: {
+                    door.direction = 1;     // Open thyself!
+                    door.type = Normal;
+                    S_StartSound((mobj_t*) &door.sector->soundorg, sfx_doropn);
+                }   break;
+
+                default:
+                    break;
+            }
+        }   break;
+
+        // Door is closing (moving ceiling down)
+        case -1: {
+            const result_e planeMoveResult = T_MovePlane(*door.sector, door.speed, door.sector->floorheight, false, 1, door.direction);
+
+            if (planeMoveResult == pastdest) {
+                // Door has finished closing: for most door types we now deactivate and cleanup the door by removing it's thinker.
+                // We also remove the special reference on the sector too.
+                switch (door.type) {
+                    case BlazeRaise:
+                    case BlazeClose:
+                        door.sector->specialdata = nullptr;
+                        P_RemoveThinker(door.thinker);
+                        S_StartSound((mobj_t*) &door.sector->soundorg, sfx_bdcls);
+                        return;
+
+                    case Normal:
+                    case Close:
+                        door.sector->specialdata = nullptr;
+                        P_RemoveThinker(door.thinker);
+                        break;
+
+                    // This door is the exception and is only beginning it's work:
+                    case Close30ThenOpen:
+                        door.direction = 0;                 // Waiting to open
+                        door.topcountdown = TICRATE * 30;   // Wait 30 seconds
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            else if (planeMoveResult == crushed) {
+                // Door movement possibly impeded by things underneath it
+                switch (door.type) {
+                    // These door types don't care if they would crush things and won't go back up in this situation
+                    case BlazeClose:
+                    case Close:
+                        break;
+
+                    // For most normal doors when a thing is blocking it closing, go back up again
+                    default:
+                        door.direction = 1;
+                        S_StartSound((mobj_t*) &door.sector->soundorg, sfx_doropn);
+                        break;
+                }
+            }
+        }   break;
+
+        // Door is opening (moving ceiling up)
+        case 1: {
+            // Has the door fully opened?
+            const result_e planeMoveResult = T_MovePlane(*door.sector, door.speed, door.topheight, 0, 1, door.direction);
+
+            if (planeMoveResult != pastdest)
+                break;
+            
+            // Door has fully opened: decide what to do
+            switch (door.type) {
+                // These doors will wait and close again after a while
+                case Normal:
+                case BlazeRaise:
+                    door.direction = 0;                 // Wait for a bit
+                    door.topcountdown = door.topwait;   // Duration to wait
+                    break;
+
+                // These doors stay open permanently so we can now remove the door thinker
+                case Close30ThenOpen:
+                case Open:
+                case BlazeOpen:
+                    door.sector->specialdata = nullptr;
+                    P_RemoveThinker(door.thinker);
+                    break;
+
+                default:
+                    break;
+            }
+        }   break;
     }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x78;                                         // Result = JumpTable_T_VerticalDoor_1[0] (80010078)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80015518: goto loc_80015518;
-        case 0x80015464: goto loc_80015464;
-        case 0x80015528: goto loc_80015528;
-        case 0x80015448: goto loc_80015448;
-        default: jump_table_err(); break;
-    }
-loc_80015448:
-    v0 = lw(s0 + 0x10);
-    a0 = s0;
-    sw(0, v0 + 0x50);
-    _thunk_P_RemoveThinker();
-    a0 = lw(s0 + 0x10);
-    a1 = 0x58;                                          // Result = 00000058
-    goto loc_80015498;
-loc_80015464:
-    v0 = 0x1C2;                                         // Result = 000001C2
-    goto loc_8001550C;
-loc_8001546C:
-    if (v1 != s1) goto loc_80015528;
-    a0 = lw(s0 + 0xC);
-    {
-        const bool bJump = (a0 == v0);
-        v0 = 7;                                         // Result = 00000007
-        if (bJump) goto loc_80015528;
-    }
-    if (a0 == v0) goto loc_80015528;
-loc_8001548C:
-    a0 = lw(s0 + 0x10);
-    a1 = sfx_doropn;
-    sw(v1, s0 + 0x1C);
-loc_80015498:
-    a0 += 0x38;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    goto loc_80015528;
-loc_800154A8:
-    sw(v1, sp + 0x10);
-    v0 = lw(s0 + 0x1C);
-    sw(v0, sp + 0x14);
-    a0 = lw(s0 + 0x10);
-    a1 = lw(s0 + 0x18);
-    a2 = lw(s0 + 0x14);
-    a3 = 0;                                             // Result = 00000000
-    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
-    v1 = 2;                                             // Result = 00000002
-    if (v0 != v1) goto loc_80015528;
-    v1 = lw(s0 + 0xC);
-    v0 = (v1 < 7);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80015528;
-    }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x98;                                         // Result = JumpTable_T_VerticalDoor_2[0] (80010098)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80015508: goto loc_80015508;
-        case 0x80015518: goto loc_80015518;
-        case 0x80015528: goto loc_80015528;
-        default: jump_table_err(); break;
-    }
-loc_80015508:
-    v0 = lw(s0 + 0x20);
-loc_8001550C:
-    sw(0, s0 + 0x1C);
-    sw(v0, s0 + 0x24);
-    goto loc_80015528;
-loc_80015518:
-    v0 = lw(s0 + 0x10);
-    a0 = s0;
-    sw(0, v0 + 0x50);
-    _thunk_P_RemoveThinker();
-loc_80015528:
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+}
+
+// TODO: REMOVE eventually
+void _thunk_T_VerticalDoor() noexcept {
+    T_VerticalDoor(*vmAddrToPtr<vldoor_t>(a0));
 }
 
 void EV_DoLockedDoor() noexcept {
@@ -360,7 +334,7 @@ bool EV_DoDoor(line_t& line, const vldoor_e doorType) noexcept {
         vldoor_t& door = *(vldoor_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(vldoor_t), PU_LEVSPEC, nullptr);
         P_AddThinker(door.thinker);
 
-        door.thinker.function = PsxVm::getNativeFuncVmAddr(T_VerticalDoor);
+        door.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_VerticalDoor);
         door.type = doorType;
         door.sector = &sector;
         door.speed = VDOORSPEED;

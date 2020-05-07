@@ -30,7 +30,6 @@ struct vldoor_t {
 
 static_assert(sizeof(vldoor_t) == 40);
 
-void T_VerticalDoor() noexcept;
 void EV_DoLockedDoor() noexcept;
 bool EV_DoDoor(line_t& line, const vldoor_e doorType) noexcept;
 void EV_VerticalDoor() noexcept;
