@@ -434,7 +434,7 @@ loc_800282A8:
 loc_800282BC:
     a0 = s0;
     a1 = s1;
-    EV_VerticalDoor();
+    EV_VerticalDoor(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
     v0 = 1;                                             // Result = 00000001
     goto loc_80028808;
 loc_800282D0:

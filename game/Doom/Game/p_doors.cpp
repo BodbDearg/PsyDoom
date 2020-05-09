@@ -395,159 +395,100 @@ bool EV_DoDoor(line_t& line, const vldoor_e doorType) noexcept {
     return bActivatedADoor;
 }
 
-void EV_VerticalDoor() noexcept {
-loc_80015988:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x20);
-    v1 = v0 << 1;
-    v1 += v0;
-    v0 = *gpSides;
-    v1 <<= 3;
-    v1 += v0;
-    s2 = lw(v1 + 0x14);
-    v0 = lw(s2 + 0x50);
-    s0 = v0;
-    if (v0 == 0) goto loc_80015A40;
-    v1 = lw(s1 + 0x14);
-    v0 = (i32(v1) < 0x1D);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < 0x1A);
-        if (bJump) goto loc_80015A04;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called to trigger a door directly via a line special on one of it's sector's lines (without a tag reference or via a switch).
+// This is the most common way of triggering a door.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {    
+    // Try to activate an already existing door thinker if the sector already has that
+    sector_t& doorSector = *gpSides->get()[line.sidenum[1]].sector;
+    vldoor_t* const pExistingDoor = (vldoor_t*) doorSector.specialdata.get();
+
+    if (pExistingDoor) {
+        switch (line.special) {
+            case 1:     // Only for "RAISE" type doors not "OPEN" (permanent) type doors
+            case 26:
+            case 27:
+            case 28:
+            case 117: {
+                // Make the door go back up if going down
+                if (pExistingDoor->direction == -1) {
+                    pExistingDoor->direction = 1;
+                    return;
+                } 
+                else {
+                    // Only players can close doors if the door is going up or waiting
+                    if (user.player) {
+                        pExistingDoor->direction = -1;
+                    }
+                }
+
+                return;     // Don't make a new door thinker or sound
+            }
+        }
     }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80015A10;
+
+    // Play the door sound
+    switch (line.special) {
+        case 1:     // Normal door sound
+        case 31:
+			S_StartSound((mobj_t*) &doorSector.soundorg, sfx_doropn);
+			break;
+
+        case 117:   // Blazing door raise
+        case 118:   // Blazing door open
+			S_StartSound((mobj_t*) &doorSector.soundorg, sfx_bdopn);
+			break;
+
+        default:    // All other door tyoes
+            S_StartSound((mobj_t*) &doorSector.soundorg, sfx_doropn);
+            break;
     }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 0x77);
-        if (bJump) goto loc_80015A10;
+    
+    // Need to create a new door thinker to run the door logic: create and set as the sector special
+    vldoor_t& newDoor = *(vldoor_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(vldoor_t), PU_LEVSPEC, nullptr);
+    P_AddThinker(newDoor.thinker);
+    doorSector.specialdata = &newDoor;
+
+    // Default door config
+    newDoor.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_VerticalDoor);
+    newDoor.speed = VDOORSPEED;
+    newDoor.sector = &doorSector;
+    newDoor.direction = 1;
+    newDoor.topwait = VDOORWAIT;
+    
+    // Door specific config
+    switch (line.special) {
+        case 1:
+        case 26:
+        case 27:
+        case 28:
+            newDoor.type = Normal;
+            break;
+
+        case 31:
+        case 32:
+        case 33:
+        case 34:
+            newDoor.type = Open;
+            line.special = 0;
+            break;
+
+        case 117:   // Blazing door raise 
+            newDoor.type = BlazeRaise;
+            newDoor.speed = VDOORSPEED * 4;
+            break;
+
+        case 118:   // Blazing door open
+            newDoor.type = BlazeOpen;
+            newDoor.speed =  VDOORSPEED * 4;
+            line.special = 0;
+            break;
     }
-    goto loc_80015A4C;
-loc_80015A04:
-    v0 = 0x75;                                          // Result = 00000075
-    if (v1 != v0) goto loc_80015A40;
-loc_80015A10:
-    v0 = lw(s0 + 0x1C);
-    v1 = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v0 != v1);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80015A28;
-    }
-    sw(v0, s0 + 0x1C);
-    goto loc_80015B68;
-loc_80015A28:
-    v0 = lw(a1 + 0x80);
-    if (v0 == 0) goto loc_80015B68;
-    sw(v1, s0 + 0x1C);
-    goto loc_80015B68;
-loc_80015A40:
-    v1 = lw(s1 + 0x14);
-    v0 = (i32(v1) < 0x77);
-loc_80015A4C:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < 0x75);
-        if (bJump) goto loc_80015A64;
-    }
-    a1 = 0x57;                                          // Result = 00000057
-    if (v0 != 0) goto loc_80015A64;
-    a0 = s2 + 0x38;
-    goto loc_80015A6C;
-loc_80015A64:
-    a0 = s2 + 0x38;
-    a1 = sfx_doropn;
-loc_80015A6C:
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    a1 = 0x28;                                          // Result = 00000028
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x52FC;                                       // Result = T_VerticalDoor (800152FC)
-    a0 = 1;                                             // Result = 00000001
-    sw(s0, s2 + 0x50);
-    sw(v0, s0 + 0x8);
-    v0 = 0x60000;                                       // Result = 00060000
-    sw(v0, s0 + 0x18);
-    v0 = 0x46;                                          // Result = 00000046
-    sw(s2, s0 + 0x10);
-    sw(a0, s0 + 0x1C);
-    sw(v0, s0 + 0x20);
-    v1 = lw(s1 + 0x14);
-    v0 = (i32(v1) < 0x23);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(v1) < 0x1F);
-        if (bJump) goto loc_80015AF8;
-    }
-    v0 = 0x75;                                          // Result = 00000075
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 5;                                         // Result = 00000005
-        if (bJump) goto loc_80015B38;
-    }
-    v0 = 0x76;                                          // Result = 00000076
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 6;                                         // Result = 00000006
-        if (bJump) goto loc_80015B44;
-    }
-    goto loc_80015B54;
-loc_80015AF8:
-    if (v0 == 0) goto loc_80015B28;
-    if (v1 == a0) goto loc_80015B20;
-    v0 = (i32(v1) < 0x1D);
-    if (i32(v1) <= 0) goto loc_80015B54;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < 0x1A);
-        if (bJump) goto loc_80015B54;
-    }
-    if (v0 != 0) goto loc_80015B54;
-loc_80015B20:
-    sw(0, s0 + 0xC);
-    goto loc_80015B54;
-loc_80015B28:
-    v0 = 3;                                             // Result = 00000003
-    sw(v0, s0 + 0xC);
-    sw(0, s1 + 0x14);
-    goto loc_80015B54;
-loc_80015B38:
-    sw(v0, s0 + 0xC);
-    v0 = 0x180000;                                      // Result = 00180000
-    goto loc_80015B50;
-loc_80015B44:
-    sw(v0, s0 + 0xC);
-    v0 = 0x180000;                                      // Result = 00180000
-    sw(0, s1 + 0x14);
-loc_80015B50:
-    sw(v0, s0 + 0x18);
-loc_80015B54:
-    a0 = s2;
-    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
-    v1 = 0xFFFC0000;                                    // Result = FFFC0000
-    v0 += v1;
-    sw(v0, s0 + 0x14);
-loc_80015B68:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Figure out where the door stops and create a slight lip when fully open
+    newDoor.topheight = P_FindLowestCeilingSurrounding(doorSector);
+    newDoor.topheight -= 4 * FRACUNIT;
 }
 
 void P_SpawnDoorCloseIn30() noexcept {
