@@ -425,7 +425,7 @@ loc_80028274:
 loc_800282A8:
     a0 = s0;
     a1 = s1;
-    EV_DoLockedDoor();
+    v0 = P_CheckKeyLock(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -440,7 +440,7 @@ loc_800282BC:
 loc_800282D0:
     a0 = s0;
     a1 = s1;
-    EV_DoLockedDoor();
+    v0 = P_CheckKeyLock(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 6;                                             // Result = 00000006
@@ -455,7 +455,7 @@ loc_800282D0:
 loc_800282FC:
     a0 = s0;
     a1 = s1;
-    EV_DoLockedDoor();
+    v0 = P_CheckKeyLock(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 6;                                             // Result = 00000006

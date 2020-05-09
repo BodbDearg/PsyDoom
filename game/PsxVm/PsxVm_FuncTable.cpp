@@ -15,7 +15,6 @@ extern void P_RemoveActiveCeiling() noexcept;
 extern void P_ActivateInStasisCeiling() noexcept;
 extern void EV_CeilingCrushStop() noexcept;
 extern void _thunk_T_VerticalDoor() noexcept;
-extern void EV_DoLockedDoor() noexcept;
 extern void P_SpawnDoorCloseIn30() noexcept;
 extern void P_SpawnDoorRaiseIn5Mins() noexcept;
 extern void P_CheckMeleeRange() noexcept;
@@ -226,7 +225,6 @@ namespace PsxVm {
         { 0x80014EBC, &P_ActivateInStasisCeiling },
         { 0x80014F30, &EV_CeilingCrushStop },
         { 0x800152FC, &_thunk_T_VerticalDoor },
-        { 0x80015540, &EV_DoLockedDoor },
         { 0x80015B84, &P_SpawnDoorCloseIn30 },
         { 0x80015C04, &P_SpawnDoorRaiseIn5Mins },
         { 0x80015CA8, &P_CheckMeleeRange },

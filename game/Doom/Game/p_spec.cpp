@@ -57,6 +57,9 @@ static const animdef_t gAnimDefs[MAXANIMS] = {
 
 const VmPtr<anim_t[MAXANIMS]>   gAnims(0x800863AC);
 const VmPtr<VmPtr<anim_t>>      gpLastAnim(0x80078164);
+const VmPtr<card_t>             gMapBlueKeyType(0x80077E9C);
+const VmPtr<card_t>             gMapRedKeyType(0x8007821C);
+const VmPtr<card_t>             gMapYellowKeyType(0x800780A0);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Caches into RAM the textures for all animated flats and textures.

@@ -5,6 +5,8 @@
 #include "Doom/Base/sounds.h"
 #include "Doom/Base/z_zone.h"
 #include "Doom/Renderer/r_local.h"
+#include "Doom/UI/st_main.h"
+#include "g_game.h"
 #include "p_floor.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -13,6 +15,12 @@
 
 static constexpr fixed_t VDOORSPEED = FRACUNIT * 6;     // Regular speed of vertical doors
 static constexpr int32_t VDOORWAIT  = 70;               // How long vertical doors normally wait before closing (game tics)
+
+// TODO: eventually make these be actual C++ string constants.
+// Can't to do that at the moment since these pointers need to be referenced by a 'VmPtr<T>', hence must be inside the executable itself.
+static const VmPtr<const char> STR_BlueKeyNeededMsg(0x80010030);
+static const VmPtr<const char> STR_YellowKeyNeededMsg(0x80010048);
+static const VmPtr<const char> STR_RedKeyNeededMsg(0x80010060);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a door: moves the door, does door state transitions and sounds etc.
@@ -148,169 +156,76 @@ void _thunk_T_VerticalDoor() noexcept {
     T_VerticalDoor(*vmAddrToPtr<vldoor_t>(a0));
 }
 
-void EV_DoLockedDoor() noexcept {
-loc_80015540:
-    sp -= 0x18;
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
-    s0 = lw(a1 + 0x80);
-    if (s0 != 0) goto loc_80015564;
-loc_8001555C:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80015750;
-loc_80015564:
-    v0 = lw(a0 + 0x14);
-    v1 = v0 - 0x1A;
-    v0 = (v1 < 0x70);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_8001555C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// New PSX function: check to see if a door being used is locked due to key lock constraints and flash a message to the player if it is.
+// Returns 'false' if the door cannot be used by the given map object, or if the door does NOT have a key lock.
+// Note: the function should not be called for doors that require no keys!
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_CheckKeyLock(line_t& line, mobj_t& user) noexcept {
+    // Monsters can never open key doors
+    if (!user.player)
+        return false;
+
+    player_t& player = *user.player;
+    player_t& curPlayer = gPlayers[*gCurPlayerIndex];
+
+    switch (line.special) {
+        // Blue keycard and skull key
+        case 26:
+        case 32:
+        case 99:
+        case 133: {
+            if ((!player.cards[it_bluecard]) && (!player.cards[it_blueskull])) {
+                player.message = STR_BlueKeyNeededMsg;
+                S_StartSound(&user, sfx_oof);
+
+                if (&player == &curPlayer) {    // Only flash the HUD message if it's this player triggering the door
+                    gStatusBar->tryopen[*gMapBlueKeyType] = true;
+                }
+
+                return false;
+            }
+        }   break;
+
+        // Yellow keycard and skull key
+        case 27:
+        case 34:
+        case 136:
+        case 137: {
+            if ((!player.cards[it_yellowcard]) && (!player.cards[it_yellowskull])) {
+                player.message = STR_YellowKeyNeededMsg;
+                S_StartSound(&user, sfx_oof);
+
+                if (&player == &curPlayer) {    // Only flash the HUD message if it's this player triggering the door
+                    gStatusBar->tryopen[*gMapYellowKeyType] = true;
+                }
+
+                return false;
+            }
+        }   break;
+
+        // Red keycard and skull key
+        case 28:
+        case 33:
+        case 134:
+        case 135: {
+            if ((!player.cards[it_redcard]) && (!player.cards[it_redskull])) {
+                player.message = STR_RedKeyNeededMsg;
+                S_StartSound(&user, sfx_oof);
+
+                if (&player == &curPlayer) {    // Only flash the HUD message if it's this player triggering the door
+                    gStatusBar->tryopen[*gMapRedKeyType] = true;
+                }
+
+                return false;
+            }
+        }   break;
+
+        default:
+            return false;
     }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0xB8;                                         // Result = JumpTable_EV_DoLockedDoor[0] (800100B8)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80015598: goto loc_80015598;
-        case 0x8001562C: goto loc_8001562C;
-        case 0x800156C0: goto loc_800156C0;
-        case 0x8001555C: goto loc_8001555C;
-        default: jump_table_err(); break;
-    }
-loc_80015598:
-    v0 = lw(s0 + 0x4C);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80015750;
-    }
-    v0 = lw(s0 + 0x58);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80015750;
-    }
-    a0 = a1;
-    a1 = sfx_oof;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x30;                                         // Result = STR_BlueKeyNeededMsg[0] (80010030)
-    sw(v0, s0 + 0xD4);
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = *gCurPlayerIndex;
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    v0 += v1;
-    {
-        const bool bJump = (s0 != v0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80015750;
-    }
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7E9C);                               // Load from: gMapBlueKeyType (80077E9C)
-    v1 = 1;                                             // Result = 00000001
-    v0 <<= 2;
-    at = 0x800A0000;                                    // Result = 800A0000
-    at -= 0x78E4;                                       // Result = gStatusBar[1] (8009871C)
-    at += v0;
-    sw(v1, at);
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80015750;
-loc_8001562C:
-    v0 = lw(s0 + 0x50);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80015750;
-    }
-    v0 = lw(s0 + 0x5C);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80015750;
-    }
-    a0 = a1;
-    a1 = sfx_oof;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x48;                                         // Result = STR_YellowKeyNeededMsg[0] (80010048)
-    sw(v0, s0 + 0xD4);
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = *gCurPlayerIndex;
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    v0 += v1;
-    {
-        const bool bJump = (s0 != v0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80015750;
-    }
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F60);                               // Load from: gMapYellowKeyType (800780A0)
-    v1 = 1;                                             // Result = 00000001
-    v0 <<= 2;
-    at = 0x800A0000;                                    // Result = 800A0000
-    at -= 0x78E4;                                       // Result = gStatusBar[1] (8009871C)
-    at += v0;
-    sw(v1, at);
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80015750;
-loc_800156C0:
-    v0 = lw(s0 + 0x48);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80015750;
-    }
-    v0 = lw(s0 + 0x54);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80015750;
-    }
-    a0 = a1;
-    a1 = sfx_oof;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x60;                                         // Result = STR_RedKeyNeededMsg[0] (80010060)
-    sw(v0, s0 + 0xD4);
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = *gCurPlayerIndex;
-    v1 = v0 << 2;
-    v1 += v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    v0 += v1;
-    {
-        const bool bJump = (s0 != v0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80015750;
-    }
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7DE4);                               // Load from: gMapRedKeyType (8007821C)
-    v1 = 1;                                             // Result = 00000001
-    v0 <<= 2;
-    at = 0x800A0000;                                    // Result = 800A0000
-    at -= 0x78E4;                                       // Result = gStatusBar[1] (8009871C)
-    at += v0;
-    sw(v1, at);
-    v0 = 0;                                             // Result = 00000000
-loc_80015750:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
