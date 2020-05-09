@@ -11,6 +11,8 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
+
+#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
 static constexpr fixed_t VDOORSPEED = FRACUNIT * 6;     // Regular speed of vertical doors
@@ -153,7 +155,7 @@ static void T_VerticalDoor(vldoor_t& door) noexcept {
 
 // TODO: REMOVE eventually
 void _thunk_T_VerticalDoor() noexcept {
-    T_VerticalDoor(*vmAddrToPtr<vldoor_t>(a0));
+    T_VerticalDoor(*vmAddrToPtr<vldoor_t>(*PsxVm::gpReg_a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -406,79 +408,42 @@ void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {
     newDoor.topheight -= 4 * FRACUNIT;
 }
 
-void P_SpawnDoorCloseIn30() noexcept {
-loc_80015B84:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    a1 = 0x28;                                          // Result = 00000028
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x52FC;                                       // Result = T_VerticalDoor (800152FC)
-    sw(s0, s1 + 0x50);
-    sw(0, s1 + 0x14);
-    sw(v0, s0 + 0x8);
-    v0 = 0x60000;                                       // Result = 00060000
-    sw(v0, s0 + 0x18);
-    v0 = 0x1C2;                                         // Result = 000001C2
-    sw(s1, s0 + 0x10);
-    sw(0, s0 + 0x1C);
-    sw(0, s0 + 0xC);
-    sw(v0, s0 + 0x24);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawn a door thinker that closes after 30 seconds
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SpawnDoorCloseIn30(sector_t& sector) noexcept {
+    // Spawn the door thinker and link it to the sector
+    vldoor_t& door = *(vldoor_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(vldoor_t), PU_LEVSPEC, nullptr);
+    P_AddThinker(door.thinker);
+    sector.specialdata = &door;
+    sector.special = 0;
+
+    // Configure door settings
+    door.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_VerticalDoor);
+    door.sector = &sector;
+    door.direction = 0;
+    door.type = Normal;
+    door.speed = VDOORSPEED;
+    door.topcountdown = 30 * TICRATE;
 }
 
-void P_SpawnDoorRaiseIn5Mins() noexcept {
-loc_80015C04:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    a1 = 0x28;                                          // Result = 00000028
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    a0 = s1;
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x52FC;                                       // Result = T_VerticalDoor (800152FC)
-    sw(s0, a0 + 0x50);
-    sw(0, a0 + 0x14);
-    sw(v0, s0 + 0x8);
-    v0 = 2;                                             // Result = 00000002
-    sw(v0, s0 + 0x1C);
-    v0 = 4;                                             // Result = 00000004
-    sw(v0, s0 + 0xC);
-    v0 = 0x60000;                                       // Result = 00060000
-    sw(a0, s0 + 0x10);
-    sw(v0, s0 + 0x18);
-    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
-    v1 = 0xFFFC0000;                                    // Result = FFFC0000
-    v0 += v1;
-    sw(v0, s0 + 0x14);
-    v0 = 0x46;                                          // Result = 00000046
-    sw(v0, s0 + 0x20);
-    v0 = 0x1194;                                        // Result = 00001194
-    sw(v0, s0 + 0x24);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawn a door thinker that opens after 5 minutes
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SpawnDoorRaiseIn5Mins(sector_t& sector, [[maybe_unused]] const int32_t secNum) noexcept {
+    // Spawn the door thinker and link it to the sector
+    vldoor_t& door = *(vldoor_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(vldoor_t), PU_LEVSPEC, nullptr);
+    P_AddThinker(door.thinker);
+    sector.specialdata = &door;
+    sector.special = 0;
+
+    // Configure door settings
+    door.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_VerticalDoor);
+    door.sector = &sector;
+    door.direction = 2;         // Do initial wait
+    door.type = RaiseIn5Mins;
+    door.speed = VDOORSPEED;
+    door.topheight = P_FindLowestCeilingSurrounding(sector) - 4 * FRACUNIT;
+    door.topwait = VDOORWAIT;
+    door.topcountdown = 5 * 60 * TICRATE;
 }

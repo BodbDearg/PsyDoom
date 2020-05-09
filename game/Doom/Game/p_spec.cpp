@@ -1602,7 +1602,7 @@ loc_80027988:
     goto loc_80027A3C;
 loc_800279A8:
     a0 = s0;
-    P_SpawnDoorCloseIn30();
+    P_SpawnDoorCloseIn30(*vmAddrToPtr<sector_t>(a0));
     s1++;
     goto loc_80027A3C;
 loc_800279B8:
@@ -1617,7 +1617,7 @@ loc_800279C8:
 loc_800279D4:
     a0 = s0;
     a1 = s1;
-    P_SpawnDoorRaiseIn5Mins();
+    P_SpawnDoorRaiseIn5Mins(*vmAddrToPtr<sector_t>(a0), a1);
     s1++;
     goto loc_80027A3C;
 loc_800279E8:
