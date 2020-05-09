@@ -144,67 +144,44 @@ result_e T_MovePlane(
     return ok;
 }
 
-void T_MoveFloor() noexcept {
-    sp -= 0x28;
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(ra, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(0, sp + 0x10);
-    v0 = lw(s0 + 0x18);
-    sw(v0, sp + 0x14);
-    a0 = lw(s0 + 0x14);
-    a1 = lw(s0 + 0x28);
-    a2 = lw(s0 + 0x24);
-    a3 = lw(s0 + 0x10);
-    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
-    v1 = *gGameTic;
-    v1 &= 3;
-    s1 = v0;
-    if (v1 != 0) goto loc_80019074;
-    a0 = lw(s0 + 0x14);
-    a1 = sfx_stnmov;
-    a0 += 0x38;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_80019074:
-    v0 = 2;                                             // Result = 00000002
-    if (s1 != v0) goto loc_800190E8;
-    v0 = lw(s0 + 0x14);
-    sw(0, v0 + 0x50);
-    v1 = lw(s0 + 0x18);
-    v0 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (v1 != v0);
-        v0 = -1;                                        // Result = FFFFFFFF
-        if (bJump) goto loc_800190A8;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Thinker/update logic for a moving floor: moves the floor, does floor state transitions and sounds etc.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void T_MoveFloor(floormove_t& floor) noexcept {
+    // Move the floor!
+    sector_t& floorSec = *floor.sector;
+    const result_e moveResult = T_MovePlane(floorSec, floor.speed, floor.floordestheight, floor.crush, 0, floor.direction);
+
+    // Every so often do a floor movement sound (every 4 tics)
+    if ((*gGameTic & 3) == 0) {
+        S_StartSound((mobj_t*) &floorSec.soundorg, sfx_stnmov);
     }
-    v1 = lw(s0 + 0xC);
-    v0 = 0xA;                                           // Result = 0000000A
-    goto loc_800190B4;
-loc_800190A8:
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 6;                                         // Result = 00000006
-        if (bJump) goto loc_800190E0;
+
+    // Has the floor reached it's intended position?
+    if (moveResult == pastdest) {
+        // Reached destination: change the floor texture and sector special if required
+        if (floor.direction == 1) {
+            if (floor.type == donutRaise) {
+                floorSec.special = floor.newspecial;
+                floorSec.floorpic = floor.texture;
+            }
+        }
+        else if (floor.direction == -1) {
+            if (floor.type == lowerAndChange) {
+                floorSec.special = floor.newspecial;
+                floorSec.floorpic = floor.texture;
+            }
+        }
+
+        // Remove the floor thinker and it's link to the sector, this movement is now done
+        floorSec.specialdata = nullptr;
+        P_RemoveThinker(floor.thinker);
     }
-    v1 = lw(s0 + 0xC);
-loc_800190B4:
-    if (v1 != v0) goto loc_800190E0;
-    v1 = lw(s0 + 0x14);
-    v0 = lw(s0 + 0x1C);
-    sw(v0, v1 + 0x14);
-    v1 = lw(s0 + 0x14);
-    v0 = lh(s0 + 0x20);
-    sw(v0, v1 + 0x8);
-loc_800190E0:
-    a0 = s0;
-    _thunk_P_RemoveThinker();
-loc_800190E8:
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+}
+
+// TODO: REMOVE eventually
+void _thunk_T_MoveFloor() noexcept {
+    T_MoveFloor(*vmAddrToPtr<floormove_t>(*PsxVm::gpReg_a0));
 }
 
 void EV_DoFloor() noexcept {
