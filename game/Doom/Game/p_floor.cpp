@@ -5,13 +5,16 @@
 #include "Doom/Base/z_zone.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
+#include "doomdata.h"
 #include "g_game.h"
 #include "p_change.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "PsxVm/PsxVm.h"
 #include <algorithm>
+
+#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PsxVm/PsxVm.h"
 
 static constexpr fixed_t FLOORSPEED = FRACUNIT * 3;     // Standard speed for floors moving up and down
 
@@ -191,7 +194,7 @@ void _thunk_T_MoveFloor() noexcept {
 // Trigger the given floor mover for sectors with the same tag as the given line
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
-    bool bActivatedAFloor = false;
+    bool bActivatedAMover = false;
 
     for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
         // Ignore if the sector already has a special or moving floor
@@ -201,7 +204,7 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
             continue;
 
         // Found a sector which will be affected by this floor special: create a thinker and link to the sector
-        bActivatedAFloor = true;
+        bActivatedAMover = true;
 
         floormove_t& floor = *(floormove_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(floormove_t), PU_LEVSPEC, nullptr);
         P_AddThinker(floor.thinker);
@@ -333,150 +336,111 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
         }
     }
 
-    return bActivatedAFloor;
+    return bActivatedAMover;
 }
 
-void EV_BuildStairs() noexcept {
-loc_80019548:
-    sp -= 0x50;
-    sw(s3, sp + 0x34);
-    s3 = -1;                                            // Result = FFFFFFFF
-    sw(s7, sp + 0x44);
-    s7 = 0;                                             // Result = 00000000
-    sw(s6, sp + 0x40);
-    s6 = 0xE9BD0000;                                    // Result = E9BD0000
-    s6 |= 0x37A7;                                       // Result = E9BD37A7
-    sw(ra, sp + 0x4C);
-    sw(fp, sp + 0x48);
-    sw(s5, sp + 0x3C);
-    sw(s4, sp + 0x38);
-    sw(s2, sp + 0x30);
-    sw(s1, sp + 0x2C);
-    sw(s0, sp + 0x28);
-    sw(a0, sp + 0x10);
-    sw(a1, sp + 0x18);
-loc_8001958C:
-    a0 = lw(sp + 0x10);
-    a1 = s3;
-    v0 = P_FindSectorFromLineTag(*vmAddrToPtr<line_t>(a0), a1);
-    s3 = v0;
-    v0 = s3 << 1;
-    if (i32(s3) < 0) goto loc_8001976C;
-    v0 += s3;
-    v0 <<= 3;
-    v0 -= s3;
-    v1 = *gpSectors;
-    v0 <<= 2;
-    s1 = v0 + v1;
-    v0 = lw(s1 + 0x50);
-    a1 = 0x2C;                                          // Result = 0000002C
-    if (v0 != 0) goto loc_8001958C;
-    s7 = 1;                                             // Result = 00000001
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    sw(s0, s1 + 0x50);
-    t0 = 0x80020000;                                    // Result = 80020000
-    t0 -= 0x6FF0;                                       // Result = T_MoveFloor (80019010)
-    sw(t0, s0 + 0x8);
-    sw(s7, s0 + 0x18);
-    sw(s1, s0 + 0x14);
-    t0 = lw(sp + 0x18);
-    if (t0 == 0) goto loc_8001962C;
-    if (t0 == s7) goto loc_8001963C;
-    sw(s5, s0 + 0x28);
-    goto loc_80019648;
-loc_8001962C:
-    s5 = 0x10000;                                       // Result = 00010000
-    s5 |= 0x8000;                                       // Result = 00018000
-    s4 = 0x80000;                                       // Result = 00080000
-    goto loc_80019644;
-loc_8001963C:
-    s5 = 0x60000;                                       // Result = 00060000
-    s4 = 0x100000;                                      // Result = 00100000
-loc_80019644:
-    sw(s5, s0 + 0x28);
-loc_80019648:
-    v0 = lw(s1);
-    s2 = s4 + v0;
-    sw(s2, s0 + 0x24);
-    fp = lw(s1 + 0x8);
-    a2 = 0;                                             // Result = 00000000
-loc_80019660:
-    v0 = lw(s1 + 0x54);
-    a3 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_8001975C;
-loc_80019670:
-    v0 = lw(s1 + 0x58);
-    v1 = a2 << 2;
-    v1 += v0;
-    v1 = lw(v1);
-    v0 = lw(v1 + 0x10);
-    v0 &= 4;
-    if (v0 == 0) goto loc_80019748;
-    a0 = lw(v1 + 0x38);
-    a1 = *gpSectors;
-    v0 = a0 - a1;
-    mult(v0, s6);
-    v0 = lo;
-    v0 = u32(i32(v0) >> 2);
-    if (s3 != v0) goto loc_80019748;
-    a0 = lw(v1 + 0x3C);
-    v0 = a0 - a1;
-    mult(v0, s6);
-    v1 = lw(a0 + 0x8);
-    v0 = lo;
-    a1 = u32(i32(v0) >> 2);
-    if (v1 != fp) goto loc_80019748;
-    v0 = lw(a0 + 0x50);
-    s2 += s4;
-    if (v0 != 0) goto loc_80019748;
-    s1 = a0;
-    s3 = a1;
-    a1 = 0x2C;                                          // Result = 0000002C
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    a3 = 1;                                             // Result = 00000001
-    sw(s0, s1 + 0x50);
-    t0 = 0x80020000;                                    // Result = 80020000
-    t0 -= 0x6FF0;                                       // Result = T_MoveFloor (80019010)
-    v0 = 1;                                             // Result = 00000001
-    sw(t0, s0 + 0x8);
-    sw(v0, s0 + 0x18);
-    sw(s1, s0 + 0x14);
-    sw(s5, s0 + 0x28);
-    sw(s2, s0 + 0x24);
-    goto loc_8001975C;
-loc_80019748:
-    v0 = lw(s1 + 0x54);
-    a2++;
-    v0 = (i32(a2) < i32(v0));
-    if (v0 != 0) goto loc_80019670;
-loc_8001975C:
-    a2 = 0;                                             // Result = 00000000
-    if (a3 != 0) goto loc_80019660;
-    goto loc_8001958C;
-loc_8001976C:
-    v0 = s7;                                            // Result = 00000000
-    ra = lw(sp + 0x4C);
-    fp = lw(sp + 0x48);
-    s7 = lw(sp + 0x44);
-    s6 = lw(sp + 0x40);
-    s5 = lw(sp + 0x3C);
-    s4 = lw(sp + 0x38);
-    s3 = lw(sp + 0x34);
-    s2 = lw(sp + 0x30);
-    s1 = lw(sp + 0x2C);
-    s0 = lw(sp + 0x28);
-    sp += 0x50;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tries to build a staircase of the specified type, with the starting step for each stairs being sectors matching the given line's tag
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
+    bool bActivatedAMover = false;
+
+    // Search for first step sectors to build a stairs from using the given line tag
+    for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
+        // Ignore if the sector already has a special or moving floor
+        sector_t& firstSector = gpSectors->get()[sectorIdx];
+
+        if (firstSector.specialdata)
+            continue;
+
+        // Found a stairs sector which will be affected by this floor special: create a thinker for the first step and link to the sector
+        bActivatedAMover = true;
+
+        floormove_t& firstFloor = *(floormove_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(floormove_t), PU_LEVSPEC, nullptr);
+        P_AddThinker(firstFloor.thinker);
+        firstSector.specialdata = &firstFloor;
+
+        // Setup the mover for the first step
+        firstFloor.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_MoveFloor);
+        firstFloor.direction = 1;
+        firstFloor.sector = &firstSector;
+
+        fixed_t moveSpeed = FLOORSPEED;     // Note: these were previously un-initialized in the PSX code if the stair type was not known
+        fixed_t stepHeight = 8 * FRACUNIT;
+
+        if (stairType == build8) {
+            moveSpeed = FLOORSPEED / 2;
+            stepHeight = 8 * FRACUNIT;
+        }
+        else if (stairType == turbo16) {
+            moveSpeed = FLOORSPEED * 2;
+            stepHeight = 16 * FRACUNIT;
+        }
+
+        fixed_t height = firstSector.floorheight + stepHeight;   // First step height
+
+        firstFloor.speed = moveSpeed;
+        firstFloor.floordestheight = height;
+
+        // Keep building stair steps while we find two sided lines where:
+        //  (1) The front sector of the line is the same sector as the previous step sector.
+        //  (2) The back sector of the line has the same floor texture as the stairs.
+        const int32_t stairFloorPic = firstSector.floorpic;
+        
+        while (true) {
+            bool bDidAStep = false;
+            sector_t& sector = gpSectors->get()[sectorIdx];
+
+            for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+                // Ignore the line if not two sided
+                line_t& stepLine = *sector.lines.get()[lineIdx];
+
+                if ((stepLine.flags & ML_TWOSIDED) == 0)
+                    continue;
+
+                // Ignore the line if the front sector is not the same as the previous step
+                sector_t& fsec = *stepLine.frontsector;
+                const int32_t fsecIdx = (int32_t)(&fsec - gpSectors->get());
+
+                if (fsecIdx != sectorIdx)
+                    continue;
+
+                // Don't build a step if the back sector doesn't have the same texture
+                sector_t& bsec = *stepLine.backsector;
+
+                if (bsec.floorpic != stairFloorPic)
+                    continue;
+
+                // Inc height for this step and as a precaution don't do a step if there is already a sector special
+                height += stepHeight;
+
+                if (bsec.specialdata)
+                    continue;
+
+                // Create a thinker for this step's floor mover, link to the sector and populate it's settings
+                floormove_t& floor = *(floormove_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(floormove_t), PU_LEVSPEC, nullptr);
+                P_AddThinker(floor.thinker);
+                bsec.specialdata = &floor;
+
+                floor.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_MoveFloor);
+                floor.direction = 1;
+                floor.sector = &bsec;
+                floor.speed = moveSpeed;
+                floor.floordestheight = height;
+
+                // Search for the next step to make from the one we just did
+                sectorIdx = (int32_t)(&bsec - gpSectors->get());
+
+                // Need to start line checks anew because we are on a new step sector
+                bDidAStep = true;
+                break;
+            }
+
+            // Done making the staircase yet?
+            if (!bDidAStep)
+                break;
+        }
+    }
+
+    return bActivatedAMover;
 }

@@ -616,7 +616,7 @@ loc_80026A10:
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
 loc_80026A18:
-    EV_BuildStairs();
+    v0 = EV_BuildStairs(*vmAddrToPtr<line_t>(a0), (stair_e) a1);
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_80026A28:

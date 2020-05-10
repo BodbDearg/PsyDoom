@@ -548,7 +548,7 @@ loc_800283F0:
 loc_80028410:
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
-    EV_BuildStairs();
+    v0 = EV_BuildStairs(*vmAddrToPtr<line_t>(a0), (stair_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -714,7 +714,7 @@ loc_800285A8:
 loc_800285C4:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
-    EV_BuildStairs();
+    v0 = EV_BuildStairs(*vmAddrToPtr<line_t>(a0), (stair_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000

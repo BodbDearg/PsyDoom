@@ -26,6 +26,12 @@ enum floor_e : uint32_t {
     donutRaise              = 10
 };
 
+// What type of stair building to do when building stairs
+enum stair_e : uint32_t {
+    build8,     // Slowly build by 8 units
+    turbo16     // Quickly build by 16 units
+};
+
 // Holds the state and settings for a moving floor
 struct floormove_t {
     thinker_t       thinker;
@@ -52,4 +58,4 @@ result_e T_MovePlane(
 ) noexcept;
 
 bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept;
-void EV_BuildStairs() noexcept;
+bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept;
