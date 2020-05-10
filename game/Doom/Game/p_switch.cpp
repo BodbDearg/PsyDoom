@@ -578,7 +578,7 @@ loc_80028448:
 loc_80028464:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -589,7 +589,7 @@ loc_80028464:
 loc_80028480:
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -634,7 +634,7 @@ loc_800284D8:
 loc_800284F4:
     a0 = s0;
     a1 = 3;                                             // Result = 00000003
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -669,7 +669,7 @@ loc_80028530:
 loc_80028550:
     a0 = s0;
     a1 = 9;                                             // Result = 00000009
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -692,7 +692,7 @@ loc_8002856C:
 loc_8002858C:
     a0 = s0;
     a1 = 4;                                             // Result = 00000004
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -703,7 +703,7 @@ loc_8002858C:
 loc_800285A8:
     a0 = s0;
     a1 = 2;                                             // Result = 00000002
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -752,7 +752,7 @@ loc_8002862C:
 loc_8002864C:
     a0 = s0;
     a1 = 4;                                             // Result = 00000004
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -778,7 +778,7 @@ loc_80028688:
 loc_800286A8:
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -802,7 +802,7 @@ loc_800286E0:
 loc_800286FC:
     a0 = s0;
     a1 = 2;                                             // Result = 00000002
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -832,7 +832,7 @@ loc_80028750:
 loc_80028768:
     a0 = s0;
     a1 = 9;                                             // Result = 00000009
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -840,7 +840,7 @@ loc_80028768:
 loc_80028784:
     a0 = s0;
     a1 = 3;                                             // Result = 00000003
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -848,7 +848,7 @@ loc_80028784:
 loc_800287A0:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000

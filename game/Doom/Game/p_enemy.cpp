@@ -3170,7 +3170,7 @@ loc_80018C20:
     v0 &= v1;
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7F88);                                // Store to: gMapBossSpecialFlags (80077F88)
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
 loc_80018C34:
     ra = lw(sp + 0x60);
     sp += 0x68;

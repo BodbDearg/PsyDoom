@@ -60,7 +60,6 @@ extern void A_BabyMetal() noexcept;
 extern void L_MissileHit() noexcept;
 extern void L_SkullBash() noexcept;
 extern void _thunk_T_MoveFloor() noexcept;
-extern void EV_DoFloor() noexcept;
 extern void EV_BuildStairs() noexcept;
 extern void T_FireFlicker() noexcept;
 extern void P_SpawnFireFlicker() noexcept;
@@ -268,7 +267,6 @@ namespace PsxVm {
         { 0x80018CE0, &L_MissileHit },
         { 0x80018D54, &L_SkullBash },
         { 0x80019010, &_thunk_T_MoveFloor },
-        { 0x80019100, &EV_DoFloor },
         { 0x80019548, &EV_BuildStairs },
         { 0x8001AD74, &T_FireFlicker },
         { 0x8001AE00, &P_SpawnFireFlicker },

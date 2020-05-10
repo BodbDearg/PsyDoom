@@ -2,6 +2,8 @@
 
 #include "Doom/doomdef.h"
 
+struct line_t;
+
 // Represents the result of moving a floor/ceiling
 enum result_e : uint32_t {
     ok          = 0,    // Movement for the floor/ceiling was fully OK
@@ -49,6 +51,5 @@ result_e T_MovePlane(
     const int32_t direction
 ) noexcept;
 
-void T_MoveFloor() noexcept;
-void EV_DoFloor() noexcept;
+bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept;
 void EV_BuildStairs() noexcept;

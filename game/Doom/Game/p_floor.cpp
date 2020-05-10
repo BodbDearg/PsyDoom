@@ -11,6 +11,9 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
+#include <algorithm>
+
+static constexpr fixed_t FLOORSPEED = FRACUNIT * 3;     // Standard speed for floors moving up and down
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Attempts to move a floor or ceiling up or down, potentially crushing things contained within.
@@ -147,7 +150,7 @@ result_e T_MovePlane(
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a moving floor: moves the floor, does floor state transitions and sounds etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void T_MoveFloor(floormove_t& floor) noexcept {
+static void T_MoveFloor(floormove_t& floor) noexcept {
     // Move the floor!
     sector_t& floorSec = *floor.sector;
     const result_e moveResult = T_MovePlane(floorSec, floor.speed, floor.floordestheight, floor.crush, 0, floor.direction);
@@ -184,296 +187,153 @@ void _thunk_T_MoveFloor() noexcept {
     T_MoveFloor(*vmAddrToPtr<floormove_t>(*PsxVm::gpReg_a0));
 }
 
-void EV_DoFloor() noexcept {
-loc_80019100:
-    sp -= 0x50;
-    sw(fp, sp + 0x48);
-    fp = a0;
-    sw(s6, sp + 0x40);
-    s6 = a1;
-    sw(s4, sp + 0x38);
-    s4 = -1;                                            // Result = FFFFFFFF
-    sw(s5, sp + 0x3C);
-    s5 = 0x30000;                                       // Result = 00030000
-    sw(s7, sp + 0x44);
-    s7 = 1;                                             // Result = 00000001
-    sw(ra, sp + 0x4C);
-    sw(s3, sp + 0x34);
-    sw(s2, sp + 0x30);
-    sw(s1, sp + 0x2C);
-    sw(s0, sp + 0x28);
-    sw(0, sp + 0x10);
-loc_80019144:
-    a0 = fp;
-loc_80019148:
-    a1 = s4;
-    v0 = P_FindSectorFromLineTag(*vmAddrToPtr<line_t>(a0), a1);
-    s4 = v0;
-    v0 = s4 << 1;
-    if (i32(s4) < 0) goto loc_80019510;
-    v0 += s4;
-    v0 <<= 3;
-    v0 -= s4;
-    v1 = *gpSectors;
-    v0 <<= 2;
-    s2 = v0 + v1;
-    v0 = lw(s2 + 0x50);
-    t0 = 1;                                             // Result = 00000001
-    if (v0 != 0) goto loc_80019144;
-    a1 = 0x2C;                                          // Result = 0000002C
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    sw(t0, sp + 0x10);
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0x6FF0;                                       // Result = T_MoveFloor (80019010)
-    sw(s0, s2 + 0x50);
-    sw(v0, s0 + 0x8);
-    v0 = (s6 < 0xA);
-    sw(s6, s0 + 0xC);
-    sw(0, s0 + 0x10);
-    if (v0 == 0) goto loc_80019144;
-    v0 = s6 << 2;
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x3A8;                                        // Result = JumpTable_EV_DoFloor[0] (800103A8)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x800191FC: goto loc_800191FC;
-        case 0x8001921C: goto loc_8001921C;
-        case 0x8001923C: goto loc_8001923C;
-        case 0x8001927C: goto loc_8001927C;
-        case 0x800192C0: goto loc_800192C0;
-        case 0x8001934C: goto loc_8001934C;
-        case 0x80019444: goto loc_80019444;
-        case 0x800192E0: goto loc_800192E0;
-        case 0x80019304: goto loc_80019304;
-        case 0x80019278: goto loc_80019278;
-        default: jump_table_err(); break;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Trigger the given floor mover for sectors with the same tag as the given line
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
+    bool bActivatedAFloor = false;
+
+    for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
+        // Ignore if the sector already has a special or moving floor
+        sector_t& sector = gpSectors->get()[sectorIdx];
+
+        if (sector.specialdata)
+            continue;
+
+        // Found a sector which will be affected by this floor special: create a thinker and link to the sector
+        bActivatedAFloor = true;
+
+        floormove_t& floor = *(floormove_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(floormove_t), PU_LEVSPEC, nullptr);
+        P_AddThinker(floor.thinker);
+        sector.specialdata = &floor;
+
+        // Common floor mover setup
+        floor.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_MoveFloor);
+        floor.type = floorType;
+        floor.crush = false;
+
+        // Setup for specific floor types
+        switch (floorType) {
+            case lowerFloor: {
+                floor.direction = -1;
+                floor.sector = &sector;
+                floor.speed = FLOORSPEED;
+                floor.floordestheight = P_FindHighestFloorSurrounding(sector);
+            }   break;
+
+            case lowerFloorToLowest: {
+                floor.direction = -1;
+                floor.sector = &sector;
+                floor.speed = FLOORSPEED;
+                floor.floordestheight = P_FindLowestFloorSurrounding(sector);
+            }   break;
+
+            case turboLower: {
+                floor.direction = -1;
+                floor.sector = &sector;
+                floor.speed = FLOORSPEED * 4;
+                floor.floordestheight = P_FindHighestFloorSurrounding(sector);
+
+                if (floor.floordestheight != sector.floorheight) {      // Create a small lip if lowering
+                    floor.floordestheight += 8 * FRACUNIT;
+                }
+            }   break;
+
+            case raiseFloorCrush:
+                floor.crush = true;     // Note: intentional fallthrough
+            case raiseFloor: {
+                floor.direction = 1;
+                floor.sector = &sector;
+                floor.speed = FLOORSPEED;
+                floor.floordestheight = P_FindLowestCeilingSurrounding(sector);
+                floor.floordestheight = std::min(floor.floordestheight, sector.ceilingheight);      // Don't go above the current ceiling
+                
+                if (floorType == raiseFloorCrush) {
+                    floor.floordestheight -= 8 * FRACUNIT;      // Leave a small gap for crushing floors (in case player gets caught in it)
+                }
+            }   break;
+
+            case raiseFloorToNearest: {
+                floor.direction = 1;
+                floor.sector = &sector;
+                floor.speed = FLOORSPEED;
+                floor.floordestheight = P_FindNextHighestFloor(sector, sector.floorheight);
+            }   break;
+
+            case raiseFloor24: {
+                floor.direction = 1;
+                floor.sector = &sector;
+                floor.speed = FLOORSPEED;
+                floor.floordestheight = sector.floorheight + 24 * FRACUNIT;
+            }   break;
+
+            case raiseFloor24AndChange: {
+                floor.direction = 1;
+                floor.sector = &sector;
+                floor.speed = FLOORSPEED;
+                floor.floordestheight = sector.floorheight + 24 * FRACUNIT;
+                sector.floorpic = line.frontsector->floorpic;
+                sector.special = line.frontsector->special;
+            }   break;
+
+            case raiseToTexture: {
+                floor.direction = 1;
+                floor.sector = &sector;
+                floor.speed = FLOORSPEED;
+                
+                // Raise the floor by the height of the lowest surrounding lower texture
+                fixed_t minLowerTexH = INT32_MAX;
+
+                for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+                    if (!twoSided(sectorIdx, lineIdx))
+                        continue;
+
+                    side_t& side1 = *getSide(sectorIdx, lineIdx, 0);
+
+                    if (side1.bottomtexture >= 0) {
+                        texture_t& tex = gpTextures->get()[side1.bottomtexture];
+                        minLowerTexH = std::min(minLowerTexH, (fixed_t) tex.height << FRACBITS);
+                    }
+
+                    side_t& side2 = *getSide(sectorIdx, lineIdx, 1);
+
+                    if (side2.bottomtexture >= 0) {
+                        texture_t& tex = gpTextures->get()[side2.bottomtexture];
+                        minLowerTexH = std::min(minLowerTexH, (fixed_t) tex.height << FRACBITS);
+                    }
+                }
+
+                floor.floordestheight = sector.floorheight + minLowerTexH;
+            }   break;
+
+            case lowerAndChange: {
+                floor.direction = -1;
+                floor.sector = &sector;
+                floor.speed = FLOORSPEED;
+                floor.floordestheight = P_FindLowestFloorSurrounding(sector);
+                floor.texture = (int16_t) sector.floorpic;
+
+                // Change the texture and special to be the same as the sector on the opposite side of the target sector's first 2 sided line
+                for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+                    if (!twoSided(sectorIdx, lineIdx))
+                        continue;
+                    
+                    side_t& side1 = *getSide(sectorIdx, lineIdx, 0);
+                    const int32_t side1SectorIdx = (int32_t)(side1.sector.get() - gpSectors->get());
+                    sector_t& oppositeSector = *getSector(sectorIdx, lineIdx, (side1SectorIdx == sectorIdx) ? 1 : 0);
+
+                    floor.texture = (int16_t) oppositeSector.floorpic;
+                    floor.newspecial = oppositeSector.special;
+                    break;
+                }
+            }   break;
+
+            default:
+                break;
+        }
     }
-loc_800191F0:
-    a1 = s1;
-    a2 = 1;                                             // Result = 00000001
-    goto loc_800194D0;
-loc_800191FC:
-    a0 = s2;
-    t0 = -1;                                            // Result = FFFFFFFF
-    sw(t0, s0 + 0x18);
-    sw(a0, s0 + 0x14);
-    sw(s5, s0 + 0x28);
-    v0 = P_FindHighestFloorSurrounding(*vmAddrToPtr<sector_t>(a0));
-    sw(v0, s0 + 0x24);
-    goto loc_80019144;
-loc_8001921C:
-    a0 = s2;
-    t0 = -1;                                            // Result = FFFFFFFF
-    sw(t0, s0 + 0x18);
-    sw(a0, s0 + 0x14);
-    sw(s5, s0 + 0x28);
-    v0 = P_FindLowestFloorSurrounding(*vmAddrToPtr<sector_t>(a0));
-    sw(v0, s0 + 0x24);
-    goto loc_80019144;
-loc_8001923C:
-    a0 = s2;
-    t0 = -1;                                            // Result = FFFFFFFF
-    v0 = 0xC0000;                                       // Result = 000C0000
-    sw(t0, s0 + 0x18);
-    sw(s2, s0 + 0x14);
-    sw(v0, s0 + 0x28);
-    v0 = P_FindHighestFloorSurrounding(*vmAddrToPtr<sector_t>(a0));
-    v1 = v0;
-    sw(v1, s0 + 0x24);
-    v0 = lw(s2);
-    a0 = fp;
-    if (v1 == v0) goto loc_80019148;
-    v0 = 0x80000;                                       // Result = 00080000
-    goto loc_800192F8;
-loc_80019278:
-    sw(s7, s0 + 0x10);
-loc_8001927C:
-    a0 = s2;
-    sw(s7, s0 + 0x18);
-    sw(s2, s0 + 0x14);
-    sw(s5, s0 + 0x28);
-    v0 = P_FindLowestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
-    sw(v0, s0 + 0x24);
-    a0 = lw(s2 + 0x4);
-    v0 = (i32(a0) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 9;                                         // Result = 00000009
-        if (bJump) goto loc_800192AC;
-    }
-    sw(a0, s0 + 0x24);
-loc_800192AC:
-    a0 = fp;
-    if (s6 != v0) goto loc_80019148;
-    v0 = lw(s0 + 0x24);
-    v1 = 0xFFF80000;                                    // Result = FFF80000
-    goto loc_800192F8;
-loc_800192C0:
-    sw(s7, s0 + 0x18);
-    sw(s2, s0 + 0x14);
-    sw(s5, s0 + 0x28);
-    a1 = lw(s2);
-    a0 = s2;
-    v0 = P_FindNextHighestFloor(*vmAddrToPtr<sector_t>(a0), a1);
-    sw(v0, s0 + 0x24);
-    goto loc_80019144;
-loc_800192E0:
-    sw(s2, s0 + 0x14);
-    v0 = lw(s0 + 0x14);
-    sw(s7, s0 + 0x18);
-    sw(s5, s0 + 0x28);
-    v0 = lw(v0);
-    v1 = 0x180000;                                      // Result = 00180000
-loc_800192F8:
-    v0 += v1;
-    sw(v0, s0 + 0x24);
-    goto loc_80019144;
-loc_80019304:
-    sw(s2, s0 + 0x14);
-    v0 = lw(s0 + 0x14);
-    sw(s7, s0 + 0x18);
-    sw(s5, s0 + 0x28);
-    v0 = lw(v0);
-    v1 = 0x180000;                                      // Result = 00180000
-    v0 += v1;
-    sw(v0, s0 + 0x24);
-    v0 = lw(fp + 0x38);
-    v0 = lw(v0 + 0x8);
-    sw(v0, s2 + 0x8);
-    v0 = lw(fp + 0x38);
-    v0 = lw(v0 + 0x14);
-    sw(v0, s2 + 0x14);
-    goto loc_80019144;
-loc_8001934C:
-    s3 = 0x7FFF0000;                                    // Result = 7FFF0000
-    s3 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    sw(s7, s0 + 0x18);
-    sw(s2, s0 + 0x14);
-    sw(s5, s0 + 0x28);
-    v0 = lw(s2 + 0x54);
-    s1 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80019428;
-    a0 = s4;
-loc_80019374:
-    a1 = s1;
-    v0 = twoSided(a0, a1);
-    a0 = s4;
-    if (v0 == 0) goto loc_80019414;
-    a1 = s1;
-    a2 = 0;                                             // Result = 00000000
-    v0 = ptrToVmAddr(getSide(a0, a1, a2));
-    v0 = lw(v0 + 0xC);
-    a0 = s4;
-    if (i32(v0) < 0) goto loc_800193CC;
-    v1 = *gpTextures;
-    v0 <<= 5;
-    v0 += v1;
-    v0 = lh(v0 + 0x6);
-    v1 = v0 << 16;
-    v0 = (i32(v1) < i32(s3));
-    a1 = s1;
-    if (v0 == 0) goto loc_800193D0;
-    s3 = v1;
-loc_800193CC:
-    a1 = s1;
-loc_800193D0:
-    a2 = 1;                                             // Result = 00000001
-    v0 = ptrToVmAddr(getSide(a0, a1, a2));
-    v0 = lw(v0 + 0xC);
-    {
-        const bool bJump = (i32(v0) < 0);
-        v0 <<= 5;
-        if (bJump) goto loc_80019414;
-    }
-    v1 = *gpTextures;
-    v0 += v1;
-    v0 = lh(v0 + 0x6);
-    v1 = v0 << 16;
-    v0 = (i32(v1) < i32(s3));
-    if (v0 == 0) goto loc_80019414;
-    s3 = v1;
-loc_80019414:
-    v0 = lw(s2 + 0x54);
-    s1++;
-    v0 = (i32(s1) < i32(v0));
-    a0 = s4;
-    if (v0 != 0) goto loc_80019374;
-loc_80019428:
-    v0 = lw(s0 + 0x14);
-    v0 = lw(v0);
-    v0 += s3;
-    sw(v0, s0 + 0x24);
-    goto loc_80019144;
-loc_80019444:
-    a0 = s2;
-    t0 = -1;                                            // Result = FFFFFFFF
-    sw(t0, s0 + 0x18);
-    sw(s2, s0 + 0x14);
-    sw(s5, s0 + 0x28);
-    v0 = P_FindLowestFloorSurrounding(*vmAddrToPtr<sector_t>(a0));
-    sw(v0, s0 + 0x24);
-    v0 = lhu(s2 + 0x8);
-    sh(v0, s0 + 0x20);
-    v0 = lw(s2 + 0x54);
-    s1 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80019144;
-    a0 = s4;
-loc_80019480:
-    a1 = s1;
-    v0 = twoSided(a0, a1);
-    a0 = s4;
-    if (v0 == 0) goto loc_800194F4;
-    a1 = s1;
-    a2 = 0;                                             // Result = 00000000
-    v0 = ptrToVmAddr(getSide(a0, a1, a2));
-    a0 = 0xE9BD0000;                                    // Result = E9BD0000
-    v0 = lw(v0 + 0x14);
-    v1 = *gpSectors;
-    a0 |= 0x37A7;                                       // Result = E9BD37A7
-    v0 -= v1;
-    mult(v0, a0);
-    v0 = lo;
-    v0 = u32(i32(v0) >> 2);
-    a0 = s4;
-    if (v0 == s4) goto loc_800191F0;
-    a1 = s1;
-    a2 = 0;                                             // Result = 00000000
-loc_800194D0:
-    v0 = ptrToVmAddr(getSector(a0, a1, a2));
-    s2 = v0;
-    v0 = lhu(s2 + 0x8);
-    sh(v0, s0 + 0x20);
-    v0 = lw(s2 + 0x14);
-    sw(v0, s0 + 0x1C);
-    goto loc_80019144;
-loc_800194F4:
-    v0 = lw(s2 + 0x54);
-    s1++;
-    v0 = (i32(s1) < i32(v0));
-    if (v0 != 0) goto loc_80019480;
-    a0 = fp;
-    goto loc_80019148;
-loc_80019510:
-    v0 = lw(sp + 0x10);
-    ra = lw(sp + 0x4C);
-    fp = lw(sp + 0x48);
-    s7 = lw(sp + 0x44);
-    s6 = lw(sp + 0x40);
-    s5 = lw(sp + 0x3C);
-    s4 = lw(sp + 0x38);
-    s3 = lw(sp + 0x34);
-    s2 = lw(sp + 0x30);
-    s1 = lw(sp + 0x2C);
-    s0 = lw(sp + 0x28);
-    sp += 0x50;
-    return;
+
+    return bActivatedAFloor;
 }
 
 void EV_BuildStairs() noexcept {

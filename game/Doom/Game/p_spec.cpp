@@ -630,7 +630,7 @@ loc_80026A40:
     a0 = s0;
     a1 = 4;                                             // Result = 00000004
 loc_80026A48:
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_80026A58:
@@ -724,17 +724,17 @@ loc_80026B9C:
 loc_80026BB0:
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     goto loc_80026D2C;
 loc_80026BC4:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     goto loc_80026D2C;
 loc_80026BD8:
     a0 = s0;
     a1 = 6;                                             // Result = 00000006
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     goto loc_80026D2C;
 loc_80026BEC:
     a0 = s0;
@@ -761,22 +761,22 @@ loc_80026C28:
 loc_80026C3C:
     a0 = s0;
     a1 = 3;                                             // Result = 00000003
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     goto loc_80026D2C;
 loc_80026C50:
     a0 = s0;
     a1 = 7;                                             // Result = 00000007
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     goto loc_80026D2C;
 loc_80026C64:
     a0 = s0;
     a1 = 8;                                             // Result = 00000008
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     goto loc_80026D2C;
 loc_80026C78:
     a0 = s0;
     a1 = 9;                                             // Result = 00000009
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     goto loc_80026D2C;
 loc_80026C8C:
     a0 = s0;
@@ -785,12 +785,12 @@ loc_80026C8C:
 loc_80026C98:
     a0 = s0;
     a1 = 5;                                             // Result = 00000005
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     goto loc_80026D2C;
 loc_80026CAC:
     a0 = s0;
     a1 = 2;                                             // Result = 00000002
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     goto loc_80026D2C;
 loc_80026CC0:
     a0 = s0;
@@ -861,7 +861,7 @@ loc_80026D94:
     goto loc_80026DF4;
 loc_80026DA8:
     a1 = 3;                                             // Result = 00000003
-    EV_DoFloor();
+    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
     goto loc_80026DE0;
 loc_80026DB8:
     a0 = s0;
