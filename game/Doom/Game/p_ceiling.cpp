@@ -71,6 +71,7 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
             }
         }   break;
 
+        // Moving down
         case -1: {
             const result_e moveResult = T_MovePlane(ceilingSector, ceiling.speed, ceiling.bottomheight, ceiling.crush, 1, ceiling.direction);
 
@@ -119,137 +120,90 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
     }
 }
 
-void EV_DoCeiling() noexcept {
-loc_80014C44:
-    sp -= 0x38;
-    sw(s5, sp + 0x24);
-    s5 = a0;
-    sw(s3, sp + 0x1C);
-    s3 = a1;
-    sw(s2, sp + 0x18);
-    s2 = -1;                                            // Result = FFFFFFFF
-    sw(s6, sp + 0x28);
-    s6 = 0;                                             // Result = 00000000
-    v0 = (s3 < 6);
-    sw(ra, sp + 0x30);
-    sw(s7, sp + 0x2C);
-    sw(s4, sp + 0x20);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    if (v0 == 0) goto loc_80014C98;
-    v0 = (s3 < 3);
-    if (v0 != 0) goto loc_80014C98;
-    P_ActivateInStasisCeiling(*vmAddrToPtr<line_t>(a0));
-loc_80014C98:
-    v1 = 0x80010000;                                    // Result = 80010000
-    v1 += 0x18;                                         // Result = JumpTable_EV_DoCeiling[0] (80010018)
-    v0 = s3 << 2;
-    s7 = v0 + v1;
-    s4 = 1;                                             // Result = 00000001
-loc_80014CAC:
-    a0 = s5;
-loc_80014CB0:
-    a1 = s2;
-    v0 = P_FindSectorFromLineTag(*vmAddrToPtr<line_t>(a0), a1);
-    s2 = v0;
-    v0 = s2 << 1;
-    if (i32(s2) < 0) goto loc_80014DE4;
-    v0 += s2;
-    v0 <<= 3;
-    v0 -= s2;
-    v1 = *gpSectors;
-    v0 <<= 2;
-    s1 = v0 + v1;
-    v0 = lw(s1 + 0x50);
-    a1 = 0x30;                                          // Result = 00000030
-    if (v0 != 0) goto loc_80014CAC;
-    s6 = 1;                                             // Result = 00000001
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x4A30;                                       // Result = T_MoveCeiling (80014A30)
-    sw(s0, s1 + 0x50);
-    sw(v0, s0 + 0x8);
-    v0 = (s3 < 6);
-    sw(s1, s0 + 0x10);
-    sw(0, s0 + 0x20);
-    if (v0 == 0) goto loc_80014DC8;
-    v0 = lw(s7);
-    switch (v0) {
-        case 0x80014D88: goto loc_80014D88;
-        case 0x80014DB0: goto loc_80014DB0;
-        case 0x80014D78: goto loc_80014D78;
-        case 0x80014D44: goto loc_80014D44;
-        default: jump_table_err(); break;
-    }
-loc_80014D44:
-    sw(s4, s0 + 0x20);
-    v0 = lw(s1 + 0x4);
-    sw(v0, s0 + 0x18);
-    v1 = lw(s1);
-    v0 = -1;                                            // Result = FFFFFFFF
-    sw(v0, s0 + 0x24);
-    v0 = 0x40000;                                       // Result = 00040000
-    sw(v0, s0 + 0x1C);
-    v0 = 0x80000;                                       // Result = 00080000
-    v1 += v0;
-    sw(v1, s0 + 0x14);
-    goto loc_80014DC8;
-loc_80014D78:
-    sw(s4, s0 + 0x20);
-    v0 = lw(s1 + 0x4);
-    sw(v0, s0 + 0x18);
-loc_80014D88:
-    v1 = lw(s1);
-    sw(v1, s0 + 0x14);
-    if (s3 == 0) goto loc_80014DA0;
-    v0 = 0x80000;                                       // Result = 00080000
-    v0 += v1;
-    sw(v0, s0 + 0x14);
-loc_80014DA0:
-    v0 = -1;                                            // Result = FFFFFFFF
-    sw(v0, s0 + 0x24);
-    v0 = 0x20000;                                       // Result = 00020000
-    goto loc_80014DC4;
-loc_80014DB0:
-    a0 = s1;
-    v0 = P_FindHighestCeilingSurrounding(*vmAddrToPtr<sector_t>(a0));
-    sw(v0, s0 + 0x18);
-    v0 = 0x20000;                                       // Result = 00020000
-    sw(s4, s0 + 0x24);
-loc_80014DC4:
-    sw(v0, s0 + 0x1C);
-loc_80014DC8:
-    v0 = lw(s1 + 0x18);
-    a0 = s0;
-    sw(s3, a0 + 0xC);
-    sw(v0, a0 + 0x28);
-    P_AddActiveCeiling(*vmAddrToPtr<ceiling_t>(a0));
-    a0 = s5;
-    goto loc_80014CB0;
-loc_80014DE4:
-    v0 = s6;
-    ra = lw(sp + 0x30);
-    s7 = lw(sp + 0x2C);
-    s6 = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x38;
-    return;
-}
-
 // TODO: REMOVE eventually
 void _thunk_T_MoveCeiling() noexcept {
     T_MoveCeiling(*vmAddrToPtr<ceiling_t>(a0));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Trigger a ceiling (mover/crusher) special of the given type for sectors matching the given line's tag
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
+    bool bActivatedACeiling = false;
+
+    // Try reactivate ceilings that are in stasis for certain ceiling types
+    switch (ceilingType) {
+        case crushAndRaise:
+        case fastCrushAndRaise:
+        case silentCrushAndRaise:
+            P_ActivateInStasisCeiling(line);
+            break;
+
+        default:
+            break;
+    }
+
+    // Spawn ceiling movers for all sectors matching the line tag (which don't already have specials)
+    for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
+        // Only spawn the ceiling mover if there isn't already a special operating on this sector
+        sector_t& sector = gpSectors->get()[sectorIdx];
+
+        if (sector.specialdata)
+            continue;
+
+        // Create the door thinker and populate its state/settings
+        bActivatedACeiling = true;
+
+        ceiling_t& ceiling = *(ceiling_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(ceiling_t), PU_LEVSPEC, nullptr);
+        P_AddThinker(ceiling.thinker);
+        
+        ceiling.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_MoveCeiling);
+        ceiling.sector = &sector;
+        ceiling.crush = false;
+
+        // This thinker is now the special for the sector
+        sector.specialdata = &ceiling;
+
+        // Ceiling specific setup and sounds
+        switch (ceilingType) {
+            case fastCrushAndRaise:
+                ceiling.crush = true;
+                ceiling.topheight = sector.ceilingheight;
+                ceiling.bottomheight = sector.floorheight + 8 * FRACUNIT;
+                ceiling.direction = -1;
+                ceiling.speed = CEILSPEED * 2;
+                break;
+
+            case crushAndRaise:
+            case silentCrushAndRaise:
+                ceiling.crush = true;
+                ceiling.topheight = sector.ceilingheight;
+            case lowerToFloor:
+            case lowerAndCrush:
+                ceiling.bottomheight = sector.floorheight;
+
+                if (ceilingType != lowerToFloor) {
+                    ceiling.bottomheight += 8 * FRACUNIT;   // Leave a small gap
+                }
+
+                ceiling.direction = -1;
+                ceiling.speed = CEILSPEED;
+                break;
+
+            case raiseToHighest:
+                ceiling.topheight = P_FindHighestCeilingSurrounding(sector);
+                ceiling.direction = 1;
+                ceiling.speed = CEILSPEED;
+                break;
+        }
+
+        // Remember the ceiling type and sector tag, and add to the active ceilings list
+        ceiling.type = ceilingType;
+        ceiling.tag = sector.tag;
+        P_AddActiveCeiling(ceiling);
+    }
+
+    return bActivatedACeiling;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

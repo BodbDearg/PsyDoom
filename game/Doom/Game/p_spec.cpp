@@ -561,7 +561,7 @@ loc_80026958:
 loc_80026964:
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
-    EV_DoCeiling();
+    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
     goto loc_80026A48;
@@ -657,7 +657,7 @@ loc_80026AA4:
     a0 = s0;
     a1 = 5;                                             // Result = 00000005
 loc_80026AAC:
-    EV_DoCeiling();
+    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_80026ABC:
@@ -680,12 +680,12 @@ loc_80026ABC:
 loc_80026B00:
     a0 = s0;
     a1 = 2;                                             // Result = 00000002
-    EV_DoCeiling();
+    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
     goto loc_80026D2C;
 loc_80026B14:
     a0 = s0;
     a1 = 3;                                             // Result = 00000003
-    EV_DoCeiling();
+    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
     goto loc_80026D2C;
 loc_80026B28:
     a0 = s0;
@@ -704,7 +704,7 @@ loc_80026B4C:
 loc_80026B60:
     a0 = s0;
     a1 = 4;                                             // Result = 00000004
-    EV_DoCeiling();
+    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
     goto loc_80026D2C;
 loc_80026B74:
     a0 = s0;

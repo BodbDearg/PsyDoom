@@ -28,5 +28,5 @@ struct ceiling_t {
 
 static_assert(sizeof(ceiling_t) == 48);
 
-void EV_DoCeiling() noexcept;
+bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept;
 bool EV_CeilingCrushStop(line_t& line) noexcept;

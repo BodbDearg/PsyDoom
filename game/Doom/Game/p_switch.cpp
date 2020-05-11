@@ -567,7 +567,7 @@ loc_8002842C:
 loc_80028448:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
-    EV_DoCeiling();
+    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -794,7 +794,7 @@ loc_800286C4:
 loc_800286E0:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
-    EV_DoCeiling();
+    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -810,7 +810,7 @@ loc_800286FC:
 loc_80028718:
     a0 = s0;
     a1 = 3;                                             // Result = 00000003
-    EV_DoCeiling();
+    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
