@@ -48,6 +48,16 @@ struct plat_t {
 
 static_assert(sizeof(plat_t) == 56);
 
+// Maximum number of active moving platforms
+static constexpr int32_t MAXPLATS = 30;
+
+// Contains all of the active platforms in the level (some slots may be empty)
+static const VmPtr<VmPtr<plat_t>[MAXPLATS]> gpActivePlats(0x80097C44);
+
+// Not required externally: making private to this module
+static void P_AddActivePlat(plat_t& plat) noexcept;
+static void P_RemoveActivePlat(plat_t& plat) noexcept;
+
 void T_PlatRaise() noexcept {
     sp -= 0x28;
     sw(s0, sp + 0x18);
@@ -131,7 +141,7 @@ loc_8001F39C:
     if (v1 != v0) goto loc_8001F44C;
 loc_8001F3A8:
     a0 = s0;
-    P_RemoveActivePlat();
+    P_RemoveActivePlat(*vmAddrToPtr<plat_t>(a0));
     goto loc_8001F44C;
 loc_8001F3B8:
     sw(0, sp + 0x10);
@@ -359,7 +369,7 @@ loc_8001F714:
     S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
 loc_8001F71C:
     a0 = s0;
-    P_AddActivePlat();
+    P_AddActivePlat(*vmAddrToPtr<plat_t>(a0));
     a0 = s3;
     goto loc_8001F4B8;
 loc_8001F72C:
@@ -446,56 +456,36 @@ loc_8001F838:
     return;
 }
 
-void P_AddActivePlat() noexcept {
-loc_8001F848:
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a1 = 0;                                             // Result = 00000000
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x7C44;                                       // Result = gpActivePlats[0] (80097C44)
-loc_8001F85C:
-    v0 = lw(v1);
-    a1++;
-    if (v0 != 0) goto loc_8001F874;
-    sw(a0, v1);
-    goto loc_8001F890;
-loc_8001F874:
-    v0 = (i32(a1) < 0x1E);
-    v1 += 4;
-    if (v0 != 0) goto loc_8001F85C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Add the given moving platform to a free slot in the 'active platforms' list
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_AddActivePlat(plat_t& plat) noexcept {
+    for (int32_t i = 0; i < MAXPLATS; ++i) {
+        VmPtr<plat_t>& pPlat = gpActivePlats[i];
+
+        if (!pPlat) {
+            pPlat = &plat;
+            return;
+        }
+    }
+
     I_Error("P_AddActivePlat: no more plats!");
-loc_8001F890:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
-void P_RemoveActivePlat() noexcept {
-loc_8001F8A0:
-    sp -= 0x18;
-    v1 = 0;                                             // Result = 00000000
-    sw(s0, sp + 0x10);
-    s0 = 0x80090000;                                    // Result = 80090000
-    s0 += 0x7C44;                                       // Result = gpActivePlats[0] (80097C44)
-    sw(ra, sp + 0x14);
-loc_8001F8B8:
-    v0 = lw(s0);
-    v1++;
-    if (a0 != v0) goto loc_8001F8E8;
-    v0 = lw(a0 + 0xC);
-    sw(0, v0 + 0x50);
-    a0 = lw(s0);
-    _thunk_P_RemoveThinker();
-    sw(0, s0);
-    goto loc_8001F904;
-loc_8001F8E8:
-    v0 = (i32(v1) < 0x1E);
-    s0 += 4;
-    if (v0 != 0) goto loc_8001F8B8;
-    I_Error("P_RemoveActivePlat: can't find plat!");
-loc_8001F904:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Remove the given moving platform from the active platforms list; also dissociates it with it's sector and deallocs it's thinker
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_RemoveActivePlat(plat_t& plat) noexcept {
+    for (int32_t i = 0; i < MAXPLATS; ++i) {
+        VmPtr<plat_t>& pPlat = gpActivePlats[i];
+
+        if (pPlat.get() == &plat) {
+            plat.sector->specialdata = nullptr;
+            P_RemoveThinker(plat.thinker);
+            pPlat = nullptr;
+            return;
+        }
+    }
+
+    I_Error("P_RemoveActivePlat: can\'t find plat!");
 }

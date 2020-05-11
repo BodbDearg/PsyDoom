@@ -239,7 +239,7 @@ static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Remove the given ceiling from the active ceilings list, and also disassociate with it's sector and dealloc it's thinker
+// Remove the given ceiling from the active ceilings list; also dissociates it with it's sector and deallocs it's thinker
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept {
     for (int32_t i = 0; i < MAXCEILINGS; ++i) {
