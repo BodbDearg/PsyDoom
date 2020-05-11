@@ -11,6 +11,15 @@
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 
+// Maximum size of the 'active ceilings' list
+static constexpr int32_t MAXCEILINGS = 30;
+
+static const VmPtr<VmPtr<ceiling_t>[MAXCEILINGS]>   gpActiveCeilings(0x800A9D18);
+
+// Not required externally: making private to this module
+static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept;
+static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept;
+
 void T_MoveCeiling() noexcept {
     sp -= 0x28;
     sw(s0, sp + 0x18);
@@ -136,7 +145,7 @@ loc_80014BDC:
     goto loc_80014C2C;
 loc_80014BE8:
     a0 = s0;
-    P_RemoveActiveCeiling();
+    P_RemoveActiveCeiling(*vmAddrToPtr<ceiling_t>(a0));
     goto loc_80014C2C;
 loc_80014BF8:
     if (s1 != v0) goto loc_80014C2C;
@@ -278,7 +287,7 @@ loc_80014DC8:
     a0 = s0;
     sw(s3, a0 + 0xC);
     sw(v0, a0 + 0x28);
-    P_AddActiveCeiling();
+    P_AddActiveCeiling(*vmAddrToPtr<ceiling_t>(a0));
     a0 = s5;
     goto loc_80014CB0;
 loc_80014DE4:
@@ -296,52 +305,35 @@ loc_80014DE4:
     return;
 }
 
-void P_AddActiveCeiling() noexcept {
-loc_80014E18:
-    a1 = 0;                                             // Result = 00000000
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x62E8;                                       // Result = gpActiveCeilings[0] (800A9D18)
-loc_80014E24:
-    v0 = lw(v1);
-    if (v0 != 0) goto loc_80014E3C;
-    sw(a0, v1);
-    goto loc_80014E4C;
-loc_80014E3C:
-    a1++;
-    v0 = (i32(a1) < 0x1E);
-    v1 += 4;
-    if (v0 != 0) goto loc_80014E24;
-loc_80014E4C:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Add the given ceiling mover to a free slot in the 'active ceilings' list.
+// Note: does NOT get added if there are no free slots.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept {
+    for (int32_t i = 0; i < MAXCEILINGS; ++i) {
+        VmPtr<ceiling_t>& pCeiling = gpActiveCeilings[i];
+
+        if (!pCeiling) {
+            pCeiling = &ceiling;
+            return;
+        }
+    }
 }
 
-void P_RemoveActiveCeiling() noexcept {
-loc_80014E54:
-    sp -= 0x18;
-    v1 = 0;                                             // Result = 00000000
-    sw(s0, sp + 0x10);
-    s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 -= 0x62E8;                                       // Result = gpActiveCeilings[0] (800A9D18)
-    sw(ra, sp + 0x14);
-loc_80014E6C:
-    v0 = lw(s0);
-    v1++;
-    if (v0 != a0) goto loc_80014E9C;
-    v0 = lw(v0 + 0x10);
-    sw(0, v0 + 0x50);
-    a0 = lw(s0);
-    _thunk_P_RemoveThinker();
-    sw(0, s0);
-    goto loc_80014EA8;
-loc_80014E9C:
-    v0 = (i32(v1) < 0x1E);
-    s0 += 4;
-    if (v0 != 0) goto loc_80014E6C;
-loc_80014EA8:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Remove the given ceiling from the active ceilings list, and also disassociate with it's sector and dealloc it's thinker
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept {
+    for (int32_t i = 0; i < MAXCEILINGS; ++i) {
+        VmPtr<ceiling_t>& pCeiling = gpActiveCeilings[i];
+
+        if (pCeiling.get() == &ceiling) {
+            ceiling.sector->specialdata = nullptr;
+            P_RemoveThinker(ceiling.thinker);
+            pCeiling = nullptr;
+            return;
+        }
+    }
 }
 
 void P_ActivateInStasisCeiling() noexcept {

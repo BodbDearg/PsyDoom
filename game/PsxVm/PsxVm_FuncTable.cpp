@@ -10,8 +10,6 @@ extern void _thunk_P_Random() noexcept;
 extern void M_AddPointToBox() noexcept;
 extern void T_MoveCeiling() noexcept;
 extern void EV_DoCeiling() noexcept;
-extern void P_AddActiveCeiling() noexcept;
-extern void P_RemoveActiveCeiling() noexcept;
 extern void P_ActivateInStasisCeiling() noexcept;
 extern void EV_CeilingCrushStop() noexcept;
 extern void _thunk_T_VerticalDoor() noexcept;
@@ -216,8 +214,6 @@ namespace PsxVm {
         { 0x80012B10, &M_AddPointToBox },
         { 0x80014A30, &T_MoveCeiling },
         { 0x80014C44, &EV_DoCeiling },
-        { 0x80014E18, &P_AddActiveCeiling },
-        { 0x80014E54, &P_RemoveActiveCeiling },
         { 0x80014EBC, &P_ActivateInStasisCeiling },
         { 0x80014F30, &EV_CeilingCrushStop },
         { 0x800152FC, &_thunk_T_VerticalDoor },
