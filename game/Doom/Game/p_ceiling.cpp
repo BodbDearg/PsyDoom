@@ -358,36 +358,22 @@ static void P_ActivateInStasisCeiling(line_t& line) noexcept {
     }
 }
 
-void EV_CeilingCrushStop() noexcept {
-loc_80014F30:
-    t0 = 0;                                             // Result = 00000000
-    a3 = 0;                                             // Result = 00000000
-    a2 = 0x800B0000;                                    // Result = 800B0000
-    a2 -= 0x62E8;                                       // Result = gpActiveCeilings[0] (800A9D18)
-loc_80014F40:
-    a1 = lw(a2);
-    a3++;
-    if (a1 == 0) goto loc_80014F90;
-    v1 = lw(a1 + 0x28);
-    v0 = lw(a0 + 0x18);
-    {
-        const bool bJump = (v1 != v0);
-        v0 = (i32(a3) < 0x1E);
-        if (bJump) goto loc_80014F94;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Pauses active ceiling movers (crushers) with the same sector tag as the given line's tag
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool EV_CeilingCrushStop(line_t& line) noexcept {
+    bool bPausedACrusher = false;
+
+    for (int32_t i = 0; i < MAXCEILINGS; ++i) {
+        ceiling_t* const pCeiling = gpActiveCeilings[i].get();
+
+        if (pCeiling && (pCeiling->tag == line.tag) && (pCeiling->direction != 0)) {
+            pCeiling->olddirection = pCeiling->direction;       // Remember which direction it was moving in for unpause
+            pCeiling->direction = 0;                            // Now in stasis
+            pCeiling->thinker.function = nullptr;               // Remove the thinker function until unpaused
+            bPausedACrusher = true;
+        }
     }
-    v0 = lw(a1 + 0x24);
-    if (v0 == 0) goto loc_80014F90;
-    sw(v0, a1 + 0x2C);
-    v0 = lw(a2);
-    sw(0, v0 + 0x8);
-    v0 = lw(a2);
-    t0 = 1;                                             // Result = 00000001
-    sw(0, v0 + 0x24);
-loc_80014F90:
-    v0 = (i32(a3) < 0x1E);
-loc_80014F94:
-    a2 += 4;
-    if (v0 != 0) goto loc_80014F40;
-    v0 = t0;                                            // Result = 00000000
-    return;
+
+    return bPausedACrusher;
 }

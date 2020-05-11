@@ -2,6 +2,8 @@
 
 #include "Doom/doomdef.h"
 
+struct line_t;
+
 enum ceiling_e : uint32_t {
     lowerToFloor,
     raiseToHighest,
@@ -27,4 +29,4 @@ struct ceiling_t {
 static_assert(sizeof(ceiling_t) == 48);
 
 void EV_DoCeiling() noexcept;
-void EV_CeilingCrushStop() noexcept;
+bool EV_CeilingCrushStop(line_t& line) noexcept;

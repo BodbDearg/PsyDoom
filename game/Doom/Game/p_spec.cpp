@@ -588,7 +588,7 @@ loc_800269B4:
     goto loc_80026A48;
 loc_800269C0:
     a0 = s0;
-    EV_CeilingCrushStop();
+    v0 = EV_CeilingCrushStop(*vmAddrToPtr<line_t>(a0));
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_800269D0:
@@ -689,7 +689,7 @@ loc_80026B14:
     goto loc_80026D2C;
 loc_80026B28:
     a0 = s0;
-    EV_CeilingCrushStop();
+    v0 = EV_CeilingCrushStop(*vmAddrToPtr<line_t>(a0));
     goto loc_80026D2C;
 loc_80026B38:
     a0 = s0;
