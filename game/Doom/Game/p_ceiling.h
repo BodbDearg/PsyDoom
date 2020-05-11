@@ -26,7 +26,5 @@ struct ceiling_t {
 
 static_assert(sizeof(ceiling_t) == 48);
 
-void T_MoveCeiling() noexcept;
 void EV_DoCeiling() noexcept;
-void P_ActivateInStasisCeiling() noexcept;
 void EV_CeilingCrushStop() noexcept;

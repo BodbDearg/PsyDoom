@@ -8,9 +8,8 @@ extern void _thunk_D_memcpy() noexcept;
 extern void _thunk_D_strncasecmp() noexcept;
 extern void _thunk_P_Random() noexcept;
 extern void M_AddPointToBox() noexcept;
-extern void T_MoveCeiling() noexcept;
+extern void _thunk_T_MoveCeiling() noexcept;
 extern void EV_DoCeiling() noexcept;
-extern void P_ActivateInStasisCeiling() noexcept;
 extern void EV_CeilingCrushStop() noexcept;
 extern void _thunk_T_VerticalDoor() noexcept;
 extern void P_CheckMeleeRange() noexcept;
@@ -212,9 +211,8 @@ namespace PsxVm {
         { 0x8001297C, &_thunk_D_strncasecmp },
         { 0x80012A18, &_thunk_P_Random },
         { 0x80012B10, &M_AddPointToBox },
-        { 0x80014A30, &T_MoveCeiling },
+        { 0x80014A30, &_thunk_T_MoveCeiling },
         { 0x80014C44, &EV_DoCeiling },
-        { 0x80014EBC, &P_ActivateInStasisCeiling },
         { 0x80014F30, &EV_CeilingCrushStop },
         { 0x800152FC, &_thunk_T_VerticalDoor },
         { 0x80015CA8, &P_CheckMeleeRange },

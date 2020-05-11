@@ -19,8 +19,11 @@ static const VmPtr<VmPtr<ceiling_t>[MAXCEILINGS]>   gpActiveCeilings(0x800A9D18)
 // Not required externally: making private to this module
 static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept;
 static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept;
+static void P_ActivateInStasisCeiling(line_t& line) noexcept;
 
-void T_MoveCeiling() noexcept {
+static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
+    a0 = ptrToVmAddr(&ceiling);
+
     sp -= 0x28;
     sw(s0, sp + 0x18);
     s0 = a0;
@@ -197,7 +200,7 @@ loc_80014C44:
     if (v0 == 0) goto loc_80014C98;
     v0 = (s3 < 3);
     if (v0 != 0) goto loc_80014C98;
-    P_ActivateInStasisCeiling();
+    P_ActivateInStasisCeiling(*vmAddrToPtr<line_t>(a0));
 loc_80014C98:
     v1 = 0x80010000;                                    // Result = 80010000
     v1 += 0x18;                                         // Result = JumpTable_EV_DoCeiling[0] (80010018)
@@ -305,6 +308,11 @@ loc_80014DE4:
     return;
 }
 
+// TODO: REMOVE eventually
+void _thunk_T_MoveCeiling() noexcept {
+    T_MoveCeiling(*vmAddrToPtr<ceiling_t>(a0));
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add the given ceiling mover to a free slot in the 'active ceilings' list.
 // Note: does NOT get added if there are no free slots.
@@ -336,40 +344,18 @@ static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept {
     }
 }
 
-void P_ActivateInStasisCeiling() noexcept {
-loc_80014EBC:
-    a3 = 0;                                             // Result = 00000000
-    t0 = 0x80010000;                                    // Result = 80010000
-    t0 += 0x4A30;                                       // Result = T_MoveCeiling (80014A30)
-    a2 = 0x800B0000;                                    // Result = 800B0000
-    a2 -= 0x62E8;                                       // Result = gpActiveCeilings[0] (800A9D18)
-loc_80014ED0:
-    a1 = lw(a2);
-    a3++;
-    if (a1 == 0) goto loc_80014F1C;
-    v1 = lw(a1 + 0x28);
-    v0 = lw(a0 + 0x18);
-    {
-        const bool bJump = (v1 != v0);
-        v0 = (i32(a3) < 0x1E);
-        if (bJump) goto loc_80014F20;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Unpauses ceiling movers which have the same tag as the given line and which are in stasis (paused)
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_ActivateInStasisCeiling(line_t& line) noexcept {
+    for (int32_t i = 0; i < MAXCEILINGS; ++i) {
+        ceiling_t* const pCeiling = gpActiveCeilings[i].get();
+
+        if (pCeiling && (pCeiling->tag == line.tag) && (pCeiling->direction == 0)) {    // Direction 0 = in stasis
+            pCeiling->direction = pCeiling->olddirection;
+            pCeiling->thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_MoveCeiling);
+        }
     }
-    v0 = lw(a1 + 0x24);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(a3) < 0x1E);
-        if (bJump) goto loc_80014F20;
-    }
-    v0 = lw(a1 + 0x2C);
-    sw(v0, a1 + 0x24);
-    v0 = lw(a2);
-    sw(t0, v0 + 0x8);
-loc_80014F1C:
-    v0 = (i32(a3) < 0x1E);
-loc_80014F20:
-    a2 += 4;
-    if (v0 != 0) goto loc_80014ED0;
-    return;
 }
 
 void EV_CeilingCrushStop() noexcept {
