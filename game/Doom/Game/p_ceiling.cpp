@@ -11,8 +11,8 @@
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 
-// Maximum size of the 'active ceilings' list
-static constexpr int32_t MAXCEILINGS = 30;
+static constexpr int32_t MAXCEILINGS    = 30;               // Maximum size of the 'active ceilings' list
+static constexpr fixed_t CEILSPEED      = FRACUNIT * 2;     // Normal move speed for ceilings/crushers
 
 static const VmPtr<VmPtr<ceiling_t>[MAXCEILINGS]>   gpActiveCeilings(0x800A9D18);
 
@@ -21,163 +21,102 @@ static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept;
 static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept;
 static void P_ActivateInStasisCeiling(line_t& line) noexcept;
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Thinker/update logic for a moving ceiling or crusher: moves the ceiling, does state transitions and sounds etc.
+//------------------------------------------------------------------------------------------------------------------------------------------
 static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
-    a0 = ptrToVmAddr(&ceiling);
+    sector_t& ceilingSector = *ceiling.sector;
 
-    sp -= 0x28;
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(ra, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    v1 = lw(s0 + 0x24);
-    if (v1 == 0) goto loc_80014C2C;
-    v0 = 1;                                             // Result = 00000001
-    if (i32(v1) > 0) goto loc_80014A70;
-    v0 = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80014B2C;
+    switch (ceiling.direction) {
+        // In stasis
+        case 0:
+            break;
+
+        // Moving up
+        case 1: {
+            const result_e moveResult = T_MovePlane(ceilingSector, ceiling.speed, ceiling.topheight, false, 1, ceiling.direction);
+
+            // Do moving sounds
+            if ((*gGameTic & 7) == 0) {
+                switch (ceiling.type) {
+                    case silentCrushAndRaise:
+                        break;
+
+                    default:
+                        S_StartSound((mobj_t*) &ceilingSector.soundorg, sfx_stnmov);
+                        break;
+                }
+            }
+
+            // Reached the destination?
+            if (moveResult == pastdest) {
+                switch (ceiling.type) {
+                    case raiseToHighest:
+                        P_RemoveActiveCeiling(ceiling);
+                        break;
+
+                    case silentCrushAndRaise:
+                        S_StartSound((mobj_t*) &ceilingSector.soundorg, sfx_pstop);
+                        ceiling.direction = -1;
+                        break;
+
+                    case fastCrushAndRaise:
+                    case crushAndRaise:
+                        ceiling.direction = -1;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }   break;
+
+        case -1: {
+            const result_e moveResult = T_MovePlane(ceilingSector, ceiling.speed, ceiling.bottomheight, ceiling.crush, 1, ceiling.direction);
+
+            if ((*gGameTic & 7) == 0) {
+                switch (ceiling.type) {
+                    case silentCrushAndRaise:
+                        break;
+
+                    default:
+                        S_StartSound((mobj_t*) &ceilingSector.soundorg, sfx_stnmov);
+                        break;
+                }
+            }
+
+            if (moveResult == pastdest) {
+                // Reached the destination
+                switch (ceiling.type) {
+                    case silentCrushAndRaise:
+                        S_StartSound((mobj_t*) &ceilingSector.soundorg, sfx_pstop);
+                    case crushAndRaise:
+                        ceiling.speed = CEILSPEED;
+                    case fastCrushAndRaise:
+                        ceiling.direction = 1;
+                        break;
+
+                    case lowerToFloor:
+                    case lowerAndCrush:
+                        P_RemoveActiveCeiling(ceiling);
+                        break;
+                }
+            }
+            else if (moveResult == crushed) {
+                // Crushing/hitting something
+                switch (ceiling.type) {
+                    case lowerAndCrush:
+                    case crushAndRaise:
+                    case silentCrushAndRaise:
+                        ceiling.speed = CEILSPEED / 8;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }   break;
     }
-    goto loc_80014C2C;
-loc_80014A70:
-    if (v1 != v0) goto loc_80014C2C;
-    sw(v1, sp + 0x10);
-    v0 = lw(s0 + 0x24);
-    sw(v0, sp + 0x14);
-    a0 = lw(s0 + 0x10);
-    a1 = lw(s0 + 0x1C);
-    a2 = lw(s0 + 0x18);
-    a3 = 0;                                             // Result = 00000000
-    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
-    v1 = *gGameTic;
-    v1 &= 7;
-    s1 = v0;
-    if (v1 != 0) goto loc_80014AD0;
-    v1 = lw(s0 + 0xC);
-    v0 = 5;
-    a1 = sfx_stnmov;
-    if (v1 == v0) goto loc_80014AD0;
-    a0 = lw(s0 + 0x10);
-    a0 += 0x38;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_80014AD0:
-    v0 = 2;                                             // Result = 00000002
-    if (s1 != v0) goto loc_80014C2C;
-    v1 = lw(s0 + 0xC);
-    v0 = (v1 < 5);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (v1 < 3);
-        if (bJump) goto loc_80014B08;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80014B20;
-    }
-    if (v1 == v0) goto loc_80014BE8;
-    goto loc_80014C2C;
-loc_80014B08:
-    v0 = 5;                                             // Result = 00000005
-    a1 = sfx_pstop;
-    if (v1 != v0) goto loc_80014C2C;
-    a0 = lw(s0 + 0x10);
-    a0 += 0x38;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_80014B20:
-    v0 = -1;                                            // Result = FFFFFFFF
-    sw(v0, s0 + 0x24);
-    goto loc_80014C2C;
-loc_80014B2C:
-    sw(v0, sp + 0x10);
-    v0 = lw(s0 + 0x24);
-    sw(v0, sp + 0x14);
-    a0 = lw(s0 + 0x10);
-    a1 = lw(s0 + 0x1C);
-    a2 = lw(s0 + 0x14);
-    a3 = lw(s0 + 0x20);
-    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
-    v1 = *gGameTic;
-    v1 &= 7;
-    s1 = v0;
-    if (v1 != 0) goto loc_80014B88;
-    v1 = lw(s0 + 0xC);
-    v0 = 5;
-    a1 = sfx_stnmov;
-    if (v1 == v0) goto loc_80014B88;
-    a0 = lw(s0 + 0x10);
-    a0 += 0x38;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_80014B88:
-    v0 = 2;                                             // Result = 00000002
-    {
-        const bool bJump = (s1 != v0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80014BF8;
-    }
-    v1 = lw(s0 + 0xC);
-    v0 = (v1 < 6);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80014C2C;
-    }
-    at = 0x80010000;                                    // Result = 80010000
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80014BE8: goto loc_80014BE8;
-        case 0x80014C2C: goto loc_80014C2C;
-        case 0x80014BD4: goto loc_80014BD4;
-        case 0x80014BDC: goto loc_80014BDC;
-        case 0x80014BC4: goto loc_80014BC4;
-        default: jump_table_err(); break;
-    }
-loc_80014BC4:
-    a0 = lw(s0 + 0x10);
-    a1 = sfx_pstop;
-    a0 += 0x38;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_80014BD4:
-    v0 = 0x20000;                                       // Result = 00020000
-    sw(v0, s0 + 0x1C);
-loc_80014BDC:
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s0 + 0x24);
-    goto loc_80014C2C;
-loc_80014BE8:
-    a0 = s0;
-    P_RemoveActiveCeiling(*vmAddrToPtr<ceiling_t>(a0));
-    goto loc_80014C2C;
-loc_80014BF8:
-    if (s1 != v0) goto loc_80014C2C;
-    v1 = lw(s0 + 0xC);
-    v0 = (v1 < 2);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (v1 < 4);
-        if (bJump) goto loc_80014C2C;
-    }
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x4000;                                    // Result = 00004000
-        if (bJump) goto loc_80014C28;
-    }
-    v0 = 5;                                             // Result = 00000005
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 0x4000;                                    // Result = 00004000
-        if (bJump) goto loc_80014C2C;
-    }
-loc_80014C28:
-    sw(v0, s0 + 0x1C);
-loc_80014C2C:
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
 }
 
 void EV_DoCeiling() noexcept {

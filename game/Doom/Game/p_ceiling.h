@@ -5,12 +5,12 @@
 struct line_t;
 
 enum ceiling_e : uint32_t {
-    lowerToFloor,
-    raiseToHighest,
-    lowerAndCrush,
-    crushAndRaise,
-    fastCrushAndRaise,
-    silentCrushAndRaise,
+    lowerToFloor            = 0,
+    raiseToHighest          = 1,
+    lowerAndCrush           = 2,
+    crushAndRaise           = 3,
+    fastCrushAndRaise       = 4,
+    silentCrushAndRaise     = 5,
 };
 
 struct ceiling_t {

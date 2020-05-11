@@ -6,14 +6,14 @@ struct line_t;
 
 // Enum representing a door type
 enum vldoor_e : uint32_t {
-    Normal,
-    Close30ThenOpen,
-    Close,
-    Open,
-    RaiseIn5Mins,
-    BlazeRaise,
-    BlazeOpen,
-    BlazeClose
+    Normal              = 0,
+    Close30ThenOpen     = 1,
+    Close               = 2,
+    Open                = 3,
+    RaiseIn5Mins        = 4,
+    BlazeRaise          = 5,
+    BlazeOpen           = 6,
+    BlazeClose          = 7
 };
 
 // State for a door thinker
