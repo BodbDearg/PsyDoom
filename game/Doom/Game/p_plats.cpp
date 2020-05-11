@@ -13,6 +13,41 @@
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 
+// Current status for a moving platform
+enum plat_e : uint32_t {
+    up,
+    down,
+    waiting,
+    in_stasis
+};
+
+// Moving platform type
+enum plattype_e : uint32_t {
+    perpetualRaise,
+    downWaitUpStay,
+    raiseAndChange,
+    raiseToNearestAndChange,
+    blazeDWUS
+};
+
+// Status and state for a moving platform
+struct plat_t {
+    thinker_t           thinker;
+    VmPtr<sector_t>     sector;
+    fixed_t             speed;
+    fixed_t             low;            // TODO: COMMENT
+    fixed_t             high;           // TODO: COMMENT
+    int32_t             wait;           // TODO: COMMENT
+    int32_t             count;          // TODO: COMMENT
+    plat_e              status;         // TODO: COMMENT
+    plat_e              oldstatus;      // TODO: COMMENT
+    bool32_t            crush;
+    int32_t             tag;            // TODO: COMMENT
+    plattype_e          type;
+};
+
+static_assert(sizeof(plat_t) == 56);
+
 void T_PlatRaise() noexcept {
     sp -= 0x28;
     sw(s0, sp + 0x18);

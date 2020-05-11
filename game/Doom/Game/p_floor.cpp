@@ -16,7 +16,24 @@
 #define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
-static constexpr fixed_t FLOORSPEED = FRACUNIT * 3;     // Standard speed for floors moving up and down
+// Holds the state and settings for a moving floor
+struct floormove_t {
+    thinker_t       thinker;
+    floor_e         type;
+    bool32_t        crush;              // Does the floor movement cause crushing?
+    VmPtr<sector_t> sector;             // The sector affected
+    int32_t         direction;          // 1 = up, -1 = down
+    int32_t         newspecial;         // TODO: comment
+    int16_t         texture;            // TODO: comment
+    int16_t         _pad;               // Unused padding
+    fixed_t         floordestheight;
+    fixed_t         speed;
+};
+
+static_assert(sizeof(floormove_t) == 44);
+
+// Standard speed for floors moving up and down
+static constexpr fixed_t FLOORSPEED = FRACUNIT * 3;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Attempts to move a floor or ceiling up or down, potentially crushing things contained within.

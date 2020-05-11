@@ -9,7 +9,24 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
+
+#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
+
+struct ceiling_t {
+    thinker_t           thinker;
+    ceiling_e           type;
+    VmPtr<sector_t>     sector;
+    fixed_t             bottomheight;   // TODO: COMMENT
+    fixed_t             topheight;      // TODO: COMMENT
+    fixed_t             speed;
+    bool32_t            crush;
+    int32_t             direction;      // 1 = up, 0 = waiting, -1 = down
+    int32_t             tag;            // TODO: COMMENT
+    int32_t             olddirection;   // TODO: COMMENT
+};
+
+static_assert(sizeof(ceiling_t) == 48);
 
 static constexpr int32_t MAXCEILINGS    = 30;               // Maximum size of the 'active ceilings' list
 static constexpr fixed_t CEILSPEED      = FRACUNIT * 2;     // Normal move speed for ceilings/crushers
@@ -122,7 +139,7 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
 
 // TODO: REMOVE eventually
 void _thunk_T_MoveCeiling() noexcept {
-    T_MoveCeiling(*vmAddrToPtr<ceiling_t>(a0));
+    T_MoveCeiling(*vmAddrToPtr<ceiling_t>(*PsxVm::gpReg_a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
