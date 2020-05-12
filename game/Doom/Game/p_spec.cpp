@@ -650,7 +650,7 @@ loc_80026A84:
     if (v0 != 0) goto loc_80026D2C;
 loc_80026A94:
     a0 = s0;
-    EV_Teleport();
+    v0 = EV_Teleport(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_80026AA4:
@@ -819,7 +819,7 @@ loc_80026D14:
     if (v0 != 0) goto loc_80026D2C;
 loc_80026D24:
     a0 = s0;
-    EV_Teleport();
+    v0 = EV_Teleport(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
 loc_80026D2C:
     ra = lw(sp + 0x24);
     s0 = lw(sp + 0x20);
