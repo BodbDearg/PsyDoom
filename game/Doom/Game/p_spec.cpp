@@ -638,7 +638,7 @@ loc_80026A58:
     a1 = 4;                                             // Result = 00000004
 loc_80026A60:
     a2 = 0;                                             // Result = 00000000
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_80026A70:
@@ -812,7 +812,7 @@ loc_80026CFC:
     a1 = 4;                                             // Result = 00000004
 loc_80026D04:
     a2 = 0;                                             // Result = 00000000
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
     goto loc_80026D2C;
 loc_80026D14:
     v0 = lw(a1 + 0x80);
@@ -874,7 +874,7 @@ loc_80026DB8:
 loc_80026DD4:
     a1 = 3;                                             // Result = 00000003
     a2 = 0;                                             // Result = 00000000
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
 loc_80026DE0:
     a0 = s0;
     if (v0 == 0) goto loc_80026DF4;

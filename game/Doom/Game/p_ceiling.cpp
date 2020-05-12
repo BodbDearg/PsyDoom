@@ -146,9 +146,7 @@ void _thunk_T_MoveCeiling() noexcept {
 // Trigger a ceiling (mover/crusher) special of the given type for sectors matching the given line's tag
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
-    bool bActivatedACeiling = false;
-
-    // Try reactivate ceilings that are in stasis for certain ceiling types
+    // Try re-activate ceilings that are in stasis for certain ceiling types
     switch (ceilingType) {
         case crushAndRaise:
         case fastCrushAndRaise:
@@ -161,6 +159,8 @@ bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
     }
 
     // Spawn ceiling movers for all sectors matching the line tag (which don't already have specials)
+    bool bActivatedACeiling = false;
+
     for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
         // Only spawn the ceiling mover if there isn't already a special operating on this sector
         sector_t& sector = gpSectors->get()[sectorIdx];
@@ -168,18 +168,16 @@ bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
         if (sector.specialdata)
             continue;
 
-        // Create the door thinker and populate its state/settings
+        // Create the door thinker, link to it's sector and populate its state/settings
         bActivatedACeiling = true;
 
         ceiling_t& ceiling = *(ceiling_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(ceiling_t), PU_LEVSPEC, nullptr);
         P_AddThinker(ceiling.thinker);
-        
+        sector.specialdata = &ceiling;
+
         ceiling.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_MoveCeiling);
         ceiling.sector = &sector;
         ceiling.crush = false;
-
-        // This thinker is now the special for the sector
-        sector.specialdata = &ceiling;
 
         // Ceiling specific setup and sounds
         switch (ceilingType) {

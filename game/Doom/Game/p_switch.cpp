@@ -528,7 +528,7 @@ loc_800283D0:
     a0 = s0;
     a1 = 4;                                             // Result = 00000004
     a2 = 0;                                             // Result = 00000000
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -537,7 +537,7 @@ loc_800283F0:
     a0 = s0;
     a1 = 4;                                             // Result = 00000004
     a2 = 0;                                             // Result = 00000000
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -612,7 +612,7 @@ loc_800284B8:
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
     a2 = 1;                                             // Result = 00000001
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -646,7 +646,7 @@ loc_80028510:
     a0 = s0;
     a1 = 2;                                             // Result = 00000002
     a2 = 0x18;                                          // Result = 00000018
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -658,7 +658,7 @@ loc_80028530:
     a0 = s0;
     a1 = 2;                                             // Result = 00000002
     a2 = 0x20;                                          // Result = 00000020
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -681,7 +681,7 @@ loc_8002856C:
     a0 = s0;
     a1 = 3;                                             // Result = 00000003
     a2 = 0;                                             // Result = 00000000
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
     {
         const bool bJump = (v0 == 0);
         v0 = 1;                                         // Result = 00000001
@@ -735,7 +735,7 @@ loc_8002860C:
     a0 = s0;
     a1 = 2;                                             // Result = 00000002
     a2 = 0x20;                                          // Result = 00000020
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -744,7 +744,7 @@ loc_8002862C:
     a0 = s0;
     a1 = 2;                                             // Result = 00000002
     a2 = 0x18;                                          // Result = 00000018
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -761,7 +761,7 @@ loc_80028668:
     a0 = s0;
     a1 = 3;                                             // Result = 00000003
     a2 = 0;                                             // Result = 00000000
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000
@@ -770,7 +770,7 @@ loc_80028688:
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
     a2 = 0;                                             // Result = 00000000
-    EV_DoPlat();
+    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000

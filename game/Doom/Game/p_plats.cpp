@@ -11,6 +11,9 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include <algorithm>
+
+#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
 // Current status for a moving platform
@@ -48,8 +51,9 @@ struct plat_t {
 
 static_assert(sizeof(plat_t) == 56);
 
-// Maximum number of active moving platforms
-static constexpr int32_t MAXPLATS = 30;
+static constexpr int32_t MAXPLATS   = 30;               // Maximum number of active platforms
+static constexpr int32_t PLATWAIT   = 3;                // Number of seconds for platforms to be in the waiting state
+static constexpr int32_t PLATSPEED  = 2 * FRACUNIT;     // Standard platform speed (some platforms are slower or faster)
 
 // Contains all of the active platforms in the level (some slots may be empty)
 static const VmPtr<VmPtr<plat_t>[MAXPLATS]> gpActivePlats(0x80097C44);
@@ -133,203 +137,104 @@ void _thunk_T_PlatRaise() noexcept {
     T_PlatRaise(*vmAddrToPtr<plat_t>(*PsxVm::gpReg_a0));
 }
 
-void EV_DoPlat() noexcept {
-loc_8001F464:
-    sp -= 0x38;
-    sw(s3, sp + 0x1C);
-    s3 = a0;
-    sw(s4, sp + 0x20);
-    s4 = a1;
-    sw(s7, sp + 0x2C);
-    s7 = a2;
-    sw(s2, sp + 0x18);
-    s2 = -1;                                            // Result = FFFFFFFF
-    sw(s5, sp + 0x24);
-    s5 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x30);
-    sw(s6, sp + 0x28);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    if (s4 != 0) goto loc_8001F4B0;
-    a0 = lw(s3 + 0x18);
-    P_ActivateInStasis(a0);
-loc_8001F4B0:
-    s6 = 0x2D;                                          // Result = 0000002D
-loc_8001F4B4:
-    a0 = s3;
-loc_8001F4B8:
-    a1 = s2;
-    v0 = P_FindSectorFromLineTag(*vmAddrToPtr<line_t>(a0), a1);
-    s2 = v0;
-    v0 = s2 << 1;
-    if (i32(s2) < 0) goto loc_8001F72C;
-    v0 += s2;
-    v0 <<= 3;
-    v0 -= s2;
-    v1 = *gpSectors;
-    v0 <<= 2;
-    s1 = v0 + v1;
-    v0 = lw(s1 + 0x50);
-    a1 = 0x38;                                          // Result = 00000038
-    if (v0 != 0) goto loc_8001F4B4;
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0xD80;                                        // Result = T_PlatRaise (8001F280)
-    sw(s4, s0 + 0x34);
-    sw(s1, s0 + 0xC);
-    sw(s0, s1 + 0x50);
-    sw(v0, s0 + 0x8);
-    sw(0, s0 + 0x2C);
-    v0 = lw(s3 + 0x18);
-    sw(v0, s0 + 0x30);
-    v0 = (s4 < 5);
-    s5 = 1;                                             // Result = 00000001
-    if (v0 == 0) goto loc_8001F71C;
-    v0 = s4 << 2;
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x8E8;                                        // Result = JumpTable_EV_DoPlat[0] (800108E8)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x8001F6AC: goto loc_8001F6AC;
-        case 0x8001F61C: goto loc_8001F61C;
-        case 0x8001F5C8: goto loc_8001F5C8;
-        case 0x8001F56C: goto loc_8001F56C;
-        case 0x8001F664: goto loc_8001F664;
-        default: jump_table_err(); break;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// For each sector matching the given line's tag, spawn a moving platform thinker/process of the given platform type.
+//
+// Notes:
+//  (1) If a sector already has some special action going on, then a platform thinker will NOT be added to the sector.
+//  (2) The movement amount is only used for certain platform types.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount) noexcept {
+    // Try re-activate moving platforms that are in stasis for certain platform types
+    switch (platType) {
+        case perpetualRaise:
+            P_ActivateInStasis(line.tag);
+            break;
+
+        default:
+            break;
     }
-loc_8001F56C:
-    v0 = 0x10000;                                       // Result = 00010000
-    sw(v0, s0 + 0x10);
-    v1 = lw(s3 + 0x1C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = *gpSides;
-    v0 <<= 3;
-    v0 += v1;
-    v0 = lw(v0 + 0x14);
-    a1 = lw(s1);
-    v0 = lw(v0 + 0x8);
-    a0 = s1;
-    sw(v0, s1 + 0x8);
-    v0 = P_FindNextHighestFloor(*vmAddrToPtr<sector_t>(a0), a1);
-    a0 = s1 + 0x38;
-    a1 = 0x15;                                          // Result = 00000015
-    sw(v0, s0 + 0x18);
-    sw(0, s0 + 0x1C);
-    sw(0, s0 + 0x24);
-    sw(0, s1 + 0x14);
-    goto loc_8001F714;
-loc_8001F5C8:
-    v0 = 0x10000;                                       // Result = 00010000
-    sw(v0, s0 + 0x10);
-    v1 = lw(s3 + 0x1C);
-    a0 = s1 + 0x38;
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = *gpSides;
-    v0 <<= 3;
-    v0 += v1;
-    v0 = lw(v0 + 0x14);
-    v1 = lw(s1);
-    v0 = lw(v0 + 0x8);
-    a1 = 0x15;                                          // Result = 00000015
-    sw(v0, s1 + 0x8);
-    v0 = s7 << 16;
-    v0 += v1;
-    sw(v0, s0 + 0x18);
-    sw(0, s0 + 0x1C);
-    sw(0, s0 + 0x24);
-    goto loc_8001F714;
-loc_8001F61C:
-    a0 = s1;
-    v0 = 0x80000;                                       // Result = 00080000
-    sw(v0, s0 + 0x10);
-    v0 = P_FindLowestFloorSurrounding(*vmAddrToPtr<sector_t>(a0));
-    sw(v0, s0 + 0x14);
-    v1 = lw(s1);
-    v0 = (i32(v1) < i32(v0));
-    a0 = s1 + 0x38;
-    if (v0 == 0) goto loc_8001F648;
-    sw(v1, s0 + 0x14);
-loc_8001F648:
-    a1 = 0x11;                                          // Result = 00000011
-    v1 = lw(s1);
-    v0 = 1;                                             // Result = 00000001
-    sw(s6, s0 + 0x1C);
-    sw(v0, s0 + 0x24);
-    sw(v1, s0 + 0x18);
-    goto loc_8001F714;
-loc_8001F664:
-    a0 = s1;
-    v0 = 0x100000;                                      // Result = 00100000
-    sw(v0, s0 + 0x10);
-    v0 = P_FindLowestFloorSurrounding(*vmAddrToPtr<sector_t>(a0));
-    sw(v0, s0 + 0x14);
-    v1 = lw(s1);
-    v0 = (i32(v1) < i32(v0));
-    a0 = s1 + 0x38;
-    if (v0 == 0) goto loc_8001F690;
-    sw(v1, s0 + 0x14);
-loc_8001F690:
-    a1 = 0x11;                                          // Result = 00000011
-    v1 = lw(s1);
-    v0 = 1;                                             // Result = 00000001
-    sw(s6, s0 + 0x1C);
-    sw(v0, s0 + 0x24);
-    sw(v1, s0 + 0x18);
-    goto loc_8001F714;
-loc_8001F6AC:
-    a0 = s1;
-    v0 = 0x20000;                                       // Result = 00020000
-    sw(v0, s0 + 0x10);
-    v0 = P_FindLowestFloorSurrounding(*vmAddrToPtr<sector_t>(a0));
-    sw(v0, s0 + 0x14);
-    v1 = lw(s1);
-    v0 = (i32(v1) < i32(v0));
-    if (v0 == 0) goto loc_8001F6D8;
-    sw(v1, s0 + 0x14);
-loc_8001F6D8:
-    a0 = s1;
-    v0 = P_FindHighestFloorSurrounding(*vmAddrToPtr<sector_t>(a0));
-    sw(v0, s0 + 0x18);
-    v1 = lw(s1);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8001F6FC;
-    sw(v1, s0 + 0x18);
-loc_8001F6FC:
-    sw(s6, s0 + 0x1C);
-    _thunk_P_Random();
-    a0 = s1 + 0x38;
-    a1 = sfx_pstart;
-    v0 &= 1;
-    sw(v0, s0 + 0x24);
-loc_8001F714:
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_8001F71C:
-    a0 = s0;
-    P_AddActivePlat(*vmAddrToPtr<plat_t>(a0));
-    a0 = s3;
-    goto loc_8001F4B8;
-loc_8001F72C:
-    v0 = s5;
-    ra = lw(sp + 0x30);
-    s7 = lw(sp + 0x2C);
-    s6 = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x38;
-    return;
+    
+    // Spawn moving platforms for all sectors matching the line tag (which don't already have specials)
+    bool bActivatedPlats = false;
+
+    for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
+        // Only spawn the platform if there isn't already a special operating on this sector
+        sector_t& sector = gpSectors->get()[sectorIdx];
+
+        if (sector.specialdata)
+            continue;
+
+        // Create the platform thinker, link to it's sector and populate its state/settings
+        bActivatedPlats = true;
+
+        plat_t& plat = *(plat_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(plat_t), PU_LEVSPEC, nullptr);
+        P_AddThinker(plat.thinker);
+        sector.specialdata = &plat;
+
+        plat.type = platType;
+        plat.sector = &sector;
+        plat.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_PlatRaise);
+        plat.crush = false;
+        plat.tag = line.tag;
+        
+        // Platform specific setup and sounds
+        switch (platType) {
+            case raiseToNearestAndChange: {
+                plat.speed = PLATSPEED / 2;
+                sector.floorpic = gpSides->get()[line.sidenum[0]].sector->floorpic;
+                plat.high = P_FindNextHighestFloor(sector, sector.floorheight);
+                plat.wait = 0;
+                plat.status = up;
+                sector.special = 0;     // Remove any damaging (slime, lava etc.) or other specials
+                S_StartSound((mobj_t*) &sector.soundorg, sfx_stnmov);
+            }   break;
+
+            case raiseAndChange: {
+                plat.speed = PLATSPEED / 2;
+                sector.floorpic = gpSides->get()[line.sidenum[0]].sector->floorpic;
+                plat.high = sector.floorheight + moveAmount * FRACUNIT;
+                plat.wait = 0;
+                plat.status = up;
+                S_StartSound((mobj_t*) &sector.soundorg, sfx_stnmov);
+            }   break;
+
+            case downWaitUpStay: {
+                plat.speed = PLATSPEED * 4;
+                plat.low = std::min(P_FindLowestFloorSurrounding(sector), sector.floorheight);
+                plat.wait = TICRATE * PLATWAIT;
+                plat.status = down;
+                plat.high = sector.floorheight;
+                S_StartSound((mobj_t*) &sector.soundorg, sfx_pstart);
+            }   break;
+
+            case blazeDWUS: {
+                plat.speed = PLATSPEED * 8;
+                plat.low = std::min(P_FindLowestFloorSurrounding(sector), sector.floorheight);
+                plat.wait = TICRATE * PLATWAIT;
+                plat.status = down;
+                plat.high = sector.floorheight;
+                S_StartSound((mobj_t*) &sector.soundorg, sfx_pstart);
+            }   break;
+
+            case perpetualRaise: {
+                plat.speed = PLATSPEED;
+                plat.low = std::min(P_FindLowestFloorSurrounding(sector), sector.floorheight);
+                plat.high = std::max(P_FindHighestFloorSurrounding(sector), sector.floorheight);
+                plat.wait = TICRATE * PLATWAIT;
+                plat.status = (P_Random() & 1) ? down : up;
+                S_StartSound((mobj_t*) &sector.soundorg, sfx_pstart);
+            }   break;
+
+            default:
+                break;
+        }
+
+        // Add the platform to the active platforms list
+        P_AddActivePlat(plat);
+    }
+
+    return bActivatedPlats;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
