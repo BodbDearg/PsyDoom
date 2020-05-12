@@ -1,7 +1,8 @@
 #pragma once
 
-void T_FireFlicker() noexcept;
-void P_SpawnFireFlicker() noexcept;
+struct sector_t;
+
+void P_SpawnFireFlicker(sector_t& sector) noexcept;
 void T_LightFlash() noexcept;
 void P_SpawnLightFlash() noexcept;
 void T_StrobeFlash() noexcept;

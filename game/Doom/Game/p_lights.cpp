@@ -7,77 +7,60 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
+#include <algorithm>
 
-void T_FireFlicker() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v0 = lw(s0 + 0x10);
-    v0--;
-    sw(v0, s0 + 0x10);
-    if (v0 != 0) goto loc_8001ADEC;
-    _thunk_P_Random();
-    v0 &= 3;
-    v0 <<= 4;
-    a0 = lw(s0 + 0xC);
-    a1 = v0;
-    v0 = lh(a0 + 0x12);
-    v1 = lw(s0 + 0x18);
-    v0 -= a1;
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8001ADD4;
-    v0 = lhu(s0 + 0x18);
-    sh(v0, a0 + 0x12);
-    goto loc_8001ADE4;
-loc_8001ADD4:
-    v0 = lhu(s0 + 0x14);
-    v0 -= a1;
-    sh(v0, a0 + 0x12);
-loc_8001ADE4:
-    v0 = 3;                                             // Result = 00000003
-    sw(v0, s0 + 0x10);
-loc_8001ADEC:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+// Definition and state for a fire flicker light
+struct fireflicker_t {
+    thinker_t           thinker;
+    VmPtr<sector_t>     sector;
+    int32_t             count;
+    int32_t             maxlight;
+    int32_t             minlight;
+};
+
+static_assert(sizeof(fireflicker_t) == 28);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Thinker/update logic for a light that flickers like fire
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void T_FireFlicker(fireflicker_t& flicker) noexcept {
+    // Time to flicker yet?
+    if (--flicker.count > 0)
+        return;
+
+    // Do the flicker and reset the countdown till the next flicker
+    sector_t& sector = *flicker.sector;
+    const int32_t variation = (P_Random() & 3) * 16;
+
+    if (sector.lightlevel - variation < flicker.minlight) {
+        sector.lightlevel = (int16_t)(flicker.minlight);
+    } else {
+        sector.lightlevel = (int16_t)(flicker.maxlight - variation);
+    }
+
+    flicker.count = 3;
 }
 
-void P_SpawnFireFlicker() noexcept {
-loc_8001AE00:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    a1 = 0x1C;                                          // Result = 0000001C
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    sw(0, s1 + 0x14);
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0x528C;                                       // Result = T_FireFlicker (8001AD74)
-    sw(v0, s0 + 0x8);
-    sw(s1, s0 + 0xC);
-    v0 = lh(s1 + 0x12);
-    sw(v0, s0 + 0x14);
-    a1 = lh(s1 + 0x12);
-    a0 = s1;
-    v0 = P_FindMinSurroundingLight(*vmAddrToPtr<sector_t>(a0), a1);
-    v0 += 0x10;
-    sw(v0, s0 + 0x18);
-    v0 = 3;                                             // Result = 00000003
-    sw(v0, s0 + 0x10);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+// TODO: REMOVE eventually
+void _thunk_T_FireFlicker() noexcept {
+    T_FireFlicker(*vmAddrToPtr<fireflicker_t>(*PsxVm::gpReg_a0));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawn a fire flicker light effect on the given sector
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SpawnFireFlicker(sector_t& sector) noexcept {
+    // Clear the current sector special (no hurt for example) and spawn the thinker
+    sector.special = 0;
+    fireflicker_t& flicker = *(fireflicker_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(fireflicker_t), PU_LEVSPEC, nullptr);
+    P_AddThinker(flicker.thinker);
+
+    // Setup flicker parameters
+    flicker.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_FireFlicker);
+    flicker.sector = &sector;
+    flicker.maxlight = sector.lightlevel;
+    flicker.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel) + 16;
+    flicker.count = 3;
 }
 
 void T_LightFlash() noexcept {

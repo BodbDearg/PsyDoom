@@ -1622,7 +1622,7 @@ loc_800279D4:
     goto loc_80027A3C;
 loc_800279E8:
     a0 = s0;
-    P_SpawnFireFlicker();
+    P_SpawnFireFlicker(*vmAddrToPtr<sector_t>(a0));
     s1++;
     goto loc_80027A3C;
 loc_800279F8:
