@@ -58,134 +58,79 @@ static const VmPtr<VmPtr<plat_t>[MAXPLATS]> gpActivePlats(0x80097C44);
 static void P_AddActivePlat(plat_t& plat) noexcept;
 static void P_RemoveActivePlat(plat_t& plat) noexcept;
 
-void T_PlatRaise() noexcept {
-    sp -= 0x28;
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(ra, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    v1 = lw(s0 + 0x24);
-    a0 = 1;                                             // Result = 00000001
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (v1 == a0) goto loc_8001F3B8;
-    v0 = 2;                                             // Result = 00000002
-    if (v1 == 0) goto loc_8001F2BC;
-    if (v1 == v0) goto loc_8001F3FC;
-    goto loc_8001F44C;
-loc_8001F2BC:
-    sw(0, sp + 0x10);
-    sw(a0, sp + 0x14);
-    a0 = lw(s0 + 0xC);
-    a1 = lw(s0 + 0x10);
-    a2 = lw(s0 + 0x18);
-    a3 = lw(s0 + 0x2C);
-    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
-    v1 = lw(s0 + 0x34);
-    v1 -= 2;
-    v1 = (v1 < 2);
-    s1 = v0;
-    if (v1 == 0) goto loc_8001F31C;
-    v0 = *gGameTic;
-    v0 &= 7;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;
-        if (bJump) goto loc_8001F320;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Thinker/update logic for a moving platform: moves the platform, does state transitions and sounds etc.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void T_PlatRaise(plat_t& plat) noexcept {
+    sector_t& sector = *plat.sector;
+
+    switch (plat.status) {
+        // Going up
+        case up: {
+            const result_e moveResult = T_MovePlane(sector, plat.speed, plat.high, plat.crush, false, 1);
+
+            // Do movement sounds every so often for certain platform types
+            if ((plat.type == raiseAndChange) || (plat.type == raiseToNearestAndChange)) {
+                if ((gGameTic & 7U) == 0) {
+                    S_StartSound((mobj_t*) &sector.soundorg, sfx_stnmov);
+                }
+            }
+
+            // Decide what to do base on the move result and platform settings
+            if ((moveResult == crushed) && (!plat.crush)) {
+                // Crushing something and this platform doesn't crush: change direction
+                plat.status = down;
+                plat.count = plat.wait;
+                S_StartSound((mobj_t*) &sector.soundorg, sfx_pstart);
+            }
+            else if (moveResult == pastdest) {
+                // Reached the destination for the platform: wait by default (overrides below) and play the stopped sound
+                plat.status = waiting;
+                plat.count = plat.wait;
+                S_StartSound((mobj_t*) &sector.soundorg, sfx_pstop);
+
+                // Certain platform types stop now at this point
+                switch (plat.type) {
+                    case downWaitUpStay:
+                    case raiseAndChange:
+                    case blazeDWUS:
+                        P_RemoveActivePlat(plat);
+                        break;
+                }
+            }
+        }   break;
+
+        // Going down
+        case down: {
+            const result_e moveResult = T_MovePlane(sector, plat.speed, plat.low, false, 0, -1);
+            
+            // Time to start waiting before going back up again?
+            if (moveResult == pastdest) {
+                plat.status = waiting;
+                plat.count = plat.wait;
+                S_StartSound((mobj_t*) &sector.soundorg, sfx_pstop);
+            }
+        }   break;
+
+        // Waiting to go back up (or down) again?
+        case waiting: {
+            plat.count--;
+
+            // Time to end the wait and begin moving again?
+            if (plat.count == 0) {
+                plat.status = (sector.floorheight == plat.low) ? up : down;     // Go back in the direction we came from
+                S_StartSound((mobj_t*) &sector.soundorg, sfx_pstart);
+            }
+        }   break;
+
+        case in_stasis:
+            break;
     }
-    a0 = lw(s0 + 0xC);
-    a1 = sfx_stnmov;
-    a0 += 0x38;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_8001F31C:
-    v0 = 1;
-loc_8001F320:
-    {
-        const bool bJump = (s1 != v0);
-        v0 = 2;
-        if (bJump) goto loc_8001F354;
-    }
-    v0 = lw(s0 + 0x2C);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_8001F354;
-    }
-    a0 = lw(s0 + 0xC);
-    v0 = lw(s0 + 0x1C);
-    a1 = sfx_pstart;
-    sw(s1, s0 + 0x24);
-    a0 += 0x38;
-    sw(v0, s0 + 0x20);
-    goto loc_8001F444;
-loc_8001F354:
-    a1 = sfx_pstop;
-    if (s1 != v0) goto loc_8001F44C;
-    a0 = lw(s0 + 0xC);
-    v0 = lw(s0 + 0x1C);
-    sw(s1, s0 + 0x24);
-    a0 += 0x38;
-    sw(v0, s0 + 0x20);
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v1 = lw(s0 + 0x34);
-    v0 = (v1 < 3);
-    if (v1 == s1) goto loc_8001F3A8;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001F39C;
-    }
-    if (v1 == v0) goto loc_8001F3A8;
-    goto loc_8001F44C;
-loc_8001F39C:
-    v0 = 4;                                             // Result = 00000004
-    if (v1 != v0) goto loc_8001F44C;
-loc_8001F3A8:
-    a0 = s0;
-    P_RemoveActivePlat(*vmAddrToPtr<plat_t>(a0));
-    goto loc_8001F44C;
-loc_8001F3B8:
-    sw(0, sp + 0x10);
-    sw(v0, sp + 0x14);
-    a0 = lw(s0 + 0xC);
-    a1 = lw(s0 + 0x10);
-    a2 = lw(s0 + 0x14);
-    a3 = 0;
-    v0 = T_MovePlane(*vmAddrToPtr<sector_t>(a0), a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14));
-    s1 = v0;
-    v0 = 2;
-    a1 = sfx_pstop;
-    if (s1 != v0) goto loc_8001F44C;
-    a0 = lw(s0 + 0xC);
-    v0 = lw(s0 + 0x1C);
-    sw(s1, s0 + 0x24);
-    a0 += 0x38;
-    sw(v0, s0 + 0x20);
-    goto loc_8001F444;
-loc_8001F3FC:
-    v0 = lw(s0 + 0x20);
-    v0--;
-    sw(v0, s0 + 0x20);
-    if (v0 != 0) goto loc_8001F44C;
-    v0 = lw(s0 + 0xC);
-    v1 = lw(v0);
-    v0 = lw(s0 + 0x14);
-    if (v1 != v0) goto loc_8001F434;
-    sw(0, s0 + 0x24);
-    goto loc_8001F438;
-loc_8001F434:
-    sw(a0, s0 + 0x24);
-loc_8001F438:
-    a0 = lw(s0 + 0xC);
-    a1 = sfx_pstart;
-    a0 += 0x38;
-loc_8001F444:
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_8001F44C:
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+}
+
+// TODO: REMOVE eventually
+void _thunk_T_PlatRaise() noexcept {
+    T_PlatRaise(*vmAddrToPtr<plat_t>(*PsxVm::gpReg_a0));
 }
 
 void EV_DoPlat() noexcept {
@@ -396,7 +341,7 @@ void P_ActivateInStasis(const int32_t tag) noexcept {
 
         if (pPlat && (pPlat->tag == tag) && (pPlat->status == in_stasis)) {
             pPlat->status = pPlat->oldstatus;
-            pPlat->thinker.function = PsxVm::getNativeFuncVmAddr(T_PlatRaise);
+            pPlat->thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_PlatRaise);
         }
     }
 }
