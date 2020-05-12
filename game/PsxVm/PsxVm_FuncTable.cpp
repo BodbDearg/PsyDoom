@@ -78,7 +78,6 @@ extern void P_TryMove2() noexcept;
 extern void T_PlatRaise() noexcept;
 extern void EV_DoPlat() noexcept;
 extern void P_ActivateInStasis() noexcept;
-extern void EV_StopPlat() noexcept;
 extern void P_RecursiveSound() noexcept;
 extern void P_NoiseAlert() noexcept;
 extern void P_BringUpWeapon() noexcept;
@@ -277,7 +276,6 @@ namespace PsxVm {
         { 0x8001F280, &T_PlatRaise },
         { 0x8001F464, &EV_DoPlat },
         { 0x8001F760, &P_ActivateInStasis },
-        { 0x8001F7D4, &EV_StopPlat },
         { 0x8001F918, &P_RecursiveSound },
         { 0x8001FA34, &P_NoiseAlert },
         { 0x8001FC18, &P_BringUpWeapon },

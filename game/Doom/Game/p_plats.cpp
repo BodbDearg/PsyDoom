@@ -423,37 +423,20 @@ loc_8001F7C4:
     return;
 }
 
-void EV_StopPlat() noexcept {
-loc_8001F7D4:
-    t0 = 0;                                             // Result = 00000000
-    t1 = 3;                                             // Result = 00000003
-    a3 = 0x80090000;                                    // Result = 80090000
-    a3 += 0x7C44;                                       // Result = gpActivePlats[0] (80097C44)
-loc_8001F7E4:
-    a1 = lw(a3);
-    t0++;
-    if (a1 == 0) goto loc_8001F834;
-    a2 = lw(a1 + 0x24);
-    v0 = (i32(t0) < 0x1E);
-    if (a2 == t1) goto loc_8001F838;
-    v1 = lw(a1 + 0x30);
-    v0 = lw(a0 + 0x18);
-    {
-        const bool bJump = (v1 != v0);
-        v0 = (i32(t0) < 0x1E);
-        if (bJump) goto loc_8001F838;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Stops moving platforms that are moving that have a sector tag matching the given line's tag
+//------------------------------------------------------------------------------------------------------------------------------------------
+void EV_StopPlat(line_t& line) noexcept {
+    for (int32_t i = 0; i < MAXPLATS; ++i) {
+        plat_t* const pPlat = gpActivePlats[i].get();
+
+        if (pPlat && (pPlat->status != in_stasis) && (pPlat->tag == line.tag)) {
+            // Stop this moving platform: remember the status before stopping and put into stasis
+            pPlat->oldstatus = pPlat->status;
+            pPlat->status = in_stasis;
+            pPlat->thinker.function = nullptr;
+        }
     }
-    sw(a2, a1 + 0x28);
-    v0 = lw(a3);
-    sw(t1, v0 + 0x24);
-    v0 = lw(a3);
-    sw(0, v0 + 0x8);
-loc_8001F834:
-    v0 = (i32(t0) < 0x1E);
-loc_8001F838:
-    a3 += 4;
-    if (v0 != 0) goto loc_8001F7E4;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

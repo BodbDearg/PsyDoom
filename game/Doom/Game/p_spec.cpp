@@ -579,7 +579,7 @@ loc_80026998:
     goto loc_80026A60;
 loc_800269A4:
     a0 = s0;
-    EV_StopPlat();
+    EV_StopPlat(*vmAddrToPtr<line_t>(a0));
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_800269B4:
@@ -751,7 +751,7 @@ loc_80026C0C:
     goto loc_80026D04;
 loc_80026C18:
     a0 = s0;
-    EV_StopPlat();
+    EV_StopPlat(*vmAddrToPtr<line_t>(a0));
     goto loc_80026D2C;
 loc_80026C28:
     a0 = s0;
