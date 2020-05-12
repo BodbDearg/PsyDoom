@@ -207,7 +207,7 @@ loc_8001F464:
     sw(s0, sp + 0x10);
     if (s4 != 0) goto loc_8001F4B0;
     a0 = lw(s3 + 0x18);
-    P_ActivateInStasis();
+    P_ActivateInStasis(a0);
 loc_8001F4B0:
     s6 = 0x2D;                                          // Result = 0000002D
 loc_8001F4B4:
@@ -387,40 +387,18 @@ loc_8001F72C:
     return;
 }
 
-void P_ActivateInStasis() noexcept {
-loc_8001F760:
-    a2 = 0;                                             // Result = 00000000
-    t0 = 3;                                             // Result = 00000003
-    a3 = 0x80020000;                                    // Result = 80020000
-    a3 -= 0xD80;                                        // Result = T_PlatRaise (8001F280)
-    a1 = 0x80090000;                                    // Result = 80090000
-    a1 += 0x7C44;                                       // Result = gpActivePlats[0] (80097C44)
-loc_8001F778:
-    v1 = lw(a1);
-    a2++;
-    if (v1 == 0) goto loc_8001F7C0;
-    v0 = lw(v1 + 0x30);
-    {
-        const bool bJump = (v0 != a0);
-        v0 = (i32(a2) < 0x1E);
-        if (bJump) goto loc_8001F7C4;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reactivates moving platforms that were paused which match the given sector tag
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_ActivateInStasis(const int32_t tag) noexcept {
+    for (int32_t i = 0; i < MAXPLATS; ++i) {
+        plat_t* pPlat = gpActivePlats[i].get();
+
+        if (pPlat && (pPlat->tag == tag) && (pPlat->status == in_stasis)) {
+            pPlat->status = pPlat->oldstatus;
+            pPlat->thinker.function = PsxVm::getNativeFuncVmAddr(T_PlatRaise);
+        }
     }
-    v0 = lw(v1 + 0x24);
-    {
-        const bool bJump = (v0 != t0);
-        v0 = (i32(a2) < 0x1E);
-        if (bJump) goto loc_8001F7C4;
-    }
-    v0 = lw(v1 + 0x28);
-    sw(v0, v1 + 0x24);
-    v0 = lw(a1);
-    sw(a3, v0 + 0x8);
-loc_8001F7C0:
-    v0 = (i32(a2) < 0x1E);
-loc_8001F7C4:
-    a1 += 4;
-    if (v0 != 0) goto loc_8001F778;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
