@@ -24,15 +24,6 @@ enum plat_e : uint32_t {
     in_stasis
 };
 
-// Moving platform type
-enum plattype_e : uint32_t {
-    perpetualRaise,
-    downWaitUpStay,
-    raiseAndChange,
-    raiseToNearestAndChange,
-    blazeDWUS
-};
-
 // Status and state for a moving platform
 struct plat_t {
     thinker_t           thinker;

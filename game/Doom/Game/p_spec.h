@@ -39,7 +39,7 @@ fixed_t P_FindLowestCeilingSurrounding(sector_t& sector) noexcept;
 fixed_t P_FindHighestCeilingSurrounding(sector_t& sector) noexcept;
 int32_t P_FindSectorFromLineTag(line_t& line, const int32_t searchStart) noexcept;
 int32_t P_FindMinSurroundingLight(sector_t& sector, const int32_t maxLightLevel) noexcept;
-void P_CrossSpecialLine() noexcept;
+void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept;
 void P_ShootSpecialLine() noexcept;
 void P_PlayerInSpecialSector(player_t& player) noexcept;
 void P_UpdateSpecials() noexcept;

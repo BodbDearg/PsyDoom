@@ -2989,7 +2989,7 @@ static const ProgElem ELEMS[] = {
     { 0x800775EC, 0x800775F0, "gpDemo_p",                               ProgElemType::PTR32 },
     { 0x800775F0, 0x800775F4, "gOptionsSndVol",                         ProgElemType::UINT32 },
     { 0x800775F4, 0x800775F8, "gOptionsMusVol",                         ProgElemType::UINT32 },
-    { 0x800775F8, 0x800775FC, "gCdMusicVol",                            ProgElemType::UINT32 },
+    { 0x800775F8, 0x800775FC, "gCdMusicVol",                            ProgElemType::INT32 },
     { 0x800775FC, 0x80077600, "gStartSkill",                            ProgElemType::UINT32 },
     { 0x80077600, 0x80077604, "gStartMapOrEpisode",                     ProgElemType::UINT32 },
     { 0x80077604, 0x80077608, "gCurrentPlayMode",                       ProgElemType::UINT32 },

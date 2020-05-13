@@ -340,503 +340,447 @@ int32_t P_FindMinSurroundingLight(sector_t& sector, const int32_t maxLightLevel)
     return minLightLevel;
 }
 
-void P_CrossSpecialLine() noexcept {
-loc_80026794:
-    sp -= 0x28;
-    sw(ra, sp + 0x24);
-    sw(s0, sp + 0x20);
-    v0 = lw(a1 + 0x80);
-    s0 = a0;
-    if (v0 != 0) goto loc_8002683C;
-    v1 = lw(a1 + 0x54);
-    v0 = (v1 < 0x1A);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (v1 < 0x14);
-        if (bJump) goto loc_800267CC;
-    }
-    if (v0 == 0) goto loc_80026D2C;
-loc_800267CC:
-    v1 = lw(s0 + 0x14);
-    v0 = 0x58;                                          // Result = 00000058
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 0x59);
-        if (bJump) goto loc_8002683C;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xA;                                       // Result = 0000000A
-        if (bJump) goto loc_80026818;
-    }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 0xB);
-        if (bJump) goto loc_8002683C;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_80026804;
-    }
-    if (v1 == v0) goto loc_8002683C;
-    goto loc_80026D2C;
-loc_80026804:
-    v0 = 0x27;                                          // Result = 00000027
-    if (v1 == v0) goto loc_8002683C;
-    goto loc_80026D2C;
-loc_80026818:
-    v0 = 0x61;                                          // Result = 00000061
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 0x61);
-        if (bJump) goto loc_8002683C;
-    }
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(v1) < 0x7F);
-        if (bJump) goto loc_80026D2C;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < 0x7D);
-        if (bJump) goto loc_80026D2C;
-    }
-    if (v0 != 0) goto loc_80026D2C;
-loc_8002683C:
-    v0 = lw(s0 + 0x14);
-    v1 = v0 - 2;
-    v0 = (v1 < 0x8D);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80026D2C;
-    }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0xBAC;                                        // Result = JumpTable_P_CrossSpecialLine[0] (80010BAC)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80026870: goto loc_80026870;
-        case 0x8002687C: goto loc_8002687C;
-        case 0x80026888: goto loc_80026888;
-        case 0x80026894: goto loc_80026894;
-        case 0x800268A0: goto loc_800268A0;
-        case 0x80026D2C: goto loc_80026D2C;
-        case 0x800268AC: goto loc_800268AC;
-        case 0x800268B8: goto loc_800268B8;
-        case 0x800268C4: goto loc_800268C4;
-        case 0x800268D0: goto loc_800268D0;
-        case 0x800268DC: goto loc_800268DC;
-        case 0x800268E8: goto loc_800268E8;
-        case 0x800268F8: goto loc_800268F8;
-        case 0x80026904: goto loc_80026904;
-        case 0x80026910: goto loc_80026910;
-        case 0x8002691C: goto loc_8002691C;
-        case 0x80026928: goto loc_80026928;
-        case 0x80026940: goto loc_80026940;
-        case 0x8002694C: goto loc_8002694C;
-        case 0x80026958: goto loc_80026958;
-        case 0x80026A94: goto loc_80026A94;
-        case 0x80026964: goto loc_80026964;
-        case 0x8002697C: goto loc_8002697C;
-        case 0x80026988: goto loc_80026988;
-        case 0x80026998: goto loc_80026998;
-        case 0x800269A4: goto loc_800269A4;
-        case 0x800269B4: goto loc_800269B4;
-        case 0x800269C0: goto loc_800269C0;
-        case 0x800269D0: goto loc_800269D0;
-        case 0x800269DC: goto loc_800269DC;
-        case 0x80026B00: goto loc_80026B00;
-        case 0x80026B14: goto loc_80026B14;
-        case 0x80026B28: goto loc_80026B28;
-        case 0x80026B38: goto loc_80026B38;
-        case 0x80026B4C: goto loc_80026B4C;
-        case 0x80026B60: goto loc_80026B60;
-        case 0x80026B74: goto loc_80026B74;
-        case 0x80026B88: goto loc_80026B88;
-        case 0x80026B9C: goto loc_80026B9C;
-        case 0x80026BB0: goto loc_80026BB0;
-        case 0x80026BC4: goto loc_80026BC4;
-        case 0x80026BD8: goto loc_80026BD8;
-        case 0x80026BEC: goto loc_80026BEC;
-        case 0x80026C00: goto loc_80026C00;
-        case 0x80026C0C: goto loc_80026C0C;
-        case 0x80026C18: goto loc_80026C18;
-        case 0x80026C28: goto loc_80026C28;
-        case 0x80026C3C: goto loc_80026C3C;
-        case 0x80026C50: goto loc_80026C50;
-        case 0x80026C64: goto loc_80026C64;
-        case 0x80026C78: goto loc_80026C78;
-        case 0x80026C8C: goto loc_80026C8C;
-        case 0x80026C98: goto loc_80026C98;
-        case 0x80026D24: goto loc_80026D24;
-        case 0x80026CAC: goto loc_80026CAC;
-        case 0x80026A10: goto loc_80026A10;
-        case 0x800269E8: goto loc_800269E8;
-        case 0x80026CC0: goto loc_80026CC0;
-        case 0x80026CD4: goto loc_80026CD4;
-        case 0x80026CE8: goto loc_80026CE8;
-        case 0x800269F8: goto loc_800269F8;
-        case 0x80026A04: goto loc_80026A04;
-        case 0x80026A28: goto loc_80026A28;
-        case 0x80026A40: goto loc_80026A40;
-        case 0x80026CFC: goto loc_80026CFC;
-        case 0x80026A58: goto loc_80026A58;
-        case 0x80026A70: goto loc_80026A70;
-        case 0x80026A84: goto loc_80026A84;
-        case 0x80026D14: goto loc_80026D14;
-        case 0x80026AA4: goto loc_80026AA4;
-        case 0x80026ABC: goto loc_80026ABC;
-        default: jump_table_err(); break;
-    }
-loc_80026870:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    goto loc_80026A30;
-loc_8002687C:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    goto loc_80026A30;
-loc_80026888:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_80026A30;
-loc_80026894:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    goto loc_80026A48;
-loc_800268A0:
-    a0 = s0;
-    a1 = 4;                                             // Result = 00000004
-    goto loc_80026AAC;
-loc_800268AC:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_80026A18;
-loc_800268B8:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    goto loc_80026A60;
-loc_800268C4:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_80026930;
-loc_800268D0:
-    a0 = s0;
-    a1 = 0xFF;                                          // Result = 000000FF
-    goto loc_80026930;
-loc_800268DC:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    goto loc_80026A30;
-loc_800268E8:
-    a0 = s0;
-    EV_StartLightStrobing(*vmAddrToPtr<line_t>(a0));
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_800268F8:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_80026A48;
-loc_80026904:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    goto loc_80026A60;
-loc_80026910:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    goto loc_80026AAC;
-loc_8002691C:
-    a0 = s0;
-    a1 = 5;                                             // Result = 00000005
-    goto loc_80026A48;
-loc_80026928:
-    a0 = s0;
-    a1 = 0x23;                                          // Result = 00000023
-loc_80026930:
-    EV_LightTurnOn(*vmAddrToPtr<line_t>(a0), a1);
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_80026940:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    goto loc_80026A48;
-loc_8002694C:
-    a0 = s0;
-    a1 = 6;                                             // Result = 00000006
-    goto loc_80026A48;
-loc_80026958:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    goto loc_80026A48;
-loc_80026964:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    goto loc_80026A48;
-loc_8002697C:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    goto loc_80026AAC;
-loc_80026988:
-    G_ExitLevel();
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_80026998:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_80026A60;
-loc_800269A4:
-    a0 = s0;
-    EV_StopPlat(*vmAddrToPtr<line_t>(a0));
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_800269B4:
-    a0 = s0;
-    a1 = 9;                                             // Result = 00000009
-    goto loc_80026A48;
-loc_800269C0:
-    a0 = s0;
-    v0 = EV_CeilingCrushStop(*vmAddrToPtr<line_t>(a0));
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_800269D0:
-    a0 = s0;
-    a1 = 7;                                             // Result = 00000007
-    goto loc_80026A48;
-loc_800269DC:
-    a0 = s0;
-    a1 = 8;                                             // Result = 00000008
-    goto loc_80026A48;
-loc_800269E8:
-    a0 = s0;
-    EV_TurnTagLightsOff(*vmAddrToPtr<line_t>(a0));
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_800269F8:
-    a0 = s0;
-    a1 = 5;                                             // Result = 00000005
-    goto loc_80026A30;
-loc_80026A04:
-    a0 = s0;
-    a1 = 6;                                             // Result = 00000006
-    goto loc_80026A30;
-loc_80026A10:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-loc_80026A18:
-    v0 = EV_BuildStairs(*vmAddrToPtr<line_t>(a0), (stair_e) a1);
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_80026A28:
-    a0 = s0;
-    a1 = 7;                                             // Result = 00000007
-loc_80026A30:
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_80026A40:
-    a0 = s0;
-    a1 = 4;                                             // Result = 00000004
-loc_80026A48:
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_80026A58:
-    a0 = s0;
-    a1 = 4;                                             // Result = 00000004
-loc_80026A60:
-    a2 = 0;                                             // Result = 00000000
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_80026A70:
-    a0 = lw(s0 + 0x18);
-    G_SecretExitLevel(a0);
-    goto loc_80026D2C;
-loc_80026A84:
-    v0 = lw(a1 + 0x80);
-    if (v0 != 0) goto loc_80026D2C;
-loc_80026A94:
-    a0 = s0;
-    v0 = EV_Teleport(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_80026AA4:
-    a0 = s0;
-    a1 = 5;                                             // Result = 00000005
-loc_80026AAC:
-    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_80026ABC:
-    S_StopMusic();
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 += 0x3E5C;                                       // Result = CDTrackNum_ClubDoom (80073E5C)
-    a0 = lw(v0);                                        // Load from: CDTrackNum_ClubDoom (80073E5C)
-    a1 = *gCdMusicVol;
-    a2 = 0;                                             // Result = 00000000
-    sw(0, sp + 0x18);
-    sw(0, sp + 0x1C);
-    v0 = lw(v0);                                        // Load from: CDTrackNum_ClubDoom (80073E5C)
-    a3 = 0;                                             // Result = 00000000
-    sw(v0, sp + 0x10);
-    sw(a1, sp + 0x14);
-    psxcd_play_at_andloop(a0, a1, a2, a3, lw(sp + 0x10), lw(sp + 0x14), lw(sp + 0x18), lw(sp + 0x1C));
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does line specials for the given thing crossing the given line.
+// Assumes the special for the line is not '0' and that the line has already been crossed.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
+    // If the object triggering the special is not a player then only certain specials can be triggered.
+    // Some things like projectiles are also not allowed to trigger specials.
+    if (!mobj.player) {
+        // Only monsters and (oddly) weapons and barrels can trigger specials
+        if ((mobj.type >= MT_TROOPSHOT) && (mobj.type <= MT_BFG))
+            return;
 
-    sw(0, s0 + 0x14);
-    goto loc_80026D2C;
-loc_80026B00:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
-    goto loc_80026D2C;
-loc_80026B14:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
-    goto loc_80026D2C;
-loc_80026B28:
-    a0 = s0;
-    v0 = EV_CeilingCrushStop(*vmAddrToPtr<line_t>(a0));
-    goto loc_80026D2C;
-loc_80026B38:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    goto loc_80026D2C;
-loc_80026B4C:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    goto loc_80026D2C;
-loc_80026B60:
-    a0 = s0;
-    a1 = 4;                                             // Result = 00000004
-    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
-    goto loc_80026D2C;
-loc_80026B74:
-    a0 = s0;
-    a1 = 0x23;                                          // Result = 00000023
-    EV_LightTurnOn(*vmAddrToPtr<line_t>(a0), a1);
-    goto loc_80026D2C;
-loc_80026B88:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    EV_LightTurnOn(*vmAddrToPtr<line_t>(a0), a1);
-    goto loc_80026D2C;
-loc_80026B9C:
-    a0 = s0;
-    a1 = 0xFF;                                          // Result = 000000FF
-    EV_LightTurnOn(*vmAddrToPtr<line_t>(a0), a1);
-    goto loc_80026D2C;
-loc_80026BB0:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    goto loc_80026D2C;
-loc_80026BC4:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    goto loc_80026D2C;
-loc_80026BD8:
-    a0 = s0;
-    a1 = 6;                                             // Result = 00000006
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    goto loc_80026D2C;
-loc_80026BEC:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    goto loc_80026D2C;
-loc_80026C00:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_80026D04;
-loc_80026C0C:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    goto loc_80026D04;
-loc_80026C18:
-    a0 = s0;
-    EV_StopPlat(*vmAddrToPtr<line_t>(a0));
-    goto loc_80026D2C;
-loc_80026C28:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    goto loc_80026D2C;
-loc_80026C3C:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    goto loc_80026D2C;
-loc_80026C50:
-    a0 = s0;
-    a1 = 7;                                             // Result = 00000007
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    goto loc_80026D2C;
-loc_80026C64:
-    a0 = s0;
-    a1 = 8;                                             // Result = 00000008
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    goto loc_80026D2C;
-loc_80026C78:
-    a0 = s0;
-    a1 = 9;                                             // Result = 00000009
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    goto loc_80026D2C;
-loc_80026C8C:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    goto loc_80026D04;
-loc_80026C98:
-    a0 = s0;
-    a1 = 5;                                             // Result = 00000005
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    goto loc_80026D2C;
-loc_80026CAC:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    goto loc_80026D2C;
-loc_80026CC0:
-    a0 = s0;
-    a1 = 5;                                             // Result = 00000005
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    goto loc_80026D2C;
-loc_80026CD4:
-    a0 = s0;
-    a1 = 6;                                             // Result = 00000006
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    goto loc_80026D2C;
-loc_80026CE8:
-    a0 = s0;
-    a1 = 7;                                             // Result = 00000007
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    goto loc_80026D2C;
-loc_80026CFC:
-    a0 = s0;
-    a1 = 4;                                             // Result = 00000004
-loc_80026D04:
-    a2 = 0;                                             // Result = 00000000
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-    goto loc_80026D2C;
-loc_80026D14:
-    v0 = lw(a1 + 0x80);
-    if (v0 != 0) goto loc_80026D2C;
-loc_80026D24:
-    a0 = s0;
-    v0 = EV_Teleport(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
-loc_80026D2C:
-    ra = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x28;
-    return;
+        // Monsters can only activate certain types of triggers: see if this is one of them
+        bool bCanTrigger = false;
+
+        switch (line.special) {
+            case 4:     // Once:  Raise door
+            case 10:    // Once:  Platform - Down, wait, up, stay
+            case 39:    // Once:  Teleport (regular, everyone)
+            case 88:    // Multi: Platform - down, wait, up, stay
+            case 97:    // Multi: Teleport (regular, everyone)
+            case 125:   // Once:  Teleport (monsters ONLY!)
+            case 126:   // Multi: Teleport (monsters ONLY!)
+                bCanTrigger = true;
+                break;
+
+            default:
+                break;
+        }
+
+        if (!bCanTrigger)
+            return;
+    }
+
+    switch (line.special) {
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // Once only triggers
+        //----------------------------------------------------------------------------------------------------------------------------------
+        
+        // Open door
+        case 2:
+            EV_DoDoor(line, Open);
+            line.special = 0;
+            break;
+
+        // Close door
+        case 3:
+            EV_DoDoor(line, Close);
+            line.special = 0;
+            break;
+
+        // Raise door
+        case 4:
+            EV_DoDoor(line, Normal);
+            line.special = 0;
+            break;
+
+        // Raise floor
+        case 5:
+            EV_DoFloor(line, raiseFloor);
+            line.special = 0;
+            break;
+
+        // Fast ceiling crush & raise
+        case 6:
+            EV_DoCeiling(line, fastCrushAndRaise);
+            line.special = 0;
+            break;
+
+        // Build stairs
+        case 8:
+            EV_BuildStairs(line, build8);
+            line.special = 0;
+            break;
+
+        // Platform - Down, wait, up, stay
+        case 10:
+            EV_DoPlat(line, downWaitUpStay, 0);
+            line.special = 0;
+            break;
+
+        // Light turn on - Use the brightest adjacent sector light level
+        case 12:
+            EV_LightTurnOn(line, 0);
+            line.special = 0;
+            break;
+
+        // Light turn on to '255'
+        case 13:
+            EV_LightTurnOn(line, 255);
+            line.special = 0;
+            break;
+
+        // Close door and open in 30 seconds
+        case 16:
+            EV_DoDoor(line, Close30ThenOpen);
+            line.special = 0;
+            break;
+
+        // Start light strobing
+        case 17:
+            EV_StartLightStrobing(line);
+            line.special = 0;
+            break;
+
+        // Raise floor to nearest height and change texture
+        case 19:
+            EV_DoFloor(line, lowerFloor);
+            line.special = 0;
+            break;
+
+        // Raise floor to nearest height and change texture
+        case 22:
+            EV_DoPlat(line, raiseToNearestAndChange, 0);
+            line.special = 0;
+            break;
+
+        // Ceiling Crush and Raise
+        case 25:
+            EV_DoCeiling(line, crushAndRaise);
+            line.special = 0;
+            break;
+
+        // Raise floor to shortest texture height on either side of lines
+        case 30:
+            EV_DoFloor(line, raiseToTexture);
+            line.special = 0;
+            break;
+
+        // Lights very dark
+        case 35:
+            EV_LightTurnOn(line, 35);
+            line.special = 0;
+            break;
+
+        // Lower Floor (turbo)
+        case 36:
+            EV_DoFloor(line, turboLower);
+            line.special = 0;
+            break;
+
+        // Lower floor to lowest surrounding floor and change texture
+        case 37:
+            EV_DoFloor(line, lowerAndChange);
+            line.special = 0;
+            break;
+
+        // Lower floor to the lowest surrounding floor height
+        case 38:
+            EV_DoFloor(line, lowerFloorToLowest);
+            line.special = 0;
+            break;
+
+        // Teleport (regular, everyone)
+        case 39:
+            EV_Teleport(line, mobj);
+            line.special = 0;
+            break;
+
+        // Raise ceiling to highest and lower floor to lowest
+        case 40:
+            EV_DoCeiling(line, raiseToHighest);
+            EV_DoFloor(line, lowerFloorToLowest);
+            line.special = 0;
+            break;
+
+        // Ceiling crush
+        case 44:
+            EV_DoCeiling(line, lowerAndCrush);
+            line.special = 0;
+            break;
+
+        // Exit the level (regular)
+        case 52:
+            G_ExitLevel();
+            line.special = 0;
+            break;
+
+        // Perpetual platform raise
+        case 53:
+            EV_DoPlat(line, perpetualRaise, 0);
+            line.special = 0;
+            break;
+
+        // Platform Stop
+        case 54:
+            EV_StopPlat(line);
+            line.special = 0;
+            break;
+
+        // Raise floor crush
+        case 56:
+            EV_DoFloor(line, raiseFloorCrush);
+            line.special = 0;
+            break;
+
+        // Ceiling crush stop
+        case 57:
+            EV_CeilingCrushStop(line);
+            line.special = 0;
+            break;
+
+        // Raise floor 24
+        case 58:
+            EV_DoFloor(line, raiseFloor24);
+            line.special = 0;
+            break;
+
+        // Raise floor 24 and change
+        case 59:
+            EV_DoFloor(line, raiseFloor24AndChange);
+            line.special = 0;
+            break;
+
+        // Build stairs turbo 16
+        case 100:
+            EV_BuildStairs(line, turbo16);
+            line.special = 0;
+            break;
+
+        // Turn lights off in sector (tag)
+        case 104:
+            EV_TurnTagLightsOff(line);
+            line.special = 0;
+            break;
+
+        // Blazing door raise (faster than turbo!)
+        case 108:
+            EV_DoDoor(line, BlazeRaise);
+            line.special = 0;
+            break;
+
+        // Blazing door open (faster than turbo!)
+        case 109:
+            EV_DoDoor(line, BlazeOpen);
+            line.special = 0;
+            break;
+
+        // Blazing door close (faster than turbo!)
+        case 110:
+            EV_DoDoor(line, BlazeClose);
+            line.special = 0;
+            break;
+
+        // Raise floor to nearest surrounding floor
+        case 119:
+            EV_DoFloor(line, raiseFloorToNearest);
+            line.special = 0;
+            break;
+
+        // Blazing platform - down, wait, up, stay
+        case 121:
+            EV_DoPlat(line, blazeDWUS, 0);
+            line.special = 0;
+            break;
+
+        // Secret exit
+        case 124:
+            G_SecretExitLevel(line.tag);
+            break;
+
+        // Teleport (monsters ONLY!)
+        case 125: {
+            if (!mobj.player) {
+                EV_Teleport(line, mobj);
+                line.special = 0;
+            }
+        }   break;
+
+        // Silent ceiling crush & raise
+        case 141:
+            EV_DoCeiling(line, silentCrushAndRaise);
+            line.special = 0;
+            break;
+
+        // New for PSX: play the Club Doom CD audio!
+        case 142:
+            S_StopMusic();
+            psxcd_play_at_andloop(gCDTrackNum[cdmusic_club_doom], *gCdMusicVol, 0, 0, gCDTrackNum[cdmusic_club_doom], *gCdMusicVol, 0, 0);
+            line.special = 0;
+            break;
+
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // Repeatable triggers
+        //----------------------------------------------------------------------------------------------------------------------------------
+
+        // Ceiling crush
+        case 72:
+            EV_DoCeiling(line, lowerAndCrush);
+            break;
+
+        // Ceiling crush and raise
+        case 73:
+            EV_DoCeiling(line, crushAndRaise);
+            break;
+
+        // Ceiling crush stop
+        case 74:
+            EV_CeilingCrushStop(line);
+            break;
+
+        // Close door
+        case 75:
+            EV_DoDoor(line, Close);
+            break;
+
+        // Close door for 30 seconds then open
+        case 76:
+            EV_DoDoor(line, Close30ThenOpen);
+            break;
+
+        // Fast ceiling crush & raise
+        case 77:
+            EV_DoCeiling(line, fastCrushAndRaise);
+            break;
+
+        // Lights very dark
+        case 79:
+            EV_LightTurnOn(line, 35);
+            break;
+
+        // Light turn on - use light level of brightest adjacent sector
+        case 80:
+            EV_LightTurnOn(line, 0);
+            break;
+
+        // Light turn on to '255'
+        case 81:
+            EV_LightTurnOn(line, 255);
+            break;
+
+        // Lower floor to lowest
+        case 82:
+            EV_DoFloor(line, lowerFloorToLowest);
+            break;
+
+        // Lower floor
+        case 83:
+            EV_DoFloor(line, lowerFloor);
+            break;
+
+        // Lower floor to lowest surrounding floor and change texture
+        case 84:
+            EV_DoFloor(line, lowerAndChange);
+            break;
+
+        // Open door
+        case 86:
+            EV_DoDoor(line, Open);
+            break;
+
+        // Perpetual platform raise
+        case 87:
+            EV_DoPlat(line, perpetualRaise, 0);
+            break;
+
+        // Platform - down, wait, up, stay
+        case 88:
+            EV_DoPlat(line, downWaitUpStay, 0);
+            break;
+
+        // Platform stop
+        case 89:
+            EV_StopPlat(line);
+            break;
+
+        // Raise Door
+        case 90:
+            EV_DoDoor(line, Normal);
+            break;
+
+        // Raise floor
+        case 91:
+            EV_DoFloor(line, raiseFloor);
+            break;
+
+        // Raise floor 24
+        case 92:
+            EV_DoFloor(line, raiseFloor24);
+            break;
+
+        // Raise floor 24 and change texture
+        case 93:
+            EV_DoFloor(line, raiseFloor24AndChange);
+            break;
+
+        // Raise floor and crush
+        case 94:
+            EV_DoFloor(line, raiseFloorCrush);
+            break;
+
+        // Raise floor to nearest height and change texture
+        case 95:
+            EV_DoPlat(line, raiseToNearestAndChange, 0);
+            break;
+
+        // Raise floor to shortest texture height on either side of lines
+        case 96:
+            EV_DoFloor(line, raiseToTexture);
+            break;
+
+        // Teleport (regular, everyone)
+        case 97:
+            EV_Teleport(line, mobj);
+            break;
+
+        // Lower Floor (turbo)
+        case 98:
+            EV_DoFloor(line, turboLower);
+            break;
+
+        // Blazing door raise (faster than turbo!)
+        case 105:
+            EV_DoDoor(line, BlazeRaise);
+            break;
+
+        // Blazing door open (faster than turbo!)
+        case 106:
+            EV_DoDoor(line, BlazeOpen);
+            break;
+
+        // Blazing door close (faster than turbo!)
+        case 107:
+            EV_DoDoor(line, BlazeClose);
+            break;
+
+        // Blazing platform - down, wait, up, stay
+        case 120:
+            EV_DoPlat(line, blazeDWUS, 0);
+            break;
+
+        // Teleport (monsters ONLY!)
+        case 126: {
+            if (!mobj.player) {
+                EV_Teleport(line, mobj);
+            }
+        }   break;
+
+        default:
+            break;
+    }
 }
 
 void P_ShootSpecialLine() noexcept {

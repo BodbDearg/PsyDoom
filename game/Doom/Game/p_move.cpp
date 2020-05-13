@@ -170,7 +170,7 @@ loc_8001E694:
     a1 = 0x80080000;                                    // Result = 80080000
     a1 = lw(a1 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
     a0 = s1;
-    P_CrossSpecialLine();
+    P_CrossSpecialLine(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
 loc_8001E6E8:
     v1 = lw(gp + 0xAE0);                                // Load from: gNumCrossCheckLines (800780C0)
     v0 = -1;                                            // Result = FFFFFFFF

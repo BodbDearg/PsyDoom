@@ -121,7 +121,7 @@ loc_800298E8:
     a0 = s3;
     if (s3 == 0) goto loc_800298F8;
     a1 = s0;
-    P_CrossSpecialLine();
+    P_CrossSpecialLine(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
 loc_800298F8:
     ra = lw(sp + 0x20);
     s3 = lw(sp + 0x1C);

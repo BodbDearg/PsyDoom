@@ -109,7 +109,6 @@ extern void ClipToLine() noexcept;
 extern void SL_CheckLine() noexcept;
 extern void SL_PointOnSide2() noexcept;
 extern void SL_CheckSpecialLines() noexcept;
-extern void P_CrossSpecialLine() noexcept;
 extern void P_ShootSpecialLine() noexcept;
 extern void P_UpdateSpecials() noexcept;
 extern void EV_DoDonut() noexcept;
@@ -292,7 +291,6 @@ namespace PsxVm {
         { 0x80025840, &SL_CheckLine },
         { 0x80025A8C, &SL_PointOnSide2 },
         { 0x80025AFC, &SL_CheckSpecialLines },
-        { 0x80026794, &P_CrossSpecialLine },
         { 0x80026D40, &P_ShootSpecialLine },
         { 0x80026FC8, &P_UpdateSpecials },
         { 0x8002745C, &EV_DoDonut },
