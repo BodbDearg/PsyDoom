@@ -1638,13 +1638,13 @@ loc_80027A0C:
     goto loc_80027A3C;
 loc_80027A1C:
     a0 = s0;
-    P_SpawnRapidStrobeFlash();
+    P_SpawnRapidStrobeFlash(*vmAddrToPtr<sector_t>(a0));
     s1++;
     goto loc_80027A3C;
 loc_80027A2C:
     a2 = 0;                                             // Result = 00000000
 loc_80027A30:
-    P_SpawnStrobeFlash();
+    P_SpawnStrobeFlash(*vmAddrToPtr<sector_t>(a0), a1, a2);
 loc_80027A38:
     s1++;
 loc_80027A3C:

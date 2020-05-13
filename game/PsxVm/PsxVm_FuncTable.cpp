@@ -57,9 +57,7 @@ extern void L_SkullBash() noexcept;
 extern void _thunk_T_MoveFloor() noexcept;
 extern void _thunk_T_FireFlicker() noexcept;
 extern void _thunk_T_LightFlash() noexcept;
-extern void T_StrobeFlash() noexcept;
-extern void P_SpawnStrobeFlash() noexcept;
-extern void P_SpawnRapidStrobeFlash() noexcept;
+extern void _thunk_T_StrobeFlash() noexcept;
 extern void EV_StartLightStrobing() noexcept;
 extern void EV_TurnTagLightsOff() noexcept;
 extern void EV_LightTurnOn() noexcept;
@@ -249,9 +247,7 @@ namespace PsxVm {
         { 0x80019010, &_thunk_T_MoveFloor },
         { 0x8001AD74, &_thunk_T_FireFlicker },
         { 0x8001AE8C, &_thunk_T_LightFlash },
-        { 0x8001AFBC, &T_StrobeFlash },
-        { 0x8001B020, &P_SpawnStrobeFlash },
-        { 0x8001B0F4, &P_SpawnRapidStrobeFlash },
+        { 0x8001AFBC, &_thunk_T_StrobeFlash },
         { 0x8001B188, &EV_StartLightStrobing },
         { 0x8001B298, &EV_TurnTagLightsOff },
         { 0x8001B394, &EV_LightTurnOn },

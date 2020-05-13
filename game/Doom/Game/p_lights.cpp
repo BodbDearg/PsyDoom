@@ -33,6 +33,25 @@ struct lightflash_t {
 
 static_assert(sizeof(lightflash_t) == 36);
 
+// Definition and state for a strobing light
+struct strobe_t {
+    thinker_t           thinker;
+    VmPtr<sector_t>     sector;
+    int32_t             count;
+    int32_t             minlight;
+    int32_t             maxlight;
+    int32_t             darktime;
+    int32_t             brighttime;
+};
+
+static_assert(sizeof(strobe_t) == 36);
+
+static constexpr int32_t GLOWSPEED      = 3;    // TODO: COMMENT
+static constexpr int32_t STROBEBRIGHT   = 3;    // Number of tics in the bright state for the strobe flash
+static constexpr int32_t TURBODARK      = 4;    // TODO: COMMENT
+static constexpr int32_t FASTDARK       = 8;    // TODO: COMMENT
+static constexpr int32_t SLOWDARK       = 15;   // TODO: COMMENT
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a light that flickers like fire
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,9 +99,11 @@ void P_SpawnFireFlicker(sector_t& sector) noexcept {
 // Thinker/update logic for a flashing light
 //------------------------------------------------------------------------------------------------------------------------------------------
 void T_LightFlash(lightflash_t& lightFlash) noexcept {
+    // Time to flash yet?
     if (--lightFlash.count != 0)
         return;
 
+    // Do the flash and reset the countdown till the next flash
     sector_t& sector = *lightFlash.sector;
 
     if (sector.lightlevel == lightFlash.maxlight) {
@@ -105,7 +126,7 @@ void _thunk_T_LightFlash() noexcept {
 void P_SpawnLightFlash(sector_t& sector) noexcept {
     // Clear the current sector special (no hurt for example) and spawn the thinker
     sector.special = 0;
-    lightflash_t& lightFlash = *(lightflash_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(lightflash_t), 4, nullptr);
+    lightflash_t& lightFlash = *(lightflash_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(lightflash_t), PU_LEVSPEC, nullptr);
     P_AddThinker(lightFlash.thinker);
 
     // Setup flash settings
@@ -118,123 +139,85 @@ void P_SpawnLightFlash(sector_t& sector) noexcept {
     lightFlash.count = (P_Random() & lightFlash.maxtime) + 1;
 }
 
-void T_StrobeFlash() noexcept {
-    v0 = lw(a0 + 0x10);
-    v0--;
-    sw(v0, a0 + 0x10);
-    if (v0 != 0) goto loc_8001B018;
-    a1 = lw(a0 + 0xC);
-    v0 = lw(a0 + 0x14);
-    v1 = lh(a1 + 0x12);
-    if (v1 != v0) goto loc_8001B000;
-    v0 = lhu(a0 + 0x18);
-    sh(v0, a1 + 0x12);
-    v0 = lw(a0 + 0x20);
-    sw(v0, a0 + 0x10);
-    goto loc_8001B018;
-loc_8001B000:
-    v0 = lhu(a0 + 0x14);
-    sh(v0, a1 + 0x12);
-    v0 = lw(a0 + 0x1C);
-    sw(v0, a0 + 0x10);
-loc_8001B018:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Thinker/update logic for a strobe flash light
+//------------------------------------------------------------------------------------------------------------------------------------------
+void T_StrobeFlash(strobe_t& strobe) noexcept {
+    // Time to flash yet?
+    if (--strobe.count != 0)
+        return;
+
+    // Do the flash and reset the countdown till the next flash
+    sector_t& sector = *strobe.sector;
+
+    if (sector.lightlevel == strobe.minlight) {
+        sector.lightlevel = (int16_t) strobe.maxlight;
+        strobe.count = strobe.brighttime;
+    } else {
+        sector.lightlevel = (int16_t) strobe.minlight;
+        strobe.count = strobe.darktime;
+    }
 }
 
-void P_SpawnStrobeFlash() noexcept {
-loc_8001B020:
-    sp -= 0x28;
-    sw(s2, sp + 0x18);
-    s2 = a0;
-    sw(s0, sp + 0x10);
-    s0 = a1;
-    sw(s3, sp + 0x1C);
-    s3 = a2;
-    a1 = 0x24;                                          // Result = 00000024
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x20);
-    sw(s1, sp + 0x14);
-    _thunk_Z_Malloc();
-    s1 = v0;
-    a0 = s1;
-    _thunk_P_AddThinker();
-    v0 = 3;                                             // Result = 00000003
-    sw(s2, s1 + 0xC);
-    sw(s0, s1 + 0x1C);
-    sw(v0, s1 + 0x20);
-    a1 = lh(s2 + 0x12);
-    a0 = s2;
-    v0 = P_FindMinSurroundingLight(*vmAddrToPtr<sector_t>(a0), a1);
-    sw(v0, s1 + 0x14);
-    v0 = lh(s2 + 0x12);
-    a0 = lw(s1 + 0x14);
-    sw(v0, s1 + 0x18);
-    v1 = lw(s1 + 0x18);
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0x5044;                                       // Result = T_StrobeFlash (8001AFBC)
-    sw(v0, s1 + 0x8);
-    if (a0 != v1) goto loc_8001B0AC;
-    sw(0, s1 + 0x14);
-loc_8001B0AC:
-    if (s3 != 0) goto loc_8001B0C8;
-    _thunk_P_Random();
-    v0 &= 7;
-    v0++;
-    goto loc_8001B0CC;
-loc_8001B0C8:
-    v0 = 1;                                             // Result = 00000001
-loc_8001B0CC:
-    sw(v0, s1 + 0x10);
-    sw(0, s2 + 0x14);
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+// TODO: REMOVE eventually
+void _thunk_T_StrobeFlash() noexcept {
+    T_StrobeFlash(*vmAddrToPtr<strobe_t>(*PsxVm::gpReg_a0));
 }
 
-void P_SpawnRapidStrobeFlash() noexcept {
-loc_8001B0F4:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    a1 = 0x24;                                          // Result = 00000024
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v1 = 1;                                             // Result = 00000001
-    v0 = 0xA;                                           // Result = 0000000A
-    sw(s1, s0 + 0xC);
-    sw(v1, s0 + 0x1C);
-    sw(v1, s0 + 0x20);
-    sw(v0, s0 + 0x14);
-    v0 = lh(s1 + 0x12);
-    a1 = lw(s0 + 0x14);
-    sw(v1, s0 + 0x10);
-    sw(v0, s0 + 0x18);
-    a0 = lw(s0 + 0x18);
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0x5044;                                       // Result = T_StrobeFlash (8001AFBC)
-    sw(v0, s0 + 0x8);
-    if (a1 != a0) goto loc_8001B16C;
-    sw(0, s0 + 0x14);
-loc_8001B16C:
-    sw(0, s1 + 0x14);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawn a strobe flash special for the given sector
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SpawnStrobeFlash(sector_t& sector, const int32_t darkTime, const bool bInSync) noexcept {
+    // Create the strobe thinker and populate it's settings
+    strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(strobe_t), PU_LEVSPEC, nullptr);
+    P_AddThinker(strobe.thinker);
+
+    strobe.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_StrobeFlash);
+    strobe.sector = &sector;
+    strobe.darktime = darkTime;
+    strobe.brighttime = STROBEBRIGHT;
+    strobe.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel);
+    strobe.maxlight = sector.lightlevel;
+
+    // If there's no light difference to the min surrounding light then flash to 0
+    if (strobe.minlight == strobe.maxlight) {
+        strobe.minlight = 0;
+    }
+
+    // Is the flash in sync?
+    if (bInSync) {
+        strobe.count = 1;
+    } else {
+        strobe.count = (P_Random() & 7) + 1;
+    }
+
+    // Remove any other sector specials like damage etc.
+    sector.special = 0;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawn a rapid strobe flash special for the given sector
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SpawnRapidStrobeFlash(sector_t& sector) noexcept {
+    // Create the strobe thinker and populate it's settings
+    strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(strobe_t), PU_LEVSPEC, nullptr);
+    P_AddThinker(strobe.thinker);
+    
+    strobe.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_StrobeFlash);
+    strobe.sector = &sector;
+    strobe.darktime = 1;
+    strobe.brighttime = 1;
+    strobe.minlight = 10;
+    strobe.maxlight = sector.lightlevel;
+    strobe.count = 1;
+    
+    // If the min value is the same as the sector light level then flash to zero
+    if (strobe.minlight == strobe.maxlight) {
+        strobe.minlight = 0;
+    }
+
+    // Remove any other sector specials like damage etc.
+    sector.special = 0;
 }
 
 void EV_StartLightStrobing() noexcept {
