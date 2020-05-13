@@ -234,130 +234,67 @@ void EV_StartLightStrobing(line_t& line) noexcept {
     }
 }
 
-void EV_TurnTagLightsOff() noexcept {
-loc_8001B298:
-    v0 = *gNumSectors;
-    sp -= 0x40;
-    sw(s3, sp + 0x2C);
-    s3 = *gpSectors;
-    sw(s5, sp + 0x34);
-    s5 = a0;
-    sw(s4, sp + 0x30);
-    s4 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x38);
-    sw(s2, sp + 0x28);
-    sw(s1, sp + 0x24);
-    sw(s0, sp + 0x20);
-    if (i32(v0) <= 0) goto loc_8001B36C;
-    s1 = s3 + 0x12;
-loc_8001B2D8:
-    v1 = lw(s1 + 0x6);
-    v0 = lw(s5 + 0x18);
-    if (v1 != v0) goto loc_8001B34C;
-    v0 = lw(s1 + 0x42);
-    s2 = lh(s1);
-    s0 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_8001B348;
-loc_8001B2FC:
-    v1 = lw(s1 + 0x46);
-    v0 = s0 << 2;
-    v0 += v1;
-    a0 = lw(v0);
-    a1 = s3;
-    v0 = ptrToVmAddr(getNextSector(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<sector_t>(a1)));
-    s0++;
-    if (v0 == 0) goto loc_8001B334;
-    v1 = lh(v0 + 0x12);
-    v0 = (i32(v1) < i32(s2));
-    if (v0 == 0) goto loc_8001B334;
-    s2 = v1;
-loc_8001B334:
-    v0 = lw(s1 + 0x42);
-    v0 = (i32(s0) < i32(v0));
-    if (v0 != 0) goto loc_8001B2FC;
-loc_8001B348:
-    sh(s2, s1);
-loc_8001B34C:
-    s4++;
-    s1 += 0x5C;
-    v0 = *gNumSectors;
-    v0 = (i32(s4) < i32(v0));
-    s3 += 0x5C;
-    if (v0 != 0) goto loc_8001B2D8;
-loc_8001B36C:
-    ra = lw(sp + 0x38);
-    s5 = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x40;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Turns 'off' lights for sectors matching the given line's tag; makes those sectors use the lowest surrounding light level
+//------------------------------------------------------------------------------------------------------------------------------------------
+void EV_TurnTagLightsOff(line_t& line) noexcept {
+    // Turn 'off' the light for all sectors with a matching tag
+    sector_t* const pSectors = gpSectors->get();
+    
+    for (int32_t sectorIdx = 0; sectorIdx < *gNumSectors; ++sectorIdx) {
+        sector_t& sector = pSectors[sectorIdx];
+
+        if (sector.tag != line.tag)
+            continue;
+
+        // Tag matches: find the lowest light level of surrounding sectors and use that as the new light level
+        int16_t minLightLevel = sector.lightlevel;
+        line_t* const pLines = sector.lines->get();
+
+        for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+            sector_t* const pNextSector = getNextSector(pLines[lineIdx], sector);
+
+            if (pNextSector) {
+                minLightLevel = std::min(minLightLevel, pNextSector->lightlevel);
+            }
+        }
+
+        sector.lightlevel = minLightLevel;
+    }
 }
 
-void EV_LightTurnOn() noexcept {
-loc_8001B394:
-    v0 = *gNumSectors;
-    sp -= 0x38;
-    sw(s3, sp + 0x24);
-    s3 = *gpSectors;
-    sw(s5, sp + 0x2C);
-    s5 = a0;
-    sw(s2, sp + 0x20);
-    s2 = a1;
-    sw(s4, sp + 0x28);
-    s4 = 0;
-    sw(ra, sp + 0x30);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    if (i32(v0) <= 0) goto loc_8001B478;
-    s1 = s3 + 0x12;
-loc_8001B3D8:
-    v1 = lw(s1 + 0x6);
-    v0 = lw(s5 + 0x18);
-    if (v1 != v0) goto loc_8001B458;
-    if (s2 != 0) goto loc_8001B454;
-    v0 = lw(s1 + 0x42);
-    v0 = (i32(s2) < i32(v0));
-    s0 = 0;
-    if (v0 == 0) goto loc_8001B454;
-loc_8001B408:
-    v1 = lw(s1 + 0x46);
-    v0 = s0 << 2;
-    v0 += v1;
-    a0 = lw(v0);
-    a1 = s3;
-    v0 = ptrToVmAddr(getNextSector(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<sector_t>(a1)));
-    s0++;
-    if (v0 == 0) goto loc_8001B440;
-    v1 = lh(v0 + 0x12);
-    v0 = (i32(s2) < i32(v1));
-    if (v0 == 0) goto loc_8001B440;
-    s2 = v1;
-loc_8001B440:
-    v0 = lw(s1 + 0x42);
-    v0 = (i32(s0) < i32(v0));
-    if (v0 != 0) goto loc_8001B408;
-loc_8001B454:
-    sh(s2, s1);
-loc_8001B458:
-    s4++;
-    s1 += 0x5C;
-    v0 = *gNumSectors;
-    v0 = (i32(s4) < i32(v0));
-    s3 += 0x5C;
-    if (v0 != 0) goto loc_8001B3D8;
-loc_8001B478:
-    ra = lw(sp + 0x30);
-    s5 = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x38;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Turns 'on' lights for sectors matching the given line's tag.
+// Uses the given light level as the 'on' light level, or the highest surrounding light level if '0' is specified.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void EV_LightTurnOn(line_t& line, const int32_t onLightLevel) noexcept {
+    // Turn 'on' the light for all sectors with a matching tag
+    sector_t* const pSectors = gpSectors->get();
+
+    for (int32_t sectorIdx = 0; sectorIdx < *gNumSectors; ++sectorIdx) {
+        sector_t& sector = pSectors[sectorIdx];
+
+        if (sector.tag != line.tag)
+            continue;
+
+        // Tag matches: use the given light level as the 'on' light level, or if '0' is specified for that
+        // use the highest light level found in surrounding sectors.
+        int32_t newLightLevel = onLightLevel;
+
+        if (onLightLevel == 0) {
+            line_t* const pLines = sector.lines->get();
+
+            for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+                sector_t* const pNextSector = getNextSector(pLines[lineIdx], sector);
+                
+                if (pNextSector) {
+                    newLightLevel = std::max(newLightLevel, (int32_t) pNextSector->lightlevel);
+                }
+            }
+        }
+
+        sector.lightlevel = (int16_t) newLightLevel;
+    }
 }
 
 void T_Glow() noexcept {

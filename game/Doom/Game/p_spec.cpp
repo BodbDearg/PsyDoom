@@ -543,7 +543,7 @@ loc_80026928:
     a0 = s0;
     a1 = 0x23;                                          // Result = 00000023
 loc_80026930:
-    EV_LightTurnOn();
+    EV_LightTurnOn(*vmAddrToPtr<line_t>(a0), a1);
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_80026940:
@@ -601,7 +601,7 @@ loc_800269DC:
     goto loc_80026A48;
 loc_800269E8:
     a0 = s0;
-    EV_TurnTagLightsOff();
+    EV_TurnTagLightsOff(*vmAddrToPtr<line_t>(a0));
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_800269F8:
@@ -709,17 +709,17 @@ loc_80026B60:
 loc_80026B74:
     a0 = s0;
     a1 = 0x23;                                          // Result = 00000023
-    EV_LightTurnOn();
+    EV_LightTurnOn(*vmAddrToPtr<line_t>(a0), a1);
     goto loc_80026D2C;
 loc_80026B88:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
-    EV_LightTurnOn();
+    EV_LightTurnOn(*vmAddrToPtr<line_t>(a0), a1);
     goto loc_80026D2C;
 loc_80026B9C:
     a0 = s0;
     a1 = 0xFF;                                          // Result = 000000FF
-    EV_LightTurnOn();
+    EV_LightTurnOn(*vmAddrToPtr<line_t>(a0), a1);
     goto loc_80026D2C;
 loc_80026BB0:
     a0 = s0;

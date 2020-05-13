@@ -869,7 +869,7 @@ loc_800287E4:
     a0 = s0;
     a1 = 0x23;                                          // Result = 00000023
 loc_800287EC:
-    EV_LightTurnOn();
+    EV_LightTurnOn(*vmAddrToPtr<line_t>(a0), a1);
     a0 = s0;
 loc_800287F8:
     a1 = 1;                                             // Result = 00000001
