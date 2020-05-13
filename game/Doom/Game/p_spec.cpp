@@ -70,6 +70,9 @@ const VmPtr<card_t>             gMapBlueKeyType(0x80077E9C);
 const VmPtr<card_t>             gMapRedKeyType(0x8007821C);
 const VmPtr<card_t>             gMapYellowKeyType(0x800780A0);
 
+// TODO: REMOVE eventually
+void _thunk_T_DelayedAction() noexcept;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Caches into RAM the textures for all animated flats and textures.
 // Also sets up the spot in VRAM where these animations will go - they occupy the same spot as the base animation frame.
@@ -652,7 +655,7 @@ loc_80026A60:
     goto loc_80026D2C;
 loc_80026A70:
     a0 = lw(s0 + 0x18);
-    G_SecretExitLevel();
+    G_SecretExitLevel(a0);
     goto loc_80026D2C;
 loc_80026A84:
     v0 = lw(a1 + 0x80);
@@ -1377,39 +1380,22 @@ loc_80027670:
     return;
 }
 
-void G_ScheduleExitLevel() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s2, sp + 0x18);
-    s2 = a1;
-    a1 = 0x14;
-    a2 = 4;
-    a0 = *gpMainMemZone;
-    a3 = 0;
-    sw(ra, sp + 0x1C);
-    sw(s0, sp + 0x10);
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 += 0x7718;                                       // Result = T_DelayedAction (80027718)
-    sw(v0, s0 + 0x8);
-    sw(s1, s0 + 0xC);
-    sw(s2, s0 + 0x10);
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Schedule an action to be invoked after the specified number of tics
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_ScheduleDelayedAction(const int32_t delayTics, void (* const actionFunc)()) noexcept {
+    delayaction_t& delayed = *(delayaction_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(delayaction_t), PU_LEVSPEC, nullptr);
+    P_AddThinker(delayed.thinker);
+
+    delayed.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_DelayedAction);
+    delayed.ticsleft = delayTics;
+    delayed.actionfunc = PsxVm::getNativeFuncVmAddr(actionFunc);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker function for performing a delayed action: performs the action after the delay time has passed and removes the thinker when done
 //------------------------------------------------------------------------------------------------------------------------------------------
-void T_DelayedAction(delayaction_t& action) noexcept {
+static void T_DelayedAction(delayaction_t& action) noexcept {
     if (--action.ticsleft <= 0) {
         // FIXME: use a native function call eventually
         const VmFunc actionFunc = PsxVm::getVmFuncForAddr(action.actionfunc);
@@ -1423,62 +1409,20 @@ void _thunk_T_DelayedAction() noexcept {
     T_DelayedAction(*vmAddrToPtr<delayaction_t>(*PsxVm::gpReg_a0));
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Schedules the level to end in 4 tics and go to the next map; this is the usual method of exiting a level
+//------------------------------------------------------------------------------------------------------------------------------------------
 void G_ExitLevel() noexcept {
-loc_80027768:
-    sp -= 0x18;
-    a1 = 0x14;
-    a2 = 4;
-    v0 = *gGameMap;
-    a0 = *gpMainMemZone;
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v0++;
-    *gNextMap = v0;
-    a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 += 0x7718;                                       // Result = T_DelayedAction (80027718)
-    sw(v0, s0 + 0x8);
-    v0 = 4;                                             // Result = 00000004
-    sw(v0, s0 + 0xC);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x3384;                                       // Result = G_SetGameComplete (80013384)
-    sw(v0, s0 + 0x10);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    *gNextMap += *gGameMap + 1;
+    P_ScheduleDelayedAction(4, G_CompleteLevel);
 }
 
-void G_SecretExitLevel() noexcept {
-loc_800277E0:
-    sp -= 0x18;
-    a1 = 0x14;
-    a2 = 4;
-    *gNextMap = a0;
-    a0 = *gpMainMemZone;
-    a3 = 0;
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 += 0x7718;                                       // Result = T_DelayedAction (80027718)
-    sw(v0, s0 + 0x8);
-    v0 = 4;                                             // Result = 00000004
-    sw(v0, s0 + 0xC);
-    v0 = 0x80010000;                                    // Result = 80010000
-    v0 += 0x3384;                                       // Result = G_SetGameComplete (80013384)
-    sw(v0, s0 + 0x10);
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Schedules the level to end in 4 tics and go to the specified map; used for entering/exiting secret maps
+//------------------------------------------------------------------------------------------------------------------------------------------
+void G_SecretExitLevel(const int32_t nextMap) noexcept {
+    *gNextMap = nextMap;
+    P_ScheduleDelayedAction(4, G_CompleteLevel);
 }
 
 void P_SpawnSpecials() noexcept {

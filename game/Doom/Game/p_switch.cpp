@@ -825,7 +825,7 @@ loc_80028734:
     goto loc_800287FC;
 loc_80028750:
     a0 = lw(s0 + 0x18);
-    G_SecretExitLevel();
+    G_SecretExitLevel(a0);
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
     goto loc_800287FC;

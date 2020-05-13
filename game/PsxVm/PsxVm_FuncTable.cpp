@@ -113,10 +113,7 @@ extern void P_CrossSpecialLine() noexcept;
 extern void P_ShootSpecialLine() noexcept;
 extern void P_UpdateSpecials() noexcept;
 extern void EV_DoDonut() noexcept;
-extern void G_ScheduleExitLevel() noexcept;
 extern void _thunk_T_DelayedAction() noexcept;
-extern void G_ExitLevel() noexcept;
-extern void G_SecretExitLevel() noexcept;
 extern void P_SpawnSpecials() noexcept;
 extern void P_StartButton() noexcept;
 extern void P_ChangeSwitchTexture() noexcept;
@@ -299,10 +296,7 @@ namespace PsxVm {
         { 0x80026D40, &P_ShootSpecialLine },
         { 0x80026FC8, &P_UpdateSpecials },
         { 0x8002745C, &EV_DoDonut },
-        { 0x800276A8, &G_ScheduleExitLevel },
         { 0x80027718, &_thunk_T_DelayedAction },
-        { 0x80027768, &G_ExitLevel },
-        { 0x800277E0, &G_SecretExitLevel },
         { 0x8002784C, &P_SpawnSpecials },
         { 0x80027EA8, &P_StartButton },
         { 0x80027F3C, &P_ChangeSwitchTexture },
