@@ -35,6 +35,15 @@ struct animdef_t {
     uint32_t    ticmask;        // New field for PSX: controls which game tics the animation will advance on
 };
 
+// New to PSX DOOM: definition for a thinker which performs an actionfunc after a delay
+struct delayaction_t {
+    thinker_t       thinker;
+    int32_t         ticsleft;       // How many tics until we perform the actionfunc
+    VmPtr<void(*)>  actionfunc;     // The action to perform after the delay
+};
+
+static_assert(sizeof(delayaction_t) == 20);
+
 // Definitions for all flat and texture animations in the game
 static const animdef_t gAnimDefs[MAXANIMS] = {
     { 0, "BLOOD1",   "BLOOD3",   3 },
@@ -1385,7 +1394,7 @@ void G_ScheduleExitLevel() noexcept {
     a0 = s0;
     _thunk_P_AddThinker();
     v0 = 0x80020000;                                    // Result = 80020000
-    v0 += 0x7718;                                       // Result = G_BeginExitLevel (80027718)
+    v0 += 0x7718;                                       // Result = T_DelayedAction (80027718)
     sw(v0, s0 + 0x8);
     sw(s1, s0 + 0xC);
     sw(s2, s0 + 0x10);
@@ -1397,24 +1406,21 @@ void G_ScheduleExitLevel() noexcept {
     return;
 }
 
-void G_BeginExitLevel() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v0 = lw(s0 + 0xC);
-    v0--;
-    sw(v0, s0 + 0xC);
-    if (i32(v0) > 0) goto loc_80027754;
-    v0 = lw(s0 + 0x10);
-    ptr_call(v0);
-    a0 = s0;
-    _thunk_P_RemoveThinker();
-loc_80027754:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Thinker function for performing a delayed action: performs the action after the delay time has passed and removes the thinker when done
+//------------------------------------------------------------------------------------------------------------------------------------------
+void T_DelayedAction(delayaction_t& action) noexcept {
+    if (--action.ticsleft <= 0) {
+        // FIXME: use a native function call eventually
+        const VmFunc actionFunc = PsxVm::getVmFuncForAddr(action.actionfunc);
+        actionFunc();
+        P_RemoveThinker(action.thinker);
+    }
+}
+
+// TODO: REMOVE eventually
+void _thunk_T_DelayedAction() noexcept {
+    T_DelayedAction(*vmAddrToPtr<delayaction_t>(*PsxVm::gpReg_a0));
 }
 
 void G_ExitLevel() noexcept {
@@ -1434,7 +1440,7 @@ loc_80027768:
     a0 = s0;
     _thunk_P_AddThinker();
     v0 = 0x80020000;                                    // Result = 80020000
-    v0 += 0x7718;                                       // Result = G_BeginExitLevel (80027718)
+    v0 += 0x7718;                                       // Result = T_DelayedAction (80027718)
     sw(v0, s0 + 0x8);
     v0 = 4;                                             // Result = 00000004
     sw(v0, s0 + 0xC);
@@ -1462,7 +1468,7 @@ loc_800277E0:
     a0 = s0;
     _thunk_P_AddThinker();
     v0 = 0x80020000;                                    // Result = 80020000
-    v0 += 0x7718;                                       // Result = G_BeginExitLevel (80027718)
+    v0 += 0x7718;                                       // Result = T_DelayedAction (80027718)
     sw(v0, s0 + 0x8);
     v0 = 4;                                             // Result = 00000004
     sw(v0, s0 + 0xC);

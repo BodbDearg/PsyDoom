@@ -540,7 +540,7 @@ static const ProgElem ELEMS[] = {
     { 0x80026FC8, 0x8002745C, "P_UpdateSpecials",                       ProgElemType::FUNCTION },
     { 0x8002745C, 0x800276A8, "EV_DoDonut",                             ProgElemType::FUNCTION },
     { 0x800276A8, 0x80027718, "G_ScheduleExitLevel",                    ProgElemType::FUNCTION },
-    { 0x80027718, 0x80027768, "G_BeginExitLevel",                       ProgElemType::FUNCTION },
+    { 0x80027718, 0x80027768, "T_DelayedAction",                        ProgElemType::FUNCTION },
     { 0x80027768, 0x800277E0, "G_ExitLevel",                            ProgElemType::FUNCTION },
     { 0x800277E0, 0x8002784C, "G_SecretExitLevel",                      ProgElemType::FUNCTION },
     { 0x8002784C, 0x80027CB0, "P_SpawnSpecials",                        ProgElemType::FUNCTION },

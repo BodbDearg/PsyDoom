@@ -114,7 +114,7 @@ extern void P_ShootSpecialLine() noexcept;
 extern void P_UpdateSpecials() noexcept;
 extern void EV_DoDonut() noexcept;
 extern void G_ScheduleExitLevel() noexcept;
-extern void G_BeginExitLevel() noexcept;
+extern void _thunk_T_DelayedAction() noexcept;
 extern void G_ExitLevel() noexcept;
 extern void G_SecretExitLevel() noexcept;
 extern void P_SpawnSpecials() noexcept;
@@ -153,7 +153,7 @@ extern void P_ComputePassword() noexcept;
 extern void P_ProcessPassword() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
-extern void G_CompleteLevel() noexcept;     // TODO: remove eventually - still required because it's called via a thinker function in 'G_BeginExitLevel'.
+extern void G_CompleteLevel() noexcept;     // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
 
 extern void LIBAPI_write() noexcept;
 extern void LIBAPI_InitPAD() noexcept;
@@ -300,7 +300,7 @@ namespace PsxVm {
         { 0x80026FC8, &P_UpdateSpecials },
         { 0x8002745C, &EV_DoDonut },
         { 0x800276A8, &G_ScheduleExitLevel },
-        { 0x80027718, &G_BeginExitLevel },
+        { 0x80027718, &_thunk_T_DelayedAction },
         { 0x80027768, &G_ExitLevel },
         { 0x800277E0, &G_SecretExitLevel },
         { 0x8002784C, &P_SpawnSpecials },
@@ -339,7 +339,7 @@ namespace PsxVm {
         { 0x800381B0, &P_ProcessPassword },
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },
-        { 0x80013384, &G_CompleteLevel },   // TODO: remove eventually - still required because it's called via a thinker function in 'G_BeginExitLevel'.
+        { 0x80013384, &G_CompleteLevel },   // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
         
         { 0x80049C3C, &LIBAPI_write },
         { 0x80049C5C, &LIBAPI_InitPAD },

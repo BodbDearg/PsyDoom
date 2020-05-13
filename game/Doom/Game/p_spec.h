@@ -45,7 +45,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept;
 void P_UpdateSpecials() noexcept;
 void EV_DoDonut() noexcept;
 void G_ScheduleExitLevel() noexcept;
-void G_BeginExitLevel() noexcept;
+void T_DelayedAction() noexcept;
 void G_ExitLevel() noexcept;
 void G_SecretExitLevel() noexcept;
 void P_SpawnSpecials() noexcept;
