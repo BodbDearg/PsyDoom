@@ -58,8 +58,7 @@ extern void _thunk_T_MoveFloor() noexcept;
 extern void _thunk_T_FireFlicker() noexcept;
 extern void _thunk_T_LightFlash() noexcept;
 extern void _thunk_T_StrobeFlash() noexcept;
-extern void T_Glow() noexcept;
-extern void P_SpawnGlowingLight() noexcept;
+extern void _thunk_T_Glow() noexcept;
 extern void P_InterceptVector() noexcept;
 extern void P_UseLines() noexcept;
 extern void P_LineAttack() noexcept;
@@ -245,8 +244,7 @@ namespace PsxVm {
         { 0x8001AD74, &_thunk_T_FireFlicker },
         { 0x8001AE8C, &_thunk_T_LightFlash },
         { 0x8001AFBC, &_thunk_T_StrobeFlash },
-        { 0x8001B4A0, &T_Glow },
-        { 0x8001B558, &P_SpawnGlowingLight },
+        { 0x8001B4A0, &_thunk_T_Glow },
         { 0x8001B7A4, &P_InterceptVector },
         { 0x8001B9F4, &P_UseLines },
         { 0x8001BE78, &P_LineAttack },

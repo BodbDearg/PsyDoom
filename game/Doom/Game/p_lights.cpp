@@ -6,8 +6,10 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "PsxVm/PsxVm.h"
 #include <algorithm>
+
+#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PsxVm/PsxVm.h"
 
 // Definition and state for a fire flicker light
 struct fireflicker_t {
@@ -46,7 +48,18 @@ struct strobe_t {
 
 static_assert(sizeof(strobe_t) == 36);
 
-static constexpr int32_t GLOWSPEED      = 3;    // TODO: COMMENT
+// Definition and state for a glowing light
+struct glow_t {
+    thinker_t           thinker;
+    VmPtr<sector_t>     sector;
+    int32_t             minlight;
+    int32_t             maxlight;
+    int32_t             direction;
+};
+
+static_assert(sizeof(glow_t) == 28);
+
+static constexpr int32_t GLOWSPEED      = 3;    // Speed that glowing lights ramp up and down at
 static constexpr int32_t STROBEBRIGHT   = 3;    // Number of tics in the bright state for the strobe flash
 static constexpr int32_t TURBODARK      = 4;    // TODO: COMMENT
 static constexpr int32_t FASTDARK       = 8;    // TODO: COMMENT
@@ -98,7 +111,7 @@ void P_SpawnFireFlicker(sector_t& sector) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a flashing light
 //------------------------------------------------------------------------------------------------------------------------------------------
-void T_LightFlash(lightflash_t& lightFlash) noexcept {
+static void T_LightFlash(lightflash_t& lightFlash) noexcept {
     // Time to flash yet?
     if (--lightFlash.count != 0)
         return;
@@ -142,7 +155,7 @@ void P_SpawnLightFlash(sector_t& sector) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a strobe flash light
 //------------------------------------------------------------------------------------------------------------------------------------------
-void T_StrobeFlash(strobe_t& strobe) noexcept {
+static void T_StrobeFlash(strobe_t& strobe) noexcept {
     // Time to flash yet?
     if (--strobe.count != 0)
         return;
@@ -196,7 +209,7 @@ void P_SpawnStrobeFlash(sector_t& sector, const int32_t darkTime, const bool bIn
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Spawn a rapid strobe flash special for the given sector
+// New for PSX: Spawn a rapid strobe flash special for the given sector
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnRapidStrobeFlash(sector_t& sector) noexcept {
     // Create the strobe thinker and populate it's settings
@@ -297,109 +310,69 @@ void EV_LightTurnOn(line_t& line, const int32_t onLightLevel) noexcept {
     }
 }
 
-void T_Glow() noexcept {
-    v1 = lw(a0 + 0x18);
-    a2 = -1;                                            // Result = FFFFFFFF
-    v0 = 1;                                             // Result = 00000001
-    if (v1 == a2) goto loc_8001B4C0;
-    if (v1 == v0) goto loc_8001B50C;
-    goto loc_8001B550;
-loc_8001B4C0:
-    v1 = lw(a0 + 0xC);
-    v0 = lhu(v1 + 0x12);
-    v0 -= 3;
-    sh(v0, v1 + 0x12);
-    a1 = lw(a0 + 0xC);
-    v1 = lw(a0 + 0x10);
-    v0 = lh(a1 + 0x12);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8001B550;
-    v0 = lhu(a0 + 0x10);
-    sh(v0, a1 + 0x12);
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, a0 + 0x18);
-    goto loc_8001B550;
-loc_8001B50C:
-    v1 = lw(a0 + 0xC);
-    v0 = lhu(v1 + 0x12);
-    v0 += 3;
-    sh(v0, v1 + 0x12);
-    a1 = lw(a0 + 0xC);
-    v0 = lw(a0 + 0x14);
-    v1 = lh(a1 + 0x12);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8001B550;
-    v0 = lhu(a0 + 0x14);
-    sh(v0, a1 + 0x12);
-    sw(a2, a0 + 0x18);
-loc_8001B550:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Thinker/update logic for a glowing light
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void T_Glow(glow_t& glow) noexcept {
+    sector_t& sector = *glow.sector;
+
+    if (glow.direction == -1) {
+        // Ramping down
+        sector.lightlevel -= GLOWSPEED;
+
+        if (sector.lightlevel < glow.minlight) {
+            sector.lightlevel = (int16_t) glow.minlight;
+            glow.direction = 1;
+        }
+    } 
+    else if (glow.direction == 1) {
+        // Ramping up
+        sector.lightlevel += GLOWSPEED;
+
+        if (sector.lightlevel > glow.maxlight) {
+            sector.lightlevel = (int16_t) glow.maxlight;
+            glow.direction = -1;
+        }
+    }
 }
 
-void P_SpawnGlowingLight() noexcept {
-loc_8001B558:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s2, sp + 0x18);
-    s2 = a1;
-    a1 = 0x1C;                                          // Result = 0000001C
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x1C);
-    sw(s0, sp + 0x10);
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0x4B60;                                       // Result = T_Glow (8001B4A0)
-    a0 = 1;                                             // Result = 00000001
-    sw(s1, s0 + 0xC);
-    sw(v0, s0 + 0x8);
-    if (s2 == a0) goto loc_8001B5F4;
-    v0 = (i32(s2) < 2);
-    if (v0 == 0) goto loc_8001B5CC;
-    if (s2 == 0) goto loc_8001B5E0;
-    sw(0, s1 + 0x14);
-    goto loc_8001B624;
-loc_8001B5CC:
-    v0 = 2;                                             // Result = 00000002
-    {
-        const bool bJump = (s2 == v0);
-        v0 = 0xFF;                                      // Result = 000000FF
-        if (bJump) goto loc_8001B610;
+// TODO: REMOVE eventually
+void _thunk_T_Glow() noexcept {
+    T_Glow(*vmAddrToPtr<glow_t>(*PsxVm::gpReg_a0));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawn a glowing light of the specified type for the given sector
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SpawnGlowingLight(sector_t& sector, const glowtype_e glowType) noexcept {
+    // Create the glow thinker
+    glow_t& glow = *(glow_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(glow_t), PU_LEVSPEC, nullptr);
+    P_AddThinker(glow.thinker);
+
+    // Configure the glow settings depending on the type
+    glow.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_Glow);
+    glow.sector = &sector;
+    
+    switch (glowType) {
+        case glowtolower:
+            glow.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel);
+            glow.maxlight = sector.lightlevel;
+            glow.direction = -1;
+            break;
+
+        case glowto10:
+            glow.minlight = 10;
+            glow.maxlight = sector.lightlevel;
+            glow.direction = -1;
+            break;
+
+        case glowto255:
+            glow.minlight = sector.lightlevel;
+            glow.maxlight = 255;
+            glow.direction = 1;
+            break;
     }
-    sw(0, s1 + 0x14);
-    goto loc_8001B624;
-loc_8001B5E0:
-    a1 = lh(s1 + 0x12);
-    a0 = s1;
-    v0 = P_FindMinSurroundingLight(*vmAddrToPtr<sector_t>(a0), a1);
-    sw(v0, s0 + 0x10);
-    goto loc_8001B5FC;
-loc_8001B5F4:
-    v0 = 0xA;                                           // Result = 0000000A
-    sw(v0, s0 + 0x10);
-loc_8001B5FC:
-    v1 = lh(s1 + 0x12);
-    v0 = -1;                                            // Result = FFFFFFFF
-    sw(v0, s0 + 0x18);
-    sw(v1, s0 + 0x14);
-    goto loc_8001B620;
-loc_8001B610:
-    v1 = lh(s1 + 0x12);
-    sw(v0, s0 + 0x14);
-    sw(a0, s0 + 0x18);
-    sw(v1, s0 + 0x10);
-loc_8001B620:
-    sw(0, s1 + 0x14);
-loc_8001B624:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Remove any other sector specials like damage etc.
+    sector.special = 0;
 }

@@ -1590,7 +1590,7 @@ loc_8002796C:
     goto loc_80027A2C;
 loc_80027978:
     a1 = 0;                                             // Result = 00000000
-    P_SpawnGlowingLight();
+    P_SpawnGlowingLight(*vmAddrToPtr<sector_t>(a0), (glowtype_e) a1);
     s1++;
     goto loc_80027A3C;
 loc_80027988:
@@ -1628,12 +1628,12 @@ loc_800279E8:
 loc_800279F8:
     a0 = s0;
     a1 = 1;                                             // Result = 00000001
-    P_SpawnGlowingLight();
+    P_SpawnGlowingLight(*vmAddrToPtr<sector_t>(a0), (glowtype_e) a1);
     s1++;
     goto loc_80027A3C;
 loc_80027A0C:
     a1 = 2;                                             // Result = 00000002
-    P_SpawnGlowingLight();
+    P_SpawnGlowingLight(*vmAddrToPtr<sector_t>(a0), (glowtype_e) a1);
     s1++;
     goto loc_80027A3C;
 loc_80027A1C:
