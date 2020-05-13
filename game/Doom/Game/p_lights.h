@@ -3,8 +3,7 @@
 struct sector_t;
 
 void P_SpawnFireFlicker(sector_t& sector) noexcept;
-void T_LightFlash() noexcept;
-void P_SpawnLightFlash() noexcept;
+void P_SpawnLightFlash(sector_t& sector) noexcept;
 void T_StrobeFlash() noexcept;
 void P_SpawnStrobeFlash() noexcept;
 void P_SpawnRapidStrobeFlash() noexcept;

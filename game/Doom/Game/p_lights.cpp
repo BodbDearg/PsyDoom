@@ -20,12 +20,25 @@ struct fireflicker_t {
 
 static_assert(sizeof(fireflicker_t) == 28);
 
+// Definition and state for a flashing light
+struct lightflash_t {
+    thinker_t           thinker;
+    VmPtr<sector_t>     sector;
+    int32_t             count;
+    int32_t             maxlight;
+    int32_t             minlight;
+    int32_t             maxtime;
+    int32_t             mintime;
+};
+
+static_assert(sizeof(lightflash_t) == 36);
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a light that flickers like fire
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void T_FireFlicker(fireflicker_t& flicker) noexcept {
     // Time to flicker yet?
-    if (--flicker.count > 0)
+    if (--flicker.count != 0)
         return;
 
     // Do the flicker and reset the countdown till the next flicker
@@ -55,7 +68,7 @@ void P_SpawnFireFlicker(sector_t& sector) noexcept {
     fireflicker_t& flicker = *(fireflicker_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(fireflicker_t), PU_LEVSPEC, nullptr);
     P_AddThinker(flicker.thinker);
 
-    // Setup flicker parameters
+    // Setup flicker settings
     flicker.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_FireFlicker);
     flicker.sector = &sector;
     flicker.maxlight = sector.lightlevel;
@@ -63,81 +76,46 @@ void P_SpawnFireFlicker(sector_t& sector) noexcept {
     flicker.count = 3;
 }
 
-void T_LightFlash() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v0 = lw(s0 + 0x10);
-    v0--;
-    sw(v0, s0 + 0x10);
-    if (v0 != 0) goto loc_8001AF00;
-    a0 = lw(s0 + 0xC);
-    v0 = lw(s0 + 0x14);
-    v1 = lh(a0 + 0x12);
-    if (v1 != v0) goto loc_8001AEE0;
-    v0 = lhu(s0 + 0x18);
-    sh(v0, a0 + 0x12);
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x20);
-    v0 &= v1;
-    goto loc_8001AEF8;
-loc_8001AEE0:
-    v0 = lhu(s0 + 0x14);
-    sh(v0, a0 + 0x12);
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x1C);
-    v0 &= v1;
-loc_8001AEF8:
-    v0++;
-    sw(v0, s0 + 0x10);
-loc_8001AF00:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Thinker/update logic for a flashing light
+//------------------------------------------------------------------------------------------------------------------------------------------
+void T_LightFlash(lightflash_t& lightFlash) noexcept {
+    if (--lightFlash.count != 0)
+        return;
+
+    sector_t& sector = *lightFlash.sector;
+
+    if (sector.lightlevel == lightFlash.maxlight) {
+        sector.lightlevel = (int16_t) lightFlash.minlight;
+        lightFlash.count = (P_Random() & lightFlash.mintime) + 1;
+    } else {
+        sector.lightlevel = (int16_t) lightFlash.maxlight;
+        lightFlash.count = (P_Random() & lightFlash.maxtime) + 1;
+    }
 }
 
-void P_SpawnLightFlash() noexcept {
-loc_8001AF14:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    a1 = 0x24;                                          // Result = 00000024
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    sw(0, s1 + 0x14);
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0x5174;                                       // Result = T_LightFlash (8001AE8C)
-    sw(v0, s0 + 0x8);
-    sw(s1, s0 + 0xC);
-    v0 = lh(s1 + 0x12);
-    sw(v0, s0 + 0x14);
-    a1 = lh(s1 + 0x12);
-    a0 = s1;
-    v0 = P_FindMinSurroundingLight(*vmAddrToPtr<sector_t>(a0), a1);
-    sw(v0, s0 + 0x18);
-    v0 = 0x40;                                          // Result = 00000040
-    sw(v0, s0 + 0x1C);
-    v0 = 7;                                             // Result = 00000007
-    sw(v0, s0 + 0x20);
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x1C);
-    v0 &= v1;
-    v0++;
-    sw(v0, s0 + 0x10);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+// TODO: REMOVE eventually
+void _thunk_T_LightFlash() noexcept {
+    T_LightFlash(*vmAddrToPtr<lightflash_t>(*PsxVm::gpReg_a0));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawn a light flash special for the given sector
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SpawnLightFlash(sector_t& sector) noexcept {
+    // Clear the current sector special (no hurt for example) and spawn the thinker
+    sector.special = 0;
+    lightflash_t& lightFlash = *(lightflash_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(lightflash_t), 4, nullptr);
+    P_AddThinker(lightFlash.thinker);
+
+    // Setup flash settings
+    lightFlash.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_LightFlash);
+    lightFlash.sector = &sector;
+    lightFlash.maxlight = sector.lightlevel;
+    lightFlash.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel);
+    lightFlash.maxtime = 64;
+    lightFlash.mintime = 7;
+    lightFlash.count = (P_Random() & lightFlash.maxtime) + 1;
 }
 
 void T_StrobeFlash() noexcept {

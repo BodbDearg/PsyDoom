@@ -1578,7 +1578,7 @@ loc_8002792C:
     goto loc_80027A3C;
 loc_80027954:
     a0 = s0;
-    P_SpawnLightFlash();
+    P_SpawnLightFlash(*vmAddrToPtr<sector_t>(a0));
     s1++;
     goto loc_80027A3C;
 loc_80027964:
