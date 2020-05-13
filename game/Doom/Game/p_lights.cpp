@@ -50,7 +50,7 @@ static constexpr int32_t GLOWSPEED      = 3;    // TODO: COMMENT
 static constexpr int32_t STROBEBRIGHT   = 3;    // Number of tics in the bright state for the strobe flash
 static constexpr int32_t TURBODARK      = 4;    // TODO: COMMENT
 static constexpr int32_t FASTDARK       = 8;    // TODO: COMMENT
-static constexpr int32_t SLOWDARK       = 15;   // TODO: COMMENT
+static constexpr int32_t SLOWDARK       = 15;   // Number of tics in the dark phase for a slow light strobe flash
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a light that flickers like fire
@@ -220,74 +220,18 @@ void P_SpawnRapidStrobeFlash(sector_t& sector) noexcept {
     sector.special = 0;
 }
 
-void EV_StartLightStrobing() noexcept {
-loc_8001B188:
-    sp -= 0x28;
-    sw(s3, sp + 0x1C);
-    s3 = a0;
-    sw(s2, sp + 0x18);
-    s2 = -1;                                            // Result = FFFFFFFF
-    sw(s4, sp + 0x20);
-    s4 = 0xF;                                           // Result = 0000000F
-    sw(ra, sp + 0x24);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-loc_8001B1B0:
-    a0 = s3;
-    a1 = s2;
-    v0 = P_FindSectorFromLineTag(*vmAddrToPtr<line_t>(a0), a1);
-    s2 = v0;
-    v0 = s2 << 1;
-    if (i32(s2) < 0) goto loc_8001B274;
-    v0 += s2;
-    v0 <<= 3;
-    v0 -= s2;
-    v1 = *gpSectors;
-    v0 <<= 2;
-    s1 = v0 + v1;
-    v0 = lw(s1 + 0x50);
-    a1 = 0x24;                                          // Result = 00000024
-    if (v0 != 0) goto loc_8001B1B0;
-    a2 = 4;                                             // Result = 00000004
-    a0 = *gpMainMemZone;
-    a3 = 0;                                             // Result = 00000000
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = 3;                                             // Result = 00000003
-    sw(s1, s0 + 0xC);
-    sw(s4, s0 + 0x1C);
-    sw(v0, s0 + 0x20);
-    a1 = lh(s1 + 0x12);
-    a0 = s1;
-    v0 = P_FindMinSurroundingLight(*vmAddrToPtr<sector_t>(a0), a1);
-    sw(v0, s0 + 0x14);
-    v0 = lh(s1 + 0x12);
-    a0 = lw(s0 + 0x14);
-    sw(v0, s0 + 0x18);
-    v1 = lw(s0 + 0x18);
-    v0 = 0x80020000;                                    // Result = 80020000
-    v0 -= 0x5044;                                       // Result = T_StrobeFlash (8001AFBC)
-    sw(v0, s0 + 0x8);
-    if (a0 != v1) goto loc_8001B258;
-    sw(0, s0 + 0x14);
-loc_8001B258:
-    _thunk_P_Random();
-    v0 &= 7;
-    v0++;
-    sw(v0, s0 + 0x10);
-    sw(0, s1 + 0x14);
-    goto loc_8001B1B0;
-loc_8001B274:
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Starts a slow (in the dark phase) light strobe flash in sectors with the same tag as the given line
+//------------------------------------------------------------------------------------------------------------------------------------------
+void EV_StartLightStrobing(line_t& line) noexcept {
+    for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
+        sector_t& sector = gpSectors->get()[sectorIdx];
+
+        // Only spawn the strobe if there isn't a special on the sector already
+        if (!sector.specialdata) {
+            P_SpawnStrobeFlash(sector, SLOWDARK, false);
+        }
+    }
 }
 
 void EV_TurnTagLightsOff() noexcept {

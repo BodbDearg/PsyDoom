@@ -520,7 +520,7 @@ loc_800268DC:
     goto loc_80026A30;
 loc_800268E8:
     a0 = s0;
-    EV_StartLightStrobing();
+    EV_StartLightStrobing(*vmAddrToPtr<line_t>(a0));
     sw(0, s0 + 0x14);
     goto loc_80026D2C;
 loc_800268F8:
