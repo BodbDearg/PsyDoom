@@ -236,7 +236,7 @@ bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
             case 1:     // Manual door raise
                 break;
 
-            default:
+            default:    // NOT allowed!
                 return false;
         }
     }

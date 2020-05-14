@@ -575,7 +575,7 @@ loc_8001BF8C:
     a0 = s4;
     if (v0 == 0) goto loc_8001BFAC;
     a1 = s0;
-    P_ShootSpecialLine();
+    P_ShootSpecialLine(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<line_t>(a1));
 loc_8001BFAC:
     v1 = lw(s0 + 0x38);
     a0 = lw(v1 + 0xC);

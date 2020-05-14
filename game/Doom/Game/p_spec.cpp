@@ -783,65 +783,44 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
     }
 }
 
-void P_ShootSpecialLine() noexcept {
-loc_80026D40:
-    sp -= 0x18;
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v0 = lw(a0 + 0x80);
-    s0 = a1;
-    if (v0 != 0) goto loc_80026D6C;
-    v1 = lw(s0 + 0x14);
-    v0 = 0x2E;                                          // Result = 0000002E
-    if (v1 != v0) goto loc_80026DF4;
-loc_80026D6C:
-    v1 = lw(s0 + 0x14);
-    v0 = 0x2E;                                          // Result = 0000002E
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 0x2F);
-        if (bJump) goto loc_80026DB8;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called when a map object shoots a line with a special; tries to activate whatever special the line has
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_ShootSpecialLine(mobj_t& mobj, line_t& line) noexcept {
+    // Monsters can only shoot certain special lines
+    if (!mobj.player) {
+        switch (line.special) {
+            case 46:    // Open door
+                break;
+
+            default:    // NOT allowed!
+                return;
+        }
     }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x18;                                      // Result = 00000018
-        if (bJump) goto loc_80026D94;
+
+    // Activate the line special
+    switch (line.special) {
+        // Raise floor
+        case 24: {
+            if (EV_DoFloor(line, raiseFloor)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Open door
+        case 46: {
+            if (EV_DoDoor(line, Open)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Raise floor to nearest and change
+        case 47: {
+            if (EV_DoPlat(line, raiseToNearestAndChange, 0)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
     }
-    a0 = s0;
-    if (v1 == v0) goto loc_80026DA8;
-    goto loc_80026DF4;
-loc_80026D94:
-    v0 = 0x2F;                                          // Result = 0000002F
-    a0 = s0;
-    if (v1 == v0) goto loc_80026DD4;
-    goto loc_80026DF4;
-loc_80026DA8:
-    a1 = 3;                                             // Result = 00000003
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    goto loc_80026DE0;
-loc_80026DB8:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80026DF4;
-    a1 = 1;                                             // Result = 00000001
-    goto loc_80026DEC;
-loc_80026DD4:
-    a1 = 3;                                             // Result = 00000003
-    a2 = 0;                                             // Result = 00000000
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-loc_80026DE0:
-    a0 = s0;
-    if (v0 == 0) goto loc_80026DF4;
-    a1 = 0;                                             // Result = 00000000
-loc_80026DEC:
-    P_ChangeSwitchTexture(*vmAddrToPtr<line_t>(a0), a1);
-loc_80026DF4:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
