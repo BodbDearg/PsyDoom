@@ -836,7 +836,7 @@ loc_80026DE0:
     if (v0 == 0) goto loc_80026DF4;
     a1 = 0;                                             // Result = 00000000
 loc_80026DEC:
-    P_ChangeSwitchTexture();
+    P_ChangeSwitchTexture(*vmAddrToPtr<line_t>(a0), a1);
 loc_80026DF4:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);

@@ -20,6 +20,25 @@ struct switchlist_t {
     char    name2[9];
 };
 
+// Identifies which part of a line/wall has a button texture on it (top / middle / bottom)
+enum bwhere_e : uint32_t {
+    top,
+    middle,
+    bottom
+};
+
+// Used to hold state for a button which is 'active' and poised to switch back to it's original state after a short amount of time.
+// Holds all of the info we need to revert the button back to it's prior state and when.
+struct button_t {
+    VmPtr<line_t>   line;           // The linedef which has the button/switch
+    bwhere_e        where;          // What part of the line was activated
+    int32_t         btexture;       // The texture to switch the line back to
+    int32_t         btimer;         // The countdown for when the button reverts to it's former state; reverts when it reaches '0'
+    VmPtr<mobj_t>   soundorg;       // When playing a sound to switch back, play it at this location
+};
+
+static_assert(sizeof(button_t) == 20);
+
 // All of the switch textures in the game
 static const switchlist_t gAlphSwitchList[] = {
     { "SW1BMET",  "SW2BMET"  },
@@ -73,10 +92,20 @@ static const switchlist_t gAlphSwitchList[] = {
     { "SW1STEEL", "SW2STEEL" },
 };
 
-static constexpr int32_t NUM_SWITCH_TYPES = C_ARRAY_SIZE(gAlphSwitchList);
+static constexpr int32_t NUM_SWITCHES = C_ARRAY_SIZE(gAlphSwitchList);
 
 // The 2 lumps for each switch texture in the game
-static const VmPtr<int32_t[NUM_SWITCH_TYPES * 2]> gSwitchList(0x800975FC);
+static const VmPtr<int32_t[NUM_SWITCHES * 2]> gSwitchList(0x800975FC);
+
+// How many buttons can be active at a time (to be switched back to their original state).
+// This limit was inherited from PC DOOM where the thinking was that 4x buttons for 4x players was more than enough.
+static constexpr int32_t MAXBUTTONS = 16;
+
+// How long it takes for a switch to go back to it's original state (1 second)
+static constexpr int32_t BUTTONTIME = 1 * TICRATE;
+
+// The list of currently active buttons
+static const VmPtr<button_t[MAXBUTTONS]> gButtonList(0x800977AC);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Caches textures for all active switches in the level.
@@ -85,7 +114,7 @@ static const VmPtr<int32_t[NUM_SWITCH_TYPES * 2]> gSwitchList(0x800975FC);
 void P_InitSwitchList() noexcept {
     int32_t* pSwitchLump = gSwitchList.get();
 
-    for (int32_t switchIdx = 0; switchIdx < NUM_SWITCH_TYPES; ++switchIdx) {
+    for (int32_t switchIdx = 0; switchIdx < NUM_SWITCHES; ++switchIdx) {
         // Get both textures for the switch
         const int32_t tex1Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name1);
         const int32_t tex2Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name2);
@@ -109,228 +138,85 @@ void P_InitSwitchList() noexcept {
     }
 }
 
-void P_StartButton() noexcept {
-    t1 = 0;                                             // Result = 00000000
-    t0 = 0x80090000;                                    // Result = 80090000
-    t0 += 0x77B8;                                       // Result = gButtonList_1[3] (800977B8)
-    v1 = 0;                                             // Result = 00000000
-loc_80027EB8:
-    v0 = lw(t0);
-    if (v0 != 0) goto loc_80027F20;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77AC;                                       // Result = gButtonList_1[0] (800977AC)
-    at += v1;
-    sw(a0, at);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77B0;                                       // Result = gButtonList_1[1] (800977B0)
-    at += v1;
-    sw(a1, at);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77B4;                                       // Result = gButtonList_1[2] (800977B4)
-    at += v1;
-    sw(a2, at);
-    sw(a3, t0);
-    v0 = lw(a0 + 0x38);
-    v0 += 0x38;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77BC;                                       // Result = gButtonList_1[4] (800977BC)
-    at += v1;
-    sw(v0, at);
-    goto loc_80027F34;
-loc_80027F20:
-    t0 += 0x14;
-    t1++;
-    v0 = (i32(t1) < 0x10);
-    v1 += 0x14;
-    if (v0 != 0) goto loc_80027EB8;
-loc_80027F34:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Save the state of a switch (current texture) for later restoration after a specified delay.
+// Used to implement buttons that switch back after a while.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_StartButton(line_t& line, const bwhere_e where, const int32_t texture, const int32_t countdownTime) noexcept {
+    // Try to find a slot to save the state of the button in
+    for (int32_t btnIdx = 0; btnIdx < MAXBUTTONS; ++btnIdx) {
+        button_t& button = gButtonList[btnIdx];
+        
+        if (button.btimer == 0) {
+            // Button slot is not in use: save the button state for later restoration and end search
+            button.line = &line;
+            button.where = where;
+            button.btexture = texture;
+            button.btimer = countdownTime;
+            button.soundorg = (mobj_t*) &line.frontsector->soundorg;
+            return;
+        }
+    }
 }
 
-void P_ChangeSwitchTexture() noexcept {
-loc_80027F3C:
-    sp -= 0x28;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s3, sp + 0x1C);
-    s3 = a1;
-    sw(ra, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s2, sp + 0x18);
-    sw(s0, sp + 0x10);
-    if (s3 != 0) goto loc_80027F68;
-    sw(0, s1 + 0x14);
-loc_80027F68:
-    v1 = lw(s1 + 0x1C);
-    a0 = 0xB;
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = *gpSides;
-    v0 <<= 3;
-    v0 += v1;
-    t0 = lw(v0 + 0x8);
-    a3 = lw(v0 + 0x10);
-    v1 = lw(s1 + 0x14);
-    a2 = lw(v0 + 0xC);
-    a1 = sfx_swtchn;
-    if (v1 != a0) goto loc_80027FA4;
-    a1 = sfx_swtchx;
-loc_80027FA4:
-    s0 = 0;                                             // Result = 00000000
-    s2 = 0x80090000;                                    // Result = 80090000
-    s2 += 0x75FC;                                       // Result = gSwitchList[0] (800975FC)
-    s4 = s2;                                            // Result = gSwitchList[0] (800975FC)
-loc_80027FB4:
-    v0 = lw(s2);
-    if (v0 != t0) goto loc_80028080;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 = lw(a0 + 0x77BC);                               // Load from: gButtonList_1[4] (800977BC)
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = lw(s1 + 0x1C);
-    a0 = *gpSides;
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 3;
-    v0 = s0 ^ 1;
-    v0 <<= 2;
-    v0 += s4;
-    v0 = lw(v0);
-    v1 += a0;
-    sw(v0, v1 + 0x8);
-    if (s3 == 0) goto loc_80028208;
-    a2 = lw(s2);
-    a3 = 0xF;                                           // Result = 0000000F
-    a0 = 0;                                             // Result = 00000000
-    a1 = 0x80090000;                                    // Result = 80090000
-    a1 += 0x77B8;                                       // Result = gButtonList_1[3] (800977B8)
-    v1 = 0;                                             // Result = 00000000
-loc_80028020:
-    v0 = lw(a1);
-    a0++;
-    if (v0 != 0) goto loc_80028068;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77AC;                                       // Result = gButtonList_1[0] (800977AC)
-    at += v1;
-    sw(s1, at);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77B0;                                       // Result = gButtonList_1[1] (800977B0)
-    at += v1;
-    sw(0, at);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77B4;                                       // Result = gButtonList_1[2] (800977B4)
-    at += v1;
-    sw(a2, at);
-    sw(a3, a1);
-    goto loc_800281BC;
-loc_80028068:
-    a1 += 0x14;
-    v0 = (i32(a0) < 0x10);
-    v1 += 0x14;
-    if (v0 != 0) goto loc_80028020;
-    goto loc_80028208;
-loc_80028080:
-    if (v0 != a3) goto loc_80028110;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 = lw(a0 + 0x77BC);                               // Load from: gButtonList_1[4] (800977BC)
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = lw(s1 + 0x1C);
-    a0 = *gpSides;
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 3;
-    v0 = s0 ^ 1;
-    v0 <<= 2;
-    v0 += s4;
-    v0 = lw(v0);
-    v1 += a0;
-    sw(v0, v1 + 0x10);
-    if (s3 == 0) goto loc_80028208;
-    a3 = 1;                                             // Result = 00000001
-    a2 = lw(s2);
-    t0 = 0xF;                                           // Result = 0000000F
-    a0 = 0;                                             // Result = 00000000
-    a1 = 0x80090000;                                    // Result = 80090000
-    a1 += 0x77B8;                                       // Result = gButtonList_1[3] (800977B8)
-    v1 = 0;                                             // Result = 00000000
-loc_800280E8:
-    v0 = lw(a1);
-    a0++;
-    if (v0 == 0) goto loc_80028188;
-    a1 += 0x14;
-    v0 = (i32(a0) < 0x10);
-    v1 += 0x14;
-    if (v0 != 0) goto loc_800280E8;
-    goto loc_80028208;
-loc_80028110:
-    if (v0 != a2) goto loc_800281F8;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 = lw(a0 + 0x77BC);                               // Load from: gButtonList_1[4] (800977BC)
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = lw(s1 + 0x1C);
-    a0 = *gpSides;
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 3;
-    v0 = s0 ^ 1;
-    v0 <<= 2;
-    v0 += s4;
-    v0 = lw(v0);
-    v1 += a0;
-    sw(v0, v1 + 0xC);
-    if (s3 == 0) goto loc_80028208;
-    a3 = 2;                                             // Result = 00000002
-    a2 = lw(s2);
-    t0 = 0xF;                                           // Result = 0000000F
-    a0 = 0;                                             // Result = 00000000
-    a1 = 0x80090000;                                    // Result = 80090000
-    a1 += 0x77B8;                                       // Result = gButtonList_1[3] (800977B8)
-    v1 = 0;                                             // Result = 00000000
-loc_80028178:
-    v0 = lw(a1);
-    a0++;
-    if (v0 != 0) goto loc_800281E0;
-loc_80028188:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77AC;                                       // Result = gButtonList_1[0] (800977AC)
-    at += v1;
-    sw(s1, at);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77B0;                                       // Result = gButtonList_1[1] (800977B0)
-    at += v1;
-    sw(a3, at);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77B4;                                       // Result = gButtonList_1[2] (800977B4)
-    at += v1;
-    sw(a2, at);
-    sw(t0, a1);
-loc_800281BC:
-    v0 = lw(s1 + 0x38);
-    v0 += 0x38;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77BC;                                       // Result = gButtonList_1[4] (800977BC)
-    at += v1;
-    sw(v0, at);
-    goto loc_80028208;
-loc_800281E0:
-    a1 += 0x14;
-    v0 = (i32(a0) < 0x10);
-    v1 += 0x14;
-    if (v0 != 0) goto loc_80028178;
-    goto loc_80028208;
-loc_800281F8:
-    s0++;
-    v0 = (s0 < 0x62);
-    s2 += 4;
-    if (v0 != 0) goto loc_80027FB4;
-loc_80028208:
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Flips the switch texture for the given line to the opposite switch texture.
+// If the switch is usable again, schedule it to switch back after a while or otherwise mark it unusable.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
+    // If the switch is once only then wipe the special so it can't be used again
+    if (!bUseAgain) {
+        line.special = 0;
+    }
+    
+    // Choose the sound for the switch.
+    // Use a different sound for the exit switch (special = 11).
+    const sfxenum_t soundId = (line.special == 11) ? sfx_swtchx : sfx_swtchn;
+
+    // Try to match a portion of the wall (upper, middle, lower) against a switch texture.
+    // When a match is found flip the texture to the opposite switch texture.
+    // If the switch is usable again, switch it back after a while.
+    side_t& side = gpSides->get()[line.sidenum[0]];
+    
+    for (int32_t switchListIdx = 0; switchListIdx < NUM_SWITCHES * 2; ++switchListIdx) {
+        const int32_t switchTex = gSwitchList[switchListIdx];
+
+        // Note: for all these cases the button should have a 'NULL' sound origin set because it's struct has been zero intialized.
+        // Therefore the initial switch sound will not play positionally, and will always be at full volume.
+        // I wonder is this odd for deathmatch though? 3DO DOOM appears to use sector that the switch is in for the sound origin...
+        if (switchTex == side.toptexture) {
+            S_StartSound(gButtonList[0].soundorg.get(), soundId);
+            side.toptexture = gSwitchList[switchListIdx ^ 1];
+
+            if (bUseAgain) {
+                P_StartButton(line, top, switchTex, BUTTONTIME);
+            }
+
+            return;
+        }
+
+        if (switchTex == side.midtexture) {
+            S_StartSound(gButtonList[0].soundorg.get(), soundId);
+            side.midtexture = gSwitchList[switchListIdx ^ 1];
+
+            if (bUseAgain) {
+                P_StartButton(line, middle, switchTex, BUTTONTIME);
+            }
+
+            return;
+        }
+
+        if (switchTex == side.bottomtexture) {
+            S_StartSound(gButtonList[0].soundorg.get(), soundId);
+            side.bottomtexture = gSwitchList[switchListIdx ^ 1];
+
+            if (bUseAgain) {
+                P_StartButton(line, bottom, switchTex, BUTTONTIME);
+            }
+
+            return;
+        }
+    }
 }
 
 void P_UseSpecialLine() noexcept {
@@ -874,7 +760,7 @@ loc_800287EC:
 loc_800287F8:
     a1 = 1;                                             // Result = 00000001
 loc_800287FC:
-    P_ChangeSwitchTexture();
+    P_ChangeSwitchTexture(*vmAddrToPtr<line_t>(a0), a1);
 loc_80028804:
     v0 = 1;                                             // Result = 00000001
 loc_80028808:

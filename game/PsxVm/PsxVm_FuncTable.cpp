@@ -113,8 +113,6 @@ extern void P_ShootSpecialLine() noexcept;
 extern void P_UpdateSpecials() noexcept;
 extern void _thunk_T_DelayedAction() noexcept;
 extern void P_SpawnSpecials() noexcept;
-extern void P_StartButton() noexcept;
-extern void P_ChangeSwitchTexture() noexcept;
 extern void P_UseSpecialLine() noexcept;
 extern void _thunk_P_AddThinker() noexcept;
 extern void _thunk_P_RemoveThinker() noexcept;
@@ -294,8 +292,6 @@ namespace PsxVm {
         { 0x80026FC8, &P_UpdateSpecials },
         { 0x80027718, &_thunk_T_DelayedAction },
         { 0x8002784C, &P_SpawnSpecials },
-        { 0x80027EA8, &P_StartButton },
-        { 0x80027F3C, &P_ChangeSwitchTexture },
         { 0x8002822C, &P_UseSpecialLine },
         { 0x80028C38, &_thunk_P_AddThinker },
         { 0x80028C68, &_thunk_P_RemoveThinker },
