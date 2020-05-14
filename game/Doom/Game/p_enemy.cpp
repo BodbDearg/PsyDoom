@@ -1015,7 +1015,7 @@ loc_80016A60:
     v1 = v0 << 1;
     v1 += v0;
     sw(v1, sp + 0x10);
-    P_LineAttack();
+    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
 loc_80016AB8:
     ra = lw(sp + 0x24);
     s2 = lw(sp + 0x20);
@@ -1094,7 +1094,7 @@ loc_80016B88:
     v1 = v0 << 1;
     v1 += v0;
     sw(v1, sp + 0x10);
-    P_LineAttack();
+    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
     v0 = (i32(s2) < 3);
     if (v0 != 0) goto loc_80016B88;
 loc_80016C04:
@@ -1179,7 +1179,7 @@ loc_80016CD4:
     v1 = v0 << 1;
     v1 += v0;
     sw(v1, sp + 0x10);
-    P_LineAttack();
+    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
 loc_80016D50:
     ra = lw(sp + 0x28);
     s3 = lw(sp + 0x24);
@@ -1315,7 +1315,7 @@ loc_80016F20:
     v1 = v0 << 1;
     v1 += v0;
     sw(v1, sp + 0x10);
-    P_LineAttack();
+    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
     v0 = (i32(s2) < 3);
     if (v0 != 0) goto loc_80016F20;
 loc_80016F9C:
@@ -1551,7 +1551,7 @@ loc_8001733C:
     sw(v0, sp + 0x10);
     a1 = lw(a0 + 0x24);
     a3 = 0;                                             // Result = 00000000
-    P_LineAttack();
+    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
 loc_80017368:
     ra = lw(sp + 0x20);
     s1 = lw(sp + 0x1C);

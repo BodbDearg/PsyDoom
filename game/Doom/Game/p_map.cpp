@@ -497,110 +497,70 @@ fixed_t P_AimLineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxD
     return (gpShootMObj->get()) ? *gShootSlope : 0;
 }
 
-void P_LineAttack() noexcept {
-loc_8001BE78:
-    sp -= 0x30;
-    sw(s4, sp + 0x20);
-    s4 = a0;
-    v0 = 0x7FFF0000;                                    // Result = 7FFF0000
-    sw(s5, sp + 0x24);
-    s5 = lw(sp + 0x40);
-    v0 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    sw(ra, sp + 0x28);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    sw(s4, gp + 0xAD4);                                 // Store to: gpShooter (800780B4)
-    sw(a2, gp + 0x9B8);                                 // Store to: gAttackRange (80077F98)
-    sw(a1, gp + 0x9A0);                                 // Store to: gAttackAngle (80077F80)
-    {
-        const bool bJump = (a3 != v0);
-        v0 = a3 + 1;
-        if (bJump) goto loc_8001BED8;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Takes an instant (raycast) shot for the shooter in the specified direction, applying a certain amount of base damage if a thing is hit.
+// If the vertical aim slope is 'INT32_MAX' then the bounds of the view frustrum are used to determine the min/max vertical aim range.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, const fixed_t zSlope, const int32_t damage) noexcept {
+    // If the aim slope is INT32_MAX then we use the screen bounds to determine the min/max slope.
+    // Otherwise just expand the specified slope range by 1 each way, so it's not zero sized.
+    if (zSlope == 0x7fffffff) {
+        *gAimTopSlope = 100 * FRACUNIT / 160;
+        *gAimBottomSlope = -100 * FRACUNIT / 160;
+    } else {
+        *gAimTopSlope = zSlope + 1;
+        *gAimBottomSlope = zSlope + -1;
     }
-    v1 = 0xFFFF0000;                                    // Result = FFFF0000
-    v1 |= 0x6000;                                       // Result = FFFF6000
-    v0 = 0xA000;                                        // Result = 0000A000
-    sw(v0, gp + 0xA18);                                 // Store to: gAimTopSlope (80077FF8)
-    sw(v1, gp + 0xD18);                                 // Store to: gAimBottomSlope (800782F8)
-    goto loc_8001BEE4;
-loc_8001BED8:
-    sw(v0, gp + 0xA18);                                 // Store to: gAimTopSlope (80077FF8)
-    v0 = a3 - 1;
-    sw(v0, gp + 0xD18);                                 // Store to: gAimBottomSlope (800782F8)
-loc_8001BEE4:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
-    v0++;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7BC4);                                // Store to: gValidCount (80077BC4)
+
+    // Take the shot!
+    *gValidCount += 1;
+    *gAttackAngle = angle;
+    *gAttackRange = maxDist;
+    *gpShooter = &shooter;
     P_Shoot2();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D2C);                               // Load from: gpShootMObj (800782D4)
-    s0 = 0x80080000;                                    // Result = 80080000
-    s0 = lw(s0 - 0x7D30);                               // Load from: gpShootLine (800782D0)
-    s2 = 0x80070000;                                    // Result = 80070000
-    s2 = lw(s2 + 0x7FC4);                               // Load from: gShootX (80077FC4)
-    s3 = 0x80070000;                                    // Result = 80070000
-    s3 = lw(s3 + 0x7FD0);                               // Load from: gShootY (80077FD0)
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 = lw(s1 + 0x7FD4);                               // Load from: gShootZ (80077FD4)
-    sw(v0, gp + 0x908);                                 // Store to: gpLineTarget (80077EE8)
-    v1 = 0x80000;                                       // Result = 00080000
-    if (v0 == 0) goto loc_8001BF8C;
-    v0 = lw(v0 + 0x64);
-    v0 &= v1;
-    a0 = s2;
-    if (v0 == 0) goto loc_8001BF60;
-    a1 = s3;
-    a2 = s1;
-    P_SpawnPuff(a0, a1, a2);
-    goto loc_8001BF70;
-loc_8001BF60:
-    a1 = s3;
-    a2 = s1;
-    a3 = s5;
-    P_SpawnBlood(a0, a1, a2, a3);
-loc_8001BF70:
-    a0 = lw(gp + 0x908);                                // Load from: gpLineTarget (80077EE8)
-    a1 = s4;
-    a2 = a1;
-    a3 = s5;
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    goto loc_8001C008;
-loc_8001BF8C:
-    if (s0 == 0) goto loc_8001C008;
-    v0 = lw(s0 + 0x14);
-    a0 = s4;
-    if (v0 == 0) goto loc_8001BFAC;
-    a1 = s0;
-    P_ShootSpecialLine(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<line_t>(a1));
-loc_8001BFAC:
-    v1 = lw(s0 + 0x38);
-    a0 = lw(v1 + 0xC);
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (a0 != v0) goto loc_8001BFF8;
-    v0 = lw(v1 + 0x4);
-    v0 = (i32(v0) < i32(s1));
-    if (v0 != 0) goto loc_8001C008;
-    a1 = lw(s0 + 0x3C);
-    if (a1 == 0) goto loc_8001BFF8;
-    v0 = lw(a1 + 0xC);
-    if (v0 == a0) goto loc_8001C008;
-loc_8001BFF8:
-    a0 = s2;
-    a1 = s3;
-    a2 = s1;
-    P_SpawnPuff(a0, a1, a2);
-loc_8001C008:
-    ra = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x30;
-    return;
+
+    // Grab the details for what was shot
+    const fixed_t shootX = *gShootX;
+    const fixed_t shootY = *gShootY;
+    const fixed_t shootZ = *gShootZ;
+    line_t* const pShootLine = gpShootLine->get();
+    mobj_t* const pShootMobj = gpShootMObj->get();
+
+    // Save what thing was hit globally
+    *gpLineTarget = pShootMobj;
+
+    // Shooting a thing?
+    if (pShootMobj) {
+        // Do blood (or smoke) then damage the thing
+        if (pShootMobj->flags & MF_NOBLOOD) {
+            P_SpawnPuff(shootX, shootY, gShootZ);
+        } else {
+            P_SpawnBlood(shootX, shootY, gShootZ, damage);
+        }
+
+        P_DamageMObj(*pShootMobj, &shooter, &shooter, damage);
+        return;
+    }
+
+    // Shooting a line?
+    if (pShootLine) {
+        // Try activate a line special if the line has it
+        if (pShootLine->special) {
+            P_ShootSpecialLine(shooter, *pShootLine);
+        }
+
+        // Spawn a puff unless we are shooting the sky (ceiling texture -1)
+        sector_t& sector = *pShootLine->frontsector;
+
+        if (sector.ceilingpic == -1) {
+            if (shootZ > sector.ceilingheight)
+                return;     // Not allowed to shoot the sky ceiling!
+
+            if (pShootLine->backsector && pShootLine->backsector->ceilingpic == -1)
+                return;     // Shooting a sky upper/lower wall!
+        }
+
+        P_SpawnPuff(shootX, shootY, shootZ);
+        return;
+    }
 }

@@ -1055,7 +1055,7 @@ loc_800208BC:
     sw(s2, sp + 0x10);
     a0 = lw(s3);
     a1 = s1 + s0;
-    P_LineAttack();
+    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     if (v0 == 0) goto loc_8002094C;
@@ -1109,7 +1109,7 @@ void A_Saw() noexcept {
     sw(s1, sp + 0x10);
     a0 = lw(s3);
     a1 = s2 + s0;
-    P_LineAttack();
+    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
     v0 = 0x80070000;                                    // Result = 80070000
     v0 = lw(v0 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
     if (v0 != 0) goto loc_80020A04;
@@ -1367,7 +1367,7 @@ loc_80020DB4:
     a0 = s3;
     a1 = s1;
     a2 = 0x8000000;                                     // Result = 08000000
-    P_LineAttack();
+    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
     ra = lw(sp + 0x28);
     s3 = lw(sp + 0x24);
     s2 = lw(sp + 0x20);
@@ -1462,7 +1462,7 @@ loc_80020F40:
     a3 = 0x7FFF0000;                                    // Result = 7FFF0000
     a3 |= 0xFFFF;                                       // Result = 7FFFFFFF
     a2 = 0x8000000;                                     // Result = 08000000
-    P_LineAttack();
+    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
     ra = lw(sp + 0x28);
     s3 = lw(sp + 0x24);
     s2 = lw(sp + 0x20);
@@ -1561,7 +1561,7 @@ loc_800210AC:
     sw(s0, sp + 0x10);
     a0 = lw(s3);
     a1 = s2 + s1;
-    P_LineAttack();
+    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
     v0 = (i32(s4) < 7);
     if (v0 != 0) goto loc_800210AC;
     ra = lw(sp + 0x30);
@@ -1703,7 +1703,7 @@ loc_800212B8:
     sw(s1, sp + 0x10);
     a0 = lw(s3);
     a3 += s0;
-    P_LineAttack();
+    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
     v0 = (i32(s4) < 0x14);
     if (v0 != 0) goto loc_800212B8;
     ra = lw(sp + 0x2C);
@@ -1826,7 +1826,7 @@ loc_80021520:
     a3 = 0x7FFF0000;                                    // Result = 7FFF0000
     a3 |= 0xFFFF;                                       // Result = 7FFFFFFF
     a2 = 0x8000000;                                     // Result = 08000000
-    P_LineAttack();
+    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
 loc_8002153C:
     ra = lw(sp + 0x28);
     s3 = lw(sp + 0x24);
