@@ -394,7 +394,7 @@ loc_8001BBC8:
     goto loc_8001BC08;
 loc_8001BBFC:
     a0 = lw(s5);
-    P_UseSpecialLine();
+    v0 = P_UseSpecialLine(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<line_t>(a1));
 loc_8001BC08:
     ra = lw(sp + 0x30);
     s5 = lw(sp + 0x2C);

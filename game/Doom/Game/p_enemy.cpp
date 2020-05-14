@@ -199,7 +199,7 @@ loc_80015F10:
 loc_80015F18:
     sw(v0, s0 + 0x6C);
     a0 = s0;
-    P_UseSpecialLine();
+    v0 = P_UseSpecialLine(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<line_t>(a1));
     v0 = (v0 > 0);
     goto loc_80015F54;
 loc_80015F2C:

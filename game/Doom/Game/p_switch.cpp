@@ -5,6 +5,7 @@
 #include "Doom/Base/sounds.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
+#include "doomdata.h"
 #include "p_ceiling.h"
 #include "p_doors.h"
 #include "p_floor.h"
@@ -12,7 +13,6 @@
 #include "p_plats.h"
 #include "p_setup.h"
 #include "p_spec.h"
-#include "PsxVm/PsxVm.h"
 
 // Defines the two textures used by a switch
 struct switchlist_t {
@@ -219,554 +219,390 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
     }
 }
 
-void P_UseSpecialLine() noexcept {
-loc_8002822C:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x80);
-    s0 = a1;
-    if (v0 != 0) goto loc_80028274;
-    v0 = lw(s0 + 0x10);
-    v0 &= 0x20;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80028808;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Attempts to use the given line and activate whatever special thing it does; used to activate switches and doors.
+// Returns 'true' if the line could be used, 'false' if not.
+// Assumes the line has a special and only attempts to activate the front side of the line, since that is all that is allowed.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_UseSpecialLine(mobj_t& mobj, line_t& line) noexcept {
+    // For monsters only certain types of lines can be used
+    if (!mobj.player) {
+        // Monsters cannot activate lines that are marked as secrets
+        if (line.flags & ML_SECRET)
+            return false;
+        
+        // Presently only ordinary manual doors can be activated by monsters
+        switch (line.special) {
+            case 1:     // Manual door raise
+                break;
+
+            default:
+                return false;
+        }
     }
-    v1 = lw(s0 + 0x14);
-    v0 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80028808;
+
+    // Try to activate the line's special
+    switch (line.special) {
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // Manually activated doors and locked doors
+        //----------------------------------------------------------------------------------------------------------------------------------
+        case 26:    // Blue door raise
+        case 27:    // Yellow door raise 
+        case 28:    // Red door raise
+        case 32:    // Blue door open
+        case 33:    // Red door open
+        case 34:    // Yellow door open
+        {      
+            if (P_CheckKeyLock(line, mobj)) {
+                EV_VerticalDoor(line, mobj);
+            }
+        }   break;
+
+        case 1:     // Vertical door
+        case 31:    // Manual door open
+        case 117:   // Blazing door raise
+        case 118:   // Blazing door open
+        {     
+            EV_VerticalDoor(line, mobj);
+        }   break;
+
+        case 99:    // Blue blazing door open
+        case 134:   // Red blazing door open
+        case 136:   // Yellow blazing door open
+        {     
+            if (P_CheckKeyLock(line, mobj)) {
+                if (EV_DoDoor(line, BlazeOpen)) {
+                    P_ChangeSwitchTexture(line, true);
+                }
+            }
+        }   break;
+
+        case 133:   // Blue blazing door open
+        case 135:   // Red blazing door open
+        case 137:   // Yellow blazing door open
+        {
+            if (P_CheckKeyLock(line, mobj)) {
+                if (EV_DoDoor(line, BlazeOpen)) {
+                    P_ChangeSwitchTexture(line, true);
+                }
+            }
+        }   break;
+
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // Repeatable switches
+        //----------------------------------------------------------------------------------------------------------------------------------
+
+        // Close door
+        case 42: {
+            if (EV_DoDoor(line, Close)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Lower ceiling to floor
+        case 43: {
+            if (EV_DoCeiling(line, lowerToFloor)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Lower floor to surrounding floor height
+        case 45: {
+            if (EV_DoFloor(line, lowerFloor)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Lower floor to lowest
+        case 60: {
+            if (EV_DoFloor(line, lowerFloorToLowest)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Open door
+        case 61: {
+            if (EV_DoDoor(line, Open)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Platform - down, wait, up, stay
+        case 62: {
+            if (EV_DoPlat(line, downWaitUpStay, 1)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Raise door
+        case 63: {
+            if (EV_DoDoor(line, Normal)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Raise floor to ceiling
+        case 64: {
+            if (EV_DoFloor(line, raiseFloor)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Raise floor - crush
+        case 65: {
+            if (EV_DoFloor(line, raiseFloorCrush)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Raise floor 24 and change texture
+        case 66: {
+            if (EV_DoPlat(line, raiseAndChange, 24)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Raise floor 32 and change texture
+        case 67: {
+            if (EV_DoPlat(line, raiseAndChange, 32)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Raise plat to next highest floor and change texture
+        case 68: {
+            if (EV_DoPlat(line, raiseToNearestAndChange, 0)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Raise floor to next highest floor
+        case 69: {
+            if (EV_DoFloor(line, raiseFloorToNearest)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Turbo lower floor
+        case 70: {
+            if (EV_DoFloor(line, turboLower)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Blazing door raise (faster than turbo!)
+        case 114: {
+            if (EV_DoDoor(line, BlazeRaise)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Blazing door open (faster than turbo!)
+        case 115: {
+            if (EV_DoDoor(line, BlazeOpen)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Blazing door close (faster than turbo!)
+        case 116: {
+            if (EV_DoDoor(line, BlazeClose)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Blazing platform - down, wait, up, stay
+        case 123: {
+            if (EV_DoPlat(line, blazeDWUS, 0)) {
+                P_ChangeSwitchTexture(line, true);
+            }
+        }   break;
+
+        // Light turn on
+        case 138: {
+            EV_LightTurnOn(line, 255);
+            P_ChangeSwitchTexture(line, true);
+        }   break;
+
+        // Light turn off
+        case 139: {
+            EV_LightTurnOn(line, 35);
+            P_ChangeSwitchTexture(line, true);
+        }   break;
+
+        //----------------------------------------------------------------------------------------------------------------------------------
+        // Once-only switches
+        //----------------------------------------------------------------------------------------------------------------------------------
+
+        // Build stairs
+        case 7: {
+            if (EV_BuildStairs(line, build8)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Change donut
+        case 9: {
+            if (EV_DoDonut(line)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Exit level
+        case 11: {
+            G_ExitLevel();
+            P_ChangeSwitchTexture(line, false);
+        }   break;
+
+        // Raise floor 32 and change texture
+        case 14: {
+            if (EV_DoPlat(line, raiseAndChange, 32)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Raise floor 24 and change texture
+        case 15: {
+            if (EV_DoPlat(line, raiseAndChange, 24)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        //  Raise floor to next highest floor
+        case 18: {
+            if (EV_DoFloor(line, raiseFloorToNearest)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Raise platform to next highest floor and change texture
+        case 20: {
+            if (EV_DoPlat(line, raiseToNearestAndChange, 0)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Platform - down, wait, up, stay
+        case 21: {
+            if (EV_DoPlat(line, downWaitUpStay, 0)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Lower floor to lowest
+        case 23: {
+            if (EV_DoFloor(line, lowerFloorToLowest)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Raise door
+        case 29: {
+            if (EV_DoDoor(line, Normal)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Lower ceiling to floor
+        case 41: {
+            if (EV_DoCeiling(line, lowerToFloor)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Ceiling crush and raise
+        case 49: {
+            if (EV_DoCeiling(line, crushAndRaise)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Close door
+        case 50: {
+            if (EV_DoDoor(line, Close)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Secret exit
+        case 51: {
+            G_SecretExitLevel(line.tag);
+            P_ChangeSwitchTexture(line, false);
+        }   break;
+
+        // Raise floor crush
+        case 55: {
+            if (EV_DoFloor(line, raiseFloorCrush)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Turbo lower floor
+        case 71: {
+            if (EV_DoFloor(line, turboLower)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Raise floor
+        case 101: {
+            if (EV_DoFloor(line, raiseFloor)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Lower floor to surrounding floor height
+        case 102: {
+            if (EV_DoFloor(line, lowerFloor)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Open door
+        case 103: {
+            if (EV_DoDoor(line, Open)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+        
+        // Blazing door raise (faster than turbo!)
+        case 111: {
+            if (EV_DoDoor(line, BlazeRaise)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Blazing door open (faster than turbo!)
+        case 112: {
+            if (EV_DoDoor(line, BlazeOpen)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Blazing door close (faster than turbo!)
+        case 113: {
+            if (EV_DoDoor(line, BlazeClose)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Blazing platform - down, wait, up, stay
+        case 122: {
+            if (EV_DoPlat(line, blazeDWUS, 0)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        // Build stairs - turbo 16
+        case 127: {
+            if (EV_BuildStairs(line, turbo16)) {
+                P_ChangeSwitchTexture(line, false);
+            }
+        }   break;
+
+        default:
+            break;
     }
-loc_80028274:
-    v0 = lw(s0 + 0x14);
-    v1 = v0 - 1;
-    v0 = (v1 < 0x8B);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80028804;
-    }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0xE34;                                        // Result = JumpTable_P_UseSpecialLine[0] (80010E34)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x800282BC: goto loc_800282BC;
-        case 0x80028804: goto loc_80028804;
-        case 0x800285C4: goto loc_800285C4;
-        case 0x800285E0: goto loc_800285E0;
-        case 0x800285F8: goto loc_800285F8;
-        case 0x8002860C: goto loc_8002860C;
-        case 0x8002862C: goto loc_8002862C;
-        case 0x8002864C: goto loc_8002864C;
-        case 0x80028668: goto loc_80028668;
-        case 0x80028688: goto loc_80028688;
-        case 0x800286A8: goto loc_800286A8;
-        case 0x800282A8: goto loc_800282A8;
-        case 0x800286C4: goto loc_800286C4;
-        case 0x800286E0: goto loc_800286E0;
-        case 0x8002842C: goto loc_8002842C;
-        case 0x80028448: goto loc_80028448;
-        case 0x80028464: goto loc_80028464;
-        case 0x80028718: goto loc_80028718;
-        case 0x80028734: goto loc_80028734;
-        case 0x80028750: goto loc_80028750;
-        case 0x80028768: goto loc_80028768;
-        case 0x80028480: goto loc_80028480;
-        case 0x8002849C: goto loc_8002849C;
-        case 0x800284B8: goto loc_800284B8;
-        case 0x800284D8: goto loc_800284D8;
-        case 0x800284F4: goto loc_800284F4;
-        case 0x80028550: goto loc_80028550;
-        case 0x80028510: goto loc_80028510;
-        case 0x80028530: goto loc_80028530;
-        case 0x8002856C: goto loc_8002856C;
-        case 0x8002858C: goto loc_8002858C;
-        case 0x800285A8: goto loc_800285A8;
-        case 0x800286FC: goto loc_800286FC;
-        case 0x800282D0: goto loc_800282D0;
-        case 0x80028784: goto loc_80028784;
-        case 0x800287A0: goto loc_800287A0;
-        case 0x800287BC: goto loc_800287BC;
-        case 0x80028328: goto loc_80028328;
-        case 0x80028344: goto loc_80028344;
-        case 0x80028360: goto loc_80028360;
-        case 0x8002837C: goto loc_8002837C;
-        case 0x80028398: goto loc_80028398;
-        case 0x800283B4: goto loc_800283B4;
-        case 0x800283D0: goto loc_800283D0;
-        case 0x800283F0: goto loc_800283F0;
-        case 0x80028410: goto loc_80028410;
-        case 0x800282FC: goto loc_800282FC;
-        case 0x800287D8: goto loc_800287D8;
-        case 0x800287E4: goto loc_800287E4;
-        default: jump_table_err(); break;
-    }
-loc_800282A8:
-    a0 = s0;
-    a1 = s1;
-    v0 = P_CheckKeyLock(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-loc_800282BC:
-    a0 = s0;
-    a1 = s1;
-    EV_VerticalDoor(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80028808;
-loc_800282D0:
-    a0 = s0;
-    a1 = s1;
-    v0 = P_CheckKeyLock(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 6;                                             // Result = 00000006
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_800282FC:
-    a0 = s0;
-    a1 = s1;
-    v0 = P_CheckKeyLock(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 6;                                             // Result = 00000006
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_80028328:
-    a0 = s0;
-    a1 = 5;                                             // Result = 00000005
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_80028344:
-    a0 = s0;
-    a1 = 6;                                             // Result = 00000006
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_80028360:
-    a0 = s0;
-    a1 = 7;                                             // Result = 00000007
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_8002837C:
-    a0 = s0;
-    a1 = 5;                                             // Result = 00000005
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_80028398:
-    a0 = s0;
-    a1 = 6;                                             // Result = 00000006
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_800283B4:
-    a0 = s0;
-    a1 = 7;                                             // Result = 00000007
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_800283D0:
-    a0 = s0;
-    a1 = 4;                                             // Result = 00000004
-    a2 = 0;                                             // Result = 00000000
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_800283F0:
-    a0 = s0;
-    a1 = 4;                                             // Result = 00000004
-    a2 = 0;                                             // Result = 00000000
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_80028410:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    v0 = EV_BuildStairs(*vmAddrToPtr<line_t>(a0), (stair_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_8002842C:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_80028448:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_80028464:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_80028480:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_8002849C:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_800284B8:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    a2 = 1;                                             // Result = 00000001
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_800284D8:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_800284F4:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_80028510:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    a2 = 0x18;                                          // Result = 00000018
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_80028530:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    a2 = 0x20;                                          // Result = 00000020
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_80028550:
-    a0 = s0;
-    a1 = 9;                                             // Result = 00000009
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_8002856C:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    a2 = 0;                                             // Result = 00000000
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_8002858C:
-    a0 = s0;
-    a1 = 4;                                             // Result = 00000004
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_800285A8:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80028808;
-    }
-    a0 = s0;
-    goto loc_800287F8;
-loc_800285C4:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    v0 = EV_BuildStairs(*vmAddrToPtr<line_t>(a0), (stair_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_800285E0:
-    a0 = s0;
-    v0 = EV_DoDonut(*vmAddrToPtr<line_t>(a0));
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_800285F8:
-    G_ExitLevel();
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_8002860C:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    a2 = 0x20;                                          // Result = 00000020
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_8002862C:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    a2 = 0x18;                                          // Result = 00000018
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_8002864C:
-    a0 = s0;
-    a1 = 4;                                             // Result = 00000004
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_80028668:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    a2 = 0;                                             // Result = 00000000
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_80028688:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    a2 = 0;                                             // Result = 00000000
-    v0 = EV_DoPlat(*vmAddrToPtr<line_t>(a0), (plattype_e) a1, a2);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_800286A8:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_800286C4:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_800286E0:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_800286FC:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_80028718:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    v0 = EV_DoCeiling(*vmAddrToPtr<line_t>(a0), (ceiling_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_80028734:
-    a0 = s0;
-    a1 = 2;                                             // Result = 00000002
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_80028750:
-    a0 = lw(s0 + 0x18);
-    G_SecretExitLevel(a0);
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_80028768:
-    a0 = s0;
-    a1 = 9;                                             // Result = 00000009
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_80028784:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_800287A0:
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_800287BC:
-    a0 = s0;
-    a1 = 3;                                             // Result = 00000003
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    a0 = s0;
-    if (v0 == 0) goto loc_80028804;
-    a1 = 0;                                             // Result = 00000000
-    goto loc_800287FC;
-loc_800287D8:
-    a0 = s0;
-    a1 = 0xFF;                                          // Result = 000000FF
-    goto loc_800287EC;
-loc_800287E4:
-    a0 = s0;
-    a1 = 0x23;                                          // Result = 00000023
-loc_800287EC:
-    EV_LightTurnOn(*vmAddrToPtr<line_t>(a0), a1);
-    a0 = s0;
-loc_800287F8:
-    a1 = 1;                                             // Result = 00000001
-loc_800287FC:
-    P_ChangeSwitchTexture(*vmAddrToPtr<line_t>(a0), a1);
-loc_80028804:
-    v0 = 1;                                             // Result = 00000001
-loc_80028808:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    return true;
 }
