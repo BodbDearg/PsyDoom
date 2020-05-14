@@ -721,7 +721,7 @@ loc_800285C4:
     goto loc_800287FC;
 loc_800285E0:
     a0 = s0;
-    EV_DoDonut();
+    v0 = EV_DoDonut(*vmAddrToPtr<line_t>(a0));
     a0 = s0;
     if (v0 == 0) goto loc_80028804;
     a1 = 0;                                             // Result = 00000000

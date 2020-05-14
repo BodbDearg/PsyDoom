@@ -32,6 +32,25 @@ enum stair_e : uint32_t {
     turbo16     // Quickly build by 16 units
 };
 
+// Holds the state and settings for a moving floor
+struct floormove_t {
+    thinker_t       thinker;
+    floor_e         type;
+    bool32_t        crush;              // Does the floor movement cause crushing?
+    VmPtr<sector_t> sector;             // The sector affected
+    int32_t         direction;          // 1 = up, -1 = down
+    int32_t         newspecial;         // TODO: comment
+    int16_t         texture;            // TODO: comment
+    int16_t         _pad;               // Unused padding
+    fixed_t         floordestheight;
+    fixed_t         speed;
+};
+
+static_assert(sizeof(floormove_t) == 44);
+
+// Standard speed for floors moving up and down
+static constexpr fixed_t FLOORSPEED = FRACUNIT * 3;
+
 result_e T_MovePlane(
     sector_t& sector,
     const fixed_t speed,
@@ -40,6 +59,9 @@ result_e T_MovePlane(
     const int32_t floorOrCeiling,
     const int32_t direction
 ) noexcept;
+
+// TODO: REMOVE eventually
+void _thunk_T_MoveFloor() noexcept;
 
 bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept;
 bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept;

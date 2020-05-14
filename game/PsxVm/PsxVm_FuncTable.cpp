@@ -111,7 +111,6 @@ extern void SL_PointOnSide2() noexcept;
 extern void SL_CheckSpecialLines() noexcept;
 extern void P_ShootSpecialLine() noexcept;
 extern void P_UpdateSpecials() noexcept;
-extern void EV_DoDonut() noexcept;
 extern void _thunk_T_DelayedAction() noexcept;
 extern void P_SpawnSpecials() noexcept;
 extern void P_StartButton() noexcept;
@@ -293,7 +292,6 @@ namespace PsxVm {
         { 0x80025AFC, &SL_CheckSpecialLines },
         { 0x80026D40, &P_ShootSpecialLine },
         { 0x80026FC8, &P_UpdateSpecials },
-        { 0x8002745C, &EV_DoDonut },
         { 0x80027718, &_thunk_T_DelayedAction },
         { 0x8002784C, &P_SpawnSpecials },
         { 0x80027EA8, &P_StartButton },

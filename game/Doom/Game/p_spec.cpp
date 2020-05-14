@@ -1181,147 +1181,92 @@ loc_80027400:
     return;
 }
 
-void EV_DoDonut() noexcept {
-loc_8002745C:
-    sp -= 0x40;
-    sw(fp, sp + 0x38);
-    fp = a0;
-    sw(s4, sp + 0x28);
-    s4 = -1;                                            // Result = FFFFFFFF
-    sw(s6, sp + 0x30);
-    s6 = 0;                                             // Result = 00000000
-    sw(s7, sp + 0x34);
-    s7 = 0x80020000;                                    // Result = 80020000
-    s7 -= 0x6FF0;                                       // Result = T_MoveFloor (80019010)
-    sw(s5, sp + 0x2C);
-    s5 = 0x10000;                                       // Result = 00010000
-    s5 |= 0x8000;                                       // Result = 00018000
-    sw(ra, sp + 0x3C);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-loc_800274A4:
-    v1 = *gNumSectors;
-    a0 = s4 + 1;                                        // Result = 00000000
-    v0 = (i32(a0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 << 1;                                   // Result = 00000000
-        if (bJump) goto loc_80027500;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Activates a 'donut' mover effect on the inner/hole sectors matching the given line's tag.
+// The donut effect raises the adjacent sector of the donut hole (outer donut) to the height of a sector adjacent to  that.
+// In addition to this the outer donut part has all floor damage removed and it's floor texture changed to the outermost sector's floor.
+// The inner part of the donut is also lowered to match the height of the outermost sector.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool EV_DoDonut(line_t& line) noexcept {
+    bool bActivatedMovers = false;
+
+    for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
+        // Only spawn a mover if there isn't already a special operating on this sector.
+        // This sector will be the inner part of the 'donut', the bit that is lowered:
+        sector_t& sector = gpSectors->get()[sectorIdx];
+
+        if (sector.specialdata)
+            continue;
+
+        bActivatedMovers = true;
+
+        // Get the next sector beyond the first line in this sector, that will be the outer ring of the 'donut', or the part that is raised:
+        sector_t* const pNextSector = getNextSector(sector.lines->get()[0], sector);
+
+        #if PC_PSX_DOOM_MODS
+            // PC-PSX: safety in case the level is setup wrong - if this line is not two sided then just ignore the command
+            if (!pNextSector)
+                continue;
+        #endif
+
+        // Run through all the lines of the next sector and try to find the first that has a back sector that isn't the inner part of the donut.
+        // This back sector gives us the floor height to raise to and also the floor pic to change to.
+        for (int32_t lineIdx = 0; lineIdx < pNextSector->linecount; ++lineIdx) {
+            line_t& nextSecLine = pNextSector->lines->get()[lineIdx];
+
+            #if PC_PSX_DOOM_MODS
+                // PC-PSX: safety - allow non two sided lines here, just skip over them
+                if (!nextSecLine.backsector)
+                    continue;
+            #endif
+
+            // Ignore this line if the back sector is the same as the inner part of the donut
+            sector_t& backSector = *nextSecLine.backsector;
+
+            if (&backSector == &sector)
+                continue;
+
+            // Create the mover for the outer part of the donut.
+            // This raises the floor to the height of the back sector we just found and changes the texture to that.
+            // This is normally used to raise slime and change the slime texture.
+            {
+                floormove_t& floorMove = *(floormove_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(floormove_t), PU_LEVSPEC, nullptr);
+                P_AddThinker(floorMove.thinker);
+                pNextSector->specialdata = &floorMove;
+
+                floorMove.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_MoveFloor);
+                floorMove.type = donutRaise;
+                floorMove.sector = pNextSector;
+                floorMove.direction = 1;
+                floorMove.crush = false;
+                floorMove.speed = FLOORSPEED / 2;
+                floorMove.newspecial = 0;                               // Remove slime etc. damage
+                floorMove.texture = (int16_t) backSector.floorpic;      // Change floor to this picture
+                floorMove.floordestheight = backSector.floorheight;
+            }
+
+            // Create the mover for the inner part or the 'hole' of the donut.
+            // This sector just lowers down to the height of the back sector we just found.
+            {
+                floormove_t& floorMove = *(floormove_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(floormove_t), PU_LEVSPEC, nullptr);
+                P_AddThinker(floorMove.thinker);
+                sector.specialdata = &floorMove;
+
+                floorMove.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_MoveFloor);
+                floorMove.type = lowerFloor;
+                floorMove.sector = &sector;
+                floorMove.direction = -1;
+                floorMove.crush = false;
+                floorMove.speed = FLOORSPEED / 2;
+                floorMove.floordestheight = backSector.floorheight;
+            }
+
+            // We're done doing the donut effect now
+            break;
+        }
     }
-    a2 = v1;
-    v0 += a0;                                           // Result = 00000000
-    v0 <<= 3;                                           // Result = 00000000
-    v0 -= a0;                                           // Result = 00000000
-    v0 <<= 2;                                           // Result = 00000000
-    v1 = *gpSectors;
-    a1 = lw(fp + 0x18);
-    v1 += v0;
-loc_800274E0:
-    v0 = lw(v1 + 0x18);
-    s4 = a0;
-    if (v0 == a1) goto loc_80027504;
-    a0++;
-    v0 = (i32(a0) < i32(a2));
-    v1 += 0x5C;
-    if (v0 != 0) goto loc_800274E0;
-loc_80027500:
-    s4 = -1;                                            // Result = FFFFFFFF
-loc_80027504:
-    v0 = s4 << 1;                                       // Result = FFFFFFFE
-    if (i32(s4) < 0) goto loc_80027670;
-    v0 += s4;                                           // Result = FFFFFFFD
-    v0 <<= 3;                                           // Result = FFFFFFE8
-    v0 -= s4;                                           // Result = FFFFFFE9
-    v1 = *gpSectors;
-    v0 <<= 2;                                           // Result = FFFFFFA4
-    s3 = v0 + v1;
-    v0 = lw(s3 + 0x50);
-    if (v0 != 0) goto loc_800274A4;
-    v0 = lw(s3 + 0x58);
-    v1 = lw(v0);
-    v0 = lw(v1 + 0x10);
-    v0 &= 4;
-    s6 = 1;                                             // Result = 00000001
-    if (v0 != 0) goto loc_80027610;
-    s1 = 0;                                             // Result = 00000000
-    goto loc_80027624;
-loc_80027564:
-    a1 = 0x2C;
-    a2 = 4;
-    a0 = *gpMainMemZone;
-    a3 = 0;
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    a1 = 0x2C;
-    a0 = *gpMainMemZone;
-    v0 = 0xA;
-    sw(s0, s1 + 0x50);
-    sw(v0, s0 + 0xC);
-    v0 = 1;                                             // Result = 00000001
-    sw(s7, s0 + 0x8);
-    sw(0, s0 + 0x10);
-    sw(v0, s0 + 0x18);
-    sw(s1, s0 + 0x14);
-    sw(s5, s0 + 0x28);
-    v0 = lhu(s2 + 0x8);
-    a2 = 4;                                             // Result = 00000004
-    sw(0, s0 + 0x1C);
-    sh(v0, s0 + 0x20);
-    v0 = lw(s2);
-    a3 = 0;                                             // Result = 00000000
-    sw(v0, s0 + 0x24);
-    _thunk_Z_Malloc();
-    s0 = v0;
-    a0 = s0;
-    _thunk_P_AddThinker();
-    v0 = -1;                                            // Result = FFFFFFFF
-    sw(s0, s3 + 0x50);
-    sw(s7, s0 + 0x8);
-    sw(0, s0 + 0xC);
-    sw(0, s0 + 0x10);
-    sw(v0, s0 + 0x18);
-    sw(s3, s0 + 0x14);
-    sw(s5, s0 + 0x28);
-    v0 = lw(s2);
-    sw(v0, s0 + 0x24);
-    goto loc_800274A4;
-loc_80027610:
-    s1 = lw(v1 + 0x38);
-    if (s1 != s3) goto loc_80027624;
-    s1 = lw(v1 + 0x3C);
-loc_80027624:
-    v0 = lw(s1 + 0x54);
-    a0 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_800274A4;
-    a1 = v0;
-    v1 = lw(s1 + 0x58);
-loc_80027640:
-    v0 = lw(v1);
-    s2 = lw(v0 + 0x3C);
-    a0++;
-    if (s2 != s3) goto loc_80027564;
-    v0 = (i32(a0) < i32(a1));
-    v1 += 4;
-    if (v0 != 0) goto loc_80027640;
-    goto loc_800274A4;
-loc_80027670:
-    v0 = s6;                                            // Result = 00000000
-    ra = lw(sp + 0x3C);
-    fp = lw(sp + 0x38);
-    s7 = lw(sp + 0x34);
-    s6 = lw(sp + 0x30);
-    s5 = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x40;
-    return;
+
+    return bActivatedMovers;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

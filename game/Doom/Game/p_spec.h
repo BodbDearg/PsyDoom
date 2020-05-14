@@ -43,7 +43,7 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept;
 void P_ShootSpecialLine() noexcept;
 void P_PlayerInSpecialSector(player_t& player) noexcept;
 void P_UpdateSpecials() noexcept;
-void EV_DoDonut() noexcept;
+bool EV_DoDonut(line_t& line) noexcept;
 void G_ExitLevel() noexcept;
 void G_SecretExitLevel(const int32_t nextMap) noexcept;
 void P_SpawnSpecials() noexcept;
