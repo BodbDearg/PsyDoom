@@ -12,6 +12,12 @@ enum glowtype_e : uint32_t {
     glowto255
 };
 
+static constexpr int32_t GLOWSPEED      = 3;    // Speed that glowing lights ramp up and down at
+static constexpr int32_t STROBEBRIGHT   = 3;    // Number of tics in the bright state for the strobe flash
+static constexpr int32_t TURBODARK      = 4;    // TODO: COMMENT
+static constexpr int32_t FASTDARK       = 8;    // TODO: COMMENT
+static constexpr int32_t SLOWDARK       = 15;   // Number of tics in the dark phase for a slow light strobe flash
+
 void P_SpawnFireFlicker(sector_t& sector) noexcept;
 void P_SpawnLightFlash(sector_t& sector) noexcept;
 void P_SpawnStrobeFlash(sector_t& sector, const int32_t darkTime, const bool bInSync) noexcept;

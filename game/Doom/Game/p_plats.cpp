@@ -16,38 +16,11 @@
 #define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
-// Current status for a moving platform
-enum plat_e : uint32_t {
-    up,
-    down,
-    waiting,
-    in_stasis
-};
-
-// Status and state for a moving platform
-struct plat_t {
-    thinker_t           thinker;
-    VmPtr<sector_t>     sector;
-    fixed_t             speed;
-    fixed_t             low;            // TODO: COMMENT
-    fixed_t             high;           // TODO: COMMENT
-    int32_t             wait;           // TODO: COMMENT
-    int32_t             count;          // TODO: COMMENT
-    plat_e              status;         // TODO: COMMENT
-    plat_e              oldstatus;      // TODO: COMMENT
-    bool32_t            crush;
-    int32_t             tag;            // TODO: COMMENT
-    plattype_e          type;
-};
-
-static_assert(sizeof(plat_t) == 56);
-
-static constexpr int32_t MAXPLATS   = 30;               // Maximum number of active platforms
 static constexpr int32_t PLATWAIT   = 3;                // Number of seconds for platforms to be in the waiting state
 static constexpr int32_t PLATSPEED  = 2 * FRACUNIT;     // Standard platform speed (some platforms are slower or faster)
 
 // Contains all of the active platforms in the level (some slots may be empty)
-static const VmPtr<VmPtr<plat_t>[MAXPLATS]> gpActivePlats(0x80097C44);
+const VmPtr<VmPtr<plat_t>[MAXPLATS]> gpActivePlats(0x80097C44);
 
 // Not required externally: making private to this module
 static void P_AddActivePlat(plat_t& plat) noexcept;

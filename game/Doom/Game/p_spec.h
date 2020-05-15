@@ -18,14 +18,10 @@ struct anim_t {
 
 static_assert(sizeof(anim_t) == 24);
 
-// The number of animated floor/texture types in the game
-static constexpr int32_t MAXANIMS = 16;
-
-extern const VmPtr<anim_t[MAXANIMS]>    gAnims;
-extern const VmPtr<VmPtr<anim_t>>       gpLastAnim;
-extern const VmPtr<card_t>              gMapBlueKeyType;
-extern const VmPtr<card_t>              gMapRedKeyType;
-extern const VmPtr<card_t>              gMapYellowKeyType;
+extern const VmPtr<card_t>      gMapBlueKeyType;
+extern const VmPtr<card_t>      gMapRedKeyType;
+extern const VmPtr<card_t>      gMapYellowKeyType;
+extern const VmPtr<int32_t>     gMapBossSpecialFlags;
 
 void P_InitPicAnims() noexcept;
 side_t* getSide(const int32_t sectorIdx, const int32_t lineIdx, const int32_t sideIdx) noexcept;

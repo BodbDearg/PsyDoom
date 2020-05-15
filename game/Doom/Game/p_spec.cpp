@@ -44,6 +44,9 @@ struct delayaction_t {
 
 static_assert(sizeof(delayaction_t) == 20);
 
+// The number of animated floor/texture types in the game
+static constexpr int32_t MAXANIMS = 16;
+
 // Definitions for all flat and texture animations in the game
 static const animdef_t gAnimDefs[MAXANIMS] = {
     { 0, "BLOOD1",   "BLOOD3",   3 },
@@ -64,11 +67,17 @@ static const animdef_t gAnimDefs[MAXANIMS] = {
     { 1, "WARN01",   "WARN02",   3 }
 };
 
-const VmPtr<anim_t[MAXANIMS]>   gAnims(0x800863AC);
-const VmPtr<VmPtr<anim_t>>      gpLastAnim(0x80078164);
-const VmPtr<card_t>             gMapBlueKeyType(0x80077E9C);
-const VmPtr<card_t>             gMapRedKeyType(0x8007821C);
-const VmPtr<card_t>             gMapYellowKeyType(0x800780A0);
+static constexpr int32_t MAXLINEANIMS = 32;     // Maximum number of line animations allowed
+
+const VmPtr<card_t>     gMapBlueKeyType(0x80077E9C);        // What type of blue key the map uses (if map has a blue key)
+const VmPtr<card_t>     gMapRedKeyType(0x8007821C);         // What type of red key the map uses (if map has a red key)
+const VmPtr<card_t>     gMapYellowKeyType(0x800780A0);      // What type of yellow key the map uses (if map has a yellow key)
+const VmPtr<int32_t>    gMapBossSpecialFlags(0x80077F88);   // PSX addition: What types of boss specials (triggers) are active on the current map
+
+static const VmPtr<anim_t[MAXANIMS]>                gAnims(0x800863AC);                 // The list of animated textures
+static const VmPtr<VmPtr<anim_t>>                   gpLastAnim(0x80078164);             // Points to the end of the list of animated textures
+static const VmPtr<VmPtr<line_t>[MAXLINEANIMS]>     gpLineSpecialList(0x8009757C);      // A list of scrolling lines for the level
+static const VmPtr<int32_t>                         gNumLinespecials(0x80077F50);       // The number of scrolling lines in the level
 
 // TODO: REMOVE eventually
 void _thunk_T_DelayedAction() noexcept;
@@ -1293,348 +1302,95 @@ void G_SecretExitLevel(const int32_t nextMap) noexcept {
     P_ScheduleDelayedAction(4, G_CompleteLevel);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawns special thinkers (for lights) in a level and sets up other special related stuff
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnSpecials() noexcept {
-loc_8002784C:
-    v0 = *gNumSectors;
-    sp -= 0x38;
-    sw(s0, sp + 0x28);
-    s0 = *gpSectors;
-    sw(s1, sp + 0x2C);
-    s1 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x30);
-    if (i32(v0) <= 0) goto loc_80027A54;
-loc_80027874:
-    v1 = lw(s0 + 0x14);
-    v0 = 0xC;                                           // Result = 0000000C
-    if (v1 == 0) goto loc_80027A38;
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 0xD);
-        if (bJump) goto loc_800279B8;
+    // Spawn thinkers for sector specials
+    for (int32_t sectorIdx = 0; sectorIdx < *gNumSectors; ++sectorIdx) {
+        sector_t& sector = gpSectors->get()[sectorIdx];
+
+        if (!sector.special)
+            continue;
+
+        switch (sector.special) {
+            case 1:     P_SpawnLightFlash(sector);                      break;  // Flickering lights
+            case 2:     P_SpawnStrobeFlash(sector, FASTDARK, false);    break;  // Strobe fast
+            case 3:     P_SpawnStrobeFlash(sector, SLOWDARK, false);    break;  // Strobe slow
+            case 8:     P_SpawnGlowingLight(sector, glowtolower);       break;  // Glowing light
+            case 9:     *gTotalSecret += 1;                             break;  // Secret sector
+            case 10:    P_SpawnDoorCloseIn30(sector);                   break;  // Door close in 30 seconds
+            case 12:    P_SpawnStrobeFlash(sector, SLOWDARK, true);     break;  // Sync strobe slow
+            case 13:    P_SpawnStrobeFlash(sector, FASTDARK, true);     break;  // Sync strobe fast
+            case 14:    P_SpawnDoorRaiseIn5Mins(sector, sectorIdx);     break;  // Door raise in 5 minutes
+            case 17:    P_SpawnFireFlicker(sector);                     break;  // Fire flicker
+            case 200:   P_SpawnGlowingLight(sector, glowto10);          break;  // Glow to dark
+            case 201:   P_SpawnGlowingLight(sector, glowto255);         break;  // Glow to bright
+            case 202:   P_SpawnRapidStrobeFlash(sector);                break;  // Rapid strobe flash (PSX addition)
+            case 204:   P_SpawnStrobeFlash(sector, TURBODARK, false);   break;  // Strobe flash
+            default:    break;
+        }
     }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 3;                                         // Result = 00000003
-        if (bJump) goto loc_800278F4;
+
+    // Save scrolling line specials to their own list (for quick updating)
+    *gNumLinespecials = 0;
+    
+    for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx) {
+        line_t& line = gpLines->get()[lineIdx];
+
+        switch (line.special) {
+            case 200:   // Effect: scroll left
+            case 201:   // Effect: scroll right
+            case 202:   // Effect: scroll up
+            case 203:   // Effect: scroll down
+            {
+                if (*gNumLinespecials < MAXLINEANIMS) {
+                    gpLineSpecialList[*gNumLinespecials] = &line;
+                    *gNumLinespecials += 1;
+                }
+            }   break;
+            
+            default:
+                break;
+        }
     }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 4);
-        if (bJump) goto loc_8002796C;
+
+    // PSX addition: if special sectors for bosses are found, set the appropriate boss special flag bits.
+    // These are sectors that activate when all enemies of the corresponding boss type are killed.
+    *gMapBossSpecialFlags = 0;
+
+    for (int32_t sectorIdx = 0; sectorIdx < *gNumSectors; ++sectorIdx) {
+        sector_t& sector = gpSectors->get()[sectorIdx];
+
+        switch (sector.tag) {
+            case 666:   *gMapBossSpecialFlags |= 0x01;  break;      // Kill all 'MT_FATSO' to activate this 'lowerFloorToLowest' floor
+            case 667:   *gMapBossSpecialFlags |= 0x02;  break;      // Kill all 'MT_BABY' to activate this 'raiseFloor24' floor
+            case 668:   *gMapBossSpecialFlags |= 0x04;  break;      // Kill all 'MT_SPIDER' to activate this 'lowerFloorToLowest' floor
+            case 669:   *gMapBossSpecialFlags |= 0x08;  break;      // Kill all 'MT_KNIGHT' to activate this 'lowerFloorToLowest' floor
+            case 670:   *gMapBossSpecialFlags |= 0x10;  break;      // Kill all 'MT_CYBORG' to activate this 'Open' door
+            case 671:   *gMapBossSpecialFlags |= 0x20;  break;      // Kill all 'MT_BRUISER' to activate this 'lowerFloorToLowest' floor
+
+            default:
+                break;
+        }
     }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_800278BC;
+
+    // Run through all map objects to see if any skull keys are being used instead of keycards.
+    // This is required for the correct sprite to be used for HUD key flashes (skull vs card).
+    *gMapRedKeyType = it_redcard;
+    *gMapBlueKeyType = it_bluecard;
+    *gMapYellowKeyType = it_yellowcard;
+
+    for (mobj_t* pmobj = gMObjHead->next.get(); pmobj != gMObjHead.get(); pmobj = pmobj->next.get()) {
+        switch (pmobj->type) {
+            case MT_MISC7:  *gMapYellowKeyType  = it_yellowskull;   break;
+            case MT_MISC8:  *gMapRedKeyType     = it_redskull;      break;
+            case MT_MISC9:  *gMapBlueKeyType    = it_blueskull;     break;
+        }
     }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_80027954;
-    }
-    a0 = s0;
-    if (v1 == v0) goto loc_80027964;
-    s1++;
-    goto loc_80027A3C;
-loc_800278BC:
-    v0 = 9;                                             // Result = 00000009
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 0xA);
-        if (bJump) goto loc_80027988;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_800278E0;
-    }
-    a0 = s0;
-    if (v1 == v0) goto loc_80027978;
-    s1++;
-    goto loc_80027A3C;
-loc_800278E0:
-    v0 = 0xA;                                           // Result = 0000000A
-    if (v1 == v0) goto loc_800279A8;
-    s1++;
-    goto loc_80027A3C;
-loc_800278F4:
-    v0 = 0xC8;                                          // Result = 000000C8
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 0xC9);
-        if (bJump) goto loc_800279F8;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xE;                                       // Result = 0000000E
-        if (bJump) goto loc_8002792C;
-    }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 0xE);
-        if (bJump) goto loc_800279D4;
-    }
-    a0 = s0;
-    if (v0 != 0) goto loc_800279C8;
-    v0 = 0x11;                                          // Result = 00000011
-    if (v1 == v0) goto loc_800279E8;
-    s1++;
-    goto loc_80027A3C;
-loc_8002792C:
-    v0 = 0xCA;                                          // Result = 000000CA
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 0xCA);
-        if (bJump) goto loc_80027A1C;
-    }
-    a0 = s0;
-    if (v0 != 0) goto loc_80027A0C;
-    v0 = 0xCC;                                          // Result = 000000CC
-    a1 = 4;                                             // Result = 00000004
-    if (v1 == v0) goto loc_80027A2C;
-    s1++;
-    goto loc_80027A3C;
-loc_80027954:
-    a0 = s0;
-    P_SpawnLightFlash(*vmAddrToPtr<sector_t>(a0));
-    s1++;
-    goto loc_80027A3C;
-loc_80027964:
-    a1 = 8;                                             // Result = 00000008
-    goto loc_80027A2C;
-loc_8002796C:
-    a0 = s0;
-    a1 = 0xF;                                           // Result = 0000000F
-    goto loc_80027A2C;
-loc_80027978:
-    a1 = 0;                                             // Result = 00000000
-    P_SpawnGlowingLight(*vmAddrToPtr<sector_t>(a0), (glowtype_e) a1);
-    s1++;
-    goto loc_80027A3C;
-loc_80027988:
-    v0 = *gTotalSecret;
-    v0++;
-    at = 0x80070000;                                    // Result = 80070000
-    *gTotalSecret = v0;
-    s1++;
-    goto loc_80027A3C;
-loc_800279A8:
-    a0 = s0;
-    P_SpawnDoorCloseIn30(*vmAddrToPtr<sector_t>(a0));
-    s1++;
-    goto loc_80027A3C;
-loc_800279B8:
-    a0 = s0;
-    a1 = 0xF;                                           // Result = 0000000F
-    a2 = 1;                                             // Result = 00000001
-    goto loc_80027A30;
-loc_800279C8:
-    a1 = 8;                                             // Result = 00000008
-    a2 = 1;                                             // Result = 00000001
-    goto loc_80027A30;
-loc_800279D4:
-    a0 = s0;
-    a1 = s1;
-    P_SpawnDoorRaiseIn5Mins(*vmAddrToPtr<sector_t>(a0), a1);
-    s1++;
-    goto loc_80027A3C;
-loc_800279E8:
-    a0 = s0;
-    P_SpawnFireFlicker(*vmAddrToPtr<sector_t>(a0));
-    s1++;
-    goto loc_80027A3C;
-loc_800279F8:
-    a0 = s0;
-    a1 = 1;                                             // Result = 00000001
-    P_SpawnGlowingLight(*vmAddrToPtr<sector_t>(a0), (glowtype_e) a1);
-    s1++;
-    goto loc_80027A3C;
-loc_80027A0C:
-    a1 = 2;                                             // Result = 00000002
-    P_SpawnGlowingLight(*vmAddrToPtr<sector_t>(a0), (glowtype_e) a1);
-    s1++;
-    goto loc_80027A3C;
-loc_80027A1C:
-    a0 = s0;
-    P_SpawnRapidStrobeFlash(*vmAddrToPtr<sector_t>(a0));
-    s1++;
-    goto loc_80027A3C;
-loc_80027A2C:
-    a2 = 0;                                             // Result = 00000000
-loc_80027A30:
-    P_SpawnStrobeFlash(*vmAddrToPtr<sector_t>(a0), a1, a2);
-loc_80027A38:
-    s1++;
-loc_80027A3C:
-    v0 = *gNumSectors;
-    v0 = (i32(s1) < i32(v0));
-    s0 += 0x5C;
-    if (v0 != 0) goto loc_80027874;
-loc_80027A54:
-    v0 = *gNumLines;
-    sw(0, gp + 0x970);                                  // Store to: gNumLinespecials (80077F50)
-    s1 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80027AD0;
-    a2 = 0x80090000;                                    // Result = 80090000
-    a2 += 0x757C;                                       // Result = gpLineSpecialList[0] (8009757C)
-    a1 = v0;
-    a0 = *gpLines;
-loc_80027A7C:
-    v1 = lw(a0 + 0x14);
-    v0 = (i32(v1) < 0xCC);
-    s1++;
-    if (v0 == 0) goto loc_80027AC4;
-    v0 = (i32(v1) < 0xC8);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(s1) < i32(a1));
-        if (bJump) goto loc_80027AC8;
-    }
-    v1 = lw(gp + 0x970);                                // Load from: gNumLinespecials (80077F50)
-    v0 = (i32(v1) < 0x20);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80027AC4;
-    }
-    v0 += a2;
-    sw(a0, v0);
-    v0 = v1 + 1;
-    sw(v0, gp + 0x970);                                 // Store to: gNumLinespecials (80077F50)
-loc_80027AC4:
-    v0 = (i32(s1) < i32(a1));
-loc_80027AC8:
-    a0 += 0x4C;
-    if (v0 != 0) goto loc_80027A7C;
-loc_80027AD0:
-    v0 = *gNumSectors;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7F88);                                 // Store to: gMapBossSpecialFlags (80077F88)
-    s1 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80027BA4;
-    a2 = 0x80010000;                                    // Result = 80010000
-    a2 += 0xE1C;                                        // Result = JumpTable_P_SpawnSpecials[0] (80010E1C)
-    a1 = v0;
-    a0 = *gpSectors;
-loc_80027AFC:
-    v0 = lw(a0 + 0x18);
-    v1 = v0 - 0x29A;
-    v0 = (v1 < 6);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80027B94;
-    }
-    v0 += a2;
-    v0 = lw(v0);
-    switch (v0) {
-        case 0x80027B2C: goto loc_80027B2C;
-        case 0x80027B3C: goto loc_80027B3C;
-        case 0x80027B4C: goto loc_80027B4C;
-        case 0x80027B5C: goto loc_80027B5C;
-        case 0x80027B6C: goto loc_80027B6C;
-        case 0x80027B7C: goto loc_80027B7C;
-        default: jump_table_err(); break;
-    }
-loc_80027B2C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    v0 |= 1;
-    goto loc_80027B8C;
-loc_80027B3C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    v0 |= 2;
-    goto loc_80027B8C;
-loc_80027B4C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    v0 |= 4;
-    goto loc_80027B8C;
-loc_80027B5C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    v0 |= 8;
-    goto loc_80027B8C;
-loc_80027B6C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    v0 |= 0x10;
-    goto loc_80027B8C;
-loc_80027B7C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    v0 |= 0x20;
-loc_80027B8C:
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7F88);                                // Store to: gMapBossSpecialFlags (80077F88)
-loc_80027B94:
-    s1++;
-    v0 = (i32(s1) < i32(a1));
-    a0 += 0x5C;
-    if (v0 != 0) goto loc_80027AFC;
-loc_80027BA4:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x715C;                                       // Result = gMObjHead[5] (800A8EA4)
-    v1 = 1;                                             // Result = 00000001
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v1, at + 0x7E9C);                                // Store to: gMapBlueKeyType (80077E9C)
-    v1 = 2;                                             // Result = 00000002
-    a0 = lw(v0);                                        // Load from: gMObjHead[5] (800A8EA4)
-    v0 -= 0x14;                                         // Result = gMObjHead[0] (800A8E90)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(v1, at - 0x7F60);                                // Store to: gMapYellowKeyType (800780A0)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7DE4);                                 // Store to: gMapRedKeyType (8007821C)
-    t3 = 0x29;                                          // Result = 00000029
-    if (a0 == v0) goto loc_80027C5C;
-    t2 = 0x28;                                          // Result = 00000028
-    t1 = 0x2A;                                          // Result = 0000002A
-    t0 = 4;                                             // Result = 00000004
-    a3 = 5;                                             // Result = 00000005
-    a2 = 3;                                             // Result = 00000003
-    a1 = v0;                                            // Result = gMObjHead[0] (800A8E90)
-loc_80027BF4:
-    v1 = lw(a0 + 0x54);
-    v0 = (v1 < 0x2A);
-    if (v1 == t3) goto loc_80027C44;
-    if (v0 == 0) goto loc_80027C1C;
-    if (v1 == t2) goto loc_80027C34;
-    goto loc_80027C4C;
-loc_80027C1C:
-    if (v1 != t1) goto loc_80027C4C;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(t0, at + 0x7E9C);                                // Store to: gMapBlueKeyType (80077E9C)
-    goto loc_80027C4C;
-loc_80027C34:
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a3, at - 0x7F60);                                // Store to: gMapYellowKeyType (800780A0)
-    goto loc_80027C4C;
-loc_80027C44:
-    at = 0x80080000;                                    // Result = 80080000
-    sw(a2, at - 0x7DE4);                                // Store to: gMapRedKeyType (8007821C)
-loc_80027C4C:
-    a0 = lw(a0 + 0x14);
-    if (a0 != a1) goto loc_80027BF4;
-loc_80027C5C:
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 -= 0x62E8;                                       // Result = gpActiveCeilings[0] (800A9D18)
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x78;                                          // Result = 00000078
-    _thunk_D_memset();
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7C44;                                       // Result = gpActivePlats[0] (80097C44)
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x78;                                          // Result = 00000078
-    _thunk_D_memset();
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x77AC;                                       // Result = gButtonList_1[0] (800977AC)
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x140;                                         // Result = 00000140
-    _thunk_D_memset();
-    ra = lw(sp + 0x30);
-    s1 = lw(sp + 0x2C);
-    s0 = lw(sp + 0x28);
-    sp += 0x38;
-    return;
+
+    // Clear these lists
+    D_memset(gpActiveCeilings.get(), std::byte(0), MAXCEILINGS * sizeof(gpActiveCeilings[0]));
+    D_memset(gpActivePlats.get(), std::byte(0), MAXPLATS * sizeof(gpActivePlats[0]));
+    D_memset(gButtonList.get(), std::byte(0), MAXBUTTONS * sizeof(gButtonList[0]));
 }

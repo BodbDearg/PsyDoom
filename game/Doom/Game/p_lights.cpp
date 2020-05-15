@@ -59,12 +59,6 @@ struct glow_t {
 
 static_assert(sizeof(glow_t) == 28);
 
-static constexpr int32_t GLOWSPEED      = 3;    // Speed that glowing lights ramp up and down at
-static constexpr int32_t STROBEBRIGHT   = 3;    // Number of tics in the bright state for the strobe flash
-static constexpr int32_t TURBODARK      = 4;    // TODO: COMMENT
-static constexpr int32_t FASTDARK       = 8;    // TODO: COMMENT
-static constexpr int32_t SLOWDARK       = 15;   // Number of tics in the dark phase for a slow light strobe flash
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a light that flickers like fire
 //------------------------------------------------------------------------------------------------------------------------------------------
