@@ -239,7 +239,7 @@ void P_UseLines(player_t& player) noexcept {
 // Apply splash/bomb damage to the given thing from the current explosion, if applicable and in range etc.
 // Note: the 'bomb source' is the thing that caused the explosion, not the projectile itself ('bomb spot').
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
+static bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
     // Non shootable things get no splash damage
     if ((mobj.flags & MF_SHOOTABLE) == 0)
         return true;
