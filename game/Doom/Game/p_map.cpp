@@ -28,10 +28,14 @@ const VmPtr<fixed_t>            gTryMoveX(0x80078150);          // Try move: pos
 const VmPtr<fixed_t>            gTryMoveY(0x80078154);          // Try move: position we're attempting to move to (Y)
 const VmPtr<bool32_t>           gbCheckPosOnly(0x800780E8);     // Try move: if 'true' then check if the position is valid to move to only, don't actually move there
 
-static const VmPtr<VmPtr<mobj_t>>   gpLineTarget(0x80077EE8);       // The thing being shot at in 'P_AimLineAttack' and 'P_LineAttack'.
-static const VmPtr<VmPtr<mobj_t>>   gpBombSource(0x80077EF0);       // Radius attacks: the thing responsible for the explosion (player, monster)
-static const VmPtr<VmPtr<mobj_t>>   gpBombSpot(0x800781A0);         // Radius attacks: the object exploding and it's position (barrel, missile etc.)
-static const VmPtr<int32_t>         gBombDamage(0x80077E94);        // Radius attacks: how much damage the explosion does before falloff
+static const VmPtr<VmPtr<mobj_t>>   gpLineTarget(0x80077EE8);   // The thing being shot at in 'P_AimLineAttack' and 'P_LineAttack'.
+static const VmPtr<VmPtr<mobj_t>>   gpBombSource(0x80077EF0);   // Radius attacks: the thing responsible for the explosion (player, monster)
+static const VmPtr<VmPtr<mobj_t>>   gpBombSpot(0x800781A0);     // Radius attacks: the object exploding and it's position (barrel, missile etc.)
+static const VmPtr<int32_t>         gBombDamage(0x80077E94);    // Radius attacks: how much damage the explosion does before falloff
+static const VmPtr<divline_t>       gUseLine(0x800A8748);       // The 'use' line being cast from the player towards walls; we try to activate walls that it hits
+static const VmPtr<fixed_t[4]>      gUseBBox(0x800A875C);       // The bounding box for the 'use' line being cast from the player
+static const VmPtr<VmPtr<line_t>>   gpCloseLine(0x80078274);    // The closest wall line currently being used
+static const VmPtr<fixed_t>         gCloseDist(0x800782A8);     // Fractional distance along the use line to the closest wall line being used
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Test if the given x/y position can be moved to for the given map object and return 'true' if the move is allowed
@@ -92,173 +96,70 @@ bool P_TryMove(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
     return *gbTryMove2;     // Was the move a success?
 }
 
-void P_InterceptVector() noexcept {
-    a3 = lh(a1 + 0xE);
-    v0 = lh(a0 + 0xA);
-    mult(a3, v0);
-    t0 = lh(a1 + 0xA);
-    v1 = lo;
-    v0 = lh(a0 + 0xE);
-    mult(t0, v0);
-    v0 = lo;
-    a2 = v1 - v0;
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (a2 == 0) goto loc_8001B840;
-    v0 = lw(a1);
-    v1 = lw(a0);
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 16);
-    mult(v0, a3);
-    v1 = lw(a0 + 0x4);
-    a0 = lw(a1 + 0x4);
-    v0 = lo;
-    v1 -= a0;
-    v1 = u32(i32(v1) >> 16);
-    mult(v1, t0);
-    v1 = lo;
-    v0 += v1;
-    v0 <<= 16;
-    div(v0, a2);
-    if (a2 != 0) goto loc_8001B824;
-    _break(0x1C00);
-loc_8001B824:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a2 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8001B83C;
-    }
-    if (v0 != at) goto loc_8001B83C;
-    tge(zero, zero, 0x5D);
-loc_8001B83C:
-    v0 = lo;
-loc_8001B840:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Computes the fraction along 'line1' that the intersection with 'line2' occurs at.
+// Returns '(fixed_t) -1' if there is no intersection.
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t P_InterceptVector(divline_t& line1, divline_t& line2) noexcept {
+    // This is pretty much the standard line/line intersection equation.
+    // See: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection 
+    // Specifically the case "Given two points on each line".
+    const int32_t ldx1 = line1.dx >> FRACBITS;
+    const int32_t ldy1 = line1.dy >> FRACBITS;
+    const int32_t ldx2 = line2.dx >> FRACBITS;
+    const int32_t ldy2 = line2.dy >> FRACBITS;
+
+    const int32_t dx = (line2.x - line1.x) >> FRACBITS;
+    const int32_t dy = (line1.y - line2.y) >> FRACBITS;
+
+    const int32_t num = (ldy2 * dx  ) + (dy   * ldx2);
+    const int32_t den = (ldy2 * ldx1) - (ldx2 * ldy1);
+
+    // Note: if the denominator is '0' then there is no intersect - parallel lines
+    return (den != 0) ? (num << FRACBITS) / den : -1;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Iterator function called on all lines nearby the player when trying to activate a line special.
+// Saves the line if it intersects the 'use' line being cast from the player, and if it is closer than the current intersecting line.
+//------------------------------------------------------------------------------------------------------------------------------------------
 bool PIT_UseLines(line_t& line) noexcept {
-    a0 = ptrToVmAddr(&line);
+    // If the 'use' bounding box doesn't cross the line then ignore the line and early out
+    const bool noBBoxOverlap = (
+        (gUseBBox[BOXTOP] <= line.bbox[BOXBOTTOM]) ||
+        (gUseBBox[BOXBOTTOM] >= line.bbox[BOXTOP]) ||
+        (gUseBBox[BOXLEFT] >= line.bbox[BOXRIGHT]) ||
+        (gUseBBox[BOXRIGHT] <= line.bbox[BOXLEFT])
+    );
 
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x7898);                               // Load from: gUseBBox[3] (800A8768)
-    sp -= 0x30;
-    sw(s1, sp + 0x24);
-    s1 = a0;
-    sw(ra, sp + 0x28);
-    sw(s0, sp + 0x20);
-    v0 = lw(s1 + 0x2C);
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001B9DC;
+    if (noBBoxOverlap)
+        return true;
+
+    // Intersect the two lines and bail out if there is no intersection
+    divline_t divline;
+    P_MakeDivline(line, divline);
+    const fixed_t intersectFrac = P_InterceptVector(*gUseLine, divline);
+
+    if (intersectFrac < 0)  // No intersection, or intersection before the start of the use line
+        return true;
+
+    // If the intersection isn't closer than the current closest use line intersection then ignore also
+    if (intersectFrac > *gCloseDist)
+        return true;
+
+    // If the line is not usable then try to narrow the vertical range for the use line
+    if (!line.special) {
+        P_LineOpening(line);
+
+        // If the vertical range for the use line is now shut then bail
+        if (*gOpenRange > 0)
+            return true;
     }
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x789C);                               // Load from: gUseBBox[2] (800A8764)
-    v1 = lw(s1 + 0x30);
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001B9DC;
-    }
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78A4);                               // Load from: gUseBBox[0] (800A875C)
-    v0 = lw(s1 + 0x28);
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001B9DC;
-    }
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A0);                               // Load from: gUseBBox[1] (800A8760)
-    v1 = lw(s1 + 0x24);
-    v0 = (i32(v0) < i32(v1));
-    a0 = s1;
-    if (v0 == 0) goto loc_8001B9CC;
-    a1 = sp + 0x10;
-    P_MakeDivline(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<divline_t>(a1));
-    a0 = lh(sp + 0x1E);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lh(v0 - 0x78AE);                               // Load from: gUseLine[2] (800A8752)
-    mult(a0, v0);
-    a2 = lh(sp + 0x1A);
-    v1 = lo;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lh(v0 - 0x78AA);                               // Load from: gUseLine[3] (800A8756)
-    mult(a2, v0);
-    v0 = lo;
-    a1 = v1 - v0;
-    s0 = -1;                                            // Result = FFFFFFFF
-    if (a1 == 0) goto loc_8001B980;
-    v0 = lw(sp + 0x10);
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x78B8);                               // Load from: gUseLine[0] (800A8748)
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 16);
-    mult(v0, a0);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78B4);                               // Load from: gUseLine[1] (800A874C)
-    a0 = lw(sp + 0x14);
-    v1 = lo;
-    v0 -= a0;
-    v0 = u32(i32(v0) >> 16);
-    mult(v0, a2);
-    v0 = lo;
-    v1 += v0;
-    v1 <<= 16;
-    div(v1, a1);
-    if (a1 != 0) goto loc_8001B964;
-    _break(0x1C00);
-loc_8001B964:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_8001B97C;
-    }
-    if (v1 != at) goto loc_8001B97C;
-    tge(zero, zero, 0x5D);
-loc_8001B97C:
-    s0 = lo;
-loc_8001B980:
-    v0 = 1;                                             // Result = 00000001
-    if (i32(s0) < 0) goto loc_8001B9DC;
-    v0 = lw(gp + 0xCC8);                                // Load from: gCloseDist (800782A8)
-    v0 = (i32(v0) < i32(s0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001B9DC;
-    }
-    v0 = lw(s1 + 0x14);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001B9D4;
-    }
-    a0 = s1;
-    P_LineOpening(*vmAddrToPtr<line_t>(a0));
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7D84);                               // Load from: gOpenRange (8007827C)
-    {
-        const bool bJump = (i32(v0) <= 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001B9D4;
-    }
-loc_8001B9CC:
-    v0 = 1;                                             // Result = 00000001
-    goto loc_8001B9DC;
-loc_8001B9D4:
-    sw(s1, gp + 0xC94);                                 // Store to: gpCloseLine (80078274)
-    sw(s0, gp + 0xCC8);                                 // Store to: gCloseDist (800782A8)
-loc_8001B9DC:
-    ra = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x30;
-    return (v0 != 0);
+
+    // This is the new closest line, save - along with the intersection fraction along the use line
+    *gpCloseLine = &line;
+    *gCloseDist = intersectFrac;
+    return true;
 }
 
 void P_UseLines() noexcept {
