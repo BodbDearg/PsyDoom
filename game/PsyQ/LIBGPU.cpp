@@ -763,50 +763,50 @@ uint16_t LIBGPU_LoadClut(const uint16_t* pColors, const int32_t x, const int32_t
 // Sets up the given draw environment struct to the defaults with the given draw area
 //------------------------------------------------------------------------------------------------------------------------------------------
 DRAWENV& LIBGPU_SetDefDrawEnv(DRAWENV& env, const int32_t x, const int32_t y, const int32_t w, const  int32_t h) noexcept {
-  env.clip.x = (int16_t) x;
-  env.clip.y = (int16_t) y;
-  env.clip.w = (int16_t) w;
-  env.clip.h = (int16_t) h;
+    env.clip.x = (int16_t) x;
+    env.clip.y = (int16_t) y;
+    env.clip.w = (int16_t) w;
+    env.clip.h = (int16_t) h;
 
-  env.ofs[0] = (int16_t) x;
-  env.ofs[1] = (int16_t) y;
+    env.ofs[0] = (int16_t) x;
+    env.ofs[1] = (int16_t) y;
 
-  env.tw.x = 0;
-  env.tw.y = 0;
-  env.tw.w = 0;
-  env.tw.h = 0;
-  env.tpage = LIBGPU_GetTPage(0, 0, 640, 0);
+    env.tw.x = 0;
+    env.tw.y = 0;
+    env.tw.w = 0;
+    env.tw.h = 0;
+    env.tpage = LIBGPU_GetTPage(0, 0, 640, 0);
 
-  env.dtd = 1;
-  env.dfe = (h != 480);
+    env.dtd = 1;
+    env.dfe = (h != 480);
 
-  env.r0 = 0;
-  env.g0 = 0;
-  env.b0 = 0;
+    env.r0 = 0;
+    env.g0 = 0;
+    env.b0 = 0;
   
-  env.isbg = 0;
-  return env;
+    env.isbg = 0;
+    return env;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets up the given display environment struct to the defaults with the given display area
 //------------------------------------------------------------------------------------------------------------------------------------------
 DISPENV& LIBGPU_SetDefDispEnv(DISPENV& disp, const int32_t x, const int32_t y, const int32_t w, const int32_t h) noexcept {
-  disp.disp.x = (int16_t) x;
-  disp.disp.y = (int16_t) y;
-  disp.disp.w = (int16_t) w;
-  disp.disp.h = (int16_t) h;
+    disp.disp.x = (int16_t) x;
+    disp.disp.y = (int16_t) y;
+    disp.disp.w = (int16_t) w;
+    disp.disp.h = (int16_t) h;
 
-  disp.screen.x = 0;
-  disp.screen.y = 0;
-  disp.screen.w = 0;
-  disp.screen.h = 0;
+    disp.screen.x = 0;
+    disp.screen.y = 0;
+    disp.screen.w = 0;
+    disp.screen.h = 0;
 
-  disp.isinter = 0;
-  disp.isrgb24 = 0;
+    disp.isinter = 0;
+    disp.isrgb24 = 0;
   
-  disp._pad[0] = 0;
-  disp._pad[1] = 0;
+    disp._pad[0] = 0;
+    disp._pad[1] = 0;
   
-  return disp;
+    return disp;
 }
