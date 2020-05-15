@@ -10,8 +10,6 @@ extern void _thunk_P_Random() noexcept;
 extern void M_AddPointToBox() noexcept;
 extern void _thunk_T_MoveCeiling() noexcept;
 extern void _thunk_T_VerticalDoor() noexcept;
-extern void P_CheckMeleeRange() noexcept;
-extern void P_CheckMissileRange() noexcept;
 extern void P_Move() noexcept;
 extern void P_TryWalk() noexcept;
 extern void P_NewChaseDir() noexcept;
@@ -109,8 +107,6 @@ extern void _thunk_T_DelayedAction() noexcept;
 extern void P_SpawnSpecials() noexcept;
 extern void _thunk_P_AddThinker() noexcept;
 extern void _thunk_P_RemoveThinker() noexcept;
-extern void P_RunThinkers() noexcept;
-extern void P_RunMobjLate() noexcept;
 extern void P_PlayerMove() noexcept;
 extern void P_PlayerXYMovement() noexcept;
 extern void P_PlayerZMovement() noexcept;
@@ -182,8 +178,6 @@ namespace PsxVm {
         { 0x80012B10, &M_AddPointToBox },
         { 0x80014A30, &_thunk_T_MoveCeiling },
         { 0x800152FC, &_thunk_T_VerticalDoor },
-        { 0x80015CA8, &P_CheckMeleeRange },
-        { 0x80015D1C, &P_CheckMissileRange },
         { 0x80015E00, &P_Move },
         { 0x80015F68, &P_TryWalk },
         { 0x80015FB4, &P_NewChaseDir },
@@ -281,8 +275,6 @@ namespace PsxVm {
         { 0x8002784C, &P_SpawnSpecials },
         { 0x80028C38, &_thunk_P_AddThinker },
         { 0x80028C68, &_thunk_P_RemoveThinker },
-        { 0x80028C74, &P_RunThinkers },
-        { 0x80028D30, &P_RunMobjLate },
         { 0x800297A0, &P_PlayerMove },
         { 0x80029918, &P_PlayerXYMovement },
         { 0x80029A08, &P_PlayerZMovement },

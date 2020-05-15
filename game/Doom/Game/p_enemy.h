@@ -1,7 +1,9 @@
 #pragma once
 
-void P_CheckMeleeRange() noexcept;
-void P_CheckMissileRange() noexcept;
+struct mobj_t;
+
+bool P_CheckMeleeRange(mobj_t& attacker) noexcept;
+bool P_CheckMissileRange(mobj_t& attacker) noexcept;
 void P_Move() noexcept;
 void P_TryWalk() noexcept;
 void P_NewChaseDir() noexcept;

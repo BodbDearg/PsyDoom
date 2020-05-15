@@ -11,112 +11,72 @@
 #include "p_doors.h"
 #include "p_floor.h"
 #include "p_inter.h"
+#include "p_local.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_sight.h"
 #include "p_switch.h"
 #include "PsxVm/PsxVm.h"
+#include <algorithm>
 
-void P_CheckMeleeRange() noexcept {
-    sp -= 0x18;
-    a1 = a0;
-    sw(ra, sp + 0x10);
-    v0 = lw(a1 + 0x64);
-    v1 = 0x4000000;                                     // Result = 04000000
-    v0 &= v1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80015D0C;
-    }
-    v0 = lw(a1 + 0x74);
-    if (v0 != 0) goto loc_80015CE0;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80015D0C;
-loc_80015CE0:
-    v1 = lw(v0);
-    a0 = lw(a1);
-    v0 = lw(v0 + 0x4);
-    a1 = lw(a1 + 0x4);
-    a0 = v1 - a0;
-    a1 = v0 - a1;
-    v0 = P_AproxDistance(a0, a1);
-    v1 = 0x450000;                                      // Result = 00450000
-    v1 |= 0xFFFF;                                       // Result = 0045FFFF
-    v1 = (i32(v1) < i32(v0));
-    v0 = v1 ^ 1;
-loc_80015D0C:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// For the given attacker, checks to see if it's target is within melee range and returns 'true' if so
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_CheckMeleeRange(mobj_t& attacker) noexcept {
+    // If the attacker can't see it's target then consider it not to be in melee range
+    if ((attacker.flags & MF_SEETARGET) == 0)
+        return false;
+
+    // If there is no target then obviously nothing is in melee range
+    if (!attacker.target)
+        return false;
+
+    // Return whether the target is within melee range
+    mobj_t& target = *attacker.target;
+    const fixed_t approxDist = P_AproxDistance(target.x - attacker.x, target.y - attacker.y);
+    return (approxDist < MELEERANGE);
 }
 
-void P_CheckMissileRange() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v1 = lw(s1 + 0x64);
-    v0 = 0x4000000;                                     // Result = 04000000
-    v0 &= v1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 & 0x40;
-        if (bJump) goto loc_80015D6C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Not really a range check, more of a check to see if an attacker should to a missile attack against its target.
+// Takes into account things like range and current sight status and also adds an element of randomness.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_CheckMissileRange(mobj_t& attacker) noexcept {
+    // If the attacker can't see it's target then it can't do a missile attack
+    if ((attacker.flags & MF_SEETARGET) == 0)
+        return false;
+
+    // If the attacker was just hit then fight back immediately! (just this once)
+    if (attacker.flags & MF_JUSTHIT) {
+        attacker.flags &= ~MF_JUSTHIT;
+        return true;
     }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = -0x41;                                     // Result = FFFFFFBF
-        if (bJump) goto loc_80015D5C;
+
+    // If the attacker has to wait a bit then an attack is not possible
+    if (attacker.reactiontime != 0)
+        return false;
+
+    // Get the distance to the target and do a tweak adjust for the sake of the random logic below
+    fixed_t distFrac = P_AproxDistance(attacker.x - attacker.target->x, attacker.y - attacker.target->y);
+    distFrac -= 64 * FRACUNIT;
+
+    // If the attacker has no melee attack then do a missile attack more frequently
+    if (attacker.info->meleestate == S_NULL) {
+        distFrac -= 128 * FRACUNIT;
     }
-    v0 &= v1;
-    sw(v0, s1 + 0x64);
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80015DE8;
-loc_80015D5C:
-    v0 = lw(s1 + 0x78);
-    if (v0 == 0) goto loc_80015D74;
-loc_80015D6C:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80015DE8;
-loc_80015D74:
-    v0 = lw(s1 + 0x74);
-    a2 = lw(s1);
-    v1 = lw(s1 + 0x4);
-    a0 = lw(v0);
-    a1 = lw(v0 + 0x4);
-    a0 = a2 - a0;
-    a1 = v1 - a1;
-    v0 = P_AproxDistance(a0, a1);
-    v1 = lw(s1 + 0x58);
-    a0 = 0xFFC00000;                                    // Result = FFC00000
-    v1 = lw(v1 + 0x28);
-    s0 = v0 + a0;
-    if (v1 != 0) goto loc_80015DB4;
-    v0 = 0xFF800000;                                    // Result = FF800000
-    s0 += v0;
-loc_80015DB4:
-    v1 = lw(s1 + 0x54);
-    v0 = 0xE;                                           // Result = 0000000E
-    s0 = u32(i32(s0) >> 16);
-    if (v1 != v0) goto loc_80015DC8;
-    s0 = u32(i32(s0) >> 1);
-loc_80015DC8:
-    v0 = (i32(s0) < 0xC9);
-    if (v0 != 0) goto loc_80015DD8;
-    s0 = 0xC8;                                          // Result = 000000C8
-loc_80015DD8:
-    _thunk_P_Random();
-    v0 = (i32(v0) < i32(s0));
-    v0 ^= 1;
-loc_80015DE8:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    
+    // Convert to integer distance and if you are a skull reduce the missile distance even more
+    int32_t dist = distFrac >> FRACBITS;
+    
+    if (attacker.type == MT_SKULL) {
+        dist >>= 1;
+    }
+    
+    // Cap the distance so there is always at least some chance of firing and decide randomly whether to fire.
+    // The closer the target is the more likely we will fire:
+    dist = std::min(dist, 200);
+    return (dist <= P_Random());
 }
 
 void P_Move() noexcept {
