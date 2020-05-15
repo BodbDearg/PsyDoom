@@ -1297,7 +1297,7 @@ loc_8002AB08:
     v0 = lw(s0 + 0xBC);
     if (v0 != 0) goto loc_8002AB44;
     a0 = s0;
-    P_UseLines();
+    P_UseLines(*vmAddrToPtr<player_t>(a0));
     v0 = 1;                                             // Result = 00000001
     sw(v0, s0 + 0xBC);
     goto loc_8002AB44;

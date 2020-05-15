@@ -15,7 +15,6 @@
 #include "p_sight.h"
 #include "p_spec.h"
 #include "p_switch.h"
-#include "PsxVm/PsxVm.h"
 #include <algorithm>
 
 const VmPtr<VmPtr<mobj_t>>      gpShooter(0x800780B4);          // The map object currently taking a shot
@@ -100,7 +99,7 @@ bool P_TryMove(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
 // Computes the fraction along 'line1' that the intersection with 'line2' occurs at.
 // Returns '(fixed_t) -1' if there is no intersection.
 //------------------------------------------------------------------------------------------------------------------------------------------
-fixed_t P_InterceptVector(divline_t& line1, divline_t& line2) noexcept {
+static fixed_t P_InterceptVector(divline_t& line1, divline_t& line2) noexcept {
     // This is pretty much the standard line/line intersection equation.
     // See: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection 
     // Specifically the case "Given two points on each line".
@@ -123,7 +122,7 @@ fixed_t P_InterceptVector(divline_t& line1, divline_t& line2) noexcept {
 // Iterator function called on all lines nearby the player when trying to activate a line special.
 // Saves the line if it intersects the 'use' line being cast from the player, and if it is closer than the current intersecting line.
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool PIT_UseLines(line_t& line) noexcept {
+static bool PIT_UseLines(line_t& line) noexcept {
     // If the 'use' bounding box doesn't cross the line then ignore the line and early out
     const bool noBBoxOverlap = (
         (gUseBBox[BOXTOP] <= line.bbox[BOXBOTTOM]) ||
@@ -162,150 +161,78 @@ bool PIT_UseLines(line_t& line) noexcept {
     return true;
 }
 
-void P_UseLines() noexcept {
-loc_8001B9F4:
-    sp -= 0x38;
-    sw(s5, sp + 0x2C);
-    s5 = a0;
-    sw(ra, sp + 0x30);
-    sw(s4, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    a0 = lw(s5);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v0 = lw(a0 + 0x24);
-    a2 = lw(a0);
-    a3 = lw(a0 + 0x4);
-    v0 >>= 19;
-    v0 <<= 2;
-    v1 += v0;
-    v1 = lw(v1);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += v0;
-    a0 = lw(at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a2, at - 0x78B8);                                // Store to: gUseLine[0] (800A8748)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a3, at - 0x78B4);                                // Store to: gUseLine[1] (800A874C)
-    v0 = v1 << 3;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 1;
-    a1 = a2 + v0;
-    v1 = a1 - a2;
-    v0 = a0 << 3;
-    v0 += a0;
-    v0 <<= 2;
-    v0 -= a0;
-    v0 <<= 1;
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(v1, at - 0x78B0);                                // Store to: gUseLine[2] (800A8750)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(v0, at - 0x78AC);                                // Store to: gUseLine[3] (800A8754)
-    a0 = a3 + v0;
-    if (i32(v1) <= 0) goto loc_8001BAC0;
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a1, at - 0x7898);                                // Store to: gUseBBox[3] (800A8768)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a2, at - 0x789C);                                // Store to: gUseBBox[2] (800A8764)
-    goto loc_8001BAD0;
-loc_8001BAC0:
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a2, at - 0x7898);                                // Store to: gUseBBox[3] (800A8768)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a1, at - 0x789C);                                // Store to: gUseBBox[2] (800A8764)
-loc_8001BAD0:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78AC);                               // Load from: gUseLine[3] (800A8754)
-    if (i32(v0) <= 0) goto loc_8001BAFC;
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a0, at - 0x78A4);                                // Store to: gUseBBox[0] (800A875C)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a3, at - 0x78A0);                                // Store to: gUseBBox[1] (800A8760)
-    goto loc_8001BB0C;
-loc_8001BAFC:
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a3, at - 0x78A4);                                // Store to: gUseBBox[0] (800A875C)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(a0, at - 0x78A0);                                // Store to: gUseBBox[1] (800A8760)
-loc_8001BB0C:
-    a1 = *gBlockmapOriginY;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x78A0);                               // Load from: gUseBBox[1] (800A8760)
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x78A4);                               // Load from: gUseBBox[0] (800A875C)
-    v1 = 0x10000;                                       // Result = 00010000
-    sw(v1, gp + 0xCC8);                                 // Store to: gCloseDist (800782A8)
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 = lw(v1 - 0x7898);                               // Load from: gUseBBox[3] (800A8768)
-    sw(0, gp + 0xC94);                                  // Store to: gpCloseLine (80078274)
-    v0 -= a1;
-    s1 = u32(i32(v0) >> 23);
-    a0 -= a1;
-    s3 = u32(i32(a0) >> 23);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
-    a1 = *gBlockmapOriginX;
-    v0++;
-    v1 -= a1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7BC4);                                // Store to: gValidCount (80077BC4)
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x789C);                               // Load from: gUseBBox[2] (800A8764)
-    v0 -= a1;
-    s4 = u32(i32(v0) >> 23);
-    v0 = (i32(s3) < i32(s1));
-    s2 = u32(i32(v1) >> 23);
-    if (v0 != 0) goto loc_8001BBC8;
-    v0 = (i32(s2) < i32(s4));
-loc_8001BB8C:
-    s0 = s4;
-    if (v0 != 0) goto loc_8001BBB8;
-    a0 = s0;
-loc_8001BB98:
-    a2 = 0x80020000;                                    // Result = 80020000
-    a2 -= 0x47B8;                                       // Result = PIT_UseLines (8001B848)
-    a1 = s1;
-    v0 = P_BlockLinesIterator(a0, a1, PIT_UseLines);
-    s0++;
-    v0 = (i32(s2) < i32(s0));
-    a0 = s0;
-    if (v0 == 0) goto loc_8001BB98;
-loc_8001BBB8:
-    s1++;
-    v0 = (i32(s3) < i32(s1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(s2) < i32(s4));
-        if (bJump) goto loc_8001BB8C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Try to use/activate surrounding map lines for the given player; called when the 'use' action is being done
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_UseLines(player_t& player) noexcept {
+    // Figure out the start point and vector for the use line
+    mobj_t& mobj = *player.mo;
+
+    divline_t& useline = *gUseLine;
+    useline.x = mobj.x;
+    useline.y = mobj.y;
+
+    const uint32_t fineAngle = mobj.angle >> ANGLETOFINESHIFT;
+    useline.dx = gFineCosine[fineAngle] * (USERANGE >> FRACBITS);
+    useline.dy = gFineSine[fineAngle] * (USERANGE >> FRACBITS);
+
+    // Figure out the bounding box for the use line
+    if (useline.dx > 0) {
+        gUseBBox[BOXLEFT] = useline.x;
+        gUseBBox[BOXRIGHT] = useline.x + useline.dx;
+    } else {
+        gUseBBox[BOXLEFT] = useline.x + useline.dx;
+        gUseBBox[BOXRIGHT] = useline.x;
     }
-loc_8001BBC8:
-    a1 = lw(gp + 0xC94);                                // Load from: gpCloseLine (80078274)
-    if (a1 == 0) goto loc_8001BC08;
-    v0 = lw(a1 + 0x14);
-    if (v0 != 0) goto loc_8001BBFC;
-    a0 = lw(s5);
-    a1 = sfx_noway;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    goto loc_8001BC08;
-loc_8001BBFC:
-    a0 = lw(s5);
-    v0 = P_UseSpecialLine(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<line_t>(a1));
-loc_8001BC08:
-    ra = lw(sp + 0x30);
-    s5 = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x38;
-    return;
+    
+    if (useline.dy > 0) {
+        gUseBBox[BOXTOP] = useline.y + useline.dy;
+        gUseBBox[BOXBOTTOM] = useline.y;
+    } else {
+        gUseBBox[BOXTOP] = useline.y;
+        gUseBBox[BOXBOTTOM] = useline.y + useline.dy;
+    }
+    
+    // Initially no wall is hit and the closest thing is at fraction 1.0 (end of the line)
+    *gCloseDist = FRACUNIT;
+    *gpCloseLine = nullptr;
+
+    // Now doing new checks
+    *gValidCount += 1;
+
+    // Compute the blockmap extents to check for use lines.
+    // PC-PSX: ensure these are always within a valid range to prevent undefined behavior at map edges.
+    #if PC_PSX_DOOM_MODS
+        const int32_t bmapTy = std::min((gUseBBox[BOXTOP] - *gBlockmapOriginY) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);
+        const int32_t bmapBy = std::max((gUseBBox[BOXBOTTOM] - *gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
+        const int32_t bmapLx = std::max((gUseBBox[BOXLEFT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
+        const int32_t bmapRx = std::min((gUseBBox[BOXRIGHT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
+    #else
+        const int32_t bmapTy = (gUseBBox[BOXTOP] - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+        const int32_t bmapBy = (gUseBBox[BOXBOTTOM] - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+        const int32_t bmapLx = (gUseBBox[BOXLEFT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
+        const int32_t bmapRx = (gUseBBox[BOXRIGHT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
+    #endif
+
+    // Check against all of the lines in these block map blocks to find the closest line to use
+    for (int32_t y = bmapBy; y <= bmapTy; ++y) {
+        for (int32_t x = bmapLx; x <= bmapRx; ++x) {
+            P_BlockLinesIterator(x, y, PIT_UseLines);
+        }
+    }
+
+    // Try to use the closest line (if any).
+    // If the line has no special then play the grunting noise.
+    line_t* const pClosestLine = gpCloseLine->get();
+
+    if (!pClosestLine)
+        return;
+    
+    if (pClosestLine->special) {
+        P_UseSpecialLine(mobj, *pClosestLine);
+    } else {
+        S_StartSound(&mobj, sfx_noway);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
