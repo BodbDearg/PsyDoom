@@ -21,12 +21,14 @@
 #include "PcPsx/DemoResult.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
 #include "Wess/wessapi.h"
+
+#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PsxVm/PsxVm.h"
 
 // The maximum level for the warp cheat.
 // PC-PSX: For this version of the game I'm allowing the user to warp to the secret levels!
@@ -102,20 +104,12 @@ void P_AddThinker(thinker_t& thinker) noexcept {
     gThinkerCap->prev = &thinker;
 }
 
-void _thunk_P_AddThinker() noexcept {
-    P_AddThinker(*vmAddrToPtr<thinker_t>(a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Mark a thinker for removal from the list of thinkers.
 // The removal happens later, during updates.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_RemoveThinker(thinker_t& thinker) noexcept {
     thinker.function = (think_t) -1;
-}
-
-void _thunk_P_RemoveThinker() noexcept {
-    P_RemoveThinker(*vmAddrToPtr<thinker_t>(a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -134,7 +128,7 @@ void P_RunThinkers() noexcept {
             // Run the thinker if it has a think function and increment the active count stat
             if (pThinker->function) {
                 // TODO: use a native function call
-                a0 = ptrToVmAddr(pThinker);
+                *PsxVm::gpReg_a0 = ptrToVmAddr(pThinker);
                 ptr_call(pThinker->function);
             }
 
@@ -150,7 +144,7 @@ void P_RunMobjLate() noexcept {
     for (mobj_t* pMObj = gMObjHead->next.get(); pMObj != gMObjHead.get(); pMObj = pMObj->next.get()) {
         if (pMObj->latecall) {
             // TODO: use a native function call
-            a0 = ptrToVmAddr(pMObj);
+            *PsxVm::gpReg_a0 = ptrToVmAddr(pMObj);
             ptr_call(pMObj->latecall);
         }
     }
@@ -526,7 +520,7 @@ gameaction_t P_Ticker() noexcept {
         // Do automap and player controls/movement
         AM_Control(player);
 
-        a0 = ptrToVmAddr(&player);
+        *PsxVm::gpReg_a0 = ptrToVmAddr(&player);
         P_PlayerThink();
     }
 

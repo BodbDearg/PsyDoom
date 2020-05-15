@@ -1031,7 +1031,7 @@ loc_8002A6D0:
     a1 = lw(v0 + 0x4);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     t0 = 0xFC710000;                                    // Result = FC710000
     t0 |= 0xC71D;                                       // Result = FC71C71D
     v1 = 0xF8E30000;                                    // Result = F8E30000

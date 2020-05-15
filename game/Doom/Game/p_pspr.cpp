@@ -1069,7 +1069,7 @@ loc_800208BC:
     a1 = lw(v0 + 0x4);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s3);
     sw(v0, v1 + 0x24);
 loc_8002094C:
@@ -1128,7 +1128,7 @@ loc_80020A04:
     a1 = lw(v0 + 0x4);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     a2 = lw(s3);
     s2 = v0;
     a1 = lw(a2 + 0x24);

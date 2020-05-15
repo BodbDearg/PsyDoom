@@ -2,6 +2,8 @@
 
 #include "Doom/psx_main.h"
 #include "i_main.h"
+
+#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
 // The minimum size that a memory block must be
@@ -157,10 +159,6 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<voi
     return &pBase[1];
 }
 
-void _thunk_Z_Malloc() noexcept {
-    v0 = ptrToVmAddr(Z_Malloc(*vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<VmPtr<void>>(a3)));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // An alternate version of Z_Malloc that attempts to allocate at the end of the heap, or at least as close as possible to the end.
 // Ignores the rover used by the memory zone also and always starts from the very end.
@@ -266,10 +264,6 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
     return (void*) &pBase[1];
 }
 
-void _thunk_Z_EndMalloc() noexcept {
-    v0 = ptrToVmAddr(Z_EndMalloc(*vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<VmPtr<void>>(a3)));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Free the given block of memory.
 // Note that the zone param is actually not needed here to perform the dealloc, perhaps it was passed in case it was needed in future?
@@ -292,10 +286,6 @@ void Z_Free2([[maybe_unused]] memzone_t& zone, void* const ptr) noexcept {
     block.user = nullptr;
     block.tag = 0;
     block.id = 0;
-}
-
-void _thunk_Z_Free2() noexcept {
-    Z_Free2(*vmAddrToPtr<memzone_t>(a0), vmAddrToPtr<void>(a1));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

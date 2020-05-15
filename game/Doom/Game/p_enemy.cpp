@@ -545,7 +545,7 @@ loc_80016424:
     a1 = lw(s1 + 0x4);
     a2 = lw(s0);
     a3 = lw(s0 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     a1 = 0xBFFF0000;                                    // Result = BFFF0000
     a1 |= 0xFFFF;                                       // Result = BFFFFFFF
     v1 = 0x7FFF0000;                                    // Result = 7FFF0000
@@ -896,7 +896,7 @@ void A_FaceTarget() noexcept {
     a1 = lw(s1 + 0x4);
     a2 = lw(v0);
     a3 = lw(v0 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -937,7 +937,7 @@ void A_PosAttack() noexcept {
     sw(v0, s2 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s2 + 0x74);
     sw(v0, s2 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1009,7 +1009,7 @@ void A_SPosAttack() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1090,7 +1090,7 @@ void A_CPosAttack() noexcept {
     sw(v0, s3 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s3 + 0x74);
     sw(v0, s3 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1167,7 +1167,7 @@ void A_CPosRefire() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1230,7 +1230,7 @@ void A_SpidAttack() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1305,7 +1305,7 @@ void A_SpidRefire() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1362,7 +1362,7 @@ void A_BspiAttack() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1408,7 +1408,7 @@ void A_TroopAttack() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1486,7 +1486,7 @@ void A_SargAttack() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1537,7 +1537,7 @@ void A_HeadAttack() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1612,7 +1612,7 @@ void A_CyberAttack() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1709,7 +1709,7 @@ void A_SkelMissile() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1798,7 +1798,7 @@ loc_800177BC:
     a1 = lw(s1 + 0x4);
     a2 = lw(s2);
     a3 = lw(s2 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x24);
     s0 = v0;
     v0 = s0 - v1;
@@ -1925,7 +1925,7 @@ void A_SkelWhoosh() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -1970,7 +1970,7 @@ void A_SkelFist() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -2055,7 +2055,7 @@ void A_FatRaise() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -2102,7 +2102,7 @@ void A_FatAttack1() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -2179,7 +2179,7 @@ void A_FatAttack2() noexcept {
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -2256,7 +2256,7 @@ void A_FatAttack3() noexcept {
     sw(v0, s2 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s2 + 0x74);
     sw(v0, s2 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -2365,7 +2365,7 @@ loc_8001804C:
     sw(v0, s1 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s1 + 0x74);
     sw(v0, s1 + 0x24);
     v0 = lw(v1 + 0x64);
@@ -2549,7 +2549,7 @@ void A_PainAttack() noexcept {
     sw(v0, s2 + 0x64);
     a2 = lw(v1);
     a3 = lw(v1 + 0x4);
-    _thunk_R_PointToAngle2();
+    v0 = R_PointToAngle2(a0, a1, a2, a3);
     v1 = lw(s2 + 0x74);
     sw(v0, s2 + 0x24);
     v0 = lw(v1 + 0x64);

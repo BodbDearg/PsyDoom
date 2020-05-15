@@ -104,9 +104,6 @@ extern void SL_PointOnSide2() noexcept;
 extern void SL_CheckSpecialLines() noexcept;
 extern void P_UpdateSpecials() noexcept;
 extern void _thunk_T_DelayedAction() noexcept;
-extern void P_SpawnSpecials() noexcept;
-extern void _thunk_P_AddThinker() noexcept;
-extern void _thunk_P_RemoveThinker() noexcept;
 extern void P_PlayerMove() noexcept;
 extern void P_PlayerXYMovement() noexcept;
 extern void P_PlayerZMovement() noexcept;
@@ -117,11 +114,6 @@ extern void P_CalcHeight() noexcept;
 extern void P_MovePlayer() noexcept;
 extern void P_DeathThink() noexcept;
 extern void P_PlayerThink() noexcept;
-extern void _thunk_R_PointToAngle2() noexcept;
-extern void _thunk_R_PointInSubsector() noexcept;
-extern void _thunk_Z_Malloc() noexcept;
-extern void _thunk_Z_EndMalloc() noexcept;
-extern void _thunk_Z_Free2() noexcept;
 extern void I_PSXInit() noexcept;
 extern void I_ReadGamepad() noexcept;
 extern void I_NetSetup() noexcept;
@@ -272,9 +264,6 @@ namespace PsxVm {
         { 0x80025AFC, &SL_CheckSpecialLines },
         { 0x80026FC8, &P_UpdateSpecials },
         { 0x80027718, &_thunk_T_DelayedAction },
-        { 0x8002784C, &P_SpawnSpecials },
-        { 0x80028C38, &_thunk_P_AddThinker },
-        { 0x80028C68, &_thunk_P_RemoveThinker },
         { 0x800297A0, &P_PlayerMove },
         { 0x80029918, &P_PlayerXYMovement },
         { 0x80029A08, &P_PlayerZMovement },
@@ -285,11 +274,6 @@ namespace PsxVm {
         { 0x8002A4E8, &P_MovePlayer },
         { 0x8002A6A0, &P_DeathThink },
         { 0x8002A7F8, &P_PlayerThink },
-        { 0x80030BA0, &_thunk_R_PointToAngle2 },
-        { 0x80030F5C, &_thunk_R_PointInSubsector },
-        { 0x800321D0, &_thunk_Z_Malloc },
-        { 0x800323C8, &_thunk_Z_EndMalloc },
-        { 0x800325D8, &_thunk_Z_Free2 },
         { 0x80032934, &I_PSXInit },
         { 0x80032BB8, &I_ReadGamepad },
         { 0x8003472C, &I_NetSetup },

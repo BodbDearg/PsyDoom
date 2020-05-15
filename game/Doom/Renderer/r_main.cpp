@@ -5,7 +5,6 @@
 #include "Doom/Game/doomdata.h"
 #include "Doom/Game/g_game.h"
 #include "Doom/Game/p_setup.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"
@@ -227,10 +226,6 @@ angle_t R_PointToAngle2(const fixed_t x1, const fixed_t y1, const fixed_t x2, co
     }
 }
 
-void _thunk_R_PointToAngle2() noexcept {
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells what side of a line a point is on, with accuracy in terms of integer units.
 // Returns '0' if the point is on the 'front' side of the line, otherwise '1' if on the back side.
@@ -285,8 +280,4 @@ subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept {
 
     const int32_t actualNodeNum = nodeNum & (~NF_SUBSECTOR);
     return &(*gpSubsectors)[actualNodeNum];
-}
-
-void _thunk_R_PointInSubsector() noexcept {
-    v0 = ptrToVmAddr(R_PointInSubsector(a0, a1));
 }

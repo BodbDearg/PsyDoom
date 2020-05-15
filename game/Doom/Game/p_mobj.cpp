@@ -292,7 +292,7 @@ loc_8001CEC8:
     s2 = lh(s4 + 0x2);
     s1 <<= 16;
     s2 <<= 16;
-    _thunk_Z_Malloc();
+    v0 = ptrToVmAddr(Z_Malloc(*vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<VmPtr<void>>(a3)));
     s0 = v0;
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
