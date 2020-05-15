@@ -405,12 +405,12 @@ fixed_t P_AimLineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxD
 void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, const fixed_t zSlope, const int32_t damage) noexcept {
     // If the aim slope is INT32_MAX then we use the screen bounds to determine the min/max slope.
     // Otherwise just expand the specified slope range by 1 each way, so it's not zero sized.
-    if (zSlope == 0x7fffffff) {
+    if (zSlope == INT32_MAX) {
         *gAimTopSlope = 100 * FRACUNIT / 160;
         *gAimBottomSlope = -100 * FRACUNIT / 160;
     } else {
         *gAimTopSlope = zSlope + 1;
-        *gAimBottomSlope = zSlope + -1;
+        *gAimBottomSlope = zSlope - 1;
     }
 
     // Take the shot!
@@ -434,9 +434,9 @@ void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, c
     if (pShootMobj) {
         // Do blood (or smoke) then damage the thing
         if (pShootMobj->flags & MF_NOBLOOD) {
-            P_SpawnPuff(shootX, shootY, gShootZ);
+            P_SpawnPuff(shootX, shootY, *gShootZ);
         } else {
-            P_SpawnBlood(shootX, shootY, gShootZ, damage);
+            P_SpawnBlood(shootX, shootY, *gShootZ, damage);
         }
 
         P_DamageMObj(*pShootMobj, &shooter, &shooter, damage);
