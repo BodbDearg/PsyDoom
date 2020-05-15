@@ -8,7 +8,6 @@
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "p_spec.h"
-#include "PsxVm/PsxVm.h"
 #include <algorithm>
 
 static constexpr int32_t MAX_CROSS_LINES = 8;
@@ -19,12 +18,15 @@ const VmPtr<fixed_t>        gTmFloorZ(0x800781E8);              // The Z value f
 const VmPtr<fixed_t>        gTmCeilingZ(0x80077F04);            // The Z value for the lowest ceiling the collider is in contact with
 const VmPtr<fixed_t>        gTmDropoffZ(0x80077F3C);            // The Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
 const VmPtr<int32_t>        gNumCrossCheckLines(0x800780C0);    // How many lines to test for whether the thing crossed them or not: for determining when to trigger line specials
+const VmPtr<bool32_t>       gbFloatOk(0x8007807C);              // P_TryMove2: if 'true' the up/down movement by floating monsters is allowed (there is vertical space to move)
 
 static const VmPtr<VmPtr<subsector_t>>              gpNewSubsec(0x800782BC);            // Destination subsector for the current move: set by 'PM_CheckPosition'
 static const VmPtr<uint32_t>                        gTmFlags(0x80078078);               // Flags for the thing being moved
 static const VmPtr<fixed_t[4]>                      gTestTmBBox(0x80097C10);            // Bounding box for the current thing being collision tested. Set in 'PM_CheckPosition'.
 static const VmPtr<VmPtr<line_t>>                   gpBlockLine(0x80078248);            // The line collided with
 static const VmPtr<VmPtr<line_t>[MAX_CROSS_LINES]>  gpCrossCheckLines(0x800A8F28);      // Lines to test for whether the thing crossed them or not: for determining when to trigger line specials
+static const VmPtr<fixed_t>                         gOldX(0x80078240);                  // P_TryMove2: position of the thing before it was moved: x
+static const VmPtr<fixed_t>                         gOldY(0x80078244);                  // P_TryMove2: position of the thing before it was moved: y
 
 // Not required externally: making private to this module
 static void PM_UnsetThingPosition(mobj_t& thing) noexcept;
@@ -33,163 +35,106 @@ static void PM_CheckPosition() noexcept;
 static bool PM_BlockLinesIterator(const int32_t x, const int32_t y) noexcept;
 static bool PM_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Attempt to do a move for the given thing, or just check if a move might be possible.
+// If not checking and the move is allowed, then the thing will be moved to it's new position and blockmap references etc. updated.
+// Note that when we are just checking if the move is allowed, height differences are IGNORED.
+//
+// Global inputs:
+//  gpTryMoveThing          : The thing doing the move
+//  gTryMoveX, gTryMoveY    : Position to move to
+//
+// Global outputs:
+//  gbTryMove2      : Whether the move was allowed, 'true' if the move was possible
+//  gpMoveThing     : The thing collided with
+//  gpBlockLine     : The line collided with (only set for certain line collisions though)
+//  gTmCeilingZ     : The Z value for the lowest ceiling touched
+//  gTmFloorZ       : The Z value for the highest floor touched
+//  gTmDropoffZ     : The Z value for the lowest floor touched
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_TryMove2() noexcept {
-loc_8001E4F4:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
-    sp -= 0x20;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v1 = lw(v0);
-    v0 = lw(v0 + 0x4);
-    sw(0, gp + 0xB5C);                                  // Store to: gbTryMove2 (8007813C)
-    sw(0, gp + 0xA9C);                                  // Store to: gbFloatOk (8007807C)
-    sw(v1, gp + 0xC60);                                 // Store to: gOldX (80078240)
-    sw(v0, gp + 0xC64);                                 // Store to: gOldY (80078244)
-    PM_CheckPosition();
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F18);                               // Load from: gbCheckPosOnly (800780E8)
-    if (v0 == 0) goto loc_8001E554;
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7F18);                                 // Store to: gbCheckPosOnly (800780E8)
-    goto loc_8001E704;
-loc_8001E554:
-    v0 = lw(gp + 0xB5C);                                // Load from: gbTryMove2 (8007813C)
-    if (v0 == 0) goto loc_8001E704;
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
-    v0 = lw(a0 + 0x64);
-    v0 &= 0x1000;
-    if (v0 != 0) goto loc_8001E608;
-    a3 = lw(gp + 0x924);                                // Load from: gTmCeilingZ (80077F04)
-    a2 = lw(gp + 0xC08);                                // Load from: gTmFloorZ (800781E8)
-    v1 = lw(a0 + 0x44);
-    sw(0, gp + 0xB5C);                                  // Store to: gbTryMove2 (8007813C)
-    v0 = a3 - a2;
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001E704;
-    }
-    t0 = lw(a0 + 0x64);
-    sw(v0, gp + 0xA9C);                                 // Store to: gbFloatOk (8007807C)
-    v0 = t0 & 0x8000;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t0 & 0x4400;
-        if (bJump) goto loc_8001E5E0;
-    }
-    a1 = lw(a0 + 0x8);
-    v1 = lw(a0 + 0x44);
-    v0 = a3 - a1;
-    v0 = (i32(v0) < i32(v1));
-    v1 = a2 - a1;
-    if (v0 != 0) goto loc_8001E704;
-    v0 = 0x180000;                                      // Result = 00180000
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = t0 & 0x4400;
-        if (bJump) goto loc_8001E704;
-    }
-loc_8001E5E0:
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x180000;                                  // Result = 00180000
-        if (bJump) goto loc_8001E600;
-    }
-    v1 = lw(gp + 0x95C);                                // Load from: gTmDropoffZ (80077F3C)
-    v1 = a2 - v1;
-    v0 = (i32(v0) < i32(v1));
-    if (v0 != 0) goto loc_8001E704;
-loc_8001E600:
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
-loc_8001E608:
-    PM_UnsetThingPosition(*vmAddrToPtr<mobj_t>(a0));
+    // Grab the thing being moved and the position we're moving to
+    mobj_t& tryMoveThing = *gpTryMoveThing->get();
+    *gOldX = tryMoveThing.x;
+    *gOldY = tryMoveThing.y;
+    
+    // Check if the move can be done and initially assume no movement (or floating) is allowed
+    *gbTryMove2 = false;
+    *gbFloatOk = false;
 
-    a0 = 0x80080000;                                    // Result = 80080000
-    a0 = lw(a0 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
-    v0 = lw(gp + 0xC08);                                // Load from: gTmFloorZ (800781E8)
-    v1 = lw(gp + 0x924);                                // Load from: gTmCeilingZ (80077F04)
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7EB0);                               // Load from: gTryMoveX (80078150)
-    a2 = 0x80080000;                                    // Result = 80080000
-    a2 = lw(a2 - 0x7EAC);                               // Load from: gTryMoveY (80078154)
-    sw(v0, a0 + 0x38);
-    sw(v1, a0 + 0x3C);
-    sw(a1, a0);
-    sw(a2, a0 + 0x4);
-    PM_SetThingPosition(*vmAddrToPtr<mobj_t>(a0));
-    v1 = 0x80080000;                                    // Result = 80080000
-    v1 = lw(v1 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
-    v0 = lw(v1 + 0x80);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001E700;
+    PM_CheckPosition();
+
+    // If only checking the move then stop here and clear that flag
+    if (*gbCheckPosOnly) {
+        *gbCheckPosOnly = false;
+        return;
     }
-    v0 = lw(v1 + 0x64);
-    v0 &= 0x9000;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001E700;
+
+    // If we can't move then stop here
+    if (!*gbTryMove2)
+        return;
+
+    // Do height checks for this move (unless noclip is active)
+    if ((tryMoveThing.flags & MF_NOCLIP) == 0) {
+        // Assume unable to move until we reach the bottom of the function (when doing height checks)
+        *gbTryMove2 = false;
+
+        // If there is no room to fit then the move is NOT ok:
+        if (tryMoveThing.height > *gTmCeilingZ - *gTmFloorZ)
+            return;
+
+        // If we can move up or down then floating movement (for floating monsters) is OK at this point
+        *gbFloatOk = true;
+
+        // Checks for when not teleporting
+        if ((tryMoveThing.flags & MF_TELEPORT) == 0) {
+            // If the object must lower itself to fit then we can't do the move
+            if (tryMoveThing.height > *gTmCeilingZ - tryMoveThing.z)
+                return;
+
+            // If the vertical increase is too big of a step up then we can't make the move
+            if (*gTmFloorZ - tryMoveThing.z > 24 * FRACUNIT)
+                return;
+        }
+
+        // If the thing cannot fall over ledges or doesn't float then don't allow it to stand over a ledge.
+        // A ledge is deemed to be a fall of more than 24.0 units.
+        const bool bCanGoOverLedges = (tryMoveThing.flags & (MF_DROPOFF | MF_FLOAT));
+
+        if ((!bCanGoOverLedges) && (*gTmFloorZ - *gTmDropoffZ > 24 * FRACUNIT))
+            return;
     }
-    v0 = lw(gp + 0xAE0);                                // Load from: gNumCrossCheckLines (800780C0)
-    v1 = -1;                                            // Result = FFFFFFFF
-    v0--;
-    sw(v0, gp + 0xAE0);                                 // Store to: gNumCrossCheckLines (800780C0)
-    {
-        const bool bJump = (v0 == v1);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001E700;
+    
+    // Move is OK at this point: update the thing's location in the blockmap and sector thing lists
+    PM_UnsetThingPosition(tryMoveThing);
+    
+    tryMoveThing.floorz = *gTmFloorZ;
+    tryMoveThing.ceilingz = *gTmCeilingZ;
+    tryMoveThing.x = *gTryMoveX;
+    tryMoveThing.y = *gTryMoveY;
+
+    PM_SetThingPosition(tryMoveThing);
+
+    // Do line special triggering for monsters if they are not noclipping or teleporting
+    if ((!tryMoveThing.player.get()) && ((tryMoveThing.flags & (MF_NOCLIP | MF_TELEPORT)) == 0)) {
+        // Process however many lines the thing crossed
+        while (*gNumCrossCheckLines > 0) {
+            *gNumCrossCheckLines -= 1;
+            line_t& line = *gpCrossCheckLines[*gNumCrossCheckLines];
+
+            // If the thing crossed this line then try to trigger its special
+            const int32_t newLineSide = P_PointOnLineSide(tryMoveThing.x, tryMoveThing.y, line);
+            const int32_t oldLineSide = P_PointOnLineSide(*gOldX, *gOldY, line);
+
+            if (newLineSide != oldLineSide) {
+                P_CrossSpecialLine(line, tryMoveThing);
+            }
+        }
     }
-    s2 = 0x800B0000;                                    // Result = 800B0000
-    s2 -= 0x70D8;                                       // Result = gpCrossCheckLines[0] (800A8F28)
-loc_8001E694:
-    v1 = lw(gp + 0xAE0);                                // Load from: gNumCrossCheckLines (800780C0)
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
-    v1 <<= 2;
-    v1 += s2;
-    a0 = lw(v0);
-    s1 = lw(v1);
-    a1 = lw(v0 + 0x4);
-    a2 = s1;
-    v0 = P_PointOnLineSide(a0, a1, *vmAddrToPtr<line_t>(a2));
-    a2 = s1;
-    a0 = lw(gp + 0xC60);                                // Load from: gOldX (80078240)
-    a1 = lw(gp + 0xC64);                                // Load from: gOldY (80078244)
-    s0 = v0;
-    v0 = P_PointOnLineSide(a0, a1, *vmAddrToPtr<line_t>(a2));
-    if (s0 == v0) goto loc_8001E6E8;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7F74);                               // Load from: gpTryMoveThing (8007808C)
-    a0 = s1;
-    P_CrossSpecialLine(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
-loc_8001E6E8:
-    v1 = lw(gp + 0xAE0);                                // Load from: gNumCrossCheckLines (800780C0)
-    v0 = -1;                                            // Result = FFFFFFFF
-    v1--;
-    sw(v1, gp + 0xAE0);                                 // Store to: gNumCrossCheckLines (800780C0)
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001E694;
-    }
-loc_8001E700:
-    sw(v0, gp + 0xB5C);                                 // Store to: gbTryMove2 (8007813C)
-loc_8001E704:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Move is OK! Note that we HAVE to set this here in all cases, regardless of whether height checks are done are not.
+    // This is because 'P_CrossSpecialLine' might trigger move checks of it's own and override this global, due to teleportation and possibly other things.
+    *gbTryMove2 = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -304,11 +249,11 @@ static void PM_SetThingPosition(mobj_t& mobj) noexcept {
 // Sets 'gbTryMove2' to 'false' if there was a collision, 'true' if there was no collision when height differences are ignored.
 // Note: height difference blocking logic is handled externally to this function.
 //
-// Inputs:
+// Global inputs:
 //  gpTryMoveThing          : The thing doing the collision test
 //  gTryMoveX, gTryMoveY    : Position to use for the thing for the collision test (can be set different to actual pos to test a move)
 //
-// Outputs:
+// Global outputs:
 //  gTestTmBBox             : The bounding box for the thing
 //  gpNewSubsec             : The new subsector the thing would be in at the given position
 //  gpMoveThing             : The thing collided with
