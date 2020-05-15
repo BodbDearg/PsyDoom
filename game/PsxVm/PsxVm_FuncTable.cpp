@@ -102,7 +102,6 @@ extern void ClipToLine() noexcept;
 extern void SL_CheckLine() noexcept;
 extern void SL_PointOnSide2() noexcept;
 extern void SL_CheckSpecialLines() noexcept;
-extern void P_UpdateSpecials() noexcept;
 extern void _thunk_T_DelayedAction() noexcept;
 extern void P_PlayerMove() noexcept;
 extern void P_PlayerXYMovement() noexcept;
@@ -262,7 +261,6 @@ namespace PsxVm {
         { 0x80025840, &SL_CheckLine },
         { 0x80025A8C, &SL_PointOnSide2 },
         { 0x80025AFC, &SL_CheckSpecialLines },
-        { 0x80026FC8, &P_UpdateSpecials },
         { 0x80027718, &_thunk_T_DelayedAction },
         { 0x800297A0, &P_PlayerMove },
         { 0x80029918, &P_PlayerXYMovement },

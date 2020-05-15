@@ -67,7 +67,8 @@ static const animdef_t gAnimDefs[MAXANIMS] = {
     { 1, "WARN01",   "WARN02",   3 }
 };
 
-static constexpr int32_t MAXLINEANIMS = 32;     // Maximum number of line animations allowed
+static constexpr int32_t MAXLINEANIMS   = 32;           // Maximum number of line animations allowed
+static constexpr int32_t SCROLLMASK     = 0xFF7F0000;   // Mask applied to offsets for scrolling walls (wrap every 128 units)
 
 const VmPtr<card_t>     gMapBlueKeyType(0x80077E9C);        // What type of blue key the map uses (if map has a blue key)
 const VmPtr<card_t>     gMapRedKeyType(0x8007821C);         // What type of red key the map uses (if map has a red key)
@@ -891,282 +892,100 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Updates all special things in the level, such as animated textures, scrolling walls and switching buttons back to their original state.
+// PSX: also animates the fire sky if the level has that.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_UpdateSpecials() noexcept {
-loc_80026FC8:
-    sp -= 0x28;
-    v0 = *gpLastAnim;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 += 0x63AC;                                       // Result = gAnims_1[0] (800863AC)
-    sw(ra, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    v0 = (a1 < v0);
-    sw(s0, sp + 0x18);
-    if (v0 == 0) goto loc_800270EC;
-    a2 = -1;                                            // Result = FFFFFFFF
-    a0 = a1 + 0x10;                                     // Result = gAnims_1[4] (800863BC)
-    t3 = *gGameTic;
-    t2 = *gpTextureTranslation;
-    t1 = *gpTextures;
-    t0 = *gpFlatTranslation;
-    a3 = *gpFlatTextures;
-loc_8002701C:
-    v0 = lw(a0 + 0x4);
-    v0 &= t3;
-    if (v0 != 0) goto loc_800270D8;
-    v0 = lw(a1);
-    if (v0 == 0) goto loc_8002708C;
-    v0 = lw(a0);
-    v1 = lw(a0 - 0xC);
-    v0++;
-    v1 = (i32(v1) < i32(v0));
-    sw(v0, a0);
-    if (v1 == 0) goto loc_80027064;
-    v0 = lw(a0 - 0x8);
-    sw(v0, a0);
-loc_80027064:
-    v0 = lw(a0 - 0x8);
-    v1 = lw(a0);
-    v0 <<= 2;
-    v0 += t2;
-    sw(v1, v0);
-    v0 = lw(a0);
-    v0 <<= 5;
-    v0 += t1;
-    goto loc_800270D4;
-loc_8002708C:
-    v0 = lw(a0);
-    v1 = lw(a0 - 0xC);
-    v0++;
-    v1 = (i32(v1) < i32(v0));
-    sw(v0, a0);
-    if (v1 == 0) goto loc_800270B0;
-    v0 = lw(a0 - 0x8);
-    sw(v0, a0);
-loc_800270B0:
-    v0 = lw(a0 - 0x8);
-    v1 = lw(a0);
-    v0 <<= 2;
-    v0 += t0;
-    sw(v1, v0);
-    v0 = lw(a0);
-    v0 <<= 5;
-    v0 += a3;
-loc_800270D4:
-    sw(a2, v0 + 0x1C);
-loc_800270D8:
-    v0 = *gpLastAnim;
-    a1 += 0x18;
-    v0 = (a1 < v0);
-    a0 += 0x18;
-    if (v0 != 0) goto loc_8002701C;
-loc_800270EC:
-    v0 = lw(gp + 0x970);                                // Load from: gNumLinespecials (80077F50)
-    s1 = 0;                                             // Result = 00000000
-    if (i32(v0) <= 0) goto loc_80027264;
-    a1 = *gpSides;
-    t1 = 0x10000;                                       // Result = 00010000
-    a3 = 0xFF7F0000;                                    // Result = FF7F0000
-    t0 = 0xFFFF0000;                                    // Result = FFFF0000
-    a2 = 0x80090000;                                    // Result = 80090000
-    a2 += 0x757C;                                       // Result = gpLineSpecialList[0] (8009757C)
-loc_80027118:
-    a0 = lw(a2);
-    v1 = lw(a0 + 0x14);
-    v0 = 0xC9;                                          // Result = 000000C9
-    {
-        const bool bJump = (v1 == v0);
-        v0 = (i32(v1) < 0xCA);
-        if (bJump) goto loc_80027188;
+    // Animate flats and wall textures
+    for (anim_t* pAnim = gAnims.get(); pAnim < gpLastAnim->get(); ++pAnim) {
+        // Skip over this entry if it isn't time to advance the animation
+        if (*gGameTic & pAnim->ticmask)
+            continue;
+
+        // Advance the animation and rewind to the first frame if we past the last frame
+        pAnim->current += 1;
+
+        if (pAnim->current > pAnim->picnum) {
+            pAnim->current = pAnim->basepic;
+        }
+
+        // Update the texture translation table and mark the texture as needing uploading to the cache.
+        // For animated flats and walls only the current frame is kept in VRAM, to save on precious VRAM space.
+        if (pAnim->istexture) {
+            gpTextureTranslation->get()[pAnim->basepic] = pAnim->current;
+            gpTextures->get()[pAnim->current].uploadFrameNum = TEX_INVALID_UPLOAD_FRAME_NUM;
+        } else {
+            gpFlatTranslation->get()[pAnim->basepic] = pAnim->current;
+            gpFlatTextures->get()[pAnim->current].uploadFrameNum = TEX_INVALID_UPLOAD_FRAME_NUM;
+        }
     }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xC8;                                      // Result = 000000C8
-        if (bJump) goto loc_80027148;
+
+    // Animate line specials (scrolling walls)
+    for (int32_t specialIdx = 0; specialIdx < *gNumLinespecials; ++specialIdx) {
+        line_t& line = *gpLineSpecialList[specialIdx];
+        side_t& side = gpSides->get()[line.sidenum[0]];
+
+        switch (line.special) {
+            // Effect: scroll left
+            case 200: {
+                side.textureoffset += FRACUNIT;
+                side.textureoffset &= SCROLLMASK;
+            }   break;
+
+            // Effect: scroll right
+            case 201: {
+                side.textureoffset -= FRACUNIT;
+                side.textureoffset &= SCROLLMASK;
+            }   break;
+
+            // Effect: scroll up
+            case 202: {
+                side.rowoffset += FRACUNIT;
+                side.rowoffset &= SCROLLMASK;
+            }   break;
+
+            // Effect: scroll down
+            case 203: {
+                side.rowoffset -= FRACUNIT;
+                side.rowoffset &= SCROLLMASK;
+            }   break;
+        }
     }
-    if (v1 == v0) goto loc_80027164;
-    goto loc_80027250;
-loc_80027148:
-    v0 = 0xCA;                                          // Result = 000000CA
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0xCB;                                      // Result = 000000CB
-        if (bJump) goto loc_800271DC;
-    }
-    if (v1 == v0) goto loc_80027200;
-    goto loc_80027250;
-loc_80027164:
-    v1 = lw(a0 + 0x1C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v0 += a1;
-    v1 = lw(v0);
-    v1 += t1;
-    goto loc_800271AC;
-loc_80027188:
-    v1 = lw(a0 + 0x1C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v0 += a1;
-    v1 = lw(v0);
-    v1 += t0;
-loc_800271AC:
-    sw(v1, v0);
-    v1 = lw(a0 + 0x1C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v0 += a1;
-    v1 = lw(v0);
-    v1 &= a3;
-    sw(v1, v0);
-    goto loc_80027250;
-loc_800271DC:
-    v1 = lw(a0 + 0x1C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v0 += a1;
-    v1 = lw(v0 + 0x4);
-    v1 += t1;
-    goto loc_80027224;
-loc_80027200:
-    v1 = lw(a0 + 0x1C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v0 += a1;
-    v1 = lw(v0 + 0x4);
-    v1 += t0;
-loc_80027224:
-    sw(v1, v0 + 0x4);
-    v1 = lw(a0 + 0x1C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v0 += a1;
-    v1 = lw(v0 + 0x4);
-    v1 &= a3;
-    sw(v1, v0 + 0x4);
-loc_80027250:
-    v0 = lw(gp + 0x970);                                // Load from: gNumLinespecials (80077F50)
-    s1++;
-    v0 = (i32(s1) < i32(v0));
-    a2 += 4;
-    if (v0 != 0) goto loc_80027118;
-loc_80027264:
-    s1 = 0;                                             // Result = 00000000
-    s0 = 0;                                             // Result = 00000000
-loc_8002726C:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77B8;                                       // Result = gButtonList_1[3] (800977B8)
-    at += s0;
-    v1 = lw(at);
-    if (i32(v1) <= 0) goto loc_80027400;
-    v0 = *gCurPlayerIndex;
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    v0 = lw(at);
-    v0 = v1 - v0;
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77B8;                                       // Result = gButtonList_1[3] (800977B8)
-    at += s0;
-    sw(v0, at);
-    {
-        const bool bJump = (i32(v0) > 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_80027400;
-    }
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77B0;                                       // Result = gButtonList_1[1] (800977B0)
-    at += s0;
-    v1 = lw(at);
-    if (v1 == v0) goto loc_80027344;
-    v0 = 2;                                             // Result = 00000002
-    if (v1 == 0) goto loc_800272FC;
-    if (v1 == v0) goto loc_8002738C;
-    goto loc_800273D0;
-loc_800272FC:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77AC;                                       // Result = gButtonList_1[0] (800977AC)
-    at += s0;
-    v0 = lw(at);
-    v1 = lw(v0 + 0x1C);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77B4;                                       // Result = gButtonList_1[2] (800977B4)
-    at += s0;
-    a0 = lw(at);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = *gpSides;
-    v0 <<= 3;
-    v0 += v1;
-    sw(a0, v0 + 0x8);
-    goto loc_800273D0;
-loc_80027344:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77AC;                                       // Result = gButtonList_1[0] (800977AC)
-    at += s0;
-    v0 = lw(at);
-    v1 = lw(v0 + 0x1C);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77B4;                                       // Result = gButtonList_1[2] (800977B4)
-    at += s0;
-    a0 = lw(at);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = *gpSides;
-    v0 <<= 3;
-    v0 += v1;
-    sw(a0, v0 + 0x10);
-    goto loc_800273D0;
-loc_8002738C:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77AC;                                       // Result = gButtonList_1[0] (800977AC)
-    at += s0;
-    v0 = lw(at);
-    v1 = lw(v0 + 0x1C);
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77B4;                                       // Result = gButtonList_1[2] (800977B4)
-    at += s0;
-    a0 = lw(at);
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = *gpSides;
-    v0 <<= 3;
-    v0 += v1;
-    sw(a0, v0 + 0xC);
-loc_800273D0:
-    at = 0x80090000;                                    // Result = 80090000
-    at += 0x77BC;                                       // Result = gButtonList_1[4] (800977BC)
-    at += s0;
-    a0 = lw(at);
-    a1 = sfx_swtchn;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x77AC;                                       // Result = gButtonList_1[0] (800977AC)
-    a0 += s0;
-    a1 = 0;
-    a2 = 0x14;
-    _thunk_D_memset();
-loc_80027400:
-    s1++;
-    v0 = (i32(s1) < 0x10);
-    s0 += 0x14;
-    if (v0 != 0) goto loc_8002726C;
     
+    // Update active switches/buttons and switch their wall textures back if it is time
+    for (int32_t buttonIdx = 0; buttonIdx < MAXBUTTONS; ++buttonIdx) {
+        // Ignore this button if it is not active
+        button_t& button = gButtonList[buttonIdx];
+
+        if (button.btimer <= 0)
+            continue;
+
+        // Advance the countdown until when the button switches back and skip over it if its not time to do that yet
+        button.btimer -= gPlayersElapsedVBlanks[*gCurPlayerIndex];
+
+        if (button.btimer > 0)
+            continue;
+
+        // Switch the wall texture for the button back to what it was
+        line_t& line = *button.line;
+        side_t& side = gpSides->get()[line.sidenum[0]];
+
+        switch (button.where) {
+            case top:       side.toptexture     = button.btexture;  break;
+            case middle:    side.midtexture     = button.btexture;  break;
+            case bottom:    side.bottomtexture  = button.btexture;  break;
+        }
+
+        // Play a sound for the button switching back and reset the state of this active button slot (now free for use again)
+        S_StartSound(button.soundorg.get(), sfx_swtchn);
+        D_memset(&button, std::byte(0), sizeof(button_t));
+    }
+
+    // New for PSX: update the fire sky if the level has a fire sky and the sky is visible
     if (*gbIsSkyVisible && gUpdateFireSkyFunc) {
-        gUpdateFireSkyFunc(**gpSkyTexture);
+        gUpdateFireSkyFunc(*gpSkyTexture->get());
     }
-    
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
