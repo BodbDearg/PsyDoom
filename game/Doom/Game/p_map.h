@@ -9,6 +9,7 @@ extern const VmPtr<fixed_t>             gAttackRange;
 extern const VmPtr<angle_t>             gAttackAngle;
 extern const VmPtr<fixed_t>             gAimTopSlope;
 extern const VmPtr<fixed_t>             gAimBottomSlope;
+extern const VmPtr<VmPtr<mobj_t>>       gpLineTarget;
 extern const VmPtr<VmPtr<mobj_t>>       gpTryMoveThing;
 extern const VmPtr<fixed_t>             gTryMoveX;
 extern const VmPtr<fixed_t>             gTryMoveY;

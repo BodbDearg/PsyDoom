@@ -1200,7 +1200,7 @@ void A_FireMissile() noexcept {
     sw(v0, v1 + 0x98);
     a0 = lw(a0);
     a1 = 0x17;                                          // Result = 00000017
-    P_SpawnPlayerMissile();
+    P_SpawnPlayerMissile(*vmAddrToPtr<mobj_t>(a0), (mobjtype_t) a1);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -1224,7 +1224,7 @@ void A_FireBFG() noexcept {
     sw(v0, v1 + 0x98);
     a0 = lw(a0);
     a1 = 0x19;                                          // Result = 00000019
-    P_SpawnPlayerMissile();
+    P_SpawnPlayerMissile(*vmAddrToPtr<mobj_t>(a0), (mobjtype_t) a1);
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -1293,7 +1293,7 @@ loc_80020C90:
 loc_80020CB0:
     a0 = lw(s1);
     a1 = 0x18;                                          // Result = 00000018
-    P_SpawnPlayerMissile();
+    P_SpawnPlayerMissile(*vmAddrToPtr<mobj_t>(a0), (mobjtype_t) a1);
     ra = lw(sp + 0x18);
     s1 = lw(sp + 0x14);
     s0 = lw(sp + 0x10);

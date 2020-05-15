@@ -73,7 +73,7 @@ void P_RemoveMobj(mobj_t& mobj) noexcept {
 
 // TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
 void _thunk_P_RemoveMobj() noexcept {
-    P_RemoveMobj(*vmAddrToPtr<mobj_t>(a0));
+    P_RemoveMobj(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -195,7 +195,7 @@ void P_ExplodeMissile(mobj_t& mobj) noexcept {
 
 // TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
 void _thunk_P_ExplodeMissile() noexcept {
-    P_ExplodeMissile(*vmAddrToPtr<mobj_t>(a0));
+    P_ExplodeMissile(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -660,238 +660,49 @@ mobj_t* P_SpawnMissile(mobj_t& source, mobj_t& dest, const mobjtype_t type) noex
     return &missile;
 }
 
-void P_SpawnPlayerMissile() noexcept {
-loc_8001E0F4:
-    sp -= 0x38;
-    sw(s3, sp + 0x1C);
-    s3 = a0;
-    sw(s5, sp + 0x24);
-    s5 = a1;
-    sw(ra, sp + 0x30);
-    sw(s7, sp + 0x2C);
-    sw(s6, sp + 0x28);
-    sw(s4, sp + 0x20);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    s4 = lw(s3 + 0x24);
-    a2 = 0x4000000;                                     // Result = 04000000
-    a1 = s4;
-    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
-    s7 = v0;
-    if (v1 != 0) goto loc_8001E1A8;
-    v0 = 0x4000000;                                     // Result = 04000000
-    s4 += v0;
-    a0 = s3;
-    a1 = s4;
-    a2 = 0x4000000;                                     // Result = 04000000
-    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
-    s7 = v0;
-    if (v1 != 0) goto loc_8001E1A8;
-    v0 = 0xF8000000;                                    // Result = F8000000
-    s4 += v0;
-    a0 = s3;
-    a1 = s4;
-    a2 = 0x4000000;                                     // Result = 04000000
-    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
-    s7 = v0;
-    if (v1 != 0) goto loc_8001E1A8;
-    s4 = lw(s3 + 0x24);
-    s7 = 0;                                             // Result = 00000000
-loc_8001E1A8:
-    a1 = 0x94;                                          // Result = 00000094
-    a2 = 2;                                             // Result = 00000002
-    v0 = 0x200000;                                      // Result = 00200000
-    a3 = 0;                                             // Result = 00000000
-    a0 = *gpMainMemZone;
-    v1 = lw(s3 + 0x8);
-    s0 = lw(s3);
-    s1 = lw(s3 + 0x4);
-    s6 = v1 + v0;
-    _thunk_Z_Malloc();
-    s2 = v0;
-    a0 = s2;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x94;                                          // Result = 00000094
-    _thunk_D_memset();
-    v0 = s5 << 1;
-    v0 += s5;
-    v0 <<= 2;
-    v0 -= s5;
-    v0 <<= 3;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x1FC4;                                       // Result = MObjInfo_MT_PLAYER[0] (8005E03C)
-    v0 += v1;
-    sw(s5, s2 + 0x54);
-    sw(v0, s2 + 0x58);
-    sw(s0, s2);
-    sw(s1, s2 + 0x4);
-    v1 = lw(v0 + 0x40);
-    sw(v1, s2 + 0x40);
-    v1 = lw(v0 + 0x44);
-    sw(v1, s2 + 0x44);
-    v1 = lw(v0 + 0x54);
-    sw(v1, s2 + 0x64);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s2 + 0x68);
-    v1 = lw(v0 + 0x14);
-    sw(v1, s2 + 0x78);
-    v1 = lw(v0 + 0x4);
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s2 + 0x60);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s2 + 0x5C);
-    v1 = lw(v0);
-    sw(v1, s2 + 0x28);
-    v0 = lw(v0 + 0x4);
-    a0 = s2;
-    sw(v0, s2 + 0x2C);
-    P_SetThingPosition(*vmAddrToPtr<mobj_t>(a0));
-    v0 = lw(s2 + 0xC);
-    v0 = lw(v0);
-    v1 = lw(s2 + 0xC);
-    v0 = lw(v0);
-    sw(v0, s2 + 0x38);
-    v0 = lw(v1);
-    v1 = lw(v0 + 0x4);
-    v0 = 0x80000000;                                    // Result = 80000000
-    sw(v1, s2 + 0x3C);
-    if (s6 != v0) goto loc_8001E2E0;
-    v0 = lw(s2 + 0x38);
-    sw(v0, s2 + 0x8);
-    goto loc_8001E310;
-loc_8001E2E0:
-    v0 = 0x7FFF0000;                                    // Result = 7FFF0000
-    v0 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    if (s6 != v0) goto loc_8001E30C;
-    v0 = lw(s2 + 0x58);
-    v0 = lw(v0 + 0x44);
-    v0 = v1 - v0;
-    sw(v0, s2 + 0x8);
-    goto loc_8001E310;
-loc_8001E30C:
-    sw(s6, s2 + 0x8);
-loc_8001E310:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    sw(s2, v0 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7170;                                       // Result = gMObjHead[0] (800A8E90)
-    sw(v0, s2 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    sw(v0, s2 + 0x10);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(s2, at - 0x7160);                                // Store to: gMObjHead[4] (800A8EA0)
-    v0 = lw(s2 + 0x58);
-    a1 = lw(v0 + 0x10);
-    v1 = s4 >> 19;
-    if (a1 == 0) goto loc_8001E368;
-    a0 = s3;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v1 = s4 >> 19;
-loc_8001E368:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    a0 = lw(s2 + 0x58);
-    v1 <<= 2;
-    sw(s3, s2 + 0x74);
-    sw(s4, s2 + 0x24);
-    v0 += v1;
-    a0 = lh(a0 + 0x3E);
-    v0 = lw(v0);
-    mult(a0, v0);
-    v0 = lo;
-    sw(v0, s2 + 0x48);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += v1;
-    v0 = lw(at);
-    mult(a0, v0);
-    v1 = lw(s2);
-    v0 = lw(s2 + 0x48);
-    a2 = lo;
-    v0 = u32(i32(v0) >> 1);
-    v0 += v1;
-    mult(a0, s7);
-    sw(v0, s2);
-    a1 = lw(s2);
-    v1 = lw(s2 + 0x4);
-    sw(a2, s2 + 0x4C);
-    v0 = lw(s2 + 0x4C);
-    a0 = s2;
-    v0 = u32(i32(v0) >> 1);
-    v0 += v1;
-    sw(v0, s2 + 0x4);
-    a2 = lw(s2 + 0x4);
-    v0 = lo;
-    sw(v0, s2 + 0x50);
-    v0 = lw(s2 + 0x50);
-    v1 = lw(s2 + 0x8);
-    v0 = u32(i32(v0) >> 1);
-    v0 += v1;
-    sw(v0, s2 + 0x8);
-    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    if (v0 != 0) goto loc_8001E4C4;
-    v1 = lw(s2 + 0x54);
-    sw(0, s2 + 0x50);
-    sw(0, s2 + 0x4C);
-    sw(0, s2 + 0x48);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at -= 0x1F94;                                       // Result = MObjInfo_MT_PLAYER[C] (8005E06C)
-    at += v0;
-    a1 = lw(at);
-    a0 = s2;
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-    _thunk_P_Random();
-    v1 = lw(s2 + 0x5C);
-    v0 &= 1;
-    v1 -= v0;
-    sw(v1, s2 + 0x5C);
-    if (i32(v1) > 0) goto loc_8001E47C;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s2 + 0x5C);
-loc_8001E47C:
-    a0 = 0xFFFE0000;                                    // Result = FFFE0000
-    a0 |= 0xFFFF;                                       // Result = FFFEFFFF
-    v0 = lw(s2 + 0x64);
-    v1 = lw(s2 + 0x58);
-    v0 &= a0;
-    sw(v0, s2 + 0x64);
-    v0 = lw(v1 + 0x38);
-    if (v0 == 0) goto loc_8001E4C4;
-    a0 = lw(s2 + 0x74);
-    S_StopSound((sfxenum_t) a0);
-    v0 = lw(s2 + 0x58);
-    a1 = lw(v0 + 0x38);
-    a0 = s2;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_8001E4C4:
-    ra = lw(sp + 0x30);
-    s7 = lw(sp + 0x2C);
-    s6 = lw(sp + 0x28);
-    s5 = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x38;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawn a missile for the player and try to do a little auto-aim
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept {
+    // Figure out the vertical aim slope.
+    // If we don't hit a thing then do a bit of auto-aim and wiggle the aim a bit to try and hit something.
+    angle_t aimAngle = source.angle;
+    fixed_t aimSlope = P_AimLineAttack(source, aimAngle, 1024 * FRACUNIT);
+
+    if (!gpLineTarget->get()) {
+        constexpr angle_t AIM_WIGGLE = ANG45 / 8;
+        
+        aimAngle = source.angle + AIM_WIGGLE;
+        aimSlope = P_AimLineAttack(source, aimAngle, 1024 * FRACUNIT);
+        
+        if (!gpLineTarget->get()) {
+            aimAngle = source.angle - AIM_WIGGLE;
+            aimSlope = P_AimLineAttack(source, aimAngle, 1024 * FRACUNIT);
+
+            // If we still haven't hit a thing after all these attempts then just shoot dead level ahead
+            if (!gpLineTarget->get()) {
+                aimAngle = source.angle;
+                aimSlope = 0;
+            }
+        }
+    }
+
+    // Spawn the missile and make the fire sound
+    mobj_t& missile = *P_SpawnMobj(source.x, source.y, source.z + 32 * FRACUNIT, missileType);
+    
+    if (missile.info->seesound != sfx_None) {
+        S_StartSound(&source, missile.info->seesound);
+    }
+
+    // Set the missile velocity and angle and save the firer (for damage blame) 
+    const int32_t missileSpeed = missile.info->speed >> FRACBITS;
+    
+    missile.target = &source;
+    missile.angle = aimAngle;
+    missile.momx = gFineCosine[aimAngle >> ANGLETOFINESHIFT] * missileSpeed;
+    missile.momy = gFineSine[aimAngle >> ANGLETOFINESHIFT] * missileSpeed;
+    missile.momz = aimSlope * missileSpeed;
+
+    // If the missile is already in collision with something then explode it
+    P_CheckMissileSpawn(missile);
 }

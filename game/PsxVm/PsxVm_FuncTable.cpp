@@ -62,7 +62,6 @@ extern void _thunk_T_Glow() noexcept;
 extern void _thunk_P_RemoveMobj() noexcept;
 extern void _thunk_P_ExplodeMissile() noexcept;
 extern void P_SpawnPlayer() noexcept;
-extern void P_SpawnPlayerMissile() noexcept;
 extern void _thunk_T_PlatRaise() noexcept;
 extern void P_RecursiveSound() noexcept;
 extern void P_NoiseAlert() noexcept;
@@ -235,7 +234,6 @@ namespace PsxVm {
         { 0x8001C724, &_thunk_P_RemoveMobj },
         { 0x8001CB9C, &_thunk_P_ExplodeMissile },
         { 0x8001CE40, &P_SpawnPlayer },
-        { 0x8001E0F4, &P_SpawnPlayerMissile },
         { 0x8001F280, &_thunk_T_PlatRaise },
         { 0x8001F918, &P_RecursiveSound },
         { 0x8001FA34, &P_NoiseAlert },

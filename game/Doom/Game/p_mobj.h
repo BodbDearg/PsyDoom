@@ -25,4 +25,4 @@ void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept;
 void P_SpawnBlood(const fixed_t x, const fixed_t y, const fixed_t z, const int32_t damage) noexcept;
 void P_CheckMissileSpawn(mobj_t& mobj) noexcept;
 mobj_t* P_SpawnMissile(mobj_t& source, mobj_t& dest, const mobjtype_t type) noexcept;
-void P_SpawnPlayerMissile() noexcept;
+void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept;
