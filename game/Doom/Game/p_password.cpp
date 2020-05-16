@@ -66,6 +66,17 @@ void P_ComputePassword(uint8_t pOutput[10]) noexcept {
     // Encode byte: armor type
     unencrypted[5] = (uint8_t)(player.armortype << 3);
 
+    // PC-PSX: encode if the game is operating in nightmare mode in the top bit of the last unencrypted byte.
+    // This change is compatible with a similar change in 'PSXDOOM-RE' so passwords should be compatible beween both projects.
+    //
+    // Note: only the top 5 bits of the last unencrypted byte are encoded to a password. 2 bits are used by armortype, and now
+    // 1 extra bit is used by nightmare mode. Therefore there are still 2 bits left for over purposes, perhaps extended level support?
+    #if PC_PSX_DOOM_MODS
+        if (*gGameSkill == sk_nightmare) {
+            unencrypted[5] |= 0x80;
+        }
+    #endif
+
     // Convert the the regular 8-bit bytes that we just encoded to 5-bit bytes which can encode 32 values.
     // This is so we can use ASCII characters and numbers to encode the data.
     // This expands the size of the password from 6 bytes to 9 bytes, as we need to encode 45 bits.
