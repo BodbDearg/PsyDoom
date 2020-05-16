@@ -147,10 +147,9 @@ void IN_Start() noexcept {
     *gIntermissionStage = 0;
     *gMenuTimeoutStartTicCon = *gTicCon;
 
-    // Compute the password for the next map
+    // Compute the password for the next map and mark it as entered (so we don't do a pistol start)
     if (*gNextMap <= NUM_MAPS) {
-        a0 = ptrToVmAddr(gPasswordCharBuffer.get());
-        P_ComputePassword();
+        P_ComputePassword(gPasswordCharBuffer.get());
         *gNumPasswordCharsEntered = 10;
     }
     

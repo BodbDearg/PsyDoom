@@ -23,9 +23,11 @@
 #include "p_switch.h"
 #include "p_telept.h"
 #include "p_tick.h"
-#include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
 #include <algorithm>
+
+#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PsxVm/PsxVm.h"
 
 // Definition for a flat or texture animation
 struct animdef_t {

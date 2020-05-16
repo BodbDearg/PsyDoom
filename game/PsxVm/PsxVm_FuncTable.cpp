@@ -122,7 +122,6 @@ extern void I_NetSendRecv() noexcept;
 extern void I_SubmitGpuCmds() noexcept;
 extern void I_LocalButtonsToNet() noexcept;
 extern void I_NetButtonsToLocal() noexcept;
-extern void P_ComputePassword() noexcept;
 extern void P_ProcessPassword() noexcept;
 extern void _thunk_FixedMul() noexcept;
 extern void _thunk_FixedDiv() noexcept;
@@ -281,7 +280,6 @@ namespace PsxVm {
         { 0x80034E58, &I_SubmitGpuCmds },
         { 0x80034EA4, &I_LocalButtonsToNet },
         { 0x80034F04, &I_NetButtonsToLocal },
-        { 0x80037DBC, &P_ComputePassword },
         { 0x800381B0, &P_ProcessPassword },
         { 0x8003F134, &_thunk_FixedMul },
         { 0x8003F180, &_thunk_FixedDiv },

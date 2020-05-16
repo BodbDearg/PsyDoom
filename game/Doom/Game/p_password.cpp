@@ -3,284 +3,104 @@
 #include "Doom/Base/i_main.h"
 #include "Doom/d_main.h"
 #include "g_game.h"
+#include "p_inter.h"
 #include "PsxVm/PsxVm.h"
 
-// FIXME: all the password code needs to be updated to work with nightmare mode.
-//
-// See:
-//  https://github.com/BodbDearg/PsyDoom/commit/53219ed02236d96b3a628bc8db43233928954f8d
-//  https://github.com/Erick194/PSXDOOM-RE/commit/7d1a37385c32c5c8f3026c3d8164647c8e67ff00
-//
-void P_ComputePassword() noexcept {
-loc_80037DBC:
-    sp -= 0x28;
-    sw(s1, sp + 0x1C);
-    s1 = a0;
-    a0 = sp + 0x10;
-    a1 = 0;                                             // Result = 00000000
-    v1 = *gCurPlayerIndex;
-    a2 = 8;                                             // Result = 00000008
-    sw(ra, sp + 0x20);
-    sw(s0, sp + 0x18);
-    v0 = v1 << 2;
-    v0 += v1;
-    v1 = v0 << 4;
-    v1 -= v0;
-    v1 <<= 2;
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    s0 = v1 + v0;
-    _thunk_D_memset();
-    a0 = 0;                                             // Result = 00000000
-    a2 = 1;                                             // Result = 00000001
-    a1 = s0;
-    v0 = (uint8_t) *gNextMap;
-    v1 = (uint8_t) *gGameSkill;
-    v0 &= 0x3F;
-    v0 <<= 2;
-    v1 &= 3;
-    sb(v0, sp + 0x10);
-    v0 |= v1;
-    sb(v0, sp + 0x10);
-loc_80037E3C:
-    v0 = lw(a1 + 0x7C);
-    a1 += 4;
-    if (v0 == 0) goto loc_80037E5C;
-    v0 = lbu(sp + 0x11);
-    v1 = a2 << a0;
-    v0 |= v1;
-    sb(v0, sp + 0x11);
-loc_80037E5C:
-    a0++;
-    v0 = (i32(a0) < 7);
-    if (v0 != 0) goto loc_80037E3C;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 = lw(v1 + 0x70D4);                               // Load from: gMaxAmmo[0] (800670D4)
-    a0 = 0x80060000;                                    // Result = 80060000
-    a0 = lw(a0 + 0x70D8);                               // Load from: gMaxAmmo[1] (800670D8)
-    a2 = 0x80060000;                                    // Result = 80060000
-    a2 = lw(a2 + 0x70DC);                               // Load from: gMaxAmmo[2] (800670DC)
-    v0 = lw(s0 + 0x60);
-    a3 = 0x80060000;                                    // Result = 80060000
-    a3 = lw(a3 + 0x70E0);                               // Load from: gMaxAmmo[3] (800670E0)
-    if (v0 == 0) goto loc_80037EB4;
-    v1 <<= 1;
-    a0 <<= 1;
-    a2 <<= 1;
-    v0 = lbu(sp + 0x11);
-    a3 <<= 1;
-    v0 |= 0x80;
-    sb(v0, sp + 0x11);
-loc_80037EB4:
-    v0 = lw(s0 + 0x98);
-    v0 <<= 3;
-    div(v0, v1);
-    if (v1 != 0) goto loc_80037ED0;
-    _break(0x1C00);
-loc_80037ED0:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_80037EE8;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PC-PSX helper to make the encoding logic byte bit cleaner and remove some redundancy.
+// Divide 'byte' by 'b' and do byte 'ceil' operation on the potentially non integer result.
+// Returns the answer as an unsigned 8-bit integer.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static inline uint8_t ceil8Div(const int32_t num, const int32_t den) noexcept {
+    const int32_t result = num / den + ((num % den != 0) ? 1 : 0);
+    return (uint8_t) result;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Compute a password for the current player and save in the given output buffer.
+// Each byte in the output buffer contains a 5-bit number from 0-31, which corresponds to one of the allowed password chars/digits.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_ComputePassword(uint8_t pOutput[10]) noexcept {
+    // Get the player to encode the password for and zero init the unencrypted password
+    player_t& player = gPlayers[*gCurPlayerIndex];
+
+    uint8_t unencrypted[8];
+    D_memset(unencrypted, std::byte(0), 8);
+
+    // Encode byte: current map and skill
+    unencrypted[0] = (uint8_t)((*gNextMap & 63) << 2);
+    unencrypted[0] |= (uint8_t)(*gGameSkill & 3);
+
+    // Encode byte: owned weapons (from shotgun onwards) and whether the backpack is owned
+    for (int32_t i = wp_shotgun; i < NUMWEAPONS; ++i) {
+        if (player.weaponowned[i]) {
+            unencrypted[1] |= (uint8_t)(1 << (i - wp_shotgun));
+        }
     }
-    if (v0 != at) goto loc_80037EE8;
-    tge(zero, zero, 0x5D);
-loc_80037EE8:
-    a1 = lo;
-    v0 = hi;
-    v1 = a1 << 4;
-    if (v0 == 0) goto loc_80037F00;
-    a1++;
-    v1 = a1 << 4;
-loc_80037F00:
-    sb(v1, sp + 0x12);
-    v0 = lw(s0 + 0x9C);
-    v0 <<= 3;
-    div(v0, a0);
-    if (a0 != 0) goto loc_80037F20;
-    _break(0x1C00);
-loc_80037F20:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a0 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_80037F38;
+
+    unencrypted[1] |= (player.backpack) ? 0x80 : 0;
+
+    // Determine the maximum ammo amount for the calculations below
+    const uint8_t maxAmmoShift = (player.backpack) ? 1 : 0;
+
+    const int32_t maxClips = gMaxAmmo[am_clip] << maxAmmoShift;
+    const int32_t maxShells = gMaxAmmo[am_shell] << maxAmmoShift;
+    const int32_t maxCells = gMaxAmmo[am_cell] << maxAmmoShift;
+    const int32_t maxMissiles = gMaxAmmo[am_misl] << maxAmmoShift;
+
+    // Encode byte: number of bullets and shells (in 1/8 of the maximum increments, rounded up)
+    const uint8_t clipsEnc = ceil8Div(player.ammo[am_clip] << 3, maxClips);
+    const uint8_t shellsEnc = ceil8Div(player.ammo[am_shell] << 3, maxShells);
+    unencrypted[2] = (clipsEnc << 4) | shellsEnc;
+
+    // Encode byte: number of cells and missiles (in 1/8 of the maximum increments, rounded up)
+    const uint8_t cellsEnc = ceil8Div(player.ammo[am_cell] << 3, maxCells);
+    const uint8_t missilesEnc = ceil8Div(player.ammo[am_misl] << 3, maxMissiles);
+    unencrypted[3] = (cellsEnc << 4) | missilesEnc;
+
+    // Encode byte: health and armor points (in 1/8 of the maximum increments (25 HP), rounded up)
+    const uint8_t healthPointsEnc = ceil8Div(player.health << 3, 200);
+    const uint8_t armorPointsEnc = ceil8Div(player.armorpoints << 3, 200);
+    unencrypted[4] = (healthPointsEnc << 4) | armorPointsEnc;
+
+    // Encode byte: armor type
+    unencrypted[5] = (uint8_t)(player.armortype << 3);
+
+    // Convert the the regular 8-bit bytes that we just encoded to 5-bit bytes which can encode 32 values.
+    // This is so we can use ASCII characters and numbers to encode the data.
+    // This expands the size of the password from 6 bytes to 9 bytes, as we need to encode 45 bits.
+    constexpr int32_t BITS_TO_ENCODE = 45;
+
+    for (int32_t srcBitIdx = 0; srcBitIdx < BITS_TO_ENCODE;) {
+        // Encode 5 source bits and save the 5-bit byte
+        uint8_t dstByte = 0;
+
+        for (int32_t bitInDstByte = 4; bitInDstByte >= 0; --bitInDstByte, ++srcBitIdx) {
+            const uint8_t srcByte = unencrypted[srcBitIdx / 8];
+            const uint8_t srcBitMask = (uint8_t)(0x80u >> (srcBitIdx & 7));
+            const uint8_t dstBitMask = (uint8_t)(1u << bitInDstByte);
+
+            if (srcByte & srcBitMask) {
+                dstByte |= dstBitMask;      // Encode the source bit when set
+            }
+        }
+
+        const int32_t dstByteIdx = (srcBitIdx - 1) / 5;     // -1 because we are now on the next dest byte
+        pOutput[dstByteIdx] = dstByte;
     }
-    if (v0 != at) goto loc_80037F38;
-    tge(zero, zero, 0x5D);
-loc_80037F38:
-    a1 = lo;
-    v0 = hi;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 | a1;
-        if (bJump) goto loc_80037F50;
+
+    // Simple encryption: build an XOR bitmask to apply to the 9 data bytes, from XOR-ing all 9 data bytes.
+    // This 5-bit XOR pattern is stored in the last output byte of the password.
+    pOutput[9] = 0;
+
+    for (int32_t i = 0; i < 9; ++i) {
+        pOutput[9] ^= pOutput[i];
     }
-    a1++;
-    v0 = v1 | a1;
-loc_80037F50:
-    sb(v0, sp + 0x12);
-    v0 = lw(s0 + 0xA0);
-    v0 <<= 3;
-    div(v0, a2);
-    if (a2 != 0) goto loc_80037F70;
-    _break(0x1C00);
-loc_80037F70:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a2 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_80037F88;
+
+    // Now apply the XOR pattern to encrypt the 9 data bytes
+    for (int32_t i = 0; i < 9; ++i) {
+        pOutput[i] ^= pOutput[9];
     }
-    if (v0 != at) goto loc_80037F88;
-    tge(zero, zero, 0x5D);
-loc_80037F88:
-    a1 = lo;
-    v0 = hi;
-    v1 = a1 << 4;
-    if (v0 == 0) goto loc_80037FA0;
-    a1++;
-    v1 = a1 << 4;
-loc_80037FA0:
-    sb(v1, sp + 0x13);
-    v0 = lw(s0 + 0xA4);
-    v0 <<= 3;
-    div(v0, a3);
-    if (a3 != 0) goto loc_80037FC0;
-    _break(0x1C00);
-loc_80037FC0:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a3 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_80037FD8;
-    }
-    if (v0 != at) goto loc_80037FD8;
-    tge(zero, zero, 0x5D);
-loc_80037FD8:
-    a1 = lo;
-    v0 = hi;
-    a2 = 0x51EB0000;                                    // Result = 51EB0000
-    if (v0 == 0) goto loc_80037FEC;
-    a1++;
-loc_80037FEC:
-    v0 = v1 | a1;
-    sb(v0, sp + 0x13);
-    v1 = lw(s0 + 0x24);
-    a2 |= 0x851F;                                       // Result = 51EB851F
-    mult(v1, a2);
-    v0 = hi;
-    a0 = v1 << 3;
-    mult(a0, a2);
-    v1 = u32(i32(v1) >> 31);
-    v0 = u32(i32(v0) >> 3);
-    a1 = v0 - v1;
-    v0 = u32(i32(a0) >> 31);
-    v1 = hi;
-    v1 = u32(i32(v1) >> 6);
-    v1 -= v0;
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v0 += v1;
-    v0 <<= 3;
-    a3 = a1 << 4;
-    if (a0 == v0) goto loc_8003804C;
-    a1++;
-    a3 = a1 << 4;
-loc_8003804C:
-    sb(a3, sp + 0x14);
-    v0 = lw(s0 + 0x28);
-    mult(v0, a2);
-    v1 = hi;
-    a0 = v0 << 3;
-    mult(a0, a2);
-    v0 = u32(i32(v0) >> 31);
-    v1 = u32(i32(v1) >> 3);
-    a1 = v1 - v0;
-    v0 = u32(i32(a0) >> 31);
-    v1 = hi;
-    v1 = u32(i32(v1) >> 6);
-    v1 -= v0;
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    v0 += v1;
-    v0 <<= 3;
-    t0 = sp + 0x10;
-    if (a0 == v0) goto loc_800380A4;
-    a1++;
-loc_800380A4:
-    a0 = 0;                                             // Result = 00000000
-    v0 = a3 | a1;
-    sb(v0, sp + 0x14);
-    v0 = lbu(s0 + 0x2C);
-    t1 = 0x80;                                          // Result = 00000080
-    v0 <<= 3;
-    sb(v0, sp + 0x15);
-    a3 = 0;                                             // Result = 00000000
-loc_800380C4:
-    a2 = 0x10;                                          // Result = 00000010
-    a1 = 4;                                             // Result = 00000004
-loc_800380CC:
-    v0 = a0;
-    if (i32(a0) >= 0) goto loc_800380D8;
-    v0 = a0 + 7;
-loc_800380D8:
-    v0 = u32(i32(v0) >> 3);
-    v1 = t0 + v0;
-    v1 = lbu(v1);
-    v0 <<= 3;
-    v0 = a0 - v0;
-    v0 = i32(t1) >> v0;
-    v1 &= v0;
-    a0++;
-    if (v1 == 0) goto loc_80038100;
-    a3 |= a2;
-loc_80038100:
-    a1--;
-    a2 = u32(i32(a2) >> 1);
-    if (i32(a1) >= 0) goto loc_800380CC;
-    v0 = 0x66660000;                                    // Result = 66660000
-    v0 |= 0x6667;                                       // Result = 66666667
-    v1 = a0 - 1;
-    mult(v1, v0);
-    v1 = u32(i32(v1) >> 31);
-    v0 = hi;
-    v0 = u32(i32(v0) >> 1);
-    v0 -= v1;
-    v0 += s1;
-    sb(a3, v0);
-    v0 = (i32(a0) < 0x2D);
-    a3 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_800380C4;
-    sb(0, s1 + 0x9);
-    a0 = s1;
-    a1 = s1 + 9;
-loc_8003814C:
-    v0 = lbu(s1 + 0x9);
-    v1 = lbu(a0);
-    a0++;
-    v0 ^= v1;
-    sb(v0, s1 + 0x9);
-    v0 = (i32(a0) < i32(a1));
-    if (v0 != 0) goto loc_8003814C;
-    a0 = s1;
-    a1 = s1 + 9;
-loc_80038174:
-    v0 = lbu(a0);
-    v1 = lbu(s1 + 0x9);
-    v0 ^= v1;
-    sb(v0, a0);
-    a0++;
-    v0 = (i32(a0) < i32(a1));
-    if (v0 != 0) goto loc_80038174;
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
 }
 
 void P_ProcessPassword() noexcept {
