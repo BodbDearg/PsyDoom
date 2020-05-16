@@ -419,7 +419,7 @@ loc_8001D0DC:
     a0 += 0x6560;                                       // Result = gPasswordCharBuffer[0] (80096560)
     a2 = a1;
     a3 = s3;
-    P_ProcessPassword();
+    v0 = P_ProcessPassword(vmAddrToPtr<uint8_t>(a0), *vmAddrToPtr<int32_t>(a1), *vmAddrToPtr<skill_t>(a2), vmAddrToPtr<player_t>(a3));
     *gbUsingAPassword = false;
 loc_8001D130:
     v0 = lh(s4 + 0x6);

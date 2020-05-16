@@ -12,7 +12,6 @@
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
 #include "PcPsx/Finally.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 
@@ -59,10 +58,6 @@ void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
 // Update logic for the password screen, entering password characters and so on...
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_PasswordScreen() noexcept {
-    // TODO: REMOVE
-    sp -= 0x28;
-    auto cleanupStackFrame = finally([](){ sp += 0x28; });
-
     // Do invalid password flash sfx every so often if currently active
     if (*gInvalidPasswordFlashTicsLeft != 0) {
         if (*gGameTic > *gPrevGameTic) {
@@ -144,22 +139,16 @@ gameaction_t TIC_PasswordScreen() noexcept {
         }
         
         // Process the password once it is complete
-        a0 = gPasswordCharBuffer;
-        a1 = sp + 0x10;     // TODO: level num
-        a2 = sp + 0x14;     // TODO: skill
-        a3 = 0;
-        P_ProcessPassword();
+        int32_t mapNum = {};
+        skill_t skill = {};
         
-        if (v0 != 0) {
+        if (P_ProcessPassword(gPasswordCharBuffer.get(), mapNum, skill, nullptr)) {
             // Valid password entered, begin warping to the destination map
             *gbUsingAPassword = true;
-
-            v1 = lw(sp + 0x10);
-            a1 = lw(sp + 0x14);
-            *gGameMap = v1;
-            *gStartMapOrEpisode = v1;
-            *gGameSkill = (skill_t) a1;
-            *gStartSkill = (skill_t) a1;
+            *gGameMap = mapNum;
+            *gStartMapOrEpisode = mapNum;
+            *gGameSkill = skill;
+            *gStartSkill = skill;
 
             return ga_warped;
         }
