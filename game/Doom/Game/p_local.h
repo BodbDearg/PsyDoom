@@ -30,7 +30,7 @@ static constexpr fixed_t    FLOATSPEED      = 8 * FRACUNIT;     // Speed of floa
 static constexpr int32_t    BASETHRESHOLD   = 100;              // How long for an AI to follow a target for (tics) - was about 3 seconds on PC, much longer on PSX. Conversion bug?
 
 // Enum representing a movement direction (for AI actors)
-enum dirtype_t : uint32_t {
+enum dirtype_t : int32_t {
     DI_EAST,
     DI_NORTHEAST,
     DI_NORTH,

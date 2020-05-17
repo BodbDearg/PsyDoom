@@ -11,6 +11,7 @@ struct state_t;
 struct state_t;
 struct subsector_t;
 
+enum dirtype_t : int32_t;
 enum mobjtype_t : uint32_t;
 enum statenum_t : uint32_t;
 
@@ -214,7 +215,7 @@ struct mobj_t {
     VmPtr<state_t>          state;              // State data
     uint32_t                flags;              // See the MF_XXX series of flags for possible bits.
     int32_t                 health;
-    int32_t                 movedir;            // Diagonal directions: 0-7
+    dirtype_t               movedir;            // For enemy AI, what direction the enemy is moving in
     int32_t                 movecount;          // When this reaches 0 a new dir is selected
     VmPtr<mobj_t>           target;             // The current map object being chased or attacked (if any), or for missiles the source object
     int32_t                 reactiontime;       // Time left until an attack is allowed

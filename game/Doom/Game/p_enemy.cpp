@@ -21,8 +21,30 @@
 #include "PsxVm/PsxVm.h"
 #include <algorithm>
 
-constexpr static fixed_t gMoveXSpeed[8] = { FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000, 0, 47000 };      // Monster movement speed multiplier for the 8 movement directions: x
-constexpr static fixed_t gMoveYSpeed[8] = { 0, 47000, FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000 };      // Monster movement speed multiplier for the 8 movement directions: y
+// Monster movement speed multiplier for the 8 movement directions: x & y
+constexpr static fixed_t gMoveXSpeed[8] = { FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000, 0, 47000 };
+constexpr static fixed_t gMoveYSpeed[8] = { 0, 47000, FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000 };
+
+// The opposite direction to every move direction
+constexpr static dirtype_t gOppositeDir[NUMDIRS] = {
+    DI_WEST,
+    DI_SOUTHWEST,
+    DI_SOUTH,
+    DI_SOUTHEAST,
+    DI_EAST,
+    DI_NORTHEAST,
+    DI_NORTH,
+    DI_NORTHWEST,
+    DI_NODIR
+};
+
+// The four diagonal directions
+constexpr static dirtype_t gDiagonalDirs[4] = {
+    DI_NORTHWEST,
+    DI_NORTHEAST,
+    DI_SOUTHWEST,
+    DI_SOUTHEAST
+};
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // For the given attacker, checks to see if it's target is within melee range and returns 'true' if so
@@ -135,306 +157,147 @@ bool P_Move(mobj_t& actor) noexcept {
     return false;
 }
 
-void P_TryWalk() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x14);
-    s0 = a0;
-    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
-    if (v0 == 0) goto loc_80015F9C;
-    _thunk_P_Random();
-    v0 &= 0xF;
-    sw(v0, s0 + 0x70);
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80015FA0;
-loc_80015F9C:
-    v0 = 0;                                             // Result = 00000000
-loc_80015FA0:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Try to move the specified actor in it's current movement direction.
+// For floating monsters also attempt to do up/down movement if appropriate, and if a move is blocked try to open doors.
+// Returns 'true' if the move was successful, or if the move was only blocked by a door which can be opened.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_TryWalk(mobj_t& actor) noexcept {
+    if (!P_Move(actor))
+        return false;
+
+    actor.movecount = P_Random() & 0xf;     // Randomly vary time until a new movement dir is chosen
+    return true;
 }
 
-void P_NewChaseDir() noexcept {
-loc_80015FB4:
-    sp -= 0x38;
-    sw(s1, sp + 0x24);
-    s1 = a0;
-    sw(ra, sp + 0x34);
-    sw(s4, sp + 0x30);
-    sw(s3, sp + 0x2C);
-    sw(s2, sp + 0x28);
-    sw(s0, sp + 0x20);
-    v0 = lw(s1 + 0x74);
-    if (v0 != 0) goto loc_80015FF4;
-    I_Error("P_NewChaseDir: called with no target");
-loc_80015FF4:
-    s4 = lw(s1 + 0x6C);
-    v0 = lw(s1 + 0x74);
-    v1 = lw(s1);
-    a2 = s4 << 2;
-    a1 = lw(v0);
-    a0 = lw(v0 + 0x4);
-    v0 = lw(s1 + 0x4);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70A0;                                       // Result = OppositeDir[0] (800670A0)
-    at += a2;
-    s2 = lw(at);
-    s3 = a1 - v1;
-    s0 = a0 - v0;
-    v0 = 0xA0000;                                       // Result = 000A0000
-    v0 = (i32(v0) < i32(s3));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xFFF60000;                                // Result = FFF60000
-        if (bJump) goto loc_80016040;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Decides on a new movement direction for the given AI thing and moves a little in that direction.
+// Precondition: the actor must have a target that it is pursuing before this is called!
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_NewChaseDir(mobj_t& actor) noexcept {
+    // Actor is expected to have a target if called
+    if (!actor.target) {
+        I_Error("P_NewChaseDir: called with no target");
+        return;
     }
-    sw(0, sp + 0x14);
-    goto loc_80016058;
-loc_80016040:
-    v0 = (i32(s3) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_80016050;
+
+    // Save the current movement direction and it's opposite for comparisons
+    const dirtype_t oldMoveDir = actor.movedir;
+    const dirtype_t turnaroundDir = gOppositeDir[oldMoveDir];
+
+    // Figure out the horizontal and vertical directions to the target and the distances
+    const fixed_t tgtDistX = actor.target->x - actor.x;
+    const fixed_t tgtDistY = actor.target->y - actor.y;
+
+    dirtype_t hdirToTgt;
+
+    if (tgtDistX > 10 * FRACUNIT) {
+        hdirToTgt = DI_EAST;
+    } else if (tgtDistX < -10 * FRACUNIT) {
+        hdirToTgt = DI_WEST;
+    } else {
+        hdirToTgt = DI_NODIR;
     }
-    v0 = 8;                                             // Result = 00000008
-loc_80016050:
-    sw(v0, sp + 0x14);
-    v0 = 0xFFF60000;                                    // Result = FFF60000
-loc_80016058:
-    v0 = (i32(s0) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 6;                                         // Result = 00000006
-        if (bJump) goto loc_80016078;
+
+    dirtype_t vdirToTgt;
+
+    if (tgtDistY > 10 * FRACUNIT) {
+        vdirToTgt = DI_NORTH;
+    } else if (tgtDistY < -10 * FRACUNIT) {
+        vdirToTgt = DI_SOUTH;
+    } else {
+        vdirToTgt = DI_NODIR;
     }
-    v0 = 0xA0000;                                       // Result = 000A0000
-    v0 = (i32(v0) < i32(s0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_80016078;
+    
+    // Try to move diagonally to the target
+    if ((hdirToTgt != DI_NODIR) && (vdirToTgt != DI_NODIR)) {
+        // Go east if dx > 0; Go south if dy < 0:
+        const uint32_t diagIdx = ((tgtDistX > 0) ? 1 : 0) + ((tgtDistY < 0) ? 2 : 0);
+        const dirtype_t diagDir = gDiagonalDirs[diagIdx];
+
+        // Walk this way unless it means turning around fully
+        actor.movedir = diagDir;
+
+        if (diagDir != turnaroundDir) {
+            if (P_TryWalk(actor))
+                return;
+        }
     }
-    v0 = 8;                                             // Result = 00000008
-loc_80016078:
-    sw(v0, sp + 0x18);
-    v0 = lw(sp + 0x14);
-    v1 = 8;                                             // Result = 00000008
-    if (v0 == v1) goto loc_80016100;
-    v0 = lw(sp + 0x18);
-    {
-        const bool bJump = (v0 == v1);
-        v0 = u32(i32(s0) >> 31);
-        if (bJump) goto loc_80016100;
+
+    // Try moving left/right and up down with a preference to move in the largest distance direction.
+    // Some random variation IS added in however to make the behavior more interesting.
+    // Note: movement in the opposite of the current direction is NOT allowed at this point.
+    dirtype_t tryDir1 = hdirToTgt;
+    dirtype_t tryDir2 = vdirToTgt;
+
+    if ((P_Random() > 200) || (std::abs(tgtDistY) > std::abs(tgtDistX))) {
+        std::swap(tryDir1, tryDir2);
     }
-    v0 &= 2;
-    a0 = 0x80060000;                                    // Result = 80060000
-    a0 += 0x70C4;                                       // Result = DiagonalDirs[0] (800670C4)
-    v1 = v0;
-    if (i32(s3) <= 0) goto loc_800160BC;
-    v0++;
-    v0 <<= 2;
-    goto loc_800160C0;
-loc_800160BC:
-    v0 = v1 << 2;
-loc_800160C0:
-    v0 += a0;
-    v0 = lw(v0);
-    sw(v0, s1 + 0x6C);
-    if (v0 == s2) goto loc_80016100;
-    a0 = s1;
-    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_800160F8;
+    
+    if (tryDir1 == turnaroundDir) {
+        tryDir1 = DI_NODIR;
     }
-    _thunk_P_Random();
-    v0 &= 0xF;
-    sw(v0, s1 + 0x70);
-    v0 = 1;                                             // Result = 00000001
-loc_800160F8:
-    if (v0 != 0) goto loc_80016310;
-loc_80016100:
-    _thunk_P_Random();
-    v0 = (i32(v0) < 0xC9);
-    if (v0 == 0) goto loc_80016138;
-    v1 = s0;
-    if (i32(s0) >= 0) goto loc_80016120;
-    v1 = -v1;
-loc_80016120:
-    v0 = s3;
-    if (i32(s3) >= 0) goto loc_8001612C;
-    v0 = -v0;
-loc_8001612C:
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_80016148;
-loc_80016138:
-    v0 = lw(sp + 0x18);
-    s0 = lw(sp + 0x14);
-    sw(v0, sp + 0x14);
-    sw(s0, sp + 0x18);
-loc_80016148:
-    v0 = lw(sp + 0x14);
-    {
-        const bool bJump = (v0 != s2);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_8001615C;
+    
+    if (tryDir2 == turnaroundDir) {
+        tryDir2 = DI_NODIR;
     }
-    sw(v0, sp + 0x14);
-loc_8001615C:
-    v0 = lw(sp + 0x18);
-    {
-        const bool bJump = (v0 != s2);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_80016170;
+    
+    if (tryDir1 != DI_NODIR) {
+        actor.movedir = tryDir1;
+        
+        if (P_TryWalk(actor))
+            return;
     }
-    sw(v0, sp + 0x18);
-loc_80016170:
-    v1 = lw(sp + 0x14);
-    v0 = 8;                                             // Result = 00000008
-    if (v1 == v0) goto loc_800161B0;
-    sw(v1, s1 + 0x6C);
-    a0 = s1;
-    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_800161A8;
+
+    if (tryDir2 != DI_NODIR) {
+        actor.movedir = tryDir2;
+        
+        if (P_TryWalk(actor))
+            return;
     }
-    _thunk_P_Random();
-    v0 &= 0xF;
-    sw(v0, s1 + 0x70);
-    v0 = 1;                                             // Result = 00000001
-loc_800161A8:
-    if (v0 != 0) goto loc_80016310;
-loc_800161B0:
-    v1 = lw(sp + 0x18);
-    v0 = 8;                                             // Result = 00000008
-    if (v1 == v0) goto loc_800161F0;
-    sw(v1, s1 + 0x6C);
-    a0 = s1;
-    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_800161E8;
+    
+    // If all that movement failed, try going in the previous movement direction
+    if (oldMoveDir != DI_NODIR) {
+        actor.movedir = oldMoveDir;
+
+        if (P_TryWalk(actor))
+            return;
     }
-    _thunk_P_Random();
-    v0 &= 0xF;
-    sw(v0, s1 + 0x70);
-    v0 = 1;                                             // Result = 00000001
-loc_800161E8:
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_80016310;
+    
+    // Next try all of the possible move directions, except the turnaround dir.
+    // Randomly start from opposite ends of the directions lists to change things up every so often.
+    if (P_Random() & 1) {
+        for (int32_t dirIdx = DI_EAST; dirIdx <= DI_SOUTHEAST; ++dirIdx) {
+            if (dirIdx == turnaroundDir)
+                continue;
+
+            actor.movedir = (dirtype_t) dirIdx;
+
+            if (P_TryWalk(actor))
+                return;
+        }
+    } else {
+        for (int32_t dirIdx = DI_SOUTHEAST; dirIdx >= DI_EAST; --dirIdx) {
+            if (dirIdx == turnaroundDir)
+                continue;
+
+            actor.movedir = (dirtype_t) dirIdx;
+
+            if (P_TryWalk(actor))
+                return;
+        }
     }
-loc_800161F0:
-    if (s4 == v0) goto loc_80016228;
-    sw(s4, s1 + 0x6C);
-    a0 = s1;
-    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80016220;
+    
+    // Last ditch attempt: try to move in the opposite (turnaround) direction
+    if (turnaroundDir != DI_NODIR) {
+        actor.movedir = turnaroundDir;
+
+        if (P_TryWalk(actor))
+            return;
     }
-    _thunk_P_Random();
-    v0 &= 0xF;
-    sw(v0, s1 + 0x70);
-    v0 = 1;                                             // Result = 00000001
-loc_80016220:
-    if (v0 != 0) goto loc_80016310;
-loc_80016228:
-    _thunk_P_Random();
-    v0 &= 1;
-    s0 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_8001628C;
-loc_8001623C:
-    if (s0 == s2) goto loc_80016274;
-    sw(s0, s1 + 0x6C);
-    a0 = s1;
-    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8001626C;
-    }
-    _thunk_P_Random();
-    v0 &= 0xF;
-    sw(v0, s1 + 0x70);
-    v0 = 1;                                             // Result = 00000001
-loc_8001626C:
-    if (v0 != 0) goto loc_80016310;
-loc_80016274:
-    s0++;
-    v0 = (s0 < 8);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_8001623C;
-    }
-    goto loc_800162D4;
-loc_8001628C:
-    s0 = 7;                                             // Result = 00000007
-loc_80016290:
-    if (s0 == s2) goto loc_800162C8;
-    sw(s0, s1 + 0x6C);
-    a0 = s1;
-    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_800162C0;
-    }
-    _thunk_P_Random();
-    v0 &= 0xF;
-    sw(v0, s1 + 0x70);
-    v0 = 1;                                             // Result = 00000001
-loc_800162C0:
-    if (v0 != 0) goto loc_80016310;
-loc_800162C8:
-    s0--;
-    v0 = 8;                                             // Result = 00000008
-    if (i32(s0) >= 0) goto loc_80016290;
-loc_800162D4:
-    {
-        const bool bJump = (s2 == v0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_8001630C;
-    }
-    sw(s2, s1 + 0x6C);
-    a0 = s1;
-    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_80016304;
-    }
-    _thunk_P_Random();
-    v0 &= 0xF;
-    sw(v0, s1 + 0x70);
-    v0 = 1;                                             // Result = 00000001
-loc_80016304:
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_80016310;
-    }
-loc_8001630C:
-    sw(v0, s1 + 0x6C);
-loc_80016310:
-    ra = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x38;
-    return;
+
+    // Unable to find a direction to move in, exhausted all options!
+    actor.movedir = DI_NODIR;
 }
 
 void P_LookForPlayers() noexcept {
@@ -682,7 +545,7 @@ loc_800166AC:
     v0 &= v1;
     sw(v0, s1 + 0x64);
     a0 = s1;
-    P_NewChaseDir();
+    P_NewChaseDir(*vmAddrToPtr<mobj_t>(a0));
     goto loc_80016910;
 loc_800166D8:
     v0 = lw(s1 + 0x58);
@@ -814,7 +677,7 @@ loc_800168B0:
     if (v0 != 0) goto loc_800168D0;
 loc_800168C8:
     a0 = s1;
-    P_NewChaseDir();
+    P_NewChaseDir(*vmAddrToPtr<mobj_t>(a0));
 loc_800168D0:
     v0 = lw(s1 + 0x58);
     v0 = lw(v0 + 0x50);
