@@ -495,110 +495,38 @@ void A_Chase(mobj_t& actor) noexcept {
     }
 }
 
-void A_FaceTarget() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x74);
-    v1 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_800169B4;
-    v0 = lw(s1 + 0x64);
-    a0 = lw(s1);
-    v0 &= v1;
-    sw(v0, s1 + 0x64);
-    v0 = lw(s1 + 0x74);
-    a1 = lw(s1 + 0x4);
-    a2 = lw(v0);
-    a3 = lw(v0 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    if (v0 == 0) goto loc_800169B4;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-loc_800169B4:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Make the actor face towards it's target, if it has one
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FaceTarget(mobj_t& actor) noexcept {
+    // Can't face target if there is none
+    if (!actor.target)
+        return;
+
+    // Monster is no longer in ambush mode and turn to face the target
+    mobj_t& target = *actor.target;
+    actor.flags &= ~MF_AMBUSH;
+    actor.angle = R_PointToAngle2(actor.x, actor.y, target.x, target.y);
+
+    // If the target has partial invisbility then vary the angle randomly a bit (by almost 45 degrees)
+    if (target.flags & MF_ALL_BLEND_FLAGS) {
+        actor.angle += (P_Random() - P_Random()) * (ANG45 / 256);
+    }
 }
 
-void A_PosAttack() noexcept {
-    sp -= 0x28;
-    sw(s2, sp + 0x20);
-    s2 = a0;
-    sw(ra, sp + 0x24);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    v0 = lw(s2 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80016AB8;
-    a0 = lw(s2);
-    a1 = lw(s2 + 0x4);
-    v0 = lw(s2 + 0x64);
-    v1 = lw(s2 + 0x74);
-    v0 &= a2;
-    sw(v0, s2 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s2 + 0x74);
-    sw(v0, s2 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    a0 = s2;
-    if (v0 == 0) goto loc_80016A60;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s2 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s2 + 0x24);
-    a0 = s2;
-loc_80016A60:
-    s1 = lw(s2 + 0x24);
-    a1 = sfx_pistol;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    s0 <<= 20;
-    s1 += s0;
-    _thunk_P_Random();
-    a0 = s2;
-    a1 = s1;
-    a2 = 0x8000000;                                     // Result = 08000000
-    a3 = 0x7FFF0000;                                    // Result = 7FFF0000
-    a3 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    v0 &= 7;
-    v0++;
-    v1 = v0 << 1;
-    v1 += v0;
-    sw(v1, sp + 0x10);
-    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
-loc_80016AB8:
-    ra = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the attack for a zombieman (pistol)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_PosAttack(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+    
+    A_FaceTarget(actor);
+    S_StartSound(&actor, sfx_pistol);
+
+    const angle_t shootAngle = actor.angle + (P_Random() - P_Random()) * (ANG45 / 512);     // Vary by up to 22.5 degrees (approximately)
+    const int32_t damage = ((P_Random() & 7) + 1) * 3;                                      // 3-24 damage
+    P_LineAttack(actor, shootAngle, MISSILERANGE, INT32_MAX, damage);
 }
 
 void A_SPosAttack() noexcept {
@@ -2870,3 +2798,5 @@ loc_80018DAC:
 // TODO: remove all these thunks
 void _thunk_A_Look() noexcept { A_Look(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_Chase() noexcept { A_Chase(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_FaceTarget() noexcept { A_FaceTarget(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_PosAttack() noexcept { A_PosAttack(*vmAddrToPtr<mobj_t>(a0)); }

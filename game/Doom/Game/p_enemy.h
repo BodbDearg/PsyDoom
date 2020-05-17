@@ -10,7 +10,7 @@ void P_NewChaseDir(mobj_t& actor) noexcept;
 bool P_LookForPlayers(mobj_t& actor, const bool bAllAround) noexcept;
 void A_Look(mobj_t& actor) noexcept;
 void A_Chase(mobj_t& actor) noexcept;
-void A_FaceTarget() noexcept;
+void A_FaceTarget(mobj_t& actor) noexcept;
 void A_PosAttack() noexcept;
 void A_SPosAttack() noexcept;
 void A_CPosAttack() noexcept;

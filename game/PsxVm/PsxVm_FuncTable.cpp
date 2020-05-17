@@ -12,8 +12,8 @@ extern void _thunk_T_MoveCeiling() noexcept;
 extern void _thunk_T_VerticalDoor() noexcept;
 extern void _thunk_A_Look() noexcept;
 extern void _thunk_A_Chase() noexcept;
-extern void A_FaceTarget() noexcept;
-extern void A_PosAttack() noexcept;
+extern void _thunk_A_FaceTarget() noexcept;
+extern void _thunk_A_PosAttack() noexcept;
 extern void A_SPosAttack() noexcept;
 extern void A_CPosAttack() noexcept;
 extern void A_CPosRefire() noexcept;
@@ -165,8 +165,8 @@ namespace PsxVm {
         { 0x800152FC, &_thunk_T_VerticalDoor },
         { 0x800164B4, &_thunk_A_Look },
         { 0x800165E0, &_thunk_A_Chase },
-        { 0x80016928, &A_FaceTarget },
-        { 0x800169CC, &A_PosAttack },
+        { 0x80016928, &_thunk_A_FaceTarget },
+        { 0x800169CC, &_thunk_A_PosAttack },
         { 0x80016AD4, &A_SPosAttack },
         { 0x80016C24, &A_CPosAttack },
         { 0x80016D70, &A_CPosRefire },
