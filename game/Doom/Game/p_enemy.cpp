@@ -15,10 +15,14 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_move.h"
 #include "p_sight.h"
 #include "p_switch.h"
 #include "PsxVm/PsxVm.h"
 #include <algorithm>
+
+constexpr static fixed_t gMoveXSpeed[8] = { FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000, 0, 47000 };      // Monster movement speed multiplier for the 8 movement directions: x
+constexpr static fixed_t gMoveYSpeed[8] = { 0, 47000, FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000 };      // Monster movement speed multiplier for the 8 movement directions: y
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // For the given attacker, checks to see if it's target is within melee range and returns 'true' if so
@@ -79,105 +83,56 @@ bool P_CheckMissileRange(mobj_t& attacker) noexcept {
     return (dist <= P_Random());
 }
 
-void P_Move() noexcept {
-loc_80015E00:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v1 = lw(s0 + 0x6C);
-    v0 = 8;                                             // Result = 00000008
-    {
-        const bool bJump = (v1 == v0);
-        v1 <<= 2;
-        if (bJump) goto loc_80015F10;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Try to move the specified actor in it's current movement direction.
+// For floating monsters also attempt to do up/down movement if appropriate, and if a move is blocked try to open doors.
+// Returns 'true' if the move was considered a success.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_Move(mobj_t& actor) noexcept {
+    // Move is unsuccessful if there is no direction
+    if (actor.movedir == DI_NODIR)
+        return false;
+    
+    // Decide on where the actor will move to and try to move there
+    const fixed_t moveSpeed = actor.info->speed;
+    const fixed_t tryX = actor.x + moveSpeed * gMoveXSpeed[actor.movedir];
+    const fixed_t tryY = actor.y + moveSpeed * gMoveYSpeed[actor.movedir];
+    
+    if (P_TryMove(actor, tryX, tryY)) {
+        // Move was successful: stop trying to float up/down (can reach whatever we're after)
+        actor.flags &= ~MF_INFLOAT;
+
+        // If the actor is not floating, ensure it is grounded on whatever sector it is in (in case it's going down steps)
+        if ((actor.flags & MF_FLOAT) == 0) {
+            actor.z = actor.floorz;
+        }
+
+        return true;
     }
-    v0 = lw(s0 + 0x58);
-    a0 = lw(v0 + 0x3C);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7060;                                       // Result = MoveXSpeed[0] (80067060)
-    at += v1;
-    v0 = lw(at);
-    mult(a0, v0);
-    a1 = lo;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7080;                                       // Result = MoveYSpeed[0] (80067080)
-    at += v1;
-    v0 = lw(at);
-    mult(a0, v0);
-    v0 = lw(s0);
-    a0 = s0;
-    a1 += v0;
-    v0 = lw(s0 + 0x4);
-    a2 = lo;
-    a2 += v0;
-    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0xFFDF0000;                                // Result = FFDF0000
-        if (bJump) goto loc_80015F2C;
+
+    // Move failed: if the actor can float then try and go up or down - depending on relative position to the line opening.
+    // If that can be done then the move is still considered a success:
+    if ((actor.flags & MF_FLOAT) && *gbFloatOk) {
+        actor.z += (actor.z >= *gTmFloorZ) ? -FLOATSPEED : FLOATSPEED;
+        actor.flags |= MF_INFLOAT;
+        return true;
     }
-    v0 = lw(s0 + 0x64);
-    v0 &= 0x4000;
-    if (v0 == 0) goto loc_80015EEC;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7F84);                               // Load from: gbFloatOk (8007807C)
-    if (v0 == 0) goto loc_80015EEC;
-    v1 = lw(s0 + 0x8);
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 = lw(v0 - 0x7E18);                               // Load from: gTmFloorZ (800781E8)
-    v0 = (i32(v1) < i32(v0));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x80000;                                   // Result = 00080000
-        if (bJump) goto loc_80015ECC;
+
+    // Try to see if we can open a door to unblock movement.
+    // If that is possible to do then consider the move a success:
+    line_t* const pBlockLine = gpBlockLine->get();
+
+    if (!pBlockLine)
+        return false;
+    
+    if (pBlockLine->special) {
+        // This line has a special: try to use it and set the movement direction to none
+        actor.movedir = DI_NODIR;
+        return P_UseSpecialLine(actor, *pBlockLine);
     }
-    v0 = 0xFFF80000;                                    // Result = FFF80000
-loc_80015ECC:
-    v0 += v1;
-    sw(v0, s0 + 0x8);
-    v0 = 1;                                             // Result = 00000001
-    v1 = lw(s0 + 0x64);
-    a0 = 0x200000;                                      // Result = 00200000
-    v1 |= a0;
-    sw(v1, s0 + 0x64);
-    goto loc_80015F54;
-loc_80015EEC:
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 = lw(a1 - 0x7DB8);                               // Load from: gpBlockLine (80078248)
-    v0 = 0;                                             // Result = 00000000
-    if (a1 == 0) goto loc_80015F54;
-    v0 = lw(a1 + 0x14);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_80015F18;
-    }
-loc_80015F10:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80015F54;
-loc_80015F18:
-    sw(v0, s0 + 0x6C);
-    a0 = s0;
-    v0 = P_UseSpecialLine(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<line_t>(a1));
-    v0 = (v0 > 0);
-    goto loc_80015F54;
-loc_80015F2C:
-    v1 = lw(s0 + 0x64);
-    v0 |= 0xFFFF;                                       // Result = FFDFFFFF
-    v0 &= v1;
-    v1 &= 0x4000;
-    sw(v0, s0 + 0x64);
-    if (v1 != 0) goto loc_80015F50;
-    v0 = lw(s0 + 0x38);
-    sw(v0, s0 + 0x8);
-loc_80015F50:
-    v0 = 1;                                             // Result = 00000001
-loc_80015F54:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Move failed!
+    return false;
 }
 
 void P_TryWalk() noexcept {
@@ -185,7 +140,7 @@ void P_TryWalk() noexcept {
     sw(s0, sp + 0x10);
     sw(ra, sp + 0x14);
     s0 = a0;
-    P_Move();
+    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
     if (v0 == 0) goto loc_80015F9C;
     _thunk_P_Random();
     v0 &= 0xF;
@@ -290,7 +245,7 @@ loc_800160C0:
     sw(v0, s1 + 0x6C);
     if (v0 == s2) goto loc_80016100;
     a0 = s1;
-    P_Move();
+    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -343,7 +298,7 @@ loc_80016170:
     if (v1 == v0) goto loc_800161B0;
     sw(v1, s1 + 0x6C);
     a0 = s1;
-    P_Move();
+    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -361,7 +316,7 @@ loc_800161B0:
     if (v1 == v0) goto loc_800161F0;
     sw(v1, s1 + 0x6C);
     a0 = s1;
-    P_Move();
+    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -381,7 +336,7 @@ loc_800161F0:
     if (s4 == v0) goto loc_80016228;
     sw(s4, s1 + 0x6C);
     a0 = s1;
-    P_Move();
+    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -402,7 +357,7 @@ loc_8001623C:
     if (s0 == s2) goto loc_80016274;
     sw(s0, s1 + 0x6C);
     a0 = s1;
-    P_Move();
+    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -429,7 +384,7 @@ loc_80016290:
     if (s0 == s2) goto loc_800162C8;
     sw(s0, s1 + 0x6C);
     a0 = s1;
-    P_Move();
+    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -453,7 +408,7 @@ loc_800162D4:
     }
     sw(s2, s1 + 0x6C);
     a0 = s1;
-    P_Move();
+    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
     {
         const bool bJump = (v0 == 0);
         v0 = 0;                                         // Result = 00000000
@@ -855,7 +810,7 @@ loc_800168B0:
     sw(v0, s1 + 0x70);
     if (i32(v0) < 0) goto loc_800168C8;
     a0 = s1;
-    P_Move();
+    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
     if (v0 != 0) goto loc_800168D0;
 loc_800168C8:
     a0 = s1;

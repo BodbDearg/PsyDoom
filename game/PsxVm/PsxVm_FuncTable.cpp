@@ -10,7 +10,6 @@ extern void _thunk_P_Random() noexcept;
 extern void M_AddPointToBox() noexcept;
 extern void _thunk_T_MoveCeiling() noexcept;
 extern void _thunk_T_VerticalDoor() noexcept;
-extern void P_Move() noexcept;
 extern void P_TryWalk() noexcept;
 extern void P_NewChaseDir() noexcept;
 extern void P_LookForPlayers() noexcept;
@@ -167,7 +166,6 @@ namespace PsxVm {
         { 0x80012B10, &M_AddPointToBox },
         { 0x80014A30, &_thunk_T_MoveCeiling },
         { 0x800152FC, &_thunk_T_VerticalDoor },
-        { 0x80015E00, &P_Move },
         { 0x80015F68, &P_TryWalk },
         { 0x80015FB4, &P_NewChaseDir },
         { 0x80016334, &P_LookForPlayers },

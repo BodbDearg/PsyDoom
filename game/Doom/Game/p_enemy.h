@@ -4,7 +4,7 @@ struct mobj_t;
 
 bool P_CheckMeleeRange(mobj_t& attacker) noexcept;
 bool P_CheckMissileRange(mobj_t& attacker) noexcept;
-void P_Move() noexcept;
+bool P_Move(mobj_t& actor) noexcept;
 void P_TryWalk() noexcept;
 void P_NewChaseDir() noexcept;
 void P_LookForPlayers() noexcept;

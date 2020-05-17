@@ -28,3 +28,17 @@ static constexpr fixed_t    USERANGE        = 70 * FRACUNIT;    // Range for usi
 static constexpr fixed_t    MAXMOVE         = 16 * FRACUNIT;    // Maximum movement amount in one go: larger moves must be split up unto multiple smaller moves
 static constexpr fixed_t    FLOATSPEED      = 8 * FRACUNIT;     // Speed of floating up or down to meet the player for floating monsters
 static constexpr int32_t    BASETHRESHOLD   = 100;              // How long for an AI to follow a target for (tics) - was about 3 seconds on PC, much longer on PSX. Conversion bug?
+
+// Enum representing a movement direction (for AI actors)
+enum dirtype_t : uint32_t {
+    DI_EAST,
+    DI_NORTHEAST,
+    DI_NORTH,
+    DI_NORTHWEST,
+    DI_WEST,
+    DI_SOUTHWEST,
+    DI_SOUTH,
+    DI_SOUTHEAST,
+    DI_NODIR,
+    NUMDIRS
+};
