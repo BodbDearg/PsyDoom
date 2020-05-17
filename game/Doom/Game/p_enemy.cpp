@@ -403,226 +403,96 @@ void A_Look(mobj_t& actor) noexcept {
     P_SetMObjState(actor, actor.info->seestate);
 }
 
-void A_Chase() noexcept {
-loc_800165E0:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x78);
-    {
-        const bool bJump = (v0 == 0);
-        v0--;
-        if (bJump) goto loc_80016608;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Core AI function that handles a lot of movement and attacking logic for enemies. Tries to get the monster as close as possible to the
+// target player (doing movements) and makes the monster attack with missiles and melee attacks where possible. Also turns the monster
+// towards the current move direction, tries to look for targets (if the current one is lost) and does active sounds among other things...
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Chase(mobj_t& actor) noexcept {
+    // Reduce time left until attack is allowed or when a new target can be acquired
+    if (actor.reactiontime != 0) {
+        actor.reactiontime--;
     }
-    sw(v0, s1 + 0x78);
-loc_80016608:
-    v0 = lw(s1 + 0x7C);
-    {
-        const bool bJump = (v0 == 0);
-        v0--;
-        if (bJump) goto loc_8001661C;
+
+    if (actor.threshold != 0) {
+        actor.threshold--;
     }
-    sw(v0, s1 + 0x7C);
-loc_8001661C:
-    v0 = lw(s1 + 0x6C);
-    v0 = (i32(v0) < 8);
-    a0 = 0xE0000000;                                    // Result = E0000000
-    if (v0 == 0) goto loc_80016664;
-    v1 = lw(s1 + 0x24);
-    v0 = lw(s1 + 0x6C);
-    v1 &= a0;
-    v0 <<= 29;
-    v0 = v1 - v0;
-    sw(v1, s1 + 0x24);
-    if (i32(v0) <= 0) goto loc_80016654;
-    v0 = v1 + a0;
-    goto loc_80016660;
-loc_80016654:
-    {
-        const bool bJump = (i32(v0) >= 0);
-        v0 = 0x20000000;                                // Result = 20000000
-        if (bJump) goto loc_80016664;
+    
+    // Turn towards the movement direction (in 45 degree increments) if required
+    if (actor.movedir < DI_NODIR) {
+        // Mask the actor angle to increments of 45 degrees and see if we need to adjust to point in the direction we want
+        actor.angle &= 0xE0000000;
+        const angle_t desiredAngle = actor.movedir * ANG45;
+        const int32_t angleDelta = (int32_t)(actor.angle - desiredAngle);   // N.B: must make signed for comparison below!
+
+        if (angleDelta > 0) {
+            actor.angle -= ANG45;
+        } else if (angleDelta < 0) {
+            actor.angle += ANG45;
+        }
     }
-    v0 += v1;
-loc_80016660:
-    sw(v0, s1 + 0x24);
-loc_80016664:
-    a1 = lw(s1 + 0x74);
-    a0 = s1;
-    if (a1 == 0) goto loc_80016688;
-    v0 = lw(a1 + 0x64);
-    v0 &= 4;
-    if (v0 != 0) goto loc_800166AC;
-loc_80016688:
-    a1 = 1;                                             // Result = 00000001
-    v0 = P_LookForPlayers(*vmAddrToPtr<mobj_t>(a0), a1);
-    if (v0 != 0) goto loc_80016910;
-    v0 = lw(s1 + 0x58);
-    a1 = lw(v0 + 0x4);
-    goto loc_8001675C;
-loc_800166AC:
-    v1 = lw(s1 + 0x64);
-    v0 = v1 & 0x80;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = -0x81;                                     // Result = FFFFFF7F
-        if (bJump) goto loc_800166D8;
+
+    // Look for a new target if required
+    mobj_t* const pTarget = actor.target.get();
+
+    if ((!pTarget) || ((pTarget->flags & MF_SHOOTABLE) == 0)) {
+        // If no target can be found then go into the spawn/idle state
+        if (!P_LookForPlayers(actor, true)) {
+            P_SetMObjState(actor, actor.info->spawnstate);
+        }
+
+        // Can't chase if no target: or if we have a new one we need to wait a little
+        return;
     }
-    v0 &= v1;
-    sw(v0, s1 + 0x64);
-    a0 = s1;
-    P_NewChaseDir(*vmAddrToPtr<mobj_t>(a0));
-    goto loc_80016910;
-loc_800166D8:
-    v0 = lw(s1 + 0x58);
-    v0 = lw(v0 + 0x28);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x4000000;                                 // Result = 04000000
-        if (bJump) goto loc_8001676C;
+    
+    // If the monster just attacked then change move direction
+    if (actor.flags & MF_JUSTATTACKED) {
+        actor.flags &= ~MF_JUSTATTACKED;
+        P_NewChaseDir(actor);
+        return;
     }
-    v0 &= v1;
-    v1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_80016728;
-    v1 = lw(a1);
-    a0 = lw(s1);
-    v0 = lw(a1 + 0x4);
-    a1 = lw(s1 + 0x4);
-    a0 = v1 - a0;
-    a1 = v0 - a1;
-    v0 = P_AproxDistance(a0, a1);
-    v1 = 0x450000;                                      // Result = 00450000
-    v1 |= 0xFFFF;                                       // Result = 0045FFFF
-    v1 = (i32(v1) < i32(v0));
-    v1 ^= 1;
-loc_80016728:
-    if (v1 == 0) goto loc_8001676C;
-    v0 = lw(s1 + 0x58);
-    a1 = lw(v0 + 0x18);
-    if (a1 == 0) goto loc_80016754;
-    a0 = s1;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = lw(s1 + 0x58);
-loc_80016754:
-    a1 = lw(v0 + 0x28);
-loc_8001675C:
-    a0 = s1;
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-    goto loc_80016910;
-loc_8001676C:
-    v1 = *gGameSkill;
-    v0 = 4;                                             // Result = 00000004
-    if (v1 == v0) goto loc_80016790;
-    v0 = lw(s1 + 0x70);
-    {
-        const bool bJump = (v0 != 0);
-        v0--;
-        if (bJump) goto loc_800168B0;
+
+    // Try and do a melee attack if possible
+    mobjinfo_t& actorInfo = *actor.info;
+
+    if ((actorInfo.meleestate != S_NULL) && P_CheckMeleeRange(actor)) {
+        if (actorInfo.attacksound != sfx_None) {
+            S_StartSound(&actor, actorInfo.attacksound);
+        }
+
+        P_SetMObjState(actor, actorInfo.meleestate);
+        return;
     }
-loc_80016790:
-    v0 = lw(s1 + 0x58);
-    v0 = lw(v0 + 0x2C);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x4000000;                                 // Result = 04000000
-        if (bJump) goto loc_800168A4;
+
+    // Try to do a missile attack if possible.
+    // Note that on nightmare skill we don't have any cooldowns on attacking again!
+    const bool bMissileAttackAllowed = ((actor.movecount == 0) || (*gGameSkill == sk_nightmare));
+
+    if ((actorInfo.missilestate != S_NULL) && bMissileAttackAllowed) {
+        if (P_CheckMissileRange(actor)) {
+            P_SetMObjState(actor, actorInfo.missilestate);
+
+            // Don't attack again for a bit unless on nightmare
+            if (*gGameSkill != sk_nightmare) {
+                actor.flags |= MF_JUSTATTACKED;
+            }
+
+            return;
+        }
     }
-    v1 = lw(s1 + 0x64);
-    v0 &= v1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 & 0x40;
-        if (bJump) goto loc_800167E4;
+
+    // See if it's time to move in a different direction.
+    // Change direction every so often, or if the monster becomes blocked:
+    actor.movecount--;
+
+    if ((actor.movecount < 0) || (!P_Move(actor))) {
+        P_NewChaseDir(actor);
     }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = -0x41;                                     // Result = FFFFFFBF
-        if (bJump) goto loc_800167D4;
+
+    // Make an active sound every so often
+    if ((actorInfo.activesound != sfx_None) && (P_Random() < 3)) {
+        S_StartSound(&actor, actorInfo.activesound);
     }
-    v0 &= v1;
-    sw(v0, s1 + 0x64);
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80016860;
-loc_800167D4:
-    v0 = lw(s1 + 0x78);
-    if (v0 == 0) goto loc_800167EC;
-loc_800167E4:
-    v0 = 0;                                             // Result = 00000000
-    goto loc_80016860;
-loc_800167EC:
-    v0 = lw(s1 + 0x74);
-    a2 = lw(s1);
-    v1 = lw(s1 + 0x4);
-    a0 = lw(v0);
-    a1 = lw(v0 + 0x4);
-    a0 = a2 - a0;
-    a1 = v1 - a1;
-    v0 = P_AproxDistance(a0, a1);
-    v1 = lw(s1 + 0x58);
-    a0 = 0xFFC00000;                                    // Result = FFC00000
-    v1 = lw(v1 + 0x28);
-    s0 = v0 + a0;
-    if (v1 != 0) goto loc_8001682C;
-    v0 = 0xFF800000;                                    // Result = FF800000
-    s0 += v0;
-loc_8001682C:
-    v1 = lw(s1 + 0x54);
-    v0 = 0xE;                                           // Result = 0000000E
-    s0 = u32(i32(s0) >> 16);
-    if (v1 != v0) goto loc_80016840;
-    s0 = u32(i32(s0) >> 1);
-loc_80016840:
-    v0 = (i32(s0) < 0xC9);
-    if (v0 != 0) goto loc_80016850;
-    s0 = 0xC8;                                          // Result = 000000C8
-loc_80016850:
-    _thunk_P_Random();
-    v0 = (i32(v0) < i32(s0));
-    v0 ^= 1;
-loc_80016860:
-    if (v0 == 0) goto loc_800168A4;
-    v0 = lw(s1 + 0x58);
-    a1 = lw(v0 + 0x2C);
-    a0 = s1;
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-    v1 = *gGameSkill;
-    v0 = 4;                                             // Result = 00000004
-    if (v1 == v0) goto loc_80016910;
-    v0 = lw(s1 + 0x64);
-    v0 |= 0x80;
-    sw(v0, s1 + 0x64);
-    goto loc_80016910;
-loc_800168A4:
-    v0 = lw(s1 + 0x70);
-    v0--;
-loc_800168B0:
-    sw(v0, s1 + 0x70);
-    if (i32(v0) < 0) goto loc_800168C8;
-    a0 = s1;
-    v0 = P_Move(*vmAddrToPtr<mobj_t>(a0));
-    if (v0 != 0) goto loc_800168D0;
-loc_800168C8:
-    a0 = s1;
-    P_NewChaseDir(*vmAddrToPtr<mobj_t>(a0));
-loc_800168D0:
-    v0 = lw(s1 + 0x58);
-    v0 = lw(v0 + 0x50);
-    if (v0 == 0) goto loc_80016910;
-    _thunk_P_Random();
-    v0 = (i32(v0) < 3);
-    if (v0 == 0) goto loc_80016910;
-    v0 = lw(s1 + 0x58);
-    a1 = lw(v0 + 0x50);
-    a0 = s1;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_80016910:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
 }
 
 void A_FaceTarget() noexcept {
@@ -2891,7 +2761,7 @@ void A_Hoof() noexcept {
     a1 = sfx_hoof;
     S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     a0 = s0;
-    A_Chase();
+    A_Chase(*vmAddrToPtr<mobj_t>(a0));
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
@@ -2906,7 +2776,7 @@ void A_Metal() noexcept {
     a1 = sfx_metal;
     S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     a0 = s0;
-    A_Chase();
+    A_Chase(*vmAddrToPtr<mobj_t>(a0));
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
@@ -2921,7 +2791,7 @@ void A_BabyMetal() noexcept {
     a1 = sfx_bspwlk;
     S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
     a0 = s0;
-    A_Chase();
+    A_Chase(*vmAddrToPtr<mobj_t>(a0));
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
     sp += 0x18;
@@ -2999,3 +2869,4 @@ loc_80018DAC:
 
 // TODO: remove all these thunks
 void _thunk_A_Look() noexcept { A_Look(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_Chase() noexcept { A_Chase(*vmAddrToPtr<mobj_t>(a0)); }
