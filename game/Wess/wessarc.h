@@ -211,7 +211,7 @@ struct callback_status {
 static_assert(sizeof(callback_status) == 8);
 
 // Flags specifying what types of patch group data gets loaded
-enum patch_group_load_flags : uint32_t {
+enum patch_group_load_flags : int32_t {
     LOAD_PATCHES        = 0x01,
     LOAD_PATCH_VOICES   = 0x02,
     LOAD_PATCH_SAMPLES  = 0x04,

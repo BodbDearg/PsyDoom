@@ -5,7 +5,7 @@
 struct line_t;
 
 // Moving platform type
-enum plattype_e : uint32_t {
+enum plattype_e : int32_t {
     perpetualRaise,
     downWaitUpStay,
     raiseAndChange,
@@ -14,7 +14,7 @@ enum plattype_e : uint32_t {
 };
 
 // Current status for a moving platform
-enum plat_e : uint32_t {
+enum plat_e : int32_t {
     up,
     down,
     waiting,

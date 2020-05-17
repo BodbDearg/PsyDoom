@@ -4,7 +4,7 @@
 #include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 
-enum class CdMapTbl_File : uint32_t;
+enum class CdMapTbl_File : int32_t;
 
 // This is a mask to chop off the highest bit of the 1st 32-bit word in a lump name.
 // That bit is not part of the name, it is used to indicate whether the lump is compressed or not.

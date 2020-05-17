@@ -3,7 +3,7 @@
 #include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 
-enum class CdMapTbl_File : uint32_t;
+enum class CdMapTbl_File : int32_t;
 struct master_status_structure;
 
 // Types of sequence loader errors

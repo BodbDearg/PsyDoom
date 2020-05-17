@@ -346,7 +346,7 @@ void P_CheckCheats() noexcept {
     ++*gCurCheatBtnSequenceIdx;
 
     // Scan through all the cheats and see if the current input matches any of them
-    for (uint32_t cheatSeqIdx = 0; cheatSeqIdx < NUM_CHEAT_SEQ; ++cheatSeqIdx) {
+    for (int32_t cheatSeqIdx = 0; cheatSeqIdx < NUM_CHEAT_SEQ; ++cheatSeqIdx) {
         // Try to match this cheat sequence against the current input
         const CheatSequence& curCheatSeq = CHEAT_SEQUENCES[cheatSeqIdx];
         int32_t numMatchingBtns = 0;

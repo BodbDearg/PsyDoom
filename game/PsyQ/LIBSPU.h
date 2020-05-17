@@ -7,13 +7,13 @@
 static constexpr uint32_t SPU_NUM_VOICES = 24;
 
 // Mode of operation for 'LIBSPU_SpuIsTransferCompleted'
-enum SpuTransferQuery : uint32_t {
+enum SpuTransferQuery : int32_t {
     SPU_TRANSFER_PEEK = 0,      // Only check whether the transfer has completed, do not block
     SPU_TRANSFER_WAIT = 1       // Wait until the transfer completes
 };
 
 // Transfer modes for for 'LIBSPU_SpuSetTransferMode'
-enum SpuTransferMode : uint32_t {
+enum SpuTransferMode : int32_t {
     SPU_TRANSFER_BY_DMA = 0,    // Transfer data to the SPU using DMA
     SPU_TRANSFER_BY_IO  = 1     // Transfer data to the SPU using synchronous writes by the CPU (slower)
 };
@@ -123,7 +123,7 @@ static constexpr uint32_t SPU_VOICE_ADSR_ADSR1  = 0x00020000;
 static constexpr uint32_t SPU_VOICE_ADSR_ADSR2  = 0x00040000;
 
 // Spu reverb modes
-enum SpuReverbMode : uint32_t {
+enum SpuReverbMode : int32_t {
     SPU_REV_MODE_OFF        = 0,
     SPU_REV_MODE_ROOM       = 1,
     SPU_REV_MODE_STUDIO_A   = 2,

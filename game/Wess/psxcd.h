@@ -2,7 +2,7 @@
 
 #include "PsyQ/LIBCD.h"
 
-enum class CdMapTbl_File : uint32_t;
+enum class CdMapTbl_File : int32_t;
 
 // Number of bytes in a CD-ROM sector
 static constexpr int32_t CD_SECTOR_SIZE = 2048;
@@ -19,7 +19,7 @@ struct PsxCd_File {
 static_assert(sizeof(PsxCd_File) == 40);
 
 // Seek mode for seeking: similar to the C standard library seek modes
-enum class PsxCd_SeekMode : uint32_t {
+enum class PsxCd_SeekMode : int32_t {
     SET = 0,    // Set the offset
     CUR = 1,    // Seek relative to the current position
     END = 2     // Seek relative to the end

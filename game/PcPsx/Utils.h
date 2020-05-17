@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-enum cheatseq_t : uint32_t;
+enum cheatseq_t : int32_t;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if a pad button has just been pressed by examining the currently pressed pad buttons versus the last pressed

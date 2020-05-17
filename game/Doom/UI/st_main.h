@@ -15,7 +15,7 @@ struct facesprite_t {
 static_assert(sizeof(facesprite_t) == 6);
 
 // Special face type
-enum spclface_e : uint32_t {
+enum spclface_e : int32_t {
     f_none,
     f_unknown1,     // TODO: what is this?
     f_unknown2,     // TODO: what is this?

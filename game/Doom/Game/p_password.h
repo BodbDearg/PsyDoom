@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-enum skill_t : uint32_t;
+enum skill_t : int32_t;
 struct player_t;
 
 void P_ComputePassword(uint8_t pOutput[10]) noexcept;

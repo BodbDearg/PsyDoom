@@ -5,7 +5,7 @@
 // A list of file ids representing files on the disc.
 // These ids are used when opening files for IO, to index a table of harcoded file locations, rather than strings.
 // The retail version of the game uses this mechanism for efficiency rather than needing to consult the filesystem.
-enum class CdMapTbl_File : uint32_t {
+enum class CdMapTbl_File : int32_t {
     SYSTEM_CNF,
     SLUS_000_77,
     DEMO1_LMP,

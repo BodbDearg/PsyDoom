@@ -12,8 +12,8 @@ struct state_t;
 struct subsector_t;
 
 enum dirtype_t : int32_t;
-enum mobjtype_t : uint32_t;
-enum statenum_t : uint32_t;
+enum mobjtype_t : int32_t;
+enum statenum_t : int32_t;
 
 // Screen resolution (NTSC)
 static constexpr int32_t SCREEN_W = 256;
@@ -67,7 +67,7 @@ static constexpr int32_t REFRESHRATE = 60;
 static constexpr int32_t VBLANK_TO_TIC_SHIFT = 2;   // How many bits to shift right to get from vblanks to to tics
 
 // What type of game is being played
-enum gametype_t : uint32_t {
+enum gametype_t : int32_t {
     gt_single,
     gt_coop,
     gt_deathmatch,
@@ -77,7 +77,7 @@ enum gametype_t : uint32_t {
 };
 
 // What skill level the game is running at
-enum skill_t : uint32_t {
+enum skill_t : int32_t {
     sk_baby,
     sk_easy,
     sk_medium,
@@ -90,7 +90,7 @@ enum skill_t : uint32_t {
 
 // Represents a high level result of running a game loop (MiniLoop).
 // Determines where the game navigates to next.
-enum gameaction_t : uint32_t {
+enum gameaction_t : int32_t {
     ga_nothing,         // No game action
     ga_died,            // Player has died
     ga_completed,       // Level complete
@@ -104,7 +104,7 @@ enum gameaction_t : uint32_t {
 };
 
 // Coordinate indexes in a bounding box
-enum : uint32_t {
+enum : int32_t {
     BOXTOP,
     BOXBOTTOM,
     BOXLEFT,
@@ -112,7 +112,7 @@ enum : uint32_t {
 };
 
 // Episode numbers
-enum episodenum_t : uint32_t {
+enum episodenum_t : int32_t {
     episode_doom1 = 1,
     episode_doom2 = 2
 };
@@ -243,14 +243,14 @@ struct degenmobj_t {
 static_assert(sizeof(degenmobj_t) == 16);
 
 // Basic player status
-enum playerstate_t : uint32_t {
+enum playerstate_t : int32_t {
     PST_LIVE,       // Player is playing the game           (TODO: CONFIRM!)
     PST_DEAD,       // Player is dead                       (TODO: CONFIRM!)
     PST_REBORN      // Player is spawning or respawning     (TODO: CONFIRM!)
 };
 
 // Player sprite type, just a weapon and a flash in DOOM
-enum psprnum_t : uint32_t {
+enum psprnum_t : int32_t {
     ps_weapon,
     ps_flash,
     NUMPSPRITES
@@ -267,7 +267,7 @@ struct pspdef_t {
 static_assert(sizeof(pspdef_t) == 16);
 
 // Keycard types
-enum card_t : uint32_t {
+enum card_t : int32_t {
     it_redcard,
     it_bluecard,
     it_yellowcard,
@@ -278,7 +278,7 @@ enum card_t : uint32_t {
 };
 
 // Player weapon types
-enum weapontype_t : uint32_t {
+enum weapontype_t : int32_t {
     wp_fist,
     wp_pistol,
     wp_shotgun,
@@ -293,7 +293,7 @@ enum weapontype_t : uint32_t {
 };
 
 // Player ammo types
-enum ammotype_t : uint32_t {
+enum ammotype_t : int32_t {
     am_clip,        // Clip for pistol and chaingun
     am_shell,       // Shells for shotgun and super shotgun
     am_cell,        // Cells for BFG and plasma guns
@@ -318,7 +318,7 @@ static_assert(sizeof(weaponinfo_t) == 24);
 extern const weaponinfo_t gWeaponInfo[NUMWEAPONS];
 
 // Player powerup types
-enum powertype_t : uint32_t {
+enum powertype_t : int32_t {
     pw_invulnerability,
     pw_strength,
     pw_invisibility,

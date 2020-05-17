@@ -5,14 +5,14 @@
 struct line_t;
 
 // Represents the result of moving a floor/ceiling
-enum result_e : uint32_t {
+enum result_e : int32_t {
     ok          = 0,    // Movement for the floor/ceiling was fully OK
     crushed     = 1,    // The floor/ceiling is crushing things and may not have moved because of this
     pastdest    = 2     // Plane has reached its destination or very close to it (sometimes stops just before if crushing things)
 };
 
 // Enum for a moving floor type
-enum floor_e : uint32_t {
+enum floor_e : int32_t {
     lowerFloor              = 0,    // Lower floor to highest surrounding floor
     lowerFloorToLowest      = 1,    // Lower floor to lowest surrounding floor
     turboLower              = 2,    // Lower floor to highest surrounding floor VERY FAST
@@ -27,7 +27,7 @@ enum floor_e : uint32_t {
 };
 
 // What type of stair building to do when building stairs
-enum stair_e : uint32_t {
+enum stair_e : int32_t {
     build8,     // Slowly build by 8 units
     turbo16     // Quickly build by 16 units
 };

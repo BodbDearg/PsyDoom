@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-enum statenum_t : uint32_t;
+enum statenum_t : int32_t;
 struct player_t;
 
 void P_RecursiveSound() noexcept;

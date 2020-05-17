@@ -8,7 +8,7 @@
 #include "Doom/doomdef.h"
 
 // Map lump offsets, relative to the 'MAPXX' marker
-enum : uint32_t {
+enum : int32_t {
     ML_LABEL,       // The 'MAPXX' marker lump
     ML_THINGS,
     ML_LINEDEFS,

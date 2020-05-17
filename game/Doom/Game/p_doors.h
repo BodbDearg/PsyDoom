@@ -7,7 +7,7 @@ struct mobj_t;
 struct sector_t;
 
 // Enum representing a door type
-enum vldoor_e : uint32_t {
+enum vldoor_e : int32_t {
     Normal              = 0,
     Close30ThenOpen     = 1,
     Close               = 2,

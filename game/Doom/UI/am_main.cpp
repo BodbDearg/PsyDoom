@@ -309,7 +309,7 @@ void AM_Drawer() noexcept {
 void DrawLine(const uint32_t color, const int32_t x1, const int32_t y1, const int32_t x2, const int32_t y2) noexcept {
     // Reject the line quickly using the 'Cohen-Sutherland' algorithm.
     // Note: no clipping is done since that is handled by the hardware.
-    enum OutFlags : uint32_t {
+    enum OutFlags : int32_t {
         INSIDE  = 0,
         LEFT    = 1,
         RIGHT   = 2,

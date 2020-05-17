@@ -76,7 +76,7 @@ struct side_t {
 static_assert(sizeof(side_t) == 24);
 
 // What type of slope a line has
-enum slopetype_t : uint32_t {
+enum slopetype_t : int32_t {
     ST_HORIZONTAL,
     ST_VERTICAL,
     ST_POSITIVE,

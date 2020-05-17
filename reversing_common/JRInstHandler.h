@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct JRInstHandler {
     // What type of 'jr' instruction handler this is
-    enum class Type : uint32_t {
+    enum class Type : int32_t {
         JUMP_TABLE,     // The jr instruction uses a jump table
         BIOS_CALL       // The jr instruction does a bios call
     };

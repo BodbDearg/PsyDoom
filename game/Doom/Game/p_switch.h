@@ -5,7 +5,7 @@
 struct line_t;
 
 // Identifies which part of a line/wall has a button texture on it (top / middle / bottom)
-enum bwhere_e : uint32_t {
+enum bwhere_e : int32_t {
     top,
     middle,
     bottom

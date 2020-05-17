@@ -2,7 +2,7 @@
 
 #include "Doom/doomdef.h"
 
-enum statenum_t : uint32_t;
+enum statenum_t : int32_t;
 struct mapthing_t;
 
 extern const VmPtr<int32_t>     gItemRespawnQueueHead;

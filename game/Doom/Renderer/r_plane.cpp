@@ -15,7 +15,7 @@ struct span_t {
 };
 
 // Index into flat span bounds
-enum : uint32_t {
+enum : int32_t {
     SPAN_LEFT,
     SPAN_RIGHT
 };

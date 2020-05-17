@@ -13,7 +13,7 @@
 #include "pw_main.h"
 
 // Available options and their names
-enum option_t : uint32_t {
+enum option_t : int32_t {
     opt_music,
     opt_sound,
     opt_password,

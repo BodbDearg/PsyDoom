@@ -2,7 +2,7 @@
 
 #include "PsxVm/VmPtr.h"
 
-enum SpuReverbMode : uint32_t;
+enum SpuReverbMode : int32_t;
 
 // Maximum volume levels
 static constexpr int16_t PSXSPU_MAX_MASTER_VOL = 0x3FFF;

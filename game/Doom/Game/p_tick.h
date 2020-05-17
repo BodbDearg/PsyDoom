@@ -7,7 +7,7 @@
 static constexpr int32_t MENU_MOVE_VBLANK_DELAY = 15;
 
 // Identifier for one of the cheat sequences
-enum cheatseq_t : uint32_t {
+enum cheatseq_t : int32_t {
     CHT_SEQ_SHOW_ALL_MAP_LINES,
     CHT_SEQ_SHOW_ALL_MAP_THINGS,
     CHT_SEQ_GOD_MODE,

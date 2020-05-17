@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-enum class CdMapTbl_File : uint32_t;
+enum class CdMapTbl_File : int32_t;
 struct master_status_structure;
 struct SampleBlock;
 

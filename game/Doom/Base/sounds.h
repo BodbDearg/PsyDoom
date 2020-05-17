@@ -3,7 +3,7 @@
 #include <cstdint>
 
 // Identifiers for all sfx in the game
-enum sfxenum_t : uint32_t {
+enum sfxenum_t : int32_t {
     sfx_None,
     sfx_sgcock,
     sfx_punch,

@@ -2,7 +2,7 @@
 
 #include "PsxVm/VmPtr.h"
 
-enum sfxenum_t : uint32_t;
+enum sfxenum_t : int32_t;
 struct mobj_t;
 struct SampleBlock;
 
@@ -10,7 +10,7 @@ struct SampleBlock;
 const int32_t S_MAX_VOL = 100;
 
 // Enum for a CD music piece and also an index into the 'gCDTrackNum' array to get an actual track number
-enum cdmusic_t : uint32_t {
+enum cdmusic_t : int32_t {
     cdmusic_title_screen,
     cdmusic_main_menu,
     cdmusic_credits_demo,

@@ -8,10 +8,10 @@
 
 #include "Doom/doomdef.h"
 
-enum sfxenum_t : uint32_t;
+enum sfxenum_t : int32_t;
 
 // Indexes into the array of sprite lump names
-enum spritenum_t : uint32_t {
+enum spritenum_t : int32_t {
     SPR_TROO,
     SPR_SHTG,
     SPR_PUNG,
@@ -157,7 +157,7 @@ enum spritenum_t : uint32_t {
 };
 
 // Indexes into the array of states
-enum statenum_t : uint32_t {
+enum statenum_t : int32_t {
     S_NULL,
     S_LIGHTDONE,
     S_PUNCH,
@@ -918,7 +918,7 @@ enum statenum_t : uint32_t {
 };
 
 // Indexes into the array of map object info structs
-enum mobjtype_t : uint32_t {
+enum mobjtype_t : int32_t {
     MT_PLAYER,
     MT_POSSESSED,
     MT_SHOTGUY,

@@ -5,7 +5,7 @@
 struct line_t;
 
 // Type for a ceiling
-enum ceiling_e : uint32_t {
+enum ceiling_e : int32_t {
     lowerToFloor            = 0,
     raiseToHighest          = 1,
     lowerAndCrush           = 2,

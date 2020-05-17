@@ -6,7 +6,7 @@ struct line_t;
 struct sector_t;
 
 // New for PSX: what type of glowing light to spawn
-enum glowtype_e : uint32_t {
+enum glowtype_e : int32_t {
     glowtolower,
     glowto10,
     glowto255

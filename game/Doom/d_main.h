@@ -4,7 +4,7 @@
 #include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 
-enum class CdMapTbl_File : uint32_t;
+enum class CdMapTbl_File : int32_t;
 
 extern const VmPtr<int32_t>                 gTicCon;
 extern const VmPtr<int32_t[MAXPLAYERS]>     gPlayersElapsedVBlanks;
