@@ -7,7 +7,7 @@ bool P_CheckMissileRange(mobj_t& attacker) noexcept;
 bool P_Move(mobj_t& actor) noexcept;
 bool P_TryWalk(mobj_t& actor) noexcept;
 void P_NewChaseDir(mobj_t& actor) noexcept;
-void P_LookForPlayers() noexcept;
+bool P_LookForPlayers(mobj_t& actor, const bool bAllAround) noexcept;
 void A_Look() noexcept;
 void A_Chase() noexcept;
 void A_FaceTarget() noexcept;

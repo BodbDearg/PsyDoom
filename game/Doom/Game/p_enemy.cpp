@@ -300,98 +300,51 @@ void P_NewChaseDir(mobj_t& actor) noexcept {
     actor.movedir = DI_NODIR;
 }
 
-void P_LookForPlayers() noexcept {
-loc_80016334:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x64);
-    v1 = 0x4000000;                                     // Result = 04000000
-    v0 &= v1;
-    if (v0 != 0) goto loc_800163E0;
-loc_8001635C:
-    v0 = gbPlayerInGame[1];
-    a0 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_800163B0;
-    _thunk_P_Random();
-    a0 = v0 & 1;
-    v0 = a0 << 2;
-    v0 += a0;
-    v1 = v0 << 4;
-    v1 -= v0;
-    v1 <<= 2;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x77F0;                                       // Result = gPlayer1[9] (800A8810)
-    at += v1;
-    v0 = lw(at);
-    {
-        const bool bJump = (i32(v0) > 0);
-        v0 = a0 << 2;
-        if (bJump) goto loc_800163B4;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Look around for players to target, potentially setting a new target on the actor.
+// Returns 'true' when a player is regarded as targetted by the actor.
+// The vision cone can be restricted to 180 degrees in front if required, if the 'all around' flag is NOT set.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool P_LookForPlayers(mobj_t& actor, const bool bAllAround) noexcept {
+    // Pick a new target if we don't see the current one, or if we don't have a live target
+    mobj_t* const pTarget = actor.target.get();
+
+    if (((actor.flags & MF_SEETARGET) == 0) || (!pTarget) || (pTarget->health <= 0)) {
+        int32_t tgtPlayerIdx = 0;
+
+        // In co-op choose a player to target randomly.
+        // This code assumes just 2 co-op players, if we wanted more it would need to chage.
+        if (gbPlayerInGame[1]) {
+            tgtPlayerIdx = P_Random() & 1;
+            
+            // If the player we chose is already dead then pick the other player
+            if (gPlayers[tgtPlayerIdx].health <= 0) {
+                tgtPlayerIdx ^= 1;
+            }
+        }
+
+        actor.target = gPlayers[tgtPlayerIdx].mo;
+        return false;
     }
-    a0 ^= 1;
-loc_800163B0:
-    v0 = a0 << 2;
-loc_800163B4:
-    v0 += a0;
-    v1 = v0 << 4;
-    v1 -= v0;
-    v1 <<= 2;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    at += v1;
-    v1 = lw(at);
-    v0 = 0;                                             // Result = 00000000
-    sw(v1, s1 + 0x74);
-    goto loc_8001649C;
-loc_800163E0:
-    s0 = lw(s1 + 0x74);
-    if (s0 == 0) goto loc_8001635C;
-    v0 = lw(s0 + 0x68);
-    if (i32(v0) <= 0) goto loc_8001635C;
-    v0 = lw(s1 + 0xC);
-    v0 = lw(v0);
-    v0 = lw(v0 + 0x20);
-    if (v0 != s0) goto loc_80016424;
-    a1 = 1;                                             // Result = 00000001
-loc_80016424:
-    v0 = 1;                                             // Result = 00000001
-    if (a1 != 0) goto loc_8001649C;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    a2 = lw(s0);
-    a3 = lw(s0 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    a1 = 0xBFFF0000;                                    // Result = BFFF0000
-    a1 |= 0xFFFF;                                       // Result = BFFFFFFF
-    v1 = 0x7FFF0000;                                    // Result = 7FFF0000
-    a0 = lw(s1 + 0x24);
-    v1 |= 0xFFFE;                                       // Result = 7FFFFFFE
-    v0 -= a0;
-    v0 += a1;
-    v1 = (v1 < v0);
-    v0 = 1;                                             // Result = 00000001
-    if (v1 != 0) goto loc_8001649C;
-    v1 = lw(s0);
-    a0 = lw(s1);
-    v0 = lw(s0 + 0x4);
-    a1 = lw(s1 + 0x4);
-    a0 = v1 - a0;
-    a1 = v0 - a1;
-    v0 = P_AproxDistance(a0, a1);
-    v1 = 0x460000;                                      // Result = 00460000
-    v1 = (i32(v1) < i32(v0));
-    v0 = 0;                                             // Result = 00000000
-    if (v1 != 0) goto loc_8001649C;
-    v0 = 1;                                             // Result = 00000001
-loc_8001649C:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // If something made a sound in the sector then regard it as seen.
+    // Note that the target field is not actually updated here, it's only done in 'A_Look':
+    if (actor.subsector->sector->soundtarget == pTarget)
+        return true;
+    
+    // If not allowed to look all around then make sure the angle to the target is in range.
+    // Must be within a 180 degree vision range:
+    if (!bAllAround) {
+        const angle_t angleToTgt = R_PointToAngle2(actor.x, actor.y, pTarget->x, pTarget->y) - actor.angle;
+        
+        if (angleToTgt > ANG90 && angleToTgt < ANG270) {
+            // Target not within the right vision angle range: when really close to the target regard it as seen anyway:
+            const fixed_t distToTgt = P_AproxDistance(pTarget->x - actor.x, pTarget->y - actor.y);
+            return (distToTgt <= MELEERANGE);
+        }
+    }
+
+    return true;
 }
 
 void A_Look() noexcept {
@@ -400,7 +353,7 @@ void A_Look() noexcept {
     s0 = a0;
     sw(ra, sp + 0x14);
     a1 = 0;                                             // Result = 00000000
-    P_LookForPlayers();
+    v0 = P_LookForPlayers(*vmAddrToPtr<mobj_t>(a0), a1);
     if (v0 != 0) goto loc_80016520;
     v0 = lw(s0 + 0xC);
     sw(0, s0 + 0x7C);
@@ -529,7 +482,7 @@ loc_80016664:
     if (v0 != 0) goto loc_800166AC;
 loc_80016688:
     a1 = 1;                                             // Result = 00000001
-    P_LookForPlayers();
+    v0 = P_LookForPlayers(*vmAddrToPtr<mobj_t>(a0), a1);
     if (v0 != 0) goto loc_80016910;
     v0 = lw(s1 + 0x58);
     a1 = lw(v0 + 0x4);
