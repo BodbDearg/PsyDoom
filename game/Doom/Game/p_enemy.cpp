@@ -347,85 +347,60 @@ bool P_LookForPlayers(mobj_t& actor, const bool bAllAround) noexcept {
     return true;
 }
 
-void A_Look() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    a1 = 0;                                             // Result = 00000000
-    v0 = P_LookForPlayers(*vmAddrToPtr<mobj_t>(a0), a1);
-    if (v0 != 0) goto loc_80016520;
-    v0 = lw(s0 + 0xC);
-    sw(0, s0 + 0x7C);
-    v0 = lw(v0);
-    v1 = lw(v0 + 0x20);
-    if (v1 == 0) goto loc_800165CC;
-    v0 = lw(v1 + 0x64);
-    v0 &= 4;
-    if (v0 == 0) goto loc_800165CC;
-    v0 = lw(s0 + 0x64);
-    v0 &= 0x20;
-    if (v0 != 0) goto loc_800165CC;
-    sw(v1, s0 + 0x74);
-loc_80016520:
-    v0 = lw(s0 + 0x58);
-    v1 = lw(v0 + 0x10);
-    v0 = (i32(v1) < 0x24);
-    if (v1 == 0) goto loc_800165B8;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(v1) < 0x27);
-        if (bJump) goto loc_80016580;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// An enemy state that runs until the enemy has seen a player, or until a player has made noise to alert the enemy
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Look(mobj_t& actor) noexcept {
+    // Unless the monster has found a target then it can't proceed to the 'see' state:
+    if (!P_LookForPlayers(actor, false)) {
+        // Not chasing anything currently
+        actor.threshold = 0;
+
+        // If something is making noise in the current sector then try to target that instead if possible
+        mobj_t* const pNoiseMaker = actor.subsector->sector->soundtarget.get();
+
+        const bool bTargetNoiseMaker = (
+            pNoiseMaker &&                          // Is there something making noise?
+            (pNoiseMaker->flags & MF_SHOOTABLE) &&  // Noise maker must be attackable
+            ((actor.flags & MF_AMBUSH) == 0)        // Ambush monsters don't react to sound
+        );
+
+        if (!bTargetNoiseMaker)     // Continue in 'look' state if we can't target something making noise
+            return;
+
+        actor.target = pNoiseMaker;
     }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < 0x31);
-        if (bJump) goto loc_8001655C;
+    
+    // Play the see sound for the monster
+    if (actor.info->seesound != sfx_None) {
+        // Vary some sounds played randomly (imps and former humans):
+        sfxenum_t soundId = actor.info->seesound;
+
+        switch (actor.info->seesound) {
+            // Bug? Notice here that it never picks 'sfx_posit3': the sound goes unused....
+            // I tested out that audio piece and it doesn't sound so good anyway, so maybe the choice was deliberate?
+            case sfx_posit1:
+            case sfx_posit2:
+            case sfx_posit3:
+                soundId = (sfxenum_t)(sfx_posit1 + (P_Random() & 1));
+                break;
+
+            case sfx_bgsit1:
+            case sfx_bgsit2:
+                soundId = (sfxenum_t)(sfx_bgsit1 + (P_Random() & 1));
+                break;
+
+            default:
+                break;
+        }
+
+        // Play the sound: if the enemy is a Spiderdemon or Cyberdemon, play at full volume also (non-positional sound)
+        mobj_t* const pSoundSrc = ((actor.type != MT_SPIDER) && (actor.type != MT_CYBORG)) ? &actor : nullptr;
+        S_StartSound(pSoundSrc, soundId);
     }
-    _thunk_P_Random();
-    v0 &= 1;
-    a1 = v0 + 0x24;
-    goto loc_8001658C;
-loc_8001655C:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(v1) < 0x2F);
-        if (bJump) goto loc_80016580;
-    }
-    if (v0 != 0) goto loc_80016580;
-    _thunk_P_Random();
-    v0 &= 1;
-    a1 = v0 + 0x2F;
-    goto loc_8001658C;
-loc_80016580:
-    v0 = lw(s0 + 0x58);
-    a1 = lw(v0 + 0x10);
-loc_8001658C:
-    v1 = lw(s0 + 0x54);
-    v0 = 0xF;                                           // Result = 0000000F
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 0x11;                                      // Result = 00000011
-        if (bJump) goto loc_800165A4;
-    }
-    if (v1 != v0) goto loc_800165AC;
-loc_800165A4:
-    a0 = 0;                                             // Result = 00000000
-    goto loc_800165B0;
-loc_800165AC:
-    a0 = s0;
-loc_800165B0:
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_800165B8:
-    v0 = lw(s0 + 0x58);
-    a1 = lw(v0 + 0xC);
-    a0 = s0;
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-loc_800165CC:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Go into the see/chase state
+    P_SetMObjState(actor, actor.info->seestate);
 }
 
 void A_Chase() noexcept {
@@ -3021,3 +2996,6 @@ loc_80018DAC:
     sp += 0x20;
     return;
 }
+
+// TODO: remove all these thunks
+void _thunk_A_Look() noexcept { A_Look(*vmAddrToPtr<mobj_t>(a0)); }

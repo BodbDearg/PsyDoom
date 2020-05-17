@@ -10,7 +10,7 @@ extern void _thunk_P_Random() noexcept;
 extern void M_AddPointToBox() noexcept;
 extern void _thunk_T_MoveCeiling() noexcept;
 extern void _thunk_T_VerticalDoor() noexcept;
-extern void A_Look() noexcept;
+extern void _thunk_A_Look() noexcept;
 extern void A_Chase() noexcept;
 extern void A_FaceTarget() noexcept;
 extern void A_PosAttack() noexcept;
@@ -163,7 +163,7 @@ namespace PsxVm {
         { 0x80012B10, &M_AddPointToBox },
         { 0x80014A30, &_thunk_T_MoveCeiling },
         { 0x800152FC, &_thunk_T_VerticalDoor },
-        { 0x800164B4, &A_Look },
+        { 0x800164B4, &_thunk_A_Look },
         { 0x800165E0, &A_Chase },
         { 0x80016928, &A_FaceTarget },
         { 0x800169CC, &A_PosAttack },
