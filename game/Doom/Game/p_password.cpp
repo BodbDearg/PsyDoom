@@ -23,21 +23,21 @@ void P_ComputePassword(uint8_t pOutput[10]) noexcept {
     // Get the player to encode the password for and zero init the unencrypted password
     player_t& player = gPlayers[*gCurPlayerIndex];
 
-    uint8_t unencrypted[8];
-    D_memset(unencrypted, std::byte(0), 8);
+    uint8_t pwdata[8];
+    D_memset(pwdata, std::byte(0), 8);
 
     // Encode byte: current map and skill
-    unencrypted[0] = (uint8_t)((*gNextMap & 63) << 2);
-    unencrypted[0] |= (uint8_t)(*gGameSkill & 3);
+    pwdata[0] = (uint8_t)((*gNextMap & 63) << 2);
+    pwdata[0] |= (uint8_t)(*gGameSkill & 3);
 
     // Encode byte: owned weapons (from shotgun onwards) and whether the backpack is owned
     for (int32_t i = wp_shotgun; i < NUMWEAPONS; ++i) {
         if (player.weaponowned[i]) {
-            unencrypted[1] |= (uint8_t)(1 << (i - wp_shotgun));
+            pwdata[1] |= (uint8_t)(1 << (i - wp_shotgun));
         }
     }
 
-    unencrypted[1] |= (player.backpack) ? 0x80 : 0;
+    pwdata[1] |= (player.backpack) ? 0x80 : 0;
 
     // Determine the maximum ammo amount for the calculations below
     const uint8_t maxAmmoShift = (player.backpack) ? 1 : 0;
@@ -50,20 +50,20 @@ void P_ComputePassword(uint8_t pOutput[10]) noexcept {
     // Encode byte: number of bullets and shells (in 1/8 of the maximum increments, rounded up)
     const uint8_t clipsEnc = ceil8Div(player.ammo[am_clip] << 3, maxClips);
     const uint8_t shellsEnc = ceil8Div(player.ammo[am_shell] << 3, maxShells);
-    unencrypted[2] = (clipsEnc << 4) | shellsEnc;
+    pwdata[2] = (clipsEnc << 4) | shellsEnc;
 
     // Encode byte: number of cells and missiles (in 1/8 of the maximum increments, rounded up)
     const uint8_t cellsEnc = ceil8Div(player.ammo[am_cell] << 3, maxCells);
     const uint8_t missilesEnc = ceil8Div(player.ammo[am_misl] << 3, maxMissiles);
-    unencrypted[3] = (cellsEnc << 4) | missilesEnc;
+    pwdata[3] = (cellsEnc << 4) | missilesEnc;
 
     // Encode byte: health and armor points (in 1/8 of the maximum increments (25 HP), rounded up)
     const uint8_t healthPointsEnc = ceil8Div(player.health << 3, 200);
     const uint8_t armorPointsEnc = ceil8Div(player.armorpoints << 3, 200);
-    unencrypted[4] = (healthPointsEnc << 4) | armorPointsEnc;
+    pwdata[4] = (healthPointsEnc << 4) | armorPointsEnc;
 
     // Encode byte: armor type
-    unencrypted[5] = (uint8_t)(player.armortype << 3);
+    pwdata[5] = (uint8_t)(player.armortype << 3);
 
     // PC-PSX: encode if the game is operating in nightmare mode in the top bit of the last unencrypted byte.
     // This change is compatible with a similar change in 'PSXDOOM-RE' so passwords should be compatible beween both projects.
@@ -72,7 +72,7 @@ void P_ComputePassword(uint8_t pOutput[10]) noexcept {
     // 1 extra bit is used by nightmare mode. Therefore there are still 2 bits left for over purposes, perhaps extended level support?
     #if PC_PSX_DOOM_MODS
         if (*gGameSkill == sk_nightmare) {
-            unencrypted[5] |= 0x80;
+            pwdata[5] |= 0x80;
         }
     #endif
 
@@ -86,7 +86,7 @@ void P_ComputePassword(uint8_t pOutput[10]) noexcept {
         uint8_t dstByte = 0;
 
         for (int32_t bitInDstByte = 4; bitInDstByte >= 0; --bitInDstByte, ++srcBitIdx) {
-            const uint8_t srcByte = unencrypted[srcBitIdx / 8];
+            const uint8_t srcByte = pwdata[srcBitIdx / 8];
             const uint8_t srcBitMask = (uint8_t)(0x80u >> (srcBitIdx & 7));
             const uint8_t dstBitMask = (uint8_t)(1u << bitInDstByte);
 
@@ -143,21 +143,19 @@ bool P_ProcessPassword(const uint8_t pPasswordIn[10], int32_t& mapNumOut, skill_
     if (expectedXorMask != encrypted[9])
         return false;
     
-    // Convert the 9 (5-bit) bytes back out to 6 8-bit bytes
-    #if PC_PSX_DOOM_MODS
-        constexpr int32_t BITS_TO_DECODE = 45;  // PC-PSX: slight correction to this
-    #else
-        constexpr int32_t BITS_TO_DECODE = 48;
-    #endif
-
-    uint8_t unencrypted[8];
+    // Convert the 9 (5-bit) bytes back out to 6 8-bit bytes.
+    constexpr int32_t NUM_OUTPUT_BITS = 48;
+    uint8_t pwdata[8];
     
-    for (int32_t srcBitIdx = 0; srcBitIdx < BITS_TO_DECODE;) {
+    for (int32_t dstBitIdx = 0; dstBitIdx < NUM_OUTPUT_BITS;) {
         uint8_t dstByte = 0;
 
-        for (int32_t bitInDstByte = 7; bitInDstByte >= 0; --bitInDstByte, ++srcBitIdx) {
-            const uint8_t srcByte = encrypted[srcBitIdx / 5];
-            const uint8_t srcBitMask = (uint8_t)(0x10u >> srcBitIdx % 5u);
+        // Harmless bug: eagle eyed readers may notice that this happens to decrypt at the end (accidentally) 3 bits from 'encrypted[9]' due
+        // to decoding in groups of 8 bits. This byte is not actual valid payload data, as it contains the XOR mask used for encryption.
+        // These 3 invalid bits are not used however, so it doesn't matter in practice.
+        for (int32_t bitInDstByte = 7; bitInDstByte >= 0; --bitInDstByte, ++dstBitIdx) {
+            const uint8_t srcByte = encrypted[dstBitIdx / 5];
+            const uint8_t srcBitMask = (uint8_t)(0x10u >> dstBitIdx % 5u);
             const uint8_t dstBitMask = (uint8_t)(1u << bitInDstByte);
 
             if (srcByte & srcBitMask) {
@@ -165,52 +163,52 @@ bool P_ProcessPassword(const uint8_t pPasswordIn[10], int32_t& mapNumOut, skill_
             }
         }
 
-        const int32_t dstByteIdx = (srcBitIdx - 1) / 8;     // -1 because we are now on the next dest byte
-        unencrypted[dstByteIdx] = dstByte;
+        const int32_t dstByteIdx = (dstBitIdx - 1) / 8;     // -1 because we are now on the next dest byte
+        pwdata[dstByteIdx] = dstByte;
     }
     
     // Decode byte: current map and skill
-    const int32_t mapNum = unencrypted[0] >> 2;
+    const int32_t mapNum = pwdata[0] >> 2;
     mapNumOut = mapNum;
 
     if ((mapNum == 0) || (mapNum > 59))
         return false;
 
-    skillOut = (skill_t)(unencrypted[0] & 3);
+    skillOut = (skill_t)(pwdata[0] & 3);
 
     #if PC_PSX_DOOM_MODS
         // PC-PSX: support the nightmare skill level in passwords!
-        if (unencrypted[5] & 0x80) {
+        if (pwdata[5] & 0x80) {
             skillOut = sk_nightmare;
         }
     #endif
 
-    // Decode byte: number of bullets and shells (in 1/8 of the maximum increments)
-    const int32_t clipsEnc = unencrypted[2] >> 4;
-    const int32_t shellsEnc = unencrypted[2] & 0xF;
+    // Decode and verify byte: number of bullets and shells (in 1/8 of the maximum increments)
+    const int32_t clipsEnc = pwdata[2] >> 4;
+    const int32_t shellsEnc = pwdata[2] & 0xF;
 
     if ((clipsEnc > 8) || (shellsEnc > 8))
         return false;
 
-    // Decode byte: number of cells and missiles (in 1/8 of the maximum increments)
-    const int32_t cellsEnc = unencrypted[3] >> 4;
-    const int32_t missilesEnc = unencrypted[3] & 0xF;
+    // Decode and verify byte: number of cells and missiles (in 1/8 of the maximum increments)
+    const int32_t cellsEnc = pwdata[3] >> 4;
+    const int32_t missilesEnc = pwdata[3] & 0xF;
 
-    if ((clipsEnc > 8) || (shellsEnc > 8))
+    if ((cellsEnc > 8) || (missilesEnc > 8))
         return false;
     
-    // Decode byte: health and armor points (in 1/8 of the maximum increments (25 HP))
-    const int32_t healthPointsEnc = unencrypted[4] >> 4;
-    const int32_t armorPointsEnc = unencrypted[4] & 0xF;
+    // Decode and verify byte: health and armor points (in 1/8 of the maximum increments (25 HP))
+    const int32_t healthPointsEnc = pwdata[4] >> 4;
+    const int32_t armorPointsEnc = pwdata[4] & 0xF;
 
-    if ((healthPointsEnc > 8) || (healthPointsEnc == 0) || (armorPointsEnc > 8))
+    if ((healthPointsEnc > 8) || (healthPointsEnc == 0) || (armorPointsEnc > 8))    // Note: '0' health (dead) is not a valid password!
         return false;
     
     // Decode byte: armor type
     #if PC_PSX_DOOM_MODS
-        const int32_t armorType = (unencrypted[5] >> 3) & 0x3;  // PC-PSX: added a mask operation here on account of the 'nightmare' flag now being in the top bit
+        const int32_t armorType = (pwdata[5] >> 3) & 0x3;  // PC-PSX: added a mask operation here on account of the 'nightmare' flag now being in the top bit
     #else
-        const int32_t armorType = unencrypted[5] >> 3;
+        const int32_t armorType = pwdata[5] >> 3;
     #endif
 
     if (armorType > 2)
@@ -223,13 +221,13 @@ bool P_ProcessPassword(const uint8_t pPasswordIn[10], int32_t& mapNumOut, skill_
 
     // Apply: owned weapons
     for (int32_t i = 0; i < 7; ++i) {
-        if ((unencrypted[1] >> i) & 1) {
+        if ((pwdata[1] >> i) & 1) {
             pPlayer->weaponowned[wp_shotgun + i] = true;
         }
     }
 
     // Apply: backpack (if in password and not already owned)
-    if ((unencrypted[1] & 0x80) && (!pPlayer->backpack)) {
+    if ((pwdata[1] & 0x80) && (!pPlayer->backpack)) {
         pPlayer->backpack = true;
 
         for (int32_t i = 0; i < NUMAMMO; ++i) {
