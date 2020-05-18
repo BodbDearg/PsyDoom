@@ -27,12 +27,12 @@ extern void _thunk_A_CyberAttack() noexcept;
 extern void _thunk_A_BruisAttack() noexcept;
 extern void _thunk_A_SkelMissile() noexcept;
 extern void _thunk_A_Tracer() noexcept;
-extern void A_SkelWhoosh() noexcept;
-extern void A_SkelFist() noexcept;
-extern void A_FatRaise() noexcept;
-extern void A_FatAttack1() noexcept;
-extern void A_FatAttack2() noexcept;
-extern void A_FatAttack3() noexcept;
+extern void _thunk_A_SkelWhoosh() noexcept;
+extern void _thunk_A_SkelFist() noexcept;
+extern void _thunk_A_FatRaise() noexcept;
+extern void _thunk_A_FatAttack1() noexcept;
+extern void _thunk_A_FatAttack2() noexcept;
+extern void _thunk_A_FatAttack3() noexcept;
 extern void A_SkullAttack() noexcept;
 extern void A_PainShootSkull() noexcept;
 extern void A_PainAttack() noexcept;
@@ -180,12 +180,12 @@ namespace PsxVm {
         { 0x80017568, &_thunk_A_BruisAttack },
         { 0x80017630, &_thunk_A_SkelMissile },
         { 0x80017730, &_thunk_A_Tracer },
-        { 0x80017980, &A_SkelWhoosh },
-        { 0x80017A30, &A_SkelFist },
-        { 0x80017B90, &A_FatRaise },
-        { 0x80017C40, &A_FatAttack1 },
-        { 0x80017D7C, &A_FatAttack2 },
-        { 0x80017EB8, &A_FatAttack3 },
+        { 0x80017980, &_thunk_A_SkelWhoosh },
+        { 0x80017A30, &_thunk_A_SkelFist },
+        { 0x80017B90, &_thunk_A_FatRaise },
+        { 0x80017C40, &_thunk_A_FatAttack1 },
+        { 0x80017D7C, &_thunk_A_FatAttack2 },
+        { 0x80017EB8, &_thunk_A_FatAttack3 },
         { 0x8001804C, &A_SkullAttack },
         { 0x800181FC, &A_PainShootSkull },
         { 0x80018350, &A_PainAttack },

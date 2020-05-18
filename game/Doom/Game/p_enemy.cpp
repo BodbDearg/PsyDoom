@@ -24,6 +24,9 @@
 // How much Revenant missiles adjust their angle by when homing towards their target (angle adjust increment)
 static constexpr angle_t TRACEANGLE = 0xC000000;
 
+// Angle adjustment increment for the Mancubus when attacking; varies it's shoot direction in multiples of this constant
+static constexpr angle_t FATSPREAD = ANG90 / 8;
+
 // Monster movement speed multiplier for the 8 movement directions: x & y
 constexpr static fixed_t gMoveXSpeed[8] = { FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000, 0, 47000 };
 constexpr static fixed_t gMoveYSpeed[8] = { 0, 47000, FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000 };
@@ -810,432 +813,122 @@ void A_Tracer(mobj_t& actor) noexcept {
     }
 }
 
-void A_SkelWhoosh() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80017A18;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    a0 = s1;
-    if (v0 == 0) goto loc_80017A10;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-    a0 = s1;
-loc_80017A10:
-    a1 = sfx_skeswg;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_80017A18:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// If there is a target plays the Revenant's punch swing sound and faces the target in preparation for a melee attack
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_SkelWhoosh(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+    
+    A_FaceTarget(actor);
+    S_StartSound(&actor, sfx_skeswg);
 }
 
-void A_SkelFist() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80017B78;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    if (v0 == 0) goto loc_80017ABC;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-loc_80017ABC:
-    v0 = lw(s1 + 0x64);
-    v1 = 0x4000000;                                     // Result = 04000000
-    v0 &= v1;
-    v1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_80017B0C;
-    v0 = lw(s1 + 0x74);
-    if (v0 == 0) goto loc_80017B0C;
-    v1 = lw(v0);
-    a0 = lw(s1);
-    v0 = lw(v0 + 0x4);
-    a1 = lw(s1 + 0x4);
-    a0 = v1 - a0;
-    a1 = v0 - a1;
-    v0 = P_AproxDistance(a0, a1);
-    v1 = 0x450000;                                      // Result = 00450000
-    v1 |= 0xFFFF;                                       // Result = 0045FFFF
-    v1 = (i32(v1) < i32(v0));
-    v1 ^= 1;
-loc_80017B0C:
-    if (v1 == 0) goto loc_80017B78;
-    _thunk_P_Random();
-    v1 = 0x66660000;                                    // Result = 66660000
-    v1 |= 0x6667;                                       // Result = 66666667
-    mult(v0, v1);
-    a0 = s1;
-    a1 = sfx_skepch;
-    v1 = u32(i32(v0) >> 31);
-    a2 = hi;
-    a2 = u32(i32(a2) >> 2);
-    a2 -= v1;
-    v1 = a2 << 2;
-    v1 += a2;
-    v1 <<= 1;
-    v0 -= v1;
-    v0++;
-    s0 = v0 << 1;
-    s0 += v0;
-    s0 <<= 1;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    a0 = lw(s1 + 0x74);
-    a1 = s1;
-    a2 = a1;
-    a3 = s0;
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-loc_80017B78:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the melee attack of the Revenant
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_SkelFist(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+
+    A_FaceTarget(actor);
+
+    if (P_CheckMeleeRange(actor)) {
+        S_StartSound(&actor, sfx_skepch);
+        const int32_t damage = (P_Random() % 10 + 1) * 6;       // 6-60 damage
+        P_DamageMObj(*actor.target, &actor, &actor, damage);
+    }
 }
 
-void A_FatRaise() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80017C1C;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    a0 = s1;
-    if (v0 == 0) goto loc_80017C20;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-loc_80017C1C:
-    a0 = s1;
-loc_80017C20:
-    a1 = sfx_manatk;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// First action in the Mancubus's attack sequence: face the target and make a noise
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FatRaise(mobj_t& actor) noexcept {
+    A_FaceTarget(actor);
+    S_StartSound(&actor, sfx_manatk);
 }
 
-void A_FatAttack1() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x74);
-    s2 = 0x8000000;                                     // Result = 08000000
-    if (v0 == 0) goto loc_80017CD4;
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    a0 = s1;
-    if (v0 == 0) goto loc_80017CD8;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-loc_80017CD4:
-    a0 = s1;
-loc_80017CD8:
-    a2 = 7;                                             // Result = 00000007
-    v0 = lw(s1 + 0x24);
-    a1 = lw(s1 + 0x74);
-    v0 += s2;
-    sw(v0, s1 + 0x24);
-    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
-    a0 = s1;
-    a1 = lw(a0 + 0x74);
-    a2 = 7;                                             // Result = 00000007
-    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
-    s1 = v0;
-    s0 = lw(s1 + 0x24);
-    v0 = lw(s1 + 0x58);
-    s0 += s2;
-    sw(s0, s1 + 0x24);
-    s0 >>= 19;
-    a0 = lw(v0 + 0x3C);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    s0 <<= 2;
-    v0 += s0;
-    a1 = lw(v0);
-    _thunk_FixedMul();
-    sw(v0, s1 + 0x48);
-    v0 = lw(s1 + 0x58);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += s0;
-    a1 = lw(at);
-    a0 = lw(v0 + 0x3C);
-    _thunk_FixedMul();
-    sw(v0, s1 + 0x4C);
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fires the 1st round of projectiles in the Mancubus's attack sequence
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FatAttack1(mobj_t& actor) noexcept {
+    // PC-PSX: avoid undefined behavior if for some reason there is no target
+    #if PC_PSX_DOOM_MODS
+        if (!actor.target)
+            return;
+    #endif
+
+    A_FaceTarget(actor);
+    mobj_t& target = *actor.target;
+
+    // Spawn the projectiles for this round and adjust the mancubus's aim
+    actor.angle += FATSPREAD;
+    P_SpawnMissile(actor, target, MT_FATSHOT);
+
+    mobj_t& missile = *P_SpawnMissile(actor, target, MT_FATSHOT);
+    missile.angle += FATSPREAD;
+
+    const uint32_t missileFineAngle = missile.angle >> ANGLETOFINESHIFT;
+    missile.momx = FixedMul(missile.info->speed, gFineCosine[missileFineAngle]);
+    missile.momy = FixedMul(missile.info->speed, gFineSine[missileFineAngle]);
 }
 
-void A_FatAttack2() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x74);
-    a0 = s1;
-    if (v0 == 0) goto loc_80017E10;
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    a0 = s1;
-    if (v0 == 0) goto loc_80017E10;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-    a0 = s1;
-loc_80017E10:
-    a2 = 7;                                             // Result = 00000007
-    v1 = 0xF8000000;                                    // Result = F8000000
-    v0 = lw(s1 + 0x24);
-    a1 = lw(s1 + 0x74);
-    v0 += v1;
-    sw(v0, s1 + 0x24);
-    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
-    a0 = s1;
-    a1 = lw(a0 + 0x74);
-    a2 = 7;                                             // Result = 00000007
-    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
-    s1 = v0;
-    v0 = 0xF0000000;                                    // Result = F0000000
-    s0 = lw(s1 + 0x24);
-    v1 = lw(s1 + 0x58);
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-    s0 >>= 19;
-    s0 <<= 2;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    a0 = lw(v1 + 0x3C);
-    v0 += s0;
-    a1 = lw(v0);
-    _thunk_FixedMul();
-    sw(v0, s1 + 0x48);
-    v0 = lw(s1 + 0x58);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += s0;
-    a1 = lw(at);
-    a0 = lw(v0 + 0x3C);
-    _thunk_FixedMul();
-    sw(v0, s1 + 0x4C);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fires the 2nd round of projectiles in the Mancubus's attack sequence
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FatAttack2(mobj_t& actor) noexcept {
+    // PC-PSX: avoid undefined behavior if for some reason there is no target
+    #if PC_PSX_DOOM_MODS
+        if (!actor.target)
+            return;
+    #endif
+
+    A_FaceTarget(actor);
+    mobj_t& target = *actor.target;
+
+    // Spawn the projectiles for this round and adjust the mancubus's aim
+    actor.angle -= FATSPREAD;
+    P_SpawnMissile(actor, target, MT_FATSHOT);
+
+    mobj_t& missile = *P_SpawnMissile(actor, target, MT_FATSHOT);
+    missile.angle -= FATSPREAD * 2;
+
+    const uint32_t missileFineAngle = missile.angle >> ANGLETOFINESHIFT;
+    missile.momx = FixedMul(missile.info->speed, gFineCosine[missileFineAngle]);
+    missile.momy = FixedMul(missile.info->speed, gFineSine[missileFineAngle]);
 }
 
-void A_FatAttack3() noexcept {
-    sp -= 0x28;
-    sw(s2, sp + 0x20);
-    s2 = a0;
-    sw(ra, sp + 0x24);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    v0 = lw(s2 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80017F48;
-    a0 = lw(s2);
-    a1 = lw(s2 + 0x4);
-    v0 = lw(s2 + 0x64);
-    v1 = lw(s2 + 0x74);
-    v0 &= a2;
-    sw(v0, s2 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s2 + 0x74);
-    sw(v0, s2 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    a0 = s2;
-    if (v0 == 0) goto loc_80017F4C;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s2 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s2 + 0x24);
-loc_80017F48:
-    a0 = s2;
-loc_80017F4C:
-    a1 = lw(s2 + 0x74);
-    a2 = 7;                                             // Result = 00000007
-    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
-    s1 = v0;
-    v0 = lw(s1 + 0x24);
-    v1 = 0xFC000000;                                    // Result = FC000000
-    v0 += v1;
-    s0 = v0 >> 19;
-    s0 <<= 2;
-    sw(v0, s1 + 0x24);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 = lw(s1 + 0x58);
-    v0 += s0;
-    a0 = lw(v1 + 0x3C);
-    a1 = lw(v0);
-    _thunk_FixedMul();
-    sw(v0, s1 + 0x48);
-    v0 = lw(s1 + 0x58);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += s0;
-    a1 = lw(at);
-    a0 = lw(v0 + 0x3C);
-    _thunk_FixedMul();
-    a0 = s2;
-    sw(v0, s1 + 0x4C);
-    a1 = lw(a0 + 0x74);
-    a2 = 7;                                             // Result = 00000007
-    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
-    s1 = v0;
-    v0 = lw(s1 + 0x24);
-    v1 = 0x4000000;                                     // Result = 04000000
-    v0 += v1;
-    s0 = v0 >> 19;
-    s0 <<= 2;
-    sw(v0, s1 + 0x24);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 = lw(s1 + 0x58);
-    v0 += s0;
-    a0 = lw(v1 + 0x3C);
-    a1 = lw(v0);
-    _thunk_FixedMul();
-    sw(v0, s1 + 0x48);
-    v0 = lw(s1 + 0x58);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += s0;
-    a1 = lw(at);
-    a0 = lw(v0 + 0x3C);
-    _thunk_FixedMul();
-    sw(v0, s1 + 0x4C);
-    ra = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fires the 3rd round of projectiles in the Mancubus's attack sequence
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FatAttack3(mobj_t& actor) noexcept {
+    // PC-PSX: avoid undefined behavior if for some reason there is no target
+    #if PC_PSX_DOOM_MODS
+        if (!actor.target)
+            return;
+    #endif
+
+    A_FaceTarget(actor);
+    mobj_t& target = *actor.target;
+
+    // Spawn the projectiles for this round and adjust the mancubus's aim
+    {
+        mobj_t& missile = *P_SpawnMissile(actor, target, MT_FATSHOT);
+        missile.angle -= FATSPREAD / 2;
+
+        const uint32_t missileFineAngle = missile.angle >> ANGLETOFINESHIFT;
+        missile.momx = FixedMul(missile.info->speed, gFineCosine[missileFineAngle]);
+        missile.momy = FixedMul(missile.info->speed, gFineSine[missileFineAngle]);
+    }
+
+    {
+        mobj_t& missile = *P_SpawnMissile(actor, target, MT_FATSHOT);
+        missile.angle += FATSPREAD / 2;
+
+        const uint32_t missileFineAngle = missile.angle >> ANGLETOFINESHIFT;
+        missile.momx = FixedMul(missile.info->speed, gFineCosine[missileFineAngle]);
+        missile.momy = FixedMul(missile.info->speed, gFineSine[missileFineAngle]);
+    }
 }
 
 void A_SkullAttack() noexcept {
@@ -2171,3 +1864,9 @@ void _thunk_A_CyberAttack() noexcept { A_CyberAttack(*vmAddrToPtr<mobj_t>(a0)); 
 void _thunk_A_BruisAttack() noexcept { A_BruisAttack(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_SkelMissile() noexcept { A_SkelMissile(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_Tracer() noexcept { A_Tracer(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_SkelWhoosh() noexcept { A_SkelWhoosh(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_SkelFist() noexcept { A_SkelFist(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_FatRaise() noexcept { A_FatRaise(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_FatAttack1() noexcept { A_FatAttack1(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_FatAttack2() noexcept { A_FatAttack2(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_FatAttack3() noexcept { A_FatAttack3(*vmAddrToPtr<mobj_t>(a0)); }
