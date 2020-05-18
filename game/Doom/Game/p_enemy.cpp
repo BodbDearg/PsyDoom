@@ -21,6 +21,9 @@
 #include "PsxVm/PsxVm.h"
 #include <algorithm>
 
+// How much Revenant missiles adjust their angle by when homing towards their target (angle adjust increment)
+static constexpr angle_t TRACEANGLE = 0xC000000;
+
 // Monster movement speed multiplier for the 8 movement directions: x & y
 constexpr static fixed_t gMoveXSpeed[8] = { FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000, 0, 47000 };
 constexpr static fixed_t gMoveYSpeed[8] = { 0, 47000, FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000 };
@@ -722,220 +725,89 @@ void A_BruisAttack(mobj_t& actor) noexcept {
     }
 }
 
-void A_SkelMissile() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80017718;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    a0 = s1;
-    if (v0 == 0) goto loc_800176C0;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-    a0 = s1;
-loc_800176C0:
-    a2 = 4;                                             // Result = 00000004
-    s0 = 0x100000;                                      // Result = 00100000
-    v0 = lw(s1 + 0x8);
-    a1 = lw(s1 + 0x74);
-    v0 += s0;
-    sw(v0, s1 + 0x8);
-    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
-    v1 = lw(s1 + 0x8);
-    v1 -= s0;
-    sw(v1, s1 + 0x8);
-    v1 = lw(v0);
-    a1 = lw(v0 + 0x48);
-    a0 = lw(v0 + 0x4);
-    a2 = lw(v0 + 0x4C);
-    v1 += a1;
-    a0 += a2;
-    sw(v1, v0);
-    sw(a0, v0 + 0x4);
-    v1 = lw(s1 + 0x74);
-    sw(v1, v0 + 0x90);
-loc_80017718:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Make a Revenant fire it's missile towards a player
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_SkelMissile(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+
+    A_FaceTarget(actor);
+
+    // Spawn the missile: also hack adjust the Revenant height slightly (temporarily) so the missile spawns higher
+    actor.z += 16 * FRACUNIT;
+    mobj_t& missile = *P_SpawnMissile(actor, *actor.target, MT_TRACER);
+    actor.z -= 16 * FRACUNIT;
+
+    // Move the missile a little and set it's target
+    missile.x += missile.momx;
+    missile.y += missile.momy;
+    missile.tracer = actor.target;
 }
 
-void A_Tracer() noexcept {
-    v0 = *gGameTic;
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    v0 &= 3;
-    sw(s0, sp + 0x10);
-    if (v0 != 0) goto loc_80017964;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    a2 = lw(s1 + 0x8);
-    P_SpawnPuff(a0, a1, a2);
-    a3 = 5;                                             // Result = 00000005
-    a2 = lw(s1 + 0x8);
-    v1 = lw(s1);
-    a0 = lw(s1 + 0x48);
-    v0 = lw(s1 + 0x4);
-    a1 = lw(s1 + 0x4C);
-    a0 = v1 - a0;
-    a1 = v0 - a1;
-    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
-    s0 = v0;
-    v0 = 0x10000;                                       // Result = 00010000
-    sw(v0, s0 + 0x50);
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x5C);
-    v0 &= 3;
-    v1 -= v0;
-    sw(v1, s0 + 0x5C);
-    if (i32(v1) > 0) goto loc_800177BC;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s0 + 0x5C);
-loc_800177BC:
-    s2 = lw(s1 + 0x90);
-    if (s2 == 0) goto loc_80017964;
-    v0 = lw(s2 + 0x68);
-    if (i32(v0) <= 0) goto loc_80017964;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    a2 = lw(s2);
-    a3 = lw(s2 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x24);
-    s0 = v0;
-    v0 = s0 - v1;
-    if (s0 == v1) goto loc_80017850;
-    a0 = 0x80000000;                                    // Result = 80000000
-    v0 = (a0 < v0);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xF4000000;                                // Result = F4000000
-        if (bJump) goto loc_80017830;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Update logic for the Revenant's homing missiles: adjusts the direction of the missile, does smoke effects etc.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Tracer(mobj_t& actor) noexcept {
+    // Only spawn smoke and change direction every 4 tics
+    if ((*gGameTic & 3) != 0)
+        return;
+
+    // Spawn a puff and some smoke behind the rocket
+    P_SpawnPuff(actor.x, actor.y, actor.z);
+
+    mobj_t& smoke = *P_SpawnMobj(actor.x - actor.momx, actor.y - actor.momy, actor.z, MT_SMOKE);
+    smoke.momz = FRACUNIT;
+    smoke.tics = std::max(smoke.tics - (P_Random() & 3), 1);
+
+    // Only follow the target and change course if it's still alive
+    mobj_t* const pTarget = actor.tracer.get();
+
+    if ((!pTarget) || (pTarget->health <= 0))
+        return;
+    
+    // Gradually adjust to face the target if we're not already pointing directly at it
+    const angle_t angleToTgt = R_PointToAngle2(actor.x, actor.y, pTarget->x, pTarget->y);
+    
+    if (angleToTgt != actor.angle) {
+        if (angleToTgt - actor.angle > ANG180) {
+            actor.angle -= TRACEANGLE;
+
+            if (angleToTgt - actor.angle < ANG180) {    // Did we over adjust?
+                actor.angle = angleToTgt;
+            }
+        } else {
+            actor.angle += TRACEANGLE;
+
+            if (angleToTgt - actor.angle > ANG180) {    // Did we over adjust?
+                actor.angle = angleToTgt;
+            }
+        }
     }
-    v0 += v1;
-    sw(v0, s1 + 0x24);
-    v0 = s0 - v0;
-    if (i32(v0) < 0) goto loc_80017850;
-    sw(s0, s1 + 0x24);
-    goto loc_80017850;
-loc_80017830:
-    v0 = 0xC000000;                                     // Result = 0C000000
-    v0 += v1;
-    sw(v0, s1 + 0x24);
-    v0 = s0 - v0;
-    v0 = (a0 < v0);
-    if (v0 == 0) goto loc_80017850;
-    sw(s0, s1 + 0x24);
-loc_80017850:
-    v0 = lw(s1 + 0x24);
-    v1 = lw(s1 + 0x58);
-    s0 = v0 >> 19;
-    s0 <<= 2;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    a0 = lw(v1 + 0x3C);
-    v0 += s0;
-    a1 = lw(v0);
-    _thunk_FixedMul();
-    sw(v0, s1 + 0x48);
-    v0 = lw(s1 + 0x58);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += s0;
-    a1 = lw(at);
-    a0 = lw(v0 + 0x3C);
-    _thunk_FixedMul();
-    sw(v0, s1 + 0x4C);
-    v1 = lw(s2);
-    a0 = lw(s1);
-    v0 = lw(s2 + 0x4);
-    a1 = lw(s1 + 0x4);
-    a0 = v1 - a0;
-    a1 = v0 - a1;
-    v0 = P_AproxDistance(a0, a1);
-    v1 = lw(s1 + 0x58);
-    v1 = lw(v1 + 0x3C);
-    div(v0, v1);
-    if (v1 != 0) goto loc_800178E0;
-    _break(0x1C00);
-loc_800178E0:
-    at = -1;                                            // Result = FFFFFFFF
+
+    // Figure out the x/y momentum based on the direction the missile is headed in
     {
-        const bool bJump = (v1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_800178F8;
+        const uint32_t fineAngle = actor.angle >> ANGLETOFINESHIFT;
+        actor.momx = FixedMul(actor.info->speed, gFineCosine[fineAngle]);
+        actor.momy = FixedMul(actor.info->speed, gFineSine[fineAngle]);
     }
-    if (v0 != at) goto loc_800178F8;
-    tge(zero, zero, 0x5D);
-loc_800178F8:
-    a1 = lo;
-    a0 = 0xFFD80000;                                    // Result = FFD80000
-    if (i32(a1) > 0) goto loc_8001790C;
-    a1 = 1;                                             // Result = 00000001
-loc_8001790C:
-    v1 = lw(s1 + 0x8);
-    v0 = lw(s2 + 0x8);
-    v1 += a0;
-    v0 -= v1;
-    div(v0, a1);
-    if (a1 != 0) goto loc_8001792C;
-    _break(0x1C00);
-loc_8001792C:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_80017944;
+
+    // Figure out how long it will take to reach the target
+    const fixed_t distToTgt = P_AproxDistance(pTarget->x - actor.x, pTarget->y - actor.y);
+    const int32_t travelTics = std::max(distToTgt / actor.info->speed, 1);
+
+    // Figure out the desired z velocity to fly in a straight line to the target.
+    // Note: with the '-40.0' adjustment we make the missile aim for the target 40.0 units above it's floor position.
+    const fixed_t missileAnchoredPos = actor.z - 40 * FRACUNIT;
+    const fixed_t zDelta = pTarget->z - missileAnchoredPos;
+    const fixed_t tgtZVelocity = zDelta / travelTics;
+
+    // Gradually ramp up or down towards the desired Z velocity to hit the target at the position wanted
+    if (actor.momz <= tgtZVelocity) {
+        actor.momz += FRACUNIT / 8;
+    } else {
+        actor.momz -= FRACUNIT / 8;
     }
-    if (v0 != at) goto loc_80017944;
-    tge(zero, zero, 0x5D);
-loc_80017944:
-    v0 = lo;
-    v1 = lw(s1 + 0x50);
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = v1 - 0x2000;
-        if (bJump) goto loc_80017960;
-    }
-    v0 = v1 + 0x2000;
-loc_80017960:
-    sw(v0, s1 + 0x50);
-loc_80017964:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
 }
 
 void A_SkelWhoosh() noexcept {
@@ -2297,3 +2169,5 @@ void _thunk_A_SargAttack() noexcept { A_SargAttack(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_HeadAttack() noexcept { A_HeadAttack(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_CyberAttack() noexcept { A_CyberAttack(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_BruisAttack() noexcept { A_BruisAttack(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_SkelMissile() noexcept { A_SkelMissile(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_Tracer() noexcept { A_Tracer(*vmAddrToPtr<mobj_t>(a0)); }

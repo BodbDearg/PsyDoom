@@ -25,8 +25,8 @@ extern void _thunk_A_SargAttack() noexcept;
 extern void _thunk_A_HeadAttack() noexcept;
 extern void _thunk_A_CyberAttack() noexcept;
 extern void _thunk_A_BruisAttack() noexcept;
-extern void A_SkelMissile() noexcept;
-extern void A_Tracer() noexcept;
+extern void _thunk_A_SkelMissile() noexcept;
+extern void _thunk_A_Tracer() noexcept;
 extern void A_SkelWhoosh() noexcept;
 extern void A_SkelFist() noexcept;
 extern void A_FatRaise() noexcept;
@@ -178,8 +178,8 @@ namespace PsxVm {
         { 0x80017380, &_thunk_A_HeadAttack },
         { 0x800174B4, &_thunk_A_CyberAttack },
         { 0x80017568, &_thunk_A_BruisAttack },
-        { 0x80017630, &A_SkelMissile },
-        { 0x80017730, &A_Tracer },
+        { 0x80017630, &_thunk_A_SkelMissile },
+        { 0x80017730, &_thunk_A_Tracer },
         { 0x80017980, &A_SkelWhoosh },
         { 0x80017A30, &A_SkelFist },
         { 0x80017B90, &A_FatRaise },
