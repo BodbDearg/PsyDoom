@@ -633,179 +633,46 @@ void A_SpidRefire(mobj_t& actor) noexcept {
     }
 }
 
-void A_BspiAttack() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80017158;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    a0 = s1;
-    if (v0 == 0) goto loc_8001714C;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-    a0 = s1;
-loc_8001714C:
-    a1 = lw(a0 + 0x74);
-    a2 = 0x1A;                                          // Result = 0000001A
-    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
-loc_80017158:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the attack for an Arachnotron
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_BspiAttack(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+
+    A_FaceTarget(actor);
+    P_SpawnMissile(actor, *actor.target, MT_ARACHPLAZ);
 }
 
-void A_TroopAttack() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80017298;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    if (v0 == 0) goto loc_800171FC;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-loc_800171FC:
-    v0 = lw(s1 + 0x64);
-    v1 = 0x4000000;                                     // Result = 04000000
-    v0 &= v1;
-    v1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_8001724C;
-    v0 = lw(s1 + 0x74);
-    if (v0 == 0) goto loc_8001724C;
-    v1 = lw(v0);
-    a0 = lw(s1);
-    v0 = lw(v0 + 0x4);
-    a1 = lw(s1 + 0x4);
-    a0 = v1 - a0;
-    a1 = v0 - a1;
-    v0 = P_AproxDistance(a0, a1);
-    v1 = 0x450000;                                      // Result = 00450000
-    v1 |= 0xFFFF;                                       // Result = 0045FFFF
-    v1 = (i32(v1) < i32(v0));
-    v1 ^= 1;
-loc_8001724C:
-    a0 = s1;
-    if (v1 == 0) goto loc_8001728C;
-    a1 = sfx_claw;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    _thunk_P_Random();
-    a0 = lw(s1 + 0x74);
-    a1 = s1;
-    a2 = a1;
-    v0 &= 7;
-    v0++;
-    a3 = v0 << 1;
-    a3 += v0;
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    goto loc_80017298;
-loc_8001728C:
-    a1 = lw(a0 + 0x74);
-    a2 = 0x14;                                          // Result = 00000014
-    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
-loc_80017298:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the attack for an Imp, which can either be a melee attack or sending a fireball towards the target
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_TroopAttack(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+
+    A_FaceTarget(actor);
+
+    // Do a melee attack if possible, otherwise spawn a fireball
+    if (P_CheckMeleeRange(actor)) {
+        S_StartSound(&actor, sfx_claw);
+        const int32_t damage = ((P_Random() & 7) + 1) * 3;      // 3-24 damage
+        P_DamageMObj(*actor.target, &actor, &actor, damage);
+    } else {
+        P_SpawnMissile(actor, *actor.target, MT_TROOPSHOT);
+    }
 }
 
-void A_SargAttack() noexcept {
-    sp -= 0x28;
-    sw(s1, sp + 0x1C);
-    s1 = a0;
-    sw(ra, sp + 0x20);
-    sw(s0, sp + 0x18);
-    v0 = lw(s1 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80017368;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    if (v0 == 0) goto loc_8001733C;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-loc_8001733C:
-    _thunk_P_Random();
-    a0 = s1;
-    a2 = 0x460000;                                      // Result = 00460000
-    v0 &= 7;
-    v0++;
-    v0 <<= 2;
-    sw(v0, sp + 0x10);
-    a1 = lw(a0 + 0x24);
-    a3 = 0;                                             // Result = 00000000
-    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
-loc_80017368:
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the melee attack for a Demon
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_SargAttack(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+    
+    A_FaceTarget(actor);
+    const int32_t damage = ((P_Random() & 7) + 1) * 4;          // 4-32 damage
+    P_LineAttack(actor, actor.angle, MELEERANGE, 0, damage);
 }
 
 void A_HeadAttack() noexcept {
@@ -2549,3 +2416,6 @@ void _thunk_A_CPosAttack() noexcept { A_CPosAttack(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_CPosRefire() noexcept { A_CPosRefire(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_SpidAttack() noexcept { A_SpidAttack(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_SpidRefire() noexcept { A_SpidRefire(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_BspiAttack() noexcept { A_BspiAttack(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_TroopAttack() noexcept { A_TroopAttack(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_SargAttack() noexcept { A_SargAttack(*vmAddrToPtr<mobj_t>(a0)); }

@@ -19,9 +19,9 @@ extern void _thunk_A_CPosAttack() noexcept;
 extern void _thunk_A_CPosRefire() noexcept;
 extern void _thunk_A_SpidAttack() noexcept;
 extern void _thunk_A_SpidRefire() noexcept;
-extern void A_BspiAttack() noexcept;
-extern void A_TroopAttack() noexcept;
-extern void A_SargAttack() noexcept;
+extern void _thunk_A_BspiAttack() noexcept;
+extern void _thunk_A_TroopAttack() noexcept;
+extern void _thunk_A_SargAttack() noexcept;
 extern void A_HeadAttack() noexcept;
 extern void A_CyberAttack() noexcept;
 extern void A_BruisAttack() noexcept;
@@ -172,9 +172,9 @@ namespace PsxVm {
         { 0x80016D70, &_thunk_A_CPosRefire },
         { 0x80016E6C, &_thunk_A_SpidAttack },
         { 0x80016FBC, &_thunk_A_SpidRefire },
-        { 0x800170BC, &A_BspiAttack },
-        { 0x80017170, &A_TroopAttack },
-        { 0x800172B0, &A_SargAttack },
+        { 0x800170BC, &_thunk_A_BspiAttack },
+        { 0x80017170, &_thunk_A_TroopAttack },
+        { 0x800172B0, &_thunk_A_SargAttack },
         { 0x80017380, &A_HeadAttack },
         { 0x800174B4, &A_CyberAttack },
         { 0x80017568, &A_BruisAttack },
