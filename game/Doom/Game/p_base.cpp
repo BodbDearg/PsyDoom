@@ -114,7 +114,7 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
                     mobj.latecall = PsxVm::getNativeFuncVmAddr(_thunk_P_RemoveMobj);
                 } else {
                     // Usual case: exploding on hitting a wall or thing
-                    mobj.latecall = PsxVm::getNativeFuncVmAddr(L_MissileHit);
+                    mobj.latecall = PsxVm::getNativeFuncVmAddr(_thunk_L_MissileHit);
                     mobj.extradata = ptrToVmAddr(gpHitThing->get());
                 }
             } else {

@@ -46,7 +46,7 @@ extern void A_BossDeath() noexcept;
 extern void _thunk_A_Hoof() noexcept;
 extern void _thunk_A_Metal() noexcept;
 extern void _thunk_A_BabyMetal() noexcept;
-extern void L_MissileHit() noexcept;
+extern void _thunk_L_MissileHit() noexcept;
 extern void L_SkullBash() noexcept;
 extern void _thunk_T_MoveFloor() noexcept;
 extern void _thunk_T_FireFlicker() noexcept;
@@ -199,7 +199,7 @@ namespace PsxVm {
         { 0x80018C44, &_thunk_A_Hoof },
         { 0x80018C78, &_thunk_A_Metal },
         { 0x80018CAC, &_thunk_A_BabyMetal },
-        { 0x80018CE0, &L_MissileHit },
+        { 0x80018CE0, &_thunk_L_MissileHit },
         { 0x80018D54, &L_SkullBash },
         { 0x80019010, &_thunk_T_MoveFloor },
         { 0x8001AD74, &_thunk_T_FireFlicker },

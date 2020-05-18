@@ -1756,33 +1756,19 @@ void A_BabyMetal(mobj_t& actor) noexcept {
     A_Chase(actor);
 }
 
-void L_MissileHit() noexcept {
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    s1 = lw(s0 + 0x84);
-    if (s1 == 0) goto loc_80018D34;
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x58);
-    v0 &= 7;
-    v1 = lw(v1 + 0x4C);
-    v0++;
-    mult(v0, v1);
-    a0 = s1;
-    a2 = lw(s0 + 0x74);
-    a3 = lo;
-    a1 = s0;
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-loc_80018D34:
-    a0 = s0;
-    P_ExplodeMissile(*vmAddrToPtr<mobj_t>(a0));
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// A late call action set in p_base: explode a missile after it has hit something and damage what it hit
+//------------------------------------------------------------------------------------------------------------------------------------------
+void L_MissileHit(mobj_t& missile) noexcept {
+    mobj_t* const pHitThing = vmAddrToPtr<mobj_t>(missile.extradata);
+
+    if (pHitThing) {
+        const int32_t damage = missile.info->damage * ((P_Random() & 7) + 1);   // 1-8x damage
+        mobj_t* const pFirer = missile.target.get();
+        P_DamageMObj(*pHitThing, &missile, pFirer, damage);
+    }
+
+    P_ExplodeMissile(missile);
 }
 
 void L_SkullBash() noexcept {
@@ -1853,3 +1839,4 @@ void _thunk_A_FatAttack3() noexcept { A_FatAttack3(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_Hoof() noexcept { A_Hoof(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_Metal() noexcept { A_Metal(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_BabyMetal() noexcept { A_BabyMetal(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_L_MissileHit() noexcept { L_MissileHit(*vmAddrToPtr<mobj_t>(a0)); }

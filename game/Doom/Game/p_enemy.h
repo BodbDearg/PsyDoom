@@ -44,5 +44,8 @@ void A_BossDeath() noexcept;
 void A_Hoof(mobj_t& actor) noexcept;
 void A_Metal(mobj_t& actor) noexcept;
 void A_BabyMetal(mobj_t& actor) noexcept;
-void L_MissileHit() noexcept;
+void L_MissileHit(mobj_t& missile) noexcept;
 void L_SkullBash() noexcept;
+
+// TODO: remove all these thunks
+void _thunk_L_MissileHit() noexcept;
