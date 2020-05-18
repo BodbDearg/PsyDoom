@@ -16,9 +16,9 @@ extern void _thunk_A_FaceTarget() noexcept;
 extern void _thunk_A_PosAttack() noexcept;
 extern void _thunk_A_SPosAttack() noexcept;
 extern void _thunk_A_CPosAttack() noexcept;
-extern void A_CPosRefire() noexcept;
-extern void A_SpidAttack() noexcept;
-extern void A_SpidRefire() noexcept;
+extern void _thunk_A_CPosRefire() noexcept;
+extern void _thunk_A_SpidAttack() noexcept;
+extern void _thunk_A_SpidRefire() noexcept;
 extern void A_BspiAttack() noexcept;
 extern void A_TroopAttack() noexcept;
 extern void A_SargAttack() noexcept;
@@ -169,9 +169,9 @@ namespace PsxVm {
         { 0x800169CC, &_thunk_A_PosAttack },
         { 0x80016AD4, &_thunk_A_SPosAttack },
         { 0x80016C24, &_thunk_A_CPosAttack },
-        { 0x80016D70, &A_CPosRefire },
-        { 0x80016E6C, &A_SpidAttack },
-        { 0x80016FBC, &A_SpidRefire },
+        { 0x80016D70, &_thunk_A_CPosRefire },
+        { 0x80016E6C, &_thunk_A_SpidAttack },
+        { 0x80016FBC, &_thunk_A_SpidRefire },
         { 0x800170BC, &A_BspiAttack },
         { 0x80017170, &A_TroopAttack },
         { 0x800172B0, &A_SargAttack },
