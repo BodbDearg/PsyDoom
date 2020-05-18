@@ -1732,49 +1732,28 @@ loc_80018C34:
     return;
 }
 
-void A_Hoof() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    a1 = sfx_hoof;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    a0 = s0;
-    A_Chase(*vmAddrToPtr<mobj_t>(a0));
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Used by the Cyberdemon; plays the hoof sound while chasing the current target
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Hoof(mobj_t& actor) noexcept {
+    S_StartSound(&actor, sfx_hoof);
+    A_Chase(actor);
 }
 
-void A_Metal() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    a1 = sfx_metal;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    a0 = s0;
-    A_Chase(*vmAddrToPtr<mobj_t>(a0));
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Used by the Cyberdemon and Spider Mastermind; plays a mechanized sound while chasing the current target
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Metal(mobj_t& actor) noexcept {
+    S_StartSound(&actor, sfx_metal);
+    A_Chase(actor);
 }
 
-void A_BabyMetal() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    a1 = sfx_bspwlk;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    a0 = s0;
-    A_Chase(*vmAddrToPtr<mobj_t>(a0));
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Used by the Arachnotron; plays it's mechanized sound while chasing the current target
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_BabyMetal(mobj_t& actor) noexcept {
+    S_StartSound(&actor, sfx_bspwlk);
+    A_Chase(actor);
 }
 
 void L_MissileHit() noexcept {
@@ -1870,3 +1849,7 @@ void _thunk_A_FatRaise() noexcept { A_FatRaise(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_FatAttack1() noexcept { A_FatAttack1(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_FatAttack2() noexcept { A_FatAttack2(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_FatAttack3() noexcept { A_FatAttack3(*vmAddrToPtr<mobj_t>(a0)); }
+
+void _thunk_A_Hoof() noexcept { A_Hoof(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_Metal() noexcept { A_Metal(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_BabyMetal() noexcept { A_BabyMetal(*vmAddrToPtr<mobj_t>(a0)); }
