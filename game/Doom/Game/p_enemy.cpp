@@ -526,172 +526,44 @@ void A_PosAttack(mobj_t& actor) noexcept {
 
     const angle_t shootAngle = actor.angle + (P_Random() - P_Random()) * (ANG45 / 512);     // Vary by up to 22.5 degrees (approximately)
     const int32_t damage = ((P_Random() & 7) + 1) * 3;                                      // 3-24 damage
+
     P_LineAttack(actor, shootAngle, MISSILERANGE, INT32_MAX, damage);
 }
 
-void A_SPosAttack() noexcept {
-    sp -= 0x30;
-    sw(s1, sp + 0x1C);
-    s1 = a0;
-    sw(ra, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s0, sp + 0x18);
-    v0 = lw(s1 + 0x74);
-    if (v0 == 0) goto loc_80016C04;
-    a1 = sfx_shotgn;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = lw(s1 + 0x74);
-    s2 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_80016B84;
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    if (v0 == 0) goto loc_80016B84;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-loc_80016B84:
-    s3 = lw(s1 + 0x24);
-loc_80016B88:
-    s2++;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    s0 <<= 20;
-    s0 += s3;
-    _thunk_P_Random();
-    v1 = 0x66660000;                                    // Result = 66660000
-    v1 |= 0x6667;                                       // Result = 66666667
-    mult(v0, v1);
-    a0 = s1;
-    a1 = s0;
-    a2 = 0x8000000;                                     // Result = 08000000
-    a3 = 0x7FFF0000;                                    // Result = 7FFF0000
-    a3 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    v1 = u32(i32(v0) >> 31);
-    t0 = hi;
-    t0 = u32(i32(t0) >> 1);
-    t0 -= v1;
-    v1 = t0 << 2;
-    v1 += t0;
-    v0 -= v1;
-    v0++;
-    v1 = v0 << 1;
-    v1 += v0;
-    sw(v1, sp + 0x10);
-    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
-    v0 = (i32(s2) < 3);
-    if (v0 != 0) goto loc_80016B88;
-loc_80016C04:
-    ra = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the attack for a shotgun guy
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_SPosAttack(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+
+    S_StartSound(&actor, sfx_shotgn);
+    A_FaceTarget(actor);
+
+    // The shotgun fires 3 pellets
+    for (int32_t i = 0; i < 3; ++i) {
+        const angle_t shootAngle =  actor.angle + (P_Random() - P_Random()) * (ANG45 / 512);    // Vary by up to 22.5 degrees (approximately)
+        const int32_t damage = (P_Random() % 5 + 1) * 3;                                        // 3-15 damage
+
+        P_LineAttack(actor, shootAngle, MISSILERANGE, INT32_MAX, damage);
+    }
 }
 
-void A_CPosAttack() noexcept {
-    sp -= 0x30;
-    sw(s3, sp + 0x24);
-    s3 = a0;
-    sw(ra, sp + 0x28);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    v0 = lw(s3 + 0x74);
-    if (v0 == 0) goto loc_80016D50;
-    a1 = sfx_pistol;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = lw(s3 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80016CD0;
-    a0 = lw(s3);
-    a1 = lw(s3 + 0x4);
-    v0 = lw(s3 + 0x64);
-    v1 = lw(s3 + 0x74);
-    v0 &= a2;
-    sw(v0, s3 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s3 + 0x74);
-    sw(v0, s3 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    a0 = s3;
-    if (v0 == 0) goto loc_80016CD4;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s3 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s3 + 0x24);
-loc_80016CD0:
-    a0 = s3;
-loc_80016CD4:
-    s1 = lw(s3 + 0x24);
-    a2 = 0x8000000;                                     // Result = 08000000
-    a1 = s1;
-    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    s2 = v0;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    s0 <<= 20;
-    s1 += s0;
-    _thunk_P_Random();
-    v1 = 0x66660000;                                    // Result = 66660000
-    v1 |= 0x6667;                                       // Result = 66666667
-    mult(v0, v1);
-    a0 = s3;
-    a1 = s1;
-    a2 = 0x8000000;                                     // Result = 08000000
-    a3 = s2;
-    v1 = u32(i32(v0) >> 31);
-    t0 = hi;
-    t0 = u32(i32(t0) >> 1);
-    t0 -= v1;
-    v1 = t0 << 2;
-    v1 += t0;
-    v0 -= v1;
-    v0++;
-    v1 = v0 << 1;
-    v1 += v0;
-    sw(v1, sp + 0x10);
-    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
-loc_80016D50:
-    ra = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the attack for a heavy weapons dude (chaingun guy)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_CPosAttack(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+
+    S_StartSound(&actor, sfx_pistol);
+    A_FaceTarget(actor);
+
+    const fixed_t aimZSlope = P_AimLineAttack(actor, actor.angle, MISSILERANGE);
+    const angle_t shootAngle = actor.angle + (P_Random() - P_Random()) * (ANG45 / 512);     // Vary by up to 22.5 degrees (approximately)
+    const int32_t damage = (P_Random() % 5 + 1) * 3;                                        // 3-15 damage
+
+    P_LineAttack(actor, shootAngle, MISSILERANGE, aimZSlope, damage);
 }
 
 void A_CPosRefire() noexcept {
@@ -2800,3 +2672,5 @@ void _thunk_A_Look() noexcept { A_Look(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_Chase() noexcept { A_Chase(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_FaceTarget() noexcept { A_FaceTarget(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_PosAttack() noexcept { A_PosAttack(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_SPosAttack() noexcept { A_SPosAttack(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_CPosAttack() noexcept { A_CPosAttack(*vmAddrToPtr<mobj_t>(a0)); }
