@@ -675,176 +675,51 @@ void A_SargAttack(mobj_t& actor) noexcept {
     P_LineAttack(actor, actor.angle, MELEERANGE, 0, damage);
 }
 
-void A_HeadAttack() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_8001749C;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    if (v0 == 0) goto loc_8001740C;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-loc_8001740C:
-    v0 = lw(s1 + 0x64);
-    v1 = 0x4000000;                                     // Result = 04000000
-    v0 &= v1;
-    v1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_8001745C;
-    v0 = lw(s1 + 0x74);
-    if (v0 == 0) goto loc_8001745C;
-    v1 = lw(v0);
-    a0 = lw(s1);
-    v0 = lw(v0 + 0x4);
-    a1 = lw(s1 + 0x4);
-    a0 = v1 - a0;
-    a1 = v0 - a1;
-    v0 = P_AproxDistance(a0, a1);
-    v1 = 0x450000;                                      // Result = 00450000
-    v1 |= 0xFFFF;                                       // Result = 0045FFFF
-    v1 = (i32(v1) < i32(v0));
-    v1 ^= 1;
-loc_8001745C:
-    a0 = s1;
-    if (v1 == 0) goto loc_80017490;
-    _thunk_P_Random();
-    a0 = lw(s1 + 0x74);
-    a1 = s1;
-    a2 = s1;
-    v0 &= 7;
-    v0++;
-    a3 = v0 << 3;
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    goto loc_8001749C;
-loc_80017490:
-    a1 = lw(a0 + 0x74);
-    a2 = 0x15;                                          // Result = 00000015
-    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
-loc_8001749C:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the attack for a Cacodemon, which can either be a melee attack or sending a fireball towards the target
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_HeadAttack(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+
+    A_FaceTarget(actor);
+    
+    // Do a melee attack if possible, otherwise spawn a fireball
+    if (P_CheckMeleeRange(actor)) {
+        const int32_t damage = ((P_Random() & 7) + 1) * 8;      // 8-64 damage
+        P_DamageMObj(*actor.target, &actor, &actor, damage);
+    } else {
+        P_SpawnMissile(actor, *actor.target, MT_HEADSHOT);
+    }
 }
 
-void A_CyberAttack() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(s1 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80017550;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    a0 = s1;
-    if (v0 == 0) goto loc_80017544;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-    a0 = s1;
-loc_80017544:
-    a1 = lw(a0 + 0x74);
-    a2 = 0x17;                                          // Result = 00000017
-    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
-loc_80017550:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the attack for a Cyberdemon
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_CyberAttack(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+
+    A_FaceTarget(actor);
+    P_SpawnMissile(actor, *actor.target, MT_ROCKET);
 }
 
-void A_BruisAttack() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    a1 = lw(s0 + 0x74);
-    v1 = 0x4000000;                                     // Result = 04000000
-    if (a1 == 0) goto loc_8001761C;
-    v0 = lw(s0 + 0x64);
-    v0 &= v1;
-    v1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_800175C8;
-    v1 = lw(a1);
-    a0 = lw(s0);
-    v0 = lw(a1 + 0x4);
-    a1 = lw(s0 + 0x4);
-    a0 = v1 - a0;
-    a1 = v0 - a1;
-    v0 = P_AproxDistance(a0, a1);
-    v1 = 0x450000;                                      // Result = 00450000
-    v1 |= 0xFFFF;                                       // Result = 0045FFFF
-    v1 = (i32(v1) < i32(v0));
-    v1 ^= 1;
-loc_800175C8:
-    a0 = s0;
-    if (v1 == 0) goto loc_80017610;
-    a1 = sfx_claw;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    _thunk_P_Random();
-    a0 = lw(s0 + 0x74);
-    a1 = s0;
-    a2 = a1;
-    v0 &= 7;
-    v0++;
-    a3 = v0 << 1;
-    a3 += v0;
-    a3 <<= 2;
-    a3 -= v0;
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    goto loc_8001761C;
-loc_80017610:
-    a1 = lw(a0 + 0x74);
-    a2 = 0x16;                                          // Result = 00000016
-    v0 = ptrToVmAddr(P_SpawnMissile(*vmAddrToPtr<mobj_t>(a0), *vmAddrToPtr<mobj_t>(a1), (mobjtype_t) a2));
-loc_8001761C:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the attack for a Baron or Hell Knight, which can either be a melee attack or sending a fireball towards the target
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_BruisAttack(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+    
+    mobj_t& target = *actor.target;
+
+    if (P_CheckMeleeRange(actor)) {
+        S_StartSound(&actor, sfx_claw);
+        const int32_t damage = ((P_Random() & 7) + 1) * 11;     // 11-88 damage
+        P_DamageMObj(target, &actor, &actor, damage);
+    } else {
+        P_SpawnMissile(actor, target, MT_BRUISERSHOT);
+    }
 }
 
 void A_SkelMissile() noexcept {
@@ -2419,3 +2294,6 @@ void _thunk_A_SpidRefire() noexcept { A_SpidRefire(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_BspiAttack() noexcept { A_BspiAttack(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_TroopAttack() noexcept { A_TroopAttack(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_SargAttack() noexcept { A_SargAttack(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_HeadAttack() noexcept { A_HeadAttack(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_CyberAttack() noexcept { A_CyberAttack(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_BruisAttack() noexcept { A_BruisAttack(*vmAddrToPtr<mobj_t>(a0)); }
