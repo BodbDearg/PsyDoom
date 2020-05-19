@@ -31,7 +31,7 @@ void A_FatRaise(mobj_t& actor) noexcept;
 void A_FatAttack1(mobj_t& actor) noexcept;
 void A_FatAttack2(mobj_t& actor) noexcept;
 void A_FatAttack3(mobj_t& actor) noexcept;
-void A_SkullAttack() noexcept;
+void A_SkullAttack(mobj_t& actor) noexcept;
 void A_PainShootSkull() noexcept;
 void A_PainAttack() noexcept;
 void A_PainDie() noexcept;
@@ -45,7 +45,8 @@ void A_Hoof(mobj_t& actor) noexcept;
 void A_Metal(mobj_t& actor) noexcept;
 void A_BabyMetal(mobj_t& actor) noexcept;
 void L_MissileHit(mobj_t& missile) noexcept;
-void L_SkullBash() noexcept;
+void L_SkullBash(mobj_t& actor) noexcept;
 
 // TODO: remove all these thunks
 void _thunk_L_MissileHit() noexcept;
+void _thunk_L_SkullBash() noexcept;

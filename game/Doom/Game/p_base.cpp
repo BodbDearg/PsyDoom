@@ -96,7 +96,7 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
         if (!PB_TryMove(mobj.x + xuse, mobj.y + yuse)) {
             // Move failed: if it's a skull flying then do the skull bash
             if (mobj.flags & MF_SKULLFLY) {
-                mobj.latecall = PsxVm::getNativeFuncVmAddr(L_SkullBash);
+                mobj.latecall = PsxVm::getNativeFuncVmAddr(_thunk_L_SkullBash);
                 mobj.extradata = ptrToVmAddr(gpHitThing->get());
             }
 

@@ -21,11 +21,9 @@
 #include "PsxVm/PsxVm.h"
 #include <algorithm>
 
-// How much Revenant missiles adjust their angle by when homing towards their target (angle adjust increment)
-static constexpr angle_t TRACEANGLE = 0xC000000;
-
-// Angle adjustment increment for the Mancubus when attacking; varies it's shoot direction in multiples of this constant
-static constexpr angle_t FATSPREAD = ANG90 / 8;
+static constexpr angle_t TRACEANGLE = 0xC000000;        // How much Revenant missiles adjust their angle by when homing towards their target (angle adjust increment)
+static constexpr angle_t FATSPREAD  = ANG90 / 8;        // Angle adjustment increment for the Mancubus when attacking; varies it's shoot direction in multiples of this constant
+static constexpr fixed_t SKULLSPEED = 40 * FRACUNIT;    // Speed that lost souls fly at
 
 // Monster movement speed multiplier for the 8 movement directions: x & y
 constexpr static fixed_t gMoveXSpeed[8] = { FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000, 0, 47000 };
@@ -931,114 +929,32 @@ void A_FatAttack3(mobj_t& actor) noexcept {
     }
 }
 
-void A_SkullAttack() noexcept {
-loc_8001804C:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s0, sp + 0x10);
-    a2 = lw(s1 + 0x74);
-    v1 = 0x1000000;                                     // Result = 01000000
-    if (a2 == 0) goto loc_800181E0;
-    v0 = lw(s1 + 0x64);
-    a1 = lw(s1 + 0x58);
-    v0 |= v1;
-    sw(v0, s1 + 0x64);
-    a1 = lw(a1 + 0x18);
-    s2 = a2;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = lw(s1 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80018108;
-    a0 = lw(s1);
-    a1 = lw(s1 + 0x4);
-    v0 = lw(s1 + 0x64);
-    v1 = lw(s1 + 0x74);
-    v0 &= a2;
-    sw(v0, s1 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s1 + 0x74);
-    sw(v0, s1 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    if (v0 == 0) goto loc_80018108;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s1 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s1 + 0x24);
-loc_80018108:
-    s0 = lw(s1 + 0x24);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    s0 >>= 19;
-    s0 <<= 2;
-    v0 += s0;
-    a1 = lw(v0);
-    a0 = 0x280000;                                      // Result = 00280000
-    _thunk_FixedMul();
-    sw(v0, s1 + 0x48);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += s0;
-    a1 = lw(at);
-    a0 = 0x280000;                                      // Result = 00280000
-    _thunk_FixedMul();
-    sw(v0, s1 + 0x4C);
-    v1 = lw(s2);
-    a0 = lw(s1);
-    v0 = lw(s2 + 0x4);
-    a1 = lw(s1 + 0x4);
-    a0 = v1 - a0;
-    a1 = v0 - a1;
-    v0 = P_AproxDistance(a0, a1);
-    a1 = v0;
-    v0 = 0x66660000;                                    // Result = 66660000
-    v0 |= 0x6667;                                       // Result = 66666667
-    mult(a1, v0);
-    v1 = u32(i32(a1) >> 31);
-    v0 = hi;
-    v0 = u32(i32(v0) >> 20);
-    a1 = v0 - v1;
-    if (i32(a1) > 0) goto loc_80018194;
-    a1 = 1;                                             // Result = 00000001
-loc_80018194:
-    v0 = lw(s2 + 0x44);
-    v1 = lw(s2 + 0x8);
-    a0 = lw(s1 + 0x8);
-    v0 = u32(i32(v0) >> 1);
-    v0 += v1;
-    v0 -= a0;
-    div(v0, a1);
-    if (a1 != 0) goto loc_800181BC;
-    _break(0x1C00);
-loc_800181BC:
-    at = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (a1 != at);
-        at = 0x80000000;                                // Result = 80000000
-        if (bJump) goto loc_800181D4;
-    }
-    if (v0 != at) goto loc_800181D4;
-    tge(zero, zero, 0x5D);
-loc_800181D4:
-    v0 = lo;
-    sw(v0, s1 + 0x50);
-loc_800181E0:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the attack for a Lost Soul, sets it flying towards it's target
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_SkullAttack(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+    
+    // Skull is now flying, play the attack sound and face the target
+    actor.flags |= MF_SKULLFLY;
+    S_StartSound(&actor, actor.info->attacksound);
+    A_FaceTarget(actor);
+    
+    // Set the xy velocity
+    const uint32_t actorFineAngle = actor.angle >> ANGLETOFINESHIFT;
+    
+    actor.momx = FixedMul(SKULLSPEED, gFineCosine[actorFineAngle]);
+    actor.momy = FixedMul(SKULLSPEED, gFineSine[actorFineAngle]);
+
+    // Figure out the z velocity based on the travel time and z delta to the target
+    mobj_t& target = *actor.target.get();
+
+    const fixed_t distToTgt = P_AproxDistance(target.x - actor.x, target.y - actor.y);
+    const int32_t travelTime = std::max(distToTgt / SKULLSPEED, 1);
+    const fixed_t zDelta = target.z + (target.height >> 1) - actor.z;
+
+    actor.momz = zDelta / travelTime;
 }
 
 void A_PainShootSkull() noexcept {
@@ -1116,7 +1032,7 @@ loc_80018270:
 loc_80018328:
     v0 = lw(s2 + 0x74);
     sw(v0, a0 + 0x74);
-    A_SkullAttack();
+    A_SkullAttack(*vmAddrToPtr<mobj_t>(a0));
 loc_80018334:
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
@@ -1229,7 +1145,7 @@ loc_80018440:
 loc_800184F8:
     v0 = lw(s2 + 0x74);
     sw(v0, a0 + 0x74);
-    A_SkullAttack();
+    A_SkullAttack(*vmAddrToPtr<mobj_t>(a0));
 loc_80018504:
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
@@ -1319,7 +1235,7 @@ loc_800185A4:
 loc_8001865C:
     v0 = lw(s2 + 0x74);
     sw(v0, a0 + 0x74);
-    A_SkullAttack();
+    A_SkullAttack(*vmAddrToPtr<mobj_t>(a0));
 loc_80018668:
     v0 = 0x80000000;                                    // Result = 80000000
 loc_8001866C:
@@ -1394,7 +1310,7 @@ loc_800186D0:
 loc_80018788:
     v0 = lw(s2 + 0x74);
     sw(v0, a0 + 0x74);
-    A_SkullAttack();
+    A_SkullAttack(*vmAddrToPtr<mobj_t>(a0));
 loc_80018794:
     v0 = 0xC0000000;                                    // Result = C0000000
 loc_80018798:
@@ -1468,7 +1384,7 @@ loc_800187FC:
 loc_800188B4:
     v0 = lw(s2 + 0x74);
     sw(v0, a0 + 0x74);
-    A_SkullAttack();
+    A_SkullAttack(*vmAddrToPtr<mobj_t>(a0));
 loc_800188C0:
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
@@ -1771,44 +1687,24 @@ void L_MissileHit(mobj_t& missile) noexcept {
     P_ExplodeMissile(missile);
 }
 
-void L_SkullBash() noexcept {
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    s1 = lw(s0 + 0x84);
-    v0 = 0xFEFF0000;                                    // Result = FEFF0000
-    if (s1 == 0) goto loc_80018DAC;
-    _thunk_P_Random();
-    v1 = lw(s0 + 0x58);
-    v0 &= 7;
-    v1 = lw(v1 + 0x4C);
-    v0++;
-    mult(v0, v1);
-    a0 = s1;
-    a1 = s0;
-    a3 = lo;
-    a2 = s0;
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    v0 = 0xFEFF0000;                                    // Result = FEFF0000
-loc_80018DAC:
-    v1 = lw(s0 + 0x64);
-    a0 = lw(s0 + 0x58);
-    v0 |= 0xFFFF;                                       // Result = FEFFFFFF
-    sw(0, s0 + 0x50);
-    sw(0, s0 + 0x4C);
-    sw(0, s0 + 0x48);
-    v1 &= v0;
-    sw(v1, s0 + 0x64);
-    a1 = lw(a0 + 0x4);
-    a0 = s0;
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// A late call action set in p_base: damage the thing a Lost Soul has bashed into
+//------------------------------------------------------------------------------------------------------------------------------------------
+void L_SkullBash(mobj_t& actor) noexcept {
+    // Damage the the map object which was bashed (if anything)
+    mobj_t* const pHitThing = vmAddrToPtr<mobj_t>(actor.extradata);
+
+    if (pHitThing) {
+        const int32_t damage = actor.info->damage * ((P_Random() & 7) + 1);     // Info damage x1-x8
+        P_DamageMObj(*pHitThing, &actor, &actor, damage);
+    }
+
+    // Kill all velocity of the lost soul, stop it flying and put back into the regular active state
+    actor.momz = 0;
+    actor.momy = 0;
+    actor.momx = 0;
+    actor.flags &= ~MF_SKULLFLY;
+    P_SetMObjState(actor, actor.info->spawnstate);
 }
 
 // TODO: remove all these thunks
@@ -1835,8 +1731,10 @@ void _thunk_A_FatRaise() noexcept { A_FatRaise(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_FatAttack1() noexcept { A_FatAttack1(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_FatAttack2() noexcept { A_FatAttack2(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_FatAttack3() noexcept { A_FatAttack3(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_SkullAttack() noexcept { A_SkullAttack(*vmAddrToPtr<mobj_t>(a0)); }
 
 void _thunk_A_Hoof() noexcept { A_Hoof(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_Metal() noexcept { A_Metal(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_BabyMetal() noexcept { A_BabyMetal(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_L_MissileHit() noexcept { L_MissileHit(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_L_SkullBash() noexcept { L_SkullBash(*vmAddrToPtr<mobj_t>(a0)); }

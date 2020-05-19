@@ -33,7 +33,7 @@ extern void _thunk_A_FatRaise() noexcept;
 extern void _thunk_A_FatAttack1() noexcept;
 extern void _thunk_A_FatAttack2() noexcept;
 extern void _thunk_A_FatAttack3() noexcept;
-extern void A_SkullAttack() noexcept;
+extern void _thunk_A_SkullAttack() noexcept;
 extern void A_PainShootSkull() noexcept;
 extern void A_PainAttack() noexcept;
 extern void A_PainDie() noexcept;
@@ -47,7 +47,7 @@ extern void _thunk_A_Hoof() noexcept;
 extern void _thunk_A_Metal() noexcept;
 extern void _thunk_A_BabyMetal() noexcept;
 extern void _thunk_L_MissileHit() noexcept;
-extern void L_SkullBash() noexcept;
+extern void _thunk_L_SkullBash() noexcept;
 extern void _thunk_T_MoveFloor() noexcept;
 extern void _thunk_T_FireFlicker() noexcept;
 extern void _thunk_T_LightFlash() noexcept;
@@ -186,7 +186,7 @@ namespace PsxVm {
         { 0x80017C40, &_thunk_A_FatAttack1 },
         { 0x80017D7C, &_thunk_A_FatAttack2 },
         { 0x80017EB8, &_thunk_A_FatAttack3 },
-        { 0x8001804C, &A_SkullAttack },
+        { 0x8001804C, &_thunk_A_SkullAttack },
         { 0x800181FC, &A_PainShootSkull },
         { 0x80018350, &A_PainAttack },
         { 0x80018520, &A_PainDie },
@@ -200,7 +200,7 @@ namespace PsxVm {
         { 0x80018C78, &_thunk_A_Metal },
         { 0x80018CAC, &_thunk_A_BabyMetal },
         { 0x80018CE0, &_thunk_L_MissileHit },
-        { 0x80018D54, &L_SkullBash },
+        { 0x80018D54, &_thunk_L_SkullBash },
         { 0x80019010, &_thunk_T_MoveFloor },
         { 0x8001AD74, &_thunk_T_FireFlicker },
         { 0x8001AE8C, &_thunk_T_LightFlash },
