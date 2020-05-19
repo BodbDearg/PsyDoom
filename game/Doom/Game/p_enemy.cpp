@@ -1396,76 +1396,55 @@ loc_800188C0:
     return;
 }
 
-void A_Scream() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v0 = lw(s0 + 0x58);
-    v1 = lw(v0 + 0x38);
-    v0 = (v1 < 0x33);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_8001894C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Play the death sound for the given actor
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Scream(mobj_t& actor) noexcept {
+    sfxenum_t soundId = {};
+
+    switch (actor.info->deathsound) {
+        case sfx_None:
+            return;
+
+        // Randomize former human death sounds.
+        // Bug? Notice here that it never picks 'sfx_podth3': the sound goes unused....
+        // I tested out that audio piece and it doesn't sound so good anyway, so maybe the choice was deliberate?
+        case sfx_podth1:
+        case sfx_podth2:
+        case sfx_podth3:
+            soundId = (sfxenum_t)(sfx_podth1 + (P_Random() & 1));
+            break;
+
+        // Randomize Imp death sounds
+        case sfx_bgdth1:
+        case sfx_bgdth2:
+            soundId = (sfxenum_t)(sfx_bgdth1 + (P_Random() & 1));
+            break;
+
+        default:
+            soundId = actor.info->deathsound;
+            break;
     }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x2C0;                                        // Result = JumpTable_A_Scream[0] (800102C0)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80018980: goto loc_80018980;
-        case 0x8001894C: goto loc_8001894C;
-        case 0x80018924: goto loc_80018924;
-        case 0x80018938: goto loc_80018938;
-        default: jump_table_err(); break;
-    }
-loc_80018924:
-    _thunk_P_Random();
-    v0 &= 1;
-    a1 = v0 + 0x27;
-    goto loc_80018958;
-loc_80018938:
-    _thunk_P_Random();
-    v0 &= 1;
-    a1 = v0 + 0x31;
-    goto loc_80018958;
-loc_8001894C:
-    v0 = lw(s0 + 0x58);
-    a1 = lw(v0 + 0x38);
-loc_80018958:
-    v1 = lw(s0 + 0x54);
-    v0 = 0xF;                                           // Result = 0000000F
-    a0 = 0;                                             // Result = 00000000
-    if (v1 == v0) goto loc_80018978;
-    v0 = 0x11;                                          // Result = 00000011
-    if (v1 == v0) goto loc_80018978;
-    a0 = s0;
-loc_80018978:
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_80018980:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    const bool bPlayFullVol = ((actor.type == MT_SPIDER) || (actor.type == MT_CYBORG));
+    mobj_t* const pSoundOrigin = (!bPlayFullVol) ? &actor : nullptr;
+    S_StartSound(pSoundOrigin, soundId);
 }
 
-void A_XScream() noexcept {
-    a1 = sfx_slop;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Play a sound for the given actor being gibbed
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_XScream(mobj_t& actor) noexcept {
+    S_StartSound(&actor, sfx_slop);
 }
 
-void A_Pain() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = lw(a0 + 0x58);
-    a1 = lw(v0 + 0x24);
-    if (a1 == 0) goto loc_800189DC;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_800189DC:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Plays the actor's pain sound (if it has one)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Pain(mobj_t& actor) noexcept {
+    if (actor.info->painsound != sfx_None) {
+        S_StartSound(&actor, actor.info->painsound);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1658,6 +1637,9 @@ void _thunk_A_FatAttack2() noexcept { A_FatAttack2(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_FatAttack3() noexcept { A_FatAttack3(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_SkullAttack() noexcept { A_SkullAttack(*vmAddrToPtr<mobj_t>(a0)); }
 
+void _thunk_A_Scream() noexcept { A_Scream(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_XScream() noexcept { A_XScream(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_Pain() noexcept { A_Pain(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_Fall() noexcept { A_Fall(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_Explode() noexcept { A_Explode(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_BossDeath() noexcept { A_BossDeath(*vmAddrToPtr<mobj_t>(a0)); }
