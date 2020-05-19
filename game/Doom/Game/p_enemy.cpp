@@ -17,7 +17,9 @@
 #include "p_mobj.h"
 #include "p_move.h"
 #include "p_sight.h"
+#include "p_spec.h"
 #include "p_switch.h"
+#include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 #include <algorithm>
 
@@ -1162,7 +1164,7 @@ void A_PainDie() noexcept {
     sw(ra, sp + 0x1C);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
-    A_Fall();
+    A_Fall(*vmAddrToPtr<mobj_t>(a0));
     v0 = 0x40000000;                                    // Result = 40000000
     v1 = lw(s2 + 0x24);
     a0 = 0x80090000;                                    // Result = 80090000
@@ -1466,186 +1468,109 @@ loc_800189DC:
     return;
 }
 
-void A_Fall() noexcept {
-loc_800189EC:
-    v0 = lw(a0 + 0x64);
-    v1 = -3;                                            // Result = FFFFFFFD
-    v0 &= v1;
-    sw(v0, a0 + 0x64);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Makes an actor non solid: called when turning enemies into corpses, so they can be walked over
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Fall(mobj_t& actor) noexcept {
+    actor.flags &= ~MF_SOLID;
 }
 
-void A_Explode() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    a1 = lw(a0 + 0x74);
-    a2 = 0x80;                                          // Result = 00000080
-    P_RadiusAttack(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), a2);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does splash damage for a missile or explosive barrel exploding
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Explode(mobj_t& actor) noexcept {
+    P_RadiusAttack(actor, actor.target.get(), 128);
 }
 
-void A_BossDeath() noexcept {
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    sp -= 0x68;
-    v0 = a1 & 1;
-    sw(ra, sp + 0x60);
-    if (v0 == 0) goto loc_80018A54;
-    v0 = 0x29A;                                         // Result = 0000029A
-    sw(v0, sp + 0x28);
-    v1 = lw(a0 + 0x54);
-    v0 = 6;                                             // Result = 00000006
-    if (v1 == v0) goto loc_80018AF4;
-loc_80018A54:
-    v0 = a1 & 2;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x29B;                                     // Result = 0000029B
-        if (bJump) goto loc_80018A74;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// See whether it is time to trigger specials that occur when a boss type monster dies.
+// If all enemies of the actor's type are dead and the map has a special for this enemy dying, then it will be triggered.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_BossDeath(mobj_t& actor) noexcept {
+    // Determine which line tag would be triggered based on the active boss specials for the current map, and what died.
+    // This tag will be triggered when all enemies of the actor's type die:
+    const uint32_t bossSpecialFlags = *gMapBossSpecialFlags;
+    const mobjtype_t actorType = actor.type;
+
+    int32_t triggerTag;
+
+    if ((bossSpecialFlags & 0x1) && (actorType == MT_FATSO)) {
+        triggerTag = 666;
     }
-    sw(v0, sp + 0x28);
-    v1 = lw(a0 + 0x54);
-    v0 = 0x10;                                          // Result = 00000010
-    if (v1 == v0) goto loc_80018AF4;
-loc_80018A74:
-    v0 = a1 & 4;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x29C;                                     // Result = 0000029C
-        if (bJump) goto loc_80018A94;
+    else if ((bossSpecialFlags & 0x2) && (actorType == MT_BABY)) {
+        triggerTag = 667;
     }
-    sw(v0, sp + 0x28);
-    v1 = lw(a0 + 0x54);
-    v0 = 0xF;                                           // Result = 0000000F
-    if (v1 == v0) goto loc_80018AF4;
-loc_80018A94:
-    v0 = a1 & 8;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x29D;                                     // Result = 0000029D
-        if (bJump) goto loc_80018AB4;
+    else if ((bossSpecialFlags & 0x04) && (actorType == MT_SPIDER)) {
+        triggerTag = 668;
     }
-    sw(v0, sp + 0x28);
-    v1 = lw(a0 + 0x54);
-    v0 = 0xD;                                           // Result = 0000000D
-    if (v1 == v0) goto loc_80018AF4;
-loc_80018AB4:
-    v0 = a1 & 0x10;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x29E;                                     // Result = 0000029E
-        if (bJump) goto loc_80018AD4;
+    else if ((bossSpecialFlags & 0x08) && (actorType == MT_KNIGHT)) {
+        triggerTag = 669;
     }
-    sw(v0, sp + 0x28);
-    v1 = lw(a0 + 0x54);
-    v0 = 0x11;                                          // Result = 00000011
-    if (v1 == v0) goto loc_80018AF4;
-loc_80018AD4:
-    v0 = a1 & 0x20;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x29F;                                     // Result = 0000029F
-        if (bJump) goto loc_80018C34;
+    else if ((bossSpecialFlags & 0x10) && (actorType == MT_CYBORG)) {
+        triggerTag = 670;
     }
-    sw(v0, sp + 0x28);
-    v1 = lw(a0 + 0x54);
-    v0 = 0xC;                                           // Result = 0000000C
-    if (v1 != v0) goto loc_80018C34;
-loc_80018AF4:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x715C;                                       // Result = gMObjHead[5] (800A8EA4)
-    a1 = lw(v0);                                        // Load from: gMObjHead[5] (800A8EA4)
-    v0 -= 0x14;                                         // Result = gMObjHead[0] (800A8E90)
-    if (a1 == v0) goto loc_80018B4C;
-    a2 = v0;                                            // Result = gMObjHead[0] (800A8E90)
-loc_80018B10:
-    if (a1 == a0) goto loc_80018B3C;
-    v1 = lw(a1 + 0x54);
-    v0 = lw(a0 + 0x54);
-    if (v1 != v0) goto loc_80018B3C;
-    v0 = lw(a1 + 0x68);
-    if (i32(v0) > 0) goto loc_80018C34;
-loc_80018B3C:
-    a1 = lw(a1 + 0x14);
-    if (a1 != a2) goto loc_80018B10;
-loc_80018B4C:
-    v0 = lw(sp + 0x28);
-    v1 = v0 - 0x29A;
-    v0 = (v1 < 6);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 2;
-        if (bJump) goto loc_80018C34;
+    else if ((bossSpecialFlags & 0x20) && (actorType == MT_BRUISER)) {
+        triggerTag = 671;
     }
-    at = 0x80010000;                                    // Result = 80010000
-    at += 0x390;                                        // Result = JumpTable_A_BossDeath[0] (80010390)
-    at += v0;
-    v0 = lw(at);
-    switch (v0) {
-        case 0x80018B80: goto loc_80018B80;
-        case 0x80018B98: goto loc_80018B98;
-        case 0x80018BB0: goto loc_80018BB0;
-        case 0x80018BC8: goto loc_80018BC8;
-        case 0x80018BE0: goto loc_80018BE0;
-        case 0x80018C0C: goto loc_80018C0C;
-        default: jump_table_err(); break;
+    else {
+        return;     // No active boss special on this map for this boss type: nothing to trigger!
     }
-loc_80018B80:
-    a0 = sp + 0x10;
-    a1 = 1;                                             // Result = 00000001
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    v1 = -2;                                            // Result = FFFFFFFE
-    goto loc_80018C20;
-loc_80018B98:
-    a0 = sp + 0x10;
-    a1 = 7;                                             // Result = 00000007
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    v1 = -3;                                            // Result = FFFFFFFD
-    goto loc_80018C20;
-loc_80018BB0:
-    a0 = sp + 0x10;
-    a1 = 1;                                             // Result = 00000001
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    v1 = -5;                                            // Result = FFFFFFFB
-    goto loc_80018C20;
-loc_80018BC8:
-    a0 = sp + 0x10;
-    a1 = 1;                                             // Result = 00000001
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    v1 = -9;                                            // Result = FFFFFFF7
-    goto loc_80018C20;
-loc_80018BE0:
-    a0 = sp + 0x10;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    v1 = -0x11;                                         // Result = FFFFFFEF
-    v0 &= v1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7F88);                                // Store to: gMapBossSpecialFlags (80077F88)
-    a1 = 3;                                             // Result = 00000003
-    v0 = EV_DoDoor(*vmAddrToPtr<line_t>(a0), (vldoor_e) a1);
-    goto loc_80018C34;
-loc_80018C0C:
-    a0 = sp + 0x10;
-    a1 = 1;                                             // Result = 00000001
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7F88);                               // Load from: gMapBossSpecialFlags (80077F88)
-    v1 = -0x21;                                         // Result = FFFFFFDF
-loc_80018C20:
-    v0 &= v1;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7F88);                                // Store to: gMapBossSpecialFlags (80077F88)
-    v0 = EV_DoFloor(*vmAddrToPtr<line_t>(a0), (floor_e) a1);
-loc_80018C34:
-    ra = lw(sp + 0x60);
-    sp += 0x68;
-    return;
+
+    // If all map objects of the given actor type are dead then we can trigger the special for the boss death.
+    // Otherwise if we find one that is alive, then we can't:
+    mobj_t& mobjHead = *gMObjHead;
+
+    for (mobj_t* pmobj = mobjHead.next.get(); pmobj != &mobjHead; pmobj = pmobj->next.get()) {
+        if ((pmobj != &actor) && (pmobj->type == actorType) && (pmobj->health > 0))
+            return;
+    }
+
+    // If we've gotten to here then we've killed all of this boss type and should trigger the appropriate special.
+    // Use a dummy line structure (only want the 'tag' field really) to trigger some specials.
+    //
+    // PC-PSX: default init this structure for good measure, as a precaution against undefined behavior.
+    #if PC_PSX_DOOM_MODS
+        line_t dummyLine = {};
+    #else
+        line_t dummyLine;
+    #endif
+
+    dummyLine.tag = triggerTag;
+
+    switch (dummyLine.tag) {
+        case 666:
+            *gMapBossSpecialFlags &= ~0x1;  // Don't attempt to trigger this special again!
+            EV_DoFloor(dummyLine, lowerFloorToLowest);
+            break;
+
+        case 667:
+            *gMapBossSpecialFlags &= ~0x2;
+            EV_DoFloor(dummyLine, raiseFloor24);
+            break;
+
+        case 668:
+            *gMapBossSpecialFlags &= ~0x4;
+            EV_DoFloor(dummyLine, lowerFloorToLowest);
+            break;
+
+        case 669:
+            *gMapBossSpecialFlags &= ~0x8;
+            EV_DoFloor(dummyLine, lowerFloorToLowest);
+            break;
+
+        case 670:
+            *gMapBossSpecialFlags &= ~0x10;
+            EV_DoDoor(dummyLine, Open);
+            return;
+
+        case 671:
+            *gMapBossSpecialFlags &= ~0x20;
+            EV_DoFloor(dummyLine, lowerFloorToLowest);
+            break;
+
+        default:
+            break;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1733,6 +1658,9 @@ void _thunk_A_FatAttack2() noexcept { A_FatAttack2(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_FatAttack3() noexcept { A_FatAttack3(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_SkullAttack() noexcept { A_SkullAttack(*vmAddrToPtr<mobj_t>(a0)); }
 
+void _thunk_A_Fall() noexcept { A_Fall(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_Explode() noexcept { A_Explode(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_BossDeath() noexcept { A_BossDeath(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_Hoof() noexcept { A_Hoof(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_Metal() noexcept { A_Metal(*vmAddrToPtr<mobj_t>(a0)); }
 void _thunk_A_BabyMetal() noexcept { A_BabyMetal(*vmAddrToPtr<mobj_t>(a0)); }
