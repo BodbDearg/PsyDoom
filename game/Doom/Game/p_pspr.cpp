@@ -144,75 +144,23 @@ static void P_RecursiveSound(sector_t& sector, const bool bStopOnSoundBlock) noe
     }
 }
 
-void P_NoiseAlert() noexcept {
-    sp -= 0x28;
-    sw(ra, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    v0 = lw(a0);
-    v0 = lw(v0 + 0xC);
-    s0 = lw(v0);
-    v0 = lw(a0 + 0x114);
-    if (v0 == s0) goto loc_8001FB58;
-    a1 = lw(a0);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
-    sw(s0, a0 + 0x114);
-    v1 = lw(s0 + 0x48);
-    a0 = v0 + 1;
-    sw(a1, gp + 0xA1C);                                 // Store to: gpSoundTarget (80077FFC)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x7BC4);                                // Store to: gValidCount (80077BC4)
-    s1 = 0;                                             // Result = 00000000
-    if (v1 != a0) goto loc_8001FAA8;
-    v1 = lw(s0 + 0x1C);
-    v0 = 1;                                             // Result = 00000001
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8001FB58;
-loc_8001FAA8:
-    v1 = lw(s0 + 0x54);
-    v0 = 1;                                             // Result = 00000001
-    sw(a0, s0 + 0x48);
-    sw(v0, s0 + 0x1C);
-    sw(a1, s0 + 0x20);
-    if (i32(v1) <= 0) goto loc_8001FB58;
-loc_8001FAC0:
-    v1 = lw(s0 + 0x58);
-    v0 = s1 << 2;
-    v0 += v1;
-    a2 = lw(v0);
-    a1 = lw(a2 + 0x3C);
-    if (a1 == 0) goto loc_8001FB44;
-    a0 = lw(a2 + 0x38);
-    v1 = lw(a1 + 0x4);
-    v0 = lw(a0);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8001FB44;
-    v1 = lw(a0 + 0x4);
-    v0 = lw(a1);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8001FB44;
-    if (a0 != s0) goto loc_8001FB24;
-    a0 = a1;
-loc_8001FB24:
-    v0 = lw(a2 + 0x10);
-    v0 &= 0x40;
-    a1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_8001FB3C;
-    a1 = 1;                                             // Result = 00000001
-loc_8001FB3C:
-    P_RecursiveSound(*vmAddrToPtr<sector_t>(a0), a1);
-loc_8001FB44:
-    v0 = lw(s0 + 0x54);
-    s1++;
-    v0 = (i32(s1) < i32(v0));
-    if (v0 != 0) goto loc_8001FAC0;
-loc_8001FB58:
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called after using weapons: make noise to alert sleeping monsters of the given player
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_NoiseAlert(player_t& player) noexcept {
+    // Optimization: don't bother doing a noise alert again if we are still in the same sector as the last one
+    mobj_t& playerMobj = *player.mo;
+    sector_t& curSector = *playerMobj.subsector->sector.get();
+
+    if (player.lastsoundsector.get() == &curSector) 
+        return;
+
+    player.lastsoundsector = &curSector;
+    *gValidCount += 1;
+    *gpSoundTarget = &playerMobj;
+
+    // Recursively flood fill sectors with sound
+    P_RecursiveSound(curSector, false);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -511,124 +459,25 @@ loc_8001FFA4:
     return;
 }
 
-void P_FireWeapon() noexcept {
-loc_8001FFBC:
-    sp -= 0x28;
-    sw(s1, sp + 0x1C);
-    s1 = a0;
-    sw(ra, sp + 0x20);
-    sw(s0, sp + 0x18);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fires the player's weapon
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_FireWeapon(player_t& player) noexcept {
+    // FIXME: convert to native function call
+    a0 = ptrToVmAddr(&player);
     P_CheckAmmo();
-    if (v0 == 0) goto loc_800201AC;
-    a0 = lw(s1);
-    a1 = 0x9F;                                          // Result = 0000009F
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-    v1 = lw(s1 + 0x6C);
-    v0 = 0x10000;                                       // Result = 00010000
-    sw(v0, s1 + 0xF8);
-    sw(0, s1 + 0xFC);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7104;                                       // Result = WeaponInfo_Fist[4] (80067104)
-    at += v0;
-    a0 = lw(at);
-    s0 = s1 + 0xF0;
-    if (a0 != 0) goto loc_80020028;
-    sw(0, s1 + 0xF0);
-    goto loc_80020098;
-loc_80020028:
-    v0 = a0 << 3;
-loc_8002002C:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_80020078;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_80020098;
-loc_80020078:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_80020098;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_8002002C;
-    sw(0, s0);
-loc_80020098:
-    v0 = lw(s1);
-    v0 = lw(v0 + 0xC);
-    s0 = lw(v0);
-    v0 = lw(s1 + 0x114);
-    if (v0 == s0) goto loc_800201AC;
-    a1 = lw(s1);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
-    sw(s0, s1 + 0x114);
-    v1 = lw(s0 + 0x48);
-    a0 = v0 + 1;
-    sw(a1, gp + 0xA1C);                                 // Store to: gpSoundTarget (80077FFC)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(a0, at + 0x7BC4);                                // Store to: gValidCount (80077BC4)
-    s1 = 0;                                             // Result = 00000000
-    if (v1 != a0) goto loc_800200FC;
-    v1 = lw(s0 + 0x1C);
-    v0 = 1;                                             // Result = 00000001
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_800201AC;
-loc_800200FC:
-    v1 = lw(s0 + 0x54);
-    v0 = 1;                                             // Result = 00000001
-    sw(a0, s0 + 0x48);
-    sw(v0, s0 + 0x1C);
-    sw(a1, s0 + 0x20);
-    if (i32(v1) <= 0) goto loc_800201AC;
-loc_80020114:
-    v1 = lw(s0 + 0x58);
-    v0 = s1 << 2;
-    v0 += v1;
-    a2 = lw(v0);
-    a1 = lw(a2 + 0x3C);
-    if (a1 == 0) goto loc_80020198;
-    a0 = lw(a2 + 0x38);
-    v1 = lw(a1 + 0x4);
-    v0 = lw(a0);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_80020198;
-    v1 = lw(a0 + 0x4);
-    v0 = lw(a1);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_80020198;
-    if (a0 != s0) goto loc_80020178;
-    a0 = a1;
-loc_80020178:
-    v0 = lw(a2 + 0x10);
-    v0 &= 0x40;
-    a1 = 0;                                             // Result = 00000000
-    if (v0 == 0) goto loc_80020190;
-    a1 = 1;                                             // Result = 00000001
-loc_80020190:
-    P_RecursiveSound(*vmAddrToPtr<sector_t>(a0), a1);
-loc_80020198:
-    v0 = lw(s0 + 0x54);
-    s1++;
-    v0 = (i32(s1) < i32(v0));
-    if (v0 != 0) goto loc_80020114;
-loc_800201AC:
-    ra = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+    const bool bHaveAmmo = v0;
+
+    if (!bHaveAmmo)
+        return;
+    
+    P_SetMObjState(*player.mo, S_PLAY_ATK1);
+
+    player.psprites[0].sx = 0x10000;
+    player.psprites[0].sy = 0;
+
+    P_SetPsprite(player, ps_weapon, gWeaponInfo[player.readyweapon].atkstate);
+    P_NoiseAlert(player);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -715,7 +564,7 @@ loc_800203A8:
     v0 &= v1;
     if (v0 == 0) goto loc_800203FC;
     a0 = s1;
-    P_FireWeapon();
+    P_FireWeapon(*vmAddrToPtr<player_t>(a0));
     goto loc_80020468;
 loc_800203FC:
     v1 = *gTicCon;
@@ -776,7 +625,7 @@ void A_ReFire() noexcept {
     v0 = lw(a0 + 0xC4);
     v0++;
     sw(v0, a0 + 0xC4);
-    P_FireWeapon();
+    P_FireWeapon(*vmAddrToPtr<player_t>(a0));
     goto loc_8002050C;
 loc_80020504:
     sw(0, a0 + 0xC4);
@@ -1952,7 +1801,7 @@ void A_CloseShotgun2() noexcept {
     v0 = lw(s0 + 0xC4);
     v0++;
     sw(v0, a0 + 0xC4);
-    P_FireWeapon();
+    P_FireWeapon(*vmAddrToPtr<player_t>(a0));
     goto loc_80021780;
 loc_80021774:
     sw(0, s0 + 0xC4);
@@ -2176,3 +2025,6 @@ loc_80021A94:
     sp += 0x38;
     return;
 }
+
+// TODO: remove all these thunks
+void _thunk_P_FireWeapon() noexcept { P_FireWeapon(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0)); }
