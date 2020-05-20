@@ -34,9 +34,8 @@ extern void _thunk_A_FatAttack1() noexcept;
 extern void _thunk_A_FatAttack2() noexcept;
 extern void _thunk_A_FatAttack3() noexcept;
 extern void _thunk_A_SkullAttack() noexcept;
-extern void A_PainShootSkull() noexcept;
-extern void A_PainAttack() noexcept;
-extern void A_PainDie() noexcept;
+extern void _thunk_A_PainAttack() noexcept;
+extern void _thunk_A_PainDie() noexcept;
 extern void _thunk_A_Scream() noexcept;
 extern void _thunk_A_XScream() noexcept;
 extern void _thunk_A_Pain() noexcept;
@@ -187,9 +186,8 @@ namespace PsxVm {
         { 0x80017D7C, &_thunk_A_FatAttack2 },
         { 0x80017EB8, &_thunk_A_FatAttack3 },
         { 0x8001804C, &_thunk_A_SkullAttack },
-        { 0x800181FC, &A_PainShootSkull },
-        { 0x80018350, &A_PainAttack },
-        { 0x80018520, &A_PainDie },
+        { 0x80018350, &_thunk_A_PainAttack },
+        { 0x80018520, &_thunk_A_PainDie },
         { 0x800188DC, &_thunk_A_Scream },
         { 0x80018994, &_thunk_A_XScream },
         { 0x800189B4, &_thunk_A_Pain },

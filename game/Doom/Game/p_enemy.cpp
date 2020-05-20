@@ -8,6 +8,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "g_game.h"
+#include "p_base.h"
 #include "p_doors.h"
 #include "p_floor.h"
 #include "p_inter.h"
@@ -20,8 +21,10 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "p_tick.h"
-#include "PsxVm/PsxVm.h"
 #include <algorithm>
+
+#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PsxVm/PsxVm.h"
 
 static constexpr angle_t TRACEANGLE = 0xC000000;        // How much Revenant missiles adjust their angle by when homing towards their target (angle adjust increment)
 static constexpr angle_t FATSPREAD  = ANG90 / 8;        // Angle adjustment increment for the Mancubus when attacking; varies it's shoot direction in multiples of this constant
@@ -959,441 +962,88 @@ void A_SkullAttack(mobj_t& actor) noexcept {
     actor.momz = zDelta / travelTime;
 }
 
-void A_PainShootSkull() noexcept {
-    sp -= 0x20;
-    sw(s2, sp + 0x18);
-    s2 = a0;
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 += 0x6554;                                       // Result = gThinkerCap[1] (80096554)
-    sw(ra, sp + 0x1C);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v1 = lw(v0);                                        // Load from: gThinkerCap[1] (80096554)
-    v0 -= 4;                                            // Result = gThinkerCap[0] (80096550)
-    a0 = 0;                                             // Result = 00000000
-    if (v1 == v0) goto loc_80018270;
-    t0 = 0x80010000;                                    // Result = 80010000
-    t0 += 0x3DE0;                                       // Result = P_MobjThinker (80013DE0)
-    a3 = 0xE;                                           // Result = 0000000E
-    a2 = v0;                                            // Result = gThinkerCap[0] (80096550)
-loc_8001823C:
-    v0 = lw(v1 + 0x8);
-    if (v0 != t0) goto loc_80018260;
-    v0 = lw(v1 + 0x54);
-    if (v0 != a3) goto loc_80018260;
-    a0++;                                               // Result = 00000001
-loc_80018260:
-    v1 = lw(v1 + 0x4);
-    if (v1 != a2) goto loc_8001823C;
-loc_80018270:
-    v0 = (i32(a0) < 0x15);                              // Result = 00000001
-    s1 = a1 >> 19;
-    if (v0 == 0) goto loc_80018334;
-    s1 <<= 2;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 = 0x40000;                                       // Result = 00040000
-    v0 += s1;
-    a1 = lw(v0);
-    v0 = lw(s2 + 0x58);
-    s0 = 0x80060000;                                    // Result = 80060000
-    s0 = lw(s0 - 0x1AB4);                               // Load from: MObjInfo_MT_SKULL[10] (8005E54C)
-    v0 = lw(v0 + 0x40);
-    s0 += v1;
-    s0 += v0;
-    a0 = s0;
-    _thunk_FixedMul();
-    a0 = s0;
-    v1 = lw(s2);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += s1;
-    a1 = lw(at);
-    s0 = v0 + v1;
-    _thunk_FixedMul();
-    a0 = s0;
-    a1 = lw(s2 + 0x4);
-    a3 = 0xE;                                           // Result = 0000000E
-    a1 += v0;
-    v0 = lw(s2 + 0x8);
-    a2 = 0x80000;                                       // Result = 00080000
-    a2 += v0;
-    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
-    s0 = v0;
-    a1 = lw(s0);
-    a2 = lw(s0 + 0x4);
-    a0 = s0;
-    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    a0 = s0;
-    if (v0 != 0) goto loc_80018328;
-    a1 = s2;
-    a2 = a1;
-    a3 = 0x2710;                                        // Result = 00002710
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    goto loc_80018334;
-loc_80018328:
-    v0 = lw(s2 + 0x74);
-    sw(v0, a0 + 0x74);
-    A_SkullAttack(*vmAddrToPtr<mobj_t>(a0));
-loc_80018334:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawn a skull (Lost Soul) from the given Pain Elemental actor at the given angle away from the parent.
+// If the skull is spawned in a wall, then it is immediately killed.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
+    // PC-PSX: disabling this logic as it was broken in PSX DOOM and NEVER limits the amount of skulls in a map.
+    // It effectively did nothing except consuming CPU cycles.
+    //
+    // In PC Doom 'mobj_t' used to be a thinker but in Jaguar Doom changes were made so that 'mobj_t' is no longer a thinker
+    // or found in the global list of thinkers. In PSX Doom no thinker will ever have 'P_MobjThinker' assigned to it as the
+    // 'think' function, hence this logic will never find any skulls to include in the count.
+    //
+    // I'm guessing this bug arose after this function was imported from Doom 2 on PC, since it would have been missing from
+    // the Jaguar port - which only included Doom 1. Perhaps there was an oversight and the logic was not updated correctly
+    // to reflect the new layout of 'mobj_t'? Because the code silently fails and doesn't seem to cause any visible problems
+    // other than many Lost Souls (if you let it) I can see why this might have been missed...
+    //
+    // The correct fix for PSX Doom here would have been to search through the global list of things instead, and count the
+    // skulls found in that list. We can't fix the issue however for PSX Doom without breaking demo compatibility, so I'm
+    // just going to disable the code instead since it is somewhat ill formed (with strange casts), and does nothing.
+    //
+    #if !PC_PSX_DOOM_MODS
+        // Count the number of skulls active in the level: if there are 21 or more then don't spawn any additional ones
+        int32_t numActiveSkulls = 0;
+
+        for (thinker_t* pThinker = gThinkerCap.next; pThinker != &thinkerCap; pThinker = pThinker->next) {
+            if (pThinker->function != P_MobjThinker)
+                continue;
+            
+            if (((mobj_t*) pThinker)->type == MT_SKULL) {
+                ++numActiveSkulls;
+            }
+        }
+
+        if (numActiveSkulls >= 21)
+            return;
+    #endif
+
+    // Figure out where to spawn the skull
+    const fixed_t spawnDist = gMObjInfo[MT_SKULL].radius + actor.info->radius + 4 * FRACUNIT;
+
+    const fixed_t spawnX = actor.x + FixedMul(spawnDist, gFineCosine[angle >> ANGLETOFINESHIFT]);
+    const fixed_t spawnY = actor.y + FixedMul(spawnDist, gFineSine[angle >> ANGLETOFINESHIFT]);
+    const fixed_t spawnZ = actor.z + 8 * FRACUNIT;
+
+    // Spawn the skull and if it can't move (is already stuck in a wall) then kill it immediately.
+    // 
+    // BUG: note that this method of skull spawning and collision testing will sometimes result in skulls being spawned outside of the level.
+    // This is because it may have been pushed beyond a point where a collision test against a wall would fail.
+    // One fix might be to do a raycast from the skull position to the Pain Elemental and see if that is blocked by anything.
+    // I can't do that fix however without breaking demo compatibility, so I'll just leave the bug alone for authentic behavior...
+    mobj_t& skull = *P_SpawnMobj(spawnX, spawnY, spawnZ, MT_SKULL);
+
+    if (!P_TryMove(skull, skull.x, skull.y)) {
+        P_DamageMObj(skull, &actor, &actor, 10000);
+        return;
+    }
+    
+    // Otherwise make the skull adopt the parent Pain Elemental's target player and begin it's attack rush
+    skull.target = actor.target;
+    A_SkullAttack(skull);
 }
 
-void A_PainAttack() noexcept {
-    sp -= 0x20;
-    sw(s2, sp + 0x18);
-    s2 = a0;
-    sw(ra, sp + 0x1C);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v0 = lw(s2 + 0x74);
-    a2 = -0x21;                                         // Result = FFFFFFDF
-    if (v0 == 0) goto loc_80018504;
-    a0 = lw(s2);
-    a1 = lw(s2 + 0x4);
-    v0 = lw(s2 + 0x64);
-    v1 = lw(s2 + 0x74);
-    v0 &= a2;
-    sw(v0, s2 + 0x64);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    v1 = lw(s2 + 0x74);
-    sw(v0, s2 + 0x24);
-    v0 = lw(v1 + 0x64);
-    v1 = 0x70000000;                                    // Result = 70000000
-    v0 &= v1;
-    if (v0 == 0) goto loc_800183E0;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    v0 = lw(s2 + 0x24);
-    s0 <<= 21;
-    s0 += v0;
-    sw(s0, s2 + 0x24);
-loc_800183E0:
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 = lw(v1 + 0x6554);                               // Load from: gThinkerCap[1] (80096554)
-    s1 = lw(s2 + 0x24);
-    a0 = 0;                                             // Result = 00000000
-    if (v1 == v0) goto loc_80018440;
-    a3 = 0x80010000;                                    // Result = 80010000
-    a3 += 0x3DE0;                                       // Result = P_MobjThinker (80013DE0)
-    a2 = 0xE;                                           // Result = 0000000E
-    a1 = v0;                                            // Result = gThinkerCap[0] (80096550)
-loc_8001840C:
-    v0 = lw(v1 + 0x8);
-    if (v0 != a3) goto loc_80018430;
-    v0 = lw(v1 + 0x54);
-    if (v0 != a2) goto loc_80018430;
-    a0++;                                               // Result = 00000001
-loc_80018430:
-    v1 = lw(v1 + 0x4);
-    if (v1 != a1) goto loc_8001840C;
-loc_80018440:
-    v0 = (i32(a0) < 0x15);                              // Result = 00000001
-    s1 >>= 19;
-    if (v0 == 0) goto loc_80018504;
-    s1 <<= 2;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 = 0x40000;                                       // Result = 00040000
-    v0 += s1;
-    a1 = lw(v0);
-    v0 = lw(s2 + 0x58);
-    s0 = 0x80060000;                                    // Result = 80060000
-    s0 = lw(s0 - 0x1AB4);                               // Load from: MObjInfo_MT_SKULL[10] (8005E54C)
-    v0 = lw(v0 + 0x40);
-    s0 += v1;
-    s0 += v0;
-    a0 = s0;
-    _thunk_FixedMul();
-    a0 = s0;
-    v1 = lw(s2);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += s1;
-    a1 = lw(at);
-    s0 = v0 + v1;
-    _thunk_FixedMul();
-    a0 = s0;
-    a1 = lw(s2 + 0x4);
-    a3 = 0xE;                                           // Result = 0000000E
-    a1 += v0;
-    v0 = lw(s2 + 0x8);
-    a2 = 0x80000;                                       // Result = 00080000
-    a2 += v0;
-    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
-    s0 = v0;
-    a1 = lw(s0);
-    a2 = lw(s0 + 0x4);
-    a0 = s0;
-    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    a0 = s0;
-    if (v0 != 0) goto loc_800184F8;
-    a1 = s2;
-    a2 = a1;
-    a3 = 0x2710;                                        // Result = 00002710
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    goto loc_80018504;
-loc_800184F8:
-    v0 = lw(s2 + 0x74);
-    sw(v0, a0 + 0x74);
-    A_SkullAttack(*vmAddrToPtr<mobj_t>(a0));
-loc_80018504:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the attack for a Pain Elemental and shoots out a Lost Soul
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_PainAttack(mobj_t& actor) noexcept {
+    if (!actor.target)
+        return;
+
+    A_FaceTarget(actor);
+    A_PainShootSkull(actor, actor.angle);
 }
 
-void A_PainDie() noexcept {
-    sp -= 0x20;
-    sw(s2, sp + 0x18);
-    s2 = a0;
-    sw(ra, sp + 0x1C);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    A_Fall(*vmAddrToPtr<mobj_t>(a0));
-    v0 = 0x40000000;                                    // Result = 40000000
-    v1 = lw(s2 + 0x24);
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 = lw(a0 + 0x6554);                               // Load from: gThinkerCap[1] (80096554)
-    v1 += v0;
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    a1 = 0;                                             // Result = 00000000
-    if (a0 == v0) goto loc_800185A4;
-    t0 = 0x80010000;                                    // Result = 80010000
-    t0 += 0x3DE0;                                       // Result = P_MobjThinker (80013DE0)
-    a3 = 0xE;                                           // Result = 0000000E
-    a2 = v0;                                            // Result = gThinkerCap[0] (80096550)
-loc_80018570:
-    v0 = lw(a0 + 0x8);
-    if (v0 != t0) goto loc_80018594;
-    v0 = lw(a0 + 0x54);
-    if (v0 != a3) goto loc_80018594;
-    a1++;                                               // Result = 00000001
-loc_80018594:
-    a0 = lw(a0 + 0x4);
-    if (a0 != a2) goto loc_80018570;
-loc_800185A4:
-    v0 = (i32(a1) < 0x15);                              // Result = 00000001
-    s1 = v1 >> 19;
-    if (v0 == 0) goto loc_80018668;
-    s1 <<= 2;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 = 0x40000;                                       // Result = 00040000
-    v0 += s1;
-    a1 = lw(v0);
-    v0 = lw(s2 + 0x58);
-    s0 = 0x80060000;                                    // Result = 80060000
-    s0 = lw(s0 - 0x1AB4);                               // Load from: MObjInfo_MT_SKULL[10] (8005E54C)
-    v0 = lw(v0 + 0x40);
-    s0 += v1;
-    s0 += v0;
-    a0 = s0;
-    _thunk_FixedMul();
-    a0 = s0;
-    v1 = lw(s2);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += s1;
-    a1 = lw(at);
-    s0 = v0 + v1;
-    _thunk_FixedMul();
-    a0 = s0;
-    a1 = lw(s2 + 0x4);
-    a3 = 0xE;                                           // Result = 0000000E
-    a1 += v0;
-    v0 = lw(s2 + 0x8);
-    a2 = 0x80000;                                       // Result = 00080000
-    a2 += v0;
-    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
-    s0 = v0;
-    a1 = lw(s0);
-    a2 = lw(s0 + 0x4);
-    a0 = s0;
-    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    a0 = s0;
-    if (v0 != 0) goto loc_8001865C;
-    a1 = s2;
-    a2 = s2;
-    a3 = 0x2710;                                        // Result = 00002710
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    v0 = 0x80000000;                                    // Result = 80000000
-    goto loc_8001866C;
-loc_8001865C:
-    v0 = lw(s2 + 0x74);
-    sw(v0, a0 + 0x74);
-    A_SkullAttack(*vmAddrToPtr<mobj_t>(a0));
-loc_80018668:
-    v0 = 0x80000000;                                    // Result = 80000000
-loc_8001866C:
-    v1 = lw(s2 + 0x24);
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 = lw(a0 + 0x6554);                               // Load from: gThinkerCap[1] (80096554)
-    v1 -= v0;
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    a1 = 0;                                             // Result = 00000000
-    if (a0 == v0) goto loc_800186D0;
-    t0 = 0x80010000;                                    // Result = 80010000
-    t0 += 0x3DE0;                                       // Result = P_MobjThinker (80013DE0)
-    a3 = 0xE;                                           // Result = 0000000E
-    a2 = v0;                                            // Result = gThinkerCap[0] (80096550)
-loc_8001869C:
-    v0 = lw(a0 + 0x8);
-    if (v0 != t0) goto loc_800186C0;
-    v0 = lw(a0 + 0x54);
-    if (v0 != a3) goto loc_800186C0;
-    a1++;                                               // Result = 00000001
-loc_800186C0:
-    a0 = lw(a0 + 0x4);
-    if (a0 != a2) goto loc_8001869C;
-loc_800186D0:
-    v0 = (i32(a1) < 0x15);                              // Result = 00000001
-    s1 = v1 >> 19;
-    if (v0 == 0) goto loc_80018794;
-    s1 <<= 2;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 = 0x40000;                                       // Result = 00040000
-    v0 += s1;
-    a1 = lw(v0);
-    v0 = lw(s2 + 0x58);
-    s0 = 0x80060000;                                    // Result = 80060000
-    s0 = lw(s0 - 0x1AB4);                               // Load from: MObjInfo_MT_SKULL[10] (8005E54C)
-    v0 = lw(v0 + 0x40);
-    s0 += v1;
-    s0 += v0;
-    a0 = s0;
-    _thunk_FixedMul();
-    a0 = s0;
-    v1 = lw(s2);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += s1;
-    a1 = lw(at);
-    s0 = v0 + v1;
-    _thunk_FixedMul();
-    a0 = s0;
-    a1 = lw(s2 + 0x4);
-    a3 = 0xE;                                           // Result = 0000000E
-    a1 += v0;
-    v0 = lw(s2 + 0x8);
-    a2 = 0x80000;                                       // Result = 00080000
-    a2 += v0;
-    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
-    s0 = v0;
-    a1 = lw(s0);
-    a2 = lw(s0 + 0x4);
-    a0 = s0;
-    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    a0 = s0;
-    if (v0 != 0) goto loc_80018788;
-    a1 = s2;
-    a2 = s2;
-    a3 = 0x2710;                                        // Result = 00002710
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    v0 = 0xC0000000;                                    // Result = C0000000
-    goto loc_80018798;
-loc_80018788:
-    v0 = lw(s2 + 0x74);
-    sw(v0, a0 + 0x74);
-    A_SkullAttack(*vmAddrToPtr<mobj_t>(a0));
-loc_80018794:
-    v0 = 0xC0000000;                                    // Result = C0000000
-loc_80018798:
-    v1 = lw(s2 + 0x24);
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 = lw(a0 + 0x6554);                               // Load from: gThinkerCap[1] (80096554)
-    v1 += v0;
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 += 0x6550;                                       // Result = gThinkerCap[0] (80096550)
-    a1 = 0;                                             // Result = 00000000
-    if (a0 == v0) goto loc_800187FC;
-    t0 = 0x80010000;                                    // Result = 80010000
-    t0 += 0x3DE0;                                       // Result = P_MobjThinker (80013DE0)
-    a3 = 0xE;                                           // Result = 0000000E
-    a2 = v0;                                            // Result = gThinkerCap[0] (80096550)
-loc_800187C8:
-    v0 = lw(a0 + 0x8);
-    if (v0 != t0) goto loc_800187EC;
-    v0 = lw(a0 + 0x54);
-    if (v0 != a3) goto loc_800187EC;
-    a1++;                                               // Result = 00000001
-loc_800187EC:
-    a0 = lw(a0 + 0x4);
-    if (a0 != a2) goto loc_800187C8;
-loc_800187FC:
-    v0 = (i32(a1) < 0x15);                              // Result = 00000001
-    s1 = v1 >> 19;
-    if (v0 == 0) goto loc_800188C0;
-    s1 <<= 2;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 = 0x40000;                                       // Result = 00040000
-    v0 += s1;
-    a1 = lw(v0);
-    v0 = lw(s2 + 0x58);
-    s0 = 0x80060000;                                    // Result = 80060000
-    s0 = lw(s0 - 0x1AB4);                               // Load from: MObjInfo_MT_SKULL[10] (8005E54C)
-    v0 = lw(v0 + 0x40);
-    s0 += v1;
-    s0 += v0;
-    a0 = s0;
-    _thunk_FixedMul();
-    a0 = s0;
-    v1 = lw(s2);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += s1;
-    a1 = lw(at);
-    s0 = v0 + v1;
-    _thunk_FixedMul();
-    a0 = s0;
-    a1 = lw(s2 + 0x4);
-    a3 = 0xE;                                           // Result = 0000000E
-    a1 += v0;
-    v0 = lw(s2 + 0x8);
-    a2 = 0x80000;                                       // Result = 00080000
-    a2 += v0;
-    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
-    s0 = v0;
-    a1 = lw(s0);
-    a2 = lw(s0 + 0x4);
-    a0 = s0;
-    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    a0 = s0;
-    if (v0 != 0) goto loc_800188B4;
-    a1 = s2;
-    a2 = a1;
-    a3 = 0x2710;                                        // Result = 00002710
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-    goto loc_800188C0;
-loc_800188B4:
-    v0 = lw(s2 + 0x74);
-    sw(v0, a0 + 0x74);
-    A_SkullAttack(*vmAddrToPtr<mobj_t>(a0));
-loc_800188C0:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the death event for a Pain Elemental: marks it as non blocking and shoots out 3 Lost Souls
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_PainDie(mobj_t& actor) noexcept {
+    A_Fall(actor);
+    A_PainShootSkull(actor, actor.angle + ANG90);
+    A_PainShootSkull(actor, actor.angle + ANG180);
+    A_PainShootSkull(actor, actor.angle + ANG270);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1612,39 +1262,40 @@ void L_SkullBash(mobj_t& actor) noexcept {
 }
 
 // TODO: remove all these thunks
-void _thunk_A_Look() noexcept { A_Look(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_Chase() noexcept { A_Chase(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_FaceTarget() noexcept { A_FaceTarget(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_PosAttack() noexcept { A_PosAttack(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_SPosAttack() noexcept { A_SPosAttack(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_CPosAttack() noexcept { A_CPosAttack(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_CPosRefire() noexcept { A_CPosRefire(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_SpidAttack() noexcept { A_SpidAttack(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_SpidRefire() noexcept { A_SpidRefire(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_BspiAttack() noexcept { A_BspiAttack(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_TroopAttack() noexcept { A_TroopAttack(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_SargAttack() noexcept { A_SargAttack(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_HeadAttack() noexcept { A_HeadAttack(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_CyberAttack() noexcept { A_CyberAttack(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_BruisAttack() noexcept { A_BruisAttack(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_SkelMissile() noexcept { A_SkelMissile(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_Tracer() noexcept { A_Tracer(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_SkelWhoosh() noexcept { A_SkelWhoosh(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_SkelFist() noexcept { A_SkelFist(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_FatRaise() noexcept { A_FatRaise(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_FatAttack1() noexcept { A_FatAttack1(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_FatAttack2() noexcept { A_FatAttack2(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_FatAttack3() noexcept { A_FatAttack3(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_SkullAttack() noexcept { A_SkullAttack(*vmAddrToPtr<mobj_t>(a0)); }
-
-void _thunk_A_Scream() noexcept { A_Scream(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_XScream() noexcept { A_XScream(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_Pain() noexcept { A_Pain(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_Fall() noexcept { A_Fall(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_Explode() noexcept { A_Explode(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_BossDeath() noexcept { A_BossDeath(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_Hoof() noexcept { A_Hoof(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_Metal() noexcept { A_Metal(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_A_BabyMetal() noexcept { A_BabyMetal(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_L_MissileHit() noexcept { L_MissileHit(*vmAddrToPtr<mobj_t>(a0)); }
-void _thunk_L_SkullBash() noexcept { L_SkullBash(*vmAddrToPtr<mobj_t>(a0)); }
+void _thunk_A_Look() noexcept { A_Look(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_Chase() noexcept { A_Chase(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_FaceTarget() noexcept { A_FaceTarget(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_PosAttack() noexcept { A_PosAttack(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_SPosAttack() noexcept { A_SPosAttack(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_CPosAttack() noexcept { A_CPosAttack(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_CPosRefire() noexcept { A_CPosRefire(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_SpidAttack() noexcept { A_SpidAttack(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_SpidRefire() noexcept { A_SpidRefire(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_BspiAttack() noexcept { A_BspiAttack(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_TroopAttack() noexcept { A_TroopAttack(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_SargAttack() noexcept { A_SargAttack(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_HeadAttack() noexcept { A_HeadAttack(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_CyberAttack() noexcept { A_CyberAttack(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_BruisAttack() noexcept { A_BruisAttack(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_SkelMissile() noexcept { A_SkelMissile(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_Tracer() noexcept { A_Tracer(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_SkelWhoosh() noexcept { A_SkelWhoosh(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_SkelFist() noexcept { A_SkelFist(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_FatRaise() noexcept { A_FatRaise(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_FatAttack1() noexcept { A_FatAttack1(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_FatAttack2() noexcept { A_FatAttack2(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_FatAttack3() noexcept { A_FatAttack3(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_SkullAttack() noexcept { A_SkullAttack(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_PainAttack() noexcept { A_PainAttack(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_PainDie() noexcept { A_PainDie(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_Scream() noexcept { A_Scream(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_XScream() noexcept { A_XScream(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_Pain() noexcept { A_Pain(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_Fall() noexcept { A_Fall(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_Explode() noexcept { A_Explode(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_BossDeath() noexcept { A_BossDeath(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_Hoof() noexcept { A_Hoof(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_Metal() noexcept { A_Metal(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_BabyMetal() noexcept { A_BabyMetal(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_L_MissileHit() noexcept { L_MissileHit(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_L_SkullBash() noexcept { L_SkullBash(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }

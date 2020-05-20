@@ -1,6 +1,6 @@
 #pragma once
 
-struct mobj_t;
+#include "Doom/doomdef.h"
 
 bool P_CheckMeleeRange(mobj_t& attacker) noexcept;
 bool P_CheckMissileRange(mobj_t& attacker) noexcept;
@@ -32,9 +32,8 @@ void A_FatAttack1(mobj_t& actor) noexcept;
 void A_FatAttack2(mobj_t& actor) noexcept;
 void A_FatAttack3(mobj_t& actor) noexcept;
 void A_SkullAttack(mobj_t& actor) noexcept;
-void A_PainShootSkull() noexcept;
-void A_PainAttack() noexcept;
-void A_PainDie() noexcept;
+void A_PainAttack(mobj_t& actor) noexcept;
+void A_PainDie(mobj_t& actor) noexcept;
 void A_Scream(mobj_t& actor) noexcept;
 void A_XScream(mobj_t& actor) noexcept;
 void A_Pain(mobj_t& actor) noexcept;

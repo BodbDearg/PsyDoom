@@ -39,7 +39,6 @@ static const VmPtr<fixed_t>                 gTestFloorZ(0x80077F68);        // C
 static const VmPtr<fixed_t>                 gTestDropoffZ(0x80078120);      // Collision testing: the Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
 
 // Not required externally: making private to this module
-static void P_MobjThinker(mobj_t& mobj) noexcept;
 static bool PB_TryMove(const fixed_t tryX, const fixed_t tryY) noexcept;
 static void PB_UnsetThingPosition(mobj_t& thing) noexcept;
 static void PB_SetThingPosition(mobj_t& mobj) noexcept;
@@ -231,7 +230,7 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
 // Does movement and state ticking for the specified map object.
 // Note: doesn't run state functions, that's done during the phase for running map object late calls.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void P_MobjThinker(mobj_t& mobj) noexcept {
+void P_MobjThinker(mobj_t& mobj) noexcept {
     // Do xy plane movement if there is current velocity
     if ((mobj.momx != 0) || (mobj.momy != 0)) {
         P_XYMovement(mobj);
