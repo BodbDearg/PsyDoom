@@ -7,7 +7,9 @@
 #include "Doom/Base/w_wad.h"
 #include "Doom/d_main.h"
 #include "Doom/doomdef.h"
+#include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "doomdata.h"
 #include "info.h"
 #include "p_inter.h"
 #include "p_map.h"
@@ -90,71 +92,56 @@ const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
     }
 };
 
-void P_RecursiveSound() noexcept {
-loc_8001F918:
-    sp -= 0x28;
-    sw(s0, sp + 0x18);
-    s0 = a0;
-    sw(ra, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    v0 = lw(s0 + 0x48);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7BC4);                               // Load from: gValidCount (80077BC4)
-    s2 = a1;
-    if (v0 != a0) goto loc_8001F95C;
-    v1 = lw(s0 + 0x1C);
-    v0 = s2 + 1;
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8001FA18;
-loc_8001F95C:
-    v0 = lw(gp + 0xA1C);                                // Load from: gpSoundTarget (80077FFC)
-    s1 = 0;                                             // Result = 00000000
-    sw(a0, s0 + 0x48);
-    a0 = lw(s0 + 0x54);
-    v1 = s2 + 1;
-    sw(v1, s0 + 0x1C);
-    sw(v0, s0 + 0x20);
-    if (i32(a0) <= 0) goto loc_8001FA18;
-loc_8001F97C:
-    v1 = lw(s0 + 0x58);
-    v0 = s1 << 2;
-    v0 += v1;
-    a2 = lw(v0);
-    a1 = lw(a2 + 0x3C);
-    if (a1 == 0) goto loc_8001FA04;
-    a0 = lw(a2 + 0x38);
-    v1 = lw(a1 + 0x4);
-    v0 = lw(a0);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8001FA04;
-    v1 = lw(a0 + 0x4);
-    v0 = lw(a1);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8001FA04;
-    if (a0 != s0) goto loc_8001F9E0;
-    a0 = a1;
-loc_8001F9E0:
-    v0 = lw(a2 + 0x10);
-    v0 &= 0x40;
-    a1 = s2;
-    if (v0 == 0) goto loc_8001F9FC;
-    a1 = 1;                                             // Result = 00000001
-    if (s2 != 0) goto loc_8001FA04;
-loc_8001F9FC:
-    P_RecursiveSound();
-loc_8001FA04:
-    v0 = lw(s0 + 0x54);
-    s1++;
-    v0 = (i32(s1) < i32(v0));
-    if (v0 != 0) goto loc_8001F97C;
-loc_8001FA18:
-    ra = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
-    return;
+// The current thing making noise
+static const VmPtr<VmPtr<mobj_t>>   gpSoundTarget(0x80077FFC);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Recursively flood fill sound starting from the given sector to other neighboring sectors considered valid for sound transfer.
+// Aside from closed doors, walls etc. stopping sound propagation sound will also be stopped after two sets of 'ML_SOUNDBLOCK' 
+// lines are encountered.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_RecursiveSound(sector_t& sector, const bool bStopOnSoundBlock) noexcept {
+    // Don't flood the sector if it's already done and it didn't have sound coming into it blocked
+    const int32_t soundTraversed = (bStopOnSoundBlock) ? 2 : 1;
+
+    if ((sector.validcount == *gValidCount) && (sector.soundtraversed <= soundTraversed))
+        return;
+    
+    // Flood fill this sector and save the thing that made noise and whether sound was blocked
+    sector.validcount = *gValidCount;
+    sector.soundtraversed = soundTraversed;
+    sector.soundtarget = *gpSoundTarget;
+
+    // Recurse into adjoining sectors and flood fill with noise
+    for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
+        line_t& line = *sector.lines[lineIdx];
+        sector_t* const pBackSector = line.backsector.get();
+
+        // Sound can't pass single sided lines
+        if (!pBackSector)
+            continue;
+        
+        sector_t& frontSector = *line.frontsector.get();
+
+        // If the sector is a closed door then sound can't pass through it
+        if (frontSector.floorheight >= pBackSector->ceilingheight)
+            continue;
+
+        if (frontSector.ceilingheight <= pBackSector->floorheight)
+            continue;
+
+        // Need to recurse into the sector on the opposite side of this sector's line
+        sector_t& checkSector = (&frontSector == &sector) ? *pBackSector : frontSector;
+        
+        if (line.flags & ML_SOUNDBLOCK) {
+            if (!bStopOnSoundBlock) {
+                P_RecursiveSound(checkSector, true);
+            }
+        }
+        else {
+            P_RecursiveSound(checkSector, bStopOnSoundBlock);
+        }
+    }
 }
 
 void P_NoiseAlert() noexcept {
@@ -214,7 +201,7 @@ loc_8001FB24:
     if (v0 == 0) goto loc_8001FB3C;
     a1 = 1;                                             // Result = 00000001
 loc_8001FB3C:
-    P_RecursiveSound();
+    P_RecursiveSound(*vmAddrToPtr<sector_t>(a0), a1);
 loc_8001FB44:
     v0 = lw(s0 + 0x54);
     s1++;
@@ -630,7 +617,7 @@ loc_80020178:
     if (v0 == 0) goto loc_80020190;
     a1 = 1;                                             // Result = 00000001
 loc_80020190:
-    P_RecursiveSound();
+    P_RecursiveSound(*vmAddrToPtr<sector_t>(a0), a1);
 loc_80020198:
     v0 = lw(s0 + 0x54);
     s1++;

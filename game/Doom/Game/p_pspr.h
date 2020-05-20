@@ -5,7 +5,6 @@
 enum statenum_t : int32_t;
 struct player_t;
 
-void P_RecursiveSound() noexcept;
 void P_NoiseAlert() noexcept;
 void P_SetPsprite(player_t& player, const int32_t spriteIdx, const statenum_t stateNum) noexcept;
 void P_BringUpWeapon() noexcept;

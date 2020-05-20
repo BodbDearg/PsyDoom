@@ -49,7 +49,7 @@ struct sector_t {
     int16_t                 lightlevel;
     int32_t                 special;
     int32_t                 tag;
-    int32_t                 soundtraversed;
+    int32_t                 soundtraversed;     // Has sound reached the sector? (0 = not checked, 1 = yes, 2 = yes but one ML_SOUNDBLOCK line has been passed)
     VmPtr<mobj_t>           soundtarget;
     uint32_t                flags;              // Sector flags: new for PSX
     int32_t                 blockbox[4];        // TODO: CONFIRM LAYOUT
