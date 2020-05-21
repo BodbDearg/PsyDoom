@@ -320,116 +320,37 @@ void P_DropWeapon(player_t& player) noexcept {
     P_SetPsprite(player, ps_weapon, gWeaponInfo[player.readyweapon].downstate);
 }
 
-void A_WeaponReady() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x18);
-    v1 = lw(s1 + 0x6C);
-    v0 = 8;                                             // Result = 00000008
-    s0 = a1;
-    if (v1 != v0) goto loc_800202DC;
-    v1 = lw(s0);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 -= 0x6B20;                                       // Result = State_S_SAW[0] (800594E0)
-    if (v1 != v0) goto loc_800202DC;
-    a0 = lw(s1);
-    a1 = sfx_sawidl;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_800202DC:
-    v1 = lw(s1 + 0x70);
-    v0 = 0xA;                                           // Result = 0000000A
-    if (v1 != v0) goto loc_800202FC;
-    v0 = lw(s1 + 0x24);
-    if (v0 != 0) goto loc_800203A8;
-loc_800202FC:
-    v1 = lw(s1 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70FC;                                       // Result = WeaponInfo_Fist[2] (800670FC)
-    at += v0;
-    a0 = lw(at);
-    s0 = s1 + 0xF0;
-    if (a0 != 0) goto loc_80020334;
-    sw(0, s1 + 0xF0);
-    goto loc_80020468;
-loc_80020334:
-    v0 = a0 << 3;
-loc_80020338:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_80020384;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_80020468;
-loc_80020384:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_80020468;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_80020338;
-    sw(0, s0);
-    goto loc_80020468;
-loc_800203A8:
-    v0 = *gPlayerNum;
-    v0 <<= 2;
-    at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
-    at += v0;
-    v1 = lw(at);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    at += v0;
-    v0 = lw(at);
-    v1 = lw(v1);
-    v0 &= v1;
-    if (v0 == 0) goto loc_800203FC;
-    a0 = s1;
-    P_FireWeapon(*vmAddrToPtr<player_t>(a0));
-    goto loc_80020468;
-loc_800203FC:
-    v1 = *gTicCon;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 <<= 6;
-    a1 = v1 & 0x1FFF;
-    v0 = a1 << 2;
-    v0 += a0;
-    a0 = lh(s1 + 0x22);
-    v0 = lw(v0);
-    mult(a0, v0);
-    a1 = v1 & 0xFFF;
-    v1 = 0x10000;                                       // Result = 00010000
-    v0 = lo;
-    v0 += v1;
-    sw(v0, s0 + 0x8);
-    v0 = a1 << 2;
-    v1 = lh(s1 + 0x22);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += v0;
-    v0 = lw(at);
-    mult(v1, v0);
-    v0 = lo;
-    sw(v0, s0 + 0xC);
-loc_80020468:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called when the player's weapon is in a state of being ready to fire. Checks for the fire button being pressed to initiate firing,
+// does weapon bobbing, and lowers the current weapon if there is a change pending or if the player has just died.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
+    // Play the idle sound for the chainsaw (if selected)
+    if ((player.readyweapon == wp_chainsaw) && (sprite.state.get() == &gStates[S_SAW])) {
+        S_StartSound(player.mo.get(), sfx_sawidl);
+    }
+
+    // If the player is changing a weapon or dying then put the current weapon away
+    if ((player.pendingweapon != wp_nochange) || (player.health == 0)) {
+        P_SetPsprite(player, ps_weapon, gWeaponInfo[player.readyweapon].downstate);
+        return;
+    }
+
+    // If the fire button is pressed then try fire the player's weapon
+    const padbuttons_t fireBtn = gpPlayerCtrlBindings[*gPlayerNum][cbind_attack];
+
+    if (gTicButtons[*gPlayerNum] & fireBtn) {
+        P_FireWeapon(player);
+        return;
+    }
+    
+    // Otherwise do weapon bobbing based on current movement speed
+    constexpr uint32_t COSA_MASK = FINEANGLES - 1;
+    constexpr uint32_t SINA_MASK = FINEANGLES / 2 - 1;
+
+    const int32_t bobAngle = *gTicCon << 6;
+    sprite.sx = WEAPONX + (player.bob >> 16) * gFineCosine[bobAngle & COSA_MASK];
+    sprite.sy = WEAPONTOP + (player.bob >> 16) * gFineSine[bobAngle & SINA_MASK];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1763,6 +1684,7 @@ loc_80021A94:
 
 // TODO: remove all these thunks
 void _thunk_P_FireWeapon() noexcept { P_FireWeapon(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_WeaponReady() noexcept { A_WeaponReady(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_ReFire() noexcept { A_ReFire(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_CheckReload() noexcept { A_CheckReload(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_Lower() noexcept { A_Lower(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }

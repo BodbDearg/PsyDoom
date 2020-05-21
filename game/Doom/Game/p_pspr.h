@@ -9,7 +9,7 @@ struct pspdef_t;
 void P_SetPsprite(player_t& player, const int32_t spriteIdx, const statenum_t stateNum) noexcept;
 void P_FireWeapon(player_t& player) noexcept;
 void P_DropWeapon(player_t& player) noexcept;
-void A_WeaponReady() noexcept;
+void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept;
 void A_ReFire(player_t& player, pspdef_t& sprite) noexcept;
 void A_CheckReload(player_t& player, pspdef_t& sprite) noexcept;
 void A_Lower(player_t& player, pspdef_t& sprite) noexcept;
