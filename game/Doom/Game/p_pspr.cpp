@@ -93,6 +93,8 @@ const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
 };
 
 static constexpr int32_t BFGCELLS       = 40;               // Number of cells in a BFG shot
+static constexpr int32_t LOWERSPEED     = 12 * FRACUNIT;    // Speed of weapon lowering (pixels)
+static constexpr int32_t RAISESPEED     = 12 * FRACUNIT;    // Speed of weapon raising (pixels)
 static constexpr int32_t WEAPONX        = 1 * FRACUNIT;     // TODO: COMMENT
 static constexpr int32_t WEAPONBOTTOM   = 96 * FRACUNIT;    // TODO: COMMENT
 static constexpr int32_t WEAPONTOP      = 0 * FRACUNIT;     // TODO: COMMENT
@@ -207,82 +209,30 @@ void P_SetPsprite(player_t& player, const int32_t spriteIdx, const statenum_t st
     }  while (sprite.tics == 0);
 }
 
-void P_BringUpWeapon() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v1 = lw(s1 + 0x70);
-    v0 = 0xA;                                           // Result = 0000000A
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_8001FC50;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Begins raising the player's current pending weapon from the bottom of the screen.
+// If there is no pending weapon, then the current weapon is raised instead - which is assumed to be a weapon we just switched to.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_BringUpWeapon(player_t& player) noexcept {
+    // If there is no pending weapon for some reason use the ready weapon as the pending one
+    if (player.pendingweapon == wp_nochange) {
+        player.pendingweapon = player.readyweapon;
     }
-    v0 = lw(s1 + 0x6C);
-    sw(v0, s1 + 0x70);
-    v1 = lw(s1 + 0x70);
-    v0 = 8;                                             // Result = 00000008
-loc_8001FC50:
-    s0 = s1 + 0xF0;
-    if (v1 != v0) goto loc_8001FC78;
-    v0 = *gbIsLevelDataCached;
-    if (v0 == 0) goto loc_8001FC78;
-    a0 = lw(s1);
-    a1 = sfx_sawup;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_8001FC78:
-    v1 = lw(s1 + 0x70);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F8;                                       // Result = WeaponInfo_Fist[1] (800670F8)
-    at += v0;
-    v1 = lw(at);
-    v0 = 0xA;                                           // Result = 0000000A
-    sw(v0, s1 + 0x70);
-    v0 = 0x10000;                                       // Result = 00010000
-    sw(v0, s1 + 0xF8);
-    v0 = 0x600000;                                      // Result = 00600000
-    a0 = v1;
-    sw(v0, s1 + 0xFC);
-    if (a0 != 0) goto loc_8001FCC4;
-    sw(0, s1 + 0xF0);
-    goto loc_8001FD34;
-loc_8001FCC4:
-    v0 = a0 << 3;
-loc_8001FCC8:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_8001FD14;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_8001FD34;
-loc_8001FD14:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_8001FD34;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_8001FCC8;
-    sw(0, s0);
-loc_8001FD34:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    
+    // If we're raising the chainsaw then play its up sound.
+    // Exception: don't do this on level start.
+    if ((player.pendingweapon == wp_chainsaw) && (*gbIsLevelDataCached)) {
+        S_StartSound(player.mo.get(), sfx_sawup);
+    }
+    
+    // No longer have a pending weapon but remember what it was (for what comes next)
+    const statenum_t nextWeaponState = gWeaponInfo[player.pendingweapon].upstate;
+    player.pendingweapon = wp_nochange;
+
+    // Put the weapon sprite beyond the bottom of the screen and start raising it (go into the 'up' state)
+    player.psprites[ps_weapon].sx = WEAPONX;
+    player.psprites[ps_weapon].sy = WEAPONBOTTOM;
+    P_SetPsprite(player, ps_weapon, nextWeaponState);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -505,108 +455,33 @@ void A_CheckReload(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept
     P_CheckAmmo(player);
 }
 
-void A_Lower() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    v0 = 0x5F0000;                                      // Result = 005F0000
-    v0 |= 0xFFFF;                                       // Result = 005FFFFF
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v1 = lw(a1 + 0xC);
-    a0 = 0xC0000;                                       // Result = 000C0000
-    v1 += a0;
-    v0 = (i32(v0) < i32(v1));
-    sw(v1, a1 + 0xC);
-    if (v0 == 0) goto loc_8002069C;
-    v1 = lw(s1 + 0x4);
-    v0 = 1;                                             // Result = 00000001
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 0x600000;                                  // Result = 00600000
-        if (bJump) goto loc_80020588;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the process of lowering the player's weapon.
+// Once the weapon is fully lowered, does the switch to the new weapon and begins raising it - unless the player is dead.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Lower(player_t& player, pspdef_t& sprite) noexcept {
+    // Lower the weapon a little bit more: if we're not finished then we can just stop there
+    sprite.sy += LOWERSPEED;
+
+    if (sprite.sy < WEAPONBOTTOM)
+        return;
+
+    // The old weapon is now lowered to be fully offscreen.
+    // If the player is now in the dead state then don't raise anything following this.
+    if (player.playerstate == PST_DEAD) {
+        sprite.sy = WEAPONBOTTOM;
+        return;
     }
-    sw(v0, a1 + 0xC);
-    goto loc_8002069C;
-loc_80020588:
-    v0 = lw(s1 + 0x24);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xA;                                       // Result = 0000000A
-        if (bJump) goto loc_80020624;
+
+    // If the player just died put the weapon into the NULL state since it is now fully offscreen
+    if (player.health == 0) {
+        P_SetPsprite(player, ps_weapon, S_NULL);
+        return;
     }
-    a0 = lw(s1 + 0x70);
-    v1 = lw(s1 + 0x70);
-    sw(a0, s1 + 0x6C);
-    if (v1 != v0) goto loc_800205B0;
-    sw(a0, s1 + 0x70);
-loc_800205B0:
-    v1 = lw(s1 + 0x70);
-    v0 = 8;                                             // Result = 00000008
-    s0 = s1 + 0xF0;
-    if (v1 != v0) goto loc_800205E4;
-    v0 = *gbIsLevelDataCached;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 1;
-        if (bJump) goto loc_800205EC;
-    }
-    a0 = lw(s1);
-    a1 = sfx_sawup;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v1 = lw(s1 + 0x70);
-loc_800205E4:
-    v0 = v1 << 1;
-loc_800205EC:
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F8;                                       // Result = WeaponInfo_Fist[1] (800670F8)
-    at += v0;
-    v1 = lw(at);
-    v0 = 0xA;                                           // Result = 0000000A
-    sw(v0, s1 + 0x70);
-    v0 = 0x10000;                                       // Result = 00010000
-    sw(v0, s1 + 0xF8);
-    v0 = 0x600000;                                      // Result = 00600000
-    a0 = v1;
-    sw(v0, s1 + 0xFC);
-    if (a0 != 0) goto loc_8002062C;
-loc_80020624:
-    sw(0, s1 + 0xF0);
-    goto loc_8002069C;
-loc_8002062C:
-    v0 = a0 << 3;
-loc_80020630:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_8002067C;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_8002069C;
-loc_8002067C:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_8002069C;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_80020630;
-    sw(0, s0);
-loc_8002069C:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Normal case: switch to the pending weapon and begin raising it
+    player.readyweapon = player.pendingweapon;
+    P_BringUpWeapon(player);
 }
 
 void A_Raise() noexcept {
@@ -1890,3 +1765,4 @@ loc_80021A94:
 void _thunk_P_FireWeapon() noexcept { P_FireWeapon(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0)); }
 void _thunk_A_ReFire() noexcept { A_ReFire(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_CheckReload() noexcept { A_CheckReload(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_Lower() noexcept { A_Lower(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }

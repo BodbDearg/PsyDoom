@@ -56,12 +56,11 @@ extern void _thunk_P_RemoveMobj() noexcept;
 extern void _thunk_P_ExplodeMissile() noexcept;
 extern void P_SpawnPlayer() noexcept;
 extern void _thunk_T_PlatRaise() noexcept;
-extern void P_BringUpWeapon() noexcept;
 extern void _thunk_P_FireWeapon() noexcept;
 extern void A_WeaponReady() noexcept;
 extern void _thunk_A_ReFire() noexcept;
 extern void _thunk_A_CheckReload() noexcept;
-extern void A_Lower() noexcept;
+extern void _thunk_A_Lower() noexcept;
 extern void A_Raise() noexcept;
 extern void A_GunFlash() noexcept;
 extern void A_Punch() noexcept;
@@ -205,12 +204,11 @@ namespace PsxVm {
         { 0x8001CB9C, &_thunk_P_ExplodeMissile },
         { 0x8001CE40, &P_SpawnPlayer },
         { 0x8001F280, &_thunk_T_PlatRaise },
-        { 0x8001FC18, &P_BringUpWeapon },
         { 0x8001FFBC, &_thunk_P_FireWeapon },
         { 0x80020298, &A_WeaponReady },
         { 0x80020480, &_thunk_A_ReFire },
         { 0x8002051C, &_thunk_A_CheckReload },
-        { 0x8002053C, &A_Lower },
+        { 0x8002053C, &_thunk_A_Lower },
         { 0x800206B4, &A_Raise },
         { 0x800207A0, &A_GunFlash },
         { 0x80020874, &A_Punch },
