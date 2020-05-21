@@ -7,7 +7,6 @@ struct player_t;
 
 void P_SetPsprite(player_t& player, const int32_t spriteIdx, const statenum_t stateNum) noexcept;
 void P_BringUpWeapon() noexcept;
-void P_CheckAmmo() noexcept;
 void P_FireWeapon(player_t& player) noexcept;
 void P_DropWeapon(player_t& player) noexcept;
 void A_WeaponReady() noexcept;

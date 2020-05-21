@@ -92,6 +92,11 @@ const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
     }
 };
 
+static constexpr int32_t BFGCELLS       = 40;               // Number of cells in a BFG shot
+static constexpr int32_t WEAPONX        = 1 * FRACUNIT;     // TODO: COMMENT
+static constexpr int32_t WEAPONBOTTOM   = 96 * FRACUNIT;    // TODO: COMMENT
+static constexpr int32_t WEAPONTOP      = 0 * FRACUNIT;     // TODO: COMMENT
+
 // The current thing making noise
 static const VmPtr<VmPtr<mobj_t>>   gpSoundTarget(0x80077FFC);
 
@@ -280,203 +285,81 @@ loc_8001FD34:
     return;
 }
 
-void P_CheckAmmo() noexcept {
-loc_8001FD4C:
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    a0 = lw(s1 + 0x6C);
-    v1 = 7;                                             // Result = 00000007
-    v0 = a0 << 1;
-    v0 += a0;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F4;                                       // Result = WeaponInfo_Fist[0] (800670F4)
-    at += v0;
-    a1 = lw(at);
-    v0 = 3;                                             // Result = 00000003
-    if (a0 != v1) goto loc_8001FD94;
-    v1 = 0x28;                                          // Result = 00000028
-    goto loc_8001FDA0;
-loc_8001FD94:
-    v1 = 1;                                             // Result = 00000001
-    if (a0 != v0) goto loc_8001FDA0;
-    v1 = 2;                                             // Result = 00000002
-loc_8001FDA0:
-    v0 = 5;                                             // Result = 00000005
-    {
-        const bool bJump = (a1 == v0);
-        v0 = a1 << 2;
-        if (bJump) goto loc_8001FDC4;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Check if the player has enough ammo to fire the current weapon and return 'true' if that is case.
+// If there is not enough ammo then this function also attempts to switch to an appropriate weapon with ammo.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static bool P_CheckAmmo(player_t& player) noexcept {
+    // Get how much ammo the shot takes
+    int32_t ammoForShot;
+
+    if (player.readyweapon == wp_bfg) {
+        ammoForShot = BFGCELLS;
+    } else if (player.readyweapon == wp_supershotgun) {
+        ammoForShot = 2;    // Double barrel shotgun
+    } else {
+        ammoForShot = 1;
     }
-    v0 += s1;
-    v0 = lw(v0 + 0x98);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 != 0) goto loc_8001FDCC;
-loc_8001FDC4:
-    v0 = 1;                                             // Result = 00000001
-    goto loc_8001FFA4;
-loc_8001FDCC:
-    v0 = lw(s1 + 0x8C);
-    if (v0 == 0) goto loc_8001FDF4;
-    v0 = lw(s1 + 0xA0);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 6;                                         // Result = 00000006
-        if (bJump) goto loc_8001FDF4;
+
+    // Can shoot if the weapon has no ammo or if we have enough ammo for the shot
+    const ammotype_t ammoType = gWeaponInfo[player.readyweapon].ammo;
+
+    if ((ammoType == am_noammo) || (player.ammo[ammoType] >= ammoForShot))
+        return true;
+
+    // Not enough ammo: figure out what weapon to switch to next
+    if (player.weaponowned[wp_plasma] && (player.ammo[am_cell] != 0)) {
+        player.pendingweapon = wp_plasma;
     }
-    sw(v0, s1 + 0x70);
-    goto loc_8001FEF8;
-loc_8001FDF4:
-    v0 = lw(s1 + 0x80);
-    if (v0 == 0) goto loc_8001FE20;
-    v0 = lw(s1 + 0x9C);
-    v0 = (i32(v0) < 3);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 3;                                         // Result = 00000003
-        if (bJump) goto loc_8001FE20;
+    else if (player.weaponowned[wp_supershotgun] && (player.ammo[am_shell] > 2)) {  // Bug? Won't switch when ammo is '2', even though a shot can be taken...
+        player.pendingweapon = wp_supershotgun;
     }
-    sw(v0, s1 + 0x70);
-    goto loc_8001FEF8;
-loc_8001FE20:
-    v0 = lw(s1 + 0x84);
-    if (v0 == 0) goto loc_8001FE48;
-    v0 = lw(s1 + 0x98);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_8001FE48;
+    else if (player.weaponowned[wp_chaingun] && (player.ammo[am_clip] != 0)) {
+        player.pendingweapon = wp_chaingun;
     }
-    sw(v0, s1 + 0x70);
-    goto loc_8001FEF8;
-loc_8001FE48:
-    v0 = lw(s1 + 0x7C);
-    if (v0 == 0) goto loc_8001FE70;
-    v0 = lw(s1 + 0x9C);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_8001FE70;
+    else if (player.weaponowned[wp_shotgun] && (player.ammo[am_shell] != 0)) {
+        player.pendingweapon = wp_shotgun;
     }
-    sw(v0, s1 + 0x70);
-    goto loc_8001FEF8;
-loc_8001FE70:
-    v0 = lw(s1 + 0x98);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8001FE88;
+    else if (player.ammo[am_clip] != 0) {
+        player.pendingweapon = wp_pistol;
     }
-    sw(v0, s1 + 0x70);
-    goto loc_8001FEF8;
-loc_8001FE88:
-    v0 = lw(s1 + 0x94);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_8001FEA0;
+    else if (player.weaponowned[wp_chainsaw]) {
+        player.pendingweapon = wp_chainsaw;
+    } 
+    else if (player.weaponowned[wp_missile] && (player.ammo[am_misl] != 0)) {
+        player.pendingweapon = wp_missile;
     }
-    sw(v0, s1 + 0x70);
-    goto loc_8001FEF8;
-loc_8001FEA0:
-    v0 = lw(s1 + 0x88);
-    if (v0 == 0) goto loc_8001FEC8;
-    v0 = lw(s1 + 0xA4);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 5;                                         // Result = 00000005
-        if (bJump) goto loc_8001FEC8;
+    else if (player.weaponowned[wp_bfg] && (player.ammo[am_cell] > BFGCELLS)) {     // Bug? Won't switch when ammo is 'BFGCELLS', even though a shot can be taken...
+        player.pendingweapon = wp_bfg;
     }
-    sw(v0, s1 + 0x70);
-    goto loc_8001FEF8;
-loc_8001FEC8:
-    v0 = lw(s1 + 0x90);
-    if (v0 == 0) goto loc_8001FEF4;
-    v0 = lw(s1 + 0xA0);
-    v0 = (i32(v0) < 0x29);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 7;                                         // Result = 00000007
-        if (bJump) goto loc_8001FEF4;
+    else {
+        player.pendingweapon = wp_fist;
     }
-    sw(v0, s1 + 0x70);
-    goto loc_8001FEF8;
-loc_8001FEF4:
-    sw(0, s1 + 0x70);
-loc_8001FEF8:
-    v1 = lw(s1 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70FC;                                       // Result = WeaponInfo_Fist[2] (800670FC)
-    at += v0;
-    a0 = lw(at);
-    s0 = s1 + 0xF0;
-    if (a0 != 0) goto loc_8001FF30;
-    sw(0, s1 + 0xF0);
-    goto loc_8001FFA0;
-loc_8001FF30:
-    v0 = a0 << 3;
-loc_8001FF34:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_8001FF80;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8001FFA4;
-    }
-loc_8001FF80:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_8001FFA0;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_8001FF34;
-    sw(0, s0);
-loc_8001FFA0:
-    v0 = 0;                                             // Result = 00000000
-loc_8001FFA4:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    
+    // Start lowering the current weapon
+    P_SetPsprite(player, ps_weapon, gWeaponInfo[player.readyweapon].downstate);
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Fires the player's weapon
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_FireWeapon(player_t& player) noexcept {
-    // FIXME: convert to native function call
-    a0 = ptrToVmAddr(&player);
-    P_CheckAmmo();
-    const bool bHaveAmmo = v0;
-
-    if (!bHaveAmmo)
+    // If there is not enough ammo then you can't fire
+    if (!P_CheckAmmo(player))
         return;
     
+    // Player is now in the attacking state
     P_SetMObjState(*player.mo, S_PLAY_ATK1);
 
-    player.psprites[0].sx = 0x10000;
-    player.psprites[0].sy = 0;
+    // Switch the player sprite into the attacking state and ensure the weapon sprite offset is correct
+    pspdef_t& weaponSprite = player.psprites[ps_weapon];
+    weaponSprite.sx = WEAPONX;
+    weaponSprite.sy = WEAPONTOP;
 
     P_SetPsprite(player, ps_weapon, gWeaponInfo[player.readyweapon].atkstate);
+
+    // Alert monsters to the noise
     P_NoiseAlert(player);
 }
 
@@ -629,7 +512,7 @@ void A_ReFire() noexcept {
     goto loc_8002050C;
 loc_80020504:
     sw(0, a0 + 0xC4);
-    P_CheckAmmo();
+    v0 = P_CheckAmmo(*vmAddrToPtr<player_t>(a0));
 loc_8002050C:
     ra = lw(sp + 0x10);
     sp += 0x18;
@@ -639,7 +522,7 @@ loc_8002050C:
 void A_CheckReload() noexcept {
     sp -= 0x18;
     sw(ra, sp + 0x10);
-    P_CheckAmmo();
+    v0 = P_CheckAmmo(*vmAddrToPtr<player_t>(a0));
     ra = lw(sp + 0x10);
     sp += 0x18;
     return;
@@ -1806,7 +1689,7 @@ void A_CloseShotgun2() noexcept {
 loc_80021774:
     sw(0, s0 + 0xC4);
     a0 = s0;
-    P_CheckAmmo();
+    v0 = P_CheckAmmo(*vmAddrToPtr<player_t>(a0));
 loc_80021780:
     ra = lw(sp + 0x14);
     s0 = lw(sp + 0x10);
