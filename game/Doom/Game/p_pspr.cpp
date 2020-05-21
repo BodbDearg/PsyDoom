@@ -482,50 +482,27 @@ loc_80020468:
     return;
 }
 
-void A_ReFire() noexcept {
-    v0 = *gPlayerNum;
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 <<= 2;
-    at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
-    at += v0;
-    v1 = lw(at);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    at += v0;
-    v0 = lw(at);
-    v1 = lw(v1);
-    v0 &= v1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xA;                                       // Result = 0000000A
-        if (bJump) goto loc_80020504;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Re-fire the current weapon if the appropriate button is pressed and if the conditions are right.
+// Otherwise switch to another weapon if out of ammo after firing.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_ReFire(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    const padbuttons_t fireBtn = gpPlayerCtrlBindings[*gPlayerNum][cbind_attack];
+
+    if ((gTicButtons[*gPlayerNum] & fireBtn) && (player.pendingweapon == wp_nochange) && (player.health != 0)) {
+        player.refire++;
+        P_FireWeapon(player);
+    } else {
+        player.refire = 0;
+        P_CheckAmmo(player);
     }
-    v1 = lw(a0 + 0x70);
-    if (v1 != v0) goto loc_80020504;
-    v0 = lw(a0 + 0x24);
-    if (v0 == 0) goto loc_80020504;
-    v0 = lw(a0 + 0xC4);
-    v0++;
-    sw(v0, a0 + 0xC4);
-    P_FireWeapon(*vmAddrToPtr<player_t>(a0));
-    goto loc_8002050C;
-loc_80020504:
-    sw(0, a0 + 0xC4);
-    v0 = P_CheckAmmo(*vmAddrToPtr<player_t>(a0));
-loc_8002050C:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
-void A_CheckReload() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = P_CheckAmmo(*vmAddrToPtr<player_t>(a0));
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Check if we have enough ammo to fire before reloading, and if there is not enough switch weapons
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_CheckReload(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    P_CheckAmmo(player);
 }
 
 void A_Lower() noexcept {
@@ -1911,3 +1888,5 @@ loc_80021A94:
 
 // TODO: remove all these thunks
 void _thunk_P_FireWeapon() noexcept { P_FireWeapon(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_ReFire() noexcept { A_ReFire(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_CheckReload() noexcept { A_CheckReload(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
