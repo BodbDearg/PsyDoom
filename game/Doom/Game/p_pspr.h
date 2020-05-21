@@ -15,7 +15,7 @@ void A_CheckReload(player_t& player, pspdef_t& sprite) noexcept;
 void A_Lower(player_t& player, pspdef_t& sprite) noexcept;
 void A_Raise(player_t& player, pspdef_t& sprite) noexcept;
 void A_GunFlash(player_t& player, pspdef_t& sprite) noexcept;
-void A_Punch() noexcept;
+void A_Punch(player_t& player, pspdef_t& sprite) noexcept;
 void A_Saw() noexcept;
 void A_FireMissile() noexcept;
 void A_FireBFG() noexcept;
