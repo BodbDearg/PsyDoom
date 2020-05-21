@@ -405,114 +405,26 @@ void A_Lower(player_t& player, pspdef_t& sprite) noexcept {
     P_BringUpWeapon(player);
 }
 
-void A_Raise() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v0 = lw(a1 + 0xC);
-    v1 = 0xFFF40000;                                    // Result = FFF40000
-    v0 += v1;
-    sw(v0, a1 + 0xC);
-    if (i32(v0) > 0) goto loc_80020788;
-    sw(0, a1 + 0xC);
-    v1 = lw(s1 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7100;                                       // Result = WeaponInfo_Fist[3] (80067100)
-    at += v0;
-    a0 = lw(at);
-    s0 = s1 + 0xF0;
-    if (a0 != 0) goto loc_80020718;
-    sw(0, s1 + 0xF0);
-    goto loc_80020788;
-loc_80020718:
-    v0 = a0 << 3;
-loc_8002071C:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_80020768;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_80020788;
-loc_80020768:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_80020788;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_8002071C;
-    sw(0, s0);
-loc_80020788:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the process of raising the player's weapon and puts it into the 'ready' state once fully raised
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Raise(player_t& player, pspdef_t& sprite) noexcept {
+    // Raise the weapon a little bit more: if we're not finished then we can just stop there
+    sprite.sy -= RAISESPEED;
+
+    if (sprite.sy > WEAPONTOP)
+        return;
+
+    // Clamp the weapon in the fully raised position and go into the ready state for the current weapon
+    sprite.sy = WEAPONTOP;
+    P_SetPsprite(player, ps_weapon, gWeaponInfo[player.readyweapon].readystate);
 }
 
-void A_GunFlash() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v1 = lw(s1 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7108;                                       // Result = WeaponInfo_Fist[5] (80067108)
-    at += v0;
-    a0 = lw(at);
-    s0 = s1 + 0x100;
-    if (a0 != 0) goto loc_800207EC;
-    sw(0, s1 + 0x100);
-    goto loc_8002085C;
-loc_800207EC:
-    v0 = a0 << 3;
-loc_800207F0:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_8002083C;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_8002085C;
-loc_8002083C:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_8002085C;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_800207F0;
-    sw(0, s0);
-loc_8002085C:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set the gun flash sprite for the current weapon into the flash state
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_GunFlash(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    P_SetPsprite(player, ps_flash, gWeaponInfo[player.readyweapon].flashstate);
 }
 
 void A_Punch() noexcept {
@@ -1688,3 +1600,5 @@ void _thunk_A_WeaponReady() noexcept { A_WeaponReady(*vmAddrToPtr<player_t>(*Psx
 void _thunk_A_ReFire() noexcept { A_ReFire(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_CheckReload() noexcept { A_CheckReload(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_Lower() noexcept { A_Lower(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_Raise() noexcept { A_Raise(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_GunFlash() noexcept { A_GunFlash(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
