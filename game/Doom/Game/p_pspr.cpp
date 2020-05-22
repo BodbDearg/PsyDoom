@@ -459,104 +459,59 @@ void A_Punch(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     }
 }
 
-void A_Saw() noexcept {
-    sp -= 0x30;
-    sw(s3, sp + 0x24);
-    s3 = a0;
-    sw(ra, sp + 0x28);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    _thunk_P_Random();
-    v0 &= 7;
-    v0++;
-    s1 = v0 << 1;
-    v1 = lw(s3);
-    s2 = lw(v1 + 0x24);
-    s1 += v0;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    a2 = 0x460000;                                      // Result = 00460000
-    a2 |= 1;                                            // Result = 00460001
-    a3 = 0x7FFF0000;                                    // Result = 7FFF0000
-    a3 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    s0 -= v0;
-    s0 <<= 18;
-    sw(s1, sp + 0x10);
-    a0 = lw(s3);
-    a1 = s2 + s0;
-    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
-    if (v0 != 0) goto loc_80020A04;
-    a0 = lw(s3);
-    a1 = sfx_sawful;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    goto loc_80020AC4;
-loc_80020A04:
-    a0 = lw(s3);
-    a1 = sfx_sawhit;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = lw(s3);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
-    a0 = lw(v0);
-    a1 = lw(v0 + 0x4);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    a2 = lw(s3);
-    s2 = v0;
-    a1 = lw(a2 + 0x24);
-    v0 = 0x80000000;                                    // Result = 80000000
-    v1 = s2 - a1;
-    v0 = (v0 < v1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xFCCC0000;                                // Result = FCCC0000
-        if (bJump) goto loc_80020A84;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does a chainsaw attack for the player
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Saw(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    // Compute the damage amount (3-24)
+    const int32_t damage = ((P_Random() & 7) + 1) * 3;
+
+    // Randomly vary the attack angle a bit and do the line attack for the chainsaw.
+    //
+    // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
+    // Left shift of signed numbers when there is overflow is undefined behavior in C/C++, and produces an implementation defined result.
+    // The original instruction was 'sll' (shift logical left) so the shift needs to be unsigned!
+    const angle_t angleVariance = (uint32_t)(P_Random() - P_Random()) << 18;
+
+    mobj_t& playerMobj = *player.mo;
+    const angle_t attackAngle = playerMobj.angle + angleVariance;
+    P_LineAttack(playerMobj, attackAngle, MELEERANGE + 1, INT32_MAX, damage);   // Melee range +1 so the 'puff doesn't skip the flash'
+
+    // If we didn't hit a thing just play the normal chainsaw sound and exit
+    mobj_t* const pHitThing = gpLineTarget->get();
+
+    if (!pHitThing) {
+        S_StartSound(&playerMobj, sfx_sawful);
+        return;
     }
-    v0 |= 0xCCCC;                                       // Result = FCCCCCCC
-    v0 = (v0 < v1);
-    if (v0 != 0) goto loc_80020A74;
-    v0 = 0x30C0000;                                     // Result = 030C0000
-    v0 |= 0x30C3;                                       // Result = 030C30C3
-    v0 += s2;
-    goto loc_80020AA8;
-loc_80020A74:
-    v0 = 0xFCCC0000;                                    // Result = FCCC0000
-    v0 |= 0xCCCD;                                       // Result = FCCCCCCD
-    v0 += a1;
-    goto loc_80020AA8;
-loc_80020A84:
-    a0 = 0x3330000;                                     // Result = 03330000
-    a0 |= 0x3333;                                       // Result = 03333333
-    v0 = (a0 < v1);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xFCF30000;                                // Result = FCF30000
-        if (bJump) goto loc_80020AA4;
+
+    // Hit a thing, play the chainsaw hit sound:
+    S_StartSound(&playerMobj, sfx_sawhit);
+
+    // Turn the player towards the target and also cause the rotation to ping-pong around that angle.
+    // This makes the chainsaw feel like it's 'wiggling' when it's stuck into something:
+    const angle_t angleToTarget = R_PointToAngle2(playerMobj.x, playerMobj.y, pHitThing->x, pHitThing->y);
+    const angle_t angleDelta = angleToTarget - playerMobj.angle;
+
+    const angle_t ANGLE_WIGGLE_1 = ANG90 / 20;
+    const angle_t ANGLE_WIGGLE_2 = ANG90 / 21;
+
+    if (angleDelta > ANG180) {
+        if (angleDelta >= -ANGLE_WIGGLE_1) {
+            playerMobj.angle -= ANGLE_WIGGLE_1;
+        } else {
+            playerMobj.angle = angleToTarget + ANGLE_WIGGLE_2;
+        }
+    } else {
+        if (angleDelta > ANGLE_WIGGLE_1) {
+            playerMobj.angle = angleToTarget - ANGLE_WIGGLE_2;
+        } else {
+            playerMobj.angle += ANGLE_WIGGLE_1;
+        }
     }
-    v0 |= 0xCF3D;                                       // Result = FCF3CF3D
-    v0 += s2;
-    goto loc_80020AA8;
-loc_80020AA4:
-    v0 = a1 + a0;
-loc_80020AA8:
-    sw(v0, a2 + 0x24);
-    v1 = lw(s3);
-    v0 = lw(v1 + 0x64);
-    v0 |= 0x80;
-    sw(v0, v1 + 0x64);
-loc_80020AC4:
-    ra = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
+
+    // Just did an attack
+    playerMobj.flags |= MF_JUSTATTACKED;
 }
 
 void A_FireMissile() noexcept {
@@ -1576,3 +1531,4 @@ void _thunk_A_Lower() noexcept { A_Lower(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0
 void _thunk_A_Raise() noexcept { A_Raise(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_GunFlash() noexcept { A_GunFlash(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_Punch() noexcept { A_Punch(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_Saw() noexcept { A_Saw(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
