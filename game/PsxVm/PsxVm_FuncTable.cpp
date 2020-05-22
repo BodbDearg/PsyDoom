@@ -65,8 +65,8 @@ extern void _thunk_A_Raise() noexcept;
 extern void _thunk_A_GunFlash() noexcept;
 extern void _thunk_A_Punch() noexcept;
 extern void _thunk_A_Saw() noexcept;
-extern void A_FireMissile() noexcept;
-extern void A_FireBFG() noexcept;
+extern void _thunk_A_FireMissile() noexcept;
+extern void _thunk_A_FireBFG() noexcept;
 extern void A_FirePlasma() noexcept;
 extern void P_BulletSlope() noexcept;
 extern void P_GunShot() noexcept;
@@ -213,8 +213,8 @@ namespace PsxVm {
         { 0x800207A0, &_thunk_A_GunFlash },
         { 0x80020874, &_thunk_A_Punch },
         { 0x8002096C, &_thunk_A_Saw },
-        { 0x80020AE4, &A_FireMissile },
-        { 0x80020B48, &A_FireBFG },
+        { 0x80020AE4, &_thunk_A_FireMissile },
+        { 0x80020B48, &_thunk_A_FireBFG },
         { 0x80020BAC, &A_FirePlasma },
         { 0x80020CD4, &P_BulletSlope },
         { 0x80020D60, &P_GunShot },

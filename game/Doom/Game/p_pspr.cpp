@@ -514,52 +514,22 @@ void A_Saw(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     playerMobj.flags |= MF_JUSTATTACKED;
 }
 
-void A_FireMissile() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v1 = lw(a0 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F4;                                       // Result = WeaponInfo_Fist[0] (800670F4)
-    at += v0;
-    v1 = lw(at);
-    v1 <<= 2;
-    v1 += a0;
-    v0 = lw(v1 + 0x98);
-    v0--;
-    sw(v0, v1 + 0x98);
-    a0 = lw(a0);
-    a1 = 0x17;                                          // Result = 00000017
-    P_SpawnPlayerMissile(*vmAddrToPtr<mobj_t>(a0), (mobjtype_t) a1);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fire a rocket for the player
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FireMissile(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    const ammotype_t ammoType = gWeaponInfo[player.readyweapon].ammo;
+    player.ammo[ammoType]--;
+    P_SpawnPlayerMissile(*player.mo, MT_ROCKET);
 }
 
-void A_FireBFG() noexcept {
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v1 = lw(a0 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F4;                                       // Result = WeaponInfo_Fist[0] (800670F4)
-    at += v0;
-    v1 = lw(at);
-    v1 <<= 2;
-    v1 += a0;
-    v0 = lw(v1 + 0x98);
-    v0 -= 0x28;
-    sw(v0, v1 + 0x98);
-    a0 = lw(a0);
-    a1 = 0x19;                                          // Result = 00000019
-    P_SpawnPlayerMissile(*vmAddrToPtr<mobj_t>(a0), (mobjtype_t) a1);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fire the BFG for the player
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FireBFG(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    const ammotype_t ammoType = gWeaponInfo[player.readyweapon].ammo;
+    player.ammo[ammoType] -= BFGCELLS;
+    P_SpawnPlayerMissile(*player.mo, MT_BFG);
 }
 
 void A_FirePlasma() noexcept {
@@ -1532,3 +1502,5 @@ void _thunk_A_Raise() noexcept { A_Raise(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0
 void _thunk_A_GunFlash() noexcept { A_GunFlash(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_Punch() noexcept { A_Punch(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_Saw() noexcept { A_Saw(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_FireMissile() noexcept { A_FireMissile(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_FireBFG() noexcept { A_FireBFG(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
