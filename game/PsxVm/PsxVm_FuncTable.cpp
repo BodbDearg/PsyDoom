@@ -77,7 +77,6 @@ extern void _thunk_A_CloseShotgun2() noexcept;
 extern void P_SlideMove() noexcept;
 extern void P_CompletableFrac() noexcept;
 extern void CheckLineEnds() noexcept;
-extern void SL_CheckLine() noexcept;
 extern void _thunk_T_DelayedAction() noexcept;
 extern void P_PlayerMove() noexcept;
 extern void P_PlayerXYMovement() noexcept;
@@ -210,7 +209,6 @@ namespace PsxVm {
         { 0x8002502C, &P_SlideMove },
         { 0x800251BC, &P_CompletableFrac },
         { 0x80025588, &CheckLineEnds },
-        { 0x80025840, &SL_CheckLine },
         { 0x80027718, &_thunk_T_DelayedAction },
         { 0x800297A0, &P_PlayerMove },
         { 0x80029918, &P_PlayerXYMovement },

@@ -3,6 +3,7 @@
 #include "Doom/Base/m_fixed.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "doomdata.h"
 #include "p_local.h"
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
@@ -13,10 +14,13 @@ static constexpr int32_t SIDE_FRONT = +1;   // Return code for side checking: po
 static constexpr int32_t SIDE_ON    =  0;   // Return code for side checking: point is on the line
 static constexpr int32_t SIDE_BACK  = -1;   // Return code for side checking: point is on the back side of the line
 
+const VmPtr<VmPtr<mobj_t>>      gpSlideThing(0x80077ED8);       // The thing being moved
+
 static const VmPtr<fixed_t>         gSlideX(0x80077F90);            // Where the player move is starting from: x
 static const VmPtr<fixed_t>         gSlideY(0x80077F94);            // Where the player move is starting from: y
 static const VmPtr<fixed_t>         gSlideDx(0x80078070);           // How much the player is wanting to move: x
 static const VmPtr<fixed_t>         gSlideDy(0x80078074);           // How much the player is wanting to move: y
+static const VmPtr<fixed_t[4]>      gEndBox(0x80097BF0);            // Bounding box for the proposed movement
 static const VmPtr<fixed_t>         gBlockFrac(0x80078228);         // Percentage of the current move allowed
 static const VmPtr<fixed_t>         gBlockNvx(0x800781A8);          // The vector to slide along for the line collided with: x
 static const VmPtr<fixed_t>         gBlockNvy(0x800781B0);          // The vector to slide along for the line collided with: y
@@ -264,7 +268,7 @@ loc_8002539C:
     s0 += 2;
     if (v0 == v1) goto loc_800253E0;
     sw(v1, a0 + 0x40);
-    SL_CheckLine();
+    SL_CheckLine(*vmAddrToPtr<line_t>(a0));
 loc_800253E0:
     v0 = lh(s0);
     a0 = lhu(s0);
@@ -454,143 +458,86 @@ void SL_ClipToLine() noexcept {
     }
 }
 
-void SL_CheckLine() noexcept {
-loc_80025840:
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7BFC);                               // Load from: gEndBox[3] (80097BFC)
-    sp -= 0x20;
-    sw(s2, sp + 0x18);
-    s2 = a0;
-    sw(ra, sp + 0x1C);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    v1 = lw(s2 + 0x2C);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 != 0) goto loc_80025A70;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 = lw(v1 + 0x7BF8);                               // Load from: gEndBox[2] (80097BF8)
-    v0 = lw(s2 + 0x30);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 != 0) goto loc_80025A70;
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7BF0);                               // Load from: gEndBox[0] (80097BF0)
-    v1 = lw(s2 + 0x28);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 != 0) goto loc_80025A70;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 = lw(v1 + 0x7BF4);                               // Load from: gEndBox[1] (80097BF4)
-    v0 = lw(s2 + 0x24);
-    v0 = (i32(v0) < i32(v1));
-    if (v0 != 0) goto loc_80025A70;
-    a0 = lw(s2 + 0x3C);
-    if (a0 == 0) goto loc_80025960;
-    v0 = lw(s2 + 0x10);
-    v0 &= 1;
-    if (v0 != 0) goto loc_80025960;
-    a2 = lw(s2 + 0x38);
-    v0 = lw(a0);
-    v1 = lw(a2);
-    a1 = v0;
-    v0 = (i32(a1) < i32(v1));
-    if (v0 == 0) goto loc_8002590C;
-    a1 = v1;
-loc_8002590C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7ED8);                               // Load from: gpSlideThing (80077ED8)
-    v1 = lw(v0 + 0x8);
-    v0 = 0x180000;                                      // Result = 00180000
-    v1 = a1 - v1;
-    v0 = (i32(v0) < i32(v1));
-    if (v0 != 0) goto loc_80025960;
-    v0 = lw(a0 + 0x4);
-    a0 = lw(a2 + 0x4);
-    v1 = v0;
-    v0 = (i32(a0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x370000;                                  // Result = 00370000
-        if (bJump) goto loc_8002594C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Clips the current proposed movement to the given line.
+//
+// Global inputs:
+//      gpSlideThing            : The thing being moved
+//      gSlideX, gSlideY        : Move start point
+//      gSlideDx, gSlideDy      : Movement amount/delta
+//      gEndBox                 : Bounding box for the entire movement (including start and end points)
+//
+// Global outputs:
+//      gBlockFrac              : Allowed movement percent (set if the collision is closer than current closest)
+//      gBlockNvx, gBlockNvy    : Normalized vector to slide along the collision wall (set if the collision is closer than current closest)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void SL_CheckLine(line_t& line) noexcept {
+    // If the movement bounding box does NOT overlap the line bounding box then we can ignore this line
+    const bool bNoBBOverlap = (
+        (gEndBox[BOXTOP] < line.bbox[BOXBOTTOM]) ||
+        (gEndBox[BOXBOTTOM] > line.bbox[BOXTOP]) ||
+        (gEndBox[BOXLEFT] > line.bbox[BOXRIGHT]) ||
+        (gEndBox[BOXRIGHT] < line.bbox[BOXLEFT])
+    );
+
+    if (bNoBBOverlap)
+        return;
+
+    // See if the line is actually blocking of movement - ignore it if it isn't.
+    // Firstly see if the line is one sided or marked as explicitly blocking:
+    sector_t* const pBackSector = line.backsector.get();
+    const bool bImpassibleLine = ((!pBackSector) || (line.flags & ML_BLOCKING));
+
+    if (!bImpassibleLine) {
+        // Not yet blocking, check to see is the step too high:
+        sector_t& frontSector = *line.frontsector;
+
+        const fixed_t openingBottom = std::max(frontSector.floorheight, pBackSector->floorheight);
+        const fixed_t stepUp = openingBottom - gpSlideThing->get()->z;
+        const bool bStepTooHigh = (stepUp > 24 * FRACUNIT);
+
+        if (!bStepTooHigh) {
+            // Step is fine to go up: see if the overall line gap is too small to fit the player
+            const fixed_t openingTop = std::min(frontSector.ceilingheight, pBackSector->ceilingheight);
+            const bool bGapTooSmall = (openingTop - openingBottom < 56 * FRACUNIT);
+
+            // If the line still isn't blocking after this last check then we can ignore it
+            if (!bGapTooSmall)
+                return;
+        }
     }
-    v1 = a0;
-loc_8002594C:
-    v0 |= 0xFFFF;                                       // Result = 0037FFFF
-    v1 -= a1;
-    v0 = (i32(v0) < i32(v1));
-    if (v0 != 0) goto loc_80025A70;
-loc_80025960:
-    v0 = lw(s2);
-    a0 = lw(gp + 0x9B0);                                // Load from: gSlideX (80077F90)
-    v1 = lw(s2);
-    a1 = lw(s2 + 0x4);
-    s0 = lw(gp + 0x9B4);                                // Load from: gSlideY (80077F94)
-    a3 = lw(v0);
-    v0 = lw(s2 + 0x48);
-    t0 = lw(v1 + 0x4);
-    a2 = lw(a1);
-    v1 = lw(s2 + 0x4);
-    v0 <<= 2;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += v0;
-    a1 = lw(at);
-    v0 = lw(v1 + 0x4);
-    a0 -= a3;
-    sw(v0, gp + 0xB00);                                 // Store to: gP2y (800780E0)
-    v0 = lw(s2 + 0x48);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v0 <<= 2;
-    v0 += v1;
-    v0 = lw(v0);
-    sw(a3, gp + 0xAEC);                                 // Store to: gP1x (800780CC)
-    sw(t0, gp + 0xAF4);                                 // Store to: gP1y (800780D4)
-    sw(a2, gp + 0xAF0);                                 // Store to: gP2x (800780D0)
-    sw(a1, gp + 0xB78);                                 // Store to: gNvx (80078158)
-    v0 = -v0;
-    sw(v0, gp + 0xB7C);                                 // Store to: gNvy (8007815C)
-    s0 -= t0;
-    _thunk_FixedMul();
-    s1 = v0;
-    a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
-    a0 = s0;
-    _thunk_FixedMul();
-    s1 += v0;
-    v0 = 0x10000;                                       // Result = 00010000
-    v0 = (i32(v0) < i32(s1));
-    v1 = 1;                                             // Result = 00000001
-    if (v0 != 0) goto loc_80025A10;
-    v0 = 0xFFFF0000;                                    // Result = FFFF0000
-    v0 = (i32(s1) < i32(v0));
-    v1 = -v0;
-loc_80025A10:
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (v1 == 0) goto loc_80025A70;
-    if (v1 != v0) goto loc_80025A68;
-    v0 = lw(s2 + 0x3C);
-    if (v0 == 0) goto loc_80025A70;
-    a0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
-    v1 = lw(gp + 0xAF0);                                // Load from: gP2x (800780D0)
-    v0 = lw(gp + 0xB00);                                // Load from: gP2y (800780E0)
-    sw(a0, gp + 0xAF0);                                 // Store to: gP2x (800780D0)
-    a0 = lw(gp + 0xAF4);                                // Load from: gP1y (800780D4)
-    sw(v0, gp + 0xAF4);                                 // Store to: gP1y (800780D4)
-    v0 = lw(gp + 0xB78);                                // Load from: gNvx (80078158)
-    sw(v1, gp + 0xAEC);                                 // Store to: gP1x (800780CC)
-    v1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
-    v0 = -v0;
-    v1 = -v1;
-    sw(v0, gp + 0xB78);                                 // Store to: gNvx (80078158)
-    sw(v1, gp + 0xB7C);                                 // Store to: gNvy (8007815C)
-    sw(a0, gp + 0xB00);                                 // Store to: gP2y (800780E0)
-loc_80025A68:
+
+    // Save the points and normal globally for the line being collided against - needed by 'SL_ClipToLine':
+    *gP1x = line.vertex1->x;
+    *gP1y = line.vertex1->y;
+    *gP2x = line.vertex2->x;
+    *gP2y = line.vertex2->y;
+    *gNvx = gFineSine[line.fineangle];
+    *gNvy = -gFineCosine[line.fineangle];
+
+    // Get what side of the line the start point for the move is on
+    const int32_t lineSide = SL_PointOnSide(*gSlideX, *gSlideY);
+
+    // If the movement start is already nearly on the line then it is ignored
+    if (lineSide == SIDE_ON)
+        return;
+
+    // If we are on the back side of the line then we only collide if the line is two sided.
+    // If the line is two sided and we are doing a collision, then we need to reverse the points and the normal.
+    if (lineSide == SIDE_BACK) {
+        // Only do back side collision against two sided lines!
+        if (!line.backsector)
+            return;
+
+        // Swap around everything because we are on the opposite side
+        std::swap(*gP1x, *gP2x);
+        std::swap(*gP1y, *gP2y);
+        *gNvx = -*gNvx;
+        *gNvy = -*gNvy;
+    }
+
+    // Clip the movement line to the line being collided against
     SL_ClipToLine();
-loc_80025A70:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
