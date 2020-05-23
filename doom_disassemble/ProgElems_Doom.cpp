@@ -3398,7 +3398,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077F78, 0x80077F7C, "gbCastDeath",                            ProgElemType::UINT32 },
     { 0x80077F7C, 0x80077F80, "g3dViewPaletteClutId",                   ProgElemType::UINT32 },
     { 0x80077F80, 0x80077F84, "gAttackAngle",                           ProgElemType::UINT32 },
-    { 0x80077F84, 0x80077F88, "gSL_CheckSpecialLines_UNKNOWN_var",      ProgElemType::UINT32 },
+    { 0x80077F84, 0x80077F88, "gSL_offset",                             ProgElemType::INT32 },
     { 0x80077F88, 0x80077F8C, "gMapBossSpecialFlags",                   ProgElemType::INT32 },
     { 0x80077F8C, 0x80077F90, "gpCeilingLine",                          ProgElemType::PTR32 },
     { 0x80077F90, 0x80077F94, "gSlideX",                                ProgElemType::INT32 },

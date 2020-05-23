@@ -1,9 +1,17 @@
 #include "p_slide.h"
 
 #include "Doom/Base/m_fixed.h"
+#include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "p_local.h"
 #include "p_setup.h"
 #include "PsxVm/PsxVm.h"
+#include <algorithm>
+
+static constexpr int32_t SIDE_FRONT = +1;   // Return code for 'SL_PointOnSide2' : point is on the front side of the line
+static constexpr int32_t SIDE_BACK  = -1;   // Return code for 'SL_PointOnSide2' : point is on the back side of the line
+
+static const VmPtr<VmPtr<line_t>>   gpSpecialLine(0x80077F9C);      // A special line that was crossed during player movement
 
 void P_SlideMove() noexcept {
 loc_8002502C:
@@ -35,7 +43,7 @@ loc_80025084:
     a1 = lw(v0 + 0x4);
     sw(s2, v0 + 0x48);
     sw(s3, v0 + 0x4C);
-    SL_CheckSpecialLines();
+    SL_CheckSpecialLines(a0, a1, a2, a3);
     goto loc_80025198;
 loc_800250AC:
     s4 = 0;                                             // Result = 00000000
@@ -689,287 +697,103 @@ loc_80025A70:
     return;
 }
 
-void SL_PointOnSide2() noexcept {
-    sp -= 0x20;
-    sw(s2, sp + 0x18);
-    s2 = a2;
-    sw(s1, sp + 0x14);
-    s1 = a1 - a3;
-    a1 = lw(sp + 0x34);
-    v0 = lw(sp + 0x30);
-    a0 -= s2;
-    sw(ra, sp + 0x1C);
-    sw(s0, sp + 0x10);
-    a1 -= a3;
-    s2 -= v0;
-    _thunk_FixedMul();
-    s0 = v0;
-    a0 = s1;
-    a1 = s2;
-    _thunk_FixedMul();
-    s0 += v0;
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (i32(s0) < 0) goto loc_80025AE0;
-    v0 = 1;                                             // Result = 00000001
-loc_80025AE0:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tell what side of a line a point is on
+//------------------------------------------------------------------------------------------------------------------------------------------
+static int32_t SL_PointOnSide2(
+    const fixed_t px,
+    const fixed_t py,
+    const fixed_t lx1,
+    const fixed_t ly1,
+    const fixed_t lx2,
+    const fixed_t ly2
+) noexcept {
+    // Use the dot product of a line relative vector against the line normal to determine which side of the line we are on
+    const fixed_t rx = px - lx1;
+    const fixed_t ry = py - ly1;
+    const fixed_t nx = ly2 - ly1;
+    const fixed_t ny = lx1 - lx2;
+    const fixed_t signedDist = FixedMul(rx, nx) + FixedMul(ry, ny);
+
+    return (signedDist >= 0) ? SIDE_FRONT : SIDE_BACK;
 }
 
-void SL_CheckSpecialLines() noexcept {
-loc_80025AFC:
-    sp -= 0x98;
-    sw(a0, sp + 0x10);
-    sw(a2, sp + 0x20);
-    v0 = (i32(a0) < i32(a2));
-    sw(ra, sp + 0x94);
-    sw(fp, sp + 0x90);
-    sw(s7, sp + 0x8C);
-    sw(s6, sp + 0x88);
-    sw(s5, sp + 0x84);
-    sw(s4, sp + 0x80);
-    sw(s3, sp + 0x7C);
-    sw(s2, sp + 0x78);
-    sw(s1, sp + 0x74);
-    sw(s0, sp + 0x70);
-    sw(a1, sp + 0x18);
-    sw(a3, sp + 0x28);
-    if (v0 == 0) goto loc_80025B50;
-    t1 = lw(sp + 0x10);
-    t0 = lw(sp + 0x20);
-    sw(t1, sp + 0x38);
-    goto loc_80025B5C;
-loc_80025B50:
-    t1 = lw(sp + 0x20);
-    t0 = lw(sp + 0x10);
-    sw(t1, sp + 0x38);
-loc_80025B5C:
-    sw(t0, sp + 0x40);
-    t1 = lw(sp + 0x18);
-    t0 = lw(sp + 0x28);
-    v0 = (i32(t1) < i32(t0));
-    if (v0 == 0) goto loc_80025B94;
-    sw(t1, sp + 0x48);
-    goto loc_80025BA0;
-loc_80025B80:
-    v0 = lw(gp + 0xA3C);                                // Load from: gpLine (8007801C)
-    sw(v0, gp + 0x9BC);                                 // Store to: gpSpecialLine (80077F9C)
-    goto loc_80025F10;
-loc_80025B94:
-    t1 = lw(sp + 0x28);
-    t0 = lw(sp + 0x18);
-    sw(t1, sp + 0x48);
-loc_80025BA0:
-    sw(t0, sp + 0x50);
-    v0 = *gBlockmapOriginX;
-    t1 = lw(sp + 0x38);
-    t0 = lw(sp + 0x40);
-    v1 = t1 - v0;
-    a0 = u32(i32(v1) >> 23);
-    v0 = t0 - v0;
-    v1 = *gBlockmapOriginY;
-    t1 = lw(sp + 0x48);
-    t0 = lw(sp + 0x50);
-    v0 = u32(i32(v0) >> 23);
-    sw(v0, sp + 0x58);
-    v0 = t1 - v1;
-    v0 = u32(i32(v0) >> 23);
-    v1 = t0 - v1;
-    v1 = u32(i32(v1) >> 23);
-    sw(v0, sp + 0x60);
-    sw(v1, sp + 0x68);
-    if (i32(a0) >= 0) goto loc_80025BF8;
-    a0 = 0;                                             // Result = 00000000
-loc_80025BF8:
-    t1 = lw(sp + 0x60);
-    if (i32(t1) >= 0) goto loc_80025C0C;
-    sw(0, sp + 0x60);
-loc_80025C0C:
-    v1 = *gBlockmapWidth;
-    t0 = lw(sp + 0x58);
-    v0 = (i32(t0) < i32(v1));
-    v1--;
-    if (v0 != 0) goto loc_80025C2C;
-    sw(v1, sp + 0x58);
-loc_80025C2C:
-    v1 = *gBlockmapHeight;
-    t1 = lw(sp + 0x68);
-    v0 = (i32(t1) < i32(v1));
-    if (v0 != 0) goto loc_80025C50;
-    v1--;
-    sw(v1, sp + 0x68);
-loc_80025C50:
-    v0 = *gValidCount;
-    t0 = lw(sp + 0x58);
-    sw(a0, sp + 0x30);
-    sw(0, gp + 0x9BC);                                  // Store to: gpSpecialLine (80077F9C)
-    v0++;
-    *gValidCount = v0;
-    v0 = (i32(t0) < i32(a0));
-    if (v0 != 0) goto loc_80025F10;
-loc_80025C7C:
-    fp = lw(sp + 0x60);
-    t1 = lw(sp + 0x68);
-    v0 = (i32(t1) < i32(fp));
-    if (v0 != 0) goto loc_80025EF8;
-loc_80025C94:
-    v0 = *gBlockmapWidth;
-    mult(fp, v0);
-    t0 = lw(sp + 0x30);
-    a0 = *gpBlockmap;
-    v1 = lo;
-    v1 += t0;
-    v0 = v1 << 1;
-    v0 += a0;
-    v0 = lh(v0);
-    sw(v1, gp + 0x9A4);                                 // Store to: gSL_CheckSpecialLines_UNKNOWN_var (80077F84)
-    v1 = *gpBlockmapLump;
-    sw(v0, gp + 0x9A4);                                 // Store to: gSL_CheckSpecialLines_UNKNOWN_var (80077F84)
-    v0 <<= 1;
-    v0 += v1;
-    sw(v0, gp + 0xC70);                                 // Store to: gpBlockmapLineNum (80078250)
-    v1 = lh(v0);
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (v1 == v0) goto loc_80025EE4;
-loc_80025CF0:
-    v0 = lw(gp + 0xC70);                                // Load from: gpBlockmapLineNum (80078250)
-    v1 = lh(v0);
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v1 = *gpLines;
-    v0 <<= 2;
-    v1 += v0;
-    v0 = lw(v1 + 0x14);
-    sw(v1, gp + 0xA3C);                                 // Store to: gpLine (8007801C)
-    if (v0 == 0) goto loc_80025EC4;
-    v0 = lw(v1 + 0x40);
-    a0 = *gValidCount;
-    if (v0 == a0) goto loc_80025EC4;
-    v0 = lw(v1 + 0x2C);
-    sw(a0, v1 + 0x40);
-    t1 = lw(sp + 0x40);
-    v0 = (i32(t1) < i32(v0));
-    if (v0 != 0) goto loc_80025EC4;
-    v0 = lw(v1 + 0x30);
-    t0 = lw(sp + 0x38);
-    v0 = (i32(v0) < i32(t0));
-    if (v0 != 0) goto loc_80025EC4;
-    v0 = lw(v1 + 0x28);
-    t1 = lw(sp + 0x50);
-    v0 = (i32(t1) < i32(v0));
-    if (v0 != 0) goto loc_80025EC4;
-    v0 = lw(v1 + 0x24);
-    t0 = lw(sp + 0x48);
-    v0 = (i32(v0) < i32(t0));
-    s5 = 1;                                             // Result = 00000001
-    if (v0 != 0) goto loc_80025EC4;
-    v0 = lw(v1);
-    v1 = lw(v1 + 0x4);
-    t1 = lw(sp + 0x10);
-    s2 = lw(v0);
-    s4 = lw(v0 + 0x4);
-    s7 = lw(v1 + 0x4);
-    s6 = lw(v1);
-    a0 = t1 - s2;
-    s3 = s7 - s4;
-    a1 = s3;
-    _thunk_FixedMul();
-    s0 = v0;
-    s1 = s2 - s6;
-    t0 = lw(sp + 0x18);
-    a1 = s1;
-    a0 = t0 - s4;
-    _thunk_FixedMul();
-    s0 += v0;
-    a1 = s3;
-    if (i32(s0) >= 0) goto loc_80025E00;
-    s5 = -1;                                            // Result = FFFFFFFF
-loc_80025E00:
-    t1 = lw(sp + 0x20);
-    a0 = t1 - s2;
-    _thunk_FixedMul();
-    s0 = v0;
-    t0 = lw(sp + 0x28);
-    a1 = s1;
-    a0 = t0 - s4;
-    _thunk_FixedMul();
-    s0 += v0;
-    v0 = 1;                                             // Result = 00000001
-    if (i32(s0) >= 0) goto loc_80025E30;
-    v0 = -1;                                            // Result = FFFFFFFF
-loc_80025E30:
-    if (s5 == v0) goto loc_80025EC4;
-    t1 = lw(sp + 0x10);
-    t0 = lw(sp + 0x28);
-    a0 = s2 - t1;
-    t1 = lw(sp + 0x18);
-    s2 = t0 - t1;
-    a1 = s2;
-    _thunk_FixedMul();
-    t0 = lw(sp + 0x18);
-    t1 = lw(sp + 0x10);
-    a0 = s4 - t0;
-    t0 = lw(sp + 0x20);
-    s0 = v0;
-    s1 = t1 - t0;
-    a1 = s1;
-    _thunk_FixedMul();
-    s0 += v0;
-    s5 = 1;                                             // Result = 00000001
-    if (i32(s0) >= 0) goto loc_80025E88;
-    s5 = -1;                                            // Result = FFFFFFFF
-loc_80025E88:
-    t1 = lw(sp + 0x10);
-    a1 = s2;
-    a0 = s6 - t1;
-    _thunk_FixedMul();
-    s0 = v0;
-    t0 = lw(sp + 0x18);
-    a1 = s1;
-    a0 = s7 - t0;
-    _thunk_FixedMul();
-    s0 += v0;
-    v0 = 1;                                             // Result = 00000001
-    if (i32(s0) >= 0) goto loc_80025EBC;
-    v0 = -1;                                            // Result = FFFFFFFF
-loc_80025EBC:
-    if (s5 != v0) goto loc_80025B80;
-loc_80025EC4:
-    v1 = lw(gp + 0xC70);                                // Load from: gpBlockmapLineNum (80078250)
-    v0 = v1 + 2;
-    sw(v0, gp + 0xC70);                                 // Store to: gpBlockmapLineNum (80078250)
-    v1 = lh(v1 + 0x2);
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (v1 != v0) goto loc_80025CF0;
-loc_80025EE4:
-    t1 = lw(sp + 0x68);
-    fp++;
-    v0 = (i32(t1) < i32(fp));
-    if (v0 == 0) goto loc_80025C94;
-loc_80025EF8:
-    t0 = lw(sp + 0x30);
-    t1 = lw(sp + 0x58);
-    t0++;
-    v0 = (i32(t1) < i32(t0));
-    sw(t0, sp + 0x30);
-    if (v0 == 0) goto loc_80025C7C;
-loc_80025F10:
-    ra = lw(sp + 0x94);
-    fp = lw(sp + 0x90);
-    s7 = lw(sp + 0x8C);
-    s6 = lw(sp + 0x88);
-    s5 = lw(sp + 0x84);
-    s4 = lw(sp + 0x80);
-    s3 = lw(sp + 0x7C);
-    s2 = lw(sp + 0x78);
-    s1 = lw(sp + 0x74);
-    s0 = lw(sp + 0x70);
-    sp += 0x98;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Checks to see if a move would cross a special line.
+// Saves the crossed special line to 'gpSpecialLine', which is null if no special line is crossed.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, const fixed_t moveX2, const fixed_t moveY2) noexcept {
+    // Compute the blockmap extents of the move
+    const fixed_t minMoveX = std::min(moveX1, moveX2);
+    const fixed_t maxMoveX = std::max(moveX1, moveX2);
+    const fixed_t minMoveY = std::min(moveY1, moveY2);
+    const fixed_t maxMoveY = std::max(moveY1, moveY2);
+
+    const int32_t bmapLx = std::max((minMoveX - *gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
+    const int32_t bmapRx = std::min((maxMoveX - *gBlockmapOriginX) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
+    const int32_t bmapBy = std::max((minMoveY - *gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
+    const int32_t bmapTy = std::min((maxMoveY - *gBlockmapOriginY) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);
+    
+    // Hit no special line yet and increment the valid count for a fresh check
+    *gpSpecialLine = nullptr;
+    *gValidCount += 1;
+
+    // Check for crossing lines in this blockmap area
+    for (int32_t bmapX = bmapLx; bmapX <= bmapRx; ++bmapX) {
+        for (int32_t bmapY = bmapBy; bmapY <= bmapTy; ++bmapY) {
+            const int32_t firstLineOffset = gpBlockmap->get()[bmapX + bmapY * (*gBlockmapWidth)];
+            
+            for (int16_t* pLineNum = (int16_t*) &gpBlockmapLump->get()[firstLineOffset]; *pLineNum != -1; ++pLineNum) {
+                // Ignore the line if it has no special or if we already checked
+                line_t& line = gpLines->get()[*pLineNum];
+
+                if (line.special == 0)
+                    continue;
+
+                if (line.validcount == *gValidCount)
+                    continue;
+
+                // Don't check again
+                line.validcount = *gValidCount;
+
+                // Make sure the move is within the bounding box of the line, ignore if not:
+                const bool bNoOverlap = (
+                    (maxMoveX < line.bbox[BOXLEFT]) ||
+                    (minMoveX > line.bbox[BOXRIGHT]) ||
+                    (maxMoveY < line.bbox[BOXBOTTOM]) ||
+                    (minMoveY > line.bbox[BOXTOP])
+                );
+
+                if (bNoOverlap)
+                    continue;
+
+                // See if the move crosses the line, if it doesn't then skip this line
+                const fixed_t v1x = line.vertex1->x;
+                const fixed_t v1y = line.vertex1->y;
+                const fixed_t v2x = line.vertex2->x;
+                const fixed_t v2y = line.vertex2->y;
+
+                {
+                    const int32_t side1 = SL_PointOnSide2(moveX1, moveY1, v1x, v1y, v2x, v2y);
+                    const int32_t side2 = SL_PointOnSide2(moveX2, moveY2, v1x, v1y, v2x, v2y);
+
+                    if (side1 == side2)
+                        continue;
+                }
+
+                // See if the line crosses the move, if it doesn't then skip this line
+                {
+                    const int32_t side1 = SL_PointOnSide2(v1x, v1y, moveX1, moveY1, moveX2, moveY2);
+                    const int32_t side2 = SL_PointOnSide2(v2x, v2y, moveX1, moveY1, moveX2, moveY2);
+
+                    if (side1 == side2)
+                        continue;
+                }
+
+                // Crossed a special line, done:
+                *gpSpecialLine = &line;
+                return;
+            }
+        }
+    }
 }
