@@ -355,55 +355,32 @@ static fixed_t SL_CrossFrac() noexcept {
     return FixedDiv(dist1, dist1 - dist2);
 }
 
-void CheckLineEnds() noexcept {
-    v1 = lw(gp + 0xB14);                                // Load from: gP3y (800780F4)
-    v0 = lw(gp + 0xAF4);                                // Load from: gP1y (800780D4)
-    sp -= 0x28;
-    sw(s2, sp + 0x18);
-    s2 = lw(gp + 0xAFC);                                // Load from: gP3x (800780DC)
-    a0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
-    sw(s0, sp + 0x10);
-    s0 = lw(gp + 0xB1C);                                // Load from: gP4y (800780FC)
-    sw(ra, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s1, sp + 0x14);
-    s3 = v0 - v1;
-    a0 -= s2;
-    s0 -= v1;
-    v0 = lw(gp + 0xB10);                                // Load from: gP4x (800780F0)
-    a1 = s0;
-    s2 -= v0;
-    _thunk_FixedMul();
-    s1 = v0;
-    a0 = s3;
-    a1 = s2;
-    _thunk_FixedMul();
-    s1 += v0;
-    a1 = s0;
-    a2 = lw(gp + 0xAF0);                                // Load from: gP2x (800780D0)
-    v1 = lw(gp + 0xB00);                                // Load from: gP2y (800780E0)
-    v0 = lw(gp + 0xB14);                                // Load from: gP3y (800780F4)
-    a0 = lw(gp + 0xAFC);                                // Load from: gP3x (800780DC)
-    s3 = v1 - v0;
-    a0 = a2 - a0;
-    _thunk_FixedMul();
-    s0 = v0;
-    a0 = s3;
-    a1 = s2;
-    _thunk_FixedMul();
-    s0 += v0;
-    s1 = ~s1;
-    s1 >>= 31;
-    s0 >>= 31;
-    v0 = s1 ^ s0;
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tells if the line defined by P1/P2 crosses the line defined by P3/P4; this function is unused in PSX Doom.
+//
+// PC-PSX: not compiling this as it generates an unused warning.
+//------------------------------------------------------------------------------------------------------------------------------------------
+#if !PC_PSX_DOOM_MODS
+
+static bool CheckLineEnds() noexcept {
+    // Compute line normal
+    const fixed_t nx = *gP4y - *gP3y;
+    const fixed_t ny = *gP3x - *gP4x;
+
+    // Compute vectors relative to the line's first point
+    const fixed_t rx1 = *gP1x - *gP3x;
+    const fixed_t ry1 = *gP1y - *gP3y;
+    const fixed_t rx2 = *gP2x - *gP3x;
+    const fixed_t ry2 = *gP2y - *gP3y;
+
+    // Return true if P1 & P2 are on opposite sides of the line by using the dot product to compute perpendicular distance to the line
+    const fixed_t dist1 = FixedMul(rx1, nx) + FixedMul(ry1, ny);
+    const fixed_t dist2 = FixedMul(rx2, nx) + FixedMul(ry2, ny);
+
+    return ((dist1 < 0) != (dist2 < 0));
 }
+
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Intersect the current movement line against the current collision line being tested.
