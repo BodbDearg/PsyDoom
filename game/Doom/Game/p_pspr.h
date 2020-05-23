@@ -3,6 +3,7 @@
 #include <cstdint>
 
 enum statenum_t : int32_t;
+struct mobj_t;
 struct player_t;
 struct pspdef_t;
 
@@ -24,13 +25,13 @@ void A_FirePistol(player_t& player, pspdef_t& sprite) noexcept;
 void A_FireShotgun(player_t& player, pspdef_t& sprite) noexcept;
 void A_FireShotgun2(player_t& player, pspdef_t& sprite) noexcept;
 void A_FireCGun(player_t& player, pspdef_t& sprite) noexcept;
-void A_Light0() noexcept;
-void A_Light1() noexcept;
-void A_Light2() noexcept;
-void A_BFGSpray() noexcept;
-void A_BFGsound() noexcept;
-void A_OpenShotgun2() noexcept;
-void A_LoadShotgun2() noexcept;
+void A_Light0(player_t& player, pspdef_t& sprite) noexcept;
+void A_Light1(player_t& player, pspdef_t& sprite) noexcept;
+void A_Light2(player_t& player, pspdef_t& sprite) noexcept;
+void A_BFGSpray(mobj_t& mobj) noexcept;
+void A_BFGsound(player_t& player, pspdef_t& sprite) noexcept;
+void A_OpenShotgun2(player_t& player, pspdef_t& sprite) noexcept;
+void A_LoadShotgun2(player_t& player, pspdef_t& sprite) noexcept;
 void A_CloseShotgun2() noexcept;
 void P_SetupPsprites() noexcept;
 void P_MovePsprites() noexcept;

@@ -75,10 +75,10 @@ extern void _thunk_A_FireCGun() noexcept;
 extern void _thunk_A_Light0() noexcept;
 extern void _thunk_A_Light1() noexcept;
 extern void _thunk_A_Light2() noexcept;
-extern void A_BFGSpray() noexcept;
-extern void A_BFGsound() noexcept;
-extern void A_OpenShotgun2() noexcept;
-extern void A_LoadShotgun2() noexcept;
+extern void _thunk_A_BFGSpray() noexcept;
+extern void _thunk_A_BFGsound() noexcept;
+extern void _thunk_A_OpenShotgun2() noexcept;
+extern void _thunk_A_LoadShotgun2() noexcept;
 extern void A_CloseShotgun2() noexcept;
 extern void P_SetupPsprites() noexcept;
 extern void P_MovePsprites() noexcept;
@@ -221,10 +221,10 @@ namespace PsxVm {
         { 0x8002155C, &_thunk_A_Light0 },
         { 0x80021564, &_thunk_A_Light1 },
         { 0x80021570, &_thunk_A_Light2 },
-        { 0x8002157C, &A_BFGSpray },
-        { 0x8002166C, &A_BFGsound },
-        { 0x80021690, &A_OpenShotgun2 },
-        { 0x800216B4, &A_LoadShotgun2 },
+        { 0x8002157C, &_thunk_A_BFGSpray },
+        { 0x8002166C, &_thunk_A_BFGsound },
+        { 0x80021690, &_thunk_A_OpenShotgun2 },
+        { 0x800216B4, &_thunk_A_LoadShotgun2 },
         { 0x800216D8, &A_CloseShotgun2 },
         { 0x80021794, &P_SetupPsprites },
         { 0x8002190C, &P_MovePsprites },

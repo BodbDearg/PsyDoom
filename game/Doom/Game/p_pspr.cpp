@@ -700,86 +700,58 @@ void A_Light2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     player.extralight = 16;
 }
 
-void A_BFGSpray() noexcept {
-    sp -= 0x28;
-    sw(s3, sp + 0x1C);
-    s3 = a0;
-    sw(s4, sp + 0x20);
-    s4 = 0;                                             // Result = 00000000
-    sw(s2, sp + 0x18);
-    s2 = 0;                                             // Result = 00000000
-    sw(ra, sp + 0x24);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    a2 = 0x4000000;                                     // Result = 04000000
-loc_800215A8:
-    a1 = 0xE0000000;                                    // Result = E0000000
-    a1 += s2;
-    v0 = lw(s3 + 0x24);
-    a0 = lw(s3 + 0x74);
-    a1 += v0;
-    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
-    a3 = 0x20;                                          // Result = 00000020
-    if (v0 == 0) goto loc_8002162C;
-    s1 = 0;                                             // Result = 00000000
-    s0 = 0;                                             // Result = 00000000
-    a0 = lw(v0);
-    a1 = lw(v0 + 0x4);
-    a2 = lw(v0 + 0x44);
-    v0 = lw(v0 + 0x8);
-    a2 = u32(i32(a2) >> 2);
-    a2 += v0;
-    v0 = ptrToVmAddr(P_SpawnMobj(a0, a1, a2, (mobjtype_t) a3));
-loc_800215F8:
-    s0++;
-    _thunk_P_Random();
-    v1 = s1 + 1;
-    v0 &= 7;
-    s1 = v1 + v0;
-    v0 = (i32(s0) < 0xF);
-    a3 = s1;
-    if (v0 != 0) goto loc_800215F8;
-    a1 = lw(s3 + 0x74);
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
-    a2 = a1;
-    P_DamageMObj(*vmAddrToPtr<mobj_t>(a0), vmAddrToPtr<mobj_t>(a1), vmAddrToPtr<mobj_t>(a2), a3);
-loc_8002162C:
-    v0 = 0x1990000;                                     // Result = 01990000
-    v0 |= 0x9999;                                       // Result = 01999999
-    s2 += v0;
-    s4++;
-    v0 = (i32(s4) < 0x28);
-    a2 = 0x4000000;                                     // Result = 04000000
-    if (v0 != 0) goto loc_800215A8;
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tries to spawn a BFG explosion on every monster in view.
+// Up to 40 explosions are created.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_BFGSpray(mobj_t& mobj) noexcept {
+    // PC-PSX: add extra assert here - it's expected the map object has a target (the firer of the BFG, i.e the player thing)
+    ASSERT(mobj.target);
+    mobj_t& target = *mobj.target;
+
+    // Spawn explosions from -45 degrees relative to the player to +45 degrees
+    constexpr int32_t NUM_EXPLOSIONS = 40;
+
+    for (int32_t explosionIdx = 0; explosionIdx < NUM_EXPLOSIONS; ++explosionIdx) {
+        P_AimLineAttack(target, mobj.angle - ANG45 + (ANG90 / NUM_EXPLOSIONS) * explosionIdx, 1024 * FRACUNIT);
+        mobj_t* const pLineTarget = gpLineTarget->get();
+
+        if (!pLineTarget)
+            continue;
+
+        // Spawn the BFG explosion on the monster
+        P_SpawnMobj(pLineTarget->x, pLineTarget->y, pLineTarget->z + (pLineTarget->height >> 2), MT_EXTRABFG);
+
+        // Figure out the damage amount (15-120) in a series of damage 'rounds' and deal the damage
+        int32_t damageAmt = 0;
+
+        for (int32_t damageRound = 0; damageRound < 15; ++damageRound) {
+            damageAmt += (P_Random() & 7) + 1;
+        }
+
+        P_DamageMObj(*pLineTarget, &target, &target, damageAmt);
+    }
 }
 
-void A_BFGsound() noexcept {
-    a0 = lw(a0);
-    a1 = sfx_bfg;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do the BFG firing sound
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_BFGsound(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    S_StartSound(player.mo.get(), sfx_bfg);
 }
 
-void A_OpenShotgun2() noexcept {
-    a0 = lw(a0);
-    a1 = sfx_dbopn;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Play the Super Shotgun opening sound (during reload sequence)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_OpenShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    S_StartSound(player.mo.get(), sfx_dbopn);
 }
 
-void A_LoadShotgun2() noexcept {
-    a0 = lw(a0);
-    a1 = sfx_dbload;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Play the Super Shotgun loading sound (during reload sequence)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_LoadShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    S_StartSound(player.mo.get(), sfx_dbload);
 }
 
 void A_CloseShotgun2() noexcept {
@@ -1059,3 +1031,7 @@ void _thunk_A_FireCGun() noexcept { A_FireCGun(*vmAddrToPtr<player_t>(*PsxVm::gp
 void _thunk_A_Light0() noexcept { A_Light0(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_Light1() noexcept { A_Light1(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_Light2() noexcept { A_Light2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_BFGSpray() noexcept { A_BFGSpray(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
+void _thunk_A_BFGsound() noexcept { A_BFGsound(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_OpenShotgun2() noexcept { A_OpenShotgun2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_LoadShotgun2() noexcept { A_LoadShotgun2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
