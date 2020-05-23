@@ -655,139 +655,49 @@ void A_FireShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcep
     }
 }
 
-void A_FireCGun() noexcept {
-    sp -= 0x30;
-    sw(s1, sp + 0x1C);
-    s1 = a0;
-    sw(s0, sp + 0x18);
-    s0 = a1;
-    sw(ra, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    a0 = lw(s1);
-    a1 = sfx_pistol;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = lw(s1 + 0x6C);
-    v1 = v0 << 1;
-    v1 += v0;
-    v1 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F4;                                       // Result = WeaponInfo_Fist[0] (800670F4)
-    at += v1;
-    v0 = lw(at);
-    v0 <<= 2;
-    v1 = v0 + s1;
-    v0 = lw(v1 + 0x98);
-    {
-        const bool bJump = (v0 == 0);
-        v0--;
-        if (bJump) goto loc_8002153C;
-    }
-    sw(v0, v1 + 0x98);
-    v1 = lw(s1 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7108;                                       // Result = WeaponInfo_Fist[5] (80067108)
-    at += v0;
-    v0 = lw(at);
-    v1 = v0 << 3;
-    v1 -= v0;
-    v1 <<= 2;
-    v0 = lw(s0);
-    v1 += v0;
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 -= 0x6CC4;                                       // Result = State_S_CHAIN1[0] (8005933C)
-    v1 -= v0;
-    v0 = v1 << 3;
-    v0 += v1;
-    a0 = v0 << 6;
-    v0 += a0;
-    v0 <<= 3;
-    v0 += v1;
-    a0 = v0 << 15;
-    v0 += a0;
-    v0 <<= 3;
-    v0 += v1;
-    v0 = -v0;
-    a0 = u32(i32(v0) >> 2);
-    s0 = s1 + 0x100;
-    if (a0 != 0) goto loc_80021470;
-    sw(0, s1 + 0x100);
-    goto loc_800214E0;
-loc_80021470:
-    v0 = a0 << 3;
-loc_80021474:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_800214C0;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_800214E0;
-loc_800214C0:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_800214E0;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_80021474;
-    sw(0, s0);
-loc_800214E0:
-    s0 = lw(s1 + 0xC4);
-    s3 = lw(s1);
-    s0 = (s0 < 1);
-    _thunk_P_Random();
-    v0 &= 3;
-    v0++;
-    s1 = lw(s3 + 0x24);
-    s2 = v0 << 2;
-    if (s0 != 0) goto loc_80021520;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    s0 <<= 18;
-    s1 += s0;
-loc_80021520:
-    sw(s2, sp + 0x10);
-    a0 = s3;
-    a1 = s1;
-    a3 = 0x7FFF0000;                                    // Result = 7FFF0000
-    a3 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    a2 = 0x8000000;                                     // Result = 08000000
-    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
-loc_8002153C:
-    ra = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fire the Chaingun for the player
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FireCGun(player_t& player, pspdef_t& sprite) noexcept {
+    // Play the sound and decrement ammo count (if we have any ammo)
+    mobj_t& playerMobj = *player.mo;
+    S_StartSound(&playerMobj, sfx_pistol);
+
+    const weaponinfo_t& weaponInfo = gWeaponInfo[player.readyweapon];
+    const ammotype_t ammoType = weaponInfo.ammo;
+
+    if (player.ammo[ammoType] == 0)
+        return;
+
+    player.ammo[ammoType]--;
+
+    // Do a muzzle flash for the chaingun and sync to the animation frames of the chaingun
+    const statenum_t flashStateNum = (statenum_t)(weaponInfo.flashstate + sprite.state.get() - &gStates[S_CHAIN1]);
+    P_SetPsprite(player, ps_flash, flashStateNum);
+
+    // Fire a bullet
+    P_GunShot(playerMobj, (player.refire == 0));
 }
 
-void A_Light0() noexcept {
-    sw(0, a0 + 0xE4);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set extra light from muzzle flash for the player: 0
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Light0(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    player.extralight = 0;
 }
 
-void A_Light1() noexcept {
-    v0 = 8;
-    sw(v0, a0 + 0xE4);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set extra light from muzzle flash for the player: 8
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Light1(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    player.extralight = 8;
 }
 
-void A_Light2() noexcept {
-    v0 = 0x10;
-    sw(v0, a0 + 0xE4);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Set extra light from muzzle flash for the player: 16
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_Light2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    player.extralight = 16;
 }
 
 void A_BFGSpray() noexcept {
@@ -1145,3 +1055,7 @@ void _thunk_A_FirePlasma() noexcept { A_FirePlasma(*vmAddrToPtr<player_t>(*PsxVm
 void _thunk_A_FirePistol() noexcept { A_FirePistol(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_FireShotgun() noexcept { A_FireShotgun(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_FireShotgun2() noexcept { A_FireShotgun2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_FireCGun() noexcept { A_FireCGun(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_Light0() noexcept { A_Light0(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_Light1() noexcept { A_Light1(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_Light2() noexcept { A_Light2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }

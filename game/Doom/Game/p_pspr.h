@@ -23,7 +23,7 @@ void A_FirePlasma(player_t& player, pspdef_t& sprite) noexcept;
 void A_FirePistol(player_t& player, pspdef_t& sprite) noexcept;
 void A_FireShotgun(player_t& player, pspdef_t& sprite) noexcept;
 void A_FireShotgun2(player_t& player, pspdef_t& sprite) noexcept;
-void A_FireCGun() noexcept;
+void A_FireCGun(player_t& player, pspdef_t& sprite) noexcept;
 void A_Light0() noexcept;
 void A_Light1() noexcept;
 void A_Light2() noexcept;
