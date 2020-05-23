@@ -8,10 +8,29 @@
 #include "PsxVm/PsxVm.h"
 #include <algorithm>
 
-static constexpr int32_t SIDE_FRONT = +1;   // Return code for 'SL_PointOnSide2' : point is on the front side of the line
-static constexpr int32_t SIDE_BACK  = -1;   // Return code for 'SL_PointOnSide2' : point is on the back side of the line
+static constexpr int32_t CLIPRADIUS = 23;   // Radius of the player for collisions against lines
+static constexpr int32_t SIDE_FRONT = +1;   // Return code for side checking: point is on the front side of the line
+static constexpr int32_t SIDE_ON    =  0;   // Return code for side checking: point is on the line
+static constexpr int32_t SIDE_BACK  = -1;   // Return code for side checking: point is on the back side of the line
 
+static const VmPtr<fixed_t>         gSlideX(0x80077F90);            // Where the player move is starting from: x
+static const VmPtr<fixed_t>         gSlideY(0x80077F94);            // Where the player move is starting from: y
+static const VmPtr<fixed_t>         gSlideDx(0x80078070);           // How much the player is wanting to move: x
+static const VmPtr<fixed_t>         gSlideDy(0x80078074);           // How much the player is wanting to move: y
+static const VmPtr<fixed_t>         gBlockFrac(0x80078228);         // Percentage of the current move allowed
+static const VmPtr<fixed_t>         gBlockNvx(0x800781A8);          // The vector to slide along for the line collided with: x
+static const VmPtr<fixed_t>         gBlockNvy(0x800781B0);          // The vector to slide along for the line collided with: y
 static const VmPtr<VmPtr<line_t>>   gpSpecialLine(0x80077F9C);      // A special line that was crossed during player movement
+static const VmPtr<fixed_t>         gNvx(0x80078158);               // Line being collided against, normalized normal: x
+static const VmPtr<fixed_t>         gNvy(0x8007815C);               // Line being collided against, normalized normal: y
+static const VmPtr<fixed_t>         gP1x(0x800780CC);               // Line being collided against, p1: x
+static const VmPtr<fixed_t>         gP1y(0x800780D4);               // Line being collided against, p1: y
+static const VmPtr<fixed_t>         gP2x(0x800780D0);               // Line being collided against, p2: x
+static const VmPtr<fixed_t>         gP2y(0x800780E0);               // Line being collided against, p2: y
+static const VmPtr<fixed_t>         gP3x(0x800780DC);               // Movement line, p1: x
+static const VmPtr<fixed_t>         gP3y(0x800780F4);               // Movement line, p1: y
+static const VmPtr<fixed_t>         gP4x(0x800780F0);               // Movement line, p2: x
+static const VmPtr<fixed_t>         gP4y(0x800780FC);               // Movement line, p2: y
 
 void P_SlideMove() noexcept {
 loc_8002502C:
@@ -289,90 +308,47 @@ loc_80025434:
     return;
 }
 
-void SL_PointOnSide() noexcept {
-    v0 = lw(gp + 0xAF4);                                // Load from: gP1y (800780D4)
-    sp -= 0x20;
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    s0 = a1 - v0;
-    v0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
-    a1 = lw(gp + 0xB78);                                // Load from: gNvx (80078158)
-    a0 -= v0;
-    _thunk_FixedMul();
-    s1 = v0;
-    a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
-    a0 = s0;
-    _thunk_FixedMul();
-    s1 += v0;
-    v0 = 0x10000;                                       // Result = 00010000
-    v0 = (i32(v0) < i32(s1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_800254B8;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Tell what side of the current test line the given point is on.
+// Answer is one of 'SIDE_FRONT', 'SIDE_BACK' or 'SIDE_ON'; 'SIDE_ON' is returned with the distance is <= 1.0.
+//
+// Global inputs:
+//      gP1x, gP1y  : First point of the line being tested against
+//      gNvx, gNvy  : Normalized normal for the line being tested against
+//------------------------------------------------------------------------------------------------------------------------------------------
+static int32_t SL_PointOnSide(const fixed_t x, const fixed_t y) noexcept {
+    // Use the dot product of a line relative vector with the normal to tell the side
+    const fixed_t dist = FixedMul(x - *gP1x, *gNvx) + FixedMul(y - *gP1y, *gNvy);
+
+    if (dist > FRACUNIT) {
+        return SIDE_FRONT;
+    } else if (dist < -FRACUNIT) {
+        return SIDE_BACK;
+    } else {
+        return SIDE_ON;
     }
-    v0 = 0xFFFF0000;                                    // Result = FFFF0000
-    v0 = (i32(s1) < i32(v0));
-    v0 = -v0;
-loc_800254B8:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
 }
 
-void SL_CrossFrac() noexcept {
-    a1 = lw(gp + 0xB78);                                // Load from: gNvx (80078158)
-    a2 = lw(gp + 0xAFC);                                // Load from: gP3x (800780DC)
-    v1 = lw(gp + 0xB14);                                // Load from: gP3y (800780F4)
-    v0 = lw(gp + 0xAF4);                                // Load from: gP1y (800780D4)
-    a0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
-    sp -= 0x20;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    s1 = v1 - v0;
-    a0 = a2 - a0;
-    _thunk_FixedMul();
-    s2 = v0;
-    a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
-    a0 = s1;
-    _thunk_FixedMul();
-    s2 += v0;
-    a1 = lw(gp + 0xB78);                                // Load from: gNvx (80078158)
-    a2 = lw(gp + 0xB10);                                // Load from: gP4x (800780F0)
-    v1 = lw(gp + 0xB1C);                                // Load from: gP4y (800780FC)
-    v0 = lw(gp + 0xAF4);                                // Load from: gP1y (800780D4)
-    a0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
-    s1 = v1 - v0;
-    a0 = a2 - a0;
-    _thunk_FixedMul();
-    s0 = v0;
-    a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
-    a0 = s1;
-    _thunk_FixedMul();
-    s0 += v0;
-    v0 = ~s2;
-    v0 >>= 31;
-    v1 = s0 >> 31;
-    {
-        const bool bJump = (v0 != v1);
-        v0 = 0x10000;                                   // Result = 00010000
-        if (bJump) goto loc_8002556C;
-    }
-    a0 = s2;
-    a1 = a0 - s0;
-    _thunk_FixedDiv();
-loc_8002556C:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Computes and returns the fraction along the movement line that the intersection with the test line occurs at.
+//
+// Global inputs:
+//      gP3x, gP3y, gP4x, gP4y  : Move line coordinates
+//      gP1x, gP1y              : First point of the line being tested against
+//      gNvx, gNvy              : Normalized normal for the line being tested against
+//------------------------------------------------------------------------------------------------------------------------------------------
+static fixed_t SL_CrossFrac() noexcept {
+    // Project the move start and end points onto the normalized normal of the line being tested against.
+    // This gives us the perpendicular distance of these points to the line.
+    const fixed_t dist1 = FixedMul(*gP3x - *gP1x, *gNvx) + FixedMul(*gP3y - *gP1y, *gNvy);
+    const fixed_t dist2 = FixedMul(*gP4x - *gP1x, *gNvx) + FixedMul(*gP4y - *gP1y, *gNvy);
+
+    // If the points don't cross the line then there 
+    if ((dist1 < 0) == (dist2 < 0))
+        return FRACUNIT;
+    
+    // Otherwise compute the fraction along the move line that the intersection occurs at
+    return FixedDiv(dist1, dist1 - dist2);
 }
 
 void CheckLineEnds() noexcept {
@@ -425,137 +401,57 @@ void CheckLineEnds() noexcept {
     return;
 }
 
-void ClipToLine() noexcept {
-loc_80025648:
-    a1 = lw(gp + 0xB78);                                // Load from: gNvx (80078158)
-    v1 = lw(gp + 0x9B0);                                // Load from: gSlideX (80077F90)
-    a0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
-    a2 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = lw(gp + 0x9B4);                                // Load from: gSlideY (80077F94)
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v0 = a1 << 1;
-    v0 += a1;
-    v0 <<= 3;
-    v0 -= a1;
-    v1 -= v0;
-    v0 = a2 << 1;
-    v0 += a2;
-    v0 <<= 3;
-    v0 -= a2;
-    s0 -= v0;
-    a2 = lw(gp + 0xA90);                                // Load from: gSlideDx (80078070)
-    v0 = lw(gp + 0xA94);                                // Load from: gSlideDy (80078074)
-    a0 = v1 - a0;
-    sw(v1, gp + 0xAFC);                                 // Store to: gP3x (800780DC)
-    sw(s0, gp + 0xB14);                                 // Store to: gP3y (800780F4)
-    v1 += a2;
-    sw(v1, gp + 0xB10);                                 // Store to: gP4x (800780F0)
-    v1 = lw(gp + 0xAF4);                                // Load from: gP1y (800780D4)
-    v0 += s0;
-    sw(v0, gp + 0xB1C);                                 // Store to: gP4y (800780FC)
-    s0 -= v1;
-    _thunk_FixedMul();
-    s1 = v0;
-    a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
-    a0 = s0;
-    _thunk_FixedMul();
-    s1 += v0;
-    v0 = 0x10000;                                       // Result = 00010000
-    v0 = (i32(v0) < i32(s1));
-    s2 = 1;                                             // Result = 00000001
-    if (v0 != 0) goto loc_800256F8;
-    v0 = 0xFFFF0000;                                    // Result = FFFF0000
-    v0 = (i32(s1) < i32(v0));
-    s2 = -v0;
-loc_800256F8:
-    v0 = -1;                                            // Result = FFFFFFFF
-    if (s2 == v0) goto loc_80025824;
-    a1 = lw(gp + 0xB78);                                // Load from: gNvx (80078158)
-    v1 = lw(gp + 0xB10);                                // Load from: gP4x (800780F0)
-    s0 = lw(gp + 0xB1C);                                // Load from: gP4y (800780FC)
-    a0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
-    v0 = lw(gp + 0xAF4);                                // Load from: gP1y (800780D4)
-    a0 = v1 - a0;
-    s0 -= v0;
-    _thunk_FixedMul();
-    s1 = v0;
-    a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
-    a0 = s0;
-    _thunk_FixedMul();
-    s1 += v0;
-    v0 = 0x10000;                                       // Result = 00010000
-    v0 = (i32(v0) < i32(s1));
-    v1 = 1;                                             // Result = 00000001
-    if (v0 != 0) goto loc_80025754;
-    v0 = 0xFFFF0000;                                    // Result = FFFF0000
-    v0 = (i32(s1) < i32(v0));
-    v1 = -v0;
-loc_80025754:
-    v0 = 1;                                             // Result = 00000001
-    if (v1 == 0) goto loc_80025824;
-    if (v1 == v0) goto loc_80025824;
-    v1 = 0;                                             // Result = 00000000
-    if (s2 == 0) goto loc_8002580C;
-    a1 = lw(gp + 0xB78);                                // Load from: gNvx (80078158)
-    a2 = lw(gp + 0xAFC);                                // Load from: gP3x (800780DC)
-    v1 = lw(gp + 0xB14);                                // Load from: gP3y (800780F4)
-    v0 = lw(gp + 0xAF4);                                // Load from: gP1y (800780D4)
-    a0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
-    s1 = v1 - v0;
-    a0 = a2 - a0;
-    _thunk_FixedMul();
-    s2 = v0;
-    a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
-    a0 = s1;
-    _thunk_FixedMul();
-    s2 += v0;
-    a1 = lw(gp + 0xB78);                                // Load from: gNvx (80078158)
-    a2 = lw(gp + 0xB10);                                // Load from: gP4x (800780F0)
-    v1 = lw(gp + 0xB1C);                                // Load from: gP4y (800780FC)
-    v0 = lw(gp + 0xAF4);                                // Load from: gP1y (800780D4)
-    a0 = lw(gp + 0xAEC);                                // Load from: gP1x (800780CC)
-    s1 = v1 - v0;
-    a0 = a2 - a0;
-    _thunk_FixedMul();
-    s0 = v0;
-    a1 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
-    a0 = s1;
-    _thunk_FixedMul();
-    s0 += v0;
-    v0 = ~s2;
-    v0 >>= 31;
-    v1 = s0 >> 31;
-    {
-        const bool bJump = (v0 != v1);
-        v1 = 0x10000;                                   // Result = 00010000
-        if (bJump) goto loc_800257F8;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Intersect the current movement line against the current collision line being tested.
+// Reduces the allowed movement amount if there is a collision, and it's closer than the current closest collision.
+//
+// Global inputs:
+//      gSlideX, gSlideY        : Move start point
+//      gSlideDx, gSlideDy      : Movement amount/delta
+//      gP1x, gP1y              : 1st point of the line being collided against
+//      gNvx, gNvy              : Normalized normal for the line being collided against
+//
+// Global outputs:
+//      gBlockFrac              : Allowed movement percent (set if the collision is closer than current closest)
+//      gBlockNvx, gBlockNvy    : Normalized vector to slide along the collision wall (set if the collision is closer than current closest)
+//------------------------------------------------------------------------------------------------------------------------------------------
+void SL_ClipToLine() noexcept {
+    // Move start point is on the circumference of the player circle, the closest point to the wall (use the normal to compute that).
+    // Move end point is that plus the movement amount.
+    *gP3x = *gSlideX - (*gNvx) * CLIPRADIUS;
+    *gP3y = *gSlideY - (*gNvy) * CLIPRADIUS;
+    *gP4x = *gP3x + *gSlideDx;
+    *gP4y = *gP3y + *gSlideDy;
+
+    // If the move start point is on the wrong side of the line then ignore (can't be colliding with it)
+    const int32_t moveP1Side = SL_PointOnSide(*gP3x, *gP3y);
+
+    if (moveP1Side == SIDE_BACK)
+        return;
+    
+    // If the move end point is (roughly) along or in front of the line then the move is allowed and we don't need to clip
+    const int32_t moveP2Side = SL_PointOnSide(*gP4x, *gP4y);
+
+    if ((moveP2Side == SIDE_ON) || (moveP2Side == SIDE_FRONT))
+        return;
+    
+    // If the move start point is already on the line and the end point is behind then disallow the move entirely
+    if (moveP1Side == SIDE_ON) {
+        *gBlockNvx = -*gNvy;
+        *gBlockNvy = *gNvx;
+        *gBlockFrac = 0;
+        return;
     }
-    a0 = s2;
-    a1 = a0 - s0;
-    _thunk_FixedDiv();
-    v1 = v0;
-loc_800257F8:
-    v0 = lw(gp + 0xC48);                                // Load from: gBlockFrac (80078228)
-    v0 = (i32(v1) < i32(v0));
-    if (v0 == 0) goto loc_80025824;
-loc_8002580C:
-    v0 = lw(gp + 0xB7C);                                // Load from: gNvy (8007815C)
-    sw(v1, gp + 0xC48);                                 // Store to: gBlockFrac (80078228)
-    v1 = lw(gp + 0xB78);                                // Load from: gNvx (80078158)
-    v0 = -v0;
-    sw(v0, gp + 0xBC8);                                 // Store to: gBlockNvx (800781A8)
-    sw(v1, gp + 0xBD0);                                 // Store to: gBlockNvy (800781B0)
-loc_80025824:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+
+    // Compute how much percent of the move is allowed.
+    // Only save this collision if it's closer than the current closest:
+    const fixed_t intersectFrac = SL_CrossFrac();
+
+    if (intersectFrac < *gBlockFrac) {
+        *gBlockNvx = -*gNvy;
+        *gBlockNvy = *gNvx;
+        *gBlockFrac = intersectFrac;
+    }
 }
 
 void SL_CheckLine() noexcept {
@@ -687,7 +583,7 @@ loc_80025A10:
     sw(v1, gp + 0xB7C);                                 // Store to: gNvy (8007815C)
     sw(a0, gp + 0xB00);                                 // Store to: gP2y (800780E0)
 loc_80025A68:
-    ClipToLine();
+    SL_ClipToLine();
 loc_80025A70:
     ra = lw(sp + 0x1C);
     s2 = lw(sp + 0x18);
@@ -698,7 +594,7 @@ loc_80025A70:
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Tell what side of a line a point is on
+// Tell what side of a line a point is on: answer is either 'SIDE_FRONT' or 'SIDE_BACK'
 //------------------------------------------------------------------------------------------------------------------------------------------
 static int32_t SL_PointOnSide2(
     const fixed_t px,

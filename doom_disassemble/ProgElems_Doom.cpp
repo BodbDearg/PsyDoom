@@ -518,7 +518,7 @@ static const ProgElem ELEMS[] = {
     { 0x80025460, 0x800254D0, "SL_PointOnSide",                         ProgElemType::FUNCTION },
     { 0x800254D0, 0x80025588, "SL_CrossFrac",                           ProgElemType::FUNCTION },
     { 0x80025588, 0x80025648, "CheckLineEnds",                          ProgElemType::FUNCTION },
-    { 0x80025648, 0x80025840, "ClipToLine",                             ProgElemType::FUNCTION },
+    { 0x80025648, 0x80025840, "SL_ClipToLine",                          ProgElemType::FUNCTION },
     { 0x80025840, 0x80025A8C, "SL_CheckLine",                           ProgElemType::FUNCTION },
     { 0x80025A8C, 0x80025AFC, "SL_PointOnSide2",                        ProgElemType::FUNCTION },
     { 0x80025AFC, 0x80025F44, "SL_CheckSpecialLines",                   ProgElemType::FUNCTION },
