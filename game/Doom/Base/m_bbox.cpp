@@ -1,6 +1,6 @@
 #include "m_bbox.h"
 
-#include "PsxVm/PsxVm.h"
+#include <algorithm>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Clear the coordinates for the given bounding box.
@@ -30,26 +30,12 @@ void M_AddToBox(fixed_t* const pBox, const fixed_t x, const fixed_t y) noexcept 
     }
 }
 
-void M_AddPointToBox() noexcept {
-    v0 = lw(a0 + 0x8);
-    v0 = (i32(a1) < i32(v0));
-    if (v0 == 0) goto loc_80012B28;
-    sw(a1, a0 + 0x8);
-loc_80012B28:
-    v0 = lw(a0 + 0xC);
-    v0 = (i32(v0) < i32(a1));
-    if (v0 == 0) goto loc_80012B40;
-    sw(a1, a0 + 0xC);
-loc_80012B40:
-    v0 = lw(a0 + 0x4);
-    v0 = (i32(a2) < i32(v0));
-    if (v0 == 0) goto loc_80012B58;
-    sw(a2, a0 + 0x4);
-loc_80012B58:
-    v0 = lw(a0);
-    v0 = (i32(v0) < i32(a2));
-    if (v0 == 0) goto loc_80012B70;
-    sw(a2, a0);
-loc_80012B70:
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Variant of 'M_AddToBox' that checks the coord against ALL bounds: unused in PSX DOOM
+//------------------------------------------------------------------------------------------------------------------------------------------
+void M_AddToBox2(fixed_t* const pBox, const fixed_t x, const fixed_t y) noexcept {
+    pBox[BOXLEFT] = std::min(pBox[BOXLEFT], x);
+    pBox[BOXRIGHT] = std::max(pBox[BOXRIGHT], x);
+    pBox[BOXBOTTOM] = std::min(pBox[BOXBOTTOM], y);
+    pBox[BOXTOP] = std::max(pBox[BOXTOP], y);
 }

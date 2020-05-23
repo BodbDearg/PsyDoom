@@ -21,7 +21,6 @@
 #include "p_setup.h"
 #include "p_tick.h"
 #include "PcPsx/Endian.h"
-#include "PsxVm/PsxVm.h"
 #include "Wess/wessapi.h"
 
 // Helper global holding the result of executing a gameloop via 'MiniLoop'.
@@ -215,8 +214,7 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
     }
 
     // Spawn the player
-    a0 = ptrToVmAddr(pChosenSpawnPt);
-    P_SpawnPlayer();
+    P_SpawnPlayer(*pChosenSpawnPt);
 
     // Restore all cooperative starts back to having their previous type, if we modified them.
     // The co-op spawn logic assumes the type is correct for the corresponding player index.

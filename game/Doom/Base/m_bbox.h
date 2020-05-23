@@ -4,4 +4,4 @@
 
 void M_ClearBox(fixed_t* const pBox) noexcept;
 void M_AddToBox(fixed_t* const pBox, const fixed_t x, const fixed_t y) noexcept;
-void M_AddPointToBox() noexcept;
+void M_AddToBox2(fixed_t* const pBox, const fixed_t x, const fixed_t y) noexcept;

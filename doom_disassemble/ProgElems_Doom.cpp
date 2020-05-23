@@ -294,7 +294,7 @@ static const ProgElem ELEMS[] = {
     { 0x80012A70, 0x80012A80, "M_ClearRandom",                          ProgElemType::FUNCTION },
     { 0x80012A80, 0x80012AA0, "M_ClearBox",                             ProgElemType::FUNCTION },
     { 0x80012AA0, 0x80012B10, "M_AddToBox",                             ProgElemType::FUNCTION },
-    { 0x80012B10, 0x80012B78, "M_AddPointToBox",                        ProgElemType::FUNCTION },
+    { 0x80012B10, 0x80012B78, "M_AddToBox2",                            ProgElemType::FUNCTION },
     { 0x80012B78, 0x80012E04, "MiniLoop",                               ProgElemType::FUNCTION },
     { 0x80012E04, 0x80012F00, "G_DoLoadLevel",                          ProgElemType::FUNCTION },
     { 0x80012F00, 0x80012F88, "G_PlayerFinishLevel",                    ProgElemType::FUNCTION },

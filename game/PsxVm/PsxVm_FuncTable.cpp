@@ -3,7 +3,6 @@
 
 #include <map>
 
-extern void M_AddPointToBox() noexcept;
 extern void _thunk_T_MoveCeiling() noexcept;
 extern void _thunk_T_VerticalDoor() noexcept;
 extern void _thunk_A_Look() noexcept;
@@ -50,7 +49,6 @@ extern void _thunk_T_StrobeFlash() noexcept;
 extern void _thunk_T_Glow() noexcept;
 extern void _thunk_P_RemoveMobj() noexcept;
 extern void _thunk_P_ExplodeMissile() noexcept;
-extern void P_SpawnPlayer() noexcept;
 extern void _thunk_T_PlatRaise() noexcept;
 extern void _thunk_P_FireWeapon() noexcept;
 extern void _thunk_A_WeaponReady() noexcept;
@@ -143,7 +141,6 @@ extern void LIBCOMB__ioabort() noexcept;
 
 namespace PsxVm {
     std::map<uint32_t, VmFunc> gFuncTable = {
-        { 0x80012B10, &M_AddPointToBox },
         { 0x80014A30, &_thunk_T_MoveCeiling },
         { 0x800152FC, &_thunk_T_VerticalDoor },
         { 0x800164B4, &_thunk_A_Look },
@@ -190,7 +187,6 @@ namespace PsxVm {
         { 0x8001B4A0, &_thunk_T_Glow },
         { 0x8001C724, &_thunk_P_RemoveMobj },
         { 0x8001CB9C, &_thunk_P_ExplodeMissile },
-        { 0x8001CE40, &P_SpawnPlayer },
         { 0x8001F280, &_thunk_T_PlatRaise },
         { 0x8001FFBC, &_thunk_P_FireWeapon },
         { 0x80020298, &_thunk_A_WeaponReady },

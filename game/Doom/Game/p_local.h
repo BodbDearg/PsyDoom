@@ -22,6 +22,7 @@ static constexpr fixed_t ONFLOORZ   = INT32_MIN;
 static constexpr fixed_t ONCEILINGZ = INT32_MAX;
 
 static constexpr int32_t MAXHEALTH      = 100;              // Default maximum health for the player
+static constexpr fixed_t VIEWHEIGHT     = 41 * FRACUNIT;    // Height of the view off the ground
 static constexpr fixed_t GRAVITY        = 4 * FRACUNIT;     // Gravity strength: same as Jaguar Doom
 static constexpr fixed_t MELEERANGE     = 70 * FRACUNIT;    // Range for melee attacks
 static constexpr fixed_t USERANGE       = 70 * FRACUNIT;    // Range for using things

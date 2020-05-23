@@ -21,8 +21,10 @@
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_tick.h"
-#include "PsxVm/PsxVm.h"
 #include <algorithm>
+
+#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PsxVm/PsxVm.h"
 
 // Item respawn queue
 static constexpr int32_t ITEMQUESIZE = 64;
@@ -69,11 +71,6 @@ void P_RemoveMobj(mobj_t& mobj) noexcept {
     mobj.next->prev = mobj.prev;
     mobj.prev->next = mobj.next;
     Z_Free2(*gpMainMemZone->get(), &mobj);
-}
-
-// TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
-void _thunk_P_RemoveMobj() noexcept {
-    P_RemoveMobj(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -161,7 +158,7 @@ bool P_SetMObjState(mobj_t& mobj, const statenum_t stateNum) noexcept {
     if (state.action) {
         // FIXME: convert to native call
         const VmFunc func = PsxVm::getVmFuncForAddr(state.action);
-        a0 = ptrToVmAddr(&mobj);
+        *PsxVm::gpReg_a0 = ptrToVmAddr(&mobj);
         func();
     }
 
@@ -191,11 +188,6 @@ void P_ExplodeMissile(mobj_t& mobj) noexcept {
         S_StopSound(mobj.target);
         S_StartSound(&mobj, mobjInfo.deathsound);
     }
-}
-
-// TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
-void _thunk_P_ExplodeMissile() noexcept {
-    P_ExplodeMissile(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -250,199 +242,73 @@ mobj_t* P_SpawnMobj(const fixed_t x, const fixed_t y, const fixed_t z, const mob
     return &mobj;
 }
 
-void P_SpawnPlayer() noexcept {
-loc_8001CE40:
-    sp -= 0x38;
-    sw(s4, sp + 0x28);
-    s4 = a0;
-    sw(ra, sp + 0x30);
-    sw(s5, sp + 0x2C);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    a0 = lh(s4 + 0x6);
-    v1 = a0 << 2;
-    at = *gpSectors;
-    at += v1;
-    v0 = lw(at);
-    v1 += a0;
-    if (v0 != 0) goto loc_8001CE94;
-    v0 = 0;                                             // Result = 00000000
-    goto loc_8001D15C;
-loc_8001CE94:
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7940;                                       // Result = gTmpWadLumpBuffer[3FDE] (800A86C0)
-    s3 = v0 + v1;
-    v0 = lw(s3 + 0x4);
-    s5 = 2;                                             // Result = 00000002
-    a1 = 0x94;                                          // Result = 00000094
-    if (v0 != s5) goto loc_8001CEC8;
-    a0--;
-    G_PlayerReborn(a0);
-    a1 = 0x94;                                          // Result = 00000094
-loc_8001CEC8:
-    a2 = 2;                                             // Result = 00000002
-    a3 = 0;                                             // Result = 00000000
-    a0 = *gpMainMemZone;
-    s1 = lh(s4);
-    s2 = lh(s4 + 0x2);
-    s1 <<= 16;
-    s2 <<= 16;
-    v0 = ptrToVmAddr(Z_Malloc(*vmAddrToPtr<memzone_t>(a0), a1, (int16_t) a2, vmAddrToPtr<VmPtr<void>>(a3)));
-    s0 = v0;
-    a0 = s0;
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0x94;                                          // Result = 00000094
-    D_memset(vmAddrToPtr<void>(a0), (std::byte) a1, a2);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 -= 0x1FC4;                                       // Result = MObjInfo_MT_PLAYER[0] (8005E03C)
-    sw(0, s0 + 0x54);
-    sw(v0, s0 + 0x58);
-    sw(s1, s0);
-    sw(s2, s0 + 0x4);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x1F84);                               // Load from: MObjInfo_MT_PLAYER[10] (8005E07C)
-    sw(v0, s0 + 0x40);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x1F80);                               // Load from: MObjInfo_MT_PLAYER[11] (8005E080)
-    sw(v0, s0 + 0x44);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x1F70);                               // Load from: MObjInfo_MT_PLAYER[15] (8005E090)
-    sw(v0, s0 + 0x64);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x1FBC);                               // Load from: MObjInfo_MT_PLAYER[2] (8005E044)
-    sw(v0, s0 + 0x68);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 = lw(v0 - 0x1FB0);                               // Load from: MObjInfo_MT_PLAYER[5] (8005E050)
-    sw(v0, s0 + 0x78);
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 = lw(v1 - 0x1FC0);                               // Load from: MObjInfo_MT_PLAYER[1] (8005E040)
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0 + 0x60);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x5C);
-    v1 = lw(v0);
-    sw(v1, s0 + 0x28);
-    v0 = lw(v0 + 0x4);
-    a0 = s0;
-    sw(v0, s0 + 0x2C);
-    P_SetThingPosition(*vmAddrToPtr<mobj_t>(a0));
-    v0 = lw(s0 + 0xC);
-    v0 = lw(v0);
-    v1 = lw(s0 + 0xC);
-    v0 = lw(v0);
-    sw(v0, s0 + 0x38);
-    v0 = lw(v1);
-    v1 = lw(s0 + 0x38);
-    v0 = lw(v0 + 0x4);
-    sw(v1, s0 + 0x8);
-    sw(v0, s0 + 0x3C);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    sw(s0, v0 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x7170;                                       // Result = gMObjHead[0] (800A8E90)
-    sw(v0, s0 + 0x14);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7160);                               // Load from: gMObjHead[4] (800A8EA0)
-    a1 = 0xB60B0000;                                    // Result = B60B0000
-    sw(v0, s0 + 0x10);
-    at = 0x800B0000;                                    // Result = 800B0000
-    sw(s0, at - 0x7160);                                // Store to: gMObjHead[4] (800A8EA0)
-    v1 = lhu(s4 + 0x4);
-    a1 |= 0x60B7;                                       // Result = B60B60B7
-    v1 <<= 16;
-    a0 = u32(i32(v1) >> 16);
-    mult(a0, a1);
-    sw(s3, s0 + 0x80);
-    v1 = u32(i32(v1) >> 31);
-    v0 = hi;
-    v0 += a0;
-    v0 = u32(i32(v0) >> 5);
-    v0 -= v1;
-    v0 <<= 29;
-    sw(v0, s0 + 0x24);
-    v0 = lw(s3 + 0x24);
-    v1 = 0x290000;                                      // Result = 00290000
-    sw(v0, s0 + 0x68);
-    v0 = 0x24;                                          // Result = 00000024
-    sw(s0, s3);
-    sw(0, s3 + 0x4);
-    sw(0, s3 + 0xC4);
-    sw(0, s3 + 0xD4);
-    sw(0, s3 + 0xD8);
-    sw(0, s3 + 0xDC);
-    sw(0, s3 + 0xE4);
-    sw(0, s3 + 0xE8);
-    sw(v1, s3 + 0x18);
-    sw(v0, s3 + 0x120);
-    v0 = lw(s0 + 0x8);
-    v0 += v1;
-    sw(v0, s3 + 0x14);
-    a0 = lh(s4 + 0x6);
-    a0--;
-    P_SetupPsprites(a0);
-    v0 = *gNetGame;
-    if (v0 != s5) goto loc_8001D0DC;
-    a0 = 1;                                             // Result = 00000001
-    v1 = 5;                                             // Result = 00000005
-    v0 = s3 + 0x14;
-loc_8001D0C4:
-    sw(a0, v0 + 0x48);
-    v1--;
-    v0 -= 4;
-    if (i32(v1) >= 0) goto loc_8001D0C4;
-    v0 = *gNetGame;
-loc_8001D0DC:
-    if (v0 != 0) goto loc_8001D130;
-    v0 = lh(s4 + 0x6);
-    v1 = *gCurPlayerIndex;
-    v0--;
-    {
-        const bool bJump = (v0 != v1);
-        v0 = s0;
-        if (bJump) goto loc_8001D15C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Spawn a player using the specified map thing
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SpawnPlayer(const mapthing_t& mapThing) noexcept {
+    // Is this player in the game? Do not spawn if not:
+    if (!gbPlayerInGame[mapThing.type - 1])
+        return;
+    
+    // Do rebirth logic if respawning
+    player_t& player = gPlayers[mapThing.type - 1];
+    
+    if (player.playerstate == PST_REBORN) {
+        G_PlayerReborn(mapThing.type - 1);
     }
-    v0 = *gbUsingAPassword;
-    a1 = sp + 0x10;
-    if (v0 == 0) goto loc_8001D130;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x6560;                                       // Result = gPasswordCharBuffer[0] (80096560)
-    a2 = a1;
-    a3 = s3;
-    v0 = P_ProcessPassword(vmAddrToPtr<uint8_t>(a0), *vmAddrToPtr<int32_t>(a1), *vmAddrToPtr<skill_t>(a2), vmAddrToPtr<player_t>(a3));
-    *gbUsingAPassword = false;
-loc_8001D130:
-    v0 = lh(s4 + 0x6);
-    v1 = *gCurPlayerIndex;
-    v0--;
-    {
-        const bool bJump = (v0 != v1);
-        v0 = s0;
-        if (bJump) goto loc_8001D15C;
+    
+    // Spawn the player map object and initialize it's fields
+    const fixed_t spawnX = (fixed_t) mapThing.x << FRACBITS;
+    const fixed_t spawnY = (fixed_t) mapThing.y << FRACBITS;
+
+    mobj_t& mobj = *P_SpawnMobj(spawnX, spawnY, ONFLOORZ, MT_PLAYER);
+    mobj.player = &player;
+    mobj.health = player.health;
+    mobj.angle = ((fixed_t) mapThing.angle / 45) * ANG45;
+
+    // Initialize the player object and the player weapon sprites
+    player.mo = &mobj;
+    player.playerstate = PST_LIVE;
+    player.refire = 0;
+    player.message = nullptr;
+    player.damagecount = 0;
+    player.bonuscount = 0;
+    player.extralight = 0;
+    player.fixedcolormap = 0;
+    player.viewheight = VIEWHEIGHT;
+    player.automapscale = 36;
+    player.viewz = mobj.z + VIEWHEIGHT;
+
+    P_SetupPsprites(mapThing.type - 1);
+    
+    // Give all keys to players in deathmatch
+    if (*gNetGame == gt_deathmatch) {
+        for (int32_t cardIdx = 0; cardIdx < NUMCARDS; ++cardIdx) {
+            player.cards[cardIdx] = true;
+        }
     }
-    ST_InitEveryLevel();
-    I_UpdatePalette();
-    v0 = s0;
-loc_8001D15C:
-    ra = lw(sp + 0x30);
-    s5 = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x38;
-    return;
+    
+    // Single player only logic
+    if (*gNetGame == gt_single) {
+        // Only process passwords if we are spawning the user's player
+        if (*gCurPlayerIndex != mapThing.type - 1)
+            return;
+        
+        // Add weapons from a password (if we are using one)
+        if (*gbUsingAPassword) {
+            int32_t mapNum = {};
+            skill_t skill = {};
+
+            P_ProcessPassword(gPasswordCharBuffer.get(), mapNum, skill, &player);
+            *gbUsingAPassword = false;
+        }
+    }
+
+    // Init the status bar and palette if we are spawning the user's player
+    if (*gCurPlayerIndex == mapThing.type - 1) {
+        ST_InitEveryLevel();
+        I_UpdatePalette();
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -705,4 +571,14 @@ void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept
 
     // If the missile is already in collision with something then explode it
     P_CheckMissileSpawn(missile);
+}
+
+// TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
+void _thunk_P_RemoveMobj() noexcept {
+    P_RemoveMobj(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0));
+}
+
+// TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
+void _thunk_P_ExplodeMissile() noexcept {
+    P_ExplodeMissile(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0));
 }

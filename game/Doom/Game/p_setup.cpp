@@ -22,7 +22,6 @@
 #include "p_switch.h"
 #include "p_tick.h"
 #include "PcPsx/Endian.h"
-#include "PsxVm/PsxVm.h"
 
 // How much heap space is required after loading the map in order to run the game (48 KiB).
 // If we don't have this much then the game craps out with an error.
@@ -1013,8 +1012,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
         }
     }
     else {
-        a0 = ptrToVmAddr(&gPlayerStarts[0]);
-        P_SpawnPlayer();
+        P_SpawnPlayer(gPlayerStarts[0]);
     }
 }
 
