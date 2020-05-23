@@ -100,8 +100,9 @@ static constexpr int32_t WEAPONX        = 1 * FRACUNIT;     // TODO: COMMENT
 static constexpr int32_t WEAPONBOTTOM   = 96 * FRACUNIT;    // TODO: COMMENT
 static constexpr int32_t WEAPONTOP      = 0 * FRACUNIT;     // TODO: COMMENT
 
-// The current thing making noise
-static const VmPtr<VmPtr<mobj_t>>   gpSoundTarget(0x80077FFC);
+
+static const VmPtr<VmPtr<mobj_t>>   gpSoundTarget(0x80077FFC);      // The current thing making noise
+static const VmPtr<fixed_t>         gBulletSlope(0x80077FF0);       // Vertical aiming slope for shooting: computed by 'P_BulletSlope'
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Recursively flood fill sound starting from the given sector to other neighboring sectors considered valid for sound transfer.
@@ -471,7 +472,7 @@ void A_Saw(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
     // Left shift of signed numbers when there is overflow is undefined behavior in C/C++, and produces an implementation defined result.
     // The original instruction was 'sll' (shift logical left) so the shift needs to be unsigned!
-    const angle_t angleVariance = (uint32_t)(P_Random() - P_Random()) << 18;
+    const angle_t angleVariance = (angle_t)(P_Random() - P_Random()) << 18;
 
     mobj_t& playerMobj = *player.mo;
     const angle_t attackAngle = playerMobj.angle + angleVariance;
@@ -532,490 +533,126 @@ void A_FireBFG(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     P_SpawnPlayerMissile(*player.mo, MT_BFG);
 }
 
-void A_FirePlasma() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    v1 = lw(s1 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F4;                                       // Result = WeaponInfo_Fist[0] (800670F4)
-    at += v0;
-    v1 = lw(at);
-    v1 <<= 2;
-    v1 += s1;
-    v0 = lw(v1 + 0x98);
-    v0--;
-    sw(v0, v1 + 0x98);
-    _thunk_P_Random();
-    a0 = lw(s1 + 0x6C);
-    v0 &= 1;
-    v1 = a0 << 1;
-    v1 += a0;
-    v1 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7108;                                       // Result = WeaponInfo_Fist[5] (80067108)
-    at += v1;
-    v1 = lw(at);
-    a0 = v0 + v1;
-    s0 = s1 + 0x100;
-    if (a0 != 0) goto loc_80020C40;
-    sw(0, s1 + 0x100);
-    goto loc_80020CB0;
-loc_80020C40:
-    v0 = a0 << 3;
-loc_80020C44:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_80020C90;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_80020CB0;
-loc_80020C90:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_80020CB0;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_80020C44;
-    sw(0, s0);
-loc_80020CB0:
-    a0 = lw(s1);
-    a1 = 0x18;                                          // Result = 00000018
-    P_SpawnPlayerMissile(*vmAddrToPtr<mobj_t>(a0), (mobjtype_t) a1);
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fire the Plasma gun for the player
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FirePlasma(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    const ammotype_t ammoType = gWeaponInfo[player.readyweapon].ammo;
+    player.ammo[ammoType]--;
+
+    // The plasma gun does its muzzle flash a bit randomly
+    P_SetPsprite(player, ps_flash, (statenum_t)(gWeaponInfo[player.readyweapon].flashstate + (P_Random() & 1)));
+    P_SpawnPlayerMissile(*player.mo, MT_PLASMA);
 }
 
-void P_BulletSlope() noexcept {
-    sp -= 0x20;
-    sw(s1, sp + 0x14);
-    s1 = a0;
-    sw(ra, sp + 0x18);
-    sw(s0, sp + 0x10);
-    s0 = lw(s1 + 0x24);
-    a2 = 0x4000000;                                     // Result = 04000000
-    a1 = s0;
-    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
-    sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
-    v0 = 0x4000000;                                     // Result = 04000000
-    if (v1 != 0) goto loc_80020D48;
-    s0 += v0;
-    a0 = s1;
-    a1 = s0;
-    a2 = 0x4000000;                                     // Result = 04000000
-    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
-    sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
-    a0 = s1;
-    if (v1 != 0) goto loc_80020D48;
-    a1 = 0xF8000000;                                    // Result = F8000000
-    a1 += s0;
-    a2 = 0x4000000;                                     // Result = 04000000
-    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
-loc_80020D48:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does a little bit of aim wiggle to figure out the vertical aim slope for an attack.
+// Saves the resulting vertical slope to 'gBulletSlope'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_BulletSlope(mobj_t& mobj) noexcept {
+    *gBulletSlope = P_AimLineAttack(mobj, mobj.angle, 1024 * FRACUNIT);
+
+    constexpr angle_t AIM_WIGGLE = ANG45 / 8;
+
+    if (!gpLineTarget->get()) {
+        *gBulletSlope = P_AimLineAttack(mobj, mobj.angle + AIM_WIGGLE, 1024 * FRACUNIT);
+
+        if (!gpLineTarget->get()) {
+            *gBulletSlope = P_AimLineAttack(mobj, mobj.angle - AIM_WIGGLE, 1024 * FRACUNIT);
+        }
+    }
 }
 
-void P_GunShot() noexcept {
-    sp -= 0x30;
-    sw(s3, sp + 0x24);
-    s3 = a0;
-    sw(s0, sp + 0x18);
-    s0 = a1;
-    sw(ra, sp + 0x28);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    _thunk_P_Random();
-    v0 &= 3;
-    v0++;
-    s1 = lw(s3 + 0x24);
-    s2 = v0 << 2;
-    if (s0 != 0) goto loc_80020DB4;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    s0 <<= 18;
-    s1 += s0;
-loc_80020DB4:
-    sw(s2, sp + 0x10);
-    a3 = 0x7FFF0000;                                    // Result = 7FFF0000
-    a3 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    a0 = s3;
-    a1 = s1;
-    a2 = 0x8000000;                                     // Result = 08000000
-    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
-    ra = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does a pistol or chaingun shot for the player (4-16 damage).
+// Randomly varies the attack angle a little if the shot is intended to be inaccurate.
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void P_GunShot(mobj_t& mobj, const bool bAccurate) noexcept {
+    const int32_t damage = ((P_Random() & 3) + 1) * 4;
+    angle_t angle = mobj.angle;
+    
+    if (!bAccurate) {
+        // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
+        // The original instruction was 'sll' (shift logical left) so the shift needs to be unsigned!
+        angle += (angle_t)(P_Random() - P_Random()) << 18;
+    }
+
+    P_LineAttack(mobj, angle, MISSILERANGE, INT32_MAX, damage);
 }
 
-void A_FirePistol() noexcept {
-    sp -= 0x30;
-    sw(s1, sp + 0x1C);
-    s1 = a0;
-    sw(ra, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s0, sp + 0x18);
-    a0 = lw(s1);
-    a1 = sfx_pistol;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v1 = lw(s1 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F4;                                       // Result = WeaponInfo_Fist[0] (800670F4)
-    at += v0;
-    v1 = lw(at);
-    v1 <<= 2;
-    v1 += s1;
-    v0 = lw(v1 + 0x98);
-    v0--;
-    sw(v0, v1 + 0x98);
-    v1 = lw(s1 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7108;                                       // Result = WeaponInfo_Fist[5] (80067108)
-    at += v0;
-    a0 = lw(at);
-    s0 = s1 + 0x100;
-    if (a0 != 0) goto loc_80020E90;
-    sw(0, s1 + 0x100);
-    goto loc_80020F00;
-loc_80020E90:
-    v0 = a0 << 3;
-loc_80020E94:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_80020EE0;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_80020F00;
-loc_80020EE0:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_80020F00;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_80020E94;
-    sw(0, s0);
-loc_80020F00:
-    s0 = lw(s1 + 0xC4);
-    s3 = lw(s1);
-    s0 = (s0 < 1);
-    _thunk_P_Random();
-    v0 &= 3;
-    v0++;
-    s1 = lw(s3 + 0x24);
-    s2 = v0 << 2;
-    if (s0 != 0) goto loc_80020F40;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    s0 <<= 18;
-    s1 += s0;
-loc_80020F40:
-    sw(s2, sp + 0x10);
-    a0 = s3;
-    a1 = s1;
-    a3 = 0x7FFF0000;                                    // Result = 7FFF0000
-    a3 |= 0xFFFF;                                       // Result = 7FFFFFFF
-    a2 = 0x8000000;                                     // Result = 08000000
-    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
-    ra = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fire the Pistol for the player
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FirePistol(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    // Play the sound and decrement ammo count
+    mobj_t& playerMobj = *player.mo;
+    S_StartSound(&playerMobj, sfx_pistol);
+    
+    const weaponinfo_t& weaponInfo = gWeaponInfo[player.readyweapon];
+    player.ammo[weaponInfo.ammo]--;
+
+    // Do the muzzle flash and fire the shot; note: shot is more inaccurate if refiring immediately!
+    P_SetPsprite(player, ps_flash, weaponInfo.flashstate);
+    P_GunShot(playerMobj, (player.refire == 0));
 }
 
-void A_FireShotgun() noexcept {
-    sp -= 0x38;
-    sw(s3, sp + 0x24);
-    s3 = a0;
-    sw(ra, sp + 0x30);
-    sw(s5, sp + 0x2C);
-    sw(s4, sp + 0x28);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    a0 = lw(s3);
-    a1 = sfx_shotgn;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v1 = lw(s3 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F4;                                       // Result = WeaponInfo_Fist[0] (800670F4)
-    at += v0;
-    v1 = lw(at);
-    v1 <<= 2;
-    v1 += s3;
-    v0 = lw(v1 + 0x98);
-    v0--;
-    sw(v0, v1 + 0x98);
-    v1 = lw(s3 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7108;                                       // Result = WeaponInfo_Fist[5] (80067108)
-    at += v0;
-    a0 = lw(at);
-    s0 = s3 + 0x100;
-    if (a0 != 0) goto loc_80021024;
-    sw(0, s3 + 0x100);
-    goto loc_80021094;
-loc_80021024:
-    v0 = a0 << 3;
-loc_80021028:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s3;
-    if (v0 == 0) goto loc_80021074;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_80021094;
-loc_80021074:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_80021094;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_80021028;
-    sw(0, s0);
-loc_80021094:
-    a0 = lw(s3);
-    a2 = 0x8000000;                                     // Result = 08000000
-    a1 = lw(a0 + 0x24);
-    s4 = 0;                                             // Result = 00000000
-    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    s5 = v0;
-loc_800210AC:
-    s4++;
-    _thunk_P_Random();
-    s0 = v0 & 3;
-    s0++;
-    v1 = lw(s3);
-    s2 = lw(v1 + 0x24);
-    s0 <<= 2;
-    _thunk_P_Random();
-    s1 = v0;
-    _thunk_P_Random();
-    a2 = 0x8000000;                                     // Result = 08000000
-    s1 -= v0;
-    s1 <<= 18;
-    a3 = s5;
-    sw(s0, sp + 0x10);
-    a0 = lw(s3);
-    a1 = s2 + s1;
-    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
-    v0 = (i32(s4) < 7);
-    if (v0 != 0) goto loc_800210AC;
-    ra = lw(sp + 0x30);
-    s5 = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x38;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fire the Shotgun for the player
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FireShotgun(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    // Play the sound and decrement ammo count
+    mobj_t& playerMobj = *player.mo;
+    S_StartSound(&playerMobj, sfx_shotgn);
+
+    const weaponinfo_t& weaponInfo = gWeaponInfo[player.readyweapon];
+    player.ammo[weaponInfo.ammo]--;
+    
+    // Do muzzle flash
+    P_SetPsprite(player, ps_flash, weaponInfo.flashstate);
+
+    // Decide on vertical aim and fire the 7 shotgun pellets (4-16 damage each)
+    const fixed_t aimZSlope = P_AimLineAttack(playerMobj, playerMobj.angle, MISSILERANGE);
+
+    for (int32_t pelletIdx = 0; pelletIdx < 7; ++pelletIdx) {
+        // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
+        // The original instruction was 'sll' (shift logical left) so the shift needs to be unsigned!
+        const int32_t damage = ((P_Random() & 3) + 1) * 4;
+        const angle_t angleVariance = (angle_t)(P_Random() - P_Random()) << 18;
+        const angle_t angle = playerMobj.angle + angleVariance;
+
+        P_LineAttack(playerMobj, angle, MISSILERANGE, aimZSlope, damage);
+    }
 }
 
-void A_FireShotgun2() noexcept {
-    sp -= 0x30;
-    sw(s3, sp + 0x24);
-    s3 = a0;
-    sw(ra, sp + 0x2C);
-    sw(s4, sp + 0x28);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    a0 = lw(s3);
-    a1 = sfx_dshtgn;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    a0 = lw(s3);
-    a1 = 0xA0;
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-    v1 = lw(s3 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F4;                                       // Result = WeaponInfo_Fist[0] (800670F4)
-    at += v0;
-    v1 = lw(at);
-    v1 <<= 2;
-    v1 += s3;
-    v0 = lw(v1 + 0x98);
-    v0 -= 2;
-    sw(v0, v1 + 0x98);
-    v1 = lw(s3 + 0x6C);
-    v0 = v1 << 1;
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7108;                                       // Result = WeaponInfo_Fist[5] (80067108)
-    at += v0;
-    a0 = lw(at);
-    s0 = s3 + 0x100;
-    if (a0 != 0) goto loc_800211DC;
-    sw(0, s3 + 0x100);
-    goto loc_8002124C;
-loc_800211DC:
-    v0 = a0 << 3;
-loc_800211E0:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s3;
-    if (v0 == 0) goto loc_8002122C;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_8002124C;
-loc_8002122C:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_8002124C;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_800211E0;
-    sw(0, s0);
-loc_8002124C:
-    s1 = lw(s3);
-    a2 = 0x4000000;                                     // Result = 04000000
-    s0 = lw(s1 + 0x24);
-    a0 = s1;
-    a1 = s0;
-    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
-    sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
-    s4 = 0;                                             // Result = 00000000
-    if (v1 != 0) goto loc_800212B8;
-    v0 = 0x4000000;                                     // Result = 04000000
-    s0 += v0;
-    a0 = s1;
-    a1 = s0;
-    a2 = 0x4000000;                                     // Result = 04000000
-    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lw(v1 + 0x7EE8);                               // Load from: gpLineTarget (80077EE8)
-    sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
-    a0 = s1;
-    if (v1 != 0) goto loc_800212B8;
-    a1 = 0xF8000000;                                    // Result = F8000000
-    a1 += s0;
-    a2 = 0x4000000;                                     // Result = 04000000
-    v0 = P_AimLineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    sw(v0, gp + 0xA10);                                 // Store to: gSlope (80077FF0)
-loc_800212B8:
-    s4++;
-    _thunk_P_Random();
-    v1 = 0x55550000;                                    // Result = 55550000
-    v1 |= 0x5556;                                       // Result = 55555556
-    mult(v0, v1);
-    v1 = lw(s3);
-    s2 = lw(v1 + 0x24);
-    v1 = u32(i32(v0) >> 31);
-    a0 = hi;
-    a0 -= v1;
-    v1 = a0 << 1;
-    v1 += a0;
-    v0 -= v1;
-    v0++;
-    s1 = v0 << 2;
-    s1 += v0;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    s0 -= v0;
-    s0 <<= 19;
-    s2 += s0;
-    _thunk_P_Random();
-    s0 = v0;
-    _thunk_P_Random();
-    a1 = s2;
-    a2 = 0x8000000;                                     // Result = 08000000
-    s0 -= v0;
-    a3 = lw(gp + 0xA10);                                // Load from: gSlope (80077FF0)
-    s0 <<= 5;
-    sw(s1, sp + 0x10);
-    a0 = lw(s3);
-    a3 += s0;
-    P_LineAttack(*vmAddrToPtr<mobj_t>(a0), a1, a2, a3, lw(sp + 0x10));
-    v0 = (i32(s4) < 0x14);
-    if (v0 != 0) goto loc_800212B8;
-    ra = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x30;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Fire the Super Shotgun for the player
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_FireShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    // Play the double barrel shotgun sound and set the player thing into the 'attack 2' state
+    mobj_t& playerMobj = *player.mo;
+    S_StartSound(&playerMobj, sfx_dshtgn);
+    P_SetMObjState(playerMobj, S_PLAY_ATK2);
+
+    // Decrement ammo amount and do the muzzle flash
+    const weaponinfo_t& weaponInfo = gWeaponInfo[player.readyweapon];
+    player.ammo[weaponInfo.ammo] -= 2;
+    
+    P_SetPsprite(player, ps_flash, weaponInfo.flashstate);
+
+    // Figure out the vertical aim slope
+    P_BulletSlope(playerMobj);
+
+    // Fire all of the 20 shotgun pellets (5-15 damage each)
+    for (int32_t pelletIdx = 0; pelletIdx < 20; ++pelletIdx) {
+        // IMPORTANT: the cast to 'angle_t' (unsigned integer) before shifting is a *MUST* here for correct demo syncing!
+        // The original instruction was 'sll' (shift logical left) so the shift needs to be unsigned!
+        const int32_t damage = (P_Random() % 3 + 1) * 5;
+        const angle_t angleVariance = (angle_t)(P_Random() - P_Random()) << 19;
+        const angle_t angle = playerMobj.angle + angleVariance;
+        const fixed_t aimSlope = *gBulletSlope + (P_Random() - P_Random()) * 32;
+
+        P_LineAttack(playerMobj, angle, MISSILERANGE, aimSlope, damage);
+    }
 }
 
 void A_FireCGun() noexcept {
@@ -1504,3 +1141,7 @@ void _thunk_A_Punch() noexcept { A_Punch(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0
 void _thunk_A_Saw() noexcept { A_Saw(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_FireMissile() noexcept { A_FireMissile(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_FireBFG() noexcept { A_FireBFG(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_FirePlasma() noexcept { A_FirePlasma(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_FirePistol() noexcept { A_FirePistol(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_FireShotgun() noexcept { A_FireShotgun(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_FireShotgun2() noexcept { A_FireShotgun2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }

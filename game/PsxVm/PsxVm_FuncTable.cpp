@@ -67,12 +67,10 @@ extern void _thunk_A_Punch() noexcept;
 extern void _thunk_A_Saw() noexcept;
 extern void _thunk_A_FireMissile() noexcept;
 extern void _thunk_A_FireBFG() noexcept;
-extern void A_FirePlasma() noexcept;
-extern void P_BulletSlope() noexcept;
-extern void P_GunShot() noexcept;
-extern void A_FirePistol() noexcept;
-extern void A_FireShotgun() noexcept;
-extern void A_FireShotgun2() noexcept;
+extern void _thunk_A_FirePlasma() noexcept;
+extern void _thunk_A_FirePistol() noexcept;
+extern void _thunk_A_FireShotgun() noexcept;
+extern void _thunk_A_FireShotgun2() noexcept;
 extern void A_FireCGun() noexcept;
 extern void A_Light0() noexcept;
 extern void A_Light1() noexcept;
@@ -215,12 +213,10 @@ namespace PsxVm {
         { 0x8002096C, &_thunk_A_Saw },
         { 0x80020AE4, &_thunk_A_FireMissile },
         { 0x80020B48, &_thunk_A_FireBFG },
-        { 0x80020BAC, &A_FirePlasma },
-        { 0x80020CD4, &P_BulletSlope },
-        { 0x80020D60, &P_GunShot },
-        { 0x80020DF0, &A_FirePistol },
-        { 0x80020F7C, &A_FireShotgun },
-        { 0x8002112C, &A_FireShotgun2 },
+        { 0x80020BAC, &_thunk_A_FirePlasma },
+        { 0x80020DF0, &_thunk_A_FirePistol },
+        { 0x80020F7C, &_thunk_A_FireShotgun },
+        { 0x8002112C, &_thunk_A_FireShotgun2 },
         { 0x80021374, &A_FireCGun },
         { 0x8002155C, &A_Light0 },
         { 0x80021564, &A_Light1 },

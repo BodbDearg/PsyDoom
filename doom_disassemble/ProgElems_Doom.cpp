@@ -3420,7 +3420,7 @@ static const ProgElem ELEMS[] = {
     { 0x80077FDC, 0x80077FE4, "gSecretValue",                           ProgElemType::ARRAY, ProgElemType::INT32, 0 },
     { 0x80077FE4, 0x80077FE8, "gCurCheatBtnSequenceIdx",                ProgElemType::UINT32 },
     { 0x80077FEC, 0x80077FF0, "gTotalSecret",                           ProgElemType::INT32 },
-    { 0x80077FF0, 0x80077FF4, "gSlope",                                 ProgElemType::INT32 },
+    { 0x80077FF0, 0x80077FF4, "gBulletSlope",                           ProgElemType::INT32 },
     { 0x80077FF4, 0x80077FF8, "gbIsLevelBeingRestarted",                ProgElemType::UINT32 },
     { 0x80077FF8, 0x80077FFC, "gAimTopSlope",                           ProgElemType::INT32 },
     { 0x80077FFC, 0x80078000, "gpSoundTarget",                          ProgElemType::PTR32 },
