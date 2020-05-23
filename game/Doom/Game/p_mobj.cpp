@@ -297,7 +297,7 @@ loc_8001CEC8:
     a0 = s0;
     a1 = 0;                                             // Result = 00000000
     a2 = 0x94;                                          // Result = 00000094
-    _thunk_D_memset();
+    D_memset(vmAddrToPtr<void>(a0), (std::byte) a1, a2);
     v0 = 0x80060000;                                    // Result = 80060000
     v0 -= 0x1FC4;                                       // Result = MObjInfo_MT_PLAYER[0] (8005E03C)
     sw(0, s0 + 0x54);

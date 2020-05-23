@@ -1,6 +1,5 @@
 #include "m_random.h"
 
-#include "PsxVm/PsxVm.h"
 #include "PsxVm/VmPtr.h"
 
 // The RNG table for PSX DOOM - same as the PC version and other ports
@@ -33,10 +32,6 @@ static const VmPtr<uint32_t>   gMRndIndex(0x80077608);
 int32_t P_Random() noexcept {
     *gPRndIndex = (*gPRndIndex + 1) & 0xFF;
     return (int32_t)(uint32_t) gRndTable[*gPRndIndex];
-}
-
-void _thunk_P_Random() noexcept {
-    v0 = P_Random();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

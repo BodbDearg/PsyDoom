@@ -31,20 +31,14 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept;
 #endif
 
 gameaction_t RunCredits() noexcept;
+
 void I_SetDebugDrawStringPos(const int32_t x, const int32_t y) noexcept;
 void I_DebugDrawString(const char* const fmtMsg, ...) noexcept;
 
 void D_memset(void* const pDst, const std::byte fillByte, const uint32_t count) noexcept;
-void _thunk_D_memset() noexcept;
-
 void D_memcpy(void* const pDst, const void* const pSrc, const uint32_t numBytes) noexcept;
-void _thunk_D_memcpy() noexcept;
-
 void D_strncpy(char* dst, const char* src, uint32_t maxChars) noexcept;
-
 int32_t D_strncasecmp(const char* str1, const char* str2, int32_t maxCount) noexcept;
-void _thunk_D_strncasecmp() noexcept;
-
 void D_strupr(char* str) noexcept;
 
 gameaction_t MiniLoop(

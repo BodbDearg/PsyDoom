@@ -331,11 +331,6 @@ void D_memset(void* const pDst, const std::byte fillByte, const uint32_t count) 
     }
 }
 
-void _thunk_D_memset() noexcept {
-    VmPtr<std::byte> pDst(a0);
-    D_memset(pDst.get(), (std::byte) a1, a2);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Copy a number of bytes from source to destination
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -350,12 +345,6 @@ void D_memcpy(void* const pDst, const void* const pSrc, const uint32_t numBytes)
         ++pSrcByte;
         ++pDstByte;
     }
-}
-
-void _thunk_D_memcpy() noexcept {
-    VmPtr<std::byte> pDst = a0;
-    VmPtr<std::byte> pSrc = a1;
-    D_memcpy(pDst.get(), pSrc.get(), a2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -400,10 +389,6 @@ int32_t D_strncasecmp(const char* str1, const char* str2, int32_t maxCount) noex
     }
 
     return (*str1 == *str2);
-}
-
-void _thunk_D_strncasecmp() noexcept {
-    v0 = D_strncasecmp(vmAddrToPtr<const char>(a0), vmAddrToPtr<const char>(a1), (int32_t) a2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

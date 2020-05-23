@@ -3,10 +3,6 @@
 
 #include <map>
 
-extern void _thunk_D_memset() noexcept;
-extern void _thunk_D_memcpy() noexcept;
-extern void _thunk_D_strncasecmp() noexcept;
-extern void _thunk_P_Random() noexcept;
 extern void M_AddPointToBox() noexcept;
 extern void _thunk_T_MoveCeiling() noexcept;
 extern void _thunk_T_VerticalDoor() noexcept;
@@ -147,10 +143,6 @@ extern void LIBCOMB__ioabort() noexcept;
 
 namespace PsxVm {
     std::map<uint32_t, VmFunc> gFuncTable = {
-        { 0x80012850, &_thunk_D_memset },
-        { 0x8001290C, &_thunk_D_memcpy },
-        { 0x8001297C, &_thunk_D_strncasecmp },
-        { 0x80012A18, &_thunk_P_Random },
         { 0x80012B10, &M_AddPointToBox },
         { 0x80014A30, &_thunk_T_MoveCeiling },
         { 0x800152FC, &_thunk_T_VerticalDoor },
