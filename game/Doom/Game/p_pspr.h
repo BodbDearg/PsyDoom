@@ -32,6 +32,6 @@ void A_BFGSpray(mobj_t& mobj) noexcept;
 void A_BFGsound(player_t& player, pspdef_t& sprite) noexcept;
 void A_OpenShotgun2(player_t& player, pspdef_t& sprite) noexcept;
 void A_LoadShotgun2(player_t& player, pspdef_t& sprite) noexcept;
-void A_CloseShotgun2() noexcept;
-void P_SetupPsprites() noexcept;
+void A_CloseShotgun2(player_t& player, pspdef_t& sprite) noexcept;
+void P_SetupPsprites(const int32_t playerIdx) noexcept;
 void P_MovePsprites() noexcept;

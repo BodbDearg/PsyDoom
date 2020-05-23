@@ -10,6 +10,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
+#include "g_game.h"
 #include "info.h"
 #include "p_inter.h"
 #include "p_local.h"
@@ -100,9 +101,9 @@ static constexpr int32_t WEAPONX        = 1 * FRACUNIT;     // TODO: COMMENT
 static constexpr int32_t WEAPONBOTTOM   = 96 * FRACUNIT;    // TODO: COMMENT
 static constexpr int32_t WEAPONTOP      = 0 * FRACUNIT;     // TODO: COMMENT
 
-
-static const VmPtr<VmPtr<mobj_t>>   gpSoundTarget(0x80077FFC);      // The current thing making noise
-static const VmPtr<fixed_t>         gBulletSlope(0x80077FF0);       // Vertical aiming slope for shooting: computed by 'P_BulletSlope'
+static const VmPtr<VmPtr<mobj_t>>           gpSoundTarget(0x80077FFC);      // The current thing making noise
+static const VmPtr<fixed_t>                 gBulletSlope(0x80077FF0);       // Vertical aiming slope for shooting: computed by 'P_BulletSlope'
+static const VmPtr<int32_t[MAXPLAYERS]>     gTicRemainder(0x80078090);      // How many unsimulated player sprite tics there are
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Recursively flood fill sound starting from the given sector to other neighboring sectors considered valid for sound transfer.
@@ -754,148 +755,31 @@ void A_LoadShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcep
     S_StartSound(player.mo.get(), sfx_dbload);
 }
 
-void A_CloseShotgun2() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    a0 = lw(s0);
-    a1 = sfx_dbcls;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v0 = *gPlayerNum;
-    v0 <<= 2;
-    at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
-    at += v0;
-    v1 = lw(at);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    at += v0;
-    v0 = lw(at);
-    v1 = lw(v1);
-    v0 &= v1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xA;                                       // Result = 0000000A
-        if (bJump) goto loc_80021774;
-    }
-    v1 = lw(s0 + 0x70);
-    if (v1 != v0) goto loc_80021774;
-    v0 = lw(s0 + 0x24);
-    a0 = s0;
-    if (v0 == 0) goto loc_80021774;
-    v0 = lw(s0 + 0xC4);
-    v0++;
-    sw(v0, a0 + 0xC4);
-    P_FireWeapon(*vmAddrToPtr<player_t>(a0));
-    goto loc_80021780;
-loc_80021774:
-    sw(0, s0 + 0xC4);
-    a0 = s0;
-    v0 = P_CheckAmmo(*vmAddrToPtr<player_t>(a0));
-loc_80021780:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Called at the end of the Super Shotgun firing sequence: possibly refires, and plays the gun closing sound
+//------------------------------------------------------------------------------------------------------------------------------------------
+void A_CloseShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
+    S_StartSound(player.mo.get(), sfx_dbcls);
+    A_ReFire(player, sprite);
 }
 
-void P_SetupPsprites() noexcept {
-loc_80021794:
-    sp -= 0x20;
-    v1 = a0 << 2;
-    a1 = 1;                                             // Result = 00000001
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7F70;                                       // Result = gTicRemainder[0] (80078090)
-    at += v1;
-    sw(0, at);
-    v1 += a0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x800B0000;                                    // Result = 800B0000
-    v1 -= 0x7814;                                       // Result = gPlayer1[0] (800A87EC)
-    s1 = v0 + v1;
-    v0 = s1 + 0x10;
-loc_800217DC:
-    sw(0, v0 + 0xF0);
-    a1--;
-    v0 -= 0x10;
-    if (i32(a1) >= 0) goto loc_800217DC;
-    v1 = lw(s1 + 0x6C);
-    v0 = 0xA;                                           // Result = 0000000A
-    sw(v1, s1 + 0x70);
-    if (v1 != v0) goto loc_80021808;
-    v0 = lw(s1 + 0x6C);
-    sw(v0, s1 + 0x70);
-loc_80021808:
-    v1 = lw(s1 + 0x70);
-    v0 = 8;                                             // Result = 00000008
-    s0 = s1 + 0xF0;
-    if (v1 != v0) goto loc_8002183C;
-    v0 = *gbIsLevelDataCached;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 << 1;
-        if (bJump) goto loc_80021844;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize the player sprites (weapon sprites) for a specified player: called at the start of each level for each player
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_SetupPsprites(const int32_t playerIdx) noexcept {
+    // Clear unsimulated tic count
+    gTicRemainder[playerIdx] = 0;
+
+    // Remove all player sprites
+    player_t& player = gPlayers[playerIdx];
+
+    for (int32_t i = 0; i < NUMPSPRITES; ++i) {
+        player.psprites[i].state = nullptr;
     }
-    a0 = lw(s1);
-    a1 = sfx_sawup;
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-    v1 = lw(s1 + 0x70);
-loc_8002183C:
-    v0 = v1 << 1;
-loc_80021844:
-    v0 += v1;
-    v0 <<= 3;
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x70F8;                                       // Result = WeaponInfo_Fist[1] (800670F8)
-    at += v0;
-    v1 = lw(at);
-    v0 = 0xA;                                           // Result = 0000000A
-    sw(v0, s1 + 0x70);
-    v0 = 0x10000;                                       // Result = 00010000
-    sw(v0, s1 + 0xF8);
-    v0 = 0x600000;                                      // Result = 00600000
-    a0 = v1;
-    sw(v0, s1 + 0xFC);
-    if (a0 != 0) goto loc_80021884;
-    sw(0, s1 + 0xF0);
-    goto loc_800218F4;
-loc_80021884:
-    v0 = a0 << 3;
-loc_80021888:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_800218D4;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_800218F4;
-loc_800218D4:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_800218F4;
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_80021888;
-    sw(0, s0);
-loc_800218F4:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+    
+    // Raise the current weapon
+    player.pendingweapon = player.readyweapon;
+    P_BringUpWeapon(player);
 }
 
 void P_MovePsprites() noexcept {
@@ -1035,3 +919,4 @@ void _thunk_A_BFGSpray() noexcept { A_BFGSpray(*vmAddrToPtr<mobj_t>(*PsxVm::gpRe
 void _thunk_A_BFGsound() noexcept { A_BFGsound(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_OpenShotgun2() noexcept { A_OpenShotgun2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
 void _thunk_A_LoadShotgun2() noexcept { A_LoadShotgun2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
+void _thunk_A_CloseShotgun2() noexcept { A_CloseShotgun2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }

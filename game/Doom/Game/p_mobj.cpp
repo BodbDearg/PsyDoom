@@ -390,7 +390,7 @@ loc_8001CEC8:
     sw(v0, s3 + 0x14);
     a0 = lh(s4 + 0x6);
     a0--;
-    P_SetupPsprites();
+    P_SetupPsprites(a0);
     v0 = *gNetGame;
     if (v0 != s5) goto loc_8001D0DC;
     a0 = 1;                                             // Result = 00000001
