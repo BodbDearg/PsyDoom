@@ -1004,7 +1004,7 @@ loc_8002A6A0:
     sw(s0, sp + 0x10);
     sw(ra, sp + 0x14);
     s0 = a0;
-    P_MovePsprites();
+    P_MovePsprites(*vmAddrToPtr<player_t>(a0));
     v1 = lw(s0 + 0x18);
     v0 = 0x80000;                                       // Result = 00080000
     v0 = (i32(v0) < i32(v1));
@@ -1339,7 +1339,7 @@ loc_8002ABC8:
     sw(0, s0 + 0xB8);
 loc_8002ABCC:
     a0 = s0;
-    P_MovePsprites();
+    P_MovePsprites(*vmAddrToPtr<player_t>(a0));
     v1 = *gGameTic;
     v0 = *gPrevGameTic;
     v0 = (i32(v0) < i32(v1));

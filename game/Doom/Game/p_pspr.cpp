@@ -17,6 +17,8 @@
 #include "p_map.h"
 #include "p_mobj.h"
 #include "p_tick.h"
+
+#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
 const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
@@ -103,7 +105,7 @@ static constexpr int32_t WEAPONTOP      = 0 * FRACUNIT;     // TODO: COMMENT
 
 static const VmPtr<VmPtr<mobj_t>>           gpSoundTarget(0x80077FFC);      // The current thing making noise
 static const VmPtr<fixed_t>                 gBulletSlope(0x80077FF0);       // Vertical aiming slope for shooting: computed by 'P_BulletSlope'
-static const VmPtr<int32_t[MAXPLAYERS]>     gTicRemainder(0x80078090);      // How many unsimulated player sprite tics there are
+static const VmPtr<int32_t[MAXPLAYERS]>     gTicRemainder(0x80078090);      // How many unsimulated player sprite 60 Hz vblanks there are
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Recursively flood fill sound starting from the given sector to other neighboring sectors considered valid for sound transfer.
@@ -196,8 +198,8 @@ void P_SetPsprite(player_t& player, const int32_t spriteIdx, const statenum_t st
         // Perform the state action
         if (state.action) {
             // FIXME: convert to native function call
-            a0 = ptrToVmAddr(&player);
-            a1 = ptrToVmAddr(&sprite);
+            *PsxVm::gpReg_a0 = ptrToVmAddr(&player);
+            *PsxVm::gpReg_a1 = ptrToVmAddr(&sprite);
             void (* const pActionFunc)() = PsxVm::getVmFuncForAddr(state.action);
             pActionFunc();
 
@@ -782,117 +784,40 @@ void P_SetupPsprites(const int32_t playerIdx) noexcept {
     P_BringUpWeapon(player);
 }
 
-void P_MovePsprites() noexcept {
-loc_8002190C:
-    sp -= 0x38;
-    sw(s1, sp + 0x1C);
-    s1 = a0;
-    v1 = *gPlayerNum;
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 -= 0x7F70;                                       // Result = gTicRemainder[0] (80078090)
-    sw(ra, sp + 0x30);
-    sw(s5, sp + 0x2C);
-    sw(s4, sp + 0x28);
-    sw(s3, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s0, sp + 0x18);
-    v1 <<= 2;
-    a0 = v1 + a1;
-    v0 = lw(a0);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v1;
-    v1 = lw(at);
-    v0 += v1;
-    sw(v0, a0);
-    v0 = (i32(v0) < 4);
-    if (v0 != 0) goto loc_80021A94;
-loc_80021974:
-    s3 = s1 + 0xF0;
-    s5 = 0;                                             // Result = 00000000
-    v1 = *gPlayerNum;
-    s2 = s1 + 0xF4;
-    v1 <<= 2;
-    v1 += a1;
-    v0 = lw(v1);
-    s4 = 0xF0;                                          // Result = 000000F0
-    v0 -= 4;
-    sw(v0, v1);
-loc_800219A0:
-    v0 = lw(s3);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = -1;                                        // Result = FFFFFFFF
-        if (bJump) goto loc_80021A48;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Updates/ticks player weapon sprites
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_MovePsprites(player_t& player) noexcept {
+    // Keep simulating player sprite tics while we are behind by one tick
+    gTicRemainder[*gPlayerNum] += gPlayersElapsedVBlanks[*gPlayerNum];
+    
+    while (gTicRemainder[*gPlayerNum] >= VBLANKS_PER_TIC) {
+        gTicRemainder[*gPlayerNum] -= VBLANKS_PER_TIC;
+        
+        // Tic all player sprites and advance them to the next state if required
+        for (int32_t playerSprIdx = 0; playerSprIdx < NUMPSPRITES; ++playerSprIdx) {
+            pspdef_t& playerSpr = player.psprites[playerSprIdx];
+
+            // A null state means not active:
+            if (!playerSpr.state)
+                continue;
+
+            // A tic count of -1 means never change state
+            if (playerSpr.tics == -1)
+                continue;
+
+            // Advance the tic count and move onto the next state if required
+            playerSpr.tics--;
+
+            if (playerSpr.tics == 0) {
+                P_SetPsprite(player, playerSprIdx, playerSpr.state->nextstate);
+            }
+        }
     }
-    v1 = lw(s2);
-    {
-        const bool bJump = (v1 == v0);
-        v0 = v1 - 1;
-        if (bJump) goto loc_80021A48;
-    }
-    sw(v0, s2);
-    if (v0 != 0) goto loc_80021A48;
-    v0 = lw(s3);
-    a0 = lw(v0 + 0x10);
-    s0 = s1 + s4;
-    goto loc_80021A3C;
-loc_800219DC:
-    v0 -= a0;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x4);
-    v0 = lw(v0 + 0xC);
-    a0 = s1;
-    if (v0 == 0) goto loc_80021A28;
-    a1 = s0;
-    ptr_call(v0);
-    v0 = lw(s0);
-    if (v0 == 0) goto loc_80021A48;
-loc_80021A28:
-    v0 = lw(s0);
-    v1 = lw(s0 + 0x4);
-    a0 = lw(v0 + 0x10);
-    if (v1 != 0) goto loc_80021A48;
-loc_80021A3C:
-    v0 = a0 << 3;
-    if (a0 != 0) goto loc_800219DC;
-    sw(0, s0);
-loc_80021A48:
-    s4 += 0x10;
-    s5++;
-    s2 += 0x10;
-    v0 = (i32(s5) < 2);
-    s3 += 0x10;
-    if (v0 != 0) goto loc_800219A0;
-    v0 = *gPlayerNum;
-    v0 <<= 2;
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7F70;                                       // Result = gTicRemainder[0] (80078090)
-    at += v0;
-    v0 = lw(at);
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 -= 0x7F70;                                       // Result = gTicRemainder[0] (80078090)
-    v0 = (i32(v0) < 4);
-    if (v0 == 0) goto loc_80021974;
-loc_80021A94:
-    v0 = lw(s1 + 0xF8);
-    v1 = lw(s1 + 0xFC);
-    sw(v0, s1 + 0x108);
-    sw(v1, s1 + 0x10C);
-    ra = lw(sp + 0x30);
-    s5 = lw(sp + 0x2C);
-    s4 = lw(sp + 0x28);
-    s3 = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x38;
-    return;
+    
+    // Sync the muzzle flash offset to the weapon offset
+    player.psprites[ps_flash].sx = player.psprites[ps_weapon].sx;
+    player.psprites[ps_flash].sy = player.psprites[ps_weapon].sy;
 }
 
 // TODO: remove all these thunks

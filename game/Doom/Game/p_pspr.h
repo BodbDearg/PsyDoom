@@ -34,4 +34,4 @@ void A_OpenShotgun2(player_t& player, pspdef_t& sprite) noexcept;
 void A_LoadShotgun2(player_t& player, pspdef_t& sprite) noexcept;
 void A_CloseShotgun2(player_t& player, pspdef_t& sprite) noexcept;
 void P_SetupPsprites(const int32_t playerIdx) noexcept;
-void P_MovePsprites() noexcept;
+void P_MovePsprites(player_t& player) noexcept;
