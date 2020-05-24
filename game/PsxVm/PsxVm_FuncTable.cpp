@@ -75,7 +75,6 @@ extern void _thunk_A_OpenShotgun2() noexcept;
 extern void _thunk_A_LoadShotgun2() noexcept;
 extern void _thunk_A_CloseShotgun2() noexcept;
 extern void _thunk_T_DelayedAction() noexcept;
-extern void P_BuildMove() noexcept;
 extern void P_Thrust() noexcept;
 extern void P_CalcHeight() noexcept;
 extern void P_MovePlayer() noexcept;
@@ -198,7 +197,6 @@ namespace PsxVm {
         { 0x800216B4, &_thunk_A_LoadShotgun2 },
         { 0x800216D8, &_thunk_A_CloseShotgun2 },
         { 0x80027718, &_thunk_T_DelayedAction },
-        { 0x80029DD4, &P_BuildMove },
         { 0x8002A2B8, &P_Thrust },
         { 0x8002A32C, &P_CalcHeight },
         { 0x8002A4E8, &P_MovePlayer },

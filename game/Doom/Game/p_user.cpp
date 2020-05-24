@@ -14,12 +14,27 @@
 #include "p_slide.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "PcPsx/Utils.h"
 #include "PsxVm/PsxVm.h"
 #include <algorithm>
 #include <cmath>
 
-static constexpr fixed_t STOPSPEED  = FRACUNIT / 16;    // Stop the player completely if velocity falls under this amount
-static constexpr fixed_t FRICTION   = 0xd200;           // Friction amount to apply to player movement: approximately 0.82
+// Accelerating turn speeds: normal
+static constexpr fixed_t ANGLE_TURN[10] = { 
+    300, 300, 500, 500, 600, 700, 800, 900, 900, 1000
+};
+
+// Accelerating turn speeds: fast
+static constexpr fixed_t FAST_ANGLE_TURN[10] = {
+    800, 800, 900, 1000, 1000, 1200, 1200, 1300, 1300, 1400
+};
+
+static constexpr fixed_t STOPSPEED              = FRACUNIT / 16;                // Stop the player completely if velocity falls under this amount
+static constexpr fixed_t FRICTION               = 0xd200;                       // Friction amount to apply to player movement: approximately 0.82
+static constexpr fixed_t FORWARD_MOVE[2]        = { 0x40000, 0x60000 };         // Movement speeds: forward/back
+static constexpr fixed_t SIDE_MOVE[2]           = { 0x38000, 0x58000 };         // Movement speeds: strafe left/right
+static constexpr int32_t TURN_ACCEL_TICS        = C_ARRAY_SIZE(ANGLE_TURN);     // Number of tics/stages in turn acceleration before it hits max speed
+static constexpr int32_t TURN_TO_ANGLE_SHIFT    = 17;                           // How many bits to shift the turn amount left to scale it to an angle
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Attempts to move the given player map object according to it's current velocity.
@@ -27,8 +42,9 @@ static constexpr fixed_t FRICTION   = 0xd200;           // Friction amount to ap
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_PlayerMove(mobj_t& mobj) noexcept {
     // This is the amount to be moved
-    fixed_t moveDx = (mobj.momx >> 2) * gPlayersElapsedVBlanks[*gPlayerNum];
-    fixed_t moveDy = (mobj.momy >> 2) * gPlayersElapsedVBlanks[*gPlayerNum];
+    const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[*gPlayerNum];
+    fixed_t moveDx = (mobj.momx >> 2) * elapsedVBlanks;
+    fixed_t moveDy = (mobj.momy >> 2) * elapsedVBlanks;
 
     // Do the sliding movement
     *gpSlideThing = &mobj;
@@ -167,334 +183,105 @@ void P_PlayerMobjThink(mobj_t& mobj) noexcept {
     }
 }
 
-void P_BuildMove() noexcept {
-loc_80029DD4:
-    sp -= 0x18;
-    v0 = *gPlayerNum;
-    a1 = a0;
-    sw(ra, sp + 0x10);
-    v0 <<= 2;
-    at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
-    at += v0;
-    t0 = lw(at);
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    at += v0;
-    a2 = lw(at);
-    v1 = lw(t0 + 0xC);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
-    at += v0;
-    a0 = lw(at);
-    a3 = a2 & v1;
-    v1 = a2 & 0x8000;
-    a3 = (i32(a3) > 0);
-    if (v1 == 0) goto loc_80029E3C;
-    v0 = a0 & 0x8000;
-    if (v0 != 0) goto loc_80029E50;
-loc_80029E3C:
-    v0 = a2 & 0x2000;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a0 & 0x2000;
-        if (bJump) goto loc_80029E64;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Reads inputs to decide how much the player will try to move and turn for a tic
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_BuildMove(player_t& player) noexcept {
+    // Grab some useful stuff: elapsed vblanks, currend and old buttons and gamepad bindings
+    const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[*gPlayerNum];
+    const uint32_t curBtns = gTicButtons[*gPlayerNum];
+    const uint32_t oldBtns = gOldTicButtons[*gPlayerNum];
+
+    const padbuttons_t* const pBtnBindings = gpPlayerCtrlBindings[*gPlayerNum].get();
+    
+    // Do turn acceleration if turn is held continously for 2 frames or more
+    const bool bLeftTurnAccel = ((curBtns & PAD_LEFT) && (oldBtns & PAD_LEFT));
+    const bool bRightTurnAccel = ((curBtns & PAD_RIGHT) && (oldBtns & PAD_RIGHT));
+    
+    if (bLeftTurnAccel || bRightTurnAccel) {
+        player.turnheld = std::min(player.turnheld + 1, TURN_ACCEL_TICS - 1);
+    } else {
+        player.turnheld = 0;
     }
-    if (v0 == 0) goto loc_80029E64;
-loc_80029E50:
-    v0 = lw(a1 + 0x128);
-    v0++;
-    sw(v0, a1 + 0x128);
-    goto loc_80029E68;
-loc_80029E64:
-    sw(0, a1 + 0x128);
-loc_80029E68:
-    v0 = lw(a1 + 0x128);
-    v0 = (i32(v0) < 0xA);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 9;                                         // Result = 00000009
-        if (bJump) goto loc_80029E80;
+    
+    // Initially assume no turning or movement
+    player.angleturn = 0;
+    player.sidemove = 0;
+    player.forwardmove = 0;
+
+    // What movement speed is being used, run or normal?
+    const uint32_t speedMode = (curBtns & pBtnBindings[cbind_speed]) ? 1 : 0;
+    
+    // Do strafe left/right controls
+    if (curBtns & pBtnBindings[cbind_strafe_left]) {
+        player.sidemove = (-SIDE_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
     }
-    sw(v0, a1 + 0x128);
-loc_80029E80:
-    sw(0, a1 + 0x10);
-    sw(0, a1 + 0xC);
-    sw(0, a1 + 0x8);
-    v0 = lw(t0 + 0x10);
-    v0 &= a2;
-    v1 = a3 << 2;
-    if (v0 == 0) goto loc_80029EDC;
-    v0 = *gPlayerNum;
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    v0 = lw(at);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7840;                                       // Result = SideMove[0] (80067840)
-    at += v1;
-    v1 = lw(at);
-    v0 = -v0;
-    mult(v0, v1);
-    goto loc_80029F28;
-loc_80029EDC:
-    v0 = lw(t0 + 0x14);
-    v0 &= a2;
-    if (v0 == 0) goto loc_80029F40;
-    v0 = *gPlayerNum;
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    a0 = lw(at);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7840;                                       // Result = SideMove[0] (80067840)
-    at += v1;
-    v0 = lw(at);
-    mult(a0, v0);
-loc_80029F28:
-    v0 = lo;
-    if (i32(v0) >= 0) goto loc_80029F38;
-    v0 += 3;
-loc_80029F38:
-    v0 = u32(i32(v0) >> 2);
-    sw(v0, a1 + 0xC);
-loc_80029F40:
-    v0 = lw(t0 + 0x8);
-    v0 &= a2;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 & 0x8000;
-        if (bJump) goto loc_80029FF8;
+    else if (curBtns & pBtnBindings[cbind_strafe_right]) {
+        player.sidemove = (+SIDE_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
     }
-    v1 = a3 << 2;
-    if (v0 == 0) goto loc_80029F98;
-    v0 = *gPlayerNum;
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    v0 = lw(at);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7840;                                       // Result = SideMove[0] (80067840)
-    at += v1;
-    v1 = lw(at);
-    v0 = -v0;
-    mult(v0, v1);
-    goto loc_80029FDC;
-loc_80029F98:
-    v0 = a2 & 0x2000;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 & 0x1000;
-        if (bJump) goto loc_8002A190;
+
+    // Do turning or strafing controls (if strafe button held)
+    if (curBtns & pBtnBindings[cbind_strafe]) {
+        // Strafe button held: turn buttons become strafing buttons
+        if (curBtns & PAD_LEFT) {
+            player.sidemove = (-SIDE_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
+        }
+        else if (curBtns & PAD_RIGHT) {
+            player.sidemove = (+SIDE_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
+        }
+    } 
+    else {
+        // No strafe button held: do normal turning
+        fixed_t turnAmt = 0;
+
+        if ((speedMode != 0) && ((curBtns & (PAD_UP | PAD_DOWN)) == 0)) {
+            // Do fast turning when run is pressed and we are not moving forward/back
+            if (curBtns & PAD_LEFT) {
+                turnAmt = +FAST_ANGLE_TURN[player.turnheld];
+            } else if (curBtns & PAD_RIGHT) {
+                turnAmt = -FAST_ANGLE_TURN[player.turnheld];
+            }
+        } else {
+            // Otherwise do the slow turning speed
+            if (curBtns & PAD_LEFT) {
+                turnAmt = +ANGLE_TURN[player.turnheld];
+            } else if (curBtns & PAD_RIGHT) {
+                turnAmt = -ANGLE_TURN[player.turnheld];
+            }
+        }
+
+        // Apply the turn amount adjusted for framerate
+        turnAmt *= elapsedVBlanks;
+        turnAmt /= VBLANKS_PER_TIC;
+        player.angleturn = turnAmt << TURN_TO_ANGLE_SHIFT;
     }
-    v0 = *gPlayerNum;
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    a0 = lw(at);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7840;                                       // Result = SideMove[0] (80067840)
-    at += v1;
-    v0 = lw(at);
-    mult(a0, v0);
-loc_80029FDC:
-    v0 = lo;
-    if (i32(v0) >= 0) goto loc_80029FEC;
-    v0 += 3;
-loc_80029FEC:
-    v0 = u32(i32(v0) >> 2);
-    sw(v0, a1 + 0xC);
-    goto loc_8002A18C;
-loc_80029FF8:
-    v0 = a2 & 0x5000;
-    if (a3 == 0) goto loc_8002A0C8;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = a2 & 0x8000;
-        if (bJump) goto loc_8002A0CC;
+
+    // Do forward/backward movement controls
+    if (curBtns & PAD_UP) {
+        player.forwardmove = (+FORWARD_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
     }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 & 0x2000;
-        if (bJump) goto loc_8002A064;
+    else if (curBtns & PAD_DOWN) {
+        player.forwardmove = (-FORWARD_MOVE[speedMode] * elapsedVBlanks) / VBLANKS_PER_TIC;
     }
-    v0 = *gPlayerNum;
-    v1 = lw(a1 + 0x128);
-    v0 <<= 2;
-    v1 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    a0 = lw(at);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7870;                                       // Result = FastAngleTurn[0] (80067870)
-    at += v1;
-    v0 = lw(at);
-    mult(a0, v0);
-    v0 = lo;
-    if (i32(v0) >= 0) goto loc_8002A05C;
-    v0 += 3;
-loc_8002A05C:
-    v0 = u32(i32(v0) >> 2);
-    goto loc_8002A184;
-loc_8002A064:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 & 0x1000;
-        if (bJump) goto loc_8002A190;
+    
+    // If the player is not moving at all change the animation frame to standing
+    mobj_t& mobj = *player.mo;
+
+    if ((mobj.momx == 0) && (mobj.momy == 0) && (player.forwardmove == 0) && (player.sidemove == 0)) {
+        // Only switch to the standing frame if we are running; if we are already standing do nothing:
+        state_t& state = *mobj.state;
+
+        const bool bIsInRunState = (
+            (&state == &gStates[S_PLAY_RUN1]) ||
+            (&state == &gStates[S_PLAY_RUN2]) ||
+            (&state == &gStates[S_PLAY_RUN3]) ||
+            (&state == &gStates[S_PLAY_RUN4])
+        );
+
+        if (bIsInRunState) {
+            P_SetMObjState(mobj, S_PLAY);
+        }
     }
-    v0 = *gPlayerNum;
-    v1 = lw(a1 + 0x128);
-    v0 <<= 2;
-    v1 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    a0 = lw(at);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7870;                                       // Result = FastAngleTurn[0] (80067870)
-    at += v1;
-    v0 = lw(at);
-    mult(a0, v0);
-    v0 = lo;
-    if (i32(v0) >= 0) goto loc_8002A0B8;
-    v0 += 3;
-loc_8002A0B8:
-    v0 = u32(i32(v0) >> 2);
-    v0 <<= 17;
-    v0 = -v0;
-    goto loc_8002A188;
-loc_8002A0C8:
-    v0 = a2 & 0x8000;
-loc_8002A0CC:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 & 0x2000;
-        if (bJump) goto loc_8002A128;
-    }
-    v0 = *gPlayerNum;
-    v1 = lw(a1 + 0x128);
-    v0 <<= 2;
-    v1 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    a0 = lw(at);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7848;                                       // Result = AngleTurn[0] (80067848)
-    at += v1;
-    v0 = lw(at);
-    mult(a0, v0);
-    v0 = lo;
-    if (i32(v0) >= 0) goto loc_8002A120;
-    v0 += 3;
-loc_8002A120:
-    v0 = u32(i32(v0) >> 2);
-    goto loc_8002A184;
-loc_8002A128:
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a2 & 0x1000;
-        if (bJump) goto loc_8002A190;
-    }
-    v0 = *gPlayerNum;
-    v1 = lw(a1 + 0x128);
-    v0 <<= 2;
-    v1 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    a0 = lw(at);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7848;                                       // Result = AngleTurn[0] (80067848)
-    at += v1;
-    v0 = lw(at);
-    mult(a0, v0);
-    v0 = lo;
-    if (i32(v0) >= 0) goto loc_8002A17C;
-    v0 += 3;
-loc_8002A17C:
-    v0 = u32(i32(v0) >> 2);
-    v0 = -v0;
-loc_8002A184:
-    v0 <<= 17;
-loc_8002A188:
-    sw(v0, a1 + 0x10);
-loc_8002A18C:
-    v0 = a2 & 0x1000;
-loc_8002A190:
-    v1 = a3 << 2;
-    if (v0 == 0) goto loc_8002A1D0;
-    v0 = *gPlayerNum;
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    a0 = lw(at);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7838;                                       // Result = ForwardMove[0] (80067838)
-    at += v1;
-    v0 = lw(at);
-    mult(a0, v0);
-    goto loc_8002A214;
-loc_8002A1D0:
-    v0 = a2 & 0x4000;
-    if (v0 == 0) goto loc_8002A22C;
-    v0 = *gPlayerNum;
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    v0 = lw(at);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7838;                                       // Result = ForwardMove[0] (80067838)
-    at += v1;
-    v1 = lw(at);
-    v0 = -v0;
-    mult(v0, v1);
-loc_8002A214:
-    v0 = lo;
-    if (i32(v0) >= 0) goto loc_8002A224;
-    v0 += 3;
-loc_8002A224:
-    v0 = u32(i32(v0) >> 2);
-    sw(v0, a1 + 0x8);
-loc_8002A22C:
-    a0 = lw(a1);
-    v0 = lw(a0 + 0x48);
-    if (v0 != 0) goto loc_8002A2A8;
-    v0 = lw(a0 + 0x4C);
-    if (v0 != 0) goto loc_8002A2A8;
-    v0 = lw(a1 + 0x8);
-    if (v0 != 0) goto loc_8002A2A8;
-    v0 = lw(a1 + 0xC);
-    if (v0 != 0) goto loc_8002A2A8;
-    v1 = lw(a0 + 0x60);
-    a1 = 0x80060000;                                    // Result = 80060000
-    a1 -= 0x6180;                                       // Result = State_S_PLAY_RUN1[0] (80059E80)
-    v0 = a1 + 0x1C;                                     // Result = State_S_PLAY_RUN2[0] (80059E9C)
-    if (v1 == a1) goto loc_8002A2A0;
-    {
-        const bool bJump = (v1 == v0);
-        v0 = a1 + 0x38;                                 // Result = State_S_PLAY_RUN3[0] (80059EB8)
-        if (bJump) goto loc_8002A2A0;
-    }
-    {
-        const bool bJump = (v1 == v0);
-        v0 = a1 + 0x54;                                 // Result = State_S_PLAY_RUN4[0] (80059ED4)
-        if (bJump) goto loc_8002A2A0;
-    }
-    if (v1 != v0) goto loc_8002A2A8;
-loc_8002A2A0:
-    a1 = 0x9A;                                          // Result = 0000009A
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-loc_8002A2A8:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void P_Thrust() noexcept {
@@ -981,7 +768,7 @@ loc_8002AA14:
     a0 = lw(s0);
     P_PlayerMobjThink(*vmAddrToPtr<mobj_t>(a0));
     a0 = s0;
-    P_BuildMove();
+    P_BuildMove(*vmAddrToPtr<player_t>(a0));
     v1 = lw(s0 + 0x4);
     v0 = 1;                                             // Result = 00000001
     if (v1 != v0) goto loc_8002AA5C;

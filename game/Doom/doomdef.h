@@ -72,7 +72,7 @@ enum gametype_t : int32_t {
     gt_single,
     gt_coop,
     gt_deathmatch,
-#if PC_PSX_DOOM_MODS    // PC-PSX: adding this for convenience
+#if PC_PSX_DOOM_MODS    // PC-PSX: adding for convenience
     NUMGAMETYPES
 #endif
 };
@@ -84,7 +84,7 @@ enum skill_t : int32_t {
     sk_medium,
     sk_hard,
     sk_nightmare,
-#if PC_PSX_DOOM_MODS    // PC-PSX: adding this for convenience
+#if PC_PSX_DOOM_MODS    // PC-PSX: adding for convenience
     NUMSKILLS
 #endif
 };
@@ -350,50 +350,50 @@ static constexpr uint32_t AF_FOLLOW = 0x2;      // If set then do not follow the
 
 // Holds state specific to each player
 struct player_t {
-    VmPtr<mobj_t>       mo;                                 // The map object controlled by the player
-    playerstate_t       playerstate;                        // Player status
-    fixed_t             forwardmove;
-    fixed_t             sidemove;
-    angle_t             angleturn;
-    fixed_t             viewz;
-    fixed_t             viewheight;
-    fixed_t             deltaviewheight;
-    fixed_t             bob;
-    int32_t             health;
-    int32_t             armorpoints;
-    int32_t             armortype;                          // 0 = no armor, 1 = regular armor, 2 = mega armor
-    int32_t             powers[NUMPOWERS];                  // How many ticks left for each power
-    bool32_t            cards[NUMCARDS];                    // Which keycards the player has
-    bool32_t            backpack;
-    uint32_t            frags;
-    uint32_t            __padding;
-    weapontype_t        readyweapon;
-    weapontype_t        pendingweapon;
-    bool32_t            weaponowned[NUMWEAPONS];
-    int32_t             ammo[NUMAMMO];
-    int32_t             maxammo[NUMAMMO];
-    uint32_t            attackdown;
-    uint32_t            usedown;
-    uint32_t            cheats;
-    uint32_t            refire;
-    uint32_t            killcount;
-    uint32_t            itemcount;
-    uint32_t            secretcount;
-    VmPtr<char>         message;
-    uint32_t            damagecount;
-    uint32_t            bonuscount;
-    VmPtr<mobj_t>       attacker;
-    uint32_t            extralight;
-    uint32_t            fixedcolormap;
-    uint32_t            colormap;
-    pspdef_t            psprites[NUMPSPRITES];
-    bool32_t            didsecret;
-    VmPtr<sector_t>     lastsoundsector;
-    int32_t             automapx;
-    int32_t             automapy;
-    uint32_t            automapscale;
-    uint32_t            automapflags;
-    uint32_t            turnheld;
+    VmPtr<mobj_t>       mo;                             // The map object controlled by the player
+    playerstate_t       playerstate;                    // Player status
+    fixed_t             forwardmove;                    // TODO: COMMENT
+    fixed_t             sidemove;                       // TODO: COMMENT
+    angle_t             angleturn;                      // TODO: COMMENT
+    fixed_t             viewz;                          // TODO: COMMENT
+    fixed_t             viewheight;                     // TODO: COMMENT
+    fixed_t             deltaviewheight;                // TODO: COMMENT
+    fixed_t             bob;                            // TODO: COMMENT
+    int32_t             health;                         // TODO: COMMENT
+    int32_t             armorpoints;                    // TODO: COMMENT
+    int32_t             armortype;                      // 0 = no armor, 1 = regular armor, 2 = mega armor
+    int32_t             powers[NUMPOWERS];              // How many ticks left for each power
+    bool32_t            cards[NUMCARDS];                // Which keycards the player has
+    bool32_t            backpack;                       // TODO: COMMENT
+    uint32_t            frags;                          // TODO: COMMENT
+    uint32_t            __padding;                      // TODO: COMMENT
+    weapontype_t        readyweapon;                    // TODO: COMMENT
+    weapontype_t        pendingweapon;                  // TODO: COMMENT
+    bool32_t            weaponowned[NUMWEAPONS];        // TODO: COMMENT
+    int32_t             ammo[NUMAMMO];                  // TODO: COMMENT
+    int32_t             maxammo[NUMAMMO];               // TODO: COMMENT
+    uint32_t            attackdown;                     // TODO: COMMENT
+    uint32_t            usedown;                        // TODO: COMMENT
+    uint32_t            cheats;                         // TODO: COMMENT
+    uint32_t            refire;                         // TODO: COMMENT
+    uint32_t            killcount;                      // TODO: COMMENT
+    uint32_t            itemcount;                      // TODO: COMMENT
+    uint32_t            secretcount;                    // TODO: COMMENT
+    VmPtr<char>         message;                        // TODO: COMMENT
+    uint32_t            damagecount;                    // TODO: COMMENT
+    uint32_t            bonuscount;                     // TODO: COMMENT
+    VmPtr<mobj_t>       attacker;                       // TODO: COMMENT
+    uint32_t            extralight;                     // TODO: COMMENT
+    uint32_t            fixedcolormap;                  // TODO: COMMENT
+    uint32_t            colormap;                       // TODO: COMMENT
+    pspdef_t            psprites[NUMPSPRITES];          // TODO: COMMENT
+    bool32_t            didsecret;                      // TODO: COMMENT
+    VmPtr<sector_t>     lastsoundsector;                // TODO: COMMENT
+    int32_t             automapx;                       // TODO: COMMENT
+    int32_t             automapy;                       // TODO: COMMENT
+    uint32_t            automapscale;                   // TODO: COMMENT
+    uint32_t            automapflags;                   // TODO: COMMENT
+    int32_t             turnheld;                       // TODO: COMMENT
 };
 
 static_assert(sizeof(player_t) == 300);
