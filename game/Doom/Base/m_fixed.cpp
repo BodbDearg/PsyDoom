@@ -1,7 +1,5 @@
 #include "m_fixed.h"
 
-#include "PsxVm/PsxVm.h"
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Multiply two numbers in 16.16 fixed point format
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -17,10 +15,6 @@ fixed_t FixedMul(const fixed_t a, const fixed_t b) noexcept {
     const fixed_t result_abs = (fixed_t) result_u64;
 
     return (bNegativeResult) ? -result_abs : result_abs;
-}
-
-void _thunk_FixedMul() noexcept {
-    v0 = FixedMul(a0, a1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -66,8 +60,4 @@ fixed_t FixedDiv(const fixed_t a, const fixed_t b) noexcept {
 
     // Last step, correct the sign of the result
     return (bNegativeResult) ? -result : result;
-}
-
-void _thunk_FixedDiv() noexcept {
-    v0 = FixedDiv(a0, a1);
 }

@@ -94,8 +94,6 @@ extern void I_NetSendRecv() noexcept;
 extern void I_SubmitGpuCmds() noexcept;
 extern void I_LocalButtonsToNet() noexcept;
 extern void I_NetButtonsToLocal() noexcept;
-extern void _thunk_FixedMul() noexcept;
-extern void _thunk_FixedDiv() noexcept;
 extern void G_CompleteLevel() noexcept;     // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
 
 extern void LIBAPI_write() noexcept;
@@ -223,8 +221,6 @@ namespace PsxVm {
         { 0x80034E58, &I_SubmitGpuCmds },
         { 0x80034EA4, &I_LocalButtonsToNet },
         { 0x80034F04, &I_NetButtonsToLocal },
-        { 0x8003F134, &_thunk_FixedMul },
-        { 0x8003F180, &_thunk_FixedDiv },
         { 0x80013384, &G_CompleteLevel },   // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
         
         { 0x80049C3C, &LIBAPI_write },
