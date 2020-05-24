@@ -7,6 +7,7 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "g_game.h"
+#include "p_local.h"
 #include "p_map.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
@@ -14,123 +15,52 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
+#include <algorithm>
 
-void P_PlayerMove() noexcept {
-    v0 = *gPlayerNum;
-    sp -= 0x28;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v1 = lw(s0 + 0x48);
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += v0;
-    a0 = lw(at);
-    v1 = u32(i32(v1) >> 2);
-    mult(v1, a0);
-    v0 = lw(s0 + 0x4C);
-    s2 = lo;
-    v0 = u32(i32(v0) >> 2);
-    mult(v0, a0);
-    sw(s0, gp + 0x8F8);                                 // Store to: gpSlideThing (80077ED8)
-    s1 = lo;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Attempts to move the given player map object according to it's current velocity.
+// Also crosses special lines in the process, and interacts with special things touched.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_PlayerMove(mobj_t& mobj) noexcept {
+    // This is the amount to be moved
+    fixed_t moveDx = (mobj.momx >> 2) * gPlayersElapsedVBlanks[*gPlayerNum];
+    fixed_t moveDy = (mobj.momy >> 2) * gPlayersElapsedVBlanks[*gPlayerNum];
+
+    // Do the sliding movement
+    *gpSlideThing = &mobj;
     P_SlideMove();
-    s3 = 0x80070000;                                    // Result = 80070000
-    s3 = lw(s3 + 0x7F9C);                               // Load from: gpSpecialLine (80077F9C)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lw(a1 + 0x7F90);                               // Load from: gSlideX (80077F90)
-    v0 = lw(s0);
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 = lw(a2 + 0x7F94);                               // Load from: gSlideY (80077F94)
-    if (a1 != v0) goto loc_80029838;
-    v0 = lw(s0 + 0x4);
-    {
-        const bool bJump = (a2 == v0);
-        v0 = 0x100000;                                  // Result = 00100000
-        if (bJump) goto loc_80029848;
+    line_t* const pSpecialLineToCross = gpSpecialLine->get();
+
+    // If we did not succeed in doing a sliding movement, or cannot go to the suggested location then try stairstepping.
+    // With stairstepping we try to do the x and y axis movements alone, instead of together:
+    const bool bSlideMoveBlocked = ((*gSlideX == mobj.x) && (*gSlideY == mobj.y));
+
+    if (bSlideMoveBlocked || (!P_TryMove(mobj, *gSlideX, *gSlideY))) {
+        // Clamp the movement amount so we don't go beyond the max
+        moveDx = std::clamp(moveDx, -MAXMOVE, +MAXMOVE);
+        moveDy = std::clamp(moveDy, -MAXMOVE, +MAXMOVE);
+
+        // Try move in the y direction first
+        if (!P_TryMove(mobj, mobj.x, mobj.y + moveDy)) {
+            // Y move failed: try move in the x direction and kill all velocity in disallowed movement directions
+            if (!P_TryMove(mobj, mobj.x + moveDx, mobj.y)) {
+                mobj.momy = 0;
+                mobj.momx = 0;
+            } else {
+                mobj.momx = moveDx;
+                mobj.momy = 0;
+            }
+        } else {
+            // Y move succeeded: kill all velocity in the x direction
+            mobj.momx = 0;
+            mobj.momy = moveDy;
+        }
     }
-loc_80029838:
-    a0 = s0;
-    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x100000;                                  // Result = 00100000
-        if (bJump) goto loc_800298E8;
+
+    // Trigger line specials if we crossed a special line
+    if (pSpecialLineToCross) {
+        P_CrossSpecialLine(*pSpecialLineToCross, mobj);
     }
-loc_80029848:
-    v0 = (i32(v0) < i32(s2));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xFFF00000;                                // Result = FFF00000
-        if (bJump) goto loc_8002985C;
-    }
-    s2 = 0x100000;                                      // Result = 00100000
-    goto loc_8002986C;
-loc_8002985C:
-    v0 = (i32(s2) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x100000;                                  // Result = 00100000
-        if (bJump) goto loc_80029870;
-    }
-    s2 = 0xFFF00000;                                    // Result = FFF00000
-loc_8002986C:
-    v0 = 0x100000;                                      // Result = 00100000
-loc_80029870:
-    v0 = (i32(v0) < i32(s1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xFFF00000;                                // Result = FFF00000
-        if (bJump) goto loc_80029884;
-    }
-    s1 = 0x100000;                                      // Result = 00100000
-    goto loc_80029894;
-loc_80029884:
-    v0 = (i32(s1) < i32(v0));
-    a0 = s0;
-    if (v0 == 0) goto loc_80029898;
-    s1 = 0xFFF00000;                                    // Result = FFF00000
-loc_80029894:
-    a0 = s0;
-loc_80029898:
-    a2 = lw(s0 + 0x4);
-    a1 = lw(s0);
-    a2 += s1;
-    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    a0 = s0;
-    if (v0 == 0) goto loc_800298BC;
-    sw(0, s0 + 0x48);
-    sw(s1, s0 + 0x4C);
-    goto loc_800298E8;
-loc_800298BC:
-    a1 = lw(s0);
-    a2 = lw(s0 + 0x4);
-    a1 += s2;
-    v0 = P_TryMove(*vmAddrToPtr<mobj_t>(a0), a1, a2);
-    if (v0 == 0) goto loc_800298E0;
-    sw(s2, s0 + 0x48);
-    sw(0, s0 + 0x4C);
-    goto loc_800298E8;
-loc_800298E0:
-    sw(0, s0 + 0x4C);
-    sw(0, s0 + 0x48);
-loc_800298E8:
-    a0 = s3;
-    if (s3 == 0) goto loc_800298F8;
-    a1 = s0;
-    P_CrossSpecialLine(*vmAddrToPtr<line_t>(a0), *vmAddrToPtr<mobj_t>(a1));
-loc_800298F8:
-    ra = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
 }
 
 void P_PlayerXYMovement() noexcept {
@@ -138,7 +68,7 @@ void P_PlayerXYMovement() noexcept {
     sw(s0, sp + 0x10);
     sw(ra, sp + 0x14);
     s0 = a0;
-    P_PlayerMove();
+    P_PlayerMove(*vmAddrToPtr<mobj_t>(a0));
     v0 = lw(s0 + 0x8);
     a0 = lw(s0 + 0x38);
     v0 = (i32(a0) < i32(v0));
@@ -279,7 +209,7 @@ loc_80029B38:
     if (v0 == 0) goto loc_80029C38;
 loc_80029B68:
     a0 = s0;
-    P_PlayerMove();
+    P_PlayerMove(*vmAddrToPtr<mobj_t>(a0));
     v0 = lw(s0 + 0x8);
     a0 = lw(s0 + 0x38);
     v0 = (i32(a0) < i32(v0));

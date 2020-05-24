@@ -14,16 +14,16 @@ static constexpr int32_t SIDE_ON    =  0;   // Return code for side checking: po
 static constexpr int32_t SIDE_BACK  = -1;   // Return code for side checking: point is on the back side of the line
 
 const VmPtr<VmPtr<mobj_t>>      gpSlideThing(0x80077ED8);       // The thing being moved
+const VmPtr<fixed_t>            gSlideX(0x80077F90);            // Where the player move is starting from: x
+const VmPtr<fixed_t>            gSlideY(0x80077F94);            // Where the player move is starting from: y
+const VmPtr<VmPtr<line_t>>      gpSpecialLine(0x80077F9C);      // The special line that would be crossed by player movement
 
-static const VmPtr<fixed_t>         gSlideX(0x80077F90);            // Where the player move is starting from: x
-static const VmPtr<fixed_t>         gSlideY(0x80077F94);            // Where the player move is starting from: y
 static const VmPtr<fixed_t>         gSlideDx(0x80078070);           // How much the player is wanting to move: x
 static const VmPtr<fixed_t>         gSlideDy(0x80078074);           // How much the player is wanting to move: y
 static const VmPtr<fixed_t[4]>      gEndBox(0x80097BF0);            // Bounding box for the proposed movement
 static const VmPtr<fixed_t>         gBlockFrac(0x80078228);         // Percentage of the current move allowed
 static const VmPtr<fixed_t>         gBlockNvx(0x800781A8);          // The vector to slide along for the line collided with: x
 static const VmPtr<fixed_t>         gBlockNvy(0x800781B0);          // The vector to slide along for the line collided with: y
-static const VmPtr<VmPtr<line_t>>   gpSpecialLine(0x80077F9C);      // A special line that was crossed during player movement
 static const VmPtr<fixed_t>         gNvx(0x80078158);               // Line being collided against, normalized normal: x
 static const VmPtr<fixed_t>         gNvy(0x8007815C);               // Line being collided against, normalized normal: y
 static const VmPtr<fixed_t>         gP1x(0x800780CC);               // Line being collided against, p1: x
@@ -41,14 +41,14 @@ static void SL_CheckLine(line_t& line) noexcept;
 static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, const fixed_t moveX2, const fixed_t moveY2) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Attempts to do a movement for the player's map object (with wall sliding) when movement is blocked.
-// Also triggers special lines if those are crossed and kills the thing's momentum if it can't move at all.
+// Attempts to do movement (with wall sliding) for the player's map object.
 //
 // Global inputs:
 //      gpSlideThing        : The player thing being moved
 //
 // Global outputs:
 //      gSlideX, gSlideY    : The final position of the thing after movement
+//      gpSpecialLine       : The special line that was crossed by movement (null if none)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SlideMove() noexcept {
     // Set the starting position and grab the initial movement amount

@@ -1,6 +1,8 @@
 #pragma once
 
-void P_PlayerMove() noexcept;
+struct mobj_t;
+
+void P_PlayerMove(mobj_t& mobj) noexcept;
 void P_PlayerXYMovement() noexcept;
 void P_PlayerZMovement() noexcept;
 void P_PlayerMobjThink() noexcept;
