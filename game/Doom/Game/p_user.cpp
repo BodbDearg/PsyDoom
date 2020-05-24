@@ -393,98 +393,63 @@ void P_MovePlayer(player_t& player) noexcept {
     }
 }
 
-void P_DeathThink() noexcept {
-loc_8002A6A0:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x14);
-    s0 = a0;
-    P_MovePsprites(*vmAddrToPtr<player_t>(a0));
-    v1 = lw(s0 + 0x18);
-    v0 = 0x80000;                                       // Result = 00080000
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xFFFF0000;                                // Result = FFFF0000
-        if (bJump) goto loc_8002A6D0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does updates for the player when dead: drops down the view height, weapons and faces the killer etc.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_DeathThink(player_t& player) noexcept {
+    // Drop the currently held weapon
+    P_MovePsprites(player);
+
+    // Lower the view to the ground
+    if (player.viewheight > 0x80000) {
+        player.viewheight -= FRACUNIT;
     }
-    v0 += v1;
-    sw(v0, s0 + 0x18);
-loc_8002A6D0:
-    v0 = lw(s0);
-    v1 = lw(v0 + 0x8);
-    v0 = lw(v0 + 0x38);
-    v0 = (i32(v0) < i32(v1));
-    v0 ^= 1;
-    sw(v0, gp + 0xBEC);                                 // Store to: gbOnGround (800781CC)
-    a0 = s0;
-    P_CalcHeight(*vmAddrToPtr<player_t>(a0));
-    v1 = lw(s0 + 0xE0);
-    if (v1 == 0) goto loc_8002A78C;
-    v0 = lw(s0);
-    if (v1 == v0) goto loc_8002A78C;
-    a0 = lw(v0);
-    a1 = lw(v0 + 0x4);
-    a2 = lw(v1);
-    a3 = lw(v1 + 0x4);
-    v0 = R_PointToAngle2(a0, a1, a2, a3);
-    t0 = 0xFC710000;                                    // Result = FC710000
-    t0 |= 0xC71D;                                       // Result = FC71C71D
-    v1 = 0xF8E30000;                                    // Result = F8E30000
-    a1 = lw(s0);
-    v1 |= 0x8E3A;                                       // Result = F8E38E3A
-    a0 = lw(a1 + 0x24);
-    a3 = v0;
-    a2 = v0 - a0;
-    v0 = a2 + t0;
-    v1 = (v1 < v0);
-    if (v1 == 0) goto loc_8002A768;
-    sw(a3, a1 + 0x24);
-    goto loc_8002A78C;
-loc_8002A768:
-    v0 = 0x38E0000;                                     // Result = 038E0000
-    if (i32(a2) < 0) goto loc_8002A780;
-    v0 |= 0x38E3;                                       // Result = 038E38E3
-    v0 += a0;
-    sw(v0, a1 + 0x24);
-    goto loc_8002A7A0;
-loc_8002A780:
-    v0 = a0 + t0;
-    sw(v0, a1 + 0x24);
-    goto loc_8002A7A0;
-loc_8002A78C:
-    v0 = lw(s0 + 0xD8);
-    {
-        const bool bJump = (v0 == 0);
-        v0--;
-        if (bJump) goto loc_8002A7A0;
+
+    // Is the player on the ground now?
+    mobj_t& playerMobj = *player.mo;
+    *gbOnGround = (playerMobj.z <= playerMobj.floorz);
+
+    // Update the current view height
+    P_CalcHeight(player);
+
+    // If we were killed by an enemy then turn to face it
+    mobj_t* const pAttacker = player.attacker.get();
+
+    if (pAttacker && (pAttacker != &playerMobj)) {
+        // Killed by an enemy: turn to face it, then fade out the reddamage tint
+        const angle_t angleToAttacker = R_PointToAngle2(playerMobj.x, playerMobj.y, pAttacker->x, pAttacker->y);
+        const angle_t angleDelta = angleToAttacker - playerMobj.angle;
+
+        if ((angleDelta >= ANG5) && (angleDelta <= (angle_t) -ANG5)) {
+            // Still turning to face the killer: turn the right way
+            if (angleDelta < ANG180) {
+                playerMobj.angle += ANG5;
+            } else {
+                playerMobj.angle -= ANG5;
+            }
+        }
+        else {
+            // Now looking directly at the killer: snap to it's angle and fade out the damage tint
+            playerMobj.angle = angleToAttacker;
+
+            if (player.damagecount != 0) {
+                player.damagecount--;
+            }
+        }
+    } 
+    else {
+        // Not killed by an enemy: just fade out the red damage tint
+        if (player.damagecount != 0) {
+            player.damagecount--;
+        }
     }
-    sw(v0, s0 + 0xD8);
-loc_8002A7A0:
-    v0 = *gPlayerNum;
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    at += v0;
-    v0 = lbu(at);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0x80000;                                   // Result = 00080000
-        if (bJump) goto loc_8002A7E4;
+
+    // Respawn if the right buttons are pressed and the player's view has dropped enough
+    const bool bRespawnBtnPressed = gTicButtons[*gPlayerNum] & (PAD_ACTION_BTNS | PAD_SHOULDER_BTNS);
+
+    if (bRespawnBtnPressed && (player.viewheight <= 8 * FRACUNIT)) {
+        player.playerstate = PST_REBORN;
     }
-    v1 = lw(s0 + 0x18);
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 2;                                         // Result = 00000002
-        if (bJump) goto loc_8002A7E4;
-    }
-    sw(v0, s0 + 0x4);
-loc_8002A7E4:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 void P_PlayerThink() noexcept {
@@ -641,7 +606,7 @@ loc_8002AA14:
     v0 = 1;                                             // Result = 00000001
     if (v1 != v0) goto loc_8002AA5C;
     a0 = s0;
-    P_DeathThink();
+    P_DeathThink(*vmAddrToPtr<player_t>(a0));
     goto loc_8002ACCC;
 loc_8002AA5C:
     v0 = lw(s0);

@@ -38,6 +38,7 @@ static constexpr angle_t ANG45  = 0x20000000;
 static constexpr angle_t ANG90  = 0x40000000;
 static constexpr angle_t ANG180 = 0x80000000;
 static constexpr angle_t ANG270 = 0xC0000000;
+static constexpr angle_t ANG5   = ANG45 / 9;
 
 // Constants relating to trig lookup tables
 static constexpr uint32_t FINEANGLES        = 8192;                 // How many entries in sine, cosine etc. LUTs. The number of 'fine' angles.

@@ -10,5 +10,5 @@ void P_BuildMove(player_t& player) noexcept;
 void P_Thrust(player_t& player, const angle_t angle, const fixed_t amount) noexcept;
 void P_CalcHeight(player_t& player) noexcept;
 void P_MovePlayer(player_t& player) noexcept;
-void P_DeathThink() noexcept;
+void P_DeathThink(player_t& player) noexcept;
 void P_PlayerThink() noexcept;
