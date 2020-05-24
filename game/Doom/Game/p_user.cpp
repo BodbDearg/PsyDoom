@@ -35,6 +35,7 @@ static constexpr fixed_t FORWARD_MOVE[2]        = { 0x40000, 0x60000 };         
 static constexpr fixed_t SIDE_MOVE[2]           = { 0x38000, 0x58000 };         // Movement speeds: strafe left/right
 static constexpr int32_t TURN_ACCEL_TICS        = C_ARRAY_SIZE(ANGLE_TURN);     // Number of tics/stages in turn acceleration before it hits max speed
 static constexpr int32_t TURN_TO_ANGLE_SHIFT    = 17;                           // How many bits to shift the turn amount left to scale it to an angle
+static constexpr fixed_t MAXBOB                 = 16 * FRACUNIT;                // Maximum amount of view bobbing per frame (16 pixels)
 
 static const VmPtr<bool32_t>    gbOnGround(0x800781CC);     // Flag set to true when the player is on the ground
 
@@ -295,116 +296,72 @@ void P_Thrust(player_t& player, const angle_t angle, const fixed_t amount) noexc
     mobj.momy += (amount >> 8) * (gFineSine[angle >> ANGLETOFINESHIFT] >> 8);
 }
 
-void P_CalcHeight() noexcept {
-loc_8002A32C:
-    a1 = a0;
-    v0 = lw(a1);
-    v0 = lw(v0 + 0x48);
-    v0 = u32(i32(v0) >> 8);
-    mult(v0, v0);
-    v0 = lw(a1);
-    v1 = lo;
-    sw(v1, a1 + 0x20);
-    v0 = lw(v0 + 0x4C);
-    v0 = u32(i32(v0) >> 8);
-    mult(v0, v0);
-    v0 = lo;
-    v0 += v1;
-    v0 = u32(i32(v0) >> 4);
-    v1 = 0x100000;                                      // Result = 00100000
-    sw(v0, a1 + 0x20);
-    v0 = (i32(v1) < i32(v0));
-    if (v0 == 0) goto loc_8002A388;
-    sw(v1, a1 + 0x20);
-loc_8002A388:
-    v0 = lw(gp + 0xBEC);                                // Load from: gbOnGround (800781CC)
-    a0 = 0x290000;                                      // Result = 00290000
-    if (v0 != 0) goto loc_8002A3D0;
-    v0 = lw(a1);
-    v1 = lw(v0 + 0x8);
-    v0 = lw(a1);
-    v1 += a0;
-    sw(v1, a1 + 0x14);
-    a0 = lw(v0 + 0x3C);
-    v0 = 0xFFFC0000;                                    // Result = FFFC0000
-    a0 += v0;
-    v1 = (i32(a0) < i32(v1));
-    if (v1 == 0) goto loc_8002A4E0;
-    sw(a0, a1 + 0x14);
-    goto loc_8002A4E0;
-loc_8002A3D0:
-    v1 = *gTicCon;
-    v0 = v1 << 1;
-    v0 += v1;
-    v1 = v0 << 4;
-    v0 += v1;
-    v0 <<= 4;
-    v0 &= 0x7FF0;
-    v1 = lw(a1 + 0x20);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += v0;
-    v0 = lw(at);
-    v1 = u32(i32(v1) >> 17);
-    mult(v1, v0);
-    v0 = lw(a1 + 0x4);
-    a0 = lo;
-    if (v0 != 0) goto loc_8002A4A4;
-    v0 = lw(a1 + 0x18);
-    v1 = lw(a1 + 0x1C);
-    v0 += v1;
-    v1 = 0x290000;                                      // Result = 00290000
-    sw(v0, a1 + 0x18);
-    v0 = (i32(v1) < i32(v0));
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Computes the player's current view height (for rendering) and does smooth stepping up stairs.
+// Also applies view bobbing to the view height.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_CalcHeight(player_t& player) noexcept {
+    // Compute movement bobbing amount
+    mobj_t& mobj = *player.mo;
+
     {
-        const bool bJump = (v0 == 0);
-        v0 = 0x140000;                                  // Result = 00140000
-        if (bJump) goto loc_8002A44C;
+        const int32_t speedX = mobj.momx >> 8;
+        const int32_t speedY = mobj.momy >> 8;
+
+        player.bob = (speedX * speedX) + (speedY * speedY);
+        player.bob >>= 4;
+        player.bob = std::min(player.bob, MAXBOB);
     }
-    sw(v1, a1 + 0x18);
-    sw(0, a1 + 0x1C);
-loc_8002A44C:
-    v1 = lw(a1 + 0x18);
-    v0 |= 0x7FFF;                                       // Result = 00147FFF
-    v0 = (i32(v0) < i32(v1));
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0x140000;                                  // Result = 00140000
-        if (bJump) goto loc_8002A478;
+    
+    // When we are not on the ground just set the view z based on map object z and clamp below the ceiling
+    const fixed_t maxViewZ = mobj.ceilingz - 4 * FRACUNIT;
+
+    if (!*gbOnGround) {
+        player.viewz = mobj.z + VIEWHEIGHT;
+        player.viewz = std::min(player.viewz, maxViewZ);    // Don't get too close to the ceiling!
+        return;
     }
-    v1 = lw(a1 + 0x1C);
-    v0 |= 0x8000;                                       // Result = 00148000
-    sw(v0, a1 + 0x18);
-    if (i32(v1) > 0) goto loc_8002A488;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, a1 + 0x1C);
-loc_8002A478:
-    v0 = lw(a1 + 0x1C);
-    if (v0 == 0) goto loc_8002A4A4;
-loc_8002A488:
-    v0 = lw(a1 + 0x1C);
-    v1 = 0x8000;                                        // Result = 00008000
-    v0 += v1;
-    sw(v0, a1 + 0x1C);
-    if (v0 != 0) goto loc_8002A4A4;
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, a1 + 0x1C);
-loc_8002A4A4:
-    v0 = lw(a1);
-    v1 = lw(a1 + 0x18);
-    v0 = lw(v0 + 0x8);
-    v0 += v1;
-    v1 = lw(a1);
-    v0 += a0;
-    sw(v0, a1 + 0x14);
-    a0 = lw(v1 + 0x3C);
-    v1 = 0xFFFC0000;                                    // Result = FFFC0000
-    a0 += v1;
-    v0 = (i32(a0) < i32(v0));
-    if (v0 == 0) goto loc_8002A4E0;
-    sw(a0, a1 + 0x14);
-loc_8002A4E0:
-    return;
+
+    // Do view height movements due smooth stepping up stairs
+    if (player.playerstate == PST_LIVE) {
+        player.viewheight += player.deltaviewheight;
+
+        // Raised too far?
+        if (player.viewheight > VIEWHEIGHT) {
+            player.viewheight = VIEWHEIGHT;
+            player.deltaviewheight = 0;     // Stop moving up
+        }
+
+        // Gone down to low?
+        if (player.viewheight < VIEWHEIGHT / 2) {
+            player.viewheight = VIEWHEIGHT / 2;
+            player.deltaviewheight = std::max(player.deltaviewheight, 1);   // Start moving up
+        }
+
+        // If we are moving up still, accelerate the the movement over time
+        if (player.deltaviewheight != 0) {
+            player.deltaviewheight += FRACUNIT / 2;
+
+            // Don't stop moving yet if we were moving down previously but now have flipped around
+            if (player.deltaviewheight == 0) {
+                player.deltaviewheight = 1;
+            }
+        }
+    }
+
+    // Compute the bob amplitude, which uses a sine wave as it's basis.
+    // We step a certain amount of the bob with every vblank elapsed:
+    constexpr int32_t BOB_PHASE_TIME = (VBLANKS_PER_SEC * 2) / 3;
+    constexpr int32_t BOB_PHASE_STEP = FINEANGLES / BOB_PHASE_TIME;
+
+    const uint32_t bobPhase = (*gTicCon * BOB_PHASE_STEP) & FINEMASK;
+    const fixed_t bobAmplitude = gFineSine[bobPhase];
+
+    // Compute the final view z based on map object z, view height and bob amount
+    player.viewz = mobj.z + player.viewheight + (player.bob >> 17) * bobAmplitude;
+
+    // Clamp the view z so it's not to close to the ceiling (if need be)
+    player.viewz = std::min(player.viewz, maxViewZ);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -461,7 +418,7 @@ loc_8002A6D0:
     v0 ^= 1;
     sw(v0, gp + 0xBEC);                                 // Store to: gbOnGround (800781CC)
     a0 = s0;
-    P_CalcHeight();
+    P_CalcHeight(*vmAddrToPtr<player_t>(a0));
     v1 = lw(s0 + 0xE0);
     if (v1 == 0) goto loc_8002A78C;
     v0 = lw(s0);
@@ -718,7 +675,7 @@ loc_8002AAB8:
     P_MovePlayer(*vmAddrToPtr<player_t>(a0));
 loc_8002AAC0:
     a0 = s0;
-    P_CalcHeight();
+    P_CalcHeight(*vmAddrToPtr<player_t>(a0));
     v0 = lw(s0);
     v0 = lw(v0 + 0xC);
     v0 = lw(v0);

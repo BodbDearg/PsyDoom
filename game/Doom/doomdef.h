@@ -63,7 +63,7 @@ static constexpr int32_t MAXPLAYERS = 2;
 // PSX DOOM has a 15Hz timebase, similar to Jaguar DOOM. Some operations however update at 30Hz (rendering speed).
 static constexpr int32_t TICRATE = 15;
 static constexpr int32_t DRAWRATE = 60;
-static constexpr int32_t REFRESHRATE = 60;
+static constexpr int32_t VBLANKS_PER_SEC = 60;      // Number of vblanks per second (assuming a 60 Hz display)
 static constexpr int32_t VBLANKS_PER_TIC = 4;       // How many vblanks there are in a game tic
 static constexpr int32_t VBLANK_TO_TIC_SHIFT = 2;   // How many bits to shift right to get from vblanks to to tics
 
