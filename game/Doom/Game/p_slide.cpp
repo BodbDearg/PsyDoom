@@ -73,7 +73,7 @@ loc_800250AC:
     a0 = s2;
 loc_800250B4:
     a1 = s3;
-    P_CompletableFrac();
+    v0 = P_CompletableFrac(a0, a1);
     s0 = v0;
     v0 = 0x10000;                                       // Result = 00010000
     if (s0 == v0) goto loc_800250D0;
@@ -139,177 +139,76 @@ loc_80025198:
     return;
 }
 
-void P_CompletableFrac() noexcept {
-loc_800251BC:
-    sp -= 0x40;
-    a2 = a0;
-    v0 = 0x10000;                                       // Result = 00010000
-    v1 = lw(gp + 0x9B4);                                // Load from: gSlideY (80077F94)
-    a0 = 0x170000;                                      // Result = 00170000
-    sw(ra, sp + 0x3C);
-    sw(s6, sp + 0x38);
-    sw(s5, sp + 0x34);
-    sw(s4, sp + 0x30);
-    sw(s3, sp + 0x2C);
-    sw(s2, sp + 0x28);
-    sw(s1, sp + 0x24);
-    sw(s0, sp + 0x20);
-    sw(v0, gp + 0xC48);                                 // Store to: gBlockFrac (80078228)
-    sw(a2, gp + 0xA90);                                 // Store to: gSlideDx (80078070)
-    sw(a1, gp + 0xA94);                                 // Store to: gSlideDy (80078074)
-    v0 = v1 + a0;
-    at = 0x80090000;                                    // Result = 80090000
-    sw(v0, at + 0x7BF0);                                // Store to: gEndBox[0] (80097BF0)
-    v0 = lw(gp + 0x9B0);                                // Load from: gSlideX (80077F90)
-    v1 -= a0;
-    at = 0x80090000;                                    // Result = 80090000
-    sw(v1, at + 0x7BF4);                                // Store to: gEndBox[1] (80097BF4)
-    v1 = v0 + a0;
-    v0 -= a0;
-    at = 0x80090000;                                    // Result = 80090000
-    sw(v1, at + 0x7BFC);                                // Store to: gEndBox[3] (80097BFC)
-    at = 0x80090000;                                    // Result = 80090000
-    sw(v0, at + 0x7BF8);                                // Store to: gEndBox[2] (80097BF8)
-    v0 += a2;
-    if (i32(a2) <= 0) goto loc_8002524C;
-    v0 = a2 + v1;
-    at = 0x80090000;                                    // Result = 80090000
-    sw(v0, at + 0x7BFC);                                // Store to: gEndBox[3] (80097BFC)
-    goto loc_80025254;
-loc_8002524C:
-    at = 0x80090000;                                    // Result = 80090000
-    sw(v0, at + 0x7BF8);                                // Store to: gEndBox[2] (80097BF8)
-loc_80025254:
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x7BF4;                                       // Result = gEndBox[1] (80097BF4)
-    if (i32(a1) <= 0) goto loc_8002526C;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 += 0x7BF0;                                       // Result = gEndBox[0] (80097BF0)
-loc_8002526C:
-    v0 = lw(v1);
-    v0 += a1;
-    sw(v0, v1);
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7BF8);                               // Load from: gEndBox[2] (80097BF8)
-    a0 = *gBlockmapOriginX;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 = lw(v1 + 0x7BFC);                               // Load from: gEndBox[3] (80097BFC)
-    v0 -= a0;
-    a1 = u32(i32(v0) >> 23);
-    v1 -= a0;
-    s5 = u32(i32(v1) >> 23);
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7BF4);                               // Load from: gEndBox[1] (80097BF4)
-    a0 = *gBlockmapOriginY;
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 = lw(v1 + 0x7BF0);                               // Load from: gEndBox[0] (80097BF0)
-    v0 -= a0;
-    s6 = u32(i32(v0) >> 23);
-    v1 -= a0;
-    v0 = *gValidCount;
-    v0++;
-    *gValidCount = v0;
-    s3 = u32(i32(v1) >> 23);
-    if (i32(a1) >= 0) goto loc_800252EC;
-    a1 = 0;                                             // Result = 00000000
-loc_800252EC:
-    if (i32(s6) >= 0) goto loc_800252F8;
-    s6 = 0;                                             // Result = 00000000
-loc_800252F8:
-    v1 = *gBlockmapWidth;
-    v0 = (i32(s5) < i32(v1));
-    if (v0 != 0) goto loc_80025314;
-    s5 = v1 - 1;
-loc_80025314:
-    v1 = *gBlockmapHeight;
-    v0 = (i32(s3) < i32(v1));
-    s2 = a1;
-    if (v0 != 0) goto loc_80025330;
-    s3 = v1 - 1;
-loc_80025330:
-    v0 = (i32(s5) < i32(s2));
-    if (v0 != 0) goto loc_80025410;
-    v0 = (i32(s3) < i32(s6));
-loc_80025340:
-    s1 = s6;
-    if (v0 != 0) goto loc_80025400;
-loc_80025348:
-    v0 = *gBlockmapWidth;
-    mult(s1, v0);
-    v1 = *gpBlockmap;
-    v0 = lo;
-    v0 += s2;
-    v0 <<= 1;
-    v0 += v1;
-    v0 = lh(v0);
-    v1 = *gpBlockmapLump;
-    v0 <<= 1;
-    s0 = v0 + v1;
-    v0 = -1;                                            // Result = FFFFFFFF
-    v1 = lh(s0);
-    a0 = lhu(s0);
-    {
-        const bool bJump = (v1 == v0);
-        v1 = a0 << 16;
-        if (bJump) goto loc_800253F0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the fraction (0-1) of the given movement amount (dx, dy) that is completable.
+//
+// Global inputs:
+//      gpSlideThing            : The thing being moved
+//      gSlideX, gSlideY        : Move start point
+//
+// Global outputs:
+//      gBlockNvx, gBlockNvy    : Normalized vector to slide along the collision wall (set if the collision is closer than current closest)
+//------------------------------------------------------------------------------------------------------------------------------------------
+fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
+    // Assume we can move the entire distance until we find otherwise and save movement amount globally
+    *gBlockFrac = FRACUNIT;
+    *gSlideDx = dx;
+    *gSlideDy = dy;
+
+    // Compute the bounding box for the move
+    gEndBox[BOXTOP]    = *gSlideY + CLIPRADIUS * FRACUNIT;
+    gEndBox[BOXBOTTOM] = *gSlideY - CLIPRADIUS * FRACUNIT;
+    gEndBox[BOXLEFT]   = *gSlideX - CLIPRADIUS * FRACUNIT;
+    gEndBox[BOXRIGHT]  = *gSlideX + CLIPRADIUS * FRACUNIT;
+    
+    if (dx > 0) {
+        gEndBox[BOXRIGHT] += dx;
+    } else {
+        gEndBox[BOXLEFT] += dx;
     }
-    s4 = -1;                                            // Result = FFFFFFFF
-loc_8002539C:
-    v1 = u32(i32(v1) >> 16);
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    v0 -= v1;
-    v1 = *gpLines;
-    v0 <<= 2;
-    a0 = v0 + v1;
-    v0 = lw(a0 + 0x40);
-    v1 = *gValidCount;
-    s0 += 2;
-    if (v0 == v1) goto loc_800253E0;
-    sw(v1, a0 + 0x40);
-    SL_CheckLine(*vmAddrToPtr<line_t>(a0));
-loc_800253E0:
-    v0 = lh(s0);
-    a0 = lhu(s0);
-    v1 = a0 << 16;
-    if (v0 != s4) goto loc_8002539C;
-loc_800253F0:
-    s1++;
-    v0 = (i32(s3) < i32(s1));
-    if (v0 == 0) goto loc_80025348;
-loc_80025400:
-    s2++;
-    v0 = (i32(s5) < i32(s2));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(s3) < i32(s6));
-        if (bJump) goto loc_80025340;
+    
+    if (dy > 0) {
+        gEndBox[BOXTOP] += dy;
+    } else {
+        gEndBox[BOXBOTTOM] += dy;
     }
-loc_80025410:
-    v1 = lw(gp + 0xC48);                                // Load from: gBlockFrac (80078228)
-    v0 = (i32(v1) < 0x1000);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 0;                                         // Result = 00000000
-        if (bJump) goto loc_8002542C;
+
+    // Compute the blockmap extents for the move
+    const int32_t bmapTy = std::min((gEndBox[BOXTOP] - *gBlockmapOriginY) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);
+    const int32_t bmapBy = std::max((gEndBox[BOXBOTTOM] - *gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
+    const int32_t bmapLx = std::max((gEndBox[BOXLEFT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
+    const int32_t bmapRx = std::min((gEndBox[BOXRIGHT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
+    
+    // Increment this counter for the line checks that follow: doing new checks
+    *gValidCount += 1;
+
+    // Run through all of the blockmap cells covering the movemet range.
+    // Collide the movement line against all lines found in these cells.
+    for (int32_t bmapX = bmapLx; bmapX <= bmapRx; ++bmapX) {
+        for (int32_t bmapY = bmapBy; bmapY <= bmapTy; ++bmapY) {
+            // Get where the line numbers list for this blockmap cell starts in the blockmap
+            int16_t* pLineNum = (int16_t*) gpBlockmapLump->get() + gpBlockmap->get()[bmapX + bmapY * (*gBlockmapWidth)];
+
+            // Collide against all of the lines in this cell
+            for (; *pLineNum != -1; ++pLineNum) {
+                line_t& line = gpLines->get()[*pLineNum];
+                
+                // Only collide against this line if we didn't already do it
+                if (line.validcount != *gValidCount) {
+                    line.validcount = *gValidCount;
+                    SL_CheckLine(line);
+                }
+            }
+        }
     }
-    v0 = v1;
-    goto loc_80025434;
-loc_8002542C:
-    sw(0, gp + 0xC48);                                  // Store to: gBlockFrac (80078228)
-    sw(0, gp + 0x9BC);                                  // Store to: gpSpecialLine (80077F9C)
-loc_80025434:
-    ra = lw(sp + 0x3C);
-    s6 = lw(sp + 0x38);
-    s5 = lw(sp + 0x34);
-    s4 = lw(sp + 0x30);
-    s3 = lw(sp + 0x2C);
-    s2 = lw(sp + 0x28);
-    s1 = lw(sp + 0x24);
-    s0 = lw(sp + 0x20);
-    sp += 0x40;
-    return;
+
+    // If the movement amount is less than 1/16 of what is allowed then stop movement entirely
+    if (*gBlockFrac < FRACUNIT / 16) {
+        *gBlockFrac = 0;
+        *gpSpecialLine = nullptr;
+    }
+
+    return *gBlockFrac;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
