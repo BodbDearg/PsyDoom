@@ -36,6 +36,8 @@ static constexpr fixed_t SIDE_MOVE[2]           = { 0x38000, 0x58000 };         
 static constexpr int32_t TURN_ACCEL_TICS        = C_ARRAY_SIZE(ANGLE_TURN);     // Number of tics/stages in turn acceleration before it hits max speed
 static constexpr int32_t TURN_TO_ANGLE_SHIFT    = 17;                           // How many bits to shift the turn amount left to scale it to an angle
 
+static const VmPtr<bool32_t>    gbOnGround(0x800781CC);     // Flag set to true when the player is on the ground
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Attempts to move the given player map object according to it's current velocity.
 // Also crosses special lines in the process, and interacts with special things touched.
@@ -284,33 +286,13 @@ void P_BuildMove(player_t& player) noexcept {
     }
 }
 
-void P_Thrust() noexcept {
-    a1 >>= 19;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    a1 <<= 2;
-    v0 += a1;
-    v0 = lw(v0);
-    a2 = u32(i32(a2) >> 8);
-    v0 = u32(i32(v0) >> 8);
-    mult(a2, v0);
-    a3 = lw(a0);
-    v1 = lw(a3 + 0x48);
-    v0 = lo;
-    v0 += v1;
-    sw(v0, a3 + 0x48);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += a1;
-    v0 = lw(at);
-    v0 = u32(i32(v0) >> 8);
-    mult(a2, v0);
-    a0 = lw(a0);
-    v1 = lw(a0 + 0x4C);
-    v0 = lo;
-    v0 += v1;
-    sw(v0, a0 + 0x4C);
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Applies the specified amount of velocity to the player's map object in the given direction
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_Thrust(player_t& player, const angle_t angle, const fixed_t amount) noexcept {
+    mobj_t& mobj = *player.mo;
+    mobj.momx += (amount >> 8) * (gFineCosine[angle >> ANGLETOFINESHIFT] >> 8);
+    mobj.momy += (amount >> 8) * (gFineSine[angle >> ANGLETOFINESHIFT] >> 8);
 }
 
 void P_CalcHeight() noexcept {
@@ -425,104 +407,33 @@ loc_8002A4E0:
     return;
 }
 
-void P_MovePlayer() noexcept {
-loc_8002A4E8:
-    sp -= 0x18;
-    a3 = a0;
-    sw(ra, sp + 0x10);
-    a0 = lw(a3);
-    v1 = lw(a3 + 0x10);
-    v0 = lw(a0 + 0x24);
-    v0 += v1;
-    sw(v0, a0 + 0x24);
-    v0 = lw(a3);
-    v1 = lw(v0 + 0x8);
-    v0 = lw(v0 + 0x38);
-    a2 = lw(a3 + 0x8);
-    v0 = (i32(v0) < i32(v1));
-    v0 ^= 1;
-    sw(v0, gp + 0xBEC);                                 // Store to: gbOnGround (800781CC)
-    if (a2 == 0) goto loc_8002A5B0;
-    a2 = u32(i32(a2) >> 8);
-    if (v0 == 0) goto loc_8002A5B0;
-    a1 = lw(a3);
-    v1 = lw(a1 + 0x24);
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 >>= 19;
-    v1 <<= 2;
-    v0 += v1;
-    v0 = lw(v0);
-    v0 = u32(i32(v0) >> 8);
-    mult(a2, v0);
-    a0 = lw(a1 + 0x48);
-    v0 = lo;
-    v0 += a0;
-    sw(v0, a1 + 0x48);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += v1;
-    v0 = lw(at);
-    v0 = u32(i32(v0) >> 8);
-    mult(a2, v0);
-    a0 = lw(a3);
-    v1 = lw(a0 + 0x4C);
-    v0 = lo;
-    v0 += v1;
-    sw(v0, a0 + 0x4C);
-loc_8002A5B0:
-    a2 = lw(a3 + 0xC);
-    if (a2 == 0) goto loc_8002A64C;
-    v0 = lw(gp + 0xBEC);                                // Load from: gbOnGround (800781CC)
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xC0000000;                                // Result = C0000000
-        if (bJump) goto loc_8002A64C;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Applies turn rotation and velocity due to movement inputs to the player.
+// Also puts the player into the run animation if moving.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_MovePlayer(player_t& player) noexcept {
+    // Apply angle turning
+    mobj_t& mobj = *player.mo;
+    mobj.angle += player.angleturn;
+
+    // Save whether we are on the ground
+    *gbOnGround = (mobj.z <= mobj.floorz);
+    
+    // Apply side and forward/backward movement velocity
+    if ((player.forwardmove != 0) && *gbOnGround) {
+        P_Thrust(player, mobj.angle, player.forwardmove);
     }
-    a1 = lw(a3);
-    v1 = lw(a1 + 0x24);
-    v1 += v0;
-    v1 >>= 19;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7BD0);                               // Load from: gpFineCosine (80077BD0)
-    v1 <<= 2;
-    v0 += v1;
-    v0 = lw(v0);
-    a2 = u32(i32(a2) >> 8);
-    v0 = u32(i32(v0) >> 8);
-    mult(a2, v0);
-    a0 = lw(a1 + 0x48);
-    v0 = lo;
-    v0 += a0;
-    sw(v0, a1 + 0x48);
-    at = 0x80060000;                                    // Result = 80060000
-    at += 0x7958;                                       // Result = FineSine[0] (80067958)
-    at += v1;
-    v0 = lw(at);
-    v0 = u32(i32(v0) >> 8);
-    mult(a2, v0);
-    a0 = lw(a3);
-    v1 = lw(a0 + 0x4C);
-    v0 = lo;
-    v0 += v1;
-    sw(v0, a0 + 0x4C);
-loc_8002A64C:
-    v0 = lw(a3 + 0x8);
-    if (v0 != 0) goto loc_8002A66C;
-    v0 = lw(a3 + 0xC);
-    if (v0 == 0) goto loc_8002A690;
-loc_8002A66C:
-    a0 = lw(a3);
-    v1 = lw(a0 + 0x60);
-    v0 = 0x80060000;                                    // Result = 80060000
-    v0 -= 0x619C;                                       // Result = State_S_PLAY[0] (80059E64)
-    if (v1 != v0) goto loc_8002A690;
-    a1 = 0x9B;                                          // Result = 0000009B
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-loc_8002A690:
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    if ((player.sidemove != 0) && *gbOnGround) {
+        P_Thrust(player, mobj.angle - ANG90, player.sidemove);
+    }
+
+    // Switch to the running animation frames if moving and currently showing the standing still ones
+    const bool bIsMoving = ((player.forwardmove != 0) || (player.sidemove != 0));
+
+    if (bIsMoving && (mobj.state.get() == &gStates[S_PLAY])) {
+        P_SetMObjState(mobj, S_PLAY_RUN1);
+    }
 }
 
 void P_DeathThink() noexcept {
@@ -804,7 +715,7 @@ loc_8002AA98:
     goto loc_8002AAC0;
 loc_8002AAB8:
     a0 = s0;
-    P_MovePlayer();
+    P_MovePlayer(*vmAddrToPtr<player_t>(a0));
 loc_8002AAC0:
     a0 = s0;
     P_CalcHeight();
