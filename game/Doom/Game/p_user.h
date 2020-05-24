@@ -3,9 +3,9 @@
 struct mobj_t;
 
 void P_PlayerMove(mobj_t& mobj) noexcept;
-void P_PlayerXYMovement() noexcept;
-void P_PlayerZMovement() noexcept;
-void P_PlayerMobjThink() noexcept;
+void P_PlayerXYMovement(mobj_t& mobj) noexcept;
+void P_PlayerZMovement(mobj_t& mobj) noexcept;
+void P_PlayerMobjThink(mobj_t& mobj) noexcept;
 void P_BuildMove() noexcept;
 void P_Thrust() noexcept;
 void P_CalcHeight() noexcept;

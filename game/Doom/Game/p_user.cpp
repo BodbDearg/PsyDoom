@@ -16,6 +16,10 @@
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
 #include <algorithm>
+#include <cmath>
+
+static constexpr fixed_t STOPSPEED  = FRACUNIT / 16;    // Stop the player completely if velocity falls under this amount
+static constexpr fixed_t FRICTION   = 0xd200;           // Friction amount to apply to player movement: approximately 0.82
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Attempts to move the given player map object according to it's current velocity.
@@ -63,298 +67,104 @@ void P_PlayerMove(mobj_t& mobj) noexcept {
     }
 }
 
-void P_PlayerXYMovement() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    sw(ra, sp + 0x14);
-    s0 = a0;
-    P_PlayerMove(*vmAddrToPtr<mobj_t>(a0));
-    v0 = lw(s0 + 0x8);
-    a0 = lw(s0 + 0x38);
-    v0 = (i32(a0) < i32(v0));
-    v1 = 0x100000;                                      // Result = 00100000
-    if (v0 != 0) goto loc_800299F4;
-    v0 = lw(s0 + 0x64);
-    v0 &= v1;
-    if (v0 == 0) goto loc_80029978;
-    v0 = lw(s0 + 0xC);
-    v0 = lw(v0);
-    v0 = lw(v0);
-    if (a0 != v0) goto loc_800299F4;
-loc_80029978:
-    v0 = lw(s0 + 0x48);
-    v0 += 0xFFF;
-    v0 = (v0 < 0x1FFF);
-    if (v0 == 0) goto loc_800299B4;
-    v0 = lw(s0 + 0x4C);
-    v0 += 0xFFF;
-    v0 = (v0 < 0x1FFF);
-    if (v0 == 0) goto loc_800299B4;
-    sw(0, s0 + 0x48);
-    sw(0, s0 + 0x4C);
-    goto loc_800299F4;
-loc_800299B4:
-    v0 = lw(s0 + 0x48);
-    a0 = lw(s0 + 0x4C);
-    v0 = u32(i32(v0) >> 8);
-    v1 = v0 << 3;
-    v1 -= v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 1;
-    a0 = u32(i32(a0) >> 8);
-    v1 = a0 << 3;
-    v1 -= a0;
-    sw(v0, s0 + 0x48);
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 1;
-    sw(v0, s0 + 0x4C);
-loc_800299F4:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do movement in the XY direction for the player map object and apply friction
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_PlayerXYMovement(mobj_t& mobj) noexcept {
+    // Physically move the player and cross special lines, touch things etc.
+    P_PlayerMove(mobj);
+    
+    // No friction when the player is in the air
+    if (mobj.z > mobj.floorz)
+        return;
+
+    // If the player is a corpse and over a step then don't apply friction: slide down it
+    if ((mobj.flags & MF_CORPSE) && (mobj.floorz != mobj.subsector->sector->floorheight))
+        return;
+        
+    // If the player has reached a low enough velocity then stop completely, otherwise apply friction
+    if ((std::abs(mobj.momx) < STOPSPEED) && (std::abs(mobj.momy) < STOPSPEED)) {
+        mobj.momx = 0;
+        mobj.momy = 0;
+    } else {
+        mobj.momx = (mobj.momx >> 8) * (FRICTION >> 8);
+        mobj.momy = (mobj.momy >> 8) * (FRICTION >> 8);
+    }
 }
 
-void P_PlayerZMovement() noexcept {
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    a1 = lw(s0 + 0x8);
-    v1 = lw(s0 + 0x38);
-    v0 = (i32(a1) < i32(v1));
-    v1 -= a1;
-    if (v0 == 0) goto loc_80029A64;
-    a0 = lw(s0 + 0x80);
-    v0 = lw(a0 + 0x18);
-    v0 -= v1;
-    sw(v0, a0 + 0x18);
-    a0 = lw(s0 + 0x80);
-    v1 = lw(a0 + 0x18);
-    v0 = 0x290000;                                      // Result = 00290000
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 2);
-    sw(v0, a0 + 0x1C);
-loc_80029A64:
-    v0 = lw(s0 + 0x8);
-    a0 = lw(s0 + 0x50);
-    v1 = lw(s0 + 0x38);
-    v0 += a0;
-    v1 = (i32(v1) < i32(v0));
-    sw(v0, s0 + 0x8);
-    if (v1 != 0) goto loc_80029AC0;
-    a0 = lw(s0 + 0x50);
-    v0 = 0xFFF80000;                                    // Result = FFF80000
-    if (i32(a0) >= 0) goto loc_80029AB4;
-    v0 = (i32(a0) < i32(v0));
-    {
-        const bool bJump = (v0 == 0);
-        v0 = u32(i32(a0) >> 3);
-        if (bJump) goto loc_80029AB0;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does height clipping and movement z velocity for the player thing.
+// Also applies gravity when the thing is in the air.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_PlayerZMovement(mobj_t& mobj) noexcept {
+    player_t& player = *mobj.player;
+
+    // Do smooth stepping up a step
+    if (mobj.z < mobj.floorz) {
+        // TODO: comment on exactly what this is doing
+        player.viewheight -= mobj.floorz - mobj.z;
+        player.deltaviewheight = (VIEWHEIGHT - player.viewheight) >> 2;
     }
-    a0 = s0;
-    v1 = lw(s0 + 0x80);
-    a1 = sfx_oof;
-    sw(v0, v1 + 0x1C);
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_80029AB0:
-    sw(0, s0 + 0x50);
-loc_80029AB4:
-    v0 = lw(s0 + 0x38);
-    sw(v0, s0 + 0x8);
-    goto loc_80029AE0;
-loc_80029AC0:
-    v1 = lw(s0 + 0x50);
-    v0 = 0xFFFE0000;                                    // Result = FFFE0000
-    if (v1 != 0) goto loc_80029AD8;
-    v0 = 0xFFFC0000;                                    // Result = FFFC0000
-    goto loc_80029ADC;
-loc_80029AD8:
-    v0 += v1;
-loc_80029ADC:
-    sw(v0, s0 + 0x50);
-loc_80029AE0:
-    v0 = lw(s0 + 0x8);
-    a0 = lw(s0 + 0x44);
-    v1 = lw(s0 + 0x3C);
-    v0 += a0;
-    v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_80029B24;
-    v0 = lw(s0 + 0x50);
-    if (i32(v0) <= 0) goto loc_80029B10;
-    sw(0, s0 + 0x50);
-loc_80029B10:
-    v0 = lw(s0 + 0x3C);
-    v1 = lw(s0 + 0x44);
-    v0 -= v1;
-    sw(v0, s0 + 0x8);
-loc_80029B24:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    
+    // Advance z position by the velocity
+    mobj.z += mobj.momz;
+
+    // Clip z position against the floor
+    if (mobj.z <= mobj.floorz) {
+        // Hitting the floor: kill any downward velocity and clamp z position to the floor
+        if (mobj.momz < 0) {
+            if (mobj.momz < -GRAVITY * 2) {
+                // If we hit the floor hard then play the 'oof' sound
+                player.deltaviewheight = mobj.momz >> 3;
+                S_StartSound(&mobj, sfx_oof);
+            }
+
+            mobj.momz = 0;
+        }
+
+        mobj.z = mobj.floorz;
+    }
+    else {
+        // Not hitting the floor: do acceleration due to gravity.
+        // Gravity is doubled on the first falling tic to account for the fact that it was always being applied, even on the floor:
+        mobj.momz -= (mobj.momz == 0) ? GRAVITY : GRAVITY / 2;
+    }
+
+    // Clip height against the ceiling and kill upwards velocity if we're hitting it
+    if (mobj.z + mobj.height > mobj.ceilingz) {
+        mobj.z = mobj.ceilingz - mobj.height;
+        mobj.momz = std::min(mobj.momz, 0);
+    }
 }
 
-void P_PlayerMobjThink() noexcept {
-loc_80029B38:
-    sp -= 0x18;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x14);
-    v0 = lw(s0 + 0x48);
-    if (v0 != 0) goto loc_80029B68;
-    v0 = lw(s0 + 0x4C);
-    if (v0 == 0) goto loc_80029C38;
-loc_80029B68:
-    a0 = s0;
-    P_PlayerMove(*vmAddrToPtr<mobj_t>(a0));
-    v0 = lw(s0 + 0x8);
-    a0 = lw(s0 + 0x38);
-    v0 = (i32(a0) < i32(v0));
-    v1 = 0x100000;                                      // Result = 00100000
-    if (v0 != 0) goto loc_80029C38;
-    v0 = lw(s0 + 0x64);
-    v0 &= v1;
-    if (v0 == 0) goto loc_80029BBC;
-    v0 = lw(s0 + 0xC);
-    v0 = lw(v0);
-    v0 = lw(v0);
-    if (a0 != v0) goto loc_80029C38;
-loc_80029BBC:
-    v0 = lw(s0 + 0x48);
-    v0 += 0xFFF;
-    v0 = (v0 < 0x1FFF);
-    if (v0 == 0) goto loc_80029BF8;
-    v0 = lw(s0 + 0x4C);
-    v0 += 0xFFF;
-    v0 = (v0 < 0x1FFF);
-    if (v0 == 0) goto loc_80029BF8;
-    sw(0, s0 + 0x48);
-    sw(0, s0 + 0x4C);
-    goto loc_80029C38;
-loc_80029BF8:
-    v0 = lw(s0 + 0x48);
-    a0 = lw(s0 + 0x4C);
-    v0 = u32(i32(v0) >> 8);
-    v1 = v0 << 3;
-    v1 -= v0;
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 1;
-    a0 = u32(i32(a0) >> 8);
-    v1 = a0 << 3;
-    v1 -= a0;
-    sw(v0, s0 + 0x48);
-    v0 = v1 << 4;
-    v0 -= v1;
-    v0 <<= 1;
-    sw(v0, s0 + 0x4C);
-loc_80029C38:
-    a1 = lw(s0 + 0x8);
-    v1 = lw(s0 + 0x38);
-    v0 = (i32(a1) < i32(v1));
-    if (a1 != v1) goto loc_80029C5C;
-    v0 = lw(s0 + 0x50);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = (i32(a1) < i32(v1));
-        if (bJump) goto loc_80029D58;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Do movement and state transitions for the player's map object
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_PlayerMobjThink(mobj_t& mobj) noexcept {
+    // Do XY and Z movement and velocity updates as required
+    if ((mobj.momx != 0) || (mobj.momy != 0)) {
+        P_PlayerXYMovement(mobj);
     }
-loc_80029C5C:
-    v1 -= a1;
-    if (v0 == 0) goto loc_80029C98;
-    a0 = lw(s0 + 0x80);
-    v0 = lw(a0 + 0x18);
-    v0 -= v1;
-    sw(v0, a0 + 0x18);
-    a0 = lw(s0 + 0x80);
-    v1 = lw(a0 + 0x18);
-    v0 = 0x290000;                                      // Result = 00290000
-    v0 -= v1;
-    v0 = u32(i32(v0) >> 2);
-    sw(v0, a0 + 0x1C);
-loc_80029C98:
-    v0 = lw(s0 + 0x8);
-    a0 = lw(s0 + 0x50);
-    v1 = lw(s0 + 0x38);
-    v0 += a0;
-    v1 = (i32(v1) < i32(v0));
-    sw(v0, s0 + 0x8);
-    if (v1 != 0) goto loc_80029CF4;
-    a1 = lw(s0 + 0x50);
-    v0 = 0xFFF80000;                                    // Result = FFF80000
-    if (i32(a1) >= 0) goto loc_80029CE8;
-    v0 = (i32(a1) < i32(v0));
-    a0 = s0;
-    if (v0 == 0) goto loc_80029CE4;
-    v0 = u32(i32(a1) >> 3);
-    v1 = lw(s0 + 0x80);
-    a1 = sfx_oof;
-    sw(v0, v1 + 0x1C);
-    S_StartSound(vmAddrToPtr<mobj_t>(a0), (sfxenum_t) a1);
-loc_80029CE4:
-    sw(0, s0 + 0x50);
-loc_80029CE8:
-    v0 = lw(s0 + 0x38);
-    sw(v0, s0 + 0x8);
-    goto loc_80029D14;
-loc_80029CF4:
-    v1 = lw(s0 + 0x50);
-    v0 = 0xFFFE0000;                                    // Result = FFFE0000
-    if (v1 != 0) goto loc_80029D0C;
-    v0 = 0xFFFC0000;                                    // Result = FFFC0000
-    goto loc_80029D10;
-loc_80029D0C:
-    v0 += v1;
-loc_80029D10:
-    sw(v0, s0 + 0x50);
-loc_80029D14:
-    v0 = lw(s0 + 0x8);
-    a0 = lw(s0 + 0x44);
-    v1 = lw(s0 + 0x3C);
-    v0 += a0;
-    v1 = (i32(v1) < i32(v0));
-    if (v1 == 0) goto loc_80029D58;
-    v0 = lw(s0 + 0x50);
-    if (i32(v0) <= 0) goto loc_80029D44;
-    sw(0, s0 + 0x50);
-loc_80029D44:
-    v0 = lw(s0 + 0x3C);
-    v1 = lw(s0 + 0x44);
-    v0 -= v1;
-    sw(v0, s0 + 0x8);
-loc_80029D58:
-    v1 = lw(s0 + 0x5C);
-    v0 = -1;                                            // Result = FFFFFFFF
-    {
-        const bool bJump = (v1 == v0);
-        v0 = v1 - 1;
-        if (bJump) goto loc_80029DC0;
+
+    if ((mobj.z != mobj.floorz) || (mobj.momz != 0)) {
+        P_PlayerZMovement(mobj);
     }
-    sw(v0, s0 + 0x5C);
-    if (i32(v0) > 0) goto loc_80029DC0;
-    v0 = lw(s0 + 0x60);
-    v1 = lw(v0 + 0x10);
-    v0 = v1 << 3;
-    v0 -= v1;
-    v0 <<= 2;
-    v1 = 0x80060000;                                    // Result = 80060000
-    v1 -= 0x7274;                                       // Result = State_S_NULL[0] (80058D8C)
-    v0 += v1;
-    sw(v0, s0 + 0x60);
-    v1 = lw(v0 + 0x8);
-    sw(v1, s0 + 0x5C);
-    v1 = lw(v0);
-    sw(v1, s0 + 0x28);
-    v0 = lw(v0 + 0x4);
-    sw(v0, s0 + 0x2C);
-loc_80029DC0:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+
+    // Transition to the next state if required, or never if the tic count is '-1' (forever).
+    // Oddly, this logic does not call a state transition function for the player thing - not required because of player control?
+    if (mobj.tics == -1)
+        return;
+
+    mobj.tics--;
+
+    if (mobj.tics <= 0) {
+        // Time to go to the next state: but don't call the state transition function as that's not needed for the player
+        state_t& newState = gStates[mobj.state->nextstate];
+        mobj.state = &newState;
+        mobj.tics = newState.tics;
+        mobj.sprite = newState.sprite;
+        mobj.frame = newState.frame;
+    }
 }
 
 void P_BuildMove() noexcept {
@@ -1169,7 +979,7 @@ loc_8002AA14:
     v0 = *gbGamePaused;
     if (v0 != 0) goto loc_8002ACCC;
     a0 = lw(s0);
-    P_PlayerMobjThink();
+    P_PlayerMobjThink(*vmAddrToPtr<mobj_t>(a0));
     a0 = s0;
     P_BuildMove();
     v1 = lw(s0 + 0x4);
