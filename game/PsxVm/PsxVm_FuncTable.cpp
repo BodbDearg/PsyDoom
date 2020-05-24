@@ -74,7 +74,6 @@ extern void _thunk_A_BFGsound() noexcept;
 extern void _thunk_A_OpenShotgun2() noexcept;
 extern void _thunk_A_LoadShotgun2() noexcept;
 extern void _thunk_A_CloseShotgun2() noexcept;
-extern void P_SlideMove() noexcept;
 extern void _thunk_T_DelayedAction() noexcept;
 extern void P_PlayerMove() noexcept;
 extern void P_PlayerXYMovement() noexcept;
@@ -204,7 +203,6 @@ namespace PsxVm {
         { 0x80021690, &_thunk_A_OpenShotgun2 },
         { 0x800216B4, &_thunk_A_LoadShotgun2 },
         { 0x800216D8, &_thunk_A_CloseShotgun2 },
-        { 0x8002502C, &P_SlideMove },
         { 0x80027718, &_thunk_T_DelayedAction },
         { 0x800297A0, &P_PlayerMove },
         { 0x80029918, &P_PlayerXYMovement },

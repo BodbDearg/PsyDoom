@@ -6,7 +6,6 @@
 #include "doomdata.h"
 #include "p_local.h"
 #include "p_setup.h"
-#include "PsxVm/PsxVm.h"
 #include <algorithm>
 
 static constexpr int32_t CLIPRADIUS = 23;   // Radius of the player for collisions against lines
@@ -36,107 +35,80 @@ static const VmPtr<fixed_t>         gP3y(0x800780F4);               // Movement 
 static const VmPtr<fixed_t>         gP4x(0x800780F0);               // Movement line, p2: x
 static const VmPtr<fixed_t>         gP4y(0x800780FC);               // Movement line, p2: y
 
+// Not required externally: making private to this module
+static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept;
+static void SL_CheckLine(line_t& line) noexcept;
+static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, const fixed_t moveX2, const fixed_t moveY2) noexcept;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Attempts to do a movement for the player's map object (with wall sliding) when movement is blocked.
+// Also triggers special lines if those are crossed and kills the thing's momentum if it can't move at all.
+//
+// Global inputs:
+//      gpSlideThing        : The player thing being moved
+//
+// Global outputs:
+//      gSlideX, gSlideY    : The final position of the thing after movement
+//------------------------------------------------------------------------------------------------------------------------------------------
 void P_SlideMove() noexcept {
-loc_8002502C:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7ED8);                               // Load from: gpSlideThing (80077ED8)
-    sp -= 0x28;
-    sw(ra, sp + 0x24);
-    sw(s4, sp + 0x20);
-    sw(s3, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    s2 = lw(v0 + 0x48);
-    s3 = lw(v0 + 0x4C);
-    v1 = lw(v0);
-    a0 = lw(v0 + 0x4);
-    v0 = lw(v0 + 0x64);
-    v0 &= 0x1000;
-    sw(v1, gp + 0x9B0);                                 // Store to: gSlideX (80077F90)
-    sw(a0, gp + 0x9B4);                                 // Store to: gSlideY (80077F94)
-    s0 = 0x10000;                                       // Result = 00010000
-    if (v0 == 0) goto loc_800250AC;
-    a0 = s0;                                            // Result = 00010000
-    goto loc_800250E0;
-loc_80025084:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7ED8);                               // Load from: gpSlideThing (80077ED8)
-    a0 = lw(v0);
-    a1 = lw(v0 + 0x4);
-    sw(s2, v0 + 0x48);
-    sw(s3, v0 + 0x4C);
-    SL_CheckSpecialLines(a0, a1, a2, a3);
-    goto loc_80025198;
-loc_800250AC:
-    s4 = 0;                                             // Result = 00000000
-    a0 = s2;
-loc_800250B4:
-    a1 = s3;
-    v0 = P_CompletableFrac(a0, a1);
-    s0 = v0;
-    v0 = 0x10000;                                       // Result = 00010000
-    if (s0 == v0) goto loc_800250D0;
-    s0 -= 0x1000;
-loc_800250D0:
-    a0 = s0;
-    if (i32(s0) >= 0) goto loc_800250E0;
-    s0 = 0;                                             // Result = 00000000
-    a0 = s0;                                            // Result = 00000000
-loc_800250E0:
-    a1 = s2;
-    _thunk_FixedMul();
-    a0 = s0;
-    a1 = s3;
-    s1 = v0;
-    _thunk_FixedMul();
-    v1 = lw(gp + 0x9B0);                                // Load from: gSlideX (80077F90)
-    a0 = v0;
-    a2 = s1 + v1;
-    v1 = lw(gp + 0x9B4);                                // Load from: gSlideY (80077F94)
-    v0 = 0x10000;                                       // Result = 00010000
-    sw(a2, gp + 0x9B0);                                 // Store to: gSlideX (80077F90)
-    a3 = a0 + v1;
-    sw(a3, gp + 0x9B4);                                 // Store to: gSlideY (80077F94)
-    if (s0 == v0) goto loc_80025084;
-    s3 -= a0;
-    a0 = s2 - s1;
-    a1 = lw(gp + 0xBC8);                                // Load from: gBlockNvx (800781A8)
-    s4++;
-    _thunk_FixedMul();
-    s0 = v0;
-    a1 = lw(gp + 0xBD0);                                // Load from: gBlockNvy (800781B0)
-    a0 = s3;
-    _thunk_FixedMul();
-    s0 += v0;
-    a1 = lw(gp + 0xBC8);                                // Load from: gBlockNvx (800781A8)
-    a0 = s0;
-    _thunk_FixedMul();
-    s2 = v0;
-    a1 = lw(gp + 0xBD0);                                // Load from: gBlockNvy (800781B0)
-    a0 = s0;
-    _thunk_FixedMul();
-    s3 = v0;
-    v0 = (i32(s4) < 3);
-    a0 = s2;
-    if (v0 != 0) goto loc_800250B4;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7ED8);                               // Load from: gpSlideThing (80077ED8)
-    v1 = lw(v0);
-    a0 = lw(v0 + 0x4);
-    sw(0, v0 + 0x4C);
-    sw(0, v0 + 0x48);
-    sw(v1, gp + 0x9B0);                                 // Store to: gSlideX (80077F90)
-    sw(a0, gp + 0x9B4);                                 // Store to: gSlideY (80077F94)
-loc_80025198:
-    ra = lw(sp + 0x24);
-    s4 = lw(sp + 0x20);
-    s3 = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x28;
-    return;
+    // Set the starting position and grab the initial movement amount
+    mobj_t& slideThing = *gpSlideThing->get();
+    *gSlideX = slideThing.x;
+    *gSlideY = slideThing.y;
+
+    fixed_t moveDx = slideThing.momx;
+    fixed_t moveDy = slideThing.momy;
+
+    // If the noclip cheat is on then simply move to where we want to and check for line specials
+    if (slideThing.flags & MF_NOCLIP) {
+        *gSlideX += slideThing.momx;
+        *gSlideY += slideThing.momy;
+        SL_CheckSpecialLines(slideThing.x, slideThing.y, *gSlideX, *gSlideY);
+        return;
+    }
+
+    // Do 3 movements or bounces off walls before giving up
+    for (int32_t attemptCount = 0; attemptCount < 3; ++attemptCount) {
+        // Figure out the percentage we can move this step.
+        // If the movement was not fully completable then reduce the move amount slightly to account for imprecision:
+        fixed_t moveFrac = P_CompletableFrac(moveDx, moveDy);
+
+        if (moveFrac != FRACUNIT) {
+            moveFrac -= FRACUNIT / 16;
+        }
+
+        moveFrac = std::max(moveFrac, 0);   // Never let it be negative!
+
+        // Move by the amount we were allowed to move in the movement direction
+        const fixed_t allowedDx = FixedMul(moveFrac, moveDx);
+        const fixed_t allowedDy = FixedMul(moveFrac, moveDy);
+        *gSlideX += allowedDx;
+        *gSlideY += allowedDy;
+
+        // If the entire move was allowed then we are done, and check for crossing special lines
+        if (moveFrac == FRACUNIT) {
+            slideThing.momx = moveDx;
+            slideThing.momy = moveDy;
+            SL_CheckSpecialLines(slideThing.x, slideThing.y, *gSlideX, *gSlideY);
+            return;
+        }
+
+        // For the next iteration try slide along the wall.
+        // Slide by the movement amount that was disallowed in the direction of the wall.
+        const fixed_t blockedDx = moveDx - allowedDx;
+        const fixed_t blockedDy = moveDy - allowedDy;
+        const fixed_t slideDist = FixedMul(blockedDx, *gBlockNvx) + FixedMul(blockedDy, *gBlockNvy);
+
+        moveDx = FixedMul(slideDist, *gBlockNvx);
+        moveDy = FixedMul(slideDist, *gBlockNvy);
+    }
+
+    // If we get to here then movement failed, set the result position to the original position.
+    // Kill the player's momentum in this case also and don't bother checking for special lines crossed.
+    *gSlideX = slideThing.x;
+    *gSlideY = slideThing.y;
+    slideThing.momy = 0;
+    slideThing.momx = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -149,7 +121,7 @@ loc_80025198:
 // Global outputs:
 //      gBlockNvx, gBlockNvy    : Normalized vector to slide along the collision wall (set if the collision is closer than current closest)
 //------------------------------------------------------------------------------------------------------------------------------------------
-fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
+static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
     // Assume we can move the entire distance until we find otherwise and save movement amount globally
     *gBlockFrac = FRACUNIT;
     *gSlideDx = dx;
@@ -295,7 +267,7 @@ static bool CheckLineEnds() noexcept {
 //      gBlockFrac              : Allowed movement percent (set if the collision is closer than current closest)
 //      gBlockNvx, gBlockNvy    : Normalized vector to slide along the collision wall (set if the collision is closer than current closest)
 //------------------------------------------------------------------------------------------------------------------------------------------
-void SL_ClipToLine() noexcept {
+static void SL_ClipToLine() noexcept {
     // Move start point is on the circumference of the player circle, the closest point to the wall (use the normal to compute that).
     // Move end point is that plus the movement amount.
     *gP3x = *gSlideX - (*gNvx) * CLIPRADIUS;
@@ -347,7 +319,7 @@ void SL_ClipToLine() noexcept {
 //      gBlockFrac              : Allowed movement percent (set if the collision is closer than current closest)
 //      gBlockNvx, gBlockNvy    : Normalized vector to slide along the collision wall (set if the collision is closer than current closest)
 //------------------------------------------------------------------------------------------------------------------------------------------
-void SL_CheckLine(line_t& line) noexcept {
+static void SL_CheckLine(line_t& line) noexcept {
     // If the movement bounding box does NOT overlap the line bounding box then we can ignore this line
     const bool bNoBBOverlap = (
         (gEndBox[BOXTOP] < line.bbox[BOXBOTTOM]) ||
@@ -441,7 +413,7 @@ static int32_t SL_PointOnSide2(
 // Checks to see if a move would cross a special line.
 // Saves the crossed special line to 'gpSpecialLine', which is null if no special line is crossed.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, const fixed_t moveX2, const fixed_t moveY2) noexcept {
+static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, const fixed_t moveX2, const fixed_t moveY2) noexcept {
     // Compute the blockmap extents of the move
     const fixed_t minMoveX = std::min(moveX1, moveX2);
     const fixed_t maxMoveX = std::max(moveX1, moveX2);
