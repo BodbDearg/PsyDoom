@@ -8,4 +8,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+// PsyDoom: add this to stop it moaning about SDK version not being defined
+#if _WIN32
+    #include <SDKDDKVer.h>
+#endif
+
 #include "asio/impl/src.hpp"
