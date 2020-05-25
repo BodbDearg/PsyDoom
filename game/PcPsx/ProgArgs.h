@@ -11,6 +11,10 @@ extern const char*  gPlayDemoFilePath;
 extern const char*  gSaveDemoResultFilePath;
 extern const char*  gCheckDemoResultFilePath;
 
+// FIXME: temp stuff for testing
+extern bool gbIsNetServer;
+extern bool gbIsNetClient;
+
 void init(const int argc, const char** const argv) noexcept;
 void shutdown() noexcept;
 

@@ -948,6 +948,12 @@ loc_8003472C:
     v0 = LIBCOMB__comb_control(3, 0, 0);
 
     a2 = 8;                                             // Result = 00000008
+
+    // FIXME: HACK
+    if (ProgArgs::gbIsNetServer) {
+        v0 = 0;
+    }
+
     if (v0 == 0) goto loc_800347EC;
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
@@ -955,13 +961,13 @@ loc_8003472C:
     a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
     *gCurPlayerIndex = 1;
     s0 = 0x4000;                                        // Result = 00004000
-    LIBAPI_write();
+    v0 = LIBAPI_write(a0, vmAddrToPtr<void>(a1), a2);
 
     a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
     a2 = 8;                                             // Result = 00000008
-    LIBAPI_read();
+    v0 = LIBAPI_read(a0, vmAddrToPtr<void>(a1), a2);
 
 loc_80034794:
     v0 = 0x80090000;                                    // Result = 80090000
@@ -997,7 +1003,7 @@ loc_800347EC:
     a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
     *gCurPlayerIndex = 0;
     s0 = 0x4000;                                        // Result = 00004000
-    LIBAPI_read();
+    v0 = LIBAPI_read(a0, vmAddrToPtr<void>(a1), a2);
 loc_8003480C:
     v0 = 0x80090000;                                    // Result = 80090000
     v0 = lw(v0 + 0x7788);                               // Load from: gPadInputBuffer_1[0] (80097788)
@@ -1035,7 +1041,7 @@ loc_8003485C:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
     a2 = 8;                                             // Result = 00000008
-    LIBAPI_write();
+    v0 = LIBAPI_write(a0, vmAddrToPtr<void>(a1), a2);
 loc_80034884:
     I_NetHandshake();
     v0 = *gCurPlayerIndex;
@@ -1064,12 +1070,12 @@ loc_800348EC:
     a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
     a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
     a2 = 8;                                             // Result = 00000008
-    LIBAPI_write();
+    v0 = LIBAPI_write(a0, vmAddrToPtr<void>(a1), a2);
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
     a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
     a2 = 8;                                             // Result = 00000008
-    LIBAPI_read();
+    v0 = LIBAPI_read(a0, vmAddrToPtr<void>(a1), a2);
 loc_80034928:
     a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
     v0 = LIBAPI_TestEvent(a0);
@@ -1093,7 +1099,7 @@ loc_80034988:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
     a2 = 8;                                             // Result = 00000008
-    LIBAPI_read();
+    v0 = LIBAPI_read(a0, vmAddrToPtr<void>(a1), a2);
 loc_8003499C:
     a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
     v0 = LIBAPI_TestEvent(a0);
@@ -1130,7 +1136,7 @@ loc_80034A1C:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
     a2 = 8;                                             // Result = 00000008
-    LIBAPI_write();
+    v0 = LIBAPI_write(a0, vmAddrToPtr<void>(a1), a2);
 loc_80034A44:
     sw(0, gp + 0x62C);                                  // Store to: gbDidAbortGame (80077C0C)
 loc_80034A48:
@@ -1329,7 +1335,7 @@ loc_80034D20:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
     a2 = 8;                                             // Result = 00000008
-    LIBAPI_read();
+    v0 = LIBAPI_read(a0, vmAddrToPtr<void>(a1), a2);
     a0 = -1;                                            // Result = FFFFFFFF
     _thunk_LIBETC_VSync();
     s0 = v0;
@@ -1355,7 +1361,7 @@ loc_80034D88:
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
     a2 = 8;                                             // Result = 00000008
-    LIBAPI_write();
+    v0 = LIBAPI_write(a0, vmAddrToPtr<void>(a1), a2);
     goto loc_80034E44;
 loc_80034DB8:
     
@@ -1366,12 +1372,12 @@ loc_80034DB8:
     a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
     a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
     a2 = 8;                                             // Result = 00000008
-    LIBAPI_write();
+    v0 = LIBAPI_write(a0, vmAddrToPtr<void>(a1), a2);
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
     a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
     a2 = 8;                                             // Result = 00000008
-    LIBAPI_read();
+    v0 = LIBAPI_read(a0, vmAddrToPtr<void>(a1), a2);
     a0 = -1;                                            // Result = FFFFFFFF
     _thunk_LIBETC_VSync();
     s0 = v0;

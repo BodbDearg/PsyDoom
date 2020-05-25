@@ -86,11 +86,9 @@ extern void I_LocalButtonsToNet() noexcept;
 extern void I_NetButtonsToLocal() noexcept;
 extern void G_CompleteLevel() noexcept;             // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
 
-extern void LIBAPI_write() noexcept;
 extern void LIBAPI_InitPAD() noexcept;
 extern void LIBAPI_StartPAD() noexcept;
 extern void LIBAPI_ChangeClearPAD() noexcept;
-extern void LIBAPI_read() noexcept;
 extern void LIBAPI_open() noexcept;
 extern void LIBETC_ResetCallback() noexcept;
 extern void LIBAPI_ReturnFromException() noexcept;
@@ -201,11 +199,9 @@ namespace PsxVm {
         { 0x80034F04, &I_NetButtonsToLocal },
         { 0x80013384, &G_CompleteLevel },   // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
         
-        { 0x80049C3C, &LIBAPI_write },
         { 0x80049C5C, &LIBAPI_InitPAD },
         { 0x80049DEC, &LIBAPI_StartPAD },
         { 0x80049DFC, &LIBAPI_ChangeClearPAD },
-        { 0x80049E1C, &LIBAPI_read },
         { 0x80049E4C, &LIBAPI_open },
         { 0x8004A7AC, &LIBETC_ResetCallback },
         { 0x8004AD80, &LIBAPI_ReturnFromException },

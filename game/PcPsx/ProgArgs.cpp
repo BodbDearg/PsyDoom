@@ -26,6 +26,10 @@ const char* gPlayDemoFilePath = "";             // The demo file to play and exi
 const char* gSaveDemoResultFilePath = "";       // Path to a json file to save the demo result to
 const char* gCheckDemoResultFilePath = "";      // Path to a json file to read the demo result from and verify a match with
 
+// FIXME: temp stuff for testing
+bool gbIsNetServer = false;
+bool gbIsNetClient = false;
+
 // Format for a function that parses an argument.
 // Takes in the current arguments list pointer and the number of arguments left, which is always expected to be at least '1'.
 // Returns the number of arguments consumed.
@@ -85,6 +89,26 @@ static int parseArg_checkresult(const int argc, const char** const argv) {
     return 0;
 }
 
+// FIXME: temp stuff for testing
+static int parseArg_server([[maybe_unused]] const int argc, const char** const argv) {
+    if (std::strcmp(argv[0], "-server") == 0) {
+        gbIsNetServer = true;
+        return 1;
+    }
+
+    return 0;
+}
+
+// FIXME: temp stuff for testing
+static int parseArg_client([[maybe_unused]] const int argc, const char** const argv) {
+    if (std::strcmp(argv[0], "-client") == 0) {
+        gbIsNetClient = true;
+        return 1;
+    }
+
+    return 0;
+}
+
 // A list of all the argument parsing functions
 static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_highfps,
@@ -92,7 +116,9 @@ static constexpr ArgParser ARG_PARSERS[] = {
     parseArg_datadir,
     parseArg_playdemo,
     parseArg_saveresult,
-    parseArg_checkresult
+    parseArg_checkresult,
+    parseArg_server,
+    parseArg_client
 };
 
 void init(const int argc, const char** const argv) noexcept {
@@ -128,7 +154,13 @@ void init(const int argc, const char** const argv) noexcept {
 void shutdown() noexcept {
     // Reset everything back to its initial state and free any memory allocated (to help leak detection)
     gbUseHighFpsHack = false;
+    gbHeadlessMode = false;
     gDataDirPath = "";
+    gPlayDemoFilePath = "";
+    gSaveDemoResultFilePath = "";
+    gCheckDemoResultFilePath = "";
+    gbIsNetServer = false;
+    gbIsNetClient = false;
 }
 
 END_NAMESPACE(ProgArgs)

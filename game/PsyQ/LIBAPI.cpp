@@ -1,5 +1,6 @@
 #include "LIBAPI.h"
 
+#include "PcPsx/Network.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -95,11 +96,9 @@ void LIBAPI_EnterCriticalSection() noexcept {
     // Not using interrupts in this port/environment anymore - just ignore the call...
 }
 
-void LIBAPI_write() noexcept {
-loc_80049C3C:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0x35;                                          // Result = 00000035
-    emu_call(t2);
+int32_t LIBAPI_write(const int32_t fileDesc, const void* const pBuffer, const int32_t numBytes) noexcept {
+    // FIXME: IMPLEMENT PROPERLY - return value: bytes written or -1 on error
+    return Network::sendBytes(pBuffer, numBytes) ? numBytes : -1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -234,11 +233,9 @@ int32_t LIBAPI_OpenEvent(const int32_t cause, const int32_t type, const int32_t 
     return v0;
 }
 
-void LIBAPI_read() noexcept {
-loc_80049E1C:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0x34;                                          // Result = 00000034
-    emu_call(t2);
+int32_t LIBAPI_read(const int32_t fileDesc, void* const pBuffer, const int32_t numBytes) noexcept {
+    // FIXME: IMPLEMENT PROPERLY - return value: bytes read or -1 on error
+    return Network::recvBytes(pBuffer, numBytes) ? numBytes : -1;
 }
 
 bool LIBAPI_TestEvent([[maybe_unused]] const uint32_t eventDescriptor) noexcept {

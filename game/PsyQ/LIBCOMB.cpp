@@ -1,8 +1,13 @@
 #include "LIBCOMB.h"
 
 #include "LIBAPI.h"
-#include "PsxVm/PsxVm.h"
+ #include "PsxVm/PsxVm.h"
 
+// FIXME: temp stuff for testing
+#include "PcPsx/ProgArgs.h"
+#include "PcPsx/Network.h"
+
+// FIXME: removing for now due to ASIO
 void LIBCOMB_UNKNOWN_func_1() noexcept {
 loc_800574A8:
     sp -= 0x28;
@@ -746,6 +751,16 @@ void LIBCOMB_ChangeClearSIO() noexcept {
 }
 
 void LIBCOMB_AddCOMB() noexcept {
+    // FIXME: temp stuff for testing
+    if (ProgArgs::gbIsNetServer) {
+        Network::initForServer();
+    }
+    else if (ProgArgs::gbIsNetClient) {
+        Network::initForClient();
+    }
+
+// FIXME: implement properly
+#if 0
 loc_800580B4:
     sp -= 0x18;
     sw(ra, sp + 0x14);
@@ -756,6 +771,7 @@ loc_800580B4:
     ra = lw(sp + 0x14);
     sp += 0x18;
     return;
+#endif
 }
 
 void LIBCOMB_DelCOMB() noexcept {

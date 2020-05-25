@@ -141,6 +141,8 @@ set(SOURCE_FILES
     "PcPsx/Macros.h"
     "PcPsx/ModMgr.cpp"
     "PcPsx/ModMgr.h"
+    "PcPsx/Network.cpp"
+    "PcPsx/Network.h"
     "PcPsx/ProgArgs.cpp"
     "PcPsx/ProgArgs.h"
     "PcPsx/Types.h"
@@ -227,7 +229,11 @@ target_compile_definitions(${GAME_TGT_NAME} PRIVATE
 include_directories(${INCLUDE_PATHS})
     
 # Required libraries
-target_link_libraries(${GAME_TGT_NAME} ${AVOCADO_TGT_NAME} ${RAPID_JSON_TGT_NAME})
+target_link_libraries(${GAME_TGT_NAME}
+    ${AVOCADO_TGT_NAME}
+    ${RAPID_JSON_TGT_NAME}
+    ${ASIO_TGT_NAME}
+)
 
 # MSVC use a lower warning level for this project temporarily
 if (COMPILER_MSVC)

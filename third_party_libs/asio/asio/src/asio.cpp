@@ -10,7 +10,7 @@
 
 // PsyDoom: add this to stop it moaning about SDK version not being defined
 #if _WIN32
-    #include <SDKDDKVer.h>
+    #include <sdkddkver.h>
 #endif
 
 #include "asio/impl/src.hpp"
