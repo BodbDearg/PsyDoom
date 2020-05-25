@@ -515,7 +515,7 @@ gameaction_t P_Ticker() noexcept {
         player_t& player = gPlayers[*gPlayerNum];
 
         if (player.playerstate == PST_REBORN) {
-            G_DoReborn(gPlayerNum);
+            G_DoReborn(*gPlayerNum);
         }
 
         // Do automap and player updates (controls, movement etc.)
