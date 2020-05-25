@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 void LIBCOMB_UNKNOWN_func_1() noexcept;
 void LIBCOMB_UNKNOWN_func_2() noexcept;
 void LIBCOMB_UNKNOWN_func_3() noexcept;
@@ -13,5 +15,5 @@ void LIBCOMB_ChangeClearSIO() noexcept;
 void LIBCOMB_AddCOMB() noexcept;
 void LIBCOMB_DelCOMB() noexcept;
 void LIBCOMB_UNKNOWN_ctrl_help() noexcept;
-void LIBCOMB__comb_control() noexcept;
+int32_t LIBCOMB__comb_control(const int32_t cmd, const int32_t arg, const int32_t param) noexcept;
 void LIBCOMB__ioabort() noexcept;

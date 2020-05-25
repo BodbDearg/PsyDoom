@@ -1053,7 +1053,11 @@ loc_8005852C:
     return;
 }
 
-void LIBCOMB__comb_control() noexcept {
+int32_t LIBCOMB__comb_control(const int32_t cmd, const int32_t arg, const int32_t param) noexcept {
+    // TOOD: IMPLEMENT ME
+    return 0;
+
+#if 0
 loc_80058534:
     sp -= 0x38;
     sw(a0, sp + 0x38);
@@ -1401,6 +1405,7 @@ loc_800589FC:
     s1 = lw(sp + 0x18);
     sp += 0x38;
     return;
+#endif
 }
 
 void LIBCOMB__ioabort() noexcept {

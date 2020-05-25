@@ -112,7 +112,6 @@ extern void LIBCOMB_ChangeClearSIO() noexcept;
 extern void LIBCOMB_AddCOMB() noexcept;
 extern void LIBCOMB_DelCOMB() noexcept;
 extern void LIBCOMB_UNKNOWN_ctrl_help() noexcept;
-extern void LIBCOMB__comb_control() noexcept;
 extern void LIBAPI_SysEnqIntRP() noexcept;
 extern void LIBAPI_AddDrv() noexcept;
 extern void LIBAPI_DelDrv() noexcept;
@@ -229,7 +228,6 @@ namespace PsxVm {
         { 0x800580B4, &LIBCOMB_AddCOMB },
         { 0x800580E0, &LIBCOMB_DelCOMB },
         { 0x8005810C, &LIBCOMB_UNKNOWN_ctrl_help },
-        { 0x80058534, &LIBCOMB__comb_control },
         { 0x80058A18, &LIBAPI_SysEnqIntRP },
         { 0x80058A28, &LIBAPI_AddDrv },
         { 0x80058A38, &LIBAPI_DelDrv },

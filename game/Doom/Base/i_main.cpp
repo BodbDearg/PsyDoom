@@ -279,13 +279,10 @@ void I_PSXInit() noexcept {
     sw(v0, gp + 0x934);                                 // Store to: gNetOutputFd (80077F14)
     a1 = 0x8001;                                        // Result = 00008001
     LIBAPI_open();
-    
-    a0 = 1;                                             // Result = 00000001
-    a1 = 3;                                             // Result = 00000003
     sw(v0, gp + 0xC54);                                 // Store to: gNetInputFd (80078234)
-    a2 = 0x9600;                                        // Result = 00009600
-    LIBCOMB__comb_control();
-    
+
+    v0 = LIBCOMB__comb_control(1, 3, 38400);
+        
     I_DrawPresent();
     I_DrawPresent();
 
@@ -943,14 +940,13 @@ void I_NetSetup() noexcept {
 loc_8003472C:
     sp -= 0x20;
     v0 = 0xAA;                                          // Result = 000000AA
-    a0 = 3;                                             // Result = 00000003
-    a1 = 0;                                             // Result = 00000000
     sw(ra, sp + 0x18);
     sw(s1, sp + 0x14);
     sw(s0, sp + 0x10);
     sb(v0, gp + 0x9D0);                                 // Store to: gNetOutputPacket[0] (80077FB0)
-    a2 = 0;                                             // Result = 00000000
-    LIBCOMB__comb_control();
+
+    v0 = LIBCOMB__comb_control(3, 0, 0);
+
     a2 = 8;                                             // Result = 00000008
     if (v0 == 0) goto loc_800347EC;
     a1 = 0x80070000;                                    // Result = 80070000
@@ -1025,12 +1021,12 @@ loc_8003483C:
     }
     a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
     LIBAPI_TestEvent();
+
     a0 = 3;                                             // Result = 00000003
     if (v0 == 0) goto loc_8003480C;
 loc_8003485C:
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    LIBCOMB__comb_control();
+    v0 = LIBCOMB__comb_control(3, 0, 0);
+
     a0 = 3;                                             // Result = 00000003
     if (v0 == 0) goto loc_8003485C;
     a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
@@ -1056,11 +1052,10 @@ loc_80034884:
     I_LocalButtonsToNet();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7FB4);                                // Store to: gNetOutputPacket[4] (80077FB4)
-    a0 = 3;                                             // Result = 00000003
+    
 loc_800348EC:
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    LIBCOMB__comb_control();
+    v0 = LIBCOMB__comb_control(3, 0, 0);
+
     a0 = 3;                                             // Result = 00000003
     if (v0 == 0) goto loc_800348EC;
     a1 = 0x80070000;                                    // Result = 80070000
@@ -1088,10 +1083,8 @@ loc_80034928:
     goto loc_80034A44;
 loc_8003496C:
     sw(v0, gp + 0x62C);                                 // Store to: gbDidAbortGame (80077C0C)
-    a0 = 2;
-    a1 = 3;
-    a2 = 0;
-    LIBCOMB__comb_control();
+    
+    v0 = LIBCOMB__comb_control(2, 3, 0);
     goto loc_80034A48;
 loc_80034988:
     a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
@@ -1125,11 +1118,10 @@ loc_8003499C:
     I_LocalButtonsToNet();
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7FB4);                                // Store to: gNetOutputPacket[4] (80077FB4)
-    a0 = 3;                                             // Result = 00000003
+    
 loc_80034A1C:
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    LIBCOMB__comb_control();
+    v0 = LIBCOMB__comb_control(3, 0, 0);
+
     a0 = 3;                                             // Result = 00000003
     if (v0 == 0) goto loc_80034A1C;
     a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
@@ -1352,9 +1344,9 @@ loc_80034D54:
     if (v0 != 0) goto loc_80034D54;
     goto loc_80034E30;
 loc_80034D88:
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    LIBCOMB__comb_control();
+    
+    v0 = LIBCOMB__comb_control(3, 0, 0);
+
     a0 = 3;                                             // Result = 00000003
     if (v0 == 0) goto loc_80034D88;
     a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
@@ -1364,10 +1356,9 @@ loc_80034D88:
     LIBAPI_write();
     goto loc_80034E44;
 loc_80034DB8:
-    a0 = 3;                                             // Result = 00000003
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    LIBCOMB__comb_control();
+    
+    v0 = LIBCOMB__comb_control(3, 0, 0);
+
     if (v0 == 0) goto loc_80034DB8;
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
@@ -1393,9 +1384,9 @@ loc_80034E04:
     a0 = 2;                                             // Result = 00000002
     if (v0 != 0) goto loc_80034E04;
 loc_80034E30:
-    a1 = 1;                                             // Result = 00000001
-    a2 = 0;                                             // Result = 00000000
-    LIBCOMB__comb_control();
+    
+    v0 = LIBCOMB__comb_control(2, 1, 0);
+
     goto loc_80034D20;
 loc_80034E44:
     ra = lw(sp + 0x14);
