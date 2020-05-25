@@ -50,6 +50,9 @@ static constexpr int32_t GODFACE    = 40;
 static constexpr int32_t DEADFACE   = 41;
 static constexpr int32_t FIRSTSPLAT = 42;   // Gib frames
 
+// Which slot (by index) on the weapon micronumbers display each weapon maps to
+static constexpr int32_t WEAPON_MICRO_INDEXES[NUMWEAPONS] = { 0, 1, 2, 3, 4, 5, 6, 7, 0 };
+
 extern const facesprite_t       gFaceSprites[NUMFACES];
 extern const VmPtr<stbar_t>     gStatusBar;
 

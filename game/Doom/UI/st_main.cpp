@@ -29,9 +29,6 @@ static const int16_t gMicronumsY[NUMMICROS] = { 204, 204, 204, 204, 216, 216, 21
 // Keycard y positions on the status bar
 static const int16_t gCardY[NUMCARDS] = { 204, 212, 220, 204, 212, 220 };
 
-// Which slot (by index) on the weapon micronumbers display each weapon maps to
-static const int32_t gWeaponMicroIndexes[NUMWEAPONS] = { 0, 1, 2, 3, 4, 5, 6, 7, 0 };
-
 // The definitions for each face sprite
 const facesprite_t gFaceSprites[NUMFACES] = {
     { 118, 202,   0,  41, 19, 29 },     // STFST01  - 0
@@ -408,7 +405,7 @@ void ST_Drawer() noexcept {
         }
 
         // Draw the white box or highlight for the currently selected weapon
-        const int32_t microNumIdx = gWeaponMicroIndexes[weapon];
+        const int32_t microNumIdx = WEAPON_MICRO_INDEXES[weapon];
 
         LIBGPU_setXY0(spritePrim, gMicronumsX[microNumIdx], gMicronumsY[microNumIdx]);
         LIBGPU_setUV0(spritePrim, 164, 192);

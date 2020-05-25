@@ -6,6 +6,7 @@
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "Doom/UI/st_main.h"
 #include "g_game.h"
 #include "p_local.h"
 #include "p_map.h"
@@ -15,7 +16,6 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PcPsx/Utils.h"
-#include "PsxVm/PsxVm.h"
 #include <algorithm>
 #include <cmath>
 
@@ -43,7 +43,7 @@ static const VmPtr<bool32_t>    gbOnGround(0x800781CC);     // Flag set to true 
 // Attempts to move the given player map object according to it's current velocity.
 // Also crosses special lines in the process, and interacts with special things touched.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_PlayerMove(mobj_t& mobj) noexcept {
+static void P_PlayerMove(mobj_t& mobj) noexcept {
     // This is the amount to be moved
     const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[*gPlayerNum];
     fixed_t moveDx = (mobj.momx >> 2) * elapsedVBlanks;
@@ -89,7 +89,7 @@ void P_PlayerMove(mobj_t& mobj) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Do movement in the XY direction for the player map object and apply friction
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_PlayerXYMovement(mobj_t& mobj) noexcept {
+static void P_PlayerXYMovement(mobj_t& mobj) noexcept {
     // Physically move the player and cross special lines, touch things etc.
     P_PlayerMove(mobj);
     
@@ -115,7 +115,7 @@ void P_PlayerXYMovement(mobj_t& mobj) noexcept {
 // Does height clipping and movement z velocity for the player thing.
 // Also applies gravity when the thing is in the air.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_PlayerZMovement(mobj_t& mobj) noexcept {
+static void P_PlayerZMovement(mobj_t& mobj) noexcept {
     player_t& player = *mobj.player;
 
     // Do smooth stepping up a step
@@ -159,7 +159,7 @@ void P_PlayerZMovement(mobj_t& mobj) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Do movement and state transitions for the player's map object
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_PlayerMobjThink(mobj_t& mobj) noexcept {
+static void P_PlayerMobjThink(mobj_t& mobj) noexcept {
     // Do XY and Z movement and velocity updates as required
     if ((mobj.momx != 0) || (mobj.momy != 0)) {
         P_PlayerXYMovement(mobj);
@@ -189,7 +189,7 @@ void P_PlayerMobjThink(mobj_t& mobj) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads inputs to decide how much the player will try to move and turn for a tic
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_BuildMove(player_t& player) noexcept {
+static void P_BuildMove(player_t& player) noexcept {
     // Grab some useful stuff: elapsed vblanks, currend and old buttons and gamepad bindings
     const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[*gPlayerNum];
     const uint32_t curBtns = gTicButtons[*gPlayerNum];
@@ -290,7 +290,7 @@ void P_BuildMove(player_t& player) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Applies the specified amount of velocity to the player's map object in the given direction
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_Thrust(player_t& player, const angle_t angle, const fixed_t amount) noexcept {
+static void P_Thrust(player_t& player, const angle_t angle, const fixed_t amount) noexcept {
     mobj_t& mobj = *player.mo;
     mobj.momx += (amount >> 8) * (gFineCosine[angle >> ANGLETOFINESHIFT] >> 8);
     mobj.momy += (amount >> 8) * (gFineSine[angle >> ANGLETOFINESHIFT] >> 8);
@@ -300,7 +300,7 @@ void P_Thrust(player_t& player, const angle_t angle, const fixed_t amount) noexc
 // Computes the player's current view height (for rendering) and does smooth stepping up stairs.
 // Also applies view bobbing to the view height.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_CalcHeight(player_t& player) noexcept {
+static void P_CalcHeight(player_t& player) noexcept {
     // Compute movement bobbing amount
     mobj_t& mobj = *player.mo;
 
@@ -368,7 +368,7 @@ void P_CalcHeight(player_t& player) noexcept {
 // Applies turn rotation and velocity due to movement inputs to the player.
 // Also puts the player into the run animation if moving.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_MovePlayer(player_t& player) noexcept {
+static void P_MovePlayer(player_t& player) noexcept {
     // Apply angle turning
     mobj_t& mobj = *player.mo;
     mobj.angle += player.angleturn;
@@ -396,7 +396,7 @@ void P_MovePlayer(player_t& player) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Does updates for the player when dead: drops down the view height, weapons and faces the killer etc.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void P_DeathThink(player_t& player) noexcept {
+static void P_DeathThink(player_t& player) noexcept {
     // Drop the currently held weapon
     P_MovePsprites(player);
 
@@ -445,343 +445,203 @@ void P_DeathThink(player_t& player) noexcept {
     }
 
     // Respawn if the right buttons are pressed and the player's view has dropped enough
-    const bool bRespawnBtnPressed = gTicButtons[*gPlayerNum] & (PAD_ACTION_BTNS | PAD_SHOULDER_BTNS);
+    const bool bRespawnBtnPressed = (gTicButtons[*gPlayerNum] & (PAD_ACTION_BTNS | PAD_SHOULDER_BTNS));
 
     if (bRespawnBtnPressed && (player.viewheight <= 8 * FRACUNIT)) {
         player.playerstate = PST_REBORN;
     }
 }
 
-void P_PlayerThink() noexcept {
-loc_8002A7F8:
-    v0 = *gPlayerNum;
-    sp -= 0x20;
-    sw(s0, sp + 0x10);
-    s0 = a0;
-    sw(ra, sp + 0x1C);
-    sw(s2, sp + 0x18);
-    sw(s1, sp + 0x14);
-    v1 = lw(s0 + 0x4);
-    v0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    at += v0;
-    s2 = lw(at);
-    at = 0x80080000;                                    // Result = 80080000
-    at -= 0x7DEC;                                       // Result = gOldTicButtons[0] (80078214)
-    at += v0;
-    a1 = lw(at);
-    at = ptrToVmAddr(&gpPlayerCtrlBindings[0]);
-    at += v0;
-    s1 = lw(at);
-    v0 = 0xA;                                           // Result = 0000000A
-    if (v1 != 0) goto loc_8002AA14;
-    a0 = lw(s0 + 0x70);
-    {
-        const bool bJump = (a0 != v0);
-        v0 = a0 << 2;
-        if (bJump) goto loc_8002A874;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does all player updates such as movement, controls, weapon switching and so forth
+//------------------------------------------------------------------------------------------------------------------------------------------
+void P_PlayerThink(player_t& player) noexcept {
+    // Grab the current and previous buttons, and the gamepad bindings
+    const uint32_t curBtns = gTicButtons[*gPlayerNum];
+    const uint32_t oldBtns = gOldTicButtons[*gPlayerNum];
+    const padbuttons_t* pBtnBindings = gpPlayerCtrlBindings[*gPlayerNum].get();
+
+    // Do weapon switching if the player is still alive (and even if paused)
+    if (player.playerstate == PST_LIVE) {
+        // Get the current weapon being switched to, or the ready weapon if not switching weapons
+        const weapontype_t curWeaponType = (player.pendingweapon == wp_nochange) ? player.readyweapon : player.pendingweapon;
+        
+        // Get the current micro box that is highlighted (for this weapon)
+        int32_t weaponMicroBoxIdx = WEAPON_MICRO_INDEXES[curWeaponType];
+        int32_t nextWeaponIdx = weaponMicroBoxIdx;
+
+        // See if next/previous weapon buttons have just been pressed
+        const bool bGotoPrevWeapon = padBtnJustPressed(pBtnBindings[cbind_weapon_back], curBtns, oldBtns);
+        const bool bGotoNextWeapon = padBtnJustPressed(pBtnBindings[cbind_weapon_forward], curBtns, oldBtns);
+
+        // See if we are switching weapons
+        if (bGotoPrevWeapon) {
+            // Try to go to the previous weapon
+            if ((weaponMicroBoxIdx == 0) && player.weaponowned[wp_chainsaw]) {
+                // When we are on the 1st slot and own the chainsaw then allow toggling between fists and chainsaw.
+                // This assignment doesn't mean anything, it's just set to trigger a weapon change (see below).
+                weaponMicroBoxIdx = 1;
+            }
+            else if (weaponMicroBoxIdx > 0) {
+                // If above the first slot go to the previous weapon.
+                // Keep going back until we find a weapon that is owned - which we should always have (fists/pistol).
+                nextWeaponIdx--;
+
+                while ((!player.weaponowned[nextWeaponIdx]) && (nextWeaponIdx > 0)) {
+                    nextWeaponIdx--;
+                }
+            }
+        }
+        else if (bGotoNextWeapon) {
+            // Go to the next weapon: keep incrementing the weapon index until we find one that is owned or hit the last microbox index
+            if (weaponMicroBoxIdx < 8) {
+                nextWeaponIdx++;
+
+                while ((!player.weaponowned[nextWeaponIdx]) && (nextWeaponIdx < 8)) {
+                    nextWeaponIdx++;
+                }
+            }
+
+            // If we incremented onto the chainsaw (value 8) then go back to the bfg (wraparound is not allowed)
+            if (nextWeaponIdx == wp_chainsaw) {
+                nextWeaponIdx = wp_bfg;
+
+                // If the bfg is not owned keep going back in the weapon list until we find one that is owned (there will always be something owned)
+                while (!player.weaponowned[nextWeaponIdx]) {
+                    nextWeaponIdx--;
+                }
+            }
+        }
+
+        // Did we decide to change weapon?
+        if (nextWeaponIdx != weaponMicroBoxIdx) {
+            // If we are on the fists and triggering a change then toggle between those and the chainsaw
+            if ((nextWeaponIdx == wp_fist) && (player.readyweapon != wp_chainsaw)) {
+                nextWeaponIdx = (player.weaponowned[wp_chainsaw] != 0) ? wp_chainsaw : wp_fist;
+            }
+
+            // Actually change the weapon
+            player.pendingweapon = (weapontype_t) nextWeaponIdx;
+        }
     }
-    a0 = lw(s0 + 0x6C);
-    v0 = a0 << 2;
-loc_8002A874:
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x408C;                                       // Result = gWeaponMicroIndexes[0] (8007408C)
-    at += v0;
-    a0 = lw(at);
-    v1 = lw(s1 + 0x18);
-    v0 = s2 & v1;
-    a2 = a0;
-    if (v0 == 0) goto loc_8002A924;
-    v0 = a1 & v1;
-    if (v0 != 0) goto loc_8002A924;
-    if (a0 != 0) goto loc_8002A8C4;
-    v0 = lw(s0 + 0x94);
-    if (v0 == 0) goto loc_8002A8C4;
-    a2 = 1;                                             // Result = 00000001
-    goto loc_8002A9E0;
-loc_8002A8C4:
-    if (i32(a0) <= 0) goto loc_8002A9E0;
-    a0--;
-    v0 = a0 << 2;
-    v0 += s0;
-    v0 = lw(v0 + 0x74);
-    if (v0 != 0) goto loc_8002A9E0;
-    if (i32(a0) <= 0) goto loc_8002A9E0;
-    a0--;
-    v0 = a0 << 2;
-    v1 = v0 + s0;
-    v0 = lw(v1 + 0x74);
-loc_8002A900:
-    if (v0 != 0) goto loc_8002A9E0;
-    if (i32(a0) <= 0) goto loc_8002A9E0;
-    v1 -= 4;
-    v0 = lw(v1 + 0x74);
-    a0--;
-    goto loc_8002A900;
-loc_8002A924:
-    v1 = lw(s1 + 0x1C);
-    v0 = s2 & v1;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = a1 & v1;
-        if (bJump) goto loc_8002A9E0;
+
+    // Updates for when the game is NOT paused
+    if (!*gbGamePaused) {
+        // Do physical movements due to velocity and state transitions for the player
+        mobj_t& playerMobj = *player.mo;
+        P_PlayerMobjThink(playerMobj);
+
+        // Gather inputs for the next move
+        P_BuildMove(player);
+
+        // Is the player dead? If so do death updates, otherwise do all the normal updates
+        if (player.playerstate == PST_DEAD) {
+            P_DeathThink(player);
+        } else {
+            // Attacking with the chainsaw causes some movement forward
+            if (playerMobj.flags & MF_JUSTATTACKED) {
+                player.angleturn = 0;
+                player.forwardmove = FRACUNIT * 25 / 32;
+                player.sidemove = 0;
+                playerMobj.flags &= ~MF_JUSTATTACKED;
+            }
+
+            // Apply thrust unless delayed after exiting a teleporter etc.
+            if (playerMobj.reactiontime == 0) {
+                P_MovePlayer(player);
+            } else {
+                playerMobj.reactiontime--;
+            }
+
+            // Adjust view height
+            P_CalcHeight(player);
+
+            // Do sector specials: lava and slime etc. hurting the player
+            if (playerMobj.subsector->sector->special) {
+                P_PlayerInSpecialSector(player);
+
+                if (player.playerstate == PST_DEAD)
+                    return;
+            }
+
+            // Use special lines if the use button is pressed
+            if (curBtns & pBtnBindings[cbind_use]) {
+                if (!player.usedown) {
+                    P_UseLines(player);
+                    player.usedown = true;
+                }
+            } else {
+                player.usedown = false;
+            }
+
+            // Go into the attack state and update the status bar for this player if fire is pressed for a long time on certain weapons
+            if (curBtns & pBtnBindings[cbind_attack]) {
+                P_SetMObjState(playerMobj, S_PLAY_ATK1);
+                player.attackdown++;
+
+                // Should we do the grimmace face after fire has been pressed a long time?
+                const bool bDoGrimmaceFace = (
+                    (*gPlayerNum == *gCurPlayerIndex) &&
+                    (player.attackdown > TICRATE * 2) &&
+                    ((player.readyweapon == wp_chaingun) || (player.readyweapon == wp_plasma))
+                );
+
+                if (bDoGrimmaceFace) {
+                    gStatusBar->specialFace = f_mowdown;
+                }
+            } else {
+                // Not attacking this tic: reset the count for number of tics attacking
+                player.attackdown = 0;
+            }
+
+            // Update the player's weapon sprites
+            P_MovePsprites(player);
+
+            // Tic special powers if enough time has elapsed and reduce their duration.
+            if (*gGameTic > *gPrevGameTic) {
+                // Note: berserk is special and counts up to diminish the red hue effect after picking it up.
+                // It never runs out (theoretically it CAN if there is an overflow) unlike other powers...
+                if (player.powers[pw_strength]) {
+                    player.powers[pw_strength]++;
+                }
+
+                if (player.powers[pw_invulnerability] != 0) {
+                    player.powers[pw_invulnerability]--;
+                }
+
+                if (player.powers[pw_invisibility]) {
+                    player.powers[pw_invisibility]--;
+
+                    // Remove the invisibility blend mask if it's out
+                    if (player.powers[pw_invisibility] == 0) {
+                        playerMobj.flags &= ~MF_BLEND_ADD_25;
+                    } else {
+                        // If we are getting low on invisibility (4 seconds or less) then blink it out:
+                        if (player.powers[pw_invisibility] <= TICRATE * 4) {
+                            if ((player.powers[pw_invisibility] & 7) == 0) {
+                                playerMobj.flags ^= MF_BLEND_ADD_25;
+                            }
+                        }
+                    }
+                }
+
+                if (player.powers[pw_infrared]) {
+                    player.powers[pw_infrared]--;
+                }
+
+                if (player.powers[pw_ironfeet]) {
+                    player.powers[pw_ironfeet]--;
+                }
+
+                // Reduce damage and bonus tints
+                if (player.damagecount != 0) {
+                    player.damagecount--;
+                }
+
+                if (player.bonuscount != 0) {
+                    player.bonuscount--;
+                }
+            }
+        }
     }
-    {
-        const bool bJump = (v0 != 0);
-        v0 = (i32(a0) < 8);
-        if (bJump) goto loc_8002A9E0;
-    }
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_8002A9B0;
-    }
-    a0++;
-    v0 = a0 << 2;
-    v0 += s0;
-    v0 = lw(v0 + 0x74);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_8002A9B0;
-    }
-    v0 = (i32(a0) < 8);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_8002A9B0;
-    }
-    a0++;
-    v0 = a0 << 2;
-    v1 = v0 + s0;
-    v0 = lw(v1 + 0x74);
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_8002A9B0;
-    }
-loc_8002A98C:
-    v0 = (i32(a0) < 8);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 8;                                         // Result = 00000008
-        if (bJump) goto loc_8002A9B0;
-    }
-    v1 += 4;
-    v0 = lw(v1 + 0x74);
-    a0++;
-    if (v0 == 0) goto loc_8002A98C;
-    v0 = 8;                                             // Result = 00000008
-loc_8002A9B0:
-    if (a0 != v0) goto loc_8002A9E0;
-    v0 = lw(s0 + 0x90);
-    a0 = 7;                                             // Result = 00000007
-    if (v0 != 0) goto loc_8002A9E0;
-    v1 = s0 + 0x1C;
-loc_8002A9CC:
-    v1 -= 4;
-    v0 = lw(v1 + 0x74);
-    a0--;
-    if (v0 == 0) goto loc_8002A9CC;
-loc_8002A9E0:
-    if (a0 == a2) goto loc_8002AA14;
-    v0 = 8;                                             // Result = 00000008
-    if (a0 != 0) goto loc_8002AA10;
-    v1 = lw(s0 + 0x6C);
-    if (v1 == v0) goto loc_8002AA10;
-    v0 = lw(s0 + 0x94);
-    v0 = (v0 > 0);
-    a0 = v0 << 3;
-loc_8002AA10:
-    sw(a0, s0 + 0x70);
-loc_8002AA14:
-    v0 = *gbGamePaused;
-    if (v0 != 0) goto loc_8002ACCC;
-    a0 = lw(s0);
-    P_PlayerMobjThink(*vmAddrToPtr<mobj_t>(a0));
-    a0 = s0;
-    P_BuildMove(*vmAddrToPtr<player_t>(a0));
-    v1 = lw(s0 + 0x4);
-    v0 = 1;                                             // Result = 00000001
-    if (v1 != v0) goto loc_8002AA5C;
-    a0 = s0;
-    P_DeathThink(*vmAddrToPtr<player_t>(a0));
-    goto loc_8002ACCC;
-loc_8002AA5C:
-    v0 = lw(s0);
-    v0 = lw(v0 + 0x64);
-    v0 &= 0x80;
-    {
-        const bool bJump = (v0 == 0);
-        v0 = 0xC800;                                    // Result = 0000C800
-        if (bJump) goto loc_8002AA98;
-    }
-    a0 = lw(s0);
-    sw(0, s0 + 0x10);
-    sw(v0, s0 + 0x8);
-    sw(0, s0 + 0xC);
-    v0 = lw(a0 + 0x64);
-    v1 = -0x81;                                         // Result = FFFFFF7F
-    v0 &= v1;
-    sw(v0, a0 + 0x64);
-loc_8002AA98:
-    v1 = lw(s0);
-    v0 = lw(v1 + 0x78);
-    {
-        const bool bJump = (v0 == 0);
-        v0--;
-        if (bJump) goto loc_8002AAB8;
-    }
-    sw(v0, v1 + 0x78);
-    goto loc_8002AAC0;
-loc_8002AAB8:
-    a0 = s0;
-    P_MovePlayer(*vmAddrToPtr<player_t>(a0));
-loc_8002AAC0:
-    a0 = s0;
-    P_CalcHeight(*vmAddrToPtr<player_t>(a0));
-    v0 = lw(s0);
-    v0 = lw(v0 + 0xC);
-    v0 = lw(v0);
-    v0 = lw(v0 + 0x14);
-    if (v0 == 0) goto loc_8002AB08;
-    a0 = s0;
-    P_PlayerInSpecialSector(*vmAddrToPtr<player_t>(a0));
-    v1 = lw(s0 + 0x4);
-    v0 = 1;                                             // Result = 00000001
-    if (v1 == v0) goto loc_8002ACCC;
-loc_8002AB08:
-    v0 = lw(s1 + 0x4);
-    v0 &= s2;
-    if (v0 == 0) goto loc_8002AB40;
-    v0 = lw(s0 + 0xBC);
-    if (v0 != 0) goto loc_8002AB44;
-    a0 = s0;
-    P_UseLines(*vmAddrToPtr<player_t>(a0));
-    v0 = 1;                                             // Result = 00000001
-    sw(v0, s0 + 0xBC);
-    goto loc_8002AB44;
-loc_8002AB40:
-    sw(0, s0 + 0xBC);
-loc_8002AB44:
-    v0 = lw(s1);
-    v0 &= s2;
-    if (v0 == 0) goto loc_8002ABC8;
-    a0 = lw(s0);
-    a1 = 0x9F;                                          // Result = 0000009F
-    v0 = P_SetMObjState(*vmAddrToPtr<mobj_t>(a0), (statenum_t) a1);
-    v0 = lw(s0 + 0xB8);
-    v0++;
-    sw(v0, s0 + 0xB8);
-    v0 = (i32(v0) < 0x1F);
-    if (v0 != 0) goto loc_8002ABCC;
-    v1 = *gPlayerNum;
-    v0 = *gCurPlayerIndex;
-    {
-        const bool bJump = (v1 != v0);
-        v0 = 4;                                         // Result = 00000004
-        if (bJump) goto loc_8002ABCC;
-    }
-    v1 = lw(s0 + 0x6C);
-    {
-        const bool bJump = (v1 == v0);
-        v0 = 6;                                         // Result = 00000006
-        if (bJump) goto loc_8002ABB4;
-    }
-    if (v1 != v0) goto loc_8002ABCC;
-loc_8002ABB4:
-    v0 = 7;                                             // Result = 00000007
-    at = 0x800A0000;                                    // Result = 800A0000
-    sw(v0, at - 0x78E8);                                // Store to: gStatusBar[0] (80098718)
-    goto loc_8002ABCC;
-loc_8002ABC8:
-    sw(0, s0 + 0xB8);
-loc_8002ABCC:
-    a0 = s0;
-    P_MovePsprites(*vmAddrToPtr<player_t>(a0));
-    v1 = *gGameTic;
-    v0 = *gPrevGameTic;
-    v0 = (i32(v0) < i32(v1));
-    if (v0 == 0) goto loc_8002ACCC;
-    v0 = lw(s0 + 0x34);
-    {
-        const bool bJump = (v0 == 0);
-        v0++;
-        if (bJump) goto loc_8002AC08;
-    }
-    sw(v0, s0 + 0x34);
-loc_8002AC08:
-    v0 = lw(s0 + 0x30);
-    {
-        const bool bJump = (v0 == 0);
-        v0--;
-        if (bJump) goto loc_8002AC1C;
-    }
-    sw(v0, s0 + 0x30);
-loc_8002AC1C:
-    v0 = lw(s0 + 0x38);
-    v1 = v0 - 1;
-    if (v0 == 0) goto loc_8002AC7C;
-    sw(v1, s0 + 0x38);
-    if (v1 != 0) goto loc_8002AC50;
-    a0 = lw(s0);
-    v1 = 0x8FFF0000;                                    // Result = 8FFF0000
-    v0 = lw(a0 + 0x64);
-    v1 |= 0xFFFF;                                       // Result = 8FFFFFFF
-    v0 &= v1;
-    sw(v0, a0 + 0x64);
-    goto loc_8002AC7C;
-loc_8002AC50:
-    v0 = (i32(v1) < 0x3D);
-    {
-        const bool bJump = (v0 == 0);
-        v0 = v1 & 7;
-        if (bJump) goto loc_8002AC7C;
-    }
-    a0 = 0x70000000;                                    // Result = 70000000
-    if (v0 != 0) goto loc_8002AC7C;
-    v0 = lw(s0);
-    v1 = lw(v0 + 0x64);
-    v1 ^= a0;
-    sw(v1, v0 + 0x64);
-loc_8002AC7C:
-    v0 = lw(s0 + 0x44);
-    {
-        const bool bJump = (v0 == 0);
-        v0--;
-        if (bJump) goto loc_8002AC90;
-    }
-    sw(v0, s0 + 0x44);
-loc_8002AC90:
-    v0 = lw(s0 + 0x3C);
-    {
-        const bool bJump = (v0 == 0);
-        v0--;
-        if (bJump) goto loc_8002ACA4;
-    }
-    sw(v0, s0 + 0x3C);
-loc_8002ACA4:
-    v0 = lw(s0 + 0xD8);
-    {
-        const bool bJump = (v0 == 0);
-        v0--;
-        if (bJump) goto loc_8002ACB8;
-    }
-    sw(v0, s0 + 0xD8);
-loc_8002ACB8:
-    v0 = lw(s0 + 0xDC);
-    {
-        const bool bJump = (v0 == 0);
-        v0--;
-        if (bJump) goto loc_8002ACCC;
-    }
-    sw(v0, s0 + 0xDC);
-loc_8002ACCC:
-    ra = lw(sp + 0x1C);
-    s2 = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
 }

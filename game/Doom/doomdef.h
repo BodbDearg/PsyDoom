@@ -374,7 +374,7 @@ struct player_t {
     int32_t             ammo[NUMAMMO];                  // TODO: COMMENT
     int32_t             maxammo[NUMAMMO];               // TODO: COMMENT
     uint32_t            attackdown;                     // TODO: COMMENT
-    uint32_t            usedown;                        // TODO: COMMENT
+    bool32_t            usedown;                        // TODO: COMMENT
     uint32_t            cheats;                         // TODO: COMMENT
     uint32_t            refire;                         // TODO: COMMENT
     uint32_t            killcount;                      // TODO: COMMENT

@@ -46,6 +46,7 @@ struct CheatSequence {
     uint16_t btns[CHEAT_SEQ_LEN];
 };
 
+// What buttons to press to activate each of the cheat sequences
 static constexpr CheatSequence CHEAT_SEQUENCES[] = {
     { PAD_TRIANGLE, PAD_TRIANGLE, PAD_L2,     PAD_R2,     PAD_L2,       PAD_R2,       PAD_R1,     PAD_SQUARE },     // CHT_SEQ_SHOW_ALL_MAP_LINES
     { PAD_TRIANGLE, PAD_TRIANGLE, PAD_L2,     PAD_R2,     PAD_L2,       PAD_R2,       PAD_R1,     PAD_CIRCLE },     // CHT_SEQ_SHOW_ALL_MAP_THINGS
@@ -517,11 +518,9 @@ gameaction_t P_Ticker() noexcept {
             G_DoReborn(gPlayerNum);
         }
 
-        // Do automap and player controls/movement
+        // Do automap and player updates (controls, movement etc.)
         AM_Control(player);
-
-        *PsxVm::gpReg_a0 = ptrToVmAddr(&player);
-        P_PlayerThink();
+        P_PlayerThink(player);
     }
 
     return *gGameAction;

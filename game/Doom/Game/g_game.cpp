@@ -136,7 +136,7 @@ void G_PlayerReborn(const int32_t playerIdx) noexcept {
     // Initialize player state and restore the previously saved stats
     player.health = MAXHEALTH;
     player.attackdown = 1;
-    player.usedown = 1;
+    player.usedown = true;
     player.playerstate = PST_LIVE;
     player.pendingweapon = wp_pistol;
     player.readyweapon = wp_pistol;
