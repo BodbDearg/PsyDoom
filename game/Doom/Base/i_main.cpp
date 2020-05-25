@@ -956,11 +956,13 @@ loc_8003472C:
     *gCurPlayerIndex = 1;
     s0 = 0x4000;                                        // Result = 00004000
     LIBAPI_write();
+
+    a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
     a1 = 0x80070000;                                    // Result = 80070000
     a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
-    a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
     a2 = 8;                                             // Result = 00000008
     LIBAPI_read();
+
 loc_80034794:
     v0 = 0x80090000;                                    // Result = 80090000
     v0 = lw(v0 + 0x7788);                               // Load from: gPadInputBuffer_1[0] (80097788)

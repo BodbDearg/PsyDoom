@@ -1053,7 +1053,13 @@ loc_8005852C:
     return;
 }
 
-int32_t LIBCOMB__comb_control([[maybe_unused]] const int32_t cmd, [[maybe_unused]] const int32_t arg, [[maybe_unused]] const int32_t param) noexcept {
+int32_t LIBCOMB__comb_control([[maybe_unused]] const int32_t cmd, [[maybe_unused]] const int32_t subcmd, [[maybe_unused]] const int32_t param) noexcept {
+    // Set RTS (Ready To Send) flag to either '1' or '0' using the param, and return CTS (Clear to Send) flag as '1' or '0'
+    if ((cmd == 3) && (subcmd == 0)) {
+        // Say we are always clear to send
+        return 1;
+    }
+
     // FIXME: IMPLEMENT ME
     return 0;
 

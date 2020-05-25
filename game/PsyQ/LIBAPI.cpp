@@ -243,7 +243,7 @@ loc_80049E1C:
 
 bool LIBAPI_TestEvent([[maybe_unused]] const uint32_t eventDescriptor) noexcept {
     // FIXME: IMPLEMENT ME
-    return false;
+    return true;
 
 #if 0
 loc_80049E2C:
