@@ -241,11 +241,17 @@ loc_80049E1C:
     emu_call(t2);
 }
 
-void LIBAPI_TestEvent() noexcept {
+bool LIBAPI_TestEvent([[maybe_unused]] const uint32_t eventDescriptor) noexcept {
+    // FIXME: IMPLEMENT ME
+    return false;
+
+#if 0
 loc_80049E2C:
     t2 = 0xB0;                                          // Result = 000000B0
     t1 = 0xB;                                           // Result = 0000000B
     emu_call(t2);
+    v0 = 0;
+#endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

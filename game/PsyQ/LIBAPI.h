@@ -32,6 +32,7 @@ void LIBAPI_StartPAD() noexcept;
 void LIBAPI_ChangeClearPAD() noexcept;
 int32_t LIBAPI_OpenEvent(const int32_t cause, const int32_t type, const int32_t mode, int32_t (* const pHandler)()) noexcept;
 void LIBAPI_read() noexcept;
+bool LIBAPI_TestEvent(const uint32_t eventDescriptor) noexcept;
 void LIBAPI_TestEvent() noexcept;
 void LIBAPI_ExitCriticalSection() noexcept;
 void LIBAPI_open() noexcept;

@@ -91,7 +91,6 @@ extern void LIBAPI_InitPAD() noexcept;
 extern void LIBAPI_StartPAD() noexcept;
 extern void LIBAPI_ChangeClearPAD() noexcept;
 extern void LIBAPI_read() noexcept;
-extern void LIBAPI_TestEvent() noexcept;
 extern void LIBAPI_open() noexcept;
 extern void LIBETC_ResetCallback() noexcept;
 extern void LIBAPI_ReturnFromException() noexcept;
@@ -207,7 +206,6 @@ namespace PsxVm {
         { 0x80049DEC, &LIBAPI_StartPAD },
         { 0x80049DFC, &LIBAPI_ChangeClearPAD },
         { 0x80049E1C, &LIBAPI_read },
-        { 0x80049E2C, &LIBAPI_TestEvent },
         { 0x80049E4C, &LIBAPI_open },
         { 0x8004A7AC, &LIBETC_ResetCallback },
         { 0x8004AD80, &LIBAPI_ReturnFromException },

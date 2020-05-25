@@ -1053,8 +1053,8 @@ loc_8005852C:
     return;
 }
 
-int32_t LIBCOMB__comb_control(const int32_t cmd, const int32_t arg, const int32_t param) noexcept {
-    // TOOD: IMPLEMENT ME
+int32_t LIBCOMB__comb_control([[maybe_unused]] const int32_t cmd, [[maybe_unused]] const int32_t arg, [[maybe_unused]] const int32_t param) noexcept {
+    // FIXME: IMPLEMENT ME
     return 0;
 
 #if 0

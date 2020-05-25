@@ -985,7 +985,7 @@ loc_800347C4:
         if (bJump) goto loc_8003496C;
     }
     a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
-    LIBAPI_TestEvent();
+    v0 = LIBAPI_TestEvent(a0);
     if (v0 == 0) goto loc_80034794;
     goto loc_80034884;
 loc_800347EC:
@@ -1020,7 +1020,7 @@ loc_8003483C:
         if (bJump) goto loc_8003496C;
     }
     a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
-    LIBAPI_TestEvent();
+    v0 = LIBAPI_TestEvent(a0);
 
     a0 = 3;                                             // Result = 00000003
     if (v0 == 0) goto loc_8003480C;
@@ -1070,7 +1070,7 @@ loc_800348EC:
     LIBAPI_read();
 loc_80034928:
     a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
-    LIBAPI_TestEvent();
+    v0 = LIBAPI_TestEvent(a0);
     if (v0 == 0) goto loc_80034928;
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x7EAC);                               // Load from: gNetInputPacket[4] (80077EAC)
@@ -1094,7 +1094,7 @@ loc_80034988:
     LIBAPI_read();
 loc_8003499C:
     a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
-    LIBAPI_TestEvent();
+    v0 = LIBAPI_TestEvent(a0);
     if (v0 == 0) goto loc_8003499C;
     a0 = 0x80070000;                                    // Result = 80070000
     a0 = lw(a0 + 0x7EAC);                               // Load from: gNetInputPacket[4] (80077EAC)
@@ -1333,7 +1333,7 @@ loc_80034D20:
     s0 = v0;
 loc_80034D54:
     a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
-    LIBAPI_TestEvent();
+    v0 = LIBAPI_TestEvent(a0);
     a0 = 3;                                             // Result = 00000003
     if (v0 != 0) goto loc_80034D88;
     a0 = -1;                                            // Result = FFFFFFFF
@@ -1375,7 +1375,7 @@ loc_80034DB8:
     s0 = v0;
 loc_80034E04:
     a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
-    LIBAPI_TestEvent();
+    v0 = LIBAPI_TestEvent(a0);
     if (v0 != 0) goto loc_80034E44;
     a0 = -1;                                            // Result = FFFFFFFF
     _thunk_LIBETC_VSync();
