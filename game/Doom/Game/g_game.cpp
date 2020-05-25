@@ -294,8 +294,8 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
         gpPlayerCtrlBindings[0] = gCtrlBindings;
         gbPlayerInGame[1] = false;
     }
-    else if (gameType == gt_deathmatch || gameType == gt_coop) {
-        gbPlayerInGame[2] = true;
+    else if ((gameType == gt_deathmatch) || (gameType == gt_coop)) {
+        gbPlayerInGame[1] = true;
     }
 
     // Not recording or playing back a demo (yet)
