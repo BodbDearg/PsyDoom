@@ -90,6 +90,9 @@ constexpr uint16_t TEX_PAGE_VRAM_TEXCOORDS[NUM_TCACHE_PAGES + 1][2] = {
     896,    256
 };
 
+// The size of a packet and the packet buffers in a networked game
+constexpr int32_t NET_PACKET_SIZE = 8;
+
 // Texture cache variables.
 // The texture cache data structure, where we are filling in the cache next and the current fill row height (in cells).
 static const VmPtr<VmPtr<tcache_t>> gpTexCache(0x80077F74);
@@ -153,6 +156,20 @@ const VmPtr<texture_t>  gTex_PAUSE(0x80097A70);
 const VmPtr<texture_t>  gTex_LOADING(0x80097A90);
 const VmPtr<texture_t>  gTex_NETERR(0x80097AF0);
 const VmPtr<texture_t>  gTex_CONNECT(0x80097B10);
+
+// PSX Kernel events that fire when reads and writes complete for Serial I/O in a multiplayer game
+static VmPtr<uint32_t>  gSioReadDoneEvent(0x80077F24);
+static VmPtr<uint32_t>  gSioWriteDoneEvent(0x80078040);
+
+// File descriptors for the input/output streams used for multiplayer games.
+// These are opened against the Serial I/O device (PlayStation Link Cable).
+static VmPtr<int32_t>   gNetInputFd(0x80078234);
+static VmPtr<int32_t>   gNetOutputFd(0x80077F14);
+
+// The packet buffers for sending and receiving in a multiplayer game.
+// The link cable allows 8 bytes to be sent and received at a time.
+static VmPtr<uint8_t[NET_PACKET_SIZE]>  gNetInputPacket(0x80077EA8);
+static VmPtr<uint8_t[NET_PACKET_SIZE]>  gNetOutputPacket(0x80077FB0);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // User/client entrypoint for PlayStation DOOM.
@@ -1324,84 +1341,63 @@ loc_80034CF8:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sends and receives a single packet of data between the two players in a networked game (over the serial link cable)
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_NetSendRecv() noexcept {
-loc_80034D14:
-    sp -= 0x18;
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
-loc_80034D20:
-    v0 = *gCurPlayerIndex;
-    if (v0 == 0) goto loc_80034DB8;
-    a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
-    a2 = 8;                                             // Result = 00000008
-    v0 = LIBAPI_read(a0, vmAddrToPtr<void>(a1), a2);
-    a0 = -1;                                            // Result = FFFFFFFF
-    _thunk_LIBETC_VSync();
-    s0 = v0;
-loc_80034D54:
-    a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
-    v0 = LIBAPI_TestEvent(a0);
-    a0 = 3;                                             // Result = 00000003
-    if (v0 != 0) goto loc_80034D88;
-    a0 = -1;                                            // Result = FFFFFFFF
-    _thunk_LIBETC_VSync();
-    v0 -= s0;
-    v0 = (i32(v0) < 0x12C);
-    a0 = 2;                                             // Result = 00000002
-    if (v0 != 0) goto loc_80034D54;
-    goto loc_80034E30;
-loc_80034D88:
-    
-    v0 = LIBCOMB__comb_control(3, 0, 0);
+    while (true) {
+        // Which of the two players are we doing comms for?
+        if (*gCurPlayerIndex == 0) {
+            // Player 1: start by waiting until we are clear to send
+            // TODO: Replace with new LIBCOMB_CombCTS() function.
+            while (LIBCOMB__comb_control(3, 0, 0) == 0) {}
+            
+            // Write the output packet
+            LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
 
-    a0 = 3;                                             // Result = 00000003
-    if (v0 == 0) goto loc_80034D88;
-    a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
-    a2 = 8;                                             // Result = 00000008
-    v0 = LIBAPI_write(a0, vmAddrToPtr<void>(a1), a2);
-    goto loc_80034E44;
-loc_80034DB8:
-    
-    v0 = LIBCOMB__comb_control(3, 0, 0);
+            // Read the input packet and wait until it's done.
+            // Timeout after 5 seconds and retry the entire send/receive procedure.
+            LIBAPI_read(*gNetInputFd, gNetInputPacket.get(), NET_PACKET_SIZE);
+            const int32_t startVBlanks = LIBETC_VSync(-1);
+            
+            while (true) {
+                // If the read is done then we can finish up this round of sending/receiving
+                if (LIBAPI_TestEvent(*gSioReadDoneEvent))
+                    return;
 
-    if (v0 == 0) goto loc_80034DB8;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
-    a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
-    a2 = 8;                                             // Result = 00000008
-    v0 = LIBAPI_write(a0, vmAddrToPtr<void>(a1), a2);
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
-    a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
-    a2 = 8;                                             // Result = 00000008
-    v0 = LIBAPI_read(a0, vmAddrToPtr<void>(a1), a2);
-    a0 = -1;                                            // Result = FFFFFFFF
-    _thunk_LIBETC_VSync();
-    s0 = v0;
-loc_80034E04:
-    a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
-    v0 = LIBAPI_TestEvent(a0);
-    if (v0 != 0) goto loc_80034E44;
-    a0 = -1;                                            // Result = FFFFFFFF
-    _thunk_LIBETC_VSync();
-    v0 -= s0;
-    v0 = (i32(v0) < 0x12C);
-    a0 = 2;                                             // Result = 00000002
-    if (v0 != 0) goto loc_80034E04;
-loc_80034E30:
-    
-    v0 = LIBCOMB__comb_control(2, 1, 0);
+                // Timeout after 5 seconds if the read still isn't done...
+                if (LIBETC_VSync(-1) - startVBlanks >= VBLANKS_PER_SEC * 5)
+                    break;
+            }
+        } else {
+            // Player 2: start by reading the input packet
+            LIBAPI_read(*gNetInputFd, gNetInputPacket.get(), NET_PACKET_SIZE);
+            const int32_t startVBlanks = LIBETC_VSync(-1);
+            
+            // Wait until the input packet is read.
+            // Timeout after 5 seconds and retry the entire send/receive procedure.
+            while (true) {
+                // Is the input packet done yet?
+                if (LIBAPI_TestEvent(*gSioReadDoneEvent)) {
+                    // Yes we read it! Wait until we are clear to send.
+                    // TODO: Replace with new LIBCOMB_CombCTS() function.
+                    while (LIBCOMB__comb_control(3, 0, 0) == 0) {}
 
-    goto loc_80034D20;
-loc_80034E44:
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+                    // Write the output packet and finish up
+                    LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
+                    return;
+                }
+
+                // Timeout after 5 seconds if the read still isn't done...
+                if (LIBETC_VSync(-1) - startVBlanks >= VBLANKS_PER_SEC * 5)
+                    break;
+            }
+        }
+
+        // Clear the error bits before we retry the send again
+        /// TODO: Replace with new LIBCOMB_CombResetError() function.
+        LIBCOMB__comb_control(2, 1, 0);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

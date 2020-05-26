@@ -80,7 +80,6 @@ extern void I_ReadGamepad() noexcept;
 extern void I_NetSetup() noexcept;
 extern void I_NetUpdate() noexcept;
 extern void I_NetHandshake() noexcept;
-extern void I_NetSendRecv() noexcept;
 extern void G_CompleteLevel() noexcept;             // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
 
 extern void LIBAPI_InitPAD() noexcept;
@@ -173,7 +172,6 @@ namespace PsxVm {
         { 0x8003472C, &I_NetSetup },
         { 0x80034A60, &I_NetUpdate },
         { 0x80034CB8, &I_NetHandshake },
-        { 0x80034D14, &I_NetSendRecv },
         { 0x80013384, &G_CompleteLevel },   // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
         
         { 0x80049C5C, &LIBAPI_InitPAD },
