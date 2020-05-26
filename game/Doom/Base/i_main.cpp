@@ -1057,7 +1057,7 @@ loc_80034884:
     sb(v1, at + 0x7FB2);                                // Store to: gNetOutputPacket[2] (80077FB2)
     at = 0x80070000;                                    // Result = 80070000
     sb(a1, at + 0x7FB3);                                // Store to: gNetOutputPacket[3] (80077FB3)
-    I_LocalButtonsToNet();
+    v0 = I_LocalButtonsToNet(vmAddrToPtr<padbuttons_t>(a0));
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7FB4);                                // Store to: gNetOutputPacket[4] (80077FB4)
     
@@ -1123,7 +1123,7 @@ loc_8003499C:
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7FC8);                                // Store to: MAYBE_gpButtonBindings_Player1 (80077FC8)
     a0 = s0;
-    I_LocalButtonsToNet();
+    v0 = I_LocalButtonsToNet(vmAddrToPtr<padbuttons_t>(a0));
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7FB4);                                // Store to: gNetOutputPacket[4] (80077FB4)
     
@@ -1424,37 +1424,29 @@ loc_80034E84:
     return;
 }
 
-void I_LocalButtonsToNet() noexcept {
-loc_80034EA4:
-    t1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    t2 = 0x80070000;                                    // Result = 80070000
-    t2 += 0x3DEC;                                       // Result = gBtnSprite_Triangle_ButtonMask (80073DEC)
-loc_80034EB4:
-    a1 = 0;                                             // Result = 00000000
-    t0 = a2 << 2;
-    a3 = lw(a0);
-    v1 = t2;                                            // Result = gBtnSprite_Triangle_ButtonMask (80073DEC)
-loc_80034EC4:
-    v0 = lw(v1);
-    {
-        const bool bJump = (a3 == v0);
-        v0 = a1 << t0;
-        if (bJump) goto loc_80034EE8;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Encodes the given control bindings into a 32-bit integer suitable for network/link-cable transmission
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t I_LocalButtonsToNet(const padbuttons_t pCtrlBindings[NUM_CTRL_BINDS]) noexcept {
+    // Encode each control binding using 4-bits.
+    // Technically it could be done in 3 bits since there are only 8 possible buttons, but 8 x 4-bits will still fit in the 32-bits also.
+    uint32_t encodedBindings = 0;
+
+    for (int32_t bindingIdx = 0; bindingIdx < NUM_CTRL_BINDS; ++bindingIdx) {
+        // Find out which button this action is bound to
+        int32_t buttonIdx = 0;
+
+        for (; buttonIdx < NUM_BINDABLE_BTNS; ++buttonIdx) {
+            // Is this the button used for this action?
+            if (gBtnMasks[buttonIdx] == pCtrlBindings[bindingIdx])
+                break;
+        }
+        
+        // Encode the button using a 4 bit slot in the 32-bit integer
+        encodedBindings |= buttonIdx << (bindingIdx * 4);
     }
-    a1++;                                               // Result = 00000001
-    v0 = (i32(a1) < 8);                                 // Result = 00000001
-    v1 += 4;                                            // Result = gBtnSprite_Circle_ButtonMask (80073DF0)
-    if (v0 != 0) goto loc_80034EC4;
-    v0 = a1 << t0;
-loc_80034EE8:
-    t1 |= v0;
-    a2++;
-    v0 = (i32(a2) < 8);
-    a0 += 4;
-    if (v0 != 0) goto loc_80034EB4;
-    v0 = t1;
-    return;
+
+    return encodedBindings;
 }
 
 void I_NetButtonsToLocal() noexcept {

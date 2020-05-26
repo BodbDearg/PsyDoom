@@ -140,5 +140,5 @@ void I_NetUpdate() noexcept;
 void I_NetHandshake() noexcept;
 void I_NetSendRecv() noexcept;
 void I_SubmitGpuCmds() noexcept;
-void I_LocalButtonsToNet() noexcept;
+uint32_t I_LocalButtonsToNet(const padbuttons_t pCtrlBindings[NUM_CTRL_BINDS]) noexcept;
 void I_NetButtonsToLocal() noexcept;

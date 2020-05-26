@@ -82,7 +82,6 @@ extern void I_NetUpdate() noexcept;
 extern void I_NetHandshake() noexcept;
 extern void I_NetSendRecv() noexcept;
 extern void I_SubmitGpuCmds() noexcept;
-extern void I_LocalButtonsToNet() noexcept;
 extern void I_NetButtonsToLocal() noexcept;
 extern void G_CompleteLevel() noexcept;             // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
 
@@ -195,7 +194,6 @@ namespace PsxVm {
         { 0x80034CB8, &I_NetHandshake },
         { 0x80034D14, &I_NetSendRecv },
         { 0x80034E58, &I_SubmitGpuCmds },
-        { 0x80034EA4, &I_LocalButtonsToNet },
         { 0x80034F04, &I_NetButtonsToLocal },
         { 0x80013384, &G_CompleteLevel },   // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
         
