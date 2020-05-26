@@ -96,7 +96,7 @@ void LIBAPI_EnterCriticalSection() noexcept {
     // Not using interrupts in this port/environment anymore - just ignore the call...
 }
 
-int32_t LIBAPI_write(const int32_t fileDesc, const void* const pBuffer, const int32_t numBytes) noexcept {
+int32_t LIBAPI_write([[maybe_unused]] const int32_t fileDesc, const void* const pBuffer, const int32_t numBytes) noexcept {
     // FIXME: IMPLEMENT PROPERLY - return value: bytes written or -1 on error
     return Network::sendBytes(pBuffer, numBytes) ? numBytes : -1;
 }
@@ -233,7 +233,7 @@ int32_t LIBAPI_OpenEvent(const int32_t cause, const int32_t type, const int32_t 
     return v0;
 }
 
-int32_t LIBAPI_read(const int32_t fileDesc, void* const pBuffer, const int32_t numBytes) noexcept {
+int32_t LIBAPI_read([[maybe_unused]] const int32_t fileDesc, void* const pBuffer, const int32_t numBytes) noexcept {
     // FIXME: IMPLEMENT PROPERLY - return value: bytes read or -1 on error
     return Network::recvBytes(pBuffer, numBytes) ? numBytes : -1;
 }
@@ -265,13 +265,6 @@ loc_80049E4C:
     emu_call(t2);
 }
 
-void LIBAPI_ReturnFromException() noexcept {
-loc_8004AD80:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0x17;                                          // Result = 00000017
-    emu_call(t2);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Flushes the instruction cache
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -283,33 +276,5 @@ void LIBAPI_InitHeap() noexcept {
 loc_80050884:
     t2 = 0xA0;                                          // Result = 000000A0
     t1 = 0x39;                                          // Result = 00000039
-    emu_call(t2);
-}
-
-void LIBAPI_DeliverEvent() noexcept {
-loc_80053D48:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 7;                                             // Result = 00000007
-    emu_call(t2);
-}
-
-void LIBAPI_SysEnqIntRP() noexcept {
-loc_80058A18:
-    t2 = 0xC0;                                          // Result = 000000C0
-    t1 = 2;                                             // Result = 00000002
-    emu_call(t2);
-}
-
-void LIBAPI_AddDrv() noexcept {
-loc_80058A28:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0x47;                                          // Result = 00000047
-    emu_call(t2);
-}
-
-void LIBAPI_DelDrv() noexcept {
-loc_80058A38:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0x48;                                          // Result = 00000048
     emu_call(t2);
 }

@@ -35,10 +35,5 @@ int32_t LIBAPI_read(const int32_t fileDesc, void* const pBuffer, const int32_t n
 bool LIBAPI_TestEvent(const uint32_t eventDescriptor) noexcept;
 void LIBAPI_ExitCriticalSection() noexcept;
 void LIBAPI_open() noexcept;
-void LIBAPI_ReturnFromException() noexcept;
 void LIBAPI_FlushCache() noexcept;
 void LIBAPI_InitHeap() noexcept;
-void LIBAPI_DeliverEvent() noexcept;
-void LIBAPI_SysEnqIntRP() noexcept;
-void LIBAPI_AddDrv() noexcept;
-void LIBAPI_DelDrv() noexcept;

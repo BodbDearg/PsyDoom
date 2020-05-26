@@ -90,28 +90,11 @@ extern void LIBAPI_StartPAD() noexcept;
 extern void LIBAPI_ChangeClearPAD() noexcept;
 extern void LIBAPI_open() noexcept;
 extern void LIBETC_ResetCallback() noexcept;
-extern void LIBAPI_ReturnFromException() noexcept;
 extern void _thunk_LIBETC_VSync() noexcept;
 extern void _thunk_LIBETC_v_wait() noexcept;
 extern void LIBAPI_InitHeap() noexcept;
-extern void LIBAPI_DeliverEvent() noexcept;
-extern void LIBCOMB_UNKNOWN_func_1() noexcept;
-extern void LIBCOMB_UNKNOWN_func_2() noexcept;
-extern void LIBCOMB_UNKNOWN_func_3() noexcept;
-extern void LIBCOMB_UNKNOWN_func_4() noexcept;
-extern void LIBCOMB_UNKNOWN_func_5() noexcept;
-extern void LIBCOMB_UNKNOWN_func_6() noexcept;
-extern void LIBCOMB_UNKNOWN_func_7() noexcept;
-extern void LIBCOMB_UNKNOWN_func_8() noexcept;
-extern void LIBCOMB_UNKNOWN_func_9() noexcept;
-extern void LIBCOMB_ChangeClearSIO() noexcept;
 extern void LIBCOMB_AddCOMB() noexcept;
 extern void LIBCOMB_DelCOMB() noexcept;
-extern void LIBCOMB_UNKNOWN_ctrl_help() noexcept;
-extern void LIBAPI_SysEnqIntRP() noexcept;
-extern void LIBAPI_AddDrv() noexcept;
-extern void LIBAPI_DelDrv() noexcept;
-extern void LIBCOMB__ioabort() noexcept;
 
 namespace PsxVm {
     std::map<uint32_t, VmFunc> gFuncTable = {
@@ -202,27 +185,10 @@ namespace PsxVm {
         { 0x80049DFC, &LIBAPI_ChangeClearPAD },
         { 0x80049E4C, &LIBAPI_open },
         { 0x8004A7AC, &LIBETC_ResetCallback },
-        { 0x8004AD80, &LIBAPI_ReturnFromException },
         { 0x8004BA94, &_thunk_LIBETC_VSync },
         { 0x8004BBDC, &_thunk_LIBETC_v_wait },
         { 0x80050884, &LIBAPI_InitHeap },
-        { 0x80053D48, &LIBAPI_DeliverEvent },
-        { 0x800574A8, &LIBCOMB_UNKNOWN_func_1 },
-        { 0x800575E8, &LIBCOMB_UNKNOWN_func_2 },
-        { 0x80057728, &LIBCOMB_UNKNOWN_func_3 },
-        { 0x80057850, &LIBCOMB_UNKNOWN_func_4 },
-        { 0x80057DA4, &LIBCOMB_UNKNOWN_func_5 },
-        { 0x80057DF4, &LIBCOMB_UNKNOWN_func_6 },
-        { 0x80057DFC, &LIBCOMB_UNKNOWN_func_7 },
-        { 0x80057E58, &LIBCOMB_UNKNOWN_func_8 },
-        { 0x80057F64, &LIBCOMB_UNKNOWN_func_9 },
-        { 0x800580A8, &LIBCOMB_ChangeClearSIO },
         { 0x800580B4, &LIBCOMB_AddCOMB },
         { 0x800580E0, &LIBCOMB_DelCOMB },
-        { 0x8005810C, &LIBCOMB_UNKNOWN_ctrl_help },
-        { 0x80058A18, &LIBAPI_SysEnqIntRP },
-        { 0x80058A28, &LIBAPI_AddDrv },
-        { 0x80058A38, &LIBAPI_DelDrv },
-        { 0x80058A48, &LIBCOMB__ioabort },
     };
 }
