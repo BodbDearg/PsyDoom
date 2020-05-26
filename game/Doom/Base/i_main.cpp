@@ -1404,25 +1404,21 @@ loc_80034E44:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Submits any pending draw primitives in the gpu commands buffer to the GPU
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_SubmitGpuCmds() noexcept {
-loc_80034E58:
-    v0 = lw(gp + 0x634);                                // Load from: gpGpuPrimsBeg (80077C14)
-    v1 = lw(gp + 0x638);                                // Load from: gpGpuPrimsEnd (80077C18)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    if (v0 == v1) goto loc_80034E84;
-    v0 = 0xFF0000;                                      // Result = 00FF0000
-    v0 |= 0xFFFF;                                       // Result = 00FFFFFF
-    sw(v0, v1);
-    LIBGPU_DrawOTag(gpGpuPrimsBeg->get());
-loc_80034E84:
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 += 0x6550;                                       // Result = gGpuCmdsBuffer[0] (80086550)
-    sw(v0, gp + 0x634);                                 // Store to: gpGpuPrimsBeg (80077C14)
-    sw(v0, gp + 0x638);                                 // Store to: gpGpuPrimsEnd (80077C18)
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
+    // Submit the primitives list to the GPU if it's not empty
+    if (*gpGpuPrimsBeg != *gpGpuPrimsEnd) {
+        // Note: this marks the end of the primitive list, by setting the 'tag' field of an invalid primitive to 0xFFFFFF.
+        // This is similar to LIBGPU_TermPrim, except we don't bother using a valid primitive struct.
+        *(uint32_t*) gpGpuPrimsEnd.get() = 0x00FFFFFF;
+        LIBGPU_DrawOTag(gpGpuPrimsBeg.get());
+    }
+
+    // Clear the primitives list
+    *gpGpuPrimsBeg = gGpuCmdsBuffer;
+    *gpGpuPrimsEnd = gGpuCmdsBuffer;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
