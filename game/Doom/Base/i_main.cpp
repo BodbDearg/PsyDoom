@@ -1318,21 +1318,25 @@ loc_80034CA0:
 // Sends a sequence of expected 8 bytes, and expects to receive the same 8 bytes back.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_NetHandshake() noexcept {
-    // Send the values 0-7 and verify we get the same values back
-    uint8_t syncByte = 0;
+    // PC-PSX: this is no longer neccessary and is in fact wasteful since the underlying protocol (TCP)
+    // now guarantees correct ordering and reliability for packets - disable:
+    #if !PC_PSX_DOOM_MODS
+        // Send the values 0-7 and verify we get the same values back
+        uint8_t syncByte = 0;
 
-    while (syncByte < 8) {
-        // Send the sync byte and get the other one back
-        gNetOutputPacket[0] = syncByte;
-        I_NetSendRecv();
+        while (syncByte < 8) {
+            // Send the sync byte and get the other one back
+            gNetOutputPacket[0] = syncByte;
+            I_NetSendRecv();
         
-        // Is it what we expected? If it isn't then start over, otherwise move onto the next sync byte:
-        if (gNetInputPacket[0] == gNetOutputPacket[0]) {
-            syncByte++;
-        } else {
-            syncByte = 0;
+            // Is it what we expected? If it isn't then start over, otherwise move onto the next sync byte:
+            if (gNetInputPacket[0] == gNetOutputPacket[0]) {
+                syncByte++;
+            } else {
+                syncByte = 0;
+            }
         }
-    }
+    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
