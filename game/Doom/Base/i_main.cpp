@@ -1313,32 +1313,26 @@ loc_80034CA0:
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Performs a synchronization handshake between the two PlayStations involved in a networked game over Serial Cable.
+// Sends a sequence of expected 8 bytes, and expects to receive the same 8 bytes back.
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_NetHandshake() noexcept {
-loc_80034CB8:
-    sp -= 0x18;
-    sw(ra, sp + 0x14);
-    sw(s0, sp + 0x10);
-    s0 = 0;                                             // Result = 00000000
-loc_80034CC8:
-    sb(s0, gp + 0x9D0);                                 // Store to: gNetOutputPacket[0] (80077FB0)
-    I_NetSendRecv();
-    v1 = lbu(gp + 0x8C8);                               // Load from: gNetInputPacket[0] (80077EA8)
-    v0 = lbu(gp + 0x9D0);                               // Load from: gNetOutputPacket[0] (80077FB0)
-    {
-        const bool bJump = (v1 != v0);
-        v0 = (i32(s0) < 8);                             // Result = 00000001
-        if (bJump) goto loc_80034CF8;
+    // Send the values 0-7 and verify we get the same values back
+    uint8_t syncByte = 0;
+
+    while (syncByte < 8) {
+        // Send the sync byte and get the other one back
+        gNetOutputPacket[0] = syncByte;
+        I_NetSendRecv();
+        
+        // Is it what we expected? If it isn't then start over, otherwise move onto the next sync byte:
+        if (gNetInputPacket[0] == gNetOutputPacket[0]) {
+            syncByte++;
+        } else {
+            syncByte = 0;
+        }
     }
-    s0++;                                               // Result = 00000001
-    v0 = (i32(s0) < 8);                                 // Result = 00000001
-    if (v0 != 0) goto loc_80034CC8;
-loc_80034CF8:
-    s0 = 0;                                             // Result = 00000000
-    if (v0 != 0) goto loc_80034CC8;
-    ra = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x18;
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
