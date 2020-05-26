@@ -129,8 +129,9 @@ const VmPtr<uint32_t> gNumFramesDrawn(0x80077C10);
 const VmPtr<int32_t> gCurPlayerIndex(0x80077618);
 
 // Control related stuff
-const VmPtr<padbuttons_t[NUM_CTRL_BINDS]>                       gCtrlBindings(0x80073E0C);
-const VmPtr<VmPtr<padbuttons_t[NUM_CTRL_BINDS]>[MAXPLAYERS]>    gpPlayerCtrlBindings(0x80077FC8);
+const VmPtr<padbuttons_t[NUM_CTRL_BINDS]>                       gCtrlBindings(0x80073E0C);              // This players control bindings
+const VmPtr<padbuttons_t[NUM_CTRL_BINDS]>                       gOtherPlayerCtrlBindings(0x800782FC);   // Control bindings for the remote player
+const VmPtr<VmPtr<padbuttons_t[NUM_CTRL_BINDS]>[MAXPLAYERS]>    gpPlayerCtrlBindings(0x80077FC8);       // Pointer to control bindings for player 1 and 2
 
 const padbuttons_t gBtnMasks[NUM_BINDABLE_BTNS] = {
     PAD_TRIANGLE,   // bindablebtn_triangle
@@ -1085,7 +1086,7 @@ loc_80034928:
     v0 = gCtrlBindings;
     at = 0x80070000;                                    // Result = 80070000
     gpPlayerCtrlBindings[0] = v0;
-    I_NetButtonsToLocal();
+    v0 = ptrToVmAddr(I_NetButtonsToLocal(a0));
     at = 0x80070000;                                    // Result = 80070000
     gpPlayerCtrlBindings[1] = v0;
     goto loc_80034A44;
@@ -1119,7 +1120,7 @@ loc_8003499C:
     sw(v0, at + 0x7604);                                // Store to: gStartGameType (80077604)
     *gStartSkill = (skill_t) v1;
     *gStartMapOrEpisode = a1;
-    I_NetButtonsToLocal();
+    v0 = ptrToVmAddr(I_NetButtonsToLocal(a0));
     at = 0x80070000;                                    // Result = 80070000
     sw(v0, at + 0x7FC8);                                // Store to: MAYBE_gpButtonBindings_Player1 (80077FC8)
     a0 = s0;
@@ -1449,26 +1450,25 @@ uint32_t I_LocalButtonsToNet(const padbuttons_t pCtrlBindings[NUM_CTRL_BINDS]) n
     return encodedBindings;
 }
 
-void I_NetButtonsToLocal() noexcept {
-loc_80034F04:
-    v1 = 0;                                             // Result = 00000000
-    a2 = 0x80070000;                                    // Result = 80070000
-    a2 += 0x3DEC;                                       // Result = gBtnSprite_Triangle_ButtonMask (80073DEC)
-    a1 = 0x80080000;                                    // Result = 80080000
-    a1 -= 0x7D04;                                       // Result = 800782FC
-loc_80034F18:
-    v0 = v1 << 2;
-    v0 = i32(a0) >> v0;
-    v0 &= 0xF;
-    v0 <<= 2;
-    v0 += a2;
-    v0 = lw(v0);
-    v1++;
-    sw(v0, a1);
-    v0 = (i32(v1) < 8);
-    a1 += 4;
-    if (v0 != 0) goto loc_80034F18;
-    v0 = 0x80080000;                                    // Result = 80080000
-    v0 -= 0x7D04;                                       // Result = 800782FC
-    return;
+//------------------------------------------------------------------------------------------------------------------------------------------
+// The reverse operation to 'I_LocalButtonsToNet'.
+// Decodes the given 32-bit integer containing control bindings for the other player in the networked game.
+// The bindings are saved to the 'gOtherPlayerCtrlBindings' global array and this is also what is returned.
+//------------------------------------------------------------------------------------------------------------------------------------------
+padbuttons_t* I_NetButtonsToLocal(const uint32_t encodedBindings) noexcept {
+    for (int32_t bindingIdx = 0; bindingIdx < NUM_CTRL_BINDS; ++bindingIdx) {
+        // PC-PSX: use '7' as the mask here, because there are only 7 bindable buttons.
+        // Also assert the assumption here that there are only 8 buttons which can be bound.
+        static_assert(NUM_BINDABLE_BTNS == 8);
+
+        #if PC_PSX_DOOM_MODS
+            const uint32_t buttonIdx = (encodedBindings >> (bindingIdx * 4)) & 7;
+        #else
+            const uint32_t buttonIdx = (encodedBindings >> (bindingIdx * 4)) & 0xF;
+        #endif
+
+        gOtherPlayerCtrlBindings[bindingIdx] = gBtnMasks[buttonIdx];
+    }
+
+    return gOtherPlayerCtrlBindings.get();
 }

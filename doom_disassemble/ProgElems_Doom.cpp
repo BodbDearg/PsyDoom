@@ -3599,6 +3599,7 @@ static const ProgElem ELEMS[] = {
     { 0x800782F0, 0x800782F4, "gpbIsUncompressedLump",                  ProgElemType::PTR32 },
     { 0x800782F4, 0x800782F8, "gNumActiveThinkers",                     ProgElemType::INT32 },
     { 0x800782F8, 0x800782FC, "gAimBottomSlope",                        ProgElemType::INT32 },
+    { 0x800782FC, 0x8007831C, "gOtherPlayerCtrlBindings",               ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x8007831C, 0x80078344, "gPSXCD_cdfile",                          ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80078344, 0x80078358, "gPSXCD_psxcd_cmd_1",                     ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
     { 0x80078358, 0x8007836C, "gPSXCD_psxcd_cmd_2",                     ProgElemType::ARRAY, ProgElemType::UINT32, 0 },
