@@ -8,6 +8,7 @@
 #include "PcPsx/Endian.h"
 #include "PcPsx/Finally.h"
 #include "PcPsx/ProgArgs.h"
+#include "PcPsx/Utils.h"
 #include "PcPsx/Video.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBAPI.h"
@@ -524,6 +525,11 @@ void I_DrawPresent() noexcept {
         // Has the required time passed?
         if (*gElapsedVBlanks >= minElapsedVBlanks)
             break;
+
+        // PC-PSX: yield some CPU time here since we are waiting rather than wasting it spinning constantly
+        #if PC_PSX_DOOM_MODS
+            thread_yield();
+        #endif
     }
 
     // Further framerate limiting for demos:
@@ -531,6 +537,11 @@ void I_DrawPresent() noexcept {
     // Probably done so the simulation remains consistent!
     if (*gbDemoPlayback || *gbDemoRecording) {
         while (*gElapsedVBlanks < 4) {
+            // PC-PSX: yield some CPU time here since we are waiting rather than wasting it spinning constantly
+            #if PC_PSX_DOOM_MODS
+                thread_yield();
+            #endif
+
             *gTotalVBlanks = LIBETC_VSync(-1);
             *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
         }

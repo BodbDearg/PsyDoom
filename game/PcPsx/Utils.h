@@ -15,8 +15,5 @@ inline constexpr bool padBtnJustPressed(const uint32_t btn, const uint32_t curPa
     }
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Returns the cheat sequence to execute on the pause menu using helper shortcut keys in development mode.
-// These save the pain of inputting button sequences and make it easy to cheat.
-//------------------------------------------------------------------------------------------------------------------------------------------
 cheatseq_t getDevCheatSequenceToExec() noexcept;
+void thread_yield() noexcept;

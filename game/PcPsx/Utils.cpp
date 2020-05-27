@@ -2,7 +2,12 @@
 
 #include "Doom/Game/p_tick.h"
 #include <SDL.h>
+#include <thread>
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the cheat sequence to execute on the pause menu using helper shortcut keys in development mode.
+// These save the pain of inputting button sequences and make it easy to cheat.
+//------------------------------------------------------------------------------------------------------------------------------------------
 cheatseq_t getDevCheatSequenceToExec() noexcept {
     // TODO: disable this in non developer builds, or at least provide a toggle (defaulted to off)
     const uint8_t* const pKbState = SDL_GetKeyboardState(nullptr);
@@ -26,4 +31,11 @@ cheatseq_t getDevCheatSequenceToExec() noexcept {
     }
 
     return (cheatseq_t) UINT32_MAX;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Yield some CPU time to the host machine
+//------------------------------------------------------------------------------------------------------------------------------------------
+void thread_yield() noexcept {
+    std::this_thread::yield();
 }
