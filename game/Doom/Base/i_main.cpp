@@ -354,32 +354,12 @@ void I_PSXInit() noexcept {
     }
 }
 
-void I_ReadGamepad() noexcept {
-loc_80032BB8:
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 = lw(v1 + 0x7788);                               // Load from: gPadInputBuffer_1[0] (80097788)
-    v0 = 0xFFFF0000;                                    // Result = FFFF0000
-    a0 = v1 ^ v0;
-    v1 = a0 & 0xF0FF;
-    v0 = 0x4000;                                        // Result = 00004000
-    {
-        const bool bJump = (v1 != v0);
-        v1 = a0 >> 24;
-        if (bJump) goto loc_80032BE8;
-    }
-    v0 = a0 >> 8;
-    v0 &= 0xFF00;
-    a0 = v0 | v1;
-    goto loc_80032BEC;
-loc_80032BE8:
-    a0 = 0;                                             // Result = 00000000
-loc_80032BEC:
-    v0 = a0;
-
-    // TODO: temp hack to reduce input lag - get the button bits directly from the emulator.
-    // Cleanup this stuff in a bit:
-    PsxVm::updateInput();
-    v0 = PsxVm::getControllerButtonBits();
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Returns the current controller buttons pressed for gamepad 1 and 2.
+// The buttons for pad 1 are in the lower 16-bits, the buttons for pad 2 are in the high 16 bits.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t I_ReadGamepad() noexcept {
+    return LIBETC_PadRead(0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

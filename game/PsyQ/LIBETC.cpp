@@ -126,3 +126,13 @@ void LIBETC_v_wait(const int32_t targetVCount, [[maybe_unused]] const uint16_t t
 void _thunk_LIBETC_v_wait() noexcept {
     LIBETC_v_wait((int32_t) a0, (uint16_t) a1);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Return the pressed buttons for pad 1 and pad 2 (digital controllers).
+// The buttons for pad 1 are returned in the lower 16-bits, the buttons for pad 2 are returned in the high 16-bits.
+// The input parameter is not used, and should be set to '0'.
+//------------------------------------------------------------------------------------------------------------------------------------------
+uint32_t LIBETC_PadRead([[maybe_unused]] const uint32_t unusedControllerId) noexcept {
+    PsxVm::updateInput();
+    return PsxVm::getControllerButtonBits();
+}

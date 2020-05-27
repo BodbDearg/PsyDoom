@@ -446,8 +446,7 @@ gameaction_t MiniLoop(
         }
         
         // Read pad inputs and save as the current pad buttons (overwritten if a demo)
-        I_ReadGamepad();
-        uint32_t padBtns = v0;
+        uint32_t padBtns = I_ReadGamepad();
         gTicButtons[*gCurPlayerIndex] = padBtns;
 
         if (*gNetGame != gt_single) {
