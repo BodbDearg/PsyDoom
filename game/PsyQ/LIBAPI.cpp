@@ -81,12 +81,10 @@ bool LIBAPI_CloseEvent(const int32_t event) noexcept {
         }
     }
 
-    // TODO: REMOVE BIOS CALL
-    a0 = event;
-    t2 = 0xB0;
-    t1 = 9;
-    emu_call(t2);
-    return (v0 != 0);
+    // FIXME: support SerialIO events here!
+
+    // Failed to close the event if we've gotten to here!
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -114,12 +112,10 @@ bool LIBAPI_EnableEvent(const int32_t event) noexcept {
         }
     }
 
-    // TODO: REMOVE BIOS CALL
-    a0 = event;
-    t2 = 0xB0;
-    t1 = 0xC;
-    emu_call(t2);
-    return (v0 != 0);
+    // FIXME: support SerialIO events here!
+
+    // Failed to enable the event if we've gotten to here!
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -188,12 +184,10 @@ bool LIBAPI_DisableEvent(const int32_t event) noexcept {
         }
     }
 
-    // TODO: REMOVE BIOS CALL
-    a0 = event;
-    t2 = 0xB0;
-    t1 = 0xD;
-    emu_call(t2);
-    return (v0 != 0);
+    // FIXME: support SerialIO events here!
+
+    // Failed to disable the event if we've gotten to here!
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -229,17 +223,10 @@ int32_t LIBAPI_OpenEvent(const int32_t cause, const int32_t type, const int32_t 
         }
     }
 
-    // TODO: REMOVE THIS
-    a0 = cause;
-    a1 = type;
-    a2 = mode;
-    a3 = PsxVm::getNativeFuncVmAddr((void*) pHandler);
+    // FIXME: support SerialIO events here!
 
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 8;                                             // Result = 00000008
-    emu_call(t2);
-
-    return v0;
+    // This is the failure value which means we didn't open an event
+    return -1;
 }
 
 int32_t LIBAPI_read([[maybe_unused]] const int32_t fileDesc, void* const pBuffer, const int32_t numBytes) noexcept {
@@ -250,14 +237,6 @@ int32_t LIBAPI_read([[maybe_unused]] const int32_t fileDesc, void* const pBuffer
 bool LIBAPI_TestEvent([[maybe_unused]] const uint32_t eventDescriptor) noexcept {
     // FIXME: IMPLEMENT ME
     return true;
-
-#if 0
-loc_80049E2C:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0xB;                                           // Result = 0000000B
-    emu_call(t2);
-    v0 = 0;
-#endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -266,22 +245,17 @@ loc_80049E2C:
 void LIBAPI_ExitCriticalSection() noexcept {}
 
 void LIBAPI_open() noexcept {
-loc_80049E4C:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0x32;                                          // Result = 00000032
-    emu_call(t2);
+    // FIXME: IMPLEMENT ME
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Flushes the instruction cache
+// Flushes the instruction cache: doesn't need to do anything in PsyDoom
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LIBAPI_FlushCache() noexcept {
-    // Don't need to do anything for this anymore...
-}
+void LIBAPI_FlushCache() noexcept {}
 
-void LIBAPI_InitHeap() noexcept {
-loc_80050884:
-    t2 = 0xA0;                                          // Result = 000000A0
-    t1 = 0x39;                                          // Result = 00000039
-    emu_call(t2);
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Bios implemented function which initializes the PsyQ SDK heap, so that functions like malloc() can work.
+// PSX Doom didn't use this heap at all, so might have gotten away with not calling this.
+// For PsyDoom we don't need to implement this either, so it's now just blank instead.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBAPI_InitHeap() noexcept {}
