@@ -141,33 +141,6 @@ void handleSdlWindowEvents() noexcept {
     }
 }
 
-void doFrameRateLimiting() noexcept {
-    // Ignore call in headless mode
-    if (ProgArgs::gbHeadlessMode)
-        return;
-
-    // Make sure sound is up to date on entry
-    emulate_sound_if_required();
-
-    // Limit the frame rate to 30 Hz
-    while (true) {
-        const uint32_t tickCount = SDL_GetTicks();
-        const uint32_t oneFrameTickCount = 1000 / 30;
-        const uint32_t elapsedTicks = tickCount - gLastFrameTickCount;
-
-        if (elapsedTicks < oneFrameTickCount) {
-            emulate_sound_if_required();
-            std::this_thread::yield();
-        } else {
-            gLastFrameTickCount = tickCount;
-            break;
-        }
-    }
-
-    // Make sure sound is up to date on exit
-    emulate_sound_if_required();
-}
-
 void initVideo() noexcept {
     // Ignore call in headless mode
     if (ProgArgs::gbHeadlessMode)

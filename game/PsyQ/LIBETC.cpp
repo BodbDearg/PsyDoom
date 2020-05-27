@@ -1,6 +1,5 @@
 #include "LIBETC.h"
 
-#include "LIBAPI.h"
 #include "PsxVm/PsxVm.h"
 #include <ctime>
 

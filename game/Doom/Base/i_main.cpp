@@ -18,7 +18,6 @@
 #include "PsyQ/LIBSN.h"
 #include "w_wad.h"
 #include "z_zone.h"
-#include <ctime>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Texture cache related stuff.
@@ -498,59 +497,40 @@ void I_DrawPresent() noexcept {
     // Finish up all in-flight drawing commands
     LIBGPU_DrawSync(0);
 
-    // PC-PSX: this interferes with frame pacing in the new host environment - disabling
-    #if !PC_PSX_DOOM_MODS
-        // Wait for a vblank to occur
-        LIBETC_VSync(0);
-    #endif
+    // Wait until a VBlank occurs to swap the framebuffers.
+    // PC-PSX: Note: this call now does nothing as that would inferfere with frame pacing - here just for historical reference!
+    LIBETC_VSync(0);
 
     // Swap the framebuffers
     *gCurDispBufferIdx ^= 1;
     LIBGPU_PutDrawEnv(gDrawEnvs[*gCurDispBufferIdx]);
     LIBGPU_PutDispEnv(gDispEnvs[*gCurDispBufferIdx]);
+        
+    // In PSX Doom the rendering rate was originally limited to 30 Hz
+    uint32_t minElapsedVBlanks = 2;
 
-    // FIXME: remove the high fps hack eventually
     #if PC_PSX_DOOM_MODS
+        // FIXME: remove the high fps hack eventually
         if (ProgArgs::gbUseHighFpsHack) {
-    #endif
-            // Hack/experiment with high frame rates - needs a lot of work
-            {
-                const clock_t now = std::clock();
-                *gTotalVBlanks = ((uint64_t) now * 60) / (uint64_t) CLOCKS_PER_SEC;
-                *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
-
-                if (*gElapsedVBlanks > 16) {
-                    *gElapsedVBlanks = 16;
-                }
-            }
-    #if PC_PSX_DOOM_MODS
-        } else {
-    #endif
-            // Frame rate limiting to 30 Hz.
-            // Continously poll and wait until at least 2 vblanks have elapsed before continuing.
-            do {
-                // PC-PSX: wait one 30 Hz tick
-                #if PC_PSX_DOOM_MODS
-                    PcPsx::doFrameRateLimiting();
-                #endif
-
-                *gTotalVBlanks = LIBETC_VSync(-1);
-                *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
-            } while (*gElapsedVBlanks < 2);
-    #if PC_PSX_DOOM_MODS
+            minElapsedVBlanks = 1;
         }
     #endif
+
+    // Continously poll and wait until the required number of vblanks have elapsed before continuing
+    while (true) {
+        *gTotalVBlanks = LIBETC_VSync(-1);
+        *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
+
+        // Has the required time passed?
+        if (*gElapsedVBlanks >= minElapsedVBlanks)
+            break;
+    }
 
     // Further framerate limiting for demos:
     // Demo playback or recording is forced to run at 15 Hz all of the time (the game simulation rate).
     // Probably done so the simulation remains consistent!
     if (*gbDemoPlayback || *gbDemoRecording) {
         while (*gElapsedVBlanks < 4) {
-            // PC-PSX: wait one 30 Hz tick
-            #if PC_PSX_DOOM_MODS
-                PcPsx::doFrameRateLimiting();
-            #endif
-
             *gTotalVBlanks = LIBETC_VSync(-1);
             *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
         }
