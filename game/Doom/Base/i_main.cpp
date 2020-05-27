@@ -158,18 +158,23 @@ const VmPtr<texture_t>  gTex_NETERR(0x80097AF0);
 const VmPtr<texture_t>  gTex_CONNECT(0x80097B10);
 
 // PSX Kernel events that fire when reads and writes complete for Serial I/O in a multiplayer game
-static VmPtr<uint32_t>  gSioReadDoneEvent(0x80077F24);
-static VmPtr<uint32_t>  gSioWriteDoneEvent(0x80078040);
+static const VmPtr<uint32_t>    gSioReadDoneEvent(0x80077F24);
+static const VmPtr<uint32_t>    gSioWriteDoneEvent(0x80078040);
 
 // File descriptors for the input/output streams used for multiplayer games.
 // These are opened against the Serial I/O device (PlayStation Link Cable).
-static VmPtr<int32_t>   gNetInputFd(0x80078234);
-static VmPtr<int32_t>   gNetOutputFd(0x80077F14);
+static const VmPtr<int32_t>     gNetInputFd(0x80078234);
+static const VmPtr<int32_t>     gNetOutputFd(0x80077F14);
 
 // The packet buffers for sending and receiving in a multiplayer game.
 // The link cable allows 8 bytes to be sent and received at a time.
-static VmPtr<uint8_t[NET_PACKET_SIZE]>  gNetInputPacket(0x80077EA8);
-static VmPtr<uint8_t[NET_PACKET_SIZE]>  gNetOutputPacket(0x80077FB0);
+static const VmPtr<uint8_t[NET_PACKET_SIZE]>    gNetInputPacket(0x80077EA8);
+static const VmPtr<uint8_t[NET_PACKET_SIZE]>    gNetOutputPacket(0x80077FB0);
+
+// Buffers used originally by the PsyQ SDK to store gamepad input.
+// In PsyDoom they are just here for historical reference.
+static const VmPtr<uint8_t[34]>     gPadInputBuffer_1(0x80097788);
+static const VmPtr<uint8_t[34]>     gPadInputBuffer_2(0x800978EC);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // User/client entrypoint for PlayStation DOOM.
@@ -198,21 +203,19 @@ void I_PSXInit() noexcept {
     sw(s1, sp + 0x1C);
     sw(s0, sp + 0x18);
     
+    // Initialize system callbacks and interrupt handlers 
     LIBETC_ResetCallback();
+
+    // Initialize the GPU
     LIBGPU_ResetGraph(0);
     LIBGPU_SetGraphDebug(0);
 
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 += 0x7788;                                       // Result = gPadInputBuffer_1[0] (80097788)
-    a1 = 0x22;                                          // Result = 00000022
-    a2 = 0x80090000;                                    // Result = 80090000
-    a2 += 0x78EC;                                       // Result = gPadInputBuffer_2[0] (800978EC)
-    a3 = 0x22;                                          // Result = 00000022
-    LIBAPI_InitPAD();
+    // Initialize the gamepad
+    LIBAPI_InitPAD(gPadInputBuffer_1.get(), gPadInputBuffer_2.get(), 34, 34);
     LIBAPI_StartPAD();
+    LIBAPI_ChangeClearPAD(0);
 
-    a0 = 0;                                             // Result = 00000000
-    LIBAPI_ChangeClearPAD();
+    // Initialize the Geometry Transformation Engine (GTE) coprocessor
     LIBGTE_InitGeom();
 
     // These calls don't really matter for PSX DOOM since we don't do perspective projection using the GTE
@@ -267,43 +270,43 @@ void I_PSXInit() noexcept {
     LIBAPI_ExitCriticalSection();
     LIBCOMB_AddCOMB();
     
-    a0 = 0xF0000000;                                    // Result = F0000000
-    a0 |= 0xB;                                          // Result = F000000B
+    a0 = 0xF000000B;                                    // Result = F000000B
     a1 = 0x400;                                         // Result = 00000400
     a2 = 0x2000;                                        // Result = 00002000
     v0 = LIBAPI_OpenEvent(a0, a1, a2, nullptr);
+    sw(v0, gp + 0x944);                                 // Store to: gSioErrorEvent (80077F24)
+    
     a0 = v0;
-    sw(a0, gp + 0x944);                                 // Store to: gSioErrorEvent (80077F24)
+    LIBAPI_EnableEvent(a0);
     
-    v0 = LIBAPI_EnableEvent(a0);
-    
-    a0 = 0xF0000000;                                    // Result = F0000000
-    a0 |= 0xB;                                          // Result = F000000B
+    a0 = 0xF000000B;                                    // Result = F000000B
     a1 = 0x800;                                         // Result = 00000800
     a2 = 0x2000;                                        // Result = 00002000
     v0 = LIBAPI_OpenEvent(a0, a1, a2, nullptr);
+    sw(v0, gp + 0xA60);                                 // Store to: gSioWriteDoneEvent (80078040)
+
     a0 = v0;
-    sw(a0, gp + 0xA60);                                 // Store to: gSioWriteDoneEvent (80078040)
-    
-    v0 = LIBAPI_EnableEvent(a0);
+    LIBAPI_EnableEvent(a0);
     
     s0 = 0x80070000;                                    // Result = 80070000
     s0 += 0x7C1C;                                       // Result = STR_sio_3[0] (80077C1C)
     a0 = s0;                                            // Result = STR_sio_3[0] (80077C1C)
     a1 = 2;                                             // Result = 00000002
     LIBAPI_open();
-    
-    a0 = s0;                                            // Result = STR_sio_3[0] (80077C1C)
     sw(v0, gp + 0x934);                                 // Store to: gNetOutputFd (80077F14)
+
+    a0 = s0;                                            // Result = STR_sio_3[0] (80077C1C)    
     a1 = 0x8001;                                        // Result = 00008001
     LIBAPI_open();
     sw(v0, gp + 0xC54);                                 // Store to: gNetInputFd (80078234)
 
-    v0 = LIBCOMB__comb_control(1, 3, 38400);
+    LIBCOMB__comb_control(1, 3, 38400);
         
+    // Clear both draw buffers by swapping twice (clears on swap)
     I_DrawPresent();
     I_DrawPresent();
 
+    // Enable display output
     LIBGPU_SetDispMask(1);
 
     ra = lw(sp + 0x24);

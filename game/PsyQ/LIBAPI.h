@@ -24,12 +24,19 @@ bool LIBAPI_CloseEvent(const int32_t event) noexcept;
 void LIBAPI_EnterCriticalSection() noexcept;
 int32_t LIBAPI_write(const int32_t fileDesc, const void* const pBuffer, const int32_t numBytes) noexcept;
 bool LIBAPI_EnableEvent(const int32_t event) noexcept;
-void LIBAPI_InitPAD() noexcept;
+
+bool LIBAPI_InitPAD(
+    uint8_t pPadInputBuffer1[34],
+    uint8_t pPadInputBuffer2[34],
+    const int32_t inputBuffer1Size,
+    const int32_t inputBuffer2Size
+) noexcept;
+
 bool LIBAPI_SetRCnt(const int32_t cntType, const uint16_t target, const int32_t mode) noexcept;
 bool LIBAPI_StartRCnt(const int32_t cntType) noexcept;
 bool LIBAPI_DisableEvent(const int32_t event) noexcept;
-void LIBAPI_StartPAD() noexcept;
-void LIBAPI_ChangeClearPAD() noexcept;
+bool LIBAPI_StartPAD() noexcept;
+void LIBAPI_ChangeClearPAD(const int32_t val) noexcept;
 int32_t LIBAPI_OpenEvent(const int32_t cause, const int32_t type, const int32_t mode, int32_t (* const pHandler)()) noexcept;
 int32_t LIBAPI_read(const int32_t fileDesc, void* const pBuffer, const int32_t numBytes) noexcept;
 bool LIBAPI_TestEvent(const uint32_t eventDescriptor) noexcept;

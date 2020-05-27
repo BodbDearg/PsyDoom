@@ -90,11 +90,9 @@ bool LIBAPI_CloseEvent(const int32_t event) noexcept {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Disables hardware interrupts
+// Disables PlayStation hardware interrupts; not using PSX interrupts anymore in PsyDoom, so this call now does nothing...
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LIBAPI_EnterCriticalSection() noexcept {
-    // Not using interrupts in this port/environment anymore - just ignore the call...
-}
+void LIBAPI_EnterCriticalSection() noexcept {}
 
 int32_t LIBAPI_write([[maybe_unused]] const int32_t fileDesc, const void* const pBuffer, const int32_t numBytes) noexcept {
     // FIXME: IMPLEMENT PROPERLY - return value: bytes written or -1 on error
@@ -124,11 +122,22 @@ bool LIBAPI_EnableEvent(const int32_t event) noexcept {
     return (v0 != 0);
 }
 
-void LIBAPI_InitPAD() noexcept {
-loc_80049C5C:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0x12;                                          // Result = 00000012
-    emu_call(t2);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initializes the controller driver.
+// Two buffers are provided to receive controller data, which must be both at least 34 bytes in size.
+// Always returns 'true' for success.
+//
+// On the PlayStation this function originally called into the BIOS to do it's work, but in PsyDoom we don't need to do anything here.
+// We just ignore the given buffers also in PsyDoom, they're not needed any longer.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool LIBAPI_InitPAD(
+    [[maybe_unused]] uint8_t pPadInputBuffer1[34],
+    [[maybe_unused]] uint8_t pPadInputBuffer2[34],
+    [[maybe_unused]] const int32_t inputBuffer1Size,
+    [[maybe_unused]] const int32_t inputBuffer2Size
+) noexcept {
+    // Nothing to do here for PsyDoom...
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -187,19 +196,19 @@ bool LIBAPI_DisableEvent(const int32_t event) noexcept {
     return (v0 != 0);
 }
 
-void LIBAPI_StartPAD() noexcept {
-loc_80049DEC:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0x13;                                          // Result = 00000013
-    emu_call(t2);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyQ BIOS function which starts reading controller data on a regular basis; always returns 'true'.
+// Not implemented for PsyDoom because we don't need it.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool LIBAPI_StartPAD() noexcept {
+    return true;
 }
 
-void LIBAPI_ChangeClearPAD() noexcept {
-loc_80049DFC:
-    t2 = 0xB0;                                          // Result = 000000B0
-    t1 = 0x5B;                                          // Result = 0000005B
-    emu_call(t2);
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// PsyQ BIOS function which determines how controller input is read from interrupts.
+// I don't know the exact meaning of the values passed in - we don't need this function in PsyDoom anyway.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBAPI_ChangeClearPAD([[maybe_unused]] const int32_t val) noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Open a specified hardware event (which can be listened to) and return the event descriptor
@@ -252,11 +261,9 @@ loc_80049E2C:
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Re-enables hardware interrupts
+// Re-enables PlayStation hardware interrupts; not using PSX interrupts anymore in PsyDoom, so this call now does nothing...
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LIBAPI_ExitCriticalSection() noexcept {
-    // Not using interrupts in this port/environment anymore - just ignore the call...
-}
+void LIBAPI_ExitCriticalSection() noexcept {}
 
 void LIBAPI_open() noexcept {
 loc_80049E4C:
