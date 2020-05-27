@@ -258,4 +258,4 @@ void LIBAPI_FlushCache() noexcept {}
 // PSX Doom didn't use this heap at all, so might have gotten away with not calling this.
 // For PsyDoom we don't need to implement this either, so it's now just blank instead.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void LIBAPI_InitHeap() noexcept {}
+void LIBAPI_InitHeap([[maybe_unused]] void* const pHeapMem, [[maybe_unused]] const uint32_t heapSize) noexcept {}

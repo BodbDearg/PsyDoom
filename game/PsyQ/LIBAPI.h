@@ -43,4 +43,4 @@ bool LIBAPI_TestEvent(const uint32_t eventDescriptor) noexcept;
 void LIBAPI_ExitCriticalSection() noexcept;
 void LIBAPI_open() noexcept;
 void LIBAPI_FlushCache() noexcept;
-void LIBAPI_InitHeap() noexcept;
+void LIBAPI_InitHeap(void* const pHeapMem, const uint32_t heapSize) noexcept;

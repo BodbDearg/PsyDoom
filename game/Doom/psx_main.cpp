@@ -53,12 +53,8 @@ void psx_main() noexcept {
 
     // Initialize the heap for the PsyQ SDK.
     // Note that DOOM uses it's own memory management system, so this call is effectively useless.
-    {
-        // Note: I don't know why '4' was added here, was that incorrect? Would only be a problem anyway if we reached the end of the stack.
-        a0 = InitHeapBaseAddr + 4;
-        a1 = InitHeapSize;
-        LIBAPI_InitHeap();
-    }
+    // Note: I don't know why '4' was added here, was that incorrect? Would only be a problem anyway if we reached the end of the stack.       
+    LIBAPI_InitHeap(PsxVm::gpRam + WrappedHeapStartAddr + 4, InitHeapSize);
 
     // Restore the return address to outside the .EXE
     ra = *gProgramReturnAddr;
