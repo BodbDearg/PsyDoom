@@ -2,24 +2,12 @@
 
 #include "LIBAPI.h"
 #include "PsxVm/PsxVm.h"
+#include <ctime>
 
-void LIBETC_ResetCallback() noexcept {
-// TODO: RUN NATIVELY
-#if 1
-    emu_call(0x8004A7AC);
-#else
-loc_8004A7AC:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x5B90);                               // Load from: gpLIBETC_INTR_interruptsListPtr (80075B90)
-    sp -= 0x18;
-    sw(ra, sp + 0x10);
-    v0 = lw(v0 + 0xC);
-    ptr_call(v0);
-    ra = lw(sp + 0x10);
-    sp += 0x18;
-    return;
-#endif
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize system callbacks and interrupt handlers: doesn't need to do anything for PsyDoom!
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBETC_ResetCallback() noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Wait for the next vblank or return the time elapsed in vblanks or hblanks.
@@ -32,99 +20,27 @@ loc_8004A7AC:
 //    < 0   Return the total number of vertical blank units elapsed since program start.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t LIBETC_VSync(const int32_t mode) noexcept {
-    v0 = lw(0x80075D04);            // Load from: GPU_REG_GP1 (80075D04)
-    v1 = lw(0x80075D08);            // Load from: TIMER_REG_ROOT_CNT_1 (80075D08)
-    uint32_t x0 = lw(v0);
-    v0 = lw(v1);
+    // Wait for VBLANK not supported in PsyDoom! Just ignore the call.
+    if (mode == 0)
+        return 0;
 
-    v1 = lw(0x80075D0C);            // Load from: gLIBETC_Hcount (80075D0C)
-    v0 -= v1;
-    uint32_t x1 = v0 & 0xFFFF;
+    // PC-PSX: if this is being polled to pass time, ensure we are updating sound.
+    // FIXME: update everything else also, window etc.
+    #if PC_PSX_DOOM_MODS
+        emulate_sound_if_required();
+    #endif
 
-    if (mode >= 0) {
-        v0 = x1;
-
-        if (mode != 1) {
-            v0 = lw(0x80075D10);        // Load from: gLIBETC_VSync_UNKNOWN_VAR_3 (80075D10)
-            v0--;
-            v0 += mode;
-            a1 = 0;
-
-            if (mode > 0) {
-                a1 = mode - 1;
-            } else {
-                a0 = v0;
-                _thunk_LIBETC_v_wait();
-                v0 = lw(0x80075D04);        // Load from: GPU_REG_GP1 (80075D04)
-                x0 = lw(v0);
-                a0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)
-                a1 = 1;
-                a0++;
-                _thunk_LIBETC_v_wait();
-                v0 = 0x80000;
-                v0 &= x0;
-
-                if (v0 != 0) {
-                    v1 = lw(0x80075D04);    // Load from: GPU_REG_GP1 (80075D04)
-                    v0 = lw(v1);
-                    v0 ^= x0;
-
-                    if (i32(v0) >= 0) {
-                        a0 = 0x80000000;
-
-                        do {
-                            v0 = lw(v1);
-                            v0 ^= x0;
-                            v0 &= a0;
-                        } while (v0 == 0);
-                    }
-                }
-
-                v0 = lw(0x80075CCC);        // Load from: gLIBETC_Vcount (80075CCC)
-                sw(v0, 0x80075D10);         // Store to: gLIBETC_VSync_UNKNOWN_VAR_3 (80075D10)
-
-                v1 = lw(0x80075D08);        // Load from: TIMER_REG_ROOT_CNT_1 (80075D08)
-                v1 = lw(v1);
-                sw(v1, 0x80075D0C);         // Store to: gLIBETC_Hcount (80075D0C)
-            }
-        }
-
-        return x1;
+    if (mode < 0) {
+        // For the VBLANK count emulation use the time since the program started to get the count.
+        const clock_t now = clock();
+        double vblanks = ((double) now * 60.0) / (double) CLOCKS_PER_SEC;
+        return (int32_t) vblanks;
     }
     else {
-        // PC-PSX: If you are polling vsync do a little emulation to pass the time.
-        // Also advance the GPU emulation by a lot.
-        #if PC_PSX_DOOM_MODS
-            emulate_gpu(4096);
-            emulate_sound_if_required();
-        #endif
-
-        return lw(0x80075CCC);      // Load from: gLIBETC_Vcount (80075CCC)
+        // Horizontal blanking units not supported in PsyDoom, always return '0'.
+        // Doom doesn't require this mode anyway, so it's OK:
+        return 0;
     }
-}
-
-void _thunk_LIBETC_VSync() noexcept {
-    v0 = LIBETC_VSync(a0);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Waits for the specified target vblank amount with a specified timeout.
-// This is an internal PSYQ function and not documented.
-//------------------------------------------------------------------------------------------------------------------------------------------
-void LIBETC_v_wait(const int32_t targetVCount, [[maybe_unused]] const uint16_t timeout) noexcept {
-    int32_t vcount = (int32_t) lw(0x80075CCC);          // Load from: gLIBETC_Vcount (80075CCC)
-
-    while (vcount < targetVCount) {
-        #if PC_PSX_DOOM_MODS
-            emulate_frame();
-        #endif
-
-        vcount = (int32_t) lw(0x80075CCC);      // Load from: gLIBETC_Vcount (80075CCC)
-    }
-}
-
-void _thunk_LIBETC_v_wait() noexcept {
-    LIBETC_v_wait((int32_t) a0, (uint16_t) a1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

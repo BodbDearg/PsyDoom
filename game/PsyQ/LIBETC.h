@@ -13,11 +13,5 @@ static inline void* LIBETC_getScratchAddr(const uint32_t word) {
 }
 
 void LIBETC_ResetCallback() noexcept;
-
 int32_t LIBETC_VSync(const int32_t mode) noexcept;
-void _thunk_LIBETC_VSync() noexcept;
-
-void LIBETC_v_wait(const int32_t targetVCount, const uint16_t timeout) noexcept;
-void _thunk_LIBETC_v_wait() noexcept;
-
 uint32_t LIBETC_PadRead(uint32_t unusedControllerId) noexcept;

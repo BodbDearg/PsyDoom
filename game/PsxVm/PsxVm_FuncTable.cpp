@@ -81,10 +81,6 @@ extern void I_NetUpdate() noexcept;
 extern void G_CompleteLevel() noexcept;             // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
 
 extern void LIBAPI_open() noexcept;
-extern void LIBETC_ResetCallback() noexcept;
-extern void _thunk_LIBETC_VSync() noexcept;
-extern void _thunk_LIBETC_v_wait() noexcept;
-extern void LIBAPI_InitHeap() noexcept;
 extern void LIBCOMB_AddCOMB() noexcept;
 extern void LIBCOMB_DelCOMB() noexcept;
 
@@ -168,10 +164,6 @@ namespace PsxVm {
         { 0x80013384, &G_CompleteLevel },   // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
         
         { 0x80049E4C, &LIBAPI_open },
-        { 0x8004A7AC, &LIBETC_ResetCallback },
-        { 0x8004BA94, &_thunk_LIBETC_VSync },
-        { 0x8004BBDC, &_thunk_LIBETC_v_wait },
-        { 0x80050884, &LIBAPI_InitHeap },
         { 0x800580B4, &LIBCOMB_AddCOMB },
         { 0x800580E0, &LIBCOMB_DelCOMB },
     };

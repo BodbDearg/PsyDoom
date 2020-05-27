@@ -130,7 +130,8 @@ void P_RunThinkers() noexcept {
             if (pThinker->function) {
                 // TODO: use a native function call
                 *PsxVm::gpReg_a0 = ptrToVmAddr(pThinker);
-                ptr_call(pThinker->function);
+                const VmFunc func = PsxVm::getVmFuncForAddr(pThinker->function);
+                func();
             }
 
             *gNumActiveThinkers += 1;
@@ -146,7 +147,8 @@ void P_RunMobjLate() noexcept {
         if (pMObj->latecall) {
             // TODO: use a native function call
             *PsxVm::gpReg_a0 = ptrToVmAddr(pMObj);
-            ptr_call(pMObj->latecall);
+            const VmFunc func = PsxVm::getVmFuncForAddr(pMObj->latecall);
+            func();
         }
     }
 }
