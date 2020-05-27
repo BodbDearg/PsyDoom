@@ -9,13 +9,6 @@
 #include "utils/file.h"
 #include "utils/psx_exe.h"
 
-#if DOOM_AVOCADO_MODS
-    namespace PsxVm {
-        bool isEmulatorAtExitPoint() noexcept;
-        bool canExitEmulator() noexcept;
-    }
-#endif
-
 System::System() {
     bios.fill(0);
     ram.fill(0);
@@ -41,11 +34,6 @@ System::System() {
 
     debugOutput = config.debug.log.system;
     biosLog = config.debug.log.bios;
-
-#if DOOM_AVOCADO_MODS
-    vblankCounter = 0;
-#endif
-    
     cycles = 0;
 }
 
@@ -342,12 +330,6 @@ void System::singleStep() {
 
     dma->step();
 
-    // DOOM: the host program now has complete control over when and how the CDROM logic is executed.
-    // This is no longer part of the emulation.
-    #if !DOOM_AVOCADO_MODS
-        cdrom->step();
-    #endif
-
     timer[0]->step(3);
     timer[1]->step(3);
     timer[2]->step(3);
@@ -366,33 +348,15 @@ void System::emulateFrame() {
     cpu->gte.log.clear();
     gpu->gpuLogList.clear();
 
-// DC: This is ENORMOUSLY expensive, and slows things to a crawl every time we want to do a bit of emulation.
-// Since I don't need this can just disable...
-#if !DOOM_AVOCADO_MODS
     gpu->prevVram = gpu->vram;
-#endif
 
     int systemCycles = 300;
     for (;;) {
-        #if DOOM_AVOCADO_MODS
-            // On do a CPU emulation if not at the exit point or if there are interrupts.
-            // Otherwise spare host CPU cycles and skip this...
-            if (!PsxVm::canExitEmulator()) {
-        #endif
-                if (!cpu->executeInstructions(systemCycles / 3)) {
-                    return;
-                }
-        #if DOOM_AVOCADO_MODS
-            }
-        #endif
+        if (!cpu->executeInstructions(systemCycles / 3)) {
+            return;
+        }
 
         dma->step();
-
-        // DOOM: the host program now has complete control over when and how the CDROM logic is executed.
-        // This is no longer part of the emulation.
-        #if !DOOM_AVOCADO_MODS
-            cdrom->step();
-        #endif
 
         timer[0]->step(systemCycles);
         timer[1]->step(systemCycles);
@@ -407,9 +371,6 @@ void System::emulateFrame() {
             magicNumber *= 50.f / 60.f;
         }
 
-        // DOOM: the host program now has complete control over when and how the SPU logic is executed.
-        // This is no longer part of the emulation.
-        #if !DOOM_AVOCADO_MODS
         spuCounter += (float)systemCycles / magicNumber / (float)0x300;
         if (spuCounter >= 1.f) {
             spu->step(cdrom.get());
@@ -420,17 +381,11 @@ void System::emulateFrame() {
             spu->bufferReady = false;
             Sound::appendBuffer(spu->audioBuffer.begin(), spu->audioBuffer.end());
         }
-        #endif
 
         controller->step();
 
         if (gpu->emulateGpuCycles(systemCycles)) {
             interrupt->trigger(interrupt::VBLANK);
-
-            #if DOOM_AVOCADO_MODS
-                ++vblankCounter;
-            #endif
-
             return;  // frame emulated
         }
 
@@ -449,12 +404,6 @@ void System::emulateFrame() {
             }
         }
         // Handle Timer1 - Reset on VBlank
-
-        #if DOOM_AVOCADO_MODS
-            // Is it time to hand back control to the native C++ code?
-            if (PsxVm::canExitEmulator())
-                break;
-        #endif
     }
 }
 

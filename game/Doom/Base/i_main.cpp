@@ -522,10 +522,6 @@ void I_DrawPresent() noexcept {
                 if (*gElapsedVBlanks > 16) {
                     *gElapsedVBlanks = 16;
                 }
-
-                for (uint32_t i = 0; i < *gElapsedVBlanks; ++i) {
-                    emulate_frame();
-                }
             }
     #if PC_PSX_DOOM_MODS
         } else {

@@ -99,16 +99,9 @@ namespace PsxVm {
 // These instructions were not so easy to convert directly to C++ so they are handled via functions.
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-// Trap instructions
-void tge(const uint32_t r1, const uint32_t r2, const uint16_t i) noexcept;
-
 // Arithmetic
 uint32_t add(const uint32_t r1, const uint32_t r2) noexcept;
 uint32_t addi(const uint32_t r1, const int16_t i) noexcept;
-void div(const uint32_t r1, const uint32_t r2) noexcept;
-void divu(const uint32_t r1, const uint32_t r2) noexcept;
-void mult(const uint32_t r1, const uint32_t r2) noexcept;
-void multu(const uint32_t r1, const uint32_t r2) noexcept;
 uint32_t sub(const uint32_t r1, const uint32_t r2) noexcept;
 
 // RAM to CPU loads
@@ -117,32 +110,11 @@ uint32_t lbu(const uint32_t addr) noexcept;
 uint32_t lh(const uint32_t addr) noexcept;
 uint32_t lhu(const uint32_t addr) noexcept;
 uint32_t lw(const uint32_t addr) noexcept;
-uint32_t lwl(const uint32_t r1, const uint32_t addr) noexcept;
-uint32_t lwr(const uint32_t r1, const uint32_t addr) noexcept;
 
 // CPU to RAM stores
 void sb(const uint32_t r1, const uint32_t addr) noexcept;
 void sh(const uint32_t r1, const uint32_t addr) noexcept;
 void sw(const uint32_t r1, const uint32_t addr) noexcept;
-void swl(const uint32_t r1, const uint32_t addr) noexcept;
-void swr(const uint32_t r1, const uint32_t addr) noexcept;
-
-// Coprocessor 0 instructions
-uint32_t mfc0(const uint8_t s) noexcept;
-void mtc0(const uint32_t r1, const uint8_t d) noexcept;
-
-// Coprocessor 2 (GTE) instructions
-void cop2(const uint32_t i) noexcept;
-uint32_t cfc2(const uint8_t s) noexcept;
-void ctc2(const uint32_t r1, const uint8_t d) noexcept;
-uint32_t mfc2(const uint8_t s) noexcept;
-void mtc2(const uint32_t r1, const uint8_t d) noexcept;
-void lwc2(const uint8_t d, const uint32_t addr) noexcept;
-void swc2(const uint8_t s, const uint32_t addr) noexcept;
-
-// Misc
-void _break(const uint32_t i) noexcept;
-void syscall(const uint32_t i) noexcept;
 
 // Write directly to GPU registers GP0 and GP1 and read the GPU status/control register GP1
 void writeGP0(const uint32_t data) noexcept;
@@ -151,41 +123,10 @@ uint32_t getGpuStat() noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // VM interface: function calls and utilities
-// Call a function pointer or make a bios call.
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-// Call a pointer to a function at the given address.
-// The function passes args and return values through the VM interface.
-// The call *MAY* be emulated via the PSX emulator.
-void ptr_call(const uint32_t addr) noexcept;
-
-// Call function via the emulator.
-// This will transfer control over to the emulator and not return until the called function is exited.
-void emu_call(const uint32_t func) noexcept;
-
-// Called when the code is trying to jump to an unexpected location for a jump table.
-// If this happens then something has seriously gone wrong.
-void jump_table_err() noexcept;
-
-// Emulate a frame in the PSX emulator.
-// This causes time to pass, interupts to be generated etc.
-void emulate_frame() noexcept;
-
-// Do a little bit of emulation in the PSX emulator (not a whole frame)
-void emulate_a_little() noexcept;
-
-// Emulate the GPU (only!) by a specified number of cycles.
-// Useful to speed up generating a new vblank.
-void emulate_gpu(const int numCycles) noexcept;
-
-// Emulate timers only by a specified number of cycles
-void emulate_timers(const int numCycles) noexcept;
 
 // Emulate sound until we have enough samples to handle an upcoming buffer request
 void emulate_sound_if_required() noexcept;
-
-// Emulate the cdrom a little
-void emulate_cdrom() noexcept;
 
 // Fire timer (root counter) related events if appropriate.
 // Note: this is implemented in LIBAPI, where timers are handled.
@@ -221,13 +162,8 @@ namespace PsxVm {
     extern uint8_t*                 gpRam;
     extern uint8_t*                 gpScratchpad;       // Cache used as fast RAM (1 KiB)
 
-    // Initialize the VM with the given bios, original Playstation DOOM .EXE and CD file path (.cue format)
-    bool init(
-        const char* const biosFilePath,
-        const char* const doomExePath,
-        const char* const doomCdCuePath
-    ) noexcept;
-
+    // Initialize the VM with the original Playstation DOOM .EXE and CD file path (.cue format)
+    bool init(const char* const doomExePath, const char* const doomCdCuePath) noexcept;
     void shutdown() noexcept;
 
     // Updates inputs to the emulator from real inputs on the host machine
@@ -239,12 +175,6 @@ namespace PsxVm {
     // Give the PSX VM address for the given native C++ function.
     // Will return '0' if the native function is not mapped to a VM address.
     uint32_t getNativeFuncVmAddr(void* const pFunc) noexcept;
-
-    // Is the emulator at the point in the program where it returns control to C++?
-    bool isEmulatorAtExitPoint() noexcept;
-
-    // Tells if the emulator can return control back to the native C++ code
-    bool canExitEmulator() noexcept;
 
     // Get the button bits for the controller directly, bypassing emulation
     uint16_t getControllerButtonBits() noexcept;

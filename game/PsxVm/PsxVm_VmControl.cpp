@@ -201,48 +201,7 @@ static void clearVmPointers() noexcept {
     gpSystem = nullptr;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Run the bios bootstrap code until it reaches the point where it's able to display something.
-// This needs to be done in order to correctly configure the emulated PlayStation.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void emulateBiosUntilShell() noexcept {
-    // Set a breakpoint on the BIOS executing up until the shell and emulate until then
-    mips::CPU& cpu = *gpCpu;
-    System& system = *gpSystem;
-
-    cpu.breakpoints.emplace(0x80030000, mips::CPU::Breakpoint(true));
-    system.debugOutput = false;
-
-    while (system.state == System::State::run) {
-        system.emulateFrame();
-    }
-
-    cpu.breakpoints.clear();
-    system.debugOutput = true;
-    system.state = System::State::run;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Patch an 'exit' point for the PlayStation emulator in RAM.
-// This exit point consists of a jump instruction that jumps to itself, followed by a NOP.
-// We patch this at the entry point for NTSC DOOM.
-//------------------------------------------------------------------------------------------------------------------------------------------
-static void createEmulatorExitPointPatch() noexcept {
-    const uint32_t patchAddr1 = 0x00050714;     // 80050714h mapped to the 2MB of RAM that the PSX has
-    const uint32_t patchAddr2 = 0x00050718;     // 80050718h mapped to the 2MB of RAM that the PSX has
-    const uint32_t inst1 = 0x080141C5;          // j 80050714
-    const uint32_t inst2 = 0x00000000;          // sll $zero $zero 0 (a.k.a NOP)
-
-    uint8_t* const pRam = gpSystem->ram.data();
-    std::memcpy(pRam + patchAddr1, &inst1, sizeof(uint32_t));
-    std::memcpy(pRam + patchAddr2, &inst2, sizeof(uint32_t));
-}
-
-bool PsxVm::init(
-    const char* const biosFilePath,
-    const char* const doomExePath,
-    const char* const doomCdCuePath
-) noexcept {
+bool PsxVm::init(const char* const doomExePath, const char* const doomCdCuePath) noexcept {
     // Create a new system and setup vm pointers
     gSystem.reset(new System());
     System& system = *gSystem;
@@ -264,21 +223,7 @@ bool PsxVm::init(
         return false;
     }
 
-    // Load the bios file and emulate the bios until the shell
-    if (!system.loadBios(biosFilePath)) {
-        FATAL_ERROR_F(
-            "Couldn't load the NTSC-U PSX bios file '%s'!\n"
-            "Is it present in the current working directory?",
-            biosFilePath
-        );
-
-        shutdown();
-        return false;
-    }
-
-    emulateBiosUntilShell();
-
-    // Load the DOOM exe and patch memory to create an emulator 'exit point' where we can return control to native code from
+    // Load the DOOM .EXE so we get all of it's globals in RAM
     disc::Data data = getFileContents(doomExePath);
 
     if (!system.loadExeFile(data)) {
@@ -292,15 +237,6 @@ bool PsxVm::init(
         shutdown();
         return false;
     }
-
-    createEmulatorExitPointPatch();
-
-    // Point the emulator at the exit point
-    system.cpu->setReg(31, 0x80050714);
-    system.cpu->setPC(0x80050714);
-
-    // Expect emulator to be in a state where we can exit it
-    ASSERT(canExitEmulator());
 
     // Setup input manager
     gInputMgr.reset(new InputManager());
@@ -477,36 +413,4 @@ VmFunc PsxVm::getVmFuncForAddr(const uint32_t addr) noexcept {
 uint32_t PsxVm::getNativeFuncVmAddr(void* const pFunc) noexcept {
     auto iter = gNativeFuncToVmAddr.find(pFunc);
     return (iter != gNativeFuncToVmAddr.end()) ? iter->second : 0;
-}
-
-bool PsxVm::isEmulatorAtExitPoint() noexcept {
-    // The instructions at '0x80050714' and '0x80050718' are the exit point instructions
-    mips::CPU& cpu = *gpCpu;
-    const uint32_t curPC = cpu.PC;
-    const uint32_t nextPC = cpu.nextPC;
-    return (
-        (curPC == 0x80050714 || curPC == 0x80050718) &&
-        (nextPC == 0x80050714 || nextPC == 0x80050718)
-    );
-}
-
-bool PsxVm::canExitEmulator() noexcept {
-    // Only allow exit if we are the emulator exit point
-    if (!isEmulatorAtExitPoint())
-        return false;
-    
-    // There must be no interrupts pending also in order to exit
-    mips::CPU& cpu = *gpCpu;
-
-    if (cpu.cop0.status.interruptEnable) {
-        if ((cpu.cop0.cause.interruptPending & cpu.cop0.status.interruptMask) != 0) {
-            return false;
-        }
-    }
-
-    if (gpSystem->interrupt->interruptPending())
-        return false;
-
-    // If we get to here then we can exit the emulator back to native code
-    return true;
 }

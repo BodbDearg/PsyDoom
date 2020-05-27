@@ -10,8 +10,8 @@ int main(const int argc, const char** const argv) {
     // Parse command line arguments
     ProgArgs::init(argc, argv);
 
-    // Initialize the PSX VM using the NTSC-U BIOS, NTSC-U PSXDOOM.EXE and the CDROM .cue file.
-    if (!PsxVm::init("SCPH1001.BIN", "PSXDOOM.EXE", "Doom.cue")) {
+    // Initialize the PSX VM using NTSC-U PSXDOOM.EXE and the CDROM .cue file.
+    if (!PsxVm::init("PSXDOOM.EXE", "Doom.cue")) {
         return 1;
     }
 

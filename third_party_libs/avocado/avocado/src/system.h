@@ -82,10 +82,6 @@ struct System {
     std::unique_ptr<Serial> serial;
     std::array<std::unique_ptr<device::timer::Timer>, 3> timer;
 
-#if DOOM_AVOCADO_MODS
-    uint32_t vblankCounter;     // For tracking how many vblanks have elapsed since a certain point
-#endif
-
     template <typename T>
     INLINE T readMemory(uint32_t address);
     template <typename T>

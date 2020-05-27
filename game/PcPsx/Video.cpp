@@ -164,11 +164,6 @@ void doFrameRateLimiting() noexcept {
         }
     }
 
-    // Simulate the amount of emulator frames we waited for (2 60 Hz frames)
-    for (uint32_t i = 0; i < 2; ++i) {
-        emulate_frame();
-    }
-
     // Make sure sound is up to date on exit
     emulate_sound_if_required();
 }
