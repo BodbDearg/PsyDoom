@@ -450,12 +450,10 @@ gameaction_t MiniLoop(
         gTicButtons[*gCurPlayerIndex] = padBtns;
 
         if (*gNetGame != gt_single) {
-            // Updates for when we are in a networked game.
-            // Abort from the game also if there is a problem.
-            I_NetUpdate();
-            bool exitGame = (v0 != 0);
+            // Updates for when we are in a networked game: abort from the game also if there is a problem
+            const bool bNetError = I_NetUpdate();
 
-            if (exitGame) {
+            if (bNetError) {
                 *gGameAction = ga_warped;
                 exitAction = ga_warped;
                 break;
@@ -502,7 +500,8 @@ gameaction_t MiniLoop(
             #endif
         }
 
-        // Advance the number of 60 Hz ticks passed
+        // Advance the number of 60 Hz ticks passed.
+        // N.B: the tick count used here is ALWAYS for player 1, this is how time is kept in sync for a network game.
         *gTicCon += gPlayersElapsedVBlanks[0];
         
         // Advance to the next game tick if it is time.

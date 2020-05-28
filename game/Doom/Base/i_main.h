@@ -136,7 +136,7 @@ void I_RemoveTexCacheEntry(texture_t& tex) noexcept;
 void I_PurgeTexCache() noexcept;
 void I_VramViewerDraw(const int32_t texPageNum) noexcept;
 void I_NetSetup() noexcept;
-void I_NetUpdate() noexcept;
+bool I_NetUpdate() noexcept;
 void I_NetHandshake() noexcept;
 void I_NetSendRecv() noexcept;
 void I_SubmitGpuCmds() noexcept;

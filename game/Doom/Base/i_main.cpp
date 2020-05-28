@@ -3,6 +3,7 @@
 #include "d_vsprintf.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
+#include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "i_drawcmds.h"
 #include "PcPsx/Endian.h"
@@ -1046,152 +1047,88 @@ void I_NetSetup() noexcept {
     *gbDidAbortGame = false;
 }
 
-void I_NetUpdate() noexcept {
-loc_80034A60:
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 = lw(v0 - 0x7814);                               // Load from: gPlayer1[0] (800A87EC)
-    a0 = 0x800B0000;                                    // Result = 800B0000
-    a0 = lw(a0 - 0x76E8);                               // Load from: gPlayer2[0] (800A8918)
-    sp -= 0x48;
-    sw(ra, sp + 0x40);
-    sw(s1, sp + 0x3C);
-    sw(s0, sp + 0x38);
-    v1 = lbu(v0);
-    a1 = lbu(v0 + 0x4);
-    a2 = lbu(a0);
-    a0 = lbu(a0 + 0x4);
-    v0 = 0xAA;                                          // Result = 000000AA
-    sb(v0, gp + 0x9D0);                                 // Store to: gNetOutputPacket[0] (80077FB0)
-    v1 ^= a1;
-    v1 ^= a2;
-    v1 ^= a0;
-    v0 = v1 >> 8;
-    v0 ^= v1;
-    v1 >>= 16;
-    a0 = *gCurPlayerIndex;
-    v0 ^= v1;
-    at = 0x80070000;                                    // Result = 80070000
-    sb(v0, at + 0x7FB1);                                // Store to: gNetOutputPacket[1] (80077FB1)
-    a0 <<= 2;
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    at += a0;
-    v0 = lbu(at);
-    at = 0x80070000;                                    // Result = 80070000
-    sb(v0, at + 0x7FB2);                                // Store to: gNetOutputPacket[2] (80077FB2)
-    at = 0x80070000;                                    // Result = 80070000
-    at += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    at += a0;
-    v0 = lw(at);
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7FB4);                                // Store to: gNetOutputPacket[4] (80077FB4)
-    I_NetSendRecv();
-    s1 = 0x80070000;                                    // Result = 80070000
-    s1 += 0x7FBC;                                       // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 += 0x7F44;                                       // Result = gTicButtons[0] (80077F44)
-    v1 = lbu(gp + 0x8C8);                               // Load from: gNetInputPacket[0] (80077EA8)
-    v0 = 0xAA;                                          // Result = 000000AA
-    if (v1 != v0) goto loc_80034B44;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lbu(v1 + 0x7EA9);                              // Load from: gNetInputPacket[1] (80077EA9)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x7FB1);                              // Load from: gNetOutputPacket[1] (80077FB1)
-    if (v1 == v0) goto loc_80034C48;
-loc_80034B44:
-    s0 = 0x800B0000;                                    // Result = 800B0000
-    s0 = lh(s0 - 0x6F5C);                               // Load from: gPaletteClutId_UI (800A90A4)
-    LIBGPU_DrawSync(0);
-    a3 = lw(gp + 0xB18);                                // Load from: gCurDrawDispBufferIdx (800780F8)
-    v1 = a3 ^ 1;
-    v0 = v1 << 2;
-    v0 += v1;
-    v0 <<= 2;
-    a0 = a3 << 2;
-    a0 += a3;
-    a0 <<= 2;
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6E9C;                                       // Result = gDispEnv1[0] (800A9164)
-    at += v0;
-    a1 = lh(at);
-    at = 0x800B0000;                                    // Result = 800B0000
-    at -= 0x6E9A;                                       // Result = gDispEnv1[1] (800A9166)
-    at += v0;
-    a2 = lh(at);
-    v0 = 0x800B0000;                                    // Result = 800B0000
-    v0 -= 0x6E9C;                                       // Result = gDispEnv1[0] (800A9164)
-    a0 += v0;
-    v0 = LIBGPU_MoveImage(*vmAddrToPtr<const RECT>(a0), a1, a2);
-    I_IncDrawnFrameCount();
-    I_CacheTex(*gTex_NETERR);
-    a1 = s0;
-    a0 = 0x80090000;                                    // Result = 80090000
-    a0 = lhu(a0 + 0x7AFA);                              // Load from: gTex_NETERR[2] (80097AFA)
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lbu(v0 + 0x7AF8);                              // Load from: gTex_NETERR[2] (80097AF8)
-    v1 = 0x80090000;                                    // Result = 80090000
-    v1 = lbu(v1 + 0x7AF9);                              // Load from: gTex_NETERR[2] (80097AF9)
-    a3 = 0x80090000;                                    // Result = 80090000
-    a3 = lh(a3 + 0x7AF4);                               // Load from: gTex_NETERR[1] (80097AF4)
-    t0 = 0x80090000;                                    // Result = 80090000
-    t0 = lh(t0 + 0x7AF6);                               // Load from: gTex_NETERR[1] (80097AF6)
-    a2 = 0x54;                                          // Result = 00000054
-    sw(a3, sp + 0x18);
-    a3 = 0x6D;                                          // Result = 0000006D
-    sw(v0, sp + 0x10);
-    sw(v1, sp + 0x14);
-    sw(t0, sp + 0x1C);
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Sends the packet for the current frame in a networked game and receives the packet from the other player.
+// Also does error checking, to make sure that the connection is still OK.
+// Returns 'true' if a network error has occurred.
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool I_NetUpdate() noexcept {
+    // The 1st two bytes of the network packet are for error detection, header and position sanity check:
+    mobj_t& player1Mobj = *gPlayers[0].mo;
+    mobj_t& player2Mobj = *gPlayers[1].mo;
 
-    I_DrawSprite(
-        (uint16_t) a0,
-        (int16_t) a1,
-        (int16_t) a2,
-        (int16_t) a3,
-        (uint8_t) lw(sp + 0x10),
-        (uint8_t) lw(sp + 0x14),
-        (uint16_t) lw(sp + 0x18),
-        (uint16_t) lw(sp + 0x1C)
+    gNetOutputPacket[0] = NET_PACKET_HEADER;
+    gNetOutputPacket[1] = (uint8_t)(player1Mobj.x ^ player1Mobj.y ^ player2Mobj.x ^ player2Mobj.y);
+
+    // Send the elapsed tics for this player and the buttons pressed
+    gNetOutputPacket[2] = (uint8_t)(gPlayersElapsedVBlanks[*gCurPlayerIndex]);
+
+    const uint32_t thisPlayerBtns = gTicButtons[*gCurPlayerIndex];
+    gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
+    gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
+    gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
+    gNetOutputPacket[7] = (uint8_t)(thisPlayerBtns >> 24);
+
+    I_NetSendRecv();
+
+    // See if the packet we received from the other player is what we expect.
+    // If it isn't then show a 'network error' message:
+    if ((gNetInputPacket[0] != NET_PACKET_HEADER) || (gNetInputPacket[1] != gNetOutputPacket[1])) {
+        // Uses the current image as the basis for the next frame; copy the presented framebuffer to the drawing framebuffer:
+        LIBGPU_DrawSync(0);
+        LIBGPU_MoveImage(
+            gDispEnvs[*gCurDispBufferIdx].disp,
+            gDispEnvs[*gCurDispBufferIdx ^ 1].disp.x,
+            gDispEnvs[*gCurDispBufferIdx ^ 1].disp.y
+        );
+
+        // Show the 'Network error' plaque
+        I_IncDrawnFrameCount();
+        I_CacheTex(*gTex_NETERR);
+        I_DrawSprite(
+            gTex_NETERR->texPageId,
+            gPaletteClutIds[UIPAL],
+            84,
+            109,
+            gTex_NETERR->texPageCoordX,
+            gTex_NETERR->texPageCoordY,
+            gTex_NETERR->width,
+            gTex_NETERR->height
+        );
+
+        I_SubmitGpuCmds();
+        I_DrawPresent();
+
+        // Try and do a sync handshake between the players
+        I_NetHandshake();
+
+        // Clear the other player's buttons, and this player's previous buttons (not sure why that would matter)
+        gTicButtons[1] = 0;
+        gOldTicButtons[0] = 0;
+
+        // There was a network error!
+        return true;
+    }
+
+    // Read and save the buttons for the other player and their elapsed vblank count.
+    // Note that the vblank count for player 1 is what determines the speed of the game for both players.
+    const uint32_t otherPlayerBtns = (
+        ((uint32_t) gNetInputPacket[4] << 0) |
+        ((uint32_t) gNetInputPacket[5] << 8) |
+        ((uint32_t) gNetInputPacket[6] << 16) |
+        ((uint32_t) gNetInputPacket[7] << 24)
     );
 
-    I_SubmitGpuCmds();
-    I_DrawPresent();
-    I_NetHandshake();
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7F48);                                 // Store to: gTicButtons[1] (80077F48)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7DEC);                                 // Store to: gOldTicButtons[0] (80078214)
-    at = 0x80070000;                                    // Result = 80070000
-    sw(0, at + 0x7F48);                                 // Store to: gTicButtons[1] (80077F48)
-    at = 0x80080000;                                    // Result = 80080000
-    sw(0, at - 0x7DEC);                                 // Store to: gOldTicButtons[0] (80078214)
-    v0 = 1;                                             // Result = 00000001
-    goto loc_80034CA0;
-loc_80034C48:
-    v0 = *gCurPlayerIndex;
-    v1 = s0;                                            // Result = gTicButtons[0] (80077F44)
-    if (v0 != 0) goto loc_80034C64;
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 += 0x7F48;                                       // Result = gTicButtons[1] (80077F48)
-loc_80034C64:
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lw(v0 + 0x7EAC);                               // Load from: gNetInputPacket[4] (80077EAC)
-    sw(v0, v1);
-    v0 = *gCurPlayerIndex;
-    a0 = s1;                                            // Result = gPlayersElapsedVBlanks[0] (80077FBC)
-    if (v0 != 0) goto loc_80034C90;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 += 0x7FC0;                                       // Result = gPlayersElapsedVBlanks[1] (80077FC0)
-loc_80034C90:
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lbu(v1 + 0x7EAA);                              // Load from: gNetInputPacket[2] (80077EAA)
-    v0 = 0;                                             // Result = 00000000
-    sw(v1, a0);
-loc_80034CA0:
-    ra = lw(sp + 0x40);
-    s1 = lw(sp + 0x3C);
-    s0 = lw(sp + 0x38);
-    sp += 0x48;
-    return;
+    if (*gCurPlayerIndex == 0) {
+        gTicButtons[1] = otherPlayerBtns;
+        gPlayersElapsedVBlanks[1] = gNetInputPacket[2];
+    } else {
+        gTicButtons[0] = otherPlayerBtns;
+        gPlayersElapsedVBlanks[0] = gNetInputPacket[2];
+    }
+
+    // No network error occured
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

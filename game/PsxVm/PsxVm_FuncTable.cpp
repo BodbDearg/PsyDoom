@@ -76,7 +76,6 @@ extern void _thunk_A_LoadShotgun2() noexcept;
 extern void _thunk_A_CloseShotgun2() noexcept;
 extern void _thunk_T_DelayedAction() noexcept;
 extern void I_PSXInit() noexcept;
-extern void I_NetUpdate() noexcept;
 extern void G_CompleteLevel() noexcept;             // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
 
 extern void LIBAPI_open() noexcept;
@@ -158,7 +157,6 @@ namespace PsxVm {
         { 0x800216D8, &_thunk_A_CloseShotgun2 },
         { 0x80027718, &_thunk_T_DelayedAction },
         { 0x80032934, &I_PSXInit },
-        { 0x80034A60, &I_NetUpdate },
         { 0x80013384, &G_CompleteLevel },   // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
         
         { 0x80049E4C, &LIBAPI_open },
