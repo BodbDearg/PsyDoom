@@ -4,7 +4,6 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "wessapi_m.h"
 
-#include "PsxVm/PsxVm.h"
 #include "PsxVm/VmSVal.h"
 #include "wessapi.h"
 #include "wessarc.h"

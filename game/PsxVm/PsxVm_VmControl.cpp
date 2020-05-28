@@ -2,8 +2,6 @@
 // VM controller functions.
 // Setup and control the Avocado emulator and our emulation layers.
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-#define PSX_VM_NO_REGISTER_MACROS 1     // Because they cause conflicts with Avocado
 #include "PsxVm.h"
 
 #include "PcPsx/FatalErrors.h"

@@ -14,7 +14,6 @@
 #include "Game/p_tick.h"
 #include "PcPsx/FileUtils.h"
 #include "PcPsx/ProgArgs.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "Renderer/r_data.h"
@@ -25,10 +24,7 @@
 #include "UI/o_main.h"
 #include "UI/st_main.h"
 #include "UI/ti_main.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <cstdio>
-END_THIRD_PARTY_INCLUDES
+#include <cstdio>
 
 // The current number of 60Hz ticks
 const VmPtr<int32_t> gTicCon(0x8007814C);

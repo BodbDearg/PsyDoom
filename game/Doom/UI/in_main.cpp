@@ -11,7 +11,6 @@
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
 #include "PcPsx/Macros.h"
-#include "PsxVm/PsxVm.h"
 #include "pw_main.h"
 #include "st_main.h"
 #include "Wess/psxcd.h"

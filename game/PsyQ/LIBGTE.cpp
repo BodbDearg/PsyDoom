@@ -3,9 +3,8 @@
 // These functions are not neccesarily faithful to the original code, and are reworked to make the game run in it's new environment.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "LIBGTE.h"
-#include "LIBAPI.h"
 
-#define PSX_VM_NO_REGISTER_MACROS 1
+#include "LIBAPI.h"
 #include "PsxVm/PsxVm.h"
 
 BEGIN_THIRD_PARTY_INCLUDES

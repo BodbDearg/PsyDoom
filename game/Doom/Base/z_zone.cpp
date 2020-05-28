@@ -2,8 +2,6 @@
 
 #include "Doom/psx_main.h"
 #include "i_main.h"
-
-#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
 // The minimum size that a memory block must be

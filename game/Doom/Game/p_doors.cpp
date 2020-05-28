@@ -11,8 +11,6 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
-
-#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
 // State for a door thinker

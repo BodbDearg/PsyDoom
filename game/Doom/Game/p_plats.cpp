@@ -11,10 +11,8 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include <algorithm>
-
-#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
+#include <algorithm>
 
 static constexpr int32_t PLATWAIT   = 3;                // Number of seconds for platforms to be in the waiting state
 static constexpr int32_t PLATSPEED  = 2 * FRACUNIT;     // Standard platform speed (some platforms are slower or faster)

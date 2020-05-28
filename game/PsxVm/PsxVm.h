@@ -56,44 +56,6 @@ namespace PsxVm {
     extern uint32_t* gpReg_lo;
 }
 
-// These are optional, since they can conflict with Avocado and other things due to short names
-#if (!PSX_VM_NO_REGISTER_MACROS)
-    #define zero    (*PsxVm::gpReg_zero)
-    #define at      (*PsxVm::gpReg_at)
-    #define v0      (*PsxVm::gpReg_v0)
-    #define v1      (*PsxVm::gpReg_v1)
-    #define a0      (*PsxVm::gpReg_a0)
-    #define a1      (*PsxVm::gpReg_a1)
-    #define a2      (*PsxVm::gpReg_a2)
-    #define a3      (*PsxVm::gpReg_a3)
-    #define t0      (*PsxVm::gpReg_t0)
-    #define t1      (*PsxVm::gpReg_t1)
-    #define t2      (*PsxVm::gpReg_t2)
-    #define t3      (*PsxVm::gpReg_t3)
-    #define t4      (*PsxVm::gpReg_t4)
-    #define t5      (*PsxVm::gpReg_t5)
-    #define t6      (*PsxVm::gpReg_t6)
-    #define t7      (*PsxVm::gpReg_t7)
-    #define s0      (*PsxVm::gpReg_s0)
-    #define s1      (*PsxVm::gpReg_s1)
-    #define s2      (*PsxVm::gpReg_s2)
-    #define s3      (*PsxVm::gpReg_s3)
-    #define s4      (*PsxVm::gpReg_s4)
-    #define s5      (*PsxVm::gpReg_s5)
-    #define s6      (*PsxVm::gpReg_s6)
-    #define s7      (*PsxVm::gpReg_s7)
-    #define t8      (*PsxVm::gpReg_t8)
-    #define t9      (*PsxVm::gpReg_t9)
-    #define k0      (*PsxVm::gpReg_k0)
-    #define k1      (*PsxVm::gpReg_k1)
-    #define gp      (*PsxVm::gpReg_gp)
-    #define sp      (*PsxVm::gpReg_sp)
-    #define fp      (*PsxVm::gpReg_fp)
-    #define ra      (*PsxVm::gpReg_ra)
-    #define hi      (*PsxVm::gpReg_hi)
-    #define lo      (*PsxVm::gpReg_lo)
-#endif
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // VM interface: mips instructions.
 // These instructions were not so easy to convert directly to C++ so they are handled via functions.

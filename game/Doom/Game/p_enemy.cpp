@@ -21,10 +21,8 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "p_tick.h"
-#include <algorithm>
-
-#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
+#include <algorithm>
 
 static constexpr angle_t TRACEANGLE = 0xC000000;        // How much Revenant missiles adjust their angle by when homing towards their target (angle adjust increment)
 static constexpr angle_t FATSPREAD  = ANG90 / 8;        // Angle adjustment increment for the Mancubus when attacking; varies it's shoot direction in multiples of this constant

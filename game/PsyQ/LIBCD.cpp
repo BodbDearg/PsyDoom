@@ -7,8 +7,6 @@
 #include "LIBAPI.h"
 #include "LIBETC.h"
 #include "PcPsx/Finally.h"
-
-#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
 BEGIN_THIRD_PARTY_INCLUDES

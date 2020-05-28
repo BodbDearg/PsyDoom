@@ -5,15 +5,11 @@
 #include "LIBGPU.h"
 
 #include "LIBETC.h"
-
-#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
+#include <cstdarg>
 
 BEGIN_THIRD_PARTY_INCLUDES
-
-#include <cstdarg>
-#include <device/gpu/gpu.h>
-
+    #include <device/gpu/gpu.h>
 END_THIRD_PARTY_INCLUDES
 
 // The CLUT and texture page for the debug font

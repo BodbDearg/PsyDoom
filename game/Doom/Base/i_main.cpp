@@ -11,7 +11,6 @@
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
 #include "PcPsx/Video.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBAPI.h"
 #include "PsyQ/LIBCOMB.h"
 #include "PsyQ/LIBETC.h"

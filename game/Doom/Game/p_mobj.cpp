@@ -21,10 +21,8 @@
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_tick.h"
-#include <algorithm>
-
-#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
+#include <algorithm>
 
 // Item respawn queue
 static constexpr int32_t ITEMQUESIZE = 64;

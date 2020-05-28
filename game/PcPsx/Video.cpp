@@ -1,26 +1,13 @@
 #include "Video.h"
 
 #include "ProgArgs.h"
-
-#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
-
-// Disabling certain Avocado warnings for MSVC
-#ifdef _MSC_VER
-    #pragma warning(push)
-    #pragma warning(disable: 4201)
-    #pragma warning(disable: 4244)
-#endif
-
-#include <device/gpu/gpu.h>
-
-#ifdef _MSC_VER
-    #pragma warning(pop)
-#endif
-
-#include "Macros.h"
 #include <SDL.h>
 #include <thread>
+
+BEGIN_THIRD_PARTY_INCLUDES
+    #include <device/gpu/gpu.h>
+END_THIRD_PARTY_INCLUDES
 
 BEGIN_NAMESPACE(PcPsx)
 

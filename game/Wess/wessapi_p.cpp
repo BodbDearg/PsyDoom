@@ -5,7 +5,6 @@
 #include "wessapi_p.h"
 
 #include "psxcmd.h"
-#include "PsxVm/PsxVm.h"
 #include "wessapi.h"
 #include "wessarc.h"
 

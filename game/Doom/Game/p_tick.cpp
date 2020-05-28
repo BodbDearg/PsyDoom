@@ -21,14 +21,12 @@
 #include "PcPsx/DemoResult.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
+#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
 #include "Wess/wessapi.h"
-
-#define PSX_VM_NO_REGISTER_MACROS 1
-#include "PsxVm/PsxVm.h"
 
 // The maximum level for the warp cheat.
 // PC-PSX: For this version of the game I'm allowing the user to warp to the secret levels!

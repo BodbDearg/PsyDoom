@@ -5,7 +5,6 @@
 #include "Doom/d_main.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
-#include "PsxVm/PsxVm.h"
 #include "Wess/psxcd.h"
 
 // Credits screen resources

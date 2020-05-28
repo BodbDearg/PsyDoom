@@ -2,7 +2,6 @@
 
 #include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"
-#include "PsxVm/PsxVm.h"
 
 void LIBCOMB_AddCOMB() noexcept {
     // FIXME: IMPLEMENT ME FULLY

@@ -6,12 +6,10 @@
 
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Types.h"
+#include "PsxVm/PsxVm.h"
 #include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessarc.h"
-
-#define PSX_VM_NO_REGISTER_MACROS 1
-#include "PsxVm/PsxVm.h"
 
 // The end address of usable SPU RAM.
 // This can vary depending on the reverb mode - some reverb modes require more RAM than others.

@@ -4,7 +4,6 @@
 // Module dealing with low level drawing commands.
 // Holds the primitives buffer and contains functionality for submitting draw primitives.
 //------------------------------------------------------------------------------------------------------------------------------------------
-#include "PcPsx/Macros.h"
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 

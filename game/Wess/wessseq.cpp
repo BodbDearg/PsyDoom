@@ -4,10 +4,8 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "wessseq.h"
 
-#include "wessarc.h"
-
-#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
+#include "wessarc.h"
 
 const WessDriverFunc gWess_DrvFunctions[36] = {
     // Manually called commands

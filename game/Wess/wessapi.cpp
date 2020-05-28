@@ -3,10 +3,10 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "wessapi.h"
 
+#include "PcPsx/Endian.h"
 #include "PcPsx/Finally.h"
 #include "psxcmd.h"
 #include "PsxVm/PsxVm.h"
-#include "PcPsx/Endian.h"
 #include "wessapi_t.h"
 #include "wessarc.h"
 #include "wessseq.h"

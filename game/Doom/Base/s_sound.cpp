@@ -7,7 +7,6 @@
 #include "i_main.h"
 #include "m_fixed.h"
 #include "PcPsx/ProgArgs.h"
-#include "PsxVm/PsxVm.h"
 #include "sounds.h"
 #include "Wess/lcdload.h"
 #include "Wess/psxcd.h"
@@ -19,10 +18,7 @@
 #include "Wess/wessapi_p.h"
 #include "Wess/wessapi_t.h"
 #include "Wess/wessarc.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <algorithm>
-END_THIRD_PARTY_INCLUDES
+#include <algorithm>
 
 // Sound settings for the WESS PSX sound driver
 static const int32_t gSound_PSXSettings[SNDHW_TAG_MAX * 2] = {

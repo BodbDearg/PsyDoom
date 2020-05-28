@@ -6,10 +6,8 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include <algorithm>
-
-#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
+#include <algorithm>
 
 // Definition and state for a fire flicker light
 struct fireflicker_t {

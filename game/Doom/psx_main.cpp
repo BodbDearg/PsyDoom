@@ -35,10 +35,10 @@ void psx_main() noexcept {
     // Setup the stack pointer.
     // This reserves room for a 64-bit value and bring into the memory segment normally used by the .EXE:
     constexpr uint32_t InitialStackPtrAddr = StackEndAddr - sizeof(uint64_t);
-    sp = InitialStackPtrAddr | 0x80000000;
+    *PsxVm::gpReg_sp = InitialStackPtrAddr | 0x80000000;
 
     // Save the return address once the .EXE is done
-    *gProgramReturnAddr = ra;
+    *gProgramReturnAddr = *PsxVm::gpReg_ra;
     
     // Figure out the size and start address to use when initializing the heap
     constexpr uint32_t WrappedHeapStartAddr = ((HeapStartAddr << 3) >> 3);
@@ -48,8 +48,8 @@ void psx_main() noexcept {
     
     // Setup the value that the 'gp' register will have for the entire program.
     // Also setup the initial value of the 'fp' register.
-    gp = GpRegisterValue;
-    fp = sp;
+    *PsxVm::gpReg_gp = GpRegisterValue;
+    *PsxVm::gpReg_fp = *PsxVm::gpReg_sp;
 
     // Initialize the heap for the PsyQ SDK.
     // Note that DOOM uses it's own memory management system, so this call is effectively useless.
@@ -57,7 +57,7 @@ void psx_main() noexcept {
     LIBAPI_InitHeap(PsxVm::gpRam + WrappedHeapStartAddr + 4, InitHeapSize);
 
     // Restore the return address to outside the .EXE
-    ra = *gProgramReturnAddr;
+    *PsxVm::gpReg_ra = *gProgramReturnAddr;
 
     // Call the real 'main()' function of DOOM, as it was on the PSX.
     //

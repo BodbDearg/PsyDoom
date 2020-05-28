@@ -15,13 +15,8 @@
 #include "p_mobj.h"
 #include "p_setup.h"
 #include "p_tick.h"
-
-#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <algorithm>
-END_THIRD_PARTY_INCLUDES
+#include <algorithm>
 
 static constexpr fixed_t STOPSPEED  = 0x1000;   // Speed under which to stop a thing fully
 static constexpr fixed_t FRICTION   = 0xD200;   // Friction amount to apply (note: 0xD240 in Jaguar Doom)

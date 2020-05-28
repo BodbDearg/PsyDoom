@@ -8,11 +8,9 @@
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Types.h"
 #include "psxspu.h"
+#include "PsxVm/PsxVm.h"
 #include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBCD.h"
-
-#define PSX_VM_NO_REGISTER_MACROS 1
-#include "PsxVm/PsxVm.h"
 
 // PSXCD module commands within PsxCd_Command
 enum PsxCd_CmdOp : int32_t {

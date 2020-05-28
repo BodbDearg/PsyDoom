@@ -5,9 +5,6 @@
 #include <chrono>
 #include <cmath>
 
-// Include LAST due to potential conflicts with the MIPS macros
-#include "PsxVm/PsxVm.h"
-
 // Shorten this
 typedef std::chrono::high_resolution_clock::time_point SysTime;
 
@@ -244,7 +241,7 @@ bool LIBAPI_TestEvent([[maybe_unused]] const uint32_t eventDescriptor) noexcept 
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBAPI_ExitCriticalSection() noexcept {}
 
-int32_t LIBAPI_open(const char* const pPath, const uint32_t flags) noexcept {
+int32_t LIBAPI_open([[maybe_unused]] const char* const pPath, [[maybe_unused]] const uint32_t flags) noexcept {
     // FIXME: IMPLEMENT ME
     return -1;
 }

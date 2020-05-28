@@ -2,16 +2,14 @@
 // VM interface functions.
 // Functionality which helps us emulate the original hardware environment of the program.
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-#define PSX_VM_NO_REGISTER_MACROS 1     // Because they cause conflicts with Avocado
 #include "PsxVm.h"
 
 #include "PcPsx/Macros.h"
 #include "PcPsx/ProgArgs.h"
+#include <cstdlib>
 
 BEGIN_THIRD_PARTY_INCLUDES
     #include <cpu/instructions.h>
-    #include <cstdlib>
     #include <sound/sound.h>
     #include <system.h>
 END_THIRD_PARTY_INCLUDES

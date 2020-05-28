@@ -1,4 +1,3 @@
-#define PSX_VM_NO_REGISTER_MACROS 1     // In case of conflicts
 #include "PsxVm.h"
 
 #include <map>

@@ -17,8 +17,6 @@
 #include "p_map.h"
 #include "p_mobj.h"
 #include "p_tick.h"
-
-#define PSX_VM_NO_REGISTER_MACROS 1
 #include "PsxVm/PsxVm.h"
 
 const weaponinfo_t gWeaponInfo[NUMWEAPONS] = {
