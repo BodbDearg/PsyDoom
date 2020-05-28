@@ -363,13 +363,13 @@ void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {
     switch (line.special) {
         case 1:     // Normal door sound
         case 31:
-			S_StartSound((mobj_t*) &doorSector.soundorg, sfx_doropn);
-			break;
+            S_StartSound((mobj_t*) &doorSector.soundorg, sfx_doropn);
+            break;
 
         case 117:   // Blazing door raise
         case 118:   // Blazing door open
-			S_StartSound((mobj_t*) &doorSector.soundorg, sfx_bdopn);
-			break;
+            S_StartSound((mobj_t*) &doorSector.soundorg, sfx_bdopn);
+            break;
 
         default:    // All other door tyoes
             S_StartSound((mobj_t*) &doorSector.soundorg, sfx_doropn);
