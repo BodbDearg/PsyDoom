@@ -1,6 +1,0 @@
-Note: I have stripped out some stuff which is not needed to use this library.
-The full version is available at the link below.
-
-Commit:
-    https://github.com/g-truc/glm/tree/d666b5e533ac832241fc0dca2a6954ac2c0805d6
-    (Nov 29, 2019, 2:24 AM PST)

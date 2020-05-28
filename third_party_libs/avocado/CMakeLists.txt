@@ -183,7 +183,6 @@ target_compile_definitions(${AVOCADO_TGT_NAME} PUBLIC DOOM_AVOCADO_MODS=1)
 target_link_libraries(${AVOCADO_TGT_NAME}
     ${EVENT_BUS_TGT_NAME}
     ${FMT_TGT_NAME}
-    ${GLM_TGT_NAME}
     ${LIBSDL_TGT_NAME}
     ${MAGIC_ENUM_TGT_NAME}
 )
