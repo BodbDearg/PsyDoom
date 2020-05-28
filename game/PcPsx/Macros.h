@@ -98,23 +98,18 @@
     Type(const Type& other) noexcept = default;\
     Type& operator = (const Type& other) noexcept = delete;
 
-// Disable certain warnings when including third party headers
+// Disable and re-enable certain warnings when including third party headers
 #if defined(_MSC_VER)
     // MSVC++
-    #define BEGIN_THIRD_PARTY_INCLUDES\
+    #define BEGIN_DISABLE_HEADER_WARNINGS\
         __pragma(warning(push))             /* Save so we can restore later */\
         __pragma(warning(disable:4201))     /* Non standard extension used */\
         __pragma(warning(disable:4244))     /* Conversion: possible loss of data */
-#else
-    // Unhandled compiler
-    #define BEGIN_THIRD_PARTY_INCLUDES
-#endif
 
-#if defined(_MSC_VER)
-    // MSVC++
-    #define END_THIRD_PARTY_INCLUDES\
+    #define END_DISABLE_HEADER_WARNINGS\
         __pragma(warning(pop))
 #else
     // Unhandled compiler
-    #define END_THIRD_PARTY_INCLUDES
+    #define BEGIN_DISABLE_HEADER_WARNINGS
+    #define END_DISABLE_HEADER_WARNINGS
 #endif

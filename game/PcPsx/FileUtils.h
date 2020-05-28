@@ -1,10 +1,7 @@
 #pragma once
 
 #include "Macros.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <cstddef>
-END_THIRD_PARTY_INCLUDES
+#include <cstddef>
 
 BEGIN_NAMESPACE(FileUtils)
 

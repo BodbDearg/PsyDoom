@@ -11,11 +11,7 @@
 #include "p_local.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <algorithm>
-END_THIRD_PARTY_INCLUDES
-
+#include <algorithm>
 
 static constexpr uint32_t BONUSADD          = 4;    // How much to add to the 'bonus' effect strength counter anytime a bonus is picked up
 static constexpr uint32_t MAX_DEAD_PLAYERS  = 32;   // Maximum number of dead player corpses to leave lying around (deathmatch)

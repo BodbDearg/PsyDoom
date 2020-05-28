@@ -9,13 +9,11 @@
 #include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
 
-BEGIN_THIRD_PARTY_INCLUDES
-
-#include <device/cdrom/cdrom.h>
-#include <device/spu/spu.h>
-#include <disc/disc.h>
-
-END_THIRD_PARTY_INCLUDES
+BEGIN_DISABLE_HEADER_WARNINGS
+    #include <device/cdrom/cdrom.h>
+    #include <device/spu/spu.h>
+    #include <disc/disc.h>
+END_DISABLE_HEADER_WARNINGS
 
 // CD-ROM constants
 static constexpr int32_t CD_SECTORS_PER_SEC = 75;       // The number of CD sectors per second of audio

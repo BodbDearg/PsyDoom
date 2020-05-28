@@ -14,12 +14,9 @@
 #include "Doom/Game/g_game.h"
 #include "FileUtils.h"
 #include "Finally.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <rapidjson/document.h>
-    #include <rapidjson/filewritestream.h>
-    #include <rapidjson/prettywriter.h>
-END_THIRD_PARTY_INCLUDES
+#include <rapidjson/document.h>
+#include <rapidjson/filewritestream.h>
+#include <rapidjson/prettywriter.h>
 
 BEGIN_NAMESPACE(DemoResult)
 

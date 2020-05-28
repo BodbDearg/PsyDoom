@@ -7,10 +7,7 @@
 #include "doomdata.h"
 #include "p_map.h"
 #include "p_setup.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <algorithm>
-END_THIRD_PARTY_INCLUDES
+#include <algorithm>
 
 // The vertices used for the partial 'line_t' used for the shooters shoot line
 struct thingline_t {

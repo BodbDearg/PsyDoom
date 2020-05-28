@@ -9,10 +9,7 @@
 #include "wessapi.h"
 #include "wessarc.h"
 #include "wessseq.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <algorithm>
-END_THIRD_PARTY_INCLUDES
+#include <algorithm>
 
 const WessDriverFunc gWess_drv_cmds[19] = {
     PSX_DriverInit,         // 00

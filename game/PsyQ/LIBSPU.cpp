@@ -8,15 +8,13 @@
 #include "LIBETC.h"
 #include "PcPsx/Macros.h"
 #include "PsxVm/PsxVm.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-
 #include <algorithm>
 #include <cstdint>
-#include <device/spu/spu.h>
-#include <system.h>
 
-END_THIRD_PARTY_INCLUDES
+BEGIN_DISABLE_HEADER_WARNINGS
+    #include <device/spu/spu.h>
+    #include <system.h>
+END_DISABLE_HEADER_WARNINGS
 
 // How big the sound RAM is available to the SPU
 static constexpr uint32_t SPU_RAM_SIZE = 512 * 1024;

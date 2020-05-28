@@ -8,9 +8,9 @@
 #include "PsxVm/PsxVm.h"
 #include <cstdarg>
 
-BEGIN_THIRD_PARTY_INCLUDES
+BEGIN_DISABLE_HEADER_WARNINGS
     #include <device/gpu/gpu.h>
-END_THIRD_PARTY_INCLUDES
+END_DISABLE_HEADER_WARNINGS
 
 // The CLUT and texture page for the debug font
 static uint16_t gDFontClutId;

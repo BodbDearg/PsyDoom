@@ -5,10 +5,7 @@
 // A lot (or all?) of this code can probably go away once we have C++ 20 and it's endian utilities.
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "Macros.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <cstdint>
-END_THIRD_PARTY_INCLUDES
+#include <cstdint>
 
 BEGIN_NAMESPACE(Endian)
 

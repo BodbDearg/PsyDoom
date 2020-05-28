@@ -14,10 +14,7 @@
 #include "PsyQ/LIBCD.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessarc.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <cstring>
-END_THIRD_PARTY_INCLUDES
+#include <cstring>
 
 // Maximum number of sounds that can be in an LCD file
 static constexpr uint32_t MAX_LCD_SOUNDS = 100;

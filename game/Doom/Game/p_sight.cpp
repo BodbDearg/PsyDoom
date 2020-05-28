@@ -9,10 +9,7 @@
 #include "p_setup.h"
 #include "p_shoot.h"
 #include "p_tick.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <algorithm>
-END_THIRD_PARTY_INCLUDES
+#include <algorithm>
 
 static const VmPtr<fixed_t>     gSightZStart(0x80078020);   // Z position of thing looking
 static const VmPtr<fixed_t>     gTopSlope(0x800781E0);      // Maximum/top unblocked viewing slope (clipped against upper walls)

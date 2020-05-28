@@ -3,10 +3,8 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "ProgArgs.h"
 
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <cstdio>
-    #include <cstring>
-END_THIRD_PARTY_INCLUDES
+#include <cstdio>
+#include <cstring>
 
 BEGIN_NAMESPACE(ProgArgs)
 

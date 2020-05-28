@@ -8,11 +8,11 @@
 #include "PcPsx/ProgArgs.h"
 #include <cstdlib>
 
-BEGIN_THIRD_PARTY_INCLUDES
+BEGIN_DISABLE_HEADER_WARNINGS
     #include <cpu/instructions.h>
     #include <sound/sound.h>
     #include <system.h>
-END_THIRD_PARTY_INCLUDES
+END_DISABLE_HEADER_WARNINGS
 
 // External function required from LIBCD.
 // This is a slight layering violation (this module should not know app code) but is required for correct functionality.

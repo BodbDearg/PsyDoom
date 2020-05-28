@@ -4,14 +4,11 @@
 #include "ModMgr.h"
 
 #include "ProgArgs.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <cstdio>
-    #include <cstring>
-    #include <filesystem>
-    #include <map>
-    #include <vector>
-END_THIRD_PARTY_INCLUDES
+#include <cstdio>
+#include <cstring>
+#include <filesystem>
+#include <map>
+#include <vector>
 
 BEGIN_NAMESPACE(ModMgr)
 

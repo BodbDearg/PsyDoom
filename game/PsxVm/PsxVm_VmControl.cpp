@@ -6,19 +6,17 @@
 
 #include "PcPsx/FatalErrors.h"
 #include "PcPsx/Macros.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-
-#include <disc/format/cue.h>
-#include <disc/load.h>
-#include <input/input_manager.h>
 #include <map>
 #include <memory>
 #include <SDL.h>
-#include <sound/sound.h>
-#include <system.h>
 
-END_THIRD_PARTY_INCLUDES
+BEGIN_DISABLE_HEADER_WARNINGS
+    #include <disc/format/cue.h>
+    #include <disc/load.h>
+    #include <input/input_manager.h>
+    #include <sound/sound.h>
+    #include <system.h>
+END_DISABLE_HEADER_WARNINGS
 
 using namespace PsxVm;
 

@@ -5,11 +5,8 @@
 #include "Doom/Renderer/r_main.h"
 #include "p_local.h"
 #include "p_setup.h"
-
-BEGIN_THIRD_PARTY_INCLUDES
-    #include <algorithm>
-    #include <cmath>
-END_THIRD_PARTY_INCLUDES
+#include <algorithm>
+#include <cmath>
 
 const VmPtr<fixed_t>    gOpenBottom(0x80077F30);    // Line opening (floor/ceiling gap) info: bottom Z value of the opening
 const VmPtr<fixed_t>    gOpenTop(0x800780BC);       // Line opening (floor/ceiling gap) info: top Z value of the opening

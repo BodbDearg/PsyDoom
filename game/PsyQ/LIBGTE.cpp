@@ -7,12 +7,10 @@
 #include "LIBAPI.h"
 #include "PsxVm/PsxVm.h"
 
-BEGIN_THIRD_PARTY_INCLUDES
-
-#include <cpu/cpu.h>
-#include <cpu/gte/gte.h>
-
-END_THIRD_PARTY_INCLUDES
+BEGIN_DISABLE_HEADER_WARNINGS
+    #include <cpu/cpu.h>
+    #include <cpu/gte/gte.h>
+END_DISABLE_HEADER_WARNINGS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Helper: makes a 32-bit unsigned integer from the 2 given 16-bit unsigned integers.
