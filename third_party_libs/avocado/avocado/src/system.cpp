@@ -34,6 +34,7 @@ System::System() {
 
     debugOutput = config.debug.log.system;
     biosLog = config.debug.log.bios;
+
     cycles = 0;
 }
 
@@ -329,7 +330,7 @@ void System::singleStep() {
     state = State::pause;
 
     dma->step();
-
+    cdrom->step();
     timer[0]->step(3);
     timer[1]->step(3);
     timer[2]->step(3);
@@ -349,7 +350,6 @@ void System::emulateFrame() {
     gpu->gpuLogList.clear();
 
     gpu->prevVram = gpu->vram;
-
     int systemCycles = 300;
     for (;;) {
         if (!cpu->executeInstructions(systemCycles / 3)) {
@@ -357,7 +357,7 @@ void System::emulateFrame() {
         }
 
         dma->step();
-
+        cdrom->step();
         timer[0]->step(systemCycles);
         timer[1]->step(systemCycles);
         timer[2]->step(systemCycles);
@@ -370,7 +370,6 @@ void System::emulateFrame() {
             // Note - this overclocks SPU clock, bugs might appear.
             magicNumber *= 50.f / 60.f;
         }
-
         spuCounter += (float)systemCycles / magicNumber / (float)0x300;
         if (spuCounter >= 1.f) {
             spu->step(cdrom.get());

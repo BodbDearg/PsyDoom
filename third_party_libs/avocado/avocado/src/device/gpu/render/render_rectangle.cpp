@@ -3,43 +3,22 @@
 #include "texture_utils.h"
 #include "utils/macros.h"
 
-using glm::ivec2;
-using glm::ivec3;
-using glm::uvec2;
-using gpu::GPU;
-
 #undef VRAM
 #define VRAM ((uint16_t(*)[gpu::VRAM_WIDTH])gpu->vram.data())
 
-// Duplicated code, unify
-INLINE glm::uvec2 calculateTexel(glm::ivec2 tex, const gpu::GP0_E2 textureWindow) {
-    // Texture is repeated outside of 256x256 window
-    tex.x %= 256u;
-    tex.y %= 256u;
-
-    // Texture masking
-    // texel = (texel AND(NOT(Mask * 8))) OR((Offset AND Mask) * 8)
-    tex.x = (tex.x & ~(textureWindow.maskX * 8)) | ((textureWindow.offsetX & textureWindow.maskX) * 8);
-    tex.y = (tex.y & ~(textureWindow.maskY * 8)) | ((textureWindow.offsetY & textureWindow.maskY) * 8);
-
-    return tex;
-}
-
-template <ColorDepth bits>
-INLINE void rectangle(GPU* gpu, const primitive::Rect& rect) {
+template <ColorDepth bits, bool isSemiTransparent, bool isBlended, bool checkMaskBeforeDraw>
+INLINE void rasterizeRectangle(gpu::GPU* gpu, const primitive::Rect& rect) {
     // Extract common GPU state
     const auto transparency = gpu->gp0_e1.semiTransparency;
-    const bool checkMaskBeforeDraw = gpu->gp0_e6.checkMaskBeforeDraw;
     const bool setMaskWhileDrawing = gpu->gp0_e6.setMaskWhileDrawing;
     const auto textureWindow = gpu->gp0_e2;
-    const bool isBlended = !rect.isRawTexture;
     constexpr bool isTextured = bits != ColorDepth::NONE;
 
     if (rect.size.x >= 1024 || rect.size.y >= 512) return;
 
-    const ivec2 pos(                       //
-        rect.pos.x + gpu->drawingOffsetX,  //
-        rect.pos.y + gpu->drawingOffsetY   //
+    const ivec2 pos(  //
+        rect.pos.x,   //
+        rect.pos.y    //
     );
     const ivec2 min(              //
         gpu->minDrawingX(pos.x),  //
@@ -65,11 +44,13 @@ INLINE void rectangle(GPU* gpu, const primitive::Rect& rect) {
         vStep = -1;
     }
 
+    loadClutCacheIfRequired<bits>(gpu, rect.clut);
+
     int x, y, u, v;
     for (y = min.y, v = uv.y; y <= max.y; y++, v += vStep) {
         for (x = min.x, u = uv.x; x <= max.x; x++, u += uStep) {
             PSXColor bg = VRAM[y][x];
-            if (unlikely(checkMaskBeforeDraw)) {
+            if constexpr (checkMaskBeforeDraw) {
                 if (bg.k) continue;
             }
 
@@ -77,17 +58,19 @@ INLINE void rectangle(GPU* gpu, const primitive::Rect& rect) {
             if constexpr (bits == ColorDepth::NONE) {
                 c = PSXColor(rect.color.r, rect.color.g, rect.color.b);
             } else {
-                uvec2 texel = calculateTexel(ivec2(u, v), textureWindow);
-                c = fetchTex<bits>(gpu, texel, rect.texpage, rect.clut);
+                const ivec2 texel = maskTexel(ivec2(u, v), textureWindow);
+                c = fetchTex<bits>(gpu, texel, rect.texpage);
                 if (c.raw == 0x0000) continue;
 
-                if (isBlended) {
-                    c = c * ivec3(rect.color.r, rect.color.g, rect.color.b);
+                if constexpr (isBlended) {
+                    c = c * rect.color;
                 }
             }
 
-            if (rect.isSemiTransparent && (!isTextured || c.k)) {
-                c = PSXColor::blend(bg, c, transparency);
+            if constexpr (isSemiTransparent) {
+                if (!isTextured || c.k) {
+                    c = PSXColor::blend(bg, c, transparency);
+                }
             }
 
             c.k |= setMaskWhileDrawing;
@@ -96,14 +79,44 @@ INLINE void rectangle(GPU* gpu, const primitive::Rect& rect) {
         }
     }
 }
+
+// Generate all permutations of rasterizeRectangle
+using rasterizeRectangle_t = void(gpu::GPU* gpu, const primitive::Rect& rect);
+
+#define E(bits, isSemiTransparent, isBlended, checkMaskBit) \
+    &rasterizeRectangle<bitsToDepth<bits>(), isSemiTransparent, isBlended, checkMaskBit>
+
+/* Kotlin script for lookup array generation:
+
+    fun Iterable<Int>.wrap(f: (Int) -> String): String =
+        "{" + joinToString(",", transform = f) + "}"
+
+    fun generateTable(): String =
+        setOf(0, 4, 8, 16).wrap { bits ->
+        (0..1).wrap { isSemiTransparent ->
+        (0..1).wrap { isBlended ->
+        (0..1).wrap { checkMaskBit ->
+            "E($bits, $isSemiTransparent, $isGouraudShaded, $isBlended, $checkMaskBit, $dithering)"
+        }}}}
+
+    generateTable()
+*/
+
+static constexpr rasterizeRectangle_t* rasterizeRectangleDispatchTable[4][2][2][2] =  //
+    {{{{E(0, 0, 0, 0), E(0, 0, 0, 1)}, {E(0, 0, 1, 0), E(0, 0, 1, 1)}}, {{E(0, 1, 0, 0), E(0, 1, 0, 1)}, {E(0, 1, 1, 0), E(0, 1, 1, 1)}}},
+     {{{E(4, 0, 0, 0), E(4, 0, 0, 1)}, {E(4, 0, 1, 0), E(4, 0, 1, 1)}}, {{E(4, 1, 0, 0), E(4, 1, 0, 1)}, {E(4, 1, 1, 0), E(4, 1, 1, 1)}}},
+     {{{E(8, 0, 0, 0), E(8, 0, 0, 1)}, {E(8, 0, 1, 0), E(8, 0, 1, 1)}}, {{E(8, 1, 0, 0), E(8, 1, 0, 1)}, {E(8, 1, 1, 0), E(8, 1, 1, 1)}}},
+     {{{E(16, 0, 0, 0), E(16, 0, 0, 1)}, {E(16, 0, 1, 0), E(16, 0, 1, 1)}},
+      {{E(16, 1, 0, 0), E(16, 1, 0, 1)}, {E(16, 1, 1, 0), E(16, 1, 1, 1)}}}};
+#undef E
+
 void Render::drawRectangle(gpu::GPU* gpu, const primitive::Rect& rect) {
-    if (rect.bits == 0) {
-        rectangle<ColorDepth::NONE>(gpu, rect);
-    } else if (rect.bits == 4) {
-        rectangle<ColorDepth::BIT_4>(gpu, rect);
-    } else if (rect.bits == 8) {
-        rectangle<ColorDepth::BIT_8>(gpu, rect);
-    } else if (rect.bits == 16) {
-        rectangle<ColorDepth::BIT_16>(gpu, rect);
-    }
+    auto bits = (int)bitsToDepth(rect.bits);
+    auto isSemiTransparent = rect.isSemiTransparent;
+    auto isBlended = !rect.isRawTexture;
+    auto checkMaskBit = gpu->gp0_e6.checkMaskBeforeDraw;
+
+    auto rasterize = rasterizeRectangleDispatchTable[bits][isSemiTransparent][isBlended][checkMaskBit];
+
+    rasterize(gpu, rect);
 }

@@ -12,10 +12,10 @@ void Render::drawLine(gpu::GPU* gpu, const primitive::Line& line) {
     const bool setMaskWhileDrawing = gpu->gp0_e6.setMaskWhileDrawing;
     const bool dithering = gpu->gp0_e1.dither24to15;
 
-    int x0 = line.pos[0].x + gpu->drawingOffsetX;
-    int y0 = line.pos[0].y + gpu->drawingOffsetY;
-    int x1 = line.pos[1].x + gpu->drawingOffsetX;
-    int y1 = line.pos[1].y + gpu->drawingOffsetY;
+    int x0 = line.pos[0].x;
+    int y0 = line.pos[0].y;
+    int x1 = line.pos[1].x;
+    int y1 = line.pos[1].y;
     RGB c0 = line.color[0];
     RGB c1 = line.color[1];
 
@@ -47,7 +47,7 @@ void Render::drawLine(gpu::GPU* gpu, const primitive::Line& line) {
 
     // TODO: Precalculate color stepping
     auto getColor = [&](int x, int y) -> RGB {
-        if (!line.gouroudShading) {
+        if (!line.gouraudShading) {
             return c0;
         }
         float relPos = sqrtf(powf(x0 - x, 2) + powf(y0 - y, 2));
@@ -65,11 +65,11 @@ void Render::drawLine(gpu::GPU* gpu, const primitive::Line& line) {
 
         PSXColor c(fullColor.r, fullColor.g, fullColor.b);
         if (dithering) {
-            glm::ivec3 col(fullColor.r, fullColor.g, fullColor.b);
-            col += ditherTable[y & 3u][x & 3u];
-            col = glm::clamp(col, 0, 255);
-
-            c = PSXColor(col.r, col.g, col.b);
+            c = PSXColor(                                //
+                ditherLUT[y & 3u][x & 3u][fullColor.r],  //
+                ditherLUT[y & 3u][x & 3u][fullColor.g],  //
+                ditherLUT[y & 3u][x & 3u][fullColor.b]   //
+            );
         }
 
         if (line.isSemiTransparent) {

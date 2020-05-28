@@ -1,1 +1,0 @@
-include $(call my-dir)/../../../Avocado_Application.mk

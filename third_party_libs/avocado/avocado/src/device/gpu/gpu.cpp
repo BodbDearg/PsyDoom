@@ -52,6 +52,8 @@ void GPU::reset() {
     drawingOffsetY = 0;
 
     gp0_e6._reg = 0;
+
+    clutCachePos = ivec2(-1, -1);
 }
 
 void GPU::drawTriangle(const primitive::Triangle& triangle) {
@@ -59,7 +61,7 @@ void GPU::drawTriangle(const primitive::Triangle& triangle) {
         int flags = 0;
         if (triangle.isRawTexture) flags |= Vertex::Flags::RawTexture;
         if (gp0_e1.dither24to15) flags |= Vertex::Flags::Dithering;
-        if (triangle.gouroudShading) flags |= Vertex::Flags::GouroudShading;
+        if (triangle.gouraudShading) flags |= Vertex::Flags::GouraudShading;
         if (triangle.isSemiTransparent) {
             flags |= Vertex::Flags::SemiTransparency;
             flags |= static_cast<int>(triangle.transparency) << 5;
@@ -68,7 +70,7 @@ void GPU::drawTriangle(const primitive::Triangle& triangle) {
         for (int i : {0, 1, 2}) {
             auto& v = triangle.v[i];
             vertices.push_back({
-                {static_cast<float>(v.pos.x + drawingOffsetX), static_cast<float>(v.pos.y + drawingOffsetY)},
+                {static_cast<float>(v.pos.x), static_cast<float>(v.pos.y)},
                 {v.color.r, v.color.g, v.color.b},
                 {v.uv.x, v.uv.y},
                 triangle.bits,
@@ -88,25 +90,20 @@ void GPU::drawTriangle(const primitive::Triangle& triangle) {
 
 void GPU::drawLine(const primitive::Line& line) {
     if (hardwareRendering) {
-        glm::ivec2 p[2];
-        for (int i = 0; i < 2; i++) {
-            p[i] = line.pos[i];
-            p[i].x += drawingOffsetX;
-            p[i].y += drawingOffsetY;
-        }
+        vec2 p[2]{line.pos[0], line.pos[1]};
         auto c = line.color;
         int flags = 0;
 
-        if (line.gouroudShading) flags |= Vertex::Flags::GouroudShading;
+        if (line.gouraudShading) flags |= Vertex::Flags::GouraudShading;
         if (line.isSemiTransparent) {
             flags |= Vertex::Flags::SemiTransparency;
             flags |= static_cast<int>(gp0_e1.semiTransparency) << 5;
         }
 
         // Calculate vector b perpendicular to p0p1 line
-        glm::vec2 angle(p[1] - p[0]);
+        vec2 angle(p[1] - p[0]);
         // Rotate 90°, normalize and make it half size
-        glm::vec2 b = glm::normalize(glm::vec2(angle.y, -angle.x)) / 2.f;
+        vec2 b = vec2::normalize(vec2(angle.y, -angle.x)) / 2.f;
 
         auto pushVertex = [&](float x, float y, const RGB c) {
             vertices.push_back({
@@ -122,7 +119,7 @@ void GPU::drawLine(const primitive::Line& line) {
             });
         };
 
-        // Trianglulate line
+        // Triangulate line
         pushVertex(p[0].x - b.x, p[0].y - b.y, c[0]);
         pushVertex(p[0].x + b.x, p[0].y + b.y, c[0]);
         pushVertex(p[1].x - b.x, p[1].y - b.y, c[1]);
@@ -138,12 +135,12 @@ void GPU::drawLine(const primitive::Line& line) {
 
 void GPU::drawRectangle(const primitive::Rect& rect) {
     if (hardwareRendering) {
-        glm::ivec2 p;
+        ivec2 p;
         float x[4], y[4];
-        glm::ivec2 uv[4];
+        ivec2 uv[4];
 
-        p.x = rect.pos.x + drawingOffsetX;
-        p.y = rect.pos.y + drawingOffsetY;
+        p.x = rect.pos.x;
+        p.y = rect.pos.y;
 
         x[0] = p.x;
         y[0] = p.y;
@@ -223,7 +220,7 @@ void GPU::cmdFillRectangle() {
     cmd = Command::None;
 
     if (hardwareRendering) {
-        glm::ivec2 p[4] = {
+        ivec2 p[4] = {
             {startX, startY},
             {endX, startY},
             {startX, endY},
@@ -261,10 +258,10 @@ void GPU::cmdPolygon(PolygonArgs arg) {
     TextureInfo tex;
 
     for (int i = 0; i < arg.getVertexCount(); i++) {
-        v[i].pos.x = extend_sign<11>(arguments[ptr] & 0xffff);
-        v[i].pos.y = extend_sign<11>((arguments[ptr++] & 0xffff0000) >> 16);
+        v[i].pos.x = drawingOffsetX + extend_sign<11>(arguments[ptr] & 0xffff);
+        v[i].pos.y = drawingOffsetY + extend_sign<11>((arguments[ptr++] & 0xffff0000) >> 16);
 
-        if (!arg.isRawTexture && (!arg.gouroudShading || i == 0)) v[i].color.raw = arguments[0] & 0xffffff;
+        if (!arg.isRawTexture && (!arg.gouraudShading || i == 0)) v[i].color.raw = arguments[0] & 0xffffff;
         if (arg.isTextureMapped) {
             if (i == 0) tex.palette = arguments[ptr];
             if (i == 1) tex.texpage = arguments[ptr];
@@ -272,7 +269,7 @@ void GPU::cmdPolygon(PolygonArgs arg) {
             v[i].uv.y = (arguments[ptr] >> 8) & 0xff;
             ptr++;
         }
-        if (arg.gouroudShading && i < arg.getVertexCount() - 1) v[i + 1].color.raw = arguments[ptr++] & 0xffffff;
+        if (arg.gouraudShading && i < arg.getVertexCount() - 1) v[i + 1].color.raw = arguments[ptr++] & 0xffffff;
     }
 
     primitive::Triangle triangle;
@@ -283,7 +280,7 @@ void GPU::cmdPolygon(PolygonArgs arg) {
     triangle.isSemiTransparent = arg.semiTransparency;
     triangle.transparency = gp0_e1.semiTransparency;
     triangle.isRawTexture = arg.isRawTexture;
-    triangle.gouroudShading = arg.gouroudShading;
+    triangle.gouraudShading = arg.gouraudShading;
 
     if (arg.isTextureMapped) {
         triangle.bits = tex.getBitcount();
@@ -324,20 +321,20 @@ void GPU::cmdLine(LineArgs arg) {
 
     primitive::Line line;
     line.isSemiTransparent = arg.semiTransparency;
-    line.gouroudShading = arg.gouroudShading;
+    line.gouraudShading = arg.gouraudShading;
 
-    line.pos[0].x = extend_sign<11>(arguments[ptr] & 0xffff);
-    line.pos[0].y = extend_sign<11>((arguments[ptr++] & 0xffff0000) >> 16);
+    line.pos[0].x = drawingOffsetX + extend_sign<11>(arguments[ptr] & 0xffff);
+    line.pos[0].y = drawingOffsetY + extend_sign<11>((arguments[ptr++] & 0xffff0000) >> 16);
     line.color[0].raw = (arguments[0] & 0xffffff);
 
-    if (arg.gouroudShading) {
+    if (arg.gouraudShading) {
         line.color[1].raw = arguments[ptr++];
     } else {
         line.color[1] = line.color[0];
     }
 
-    line.pos[1].x = extend_sign<11>((arguments[ptr] & 0xffff));
-    line.pos[1].y = extend_sign<11>((arguments[ptr++] & 0xffff0000) >> 16);
+    line.pos[1].x = drawingOffsetX + extend_sign<11>((arguments[ptr] & 0xffff));
+    line.pos[1].y = drawingOffsetY + extend_sign<11>((arguments[ptr++] & 0xffff0000) >> 16);
 
     drawLine(line);
 
@@ -347,7 +344,7 @@ void GPU::cmdLine(LineArgs arg) {
     }
 
     // Swap pos[1] to pos[0] (and color if shaded), so that next lines can be rendered
-    if (!arg.gouroudShading) {
+    if (!arg.gouraudShading) {
         arguments[1] = arguments[2];  // Pos
     } else {
         arguments[1] = arguments[3];  // Pos
@@ -362,7 +359,6 @@ void GPU::cmdRectangle(RectangleArgs arg) {
     arg[1] = pos              (0xYYYY XXXX)
     arg[2] = Palette + tex UV (0xCLUT VVUU) (*if textured)
     arg[3] = size             (0xHHHH WWWW) (*if variable size) */
-    using vec2 = glm::ivec2;
     using Bits = gpu::GP0_E1::TexturePageColors;
 
     int16_t w = arg.getSize();
@@ -373,12 +369,12 @@ void GPU::cmdRectangle(RectangleArgs arg) {
         h = extend_sign<11>((arguments[(arg.isTextureMapped ? 3 : 2)] & 0xffff0000) >> 16);
     }
 
-    int16_t x = extend_sign<11>(arguments[1] & 0xffff);
-    int16_t y = extend_sign<11>((arguments[1] & 0xffff0000) >> 16);
+    int16_t x = drawingOffsetX + extend_sign<11>(arguments[1] & 0xffff);
+    int16_t y = drawingOffsetY + extend_sign<11>((arguments[1] & 0xffff0000) >> 16);
 
     primitive::Rect rect;
-    rect.pos = vec2(x, y);
-    rect.size = vec2(w, h);
+    rect.pos = ivec2(x, y);
+    rect.size = ivec2(w, h);
     rect.color.raw = (arguments[0] & 0xffffff);
 
     if (!arg.isTextureMapped) {
@@ -409,9 +405,9 @@ void GPU::cmdRectangle(RectangleArgs arg) {
         };
         Argument2 p = arguments[2];
 
-        rect.uv = vec2(p.u, p.v);
-        rect.clut = vec2(p.clutX * 16, p.clutY);
-        rect.texpage = vec2(gp0_e1.texturePageBaseX * 64, gp0_e1.texturePageBaseY * 256);
+        rect.uv = ivec2(p.u, p.v);
+        rect.clut = ivec2(p.clutX * 16, p.clutY);
+        rect.texpage = ivec2(gp0_e1.texturePageBaseX * 64, gp0_e1.texturePageBaseY * 256);
     }
 
     drawRectangle(rect);
@@ -616,6 +612,7 @@ void GPU::writeGP0(uint32_t data) {
             }
         } else if (command == 0x01) {
             // Clear Cache
+            clutCachePos = ivec2(-1, -1);
         } else if (command == 0x02) {
             // Fill rectangle
             cmd = Command::FillRectangle;

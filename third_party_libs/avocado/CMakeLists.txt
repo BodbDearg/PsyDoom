@@ -67,12 +67,15 @@ set(SOURCE_FILES
     "${SRC_DIR}/device/dma/dma_channel.h"
     "${SRC_DIR}/device/expansion2.cpp"
     "${SRC_DIR}/device/expansion2.h"
+    "${SRC_DIR}/device/gpu/color_depth.cpp"
+    "${SRC_DIR}/device/gpu/color_depth.h"
     "${SRC_DIR}/device/gpu/gpu.cpp"
     "${SRC_DIR}/device/gpu/gpu.h"
     "${SRC_DIR}/device/gpu/primitive.h"
     "${SRC_DIR}/device/gpu/psx_color.cpp"
     "${SRC_DIR}/device/gpu/psx_color.h"
     "${SRC_DIR}/device/gpu/registers.h"
+    "${SRC_DIR}/device/gpu/render/dither.cpp"
     "${SRC_DIR}/device/gpu/render/dither.h"
     "${SRC_DIR}/device/gpu/render/render.h"
     "${SRC_DIR}/device/gpu/render/render_line.cpp"
@@ -149,6 +152,8 @@ set(SOURCE_FILES
     "${SRC_DIR}/utils/psx_exe.h"
     "${SRC_DIR}/utils/string.cpp"
     "${SRC_DIR}/utils/string.h"
+    "${SRC_DIR}/utils/vector.cpp"
+    "${SRC_DIR}/utils/vector.h"
 )
 
 set(OTHER_FILES

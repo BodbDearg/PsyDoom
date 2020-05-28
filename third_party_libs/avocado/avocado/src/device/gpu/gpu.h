@@ -1,7 +1,7 @@
 #pragma once
 #include <array>
-#include <glm/glm.hpp>
 #include <vector>
+#include "color_depth.h"
 #include "primitive.h"
 #include "psx_color.h"
 #include "registers.h"
@@ -103,6 +103,11 @@ public:
     bool textureDisableAllowed = false;
 
     std::array<uint16_t, VRAM_WIDTH * VRAM_HEIGHT> vram{};
+
+    // TODO: Serialize?
+    std::array<uint16_t, 256> clutCache{};
+    ivec2 clutCachePos{-1, -1};
+    ColorDepth clutCacheColorDepth = ColorDepth::NONE;
 
 // PC-PSX DOOM: allowing some lower level access to the GPU for speed
 #if !DOOM_AVOCADO_MODS

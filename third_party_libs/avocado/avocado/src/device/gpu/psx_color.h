@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <glm/glm.hpp>
 #include "semi_transparency.h"
 #include "utils/macros.h"
 #include "utils/math.h"
@@ -17,6 +16,7 @@ union RGB {
     uint32_t raw;
 
     RGB() : raw(0) {}
+    RGB(int r, int g, int b) : r(r), g(g), b(b) {}
 };
 
 RGB operator*(const RGB& lhs, const float rhs);
@@ -47,10 +47,17 @@ union PSXColor {
         this->k = 0;
     }
 
+    PSXColor(RGB c) {
+        this->r = c.r >> 3;
+        this->g = c.g >> 3;
+        this->b = c.b >> 3;
+        this->k = 0;
+    }
+
     // 5bit input values
     PSXColor(uint8_t r, uint8_t g, uint8_t b, uint8_t k) : r(r), g(g), b(b), k(k) {}
 
-    PSXColor operator*(const glm::ivec3& rhs) const {
+    PSXColor operator*(const RGB& rhs) const {
         return PSXColor(                               //
             clamp_top<uint8_t>((rhs.r * r) >> 7, 31),  //
             clamp_top<uint8_t>((rhs.g * g) >> 7, 31),  //
