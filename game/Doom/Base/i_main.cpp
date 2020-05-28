@@ -197,13 +197,10 @@ void I_Main() noexcept {
     #endif
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does PlayStation specific hardware initialization, except for audio (which is handled by the WESS library)
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_PSXInit() noexcept {
-    sp -= 0x28;
-    sw(ra, sp + 0x24);
-    sw(s2, sp + 0x20);
-    sw(s1, sp + 0x1C);
-    sw(s0, sp + 0x18);
-    
     // Initialize system callbacks and interrupt handlers 
     LIBETC_ResetCallback();
 
@@ -223,83 +220,42 @@ void I_PSXInit() noexcept {
     LIBGTE_SetGeomScreen(128);
     LIBGTE_SetGeomOffset(128, 100);
 
-    s0 = 0xF0;                                          // Result = 000000F0
-    s1 = 0x800B0000;                                    // Result = 800B0000
-    s1 -= 0x6F54;                                       // Result = gDrawEnv1[0] (800A90AC)
-    a0 = s1;                                            // Result = gDrawEnv1[0] (800A90AC)
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0x100;                                         // Result = 00000100
-    sw(s0, sp + 0x10);
-    LIBGPU_SetDefDrawEnv(*vmAddrToPtr<DRAWENV>(a0), a1, a2, a3, s0);
-
-    s2 = 1;                                             // Result = 00000001
-    a0 = s1 + 0x5C;                                     // Result = gDrawEnv2[0] (800A9108)
-    a1 = 0x100;                                         // Result = 00000100
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0x100;                                         // Result = 00000100
-    at = 0x800B0000;                                    // Result = 800B0000
-    sb(s2, at - 0x6F3C);                                // Store to: gDrawEnv1[C] (800A90C4)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sb(0, at - 0x6F3E);                                 // Store to: gDrawEnv1[B] (800A90C2)
-    sw(s0, sp + 0x10);
-    LIBGPU_SetDefDrawEnv(*vmAddrToPtr<DRAWENV>(a0), a1, a2, a3, s0);
-
-    s1 = 0x800B0000;                                    // Result = 800B0000
-    s1 -= 0x6E9C;                                       // Result = gDispEnv1[0] (800A9164)
-    a0 = s1;                                            // Result = gDispEnv1[0] (800A9164)
-    a1 = 0x100;                                         // Result = 00000100
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0x100;                                         // Result = 00000100
-    at = 0x800B0000;                                    // Result = 800B0000
-    sb(s2, at - 0x6EE0);                                // Store to: gDrawEnv2[C] (800A9120)
-    at = 0x800B0000;                                    // Result = 800B0000
-    sb(0, at - 0x6EE2);                                 // Store to: gDrawEnv2[B] (800A911E)
-    sw(s0, sp + 0x10);
-    LIBGPU_SetDefDispEnv(*vmAddrToPtr<DISPENV>(a0), a1, a2, a3, s0);
+    // Setup the descriptors (draw and display environments) for the two framebuffers.
+    // These structs specify where in VRAM the framebuffers live, clearing and dithering options and so on.
+    LIBGPU_SetDefDrawEnv(gDrawEnvs[0], 0, 0, 256, 240);
+    gDrawEnvs[0].isbg = true;
+    gDrawEnvs[0].dtd = false;
     
-    a0 = s1 + 0x14;                                     // Result = gDispEnv2[0] (800A9178)
-    a1 = 0;                                             // Result = 00000000
-    a2 = 0;                                             // Result = 00000000
-    a3 = 0x100;                                         // Result = 00000100
-    sw(s0, sp + 0x10);
-    LIBGPU_SetDefDispEnv(*vmAddrToPtr<DISPENV>(a0), a1, a2, a3, s0);
+    LIBGPU_SetDefDrawEnv(gDrawEnvs[1], 256, 0, 256, 240);
+    gDrawEnvs[1].isbg = true;
+    gDrawEnvs[1].dtd = false;
+
+    LIBGPU_SetDefDispEnv(gDispEnvs[0], 256, 0, 256, 240);
+    LIBGPU_SetDefDispEnv(gDispEnvs[1], 0, 0, 256, 240);
     
+    // Start off presenting this framebuffer
     *gCurDispBufferIdx = 0;
     
+    // Not sure why interrupts are being disabled and then immediately re-enabled, perhaps to flush out some state?
     LIBAPI_EnterCriticalSection();
     LIBAPI_ExitCriticalSection();
+
+    // Setup serial (PlayStation link cable) communications:
+    //  (1) Install the serial I/O driver.
+    //  (2) Setup events for read and write done, so we can detect when these operations complete.
+    //  (3) Open the serial I/O files that we use for input and output
+    //  (4) Set data transmission rate (bits per second)
+    //
     LIBCOMB_AddCOMB();
     
-    a0 = 0xF000000B;                                    // Result = F000000B
-    a1 = 0x400;                                         // Result = 00000400
-    a2 = 0x2000;                                        // Result = 00002000
-    v0 = LIBAPI_OpenEvent(a0, a1, a2, nullptr);
-    sw(v0, gp + 0x944);                                 // Store to: gSioErrorEvent (80077F24)
+    *gSioReadDoneEvent = LIBAPI_OpenEvent(HwSIO, EvSpIOER, EvMdNOINTR, nullptr);
+    LIBAPI_EnableEvent(*gSioReadDoneEvent);
     
-    a0 = v0;
-    LIBAPI_EnableEvent(a0);
-    
-    a0 = 0xF000000B;                                    // Result = F000000B
-    a1 = 0x800;                                         // Result = 00000800
-    a2 = 0x2000;                                        // Result = 00002000
-    v0 = LIBAPI_OpenEvent(a0, a1, a2, nullptr);
-    sw(v0, gp + 0xA60);                                 // Store to: gSioWriteDoneEvent (80078040)
+    *gSioWriteDoneEvent = LIBAPI_OpenEvent(HwSIO, EvSpIOEW, EvMdNOINTR, nullptr);
+    LIBAPI_EnableEvent(*gSioWriteDoneEvent);
 
-    a0 = v0;
-    LIBAPI_EnableEvent(a0);
-    
-    s0 = 0x80070000;                                    // Result = 80070000
-    s0 += 0x7C1C;                                       // Result = STR_sio_3[0] (80077C1C)
-    a0 = s0;                                            // Result = STR_sio_3[0] (80077C1C)
-    a1 = 2;                                             // Result = 00000002
-    LIBAPI_open();
-    sw(v0, gp + 0x934);                                 // Store to: gNetOutputFd (80077F14)
-
-    a0 = s0;                                            // Result = STR_sio_3[0] (80077C1C)    
-    a1 = 0x8001;                                        // Result = 00008001
-    LIBAPI_open();
-    sw(v0, gp + 0xC54);                                 // Store to: gNetInputFd (80078234)
+    *gNetOutputFd = LIBAPI_open("sio:", O_WRONLY);
+    *gNetInputFd = LIBAPI_open("sio:", O_RDONLY | O_NOWAIT);
 
     LIBCOMB_CombSetBPS(38400);
         
@@ -309,12 +265,6 @@ void I_PSXInit() noexcept {
 
     // Enable display output
     LIBGPU_SetDispMask(1);
-
-    ra = lw(sp + 0x24);
-    s2 = lw(sp + 0x20);
-    s1 = lw(sp + 0x1C);
-    s0 = lw(sp + 0x18);
-    sp += 0x28;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -21,14 +21,14 @@ void I_CrossFadeFrameBuffers() noexcept {
     DISPENV dispEnvs[2];
     
     LIBGPU_SetDefDrawEnv(drawEnvs[0], 512, 256, 256, 240);
-    drawEnvs[0].isbg = 1;
-    drawEnvs[0].dtd = 0;
-    drawEnvs[0].dfe = 1;
+    drawEnvs[0].isbg = true;
+    drawEnvs[0].dtd = false;
+    drawEnvs[0].dfe = true;
 
     LIBGPU_SetDefDrawEnv(drawEnvs[1], 768, 256, 256, 240);
-    drawEnvs[1].isbg = 1;
-    drawEnvs[1].dtd = 0;
-    drawEnvs[1].dfe = 1;
+    drawEnvs[1].isbg = true;
+    drawEnvs[1].dtd = false;
+    drawEnvs[1].dfe = true;
 
     LIBGPU_SetDefDispEnv(dispEnvs[0], 768, 256, 256, 240);
     LIBGPU_SetDefDispEnv(dispEnvs[1], 512, 256, 256, 240);

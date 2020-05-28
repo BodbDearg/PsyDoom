@@ -777,14 +777,14 @@ DRAWENV& LIBGPU_SetDefDrawEnv(DRAWENV& env, const int32_t x, const int32_t y, co
     env.tw.h = 0;
     env.tpage = LIBGPU_GetTPage(0, 0, 640, 0);
 
-    env.dtd = 1;
+    env.dtd = true;
     env.dfe = (h != 480);
 
     env.r0 = 0;
     env.g0 = 0;
     env.b0 = 0;
   
-    env.isbg = 0;
+    env.isbg = false;
     return env;
 }
 

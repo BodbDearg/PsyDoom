@@ -244,8 +244,9 @@ bool LIBAPI_TestEvent([[maybe_unused]] const uint32_t eventDescriptor) noexcept 
 //------------------------------------------------------------------------------------------------------------------------------------------
 void LIBAPI_ExitCriticalSection() noexcept {}
 
-void LIBAPI_open() noexcept {
+int32_t LIBAPI_open(const char* const pPath, const uint32_t flags) noexcept {
     // FIXME: IMPLEMENT ME
+    return -1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

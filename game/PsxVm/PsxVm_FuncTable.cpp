@@ -75,12 +75,7 @@ extern void _thunk_A_OpenShotgun2() noexcept;
 extern void _thunk_A_LoadShotgun2() noexcept;
 extern void _thunk_A_CloseShotgun2() noexcept;
 extern void _thunk_T_DelayedAction() noexcept;
-extern void I_PSXInit() noexcept;
 extern void G_CompleteLevel() noexcept;             // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
-
-extern void LIBAPI_open() noexcept;
-extern void LIBCOMB_AddCOMB() noexcept;
-extern void LIBCOMB_DelCOMB() noexcept;
 
 namespace PsxVm {
     std::map<uint32_t, VmFunc> gFuncTable = {
@@ -156,11 +151,6 @@ namespace PsxVm {
         { 0x800216B4, &_thunk_A_LoadShotgun2 },
         { 0x800216D8, &_thunk_A_CloseShotgun2 },
         { 0x80027718, &_thunk_T_DelayedAction },
-        { 0x80032934, &I_PSXInit },
         { 0x80013384, &G_CompleteLevel },   // TODO: remove eventually - still required because it's called via a thinker function in 'T_DelayedAction'.
-        
-        { 0x80049E4C, &LIBAPI_open },
-        { 0x800580B4, &LIBCOMB_AddCOMB },
-        { 0x800580E0, &LIBCOMB_DelCOMB },
     };
 }
