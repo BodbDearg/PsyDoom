@@ -82,6 +82,8 @@ void I_AddPrim(const void* const pPrim) noexcept {
     // Make enough room to insert the new primitive into the command buffer.
     // Continue looping until we've made the room!
     while (true) {
+        // FIXME: I think there is a bug with this stuff somewhere that causes (very seldom) non rendering of some geom: investigate
+
         // Is the command queue not wrapping around?
         if (*gpGpuPrimsBeg <= *gpGpuPrimsEnd) {
             // Command queue doesn't wrap around currently.

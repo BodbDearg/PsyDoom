@@ -50,33 +50,6 @@ namespace PsxVm {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// VM interface: mips instructions.
-// These instructions were not so easy to convert directly to C++ so they are handled via functions.
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-// Arithmetic
-uint32_t add(const uint32_t r1, const uint32_t r2) noexcept;
-uint32_t addi(const uint32_t r1, const int16_t i) noexcept;
-uint32_t sub(const uint32_t r1, const uint32_t r2) noexcept;
-
-// RAM to CPU loads
-uint32_t lb(const uint32_t addr) noexcept;
-uint32_t lbu(const uint32_t addr) noexcept;
-uint32_t lh(const uint32_t addr) noexcept;
-uint32_t lhu(const uint32_t addr) noexcept;
-uint32_t lw(const uint32_t addr) noexcept;
-
-// CPU to RAM stores
-void sb(const uint32_t r1, const uint32_t addr) noexcept;
-void sh(const uint32_t r1, const uint32_t addr) noexcept;
-void sw(const uint32_t r1, const uint32_t addr) noexcept;
-
-// Write directly to GPU registers GP0 and GP1 and read the GPU status/control register GP1
-void writeGP0(const uint32_t data) noexcept;
-void writeGP1(const uint32_t data) noexcept;
-uint32_t getGpuStat() noexcept;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // VM interface: function calls and utilities
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -95,7 +68,6 @@ uint32_t ptrToVmAddr(const void* const ptr) noexcept;
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Avocado types
 //------------------------------------------------------------------------------------------------------------------------------------------
-class Interrupt;
 struct System;
 
 namespace mips              { struct CPU;   }
@@ -113,7 +85,6 @@ namespace PsxVm {
     extern gpu::GPU*                gpGpu;
     extern spu::SPU*                gpSpu;
     extern device::cdrom::CDROM*    gpCdrom;
-    extern Interrupt*               gpInterrupt;
     extern uint8_t*                 gpRam;
     extern uint8_t*                 gpScratchpad;       // Cache used as fast RAM (1 KiB)
 

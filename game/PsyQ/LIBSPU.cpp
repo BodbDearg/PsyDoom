@@ -751,8 +751,6 @@ void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept {
         }
     }
     else if (onOff == SPU_ON) {
-        const uint64_t sysCycles = PsxVm::gpSystem->cycles;
-
         for (uint32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
             if (voiceBits & (1 << voiceIdx)) {
                 spu::Voice& voice = spu.voices[voiceIdx];

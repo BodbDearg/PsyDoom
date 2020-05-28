@@ -28,7 +28,6 @@ mips::CPU*              PsxVm::gpCpu;
 gpu::GPU*               PsxVm::gpGpu;
 spu::SPU*               PsxVm::gpSpu;
 device::cdrom::CDROM*   PsxVm::gpCdrom;
-Interrupt*              PsxVm::gpInterrupt;
 uint8_t*                PsxVm::gpRam;
 uint8_t*                PsxVm::gpScratchpad;
 
@@ -103,7 +102,6 @@ static void setupVmPointers() noexcept {
     gpGpu = gpSystem->gpu.get();
     gpSpu = gpSystem->spu.get();
     gpCdrom = gpSystem->cdrom.get();
-    gpInterrupt = gpSystem->interrupt.get();
     gpRam = gpSystem->ram.data();
     gpScratchpad = gpSystem->scratchpad.data();
 
@@ -189,7 +187,6 @@ static void clearVmPointers() noexcept {
 
     gpScratchpad = nullptr;
     gpRam = nullptr;
-    gpInterrupt = nullptr;
     gpCdrom = nullptr;
     gpSpu = nullptr;
     gpGpu = nullptr;
@@ -351,6 +348,7 @@ void PsxVm::updateInput() noexcept {
     inputMgr.setState(gPadBtnKey_Start, btnStart);
     inputMgr.setState(gPadBtnKey_Select, btnSelect);
 
+    // TODO: remove use of avocado controller
     gpSystem->controller->update();
 }
 
@@ -380,6 +378,7 @@ uint16_t PsxVm::getControllerButtonBits() noexcept {
     return buttonBits;
 }
 
+// TODO: replace with a more readable solution; don't write to GP0 and setup the GPU and submit primitives directly
 void PsxVm::submitGpuPrimitive(const void* const pPrim) noexcept {
     ASSERT(pPrim);
     
@@ -397,7 +396,7 @@ void PsxVm::submitGpuPrimitive(const void* const pPrim) noexcept {
         const uint32_t dataWord = *pCurWord;
         ++pCurWord;
         --dataWordsLeft;
-        writeGP0(dataWord);
+        gpGpu->writeGP0(dataWord);
     }
 }
 
