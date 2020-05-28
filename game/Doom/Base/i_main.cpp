@@ -90,8 +90,8 @@ constexpr uint16_t TEX_PAGE_VRAM_TEXCOORDS[NUM_TCACHE_PAGES + 1][2] = {
     896,    256
 };
 
-// The size of a packet and the packet buffers in a networked game
-constexpr int32_t NET_PACKET_SIZE = 8;
+constexpr int32_t   NET_PACKET_SIZE     = 8;        // The size of a packet and the packet buffers in a networked game
+constexpr uint8_t   NET_PACKET_HEADER   = 0xAA;     // The 1st byte in every network packet: used for error detection purposes
 
 // Texture cache variables.
 // The texture cache data structure, where we are filling in the cache next and the current fill row height (in cells).
@@ -300,7 +300,7 @@ void I_PSXInit() noexcept {
     LIBAPI_open();
     sw(v0, gp + 0xC54);                                 // Store to: gNetInputFd (80078234)
 
-    LIBCOMB__comb_control(1, 3, 38400);
+    LIBCOMB_CombSetBPS(38400);
         
     // Clear both draw buffers by swapping twice (clears on swap)
     I_DrawPresent();
@@ -487,7 +487,7 @@ void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos,
 // Increments the 'drawn frame' counter used to track texture cache overflows
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_IncDrawnFrameCount() noexcept {
-    ++*gNumFramesDrawn;
+    *gNumFramesDrawn += 1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -924,215 +924,126 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Does the setup for a network game: synchronizes between players, then sends the game details and control bindings
+//------------------------------------------------------------------------------------------------------------------------------------------
 void I_NetSetup() noexcept {
-loc_8003472C:
-    sp -= 0x20;
-    v0 = 0xAA;                                          // Result = 000000AA
-    sw(ra, sp + 0x18);
-    sw(s1, sp + 0x14);
-    sw(s0, sp + 0x10);
-    sb(v0, gp + 0x9D0);                                 // Store to: gNetOutputPacket[0] (80077FB0)
+    // FIXME: rework this function to prevent pausing during long network requests.
+    // Maybe a completely new implementation for PC-PSX?
 
-    v0 = LIBCOMB__comb_control(3, 0, 0);
+    // Set the output packet header
+    gNetOutputPacket[0] = NET_PACKET_HEADER;
 
-    a2 = 8;                                             // Result = 00000008
+    // Player number determination: if the current PlayStation is first in the game (NOT cleared to send) then it becomes Player 1.
+    // PC-PSX: use the client/server setting to determine this instead.
+    #if PC_PSX_DOOM_MODS
+        const bool bIsPlayer1 = ProgArgs::gbIsNetServer;
+    #else
+        const bool bIsPlayer1 = (!LIBCOMB_CombCTS());
+    #endif
 
-    // FIXME: HACK
-    if (ProgArgs::gbIsNetServer) {
-        v0 = 0;
+    // Read and write a dummy 8 bytes between the two players.
+    // Allow the player to abort with the select button also, if a network game is no longer desired.
+    if (bIsPlayer1) {
+        // Player 1 waits to read from Player 2 firstly
+        *gCurPlayerIndex = 0;
+        LIBAPI_read(*gNetInputFd, gNetInputPacket.get(), NET_PACKET_SIZE);
+
+        // Wait until the read is done before continuing, or abort if 'select' is pressed
+        do {
+            if (LIBETC_PadRead(0) & PAD_SELECT) {
+                *gbDidAbortGame = true;
+                LIBCOMB_CombCancelRead();
+                return;
+            }
+        } while (!LIBAPI_TestEvent(*gSioReadDoneEvent));
+
+        // Wait until we are cleared to send to the receiver and send the output packet
+        while (!LIBCOMB_CombCTS()) {}
+        LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
+    } else {
+        // Player 2 writes a packet to Player 1 firstly
+        *gCurPlayerIndex = true;
+        LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
+        LIBAPI_read(*gNetInputFd, gNetInputPacket.get(), NET_PACKET_SIZE);
+
+        // Wait until the read is done before continuing, or abort if 'select' is pressed
+        do {
+            if (LIBETC_PadRead(0) & PAD_SELECT) {
+                *gbDidAbortGame = true;
+                LIBCOMB_CombCancelRead();
+                return;
+            }
+        } while (!LIBAPI_TestEvent(*gSioReadDoneEvent));
     }
-
-    if (v0 == 0) goto loc_800347EC;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
-    s1 = 0xFFFF0000;                                    // Result = FFFF0000
-    a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
-    *gCurPlayerIndex = 1;
-    s0 = 0x4000;                                        // Result = 00004000
-    v0 = LIBAPI_write(a0, vmAddrToPtr<void>(a1), a2);
-
-    a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
-    a2 = 8;                                             // Result = 00000008
-    v0 = LIBAPI_read(a0, vmAddrToPtr<void>(a1), a2);
-
-loc_80034794:
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7788);                               // Load from: gPadInputBuffer_1[0] (80097788)
-    v1 = v0 ^ s1;
-    v0 = v1 & 0xF0FF;
-    {
-        const bool bJump = (v0 != s0);
-        v0 = v1 >> 8;
-        if (bJump) goto loc_800347C0;
-    }
-    v0 &= 0xFF00;
-    v1 >>= 24;
-    v1 |= v0;
-    goto loc_800347C4;
-loc_800347C0:
-    v1 = 0;                                             // Result = 00000000
-loc_800347C4:
-    v0 = v1 & 0x100;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8003496C;
-    }
-    a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
-    v0 = LIBAPI_TestEvent(a0);
-    if (v0 == 0) goto loc_80034794;
-    goto loc_80034884;
-loc_800347EC:
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
-    s1 = 0xFFFF0000;                                    // Result = FFFF0000
-    a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
-    *gCurPlayerIndex = 0;
-    s0 = 0x4000;                                        // Result = 00004000
-    v0 = LIBAPI_read(a0, vmAddrToPtr<void>(a1), a2);
-loc_8003480C:
-    v0 = 0x80090000;                                    // Result = 80090000
-    v0 = lw(v0 + 0x7788);                               // Load from: gPadInputBuffer_1[0] (80097788)
-    v1 = v0 ^ s1;
-    v0 = v1 & 0xF0FF;
-    {
-        const bool bJump = (v0 != s0);
-        v0 = v1 >> 8;
-        if (bJump) goto loc_80034838;
-    }
-    v0 &= 0xFF00;
-    v1 >>= 24;
-    v1 |= v0;
-    goto loc_8003483C;
-loc_80034838:
-    v1 = 0;                                             // Result = 00000000
-loc_8003483C:
-    v0 = v1 & 0x100;
-    {
-        const bool bJump = (v0 != 0);
-        v0 = 1;                                         // Result = 00000001
-        if (bJump) goto loc_8003496C;
-    }
-    a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
-    v0 = LIBAPI_TestEvent(a0);
-
-    a0 = 3;                                             // Result = 00000003
-    if (v0 == 0) goto loc_8003480C;
-loc_8003485C:
-    v0 = LIBCOMB__comb_control(3, 0, 0);
-
-    a0 = 3;                                             // Result = 00000003
-    if (v0 == 0) goto loc_8003485C;
-    a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
-    a2 = 8;                                             // Result = 00000008
-    v0 = LIBAPI_write(a0, vmAddrToPtr<void>(a1), a2);
-loc_80034884:
+    
+    // Do a synchronization handshake between the players
     I_NetHandshake();
-    v0 = *gCurPlayerIndex;
-    if (v0 != 0) goto loc_80034988;
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x7604);                              // Load from: gStartGameType (80077604)
-    v1 = *gStartSkill;
-    a1 = (uint8_t) *gStartMapOrEpisode;
-    a0 = gCtrlBindings;
-    at = 0x80070000;                                    // Result = 80070000
-    sb(v0, at + 0x7FB1);                                // Store to: gNetOutputPacket[1] (80077FB1)
-    at = 0x80070000;                                    // Result = 80070000
-    sb(v1, at + 0x7FB2);                                // Store to: gNetOutputPacket[2] (80077FB2)
-    at = 0x80070000;                                    // Result = 80070000
-    sb(a1, at + 0x7FB3);                                // Store to: gNetOutputPacket[3] (80077FB3)
-    v0 = I_LocalButtonsToNet(vmAddrToPtr<padbuttons_t>(a0));
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7FB4);                                // Store to: gNetOutputPacket[4] (80077FB4)
-    
-loc_800348EC:
-    v0 = LIBCOMB__comb_control(3, 0, 0);
 
-    a0 = 3;                                             // Result = 00000003
-    if (v0 == 0) goto loc_800348EC;
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
-    a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
-    a2 = 8;                                             // Result = 00000008
-    v0 = LIBAPI_write(a0, vmAddrToPtr<void>(a1), a2);
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
-    a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
-    a2 = 8;                                             // Result = 00000008
-    v0 = LIBAPI_read(a0, vmAddrToPtr<void>(a1), a2);
-loc_80034928:
-    a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
-    v0 = LIBAPI_TestEvent(a0);
-    if (v0 == 0) goto loc_80034928;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7EAC);                               // Load from: gNetInputPacket[4] (80077EAC)
-    v0 = gCtrlBindings;
-    at = 0x80070000;                                    // Result = 80070000
-    gpPlayerCtrlBindings[0] = v0;
-    v0 = ptrToVmAddr(I_NetButtonsToLocal(a0));
-    at = 0x80070000;                                    // Result = 80070000
-    gpPlayerCtrlBindings[1] = v0;
-    goto loc_80034A44;
-loc_8003496C:
-    sw(v0, gp + 0x62C);                                 // Store to: gbDidAbortGame (80077C0C)
-    
-    v0 = LIBCOMB__comb_control(2, 3, 0);
-    goto loc_80034A48;
-loc_80034988:
-    a0 = lw(gp + 0xC54);                                // Load from: gNetInputFd (80078234)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7EA8;                                       // Result = gNetInputPacket[0] (80077EA8)
-    a2 = 8;                                             // Result = 00000008
-    v0 = LIBAPI_read(a0, vmAddrToPtr<void>(a1), a2);
-loc_8003499C:
-    a0 = lw(gp + 0x944);                                // Load from: gSioErrorEvent (80077F24)
-    v0 = LIBAPI_TestEvent(a0);
-    if (v0 == 0) goto loc_8003499C;
-    a0 = 0x80070000;                                    // Result = 80070000
-    a0 = lw(a0 + 0x7EAC);                               // Load from: gNetInputPacket[4] (80077EAC)
-    v0 = 0x80070000;                                    // Result = 80070000
-    v0 = lbu(v0 + 0x7EA9);                              // Load from: gNetInputPacket[1] (80077EA9)
-    v1 = 0x80070000;                                    // Result = 80070000
-    v1 = lbu(v1 + 0x7EAA);                              // Load from: gNetInputPacket[2] (80077EAA)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 = lbu(a1 + 0x7EAB);                              // Load from: gNetInputPacket[3] (80077EAB)
-    s0 = gCtrlBindings;
-    at = 0x80070000;                                    // Result = 80070000
-    gpPlayerCtrlBindings[1] = s0;
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7604);                                // Store to: gStartGameType (80077604)
-    *gStartSkill = (skill_t) v1;
-    *gStartMapOrEpisode = a1;
-    v0 = ptrToVmAddr(I_NetButtonsToLocal(a0));
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7FC8);                                // Store to: MAYBE_gpButtonBindings_Player1 (80077FC8)
-    a0 = s0;
-    v0 = I_LocalButtonsToNet(vmAddrToPtr<padbuttons_t>(a0));
-    at = 0x80070000;                                    // Result = 80070000
-    sw(v0, at + 0x7FB4);                                // Store to: gNetOutputPacket[4] (80077FB4)
-    
-loc_80034A1C:
-    v0 = LIBCOMB__comb_control(3, 0, 0);
+    // Send the game details if player 1, if player 2 then receive them:
+    if (*gCurPlayerIndex == 0) {
+        // Fill in the packet details with game type, skill, map and this player's control bindings
+        gNetOutputPacket[1] = (uint8_t) *gStartGameType;
+        gNetOutputPacket[2] = (uint8_t) *gStartSkill;
+        gNetOutputPacket[3] = (uint8_t) *gStartMapOrEpisode;
 
-    a0 = 3;                                             // Result = 00000003
-    if (v0 == 0) goto loc_80034A1C;
-    a0 = lw(gp + 0x934);                                // Load from: gNetOutputFd (80077F14)
-    a1 = 0x80070000;                                    // Result = 80070000
-    a1 += 0x7FB0;                                       // Result = gNetOutputPacket[0] (80077FB0)
-    a2 = 8;                                             // Result = 00000008
-    v0 = LIBAPI_write(a0, vmAddrToPtr<void>(a1), a2);
-loc_80034A44:
-    sw(0, gp + 0x62C);                                  // Store to: gbDidAbortGame (80077C0C)
-loc_80034A48:
-    ra = lw(sp + 0x18);
-    s1 = lw(sp + 0x14);
-    s0 = lw(sp + 0x10);
-    sp += 0x20;
-    return;
+        const uint32_t thisPlayerBtns = I_LocalButtonsToNet(gCtrlBindings.get());
+        gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
+        gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
+        gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
+        gNetOutputPacket[7] = (uint8_t)(thisPlayerBtns >> 24);
+
+        // Wait until cleared to send then send the packet
+        while (!LIBCOMB_CombCTS()) {}
+        LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
+
+        // Read the control bindings for the other player and wait until it is read
+        LIBAPI_read(*gNetInputFd, gNetInputPacket.get(), NET_PACKET_SIZE);
+        while (!LIBAPI_TestEvent(*gSioReadDoneEvent)) {}
+
+        const uint32_t otherPlayerBtns = (
+            ((uint32_t) gNetInputPacket[4] << 0) |
+            ((uint32_t) gNetInputPacket[5] << 8) |
+            ((uint32_t) gNetInputPacket[6] << 16) |
+            ((uint32_t) gNetInputPacket[7] << 24)
+        );
+
+        // Save the control bindings for both players
+        gpPlayerCtrlBindings[0] = ptrToVmAddr(gCtrlBindings.get());
+        gpPlayerCtrlBindings[1] = ptrToVmAddr(I_NetButtonsToLocal(otherPlayerBtns));
+    }
+    else {
+        // Read the game details and control bindings for the other player and wait until it is read
+        LIBAPI_read(*gNetInputFd, gNetInputPacket.get(), NET_PACKET_SIZE);
+        while (!LIBAPI_TestEvent(*gSioReadDoneEvent)) {}
+    
+        // Save the game details and the control bindings
+        const uint32_t otherPlayerBtns = (
+            ((uint32_t) gNetInputPacket[4] << 0) |
+            ((uint32_t) gNetInputPacket[5] << 8) |
+            ((uint32_t) gNetInputPacket[6] << 16) |
+            ((uint32_t) gNetInputPacket[7] << 24)
+        );
+
+        *gStartGameType = (gametype_t) gNetInputPacket[1];
+        *gStartSkill = (skill_t) gNetInputPacket[2];
+        *gStartMapOrEpisode = gNetInputPacket[3];
+        gpPlayerCtrlBindings[0] = ptrToVmAddr(I_NetButtonsToLocal(otherPlayerBtns));
+        gpPlayerCtrlBindings[1] = ptrToVmAddr(gCtrlBindings.get());
+
+        // For the output packet send the control bindings of this player to the other player
+        const uint32_t thisPlayerBtns = I_LocalButtonsToNet(gCtrlBindings.get());
+        gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
+        gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
+        gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
+        gNetOutputPacket[7] = (uint8_t)(thisPlayerBtns >> 24);
+        
+        // Wait until we are cleared to send to the receiver and send the output packet
+        while (!LIBCOMB_CombCTS()) {}
+        LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
+    }
+
+    *gbDidAbortGame = false;
 }
 
 void I_NetUpdate() noexcept {
@@ -1317,8 +1228,8 @@ void I_NetSendRecv() noexcept {
         // Which of the two players are we doing comms for?
         if (*gCurPlayerIndex == 0) {
             // Player 1: start by waiting until we are clear to send
-            // TODO: Replace with new LIBCOMB_CombCTS() function.
-            while (LIBCOMB__comb_control(3, 0, 0) == 0) {}
+            // FIXME: REMOVE
+            while (!LIBCOMB_CombCTS()) {}
             
             // Write the output packet
             LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
@@ -1348,8 +1259,8 @@ void I_NetSendRecv() noexcept {
                 // Is the input packet done yet?
                 if (LIBAPI_TestEvent(*gSioReadDoneEvent)) {
                     // Yes we read it! Wait until we are clear to send.
-                    // TODO: Replace with new LIBCOMB_CombCTS() function.
-                    while (LIBCOMB__comb_control(3, 0, 0) == 0) {}
+                    // FIXME: REMOVE
+                    while (!LIBCOMB_CombCTS()) {}
 
                     // Write the output packet and finish up
                     LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
@@ -1363,8 +1274,7 @@ void I_NetSendRecv() noexcept {
         }
 
         // Clear the error bits before we retry the send again
-        /// TODO: Replace with new LIBCOMB_CombResetError() function.
-        LIBCOMB__comb_control(2, 1, 0);
+        LIBCOMB_CombResetError();
     }
 }
 

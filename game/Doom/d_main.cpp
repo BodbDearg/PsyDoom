@@ -51,7 +51,7 @@ const VmPtr<skill_t>        gStartSkill(0x800775FC);
 const VmPtr<int32_t>        gStartMapOrEpisode(0x80077600);
 const VmPtr<gametype_t>     gStartGameType(0x80077604);
 
-// Net games: set if the connection attempt was aborted
+// Net games: set if a network game being started was aborted
 const VmPtr<bool32_t>   gbDidAbortGame(0x80077C0C);
 
 // Debug draw string position
