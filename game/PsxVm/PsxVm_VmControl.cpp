@@ -106,40 +106,7 @@ static void setupVmPointers() noexcept {
     gpScratchpad = gpSystem->scratchpad.data();
 
     // Mips registers
-    gpReg_zero = &gpCpu->reg[0];
-    gpReg_at = &gpCpu->reg[1];
-    gpReg_v0 = &gpCpu->reg[2];
-    gpReg_v1 = &gpCpu->reg[3];
-    gpReg_a0 = &gpCpu->reg[4];
-    gpReg_a1 = &gpCpu->reg[5];
-    gpReg_a2 = &gpCpu->reg[6];
-    gpReg_a3 = &gpCpu->reg[7];
-    gpReg_t0 = &gpCpu->reg[8];
-    gpReg_t1 = &gpCpu->reg[9];
-    gpReg_t2 = &gpCpu->reg[10];
-    gpReg_t3 = &gpCpu->reg[11];
-    gpReg_t4 = &gpCpu->reg[12];
-    gpReg_t5 = &gpCpu->reg[13];
-    gpReg_t6 = &gpCpu->reg[14];
-    gpReg_t7 = &gpCpu->reg[15];
-    gpReg_s0 = &gpCpu->reg[16];
-    gpReg_s1 = &gpCpu->reg[17];
-    gpReg_s2 = &gpCpu->reg[18];
-    gpReg_s3 = &gpCpu->reg[19];
-    gpReg_s4 = &gpCpu->reg[20];
-    gpReg_s5 = &gpCpu->reg[21];
-    gpReg_s6 = &gpCpu->reg[22];
-    gpReg_s7 = &gpCpu->reg[23];
-    gpReg_t8 = &gpCpu->reg[24];
-    gpReg_t9 = &gpCpu->reg[25];
-    gpReg_k0 = &gpCpu->reg[26];
-    gpReg_k1 = &gpCpu->reg[27];
-    gpReg_gp = &gpCpu->reg[28];
     gpReg_sp = &gpCpu->reg[29];
-    gpReg_fp = &gpCpu->reg[30];
-    gpReg_ra = &gpCpu->reg[31];
-    gpReg_hi = &gpCpu->hi;
-    gpReg_lo = &gpCpu->lo;
 
     // Native function to VM addresses
     for (const auto& addrFuncPair : PsxVm::gFuncTable) {
@@ -150,40 +117,7 @@ static void setupVmPointers() noexcept {
 static void clearVmPointers() noexcept {
     gNativeFuncToVmAddr.clear();
 
-    gpReg_lo = nullptr;
-    gpReg_hi = nullptr;
-    gpReg_ra = nullptr;
-    gpReg_fp = nullptr;
     gpReg_sp = nullptr;
-    gpReg_gp = nullptr;
-    gpReg_k1 = nullptr;
-    gpReg_k0 = nullptr;
-    gpReg_t9 = nullptr;
-    gpReg_t8 = nullptr;
-    gpReg_s7 = nullptr;
-    gpReg_s6 = nullptr;
-    gpReg_s5 = nullptr;
-    gpReg_s4 = nullptr;
-    gpReg_s3 = nullptr;
-    gpReg_s2 = nullptr;
-    gpReg_s1 = nullptr;
-    gpReg_s0 = nullptr;
-    gpReg_t7 = nullptr;
-    gpReg_t6 = nullptr;
-    gpReg_t5 = nullptr;
-    gpReg_t4 = nullptr;
-    gpReg_t3 = nullptr;
-    gpReg_t2 = nullptr;
-    gpReg_t1 = nullptr;
-    gpReg_t0 = nullptr;
-    gpReg_a3 = nullptr;
-    gpReg_a2 = nullptr;
-    gpReg_a1 = nullptr;
-    gpReg_a0 = nullptr;
-    gpReg_v1 = nullptr;
-    gpReg_v0 = nullptr;
-    gpReg_at = nullptr;
-    gpReg_zero = nullptr;
 
     gpScratchpad = nullptr;
     gpRam = nullptr;

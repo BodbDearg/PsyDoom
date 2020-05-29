@@ -9,44 +9,10 @@
 typedef void (*VmFunc)();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// VM interface: Mips R3000 registers and macros aliasing them.
-// Note: not allowing modification of the 'zero' register.
+// VM interface: Mips R3000 registers
 //------------------------------------------------------------------------------------------------------------------------------------------
 namespace PsxVm {
-    extern const uint32_t* gpReg_zero;
-    extern uint32_t* gpReg_at;
-    extern uint32_t* gpReg_v0;
-    extern uint32_t* gpReg_v1;
-    extern uint32_t* gpReg_a0;
-    extern uint32_t* gpReg_a1;
-    extern uint32_t* gpReg_a2;
-    extern uint32_t* gpReg_a3;
-    extern uint32_t* gpReg_t0;
-    extern uint32_t* gpReg_t1;
-    extern uint32_t* gpReg_t2;
-    extern uint32_t* gpReg_t3;
-    extern uint32_t* gpReg_t4;
-    extern uint32_t* gpReg_t5;
-    extern uint32_t* gpReg_t6;
-    extern uint32_t* gpReg_t7;
-    extern uint32_t* gpReg_s0;
-    extern uint32_t* gpReg_s1;
-    extern uint32_t* gpReg_s2;
-    extern uint32_t* gpReg_s3;
-    extern uint32_t* gpReg_s4;
-    extern uint32_t* gpReg_s5;
-    extern uint32_t* gpReg_s6;
-    extern uint32_t* gpReg_s7;
-    extern uint32_t* gpReg_t8;
-    extern uint32_t* gpReg_t9;
-    extern uint32_t* gpReg_k0;
-    extern uint32_t* gpReg_k1;
-    extern uint32_t* gpReg_gp;
     extern uint32_t* gpReg_sp;
-    extern uint32_t* gpReg_fp;
-    extern uint32_t* gpReg_ra;
-    extern uint32_t* gpReg_hi;
-    extern uint32_t* gpReg_lo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

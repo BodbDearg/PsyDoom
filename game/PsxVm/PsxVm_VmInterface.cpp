@@ -22,40 +22,7 @@ void stepCdromWithCallbacks() noexcept;
 using namespace PsxVm;
 
 namespace PsxVm {
-    const uint32_t* gpReg_zero;
-    uint32_t* gpReg_at;
-    uint32_t* gpReg_v0;
-    uint32_t* gpReg_v1;
-    uint32_t* gpReg_a0;
-    uint32_t* gpReg_a1;
-    uint32_t* gpReg_a2;
-    uint32_t* gpReg_a3;
-    uint32_t* gpReg_t0;
-    uint32_t* gpReg_t1;
-    uint32_t* gpReg_t2;
-    uint32_t* gpReg_t3;
-    uint32_t* gpReg_t4;
-    uint32_t* gpReg_t5;
-    uint32_t* gpReg_t6;
-    uint32_t* gpReg_t7;
-    uint32_t* gpReg_s0;
-    uint32_t* gpReg_s1;
-    uint32_t* gpReg_s2;
-    uint32_t* gpReg_s3;
-    uint32_t* gpReg_s4;
-    uint32_t* gpReg_s5;
-    uint32_t* gpReg_s6;
-    uint32_t* gpReg_s7;
-    uint32_t* gpReg_t8;
-    uint32_t* gpReg_t9;
-    uint32_t* gpReg_k0;
-    uint32_t* gpReg_k1;
-    uint32_t* gpReg_gp;
     uint32_t* gpReg_sp;
-    uint32_t* gpReg_fp;
-    uint32_t* gpReg_ra;
-    uint32_t* gpReg_hi;
-    uint32_t* gpReg_lo;
 }
 
 void emulate_sound_if_required() noexcept {
