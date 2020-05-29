@@ -363,7 +363,7 @@ void Eng_StatusMark(track_status& trackStat) noexcept {
         const uint8_t callbackType = trackStat.pcur_cmd[1];
 
         if (callbackStat.type == callbackType) {
-            // FIXME: remove this once real function pointers are used
+            // Get the function to be called
             typedef void (*CallbackFunc)(uint8_t callbackType, int16_t value);
             const CallbackFunc callback = (CallbackFunc) PsxVm::getVmFuncForAddr(callbackStat.pfunc.addr());
 

@@ -21,6 +21,3 @@ void P_SpawnBlood(const fixed_t x, const fixed_t y, const fixed_t z, const int32
 void P_CheckMissileSpawn(mobj_t& mobj) noexcept;
 mobj_t* P_SpawnMissile(mobj_t& source, mobj_t& dest, const mobjtype_t type) noexcept;
 void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept;
-
-void _thunk_P_RemoveMobj() noexcept; // TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
-void _thunk_P_ExplodeMissile() noexcept;    // TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.

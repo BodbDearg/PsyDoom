@@ -195,11 +195,8 @@ void P_SetPsprite(player_t& player, const int32_t spriteIdx, const statenum_t st
 
         // Perform the state action
         if (state.action) {
-            // FIXME: convert to native function call
-            *PsxVm::gpReg_a0 = ptrToVmAddr(&player);
-            *PsxVm::gpReg_a1 = ptrToVmAddr(&sprite);
-            void (* const pActionFunc)() = PsxVm::getVmFuncForAddr(state.action);
-            pActionFunc();
+            const statefn_pspr_t func = (statefn_pspr_t) PsxVm::getVmFuncForAddr(state.action);
+            func(player, sprite);
 
             // Finish if we no longer have a state
             if (!sprite.state)
@@ -817,29 +814,3 @@ void P_MovePsprites(player_t& player) noexcept {
     player.psprites[ps_flash].sx = player.psprites[ps_weapon].sx;
     player.psprites[ps_flash].sy = player.psprites[ps_weapon].sy;
 }
-
-// TODO: remove all these thunks
-void _thunk_P_FireWeapon() noexcept { P_FireWeapon(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0)); }
-void _thunk_A_WeaponReady() noexcept { A_WeaponReady(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_ReFire() noexcept { A_ReFire(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_CheckReload() noexcept { A_CheckReload(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_Lower() noexcept { A_Lower(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_Raise() noexcept { A_Raise(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_GunFlash() noexcept { A_GunFlash(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_Punch() noexcept { A_Punch(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_Saw() noexcept { A_Saw(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_FireMissile() noexcept { A_FireMissile(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_FireBFG() noexcept { A_FireBFG(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_FirePlasma() noexcept { A_FirePlasma(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_FirePistol() noexcept { A_FirePistol(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_FireShotgun() noexcept { A_FireShotgun(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_FireShotgun2() noexcept { A_FireShotgun2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_FireCGun() noexcept { A_FireCGun(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_Light0() noexcept { A_Light0(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_Light1() noexcept { A_Light1(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_Light2() noexcept { A_Light2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_BFGSpray() noexcept { A_BFGSpray(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0)); }
-void _thunk_A_BFGsound() noexcept { A_BFGsound(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_OpenShotgun2() noexcept { A_OpenShotgun2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_LoadShotgun2() noexcept { A_LoadShotgun2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }
-void _thunk_A_CloseShotgun2() noexcept { A_CloseShotgun2(*vmAddrToPtr<player_t>(*PsxVm::gpReg_a0), *vmAddrToPtr<pspdef_t>(*PsxVm::gpReg_a1)); }

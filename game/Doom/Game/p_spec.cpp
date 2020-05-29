@@ -27,6 +27,9 @@
 #include "Wess/psxcd.h"
 #include <algorithm>
 
+// Format for a delayed action function that can be scheduled by 'P_ScheduleDelayedAction'
+typedef void (*delayed_actionfn_t)() noexcept;
+
 // Definition for a flat or texture animation
 struct animdef_t {
     bool        istexture;      // False for flats
@@ -80,8 +83,8 @@ static const VmPtr<VmPtr<anim_t>>                   gpLastAnim(0x80078164);     
 static const VmPtr<VmPtr<line_t>[MAXLINEANIMS]>     gpLineSpecialList(0x8009757C);      // A list of scrolling lines for the level
 static const VmPtr<int32_t>                         gNumLinespecials(0x80077F50);       // The number of scrolling lines in the level
 
-// TODO: REMOVE eventually
-void _thunk_T_DelayedAction() noexcept;
+// TODO: Make private to the module eventually
+void T_DelayedAction(delayaction_t& action) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Caches into RAM the textures for all animated flats and textures.
@@ -1041,7 +1044,7 @@ bool EV_DoDonut(line_t& line) noexcept {
                 P_AddThinker(floorMove.thinker);
                 pNextSector->specialdata = &floorMove;
 
-                floorMove.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_MoveFloor);
+                floorMove.thinker.function = PsxVm::getNativeFuncVmAddr(T_MoveFloor);
                 floorMove.type = donutRaise;
                 floorMove.sector = pNextSector;
                 floorMove.direction = 1;
@@ -1059,7 +1062,7 @@ bool EV_DoDonut(line_t& line) noexcept {
                 P_AddThinker(floorMove.thinker);
                 sector.specialdata = &floorMove;
 
-                floorMove.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_MoveFloor);
+                floorMove.thinker.function = PsxVm::getNativeFuncVmAddr(T_MoveFloor);
                 floorMove.type = lowerFloor;
                 floorMove.sector = &sector;
                 floorMove.direction = -1;
@@ -1079,30 +1082,25 @@ bool EV_DoDonut(line_t& line) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Schedule an action to be invoked after the specified number of tics
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void P_ScheduleDelayedAction(const int32_t delayTics, void (* const actionFunc)()) noexcept {
+static void P_ScheduleDelayedAction(const int32_t delayTics, const delayed_actionfn_t actionFunc) noexcept {
     delayaction_t& delayed = *(delayaction_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(delayaction_t), PU_LEVSPEC, nullptr);
     P_AddThinker(delayed.thinker);
 
-    delayed.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_DelayedAction);
+    delayed.thinker.function = PsxVm::getNativeFuncVmAddr(T_DelayedAction);
     delayed.ticsleft = delayTics;
     delayed.actionfunc = PsxVm::getNativeFuncVmAddr(actionFunc);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker function for performing a delayed action: performs the action after the delay time has passed and removes the thinker when done
+// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_DelayedAction(delayaction_t& action) noexcept {
+void T_DelayedAction(delayaction_t& action) noexcept {
     if (--action.ticsleft <= 0) {
-        // FIXME: use a native function call eventually
-        const VmFunc actionFunc = PsxVm::getVmFuncForAddr(action.actionfunc);
+        const delayed_actionfn_t actionFunc = (delayed_actionfn_t) PsxVm::getVmFuncForAddr(action.actionfunc);
         actionFunc();
         P_RemoveThinker(action.thinker);
     }
-}
-
-// TODO: REMOVE eventually
-void _thunk_T_DelayedAction() noexcept {
-    T_DelayedAction(*vmAddrToPtr<delayaction_t>(*PsxVm::gpReg_a0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -24,8 +24,9 @@ static void P_ActivateInStasisCeiling(line_t& line) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a moving ceiling or crusher: moves the ceiling, does state transitions and sounds etc.
+// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
+void T_MoveCeiling(ceiling_t& ceiling) noexcept {
     sector_t& ceilingSector = *ceiling.sector;
 
     switch (ceiling.direction) {
@@ -121,11 +122,6 @@ static void T_MoveCeiling(ceiling_t& ceiling) noexcept {
     }
 }
 
-// TODO: REMOVE eventually
-void _thunk_T_MoveCeiling() noexcept {
-    T_MoveCeiling(*vmAddrToPtr<ceiling_t>(*PsxVm::gpReg_a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Trigger a ceiling (mover/crusher) special of the given type for sectors matching the given line's tag
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -159,7 +155,7 @@ bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
         P_AddThinker(ceiling.thinker);
         sector.specialdata = &ceiling;
 
-        ceiling.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_MoveCeiling);
+        ceiling.thinker.function = PsxVm::getNativeFuncVmAddr(T_MoveCeiling);
         ceiling.sector = &sector;
         ceiling.crush = false;
 
@@ -245,7 +241,7 @@ static void P_ActivateInStasisCeiling(line_t& line) noexcept {
 
         if (pCeiling && (pCeiling->tag == line.tag) && (pCeiling->direction == 0)) {    // Direction 0 = in stasis
             pCeiling->direction = pCeiling->olddirection;
-            pCeiling->thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_MoveCeiling);
+            pCeiling->thinker.function = PsxVm::getNativeFuncVmAddr(T_MoveCeiling);
         }
     }
 }

@@ -26,8 +26,9 @@ static void P_RemoveActivePlat(plat_t& plat) noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a moving platform: moves the platform, does state transitions and sounds etc.
+// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_PlatRaise(plat_t& plat) noexcept {
+void T_PlatRaise(plat_t& plat) noexcept {
     sector_t& sector = *plat.sector;
 
     switch (plat.status) {
@@ -94,11 +95,6 @@ static void T_PlatRaise(plat_t& plat) noexcept {
     }
 }
 
-// TODO: REMOVE eventually
-void _thunk_T_PlatRaise() noexcept {
-    T_PlatRaise(*vmAddrToPtr<plat_t>(*PsxVm::gpReg_a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // For each sector matching the given line's tag, spawn a moving platform thinker/process of the given platform type.
 //
@@ -136,7 +132,7 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
 
         plat.type = platType;
         plat.sector = &sector;
-        plat.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_PlatRaise);
+        plat.thinker.function = PsxVm::getNativeFuncVmAddr(T_PlatRaise);
         plat.crush = false;
         plat.tag = line.tag;
         
@@ -208,7 +204,7 @@ void P_ActivateInStasis(const int32_t tag) noexcept {
 
         if (pPlat && (pPlat->tag == tag) && (pPlat->status == in_stasis)) {
             pPlat->status = pPlat->oldstatus;
-            pPlat->thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_PlatRaise);
+            pPlat->thinker.function = PsxVm::getNativeFuncVmAddr(T_PlatRaise);
         }
     }
 }

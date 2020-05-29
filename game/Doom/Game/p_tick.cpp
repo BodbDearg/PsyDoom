@@ -108,7 +108,7 @@ void P_AddThinker(thinker_t& thinker) noexcept {
 // The removal happens later, during updates.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_RemoveThinker(thinker_t& thinker) noexcept {
-    thinker.function = (think_t) -1;
+    thinker.function = -1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ void P_RunThinkers() noexcept {
     *gNumActiveThinkers = 0;
 
     for (thinker_t* pThinker = gThinkerCap->next.get(); pThinker != gThinkerCap.get(); pThinker = pThinker->next.get()) {
-        if (pThinker->function == (think_t) -1) {
+        if (pThinker->function.addr() == (uint32_t) -1) {
             // Time to remove this thinker, it's function has been zapped
             pThinker->next->prev = pThinker->prev;
             pThinker->prev->next = pThinker->next;
@@ -126,10 +126,8 @@ void P_RunThinkers() noexcept {
         } else {
             // Run the thinker if it has a think function and increment the active count stat
             if (pThinker->function) {
-                // TODO: use a native function call
-                *PsxVm::gpReg_a0 = ptrToVmAddr(pThinker);
-                const VmFunc func = PsxVm::getVmFuncForAddr(pThinker->function);
-                func();
+                const think_t func = (think_t) PsxVm::getVmFuncForAddr(pThinker->function);
+                func(*pThinker);
             }
 
             *gNumActiveThinkers += 1;
@@ -143,10 +141,8 @@ void P_RunThinkers() noexcept {
 void P_RunMobjLate() noexcept {
     for (mobj_t* pMObj = gMObjHead->next.get(); pMObj != gMObjHead.get(); pMObj = pMObj->next.get()) {
         if (pMObj->latecall) {
-            // TODO: use a native function call
-            *PsxVm::gpReg_a0 = ptrToVmAddr(pMObj);
-            const VmFunc func = PsxVm::getVmFuncForAddr(pMObj->latecall);
-            func();
+            const statefn_mobj_t func = (statefn_mobj_t) PsxVm::getVmFuncForAddr(pMObj->latecall);
+            func(*pMObj);
         }
     }
 }

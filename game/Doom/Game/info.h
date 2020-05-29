@@ -10,6 +10,10 @@
 
 enum sfxenum_t : int32_t;
 
+// PC-PSX: Helper typedefs for the two possible forms of state_t function: one for map objects (things) and one for player sprites (weapons)
+typedef void (*statefn_mobj_t)(mobj_t&) noexcept;
+typedef void (*statefn_pspr_t)(player_t&, pspdef_t&) noexcept;
+
 // Indexes into the array of sprite lump names
 enum spritenum_t : int32_t {
     SPR_TROO,

@@ -59,8 +59,9 @@ static_assert(sizeof(glow_t) == 28);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a light that flickers like fire
+// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_FireFlicker(fireflicker_t& flicker) noexcept {
+void T_FireFlicker(fireflicker_t& flicker) noexcept {
     // Time to flicker yet?
     if (--flicker.count != 0)
         return;
@@ -78,11 +79,6 @@ static void T_FireFlicker(fireflicker_t& flicker) noexcept {
     flicker.count = 3;
 }
 
-// TODO: REMOVE eventually
-void _thunk_T_FireFlicker() noexcept {
-    T_FireFlicker(*vmAddrToPtr<fireflicker_t>(*PsxVm::gpReg_a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Spawn a fire flicker light effect on the given sector
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -93,7 +89,7 @@ void P_SpawnFireFlicker(sector_t& sector) noexcept {
     P_AddThinker(flicker.thinker);
 
     // Setup flicker settings
-    flicker.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_FireFlicker);
+    flicker.thinker.function = PsxVm::getNativeFuncVmAddr(T_FireFlicker);
     flicker.sector = &sector;
     flicker.maxlight = sector.lightlevel;
     flicker.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel) + 16;
@@ -102,8 +98,9 @@ void P_SpawnFireFlicker(sector_t& sector) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a flashing light
+// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_LightFlash(lightflash_t& lightFlash) noexcept {
+void T_LightFlash(lightflash_t& lightFlash) noexcept {
     // Time to flash yet?
     if (--lightFlash.count != 0)
         return;
@@ -120,11 +117,6 @@ static void T_LightFlash(lightflash_t& lightFlash) noexcept {
     }
 }
 
-// TODO: REMOVE eventually
-void _thunk_T_LightFlash() noexcept {
-    T_LightFlash(*vmAddrToPtr<lightflash_t>(*PsxVm::gpReg_a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Spawn a light flash special for the given sector
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -135,7 +127,7 @@ void P_SpawnLightFlash(sector_t& sector) noexcept {
     P_AddThinker(lightFlash.thinker);
 
     // Setup flash settings
-    lightFlash.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_LightFlash);
+    lightFlash.thinker.function = PsxVm::getNativeFuncVmAddr(T_LightFlash);
     lightFlash.sector = &sector;
     lightFlash.maxlight = sector.lightlevel;
     lightFlash.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel);
@@ -146,8 +138,9 @@ void P_SpawnLightFlash(sector_t& sector) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a strobe flash light
+// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_StrobeFlash(strobe_t& strobe) noexcept {
+void T_StrobeFlash(strobe_t& strobe) noexcept {
     // Time to flash yet?
     if (--strobe.count != 0)
         return;
@@ -164,11 +157,6 @@ static void T_StrobeFlash(strobe_t& strobe) noexcept {
     }
 }
 
-// TODO: REMOVE eventually
-void _thunk_T_StrobeFlash() noexcept {
-    T_StrobeFlash(*vmAddrToPtr<strobe_t>(*PsxVm::gpReg_a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Spawn a strobe flash special for the given sector
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -177,7 +165,7 @@ void P_SpawnStrobeFlash(sector_t& sector, const int32_t darkTime, const bool bIn
     strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(strobe_t), PU_LEVSPEC, nullptr);
     P_AddThinker(strobe.thinker);
 
-    strobe.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_StrobeFlash);
+    strobe.thinker.function = PsxVm::getNativeFuncVmAddr(T_StrobeFlash);
     strobe.sector = &sector;
     strobe.darktime = darkTime;
     strobe.brighttime = STROBEBRIGHT;
@@ -208,7 +196,7 @@ void P_SpawnRapidStrobeFlash(sector_t& sector) noexcept {
     strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(strobe_t), PU_LEVSPEC, nullptr);
     P_AddThinker(strobe.thinker);
     
-    strobe.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_StrobeFlash);
+    strobe.thinker.function = PsxVm::getNativeFuncVmAddr(T_StrobeFlash);
     strobe.sector = &sector;
     strobe.darktime = 1;
     strobe.brighttime = 1;
@@ -304,8 +292,9 @@ void EV_LightTurnOn(line_t& line, const int32_t onLightLevel) noexcept {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a glowing light
+// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_Glow(glow_t& glow) noexcept {
+void T_Glow(glow_t& glow) noexcept {
     sector_t& sector = *glow.sector;
 
     if (glow.direction == -1) {
@@ -328,11 +317,6 @@ static void T_Glow(glow_t& glow) noexcept {
     }
 }
 
-// TODO: REMOVE eventually
-void _thunk_T_Glow() noexcept {
-    T_Glow(*vmAddrToPtr<glow_t>(*PsxVm::gpReg_a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Spawn a glowing light of the specified type for the given sector
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -342,7 +326,7 @@ void P_SpawnGlowingLight(sector_t& sector, const glowtype_e glowType) noexcept {
     P_AddThinker(glow.thinker);
 
     // Configure the glow settings depending on the type
-    glow.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_Glow);
+    glow.thinker.function = PsxVm::getNativeFuncVmAddr(T_Glow);
     glow.sector = &sector;
     
     switch (glowType) {

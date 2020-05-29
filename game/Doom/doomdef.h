@@ -131,13 +131,13 @@ static constexpr uint32_t NUM_REGULAR_MAPS = 54;
 const int32_t MAX_DEMO_TICKS = 16384;
 
 // Format for a thinker function to handle some periodic update for an actor/system
-typedef VmPtr<void (*)> think_t;
+typedef void (*think_t)(struct thinker_t&) noexcept;
 
 // An element that receives periodic updates
 struct thinker_t {
     VmPtr<thinker_t>    prev;
     VmPtr<thinker_t>    next;
-    think_t             function;
+    VmPtr<think_t>      function;
 };
 
 static_assert(sizeof(thinker_t) == 12);

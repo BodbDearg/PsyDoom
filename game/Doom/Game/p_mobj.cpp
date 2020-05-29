@@ -154,10 +154,8 @@ bool P_SetMObjState(mobj_t& mobj, const statenum_t stateNum) noexcept {
     mobj.frame = state.frame;
 
     if (state.action) {
-        // FIXME: convert to native call
-        const VmFunc func = PsxVm::getVmFuncForAddr(state.action);
-        *PsxVm::gpReg_a0 = ptrToVmAddr(&mobj);
-        func();
+        const statefn_mobj_t func = (statefn_mobj_t) PsxVm::getVmFuncForAddr(state.action);
+        func(mobj);
     }
 
     // This request gets cleared on state switch
@@ -569,14 +567,4 @@ void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept
 
     // If the missile is already in collision with something then explode it
     P_CheckMissileSpawn(missile);
-}
-
-// TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
-void _thunk_P_RemoveMobj() noexcept {
-    P_RemoveMobj(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0));
-}
-
-// TODO: remove eventually. Needed at the minute due to 'latecall' function pointer invocations of this function.
-void _thunk_P_ExplodeMissile() noexcept {
-    P_ExplodeMissile(*vmAddrToPtr<mobj_t>(*PsxVm::gpReg_a0));
 }

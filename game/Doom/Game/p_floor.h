@@ -60,8 +60,6 @@ result_e T_MovePlane(
     const int32_t direction
 ) noexcept;
 
-// TODO: REMOVE eventually
-void _thunk_T_MoveFloor() noexcept;
-
+void T_MoveFloor(floormove_t& floor) noexcept;
 bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept;
 bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept;

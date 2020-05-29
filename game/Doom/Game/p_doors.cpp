@@ -38,8 +38,9 @@ static const VmPtr<const char> STR_RedKeyNeededMsg(0x80010060);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a door: moves the door, does door state transitions and sounds etc.
+// TODO: Make private to the module eventually.
 //------------------------------------------------------------------------------------------------------------------------------------------
-static void T_VerticalDoor(vldoor_t& door) noexcept {
+void T_VerticalDoor(vldoor_t& door) noexcept {
     // Which way is the door moving?
     switch (door.direction) {
         // Door is waiting
@@ -165,11 +166,6 @@ static void T_VerticalDoor(vldoor_t& door) noexcept {
     }
 }
 
-// TODO: REMOVE eventually
-void _thunk_T_VerticalDoor() noexcept {
-    T_VerticalDoor(*vmAddrToPtr<vldoor_t>(*PsxVm::gpReg_a0));
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // New PSX function: check to see if a door being used is locked due to key lock constraints and flash a message to the player if it is.
 // Returns 'false' if the door cannot be used by the given map object, or if the door does NOT have a key lock.
@@ -263,7 +259,7 @@ bool EV_DoDoor(line_t& line, const vldoor_e doorType) noexcept {
         vldoor_t& door = *(vldoor_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(vldoor_t), PU_LEVSPEC, nullptr);
         P_AddThinker(door.thinker);
 
-        door.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_VerticalDoor);
+        door.thinker.function = PsxVm::getNativeFuncVmAddr(T_VerticalDoor);
         door.type = doorType;
         door.sector = &sector;
         door.speed = VDOORSPEED;
@@ -380,7 +376,7 @@ void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {
     doorSector.specialdata = &newDoor;
 
     // Default door config
-    newDoor.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_VerticalDoor);
+    newDoor.thinker.function = PsxVm::getNativeFuncVmAddr(T_VerticalDoor);
     newDoor.speed = VDOORSPEED;
     newDoor.sector = &doorSector;
     newDoor.direction = 1;
@@ -431,7 +427,7 @@ void P_SpawnDoorCloseIn30(sector_t& sector) noexcept {
     sector.special = 0;
 
     // Configure door settings
-    door.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_VerticalDoor);
+    door.thinker.function = PsxVm::getNativeFuncVmAddr(T_VerticalDoor);
     door.sector = &sector;
     door.direction = 0;
     door.type = Normal;
@@ -450,7 +446,7 @@ void P_SpawnDoorRaiseIn5Mins(sector_t& sector, [[maybe_unused]] const int32_t se
     sector.special = 0;
 
     // Configure door settings
-    door.thinker.function = PsxVm::getNativeFuncVmAddr(_thunk_T_VerticalDoor);
+    door.thinker.function = PsxVm::getNativeFuncVmAddr(T_VerticalDoor);
     door.sector = &sector;
     door.direction = 2;         // Do initial wait
     door.type = RaiseIn5Mins;
