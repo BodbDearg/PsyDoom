@@ -7,9 +7,10 @@ enum cheatseq_t : int32_t;
 
 BEGIN_NAMESPACE(Utils)
 
-void do_platform_updates() noexcept;
-void wait_for_seconds(float seconds) noexcept;
-void thread_yield() noexcept;
+void doPlatformUpdates() noexcept;
+void waitForSeconds(float seconds) noexcept;
+void waitForCdAudioPlaybackStart() noexcept;
+void threadYield() noexcept;
 cheatseq_t getDevCheatSequenceToExec() noexcept;
 
 //------------------------------------------------------------------------------------------------------------------------------------------

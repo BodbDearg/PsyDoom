@@ -14,6 +14,7 @@
 #include "Doom/Renderer/r_sky.h"
 #include "m_main.h"
 #include "o_main.h"
+#include "PcPsx/Utils.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 
@@ -74,7 +75,7 @@ void START_Title() noexcept {
     psxcd_play(gCDTrackNum[cdmusic_title_screen], *gCdMusicVol);
     
     // Wait until some cd audio has been read
-    while (psxcd_elapsed_sectors() == 0) {}
+    Utils::waitForCdAudioPlaybackStart();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -5,6 +5,7 @@
 #include "Doom/d_main.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
+#include "PcPsx/Utils.h"
 #include "Wess/psxcd.h"
 
 // Credits screen resources
@@ -46,7 +47,7 @@ void START_Credits() noexcept {
     );
     
     // Wait until some cd audio has been read
-    while (psxcd_elapsed_sectors() == 0) {}
+    Utils::waitForCdAudioPlaybackStart();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

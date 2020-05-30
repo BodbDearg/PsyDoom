@@ -300,7 +300,7 @@ void I_PSXInit() noexcept {
     // TODO: check for window close and then terminate forcefully here.
     while (true) {
         #if PC_PSX_DOOM_MODS
-            Utils::do_platform_updates();
+            Utils::doPlatformUpdates();
         #endif
     }
 }
@@ -481,8 +481,8 @@ void I_DrawPresent() noexcept {
 
         // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
         #if PC_PSX_DOOM_MODS
-            Utils::do_platform_updates();
-            Utils::thread_yield();
+            Utils::doPlatformUpdates();
+            Utils::threadYield();
         #endif
     }
 
@@ -493,8 +493,8 @@ void I_DrawPresent() noexcept {
         while (*gElapsedVBlanks < 4) {
             // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
             #if PC_PSX_DOOM_MODS
-                Utils::do_platform_updates();
-                Utils::thread_yield();
+                Utils::doPlatformUpdates();
+                Utils::threadYield();
             #endif
 
             *gTotalVBlanks = LIBETC_VSync(-1);
@@ -1058,7 +1058,7 @@ bool I_NetUpdate() noexcept {
         // PC-PSX: wait for a few seconds so the network error can be displayed.
         // When done clear the screen so the 'loading' message displays clearly and not overlapped with the 'network error' message:
         #if PC_PSX_DOOM_MODS
-            Utils::wait_for_seconds(3.0f);
+            Utils::waitForSeconds(3.0f);
             I_DrawPresent();
         #endif
 
@@ -1145,8 +1145,8 @@ void I_NetSendRecv() noexcept {
 
                 // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
                 #if PC_PSX_DOOM_MODS
-                    Utils::do_platform_updates();
-                    Utils::thread_yield();
+                    Utils::doPlatformUpdates();
+                    Utils::threadYield();
                 #endif
             }
         } else {
@@ -1175,8 +1175,8 @@ void I_NetSendRecv() noexcept {
 
                 // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
                 #if PC_PSX_DOOM_MODS
-                    Utils::do_platform_updates();
-                    Utils::thread_yield();
+                    Utils::doPlatformUpdates();
+                    Utils::threadYield();
                 #endif
             }
         }

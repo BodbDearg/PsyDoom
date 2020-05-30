@@ -233,10 +233,10 @@ void displayFramebuffer() noexcept {
         return;
 
     // Otherwise handle and ensure sound etc. is up to date before and after the buffer swap
-    Utils::do_platform_updates();
+    Utils::doPlatformUpdates();
     copyPsxToSdlFramebuffer();
     presentSdlFramebuffer();
-    Utils::do_platform_updates();
+    Utils::doPlatformUpdates();
 }
 
 SDL_Window* getWindow() noexcept {

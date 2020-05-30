@@ -10,6 +10,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
+#include "PcPsx/Utils.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 
@@ -160,7 +161,7 @@ void M_Start() noexcept {
     );
 
     // Wait until some cd audio has been read
-    while (psxcd_elapsed_sectors() == 0) {}
+    Utils::waitForCdAudioPlaybackStart();
 
     // Don't clear the screen when setting a new draw environment.
     // Need to preserve the screen contents for the cross fade:

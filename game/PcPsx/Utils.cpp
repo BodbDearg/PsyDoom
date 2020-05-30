@@ -3,6 +3,7 @@
 #include "Doom/Game/p_tick.h"
 #include "PsxVm/PsxVm.h"
 #include "Video.h"
+#include "Wess/psxcd.h"
 
 #include <SDL.h>
 #include <thread>
@@ -12,7 +13,7 @@ BEGIN_NAMESPACE(Utils)
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Run update actions that have to be done periodically, including running the window and processing sound
 //------------------------------------------------------------------------------------------------------------------------------------------
-void do_platform_updates() noexcept {
+void doPlatformUpdates() noexcept {
     emulate_sound_if_required();
     Video::handleSdlWindowEvents();
 }
@@ -20,7 +21,7 @@ void do_platform_updates() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Wait for a number of seconds while still doing platform updates
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wait_for_seconds(float seconds) noexcept {
+void waitForSeconds(float seconds) noexcept {
     const clock_t startTime = clock();
 
     while (true) {
@@ -30,15 +31,31 @@ void wait_for_seconds(float seconds) noexcept {
         if (elapsed > seconds)
             break;
         
-        do_platform_updates();
-        thread_yield();
+        doPlatformUpdates();
+        threadYield();
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility that implements a commonly used loop from the original PSX Doom, with some PC friendly modifications.
+// Waits until at least 1 CD audio sector has been read before continuing.
+// This modified version also does platform updates so we can escape the loop, and the UI remains responsive.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void waitForCdAudioPlaybackStart() noexcept {
+    // Wait until some cd audio has been read...
+    // This is all the original PSX Doom code did, nothing else:
+    while (psxcd_elapsed_sectors() == 0) {
+        // PC-PSX: also update everything (sound etc.) so we can eventually escape this loop and the user can close the window if required.
+        // Since we are waiting a bit we can also yield some CPU time.
+        Utils::doPlatformUpdates();
+        Utils::threadYield();
+    }    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Yield some CPU time to the host machine
 //------------------------------------------------------------------------------------------------------------------------------------------
-void thread_yield() noexcept {
+void threadYield() noexcept {
     std::this_thread::yield();
 }
 
