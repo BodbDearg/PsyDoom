@@ -1,9 +1,11 @@
 #include "Utils.h"
 
 #include "Doom/Game/p_tick.h"
+#include "ProgArgs.h"
 #include "PsxVm/PsxVm.h"
 #include "Video.h"
 #include "Wess/psxcd.h"
+#include "Wess/psxspu.h"
 
 #include <SDL.h>
 #include <thread>
@@ -39,7 +41,7 @@ void waitForSeconds(float seconds) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Utility that implements a commonly used loop from the original PSX Doom, with some PC friendly modifications.
 // Waits until at least 1 CD audio sector has been read before continuing.
-// This modified version also does platform updates so we can escape the loop, and the UI remains responsive.
+// This modified version also does platform updates so we can escape the loop, and so the UI remains responsive.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void waitForCdAudioPlaybackStart() noexcept {
     // Wait until some cd audio has been read...
@@ -49,7 +51,28 @@ void waitForCdAudioPlaybackStart() noexcept {
         // Since we are waiting a bit we can also yield some CPU time.
         Utils::doPlatformUpdates();
         Utils::threadYield();
-    }    
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Utility that implements a commonly used loop from the original PSX Doom, with some PC friendly modifications.
+// Waits until at CD audio has finished fading out.
+// This modified version also does platform updates so we can escape the loop, and so the UI remains responsive.
+//------------------------------------------------------------------------------------------------------------------------------------------
+void waitForCdAudioFadeOut() noexcept {
+    // PC-PSX: never wait for fades in headless mode
+    #if PC_PSX_DOOM_MODS
+        if (ProgArgs::gbHeadlessMode)
+            return;
+    #endif
+
+    // Wait for the fade to complete...
+    while (psxspu_get_cd_fade_status()) {
+        // PC-PSX: also update everything (sound etc.) so we can eventually escape this loop and the user can close the window if required.
+        // Since we are waiting a bit we can also yield some CPU time.
+        Utils::doPlatformUpdates();
+        Utils::threadYield();
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

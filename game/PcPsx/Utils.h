@@ -10,6 +10,7 @@ BEGIN_NAMESPACE(Utils)
 void doPlatformUpdates() noexcept;
 void waitForSeconds(float seconds) noexcept;
 void waitForCdAudioPlaybackStart() noexcept;
+void waitForCdAudioFadeOut() noexcept;
 void threadYield() noexcept;
 cheatseq_t getDevCheatSequenceToExec() noexcept;
 

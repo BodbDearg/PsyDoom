@@ -6,6 +6,7 @@
 #include "PcPsx/ModMgr.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Types.h"
+#include "PcPsx/Utils.h"
 #include "psxspu.h"
 #include "PsxVm/PsxVm.h"
 
@@ -439,11 +440,7 @@ void psxcd_set_data_mode() noexcept {
 
         if (cdVol != 0) {
             psxspu_start_cd_fade(FADE_TIME_MS, 0);
-
-            while (psxspu_get_cd_fade_status()) {
-                // Wait for the fade to complete...
-                // TODO: PC-PSX: yield CPU cycles here and handle window events if pausing.
-            }
+            Utils::waitForCdAudioFadeOut();
         }
 
         // Disable cd audio mixing
@@ -1240,11 +1237,7 @@ void psxcd_stop() noexcept {
 
     if (startCdVol != 0) {
         psxspu_start_cd_fade(FADE_TIME_MS, 0);
-
-        while (psxspu_get_cd_fade_status()) {
-            // Wait for the fade to complete...
-            // TODO: PC-PSX: yield CPU cycles here and handle window events if pausing.
-        }
+        Utils::waitForCdAudioFadeOut();
     }
 
     // Ensure no active commands, and issue the pause command
@@ -1275,11 +1268,7 @@ void psxcd_pause() noexcept {
 
     if (startCdVol != 0) {
         psxspu_start_cd_fade(FADE_TIME_MS, 0);
-
-        while (psxspu_get_cd_fade_status()) {
-            // Wait for the fade to complete...
-            // TODO: PC-PSX: yield CPU cycles here and handle window events if pausing.
-        }
+        Utils::waitForCdAudioFadeOut();
     }
     
     // Ensure no active commands, and issue the pause command
@@ -1317,11 +1306,6 @@ void psxcd_restart(const int32_t vol) noexcept {
 // Tells how many sectors have elapsed during cd playback
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxcd_elapsed_sectors() noexcept {
-    // PC-PSX: Update audio: this will also advance cdrom playback in case this is being polled in a loop
-    #if PC_PSX_DOOM_MODS
-        emulate_sound_if_required();
-    #endif
-
     // If we haven't started playback then no sectors are elapsed
     if (*gPSXCD_beginloc == 0)
         return 0;

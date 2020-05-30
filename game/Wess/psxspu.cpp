@@ -288,15 +288,6 @@ void psxspu_stop_cd_fade() noexcept {
 // Returns 'true' if the cd audio fade out is still ongoing, 'false' otherwise
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool psxspu_get_cd_fade_status() noexcept {
-    // PC-PSX: never fade in headless mode.
-    // Also emulate sound a little in case calling code is polling in a loop waiting for changed spu status.
-    #if PC_PSX_DOOM_MODS
-        if (ProgArgs::gbHeadlessMode)
-            return false;
-
-        emulate_sound_if_required();
-    #endif
-    
     return (*gPsxSpu_cd_fade_ticks_left > 1);
 }
 
