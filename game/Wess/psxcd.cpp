@@ -639,7 +639,9 @@ int32_t psxcd_read(void* const pDest, int32_t numBytes, PsxCd_File& file) noexce
 
     // Continue reading until done
     while (psxcd_async_on()) {
-        // TODO: PC-PSX: update the window and sound while this is happening
+        #if PC_PSX_DOOM_MODS
+            Utils::doPlatformUpdates();
+        #endif
     }
     
     return retBytesRead;
