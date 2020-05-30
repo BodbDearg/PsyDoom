@@ -1,5 +1,7 @@
 #include "Network.h"
 
+#include "ProgArgs.h"
+
 // This prevents warnings in ASIO about the Windows SDK target version not being specified
 #if _WIN32
     #include <sdkddkver.h>
@@ -13,9 +15,12 @@ static std::unique_ptr<asio::ip::tcp::socket>   gpSocket;
 // FIXME: TEMP STUFF FOR TESTING
 void Network::initForServer() noexcept {
     try {
+        // Create the io context and socket
         gpIoContext.reset(new asio::io_context());
         gpSocket.reset(new asio::ip::tcp::socket(*gpIoContext));
-        asio::ip::tcp::acceptor acceptor(*gpIoContext, asio::ip::tcp::endpoint(asio::ip::tcp::v6(), 1234));
+
+        // Wait for a connection and accept
+        asio::ip::tcp::acceptor acceptor(*gpIoContext, asio::ip::tcp::endpoint(asio::ip::tcp::v6(), ProgArgs::gServerPort));
         acceptor.accept(*gpSocket);
     }
     catch (...) {
@@ -28,9 +33,20 @@ void Network::initForServer() noexcept {
 // FIXME: TEMP STUFF FOR TESTING
 void Network::initForClient() noexcept {
     try {
+        // Create the io context and socket
         gpIoContext.reset(new asio::io_context());
         gpSocket.reset(new asio::ip::tcp::socket(*gpIoContext));
-        gpSocket->connect(asio::ip::tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 1234));
+
+        // Resolve the host addresss
+        asio::ip::tcp::resolver tcpResolver(*gpIoContext);
+        asio::ip::tcp::resolver::query tcpResolverQuery(ProgArgs::getServerHost(), std::to_string(ProgArgs::gServerPort));
+        asio::ip::tcp::resolver::iterator tcpResolveIter = tcpResolver.resolve(tcpResolverQuery);
+        
+        // Connect to the resolved address
+        while (tcpResolveIter != asio::ip::tcp::resolver::iterator{}) {
+            gpSocket->connect(*tcpResolveIter);
+            break;
+        }
     }
     catch (...) {
         std::printf("ERROR: Network::initForClient: error connecting to the server!");

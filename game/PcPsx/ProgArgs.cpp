@@ -4,8 +4,12 @@
 #include "ProgArgs.h"
 
 #include <cstring>
+#include <string>
 
 BEGIN_NAMESPACE(ProgArgs)
+
+// The default client and server port
+static constexpr int16_t DEFAULT_NET_PORT = 666;
 
 // Enable a temp hack to allow the engine to run beyond the original 30 FPS.
 // TODO: Eventually support any framerate and interpolate.
@@ -23,9 +27,12 @@ const char* gPlayDemoFilePath = "";             // The demo file to play and exi
 const char* gSaveDemoResultFilePath = "";       // Path to a json file to save the demo result to
 const char* gCheckDemoResultFilePath = "";      // Path to a json file to read the demo result from and verify a match with
 
-// FIXME: temp stuff for testing
-bool gbIsNetServer = false;
-bool gbIsNetClient = false;
+bool    gbIsNetServer   = false;                // True if this peer is a server in a networked game (player 1, waits for client connection)
+bool    gbIsNetClient   = false;                // True if this peer is a client in a networked game (player 2, connects to waiting server)
+int16_t gServerPort     = DEFAULT_NET_PORT;     // Port that the server listens on or that the client connects to
+
+// Host that the client connects to: private so we don't expose std::string everywhere
+static std::string gServerHost;
 
 // Format for a function that parses an argument.
 // Takes in the current arguments list pointer and the number of arguments left, which is always expected to be at least '1'.
@@ -86,21 +93,47 @@ static int parseArg_checkresult(const int argc, const char** const argv) {
     return 0;
 }
 
-// FIXME: temp stuff for testing
 static int parseArg_server([[maybe_unused]] const int argc, const char** const argv) {
     if (std::strcmp(argv[0], "-server") == 0) {
         gbIsNetServer = true;
+
+        // Is there a port number following?
+        if ((argc >= 2) && (argv[1][0] != '-')) {
+            try {
+                gServerPort = std::stoi(argv[1]);
+            } catch (...) {
+                std::printf("Bad server port number '%s'! Arg will be ignored...\n", argv[1]);
+            }
+
+            return 2;
+        }
+
         return 1;
     }
 
     return 0;
 }
 
-// FIXME: temp stuff for testing
 static int parseArg_client([[maybe_unused]] const int argc, const char** const argv) {
-    if (std::strcmp(argv[0], "-client") == 0) {
+    if ((argc >= 2) && (std::strcmp(argv[0], "-client") == 0)) {
         gbIsNetClient = true;
-        return 1;
+
+        // Parse the host and possibly port (separated by ':'):
+        const char* const pFirstColon = std::strchr(argv[1], ':');
+
+        if (!pFirstColon) {
+            gServerHost = argv[1];
+        } else {
+            gServerHost = std::string(argv[1], pFirstColon - argv[1]);
+
+            try {
+                gServerPort = std::stoi(pFirstColon + 1);
+            } catch (...) {
+                std::printf("Bad server port number '%s'! Arg will be ignored...\n", pFirstColon + 1);
+            }
+        }
+
+        return 2;
     }
 
     return 0;
@@ -141,7 +174,7 @@ void init(const int argc, const char** const argv) noexcept {
 
         // Unrecognized argument? If so warn about it and skip:
         if (!bHandledArg) {
-            std::printf("Unrecognized command line argument '%s'! Arg will be ignored...", pCurArgv[0]);
+            std::printf("Unrecognized command line argument '%s'! Arg will be ignored...\n", pCurArgv[0]);
             argsLeft--;
             pCurArgv++;
         }
@@ -158,6 +191,10 @@ void shutdown() noexcept {
     gCheckDemoResultFilePath = "";
     gbIsNetServer = false;
     gbIsNetClient = false;
+}
+
+const char* getServerHost() noexcept {
+    return gServerHost.c_str();
 }
 
 END_NAMESPACE(ProgArgs)
