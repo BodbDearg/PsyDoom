@@ -24,12 +24,6 @@ int32_t LIBETC_VSync(const int32_t mode) noexcept {
     if (mode == 0)
         return 0;
 
-    // PC-PSX: if this is being polled to pass time, ensure we are updating sound.
-    // FIXME: update everything else also, window etc.
-    #if PC_PSX_DOOM_MODS
-        emulate_sound_if_required();
-    #endif
-
     if (mode < 0) {
         // For the VBLANK count emulation use the time since the program started to get the count.
         const clock_t now = clock();

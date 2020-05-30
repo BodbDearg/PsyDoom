@@ -479,8 +479,9 @@ void I_DrawPresent() noexcept {
         if (*gElapsedVBlanks >= minElapsedVBlanks)
             break;
 
-        // PC-PSX: yield some CPU time here since we are waiting rather than wasting it spinning constantly
+        // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
         #if PC_PSX_DOOM_MODS
+            Utils::do_platform_updates();
             Utils::thread_yield();
         #endif
     }
@@ -490,8 +491,9 @@ void I_DrawPresent() noexcept {
     // Probably done so the simulation remains consistent!
     if (*gbDemoPlayback || *gbDemoRecording) {
         while (*gElapsedVBlanks < 4) {
-            // PC-PSX: yield some CPU time here since we are waiting rather than wasting it spinning constantly
+            // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
             #if PC_PSX_DOOM_MODS
+                Utils::do_platform_updates();
                 Utils::thread_yield();
             #endif
 
@@ -1118,9 +1120,11 @@ void I_NetSendRecv() noexcept {
     while (true) {
         // Which of the two players are we doing comms for?
         if (*gCurPlayerIndex == 0) {
-            // Player 1: start by waiting until we are clear to send
-            // FIXME: REMOVE
-            while (!LIBCOMB_CombCTS()) {}
+            // Player 1: start by waiting until we are clear to send.
+            // PC-PSX: No wait for clear to send here.
+            #if !PC_PSX_DOOM_MODS
+                while (!LIBCOMB_CombCTS()) {}
+            #endif
             
             // Write the output packet
             LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
@@ -1138,6 +1142,12 @@ void I_NetSendRecv() noexcept {
                 // Timeout after 5 seconds if the read still isn't done...
                 if (LIBETC_VSync(-1) - startVBlanks >= VBLANKS_PER_SEC * 5)
                     break;
+
+                // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
+                #if PC_PSX_DOOM_MODS
+                    Utils::do_platform_updates();
+                    Utils::thread_yield();
+                #endif
             }
         } else {
             // Player 2: start by reading the input packet
@@ -1149,11 +1159,12 @@ void I_NetSendRecv() noexcept {
             while (true) {
                 // Is the input packet done yet?
                 if (LIBAPI_TestEvent(*gSioReadDoneEvent)) {
-                    // Yes we read it! Wait until we are clear to send.
-                    // FIXME: REMOVE
-                    while (!LIBCOMB_CombCTS()) {}
+                    // Yes we read it! Write the output packet and finish up once we are clear to send.
+                    // PC-PSX: No wait for clear to send here.
+                    #if !PC_PSX_DOOM_MODS
+                        while (!LIBCOMB_CombCTS()) {}
+                    #endif
 
-                    // Write the output packet and finish up
                     LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
                     return;
                 }
@@ -1161,6 +1172,12 @@ void I_NetSendRecv() noexcept {
                 // Timeout after 5 seconds if the read still isn't done...
                 if (LIBETC_VSync(-1) - startVBlanks >= VBLANKS_PER_SEC * 5)
                     break;
+
+                // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
+                #if PC_PSX_DOOM_MODS
+                    Utils::do_platform_updates();
+                    Utils::thread_yield();
+                #endif
             }
         }
 
