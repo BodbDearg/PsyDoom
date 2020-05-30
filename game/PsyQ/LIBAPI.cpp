@@ -29,7 +29,8 @@ struct RootCounter2 {
 static RootCounter2 gRootCnt2 = {};
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// Not a part of the original LIBAPI: this is called by the host application to generate timer related events (fake 'interrupts')
+// Not a part of the original LIBAPI: this is called by the host application to generate hardware timer related events (fake 'interrupts').
+// This is what drives the music sequencer.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void generate_timer_events() noexcept {
     // Don't do anything if we are not counting or if there is no interval defined

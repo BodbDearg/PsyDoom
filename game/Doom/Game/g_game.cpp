@@ -18,6 +18,7 @@
 #include "p_setup.h"
 #include "p_tick.h"
 #include "PcPsx/Endian.h"
+#include "PcPsx/Utils.h"
 #include "Wess/wessapi.h"
 
 // Helper global holding the result of executing a gameloop via 'MiniLoop'.
@@ -67,7 +68,11 @@ void G_DoLoadLevel() noexcept {
 
     // Wait for the pistol and barrel explode menu sounds to stop playing
     while ((wess_seq_status(sfx_barexp) == SEQUENCE_PLAYING) || (wess_seq_status(sfx_pistol) == SEQUENCE_PLAYING)) {
-        // TODO: PC-PSX: update the window, emulate sounds etc. here while we wait..
+        // PC-PSX: need to update sound to escape this loop, also ensure the window stays responsive etc.
+        #if PC_PSX_DOOM_MODS
+            Utils::doPlatformUpdates();
+            Utils::threadYield();
+        #endif
     }
 
     // Loading sound and music

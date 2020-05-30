@@ -16,6 +16,7 @@ BEGIN_NAMESPACE(Utils)
 // Run update actions that have to be done periodically, including running the window and processing sound
 //------------------------------------------------------------------------------------------------------------------------------------------
 void doPlatformUpdates() noexcept {
+    generate_timer_events();
     emulate_sound_if_required();
     Video::handleSdlWindowEvents();
 }

@@ -7,6 +7,7 @@
 #include "i_main.h"
 #include "m_fixed.h"
 #include "PcPsx/ProgArgs.h"
+#include "PcPsx/Utils.h"
 #include "sounds.h"
 #include "Wess/lcdload.h"
 #include "Wess/psxspu.h"
@@ -306,7 +307,11 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
             S_StopMusic();
 
             while (wess_seq_status(gMusicSeqDefs[*gCurMusicSeqIdx].seqIdx) != SequenceStatus::SEQUENCE_INACTIVE) {
-                // TODO: PC-PSX - update the window etc. here?
+                // PC-PSX: need to update sound to escape this loop, also ensure the window stays responsive etc.
+                #if PC_PSX_DOOM_MODS
+                    Utils::doPlatformUpdates();
+                    Utils::threadYield();
+                #endif
             }
 
             wess_seq_range_free(0 + NUMSFX, NUM_MUSIC_SEQS);

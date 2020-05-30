@@ -27,9 +27,6 @@ void emulate_sound_if_required() noexcept {
     if (ProgArgs::gbHeadlessMode)
         return;
 
-    // Update timer events while we are at it - that might affect the sound sequencer
-    generate_timer_events();
-
     while (true) {
         size_t soundBufferSize;
 

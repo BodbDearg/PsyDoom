@@ -977,11 +977,6 @@ void wess_seq_trigger_special(const int32_t seqIdx, const TriggerPlayAttr* const
 // Returns the current state of the specified sequence
 //------------------------------------------------------------------------------------------------------------------------------------------
 SequenceStatus wess_seq_status(const int32_t seqIdx) noexcept {
-    // Emulate sound a little in case calling code is polling in a loop waiting for status to change
-    #if PC_PSX_DOOM_MODS
-        emulate_sound_if_required();
-    #endif
-
     // Is the sequence number a valid one?
     if (!Is_Seq_Num_Valid(seqIdx))
         return SEQUENCE_INVALID;
