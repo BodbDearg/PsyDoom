@@ -7,7 +7,6 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/UI/st_main.h"
 #include "g_game.h"
-#include "info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"

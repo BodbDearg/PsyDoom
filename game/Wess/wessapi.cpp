@@ -4,11 +4,8 @@
 #include "wessapi.h"
 
 #include "PcPsx/Endian.h"
-#include "PcPsx/Finally.h"
-#include "psxcmd.h"
 #include "PsxVm/PsxVm.h"
 #include "wessapi_t.h"
-#include "wessarc.h"
 #include "wessseq.h"
 
 // 4 byte identifier for WMD (Williams Module) files: says 'SPSX'

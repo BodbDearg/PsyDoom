@@ -3,14 +3,11 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "PSXCD.h"
 
-#include "Doom/cdmaptbl.h"
 #include "PcPsx/ModMgr.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Types.h"
 #include "psxspu.h"
 #include "PsxVm/PsxVm.h"
-#include "PsxVm/VmPtr.h"
-#include "PsyQ/LIBCD.h"
 
 // PSXCD module commands within PsxCd_Command
 enum PsxCd_CmdOp : int32_t {

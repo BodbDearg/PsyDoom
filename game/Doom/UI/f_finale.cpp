@@ -7,7 +7,6 @@
 #include "Doom/Base/sounds.h"
 #include "Doom/d_main.h"
 #include "Doom/Game/g_game.h"
-#include "Doom/Game/info.h"
 #include "Doom/Game/p_setup.h"
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
@@ -15,7 +14,6 @@
 #include "m_main.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
-#include "Wess/psxcd.h"
 
 // Win text for Doom 1 and 2
 static const char gDoom1WinText[][24 + 1] = {

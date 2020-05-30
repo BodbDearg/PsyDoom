@@ -15,6 +15,7 @@
 #include "p_sight.h"
 #include "p_spec.h"
 #include "p_switch.h"
+
 #include <algorithm>
 
 const VmPtr<VmPtr<mobj_t>>      gpShooter(0x800780B4);          // The map object currently taking a shot

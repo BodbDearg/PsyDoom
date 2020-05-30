@@ -4,15 +4,12 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "LIBCD.h"
 
-#include "LIBAPI.h"
-#include "LIBETC.h"
 #include "PcPsx/Finally.h"
 #include "PsxVm/PsxVm.h"
 
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <device/cdrom/cdrom.h>
     #include <device/spu/spu.h>
-    #include <disc/disc.h>
 END_DISABLE_HEADER_WARNINGS
 
 // CD-ROM constants

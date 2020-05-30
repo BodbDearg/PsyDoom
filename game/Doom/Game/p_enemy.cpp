@@ -8,7 +8,6 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "g_game.h"
-#include "p_base.h"
 #include "p_doors.h"
 #include "p_floor.h"
 #include "p_inter.h"
@@ -22,6 +21,7 @@
 #include "p_switch.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
+
 #include <algorithm>
 
 static constexpr angle_t TRACEANGLE = 0xC000000;        // How much Revenant missiles adjust their angle by when homing towards their target (angle adjust increment)

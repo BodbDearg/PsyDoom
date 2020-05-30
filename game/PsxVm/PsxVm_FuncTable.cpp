@@ -4,6 +4,7 @@
 #include "Doom/Game/p_enemy.h"
 #include "Doom/Game/p_mobj.h"
 #include "Doom/Game/p_pspr.h"
+
 #include <map>
 
 struct ceiling_t;

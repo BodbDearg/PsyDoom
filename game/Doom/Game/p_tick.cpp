@@ -22,7 +22,6 @@
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
 #include "PsxVm/PsxVm.h"
-#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
@@ -166,7 +165,7 @@ void P_CheckCheats() noexcept {
         const uint32_t oldPadBtns = gOldTicButtons[playerIdx];
         
         // Toggling pause?
-        if (padBtnJustPressed(PAD_START, padBtns, oldPadBtns)) {
+        if (Utils::padBtnJustPressed(PAD_START, padBtns, oldPadBtns)) {
             *gbGamePaused = (!*gbGamePaused);
 
             // Handle the game being paused, if just pausing
@@ -207,7 +206,7 @@ void P_CheckCheats() noexcept {
 
         // Showing the options menu if the game is paused and the options button has just been pressed.
         // Otherwise do not do any of the logic below...
-        if ((!padBtnJustPressed(PAD_SELECT, padBtns, oldPadBtns)) || (!*gbGamePaused))
+        if ((!Utils::padBtnJustPressed(PAD_SELECT, padBtns, oldPadBtns)) || (!*gbGamePaused))
             continue;
         
         // About to open up the options menu, disable these player cheats and present what we have to the screen
@@ -316,7 +315,7 @@ void P_CheckCheats() noexcept {
     // PC-PSX: allow cheats to be easily input using keyboard keys in dev builds
     #if PC_PSX_DOOM_MODS
         static cheatseq_t prevDevCheatSeq = (cheatseq_t) UINT32_MAX;
-        cheatseq_t devCheatSeq = getDevCheatSequenceToExec();
+        cheatseq_t devCheatSeq = Utils::getDevCheatSequenceToExec();
 
         // Cheat key must be released in order to be used again.
         // This prevents us from rapidly cycling between on/off states for some cheats.

@@ -2,7 +2,6 @@
 
 #include "Doom/Base/i_drawcmds.h"
 #include "Doom/Base/i_main.h"
-#include "Doom/Game/info.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "PsyQ/LIBGTE.h"

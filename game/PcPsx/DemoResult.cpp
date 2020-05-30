@@ -14,6 +14,7 @@
 #include "Doom/Game/g_game.h"
 #include "FileUtils.h"
 #include "Finally.h"
+
 #include <rapidjson/document.h>
 #include <rapidjson/filewritestream.h>
 #include <rapidjson/prettywriter.h>

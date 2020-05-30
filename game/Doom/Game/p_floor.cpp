@@ -2,7 +2,6 @@
 
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
-#include "Doom/Base/z_zone.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "doomdata.h"
@@ -12,6 +11,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
+
 #include <algorithm>
 
 //------------------------------------------------------------------------------------------------------------------------------------------

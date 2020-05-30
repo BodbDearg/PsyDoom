@@ -24,8 +24,6 @@
 #include "p_telept.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
-#include "Wess/psxcd.h"
-#include <algorithm>
 
 // Format for a delayed action function that can be scheduled by 'P_ScheduleDelayedAction'
 typedef void (*delayed_actionfn_t)() noexcept;

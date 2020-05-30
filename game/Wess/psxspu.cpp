@@ -5,9 +5,7 @@
 #include "PSXSPU.h"
 
 #include "PcPsx/ProgArgs.h"
-#include "PcPsx/Types.h"
 #include "PsxVm/PsxVm.h"
-#include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessarc.h"
 

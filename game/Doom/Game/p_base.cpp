@@ -16,6 +16,7 @@
 #include "p_setup.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
+
 #include <algorithm>
 
 static constexpr fixed_t STOPSPEED  = 0x1000;   // Speed under which to stop a thing fully

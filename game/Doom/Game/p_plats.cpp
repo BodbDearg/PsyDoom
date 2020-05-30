@@ -12,6 +12,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
+
 #include <algorithm>
 
 static constexpr int32_t PLATWAIT   = 3;                // Number of seconds for platforms to be in the waiting state

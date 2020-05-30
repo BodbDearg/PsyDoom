@@ -6,8 +6,6 @@
 #include "Doom/Base/m_fixed.h"
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/w_wad.h"
-#include "Doom/Base/z_zone.h"
-#include "Doom/cdmaptbl.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
@@ -21,7 +19,6 @@
 #include "p_spec.h"
 #include "p_switch.h"
 #include "p_tick.h"
-#include "PcPsx/Endian.h"
 
 // How much heap space is required after loading the map in order to run the game (48 KiB).
 // If we don't have this much then the game craps out with an error.

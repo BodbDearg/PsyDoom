@@ -5,10 +5,9 @@
 #include "psxcmd.h"
 
 #include "psxspu.h"
-#include "PsyQ/LIBSPU.h"
 #include "wessapi.h"
-#include "wessarc.h"
 #include "wessseq.h"
+
 #include <algorithm>
 
 const WessDriverFunc gWess_drv_cmds[19] = {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Macros.h"
+
 #include <cstddef>
 
 BEGIN_NAMESPACE(FileUtils)

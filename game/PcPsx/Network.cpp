@@ -6,8 +6,6 @@
 #endif
 
 #include <asio.hpp>
-#include <memory>
-#include <cstdio>
 
 static std::unique_ptr<asio::io_context>        gpIoContext;
 static std::unique_ptr<asio::ip::tcp::socket>   gpSocket;

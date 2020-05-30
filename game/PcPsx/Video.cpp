@@ -2,14 +2,15 @@
 
 #include "ProgArgs.h"
 #include "PsxVm/PsxVm.h"
+#include "Utils.h"
+
 #include <SDL.h>
-#include <thread>
 
 BEGIN_DISABLE_HEADER_WARNINGS
     #include <device/gpu/gpu.h>
 END_DISABLE_HEADER_WARNINGS
 
-BEGIN_NAMESPACE(PcPsx)
+BEGIN_NAMESPACE(Video)
 
 static SDL_Window*      gWindow;
 static SDL_Renderer*    gRenderer;
@@ -231,16 +232,15 @@ void displayFramebuffer() noexcept {
     if (ProgArgs::gbHeadlessMode)
         return;
 
-    // Otherwise handle
-    handleSdlWindowEvents();
+    // Otherwise handle and ensure sound etc. is up to date before and after the buffer swap
+    Utils::do_platform_updates();
     copyPsxToSdlFramebuffer();
     presentSdlFramebuffer();
-    emulate_sound_if_required();
-    PsxVm::updateInput();
+    Utils::do_platform_updates();
 }
 
 SDL_Window* getWindow() noexcept {
     return gWindow;
 }
 
-END_NAMESPACE(PcPsx)
+END_NAMESPACE(Video)

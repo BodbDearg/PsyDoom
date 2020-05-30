@@ -9,7 +9,6 @@
 #include "PcPsx/ProgArgs.h"
 #include "sounds.h"
 #include "Wess/lcdload.h"
-#include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
 #include "Wess/seqload.h"
 #include "Wess/seqload_r.h"
@@ -18,6 +17,7 @@
 #include "Wess/wessapi_p.h"
 #include "Wess/wessapi_t.h"
 #include "Wess/wessarc.h"
+
 #include <algorithm>
 
 // Sound settings for the WESS PSX sound driver

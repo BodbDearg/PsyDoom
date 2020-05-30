@@ -4,16 +4,13 @@
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
-#include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
-#include "Doom/doomdef.h"
 #include "Doom/Renderer/r_data.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "Doom/UI/f_finale.h"
 #include "Doom/UI/in_main.h"
 #include "doomdata.h"
-#include "info.h"
 #include "p_inter.h"
 #include "p_local.h"
 #include "p_map.h"
@@ -341,8 +338,8 @@ void G_RunGame() noexcept {
         
         if (*gGameAction == ga_warped)
             continue;
-    
-        if (*gGameAction == ga_died || *gGameAction == ga_restart) {
+        
+        if ((*gGameAction == ga_died) || (*gGameAction == ga_restart)) {
             *gbIsLevelBeingRestarted = true;
             continue;
         }
@@ -358,7 +355,7 @@ void G_RunGame() noexcept {
         MiniLoop(IN_Start, IN_Stop, IN_Ticker, IN_Drawer);
 
         // Should we do the Ultimate DOOM finale?
-        if (*gNetGame == gt_single && *gGameMap == 30 && *gNextMap == 31) {
+        if ((*gNetGame == gt_single) && (*gGameMap == 30) && (*gNextMap == 31)) {
             MiniLoop(F1_Start, F1_Stop, F1_Ticker, F1_Drawer);
 
             if (*gGameAction == ga_warped || *gGameAction == ga_restart)
@@ -379,7 +376,7 @@ void G_RunGame() noexcept {
 
         MiniLoop(F2_Start, F2_Stop, F2_Ticker, F2_Drawer);
 
-        if (*gGameAction != ga_warped && *gGameAction != ga_restart)
+        if ((*gGameAction != ga_warped) && (*gGameAction != ga_restart))
             break;
     }
 }

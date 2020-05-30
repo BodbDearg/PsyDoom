@@ -1,7 +1,6 @@
 #include "i_file.h"
 
 #include "i_main.h"
-#include "Wess/psxcd.h"
 
 static constexpr int32_t MAX_OPEN_FILES = 4;
 

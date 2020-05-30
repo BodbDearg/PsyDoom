@@ -4,11 +4,9 @@
 #include "ModMgr.h"
 
 #include "ProgArgs.h"
-#include <cstdio>
-#include <cstring>
+
 #include <filesystem>
 #include <map>
-#include <vector>
 
 BEGIN_NAMESPACE(ModMgr)
 

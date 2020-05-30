@@ -14,7 +14,6 @@
 #include "Doom/Renderer/r_sky.h"
 #include "m_main.h"
 #include "o_main.h"
-#include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 

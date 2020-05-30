@@ -6,7 +6,6 @@
 
 #include "psxcmd.h"
 #include "wessapi.h"
-#include "wessarc.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Unpause the specified track in the given sequence

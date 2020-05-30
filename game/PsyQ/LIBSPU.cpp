@@ -4,15 +4,9 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "LIBSPU.h"
 
-#include "LIBAPI.h"
-#include "LIBETC.h"
-#include "PcPsx/Macros.h"
 #include "PsxVm/PsxVm.h"
-#include <algorithm>
-#include <cstdint>
 
 BEGIN_DISABLE_HEADER_WARNINGS
-    #include <device/spu/spu.h>
     #include <system.h>
 END_DISABLE_HEADER_WARNINGS
 
@@ -754,7 +748,7 @@ void LIBSPU_SpuSetKey(const int32_t onOff, const uint32_t voiceBits) noexcept {
         for (uint32_t voiceIdx = 0; voiceIdx < SPU_NUM_VOICES; ++voiceIdx) {
             if (voiceBits & (1 << voiceIdx)) {
                 spu::Voice& voice = spu.voices[voiceIdx];
-                voice.keyOn(0);
+                voice.keyOn();
             }
         }
     }

@@ -1,8 +1,46 @@
 #include "Utils.h"
 
 #include "Doom/Game/p_tick.h"
+#include "PsxVm/PsxVm.h"
+#include "Video.h"
+
 #include <SDL.h>
 #include <thread>
+
+BEGIN_NAMESPACE(Utils)
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Run update actions that have to be done periodically, including running the window and processing sound
+//------------------------------------------------------------------------------------------------------------------------------------------
+void do_platform_updates() noexcept {
+    emulate_sound_if_required();
+    Video::handleSdlWindowEvents();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Wait for a number of seconds while still doing platform updates
+//------------------------------------------------------------------------------------------------------------------------------------------
+void wait_for_seconds(float seconds) noexcept {
+    const clock_t startTime = clock();
+
+    while (true) {
+        const clock_t now = clock();
+        const double elapsed = (double)(now - startTime) / (double) CLOCKS_PER_SEC;
+
+        if (elapsed > seconds)
+            break;
+        
+        do_platform_updates();
+        thread_yield();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Yield some CPU time to the host machine
+//------------------------------------------------------------------------------------------------------------------------------------------
+void thread_yield() noexcept {
+    std::this_thread::yield();
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Returns the cheat sequence to execute on the pause menu using helper shortcut keys in development mode.
@@ -33,9 +71,4 @@ cheatseq_t getDevCheatSequenceToExec() noexcept {
     return (cheatseq_t) UINT32_MAX;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// Yield some CPU time to the host machine
-//------------------------------------------------------------------------------------------------------------------------------------------
-void thread_yield() noexcept {
-    std::this_thread::yield();
-}
+END_NAMESPACE(Utils)

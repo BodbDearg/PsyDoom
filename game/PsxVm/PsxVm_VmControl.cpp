@@ -4,10 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "PsxVm.h"
 
-#include "PcPsx/FatalErrors.h"
-#include "PcPsx/Macros.h"
 #include <map>
-#include <memory>
 #include <SDL.h>
 
 BEGIN_DISABLE_HEADER_WARNINGS

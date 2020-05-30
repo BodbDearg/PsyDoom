@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PcPsx/Macros.h"
+
 #include <cstdint>
 #include <type_traits>
 

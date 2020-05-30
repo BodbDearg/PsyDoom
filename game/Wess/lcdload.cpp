@@ -6,14 +6,12 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "lcdload.h"
 
-#include "Doom/cdmaptbl.h"
 #include "PcPsx/Finally.h"
 #include "PcPsx/ProgArgs.h"
-#include "psxcd.h"
 #include "psxspu.h"
-#include "PsyQ/LIBCD.h"
 #include "PsyQ/LIBSPU.h"
 #include "wessarc.h"
+
 #include <cstring>
 
 // Maximum number of sounds that can be in an LCD file

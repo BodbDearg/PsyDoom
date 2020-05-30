@@ -109,7 +109,7 @@ void I_CrossFadeFrameBuffers() noexcept {
 
         // PC-PSX: copy the PSX framebuffer to the display
         #if PC_PSX_DOOM_MODS
-            PcPsx::displayFramebuffer();
+            Video::displayFramebuffer();
         #endif
     }
     

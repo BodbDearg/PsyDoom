@@ -7,6 +7,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
+
 #include <algorithm>
 
 // Definition and state for a fire flicker light

@@ -1,9 +1,9 @@
-#include "i_drawcmds.h"
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Module dealing with low level drawing commands.
 // Holds the primitives buffer and contains functionality for submitting draw primitives.
 //------------------------------------------------------------------------------------------------------------------------------------------
+#include "i_drawcmds.h"
+
 #include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 

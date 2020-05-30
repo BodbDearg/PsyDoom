@@ -6,6 +6,7 @@
 
 #include "LIBETC.h"
 #include "PsxVm/PsxVm.h"
+
 #include <cstdarg>
 
 BEGIN_DISABLE_HEADER_WARNINGS

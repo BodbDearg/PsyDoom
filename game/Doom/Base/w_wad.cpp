@@ -4,7 +4,6 @@
 #include "Doom/d_main.h"
 #include "i_file.h"
 #include "i_main.h"
-#include "PcPsx/Endian.h"
 #include "PsxVm/VmSVal.h"
 #include "z_zone.h"
 

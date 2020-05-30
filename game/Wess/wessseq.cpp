@@ -5,7 +5,6 @@
 #include "wessseq.h"
 
 #include "PsxVm/PsxVm.h"
-#include "wessarc.h"
 
 const WessDriverFunc gWess_DrvFunctions[36] = {
     // Manually called commands

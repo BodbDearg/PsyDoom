@@ -16,8 +16,8 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "PcPsx/Utils.h"
+
 #include <algorithm>
-#include <cmath>
 
 // Accelerating turn speeds: normal
 static constexpr fixed_t ANGLE_TURN[10] = { 
@@ -471,8 +471,8 @@ void P_PlayerThink(player_t& player) noexcept {
         int32_t nextWeaponIdx = weaponMicroBoxIdx;
 
         // See if next/previous weapon buttons have just been pressed
-        const bool bGotoPrevWeapon = padBtnJustPressed(pBtnBindings[cbind_weapon_back], curBtns, oldBtns);
-        const bool bGotoNextWeapon = padBtnJustPressed(pBtnBindings[cbind_weapon_forward], curBtns, oldBtns);
+        const bool bGotoPrevWeapon = Utils::padBtnJustPressed(pBtnBindings[cbind_weapon_back], curBtns, oldBtns);
+        const bool bGotoNextWeapon = Utils::padBtnJustPressed(pBtnBindings[cbind_weapon_forward], curBtns, oldBtns);
 
         // See if we are switching weapons
         if (bGotoPrevWeapon) {

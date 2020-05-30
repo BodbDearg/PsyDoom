@@ -8,6 +8,7 @@
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "p_spec.h"
+
 #include <algorithm>
 
 static constexpr int32_t MAX_CROSS_LINES = 8;

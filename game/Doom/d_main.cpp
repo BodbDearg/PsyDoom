@@ -1,7 +1,6 @@
 #include "d_main.h"
 
 #include "Base/d_vsprintf.h"
-#include "Base/i_drawcmds.h"
 #include "Base/i_file.h"
 #include "Base/i_main.h"
 #include "Base/i_misc.h"
@@ -9,7 +8,6 @@
 #include "Base/w_wad.h"
 #include "Base/z_zone.h"
 #include "cdmaptbl.h"
-#include "doomdef.h"
 #include "Game/g_game.h"
 #include "Game/p_tick.h"
 #include "PcPsx/FileUtils.h"
@@ -24,7 +22,6 @@
 #include "UI/o_main.h"
 #include "UI/st_main.h"
 #include "UI/ti_main.h"
-#include <cstdio>
 
 // The current number of 60Hz ticks
 const VmPtr<int32_t> gTicCon(0x8007814C);
@@ -450,8 +447,16 @@ gameaction_t MiniLoop(
             const bool bNetError = I_NetUpdate();
 
             if (bNetError) {
-                *gGameAction = ga_warped;
-                exitAction = ga_warped;
+                // PC-PSX: if a network error occurs don't try to restart the level, the connection is most likely still gone.
+                // Exit to the main menu instead.
+                #if PC_PSX_DOOM_MODS
+                    *gGameAction = ga_exitdemo;
+                    exitAction = ga_exitdemo;
+                #else
+                    *gGameAction = ga_warped;
+                    exitAction = ga_warped;
+                #endif
+
                 break;
             }
         }

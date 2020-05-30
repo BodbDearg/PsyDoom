@@ -7,6 +7,7 @@
 #include "doomdata.h"
 #include "p_map.h"
 #include "p_setup.h"
+
 #include <algorithm>
 
 // The vertices used for the partial 'line_t' used for the shooters shoot line

@@ -5,10 +5,10 @@
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
 #include "doomdata.h"
-#include "p_local.h"
 #include "p_setup.h"
 #include "p_shoot.h"
 #include "p_tick.h"
+
 #include <algorithm>
 
 static const VmPtr<fixed_t>     gSightZStart(0x80078020);   // Z position of thing looking

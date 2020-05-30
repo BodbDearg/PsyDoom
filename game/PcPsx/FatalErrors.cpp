@@ -1,8 +1,8 @@
 #include "FatalErrors.h"
 
+#include "ProgArgs.h"
 #include "Video.h"
-#include "Macros.h"
-#include <cstring>
+
 #include <SDL.h>
 #include <vector>
 
@@ -20,13 +20,15 @@ static constexpr const char* const UNSPECIFIED_ERROR_STR = "An unspecified/unkno
         std::printf("[FATAL ERROR] %s\n", UNSPECIFIED_ERROR_STR);
     }
 
-    // Show a GUI error box
-    SDL_ShowSimpleMessageBox(
-        SDL_MESSAGEBOX_ERROR,
-        "A fatal error has occurred!",
-        (msg != nullptr) ? msg : UNSPECIFIED_ERROR_STR,
-        PcPsx::getWindow()
-    );
+    // Show a GUI error box (except if in headless mode)
+    if (!ProgArgs::gbHeadlessMode) {
+        SDL_ShowSimpleMessageBox(
+            SDL_MESSAGEBOX_ERROR,
+            "A fatal error has occurred!",
+            (msg != nullptr) ? msg : UNSPECIFIED_ERROR_STR,
+            Video::getWindow()
+        );
+    }
     
     // Finish up!
     std::terminate();

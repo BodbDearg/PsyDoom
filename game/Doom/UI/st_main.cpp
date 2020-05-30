@@ -11,10 +11,8 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "in_main.h"
-#include "PcPsx/Finally.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
-#include <cstdio>
 
 static constexpr int32_t GIBTIME    = 2;    // How long frames in the gib animation last
 static constexpr int32_t FLASHDELAY = 4;    // Tics in between keycard flashes

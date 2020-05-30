@@ -5,7 +5,6 @@
 #include "Doom/Base/m_random.h"
 #include "Doom/Base/s_sound.h"
 #include "Doom/Base/sounds.h"
-#include "Doom/Base/z_zone.h"
 #include "Doom/d_main.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
@@ -13,7 +12,6 @@
 #include "Doom/UI/st_main.h"
 #include "doomdata.h"
 #include "g_game.h"
-#include "info.h"
 #include "p_local.h"
 #include "p_map.h"
 #include "p_maputl.h"
@@ -22,6 +20,7 @@
 #include "p_setup.h"
 #include "p_tick.h"
 #include "PsxVm/PsxVm.h"
+
 #include <algorithm>
 
 // Item respawn queue

@@ -4,12 +4,9 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "PsxVm.h"
 
-#include "PcPsx/Macros.h"
 #include "PcPsx/ProgArgs.h"
-#include <cstdlib>
 
 BEGIN_DISABLE_HEADER_WARNINGS
-    #include <cpu/instructions.h>
     #include <sound/sound.h>
     #include <system.h>
 END_DISABLE_HEADER_WARNINGS

@@ -6,8 +6,6 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "i_drawcmds.h"
-#include "PcPsx/Endian.h"
-#include "PcPsx/Finally.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
 #include "PcPsx/Video.h"
@@ -186,13 +184,13 @@ void I_Main() noexcept {
     LIBSN__main();
 
     #if PC_PSX_DOOM_MODS
-        PcPsx::initVideo();
+        Video::initVideo();
     #endif
 
     D_DoomMain();
 
     #if PC_PSX_DOOM_MODS
-        PcPsx::shutdownVideo();
+        Video::shutdownVideo();
     #endif
 }
 
@@ -298,11 +296,11 @@ void I_PSXInit() noexcept {
     // Present the resulting message
     I_DrawPresent();
 
-    // TODO: PC-PSX: allow the PC client to exit the app from here
+    // Deliberate infinite loop...
+    // TODO: check for window close and then terminate forcefully here.
     while (true) {
-        // Deliberate infinite loop...
         #if PC_PSX_DOOM_MODS
-            PcPsx::handleSdlWindowEvents();     // TODO: this is a temp hack to quitting the app after I_Error()
+            Utils::do_platform_updates();
         #endif
     }
 }
@@ -456,6 +454,11 @@ void I_DrawPresent() noexcept {
     *gCurDispBufferIdx ^= 1;
     LIBGPU_PutDrawEnv(gDrawEnvs[*gCurDispBufferIdx]);
     LIBGPU_PutDispEnv(gDispEnvs[*gCurDispBufferIdx]);
+
+    // PC-PSX: copy the PSX framebuffer to the display
+    #if PC_PSX_DOOM_MODS
+        Video::displayFramebuffer();
+    #endif
         
     // In PSX Doom the rendering rate was originally limited to 30 Hz
     uint32_t minElapsedVBlanks = 2;
@@ -478,7 +481,7 @@ void I_DrawPresent() noexcept {
 
         // PC-PSX: yield some CPU time here since we are waiting rather than wasting it spinning constantly
         #if PC_PSX_DOOM_MODS
-            thread_yield();
+            Utils::thread_yield();
         #endif
     }
 
@@ -489,7 +492,7 @@ void I_DrawPresent() noexcept {
         while (*gElapsedVBlanks < 4) {
             // PC-PSX: yield some CPU time here since we are waiting rather than wasting it spinning constantly
             #if PC_PSX_DOOM_MODS
-                thread_yield();
+                Utils::thread_yield();
             #endif
 
             *gTotalVBlanks = LIBETC_VSync(-1);
@@ -501,11 +504,6 @@ void I_DrawPresent() noexcept {
 
     // So we can compute the elapsed vblank amount next time round
     *gLastTotalVBlanks = *gTotalVBlanks;
-
-    // PC-PSX: copy the PSX framebuffer to the display
-    #if PC_PSX_DOOM_MODS
-        PcPsx::displayFramebuffer();
-    #endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1054,6 +1052,13 @@ bool I_NetUpdate() noexcept {
         // Clear the other player's buttons, and this player's previous buttons (not sure why that would matter)
         gTicButtons[1] = 0;
         gOldTicButtons[0] = 0;
+
+        // PC-PSX: wait for a few seconds so the network error can be displayed.
+        // When done clear the screen so the 'loading' message displays clearly and not overlapped with the 'network error' message:
+        #if PC_PSX_DOOM_MODS
+            Utils::wait_for_seconds(3.0f);
+            I_DrawPresent();
+        #endif
 
         // There was a network error!
         return true;

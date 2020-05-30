@@ -2,9 +2,7 @@
 
 #include "Doom/Base/i_main.h"
 #include "Doom/Base/w_wad.h"
-#include "Doom/Base/z_zone.h"
 #include "Doom/Game/doomdata.h"
-#include "PcPsx/Endian.h"
 #include "PsyQ/LIBGPU.h"
 
 // Structure for a palette in the game: contains 256 RGBA5551 color values.

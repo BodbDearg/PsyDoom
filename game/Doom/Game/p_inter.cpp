@@ -11,6 +11,7 @@
 #include "p_local.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
+
 #include <algorithm>
 
 static constexpr uint32_t BONUSADD          = 4;    // How much to add to the 'bonus' effect strength counter anytime a bonus is picked up

@@ -6,6 +6,7 @@
 #include "doomdata.h"
 #include "p_local.h"
 #include "p_setup.h"
+
 #include <algorithm>
 
 static constexpr int32_t CLIPRADIUS = 23;   // Radius of the player for collisions against lines
