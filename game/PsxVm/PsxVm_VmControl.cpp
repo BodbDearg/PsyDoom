@@ -130,6 +130,9 @@ bool PsxVm::init(const char* const doomExePath, const char* const doomCdCuePath)
     gSystem.reset(new System());
     System& system = *gSystem;
     setupVmPointers();
+
+    // GPU: disable logging - this eats up TONS of memory!
+    gpGpu->gpuLogEnabled = false;
     
     // Open the DOOM cdrom
     system.cdrom->disc = disc::load(doomCdCuePath);
