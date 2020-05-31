@@ -108,6 +108,14 @@
 
     #define END_DISABLE_HEADER_WARNINGS\
         __pragma(warning(pop))
+#elif defined (__GNUC__)
+    // GCC or Clang
+    #define BEGIN_DISABLE_HEADER_WARNINGS\
+        _Pragma("GCC diagnostic push")\
+        _Pragma("GCC diagnostic ignored \"-Wgnu-anonymous-struct\"")    /* Anonymous structs are a GNU extension */
+    
+    #define END_DISABLE_HEADER_WARNINGS\
+        _Pragma("GCC diagnostic pop")
 #else
     // Unhandled compiler
     #define BEGIN_DISABLE_HEADER_WARNINGS

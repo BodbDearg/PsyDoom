@@ -90,7 +90,7 @@ void P_SpawnFireFlicker(sector_t& sector) noexcept {
     P_AddThinker(flicker.thinker);
 
     // Setup flicker settings
-    flicker.thinker.function = PsxVm::getNativeFuncVmAddr(T_FireFlicker);
+    flicker.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_FireFlicker);
     flicker.sector = &sector;
     flicker.maxlight = sector.lightlevel;
     flicker.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel) + 16;
@@ -128,7 +128,7 @@ void P_SpawnLightFlash(sector_t& sector) noexcept {
     P_AddThinker(lightFlash.thinker);
 
     // Setup flash settings
-    lightFlash.thinker.function = PsxVm::getNativeFuncVmAddr(T_LightFlash);
+    lightFlash.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_LightFlash);
     lightFlash.sector = &sector;
     lightFlash.maxlight = sector.lightlevel;
     lightFlash.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel);
@@ -166,7 +166,7 @@ void P_SpawnStrobeFlash(sector_t& sector, const int32_t darkTime, const bool bIn
     strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(strobe_t), PU_LEVSPEC, nullptr);
     P_AddThinker(strobe.thinker);
 
-    strobe.thinker.function = PsxVm::getNativeFuncVmAddr(T_StrobeFlash);
+    strobe.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_StrobeFlash);
     strobe.sector = &sector;
     strobe.darktime = darkTime;
     strobe.brighttime = STROBEBRIGHT;
@@ -197,7 +197,7 @@ void P_SpawnRapidStrobeFlash(sector_t& sector) noexcept {
     strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(strobe_t), PU_LEVSPEC, nullptr);
     P_AddThinker(strobe.thinker);
     
-    strobe.thinker.function = PsxVm::getNativeFuncVmAddr(T_StrobeFlash);
+    strobe.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_StrobeFlash);
     strobe.sector = &sector;
     strobe.darktime = 1;
     strobe.brighttime = 1;
@@ -327,7 +327,7 @@ void P_SpawnGlowingLight(sector_t& sector, const glowtype_e glowType) noexcept {
     P_AddThinker(glow.thinker);
 
     // Configure the glow settings depending on the type
-    glow.thinker.function = PsxVm::getNativeFuncVmAddr(T_Glow);
+    glow.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_Glow);
     glow.sector = &sector;
     
     switch (glowType) {

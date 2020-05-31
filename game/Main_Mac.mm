@@ -1,8 +1,7 @@
 #include "Doom/psx_main.h"
 #include "Doom/psx_main.h"
 #include "PcPsx/ModMgr.h"
-
-#define PSX_VM_NO_REGISTER_MACROS 1
+#include "PcPsx/ProgArgs.h"
 #include "PsxVm/PsxVm.h"
 
 #include <Foundation/Foundation.h>
@@ -33,10 +32,10 @@ int main(const int argc, const char** const argv) noexcept {
         ProgArgs::init(argc, argv);
     
         // Initialize the PSX VM using the NTSC-U BIOS, NTSC-U PSXDOOM.EXE and the CDROM .cue file
-        if (!PsxVm::init("SCPH1001.BIN", "PSXDOOM.EXE", "Doom.cue")) {
+        if (!PsxVm::init("PSXDOOM.EXE", "Doom.cue")) {
             return 1;
         }
-
+        
         // Initialize the modding manager
         ModMgr::init();
 

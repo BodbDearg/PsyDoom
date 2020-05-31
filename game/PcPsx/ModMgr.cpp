@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <map>
+#include <vector>
 
 BEGIN_NAMESPACE(ModMgr)
 

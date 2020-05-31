@@ -415,6 +415,8 @@ void P_CheckCheats() noexcept {
                             case MT_MISC7: player.cards[it_yellowskull] = true; break;
                             case MT_MISC8: player.cards[it_redskull]    = true; break;
                             case MT_MISC9: player.cards[it_blueskull]   = true; break;
+                            
+                            default: break;
                         }
                     }
 

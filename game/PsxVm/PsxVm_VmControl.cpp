@@ -215,11 +215,14 @@ void PsxVm::updateInput() noexcept {
             }
         };
 
+        // TODO: use or remove
+        #if 0
         auto setValueIfTrigPressed = [&](InputManager::AnalogValue& value, const SDL_GameControllerAxis axis) noexcept {
             if (SDL_GameControllerGetAxis(gpGameController, axis) >= 0.5f) {
                 value.value = UINT8_MAX;
             }
         };
+        #endif
 
         setValueIfPressed(btnUp, SDL_CONTROLLER_BUTTON_DPAD_UP);
         setValueIfPressed(btnDown, SDL_CONTROLLER_BUTTON_DPAD_DOWN);

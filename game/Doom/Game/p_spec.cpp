@@ -1042,7 +1042,7 @@ bool EV_DoDonut(line_t& line) noexcept {
                 P_AddThinker(floorMove.thinker);
                 pNextSector->specialdata = &floorMove;
 
-                floorMove.thinker.function = PsxVm::getNativeFuncVmAddr(T_MoveFloor);
+                floorMove.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_MoveFloor);
                 floorMove.type = donutRaise;
                 floorMove.sector = pNextSector;
                 floorMove.direction = 1;
@@ -1060,7 +1060,7 @@ bool EV_DoDonut(line_t& line) noexcept {
                 P_AddThinker(floorMove.thinker);
                 sector.specialdata = &floorMove;
 
-                floorMove.thinker.function = PsxVm::getNativeFuncVmAddr(T_MoveFloor);
+                floorMove.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_MoveFloor);
                 floorMove.type = lowerFloor;
                 floorMove.sector = &sector;
                 floorMove.direction = -1;
@@ -1084,9 +1084,9 @@ static void P_ScheduleDelayedAction(const int32_t delayTics, const delayed_actio
     delayaction_t& delayed = *(delayaction_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(delayaction_t), PU_LEVSPEC, nullptr);
     P_AddThinker(delayed.thinker);
 
-    delayed.thinker.function = PsxVm::getNativeFuncVmAddr(T_DelayedAction);
+    delayed.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_DelayedAction);
     delayed.ticsleft = delayTics;
-    delayed.actionfunc = PsxVm::getNativeFuncVmAddr(actionFunc);
+    delayed.actionfunc = PsxVm::getNativeFuncVmAddr((void*) actionFunc);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1201,6 +1201,8 @@ void P_SpawnSpecials() noexcept {
             case MT_MISC7:  *gMapYellowKeyType  = it_yellowskull;   break;
             case MT_MISC8:  *gMapRedKeyType     = it_redskull;      break;
             case MT_MISC9:  *gMapBlueKeyType    = it_blueskull;     break;
+            
+            default: break;
         }
     }
 

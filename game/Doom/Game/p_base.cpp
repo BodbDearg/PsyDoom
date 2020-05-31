@@ -91,7 +91,7 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
         if (!PB_TryMove(mobj.x + xuse, mobj.y + yuse)) {
             // Move failed: if it's a skull flying then do the skull bash
             if (mobj.flags & MF_SKULLFLY) {
-                mobj.latecall = PsxVm::getNativeFuncVmAddr(L_SkullBash);
+                mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) L_SkullBash);
                 mobj.extradata = ptrToVmAddr(gpHitThing->get());
             }
 
@@ -106,10 +106,10 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
 
                 if (bHitSky) {
                     // Hit the sky: just remove quietly
-                    mobj.latecall = PsxVm::getNativeFuncVmAddr(P_RemoveMobj);
+                    mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) P_RemoveMobj);
                 } else {
                     // Usual case: exploding on hitting a wall or thing
-                    mobj.latecall = PsxVm::getNativeFuncVmAddr(L_MissileHit);
+                    mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) L_MissileHit);
                     mobj.extradata = ptrToVmAddr(gpHitThing->get());
                 }
             } else {
@@ -193,7 +193,7 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
         mobj.z = mobj.floorz;
 
         if (mobj.flags & MF_MISSILE) {
-            mobj.latecall = PsxVm::getNativeFuncVmAddr(P_ExplodeMissile);    // BOOM!
+            mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) P_ExplodeMissile);   // BOOM!
             return;
         }
     }
@@ -217,7 +217,7 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
         mobj.z = mobj.ceilingz - mobj.height;
 
         if (mobj.flags & MF_MISSILE) {
-            mobj.latecall = PsxVm::getNativeFuncVmAddr(P_ExplodeMissile);
+            mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) P_ExplodeMissile);
         }
     }
 }
@@ -264,7 +264,7 @@ void P_MobjThinker(mobj_t& mobj) noexcept {
                 mobj.latecall = nextState.action;
             } else {
                 // No next state: schedule a removal for this map object
-                mobj.latecall = PsxVm::getNativeFuncVmAddr(P_RemoveMobj);
+                mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) P_RemoveMobj);
             }
         }
     }

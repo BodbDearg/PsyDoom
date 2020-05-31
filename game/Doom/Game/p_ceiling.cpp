@@ -103,6 +103,9 @@ void T_MoveCeiling(ceiling_t& ceiling) noexcept {
                     case lowerAndCrush:
                         P_RemoveActiveCeiling(ceiling);
                         break;
+                        
+                    default:
+                        break;
                 }
             }
             else if (moveResult == crushed) {
@@ -155,7 +158,7 @@ bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
         P_AddThinker(ceiling.thinker);
         sector.specialdata = &ceiling;
 
-        ceiling.thinker.function = PsxVm::getNativeFuncVmAddr(T_MoveCeiling);
+        ceiling.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_MoveCeiling);
         ceiling.sector = &sector;
         ceiling.crush = false;
 
@@ -241,7 +244,7 @@ static void P_ActivateInStasisCeiling(line_t& line) noexcept {
 
         if (pCeiling && (pCeiling->tag == line.tag) && (pCeiling->direction == 0)) {    // Direction 0 = in stasis
             pCeiling->direction = pCeiling->olddirection;
-            pCeiling->thinker.function = PsxVm::getNativeFuncVmAddr(T_MoveCeiling);
+            pCeiling->thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_MoveCeiling);
         }
     }
 }

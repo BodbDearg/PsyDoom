@@ -75,18 +75,18 @@ static constexpr uint32_t TCACHE_BASE_PAGE = 4;
 //      TODO: find out more about this.
 //
 constexpr uint16_t TEX_PAGE_VRAM_TEXCOORDS[NUM_TCACHE_PAGES + 1][2] = {
-    512,    0,
-    640,    0,
-    768,    0,
-    896,    0,
-    0,      256,
-    128,    256,
-    256,    256,
-    384,    256,
-    512,    256,
-    640,    256,
-    768,    256,
-    896,    256
+    { 512,  0,  },
+    { 640,  0,  },
+    { 768,  0,  },
+    { 896,  0,  },
+    { 0,    256 },
+    { 128,  256 },
+    { 256,  256 },
+    { 384,  256 },
+    { 512,  256 },
+    { 640,  256 },
+    { 768,  256 },
+    { 896,  256 }
 };
 
 constexpr int32_t   NET_PACKET_SIZE     = 8;        // The size of a packet and the packet buffers in a networked game

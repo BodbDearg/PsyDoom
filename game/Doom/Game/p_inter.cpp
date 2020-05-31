@@ -279,6 +279,9 @@ bool P_GivePower(player_t& player, const powertype_t power) noexcept {
         case pw_infrared:
             player.powers[power] = INFRATICS;
             return true;
+            
+        default:
+            break;
     }
 
     return false;   // Invalid power

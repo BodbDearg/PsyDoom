@@ -2,7 +2,7 @@
 // Williams Entertainment Sound System (WESS): PlayStation SPU utilities.
 // Many thanks to Erick Vasquez Garcia (author of 'PSXDOOM-RE') for his reconstruction this module, upon which this interpretation is based.
 //------------------------------------------------------------------------------------------------------------------------------------------
-#include "PSXSPU.h"
+#include "psxspu.h"
 
 #include "PcPsx/ProgArgs.h"
 #include "PsxVm/PsxVm.h"

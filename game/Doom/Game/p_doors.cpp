@@ -259,7 +259,7 @@ bool EV_DoDoor(line_t& line, const vldoor_e doorType) noexcept {
         vldoor_t& door = *(vldoor_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(vldoor_t), PU_LEVSPEC, nullptr);
         P_AddThinker(door.thinker);
 
-        door.thinker.function = PsxVm::getNativeFuncVmAddr(T_VerticalDoor);
+        door.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_VerticalDoor);
         door.type = doorType;
         door.sector = &sector;
         door.speed = VDOORSPEED;
@@ -376,7 +376,7 @@ void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {
     doorSector.specialdata = &newDoor;
 
     // Default door config
-    newDoor.thinker.function = PsxVm::getNativeFuncVmAddr(T_VerticalDoor);
+    newDoor.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_VerticalDoor);
     newDoor.speed = VDOORSPEED;
     newDoor.sector = &doorSector;
     newDoor.direction = 1;
@@ -427,7 +427,7 @@ void P_SpawnDoorCloseIn30(sector_t& sector) noexcept {
     sector.special = 0;
 
     // Configure door settings
-    door.thinker.function = PsxVm::getNativeFuncVmAddr(T_VerticalDoor);
+    door.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_VerticalDoor);
     door.sector = &sector;
     door.direction = 0;
     door.type = Normal;
@@ -446,7 +446,7 @@ void P_SpawnDoorRaiseIn5Mins(sector_t& sector, [[maybe_unused]] const int32_t se
     sector.special = 0;
 
     // Configure door settings
-    door.thinker.function = PsxVm::getNativeFuncVmAddr(T_VerticalDoor);
+    door.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_VerticalDoor);
     door.sector = &sector;
     door.direction = 2;         // Do initial wait
     door.type = RaiseIn5Mins;

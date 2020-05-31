@@ -60,8 +60,8 @@ int32_t D_vsprintf(char* dstStr, const char* fmtStr, va_list args) noexcept {
 
         // Handle a single character arg if specified
         if (*fmtStr == 'c') {
-            const char singleChar = va_arg(args, char);
-            *dstStr = singleChar;
+            const int singleChar = va_arg(args, int);
+            *dstStr = (char) singleChar;
             ++dstStr;
             ++fmtStr;
             continue;

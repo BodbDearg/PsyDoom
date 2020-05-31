@@ -64,6 +64,9 @@ void T_PlatRaise(plat_t& plat) noexcept {
                     case blazeDWUS:
                         P_RemoveActivePlat(plat);
                         break;
+                        
+                    default:
+                        break;
                 }
             }
         }   break;
@@ -133,7 +136,7 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
 
         plat.type = platType;
         plat.sector = &sector;
-        plat.thinker.function = PsxVm::getNativeFuncVmAddr(T_PlatRaise);
+        plat.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_PlatRaise);
         plat.crush = false;
         plat.tag = line.tag;
         
@@ -205,7 +208,7 @@ void P_ActivateInStasis(const int32_t tag) noexcept {
 
         if (pPlat && (pPlat->tag == tag) && (pPlat->status == in_stasis)) {
             pPlat->status = pPlat->oldstatus;
-            pPlat->thinker.function = PsxVm::getNativeFuncVmAddr(T_PlatRaise);
+            pPlat->thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_PlatRaise);
         }
     }
 }

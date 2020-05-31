@@ -17,7 +17,6 @@ static SDL_Renderer*    gRenderer;
 static SDL_Texture*     gFramebufferTexture;
 static SDL_Rect         gOutputRect;
 static uint32_t*        gpFrameBuffer;
-static uint32_t         gLastFrameTickCount;
 
 // TODO: this is a temporary thing.
 // Note that I am using the stretched NTSC resolution here for game resolution width, not the physical framebuffer width (256 pixels wide).
