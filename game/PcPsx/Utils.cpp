@@ -1,6 +1,7 @@
 #include "Utils.h"
 
 #include "Doom/Game/p_tick.h"
+#include "Network.h"
 #include "ProgArgs.h"
 #include "PsxVm/PsxVm.h"
 #include "Video.h"
@@ -18,6 +19,7 @@ BEGIN_NAMESPACE(Utils)
 void doPlatformUpdates() noexcept {
     generate_timer_events();
     emulate_sound_if_required();
+    Network::doUpdates();
     Video::handleSdlWindowEvents();
 }
 

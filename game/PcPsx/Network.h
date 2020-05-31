@@ -4,9 +4,11 @@
 
 BEGIN_NAMESPACE(Network)
 
-// FIXME: TEMP STUFF FOR TESTING
-void initForServer() noexcept;
-void initForClient() noexcept;
+bool initForServer() noexcept;
+bool initForClient() noexcept;
+void shutdown() noexcept;
+bool isConnected() noexcept;
+void doUpdates() noexcept;
 bool sendBytes(const void* const pBuffer, const int32_t numBytes) noexcept;
 bool recvBytes(void* pBuffer, const int32_t numBytes) noexcept;
 

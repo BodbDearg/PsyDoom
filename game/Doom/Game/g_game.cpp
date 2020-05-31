@@ -336,7 +336,7 @@ void G_RunGame() noexcept {
         MiniLoop(P_Start, P_Stop, P_Ticker, P_Drawer);
     
         *gbIsLevelBeingRestarted = false;
-    
+        
         if (*gGameAction == ga_recorddemo) {
             G_EndDemoRecording();
         }

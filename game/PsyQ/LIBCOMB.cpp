@@ -3,19 +3,15 @@
 #include "PcPsx/Network.h"
 #include "PcPsx/ProgArgs.h"
 
-void LIBCOMB_AddCOMB() noexcept {
-    // FIXME: IMPLEMENT ME FULLY
-    if (ProgArgs::gbIsNetServer) {
-        Network::initForServer();
-    }
-    else if (ProgArgs::gbIsNetClient) {
-        Network::initForClient();
-    }
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Install the serial link driver for the PlayStation: doesn't need to do anything in PsyDoom!
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBCOMB_AddCOMB() noexcept {}
 
-void LIBCOMB_DelCOMB() noexcept {
-    // FIXME: IMPLEMENT ME FULLY
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
+// Un-install the serial link driver for the PlayStation: doesn't need to do anything in PsyDoom!
+//------------------------------------------------------------------------------------------------------------------------------------------
+void LIBCOMB_DelCOMB() noexcept {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Do various serial link commands and return the result.
@@ -30,16 +26,16 @@ static int32_t LIBCOMB__comb_control([[maybe_unused]] const int32_t cmd, [[maybe
     if ((cmd == 2) && (subcmd == 1))
         return 0;
 
-    // Cancel the current read (if any)
-    if ((cmd == 2) && (subcmd == 3))
-        // FIXME: need to implement this if a network operation is happening
+    // Cancel the current read (if any) - in PsyDoom this will kill the whole connection if done
+    if ((cmd == 2) && (subcmd == 3)) {
+        Network::shutdown();
         return 0;
+    }
 
     // Set RTS (Ready To Send) flag to either '1' or '0' using the param, and return CTS (Clear to Send) flag as '1' or '0'.
     // For PsyDoom we don't use any of these flags, so no logic here.
     if ((cmd == 3) && (subcmd == 0))
-        // FIXME: change answer depending on network status (for now saying we are always clear to send)
-        return 1;
+        return Network::isConnected() ? 1 : 0;
 
     // Unhandled command + subcommand combo: return '-1' to indicate an error
     return -1;

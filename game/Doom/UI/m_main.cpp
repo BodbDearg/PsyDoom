@@ -10,6 +10,7 @@
 #include "Doom/Game/p_tick.h"
 #include "Doom/Renderer/r_data.h"
 #include "o_main.h"
+#include "PcPsx/Network.h"
 #include "PcPsx/Utils.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
@@ -98,6 +99,11 @@ gameaction_t RunMenu() noexcept {
     // Startup the game!
     G_InitNew(*gStartSkill, *gStartMapOrEpisode, *gStartGameType);
     G_RunGame();
+
+    // PC-PSX: cleanup any network connections if we were doing a net game
+    #if PC_PSX_DOOM_MODS
+        Network::shutdown();
+    #endif
 
     return ga_nothing;
 }
