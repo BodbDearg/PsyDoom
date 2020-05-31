@@ -58,6 +58,27 @@ static bool waitForAsyncNetworkOp(bool& bFinishedFlag, const bool bIsAbortable) 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+// Setup options and preferences for the given socket
+//------------------------------------------------------------------------------------------------------------------------------------------
+static void setSocketOptions(asio::ip::tcp::socket& socket) noexcept {
+    auto trySetOption = [&](auto option) noexcept {
+        try {
+            socket.set_option(option);
+        }
+        catch (...) {
+            // Ignore if not supported on this platform...
+        }
+    };
+
+    trySetOption(asio::ip::tcp::no_delay(true));                        // Disable Nagles algorithm
+    trySetOption(asio::socket_base::send_buffer_size(1024 * 16));       // 16 KiB
+    trySetOption(asio::socket_base::receive_buffer_size(1024 * 16));    // 16 KiB
+    trySetOption(asio::socket_base::keep_alive(false));                 // Shouldn't be neccessary when client + server are talking constantly
+    trySetOption(asio::socket_base::send_low_watermark(0));             // Don't wait to batch up sends/receives (Doom only sends a small amount of data)
+    trySetOption(asio::socket_base::receive_low_watermark(0));          // Don't wait to batch up sends/receives (Doom only sends a small amount of data)
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 // Create a connection for the server of a game (player 1).
 // Waits until an incomming connection is received from the client (player 2).
 // Updates the window etc. while all this is happening and allows the connection attempt to be aborted.
@@ -85,6 +106,10 @@ bool initForServer() noexcept {
         );
 
         waitForAsyncNetworkOp(bDoneAsyncOp, true);
+
+        if (gpSocket && bWasSuccessful) {
+            setSocketOptions(*gpSocket);
+        }
     }
     catch (...) {
         // Connection attempt failed for some reason...
@@ -145,6 +170,11 @@ bool initForClient() noexcept {
                 );
 
                 waitForAsyncNetworkOp(bDoneAsyncOp, true);
+
+                if (gpSocket && bWasSuccessful) {
+                    setSocketOptions(*gpSocket);
+                }
+
                 break;
             }
         }
