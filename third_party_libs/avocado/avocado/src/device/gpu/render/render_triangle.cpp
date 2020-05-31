@@ -39,7 +39,14 @@ using delta_t = int32_t;
 #define ADD_PADDING(x) ((delta_t)(x) << FP_PADDING)
 #else
 
-using delta_t = float;
+// DOOM: hack temp fix for some wall & floor texels shifting around between alternating positions every frame.
+// There seems to be some precision issues and the different VRAM addresses for each alternate frame produce different rasterization results.
+#if DOOM_AVOCADO_MODS
+    using delta_t = double;
+#else
+    using delta_t = float;
+#endif
+
 #define TO_FP(x) (x)
 #define FROM_FP(x) (x)
 #define ADD_PADDING(x) (x)
@@ -79,16 +86,31 @@ AttributeDeltas::Delta calculateDelta(const int area, const ivec2 p[3], const in
 }
 
 delta_t calculateStartAttribute(const int area, const ivec2 p[3], const int bias[3], const int a[3]) {
-    float A = (p[1].x * p[2].y - p[2].x * p[1].y) * a[0] - bias[0];
-    float B = (p[2].x * p[0].y - p[0].x * p[2].y) * a[1] - bias[1];
-    float C = (p[0].x * p[1].y - p[1].x * p[0].y) * a[2] - bias[2];
+    // DOOM: hack temp fix for some wall & floor texels shifting around between alternating positions every frame.
+    // There seems to be some precision issues and the different VRAM addresses for each alternate frame produce different rasterization results.
+    #if DOOM_AVOCADO_MODS
+        double A = (p[1].x * p[2].y - p[2].x * p[1].y) * a[0] - bias[0];
+        double B = (p[2].x * p[0].y - p[0].x * p[2].y) * a[1] - bias[1];
+        double C = (p[0].x * p[1].y - p[1].x * p[0].y) * a[2] - bias[2];
+    #else
+        float A = (p[1].x * p[2].y - p[2].x * p[1].y) * a[0] - bias[0];
+        float B = (p[2].x * p[0].y - p[0].x * p[2].y) * a[1] - bias[1];
+        float C = (p[0].x * p[1].y - p[1].x * p[0].y) * a[2] - bias[2];
+    #endif
 
 #ifdef USE_FIXED_POINT
     auto half = (1 << (FP_PRECISION - 1));
 #else
     auto half = 0.5f;
 #endif
-    return ADD_PADDING((TO_FP(A + B + C) / static_cast<float>(area)) + half);
+    
+    // DOOM: hack temp fix for some wall & floor texels shifting around between alternating positions every frame.
+    // There seems to be some precision issues and the different VRAM addresses for each alternate frame produce different rasterization results.
+    #if DOOM_AVOCADO_MODS
+        return ADD_PADDING((TO_FP(A + B + C) / static_cast<double>(area)) + half);
+    #else
+        return ADD_PADDING((TO_FP(A + B + C) / static_cast<float>(area)) + half);
+    #endif
 }
 
 template <bool isGouraudShaded, bool isTextured>
