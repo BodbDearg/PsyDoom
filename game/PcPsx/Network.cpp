@@ -78,7 +78,7 @@ bool initForServer() noexcept {
 
         acceptor.async_accept(
             *gpSocket,
-            [&](const asio::error_code error) noexcept {
+            [&](const asio::error_code& error) noexcept {
                 bDoneAsyncOp = true;
                 bWasSuccessful = (!error);
             }
@@ -122,7 +122,7 @@ bool initForClient() noexcept {
 
         tcpResolver.async_resolve(
             tcpResolverQuery,
-            [&](const asio::error_code error, asio::ip::tcp::resolver::iterator iter) noexcept {
+            [&](const asio::error_code& error, asio::ip::tcp::resolver::iterator iter) noexcept {
                 bDoneAsyncOp = true;
                 resolverIter = iter;
                 bWasSuccessful = (!error);
@@ -138,7 +138,7 @@ bool initForClient() noexcept {
             while (resolverIter != asio::ip::tcp::resolver::iterator{}) {
                 gpSocket->async_connect(
                     *resolverIter,
-                    [&](const asio::error_code error) noexcept {
+                    [&](const asio::error_code& error) noexcept {
                         bDoneAsyncOp = true;
                         bWasSuccessful = (!error);
                     }
@@ -181,8 +181,9 @@ bool isConnected() noexcept {
 // Process any network related events that need to be handled
 //------------------------------------------------------------------------------------------------------------------------------------------
 void doUpdates() noexcept {
-    while (gpIoContext && gpIoContext->poll()) {
-        gpIoContext->run();
+    if (gpIoContext) {
+        gpIoContext->restart();
+        gpIoContext->poll();
     }
 }
 
@@ -226,7 +227,7 @@ bool sendBytes(const void* const pBuffer, const int32_t numBytes) noexcept {
         asio::async_write(
             *gpSocket,
             asio::buffer(pBuffer, (size_t) numBytes),
-            [&]([[maybe_unused]] const asio::error_code error, [[maybe_unused]] const std::size_t bytesWritten) noexcept {
+            [&]([[maybe_unused]] const asio::error_code& error, [[maybe_unused]] const std::size_t bytesWritten) noexcept {
                 gbIsSendingBytes = false;
             }
         );
