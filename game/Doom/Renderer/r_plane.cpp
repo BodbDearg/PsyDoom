@@ -21,7 +21,7 @@ enum : int32_t {
 };
 
 // The bounds of each flat span for the currently drawing flat
-static const VmPtr<span_t[VIEW_3D_H]> gFlatSpans(0x800980D0);
+static span_t gFlatSpans[VIEW_3D_H];
 
 // Internal plane rendering function only: forward declare here
 static void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& tex) noexcept;

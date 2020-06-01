@@ -796,7 +796,7 @@ void P_Init() noexcept {
 
     // Initialize the sky texture, palette and do some more specialized setup if it's the fire sky
     gUpdateFireSkyFunc = nullptr;
-    *gPaletteClutId_CurMapSky = gPaletteClutIds[MAINPAL];
+    gPaletteClutId_CurMapSky = gPaletteClutIds[MAINPAL];
 
     if (*gpSkyTexture) {
         // If the lump name for the sky follows the format 'xxxx9' then assume it is a fire sky.
@@ -806,7 +806,7 @@ void P_Init() noexcept {
 
         if (skyTexLump.name.chars[4] == '9') {
             W_CacheLumpNum(skyTex.lumpNum, PU_ANIMATION, true);
-            *gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
+            gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
             gUpdateFireSkyFunc = P_UpdateFireSky;
             
             // This gets the fire going, so it doesn't take a while to creep up when the map is started.

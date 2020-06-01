@@ -62,7 +62,7 @@ void START_Title() noexcept {
         texture_t& skyTex = (*gpTextures)[skyTexLumpNum];
 
         *gpSkyTexture = &skyTex;
-        *gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
+        gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
 
         W_CacheLumpNum(skyTex.lumpNum, PU_CACHE, true);
         I_CacheTex(skyTex);
@@ -234,7 +234,7 @@ void DRAW_Title() noexcept {
     );
 
     polyPrim.tpage = skytex.texPageId;
-    polyPrim.clut =  *gPaletteClutId_CurMapSky;
+    polyPrim.clut = gPaletteClutId_CurMapSky;
 
     // Draw the fire sky pieces
     for (int32_t i = 0; i < 4; ++i) {

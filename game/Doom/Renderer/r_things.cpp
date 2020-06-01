@@ -11,13 +11,11 @@
 
 // Describes a sprite that is to be drawn
 struct vissprite_t {
-    int32_t                 viewx;      // Viewspace x position
-    fixed_t                 scale;      // Scale due to perspective
-    VmPtr<mobj_t>           thing;      // The thing
-    VmPtr<vissprite_t>      next;       // Next in the list of sprites
+    int32_t         viewx;      // Viewspace x position
+    fixed_t         scale;      // Scale due to perspective
+    mobj_t*         thing;      // The thing
+    vissprite_t*    next;       // Next in the list of sprites
 };
-
-static_assert(sizeof(vissprite_t) == 16);
 
 // This is the maximum number of vissprites that can be drawn per subsector.
 // Any more than this will simply be ignored.
@@ -25,22 +23,22 @@ static constexpr int32_t MAXVISSPRITES = 64;
 
 // The linked list of draw sprites (sorted back to front) for the current subsector and head of the draw list.
 // The head is a dummy vissprite which is not actually drawn and vorks in a similar fashion to the head of the map objects list.
-static const VmPtr<vissprite_t[MAXVISSPRITES]> gVisSprites(0x800A8A7C);
-static const VmPtr<vissprite_t[MAXVISSPRITES]> gVisSpriteHead(0x80096D6C);
+static vissprite_t  gVisSprites[MAXVISSPRITES];
+static vissprite_t  gVisSpriteHead[MAXVISSPRITES];
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draws all of the sprites in a subsector, back to front
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
     // Initially the linked list of draw sprites is empty, cap it off as such
-    gVisSpriteHead->next = gVisSpriteHead.get();
+    gVisSpriteHead->next = gVisSpriteHead;
     
     // Run through all the things in the current sector and add things in this subsector to the draw list
     sector_t& sector = *subsec.sector;
     int32_t numDrawSprites = 0;
 
     {
-        vissprite_t* pVisSprite = gVisSprites.get();
+        vissprite_t* pVisSprite = gVisSprites;
 
         for (mobj_t* pThing = sector.thinglist.get(); pThing; pThing = pThing->snext.get()) {
             // Only draw the thing if it's in the subsector we are interested in
@@ -85,17 +83,17 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
             // Find the vissprite in the linked list to insert the new sprite AFTER.
             // This will be first sprite for which the next sprite is bigger than the new sprite we are inserting.
             // This method basically sorts the sprites from back to front, with sprites at the back being first in the draw list:
-            vissprite_t* pInsertPt = gVisSpriteHead.get();
+            vissprite_t* pInsertPt = gVisSpriteHead;
 
             {
-                vissprite_t* pNextSpr = pInsertPt->next.get();
+                vissprite_t* pNextSpr = pInsertPt->next;
 
-                while (pNextSpr != gVisSpriteHead.get()) {
+                while (pNextSpr != gVisSpriteHead) {
                     if (pNextSpr->scale >= pVisSprite->scale)
                         break;
 
                     pInsertPt = pNextSpr;
-                    pNextSpr = pNextSpr->next.get();
+                    pNextSpr = pNextSpr->next;
                 }
             }
 
@@ -131,7 +129,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
     polyPrim.clut = *g3dViewPaletteClutId;
 
     // Draw all the sprites in the draw list for the subsector
-    for (const vissprite_t* pSpr = gVisSpriteHead->next.get(); pSpr != gVisSpriteHead.get(); pSpr = pSpr->next.get()) {
+    for (const vissprite_t* pSpr = gVisSpriteHead->next; pSpr != gVisSpriteHead; pSpr = pSpr->next) {
         // Grab the sprite frame to use
         const mobj_t& thing = *pSpr->thing;
         const spritedef_t& spriteDef = gSprites[thing.sprite];

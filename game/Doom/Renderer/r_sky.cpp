@@ -12,7 +12,7 @@
 static constexpr uint32_t ANGLETOSKYSHIFT = 22;
 
 // The CLUT to use for the sky
-const VmPtr<uint16_t> gPaletteClutId_CurMapSky(0x800782CC);
+uint16_t gPaletteClutId_CurMapSky;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Draws the sky sprite.
@@ -54,7 +54,7 @@ void R_DrawSky() noexcept {
     LIBGPU_setXY0(spr, 0, 0);
     LIBGPU_setWH(spr, SCREEN_W, skytex.height);
     LIBGPU_setUV0(spr, (uint8_t)(skytex.texPageCoordX - (gViewAngle >> ANGLETOSKYSHIFT)), skytex.texPageCoordY);
-    spr.clut = *gPaletteClutId_CurMapSky;
+    spr.clut = gPaletteClutId_CurMapSky;
     
     I_AddPrim(&spr);
 }

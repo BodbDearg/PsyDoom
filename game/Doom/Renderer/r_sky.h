@@ -1,7 +1,7 @@
 #pragma once
 
-#include "PsxVm/VmPtr.h"
+#include <cstdint>
 
-extern const VmPtr<uint16_t> gPaletteClutId_CurMapSky;
+extern uint16_t gPaletteClutId_CurMapSky;
 
 void R_DrawSky() noexcept;

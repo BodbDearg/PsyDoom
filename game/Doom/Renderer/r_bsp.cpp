@@ -27,14 +27,14 @@ static const int32_t gCheckcoord[12][4] = {
 };
 
 // Which screen columns are fully occluded by geometry
-static const VmPtr<bool[SCREEN_W]> gbSolidCols(0x800A8F48);
+static bool gbSolidCols[SCREEN_W];
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Do BSP tree traversal (starting at the root node) to build up the list of subsectors to draw
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_BSP() noexcept {
     // Initially all screen columns are fully not occluded by geometry
-    D_memset(gbSolidCols.get(), std::byte(0), SCREEN_W * sizeof(bool));
+    D_memset(gbSolidCols, std::byte(0), sizeof(gbSolidCols));
 
     // The subsector draw list is also initially empty and the sky not visible
     gppEndDrawSubsector = gpDrawSubsectors;
@@ -510,7 +510,7 @@ void R_AddLine(seg_t& seg) noexcept {
     int32_t visibleBegX = SCREEN_W;
     
     {
-        const bool* pbIsSolidCol = gbSolidCols.get() + begX;
+        const bool* pbIsSolidCol = &gbSolidCols[begX];
         
         for (int32_t x = begX; x < endX; ++x, ++pbIsSolidCol) {
             if (!(*pbIsSolidCol)) {
@@ -524,7 +524,7 @@ void R_AddLine(seg_t& seg) noexcept {
     int32_t visibleEndX = 0;
     
     {
-        const bool* pbIsSolidCol = gbSolidCols.get() + endX;
+        const bool* pbIsSolidCol = &gbSolidCols[endX];
         
         for (int32_t x = endX - 1; x >= begX; --x) {
             --pbIsSolidCol;
@@ -562,7 +562,7 @@ void R_AddLine(seg_t& seg) noexcept {
             // previously determined visible x range to be occluded, rather than the entire seg x range.
             // Probably doesn't make a huge difference in reality though..
             //
-            bool* pbIsSolidCol = gbSolidCols.get() + begX;
+            bool* pbIsSolidCol = &gbSolidCols[begX];
             
             for (int32_t x = begX; x < endX; ++x, ++pbIsSolidCol) {
                 *pbIsSolidCol = true;
