@@ -1,9 +1,9 @@
 # PsyDoom
 *(Note: formerly known as 'StationDoom')*
 
-This project is a reverse engineering attempt to backport PlayStation Doom to PC. The code is derived directly from the original machine code (see commit history for a timeline of its transformation) and currently runs in a semi-native, semi-emulated environment. The [Avocado](https://github.com/JaCzekanski/Avocado) PlayStation emulator is used to handle the specifics of the PSX hardware and emulate a couple of small functions that don't work correctly yet in C++. Eventually the goal is reach 100% native status for all game code, remove all dependencies on the BIOS and original game .EXE, and use the emulator only to replicate the specific behavior of some hardware elements such as the spu and gpu.
+This project backports PlayStation Doom to PC using reverse engineering. The code is derived directly from the original PlayStation machine code (see commit history for a timeline of its transformation) and now runs natively on modern systems, having been gradually converted from emulated MIPS instructions to structured C++ code over time. The [Avocado](https://github.com/JaCzekanski/Avocado) PlayStation emulator is used to handle the specifics of some PSX hardware and replicate the GPU & SPU of the PlayStation, helping the game feel authentic as possible. As of right now the game runs 100% natively on PC but still requires the original .EXE file for some global variable values; this limitation will be removed soon.
 
-A sister project, [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE), by [Erick Vásquez García (Erick194)](https://github.com/Erick194) also completely recreates the Doom source code for the actual PlayStation hardware and 'PsyQ' SDK. The reverse engineering work in that project is used to accelerate the incremental transition to native C++ for this project, and also interpretation of the code. Going forward, both projects will likely share improvements and refinements and collaborate even more.
+A sister project, [PSXDOOM-RE](https://github.com/Erick194/PSXDOOM-RE), by [Erick Vásquez García (Erick194)](https://github.com/Erick194) also completely recreates the Doom source code for the actual PlayStation hardware and 'PsyQ' SDK. The reverse engineering work for that project was used to help accelerate the transition to native C++ code for this project and to cross verify the reverse engineering work in both projects.
 
 Will add more details here later and eventually 'official' binary builds once it is stable enough for general release. If you want to try/experiment with this for now, you will need to build from source or use one of the occasional binaries that I will put up - see details below.
 
@@ -11,7 +11,7 @@ As of right now the game mostly runs correctly, with a few minor issues. Here is
 
 [![Alt text](https://img.youtube.com/vi/o7t7w1YjjSw/0.jpg)](https://www.youtube.com/watch?v=o7t7w1YjjSw)
 
-As mentioned above the eventual goal of this project is convert the entire game code to C++, remove the PSX BIOS dependency and need for the original .EXE, and hopefully also simplify + remove most emulation code except where strictly necessary for authenticity. All of this while preserving as much of the original code structure and meaning as possible, for historical reference..
+The eventual goal of this project is to have a complete replacement for the original PlayStation Doom .EXE for modern systems, and allow for modern conveniences like keyboard & mouse support etc.
 
 Longer term goals include support for Final Doom, proper modding support (I added some basic support so far!) and PSX DOOM engine limit removal. Once all those things have been done this project can also be forked to provide an 'enhanced' version of game with support for higher resolution, fixing of graphical glitches, support for widescreen and so on.
 
@@ -23,7 +23,6 @@ Longer term goals include support for Final Doom, proper modding support (I adde
 - Make sure to have the latest Visual C redistributable installed:
   - https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
 - The following items must be present in the working directory of the application:
-  - **SCPH1001.BIN**: The original US/NTSC PlayStation 1 BIOS. Later US/NTSC bioses like 'SCPH7001.BIN' may also work if aliased to this name.
   - **PSXDOOM.EXE**: The PSX DOOM game .EXE file as extracted from the game disc. 
     - This *MUST* be the 'Greatest Hits' US/NTSC version of PlayStation DOOM, or product SLUS-00077.
         - No other versions of the .EXE will work - the game relies on this exact .EXE layout!
@@ -53,6 +52,16 @@ Longer term goals include support for Final Doom, proper modding support (I adde
     - F6: Show all map things
     - F7: Show all map lines
     - F8: VRAM Viewer (functionality hidden in retail)
+- Multiplayer/link-cable emulation
+    - PsyDoom now supports an emulation of the original 'Link Cable' multiplayer functionality, over regular TCP.
+    - This requires a VERY low latency network connection to be playable as the game's network protocol is synchronous and not lag tolerant, Ethernet or very fast wifi is HIGHLY recommended.
+    - Player 1 is the 'server' and listens for connections from Player 2, the 'client'.
+    - To specify the machine as a server, add the following command line switch (listen port is optional, defaults to `666`):
+        - `-server [LISTEN_PORT]`
+    - To specify the current machine as a client, add the `-client` switch and specify the server host name afterwards:
+        - `-client [SERVER_HOST_NAME_AND_PORT]` 
+    - If you need to specify a server port other than the default `666`, use the following format:
+        - `-client 192.168.0.2:12345`
 - Hacky/temp 'mods' system.
     - You can override any game files by supplying the game with a directory containing those overrides.
     - Specify the directory using the `-datadir <MY_DIRECTORY_PATH>` command line argument.
@@ -70,5 +79,4 @@ Longer term goals include support for Final Doom, proper modding support (I adde
 ## Current limitations/bugs
 - Some occasional sound issues, sound is mostly OK at this point though.
 - Only the 'Greatest Hits' US version of PSX DOOM is supported, not Final DOOM or any other SKU.
-- Multiplayer does not work and will freeze the game.
 - The intro movie does not play yet.
