@@ -557,7 +557,7 @@ void P_Drawer() noexcept {
 void P_Start() noexcept {
     // Initialize some basic fields and the automap
     *gbGamePaused = false;
-    *gValidCount = 1;
+    gValidCount = 1;
     
     AM_Start();
     M_ClearRandom();

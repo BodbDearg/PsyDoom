@@ -199,7 +199,7 @@ void P_UseLines(player_t& player) noexcept {
     *gpCloseLine = nullptr;
 
     // Now doing new checks
-    *gValidCount += 1;
+    gValidCount++;
 
     // Compute the blockmap extents to check for use lines.
     // PC-PSX: ensure these are always within a valid range to prevent undefined behavior at map edges.
@@ -314,7 +314,7 @@ fixed_t P_AimLineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxD
     *gAimBottomSlope = (-100 * FRACUNIT) / 160;
 
     // Setup for shot simulation and see what this shot would hit
-    *gValidCount += 1;
+    gValidCount++;
     *gAttackAngle = angle;
     *gAttackRange = maxDist;
     *gpShooter = &shooter;
@@ -342,7 +342,7 @@ void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, c
     }
 
     // Take the shot!
-    *gValidCount += 1;
+    gValidCount++;
     *gAttackAngle = angle;
     *gAttackRange = maxDist;
     *gpShooter = &shooter;

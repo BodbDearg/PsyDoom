@@ -44,9 +44,9 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
             // Transform this leaf edge's vertexes if they need to be transformed
             if (vert.frameUpdated != *gNumFramesDrawn) {
                 const SVECTOR viewToPt = {
-                    (int16_t)((vert.x - *gViewX) >> 16),
+                    (int16_t)((vert.x - gViewX) >> 16),
                     0,
-                    (int16_t)((vert.y - *gViewY) >> 16)
+                    (int16_t)((vert.y - gViewY) >> 16)
                 };
                 
                 VECTOR viewVec;
@@ -138,14 +138,14 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     }
     
     // Draw the floor if above it
-    sector_t& drawsec = **gpCurDrawSector;
+    sector_t& drawsec = *gpCurDrawSector;
     
-    if (*gViewZ > drawsec.floorheight) {
+    if (gViewZ > drawsec.floorheight) {
         R_DrawSubsectorFlat(drawleaf, false);
     }
     
     // Draw the ceiling if below it and it is not a sky ceiling
-    if ((drawsec.ceilingpic != -1) && (*gViewZ < drawsec.ceilingheight)) {
+    if ((drawsec.ceilingpic != -1) && (gViewZ < drawsec.ceilingheight)) {
         R_DrawSubsectorFlat(drawleaf, true);
     }
     

@@ -258,15 +258,15 @@ void I_UpdatePalette() noexcept {
 
     // Deciding on various palettes and effects based on the player status.
     // A lot of these powerups start blinking when the player gets to 4 seconds or less remaining.
-    *gbDoViewLighting = true;
+    gbDoViewLighting = true;
     uint32_t paletteIdx = MAINPAL;
 
     if ((player.powers[pw_infrared] > TICRATE * 4) || (player.powers[pw_infrared] & 8)) {
-        *gbDoViewLighting = false;
+        gbDoViewLighting = false;
     }
 
     if ((player.powers[pw_invulnerability] > TICRATE * 4) || (player.powers[pw_invulnerability] & 8)) {
-        *gbDoViewLighting = false;
+        gbDoViewLighting = false;
         paletteIdx = INVULNERABILITYPAL;
     }
     else if (redAmount != 0) {

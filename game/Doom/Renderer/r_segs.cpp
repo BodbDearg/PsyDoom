@@ -15,7 +15,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_DrawWalls(leafedge_t& edge) noexcept {
     // Grabbing stuff being drawn
-    sector_t& frontSec = **gpCurDrawSector;
+    sector_t& frontSec = *gpCurDrawSector;
     seg_t& seg = *edge.seg;
     side_t& side = *seg.sidedef;
     line_t& line = *seg.linedef;
@@ -26,8 +26,8 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
     // Compute the top and bottom y values for the front sector in texture space, relative to the viewpoint.
     // Note: texture space y coords run in the opposite direction to viewspace z, hence this calculation is
     // inverted from what it would normally be in viewspace.
-    const int32_t fsec_ty = (*gViewZ - frontSec.ceilingheight) >> FRACBITS;
-    const int32_t fsec_by = (*gViewZ - frontSec.floorheight) >> FRACBITS;
+    const int32_t fsec_ty = (gViewZ - frontSec.ceilingheight) >> FRACBITS;
+    const int32_t fsec_by = (gViewZ - frontSec.floorheight) >> FRACBITS;
 
     // Initially the mid wall texture space y coords are that of the sector.
     // Adjust as we go along if we are drawing a two sided line:
@@ -39,8 +39,8 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
 
     if (pBackSec) {
         // Get the top and bottom y values for the back sector in texture space
-        const int32_t bsec_ty = (*gViewZ - pBackSec->ceilingheight) >> FRACBITS;
-        const int32_t bsec_by = (*gViewZ - pBackSec->floorheight) >> FRACBITS;
+        const int32_t bsec_ty = (gViewZ - pBackSec->ceilingheight) >> FRACBITS;
+        const int32_t bsec_by = (gViewZ - pBackSec->floorheight) >> FRACBITS;
 
         // Do we need to render the upper wall?
         // Do so if the ceiling lowers, and if the following texture is not sky:
@@ -169,7 +169,7 @@ void R_DrawWallPiece(
         return;
 
     // Force the wall to be transparent if the X-Ray vision cheat is on
-    player_t& player = **gpViewPlayer;
+    player_t& player = *gpViewPlayer;
     
     if (player.cheats & CF_XRAYVISION) {
         bTransparent = true;
@@ -228,14 +228,14 @@ void R_DrawWallPiece(
     vertex_t& segv1 = *seg.vertex1;
 
     const uint32_t segFineAngle = seg.angle >> ANGLETOFINESHIFT;
-    const uint32_t segViewFineAngle = (seg.angle - *gViewAngle + ANG90) >> ANGLETOFINESHIFT;
+    const uint32_t segViewFineAngle = (seg.angle - gViewAngle + ANG90) >> ANGLETOFINESHIFT;
 
     const fixed_t segSin = gFineSine[segFineAngle] >> 8;
     const fixed_t segCos = gFineCosine[segFineAngle] >> 8;
     const fixed_t segViewSin = gFineSine[segViewFineAngle] >> 8;
     const fixed_t segViewCos = gFineCosine[segViewFineAngle] >> 8;
-    const fixed_t segP1ViewX = (segv1.x - *gViewX) >> 8;
-    const fixed_t segP1ViewY = (segv1.y - *gViewY) >> 8;
+    const fixed_t segP1ViewX = (segv1.x - gViewX) >> 8;
+    const fixed_t segP1ViewY = (segv1.y - gViewY) >> 8;
 
     // Compute perpendicular distance to the line segment.
     // Should be negative if we are on the inside of the line segment:
@@ -375,7 +375,7 @@ void R_DrawWallPiece(
             // Decide on rgb color values to render the column with
             int32_t r, g, b;
 
-            if (*gbDoViewLighting) {
+            if (gbDoViewLighting) {
                 int32_t lightIntensity = scaleCur >> 8;
 
                 if (lightIntensity < LIGHT_INTENSTIY_MIN) {
@@ -385,16 +385,16 @@ void R_DrawWallPiece(
                     lightIntensity = LIGHT_INTENSTIY_MAX;
                 }
 
-                r = (lightIntensity * (*gCurLightValR)) >> 7;
-                g = (lightIntensity * (*gCurLightValG)) >> 7;
-                b = (lightIntensity * (*gCurLightValB)) >> 7;
+                r = (lightIntensity * gCurLightValR) >> 7;
+                g = (lightIntensity * gCurLightValG) >> 7;
+                b = (lightIntensity * gCurLightValB) >> 7;
                 if (r > 255) { r = 255; }
                 if (g > 255) { g = 255; }
                 if (b > 255) { b = 255; }
             } else {
-                r = *gCurLightValR;
-                g = *gCurLightValG;
-                b = *gCurLightValB;
+                r = gCurLightValR;
+                g = gCurLightValG;
+                b = gCurLightValB;
             }
 
             // Finally populate the triangle for the wall column and draw

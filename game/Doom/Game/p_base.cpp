@@ -461,7 +461,7 @@ static bool PB_CheckPosition() noexcept {
     const int32_t bmapBy = std::max((gTestBBox[BOXBOTTOM] - *gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
 
     // This is a new collision test so increment this stamp
-    *gValidCount += 1;
+    gValidCount++;
 
     // Test against everything in this blockmap range.
     // Stop and return 'false' for a definite collision if that happens.
@@ -661,8 +661,8 @@ static bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
         line_t& line = pLines[*pLineNum];
 
         // Only check the line if not already checked this test
-        if (line.validcount != *gValidCount) {
-            line.validcount = *gValidCount;
+        if (line.validcount != gValidCount) {
+            line.validcount = gValidCount;
 
             // If it's collided with and definitely blocking then stop
             if (PB_BoxCrossLine(line) && (!PB_CheckLine(line)))

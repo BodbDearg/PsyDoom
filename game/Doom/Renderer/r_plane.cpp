@@ -31,7 +31,7 @@ static void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const textur
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
     // Get the texture for the flat
-    const sector_t& drawsec = **gpCurDrawSector;
+    const sector_t& drawsec = *gpCurDrawSector;
     const int32_t flatPicNum = (bIsCeiling) ? drawsec.ceilingpic : drawsec.floorpic;
     const int32_t flatTexNum = (*gpFlatTranslation)[flatPicNum];
     texture_t& tex = (*gpFlatTextures)[flatTexNum];
@@ -74,9 +74,9 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
     fixed_t planeZ;
 
     if (bIsCeiling) {
-        planeZ = drawsec.ceilingheight - *gViewZ;
+        planeZ = drawsec.ceilingheight - gViewZ;
     } else {
-        planeZ = drawsec.floorheight - *gViewZ;
+        planeZ = drawsec.floorheight - gViewZ;
     }
 
     // Draw the horizontal spans of the leaf
@@ -232,10 +232,10 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
         const int32_t dist = (gYSlope[spanY] * planeViewZ) >> FRACBITS;
 
         // Compute the base texture uv offset for the span based on solely on global position and view angle
-        const fixed_t viewCos = *gViewCos;
-        const fixed_t viewSin = *gViewSin;
-        const fixed_t viewX = *gViewX;
-        const fixed_t viewY = *gViewY;
+        const fixed_t viewCos = gViewCos;
+        const fixed_t viewSin = gViewSin;
+        const fixed_t viewX = gViewX;
+        const fixed_t viewY = gViewY;
         const fixed_t spanUOffset = dist * viewCos + viewX;
         const fixed_t spanVOffset = dist * viewSin + viewY;
 
@@ -293,7 +293,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
         {
             int32_t r, g, b;
 
-            if (*gbDoViewLighting) {
+            if (gbDoViewLighting) {
                 int32_t lightIntensity = LIGHT_INTENSTIY_MAX - (dist >> 1);
                 
                 if (lightIntensity < LIGHT_INTENSTIY_MIN) {
@@ -303,16 +303,16 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
                     lightIntensity = LIGHT_INTENSTIY_MAX;
                 }
 
-                r = (lightIntensity * (*gCurLightValR)) >> 7;
-                g = (lightIntensity * (*gCurLightValG)) >> 7;
-                b = (lightIntensity * (*gCurLightValB)) >> 7;
+                r = (lightIntensity * gCurLightValR) >> 7;
+                g = (lightIntensity * gCurLightValG) >> 7;
+                b = (lightIntensity * gCurLightValB) >> 7;
                 if (r > 255) { r = 255; }
                 if (g > 255) { g = 255; }
                 if (b > 255) { b = 255; }
             } else {
-                r = *gCurLightValR;
-                g = *gCurLightValG;
-                b = *gCurLightValB;
+                r = gCurLightValR;
+                g = gCurLightValG;
+                b = gCurLightValB;
             }
 
             LIBGPU_setRGB0(polyPrim, (uint8_t) r, (uint8_t) g, (uint8_t) b);

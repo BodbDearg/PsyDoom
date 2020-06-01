@@ -329,7 +329,7 @@ static bool PA_CrossSubsector(subsector_t& subsec) noexcept {
     }
 
     // Check for hits against all segs in the subsector
-    const int32_t curValidCount = *gValidCount;
+    const int32_t curValidCount = gValidCount;
     seg_t* const pSegs = gpSegs->get() + subsec.firstseg;
     const int16_t numSegs = subsec.numsegs;
     

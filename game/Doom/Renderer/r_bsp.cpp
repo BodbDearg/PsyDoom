@@ -37,8 +37,8 @@ void R_BSP() noexcept {
     D_memset(gbSolidCols.get(), std::byte(0), SCREEN_W * sizeof(bool));
 
     // The subsector draw list is also initially empty and the sky not visible
-    *gppEndDrawSubsector = gpDrawSubsectors;
-    *gbIsSkyVisible = false;
+    gppEndDrawSubsector = gpDrawSubsectors;
+    gbIsSkyVisible = false;
 
     // Traverse the BSP tree to generate the list of subsectors to draw
     const int32_t bsproot = *gNumBspNodes - 1;
@@ -67,8 +67,8 @@ void R_RenderBSPNode(const int32_t bspnum) noexcept {
 
         // Compute which side of the line the point is on using the cross product.
         // This is pretty much the same code found in 'R_PointOnSide':
-        const int32_t dx = *gViewX - node.line.x;
-        const int32_t dy = *gViewY - node.line.y;
+        const int32_t dx = gViewX - node.line.x;
+        const int32_t dy = gViewY - node.line.y;
         const int32_t lprod = (node.line.dx >> FRACBITS) * (dy >> FRACBITS);
         const int32_t rprod = (node.line.dy >> FRACBITS) * (dx >> FRACBITS);
 
@@ -102,9 +102,9 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     // Determine if the point is inside the box or which outside region it is in, if outside.
     int32_t boxx;
 
-    if (*gViewX < bspcoord[BOXLEFT]) {
+    if (gViewX < bspcoord[BOXLEFT]) {
         boxx = 0;   // Left
-    } else if (*gViewX <= bspcoord[BOXRIGHT]) {
+    } else if (gViewX <= bspcoord[BOXRIGHT]) {
         boxx = 1;   // Inside
     } else {
         boxx = 2;   // Right
@@ -112,9 +112,9 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
 
     int32_t boxy;
 
-    if (*gViewY > bspcoord[BOXTOP]) {
+    if (gViewY > bspcoord[BOXTOP]) {
         boxy = 0;   // Above
-    } else if (*gViewY >= bspcoord[BOXBOTTOM]) {
+    } else if (gViewY >= bspcoord[BOXBOTTOM]) {
         boxy = 1;   // Inside
     } else {
         boxy = 2;   // Below
@@ -143,24 +143,24 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
         if (boxpos < 5) {
             if (boxpos == 1) {
                 // Above, Inside
-                bSkipVisCheck = (*gViewY - y1 <= SKIPVIS_FUDGE);
+                bSkipVisCheck = (gViewY - y1 <= SKIPVIS_FUDGE);
             } else {
                 // Above, Left or Right
                 bSkipVisCheck = false;
             }
         } else if (boxpos == 6) {
             // Inside, Right
-            bSkipVisCheck = (*gViewX - x1 <= SKIPVIS_FUDGE);
+            bSkipVisCheck = (gViewX - x1 <= SKIPVIS_FUDGE);
         } else if (boxpos == 9) {
             // Below, Inside
-            bSkipVisCheck = (*gViewY - y1 >= -SKIPVIS_FUDGE);
+            bSkipVisCheck = (gViewY - y1 >= -SKIPVIS_FUDGE);
         } else {
             // Below, Left or Right
             bSkipVisCheck = false;
         }
     } else {
         // Inside, Left
-        bSkipVisCheck = (*gViewX - x1 >= -SKIPVIS_FUDGE);
+        bSkipVisCheck = (gViewX - x1 >= -SKIPVIS_FUDGE);
     }
 
     // If we decided to skip the check just assume the node is visible
@@ -173,9 +173,9 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
 
     {
         const SVECTOR vecIn = {
-            (int16_t)((x1 - *gViewX) >> 16),
+            (int16_t)((x1 - gViewX) >> 16),
             0,
-            (int16_t)((y1 - *gViewY) >> 16)
+            (int16_t)((y1 - gViewY) >> 16)
         };
         int32_t flagsOut;
         VECTOR vecOut;
@@ -186,9 +186,9 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
     }
     {
         const SVECTOR vecIn = {
-            (int16_t)((x2 - *gViewX) >> 16),
+            (int16_t)((x2 - gViewX) >> 16),
             0,
-            (int16_t)((y2 - *gViewY) >> 16)
+            (int16_t)((y2 - gViewY) >> 16)
         };
         int32_t flagsOut;
         VECTOR vecOut;
@@ -321,13 +321,13 @@ void R_Subsector(const int32_t subsecNum) noexcept {
     
     // If we've hit the limit for the number of subsectors that can be drawn then stop emitting.
     // Otherwise add the subsector to the draw list.
-    if (gppEndDrawSubsector->get() - gpDrawSubsectors.get() >= MAX_DRAW_SUBSECTORS)
+    if (gppEndDrawSubsector - gpDrawSubsectors >= MAX_DRAW_SUBSECTORS)
         return;
     
     subsector_t& subsec = (*gpSubsectors)[subsecNum];
-    *gpCurDrawSector = subsec.sector;
-    **gppEndDrawSubsector = &subsec;
-    *gppEndDrawSubsector += 1;
+    gpCurDrawSector = subsec.sector.get();
+    *gppEndDrawSubsector = &subsec;
+    gppEndDrawSubsector++;
     
     // Do draw preparation on all of the segs in the subsector.
     // This figures out what areas of the screen they occlude, updates transformed vertex positions, and more...
@@ -353,9 +353,9 @@ void R_AddLine(seg_t& seg) noexcept {
     
     if (segv1.frameUpdated != *gNumFramesDrawn) {
         const SVECTOR viewToPt = {
-            (int16_t)((segv1.x - *gViewX) >> 16),
+            (int16_t)((segv1.x - gViewX) >> 16),
             0,
-            (int16_t)((segv1.y - *gViewY) >> 16)
+            (int16_t)((segv1.y - gViewY) >> 16)
         };
         
         VECTOR viewVec;
@@ -379,9 +379,9 @@ void R_AddLine(seg_t& seg) noexcept {
     
     if (segv2.frameUpdated != *gNumFramesDrawn) {
         const SVECTOR viewToPt = {
-            (int16_t)((segv2.x - *gViewX) >> 16),
+            (int16_t)((segv2.x - gViewX) >> 16),
             0,
-            (int16_t)((segv2.y - *gViewY) >> 16)
+            (int16_t)((segv2.y - gViewY) >> 16)
         };
         
         VECTOR viewVec;
@@ -493,8 +493,8 @@ void R_AddLine(seg_t& seg) noexcept {
         return;
 
     // If there is no ceiling texture at this seg then the sky is visible and needs to be drawn
-    if ((*gpCurDrawSector)->ceilingpic == -1) {
-        *gbIsSkyVisible = true;
+    if (gpCurDrawSector->ceilingpic == -1) {
+        gbIsSkyVisible = true;
     }
     
     // Clamp the x values to the screen range
@@ -547,7 +547,7 @@ void R_AddLine(seg_t& seg) noexcept {
     // Mark any columns that this seg fully occludes as 'solid'.
     // Only do this however if the seg is not drawn with translucent parts or transparency:
     if ((seg.linedef->flags & ML_MIDMASKED) == 0) {
-        const sector_t& frontSec = **gpCurDrawSector;
+        const sector_t& frontSec = *gpCurDrawSector;
         const sector_t* const pBackSec = seg.backsector.get();
         
         // Is this seg something that fully occludes stuff behind it?

@@ -53,7 +53,7 @@ void R_DrawSky() noexcept {
     LIBGPU_SetShadeTex(&spr, true);
     LIBGPU_setXY0(spr, 0, 0);
     LIBGPU_setWH(spr, SCREEN_W, skytex.height);
-    LIBGPU_setUV0(spr, (uint8_t)(skytex.texPageCoordX - (*gViewAngle >> ANGLETOSKYSHIFT)), skytex.texPageCoordY);
+    LIBGPU_setUV0(spr, (uint8_t)(skytex.texPageCoordX - (gViewAngle >> ANGLETOSKYSHIFT)), skytex.texPageCoordY);
     spr.clut = *gPaletteClutId_CurMapSky;
     
     I_AddPrim(&spr);

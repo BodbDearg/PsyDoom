@@ -112,11 +112,11 @@ static void P_RecursiveSound(sector_t& sector, const bool bStopOnSoundBlock) noe
     // Don't flood the sector if it's already done and it didn't have sound coming into it blocked
     const int32_t soundTraversed = (bStopOnSoundBlock) ? 2 : 1;
 
-    if ((sector.validcount == *gValidCount) && (sector.soundtraversed <= soundTraversed))
+    if ((sector.validcount == gValidCount) && (sector.soundtraversed <= soundTraversed))
         return;
     
     // Flood fill this sector and save the thing that made noise and whether sound was blocked
-    sector.validcount = *gValidCount;
+    sector.validcount = gValidCount;
     sector.soundtraversed = soundTraversed;
     sector.soundtarget = *gpSoundTarget;
 
@@ -164,7 +164,7 @@ static void P_NoiseAlert(player_t& player) noexcept {
         return;
 
     player.lastsoundsector = &curSector;
-    *gValidCount += 1;
+    gValidCount++;
     *gpSoundTarget = &playerMobj;
 
     // Recursively flood fill sectors with sound

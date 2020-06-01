@@ -984,7 +984,7 @@ void P_UpdateSpecials() noexcept {
     }
 
     // New for PSX: update the fire sky if the level has a fire sky and the sky is visible
-    if (*gbIsSkyVisible && gUpdateFireSkyFunc) {
+    if (gbIsSkyVisible && gUpdateFireSkyFunc) {
         gUpdateFireSkyFunc(*gpSkyTexture->get());
     }
 }

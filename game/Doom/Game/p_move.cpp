@@ -289,7 +289,7 @@ static void PM_CheckPosition() noexcept {
     *gNumCrossCheckLines = 0;
 
     // Prep for new collision tests: increment this marker
-    *gValidCount += 1;
+    gValidCount++;
 
     // If the thing is no-clipping then we can just exit and allow the move
     if (*gTmFlags & MF_NOCLIP) {
@@ -540,8 +540,8 @@ static bool PM_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
         line_t& line = pLines[*pLineNum];
 
         // Only check the line if not already checked this test
-        if (line.validcount != *gValidCount) {
-            line.validcount = *gValidCount;
+        if (line.validcount != gValidCount) {
+            line.validcount = gValidCount;
             
             // If it's collided with and definitely blocking then stop
             if (PM_BoxCrossLine(line) && (!PIT_CheckLine(line)))

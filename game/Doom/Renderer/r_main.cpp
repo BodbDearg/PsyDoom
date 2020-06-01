@@ -16,34 +16,34 @@
 #include "r_things.h"
 
 // Incremented whenever checks are made
-const VmPtr<int32_t>    gValidCount(0x80077BC4);
+int32_t gValidCount;
 
 // View properties
-const VmPtr<VmPtr<player_t>>    gpViewPlayer(0x80077F34);
-const VmPtr<fixed_t>            gViewX(0x80077EE0);
-const VmPtr<fixed_t>            gViewY(0x80077EE4);
-const VmPtr<fixed_t>            gViewZ(0x80077EEC);
-const VmPtr<angle_t>            gViewAngle(0x80078294);
-const VmPtr<fixed_t>            gViewCos(0x8007809C);
-const VmPtr<fixed_t>            gViewSin(0x800780B8);
-const VmPtr<bool32_t>           gbIsSkyVisible(0x800781F4);
-const VmPtr<MATRIX>             gDrawMatrix(0x80086530);
+player_t*   gpViewPlayer;
+fixed_t     gViewX;
+fixed_t     gViewY;
+fixed_t     gViewZ;
+angle_t     gViewAngle;
+fixed_t     gViewCos;
+fixed_t     gViewSin;
+bool        gbIsSkyVisible;
+MATRIX      gDrawMatrix;
 
 // Light properties
-const VmPtr<bool32_t>               gbDoViewLighting(0x80078264);
-const VmPtr<VmPtr<const light_t>>   gpCurLight(0x80078054);
-const VmPtr<uint32_t>               gCurLightValR(0x80077E8C);
-const VmPtr<uint32_t>               gCurLightValG(0x80078034);
-const VmPtr<uint32_t>               gCurLightValB(0x80077F70);
+bool            gbDoViewLighting;
+const light_t*  gpCurLight;
+uint32_t        gCurLightValR;
+uint32_t        gCurLightValG;
+uint32_t        gCurLightValB;
 
 // The list of subsectors to draw and current position in the list.
 // The draw subsector count does not appear to be used for anything however... Maybe used in debug builds for stat tracking?
-const VmPtr<VmPtr<subsector_t>[MAX_DRAW_SUBSECTORS]>    gpDrawSubsectors(0x800A91B4);
-const VmPtr<VmPtr<VmPtr<subsector_t>>>                  gppEndDrawSubsector(0x80078064);
-const VmPtr<int32_t>                                    gNumDrawSubsectors(0x800780EC);
+subsector_t*    gpDrawSubsectors[MAX_DRAW_SUBSECTORS];
+subsector_t**   gppEndDrawSubsector;
+int32_t         gNumDrawSubsectors;
 
 // What sector is currently being drawn
-const VmPtr<VmPtr<sector_t>>    gpCurDrawSector(0x8007800C);
+sector_t* gpCurDrawSector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // One time setup for the 3D view renderer
@@ -53,21 +53,21 @@ void R_Init() noexcept {
     R_InitData();
 
     // Initialize the transform matrix used for drawing and upload it to the GTE
-    gDrawMatrix->t[0] = 0;
-    gDrawMatrix->t[1] = 0;
-    gDrawMatrix->t[2] = 0;
-    LIBGTE_SetTransMatrix(*gDrawMatrix);
+    gDrawMatrix.t[0] = 0;
+    gDrawMatrix.t[1] = 0;
+    gDrawMatrix.t[2] = 0;
+    LIBGTE_SetTransMatrix(gDrawMatrix);
 
-    gDrawMatrix->m[0][0] = 0;
-    gDrawMatrix->m[0][1] = 0;
-    gDrawMatrix->m[0][2] = 0;
-    gDrawMatrix->m[1][0] = 0;
-    gDrawMatrix->m[1][1] = GTE_ROTFRAC_UNIT;    // This part of the matrix never changes, so assign here
-    gDrawMatrix->m[1][2] = 0;
-    gDrawMatrix->m[2][0] = 0;
-    gDrawMatrix->m[2][1] = 0;
-    gDrawMatrix->m[2][2] = 0;
-    LIBGTE_SetRotMatrix(*gDrawMatrix);
+    gDrawMatrix.m[0][0] = 0;
+    gDrawMatrix.m[0][1] = 0;
+    gDrawMatrix.m[0][2] = 0;
+    gDrawMatrix.m[1][0] = 0;
+    gDrawMatrix.m[1][1] = GTE_ROTFRAC_UNIT;     // This part of the matrix never changes, so assign here
+    gDrawMatrix.m[1][2] = 0;
+    gDrawMatrix.m[2][0] = 0;
+    gDrawMatrix.m[2][1] = 0;
+    gDrawMatrix.m[2][2] = 0;
+    LIBGTE_SetRotMatrix(gDrawMatrix);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -75,73 +75,73 @@ void R_Init() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_RenderPlayerView() noexcept {
     // If currently in fullbright mode (no lighting) then setup the light params now
-    if (!*gbDoViewLighting) {
-        *gCurLightValR = 128;
-        *gCurLightValG = 128;
-        *gCurLightValB = 128;
-        *gpCurLight = &(*gpLightsLump)[0];
+    if (!gbDoViewLighting) {
+        gCurLightValR = 128;
+        gCurLightValG = 128;
+        gCurLightValB = 128;
+        gpCurLight = &(*gpLightsLump)[0];
     }
 
     // Store view parameters before drawing
     player_t& player = gPlayers[*gCurPlayerIndex];
 
-    *gpViewPlayer = &player;
-    *gViewX = player.mo->x & (~FRACMASK);
-    *gViewY = player.mo->y & (~FRACMASK);
-    *gViewZ = player.viewz & (~FRACMASK);
-    *gViewAngle = player.mo->angle;
-    *gViewCos = gFineCosine[*gViewAngle >> ANGLETOFINESHIFT];
-    *gViewSin = gFineSine[*gViewAngle >> ANGLETOFINESHIFT];
+    gpViewPlayer = &player;
+    gViewX = player.mo->x & (~FRACMASK);
+    gViewY = player.mo->y & (~FRACMASK);
+    gViewZ = player.viewz & (~FRACMASK);
+    gViewAngle = player.mo->angle;
+    gViewCos = gFineCosine[gViewAngle >> ANGLETOFINESHIFT];
+    gViewSin = gFineSine[gViewAngle >> ANGLETOFINESHIFT];
     
     // Set the draw matrix and upload to the GTE
-    gDrawMatrix->m[0][0] = (int16_t)( *gViewSin >> GTE_ROTFRAC_SHIFT);
-    gDrawMatrix->m[0][2] = (int16_t)(-*gViewCos >> GTE_ROTFRAC_SHIFT);
-    gDrawMatrix->m[2][0] = (int16_t)( *gViewCos >> GTE_ROTFRAC_SHIFT);
-    gDrawMatrix->m[2][2] = (int16_t)( *gViewSin >> GTE_ROTFRAC_SHIFT);
-    LIBGTE_SetRotMatrix(*gDrawMatrix);
+    gDrawMatrix.m[0][0] = (int16_t)( gViewSin >> GTE_ROTFRAC_SHIFT);
+    gDrawMatrix.m[0][2] = (int16_t)(-gViewCos >> GTE_ROTFRAC_SHIFT);
+    gDrawMatrix.m[2][0] = (int16_t)( gViewCos >> GTE_ROTFRAC_SHIFT);
+    gDrawMatrix.m[2][2] = (int16_t)( gViewSin >> GTE_ROTFRAC_SHIFT);
+    LIBGTE_SetRotMatrix(gDrawMatrix);
 
     // Traverse the BSP tree to determine what needs to be drawn and in what order.
     R_BSP();
     
     // Stat tracking: how many subsectors will we draw?
-    *gNumDrawSubsectors = (int32_t)(gppEndDrawSubsector->get() - gpDrawSubsectors.get());
+    gNumDrawSubsectors = (int32_t)(gppEndDrawSubsector - gpDrawSubsectors);
 
     // Finish up the previous draw before we continue and draw the sky if currently visible
     I_DrawPresent();
 
-    if (*gbIsSkyVisible) {
+    if (gbIsSkyVisible) {
         R_DrawSky();
     }
     
     // Draw all subsectors emitted during BSP traversal.
     // Draw them in back to front order.
-    while (*gppEndDrawSubsector > gpDrawSubsectors) {
-        --*gppEndDrawSubsector;
+    while (gppEndDrawSubsector > gpDrawSubsectors) {
+        --gppEndDrawSubsector;
 
         // Set the current draw sector
-        subsector_t& subsec = ***gppEndDrawSubsector;
+        subsector_t& subsec = **gppEndDrawSubsector;
         sector_t& sec = *subsec.sector;
-        *gpCurDrawSector = &sec;
+        gpCurDrawSector = &sec;
 
         // Setup the lighting values to use for the sector
-        if (*gbDoViewLighting) {
+        if (gbDoViewLighting) {
             // Compute basic light values
             const light_t& light = (*gpLightsLump)[sec.colorid];
 
-            *gpCurLight = &light;
-            *gCurLightValR = ((uint32_t) sec.lightlevel * (uint32_t) light.r) >> 8;
-            *gCurLightValG = ((uint32_t) sec.lightlevel * (uint32_t) light.g) >> 8;
-            *gCurLightValB = ((uint32_t) sec.lightlevel * (uint32_t) light.b) >> 8;
+            gpCurLight = &light;
+            gCurLightValR = ((uint32_t) sec.lightlevel * (uint32_t) light.r) >> 8;
+            gCurLightValG = ((uint32_t) sec.lightlevel * (uint32_t) light.g) >> 8;
+            gCurLightValB = ((uint32_t) sec.lightlevel * (uint32_t) light.b) >> 8;
 
             // Contribute the player muzzle flash to the light and saturate
             if (player.extralight != 0) {
-                *gCurLightValR += player.extralight;
-                *gCurLightValG += player.extralight;
-                *gCurLightValB += player.extralight;
+                gCurLightValR += player.extralight;
+                gCurLightValG += player.extralight;
+                gCurLightValB += player.extralight;
 
-                if (*gCurLightValR > 255) { *gCurLightValR = 255; }
-                if (*gCurLightValG > 255) { *gCurLightValG = 255; }
-                if (*gCurLightValB > 255) { *gCurLightValB = 255; }
+                if (gCurLightValR > 255) { gCurLightValR = 255; }
+                if (gCurLightValG > 255) { gCurLightValG = 255; }
+                if (gCurLightValB > 255) { gCurLightValB = 255; }
             }
         }
         

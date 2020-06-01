@@ -242,8 +242,8 @@ bool P_BlockLinesIterator(const int32_t x, const int32_t y, bool (*pFunc)(line_t
         pLineIdx++;
 
         // Only visit the line if not already visited for this set of checks
-        if (line.validcount != *gValidCount) {
-            line.validcount = *gValidCount;
+        if (line.validcount != gValidCount) {
+            line.validcount = gValidCount;
 
             // Call the function and stop if requested
             if (!pFunc(line))

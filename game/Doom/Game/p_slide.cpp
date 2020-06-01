@@ -153,7 +153,7 @@ static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
     const int32_t bmapRx = std::min((gEndBox[BOXRIGHT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
     
     // Increment this counter for the line checks that follow: doing new checks
-    *gValidCount += 1;
+    gValidCount++;
 
     // Run through all of the blockmap cells covering the movemet range.
     // Collide the movement line against all lines found in these cells.
@@ -167,8 +167,8 @@ static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
                 line_t& line = gpLines->get()[*pLineNum];
                 
                 // Only collide against this line if we didn't already do it
-                if (line.validcount != *gValidCount) {
-                    line.validcount = *gValidCount;
+                if (line.validcount != gValidCount) {
+                    line.validcount = gValidCount;
                     SL_CheckLine(line);
                 }
             }
@@ -428,7 +428,7 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
     
     // Hit no special line yet and increment the valid count for a fresh check
     *gpSpecialLine = nullptr;
-    *gValidCount += 1;
+    gValidCount++;
 
     // Check for crossing lines in this blockmap area
     for (int32_t bmapX = bmapLx; bmapX <= bmapRx; ++bmapX) {
@@ -442,11 +442,11 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
                 if (line.special == 0)
                     continue;
 
-                if (line.validcount == *gValidCount)
+                if (line.validcount == gValidCount)
                     continue;
 
                 // Don't check again
-                line.validcount = *gValidCount;
+                line.validcount = gValidCount;
 
                 // Make sure the move is within the bounding box of the line, ignore if not:
                 const bool bNoOverlap = (

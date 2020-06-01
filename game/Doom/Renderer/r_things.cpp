@@ -52,10 +52,11 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
 
             {
                 SVECTOR worldpos = {
-                    (int16_t)((pThing->x - *gViewX) >> FRACBITS),
+                    (int16_t)((pThing->x - gViewX) >> FRACBITS),
                     0,
-                    (int16_t)((pThing->y - *gViewY) >> FRACBITS)
+                    (int16_t)((pThing->y - gViewY) >> FRACBITS)
                 };
+
                 int32_t flagsOut;
                 LIBGTE_RotTrans(worldpos, viewpos, flagsOut);
             }
@@ -142,7 +143,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         bool bFlipSpr;
 
         if (frame.rotate) {
-            const angle_t angToThing = R_PointToAngle2(*gViewX, *gViewY, thing.x, thing.y);
+            const angle_t angToThing = R_PointToAngle2(gViewX, gViewY, thing.x, thing.y);
             const uint32_t dirIdx = (angToThing - thing.angle + (ANG45 / 2) * 9) >> 29;     // Note: same calculation as PC Doom
 
             lumpNum = frame.lump[dirIdx];
@@ -174,7 +175,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         if (thing.frame & FF_FULLBRIGHT) {
             LIBGPU_setRGB0(polyPrim, LIGHT_INTENSTIY_MAX, LIGHT_INTENSTIY_MAX, LIGHT_INTENSTIY_MAX);
         } else {
-            LIBGPU_setRGB0(polyPrim, (uint8_t) *gCurLightValR, (uint8_t) *gCurLightValG, (uint8_t) *gCurLightValB);
+            LIBGPU_setRGB0(polyPrim, (uint8_t) gCurLightValR, (uint8_t) gCurLightValG, (uint8_t) gCurLightValB);
         }
 
         // Figure out the y position and width + height for the sprite.
@@ -190,7 +191,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         constexpr fixed_t ASPECT_CORRECT = (FRACUNIT * 4) / 5;
         
         const fixed_t scale = pSpr->scale;
-        int32_t drawY = (thing.z - *gViewZ) >> FRACBITS;
+        int32_t drawY = (thing.z - gViewZ) >> FRACBITS;
         drawY += tex.offsetY;
         drawY = (drawY * -scale) >> FRACBITS;   // Scale due to perspective
         drawY += HALF_VIEW_3D_H;
@@ -254,7 +255,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_DrawWeapon() noexcept {
     // Run through all of the player sprites for the view player and render
-    player_t& player = **gpViewPlayer;
+    player_t& player = *gpViewPlayer;
     pspdef_t* pSprite = player.psprites;
     
     for (int32_t pspIdx = 0; pspIdx < NUMPSPRITES; ++pspIdx, ++pSprite) {
@@ -307,7 +308,8 @@ void R_DrawWeapon() noexcept {
         if (state.frame & FF_FULLBRIGHT) {
             // Note: these magic 5/8 multipliers correspond VERY closely to 'LIGHT_INTENSTIY_MAX / 255'.
             // The resulting values are sometimes not quite the same however.
-            const light_t& light = **gpCurLight;
+            const light_t& light = *gpCurLight;
+
             LIBGPU_setRGB0(spr,
                 (uint8_t)(((uint32_t) light.r * 5) / 8),
                 (uint8_t)(((uint32_t) light.g * 5) / 8),
@@ -315,9 +317,9 @@ void R_DrawWeapon() noexcept {
             );
         } else {
             LIBGPU_setRGB0(spr,
-                (uint8_t) *gCurLightValR,
-                (uint8_t) *gCurLightValG,
-                (uint8_t) *gCurLightValB
+                (uint8_t) gCurLightValR,
+                (uint8_t) gCurLightValG,
+                (uint8_t) gCurLightValB
             );
         }
         

@@ -91,7 +91,7 @@ bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
     *gBottomSlope = mobj2.z - sightZStart;
     
     // Doing a new raycast so update the visitation mark which tells us if stuff has already been processed
-    *gValidCount += 1;
+    gValidCount++;
 
     // Do a raycast against the BSP tree and return if sight is unobstructed.
     // Also narrows the vertical sight range with each lower and upper wall encountered.
@@ -159,11 +159,11 @@ static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
 
         // Skip past this seg's line if we've already done it this sight check.
         // Multiple segs might reference the same line, so this saves redundant work:
-        if (line.validcount == *gValidCount)
+        if (line.validcount == gValidCount)
             continue;
         
         // Don't check the line again until the next sight check
-        line.validcount = *gValidCount;
+        line.validcount = gValidCount;
 
         // If the sight line does not intersect along the actual line points then ignore.
         // Not sure where the magics here came from, probably through hacking/experimentation?
