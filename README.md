@@ -54,7 +54,7 @@ Longer term goals include support for Final Doom, proper modding support (I adde
     - F8: VRAM Viewer (functionality hidden in retail)
 - Multiplayer/link-cable emulation
     - PsyDoom now supports an emulation of the original 'Link Cable' multiplayer functionality, over regular TCP.
-    - This requires a VERY low latency network connection to be playable as the game's network protocol is synchronous and not lag tolerant, Ethernet or very fast wifi is HIGHLY recommended.
+    - This requires a VERY low latency network connection to be playable as the game's network protocol is synchronous and not lag tolerant, Ethernet or very fast Wifi is HIGHLY recommended.
     - Player 1 is the 'server' and listens for connections from Player 2, the 'client'.
     - To specify the machine as a server, add the following command line switch (listen port is optional, defaults to `666`):
         - `-server [LISTEN_PORT]`
