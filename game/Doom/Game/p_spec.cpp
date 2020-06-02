@@ -101,7 +101,7 @@ void P_InitPicAnims() noexcept {
             lastanim.picnum = R_TextureNumForName(animdef.endname);
 
             // Ignore this animation if it's not used in the level
-            texture_t& basetex = (*gpTextures)[lastanim.basepic];
+            texture_t& basetex = gpTextures[lastanim.basepic];
 
             if (basetex.texPageId == 0)
                 continue;
@@ -109,9 +109,9 @@ void P_InitPicAnims() noexcept {
             // For all frames in the animation, cache the lump in RAM and make it occupy the same VRAM spot as the base texture
             for (int32_t picNum = lastanim.basepic; picNum <= lastanim.picnum; ++picNum) {
                 // Ensure the lump is cached in RAM for runtime (will need to be backed in RAM in case it's evicted from VRAM)
-                W_CacheLumpNum(*gFirstTexLumpNum + picNum, PU_ANIMATION, false);
+                W_CacheLumpNum(gFirstTexLumpNum + picNum, PU_ANIMATION, false);
 
-                texture_t& dstTex = (*gpTextures)[picNum];
+                texture_t& dstTex = gpTextures[picNum];
                 dstTex.texPageCoordX = basetex.texPageCoordX;
                 dstTex.texPageCoordY = basetex.texPageCoordY;
                 dstTex.texPageId = basetex.texPageId;
@@ -123,7 +123,7 @@ void P_InitPicAnims() noexcept {
             lastanim.picnum = R_FlatNumForName(animdef.endname);
 
             // Ignore this animation if it's not used in the level
-            texture_t& basetex = (*gpFlatTextures)[lastanim.basepic];
+            texture_t& basetex = gpFlatTextures[lastanim.basepic];
 
             if (basetex.texPageId == 0)
                 continue;
@@ -131,9 +131,9 @@ void P_InitPicAnims() noexcept {
             // For all frames in the animation, cache the lump in RAM and make it occupy the same VRAM spot as the base texture
             for (int32_t picNum = lastanim.basepic; picNum <= lastanim.picnum; ++picNum) {
                 // Ensure the lump is cached in RAM for runtime (will need to be backed in RAM in case it's evicted from VRAM)
-                W_CacheLumpNum(*gFirstFlatLumpNum + picNum, PU_ANIMATION, false);
+                W_CacheLumpNum(gFirstFlatLumpNum + picNum, PU_ANIMATION, false);
 
-                texture_t& dstTex = (*gpFlatTextures)[picNum];
+                texture_t& dstTex = gpFlatTextures[picNum];
                 dstTex.texPageCoordX = basetex.texPageCoordX;
                 dstTex.texPageCoordY = basetex.texPageCoordY;
                 dstTex.texPageId = basetex.texPageId;
@@ -914,11 +914,11 @@ void P_UpdateSpecials() noexcept {
         // Update the texture translation table and mark the texture as needing uploading to the cache.
         // For animated flats and walls only the current frame is kept in VRAM, to save on precious VRAM space.
         if (pAnim->istexture) {
-            gpTextureTranslation->get()[pAnim->basepic] = pAnim->current;
-            gpTextures->get()[pAnim->current].uploadFrameNum = TEX_INVALID_UPLOAD_FRAME_NUM;
+            gpTextureTranslation[pAnim->basepic] = pAnim->current;
+            gpTextures[pAnim->current].uploadFrameNum = TEX_INVALID_UPLOAD_FRAME_NUM;
         } else {
-            gpFlatTranslation->get()[pAnim->basepic] = pAnim->current;
-            gpFlatTextures->get()[pAnim->current].uploadFrameNum = TEX_INVALID_UPLOAD_FRAME_NUM;
+            gpFlatTranslation[pAnim->basepic] = pAnim->current;
+            gpFlatTextures[pAnim->current].uploadFrameNum = TEX_INVALID_UPLOAD_FRAME_NUM;
         }
     }
 
@@ -985,7 +985,7 @@ void P_UpdateSpecials() noexcept {
 
     // New for PSX: update the fire sky if the level has a fire sky and the sky is visible
     if (gbIsSkyVisible && gUpdateFireSkyFunc) {
-        gUpdateFireSkyFunc(*gpSkyTexture->get());
+        gUpdateFireSkyFunc(*gpSkyTexture);
     }
 }
 

@@ -94,8 +94,8 @@ void P_InitSwitchList() noexcept {
         const int32_t tex1Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name1);
         const int32_t tex2Lump = R_TextureNumForName(gAlphSwitchList[switchIdx].name2);
         
-        texture_t& tex1 = (*gpTextures)[tex1Lump];
-        texture_t& tex2 = (*gpTextures)[tex2Lump];
+        texture_t& tex1 = gpTextures[tex1Lump];
+        texture_t& tex2 = gpTextures[tex2Lump];
 
         // Cache the other switch texture if one of the switch textures is loaded
         if ((tex1.texPageId) != 0 && (tex2.texPageId == 0)) {

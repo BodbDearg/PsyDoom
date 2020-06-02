@@ -126,7 +126,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
     // Initialize the quad primitive used to draw sprites
     POLY_FT4& polyPrim = *(POLY_FT4*) LIBETC_getScratchAddr(128);
     LIBGPU_SetPolyFT4(polyPrim);
-    polyPrim.clut = *g3dViewPaletteClutId;
+    polyPrim.clut = g3dViewPaletteClutId;
 
     // Draw all the sprites in the draw list for the subsector
     for (const vissprite_t* pSpr = gVisSpriteHead->next; pSpr != gVisSpriteHead; pSpr = pSpr->next) {
@@ -152,8 +152,8 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
         }
 
         // Upload the sprite texture to VRAM if not already uploaded
-        const int32_t sprIndex = lumpNum - *gFirstSpriteLumpNum;
-        texture_t& tex = (*gpSpriteTextures)[sprIndex];
+        const int32_t sprIndex = lumpNum - gFirstSpriteLumpNum;
+        texture_t& tex = gpSpriteTextures[sprIndex];
         I_CacheTex(tex);
 
         // Get the 3 blending flags and set whether the sprite is semi transparent
@@ -266,9 +266,9 @@ void R_DrawWeapon() noexcept {
         const spritedef_t& spriteDef = gSprites[state.sprite];
         const int32_t frameNum = state.frame & FF_FRAMEMASK;
         const spriteframe_t& frame = spriteDef.spriteframes[frameNum];
-        const int32_t texNum = frame.lump[0] - *gFirstSpriteLumpNum;
+        const int32_t texNum = frame.lump[0] - gFirstSpriteLumpNum;
 
-        texture_t& tex = (*gpSpriteTextures)[texNum];
+        texture_t& tex = gpSpriteTextures[texNum];
         I_CacheTex(tex);
 
         // Setup the default drawing mode to disable wrapping (remove texture window).
@@ -301,7 +301,7 @@ void R_DrawWeapon() noexcept {
 
         LIBGPU_setWH(spr, tex.width, tex.height);
         LIBGPU_setUV0(spr, tex.texPageCoordX, tex.texPageCoordY);
-        spr.clut = *g3dViewPaletteClutId;
+        spr.clut = g3dViewPaletteClutId;
 
         if (state.frame & FF_FULLBRIGHT) {
             // Note: these magic 5/8 multipliers correspond VERY closely to 'LIGHT_INTENSTIY_MAX / 255'.

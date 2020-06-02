@@ -33,8 +33,8 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
     // Get the texture for the flat
     const sector_t& drawsec = *gpCurDrawSector;
     const int32_t flatPicNum = (bIsCeiling) ? drawsec.ceilingpic : drawsec.floorpic;
-    const int32_t flatTexNum = (*gpFlatTranslation)[flatPicNum];
-    texture_t& tex = (*gpFlatTextures)[flatTexNum];
+    const int32_t flatTexNum = gpFlatTranslation[flatPicNum];
+    texture_t& tex = gpFlatTextures[flatTexNum];
 
     // Upload the flat texture to VRAM if required.
     // This case will be triggered for animated flats like water & slime - only one frame will be in VRAM at a time.
@@ -201,7 +201,7 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
     POLY_FT3& polyPrim = *(POLY_FT3*) LIBETC_getScratchAddr(128);
 
     LIBGPU_SetPolyFT3(polyPrim);
-    polyPrim.clut = *g3dViewPaletteClutId;
+    polyPrim.clut = g3dViewPaletteClutId;
     polyPrim.tpage = tex.texPageId;
 
     // Draw all of the horizontal spans in the flat

@@ -292,7 +292,7 @@ void I_UpdatePalette() noexcept {
     }
 
     // Save the palette we decided on
-    *g3dViewPaletteClutId = gPaletteClutIds[paletteIdx];
+    g3dViewPaletteClutId = gPaletteClutIds[paletteIdx];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

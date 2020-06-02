@@ -59,9 +59,9 @@ void START_Title() noexcept {
     // Cache the fire sky texture used in the title screen and save it's reference
     {
         const int32_t skyTexLumpNum = R_TextureNumForName("SKY09");
-        texture_t& skyTex = (*gpTextures)[skyTexLumpNum];
+        texture_t& skyTex = gpTextures[skyTexLumpNum];
 
-        *gpSkyTexture = &skyTex;
+        gpSkyTexture = &skyTex;
         gPaletteClutId_CurMapSky = gPaletteClutIds[FIRESKYPAL];
 
         W_CacheLumpNum(skyTex.lumpNum, PU_CACHE, true);
@@ -124,7 +124,7 @@ gameaction_t TIC_Title() noexcept {
         // Eventually it will settle at position '0' so we will do this all the time then and completely put out the fire.
         if ((*gTitleScreenSpriteY < 50) && ((*gTitleScreenSpriteY & 1) == 0)) {
             // Get the pixels for the last row in the fire sky
-            texture_t& skyTex = **gpSkyTexture;
+            texture_t& skyTex = *gpSkyTexture;
             uint8_t* const pLumpData = (uint8_t*)(*gpLumpCache)[skyTex.lumpNum].get();
             uint8_t* const pFSkyRows = pLumpData + 8;   // TODO: comment what is being skipped
             uint8_t* const pFSkyLastRow = pFSkyRows + FIRESKY_W * (FIRESKY_H - 1);
@@ -144,7 +144,7 @@ gameaction_t TIC_Title() noexcept {
         }
 
         // Run the fire sky simulation
-        P_UpdateFireSky(**gpSkyTexture);
+        P_UpdateFireSky(*gpSkyTexture);
     }
     
     // If the title sprite has not reached the top of the screen then we don't ever timeout
@@ -192,7 +192,7 @@ void DRAW_Title() noexcept {
 
     // Upload the firesky texture if VRAM if required.
     // This will happen constantly for the duration of the title screen, as the fire is constantly changing.
-    texture_t& skytex = **gpSkyTexture;
+    texture_t& skytex = *gpSkyTexture;
 
     if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         // Figure out where the texture is in VRAM coords and upload it

@@ -79,7 +79,7 @@ void R_RenderPlayerView() noexcept {
         gCurLightValR = 128;
         gCurLightValG = 128;
         gCurLightValB = 128;
-        gpCurLight = &(*gpLightsLump)[0];
+        gpCurLight = &gpLightsLump[0];
     }
 
     // Store view parameters before drawing
@@ -126,7 +126,7 @@ void R_RenderPlayerView() noexcept {
         // Setup the lighting values to use for the sector
         if (gbDoViewLighting) {
             // Compute basic light values
-            const light_t& light = (*gpLightsLump)[sec.colorid];
+            const light_t& light = gpLightsLump[sec.colorid];
 
             gpCurLight = &light;
             gCurLightValR = ((uint32_t) sec.lightlevel * (uint32_t) light.r) >> 8;

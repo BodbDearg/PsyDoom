@@ -65,24 +65,24 @@ struct light_t {
 
 static_assert(sizeof(light_t) == 4);
 
-extern const VmPtr<VmPtr<texture_t>>        gpTextures;
-extern const VmPtr<VmPtr<texture_t>>        gpFlatTextures;
-extern const VmPtr<VmPtr<texture_t>>        gpSpriteTextures;
-extern const VmPtr<VmPtr<texture_t>>        gpSkyTexture;
-extern const VmPtr<VmPtr<int32_t>>          gpTextureTranslation;
-extern const VmPtr<VmPtr<int32_t>>          gpFlatTranslation;
-extern const VmPtr<VmPtr<light_t>>          gpLightsLump;
-extern const VmPtr<uint16_t[NUMPALETTES]>   gPaletteClutIds;
-extern const VmPtr<uint16_t>                g3dViewPaletteClutId;
-extern const VmPtr<int32_t>                 gFirstTexLumpNum;
-extern const VmPtr<int32_t>                 gLastTexLumpNum;
-extern const VmPtr<int32_t>                 gNumTexLumps;
-extern const VmPtr<int32_t>                 gFirstFlatLumpNum;
-extern const VmPtr<int32_t>                 gLastFlatLumpNum;
-extern const VmPtr<int32_t>                 gNumFlatLumps;
-extern const VmPtr<int32_t>                 gFirstSpriteLumpNum;
-extern const VmPtr<int32_t>                 gLastSpriteLumpNum;
-extern const VmPtr<int32_t>                 gNumSpriteLumps;
+extern texture_t*   gpTextures;
+extern texture_t*   gpFlatTextures;
+extern texture_t*   gpSpriteTextures;
+extern texture_t*   gpSkyTexture;
+extern int32_t*     gpTextureTranslation;
+extern int32_t*     gpFlatTranslation;
+extern light_t*     gpLightsLump;
+extern uint16_t     gPaletteClutIds[NUMPALETTES];
+extern uint16_t     g3dViewPaletteClutId;
+extern int32_t      gFirstTexLumpNum;
+extern int32_t      gLastTexLumpNum;
+extern int32_t      gNumTexLumps;
+extern int32_t      gFirstFlatLumpNum;
+extern int32_t      gLastFlatLumpNum;
+extern int32_t      gNumFlatLumps;
+extern int32_t      gFirstSpriteLumpNum;
+extern int32_t      gLastSpriteLumpNum;
+extern int32_t      gNumSpriteLumps;
 
 void R_InitData() noexcept;
 void R_InitTextures() noexcept;

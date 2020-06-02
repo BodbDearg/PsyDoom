@@ -470,7 +470,7 @@ void F2_Drawer() noexcept {
         const spritedef_t& spriteDef = gSprites[state.sprite];
         const spriteframe_t& spriteFrame = spriteDef.spriteframes[state.frame & FF_FRAMEMASK];
 
-        texture_t& spriteTex = (*gpSpriteTextures)[spriteFrame.lump[0] - *gFirstSpriteLumpNum];
+        texture_t& spriteTex = gpSpriteTextures[spriteFrame.lump[0] - gFirstSpriteLumpNum];
         I_CacheTex(spriteTex);
 
         // Setup and draw the sprite for the cast character

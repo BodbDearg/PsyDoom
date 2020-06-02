@@ -258,9 +258,9 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     // Set the sky texture pointer
     if (skyLumpName[3] != 0) {
         const int32_t skyTexIdx = R_TextureNumForName(skyLumpName);
-        *gpSkyTexture = &(*gpTextures)[skyTexIdx];
+        gpSkyTexture = &gpTextures[skyTexIdx];
     } else {
-        *gpSkyTexture = nullptr;
+        gpSkyTexture = nullptr;
     }
 }
 
@@ -762,14 +762,14 @@ void P_Init() noexcept {
         for (int32_t secIdx = 0; secIdx < *gNumSectors; ++secIdx, ++pSec) {
             // Note: ceiling might not have a texture (sky)
             if (pSec->ceilingpic != -1) {
-                texture_t& ceilTex = (*gpFlatTextures)[pSec->ceilingpic];
+                texture_t& ceilTex = gpFlatTextures[pSec->ceilingpic];
 
                 if (ceilTex.texPageId == 0) {
                     I_CacheTex(ceilTex);
                 }
             }
 
-            texture_t& floorTex = (*gpFlatTextures)[pSec->floorpic];
+            texture_t& floorTex = gpFlatTextures[pSec->floorpic];
 
             if (floorTex.texPageId == 0) {
                 I_CacheTex(floorTex);
@@ -798,10 +798,10 @@ void P_Init() noexcept {
     gUpdateFireSkyFunc = nullptr;
     gPaletteClutId_CurMapSky = gPaletteClutIds[MAINPAL];
 
-    if (*gpSkyTexture) {
+    if (gpSkyTexture) {
         // If the lump name for the sky follows the format 'xxxx9' then assume it is a fire sky.
         // That needs to have it's lump cached, palette & update function set and initial few updates done...
-        texture_t& skyTex = **gpSkyTexture;
+        texture_t& skyTex = *gpSkyTexture;
         const lumpinfo_t& skyTexLump = (*gpLumpInfo)[skyTex.lumpNum];
 
         if (skyTexLump.name.chars[4] == '9') {
@@ -1185,7 +1185,7 @@ void P_CacheSprite(const spritedef_t& sprdef) noexcept {
         for (int32_t dirIdx = 0; dirIdx < 8; ++dirIdx) {
             const int32_t lumpNum = spriteFrame.lump[dirIdx];
             
-            if ((lumpNum < *gFirstSpriteLumpNum) || (lumpNum > *gLastSpriteLumpNum)) {
+            if ((lumpNum < gFirstSpriteLumpNum) || (lumpNum > gLastSpriteLumpNum)) {
                 I_Error("CacheSprite: invalid sprite lump %d", lumpNum);
             }
 
@@ -1217,7 +1217,7 @@ void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
 
     for (int32_t sideIdx = 0; sideIdx < *gNumSides; ++sideIdx, ++pSide) {
         if (pSide->toptexture != -1) {
-            texture_t& tex = (*gpTextures)[pSide->toptexture];
+            texture_t& tex = gpTextures[pSide->toptexture];
 
             if ((tex.width == width) && (tex.texPageId == 0)) {
                 I_CacheTex(tex);
@@ -1225,7 +1225,7 @@ void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
         }
         
         if (pSide->midtexture != -1) {
-            texture_t& tex = (*gpTextures)[pSide->midtexture];
+            texture_t& tex = gpTextures[pSide->midtexture];
 
             if ((tex.width == width) && (tex.texPageId == 0)) {
                 I_CacheTex(tex);
@@ -1233,7 +1233,7 @@ void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
         }
         
         if (pSide->bottomtexture != -1) {
-            texture_t& tex = (*gpTextures)[pSide->bottomtexture];
+            texture_t& tex = gpTextures[pSide->bottomtexture];
 
             if ((tex.width == width) && (tex.texPageId == 0)) {
                 I_CacheTex(tex);

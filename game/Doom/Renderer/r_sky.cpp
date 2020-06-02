@@ -22,7 +22,7 @@ uint16_t gPaletteClutId_CurMapSky;
 void R_DrawSky() noexcept {
     // Do we need to upload the fire sky texture? If so then upload it...
     // This code only executes for the fire sky - the regular sky is already in VRAM at this point.
-    texture_t& skytex = *gpSkyTexture->get();
+    texture_t& skytex = *gpSkyTexture;
 
     if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         const void* const pLumpData = (*gpLumpCache)[skytex.lumpNum].get();

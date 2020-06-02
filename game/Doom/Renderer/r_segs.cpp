@@ -69,7 +69,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             }
             
             // Draw the columns of wall piece
-            texture_t& tex = (*gpTextures)[(*gpTextureTranslation)[side.toptexture]];
+            texture_t& tex = gpTextures[gpTextureTranslation[side.toptexture]];
             R_DrawWallPiece(edge, tex, fsec_ty, bsec_ty, vt, vb, false);
         }
         
@@ -103,7 +103,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
             vb = vt + tex_h;
             
             // Draw the columns of wall piece
-            texture_t& tex = (*gpTextures)[(*gpTextureTranslation)[side.bottomtexture]];
+            texture_t& tex = gpTextures[gpTextureTranslation[side.bottomtexture]];
             R_DrawWallPiece(edge, tex, bsec_by, fsec_by, vt, vb, false);
         }
 
@@ -138,7 +138,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
         // PSX specific: draw translucent as well if the linedef has that special flag.
         bool bDrawTransparent = (line.flags & ML_MIDTRANSLUCENT);
 
-        texture_t& tex = (*gpTextures)[(*gpTextureTranslation)[side.midtexture]];
+        texture_t& tex = gpTextures[gpTextureTranslation[side.midtexture]];
         R_DrawWallPiece(edge, tex, mid_ty, mid_by, vt, vb, bDrawTransparent);
     }
 }
@@ -208,7 +208,7 @@ void R_DrawWallPiece(
         LIBGPU_SetSemiTrans(&polyPrim, true);
     }
 
-    polyPrim.clut = *g3dViewPaletteClutId;
+    polyPrim.clut = g3dViewPaletteClutId;
     polyPrim.tpage = tex.texPageId;
 
     // Compute scale and y coordinate step per wall column
