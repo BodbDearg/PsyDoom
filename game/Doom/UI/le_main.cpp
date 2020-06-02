@@ -45,11 +45,11 @@ gameaction_t TIC_Legals() noexcept {
         *gTitleScreenSpriteY = *gTitleScreenSpriteY - 1;
     
         if (*gTitleScreenSpriteY == 0) {
-            *gMenuTimeoutStartTicCon = *gTicCon;
+            gMenuTimeoutStartTicCon = *gTicCon;
         }
     } else {
         // Must hold the legals text for a small amount of time before allowing skip (via a button press) or timeout
-        const int32_t waitTicsElapsed = *gTicCon - *gMenuTimeoutStartTicCon;
+        const int32_t waitTicsElapsed = *gTicCon - gMenuTimeoutStartTicCon;
         
         if (waitTicsElapsed > 120) {
             if (waitTicsElapsed >= 180)

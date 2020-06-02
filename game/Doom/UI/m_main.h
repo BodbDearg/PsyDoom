@@ -11,9 +11,9 @@ static constexpr uint8_t M_SKULL_W = 16;
 static constexpr uint8_t M_SKULL_H = 18;
 
 extern const VmPtr<texture_t>               gTex_BACK;
-extern const VmPtr<int32_t[MAXPLAYERS]>     gCursorPos;
-extern const VmPtr<int32_t>                 gCursorFrame;
-extern const VmPtr<int32_t>                 gMenuTimeoutStartTicCon;
+extern int32_t      gCursorPos[MAXPLAYERS];
+extern int32_t      gCursorFrame;
+extern int32_t      gMenuTimeoutStartTicCon;
 
 gameaction_t RunMenu() noexcept;
 

@@ -5,8 +5,8 @@
 struct texture_t;
 
 extern const VmPtr<texture_t>   gTex_MARB01;
-extern const VmPtr<int32_t>     gOptionsSndVol;
-extern const VmPtr<int32_t>     gOptionsMusVol;
+extern int32_t      gOptionsSndVol;
+extern int32_t      gOptionsMusVol;
 
 void O_Init() noexcept;
 void O_Shutdown(const gameaction_t exitAction) noexcept;

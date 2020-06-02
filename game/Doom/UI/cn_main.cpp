@@ -44,7 +44,7 @@ const VmPtr<texture_t> gTex_BUTTONS(0x80097AD0);
 void START_ControlsScreen() noexcept {
     S_StartSound(nullptr, sfx_pistol);
     
-    *gCursorFrame = 0;
+    gCursorFrame = 0;
     gCursorPos[0] = 0;
 
     I_LoadAndCacheTexLump(*gTex_BUTTONS, "BUTTONS", 0);
@@ -65,7 +65,7 @@ void STOP_ControlsScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
 gameaction_t TIC_ControlsScreen() noexcept {
     // Animate the cursor every so often
     if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 3) == 0)) {
-        *gCursorFrame ^= 1;
+        gCursorFrame ^= 1;
     }
     
     // Do menu up/down movements
@@ -161,7 +161,7 @@ void DRAW_ControlsScreen() noexcept {
         gPaletteClutIds[UIPAL],
         12,
         (int16_t) gCursorPos[0] * 20 + 43,
-        M_SKULL_TEX_U + (uint8_t)(*gCursorFrame) * M_SKULL_W,
+        M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W,
         M_SKULL_TEX_V,
         M_SKULL_W,
         M_SKULL_H

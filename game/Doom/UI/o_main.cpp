@@ -70,8 +70,8 @@ static const menuitem_t*    gpOptionsMenuItems;
 const VmPtr<texture_t> gTex_MARB01(0x80097AB0);
 
 // Current options music and sound volume
-const VmPtr<int32_t> gOptionsSndVol(0x800775F0);
-const VmPtr<int32_t> gOptionsMusVol(0x800775F4);
+int32_t     gOptionsSndVol = 100;
+int32_t     gOptionsMusVol = 100;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the options menu
@@ -81,7 +81,7 @@ void O_Init() noexcept {
     S_StartSound(nullptr, sfx_pistol);
 
     // Initialize cursor position and vblanks until move for all players
-    *gCursorFrame = 0;
+    gCursorFrame = 0;
 
     for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
         gCursorPos[playerIdx] = 0;
@@ -119,7 +119,7 @@ void O_Shutdown([[maybe_unused]] const gameaction_t exitAction) noexcept {
 gameaction_t O_Control() noexcept {
     // Animate the skull cursor
     if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 3) == 0)) {
-        *gCursorFrame ^= 1;
+        gCursorFrame ^= 1;
     }
 
     // Do options menu controls for all players
@@ -150,7 +150,7 @@ gameaction_t O_Control() noexcept {
                 gVBlanksUntilMenuMove[playerIdx] = 15;
                 
                 if (ticButtons & PAD_DOWN) {
-                    gCursorPos[playerIdx] += 1;
+                    gCursorPos[playerIdx]++;
 
                     if (gCursorPos[playerIdx] >= gOptionsMenuSize) {
                         gCursorPos[playerIdx] = 0;
@@ -162,7 +162,7 @@ gameaction_t O_Control() noexcept {
                     }
                 }
                 else if (ticButtons & PAD_UP) {
-                    gCursorPos[playerIdx] -= 1;
+                    gCursorPos[playerIdx]--;
 
                     if (gCursorPos[playerIdx] < 0) {
                         gCursorPos[playerIdx] = gOptionsMenuSize - 1;
@@ -185,34 +185,34 @@ gameaction_t O_Control() noexcept {
                 // Only process audio updates for this player
                 if (playerIdx == *gCurPlayerIndex) {
                     if (ticButtons & PAD_RIGHT) {
-                        *gOptionsMusVol += 1;
+                        gOptionsMusVol++;
                         
-                        if (*gOptionsMusVol > 100) {
-                            *gOptionsMusVol = 100;  // TODO: make a constant for '100'
+                        if (gOptionsMusVol > 100) {
+                            gOptionsMusVol = 100;   // TODO: make a constant for '100'
                         } else {
-                            S_SetMusicVolume(doomToWessVol(*gOptionsMusVol));
+                            S_SetMusicVolume(doomToWessVol(gOptionsMusVol));
 
-                            if (*gOptionsMusVol & 1) {
+                            if (gOptionsMusVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
                         
-                        *gCdMusicVol = ((*gOptionsMusVol) * 0x3CFF) / 100;          // TODO: where does the '0x3CFF' constant come from?
+                        *gCdMusicVol = (gOptionsMusVol * 0x3CFF) / 100;     // TODO: where does the '0x3CFF' constant come from?
                     }
                     else if (ticButtons & PAD_LEFT) {
-                        *gOptionsMusVol -= 1;
+                        gOptionsMusVol--;
 
-                        if (*gOptionsMusVol < 0) {
-                            *gOptionsMusVol = 0;
+                        if (gOptionsMusVol < 0) {
+                            gOptionsMusVol = 0;
                         } else {
-                            S_SetMusicVolume(doomToWessVol(*gOptionsMusVol));
+                            S_SetMusicVolume(doomToWessVol(gOptionsMusVol));
 
-                            if (*gOptionsMusVol & 1) {
+                            if (gOptionsMusVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
 
-                        *gCdMusicVol = ((*gOptionsMusVol) * 0x3CFF) / 100;          // TODO: where does the '0x3CFF' constant come from?
+                        *gCdMusicVol = (gOptionsMusVol * 0x3CFF) / 100;     // TODO: where does the '0x3CFF' constant come from?
                     }
                 }
             }   break;
@@ -222,27 +222,27 @@ gameaction_t O_Control() noexcept {
                 // Only process audio updates for this player
                 if (playerIdx == *gCurPlayerIndex) {
                     if (ticButtons & PAD_RIGHT) {
-                        *gOptionsSndVol += 1;
+                        gOptionsSndVol++;
 
-                        if (*gOptionsSndVol > 100) {
-                            *gOptionsSndVol = 100;  // TODO: make a constant for '100'
+                        if (gOptionsSndVol > 100) {
+                            gOptionsSndVol = 100;   // TODO: make a constant for '100'
                         } else {
-                            S_SetSfxVolume(doomToWessVol(*gOptionsSndVol));
+                            S_SetSfxVolume(doomToWessVol(gOptionsSndVol));
                             
-                            if (*gOptionsSndVol & 1) {
+                            if (gOptionsSndVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
                     }
                     else if (ticButtons & PAD_LEFT) {
-                        *gOptionsSndVol -= 1;
+                        gOptionsSndVol -= 1;
 
-                        if (*gOptionsSndVol < 0) {
-                            *gOptionsSndVol = 0;
+                        if (gOptionsSndVol < 0) {
+                            gOptionsSndVol = 0;
                         } else {
-                            S_SetSfxVolume(doomToWessVol(*gOptionsSndVol));
+                            S_SetSfxVolume(doomToWessVol(gOptionsSndVol));
                             
-                            if (*gOptionsSndVol & 1) {
+                            if (gOptionsSndVol & 1) {
                                 S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
@@ -327,7 +327,7 @@ void O_Drawer() noexcept {
                 );
 
                 // Draw the slider handle
-                const int32_t sliderVal = (pMenuItem->option == opt_sound) ? *gOptionsSndVol : *gOptionsMusVol;
+                const int32_t sliderVal = (pMenuItem->option == opt_sound) ? gOptionsSndVol : gOptionsMusVol;
 
                 I_DrawSprite(
                     gTex_STATUS->texPageId,
@@ -351,7 +351,7 @@ void O_Drawer() noexcept {
             gPaletteClutIds[UIPAL],
             (int16_t) menuItem.x - 24,
             (int16_t) menuItem.y - 2,
-            M_SKULL_TEX_U + (uint8_t)(*gCursorFrame) * M_SKULL_W,
+            M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W,
             M_SKULL_TEX_V,
             M_SKULL_W,
             M_SKULL_H

@@ -58,7 +58,7 @@ const VmPtr<int32_t>    gDebugDrawStringYPos(0x8007803C);
 void D_DoomMain() noexcept {
     // PlayStation specific setup
     I_PSXInit();
-    PsxSoundInit(doomToWessVol(*gOptionsSndVol), doomToWessVol(*gOptionsMusVol), gTmpBuffer.get());
+    PsxSoundInit(doomToWessVol(gOptionsSndVol), doomToWessVol(gOptionsMusVol), gTmpBuffer.get());
 
     // Initializing standard DOOM subsystems, zone memory management, WAD, platform stuff, renderer etc.
     Z_Init();

@@ -89,17 +89,17 @@ const char gMapNames[][32] = {
 static_assert(C_ARRAY_SIZE(gMapNames) == NUM_MAPS);
 
 // The final stats to display for each player
-static const VmPtr<pstats_t> gPStats(0x80097C24);
+static pstats_t gPStats[MAXPLAYERS];
 
 // The currently displaying stats for each player, this is ramped up over time
-static const VmPtr<int32_t[MAXPLAYERS]>     gKillValue(0x800782A0);
-static const VmPtr<int32_t[MAXPLAYERS]>     gItemValue(0x800782AC);
-static const VmPtr<int32_t[MAXPLAYERS]>     gSecretValue(0x80077FDC);
-static const VmPtr<int32_t[MAXPLAYERS]>     gFragValue(0x80078268);
+static int32_t  gKillValue[MAXPLAYERS];
+static int32_t  gItemValue[MAXPLAYERS];
+static int32_t  gSecretValue[MAXPLAYERS];
+static int32_t  gFragValue[MAXPLAYERS];
 
 // What stage of the intermission we are at.
 // 0 = ramping up score, 1 = score fully shown, 2 = begin exiting intermission.
-static const VmPtr<int32_t[MAXPLAYERS]>     gIntermissionStage(0x800782DC);
+static int32_t  gIntermissionStage;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialization/setup logic for the intermission screen
@@ -143,8 +143,8 @@ void IN_Start() noexcept {
     }
 
     // Init menu timeout and intermission stage
-    *gIntermissionStage = 0;
-    *gMenuTimeoutStartTicCon = *gTicCon;
+    gIntermissionStage = 0;
+    gMenuTimeoutStartTicCon = *gTicCon;
 
     // Compute the password for the next map and mark it as entered (so we don't do a pistol start)
     if (*gNextMap <= NUM_MAPS) {
@@ -182,7 +182,7 @@ void IN_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t IN_Ticker() noexcept {
     // Intermission pauses for 1 second (60 vblanks) initially to stop accidental button presses
-    if (*gTicCon - *gMenuTimeoutStartTicCon <= 60)
+    if (*gTicCon - gMenuTimeoutStartTicCon <= 60)
         return ga_nothing;
 
     // Checking for inputs from all players to speed up the intermission
@@ -193,10 +193,10 @@ gameaction_t IN_Ticker() noexcept {
         // Handle the player trying to goto to the next stage of the intermission when action buttons are pressed
         if ((ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS)) {
             // Advance to the next stage of the intermission
-            *gIntermissionStage += 1;
+            gIntermissionStage++;
 
             // If we are skipping to the stats being fully shown then fully display them now
-            if (*gIntermissionStage == 1) {
+            if (gIntermissionStage == 1) {
                 for (int32_t i = 0; i < MAXPLAYERS; ++i) {
                     const pstats_t& stats = gPStats[i];
 
@@ -210,7 +210,7 @@ gameaction_t IN_Ticker() noexcept {
             }
 
             // If we are at the stage where the intermission can be exited do that now
-            if (*gIntermissionStage >= 2) {
+            if (gIntermissionStage >= 2) {
                 S_StartSound(nullptr, sfx_barexp);
                 return ga_died;
             }
@@ -286,8 +286,8 @@ gameaction_t IN_Ticker() noexcept {
     }
 
     // If the ramp up is done and we are on the initial stage then advance to the next and do the explode sfx
-    if ((!bStillCounting) && (*gIntermissionStage == 0)) {
-        *gIntermissionStage = 1;
+    if ((!bStillCounting) && (gIntermissionStage == 0)) {
+        gIntermissionStage = 1;
         S_StartSound(nullptr, sfx_barexp);
     }
 

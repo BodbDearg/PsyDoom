@@ -16,9 +16,9 @@
 #include "Wess/psxcd.h"
 
 const VmPtr<texture_t>              gTex_BACK(0x80097A10);                  // The background texture for the main menu
-const VmPtr<int32_t[MAXPLAYERS]>    gCursorPos(0x80078000);                 // Which of the menu options each player's cursor is over (see 'menu_t')
-const VmPtr<int32_t>                gCursorFrame(0x800781D8);               // Current frame that the menu cursor is displaying
-const VmPtr<int32_t>                gMenuTimeoutStartTicCon(0x80077F0C);    // Tick that we start checking for menu timeouts from
+int32_t     gCursorPos[MAXPLAYERS];     // Which of the menu options each player's cursor is over (see 'menu_t')
+int32_t     gCursorFrame;               // Current frame that the menu cursor is displaying
+int32_t     gMenuTimeoutStartTicCon;    // Tick that we start checking for menu timeouts from
 
 // Main menu options
 enum menu_t : int32_t {
@@ -58,7 +58,7 @@ static const char gSkillNames[NUMSKILLS][16] = {
 static const VmPtr<texture_t> gTex_DOOM(0x80097A50);
 
 // Restricts what maps or episodes the player can pick
-static const VmPtr<int32_t> gMaxStartEpisodeOrMap(0x8007817C);
+static int32_t gMaxStartEpisodeOrMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Starts up the main menu and returns the action to do on exit
@@ -134,17 +134,17 @@ void M_Start() noexcept {
     I_LoadAndCacheTexLump(*gTex_CONNECT, "CONNECT", 0);
     
     // Some basic menu setup
-    *gCursorFrame = 0;
-    *gCursorPos = 0;
+    gCursorFrame = 0;
+    gCursorPos[0] = 0;
     gVBlanksUntilMenuMove[0] = 0;
     
     if (*gStartGameType == gt_single) {
-        *gMaxStartEpisodeOrMap = MAX_EPISODE;
+        gMaxStartEpisodeOrMap = MAX_EPISODE;
     } else {
-        *gMaxStartEpisodeOrMap = NUM_REGULAR_MAPS;      // For multiplayer any of the normal (non secret) maps can be selected
+        gMaxStartEpisodeOrMap = NUM_REGULAR_MAPS;   // For multiplayer any of the normal (non secret) maps can be selected
     }
     
-    if (*gStartMapOrEpisode > *gMaxStartEpisodeOrMap) {
+    if (*gStartMapOrEpisode > gMaxStartEpisodeOrMap) {
         // Wrap back around if we have to...
         *gStartMapOrEpisode = 1;
     }
@@ -184,7 +184,7 @@ void M_Start() noexcept {
     gDrawEnvs[1].isbg = true;
 
     // Begin counting for menu timeouts
-    *gMenuTimeoutStartTicCon = *gTicCon;
+    gMenuTimeoutStartTicCon = *gTicCon;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -212,16 +212,16 @@ gameaction_t M_Ticker() noexcept {
     const padbuttons_t ticButtons = gTicButtons[0];
 
     if (ticButtons != 0) {
-        *gMenuTimeoutStartTicCon = *gTicCon;
+        gMenuTimeoutStartTicCon = *gTicCon;
     }
 
     // Exit the menu if timed out
-    if (*gTicCon - *gMenuTimeoutStartTicCon >= 1800)
+    if (*gTicCon - gMenuTimeoutStartTicCon >= 1800)
         return ga_timeout;
 
     // Animate the skull cursor
     if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 3) == 0)) {
-        *gCursorFrame ^= 1;
+        gCursorFrame ^= 1;
     }
     
     // Check for game start or options open actions
@@ -261,19 +261,19 @@ gameaction_t M_Ticker() noexcept {
 
     // Do menu up/down movements
     if (ticButtons & PAD_DOWN) {
-        *gCursorPos += 1;
+        gCursorPos[0]++;
         
-        if (*gCursorPos == NUMMENUITEMS) {
-            *gCursorPos = (menu_t) 0;
+        if (gCursorPos[0] == NUMMENUITEMS) {
+            gCursorPos[0] = (menu_t) 0;
         }
 
         S_StartSound(nullptr, sfx_pstop);
     }
     else if (ticButtons & PAD_UP) {
-        *gCursorPos -= 1;
+        gCursorPos[0]--;
 
-        if (*gCursorPos == -1) {
-            *gCursorPos = NUMMENUITEMS - 1;
+        if (gCursorPos[0] == -1) {
+            gCursorPos[0] = NUMMENUITEMS - 1;
         }
 
         S_StartSound(nullptr, sfx_pstop);
@@ -305,12 +305,12 @@ gameaction_t M_Ticker() noexcept {
         }
 
         if (*gStartGameType == gt_single) {
-            *gMaxStartEpisodeOrMap = MAX_EPISODE;
+            gMaxStartEpisodeOrMap = MAX_EPISODE;
         } else {
-            *gMaxStartEpisodeOrMap = NUM_REGULAR_MAPS;
+            gMaxStartEpisodeOrMap = NUM_REGULAR_MAPS;
         }
 
-        if (*gStartMapOrEpisode > *gMaxStartEpisodeOrMap) {
+        if (*gStartMapOrEpisode > gMaxStartEpisodeOrMap) {
             *gStartMapOrEpisode = 1;
         }
 
@@ -321,10 +321,10 @@ gameaction_t M_Ticker() noexcept {
         if (ticButtons & PAD_RIGHT) {
             *gStartMapOrEpisode += 1;
             
-            if (*gStartMapOrEpisode <= *gMaxStartEpisodeOrMap) {
+            if (*gStartMapOrEpisode <= gMaxStartEpisodeOrMap) {
                 S_StartSound(nullptr, sfx_swtchx);
             } else {
-                *gStartMapOrEpisode = *gMaxStartEpisodeOrMap;
+                *gStartMapOrEpisode = gMaxStartEpisodeOrMap;
             }
         }
         else if (ticButtons & PAD_LEFT) {
@@ -382,7 +382,7 @@ void M_Drawer() noexcept {
         gPaletteClutIds[UIPAL],
         50,
         gMenuYPos[gCursorPos[0]] - 2,
-        M_SKULL_TEX_U + (uint8_t)(*gCursorFrame) * M_SKULL_W,
+        M_SKULL_TEX_U + (uint8_t) gCursorFrame * M_SKULL_W,
         M_SKULL_TEX_V,
         M_SKULL_W,
         M_SKULL_H
