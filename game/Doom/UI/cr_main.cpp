@@ -15,11 +15,11 @@ static const VmPtr<texture_t>   gTex_WMSCRED1(0x80097B70);
 static const VmPtr<texture_t>   gTex_WMSCRED2(0x80097B90);
 
 // Current credits scroll position
-static const VmPtr<int32_t> gCreditsScrollYPos(0x8007825C);
-static const VmPtr<int32_t> gCreditsPage(0x800781A4);
+static int32_t  gCreditsScrollYPos;
+static int32_t  gCreditsPage;
 
 // This controls the update rate
-static const VmPtr<int32_t> gVBlanksUntilCreditScreenUpdate(0x80077CCC);
+static int32_t  gVBlanksUntilCreditScreenUpdate;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Startup/init logic for the credits screen
@@ -31,8 +31,8 @@ void START_Credits() noexcept {
     I_LoadAndCacheTexLump(*gTex_WMSCRED1, "WMSCRED1", 0);
     I_LoadAndCacheTexLump(*gTex_WMSCRED2, "WMSCRED2", 0);
     
-    *gCreditsScrollYPos = SCREEN_H;
-    *gCreditsPage = 0;
+    gCreditsScrollYPos = SCREEN_H;
+    gCreditsPage = 0;
     
     // Play the credits music
     psxcd_play_at_andloop(
@@ -66,23 +66,23 @@ gameaction_t TIC_Credits() noexcept {
         return ga_exit;
     
     // We only update/scroll this screen periodically, see if it is time
-    *gVBlanksUntilCreditScreenUpdate -= gPlayersElapsedVBlanks[0];
+    gVBlanksUntilCreditScreenUpdate -= gPlayersElapsedVBlanks[0];
 
-    if (*gVBlanksUntilCreditScreenUpdate > 0)
+    if (gVBlanksUntilCreditScreenUpdate > 0)
         return ga_nothing;
     
-    *gVBlanksUntilCreditScreenUpdate = 2;
-    *gCreditsScrollYPos -= 1;
+    gVBlanksUntilCreditScreenUpdate = 2;
+    gCreditsScrollYPos -= 1;
 
     // Move onto the next page or exit if we have scrolled far enough
-    if (*gCreditsPage == 0) {
-        if (*gCreditsScrollYPos < -182) {
-            *gCreditsScrollYPos = SCREEN_H;
-            *gCreditsPage = 1;
+    if (gCreditsPage == 0) {
+        if (gCreditsScrollYPos < -182) {
+            gCreditsScrollYPos = SCREEN_H;
+            gCreditsPage = 1;
         }
     }
-    else if (*gCreditsPage == 1) {
-        if (*gCreditsScrollYPos < -228) {
+    else if (gCreditsPage == 1) {
+        if (gCreditsScrollYPos < -228) {
             return ga_exitdemo;
         }
     }
@@ -99,13 +99,13 @@ void DRAW_Credits() noexcept {
     
     // Draw the background and scrolling credits text for whatever credits page we are on.
     // There are two pages, ID and Williams credits:
-    if (*gCreditsPage == 0) {
+    if (gCreditsPage == 0) {
         I_CacheAndDrawSprite(*gTex_IDCRED1, 0, 0, gPaletteClutIds[IDCREDITS1PAL]);
-        I_CacheAndDrawSprite(*gTex_IDCRED2, 9, (int16_t) *gCreditsScrollYPos, gPaletteClutIds[UIPAL]);
-    }
-    else if (*gCreditsPage == 1) {
+        I_CacheAndDrawSprite(*gTex_IDCRED2, 9, (int16_t) gCreditsScrollYPos, gPaletteClutIds[UIPAL]);
+    } 
+    else if (gCreditsPage == 1) {
         I_CacheAndDrawSprite(*gTex_WMSCRED1, 0, 0, gPaletteClutIds[WCREDITS1PAL]);
-        I_CacheAndDrawSprite(*gTex_WMSCRED2, 7, (int16_t) *gCreditsScrollYPos, gPaletteClutIds[UIPAL]);
+        I_CacheAndDrawSprite(*gTex_WMSCRED2, 7, (int16_t) gCreditsScrollYPos, gPaletteClutIds[UIPAL]);
     }
 
     // Finish up the frame

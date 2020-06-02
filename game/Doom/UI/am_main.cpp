@@ -25,19 +25,19 @@ static constexpr uint32_t COLOR_YELLOW  = 0xCCCC00;
 static constexpr uint32_t COLOR_GREY    = 0x808080;
 static constexpr uint32_t COLOR_AQUA    = 0x0080FF;
 
-static const VmPtr<fixed_t> gAutomapXMin(0x80078280);
-static const VmPtr<fixed_t> gAutomapXMax(0x80078290);
-static const VmPtr<fixed_t> gAutomapYMin(0x8007828C);
-static const VmPtr<fixed_t> gAutomapYMax(0x80078298);
+static fixed_t  gAutomapXMin;
+static fixed_t  gAutomapXMax;
+static fixed_t  gAutomapYMin;
+static fixed_t  gAutomapYMax;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Automap initialization logic
 //------------------------------------------------------------------------------------------------------------------------------------------
 void AM_Start() noexcept {
-    *gAutomapXMin = *gBlockmapOriginX;
-    *gAutomapYMin = *gBlockmapOriginY;
-    *gAutomapXMax = (*gBlockmapWidth  << MAPBLOCKSHIFT) + *gBlockmapOriginX;
-    *gAutomapYMax = (*gBlockmapHeight << MAPBLOCKSHIFT) + *gBlockmapOriginY;
+    gAutomapXMin = *gBlockmapOriginX;
+    gAutomapYMin = *gBlockmapOriginY;
+    gAutomapXMax = (*gBlockmapWidth  << MAPBLOCKSHIFT) + *gBlockmapOriginX;
+    gAutomapYMax = (*gBlockmapHeight << MAPBLOCKSHIFT) + *gBlockmapOriginY;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,15 +92,15 @@ void AM_Control(player_t& player) noexcept {
     if (ticButtons & PAD_RIGHT) {
         player.automapx += moveStep;
 
-        if (player.automapx > *gAutomapXMax) {
-            player.automapx = *gAutomapXMax;
+        if (player.automapx > gAutomapXMax) {
+            player.automapx = gAutomapXMax;
         }
     }
     else if (ticButtons & PAD_LEFT) {
         player.automapx -= moveStep;
 
-        if (player.automapx < *gAutomapXMin) {
-            player.automapx = *gAutomapXMin;
+        if (player.automapx < gAutomapXMin) {
+            player.automapx = gAutomapXMin;
         }
     }
 
@@ -108,15 +108,15 @@ void AM_Control(player_t& player) noexcept {
     if (ticButtons & PAD_UP) {
         player.automapy += moveStep;
 
-        if (player.automapy > *gAutomapYMax) {
-            player.automapy = *gAutomapYMax;
+        if (player.automapy > gAutomapYMax) {
+            player.automapy = gAutomapYMax;
         }
     }
     else if (ticButtons & PAD_DOWN) {
         player.automapy -= moveStep;
 
-        if (player.automapy < *gAutomapYMin) {
-            player.automapy = *gAutomapYMin;
+        if (player.automapy < gAutomapYMin) {
+            player.automapy = gAutomapYMin;
         }
     }
     

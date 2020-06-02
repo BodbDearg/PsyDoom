@@ -78,18 +78,18 @@ enum finalestage_t : int32_t {
     F_STAGE_CAST,
 };
 
-static const VmPtr<finalestage_t>   gFinaleStage(0x8007816C);           // What stage of the finale we are on
-static const VmPtr<int32_t>         gFinTextYPos(0x80077F10);           // Current y position of the top finale line
-static const VmPtr<char[28]>        gFinIncomingLine(0x800A9048);       // Text for the incoming line
-static const VmPtr<int32_t>         gFinIncomingLineLen(0x80077F58);    // How many characters are being displayed for the incomming text line
-static const VmPtr<int32_t>         gFinLinesDone(0x80078110);          // How many full lines we are displaying
-static const VmPtr<int32_t>         gCastNum(0x80078288);               // Which of the cast characters (specified by index) we are showing
-static const VmPtr<int32_t>         gCastTics(0x80077ED0);              // Tracks current time in the current cast state
-static const VmPtr<int32_t>         gCastFrames(0x80078088);            // Tracks how many frames a cast member has done - used to decide when to attack
-static const VmPtr<int32_t>         gCastOnMelee(0x80078168);           // If non zero then the cast member should do a melee attack
-static const VmPtr<bool32_t>        gbCastDeath(0x80077F78);            // Are we killing the current cast member?
-static const VmPtr<VmPtr<state_t>>  gpCastState(0x80077FA8);            // Current state being displayed for the cast character
-static const VmPtr<texture_t>       gTex_DEMON(0x80097BB0);             // The demon (icon of sin) background for the DOOM II finale
+static finalestage_t    gFinaleStage;           // What stage of the finale we are on
+static int32_t          gFinTextYPos;           // Current y position of the top finale line
+static char             gFinIncomingLine[28];   // Text for the incoming line
+static int32_t          gFinIncomingLineLen;    // How many characters are being displayed for the incomming text line
+static int32_t          gFinLinesDone;          // How many full lines we are displaying
+static int32_t          gCastNum;               // Which of the cast characters (specified by index) we are showing
+static int32_t          gCastTics;              // Tracks current time in the current cast state
+static int32_t          gCastFrames;            // Tracks how many frames a cast member has done - used to decide when to attack
+static int32_t          gCastOnMelee;           // If non zero then the cast member should do a melee attack
+static bool             gbCastDeath;            // Are we killing the current cast member?
+static const state_t*   gpCastState;            // Current state being displayed for the cast character
+static const VmPtr<texture_t>   gTex_DEMON(0x80097BB0);     // The demon (icon of sin) background for the DOOM II finale
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the Ultimate DOOM finale screen
@@ -101,8 +101,8 @@ void F1_Start() noexcept {
     I_CacheTex(*gTex_BACK);
 
     // Init finale
-    *gFinLinesDone = 0;
-    *gFinIncomingLineLen = 0;
+    gFinLinesDone = 0;
+    gFinIncomingLineLen = 0;
     gFinIncomingLine[0] = 0;
 
     // Play the finale cd track
@@ -146,23 +146,23 @@ gameaction_t F1_Ticker() noexcept {
         return *gGameAction;
 
     // Check to see if the text needs to advance more, or if we can exit
-    if (*gFinLinesDone < 11) {
+    if (gFinLinesDone < 11) {
         // Text is not yet done popping up: only advance if time has elapsed and on every 2nd tick
         if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 1) == 0)) {
             // Get the current incoming text line text and see if we need to move onto another
-            const char* const textLine = gDoom1WinText[*gFinLinesDone];
+            const char* const textLine = gDoom1WinText[gFinLinesDone];
 
-            if (textLine[*gFinIncomingLineLen] == 0) {
+            if (textLine[gFinIncomingLineLen] == 0) {
                 // We've reached the end of this line, move onto a new one
-                *gFinIncomingLineLen = 0;
-                *gFinLinesDone = *gFinLinesDone + 1;
+                gFinIncomingLineLen = 0;
+                gFinLinesDone++;
             } else {
-                D_strncpy(gFinIncomingLine.get(), textLine, *gFinIncomingLineLen);
+                D_strncpy(gFinIncomingLine, textLine, gFinIncomingLineLen);
             }
             
             // Null terminate the incomming text line and include this character in the length
-            gFinIncomingLine[*gFinIncomingLineLen] = 0;
-            *gFinIncomingLineLen += 1;
+            gFinIncomingLine[gFinIncomingLineLen] = 0;
+            gFinIncomingLineLen++;
         }
     }
     else if ((ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS)) {
@@ -184,12 +184,12 @@ void F1_Drawer() noexcept {
     // Show both the incoming and fully displayed text lines
     int32_t ypos = 45;
     
-    for (int32_t lineIdx = 0; lineIdx < *gFinLinesDone; ++lineIdx) {
+    for (int32_t lineIdx = 0; lineIdx < gFinLinesDone; ++lineIdx) {
         I_DrawString(-1, ypos, gDoom1WinText[lineIdx]);
         ypos += 14;
     }
     
-    I_DrawString(-1, ypos, gFinIncomingLine.get());
+    I_DrawString(-1, ypos, gFinIncomingLine);
 
     // Not sure why the finale screen would be 'paused'?
     if (*gbGamePaused) {
@@ -217,19 +217,19 @@ void F2_Start() noexcept {
     const mobjinfo_t& mobjInfo = gMObjInfo[gCastOrder[0].type];
     const state_t& state = gStates[mobjInfo.seestate];
 
-    *gFinaleStage = F_STAGE_TEXT;
-    *gFinLinesDone = 0;
-    *gFinIncomingLineLen = 0;
+    gFinaleStage = F_STAGE_TEXT;
+    gFinLinesDone = 0;
+    gFinIncomingLineLen = 0;
     gFinIncomingLine[0] = 0;
-    *gFinTextYPos = 45;
+    gFinTextYPos = 45;
     
     // Initialize the cast display
-    *gCastNum = 0;
-    *gpCastState = ptrToVmAddr(&state);
-    *gCastTics = state.tics;
-    *gbCastDeath = false;
-    *gCastFrames = 0;
-    *gCastOnMelee = 0;
+    gCastNum = 0;
+    gpCastState = &state;
+    gCastTics = state.tics;
+    gbCastDeath = false;
+    gCastFrames = 0;
+    gCastOnMelee = 0;
     
     // Load sound for the finale
     S_LoadMapSoundAndMusic(60);
@@ -275,46 +275,46 @@ gameaction_t F2_Ticker() noexcept {
         return *gGameAction;
     
     // Handle whatever finale stage we are on
-    if (*gFinaleStage == F_STAGE_TEXT) {
+    if (gFinaleStage == F_STAGE_TEXT) {
         // Currently popping up text: only advance if time has elapsed and on every 2nd tick
         if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 1) == 0)) {
             // Get the current incoming text line text and see if we need to move onto another
-            const char* const textLine = gDoom2WinText[*gFinLinesDone];
+            const char* const textLine = gDoom2WinText[gFinLinesDone];
 
-            if (textLine[*gFinIncomingLineLen] == 0) {
+            if (textLine[gFinIncomingLineLen] == 0) {
                 // We've reached the end of this line, move onto a new one
-                *gFinLinesDone += 1;
-                *gFinIncomingLineLen = 0;
+                gFinLinesDone++;
+                gFinIncomingLineLen = 0;
 
                 // If we're done all the lines then begin scrolling the text up
-                if (*gFinLinesDone >= 11) {
-                    *gFinaleStage = F_STAGE_SCROLLTEXT;
+                if (gFinLinesDone >= 11) {
+                    gFinaleStage = F_STAGE_SCROLLTEXT;
                 }
             } else {
-                D_strncpy(gFinIncomingLine.get(), textLine, *gFinIncomingLineLen);
+                D_strncpy(gFinIncomingLine, textLine, gFinIncomingLineLen);
             }
 
             // Null terminate the incomming text line and include this character in the length
-            gFinIncomingLine[*gFinIncomingLineLen] = 0;
-            *gFinIncomingLineLen += 1;
+            gFinIncomingLine[gFinIncomingLineLen] = 0;
+            gFinIncomingLineLen++;
         }
     }
-    else if (*gFinaleStage == F_STAGE_SCROLLTEXT) {
+    else if (gFinaleStage == F_STAGE_SCROLLTEXT) {
         // Scrolling the finale text upwards for a bit before the cast call
-        *gFinTextYPos -= 1;
+        gFinTextYPos -= 1;
         
-        if (*gFinTextYPos < -200) {
-            *gFinaleStage = F_STAGE_CAST;
+        if (gFinTextYPos < -200) {
+            gFinaleStage = F_STAGE_CAST;
         }
     }
-    else if (*gFinaleStage == F_STAGE_CAST)  {
+    else if (gFinaleStage == F_STAGE_CAST)  {
         // Doing the cast call: see first if the player is shooting the current character
-        if ((!*gbCastDeath) && (ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS)) {
+        if ((!gbCastDeath) && (ticButtons != oldTicButtons) && (ticButtons & PAD_ACTION_BTNS)) {
             // Shooting this character! Play the shotgun sound:
             S_StartSound(nullptr, sfx_shotgn);
 
             // Play enemy death sound if it has it
-            const mobjinfo_t& mobjinfo = gMObjInfo[gCastOrder[*gCastNum].type];
+            const mobjinfo_t& mobjinfo = gMObjInfo[gCastOrder[gCastNum].type];
             
             if (mobjinfo.deathsound != 0) {
                 S_StartSound(nullptr, mobjinfo.deathsound);
@@ -323,46 +323,46 @@ gameaction_t F2_Ticker() noexcept {
             // Begin playing the death animation
             const state_t& deathState = gStates[mobjinfo.deathstate];
 
-            *gbCastDeath = true;
-            *gCastFrames = 0;
-            *gpCastState = ptrToVmAddr(&deathState);
-            *gCastTics = deathState.tics;
+            gbCastDeath = true;
+            gCastFrames = 0;
+            gpCastState = &deathState;
+            gCastTics = deathState.tics;
         }
 
         // Only advance character animation if time has passed
         if (*gGameTic > *gPrevGameTic) {
-            if (*gbCastDeath && ((*gpCastState)->nextstate == S_NULL)) {
+            if (gbCastDeath && (gpCastState->nextstate == S_NULL)) {
                 // Character is dead and there is no state which follows (death anim is finished): switch to the next character
-                *gCastNum += 1;
-                *gbCastDeath = false;
+                gCastNum++;
+                gbCastDeath = false;
 
                 // Loop back around to the first character when we reach the end
-                if (gCastOrder[*gCastNum].name  == nullptr) {
-                    *gCastNum = 0;
+                if (gCastOrder[gCastNum].name  == nullptr) {
+                    gCastNum = 0;
                 }
 
                 // Initialize frame count, set state to the 'see' state and make a noise if there is a 'see' sound
-                const castinfo_t& castinfo = gCastOrder[*gCastNum];
+                const castinfo_t& castinfo = gCastOrder[gCastNum];
                 const mobjinfo_t& mobjinfo = gMObjInfo[castinfo.type];
 
-                *gCastFrames = 0;
-                *gpCastState = &gStates[mobjinfo.seestate];
+                gCastFrames = 0;
+                gpCastState = &gStates[mobjinfo.seestate];
 
                 if (mobjinfo.seesound != 0) {
                     S_StartSound(nullptr, mobjinfo.seesound);
                 }
             } else {
                 // Character is not dead, advance the time until the next state
-                *gCastTics -= 1;
+                gCastTics -= 1;
 
                 // If we still have time until the next state then there is nothing more to do
-                if (*gCastTics > 0)
+                if (gCastTics > 0)
                     return ga_nothing;
-            
+                
                 // Hacked in logic to play sounds on certain frames of animation
                 sfxenum_t soundId;
 
-                switch ((*gpCastState)->nextstate) {
+                switch (gpCastState->nextstate) {
                     case S_PLAY_ATK2:   soundId = sfx_dshtgn;   break;
                     case S_POSS_ATK2:   soundId = sfx_pistol;   break;
                     case S_SPOS_ATK2:   soundId = sfx_shotgn;   break;
@@ -398,45 +398,45 @@ gameaction_t F2_Ticker() noexcept {
             }
 
             // Advance onto the next state
-            *gpCastState = &gStates[(*gpCastState)->nextstate];
-            *gCastFrames += 1;
+            gpCastState = &gStates[gpCastState->nextstate];
+            gCastFrames++;
 
-            const castinfo_t& castinfo = gCastOrder[*gCastNum];
+            const castinfo_t& castinfo = gCastOrder[gCastNum];
             const mobjinfo_t& mobjinfo = gMObjInfo[castinfo.type];
 
             // Every 12 frames make the enemy attack.
             // Alternate between melee and ranged attacks where possible.
-            if (*gCastFrames == 12) {
-                if (*gCastOnMelee) {
-                    *gpCastState = &gStates[mobjinfo.meleestate];
+            if (gCastFrames == 12) {
+                if (gCastOnMelee) {
+                    gpCastState = &gStates[mobjinfo.meleestate];
                 } else {
-                    *gpCastState = &gStates[mobjinfo.missilestate];
+                    gpCastState = &gStates[mobjinfo.missilestate];
                 }
 
                 // If there wasn't a ranged or melee attack then try using the opposite attack type
-                *gCastOnMelee ^= 1;
+                gCastOnMelee ^= 1;
 
-                if (gpCastState->get() == &gStates[S_NULL]) {
-                    if (*gCastOnMelee) {
-                        *gpCastState = &gStates[mobjinfo.meleestate];
+                if (gpCastState == &gStates[S_NULL]) {
+                    if (gCastOnMelee) {
+                        gpCastState = &gStates[mobjinfo.meleestate];
                     } else {
-                        *gpCastState = &gStates[mobjinfo.missilestate];
+                        gpCastState = &gStates[mobjinfo.missilestate];
                     }
                 }
             }
 
             // If it is the player then every so often put it into the 'see' state
-            if ((*gCastFrames == 24) || (gpCastState->get() == &gStates[S_PLAY])) {
-                *gpCastState = &gStates[mobjinfo.seestate];
-                *gCastFrames = 0;
+            if ((gCastFrames == 24) || (gpCastState == &gStates[S_PLAY])) {
+                gpCastState = &gStates[mobjinfo.seestate];
+                gCastFrames = 0;
             }
             
             // Update the number of tics to stay in this state.
             // If the state defines no time limit then make up one:
-            *gCastTics = (*gpCastState)->tics;
+            gCastTics = gpCastState->tics;
 
-            if (*gCastTics == -1) {
-                *gCastTics = TICRATE;
+            if (gCastTics == -1) {
+                gCastTics = TICRATE;
             }
         }
     }
@@ -453,20 +453,20 @@ void F2_Drawer() noexcept {
     I_CacheAndDrawSprite(*gTex_DEMON, 0, 0, gPaletteClutIds[MAINPAL]);
 
     // See whether we are drawing the text or the cast of characters
-    if (*gFinaleStage >= F_STAGE_TEXT && *gFinaleStage <= F_STAGE_SCROLLTEXT) {
+    if (gFinaleStage >= F_STAGE_TEXT && gFinaleStage <= F_STAGE_SCROLLTEXT) {
         // Still showing the text, show both the incoming and fully displayed text lines
-        int32_t ypos = *gFinTextYPos;
+        int32_t ypos = gFinTextYPos;
 
-        for (int32_t lineIdx = 0; lineIdx < *gFinLinesDone; ++lineIdx) {
+        for (int32_t lineIdx = 0; lineIdx < gFinLinesDone; ++lineIdx) {
             I_DrawString(-1, ypos, gDoom2WinText[lineIdx]);
             ypos += 14;
         }
         
-        I_DrawString(-1, ypos, gFinIncomingLine.get());
+        I_DrawString(-1, ypos, gFinIncomingLine);
     }
-    else if (*gFinaleStage == F_STAGE_CAST) {
+    else if (gFinaleStage == F_STAGE_CAST) {
         // Showing the cast of character, get the texture for the current sprite to show and cache it
-        const state_t& state = **gpCastState;
+        const state_t& state = *gpCastState;
         const spritedef_t& spriteDef = gSprites[state.sprite];
         const spriteframe_t& spriteFrame = spriteDef.spriteframes[state.frame & FF_FRAMEMASK];
 
@@ -516,7 +516,7 @@ void F2_Drawer() noexcept {
 
         // Draw screen title and current character name
         I_DrawString(-1, 20, "Cast Of Characters");
-        I_DrawString(-1, 208, gCastOrder[*gCastNum].name);
+        I_DrawString(-1, 208, gCastOrder[gCastNum].name);
     }
 
     // Not sure why the finale screen would be 'paused'?
