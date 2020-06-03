@@ -329,7 +329,7 @@ int32_t wess_dig_lcd_load(
     // Keep trying to read the LCD file until there is success
     while (true) {
         // Try to read the header sector for the LCD file: begin by opening the requested LCD file and initializing sound related variables
-        uint16_t* const pLcdHeader = (uint16_t*) gPSXCD_sectorbuf.get();
+        uint16_t* const pLcdHeader = (uint16_t*) gPSXCD_sectorbuf;
 
         gWess_lcd_load_soundNum = 0;
         gWess_lcd_load_soundBytesLeft = 0;
@@ -369,9 +369,9 @@ int32_t wess_dig_lcd_load(
         }
 
         // Grab the sector buffer and get the number of sounds to load from it
-        LIBCD_CdGetSector(gPSXCD_sectorbuf.get(), CD_SECTOR_SIZE / sizeof(uint32_t));
+        LIBCD_CdGetSector(gPSXCD_sectorbuf, CD_SECTOR_SIZE / sizeof(uint32_t));
         gWess_lcd_load_numSounds = pLcdHeader[0];
-        gpWess_lcd_load_headerBuf = gPSXCD_sectorbuf.get();
+        gpWess_lcd_load_headerBuf = gPSXCD_sectorbuf;
 
         // If the number of sounds exceeds the max then a read error must have happened.
         // In this case retry the read again...

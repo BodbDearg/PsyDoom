@@ -36,7 +36,7 @@ struct PsxCd_MapTblEntry {
 static_assert(sizeof(PsxCd_MapTblEntry) == 8);
 
 // Sector buffer for when we are reading data
-extern const VmPtr<uint8_t[CD_SECTOR_SIZE]> gPSXCD_sectorbuf;
+extern uint8_t gPSXCD_sectorbuf[CD_SECTOR_SIZE];
 
 void psxcd_sync() noexcept;
 bool psxcd_critical_sync() noexcept;
