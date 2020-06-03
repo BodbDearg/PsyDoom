@@ -16,7 +16,7 @@
 #include "r_things.h"
 
 // Incremented whenever checks are made
-int32_t gValidCount;
+int32_t gValidCount = 1;
 
 // View properties
 player_t*   gpViewPlayer;

@@ -90,15 +90,16 @@ static constexpr uint8_t gWess_seq_CmdLength[36] = {
 
 static_assert(C_ARRAY_SIZE(gWess_seq_CmdLength) == C_ARRAY_SIZE(gWess_DrvFunctions));
 
-const VmPtr<uint8_t>                    gWess_master_sfx_volume(0x80075A04);    // Master volume level for all sfx voices
-const VmPtr<uint8_t>                    gWess_master_mus_volume(0x80075A05);    // Master volume level for all music voices
-const VmPtr<PanMode>                    gWess_pan_status(0x80075A06);           // Current pan mode
-const VmPtr<VmPtr<SavedVoiceList>>      gpWess_savedVoices(0x80075A10);         // Used to save and restore voice state when pausing or resuming sound playback
+// TODO: use constants here for max values
+uint8_t             gWess_master_sfx_volume     = 127;          // Master volume level for all sfx voices
+uint8_t             gWess_master_mus_volume     = 127;          // Master volume level for all music voices
+PanMode             gWess_pan_status            = PAN_ON;       // Current pan mode
+SavedVoiceList*     gpWess_savedVoices          = nullptr;      // Used to save and restore voice state when pausing or resuming sound playback
 
-static const VmPtr<VmPtr<master_status_structure>>      gpWess_eng_mstat(0x80075AC0);               // Saved reference to the master status structure
-static const VmPtr<VmPtr<sequence_status>>              gpWess_eng_sequenceStats(0x80075ABC);       // Saved reference to the list of sequence statuses
-static const VmPtr<VmPtr<track_status>>                 gpWess_eng_trackStats(0x80075AB8);          // Saved reference to the list of track statuses
-static const VmPtr<uint8_t>                             gWess_eng_maxActiveTracks(0x80075AB4);      // The maximum number of active tracks in the sequencer
+static master_status_structure*     gpWess_eng_mstat;               // Saved reference to the master status structure
+static sequence_status*             gpWess_eng_sequenceStats;       // Saved reference to the list of sequence statuses
+static track_status*                gpWess_eng_trackStats;          // Saved reference to the list of track statuses
+static uint8_t                      gWess_eng_maxActiveTracks;      // The maximum number of active tracks in the sequencer
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reads from track data a variable length delta time (relative to the previous sequencer command) for when the next sequencer command
@@ -178,10 +179,10 @@ int32_t Len_Vlq(const uint32_t deltaTime) noexcept {
 // Do initialization for the sequencer engine
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_DriverInit(master_status_structure& mstat) noexcept {
-    *gpWess_eng_mstat = &mstat;
-    *gpWess_eng_sequenceStats = mstat.psequence_stats;
-    *gpWess_eng_trackStats = mstat.ptrack_stats;
-    *gWess_eng_maxActiveTracks = mstat.pmodule->hdr.max_active_tracks;
+    gpWess_eng_mstat = &mstat;
+    gpWess_eng_sequenceStats = mstat.psequence_stats.get();
+    gpWess_eng_trackStats = mstat.ptrack_stats.get();
+    gWess_eng_maxActiveTracks = mstat.pmodule->hdr.max_active_tracks;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -209,7 +210,7 @@ void Eng_DriverEntry3() noexcept {}
 // Mark the given track as not playing and update the track and parent sequence accordingly
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_TrkOff(track_status& trackStat) noexcept {
-    master_status_structure& mstat = *gpWess_eng_mstat->get();
+    master_status_structure& mstat = *gpWess_eng_mstat;
     sequence_status& seqStat = mstat.psequence_stats[trackStat.seqstat_idx];
 
     // Mark the track as not playing anymore
@@ -342,7 +343,7 @@ void Eng_NoteOff([[maybe_unused]] track_status& trackStat) noexcept {}
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_StatusMark(track_status& trackStat) noexcept {
     // If there are no callbacks active then there is nothing to do
-    master_status_structure& mstat = *gpWess_eng_mstat->get();
+    master_status_structure& mstat = *gpWess_eng_mstat;
     uint8_t activeCallbacksLeftToVisit = mstat.num_active_callbacks;
 
     if (activeCallbacksLeftToVisit <= 0)
@@ -386,7 +387,7 @@ void Eng_StatusMark(track_status& trackStat) noexcept {
 // If the gate is not initialized or 'reset' (value 0xFF) then it's value is also set to the value specified by the command.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_GateJump(track_status& trackStat) noexcept {
-    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    sequence_status& seqStat = gpWess_eng_sequenceStats[trackStat.seqstat_idx];
 
     // Get the specified gate value
     const uint8_t gateIdx = trackStat.pcur_cmd[1];
@@ -414,7 +415,7 @@ void Eng_GateJump(track_status& trackStat) noexcept {
 // The number of items is initialized on the first jump to the specified amount if the iteration count was previously reset (0xFF).
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_IterJump(track_status& trackStat) noexcept {
-    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    sequence_status& seqStat = gpWess_eng_sequenceStats[trackStat.seqstat_idx];
 
     // Get the specified iteration count
     const uint8_t iterIdx = trackStat.pcur_cmd[1];
@@ -446,8 +447,8 @@ void Eng_IterJump(track_status& trackStat) noexcept {
 // Clear the specified boolean gate for a track, or clear all gates for the track
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_ResetGates(track_status& trackStat) noexcept {
-    master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    master_status_structure& mstat = *gpWess_eng_mstat;
+    sequence_status& seqStat = gpWess_eng_sequenceStats[trackStat.seqstat_idx];
 
     // Either reset all gates (gate index '0xFF') or reset a specific one
     const uint8_t gateIdx = trackStat.pcur_cmd[1];
@@ -467,8 +468,8 @@ void Eng_ResetGates(track_status& trackStat) noexcept {
 // Clear the specified iteration (iter) count for a track, or clear all iteration counts for the track
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_ResetIters(track_status& trackStat) noexcept {
-    master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    master_status_structure& mstat = *gpWess_eng_mstat;
+    sequence_status& seqStat = gpWess_eng_sequenceStats[trackStat.seqstat_idx];
 
     // Either reset all iters (iter index '0xFF') or reset a specific one
     const uint8_t iterIdx = trackStat.pcur_cmd[1];
@@ -488,7 +489,7 @@ void Eng_ResetIters(track_status& trackStat) noexcept {
 // Set the value for a specified iteration count in a track
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_WriteIterBox(track_status& trackStat) noexcept {
-    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    sequence_status& seqStat = gpWess_eng_sequenceStats[trackStat.seqstat_idx];
     const uint8_t iterIdx = trackStat.pcur_cmd[1];
     seqStat.piters[iterIdx] = trackStat.pcur_cmd[2];
 }
@@ -498,8 +499,8 @@ void Eng_WriteIterBox(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_SeqTempo(track_status& trackStat) noexcept {
     // Helper variables for the loop
-    master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    master_status_structure& mstat = *gpWess_eng_mstat;
+    sequence_status& seqStat = gpWess_eng_sequenceStats[trackStat.seqstat_idx];
     sequence_data& sequence = mstat.pmodule->psequences[seqStat.seq_idx];
 
     // Read the new quarter notes per minute (BPM) amount from the command
@@ -520,7 +521,7 @@ void Eng_SeqTempo(track_status& trackStat) noexcept {
             continue;
 
         // Update the quarter notes per minute and parts per interrupt (16.16) advancement for this track
-        track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackStatIdx];
+        track_status& thisTrackStat = gpWess_eng_trackStats[trackStatIdx];
         thisTrackStat.tempo_qpm = newQpm;
         thisTrackStat.tempo_ppi_frac = CalcPartsPerInt(GetIntsPerSec(), thisTrackStat.tempo_ppq, thisTrackStat.tempo_qpm);
 
@@ -538,8 +539,8 @@ void Eng_SeqTempo(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_SeqGosub(track_status& trackStat) noexcept {
     // Some useful stuff for the loop below
-    master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    master_status_structure& mstat = *gpWess_eng_mstat;
+    sequence_status& seqStat = gpWess_eng_sequenceStats[trackStat.seqstat_idx];
     const sequence_data& sequence = mstat.pmodule->psequences[seqStat.seq_idx];
 
     // Get the label to jump to from the command and do not do any jump if the label index is invalid
@@ -561,7 +562,7 @@ void Eng_SeqGosub(track_status& trackStat) noexcept {
                 continue;
 
             // Save the current location in the track's location stack and use up a location stack slot
-            track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackStatIdx];
+            track_status& thisTrackStat = gpWess_eng_trackStats[trackStatIdx];
             *thisTrackStat.ploc_stack_cur = thisTrackStat.pcur_cmd.get() + gWess_seq_CmdLength[SeqGosub];
             thisTrackStat.ploc_stack_cur += 1;
             
@@ -584,8 +585,8 @@ void Eng_SeqGosub(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_SeqJump(track_status& trackStat) noexcept {
     // Some useful stuff for the loop below
-    master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    master_status_structure& mstat = *gpWess_eng_mstat;
+    sequence_status& seqStat = gpWess_eng_sequenceStats[trackStat.seqstat_idx];
     const sequence_data& sequence = mstat.pmodule->psequences[seqStat.seq_idx];
     
     // Get the label to jump to from the command and do not do any jump if the label index is invalid
@@ -607,7 +608,7 @@ void Eng_SeqJump(track_status& trackStat) noexcept {
                 continue;
 
             // Update the current position of the track
-            track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackStatIdx];
+            track_status& thisTrackStat = gpWess_eng_trackStats[trackStatIdx];
             const uint32_t targetOffset = thisTrackStat.plabels[labelIdx];
             thisTrackStat.pcur_cmd = thisTrackStat.pcmds_start.get() + targetOffset;
 
@@ -628,8 +629,8 @@ void Eng_SeqJump(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_SeqRet(track_status& trackStat) noexcept {
     // Some useful stuff for the loop below
-    master_status_structure& mstat = *gpWess_eng_mstat->get();
-    sequence_status& seqStat = gpWess_eng_sequenceStats->get()[trackStat.seqstat_idx];
+    master_status_structure& mstat = *gpWess_eng_mstat;
+    sequence_status& seqStat = gpWess_eng_sequenceStats[trackStat.seqstat_idx];
     const sequence_data& sequence = mstat.pmodule->psequences[seqStat.seq_idx];
     
     // Restore the previous location for all active tracks in the sequence
@@ -647,7 +648,7 @@ void Eng_SeqRet(track_status& trackStat) noexcept {
             continue;
 
         // Restore the previously saved track location and free up the location stack slot
-        track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackStatIdx];
+        track_status& thisTrackStat = gpWess_eng_trackStats[trackStatIdx];
         thisTrackStat.ploc_stack_cur -= 1;
         thisTrackStat.pcur_cmd = *thisTrackStat.ploc_stack_cur;
 
@@ -666,7 +667,7 @@ void Eng_SeqRet(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Eng_SeqEnd(track_status& trackStat) noexcept {
     // Helper variables for the loop
-    master_status_structure& mstat = *gpWess_eng_mstat->get();
+    master_status_structure& mstat = *gpWess_eng_mstat;
     sequence_status& seqStat = mstat.psequence_stats[trackStat.seqstat_idx];
 
     // Run through all of the active tracks in the sequence and mute them all
@@ -680,7 +681,7 @@ void Eng_SeqEnd(track_status& trackStat) noexcept {
             continue;
 
         // Mute the track
-        track_status& thisTrackStat = gpWess_eng_trackStats->get()[trackStatIdx];
+        track_status& thisTrackStat = gpWess_eng_trackStats[trackStatIdx];
         gWess_CmdFuncArr[thisTrackStat.driver_id][TrkOff](thisTrackStat);
 
         // If there are no more active tracks left to visit in the sequence then we are done
@@ -802,9 +803,9 @@ void Eng_NullEvent([[maybe_unused]] track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void SeqEngine() noexcept {
     // Some helper variables for the loop
-    master_status_structure& mstat = *gpWess_eng_mstat->get();
-    track_status* const pTrackStats = gpWess_eng_trackStats->get();
-    const uint8_t maxTracks = *gWess_eng_maxActiveTracks;
+    master_status_structure& mstat = *gpWess_eng_mstat;
+    track_status* const pTrackStats = gpWess_eng_trackStats;
+    const uint8_t maxTracks = gWess_eng_maxActiveTracks;
 
     // Run through all of the active tracks and run sequencer commands for them
     uint8_t numActiveTracksToVisit = mstat.num_active_tracks;

@@ -70,8 +70,8 @@ static const menuitem_t*    gpOptionsMenuItems;
 const VmPtr<texture_t> gTex_MARB01(0x80097AB0);
 
 // Current options music and sound volume
-int32_t     gOptionsSndVol = 100;
-int32_t     gOptionsMusVol = 100;
+int32_t     gOptionsSndVol = 100;           // TODO: make constant
+int32_t     gOptionsMusVol = 100;           // TODO: make constant
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the options menu

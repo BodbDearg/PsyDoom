@@ -43,6 +43,7 @@ static void decideStartupResolution(int32_t& w, int32_t& h) noexcept {
 
 static void lockFramebufferTexture() noexcept {
     int pitch = 0;
+
     if (SDL_LockTexture(gFramebufferTexture, nullptr, reinterpret_cast<void**>(&gpFrameBuffer), &pitch) != 0) {
         FATAL_ERROR("Failed to lock the framebuffer texture for writing!");
     }

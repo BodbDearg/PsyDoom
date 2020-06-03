@@ -57,7 +57,7 @@ static const VmPtr<uint8_t[SPU_NUM_VOICES]>             gWess_spuKeyStatuses(0x8
 // Sets the location where we will start recording voice details before temporarily muting
 //------------------------------------------------------------------------------------------------------------------------------------------
 void start_record_music_mute(SavedVoiceList* const pVoices) noexcept {
-    *gpWess_savedVoices = pVoices;
+    gpWess_savedVoices = pVoices;
 
     if (pVoices) {
         pVoices->size = 0;
@@ -68,7 +68,7 @@ void start_record_music_mute(SavedVoiceList* const pVoices) noexcept {
 // Clears the location where we will record voice details while temporarily muting
 //------------------------------------------------------------------------------------------------------------------------------------------
 void end_record_music_mute() noexcept {
-    *gpWess_savedVoices = nullptr;
+    gpWess_savedVoices = nullptr;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ void add_music_mute_note(
     const patch_voice& patchVoice,
     const patch_sample& patchSample
 ) noexcept {
-    SavedVoiceList* const pSavedVoices = gpWess_savedVoices->get();
+    SavedVoiceList* const pSavedVoices = gpWess_savedVoices;
 
     if (pSavedVoices) {
         // PC-PSX: sanity check we haven't exceeded the bounds of the saved notes array.
@@ -152,7 +152,7 @@ void TriggerPSXVoice(const voice_status& voiceStat, [[maybe_unused]] const uint8
     // Figure out pan amount
     int16_t triggerPan;
 
-    if (*gWess_pan_status == PAN_OFF) {
+    if (gWess_pan_status == PAN_OFF) {
         triggerPan = WESS_PAN_CENTER;
     } else {
         // Note: deduct 'WESS_PAN_CENTER' since panning should be centered when both these settings are at the center
@@ -167,15 +167,15 @@ void TriggerPSXVoice(const voice_status& voiceStat, [[maybe_unused]] const uint8
     triggerVol *= trackStat.volume_cntrl;
 
     if (trackStat.sound_class == SNDFX_CLASS) {
-        triggerVol *= (*gWess_master_sfx_volume);
+        triggerVol *= gWess_master_sfx_volume;
     } else {
-        triggerVol *= (*gWess_master_mus_volume);
+        triggerVol *= gWess_master_mus_volume;
     }
 
     triggerVol >>= 21;
     
     // Set volume using trigger volume and pan
-    if (*gWess_pan_status == PAN_OFF) {
+    if (gWess_pan_status == PAN_OFF) {
         const uint16_t spuVol = (int16_t) triggerVol * 64;
         spuVoiceAttr.volume.left = spuVol;
         spuVoiceAttr.volume.right = spuVol;
@@ -183,7 +183,7 @@ void TriggerPSXVoice(const voice_status& voiceStat, [[maybe_unused]] const uint8
         const int16_t spuVolL = (int16_t)(((int32_t) triggerVol * 128 * (128 - triggerPan)) / 128);
         const int16_t spuVolR = (int16_t)(((int32_t) triggerVol * 128 * (triggerPan + 1  )) / 128);
 
-        if (*gWess_pan_status == PAN_ON) {
+        if (gWess_pan_status == PAN_ON) {
             spuVoiceAttr.volume.left = spuVolL;
             spuVoiceAttr.volume.right = spuVolR;
         } else {
@@ -445,7 +445,7 @@ void PSX_TrkMute(track_status& trackStat) noexcept {
             continue;
         
         // If the voice is not being killed, is a music voice and we are recording voice state then save for later un-pause
-        if (gpWess_savedVoices->get() && (!voiceStat.release) && (trackStat.sound_class == MUSIC_CLASS)) {
+        if (gpWess_savedVoices && (!voiceStat.release) && (trackStat.sound_class == MUSIC_CLASS)) {
             sequence_status& seqStat = gpWess_drv_sequenceStats->get()[trackStat.seqstat_idx];
 
             add_music_mute_note(
@@ -595,7 +595,7 @@ void PSX_VolumeMod(track_status& trackStat) noexcept {
         // Figure out the current pan amount (0-127)
         int16_t currentPan;
 
-        if (*gWess_pan_status == PAN_OFF) {
+        if (gWess_pan_status == PAN_OFF) {
             currentPan = WESS_PAN_CENTER;
         } else {
             // Note: deduct 'WESS_PAN_CENTER' since panning should be centered when both these settings are at the center
@@ -610,15 +610,15 @@ void PSX_VolumeMod(track_status& trackStat) noexcept {
         updatedVol *= trackStat.volume_cntrl;
             
         if (trackStat.sound_class == SNDFX_CLASS) {
-            updatedVol *= (*gWess_master_sfx_volume);
+            updatedVol *= gWess_master_sfx_volume;
         } else {
-            updatedVol *= (*gWess_master_mus_volume);
+            updatedVol *= gWess_master_mus_volume;
         }
 
         updatedVol >>= 21;
 
         // Figure out the left/right volume using the computed volume and pan
-        if (*gWess_pan_status == PAN_OFF) {
+        if (gWess_pan_status == PAN_OFF) {
             const uint16_t spuVol = (int16_t) updatedVol * 64;
             spuVoiceAttr.volume.left = spuVol;
             spuVoiceAttr.volume.right = spuVol;
@@ -626,7 +626,7 @@ void PSX_VolumeMod(track_status& trackStat) noexcept {
             const int16_t spuVolL = (int16_t)(((int32_t) updatedVol * 128 * (128 - currentPan)) / 128);
             const int16_t spuVolR = (int16_t)(((int32_t) updatedVol * 128 * (currentPan + 1  )) / 128);
 
-            if (*gWess_pan_status == PAN_ON) {
+            if (gWess_pan_status == PAN_ON) {
                 spuVoiceAttr.volume.left = spuVolL;
                 spuVoiceAttr.volume.right = spuVolR;
             } else {
@@ -664,7 +664,7 @@ void PSX_PanMod(track_status& trackStat) noexcept {
     trackStat.pan_cntrl = trackStat.pcur_cmd[1];
 
     // If panning is disabled then there is nothing further to do
-    if (*gWess_pan_status == PAN_OFF)
+    if (gWess_pan_status == PAN_OFF)
         return;
 
     // Update the pan for all active voices used by the track. If there are no active voices then we can stop here:
@@ -691,9 +691,9 @@ void PSX_PanMod(track_status& trackStat) noexcept {
         currentVol *= trackStat.volume_cntrl;
 
         if (trackStat.sound_class == SNDFX_CLASS) {
-            currentVol *= (*gWess_master_sfx_volume);
+            currentVol *= gWess_master_sfx_volume;
         } else {
-            currentVol *= (*gWess_master_mus_volume);
+            currentVol *= gWess_master_mus_volume;
         }
 
         currentVol >>= 21;
@@ -702,7 +702,7 @@ void PSX_PanMod(track_status& trackStat) noexcept {
         const int16_t spuVolL = (int16_t)(((int32_t) currentVol * 128 * (128 - updatedPan)) / 128);
         const int16_t spuVolR = (int16_t)(((int32_t) currentVol * 128 * (updatedPan + 1  )) / 128);
 
-        if (*gWess_pan_status == PAN_ON) {
+        if (gWess_pan_status == PAN_ON) {
             spuVoiceAttr.volume.left = spuVolL;
             spuVoiceAttr.volume.right = spuVolR;
         } else {

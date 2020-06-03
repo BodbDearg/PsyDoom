@@ -12,14 +12,14 @@
 // Return the master volume for sound effects
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t wess_master_sfx_volume_get() noexcept {
-    return (Is_Module_Loaded()) ? *gWess_master_sfx_volume : 0;
+    return (Is_Module_Loaded()) ? gWess_master_sfx_volume : 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Return the master volume for music
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t wess_master_mus_volume_get() noexcept {
-    return (Is_Module_Loaded()) ? *gWess_master_mus_volume : 0;
+    return (Is_Module_Loaded()) ? gWess_master_mus_volume : 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ uint8_t wess_master_mus_volume_get() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void wess_master_sfx_vol_set(const uint8_t vol) noexcept {
     if (Is_Module_Loaded()) {
-        *gWess_master_sfx_volume = vol;
+        gWess_master_sfx_volume = vol;
     }
 }
 
@@ -52,7 +52,7 @@ void wess_master_mus_vol_set(const uint8_t musicVol) noexcept {
     *gbWess_SeqOn = false;
 
     // Update the master volume global
-    *gWess_master_mus_volume = musicVol;
+    gWess_master_mus_volume = musicVol;
 
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat->get();
@@ -118,12 +118,12 @@ void wess_master_mus_vol_set(const uint8_t musicVol) noexcept {
 // Return whether panning is enabled
 //------------------------------------------------------------------------------------------------------------------------------------------
 PanMode wess_pan_mode_get() noexcept {
-    return *gWess_pan_status;
+    return gWess_pan_status;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set whether panning is enabled
 //------------------------------------------------------------------------------------------------------------------------------------------
 void wess_pan_mode_set(const PanMode mode) noexcept {
-    *gWess_pan_status = mode;
+    gWess_pan_status = mode;
 }
