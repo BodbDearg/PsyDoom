@@ -79,8 +79,8 @@ struct SavedVoiceList {
 
 static_assert(sizeof(SavedVoiceList) == 388);
 
-extern const VmPtr<bool32_t>                            gbWess_module_loaded;
-extern const VmPtr<VmPtr<master_status_structure>>      gpWess_pm_stat;
+extern bool                         gbWess_module_loaded;
+extern master_status_structure*     gpWess_pm_stat;
 
 void zeroset(void* const pDest, const uint32_t numBytes) noexcept;
 void wess_install_error_handler(int32_t (* const pErrorFunc)(int32_t, int32_t), const int32_t module) noexcept;

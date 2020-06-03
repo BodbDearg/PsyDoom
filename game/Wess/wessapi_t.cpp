@@ -131,7 +131,7 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
 // Trigger the specified sequence number and assign it the given type number
 //------------------------------------------------------------------------------------------------------------------------------------------
 void wess_seq_trigger_type(const int32_t seqIdx, const uint32_t seqType) noexcept {
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
     wess_seq_structrig(mstat.pmodule->psequences[seqIdx], seqIdx, seqType, false, nullptr);
 }
 
@@ -139,7 +139,7 @@ void wess_seq_trigger_type(const int32_t seqIdx, const uint32_t seqType) noexcep
 // Trigger the specified sequence number with custom play attributes and assign it the given type number
 //------------------------------------------------------------------------------------------------------------------------------------------
 void wess_seq_trigger_type_special(const int32_t seqIdx, const uint32_t seqType, const TriggerPlayAttr* const pPlayAttribs) noexcept {
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
     wess_seq_structrig(mstat.pmodule->psequences[seqIdx], seqIdx, seqType, false, pPlayAttribs);
 }
 
@@ -156,7 +156,7 @@ void wess_seq_update_type_special(const uint32_t seqType, const TriggerPlayAttr*
     *gbWess_SeqOn = false;
 
     // Grab some basic info from the master status
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
 
     const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
     const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
@@ -221,7 +221,7 @@ void wess_seq_stoptype(const uint32_t seqType) noexcept {
     *gbWess_SeqOn = false;
 
     // Grab some basic info from the master status
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
 
     const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
     const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;

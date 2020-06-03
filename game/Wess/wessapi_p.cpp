@@ -48,7 +48,7 @@ void wess_seq_pause(const int32_t seqIdx, const bool bMute) noexcept {
     *gbWess_SeqOn = false;
 
     // Grab some basic info from the master status
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
 
     const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
     const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
@@ -116,7 +116,7 @@ void wess_seq_restart(const int32_t seqIdx) noexcept {
     *gbWess_SeqOn = false;
 
     // Grab some basic info from the master status
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
 
     const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
     const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
@@ -185,7 +185,7 @@ void wess_seq_pauseall(const bool bMute, SavedVoiceList* const pSavedVoices) noe
     }
 
     // Grab some basic info from the master status
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
 
     const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
     const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
@@ -257,7 +257,7 @@ void wess_seq_restartall(SavedVoiceList* const pSavedVoices) noexcept {
     *gbWess_SeqOn = false;
 
     // Grab some basic info from the master status
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
 
     const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
     const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;

@@ -55,7 +55,7 @@ void wess_master_mus_vol_set(const uint8_t musicVol) noexcept {
     gWess_master_mus_volume = musicVol;
 
     // Grab some basic info from the master status
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
 
     const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
     const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;

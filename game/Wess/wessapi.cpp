@@ -17,21 +17,21 @@ static constexpr uint32_t WESS_MODULE_VER = 1;
 // Minimum tracks in a sequence
 static constexpr uint8_t MINIMUM_TRACK_INDXS_FOR_A_SEQUENCE = 4;
 
-const VmPtr<bool32_t>                           gbWess_module_loaded(0x800758F8);       // If true then a WMD file (module) has been loaded
-const VmPtr<VmPtr<master_status_structure>>     gpWess_pm_stat(0x800A8758);             // Master status structure for the entire sequencer system
+bool                        gbWess_module_loaded;       // If true then a WMD file (module) has been loaded
+master_status_structure*    gpWess_pm_stat;             // Master status structure for the entire sequencer system
 
-static const VmPtr<bool32_t>            gbWess_sysinit(0x800758F4);             // Set to true once the WESS API has been initialized
-static const VmPtr<bool32_t>            gbWess_early_exit(0x800758FC);          // Unused flag in PSX DOOM, I think to request the API to exit?
-static const VmPtr<int32_t>             gWess_num_snd_drv(0x800758E4);          // The number of sound drivers available
-static const VmPtr<VmPtr<uint8_t>>      gpWess_wmd_mem(0x8007590C);             // The memory block that the module and all sequences are loaded into. Contains master status struct and it's children.
-static const VmPtr<bool32_t>            gbWess_wmd_mem_is_mine(0x80075908);     // If true then the WESS API allocated the WMD memory block and thus is responsible for its cleanup
-static const VmPtr<VmPtr<uint8_t>>      gpWess_wmd_end(0x80075910);             // Current end of the used portion of the WMD memory block
-static const VmPtr<int32_t>             gWess_wmd_size(0x80075914);             // Size of the WMD memory block allocated, or upper limit on sequencer memory use
-static const VmPtr<int32_t>             gWess_mem_limit(0x80075904);            // Size of the WMD memory block that the WESS API was INTENDING to allocate (alloc may have failed)
-static const VmPtr<int32_t>             gWess_end_seq_num(0x80075900);          // Maximum sequence number (exclusive) in the loaded module file
-static const VmPtr<VmPtr<PsxCd_File>>   gpWess_fp_wmd_file(0x800758F0);         // File object for the module (.WMD) file on-disc
-static const VmPtr<VmPtr<uint8_t>>      gpWess_wmdFileBytesBeg(0x800758EC);     // Pointer to the start of a buffer containing the serialized .WMD file, as it was read from the disc
-static const VmPtr<VmPtr<uint8_t>>      gpWess_curWmdFileBytes(0x800758E8);     // Location in the buffer containing the serialized .WMD file to read from next
+static bool             gbWess_sysinit;             // Set to true once the WESS API has been initialized
+static bool             gbWess_early_exit;          // Unused flag in PSX DOOM, I think to request the API to exit?
+static int32_t          gWess_num_snd_drv;          // The number of sound drivers available
+static uint8_t*         gpWess_wmd_mem;             // The memory block that the module and all sequences are loaded into. Contains master status struct and it's children.
+static bool             gbWess_wmd_mem_is_mine;     // If true then the WESS API allocated the WMD memory block and thus is responsible for its cleanup
+static uint8_t*         gpWess_wmd_end;             // Current end of the used portion of the WMD memory block
+static int32_t          gWess_wmd_size;             // Size of the WMD memory block allocated, or upper limit on sequencer memory use
+static int32_t          gWess_mem_limit;            // Size of the WMD memory block that the WESS API was INTENDING to allocate (alloc may have failed)
+static int32_t          gWess_end_seq_num;          // Maximum sequence number (exclusive) in the loaded module file
+static PsxCd_File*      gpWess_fp_wmd_file;         // File object for the module (.WMD) file on-disc
+static const uint8_t*   gpWess_wmdFileBytesBeg;     // Pointer to the start of a buffer containing the serialized .WMD file, as it was read from the disc
+static const uint8_t*   gpWess_curWmdFileBytes;     // Location in the buffer containing the serialized .WMD file to read from next
 
 // Unused error handling stuff.
 // May have only been used in debug builds.
@@ -62,29 +62,29 @@ void wess_install_error_handler(int32_t (* const pErrorFunc)(int32_t, int32_t), 
 // Return a pointer to the master status structure for the loaded module
 //------------------------------------------------------------------------------------------------------------------------------------------
 master_status_structure* wess_get_master_status() noexcept {
-    return gpWess_pm_stat->get();
+    return gpWess_pm_stat;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if the WESS API has been initialized
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool Is_System_Active() noexcept {
-    return *gbWess_sysinit;
+    return gbWess_sysinit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if a module file (.WMD) file has been loaded
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool Is_Module_Loaded() noexcept {
-    return *gbWess_module_loaded;
+    return gbWess_module_loaded;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Tells if the given sequence index is valid and loaded
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool Is_Seq_Num_Valid(const int32_t seqIdx) noexcept {
-    if ((seqIdx >= 0) && (seqIdx < *gWess_end_seq_num)) {
-        return ((*gpWess_pm_stat)->pmodule->psequences[seqIdx].ptracks != nullptr);
+    if ((seqIdx >= 0) && (seqIdx < gWess_end_seq_num)) {
+        return (gpWess_pm_stat->pmodule->psequences[seqIdx].ptracks != nullptr);
     }
 
     return false;
@@ -95,8 +95,8 @@ bool Is_Seq_Num_Valid(const int32_t seqIdx) noexcept {
 // I think it is to request the WESS API to finish up early, possibly a leftover from PC code?
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Register_Early_Exit() noexcept {
-    if (!*gbWess_early_exit) {
-        *gbWess_early_exit = true;
+    if (!gbWess_early_exit) {
+        gbWess_early_exit = true;
     }
 }
 
@@ -121,7 +121,7 @@ void wess_restore_handler() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool wess_init() noexcept {
     // If we don't need to initialize then don't...
-    if (*gbWess_sysinit)
+    if (gbWess_sysinit)
         return false;
 
     // Ensure the sequencer is initially disabled
@@ -133,7 +133,7 @@ bool wess_init() noexcept {
     }
     
     wess_low_level_init();
-    *gbWess_sysinit = true;
+    gbWess_sysinit = true;
     return true;
 }
 
@@ -142,18 +142,18 @@ bool wess_init() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void wess_exit(bool bForceRestoreTimerHandler) noexcept {
     // Must be initialized to shut down
-    if ((!Is_System_Active()) || (!*gbWess_sysinit))
+    if ((!Is_System_Active()) || (!gbWess_sysinit))
         return;
 
     // Unload the current module and do hardware specific shutdown
-    if (*gbWess_module_loaded) {
+    if (gbWess_module_loaded) {
         wess_unload_module();
     }
 
     wess_low_level_exit();
 
     // Mark the API as not initialized and restore the previous timer handler if appropriate
-    *gbWess_sysinit = false;
+    gbWess_sysinit = false;
 
     if (bForceRestoreTimerHandler || *gbWess_WessTimerActive) {
         wess_restore_handler();
@@ -164,27 +164,27 @@ void wess_exit(bool bForceRestoreTimerHandler) noexcept {
 // Return a pointer to the start of memory used by the loaded .WMD (Williams module) file and for loaded sequences
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t* wess_get_wmd_start() noexcept {
-    return gpWess_wmd_mem->get();
+    return gpWess_wmd_mem;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Return a pointer to the end of occupied memory used by the loaded .WMD (Williams module) file and for loaded sequences
 //------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t* wess_get_wmd_end() noexcept {
-    return gpWess_wmd_end->get();
+    return gpWess_wmd_end;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Frees all memory used by the currently loaded module, if the memory was allocated by the WESS API
 //------------------------------------------------------------------------------------------------------------------------------------------
 void free_mem_if_mine() noexcept {
-    if (*gbWess_wmd_mem_is_mine) {
-        if (gpWess_wmd_mem->get()) {
-            wess_free(gpWess_wmd_mem->get());
-            *gpWess_wmd_mem = nullptr;
+    if (gbWess_wmd_mem_is_mine) {
+        if (gpWess_wmd_mem) {
+            wess_free(gpWess_wmd_mem);
+            gpWess_wmd_mem = nullptr;
         }
 
-        *gbWess_wmd_mem_is_mine = false;
+        gbWess_wmd_mem_is_mine = false;
     }
 }
 
@@ -194,18 +194,18 @@ void free_mem_if_mine() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void wess_unload_module() noexcept {
     // If nothing is loaded then there is nothing to do
-    if (!*gbWess_module_loaded)
+    if (!gbWess_module_loaded)
         return;
 
     // Shutdown the sequencer engine
     wess_seq_stopall();
     *gbWess_SeqOn = false;
 
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
     gWess_CmdFuncArr[NoSound_ID][DriverExit](mstat);
 
     // Shutdown loaded sound drivers for each patch group
-    const int32_t numPatchGroups = (*gpWess_pm_stat)->num_patch_groups;
+    const int32_t numPatchGroups = mstat.num_patch_groups;
 
     for (int32_t patchGroupIdx = 0; patchGroupIdx < numPatchGroups; ++patchGroupIdx) {
         patch_group_data& patchGroup = mstat.ppatch_groups[patchGroupIdx];
@@ -223,7 +223,7 @@ void wess_unload_module() noexcept {
 
     // Free any module memory allocated and mark unloaded
     free_mem_if_mine();
-    *gbWess_module_loaded = false;
+    gbWess_module_loaded = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -246,14 +246,14 @@ static void wess_memcpy(void* const pDst, const void* const pSrc, const uint32_t
 static bool conditional_read(const uint32_t readFlag, uint8_t*& pDstMemPtr, const int32_t readSize) noexcept {
     // Either skip over the memory block or read it
     if (readFlag) {
-        wess_memcpy(pDstMemPtr, gpWess_curWmdFileBytes->get(), readSize);
+        wess_memcpy(pDstMemPtr, gpWess_curWmdFileBytes, readSize);
         
         pDstMemPtr += readSize;
         pDstMemPtr += (uintptr_t) pDstMemPtr & 1;       // 32-bit align the pointer after the read...
         pDstMemPtr += (uintptr_t) pDstMemPtr & 2;       // 32-bit align the pointer after the read...
     }
 
-    *gpWess_curWmdFileBytes += readSize;
+    gpWess_curWmdFileBytes += readSize;
     return true;
 }
 
@@ -273,46 +273,46 @@ int32_t wess_load_module(
     const int32_t* const* const pSettingTagLists
 ) noexcept {
     // Save the maximum memory limit and unload the current module (if loaded)
-    *gWess_mem_limit = memoryAllowance;
+    gWess_mem_limit = memoryAllowance;
     
-    if (*gbWess_module_loaded) {
+    if (gbWess_module_loaded) {
         wess_unload_module();
     }
 
     // Figure out how many sound drivers are available (and thus how many patch groups to allocate)
     const int32_t numPatchGroups = get_num_Wess_Sound_Drivers(pSettingTagLists);
-    *gWess_num_snd_drv = numPatchGroups;
+    gWess_num_snd_drv = numPatchGroups;
     
     // Allocate the required amount of memory or just save what we were given (if given memory)
     if (pDestMem) {
-        *gbWess_wmd_mem_is_mine = false;
-        *gpWess_wmd_mem = ptrToVmAddr(pDestMem);
+        gbWess_wmd_mem_is_mine = false;
+        gpWess_wmd_mem = (uint8_t*) pDestMem;
     } else {
-        *gbWess_wmd_mem_is_mine = true;
-        *gpWess_wmd_mem = ptrToVmAddr(wess_malloc(memoryAllowance));
+        gbWess_wmd_mem_is_mine = true;
+        gpWess_wmd_mem = (uint8_t*) wess_malloc(memoryAllowance);
 
         // If malloc failed then we can't load the module
-        if (!*gpWess_wmd_mem) {
-            return *gbWess_module_loaded;
+        if (!gpWess_wmd_mem) {
+            return gbWess_module_loaded;
         }
     }
     
     // Zero initialize the loaded module memory
-    *gWess_wmd_size = memoryAllowance;
-    zeroset(gpWess_wmd_mem->get(), memoryAllowance);
+    gWess_wmd_size = memoryAllowance;
+    zeroset(gpWess_wmd_mem, memoryAllowance);
 
     // No sequences initially
-    *gWess_end_seq_num = 0;
+    gWess_end_seq_num = 0;
     
     // If the WESS API has not been initialized or an input WMD file is not supplied then we can't load the module
     if ((!Is_System_Active()) || (!pWmdFile)) {
         free_mem_if_mine();
-        return *gbWess_module_loaded;
+        return gbWess_module_loaded;
     }
    
     // Input file pointers
-    *gpWess_curWmdFileBytes = ptrToVmAddr(pWmdFile);
-    *gpWess_wmdFileBytesBeg = ptrToVmAddr(pWmdFile);
+    gpWess_curWmdFileBytes = (const uint8_t*) pWmdFile;
+    gpWess_wmdFileBytesBeg = (const uint8_t*) pWmdFile;
 
     // Destination pointer to allocate from in the loaded WMD memory block.
     // The code below allocates from this chunk linearly.
@@ -321,10 +321,10 @@ int32_t wess_load_module(
     // Alloc the root master status structure
     master_status_structure& mstat = *(master_status_structure*) pCurDestBytes;
     pCurDestBytes += sizeof(master_status_structure);
-    *gpWess_pm_stat = &mstat;
+    gpWess_pm_stat = &mstat;
 
     // Master status: setting up various fields
-    mstat.pmodule_file = *gpWess_fp_wmd_file;
+    mstat.pmodule_file = gpWess_fp_wmd_file;
     mstat.pabstime_ms = gWess_Millicount.get();
     mstat.num_patch_groups = (uint8_t) numPatchGroups;
 
@@ -336,8 +336,8 @@ int32_t wess_load_module(
     // Read the module header and verify it has the expected id and version.
     // If this operation fails then free any memory allocated (if owned):
     module_header& moduleHdr = module.hdr;
-    wess_memcpy(&moduleHdr, gpWess_curWmdFileBytes->get(), sizeof(module_header));
-    *gpWess_curWmdFileBytes += sizeof(module_header);
+    wess_memcpy(&moduleHdr, gpWess_curWmdFileBytes, sizeof(module_header));
+    gpWess_curWmdFileBytes += sizeof(module_header);
 
     if ((moduleHdr.module_id != WESS_MODULE_ID) || (moduleHdr.module_version != WESS_MODULE_VER)) {
         free_mem_if_mine();
@@ -406,8 +406,8 @@ int32_t wess_load_module(
         // Read the patch group header.
         // Note: in the original code this data structure was a global, but I've made it a local here...
         patch_group_header patchGroupHdr;
-        wess_memcpy(&patchGroupHdr, gpWess_curWmdFileBytes->get(), sizeof(patch_group_header));
-        *gpWess_curWmdFileBytes += sizeof(patch_group_header);
+        wess_memcpy(&patchGroupHdr, gpWess_curWmdFileBytes, sizeof(patch_group_header));
+        gpWess_curWmdFileBytes += sizeof(patch_group_header);
 
         // Try to match against one of the sound drivers loaded
         for (int32_t patchGroupIdx = 0; patchGroupIdx < mstat.num_patch_groups; ++patchGroupIdx) {
@@ -420,7 +420,7 @@ int32_t wess_load_module(
             // Save the header, pointer to patch data and offset, and increment the total voice count
             patchGroup.hdr = patchGroupHdr;
             patchGroup.pdata = pCurDestBytes;
-            patchGroup.modfile_offset = (int32_t)(gpWess_curWmdFileBytes->get() - gpWess_wmdFileBytesBeg->get());
+            patchGroup.modfile_offset = (int32_t)(gpWess_curWmdFileBytes - gpWess_wmdFileBytesBeg);
 
             mstat.max_voices += patchGroupHdr.hw_voice_limit;
 
@@ -551,10 +551,10 @@ int32_t wess_load_module(
     for (int32_t seqIdx = 0; seqIdx < module.hdr.num_sequences; ++seqIdx) {
         // Read the sequence header, save the sequence position in the file and move past it
         sequence_data& sequence = module.psequences[seqIdx];
-        wess_memcpy(&sequence.hdr, gpWess_curWmdFileBytes->get(), sizeof(sequence_header));
+        wess_memcpy(&sequence.hdr, gpWess_curWmdFileBytes, sizeof(sequence_header));
 
-        sequence.modfile_offset = (uint32_t)(gpWess_curWmdFileBytes->get() - gpWess_wmdFileBytesBeg->get());
-        *gpWess_curWmdFileBytes += sizeof(sequence_header);
+        sequence.modfile_offset = (uint32_t)(gpWess_curWmdFileBytes - gpWess_wmdFileBytesBeg);
+        gpWess_curWmdFileBytes += sizeof(sequence_header);
 
         // Run through all tracks in the sequence and figure out the stats (size etc.) for what will be loaded
         uint8_t numTracksToload = 0;
@@ -564,8 +564,8 @@ int32_t wess_load_module(
             // Read the track header and move on in the file.
             // Note: in the original code this data structure was a global, but I've made it a local here...
             track_header trackHdr;
-            wess_memcpy(&trackHdr, gpWess_curWmdFileBytes->get(), sizeof(track_header));
-            *gpWess_curWmdFileBytes += sizeof(track_header);
+            wess_memcpy(&trackHdr, gpWess_curWmdFileBytes, sizeof(track_header));
+            gpWess_curWmdFileBytes += sizeof(track_header);
 
             // Decide whether the track is to be loaded for this sound driver
             bool bLoadTrack = false;
@@ -631,8 +631,8 @@ int32_t wess_load_module(
             }
 
             // Move past this track in the WMD file
-            *gpWess_curWmdFileBytes += (uint32_t) trackHdr.num_labels * sizeof(uint32_t);
-            *gpWess_curWmdFileBytes += trackHdr.cmd_stream_size;
+            gpWess_curWmdFileBytes += (uint32_t) trackHdr.num_labels * sizeof(uint32_t);
+            gpWess_curWmdFileBytes += trackHdr.cmd_stream_size;
         }
         
         // Incorporate track count into the global max
@@ -725,20 +725,20 @@ int32_t wess_load_module(
     }
 
     // The module is now loaded and the sequencer is enabled
-    *gbWess_module_loaded = true;
+    gbWess_module_loaded = true;
     *gbWess_SeqOn = true;
 
     // Save the end pointer for the loaded module and ensure 32-bit aligned
     pCurDestBytes += (uintptr_t) pCurDestBytes & 1;
     pCurDestBytes += (uintptr_t) pCurDestBytes & 2;
-    *gpWess_wmd_end = pCurDestBytes;
+    gpWess_wmd_end = pCurDestBytes;
 
     // This is maximum sequence number that can be triggered
-    *gWess_end_seq_num = module.hdr.num_sequences;
+    gWess_end_seq_num = module.hdr.num_sequences;
 
     // PC-PSX: sanity check we haven't overflowed module memory
     #if PC_PSX_DOOM_MODS
-        ASSERT(gpWess_wmd_end->get() - gpWess_wmd_mem->get() <= *gWess_mem_limit);
+        ASSERT(gpWess_wmd_end - gpWess_wmd_mem <= gWess_mem_limit);
     #endif
     
     // Load was a success!
@@ -864,7 +864,7 @@ int32_t wess_seq_structrig(
     // Disable sequencer ticking temporarily (to avoid hardware timer interrupts) while we setup all this
     *gbWess_SeqOn = false;
 
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
     module_data& module = *mstat.pmodule;
 
     const uint8_t maxActiveSeqs = module.hdr.max_active_sequences;
@@ -969,7 +969,7 @@ void wess_seq_trigger(const int32_t seqIdx) noexcept {
 // The sequence is assigned the type number '0'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void wess_seq_trigger_special(const int32_t seqIdx, const TriggerPlayAttr* const pPlayAttribs) noexcept {
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
     wess_seq_structrig(mstat.pmodule->psequences[seqIdx], seqIdx, 0, false, pPlayAttribs);
 }
 
@@ -982,7 +982,7 @@ SequenceStatus wess_seq_status(const int32_t seqIdx) noexcept {
         return SEQUENCE_INVALID;
     
     // Try to find the specified sequence number among all the sequences
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
     const int32_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
 
     for (uint8_t statIdx = 0; statIdx < maxSeqs; ++statIdx) {
@@ -1019,7 +1019,7 @@ void wess_seq_stop(const int32_t seqIdx) noexcept {
     *gbWess_SeqOn = false;
     
     // Run through all of the sequences searching for the one we are interested in
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
 
     const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
     const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
@@ -1080,7 +1080,7 @@ void wess_seq_stopall() noexcept {
     *gbWess_SeqOn = false;
 
     // Grab some basic info from the master status
-    master_status_structure& mstat = *gpWess_pm_stat->get();
+    master_status_structure& mstat = *gpWess_pm_stat;
 
     const uint8_t maxSeqs = mstat.pmodule->hdr.max_active_sequences;
     const uint32_t maxTracksPerSeq = mstat.max_tracks_per_seq;
