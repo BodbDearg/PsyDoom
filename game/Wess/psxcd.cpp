@@ -5,7 +5,6 @@
 
 #include "PcPsx/ModMgr.h"
 #include "PcPsx/ProgArgs.h"
-#include "PcPsx/Types.h"
 #include "PcPsx/Utils.h"
 #include "psxspu.h"
 #include "PsxVm/PsxVm.h"
@@ -65,40 +64,35 @@ static int32_t          gPSXCD_cur_cmd;                 // Async read: index of 
 static PsxCd_Command    gPSXCD_psxcd_cmds[5];           // Async read: commands issued to the cd
 
 // Audio mode stuff
-static const VmPtr<CdlLOC>      gPSXCD_lastloc(0x80077DF4);             // The last valid intended cd-audio disc seek location
-static const VmPtr<CdlLOC>      gPSXCD_newloc(0x80077DF0);              // Last known location for cd audio playback, this gets continously saved to so we can restore if we want to pause
-static const VmPtr<CdlLOC>      gPSXCD_beginloc(0x80077DF8);            // Start sector of the current audio track
-static const VmPtr<CdlLOC>      gPSXCD_cdloc(0x80077DE8);               // Temporary CdlLOC variable used in various places
-static const VmPtr<int32_t>     gPSXCD_playvol(0x80077DCC);             // Specified playback volume for cd audio
-static const VmPtr<int32_t>     gPSXCD_loopvol(0x80077DDC);             // Volume to playback cd audio when looping around again
-static const VmPtr<CdlATV>      gPSXCD_cdatv(0x80077DEC);               // The volume mixing levels of cd audio sent to the SPU for output
-static const VmPtr<int32_t>     gPSXCD_playfadeuptime(0x80077DD0);      // If > 0 then fade up cd audio volume in this amount of time (MS) when beginning playback
-static const VmPtr<int32_t>     gPSXCD_loopfadeuptime(0x80077DE4);      // Same as the regular 'fade up time', but used when we loop
-static const VmPtr<int32_t>     gPSXCD_looptrack(0x80077DD4);           // What track to loop after the current one ends
-static const VmPtr<int32_t>     gPSXCD_loopsectoroffset(0x80077DE0);    // The sector offset to begin the loop track at
+static CdlLOC   gPSXCD_lastloc;             // The last valid intended cd-audio disc seek location
+static CdlLOC   gPSXCD_newloc;              // Last known location for cd audio playback, this gets continously saved to so we can restore if we want to pause
+static CdlLOC   gPSXCD_beginloc;            // Start sector of the current audio track
+static CdlLOC   gPSXCD_cdloc;               // Temporary CdlLOC variable used in various places
+static int32_t  gPSXCD_playvol;             // Specified playback volume for cd audio
+static int32_t  gPSXCD_loopvol;             // Volume to playback cd audio when looping around again
+static CdlATV   gPSXCD_cdatv;               // The volume mixing levels of cd audio sent to the SPU for output
+static int32_t  gPSXCD_playfadeuptime;      // If > 0 then fade up cd audio volume in this amount of time (MS) when beginning playback
+static int32_t  gPSXCD_loopfadeuptime;      // Same as the regular 'fade up time', but used when we loop
+static int32_t  gPSXCD_looptrack;           // What track to loop after the current one ends
+static int32_t  gPSXCD_loopsectoroffset;    // The sector offset to begin the loop track at
 
 // Number of sectors read in data and audio mode respectively
-static const VmPtr<int32_t>     gPSXCD_readcount(0x80077D94);           // Number of data sectors read
-static const VmPtr<int32_t>     gPSXCD_playcount(0x80077D98);           // Number of audio sectors read
+static int32_t  gPSXCD_readcount;       // Number of data sectors read
+static int32_t  gPSXCD_playcount;       // Number of audio sectors read
 
 // CD commands issued and results
-static const VmPtr<CdlCmd>      gPSXCD_cdl_com(0x80077D92);             // The last command issued to the cdrom via 'LIBCD_CdControl'
-static const VmPtr<CdlCmd>      gPSXCD_cdl_err_com(0x80077D93);         // The last command issued to the cdrom via 'LIBCD_CdControl' which was an error
-
-static const VmPtr<uint8_t[8]>  gPSXCD_cd_param(0x80077D9C);            // Parameters for the last command issued to the cdrom via 'LIBCD_CdControl' (if there were parameters)
-
-static const VmPtr<int32_t>     gPSXCD_cdl_intr(0x80077D84);            // Int result of the last read command issued to the cdrom
-static const VmPtr<int32_t>     gPSXCD_sync_intr(0x80077DA4);           // Int result of the last 'LIBCD_CdSync' call when waiting until command completion
-static const VmPtr<int32_t>     gPSXCD_check_intr(0x80077DB0);          // Int result of the last 'LIBCD_CdSync' call when querying the status of something
-static const VmPtr<int32_t>     gPSXCD_cdl_err_intr(0x80077D88);        // Int result of the last 'LIBCD_CdSync' call with an error
-
-static const VmPtr<uint8_t[8]>  gPSXCD_sync_result(0x80077DA8);         // Result bytes for the last 'LIBCD_CdSync' call when waiting until command completion
-static const VmPtr<uint8_t[8]>  gPSXCD_check_result(0x80077DB4);        // Result bytes for the last 'LIBCD_CdSync' call when querying the status of something
-
-static const VmPtr<int32_t>     gPSXCD_cdl_err_count(0x80077D8C);       // A count of how many cd errors that occurred
-
-static const VmPtr<uint8_t>     gPSXCD_cdl_stat(0x80077D90);            // The first result byte (status byte) for the last read command
-static const VmPtr<uint8_t>     gPSXCD_cdl_err_stat(0x80077D91);        // The first result byte (status byte) for when the last error which occurred
+static CdlCmd   gPSXCD_cdl_com = CdlPause;      // The last command issued to the cdrom via 'LIBCD_CdControl'
+static CdlCmd   gPSXCD_cdl_err_com;             // The last command issued to the cdrom via 'LIBCD_CdControl' which was an error
+static uint8_t  gPSXCD_cd_param[8];             // Parameters for the last command issued to the cdrom via 'LIBCD_CdControl' (if there were parameters)
+static int32_t  gPSXCD_cdl_intr;                // Int result of the last read command issued to the cdrom
+static int32_t  gPSXCD_sync_intr;               // Int result of the last 'LIBCD_CdSync' call when waiting until command completion
+static int32_t  gPSXCD_check_intr;              // Int result of the last 'LIBCD_CdSync' call when querying the status of something
+static int32_t  gPSXCD_cdl_err_intr;            // Int result of the last 'LIBCD_CdSync' call with an error
+static uint8_t  gPSXCD_sync_result[8];          // Result bytes for the last 'LIBCD_CdSync' call when waiting until command completion
+static uint8_t  gPSXCD_check_result[8];         // Result bytes for the last 'LIBCD_CdSync' call when querying the status of something
+static int32_t  gPSXCD_cdl_err_count;           // A count of how many cd errors that occurred
+static uint8_t  gPSXCD_cdl_stat;                // The first result byte (status byte) for the last read command
+static uint8_t  gPSXCD_cdl_err_stat;            // The first result byte (status byte) for when the last error which occurred
 
 // Previous 'CdReadyCallback' and 'CDSyncCallback' functions used by LIBCD prior to initializing this module.
 // Used for restoring once we shutdown this module.
@@ -131,18 +125,18 @@ void psxcd_sync() noexcept {
         const uint32_t timeoutMs = *gWess_Millicount + 8000;
 
         while (*gWess_Millicount < timeoutMs) {
-            *gPSXCD_sync_intr = LIBCD_CdSync(1, gPSXCD_sync_result.get());
+            gPSXCD_sync_intr = LIBCD_CdSync(1, gPSXCD_sync_result);
 
-            if (*gPSXCD_sync_intr == CdlDiskError) {
+            if (gPSXCD_sync_intr == CdlDiskError) {
                 // Cancel the current command if there was a problem and try again
                 LIBCD_CdFlush();
-                *gPSXCD_cdl_err_count += 1;
-                *gPSXCD_cdl_err_intr = *gPSXCD_sync_intr + 80;   // '+': Just to make the codes more unique, so their source is known
-                *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
-                *gPSXCD_cdl_err_stat = gPSXCD_sync_result[0];
+                gPSXCD_cdl_err_count++;
+                gPSXCD_cdl_err_intr = gPSXCD_sync_intr + 80;    // '+': Just to make the codes more unique, so their source is known
+                gPSXCD_cdl_err_com = gPSXCD_cdl_com;
+                gPSXCD_cdl_err_stat = gPSXCD_sync_result[0];
             }
 
-            if (*gPSXCD_sync_intr == CdlComplete)
+            if (gPSXCD_sync_intr == CdlComplete)
                 break;
         }
     #endif
@@ -162,20 +156,20 @@ bool psxcd_critical_sync() noexcept {
         const uint32_t timeoutMs = *gWess_Millicount + 8000;
 
         while (*gWess_Millicount < timeoutMs) {
-            *gPSXCD_sync_intr = LIBCD_CdSync(1, gPSXCD_sync_result.get());
+            gPSXCD_sync_intr = LIBCD_CdSync(1, gPSXCD_sync_result);
 
-            if (*gPSXCD_sync_intr == CdlDiskError) {
+            if (gPSXCD_sync_intr == CdlDiskError) {
                 // Cancel the current command if there was a problem
                 LIBCD_CdFlush();
-                *gPSXCD_cdl_err_count += 1;
-                *gPSXCD_cdl_err_intr = *gPSXCD_sync_intr + 70;      // '+': Just to make the codes more unique, so their source is known
-                *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
-                *gPSXCD_cdl_err_stat = gPSXCD_sync_result[0];
+                gPSXCD_cdl_err_count++;
+                gPSXCD_cdl_err_intr = gPSXCD_sync_intr + 70;    // '+': Just to make the codes more unique, so their source is known
+                gPSXCD_cdl_err_com = gPSXCD_cdl_com;
+                gPSXCD_cdl_err_stat = gPSXCD_sync_result[0];
 
                 return false;   // Give up if an error happens!
             }
 
-            if (*gPSXCD_sync_intr == CdlComplete)
+            if (gPSXCD_sync_intr == CdlComplete)
                 return true;
         }
 
@@ -192,7 +186,7 @@ void PSXCD_cbcomplete(const CdlSyncStatus status, const uint8_t pResult[8]) noex
 
     // Did the command complete OK?
     if (status == CdlComplete) {
-        if (*gPSXCD_cdl_com == CdlSeekP) {
+        if (gPSXCD_cdl_com == CdlSeekP) {
             // Just finished a seek
             gbPSXCD_seeking_for_play = false;
 
@@ -200,28 +194,28 @@ void PSXCD_cbcomplete(const CdlSyncStatus status, const uint8_t pResult[8]) noex
             if (gbPSXCD_playflag) {
                 psxspu_setcdmixon();
 
-                if (*gPSXCD_playfadeuptime == 0) {
-                    psxspu_set_cd_vol(*gPSXCD_playvol);
+                if (gPSXCD_playfadeuptime == 0) {
+                    psxspu_set_cd_vol(gPSXCD_playvol);
                 } else {
                     psxspu_set_cd_vol(0);
-                    psxspu_start_cd_fade(*gPSXCD_playfadeuptime, *gPSXCD_playvol);
-                    *gPSXCD_playfadeuptime = 0;
+                    psxspu_start_cd_fade(gPSXCD_playfadeuptime, gPSXCD_playvol);
+                    gPSXCD_playfadeuptime = 0;
                 }
 
                 // Begin playback of the cd audio
-                *gPSXCD_cdl_com = CdlPlay;
+                gPSXCD_cdl_com = CdlPlay;
                 LIBCD_CdControlF(CdlPlay, nullptr);
             }
-        } else if (*gPSXCD_cdl_com == CdlPause) {
+        } else if (gPSXCD_cdl_com == CdlPause) {
             // Just finished a pause
             gbPSXCD_waiting_for_pause = false;
         }
     } else {
         // An error happened - record the details
-        *gPSXCD_cdl_err_count += 1;
-        *gPSXCD_cdl_err_intr = status + 10;     // '+': Just to make the codes more unique, so their source is known
-        *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
-        *gPSXCD_cdl_err_stat = pResult[0];
+        gPSXCD_cdl_err_count++;
+        gPSXCD_cdl_err_intr = status + 10;      // '+': Just to make the codes more unique, so their source is known
+        gPSXCD_cdl_err_com = gPSXCD_cdl_com;
+        gPSXCD_cdl_err_stat = pResult[0];
     }
 }
 
@@ -234,12 +228,12 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
         return;
     
     // Save the status bits and int results for the command
-    *gPSXCD_cdl_stat = pResult[0];
-    *gPSXCD_cdl_intr = status;
+    gPSXCD_cdl_stat = pResult[0];
+    gPSXCD_cdl_intr = status;
     
-    if ((pResult[0] & CdlStatRead) && gbPSXCD_async_on && (*gPSXCD_cdl_com == CdlReadN)) {
+    if ((pResult[0] & CdlStatRead) && gbPSXCD_async_on && (gPSXCD_cdl_com == CdlReadN)) {
         // Update read stats
-        *gPSXCD_readcount += 1;
+        gPSXCD_readcount++;
         
         // Is there data ready for reading?
         if (status == CdlDataReady) {
@@ -288,7 +282,7 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
             if (gPSXCD_psxcd_cmds[gPSXCD_cur_cmd].command == PSXCD_COMMAND_END) {
                 gbPSXCD_async_on = false;
                 gbPSXCD_waiting_for_pause = true;
-                *gPSXCD_cdl_com = CdlPause;
+                gPSXCD_cdl_com = CdlPause;
                 LIBCD_CdControlF(CdlPause, nullptr);
             }
 
@@ -301,8 +295,8 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
             gbPSXCD_critical_error = true;      // This is a bad one!
         }
 
-        *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
-        *gPSXCD_cdl_err_intr = status;
+        gPSXCD_cdl_err_com = gPSXCD_cdl_com;
+        gPSXCD_cdl_err_intr = status;
     }
     else if (pResult[0] & CdlStatPlay) {
         // If we are playing cd audio and there is new data ready then record the updated cd location
@@ -310,11 +304,11 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
             // I'm not sure what the hell this flag is - I couldn't find any mention of it anywhere.
             // This bit shouldn't be set even when the encoding is BCD because second count shouldn't exceed 60?
             if ((pResult[4] & 0x80) == 0) {
-                *gPSXCD_playcount += 1;
-                gPSXCD_newloc->minute = pResult[3];
-                gPSXCD_newloc->second = pResult[4];
-                gPSXCD_newloc->sector = pResult[5];
-                gPSXCD_newloc->track = (pResult[1] >> 4) * 10 + (pResult[1] & 0x0F);    // Convert from BCD to binary
+                gPSXCD_playcount++;
+                gPSXCD_newloc.minute = pResult[3];
+                gPSXCD_newloc.second = pResult[4];
+                gPSXCD_newloc.sector = pResult[5];
+                gPSXCD_newloc.track = (pResult[1] >> 4) * 10 + (pResult[1] & 0x0F);     // Convert from BCD to binary
             }
 
             return;
@@ -323,20 +317,20 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
         // If we have reached the end then we might want to loop around again
         if (status == CdlDataEnd) {
             // Clear the command and location if we have reached the end
-            *gPSXCD_cdl_com = CdlNop;
-            *gPSXCD_lastloc = 0;
+            gPSXCD_cdl_com = CdlNop;
+            gPSXCD_lastloc = 0;
 
             // Are we to loop and play again?
             if (gbPSXCD_playflag || gbPSXCD_loopflag) {
                 psxcd_play_at_andloop(
-                    *gPSXCD_looptrack,
-                    *gPSXCD_loopvol,
-                    *gPSXCD_loopsectoroffset,
-                    *gPSXCD_loopfadeuptime,
-                    *gPSXCD_looptrack,
-                    *gPSXCD_loopvol,
-                    *gPSXCD_loopsectoroffset,
-                    *gPSXCD_loopfadeuptime
+                    gPSXCD_looptrack,
+                    gPSXCD_loopvol,
+                    gPSXCD_loopsectoroffset,
+                    gPSXCD_loopfadeuptime,
+                    gPSXCD_looptrack,
+                    gPSXCD_loopvol,
+                    gPSXCD_loopsectoroffset,
+                    gPSXCD_loopfadeuptime
                 );
             }
 
@@ -349,19 +343,19 @@ void PSXCD_cbready(const CdlSyncStatus status, const uint8_t pResult[8]) noexcep
         }
 
         // Error or unknown situation:
-        *gPSXCD_cdl_err_intr = status + 20;         // '+': Just to make the codes more unique, so their source is known
-        *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
+        gPSXCD_cdl_err_intr = status + 20;      // '+': Just to make the codes more unique, so their source is known
+        gPSXCD_cdl_err_com = gPSXCD_cdl_com;
     }
     else {
         // Error or unknown situation:
-        *gPSXCD_cdl_err_intr = status + 30;         // '+': Just to make the codes more unique, so their source is known
-        *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
+        gPSXCD_cdl_err_intr = status + 30;      // '+': Just to make the codes more unique, so their source is known
+        gPSXCD_cdl_err_com = gPSXCD_cdl_com;
     }
 
     // This point is only reached if there is an error!
-    *gPSXCD_cdl_err_count += 1;
-    *gPSXCD_cdl_err_stat = pResult[0];
-    *gPSXCD_cdl_com = *gPSXCD_cdl_err_com;
+    gPSXCD_cdl_err_count++;
+    gPSXCD_cdl_err_stat = pResult[0];
+    gPSXCD_cdl_com = gPSXCD_cdl_err_com;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -450,9 +444,9 @@ void psxcd_set_data_mode() noexcept {
         psxcd_sync();
 
         gPSXCD_psxcd_mode = 1;
-        *gPSXCD_cdl_com = CdlSetmode;
+        gPSXCD_cdl_com = CdlSetmode;
         gPSXCD_cd_param[0] = CdlModeSpeed;  // Operate the CDROM at 2x speed
-        LIBCD_CdControl(CdlSetmode, gPSXCD_cd_param.get(), nullptr);
+        LIBCD_CdControl(CdlSetmode, gPSXCD_cd_param, nullptr);
         psxcd_sync();
     } else {
         // Already in data mode: just cancel any reads or commands in flight
@@ -462,13 +456,13 @@ void psxcd_set_data_mode() noexcept {
 
         psxcd_sync();
         
-        if (*gPSXCD_cdl_com == CdlPause) {
+        if (gPSXCD_cdl_com == CdlPause) {
             LIBCD_CdFlush();
         }
     }
     
     // Stop the cdrom at the current location when we are done to finish up
-    *gPSXCD_cdl_com = CdlPause;
+    gPSXCD_cdl_com = CdlPause;
     LIBCD_CdControl(CdlPause, nullptr, nullptr);
     psxcd_sync();
     LIBCD_CdFlush();
@@ -534,18 +528,18 @@ bool psxcd_async_on() noexcept {
         return false;
 
     // Otherwise do a status check on the health of the read to make sure it is going ok
-    *gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result.get());
+    gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result);
 
     // If a problem happened then retry the current read.
     // Retry if we encounter a critical error, a disk error or the motor stops rotating - which can happen if the shell is opened.
-    if (gbPSXCD_critical_error || (*gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
+    if (gbPSXCD_critical_error || (gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
         // A problem happened! Record the details of the error and stop any executing cd commands:
         LIBCD_CdFlush();
 
-        *gPSXCD_cdl_err_count += 1;
-        *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
-        *gPSXCD_cdl_err_intr = *gPSXCD_check_intr + 100;    // '+': Just to make the codes more unique, so their source is known
-        *gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
+        gPSXCD_cdl_err_count++;
+        gPSXCD_cdl_err_com = gPSXCD_cdl_com;
+        gPSXCD_cdl_err_intr = gPSXCD_check_intr + 100;      // '+': Just to make the codes more unique, so their source is known
+        gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
 
         // Clear the error flag and retry the last read command
         gbPSXCD_critical_error = false;
@@ -568,21 +562,21 @@ bool psxcd_seeking_for_play() noexcept {
     // PC-PSX: this fancy error handling is not necessary in this emulated environment
     #if !PC_PSX_DOOM_MODS
         // The cdrom is still busy seeking: check to make sure there was not an error
-        *gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result.get());
+        gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result);
     
-        if ((*gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
+        if ((gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
             // Some sort of error happened and not on standby: cancel the current command and record the command details
             LIBCD_CdFlush();
 
-            *gPSXCD_cdl_err_count += 1;
-            *gPSXCD_cdl_err_intr = *gPSXCD_check_intr + 110;    // '+': Just to make the codes more unique, so their source is known
-            *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
-            *gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
+            gPSXCD_cdl_err_count++;
+            gPSXCD_cdl_err_intr = gPSXCD_check_intr + 110;      // '+': Just to make the codes more unique, so their source is known
+            gPSXCD_cdl_err_com = gPSXCD_cdl_com;
+            gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
 
             // Try to seek to the last valid intended cd audio location
             psxcd_sync();
-            *gPSXCD_cdl_com = CdlSeekP;
-            LIBCD_CdControlF(CdlSeekP, (uint8_t*) gPSXCD_lastloc.get());
+            gPSXCD_cdl_com = CdlSeekP;
+            LIBCD_CdControlF(CdlSeekP, (uint8_t*) &gPSXCD_lastloc);
         }
     #endif
     
@@ -600,20 +594,20 @@ bool psxcd_waiting_for_pause() noexcept {
     // PC-PSX: this fancy error handling is not necessary in this emulated environment
     #if !PC_PSX_DOOM_MODS
         // The cdrom is still busy pausing: check to make sure there was not an error
-        *gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result.get());
+        gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result);
 
-        if ((*gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
+        if ((gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
             // Some sort of error happened and not on standby: cancel the current command and record the command details
             LIBCD_CdFlush();
 
-            *gPSXCD_cdl_err_count += 1;
-            *gPSXCD_cdl_err_intr = *gPSXCD_check_intr + 120;    // '+': Just to make the codes more unique, so their source is known
-            *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
-            *gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
+            gPSXCD_cdl_err_count++;
+            gPSXCD_cdl_err_intr = gPSXCD_check_intr + 120;      // '+': Just to make the codes more unique, so their source is known
+            gPSXCD_cdl_err_com = gPSXCD_cdl_com;
+            gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
 
             // Retry the pause command
             psxcd_sync();
-            *gPSXCD_cdl_com = CdlPause;
+            gPSXCD_cdl_com = CdlPause;
             LIBCD_CdControlF(CdlPause, nullptr);
         }
     #endif
@@ -662,7 +656,7 @@ void psxcd_async_read_cancel() noexcept {
 
     // Pause the cdrom
     gbPSXCD_waiting_for_pause = true;
-    *gPSXCD_cdl_com = CdlPause;
+    gPSXCD_cdl_com = CdlPause;
     LIBCD_CdControlF(CdlPause, nullptr);
 }
 
@@ -840,7 +834,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
         // Issue command: are we to seek to a location?
         if (gPSXCD_psxcd_cmds[gPSXCD_cur_cmd].command == PSXCD_COMMAND_SEEK) {
             psxcd_sync();
-            *gPSXCD_cdl_com = CdlSetloc;
+            gPSXCD_cdl_com = CdlSetloc;
             LIBCD_CdControl(CdlSetloc, (const uint8_t*) &gPSXCD_psxcd_cmds[gPSXCD_cur_cmd].io_loc, nullptr);
             gPSXCD_cur_cmd++;
 
@@ -859,7 +853,7 @@ static int32_t psxcd_async_read(void* const pDest, const int32_t numBytes, PsxCd
             case PSXCD_COMMAND_READ:
             case PSXCD_COMMAND_READCOPY: {
                 if (psxcd_critical_sync()) {
-                    *gPSXCD_cdl_com = CdlReadN;
+                    gPSXCD_cdl_com = CdlReadN;
                     LIBCD_CdControl(CdlReadN, (const uint8_t*) &gPSXCD_psxcd_cmds[gPSXCD_cur_cmd].io_loc, nullptr);
                     
                     if (psxcd_critical_sync()) {
@@ -995,13 +989,13 @@ void psxcd_set_audio_mode() noexcept {
 
         // Switch to audio mode
         gPSXCD_cd_param[0] = CdlModeRept | CdlModeAP | CdlModeDA;
-        *gPSXCD_cdl_com = CdlSetmode;
-        LIBCD_CdControl(CdlSetmode, gPSXCD_cd_param.get(), nullptr);
+        gPSXCD_cdl_com = CdlSetmode;
+        LIBCD_CdControl(CdlSetmode, gPSXCD_cd_param, nullptr);
         gPSXCD_psxcd_mode = 0;
 
         // Finish up the last command and pause
         psxcd_sync();
-        *gPSXCD_cdl_com = CdlPause;
+        gPSXCD_cdl_com = CdlPause;
         LIBCD_CdControl(CdlPause, nullptr, nullptr);
         psxcd_sync();
 
@@ -1017,7 +1011,7 @@ void psxcd_set_audio_mode() noexcept {
 // Set the volume to playback cd audio when looping around again
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_set_loop_volume(const int32_t vol) noexcept {
-    *gPSXCD_loopvol = vol;
+    gPSXCD_loopvol = vol;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1059,33 +1053,33 @@ void psxcd_play_at_andloop(
 
     // Figure out the position to begin playback from
     const int32_t trackBegSector = LIBCD_CdPosToInt(trackLoc);
-    LIBCD_CdIntToPos(trackBegSector + sectorOffset, *gPSXCD_cdloc);
+    LIBCD_CdIntToPos(trackBegSector + sectorOffset, gPSXCD_cdloc);
 
     // Init playback stats
     gbPSXCD_playflag = true;
     gbPSXCD_loopflag = true;
-    *gPSXCD_playvol = vol;
-    *gPSXCD_playfadeuptime = fadeUpTime;
-    *gPSXCD_playcount = 0;
+    gPSXCD_playvol = vol;
+    gPSXCD_playfadeuptime = fadeUpTime;
+    gPSXCD_playcount = 0;
     
     // Save the parameters for when we loop
-    *gPSXCD_looptrack = loopTrack;
-    *gPSXCD_loopvol = loopVol;
-    *gPSXCD_loopsectoroffset = loopSectorOffest;
-    *gPSXCD_loopfadeuptime = loopFadeUpTime;
+    gPSXCD_looptrack = loopTrack;
+    gPSXCD_loopvol = loopVol;
+    gPSXCD_loopsectoroffset = loopSectorOffest;
+    gPSXCD_loopfadeuptime = loopFadeUpTime;
 
     // Seek to the track start
     gbPSXCD_seeking_for_play = true;
-    *gPSXCD_cdl_com = CdlSeekP;
-    LIBCD_CdControlF(CdlSeekP, (const uint8_t*) gPSXCD_cdloc.get());
+    gPSXCD_cdl_com = CdlSeekP;
+    LIBCD_CdControlF(CdlSeekP, (const uint8_t*) &gPSXCD_cdloc);
 
     // Remember the track start location as the begin, current and last valid intended location.
     //
     // This looks like a BUG in the original code to me? Should it not be saving 'gPSXCD_cdloc'?
     // Otherwise the sector offset specified is forgotten about...
-    *gPSXCD_newloc = trackLoc;
-    *gPSXCD_lastloc = trackLoc;
-    *gPSXCD_beginloc = trackLoc;
+    gPSXCD_newloc = trackLoc;
+    gPSXCD_lastloc = trackLoc;
+    gPSXCD_beginloc = trackLoc;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1113,26 +1107,26 @@ void psxcd_play_at(const int32_t track, const int32_t vol, const int32_t sectorO
 
     // Figure out the position to begin playback from
     const int32_t trackBegSector = LIBCD_CdPosToInt(trackLoc);
-    LIBCD_CdIntToPos(trackBegSector + sectorOffset, *gPSXCD_cdloc);
+    LIBCD_CdIntToPos(trackBegSector + sectorOffset, gPSXCD_cdloc);
 
     // Init some playback stats and begin seeking to the specified track location
     gbPSXCD_playflag = true;
-    *gPSXCD_playvol = vol;
+    gPSXCD_playvol = vol;
     gbPSXCD_seeking_for_play = true;
-    *gPSXCD_playcount = 0;
+    gPSXCD_playcount = 0;
     gbPSXCD_loopflag = false;       // Don't loop
-    *gPSXCD_playfadeuptime = 0;     // Don't fade in
+    gPSXCD_playfadeuptime = 0;      // Don't fade in
 
-    *gPSXCD_cdl_com = CdlSeekP;
-    LIBCD_CdControlF(CdlSeekP, (const uint8_t*) gPSXCD_cdloc.get());
+    gPSXCD_cdl_com = CdlSeekP;
+    LIBCD_CdControlF(CdlSeekP, (const uint8_t*) &gPSXCD_cdloc);
 
     // Remember the track start location as the begin, current and last valid intended location.
     //
     // This looks like a BUG in the original code to me? Should it not be saving 'gPSXCD_cdloc'?
     // Otherwise the sector offset specified is forgotten about...
-    *gPSXCD_newloc = trackLoc;
-    *gPSXCD_lastloc = trackLoc;
-    *gPSXCD_beginloc = trackLoc;
+    gPSXCD_newloc = trackLoc;
+    gPSXCD_lastloc = trackLoc;
+    gPSXCD_beginloc = trackLoc;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1166,24 +1160,24 @@ void psxcd_seek_for_play_at(const int32_t track, const int32_t sectorOffset) noe
 
     // Figure out the position to go to
     const uint32_t trackBegSector = LIBCD_CdPosToInt(trackLoc);
-    LIBCD_CdIntToPos(trackBegSector + sectorOffset, *gPSXCD_cdloc);
+    LIBCD_CdIntToPos(trackBegSector + sectorOffset, gPSXCD_cdloc);
 
     // Init some playback stats and begin seeking to the specified track location
     gbPSXCD_playflag = false;
-    *gPSXCD_playcount = 0;
+    gPSXCD_playcount = 0;
     gbPSXCD_loopflag = false;
     gbPSXCD_seeking_for_play = true;
 
-    *gPSXCD_cdl_com = CdlSeekP;
+    gPSXCD_cdl_com = CdlSeekP;
     LIBCD_CdControlF(CdlSeekP, (const uint8_t*) &gPSXCD_cdloc);
 
     // Remember the track start location as the begin, current and last valid intended location.
     //
     // This looks like a BUG in the original code to me? Should it not be saving 'gPSXCD_cdloc'?
     // Otherwise the sector offset specified is forgotten about...
-    *gPSXCD_newloc = trackLoc;
-    *gPSXCD_lastloc = trackLoc;
-    *gPSXCD_beginloc = trackLoc;
+    gPSXCD_newloc = trackLoc;
+    gPSXCD_lastloc = trackLoc;
+    gPSXCD_beginloc = trackLoc;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1199,17 +1193,17 @@ void psxcd_seek_for_play(const int32_t track) noexcept {
 bool psxcd_play_status() noexcept {
     // Was the last command to play or to seek to a physical (audio) location?
     // If not then we cannot be playing:
-    if ((*gPSXCD_cdl_com == CdlPlay) || (*gPSXCD_cdl_com == CdlSeekP)) {
-        *gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result.get());
+    if ((gPSXCD_cdl_com == CdlPlay) || (gPSXCD_cdl_com == CdlSeekP)) {
+        gPSXCD_check_intr = LIBCD_CdSync(1, gPSXCD_check_result);
 
         // Make sure playback is ok: if there was an error or the motor stopped then stop current commands and record the error
-        if ((*gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
+        if ((gPSXCD_check_intr == CdlDiskError) || ((gPSXCD_check_result[0] & CdlStatStandby) == 0)) {
             LIBCD_CdFlush();
 
-            *gPSXCD_cdl_err_count += 1;
-            *gPSXCD_cdl_err_com = *gPSXCD_cdl_com;
-            *gPSXCD_cdl_err_intr = *gPSXCD_check_intr + 90;     // '+': Just to make the codes more unique, so their source is known
-            *gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
+            gPSXCD_cdl_err_count++;
+            gPSXCD_cdl_err_com = gPSXCD_cdl_com;
+            gPSXCD_cdl_err_intr = gPSXCD_check_intr + 90;       // '+': Just to make the codes more unique, so their source is known
+            gPSXCD_cdl_err_stat = gPSXCD_check_result[0];
 
             return false;   // Bah... Take better care of your discs! :P
         }
@@ -1232,7 +1226,7 @@ void psxcd_stop() noexcept {
     gbPSXCD_seeking_for_play = false;
 
     // Unlike 'psxcd_pause' DON'T remember where to resume playback from, this is a 'stop' command
-    *gPSXCD_lastloc = 0;
+    gPSXCD_lastloc = 0;
 
     // Quickly fade out cd audio if playing
     const int32_t startCdVol = psxspu_get_cd_vol();
@@ -1246,7 +1240,7 @@ void psxcd_stop() noexcept {
     psxcd_sync();
 
     gbPSXCD_waiting_for_pause = true;
-    *gPSXCD_cdl_com = CdlPause;
+    gPSXCD_cdl_com = CdlPause;
     LIBCD_CdControlF(CdlPause, nullptr);
 }
 
@@ -1259,11 +1253,11 @@ void psxcd_pause() noexcept {
     gbPSXCD_seeking_for_play = false;
 
     // If we did not start playback of anything (never set a sector location) then we don't need to do anything else
-    if (*gPSXCD_lastloc == 0)
+    if (gPSXCD_lastloc == 0)
         return;
 
     // Save the last location we read from so we can restore in 'psxcd_restart'
-    *gPSXCD_lastloc = *gPSXCD_newloc;
+    gPSXCD_lastloc = gPSXCD_newloc;
 
     // Quickly fade out cd audio if playing
     const int32_t startCdVol = psxspu_get_cd_vol();
@@ -1277,7 +1271,7 @@ void psxcd_pause() noexcept {
     psxcd_sync();
 
     gbPSXCD_waiting_for_pause = true;
-    *gPSXCD_cdl_com = CdlPause;
+    gPSXCD_cdl_com = CdlPause;
     LIBCD_CdControlF(CdlPause, nullptr);
 }
 
@@ -1286,22 +1280,22 @@ void psxcd_pause() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_restart(const int32_t vol) noexcept {
     // Only do the restart if we had paused previously (have a saved sector position)
-    if (*gPSXCD_lastloc == 0)
+    if (gPSXCD_lastloc == 0)
         return;
 
     // Switch to audio mode
     psxcd_set_audio_mode();
 
     // Reset all these variables
-    *gPSXCD_cdloc = *gPSXCD_lastloc;
+    gPSXCD_cdloc = gPSXCD_lastloc;
     gbPSXCD_playflag = true;
     gbPSXCD_seeking_for_play = true;
-    *gPSXCD_playcount = 0;
-    *gPSXCD_playvol = vol;
+    gPSXCD_playcount = 0;
+    gPSXCD_playvol = vol;
 
     // Seek to the last intended cd location
-    *gPSXCD_cdl_com = CdlSeekP;
-    LIBCD_CdControlF(CdlSeekP, (const uint8_t*) gPSXCD_cdloc.get());
+    gPSXCD_cdl_com = CdlSeekP;
+    LIBCD_CdControlF(CdlSeekP, (const uint8_t*) &gPSXCD_cdloc);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1309,12 +1303,12 @@ void psxcd_restart(const int32_t vol) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxcd_elapsed_sectors() noexcept {
     // If we haven't started playback then no sectors are elapsed
-    if (*gPSXCD_beginloc == 0)
+    if (gPSXCD_beginloc == 0)
         return 0;
 
     // Return the difference between the current and the track start sector
-    const int32_t begSector = LIBCD_CdPosToInt(*gPSXCD_beginloc);
-    const int32_t curSector = LIBCD_CdPosToInt(*gPSXCD_newloc);
+    const int32_t begSector = LIBCD_CdPosToInt(gPSXCD_beginloc);
+    const int32_t curSector = LIBCD_CdPosToInt(gPSXCD_newloc);
     return curSector - begSector;
 }
 
@@ -1323,16 +1317,16 @@ int32_t psxcd_elapsed_sectors() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxcd_set_stereo(const bool bStereo) noexcept {
     if (bStereo) {
-        gPSXCD_cdatv->l_to_l = 127;
-        gPSXCD_cdatv->l_to_r = 0;
-        gPSXCD_cdatv->r_to_r = 127;
-        gPSXCD_cdatv->r_to_l = 0;
+        gPSXCD_cdatv.l_to_l = 127;
+        gPSXCD_cdatv.l_to_r = 0;
+        gPSXCD_cdatv.r_to_r = 127;
+        gPSXCD_cdatv.r_to_l = 0;
     } else {
-        gPSXCD_cdatv->l_to_l = 63;
-        gPSXCD_cdatv->l_to_r = 63;
-        gPSXCD_cdatv->r_to_r = 63;
-        gPSXCD_cdatv->r_to_l = 63;
+        gPSXCD_cdatv.l_to_l = 63;
+        gPSXCD_cdatv.l_to_r = 63;
+        gPSXCD_cdatv.r_to_r = 63;
+        gPSXCD_cdatv.r_to_l = 63;
     }
 
-    LIBCD_CdMix(*gPSXCD_cdatv);
+    LIBCD_CdMix(gPSXCD_cdatv);
 }
