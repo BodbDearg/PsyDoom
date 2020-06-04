@@ -373,12 +373,33 @@ void R_DrawFlatSpans(leaf_t& leaf, const fixed_t planeViewZ, const texture_t& te
             const int32_t uStep = (spanUR - spanUL) / numSpanPieces;
             const int32_t vStep = (spanVR - spanVL) / numSpanPieces;
 
+            // PC-PSX: precision fix to prevent cracks at the right side of the screen on large open maps like 'Tower Of Babel'.
+            // Store the coords where the last span should end, and use those for the right side of the last span instead of
+            // the somewhat truncated/imprecise stepped coords.
+            // 
+            // TODO: make this tweak configurable according to user prefs.
+            #if PC_PSX_DOOM_MODS
+                const int32_t origSpanR = spanR;
+                const int32_t origSpanUR = spanUR;
+                const int32_t origSpanVR = spanVR;
+            #endif
+
             // Issue the draw primitives for all of the span pieces
             for (int32_t pieceIdx = 0; pieceIdx < numSpanPieces; ++pieceIdx) {
                 // Step the right bounds to the next piece
                 spanR = spanL + xStep;
                 spanUR = spanUL + uStep;
                 spanVR = spanVL + vStep;
+
+                // PC-PSX: precision fix to prevent cracks at the right side of the screen on large open maps like 'Tower Of Babel'.
+                // TODO: make this tweak configurable according to user prefs.
+                #if PC_PSX_DOOM_MODS
+                    if (pieceIdx + 1 >= numSpanPieces) {
+                        spanR = origSpanR;
+                        spanUR = origSpanUR;
+                        spanVR = origSpanVR;
+                    }
+                #endif
                 
                 // Wrap the uv coordinates to 128x128 using the smallest u or v coordinate as the basis for wrapping.
                 // Do this in a similar way to the initial draw preparation, except this time the wrapping is 128x128.
