@@ -32,26 +32,27 @@ const WessDriverFunc gWess_drv_cmds[19] = {
     PSX_NoteOff             // 18
 };
 
-static const VmPtr<VmPtr<master_status_structure>>      gpWess_drv_mstat(0x8007F164);               // Pointer to the master status structure being used by the sequencer
-static const VmPtr<VmPtr<sequence_status>>              gpWess_drv_sequenceStats(0x8007F168);       // Saved reference to the list of sequence statuses (in the master status struct)
-static const VmPtr<VmPtr<track_status>>                 gpWess_drv_trackStats(0x8007F16C);          // Saved reference to the list of track statuses (in the master status struct)
-static const VmPtr<VmPtr<voice_status>>                 gpWess_drv_voiceStats(0x8007F0B8);          // Saved reference to the list of voice statuses (in the master status struct)
-static const VmPtr<VmPtr<voice_status>>                 gpWess_drv_psxVoiceStats(0x8007F170);       // Saved reference to the list of PSX sound driver owned voice statuses (in the master status struct)
-static const VmPtr<VmPtr<patch_group_data>>             gpWess_drv_patchGroup(0x8007F178);          // Saved reference to the patch group info for the PSX sound driver
-static const VmPtr<VmPtr<patch>>                        gpWess_drv_patches(0x8007F180);             // Saved reference to the list of patches (in the master status struct)
-static const VmPtr<VmPtr<patch_voice>>                  gpWess_drv_patchVoices(0x8007F184);         // Saved reference to the list of patch voices (in the master status struct)
-static const VmPtr<VmPtr<patch_sample>>                 gpWess_drv_patchSamples(0x8007F188);        // Saved reference to the list of patch samples (in the master status struct)
-static const VmPtr<VmPtr<drum_patch>>                   gpWess_drv_drumPatches(0x8007F18C);         // Saved reference to the list of drum patches (in the master status struct)
-static const VmPtr<uint8_t>                             gWess_drv_numPatchGroups(0x8007F0B0);       // How many patch groups there are in the currently loaded module
-static const VmPtr<uint8_t>                             gWess_drv_totalVoices(0x8007F0AC);          // Maximum number of voices available to the sequencer system
-static const VmPtr<uint32_t>                            gWess_drv_hwVoiceLimit(0x8007F174);         // Maximum number of voices available to the PSX sound driver
-static const VmPtr<VmPtr<uint32_t>>                     gpWess_drv_cur_abstime_ms(0x8007F17C);      // Pointer to the current absolute time (milliseconds since launch) for the sequencer system
-static const VmPtr<uint8_t[SPU_NUM_VOICES]>             gWess_drv_chanReverbAmt(0x8007F1E8);        // Current reverb levels for each channel/voice
-static const VmPtr<uint32_t>                            gWess_drv_voicesToRelease(0x80075A08);      // Bit mask for which voices are requested to be released (key off)
-static const VmPtr<uint32_t>                            gWess_drv_voicesToMute(0x80075A0C);         // Bit mask for which voices are requested to be muted
-static const VmPtr<uint8_t>                             gWess_drv_muteReleaseRate(0x80075A07);      // Controls how fast muted voices are faded out; higher values means a faster fade.
-static const VmPtr<SpuVoiceAttr>                        gWess_spuVoiceAttr(0x8007F190);             // Temporary used for setting voice parameters with LIBSPU
-static const VmPtr<uint8_t[SPU_NUM_VOICES]>             gWess_spuKeyStatuses(0x8007F1D0);           // Current voice statuses (4 possible states) returned by 'LIBSPU_SpuGetAllKeysStatus'.
+static master_status_structure*     gpWess_drv_mstat;               // Pointer to the master status structure being used by the sequencer
+static sequence_status*             gpWess_drv_sequenceStats;       // Saved reference to the list of sequence statuses (in the master status struct)
+static track_status*                gpWess_drv_trackStats;          // Saved reference to the list of track statuses (in the master status struct)
+static voice_status*                gpWess_drv_voiceStats;          // Saved reference to the list of voice statuses (in the master status struct)
+static voice_status*                gpWess_drv_psxVoiceStats;       // Saved reference to the list of PSX sound driver owned voice statuses (in the master status struct)
+static patch_group_data*            gpWess_drv_patchGroup;          // Saved reference to the patch group info for the PSX sound driver
+static patch*                       gpWess_drv_patches;             // Saved reference to the list of patches (in the master status struct)
+static patch_voice*                 gpWess_drv_patchVoices;         // Saved reference to the list of patch voices (in the master status struct)
+static patch_sample*                gpWess_drv_patchSamples;        // Saved reference to the list of patch samples (in the master status struct)
+static drum_patch*                  gpWess_drv_drumPatches;         // Saved reference to the list of drum patches (in the master status struct)
+
+static uint8_t          gWess_drv_numPatchGroups;                   // How many patch groups there are in the currently loaded module
+static uint8_t          gWess_drv_totalVoices;                      // Maximum number of voices available to the sequencer system
+static uint32_t         gWess_drv_hwVoiceLimit;                     // Maximum number of voices available to the PSX sound driver
+static uint32_t*        gpWess_drv_cur_abstime_ms;                  // Pointer to the current absolute time (milliseconds since launch) for the sequencer system
+static uint8_t          gWess_drv_chanReverbAmt[SPU_NUM_VOICES];    // Current reverb levels for each channel/voice
+static uint32_t         gWess_drv_voicesToRelease;                  // Bit mask for which voices are requested to be released (key off)
+static uint32_t         gWess_drv_voicesToMute;                     // Bit mask for which voices are requested to be muted
+static uint8_t          gWess_drv_muteReleaseRate;                  // Controls how fast muted voices are faded out; higher values means a faster fade.
+static SpuVoiceAttr     gWess_spuVoiceAttr;                         // Temporary used for setting voice parameters with LIBSPU
+static uint8_t          gWess_spuKeyStatuses[SPU_NUM_VOICES];       // Current voice statuses (4 possible states) returned by 'LIBSPU_SpuGetAllKeysStatus'.
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the location where we will start recording voice details before temporarily muting
@@ -107,12 +108,12 @@ void add_music_mute_note(
 void wess_set_mute_release(const int32_t newReleaseRate) noexcept {
     // TODO: make a constant for the scale value
     int32_t maxRate = 0x10000000;
-    *gWess_drv_muteReleaseRate = 31;
+    gWess_drv_muteReleaseRate = 31;
 
     // Note that the max release rate is '31' and minimum is '2' with this scheme
-    while ((maxRate > newReleaseRate) && (*gWess_drv_muteReleaseRate != 0)) {
+    while ((maxRate > newReleaseRate) && (gWess_drv_muteReleaseRate != 0)) {
         maxRate >>= 1;
-        *gWess_drv_muteReleaseRate -= 1;
+        gWess_drv_muteReleaseRate -= 1;
     }
 }
 
@@ -122,8 +123,8 @@ void wess_set_mute_release(const int32_t newReleaseRate) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void TriggerPSXVoice(const voice_status& voiceStat, [[maybe_unused]] const uint8_t voiceNote, const uint8_t voiceVol) noexcept {
     // Get the track status and LIBSPU struct we use to setup the voice
-    SpuVoiceAttr& spuVoiceAttr = *gWess_spuVoiceAttr;
-    track_status& trackStat = gpWess_drv_trackStats->get()[voiceStat.trackstat_idx];
+    SpuVoiceAttr& spuVoiceAttr = gWess_spuVoiceAttr;
+    track_status& trackStat = gpWess_drv_trackStats[voiceStat.trackstat_idx];
 
     // These are the attributes we will set
     spuVoiceAttr.attr_mask = (
@@ -238,55 +239,55 @@ void PSX_DriverInit(master_status_structure& mstat) noexcept {
     // Save pointers to various master status fields and stats
     const uint8_t numPatchGroups = mstat.pmodule->hdr.num_patch_groups;
 
-    *gpWess_drv_mstat = &mstat;
-    *gpWess_drv_sequenceStats = mstat.psequence_stats;
-    *gpWess_drv_trackStats = mstat.ptrack_stats;
-    *gpWess_drv_voiceStats = mstat.pvoice_stats;
-    *gWess_drv_numPatchGroups = numPatchGroups;
-    *gWess_drv_totalVoices = mstat.max_voices;
-    *gpWess_drv_cur_abstime_ms = mstat.pabstime_ms;
+    gpWess_drv_mstat = &mstat;
+    gpWess_drv_sequenceStats = mstat.psequence_stats.get();
+    gpWess_drv_trackStats = mstat.ptrack_stats.get();
+    gpWess_drv_voiceStats = mstat.pvoice_stats.get();
+    gWess_drv_numPatchGroups = numPatchGroups;
+    gWess_drv_totalVoices = mstat.max_voices;
+    gpWess_drv_cur_abstime_ms = mstat.pabstime_ms.get();
     
     // Determine the start of the PSX hardware voices in the voices list
-    *gpWess_drv_psxVoiceStats = gpWess_drv_voiceStats->get();
+    gpWess_drv_psxVoiceStats = gpWess_drv_voiceStats;
 
     for (uint8_t voiceIdx = 0; voiceIdx < mstat.max_voices; ++voiceIdx) {
-        voice_status& voiceStat = gpWess_drv_voiceStats->get()[voiceIdx];
+        voice_status& voiceStat = gpWess_drv_voiceStats[voiceIdx];
 
         if (voiceStat.driver_id == PSX_ID) {
-            *gpWess_drv_psxVoiceStats = &voiceStat;
+            gpWess_drv_psxVoiceStats = &voiceStat;
             break;
         }
     }
 
     // Determine the patch group info for the PSX hardware driver
-    *gpWess_drv_patchGroup = nullptr;
+    gpWess_drv_patchGroup = nullptr;
 
     for (uint8_t patchGroupIdx = 0; patchGroupIdx < numPatchGroups; ++patchGroupIdx) {
         patch_group_data& patchGroup = mstat.ppatch_groups[patchGroupIdx];
 
         if (patchGroup.hdr.driver_id == PSX_ID) {
-            *gpWess_drv_patchGroup = &patchGroup;
+            gpWess_drv_patchGroup = &patchGroup;
             break;
         }
     }
 
     // Save various bits of patch group information and pointers for the PSX patch group
-    patch_group_data& patchGroup = *gpWess_drv_patchGroup->get();
-    *gWess_drv_hwVoiceLimit = patchGroup.hdr.hw_voice_limit;
+    patch_group_data& patchGroup = *gpWess_drv_patchGroup;
+    gWess_drv_hwVoiceLimit = patchGroup.hdr.hw_voice_limit;
 
     {
         uint8_t* pPatchData = patchGroup.pdata.get();
 
-        *gpWess_drv_patches = (patch*) pPatchData;
+        gpWess_drv_patches = (patch*) pPatchData;
         pPatchData += sizeof(patch) * patchGroup.hdr.num_patches;
 
-        *gpWess_drv_patchVoices = (patch_voice*) pPatchData;
+        gpWess_drv_patchVoices = (patch_voice*) pPatchData;
         pPatchData += sizeof(patch_voice) * patchGroup.hdr.num_patch_voices;
 
-        *gpWess_drv_patchSamples = (patch_sample*) pPatchData;
+        gpWess_drv_patchSamples = (patch_sample*) pPatchData;
         pPatchData += sizeof(patch_sample) * patchGroup.hdr.num_patch_samples;
 
-        *gpWess_drv_drumPatches = (drum_patch*) pPatchData;
+        gpWess_drv_drumPatches = (drum_patch*) pPatchData;
     }
     
     // Do low level SPU initialization
@@ -312,16 +313,16 @@ void PSX_DriverExit([[maybe_unused]] master_status_structure& mstat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_DriverEntry1() noexcept {
     // Grab the list of available hardware voice statuses and how many voices are available
-    const uint32_t maxHwVoices = *gWess_drv_hwVoiceLimit;
-    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats->get();
+    const uint32_t maxHwVoices = gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats;
 
     // Stop all currently active voices that are releasing and past their end time for release
     {
         // Grab some stuff needed in the loop
-        master_status_structure& mstat = *gpWess_drv_mstat->get();
+        master_status_structure& mstat = *gpWess_drv_mstat;
 
         uint8_t numActiveVoicesLeftToVisit = mstat.num_active_voices;
-        const uint32_t curAbsTime = *gpWess_drv_cur_abstime_ms->get();
+        const uint32_t curAbsTime = *gpWess_drv_cur_abstime_ms;
 
         // Turn off all applicable voices
         if (numActiveVoicesLeftToVisit > 0) {
@@ -347,26 +348,26 @@ void PSX_DriverEntry1() noexcept {
         // Figure out what voices to key off (start releasing or turn off)
         uint32_t voicesToTurnOff = 0;
     
-        if (*gWess_drv_voicesToRelease != 0) {
+        if (gWess_drv_voicesToRelease != 0) {
             // Some voices are requested to be released (key off) - incorporate those and clear the command
-            voicesToTurnOff = *gWess_drv_voicesToRelease;
-            *gWess_drv_voicesToRelease = 0;
+            voicesToTurnOff = gWess_drv_voicesToRelease;
+            gWess_drv_voicesToRelease = 0;
         }
 
-        if (*gWess_drv_voicesToMute != 0) {
+        if (gWess_drv_voicesToMute != 0) {
             // Some voices are requested to be muted, quickly ramp those down exponetially.
             // This code here ensures that they fade out rapidly.
-            SpuVoiceAttr& spuVoiceAttr = *gWess_spuVoiceAttr;
+            SpuVoiceAttr& spuVoiceAttr = gWess_spuVoiceAttr;
 
-            spuVoiceAttr.voice_bits = *gWess_drv_voicesToMute;
+            spuVoiceAttr.voice_bits = gWess_drv_voicesToMute;
             spuVoiceAttr.attr_mask = SPU_VOICE_ADSR_RMODE | SPU_VOICE_ADSR_RR;
             spuVoiceAttr.r_mode = SPU_VOICE_EXPDec;
-            spuVoiceAttr.rr = *gWess_drv_muteReleaseRate;
+            spuVoiceAttr.rr = gWess_drv_muteReleaseRate;
             LIBSPU_SpuSetVoiceAttr(spuVoiceAttr);
 
             // Include these voices in the voices that will be keyed off and clear the command
-            voicesToTurnOff |= *gWess_drv_voicesToMute;
-            *gWess_drv_voicesToMute = 0;
+            voicesToTurnOff |= gWess_drv_voicesToMute;
+            gWess_drv_voicesToMute = 0;
         }
     
         // Key off the voices requested to be keyed off
@@ -376,7 +377,7 @@ void PSX_DriverEntry1() noexcept {
     }
     
     // Release any voices that the SPU says are now off
-    LIBSPU_SpuGetAllKeysStatus(gWess_spuKeyStatuses.get());
+    LIBSPU_SpuGetAllKeysStatus(gWess_spuKeyStatuses);
 
     for (uint32_t hwVoiceIdx = 0; hwVoiceIdx < maxHwVoices; ++hwVoiceIdx) {
         voice_status& voiceStat = pHwVoiceStats[hwVoiceIdx];
@@ -414,7 +415,7 @@ void PSX_TrkOff(track_status& trackStat) noexcept {
         trackStat.off = true;
         trackStat.stopped = true;
 
-        sequence_status& seqStat = gpWess_drv_sequenceStats->get()[trackStat.seqstat_idx];
+        sequence_status& seqStat = gpWess_drv_sequenceStats[trackStat.seqstat_idx];
         seqStat.num_tracks_playing--;
 
         if (seqStat.num_tracks_playing == 0) {
@@ -434,8 +435,8 @@ void PSX_TrkMute(track_status& trackStat) noexcept {
         return;
 
     // Run through all PSX hardware voices and mute the ones belonging to this track
-    uint32_t numHwVoices = *gWess_drv_hwVoiceLimit;
-    voice_status* const pHwVoices = gpWess_drv_psxVoiceStats->get();
+    uint32_t numHwVoices = gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoices = gpWess_drv_psxVoiceStats;
 
     for (uint32_t voiceIdx = 0; voiceIdx < numHwVoices; ++voiceIdx) {
         voice_status& voiceStat = pHwVoices[voiceIdx];
@@ -446,7 +447,7 @@ void PSX_TrkMute(track_status& trackStat) noexcept {
         
         // If the voice is not being killed, is a music voice and we are recording voice state then save for later un-pause
         if (gpWess_savedVoices && (!voiceStat.release) && (trackStat.sound_class == MUSIC_CLASS)) {
-            sequence_status& seqStat = gpWess_drv_sequenceStats->get()[trackStat.seqstat_idx];
+            sequence_status& seqStat = gpWess_drv_sequenceStats[trackStat.seqstat_idx];
 
             add_music_mute_note(
                 seqStat.seq_idx,
@@ -462,9 +463,9 @@ void PSX_TrkMute(track_status& trackStat) noexcept {
         // The release rate is exponential, hence the shifts here:
         //
         // TODO: make a constant for the scale value.
-        voiceStat.release_time_ms = 0x10000000 >> (31 - (*gWess_drv_muteReleaseRate % 32));
+        voiceStat.release_time_ms = 0x10000000 >> (31 - (gWess_drv_muteReleaseRate % 32));
         PSX_voicerelease(voiceStat);
-        *gWess_drv_voicesToMute |= 1 << (voiceStat.ref_idx % 32);
+        gWess_drv_voicesToMute |= 1 << (voiceStat.ref_idx % 32);
 
         // If there are no more active voices to visit then we are done
         numActiveVoicesToVisit--;
@@ -492,9 +493,9 @@ void PSX_PatchMod([[maybe_unused]] track_status& trackStat) noexcept {}
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_PitchMod(track_status& trackStat) noexcept {
     // Cache these for the loop
-    SpuVoiceAttr& spuVoiceAttr = *gWess_spuVoiceAttr;
-    const uint32_t numHwVoices = *gWess_drv_hwVoiceLimit;
-    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats->get();
+    SpuVoiceAttr& spuVoiceAttr =  gWess_spuVoiceAttr;
+    const uint32_t numHwVoices = gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats;
 
     // Read the pitch modification amount from the command: don't do anything if it's unchanged
     const int16_t pitchMod = ((int16_t) trackStat.pcur_cmd[1]) | ((int16_t) trackStat.pcur_cmd[2] << 8);
@@ -572,9 +573,9 @@ void PSX_ModuMod([[maybe_unused]] track_status& trackStat) noexcept {}
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_VolumeMod(track_status& trackStat) noexcept {
     // Cache these for the loop
-    SpuVoiceAttr& spuVoiceAttr = *gWess_spuVoiceAttr;
-    const uint32_t numHwVoices = *gWess_drv_hwVoiceLimit;
-    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats->get();
+    SpuVoiceAttr& spuVoiceAttr = gWess_spuVoiceAttr;
+    const uint32_t numHwVoices = gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats;
 
     // Update the track volume with the amount in the sequencer command
     trackStat.volume_cntrl = trackStat.pcur_cmd[1];
@@ -656,9 +657,9 @@ void PSX_VolumeMod(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_PanMod(track_status& trackStat) noexcept {
     // Cache these for the loop
-    SpuVoiceAttr& spuVoiceAttr = *gWess_spuVoiceAttr;
-    const uint32_t numHwVoices = *gWess_drv_hwVoiceLimit;
-    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats->get();
+    SpuVoiceAttr& spuVoiceAttr = gWess_spuVoiceAttr;
+    const uint32_t numHwVoices = gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats;
 
     // Update the track pan setting with the amount in the sequencer command
     trackStat.pan_cntrl = trackStat.pcur_cmd[1];
@@ -752,7 +753,7 @@ void PSX_voiceon(
     const uint8_t voiceNote,
     const uint8_t voiceVol
 ) noexcept {
-    master_status_structure& mstat = *gpWess_drv_mstat->get();
+    master_status_structure& mstat = *gpWess_drv_mstat;
 
     // Fill in basic fields on the voice status
     voiceStat.active = true;
@@ -771,7 +772,7 @@ void PSX_voiceon(
     voiceStat.priority = trackStat.priority;
     voiceStat.ppatch_voice = &patchVoice;
     voiceStat.ppatch_sample = &patchSample;
-    voiceStat.onoff_abstime_ms = *gpWess_drv_cur_abstime_ms->get();
+    voiceStat.onoff_abstime_ms = *gpWess_drv_cur_abstime_ms;
     
     // Figure out how long it takes for the voice to fade out.
     // The low 5 bits affect the exponential falloff, the 6th bit controls how that falloff is scaled.
@@ -793,8 +794,8 @@ void PSX_voiceon(
 // Free up the given voice, and potentially the parent track if it has no more voices active
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_voiceparmoff(voice_status& voiceStat) noexcept {
-    master_status_structure& mstat = *gpWess_drv_mstat->get();
-    track_status& trackStat = gpWess_drv_trackStats->get()[voiceStat.trackstat_idx];
+    master_status_structure& mstat = *gpWess_drv_mstat;
+    track_status& trackStat = gpWess_drv_trackStats[voiceStat.trackstat_idx];
 
     // Update track and global voice stats
     mstat.num_active_voices--;
@@ -814,8 +815,8 @@ void PSX_voiceparmoff(voice_status& voiceStat) noexcept {
 // Move the given voice to the 'release' state so it can begin to fade out
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_voicerelease(voice_status& voiceStat) noexcept {
-    const uint32_t curAbsTime = *gpWess_drv_cur_abstime_ms->get();
-    *gWess_drv_voicesToRelease |= 1 << (voiceStat.ref_idx % 32);
+    const uint32_t curAbsTime = *gpWess_drv_cur_abstime_ms;
+    gWess_drv_voicesToRelease |= 1 << (voiceStat.ref_idx % 32);
 
     voiceStat.release = true;
     voiceStat.onoff_abstime_ms = curAbsTime + voiceStat.release_time_ms;    // Compute when the voice is to be turned off or deallocated
@@ -848,8 +849,8 @@ void PSX_voicenote(
 
     // Run through all the hardware voices and try to find one that is free to play the sound.
     // If none are available, try to steal a currently active voice and prioritize which one we steal according to certain rules.
-    const uint32_t numHwVoices = *gWess_drv_hwVoiceLimit;
-    voice_status* const pHwVoices = gpWess_drv_psxVoiceStats->get();
+    const uint32_t numHwVoices = gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoices = gpWess_drv_psxVoiceStats;
 
     bool bStealVoice = false;
 
@@ -921,7 +922,7 @@ void PSX_NoteOn(track_status& trackStat) noexcept {
     if (trackStat.sound_class == DRUMS_CLASS) {
         // For drums the note to play back with is determined by the drum patch: drums always use the same note
         const uint8_t drumTypeIdx = trackStat.pcur_cmd[1];
-        const drum_patch& drumPatch = gpWess_drv_drumPatches->get()[drumTypeIdx];
+        const drum_patch& drumPatch = gpWess_drv_drumPatches[drumTypeIdx];
 
         patchIdx = drumPatch.patch_idx;
         voiceNote = (uint8_t) drumPatch.note;
@@ -933,13 +934,13 @@ void PSX_NoteOn(track_status& trackStat) noexcept {
     const uint8_t voiceVol = trackStat.pcur_cmd[2];
     
     // Play all of the voices/sounds for the patch/instrument
-    const patch& patch = gpWess_drv_patches->get()[patchIdx];
+    const patch& patch = gpWess_drv_patches[patchIdx];
     const uint16_t patchVoiceCount = patch.num_voices;
 
     for (uint16_t voiceIdx = 0; voiceIdx < patchVoiceCount; ++voiceIdx) {
         // Grab the details for this particular patch voice
-        const patch_voice& patchVoice = gpWess_drv_patchVoices->get()[patch.first_voice_idx + voiceIdx];
-        const patch_sample& patchSample = gpWess_drv_patchSamples->get()[patchVoice.sample_idx];
+        const patch_voice& patchVoice = gpWess_drv_patchVoices[patch.first_voice_idx + voiceIdx];
+        const patch_sample& patchSample = gpWess_drv_patchSamples[patchVoice.sample_idx];
 
         // Is this sample actually loaded? Do not play anything if it's not in SPU RAM:
         if (patchSample.spu_addr == 0)
@@ -957,8 +958,8 @@ void PSX_NoteOn(track_status& trackStat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void PSX_NoteOff(track_status& trackStat) noexcept {
     // Grab some stuff we'll need in the loop
-    const uint32_t numHwVoices = *gWess_drv_hwVoiceLimit;
-    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats->get();
+    const uint32_t numHwVoices = gWess_drv_hwVoiceLimit;
+    voice_status* const pHwVoiceStats = gpWess_drv_psxVoiceStats;
 
     const uint8_t cmdNote = trackStat.pcur_cmd[1];
     const uint8_t cmdTrackIdx = trackStat.ref_idx;
