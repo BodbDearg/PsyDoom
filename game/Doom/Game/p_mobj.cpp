@@ -52,7 +52,7 @@ void P_RemoveMobj(mobj_t& mobj) noexcept {
         // Remember the item details for later respawning and occupy one queue slot
         const int32_t slotIdx = (*gItemRespawnQueueHead) & ITEMQUESIZE_MASK;
 
-        gItemRespawnTime[slotIdx] = *gTicCon;
+        gItemRespawnTime[slotIdx] = gTicCon;
         gItemRespawnQueue[slotIdx].x = mobj.spawnx;
         gItemRespawnQueue[slotIdx].y = mobj.spawny;
         gItemRespawnQueue[slotIdx].type = mobj.spawntype;
@@ -90,7 +90,7 @@ void P_RespawnSpecials() noexcept {
     // Wait 120 seconds before respawning things
     const int32_t slotIdx = (*gItemRespawnQueueTail) & ITEMQUESIZE_MASK;
     
-    if (*gTicCon - gItemRespawnTime[slotIdx] < 120 * TICRATE)
+    if (gTicCon - gItemRespawnTime[slotIdx] < 120 * TICRATE)
         return;
 
     // Get the spawn location and sector

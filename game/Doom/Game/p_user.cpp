@@ -354,7 +354,7 @@ static void P_CalcHeight(player_t& player) noexcept {
     constexpr int32_t BOB_PHASE_TIME = (VBLANKS_PER_SEC * 2) / 3;
     constexpr int32_t BOB_PHASE_STEP = FINEANGLES / BOB_PHASE_TIME;
 
-    const uint32_t bobPhase = (*gTicCon * BOB_PHASE_STEP) & FINEMASK;
+    const uint32_t bobPhase = (gTicCon * BOB_PHASE_STEP) & FINEMASK;
     const fixed_t bobAmplitude = gFineSine[bobPhase];
 
     // Compute the final view z based on map object z, view height and bob amount

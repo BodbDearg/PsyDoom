@@ -1,14 +1,12 @@
 #pragma once
 
 #include "doomdef.h"
-#include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 
 enum class CdMapTbl_File : int32_t;
 
-extern const VmPtr<int32_t>                 gTicCon;
-extern const VmPtr<int32_t[MAXPLAYERS]>     gPlayersElapsedVBlanks;
-
+extern int32_t      gTicCon;
+extern int32_t      gPlayersElapsedVBlanks[MAXPLAYERS];
 extern uint32_t*    gpDemoBuffer;
 extern uint32_t*    gpDemo_p;
 
@@ -16,10 +14,10 @@ extern uint32_t*    gpDemo_p;
     extern uint32_t*    gpDemoBufferEnd;
 #endif
 
-extern const VmPtr<skill_t>                 gStartSkill;
-extern const VmPtr<int32_t>                 gStartMapOrEpisode;
-extern const VmPtr<gametype_t>              gStartGameType;
-extern const VmPtr<bool32_t>                gbDidAbortGame;
+extern skill_t      gStartSkill;
+extern int32_t      gStartMapOrEpisode;
+extern gametype_t   gStartGameType;
+extern bool         gbDidAbortGame;
 
 void D_DoomMain() noexcept;
 gameaction_t RunLegals() noexcept;

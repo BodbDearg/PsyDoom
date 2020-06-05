@@ -346,7 +346,7 @@ void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
     constexpr uint32_t COSA_MASK = FINEANGLES - 1;
     constexpr uint32_t SINA_MASK = FINEANGLES / 2 - 1;
 
-    const int32_t bobAngle = *gTicCon << 6;
+    const int32_t bobAngle = gTicCon << 6;
     sprite.sx = WEAPONX + (player.bob >> 16) * gFineCosine[bobAngle & COSA_MASK];
     sprite.sy = WEAPONTOP + (player.bob >> 16) * gFineSine[bobAngle & SINA_MASK];
 }

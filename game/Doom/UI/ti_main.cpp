@@ -108,7 +108,7 @@ gameaction_t TIC_Title() noexcept {
             *gTitleScreenSpriteY -= 1;
 
             if (*gTitleScreenSpriteY == 0) {
-                gMenuTimeoutStartTicCon = *gTicCon;     // Start the timeout process...
+                gMenuTimeoutStartTicCon = gTicCon;      // Start the timeout process...
             }
         }
     }
@@ -152,7 +152,7 @@ gameaction_t TIC_Title() noexcept {
         return ga_nothing;
     
     // Once the title sprite reaches the top of the screen, timeout after a while...
-    const bool bHasTimedOut = (*gTicCon - gMenuTimeoutStartTicCon >= 1800);
+    const bool bHasTimedOut = (gTicCon - gMenuTimeoutStartTicCon >= 1800);
     return (bHasTimedOut) ? ga_timeout : ga_nothing;
 }
 

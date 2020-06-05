@@ -888,7 +888,7 @@ void I_NetSetup() noexcept {
         const bool bHaveNetConn = (ProgArgs::gbIsNetServer) ? Network::initForServer() : Network::initForClient();
 
         if (!bHaveNetConn) {
-            *gbDidAbortGame = true;
+            gbDidAbortGame = true;
             return;
         }
     #endif
@@ -913,7 +913,7 @@ void I_NetSetup() noexcept {
             // Wait until the read is done before continuing, or abort if 'select' is pressed
             do {
                 if (LIBETC_PadRead(0) & PAD_SELECT) {
-                    *gbDidAbortGame = true;
+                    gbDidAbortGame = true;
                     LIBCOMB_CombCancelRead();
                     return;
                 }
@@ -936,7 +936,7 @@ void I_NetSetup() noexcept {
             // Wait until the read is done before continuing, or abort if 'select' is pressed
             do {
                 if (LIBETC_PadRead(0) & PAD_SELECT) {
-                    *gbDidAbortGame = true;
+                    gbDidAbortGame = true;
                     LIBCOMB_CombCancelRead();
                     return;
                 }
@@ -950,9 +950,9 @@ void I_NetSetup() noexcept {
     // Send the game details if player 1, if player 2 then receive them:
     if (*gCurPlayerIndex == 0) {
         // Fill in the packet details with game type, skill, map and this player's control bindings
-        gNetOutputPacket[1] = (uint8_t) *gStartGameType;
-        gNetOutputPacket[2] = (uint8_t) *gStartSkill;
-        gNetOutputPacket[3] = (uint8_t) *gStartMapOrEpisode;
+        gNetOutputPacket[1] = (uint8_t) gStartGameType;
+        gNetOutputPacket[2] = (uint8_t) gStartSkill;
+        gNetOutputPacket[3] = (uint8_t) gStartMapOrEpisode;
 
         const uint32_t thisPlayerBtns = I_LocalButtonsToNet(gCtrlBindings.get());
         gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
@@ -1004,9 +1004,9 @@ void I_NetSetup() noexcept {
             ((uint32_t) gNetInputPacket[7] << 24)
         );
 
-        *gStartGameType = (gametype_t) gNetInputPacket[1];
-        *gStartSkill = (skill_t) gNetInputPacket[2];
-        *gStartMapOrEpisode = gNetInputPacket[3];
+        gStartGameType = (gametype_t) gNetInputPacket[1];
+        gStartSkill = (skill_t) gNetInputPacket[2];
+        gStartMapOrEpisode = gNetInputPacket[3];
         gpPlayerCtrlBindings[0] = ptrToVmAddr(I_NetButtonsToLocal(otherPlayerBtns));
         gpPlayerCtrlBindings[1] = ptrToVmAddr(gCtrlBindings.get());
 
@@ -1030,12 +1030,12 @@ void I_NetSetup() noexcept {
     // This will happen if an error occurred, and if this is the case then we should abort the connection attempt:
     #if PC_PSX_DOOM_MODS
         if (!Network::isConnected()) {
-            *gbDidAbortGame = true;
+            gbDidAbortGame = true;
             return;
         }
     #endif
 
-    *gbDidAbortGame = false;
+    gbDidAbortGame = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

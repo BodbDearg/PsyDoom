@@ -24,10 +24,10 @@
 #include "UI/ti_main.h"
 
 // The current number of 60Hz ticks
-const VmPtr<int32_t> gTicCon(0x8007814C);
+int32_t gTicCon;
 
 // The number of elapsed vblanks (60Hz) for all players
-const VmPtr<int32_t[MAXPLAYERS]> gPlayersElapsedVBlanks(0x80077FBC);
+int32_t gPlayersElapsedVBlanks[MAXPLAYERS];
 
 // Pointer to a buffer holding the demo and the current pointer within the buffer for playback/recording
 uint32_t* gpDemoBuffer;
@@ -40,16 +40,16 @@ uint32_t* gpDemo_p;
 #endif
 
 // Game start parameters
-const VmPtr<skill_t>        gStartSkill(0x800775FC);
-const VmPtr<int32_t>        gStartMapOrEpisode(0x80077600);
-const VmPtr<gametype_t>     gStartGameType(0x80077604);
+skill_t     gStartSkill         = sk_medium;
+int32_t     gStartMapOrEpisode  = 1;
+gametype_t  gStartGameType      = gt_single;
 
 // Net games: set if a network game being started was aborted
-const VmPtr<bool32_t>   gbDidAbortGame(0x80077C0C);
+bool gbDidAbortGame = false;
 
 // Debug draw string position
-const VmPtr<int32_t>    gDebugDrawStringXPos(0x80078030);
-const VmPtr<int32_t>    gDebugDrawStringYPos(0x8007803C);
+static int32_t gDebugDrawStringXPos;
+static int32_t gDebugDrawStringYPos;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Main DOOM entry point.
@@ -71,7 +71,7 @@ void D_DoomMain() noexcept {
     *gPrevGameTic = 0;
     *gGameTic = 0;
     *gLastTgtGameTicCount = 0;
-    *gTicCon = 0;
+    gTicCon = 0;
 
     for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
         gTicButtons[playerIdx] = 0;
@@ -220,8 +220,8 @@ gameaction_t RunCredits() noexcept {
 // Set the text position for the debug draw string
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_SetDebugDrawStringPos(const int32_t x, const int32_t y) noexcept {
-    *gDebugDrawStringXPos = x;
-    *gDebugDrawStringYPos = y;
+    gDebugDrawStringXPos = x;
+    gDebugDrawStringYPos = y;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -270,10 +270,10 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         va_end(args);
     }
 
-    I_DrawStringSmall(*gDebugDrawStringXPos, *gDebugDrawStringYPos, msgBuffer);
+    I_DrawStringSmall(gDebugDrawStringXPos, gDebugDrawStringYPos, msgBuffer);
 
     // The message scrolls down the screen as it is drawn more
-    *gDebugDrawStringYPos += 8;
+    gDebugDrawStringYPos += 8;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -417,7 +417,7 @@ gameaction_t MiniLoop(
     *gGameAction = ga_nothing;
     *gPrevGameTic = 0;
     *gGameTic = 0;
-    *gTicCon = 0;
+    gTicCon = 0;
     *gLastTgtGameTicCount = 0;
 
     // Run startup logic for this game loop beginning
@@ -503,11 +503,11 @@ gameaction_t MiniLoop(
 
         // Advance the number of 60 Hz ticks passed.
         // N.B: the tick count used here is ALWAYS for player 1, this is how time is kept in sync for a network game.
-        *gTicCon += gPlayersElapsedVBlanks[0];
+        gTicCon += gPlayersElapsedVBlanks[0];
         
         // Advance to the next game tick if it is time.
         // Video refreshes at 60 Hz but the game ticks at 15 Hz:
-        const int32_t tgtGameTicCount = *gTicCon >> VBLANK_TO_TIC_SHIFT;
+        const int32_t tgtGameTicCount = gTicCon >> VBLANK_TO_TIC_SHIFT;
         
         if (*gLastTgtGameTicCount < tgtGameTicCount) {
             *gLastTgtGameTicCount = tgtGameTicCount;

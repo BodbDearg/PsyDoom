@@ -145,9 +145,9 @@ gameaction_t TIC_PasswordScreen() noexcept {
             // Valid password entered, begin warping to the destination map
             *gbUsingAPassword = true;
             *gGameMap = mapNum;
-            *gStartMapOrEpisode = mapNum;
+            gStartMapOrEpisode = mapNum;
             *gGameSkill = skill;
-            *gStartSkill = skill;
+            gStartSkill = skill;
 
             return ga_warped;
         }
@@ -219,7 +219,7 @@ void DRAW_PasswordScreen() noexcept {
 
         // Flash (don't display every 4 frames) the currently selected password character and make it over-bright
         if (*gCurPasswordCharIdx == pwCharIdx) {
-            if ((*gTicCon) & 4)
+            if (gTicCon & 4)
                 continue;
             
             LIBGPU_setRGB0(spritePrim, 255, 0, 0);          // Selected characters are color multiplied almost 2x and only red

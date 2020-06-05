@@ -369,7 +369,7 @@ void G_RunGame() noexcept {
             if (*gGameAction == ga_exitdemo)
                 break;
 
-            *gStartMapOrEpisode = -2;
+            gStartMapOrEpisode = -2;
             break;
         }
 

@@ -190,7 +190,7 @@ void DRAW_ControlsScreen() noexcept {
             }
 
             // Draw the button, unless the cursor is on it and it is flashing and currently invisible (it's flashed every 8 ticks)
-            if ((gCursorPos[0] != ctrlBindIdx) || ((*gTicCon & 8) == 0)) {
+            if ((gCursorPos[0] != ctrlBindIdx) || ((gTicCon & 8) == 0)) {
                 constexpr uint8_t BTN_SPRITE_SIZE = 16;
 
                 I_DrawSprite(
@@ -222,7 +222,7 @@ void DRAW_ControlsScreen() noexcept {
     // Draw 'Default' (reset controls to default) menu option
     constexpr int32_t menuOptIdx = NUM_CTRL_BINDS;
 
-    if ((gCursorPos[0] != menuOptIdx) || ((*gTicCon & 8) == 0)) {
+    if ((gCursorPos[0] != menuOptIdx) || ((gTicCon & 8) == 0)) {
         I_DrawString(65, NUM_CTRL_BINDS * 20 + 45, "Default");
     }
 

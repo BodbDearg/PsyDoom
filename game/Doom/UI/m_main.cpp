@@ -78,7 +78,7 @@ gameaction_t RunMenu() noexcept {
 
         // If the game type is singleplayer then we can just go straight to initializing and running the game.
         // Otherwise for a net game, we need to establish a connection and show the 'connecting' plaque...
-        if (*gStartGameType == gt_single)
+        if (gStartGameType == gt_single)
             break;
         
         I_DrawLoadingPlaque(*gTex_CONNECT, 54, 103, gPaletteClutIds[MAINPAL]);
@@ -94,10 +94,10 @@ gameaction_t RunMenu() noexcept {
         // Play a sound to acknowledge that the connecting process has ended
         S_StartSound(nullptr, sfx_pistol);
 
-    } while (*gbDidAbortGame);
+    } while (gbDidAbortGame);
 
     // Startup the game!
-    G_InitNew(*gStartSkill, *gStartMapOrEpisode, *gStartGameType);
+    G_InitNew(gStartSkill, gStartMapOrEpisode, gStartGameType);
     G_RunGame();
 
     // PC-PSX: cleanup any network connections if we were doing a net game
@@ -138,20 +138,20 @@ void M_Start() noexcept {
     gCursorPos[0] = 0;
     gVBlanksUntilMenuMove[0] = 0;
     
-    if (*gStartGameType == gt_single) {
+    if (gStartGameType == gt_single) {
         gMaxStartEpisodeOrMap = MAX_EPISODE;
     } else {
         gMaxStartEpisodeOrMap = NUM_REGULAR_MAPS;   // For multiplayer any of the normal (non secret) maps can be selected
     }
     
-    if (*gStartMapOrEpisode > gMaxStartEpisodeOrMap) {
+    if (gStartMapOrEpisode > gMaxStartEpisodeOrMap) {
         // Wrap back around if we have to...
-        *gStartMapOrEpisode = 1;
+        gStartMapOrEpisode = 1;
     }
-    else if (*gStartMapOrEpisode < 0) {
+    else if (gStartMapOrEpisode < 0) {
         // Start map or episode will be set to '< 0' when the Doom I is finished.
         // This implies we want to point the user to Doom II:
-        *gStartMapOrEpisode = 2;
+        gStartMapOrEpisode = 2;
     }
 
     // Play the main menu music
@@ -184,7 +184,7 @@ void M_Start() noexcept {
     gDrawEnvs[1].isbg = true;
 
     // Begin counting for menu timeouts
-    gMenuTimeoutStartTicCon = *gTicCon;
+    gMenuTimeoutStartTicCon = gTicCon;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -196,10 +196,10 @@ void M_Stop(const gameaction_t exitAction) noexcept {
     psxcd_stop();
 
     // Single player: adjust the start map for the episode that was selected
-    if ((exitAction == ga_exit) && (*gStartGameType == gt_single)) {
+    if ((exitAction == ga_exit) && (gStartGameType == gt_single)) {
         // If DOOM II is selected: point to the first map of DOOM II
-        if (*gStartMapOrEpisode != episode_doom1) {
-            *gStartMapOrEpisode = 31;
+        if (gStartMapOrEpisode != episode_doom1) {
+            gStartMapOrEpisode = 31;
         }
     }
 }
@@ -212,11 +212,11 @@ gameaction_t M_Ticker() noexcept {
     const padbuttons_t ticButtons = gTicButtons[0];
 
     if (ticButtons != 0) {
-        gMenuTimeoutStartTicCon = *gTicCon;
+        gMenuTimeoutStartTicCon = gTicCon;
     }
 
     // Exit the menu if timed out
-    if (*gTicCon - gMenuTimeoutStartTicCon >= 1800)
+    if (gTicCon - gMenuTimeoutStartTicCon >= 1800)
         return ga_timeout;
 
     // Animate the skull cursor
@@ -282,36 +282,36 @@ gameaction_t M_Ticker() noexcept {
     if (gCursorPos[0] == gamemode) {
         // Menu left/right movements: game mode
         if (ticButtons & PAD_RIGHT) {
-            if (*gStartGameType < gt_deathmatch) {
-                *gStartGameType = (gametype_t)((uint32_t) *gStartGameType + 1);
+            if (gStartGameType < gt_deathmatch) {
+                gStartGameType = (gametype_t)((uint32_t) gStartGameType + 1);
                 
-                if (*gStartGameType == gt_coop) {
-                    *gStartMapOrEpisode = 1;
+                if (gStartGameType == gt_coop) {
+                    gStartMapOrEpisode = 1;
                 }
 
                 S_StartSound(nullptr, sfx_swtchx);
             }
         }
         else if (ticButtons & PAD_LEFT) {
-            if (*gStartGameType != gt_single) {
-                *gStartGameType = (gametype_t)((uint32_t) *gStartGameType -1);
+            if (gStartGameType != gt_single) {
+                gStartGameType = (gametype_t)((uint32_t) gStartGameType -1);
 
-                if (*gStartGameType == gt_single) {
-                    *gStartMapOrEpisode = 1;
+                if (gStartGameType == gt_single) {
+                    gStartMapOrEpisode = 1;
                 }
 
                 S_StartSound(nullptr, sfx_swtchx);
             }
         }
 
-        if (*gStartGameType == gt_single) {
+        if (gStartGameType == gt_single) {
             gMaxStartEpisodeOrMap = MAX_EPISODE;
         } else {
             gMaxStartEpisodeOrMap = NUM_REGULAR_MAPS;
         }
 
-        if (*gStartMapOrEpisode > gMaxStartEpisodeOrMap) {
-            *gStartMapOrEpisode = 1;
+        if (gStartMapOrEpisode > gMaxStartEpisodeOrMap) {
+            gStartMapOrEpisode = 1;
         }
 
         return ga_nothing;
@@ -319,21 +319,21 @@ gameaction_t M_Ticker() noexcept {
     else if (gCursorPos[0] == level) {
         // Menu left/right movements: level/episode select
         if (ticButtons & PAD_RIGHT) {
-            *gStartMapOrEpisode += 1;
+            gStartMapOrEpisode += 1;
             
-            if (*gStartMapOrEpisode <= gMaxStartEpisodeOrMap) {
+            if (gStartMapOrEpisode <= gMaxStartEpisodeOrMap) {
                 S_StartSound(nullptr, sfx_swtchx);
             } else {
-                *gStartMapOrEpisode = gMaxStartEpisodeOrMap;
+                gStartMapOrEpisode = gMaxStartEpisodeOrMap;
             }
         }
         else if (ticButtons & PAD_LEFT) {
-            *gStartMapOrEpisode -= 1;
+            gStartMapOrEpisode -= 1;
             
-            if (*gStartMapOrEpisode > 0) {
+            if (gStartMapOrEpisode > 0) {
                 S_StartSound(nullptr, sfx_swtchx);
             } else {
-                *gStartMapOrEpisode = 1;
+                gStartMapOrEpisode = 1;
             }
         }
 
@@ -349,14 +349,14 @@ gameaction_t M_Ticker() noexcept {
                 constexpr skill_t MAX_ALLOWED_SKILL = sk_hard;
             #endif
 
-            if (*gStartSkill < MAX_ALLOWED_SKILL) {
-                *gStartSkill = (skill_t)((uint32_t) *gStartSkill + 1);
+            if (gStartSkill < MAX_ALLOWED_SKILL) {
+                gStartSkill = (skill_t)((uint32_t) gStartSkill + 1);
                 S_StartSound(nullptr, sfx_swtchx);
             }
         }
         else if (ticButtons & PAD_LEFT) {
-            if (*gStartSkill != sk_baby) {
-                *gStartSkill = (skill_t)((uint32_t) *gStartSkill - 1);
+            if (gStartSkill != sk_baby) {
+                gStartSkill = (skill_t)((uint32_t) gStartSkill - 1);
                 S_StartSound(nullptr, sfx_swtchx);
             }
         }
@@ -390,10 +390,10 @@ void M_Drawer() noexcept {
 
     // Draw the text for the various menu entries
     I_DrawString(74, gMenuYPos[gamemode], "Game Mode");
-    I_DrawString(90, gMenuYPos[gamemode] + 20, gGameTypeNames[*gStartGameType]);
+    I_DrawString(90, gMenuYPos[gamemode] + 20, gGameTypeNames[gStartGameType]);
 
-    if (*gStartGameType == gt_single) {
-        if (*gStartMapOrEpisode == 1) {
+    if (gStartGameType == gt_single) {
+        if (gStartMapOrEpisode == 1) {
             I_DrawString(74, gMenuYPos[level], "Ultimate Doom");
         } else {
             I_DrawString(74, gMenuYPos[level], "Doom II");
@@ -402,12 +402,12 @@ void M_Drawer() noexcept {
         // Coop or deathmatch game, draw the level number rather than episode
         I_DrawString(74, gMenuYPos[level], "Level");
 
-        const int32_t xpos = (*gStartMapOrEpisode >= 10) ? 148 : 136;
-        I_DrawNumber(xpos, gMenuYPos[level], *gStartMapOrEpisode);
+        const int32_t xpos = (gStartMapOrEpisode >= 10) ? 148 : 136;
+        I_DrawNumber(xpos, gMenuYPos[level], gStartMapOrEpisode);
     }
 
     I_DrawString(74, gMenuYPos[difficulty], "Difficulty");
-    I_DrawString(90, gMenuYPos[difficulty] + 20, gSkillNames[*gStartSkill]);
+    I_DrawString(90, gMenuYPos[difficulty] + 20, gSkillNames[gStartSkill]);
     I_DrawString(74, gMenuYPos[options], "Options");
     
     // Finish up the frame

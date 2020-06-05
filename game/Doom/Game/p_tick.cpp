@@ -181,7 +181,7 @@ void P_CheckCheats() noexcept {
 
                 // Remember the tick we paused on and reset cheat button sequences
                 *gCurCheatBtnSequenceIdx = 0;
-                *gTicConOnPause = *gTicCon;
+                *gTicConOnPause = gTicCon;
                 return;
             }
 
@@ -200,7 +200,7 @@ void P_CheckCheats() noexcept {
             gPlayers[0].cheats &= ~(CF_VRAMVIEWER|CF_WARPMENU);
 
             // Restore previous tick counters on unpause
-            *gTicCon = *gTicConOnPause;
+            gTicCon = *gTicConOnPause;
             *gLastTgtGameTicCount = *gTicConOnPause >> VBLANK_TO_TIC_SHIFT;
         }
 
@@ -277,7 +277,7 @@ void P_CheckCheats() noexcept {
                 // Button pressed to initiate the level warp - kick it off!
                 *gGameAction = ga_warped;
                 player.cheats &= (~CF_WARPMENU);
-                *gStartMapOrEpisode = *gMapNumToCheatWarpTo;
+                gStartMapOrEpisode = *gMapNumToCheatWarpTo;
                 *gGameMap = *gMapNumToCheatWarpTo;
             }
         }
