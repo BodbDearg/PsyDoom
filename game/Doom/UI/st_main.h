@@ -29,17 +29,15 @@ enum spclface_e : int32_t {
 
 // Container for most status bar related state
 struct stbar_t {
-    uint32_t            face;
-    spclface_e          specialFace;
-    uint32_t            tryopen[NUMCARDS];
-    uint32_t            gotgibbed;
-    int32_t             gibframe;
-    int32_t             gibframeTicsLeft;
-    VmPtr<const char>   message;
-    int32_t             messageTicsLeft;
+    uint32_t        face;                   // TODO: COMMENT
+    spclface_e      specialFace;            // TODO: COMMENT
+    uint32_t        tryopen[NUMCARDS];      // TODO: COMMENT
+    uint32_t        gotgibbed;              // TODO: COMMENT
+    int32_t         gibframe;               // TODO: COMMENT
+    int32_t         gibframeTicsLeft;       // TODO: COMMENT
+    const char*     message;                // TODO: COMMENT
+    int32_t         messageTicsLeft;        // TODO: COMMENT
 };
-
-static_assert(sizeof(stbar_t) == 52);
 
 // The number of face sprite definitions there are
 static constexpr int32_t NUMFACES = 47;
@@ -53,8 +51,8 @@ static constexpr int32_t FIRSTSPLAT = 42;   // Gib frames
 // Which slot (by index) on the weapon micronumbers display each weapon maps to
 static constexpr int32_t WEAPON_MICRO_INDEXES[NUMWEAPONS] = { 0, 1, 2, 3, 4, 5, 6, 7, 0 };
 
-extern const facesprite_t       gFaceSprites[NUMFACES];
-extern const VmPtr<stbar_t>     gStatusBar;
+extern const facesprite_t   gFaceSprites[NUMFACES];
+extern stbar_t              gStatusBar;
 
 void ST_Init() noexcept;
 void ST_InitEveryLevel() noexcept;

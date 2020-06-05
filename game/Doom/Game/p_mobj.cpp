@@ -290,12 +290,12 @@ void P_SpawnPlayer(const mapthing_t& mapThing) noexcept {
             return;
         
         // Add weapons from a password (if we are using one)
-        if (*gbUsingAPassword) {
+        if (gbUsingAPassword) {
             int32_t mapNum = {};
             skill_t skill = {};
 
-            P_ProcessPassword(gPasswordCharBuffer.get(), mapNum, skill, &player);
-            *gbUsingAPassword = false;
+            P_ProcessPassword(gPasswordCharBuffer, mapNum, skill, &player);
+            gbUsingAPassword = false;
         }
     }
 

@@ -587,7 +587,7 @@ void P_PlayerThink(player_t& player) noexcept {
                 );
 
                 if (bDoGrimmaceFace) {
-                    gStatusBar->specialFace = f_mowdown;
+                    gStatusBar.specialFace = f_mowdown;
                 }
             } else {
                 // Not attacking this tic: reset the count for number of tics attacking

@@ -849,7 +849,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
         // Hellslime damage
         case 5: {
             if (!player.powers[pw_ironfeet]) {
-                gStatusBar->specialFace = f_mowdown;
+                gStatusBar.specialFace = f_mowdown;
 
                 if ((*gGameTic > *gPrevGameTic) && (*gGameTic % 16 == 0)) {     // Apply roughly every 1 second
                     P_DamageMObj(*player.mo, nullptr, nullptr, 10);
@@ -860,7 +860,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
         // Nukage damage
         case 7: {
             if (!player.powers[pw_ironfeet]) {
-                gStatusBar->specialFace = f_mowdown;
+                gStatusBar.specialFace = f_mowdown;
 
                 if ((*gGameTic > *gPrevGameTic) && (*gGameTic % 16 == 0)) {     // Apply roughly every 1 second
                     P_DamageMObj(*player.mo, nullptr, nullptr, 5);
@@ -873,7 +873,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
         // Super hellslime damage
         case 16: {
             if ((!player.powers[pw_ironfeet]) || (P_Random() < 5)) {    // Occasionally damages even if a radiation suit is worn
-                gStatusBar->specialFace = f_mowdown;
+                gStatusBar.specialFace = f_mowdown;
 
                 if ((*gGameTic > *gPrevGameTic) && (*gGameTic % 16 == 0)) {     // Apply roughly every 1 second
                     P_DamageMObj(*player.mo, nullptr, nullptr, 20);

@@ -60,7 +60,7 @@ bool PIT_ChangeSector(mobj_t& mobj) noexcept {
 
         // If it is the player being gibbed then make the status bar head gib
         if (mobj.player.get() == &gPlayers[*gCurPlayerIndex]) {
-            gStatusBar->gotgibbed = true;
+            gStatusBar.gotgibbed = true;
         }
 
         return true;

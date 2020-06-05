@@ -78,20 +78,6 @@ static const VmPtr<int32_t>                     gTicConOnPause(0x800782D8);     
 // Stat tracking counts
 static const VmPtr<int32_t> gNumActiveThinkers(0x800782F4);
 
-// Cheat activated message strings.
-//
-// TODO: eventually make these be actual C++ string constants.
-// Can't to do that at the moment since these pointers need to be referenced by a 'VmPtr<T>', hence must be inside the executable itself.
-static const VmPtr<const char> STR_Cheat_AllMapLines_On(0x80011060);
-static const VmPtr<const char> STR_Cheat_AllMapLines_Off(0x80011074);
-static const VmPtr<const char> STR_Cheat_AllMapThings_On(0x80011088);
-static const VmPtr<const char> STR_Cheat_AllMapThings_Off(0x8001109C);
-static const VmPtr<const char> STR_Cheat_GodMode_On(0x800110B0);
-static const VmPtr<const char> STR_Cheat_GodMode_Off(0x800110C8);
-static const VmPtr<const char> STR_Cheat_LotsOfGoodies(0x800110E0);
-static const VmPtr<const char> STR_Cheat_On(0x8001106E);                    // Temp 'On' message for 'noclip' cheat.
-static const VmPtr<const char> STR_Cheat_Off(0x80011082);                   // Temp 'Off' message for 'noclip' cheat.
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add a thinker to the linked list of thinkers
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -368,38 +354,38 @@ void P_CheckCheats() noexcept {
                 // Toggle show all map lines cheat
                 case CHT_SEQ_SHOW_ALL_MAP_LINES: {
                     player.cheats ^= CF_ALLLINES;
-                    gStatusBar->messageTicsLeft = 1;
+                    gStatusBar.messageTicsLeft = 1;
 
                     if (player.cheats & CF_ALLLINES) {
-                        gStatusBar->message = STR_Cheat_AllMapLines_On;
+                        gStatusBar.message = "Map All Lines ON.";
                     } else {
-                        gStatusBar->message = STR_Cheat_AllMapLines_Off;
+                        gStatusBar.message = "Map All Lines OFF.";
                     }
                 }   break;
 
                 // Toggle show all map things cheat
                 case CHT_SEQ_SHOW_ALL_MAP_THINGS: {
                     player.cheats ^= CF_ALLMOBJ;
-                    gStatusBar->messageTicsLeft = 1;
+                    gStatusBar.messageTicsLeft = 1;
 
                     if (player.cheats & CF_ALLMOBJ) {
-                        gStatusBar->message = STR_Cheat_AllMapThings_On;
+                        gStatusBar.message = "Map All Things ON.";
                     } else {
-                        gStatusBar->message = STR_Cheat_AllMapThings_Off;
+                        gStatusBar.message = "Map All Things OFF.";
                     }
                 }   break;
 
                 // Toggle god mode cheat
                 case CHT_SEQ_GOD_MODE: {
                     player.cheats ^= CF_GODMODE;
-                    gStatusBar->messageTicsLeft = 1;
+                    gStatusBar.messageTicsLeft = 1;
 
                     if (player.cheats & CF_GODMODE) {
                         player.health = 100;
                         player.mo->health = 100;
-                        gStatusBar->message = STR_Cheat_GodMode_On;
+                        gStatusBar.message = "All Powerful Mode ON.";
                     } else {
-                        gStatusBar->message = STR_Cheat_GodMode_Off;
+                        gStatusBar.message = "All Powerful Mode OFF.";
                     }
                 }   break;
                 
@@ -433,8 +419,8 @@ void P_CheckCheats() noexcept {
                         player.ammo[ammoIdx] = player.maxammo[ammoIdx];
                     }
 
-                    gStatusBar->messageTicsLeft = 1;
-                    gStatusBar->message = STR_Cheat_LotsOfGoodies;
+                    gStatusBar.messageTicsLeft = 1;
+                    gStatusBar.message = "Lots Of Goodies!";
                 }   break;
 
                 // Level warp cheat, bring up the warp menu
@@ -462,12 +448,12 @@ void P_CheckCheats() noexcept {
                 // No-clip cheat
                 case CHT_SEQ_NOCLIP: {
                     player.mo->flags ^= MF_NOCLIP;
-                    gStatusBar->messageTicsLeft = 1;
+                    gStatusBar.messageTicsLeft = 1;
 
                     if (player.mo->flags & MF_NOCLIP) {
-                        gStatusBar->message = STR_Cheat_On;
+                        gStatusBar.message = "Incorporeal Mode ON.";
                     } else {
-                        gStatusBar->message = STR_Cheat_Off;
+                        gStatusBar.message = "Incorporeal Mode OFF.";
                     }
                 }   break;
             #endif

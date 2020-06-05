@@ -17,15 +17,12 @@
 // The list of password characters
 const char gPasswordChars[NUM_PW_CHARS + 1] = "bcdfghjklmnpqrstvwxyz0123456789!";
 
-static const VmPtr<uint32_t>    gInvalidPasswordFlashTicsLeft(0x8007802C);  // How many ticks left to flash 'invalid password' for after entering a wrong password
-static const VmPtr<int32_t>     gCurPasswordCharIdx(0x80078174);            // Which password character is currently selected/highlighted for input
+static uint32_t     gInvalidPasswordFlashTicsLeft;      // How many ticks left to flash 'invalid password' for after entering a wrong password
+static int32_t      gCurPasswordCharIdx;                // Which password character is currently selected/highlighted for input
 
-// How many characters have been input for the current password sequence and the password input buffer
-const VmPtr<int32_t>                gNumPasswordCharsEntered(0x80077C40);
-const VmPtr<uint8_t[PW_SEQ_LEN]>    gPasswordCharBuffer(0x80096560);
-
-// True if a valid password is currently being used
-const VmPtr<bool32_t> gbUsingAPassword(0x80077C3C);
+int32_t     gNumPasswordCharsEntered;               // How many characters have been input for the current password sequence
+uint8_t     gPasswordCharBuffer[PW_SEQ_LEN];        // The password input buffer
+bool        gbUsingAPassword;                       // True if a valid password is currently being used
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the password screen
@@ -38,8 +35,8 @@ void START_PasswordScreen() noexcept {
     gOldTicButtons[0] = gTicButtons[0];
     gOldTicButtons[1] = gTicButtons[1];
 
-    *gInvalidPasswordFlashTicsLeft = 0;
-    *gCurPasswordCharIdx = 0;
+    gInvalidPasswordFlashTicsLeft = 0;
+    gCurPasswordCharIdx = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -49,7 +46,7 @@ void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
     S_StartSound(nullptr, sfx_pistol);
 
     // Draw the screen one more time before we transition
-    *gCurPasswordCharIdx = 32;
+    gCurPasswordCharIdx = 32;
     DRAW_PasswordScreen();
 }
 
@@ -58,11 +55,11 @@ void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_PasswordScreen() noexcept {
     // Do invalid password flash sfx every so often if currently active
-    if (*gInvalidPasswordFlashTicsLeft != 0) {
+    if (gInvalidPasswordFlashTicsLeft != 0) {
         if (*gGameTic > *gPrevGameTic) {
-            *gInvalidPasswordFlashTicsLeft -= 1;
+            gInvalidPasswordFlashTicsLeft -= 1;
             
-            if ((*gInvalidPasswordFlashTicsLeft & 7) == 4) {
+            if ((gInvalidPasswordFlashTicsLeft & 7) == 4) {
                 S_StartSound(nullptr, sfx_itemup);
             }
         }
@@ -83,32 +80,32 @@ gameaction_t TIC_PasswordScreen() noexcept {
             gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
             
             if (ticButtons & PAD_UP) {
-                if (*gCurPasswordCharIdx >= 8) {
-                    *gCurPasswordCharIdx -= 8;
+                if (gCurPasswordCharIdx >= 8) {
+                    gCurPasswordCharIdx -= 8;
                     S_StartSound(nullptr, sfx_pstop);
                 }
             }
             else if (ticButtons & PAD_DOWN) {
-                if (*gCurPasswordCharIdx + 8 < NUM_PW_CHARS) {
-                    *gCurPasswordCharIdx += 8;
+                if (gCurPasswordCharIdx + 8 < NUM_PW_CHARS) {
+                    gCurPasswordCharIdx += 8;
                     S_StartSound(nullptr, sfx_pstop);
                 }
             }
 
             if (ticButtons & PAD_LEFT) {
-                *gCurPasswordCharIdx -= 1;
+                gCurPasswordCharIdx -= 1;
 
-                if (*gCurPasswordCharIdx < 0) {
-                    *gCurPasswordCharIdx = 0;
+                if (gCurPasswordCharIdx < 0) {
+                    gCurPasswordCharIdx = 0;
                 } else {
                     S_StartSound(nullptr, sfx_pstop);
                 }
             }
             else if (ticButtons & PAD_RIGHT) {
-                *gCurPasswordCharIdx += 1;
+                gCurPasswordCharIdx += 1;
 
-                if (*gCurPasswordCharIdx >= NUM_PW_CHARS) {
-                    *gCurPasswordCharIdx = NUM_PW_CHARS - 1;
+                if (gCurPasswordCharIdx >= NUM_PW_CHARS) {
+                    gCurPasswordCharIdx = NUM_PW_CHARS - 1;
                 } else {
                     S_StartSound(nullptr, sfx_pstop);
                 }
@@ -128,12 +125,12 @@ gameaction_t TIC_PasswordScreen() noexcept {
         // Entering a password character (if there is a free slot)
         S_StartSound(nullptr, sfx_swtchx);
 
-        if (*gNumPasswordCharsEntered < PW_SEQ_LEN) {
-            gPasswordCharBuffer[*gNumPasswordCharsEntered] = (uint8_t) *gCurPasswordCharIdx;
-            *gNumPasswordCharsEntered += 1;
+        if (gNumPasswordCharsEntered < PW_SEQ_LEN) {
+            gPasswordCharBuffer[gNumPasswordCharsEntered] = (uint8_t) gCurPasswordCharIdx;
+            gNumPasswordCharsEntered++;
             
             // If the password sequence is not yet complete then there is nothing more to do
-            if (*gNumPasswordCharsEntered < PW_SEQ_LEN)
+            if (gNumPasswordCharsEntered < PW_SEQ_LEN)
                 return ga_nothing;
         }
         
@@ -141,9 +138,9 @@ gameaction_t TIC_PasswordScreen() noexcept {
         int32_t mapNum = {};
         skill_t skill = {};
         
-        if (P_ProcessPassword(gPasswordCharBuffer.get(), mapNum, skill, nullptr)) {
+        if (P_ProcessPassword(gPasswordCharBuffer, mapNum, skill, nullptr)) {
             // Valid password entered, begin warping to the destination map
-            *gbUsingAPassword = true;
+            gbUsingAPassword = true;
             *gGameMap = mapNum;
             gStartMapOrEpisode = mapNum;
             *gGameSkill = skill;
@@ -153,19 +150,19 @@ gameaction_t TIC_PasswordScreen() noexcept {
         }
         else {
             // Invalid password entered, flash the message for a bit
-            *gInvalidPasswordFlashTicsLeft = 16;
+            gInvalidPasswordFlashTicsLeft = 16;
         }
     }
     else if (ticButtons & PAD_TRIANGLE) {
         // Delete a password sequence character and reset it's value in the buffer to the default
         S_StartSound(nullptr, sfx_swtchx);
-        *gNumPasswordCharsEntered -= 1;
+        gNumPasswordCharsEntered--;
 
-        if (*gNumPasswordCharsEntered < 0) {
-            *gNumPasswordCharsEntered = 0;
+        if (gNumPasswordCharsEntered < 0) {
+            gNumPasswordCharsEntered = 0;
         }
 
-        gPasswordCharBuffer[*gNumPasswordCharsEntered] = 0;
+        gPasswordCharBuffer[gNumPasswordCharsEntered] = 0;
     }
 
     return ga_nothing;
@@ -218,7 +215,7 @@ void DRAW_PasswordScreen() noexcept {
         int16_t charY = (int16_t)((charRow * CHAR_SPACING) + 60);
 
         // Flash (don't display every 4 frames) the currently selected password character and make it over-bright
-        if (*gCurPasswordCharIdx == pwCharIdx) {
+        if (gCurPasswordCharIdx == pwCharIdx) {
             if (gTicCon & 4)
                 continue;
             
@@ -266,7 +263,7 @@ void DRAW_PasswordScreen() noexcept {
 
             int32_t xpos = CHARS_START_X;
         
-            for (int32_t charIdx = 0; charIdx < *gNumPasswordCharsEntered; ++charIdx) {
+            for (int32_t charIdx = 0; charIdx < gNumPasswordCharsEntered; ++charIdx) {
                 const uint8_t pwCharIdx = gPasswordCharBuffer[charIdx];
                 charStr[0] = gPasswordChars[pwCharIdx];
                 I_DrawString(xpos, 160, charStr);
@@ -276,16 +273,16 @@ void DRAW_PasswordScreen() noexcept {
         
         // Draw password characters that need to be input
         {
-            int32_t xpos = (*gNumPasswordCharsEntered) * CHARS_SPACING + CHARS_START_X;
+            int32_t xpos = gNumPasswordCharsEntered * CHARS_SPACING + CHARS_START_X;
 
-            for (int32_t charIdx = *gNumPasswordCharsEntered; charIdx < PW_SEQ_LEN; ++charIdx) {
+            for (int32_t charIdx = gNumPasswordCharsEntered; charIdx < PW_SEQ_LEN; ++charIdx) {
                 I_DrawString(xpos, 160, ".");
                 xpos += CHARS_SPACING;
             }
         }
         
         // Flash the invalid password message if a password was entered wrong
-        if (*gInvalidPasswordFlashTicsLeft & 4) {
+        if (gInvalidPasswordFlashTicsLeft & 4) {
             I_DrawString(-1, 200, "Invalid Password");
         }
     }

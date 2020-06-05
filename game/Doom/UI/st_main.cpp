@@ -86,19 +86,19 @@ struct sbflash_t {
     int16_t     times;      // How many flashes are left
 };
 
-static const VmPtr<sbflash_t[NUMCARDS]> gFlashCards(0x800A94B4);
+static sbflash_t gFlashCards[NUMCARDS];
 
-// Status bar
-const VmPtr<stbar_t> gStatusBar(0x80098714);
+// The main state for the status bar
+stbar_t gStatusBar;
 
 // Face related state
-static const VmPtr<int32_t>                 gFaceTics(0x80078134);
-static const VmPtr<bool32_t>                gbDrawSBFace(0x80078130);
-static const VmPtr<VmPtr<facesprite_t>>     gpCurSBFaceSprite(0x80078230);
-static const VmPtr<bool32_t>                gbGibDraw(0x80078058);
-static const VmPtr<bool32_t>                gbDoSpclFace(0x80077ECC);
-static const VmPtr<int32_t>                 gNewFace(0x80078024);
-static const VmPtr<spclface_e>              gSpclFaceType(0x80077F08);
+static int32_t                  gFaceTics;              // Ticks left for current face
+static bool                     gbDrawSBFace;           // Draw the face sprite?
+static const facesprite_t*      gpCurSBFaceSprite;      // Which sprite to draw
+static bool                     gbGibDraw;              // Are we animating the face being gibbed?
+static bool                     gbDoSpclFace;           // Should we do a special face next?
+static int32_t                  gNewFace;               // Which normal face to use next
+static spclface_e               gSpclFaceType;          // Which special face to use next
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // 'Status bar' one time initialization.
@@ -133,18 +133,18 @@ void ST_Init() noexcept {
 // Status bar initialization done at the beginning of each level
 //------------------------------------------------------------------------------------------------------------------------------------------
 void ST_InitEveryLevel() noexcept {
-    gStatusBar->gotgibbed = false;
-    gStatusBar->specialFace = f_none;
-    gStatusBar->messageTicsLeft = 0;
+    gStatusBar.gotgibbed = false;
+    gStatusBar.specialFace = f_none;
+    gStatusBar.messageTicsLeft = 0;
 
-    *gbDrawSBFace = true;
-    *gFaceTics = 0;
-    *gpCurSBFaceSprite = 0x80073E68;    // FIXME: StatusBarFaceSpriteInfo[0] (80073E68)
-    *gbGibDraw = false;
-    *gbDoSpclFace = false;
+    gbDrawSBFace = true;
+    gFaceTics = 0;
+    gpCurSBFaceSprite = &gFaceSprites[0];
+    gbGibDraw = false;
+    gbDoSpclFace = false;
 
     for (int32_t cardIdx = 0; cardIdx < NUMCARDS; ++cardIdx) {
-        gStatusBar->tryopen[cardIdx] = false;
+        gStatusBar.tryopen[cardIdx] = false;
         gFlashCards[cardIdx].active = false;
     }
 }
@@ -157,61 +157,61 @@ void ST_Ticker() noexcept {
     player_t& player = gPlayers[*gCurPlayerIndex];
 
     // Do face animation
-    *gFaceTics -= 1;
+    gFaceTics--;
 
-    if (*gFaceTics <= 0) {
-        *gFaceTics = M_Random() & 15;
-        *gNewFace = M_Random() & 3;
+    if (gFaceTics <= 0) {
+        gFaceTics = M_Random() & 15;
+        gNewFace = M_Random() & 3;
 
-        if (*gNewFace == 3) {
-            *gNewFace = 1;
+        if (gNewFace == 3) {
+            gNewFace = 1;
         }
 
-        *gbDoSpclFace = false;
+        gbDoSpclFace = false;
     }
     
     // Handle if we are doing a special face
-    if (gStatusBar->specialFace != f_none) {
-        *gbDoSpclFace = true;
-        *gSpclFaceType = gStatusBar->specialFace;
-        *gFaceTics = TICRATE;
-        gStatusBar->specialFace = f_none;
+    if (gStatusBar.specialFace != f_none) {
+        gbDoSpclFace = true;
+        gSpclFaceType = gStatusBar.specialFace;
+        gFaceTics = TICRATE;
+        gStatusBar.specialFace = f_none;
     }
 
     // Handle being gibbed
-    if (gStatusBar->gotgibbed) {
-        *gbGibDraw = true;
-        gStatusBar->gibframeTicsLeft = GIBTIME;
-        gStatusBar->gibframe = 0;
-        gStatusBar->gotgibbed = false;
+    if (gStatusBar.gotgibbed) {
+        gbGibDraw = true;
+        gStatusBar.gibframeTicsLeft = GIBTIME;
+        gStatusBar.gibframe = 0;
+        gStatusBar.gotgibbed = false;
     }
     
     // Animate being gibbed
-    if (*gbGibDraw) {
-        gStatusBar->gibframeTicsLeft -= 1;
+    if (gbGibDraw) {
+        gStatusBar.gibframeTicsLeft -= 1;
 
-        if (gStatusBar->gibframeTicsLeft <= 0) {
-            gStatusBar->gibframe += 1;
-            gStatusBar->gibframeTicsLeft = GIBTIME;
+        if (gStatusBar.gibframeTicsLeft <= 0) {
+            gStatusBar.gibframe++;
+            gStatusBar.gibframeTicsLeft = GIBTIME;
 
             // Is the gib animation fully played out? If so we render nothing...
-            if (gStatusBar->gibframe >= 5) {
-                *gbGibDraw = false;
-                *gbDrawSBFace = false;
+            if (gStatusBar.gibframe >= 5) {
+                gbGibDraw = false;
+                gbDrawSBFace = false;
             }
         }
     }
 
     // Handle new messages to display
     if (player.message) {
-        gStatusBar->message = player.message;
-        gStatusBar->messageTicsLeft = TICRATE * 5;
+        gStatusBar.message = player.message.get();
+        gStatusBar.messageTicsLeft = TICRATE * 5;
         player.message = nullptr;
     }
 
     // Decrease message time left
-    if (gStatusBar->messageTicsLeft != 0) {
-        gStatusBar->messageTicsLeft -= 1;
+    if (gStatusBar.messageTicsLeft != 0) {
+        gStatusBar.messageTicsLeft--;
     }
 
     // Update the keycard flash for all keys
@@ -219,9 +219,9 @@ void ST_Ticker() noexcept {
         sbflash_t& flashCard = gFlashCards[cardIdx];
 
         // Are we starting up a keycard flash or processing a current one?
-        if (gStatusBar->tryopen[cardIdx]) {
+        if (gStatusBar.tryopen[cardIdx]) {
             // Starting up a keycard flash
-            gStatusBar->tryopen[cardIdx] = false;
+            gStatusBar.tryopen[cardIdx] = false;
             flashCard.active = true;
             flashCard.delay = FLASHDELAY;
             flashCard.times = FLASHTIMES + 1;
@@ -253,30 +253,30 @@ void ST_Ticker() noexcept {
     // Decide on the face frame to use
     if ((player.cheats & CF_GODMODE) || (player.powers[pw_invulnerability] != 0)) {
         // Godmode/invulnerability face
-        gStatusBar->face = GODFACE;
+        gStatusBar.face = GODFACE;
     } else {
-        if (*gbGibDraw) {
+        if (gbGibDraw) {
             // Player is being gibbed: use that face
-            gStatusBar->face = gStatusBar->gibframe + FIRSTSPLAT;
+            gStatusBar.face = gStatusBar.gibframe + FIRSTSPLAT;
         }
         else if (player.health != 0) {
             // Player is alive: decide on face based on special face type and current health
             const int32_t healthSeg = player.health / 20;
             const int32_t healthFrameOffset = (healthSeg >= 4) ? 0 : (4 - healthSeg) * 8;
 
-            if (*gbDoSpclFace) {
-                gStatusBar->face = *gSpclFaceType + healthFrameOffset;
+            if (gbDoSpclFace) {
+                gStatusBar.face = gSpclFaceType + healthFrameOffset;
             } else {
-                gStatusBar->face = *gNewFace + healthFrameOffset;
+                gStatusBar.face = gNewFace + healthFrameOffset;
             }
         } else {
             // Player is dead: use dead face
-            gStatusBar->face = DEADFACE;
+            gStatusBar.face = DEADFACE;
         }
     }
     
     // Save the sprite info for the face that will be drawn
-    *gpCurSBFaceSprite = 0x80073E68 + gStatusBar->face * sizeof(facesprite_t);  // FIXME: StatusBarFaceSpriteInfo[0] (80073E68)
+    gpCurSBFaceSprite = &gFaceSprites[gStatusBar.face];
 
     // Update the current palette in use
     I_UpdatePalette();
@@ -311,8 +311,8 @@ void ST_Drawer() noexcept {
     // Draw the current status bar message, or the map name (if in the automap)
     player_t& player = gPlayers[*gCurPlayerIndex];
 
-    if (gStatusBar->messageTicsLeft > 0) {
-        I_DrawStringSmall(7, 193, gStatusBar->message.get());
+    if (gStatusBar.messageTicsLeft > 0) {
+        I_DrawStringSmall(7, 193, gStatusBar.message);
     } else {
         if (player.automapflags & AF_ACTIVE) {
             constexpr const char* const MAP_TITLE_FMT = "LEVEL %d:%s";
@@ -423,8 +423,8 @@ void ST_Drawer() noexcept {
     }
 
     // Draw the doomguy face if enabled
-    if (*gbDrawSBFace) {
-        const facesprite_t& sprite = **gpCurSBFaceSprite;
+    if (gbDrawSBFace) {
+        const facesprite_t& sprite = *gpCurSBFaceSprite;
 
         LIBGPU_setXY0(spritePrim, sprite.xPos, sprite.yPos);
         LIBGPU_setUV0(spritePrim, sprite.texU, sprite.texV);

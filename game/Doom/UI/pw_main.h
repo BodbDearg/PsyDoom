@@ -8,10 +8,10 @@ static constexpr int32_t NUM_PW_CHARS = 32;
 // The length of a password sequence
 static constexpr int32_t PW_SEQ_LEN = 10;
 
-extern const char                           gPasswordChars[NUM_PW_CHARS + 1];
-extern const VmPtr<int32_t>                 gNumPasswordCharsEntered;
-extern const VmPtr<uint8_t[PW_SEQ_LEN]>     gPasswordCharBuffer;
-extern const VmPtr<bool32_t>                gbUsingAPassword;
+extern const char   gPasswordChars[NUM_PW_CHARS + 1];
+extern int32_t      gNumPasswordCharsEntered;
+extern uint8_t      gPasswordCharBuffer[PW_SEQ_LEN];
+extern bool         gbUsingAPassword;
 
 void START_PasswordScreen() noexcept;
 void STOP_PasswordScreen(const gameaction_t exitAction) noexcept;

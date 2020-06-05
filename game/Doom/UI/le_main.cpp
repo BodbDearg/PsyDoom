@@ -25,7 +25,7 @@ void START_Legals() noexcept {
     I_LoadAndCacheTexLump(*gTex_LEGALS, "LEGALS", 0);
     
     S_StartSound(nullptr, sfx_sgcock);
-    *gTitleScreenSpriteY = SCREEN_H;
+    gTitleScreenSpriteY = SCREEN_H;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -41,10 +41,10 @@ void STOP_Legals([[maybe_unused]] const gameaction_t exitAction) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_Legals() noexcept {
     // Scroll the legal text, otherwise check for timeout
-    if (*gTitleScreenSpriteY > 0) {
-        *gTitleScreenSpriteY = *gTitleScreenSpriteY - 1;
+    if (gTitleScreenSpriteY > 0) {
+        gTitleScreenSpriteY--;
     
-        if (*gTitleScreenSpriteY == 0) {
+        if (gTitleScreenSpriteY == 0) {
             gMenuTimeoutStartTicCon = gTicCon;
         }
     } else {
@@ -68,7 +68,7 @@ gameaction_t TIC_Legals() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DRAW_Legals() noexcept {
     I_IncDrawnFrameCount();
-    I_CacheAndDrawSprite(*gTex_LEGALS, 0, (int16_t) *gTitleScreenSpriteY, gPaletteClutIds[UIPAL]);
+    I_CacheAndDrawSprite(*gTex_LEGALS, 0, (int16_t) gTitleScreenSpriteY, gPaletteClutIds[UIPAL]);
 
     I_SubmitGpuCmds();
     I_DrawPresent();

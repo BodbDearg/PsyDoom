@@ -194,7 +194,7 @@ bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bDropp
 
         // If this player is picking up the gun then switch to the evil grin status bar face
         if (&player == &gPlayers[*gCurPlayerIndex]) {
-            gStatusBar->specialFace = f_gotgat;
+            gStatusBar.specialFace = f_gotgat;
         }
     }
 
@@ -709,7 +709,7 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
             bDoGibbing = true;
 
             if (pTargetPlayer == &gPlayers[*gCurPlayerIndex]) {
-                gStatusBar->gotgibbed = true;
+                gStatusBar.gotgibbed = true;
             }
 
             S_StartSound(&target, sfx_slop);    // Gib death sound
@@ -791,7 +791,7 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
 
         // If more than 30 HP are taken then do the special shocked face for that
         if ((damageAmt > 30) && (pTargetPlayer == &curPlayer)) {
-            gStatusBar->specialFace = f_hurtbad;
+            gStatusBar.specialFace = f_hurtbad;
         }
     }
 
@@ -841,10 +841,10 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
             const angle_t angleToAttacker = forceAngle - target.angle;
 
             if ((angleToAttacker > ANG45 + ANG45 / 2) && (angleToAttacker < ANG180)) {
-                gStatusBar->specialFace = f_faceright;
+                gStatusBar.specialFace = f_faceright;
             }
             else if ((angleToAttacker > ANG180) && (angleToAttacker < ANG270 + ANG45 / 2)) {
-                gStatusBar->specialFace = f_faceleft;
+                gStatusBar.specialFace = f_faceleft;
             }
         }
 

@@ -20,14 +20,14 @@
 
 // Current position of the DOOM logo.
 // Also adopted by the 'legals' screen for the same purpose.
-const VmPtr<int32_t> gTitleScreenSpriteY(0x80078190);
+int32_t gTitleScreenSpriteY;
 
 // The DOOM logo texture
 static const VmPtr<texture_t> gTex_TITLE(0x80097A30);
 
 // Controls how frequently the title sprite and fire sky update and move
-static const VmPtr<int32_t> gVBlanksUntilTitleSprMove(0x80077C84);
-static const VmPtr<int32_t> gVBlanksUntilTitleFireMove(0x80077C88);
+static int32_t gVBlanksUntilTitleSprMove;
+static int32_t gVBlanksUntilTitleFireMove;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialization logic for the main title screen
@@ -69,7 +69,7 @@ void START_Title() noexcept {
     }
     
     // Initially the DOOM logo is offscreen
-    *gTitleScreenSpriteY = SCREEN_H + 10;
+    gTitleScreenSpriteY = SCREEN_H + 10;
 
     // Play the music for the title screen
     psxcd_play(gCDTrackNum[cdmusic_title_screen], *gCdMusicVol);
@@ -97,32 +97,32 @@ gameaction_t TIC_Title() noexcept {
     
     // Decrement the time until the title sprite moves
     const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[*gCurPlayerIndex];
-    *gVBlanksUntilTitleSprMove -= elapsedVBlanks;
+    gVBlanksUntilTitleSprMove -= elapsedVBlanks;
     
     // If it is time to move the title sprite then do that.
     // Stop the title sprite also once it reaches the top of the screen and begin the menu timeout counter.
-    if (*gVBlanksUntilTitleSprMove <= 0) {
-        *gVBlanksUntilTitleSprMove = 2;
+    if (gVBlanksUntilTitleSprMove <= 0) {
+        gVBlanksUntilTitleSprMove = 2;
 
-        if (*gTitleScreenSpriteY != 0) {
-            *gTitleScreenSpriteY -= 1;
+        if (gTitleScreenSpriteY != 0) {
+            gTitleScreenSpriteY -= 1;
 
-            if (*gTitleScreenSpriteY == 0) {
+            if (gTitleScreenSpriteY == 0) {
                 gMenuTimeoutStartTicCon = gTicCon;      // Start the timeout process...
             }
         }
     }
 
     // Update the fire sky if it is time to do that
-    *gVBlanksUntilTitleFireMove -= elapsedVBlanks;
+    gVBlanksUntilTitleFireMove -= elapsedVBlanks;
     
-    if (*gVBlanksUntilTitleFireMove <= 0) {
-        *gVBlanksUntilTitleFireMove = 2;
+    if (gVBlanksUntilTitleFireMove <= 0) {
+        gVBlanksUntilTitleFireMove = 2;
 
         // Once the title screen sprite is above a certain height, begin to fizzle out the fire.
         // Do this for every even y position that the title screen sprite is at.
         // Eventually it will settle at position '0' so we will do this all the time then and completely put out the fire.
-        if ((*gTitleScreenSpriteY < 50) && ((*gTitleScreenSpriteY & 1) == 0)) {
+        if ((gTitleScreenSpriteY < 50) && ((gTitleScreenSpriteY & 1) == 0)) {
             // Get the pixels for the last row in the fire sky
             texture_t& skyTex = *gpSkyTexture;
             uint8_t* const pLumpData = (uint8_t*)(*gpLumpCache)[skyTex.lumpNum].get();
@@ -148,7 +148,7 @@ gameaction_t TIC_Title() noexcept {
     }
     
     // If the title sprite has not reached the top of the screen then we don't ever timeout
-    if (*gTitleScreenSpriteY != 0)
+    if (gTitleScreenSpriteY != 0)
         return ga_nothing;
     
     // Once the title sprite reaches the top of the screen, timeout after a while...
@@ -175,7 +175,7 @@ void DRAW_Title() noexcept {
             255,    239
         );
 
-        const int16_t titleY = (int16_t) *gTitleScreenSpriteY;
+        const int16_t titleY = (int16_t) gTitleScreenSpriteY;
 
         LIBGPU_setXY4(polyPrim,
             0,      titleY,

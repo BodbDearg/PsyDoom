@@ -148,8 +148,8 @@ void IN_Start() noexcept {
 
     // Compute the password for the next map and mark it as entered (so we don't do a pistol start)
     if (*gNextMap <= NUM_MAPS) {
-        P_ComputePassword(gPasswordCharBuffer.get());
-        *gNumPasswordCharsEntered = 10;
+        P_ComputePassword(gPasswordCharBuffer);
+        gNumPasswordCharsEntered = 10;
     }
     
     // Play the intermission cd track
