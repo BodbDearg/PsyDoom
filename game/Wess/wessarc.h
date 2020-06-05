@@ -349,7 +349,7 @@ static_assert(sizeof(voice_status) == 24);
 // It's populated with information from the module file (.WMD) and contains state for all of the active sequences, tracks within sequences and
 // individual voices. It also holds volume levels, driver info and callbacks etc.
 struct master_status_structure {
-    VmPtr<uint32_t>             pabstime_ms;                // Pointer to the current absolute sequencer time (MS)
+    uint32_t*                   pabstime_ms;                // Pointer to the current absolute sequencer time (MS)
     uint8_t                     num_active_seqs;            // How many sequence statuses are currently allocated from the pool of sequence statuses
     uint8_t                     num_active_tracks;          // How many track statuses are currently allocated from the pool of track statuses
     uint8_t                     num_active_voices;          // How many voices are currently allocated among all tracks
@@ -371,14 +371,12 @@ struct master_status_structure {
     VmPtr<PsxCd_File>           pmodule_file;               // Pointer to the module file itself
 };
 
-static_assert(sizeof(master_status_structure) == 56);
-
-extern const VmPtr<uint32_t>                    gWess_Millicount;
-extern const VmPtr<uint32_t>                    gWess_Millicount_Frac;
-extern const VmPtr<bool32_t>                    gbWess_WessTimerActive;
-extern const VmPtr<uint8_t[CD_SECTOR_SIZE]>     gWess_sectorBuffer1;
-extern const VmPtr<uint8_t[CD_SECTOR_SIZE]>     gWess_sectorBuffer2;
-extern const VmPtr<bool32_t>                    gbWess_SeqOn;
+extern uint32_t     gWess_Millicount;
+extern uint32_t     gWess_Millicount_Frac;
+extern bool         gbWess_WessTimerActive;
+extern uint8_t      gWess_sectorBuffer1[CD_SECTOR_SIZE];
+extern uint8_t      gWess_sectorBuffer2[CD_SECTOR_SIZE];
+extern bool         gbWess_SeqOn;
 
 // Type for a driver or sequencer command function.
 // The format of the function depends on the particular command function invoked.

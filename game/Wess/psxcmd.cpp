@@ -245,7 +245,7 @@ void PSX_DriverInit(master_status_structure& mstat) noexcept {
     gpWess_drv_voiceStats = mstat.pvoice_stats.get();
     gWess_drv_numPatchGroups = numPatchGroups;
     gWess_drv_totalVoices = mstat.max_voices;
-    gpWess_drv_cur_abstime_ms = mstat.pabstime_ms.get();
+    gpWess_drv_cur_abstime_ms = mstat.pabstime_ms;
     
     // Determine the start of the PSX hardware voices in the voices list
     gpWess_drv_psxVoiceStats = gpWess_drv_voiceStats;

@@ -6,19 +6,17 @@
 
 #include "wessarc.h"
 
-// Has the sequence loader been initialized?
-const VmPtr<bool32_t>   gbWess_seq_loader_enable(0x80075960);
+bool gbWess_seq_loader_enable;      // Has the sequence loader been initialized?
 
-static const VmPtr<int32_t>                             gWess_num_sequences(0x8007596C);            // The number of sequences in the loaded module file
-static const VmPtr<int32_t>                             gWess_seqld_moduleRefCount(0x80075974);     // Reference count for the opened module file - closed upon reaching '0'
-static const VmPtr<VmPtr<PsxCd_File>>                   gpWess_seqld_moduleFile(0x80075980);        // The module file from which sequences are loaded
-static const VmPtr<CdMapTbl_File>                       gWess_seqld_moduleFileId(0x80075964);       // File id for the module file
-static const VmPtr<VmPtr<master_status_structure>>      gpWess_seqld_mstat(0x80075968);             // Saved reference to the master status structure
-static const VmPtr<track_header>                        gWess_seqld_seqTrackHdr(0x8007F050);        // Track header for the current sequence track being loaded
-static const VmPtr<track_header>                        gWess_seqld_emptyTrackHdr(0x8007F068);      // Track header for a generated dummy track for empty sequences with no tracks
-
-static SeqLoaderErrorHandler    gpWess_seqld_errorHandler;      // Callback invoked if there are problems loading sequences
-static int32_t                  gWess_seqld_errorModule;        // Module value passed to the error handling callback
+static int32_t                      gWess_num_sequences;            // The number of sequences in the loaded module file
+static int32_t                      gWess_seqld_moduleRefCount;     // Reference count for the opened module file - closed upon reaching '0'
+static PsxCd_File*                  gpWess_seqld_moduleFile;        // The module file from which sequences are loaded
+static CdMapTbl_File                gWess_seqld_moduleFileId;       // File id for the module file
+static master_status_structure*     gpWess_seqld_mstat;             // Saved reference to the master status structure
+static track_header                 gWess_seqld_seqTrackHdr;        // Track header for the current sequence track being loaded
+static track_header                 gWess_seqld_emptyTrackHdr;      // Track header for a generated dummy track for empty sequences with no tracks
+static SeqLoaderErrorHandler        gpWess_seqld_errorHandler;      // Callback invoked if there are problems loading sequences
+static int32_t                      gWess_seqld_errorModule;        // Module value passed to the error handling callback
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Invokes the sequence loader error handler with the given error code
@@ -41,7 +39,7 @@ void wess_seq_loader_install_error_handler(const SeqLoaderErrorHandler handler, 
 // Tells if the given sequence index is valid for the open module (.WMD) file
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool Is_Seq_Seq_Num_Valid(const int32_t seqIdx) noexcept {
-    return ((seqIdx >= 0) && (seqIdx < *gWess_num_sequences));
+    return ((seqIdx >= 0) && (seqIdx < gWess_num_sequences));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -50,16 +48,16 @@ bool Is_Seq_Seq_Num_Valid(const int32_t seqIdx) noexcept {
 // Returns 'true' if the file is successfully opened.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool open_sequence_data() noexcept {
-    if (*gWess_seqld_moduleRefCount == 0) {
-        *gpWess_seqld_moduleFile = module_open(*gWess_seqld_moduleFileId);
+    if (gWess_seqld_moduleRefCount == 0) {
+        gpWess_seqld_moduleFile = module_open(gWess_seqld_moduleFileId);
 
-        if (!gpWess_seqld_moduleFile->get()) {
+        if (!gpWess_seqld_moduleFile) {
             wess_seq_load_err(SEQLOAD_FOPEN);
             return false;
         }
     }
 
-    *gWess_seqld_moduleRefCount += 1;
+    gWess_seqld_moduleRefCount++;
     return true;
 }
 
@@ -68,12 +66,12 @@ bool open_sequence_data() noexcept {
 // If the reference count falls to '0' then the file is closed.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void close_sequence_data() noexcept {
-    if (*gWess_seqld_moduleRefCount == 1) {
-        module_close(*gpWess_seqld_moduleFile->get());
+    if (gWess_seqld_moduleRefCount == 1) {
+        module_close(*gpWess_seqld_moduleFile);
     }
 
-    if (*gWess_seqld_moduleRefCount > 0) {
-        *gWess_seqld_moduleRefCount -= 1;
+    if (gWess_seqld_moduleRefCount > 0) {
+        gWess_seqld_moduleRefCount--;
     }
 }
 
@@ -83,7 +81,7 @@ void close_sequence_data() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noexcept {
     // Can't load if the sequence loader wasn't initialized or the sequence index is invalid
-    if ((!*gbWess_seq_loader_enable) || (!Is_Seq_Seq_Num_Valid(seqIdx)))
+    if ((!gbWess_seq_loader_enable) || (!Is_Seq_Seq_Num_Valid(seqIdx)))
         return 0;
 
     // Make sure the module file containing the sequence is open
@@ -94,7 +92,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
 
     // Allocate room for all the track infos in the sequence.
     // If there are no tracks in the sequence then alloc room for one default empty track:
-    master_status_structure& mstat = *gpWess_seqld_mstat->get();
+    master_status_structure& mstat = *gpWess_seqld_mstat;
     module_data& module = *mstat.pmodule;
     sequence_data& sequence = module.psequences[seqIdx];
     
@@ -108,7 +106,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
     }
 
     // Go to where the sequence is located in the module file
-    PsxCd_File& moduleFile = *gpWess_seqld_moduleFile->get();
+    PsxCd_File& moduleFile = *gpWess_seqld_moduleFile;
 
     if (module_seek(moduleFile, sequence.modfile_offset, PsxCd_SeekMode::SET) != 0) {
         wess_seq_load_err(SEQLOAD_FSEEK);
@@ -124,7 +122,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
     // Read all of the tracks in the sequence
     for (uint16_t trackIdx = 0; trackIdx < sequence.hdr.num_tracks; ++trackIdx) {
         // Read the track header firstly
-        track_header& trackHdr = *gWess_seqld_seqTrackHdr;
+        track_header& trackHdr = gWess_seqld_seqTrackHdr;
 
         if (module_read(&trackHdr, sizeof(track_header), moduleFile) != sizeof(track_header)) {
             wess_seq_load_err(SEQLOAD_FREAD);
@@ -243,7 +241,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
     if (sequence.num_tracks == 0) {
         // Set the track header and label list pointer
         track_data& track = sequence.ptracks[0];
-        track.hdr = *gWess_seqld_emptyTrackHdr;
+        track.hdr = gWess_seqld_emptyTrackHdr;
         track.plabels = (uint32_t*) pCurSeqMem;
         
         // Init and alloc the track command stream with two commands.
@@ -272,21 +270,21 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool wess_seq_loader_init(master_status_structure* const pMStat, const CdMapTbl_File moduleFileId, const bool bOpenModuleFile) noexcept {
     // Some very basic initialization
-    *gbWess_seq_loader_enable = false;
-    *gWess_seqld_moduleFileId = moduleFileId;
-    *gpWess_seqld_mstat = pMStat;
+    gbWess_seq_loader_enable = false;
+    gWess_seqld_moduleFileId = moduleFileId;
+    gpWess_seqld_mstat = pMStat;
 
     // If there is no master stat then this fails
     if (!pMStat)
         return false;
 
     // Save the number of sequences in the module
-    *gbWess_seq_loader_enable = true;
-    *gWess_num_sequences = pMStat->pmodule->hdr.num_sequences;
+    gbWess_seq_loader_enable = true;
+    gWess_num_sequences = pMStat->pmodule->hdr.num_sequences;
 
     // Fill in the header for the default empty track.
     // This is used to create a 'dummy' track when a sequence contains no tracks - so a sequence always has 1 track.
-    track_header& emptyTrackHdr = *gWess_seqld_emptyTrackHdr;
+    track_header& emptyTrackHdr = gWess_seqld_emptyTrackHdr;
     emptyTrackHdr.priority = 128;
     emptyTrackHdr.init_volume_cntrl = 127;
     emptyTrackHdr.init_pan_cntrl = 64;
@@ -319,7 +317,7 @@ bool wess_seq_loader_init(master_status_structure* const pMStat, const CdMapTbl_
 //------------------------------------------------------------------------------------------------------------------------------------------
 void wess_seq_loader_exit() noexcept {
     close_sequence_data();
-    *gbWess_seq_loader_enable = false;
+    gbWess_seq_loader_enable = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -327,8 +325,8 @@ void wess_seq_loader_exit() noexcept {
 // Returns '0' also if the sequence loader is not initialized or the sequence number invalid.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t wess_seq_sizeof(const int32_t seqIdx) noexcept {
-    if ((*gbWess_seq_loader_enable) && Is_Seq_Seq_Num_Valid(seqIdx)) {
-        master_status_structure& mstat = *gpWess_seqld_mstat->get();
+    if (gbWess_seq_loader_enable && Is_Seq_Seq_Num_Valid(seqIdx)) {
+        master_status_structure& mstat = *gpWess_seqld_mstat;
         sequence_data& sequence = mstat.pmodule->psequences[seqIdx];
         return (sequence.ptracks) ? 0 : sequence.track_data_size;
     }
@@ -342,11 +340,11 @@ int32_t wess_seq_sizeof(const int32_t seqIdx) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t wess_seq_load(const int32_t seqIdx, void* const pSeqMem) noexcept {
     // Don't load if the sequence index is invalid or the sequence loader not initialized
-    if ((!*gbWess_seq_loader_enable) || (!Is_Seq_Seq_Num_Valid(seqIdx)))
+    if ((!gbWess_seq_loader_enable) || (!Is_Seq_Seq_Num_Valid(seqIdx)))
         return 0;
 
     // Only load the sequence if not already loaded, otherwise we return '0' for using zero bytes from the given buffer
-    master_status_structure& mstat = *gpWess_seqld_mstat->get();
+    master_status_structure& mstat = *gpWess_seqld_mstat;
     sequence_data& sequence = mstat.pmodule->psequences[seqIdx];
     return (!sequence.ptracks) ? load_sequence_data(seqIdx, pSeqMem) : 0;
 }
@@ -356,10 +354,10 @@ int32_t wess_seq_load(const int32_t seqIdx, void* const pSeqMem) noexcept {
 // Depsite what the name implies, this does not actually free any memory - it just clears a pointer reference to the sequence data.
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool wess_seq_free(const int32_t seqIdx) noexcept {
-    if ((!*gbWess_seq_loader_enable) || (!Is_Seq_Seq_Num_Valid(seqIdx)))
+    if ((!gbWess_seq_loader_enable) || (!Is_Seq_Seq_Num_Valid(seqIdx)))
         return false;
 
-    master_status_structure& mstat = *gpWess_seqld_mstat->get();
+    master_status_structure& mstat = *gpWess_seqld_mstat;
     sequence_data& sequence = mstat.pmodule->psequences[seqIdx];
 
     if (sequence.ptracks) {

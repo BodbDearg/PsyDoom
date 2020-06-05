@@ -209,9 +209,9 @@ int32_t wess_dig_lcd_psxcd_sync() noexcept {
     #if PC_PSX_DOOM_MODS
         return 0;
     #else
-        const uint32_t timeoutMs = *gWess_Millicount + 8000;
+        const uint32_t timeoutMs = gWess_Millicount + 8000;
     
-        while (*gWess_Millicount < timeoutMs) {
+        while (gWess_Millicount < timeoutMs) {
             // Note: the sync result was a global but it wasn't used anywhere else so I made it local instead...
             uint8_t syncResult[8];
             const CdlSyncStatus status = LIBCD_CdSync(1, syncResult);
@@ -270,7 +270,7 @@ int32_t wess_dig_lcd_load(
         uint16_t    patchSampleIndices[MAX_LCD_SOUNDS];
     };
 
-    LCDHeader* const pLcdHeader = (LCDHeader*) gWess_sectorBuffer1.get();
+    LCDHeader* const pLcdHeader = (LCDHeader*) gWess_sectorBuffer1;
 
     if (psxcd_read(pLcdHeader, sizeof(LCDHeader), *pLcdFile) != sizeof(LCDHeader))
         return 0;
@@ -282,7 +282,7 @@ int32_t wess_dig_lcd_load(
     // Set the number of sounds to load globally and which buffer contains the LCD header.
     // Also initialize other variables used by 'wess_dig_lcd_data_read':
     gWess_lcd_load_numSounds = pLcdHeader->numPatchSamples;
-    gpWess_lcd_load_headerBuf = gWess_sectorBuffer1.get();
+    gpWess_lcd_load_headerBuf = gWess_sectorBuffer1;
 
     gWess_lcd_load_soundNum = 0;
     gWess_lcd_load_samplePos = destSpuAddr;
@@ -298,7 +298,7 @@ int32_t wess_dig_lcd_load(
 
     while (lcdBytesLeft > 0) {
         // Read this sector from the LCD file and the number of bytes left is smaller then read that amount instead
-        uint8_t* const sectorBuffer = gWess_sectorBuffer2.get();
+        uint8_t* const sectorBuffer = gWess_sectorBuffer2;
         const int32_t readSize = (lcdBytesLeft < CD_SECTOR_SIZE) ? lcdBytesLeft : CD_SECTOR_SIZE;
         psxcd_read(sectorBuffer, readSize, *pLcdFile);
 
@@ -407,7 +407,7 @@ int32_t wess_dig_lcd_load(
             }
             
             // Grab the contents of this CD sector
-            uint8_t* const pSectorBuffer = (bUseSectorBuffer2) ? gWess_sectorBuffer2.get() : gWess_sectorBuffer1.get();
+            uint8_t* const pSectorBuffer = (bUseSectorBuffer2) ? gWess_sectorBuffer2 : gWess_sectorBuffer1;
             LIBCD_CdGetSector(pSectorBuffer, CD_SECTOR_SIZE / sizeof(uint32_t));
             lcdSoundBytesLeft -= CD_SECTOR_SIZE;
             

@@ -272,7 +272,7 @@ void psxspu_start_cd_fade(const int32_t fadeTimeMs, const int32_t destVol) noexc
 
     gbPsxSpu_timer_callback_enabled = false;
 
-    if (*gbWess_WessTimerActive) {
+    if (gbWess_WessTimerActive) {
         // Note: the timer callback fires at approximately 120 Hz, hence convert from MS to a 120 Hz tick count here
         gPsxSpu_cd_fade_ticks_left = (fadeTimeMs * 120) / 1000 + 1;
         gPsxSpu_cd_destvol_fixed = destVol * 0x10000;
@@ -328,7 +328,7 @@ int32_t psxspu_get_master_vol() noexcept {
 void psxspu_start_master_fade(const int32_t fadeTimeMs, const int32_t destVol) noexcept {
     gbPsxSpu_timer_callback_enabled = false;
 
-    if (*gbWess_WessTimerActive) {
+    if (gbWess_WessTimerActive) {
         // Note: the timer callback fires at approximately 120 Hz, hence convert from MS to a 120 Hz tick count here
         gPsxSpu_master_fade_ticks_left = (fadeTimeMs * 120) / 1000 + 1;
         gPsxSpu_master_destvol_fixed = destVol << 16;

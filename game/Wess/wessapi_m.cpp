@@ -49,7 +49,7 @@ void wess_master_mus_vol_set(const uint8_t musicVol) noexcept {
 
     // Temporarily disable the sequencer while we do this.
     // It was originally fired by hardware timer interrupts, so this step was required.
-    *gbWess_SeqOn = false;
+    gbWess_SeqOn = false;
 
     // Update the master volume global
     gWess_master_mus_volume = musicVol;
@@ -111,7 +111,7 @@ void wess_master_mus_vol_set(const uint8_t musicVol) noexcept {
     }
 
     // Re-enable the sequencer
-    *gbWess_SeqOn = true;
+    gbWess_SeqOn = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

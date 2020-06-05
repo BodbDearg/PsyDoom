@@ -122,9 +122,9 @@ void psxcd_sync() noexcept {
     // PC-PSX: this logic is no longer neccessary.
     // The reimplementation of LIBCD executes everything synchronously.
     #if !PC_PSX_DOOM_MODS
-        const uint32_t timeoutMs = *gWess_Millicount + 8000;
+        const uint32_t timeoutMs = gWess_Millicount + 8000;
 
-        while (*gWess_Millicount < timeoutMs) {
+        while (gWess_Millicount < timeoutMs) {
             gPSXCD_sync_intr = LIBCD_CdSync(1, gPSXCD_sync_result);
 
             if (gPSXCD_sync_intr == CdlDiskError) {
@@ -153,9 +153,9 @@ bool psxcd_critical_sync() noexcept {
     #if PC_PSX_DOOM_MODS
         return true;
     #else
-        const uint32_t timeoutMs = *gWess_Millicount + 8000;
+        const uint32_t timeoutMs = gWess_Millicount + 8000;
 
-        while (*gWess_Millicount < timeoutMs) {
+        while (gWess_Millicount < timeoutMs) {
             gPSXCD_sync_intr = LIBCD_CdSync(1, gPSXCD_sync_result);
 
             if (gPSXCD_sync_intr == CdlDiskError) {

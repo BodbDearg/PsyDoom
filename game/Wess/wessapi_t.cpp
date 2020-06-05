@@ -153,7 +153,7 @@ void wess_seq_update_type_special(const uint32_t seqType, const TriggerPlayAttr*
 
     // Temporarily disable the sequencer while we do this.
     // It was originally fired by hardware timer interrupts, so this step was required.
-    *gbWess_SeqOn = false;
+    gbWess_SeqOn = false;
 
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat;
@@ -205,7 +205,7 @@ void wess_seq_update_type_special(const uint32_t seqType, const TriggerPlayAttr*
     }
 
     // Re-enable the sequencer
-    *gbWess_SeqOn = true;
+    gbWess_SeqOn = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -218,7 +218,7 @@ void wess_seq_stoptype(const uint32_t seqType) noexcept {
 
     // Temporarily disable the sequencer while we do this.
     // It was originally fired by hardware timer interrupts, so this step was required.
-    *gbWess_SeqOn = false;
+    gbWess_SeqOn = false;
 
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat;
@@ -268,5 +268,5 @@ void wess_seq_stoptype(const uint32_t seqType) noexcept {
     }
 
     // Re-enable the sequencer
-    *gbWess_SeqOn = true;
+    gbWess_SeqOn = true;
 }

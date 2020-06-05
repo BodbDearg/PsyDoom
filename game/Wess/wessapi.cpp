@@ -8,14 +8,9 @@
 #include "wessapi_t.h"
 #include "wessseq.h"
 
-// 4 byte identifier for WMD (Williams Module) files: says 'SPSX'
-static constexpr uint32_t WESS_MODULE_ID = Endian::littleToHost(0x58535053);
-
-// Expected WMD (module) file version
-static constexpr uint32_t WESS_MODULE_VER = 1;
-
-// Minimum tracks in a sequence
-static constexpr uint8_t MINIMUM_TRACK_INDXS_FOR_A_SEQUENCE = 4;
+static constexpr uint32_t WESS_MODULE_ID = Endian::littleToHost(0x58535053);        // 4 byte identifier for WMD (Williams Module) files: says 'SPSX'
+static constexpr uint32_t WESS_MODULE_VER = 1;                                      // Expected WMD (module) file version
+static constexpr uint8_t MINIMUM_TRACK_INDXS_FOR_A_SEQUENCE = 4;                    // Minimum tracks in a sequence
 
 bool                        gbWess_module_loaded;       // If true then a WMD file (module) has been loaded
 master_status_structure*    gpWess_pm_stat;             // Master status structure for the entire sequencer system
@@ -125,10 +120,10 @@ bool wess_init() noexcept {
         return false;
 
     // Ensure the sequencer is initially disabled
-    *gbWess_SeqOn = false;
+    gbWess_SeqOn = false;
 
     // Install the timing handler/callback, init hardware specific stuff and mark the module as initialized
-    if (!*gbWess_WessTimerActive) {
+    if (!gbWess_WessTimerActive) {
         wess_install_handler();
     }
     
@@ -155,7 +150,7 @@ void wess_exit(bool bForceRestoreTimerHandler) noexcept {
     // Mark the API as not initialized and restore the previous timer handler if appropriate
     gbWess_sysinit = false;
 
-    if (bForceRestoreTimerHandler || *gbWess_WessTimerActive) {
+    if (bForceRestoreTimerHandler || gbWess_WessTimerActive) {
         wess_restore_handler();
     }
 }
@@ -199,7 +194,7 @@ void wess_unload_module() noexcept {
 
     // Shutdown the sequencer engine
     wess_seq_stopall();
-    *gbWess_SeqOn = false;
+    gbWess_SeqOn = false;
 
     master_status_structure& mstat = *gpWess_pm_stat;
     gWess_CmdFuncArr[NoSound_ID][DriverExit](mstat);
@@ -325,7 +320,7 @@ int32_t wess_load_module(
 
     // Master status: setting up various fields
     mstat.pmodule_file = gpWess_fp_wmd_file;
-    mstat.pabstime_ms = gWess_Millicount.get();
+    mstat.pabstime_ms = &gWess_Millicount;
     mstat.num_patch_groups = (uint8_t) numPatchGroups;
 
     // Alloc the module info struct and link to the master status struct
@@ -726,7 +721,7 @@ int32_t wess_load_module(
 
     // The module is now loaded and the sequencer is enabled
     gbWess_module_loaded = true;
-    *gbWess_SeqOn = true;
+    gbWess_SeqOn = true;
 
     // Save the end pointer for the loaded module and ensure 32-bit aligned
     pCurDestBytes += (uintptr_t) pCurDestBytes & 1;
@@ -862,7 +857,7 @@ int32_t wess_seq_structrig(
         return 0;
 
     // Disable sequencer ticking temporarily (to avoid hardware timer interrupts) while we setup all this
-    *gbWess_SeqOn = false;
+    gbWess_SeqOn = false;
 
     master_status_structure& mstat = *gpWess_pm_stat;
     module_data& module = *mstat.pmodule;
@@ -879,7 +874,7 @@ int32_t wess_seq_structrig(
 
     // If we failed to allocate a sequence status structure then we can't play anything
     if (allocSeqStatIdx >= maxActiveSeqs) {
-        *gbWess_SeqOn = true;
+        gbWess_SeqOn = true;
         return 0;
     }
 
@@ -948,7 +943,7 @@ int32_t wess_seq_structrig(
     }
 
     // Renable the sequencer's timer interrupts/updates and return what sequence index we started playing (if any)
-    *gbWess_SeqOn = true;
+    gbWess_SeqOn = true;
 
     if (numTracksPlayed > 0) {
         return (int32_t) allocSeqStatIdx + 1;
@@ -1016,7 +1011,7 @@ void wess_seq_stop(const int32_t seqIdx) noexcept {
 
     // Temporarily disable the sequencer while we do this.
     // It was originally fired by hardware timer interrupts, so this step was required.
-    *gbWess_SeqOn = false;
+    gbWess_SeqOn = false;
     
     // Run through all of the sequences searching for the one we are interested in
     master_status_structure& mstat = *gpWess_pm_stat;
@@ -1064,7 +1059,7 @@ void wess_seq_stop(const int32_t seqIdx) noexcept {
     }
 
     // Re-enable the sequencer
-    *gbWess_SeqOn = true;
+    gbWess_SeqOn = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1077,7 +1072,7 @@ void wess_seq_stopall() noexcept {
 
     // Temporarily disable the sequencer while we do this.
     // It was originally fired by hardware timer interrupts, so this step was required.
-    *gbWess_SeqOn = false;
+    gbWess_SeqOn = false;
 
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat;
@@ -1125,5 +1120,5 @@ void wess_seq_stopall() noexcept {
     }
 
     // Re-enable the sequencer
-    *gbWess_SeqOn = true;
+    gbWess_SeqOn = true;
 }

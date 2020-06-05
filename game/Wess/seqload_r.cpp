@@ -10,7 +10,7 @@
 // Return the total size of a range of sequences, starting at the given index
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t wess_seq_range_sizeof(const int32_t firstSeqIdx, const int32_t numSeqs) noexcept {
-    if ((!*gbWess_seq_loader_enable) || (numSeqs == 0))
+    if ((!gbWess_seq_loader_enable) || (numSeqs == 0))
         return 0;
 
     const int32_t endSeqIdx = firstSeqIdx + numSeqs;
@@ -28,7 +28,7 @@ int32_t wess_seq_range_sizeof(const int32_t firstSeqIdx, const int32_t numSeqs) 
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t wess_seq_range_load(const int32_t firstSeqIdx, const int32_t numSeqs, void* const pSeqMem) noexcept {
     // If the sequencer loader is not intialized or we can't open the module file containing sequences then loading fails
-    if ((!*gbWess_seq_loader_enable) || (!open_sequence_data()))
+    if ((!gbWess_seq_loader_enable) || (!open_sequence_data()))
         return 0;
 
     // Try load all of the sequences specified
@@ -55,7 +55,7 @@ int32_t wess_seq_range_load(const int32_t firstSeqIdx, const int32_t numSeqs, vo
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool wess_seq_range_free(const int32_t firstSeqIdx, const int32_t numSeqs) noexcept {
     // Don't do anything if the sequence loader is not initialized or if no sequences were specified
-    if ((!*gbWess_seq_loader_enable) || (numSeqs == 0))
+    if ((!gbWess_seq_loader_enable) || (numSeqs == 0))
         return false;
 
     // 'Free' the range of sequences

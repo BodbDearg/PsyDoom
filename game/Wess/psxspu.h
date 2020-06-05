@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PsxVm/VmPtr.h"
+#include <cstdint>
 
 enum SpuReverbMode : int32_t;
 

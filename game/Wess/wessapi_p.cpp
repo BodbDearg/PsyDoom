@@ -45,7 +45,7 @@ void wess_seq_pause(const int32_t seqIdx, const bool bMute) noexcept {
 
     // Temporarily disable the sequencer while we do this.
     // It was originally fired by hardware timer interrupts, so this step was required.
-    *gbWess_SeqOn = false;
+    gbWess_SeqOn = false;
 
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat;
@@ -100,7 +100,7 @@ void wess_seq_pause(const int32_t seqIdx, const bool bMute) noexcept {
     }
 
     // Re-enable the sequencer
-    *gbWess_SeqOn = true;
+    gbWess_SeqOn = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -113,7 +113,7 @@ void wess_seq_restart(const int32_t seqIdx) noexcept {
 
     // Temporarily disable the sequencer while we do this.
     // It was originally fired by hardware timer interrupts, so this step was required.
-    *gbWess_SeqOn = false;
+    gbWess_SeqOn = false;
 
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat;
@@ -162,7 +162,7 @@ void wess_seq_restart(const int32_t seqIdx) noexcept {
     }
 
     // Re-enable the sequencer
-    *gbWess_SeqOn = true;
+    gbWess_SeqOn = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -176,7 +176,7 @@ void wess_seq_pauseall(const bool bMute, SavedVoiceList* const pSavedVoices) noe
 
     // Temporarily disable the sequencer while we do this.
     // It was originally fired by hardware timer interrupts, so this step was required.
-    *gbWess_SeqOn = false;
+    gbWess_SeqOn = false;
     
     // If muting temporarily, then save the state of all voices to the given state struct (if given).
     // This allows the voices to be restored to what they were previously.
@@ -240,7 +240,7 @@ void wess_seq_pauseall(const bool bMute, SavedVoiceList* const pSavedVoices) noe
     }
 
     // Re-enable the sequencer
-    *gbWess_SeqOn = true;
+    gbWess_SeqOn = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -254,7 +254,7 @@ void wess_seq_restartall(SavedVoiceList* const pSavedVoices) noexcept {
 
     // Temporarily disable the sequencer while we do this.
     // It was originally fired by hardware timer interrupts, so this step was required.
-    *gbWess_SeqOn = false;
+    gbWess_SeqOn = false;
 
     // Grab some basic info from the master status
     master_status_structure& mstat = *gpWess_pm_stat;
@@ -318,5 +318,5 @@ void wess_seq_restartall(SavedVoiceList* const pSavedVoices) noexcept {
     }
 
     // Re-enable the sequencer
-    *gbWess_SeqOn = true;
+    gbWess_SeqOn = true;
 }
