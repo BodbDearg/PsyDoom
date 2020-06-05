@@ -251,7 +251,7 @@ static void data_read_chunk(PsxCd_File& file, const int32_t chunkSize, const uin
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t data_read(PsxCd_File& file, const int32_t destSpuAddr, const int32_t numBytes, const int32_t fileOffset) noexcept {
     // Will the transfer fit? Ignore if it doesn't...
-    const int32_t maxBytes = *gPsxSpu_sram_end - destSpuAddr;
+    const int32_t maxBytes = gPsxSpu_sram_end - destSpuAddr;
 
     if (numBytes > maxBytes)
         return 0;

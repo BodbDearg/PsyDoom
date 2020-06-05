@@ -161,9 +161,9 @@ int32_t wess_dig_lcd_data_read(
             // If uploading this sound would cause us to go beyond the bounds of SPU ram then do not try to upload this sound
             #if PC_PSX_DOOM_MODS
                 // PC-PSX: I think this condition was slightly wrong?
-                const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + sndDataOffset + nextPatchSample.size  > (int32_t) *gPsxSpu_sram_end);
+                const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + sndDataOffset + nextPatchSample.size  > (int32_t) gPsxSpu_sram_end);
             #else
-                const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + nextPatchSample.size > (int32_t)(*gPsxSpu_sram_end + sndDataOffset));
+                const bool bInsufficientSpuRam = ((int32_t) destSpuAddr + nextPatchSample.size > (int32_t)(gPsxSpu_sram_end + sndDataOffset));
             #endif
 
             if (bInsufficientSpuRam) {

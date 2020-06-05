@@ -9,44 +9,54 @@
 #include "PsyQ/LIBSPU.h"
 #include "wessarc.h"
 
-// The end address of usable SPU RAM.
-// This can vary depending on the reverb mode - some reverb modes require more RAM than others.
-const VmPtr<uint32_t> gPsxSpu_sram_end(0x8007598C);
+// How much SPU RAM there is in total (512 KiB)
+static constexpr uint32_t SPU_RAM_SIZE = 512 * 1024;
 
-// Is this module initialized?
-static const VmPtr<bool32_t> gbPsxSpu_initialized(0x80075984);
+// This much of SPU RAM is reserved at the start for the 4 capture buffers, 2 of which are used for CD Audio left/right samples.
+static constexpr uint32_t SPU_CAPTURE_BUFFERS_SIZE = 4 * 1024;
+
+// How much SPU RAM is usable if no reverb is used.
+// Reverb may require additional SPU RAM to be marked off limits, for the reverb work area.
+static constexpr uint32_t MAX_USABLE_SPU_RAM = SPU_RAM_SIZE - SPU_CAPTURE_BUFFERS_SIZE;
 
 // Dummy memory manager book keeping area used by 'LIBSPU_SpuInitMalloc' and LIBSPU malloc functions.
 // The SPU malloc functions are not used at all in DOOM, so this area will be unused.
 static constexpr uint32_t MAX_SPU_ALLOCS = 1;
 static constexpr uint32_t SPU_MALLOC_RECORDS_SIZE = SPU_MALLOC_RECSIZ * (MAX_SPU_ALLOCS + 1);
 
-static const VmPtr<uint8_t[SPU_MALLOC_RECORDS_SIZE]> gPsxSpu_SpuMallocRecords(0x800A9508);
+static uint8_t gPsxSpu_SpuMallocRecords[SPU_MALLOC_RECORDS_SIZE];
+
+// Is this module initialized?
+static bool gbPsxSpu_initialized;
+
+// The end offset into usable SPU RAM.
+// Note: 4 KiB must be reserved at the start of SPU RAM for the 4 capture buffers, 2 of which are used for CD Audio left/right samples.
+uint32_t gPsxSpu_sram_end = MAX_USABLE_SPU_RAM;
 
 // If true then we process the 'psxspu_fadeengine' timer callback, otherwise the callback is ignored.
 // The timer callback was originally triggered via periodic timer interrupts, so this flag was used to temporarily ignore interrupts.
 // It's seen throughout this code guarding sections where we do not want interrupts.
-static const VmPtr<bool32_t> gbPsxSpu_timer_callback_enabled(0x80075988);
+static bool gbPsxSpu_timer_callback_enabled;
 
 // How many ticks for master and cd fade out are remaining, with a tick being decremented each time the timer callback is triggered.
 // Each tick is approximately 1/120 seconds - not precisely though.
-static const VmPtr<int32_t> gPsxSpu_master_fade_ticks_left(0x80075994);
-static const VmPtr<int32_t> gPsxSpu_cd_fade_ticks_left(0x800759A8);
+static int32_t  gPsxSpu_master_fade_ticks_left;
+static int32_t  gPsxSpu_cd_fade_ticks_left;
 
 // Master and cdrom audio volume levels (integer and fixed point)
-static const VmPtr<int32_t> gPsxSpu_master_vol(0x80075990);
-static const VmPtr<int32_t> gPsxSpu_master_vol_fixed(0x80075998);
-static const VmPtr<int32_t> gPsxSpu_cd_vol(0x800759A4);
-static const VmPtr<int32_t> gPsxSpu_cd_vol_fixed(0x800759AC);
+static int32_t  gPsxSpu_master_vol           = PSXSPU_MAX_MASTER_VOL;
+static int32_t  gPsxSpu_master_vol_fixed     = PSXSPU_MAX_MASTER_VOL << 16;      // Master volume in 16.16 format
+static int32_t  gPsxSpu_cd_vol               = PSXSPU_MAX_CD_VOL;
+static int32_t  gPsxSpu_cd_vol_fixed         = PSXSPU_MAX_CD_VOL << 16;          // CD volume in 16.16 format
 
 // Master and cdrom destination volume levels and increment/decerement stepping for fading
-static const VmPtr<int32_t> gPsxSpu_master_destvol_fixed(0x8007599C);
-static const VmPtr<int32_t> gPsxSpu_master_fadestep_fixed(0x800759A0);
-static const VmPtr<int32_t> gPsxSpu_cd_destvol_fixed(0x800759B0);
-static const VmPtr<int32_t> gPsxSpu_cd_fadestep_fixed(0x800759B4);
+static int32_t  gPsxSpu_master_destvol_fixed;
+static int32_t  gPsxSpu_master_fadestep_fixed;
+static int32_t  gPsxSpu_cd_destvol_fixed;
+static int32_t  gPsxSpu_cd_fadestep_fixed;
 
 // Current reverb settings
-static const VmPtr<SpuReverbAttr> gPsxSpu_rev_attr(0x8007f080);
+static SpuReverbAttr gPsxSpu_rev_attr;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize reverb to the specified settings
@@ -58,58 +68,58 @@ void psxspu_init_reverb(
     const int32_t delay,
     const int32_t feedback
 ) noexcept {
-    *gbPsxSpu_timer_callback_enabled = false;
+    gbPsxSpu_timer_callback_enabled = false;
 
-    gPsxSpu_rev_attr->mask = SPU_REV_MODE | SPU_REV_DEPTHL | SPU_REV_DEPTHR | SPU_REV_DELAYTIME | SPU_REV_FEEDBACK;
-    gPsxSpu_rev_attr->mode = (SpuReverbMode)(reverbMode | SPU_REV_MODE_CLEAR_WA);
-    gPsxSpu_rev_attr->depth.left = depthLeft;
-    gPsxSpu_rev_attr->depth.right = depthRight;
-    gPsxSpu_rev_attr->delay = delay;
-    gPsxSpu_rev_attr->feedback = feedback;
+    gPsxSpu_rev_attr.mask = SPU_REV_MODE | SPU_REV_DEPTHL | SPU_REV_DEPTHR | SPU_REV_DELAYTIME | SPU_REV_FEEDBACK;
+    gPsxSpu_rev_attr.mode = (SpuReverbMode)(reverbMode | SPU_REV_MODE_CLEAR_WA);
+    gPsxSpu_rev_attr.depth.left = depthLeft;
+    gPsxSpu_rev_attr.depth.right = depthRight;
+    gPsxSpu_rev_attr.delay = delay;
+    gPsxSpu_rev_attr.feedback = feedback;
 
-    LIBSPU_SpuSetReverbModeParam(*gPsxSpu_rev_attr);
-    LIBSPU_SpuSetReverbDepth(*gPsxSpu_rev_attr);
+    LIBSPU_SpuSetReverbModeParam(gPsxSpu_rev_attr);
+    LIBSPU_SpuSetReverbDepth(gPsxSpu_rev_attr);
     const bool bReverbEnabled = (reverbMode != SPU_REV_MODE_OFF);
 
     if (bReverbEnabled) {
         LIBSPU_SpuSetReverb(SPU_ON);
-        *gPsxSpu_sram_end = LIBSPU_SpuGetReverbOffsetAddr();    // Reverb reduces the available SPU RAM because it needs a work area
+        gPsxSpu_sram_end = LIBSPU_SpuGetReverbOffsetAddr();     // Reverb reduces the available SPU RAM because it needs a work area
     } else {
         LIBSPU_SpuSetReverb(SPU_OFF);
-        *gPsxSpu_sram_end = 0x7F000;    // A few KiB short of the 512 KiB max - I guess held back in case reverb is wanted later?
+        gPsxSpu_sram_end = MAX_USABLE_SPU_RAM;      // No reverb, so the amount usable is the max usable SPU RAM amount
     }
 
     LIBSPU_SpuSetReverbVoice(bReverbEnabled, SPU_ALLCH);
-    *gbPsxSpu_timer_callback_enabled = true;
+    gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Set the reverb strength for the left and right channels
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_set_reverb_depth(const int16_t depthLeft, const int16_t depthRight) noexcept {
-    *gbPsxSpu_timer_callback_enabled = false;
+    gbPsxSpu_timer_callback_enabled = false;
 
-    gPsxSpu_rev_attr->depth.left = depthLeft;
-    gPsxSpu_rev_attr->depth.right = depthRight;
-    LIBSPU_SpuSetReverbDepth(*gPsxSpu_rev_attr);
+    gPsxSpu_rev_attr.depth.left = depthLeft;
+    gPsxSpu_rev_attr.depth.right = depthRight;
+    LIBSPU_SpuSetReverbDepth(gPsxSpu_rev_attr);
 
-    *gbPsxSpu_timer_callback_enabled = true;
+    gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize the PlayStation SPU and the SPU handling module
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_init() noexcept {
-    if (*gbPsxSpu_initialized)
+    if (gbPsxSpu_initialized)
         return;
     
-    *gbPsxSpu_timer_callback_enabled = false;
+    gbPsxSpu_timer_callback_enabled = false;
 
     LIBSPU_SpuInit();
-    *gbPsxSpu_initialized = true;
+    gbPsxSpu_initialized = true;
 
     // Note: 'SpuMalloc' is not used AT ALL, so this call could have probably been removed...
-    LIBSPU_SpuInitMalloc(MAX_SPU_ALLOCS, gPsxSpu_SpuMallocRecords.get());
+    LIBSPU_SpuInitMalloc(MAX_SPU_ALLOCS, gPsxSpu_SpuMallocRecords);
     LIBSPU_SpuSetTransferMode(SPU_TRANSFER_BY_DMA);
     psxspu_init_reverb(SPU_REV_MODE_OFF, 0, 0, 0, 0);
 
@@ -129,14 +139,14 @@ void psxspu_init() noexcept {
 
     LIBSPU_SpuSetCommonAttr(soundAttribs);
 
-    *gbPsxSpu_timer_callback_enabled = true;
+    gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Internal function: set the master volume for the SPU (directly)
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void psxspu_set_master_volume(const int32_t vol) noexcept {
-    *gbPsxSpu_timer_callback_enabled = false;
+    gbPsxSpu_timer_callback_enabled = false;
     
     SpuCommonAttr attribs;
     attribs.mask = SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
@@ -144,14 +154,14 @@ static void psxspu_set_master_volume(const int32_t vol) noexcept {
     attribs.mvol.right = (int16_t) vol;
     LIBSPU_SpuSetCommonAttr(attribs);
 
-    *gbPsxSpu_timer_callback_enabled = true;
+    gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Internal function: set the master volume for cd audio on the SPU (directly)
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void psxspu_set_cd_volume(const int32_t vol) noexcept {
-    *gbPsxSpu_timer_callback_enabled = false;
+    gbPsxSpu_timer_callback_enabled = false;
     
     SpuCommonAttr attribs;
     attribs.mask = SPU_COMMON_CDVOLL | SPU_COMMON_CDVOLR;
@@ -159,35 +169,35 @@ static void psxspu_set_cd_volume(const int32_t vol) noexcept {
     attribs.cd.volume.right = (int16_t) vol;
     LIBSPU_SpuSetCommonAttr(attribs);
 
-    *gbPsxSpu_timer_callback_enabled = true;
+    gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Enable mixing of cd audio into the sound output
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_setcdmixon() noexcept {
-    *gbPsxSpu_timer_callback_enabled = false;
+    gbPsxSpu_timer_callback_enabled = false;
   
     SpuCommonAttr attribs;
     attribs.mask = SPU_COMMON_CDMIX;
     attribs.cd.mix = true;
     LIBSPU_SpuSetCommonAttr(attribs);
   
-    *gbPsxSpu_timer_callback_enabled =  true;
+    gbPsxSpu_timer_callback_enabled =  true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Disable mixing of cd audio into the sound output
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_setcdmixoff() noexcept {
-    *gbPsxSpu_timer_callback_enabled = false;
+    gbPsxSpu_timer_callback_enabled = false;
 
     SpuCommonAttr attribs;
     attribs.mask = SPU_COMMON_CDMIX;
     attribs.cd.mix = false;
     LIBSPU_SpuSetCommonAttr(attribs);
 
-    *gbPsxSpu_timer_callback_enabled = true;
+    gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -197,35 +207,35 @@ void psxspu_setcdmixoff() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_fadeengine() noexcept {
     // Ignore this callback if temporarily disabled
-    if (!*gbPsxSpu_timer_callback_enabled)
+    if (!gbPsxSpu_timer_callback_enabled)
         return;
 
     // Do cd audio fades
-    if (*gPsxSpu_cd_fade_ticks_left > 0) {
-        *gPsxSpu_cd_fade_ticks_left -= 1;
-        *gPsxSpu_cd_vol_fixed += *gPsxSpu_cd_fadestep_fixed;
+    if (gPsxSpu_cd_fade_ticks_left > 0) {
+        gPsxSpu_cd_fade_ticks_left--;
+        gPsxSpu_cd_vol_fixed += gPsxSpu_cd_fadestep_fixed;
 
         // If we've reached the end ensure we haven't gone past the desired value by just setting explicitly
-        if (*gPsxSpu_cd_fade_ticks_left == 0) {
-            *gPsxSpu_cd_vol_fixed = *gPsxSpu_cd_destvol_fixed;
+        if (gPsxSpu_cd_fade_ticks_left == 0) {
+            gPsxSpu_cd_vol_fixed = gPsxSpu_cd_destvol_fixed;
         }
 
-        *gPsxSpu_cd_vol = *gPsxSpu_cd_vol_fixed >> 16;
-        psxspu_set_cd_volume(*gPsxSpu_cd_vol);
+        gPsxSpu_cd_vol = gPsxSpu_cd_vol_fixed >> 16;
+        psxspu_set_cd_volume(gPsxSpu_cd_vol);
     }
 
     // Do master volume fades
-    if (*gPsxSpu_master_fade_ticks_left > 0) {
-        *gPsxSpu_master_fade_ticks_left -= 1;
-        *gPsxSpu_master_vol_fixed += *gPsxSpu_master_fadestep_fixed;
+    if (gPsxSpu_master_fade_ticks_left > 0) {
+        gPsxSpu_master_fade_ticks_left--;
+        gPsxSpu_master_vol_fixed += gPsxSpu_master_fadestep_fixed;
 
         // If we've reached the end ensure we haven't gone past the desired value by just setting explicitly
-        if (*gPsxSpu_master_fade_ticks_left == 0) {
-            *gPsxSpu_master_vol_fixed = *gPsxSpu_master_destvol_fixed;
+        if (gPsxSpu_master_fade_ticks_left == 0) {
+            gPsxSpu_master_vol_fixed = gPsxSpu_master_destvol_fixed;
         }
 
-        *gPsxSpu_master_vol = *gPsxSpu_master_vol_fixed >> 16;
-        psxspu_set_master_volume(*gPsxSpu_master_vol);
+        gPsxSpu_master_vol = gPsxSpu_master_vol_fixed >> 16;
+        psxspu_set_master_volume(gPsxSpu_master_vol);
     }
 }
 
@@ -233,21 +243,21 @@ void psxspu_fadeengine() noexcept {
 // Set the current cd audio volume and disable any fades on cd volume that are active
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_set_cd_vol(const int32_t vol) noexcept {
-    *gbPsxSpu_timer_callback_enabled = false;
+    gbPsxSpu_timer_callback_enabled = false;
 
-    *gPsxSpu_cd_vol = vol;
-    *gPsxSpu_cd_vol_fixed = vol << 16;
-    *gPsxSpu_cd_fade_ticks_left = 0;
+    gPsxSpu_cd_vol = vol;
+    gPsxSpu_cd_vol_fixed = vol << 16;
+    gPsxSpu_cd_fade_ticks_left = 0;
     psxspu_set_cd_volume(vol);
 
-    *gbPsxSpu_timer_callback_enabled = true;
+    gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the current (integer) volume for cd audio
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxspu_get_cd_vol() noexcept {
-    return *gPsxSpu_cd_vol;
+    return gPsxSpu_cd_vol;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -260,75 +270,75 @@ void psxspu_start_cd_fade(const int32_t fadeTimeMs, const int32_t destVol) noexc
             return;
     #endif
 
-    *gbPsxSpu_timer_callback_enabled = false;
+    gbPsxSpu_timer_callback_enabled = false;
 
     if (*gbWess_WessTimerActive) {
         // Note: the timer callback fires at approximately 120 Hz, hence convert from MS to a 120 Hz tick count here
-        *gPsxSpu_cd_fade_ticks_left = (fadeTimeMs * 120) / 1000 + 1;
-        *gPsxSpu_cd_destvol_fixed = destVol * 0x10000;
-        *gPsxSpu_cd_fadestep_fixed = (*gPsxSpu_cd_destvol_fixed - *gPsxSpu_cd_vol_fixed) / *gPsxSpu_cd_fade_ticks_left;
+        gPsxSpu_cd_fade_ticks_left = (fadeTimeMs * 120) / 1000 + 1;
+        gPsxSpu_cd_destvol_fixed = destVol * 0x10000;
+        gPsxSpu_cd_fadestep_fixed = (gPsxSpu_cd_destvol_fixed - gPsxSpu_cd_vol_fixed) / gPsxSpu_cd_fade_ticks_left;
     } else {
         // If the timer callback is not active then skip doing any fade since there is no means of doing it
-        *gPsxSpu_cd_fade_ticks_left = 0;
+        gPsxSpu_cd_fade_ticks_left = 0;
     }
 
-    *gbPsxSpu_timer_callback_enabled = true;
+    gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Stop doing a fade of cd music
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_stop_cd_fade() noexcept {
-    *gbPsxSpu_timer_callback_enabled = false;
-    *gPsxSpu_cd_fade_ticks_left = 0;
-    *gbPsxSpu_timer_callback_enabled = true;
+    gbPsxSpu_timer_callback_enabled = false;
+    gPsxSpu_cd_fade_ticks_left = 0;
+    gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Returns 'true' if the cd audio fade out is still ongoing, 'false' otherwise
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool psxspu_get_cd_fade_status() noexcept {
-    return (*gPsxSpu_cd_fade_ticks_left > 1);
+    return (gPsxSpu_cd_fade_ticks_left > 1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Sets the master volume level
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_set_master_vol(const int32_t vol) noexcept {
-    *gbPsxSpu_timer_callback_enabled = 0;
+    gbPsxSpu_timer_callback_enabled = 0;
     
-    *gPsxSpu_master_vol = vol;
-    *gPsxSpu_master_vol_fixed = vol << 16;
-    *gPsxSpu_master_fade_ticks_left = 0;
-    psxspu_set_master_volume(*gPsxSpu_master_vol);
+    gPsxSpu_master_vol = vol;
+    gPsxSpu_master_vol_fixed = vol << 16;
+    gPsxSpu_master_fade_ticks_left = 0;
+    psxspu_set_master_volume(gPsxSpu_master_vol);
 
-    *gbPsxSpu_timer_callback_enabled = 1;
+    gbPsxSpu_timer_callback_enabled = 1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Gets the master volume level
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t psxspu_get_master_vol() noexcept {
-    return *gPsxSpu_master_vol;
+    return gPsxSpu_master_vol;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Begin doing a fade of master volume to the specified volume in the specified amount of time
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_start_master_fade(const int32_t fadeTimeMs, const int32_t destVol) noexcept {
-    *gbPsxSpu_timer_callback_enabled = false;
+    gbPsxSpu_timer_callback_enabled = false;
 
     if (*gbWess_WessTimerActive) {
         // Note: the timer callback fires at approximately 120 Hz, hence convert from MS to a 120 Hz tick count here
-        *gPsxSpu_master_fade_ticks_left = (fadeTimeMs * 120) / 1000 + 1;
-        *gPsxSpu_master_destvol_fixed = destVol * 0x10000;
-        *gPsxSpu_master_fadestep_fixed = (*gPsxSpu_master_destvol_fixed - *gPsxSpu_master_vol_fixed) / *gPsxSpu_master_fade_ticks_left;
+        gPsxSpu_master_fade_ticks_left = (fadeTimeMs * 120) / 1000 + 1;
+        gPsxSpu_master_destvol_fixed = destVol << 16;
+        gPsxSpu_master_fadestep_fixed = (gPsxSpu_master_destvol_fixed - gPsxSpu_master_vol_fixed) / gPsxSpu_master_fade_ticks_left;
     } else {
         // If the timer callback is not active then skip doing any fade since there is no means of doing it
-        *gPsxSpu_master_fade_ticks_left = 0;
+        gPsxSpu_master_fade_ticks_left = 0;
     }
 
-    *gbPsxSpu_timer_callback_enabled = true;
+    gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -336,14 +346,14 @@ void psxspu_start_master_fade(const int32_t fadeTimeMs, const int32_t destVol) n
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psxspu_stop_master_fade() noexcept {
     // Note: disabling callback processing before setting the tick count - in case an interrupt happens
-    *gbPsxSpu_timer_callback_enabled = false;
-    *gPsxSpu_master_fade_ticks_left = 0;
-    *gbPsxSpu_timer_callback_enabled = true;
+    gbPsxSpu_timer_callback_enabled = false;
+    gPsxSpu_master_fade_ticks_left = 0;
+    gbPsxSpu_timer_callback_enabled = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Returns 'true' if the master volume fade out is still ongoing, 'false' otherwise
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool psxspu_get_master_fade_status() noexcept {
-    return (*gPsxSpu_master_fade_ticks_left > 1);
+    return (gPsxSpu_master_fade_ticks_left > 1);
 }

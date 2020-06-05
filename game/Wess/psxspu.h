@@ -12,7 +12,7 @@ static constexpr int16_t PSXSPU_MAX_CD_VOL     = 0x3CFF;
 // Memory before this is reserved by the PlayStation for things like mixing CD Audio, audio input buffers and so on.
 static constexpr uint32_t SPU_RAM_APP_BASE = 0x1010;
 
-extern const VmPtr<uint32_t> gPsxSpu_sram_end;
+extern uint32_t gPsxSpu_sram_end;
 
 void psxspu_init_reverb(
     const SpuReverbMode reverbMode,
