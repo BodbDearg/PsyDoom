@@ -1239,16 +1239,16 @@ void I_NetSendRecv() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_SubmitGpuCmds() noexcept {
     // Submit the primitives list to the GPU if it's not empty
-    if (*gpGpuPrimsBeg != *gpGpuPrimsEnd) {
+    if (gpGpuPrimsBeg != gpGpuPrimsEnd) {
         // Note: this marks the end of the primitive list, by setting the 'tag' field of an invalid primitive to 0xFFFFFF.
         // This is similar to LIBGPU_TermPrim, except we don't bother using a valid primitive struct.
-        *(uint32_t*) gpGpuPrimsEnd.get() = 0x00FFFFFF;
-        LIBGPU_DrawOTag(gpGpuPrimsBeg.get());
+        ((uint32_t*) gpGpuPrimsEnd)[0] = 0x00FFFFFF;
+        LIBGPU_DrawOTag(gpGpuPrimsBeg);
     }
 
     // Clear the primitives list
-    *gpGpuPrimsBeg = gGpuCmdsBuffer;
-    *gpGpuPrimsEnd = gGpuCmdsBuffer;
+    gpGpuPrimsBeg = gGpuCmdsBuffer;
+    gpGpuPrimsEnd = gGpuCmdsBuffer;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

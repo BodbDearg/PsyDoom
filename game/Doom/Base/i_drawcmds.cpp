@@ -8,10 +8,10 @@
 #include "PsyQ/LIBGPU.h"
 
 // GPU packets beginning and end pointer and the 64 KiB buffer used to hold GPU primitives
-const VmPtr<VmPtr<std::byte>>       gpGpuPrimsBeg(0x80077C14);
-const VmPtr<VmPtr<std::byte>>       gpGpuPrimsEnd(0x80077C18);
-const VmPtr<std::byte[0x10000]>     gGpuCmdsBuffer(0x80086550);
-const VmPtr<std::byte>              gGpuCmdsBufferEnd(0x80096550);
+std::byte           gGpuCmdsBuffer[GPU_CMD_BUFFER_SIZE];
+std::byte*          gpGpuPrimsBeg = gGpuCmdsBuffer;
+std::byte*          gpGpuPrimsEnd = gGpuCmdsBuffer;
+const std::byte*    gGpuCmdsBufferEnd = gGpuCmdsBuffer + GPU_CMD_BUFFER_SIZE;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Helper: makes up the tag which is at the beginning of every draw primitive in the command buffer.
@@ -43,7 +43,7 @@ static bool isCpuToGpuDmaEnabled() noexcept {
 // Note: this is only allowed however if CPU to GPU DMA is enabled!
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void flushGpuCmds() noexcept {
-    while (*gpGpuPrimsBeg != *gpGpuPrimsEnd) {
+    while (gpGpuPrimsBeg != gpGpuPrimsEnd) {
         // Abort for now if CPU to GPU DMA is off; hope that it gets turned on later or the queue gets cleared somehow?
         // Not sure what situation is would occur in...
         //
@@ -55,13 +55,13 @@ static void flushGpuCmds() noexcept {
                 break;
         #endif
         
-        // Read the tag for this primitive the next primitive address
-        const uint32_t tag = ((uint32_t*) gpGpuPrimsBeg->get())[0];
-        const uint32_t nextPrimAddr = (tag & 0x00FFFFFF) | 0x80000000;
+        // Read the tag for this primitive and the next primitive's offset
+        const uint32_t tag = ((uint32_t*) gpGpuPrimsBeg)[0];
+        const uint32_t nextPrimOffset = tag & 0x00FFFFFF;
 
         // Submit the primitive to the GPU and move onto the next one
-        PsxVm::submitGpuPrimitive(gpGpuPrimsBeg->get());
-        *gpGpuPrimsBeg = nextPrimAddr;
+        PsxVm::submitGpuPrimitive(gpGpuPrimsBeg);
+        gpGpuPrimsBeg = gGpuCmdsBuffer + nextPrimOffset;
     }
 }
 
@@ -85,23 +85,23 @@ void I_AddPrim(const void* const pPrim) noexcept {
         // FIXME: I think there is a bug with this stuff somewhere that causes (very seldom) non rendering of some geom: investigate
 
         // Is the command queue not wrapping around?
-        if (*gpGpuPrimsBeg <= *gpGpuPrimsEnd) {
+        if (gpGpuPrimsBeg <= gpGpuPrimsEnd) {
             // Command queue doesn't wrap around currently.
             // If there's already enough room for the primitive then we are done:
-            if (gpGpuPrimsEnd->get() + primSize < gGpuCmdsBufferEnd.get())
+            if (gpGpuPrimsEnd + primSize < gGpuCmdsBufferEnd)
                 break;
             
             // Okay, there's not enough room for the primitive.
             // Need to insert a dummy primitive/tag to link back to the start of the command buffer, and then wraparound the queue.
             // Note: There should be room for a 32-bit integer, due to the way the size checks are done!
-            const uint32_t tag = makePrimTag(sizeof(uint32_t), gGpuCmdsBuffer.get());
-            ((uint32_t*) gpGpuPrimsEnd->get())[0] = tag;
-            *gpGpuPrimsEnd = gGpuCmdsBuffer;
+            const uint32_t tag = makePrimTag(sizeof(uint32_t), gGpuCmdsBuffer);
+            ((uint32_t*) gpGpuPrimsEnd)[0] = tag;
+            gpGpuPrimsEnd = gGpuCmdsBuffer;
         }
 
         // The command queue is wrapping around if we are getting here.
         // In this case, check to see if there is enough room for the primitive and if so then we are done:
-        if (gpGpuPrimsEnd->get() + primSize < gpGpuPrimsBeg->get())
+        if (gpGpuPrimsEnd + primSize < gpGpuPrimsBeg)
             break;
 
         // There is not enough room for the primitive and the queue is wrapping!
@@ -113,10 +113,11 @@ void I_AddPrim(const void* const pPrim) noexcept {
     // Write the given primitive into the command buffer
     {
         // Write the primitive tag
-        const uint32_t nextPrimAddr24 = (gpGpuPrimsEnd->addr() + primSize) & 0x00FFFFFF;
-        const uint32_t primTag = (numPrimDataWords << 24) | nextPrimAddr24;
+        const uint32_t nextPrimOffset = (uint32_t)(gpGpuPrimsEnd - gGpuCmdsBuffer) + primSize;
+        const uint32_t nextPrimOffset24 = nextPrimOffset & 0x00FFFFFF;
+        const uint32_t primTag = (numPrimDataWords << 24) | nextPrimOffset24;
 
-        uint32_t* pDstWord = (uint32_t*) gpGpuPrimsEnd->get();
+        uint32_t* pDstWord = (uint32_t*) gpGpuPrimsEnd;
         *pDstWord = primTag;
         ++pDstWord;
 
@@ -130,7 +131,7 @@ void I_AddPrim(const void* const pPrim) noexcept {
         }
 
         // Move along in the command buffer
-        *gpGpuPrimsEnd += primSize;
+        gpGpuPrimsEnd += primSize;
     }
 
     // Not sure why this was here...
