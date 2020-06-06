@@ -180,7 +180,7 @@ void P_ExplodeMissile(mobj_t& mobj) noexcept {
 
     // Stop the missile sound and start the explode sound
     if (mobjInfo.deathsound != sfx_None) {
-        S_StopSound(mobj.target);
+        S_StopSound(mobj.target.get());
         S_StartSound(&mobj, mobjInfo.deathsound);
     }
 }

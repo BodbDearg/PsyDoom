@@ -4,6 +4,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "psxcmd.h"
 
+#include "PcPsx/Macros.h"
 #include "psxspu.h"
 #include "wessapi.h"
 #include "wessseq.h"

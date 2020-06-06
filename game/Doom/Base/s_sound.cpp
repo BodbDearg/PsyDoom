@@ -374,8 +374,8 @@ void S_Resume() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Stop playing the specified sound
 //------------------------------------------------------------------------------------------------------------------------------------------
-void S_StopSound(const VmPtr<mobj_t> origin) noexcept {
-    wess_seq_stoptype(origin.addr());
+void S_StopSound(const mobj_t* pOrigin) noexcept {
+    wess_seq_stoptype((uintptr_t) pOrigin);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -471,7 +471,7 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
     sndAttribs.volume_cntrl = (uint8_t) vol;
     sndAttribs.pan_cntrl = (uint8_t) pan;
 
-    wess_seq_trigger_type_special(soundId, ptrToVmAddr(pOrigin), &sndAttribs);
+    wess_seq_trigger_type_special(soundId, (uintptr_t) pOrigin, &sndAttribs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

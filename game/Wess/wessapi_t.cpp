@@ -125,7 +125,7 @@ void updatetrackstat(track_status& trackStat, const TriggerPlayAttr* const pPlay
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Trigger the specified sequence number and assign it the given type number
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_trigger_type(const int32_t seqIdx, const uint32_t seqType) noexcept {
+void wess_seq_trigger_type(const int32_t seqIdx, const uintptr_t seqType) noexcept {
     master_status_structure& mstat = *gpWess_pm_stat;
     wess_seq_structrig(mstat.pmodule->psequences[seqIdx], seqIdx, seqType, false, nullptr);
 }
@@ -133,7 +133,7 @@ void wess_seq_trigger_type(const int32_t seqIdx, const uint32_t seqType) noexcep
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Trigger the specified sequence number with custom play attributes and assign it the given type number
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_trigger_type_special(const int32_t seqIdx, const uint32_t seqType, const TriggerPlayAttr* const pPlayAttribs) noexcept {
+void wess_seq_trigger_type_special(const int32_t seqIdx, const uintptr_t seqType, const TriggerPlayAttr* const pPlayAttribs) noexcept {
     master_status_structure& mstat = *gpWess_pm_stat;
     wess_seq_structrig(mstat.pmodule->psequences[seqIdx], seqIdx, seqType, false, pPlayAttribs);
 }
@@ -141,7 +141,7 @@ void wess_seq_trigger_type_special(const int32_t seqIdx, const uint32_t seqType,
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Update sequences of the specified type with the given play attributes
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_update_type_special(const uint32_t seqType, const TriggerPlayAttr* const pPlayAttribs) noexcept {
+void wess_seq_update_type_special(const uintptr_t seqType, const TriggerPlayAttr* const pPlayAttribs) noexcept {
     // Don't bother if there is no module loaded
     if (!Is_Module_Loaded())
         return;
@@ -206,7 +206,7 @@ void wess_seq_update_type_special(const uint32_t seqType, const TriggerPlayAttr*
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Stop music sequences with the specified type number
 //------------------------------------------------------------------------------------------------------------------------------------------
-void wess_seq_stoptype(const uint32_t seqType) noexcept {
+void wess_seq_stoptype(const uintptr_t seqType) noexcept {
     // If the module is not loaded then there is nothing to do
     if (!Is_Module_Loaded())
         return;

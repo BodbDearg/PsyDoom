@@ -245,7 +245,7 @@ struct sequence_status {
     uint8_t         num_tracks_playing;     // How many tracks this sequence is currently playing
     uint8_t         volume;                 // Default initialized to upon allocating the sequence status but doesn't seem to be used appart from that?
     uint8_t         pan;                    // Default initialized to upon allocating the sequence status but doesn't seem to be used appart from that?
-    uint32_t        type;                   // A user supplied handle: used to identify individual sequences for the purposes of stopping or updating them
+    uintptr_t       type;                   // A user supplied handle: used to identify individual sequences for the purposes of stopping or updating them
     uint8_t*        ptrackstat_indices;     // A sparse list of active track status indices for the sequence. If a slot is '0xFF' then that slot does not to refer to a track status.
     uint8_t*        pgates;                 // The value for all on/off gates for the sequence. If the value is '0xFF' then the gate has not been initialized.
     uint8_t*        piters;                 // The value for all iteration counters for the sequence. If the value is '0xFF' then the counter has not been initialized.

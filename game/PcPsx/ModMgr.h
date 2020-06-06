@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Doom/cdmaptbl.h"
+#include "Macros.h"
 #include "Wess/psxcd.h"
 
 BEGIN_NAMESPACE(ModMgr)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PsxVm/VmPtr.h"
+#include <cstdint>
 
 enum sfxenum_t : int32_t;
 struct mobj_t;
@@ -37,7 +37,7 @@ void S_UnloadSampleBlock(SampleBlock& sampleBlock) noexcept;
 void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept;
 void S_Pause() noexcept;
 void S_Resume() noexcept;
-void S_StopSound(const VmPtr<mobj_t> origin) noexcept;
+void S_StopSound(const mobj_t* pOrigin) noexcept;
 void S_StopAll() noexcept;
 void S_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept;
 void S_UpdateSounds() noexcept;

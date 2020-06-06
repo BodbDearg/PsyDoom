@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PsxVm/VmPtr.h"
+#include <cstdint>
 
 // Maximum number of tracks on a CD
 static constexpr int32_t CdlMAXTOC = 100;
