@@ -18,34 +18,34 @@
 
 #include <algorithm>
 
-const VmPtr<VmPtr<mobj_t>>      gpShooter(0x800780B4);          // The map object currently taking a shot
-const VmPtr<fixed_t>            gAttackRange(0x80077F98);       // Maximum attack range for an attacker
-const VmPtr<angle_t>            gAttackAngle(0x80077F80);       // Angle of attack for an attacker
-const VmPtr<fixed_t>            gAimTopSlope(0x80077FF8);       // Maximum Z slope for shooting (defines Z range that stuff can be hit within)
-const VmPtr<fixed_t>            gAimBottomSlope(0x800782F8);    // Minimum Z slope for shooting (defines Z range that stuff can be hit within)
-const VmPtr<VmPtr<mobj_t>>      gpLineTarget(0x80077EE8);       // The thing being shot at in 'P_AimLineAttack' and 'P_LineAttack'.
-const VmPtr<VmPtr<mobj_t>>      gpTryMoveThing(0x8007808C);     // Try move: the thing being moved
-const VmPtr<fixed_t>            gTryMoveX(0x80078150);          // Try move: position we're attempting to move to (X)
-const VmPtr<fixed_t>            gTryMoveY(0x80078154);          // Try move: position we're attempting to move to (Y)
-const VmPtr<bool32_t>           gbCheckPosOnly(0x800780E8);     // Try move: if 'true' then check if the position is valid to move to only, don't actually move there
+mobj_t*     gpShooter;          // The map object currently taking a shot
+fixed_t     gAttackRange;       // Maximum attack range for an attacker
+angle_t     gAttackAngle;       // Angle of attack for an attacker
+fixed_t     gAimTopSlope;       // Maximum Z slope for shooting (defines Z range that stuff can be hit within)
+fixed_t     gAimBottomSlope;    // Minimum Z slope for shooting (defines Z range that stuff can be hit within)
+mobj_t*     gpLineTarget;       // The thing being shot at in 'P_AimLineAttack' and 'P_LineAttack'.
+mobj_t*     gpTryMoveThing;     // Try move: the thing being moved
+fixed_t     gTryMoveX;          // Try move: position we're attempting to move to (X)
+fixed_t     gTryMoveY;          // Try move: position we're attempting to move to (Y)
+bool        gbCheckPosOnly;     // Try move: if 'true' then check if the position is valid to move to only, don't actually move there
 
-static const VmPtr<VmPtr<mobj_t>>   gpBombSource(0x80077EF0);   // Radius attacks: the thing responsible for the explosion (player, monster)
-static const VmPtr<VmPtr<mobj_t>>   gpBombSpot(0x800781A0);     // Radius attacks: the object exploding and it's position (barrel, missile etc.)
-static const VmPtr<int32_t>         gBombDamage(0x80077E94);    // Radius attacks: how much damage the explosion does before falloff
-static const VmPtr<divline_t>       gUseLine(0x800A8748);       // The 'use' line being cast from the player towards walls; we try to activate walls that it hits
-static const VmPtr<fixed_t[4]>      gUseBBox(0x800A875C);       // The bounding box for the 'use' line being cast from the player
-static const VmPtr<VmPtr<line_t>>   gpCloseLine(0x80078274);    // The closest wall line currently being used
-static const VmPtr<fixed_t>         gCloseDist(0x800782A8);     // Fractional distance along the use line to the closest wall line being used
+static mobj_t*      gpBombSource;       // Radius attacks: the thing responsible for the explosion (player, monster)
+static mobj_t*      gpBombSpot;         // Radius attacks: the object exploding and it's position (barrel, missile etc.)
+static int32_t      gBombDamage;        // Radius attacks: how much damage the explosion does before falloff
+static divline_t    gUseLine;           // The 'use' line being cast from the player towards walls; we try to activate walls that it hits
+static fixed_t      gUseBBox[4];        // The bounding box for the 'use' line being cast from the player
+static line_t*      gpCloseLine;        // The closest wall line currently being used
+static fixed_t      gCloseDist;         // Fractional distance along the use line to the closest wall line being used
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Test if the given x/y position can be moved to for the given map object and return 'true' if the move is allowed
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_CheckPosition(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
     // Save inputs for P_TryMove2
-    *gbCheckPosOnly = true;
-    *gpTryMoveThing = &mobj;
-    *gTryMoveX = x;
-    *gTryMoveY = y;
+    gbCheckPosOnly = true;
+    gpTryMoveThing = &mobj;
+    gTryMoveX = x;
+    gTryMoveY = y;
 
     // Check if the move can be done and return the output result
     P_TryMove2();
@@ -58,9 +58,9 @@ bool P_CheckPosition(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_TryMove(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
     // Save inputs for P_TryMove2 and attempt to do the move
-    *gpTryMoveThing = &mobj;
-    *gTryMoveX = x;
-    *gTryMoveY = y;
+    gpTryMoveThing = &mobj;
+    gTryMoveX = x;
+    gTryMoveY = y;
     P_TryMove2();
 
     // If we collided with something then try and interact with it it
@@ -138,13 +138,13 @@ static bool PIT_UseLines(line_t& line) noexcept {
     // Intersect the two lines and bail out if there is no intersection
     divline_t divline;
     P_MakeDivline(line, divline);
-    const fixed_t intersectFrac = P_InterceptVector(*gUseLine, divline);
+    const fixed_t intersectFrac = P_InterceptVector(gUseLine, divline);
 
     if (intersectFrac < 0)  // No intersection, or intersection before the start of the use line
         return true;
 
     // If the intersection isn't closer than the current closest use line intersection then ignore also
-    if (intersectFrac > *gCloseDist)
+    if (intersectFrac > gCloseDist)
         return true;
 
     // If the line is not usable then try to narrow the vertical range for the use line
@@ -157,8 +157,8 @@ static bool PIT_UseLines(line_t& line) noexcept {
     }
 
     // This is the new closest line, save - along with the intersection fraction along the use line
-    *gpCloseLine = &line;
-    *gCloseDist = intersectFrac;
+    gpCloseLine = &line;
+    gCloseDist = intersectFrac;
     return true;
 }
 
@@ -169,7 +169,7 @@ void P_UseLines(player_t& player) noexcept {
     // Figure out the start point and vector for the use line
     mobj_t& mobj = *player.mo;
 
-    divline_t& useline = *gUseLine;
+    divline_t& useline = gUseLine;
     useline.x = mobj.x;
     useline.y = mobj.y;
 
@@ -195,8 +195,8 @@ void P_UseLines(player_t& player) noexcept {
     }
     
     // Initially no wall is hit and the closest thing is at fraction 1.0 (end of the line)
-    *gCloseDist = FRACUNIT;
-    *gpCloseLine = nullptr;
+    gCloseDist = FRACUNIT;
+    gpCloseLine = nullptr;
 
     // Now doing new checks
     gValidCount++;
@@ -224,7 +224,7 @@ void P_UseLines(player_t& player) noexcept {
 
     // Try to use the closest line (if any).
     // If the line has no special then play the grunting noise.
-    line_t* const pClosestLine = gpCloseLine->get();
+    line_t* const pClosestLine = gpCloseLine;
 
     if (!pClosestLine)
         return;
@@ -250,7 +250,7 @@ static bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
         return true;
 
     // Get a distance estimate to the source of the blast
-    mobj_t& bombSpot = *gpBombSpot->get();
+    mobj_t& bombSpot = *gpBombSpot;
     
     const fixed_t dx = std::abs(mobj.x - bombSpot.x);
     const fixed_t dy = std::abs(mobj.y - bombSpot.y);
@@ -260,8 +260,8 @@ static bool PIT_RadiusAttack(mobj_t& mobj) noexcept {
     const int32_t damageFade = std::max((approxDist - mobj.radius) >> FRACBITS, 0);
 
     // Apply the actual damage if > 0 and if the thing has a line of sight to the explosion
-    const int32_t bombBaseDamage = *gBombDamage;
-    mobj_t* pBombSource = gpBombSource->get();
+    const int32_t bombBaseDamage = gBombDamage;
+    mobj_t* pBombSource = gpBombSource;
 
     if ((bombBaseDamage > damageFade) && P_CheckSight(mobj, bombSpot)) {
         P_DamageMObj(mobj, &bombSpot, pBombSource, bombBaseDamage - damageFade);
@@ -293,9 +293,9 @@ void P_RadiusAttack(mobj_t& bombSpot, mobj_t* const pSource, const int32_t damag
     #endif
 
     // Save bomb properties globally and apply the blast damage (where possible) to things within the blockmap search range
-    *gpBombSpot = &bombSpot;
-    *gpBombSource = pSource;
-    *gBombDamage = damage;
+    gpBombSpot = &bombSpot;
+    gpBombSource = pSource;
+    gBombDamage = damage;
 
     for (int32_t y = bmapBy; y <= bmapTy; ++y) {
         for (int32_t x = bmapLx; x <= bmapRx; ++x) {
@@ -310,19 +310,19 @@ void P_RadiusAttack(mobj_t& bombSpot, mobj_t* const pSource, const int32_t damag
 //------------------------------------------------------------------------------------------------------------------------------------------
 fixed_t P_AimLineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist) noexcept {
     // Can't shoot outside view angles: set the allowed Z slope range for the shot
-    *gAimTopSlope = (100 * FRACUNIT) / 160;
-    *gAimBottomSlope = (-100 * FRACUNIT) / 160;
+    gAimTopSlope = (100 * FRACUNIT) / 160;
+    gAimBottomSlope = (-100 * FRACUNIT) / 160;
 
     // Setup for shot simulation and see what this shot would hit
     gValidCount++;
-    *gAttackAngle = angle;
-    *gAttackRange = maxDist;
-    *gpShooter = &shooter;
+    gAttackAngle = angle;
+    gAttackRange = maxDist;
+    gpShooter = &shooter;
     P_Shoot2();
 
     // Save what thing is being targeted and return the computed slope.
     // If we hit a thing then use the slope to the thing, otherwise shoot level ahead (slope 0).
-    *gpLineTarget = gpShootMObj->get();
+    gpLineTarget = gpShootMObj->get();
     return (gpShootMObj->get()) ? *gShootSlope : 0;
 }
 
@@ -334,18 +334,18 @@ void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, c
     // If the aim slope is INT32_MAX then we use the screen bounds to determine the min/max slope.
     // Otherwise just expand the specified slope range by 1 each way, so it's not zero sized.
     if (zSlope == INT32_MAX) {
-        *gAimTopSlope = 100 * FRACUNIT / 160;
-        *gAimBottomSlope = -100 * FRACUNIT / 160;
+        gAimTopSlope = 100 * FRACUNIT / 160;
+        gAimBottomSlope = -100 * FRACUNIT / 160;
     } else {
-        *gAimTopSlope = zSlope + 1;
-        *gAimBottomSlope = zSlope - 1;
+        gAimTopSlope = zSlope + 1;
+        gAimBottomSlope = zSlope - 1;
     }
 
     // Take the shot!
     gValidCount++;
-    *gAttackAngle = angle;
-    *gAttackRange = maxDist;
-    *gpShooter = &shooter;
+    gAttackAngle = angle;
+    gAttackRange = maxDist;
+    gpShooter = &shooter;
     P_Shoot2();
 
     // Grab the details for what was shot
@@ -356,7 +356,7 @@ void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, c
     mobj_t* const pShootMobj = gpShootMObj->get();
 
     // Save what thing was hit globally
-    *gpLineTarget = pShootMobj;
+    gpLineTarget = pShootMobj;
 
     // Shooting a thing?
     if (pShootMobj) {

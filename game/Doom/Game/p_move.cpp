@@ -55,7 +55,7 @@ static bool PM_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_TryMove2() noexcept {
     // Grab the thing being moved and the position we're moving to
-    mobj_t& tryMoveThing = *gpTryMoveThing->get();
+    mobj_t& tryMoveThing = *gpTryMoveThing;
     *gOldX = tryMoveThing.x;
     *gOldY = tryMoveThing.y;
     
@@ -66,8 +66,8 @@ void P_TryMove2() noexcept {
     PM_CheckPosition();
 
     // If only checking the move then stop here and clear that flag
-    if (*gbCheckPosOnly) {
-        *gbCheckPosOnly = false;
+    if (gbCheckPosOnly) {
+        gbCheckPosOnly = false;
         return;
     }
 
@@ -111,8 +111,8 @@ void P_TryMove2() noexcept {
     
     tryMoveThing.floorz = *gTmFloorZ;
     tryMoveThing.ceilingz = *gTmCeilingZ;
-    tryMoveThing.x = *gTryMoveX;
-    tryMoveThing.y = *gTryMoveY;
+    tryMoveThing.x = gTryMoveX;
+    tryMoveThing.y = gTryMoveY;
 
     PM_SetThingPosition(tryMoveThing);
 
@@ -267,16 +267,16 @@ static void PM_SetThingPosition(mobj_t& mobj) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void PM_CheckPosition() noexcept {
     // Save the flags for the thing being moved and precompute it's bounding box
-    mobj_t& tryMoveThing = *gpTryMoveThing->get();
+    mobj_t& tryMoveThing = *gpTryMoveThing;
 
     *gTmFlags = tryMoveThing.flags;
-    gTestTmBBox[0] = *gTryMoveY + tryMoveThing.radius;
-    gTestTmBBox[1] = *gTryMoveY - tryMoveThing.radius;
-    gTestTmBBox[3] = *gTryMoveX + tryMoveThing.radius;
-    gTestTmBBox[2] = *gTryMoveX - tryMoveThing.radius;
+    gTestTmBBox[BOXTOP] = gTryMoveY + tryMoveThing.radius;
+    gTestTmBBox[BOXBOTTOM] = gTryMoveY - tryMoveThing.radius;
+    gTestTmBBox[BOXLEFT] = gTryMoveX - tryMoveThing.radius;
+    gTestTmBBox[BOXRIGHT] = gTryMoveX + tryMoveThing.radius;
 
     // Precompute the subsector for the thing being moved
-    subsector_t& newSubsec = *R_PointInSubsector(*gTryMoveX, *gTryMoveY);
+    subsector_t& newSubsec = *R_PointInSubsector(gTryMoveX, gTryMoveY);
     sector_t& newSector = *newSubsec.sector;
     *gpNewSubsec = &newSubsec;
 
@@ -396,7 +396,7 @@ static bool PIT_CheckLine(line_t& line) noexcept {
         return false;
     
     // If not a projectile and the line is marked as explicitly blocking then block
-    mobj_t& tryMoveThing = *gpTryMoveThing->get();
+    mobj_t& tryMoveThing = *gpTryMoveThing;
 
     if ((tryMoveThing.flags & MF_MISSILE) == 0) {
         // If the line blocks everything then register a collision
@@ -459,15 +459,15 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
         return true;
     
     // The thing cannot collide with itself
-    mobj_t& tryMoveThing = *gpTryMoveThing->get();
+    mobj_t& tryMoveThing = *gpTryMoveThing;
 
     if (&mobj == &tryMoveThing)
         return true;
 
     // See if the thing is within range: exit with no collision if it isn't
     const fixed_t totalRadius = mobj.radius + tryMoveThing.radius;
-    const fixed_t dx = std::abs(mobj.x - *gTryMoveX);
-    const fixed_t dy = std::abs(mobj.y - *gTryMoveY);
+    const fixed_t dx = std::abs(mobj.x - gTryMoveX);
+    const fixed_t dy = std::abs(mobj.y - gTryMoveY);
 
     if ((dx >= totalRadius) || (dy >= totalRadius))
         return true;

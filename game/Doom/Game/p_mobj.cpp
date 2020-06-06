@@ -431,7 +431,7 @@ void P_SpawnPuff(const fixed_t x, const fixed_t y, const fixed_t z) noexcept {
     }
     
     // Don't do sparks if punching the wall
-    if (*gAttackRange == MELEERANGE) {
+    if (gAttackRange == MELEERANGE) {
         P_SetMObjState(mobj, S_PUFF3);
     }
 }
@@ -530,18 +530,18 @@ void P_SpawnPlayerMissile(mobj_t& source, const mobjtype_t missileType) noexcept
     angle_t aimAngle = source.angle;
     fixed_t aimSlope = P_AimLineAttack(source, aimAngle, 1024 * FRACUNIT);
 
-    if (!gpLineTarget->get()) {
+    if (!gpLineTarget) {
         constexpr angle_t AIM_WIGGLE = ANG45 / 8;
         
         aimAngle = source.angle + AIM_WIGGLE;
         aimSlope = P_AimLineAttack(source, aimAngle, 1024 * FRACUNIT);
         
-        if (!gpLineTarget->get()) {
+        if (!gpLineTarget) {
             aimAngle = source.angle - AIM_WIGGLE;
             aimSlope = P_AimLineAttack(source, aimAngle, 1024 * FRACUNIT);
 
             // If we still haven't hit a thing after all these attempts then just shoot dead level ahead
-            if (!gpLineTarget->get()) {
+            if (!gpLineTarget) {
                 aimAngle = source.angle;
                 aimSlope = 0;
             }

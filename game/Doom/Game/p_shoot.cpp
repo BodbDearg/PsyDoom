@@ -45,13 +45,13 @@ static const VmPtr<fixed_t>             gFirstLineFrac(0x800781D0);         // F
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_Shoot2() noexcept {
     // Save the start and precompute the end point for the shot line
-    mobj_t& shooter = *gpShooter->get();
+    mobj_t& shooter = *gpShooter;
 
     gShootDiv->x = shooter.x;
     gShootDiv->y = shooter.y;
     
-    const int32_t attackRangeInt = (*gAttackRange) >> FRACBITS;
-    const uint32_t attackFineAngle = (*gAttackAngle) >> ANGLETOFINESHIFT;
+    const int32_t attackRangeInt = gAttackRange >> FRACBITS;
+    const uint32_t attackFineAngle = gAttackAngle >> ANGLETOFINESHIFT;
 
     *gShootX2 = shooter.x + attackRangeInt * gFineCosine[attackFineAngle];
     *gShootY2 = shooter.y + attackRangeInt * gFineSine[attackFineAngle];
@@ -63,7 +63,7 @@ void P_Shoot2() noexcept {
 
     // Figure out the shot height and shot center line slope
     *gShootZ = shooter.z + (shooter.height >> 1) + (8 * FRACUNIT);
-    *gAimMidSlope = (*gAimTopSlope + *gAimBottomSlope) >> 1;
+    *gAimMidSlope = (gAimTopSlope + gAimBottomSlope) >> 1;
     
     // Precompute the start and end points for the shot line (integer/whole coords)
     *gSsx1 = gShootDiv->x >> FRACBITS;
@@ -86,12 +86,12 @@ void P_Shoot2() noexcept {
     
     // If we hit a wall then adjust the hit spot slightly so the puff isn't in the wall - move it out
     if ((!gpShootMObj->get()) && gpShootLine->get()) {
-        const fixed_t hitFracAdjust = FixedDiv(4 * FRACUNIT, *gAttackRange);
+        const fixed_t hitFracAdjust = FixedDiv(4 * FRACUNIT, gAttackRange);
         *gFirstLineFrac -= hitFracAdjust;
 
         *gShootX = gShootDiv->x + FixedMul(gShootDiv->dx, *gFirstLineFrac);
         *gShootY = gShootDiv->y + FixedMul(gShootDiv->dy, *gFirstLineFrac);
-        *gShootZ += FixedMul(*gAimMidSlope, FixedMul(*gFirstLineFrac, *gAttackRange));
+        *gShootZ += FixedMul(*gAimMidSlope, FixedMul(*gFirstLineFrac, gAttackRange));
     }
 }
 
@@ -162,7 +162,7 @@ bool PA_ShootLine(line_t& line, const fixed_t hitFrac) noexcept {
     const fixed_t lowestCeilHeight = std::min(fsec.ceilingheight, bsec.ceilingheight);
 
     // How far away is the hit point?
-    const fixed_t hitDist = FixedMul(*gAttackRange, hitFrac);
+    const fixed_t hitDist = FixedMul(gAttackRange, hitFrac);
     
     // Is there a lower wall which can be hit?
     if (fsec.floorheight != bsec.floorheight) {
@@ -175,7 +175,7 @@ bool PA_ShootLine(line_t& line, const fixed_t hitFrac) noexcept {
         }
 
         // Narrow the allowed vertical aim range by this lower wall - can only shoot above it now
-        *gAimBottomSlope = std::max(*gAimBottomSlope, slopeToFloor);
+        gAimBottomSlope = std::max(gAimBottomSlope, slopeToFloor);
     }
     
     // Is there an upper wall which can be hit?
@@ -189,11 +189,11 @@ bool PA_ShootLine(line_t& line, const fixed_t hitFrac) noexcept {
         }
         
         // Narrow the allowed vertical aim range by this upper wall - can only shoot below it now
-        *gAimTopSlope = std::min(*gAimTopSlope, slopeToCeiling);
+        gAimTopSlope = std::min(gAimTopSlope, slopeToCeiling);
     }
 
     // If the opening is fully closed then the shot stops here
-    return (*gAimTopSlope > *gAimBottomSlope);
+    return (gAimTopSlope > gAimBottomSlope);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -202,7 +202,7 @@ bool PA_ShootLine(line_t& line, const fixed_t hitFrac) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool PA_ShootThing(mobj_t& thing, const fixed_t hitFrac) noexcept {
     // A shooter cannot shoot itself
-    if (&thing == gpShooter->get())
+    if (&thing == gpShooter)
         return true;
 
     // Can't shoot the thing if it's not shootable (corpse etc.)
@@ -210,25 +210,25 @@ bool PA_ShootThing(mobj_t& thing, const fixed_t hitFrac) noexcept {
         return true;
     
     // How far is the hit point away?
-    const fixed_t hitDist = FixedMul(*gAttackRange, hitFrac);
+    const fixed_t hitDist = FixedMul(gAttackRange, hitFrac);
 
     // Are we shooting over the thing? If so then it cannot be hit.
     // Check the allowed shooting vertical range against the top of the thing's bounding box.
     fixed_t thingTopSlope = FixedDiv(thing.z + thing.height - *gShootZ, hitDist);
     
-    if (*gAimBottomSlope > thingTopSlope)
+    if (gAimBottomSlope > thingTopSlope)
         return true;
 
     // Are we shooting under over the thing? If so then it cannot be hit.
     // Check the allowed shooting vertical range against the bottom of the thing's bounding box.
     fixed_t thingBottomSlope = FixedDiv(thing.z - *gShootZ, hitDist);
 
-    if (*gAimTopSlope < thingBottomSlope)
+    if (gAimTopSlope < thingBottomSlope)
         return true;
     
     // Clamp the parts of the thing we can hit to the allowed ranges for shooting
-    thingTopSlope = std::min(thingTopSlope, *gAimTopSlope);
-    thingBottomSlope = std::max(thingBottomSlope, *gAimBottomSlope);
+    thingTopSlope = std::min(thingTopSlope, gAimTopSlope);
+    thingBottomSlope = std::max(thingBottomSlope, gAimBottomSlope);
 
     // Shoot the thing midway along the visible parts of it and remember what is being shot
     *gShootSlope = (thingTopSlope + thingBottomSlope) >> 1;
@@ -236,12 +236,12 @@ bool PA_ShootThing(mobj_t& thing, const fixed_t hitFrac) noexcept {
 
     // Adjust the hit point so it is a little closer - move away from thing center by 10.0 units.
     // Done so blood drops are spawned in front of the thing.
-    const fixed_t adjustedHitFrac = hitFrac - FixedDiv(10 * FRACUNIT, *gAttackRange);
+    const fixed_t adjustedHitFrac = hitFrac - FixedDiv(10 * FRACUNIT, gAttackRange);
 
     // Figure out the hit point
     *gShootX = gShootDiv->x + FixedMul(gShootDiv->dx, adjustedHitFrac);
     *gShootY = gShootDiv->y + FixedMul(gShootDiv->dy, adjustedHitFrac);
-    *gShootZ += FixedMul(*gShootSlope, FixedMul(adjustedHitFrac, *gAttackRange));
+    *gShootZ += FixedMul(*gShootSlope, FixedMul(adjustedHitFrac, gAttackRange));
 
     // We hit something so the shooting ray has been obstructed
     return false;

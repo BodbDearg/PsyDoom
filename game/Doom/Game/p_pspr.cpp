@@ -448,7 +448,7 @@ void A_Punch(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     P_LineAttack(playerMobj, attackAngle, MELEERANGE, INT32_MAX, damage);
 
     // If we hit a thing then adjust the player's angle to the attack angle and play a sound
-    mobj_t* const pHitThing = gpLineTarget->get();
+    mobj_t* const pHitThing = gpLineTarget;
 
     if (pHitThing) {
         S_StartSound(&playerMobj, sfx_punch);
@@ -475,7 +475,7 @@ void A_Saw(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
     P_LineAttack(playerMobj, attackAngle, MELEERANGE + 1, INT32_MAX, damage);   // Melee range +1 so the 'puff doesn't skip the flash'
 
     // If we didn't hit a thing just play the normal chainsaw sound and exit
-    mobj_t* const pHitThing = gpLineTarget->get();
+    mobj_t* const pHitThing = gpLineTarget;
 
     if (!pHitThing) {
         S_StartSound(&playerMobj, sfx_sawful);
@@ -550,10 +550,10 @@ static void P_BulletSlope(mobj_t& mobj) noexcept {
 
     constexpr angle_t AIM_WIGGLE = ANG45 / 8;
 
-    if (!gpLineTarget->get()) {
+    if (!gpLineTarget) {
         *gBulletSlope = P_AimLineAttack(mobj, mobj.angle + AIM_WIGGLE, 1024 * FRACUNIT);
 
-        if (!gpLineTarget->get()) {
+        if (!gpLineTarget) {
             *gBulletSlope = P_AimLineAttack(mobj, mobj.angle - AIM_WIGGLE, 1024 * FRACUNIT);
         }
     }
@@ -710,7 +710,7 @@ void A_BFGSpray(mobj_t& mobj) noexcept {
 
     for (int32_t explosionIdx = 0; explosionIdx < NUM_EXPLOSIONS; ++explosionIdx) {
         P_AimLineAttack(target, mobj.angle - ANG45 + (ANG90 / NUM_EXPLOSIONS) * explosionIdx, 1024 * FRACUNIT);
-        mobj_t* const pLineTarget = gpLineTarget->get();
+        mobj_t* const pLineTarget = gpLineTarget;
 
         if (!pLineTarget)
             continue;
