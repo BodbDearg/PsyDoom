@@ -6,10 +6,10 @@ struct divline_t;
 struct line_t;
 struct mobj_t;
 
-extern const VmPtr<fixed_t>     gOpenBottom;
-extern const VmPtr<fixed_t>     gOpenTop;
-extern const VmPtr<fixed_t>     gOpenRange;
-extern const VmPtr<fixed_t>     gLowFloor;
+extern fixed_t gOpenBottom;
+extern fixed_t gOpenTop;
+extern fixed_t gOpenRange;
+extern fixed_t gLowFloor;
 
 fixed_t P_AproxDistance(const fixed_t dx, const fixed_t dy) noexcept;
 int32_t P_PointOnLineSide(const fixed_t x, const fixed_t y, const line_t& line) noexcept;

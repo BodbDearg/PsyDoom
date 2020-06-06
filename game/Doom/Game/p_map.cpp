@@ -152,7 +152,7 @@ static bool PIT_UseLines(line_t& line) noexcept {
         P_LineOpening(line);
 
         // If the vertical range for the use line is now shut then bail
-        if (*gOpenRange > 0)
+        if (gOpenRange > 0)
             return true;
     }
 

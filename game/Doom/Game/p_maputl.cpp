@@ -8,10 +8,10 @@
 
 #include <algorithm>
 
-const VmPtr<fixed_t>    gOpenBottom(0x80077F30);    // Line opening (floor/ceiling gap) info: bottom Z value of the opening
-const VmPtr<fixed_t>    gOpenTop(0x800780BC);       // Line opening (floor/ceiling gap) info: top Z value of the opening
-const VmPtr<fixed_t>    gOpenRange(0x8007827C);     // Line opening (floor/ceiling gap) info: Z size of the opening
-const VmPtr<fixed_t>    gLowFloor(0x800781DC);      // Line opening (floor/ceiling gap) info: the lowest (front/back sector) floor of the opening
+fixed_t gOpenBottom;    // Line opening (floor/ceiling gap) info: bottom Z value of the opening
+fixed_t gOpenTop;       // Line opening (floor/ceiling gap) info: top Z value of the opening
+fixed_t gOpenRange;     // Line opening (floor/ceiling gap) info: Z size of the opening
+fixed_t gLowFloor;      // Line opening (floor/ceiling gap) info: the lowest (front/back sector) floor of the opening
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Gives a cheap approximate/estimated length for the given vector
@@ -114,7 +114,7 @@ void P_MakeDivline(const line_t& line, divline_t& divline) noexcept {
 void P_LineOpening(const line_t& line) noexcept {
     // If the line is 1-sided (a solid wall) then there is no opening
     if (line.sidenum[1] == -1) {
-        *gOpenRange = 0;
+        gOpenRange = 0;
         return;
     }
 
@@ -122,10 +122,10 @@ void P_LineOpening(const line_t& line) noexcept {
     const sector_t& fsec = *line.frontsector;
     const sector_t& bsec = *line.backsector;
 
-    *gOpenTop = std::min(fsec.ceilingheight, bsec.ceilingheight);
-    *gOpenBottom = std::max(fsec.floorheight, bsec.floorheight);
-    *gLowFloor = std::min(fsec.floorheight, bsec.floorheight);
-    *gOpenRange = *gOpenTop - *gOpenBottom;
+    gOpenTop = std::min(fsec.ceilingheight, bsec.ceilingheight);
+    gOpenBottom = std::max(fsec.floorheight, bsec.floorheight);
+    gLowFloor = std::min(fsec.floorheight, bsec.floorheight);
+    gOpenRange = gOpenTop - gOpenBottom;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
