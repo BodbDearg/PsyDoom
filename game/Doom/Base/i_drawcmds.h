@@ -1,6 +1,7 @@
 #pragma once
 
-#include "PsxVm/VmPtr.h"
+#include <cstddef>
+#include <cstdint>
 
 // 64 KiB of GPU primitives can be stored in the GPU command buffer at once
 static constexpr uint32_t GPU_CMD_BUFFER_SIZE = 64 * 1024;

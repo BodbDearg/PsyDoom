@@ -24,8 +24,8 @@ static uint32_t makePrimTag(const uint32_t primSize, void* const pNextPrim) noex
     #endif
 
     const uint32_t numPrimDataWords = (primSize / sizeof(uint32_t)) - 1;    // Note: the tag size is excluded!
-    const uint32_t nextPrimAddr = ptrToVmAddr(pNextPrim);
-    return (numPrimDataWords << 24) | (nextPrimAddr & 0x00FFFFFF);
+    const uint32_t nextPrimOffset = (uint32_t)((std::byte*) pNextPrim - gGpuCmdsBuffer);
+    return (numPrimDataWords << 24) | (nextPrimOffset & 0x00FFFFFF);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
