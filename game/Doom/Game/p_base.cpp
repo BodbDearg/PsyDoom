@@ -22,17 +22,17 @@
 static constexpr fixed_t STOPSPEED  = 0x1000;   // Speed under which to stop a thing fully
 static constexpr fixed_t FRICTION   = 0xD200;   // Friction amount to apply (note: 0xD240 in Jaguar Doom)
 
-static const VmPtr<VmPtr<mobj_t>>           gpBaseThing(0x8007824C);        // The current thing that is doing collision testing against other stuff: used by various functions in the module
-static const VmPtr<fixed_t>                 gTestX(0x80077EF4);             // The thing position to use for collision testing - X
-static const VmPtr<fixed_t>                 gTestY(0x80077F00);             // The thing position to use for collision testing - Y
-static const VmPtr<fixed_t[4]>              gTestBBox(0x800A9064);          // Bounding box for various collision tests
-static const VmPtr<uint32_t>                gTestFlags(0x800782B4);         // Used in place of 'mobj_t' flags for various functions in this module
-static const VmPtr<VmPtr<subsector_t>>      gpTestSubSec(0x80077F28);       // Current cached thing subsector: input and output for some functions in this module
-static const VmPtr<VmPtr<mobj_t>>           gpHitThing(0x80078184);         // The thing that was collided against during collision testing
-static const VmPtr<VmPtr<line_t>>           gpCeilingLine(0x80077F8C);      // Collision testing: the line for the lowest ceiling edge the collider is in contact with
-static const VmPtr<fixed_t>                 gTestCeilingz(0x80078104);      // Collision testing: the Z value for the lowest ceiling the collider is in contact with
-static const VmPtr<fixed_t>                 gTestFloorZ(0x80077F68);        // Collision testing: the Z value for the highest floor the collider is in contact with
-static const VmPtr<fixed_t>                 gTestDropoffZ(0x80078120);      // Collision testing: the Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
+static mobj_t*          gpBaseThing;        // The current thing that is doing collision testing against other stuff: used by various functions in the module
+static fixed_t          gTestX;             // The thing position to use for collision testing - X
+static fixed_t          gTestY;             // The thing position to use for collision testing - Y
+static fixed_t          gTestBBox[4];       // Bounding box for various collision tests
+static uint32_t         gTestFlags;         // Used in place of 'mobj_t' flags for various functions in this module
+static subsector_t*     gpTestSubSec;       // Current cached thing subsector: input and output for some functions in this module
+static mobj_t*          gpHitThing;         // The thing that was collided against during collision testing
+static line_t*          gpCeilingLine;      // Collision testing: the line for the lowest ceiling edge the collider is in contact with
+static fixed_t          gTestCeilingz;      // Collision testing: the Z value for the lowest ceiling the collider is in contact with
+static fixed_t          gTestFloorZ;        // Collision testing: the Z value for the highest floor the collider is in contact with
+static fixed_t          gTestDropoffZ;      // Collision testing: the Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
 
 // Not required externally: making private to this module
 static bool PB_TryMove(const fixed_t tryX, const fixed_t tryY) noexcept;
@@ -47,11 +47,11 @@ static bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_RunMobjBase() noexcept {
     mobj_t& mobjHead = *gMObjHead;
-    *gpBaseThing = mobjHead.next.get();
+    gpBaseThing = mobjHead.next.get();
 
     // Run through all the map objects
-    while (gpBaseThing->get() != &mobjHead) {
-        mobj_t& mobj = *gpBaseThing->get();
+    while (gpBaseThing != &mobjHead) {
+        mobj_t& mobj = *gpBaseThing;
 
         // Only run the think logic if it's not the player.
         if (!mobj.player) {
@@ -61,7 +61,7 @@ void P_RunMobjBase() noexcept {
             P_MobjThinker(mobj);
         }
 
-        *gpBaseThing = mobj.next.get();
+        gpBaseThing = mobj.next.get();
     }
 }
 
@@ -92,16 +92,16 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
             // Move failed: if it's a skull flying then do the skull bash
             if (mobj.flags & MF_SKULLFLY) {
                 mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) L_SkullBash);
-                mobj.extradata = ptrToVmAddr(gpHitThing->get());
+                mobj.extradata = ptrToVmAddr(gpHitThing);
             }
 
             // If it's a missile explode or remove, otherwise stop momentum fully
             if (mobj.flags & MF_MISSILE) {
                 // Missile: if the missile hit the sky then just remove it rather than exploding
                 const bool bHitSky = (
-                    gpCeilingLine->get() &&
-                    gpCeilingLine->get()->backsector.get() &&
-                    (gpCeilingLine->get()->backsector->ceilingpic == -1)
+                    gpCeilingLine &&
+                    gpCeilingLine->backsector.get() &&
+                    (gpCeilingLine->backsector->ceilingpic == -1)
                 );
 
                 if (bHitSky) {
@@ -110,7 +110,7 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
                 } else {
                     // Usual case: exploding on hitting a wall or thing
                     mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) L_MissileHit);
-                    mobj.extradata = ptrToVmAddr(gpHitThing->get());
+                    mobj.extradata = ptrToVmAddr(gpHitThing);
                 }
             } else {
                 // Remove all momentum since the thing cannot move
@@ -276,31 +276,31 @@ void P_MobjThinker(mobj_t& mobj) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool PB_TryMove(const fixed_t tryX, const fixed_t tryY) noexcept {
     // Save the position we are attempting to move to
-    *gTestX = tryX;
-    *gTestY = tryY;
+    gTestX = tryX;
+    gTestY = tryY;
 
     // If we collided for sure with something (ignoring height) then stop now
     if (!PB_CheckPosition())
         return false;
 
     // If the floor/ceiling height gap is too small to move through then the move cannot happen
-    mobj_t& baseThing = *gpBaseThing->get();
+    mobj_t& baseThing = *gpBaseThing;
 
-    if (*gTestCeilingz - *gTestFloorZ < baseThing.height)
+    if (gTestCeilingz - gTestFloorZ < baseThing.height)
         return false;
 
     // If the thing is too high up in the air to pass under the upper wall then the move cannot happen
-    if (*gTestCeilingz - baseThing.z < baseThing.height)
+    if (gTestCeilingz - baseThing.z < baseThing.height)
         return false;
     
     // If the step up is too big for a step then the move cannot happen
-    if (*gTestFloorZ - baseThing.z > 24 * FRACUNIT)
+    if (gTestFloorZ - baseThing.z > 24 * FRACUNIT)
         return false;
 
     // See if the fall is too large (monsters).
     // Only do this test for things that don't float and which care about falling off cliffs.
-    if ((*gTestFlags & (MF_DROPOFF | MF_FLOAT)) == 0) {
-        if (*gTestFloorZ - *gTestDropoffZ > 24 * FRACUNIT) {
+    if ((gTestFlags & (MF_DROPOFF | MF_FLOAT)) == 0) {
+        if (gTestFloorZ - gTestDropoffZ > 24 * FRACUNIT) {
             // Drop is too large for this thing!
             return false;
         }
@@ -310,10 +310,10 @@ static bool PB_TryMove(const fixed_t tryX, const fixed_t tryY) noexcept {
     // Remove the thing from the sector thing lists and the blockmap, update it's position etc. and then re-add.
     PB_UnsetThingPosition(baseThing);
 
-    baseThing.floorz = *gTestFloorZ;
-    baseThing.ceilingz = *gTestCeilingz;
-    baseThing.x = *gTestX;
-    baseThing.y = *gTestY;
+    baseThing.floorz = gTestFloorZ;
+    baseThing.ceilingz = gTestCeilingz;
+    baseThing.x = gTestX;
+    baseThing.y = gTestY;
 
     PB_SetThingPosition(baseThing);
 
@@ -338,7 +338,7 @@ static void PB_UnsetThingPosition(mobj_t& thing) noexcept {
     }
 
     // Remove the thing from the blockmap, if it is added to the blockmap
-    if ((*gTestFlags & MF_NOBLOCKMAP) == 0) {
+    if ((gTestFlags & MF_NOBLOCKMAP) == 0) {
         if (thing.bnext) {
             thing.bnext->bprev = thing.bprev;
         }
@@ -370,7 +370,7 @@ static void PB_UnsetThingPosition(mobj_t& thing) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void PB_SetThingPosition(mobj_t& mobj) noexcept {
     // Add the thing into the sector thing linked list
-    subsector_t& subsec = *gpTestSubSec->get();
+    subsector_t& subsec = *gpTestSubSec;
     sector_t& sec = *subsec.sector;
 
     mobj.subsector = &subsec;
@@ -384,7 +384,7 @@ static void PB_SetThingPosition(mobj_t& mobj) noexcept {
     sec.thinglist = &mobj;
 
     // Add the thing into the blockmap unless the thing flags specify otherwise (inert things)
-    if ((*gTestFlags & MF_NOBLOCKMAP) == 0) {
+    if ((gTestFlags & MF_NOBLOCKMAP) == 0) {
         // Compute the blockmap cell and see if it's in range for the blockmap
         const int32_t bmapX = (mobj.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
         const int32_t bmapY = (mobj.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
@@ -430,29 +430,29 @@ static void PB_SetThingPosition(mobj_t& mobj) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool PB_CheckPosition() noexcept {
     // Save the bounding box, flags and subsector for the thing having collision testing done
-    mobj_t& baseThing = *gpBaseThing->get();
-    *gTestFlags = baseThing.flags;
+    mobj_t& baseThing = *gpBaseThing;
+    gTestFlags = baseThing.flags;
 
     {
         const fixed_t radius = baseThing.radius;
-        gTestBBox[0] = *gTestY + radius;
-        gTestBBox[1] = *gTestY - radius;
-        gTestBBox[3] = *gTestX + radius;
-        gTestBBox[BOXLEFT] = *gTestX - radius;
+        gTestBBox[BOXTOP] = gTestY + radius;
+        gTestBBox[BOXBOTTOM] = gTestY - radius;
+        gTestBBox[BOXLEFT] = gTestX - radius;
+        gTestBBox[BOXRIGHT] = gTestX + radius;
     }
 
-    subsector_t& testSubsec = *R_PointInSubsector(*gTestX, *gTestY);
+    subsector_t& testSubsec = *R_PointInSubsector(gTestX, gTestY);
     sector_t& testSec = *testSubsec.sector;
-    *gpTestSubSec = &testSubsec;
+    gpTestSubSec = &testSubsec;
 
     // Initially have collided with nothing
-    *gpCeilingLine = nullptr;
-    *gpHitThing = nullptr;
+    gpCeilingLine = nullptr;
+    gpHitThing = nullptr;
 
     // Initialize the lowest ceiling, and highest/lowest floor values to that of the initial subsector
-    *gTestFloorZ = testSec.floorheight;
-    *gTestDropoffZ = testSec.floorheight;
-    *gTestCeilingz = testSec.ceilingheight;
+    gTestFloorZ = testSec.floorheight;
+    gTestDropoffZ = testSec.floorheight;
+    gTestCeilingz = testSec.ceilingheight;
 
     // Determine the blockmap extents (left/right, top/bottom) to be tested against for collision and clamp to a valid range
     const int32_t bmapLx = std::max((gTestBBox[BOXLEFT] - *gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
@@ -538,7 +538,7 @@ static bool PB_CheckLine(line_t& line) noexcept {
         return false;
 
     // If not a projectile and the line is marked as explicitly blocking then block
-    if ((*gTestFlags & MF_MISSILE) == 0) {
+    if ((gTestFlags & MF_MISSILE) == 0) {
         if (line.flags & (ML_BLOCKING | ML_BLOCKMONSTERS)) {
             return false;
         }
@@ -557,17 +557,17 @@ static bool PB_CheckLine(line_t& line) noexcept {
     const fixed_t lowFloor = std::min(fsec.floorheight, bsec.floorheight);
 
     // Adjust the global low ceiling, high floor and lowest floor values
-    if (openTop < *gTestCeilingz) {
-        *gTestCeilingz = openTop;
-        *gpCeilingLine = &line;
+    if (openTop < gTestCeilingz) {
+        gTestCeilingz = openTop;
+        gpCeilingLine = &line;
     }
 
-    if (openBottom > *gTestFloorZ) {
-        *gTestFloorZ = openBottom;
+    if (openBottom > gTestFloorZ) {
+        gTestFloorZ = openBottom;
     }
 
-    if (lowFloor < *gTestDropoffZ) {
-        *gTestDropoffZ = lowFloor;
+    if (lowFloor < gTestDropoffZ) {
+        gTestDropoffZ = lowFloor;
     }
 
     // This line does not block, ignoring height differences.
@@ -587,11 +587,11 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
     
     // Get the thing which is doing the collision test and see if it is close enough to this thing.
     // If it isn't then we can early out here and return 'true' for no collision:
-    mobj_t& baseThing = *gpBaseThing->get();
+    mobj_t& baseThing = *gpBaseThing;
     const fixed_t totalRadius = mobj.radius + baseThing.radius;
     
-    const fixed_t dx = std::abs(mobj.x - *gTestX);
-    const fixed_t dy = std::abs(mobj.y - *gTestY);
+    const fixed_t dx = std::abs(mobj.x - gTestX);
+    const fixed_t dy = std::abs(mobj.y - gTestY);
 
     if ((dx >= totalRadius) || (dy >= totalRadius))
         return true;
@@ -601,10 +601,10 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
         return true;
 
     // Check for a lost soul slamming into things
-    const int32_t testFlags = *gTestFlags;
+    const int32_t testFlags = gTestFlags;
 
     if (testFlags & MF_SKULLFLY) {
-        *gpHitThing = &mobj;
+        gpHitThing = &mobj;
         return false;
     }
 
@@ -635,7 +635,7 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
         
         // So long as the thing is shootable then the missile can hit it
         if (mobj.flags & MF_SHOOTABLE) {
-            *gpHitThing = &mobj;
+            gpHitThing = &mobj;
             return false;
         }
     }
