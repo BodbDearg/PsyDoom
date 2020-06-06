@@ -155,7 +155,7 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
     #else
         // Read the demo file contents (up to 16 KiB)
         constexpr uint32_t DEMO_BUFFER_SIZE = 16 * 1024;
-        gpDemoBuffer = (uint32_t*) Z_EndMalloc(**gpMainMemZone, DEMO_BUFFER_SIZE, PU_STATIC, nullptr);
+        gpDemoBuffer = (uint32_t*) Z_EndMalloc(*gpMainMemZone, DEMO_BUFFER_SIZE, PU_STATIC, nullptr);
         ReadFile(openFileIdx, gpDemoBuffer->get(), 16 * 1024);
     #endif
     
@@ -171,7 +171,7 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
         gpDemoBuffer = nullptr;
         gpDemoBufferEnd = nullptr;
     #else
-        Z_Free2(**gpMainMemZone, gpDemoBuffer);
+        Z_Free2(*gpMainMemZone, gpDemoBuffer);
     #endif
 
     return exitAction;

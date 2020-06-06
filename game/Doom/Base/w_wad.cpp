@@ -17,19 +17,19 @@ static_assert(sizeof(wadinfo_t) == 12);
 
 // Main IWAD lump related state: the number of lumps, info on each lump, pointers to loaded lumps and
 // whether each lump was loaded from the main IWAD or not.
-const VmPtr<int32_t>                gNumLumps(0x800781EC);
-const VmPtr<VmPtr<lumpinfo_t>>      gpLumpInfo(0x800781C4);
+int32_t         gNumLumps;
+lumpinfo_t*     gpLumpInfo;
 const VmPtr<VmPtr<VmPtr<void>>>     gpLumpCache(0x8007823C);
-const VmPtr<VmPtr<bool>>            gpbIsUncompressedLump(0x800782F0);
-const VmPtr<bool32_t>               gbIsLevelDataCached(0x80077BE4);
+bool*           gpbIsUncompressedLump;
+bool            gbIsLevelDataCached;
 
 // Which of the open files is the main WAD file
-static const VmPtr<uint32_t> gMainWadFileIdx(0x80078254);
+static uint32_t gMainWadFileIdx;
 
 // Map WAD stuff: pointer to the loaded WAD in memory, number of map WAD lumps, pointer to the map WAD info tables (the WAD directory).
-static const VmPtr<VmPtr<void>>     gpMapWadFileData(0x80077F18);
-static const VmPtr<int32_t>         gNumMapWadLumps(0x8007811C);
-const VmPtr<VmPtr<lumpinfo_t>>      gpMapWadLumpInfo(0x800780C8);
+static void*    gpMapWadFileData;
+static int32_t  gNumMapWadLumps;
+lumpinfo_t*     gpMapWadLumpInfo;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the WAD file management system.
@@ -38,32 +38,32 @@ const VmPtr<VmPtr<lumpinfo_t>>      gpMapWadLumpInfo(0x800780C8);
 void W_Init() noexcept {
     // Initialize the list of open file slots and open the main IWAD file
     InitOpenFileSlots();
-    *gMainWadFileIdx = OpenFile(CdMapTbl_File::PSXDOOM_WAD);
+    gMainWadFileIdx = OpenFile(CdMapTbl_File::PSXDOOM_WAD);
 
     // Read the header for the IWAD and ensure it has the correct id/magic
     wadinfo_t wadinfo = {};
-    ReadFile(*gMainWadFileIdx, &wadinfo, sizeof(wadinfo_t));
+    ReadFile(gMainWadFileIdx, &wadinfo, sizeof(wadinfo_t));
 
     if (D_strncasecmp(wadinfo.fileid, "IWAD", sizeof(wadinfo.fileid)) != 0) {
         I_Error("W_Init: invalid main IWAD id");
     }
 
     // Save the number of lumps and alloc the lump info array
-    *gNumLumps = wadinfo.numlumps;
-    *gpLumpInfo = (lumpinfo_t*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(lumpinfo_t), PU_STATIC, nullptr);
+    gNumLumps = wadinfo.numlumps;
+    gpLumpInfo = (lumpinfo_t*) Z_Malloc(*gpMainMemZone, gNumLumps * sizeof(lumpinfo_t), PU_STATIC, nullptr);
 
     // Read the lump info array
-    SeekAndTellFile(*gMainWadFileIdx, wadinfo.infotableofs, PsxCd_SeekMode::SET);
-    ReadFile(*gMainWadFileIdx, gpLumpInfo->get(), *gNumLumps * sizeof(lumpinfo_t));
+    SeekAndTellFile(gMainWadFileIdx, wadinfo.infotableofs, PsxCd_SeekMode::SET);
+    ReadFile(gMainWadFileIdx, gpLumpInfo, gNumLumps * sizeof(lumpinfo_t));
 
     // Alloc and zero init the lump cache pointers list and an array of bools to say whether each lump is compressed or not.
     static_assert(sizeof(bool) == 1, "Expect bool to be 1 byte!");
 
-    *gpLumpCache = (VmPtr<void>*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(VmPtr<void>), PU_STATIC, nullptr);
-    *gpbIsUncompressedLump = (bool*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(bool), PU_STATIC, nullptr);
+    *gpLumpCache = (VmPtr<void>*) Z_Malloc(*gpMainMemZone, gNumLumps * sizeof(VmPtr<void>), PU_STATIC, nullptr);
+    gpbIsUncompressedLump = (bool*) Z_Malloc(*gpMainMemZone, gNumLumps * sizeof(bool), PU_STATIC, nullptr);
 
-    D_memset(gpLumpCache->get(), std::byte(0), *gNumLumps * sizeof(VmPtr<void>));
-    D_memset(gpbIsUncompressedLump->get(), std::byte(0), *gNumLumps * sizeof(bool));
+    D_memset(gpLumpCache->get(), std::byte(0), gNumLumps * sizeof(VmPtr<void>));
+    D_memset(gpbIsUncompressedLump, std::byte(0), gNumLumps * sizeof(bool));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -82,10 +82,10 @@ int32_t W_CheckNumForName(const char* const name) noexcept {
     const uint32_t findNameW2 = (uint32_t&) nameUpper[4];
 
     // Try to find the given lump name and compare names using 32-bit words rather than single chars
-    lumpinfo_t* pLump = gpLumpInfo->get();
+    lumpinfo_t* pLump = gpLumpInfo;
     int32_t lumpIdx = 0;
 
-    while (lumpIdx < *gNumLumps) {
+    while (lumpIdx < gNumLumps) {
         // Note: must mask the highest bit of the first character of the lump name.
         // This bit is used to indicate whether the lump is compressed or not.
         const uint32_t lumpNameW1 = ((uint32_t&) pLump->name.chars[0]) & NAME_WORD_MASK;
@@ -121,11 +121,11 @@ int32_t W_GetNumForName(const char* const name) noexcept {
 // Issues a fatal error if the lump is not found.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t W_LumpLength(const int32_t lumpNum) noexcept {
-    if (lumpNum >= *gNumLumps) {
+    if (lumpNum >= gNumLumps) {
         I_Error("W_LumpLength: %i >= numlumps", lumpNum);
     }
 
-    const lumpinfo_t& lump = (*gpLumpInfo)[lumpNum];
+    const lumpinfo_t& lump = gpLumpInfo[lumpNum];
     return lump.size;
 }
 
@@ -140,18 +140,18 @@ void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress
     // This code relies on getting the NEXT lump after the requested one in order to determine sizes.
     // We shouldn't be reading the last WAD lump anyway as it's an end marker...
     #if PC_PSX_DOOM_MODS
-        if (lumpNum + 1 >= *gNumLumps) {
+        if (lumpNum + 1 >= gNumLumps) {
             I_Error("W_ReadLump: %i + 1 >= numlumps", lumpNum);
         }
     #else
-        if (lumpNum >= *gNumLumps) {
+        if (lumpNum >= gNumLumps) {
             I_Error("W_ReadLump: %i >= numlumps", lumpNum);
         }
     #endif
     
     // The lump requested and the next one after that
-    const lumpinfo_t& lump = (*gpLumpInfo)[lumpNum];
-    const lumpinfo_t& nextLump = (*gpLumpInfo)[lumpNum + 1];
+    const lumpinfo_t& lump = gpLumpInfo[lumpNum];
+    const lumpinfo_t& nextLump = gpLumpInfo[lumpNum + 1];
 
     // Do we need to decompress? Decompress if specified and if the lumpname has the special bit
     // set in the first character, indicating that the lump is compressed.
@@ -159,17 +159,17 @@ void W_ReadLump(const int32_t lumpNum, void* const pDest, const bool bDecompress
 
     if (bDecompress && (((uint8_t) lump.name.chars[0] & 0x80u) != 0)) {
         // Decompression needed, must alloc a temp buffer for the compressed data before reading and decompressing!
-        void* const pTmpBuffer = Z_EndMalloc(**gpMainMemZone, lump.size, PU_STATIC, nullptr);
+        void* const pTmpBuffer = Z_EndMalloc(*gpMainMemZone, lump.size, PU_STATIC, nullptr);
         
-        SeekAndTellFile(*gMainWadFileIdx, lump.filepos, PsxCd_SeekMode::SET);
-        ReadFile(*gMainWadFileIdx, pTmpBuffer, sizeToRead);
+        SeekAndTellFile(gMainWadFileIdx, lump.filepos, PsxCd_SeekMode::SET);
+        ReadFile(gMainWadFileIdx, pTmpBuffer, sizeToRead);
         decode(pTmpBuffer, pDest);
 
-        Z_Free2(**gpMainMemZone, pTmpBuffer);
+        Z_Free2(*gpMainMemZone, pTmpBuffer);
     } else {
         // No decompression needed, can just read straight into the output buffer
-        SeekAndTellFile(*gMainWadFileIdx, lump.filepos, PsxCd_SeekMode::SET);
-        ReadFile(*gMainWadFileIdx, pDest, sizeToRead);
+        SeekAndTellFile(gMainWadFileIdx, lump.filepos, PsxCd_SeekMode::SET);
+        ReadFile(gMainWadFileIdx, pDest, sizeToRead);
     }
 }
 
@@ -185,11 +185,11 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
     // This code relies on getting the NEXT lump after the requested one in order to determine sizes.
     // We shouldn't be reading the last WAD lump anyway as it's an end marker...
     #if PC_PSX_DOOM_MODS
-        if (lumpNum + 1 >= *gNumLumps) {
+        if (lumpNum + 1 >= gNumLumps) {
             I_Error("W_CacheLumpNum: %i + 1 >= numlumps", lumpNum);
         }
     #else
-        if (lumpNum >= *gNumLumps) {
+        if (lumpNum >= gNumLumps) {
             I_Error("W_CacheLumpNum: %i >= numlumps", lumpNum);
         }
     #endif
@@ -205,34 +205,34 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
         // PC-PSX: waive this restriction and allow lumps to be loaded in on the fly.
         // This change means that levels no longer need to ship with 'MAPSPR--.IMG' and 'MAPTEX--.IMG' files.
         #if !PC_PSX_DOOM_MODS
-            if (*gbIsLevelDataCached) {
+            if (gbIsLevelDataCached) {
                 I_Error("cache miss on lump %i", lumpNum);
             }
         #endif
-    
+        
         // Figure out how much data we will need to allocate. If we are decompressing then this will be the decompressed size, otherwise
         // it will be the actual size of the lump before decompression is applied:
-        const lumpinfo_t& lumpInfo = (*gpLumpInfo)[lumpNum];
+        const lumpinfo_t& lumpInfo = gpLumpInfo[lumpNum];
         int32_t sizeToRead;
         
         if (bDecompress) {
             sizeToRead = lumpInfo.size;
         } else {
-            const lumpinfo_t& nextLumpInfo = (*gpLumpInfo)[lumpNum + 1];
+            const lumpinfo_t& nextLumpInfo = gpLumpInfo[lumpNum + 1];
             const int32_t lumpStorageSize = nextLumpInfo.filepos - lumpInfo.filepos;
             sizeToRead = lumpStorageSize;
         }
 
         // Alloc RAM for the lump and read it
-        Z_Malloc(**gpMainMemZone, sizeToRead, allocTag, &lumpCacheEntry);
+        Z_Malloc(*gpMainMemZone, sizeToRead, allocTag, &lumpCacheEntry);
         W_ReadLump(lumpNum, lumpCacheEntry.get(), bDecompress);
 
         // Save whether the lump is compressed or not.
         // If the lump is compressed then the highest bit of the first character in the name will be set:
         if ((lumpInfo.name.chars[0] & 0x80) != 0) {
-            (*gpbIsUncompressedLump)[lumpNum] = bDecompress;
+            gpbIsUncompressedLump[lumpNum] = bDecompress;
         } else {
-            (*gpbIsUncompressedLump)[lumpNum] = true;
+            gpbIsUncompressedLump[lumpNum] = true;
         }
     }
 
@@ -254,17 +254,17 @@ void* W_OpenMapWad(const CdMapTbl_File discFile) noexcept {
     {
         const uint32_t openFileIdx = OpenFile(discFile);
         const int32_t wadSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
-        *gpMapWadFileData = Z_EndMalloc(**gpMainMemZone, wadSize, PU_STATIC, nullptr);
+        gpMapWadFileData = Z_EndMalloc(*gpMainMemZone, wadSize, PU_STATIC, nullptr);
 
         SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::SET);
-        ReadFile(openFileIdx, (*gpMapWadFileData).get(), wadSize);
+        ReadFile(openFileIdx, gpMapWadFileData, wadSize);
         CloseFile(openFileIdx);
     }
 
     // Make sure the file id is valid.
     // Note that PSX DOOM expects the identifier "IWAD" also in it's map wads, rather then "PWAD".
     // I am relaxing this restriction for the PC-PSX version however and accepting "PWAD" if there:
-    const wadinfo_t& wadinfo = *(wadinfo_t*) gpMapWadFileData->get();
+    const wadinfo_t& wadinfo = *(wadinfo_t*) gpMapWadFileData;
 
     const bool bIsValidWad = (
         #if PC_PSX_DOOM_MODS
@@ -278,9 +278,9 @@ void* W_OpenMapWad(const CdMapTbl_File discFile) noexcept {
     }
     
     // Finish up by saving some high level map wad info
-    *gNumMapWadLumps = wadinfo.numlumps;
-    *gpMapWadLumpInfo = (lumpinfo_t*)((std::byte*) gpMapWadFileData->get() + wadinfo.infotableofs);
-    return gpMapWadFileData->get();
+    gNumMapWadLumps = wadinfo.numlumps;
+    gpMapWadLumpInfo = (lumpinfo_t*)((std::byte*) gpMapWadFileData + wadinfo.infotableofs);
+    return gpMapWadFileData;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -288,11 +288,11 @@ void* W_OpenMapWad(const CdMapTbl_File discFile) noexcept {
 // Issues a fatal error if the lump is not found.
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t W_MapLumpLength(const int32_t lumpNum) noexcept {
-    if (lumpNum >= *gNumMapWadLumps) {
+    if (lumpNum >= gNumMapWadLumps) {
         I_Error("W_MapLumpLength: %i out of range", lumpNum);
     }
 
-    const lumpinfo_t& lump = (*gpMapWadLumpInfo)[lumpNum];
+    const lumpinfo_t& lump = gpMapWadLumpInfo[lumpNum];
     return lump.size;
 }
 
@@ -312,10 +312,10 @@ int32_t W_MapCheckNumForName(const char* const name) noexcept {
     const uint32_t findNameW2 = (uint32_t&) nameUpper[4];
 
     // Try to find the given lump name and compare names using 32-bit words rather than single chars
-    lumpinfo_t* pLump = (*gpMapWadLumpInfo).get();
+    lumpinfo_t* pLump = gpMapWadLumpInfo;
     int32_t lumpIdx = 0;
 
-    while (lumpIdx < *gNumLumps) {
+    while (lumpIdx < gNumLumps) {
         // Note: must mask the highest bit of the first character of the lump name.
         // This bit is used to indicate whether the lump is compressed or not.
         const uint32_t lumpNameW1 = ((uint32_t&) pLump->name.chars[0]) & NAME_WORD_MASK;
@@ -342,26 +342,26 @@ void W_ReadMapLump(const int32_t lumpNum, void* const pDest, const bool bDecompr
     // This code relies on getting the NEXT lump after the requested one in order to determine sizes.
     // We shouldn't be reading the last WAD lump anyway as it's an end marker...
     #if PC_PSX_DOOM_MODS
-        if (lumpNum + 1 >= *gNumMapWadLumps) {
+        if (lumpNum + 1 >= gNumMapWadLumps) {
             I_Error("W_ReadMapLump: lump %d + 1 out of range", lumpNum);
         }
     #else
-        if (lumpNum >= *gNumMapWadLumps) {
+        if (lumpNum >= gNumMapWadLumps) {
             I_Error("W_ReadMapLump: lump %d out of range", lumpNum);
         }
     #endif
 
     // Do we need to decompress? Decompress if specified and if the lumpname has the special bit
     // set in the first character, indicating that the lump is compressed.
-    const lumpinfo_t& lump = (*gpMapWadLumpInfo)[lumpNum];
-    const std::byte* const pLumpBytes = ((std::byte*) gpMapWadFileData->get()) + lump.filepos;
+    const lumpinfo_t& lump = gpMapWadLumpInfo[lumpNum];
+    const std::byte* const pLumpBytes = (std::byte*) gpMapWadFileData + lump.filepos;
     
     if (bDecompress && (((uint8_t) lump.name.chars[0] & 0x80u) != 0)) {
         // Decompression needed: decompress to the given output buffer
         decode(pLumpBytes, pDest);
     } else {
         // No decompression needed, can just copy straight into the output buffer
-        const lumpinfo_t& nextLump = (*gpLumpInfo)[lumpNum + 1];
+        const lumpinfo_t& nextLump = gpLumpInfo[lumpNum + 1];
         const uint32_t sizeToCopy = nextLump.filepos - lump.filepos;
         D_memcpy(pDest, pLumpBytes, sizeToCopy);
     }

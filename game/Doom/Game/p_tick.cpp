@@ -107,7 +107,7 @@ void P_RunThinkers() noexcept {
             // Time to remove this thinker, it's function has been zapped
             pThinker->next->prev = pThinker->prev;
             pThinker->prev->next = pThinker->next;
-            Z_Free2(**gpMainMemZone, pThinker);
+            Z_Free2(*gpMainMemZone, pThinker);
         } else {
             // Run the thinker if it has a think function and increment the active count stat
             if (pThinker->function) {
@@ -549,7 +549,7 @@ void P_Start() noexcept {
     M_ClearRandom();
 
     // Shouldn't be loading anything off the CDROM during gameplay after this point
-    *gbIsLevelDataCached = true;
+    gbIsLevelDataCached = true;
 
     // Play music: for demos play the credits music cd track.
     // Otherwise play some sequencer music for the level.
@@ -599,7 +599,7 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 
     // Game is no longer paused and level data no longer cached
     *gbGamePaused = false;
-    *gbIsLevelDataCached = false;
+    gbIsLevelDataCached = false;
 
     // Finish up the level for each player
     for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {

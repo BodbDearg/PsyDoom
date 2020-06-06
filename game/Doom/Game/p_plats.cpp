@@ -130,7 +130,7 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
         // Create the platform thinker, link to it's sector and populate its state/settings
         bActivatedPlats = true;
 
-        plat_t& plat = *(plat_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(plat_t), PU_LEVSPEC, nullptr);
+        plat_t& plat = *(plat_t*) Z_Malloc(*gpMainMemZone, sizeof(plat_t), PU_LEVSPEC, nullptr);
         P_AddThinker(plat.thinker);
         sector.specialdata = &plat;
 

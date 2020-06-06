@@ -80,7 +80,7 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
 
     // Alloc the runtime vertex array
     *gNumVertexes = lumpSize / sizeof(mapvertex_t);
-    *gpVertexes = (vertex_t*) Z_Malloc(**gpMainMemZone, *gNumVertexes * sizeof(vertex_t), PU_LEVEL, nullptr);
+    *gpVertexes = (vertex_t*) Z_Malloc(*gpMainMemZone, *gNumVertexes * sizeof(vertex_t), PU_LEVEL, nullptr);
     
     // Read the WAD vertexes into the temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
@@ -111,7 +111,7 @@ static void P_LoadSegs(const int32_t lumpNum) noexcept {
     
     // Alloc ram for the runtime segs and zero initialize
     *gNumSegs = lumpSize / sizeof(mapseg_t);
-    *gpSegs = (seg_t*) Z_Malloc(**gpMainMemZone, *gNumSegs * sizeof(seg_t), PU_LEVEL, nullptr);
+    *gpSegs = (seg_t*) Z_Malloc(*gpMainMemZone, *gNumSegs * sizeof(seg_t), PU_LEVEL, nullptr);
     D_memset(gpSegs->get(), std::byte(0), *gNumSegs * sizeof(seg_t));
 
     // Read the map lump containing the segs into a temp buffer from the map WAD
@@ -170,7 +170,7 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
 
     // Alloc ram for the runtime subsectors and zero initialize
     *gNumSubsectors = lumpSize / sizeof(mapsubsector_t);
-    *gpSubsectors = (subsector_t*) Z_Malloc(**gpMainMemZone, *gNumSubsectors * sizeof(subsector_t), PU_LEVEL, nullptr);
+    *gpSubsectors = (subsector_t*) Z_Malloc(*gpMainMemZone, *gNumSubsectors * sizeof(subsector_t), PU_LEVEL, nullptr);
     D_memset(gpSubsectors->get(), std::byte(0), *gNumSubsectors * sizeof(subsector_t));
 
     // Read the map lump containing the subsectors into a temp buffer from the map WAD
@@ -211,7 +211,7 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
 
     // Alloc ram for the runtime sectors and zero initialize
     *gNumSectors = lumpSize / sizeof(mapsector_t);
-    *gpSectors = (sector_t*) Z_Malloc(**gpMainMemZone, *gNumSectors * sizeof(sector_t), PU_LEVEL, nullptr);
+    *gpSectors = (sector_t*) Z_Malloc(*gpMainMemZone, *gNumSectors * sizeof(sector_t), PU_LEVEL, nullptr);
     D_memset(gpSectors->get(), std::byte(0), *gNumSectors * sizeof(sector_t));
 
     // Read the map lump containing the sectors into a temp buffer from the map WAD
@@ -277,7 +277,7 @@ static void P_LoadNodes(const int32_t lumpNum) noexcept {
 
     // Alloc ram for the runtime nodes
     *gNumBspNodes = lumpSize / sizeof(mapnode_t);
-    *gpBspNodes = (node_t*) Z_Malloc(**gpMainMemZone, *gNumBspNodes * sizeof(node_t), PU_LEVEL, nullptr);
+    *gpBspNodes = (node_t*) Z_Malloc(*gpMainMemZone, *gNumBspNodes * sizeof(node_t), PU_LEVEL, nullptr);
 
     // Read the map lump containing the nodes into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
@@ -358,7 +358,7 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
 
     // Alloc ram for the runtime linedefs and zero initialize
     *gNumLines = lumpSize / sizeof(maplinedef_t);
-    *gpLines = (line_t*) Z_Malloc(**gpMainMemZone, *gNumLines * sizeof(line_t), PU_LEVEL, nullptr);
+    *gpLines = (line_t*) Z_Malloc(*gpMainMemZone, *gNumLines * sizeof(line_t), PU_LEVEL, nullptr);
     D_memset(gpLines->get(), std::byte(0), *gNumLines * sizeof(line_t));
 
     // Read the map lump containing the sidedefs into a temp buffer from the map WAD
@@ -451,7 +451,7 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
 
     // Alloc ram for the runtime sidedefs and zero initialize
     *gNumSides = lumpSize / sizeof(mapsidedef_t);
-    *gpSides = (side_t*) Z_Malloc(**gpMainMemZone, *gNumSides * sizeof(side_t), PU_LEVEL, nullptr);
+    *gpSides = (side_t*) Z_Malloc(*gpMainMemZone, *gNumSides * sizeof(side_t), PU_LEVEL, nullptr);
     D_memset(gpSides->get(), std::byte(0), *gNumSides  * sizeof(side_t));
 
     // Read the map lump containing the sidedefs into a temp buffer from the map WAD
@@ -481,7 +481,7 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
 static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     // Read the blockmap lump into RAM
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
-    *gpBlockmapLump = (uint16_t*) Z_Malloc(**gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
+    *gpBlockmapLump = (uint16_t*) Z_Malloc(*gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
     W_ReadMapLump(lumpNum, gpBlockmapLump->get(), true);
 
     // The first 8 bytes of the blockmap are it's header
@@ -525,7 +525,7 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     
     // Alloc and null initialize the list of map objects for each block
     const int32_t blockLinksSize = (int32_t) blockmapHeader.width * (int32_t) blockmapHeader.height * sizeof(VmPtr<mobj_t>);
-    *gppBlockLinks = (VmPtr<mobj_t>*) Z_Malloc(**gpMainMemZone, blockLinksSize, PU_LEVEL, nullptr);
+    *gppBlockLinks = (VmPtr<mobj_t>*) Z_Malloc(*gpMainMemZone, blockLinksSize, PU_LEVEL, nullptr);
     D_memset(gppBlockLinks->get(), std::byte(0), blockLinksSize);
 }
 
@@ -534,7 +534,7 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadRejectMap(const int32_t lumpNum) noexcept {
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
-    *gpRejectMatrix = (uint8_t*) Z_Malloc(**gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
+    *gpRejectMatrix = (uint8_t*) Z_Malloc(*gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
     W_ReadMapLump(lumpNum, gpRejectMatrix->get(), true);
 }
 
@@ -576,7 +576,7 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
     }
 
     // Allocate room for all the leaf edges
-    *gpLeafEdges = (leafedge_t*) Z_Malloc(**gpMainMemZone, totalLeafEdges * sizeof(leafedge_t), PU_LEVEL, nullptr);
+    *gpLeafEdges = (leafedge_t*) Z_Malloc(*gpMainMemZone, totalLeafEdges * sizeof(leafedge_t), PU_LEVEL, nullptr);
     
     // Convert WAD leaf edges to runtime leaf edges and link them in with other map data structures
     *gTotalNumLeafEdges = 0;
@@ -666,7 +666,7 @@ static void P_GroupLines() noexcept {
     }
 
     // Alloc the array of line refs that will be shared by all sectors
-    VmPtr<line_t>* const pLineRefBuffer = (VmPtr<line_t>*) Z_Malloc(**gpMainMemZone, totalLineRefs * sizeof(VmPtr<line_t>), PU_LEVEL, nullptr);
+    VmPtr<line_t>* const pLineRefBuffer = (VmPtr<line_t>*) Z_Malloc(*gpMainMemZone, totalLineRefs * sizeof(VmPtr<line_t>), PU_LEVEL, nullptr);
     VmPtr<line_t>* pLineRef = pLineRefBuffer;
 
     // Build the list of lines for each sector, also bounding boxes and the 'sound origin' point
@@ -802,7 +802,7 @@ void P_Init() noexcept {
         // If the lump name for the sky follows the format 'xxxx9' then assume it is a fire sky.
         // That needs to have it's lump cached, palette & update function set and initial few updates done...
         texture_t& skyTex = *gpSkyTexture;
-        const lumpinfo_t& skyTexLump = (*gpLumpInfo)[skyTex.lumpNum];
+        const lumpinfo_t& skyTexLump = gpLumpInfo[skyTex.lumpNum];
 
         if (skyTexLump.name.chars[4] == '9') {
             W_CacheLumpNum(skyTex.lumpNum, PU_ANIMATION, true);
@@ -864,7 +864,7 @@ void P_Init() noexcept {
     // Small optimization opportunity: this is slightly wasteful in that if we have animated walls/floors, then they will be evicted by this
     // call here and then reloaded immediately again in the call to 'P_InitPicAnims', but under a different zone memory manager tag.
     // We could perhaps change the memory tag and retain them in RAM if still needed for animation?
-    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+    Z_FreeTags(*gpMainMemZone, PU_CACHE);
 
     // Load animated wall and flat textures into RAM so they are ready when needed.
     // These will be uploaded dynamically into VRAM at runtime, as the engine animates the flat or wall texture.
@@ -877,15 +877,15 @@ void P_Init() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) noexcept {
     // Cleanup of memory and resetting the RNG before we start
-    Z_FreeTags(**gpMainMemZone, PU_CACHE|PU_LEVSPEC|PU_LEVEL);
+    Z_FreeTags(*gpMainMemZone, PU_CACHE|PU_LEVSPEC|PU_LEVEL);
 
     if (!*gbIsLevelBeingRestarted) {
         *gLockedTexPagesMask &= 1;
-        Z_FreeTags(**gpMainMemZone, PU_ANIMATION);
+        Z_FreeTags(*gpMainMemZone, PU_ANIMATION);
     }
     
     I_PurgeTexCache();
-    Z_CheckHeap(**gpMainMemZone);
+    Z_CheckHeap(*gpMainMemZone);
     M_ClearRandom();
 
     // Init player stats for the map
@@ -969,7 +969,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     
     // Spawn special thinkers such as light flashes etc. and free up the loaded WAD data
     P_SpawnSpecials();
-    Z_Free2(**gpMainMemZone, pMapWadFileData);
+    Z_Free2(*gpMainMemZone, pMapWadFileData);
 
     // Loading map textures and sprites
     if (!*gbIsLevelBeingRestarted) {
@@ -982,7 +982,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     }
 
     // Check there is enough heap space left in order to run the level
-    const int32_t freeMemForGameplay = Z_FreeMemory(**gpMainMemZone);
+    const int32_t freeMemForGameplay = Z_FreeMemory(*gpMainMemZone);
 
     if (freeMemForGameplay < MIN_REQ_HEAP_SPACE_FOR_GAMEPLAY) {
         Z_DumpHeap();
@@ -1040,7 +1040,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
         // Alloc room to hold the file: note that we reduce the alloc size by 'sizeof(memblock_t)' since the blocks
         // file already includes space for a 'memblock_t' header for each lump. We also save the current memblock
         // header just in case loading fails, so we can restore it prior to deallocation...
-        std::byte* const pAlloc = (std::byte*) Z_Malloc(**gpMainMemZone, fileSize - sizeof(memblock_t), PU_STATIC, nullptr);
+        std::byte* const pAlloc = (std::byte*) Z_Malloc(*gpMainMemZone, fileSize - sizeof(memblock_t), PU_STATIC, nullptr);
         initialAllocHeader = ((memblock_t*) pAlloc)[-1];
         pBlockData = (std::byte*) &((fileblock_t*) pAlloc)[-1];
         
@@ -1065,7 +1065,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
             }
             
             // Verify the lump number is valid
-            if (fileBlock.lumpNum >= *gNumLumps) {
+            if (fileBlock.lumpNum >= gNumLumps) {
                 bLoadedOk = false;
                 break;
             }
@@ -1080,7 +1080,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
             if (fileBlock.isUncompressed == 0) {
                 // Get the decompressed size of the data following the file block header and make sure it is what we expect
                 const uint32_t inflatedSize = getDecodedSize(&(&fileBlock)[1]);
-                const lumpinfo_t& lump = (*gpLumpInfo)[fileBlock.lumpNum];
+                const lumpinfo_t& lump = gpLumpInfo[fileBlock.lumpNum];
                 
                 if (inflatedSize != lump.size) {
                     bLoadedOk = false;
@@ -1111,7 +1111,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
         // Load failed: restore the old alloc header and free the memory block.
         // Will try again a certain number of times to try and counteract unreliable CDs.
         ((memblock_t*) pBlockData)[0] = initialAllocHeader;
-        Z_Free2(**gpMainMemZone, pAlloc);
+        Z_Free2(*gpMainMemZone, pAlloc);
     }
     
     // Once all the blocks are loaded and verified then setup all of the block links.
@@ -1138,7 +1138,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
             // Also save whether the lump is compressed or not:
             memblock.user = &lumpCacheEntry;
             lumpCacheEntry = &memblock + 1;
-            (*gpbIsUncompressedLump)[fileblock.lumpNum] = fileblock.isUncompressed;
+            gpbIsUncompressedLump[fileblock.lumpNum] = fileblock.isUncompressed;
         }
         
         // Is this the last loade block in the file?
@@ -1169,7 +1169,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
     } while (bytesLeft != 0);
     
     // After all that is done, make sure the heap is valid
-    Z_CheckHeap(**gpMainMemZone);
+    Z_CheckHeap(*gpMainMemZone);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

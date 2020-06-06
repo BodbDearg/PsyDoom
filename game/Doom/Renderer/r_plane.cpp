@@ -42,7 +42,7 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
     if (tex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         // Decompress the lump data to the temporary buffer if required
         const void* pLumpData;
-        const bool bIsUncompressedLump = (*gpbIsUncompressedLump)[tex.lumpNum];
+        const bool bIsUncompressedLump = gpbIsUncompressedLump[tex.lumpNum];
 
         if (bIsUncompressedLump) {
             pLumpData = (*gpLumpCache)[tex.lumpNum].get();

@@ -95,7 +95,7 @@ void G_DoLoadLevel() noexcept {
 
     // And and setup the level, then verify the heap after all that is done
     P_SetupLevel(*gGameMap, *gGameSkill);
-    Z_CheckHeap(**gpMainMemZone);
+    Z_CheckHeap(*gpMainMemZone);
 
     // No action set upon starting a level
     *gGameAction = ga_nothing;
@@ -264,7 +264,7 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
     *gLockedTexPagesMask &= 1;
     I_PurgeTexCache();
 
-    Z_FreeTags(**gpMainMemZone, PU_CACHE|PU_ANIMATION|PU_LEVSPEC|PU_LEVEL);
+    Z_FreeTags(*gpMainMemZone, PU_CACHE|PU_ANIMATION|PU_LEVSPEC|PU_LEVEL);
     M_ClearRandom();
 
     // Save game params: note that in multiplayer these might be overriden later
@@ -351,7 +351,7 @@ void G_RunGame() noexcept {
         
         // Cleanup after the level is done
         *gLockedTexPagesMask &= 1;
-        Z_FreeTags(**gpMainMemZone, PU_ANIMATION);
+        Z_FreeTags(*gpMainMemZone, PU_ANIMATION);
         
         if (*gGameAction == ga_exitdemo)
             break;
@@ -428,7 +428,7 @@ gameaction_t G_PlayDemoPtr() noexcept {
     // Restore the previous control bindings and cleanup
     D_memcpy(gCtrlBindings.get(), prevCtrlBindings, sizeof(prevCtrlBindings));
     *gLockedTexPagesMask &= 1;
-    Z_FreeTags(**gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
+    Z_FreeTags(*gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
 
     // PC-PSX: cleanup the demo pointer when we're done
     #if PC_PSX_DOOM_MODS

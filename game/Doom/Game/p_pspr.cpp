@@ -219,7 +219,7 @@ static void P_BringUpWeapon(player_t& player) noexcept {
     
     // If we're raising the chainsaw then play its up sound.
     // Exception: don't do this on level start.
-    if ((player.pendingweapon == wp_chainsaw) && (*gbIsLevelDataCached)) {
+    if ((player.pendingweapon == wp_chainsaw) && gbIsLevelDataCached) {
         S_StartSound(player.mo.get(), sfx_sawup);
     }
     

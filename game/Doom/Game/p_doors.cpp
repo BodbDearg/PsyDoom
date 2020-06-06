@@ -256,7 +256,7 @@ bool EV_DoDoor(line_t& line, const vldoor_e doorType) noexcept {
         // Create the door thinker and populate its state/settings
         bActivatedADoor = true;
 
-        vldoor_t& door = *(vldoor_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(vldoor_t), PU_LEVSPEC, nullptr);
+        vldoor_t& door = *(vldoor_t*) Z_Malloc(*gpMainMemZone, sizeof(vldoor_t), PU_LEVSPEC, nullptr);
         P_AddThinker(door.thinker);
 
         door.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_VerticalDoor);
@@ -371,7 +371,7 @@ void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {
     }
     
     // Need to create a new door thinker to run the door logic: create and set as the sector special
-    vldoor_t& newDoor = *(vldoor_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(vldoor_t), PU_LEVSPEC, nullptr);
+    vldoor_t& newDoor = *(vldoor_t*) Z_Malloc(*gpMainMemZone, sizeof(vldoor_t), PU_LEVSPEC, nullptr);
     P_AddThinker(newDoor.thinker);
     doorSector.specialdata = &newDoor;
 
@@ -421,7 +421,7 @@ void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnDoorCloseIn30(sector_t& sector) noexcept {
     // Spawn the door thinker and link it to the sector
-    vldoor_t& door = *(vldoor_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(vldoor_t), PU_LEVSPEC, nullptr);
+    vldoor_t& door = *(vldoor_t*) Z_Malloc(*gpMainMemZone, sizeof(vldoor_t), PU_LEVSPEC, nullptr);
     P_AddThinker(door.thinker);
     sector.specialdata = &door;
     sector.special = 0;
@@ -440,7 +440,7 @@ void P_SpawnDoorCloseIn30(sector_t& sector) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnDoorRaiseIn5Mins(sector_t& sector, [[maybe_unused]] const int32_t secNum) noexcept {
     // Spawn the door thinker and link it to the sector
-    vldoor_t& door = *(vldoor_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(vldoor_t), PU_LEVSPEC, nullptr);
+    vldoor_t& door = *(vldoor_t*) Z_Malloc(*gpMainMemZone, sizeof(vldoor_t), PU_LEVSPEC, nullptr);
     P_AddThinker(door.thinker);
     sector.specialdata = &door;
     sector.special = 0;

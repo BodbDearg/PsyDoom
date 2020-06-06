@@ -327,7 +327,7 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
 
     // Ensure the lump data is loaded and decompress if required
     const void* pLumpData = W_CacheLumpNum(lumpNum, PU_CACHE, false);
-    const bool bIsCompressed = (!(*gpbIsUncompressedLump)[lumpNum]);
+    const bool bIsCompressed = (!gpbIsUncompressedLump[lumpNum]);
 
     if (bIsCompressed) {
         decode(pLumpData, gTmpBuffer.get());
@@ -523,7 +523,7 @@ void I_VsyncCallback() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_Init() noexcept {
     // Alloc the texture cache, zero initialize and do a 'purge' to initialize tracking/management state
-    *gpTexCache = (tcache_t*) Z_Malloc(**gpMainMemZone, sizeof(tcache_t), PU_STATIC, nullptr);
+    *gpTexCache = (tcache_t*) Z_Malloc(*gpMainMemZone, sizeof(tcache_t), PU_STATIC, nullptr);
     D_memset(gpTexCache->get(), std::byte(0), sizeof(tcache_t));
     I_PurgeTexCache();
 }
@@ -645,7 +645,7 @@ void I_CacheTex(texture_t& tex) noexcept {
 
     // Make sure the texture's lump is loaded and decompress if required
     const void* pTexData = W_CacheLumpNum(tex.lumpNum, PU_CACHE, false);
-    const bool bIsTexCompressed = (!(*gpbIsUncompressedLump)[tex.lumpNum]);
+    const bool bIsTexCompressed = (!gpbIsUncompressedLump[tex.lumpNum]);
 
     if (bIsTexCompressed) {
         decode(pTexData, gTmpBuffer.get());

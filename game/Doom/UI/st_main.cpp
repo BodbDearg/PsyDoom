@@ -126,7 +126,7 @@ void ST_Init() noexcept {
     *gTCacheFillRowCellH = 0;
     
     // The STATUS texture can now be evicted from memory since it will always be in VRAM
-    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+    Z_FreeTags(*gpMainMemZone, PU_CACHE);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

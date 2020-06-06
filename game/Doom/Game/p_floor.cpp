@@ -197,7 +197,7 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
         // Found a sector which will be affected by this floor special: create a thinker and link to the sector
         bActivatedAMover = true;
 
-        floormove_t& floor = *(floormove_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(floormove_t), PU_LEVSPEC, nullptr);
+        floormove_t& floor = *(floormove_t*) Z_Malloc(*gpMainMemZone, sizeof(floormove_t), PU_LEVSPEC, nullptr);
         P_AddThinker(floor.thinker);
         sector.specialdata = &floor;
 
@@ -347,7 +347,7 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
         // Found a stairs sector which will be affected by this floor special: create a thinker for the first step and link to the sector
         bActivatedAMover = true;
 
-        floormove_t& firstFloor = *(floormove_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(floormove_t), PU_LEVSPEC, nullptr);
+        floormove_t& firstFloor = *(floormove_t*) Z_Malloc(*gpMainMemZone, sizeof(floormove_t), PU_LEVSPEC, nullptr);
         P_AddThinker(firstFloor.thinker);
         firstSector.specialdata = &firstFloor;
 
@@ -409,7 +409,7 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
                     continue;
 
                 // Create a thinker for this step's floor mover, link to the sector and populate it's settings
-                floormove_t& floor = *(floormove_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(floormove_t), PU_LEVSPEC, nullptr);
+                floormove_t& floor = *(floormove_t*) Z_Malloc(*gpMainMemZone, sizeof(floormove_t), PU_LEVSPEC, nullptr);
                 P_AddThinker(floor.thinker);
                 bsec.specialdata = &floor;
 

@@ -40,7 +40,7 @@ struct memzone_t {
 
 static_assert(sizeof(memzone_t) == 32);
 
-extern const VmPtr<VmPtr<memzone_t>> gpMainMemZone;
+extern memzone_t* gpMainMemZone;
 
 void Z_Init() noexcept;
 memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept;

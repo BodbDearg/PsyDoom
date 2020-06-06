@@ -64,7 +64,7 @@ void R_InitTextures() noexcept {
     // Alloc the list of textures and the texture translation table
     {
         std::byte* const pAlloc = (std::byte*) Z_Malloc(
-            **gpMainMemZone,
+            *gpMainMemZone,
             gNumTexLumps * (sizeof(texture_t) + sizeof(int32_t)),
             PU_STATIC,
             nullptr
@@ -100,7 +100,7 @@ void R_InitTextures() noexcept {
         }
 
         // Cleanup this after we are done
-        Z_Free2(**gpMainMemZone, pMapTextures);
+        Z_Free2(*gpMainMemZone, pMapTextures);
     }
     
     // Init the texture translation table: initially all textures translate to themselves
@@ -112,7 +112,7 @@ void R_InitTextures() noexcept {
     
     // Clear out any blocks marked as 'cache' which can be evicted.
     // This call is here probably to try and avoid spikes in memory load.
-    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+    Z_FreeTags(*gpMainMemZone, PU_CACHE);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -128,7 +128,7 @@ void R_InitFlats() noexcept {
     // Alloc the list of flat textures and the flat texture translation table
     {
         std::byte* const pAlloc = (std::byte*) Z_Malloc(
-            **gpMainMemZone,
+            *gpMainMemZone,
             gNumFlatLumps * (sizeof(texture_t) + sizeof(int32_t)),
             PU_STATIC,
             nullptr
@@ -174,7 +174,7 @@ void R_InitSprites() noexcept {
     gNumSpriteLumps = gLastSpriteLumpNum - gFirstSpriteLumpNum + 1;
 
     // Alloc the list of sprite textures
-    gpSpriteTextures = (texture_t*) Z_Malloc(**gpMainMemZone, gNumSpriteLumps * sizeof(texture_t), PU_STATIC, nullptr);
+    gpSpriteTextures = (texture_t*) Z_Malloc(*gpMainMemZone, gNumSpriteLumps * sizeof(texture_t), PU_STATIC, nullptr);
 
     // Load the sprite metadata lump and process each associated sprite texture entry.
     // The metadata gives us the size and offsetting for each sprite.
@@ -205,8 +205,8 @@ void R_InitSprites() noexcept {
 
     // Cleanup this after we are done and clear out any blocks marked as 'cache' - those can be evicted.
     // This call is here probably to try and avoid spikes in memory load.
-    Z_Free2(**gpMainMemZone, pMapSpriteTextures);
-    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+    Z_Free2(*gpMainMemZone, pMapSpriteTextures);
+    Z_FreeTags(*gpMainMemZone, PU_CACHE);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -229,7 +229,7 @@ int32_t R_TextureNumForName(const char* const name) noexcept {
     }
 
     // Search for the specified lump name and return the index if found
-    const lumpinfo_t* pLumpInfo = &(*gpLumpInfo)[gFirstTexLumpNum];
+    const lumpinfo_t* pLumpInfo = &gpLumpInfo[gFirstTexLumpNum];
 
     for (int32_t lumpIdx = 0; lumpIdx < gNumTexLumps; ++lumpIdx, ++pLumpInfo) {
         if (pLumpInfo->name.words[1] == nameUpper.words[1]) {
@@ -263,7 +263,7 @@ int32_t R_FlatNumForName(const char* const name) noexcept {
     }
 
     // Search for the specified lump name and return the index if found
-    const lumpinfo_t* pLumpInfo = &(*gpLumpInfo)[gFirstFlatLumpNum];
+    const lumpinfo_t* pLumpInfo = &gpLumpInfo[gFirstFlatLumpNum];
 
     for (int32_t lumpIdx = 0; lumpIdx < gNumTexLumps; ++lumpIdx, ++pLumpInfo) {
         if (pLumpInfo->name.words[1] == nameUpper.words[1]) {
@@ -340,7 +340,7 @@ void R_InitPalette() noexcept {
     
     // Clear out the palette data we just loaded as it's now in VRAM and doesn't need a backing RAM store.
     // This will also clear out anything else that is non essential.
-    Z_FreeTags(**gpMainMemZone, PU_CACHE);
+    Z_FreeTags(*gpMainMemZone, PU_CACHE);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

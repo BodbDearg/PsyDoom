@@ -8,7 +8,7 @@
 static constexpr int32_t MINFRAGMENT = 64;
 
 // The main (and only) memory zone used by PSX DOOM
-extern const VmPtr<VmPtr<memzone_t>> gpMainMemZone(0x80078198);
+memzone_t* gpMainMemZone;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the zone memory management system.
@@ -26,7 +26,7 @@ void Z_Init() noexcept {
     constexpr uint32_t AlignedHeapSize = (StackStartAddr - WrappedHeapStartAddr + 3) & 0xFFFFFFFC;
 
     // Setup and save the main memory zone (the only zone)
-    *gpMainMemZone = Z_InitZone(vmAddrToPtr<void>(AlignedHeapStartAddr), AlignedHeapSize);
+    gpMainMemZone = Z_InitZone(vmAddrToPtr<void>(AlignedHeapStartAddr), AlignedHeapSize);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -97,7 +97,7 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<voi
             }
 
             // Chuck out this block!
-            Z_Free2(**gpMainMemZone, &pRover[1]);
+            Z_Free2(*gpMainMemZone, &pRover[1]);
         }
 
         // Merge adjacent free memory blocks where possible
@@ -203,7 +203,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
             }
 
             // Chuck out this block!
-            Z_Free2(**gpMainMemZone, &pRover[1]);
+            Z_Free2(*gpMainMemZone, &pRover[1]);
         }
 
         // Merge adjacent free memory blocks where possible

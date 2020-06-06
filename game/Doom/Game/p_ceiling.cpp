@@ -154,7 +154,7 @@ bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
         // Create the door thinker, link to it's sector and populate its state/settings
         bActivatedACeiling = true;
 
-        ceiling_t& ceiling = *(ceiling_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(ceiling_t), PU_LEVSPEC, nullptr);
+        ceiling_t& ceiling = *(ceiling_t*) Z_Malloc(*gpMainMemZone, sizeof(ceiling_t), PU_LEVSPEC, nullptr);
         P_AddThinker(ceiling.thinker);
         sector.specialdata = &ceiling;
 

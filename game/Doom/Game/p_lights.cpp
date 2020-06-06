@@ -86,7 +86,7 @@ void T_FireFlicker(fireflicker_t& flicker) noexcept {
 void P_SpawnFireFlicker(sector_t& sector) noexcept {
     // Clear the current sector special (no hurt for example) and spawn the thinker
     sector.special = 0;
-    fireflicker_t& flicker = *(fireflicker_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(fireflicker_t), PU_LEVSPEC, nullptr);
+    fireflicker_t& flicker = *(fireflicker_t*) Z_Malloc(*gpMainMemZone, sizeof(fireflicker_t), PU_LEVSPEC, nullptr);
     P_AddThinker(flicker.thinker);
 
     // Setup flicker settings
@@ -124,7 +124,7 @@ void T_LightFlash(lightflash_t& lightFlash) noexcept {
 void P_SpawnLightFlash(sector_t& sector) noexcept {
     // Clear the current sector special (no hurt for example) and spawn the thinker
     sector.special = 0;
-    lightflash_t& lightFlash = *(lightflash_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(lightflash_t), PU_LEVSPEC, nullptr);
+    lightflash_t& lightFlash = *(lightflash_t*) Z_Malloc(*gpMainMemZone, sizeof(lightflash_t), PU_LEVSPEC, nullptr);
     P_AddThinker(lightFlash.thinker);
 
     // Setup flash settings
@@ -163,7 +163,7 @@ void T_StrobeFlash(strobe_t& strobe) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnStrobeFlash(sector_t& sector, const int32_t darkTime, const bool bInSync) noexcept {
     // Create the strobe thinker and populate it's settings
-    strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(strobe_t), PU_LEVSPEC, nullptr);
+    strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone, sizeof(strobe_t), PU_LEVSPEC, nullptr);
     P_AddThinker(strobe.thinker);
 
     strobe.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_StrobeFlash);
@@ -194,7 +194,7 @@ void P_SpawnStrobeFlash(sector_t& sector, const int32_t darkTime, const bool bIn
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnRapidStrobeFlash(sector_t& sector) noexcept {
     // Create the strobe thinker and populate it's settings
-    strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(strobe_t), PU_LEVSPEC, nullptr);
+    strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone, sizeof(strobe_t), PU_LEVSPEC, nullptr);
     P_AddThinker(strobe.thinker);
     
     strobe.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_StrobeFlash);
@@ -323,7 +323,7 @@ void T_Glow(glow_t& glow) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnGlowingLight(sector_t& sector, const glowtype_e glowType) noexcept {
     // Create the glow thinker
-    glow_t& glow = *(glow_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(glow_t), PU_LEVSPEC, nullptr);
+    glow_t& glow = *(glow_t*) Z_Malloc(*gpMainMemZone, sizeof(glow_t), PU_LEVSPEC, nullptr);
     P_AddThinker(glow.thinker);
 
     // Configure the glow settings depending on the type

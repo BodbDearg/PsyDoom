@@ -1,7 +1,6 @@
 #pragma once
 
 #include "PcPsx/Endian.h"
-#include "PcPsx/Types.h"
 #include "PsxVm/VmPtr.h"
 
 enum class CdMapTbl_File : int32_t;
@@ -30,11 +29,11 @@ struct lumpinfo_t {
 
 static_assert(sizeof(lumpinfo_t) == 16);
 
-extern const VmPtr<int32_t>             gNumLumps;
-extern const VmPtr<VmPtr<lumpinfo_t>>   gpLumpInfo;
+extern int32_t      gNumLumps;
+extern lumpinfo_t*  gpLumpInfo;
 extern const VmPtr<VmPtr<VmPtr<void>>>  gpLumpCache;
-extern const VmPtr<VmPtr<bool>>         gpbIsUncompressedLump;
-extern const VmPtr<bool32_t>            gbIsLevelDataCached;
+extern bool*        gpbIsUncompressedLump;
+extern bool         gbIsLevelDataCached;
 
 void W_Init() noexcept;
 int32_t W_CheckNumForName(const char* const name) noexcept;

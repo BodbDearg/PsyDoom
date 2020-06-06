@@ -1038,7 +1038,7 @@ bool EV_DoDonut(line_t& line) noexcept {
             // This raises the floor to the height of the back sector we just found and changes the texture to that.
             // This is normally used to raise slime and change the slime texture.
             {
-                floormove_t& floorMove = *(floormove_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(floormove_t), PU_LEVSPEC, nullptr);
+                floormove_t& floorMove = *(floormove_t*) Z_Malloc(*gpMainMemZone, sizeof(floormove_t), PU_LEVSPEC, nullptr);
                 P_AddThinker(floorMove.thinker);
                 pNextSector->specialdata = &floorMove;
 
@@ -1056,7 +1056,7 @@ bool EV_DoDonut(line_t& line) noexcept {
             // Create the mover for the inner part or the 'hole' of the donut.
             // This sector just lowers down to the height of the back sector we just found.
             {
-                floormove_t& floorMove = *(floormove_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(floormove_t), PU_LEVSPEC, nullptr);
+                floormove_t& floorMove = *(floormove_t*) Z_Malloc(*gpMainMemZone, sizeof(floormove_t), PU_LEVSPEC, nullptr);
                 P_AddThinker(floorMove.thinker);
                 sector.specialdata = &floorMove;
 
@@ -1081,7 +1081,7 @@ bool EV_DoDonut(line_t& line) noexcept {
 // Schedule an action to be invoked after the specified number of tics
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_ScheduleDelayedAction(const int32_t delayTics, const delayed_actionfn_t actionFunc) noexcept {
-    delayaction_t& delayed = *(delayaction_t*) Z_Malloc(*gpMainMemZone->get(), sizeof(delayaction_t), PU_LEVSPEC, nullptr);
+    delayaction_t& delayed = *(delayaction_t*) Z_Malloc(*gpMainMemZone, sizeof(delayaction_t), PU_LEVSPEC, nullptr);
     P_AddThinker(delayed.thinker);
 
     delayed.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_DelayedAction);
