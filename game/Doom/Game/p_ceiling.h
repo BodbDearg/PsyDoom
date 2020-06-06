@@ -33,7 +33,7 @@ static_assert(sizeof(ceiling_t) == 48);
 // Maximum number of ceiling movers there can be active at once
 static constexpr int32_t MAXCEILINGS = 30;
 
-extern const VmPtr<VmPtr<ceiling_t>[MAXCEILINGS]> gpActiveCeilings;
+extern ceiling_t* gpActiveCeilings[MAXCEILINGS];
 
 bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept;
 bool EV_CeilingCrushStop(line_t& line) noexcept;

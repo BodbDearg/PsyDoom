@@ -15,7 +15,7 @@
 static constexpr fixed_t CEILSPEED = FRACUNIT * 2;
 
 // The list of currently active ceilings
-const VmPtr<VmPtr<ceiling_t>[MAXCEILINGS]> gpActiveCeilings(0x800A9D18);
+ceiling_t* gpActiveCeilings[MAXCEILINGS];
 
 // Not required externally: making private to this module
 static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept;
@@ -210,10 +210,8 @@ bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept {
     for (int32_t i = 0; i < MAXCEILINGS; ++i) {
-        VmPtr<ceiling_t>& pCeiling = gpActiveCeilings[i];
-
-        if (!pCeiling) {
-            pCeiling = &ceiling;
+        if (!gpActiveCeilings[i]) {
+            gpActiveCeilings[i] = &ceiling;
             return;
         }
     }
@@ -224,12 +222,10 @@ static void P_AddActiveCeiling(ceiling_t& ceiling) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept {
     for (int32_t i = 0; i < MAXCEILINGS; ++i) {
-        VmPtr<ceiling_t>& pCeiling = gpActiveCeilings[i];
-
-        if (pCeiling.get() == &ceiling) {
+        if (gpActiveCeilings[i] == &ceiling) {
             ceiling.sector->specialdata = nullptr;
             P_RemoveThinker(ceiling.thinker);
-            pCeiling = nullptr;
+            gpActiveCeilings[i] = nullptr;
             return;
         }
     }
@@ -240,7 +236,7 @@ static void P_RemoveActiveCeiling(ceiling_t& ceiling) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_ActivateInStasisCeiling(line_t& line) noexcept {
     for (int32_t i = 0; i < MAXCEILINGS; ++i) {
-        ceiling_t* const pCeiling = gpActiveCeilings[i].get();
+        ceiling_t* const pCeiling = gpActiveCeilings[i];
 
         if (pCeiling && (pCeiling->tag == line.tag) && (pCeiling->direction == 0)) {    // Direction 0 = in stasis
             pCeiling->direction = pCeiling->olddirection;
@@ -256,7 +252,7 @@ bool EV_CeilingCrushStop(line_t& line) noexcept {
     bool bPausedACrusher = false;
 
     for (int32_t i = 0; i < MAXCEILINGS; ++i) {
-        ceiling_t* const pCeiling = gpActiveCeilings[i].get();
+        ceiling_t* const pCeiling = gpActiveCeilings[i];
 
         if (pCeiling && (pCeiling->tag == line.tag) && (pCeiling->direction != 0)) {
             pCeiling->olddirection = pCeiling->direction;       // Remember which direction it was moving in for unpause

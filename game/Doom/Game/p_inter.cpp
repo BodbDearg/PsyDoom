@@ -17,10 +17,24 @@
 static constexpr uint32_t BONUSADD          = 4;    // How much to add to the 'bonus' effect strength counter anytime a bonus is picked up
 static constexpr uint32_t MAX_DEAD_PLAYERS  = 32;   // Maximum number of dead player corpses to leave lying around (deathmatch)
 
-const VmPtr<int32_t[NUMAMMO]>                   gMaxAmmo(0x800670D4);                       // The maximum amount of ammo for each ammo type
-const VmPtr<int32_t[NUMAMMO]>                   gClipAmmo(0x800670E4);                      // How much ammo a clip for each ammo type gives
-const VmPtr<uint32_t>                           gDeadPlayerRemovalQueueIdx(0x80078010);     // Next index in the dead player removal queue to use (this index is wrapped)
-const VmPtr<VmPtr<mobj_t>[MAX_DEAD_PLAYERS]>    gDeadPlayerMobjRemovalQueue(0x800A876C);    // A queue of player corpses that eventually get removed from the game when a new corpse uses an occupied queue slot
+// The maximum amount of ammo for each ammo type
+const int32_t gMaxAmmo[NUMAMMO] = {
+    200,    // am_clip
+    50,     // am_shell
+    300,    // am_cell
+    50      // am_misl
+};
+
+// How much ammo a clip for each ammo type gives
+const int32_t gClipAmmo[NUMAMMO] = {
+    10,     // am_clip
+    4,      // am_shell
+    20,     // am_cell
+    1       // am_misl
+};
+
+static uint32_t     gDeadPlayerRemovalQueueIdx;                         // Next index in the dead player removal queue to use (this index is wrapped)
+static mobj_t*      gDeadPlayerMobjRemovalQueue[MAX_DEAD_PLAYERS];      // A queue of player corpses that eventually get removed from the game when a new corpse uses an occupied queue slot
 
 // Item message pickup strings.
 //
@@ -719,14 +733,14 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
         
         // New for PSX: Remove a player corpse if too many are lying around, to help memory usage.
         // Save this new corpse in a circular queue also for later removal.
-        if (*gDeadPlayerRemovalQueueIdx >= MAX_DEAD_PLAYERS) {
-            P_RemoveMobj(*gDeadPlayerMobjRemovalQueue[*gDeadPlayerRemovalQueueIdx % MAX_DEAD_PLAYERS]);
+        if (gDeadPlayerRemovalQueueIdx >= MAX_DEAD_PLAYERS) {
+            P_RemoveMobj(*gDeadPlayerMobjRemovalQueue[gDeadPlayerRemovalQueueIdx % MAX_DEAD_PLAYERS]);
         }
 
-        gDeadPlayerMobjRemovalQueue[*gDeadPlayerRemovalQueueIdx % MAX_DEAD_PLAYERS] = &target;
-        *gDeadPlayerRemovalQueueIdx += 1;
+        gDeadPlayerMobjRemovalQueue[gDeadPlayerRemovalQueueIdx % MAX_DEAD_PLAYERS] = &target;
+        gDeadPlayerRemovalQueueIdx++;
     }
-
+     
     // Monster gib triggering: trigger if end health is less than the negative amount of starting health
     if (target.health < -target.info->spawnhealth) {
         bDoGibbing = true;

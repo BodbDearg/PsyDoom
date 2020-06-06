@@ -13,8 +13,8 @@
 #include "p_mobj.h"
 #include "p_move.h"
 
-const VmPtr<bool32_t>   gbNofit(0x80077EBC);            // If 'true' then one or more things in the test sector undergoing height changes do not fit
-const VmPtr<bool32_t>   gbCrushChange(0x80077FA0);      // If 'true' then the current sector undergoing height changes should crush/damage things when they do not fit
+bool gbNofit;           // If 'true' then one or more things in the test sector undergoing height changes do not fit
+bool gbCrushChange;     // If 'true' then the current sector undergoing height changes should crush/damage things when they do not fit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Clamps the map object's z position to be in a valid range for the sector it is within using the current floor/ceiling height.
@@ -78,10 +78,10 @@ bool PIT_ChangeSector(mobj_t& mobj) noexcept {
         return true;
     
     // Things in the current sector do not fit into it's height range
-    *gbNofit = true;
+    gbNofit = true;
 
     // If the sector crushes and it's every 4th tic then do some damage to the thing
-    if (*gbCrushChange && ((gGameTic & 3) == 0)) {
+    if (gbCrushChange && ((gGameTic & 3) == 0)) {
         P_DamageMObj(mobj, nullptr, nullptr, 10);
 
         // Spawn some blood and randomly send it off in different directions
@@ -106,8 +106,8 @@ bool P_ChangeSector(sector_t& sector, const bool bCrunch) noexcept {
     }
 
     // Initially everything fits in the sector and save whether to crush for the blockmap iterator
-    *gbNofit = false;
-    *gbCrushChange = bCrunch;
+    gbNofit = false;
+    gbCrushChange = bCrunch;
 
     // Clip the heights of all things in the updated sector and crush things where appropriate.
     // Note that this crude test may pull in things in other sectors, which could be included in the results also. Generally that's okay however!
@@ -122,5 +122,5 @@ bool P_ChangeSector(sector_t& sector, const bool bCrunch) noexcept {
         }
     }
     
-    return *gbNofit;    // Did all the things in the sector fit?
+    return gbNofit;     // Did all the things in the sector fit?
 }

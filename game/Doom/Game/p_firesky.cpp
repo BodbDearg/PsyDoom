@@ -8,7 +8,7 @@
 static const uint8_t FIRESKY_X_WRAP_MASK = FIRESKY_W - 1;
 
 // This RNG seed is used exclusively for the fire sky
-static const VmPtr<uint32_t> gFireSkyRndIndex(0x80077B38);
+static uint32_t gFireSkyRndIndex;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Does one update round/iteration of the famous PlayStation Doom 'fire sky' effect.
@@ -43,8 +43,8 @@ void P_UpdateFireSky(texture_t& skyTex) noexcept {
             } else {
                 // Source pixel is not zero temp: propagate its 'heat' to the row above.
                 // Vary destination x and heat decay randomly:
-                const uint8_t dstXRand = gRndTable[(*gFireSkyRndIndex)++ & 0xFF] & 3;
-                const uint8_t tempRand = gRndTable[(*gFireSkyRndIndex)++ & 0xFF] & 1;
+                const uint8_t dstXRand = gRndTable[gFireSkyRndIndex++ & 0xFF] & 3;
+                const uint8_t tempRand = gRndTable[gFireSkyRndIndex++ & 0xFF] & 1;
 
                 // Update the chosen pixel in the row above and do heat decay randomly
                 const uint8_t dstX = (x + 1 - dstXRand) & FIRESKY_X_WRAP_MASK;
