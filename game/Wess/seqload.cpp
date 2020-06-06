@@ -217,7 +217,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
         track.plabels = (uint32_t*) pCurSeqMem;
         pCurSeqMem += labelListSize;
 
-        if (module_read(track.plabels.get(), labelListSize, moduleFile) != labelListSize) {
+        if (module_read(track.plabels, labelListSize, moduleFile) != labelListSize) {
             wess_seq_load_err(SEQLOAD_FREAD);
             return 0;
         }
@@ -231,7 +231,7 @@ static int32_t load_sequence_data(const int32_t seqIdx, void* const pSeqMem) noe
         pCurSeqMem += ((uintptr_t) pCurSeqMem) & 2;
         
         // Read the track command stream
-        if (module_read(track.pcmd_stream.get(), trackCmdStreamSize, moduleFile) != trackCmdStreamSize) {
+        if (module_read(track.pcmd_stream, trackCmdStreamSize, moduleFile) != trackCmdStreamSize) {
             wess_seq_load_err(SEQLOAD_FREAD);
             return 0;
         }

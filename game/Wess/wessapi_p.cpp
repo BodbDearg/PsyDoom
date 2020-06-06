@@ -65,7 +65,7 @@ void wess_seq_pause(const int32_t seqIdx, const bool bMute) noexcept {
             // If this is the sequence number we are interested in then run through all of it's tracks and stop each of them
             if (seqStat.seq_idx == seqIdx) {
                 uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
-                uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
+                uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices;
 
                 for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                     // Is this sequence track slot actually in use? Skip if not:
@@ -133,7 +133,7 @@ void wess_seq_restart(const int32_t seqIdx) noexcept {
             // If this is the sequence number we are interested in then run through all of it's tracks and pause each of them
             if (seqStat.seq_idx == seqIdx) {
                 uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
-                uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
+                uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices;
 
                 for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                     // Is this sequence track slot actually in use? Skip if not:
@@ -201,7 +201,7 @@ void wess_seq_pauseall(const bool bMute, SavedVoiceList* const pSavedVoices) noe
 
             // Run through all of the active tracks in the sequence and pause them all
             uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
-            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
+            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices;
 
             for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                 // Is this sequence track slot actually in use? Skip if not:
@@ -272,7 +272,7 @@ void wess_seq_restartall(SavedVoiceList* const pSavedVoices) noexcept {
 
             // Run through all of the active tracks in the sequence and restart them all
             uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
-            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
+            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices;
 
             for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                 // Is this sequence track slot actually in use? Skip if not:

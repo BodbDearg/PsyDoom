@@ -1,7 +1,6 @@
 #pragma once
 
 #include "psxcd.h"
-#include "PcPsx/Types.h"
 
 // Setting ids for sound hardware
 enum SoundHardwareTags : int32_t {
@@ -74,8 +73,6 @@ struct patch {
     uint16_t    first_voice_idx;    // Index of the first patch voice for the patch. Other patch voices follow contiguously in the voices list.
 };
 
-static_assert(sizeof(patch) == 4);
-
 // Settings for one individual voice/sound in a patch/instrument
 struct patch_voice {
     uint8_t     priority;           // Voice priority: used to determine what to kill when we're out of voices
@@ -93,8 +90,6 @@ struct patch_voice {
     uint16_t    adsr2;              // The second (high) 16-bits of the SPU voice envelope (see comments for 'SpuVoiceAttr' for more details)
 };
 
-static_assert(sizeof(patch_voice) == 16);
-
 // Holds details for a sound sample used by a patch voice which can be loaded or is already loaded
 struct patch_sample {
     uint32_t    offset;         // Unused & unclear what the purpose of this is for. Increases with each patch sample in the module.
@@ -102,16 +97,12 @@ struct patch_sample {
     uint32_t    spu_addr;       // Where in SPU RAM the patch is currently uploaded to. Set to '0' if not uploaded to the SPU.
 };
 
-static_assert(sizeof(patch_sample) == 12);
-
 // Special patch type used for drum tracks.
 // Consists of a patch that is always played back using the same note.
 struct drum_patch {
     uint16_t    patch_idx;      // Watch patch to use for this drum
     uint16_t    note;           // What note/pitch to play the drum patch at
 };
-
-static_assert(sizeof(drum_patch) == 4);
 
 // Main header for a module (.WMD) file.
 // Defines general/global info and settings for the module.
@@ -157,16 +148,12 @@ struct track_header {
     uint32_t        cmd_stream_size;        // The size of the stream containing sequencer commands and command timings for the track
 };
 
-static_assert(sizeof(track_header) == 24);
-
 // Holds all of the read-only data for a track in a music sequence
 struct track_data {
-    track_header        hdr;            // Header for the track
-    VmPtr<uint32_t>     plabels;        // A list of offsets into track data: used by control flow (i.e jump) sequencer commands
-    VmPtr<uint8_t>      pcmd_stream;    // The actual byte stream containing sequencer commands for the track and delta timings in between them
+    track_header    hdr;            // Header for the track
+    uint32_t*       plabels;        // A list of offsets into track data: used by control flow (i.e jump) sequencer commands
+    uint8_t*        pcmd_stream;    // The actual byte stream containing sequencer commands for the track and delta timings in between them
 };
-
-static_assert(sizeof(track_data) == 32);
 
 // Basic information for a sequence
 struct sequence_header {
@@ -174,30 +161,24 @@ struct sequence_header {
     uint16_t    _unused;        // Field appears to be unused - it's purpose cannot be determined because of that
 };
 
-static_assert(sizeof(sequence_header) == 4);
-
 // Holds all of the read-only data for a music sequence
 struct sequence_data {
     sequence_header     hdr;                // General info for the sequence: always remains loaded in memory
-    VmPtr<track_data>   ptracks;            // The loaded list of tracks for the sequence: loaded and unloaded on demand for music tracks (to save memory)
+    track_data*         ptracks;            // The loaded list of tracks for the sequence: loaded and unloaded on demand for music tracks (to save memory)
     uint32_t            modfile_offset;     // The offset of this sequence's data in the module file
     uint32_t            track_data_size;    // Total size of all the loaded tracks in the sequence (some tracks may be skipped)
     uint32_t            num_tracks;         // Total number of loaded tracks in the sequence (some tracks may be skipped)
 };
 
-static_assert(sizeof(sequence_data) == 20);
-
 // Contains the header for the module and the read-only data for all loaded sequences and tracks
 struct module_data {
-    module_header           hdr;            // Header or basic info for the module
-    VmPtr<sequence_data>    psequences;     // All of the tracks in the module: this list is loaded at all times, but tracks for individual sequences might not be
+    module_header   hdr;            // Header or basic info for the module
+    sequence_data*  psequences;     // All of the tracks in the module: this list is loaded at all times, but tracks for individual sequences might not be
 };
-
-static_assert(sizeof(module_data) == 20);
 
 // Format for a user callback function.
 // Receives the callback type and value, both of which are defined by the sequencer command invoking the callback.
-typedef VmPtr<void(uint8_t callbackType, int16_t value)> callfunc_t;
+typedef void (*callfunc_t)(uint8_t callbackType, int16_t value) noexcept;
 
 // Holds information for a user callback.
 // User callbacks can be triggered by the 'Eng_StatusMark' sequencer command.
@@ -207,8 +188,6 @@ struct callback_status {
     uint16_t    cur_value;      // Current 'value' being passed to the callback (defined by the sequencer command)
     callfunc_t  pfunc;          // The actual function to call
 };
-
-static_assert(sizeof(callback_status) == 8);
 
 // Flags specifying what types of patch group data gets loaded
 enum patch_group_load_flags : int32_t {
@@ -237,8 +216,6 @@ struct patch_group_header {
     uint32_t                extra_data_size;        // The size of extra driver specific data in the module file
 };
 
-static_assert(sizeof(patch_group_header) == 28);
-
 // Determines what types of tracks a sound driver is interested in loading it
 struct hardware_table_list {
     SoundDriverId   driver_id;              // Driver id to use for filtering tracks by driver
@@ -248,18 +225,14 @@ struct hardware_table_list {
     int32_t         _unused_flags : 29;     // These bit flags are not used
 };
 
-static_assert(sizeof(hardware_table_list) == 8);
-
 // Holds all of the read-only data for a patch group (group of patches specific to a sound driver)
 struct patch_group_data {
     patch_group_header      hdr;                                // General info for the patch group
-    VmPtr<uint8_t>          pdata;                              // Contains the lists of patches, patch voices and patch samples etc. (all patch group instrument data)
+    uint8_t*                pdata;                              // Contains the lists of patches, patch voices and patch samples etc. (all patch group instrument data)
     int32_t                 modfile_offset;                     // Where in the module file this patch group is found
     int32_t                 sndhw_tags[SNDHW_TAG_MAX * 2];      // Holds a copy of the settings list (sound hardware tags) that the driver was initialized with
     hardware_table_list     hw_table_list;                      // What types of tracks the driver wants to load
 };
-
-static_assert(sizeof(patch_group_data) == 84);
 
 // Holds the current state for a music/sound sequence
 struct sequence_status {
@@ -273,102 +246,96 @@ struct sequence_status {
     uint8_t         volume;                 // Default initialized to upon allocating the sequence status but doesn't seem to be used appart from that?
     uint8_t         pan;                    // Default initialized to upon allocating the sequence status but doesn't seem to be used appart from that?
     uint32_t        type;                   // A user supplied handle: used to identify individual sequences for the purposes of stopping or updating them
-    VmPtr<uint8_t>  ptrackstat_indices;     // A sparse list of active track status indices for the sequence. If a slot is '0xFF' then that slot does not to refer to a track status.
-    VmPtr<uint8_t>  pgates;                 // The value for all on/off gates for the sequence. If the value is '0xFF' then the gate has not been initialized.
-    VmPtr<uint8_t>  piters;                 // The value for all iteration counters for the sequence. If the value is '0xFF' then the counter has not been initialized.
+    uint8_t*        ptrackstat_indices;     // A sparse list of active track status indices for the sequence. If a slot is '0xFF' then that slot does not to refer to a track status.
+    uint8_t*        pgates;                 // The value for all on/off gates for the sequence. If the value is '0xFF' then the gate has not been initialized.
+    uint8_t*        piters;                 // The value for all iteration counters for the sequence. If the value is '0xFF' then the counter has not been initialized.
 };
-
-static_assert(sizeof(sequence_status) == 24);
 
 // Holds the current state for an individual track in a sequence
 struct track_status {
-    uint8_t                 active : 1;             // If true then this status structure is allocated and in use
-    uint8_t                 mute : 1;               // A flag set to indicate that the track is muted: doesn't seem to actually affect anything though
-    uint8_t                 handled : 1;            // When set the track has to be manually started, and manually deallocated
-    uint8_t                 stopped : 1;            // This flag is set when playback of the track is paused
-    uint8_t                 timed : 1;              // If set then the track is ended at a fixed and manually specified time
-    uint8_t                 looped : 1;             // If set then the track loops when ended
-    uint8_t                 skip : 1;               // An instruction for the sequencer not to determine the next sequencer command automatically: used by flow control commands to take control
-    uint8_t                 off : 1;                // Set to indicate the track is being turned off
-    uint8_t                 ref_idx;                // Reference index: this is the index of the track status in the list of track statuses (the track work areas list)
-    uint8_t                 seqstat_idx;            // The index of the sequence status this track status belongs to
-    SoundDriverId           driver_id;              // What driver is using this track
-    uint32_t                qnp_till_next_cmd;      // How many quarter note parts must pass before the next sequencer command is executed (time delta till next command)
-    uint8_t                 priority;               // Priority level of the track for voice prioritization (when we're out of voices)
-    uint8_t                 reverb;                 // If non zero then reverb is enabled for the track, otherwise disabled
-    uint16_t                patch_idx;              // The index of the patch that this track uses
-    uint8_t                 volume_cntrl;           // Volume level to use for track voices
-    uint8_t                 pan_cntrl;              // Pan modifier to use for track voices
-    int16_t                 pitch_cntrl;            // Pitch modifier to use for track voices
-    uint8_t                 num_active_voices;      // How many voices is the track currently using?
-    uint8_t                 max_voices;             // The maximum number of voices this track can use: copied from the track header
-    uint8_t                 mutegroups_mask;        // A set of bit flags for what muting groups the track belongs to. Doesn't seem to affect anything ultimately though?
-    SoundClass              sound_class;            // The sound class this track falls into
-    uint16_t                tempo_ppq;              // Tempo: parts (or subdivisions) per quarter note - affects timing precision
-    uint16_t                tempo_qpm;              // Tempo: quarter notes per minute, or beats per minute (BPM)
-    uint16_t                num_labels;             // Copied from the track header: number of labels the track defines
-    uint16_t                end_label_idx;          // Copied from the track header: number of labels the track defines
-    uint32_t                tempo_ppi_frac;         // Tempo: How many quarter note parts to advance track timing by per hardware timer interrupt (in 16.16 fixed point format)
-    uint32_t                deltatime_qnp_frac;     // Delta timing: fractional (.16 fixed point) quarter note parts since the previous sequencer commmand
-    uint32_t                deltatime_qnp;          // Delta timing: whole quarter note parts since the previous sequencer commmand
-    uint32_t                abstime_qnp;            // Absolute timing: total whole quarter note parts since the track was started
-    uint32_t                end_abstime_qnp;        // Timing: absolute quarter note part count to end the track at (if the 'timed' flag is set for manual track end time)
-    VmPtr<uint8_t>          pcmds_start;            // Points to the start of the command stream for the track: this contains all of the track's sequencer commands and the time between them
-    VmPtr<uint8_t>          pcur_cmd;               // Current track location: a pointer within the track's command stream to the next upcoming sequencer command
-    VmPtr<uint32_t>         plabels;                // Convenience pointer to the label list for the track
-    VmPtr<VmPtr<uint8_t>>   ploc_stack;             // A stack of track locations that can be used by sequencer commands which save and restore the current track data location
-    VmPtr<VmPtr<uint8_t>>   ploc_stack_cur;         // Points to the next stack location to use from the track location stack
-    VmPtr<VmPtr<uint8_t>>   ploc_stack_end;         // Points to the end of the track's location stack
-    uint32_t                cmd_stream_size;        // How big the track's command stream is (in bytes)
-    uint32_t                cmd_stream_capacity;    // How big the memory block for the track's command stream is (in bytes)
+    uint8_t         active : 1;             // If true then this status structure is allocated and in use
+    uint8_t         mute : 1;               // A flag set to indicate that the track is muted: doesn't seem to actually affect anything though
+    uint8_t         handled : 1;            // When set the track has to be manually started, and manually deallocated
+    uint8_t         stopped : 1;            // This flag is set when playback of the track is paused
+    uint8_t         timed : 1;              // If set then the track is ended at a fixed and manually specified time
+    uint8_t         looped : 1;             // If set then the track loops when ended
+    uint8_t         skip : 1;               // An instruction for the sequencer not to determine the next sequencer command automatically: used by flow control commands to take control
+    uint8_t         off : 1;                // Set to indicate the track is being turned off
+    uint8_t         ref_idx;                // Reference index: this is the index of the track status in the list of track statuses (the track work areas list)
+    uint8_t         seqstat_idx;            // The index of the sequence status this track status belongs to
+    SoundDriverId   driver_id;              // What driver is using this track
+    uint32_t        qnp_till_next_cmd;      // How many quarter note parts must pass before the next sequencer command is executed (time delta till next command)
+    uint8_t         priority;               // Priority level of the track for voice prioritization (when we're out of voices)
+    uint8_t         reverb;                 // If non zero then reverb is enabled for the track, otherwise disabled
+    uint16_t        patch_idx;              // The index of the patch that this track uses
+    uint8_t         volume_cntrl;           // Volume level to use for track voices
+    uint8_t         pan_cntrl;              // Pan modifier to use for track voices
+    int16_t         pitch_cntrl;            // Pitch modifier to use for track voices
+    uint8_t         num_active_voices;      // How many voices is the track currently using?
+    uint8_t         max_voices;             // The maximum number of voices this track can use: copied from the track header
+    uint8_t         mutegroups_mask;        // A set of bit flags for what muting groups the track belongs to. Doesn't seem to affect anything ultimately though?
+    SoundClass      sound_class;            // The sound class this track falls into
+    uint16_t        tempo_ppq;              // Tempo: parts (or subdivisions) per quarter note - affects timing precision
+    uint16_t        tempo_qpm;              // Tempo: quarter notes per minute, or beats per minute (BPM)
+    uint16_t        num_labels;             // Copied from the track header: number of labels the track defines
+    uint16_t        end_label_idx;          // Copied from the track header: number of labels the track defines
+    uint32_t        tempo_ppi_frac;         // Tempo: How many quarter note parts to advance track timing by per hardware timer interrupt (in 16.16 fixed point format)
+    uint32_t        deltatime_qnp_frac;     // Delta timing: fractional (.16 fixed point) quarter note parts since the previous sequencer commmand
+    uint32_t        deltatime_qnp;          // Delta timing: whole quarter note parts since the previous sequencer commmand
+    uint32_t        abstime_qnp;            // Absolute timing: total whole quarter note parts since the track was started
+    uint32_t        end_abstime_qnp;        // Timing: absolute quarter note part count to end the track at (if the 'timed' flag is set for manual track end time)
+    uint8_t*        pcmds_start;            // Points to the start of the command stream for the track: this contains all of the track's sequencer commands and the time between them
+    uint8_t*        pcur_cmd;               // Current track location: a pointer within the track's command stream to the next upcoming sequencer command
+    uint32_t*       plabels;                // Convenience pointer to the label list for the track
+    uint8_t**       ploc_stack;             // A stack of track locations that can be used by sequencer commands which save and restore the current track data location
+    uint8_t**       ploc_stack_cur;         // Points to the next stack location to use from the track location stack
+    uint8_t**       ploc_stack_end;         // Points to the end of the track's location stack
+    uint32_t        cmd_stream_size;        // How big the track's command stream is (in bytes)
+    uint32_t        cmd_stream_capacity;    // How big the memory block for the track's command stream is (in bytes)
 };
-
-static_assert(sizeof(track_status) == 80);
 
 // Holds state for one hardware voice in the sequencer system
 struct voice_status {
-    uint8_t                         active : 1;             // '1' if the voice has been allocated
-    uint8_t                         release : 1;            // '1' if the voice is being released or 'keyed off'
-    uint8_t                         _unusedFlagBits : 6;    // These flag fields are unused
-    SoundDriverId                   driver_id;              // Which sound driver this voice is used with
-    uint8_t                         ref_idx;                // Reference index: index of this voice in it's parent patch group (hardware voice index)
-    uint8_t                         trackstat_idx;          // The index of the track status which is using this voice
-    uint8_t                         priority;               // Inherited from the parent track: used to determine when voices are 'stolen' or not when the voice limit is reached
-    uint8_t                         note;                   // Which note (semitone) the voice is to play
-    uint8_t                         volume;                 // Volume the voice is to play at
-    SoundClass                      sound_class;            // What broad class of sound the voice is being used for (MUSIC, SFX etc.)
-    VmPtr<const patch_voice>        ppatch_voice;           // The patch voice which used by this hardware voice
-    VmPtr<const patch_sample>       ppatch_sample;          // Details for the sound sample used by the hardware voice
-    uint32_t                        onoff_abstime_ms;       // When the voice was keyed on or started, or when it fully ends and should be deallocated (if being keyed off). The time is absolute time in MS since the sequencer started.
-    uint32_t                        release_time_ms;        // How long it takes for the voice to fade out after being released
+    uint8_t                 active : 1;             // '1' if the voice has been allocated
+    uint8_t                 release : 1;            // '1' if the voice is being released or 'keyed off'
+    uint8_t                 _unusedFlagBits : 6;    // These flag fields are unused
+    SoundDriverId           driver_id;              // Which sound driver this voice is used with
+    uint8_t                 ref_idx;                // Reference index: index of this voice in it's parent patch group (hardware voice index)
+    uint8_t                 trackstat_idx;          // The index of the track status which is using this voice
+    uint8_t                 priority;               // Inherited from the parent track: used to determine when voices are 'stolen' or not when the voice limit is reached
+    uint8_t                 note;                   // Which note (semitone) the voice is to play
+    uint8_t                 volume;                 // Volume the voice is to play at
+    SoundClass              sound_class;            // What broad class of sound the voice is being used for (MUSIC, SFX etc.)
+    const patch_voice*      ppatch_voice;           // The patch voice which used by this hardware voice
+    const patch_sample*     ppatch_sample;          // Details for the sound sample used by the hardware voice
+    uint32_t                onoff_abstime_ms;       // When the voice was keyed on or started, or when it fully ends and should be deallocated (if being keyed off). The time is absolute time in MS since the sequencer started.
+    uint32_t                release_time_ms;        // How long it takes for the voice to fade out after being released
 };
-
-static_assert(sizeof(voice_status) == 24);
 
 // The master status structure: this is the root data structure for the entire sequencer system, holding most of it's read-only data and state.
 // It's populated with information from the module file (.WMD) and contains state for all of the active sequences, tracks within sequences and
 // individual voices. It also holds volume levels, driver info and callbacks etc.
 struct master_status_structure {
-    uint32_t*                   pabstime_ms;                // Pointer to the current absolute sequencer time (MS)
-    uint8_t                     num_active_seqs;            // How many sequence statuses are currently allocated from the pool of sequence statuses
-    uint8_t                     num_active_tracks;          // How many track statuses are currently allocated from the pool of track statuses
-    uint8_t                     num_active_voices;          // How many voices are currently allocated among all tracks
-    uint8_t                     max_voices;                 // The total number of voice statuses for all patch groups (max active voices)
-    uint8_t                     num_patch_groups;           // How many patch groups or patches for a sound driver there are - should just be '1' (PSX) for DOOM
-    uint8_t                     _unused1;                   // An unused field: its purpose cannot be inferred as it is never used
-    uint8_t                     num_active_callbacks;       // How many user callbacks are allocated: never written to in DOOM, other than zero initialized
-    uint8_t                     _unused2;                   // An unused field: its purpose cannot be inferred as it is never used
-    VmPtr<module_data>          pmodule;                    // Module header, sequences and track data (for sequences that are loaded)
-    VmPtr<callback_status>      pcallback_stats;            // A pool of callback statuses which can be user allocated and invoked by 'Eng_StatusMark' commands
-    VmPtr<uint8_t>              pmaster_vols;               // Master volume levels for each patch group or sound driver: written to but appears otherwise unused
-    VmPtr<patch_group_data>     ppatch_groups;              // A collection of patch group settings and data for each sound driver: instrument definitions live here
-    uint32_t                    max_tracks_per_seq;         // Maximum number of tracks per sequence for all sequences in the module
-    VmPtr<sequence_status>      psequence_stats;            // Sequence statuses: a pool from which all sequence statuses are allocated. The size of this list is specified by the module header.
-    uint32_t                    max_track_loc_stack_size;   // Maximum number of track data locations that can be saved per track for later restoring (location stack)
-    VmPtr<track_status>         ptrack_stats;               // Track statuses: a pool from which all track statuses are allocated. The size of this list is specified by the module header.
-    uint32_t                    max_voices_per_track;       // Maximum number of voices used by any track in any sequence
-    VmPtr<voice_status>         pvoice_stats;               // Status structures or 'work areas' for voices sequences. The size of this list is determined by sound drivers.
-    VmPtr<PsxCd_File>           pmodule_file;               // Pointer to the module file itself
+    uint32_t*           pabstime_ms;                // Pointer to the current absolute sequencer time (MS)
+    uint8_t             num_active_seqs;            // How many sequence statuses are currently allocated from the pool of sequence statuses
+    uint8_t             num_active_tracks;          // How many track statuses are currently allocated from the pool of track statuses
+    uint8_t             num_active_voices;          // How many voices are currently allocated among all tracks
+    uint8_t             max_voices;                 // The total number of voice statuses for all patch groups (max active voices)
+    uint8_t             num_patch_groups;           // How many patch groups or patches for a sound driver there are - should just be '1' (PSX) for DOOM
+    uint8_t             _unused1;                   // An unused field: its purpose cannot be inferred as it is never used
+    uint8_t             num_active_callbacks;       // How many user callbacks are allocated: never written to in DOOM, other than zero initialized
+    uint8_t             _unused2;                   // An unused field: its purpose cannot be inferred as it is never used
+    module_data*        pmodule;                    // Module header, sequences and track data (for sequences that are loaded)
+    callback_status*    pcallback_stats;            // A pool of callback statuses which can be user allocated and invoked by 'Eng_StatusMark' commands
+    uint8_t*            pmaster_vols;               // Master volume levels for each patch group or sound driver: written to but appears otherwise unused
+    patch_group_data*   ppatch_groups;              // A collection of patch group settings and data for each sound driver: instrument definitions live here
+    uint32_t            max_tracks_per_seq;         // Maximum number of tracks per sequence for all sequences in the module
+    sequence_status*    psequence_stats;            // Sequence statuses: a pool from which all sequence statuses are allocated. The size of this list is specified by the module header.
+    uint32_t            max_track_loc_stack_size;   // Maximum number of track data locations that can be saved per track for later restoring (location stack)
+    track_status*       ptrack_stats;               // Track statuses: a pool from which all track statuses are allocated. The size of this list is specified by the module header.
+    uint32_t            max_voices_per_track;       // Maximum number of voices used by any track in any sequence
+    voice_status*       pvoice_stats;               // Status structures or 'work areas' for voices sequences. The size of this list is determined by sound drivers.
+    PsxCd_File*         pmodule_file;               // Pointer to the module file itself
 };
 
 extern uint32_t     gWess_Millicount;

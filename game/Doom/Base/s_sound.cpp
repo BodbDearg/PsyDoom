@@ -4,6 +4,7 @@
 #include "Doom/Game/g_game.h"
 #include "Doom/Renderer/r_local.h"
 #include "Doom/Renderer/r_main.h"
+#include "EngineLimits.h"
 #include "i_main.h"
 #include "m_fixed.h"
 #include "PcPsx/ProgArgs.h"
@@ -177,12 +178,9 @@ static constexpr int32_t S_ATTENUATOR = ((S_CLIPPING_DIST - S_CLOSE_DIST) >> FRA
 // Current volume cd music is played back at
 int32_t gCdMusicVol = PSXSPU_MAX_CD_VOL;
 
-// The size of the WMD buffer
-static constexpr uint32_t WMD_MEM_SIZE = 26000;
-
 // The buffer used to hold the master status structure created by loading the .WMD file.
 // Also holds sequence data for current level music.
-static const VmPtr<uint8_t[WMD_MEM_SIZE]> gSound_WmdMem(0x80078588);
+static uint8_t gSound_WmdMem[WMD_MEM_SIZE];
 
 // The start pointer within 'gSound_WmdMem' where map music sequences can be loaded to.
 // Anything at this address or after in the buffer can be used for that purpose.
@@ -520,7 +518,7 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
 
     // Load the main module (.WMD) file.
     // This initializes common stuff used for all music and sounds played in the game.
-    wess_load_module(pTmpWmdLoadBuffer, gSound_WmdMem.get(), WMD_MEM_SIZE, gSound_SettingsLists);
+    wess_load_module(pTmpWmdLoadBuffer, gSound_WmdMem, WMD_MEM_SIZE, gSound_SettingsLists);
 
     // Initialize the music sequence and LCD (samples file) loaders
     master_status_structure& mstat = *wess_get_master_status();

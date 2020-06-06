@@ -1,7 +1,6 @@
 #pragma once
 
 #include "PcPsx/Types.h"
-#include "PsxVm/VmPtr.h"
 #include "PsyQ/LIBSPU.h"
 
 struct master_status_structure;
@@ -56,28 +55,22 @@ struct TriggerPlayAttr {
     uint32_t    playtime_qnp;       // For timed voices when the voice will stop relative to the current track time (in quarter note parts)
 };
 
-static_assert(sizeof(TriggerPlayAttr) == 20);
-
 // Records state for a voice in a track: used by pause/resume functionality
 struct SavedVoice {
-    int16_t                         seq_idx;            // What sequence index the voice belongs to
-    int16_t                         trackstat_idx;      // What track index the voice belongs to
-    int8_t                          note;               // What note (semitone) was being played by the voice
-    int8_t                          volume;             // What volume the voice was being played at
-    int16_t                         _pad;               // Unused/padding bytes
-    VmPtr<const patch_voice>        ppatch_voice;       // Settings for the patch voice being used
-    VmPtr<const patch_sample>       ppatch_sample;      // Details about the sound sample being used by the voice
+    int16_t                 seq_idx;            // What sequence index the voice belongs to
+    int16_t                 trackstat_idx;      // What track index the voice belongs to
+    int8_t                  note;               // What note (semitone) was being played by the voice
+    int8_t                  volume;             // What volume the voice was being played at
+    int16_t                 _pad;               // Unused/padding bytes
+    const patch_voice*      ppatch_voice;       // Settings for the patch voice being used
+    const patch_sample*     ppatch_sample;      // Details about the sound sample being used by the voice
 };
-
-static_assert(sizeof(SavedVoice) == 16);
 
 // Records state for all voices: used by pause/resume functionality
 struct SavedVoiceList {
     int32_t     size;
     SavedVoice  voices[SPU_NUM_VOICES];
 };
-
-static_assert(sizeof(SavedVoiceList) == 388);
 
 extern bool                         gbWess_module_loaded;
 extern master_status_structure*     gpWess_pm_stat;

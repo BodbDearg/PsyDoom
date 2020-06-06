@@ -58,7 +58,7 @@ bool wess_dig_lcd_loader_init(master_status_structure* const pMStat) noexcept {
 
     // Save pointers to the various data structures for the patch group
     {
-        uint8_t* pPatchesData = pPatchGroup->pdata.get();
+        uint8_t* pPatchesData = pPatchGroup->pdata;
 
         gpWess_lcd_load_patches = (patch*) pPatchesData;
         pPatchesData += sizeof(patch) * pPatchGroup->hdr.num_patches;

@@ -4,7 +4,6 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 #include "wessapi_m.h"
 
-#include "PsxVm/VmSVal.h"
 #include "wessapi.h"
 #include "wessseq.h"
 
@@ -39,14 +38,6 @@ void wess_master_mus_vol_set(const uint8_t musicVol) noexcept {
     if (!Is_Module_Loaded())
         return;
 
-    // TODO: TEMP MEASURE FOR NOW - REMOVE EVENTUALLY: need a stack buffer in VM space for now
-    struct Cmd {
-        uint8_t bytes[8];
-    };
-
-    VmSVal<Cmd> cmd;
-    uint8_t* const cmdBytes = cmd->bytes;
-
     // Temporarily disable the sequencer while we do this.
     // It was originally fired by hardware timer interrupts, so this step was required.
     gbWess_SeqOn = false;
@@ -71,7 +62,7 @@ void wess_master_mus_vol_set(const uint8_t musicVol) noexcept {
 
             // Run through all of the active tracks in the sequence and stop them all
             uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
-            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
+            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices;
 
             for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                 // Is this sequence track slot actually in use? Skip if not:
@@ -85,13 +76,14 @@ void wess_master_mus_vol_set(const uint8_t musicVol) noexcept {
                 
                 if (trackStat.sound_class == MUSIC_CLASS) {
                     // Issue a sequencer command to to update the volume levels: change the track command stream temporarily also to do this
-                    uint8_t* const pPrevCmdBytes = trackStat.pcur_cmd.get();
-                    trackStat.pcur_cmd = cmdBytes;
+                    uint8_t* const pPrevCmdBytes = trackStat.pcur_cmd;
 
+                    uint8_t cmdBytes[8];
                     cmdBytes[0] = VolumeMod;
                     cmdBytes[1] = trackStat.volume_cntrl;
-                    gWess_CmdFuncArr[trackStat.driver_id][VolumeMod](trackStat);
 
+                    trackStat.pcur_cmd = cmdBytes;
+                    gWess_CmdFuncArr[trackStat.driver_id][VolumeMod](trackStat);
                     trackStat.pcur_cmd = pPrevCmdBytes;
                 }
 

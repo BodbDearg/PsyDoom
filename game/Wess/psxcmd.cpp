@@ -240,9 +240,9 @@ void PSX_DriverInit(master_status_structure& mstat) noexcept {
     const uint8_t numPatchGroups = mstat.pmodule->hdr.num_patch_groups;
 
     gpWess_drv_mstat = &mstat;
-    gpWess_drv_sequenceStats = mstat.psequence_stats.get();
-    gpWess_drv_trackStats = mstat.ptrack_stats.get();
-    gpWess_drv_voiceStats = mstat.pvoice_stats.get();
+    gpWess_drv_sequenceStats = mstat.psequence_stats;
+    gpWess_drv_trackStats = mstat.ptrack_stats;
+    gpWess_drv_voiceStats = mstat.pvoice_stats;
     gWess_drv_numPatchGroups = numPatchGroups;
     gWess_drv_totalVoices = mstat.max_voices;
     gpWess_drv_cur_abstime_ms = mstat.pabstime_ms;
@@ -276,7 +276,7 @@ void PSX_DriverInit(master_status_structure& mstat) noexcept {
     gWess_drv_hwVoiceLimit = patchGroup.hdr.hw_voice_limit;
 
     {
-        uint8_t* pPatchData = patchGroup.pdata.get();
+        uint8_t* pPatchData = patchGroup.pdata;
 
         gpWess_drv_patches = (patch*) pPatchData;
         pPatchData += sizeof(patch) * patchGroup.hdr.num_patches;

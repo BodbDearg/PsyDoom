@@ -693,10 +693,9 @@ int32_t wess_load_module(
         track_status& trackStat = pTrackStat[trackIdx];
 
         trackStat.ref_idx = trackIdx;
-        trackStat.ploc_stack = (VmPtr<uint8_t>*) pCurDestBytes;
-
-        pCurDestBytes += sizeof(VmPtr<uint8_t>) * mstat.max_track_loc_stack_size;
-        trackStat.ploc_stack_end = (VmPtr<uint8_t>*) pCurDestBytes;
+        trackStat.ploc_stack = (uint8_t**) pCurDestBytes;
+        pCurDestBytes += sizeof(uint8_t*) * mstat.max_track_loc_stack_size;
+        trackStat.ploc_stack_end = (uint8_t**) pCurDestBytes;
     }
 
     // Initialize the sequencer
@@ -835,8 +834,8 @@ void filltrackstat(track_status& trackStat, const track_data& track, const Trigg
 void assigntrackstat(track_status& trackStat, const track_data& track) noexcept {
     trackStat.cmd_stream_capacity = track.hdr.cmd_stream_size;
     trackStat.end_label_idx = track.hdr.num_labels;
-    trackStat.pcmds_start = track.pcmd_stream.get();
-    trackStat.pcur_cmd = Read_Vlq(track.pcmd_stream.get(), trackStat.qnp_till_next_cmd);
+    trackStat.pcmds_start = track.pcmd_stream;
+    trackStat.pcur_cmd = Read_Vlq(track.pcmd_stream, trackStat.qnp_till_next_cmd);
     trackStat.plabels = track.plabels;
 }
 
@@ -881,7 +880,7 @@ int32_t wess_seq_structrig(
     // Try to allocate free tracks for all of the tracks that the sequence needs to play.
     // Note that this loop assumes each sequence will always have at least 1 track to play.
     sequence_status& seqStat = mstat.psequence_stats[allocSeqStatIdx];
-    uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
+    uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices;
 
     uint8_t numTracksPlayed = 0;
     uint8_t numTracksToPlay = (uint8_t) sequence.hdr.num_tracks;
@@ -1034,7 +1033,7 @@ void wess_seq_stop(const int32_t seqIdx) noexcept {
         if (seqStat.seq_idx == seqIdx) {
             // This is the sequence we want, go through all the tracks and stop each one
             uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
-            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
+            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices;
 
             for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                 // Is this track index valid and in use?
@@ -1091,7 +1090,7 @@ void wess_seq_stopall() noexcept {
 
             // Run through all of the active tracks in the sequence and stop them all
             uint32_t numActiveTracksToVisit = seqStat.num_tracks_active;
-            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices.get();
+            uint8_t* const pTrackStatIndices = seqStat.ptrackstat_indices;
 
             for (uint32_t trackSlotIdx = 0; trackSlotIdx < maxTracksPerSeq; ++trackSlotIdx) {
                 // Is this sequence track slot actually in use? Skip if not:
