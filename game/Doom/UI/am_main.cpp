@@ -254,19 +254,19 @@ void AM_Drawer() noexcept {
     // Draw map things for players: again display a little triangle for each player
     for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
         // In deathmatch only show this player's triangle
-        if ((*gNetGame != gt_coop) && (playerIdx != gCurPlayerIndex))
+        if ((gNetGame != gt_coop) && (playerIdx != gCurPlayerIndex))
             continue;
 
         // Flash the player's triangle when alive
         const player_t& player = gPlayers[playerIdx];
         
-        if ((player.playerstate == PST_LIVE) && (*gGameTic & 2))
+        if ((player.playerstate == PST_LIVE) && (gGameTic & 2))
             continue;
         
         // Change the colors of this player in COOP to distinguish
         uint32_t color = COLOR_GREEN;
 
-        if ((*gNetGame == gt_coop) && (playerIdx == gCurPlayerIndex)) {
+        if ((gNetGame == gt_coop) && (playerIdx == gCurPlayerIndex)) {
             color = COLOR_YELLOW;
         }
 

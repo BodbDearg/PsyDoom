@@ -851,7 +851,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
             if (!player.powers[pw_ironfeet]) {
                 gStatusBar.specialFace = f_mowdown;
 
-                if ((*gGameTic > *gPrevGameTic) && (*gGameTic % 16 == 0)) {     // Apply roughly every 1 second
+                if ((gGameTic > gPrevGameTic) && (gGameTic % 16 == 0)) {    // Apply roughly every 1 second
                     P_DamageMObj(*player.mo, nullptr, nullptr, 10);
                 }
             }
@@ -862,7 +862,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
             if (!player.powers[pw_ironfeet]) {
                 gStatusBar.specialFace = f_mowdown;
 
-                if ((*gGameTic > *gPrevGameTic) && (*gGameTic % 16 == 0)) {     // Apply roughly every 1 second
+                if ((gGameTic > gPrevGameTic) && (gGameTic % 16 == 0)) {    // Apply roughly every 1 second
                     P_DamageMObj(*player.mo, nullptr, nullptr, 5);
                 }
             }
@@ -875,7 +875,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
             if ((!player.powers[pw_ironfeet]) || (P_Random() < 5)) {    // Occasionally damages even if a radiation suit is worn
                 gStatusBar.specialFace = f_mowdown;
 
-                if ((*gGameTic > *gPrevGameTic) && (*gGameTic % 16 == 0)) {     // Apply roughly every 1 second
+                if ((gGameTic > gPrevGameTic) && (gGameTic % 16 == 0)) {    // Apply roughly every 1 second
                     P_DamageMObj(*player.mo, nullptr, nullptr, 20);
                 }
             }
@@ -901,7 +901,7 @@ void P_UpdateSpecials() noexcept {
     // Animate flats and wall textures
     for (anim_t* pAnim = gAnims.get(); pAnim < gpLastAnim->get(); ++pAnim) {
         // Skip over this entry if it isn't time to advance the animation
-        if (*gGameTic & pAnim->ticmask)
+        if (gGameTic & pAnim->ticmask)
             continue;
 
         // Advance the animation and rewind to the first frame if we past the last frame
@@ -1105,7 +1105,7 @@ void T_DelayedAction(delayaction_t& action) noexcept {
 // Schedules the level to end in 4 tics and go to the next map; this is the usual method of exiting a level
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_ExitLevel() noexcept {
-    *gNextMap += *gGameMap + 1;
+    gNextMap = gGameMap + 1;
     P_ScheduleDelayedAction(4, G_CompleteLevel);
 }
 
@@ -1113,7 +1113,7 @@ void G_ExitLevel() noexcept {
 // Schedules the level to end in 4 tics and go to the specified map; used for entering/exiting secret maps
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_SecretExitLevel(const int32_t nextMap) noexcept {
-    *gNextMap = nextMap;
+    gNextMap = nextMap;
     P_ScheduleDelayedAction(4, G_CompleteLevel);
 }
 
@@ -1133,7 +1133,7 @@ void P_SpawnSpecials() noexcept {
             case 2:     P_SpawnStrobeFlash(sector, FASTDARK, false);    break;  // Strobe fast
             case 3:     P_SpawnStrobeFlash(sector, SLOWDARK, false);    break;  // Strobe slow
             case 8:     P_SpawnGlowingLight(sector, glowtolower);       break;  // Glowing light
-            case 9:     *gTotalSecret += 1;                             break;  // Secret sector
+            case 9:     gTotalSecret++;                                 break;  // Secret sector
             case 10:    P_SpawnDoorCloseIn30(sector);                   break;  // Door close in 30 seconds
             case 12:    P_SpawnStrobeFlash(sector, SLOWDARK, true);     break;  // Sync strobe slow
             case 13:    P_SpawnStrobeFlash(sector, FASTDARK, true);     break;  // Sync strobe fast

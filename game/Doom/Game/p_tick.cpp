@@ -187,7 +187,7 @@ void P_CheckCheats() noexcept {
 
             // Restore previous tick counters on unpause
             gTicCon = *gTicConOnPause;
-            *gLastTgtGameTicCount = *gTicConOnPause >> VBLANK_TO_TIC_SHIFT;
+            gLastTgtGameTicCount = *gTicConOnPause >> VBLANK_TO_TIC_SHIFT;
         }
 
         // Showing the options menu if the game is paused and the options button has just been pressed.
@@ -205,7 +205,7 @@ void P_CheckCheats() noexcept {
         const gameaction_t optionsAction = MiniLoop(O_Init, O_Shutdown, O_Control, O_Drawer);
         
         if (optionsAction != ga_exit) {
-            *gGameAction = optionsAction;
+            gGameAction = optionsAction;
 
             if (optionsAction == ga_restart || optionsAction == ga_exitdemo) {
                 O_Drawer();
@@ -216,7 +216,7 @@ void P_CheckCheats() noexcept {
     }
 
     // Cheats are disallowed in a multiplayer game
-    if (*gNetGame != gt_single)
+    if (gNetGame != gt_single)
         return;
 
     // Grab inputs for the 1st player.
@@ -261,10 +261,10 @@ void P_CheckCheats() noexcept {
         if (padBtns != oldPadBtns) {
             if (padBtns & PAD_ACTION_BTNS) {
                 // Button pressed to initiate the level warp - kick it off!
-                *gGameAction = ga_warped;
+                gGameAction = ga_warped;
                 player.cheats &= (~CF_WARPMENU);
                 gStartMapOrEpisode = *gMapNumToCheatWarpTo;
-                *gGameMap = *gMapNumToCheatWarpTo;
+                gGameMap = *gMapNumToCheatWarpTo;
             }
         }
 
@@ -427,10 +427,10 @@ void P_CheckCheats() noexcept {
                 case CHT_SEQ_LEVEL_WARP: {
                     player.cheats |= CF_WARPMENU;
                     
-                    if (*gGameMap > MAX_CHEAT_WARP_LEVEL) {
+                    if (gGameMap > MAX_CHEAT_WARP_LEVEL) {
                         *gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
                     } else {
-                        *gMapNumToCheatWarpTo = *gGameMap;
+                        *gMapNumToCheatWarpTo = gGameMap;
                     }
                 }   break;
 
@@ -472,13 +472,13 @@ void P_CheckCheats() noexcept {
 // High level tick/update logic for main gameplay
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t P_Ticker() noexcept {
-    *gGameAction = ga_nothing;
+    gGameAction = ga_nothing;
 
     // Check for pause and cheats
     P_CheckCheats();
 
     // Run map entities and do status bar logic, if it's time
-    if ((!*gbGamePaused) && (*gGameTic > *gPrevGameTic)) {
+    if ((!*gbGamePaused) && (gGameTic > gPrevGameTic)) {
         P_RunThinkers();
         P_CheckSights();
         P_RunMobjBase();
@@ -506,7 +506,7 @@ gameaction_t P_Ticker() noexcept {
         P_PlayerThink(player);
     }
 
-    return *gGameAction;
+    return gGameAction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -553,7 +553,7 @@ void P_Start() noexcept {
 
     // Play music: for demos play the credits music cd track.
     // Otherwise play some sequencer music for the level.
-    if (!*gbDemoPlayback) {
+    if (!gbDemoPlayback) {
         S_StartMusic();
     } else {
         psxcd_play_at_andloop(
@@ -578,13 +578,13 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 
     // PC-PSX: save/check demo result if requested
     #if PC_PSX_DOOM_MODS
-        if ((*gbDemoPlayback) || (*gbDemoRecording)) {
+        if (gbDemoPlayback || gbDemoRecording) {
             if (ProgArgs::gSaveDemoResultFilePath[0]) {
                 DemoResult::saveToJsonFile(ProgArgs::gSaveDemoResultFilePath);
             }
         }
 
-        if ((*gbDemoPlayback) && ProgArgs::gCheckDemoResultFilePath[0]) {
+        if (gbDemoPlayback && ProgArgs::gCheckDemoResultFilePath[0]) {
             if (!DemoResult::verifyMatchesJsonFileResult(ProgArgs::gCheckDemoResultFilePath)) {
                 // If checking the demo result fails, return code '1' to indicate a failure
                 std::exit(1);

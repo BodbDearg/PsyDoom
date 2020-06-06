@@ -75,7 +75,7 @@ void P_RemoveMobj(mobj_t& mobj) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_RespawnSpecials() noexcept {
     // Only respawn in deathmatch
-    if (*gNetGame != gt_deathmatch)
+    if (gNetGame != gt_deathmatch)
         return;
     
     // No respawning if there is nothing to respawn
@@ -277,14 +277,14 @@ void P_SpawnPlayer(const mapthing_t& mapThing) noexcept {
     P_SetupPsprites(mapThing.type - 1);
     
     // Give all keys to players in deathmatch
-    if (*gNetGame == gt_deathmatch) {
+    if (gNetGame == gt_deathmatch) {
         for (int32_t cardIdx = 0; cardIdx < NUMCARDS; ++cardIdx) {
             player.cards[cardIdx] = true;
         }
     }
     
     // Single player only logic
-    if (*gNetGame == gt_single) {
+    if (gNetGame == gt_single) {
         // Only process passwords if we are spawning the user's player
         if (gCurPlayerIndex != mapThing.type - 1)
             return;
@@ -327,18 +327,18 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     }
     
     // Ignore if it's a deathmatch only thing and this is not deathmatch
-    if ((mapthing.options & MTF_DEATHMATCH) && (*gNetGame != gt_deathmatch))
+    if ((mapthing.options & MTF_DEATHMATCH) && (gNetGame != gt_deathmatch))
         return;
     
     // Ignore the thing if it's not for this skill level.
     // Note: 'bSkillMatch' was undefined in the original code if the game skill was greater than nightmare but I'm defaulting it here.
     bool bSkillMatch = false;
 
-    if (*gGameSkill <= sk_easy) {
+    if (gGameSkill <= sk_easy) {
         bSkillMatch = (mapthing.options & MTF_EASY);
-    } else if (*gGameSkill == sk_medium) {
+    } else if (gGameSkill == sk_medium) {
         bSkillMatch = (mapthing.options & MTF_NORMAL);
-    } else if (*gGameSkill <= sk_nightmare) {
+    } else if (gGameSkill <= sk_nightmare) {
         bSkillMatch = (mapthing.options & MTF_HARD);
     }
     
@@ -364,7 +364,7 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
     // Do not spawn monsters and keycards in deathmatch
     const mobjinfo_t& info = gMObjInfo[thingType];
 
-    if ((*gNetGame == gt_deathmatch) && info.flags & (MF_NOTDMATCH|MF_COUNTKILL))
+    if ((gNetGame == gt_deathmatch) && info.flags & (MF_NOTDMATCH|MF_COUNTKILL))
         return;
 
     // Decide whether the thing spawns on the ceiling or floor and spawn it
@@ -384,11 +384,11 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
 
     // Include the thing in kill and item stats if applicable
     if (mobj.flags & MF_COUNTKILL) {
-        *gTotalKills += 1;
+        gTotalKills++;
     }
     
     if (mobj.flags & MF_COUNTITEM) {
-        *gTotalItems += 1;
+        gTotalItems++;
     }
     
     // Set thing angle

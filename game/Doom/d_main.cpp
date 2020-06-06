@@ -68,9 +68,9 @@ void D_DoomMain() noexcept {
     ST_Init();
 
     // Clearing some global tick counters and inputs
-    *gPrevGameTic = 0;
-    *gGameTic = 0;
-    *gLastTgtGameTicCount = 0;
+    gPrevGameTic = 0;
+    gGameTic = 0;
+    gLastTgtGameTicCount = 0;
     gTicCon = 0;
 
     for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
@@ -409,16 +409,16 @@ gameaction_t MiniLoop(
     void (*const pDrawer)()
 ) noexcept {
     // Network initialization
-    if (*gNetGame != gt_single) {
+    if (gNetGame != gt_single) {
         I_NetHandshake();
     }
 
     // Init timers and exit action
-    *gGameAction = ga_nothing;
-    *gPrevGameTic = 0;
-    *gGameTic = 0;
+    gGameAction = ga_nothing;
+    gPrevGameTic = 0;
+    gGameTic = 0;
     gTicCon = 0;
-    *gLastTgtGameTicCount = 0;
+    gLastTgtGameTicCount = 0;
 
     // Run startup logic for this game loop beginning
     pStart();
@@ -442,7 +442,7 @@ gameaction_t MiniLoop(
         uint32_t padBtns = I_ReadGamepad();
         gTicButtons[gCurPlayerIndex] = padBtns;
 
-        if (*gNetGame != gt_single) {
+        if (gNetGame != gt_single) {
             // Updates for when we are in a networked game: abort from the game also if there is a problem
             const bool bNetError = I_NetUpdate();
 
@@ -450,20 +450,20 @@ gameaction_t MiniLoop(
                 // PC-PSX: if a network error occurs don't try to restart the level, the connection is most likely still gone.
                 // Exit to the main menu instead.
                 #if PC_PSX_DOOM_MODS
-                    *gGameAction = ga_exitdemo;
+                    gGameAction = ga_exitdemo;
                     exitAction = ga_exitdemo;
                 #else
-                    *gGameAction = ga_warped;
+                    gGameAction = ga_warped;
                     exitAction = ga_warped;
                 #endif
 
                 break;
             }
         }
-        else if (*gbDemoRecording || *gbDemoPlayback) {
+        else if (gbDemoRecording || gbDemoPlayback) {
             // Demo recording or playback.
             // Need to either read inputs from or save them to a buffer.
-            if (*gbDemoPlayback) {
+            if (gbDemoPlayback) {
                 // Demo playback: any button pressed on the gamepad will abort
                 exitAction = ga_exit;
 
@@ -509,9 +509,9 @@ gameaction_t MiniLoop(
         // Video refreshes at 60 Hz but the game ticks at 15 Hz:
         const int32_t tgtGameTicCount = gTicCon >> VBLANK_TO_TIC_SHIFT;
         
-        if (*gLastTgtGameTicCount < tgtGameTicCount) {
-            *gLastTgtGameTicCount = tgtGameTicCount;
-            *gGameTic += 1;
+        if (gLastTgtGameTicCount < tgtGameTicCount) {
+            gLastTgtGameTicCount = tgtGameTicCount;
+            gGameTic++;
         }
         
         // Call the ticker function to do updates for the frame
@@ -524,11 +524,11 @@ gameaction_t MiniLoop(
         pDrawer();
         
         // Do we need to update sound? (sound updates at 15 Hz)
-        if (*gPrevGameTic < *gGameTic) {
+        if (gPrevGameTic < gGameTic) {
             S_UpdateSounds();
         }
 
-        *gPrevGameTic = *gGameTic;
+        gPrevGameTic = gGameTic;
     }
     
     // Run cleanup logic for this game loop ending

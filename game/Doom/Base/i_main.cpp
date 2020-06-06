@@ -501,7 +501,7 @@ void I_DrawPresent() noexcept {
     // Further framerate limiting for demos:
     // Demo playback or recording is forced to run at 15 Hz all of the time (the game simulation rate).
     // Probably done so the simulation remains consistent!
-    if (*gbDemoPlayback || *gbDemoRecording) {
+    if (gbDemoPlayback || gbDemoRecording) {
         while (gElapsedVBlanks < 4) {
             // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
             #if PC_PSX_DOOM_MODS

@@ -81,7 +81,7 @@ bool PIT_ChangeSector(mobj_t& mobj) noexcept {
     *gbNofit = true;
 
     // If the sector crushes and it's every 4th tic then do some damage to the thing
-    if (*gbCrushChange && ((*gGameTic & 3) == 0)) {
+    if (*gbCrushChange && ((gGameTic & 3) == 0)) {
         P_DamageMObj(mobj, nullptr, nullptr, 10);
 
         // Spawn some blood and randomly send it off in different directions

@@ -119,25 +119,25 @@ void IN_Start() noexcept {
         gSecretValue[playerIdx] = 0;
         gFragValue[playerIdx] = 0;
 
-        if (*gTotalKills != 0) {
-            pstats.killpercent = (player.killcount * 100) / *gTotalKills;
+        if (gTotalKills != 0) {
+            pstats.killpercent = (player.killcount * 100) / gTotalKills;
         } else {
             pstats.killpercent = 100;
         }
 
-        if (*gTotalItems != 0) {
-            pstats.itempercent = (player.itemcount * 100) / *gTotalItems;
+        if (gTotalItems != 0) {
+            pstats.itempercent = (player.itemcount * 100) / gTotalItems;
         } else {
             pstats.itempercent = 100;
         }
 
-        if (*gTotalSecret != 0) {
-            pstats.secretpercent = (player.secretcount * 100) / *gTotalSecret;
+        if (gTotalSecret != 0) {
+            pstats.secretpercent = (player.secretcount * 100) / gTotalSecret;
         } else {
             pstats.secretpercent = 100;
         }
 
-        if (*gNetGame == gt_deathmatch) {
+        if (gNetGame == gt_deathmatch) {
             pstats.fragcount = player.frags;
         }
     }
@@ -147,7 +147,7 @@ void IN_Start() noexcept {
     gMenuTimeoutStartTicCon = gTicCon;
 
     // Compute the password for the next map and mark it as entered (so we don't do a pistol start)
-    if (*gNextMap <= NUM_MAPS) {
+    if (gNextMap <= NUM_MAPS) {
         P_ComputePassword(gPasswordCharBuffer);
         gNumPasswordCharsEntered = 10;
     }
@@ -217,12 +217,12 @@ gameaction_t IN_Ticker() noexcept {
         }
 
         // If a single player game only check the first player for skip inputs
-        if (*gNetGame == gt_single)
+        if (gNetGame == gt_single)
             break;
     }
 
     // If a full 15Hz tick has not yet elapsed then do not advance the count
-    if (*gGameTic <= *gPrevGameTic)
+    if (gGameTic <= gPrevGameTic)
         return ga_nothing;
     
     // Count up the applicable stats for the current game mode.
@@ -232,7 +232,7 @@ gameaction_t IN_Ticker() noexcept {
     for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
         const pstats_t& stats = gPStats[playerIdx];
 
-        if (*gNetGame == gt_deathmatch) {
+        if (gNetGame == gt_deathmatch) {
             // Deathmatch game: note that frag count can count both downwards and upwards
             if (stats.fragcount < 0) {
                 if (gFragValue[playerIdx] > stats.fragcount) {
@@ -292,7 +292,7 @@ gameaction_t IN_Ticker() noexcept {
     }
 
     // Do periodic gun shot sounds (every 2nd tick) while the count up is happening
-    if (bStillCounting && ((*gGameTic & 1) == 0)) {
+    if (bStillCounting && ((gGameTic & 1) == 0)) {
         S_StartSound(nullptr, sfx_pistol);
     }
 
@@ -305,9 +305,9 @@ gameaction_t IN_Ticker() noexcept {
 void IN_Drawer() noexcept {
     I_IncDrawnFrameCount();
 
-    if (*gNetGame == gt_coop) {
+    if (gNetGame == gt_coop) {
         IN_CoopDrawer();
-    } else if (*gNetGame == gt_deathmatch) {
+    } else if (gNetGame == gt_deathmatch) {
         IN_DeathmatchDrawer();
     } else {
         IN_SingleDrawer();
@@ -323,7 +323,7 @@ void IN_Drawer() noexcept {
 void IN_SingleDrawer() noexcept {
     I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
-    I_DrawString(-1, 20, gMapNames[*gGameMap - 1]);
+    I_DrawString(-1, 20, gMapNames[gGameMap - 1]);
     I_DrawString(-1, 36, "Finished");
 
     I_DrawString(57, 65, "Kills");
@@ -339,9 +339,9 @@ void IN_SingleDrawer() noexcept {
     I_DrawNumber(170, 117, gSecretValue[0]);
     
     // Only draw the next map and password if there is a next map
-    if (*gNextMap <= NUM_MAPS) {
+    if (gNextMap <= NUM_MAPS) {
         I_DrawString(-1, 145, "Entering");
-        I_DrawString(-1, 161, gMapNames[*gNextMap - 1]);
+        I_DrawString(-1, 161, gMapNames[gNextMap - 1]);
         I_DrawString(-1, 187, "Password");
 
         char passwordStr[PW_SEQ_LEN + 1];
@@ -406,9 +406,9 @@ void IN_CoopDrawer() noexcept {
     I_DrawNumber(216, 123, gSecretValue[(gCurPlayerIndex == 0) ? 1 : 0]);
 
     // Only draw the next map and password if there is a next map
-    if (*gNextMap < 60) {
+    if (gNextMap < 60) {
         I_DrawString(-1, 149, "Entering");
-        I_DrawString(-1, 165, gMapNames[*gNextMap - 1]);
+        I_DrawString(-1, 165, gMapNames[gNextMap - 1]);
 
         // Well this is mean! The current player only gets to see a password if not dead :(
         if (gPlayers[gCurPlayerIndex].health > 0) {
@@ -432,7 +432,7 @@ void IN_CoopDrawer() noexcept {
 void IN_DeathmatchDrawer() noexcept {
     I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
-    I_DrawString(-1, 20, gMapNames[*gGameMap - 1]);
+    I_DrawString(-1, 20, gMapNames[gGameMap - 1]);
     I_DrawString(-1, 36, "Finished");
 
     const facesprite_t* pFaceSpriteP1;
@@ -497,8 +497,8 @@ void IN_DeathmatchDrawer() noexcept {
     I_DrawNumber(206, 138, gFragValue[(gCurPlayerIndex == 0) ? 1 : 0]);
 
     // Only draw the next map if there is one
-    if (*gNextMap <= NUM_MAPS) {
+    if (gNextMap <= NUM_MAPS) {
         I_DrawString(-1, 190, "Entering");
-        I_DrawString(-1, 206, gMapNames[*gNextMap - 1]);
+        I_DrawString(-1, 206, gMapNames[gNextMap - 1]);
     }
 }

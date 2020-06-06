@@ -879,7 +879,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     // Cleanup of memory and resetting the RNG before we start
     Z_FreeTags(*gpMainMemZone, PU_CACHE|PU_LEVSPEC|PU_LEVEL);
 
-    if (!*gbIsLevelBeingRestarted) {
+    if (!gbIsLevelBeingRestarted) {
         gLockedTexPagesMask &= 1;
         Z_FreeTags(*gpMainMemZone, PU_ANIMATION);
     }
@@ -889,9 +889,9 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     M_ClearRandom();
 
     // Init player stats for the map
-    *gTotalKills = 0;
-    *gTotalItems = 0;
-    *gTotalSecret = 0;
+    gTotalKills = 0;
+    gTotalItems = 0;
+    gTotalSecret = 0;
 
     for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
         player_t& player = gPlayers[playerIdx];
@@ -972,7 +972,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     Z_Free2(*gpMainMemZone, pMapWadFileData);
 
     // Loading map textures and sprites
-    if (!*gbIsLevelBeingRestarted) {
+    if (!gbIsLevelBeingRestarted) {
         const CdMapTbl_File mapTexFile = (CdMapTbl_File)((int32_t) CdMapTbl_File::MAPTEX01_IMG + mapIdxInFolder + mapFolderOffset);
         const CdMapTbl_File mapSprFile = (CdMapTbl_File)((int32_t) CdMapTbl_File::MAPSPR01_IMG + mapIdxInFolder + mapFolderOffset);
         
@@ -990,7 +990,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     }
 
     // Spawn the player(s)
-    if (*gNetGame != gt_single) {
+    if (gNetGame != gt_single) {
         I_NetHandshake();
         
         // Randomly spawn players in different locations - this logic is a little strange.

@@ -56,7 +56,7 @@ void STOP_PasswordScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
 gameaction_t TIC_PasswordScreen() noexcept {
     // Do invalid password flash sfx every so often if currently active
     if (gInvalidPasswordFlashTicsLeft != 0) {
-        if (*gGameTic > *gPrevGameTic) {
+        if (gGameTic > gPrevGameTic) {
             gInvalidPasswordFlashTicsLeft -= 1;
             
             if ((gInvalidPasswordFlashTicsLeft & 7) == 4) {
@@ -141,9 +141,9 @@ gameaction_t TIC_PasswordScreen() noexcept {
         if (P_ProcessPassword(gPasswordCharBuffer, mapNum, skill, nullptr)) {
             // Valid password entered, begin warping to the destination map
             gbUsingAPassword = true;
-            *gGameMap = mapNum;
+            gGameMap = mapNum;
             gStartMapOrEpisode = mapNum;
-            *gGameSkill = skill;
+            gGameSkill = skill;
             gStartSkill = skill;
 
             return ga_warped;

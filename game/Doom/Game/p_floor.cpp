@@ -155,7 +155,7 @@ void T_MoveFloor(floormove_t& floor) noexcept {
     const result_e moveResult = T_MovePlane(floorSec, floor.speed, floor.floordestheight, floor.crush, 0, floor.direction);
 
     // Every so often do a floor movement sound (every 4 tics)
-    if ((*gGameTic & 3) == 0) {
+    if ((gGameTic & 3) == 0) {
         S_StartSound((mobj_t*) &floorSec.soundorg, sfx_stnmov);
     }
 

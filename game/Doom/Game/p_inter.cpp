@@ -102,7 +102,7 @@ bool P_GiveAmmo(player_t& player, const ammotype_t ammoType, const int32_t numCl
         ammoToAdd = numClips * gClipAmmo[ammoType];
     }
 
-    if (*gGameSkill == sk_baby) {
+    if (gGameSkill == sk_baby) {
         ammoToAdd *= 2;
     }
 
@@ -160,7 +160,7 @@ bool P_GiveAmmo(player_t& player, const ammotype_t ammoType, const int32_t numCl
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bDropped) noexcept {
     // In co-op mode only allow placed weapons to be picked up if not already owned
-    if ((*gNetGame == gt_coop) && (!bDropped)) {
+    if ((gNetGame == gt_coop) && (!bDropped)) {
         if (player.weaponowned[weapon])
             return false;
         
@@ -319,7 +319,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_bluecard);
             }
 
-            if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+            if (gNetGame != gt_single)      // Leave it around in co-op games for other players
                 return;
 
         }   break;
@@ -330,7 +330,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_redcard);
             }
 
-            if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+            if (gNetGame != gt_single)      // Leave it around in co-op games for other players
                 return;
 
         }   break;
@@ -341,7 +341,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_yellowcard);
             }
 
-            if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+            if (gNetGame != gt_single)      // Leave it around in co-op games for other players
                 return;
 
         }   break;
@@ -352,7 +352,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_blueskull);
             }
 
-            if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+            if (gNetGame != gt_single)      // Leave it around in co-op games for other players
                 return;
 
         }   break;
@@ -363,7 +363,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_redskull);
             }
 
-            if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+            if (gNetGame != gt_single)      // Leave it around in co-op games for other players
                 return;
 
         }   break;
@@ -374,7 +374,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveCard(player, it_yellowskull);
             }
 
-            if (*gNetGame != gt_single)     // Leave it around in co-op games for other players
+            if (gNetGame != gt_single)      // Leave it around in co-op games for other players
                 return;
 
         }   break;
@@ -688,7 +688,7 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
         // A killable thing (monster) killed by a player deliberately: add to that player's kill count
         pKillerPlayer->killcount += 1;
     }
-    else if ((*gNetGame == gt_single) && (target.flags & MF_COUNTKILL)) {
+    else if ((gNetGame == gt_single) && (target.flags & MF_COUNTKILL)) {
         // In single player all monster deaths are credited towards the player.
         // This is true even for kills caused by other monsters (infighting) and environmental stuff.
         gPlayers[0].killcount += 1;
@@ -785,7 +785,7 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
     
     if (pTargetPlayer) {
         // In the lowest skill mode only half damage is applied
-        if (*gGameSkill == sk_baby) {
+        if (gGameSkill == sk_baby) {
             damageAmt >>= 1;
         }
 

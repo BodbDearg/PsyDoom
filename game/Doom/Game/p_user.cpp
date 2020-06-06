@@ -598,7 +598,7 @@ void P_PlayerThink(player_t& player) noexcept {
             P_MovePsprites(player);
 
             // Tic special powers if enough time has elapsed and reduce their duration.
-            if (*gGameTic > *gPrevGameTic) {
+            if (gGameTic > gPrevGameTic) {
                 // Note: berserk is special and counts up to diminish the red hue effect after picking it up.
                 // It never runs out (theoretically it CAN if there is an overflow) unlike other powers...
                 if (player.powers[pw_strength]) {

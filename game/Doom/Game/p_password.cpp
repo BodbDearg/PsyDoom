@@ -27,8 +27,8 @@ void P_ComputePassword(uint8_t pOutput[10]) noexcept {
     D_memset(pwdata, std::byte(0), 8);
 
     // Encode byte: current map and skill
-    pwdata[0] = (uint8_t)((*gNextMap & 63) << 2);
-    pwdata[0] |= (uint8_t)(*gGameSkill & 3);
+    pwdata[0] = (uint8_t)((gNextMap & 63) << 2);
+    pwdata[0] |= (uint8_t)(gGameSkill & 3);
 
     // Encode byte: owned weapons (from shotgun onwards) and whether the backpack is owned
     for (int32_t i = wp_shotgun; i < NUMWEAPONS; ++i) {
@@ -71,7 +71,7 @@ void P_ComputePassword(uint8_t pOutput[10]) noexcept {
     // Note: only the top 5 bits of the last unencrypted byte are encoded to a password. 2 bits are used by armortype, and now
     // 1 extra bit is used by nightmare mode. Therefore there are still 2 bits left for over purposes, perhaps extended level support?
     #if PC_PSX_DOOM_MODS
-        if (*gGameSkill == sk_nightmare) {
+        if (gGameSkill == sk_nightmare) {
             pwdata[5] |= 0x80;
         }
     #endif

@@ -473,14 +473,14 @@ void A_Chase(mobj_t& actor) noexcept {
 
     // Try to do a missile attack if possible.
     // Note that on nightmare skill we don't have any cooldowns on attacking again!
-    const bool bMissileAttackAllowed = ((actor.movecount == 0) || (*gGameSkill == sk_nightmare));
+    const bool bMissileAttackAllowed = ((actor.movecount == 0) || (gGameSkill == sk_nightmare));
 
     if ((actorInfo.missilestate != S_NULL) && bMissileAttackAllowed) {
         if (P_CheckMissileRange(actor)) {
             P_SetMObjState(actor, actorInfo.missilestate);
 
             // Don't attack again for a bit unless on nightmare
-            if (*gGameSkill != sk_nightmare) {
+            if (gGameSkill != sk_nightmare) {
                 actor.flags |= MF_JUSTATTACKED;
             }
 
@@ -754,7 +754,7 @@ void A_SkelMissile(mobj_t& actor) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_Tracer(mobj_t& actor) noexcept {
     // Only spawn smoke and change direction every 4 tics
-    if ((*gGameTic & 3) != 0)
+    if ((gGameTic & 3) != 0)
         return;
 
     // Spawn a puff and some smoke behind the rocket

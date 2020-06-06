@@ -320,9 +320,9 @@ void ST_Drawer() noexcept {
 
             // PC-PSX: use 'snprintf' just to be safe here
             #if PC_PSX_DOOM_MODS
-                std::snprintf(mapTitle, C_ARRAY_SIZE(mapTitle), MAP_TITLE_FMT, *gGameMap, gMapNames[*gGameMap - 1]);
+                std::snprintf(mapTitle, C_ARRAY_SIZE(mapTitle), MAP_TITLE_FMT, gGameMap, gMapNames[gGameMap - 1]);
             #else
-                std::sprintf(mapTitle, MAP_TITLE_FMT, *gGameMap, gMapNames[*gGameMap - 1]);
+                std::sprintf(mapTitle, MAP_TITLE_FMT, gGameMap, gMapNames[gGameMap - 1]);
             #endif
 
             I_DrawStringSmall(7, 193, mapTitle);
@@ -374,7 +374,7 @@ void ST_Drawer() noexcept {
     }
 
     // Draw weapon selector or frags (if deathmatch)
-    if (*gNetGame != gt_deathmatch) {
+    if (gNetGame != gt_deathmatch) {
         // Draw the weapon number box/container
         LIBGPU_setXY0(spritePrim, 200, 205);
         LIBGPU_setUV0(spritePrim, 180, 184);

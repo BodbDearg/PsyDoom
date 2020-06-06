@@ -90,7 +90,7 @@ void O_Init() noexcept {
     }
 
     // Set what menu layout to use
-    if (*gNetGame != gt_single) {
+    if (gNetGame != gt_single) {
         gpOptionsMenuItems = gOptMenuItems_NetGame;
         gOptionsMenuSize = 4;
     }
@@ -119,7 +119,7 @@ void O_Shutdown([[maybe_unused]] const gameaction_t exitAction) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t O_Control() noexcept {
     // Animate the skull cursor
-    if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 3) == 0)) {
+    if ((gGameTic > gPrevGameTic) && ((gGameTic & 3) == 0)) {
         gCursorFrame ^= 1;
     }
 
@@ -301,7 +301,7 @@ void O_Drawer() noexcept {
     }
 
     // Don't do any rendering if we are about to exit the menu
-    if (*gGameAction == ga_nothing) {
+    if (gGameAction == ga_nothing) {
         // Menu title
         I_DrawString(-1, 20, "Options");
 

@@ -64,7 +64,7 @@ void STOP_ControlsScreen([[maybe_unused]] const gameaction_t exitAction) noexcep
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t TIC_ControlsScreen() noexcept {
     // Animate the cursor every so often
-    if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 3) == 0)) {
+    if ((gGameTic > gPrevGameTic) && ((gGameTic & 3) == 0)) {
         gCursorFrame ^= 1;
     }
     

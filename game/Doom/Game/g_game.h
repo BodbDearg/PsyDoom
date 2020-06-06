@@ -2,22 +2,22 @@
 
 #include "Doom/doomdef.h"
 
-extern const VmPtr<gameaction_t>            gGameAction;
-extern const VmPtr<skill_t>                 gGameSkill;
-extern const VmPtr<gametype_t>              gNetGame;
-extern const VmPtr<int32_t>                 gGameMap;
-extern const VmPtr<int32_t>                 gNextMap;
+extern gameaction_t     gGameAction;
+extern skill_t          gGameSkill;
+extern gametype_t       gNetGame;
+extern int32_t          gGameMap;
+extern int32_t          gNextMap;
 extern const VmPtr<player_t[MAXPLAYERS]>    gPlayers;
-extern const VmPtr<bool32_t[MAXPLAYERS]>    gbPlayerInGame;
-extern const VmPtr<int32_t>                 gGameTic;
-extern const VmPtr<int32_t>                 gPrevGameTic;
-extern const VmPtr<int32_t>                 gLastTgtGameTicCount;
-extern const VmPtr<int32_t>                 gTotalKills;
-extern const VmPtr<int32_t>                 gTotalItems;
-extern const VmPtr<int32_t>                 gTotalSecret;
-extern const VmPtr<bool32_t>                gbDemoPlayback;
-extern const VmPtr<bool32_t>                gbDemoRecording;
-extern const VmPtr<bool32_t>                gbIsLevelBeingRestarted;
+extern bool             gbPlayerInGame[MAXPLAYERS];
+extern int32_t          gGameTic;
+extern int32_t          gPrevGameTic;
+extern int32_t          gLastTgtGameTicCount;
+extern int32_t          gTotalKills;
+extern int32_t          gTotalItems;
+extern int32_t          gTotalSecret;
+extern bool             gbDemoPlayback;
+extern bool             gbDemoRecording;
+extern bool             gbIsLevelBeingRestarted;
 
 void G_DoLoadLevel() noexcept;
 void G_PlayerFinishLevel(int32_t playerIdx) noexcept;

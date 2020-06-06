@@ -39,7 +39,7 @@ void T_MoveCeiling(ceiling_t& ceiling) noexcept {
             const result_e moveResult = T_MovePlane(ceilingSector, ceiling.speed, ceiling.topheight, false, 1, ceiling.direction);
 
             // Do moving sounds
-            if ((*gGameTic & 7) == 0) {
+            if ((gGameTic & 7) == 0) {
                 switch (ceiling.type) {
                     case silentCrushAndRaise:
                         break;
@@ -77,7 +77,7 @@ void T_MoveCeiling(ceiling_t& ceiling) noexcept {
         case -1: {
             const result_e moveResult = T_MovePlane(ceilingSector, ceiling.speed, ceiling.bottomheight, ceiling.crush, 1, ceiling.direction);
 
-            if ((*gGameTic & 7) == 0) {
+            if ((gGameTic & 7) == 0) {
                 switch (ceiling.type) {
                     case silentCrushAndRaise:
                         break;

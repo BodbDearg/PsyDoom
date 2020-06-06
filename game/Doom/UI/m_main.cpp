@@ -113,7 +113,7 @@ gameaction_t RunMenu() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_Start() noexcept {
     // Assume no networked game initially
-    *gNetGame = gt_single;
+    gNetGame = gt_single;
     gCurPlayerIndex = 0;
     gbPlayerInGame[0] = true;
     gbPlayerInGame[1] = false;
@@ -220,7 +220,7 @@ gameaction_t M_Ticker() noexcept {
         return ga_timeout;
 
     // Animate the skull cursor
-    if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 3) == 0)) {
+    if ((gGameTic > gPrevGameTic) && ((gGameTic & 3) == 0)) {
         gCursorFrame ^= 1;
     }
     

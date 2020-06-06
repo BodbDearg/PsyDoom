@@ -134,7 +134,7 @@ void F1_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t F1_Ticker() noexcept {
     // Grab inputs and set global game action
-    *gGameAction = ga_nothing;
+    gGameAction = ga_nothing;
 
     const padbuttons_t ticButtons = gTicButtons[gCurPlayerIndex];
     const padbuttons_t oldTicButtons = gOldTicButtons[gCurPlayerIndex];
@@ -143,12 +143,12 @@ gameaction_t F1_Ticker() noexcept {
     P_CheckCheats();
     
     if (*gbGamePaused)
-        return *gGameAction;
+        return gGameAction;
 
     // Check to see if the text needs to advance more, or if we can exit
     if (gFinLinesDone < 11) {
         // Text is not yet done popping up: only advance if time has elapsed and on every 2nd tick
-        if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 1) == 0)) {
+        if ((gGameTic > gPrevGameTic) && ((gGameTic & 1) == 0)) {
             // Get the current incoming text line text and see if we need to move onto another
             const char* const textLine = gDoom1WinText[gFinLinesDone];
 
@@ -263,7 +263,7 @@ void F2_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t F2_Ticker() noexcept {
     // Grab inputs and set global game action
-    *gGameAction = ga_nothing;
+    gGameAction = ga_nothing;
 
     const padbuttons_t ticButtons = gTicButtons[gCurPlayerIndex];
     const padbuttons_t oldTicButtons = gOldTicButtons[gCurPlayerIndex];
@@ -272,12 +272,12 @@ gameaction_t F2_Ticker() noexcept {
     P_CheckCheats();
     
     if (*gbGamePaused)
-        return *gGameAction;
+        return gGameAction;
     
     // Handle whatever finale stage we are on
     if (gFinaleStage == F_STAGE_TEXT) {
         // Currently popping up text: only advance if time has elapsed and on every 2nd tick
-        if ((*gGameTic > *gPrevGameTic) && ((*gGameTic & 1) == 0)) {
+        if ((gGameTic > gPrevGameTic) && ((gGameTic & 1) == 0)) {
             // Get the current incoming text line text and see if we need to move onto another
             const char* const textLine = gDoom2WinText[gFinLinesDone];
 
@@ -330,7 +330,7 @@ gameaction_t F2_Ticker() noexcept {
         }
 
         // Only advance character animation if time has passed
-        if (*gGameTic > *gPrevGameTic) {
+        if (gGameTic > gPrevGameTic) {
             if (gbCastDeath && (gpCastState->nextstate == S_NULL)) {
                 // Character is dead and there is no state which follows (death anim is finished): switch to the next character
                 gCastNum++;
