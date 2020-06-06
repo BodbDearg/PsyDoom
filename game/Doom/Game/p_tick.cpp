@@ -517,9 +517,9 @@ void P_Drawer() noexcept {
     // Keep the framerate at 15-Hz for consistent demo playback (4 60Hz vblanks).
     #if PC_PSX_DOOM_MODS
         if (ProgArgs::gbHeadlessMode) {
-            *gTotalVBlanks += 4;
-            *gLastTotalVBlanks = *gTotalVBlanks;
-            *gElapsedVBlanks = 4;
+            gTotalVBlanks += 4;
+            gLastTotalVBlanks = gTotalVBlanks;
+            gElapsedVBlanks = 4;
             return;
         }
     #endif
@@ -527,7 +527,7 @@ void P_Drawer() noexcept {
     I_IncDrawnFrameCount();
 
     // Draw either the automap or 3d view, depending on whether the automap is active or not
-    if (gPlayers[*gCurPlayerIndex].automapflags & AF_ACTIVE) {
+    if (gPlayers[gCurPlayerIndex].automapflags & AF_ACTIVE) {
         AM_Drawer();
     } else {
         R_RenderPlayerView();

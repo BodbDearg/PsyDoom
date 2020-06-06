@@ -34,7 +34,7 @@ void I_CrossFadeFrameBuffers() noexcept {
     LIBGPU_SetDefDispEnv(dispEnvs[1], 512, 256, 256, 240);
     
     // Copy the current framebuffer to the 1st fade framebuffer, that will be initially displayed
-    LIBGPU_MoveImage(gDispEnvs[*gCurDispBufferIdx].disp, 768, 256);
+    LIBGPU_MoveImage(gDispEnvs[gCurDispBufferIdx].disp, 768, 256);
     LIBGPU_DrawSync(0);
 
     // Do the initial switch the framebuffers used for the fade
@@ -64,7 +64,7 @@ void I_CrossFadeFrameBuffers() noexcept {
     );
     
     polyPrim1.clut = 0;
-    polyPrim1.tpage = LIBGPU_GetTPage(2, 0, (*gCurDispBufferIdx == 0) ? 256 : 0, 0);
+    polyPrim1.tpage = LIBGPU_GetTPage(2, 0, (gCurDispBufferIdx == 0) ? 256 : 0, 0);
   
     LIBGPU_SetPolyFT4(polyPrim2);
     LIBGPU_SetSemiTrans(&polyPrim2, true);
@@ -83,7 +83,7 @@ void I_CrossFadeFrameBuffers() noexcept {
         SCREEN_W - 1,   SCREEN_H - 1
     );
 
-    polyPrim2.tpage = LIBGPU_GetTPage(2, 0, (*gCurDispBufferIdx == 0) ? 0 : 256, 0);
+    polyPrim2.tpage = LIBGPU_GetTPage(2, 0, (gCurDispBufferIdx == 0) ? 0 : 256, 0);
     polyPrim2.clut = 0;
 
     // Run the cross fade until completion

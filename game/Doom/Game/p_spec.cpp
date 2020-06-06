@@ -963,7 +963,7 @@ void P_UpdateSpecials() noexcept {
             continue;
 
         // Advance the countdown until when the button switches back and skip over it if its not time to do that yet
-        button.btimer -= gPlayersElapsedVBlanks[*gCurPlayerIndex];
+        button.btimer -= gPlayersElapsedVBlanks[gCurPlayerIndex];
 
         if (button.btimer > 0)
             continue;

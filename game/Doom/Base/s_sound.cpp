@@ -403,7 +403,7 @@ static void I_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcep
         return;
 
     // Grab the listener (player) and default the pan/volume for now
-    mobj_t* pListener = gPlayers[*gCurPlayerIndex].mo.get();
+    mobj_t* pListener = gPlayers[gCurPlayerIndex].mo.get();
     int32_t vol = WESS_MAX_MASTER_VOL;
     int32_t pan = WESS_PAN_CENTER;
     

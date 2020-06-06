@@ -136,8 +136,8 @@ gameaction_t F1_Ticker() noexcept {
     // Grab inputs and set global game action
     *gGameAction = ga_nothing;
 
-    const padbuttons_t ticButtons = gTicButtons[*gCurPlayerIndex];
-    const padbuttons_t oldTicButtons = gOldTicButtons[*gCurPlayerIndex];
+    const padbuttons_t ticButtons = gTicButtons[gCurPlayerIndex];
+    const padbuttons_t oldTicButtons = gOldTicButtons[gCurPlayerIndex];
 
     // Not sure why this screen is updating cheats or checking for pause...
     P_CheckCheats();
@@ -265,8 +265,8 @@ gameaction_t F2_Ticker() noexcept {
     // Grab inputs and set global game action
     *gGameAction = ga_nothing;
 
-    const padbuttons_t ticButtons = gTicButtons[*gCurPlayerIndex];
-    const padbuttons_t oldTicButtons = gOldTicButtons[*gCurPlayerIndex];
+    const padbuttons_t ticButtons = gTicButtons[gCurPlayerIndex];
+    const padbuttons_t oldTicButtons = gOldTicButtons[gCurPlayerIndex];
 
     // Not sure why this screen is updating cheats or checking for pause...
     P_CheckCheats();

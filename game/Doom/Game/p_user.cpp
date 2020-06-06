@@ -195,7 +195,7 @@ static void P_BuildMove(player_t& player) noexcept {
     const uint32_t curBtns = gTicButtons[*gPlayerNum];
     const uint32_t oldBtns = gOldTicButtons[*gPlayerNum];
 
-    const padbuttons_t* const pBtnBindings = gpPlayerCtrlBindings[*gPlayerNum].get();
+    const padbuttons_t* const pBtnBindings = gpPlayerCtrlBindings[*gPlayerNum];
     
     // Do turn acceleration if turn is held continously for 2 frames or more
     const bool bLeftTurnAccel = ((curBtns & PAD_LEFT) && (oldBtns & PAD_LEFT));
@@ -459,7 +459,7 @@ void P_PlayerThink(player_t& player) noexcept {
     // Grab the current and previous buttons, and the gamepad bindings
     const uint32_t curBtns = gTicButtons[*gPlayerNum];
     const uint32_t oldBtns = gOldTicButtons[*gPlayerNum];
-    const padbuttons_t* pBtnBindings = gpPlayerCtrlBindings[*gPlayerNum].get();
+    const padbuttons_t* pBtnBindings = gpPlayerCtrlBindings[*gPlayerNum];
 
     // Do weapon switching if the player is still alive (and even if paused)
     if (player.playerstate == PST_LIVE) {
@@ -581,7 +581,7 @@ void P_PlayerThink(player_t& player) noexcept {
 
                 // Should we do the grimmace face after fire has been pressed a long time?
                 const bool bDoGrimmaceFace = (
-                    (*gPlayerNum == *gCurPlayerIndex) &&
+                    (*gPlayerNum == gCurPlayerIndex) &&
                     (player.attackdown > TICRATE * 2) &&
                     ((player.readyweapon == wp_chaingun) || (player.readyweapon == wp_plasma))
                 );

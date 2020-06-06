@@ -83,10 +83,10 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
     *gpVertexes = (vertex_t*) Z_Malloc(*gpMainMemZone, *gNumVertexes * sizeof(vertex_t), PU_LEVEL, nullptr);
     
     // Read the WAD vertexes into the temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+    W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Convert the vertexes to the renderer runtime format
-    const mapvertex_t* pSrcVertex = (const mapvertex_t*) gTmpBuffer.get();
+    const mapvertex_t* pSrcVertex = (const mapvertex_t*) gTmpBuffer;
     vertex_t* pDstVertex = gpVertexes->get();
 
     for (int32_t vertexIdx = 0; vertexIdx < *gNumVertexes; ++vertexIdx) {
@@ -115,10 +115,10 @@ static void P_LoadSegs(const int32_t lumpNum) noexcept {
     D_memset(gpSegs->get(), std::byte(0), *gNumSegs * sizeof(seg_t));
 
     // Read the map lump containing the segs into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+    W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Process the WAD segs and convert them into runtime segs
-    const mapseg_t* pSrcSeg = (const mapseg_t*) gTmpBuffer.get();
+    const mapseg_t* pSrcSeg = (const mapseg_t*) gTmpBuffer;
     seg_t* pDstSeg = gpSegs->get();
 
     for (int32_t segIdx = 0; segIdx < *gNumSegs; ++segIdx) {
@@ -174,10 +174,10 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     D_memset(gpSubsectors->get(), std::byte(0), *gNumSubsectors * sizeof(subsector_t));
 
     // Read the map lump containing the subsectors into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+    W_ReadMapLump(lumpNum, gTmpBuffer, true);
     
     // Process the WAD subsectors and convert them into runtime subsectors
-    const mapsubsector_t* pSrcSubsec = (const mapsubsector_t*) gTmpBuffer.get();
+    const mapsubsector_t* pSrcSubsec = (const mapsubsector_t*) gTmpBuffer;
     subsector_t* pDstSubsec = gpSubsectors->get();
 
     for (int32_t subsectorIdx = 0; subsectorIdx < *gNumSubsectors; ++subsectorIdx) {
@@ -215,11 +215,11 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     D_memset(gpSectors->get(), std::byte(0), *gNumSectors * sizeof(sector_t));
 
     // Read the map lump containing the sectors into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+    W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Process the WAD sectors and convert them into runtime sectors
     {
-        const mapsector_t* pSrcSec = (const mapsector_t*) gTmpBuffer.get();
+        const mapsector_t* pSrcSec = (const mapsector_t*) gTmpBuffer;
         sector_t* pDstSec = gpSectors->get();
 
         for (int32_t secIdx = 0; secIdx < *gNumSectors; ++secIdx) {
@@ -280,11 +280,11 @@ static void P_LoadNodes(const int32_t lumpNum) noexcept {
     *gpBspNodes = (node_t*) Z_Malloc(*gpMainMemZone, *gNumBspNodes * sizeof(node_t), PU_LEVEL, nullptr);
 
     // Read the map lump containing the nodes into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+    W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Process the WAD nodes and convert them into runtime nodes.
     // The format for nodes on the PSX appears identical to PC.
-    const mapnode_t* pSrcNode = (const mapnode_t*) gTmpBuffer.get();
+    const mapnode_t* pSrcNode = (const mapnode_t*) gTmpBuffer;
     node_t* pDstNode = gpBspNodes->get();
 
     for (int32_t nodeIdx = 0; nodeIdx < *gNumBspNodes; ++nodeIdx) {
@@ -320,10 +320,10 @@ static void P_LoadThings(const int32_t lumpNum) noexcept {
 
     // Determine how many things there are to spawn and read the lump from the WAD
     const int32_t numThings = lumpSize / sizeof(mapthing_t);
-    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+    W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Spawn the map things
-    mapthing_t* pSrcThing = (mapthing_t*) gTmpBuffer.get();
+    mapthing_t* pSrcThing = (mapthing_t*) gTmpBuffer;
 
     for (int32_t thingIdx = 0; thingIdx < numThings; ++thingIdx) {
         // Endian correct the map thing and then spawn it
@@ -362,10 +362,10 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
     D_memset(gpLines->get(), std::byte(0), *gNumLines * sizeof(line_t));
 
     // Read the map lump containing the sidedefs into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+    W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Process the WAD linedefs and convert them into runtime linedefs
-    const maplinedef_t* pSrcLine = (maplinedef_t*) gTmpBuffer.get();
+    const maplinedef_t* pSrcLine = (maplinedef_t*) gTmpBuffer;
     line_t* pDstLine = gpLines->get();
 
     for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx) {
@@ -455,10 +455,10 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
     D_memset(gpSides->get(), std::byte(0), *gNumSides  * sizeof(side_t));
 
     // Read the map lump containing the sidedefs into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
+    W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Process the WAD sidedefs and convert them into runtime sidedefs
-    const mapsidedef_t* pSrcSide = (const mapsidedef_t*) gTmpBuffer.get();
+    const mapsidedef_t* pSrcSide = (const mapsidedef_t*) gTmpBuffer;
     side_t* pDstSide = gpSides->get();
 
     for (int32_t sideIdx = 0; sideIdx < *gNumSides; ++sideIdx) {
@@ -550,9 +550,9 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
     }
 
     // Read the map lump containing the leaf edges into a temp buffer from the map WAD
-    W_ReadMapLump(lumpNum, gTmpBuffer.get(), true);
-    const std::byte* const pLumpBeg = gTmpBuffer.get();
-    const std::byte* const pLumpEnd = gTmpBuffer.get() + lumpSize;
+    W_ReadMapLump(lumpNum, gTmpBuffer, true);
+    const std::byte* const pLumpBeg = gTmpBuffer;
+    const std::byte* const pLumpEnd = gTmpBuffer + lumpSize;
 
     // Determine the number of leafs in the lump.
     // The number of leafs MUST equal the number of subsectors, and they must be in the same order as their subsectors.
@@ -581,7 +581,7 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
     // Convert WAD leaf edges to runtime leaf edges and link them in with other map data structures
     *gTotalNumLeafEdges = 0;
 
-    const std::byte* pLumpByte = gTmpBuffer.get();
+    const std::byte* pLumpByte = gTmpBuffer;
     subsector_t* pSubsec = gpSubsectors->get();
     leafedge_t* pDstEdge = gpLeafEdges->get();
 
@@ -788,11 +788,11 @@ void P_Init() noexcept {
     //      be evicted by any wall texture loads below - since we forced the fill location to the start of the 3rd page.
     //
     // So if you want to support more than 16 flats or do a more flexible VRAM arrangement, this is the place to look..
-    *gLockedTexPagesMask |= 0b0000'0000'0010;
-    *gTCacheFillPage = 2;
-    *gTCacheFillCellX = 0;
-    *gTCacheFillCellY = 0;
-    *gTCacheFillRowCellH = 0;
+    gLockedTexPagesMask |= 0b0000'0000'0010;
+    gTCacheFillPage = 2;
+    gTCacheFillCellX = 0;
+    gTCacheFillCellY = 0;
+    gTCacheFillRowCellH = 0;
 
     // Initialize the sky texture, palette and do some more specialized setup if it's the fire sky
     gUpdateFireSkyFunc = nullptr;
@@ -853,11 +853,11 @@ void P_Init() noexcept {
     // Basically only the 3rd, 4th and 5th texture pages can be used for wall textures.
     // This gives a maximum wall texture area of 768x256 - everything else after that is reserved for sprites.
     // Even if the code above fills in more textures, they will eventually be evicted from the cache in favor of sprites.
-    *gLockedTexPagesMask |= 0b0000'0001'1100;
-    *gTCacheFillPage = 5;
-    *gTCacheFillCellX = 0;
-    *gTCacheFillCellY = 0;
-    *gTCacheFillRowCellH = 0;
+    gLockedTexPagesMask |= 0b0000'0001'1100;
+    gTCacheFillPage = 5;
+    gTCacheFillCellX = 0;
+    gTCacheFillCellY = 0;
+    gTCacheFillRowCellH = 0;
     
     // Clear out any floor or wall textures we had temporarily in RAM from the above caching.
     //
@@ -880,7 +880,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     Z_FreeTags(*gpMainMemZone, PU_CACHE|PU_LEVSPEC|PU_LEVEL);
 
     if (!*gbIsLevelBeingRestarted) {
-        *gLockedTexPagesMask &= 1;
+        gLockedTexPagesMask &= 1;
         Z_FreeTags(*gpMainMemZone, PU_ANIMATION);
     }
     
@@ -1206,10 +1206,10 @@ void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
     // Round the current fill position in the texture cache up to the nearest multiple of the given texture width.
     // This ensures that for instance 64 pixel textures are on 64 pixel boundaries on the x dimension.
     {
-        const int32_t cellX = *gTCacheFillCellX;
+        const int32_t cellX = gTCacheFillCellX;
         const int32_t cellW = ((width >= 0) ? width : width + 15) / TCACHE_CELL_SIZE;   // This is a signed floor() operation
         const int32_t cellXRnd = (cellX + (cellW - 1)) & (-cellW);                      // Note: '&(-cellW)' chops off the unwanted lower bits from the result
-        *gTCacheFillCellX = cellXRnd;
+        gTCacheFillCellX = cellXRnd;
     }
 
     // Run through all the sides in the map and cache textures with the specified width

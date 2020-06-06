@@ -132,7 +132,7 @@ gameaction_t TIC_ControlsScreen() noexcept {
     else if (ticButtons & PAD_ACTION_BTNS) {
         // One of the right action buttons is pressed on the default configuration slot.
         // Restore the control bindings to their defaults and play a sound to acknowledge the change:
-        D_memcpy(gCtrlBindings.get(), gDefaultCtrlBindings, sizeof(gDefaultCtrlBindings));
+        D_memcpy(gCtrlBindings, gDefaultCtrlBindings, sizeof(gDefaultCtrlBindings));
         S_StartSound(nullptr, sfx_swtchx);
     }
 
@@ -169,7 +169,7 @@ void DRAW_ControlsScreen() noexcept {
 
     // Draw which button each action is bound to
     {
-        const padbuttons_t* pCtrlBinding = gCtrlBindings.get();
+        const padbuttons_t* pCtrlBinding = gCtrlBindings;
         int16_t ypos = 45;
 
         for (int16_t ctrlBindIdx = 0; ctrlBindIdx < NUM_CTRL_BINDS; ++ctrlBindIdx, ++pCtrlBinding) {

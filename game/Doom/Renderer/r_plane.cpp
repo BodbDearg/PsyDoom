@@ -48,14 +48,14 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
             pLumpData = (*gpLumpCache)[tex.lumpNum].get();
         } else {
             const void* pCompressedLumpData = (*gpLumpCache)[tex.lumpNum].get();
-            decode(pCompressedLumpData, gTmpBuffer.get());
-            pLumpData = gTmpBuffer.get();
+            decode(pCompressedLumpData, gTmpBuffer);
+            pLumpData = gTmpBuffer;
         }
 
         // Load the decompressed texture to the required part of VRAM and mark as loaded
         const RECT vramRect = getTextureVramRect(tex);
         LIBGPU_LoadImage(vramRect, (uint16_t*) pLumpData + 4);      // TODO: figure out what 8 bytes are being skipped
-        tex.uploadFrameNum = *gNumFramesDrawn;
+        tex.uploadFrameNum = gNumFramesDrawn;
     }
 
     // Setup the texture window so that repeating occurs.

@@ -96,45 +96,56 @@ constexpr uint8_t   NET_PACKET_HEADER   = 0xAA;     // The 1st byte in every net
 // The texture cache data structure, where we are filling in the cache next and the current fill row height (in cells).
 static const VmPtr<VmPtr<tcache_t>> gpTexCache(0x80077F74);
 
-const VmPtr<uint32_t>   gTCacheFillPage(0x80078028);
-const VmPtr<uint32_t>   gTCacheFillCellX(0x800782E4);
-const VmPtr<uint32_t>   gTCacheFillCellY(0x800782E8);
-const VmPtr<uint32_t>   gTCacheFillRowCellH(0x80078278);
+uint32_t    gTCacheFillPage;
+uint32_t    gTCacheFillCellX;
+uint32_t    gTCacheFillCellY;
+uint32_t    gTCacheFillRowCellH;
 
 // Texture cache: a bit mask of which texture pages (past the initial 4 which are reserved for the framebuffer) are 'locked' during gameplay.
 // Locked texture pages are not allowed to be unloaded and are used for UI sprites, wall and floor textures.
 // Sprites on the other hand are placed in 'unlocked' texture pages and can be evicted at any time.
-const VmPtr<uint32_t> gLockedTexPagesMask(0x80077C08);
+uint32_t gLockedTexPagesMask;
 
 // A 64-KB buffer used for WAD loading and other stuff
-const VmPtr<std::byte[TMP_BUFFER_SIZE]> gTmpBuffer(0x80098748);
+std::byte gTmpBuffer[TMP_BUFFER_SIZE];
 
 // Video vblank timers: track the total amount, last total and current elapsed amount
-const VmPtr<uint32_t> gTotalVBlanks(0x80077E98);
-const VmPtr<uint32_t> gLastTotalVBlanks(0x80078114);
-const VmPtr<uint32_t> gElapsedVBlanks(0x800781BC);
+uint32_t gTotalVBlanks;
+uint32_t gLastTotalVBlanks;
+uint32_t gElapsedVBlanks;
 
 // The index of the currently displaying framebuffer, 0 or 1
-const VmPtr<uint32_t> gCurDispBufferIdx(0x800780F8);
+uint32_t gCurDispBufferIdx;
 
 // The draw and display environments for framebuffers 0 and 1
-const VmPtr<DISPENV[2]> gDispEnvs(0x800A9164);
-const VmPtr<DRAWENV[2]> gDrawEnvs(0x800A90AC);
+DISPENV gDispEnvs[2];
+DRAWENV gDrawEnvs[2];
 
 // Used to tell when the texture cache overflows.
 // Each texture when added to the cache is assigned the current value of this number.
 // When the time comes to evict a texture to make room for another, we check to make sure that the texture wasn't loaded in the current frame.
 // If the evicted texture WAS loaded in the current frame, then it means we've run out of texture memory and can't draw all of the textures in the frame.
-const VmPtr<uint32_t> gNumFramesDrawn(0x80077C10);
+uint32_t gNumFramesDrawn;
 
 // The index of the user's player in the array of players: whether you are player 1 or 2 in other words
-const VmPtr<int32_t> gCurPlayerIndex(0x80077618);
+int32_t gCurPlayerIndex;
 
-// Control related stuff
-const VmPtr<padbuttons_t[NUM_CTRL_BINDS]>                       gCtrlBindings(0x80073E0C);              // This players control bindings
-const VmPtr<padbuttons_t[NUM_CTRL_BINDS]>                       gOtherPlayerCtrlBindings(0x800782FC);   // Control bindings for the remote player
-const VmPtr<VmPtr<padbuttons_t[NUM_CTRL_BINDS]>[MAXPLAYERS]>    gpPlayerCtrlBindings(0x80077FC8);       // Pointer to control bindings for player 1 and 2
+// This player's control bindings
+padbuttons_t gCtrlBindings[NUM_CTRL_BINDS] = {
+    PAD_TRIANGLE,
+    PAD_CIRCLE,
+    PAD_CROSS,
+    PAD_SQUARE,
+    PAD_L1,
+    PAD_R1,
+    PAD_L2,
+    PAD_R2
+};
 
+padbuttons_t  gOtherPlayerCtrlBindings[NUM_CTRL_BINDS];       // Control bindings for the remote player
+padbuttons_t* gpPlayerCtrlBindings[MAXPLAYERS];               // Pointer to control bindings for player 1 and 2
+
+// Bit masks for each of the bindable buttons
 const padbuttons_t gBtnMasks[NUM_BINDABLE_BTNS] = {
     PAD_TRIANGLE,   // bindablebtn_triangle
     PAD_CIRCLE,     // bindablebtn_circle
@@ -157,23 +168,23 @@ const VmPtr<texture_t>  gTex_NETERR(0x80097AF0);
 const VmPtr<texture_t>  gTex_CONNECT(0x80097B10);
 
 // PSX Kernel events that fire when reads and writes complete for Serial I/O in a multiplayer game
-static const VmPtr<uint32_t>    gSioReadDoneEvent(0x80077F24);
-static const VmPtr<uint32_t>    gSioWriteDoneEvent(0x80078040);
+static uint32_t gSioReadDoneEvent;
+static uint32_t gSioWriteDoneEvent;
 
 // File descriptors for the input/output streams used for multiplayer games.
 // These are opened against the Serial I/O device (PlayStation Link Cable).
-static const VmPtr<int32_t>     gNetInputFd(0x80078234);
-static const VmPtr<int32_t>     gNetOutputFd(0x80077F14);
+static int32_t gNetInputFd;
+static int32_t gNetOutputFd;
 
 // The packet buffers for sending and receiving in a multiplayer game.
 // The link cable allows 8 bytes to be sent and received at a time.
-static const VmPtr<uint8_t[NET_PACKET_SIZE]>    gNetInputPacket(0x80077EA8);
-static const VmPtr<uint8_t[NET_PACKET_SIZE]>    gNetOutputPacket(0x80077FB0);
+static uint8_t gNetInputPacket[NET_PACKET_SIZE];
+static uint8_t gNetOutputPacket[NET_PACKET_SIZE];
 
 // Buffers used originally by the PsyQ SDK to store gamepad input.
 // In PsyDoom they are just here for historical reference.
-static const VmPtr<uint8_t[34]>     gPadInputBuffer_1(0x80097788);
-static const VmPtr<uint8_t[34]>     gPadInputBuffer_2(0x800978EC);
+static uint8_t gPadInputBuffer_1[34];
+static uint8_t gPadInputBuffer_2[34];
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // User/client entrypoint for PlayStation DOOM.
@@ -207,7 +218,7 @@ void I_PSXInit() noexcept {
     LIBGPU_SetGraphDebug(0);
 
     // Initialize the gamepad
-    LIBAPI_InitPAD(gPadInputBuffer_1.get(), gPadInputBuffer_2.get(), 34, 34);
+    LIBAPI_InitPAD(gPadInputBuffer_1, gPadInputBuffer_2, 34, 34);
     LIBAPI_StartPAD();
     LIBAPI_ChangeClearPAD(0);
 
@@ -232,7 +243,7 @@ void I_PSXInit() noexcept {
     LIBGPU_SetDefDispEnv(gDispEnvs[1], 0, 0, 256, 240);
     
     // Start off presenting this framebuffer
-    *gCurDispBufferIdx = 0;
+    gCurDispBufferIdx = 0;
     
     // Not sure why interrupts are being disabled and then immediately re-enabled, perhaps to flush out some state?
     LIBAPI_EnterCriticalSection();
@@ -246,14 +257,14 @@ void I_PSXInit() noexcept {
     //
     LIBCOMB_AddCOMB();
     
-    *gSioReadDoneEvent = LIBAPI_OpenEvent(HwSIO, EvSpIOER, EvMdNOINTR, nullptr);
-    LIBAPI_EnableEvent(*gSioReadDoneEvent);
+    gSioReadDoneEvent = LIBAPI_OpenEvent(HwSIO, EvSpIOER, EvMdNOINTR, nullptr);
+    LIBAPI_EnableEvent(gSioReadDoneEvent);
     
-    *gSioWriteDoneEvent = LIBAPI_OpenEvent(HwSIO, EvSpIOEW, EvMdNOINTR, nullptr);
-    LIBAPI_EnableEvent(*gSioWriteDoneEvent);
+    gSioWriteDoneEvent = LIBAPI_OpenEvent(HwSIO, EvSpIOEW, EvMdNOINTR, nullptr);
+    LIBAPI_EnableEvent(gSioWriteDoneEvent);
 
-    *gNetOutputFd = LIBAPI_open("sio:", O_WRONLY);
-    *gNetInputFd = LIBAPI_open("sio:", O_RDONLY | O_NOWAIT);
+    gNetOutputFd = LIBAPI_open("sio:", O_WRONLY);
+    gNetInputFd = LIBAPI_open("sio:", O_RDONLY | O_NOWAIT);
 
     LIBCOMB_CombSetBPS(38400);
         
@@ -330,8 +341,8 @@ void I_LoadAndCacheTexLump(texture_t& tex, const char* const name, int32_t lumpN
     const bool bIsCompressed = (!gpbIsUncompressedLump[lumpNum]);
 
     if (bIsCompressed) {
-        decode(pLumpData, gTmpBuffer.get());
-        pLumpData = gTmpBuffer.get();
+        decode(pLumpData, gTmpBuffer);
+        pLumpData = gTmpBuffer;
     }
 
     // Populate the basic info for the texture
@@ -418,8 +429,8 @@ void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos,
     // Make sure the GPU is idle and copy the front buffer to the back buffer, will draw over that
     LIBGPU_DrawSync(0);
 
-    const DISPENV& frontBuffer = gDispEnvs[*gCurDispBufferIdx];
-    const DISPENV& backBuffer = gDispEnvs[*gCurDispBufferIdx ^ 1];
+    const DISPENV& frontBuffer = gDispEnvs[gCurDispBufferIdx];
+    const DISPENV& backBuffer = gDispEnvs[gCurDispBufferIdx ^ 1];
     LIBGPU_MoveImage(frontBuffer.disp, backBuffer.disp.x, backBuffer.disp.y);
 
     // Ensure the plaque is loaded
@@ -436,7 +447,7 @@ void I_DrawLoadingPlaque(texture_t& tex, const int16_t xpos, const int16_t ypos,
 // Increments the 'drawn frame' counter used to track texture cache overflows
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_IncDrawnFrameCount() noexcept {
-    *gNumFramesDrawn += 1;
+    gNumFramesDrawn++;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -452,9 +463,9 @@ void I_DrawPresent() noexcept {
     LIBETC_VSync(0);
 
     // Swap the framebuffers
-    *gCurDispBufferIdx ^= 1;
-    LIBGPU_PutDrawEnv(gDrawEnvs[*gCurDispBufferIdx]);
-    LIBGPU_PutDispEnv(gDispEnvs[*gCurDispBufferIdx]);
+    gCurDispBufferIdx ^= 1;
+    LIBGPU_PutDrawEnv(gDrawEnvs[gCurDispBufferIdx]);
+    LIBGPU_PutDispEnv(gDispEnvs[gCurDispBufferIdx]);
 
     // PC-PSX: copy the PSX framebuffer to the display
     #if PC_PSX_DOOM_MODS
@@ -473,11 +484,11 @@ void I_DrawPresent() noexcept {
 
     // Continously poll and wait until the required number of vblanks have elapsed before continuing
     while (true) {
-        *gTotalVBlanks = LIBETC_VSync(-1);
-        *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
+        gTotalVBlanks = LIBETC_VSync(-1);
+        gElapsedVBlanks = gTotalVBlanks - gLastTotalVBlanks;
 
         // Has the required time passed?
-        if (*gElapsedVBlanks >= minElapsedVBlanks)
+        if (gElapsedVBlanks >= minElapsedVBlanks)
             break;
 
         // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
@@ -491,22 +502,22 @@ void I_DrawPresent() noexcept {
     // Demo playback or recording is forced to run at 15 Hz all of the time (the game simulation rate).
     // Probably done so the simulation remains consistent!
     if (*gbDemoPlayback || *gbDemoRecording) {
-        while (*gElapsedVBlanks < 4) {
+        while (gElapsedVBlanks < 4) {
             // PC-PSX: do platform updates (sound, window etc.) and yield some cpu since we are waiting for a bit
             #if PC_PSX_DOOM_MODS
                 Utils::doPlatformUpdates();
                 Utils::threadYield();
             #endif
 
-            *gTotalVBlanks = LIBETC_VSync(-1);
-            *gElapsedVBlanks = *gTotalVBlanks - *gLastTotalVBlanks;
+            gTotalVBlanks = LIBETC_VSync(-1);
+            gElapsedVBlanks = gTotalVBlanks - gLastTotalVBlanks;
         }
 
-        *gElapsedVBlanks = 4;
+        gElapsedVBlanks = 4;
     }
 
     // So we can compute the elapsed vblank amount next time round
-    *gLastTotalVBlanks = *gTotalVBlanks;
+    gLastTotalVBlanks = gTotalVBlanks;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -514,7 +525,7 @@ void I_DrawPresent() noexcept {
 // This function appears to be unused in the retail game, probably more simple to use polling instead and not deal with interrupts?
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_VsyncCallback() noexcept {
-    *gTotalVBlanks += 1;
+    gTotalVBlanks++;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -534,28 +545,28 @@ void I_Init() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_CacheTex(texture_t& tex) noexcept {
     // First update the frame the texture was added to the cache, for tracking overflows
-    tex.uploadFrameNum = *gNumFramesDrawn;
+    tex.uploadFrameNum = gNumFramesDrawn;
 
     // If the texture is already in the cache then there is nothing else to do
     if (tex.texPageId != 0)
         return;
 
-    const uint32_t startTCacheFillPage = *gTCacheFillPage;
+    const uint32_t startTCacheFillPage = gTCacheFillPage;
     VmPtr<texture_t>* pTexStartCacheCell = nullptr;
 
     {
     find_free_tcache_location:
         // Move onto another row in the texture cache if this row can't accomodate the texture
-        if (*gTCacheFillCellX + tex.width16 > TCACHE_CELLS_X) {
-            *gTCacheFillCellY = *gTCacheFillCellY + *gTCacheFillRowCellH;
-            *gTCacheFillCellX = 0;
-            *gTCacheFillRowCellH = 0;
+        if (gTCacheFillCellX + tex.width16 > TCACHE_CELLS_X) {
+            gTCacheFillCellY += gTCacheFillRowCellH;
+            gTCacheFillCellX = 0;
+            gTCacheFillRowCellH = 0;
         }
         
         // Move onto another page in the texture cache if this page can't accomodate the texture.
         // Find one that is not locked and which is available for modification.
-        if (*gTCacheFillCellY + tex.height16 > TCACHE_CELLS_Y) {
-            const uint32_t lockedTPages = *gLockedTexPagesMask;
+        if (gTCacheFillCellY + tex.height16 > TCACHE_CELLS_Y) {
+            const uint32_t lockedTPages = gLockedTexPagesMask;
 
             // PC-PSX: if all the pages are locked this code will loop forever.
             // If this situation arises go straight to the overflow error so we can at least report the problem.
@@ -564,30 +575,30 @@ void I_CacheTex(texture_t& tex) noexcept {
             #endif
                     // Continue moving to the next texture page and wraparound if required until we find one that is not locked
                     do {
-                        *gTCacheFillPage += 1;
-                        *gTCacheFillPage -= (*gTCacheFillPage / NUM_TCACHE_PAGES) * NUM_TCACHE_PAGES;
-                    } while ((lockedTPages >> *gTCacheFillPage) & 1);
+                        gTCacheFillPage++;
+                        gTCacheFillPage -= (gTCacheFillPage / NUM_TCACHE_PAGES) * NUM_TCACHE_PAGES;
+                    } while ((lockedTPages >> gTCacheFillPage) & 1);
             #if PC_PSX_DOOM_MODS
                 }
             #endif
 
             // If we wound up back where we started then there's nowhere in the cache to fit this texture.
             // This is where the imfamous overflow error kicks in...
-            if (*gTCacheFillPage == startTCacheFillPage) {
+            if (gTCacheFillPage == startTCacheFillPage) {
                 I_Error("Texture Cache Overflow\n");
             }
 
-            *gTCacheFillCellX = 0;
-            *gTCacheFillCellY = 0;
-            *gTCacheFillRowCellH = 0;
+            gTCacheFillCellX = 0;
+            gTCacheFillCellY = 0;
+            gTCacheFillRowCellH = 0;
         }
 
         // At the current fill location search all of the cells in the texture cache that this texture would occupy.
         // Make sure all of the cells are free and available for use before we can proceed.
         // If cells are not free then evict whatever is in the cache if allowed, otherwise skip past it.
         tcache_t& tcache = **gpTexCache;
-        tcachepage_t& tcachepage = tcache.pages[*gTCacheFillPage];
-        pTexStartCacheCell = &tcachepage.cells[*gTCacheFillCellY][*gTCacheFillCellX];
+        tcachepage_t& tcachepage = tcache.pages[gTCacheFillPage];
+        pTexStartCacheCell = &tcachepage.cells[gTCacheFillCellY][gTCacheFillCellX];
 
         {
             // Iterate through all the cells this texture would occupy
@@ -605,13 +616,13 @@ void I_CacheTex(texture_t& tex) noexcept {
 
                     // Cell is not empty! If the texture in the cell is in use for this frame then we can't evict it.
                     // In this case skip past the texture and try again:
-                    if (pCellTex->uploadFrameNum == *gNumFramesDrawn) {
-                        *gTCacheFillCellX += pCellTex->width16;
+                    if (pCellTex->uploadFrameNum == gNumFramesDrawn) {
+                        gTCacheFillCellX += pCellTex->width16;
 
                         // We may need to skip onto the next row on retry also, make sure we have the right row height recorded.
                         // The row height is the max of all the texture heights on the row basically:
-                        if (*gTCacheFillRowCellH < pCellTex->height16) {
-                            *gTCacheFillRowCellH = pCellTex->height16;
+                        if (gTCacheFillRowCellH < pCellTex->height16) {
+                            gTCacheFillRowCellH = pCellTex->height16;
                         }
 
                         goto find_free_tcache_location;
@@ -648,20 +659,20 @@ void I_CacheTex(texture_t& tex) noexcept {
     const bool bIsTexCompressed = (!gpbIsUncompressedLump[tex.lumpNum]);
 
     if (bIsTexCompressed) {
-        decode(pTexData, gTmpBuffer.get());
-        pTexData = gTmpBuffer.get();
+        decode(pTexData, gTmpBuffer);
+        pTexData = gTmpBuffer;
     }
 
     // Upload the texture to VRAM at the current fill location
     {
-        const uint16_t tpageU = TEX_PAGE_VRAM_TEXCOORDS[*gTCacheFillPage][0];
-        const uint16_t tpageV = TEX_PAGE_VRAM_TEXCOORDS[*gTCacheFillPage][1];
+        const uint16_t tpageU = TEX_PAGE_VRAM_TEXCOORDS[gTCacheFillPage][0];
+        const uint16_t tpageV = TEX_PAGE_VRAM_TEXCOORDS[gTCacheFillPage][1];
         
         RECT dstVramRect;
         LIBGPU_setRECT(
             dstVramRect,
-            (int16_t)(tpageU + (*gTCacheFillCellX) * (TCACHE_CELL_SIZE / 2)),
-            (int16_t)(tpageV + (*gTCacheFillCellY) * TCACHE_CELL_SIZE),
+            (int16_t)(tpageU + gTCacheFillCellX * TCACHE_CELL_SIZE / 2),
+            (int16_t)(tpageV + gTCacheFillCellY * TCACHE_CELL_SIZE),
             tex.width / 2,
             tex.height
         );
@@ -670,23 +681,23 @@ void I_CacheTex(texture_t& tex) noexcept {
     }
 
     // Save the textures page coordinate
-    tex.texPageCoordX = (uint8_t)((*gTCacheFillCellX) * TCACHE_CELL_SIZE);
-    tex.texPageCoordY = (uint8_t)((*gTCacheFillCellY) * TCACHE_CELL_SIZE);
+    tex.texPageCoordX = (uint8_t)(gTCacheFillCellX * TCACHE_CELL_SIZE);
+    tex.texPageCoordY = (uint8_t)(gTCacheFillCellY * TCACHE_CELL_SIZE);
     
     // Get and save the texture page id.
     tex.texPageId = LIBGPU_GetTPage(
         1,                                                                  // Format 1 = 8 bpp (indexed)
         0,                                                                  // Note: transparency bits are added later during rendering
-        (*gTCacheFillPage + TCACHE_BASE_PAGE) * (TCACHE_PAGE_SIZE / 2),     // Note: must skip the first 4 pages (framebuffer) and also coord is divided by 2 because the data is 8-bit rather than 16-bit
-        TEX_PAGE_VRAM_TEXCOORDS[*gTCacheFillPage][1]
+        (gTCacheFillPage + TCACHE_BASE_PAGE) * (TCACHE_PAGE_SIZE / 2),      // Note: must skip the first 4 pages (framebuffer) and also coord is divided by 2 because the data is 8-bit rather than 16-bit
+        TEX_PAGE_VRAM_TEXCOORDS[gTCacheFillPage][1]
     );
 
     // Advance the fill position in the texture cache.
     // Also expand the fill row height if this texture is taller than the current height.
-    *gTCacheFillCellX += tex.width16;
+    gTCacheFillCellX += tex.width16;
 
-    if (*gTCacheFillRowCellH < tex.height16) {
-        *gTCacheFillRowCellH = tex.height16;
+    if (gTCacheFillRowCellH < tex.height16) {
+        gTCacheFillRowCellH = tex.height16;
     }
 }
 
@@ -723,7 +734,7 @@ void I_PurgeTexCache() noexcept {
 
     for (int32_t texPageIdx = 0; texPageIdx < NUM_TCACHE_PAGES; ++texPageIdx) {
         // Leave this texture page alone and skip past it if it is locked
-        const uint32_t lockedTCachePages = *gLockedTexPagesMask;
+        const uint32_t lockedTCachePages = gLockedTexPagesMask;
 
         // PC-PSX: this could potentially skip past the last texture cache page if it is locked.
         // It doesn't happen in practice because the last pages are always used for sprites and unlocked, but
@@ -770,25 +781,25 @@ void I_PurgeTexCache() noexcept {
     //
     // PC-PSX: I also added an additional safety check here.
     // If all the pages are locked for some reason this code would loop forever, check for that situation first.
-    const uint32_t lockedTPages = *gLockedTexPagesMask;
-    *gTCacheFillPage = 0;
+    const uint32_t lockedTPages = gLockedTexPagesMask;
+    gTCacheFillPage = 0;
     
     #if PC_PSX_DOOM_MODS
         if ((lockedTPages & ALL_TPAGES_MASK) != ALL_TPAGES_MASK) {
     #endif
             // Move onto the next texture cache page and wraparound, until we find an unlocked page to settle on
-            while ((lockedTPages >> *gTCacheFillPage) & 1) {
-                *gTCacheFillPage += 1;
-                *gTCacheFillPage -= (*gTCacheFillPage / NUM_TCACHE_PAGES) * NUM_TCACHE_PAGES;
+            while ((lockedTPages >> gTCacheFillPage) & 1) {
+                gTCacheFillPage++;
+                gTCacheFillPage -= (gTCacheFillPage / NUM_TCACHE_PAGES) * NUM_TCACHE_PAGES;
             }
     #if PC_PSX_DOOM_MODS
         }
     #endif
 
     // Reset the other fill parameters
-    *gTCacheFillCellX = 0;
-    *gTCacheFillCellY = 0;
-    *gTCacheFillRowCellH = 0;
+    gTCacheFillCellX = 0;
+    gTCacheFillCellY = 0;
+    gTCacheFillRowCellH = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -905,8 +916,8 @@ void I_NetSetup() noexcept {
     // Allow the player to abort with the select button also, if a network game is no longer desired.
     if (bIsPlayer1) {
         // Player 1 waits to read from Player 2 firstly
-        *gCurPlayerIndex = 0;
-        LIBAPI_read(*gNetInputFd, gNetInputPacket.get(), NET_PACKET_SIZE);
+        gCurPlayerIndex = 0;
+        LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
 
         // PC-PSX: don't need do any of this anymore, read blocks until complete and clear to send no longer applies!
         #if !PC_PSX_DOOM_MODS
@@ -917,19 +928,19 @@ void I_NetSetup() noexcept {
                     LIBCOMB_CombCancelRead();
                     return;
                 }
-            } while (!LIBAPI_TestEvent(*gSioReadDoneEvent));
+            } while (!LIBAPI_TestEvent(gSioReadDoneEvent));
 
             // Wait until we are cleared to send to the receiver
             while (!LIBCOMB_CombCTS()) {}
         #endif
 
         // Send the dummy packet to the client
-        LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
+        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
     } else {
         // Player 2 writes a packet to Player 1 firstly
-        *gCurPlayerIndex = true;
-        LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
-        LIBAPI_read(*gNetInputFd, gNetInputPacket.get(), NET_PACKET_SIZE);
+        gCurPlayerIndex = true;
+        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
+        LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
 
         // PC-PSX: don't need do any of this anymore, read blocks until complete...
         #if !PC_PSX_DOOM_MODS
@@ -940,7 +951,7 @@ void I_NetSetup() noexcept {
                     LIBCOMB_CombCancelRead();
                     return;
                 }
-            } while (!LIBAPI_TestEvent(*gSioReadDoneEvent));
+            } while (!LIBAPI_TestEvent(gSioReadDoneEvent));
         #endif
     }
     
@@ -948,13 +959,13 @@ void I_NetSetup() noexcept {
     I_NetHandshake();
 
     // Send the game details if player 1, if player 2 then receive them:
-    if (*gCurPlayerIndex == 0) {
+    if (gCurPlayerIndex == 0) {
         // Fill in the packet details with game type, skill, map and this player's control bindings
         gNetOutputPacket[1] = (uint8_t) gStartGameType;
         gNetOutputPacket[2] = (uint8_t) gStartSkill;
         gNetOutputPacket[3] = (uint8_t) gStartMapOrEpisode;
 
-        const uint32_t thisPlayerBtns = I_LocalButtonsToNet(gCtrlBindings.get());
+        const uint32_t thisPlayerBtns = I_LocalButtonsToNet(gCtrlBindings);
         gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
         gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
         gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
@@ -966,14 +977,14 @@ void I_NetSetup() noexcept {
             while (!LIBCOMB_CombCTS()) {}
         #endif
 
-        LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
+        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
 
         // Read the control bindings for the other player and wait until it is read.
         // PC-PSX: read already blocks, no need to wait.
-        LIBAPI_read(*gNetInputFd, gNetInputPacket.get(), NET_PACKET_SIZE);
+        LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
 
         #if !PC_PSX_DOOM_MODS
-            while (!LIBAPI_TestEvent(*gSioReadDoneEvent)) {}
+            while (!LIBAPI_TestEvent(gSioReadDoneEvent)) {}
         #endif
 
         const uint32_t otherPlayerBtns = (
@@ -984,16 +995,16 @@ void I_NetSetup() noexcept {
         );
 
         // Save the control bindings for both players
-        gpPlayerCtrlBindings[0] = ptrToVmAddr(gCtrlBindings.get());
-        gpPlayerCtrlBindings[1] = ptrToVmAddr(I_NetButtonsToLocal(otherPlayerBtns));
+        gpPlayerCtrlBindings[0] = gCtrlBindings;
+        gpPlayerCtrlBindings[1] = I_NetButtonsToLocal(otherPlayerBtns);
     }
     else {
         // Read the game details and control bindings for the other player and wait until it is read.
         // PC-PSX: read already blocks, no need to wait.
-        LIBAPI_read(*gNetInputFd, gNetInputPacket.get(), NET_PACKET_SIZE);
+        LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
 
         #if !PC_PSX_DOOM_MODS
-            while (!LIBAPI_TestEvent(*gSioReadDoneEvent)) {}
+            while (!LIBAPI_TestEvent(gSioReadDoneEvent)) {}
         #endif
         
         // Save the game details and the control bindings
@@ -1007,11 +1018,11 @@ void I_NetSetup() noexcept {
         gStartGameType = (gametype_t) gNetInputPacket[1];
         gStartSkill = (skill_t) gNetInputPacket[2];
         gStartMapOrEpisode = gNetInputPacket[3];
-        gpPlayerCtrlBindings[0] = ptrToVmAddr(I_NetButtonsToLocal(otherPlayerBtns));
-        gpPlayerCtrlBindings[1] = ptrToVmAddr(gCtrlBindings.get());
+        gpPlayerCtrlBindings[0] = I_NetButtonsToLocal(otherPlayerBtns);
+        gpPlayerCtrlBindings[1] = gCtrlBindings;
 
         // For the output packet send the control bindings of this player to the other player
-        const uint32_t thisPlayerBtns = I_LocalButtonsToNet(gCtrlBindings.get());
+        const uint32_t thisPlayerBtns = I_LocalButtonsToNet(gCtrlBindings);
         gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
         gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
         gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
@@ -1023,7 +1034,7 @@ void I_NetSetup() noexcept {
             while (!LIBCOMB_CombCTS()) {}
         #endif
         
-        LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
+        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
     }
 
     // PC-PSX: one last check to see if the network connection was killed.
@@ -1052,9 +1063,9 @@ bool I_NetUpdate() noexcept {
     gNetOutputPacket[1] = (uint8_t)(player1Mobj.x ^ player1Mobj.y ^ player2Mobj.x ^ player2Mobj.y);
 
     // Send the elapsed tics for this player and the buttons pressed
-    gNetOutputPacket[2] = (uint8_t)(gPlayersElapsedVBlanks[*gCurPlayerIndex]);
+    gNetOutputPacket[2] = (uint8_t)(gPlayersElapsedVBlanks[gCurPlayerIndex]);
 
-    const uint32_t thisPlayerBtns = gTicButtons[*gCurPlayerIndex];
+    const uint32_t thisPlayerBtns = gTicButtons[gCurPlayerIndex];
     gNetOutputPacket[4] = (uint8_t)(thisPlayerBtns >> 0);
     gNetOutputPacket[5] = (uint8_t)(thisPlayerBtns >> 8);
     gNetOutputPacket[6] = (uint8_t)(thisPlayerBtns >> 16);
@@ -1077,9 +1088,9 @@ bool I_NetUpdate() noexcept {
         // Uses the current image as the basis for the next frame; copy the presented framebuffer to the drawing framebuffer:
         LIBGPU_DrawSync(0);
         LIBGPU_MoveImage(
-            gDispEnvs[*gCurDispBufferIdx].disp,
-            gDispEnvs[*gCurDispBufferIdx ^ 1].disp.x,
-            gDispEnvs[*gCurDispBufferIdx ^ 1].disp.y
+            gDispEnvs[gCurDispBufferIdx].disp,
+            gDispEnvs[gCurDispBufferIdx ^ 1].disp.x,
+            gDispEnvs[gCurDispBufferIdx ^ 1].disp.y
         );
 
         // Show the 'Network error' plaque
@@ -1126,7 +1137,7 @@ bool I_NetUpdate() noexcept {
         ((uint32_t) gNetInputPacket[7] << 24)
     );
 
-    if (*gCurPlayerIndex == 0) {
+    if (gCurPlayerIndex == 0) {
         gTicButtons[1] = otherPlayerBtns;
         gPlayersElapsedVBlanks[1] = gNetInputPacket[2];
     } else {
@@ -1170,7 +1181,7 @@ void I_NetHandshake() noexcept {
 void I_NetSendRecv() noexcept {
     while (true) {
         // Which of the two players are we doing comms for?
-        if (*gCurPlayerIndex == 0) {
+        if (gCurPlayerIndex == 0) {
             // Player 1: start by waiting until we are clear to send.
             // PC-PSX: No wait for clear to send here.
             #if !PC_PSX_DOOM_MODS
@@ -1178,11 +1189,11 @@ void I_NetSendRecv() noexcept {
             #endif
             
             // Write the output packet
-            LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
+            LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
 
             // Read the input packet and wait until it's done.
             // Timeout after 5 seconds and retry the entire send/receive procedure.
-            LIBAPI_read(*gNetInputFd, gNetInputPacket.get(), NET_PACKET_SIZE);
+            LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
 
             // PC-PSX: don't need to wait here - read now blocks itself:
             #if PC_PSX_DOOM_MODS
@@ -1192,7 +1203,7 @@ void I_NetSendRecv() noexcept {
             
                 while (true) {
                     // If the read is done then we can finish up this round of sending/receiving
-                    if (LIBAPI_TestEvent(*gSioReadDoneEvent))
+                    if (LIBAPI_TestEvent(gSioReadDoneEvent))
                         return;
 
                     // Timeout after 5 seconds if the read still isn't done...
@@ -1202,23 +1213,23 @@ void I_NetSendRecv() noexcept {
             #endif
         } else {
             // Player 2: start by reading the input packet
-            LIBAPI_read(*gNetInputFd, gNetInputPacket.get(), NET_PACKET_SIZE);
+            LIBAPI_read(gNetInputFd, gNetInputPacket, NET_PACKET_SIZE);
             
             // Wait until the input packet is read.
             // Timeout after 5 seconds and retry the entire send/receive procedure.
             // PC-PSX: no need to wait since the read operation already blocks, go straight to sending.
             #if PC_PSX_DOOM_MODS
-                LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
+                LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
                 break;
             #else
                 const int32_t startVBlanks = LIBETC_VSync(-1);
 
                 while (true) {
                     // Is the input packet done yet?
-                    if (LIBAPI_TestEvent(*gSioReadDoneEvent)) {
+                    if (LIBAPI_TestEvent(gSioReadDoneEvent)) {
                         // Yes we read it! Write the output packet and finish up once we are clear to send.
                         while (!LIBCOMB_CombCTS()) {}
-                        LIBAPI_write(*gNetOutputFd, gNetOutputPacket.get(), NET_PACKET_SIZE);
+                        LIBAPI_write(gNetOutputFd, gNetOutputPacket, NET_PACKET_SIZE);
                         return;
                     }
 
@@ -1296,5 +1307,5 @@ padbuttons_t* I_NetButtonsToLocal(const uint32_t encodedBindings) noexcept {
         gOtherPlayerCtrlBindings[bindingIdx] = gBtnMasks[buttonIdx];
     }
 
-    return gOtherPlayerCtrlBindings.get();
+    return gOtherPlayerCtrlBindings;
 }

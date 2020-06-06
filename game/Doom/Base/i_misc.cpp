@@ -207,7 +207,7 @@ void I_DrawStringSmall(const int32_t x, const int32_t y, const char* const str) 
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_DrawPausedOverlay() noexcept {
     // Draw the paused plaque unless disabled
-    const player_t& player = gPlayers[*gCurPlayerIndex];
+    const player_t& player = gPlayers[gCurPlayerIndex];
 
     if ((player.cheats & CF_NOPAUSEMSG) == 0) {
         I_CacheAndDrawSprite(*gTex_PAUSE, 107, 108, gPaletteClutIds[MAINPAL]);
@@ -245,7 +245,7 @@ void I_DrawPausedOverlay() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_UpdatePalette() noexcept {
     // Decide on red amount from current damage or scaled beserk time left (pick whichever is greatest)
-    player_t& player = gPlayers[*gCurPlayerIndex];
+    player_t& player = gPlayers[gCurPlayerIndex];
     int32_t redAmount = player.damagecount;
 
     if (player.powers[pw_strength] != 0) {

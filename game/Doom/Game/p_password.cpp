@@ -21,7 +21,7 @@ static inline uint8_t ceil8Div(const int32_t num, const int32_t den) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_ComputePassword(uint8_t pOutput[10]) noexcept {
     // Get the player to encode the password for and zero init the unencrypted password
-    player_t& player = gPlayers[*gCurPlayerIndex];
+    player_t& player = gPlayers[gCurPlayerIndex];
 
     uint8_t pwdata[8];
     D_memset(pwdata, std::byte(0), 8);

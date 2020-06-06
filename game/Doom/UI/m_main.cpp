@@ -114,7 +114,7 @@ gameaction_t RunMenu() noexcept {
 void M_Start() noexcept {
     // Assume no networked game initially
     *gNetGame = gt_single;
-    *gCurPlayerIndex = 0;
+    gCurPlayerIndex = 0;
     gbPlayerInGame[0] = true;
     gbPlayerInGame[1] = false;
 
@@ -175,7 +175,7 @@ void M_Start() noexcept {
     gDrawEnvs[1].isbg = false;
 
     // Draw the menu to the other framebuffer and do the cross fade
-    *gCurDispBufferIdx ^= 1;
+    gCurDispBufferIdx ^= 1;
     M_Drawer();
     I_CrossFadeFrameBuffers();
 

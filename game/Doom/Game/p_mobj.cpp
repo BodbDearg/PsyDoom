@@ -286,7 +286,7 @@ void P_SpawnPlayer(const mapthing_t& mapThing) noexcept {
     // Single player only logic
     if (*gNetGame == gt_single) {
         // Only process passwords if we are spawning the user's player
-        if (*gCurPlayerIndex != mapThing.type - 1)
+        if (gCurPlayerIndex != mapThing.type - 1)
             return;
         
         // Add weapons from a password (if we are using one)
@@ -300,7 +300,7 @@ void P_SpawnPlayer(const mapthing_t& mapThing) noexcept {
     }
 
     // Init the status bar and palette if we are spawning the user's player
-    if (*gCurPlayerIndex == mapThing.type - 1) {
+    if (gCurPlayerIndex == mapThing.type - 1) {
         ST_InitEveryLevel();
         I_UpdatePalette();
     }

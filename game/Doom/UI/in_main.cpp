@@ -390,20 +390,20 @@ void IN_CoopDrawer() noexcept {
     I_DrawString(57, 79, "Kills");
     I_DrawString(155, 79, "%");
     I_DrawString(228, 79, "%");
-    I_DrawNumber(143, 79, gKillValue[*gCurPlayerIndex]);
-    I_DrawNumber(216, 79, gKillValue[(*gCurPlayerIndex == 0) ? 1 : 0]);
+    I_DrawNumber(143, 79, gKillValue[gCurPlayerIndex]);
+    I_DrawNumber(216, 79, gKillValue[(gCurPlayerIndex == 0) ? 1 : 0]);
 
     I_DrawString(53, 101, "Items");
     I_DrawString(155, 101, "%");
     I_DrawString(228, 101, "%");
-    I_DrawNumber(143, 101, gItemValue[*gCurPlayerIndex]);
-    I_DrawNumber(216, 101, gItemValue[(*gCurPlayerIndex == 0) ? 1 : 0]);
+    I_DrawNumber(143, 101, gItemValue[gCurPlayerIndex]);
+    I_DrawNumber(216, 101, gItemValue[(gCurPlayerIndex == 0) ? 1 : 0]);
 
     I_DrawString(26, 123, "Secrets");
     I_DrawString(155, 123, "%");
     I_DrawString(228, 123, "%");
-    I_DrawNumber(143, 123, gSecretValue[*gCurPlayerIndex]);
-    I_DrawNumber(216, 123, gSecretValue[(*gCurPlayerIndex == 0) ? 1 : 0]);
+    I_DrawNumber(143, 123, gSecretValue[gCurPlayerIndex]);
+    I_DrawNumber(216, 123, gSecretValue[(gCurPlayerIndex == 0) ? 1 : 0]);
 
     // Only draw the next map and password if there is a next map
     if (*gNextMap < 60) {
@@ -411,7 +411,7 @@ void IN_CoopDrawer() noexcept {
         I_DrawString(-1, 165, gMapNames[*gNextMap - 1]);
 
         // Well this is mean! The current player only gets to see a password if not dead :(
-        if (gPlayers[*gCurPlayerIndex].health > 0) {
+        if (gPlayers[gCurPlayerIndex].health > 0) {
             I_DrawString(-1, 191, "Password");
 
             char passwordStr[PW_SEQ_LEN + 1];
@@ -439,7 +439,7 @@ void IN_DeathmatchDrawer() noexcept {
     const facesprite_t* pFaceSpriteP2;
     
     if (gFragValue[0] > gFragValue[1]) {
-        if (*gCurPlayerIndex == 0) {
+        if (gCurPlayerIndex == 0) {
             pFaceSpriteP1 = &gFaceSprites[EVILFACE];
             pFaceSpriteP2 = &gFaceSprites[DEADFACE];
         } else {
@@ -448,7 +448,7 @@ void IN_DeathmatchDrawer() noexcept {
         }
     }
     else if (gFragValue[0] < gFragValue[1]) {
-        if (*gCurPlayerIndex == 0) {
+        if (gCurPlayerIndex == 0) {
             pFaceSpriteP1 = &gFaceSprites[DEADFACE];
             pFaceSpriteP2 = &gFaceSprites[EVILFACE];
         } else {
@@ -493,8 +493,8 @@ void IN_DeathmatchDrawer() noexcept {
     I_DrawString(195, 102, "him");
 
     I_DrawString(35, 138, "Frags");
-    I_DrawNumber(133, 138, gFragValue[*gCurPlayerIndex]);
-    I_DrawNumber(206, 138, gFragValue[(*gCurPlayerIndex == 0) ? 1 : 0]);
+    I_DrawNumber(133, 138, gFragValue[gCurPlayerIndex]);
+    I_DrawNumber(206, 138, gFragValue[(gCurPlayerIndex == 0) ? 1 : 0]);
 
     // Only draw the next map if there is one
     if (*gNextMap <= NUM_MAPS) {

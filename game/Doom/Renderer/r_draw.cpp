@@ -42,7 +42,7 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
             pDstEdge->seg = pSrcEdge->seg;
             
             // Transform this leaf edge's vertexes if they need to be transformed
-            if (vert.frameUpdated != *gNumFramesDrawn) {
+            if (vert.frameUpdated != gNumFramesDrawn) {
                 const SVECTOR viewToPt = {
                     (int16_t)((vert.x - gViewX) >> 16),
                     0,
@@ -61,7 +61,7 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
                     vert.screenx = ((vert.scale * vert.viewx) >> FRACBITS) + HALF_SCREEN_W;
                 }
                 
-                vert.frameUpdated = *gNumFramesDrawn;
+                vert.frameUpdated = gNumFramesDrawn;
             }
         }
         
@@ -254,7 +254,7 @@ void R_FrontZClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
 
             // Mark the new vertex as having up-to-date transforms and populate the new edge created.
             // Note that the new edge will only have a seg it doesn't run along the clip plane.
-            newVert.frameUpdated = *gNumFramesDrawn;
+            newVert.frameUpdated = gNumFramesDrawn;
             pDstEdge->vertex = &newVert;
 
             if (planeDist1 > 0 && planeDist2 < 0) {
@@ -429,7 +429,7 @@ int32_t R_LeftEdgeClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
         newVert.screenx = ((newVert.viewx * newVert.scale) >> FRACBITS) + HALF_SCREEN_W;
 
         // Mark the new vertex as having up-to-date transforms
-        newVert.frameUpdated = *gNumFramesDrawn;
+        newVert.frameUpdated = gNumFramesDrawn;
 
         // If we get to here then we stored an edge so move along to the next edge and save the vertex/seg for the edge
         pDstEdge->vertex = &newVert;
@@ -535,7 +535,7 @@ int32_t R_RightEdgeClip(const leaf_t& inLeaf, leaf_t& outLeaf) noexcept {
         newVert.screenx = ((newVert.viewx * newVert.scale) >> FRACBITS) + HALF_SCREEN_W;
 
         // Mark the new vertex as having up-to-date transforms
-        newVert.frameUpdated = *gNumFramesDrawn;
+        newVert.frameUpdated = gNumFramesDrawn;
 
         // If we get to here then we stored an edge so move along to the next edge and save the vertex/seg for the edge
         pDstEdge->vertex = &newVert;

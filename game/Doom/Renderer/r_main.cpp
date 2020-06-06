@@ -83,7 +83,7 @@ void R_RenderPlayerView() noexcept {
     }
 
     // Store view parameters before drawing
-    player_t& player = gPlayers[*gCurPlayerIndex];
+    player_t& player = gPlayers[gCurPlayerIndex];
 
     gpViewPlayer = &player;
     gViewX = player.mo->x & (~FRACMASK);

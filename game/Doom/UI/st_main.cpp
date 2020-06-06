@@ -106,24 +106,24 @@ static spclface_e               gSpclFaceType;          // Which special face to
 //------------------------------------------------------------------------------------------------------------------------------------------
 void ST_Init() noexcept {
     // Expect no use of the texture cache at this point
-    if (*gTCacheFillPage != 0) {
+    if (gTCacheFillPage != 0) {
         I_Error("ST_Init: initial texture cache foulup\n");
     }
 
     // Load this into the first texture cache page and expect it to be resident there
     I_LoadAndCacheTexLump(*gTex_STATUS, "STATUS", 0);
 
-    if (*gTCacheFillPage != 0) {
+    if (gTCacheFillPage != 0) {
         I_Error("ST_Init: final texture cache foulup\n");
     }
 
     // Lock down the first texture cache page (keep in VRAM at all times) and move the next fill location to the next page after
-    *gLockedTexPagesMask |= 1;
+    gLockedTexPagesMask |= 1;
     
-    *gTCacheFillPage = 1;
-    *gTCacheFillCellX = 0;
-    *gTCacheFillCellY = 0;
-    *gTCacheFillRowCellH = 0;
+    gTCacheFillPage = 1;
+    gTCacheFillCellX = 0;
+    gTCacheFillCellY = 0;
+    gTCacheFillRowCellH = 0;
     
     // The STATUS texture can now be evicted from memory since it will always be in VRAM
     Z_FreeTags(*gpMainMemZone, PU_CACHE);
@@ -154,7 +154,7 @@ void ST_InitEveryLevel() noexcept {
 // Also updates the current palette used by the game.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void ST_Ticker() noexcept {
-    player_t& player = gPlayers[*gCurPlayerIndex];
+    player_t& player = gPlayers[gCurPlayerIndex];
 
     // Do face animation
     gFaceTics--;
@@ -309,7 +309,7 @@ void ST_Drawer() noexcept {
     spritePrim.clut = gPaletteClutIds[UIPAL];
     
     // Draw the current status bar message, or the map name (if in the automap)
-    player_t& player = gPlayers[*gCurPlayerIndex];
+    player_t& player = gPlayers[gCurPlayerIndex];
 
     if (gStatusBar.messageTicsLeft > 0) {
         I_DrawStringSmall(7, 193, gStatusBar.message);

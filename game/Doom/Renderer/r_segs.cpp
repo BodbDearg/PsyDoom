@@ -181,13 +181,13 @@ void R_DrawWallPiece(
     if (tex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         // Decompress and get a pointer to the texture data.
         // TODO: figure out what 8 bytes this is skipping past!
-        decode((*gpLumpCache)[tex.lumpNum].get(), gTmpBuffer.get());
-        const uint16_t* const pTexData = (uint16_t*) gTmpBuffer.get() + 4;
+        decode((*gpLumpCache)[tex.lumpNum].get(), gTmpBuffer);
+        const uint16_t* const pTexData = (uint16_t*) gTmpBuffer + 4;
 
         // Upload to the GPU and mark the texture as loaded this frame
         const RECT texRect = getTextureVramRect(tex);
         LIBGPU_LoadImage(texRect, pTexData);
-        tex.uploadFrameNum = *gNumFramesDrawn;
+        tex.uploadFrameNum = gNumFramesDrawn;
     }
 
     // Set the texture window - the area of VRAM used for texturing

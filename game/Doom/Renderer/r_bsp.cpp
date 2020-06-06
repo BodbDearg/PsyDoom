@@ -351,7 +351,7 @@ void R_AddLine(seg_t& seg) noexcept {
     // Transform into view space but also figure out screen X and scaling due to perspective.
     vertex_t& segv1 = *seg.vertex1;
     
-    if (segv1.frameUpdated != *gNumFramesDrawn) {
+    if (segv1.frameUpdated != gNumFramesDrawn) {
         const SVECTOR viewToPt = {
             (int16_t)((segv1.x - gViewX) >> 16),
             0,
@@ -372,12 +372,12 @@ void R_AddLine(seg_t& seg) noexcept {
             segv1.screenx = ((viewVec.vx * segv1.scale) >> FRACBITS) + HALF_SCREEN_W;
         }
         
-        segv1.frameUpdated = *gNumFramesDrawn;
+        segv1.frameUpdated = gNumFramesDrawn;
     }
     
     vertex_t& segv2 = *seg.vertex2;
     
-    if (segv2.frameUpdated != *gNumFramesDrawn) {
+    if (segv2.frameUpdated != gNumFramesDrawn) {
         const SVECTOR viewToPt = {
             (int16_t)((segv2.x - gViewX) >> 16),
             0,
@@ -398,7 +398,7 @@ void R_AddLine(seg_t& seg) noexcept {
             segv2.screenx = ((viewVec.vx * segv2.scale) >> FRACBITS) + HALF_SCREEN_W;
         }
         
-        segv2.frameUpdated = *gNumFramesDrawn;
+        segv2.frameUpdated = gNumFramesDrawn;
     }
     
     // Store the clipped line segment points here: initially the line is unclipped

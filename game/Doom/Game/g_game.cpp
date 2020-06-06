@@ -261,7 +261,7 @@ void G_CompleteLevel() noexcept {
 void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameType) noexcept {
     // Resetting memory management related stuff and RNGs
     *gbIsLevelBeingRestarted = false;
-    *gLockedTexPagesMask &= 1;
+    gLockedTexPagesMask &= 1;
     I_PurgeTexCache();
 
     Z_FreeTags(*gpMainMemZone, PU_CACHE|PU_ANIMATION|PU_LEVSPEC|PU_LEVEL);
@@ -350,7 +350,7 @@ void G_RunGame() noexcept {
         }
         
         // Cleanup after the level is done
-        *gLockedTexPagesMask &= 1;
+        gLockedTexPagesMask &= 1;
         Z_FreeTags(*gpMainMemZone, PU_ANIMATION);
         
         if (*gGameAction == ga_exitdemo)
@@ -401,8 +401,8 @@ gameaction_t G_PlayDemoPtr() noexcept {
     // Read the control bindings for the demo and save the previous ones before that
     padbuttons_t prevCtrlBindings[NUM_BINDABLE_BTNS];
     
-    D_memcpy(prevCtrlBindings, gCtrlBindings.get(), sizeof(prevCtrlBindings));
-    D_memcpy(gCtrlBindings.get(), gpDemo_p, sizeof(prevCtrlBindings));
+    D_memcpy(prevCtrlBindings, gCtrlBindings, sizeof(prevCtrlBindings));
+    D_memcpy(gCtrlBindings, gpDemo_p, sizeof(prevCtrlBindings));
 
     #if PC_PSX_DOOM_MODS
         // PC-PSX: endian correct the controls written to the demo also
@@ -426,8 +426,8 @@ gameaction_t G_PlayDemoPtr() noexcept {
     *gbDemoPlayback = false;
 
     // Restore the previous control bindings and cleanup
-    D_memcpy(gCtrlBindings.get(), prevCtrlBindings, sizeof(prevCtrlBindings));
-    *gLockedTexPagesMask &= 1;
+    D_memcpy(gCtrlBindings, prevCtrlBindings, sizeof(prevCtrlBindings));
+    gLockedTexPagesMask &= 1;
     Z_FreeTags(*gpMainMemZone, PU_LEVEL | PU_LEVSPEC | PU_ANIMATION | PU_CACHE);
 
     // PC-PSX: cleanup the demo pointer when we're done

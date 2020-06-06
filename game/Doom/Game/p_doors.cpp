@@ -177,7 +177,7 @@ bool P_CheckKeyLock(line_t& line, mobj_t& user) noexcept {
         return false;
 
     player_t& player = *user.player;
-    player_t& curPlayer = gPlayers[*gCurPlayerIndex];
+    player_t& curPlayer = gPlayers[gCurPlayerIndex];
 
     switch (line.special) {
         // Blue keycard and skull key

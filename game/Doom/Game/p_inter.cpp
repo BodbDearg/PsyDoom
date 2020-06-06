@@ -193,7 +193,7 @@ bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bDropp
         player.pendingweapon = weapon;
 
         // If this player is picking up the gun then switch to the evil grin status bar face
-        if (&player == &gPlayers[*gCurPlayerIndex]) {
+        if (&player == &gPlayers[gCurPlayerIndex]) {
             gStatusBar.specialFace = f_gotgat;
         }
     }
@@ -647,7 +647,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
 
     // Note: because no sound origin is passed in here, the item pickup sound will ALWAYS play with reverb.
     // This is regardless of the reverb enabled setting of the sector. Unclear if this is a bug or if this intentional...
-    if (&player == &gPlayers[*gCurPlayerIndex]) {
+    if (&player == &gPlayers[gCurPlayerIndex]) {
         S_StartSound(nullptr, soundId);
     }
 }
@@ -708,7 +708,7 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
         if (target.health < -50) {
             bDoGibbing = true;
 
-            if (pTargetPlayer == &gPlayers[*gCurPlayerIndex]) {
+            if (pTargetPlayer == &gPlayers[gCurPlayerIndex]) {
                 gStatusBar.gotgibbed = true;
             }
 
@@ -779,7 +779,7 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
     
     // Do adjustments to damage for the player based on skill and special faces due to damage
     player_t* const pTargetPlayer = target.player.get();
-    player_t& curPlayer = gPlayers[*gCurPlayerIndex];
+    player_t& curPlayer = gPlayers[gCurPlayerIndex];
 
     int32_t damageAmt = baseDamageAmt;
     

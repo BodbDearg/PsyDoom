@@ -96,7 +96,7 @@ gameaction_t TIC_Title() noexcept {
         return ga_exit;
     
     // Decrement the time until the title sprite moves
-    const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[*gCurPlayerIndex];
+    const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gCurPlayerIndex];
     gVBlanksUntilTitleSprMove -= elapsedVBlanks;
     
     // If it is time to move the title sprite then do that.
@@ -201,7 +201,7 @@ void DRAW_Title() noexcept {
         LIBGPU_LoadImage(vramRect, (const uint16_t*) pSkyTexData + 4);  // TODO: what 8 bytes is this skipping?
 
         // Mark this as uploaded now
-        skytex.uploadFrameNum = *gNumFramesDrawn;
+        skytex.uploadFrameNum = gNumFramesDrawn;
     }
 
     // Setup a polygon primitive for drawing fire sky pieces

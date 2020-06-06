@@ -58,7 +58,7 @@ static int32_t gDebugDrawStringYPos;
 void D_DoomMain() noexcept {
     // PlayStation specific setup
     I_PSXInit();
-    PsxSoundInit(doomToWessVol(gOptionsSndVol), doomToWessVol(gOptionsMusVol), gTmpBuffer.get());
+    PsxSoundInit(doomToWessVol(gOptionsSndVol), doomToWessVol(gOptionsMusVol), gTmpBuffer);
 
     // Initializing standard DOOM subsystems, zone memory management, WAD, platform stuff, renderer etc.
     Z_Init();
@@ -424,15 +424,15 @@ gameaction_t MiniLoop(
     pStart();
 
     // Update the video refresh timers
-    *gLastTotalVBlanks = LIBETC_VSync(-1);
-    *gElapsedVBlanks = 0;
+    gLastTotalVBlanks = LIBETC_VSync(-1);
+    gElapsedVBlanks = 0;
 
     // Continue running the game loop until something causes us to exit
     gameaction_t exitAction = ga_nothing;
 
     while (true) {
         // Update timing and buttons
-        gPlayersElapsedVBlanks[*gCurPlayerIndex] = *gElapsedVBlanks;
+        gPlayersElapsedVBlanks[gCurPlayerIndex] = gElapsedVBlanks;
 
         for (uint32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
             gOldTicButtons[playerIdx] = gTicButtons[playerIdx];
@@ -440,7 +440,7 @@ gameaction_t MiniLoop(
         
         // Read pad inputs and save as the current pad buttons (overwritten if a demo)
         uint32_t padBtns = I_ReadGamepad();
-        gTicButtons[*gCurPlayerIndex] = padBtns;
+        gTicButtons[gCurPlayerIndex] = padBtns;
 
         if (*gNetGame != gt_single) {
             // Updates for when we are in a networked game: abort from the game also if there is a problem
@@ -473,7 +473,7 @@ gameaction_t MiniLoop(
                 // Read inputs from the demo buffer and advance the demo.
                 // N.B: Demo inputs override everything else from here on in.
                 padBtns = *gpDemo_p;
-                gTicButtons[*gCurPlayerIndex] = padBtns;
+                gTicButtons[gCurPlayerIndex] = padBtns;
                 gpDemo_p++;
             }
             else {

@@ -158,7 +158,7 @@ gameaction_t O_Control() noexcept {
                     }
 
                     // Note: only play sound for this user's player!
-                    if (playerIdx == *gCurPlayerIndex) {
+                    if (playerIdx == gCurPlayerIndex) {
                         S_StartSound(nullptr, sfx_pstop);
                     }
                 }
@@ -170,7 +170,7 @@ gameaction_t O_Control() noexcept {
                     }
 
                     // Note: only play sound for this user's player!
-                    if (playerIdx == *gCurPlayerIndex) {
+                    if (playerIdx == gCurPlayerIndex) {
                         S_StartSound(nullptr, sfx_pstop);
                     }
                 }
@@ -184,7 +184,7 @@ gameaction_t O_Control() noexcept {
             // Change music volume
             case opt_music: {
                 // Only process audio updates for this player
-                if (playerIdx == *gCurPlayerIndex) {
+                if (playerIdx == gCurPlayerIndex) {
                     if (ticButtons & PAD_RIGHT) {
                         gOptionsMusVol++;
                         
@@ -221,12 +221,12 @@ gameaction_t O_Control() noexcept {
             // Change sound volume
             case opt_sound: {
                 // Only process audio updates for this player
-                if (playerIdx == *gCurPlayerIndex) {
+                if (playerIdx == gCurPlayerIndex) {
                     if (ticButtons & PAD_RIGHT) {
                         gOptionsSndVol++;
 
-                        if (gOptionsSndVol > 100) {
-                            gOptionsSndVol = 100;   // TODO: make a constant for '100'
+                        if (gOptionsSndVol > S_MAX_VOL) {
+                            gOptionsSndVol = S_MAX_VOL;
                         } else {
                             S_SetSfxVolume(doomToWessVol(gOptionsSndVol));
                             
@@ -344,7 +344,7 @@ void O_Drawer() noexcept {
         }
 
         // Draw the skull cursor
-        const int32_t cursorPos = gCursorPos[*gCurPlayerIndex];
+        const int32_t cursorPos = gCursorPos[gCurPlayerIndex];
         const menuitem_t& menuItem = gpOptionsMenuItems[cursorPos];
 
         I_DrawSprite(

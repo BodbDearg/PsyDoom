@@ -30,7 +30,7 @@ void R_DrawSky() noexcept {
         RECT vramRect = getTextureVramRect(skytex);
 
         LIBGPU_LoadImage(vramRect, pTexData);
-        skytex.uploadFrameNum = *gNumFramesDrawn;
+        skytex.uploadFrameNum = gNumFramesDrawn;
     }
     
     // Set the draw mode firstly
