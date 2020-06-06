@@ -72,7 +72,7 @@ void START_Title() noexcept {
     gTitleScreenSpriteY = SCREEN_H + 10;
 
     // Play the music for the title screen
-    psxcd_play(gCDTrackNum[cdmusic_title_screen], *gCdMusicVol);
+    psxcd_play(gCDTrackNum[cdmusic_title_screen], gCdMusicVol);
     
     // Wait until some cd audio has been read
     Utils::waitForCdAudioPlaybackStart();

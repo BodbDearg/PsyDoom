@@ -155,11 +155,11 @@ void IN_Start() noexcept {
     // Play the intermission cd track
     psxcd_play_at_andloop(
         gCDTrackNum[cdmusic_intermission],
-        *gCdMusicVol,
+        gCdMusicVol,
         0,
         0,
         gCDTrackNum[cdmusic_intermission],
-        *gCdMusicVol,
+        gCdMusicVol,
         0,
         0
     );

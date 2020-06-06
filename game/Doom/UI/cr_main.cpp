@@ -37,11 +37,11 @@ void START_Credits() noexcept {
     // Play the credits music
     psxcd_play_at_andloop(
         gCDTrackNum[cdmusic_credits_demo],
-        *gCdMusicVol,
+        gCdMusicVol,
         0,
         0,
         gCDTrackNum[cdmusic_credits_demo],
-        *gCdMusicVol,
+        gCdMusicVol,
         0,
         0
     );

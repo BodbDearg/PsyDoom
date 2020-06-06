@@ -157,11 +157,11 @@ void M_Start() noexcept {
     // Play the main menu music
     psxcd_play_at_andloop(
         gCDTrackNum[cdmusic_main_menu],
-        *gCdMusicVol,
+        gCdMusicVol,
         0,
         0,
         gCDTrackNum[cdmusic_main_menu],
-        *gCdMusicVol,
+        gCdMusicVol,
         0,
         0
     );

@@ -23,7 +23,7 @@ enum cdmusic_t : int32_t {
 
 extern const uint32_t gCDTrackNum[NUM_CD_MUSIC_TRACKS];
 
-extern const VmPtr<int32_t> gCdMusicVol;
+extern int32_t gCdMusicVol;
 
 int32_t doomToWessVol(const int32_t doomVol) noexcept;
 int32_t doomToPsxSpuVol(const int32_t doomVol) noexcept;

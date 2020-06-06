@@ -11,6 +11,7 @@
 #include "Doom/Renderer/r_data.h"
 #include "m_main.h"
 #include "pw_main.h"
+#include "Wess/psxspu.h"
 
 // Available options and their names
 enum option_t : int32_t {
@@ -187,8 +188,8 @@ gameaction_t O_Control() noexcept {
                     if (ticButtons & PAD_RIGHT) {
                         gOptionsMusVol++;
                         
-                        if (gOptionsMusVol > 100) {
-                            gOptionsMusVol = 100;   // TODO: make a constant for '100'
+                        if (gOptionsMusVol > S_MAX_VOL) {
+                            gOptionsMusVol = S_MAX_VOL;
                         } else {
                             S_SetMusicVolume(doomToWessVol(gOptionsMusVol));
 
@@ -197,7 +198,7 @@ gameaction_t O_Control() noexcept {
                             }
                         }
                         
-                        *gCdMusicVol = (gOptionsMusVol * 0x3CFF) / 100;     // TODO: where does the '0x3CFF' constant come from?
+                        gCdMusicVol = (gOptionsMusVol * PSXSPU_MAX_CD_VOL) / S_MAX_VOL;
                     }
                     else if (ticButtons & PAD_LEFT) {
                         gOptionsMusVol--;
@@ -211,8 +212,8 @@ gameaction_t O_Control() noexcept {
                                 S_StartSound(nullptr, sfx_stnmov);
                             }
                         }
-
-                        *gCdMusicVol = (gOptionsMusVol * 0x3CFF) / 100;     // TODO: where does the '0x3CFF' constant come from?
+                        
+                        gCdMusicVol = (gOptionsMusVol * PSXSPU_MAX_CD_VOL) / S_MAX_VOL;
                     }
                 }
             }   break;

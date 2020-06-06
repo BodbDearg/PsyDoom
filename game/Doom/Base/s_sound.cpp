@@ -175,7 +175,7 @@ static constexpr fixed_t S_STEREO_SWING     = 96 * FRACUNIT;        // Stereo se
 static constexpr int32_t S_ATTENUATOR = ((S_CLIPPING_DIST - S_CLOSE_DIST) >> FRACBITS);
 
 // Current volume cd music is played back at
-const VmPtr<int32_t> gCdMusicVol(0x800775F8);
+int32_t gCdMusicVol = PSXSPU_MAX_CD_VOL;
 
 // The size of the WMD buffer
 static constexpr uint32_t WMD_MEM_SIZE = 26000;
@@ -186,30 +186,30 @@ static const VmPtr<uint8_t[WMD_MEM_SIZE]> gSound_WmdMem(0x80078588);
 
 // The start pointer within 'gSound_WmdMem' where map music sequences can be loaded to.
 // Anything at this address or after in the buffer can be used for that purpose.
-static const VmPtr<VmPtr<uint8_t>> gpSound_MusicSeqData(0x80077E1C);
+static uint8_t* gpSound_MusicSeqData;
 
 // Which of the music sequence definitions is currently playing
-static const VmPtr<uint32_t> gCurMusicSeqIdx(0x80077E14);
+static uint32_t gCurMusicSeqIdx;
 
 // What map we have sound and music currently loaded for
-static const VmPtr<int32_t> gLoadedSoundAndMusMapNum(0x80077E10);
+static int32_t gLoadedSoundAndMusMapNum;
 
 // The next address in SPU RAM to upload sounds to.
 // TODO: rename - this is really where to upload map stuff to.
-static const VmPtr<uint32_t>    gSound_CurSpuAddr(0x80077E18);
+static uint32_t gSound_CurSpuAddr = SPU_RAM_APP_BASE;
 
 // Sample blocks for general DOOM sounds and map specific music and sfx sounds
-static const VmPtr<SampleBlock>     gDoomSndBlock(0x8007EC9C);
-static const VmPtr<SampleBlock>     gMapSndBlock(0x8007EE30);
+static SampleBlock gDoomSndBlock;
+static SampleBlock gMapSndBlock;
 
 // Is the DOOMSFX.LCD file loaded? (main sound effect samples)
-static const VmPtr<bool32_t>    gbDidLoadDoomSfxLcd(0x80077E20);
+static bool gbDidLoadDoomSfxLcd;
 
 // Used to save the state of voices when pausing
-static const VmPtr<SavedVoiceList>  gPausedMusVoiceState(0x8007EB18);
+static SavedVoiceList gPausedMusVoiceState;
 
 // Unused tick count for how many sound 'updates' ticks were done
-static const VmPtr<uint32_t>    gNumSoundTics(0x80077E2C);
+static uint32_t gNumSoundTics;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // PC-PSX Helper: converts from a DOOM volume level (0-100) to a WESS API volume level (0-127)
@@ -246,8 +246,8 @@ void S_SetMusicVolume(const int32_t musVol) noexcept {
 // Stop the currently playing music track
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_StopMusic() noexcept {
-    if (*gCurMusicSeqIdx != 0) {
-        wess_seq_stop(gMusicSeqDefs[*gCurMusicSeqIdx].seqIdx);
+    if (gCurMusicSeqIdx != 0) {
+        wess_seq_stop(gMusicSeqDefs[gCurMusicSeqIdx].seqIdx);
     }
 }
 
@@ -263,8 +263,8 @@ void S_StartMusic() noexcept {
 
     S_StopMusic();
 
-    if (*gCurMusicSeqIdx != 0) {
-        wess_seq_trigger(gMusicSeqDefs[*gCurMusicSeqIdx].seqIdx);
+    if (gCurMusicSeqIdx != 0) {
+        wess_seq_trigger(gMusicSeqDefs[gCurMusicSeqIdx].seqIdx);
     }
 }
 
@@ -298,15 +298,15 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
     #endif
 
     // If sound and music is already loaded then bail out
-    if (*gLoadedSoundAndMusMapNum == mapIdx)
+    if (gLoadedSoundAndMusMapNum == mapIdx)
         return;
 
     // Stop current map music, free all music sequences and unload map SFX
-    if (*gLoadedSoundAndMusMapNum != 0) {
-        if (*gCurMusicSeqIdx != 0) {
+    if (gLoadedSoundAndMusMapNum != 0) {
+        if (gCurMusicSeqIdx != 0) {
             S_StopMusic();
 
-            while (wess_seq_status(gMusicSeqDefs[*gCurMusicSeqIdx].seqIdx) != SequenceStatus::SEQUENCE_INACTIVE) {
+            while (wess_seq_status(gMusicSeqDefs[gCurMusicSeqIdx].seqIdx) != SequenceStatus::SEQUENCE_INACTIVE) {
                 // PC-PSX: need to update sound to escape this loop, also ensure the window stays responsive etc.
                 #if PC_PSX_DOOM_MODS
                     Utils::doPlatformUpdates();
@@ -317,45 +317,45 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
             wess_seq_range_free(0 + NUMSFX, NUM_MUSIC_SEQS);
         }
 
-        S_UnloadSampleBlock(*gMapSndBlock);
+        S_UnloadSampleBlock(gMapSndBlock);
     }
 
     // Either load or unload the main Doom SFX LCD
     if (mapIdx == 60) {
         // For the finale unload the LCD to free up RAM
-        S_UnloadSampleBlock(*gDoomSndBlock);
-        *gbDidLoadDoomSfxLcd = false;
-        *gSound_CurSpuAddr = SPU_RAM_APP_BASE;
+        S_UnloadSampleBlock(gDoomSndBlock);
+        gbDidLoadDoomSfxLcd = false;
+        gSound_CurSpuAddr = SPU_RAM_APP_BASE;
     } else {
         // In all other cases ensure it is loaded
-        if (!*gbDidLoadDoomSfxLcd) {
-            *gSound_CurSpuAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdMapTbl_File::DOOMSFX_LCD, SPU_RAM_APP_BASE, gDoomSndBlock.get(), false);
-            *gbDidLoadDoomSfxLcd = true;
+        if (!gbDidLoadDoomSfxLcd) {
+            gSound_CurSpuAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdMapTbl_File::DOOMSFX_LCD, SPU_RAM_APP_BASE, &gDoomSndBlock, false);
+            gbDidLoadDoomSfxLcd = true;
         }
     }
 
     // Load the music sequence and lcd file for the map music.
     // Also initialize the reverb mode depending on the music.
-    *gCurMusicSeqIdx = gMapAudioDefs[mapIdx].musicSeqIdx;
-    uint32_t destSpuAddr = *gSound_CurSpuAddr;
+    gCurMusicSeqIdx = gMapAudioDefs[mapIdx].musicSeqIdx;
+    uint32_t destSpuAddr = gSound_CurSpuAddr;
 
-    if (*gCurMusicSeqIdx == 0) {
+    if (gCurMusicSeqIdx == 0) {
         // No music sequences for this map - turn off reverb
         psxspu_init_reverb(SPU_REV_MODE_OFF, 0, 0, 0, 0);
     } else {
         // Normal case: playing a map music sequence
-        const musicseq_t& musicseq = gMusicSeqDefs[*gCurMusicSeqIdx];
+        const musicseq_t& musicseq = gMusicSeqDefs[gCurMusicSeqIdx];
         psxspu_init_reverb(musicseq.reverbMode, musicseq.reverbDepthL, musicseq.reverbDepthR, 0, 0);
-        wess_seq_load(musicseq.seqIdx, gpSound_MusicSeqData->get());
-        destSpuAddr += wess_dig_lcd_load(musicseq.lcdFile, destSpuAddr, gMapSndBlock.get(), false);
+        wess_seq_load(musicseq.seqIdx, gpSound_MusicSeqData);
+        destSpuAddr += wess_dig_lcd_load(musicseq.lcdFile, destSpuAddr, &gMapSndBlock, false);
     }
 
     // Remember what map we have loaded sound and music for
-    *gLoadedSoundAndMusMapNum = mapIdx;
+    gLoadedSoundAndMusMapNum = mapIdx;
 
     // Load the sound LCD file for the map
     if (gMapAudioDefs[mapIdx].sfxLcdFile != CdMapTbl_File{}) {
-        wess_dig_lcd_load(gMapAudioDefs[mapIdx].sfxLcdFile, destSpuAddr, gMapSndBlock.get(), false);
+        wess_dig_lcd_load(gMapAudioDefs[mapIdx].sfxLcdFile, destSpuAddr, &gMapSndBlock, false);
     }
 }
 
@@ -363,14 +363,14 @@ void S_LoadMapSoundAndMusic(const int32_t mapIdx) noexcept {
 // Stops all playing sounds and sequencer music: music state is also saved for later restoring
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_Pause() noexcept {
-    wess_seq_pauseall(true, gPausedMusVoiceState.get());
+    wess_seq_pauseall(true, &gPausedMusVoiceState);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Resume playing previously paused music
 //------------------------------------------------------------------------------------------------------------------------------------------
 void S_Resume() noexcept {
-    wess_seq_restartall(gPausedMusVoiceState.get());
+    wess_seq_restartall(&gPausedMusVoiceState);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -490,7 +490,7 @@ void S_StartSound(mobj_t* const pOrigin, const sfxenum_t soundId) noexcept {
 void S_UpdateSounds() noexcept {
     // This didn't do anything for PSX DOOM other than incrementing this global sound tick counter.
     // Updates to the sequencer system were instead driven by hardware timer interrupts, firing approximately 120 times a second.
-    *gNumSoundTics += 1;
+    gNumSoundTics++;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -515,8 +515,8 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     psxcd_close(*pFile);
 
     // Initialize the sample blocks used to keep track what sounds are uploaded to where in SPU RAM
-    S_InitSampleBlock(*gDoomSndBlock);
-    S_InitSampleBlock(*gMapSndBlock);
+    S_InitSampleBlock(gDoomSndBlock);
+    S_InitSampleBlock(gMapSndBlock);
 
     // Load the main module (.WMD) file.
     // This initializes common stuff used for all music and sounds played in the game.
@@ -532,7 +532,7 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
     const int32_t sfxSequenceBytes = wess_seq_range_load(0, NUMSFX, wess_get_wmd_end());
 
     // We load map music sequences to the start of the remaining bytes in WMD memory buffer
-    *gpSound_MusicSeqData = wess_get_wmd_end() + sfxSequenceBytes;
+    gpSound_MusicSeqData = wess_get_wmd_end() + sfxSequenceBytes;
 
     // Init master volume levels
     S_SetSfxVolume(sfxVol);
@@ -540,9 +540,9 @@ void PsxSoundInit(const int32_t sfxVol, const int32_t musVol, void* const pTmpWm
 
     // Load the main SFX LCD: this is required for the main menu.
     // Also set the next location to upload to SPU RAM at after the load finishes.
-    *gbDidLoadDoomSfxLcd = false;
-    *gSound_CurSpuAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdMapTbl_File::DOOMSFX_LCD, SPU_RAM_APP_BASE, gDoomSndBlock.get(), false);
-    *gbDidLoadDoomSfxLcd = true;
+    gbDidLoadDoomSfxLcd = false;
+    gSound_CurSpuAddr = SPU_RAM_APP_BASE + wess_dig_lcd_load(CdMapTbl_File::DOOMSFX_LCD, SPU_RAM_APP_BASE, &gDoomSndBlock, false);
+    gbDidLoadDoomSfxLcd = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

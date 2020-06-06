@@ -23,29 +23,29 @@ const uint8_t gRndTable[256] = {
 };
 
 // Current position in the RNG table for main game and UI rngs
-static const VmPtr<uint32_t>   gPRndIndex(0x8007760C);
-static const VmPtr<uint32_t>   gMRndIndex(0x80077608);
+static uint32_t gPRndIndex;
+static uint32_t gMRndIndex;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Return a pseudo random number from 0-255 using the main game RNG
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t P_Random() noexcept {
-    *gPRndIndex = (*gPRndIndex + 1) & 0xFF;
-    return (int32_t)(uint32_t) gRndTable[*gPRndIndex];
+    gPRndIndex = (gPRndIndex + 1) & 0xFF;
+    return (int32_t)(uint32_t) gRndTable[gPRndIndex];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Return a pseudo random number from 0-255 using the UI RNG
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t M_Random() noexcept {
-    *gMRndIndex = (*gMRndIndex + 1) & 0xFF;
-    return (int32_t)(uint32_t) gRndTable[*gMRndIndex];
+    gMRndIndex = (gMRndIndex + 1) & 0xFF;
+    return (int32_t)(uint32_t) gRndTable[gMRndIndex];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Reset the game and UI RNGs to a known starting state
 //------------------------------------------------------------------------------------------------------------------------------------------
 void M_ClearRandom() noexcept {
-    *gPRndIndex = 0;
-    *gMRndIndex = 0;
+    gPRndIndex = 0;
+    gMRndIndex = 0;
 }

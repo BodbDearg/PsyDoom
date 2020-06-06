@@ -629,7 +629,7 @@ void P_CrossSpecialLine(line_t& line, mobj_t& mobj) noexcept {
         // New for PSX: play the Club Doom CD audio!
         case 142:
             S_StopMusic();
-            psxcd_play_at_andloop(gCDTrackNum[cdmusic_club_doom], *gCdMusicVol, 0, 0, gCDTrackNum[cdmusic_club_doom], *gCdMusicVol, 0, 0);
+            psxcd_play_at_andloop(gCDTrackNum[cdmusic_club_doom], gCdMusicVol, 0, 0, gCDTrackNum[cdmusic_club_doom], gCdMusicVol, 0, 0);
             line.special = 0;
             break;
 

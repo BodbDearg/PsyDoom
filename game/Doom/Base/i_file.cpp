@@ -4,19 +4,16 @@
 
 static constexpr int32_t MAX_OPEN_FILES = 4;
 
-static const VmPtr<PsxCd_File[MAX_OPEN_FILES]> gOpenPsxCdFiles(0x800A9D90);
+static PsxCd_File gOpenPsxCdFiles[MAX_OPEN_FILES];
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the open file records for the game.
 // There is a maximum of 4 files that can be open at once.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void InitOpenFileSlots() noexcept {
-    VmPtr<PsxCd_File> pFile = &gOpenPsxCdFiles[MAX_OPEN_FILES - 1];
-
-    do {
-        pFile->file.size = 0;
-        --pFile;
-    } while (pFile >= gOpenPsxCdFiles);
+    for (int32_t i = 0; i < MAX_OPEN_FILES; ++i) {
+        gOpenPsxCdFiles[i].file.size = 0;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,22 +31,18 @@ int32_t OpenFile(const CdMapTbl_File discFile) noexcept {
 
     // Search for a free cd file slot and abort with an error if not found
     int32_t fileSlotIdx = 0;
-    VmPtr<PsxCd_File> pFileSlot = gOpenPsxCdFiles.get();
-    
-    do {
-        if (pFileSlot->file.size == 0)
+
+    for (; fileSlotIdx < MAX_OPEN_FILES; ++fileSlotIdx) {
+        if (gOpenPsxCdFiles[fileSlotIdx].file.size == 0)
             break;
-        
-        ++fileSlotIdx;
-        ++pFileSlot;
-    } while (fileSlotIdx < MAX_OPEN_FILES);
+    }
     
     if (fileSlotIdx >= MAX_OPEN_FILES) {
         I_Error("OpenFile: Too many open files!");
     }
     
     // Save the opened file and return the opened file slot index
-    *pFileSlot = *pOpenedFile;
+    gOpenPsxCdFiles[fileSlotIdx] = *pOpenedFile;
     return fileSlotIdx;
 }
 

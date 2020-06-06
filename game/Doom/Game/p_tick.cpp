@@ -179,7 +179,7 @@ void P_CheckCheats() noexcept {
                 // Note: should NEVER be in here in this emulated environment: seek happens instantly!
             }
 
-            psxspu_start_cd_fade(500, *gCdMusicVol);
+            psxspu_start_cd_fade(500, gCdMusicVol);
             S_Resume();
 
             // When the pause menu is opened the warp menu and vram viewer are initially disabled
@@ -558,11 +558,11 @@ void P_Start() noexcept {
     } else {
         psxcd_play_at_andloop(
             gCDTrackNum[cdmusic_credits_demo],
-            *gCdMusicVol,
+            gCdMusicVol,
             0,
             0,
             gCDTrackNum[cdmusic_credits_demo],
-            *gCdMusicVol,
+            gCdMusicVol,
             0,
             0
         );
