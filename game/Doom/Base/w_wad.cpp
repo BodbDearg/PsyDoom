@@ -4,7 +4,6 @@
 #include "Doom/d_main.h"
 #include "i_file.h"
 #include "i_main.h"
-#include "PsxVm/VmSVal.h"
 #include "z_zone.h"
 
 // WAD file header
@@ -42,19 +41,19 @@ void W_Init() noexcept {
     *gMainWadFileIdx = OpenFile(CdMapTbl_File::PSXDOOM_WAD);
 
     // Read the header for the IWAD and ensure it has the correct id/magic
-    VmSVal<wadinfo_t> wadinfo;
-    ReadFile(*gMainWadFileIdx, wadinfo.get(), sizeof(wadinfo_t));
+    wadinfo_t wadinfo = {};
+    ReadFile(*gMainWadFileIdx, &wadinfo, sizeof(wadinfo_t));
 
-    if (D_strncasecmp(wadinfo->fileid, "IWAD", sizeof(wadinfo->fileid)) != 0) {
+    if (D_strncasecmp(wadinfo.fileid, "IWAD", sizeof(wadinfo.fileid)) != 0) {
         I_Error("W_Init: invalid main IWAD id");
     }
 
     // Save the number of lumps and alloc the lump info array
-    *gNumLumps = wadinfo->numlumps;
+    *gNumLumps = wadinfo.numlumps;
     *gpLumpInfo = (lumpinfo_t*) Z_Malloc(**gpMainMemZone, *gNumLumps * sizeof(lumpinfo_t), PU_STATIC, nullptr);
 
     // Read the lump info array
-    SeekAndTellFile(*gMainWadFileIdx, wadinfo->infotableofs, PsxCd_SeekMode::SET);
+    SeekAndTellFile(*gMainWadFileIdx, wadinfo.infotableofs, PsxCd_SeekMode::SET);
     ReadFile(*gMainWadFileIdx, gpLumpInfo->get(), *gNumLumps * sizeof(lumpinfo_t));
 
     // Alloc and zero init the lump cache pointers list and an array of bools to say whether each lump is compressed or not.

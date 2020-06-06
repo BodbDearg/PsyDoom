@@ -10,13 +10,6 @@
 typedef void (*VmFunc)();
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// VM interface: Mips R3000 registers
-//------------------------------------------------------------------------------------------------------------------------------------------
-namespace PsxVm {
-    extern uint32_t* gpReg_sp;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 // VM interface: function calls and utilities
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -46,14 +39,13 @@ namespace device::cdrom     { class CDROM;  }
 // VM control: setup and control the VM
 //------------------------------------------------------------------------------------------------------------------------------------------
 namespace PsxVm {
-    // Access to the emulated PSX, CPU, GPU etc.
+    // Access to the emulated PSX SPU & GPU etc.
     extern System*                  gpSystem;
-    extern mips::CPU*               gpCpu;
     extern gpu::GPU*                gpGpu;
     extern spu::SPU*                gpSpu;
     extern device::cdrom::CDROM*    gpCdrom;
-    extern uint8_t*                 gpRam;
-    extern uint8_t*                 gpScratchpad;       // Cache used as fast RAM (1 KiB)
+    extern uint8_t*                 gpRam;    
+    extern uint8_t*                 gpScratchpad;       // Cache used as fast RAM (1 KiB) (TODO: make this a native app buffer)
 
     // Initialize the VM with the original Playstation DOOM .EXE and CD file path (.cue format)
     bool init(const char* const doomExePath, const char* const doomCdCuePath) noexcept;

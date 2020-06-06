@@ -20,6 +20,7 @@
 //  (1) Save and restore the current return address register (ra) for returning control to operating system after the program is done.
 //  (2) Setting the value of the 'global pointer' (gp) register that is used as a base to reference many global variables.
 //  (3) Setting the value of the 'frame pointer' (fp) register.
+//  (4) Setting the value of the 'stack pointer' (sp) register.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void psx_main() noexcept {
     // Zero initialize the BSS section globals.
@@ -37,11 +38,8 @@ void psx_main() noexcept {
         std::memset(pBegWord, 0, numWords * sizeof(uint32_t));
     }
     
-    // Figure out the initial stack pointer address
-    constexpr uint32_t InitialStackPtrAddr = StackEndAddr - sizeof(uint64_t);
-    *PsxVm::gpReg_sp = InitialStackPtrAddr | 0x80000000;
-
     // Figure out the size and start address to use when initializing the heap
+    constexpr uint32_t InitialStackPtrAddr = StackEndAddr - sizeof(uint64_t);
     constexpr uint32_t WrappedHeapStartAddr = ((HeapStartAddr << 3) >> 3);
     constexpr uint32_t StackStartAddr = InitialStackPtrAddr - StackSize;
     constexpr uint32_t InitHeapSize = StackStartAddr - WrappedHeapStartAddr;

@@ -21,7 +21,6 @@ static std::unique_ptr<System>          gSystem;
 static std::unique_ptr<InputManager>    gInputMgr;
 
 System*                 PsxVm::gpSystem;
-mips::CPU*              PsxVm::gpCpu;
 gpu::GPU*               PsxVm::gpGpu;
 spu::SPU*               PsxVm::gpSpu;
 device::cdrom::CDROM*   PsxVm::gpCdrom;
@@ -95,15 +94,11 @@ static void rescanGameControllers() noexcept {
 static void setupVmPointers() noexcept {
     // System devices
     gpSystem = gSystem.get();
-    gpCpu = gpSystem->cpu.get();
     gpGpu = gpSystem->gpu.get();
     gpSpu = gpSystem->spu.get();
     gpCdrom = gpSystem->cdrom.get();
     gpRam = gpSystem->ram.data();
     gpScratchpad = gpSystem->scratchpad.data();
-
-    // Mips registers
-    gpReg_sp = &gpCpu->reg[29];
 
     // Native function to VM addresses
     for (const auto& addrFuncPair : PsxVm::gFuncTable) {
@@ -114,14 +109,11 @@ static void setupVmPointers() noexcept {
 static void clearVmPointers() noexcept {
     gNativeFuncToVmAddr.clear();
 
-    gpReg_sp = nullptr;
-
     gpScratchpad = nullptr;
     gpRam = nullptr;
     gpCdrom = nullptr;
     gpSpu = nullptr;
     gpGpu = nullptr;
-    gpCpu = nullptr;
     gpSystem = nullptr;
 }
 
