@@ -10,7 +10,6 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "PsxVm/PsxVm.h"
 
 #include <algorithm>
 
@@ -202,7 +201,7 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
         sector.specialdata = &floor;
 
         // Common floor mover setup
-        floor.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_MoveFloor);
+        floor.thinker.function = (think_t) &T_MoveFloor;
         floor.type = floorType;
         floor.crush = false;
 
@@ -352,7 +351,7 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
         firstSector.specialdata = &firstFloor;
 
         // Setup the mover for the first step
-        firstFloor.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_MoveFloor);
+        firstFloor.thinker.function = (think_t) &T_MoveFloor;
         firstFloor.direction = 1;
         firstFloor.sector = &firstSector;
 
@@ -413,7 +412,7 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
                 P_AddThinker(floor.thinker);
                 bsec.specialdata = &floor;
 
-                floor.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_MoveFloor);
+                floor.thinker.function = (think_t) &T_MoveFloor;
                 floor.direction = 1;
                 floor.sector = &bsec;
                 floor.speed = moveSpeed;

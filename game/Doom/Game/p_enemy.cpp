@@ -985,7 +985,7 @@ static void A_PainShootSkull(mobj_t& actor, const angle_t angle) noexcept {
         // Count the number of skulls active in the level: if there are 21 or more then don't spawn any additional ones
         int32_t numActiveSkulls = 0;
 
-        for (thinker_t* pThinker = gThinkerCap.next; pThinker != &thinkerCap; pThinker = pThinker->next) {
+        for (thinker_t* pThinker = gThinkerCap.next; pThinker != &gThinkerCap; pThinker = pThinker->next) {
             if (pThinker->function != P_MobjThinker)
                 continue;
             

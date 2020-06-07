@@ -135,12 +135,10 @@ typedef void (*think_t)(struct thinker_t&) noexcept;
 
 // An element that receives periodic updates
 struct thinker_t {
-    VmPtr<thinker_t>    prev;
-    VmPtr<thinker_t>    next;
-    VmPtr<think_t>      function;
+    thinker_t*  prev;
+    thinker_t*  next;
+    think_t     function;
 };
-
-static_assert(sizeof(thinker_t) == 12);
 
 // Flags for 'mobj_t'
 static constexpr uint32_t MF_SPECIAL            = 0x1;          // TODO: CONFIRM

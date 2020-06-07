@@ -6,57 +6,48 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "PsxVm/PsxVm.h"
 
 #include <algorithm>
 
 // Definition and state for a fire flicker light
 struct fireflicker_t {
-    thinker_t           thinker;
-    VmPtr<sector_t>     sector;
-    int32_t             count;
-    int32_t             maxlight;
-    int32_t             minlight;
+    thinker_t   thinker;
+    sector_t*   sector;
+    int32_t     count;
+    int32_t     maxlight;
+    int32_t     minlight;
 };
-
-static_assert(sizeof(fireflicker_t) == 28);
 
 // Definition and state for a flashing light
 struct lightflash_t {
-    thinker_t           thinker;
-    VmPtr<sector_t>     sector;
-    int32_t             count;
-    int32_t             maxlight;
-    int32_t             minlight;
-    int32_t             maxtime;
-    int32_t             mintime;
+    thinker_t   thinker;
+    sector_t*   sector;
+    int32_t     count;
+    int32_t     maxlight;
+    int32_t     minlight;
+    int32_t     maxtime;
+    int32_t     mintime;
 };
-
-static_assert(sizeof(lightflash_t) == 36);
 
 // Definition and state for a strobing light
 struct strobe_t {
-    thinker_t           thinker;
-    VmPtr<sector_t>     sector;
-    int32_t             count;
-    int32_t             minlight;
-    int32_t             maxlight;
-    int32_t             darktime;
-    int32_t             brighttime;
+    thinker_t   thinker;
+    sector_t*   sector;
+    int32_t     count;
+    int32_t     minlight;
+    int32_t     maxlight;
+    int32_t     darktime;
+    int32_t     brighttime;
 };
-
-static_assert(sizeof(strobe_t) == 36);
 
 // Definition and state for a glowing light
 struct glow_t {
-    thinker_t           thinker;
-    VmPtr<sector_t>     sector;
-    int32_t             minlight;
-    int32_t             maxlight;
-    int32_t             direction;
+    thinker_t   thinker;
+    sector_t*   sector;
+    int32_t     minlight;
+    int32_t     maxlight;
+    int32_t     direction;
 };
-
-static_assert(sizeof(glow_t) == 28);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a light that flickers like fire
@@ -90,7 +81,7 @@ void P_SpawnFireFlicker(sector_t& sector) noexcept {
     P_AddThinker(flicker.thinker);
 
     // Setup flicker settings
-    flicker.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_FireFlicker);
+    flicker.thinker.function = (think_t) &T_FireFlicker;
     flicker.sector = &sector;
     flicker.maxlight = sector.lightlevel;
     flicker.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel) + 16;
@@ -128,7 +119,7 @@ void P_SpawnLightFlash(sector_t& sector) noexcept {
     P_AddThinker(lightFlash.thinker);
 
     // Setup flash settings
-    lightFlash.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_LightFlash);
+    lightFlash.thinker.function = (think_t) &T_LightFlash;
     lightFlash.sector = &sector;
     lightFlash.maxlight = sector.lightlevel;
     lightFlash.minlight = P_FindMinSurroundingLight(sector, sector.lightlevel);
@@ -166,7 +157,7 @@ void P_SpawnStrobeFlash(sector_t& sector, const int32_t darkTime, const bool bIn
     strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone, sizeof(strobe_t), PU_LEVSPEC, nullptr);
     P_AddThinker(strobe.thinker);
 
-    strobe.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_StrobeFlash);
+    strobe.thinker.function = (think_t) &T_StrobeFlash;
     strobe.sector = &sector;
     strobe.darktime = darkTime;
     strobe.brighttime = STROBEBRIGHT;
@@ -197,7 +188,7 @@ void P_SpawnRapidStrobeFlash(sector_t& sector) noexcept {
     strobe_t& strobe = *(strobe_t*) Z_Malloc(*gpMainMemZone, sizeof(strobe_t), PU_LEVSPEC, nullptr);
     P_AddThinker(strobe.thinker);
     
-    strobe.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_StrobeFlash);
+    strobe.thinker.function = (think_t) &T_StrobeFlash;
     strobe.sector = &sector;
     strobe.darktime = 1;
     strobe.brighttime = 1;
@@ -327,7 +318,7 @@ void P_SpawnGlowingLight(sector_t& sector, const glowtype_e glowType) noexcept {
     P_AddThinker(glow.thinker);
 
     // Configure the glow settings depending on the type
-    glow.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_Glow);
+    glow.thinker.function = (think_t) &T_Glow;
     glow.sector = &sector;
     
     switch (glowType) {

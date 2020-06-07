@@ -41,7 +41,7 @@ extern int32_t          gMapNumToCheatWarpTo;
 extern int32_t          gVramViewerTexPage;
 extern uint32_t         gTicButtons[MAXPLAYERS];
 extern uint32_t         gOldTicButtons[MAXPLAYERS];
-extern const VmPtr<thinker_t>               gThinkerCap;
+extern thinker_t        gThinkerCap;
 extern const VmPtr<mobj_t>                  gMObjHead;
 extern const VmPtr<mobj_t>                  gMObjHead;
 

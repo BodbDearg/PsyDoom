@@ -904,8 +904,8 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     }
 
     // Setup the thinkers and map objects lists
-    gThinkerCap->prev = gThinkerCap.get();
-    gThinkerCap->next = gThinkerCap.get();
+    gThinkerCap.prev = &gThinkerCap;
+    gThinkerCap.next = &gThinkerCap;
 
     gMObjHead->next = gMObjHead.get();
     gMObjHead->prev = gMObjHead.get();

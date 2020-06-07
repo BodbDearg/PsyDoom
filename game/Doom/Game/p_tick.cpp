@@ -68,7 +68,7 @@ int32_t         gMapNumToCheatWarpTo;                   // What map the player c
 int32_t         gVramViewerTexPage;                     // What page of texture memory to display in the VRAM viewer
 uint32_t        gTicButtons[MAXPLAYERS];                // Currently pressed buttons by all players
 uint32_t        gOldTicButtons[MAXPLAYERS];             // Previously pressed buttons by all players
-const VmPtr<thinker_t>              gThinkerCap(0x80096550);                // Dummy thinker which serves as both the head and tail of the thinkers list.
+thinker_t       gThinkerCap;                            // Dummy thinker which serves as both the head and tail of the thinkers list.
 const VmPtr<mobj_t>                 gMObjHead(0x800A8E90);                  // Dummy map object which serves as both the head and tail of the map objects linked list.
 
 static int32_t      gCurCheatBtnSequenceIdx;                // What button press in the cheat sequence we are currently on
@@ -80,10 +80,10 @@ static int32_t      gNumActiveThinkers;                     // Stat tracking cou
 // Add a thinker to the linked list of thinkers
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_AddThinker(thinker_t& thinker) noexcept {
-    gThinkerCap->prev->next = &thinker;
-    thinker.next = gThinkerCap.get();
-    thinker.prev = gThinkerCap->prev;
-    gThinkerCap->prev = &thinker;
+    gThinkerCap.prev->next = &thinker;
+    thinker.next = &gThinkerCap;
+    thinker.prev = gThinkerCap.prev;
+    gThinkerCap.prev = &thinker;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ void P_AddThinker(thinker_t& thinker) noexcept {
 // The removal happens later, during updates.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_RemoveThinker(thinker_t& thinker) noexcept {
-    thinker.function = -1;
+    thinker.function = (think_t)(intptr_t) -1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -100,8 +100,8 @@ void P_RemoveThinker(thinker_t& thinker) noexcept {
 void P_RunThinkers() noexcept {
     gNumActiveThinkers = 0;
 
-    for (thinker_t* pThinker = gThinkerCap->next.get(); pThinker != gThinkerCap.get(); pThinker = pThinker->next.get()) {
-        if (pThinker->function.addr() == (uint32_t) -1) {
+    for (thinker_t* pThinker = gThinkerCap.next; pThinker != &gThinkerCap; pThinker = pThinker->next) {
+        if ((intptr_t) pThinker->function == (intptr_t) -1) {
             // Time to remove this thinker, it's function has been zapped
             pThinker->next->prev = pThinker->prev;
             pThinker->prev->next = pThinker->next;
@@ -109,8 +109,7 @@ void P_RunThinkers() noexcept {
         } else {
             // Run the thinker if it has a think function and increment the active count stat
             if (pThinker->function) {
-                const think_t func = (think_t) PsxVm::getVmFuncForAddr(pThinker->function);
-                func(*pThinker);
+                pThinker->function(*pThinker);
             }
 
             gNumActiveThinkers++;

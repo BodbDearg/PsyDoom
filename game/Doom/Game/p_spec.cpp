@@ -23,7 +23,6 @@
 #include "p_switch.h"
 #include "p_telept.h"
 #include "p_tick.h"
-#include "PsxVm/PsxVm.h"
 
 // Format for a delayed action function that can be scheduled by 'P_ScheduleDelayedAction'
 typedef void (*delayed_actionfn_t)() noexcept;
@@ -38,12 +37,10 @@ struct animdef_t {
 
 // New to PSX DOOM: definition for a thinker which performs an actionfunc after a delay
 struct delayaction_t {
-    thinker_t       thinker;
-    int32_t         ticsleft;       // How many tics until we perform the actionfunc
-    VmPtr<void(*)>  actionfunc;     // The action to perform after the delay
+    thinker_t           thinker;
+    int32_t             ticsleft;       // How many tics until we perform the actionfunc
+    delayed_actionfn_t  actionfunc;     // The action to perform after the delay
 };
-
-static_assert(sizeof(delayaction_t) == 20);
 
 // The number of animated floor/texture types in the game
 static constexpr int32_t MAXANIMS = 16;
@@ -1042,7 +1039,7 @@ bool EV_DoDonut(line_t& line) noexcept {
                 P_AddThinker(floorMove.thinker);
                 pNextSector->specialdata = &floorMove;
 
-                floorMove.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_MoveFloor);
+                floorMove.thinker.function = (think_t) &T_MoveFloor;
                 floorMove.type = donutRaise;
                 floorMove.sector = pNextSector;
                 floorMove.direction = 1;
@@ -1060,7 +1057,7 @@ bool EV_DoDonut(line_t& line) noexcept {
                 P_AddThinker(floorMove.thinker);
                 sector.specialdata = &floorMove;
 
-                floorMove.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_MoveFloor);
+                floorMove.thinker.function = (think_t) &T_MoveFloor;
                 floorMove.type = lowerFloor;
                 floorMove.sector = &sector;
                 floorMove.direction = -1;
@@ -1084,9 +1081,9 @@ static void P_ScheduleDelayedAction(const int32_t delayTics, const delayed_actio
     delayaction_t& delayed = *(delayaction_t*) Z_Malloc(*gpMainMemZone, sizeof(delayaction_t), PU_LEVSPEC, nullptr);
     P_AddThinker(delayed.thinker);
 
-    delayed.thinker.function = PsxVm::getNativeFuncVmAddr((void*) T_DelayedAction);
+    delayed.thinker.function = (think_t) &T_DelayedAction;
     delayed.ticsleft = delayTics;
-    delayed.actionfunc = PsxVm::getNativeFuncVmAddr((void*) actionFunc);
+    delayed.actionfunc = actionFunc;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1095,8 +1092,7 @@ static void P_ScheduleDelayedAction(const int32_t delayTics, const delayed_actio
 //------------------------------------------------------------------------------------------------------------------------------------------
 void T_DelayedAction(delayaction_t& action) noexcept {
     if (--action.ticsleft <= 0) {
-        const delayed_actionfn_t actionFunc = (delayed_actionfn_t) PsxVm::getVmFuncForAddr(action.actionfunc);
-        actionFunc();
+        action.actionfunc();
         P_RemoveThinker(action.thinker);
     }
 }
