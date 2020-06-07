@@ -248,7 +248,7 @@ bool EV_DoDoor(line_t& line, const vldoor_e doorType) noexcept {
     // Create door thinkers for all sectors matching the given line tag
     for (int32_t secIdx = P_FindSectorFromLineTag(line, -1); secIdx >= 0; secIdx = P_FindSectorFromLineTag(line, secIdx)) {
         // Only spawn the door if there isn't already a special operating on this sector
-        sector_t& sector = gpSectors->get()[secIdx];
+        sector_t& sector = gpSectors[secIdx];
 
         if (sector.specialdata)
             continue;
@@ -324,9 +324,9 @@ bool EV_DoDoor(line_t& line, const vldoor_e doorType) noexcept {
 // Called to trigger a door directly via a line special on one of it's sector's lines (without a tag reference or via a switch).
 // This is the most common way of triggering a door.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {    
+void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {
     // Try to activate an already existing door thinker if the sector already has that
-    sector_t& doorSector = *gpSides->get()[line.sidenum[1]].sector;
+    sector_t& doorSector = *gpSides[line.sidenum[1]].sector;
     vldoor_t* const pExistingDoor = (vldoor_t*) doorSector.specialdata.get();
 
     if (pExistingDoor) {

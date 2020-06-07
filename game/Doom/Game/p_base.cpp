@@ -346,19 +346,19 @@ static void PB_UnsetThingPosition(mobj_t& thing) noexcept {
         if (thing.bprev) {
             thing.bprev->bnext = thing.bnext;
         } else {
-            const int32_t blockx = (thing.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
-            const int32_t blocky = (thing.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+            const int32_t blockx = (thing.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
+            const int32_t blocky = (thing.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
 
             // PC-PSX: prevent buffer overflow if the map object is out of bounds.
             // This is part of the fix for the famous 'linedef deletion' bug.
             #if PC_PSX_DOOM_MODS
-                if (blockx >= 0 && blockx < *gBlockmapWidth) {
-                    if (blocky >= 0 && blocky < *gBlockmapHeight) {
-                        (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+                if (blockx >= 0 && blockx < gBlockmapWidth) {
+                    if (blocky >= 0 && blocky < gBlockmapHeight) {
+                        gppBlockLinks[blocky * gBlockmapWidth + blockx] = thing.bnext;
                     }
                 }
             #else
-                (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+                gppBlockLinks[blocky * gBlockmapWidth + blockx] = thing.bnext;
             #endif
         }
     }
@@ -386,12 +386,12 @@ static void PB_SetThingPosition(mobj_t& mobj) noexcept {
     // Add the thing into the blockmap unless the thing flags specify otherwise (inert things)
     if ((gTestFlags & MF_NOBLOCKMAP) == 0) {
         // Compute the blockmap cell and see if it's in range for the blockmap
-        const int32_t bmapX = (mobj.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
-        const int32_t bmapY = (mobj.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+        const int32_t bmapX = (mobj.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
+        const int32_t bmapY = (mobj.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
         
-        if ((bmapX >= 0) && (bmapY >= 0) && (bmapX < *gBlockmapWidth) && (bmapY < *gBlockmapHeight)) {
+        if ((bmapX >= 0) && (bmapY >= 0) && (bmapX < gBlockmapWidth) && (bmapY < gBlockmapHeight)) {
             // In range: link the thing into the blockmap list for this blockmap cell
-            VmPtr<mobj_t>& blockmapList = gppBlockLinks->get()[bmapX + bmapY * (*gBlockmapWidth)];
+            VmPtr<mobj_t>& blockmapList = gppBlockLinks[bmapX + bmapY * gBlockmapWidth];
             mobj_t* const pPrevListHead = blockmapList.get();
             
             mobj.bprev = nullptr;
@@ -455,10 +455,10 @@ static bool PB_CheckPosition() noexcept {
     gTestCeilingz = testSec.ceilingheight;
 
     // Determine the blockmap extents (left/right, top/bottom) to be tested against for collision and clamp to a valid range
-    const int32_t bmapLx = std::max((gTestBBox[BOXLEFT] - *gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
-    const int32_t bmapRx = std::min((gTestBBox[BOXRIGHT] - *gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
-    const int32_t bmapTy = std::min((gTestBBox[BOXTOP] - *gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);
-    const int32_t bmapBy = std::max((gTestBBox[BOXBOTTOM] - *gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
+    const int32_t bmapLx = std::max((gTestBBox[BOXLEFT] - gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
+    const int32_t bmapRx = std::min((gTestBBox[BOXRIGHT] - gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
+    const int32_t bmapTy = std::min((gTestBBox[BOXTOP] - gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
+    const int32_t bmapBy = std::max((gTestBBox[BOXBOTTOM] - gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
 
     // This is a new collision test so increment this stamp
     gValidCount++;
@@ -651,11 +651,11 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
     // Get the line list for this blockmap cell
-    const int16_t* pLineNum = (int16_t*)(gpBlockmapLump->get() + gpBlockmap->get()[y * (*gBlockmapWidth) + x]);
+    const int16_t* pLineNum = (int16_t*)(gpBlockmapLump + gpBlockmap[y * gBlockmapWidth + x]);
     
     // Visit all lines in the cell, checking for intersection and potential collision.
     // Stop when there is a definite collision.
-    line_t* const pLines = gpLines->get();
+    line_t* const pLines = gpLines;
 
     for (; *pLineNum != -1; ++pLineNum) {
         line_t& line = pLines[*pLineNum];
@@ -678,7 +678,7 @@ static bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
 // Stops when a collision is detected and returns 'false', otherwise returns 'true' for no collision.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
-    mobj_t* pmobj = gppBlockLinks->get()[x + y * (*gBlockmapWidth)].get();
+    mobj_t* pmobj = gppBlockLinks[x + y * gBlockmapWidth].get();
 
     while (pmobj) {
         if (!PB_CheckThing(*pmobj))

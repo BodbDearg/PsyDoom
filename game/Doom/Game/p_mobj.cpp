@@ -315,9 +315,9 @@ void P_SpawnMapThing(const mapthing_t& mapthing) noexcept {
 
     // Remember deathmatch starts for deathmatch games
     if (mapthing.type == 11) {
-        if (gpDeathmatchP->get() < &gDeathmatchStarts[MAX_DEATHMATCH_STARTS]) {
-            D_memcpy(gpDeathmatchP->get(), &mapthing, sizeof(mapthing_t));
-            *gpDeathmatchP += 1;
+        if (gpDeathmatchP < &gDeathmatchStarts[MAX_DEATHMATCH_STARTS]) {
+            D_memcpy(gpDeathmatchP, &mapthing, sizeof(mapthing_t));
+            gpDeathmatchP++;
         }
 
         return;

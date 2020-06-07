@@ -264,20 +264,20 @@ int32_t R_PointOnSide(const fixed_t x, const fixed_t y, const node_t& node) noex
 subsector_t* R_PointInSubsector(const fixed_t x, const fixed_t y) noexcept {
     // Not sure why there would ever be '0' BSP nodes - that does not seem like a valid DOOM level to me?
     // The same logic can also be found in other versions of DOOM...
-    if (*gNumBspNodes == 0) {
-        return gpSubsectors->get();
+    if (gNumBspNodes == 0) {
+        return gpSubsectors;
     }
     
     // Traverse the BSP tree starting at the root node, using the given position to decide which half-spaces to visit.
     // Once we reach a subsector stop and return it.
-    int32_t nodeNum = *gNumBspNodes - 1;
+    int32_t nodeNum = gNumBspNodes - 1;
     
     while ((nodeNum & NF_SUBSECTOR) == 0) {
-        node_t& node = (*gpBspNodes)[nodeNum];
+        node_t& node = gpBspNodes[nodeNum];
         const int32_t side = R_PointOnSide(x, y, node);
         nodeNum = node.children[side];
     }
 
     const int32_t actualNodeNum = nodeNum & (~NF_SUBSECTOR);
-    return &(*gpSubsectors)[actualNodeNum];
+    return &gpSubsectors[actualNodeNum];
 }

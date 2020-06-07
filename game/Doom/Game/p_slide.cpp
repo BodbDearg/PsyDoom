@@ -147,10 +147,10 @@ static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
     }
 
     // Compute the blockmap extents for the move
-    const int32_t bmapTy = std::min((gEndBox[BOXTOP] - *gBlockmapOriginY) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);
-    const int32_t bmapBy = std::max((gEndBox[BOXBOTTOM] - *gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
-    const int32_t bmapLx = std::max((gEndBox[BOXLEFT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
-    const int32_t bmapRx = std::min((gEndBox[BOXRIGHT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
+    const int32_t bmapTy = std::min((gEndBox[BOXTOP] - gBlockmapOriginY) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
+    const int32_t bmapBy = std::max((gEndBox[BOXBOTTOM] - gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
+    const int32_t bmapLx = std::max((gEndBox[BOXLEFT] - gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
+    const int32_t bmapRx = std::min((gEndBox[BOXRIGHT] - gBlockmapOriginX) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
     
     // Increment this counter for the line checks that follow: doing new checks
     gValidCount++;
@@ -160,11 +160,11 @@ static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
     for (int32_t bmapX = bmapLx; bmapX <= bmapRx; ++bmapX) {
         for (int32_t bmapY = bmapBy; bmapY <= bmapTy; ++bmapY) {
             // Get where the line numbers list for this blockmap cell starts in the blockmap
-            int16_t* pLineNum = (int16_t*) gpBlockmapLump->get() + gpBlockmap->get()[bmapX + bmapY * (*gBlockmapWidth)];
+            int16_t* pLineNum = (int16_t*) gpBlockmapLump + gpBlockmap[bmapX + bmapY * gBlockmapWidth];
 
             // Collide against all of the lines in this cell
             for (; *pLineNum != -1; ++pLineNum) {
-                line_t& line = gpLines->get()[*pLineNum];
+                line_t& line = gpLines[*pLineNum];
                 
                 // Only collide against this line if we didn't already do it
                 if (line.validcount != gValidCount) {
@@ -421,10 +421,10 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
     const fixed_t minMoveY = std::min(moveY1, moveY2);
     const fixed_t maxMoveY = std::max(moveY1, moveY2);
 
-    const int32_t bmapLx = std::max((minMoveX - *gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
-    const int32_t bmapRx = std::min((maxMoveX - *gBlockmapOriginX) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
-    const int32_t bmapBy = std::max((minMoveY - *gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
-    const int32_t bmapTy = std::min((maxMoveY - *gBlockmapOriginY) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);
+    const int32_t bmapLx = std::max((minMoveX - gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
+    const int32_t bmapRx = std::min((maxMoveX - gBlockmapOriginX) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
+    const int32_t bmapBy = std::max((minMoveY - gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
+    const int32_t bmapTy = std::min((maxMoveY - gBlockmapOriginY) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
     
     // Hit no special line yet and increment the valid count for a fresh check
     *gpSpecialLine = nullptr;
@@ -433,11 +433,11 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
     // Check for crossing lines in this blockmap area
     for (int32_t bmapX = bmapLx; bmapX <= bmapRx; ++bmapX) {
         for (int32_t bmapY = bmapBy; bmapY <= bmapTy; ++bmapY) {
-            const int32_t firstLineOffset = gpBlockmap->get()[bmapX + bmapY * (*gBlockmapWidth)];
+            const int32_t firstLineOffset = gpBlockmap[bmapX + bmapY * gBlockmapWidth];
             
-            for (int16_t* pLineNum = (int16_t*) &gpBlockmapLump->get()[firstLineOffset]; *pLineNum != -1; ++pLineNum) {
+            for (int16_t* pLineNum = (int16_t*) &gpBlockmapLump[firstLineOffset]; *pLineNum != -1; ++pLineNum) {
                 // Ignore the line if it has no special or if we already checked
-                line_t& line = gpLines->get()[*pLineNum];
+                line_t& line = gpLines[*pLineNum];
 
                 if (line.special == 0)
                     continue;

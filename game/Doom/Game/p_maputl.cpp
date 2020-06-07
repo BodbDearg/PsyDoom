@@ -156,19 +156,19 @@ void P_UnsetThingPosition(mobj_t& thing) noexcept {
         if (thing.bprev) {
             thing.bprev->bnext = thing.bnext;
         } else {
-            const int32_t blockx = (thing.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
-            const int32_t blocky = (thing.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+            const int32_t blockx = (thing.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
+            const int32_t blocky = (thing.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
 
             // PC-PSX: prevent buffer overflow if the map object is out of bounds.
             // This is part of the fix for the famous 'linedef deletion' bug.
             #if PC_PSX_DOOM_MODS
-                if (blockx >= 0 && blockx < *gBlockmapWidth) {
-                    if (blocky >= 0 && blocky < *gBlockmapHeight) {
-                        gppBlockLinks->get()[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+                if (blockx >= 0 && blockx < gBlockmapWidth) {
+                    if (blocky >= 0 && blocky < gBlockmapHeight) {
+                        gppBlockLinks[blocky * gBlockmapWidth + blockx] = thing.bnext;
                     }
                 }
             #else
-                gppBlockLinks->get()[blockY * (*gBlockmapWidth) + blockX] = mobj.bnext;
+                gppBlockLinks[blockY * gBlockmapWidth + blockX] = mobj.bnext;
             #endif
         }
     }
@@ -198,12 +198,12 @@ void P_SetThingPosition(mobj_t& mobj) noexcept {
 
     // Add the thing to blockmap thing lists, if the thing flags allow it
     if ((mobj.flags & MF_NOBLOCKMAP) == 0) {
-        const int32_t blockX = (mobj.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
-        const int32_t blockY = (mobj.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+        const int32_t blockX = (mobj.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
+        const int32_t blockY = (mobj.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
 
         // Make sure the thing is bounds for the blockmap: if not then just don't add it to the blockmap
-        if ((blockX >= 0) && (blockY >= 0) && (blockX < *gBlockmapWidth) && (blockY < *gBlockmapHeight)) {
-            VmPtr<mobj_t>& blockList = (*gppBlockLinks)[blockY * (*gBlockmapWidth) + blockX];
+        if ((blockX >= 0) && (blockY >= 0) && (blockX < gBlockmapWidth) && (blockY < gBlockmapHeight)) {
+            VmPtr<mobj_t>& blockList = gppBlockLinks[blockY * gBlockmapWidth + blockX];
             mobj.bprev = nullptr;
             mobj.bnext = blockList;
 
@@ -226,16 +226,16 @@ void P_SetThingPosition(mobj_t& mobj) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_BlockLinesIterator(const int32_t x, const int32_t y, bool (*pFunc)(line_t&)) noexcept {
     // If the blockmap block is out of range then there is nothing to do
-    if ((x < 0) || (y < 0) || (x >= *gBlockmapWidth) || (y >= *gBlockmapHeight))
+    if ((x < 0) || (y < 0) || (x >= gBlockmapWidth) || (y >= gBlockmapHeight))
         return true;
     
     // Get the line list offset for this blockmap cell in the blockmap lump.
     // Note that the offset to the line list is in terms of 16-bit words, not bytes.
-    const uint16_t lineListOffset = gpBlockmap->get()[x + y * (*gBlockmapWidth)];
+    const uint16_t lineListOffset = gpBlockmap[x + y * gBlockmapWidth];
 
     // Visit all the lines in the block unless the callee asks to quit
-    const int16_t* pLineIdx = (int16_t*)(gpBlockmapLump->get() + lineListOffset);
-    line_t* const pLines = gpLines->get();
+    const int16_t* pLineIdx = (int16_t*)(gpBlockmapLump + lineListOffset);
+    line_t* const pLines = gpLines;
 
     while (*pLineIdx != -1) {
         line_t& line = pLines[*pLineIdx];
@@ -261,12 +261,12 @@ bool P_BlockLinesIterator(const int32_t x, const int32_t y, bool (*pFunc)(line_t
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_BlockThingsIterator(const int32_t x, const int32_t y, bool (*pFunc)(mobj_t&)) noexcept {
     // If the blockmap block is out of range then there is nothing to do
-    if ((x < 0) || (y < 0) || (x >= *gBlockmapWidth) || (y >= *gBlockmapHeight))
+    if ((x < 0) || (y < 0) || (x >= gBlockmapWidth) || (y >= gBlockmapHeight))
         return true;
     
     // Visit all of the things in this blockmap cell unless the callee asks to quit
-    mobj_t* pmobj = gppBlockLinks->get()[x + y * (*gBlockmapWidth)].get();
-        
+    mobj_t* pmobj = gppBlockLinks[x + y * gBlockmapWidth].get();
+    
     while (pmobj) {
         // Call the function and stop if requested
         if (!pFunc(*pmobj))

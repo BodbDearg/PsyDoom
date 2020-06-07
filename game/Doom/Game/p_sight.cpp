@@ -51,16 +51,16 @@ void P_CheckSights() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
     // Figure out the reject matrix entry to lookup
-    const int32_t secnum1 = (int32_t)(mobj1.subsector->sector.get() - gpSectors->get());
-    const int32_t secnum2 = (int32_t)(mobj2.subsector->sector.get() - gpSectors->get());
-    const int32_t rejectMapEntry = secnum1 * (*gNumSectors) + secnum2;
+    const int32_t secnum1 = (int32_t)(mobj1.subsector->sector.get() - gpSectors);
+    const int32_t secnum2 = (int32_t)(mobj2.subsector->sector.get() - gpSectors);
+    const int32_t rejectMapEntry = secnum1 * gNumSectors + secnum2;
 
     // Lookup the reject matrix to see if these two sectors can possibly see each other.
     // If they can't then we can early out here.
     const int32_t rejectMapByte = rejectMapEntry / 8;
     const int32_t rejectMapBit = rejectMapEntry & 7;
 
-    if ((gpRejectMatrix->get()[rejectMapByte] & (1 << rejectMapBit)) != 0)
+    if ((gpRejectMatrix[rejectMapByte] & (1 << rejectMapBit)) != 0)
         return false;
     
     // Store the start and end points of the sight line.
@@ -95,7 +95,7 @@ bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
 
     // Do a raycast against the BSP tree and return if sight is unobstructed.
     // Also narrows the vertical sight range with each lower and upper wall encountered.
-    return PS_CrossBSPNode(*gNumBspNodes - 1);
+    return PS_CrossBSPNode(gNumBspNodes - 1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -151,7 +151,7 @@ static fixed_t PS_SightCrossLine(line_t& line) noexcept {
 static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
     // Check the sight line against the lines for all segs in the subsector
     const int32_t numSegs = subsec.numsegs;
-    seg_t* const pSegs = &gpSegs->get()[subsec.firstseg];
+    seg_t* const pSegs = &gpSegs[subsec.firstseg];
 
     for (int32_t segIdx = 0; segIdx < numSegs; ++segIdx) {
         seg_t& seg = pSegs[segIdx];
@@ -230,16 +230,16 @@ bool PS_CrossBSPNode(const int32_t nodeNum) noexcept {
     if (nodeNum & NF_SUBSECTOR) {
         const int32_t subsecNum = nodeNum & (~NF_SUBSECTOR);
         
-        if (subsecNum < *gNumSubsectors) {
-            return PS_CrossSubsector(gpSubsectors->get()[subsecNum]);
+        if (subsecNum < gNumSubsectors) {
+            return PS_CrossSubsector(gpSubsectors[subsecNum]);
         } else {
-            I_Error("PS_CrossSubsector: ss %i with numss = %i", subsecNum, *gNumSubsectors);    // Bad subsector number!
+            I_Error("PS_CrossSubsector: ss %i with numss = %i", subsecNum, gNumSubsectors);     // Bad subsector number!
             return false;
         }
     }
 
     // See what side of the bsp split the point is on: will check to see if the sight line is blocked by that half-space first
-    node_t& bspNode = gpBspNodes->get()[nodeNum];
+    node_t& bspNode = gpBspNodes[nodeNum];
     const int32_t sideNum = PA_DivlineSide(gSTrace->x, gSTrace->y, bspNode.line);
 
     // If the sight line cannot cross the closest half-space then we are done: sight is obstructed

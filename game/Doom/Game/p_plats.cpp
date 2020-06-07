@@ -122,7 +122,7 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
 
     for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
         // Only spawn the platform if there isn't already a special operating on this sector
-        sector_t& sector = gpSectors->get()[sectorIdx];
+        sector_t& sector = gpSectors[sectorIdx];
 
         if (sector.specialdata)
             continue;
@@ -144,7 +144,7 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
         switch (platType) {
             case raiseToNearestAndChange: {
                 plat.speed = PLATSPEED / 2;
-                sector.floorpic = gpSides->get()[line.sidenum[0]].sector->floorpic;
+                sector.floorpic = gpSides[line.sidenum[0]].sector->floorpic;
                 plat.high = P_FindNextHighestFloor(sector, sector.floorheight);
                 plat.wait = 0;
                 plat.status = up;
@@ -154,7 +154,7 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
 
             case raiseAndChange: {
                 plat.speed = PLATSPEED / 2;
-                sector.floorpic = gpSides->get()[line.sidenum[0]].sector->floorpic;
+                sector.floorpic = gpSides[line.sidenum[0]].sector->floorpic;
                 plat.high = sector.floorheight + moveAmount * FRACUNIT;
                 plat.wait = 0;
                 plat.status = up;

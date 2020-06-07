@@ -182,19 +182,19 @@ static void PM_UnsetThingPosition(mobj_t& thing) noexcept {
         if (thing.bprev) {
             thing.bprev->bnext = thing.bnext;
         } else {
-            const int32_t blockx = (thing.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
-            const int32_t blocky = (thing.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+            const int32_t blockx = (thing.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
+            const int32_t blocky = (thing.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
 
             // PC-PSX: prevent buffer overflow if the map object is out of bounds.
             // This is part of the fix for the famous 'linedef deletion' bug.
             #if PC_PSX_DOOM_MODS
-                if ((blockx >= 0) && (blockx < *gBlockmapWidth)) {
-                    if ((blocky >= 0) && (blocky < *gBlockmapHeight)) {
-                        (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+                if ((blockx >= 0) && (blockx < gBlockmapWidth)) {
+                    if ((blocky >= 0) && (blocky < gBlockmapHeight)) {
+                        gppBlockLinks[blocky * gBlockmapWidth + blockx] = thing.bnext;
                     }
                 }
             #else
-                (*gppBlockLinks)[blocky * (*gBlockmapWidth) + blockx] = thing.bnext;
+                gppBlockLinks[blocky * gBlockmapWidth + blockx] = thing.bnext;
             #endif
         }
     }
@@ -224,12 +224,12 @@ static void PM_SetThingPosition(mobj_t& mobj) noexcept {
 
     // Add the thing to blockmap thing lists, if the thing flags allow it
     if ((mobj.flags & MF_NOBLOCKMAP) == 0) {
-        const int32_t blockX = (mobj.x - *gBlockmapOriginX) >> MAPBLOCKSHIFT;
-        const int32_t blockY = (mobj.y - *gBlockmapOriginY) >> MAPBLOCKSHIFT;
+        const int32_t blockX = (mobj.x - gBlockmapOriginX) >> MAPBLOCKSHIFT;
+        const int32_t blockY = (mobj.y - gBlockmapOriginY) >> MAPBLOCKSHIFT;
 
         // Make sure the thing is bounds for the blockmap: if not then just don't add it to the blockmap
-        if ((blockX >= 0) && (blockY >= 0) && (blockX < *gBlockmapWidth) && (blockY < *gBlockmapHeight)) {
-            VmPtr<mobj_t>& blockList = gppBlockLinks->get()[blockY * (*gBlockmapWidth) + blockX];
+        if ((blockX >= 0) && (blockY >= 0) && (blockX < gBlockmapWidth) && (blockY < gBlockmapHeight)) {
+            VmPtr<mobj_t>& blockList = gppBlockLinks[blockY * gBlockmapWidth + blockX];
             mobj.bprev = nullptr;
             mobj.bnext = blockList.get();
 
@@ -300,10 +300,10 @@ static void PM_CheckPosition() noexcept {
     // Do collisions against things
     {
         // Compute the blockmap extents to check for collisions against other things and clamp to a valid range
-        const int32_t bmapLx = std::max((gTestTmBBox[BOXLEFT] - *gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
-        const int32_t bmapRx = std::min((gTestTmBBox[BOXRIGHT] - *gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
-        const int32_t bmapTy = std::min((gTestTmBBox[BOXTOP] - *gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);
-        const int32_t bmapBy = std::max((gTestTmBBox[BOXBOTTOM] - *gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
+        const int32_t bmapLx = std::max((gTestTmBBox[BOXLEFT] - gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
+        const int32_t bmapRx = std::min((gTestTmBBox[BOXRIGHT] - gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
+        const int32_t bmapTy = std::min((gTestTmBBox[BOXTOP] - gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
+        const int32_t bmapBy = std::max((gTestTmBBox[BOXBOTTOM] - gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT, 0);
     
         // Test against everything in this blockmap range; stop and set the result 'false' if a definite collision happens
         for (int32_t x = bmapLx; x <= bmapRx; ++x) {
@@ -318,10 +318,10 @@ static void PM_CheckPosition() noexcept {
     
     // Do collision against lines
     {
-        const int32_t bmapLx = std::max((gTestTmBBox[BOXLEFT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
-        const int32_t bmapRx = std::min((gTestTmBBox[BOXRIGHT] - *gBlockmapOriginX) >> MAPBLOCKSHIFT, *gBlockmapWidth - 1);
-        const int32_t bmapTy = std::min((gTestTmBBox[BOXTOP] - *gBlockmapOriginY) >> MAPBLOCKSHIFT, *gBlockmapHeight - 1);
-        const int32_t bmapBy = std::max((gTestTmBBox[BOXBOTTOM] - *gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
+        const int32_t bmapLx = std::max((gTestTmBBox[BOXLEFT] - gBlockmapOriginX) >> MAPBLOCKSHIFT, 0);
+        const int32_t bmapRx = std::min((gTestTmBBox[BOXRIGHT] - gBlockmapOriginX) >> MAPBLOCKSHIFT, gBlockmapWidth - 1);
+        const int32_t bmapTy = std::min((gTestTmBBox[BOXTOP] - gBlockmapOriginY) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
+        const int32_t bmapBy = std::max((gTestTmBBox[BOXBOTTOM] - gBlockmapOriginY) >> MAPBLOCKSHIFT, 0);
 
         // Test against everything in this blockmap range; stop and set the result 'false' if a definite collision happens
         for (int32_t x = bmapLx; x <= bmapRx; ++x) {
@@ -530,11 +530,11 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool PM_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
     // Get the line list for this blockmap cell
-    const int16_t* pLineNum = (int16_t*)(gpBlockmapLump->get() + gpBlockmap->get()[y * (*gBlockmapWidth) + x]);
+    const int16_t* pLineNum = (int16_t*)(gpBlockmapLump + gpBlockmap[y * gBlockmapWidth + x]);
 
     // Visit all lines in the cell, checking for intersection and potential collision.
     // Stop when there is a definite collision.
-    line_t* const pLines = gpLines->get();
+    line_t* const pLines = gpLines;
 
     for (; *pLineNum != -1; ++pLineNum) {
         line_t& line = pLines[*pLineNum];
@@ -557,7 +557,7 @@ static bool PM_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
 // In some cases the thing collided with is saved in 'gpMoveThing' for futher interactions like pickups and damaging.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool PM_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
-    for (mobj_t* pmobj = gppBlockLinks->get()[x + y * (*gBlockmapWidth)].get(); pmobj; pmobj = pmobj->bnext.get()) {
+    for (mobj_t* pmobj = gppBlockLinks[x + y * gBlockmapWidth].get(); pmobj; pmobj = pmobj->bnext.get()) {
         if (!PIT_CheckThing(*pmobj))
             return false;
     }

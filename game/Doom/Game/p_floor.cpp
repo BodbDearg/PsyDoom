@@ -189,7 +189,7 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
 
     for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
         // Ignore if the sector already has a special or moving floor
-        sector_t& sector = gpSectors->get()[sectorIdx];
+        sector_t& sector = gpSectors[sectorIdx];
 
         if (sector.specialdata)
             continue;
@@ -313,7 +313,7 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
                         continue;
                     
                     side_t& side1 = *getSide(sectorIdx, lineIdx, 0);
-                    const int32_t side1SectorIdx = (int32_t)(side1.sector.get() - gpSectors->get());
+                    const int32_t side1SectorIdx = (int32_t)(side1.sector.get() - gpSectors);
                     sector_t& oppositeSector = *getSector(sectorIdx, lineIdx, (side1SectorIdx == sectorIdx) ? 1 : 0);
 
                     floor.texture = (int16_t) oppositeSector.floorpic;
@@ -339,7 +339,7 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
     // Search for first step sectors to build a stairs from using the given line tag
     for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
         // Ignore if the sector already has a special or moving floor
-        sector_t& firstSector = gpSectors->get()[sectorIdx];
+        sector_t& firstSector = gpSectors[sectorIdx];
 
         if (firstSector.specialdata)
             continue;
@@ -380,7 +380,7 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
         
         while (true) {
             bool bDidAStep = false;
-            sector_t& sector = gpSectors->get()[sectorIdx];
+            sector_t& sector = gpSectors[sectorIdx];
 
             for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
                 // Ignore the line if not two sided
@@ -391,7 +391,7 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
 
                 // Ignore the line if the front sector is not the same as the previous step
                 sector_t& fsec = *stepLine.frontsector;
-                const int32_t fsecIdx = (int32_t)(&fsec - gpSectors->get());
+                const int32_t fsecIdx = (int32_t)(&fsec - gpSectors);
 
                 if (fsecIdx != sectorIdx)
                     continue;
@@ -420,7 +420,7 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
                 floor.floordestheight = height;
 
                 // Search for the next step to make from the one we just did
-                sectorIdx = (int32_t)(&bsec - gpSectors->get());
+                sectorIdx = (int32_t)(&bsec - gpSectors);
 
                 // Need to start line checks anew because we are on a new step sector
                 bDidAStep = true;

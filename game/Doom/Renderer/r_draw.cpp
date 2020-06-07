@@ -31,7 +31,7 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
     // Cache the entire leaf for the subsector to the scratchpad.
     // Also transform any leaf vertices that were not yet transformed up until this point.
     {
-        const leafedge_t* pSrcEdge = gpLeafEdges->get() + subsec.firstLeafEdge;
+        const leafedge_t* pSrcEdge = gpLeafEdges + subsec.firstLeafEdge;
         leafedge_t* pDstEdge = leaf1.edges;
         
         for (int32_t edgeIdx = 0; edgeIdx < subsec.numLeafEdges; ++edgeIdx, ++pSrcEdge, ++pDstEdge) {

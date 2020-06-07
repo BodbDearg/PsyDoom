@@ -36,33 +36,33 @@ static constexpr const char* SKY_LUMP_NAME = "F_SKY";
 static constexpr int32_t SKY_LUMP_NAME_LEN = sizeof("F_SKY") - 1;   // -1 to discount null terminator
 
 // Map data
-const VmPtr<VmPtr<uint16_t>>                        gpBlockmapLump(0x800780C4);
-const VmPtr<VmPtr<uint16_t>>                        gpBlockmap(0x80078140);
-const VmPtr<int32_t>                                gBlockmapWidth(0x80078284);
-const VmPtr<int32_t>                                gBlockmapHeight(0x80077EB8);
-const VmPtr<fixed_t>                                gBlockmapOriginX(0x8007818C);
-const VmPtr<fixed_t>                                gBlockmapOriginY(0x80078194);
-const VmPtr<VmPtr<VmPtr<mobj_t>>>                   gppBlockLinks(0x80077EDC);
-const VmPtr<int32_t>                                gNumVertexes(0x80078018);
-const VmPtr<VmPtr<vertex_t>>                        gpVertexes(0x800781E4);
-const VmPtr<int32_t>                                gNumSectors(0x80077F54);
-const VmPtr<VmPtr<sector_t>>                        gpSectors(0x800780A8);
-const VmPtr<int32_t>                                gNumSides(0x800781B4);
-const VmPtr<VmPtr<side_t>>                          gpSides(0x80077EA0);
-const VmPtr<int32_t>                                gNumLines(0x800781C8);
-const VmPtr<VmPtr<line_t>>                          gpLines(0x80077EB0);
-const VmPtr<int32_t>                                gNumSubsectors(0x80078224);
-const VmPtr<VmPtr<subsector_t>>                     gpSubsectors(0x80077F40);
-const VmPtr<int32_t>                                gNumBspNodes(0x800781B8);
-const VmPtr<VmPtr<node_t>>                          gpBspNodes(0x80077EA4);
-const VmPtr<int32_t>                                gNumSegs(0x800780A4);
-const VmPtr<VmPtr<seg_t>>                           gpSegs(0x80078238);
-const VmPtr<int32_t>                                gTotalNumLeafEdges(0x80077F64);
-const VmPtr<VmPtr<leafedge_t>>                      gpLeafEdges(0x8007810C);
-const VmPtr<VmPtr<uint8_t>>                         gpRejectMatrix(0x800780E4);
-const VmPtr<mapthing_t[MAXPLAYERS]>                 gPlayerStarts(0x800A8E7C);
-const VmPtr<mapthing_t[MAX_DEATHMATCH_STARTS]>      gDeathmatchStarts(0x8009806C);
-const VmPtr<VmPtr<mapthing_t>>                      gpDeathmatchP(0x80078060);          // Points past the end of the deathmatch starts list
+uint16_t*       gpBlockmapLump;
+uint16_t*       gpBlockmap;
+int32_t         gBlockmapWidth;
+int32_t         gBlockmapHeight;
+fixed_t         gBlockmapOriginX;
+fixed_t         gBlockmapOriginY;
+VmPtr<mobj_t>*  gppBlockLinks;
+int32_t         gNumVertexes;
+vertex_t*       gpVertexes;
+int32_t         gNumSectors;
+sector_t*       gpSectors;
+int32_t         gNumSides;
+side_t*         gpSides;
+int32_t         gNumLines;
+line_t*         gpLines;
+int32_t         gNumSubsectors;
+subsector_t*    gpSubsectors;
+int32_t         gNumBspNodes;
+node_t*         gpBspNodes;
+int32_t         gNumSegs;
+seg_t*          gpSegs;
+int32_t         gTotalNumLeafEdges;
+leafedge_t*     gpLeafEdges;
+uint8_t*        gpRejectMatrix;
+mapthing_t      gPlayerStarts[MAXPLAYERS];
+mapthing_t      gDeathmatchStarts[MAX_DEATHMATCH_STARTS];
+mapthing_t*     gpDeathmatchP;                                  // Points past the end of the deathmatch starts list
 
 // Function to update the fire sky.
 // Set when the map has a fire sky, otherwise null.
@@ -80,17 +80,17 @@ static void P_LoadVertexes(const int32_t lumpNum) noexcept {
     }
 
     // Alloc the runtime vertex array
-    *gNumVertexes = lumpSize / sizeof(mapvertex_t);
-    *gpVertexes = (vertex_t*) Z_Malloc(*gpMainMemZone, *gNumVertexes * sizeof(vertex_t), PU_LEVEL, nullptr);
+    gNumVertexes = lumpSize / sizeof(mapvertex_t);
+    gpVertexes = (vertex_t*) Z_Malloc(*gpMainMemZone, gNumVertexes * sizeof(vertex_t), PU_LEVEL, nullptr);
     
     // Read the WAD vertexes into the temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Convert the vertexes to the renderer runtime format
     const mapvertex_t* pSrcVertex = (const mapvertex_t*) gTmpBuffer;
-    vertex_t* pDstVertex = gpVertexes->get();
+    vertex_t* pDstVertex = gpVertexes;
 
-    for (int32_t vertexIdx = 0; vertexIdx < *gNumVertexes; ++vertexIdx) {
+    for (int32_t vertexIdx = 0; vertexIdx < gNumVertexes; ++vertexIdx) {
         pDstVertex->x = Endian::littleToHost(pSrcVertex->x);
         pDstVertex->y = Endian::littleToHost(pSrcVertex->y);
         pDstVertex->frameUpdated = 0;
@@ -111,30 +111,30 @@ static void P_LoadSegs(const int32_t lumpNum) noexcept {
     }
     
     // Alloc ram for the runtime segs and zero initialize
-    *gNumSegs = lumpSize / sizeof(mapseg_t);
-    *gpSegs = (seg_t*) Z_Malloc(*gpMainMemZone, *gNumSegs * sizeof(seg_t), PU_LEVEL, nullptr);
-    D_memset(gpSegs->get(), std::byte(0), *gNumSegs * sizeof(seg_t));
+    gNumSegs = lumpSize / sizeof(mapseg_t);
+    gpSegs = (seg_t*) Z_Malloc(*gpMainMemZone, gNumSegs * sizeof(seg_t), PU_LEVEL, nullptr);
+    D_memset(gpSegs, std::byte(0), gNumSegs * sizeof(seg_t));
 
     // Read the map lump containing the segs into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Process the WAD segs and convert them into runtime segs
     const mapseg_t* pSrcSeg = (const mapseg_t*) gTmpBuffer;
-    seg_t* pDstSeg = gpSegs->get();
+    seg_t* pDstSeg = gpSegs;
 
-    for (int32_t segIdx = 0; segIdx < *gNumSegs; ++segIdx) {
+    for (int32_t segIdx = 0; segIdx < gNumSegs; ++segIdx) {
         // Store basic seg properties
-        pDstSeg->vertex1 = &(*gpVertexes)[Endian::littleToHost(pSrcSeg->vertex1)];
-        pDstSeg->vertex2 = &(*gpVertexes)[Endian::littleToHost(pSrcSeg->vertex2)];
+        pDstSeg->vertex1 = &gpVertexes[Endian::littleToHost(pSrcSeg->vertex1)];
+        pDstSeg->vertex2 = &gpVertexes[Endian::littleToHost(pSrcSeg->vertex2)];
         pDstSeg->angle = (fixed_t) Endian::littleToHost(pSrcSeg->angle) << FRACBITS;
         pDstSeg->offset = (fixed_t) Endian::littleToHost(pSrcSeg->offset) << FRACBITS;
 
         // Figure out seg line and side
-        line_t& linedef = (*gpLines)[Endian::littleToHost(pSrcSeg->linedef)];
+        line_t& linedef = gpLines[Endian::littleToHost(pSrcSeg->linedef)];
         pDstSeg->linedef = &linedef;
 
         const int32_t sideNum = linedef.sidenum[Endian::littleToHost(pSrcSeg->side)];
-        side_t& side = (*gpSides)[sideNum];
+        side_t& side = gpSides[sideNum];
         pDstSeg->sidedef = &side;
 
         // Set front and backsector reference
@@ -142,7 +142,7 @@ static void P_LoadSegs(const int32_t lumpNum) noexcept {
 
         if (linedef.flags & ML_TWOSIDED) {
             const int32_t backSideNum = linedef.sidenum[Endian::littleToHost(pSrcSeg->side) ^ 1];
-            side_t& backSide = (*gpSides)[backSideNum];
+            side_t& backSide = gpSides[backSideNum];
             pDstSeg->backsector = backSide.sector;
         } else {
             pDstSeg->backsector = nullptr;
@@ -170,18 +170,18 @@ static void P_LoadSubSectors(const int32_t lumpNum) noexcept {
     }
 
     // Alloc ram for the runtime subsectors and zero initialize
-    *gNumSubsectors = lumpSize / sizeof(mapsubsector_t);
-    *gpSubsectors = (subsector_t*) Z_Malloc(*gpMainMemZone, *gNumSubsectors * sizeof(subsector_t), PU_LEVEL, nullptr);
-    D_memset(gpSubsectors->get(), std::byte(0), *gNumSubsectors * sizeof(subsector_t));
+    gNumSubsectors = lumpSize / sizeof(mapsubsector_t);
+    gpSubsectors = (subsector_t*) Z_Malloc(*gpMainMemZone, gNumSubsectors * sizeof(subsector_t), PU_LEVEL, nullptr);
+    D_memset(gpSubsectors, std::byte(0), gNumSubsectors * sizeof(subsector_t));
 
     // Read the map lump containing the subsectors into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer, true);
     
     // Process the WAD subsectors and convert them into runtime subsectors
     const mapsubsector_t* pSrcSubsec = (const mapsubsector_t*) gTmpBuffer;
-    subsector_t* pDstSubsec = gpSubsectors->get();
+    subsector_t* pDstSubsec = gpSubsectors;
 
-    for (int32_t subsectorIdx = 0; subsectorIdx < *gNumSubsectors; ++subsectorIdx) {
+    for (int32_t subsectorIdx = 0; subsectorIdx < gNumSubsectors; ++subsectorIdx) {
         pDstSubsec->numsegs = Endian::littleToHost(pSrcSubsec->numsegs);
         pDstSubsec->firstseg = Endian::littleToHost(pSrcSubsec->firstseg);
         pDstSubsec->numLeafEdges = 0;
@@ -211,9 +211,9 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     }
 
     // Alloc ram for the runtime sectors and zero initialize
-    *gNumSectors = lumpSize / sizeof(mapsector_t);
-    *gpSectors = (sector_t*) Z_Malloc(*gpMainMemZone, *gNumSectors * sizeof(sector_t), PU_LEVEL, nullptr);
-    D_memset(gpSectors->get(), std::byte(0), *gNumSectors * sizeof(sector_t));
+    gNumSectors = lumpSize / sizeof(mapsector_t);
+    gpSectors = (sector_t*) Z_Malloc(*gpMainMemZone, gNumSectors * sizeof(sector_t), PU_LEVEL, nullptr);
+    D_memset(gpSectors, std::byte(0), gNumSectors * sizeof(sector_t));
 
     // Read the map lump containing the sectors into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer, true);
@@ -221,9 +221,9 @@ static void P_LoadSectors(const int32_t lumpNum) noexcept {
     // Process the WAD sectors and convert them into runtime sectors
     {
         const mapsector_t* pSrcSec = (const mapsector_t*) gTmpBuffer;
-        sector_t* pDstSec = gpSectors->get();
+        sector_t* pDstSec = gpSectors;
 
-        for (int32_t secIdx = 0; secIdx < *gNumSectors; ++secIdx) {
+        for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx) {
             // Save basic properties
             pDstSec->floorheight = (fixed_t) Endian::littleToHost(pSrcSec->floorheight) << FRACBITS;
             pDstSec->ceilingheight = (fixed_t) Endian::littleToHost(pSrcSec->ceilingheight) << FRACBITS;
@@ -277,8 +277,8 @@ static void P_LoadNodes(const int32_t lumpNum) noexcept {
     }
 
     // Alloc ram for the runtime nodes
-    *gNumBspNodes = lumpSize / sizeof(mapnode_t);
-    *gpBspNodes = (node_t*) Z_Malloc(*gpMainMemZone, *gNumBspNodes * sizeof(node_t), PU_LEVEL, nullptr);
+    gNumBspNodes = lumpSize / sizeof(mapnode_t);
+    gpBspNodes = (node_t*) Z_Malloc(*gpMainMemZone, gNumBspNodes * sizeof(node_t), PU_LEVEL, nullptr);
 
     // Read the map lump containing the nodes into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer, true);
@@ -286,9 +286,9 @@ static void P_LoadNodes(const int32_t lumpNum) noexcept {
     // Process the WAD nodes and convert them into runtime nodes.
     // The format for nodes on the PSX appears identical to PC.
     const mapnode_t* pSrcNode = (const mapnode_t*) gTmpBuffer;
-    node_t* pDstNode = gpBspNodes->get();
+    node_t* pDstNode = gpBspNodes;
 
-    for (int32_t nodeIdx = 0; nodeIdx < *gNumBspNodes; ++nodeIdx) {
+    for (int32_t nodeIdx = 0; nodeIdx < gNumBspNodes; ++nodeIdx) {
         pDstNode->line.x = (fixed_t) Endian::littleToHost(pSrcNode->x) << FRACBITS;
         pDstNode->line.y = (fixed_t) Endian::littleToHost(pSrcNode->y) << FRACBITS;
         pDstNode->line.dx = (fixed_t) Endian::littleToHost(pSrcNode->dx) << FRACBITS;
@@ -358,26 +358,26 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
     }
 
     // Alloc ram for the runtime linedefs and zero initialize
-    *gNumLines = lumpSize / sizeof(maplinedef_t);
-    *gpLines = (line_t*) Z_Malloc(*gpMainMemZone, *gNumLines * sizeof(line_t), PU_LEVEL, nullptr);
-    D_memset(gpLines->get(), std::byte(0), *gNumLines * sizeof(line_t));
+    gNumLines = lumpSize / sizeof(maplinedef_t);
+    gpLines = (line_t*) Z_Malloc(*gpMainMemZone, gNumLines * sizeof(line_t), PU_LEVEL, nullptr);
+    D_memset(gpLines, std::byte(0), gNumLines * sizeof(line_t));
 
     // Read the map lump containing the sidedefs into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Process the WAD linedefs and convert them into runtime linedefs
     const maplinedef_t* pSrcLine = (maplinedef_t*) gTmpBuffer;
-    line_t* pDstLine = gpLines->get();
+    line_t* pDstLine = gpLines;
 
-    for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx) {
+    for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
         // Save some basic line properties
         pDstLine->flags = Endian::littleToHost(pSrcLine->flags);
         pDstLine->special = Endian::littleToHost(pSrcLine->special);
         pDstLine->tag = Endian::littleToHost(pSrcLine->tag);
 
         // Save line vertices, delta coordinates and slope type
-        vertex_t& vertex1 = (*gpVertexes)[Endian::littleToHost(pSrcLine->vertex1)];
-        vertex_t& vertex2 = (*gpVertexes)[Endian::littleToHost(pSrcLine->vertex2)];
+        vertex_t& vertex1 = gpVertexes[Endian::littleToHost(pSrcLine->vertex1)];
+        vertex_t& vertex2 = gpVertexes[Endian::littleToHost(pSrcLine->vertex2)];
 
         pDstLine->vertex1 = &vertex1;
         pDstLine->vertex2 = &vertex2;
@@ -421,14 +421,14 @@ static void P_LoadLineDefs(const int32_t lumpNum) noexcept {
         pDstLine->sidenum[1] = sidenum2;
 
         if (sidenum1 != -1) {
-            side_t& side = (*gpSides)[sidenum1];
+            side_t& side = gpSides[sidenum1];
             pDstLine->frontsector = side.sector;
         } else {
             pDstLine->frontsector = nullptr;
         }
 
         if (sidenum2 != -1) {
-            side_t& side = (*gpSides)[sidenum2];
+            side_t& side = gpSides[sidenum2];
             pDstLine->backsector = side.sector;
         } else {
             pDstLine->backsector = nullptr;
@@ -451,21 +451,21 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
     }
 
     // Alloc ram for the runtime sidedefs and zero initialize
-    *gNumSides = lumpSize / sizeof(mapsidedef_t);
-    *gpSides = (side_t*) Z_Malloc(*gpMainMemZone, *gNumSides * sizeof(side_t), PU_LEVEL, nullptr);
-    D_memset(gpSides->get(), std::byte(0), *gNumSides  * sizeof(side_t));
+    gNumSides = lumpSize / sizeof(mapsidedef_t);
+    gpSides = (side_t*) Z_Malloc(*gpMainMemZone, gNumSides * sizeof(side_t), PU_LEVEL, nullptr);
+    D_memset(gpSides, std::byte(0), gNumSides  * sizeof(side_t));
 
     // Read the map lump containing the sidedefs into a temp buffer from the map WAD
     W_ReadMapLump(lumpNum, gTmpBuffer, true);
 
     // Process the WAD sidedefs and convert them into runtime sidedefs
     const mapsidedef_t* pSrcSide = (const mapsidedef_t*) gTmpBuffer;
-    side_t* pDstSide = gpSides->get();
+    side_t* pDstSide = gpSides;
 
-    for (int32_t sideIdx = 0; sideIdx < *gNumSides; ++sideIdx) {
+    for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx) {
         pDstSide->textureoffset = (fixed_t) Endian::littleToHost(pSrcSide->textureoffset) << FRACBITS;
         pDstSide->rowoffset = (fixed_t) Endian::littleToHost(pSrcSide->rowoffset) << FRACBITS;
-        pDstSide->sector = &(*gpSectors)[Endian::littleToHost(pSrcSide->sector)];
+        pDstSide->sector = &gpSectors[Endian::littleToHost(pSrcSide->sector)];
         pDstSide->toptexture = R_TextureNumForName(pSrcSide->toptexture);
         pDstSide->midtexture = R_TextureNumForName(pSrcSide->midtexture);
         pDstSide->bottomtexture = R_TextureNumForName(pSrcSide->bottomtexture);
@@ -482,8 +482,8 @@ static void P_LoadSideDefs(const int32_t lumpNum) noexcept {
 static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     // Read the blockmap lump into RAM
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
-    *gpBlockmapLump = (uint16_t*) Z_Malloc(*gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
-    W_ReadMapLump(lumpNum, gpBlockmapLump->get(), true);
+    gpBlockmapLump = (uint16_t*) Z_Malloc(*gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
+    W_ReadMapLump(lumpNum, gpBlockmapLump, true);
 
     // The first 8 bytes of the blockmap are it's header
     struct blockmap_hdr_t {
@@ -494,10 +494,10 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     };
 
     static_assert(sizeof(blockmap_hdr_t) == 8);
-    blockmap_hdr_t& blockmapHeader = *(blockmap_hdr_t*) gpBlockmapLump->get();
+    blockmap_hdr_t& blockmapHeader = *(blockmap_hdr_t*) gpBlockmapLump;
 
     // The offsets to each blocklist (list of block lines per block) start after the header
-    *gpBlockmap = (uint16_t*)(&(&blockmapHeader)[1]);
+    gpBlockmap = (uint16_t*)(&(&blockmapHeader)[1]);
 
     // Endian correction for the entire blockmap lump.
     //
@@ -510,24 +510,24 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     #endif
 
     if constexpr (bEndianCorrect) {
-        static_assert(sizeof((*gpBlockmapLump)[0]) == sizeof(int16_t));
+        static_assert(sizeof(gpBlockmapLump[0]) == sizeof(int16_t));
         const int32_t count = (lumpSize / 2) + (lumpSize & 1);
 
         for (int32_t i = 0; i < count; ++i) {
-            (*gpBlockmapLump)[i] = Endian::littleToHost((*gpBlockmapLump)[i]);
+            gpBlockmapLump[i] = Endian::littleToHost(gpBlockmapLump[i]);
         }
     }
 
     // Save blockmap dimensions
-    *gBlockmapWidth = blockmapHeader.width;
-    *gBlockmapHeight = blockmapHeader.height;
-    *gBlockmapOriginX = (fixed_t) blockmapHeader.originx << FRACBITS;
-    *gBlockmapOriginY = (fixed_t) blockmapHeader.originy << FRACBITS;
+    gBlockmapWidth = blockmapHeader.width;
+    gBlockmapHeight = blockmapHeader.height;
+    gBlockmapOriginX = (fixed_t) blockmapHeader.originx << FRACBITS;
+    gBlockmapOriginY = (fixed_t) blockmapHeader.originy << FRACBITS;
     
     // Alloc and null initialize the list of map objects for each block
-    const int32_t blockLinksSize = (int32_t) blockmapHeader.width * (int32_t) blockmapHeader.height * sizeof(VmPtr<mobj_t>);
-    *gppBlockLinks = (VmPtr<mobj_t>*) Z_Malloc(*gpMainMemZone, blockLinksSize, PU_LEVEL, nullptr);
-    D_memset(gppBlockLinks->get(), std::byte(0), blockLinksSize);
+    const int32_t blockLinksSize = (int32_t) blockmapHeader.width * (int32_t) blockmapHeader.height * sizeof(gppBlockLinks[0]);
+    gppBlockLinks = (VmPtr<mobj_t>*) Z_Malloc(*gpMainMemZone, blockLinksSize, PU_LEVEL, nullptr);
+    D_memset(gppBlockLinks, std::byte(0), blockLinksSize);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -535,8 +535,8 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_LoadRejectMap(const int32_t lumpNum) noexcept {
     const int32_t lumpSize = W_MapLumpLength(lumpNum);
-    *gpRejectMatrix = (uint8_t*) Z_Malloc(*gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
-    W_ReadMapLump(lumpNum, gpRejectMatrix->get(), true);
+    gpRejectMatrix = (uint8_t*) Z_Malloc(*gpMainMemZone, lumpSize, PU_LEVEL, nullptr);
+    W_ReadMapLump(lumpNum, gpRejectMatrix, true);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -572,19 +572,19 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
         totalLeafEdges += leaf.numedges;
     }
 
-    if (numLeafs != *gNumSubsectors) {
+    if (numLeafs != gNumSubsectors) {
         I_Error("P_LoadLeafs: leaf/subsector inconsistancy");
     }
 
     // Allocate room for all the leaf edges
-    *gpLeafEdges = (leafedge_t*) Z_Malloc(*gpMainMemZone, totalLeafEdges * sizeof(leafedge_t), PU_LEVEL, nullptr);
+    gpLeafEdges = (leafedge_t*) Z_Malloc(*gpMainMemZone, totalLeafEdges * sizeof(leafedge_t), PU_LEVEL, nullptr);
     
     // Convert WAD leaf edges to runtime leaf edges and link them in with other map data structures
-    *gTotalNumLeafEdges = 0;
+    gTotalNumLeafEdges = 0;
 
     const std::byte* pLumpByte = gTmpBuffer;
-    subsector_t* pSubsec = gpSubsectors->get();
-    leafedge_t* pDstEdge = gpLeafEdges->get();
+    subsector_t* pSubsec = gpSubsectors;
+    leafedge_t* pDstEdge = gpLeafEdges;
 
     for (int32_t leafIdx = 0; leafIdx < numLeafs; ++leafIdx) {
         // Convert leaf data to host endian and move past it
@@ -594,7 +594,7 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
 
         // Save leaf info on the subsector
         pSubsec->numLeafEdges = leaf.numedges;
-        pSubsec->firstLeafEdge = (int16_t) *gTotalNumLeafEdges;
+        pSubsec->firstLeafEdge = (int16_t) gTotalNumLeafEdges;
 
         // Process the edges in the leaf
         for (int32_t edgeIdx = 0; edgeIdx < pSubsec->numLeafEdges; ++edgeIdx) {
@@ -606,28 +606,28 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
             pLumpByte += sizeof(mapleafedge_t);
 
             // Set leaf vertex reference
-            if (srcEdge.vertexnum >= *gNumVertexes) {
+            if (srcEdge.vertexnum >= gNumVertexes) {
                 I_Error("P_LoadLeafs: vertex out of range\n");
             }
 
-            pDstEdge->vertex = &(*gpVertexes)[srcEdge.vertexnum];
+            pDstEdge->vertex = &gpVertexes[srcEdge.vertexnum];
 
             // Set leaf seg reference
             if (srcEdge.segnum == -1) {
                 pDstEdge->seg = nullptr;
             } else {
-                if (srcEdge.segnum >= *gNumSegs) {
+                if (srcEdge.segnum >= gNumSegs) {
                     I_Error("P_LoadLeafs: seg out of range\n");
                 }
 
-                pDstEdge->seg = &(*gpSegs)[srcEdge.segnum];
+                pDstEdge->seg = &gpSegs[srcEdge.segnum];
             }
 
             ++pDstEdge;
         }
 
         // Move along to the next leaf
-        *gTotalNumLeafEdges += pSubsec->numLeafEdges;
+        gTotalNumLeafEdges += pSubsec->numLeafEdges;
         ++pSubsec;
     }
 }
@@ -638,10 +638,10 @@ static void P_LoadLeafs(const int32_t lumpNum) noexcept {
 static void P_GroupLines() noexcept {
     // Associate subsectors with their sectors
     {
-        subsector_t* pSubsec = gpSubsectors->get();
+        subsector_t* pSubsec = gpSubsectors;
         
-        for (int32_t subsecIdx = 0; subsecIdx < *gNumSubsectors; ++subsecIdx) {
-            const seg_t& seg = (*gpSegs)[pSubsec->firstseg];
+        for (int32_t subsecIdx = 0; subsecIdx < gNumSubsectors; ++subsecIdx) {
+            const seg_t& seg = gpSegs[pSubsec->firstseg];
             pSubsec->sector = seg.sidedef->sector;
             ++pSubsec;
         }
@@ -651,9 +651,9 @@ static void P_GroupLines() noexcept {
     int32_t totalLineRefs = 0;
 
     {
-        line_t* pLine = gpLines->get();
+        line_t* pLine = gpLines;
 
-        for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx) {
+        for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
             ++pLine->frontsector->linecount;
             ++totalLineRefs;
 
@@ -671,9 +671,9 @@ static void P_GroupLines() noexcept {
     VmPtr<line_t>* pLineRef = pLineRefBuffer;
 
     // Build the list of lines for each sector, also bounding boxes and the 'sound origin' point
-    sector_t* pSec = gpSectors->get();
+    sector_t* pSec = gpSectors;
 
-    for (int32_t secIdx = 0; secIdx < *gNumSectors; ++secIdx) {
+    for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx) {
         // Clear the bounding box for the sector and set the line list start
         fixed_t bbox[4];
         M_ClearBox(bbox);
@@ -683,9 +683,9 @@ static void P_GroupLines() noexcept {
         // Not an efficient algorithm, since it is O(N^2) but works OK given the size of the datasets in DOOM.
         // This might be a problem if you are planning on making a DOOM open world game however... :P
         {
-            line_t* pLine = gpLines->get();
+            line_t* pLine = gpLines;
 
-            for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx) {
+            for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
                 // Does this line belong to this sector?
                 // If so save the line reference in the sector line list and add to the sector bounding box.
                 if (pLine->frontsector == pSec || pLine->backsector == pSec) {
@@ -727,22 +727,22 @@ static void P_GroupLines() noexcept {
         // Compute the bounding box for the sector in blockmap units.
         // Note that if the sector extends the beyond the blockmap then we constrain it's coordinate.
         {
-            int32_t bmcoord = (bbox[BOXTOP] - *gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT;
-            bmcoord = (bmcoord >= *gBlockmapHeight) ? *gBlockmapHeight - 1 : bmcoord;
+            int32_t bmcoord = (bbox[BOXTOP] - gBlockmapOriginY + MAXRADIUS) >> MAPBLOCKSHIFT;
+            bmcoord = (bmcoord >= gBlockmapHeight) ? gBlockmapHeight - 1 : bmcoord;
             pSec->blockbox[BOXTOP] = bmcoord;
         }
         {
-            int32_t bmcoord = (bbox[BOXBOTTOM] - *gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT;
+            int32_t bmcoord = (bbox[BOXBOTTOM] - gBlockmapOriginY - MAXRADIUS) >> MAPBLOCKSHIFT;
             bmcoord = (bmcoord < 0) ? 0 : bmcoord;
             pSec->blockbox[BOXBOTTOM] = bmcoord;
         }
         {
-            int32_t bmcoord = (bbox[BOXRIGHT] - *gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT;
-            bmcoord = (bmcoord >= *gBlockmapWidth) ? *gBlockmapWidth - 1 : bmcoord;
+            int32_t bmcoord = (bbox[BOXRIGHT] - gBlockmapOriginX + MAXRADIUS) >> MAPBLOCKSHIFT;
+            bmcoord = (bmcoord >= gBlockmapWidth) ? gBlockmapWidth - 1 : bmcoord;
             pSec->blockbox[BOXRIGHT] = bmcoord;
         }
         {
-            int32_t bmcoord = (bbox[BOXLEFT] - *gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT;
+            int32_t bmcoord = (bbox[BOXLEFT] - gBlockmapOriginX - MAXRADIUS) >> MAPBLOCKSHIFT;
             bmcoord = (bmcoord < 0) ? 0 : bmcoord;
             pSec->blockbox[BOXLEFT] = bmcoord;
         }
@@ -758,9 +758,9 @@ static void P_GroupLines() noexcept {
 void P_Init() noexcept {
     // Load sector flats into VRAM if not already there
     {
-        const sector_t* pSec = gpSectors->get();
+        const sector_t* pSec = gpSectors;
 
-        for (int32_t secIdx = 0; secIdx < *gNumSectors; ++secIdx, ++pSec) {
+        for (int32_t secIdx = 0; secIdx < gNumSectors; ++secIdx, ++pSec) {
             // Note: ceiling might not have a texture (sky)
             if (pSec->ceilingpic != -1) {
                 texture_t& ceilTex = gpFlatTextures[pSec->ceilingpic];
@@ -831,9 +831,9 @@ void P_Init() noexcept {
     // Give all sides without textures a default one.
     // Maybe done so constant validity checks don't have to be done elsewhere in the game to avoid crashing?
     {
-        side_t* pSide = gpSides->get();
+        side_t* pSide = gpSides;
 
-        for (int32_t sideIdx = 0; sideIdx < *gNumSides; ++sideIdx, ++pSide) {
+        for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx, ++pSide) {
             if (pSide->toptexture == -1) {
                 pSide->toptexture = 0;
             }
@@ -965,7 +965,7 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     P_GroupLines();
 
     // Load and spawn map things. Also initialize the next deathmatch start.
-    *gpDeathmatchP = &gDeathmatchStarts[0];
+    gpDeathmatchP = &gDeathmatchStarts[0];
     P_LoadThings(mapStartLump + ML_THINGS);
     
     // Spawn special thinkers such as light flashes etc. and free up the loaded WAD data
@@ -1214,9 +1214,9 @@ void P_CacheMapTexturesWithWidth(const int32_t width) noexcept {
     }
 
     // Run through all the sides in the map and cache textures with the specified width
-    side_t* pSide = gpSides->get();
+    side_t* pSide = gpSides;
 
-    for (int32_t sideIdx = 0; sideIdx < *gNumSides; ++sideIdx, ++pSide) {
+    for (int32_t sideIdx = 0; sideIdx < gNumSides; ++sideIdx, ++pSide) {
         if (pSide->toptexture != -1) {
             texture_t& tex = gpTextures[pSide->toptexture];
 

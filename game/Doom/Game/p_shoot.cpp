@@ -77,7 +77,7 @@ void P_Shoot2() noexcept {
     *gOldFrac = 0;
 
     // Test against all lines and things in the BSP tree
-    PA_CrossBSPNode(*gNumBspNodes - 1);
+    PA_CrossBSPNode(gNumBspNodes - 1);
 
     // If we didn't hit a thing then try check against the saved previous closest thing (if any)
     if (!gpShootMObj->get()) {
@@ -330,7 +330,7 @@ static bool PA_CrossSubsector(subsector_t& subsec) noexcept {
 
     // Check for hits against all segs in the subsector
     const int32_t curValidCount = gValidCount;
-    seg_t* const pSegs = gpSegs->get() + subsec.firstseg;
+    seg_t* const pSegs = gpSegs + subsec.firstseg;
     const int16_t numSegs = subsec.numsegs;
     
     for (int32_t segIdx = 0; segIdx < numSegs; ++segIdx) {
@@ -380,16 +380,16 @@ bool PA_CrossBSPNode(const int32_t nodeNum) noexcept {
     if (nodeNum & NF_SUBSECTOR) {
         const int32_t subsecNum = nodeNum & (~NF_SUBSECTOR);
         
-        if (subsecNum < *gNumSubsectors) {
-            return PA_CrossSubsector(gpSubsectors->get()[subsecNum]);
+        if (subsecNum < gNumSubsectors) {
+            return PA_CrossSubsector(gpSubsectors[subsecNum]);
         } else {
-            I_Error("PA_CrossSubsector: ss %i with numss = %i", subsecNum, *gNumSubsectors);    // Bad subsector number!
+            I_Error("PA_CrossSubsector: ss %i with numss = %i", subsecNum, gNumSubsectors);     // Bad subsector number!
             return false;
         }
     }
 
     // See what side of the bsp split the point is on: will check to see if the sight line is blocked by that half-space first
-    node_t& bspNode = gpBspNodes->get()[nodeNum];
+    node_t& bspNode = gpBspNodes[nodeNum];
     const int32_t sideNum = PA_DivlineSide(gShootDiv->x, gShootDiv->y, bspNode.line);
 
     // If the sight line cannot cross the closest half-space then we are done: sight is obstructed

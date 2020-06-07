@@ -151,7 +151,7 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
     // Try to match a portion of the wall (upper, middle, lower) against a switch texture.
     // When a match is found flip the texture to the opposite switch texture.
     // If the switch is usable again, switch it back after a while.
-    side_t& side = gpSides->get()[line.sidenum[0]];
+    side_t& side = gpSides[line.sidenum[0]];
     
     for (int32_t switchListIdx = 0; switchListIdx < NUM_SWITCHES * 2; ++switchListIdx) {
         const int32_t switchTex = gSwitchList[switchListIdx];

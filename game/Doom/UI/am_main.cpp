@@ -34,10 +34,10 @@ static fixed_t  gAutomapYMax;
 // Automap initialization logic
 //------------------------------------------------------------------------------------------------------------------------------------------
 void AM_Start() noexcept {
-    gAutomapXMin = *gBlockmapOriginX;
-    gAutomapYMin = *gBlockmapOriginY;
-    gAutomapXMax = (*gBlockmapWidth  << MAPBLOCKSHIFT) + *gBlockmapOriginX;
-    gAutomapYMax = (*gBlockmapHeight << MAPBLOCKSHIFT) + *gBlockmapOriginY;
+    gAutomapXMin = gBlockmapOriginX;
+    gAutomapYMin = gBlockmapOriginY;
+    gAutomapXMax = (gBlockmapWidth << MAPBLOCKSHIFT) + gBlockmapOriginX;
+    gAutomapYMax = (gBlockmapHeight << MAPBLOCKSHIFT) + gBlockmapOriginY;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -164,9 +164,9 @@ void AM_Drawer() noexcept {
 
     // Draw all the map lines
     {
-        const line_t* pLine = gpLines->get();
+        const line_t* pLine = gpLines;
 
-        for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx, ++pLine) {
+        for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx, ++pLine) {
             // See whether we should draw the automap line or not
             const bool bHiddenLine = (pLine->flags & ML_DONTDRAW);
             const bool bLineSeen = ((pLine->flags & ML_MAPPED) && (!bHiddenLine));

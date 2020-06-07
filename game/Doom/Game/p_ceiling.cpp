@@ -146,7 +146,7 @@ bool EV_DoCeiling(line_t& line, const ceiling_e ceilingType) noexcept {
 
     for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
         // Only spawn the ceiling mover if there isn't already a special operating on this sector
-        sector_t& sector = gpSectors->get()[sectorIdx];
+        sector_t& sector = gpSectors[sectorIdx];
 
         if (sector.specialdata)
             continue;

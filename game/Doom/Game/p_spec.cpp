@@ -155,21 +155,21 @@ void P_InitPicAnims() noexcept {
 // Get the specified side of a line in the given sector
 //------------------------------------------------------------------------------------------------------------------------------------------
 side_t* getSide(const int32_t sectorIdx, const int32_t lineIdx, const int32_t sideIdx) noexcept {
-    return gpSides->get() + gpSectors->get()[sectorIdx].lines[lineIdx]->sidenum[sideIdx];
+    return gpSides + gpSectors[sectorIdx].lines[lineIdx]->sidenum[sideIdx];
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Get the sector on the specified side of a line in the given sector
 //------------------------------------------------------------------------------------------------------------------------------------------
 sector_t* getSector(const int32_t sectorIdx, const int32_t lineIdx, const int32_t sideIdx) noexcept {
-    return gpSides->get()[gpSectors->get()[sectorIdx].lines[lineIdx]->sidenum[sideIdx]].sector.get();
+    return gpSides[gpSectors[sectorIdx].lines[lineIdx]->sidenum[sideIdx]].sector.get();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Utility: tell if a line in sector is two sided
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool twoSided(const int32_t sectorIdx, const int32_t lineIdx) noexcept {
-    return (gpSectors->get()[sectorIdx].lines[lineIdx]->flags & ML_TWOSIDED);
+    return (gpSectors[sectorIdx].lines[lineIdx]->flags & ML_TWOSIDED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -319,8 +319,8 @@ fixed_t P_FindHighestCeilingSurrounding(sector_t& sector) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 int32_t P_FindSectorFromLineTag(line_t& line, const int32_t searchStart) noexcept {
     const int32_t lineTag = line.tag;
-    sector_t* const pSectors = gpSectors->get();
-    const int32_t numSectors = *gNumSectors;
+    sector_t* const pSectors = gpSectors;
+    const int32_t numSectors = gNumSectors;
 
     for (int32_t sectorIdx = searchStart + 1; sectorIdx < numSectors; ++sectorIdx) {
         sector_t& sector = pSectors[sectorIdx];
@@ -925,7 +925,7 @@ void P_UpdateSpecials() noexcept {
     // Animate line specials (scrolling walls)
     for (int32_t specialIdx = 0; specialIdx < *gNumLinespecials; ++specialIdx) {
         line_t& line = *gpLineSpecialList[specialIdx];
-        side_t& side = gpSides->get()[line.sidenum[0]];
+        side_t& side = gpSides[line.sidenum[0]];
 
         switch (line.special) {
             // Effect: scroll left
@@ -970,7 +970,7 @@ void P_UpdateSpecials() noexcept {
 
         // Switch the wall texture for the button back to what it was
         line_t& line = *button.line;
-        side_t& side = gpSides->get()[line.sidenum[0]];
+        side_t& side = gpSides[line.sidenum[0]];
 
         switch (button.where) {
             case top:       side.toptexture     = button.btexture;  break;
@@ -1001,7 +1001,7 @@ bool EV_DoDonut(line_t& line) noexcept {
     for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
         // Only spawn a mover if there isn't already a special operating on this sector.
         // This sector will be the inner part of the 'donut', the bit that is lowered:
-        sector_t& sector = gpSectors->get()[sectorIdx];
+        sector_t& sector = gpSectors[sectorIdx];
 
         if (sector.specialdata)
             continue;
@@ -1122,8 +1122,8 @@ void G_SecretExitLevel(const int32_t nextMap) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SpawnSpecials() noexcept {
     // Spawn thinkers for sector specials
-    for (int32_t sectorIdx = 0; sectorIdx < *gNumSectors; ++sectorIdx) {
-        sector_t& sector = gpSectors->get()[sectorIdx];
+    for (int32_t sectorIdx = 0; sectorIdx < gNumSectors; ++sectorIdx) {
+        sector_t& sector = gpSectors[sectorIdx];
 
         if (!sector.special)
             continue;
@@ -1150,8 +1150,8 @@ void P_SpawnSpecials() noexcept {
     // Save scrolling line specials to their own list (for quick updating)
     *gNumLinespecials = 0;
     
-    for (int32_t lineIdx = 0; lineIdx < *gNumLines; ++lineIdx) {
-        line_t& line = gpLines->get()[lineIdx];
+    for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
+        line_t& line = gpLines[lineIdx];
 
         switch (line.special) {
             case 200:   // Effect: scroll left
@@ -1174,8 +1174,8 @@ void P_SpawnSpecials() noexcept {
     // These are sectors that activate when all enemies of the corresponding boss type are killed.
     *gMapBossSpecialFlags = 0;
 
-    for (int32_t sectorIdx = 0; sectorIdx < *gNumSectors; ++sectorIdx) {
-        sector_t& sector = gpSectors->get()[sectorIdx];
+    for (int32_t sectorIdx = 0; sectorIdx < gNumSectors; ++sectorIdx) {
+        sector_t& sector = gpSectors[sectorIdx];
 
         switch (sector.tag) {
             case 666:   *gMapBossSpecialFlags |= 0x01;  break;      // Kill all 'MT_FATSO' to activate this 'lowerFloorToLowest' floor

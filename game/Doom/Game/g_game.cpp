@@ -176,7 +176,7 @@ void G_DoReborn(const int32_t playerIdx) noexcept {
 
     if (gNetGame == gt_deathmatch) {
         // Deathmatch game: try to choose a random spawn point that's good
-        const int32_t numSpawnPts = (int32_t)(gpDeathmatchP->get() - gDeathmatchStarts.get());
+        const int32_t numSpawnPts = (int32_t)(gpDeathmatchP - gDeathmatchStarts);
 
         for (int32_t attemptNum = 0; attemptNum < 16; ++attemptNum) {
             mapthing_t& spawnPt = gDeathmatchStarts[P_Random() % numSpawnPts];

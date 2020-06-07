@@ -41,7 +41,7 @@ void R_BSP() noexcept {
     gbIsSkyVisible = false;
 
     // Traverse the BSP tree to generate the list of subsectors to draw
-    const int32_t bsproot = *gNumBspNodes - 1;
+    const int32_t bsproot = gNumBspNodes - 1;
     R_RenderBSPNode(bsproot);
 }
 
@@ -63,7 +63,7 @@ void R_RenderBSPNode(const int32_t bspnum) noexcept {
     } else {
         // This is not a subsector, continue traversing the BSP tree.
         // Only stop when a particular node is determined to be not visible.
-        node_t& node = (*gpBspNodes)[bspnum];
+        node_t& node = gpBspNodes[bspnum];
 
         // Compute which side of the line the point is on using the cross product.
         // This is pretty much the same code found in 'R_PointOnSide':
@@ -315,8 +315,8 @@ bool R_CheckBBox(const fixed_t bspcoord[4]) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void R_Subsector(const int32_t subsecNum) noexcept {
     // Bad subsector number?
-    if (subsecNum >= *gNumSubsectors) {
-        I_Error("R_Subsector: ss %i with numss = %i", subsecNum, *gNumSubsectors);
+    if (subsecNum >= gNumSubsectors) {
+        I_Error("R_Subsector: ss %i with numss = %i", subsecNum, gNumSubsectors);
     }
     
     // If we've hit the limit for the number of subsectors that can be drawn then stop emitting.
@@ -324,14 +324,14 @@ void R_Subsector(const int32_t subsecNum) noexcept {
     if (gppEndDrawSubsector - gpDrawSubsectors >= MAX_DRAW_SUBSECTORS)
         return;
     
-    subsector_t& subsec = (*gpSubsectors)[subsecNum];
+    subsector_t& subsec = gpSubsectors[subsecNum];
     gpCurDrawSector = subsec.sector.get();
     *gppEndDrawSubsector = &subsec;
     gppEndDrawSubsector++;
     
     // Do draw preparation on all of the segs in the subsector.
     // This figures out what areas of the screen they occlude, updates transformed vertex positions, and more...
-    seg_t* pSeg = &(*gpSegs)[subsec.firstseg];
+    seg_t* pSeg = &gpSegs[subsec.firstseg];
 
     for (int32_t segsleft = subsec.numsegs; segsleft > 0; --segsleft) {
         R_AddLine(*pSeg);

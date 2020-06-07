@@ -49,9 +49,9 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
         return false;
     
     // Search for a teleport destination marker in a sector with a tag matching the given line
-    sector_t* const pSectors = gpSectors->get();
+    sector_t* const pSectors = gpSectors;
 
-    for (int32_t sectorIdx = 0; sectorIdx < *gNumSectors; ++sectorIdx) {
+    for (int32_t sectorIdx = 0; sectorIdx < gNumSectors; ++sectorIdx) {
         // Ignore this sector if it doesn't have the right tag
         sector_t& sector = pSectors[sectorIdx];
 

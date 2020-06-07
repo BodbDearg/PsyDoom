@@ -219,7 +219,7 @@ void P_SpawnRapidStrobeFlash(sector_t& sector) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void EV_StartLightStrobing(line_t& line) noexcept {
     for (int32_t sectorIdx = P_FindSectorFromLineTag(line, -1); sectorIdx >= 0; sectorIdx = P_FindSectorFromLineTag(line, sectorIdx)) {
-        sector_t& sector = gpSectors->get()[sectorIdx];
+        sector_t& sector = gpSectors[sectorIdx];
 
         // Only spawn the strobe if there isn't a special on the sector already
         if (!sector.specialdata) {
@@ -233,9 +233,9 @@ void EV_StartLightStrobing(line_t& line) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void EV_TurnTagLightsOff(line_t& line) noexcept {
     // Turn 'off' the light for all sectors with a matching tag
-    sector_t* const pSectors = gpSectors->get();
+    sector_t* const pSectors = gpSectors;
     
-    for (int32_t sectorIdx = 0; sectorIdx < *gNumSectors; ++sectorIdx) {
+    for (int32_t sectorIdx = 0; sectorIdx < gNumSectors; ++sectorIdx) {
         sector_t& sector = pSectors[sectorIdx];
 
         if (sector.tag != line.tag)
@@ -263,9 +263,9 @@ void EV_TurnTagLightsOff(line_t& line) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void EV_LightTurnOn(line_t& line, const int32_t onLightLevel) noexcept {
     // Turn 'on' the light for all sectors with a matching tag
-    sector_t* const pSectors = gpSectors->get();
+    sector_t* const pSectors = gpSectors;
 
-    for (int32_t sectorIdx = 0; sectorIdx < *gNumSectors; ++sectorIdx) {
+    for (int32_t sectorIdx = 0; sectorIdx < gNumSectors; ++sectorIdx) {
         sector_t& sector = pSectors[sectorIdx];
 
         if (sector.tag != line.tag)
