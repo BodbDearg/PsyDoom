@@ -216,9 +216,9 @@ void I_DrawPausedOverlay() noexcept {
     if (player.cheats & CF_WARPMENU) {
         // Draw the level warp menu
         char warpmsg[64];
-        std::sprintf(warpmsg, "warp to level %d", *gMapNumToCheatWarpTo);
+        std::sprintf(warpmsg, "warp to level %d", gMapNumToCheatWarpTo);
         I_DrawString(-1, 40, warpmsg);
-        I_DrawString(-1, 60, gMapNames[*gMapNumToCheatWarpTo - 1]);
+        I_DrawString(-1, 60, gMapNames[gMapNumToCheatWarpTo - 1]);
     }
     else if (player.cheats & CF_VRAMVIEWER) {
         // Draw the vram viewer: first clear the background to black and then draw it
@@ -236,7 +236,7 @@ void I_DrawPausedOverlay() noexcept {
             I_AddPrim(LIBETC_getScratchAddr(128));
         }
         
-        I_VramViewerDraw(*gVramViewerTexPage);
+        I_VramViewerDraw(gVramViewerTexPage);
     }
 }
 

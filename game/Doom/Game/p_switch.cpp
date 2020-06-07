@@ -77,17 +77,17 @@ static constexpr int32_t NUM_SWITCHES   = C_ARRAY_SIZE(gAlphSwitchList);    // N
 static constexpr int32_t BUTTONTIME     = 1 * TICRATE;                      // How long it takes for a switch to go back to it's original state (1 second)
 
 // The list of currently active buttons/switches
-const VmPtr<button_t[MAXBUTTONS]> gButtonList(0x800977AC);
+button_t gButtonList[MAXBUTTONS];
 
 // The 2 lumps for each switch texture in the game
-static const VmPtr<int32_t[NUM_SWITCHES * 2]> gSwitchList(0x800975FC);
+static int32_t gSwitchList[NUM_SWITCHES * 2];
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Caches textures for all active switches in the level.
 // Must be done after 64 pixel wide wall textures have been cached in order to work.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_InitSwitchList() noexcept {
-    int32_t* pSwitchLump = gSwitchList.get();
+    int32_t* pSwitchLump = gSwitchList;
 
     for (int32_t switchIdx = 0; switchIdx < NUM_SWITCHES; ++switchIdx) {
         // Get both textures for the switch

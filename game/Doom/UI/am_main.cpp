@@ -45,13 +45,13 @@ void AM_Start() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void AM_Control(player_t& player) noexcept {
     // If the game is paused we do nothing
-    if (*gbGamePaused)
+    if (gbGamePaused)
         return;
     
     // Toggle the automap on and off if select has just been pressed
-    const padbuttons_t ticButtons = gTicButtons[*gPlayerNum];
+    const padbuttons_t ticButtons = gTicButtons[gPlayerNum];
     
-    if ((ticButtons & PAD_SELECT) && ((gOldTicButtons[*gPlayerNum] & PAD_SELECT) == 0)) {
+    if ((ticButtons & PAD_SELECT) && ((gOldTicButtons[gPlayerNum] & PAD_SELECT) == 0)) {
         player.automapflags ^= AF_ACTIVE;
         player.automapx = player.mo->x;
         player.automapy = player.mo->y;
@@ -137,7 +137,7 @@ void AM_Control(player_t& player) noexcept {
     }
 
     // When not in follow mode, consume these inputs so that we don't move the player in the level
-    gTicButtons[*gPlayerNum] &= ~(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_R1 | PAD_L1);
+    gTicButtons[gPlayerNum] &= ~(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_R1 | PAD_L1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

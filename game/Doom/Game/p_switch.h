@@ -27,7 +27,7 @@ static_assert(sizeof(button_t) == 20);
 // This limit was inherited from PC DOOM where the thinking was that 4x buttons for 4x players was more than enough.
 static constexpr int32_t MAXBUTTONS = 16;
 
-extern const VmPtr<button_t[MAXBUTTONS]> gButtonList;
+extern button_t gButtonList[MAXBUTTONS];
 
 void P_InitSwitchList() noexcept;
 void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept;

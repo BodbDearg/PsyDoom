@@ -37,7 +37,7 @@ static constexpr int32_t TURN_ACCEL_TICS        = C_ARRAY_SIZE(ANGLE_TURN);     
 static constexpr int32_t TURN_TO_ANGLE_SHIFT    = 17;                           // How many bits to shift the turn amount left to scale it to an angle
 static constexpr fixed_t MAXBOB                 = 16 * FRACUNIT;                // Maximum amount of view bobbing per frame (16 pixels)
 
-static const VmPtr<bool32_t>    gbOnGround(0x800781CC);     // Flag set to true when the player is on the ground
+static bool gbOnGround;     // Flag set to true when the player is on the ground
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Attempts to move the given player map object according to it's current velocity.
@@ -45,7 +45,7 @@ static const VmPtr<bool32_t>    gbOnGround(0x800781CC);     // Flag set to true 
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_PlayerMove(mobj_t& mobj) noexcept {
     // This is the amount to be moved
-    const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[*gPlayerNum];
+    const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gPlayerNum];
     fixed_t moveDx = (mobj.momx >> 2) * elapsedVBlanks;
     fixed_t moveDy = (mobj.momy >> 2) * elapsedVBlanks;
 
@@ -191,11 +191,11 @@ static void P_PlayerMobjThink(mobj_t& mobj) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_BuildMove(player_t& player) noexcept {
     // Grab some useful stuff: elapsed vblanks, currend and old buttons and gamepad bindings
-    const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[*gPlayerNum];
-    const uint32_t curBtns = gTicButtons[*gPlayerNum];
-    const uint32_t oldBtns = gOldTicButtons[*gPlayerNum];
+    const int32_t elapsedVBlanks = gPlayersElapsedVBlanks[gPlayerNum];
+    const uint32_t curBtns = gTicButtons[gPlayerNum];
+    const uint32_t oldBtns = gOldTicButtons[gPlayerNum];
 
-    const padbuttons_t* const pBtnBindings = gpPlayerCtrlBindings[*gPlayerNum];
+    const padbuttons_t* const pBtnBindings = gpPlayerCtrlBindings[gPlayerNum];
     
     // Do turn acceleration if turn is held continously for 2 frames or more
     const bool bLeftTurnAccel = ((curBtns & PAD_LEFT) && (oldBtns & PAD_LEFT));
@@ -316,7 +316,7 @@ static void P_CalcHeight(player_t& player) noexcept {
     // When we are not on the ground just set the view z based on map object z and clamp below the ceiling
     const fixed_t maxViewZ = mobj.ceilingz - 4 * FRACUNIT;
 
-    if (!*gbOnGround) {
+    if (!gbOnGround) {
         player.viewz = mobj.z + VIEWHEIGHT;
         player.viewz = std::min(player.viewz, maxViewZ);    // Don't get too close to the ceiling!
         return;
@@ -374,14 +374,14 @@ static void P_MovePlayer(player_t& player) noexcept {
     mobj.angle += player.angleturn;
 
     // Save whether we are on the ground
-    *gbOnGround = (mobj.z <= mobj.floorz);
+    gbOnGround = (mobj.z <= mobj.floorz);
     
     // Apply side and forward/backward movement velocity
-    if ((player.forwardmove != 0) && *gbOnGround) {
+    if ((player.forwardmove != 0) && gbOnGround) {
         P_Thrust(player, mobj.angle, player.forwardmove);
     }
 
-    if ((player.sidemove != 0) && *gbOnGround) {
+    if ((player.sidemove != 0) && gbOnGround) {
         P_Thrust(player, mobj.angle - ANG90, player.sidemove);
     }
 
@@ -407,7 +407,7 @@ static void P_DeathThink(player_t& player) noexcept {
 
     // Is the player on the ground now?
     mobj_t& playerMobj = *player.mo;
-    *gbOnGround = (playerMobj.z <= playerMobj.floorz);
+    gbOnGround = (playerMobj.z <= playerMobj.floorz);
 
     // Update the current view height
     P_CalcHeight(player);
@@ -445,7 +445,7 @@ static void P_DeathThink(player_t& player) noexcept {
     }
 
     // Respawn if the right buttons are pressed and the player's view has dropped enough
-    const bool bRespawnBtnPressed = (gTicButtons[*gPlayerNum] & (PAD_ACTION_BTNS | PAD_SHOULDER_BTNS));
+    const bool bRespawnBtnPressed = (gTicButtons[gPlayerNum] & (PAD_ACTION_BTNS | PAD_SHOULDER_BTNS));
 
     if (bRespawnBtnPressed && (player.viewheight <= 8 * FRACUNIT)) {
         player.playerstate = PST_REBORN;
@@ -457,9 +457,9 @@ static void P_DeathThink(player_t& player) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_PlayerThink(player_t& player) noexcept {
     // Grab the current and previous buttons, and the gamepad bindings
-    const uint32_t curBtns = gTicButtons[*gPlayerNum];
-    const uint32_t oldBtns = gOldTicButtons[*gPlayerNum];
-    const padbuttons_t* pBtnBindings = gpPlayerCtrlBindings[*gPlayerNum];
+    const uint32_t curBtns = gTicButtons[gPlayerNum];
+    const uint32_t oldBtns = gOldTicButtons[gPlayerNum];
+    const padbuttons_t* pBtnBindings = gpPlayerCtrlBindings[gPlayerNum];
 
     // Do weapon switching if the player is still alive (and even if paused)
     if (player.playerstate == PST_LIVE) {
@@ -526,7 +526,7 @@ void P_PlayerThink(player_t& player) noexcept {
     }
 
     // Updates for when the game is NOT paused
-    if (!*gbGamePaused) {
+    if (!gbGamePaused) {
         // Do physical movements due to velocity and state transitions for the player
         mobj_t& playerMobj = *player.mo;
         P_PlayerMobjThink(playerMobj);
@@ -581,7 +581,7 @@ void P_PlayerThink(player_t& player) noexcept {
 
                 // Should we do the grimmace face after fire has been pressed a long time?
                 const bool bDoGrimmaceFace = (
-                    (*gPlayerNum == gCurPlayerIndex) &&
+                    (gPlayerNum == gCurPlayerIndex) &&
                     (player.attackdown > TICRATE * 2) &&
                     ((player.readyweapon == wp_chaingun) || (player.readyweapon == wp_plasma))
                 );

@@ -335,9 +335,9 @@ void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
     }
 
     // If the fire button is pressed then try fire the player's weapon
-    const padbuttons_t fireBtn = gpPlayerCtrlBindings[*gPlayerNum][cbind_attack];
+    const padbuttons_t fireBtn = gpPlayerCtrlBindings[gPlayerNum][cbind_attack];
 
-    if (gTicButtons[*gPlayerNum] & fireBtn) {
+    if (gTicButtons[gPlayerNum] & fireBtn) {
         P_FireWeapon(player);
         return;
     }
@@ -356,9 +356,9 @@ void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
 // Otherwise switch to another weapon if out of ammo after firing.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_ReFire(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
-    const padbuttons_t fireBtn = gpPlayerCtrlBindings[*gPlayerNum][cbind_attack];
+    const padbuttons_t fireBtn = gpPlayerCtrlBindings[gPlayerNum][cbind_attack];
 
-    if ((gTicButtons[*gPlayerNum] & fireBtn) && (player.pendingweapon == wp_nochange) && (player.health != 0)) {
+    if ((gTicButtons[gPlayerNum] & fireBtn) && (player.pendingweapon == wp_nochange) && (player.health != 0)) {
         player.refire++;
         P_FireWeapon(player);
     } else {
@@ -782,10 +782,10 @@ void P_SetupPsprites(const int32_t playerIdx) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_MovePsprites(player_t& player) noexcept {
     // Keep simulating player sprite tics while we are behind by one tick
-    gTicRemainder[*gPlayerNum] += gPlayersElapsedVBlanks[*gPlayerNum];
+    gTicRemainder[gPlayerNum] += gPlayersElapsedVBlanks[gPlayerNum];
     
-    while (gTicRemainder[*gPlayerNum] >= VBLANKS_PER_TIC) {
-        gTicRemainder[*gPlayerNum] -= VBLANKS_PER_TIC;
+    while (gTicRemainder[gPlayerNum] >= VBLANKS_PER_TIC) {
+        gTicRemainder[gPlayerNum] -= VBLANKS_PER_TIC;
         
         // Tic all player sprites and advance them to the next state if required
         for (int32_t playerSprIdx = 0; playerSprIdx < NUMPSPRITES; ++playerSprIdx) {

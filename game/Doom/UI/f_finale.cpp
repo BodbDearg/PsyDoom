@@ -125,7 +125,7 @@ void F1_Start() noexcept {
 // Called to shut down the Ultimate DOOM finale screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
-    *gbGamePaused = false;
+    gbGamePaused = false;
     psxcd_stop();
 }
 
@@ -142,7 +142,7 @@ gameaction_t F1_Ticker() noexcept {
     // Not sure why this screen is updating cheats or checking for pause...
     P_CheckCheats();
     
-    if (*gbGamePaused)
+    if (gbGamePaused)
         return gGameAction;
 
     // Check to see if the text needs to advance more, or if we can exit
@@ -192,7 +192,7 @@ void F1_Drawer() noexcept {
     I_DrawString(-1, ypos, gFinIncomingLine);
 
     // Not sure why the finale screen would be 'paused'?
-    if (*gbGamePaused) {
+    if (gbGamePaused) {
         I_DrawPausedOverlay();
     }
 
@@ -254,7 +254,7 @@ void F2_Start() noexcept {
 // Called to shut down the DOOM II finale screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
-    *gbGamePaused = false;
+    gbGamePaused = false;
     psxcd_stop();
 }
 
@@ -271,7 +271,7 @@ gameaction_t F2_Ticker() noexcept {
     // Not sure why this screen is updating cheats or checking for pause...
     P_CheckCheats();
     
-    if (*gbGamePaused)
+    if (gbGamePaused)
         return gGameAction;
     
     // Handle whatever finale stage we are on
@@ -520,7 +520,7 @@ void F2_Drawer() noexcept {
     }
 
     // Not sure why the finale screen would be 'paused'?
-    if (*gbGamePaused) {
+    if (gbGamePaused) {
         I_DrawPausedOverlay();
     }
 

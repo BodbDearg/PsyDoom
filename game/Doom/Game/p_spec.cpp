@@ -1209,5 +1209,5 @@ void P_SpawnSpecials() noexcept {
     // Clear these lists
     D_memset(gpActiveCeilings, std::byte(0), MAXCEILINGS * sizeof(gpActiveCeilings[0]));
     D_memset(gpActivePlats, std::byte(0), MAXPLATS * sizeof(gpActivePlats[0]));
-    D_memset(gButtonList.get(), std::byte(0), MAXBUTTONS * sizeof(gButtonList[0]));
+    D_memset(gButtonList, std::byte(0), MAXBUTTONS * sizeof(gButtonList[0]));
 }

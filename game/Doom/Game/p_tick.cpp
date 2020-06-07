@@ -61,22 +61,20 @@ static constexpr CheatSequence CHEAT_SEQUENCES[] = {
 
 static_assert(NUM_CHEAT_SEQ == C_ARRAY_SIZE(CHEAT_SEQUENCES));
 
-const VmPtr<int32_t[MAXPLAYERS]>    gVBlanksUntilMenuMove(0x80077EF8);      // How many 60 Hz ticks until we can move the cursor on the menu (one slot for each player)
-const VmPtr<bool32_t>               gbGamePaused(0x80077EC0);               // Whether the game is currently paused by either player
-const VmPtr<int32_t>                gPlayerNum(0x800782EC);                 // Current player number being updated/processed
-const VmPtr<int32_t>                gMapNumToCheatWarpTo(0x80078270);       // What map the player currently has selected for cheat warp
-const VmPtr<int32_t>                gVramViewerTexPage(0x80077ED4);         // What page of texture memory to display in the VRAM viewer
-const VmPtr<uint32_t[MAXPLAYERS]>   gTicButtons(0x80077F44);                // Currently pressed buttons by all players
-const VmPtr<uint32_t[MAXPLAYERS]>   gOldTicButtons(0x80078214);             // Previously pressed buttons by all players
+int32_t         gVBlanksUntilMenuMove[MAXPLAYERS];      // How many 60 Hz ticks until we can move the cursor on the menu (one slot for each player)
+bool            gbGamePaused;                           // Whether the game is currently paused by either player
+int32_t         gPlayerNum;                             // Current player number being updated/processed
+int32_t         gMapNumToCheatWarpTo;                   // What map the player currently has selected for cheat warp
+int32_t         gVramViewerTexPage;                     // What page of texture memory to display in the VRAM viewer
+uint32_t        gTicButtons[MAXPLAYERS];                // Currently pressed buttons by all players
+uint32_t        gOldTicButtons[MAXPLAYERS];             // Previously pressed buttons by all players
 const VmPtr<thinker_t>              gThinkerCap(0x80096550);                // Dummy thinker which serves as both the head and tail of the thinkers list.
 const VmPtr<mobj_t>                 gMObjHead(0x800A8E90);                  // Dummy map object which serves as both the head and tail of the map objects linked list.
 
-static const VmPtr<int32_t>                     gCurCheatBtnSequenceIdx(0x80077FE4);    // What button press in the cheat sequence we are currently on
-static const VmPtr<uint16_t[CHEAT_SEQ_LEN]>     gCheatSequenceBtns(0x800A91A4);         // Cheat sequence buttons inputted by the player
-static const VmPtr<int32_t>                     gTicConOnPause(0x800782D8);             // What 60Hz tick we paused on, used to discount paused time on unpause
-
-// Stat tracking counts
-static const VmPtr<int32_t> gNumActiveThinkers(0x800782F4);
+static int32_t      gCurCheatBtnSequenceIdx;                // What button press in the cheat sequence we are currently on
+static uint16_t     gCheatSequenceBtns[CHEAT_SEQ_LEN];      // Cheat sequence buttons inputted by the player
+static int32_t      gTicConOnPause;                         // What 60Hz tick we paused on, used to discount paused time on unpause
+static int32_t      gNumActiveThinkers;                     // Stat tracking count, no use other than that
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Add a thinker to the linked list of thinkers
@@ -100,7 +98,7 @@ void P_RemoveThinker(thinker_t& thinker) noexcept {
 // Execute think logic for all thinkers
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_RunThinkers() noexcept {
-    *gNumActiveThinkers = 0;
+    gNumActiveThinkers = 0;
 
     for (thinker_t* pThinker = gThinkerCap->next.get(); pThinker != gThinkerCap.get(); pThinker = pThinker->next.get()) {
         if (pThinker->function.addr() == (uint32_t) -1) {
@@ -115,7 +113,7 @@ void P_RunThinkers() noexcept {
                 func(*pThinker);
             }
 
-            *gNumActiveThinkers += 1;
+            gNumActiveThinkers++;
         }
     }
 }
@@ -152,10 +150,10 @@ void P_CheckCheats() noexcept {
         
         // Toggling pause?
         if (Utils::padBtnJustPressed(PAD_START, padBtns, oldPadBtns)) {
-            *gbGamePaused = (!*gbGamePaused);
+            gbGamePaused = (!gbGamePaused);
 
             // Handle the game being paused, if just pausing
-            if (*gbGamePaused) {
+            if (gbGamePaused) {
                 // Pause all audio and also stop the chainsaw sounds.
                 //
                 // Note: Erick informed me that stopping chainsaw sounds was added in the 'Greatest Hits' (v1.1) re-release of DOOM (and also Final DOOM).
@@ -166,8 +164,8 @@ void P_CheckCheats() noexcept {
                 S_Pause();
 
                 // Remember the tick we paused on and reset cheat button sequences
-                *gCurCheatBtnSequenceIdx = 0;
-                *gTicConOnPause = gTicCon;
+                gCurCheatBtnSequenceIdx = 0;
+                gTicConOnPause = gTicCon;
                 return;
             }
 
@@ -186,13 +184,13 @@ void P_CheckCheats() noexcept {
             gPlayers[0].cheats &= ~(CF_VRAMVIEWER|CF_WARPMENU);
 
             // Restore previous tick counters on unpause
-            gTicCon = *gTicConOnPause;
-            gLastTgtGameTicCount = *gTicConOnPause >> VBLANK_TO_TIC_SHIFT;
+            gTicCon = gTicConOnPause;
+            gLastTgtGameTicCount = gTicConOnPause >> VBLANK_TO_TIC_SHIFT;
         }
 
         // Showing the options menu if the game is paused and the options button has just been pressed.
         // Otherwise do not do any of the logic below...
-        if ((!Utils::padBtnJustPressed(PAD_SELECT, padBtns, oldPadBtns)) || (!*gbGamePaused))
+        if ((!Utils::padBtnJustPressed(PAD_SELECT, padBtns, oldPadBtns)) || (!gbGamePaused))
             continue;
         
         // About to open up the options menu, disable these player cheats and present what we have to the screen
@@ -238,19 +236,19 @@ void P_CheckCheats() noexcept {
 
         if (gVBlanksUntilMenuMove[0] <= 0) {
             if ((padBtns & PAD_LEFT) != 0) {
-                *gMapNumToCheatWarpTo -= 1;
+                gMapNumToCheatWarpTo--;
 
-                if (*gMapNumToCheatWarpTo <= 0) {
-                    *gMapNumToCheatWarpTo = 1;
+                if (gMapNumToCheatWarpTo <= 0) {
+                    gMapNumToCheatWarpTo = 1;
                 }
                 
                 gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
             }
             else if ((padBtns & PAD_RIGHT) != 0) {
-                *gMapNumToCheatWarpTo += 1;
+                gMapNumToCheatWarpTo++;
 
-                if (*gMapNumToCheatWarpTo > MAX_CHEAT_WARP_LEVEL) {
-                    *gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
+                if (gMapNumToCheatWarpTo > MAX_CHEAT_WARP_LEVEL) {
+                    gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
                 }
 
                 gVBlanksUntilMenuMove[0] = MENU_MOVE_VBLANK_DELAY;
@@ -263,8 +261,8 @@ void P_CheckCheats() noexcept {
                 // Button pressed to initiate the level warp - kick it off!
                 gGameAction = ga_warped;
                 player.cheats &= (~CF_WARPMENU);
-                gStartMapOrEpisode = *gMapNumToCheatWarpTo;
-                gGameMap = *gMapNumToCheatWarpTo;
+                gStartMapOrEpisode = gMapNumToCheatWarpTo;
+                gGameMap = gMapNumToCheatWarpTo;
             }
         }
 
@@ -276,17 +274,17 @@ void P_CheckCheats() noexcept {
     if (player.cheats & CF_VRAMVIEWER) {
         if (padBtns != oldPadBtns) {
             if (padBtns & PAD_LEFT) {
-                --*gVramViewerTexPage;
+                gVramViewerTexPage--;
 
-                if (*gVramViewerTexPage < 0) {
-                    *gVramViewerTexPage = 0;
+                if (gVramViewerTexPage < 0) {
+                    gVramViewerTexPage = 0;
                 }
             }
             else if (padBtns & PAD_RIGHT) {
-                ++*gVramViewerTexPage;
+                gVramViewerTexPage++;
 
-                if (*gVramViewerTexPage > 10) {
-                    *gVramViewerTexPage = 10;
+                if (gVramViewerTexPage > 10) {
+                    gVramViewerTexPage = 10;
                 }
             }
         }
@@ -295,7 +293,7 @@ void P_CheckCheats() noexcept {
     }
 
     // Only check for cheat sequences if the game is paused
-    if (!*gbGamePaused)
+    if (!gbGamePaused)
         return;
 
     // PC-PSX: allow cheats to be easily input using keyboard keys in dev builds
@@ -324,8 +322,8 @@ void P_CheckCheats() noexcept {
     }
 
     // Add the currently pressed buttons to the input
-    gCheatSequenceBtns[*gCurCheatBtnSequenceIdx] = (uint16_t) padBtns;
-    ++*gCurCheatBtnSequenceIdx;
+    gCheatSequenceBtns[gCurCheatBtnSequenceIdx] = (uint16_t) padBtns;
+    gCurCheatBtnSequenceIdx++;
 
     // Scan through all the cheats and see if the current input matches any of them
     for (int32_t cheatSeqIdx = 0; cheatSeqIdx < NUM_CHEAT_SEQ; ++cheatSeqIdx) {
@@ -333,7 +331,7 @@ void P_CheckCheats() noexcept {
         const CheatSequence& curCheatSeq = CHEAT_SEQUENCES[cheatSeqIdx];
         int32_t numMatchingBtns = 0;
 
-        while (numMatchingBtns < *gCurCheatBtnSequenceIdx) {
+        while (numMatchingBtns < gCurCheatBtnSequenceIdx) {
             if (gCheatSequenceBtns[numMatchingBtns] != curCheatSeq.btns[numMatchingBtns])
                 break;
 
@@ -428,9 +426,9 @@ void P_CheckCheats() noexcept {
                     player.cheats |= CF_WARPMENU;
                     
                     if (gGameMap > MAX_CHEAT_WARP_LEVEL) {
-                        *gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
+                        gMapNumToCheatWarpTo = MAX_CHEAT_WARP_LEVEL;
                     } else {
-                        *gMapNumToCheatWarpTo = gGameMap;
+                        gMapNumToCheatWarpTo = gGameMap;
                     }
                 }   break;
 
@@ -465,7 +463,7 @@ void P_CheckCheats() noexcept {
     }
 
     // Wraparound this if we need to!
-    *gCurCheatBtnSequenceIdx %= CHEAT_SEQ_LEN;
+    gCurCheatBtnSequenceIdx %= CHEAT_SEQ_LEN;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -478,7 +476,7 @@ gameaction_t P_Ticker() noexcept {
     P_CheckCheats();
 
     // Run map entities and do status bar logic, if it's time
-    if ((!*gbGamePaused) && (gGameTic > gPrevGameTic)) {
+    if ((!gbGamePaused) && (gGameTic > gPrevGameTic)) {
         P_RunThinkers();
         P_CheckSights();
         P_RunMobjBase();
@@ -489,16 +487,16 @@ gameaction_t P_Ticker() noexcept {
     }
 
     // Run player logic
-    for (*gPlayerNum = 0; *gPlayerNum < MAXPLAYERS; *gPlayerNum += 1) {
+    for (gPlayerNum = 0; gPlayerNum < MAXPLAYERS; gPlayerNum += 1) {
         // Only if this player is in the game!
-        if (!gbPlayerInGame[*gPlayerNum])
+        if (!gbPlayerInGame[gPlayerNum])
             continue;
 
         // Respawn if we need to
-        player_t& player = gPlayers[*gPlayerNum];
+        player_t& player = gPlayers[gPlayerNum];
 
         if (player.playerstate == PST_REBORN) {
-            G_DoReborn(*gPlayerNum);
+            G_DoReborn(gPlayerNum);
         }
 
         // Do automap and player updates (controls, movement etc.)
@@ -542,7 +540,7 @@ void P_Drawer() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_Start() noexcept {
     // Initialize some basic fields and the automap
-    *gbGamePaused = false;
+    gbGamePaused = false;
     gValidCount = 1;
     
     AM_Start();
@@ -598,7 +596,7 @@ void P_Stop([[maybe_unused]] const gameaction_t exitAction) noexcept {
     S_StopMusic();
 
     // Game is no longer paused and level data no longer cached
-    *gbGamePaused = false;
+    gbGamePaused = false;
     gbIsLevelDataCached = false;
 
     // Finish up the level for each player

@@ -34,13 +34,13 @@ enum cheatseq_t : int32_t {
     NUM_CHEAT_SEQ
 };
 
-extern const VmPtr<int32_t[MAXPLAYERS]>     gVBlanksUntilMenuMove;
-extern const VmPtr<bool32_t>                gbGamePaused;
-extern const VmPtr<int32_t>                 gPlayerNum;
-extern const VmPtr<int32_t>                 gMapNumToCheatWarpTo;
-extern const VmPtr<int32_t>                 gVramViewerTexPage;
-extern const VmPtr<uint32_t[MAXPLAYERS]>    gTicButtons;
-extern const VmPtr<uint32_t[MAXPLAYERS]>    gOldTicButtons;
+extern int32_t          gVBlanksUntilMenuMove[MAXPLAYERS];
+extern bool             gbGamePaused;
+extern int32_t          gPlayerNum;
+extern int32_t          gMapNumToCheatWarpTo;
+extern int32_t          gVramViewerTexPage;
+extern uint32_t         gTicButtons[MAXPLAYERS];
+extern uint32_t         gOldTicButtons[MAXPLAYERS];
 extern const VmPtr<thinker_t>               gThinkerCap;
 extern const VmPtr<mobj_t>                  gMObjHead;
 extern const VmPtr<mobj_t>                  gMObjHead;

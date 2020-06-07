@@ -434,7 +434,7 @@ void ST_Drawer() noexcept {
     }
 
     // Draw the paused overlay, level warp and vram viewer
-    if (*gbGamePaused) {
+    if (gbGamePaused) {
         I_DrawPausedOverlay();
     }
 }
