@@ -322,8 +322,8 @@ fixed_t P_AimLineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxD
 
     // Save what thing is being targeted and return the computed slope.
     // If we hit a thing then use the slope to the thing, otherwise shoot level ahead (slope 0).
-    gpLineTarget = gpShootMObj->get();
-    return (gpShootMObj->get()) ? *gShootSlope : 0;
+    gpLineTarget = gpShootMObj;
+    return (gpShootMObj) ? gShootSlope : 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -349,11 +349,11 @@ void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, c
     P_Shoot2();
 
     // Grab the details for what was shot
-    const fixed_t shootX = *gShootX;
-    const fixed_t shootY = *gShootY;
-    const fixed_t shootZ = *gShootZ;
-    line_t* const pShootLine = gpShootLine->get();
-    mobj_t* const pShootMobj = gpShootMObj->get();
+    const fixed_t shootX = gShootX;
+    const fixed_t shootY = gShootY;
+    const fixed_t shootZ = gShootZ;
+    line_t* const pShootLine = gpShootLine;
+    mobj_t* const pShootMobj = gpShootMObj;
 
     // Save what thing was hit globally
     gpLineTarget = pShootMobj;
@@ -362,9 +362,9 @@ void P_LineAttack(mobj_t& shooter, const angle_t angle, const fixed_t maxDist, c
     if (pShootMobj) {
         // Do blood (or smoke) then damage the thing
         if (pShootMobj->flags & MF_NOBLOOD) {
-            P_SpawnPuff(shootX, shootY, *gShootZ);
+            P_SpawnPuff(shootX, shootY, gShootZ);
         } else {
-            P_SpawnBlood(shootX, shootY, *gShootZ, damage);
+            P_SpawnBlood(shootX, shootY, gShootZ, damage);
         }
 
         P_DamageMObj(*pShootMobj, &shooter, &shooter, damage);
