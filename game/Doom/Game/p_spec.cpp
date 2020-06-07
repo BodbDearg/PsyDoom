@@ -71,15 +71,15 @@ static const animdef_t gAnimDefs[MAXANIMS] = {
 static constexpr int32_t MAXLINEANIMS   = 32;           // Maximum number of line animations allowed
 static constexpr int32_t SCROLLMASK     = 0xFF7F0000;   // Mask applied to offsets for scrolling walls (wrap every 128 units)
 
-const VmPtr<card_t>     gMapBlueKeyType(0x80077E9C);        // What type of blue key the map uses (if map has a blue key)
-const VmPtr<card_t>     gMapRedKeyType(0x8007821C);         // What type of red key the map uses (if map has a red key)
-const VmPtr<card_t>     gMapYellowKeyType(0x800780A0);      // What type of yellow key the map uses (if map has a yellow key)
-const VmPtr<int32_t>    gMapBossSpecialFlags(0x80077F88);   // PSX addition: What types of boss specials (triggers) are active on the current map
+card_t      gMapBlueKeyType;        // What type of blue key the map uses (if map has a blue key)
+card_t      gMapRedKeyType;         // What type of red key the map uses (if map has a red key)
+card_t      gMapYellowKeyType;      // What type of yellow key the map uses (if map has a yellow key)
+int32_t     gMapBossSpecialFlags;   // PSX addition: What types of boss specials (triggers) are active on the current map
 
-static const VmPtr<anim_t[MAXANIMS]>                gAnims(0x800863AC);                 // The list of animated textures
-static const VmPtr<VmPtr<anim_t>>                   gpLastAnim(0x80078164);             // Points to the end of the list of animated textures
-static const VmPtr<VmPtr<line_t>[MAXLINEANIMS]>     gpLineSpecialList(0x8009757C);      // A list of scrolling lines for the level
-static const VmPtr<int32_t>                         gNumLinespecials(0x80077F50);       // The number of scrolling lines in the level
+static anim_t       gAnims[MAXANIMS];                   // The list of animated textures
+static anim_t*      gpLastAnim;                         // Points to the end of the list of animated textures
+static line_t*      gpLineSpecialList[MAXLINEANIMS];    // A list of scrolling lines for the level
+static int32_t      gNumLinespecials;                   // The number of scrolling lines in the level
 
 // TODO: Make private to the module eventually
 void T_DelayedAction(delayaction_t& action) noexcept;
@@ -89,11 +89,11 @@ void T_DelayedAction(delayaction_t& action) noexcept;
 // Also sets up the spot in VRAM where these animations will go - they occupy the same spot as the base animation frame.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_InitPicAnims() noexcept {
-    *gpLastAnim = &gAnims[0];
+    gpLastAnim = &gAnims[0];
 
     for (int32_t animIdx = 0; animIdx < MAXANIMS; ++animIdx) {
         const animdef_t& animdef = gAnimDefs[animIdx];
-        anim_t& lastanim = **gpLastAnim;
+        anim_t& lastanim = *gpLastAnim;
 
         if (animdef.istexture) {
             // Determine the lump range for the animation
@@ -147,7 +147,7 @@ void P_InitPicAnims() noexcept {
         lastanim.current = lastanim.basepic;
         lastanim.ticmask = animdef.ticmask;
 
-        *gpLastAnim += 1;
+        gpLastAnim++;
     }
 }
 
@@ -899,7 +899,7 @@ void P_PlayerInSpecialSector(player_t& player) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_UpdateSpecials() noexcept {
     // Animate flats and wall textures
-    for (anim_t* pAnim = gAnims.get(); pAnim < gpLastAnim->get(); ++pAnim) {
+    for (anim_t* pAnim = gAnims; pAnim < gpLastAnim; ++pAnim) {
         // Skip over this entry if it isn't time to advance the animation
         if (gGameTic & pAnim->ticmask)
             continue;
@@ -923,7 +923,7 @@ void P_UpdateSpecials() noexcept {
     }
 
     // Animate line specials (scrolling walls)
-    for (int32_t specialIdx = 0; specialIdx < *gNumLinespecials; ++specialIdx) {
+    for (int32_t specialIdx = 0; specialIdx < gNumLinespecials; ++specialIdx) {
         line_t& line = *gpLineSpecialList[specialIdx];
         side_t& side = gpSides[line.sidenum[0]];
 
@@ -1148,7 +1148,7 @@ void P_SpawnSpecials() noexcept {
     }
 
     // Save scrolling line specials to their own list (for quick updating)
-    *gNumLinespecials = 0;
+    gNumLinespecials = 0;
     
     for (int32_t lineIdx = 0; lineIdx < gNumLines; ++lineIdx) {
         line_t& line = gpLines[lineIdx];
@@ -1159,9 +1159,9 @@ void P_SpawnSpecials() noexcept {
             case 202:   // Effect: scroll up
             case 203:   // Effect: scroll down
             {
-                if (*gNumLinespecials < MAXLINEANIMS) {
-                    gpLineSpecialList[*gNumLinespecials] = &line;
-                    *gNumLinespecials += 1;
+                if (gNumLinespecials < MAXLINEANIMS) {
+                    gpLineSpecialList[gNumLinespecials] = &line;
+                    gNumLinespecials++;
                 }
             }   break;
             
@@ -1172,18 +1172,18 @@ void P_SpawnSpecials() noexcept {
 
     // PSX addition: if special sectors for bosses are found, set the appropriate boss special flag bits.
     // These are sectors that activate when all enemies of the corresponding boss type are killed.
-    *gMapBossSpecialFlags = 0;
+    gMapBossSpecialFlags = 0;
 
     for (int32_t sectorIdx = 0; sectorIdx < gNumSectors; ++sectorIdx) {
         sector_t& sector = gpSectors[sectorIdx];
 
         switch (sector.tag) {
-            case 666:   *gMapBossSpecialFlags |= 0x01;  break;      // Kill all 'MT_FATSO' to activate this 'lowerFloorToLowest' floor
-            case 667:   *gMapBossSpecialFlags |= 0x02;  break;      // Kill all 'MT_BABY' to activate this 'raiseFloor24' floor
-            case 668:   *gMapBossSpecialFlags |= 0x04;  break;      // Kill all 'MT_SPIDER' to activate this 'lowerFloorToLowest' floor
-            case 669:   *gMapBossSpecialFlags |= 0x08;  break;      // Kill all 'MT_KNIGHT' to activate this 'lowerFloorToLowest' floor
-            case 670:   *gMapBossSpecialFlags |= 0x10;  break;      // Kill all 'MT_CYBORG' to activate this 'Open' door
-            case 671:   *gMapBossSpecialFlags |= 0x20;  break;      // Kill all 'MT_BRUISER' to activate this 'lowerFloorToLowest' floor
+            case 666:   gMapBossSpecialFlags |= 0x01;  break;   // Kill all 'MT_FATSO' to activate this 'lowerFloorToLowest' floor
+            case 667:   gMapBossSpecialFlags |= 0x02;  break;   // Kill all 'MT_BABY' to activate this 'raiseFloor24' floor
+            case 668:   gMapBossSpecialFlags |= 0x04;  break;   // Kill all 'MT_SPIDER' to activate this 'lowerFloorToLowest' floor
+            case 669:   gMapBossSpecialFlags |= 0x08;  break;   // Kill all 'MT_KNIGHT' to activate this 'lowerFloorToLowest' floor
+            case 670:   gMapBossSpecialFlags |= 0x10;  break;   // Kill all 'MT_CYBORG' to activate this 'Open' door
+            case 671:   gMapBossSpecialFlags |= 0x20;  break;   // Kill all 'MT_BRUISER' to activate this 'lowerFloorToLowest' floor
 
             default:
                 break;
@@ -1192,15 +1192,15 @@ void P_SpawnSpecials() noexcept {
 
     // Run through all map objects to see if any skull keys are being used instead of keycards.
     // This is required for the correct sprite to be used for HUD key flashes (skull vs card).
-    *gMapRedKeyType = it_redcard;
-    *gMapBlueKeyType = it_bluecard;
-    *gMapYellowKeyType = it_yellowcard;
+    gMapRedKeyType = it_redcard;
+    gMapBlueKeyType = it_bluecard;
+    gMapYellowKeyType = it_yellowcard;
 
     for (mobj_t* pmobj = gMObjHead->next.get(); pmobj != gMObjHead.get(); pmobj = pmobj->next.get()) {
         switch (pmobj->type) {
-            case MT_MISC7:  *gMapYellowKeyType  = it_yellowskull;   break;
-            case MT_MISC8:  *gMapRedKeyType     = it_redskull;      break;
-            case MT_MISC9:  *gMapBlueKeyType    = it_blueskull;     break;
+            case MT_MISC7:  gMapYellowKeyType   = it_yellowskull;   break;
+            case MT_MISC8:  gMapRedKeyType      = it_redskull;      break;
+            case MT_MISC9:  gMapBlueKeyType     = it_blueskull;     break;
             
             default: break;
         }

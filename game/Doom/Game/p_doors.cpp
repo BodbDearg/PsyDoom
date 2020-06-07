@@ -189,8 +189,9 @@ bool P_CheckKeyLock(line_t& line, mobj_t& user) noexcept {
                 player.message = STR_BlueKeyNeededMsg;
                 S_StartSound(&user, sfx_oof);
 
-                if (&player == &curPlayer) {    // Only flash the HUD message if it's this player triggering the door
-                    gStatusBar.tryopen[*gMapBlueKeyType] = true;
+                // Only flash the HUD message if it's this player triggering the door
+                if (&player == &curPlayer) {
+                    gStatusBar.tryopen[gMapBlueKeyType] = true;
                 }
 
                 return false;
@@ -206,8 +207,9 @@ bool P_CheckKeyLock(line_t& line, mobj_t& user) noexcept {
                 player.message = STR_YellowKeyNeededMsg;
                 S_StartSound(&user, sfx_oof);
 
-                if (&player == &curPlayer) {    // Only flash the HUD message if it's this player triggering the door
-                    gStatusBar.tryopen[*gMapYellowKeyType] = true;
+                // Only flash the HUD message if it's this player triggering the door
+                if (&player == &curPlayer) {
+                    gStatusBar.tryopen[gMapYellowKeyType] = true;
                 }
 
                 return false;
@@ -223,8 +225,9 @@ bool P_CheckKeyLock(line_t& line, mobj_t& user) noexcept {
                 player.message = STR_RedKeyNeededMsg;
                 S_StartSound(&user, sfx_oof);
 
-                if (&player == &curPlayer) {    // Only flash the HUD message if it's this player triggering the door
-                    gStatusBar.tryopen[*gMapRedKeyType] = true;
+                // Only flash the HUD message if it's this player triggering the door
+                if (&player == &curPlayer) {
+                    gStatusBar.tryopen[gMapRedKeyType] = true;
                 }
 
                 return false;

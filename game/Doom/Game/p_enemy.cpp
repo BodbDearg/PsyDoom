@@ -1116,7 +1116,7 @@ void A_Explode(mobj_t& actor) noexcept {
 void A_BossDeath(mobj_t& actor) noexcept {
     // Determine which line tag would be triggered based on the active boss specials for the current map, and what died.
     // This tag will be triggered when all enemies of the actor's type die:
-    const uint32_t bossSpecialFlags = *gMapBossSpecialFlags;
+    const uint32_t bossSpecialFlags = gMapBossSpecialFlags;
     const mobjtype_t actorType = actor.type;
 
     int32_t triggerTag;
@@ -1166,32 +1166,32 @@ void A_BossDeath(mobj_t& actor) noexcept {
 
     switch (dummyLine.tag) {
         case 666:
-            *gMapBossSpecialFlags &= ~0x1;  // Don't attempt to trigger this special again!
+            gMapBossSpecialFlags &= ~0x1;   // Don't attempt to trigger this special again!
             EV_DoFloor(dummyLine, lowerFloorToLowest);
             break;
 
         case 667:
-            *gMapBossSpecialFlags &= ~0x2;
+            gMapBossSpecialFlags &= ~0x2;
             EV_DoFloor(dummyLine, raiseFloor24);
             break;
 
         case 668:
-            *gMapBossSpecialFlags &= ~0x4;
+            gMapBossSpecialFlags &= ~0x4;
             EV_DoFloor(dummyLine, lowerFloorToLowest);
             break;
 
         case 669:
-            *gMapBossSpecialFlags &= ~0x8;
+            gMapBossSpecialFlags &= ~0x8;
             EV_DoFloor(dummyLine, lowerFloorToLowest);
             break;
 
         case 670:
-            *gMapBossSpecialFlags &= ~0x10;
+            gMapBossSpecialFlags &= ~0x10;
             EV_DoDoor(dummyLine, Open);
             return;
 
         case 671:
-            *gMapBossSpecialFlags &= ~0x20;
+            gMapBossSpecialFlags &= ~0x20;
             EV_DoFloor(dummyLine, lowerFloorToLowest);
             break;
 

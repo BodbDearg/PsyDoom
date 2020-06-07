@@ -18,10 +18,10 @@ struct anim_t {
 
 static_assert(sizeof(anim_t) == 24);
 
-extern const VmPtr<card_t>      gMapBlueKeyType;
-extern const VmPtr<card_t>      gMapRedKeyType;
-extern const VmPtr<card_t>      gMapYellowKeyType;
-extern const VmPtr<int32_t>     gMapBossSpecialFlags;
+extern card_t   gMapBlueKeyType;
+extern card_t   gMapRedKeyType;
+extern card_t   gMapYellowKeyType;
+extern int32_t  gMapBossSpecialFlags;
 
 void P_InitPicAnims() noexcept;
 side_t* getSide(const int32_t sectorIdx, const int32_t lineIdx, const int32_t sideIdx) noexcept;
