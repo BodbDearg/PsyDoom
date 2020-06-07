@@ -4,6 +4,8 @@
 #include "i_main.h"
 #include "PsxVm/PsxVm.h"
 
+#include <cstring>
+
 // The minimum size that a memory block must be
 static constexpr int32_t MINFRAGMENT = 64;
 
@@ -26,7 +28,8 @@ void Z_Init() noexcept {
     constexpr uint32_t AlignedHeapSize = (StackStartAddr - WrappedHeapStartAddr + 3) & 0xFFFFFFFC;
 
     // Setup and save the main memory zone (the only zone)
-    gpMainMemZone = Z_InitZone(vmAddrToPtr<void>(AlignedHeapStartAddr), AlignedHeapSize);
+    // FIXME: temporarily doubling the available heap space to accomodate larger structs due to 64-bit pointers
+    gpMainMemZone = Z_InitZone(vmAddrToPtr<void>(AlignedHeapStartAddr), AlignedHeapSize * 2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -410,5 +413,4 @@ int32_t Z_FreeMemory(memzone_t& zone) noexcept {
 // This function is empty in PSX DOOM - probably compiled out of the release build.
 // If you want this functionality you could take a look at the Linux DOOM source.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void Z_DumpHeap() noexcept {
-}
+void Z_DumpHeap() noexcept {}

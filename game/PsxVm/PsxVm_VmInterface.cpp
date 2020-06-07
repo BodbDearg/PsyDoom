@@ -65,8 +65,9 @@ uint32_t ptrToVmAddr(const void* const ptr) noexcept {
     if (ptr) {
         const intptr_t offsetToRam = (const uint8_t*) ptr - gpRam;
 
-        // Note: allow a pointer at the end of the 2 MiB RAM region, but no more
-        if (offsetToRam >= 0 && offsetToRam <= 0x200000) {
+        // Note: allow a pointer at the end of the 2 MiB RAM region, but no more.
+        // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers.
+        if (offsetToRam >= 0 && offsetToRam <= 0x400000) {
             return 0x80000000 + (uint32_t) offsetToRam;
         } else {
             // Check for a scratchpad memory address

@@ -58,8 +58,10 @@ public:
     // Pointer dereferencing
     inline ElemTy* get() const noexcept {
         if (mAddr != 0) {
-            const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
-            ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
+            // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
+            const uint32_t wrappedAddr = (mAddr & 0x3FFFFF);
+            // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
+            ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x400000, "Address pointed to spills past the 4 MiB of PSX RAM!");
             return reinterpret_cast<ElemTy*>(PsxVm::gpRam + wrappedAddr);
         } else {
             return nullptr;
@@ -68,23 +70,29 @@ public:
 
     inline ElemTy& operator * () const noexcept {
         ASSERT(mAddr != 0);
-        const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
-        ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
+        // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
+        const uint32_t wrappedAddr = (mAddr & 0x3FFFFF);
+        // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
+        ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x400000, "Address pointed to spills past the 4 MiB of PSX RAM!");
         return *reinterpret_cast<ElemTy*>(PsxVm::gpRam + wrappedAddr);
     }
 
     inline ElemTy* operator -> () const noexcept {
         ASSERT(mAddr != 0);
-        const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
-        ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x200000, "Address pointed to spills past the 2MB of PSX RAM!");
+        // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
+        const uint32_t wrappedAddr = (mAddr & 0x3FFFFF);
+        // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
+        ASSERT_LOG(wrappedAddr + sizeof(ElemTy) <= 0x400000, "Address pointed to spills past the 4 MiB of PSX RAM!");
         return reinterpret_cast<ElemTy*>(PsxVm::gpRam + wrappedAddr);
     }
 
     inline ElemTy& operator [] (const uint32_t index) const noexcept {
         ASSERT(mAddr != 0);
-        const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
+        // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
+        const uint32_t wrappedAddr = (mAddr & 0x3FFFFF);
         const uint32_t elemAddr = wrappedAddr + uint32_t(sizeof(ElemTy)) * index;
-        ASSERT_LOG(elemAddr + sizeof(ElemTy) <= 0x200000, "Array element accessed spills past the 2MB of PSX RAM!");
+        // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
+        ASSERT_LOG(elemAddr + sizeof(ElemTy) <= 0x400000, "Array element accessed spills past the 4 MiB of PSX RAM!");
         return *reinterpret_cast<ElemTy*>(PsxVm::gpRam + elemAddr);
     }
 
