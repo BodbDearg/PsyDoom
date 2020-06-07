@@ -14,6 +14,7 @@
 #include "doomdata.h"
 #include "g_game.h"
 #include "p_firesky.h"
+#include "p_inter.h"
 #include "p_local.h"
 #include "p_mobj.h"
 #include "p_spec.h"
@@ -909,10 +910,10 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     gMObjHead->next = gMObjHead.get();
     gMObjHead->prev = gMObjHead.get();
 
-    // Setup the item respawn queue and map object kill count
-    *gItemRespawnQueueHead = 0;
-    *gItemRespawnQueueTail = 0;
-    *gNumMObjKilled = 0;
+    // Setup the item respawn queue and dead player removal queue index
+    gItemRespawnQueueHead = 0;
+    gItemRespawnQueueTail = 0;
+    gDeadPlayerRemovalQueueIdx = 0;
 
     // Figure out which file to open for the map WAD.
     // Not sure why the PSX code was checking for a negative map index here, maybe a special dev/test thing?

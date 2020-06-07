@@ -33,8 +33,11 @@ const int32_t gClipAmmo[NUMAMMO] = {
     1       // am_misl
 };
 
-static uint32_t     gDeadPlayerRemovalQueueIdx;                         // Next index in the dead player removal queue to use (this index is wrapped)
-static mobj_t*      gDeadPlayerMobjRemovalQueue[MAX_DEAD_PLAYERS];      // A queue of player corpses that eventually get removed from the game when a new corpse uses an occupied queue slot
+// Next index in the dead player removal queue to use (this index is wrapped)
+uint32_t gDeadPlayerRemovalQueueIdx;
+
+// A queue of player corpses that eventually get removed from the game when a new corpse uses an occupied queue slot
+static mobj_t* gDeadPlayerMobjRemovalQueue[MAX_DEAD_PLAYERS];
 
 // Item message pickup strings.
 //

@@ -26,8 +26,8 @@ bool P_ThingHeightClip(mobj_t& mobj) noexcept {
 
     // Get the current floor/ceiling Z values for the thing and update
     P_CheckPosition(mobj, mobj.x, mobj.y);
-    mobj.floorz = *gTmFloorZ;
-    mobj.ceilingz = *gTmCeilingZ;
+    mobj.floorz = gTmFloorZ;
+    mobj.ceilingz = gTmCeilingZ;
 
     // Things that were on the floor previously rise and fall as the sector floor rises and falls.
     // Otherwise, if a floating thing, clip against the ceiling.

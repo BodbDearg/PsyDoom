@@ -141,15 +141,15 @@ bool P_Move(mobj_t& actor) noexcept {
 
     // Move failed: if the actor can float then try and go up or down - depending on relative position to the line opening.
     // If that can be done then the move is still considered a success:
-    if ((actor.flags & MF_FLOAT) && *gbFloatOk) {
-        actor.z += (actor.z >= *gTmFloorZ) ? -FLOATSPEED : FLOATSPEED;
+    if ((actor.flags & MF_FLOAT) && gbFloatOk) {
+        actor.z += (actor.z >= gTmFloorZ) ? -FLOATSPEED : FLOATSPEED;
         actor.flags |= MF_INFLOAT;
         return true;
     }
 
     // Try to see if we can open a door to unblock movement.
     // If that is possible to do then consider the move a success:
-    line_t* const pBlockLine = gpBlockLine->get();
+    line_t* const pBlockLine = gpBlockLine;
 
     if (!pBlockLine)
         return false;

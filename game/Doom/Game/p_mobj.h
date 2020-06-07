@@ -5,9 +5,8 @@
 enum statenum_t : int32_t;
 struct mapthing_t;
 
-extern const VmPtr<int32_t>     gItemRespawnQueueHead;
-extern const VmPtr<int32_t>     gItemRespawnQueueTail;
-extern const VmPtr<int32_t>     gNumMObjKilled;
+extern int32_t  gItemRespawnQueueHead;
+extern int32_t  gItemRespawnQueueTail;
 
 void P_RemoveMobj(mobj_t& mobj) noexcept;
 void P_RespawnSpecials() noexcept;

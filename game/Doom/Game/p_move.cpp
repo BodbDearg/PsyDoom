@@ -13,21 +13,21 @@
 
 static constexpr int32_t MAX_CROSS_LINES = 8;
 
-const VmPtr<bool32_t>       gbTryMove2(0x8007813C);             // Whether the move attempt by 'P_TryMove2' was successful or not ('true' if move allowed)
-const VmPtr<VmPtr<mobj_t>>  gpMoveThing(0x800782C4);            // The thing collided with (for code doing interactions with the thing)
-const VmPtr<VmPtr<line_t>>  gpBlockLine(0x80078248);            // The line collided with
-const VmPtr<fixed_t>        gTmFloorZ(0x800781E8);              // The Z value for the highest floor the collider is in contact with
-const VmPtr<fixed_t>        gTmCeilingZ(0x80077F04);            // The Z value for the lowest ceiling the collider is in contact with
-const VmPtr<fixed_t>        gTmDropoffZ(0x80077F3C);            // The Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
-const VmPtr<int32_t>        gNumCrossCheckLines(0x800780C0);    // How many lines to test for whether the thing crossed them or not: for determining when to trigger line specials
-const VmPtr<bool32_t>       gbFloatOk(0x8007807C);              // P_TryMove2: if 'true' the up/down movement by floating monsters is allowed (there is vertical space to move)
+bool        gbTryMove2;             // Whether the move attempt by 'P_TryMove2' was successful or not ('true' if move allowed)
+mobj_t*     gpMoveThing;            // The thing collided with (for code doing interactions with the thing)
+line_t*     gpBlockLine;            // The line collided with
+fixed_t     gTmFloorZ;              // The Z value for the highest floor the collider is in contact with
+fixed_t     gTmCeilingZ;            // The Z value for the lowest ceiling the collider is in contact with
+fixed_t     gTmDropoffZ;            // The Z value for the lowest floor the collider is in contact with. Used by monsters so they don't walk off cliffs.
+int32_t     gNumCrossCheckLines;    // How many lines to test for whether the thing crossed them or not: for determining when to trigger line specials
+bool        gbFloatOk;              // P_TryMove2: if 'true' the up/down movement by floating monsters is allowed (there is vertical space to move)
 
-static const VmPtr<VmPtr<subsector_t>>              gpNewSubsec(0x800782BC);            // Destination subsector for the current move: set by 'PM_CheckPosition'
-static const VmPtr<uint32_t>                        gTmFlags(0x80078078);               // Flags for the thing being moved
-static const VmPtr<fixed_t[4]>                      gTestTmBBox(0x80097C10);            // Bounding box for the current thing being collision tested. Set in 'PM_CheckPosition'.
-static const VmPtr<VmPtr<line_t>[MAX_CROSS_LINES]>  gpCrossCheckLines(0x800A8F28);      // Lines to test for whether the thing crossed them or not: for determining when to trigger line specials
-static const VmPtr<fixed_t>                         gOldX(0x80078240);                  // P_TryMove2: position of the thing before it was moved: x
-static const VmPtr<fixed_t>                         gOldY(0x80078244);                  // P_TryMove2: position of the thing before it was moved: y
+static subsector_t*     gpNewSubsec;                            // Destination subsector for the current move: set by 'PM_CheckPosition'
+static uint32_t         gTmFlags;                               // Flags for the thing being moved
+static fixed_t          gTestTmBBox[4];                         // Bounding box for the current thing being collision tested. Set in 'PM_CheckPosition'.
+static line_t*          gpCrossCheckLines[MAX_CROSS_LINES];     // Lines to test for whether the thing crossed them or not: for determining when to trigger line specials
+static fixed_t          gOldX;                                  // P_TryMove2: position of the thing before it was moved: x
+static fixed_t          gOldY;                                  // P_TryMove2: position of the thing before it was moved: y
 
 // Not required externally: making private to this module
 static void PM_UnsetThingPosition(mobj_t& thing) noexcept;
@@ -56,12 +56,12 @@ static bool PM_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;
 void P_TryMove2() noexcept {
     // Grab the thing being moved and the position we're moving to
     mobj_t& tryMoveThing = *gpTryMoveThing;
-    *gOldX = tryMoveThing.x;
-    *gOldY = tryMoveThing.y;
+    gOldX = tryMoveThing.x;
+    gOldY = tryMoveThing.y;
     
     // Check if the move can be done and initially assume no movement (or floating) is allowed
-    *gbTryMove2 = false;
-    *gbFloatOk = false;
+    gbTryMove2 = false;
+    gbFloatOk = false;
 
     PM_CheckPosition();
 
@@ -72,29 +72,29 @@ void P_TryMove2() noexcept {
     }
 
     // If we can't move then stop here
-    if (!*gbTryMove2)
+    if (!gbTryMove2)
         return;
 
     // Do height checks for this move (unless noclip is active)
     if ((tryMoveThing.flags & MF_NOCLIP) == 0) {
         // Assume unable to move until we reach the bottom of the function (when doing height checks)
-        *gbTryMove2 = false;
+        gbTryMove2 = false;
 
         // If there is no room to fit then the move is NOT ok:
-        if (tryMoveThing.height > *gTmCeilingZ - *gTmFloorZ)
+        if (tryMoveThing.height > gTmCeilingZ - gTmFloorZ)
             return;
 
         // If we can move up or down then floating movement (for floating monsters) is OK at this point
-        *gbFloatOk = true;
+        gbFloatOk = true;
 
         // Checks for when not teleporting
         if ((tryMoveThing.flags & MF_TELEPORT) == 0) {
             // If the object must lower itself to fit then we can't do the move
-            if (tryMoveThing.height > *gTmCeilingZ - tryMoveThing.z)
+            if (tryMoveThing.height > gTmCeilingZ - tryMoveThing.z)
                 return;
 
             // If the vertical increase is too big of a step up then we can't make the move
-            if (*gTmFloorZ - tryMoveThing.z > 24 * FRACUNIT)
+            if (gTmFloorZ - tryMoveThing.z > 24 * FRACUNIT)
                 return;
         }
 
@@ -102,15 +102,15 @@ void P_TryMove2() noexcept {
         // A ledge is deemed to be a fall of more than 24.0 units.
         const bool bCanGoOverLedges = (tryMoveThing.flags & (MF_DROPOFF | MF_FLOAT));
 
-        if ((!bCanGoOverLedges) && (*gTmFloorZ - *gTmDropoffZ > 24 * FRACUNIT))
+        if ((!bCanGoOverLedges) && (gTmFloorZ - gTmDropoffZ > 24 * FRACUNIT))
             return;
     }
     
     // Move is OK at this point: update the thing's location in the blockmap and sector thing lists
     PM_UnsetThingPosition(tryMoveThing);
     
-    tryMoveThing.floorz = *gTmFloorZ;
-    tryMoveThing.ceilingz = *gTmCeilingZ;
+    tryMoveThing.floorz = gTmFloorZ;
+    tryMoveThing.ceilingz = gTmCeilingZ;
     tryMoveThing.x = gTryMoveX;
     tryMoveThing.y = gTryMoveY;
 
@@ -119,13 +119,13 @@ void P_TryMove2() noexcept {
     // Do line special triggering for monsters if they are not noclipping or teleporting
     if ((!tryMoveThing.player.get()) && ((tryMoveThing.flags & (MF_NOCLIP | MF_TELEPORT)) == 0)) {
         // Process however many lines the thing crossed
-        while (*gNumCrossCheckLines > 0) {
-            *gNumCrossCheckLines -= 1;
-            line_t& line = *gpCrossCheckLines[*gNumCrossCheckLines];
+        while (gNumCrossCheckLines > 0) {
+            gNumCrossCheckLines--;
+            line_t& line = *gpCrossCheckLines[gNumCrossCheckLines];
 
             // If the thing crossed this line then try to trigger its special
             const int32_t newLineSide = P_PointOnLineSide(tryMoveThing.x, tryMoveThing.y, line);
-            const int32_t oldLineSide = P_PointOnLineSide(*gOldX, *gOldY, line);
+            const int32_t oldLineSide = P_PointOnLineSide(gOldX, gOldY, line);
 
             if (newLineSide != oldLineSide) {
                 P_CrossSpecialLine(line, tryMoveThing);
@@ -135,7 +135,7 @@ void P_TryMove2() noexcept {
 
     // Move is OK! Note that we HAVE to set this here in all cases, regardless of whether height checks are done are not.
     // This is because 'P_CrossSpecialLine' might trigger move checks of it's own and override this global, due to teleportation and possibly other things.
-    *gbTryMove2 = true;
+    gbTryMove2 = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -206,7 +206,7 @@ static void PM_UnsetThingPosition(mobj_t& thing) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void PM_SetThingPosition(mobj_t& mobj) noexcept {
     // Note: this function needs the subsector precomputed externally
-    subsector_t& newSubsec = *gpNewSubsec->get();
+    subsector_t& newSubsec = *gpNewSubsec;
     mobj.subsector = &newSubsec;
     
     // Add the thing to sector thing lists, if the thing flags allow it
@@ -269,7 +269,7 @@ static void PM_CheckPosition() noexcept {
     // Save the flags for the thing being moved and precompute it's bounding box
     mobj_t& tryMoveThing = *gpTryMoveThing;
 
-    *gTmFlags = tryMoveThing.flags;
+    gTmFlags = tryMoveThing.flags;
     gTestTmBBox[BOXTOP] = gTryMoveY + tryMoveThing.radius;
     gTestTmBBox[BOXBOTTOM] = gTryMoveY - tryMoveThing.radius;
     gTestTmBBox[BOXLEFT] = gTryMoveX - tryMoveThing.radius;
@@ -278,22 +278,22 @@ static void PM_CheckPosition() noexcept {
     // Precompute the subsector for the thing being moved
     subsector_t& newSubsec = *R_PointInSubsector(gTryMoveX, gTryMoveY);
     sector_t& newSector = *newSubsec.sector;
-    *gpNewSubsec = &newSubsec;
+    gpNewSubsec = &newSubsec;
 
     // Initialize various movement checking variables
-    *gpMoveThing = nullptr;
-    *gpBlockLine = nullptr;
-    *gTmFloorZ = newSector.floorheight;         // Initial value: lowered as collision testing touches lines
-    *gTmCeilingZ = newSector.ceilingheight;     // Initial value: raised as collision testing touches lines
-    *gTmDropoffZ = newSector.floorheight;       // Initial value: Lowered as collision testing touches lines
-    *gNumCrossCheckLines = 0;
+    gpMoveThing = nullptr;
+    gpBlockLine = nullptr;
+    gTmFloorZ = newSector.floorheight;          // Initial value: lowered as collision testing touches lines
+    gTmCeilingZ = newSector.ceilingheight;      // Initial value: raised as collision testing touches lines
+    gTmDropoffZ = newSector.floorheight;        // Initial value: Lowered as collision testing touches lines
+    gNumCrossCheckLines = 0;
 
     // Prep for new collision tests: increment this marker
     gValidCount++;
 
     // If the thing is no-clipping then we can just exit and allow the move
-    if (*gTmFlags & MF_NOCLIP) {
-        *gbTryMove2 = true;
+    if (gTmFlags & MF_NOCLIP) {
+        gbTryMove2 = true;
         return;
     }
 
@@ -309,7 +309,7 @@ static void PM_CheckPosition() noexcept {
         for (int32_t x = bmapLx; x <= bmapRx; ++x) {
             for (int32_t y = bmapBy; y <= bmapTy; ++y) {
                 if (!PM_BlockThingsIterator(x, y)) {
-                    *gbTryMove2 = false;
+                    gbTryMove2 = false;
                     return;
                 }
             }
@@ -327,7 +327,7 @@ static void PM_CheckPosition() noexcept {
         for (int32_t x = bmapLx; x <= bmapRx; ++x) {
             for (int32_t y = bmapBy; y <= bmapTy; ++y) {
                 if (!PM_BlockLinesIterator(x, y)) {
-                    *gbTryMove2 = false;
+                    gbTryMove2 = false;
                     return;
                 }
             }
@@ -335,7 +335,7 @@ static void PM_CheckPosition() noexcept {
     }
 
     // If we get to here then the collision test detected no collision: movement can be a success
-    *gbTryMove2 = true;
+    gbTryMove2 = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -413,7 +413,7 @@ static bool PIT_CheckLine(line_t& line) noexcept {
     sector_t& bsec = *line.backsector;
 
     if ((fsec.floorheight == fsec.ceilingheight) || (bsec.floorheight == bsec.ceilingheight)) {
-        *gpBlockLine = &line;
+        gpBlockLine = &line;
         return false;
     }
 
@@ -423,24 +423,24 @@ static bool PIT_CheckLine(line_t& line) noexcept {
     const fixed_t lowFloor = std::min(fsec.floorheight, bsec.floorheight);
 
     // Adjust the global low ceiling, high floor and lowest floor values
-    if (openTop < *gTmCeilingZ) {
-        *gTmCeilingZ = openTop;
+    if (openTop < gTmCeilingZ) {
+        gTmCeilingZ = openTop;
     }
 
-    if (openBottom > *gTmFloorZ) {
-        *gTmFloorZ = openBottom;
+    if (openBottom > gTmFloorZ) {
+        gTmFloorZ = openBottom;
     }
 
-    if (lowFloor < *gTmDropoffZ) {
-        *gTmDropoffZ = lowFloor;
+    if (lowFloor < gTmDropoffZ) {
+        gTmDropoffZ = lowFloor;
     }
 
     // PSX new addition: if the line has a special then save it for later testing to determine if the thing has crossed it and thus should trigger it.
     // This was added so that monsters could use teleporters again, since that ability was lost in the Jaguar version of the game.
     if (line.special) {
-        if (*gNumCrossCheckLines < MAX_CROSS_LINES) {
-            gpCrossCheckLines[*gNumCrossCheckLines] = &line;
-            *gNumCrossCheckLines += 1;
+        if (gNumCrossCheckLines < MAX_CROSS_LINES) {
+            gpCrossCheckLines[gNumCrossCheckLines] = &line;
+            gNumCrossCheckLines++;
         }
     }
 
@@ -474,7 +474,7 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
     
     // Is the thing being moved a skull which is slamming into this thing?
     if (tryMoveThing.flags & MF_SKULLFLY) {
-        *gpMoveThing = &mobj;
+        gpMoveThing = &mobj;
         return false;
     }
 
@@ -505,7 +505,7 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
 
         // If the thing hit is shootable then save it for damage purposes and return 'false' for a collision
         if (mobj.flags & MF_SHOOTABLE) {
-            *gpMoveThing = &mobj;
+            gpMoveThing = &mobj;
             return false;
         }
 
@@ -515,8 +515,8 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
     
     // Are we colliding with an item that can be picked up?
     // If so then save it but return 'true' for no collision (pickups do not block).
-    if ((mobj.flags & MF_SPECIAL) && (*gTmFlags & MF_PICKUP)) {
-        *gpMoveThing = &mobj;
+    if ((mobj.flags & MF_SPECIAL) && (gTmFlags & MF_PICKUP)) {
+        gpMoveThing = &mobj;
         return true;
     }
 

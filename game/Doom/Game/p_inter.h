@@ -2,8 +2,9 @@
 
 #include "Doom/doomdef.h"
 
-extern const int32_t gMaxAmmo[NUMAMMO];
-extern const int32_t gClipAmmo[NUMAMMO];
+extern const int32_t    gMaxAmmo[NUMAMMO];
+extern const int32_t    gClipAmmo[NUMAMMO];
+extern uint32_t         gDeadPlayerRemovalQueueIdx;
 
 bool P_GiveAmmo(player_t& player, const ammotype_t ammoType, const int32_t numClips) noexcept;
 bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bDropped) noexcept;

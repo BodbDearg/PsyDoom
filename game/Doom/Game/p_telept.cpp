@@ -72,7 +72,7 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
                 continue;
 
             // Reset the number of lines to check for being crossed (to trigger specials) and remember the pre-teleport pos for fx
-            *gNumCrossCheckLines = 0;
+            gNumCrossCheckLines = 0;
 
             const fixed_t oldX = mobj.x;
             const fixed_t oldY = mobj.y;

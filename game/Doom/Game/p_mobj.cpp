@@ -27,14 +27,11 @@
 static constexpr int32_t ITEMQUESIZE = 64;
 static constexpr int32_t ITEMQUESIZE_MASK = ITEMQUESIZE - 1;    // Convenience constant for wrapping
 
-const VmPtr<int32_t>    gItemRespawnQueueHead(0x80078138);      // Head of the circular queue
-const VmPtr<int32_t>    gItemRespawnQueueTail(0x80078180);      // Tail of the circular queue
+int32_t     gItemRespawnQueueHead;      // Head of the circular queue
+int32_t     gItemRespawnQueueTail;      // Tail of the circular queue
 
-static const VmPtr<int32_t[ITEMQUESIZE]>        gItemRespawnTime(0x80097910);       // When each item in the respawn queue began the wait to respawn
-static const VmPtr<mapthing_t[ITEMQUESIZE]>     gItemRespawnQueue(0x8008612C);      // Details for the things to be respawned
-
-// Object kill tracking
-const VmPtr<int32_t> gNumMObjKilled(0x80078010);
+static int32_t      gItemRespawnTime[ITEMQUESIZE];      // When each item in the respawn queue began the wait to respawn
+static mapthing_t   gItemRespawnQueue[ITEMQUESIZE];     // Details for the things to be respawned
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Removes the given map object from the game
@@ -50,7 +47,7 @@ void P_RemoveMobj(mobj_t& mobj) noexcept {
 
     if (bRespawn) {
         // Remember the item details for later respawning and occupy one queue slot
-        const int32_t slotIdx = (*gItemRespawnQueueHead) & ITEMQUESIZE_MASK;
+        const int32_t slotIdx = gItemRespawnQueueHead & ITEMQUESIZE_MASK;
 
         gItemRespawnTime[slotIdx] = gTicCon;
         gItemRespawnQueue[slotIdx].x = mobj.spawnx;
@@ -58,7 +55,7 @@ void P_RemoveMobj(mobj_t& mobj) noexcept {
         gItemRespawnQueue[slotIdx].type = mobj.spawntype;
         gItemRespawnQueue[slotIdx].angle = mobj.spawnangle;
 
-        *gItemRespawnQueueHead += 1;
+        gItemRespawnQueueHead++;
     }
 
     // Remove the thing from sector thing lists and the blockmap
@@ -79,16 +76,16 @@ void P_RespawnSpecials() noexcept {
         return;
     
     // No respawning if there is nothing to respawn
-    if (*gItemRespawnQueueHead == *gItemRespawnQueueTail)
+    if (gItemRespawnQueueHead == gItemRespawnQueueTail)
         return;
 
     // If the queue has overflowed in (stated) size then adjust it's size back to the limit
-    if (*gItemRespawnQueueHead - *gItemRespawnQueueTail > ITEMQUESIZE) {
-        *gItemRespawnQueueTail = *gItemRespawnQueueHead - ITEMQUESIZE;
+    if (gItemRespawnQueueHead - gItemRespawnQueueTail > ITEMQUESIZE) {
+        gItemRespawnQueueTail = gItemRespawnQueueHead - ITEMQUESIZE;
     }
 
     // Wait 120 seconds before respawning things
-    const int32_t slotIdx = (*gItemRespawnQueueTail) & ITEMQUESIZE_MASK;
+    const int32_t slotIdx = gItemRespawnQueueTail & ITEMQUESIZE_MASK;
     
     if (gTicCon - gItemRespawnTime[slotIdx] < 120 * TICRATE)
         return;
@@ -129,7 +126,7 @@ void P_RespawnSpecials() noexcept {
     mobj.spawnangle = mapthing.angle;
 
     // This thing has now been spawned, free up the queue slot
-    *gItemRespawnQueueTail += 1;
+    gItemRespawnQueueTail++;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

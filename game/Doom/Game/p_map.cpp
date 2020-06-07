@@ -49,7 +49,7 @@ bool P_CheckPosition(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
 
     // Check if the move can be done and return the output result
     P_TryMove2();
-    return *gbTryMove2;
+    return gbTryMove2;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ bool P_TryMove(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
     P_TryMove2();
 
     // If we collided with something then try and interact with it it
-    mobj_t* const pCollideThing = gpMoveThing->get();
+    mobj_t* const pCollideThing = gpMoveThing;
 
     if (pCollideThing) {
         if (mobj.flags & MF_MISSILE) {
@@ -93,7 +93,7 @@ bool P_TryMove(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
         }
     }
 
-    return *gbTryMove2;     // Was the move a success?
+    return gbTryMove2;      // Was the move a success?
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
