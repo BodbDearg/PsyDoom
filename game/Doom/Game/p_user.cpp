@@ -50,15 +50,15 @@ static void P_PlayerMove(mobj_t& mobj) noexcept {
     fixed_t moveDy = (mobj.momy >> 2) * elapsedVBlanks;
 
     // Do the sliding movement
-    *gpSlideThing = &mobj;
+    gpSlideThing = &mobj;
     P_SlideMove();
-    line_t* const pSpecialLineToCross = gpSpecialLine->get();
+    line_t* const pSpecialLineToCross = gpSpecialLine;
 
     // If we did not succeed in doing a sliding movement, or cannot go to the suggested location then try stairstepping.
     // With stairstepping we try to do the x and y axis movements alone, instead of together:
-    const bool bSlideMoveBlocked = ((*gSlideX == mobj.x) && (*gSlideY == mobj.y));
+    const bool bSlideMoveBlocked = ((gSlideX == mobj.x) && (gSlideY == mobj.y));
 
-    if (bSlideMoveBlocked || (!P_TryMove(mobj, *gSlideX, *gSlideY))) {
+    if (bSlideMoveBlocked || (!P_TryMove(mobj, gSlideX, gSlideY))) {
         // Clamp the movement amount so we don't go beyond the max
         moveDx = std::clamp(moveDx, -MAXMOVE, +MAXMOVE);
         moveDy = std::clamp(moveDy, -MAXMOVE, +MAXMOVE);

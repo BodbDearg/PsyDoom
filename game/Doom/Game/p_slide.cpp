@@ -14,27 +14,27 @@ static constexpr int32_t SIDE_FRONT = +1;   // Return code for side checking: po
 static constexpr int32_t SIDE_ON    =  0;   // Return code for side checking: point is on the line
 static constexpr int32_t SIDE_BACK  = -1;   // Return code for side checking: point is on the back side of the line
 
-const VmPtr<VmPtr<mobj_t>>      gpSlideThing(0x80077ED8);       // The thing being moved
-const VmPtr<fixed_t>            gSlideX(0x80077F90);            // Where the player move is starting from: x
-const VmPtr<fixed_t>            gSlideY(0x80077F94);            // Where the player move is starting from: y
-const VmPtr<VmPtr<line_t>>      gpSpecialLine(0x80077F9C);      // The special line that would be crossed by player movement
+mobj_t*     gpSlideThing;       // The thing being moved
+fixed_t     gSlideX;            // Where the player move is starting from: x
+fixed_t     gSlideY;            // Where the player move is starting from: y
+line_t*     gpSpecialLine;      // The special line that would be crossed by player movement
 
-static const VmPtr<fixed_t>         gSlideDx(0x80078070);           // How much the player is wanting to move: x
-static const VmPtr<fixed_t>         gSlideDy(0x80078074);           // How much the player is wanting to move: y
-static const VmPtr<fixed_t[4]>      gEndBox(0x80097BF0);            // Bounding box for the proposed movement
-static const VmPtr<fixed_t>         gBlockFrac(0x80078228);         // Percentage of the current move allowed
-static const VmPtr<fixed_t>         gBlockNvx(0x800781A8);          // The vector to slide along for the line collided with: x
-static const VmPtr<fixed_t>         gBlockNvy(0x800781B0);          // The vector to slide along for the line collided with: y
-static const VmPtr<fixed_t>         gNvx(0x80078158);               // Line being collided against, normalized normal: x
-static const VmPtr<fixed_t>         gNvy(0x8007815C);               // Line being collided against, normalized normal: y
-static const VmPtr<fixed_t>         gP1x(0x800780CC);               // Line being collided against, p1: x
-static const VmPtr<fixed_t>         gP1y(0x800780D4);               // Line being collided against, p1: y
-static const VmPtr<fixed_t>         gP2x(0x800780D0);               // Line being collided against, p2: x
-static const VmPtr<fixed_t>         gP2y(0x800780E0);               // Line being collided against, p2: y
-static const VmPtr<fixed_t>         gP3x(0x800780DC);               // Movement line, p1: x
-static const VmPtr<fixed_t>         gP3y(0x800780F4);               // Movement line, p1: y
-static const VmPtr<fixed_t>         gP4x(0x800780F0);               // Movement line, p2: x
-static const VmPtr<fixed_t>         gP4y(0x800780FC);               // Movement line, p2: y
+static fixed_t  gSlideDx;       // How much the player is wanting to move: x
+static fixed_t  gSlideDy;       // How much the player is wanting to move: y
+static fixed_t  gEndBox[4];     // Bounding box for the proposed movement
+static fixed_t  gBlockFrac;     // Percentage of the current move allowed
+static fixed_t  gBlockNvx;      // The vector to slide along for the line collided with: x
+static fixed_t  gBlockNvy;      // The vector to slide along for the line collided with: y
+static fixed_t  gNvx;           // Line being collided against, normalized normal: x
+static fixed_t  gNvy;           // Line being collided against, normalized normal: y
+static fixed_t  gP1x;           // Line being collided against, p1: x
+static fixed_t  gP1y;           // Line being collided against, p1: y
+static fixed_t  gP2x;           // Line being collided against, p2: x
+static fixed_t  gP2y;           // Line being collided against, p2: y
+static fixed_t  gP3x;           // Movement line, p1: x
+static fixed_t  gP3y;           // Movement line, p1: y
+static fixed_t  gP4x;           // Movement line, p2: x
+static fixed_t  gP4y;           // Movement line, p2: y
 
 // Not required externally: making private to this module
 static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept;
@@ -53,18 +53,18 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_SlideMove() noexcept {
     // Set the starting position and grab the initial movement amount
-    mobj_t& slideThing = *gpSlideThing->get();
-    *gSlideX = slideThing.x;
-    *gSlideY = slideThing.y;
+    mobj_t& slideThing = *gpSlideThing;
+    gSlideX = slideThing.x;
+    gSlideY = slideThing.y;
 
     fixed_t moveDx = slideThing.momx;
     fixed_t moveDy = slideThing.momy;
 
     // If the noclip cheat is on then simply move to where we want to and check for line specials
     if (slideThing.flags & MF_NOCLIP) {
-        *gSlideX += slideThing.momx;
-        *gSlideY += slideThing.momy;
-        SL_CheckSpecialLines(slideThing.x, slideThing.y, *gSlideX, *gSlideY);
+        gSlideX += slideThing.momx;
+        gSlideY += slideThing.momy;
+        SL_CheckSpecialLines(slideThing.x, slideThing.y, gSlideX, gSlideY);
         return;
     }
 
@@ -83,14 +83,14 @@ void P_SlideMove() noexcept {
         // Move by the amount we were allowed to move in the movement direction
         const fixed_t allowedDx = FixedMul(moveFrac, moveDx);
         const fixed_t allowedDy = FixedMul(moveFrac, moveDy);
-        *gSlideX += allowedDx;
-        *gSlideY += allowedDy;
+        gSlideX += allowedDx;
+        gSlideY += allowedDy;
 
         // If the entire move was allowed then we are done, and check for crossing special lines
         if (moveFrac == FRACUNIT) {
             slideThing.momx = moveDx;
             slideThing.momy = moveDy;
-            SL_CheckSpecialLines(slideThing.x, slideThing.y, *gSlideX, *gSlideY);
+            SL_CheckSpecialLines(slideThing.x, slideThing.y, gSlideX, gSlideY);
             return;
         }
 
@@ -98,16 +98,16 @@ void P_SlideMove() noexcept {
         // Slide by the movement amount that was disallowed in the direction of the wall.
         const fixed_t blockedDx = moveDx - allowedDx;
         const fixed_t blockedDy = moveDy - allowedDy;
-        const fixed_t slideDist = FixedMul(blockedDx, *gBlockNvx) + FixedMul(blockedDy, *gBlockNvy);
+        const fixed_t slideDist = FixedMul(blockedDx, gBlockNvx) + FixedMul(blockedDy, gBlockNvy);
 
-        moveDx = FixedMul(slideDist, *gBlockNvx);
-        moveDy = FixedMul(slideDist, *gBlockNvy);
+        moveDx = FixedMul(slideDist, gBlockNvx);
+        moveDy = FixedMul(slideDist, gBlockNvy);
     }
 
     // If we get to here then movement failed, set the result position to the original position.
     // Kill the player's momentum in this case also and don't bother checking for special lines crossed.
-    *gSlideX = slideThing.x;
-    *gSlideY = slideThing.y;
+    gSlideX = slideThing.x;
+    gSlideY = slideThing.y;
     slideThing.momy = 0;
     slideThing.momx = 0;
 }
@@ -124,15 +124,15 @@ void P_SlideMove() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
     // Assume we can move the entire distance until we find otherwise and save movement amount globally
-    *gBlockFrac = FRACUNIT;
-    *gSlideDx = dx;
-    *gSlideDy = dy;
+    gBlockFrac = FRACUNIT;
+    gSlideDx = dx;
+    gSlideDy = dy;
 
     // Compute the bounding box for the move
-    gEndBox[BOXTOP]    = *gSlideY + CLIPRADIUS * FRACUNIT;
-    gEndBox[BOXBOTTOM] = *gSlideY - CLIPRADIUS * FRACUNIT;
-    gEndBox[BOXLEFT]   = *gSlideX - CLIPRADIUS * FRACUNIT;
-    gEndBox[BOXRIGHT]  = *gSlideX + CLIPRADIUS * FRACUNIT;
+    gEndBox[BOXTOP] = gSlideY + CLIPRADIUS * FRACUNIT;
+    gEndBox[BOXBOTTOM] = gSlideY - CLIPRADIUS * FRACUNIT;
+    gEndBox[BOXLEFT] = gSlideX - CLIPRADIUS * FRACUNIT;
+    gEndBox[BOXRIGHT] = gSlideX + CLIPRADIUS * FRACUNIT;
     
     if (dx > 0) {
         gEndBox[BOXRIGHT] += dx;
@@ -176,12 +176,12 @@ static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
     }
 
     // If the movement amount is less than 1/16 of what is allowed then stop movement entirely
-    if (*gBlockFrac < FRACUNIT / 16) {
-        *gBlockFrac = 0;
-        *gpSpecialLine = nullptr;
+    if (gBlockFrac < FRACUNIT / 16) {
+        gBlockFrac = 0;
+        gpSpecialLine = nullptr;
     }
 
-    return *gBlockFrac;
+    return gBlockFrac;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -194,7 +194,7 @@ static fixed_t P_CompletableFrac(const fixed_t dx, const fixed_t dy) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static int32_t SL_PointOnSide(const fixed_t x, const fixed_t y) noexcept {
     // Use the dot product of a line relative vector with the normal to tell the side
-    const fixed_t dist = FixedMul(x - *gP1x, *gNvx) + FixedMul(y - *gP1y, *gNvy);
+    const fixed_t dist = FixedMul(x - gP1x, gNvx) + FixedMul(y - gP1y, gNvy);
 
     if (dist > FRACUNIT) {
         return SIDE_FRONT;
@@ -216,8 +216,8 @@ static int32_t SL_PointOnSide(const fixed_t x, const fixed_t y) noexcept {
 static fixed_t SL_CrossFrac() noexcept {
     // Project the move start and end points onto the normalized normal of the line being tested against.
     // This gives us the perpendicular distance of these points to the line.
-    const fixed_t dist1 = FixedMul(*gP3x - *gP1x, *gNvx) + FixedMul(*gP3y - *gP1y, *gNvy);
-    const fixed_t dist2 = FixedMul(*gP4x - *gP1x, *gNvx) + FixedMul(*gP4y - *gP1y, *gNvy);
+    const fixed_t dist1 = FixedMul(gP3x - gP1x, gNvx) + FixedMul(gP3y - gP1y, gNvy);
+    const fixed_t dist2 = FixedMul(gP4x - gP1x, gNvx) + FixedMul(gP4y - gP1y, gNvy);
 
     // If the points don't cross the line then there 
     if ((dist1 < 0) == (dist2 < 0))
@@ -236,14 +236,14 @@ static fixed_t SL_CrossFrac() noexcept {
 
 static bool CheckLineEnds() noexcept {
     // Compute line normal
-    const fixed_t nx = *gP4y - *gP3y;
-    const fixed_t ny = *gP3x - *gP4x;
+    const fixed_t nx = gP4y - gP3y;
+    const fixed_t ny = gP3x - gP4x;
 
     // Compute vectors relative to the line's first point
-    const fixed_t rx1 = *gP1x - *gP3x;
-    const fixed_t ry1 = *gP1y - *gP3y;
-    const fixed_t rx2 = *gP2x - *gP3x;
-    const fixed_t ry2 = *gP2y - *gP3y;
+    const fixed_t rx1 = gP1x - gP3x;
+    const fixed_t ry1 = gP1y - gP3y;
+    const fixed_t rx2 = gP2x - gP3x;
+    const fixed_t ry2 = gP2y - gP3y;
 
     // Return true if P1 & P2 are on opposite sides of the line by using the dot product to compute perpendicular distance to the line
     const fixed_t dist1 = FixedMul(rx1, nx) + FixedMul(ry1, ny);
@@ -271,28 +271,28 @@ static bool CheckLineEnds() noexcept {
 static void SL_ClipToLine() noexcept {
     // Move start point is on the circumference of the player circle, the closest point to the wall (use the normal to compute that).
     // Move end point is that plus the movement amount.
-    *gP3x = *gSlideX - (*gNvx) * CLIPRADIUS;
-    *gP3y = *gSlideY - (*gNvy) * CLIPRADIUS;
-    *gP4x = *gP3x + *gSlideDx;
-    *gP4y = *gP3y + *gSlideDy;
+    gP3x = gSlideX - gNvx * CLIPRADIUS;
+    gP3y = gSlideY - gNvy * CLIPRADIUS;
+    gP4x = gP3x + gSlideDx;
+    gP4y = gP3y + gSlideDy;
 
     // If the move start point is on the wrong side of the line then ignore (can't be colliding with it)
-    const int32_t moveP1Side = SL_PointOnSide(*gP3x, *gP3y);
+    const int32_t moveP1Side = SL_PointOnSide(gP3x, gP3y);
 
     if (moveP1Side == SIDE_BACK)
         return;
     
     // If the move end point is (roughly) along or in front of the line then the move is allowed and we don't need to clip
-    const int32_t moveP2Side = SL_PointOnSide(*gP4x, *gP4y);
+    const int32_t moveP2Side = SL_PointOnSide(gP4x, gP4y);
 
     if ((moveP2Side == SIDE_ON) || (moveP2Side == SIDE_FRONT))
         return;
     
     // If the move start point is already on the line and the end point is behind then disallow the move entirely
     if (moveP1Side == SIDE_ON) {
-        *gBlockNvx = -*gNvy;
-        *gBlockNvy = *gNvx;
-        *gBlockFrac = 0;
+        gBlockNvx = -gNvy;
+        gBlockNvy = gNvx;
+        gBlockFrac = 0;
         return;
     }
 
@@ -300,10 +300,10 @@ static void SL_ClipToLine() noexcept {
     // Only save this collision if it's closer than the current closest:
     const fixed_t intersectFrac = SL_CrossFrac();
 
-    if (intersectFrac < *gBlockFrac) {
-        *gBlockNvx = -*gNvy;
-        *gBlockNvy = *gNvx;
-        *gBlockFrac = intersectFrac;
+    if (intersectFrac < gBlockFrac) {
+        gBlockNvx = -gNvy;
+        gBlockNvy = gNvx;
+        gBlockFrac = intersectFrac;
     }
 }
 
@@ -342,7 +342,7 @@ static void SL_CheckLine(line_t& line) noexcept {
         sector_t& frontSector = *line.frontsector;
 
         const fixed_t openingBottom = std::max(frontSector.floorheight, pBackSector->floorheight);
-        const fixed_t stepUp = openingBottom - gpSlideThing->get()->z;
+        const fixed_t stepUp = openingBottom - gpSlideThing->z;
         const bool bStepTooHigh = (stepUp > 24 * FRACUNIT);
 
         if (!bStepTooHigh) {
@@ -357,15 +357,15 @@ static void SL_CheckLine(line_t& line) noexcept {
     }
 
     // Save the points and normal globally for the line being collided against - needed by 'SL_ClipToLine':
-    *gP1x = line.vertex1->x;
-    *gP1y = line.vertex1->y;
-    *gP2x = line.vertex2->x;
-    *gP2y = line.vertex2->y;
-    *gNvx = gFineSine[line.fineangle];
-    *gNvy = -gFineCosine[line.fineangle];
+    gP1x = line.vertex1->x;
+    gP1y = line.vertex1->y;
+    gP2x = line.vertex2->x;
+    gP2y = line.vertex2->y;
+    gNvx = gFineSine[line.fineangle];
+    gNvy = -gFineCosine[line.fineangle];
 
     // Get what side of the line the start point for the move is on
-    const int32_t lineSide = SL_PointOnSide(*gSlideX, *gSlideY);
+    const int32_t lineSide = SL_PointOnSide(gSlideX, gSlideY);
 
     // If the movement start is already nearly on the line then it is ignored
     if (lineSide == SIDE_ON)
@@ -379,10 +379,10 @@ static void SL_CheckLine(line_t& line) noexcept {
             return;
 
         // Swap around everything because we are on the opposite side
-        std::swap(*gP1x, *gP2x);
-        std::swap(*gP1y, *gP2y);
-        *gNvx = -*gNvx;
-        *gNvy = -*gNvy;
+        std::swap(gP1x, gP2x);
+        std::swap(gP1y, gP2y);
+        gNvx = -gNvx;
+        gNvy = -gNvy;
     }
 
     // Clip the movement line to the line being collided against
@@ -427,7 +427,7 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
     const int32_t bmapTy = std::min((maxMoveY - gBlockmapOriginY) >> MAPBLOCKSHIFT, gBlockmapHeight - 1);
     
     // Hit no special line yet and increment the valid count for a fresh check
-    *gpSpecialLine = nullptr;
+    gpSpecialLine = nullptr;
     gValidCount++;
 
     // Check for crossing lines in this blockmap area
@@ -483,7 +483,7 @@ static void SL_CheckSpecialLines(const fixed_t moveX1, const fixed_t moveY1, con
                 }
 
                 // Crossed a special line, done:
-                *gpSpecialLine = &line;
+                gpSpecialLine = &line;
                 return;
             }
         }
