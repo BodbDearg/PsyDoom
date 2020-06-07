@@ -171,7 +171,8 @@ public:
 
     inline void* get() const noexcept {
         if (mAddr != 0) {
-            const uint32_t wrappedAddr = (mAddr & 0x1FFFFF);
+            // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
+            const uint32_t wrappedAddr = (mAddr & 0x3FFFFF);
             return reinterpret_cast<void*>(PsxVm::gpRam + wrappedAddr);
         } else {
             return nullptr;

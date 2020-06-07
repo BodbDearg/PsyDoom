@@ -82,8 +82,10 @@ inline T* vmAddrToPtr(const uint32_t addr) noexcept {
             return reinterpret_cast<T*>(PsxVm::gpScratchpad + relativeAddr);
         } else {
             // Regular RAM address
-            const uint32_t wrappedAddr = (addr & 0x1FFFFF);
-            ASSERT_LOG(wrappedAddr + sizeof(T) <= 0x200000, "Address pointed to spills past the 2 MiB of PSX RAM!");
+            // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
+            const uint32_t wrappedAddr = (addr & 0x3FFFFF);
+            // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
+            ASSERT_LOG(wrappedAddr + sizeof(T) <= 0x400000, "Address pointed to spills past the 2 MiB of PSX RAM!");
             return reinterpret_cast<T*>(PsxVm::gpRam + wrappedAddr);
         }
     } else {
@@ -100,7 +102,8 @@ inline void* vmAddrToPtr(const uint32_t addr) noexcept {
             return reinterpret_cast<void*>(PsxVm::gpScratchpad + relativeAddr);
         } else {
             // Regular RAM address
-            const uint32_t wrappedAddr = (addr & 0x1FFFFF);
+            // FIXME: temporarily expanding the PSX RAM to 4 MiB to accomodate larger structs due to 64-bit pointers
+            const uint32_t wrappedAddr = (addr & 0x3FFFFF);
             return reinterpret_cast<void*>(PsxVm::gpRam + wrappedAddr);
         }
     } else {
