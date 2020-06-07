@@ -49,8 +49,8 @@ void P_CheckSights() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
     // Figure out the reject matrix entry to lookup
-    const int32_t secnum1 = (int32_t)(mobj1.subsector->sector.get() - gpSectors);
-    const int32_t secnum2 = (int32_t)(mobj2.subsector->sector.get() - gpSectors);
+    const int32_t secnum1 = (int32_t)(mobj1.subsector->sector - gpSectors);
+    const int32_t secnum2 = (int32_t)(mobj2.subsector->sector - gpSectors);
     const int32_t rejectMapEntry = secnum1 * gNumSectors + secnum2;
 
     // Lookup the reject matrix to see if these two sectors can possibly see each other.
@@ -177,8 +177,8 @@ static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
         
         // If there is no height difference between the front and back sectors then the line can't block.
         // In this case it has no upper or lower walls:
-        sector_t& bsec = *line.backsector.get();
-        sector_t& fsec = *line.frontsector.get();
+        sector_t& bsec = *line.backsector;
+        sector_t& fsec = *line.frontsector;
 
         if ((fsec.floorheight == bsec.floorheight) && (fsec.ceilingheight == bsec.ceilingheight))
             continue;

@@ -123,13 +123,13 @@ static void P_RecursiveSound(sector_t& sector, const bool bStopOnSoundBlock) noe
     // Recurse into adjoining sectors and flood fill with noise
     for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
         line_t& line = *sector.lines[lineIdx];
-        sector_t* const pBackSector = line.backsector.get();
+        sector_t* const pBackSector = line.backsector;
 
         // Sound can't pass single sided lines
         if (!pBackSector)
             continue;
         
-        sector_t& frontSector = *line.frontsector.get();
+        sector_t& frontSector = *line.frontsector;
 
         // If the sector is a closed door then sound can't pass through it
         if (frontSector.floorheight >= pBackSector->ceilingheight)
@@ -158,7 +158,7 @@ static void P_RecursiveSound(sector_t& sector, const bool bStopOnSoundBlock) noe
 static void P_NoiseAlert(player_t& player) noexcept {
     // Optimization: don't bother doing a noise alert again if we are still in the same sector as the last one
     mobj_t& playerMobj = *player.mo;
-    sector_t& curSector = *playerMobj.subsector->sector.get();
+    sector_t& curSector = *playerMobj.subsector->sector;
 
     if (player.lastsoundsector == &curSector) 
         return;

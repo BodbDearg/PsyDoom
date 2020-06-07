@@ -334,7 +334,7 @@ static void SL_CheckLine(line_t& line) noexcept {
 
     // See if the line is actually blocking of movement - ignore it if it isn't.
     // Firstly see if the line is one sided or marked as explicitly blocking:
-    sector_t* const pBackSector = line.backsector.get();
+    sector_t* const pBackSector = line.backsector;
     const bool bImpassibleLine = ((!pBackSector) || (line.flags & ML_BLOCKING));
 
     if (!bImpassibleLine) {

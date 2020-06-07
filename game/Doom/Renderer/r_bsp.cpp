@@ -325,7 +325,7 @@ void R_Subsector(const int32_t subsecNum) noexcept {
         return;
     
     subsector_t& subsec = gpSubsectors[subsecNum];
-    gpCurDrawSector = subsec.sector.get();
+    gpCurDrawSector = subsec.sector;
     *gppEndDrawSubsector = &subsec;
     gppEndDrawSubsector++;
     
@@ -548,7 +548,7 @@ void R_AddLine(seg_t& seg) noexcept {
     // Only do this however if the seg is not drawn with translucent parts or transparency:
     if ((seg.linedef->flags & ML_MIDMASKED) == 0) {
         const sector_t& frontSec = *gpCurDrawSector;
-        const sector_t* const pBackSec = seg.backsector.get();
+        const sector_t* const pBackSec = seg.backsector;
         
         // Is this seg something that fully occludes stuff behind it?
         // This will be the case if the seg is one sided (no back sector) or if there is no height gap between sectors.

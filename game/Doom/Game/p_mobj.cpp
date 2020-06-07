@@ -214,7 +214,7 @@ mobj_t* P_SpawnMobj(const fixed_t x, const fixed_t y, const fixed_t z, const mob
     P_SetThingPosition(mobj);
     
     // Decide on the z position for the thing (specified z, or floor/ceiling)
-    sector_t& sec = *mobj.subsector->sector.get();
+    sector_t& sec = *mobj.subsector->sector;
     mobj.floorz = sec.floorheight;
     mobj.ceilingz = sec.ceilingheight;
     

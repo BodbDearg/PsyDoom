@@ -62,7 +62,7 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
             if (pDstMarker->type != MT_TELEPORTMAN)
                 continue;
 
-            const int32_t destSectorIdx = (int32_t)(pDstMarker->subsector->sector.get() - pSectors);
+            const int32_t destSectorIdx = (int32_t)(pDstMarker->subsector->sector - pSectors);
 
             if (destSectorIdx != sectorIdx)
                 continue;

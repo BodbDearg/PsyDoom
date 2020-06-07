@@ -35,9 +35,14 @@ static void*        gpOldValue;             // Intercept testing: previous close
 static fixed_t      gOldFrac;               // Intercept testing: previous closest hit fractional distance (along line of sight)
 static bool         gbOldIsLine;            // Intercept testing: previous closest hit - was the hit against a line? (Was a thing if 'false')
 static bool         gbShootDivPositive;     // True if the slope for the shooters shoot direction is positive
-static const VmPtr<thingline_t>         gThingLineVerts(0x800A8A44);        // The vertices for the shooters shoot line
-static const VmPtr<VmPtr<vertex_t>>     gPartialThingLine(0x80077B14);      // A partial/degenerate 'line_t' for the shooters line (just the two vertex pointer fields defined)
+static thingline_t  gThingLineVerts;        // The vertices for the shooters shoot line
 static fixed_t      gFirstLineFrac;         // Fractional distance along the shooting line of the first/closest wall hit
+
+// A partially defined 'line_t' for the shooters line (just the two vertex pointer fields are used)
+static line_t gPartialThingLine { 
+    &gThingLineVerts.p1,
+    &gThingLineVerts.p2
+};
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Does a raycast for the current shooter taking a shot and determines what is hit.
@@ -306,19 +311,19 @@ static bool PA_CrossSubsector(subsector_t& subsec) noexcept {
         // Setup the shooters degenerate 'line_t' for the shoot line.
         // This creates a line between the two corners of the hit box.
         if (gbShootDivPositive) {
-            gThingLineVerts->p1.x = pmobj->x - pmobj->radius;
-            gThingLineVerts->p1.y = pmobj->y + pmobj->radius;
-            gThingLineVerts->p2.x = pmobj->x + pmobj->radius;
-            gThingLineVerts->p2.y = pmobj->y - pmobj->radius;
+            gThingLineVerts.p1.x = pmobj->x - pmobj->radius;
+            gThingLineVerts.p1.y = pmobj->y + pmobj->radius;
+            gThingLineVerts.p2.x = pmobj->x + pmobj->radius;
+            gThingLineVerts.p2.y = pmobj->y - pmobj->radius;
         } else {
-            gThingLineVerts->p1.x = pmobj->x - pmobj->radius;
-            gThingLineVerts->p1.y = pmobj->y - pmobj->radius;
-            gThingLineVerts->p2.x = pmobj->x + pmobj->radius;
-            gThingLineVerts->p2.y = pmobj->y + pmobj->radius;
+            gThingLineVerts.p1.x = pmobj->x - pmobj->radius;
+            gThingLineVerts.p1.y = pmobj->y - pmobj->radius;
+            gThingLineVerts.p2.x = pmobj->x + pmobj->radius;
+            gThingLineVerts.p2.y = pmobj->y + pmobj->radius;
         }
         
         // See if the thing line intersects the sight/shoot line, ignore if it doesn't
-        const fixed_t hitFrac = PA_SightCrossLine(*(line_t*) gPartialThingLine.get());
+        const fixed_t hitFrac = PA_SightCrossLine(gPartialThingLine);
 
         if ((hitFrac < 0) || (hitFrac > FRACUNIT))
             continue;

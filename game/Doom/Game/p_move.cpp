@@ -211,7 +211,7 @@ static void PM_SetThingPosition(mobj_t& mobj) noexcept {
     
     // Add the thing to sector thing lists, if the thing flags allow it
     if ((mobj.flags & MF_NOSECTOR) == 0) {
-        sector_t& newSector = *newSubsec.sector.get();
+        sector_t& newSector = *newSubsec.sector;
         mobj.sprev = nullptr;
         mobj.snext = newSector.thinglist;
         

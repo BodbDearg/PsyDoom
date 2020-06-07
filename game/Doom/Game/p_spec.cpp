@@ -177,8 +177,8 @@ sector_t* getNextSector(line_t& line, sector_t& sector) noexcept {
     if ((line.flags & ML_TWOSIDED) == 0)
         return nullptr;
 
-    sector_t* const pFrontSec = line.frontsector.get();
-    return (&sector == pFrontSec) ? line.backsector.get() : pFrontSec;
+    sector_t* const pFrontSec = line.frontsector;
+    return (&sector == pFrontSec) ? line.backsector : pFrontSec;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

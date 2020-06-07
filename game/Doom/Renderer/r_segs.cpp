@@ -35,7 +35,7 @@ void R_DrawWalls(leafedge_t& edge) noexcept {
     int32_t mid_by = fsec_by;
 
     // Draw upper and lower walls if the line is two sided (has a back sector)
-    sector_t* const pBackSec = seg.backsector.get();
+    sector_t* const pBackSec = seg.backsector;
 
     if (pBackSec) {
         // Get the top and bottom y values for the back sector in texture space

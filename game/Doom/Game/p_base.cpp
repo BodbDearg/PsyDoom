@@ -99,7 +99,7 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
                 // Missile: if the missile hit the sky then just remove it rather than exploding
                 const bool bHitSky = (
                     gpCeilingLine &&
-                    gpCeilingLine->backsector.get() &&
+                    gpCeilingLine->backsector &&
                     (gpCeilingLine->backsector->ceilingpic == -1)
                 );
 

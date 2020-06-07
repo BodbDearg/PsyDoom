@@ -79,37 +79,33 @@ enum slopetype_t : int32_t {
 
 // Describes a line in the map
 struct line_t {
-    VmPtr<vertex_t>     vertex1;
-    VmPtr<vertex_t>     vertex2;
-    fixed_t             dx;             // Precomputed 'v2 - v1' in the x and y directions
-    fixed_t             dy;
-    int32_t             flags;
-    int32_t             special;
-    int32_t             tag;
-    int32_t             sidenum[2];     // If sidenum[1] is '-1' then the line is one sided
-    fixed_t             bbox[4];
-    slopetype_t         slopetype;      // Used to simplify some collision detection
-    VmPtr<sector_t>     frontsector;
-    VmPtr<sector_t>     backsector;
-    int32_t             validcount;
-    VmPtr<void>         specialdata;    // Used by thinkers doing special logic
-    fixed_t             fineangle;      // So sine/cosine can be looked up quicker
+    vertex_t*       vertex1;
+    vertex_t*       vertex2;
+    fixed_t         dx;             // Precomputed 'v2 - v1' in the x and y directions
+    fixed_t         dy;
+    int32_t         flags;
+    int32_t         special;
+    int32_t         tag;
+    int32_t         sidenum[2];     // If sidenum[1] is '-1' then the line is one sided
+    fixed_t         bbox[4];
+    slopetype_t     slopetype;      // Used to simplify some collision detection
+    sector_t*       frontsector;
+    sector_t*       backsector;
+    int32_t         validcount;
+    void*           specialdata;    // Used by thinkers doing special logic
+    fixed_t         fineangle;      // So sine/cosine can be looked up quicker
 };
-
-static_assert(sizeof(line_t) == 76);
 
 // Describes a convex region within a sector
 struct subsector_t {
-    VmPtr<sector_t>     sector;
-    int16_t             numsegs;
-    int16_t             firstseg;
-    int16_t             numLeafEdges;
-    int16_t             firstLeafEdge;
-    int16_t             unknown5;           // TODO: find out what this field is
-    int16_t             unknown6;           // TODO: find out what this field is
+    sector_t*   sector;
+    int16_t     numsegs;
+    int16_t     firstseg;
+    int16_t     numLeafEdges;
+    int16_t     firstLeafEdge;
+    int16_t     unknown5;           // TODO: find out what this field is
+    int16_t     unknown6;           // TODO: find out what this field is
 };
-
-static_assert(sizeof(subsector_t) == 16);
 
 // The partition/dividing line for a bsp tree node: stores a position and line vector
 struct divline_t {
@@ -126,28 +122,24 @@ struct node_t {
     int32_t     children[2];    // When 'NF_SUBSECTOR' is set then it means it's a subsector number
 };
 
-static_assert(sizeof(node_t) == 56);
-
 // Seg flags
 static constexpr uint16_t SGF_VISIBLE_COLS = 0x1;   // The seg has at least 1 visible (non fully occluded column)
 
 // Describes a segment of a line
 struct seg_t {
-    VmPtr<vertex_t>     vertex1;
-    VmPtr<vertex_t>     vertex2;
-    fixed_t             offset;
-    angle_t             angle;
-    VmPtr<side_t>       sidedef;
-    VmPtr<line_t>       linedef;
-    VmPtr<sector_t>     frontsector;
-    VmPtr<sector_t>     backsector;
-    uint16_t            flags;              // TODO: find out more about the flags
-    int16_t             visibleBegX;        // First visible screenspace column: only set if SGF_VISIBLE_COLS is set
-    int16_t             visibleEndX;        // Last visible screenspace column (inclusive): only set if SGF_VISIBLE_COLS is set
-    uint16_t            pad;                // TODO: used for any purpose, or just padding?
+    vertex_t*   vertex1;
+    vertex_t*   vertex2;
+    fixed_t     offset;
+    angle_t     angle;
+    side_t*     sidedef;
+    line_t*     linedef;
+    sector_t*   frontsector;
+    sector_t*   backsector;
+    uint16_t    flags;              // TODO: find out more about the flags
+    int16_t     visibleBegX;        // First visible screenspace column: only set if SGF_VISIBLE_COLS is set
+    int16_t     visibleEndX;        // Last visible screenspace column (inclusive): only set if SGF_VISIBLE_COLS is set
+    uint16_t    pad;                // TODO: used for any purpose, or just padding?
 };
-
-static_assert(sizeof(seg_t) == 40);
 
 // Describes an edge of a leaf.
 // A leaf corresponds to a single subsector, and contains a collection of leaf edges.
