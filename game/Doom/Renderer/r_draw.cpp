@@ -144,7 +144,7 @@ void R_DrawSubsector(subsector_t& subsec) noexcept {
         leafedge_t* pEdge = drawleaf.edges;
         
         for (int32_t edgeIdx = 0; edgeIdx < drawleaf.numEdges; ++edgeIdx, ++pEdge) {
-            seg_t* const pSeg = pEdge->seg.get();
+            seg_t* const pSeg = pEdge->seg;
             
             // Only draw walls for this leaf edge if its seg has visible columns
             if (pSeg && (pSeg->flags & SGF_VISIBLE_COLS)) {

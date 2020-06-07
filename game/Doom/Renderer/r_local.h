@@ -145,11 +145,9 @@ struct seg_t {
 // A leaf corresponds to a single subsector, and contains a collection of leaf edges.
 // The leaf edge simply contains a vertex and seg reference.
 struct leafedge_t {
-    VmPtr<vertex_t>     vertex;
-    VmPtr<seg_t>        seg;
+    vertex_t*   vertex;
+    seg_t*      seg;
 };
-
-static_assert(sizeof(leafedge_t) == 8);
 
 // Runtime render structure used for rendering leafs.
 // This is cached in scratchpad memory of the PSX, hence the small limits here.
@@ -159,8 +157,6 @@ struct leaf_t {
     int32_t     numEdges;
     leafedge_t  edges[MAX_LEAF_EDGES + 1];  // +1 so we store the first edge at the end of the list and avoid bound checking
 };
-
-static_assert(sizeof(leaf_t) == 172);
 
 // Holds information for a sprite frame
 struct spriteframe_t {
