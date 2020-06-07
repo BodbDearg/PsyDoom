@@ -32,7 +32,7 @@ int32_t     gGameMap;
 int32_t     gNextMap;
 
 // State for each player and whether they are in the game
-const VmPtr<player_t[MAXPLAYERS]> gPlayers(0x800A87EC);
+player_t gPlayers[MAXPLAYERS];
 bool gbPlayerInGame[MAXPLAYERS];
 
 // Current and previous game tick count (15 Hz ticks)
@@ -57,7 +57,7 @@ bool gbIsLevelBeingRestarted;
 
 // An empty map object initially assigned to players during network game setup, for net consistency checks.
 // This is all zeroed out initially.
-static const VmPtr<mobj_t> gEmptyMObj(0x800A9E30);
+static mobj_t gEmptyMObj;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Displays a loading message then loads the current map
@@ -285,9 +285,9 @@ void G_InitNew(const skill_t skill, const int32_t mapNum, const gametype_t gameT
 
     // Clear the empty map object and assign to both players initially.
     // This is used for network consistency checks:
-    D_memset(gEmptyMObj.get(), std::byte(0), sizeof(mobj_t));
-    gPlayers[0].mo = gEmptyMObj;
-    gPlayers[1].mo = gEmptyMObj;
+    D_memset(&gEmptyMObj, std::byte(0), sizeof(mobj_t));
+    gPlayers[0].mo = &gEmptyMObj;
+    gPlayers[1].mo = &gEmptyMObj;
 
     // Set some player status flags and controls stuff
     gbPlayerInGame[0] = true;

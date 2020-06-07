@@ -1192,7 +1192,7 @@ void P_SpawnSpecials() noexcept {
     gMapBlueKeyType = it_bluecard;
     gMapYellowKeyType = it_yellowcard;
 
-    for (mobj_t* pmobj = gMObjHead->next.get(); pmobj != gMObjHead.get(); pmobj = pmobj->next.get()) {
+    for (mobj_t* pmobj = gMObjHead.next; pmobj != &gMObjHead; pmobj = pmobj->next) {
         switch (pmobj->type) {
             case MT_MISC7:  gMapYellowKeyType   = it_yellowskull;   break;
             case MT_MISC8:  gMapRedKeyType      = it_redskull;      break;

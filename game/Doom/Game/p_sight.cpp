@@ -26,9 +26,7 @@ static int32_t      gT2ys;              // Sight line end, whole coords: y
 // Updates target visibility checking for all map objects that are due an update
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_CheckSights() noexcept {
-    mobj_t& mobjHead = *gMObjHead;
-
-    for (mobj_t* pmobj = mobjHead.next.get(); pmobj != &mobjHead; pmobj = pmobj->next.get()) {
+    for (mobj_t* pmobj = gMObjHead.next; pmobj != &gMObjHead; pmobj = pmobj->next) {
         // Must be killable (enemy) to do sight checking
         if ((pmobj->flags & MF_COUNTKILL) == 0)
             continue;

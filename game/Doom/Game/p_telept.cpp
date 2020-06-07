@@ -15,9 +15,7 @@
 // Telefrags map objects (that can be shot) around the given object when placed at the specified position
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_Telefrag(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
-    mobj_t& mobjHead = *gMObjHead;
-
-    for (mobj_t* pTarget = mobjHead.next.get(); pTarget != &mobjHead; pTarget = pTarget->next.get()) {
+    for (mobj_t* pTarget = gMObjHead.next; pTarget != &gMObjHead; pTarget = pTarget->next) {
         // Can't telefrag the object if it's not shootable
         if ((pTarget->flags & MF_SHOOTABLE) == 0)
             continue;
@@ -59,9 +57,7 @@ bool EV_Teleport(line_t& line, mobj_t& mobj) noexcept {
             continue;
 
         // Try to find a teleport destination that is in the target sector
-        mobj_t& mobjHead = *gMObjHead;
-
-        for (mobj_t* pDstMarker = gMObjHead->next.get(); pDstMarker != &mobjHead; pDstMarker = pDstMarker->next.get()) {
+        for (mobj_t* pDstMarker = gMObjHead.next; pDstMarker != &gMObjHead; pDstMarker = pDstMarker->next) {
             // Ignore if the marker is not a teleport marker or not in this sector
             if (pDstMarker->type != MT_TELEPORTMAN)
                 continue;

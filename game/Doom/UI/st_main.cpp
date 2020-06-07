@@ -204,7 +204,7 @@ void ST_Ticker() noexcept {
 
     // Handle new messages to display
     if (player.message) {
-        gStatusBar.message = player.message.get();
+        gStatusBar.message = player.message;
         gStatusBar.messageTicsLeft = TICRATE * 5;
         player.message = nullptr;
     }

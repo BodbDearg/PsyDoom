@@ -177,7 +177,7 @@ void P_ExplodeMissile(mobj_t& mobj) noexcept {
 
     // Stop the missile sound and start the explode sound
     if (mobjInfo.deathsound != sfx_None) {
-        S_StopSound(mobj.target.get());
+        S_StopSound(mobj.target);
         S_StartSound(&mobj, mobjInfo.deathsound);
     }
 }
@@ -227,10 +227,10 @@ mobj_t* P_SpawnMobj(const fixed_t x, const fixed_t y, const fixed_t z, const mob
     }
 
     // Add into the linked list of things
-    gMObjHead->prev->next = &mobj;
-    mobj.next = gMObjHead.get();
-    mobj.prev = gMObjHead->prev;
-    gMObjHead->prev = &mobj;
+    gMObjHead.prev->next = &mobj;
+    mobj.next = &gMObjHead;
+    mobj.prev = gMObjHead.prev;
+    gMObjHead.prev = &mobj;
     return &mobj;
 }
 

@@ -388,7 +388,7 @@ static void P_MovePlayer(player_t& player) noexcept {
     // Switch to the running animation frames if moving and currently showing the standing still ones
     const bool bIsMoving = ((player.forwardmove != 0) || (player.sidemove != 0));
 
-    if (bIsMoving && (mobj.state.get() == &gStates[S_PLAY])) {
+    if (bIsMoving && (mobj.state == &gStates[S_PLAY])) {
         P_SetMObjState(mobj, S_PLAY_RUN1);
     }
 }
@@ -413,7 +413,7 @@ static void P_DeathThink(player_t& player) noexcept {
     P_CalcHeight(player);
 
     // If we were killed by an enemy then turn to face it
-    mobj_t* const pAttacker = player.attacker.get();
+    mobj_t* const pAttacker = player.attacker;
 
     if (pAttacker && (pAttacker != &playerMobj)) {
         // Killed by an enemy: turn to face it, then fade out the reddamage tint

@@ -907,8 +907,8 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
     gThinkerCap.prev = &gThinkerCap;
     gThinkerCap.next = &gThinkerCap;
 
-    gMObjHead->next = gMObjHead.get();
-    gMObjHead->prev = gMObjHead.get();
+    gMObjHead.next = &gMObjHead;
+    gMObjHead.prev = &gMObjHead;
 
     // Setup the item respawn queue and dead player removal queue index
     gItemRespawnQueueHead = 0;

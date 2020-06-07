@@ -298,9 +298,9 @@ static fixed_t PA_SightCrossLine(const line_t& line) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool PA_CrossSubsector(subsector_t& subsec) noexcept {
     // Check for hit against all things in the subsector
-    for (mobj_t* pmobj = subsec.sector->thinglist.get(); pmobj != nullptr; pmobj = pmobj->snext.get()) {
+    for (mobj_t* pmobj = subsec.sector->thinglist.get(); pmobj != nullptr; pmobj = pmobj->snext) {
         // Ignore the thing if its not in this subsector
-        if (pmobj->subsector.get() != &subsec)
+        if (pmobj->subsector != &subsec)
             continue;
 
         // Setup the shooters degenerate 'line_t' for the shoot line.

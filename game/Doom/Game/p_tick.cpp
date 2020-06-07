@@ -21,7 +21,6 @@
 #include "PcPsx/DemoResult.h"
 #include "PcPsx/ProgArgs.h"
 #include "PcPsx/Utils.h"
-#include "PsxVm/PsxVm.h"
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 #include "Wess/psxspu.h"
@@ -61,15 +60,15 @@ static constexpr CheatSequence CHEAT_SEQUENCES[] = {
 
 static_assert(NUM_CHEAT_SEQ == C_ARRAY_SIZE(CHEAT_SEQUENCES));
 
-int32_t         gVBlanksUntilMenuMove[MAXPLAYERS];      // How many 60 Hz ticks until we can move the cursor on the menu (one slot for each player)
-bool            gbGamePaused;                           // Whether the game is currently paused by either player
-int32_t         gPlayerNum;                             // Current player number being updated/processed
-int32_t         gMapNumToCheatWarpTo;                   // What map the player currently has selected for cheat warp
-int32_t         gVramViewerTexPage;                     // What page of texture memory to display in the VRAM viewer
-uint32_t        gTicButtons[MAXPLAYERS];                // Currently pressed buttons by all players
-uint32_t        gOldTicButtons[MAXPLAYERS];             // Previously pressed buttons by all players
-thinker_t       gThinkerCap;                            // Dummy thinker which serves as both the head and tail of the thinkers list.
-const VmPtr<mobj_t>                 gMObjHead(0x800A8E90);                  // Dummy map object which serves as both the head and tail of the map objects linked list.
+int32_t     gVBlanksUntilMenuMove[MAXPLAYERS];      // How many 60 Hz ticks until we can move the cursor on the menu (one slot for each player)
+bool        gbGamePaused;                           // Whether the game is currently paused by either player
+int32_t     gPlayerNum;                             // Current player number being updated/processed
+int32_t     gMapNumToCheatWarpTo;                   // What map the player currently has selected for cheat warp
+int32_t     gVramViewerTexPage;                     // What page of texture memory to display in the VRAM viewer
+uint32_t    gTicButtons[MAXPLAYERS];                // Currently pressed buttons by all players
+uint32_t    gOldTicButtons[MAXPLAYERS];             // Previously pressed buttons by all players
+thinker_t   gThinkerCap;                            // Dummy thinker which serves as both the head and tail of the thinkers list.
+mobj_t      gMObjHead;                              // Dummy map object which serves as both the head and tail of the map objects linked list.
 
 static int32_t      gCurCheatBtnSequenceIdx;                // What button press in the cheat sequence we are currently on
 static uint16_t     gCheatSequenceBtns[CHEAT_SEQ_LEN];      // Cheat sequence buttons inputted by the player
@@ -121,10 +120,9 @@ void P_RunThinkers() noexcept {
 // Execute the 'late call' update function for all map objects
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_RunMobjLate() noexcept {
-    for (mobj_t* pMObj = gMObjHead->next.get(); pMObj != gMObjHead.get(); pMObj = pMObj->next.get()) {
+    for (mobj_t* pMObj = gMObjHead.next; pMObj != &gMObjHead; pMObj = pMObj->next) {
         if (pMObj->latecall) {
-            const statefn_mobj_t func = (statefn_mobj_t) PsxVm::getVmFuncForAddr(pMObj->latecall);
-            func(*pMObj);
+            pMObj->latecall(*pMObj);
         }
     }
 }
@@ -390,7 +388,7 @@ void P_CheckCheats() noexcept {
                 case CHT_SEQ_WEAPONS_AND_AMMO: {
                     // Grant any keys that are present in the level.
                     // Run through the list of keys that are sitting around and give to the player...
-                    for (mobj_t* pMObj = gMObjHead->next.get(); pMObj != gMObjHead.get(); pMObj = pMObj->next.get()) {
+                    for (mobj_t* pMObj = gMObjHead.next; pMObj != &gMObjHead; pMObj = pMObj->next) {
                         switch (pMObj->type) {
                             case MT_MISC4: player.cards[it_bluecard]    = true; break;
                             case MT_MISC5: player.cards[it_redcard]     = true; break;

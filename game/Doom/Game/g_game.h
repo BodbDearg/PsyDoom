@@ -7,7 +7,7 @@ extern skill_t          gGameSkill;
 extern gametype_t       gNetGame;
 extern int32_t          gGameMap;
 extern int32_t          gNextMap;
-extern const VmPtr<player_t[MAXPLAYERS]>    gPlayers;
+extern player_t         gPlayers[MAXPLAYERS];
 extern bool             gbPlayerInGame[MAXPLAYERS];
 extern int32_t          gGameTic;
 extern int32_t          gPrevGameTic;

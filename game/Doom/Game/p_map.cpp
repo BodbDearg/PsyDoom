@@ -70,7 +70,7 @@ bool P_TryMove(mobj_t& mobj, const fixed_t x, const fixed_t y) noexcept {
         if (mobj.flags & MF_MISSILE) {
             // This thing being moved is a missile bashing into something: damage the thing hit
             const int32_t damage = ((P_Random() & 7) + 1) * mobj.info->damage;
-            P_DamageMObj(*pCollideThing, &mobj, mobj.target.get(), damage);
+            P_DamageMObj(*pCollideThing, &mobj, mobj.target, damage);
         }
         else if (mobj.flags & MF_SKULLFLY) {
             // This thing being moved is a skull which has based into something: damage the thing hit

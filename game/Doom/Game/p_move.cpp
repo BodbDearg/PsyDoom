@@ -117,7 +117,7 @@ void P_TryMove2() noexcept {
     PM_SetThingPosition(tryMoveThing);
 
     // Do line special triggering for monsters if they are not noclipping or teleporting
-    if ((!tryMoveThing.player.get()) && ((tryMoveThing.flags & (MF_NOCLIP | MF_TELEPORT)) == 0)) {
+    if ((!tryMoveThing.player) && ((tryMoveThing.flags & (MF_NOCLIP | MF_TELEPORT)) == 0)) {
         // Process however many lines the thing crossed
         while (gNumCrossCheckLines > 0) {
             gNumCrossCheckLines--;
@@ -490,7 +490,7 @@ static bool PIT_CheckThing(mobj_t& mobj) noexcept {
         
         // If we are colliding with the same species which fired the missile in most cases explode/collide the missile, but don't damage what was hit.
         // The firing thing is in the 'target' field for missiles.
-        mobj_t& firingThing = *tryMoveThing.target.get();
+        mobj_t& firingThing = *tryMoveThing.target;
 
         if (mobj.type == firingThing.type) {
             // Missiles don't collide with the things which fired them
@@ -557,7 +557,7 @@ static bool PM_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
 // In some cases the thing collided with is saved in 'gpMoveThing' for futher interactions like pickups and damaging.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool PM_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
-    for (mobj_t* pmobj = gppBlockLinks[x + y * gBlockmapWidth].get(); pmobj; pmobj = pmobj->bnext.get()) {
+    for (mobj_t* pmobj = gppBlockLinks[x + y * gBlockmapWidth].get(); pmobj; pmobj = pmobj->bnext) {
         if (!PIT_CheckThing(*pmobj))
             return false;
     }

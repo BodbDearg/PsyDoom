@@ -160,7 +160,7 @@ static void P_NoiseAlert(player_t& player) noexcept {
     mobj_t& playerMobj = *player.mo;
     sector_t& curSector = *playerMobj.subsector->sector.get();
 
-    if (player.lastsoundsector.get() == &curSector) 
+    if (player.lastsoundsector == &curSector) 
         return;
 
     player.lastsoundsector = &curSector;
@@ -220,7 +220,7 @@ static void P_BringUpWeapon(player_t& player) noexcept {
     // If we're raising the chainsaw then play its up sound.
     // Exception: don't do this on level start.
     if ((player.pendingweapon == wp_chainsaw) && gbIsLevelDataCached) {
-        S_StartSound(player.mo.get(), sfx_sawup);
+        S_StartSound(player.mo, sfx_sawup);
     }
     
     // No longer have a pending weapon but remember what it was (for what comes next)
@@ -325,7 +325,7 @@ void P_DropWeapon(player_t& player) noexcept {
 void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
     // Play the idle sound for the chainsaw (if selected)
     if ((player.readyweapon == wp_chainsaw) && (sprite.state.get() == &gStates[S_SAW])) {
-        S_StartSound(player.mo.get(), sfx_sawidl);
+        S_StartSound(player.mo, sfx_sawidl);
     }
 
     // If the player is changing a weapon or dying then put the current weapon away
@@ -733,28 +733,28 @@ void A_BFGSpray(mobj_t& mobj) noexcept {
 // Do the BFG firing sound
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_BFGsound(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
-    S_StartSound(player.mo.get(), sfx_bfg);
+    S_StartSound(player.mo, sfx_bfg);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Play the Super Shotgun opening sound (during reload sequence)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_OpenShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
-    S_StartSound(player.mo.get(), sfx_dbopn);
+    S_StartSound(player.mo, sfx_dbopn);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Play the Super Shotgun loading sound (during reload sequence)
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_LoadShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
-    S_StartSound(player.mo.get(), sfx_dbload);
+    S_StartSound(player.mo, sfx_dbload);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Called at the end of the Super Shotgun firing sequence: possibly refires, and plays the gun closing sound
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_CloseShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept {
-    S_StartSound(player.mo.get(), sfx_dbcls);
+    S_StartSound(player.mo, sfx_dbcls);
     A_ReFire(player, sprite);
 }
 

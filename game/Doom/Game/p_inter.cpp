@@ -39,48 +39,6 @@ uint32_t gDeadPlayerRemovalQueueIdx;
 // A queue of player corpses that eventually get removed from the game when a new corpse uses an occupied queue slot
 static mobj_t* gDeadPlayerMobjRemovalQueue[MAX_DEAD_PLAYERS];
 
-// Item message pickup strings.
-//
-// TODO: eventually make these be actual C++ string constants.
-// Can't to do that at the moment since these pointers need to be referenced by a 'VmPtr<T>', hence must be inside the executable itself.
-static const VmPtr<const char> STR_HealthBonusPickedUpMsg(0x800103E8);
-static const VmPtr<const char> STR_ArmorBonusPickedUpMsg(0x80010404);
-static const VmPtr<const char> STR_SuperChargePickedUpMsg(0x80010420);
-static const VmPtr<const char> STR_MegaSpherePickedUpMsg(0x80010430);
-static const VmPtr<const char> STR_ClipPickedUpMsg(0x80010440);
-static const VmPtr<const char> STR_BoxOfBulletsPickedUpMsg(0x80010454);
-static const VmPtr<const char> STR_RocketPickedUpMsg(0x80010470);
-static const VmPtr<const char> STR_BoxOfRocketsPickedUpMsg(0x80010484);
-static const VmPtr<const char> STR_EnergyCellPickedUpMsg(0x800104A0);
-static const VmPtr<const char> STR_EnergyCellPackPickedUpMsg(0x800104BC);
-static const VmPtr<const char> STR_FourShotgunShellsPickedUpMsg(0x800104DC);
-static const VmPtr<const char> STR_BoxOfShotgunShellsPickedUpMsg(0x800104F8);
-static const VmPtr<const char> STR_BackpackPickedUpMsg(0x80010514);
-static const VmPtr<const char> STR_BfgPickedUpMsg(0x8001052C);
-static const VmPtr<const char> STR_ChaingunPickedUpMsg(0x8001054C);
-static const VmPtr<const char> STR_ChainsawPickedUpMsg(0x80010564);
-static const VmPtr<const char> STR_RocketLauncherPickedUpMsg(0x80010584);
-static const VmPtr<const char> STR_PlasmaGunPickedUpMsg(0x800105A4);
-static const VmPtr<const char> STR_ShotgunPickedUpMsg(0x800105BC);
-static const VmPtr<const char> STR_SuperShotgunPickedUpMsg(0x800105D4);
-static const VmPtr<const char> STR_ArmorPickedUpMsg(0x800105F0);
-static const VmPtr<const char> STR_MegaArmorPickedUpMsg(0x80010608);
-static const VmPtr<const char> STR_BlueKeycardPickedUpMsg(0x80010620);
-static const VmPtr<const char> STR_YellowKeycardPickedUpMsg(0x8001063C);
-static const VmPtr<const char> STR_RedKeycardPickedUpMsg(0x8001065C);
-static const VmPtr<const char> STR_BlueSkullKeyPickedUpMsg(0x80010678);
-static const VmPtr<const char> STR_YellowSkullKeyPickedUpMsg(0x80010698);
-static const VmPtr<const char> STR_RedSkullKeyPickedUpMsg(0x800106B8);
-static const VmPtr<const char> STR_StimpackPickedUpMsg(0x800106D8);
-static const VmPtr<const char> STR_NeededMedKitPickedUpMsg(0x800106F0);
-static const VmPtr<const char> STR_MedKitPickedUpMsg(0x8001071C);
-static const VmPtr<const char> STR_InvunerabilityPickedUpMsg(0x80010734);
-static const VmPtr<const char> STR_BerserkPickedUpMsg(0x80010748);
-static const VmPtr<const char> STR_PartialInvisibilityPickedUpMsg(0x80010754);
-static const VmPtr<const char> STR_RadSuitPickedUpMsg(0x8001076C);
-static const VmPtr<const char> STR_ComputerAreaMapPickedUpMsg(0x80010788);
-static const VmPtr<const char> STR_LightAmplificationGogglesUpMsg(0x8001079C);
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Try to give the specified player the specified number of ammo clips of the given type.
 // If the clip count is '0' then a half clip is given instead.
@@ -184,7 +142,7 @@ bool P_GiveWeapon(player_t& player, const weapontype_t weapon, const bool bDropp
         player.weaponowned[weapon] = true;
         P_GiveAmmo(player, gWeaponInfo[weapon].ammo, 2);
         player.pendingweapon = weapon;
-        S_StartSound(player.mo.get(), sfx_wpnup);
+        S_StartSound(player.mo, sfx_wpnup);
         return false;
     }
 
@@ -323,7 +281,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         return;
     
     // See what was picked up and play the item pickup sound by default
-    player_t& player = *toucher.player.get();
+    player_t& player = *toucher.player;
     sfxenum_t soundId = sfx_itemup;
 
     switch (special.sprite) {
@@ -332,7 +290,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         //----------------------------------------------------------------------------------------------------------------------------------
         case SPR_BKEY: {
             if (!player.cards[it_bluecard]) {
-                player.message = STR_BlueKeycardPickedUpMsg;
+                player.message = "You pick up a blue keycard.";
                 P_GiveCard(player, it_bluecard);
             }
 
@@ -343,7 +301,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
 
         case SPR_RKEY: {
             if (!player.cards[it_redcard]) {
-                player.message = STR_RedKeycardPickedUpMsg;
+                player.message = "You pick up a red keycard.";
                 P_GiveCard(player, it_redcard);
             }
 
@@ -354,7 +312,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
 
         case SPR_YKEY: {
             if (!player.cards[it_yellowcard]) {
-                player.message = STR_YellowKeycardPickedUpMsg;
+                player.message = "You pick up a yellow keycard.";
                 P_GiveCard(player, it_yellowcard);
             }
 
@@ -365,7 +323,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
 
         case SPR_BSKU: {
             if (!player.cards[it_blueskull]) {
-                player.message = STR_BlueSkullKeyPickedUpMsg;
+                player.message = "You pick up a blue skull key.";
                 P_GiveCard(player, it_blueskull);
             }
 
@@ -376,7 +334,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
 
         case SPR_RSKU: {
             if (!player.cards[it_redskull]) {
-                player.message = STR_RedSkullKeyPickedUpMsg;
+                player.message = "You pick up a red skull key.";
                 P_GiveCard(player, it_redskull);
             }
 
@@ -387,7 +345,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
 
         case SPR_YSKU: {
             if (!player.cards[it_yellowskull]) {
-                player.message = STR_YellowSkullKeyPickedUpMsg;
+                player.message = "You pick up a yellow skull key.";
                 P_GiveCard(player, it_yellowskull);
             }
 
@@ -403,7 +361,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             if (!P_GiveBody(player, 10))
                 return;
 
-            player.message = STR_StimpackPickedUpMsg;
+            player.message = "You pick up a stimpack.";
         }   break;
 
         case SPR_MEDI: {
@@ -413,9 +371,9 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             // Bug: the < 25 health case would never trigger here, because we've just given 25 health.
             // Looks like the same issue is in Linux Doom and probably other versions too...
             if (player.health < 25) {
-                player.message = STR_NeededMedKitPickedUpMsg;
+                player.message = "You pick up a medikit that you REALLY need!";
             } else {
-                player.message = STR_MedKitPickedUpMsg;
+                player.message = "You pick up a medikit.";
             }
         }   break;
 
@@ -426,14 +384,14 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             if (!P_GiveArmor(player, 1))
                 return;
                 
-            player.message = STR_ArmorPickedUpMsg;
+            player.message = "You pick up the armor.";
         }   break;
 
         case SPR_ARM2: {
             if (!P_GiveArmor(player, 2))
                 return;
 
-            player.message = STR_MegaArmorPickedUpMsg;
+            player.message = "You got the MegaArmor!";
         }   break;
 
         //----------------------------------------------------------------------------------------------------------------------------------
@@ -442,7 +400,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         case SPR_BON1: {
             player.health = std::min(player.health + 2, 200);
             player.mo->health = player.health;
-            player.message = STR_HealthBonusPickedUpMsg;
+            player.message = "You pick up a health bonus.";
         }   break;
 
         case SPR_BON2: {
@@ -452,13 +410,13 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 player.armortype = 1;
             }
 
-            player.message = STR_ArmorBonusPickedUpMsg;
+            player.message = "You pick up an armor bonus.";
         }   break;
 
         case SPR_SOUL: {
             player.health = std::min(player.health + 100, 200);
             player.mo->health = player.health;
-            player.message = STR_SuperChargePickedUpMsg;
+            player.message = "Supercharge!";
             soundId = sfx_getpow;
         }   break;
 
@@ -466,7 +424,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             player.health = 200;
             player.mo->health = 200;
             P_GiveArmor(player, 2);
-            player.message = STR_MegaSpherePickedUpMsg;
+            player.message = "Mega Sphere!";
             soundId = sfx_getpow;
         }   break;
 
@@ -475,7 +433,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
         //----------------------------------------------------------------------------------------------------------------------------------
         case SPR_PINV: {
             P_GivePower(player, pw_invulnerability);
-            player.message = STR_InvunerabilityPickedUpMsg;
+            player.message = "Invulnerability!";
             soundId = sfx_getpow;
         }   break;
 
@@ -486,19 +444,19 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 player.pendingweapon = wp_fist;
             }
 
-            player.message = STR_BerserkPickedUpMsg;
+            player.message = "Berserk!";
             soundId = sfx_getpow;
         }   break;
 
         case SPR_PINS: {
             P_GivePower(player, pw_invisibility);
-            player.message = STR_PartialInvisibilityPickedUpMsg;
+            player.message = "Partial Invisibility!";
             soundId = sfx_getpow;
         }   break;
 
         case SPR_SUIT: {
             P_GivePower(player, pw_ironfeet);
-            player.message = STR_RadSuitPickedUpMsg;
+            player.message = "Radiation Shielding Suit";
             soundId = sfx_getpow;
         }   break;
 
@@ -506,13 +464,13 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             if (!P_GivePower(player, pw_allmap))
                 return;
             
-            player.message = STR_ComputerAreaMapPickedUpMsg;
+            player.message = "Computer Area Map";
             soundId = sfx_getpow;
         }   break;
 
         case SPR_PVIS: {
             P_GivePower(player, pw_infrared);
-            player.message = STR_LightAmplificationGogglesUpMsg;
+            player.message = "Light Amplification Goggles";
             soundId = sfx_getpow;
         }   break;
 
@@ -523,56 +481,56 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             if (!P_GiveAmmo(player, am_clip, (special.flags & MF_DROPPED) ? 0 : 1))
                 return;
 
-            player.message = STR_ClipPickedUpMsg;
+            player.message = "Picked up a clip.";
         }   break;
 
         case SPR_AMMO: {
             if (!P_GiveAmmo(player, am_clip, 5))
                 return;
 
-            player.message = STR_BoxOfBulletsPickedUpMsg;
+            player.message = "Picked up a box of bullets.";
         }   break;
         
         case SPR_ROCK: {
             if (!P_GiveAmmo(player, am_misl, 1))
                 return;
 
-            player.message = STR_RocketPickedUpMsg;
+            player.message = "Picked up a rocket.";
         }   break;
 
         case SPR_BROK: {
             if (!P_GiveAmmo(player, am_misl, 5))
                 return;
 
-            player.message = STR_BoxOfRocketsPickedUpMsg;
+            player.message = "Picked up a box of rockets.";
         }   break;
 
         case SPR_CELL: {
             if (!P_GiveAmmo(player, am_cell, 1))
                 return;
             
-            player.message = STR_EnergyCellPickedUpMsg;
+            player.message = "Picked up an energy cell.";
         }   break;
 
         case SPR_CELP: {
             if (!P_GiveAmmo(player, am_cell, 5))
                 return;
             
-            player.message = STR_EnergyCellPackPickedUpMsg;
+            player.message = "Picked up an energy cell pack.";
         }   break;
 
         case SPR_SHEL: {
             if (!P_GiveAmmo(player, am_shell, 1))
                 return;
             
-            player.message = STR_FourShotgunShellsPickedUpMsg;
+            player.message = "Picked up 4 shotgun shells.";
         }   break;
 
         case SPR_SBOX: {
             if (!P_GiveAmmo(player, am_shell, 5))
                 return;
             
-            player.message = STR_BoxOfShotgunShellsPickedUpMsg;
+            player.message = "Picked up a box of shells.";
         }   break;
 
         case SPR_BPAK: {
@@ -590,7 +548,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
                 P_GiveAmmo(player, (ammotype_t) ammoTypeIdx, 1);
             }
 
-            player.message = STR_BackpackPickedUpMsg;
+            player.message = "You got the backpack!";
         }   break;
 
         //----------------------------------------------------------------------------------------------------------------------------------
@@ -600,7 +558,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             if (!P_GiveWeapon(player, wp_bfg, false))
                 return;
             
-            player.message = STR_BfgPickedUpMsg;
+            player.message = "You got the BFG9000!  Oh, yes.";
             soundId = sfx_wpnup;
         }   break;
 
@@ -608,7 +566,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             if (!P_GiveWeapon(player, wp_chaingun, (special.flags & MF_DROPPED)))
                 return;
             
-            player.message = STR_ChaingunPickedUpMsg;
+            player.message = "You got the chaingun!";
             soundId = sfx_wpnup;
         }   break;
 
@@ -616,7 +574,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             if (!P_GiveWeapon(player, wp_chainsaw, false))
                 return;
             
-            player.message = STR_ChainsawPickedUpMsg;
+            player.message = "A chainsaw!  Find some meat!";
             soundId = sfx_wpnup;
         }   break;
 
@@ -624,7 +582,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             if (!P_GiveWeapon(player, wp_missile, false))
                 return;
             
-            player.message = STR_RocketLauncherPickedUpMsg;
+            player.message = "You got the rocket launcher!";
             soundId = sfx_wpnup;
         }   break;
 
@@ -632,7 +590,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             if (!P_GiveWeapon(player, wp_plasma, false))
                 return;
 
-            player.message = STR_PlasmaGunPickedUpMsg;
+            player.message = "You got the plasma gun!";
             soundId = sfx_wpnup;
         }   break;
 
@@ -640,7 +598,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             if (!P_GiveWeapon(player, wp_shotgun, (special.flags & MF_DROPPED)))
                 return;
             
-            player.message = STR_ShotgunPickedUpMsg;
+            player.message = "You got the shotgun!";
             soundId = sfx_wpnup;
         }   break;
 
@@ -648,7 +606,7 @@ void P_TouchSpecialThing(mobj_t& special, mobj_t& toucher) noexcept {
             if (!P_GiveWeapon(player, wp_supershotgun, (special.flags & MF_DROPPED)))
                 return;
 
-            player.message = STR_SuperShotgunPickedUpMsg;
+            player.message = "You got the super shotgun!";
             soundId = sfx_wpnup;
         }   break;
     }
@@ -688,8 +646,8 @@ void P_KillMObj(mobj_t* const pKiller, mobj_t& target) noexcept {
     target.height >>= 2;
     
     // Do stat counting adjustments for the kill
-    player_t* const pTargetPlayer = target.player.get();
-    player_t* const pKillerPlayer = (pKiller) ? pKiller->player.get() : nullptr;
+    player_t* const pTargetPlayer = target.player;
+    player_t* const pKillerPlayer = (pKiller) ? pKiller->player : nullptr;
     
     if (pTargetPlayer) {
         // A player was killed: someone must get or lose a frag for this
@@ -795,7 +753,7 @@ void P_DamageMObj(mobj_t& target, mobj_t* const pInflictor, mobj_t* const pSourc
     }
     
     // Do adjustments to damage for the player based on skill and special faces due to damage
-    player_t* const pTargetPlayer = target.player.get();
+    player_t* const pTargetPlayer = target.player;
     player_t& curPlayer = gPlayers[gCurPlayerIndex];
 
     int32_t damageAmt = baseDamageAmt;

@@ -34,16 +34,15 @@ enum cheatseq_t : int32_t {
     NUM_CHEAT_SEQ
 };
 
-extern int32_t          gVBlanksUntilMenuMove[MAXPLAYERS];
-extern bool             gbGamePaused;
-extern int32_t          gPlayerNum;
-extern int32_t          gMapNumToCheatWarpTo;
-extern int32_t          gVramViewerTexPage;
-extern uint32_t         gTicButtons[MAXPLAYERS];
-extern uint32_t         gOldTicButtons[MAXPLAYERS];
-extern thinker_t        gThinkerCap;
-extern const VmPtr<mobj_t>                  gMObjHead;
-extern const VmPtr<mobj_t>                  gMObjHead;
+extern int32_t      gVBlanksUntilMenuMove[MAXPLAYERS];
+extern bool         gbGamePaused;
+extern int32_t      gPlayerNum;
+extern int32_t      gMapNumToCheatWarpTo;
+extern int32_t      gVramViewerTexPage;
+extern uint32_t     gTicButtons[MAXPLAYERS];
+extern uint32_t     gOldTicButtons[MAXPLAYERS];
+extern thinker_t    gThinkerCap;
+extern mobj_t       gMObjHead;
 
 void P_AddThinker(thinker_t& thinker) noexcept;
 void P_RemoveThinker(thinker_t& thinker) noexcept;

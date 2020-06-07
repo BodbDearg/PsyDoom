@@ -46,11 +46,10 @@ static bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept;
 // Does movement and state ticking for all map objects except players
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_RunMobjBase() noexcept {
-    mobj_t& mobjHead = *gMObjHead;
-    gpBaseThing = mobjHead.next.get();
+    gpBaseThing = gMObjHead.next;
 
     // Run through all the map objects
-    while (gpBaseThing != &mobjHead) {
+    while (gpBaseThing != &gMObjHead) {
         mobj_t& mobj = *gpBaseThing;
 
         // Only run the think logic if it's not the player.
@@ -61,7 +60,7 @@ void P_RunMobjBase() noexcept {
             P_MobjThinker(mobj);
         }
 
-        gpBaseThing = mobj.next.get();
+        gpBaseThing = mobj.next;
     }
 }
 
@@ -91,7 +90,7 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
         if (!PB_TryMove(mobj.x + xuse, mobj.y + yuse)) {
             // Move failed: if it's a skull flying then do the skull bash
             if (mobj.flags & MF_SKULLFLY) {
-                mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) L_SkullBash);
+                mobj.latecall = &L_SkullBash;
                 mobj.extradata = ptrToVmAddr(gpHitThing);
             }
 
@@ -106,10 +105,10 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
 
                 if (bHitSky) {
                     // Hit the sky: just remove quietly
-                    mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) P_RemoveMobj);
+                    mobj.latecall = &P_RemoveMobj;
                 } else {
                     // Usual case: exploding on hitting a wall or thing
-                    mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) L_MissileHit);
+                    mobj.latecall = &L_MissileHit;
                     mobj.extradata = ptrToVmAddr(gpHitThing);
                 }
             } else {
@@ -193,7 +192,7 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
         mobj.z = mobj.floorz;
 
         if (mobj.flags & MF_MISSILE) {
-            mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) P_ExplodeMissile);   // BOOM!
+            mobj.latecall = &P_ExplodeMissile;  // BOOM!
             return;
         }
     }
@@ -217,7 +216,7 @@ static void P_ZMovement(mobj_t& mobj) noexcept {
         mobj.z = mobj.ceilingz - mobj.height;
 
         if (mobj.flags & MF_MISSILE) {
-            mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) P_ExplodeMissile);
+            mobj.latecall = &P_ExplodeMissile;
         }
     }
 }
@@ -261,10 +260,10 @@ void P_MobjThinker(mobj_t& mobj) noexcept {
                 mobj.tics = nextState.tics;
                 mobj.sprite = nextState.sprite;
                 mobj.frame = nextState.frame;
-                mobj.latecall = nextState.action;
+                mobj.latecall = (latecall_t) PsxVm::getVmFuncForAddr(nextState.action);
             } else {
                 // No next state: schedule a removal for this map object
-                mobj.latecall = PsxVm::getNativeFuncVmAddr((void*) P_RemoveMobj);
+                mobj.latecall = &P_RemoveMobj;
             }
         }
     }
@@ -375,7 +374,7 @@ static void PB_SetThingPosition(mobj_t& mobj) noexcept {
 
     mobj.subsector = &subsec;
     mobj.sprev = nullptr;
-    mobj.snext = sec.thinglist;
+    mobj.snext = sec.thinglist.get();
     
     if (sec.thinglist) {
         sec.thinglist->sprev = &mobj;
@@ -624,7 +623,7 @@ static bool PB_CheckThing(mobj_t& mobj) noexcept {
 
         if (sourceObjType == mobj.type) {
             // Colliding with the same species type: don't explode the missile if it's hitting the shooter of the missile
-            if (&mobj == baseThing.target.get())
+            if (&mobj == baseThing.target)
                 return true;
             
             // If it's hitting anything other than the player, explode the missile but do no damage (set no 'hit' thing).
@@ -684,7 +683,7 @@ static bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
         if (!PB_CheckThing(*pmobj))
             return false;
 
-        pmobj = pmobj->bnext.get();
+        pmobj = pmobj->bnext;
     }
 
     return true;

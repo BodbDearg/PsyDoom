@@ -61,8 +61,6 @@ struct sector_t {
     VmPtr<VmPtr<line_t>>    lines;
 };
 
-static_assert(sizeof(sector_t) == 92);
-
 // Describes a side of a line
 struct side_t {
     fixed_t             textureoffset;

@@ -314,7 +314,7 @@ void P_NewChaseDir(mobj_t& actor) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool P_LookForPlayers(mobj_t& actor, const bool bAllAround) noexcept {
     // Pick a new target if we don't see the current one, or if we don't have a live target
-    mobj_t* const pTarget = actor.target.get();
+    mobj_t* const pTarget = actor.target;
 
     if (((actor.flags & MF_SEETARGET) == 0) || (!pTarget) || (pTarget->health <= 0)) {
         int32_t tgtPlayerIdx = 0;
@@ -440,7 +440,7 @@ void A_Chase(mobj_t& actor) noexcept {
     }
 
     // Look for a new target if required
-    mobj_t* const pTarget = actor.target.get();
+    mobj_t* const pTarget = actor.target;
 
     if ((!pTarget) || ((pTarget->flags & MF_SHOOTABLE) == 0)) {
         // If no target can be found then go into the spawn/idle state
@@ -584,7 +584,7 @@ void A_CPosRefire(mobj_t& actor) noexcept {
         return;
 
     // If the target has been lost go back to the normal active state
-    mobj_t* const pTarget = actor.target.get();
+    mobj_t* const pTarget = actor.target;
 
     const bool bTargetLost = (
         (!pTarget) ||
@@ -627,7 +627,7 @@ void A_SpidRefire(mobj_t& actor) noexcept {
         return;
 
     // If the target has been lost go back to the normal active state
-    mobj_t* const pTarget = actor.target.get();
+    mobj_t* const pTarget = actor.target;
 
     const bool bTargetLost = (
         (!pTarget) ||
@@ -765,7 +765,7 @@ void A_Tracer(mobj_t& actor) noexcept {
     smoke.tics = std::max(smoke.tics - (P_Random() & 3), 1);
 
     // Only follow the target and change course if it's still alive
-    mobj_t* const pTarget = actor.tracer.get();
+    mobj_t* const pTarget = actor.tracer;
 
     if ((!pTarget) || (pTarget->health <= 0))
         return;
@@ -951,7 +951,7 @@ void A_SkullAttack(mobj_t& actor) noexcept {
     actor.momy = FixedMul(SKULLSPEED, gFineSine[actorFineAngle]);
 
     // Figure out the z velocity based on the travel time and z delta to the target
-    mobj_t& target = *actor.target.get();
+    mobj_t& target = *actor.target;
 
     const fixed_t distToTgt = P_AproxDistance(target.x - actor.x, target.y - actor.y);
     const int32_t travelTime = std::max(distToTgt / SKULLSPEED, 1);
@@ -1106,7 +1106,7 @@ void A_Fall(mobj_t& actor) noexcept {
 // Does splash damage for a missile or explosive barrel exploding
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_Explode(mobj_t& actor) noexcept {
-    P_RadiusAttack(actor, actor.target.get(), 128);
+    P_RadiusAttack(actor, actor.target, 128);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1145,9 +1145,7 @@ void A_BossDeath(mobj_t& actor) noexcept {
 
     // If all map objects of the given actor type are dead then we can trigger the special for the boss death.
     // Otherwise if we find one that is alive, then we can't:
-    mobj_t& mobjHead = *gMObjHead;
-
-    for (mobj_t* pmobj = mobjHead.next.get(); pmobj != &mobjHead; pmobj = pmobj->next.get()) {
+    for (mobj_t* pmobj = gMObjHead.next; pmobj != &gMObjHead; pmobj = pmobj->next) {
         if ((pmobj != &actor) && (pmobj->type == actorType) && (pmobj->health > 0))
             return;
     }
@@ -1232,7 +1230,7 @@ void L_MissileHit(mobj_t& missile) noexcept {
 
     if (pHitThing) {
         const int32_t damage = missile.info->damage * ((P_Random() & 7) + 1);   // 1-8x damage
-        mobj_t* const pFirer = missile.target.get();
+        mobj_t* const pFirer = missile.target;
         P_DamageMObj(*pHitThing, &missile, pFirer, damage);
     }
 

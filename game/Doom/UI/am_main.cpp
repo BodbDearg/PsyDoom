@@ -215,9 +215,9 @@ void AM_Drawer() noexcept {
     
     // Show all map things cheat: display a little wireframe triangle for for all things
     if (curPlayer.cheats & CF_ALLMOBJ) {
-        for (mobj_t* pMObj = gMObjHead->next.get(); pMObj != gMObjHead.get(); pMObj = pMObj->next.get()) {
+        for (mobj_t* pMObj = gMObjHead.next; pMObj != &gMObjHead; pMObj = pMObj->next) {
             // Ignore the player for this particular draw
-            if (pMObj == curPlayer.mo.get())
+            if (pMObj == curPlayer.mo)
                 continue;
 
             // Compute the the sine and cosines for the angles of the 3 points in the triangle

@@ -184,63 +184,59 @@ static constexpr uint32_t MF_ALL_BLEND_FLAGS = (
 );
 
 // A function which gets called after regular map object updating is done
-typedef VmPtr<void (mobj_t* pMObj)> latecall_t;
+typedef void (*latecall_t)(mobj_t& mobj) noexcept;
 
 // Holds state for an object in the game world
 struct mobj_t {
-    fixed_t                 x;                  // Global position in the world, in 16.16 format
-    fixed_t                 y;
-    fixed_t                 z;
-    VmPtr<subsector_t>      subsector;
-    VmPtr<mobj_t>           prev;               // Intrusive fields for the global linked list of things
-    VmPtr<mobj_t>           next;
-    latecall_t              latecall;
-    VmPtr<mobj_t>           snext;              // Intrusive fields for the linked list of things in the current sector
-    VmPtr<mobj_t>           sprev;
-    angle_t                 angle;              // Direction the thing is facing in
-    uint32_t                sprite;             // Current sprite displayed
-    uint32_t                frame;              // Current sprite frame displayed. Must use 'FF_FRAMEMASK' to get the actual frame number.
-    VmPtr<mobj_t>           bnext;              // Linked list of things in this blockmap block
-    VmPtr<mobj_t>           bprev;
-    fixed_t                 floorz;             // Highest floor in contact with map object
-    fixed_t                 ceilingz;           // Lowest floor in contact with map object
-    fixed_t                 radius;             // For collision detection
-    fixed_t                 height;             // For collision detection
-    fixed_t                 momx;               // Current XYZ speed
-    fixed_t                 momy;
-    fixed_t                 momz;
-    mobjtype_t              type;               // Type enum
-    VmPtr<mobjinfo_t>       info;               // Type data
-    int32_t                 tics;               // Tick counter for the current state
-    VmPtr<state_t>          state;              // State data
-    uint32_t                flags;              // See the MF_XXX series of flags for possible bits.
-    int32_t                 health;
-    dirtype_t               movedir;            // For enemy AI, what direction the enemy is moving in
-    int32_t                 movecount;          // When this reaches 0 a new dir is selected
-    VmPtr<mobj_t>           target;             // The current map object being chased or attacked (if any), or for missiles the source object
-    int32_t                 reactiontime;       // Time left until an attack is allowed
-    int32_t                 threshold;          // Time left chasing the current target
-    VmPtr<player_t>         player;             // Associated player, if any
-    uint32_t                extradata;          // Used for latecall functions
-    int16_t                 spawnx;             // Used for respawns: original spawn params
-    int16_t                 spawny;
-    uint16_t                spawntype;
-    int16_t                 spawnangle;
-    VmPtr<mobj_t>           tracer;             // Used by homing missiles
+    fixed_t         x;                  // Global position in the world, in 16.16 format
+    fixed_t         y;
+    fixed_t         z;
+    subsector_t*    subsector;
+    mobj_t*         prev;               // Intrusive fields for the global linked list of things
+    mobj_t*         next;
+    latecall_t      latecall;
+    mobj_t*         snext;              // Intrusive fields for the linked list of things in the current sector
+    mobj_t*         sprev;
+    angle_t         angle;              // Direction the thing is facing in
+    uint32_t        sprite;             // Current sprite displayed
+    uint32_t        frame;              // Current sprite frame displayed. Must use 'FF_FRAMEMASK' to get the actual frame number.
+    mobj_t*         bnext;              // Linked list of things in this blockmap block
+    mobj_t*         bprev;
+    fixed_t         floorz;             // Highest floor in contact with map object
+    fixed_t         ceilingz;           // Lowest floor in contact with map object
+    fixed_t         radius;             // For collision detection
+    fixed_t         height;             // For collision detection
+    fixed_t         momx;               // Current XYZ speed
+    fixed_t         momy;
+    fixed_t         momz;
+    mobjtype_t      type;               // Type enum
+    mobjinfo_t*     info;               // Type data
+    int32_t         tics;               // Tick counter for the current state
+    state_t*        state;              // State data
+    uint32_t        flags;              // See the MF_XXX series of flags for possible bits.
+    int32_t         health;
+    dirtype_t       movedir;            // For enemy AI, what direction the enemy is moving in
+    int32_t         movecount;          // When this reaches 0 a new dir is selected
+    mobj_t*         target;             // The current map object being chased or attacked (if any), or for missiles the source object
+    int32_t         reactiontime;       // Time left until an attack is allowed
+    int32_t         threshold;          // Time left chasing the current target
+    player_t*       player;             // Associated player, if any
+    uint32_t        extradata;          // Used for latecall functions
+    int16_t         spawnx;             // Used for respawns: original spawn params
+    int16_t         spawny;
+    uint16_t        spawntype;
+    int16_t         spawnangle;
+    mobj_t*         tracer;             // Used by homing missiles
 };
-
-static_assert(sizeof(mobj_t) == 148);
 
 // A degenerate map object with most of it's fields chopped out.
 // Used to store a sound origin within sector structures.
 struct degenmobj_t {
-    fixed_t                 x;
-    fixed_t                 y;
-    fixed_t                 z;
-    VmPtr<subsector_t>      subsector;      // TODO: CONFIRM LAYOUT
+    fixed_t         x;
+    fixed_t         y;
+    fixed_t         z;
+    subsector_t*    subsector;      // TODO: CONFIRM LAYOUT
 };
-
-static_assert(sizeof(degenmobj_t) == 16);
 
 // Basic player status
 enum playerstate_t : int32_t {
@@ -349,50 +345,49 @@ static constexpr uint32_t AF_FOLLOW = 0x2;      // If set then do not follow the
 
 // Holds state specific to each player
 struct player_t {
-    VmPtr<mobj_t>       mo;                             // The map object controlled by the player
-    playerstate_t       playerstate;                    // Player status
-    fixed_t             forwardmove;                    // TODO: COMMENT
-    fixed_t             sidemove;                       // TODO: COMMENT
-    angle_t             angleturn;                      // TODO: COMMENT
-    fixed_t             viewz;                          // TODO: COMMENT
-    fixed_t             viewheight;                     // TODO: COMMENT
-    fixed_t             deltaviewheight;                // TODO: COMMENT
-    fixed_t             bob;                            // TODO: COMMENT
-    int32_t             health;                         // TODO: COMMENT
-    int32_t             armorpoints;                    // TODO: COMMENT
-    int32_t             armortype;                      // 0 = no armor, 1 = regular armor, 2 = mega armor
-    int32_t             powers[NUMPOWERS];              // How many ticks left for each power
-    bool32_t            cards[NUMCARDS];                // Which keycards the player has
-    bool32_t            backpack;                       // TODO: COMMENT
-    uint32_t            frags;                          // TODO: COMMENT
-    uint32_t            __padding;                      // TODO: COMMENT
-    weapontype_t        readyweapon;                    // TODO: COMMENT
-    weapontype_t        pendingweapon;                  // TODO: COMMENT
-    bool32_t            weaponowned[NUMWEAPONS];        // TODO: COMMENT
-    int32_t             ammo[NUMAMMO];                  // TODO: COMMENT
-    int32_t             maxammo[NUMAMMO];               // TODO: COMMENT
-    uint32_t            attackdown;                     // TODO: COMMENT
-    bool32_t            usedown;                        // TODO: COMMENT
-    uint32_t            cheats;                         // TODO: COMMENT
-    uint32_t            refire;                         // TODO: COMMENT
-    uint32_t            killcount;                      // TODO: COMMENT
-    uint32_t            itemcount;                      // TODO: COMMENT
-    uint32_t            secretcount;                    // TODO: COMMENT
-    VmPtr<char>         message;                        // TODO: COMMENT
-    uint32_t            damagecount;                    // TODO: COMMENT
-    uint32_t            bonuscount;                     // TODO: COMMENT
-    VmPtr<mobj_t>       attacker;                       // TODO: COMMENT
-    uint32_t            extralight;                     // TODO: COMMENT
-    uint32_t            fixedcolormap;                  // TODO: COMMENT
-    uint32_t            colormap;                       // TODO: COMMENT
-    pspdef_t            psprites[NUMPSPRITES];          // TODO: COMMENT
-    bool32_t            didsecret;                      // TODO: COMMENT
-    VmPtr<sector_t>     lastsoundsector;                // TODO: COMMENT
-    int32_t             automapx;                       // TODO: COMMENT
-    int32_t             automapy;                       // TODO: COMMENT
-    uint32_t            automapscale;                   // TODO: COMMENT
-    uint32_t            automapflags;                   // TODO: COMMENT
-    int32_t             turnheld;                       // TODO: COMMENT
+    mobj_t*         mo;                             // The map object controlled by the player
+    playerstate_t   playerstate;                    // Player status
+    fixed_t         forwardmove;                    // TODO: COMMENT
+    fixed_t         sidemove;                       // TODO: COMMENT
+    angle_t         angleturn;                      // TODO: COMMENT
+    fixed_t         viewz;                          // TODO: COMMENT
+    fixed_t         viewheight;                     // TODO: COMMENT
+    fixed_t         deltaviewheight;                // TODO: COMMENT
+    fixed_t         bob;                            // TODO: COMMENT
+    int32_t         health;                         // TODO: COMMENT
+    int32_t         armorpoints;                    // TODO: COMMENT
+    int32_t         armortype;                      // 0 = no armor, 1 = regular armor, 2 = mega armor
+    int32_t         powers[NUMPOWERS];              // How many ticks left for each power
+    bool32_t        cards[NUMCARDS];                // Which keycards the player has
+    bool32_t        backpack;                       // TODO: COMMENT
+    uint32_t        frags;                          // TODO: COMMENT
+    uint32_t        __padding;                      // TODO: COMMENT
+    weapontype_t    readyweapon;                    // TODO: COMMENT
+    weapontype_t    pendingweapon;                  // TODO: COMMENT
+    bool32_t        weaponowned[NUMWEAPONS];        // TODO: COMMENT
+    int32_t         ammo[NUMAMMO];                  // TODO: COMMENT
+    int32_t         maxammo[NUMAMMO];               // TODO: COMMENT
+    uint32_t        attackdown;                     // TODO: COMMENT
+    bool32_t        usedown;                        // TODO: COMMENT
+    uint32_t        cheats;                         // TODO: COMMENT
+    uint32_t        refire;                         // TODO: COMMENT
+    uint32_t        killcount;                      // TODO: COMMENT
+    uint32_t        itemcount;                      // TODO: COMMENT
+    uint32_t        secretcount;                    // TODO: COMMENT
+    const char*     message;                        // TODO: COMMENT
+    uint32_t        damagecount;                    // TODO: COMMENT
+    uint32_t        bonuscount;                     // TODO: COMMENT
+    mobj_t*         attacker;                       // TODO: COMMENT
+    uint32_t        extralight;                     // TODO: COMMENT
+    uint32_t        fixedcolormap;                  // TODO: COMMENT
+    uint32_t        colormap;                       // TODO: COMMENT
+    pspdef_t        psprites[NUMPSPRITES];          // TODO: COMMENT
+    bool32_t        didsecret;                      // TODO: COMMENT
+    sector_t*       lastsoundsector;                // TODO: COMMENT
+    int32_t         automapx;                       // TODO: COMMENT
+    int32_t         automapy;                       // TODO: COMMENT
+    uint32_t        automapscale;                   // TODO: COMMENT
+    uint32_t        automapflags;                   // TODO: COMMENT
+    int32_t         turnheld;                       // TODO: COMMENT
 };
 
-static_assert(sizeof(player_t) == 300);

@@ -27,12 +27,6 @@ struct vldoor_t {
 static constexpr fixed_t VDOORSPEED = FRACUNIT * 6;     // Regular speed of vertical doors
 static constexpr int32_t VDOORWAIT  = 70;               // How long vertical doors normally wait before closing (game tics)
 
-// TODO: eventually make these be actual C++ string constants.
-// Can't to do that at the moment since these pointers need to be referenced by a 'VmPtr<T>', hence must be inside the executable itself.
-static const VmPtr<const char> STR_BlueKeyNeededMsg(0x80010030);
-static const VmPtr<const char> STR_YellowKeyNeededMsg(0x80010048);
-static const VmPtr<const char> STR_RedKeyNeededMsg(0x80010060);
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Thinker/update logic for a door: moves the door, does door state transitions and sounds etc.
 // TODO: Make private to the module eventually.
@@ -183,7 +177,7 @@ bool P_CheckKeyLock(line_t& line, mobj_t& user) noexcept {
         case 99:
         case 133: {
             if ((!player.cards[it_bluecard]) && (!player.cards[it_blueskull])) {
-                player.message = STR_BlueKeyNeededMsg;
+                player.message = "You need a blue key.";
                 S_StartSound(&user, sfx_oof);
 
                 // Only flash the HUD message if it's this player triggering the door
@@ -201,7 +195,7 @@ bool P_CheckKeyLock(line_t& line, mobj_t& user) noexcept {
         case 136:
         case 137: {
             if ((!player.cards[it_yellowcard]) && (!player.cards[it_yellowskull])) {
-                player.message = STR_YellowKeyNeededMsg;
+                player.message = "You need a yellow key.";
                 S_StartSound(&user, sfx_oof);
 
                 // Only flash the HUD message if it's this player triggering the door
@@ -219,7 +213,7 @@ bool P_CheckKeyLock(line_t& line, mobj_t& user) noexcept {
         case 134:
         case 135: {
             if ((!player.cards[it_redcard]) && (!player.cards[it_redskull])) {
-                player.message = STR_RedKeyNeededMsg;
+                player.message = "You need a red key.";
                 S_StartSound(&user, sfx_oof);
 
                 // Only flash the HUD message if it's this player triggering the door

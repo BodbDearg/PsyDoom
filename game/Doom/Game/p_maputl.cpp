@@ -187,7 +187,7 @@ void P_SetThingPosition(mobj_t& mobj) noexcept {
     if ((mobj.flags & MF_NOSECTOR) == 0) {
         sector_t& sec = *pSubsec->sector;
         mobj.sprev = nullptr;
-        mobj.snext = sec.thinglist;
+        mobj.snext = sec.thinglist.get();
     
         if (sec.thinglist) {
             sec.thinglist->sprev = &mobj;
@@ -205,7 +205,7 @@ void P_SetThingPosition(mobj_t& mobj) noexcept {
         if ((blockX >= 0) && (blockY >= 0) && (blockX < gBlockmapWidth) && (blockY < gBlockmapHeight)) {
             VmPtr<mobj_t>& blockList = gppBlockLinks[blockY * gBlockmapWidth + blockX];
             mobj.bprev = nullptr;
-            mobj.bnext = blockList;
+            mobj.bnext = blockList.get();
 
             if (blockList) {
                 blockList->bprev = &mobj;
@@ -272,7 +272,7 @@ bool P_BlockThingsIterator(const int32_t x, const int32_t y, bool (*pFunc)(mobj_
         if (!pFunc(*pmobj))
             return false;
         
-        pmobj = pmobj->bnext.get();
+        pmobj = pmobj->bnext;
     }
     
     return true;
