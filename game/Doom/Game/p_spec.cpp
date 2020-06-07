@@ -159,7 +159,7 @@ side_t* getSide(const int32_t sectorIdx, const int32_t lineIdx, const int32_t si
 // Get the sector on the specified side of a line in the given sector
 //------------------------------------------------------------------------------------------------------------------------------------------
 sector_t* getSector(const int32_t sectorIdx, const int32_t lineIdx, const int32_t sideIdx) noexcept {
-    return gpSides[gpSectors[sectorIdx].lines[lineIdx]->sidenum[sideIdx]].sector.get();
+    return gpSides[gpSectors[sectorIdx].lines[lineIdx]->sidenum[sideIdx]].sector;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -188,7 +188,7 @@ fixed_t P_FindLowestFloorSurrounding(sector_t& sector) noexcept {
     fixed_t lowestFloor = sector.floorheight;
 
     for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
-        line_t& line = *sector.lines[lineIdx].get();
+        line_t& line = *sector.lines[lineIdx];
         sector_t* const pNextSector = getNextSector(line, sector);
         
         if (pNextSector && (pNextSector->floorheight < lowestFloor)) {
@@ -207,7 +207,7 @@ fixed_t P_FindHighestFloorSurrounding(sector_t& sector) noexcept {
     fixed_t highestFloor = -500 * FRACUNIT;
     
     for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
-        line_t& line = *sector.lines[lineIdx].get();
+        line_t& line = *sector.lines[lineIdx];
         sector_t* const pNextSector = getNextSector(line, sector);
 
         if (pNextSector && (pNextSector->floorheight > highestFloor)) {
@@ -230,7 +230,7 @@ fixed_t P_FindNextHighestFloor(sector_t& sector, const fixed_t baseHeight) noexc
         fixed_t nextHighestFloor = INT32_MAX;
 
         for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
-            line_t& line = *sector.lines[lineIdx].get();
+            line_t& line = *sector.lines[lineIdx];
             sector_t* const pNextSector = getNextSector(line, sector);
 
             if (!pNextSector)
@@ -279,7 +279,7 @@ fixed_t P_FindLowestCeilingSurrounding(sector_t& sector) noexcept {
     fixed_t lowestHeight = INT32_MAX;
     
     for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
-        line_t& line = *sector.lines[lineIdx].get();
+        line_t& line = *sector.lines[lineIdx];
         sector_t* const pNextSector = getNextSector(line, sector);
 
         if (pNextSector && (pNextSector->ceilingheight < lowestHeight)) {
@@ -298,7 +298,7 @@ fixed_t P_FindHighestCeilingSurrounding(sector_t& sector) noexcept {
     fixed_t highestHeight = 0;
 
     for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
-        line_t& line = *sector.lines[lineIdx].get();
+        line_t& line = *sector.lines[lineIdx];
         sector_t* const pNextSector = getNextSector(line, sector);
 
         if (pNextSector && (pNextSector->ceilingheight > highestHeight)) {
@@ -337,7 +337,7 @@ int32_t P_FindMinSurroundingLight(sector_t& sector, const int32_t maxLightLevel)
     int32_t minLightLevel = maxLightLevel;
     
     for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
-        line_t& line = *sector.lines[lineIdx].get();
+        line_t& line = *sector.lines[lineIdx];
         sector_t* const pNextSector = getNextSector(line, sector);
 
         if (pNextSector && (pNextSector->lightlevel < minLightLevel)) {
@@ -1006,7 +1006,7 @@ bool EV_DoDonut(line_t& line) noexcept {
         bActivatedMovers = true;
 
         // Get the next sector beyond the first line in this sector, that will be the outer ring of the 'donut', or the part that is raised:
-        sector_t* const pNextSector = getNextSector(sector.lines->get()[0], sector);
+        sector_t* const pNextSector = getNextSector(*sector.lines[0], sector);
 
         #if PC_PSX_DOOM_MODS
             // PC-PSX: safety in case the level is setup wrong - if this line is not two sided then just ignore the command
@@ -1017,7 +1017,7 @@ bool EV_DoDonut(line_t& line) noexcept {
         // Run through all the lines of the next sector and try to find the first that has a back sector that isn't the inner part of the donut.
         // This back sector gives us the floor height to raise to and also the floor pic to change to.
         for (int32_t lineIdx = 0; lineIdx < pNextSector->linecount; ++lineIdx) {
-            line_t& nextSecLine = pNextSector->lines->get()[lineIdx];
+            line_t& nextSecLine = *pNextSector->lines[lineIdx];
 
             #if PC_PSX_DOOM_MODS
                 // PC-PSX: safety - allow non two sided lines here, just skip over them

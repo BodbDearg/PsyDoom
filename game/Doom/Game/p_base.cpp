@@ -374,7 +374,7 @@ static void PB_SetThingPosition(mobj_t& mobj) noexcept {
 
     mobj.subsector = &subsec;
     mobj.sprev = nullptr;
-    mobj.snext = sec.thinglist.get();
+    mobj.snext = sec.thinglist;
     
     if (sec.thinglist) {
         sec.thinglist->sprev = &mobj;

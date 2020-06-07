@@ -213,7 +213,7 @@ static void PM_SetThingPosition(mobj_t& mobj) noexcept {
     if ((mobj.flags & MF_NOSECTOR) == 0) {
         sector_t& newSector = *newSubsec.sector.get();
         mobj.sprev = nullptr;
-        mobj.snext = newSector.thinglist.get();
+        mobj.snext = newSector.thinglist;
         
         if (newSector.thinglist) {
             newSector.thinglist->sprev = &mobj;

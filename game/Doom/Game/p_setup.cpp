@@ -667,8 +667,8 @@ static void P_GroupLines() noexcept {
     }
 
     // Alloc the array of line refs that will be shared by all sectors
-    VmPtr<line_t>* const pLineRefBuffer = (VmPtr<line_t>*) Z_Malloc(*gpMainMemZone, totalLineRefs * sizeof(VmPtr<line_t>), PU_LEVEL, nullptr);
-    VmPtr<line_t>* pLineRef = pLineRefBuffer;
+    line_t** const pLineRefBuffer = (line_t**) Z_Malloc(*gpMainMemZone, totalLineRefs * sizeof(line_t*), PU_LEVEL, nullptr);
+    line_t** pLineRef = pLineRefBuffer;
 
     // Build the list of lines for each sector, also bounding boxes and the 'sound origin' point
     sector_t* pSec = gpSectors;
@@ -702,7 +702,7 @@ static void P_GroupLines() noexcept {
 
         // Sanity check the size of the line list we built is what we would expect.
         // It should not contradict the line count for the sector.
-        const int32_t actualLineCount = (int32_t)(pLineRef - pSec->lines.get());
+        const int32_t actualLineCount = (int32_t)(pLineRef - pSec->lines);
 
         if (actualLineCount != pSec->linecount) {
             I_Error("P_GroupLines: miscounted");

@@ -312,7 +312,7 @@ bool EV_DoFloor(line_t& line, const floor_e floorType) noexcept {
                         continue;
                     
                     side_t& side1 = *getSide(sectorIdx, lineIdx, 0);
-                    const int32_t side1SectorIdx = (int32_t)(side1.sector.get() - gpSectors);
+                    const int32_t side1SectorIdx = (int32_t)(side1.sector - gpSectors);
                     sector_t& oppositeSector = *getSector(sectorIdx, lineIdx, (side1SectorIdx == sectorIdx) ? 1 : 0);
 
                     floor.texture = (int16_t) oppositeSector.floorpic;
@@ -383,7 +383,7 @@ bool EV_BuildStairs(line_t& line, const stair_e stairType) noexcept {
 
             for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
                 // Ignore the line if not two sided
-                line_t& stepLine = *sector.lines.get()[lineIdx];
+                line_t& stepLine = *sector.lines[lineIdx];
 
                 if ((stepLine.flags & ML_TWOSIDED) == 0)
                     continue;

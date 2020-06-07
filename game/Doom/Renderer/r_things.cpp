@@ -40,7 +40,7 @@ void R_DrawSubsectorSprites(subsector_t& subsec) noexcept {
     {
         vissprite_t* pVisSprite = gVisSprites;
 
-        for (mobj_t* pThing = sector.thinglist.get(); pThing; pThing = pThing->snext) {
+        for (mobj_t* pThing = sector.thinglist; pThing; pThing = pThing->snext) {
             // Only draw the thing if it's in the subsector we are interested in
             if (pThing->subsector != &subsec)
                 continue;

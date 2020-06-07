@@ -364,7 +364,7 @@ void A_Look(mobj_t& actor) noexcept {
         actor.threshold = 0;
 
         // If something is making noise in the current sector then try to target that instead if possible
-        mobj_t* const pNoiseMaker = actor.subsector->sector->soundtarget.get();
+        mobj_t* const pNoiseMaker = actor.subsector->sector->soundtarget;
 
         const bool bTargetNoiseMaker = (
             pNoiseMaker &&                          // Is there something making noise?

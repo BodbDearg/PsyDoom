@@ -34,44 +34,40 @@ struct vertex_t {
     uint32_t    frameUpdated;       // When (in game frames) the vertex was last transformed: used to avoid unnecessary transforms
 };
 
-static_assert(sizeof(vertex_t) == 28);
-
 // PSX sector flags: just 1 defined - to disable reverb on a sector
 static constexpr uint32_t SF_NO_REVERB = 0x1;
 
 // Describes a sector or collection of lines and subsectors
 struct sector_t {
-    fixed_t                 floorheight;
-    fixed_t                 ceilingheight;
-    int32_t                 floorpic;
-    int32_t                 ceilingpic;
-    int16_t                 colorid;
-    int16_t                 lightlevel;
-    int32_t                 special;
-    int32_t                 tag;
-    int32_t                 soundtraversed;     // Has sound reached the sector? (0 = not checked, 1 = yes, 2 = yes but one ML_SOUNDBLOCK line has been passed)
-    VmPtr<mobj_t>           soundtarget;
-    uint32_t                flags;              // Sector flags: new for PSX
-    int32_t                 blockbox[4];        // TODO: CONFIRM LAYOUT
-    degenmobj_t             soundorg;           // TODO: CONFIRM LAYOUT
-    int32_t                 validcount;
-    VmPtr<mobj_t>           thinglist;
-    VmPtr<void>             specialdata;
-    int32_t                 linecount;
-    VmPtr<VmPtr<line_t>>    lines;
+    fixed_t         floorheight;
+    fixed_t         ceilingheight;
+    int32_t         floorpic;
+    int32_t         ceilingpic;
+    int16_t         colorid;
+    int16_t         lightlevel;
+    int32_t         special;
+    int32_t         tag;
+    int32_t         soundtraversed;     // Has sound reached the sector? (0 = not checked, 1 = yes, 2 = yes but one ML_SOUNDBLOCK line has been passed)
+    mobj_t*         soundtarget;
+    uint32_t        flags;              // Sector flags (new addition for PSX)
+    int32_t         blockbox[4];        // TODO: CONFIRM LAYOUT
+    degenmobj_t     soundorg;           // TODO: CONFIRM LAYOUT
+    int32_t         validcount;
+    mobj_t*         thinglist;
+    void*           specialdata;
+    int32_t         linecount;
+    line_t**        lines;
 };
 
 // Describes a side of a line
 struct side_t {
-    fixed_t             textureoffset;
-    fixed_t             rowoffset;
-    int32_t             toptexture;
-    int32_t             bottomtexture;
-    int32_t             midtexture;
-    VmPtr<sector_t>     sector;
+    fixed_t     textureoffset;
+    fixed_t     rowoffset;
+    int32_t     toptexture;
+    int32_t     bottomtexture;
+    int32_t     midtexture;
+    sector_t*   sector;
 };
-
-static_assert(sizeof(side_t) == 24);
 
 // What type of slope a line has
 enum slopetype_t : int32_t {

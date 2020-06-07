@@ -260,7 +260,7 @@ bool EV_DoDoor(line_t& line, const vldoor_e doorType) noexcept {
         door.topwait = VDOORWAIT;
 
         // This thinker is now the special for the sector
-        sector.specialdata = ptrToVmAddr(&door);
+        sector.specialdata = &door;
 
         // Door specific setup and sounds
         switch (doorType) {
@@ -321,7 +321,7 @@ bool EV_DoDoor(line_t& line, const vldoor_e doorType) noexcept {
 void EV_VerticalDoor(line_t& line, mobj_t& user) noexcept {
     // Try to activate an already existing door thinker if the sector already has that
     sector_t& doorSector = *gpSides[line.sidenum[1]].sector;
-    vldoor_t* const pExistingDoor = (vldoor_t*) doorSector.specialdata.get();
+    vldoor_t* const pExistingDoor = (vldoor_t*) doorSector.specialdata;
 
     if (pExistingDoor) {
         switch (line.special) {
