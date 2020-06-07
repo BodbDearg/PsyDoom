@@ -976,7 +976,7 @@ void P_UpdateSpecials() noexcept {
         }
 
         // Play a sound for the button switching back and reset the state of this active button slot (now free for use again)
-        S_StartSound(button.soundorg.get(), sfx_swtchn);
+        S_StartSound(button.soundorg, sfx_swtchn);
         D_memset(&button, std::byte(0), sizeof(button_t));
     }
 

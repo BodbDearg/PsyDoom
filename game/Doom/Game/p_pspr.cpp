@@ -324,7 +324,7 @@ void P_DropWeapon(player_t& player) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void A_WeaponReady(player_t& player, pspdef_t& sprite) noexcept {
     // Play the idle sound for the chainsaw (if selected)
-    if ((player.readyweapon == wp_chainsaw) && (sprite.state.get() == &gStates[S_SAW])) {
+    if ((player.readyweapon == wp_chainsaw) && (sprite.state == &gStates[S_SAW])) {
         S_StartSound(player.mo, sfx_sawidl);
     }
 
@@ -668,7 +668,7 @@ void A_FireCGun(player_t& player, pspdef_t& sprite) noexcept {
     player.ammo[ammoType]--;
 
     // Do a muzzle flash for the chaingun and sync to the animation frames of the chaingun
-    const statenum_t flashStateNum = (statenum_t)(weaponInfo.flashstate + sprite.state.get() - &gStates[S_CHAIN1]);
+    const statenum_t flashStateNum = (statenum_t)(weaponInfo.flashstate + sprite.state - &gStates[S_CHAIN1]);
     P_SetPsprite(player, ps_flash, flashStateNum);
 
     // Fire a bullet

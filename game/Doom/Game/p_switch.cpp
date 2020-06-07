@@ -160,7 +160,7 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
         // Therefore the initial switch sound will not play positionally, and will always be at full volume.
         // I wonder is this odd for deathmatch though? 3DO DOOM appears to use sector that the switch is in for the sound origin...
         if (switchTex == side.toptexture) {
-            S_StartSound(gButtonList[0].soundorg.get(), soundId);
+            S_StartSound(gButtonList[0].soundorg, soundId);
             side.toptexture = gSwitchList[switchListIdx ^ 1];
 
             if (bUseAgain) {
@@ -171,7 +171,7 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
         }
 
         if (switchTex == side.midtexture) {
-            S_StartSound(gButtonList[0].soundorg.get(), soundId);
+            S_StartSound(gButtonList[0].soundorg, soundId);
             side.midtexture = gSwitchList[switchListIdx ^ 1];
 
             if (bUseAgain) {
@@ -182,7 +182,7 @@ void P_ChangeSwitchTexture(line_t& line, const bool bUseAgain) noexcept {
         }
 
         if (switchTex == side.bottomtexture) {
-            S_StartSound(gButtonList[0].soundorg.get(), soundId);
+            S_StartSound(gButtonList[0].soundorg, soundId);
             side.bottomtexture = gSwitchList[switchListIdx ^ 1];
 
             if (bUseAgain) {

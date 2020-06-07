@@ -254,13 +254,11 @@ enum psprnum_t : int32_t {
 
 // State for a player sprite
 struct pspdef_t {
-    VmPtr<state_t>  state;      // Pointer to state structure
+    const state_t*  state;      // Pointer to state structure
     int32_t         tics;       // How many tics are left in this state?
     fixed_t         sx;         // Offset of the sprite
     fixed_t         sy;
 };
-
-static_assert(sizeof(pspdef_t) == 16);
 
 // Keycard types
 enum card_t : int32_t {
