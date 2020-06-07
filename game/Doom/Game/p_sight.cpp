@@ -11,16 +11,16 @@
 
 #include <algorithm>
 
-static const VmPtr<fixed_t>     gSightZStart(0x80078020);   // Z position of thing looking
-static const VmPtr<fixed_t>     gTopSlope(0x800781E0);      // Maximum/top unblocked viewing slope (clipped against upper walls)
-static const VmPtr<fixed_t>     gBottomSlope(0x80078008);   // Minimum/bottom unblocked viewing slope (clipped against lower walls)
-static const VmPtr<divline_t>   gSTrace(0x80097C00);        // The start point and vector for sight checking
-static const VmPtr<fixed_t>     gT2x(0x80078100);           // End point for sight checking: x
-static const VmPtr<fixed_t>     gT2y(0x80078108);           // End point for sight checking: y
-static const VmPtr<int32_t>     gT1xs(0x800781F8);          // Sight line start, whole coords: x
-static const VmPtr<int32_t>     gT1ys(0x80078208);          // Sight line start, whole coords: y
-static const VmPtr<int32_t>     gT2xs(0x80078204);          // Sight line end, whole coords: x
-static const VmPtr<int32_t>     gT2ys(0x80078210);          // Sight line end, whole coords: y
+static fixed_t      gSightZStart;       // Z position of thing looking
+static fixed_t      gTopSlope;          // Maximum/top unblocked viewing slope (clipped against upper walls)
+static fixed_t      gBottomSlope;       // Minimum/bottom unblocked viewing slope (clipped against lower walls)
+static divline_t    gSTrace;            // The start point and vector for sight checking
+static fixed_t      gT2x;               // End point for sight checking: x
+static fixed_t      gT2y;               // End point for sight checking: y
+static int32_t      gT1xs;              // Sight line start, whole coords: x
+static int32_t      gT1ys;              // Sight line start, whole coords: y
+static int32_t      gT2xs;              // Sight line end, whole coords: x
+static int32_t      gT2ys;              // Sight line end, whole coords: y
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Updates target visibility checking for all map objects that are due an update
@@ -67,28 +67,28 @@ bool P_CheckSight(mobj_t& mobj1, mobj_t& mobj2) noexcept {
     // Note that the coordinates are truncated to be on odd integer coordinates.
     // Not sure why this is done, or what it's trying to avoid - it's in the 3DO and Jag Doom sources but not explained.
     const int32_t COORD_MASK = 0xFFFE0000;
-    gSTrace->x = (mobj1.x & COORD_MASK) | FRACUNIT;
-    gSTrace->y = (mobj1.y & COORD_MASK) | FRACUNIT;
-    *gT2x = (mobj2.x & COORD_MASK) | FRACUNIT;
-    *gT2y = (mobj2.y & COORD_MASK) | FRACUNIT;
+    gSTrace.x = (mobj1.x & COORD_MASK) | FRACUNIT;
+    gSTrace.y = (mobj1.y & COORD_MASK) | FRACUNIT;
+    gT2x = (mobj2.x & COORD_MASK) | FRACUNIT;
+    gT2y = (mobj2.y & COORD_MASK) | FRACUNIT;
 
     // Precalculate the vector for the sight line
-    gSTrace->dx = *gT2x - gSTrace->x;
-    gSTrace->dy = *gT2y - gSTrace->y;
+    gSTrace.dx = gT2x - gSTrace.x;
+    gSTrace.dy = gT2y - gSTrace.y;
     
     // Precalculate the truncated start and end points for the sight line for later use
-    *gT1xs = gSTrace->x >> FRACBITS;
-    *gT1ys = gSTrace->y >> FRACBITS;
-    *gT2xs = *gT2x >> FRACBITS;
-    *gT2ys = *gT2y >> FRACBITS;
+    gT1xs = gSTrace.x >> FRACBITS;
+    gT1ys = gSTrace.y >> FRACBITS;
+    gT2xs = gT2x >> FRACBITS;
+    gT2ys = gT2y >> FRACBITS;
 
     // This is how high the sight point is at (eyeball level -1/4 height down from the top)
     const fixed_t sightZStart = mobj1.z + mobj1.height - (mobj1.height >> 2);
-    *gSightZStart = sightZStart;
+    gSightZStart = sightZStart;
     
     // Figure out the initial top and bottom slopes for the the vertical sight range
-    *gTopSlope = mobj2.z + mobj2.height - sightZStart;
-    *gBottomSlope = mobj2.z - sightZStart;
+    gTopSlope = mobj2.z + mobj2.height - sightZStart;
+    gBottomSlope = mobj2.z - sightZStart;
     
     // Doing a new raycast so update the visitation mark which tells us if stuff has already been processed
     gValidCount++;
@@ -109,10 +109,10 @@ static fixed_t PS_SightCrossLine(line_t& line) noexcept {
     const int32_t lineY1 = line.vertex1->y >> FRACBITS;
     const int32_t lineX2 = line.vertex2->x >> FRACBITS;
     const int32_t lineY2 = line.vertex2->y >> FRACBITS;
-    const int32_t sightX1 = *gT1xs;
-    const int32_t sightY1 = *gT1ys;
-    const int32_t sightX2 = *gT2xs;
-    const int32_t sightY2 = *gT2ys;
+    const int32_t sightX1 = gT1xs;
+    const int32_t sightY1 = gT1ys;
+    const int32_t sightX2 = gT2xs;
+    const int32_t sightY2 = gT2ys;
 
     // Compute which sides of the sight line the line points are on.
     // Use the same cross product trick found in 'PA_DivlineSide' and 'R_PointOnSide'.
@@ -194,26 +194,26 @@ static bool PS_CrossSubsector(subsector_t& subsec) noexcept {
         
         // Narrow the allowed vertical sight range: against bottom wall
         if (fsec.floorheight != bsec.floorheight) {
-            const fixed_t dz = highestFloor - *gSightZStart;
+            const fixed_t dz = highestFloor - gSightZStart;
             const int32_t slope = ((dz << 6) / (intersectFrac >> 2)) << 8;      // Note: chops off the low 8 bits of computed intersect slope
 
-            if (slope > *gBottomSlope) {
-                *gBottomSlope = slope;
+            if (slope > gBottomSlope) {
+                gBottomSlope = slope;
             }
         }
 
         // Narrow the allowed vertical sight range: against top wall
         if (fsec.ceilingheight != bsec.ceilingheight) {
-            const fixed_t dz = lowestCeil - *gSightZStart;
+            const fixed_t dz = lowestCeil - gSightZStart;
             const int32_t slope = ((dz << 6) / (intersectFrac >> 2)) << 8;      // Note: chops off the low 8 bits of computed intersect slope
 
-            if (slope < *gTopSlope) {
-                *gTopSlope = slope;
+            if (slope < gTopSlope) {
+                gTopSlope = slope;
             }
         }
 
         // If the allowed vertical sight range has become completely closed then sight is blocked
-        if (*gTopSlope <= *gBottomSlope)
+        if (gTopSlope <= gBottomSlope)
             return false;
     }
 
@@ -240,7 +240,7 @@ bool PS_CrossBSPNode(const int32_t nodeNum) noexcept {
 
     // See what side of the bsp split the point is on: will check to see if the sight line is blocked by that half-space first
     node_t& bspNode = gpBspNodes[nodeNum];
-    const int32_t sideNum = PA_DivlineSide(gSTrace->x, gSTrace->y, bspNode.line);
+    const int32_t sideNum = PA_DivlineSide(gSTrace.x, gSTrace.y, bspNode.line);
 
     // If the sight line cannot cross the closest half-space then we are done: sight is obstructed
     if (!PS_CrossBSPNode(bspNode.children[sideNum]))
@@ -248,7 +248,7 @@ bool PS_CrossBSPNode(const int32_t nodeNum) noexcept {
     
     // Check to see what side of the bsp split the end point for sight checking is on.
     // If it's in the same half-space we just raycasted against then we are done - sight is unobstructed.
-    if (sideNum == PA_DivlineSide(*gT2x, *gT2y, bspNode.line))
+    if (sideNum == PA_DivlineSide(gT2x, gT2y, bspNode.line))
         return true;
 
     // Failing that recurse into the opposite side of the BSP split and raycast against that, returning the result
