@@ -42,7 +42,7 @@ static_assert(sizeof(plat_t) == 56);
 // Maximum number of platforms there can be active at once
 static constexpr int32_t MAXPLATS = 30;
 
-extern const VmPtr<VmPtr<plat_t>[MAXPLATS]> gpActivePlats;
+extern plat_t* gpActivePlats[MAXPLATS];
 
 bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount) noexcept;
 void P_ActivateInStasis(const int32_t tag) noexcept;

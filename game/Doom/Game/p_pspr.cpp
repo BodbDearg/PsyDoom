@@ -99,9 +99,9 @@ static constexpr int32_t WEAPONX        = 1 * FRACUNIT;     // TODO: COMMENT
 static constexpr int32_t WEAPONBOTTOM   = 96 * FRACUNIT;    // TODO: COMMENT
 static constexpr int32_t WEAPONTOP      = 0 * FRACUNIT;     // TODO: COMMENT
 
-static const VmPtr<VmPtr<mobj_t>>           gpSoundTarget(0x80077FFC);      // The current thing making noise
-static const VmPtr<fixed_t>                 gBulletSlope(0x80077FF0);       // Vertical aiming slope for shooting: computed by 'P_BulletSlope'
-static const VmPtr<int32_t[MAXPLAYERS]>     gTicRemainder(0x80078090);      // How many unsimulated player sprite 60 Hz vblanks there are
+static mobj_t*  gpSoundTarget;                  // The current thing making noise
+static fixed_t  gBulletSlope;                   // Vertical aiming slope for shooting: computed by 'P_BulletSlope'
+static int32_t  gTicRemainder[MAXPLAYERS];      // How many unsimulated player sprite 60 Hz vblanks there are
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Recursively flood fill sound starting from the given sector to other neighboring sectors considered valid for sound transfer.
@@ -118,7 +118,7 @@ static void P_RecursiveSound(sector_t& sector, const bool bStopOnSoundBlock) noe
     // Flood fill this sector and save the thing that made noise and whether sound was blocked
     sector.validcount = gValidCount;
     sector.soundtraversed = soundTraversed;
-    sector.soundtarget = *gpSoundTarget;
+    sector.soundtarget = gpSoundTarget;
 
     // Recurse into adjoining sectors and flood fill with noise
     for (int32_t lineIdx = 0; lineIdx < sector.linecount; ++lineIdx) {
@@ -165,7 +165,7 @@ static void P_NoiseAlert(player_t& player) noexcept {
 
     player.lastsoundsector = &curSector;
     gValidCount++;
-    *gpSoundTarget = &playerMobj;
+    gpSoundTarget = &playerMobj;
 
     // Recursively flood fill sectors with sound
     P_RecursiveSound(curSector, false);
@@ -546,15 +546,15 @@ void A_FirePlasma(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcept 
 // Saves the resulting vertical slope to 'gBulletSlope'.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_BulletSlope(mobj_t& mobj) noexcept {
-    *gBulletSlope = P_AimLineAttack(mobj, mobj.angle, 1024 * FRACUNIT);
+    gBulletSlope = P_AimLineAttack(mobj, mobj.angle, 1024 * FRACUNIT);
 
     constexpr angle_t AIM_WIGGLE = ANG45 / 8;
 
     if (!gpLineTarget) {
-        *gBulletSlope = P_AimLineAttack(mobj, mobj.angle + AIM_WIGGLE, 1024 * FRACUNIT);
+        gBulletSlope = P_AimLineAttack(mobj, mobj.angle + AIM_WIGGLE, 1024 * FRACUNIT);
 
         if (!gpLineTarget) {
-            *gBulletSlope = P_AimLineAttack(mobj, mobj.angle - AIM_WIGGLE, 1024 * FRACUNIT);
+            gBulletSlope = P_AimLineAttack(mobj, mobj.angle - AIM_WIGGLE, 1024 * FRACUNIT);
         }
     }
 }
@@ -645,7 +645,7 @@ void A_FireShotgun2(player_t& player, [[maybe_unused]] pspdef_t& sprite) noexcep
         const int32_t damage = (P_Random() % 3 + 1) * 5;
         const angle_t angleVariance = (angle_t)(P_Random() - P_Random()) << 19;
         const angle_t angle = playerMobj.angle + angleVariance;
-        const fixed_t aimSlope = *gBulletSlope + (P_Random() - P_Random()) * 32;
+        const fixed_t aimSlope = gBulletSlope + (P_Random() - P_Random()) * 32;
 
         P_LineAttack(playerMobj, angle, MISSILERANGE, aimSlope, damage);
     }

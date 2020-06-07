@@ -19,7 +19,7 @@ static constexpr int32_t PLATWAIT   = 3;                // Number of seconds for
 static constexpr int32_t PLATSPEED  = 2 * FRACUNIT;     // Standard platform speed (some platforms are slower or faster)
 
 // Contains all of the active platforms in the level (some slots may be empty)
-const VmPtr<VmPtr<plat_t>[MAXPLATS]> gpActivePlats(0x80097C44);
+plat_t* gpActivePlats[MAXPLATS];
 
 // Not required externally: making private to this module
 static void P_AddActivePlat(plat_t& plat) noexcept;
@@ -204,7 +204,7 @@ bool EV_DoPlat(line_t& line, const plattype_e platType, const int32_t moveAmount
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_ActivateInStasis(const int32_t tag) noexcept {
     for (int32_t i = 0; i < MAXPLATS; ++i) {
-        plat_t* pPlat = gpActivePlats[i].get();
+        plat_t* pPlat = gpActivePlats[i];
 
         if (pPlat && (pPlat->tag == tag) && (pPlat->status == in_stasis)) {
             pPlat->status = pPlat->oldstatus;
@@ -218,7 +218,7 @@ void P_ActivateInStasis(const int32_t tag) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void EV_StopPlat(line_t& line) noexcept {
     for (int32_t i = 0; i < MAXPLATS; ++i) {
-        plat_t* const pPlat = gpActivePlats[i].get();
+        plat_t* const pPlat = gpActivePlats[i];
 
         if (pPlat && (pPlat->status != in_stasis) && (pPlat->tag == line.tag)) {
             // Stop this moving platform: remember the status before stopping and put into stasis
@@ -234,10 +234,8 @@ void EV_StopPlat(line_t& line) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_AddActivePlat(plat_t& plat) noexcept {
     for (int32_t i = 0; i < MAXPLATS; ++i) {
-        VmPtr<plat_t>& pPlat = gpActivePlats[i];
-
-        if (!pPlat) {
-            pPlat = &plat;
+        if (!gpActivePlats[i]) {
+            gpActivePlats[i] = &plat;
             return;
         }
     }
@@ -250,12 +248,10 @@ static void P_AddActivePlat(plat_t& plat) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 static void P_RemoveActivePlat(plat_t& plat) noexcept {
     for (int32_t i = 0; i < MAXPLATS; ++i) {
-        VmPtr<plat_t>& pPlat = gpActivePlats[i];
-
-        if (pPlat.get() == &plat) {
+        if (gpActivePlats[i] == &plat) {
             plat.sector->specialdata = nullptr;
             P_RemoveThinker(plat.thinker);
-            pPlat = nullptr;
+            gpActivePlats[i] = nullptr;
             return;
         }
     }
