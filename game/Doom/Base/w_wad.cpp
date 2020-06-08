@@ -19,7 +19,7 @@ static_assert(sizeof(wadinfo_t) == 12);
 // whether each lump was loaded from the main IWAD or not.
 int32_t         gNumLumps;
 lumpinfo_t*     gpLumpInfo;
-const VmPtr<VmPtr<VmPtr<void>>>     gpLumpCache(0x8007823C);
+void**          gpLumpCache;
 bool*           gpbIsUncompressedLump;
 bool            gbIsLevelDataCached;
 
@@ -59,10 +59,10 @@ void W_Init() noexcept {
     // Alloc and zero init the lump cache pointers list and an array of bools to say whether each lump is compressed or not.
     static_assert(sizeof(bool) == 1, "Expect bool to be 1 byte!");
 
-    *gpLumpCache = (VmPtr<void>*) Z_Malloc(*gpMainMemZone, gNumLumps * sizeof(VmPtr<void>), PU_STATIC, nullptr);
+    gpLumpCache = (void**) Z_Malloc(*gpMainMemZone, gNumLumps * sizeof(void*), PU_STATIC, nullptr);
     gpbIsUncompressedLump = (bool*) Z_Malloc(*gpMainMemZone, gNumLumps * sizeof(bool), PU_STATIC, nullptr);
 
-    D_memset(gpLumpCache->get(), std::byte(0), gNumLumps * sizeof(VmPtr<void>));
+    D_memset(gpLumpCache, std::byte(0), gNumLumps * sizeof(void*));
     D_memset(gpbIsUncompressedLump, std::byte(0), gNumLumps * sizeof(bool));
 }
 
@@ -195,7 +195,7 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
     #endif
 
     // If the lump is already loaded then we don't need to do anything
-    VmPtr<void>& lumpCacheEntry = (*gpLumpCache)[lumpNum];
+    void*& lumpCacheEntry = gpLumpCache[lumpNum];
     
     if (!lumpCacheEntry) {
         // If the level loading is done then we should NOT be loading lumps during gameplay.
@@ -225,7 +225,7 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
 
         // Alloc RAM for the lump and read it
         Z_Malloc(*gpMainMemZone, sizeToRead, allocTag, &lumpCacheEntry);
-        W_ReadLump(lumpNum, lumpCacheEntry.get(), bDecompress);
+        W_ReadLump(lumpNum, lumpCacheEntry, bDecompress);
 
         // Save whether the lump is compressed or not.
         // If the lump is compressed then the highest bit of the first character in the name will be set:
@@ -236,7 +236,7 @@ void* W_CacheLumpNum(const int32_t lumpNum, const int16_t allocTag, const bool b
         }
     }
 
-    return lumpCacheEntry.get();
+    return lumpCacheEntry;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -181,7 +181,7 @@ void R_DrawWallPiece(
     if (tex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         // Decompress and get a pointer to the texture data.
         // TODO: figure out what 8 bytes this is skipping past!
-        decode((*gpLumpCache)[tex.lumpNum].get(), gTmpBuffer);
+        decode(gpLumpCache[tex.lumpNum], gTmpBuffer);
         const uint16_t* const pTexData = (uint16_t*) gTmpBuffer + 4;
 
         // Upload to the GPU and mark the texture as loaded this frame

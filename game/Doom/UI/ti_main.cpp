@@ -125,7 +125,7 @@ gameaction_t TIC_Title() noexcept {
         if ((gTitleScreenSpriteY < 50) && ((gTitleScreenSpriteY & 1) == 0)) {
             // Get the pixels for the last row in the fire sky
             texture_t& skyTex = *gpSkyTexture;
-            uint8_t* const pLumpData = (uint8_t*)(*gpLumpCache)[skyTex.lumpNum].get();
+            uint8_t* const pLumpData = (uint8_t*) gpLumpCache[skyTex.lumpNum];
             uint8_t* const pFSkyRows = pLumpData + 8;   // TODO: comment what is being skipped
             uint8_t* const pFSkyLastRow = pFSkyRows + FIRESKY_W * (FIRESKY_H - 1);
 
@@ -197,7 +197,7 @@ void DRAW_Title() noexcept {
     if (skytex.uploadFrameNum == TEX_INVALID_UPLOAD_FRAME_NUM) {
         // Figure out where the texture is in VRAM coords and upload it
         const RECT vramRect = getTextureVramRect(skytex);
-        const void* const pSkyTexData = (*gpLumpCache)[skytex.lumpNum].get();
+        const void* const pSkyTexData = gpLumpCache[skytex.lumpNum];
         LIBGPU_LoadImage(vramRect, (const uint16_t*) pSkyTexData + 4);  // TODO: what 8 bytes is this skipping?
 
         // Mark this as uploaded now

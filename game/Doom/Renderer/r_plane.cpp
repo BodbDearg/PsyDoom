@@ -45,9 +45,9 @@ void R_DrawSubsectorFlat(leaf_t& leaf, const bool bIsCeiling) noexcept {
         const bool bIsUncompressedLump = gpbIsUncompressedLump[tex.lumpNum];
 
         if (bIsUncompressedLump) {
-            pLumpData = (*gpLumpCache)[tex.lumpNum].get();
+            pLumpData = gpLumpCache[tex.lumpNum];
         } else {
-            const void* pCompressedLumpData = (*gpLumpCache)[tex.lumpNum].get();
+            const void* pCompressedLumpData = gpLumpCache[tex.lumpNum];
             decode(pCompressedLumpData, gTmpBuffer);
             pLumpData = gTmpBuffer;
         }

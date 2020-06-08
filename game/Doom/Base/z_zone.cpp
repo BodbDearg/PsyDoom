@@ -9,6 +9,9 @@
 // The minimum size that a memory block must be
 static constexpr int32_t MINFRAGMENT = 64;
 
+// Size of the first two fields of the memory zone
+static constexpr size_t MEMZONE_HEADER_SIZE = offsetof(memzone_t, blocklist);
+
 // The main (and only) memory zone used by PSX DOOM
 memzone_t* gpMainMemZone;
 
@@ -40,7 +43,7 @@ memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept {
 
     pZone->size = size;
     pZone->rover = &pZone->blocklist;
-    pZone->blocklist.size = size - sizeof(uint32_t) * 2;
+    pZone->blocklist.size = size - MEMZONE_HEADER_SIZE;
     pZone->blocklist.user = nullptr;
     pZone->blocklist.tag = 0;
     pZone->blocklist.id = ZONEID;
@@ -60,18 +63,18 @@ memzone_t* Z_InitZone(void* const pBase, const int32_t size) noexcept {
 // Allocate a block of memory in the given memory zone with the given purgability tags.
 // Optionally, a referencing pointer field can also be supplied which is updated when the block is allocated or freed.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept {
+void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, void** const ppUser) noexcept {
     // This is the real size to allocate: have to add room for a memblock and also 4-byte align
     const int32_t allocSize = (size + sizeof(memblock_t) + 3) & 0xFFFFFFFC;
 
     // Scan through the block list looking for the first free block of sufficient size.
     // Also throw out any purgable blocks along the way.
-    memblock_t* pBase = zone.rover.get();
+    memblock_t* pBase = zone.rover;
     memblock_t* const pStart = pBase;
 
     while (pBase->user || (pBase->size < allocSize)) {
         // Set the rover to the next block if the current is free, so we can merge free blocks:
-        memblock_t* const pRover = (pBase->user) ? pBase : pBase->next.get();
+        memblock_t* const pRover = (pBase->user) ? pBase : pBase->next;
 
         // Wraparound to the beginning of the block list if the rover has reached the end
         if (!pRover)
@@ -82,7 +85,7 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<voi
             // Is this block exempt from being purged?
             // If that is the case then we need to try the next one after it.
             if (pRover->tag < PU_PURGELEVEL) {
-                pBase = pRover->next.get();
+                pBase = pRover->next;
 
                 if (!pBase) {
                 block_list_begin:
@@ -140,7 +143,7 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<voi
     // Setup the links on the memory block back to the pointer referencing it.
     // Also populate the pointer referencing it (if given):
     if (ppUser) {
-        pBase->user = VmPtr<VmPtr<void>>(ppUser);
+        pBase->user = ppUser;
         *ppUser = &pBase[1];
     } else {
         if (tag >= PU_PURGELEVEL) {
@@ -148,7 +151,7 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<voi
         }
 
         // Non purgable blocks without any owner are assigned a pointer value of '1'
-        pBase->user = VmPtr<VmPtr<void>>(0x00000001);
+        pBase->user = (void**) 1;
     }
     
     // Set the tag and id for the block
@@ -164,7 +167,7 @@ void* Z_Malloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<voi
 // An alternate version of Z_Malloc that attempts to allocate at the end of the heap, or at least as close as possible to the end.
 // Ignores the rover used by the memory zone also and always starts from the very end.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<void>* const ppUser) noexcept {
+void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, void** const ppUser) noexcept {
     // This is the real size to allocate: have to add room for a memblock and also 4-byte align
     const int32_t allocSize = (size + sizeof(memblock_t) + 3) & 0xFFFFFFFC;
     
@@ -172,7 +175,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
     memblock_t* pBase = &zone.blocklist;
 
     while (pBase->next) {
-        pBase = pBase->next.get();
+        pBase = pBase->next;
     }
 
     while (pBase->user || (pBase->size < allocSize)) {
@@ -182,7 +185,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
         if (pBase->user) {
             pRover = pBase;
         } else {
-            pRover = pBase->prev.get();
+            pRover = pBase->prev;
 
             // Have we gone past the start? If so then we have failed...
             if (!pRover) {
@@ -194,7 +197,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
             // Is this block exempt from being purged?
             // If that is the case then we need to try the next one after it.
             if (pRover->tag < PU_PURGELEVEL) {
-                pBase = pRover->prev.get();
+                pBase = pRover->prev;
 
                 // If we have wrapped around back to the start of the zone then we're out of RAM.
                 // In this case we have searched all blocks for one big enough and not found one :(
@@ -246,7 +249,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
     // Setup the links on the memory block back to the pointer referencing it.
     // Also populate the pointer referencing it (if given):
     if (ppUser) {
-        pBase->user = VmPtr<VmPtr<void>>(ppUser);
+        pBase->user = ppUser;
         *ppUser = &pBase[1];
     } else {
         if (tag >= PU_PURGELEVEL) {
@@ -254,7 +257,7 @@ void* Z_EndMalloc(memzone_t& zone, const int32_t size, const int16_t tag, VmPtr<
         }
         
         // Non purgable blocks without any owner are assigned a pointer value of '1'
-        pBase->user = VmPtr<VmPtr<void>>(0x00000001);
+        pBase->user = (void**) 1;
     }
 
     pBase->id = ZONEID;
@@ -280,7 +283,7 @@ void Z_Free2([[maybe_unused]] memzone_t& zone, void* const ptr) noexcept {
 
     // Clear the pointer field referencing the memory block too.
     // Treat very small addresses as not pointers also:
-    if (block.user.get() > vmAddrToPtr<void>(0x100)) {
+    if (block.user > (void*) 0x100) {
         *block.user = nullptr;
     }
 
@@ -294,7 +297,7 @@ void Z_Free2([[maybe_unused]] memzone_t& zone, void* const ptr) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Z_FreeTags(memzone_t& zone, const int16_t tagBits) noexcept {
     // Free each block if it is in use and matches one of the given tags
-    for (memblock_t* pBlock = &zone.blocklist; pBlock; pBlock = pBlock->next.get()) {
+    for (memblock_t* pBlock = &zone.blocklist; pBlock; pBlock = pBlock->next) {
         if (pBlock->user) {
             if ((pBlock->tag & tagBits) != 0) {
                 Z_Free2(zone, &pBlock[1]);
@@ -306,7 +309,7 @@ void Z_FreeTags(memzone_t& zone, const int16_t tagBits) noexcept {
     memblock_t* pNextBlock;
 
     for (memblock_t* pBlock = &zone.blocklist; pBlock; pBlock = pNextBlock) {
-        pNextBlock = pBlock->next.get();
+        pNextBlock = pBlock->next;
 
         // See if there are two adjacent free blocks
         if ((!pBlock->user) && pNextBlock && (!pNextBlock->user)) {
@@ -342,7 +345,7 @@ void Z_FreeTags(memzone_t& zone, const int16_t tagBits) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void Z_CheckHeap(const memzone_t& zone) noexcept {
     // Sanity check all blocks in the heap
-    for (const memblock_t* pBlock = &zone.blocklist; pBlock; pBlock = pBlock->next.get()) {
+    for (const memblock_t* pBlock = &zone.blocklist; pBlock; pBlock = pBlock->next) {
         // If we have reached the end of the block list, make sure we haven't 'lost' any heap memory.
         // Computed size for all the blocks should match the zone size:
         if (!pBlock->next) {
@@ -361,12 +364,12 @@ void Z_CheckHeap(const memzone_t& zone) noexcept {
         // The next block after this block should touch the current block
         const memblock_t* const pNextBlock = (const memblock_t*)((const std::byte*) pBlock + pBlock->size);
 
-        if (pNextBlock != pBlock->next.get()) {
+        if (pNextBlock != pBlock->next) {
             I_Error("Z_CheckHeap: block size does not touch the next block\n");
         }
 
         // The next block should point back to this block
-        if (pBlock->next->prev.get() != pBlock) {
+        if (pBlock->next->prev != pBlock) {
             I_Error("Z_CheckHeap: next block doesn't have proper back link\n");
         }
     }
@@ -386,7 +389,7 @@ void Z_ChangeTag(void* const ptr, const int16_t tagBits) noexcept {
     // If the block tag makes it purgeable then it must have an owner.
     // Note: regard very small user addresses as NOT pointers.
     if (tagBits >= PU_PURGELEVEL) {
-        if (block.user.get() < vmAddrToPtr<void>(0x100)) {
+        if (block.user < (void*) 0x100) {
             I_Error("Z_ChangeTag: an owner is required for purgable blocks");
         }
     }
@@ -400,7 +403,7 @@ void Z_ChangeTag(void* const ptr, const int16_t tagBits) noexcept {
 int32_t Z_FreeMemory(memzone_t& zone) noexcept {
     int32_t bytesFree = 0;
 
-    for (memblock_t* pBlock = &zone.blocklist; pBlock; pBlock = pBlock->next.get()) {
+    for (memblock_t* pBlock = &zone.blocklist; pBlock; pBlock = pBlock->next) {
         if (!pBlock->user) {
             bytesFree += pBlock->size;
         }

@@ -1016,7 +1016,82 @@ void P_SetupLevel(const int32_t mapNum, [[maybe_unused]] const skill_t skill) no
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Loads a list of memory blocks containing WAD lumps from the given file.
+// PC-PSX: this function had to be completely rewritten since 'sizeof(memblock_t)' is no longer equal to 'sizeof(fileblock_t)'.
+// This is due to pointers being larger in 64-bit mode.
 //------------------------------------------------------------------------------------------------------------------------------------------
+#if PC_PSX_DOOM_MODS
+
+void P_LoadBlocks(const CdMapTbl_File file) noexcept {
+    // Open the blocks file and get it's size
+    const int32_t openFileIdx = OpenFile(file);
+    const int32_t fileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
+    SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::SET);
+
+    // Keep reading the memory blocks in the file until we are done
+    int32_t bytesLeft = fileSize;
+
+    while (bytesLeft > 0) {
+        // Read the header for this block and verify all of it's properties.
+        // Note that the size of the block also includes the block header.
+        fileblock_t blockHeader = {};
+        ReadFile(openFileIdx, &blockHeader, sizeof(fileblock_t));
+        bytesLeft -= sizeof(fileblock_t);
+
+        if (blockHeader.id != ZONEID) {
+            I_Error("P_LoadBlocks: bad zoneid!");
+        }
+            
+        if (blockHeader.lumpNum >= gNumLumps) {
+            I_Error("P_LoadBlocks: bad lumpnum!");
+        }
+
+        if (blockHeader.isUncompressed >= 2) {
+            I_Error("P_LoadBlocks: bad c-mode!");
+        }
+
+        const int32_t blockDataSize = blockHeader.size - sizeof(fileblock_t);
+
+        if ((blockDataSize > bytesLeft) || (blockDataSize <= 0)) {
+            I_Error("P_LoadBlocks: bad size!");
+        }
+
+        // If this lump is already loaded then we can skip past reading the data for this block
+        void*& lumpCacheEntry = gpLumpCache[blockHeader.lumpNum];
+
+        if (lumpCacheEntry) {
+            SeekAndTellFile(openFileIdx, blockDataSize, PsxCd_SeekMode::CUR);
+            bytesLeft -= blockDataSize;
+            continue;
+        }
+
+        // Alloc a memory block for this memory block on disk and read the data.
+        // Set the user of the memory block to the lump cache entry for this lump (this also populates the lump cache entry):
+        uint8_t* const pBlockData = (uint8_t*) Z_Malloc(*gpMainMemZone, blockDataSize, blockHeader.tag, &lumpCacheEntry);
+        ReadFile(openFileIdx, pBlockData, blockDataSize);
+        bytesLeft -= blockDataSize;
+
+        // Verify the decompressed size is valid if the block was compressed
+        if (blockHeader.isUncompressed == 0) {
+            // Get the decompressed size of the data following the file block header and make sure it is what we expect
+            const uint32_t inflatedSize = getDecodedSize(pBlockData);
+            const lumpinfo_t& lump = gpLumpInfo[blockHeader.lumpNum];
+            
+            if (inflatedSize != lump.size) {
+                I_Error("P_LoadBlocks: bad inflated size!");
+            }
+        }
+
+        // Save whether the lump is compressed or not
+        gpbIsUncompressedLump[blockHeader.lumpNum] = blockHeader.isUncompressed;
+    }
+    
+    // After all that is done close up the file and check the heap is still in a good state
+    CloseFile(openFileIdx);
+    Z_CheckHeap(*gpMainMemZone);
+}
+
+#else
+
 void P_LoadBlocks(const CdMapTbl_File file) noexcept {
     // Try and load the memory blocks containing lumps from the given file.
     // Retry this a number of times before giving up, if the initial load attempt fails.
@@ -1038,10 +1113,10 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
         const int32_t openFileIdx = OpenFile(file);
         fileSize = SeekAndTellFile(openFileIdx, 0, PsxCd_SeekMode::END);
 
-        // Alloc room to hold the file: note that we reduce the alloc size by 'sizeof(memblock_t)' since the blocks
-        // file already includes space for a 'memblock_t' header for each lump. We also save the current memblock
+        // Alloc room to hold the file: note that we reduce the alloc size by 'sizeof(fileblock_t)' since the blocks
+        // file already includes space for a 'fileblock_t' header for each lump. We also save the current memblock
         // header just in case loading fails, so we can restore it prior to deallocation...
-        std::byte* const pAlloc = (std::byte*) Z_Malloc(*gpMainMemZone, fileSize - sizeof(memblock_t), PU_STATIC, nullptr);
+        std::byte* const pAlloc = (std::byte*) Z_Malloc(*gpMainMemZone, fileSize - sizeof(fileblock_t), PU_STATIC, nullptr);
         initialAllocHeader = ((memblock_t*) pAlloc)[-1];
         pBlockData = (std::byte*) &((fileblock_t*) pAlloc)[-1];
         
@@ -1125,9 +1200,9 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
         // same memory using different struct types. The original code did not do that but this should be functionally the same.
         fileblock_t fileblock = *(fileblock_t*) pCurBlockData;
         memblock_t& memblock = *(memblock_t*) pCurBlockData;
-    
+        
         // Check if this lump is already loaded
-        VmPtr<void>& lumpCacheEntry = (*gpLumpCache)[fileblock.lumpNum];
+        void*& lumpCacheEntry = gpLumpCache[fileblock.lumpNum];
         
         if (lumpCacheEntry) {
             // If the lump is already loaded then mark this memory block as freeable
@@ -1142,7 +1217,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
             gpbIsUncompressedLump[fileblock.lumpNum] = fileblock.isUncompressed;
         }
         
-        // Is this the last loade block in the file?
+        // Is this the last loaded block in the file?
         // If it is then set the size based on where the next block in the heap starts, otherwise just use the size defined in the file.
         bytesLeft -= fileblock.size;
         
@@ -1150,7 +1225,7 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
             memblock_t* const pNextMemblock = (memblock_t*)(pCurBlockData + fileblock.size);
             memblock.next = pNextMemblock;
         } else {
-            const uint32_t blockSize = (uint32_t)((std::byte*) initialAllocHeader.next.get() - pCurBlockData);
+            const uint32_t blockSize = (uint32_t)((std::byte*) initialAllocHeader.next - pCurBlockData);
             
             if (initialAllocHeader.next) {
                 memblock.size = blockSize;
@@ -1165,13 +1240,15 @@ void P_LoadBlocks(const CdMapTbl_File file) noexcept {
         }
         
         // Move onto the next block loaded
-        pCurBlockData = (std::byte*) memblock.next.get();
+        pCurBlockData = (std::byte*) memblock.next;
         
     } while (bytesLeft != 0);
     
     // After all that is done, make sure the heap is valid
     Z_CheckHeap(*gpMainMemZone);
 }
+
+#endif
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Caches into RAM all frames for a sprite.

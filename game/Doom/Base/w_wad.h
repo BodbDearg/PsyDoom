@@ -1,7 +1,6 @@
 #pragma once
 
 #include "PcPsx/Endian.h"
-#include "PsxVm/VmPtr.h"
 
 enum class CdMapTbl_File : int32_t;
 
@@ -31,7 +30,7 @@ static_assert(sizeof(lumpinfo_t) == 16);
 
 extern int32_t      gNumLumps;
 extern lumpinfo_t*  gpLumpInfo;
-extern const VmPtr<VmPtr<VmPtr<void>>>  gpLumpCache;
+extern void**       gpLumpCache;
 extern bool*        gpbIsUncompressedLump;
 extern bool         gbIsLevelDataCached;
 
