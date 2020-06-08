@@ -68,7 +68,7 @@ static int32_t              gOptionsMenuSize;
 static const menuitem_t*    gpOptionsMenuItems;
 
 // The marble floor texture used as a background for the options menu
-const VmPtr<texture_t> gTex_MARB01(0x80097AB0);
+texture_t   gTex_MARB01;
 
 // Current options music and sound volume
 int32_t     gOptionsSndVol = 100;           // TODO: make constant
@@ -296,7 +296,7 @@ void O_Drawer() noexcept {
 
     for (int16_t y = 0; y < 4; ++y) {
         for (int16_t x = 0; x < 4; ++x) {
-            I_CacheAndDrawSprite(*gTex_MARB01, x * 64, y * 64, gPaletteClutIds[MAINPAL]);
+            I_CacheAndDrawSprite(gTex_MARB01, x * 64, y * 64, gPaletteClutIds[MAINPAL]);
         }
     }
 
@@ -317,7 +317,7 @@ void O_Drawer() noexcept {
             if (pMenuItem->option <= opt_sound) {
                 // Draw the slider backing/container
                 I_DrawSprite(
-                    gTex_STATUS->texPageId,
+                    gTex_STATUS.texPageId,
                     gPaletteClutIds[UIPAL],
                     (int16_t) pMenuItem->x + 13,
                     (int16_t) pMenuItem->y + 20,
@@ -331,7 +331,7 @@ void O_Drawer() noexcept {
                 const int32_t sliderVal = (pMenuItem->option == opt_sound) ? gOptionsSndVol : gOptionsMusVol;
 
                 I_DrawSprite(
-                    gTex_STATUS->texPageId,
+                    gTex_STATUS.texPageId,
                     gPaletteClutIds[UIPAL],
                     (int16_t)(pMenuItem->x + 14 + sliderVal),
                     (int16_t)(pMenuItem->y + 20),
@@ -348,7 +348,7 @@ void O_Drawer() noexcept {
         const menuitem_t& menuItem = gpOptionsMenuItems[cursorPos];
 
         I_DrawSprite(
-            gTex_STATUS->texPageId,
+            gTex_STATUS.texPageId,
             gPaletteClutIds[UIPAL],
             (int16_t) menuItem.x - 24,
             (int16_t) menuItem.y - 2,

@@ -89,16 +89,16 @@ static int32_t          gCastFrames;            // Tracks how many frames a cast
 static int32_t          gCastOnMelee;           // If non zero then the cast member should do a melee attack
 static bool             gbCastDeath;            // Are we killing the current cast member?
 static const state_t*   gpCastState;            // Current state being displayed for the cast character
-static const VmPtr<texture_t>   gTex_DEMON(0x80097BB0);     // The demon (icon of sin) background for the DOOM II finale
+static texture_t        gTex_DEMON;             // The demon (icon of sin) background for the DOOM II finale
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Initializes the Ultimate DOOM finale screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F1_Start() noexcept {
     // Draw the loading plaque, purge the texture cache and load up the background needed
-    I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
     I_PurgeTexCache();
-    I_CacheTex(*gTex_BACK);
+    I_CacheTex(gTex_BACK);
 
     // Init finale
     gFinLinesDone = 0;
@@ -179,7 +179,7 @@ gameaction_t F1_Ticker() noexcept {
 void F1_Drawer() noexcept {
     // Increment the frame count (for the texture cache) and draw the background
     I_IncDrawnFrameCount();
-    I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+    I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
     // Show both the incoming and fully displayed text lines
     int32_t ypos = 45;
@@ -206,11 +206,11 @@ void F1_Drawer() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void F2_Start() noexcept {
     // Show the loading plaque and purge the texture cache
-    I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
     I_PurgeTexCache();
 
     // Load the background and sprites needed
-    I_LoadAndCacheTexLump(*gTex_DEMON, "DEMON", 0);
+    I_LoadAndCacheTexLump(gTex_DEMON, "DEMON", 0);
     P_LoadBlocks(CdMapTbl_File::MAPSPR60_IMG);
 
     // Initialize the finale text
@@ -450,7 +450,7 @@ gameaction_t F2_Ticker() noexcept {
 void F2_Drawer() noexcept {
     // Draw the icon of sin background and increment frame count for the texture cache
     I_IncDrawnFrameCount();
-    I_CacheAndDrawSprite(*gTex_DEMON, 0, 0, gPaletteClutIds[MAINPAL]);
+    I_CacheAndDrawSprite(gTex_DEMON, 0, 0, gPaletteClutIds[MAINPAL]);
 
     // See whether we are drawing the text or the cast of characters
     if (gFinaleStage >= F_STAGE_TEXT && gFinaleStage <= F_STAGE_SCROLLTEXT) {

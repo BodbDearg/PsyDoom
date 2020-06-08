@@ -10,7 +10,7 @@ static constexpr uint8_t M_SKULL_TEX_V = 192;
 static constexpr uint8_t M_SKULL_W = 16;
 static constexpr uint8_t M_SKULL_H = 18;
 
-extern const VmPtr<texture_t>               gTex_BACK;
+extern texture_t    gTex_BACK;
 extern int32_t      gCursorPos[MAXPLAYERS];
 extern int32_t      gCursorFrame;
 extern int32_t      gMenuTimeoutStartTicCon;

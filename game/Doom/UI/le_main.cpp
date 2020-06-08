@@ -15,14 +15,14 @@
 #include "ti_main.h"
 
 // Texture for the legals screen text
-static const VmPtr<texture_t> gTex_LEGALS(0x80097BD0);
+static texture_t gTex_LEGALS;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Startup/init logic for the 'legals' screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void START_Legals() noexcept {
     I_PurgeTexCache();
-    I_LoadAndCacheTexLump(*gTex_LEGALS, "LEGALS", 0);
+    I_LoadAndCacheTexLump(gTex_LEGALS, "LEGALS", 0);
     
     S_StartSound(nullptr, sfx_sgcock);
     gTitleScreenSpriteY = SCREEN_H;
@@ -68,7 +68,7 @@ gameaction_t TIC_Legals() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DRAW_Legals() noexcept {
     I_IncDrawnFrameCount();
-    I_CacheAndDrawSprite(*gTex_LEGALS, 0, (int16_t) gTitleScreenSpriteY, gPaletteClutIds[UIPAL]);
+    I_CacheAndDrawSprite(gTex_LEGALS, 0, (int16_t) gTitleScreenSpriteY, gPaletteClutIds[UIPAL]);
 
     I_SubmitGpuCmds();
     I_DrawPresent();

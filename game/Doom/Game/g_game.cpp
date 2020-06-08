@@ -64,7 +64,7 @@ static mobj_t gEmptyMObj;
 //------------------------------------------------------------------------------------------------------------------------------------------
 void G_DoLoadLevel() noexcept {
     // Draw the loading plaque
-    I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
 
     // Wait for the pistol and barrel explode menu sounds to stop playing
     while ((wess_seq_status(sfx_barexp) == SEQUENCE_PLAYING) || (wess_seq_status(sfx_pistol) == SEQUENCE_PLAYING)) {

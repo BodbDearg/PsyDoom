@@ -23,7 +23,7 @@
 int32_t gTitleScreenSpriteY;
 
 // The DOOM logo texture
-static const VmPtr<texture_t> gTex_TITLE(0x80097A30);
+static texture_t gTex_TITLE;
 
 // Controls how frequently the title sprite and fire sky update and move
 static int32_t gVBlanksUntilTitleSprMove;
@@ -38,8 +38,8 @@ void START_Title() noexcept {
 
     // Show the loading plaque
     W_CacheLumpName("LOADING", PU_STATIC, false);
-    I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
-    I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
+    I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
     
     // Load sounds for the menu
     S_LoadMapSoundAndMusic(0);
@@ -50,11 +50,11 @@ void START_Title() noexcept {
     W_CacheLumpName("NETERR", PU_STATIC, false);
     W_CacheLumpName("PAUSE", PU_STATIC, false);
 
-    I_LoadAndCacheTexLump(*gTex_MARB01, "MARB01", 0);
-    I_LoadAndCacheTexLump(*gTex_BUTTONS, "BUTTONS", 0);
-    I_LoadAndCacheTexLump(*gTex_NETERR, "NETERR", 0);
-    I_LoadAndCacheTexLump(*gTex_PAUSE, "PAUSE", 0);
-    I_LoadAndCacheTexLump(*gTex_TITLE, "TITLE", 0);
+    I_LoadAndCacheTexLump(gTex_MARB01, "MARB01", 0);
+    I_LoadAndCacheTexLump(gTex_BUTTONS, "BUTTONS", 0);
+    I_LoadAndCacheTexLump(gTex_NETERR, "NETERR", 0);
+    I_LoadAndCacheTexLump(gTex_PAUSE, "PAUSE", 0);
+    I_LoadAndCacheTexLump(gTex_TITLE, "TITLE", 0);
     
     // Cache the fire sky texture used in the title screen and save it's reference
     {
@@ -184,7 +184,7 @@ void DRAW_Title() noexcept {
             255,    239 + titleY
         );
 
-        polyPrim.tpage = gTex_TITLE->texPageId;
+        polyPrim.tpage = gTex_TITLE.texPageId;
         polyPrim.clut = gPaletteClutIds[TITLEPAL];
 
         I_AddPrim(&polyPrim);

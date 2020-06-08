@@ -51,16 +51,12 @@
 //       backed up and retained in main RAM. So essentially the renderer needs to keep a copy of all sprite data in main RAM also.
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct tcachepage_t {
-    VmPtr<texture_t> cells[TCACHE_CELLS_Y][TCACHE_CELLS_X];
+    texture_t* cells[TCACHE_CELLS_Y][TCACHE_CELLS_X];
 };
-
-static_assert(sizeof(tcachepage_t) == 1024);
 
 struct tcache_t {
     tcachepage_t pages[NUM_TCACHE_PAGES];
 };
-
-static_assert(sizeof(tcache_t) == 1024 * 11);
 
 // The texture page index in VRAM that the texture cache starts at.
 // The first 4 pages are reserved for the framebuffer!
@@ -94,7 +90,7 @@ constexpr uint8_t   NET_PACKET_HEADER   = 0xAA;     // The 1st byte in every net
 
 // Texture cache variables.
 // The texture cache data structure, where we are filling in the cache next and the current fill row height (in cells).
-static const VmPtr<VmPtr<tcache_t>> gpTexCache(0x80077F74);
+static tcache_t* gpTexCache;
 
 uint32_t    gTCacheFillPage;
 uint32_t    gTCacheFillCellX;
@@ -159,13 +155,13 @@ const padbuttons_t gBtnMasks[NUM_BINDABLE_BTNS] = {
 
 // The main UI texture atlas for the game.
 // This is loaded into the 1st available texture page and kept loaded at all times after that.
-const VmPtr<texture_t> gTex_STATUS(0x800A94E8);
+texture_t gTex_STATUS;
 
 // Loading, connecting, error etc. plaques
-const VmPtr<texture_t>  gTex_PAUSE(0x80097A70);
-const VmPtr<texture_t>  gTex_LOADING(0x80097A90);
-const VmPtr<texture_t>  gTex_NETERR(0x80097AF0);
-const VmPtr<texture_t>  gTex_CONNECT(0x80097B10);
+texture_t gTex_PAUSE;
+texture_t gTex_LOADING;
+texture_t gTex_NETERR;
+texture_t gTex_CONNECT;
 
 // PSX Kernel events that fire when reads and writes complete for Serial I/O in a multiplayer game
 static uint32_t gSioReadDoneEvent;
@@ -534,8 +530,8 @@ void I_VsyncCallback() noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_Init() noexcept {
     // Alloc the texture cache, zero initialize and do a 'purge' to initialize tracking/management state
-    *gpTexCache = (tcache_t*) Z_Malloc(*gpMainMemZone, sizeof(tcache_t), PU_STATIC, nullptr);
-    D_memset(gpTexCache->get(), std::byte(0), sizeof(tcache_t));
+    gpTexCache = (tcache_t*) Z_Malloc(*gpMainMemZone, sizeof(tcache_t), PU_STATIC, nullptr);
+    D_memset(gpTexCache, std::byte(0), sizeof(tcache_t));
     I_PurgeTexCache();
 }
 
@@ -552,7 +548,7 @@ void I_CacheTex(texture_t& tex) noexcept {
         return;
 
     const uint32_t startTCacheFillPage = gTCacheFillPage;
-    VmPtr<texture_t>* pTexStartCacheCell = nullptr;
+    texture_t** pTexStartCacheCell = nullptr;
 
     {
     find_free_tcache_location:
@@ -596,19 +592,19 @@ void I_CacheTex(texture_t& tex) noexcept {
         // At the current fill location search all of the cells in the texture cache that this texture would occupy.
         // Make sure all of the cells are free and available for use before we can proceed.
         // If cells are not free then evict whatever is in the cache if allowed, otherwise skip past it.
-        tcache_t& tcache = **gpTexCache;
+        tcache_t& tcache = *gpTexCache;
         tcachepage_t& tcachepage = tcache.pages[gTCacheFillPage];
         pTexStartCacheCell = &tcachepage.cells[gTCacheFillCellY][gTCacheFillCellX];
 
         {
             // Iterate through all the cells this texture would occupy
-            VmPtr<texture_t>* pCacheEntry = pTexStartCacheCell;
+            texture_t** pCacheEntry = pTexStartCacheCell;
             
             for (int32_t y = 0; y < tex.height16; ++y) {
                 for (int32_t x = 0; x < tex.width16; ++x) {
                     // Check to see if this cell is empty and move past it.
                     // If it's already empty then we don't need to do anything:
-                    texture_t* const pCellTex = pCacheEntry->get();
+                    texture_t* const pCellTex = *pCacheEntry;
                     ++pCacheEntry;
 
                     if (!pCellTex)
@@ -639,7 +635,7 @@ void I_CacheTex(texture_t& tex) noexcept {
 
     // Fill all of the cells in the cache occupied by this texture with references to it
     {
-        VmPtr<texture_t>* pCacheEntry = pTexStartCacheCell;
+        texture_t** pCacheEntry = pTexStartCacheCell;
 
         for (int32_t y = 0; y < tex.height16; ++y) {
             for (int32_t x = 0; x < tex.width16; ++x) {
@@ -652,7 +648,7 @@ void I_CacheTex(texture_t& tex) noexcept {
     }
 
     // Record on the texture where it is located in the cache (top left corner)
-    tex.ppTexCacheEntries = ptrToVmAddr(pTexStartCacheCell);
+    tex.ppTexCacheEntries = pTexStartCacheCell;
 
     // Make sure the texture's lump is loaded and decompress if required
     const void* pTexData = W_CacheLumpNum(tex.lumpNum, PU_CACHE, false);
@@ -713,7 +709,7 @@ void I_RemoveTexCacheEntry(texture_t& tex) noexcept {
 
     // Wipe the texture page id used and clear any cells the texture occupies
     tex.texPageId = 0;
-    VmPtr<texture_t>* pCacheEntry = tex.ppTexCacheEntries.get();
+    texture_t** pCacheEntry = tex.ppTexCacheEntries;
     
     for (int32_t y = 0; y < tex.height16; ++y) {
         for (int32_t x = 0; x < tex.width16; ++x) {
@@ -730,7 +726,7 @@ void I_RemoveTexCacheEntry(texture_t& tex) noexcept {
 // Also resets the next position that we will populate the cache at.
 //------------------------------------------------------------------------------------------------------------------------------------------
 void I_PurgeTexCache() noexcept {
-    tcache_t& tcache = **gpTexCache;
+    tcache_t& tcache = *gpTexCache;
 
     for (int32_t texPageIdx = 0; texPageIdx < NUM_TCACHE_PAGES; ++texPageIdx) {
         // Leave this texture page alone and skip past it if it is locked
@@ -751,11 +747,11 @@ void I_PurgeTexCache() noexcept {
         // Run though all of the cells in the texture cache page.
         // For each cell where we find an occupying texture, clear any cells that the found texture occupies.
         {
-            VmPtr<texture_t>* pPageCacheEntry = &tcache.pages[texPageIdx].cells[0][0];
+            texture_t** pPageCacheEntry = &tcache.pages[texPageIdx].cells[0][0];
 
             for (uint32_t cellIdx = 0; cellIdx < NUM_TCACHE_PAGE_CELLS; ++cellIdx, ++pPageCacheEntry) {
                 // Ignore the texture cache cell if not occupied by a texture
-                if (!pPageCacheEntry->get())
+                if (!*pPageCacheEntry)
                     continue;
 
                 // Get the texture occupying this cell and clear it's texture page.
@@ -763,7 +759,7 @@ void I_PurgeTexCache() noexcept {
                 tex.texPageId = 0;
 
                 // Clear all cells occupied by the texture
-                VmPtr<texture_t>* pTexCacheEntry = tex.ppTexCacheEntries.get();
+                texture_t** pTexCacheEntry = tex.ppTexCacheEntries;
 
                 for (int32_t y = 0; y < tex.height16; ++y) {
                     for (int32_t x = 0; x < tex.width16; ++x) {
@@ -841,12 +837,12 @@ void I_VramViewerDraw(const int32_t texPageNum) noexcept {
     }
 
     // Draw red lines around all entries on this texture cache page
-    const tcachepage_t& cachePage = (*gpTexCache)->pages[texPageNum];
-    const VmPtr<texture_t>* pCacheEntry = &cachePage.cells[0][0];
+    const tcachepage_t& cachePage = gpTexCache->pages[texPageNum];
+    const texture_t* const* pCacheEntry = &cachePage.cells[0][0];
 
     for (int32_t entryIdx = 0; entryIdx < TCACHE_CELLS_X * TCACHE_CELLS_Y; ++entryIdx, ++pCacheEntry) {
         // Skip past this texture cache cell if there's no texture occupying it
-        const texture_t* pTex = pCacheEntry->get();
+        const texture_t* pTex = *pCacheEntry;
         
         if (!pTex)
             continue;
@@ -1095,16 +1091,16 @@ bool I_NetUpdate() noexcept {
 
         // Show the 'Network error' plaque
         I_IncDrawnFrameCount();
-        I_CacheTex(*gTex_NETERR);
+        I_CacheTex(gTex_NETERR);
         I_DrawSprite(
-            gTex_NETERR->texPageId,
+            gTex_NETERR.texPageId,
             gPaletteClutIds[UIPAL],
             84,
             109,
-            gTex_NETERR->texPageCoordX,
-            gTex_NETERR->texPageCoordY,
-            gTex_NETERR->width,
-            gTex_NETERR->height
+            gTex_NETERR.texPageCoordX,
+            gTex_NETERR.texPageCoordY,
+            gTex_NETERR.width,
+            gTex_NETERR.height
         );
 
         I_SubmitGpuCmds();

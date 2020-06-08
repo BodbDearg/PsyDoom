@@ -107,7 +107,7 @@ static int32_t  gIntermissionStage;
 void IN_Start() noexcept {
     // Clear out purgable textures and cache the background for the intermission
     I_PurgeTexCache();
-    I_LoadAndCacheTexLump(*gTex_BACK, "BACK", 0);
+    I_LoadAndCacheTexLump(gTex_BACK, "BACK", 0);
 
     // Initialize final and displayed stats for all players
     for (int32_t playerIdx = 0; playerIdx < MAXPLAYERS; ++playerIdx) {
@@ -321,7 +321,7 @@ void IN_Drawer() noexcept {
 // Draws the single player intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_SingleDrawer() noexcept {
-    I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+    I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
     I_DrawString(-1, 20, gMapNames[gGameMap - 1]);
     I_DrawString(-1, 36, "Finished");
@@ -359,10 +359,10 @@ void IN_SingleDrawer() noexcept {
 // Draws the cooperative mode intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_CoopDrawer() noexcept {
-    I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+    I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
     I_DrawSprite(
-        gTex_STATUS->texPageId,
+        gTex_STATUS.texPageId,
         gPaletteClutIds[UIPAL],
         139,
         20,
@@ -375,7 +375,7 @@ void IN_CoopDrawer() noexcept {
     I_DrawString(130, 52, "you");
 
     I_DrawSprite(
-        gTex_STATUS->texPageId,
+        gTex_STATUS.texPageId,
         gPaletteClutIds[UIPAL],
         213,
         20,
@@ -430,7 +430,7 @@ void IN_CoopDrawer() noexcept {
 // Draws the deathmatch mode intermission screen
 //------------------------------------------------------------------------------------------------------------------------------------------
 void IN_DeathmatchDrawer() noexcept {
-    I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+    I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
     I_DrawString(-1, 20, gMapNames[gGameMap - 1]);
     I_DrawString(-1, 36, "Finished");
@@ -467,7 +467,7 @@ void IN_DeathmatchDrawer() noexcept {
     }
         
     I_DrawSprite(
-        gTex_STATUS->texPageId,
+        gTex_STATUS.texPageId,
         gPaletteClutIds[UIPAL],
         127,
         70,
@@ -480,7 +480,7 @@ void IN_DeathmatchDrawer() noexcept {
     I_DrawString(118, 102, "you");
 
     I_DrawSprite(
-        gTex_STATUS->texPageId,
+        gTex_STATUS.texPageId,
         gPaletteClutIds[UIPAL],
         200,
         70,

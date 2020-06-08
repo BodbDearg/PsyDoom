@@ -36,7 +36,7 @@ static const padbuttons_t gDefaultCtrlBindings[NUM_CTRL_BINDS] = {
 };
 
 // Graphic containing sprites for all of the 8 bindable buttons
-const VmPtr<texture_t> gTex_BUTTONS(0x80097AD0);
+texture_t gTex_BUTTONS;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Startup/initialization logic for the control configuration screen
@@ -47,7 +47,7 @@ void START_ControlsScreen() noexcept {
     gCursorFrame = 0;
     gCursorPos[0] = 0;
 
-    I_LoadAndCacheTexLump(*gTex_BUTTONS, "BUTTONS", 0);
+    I_LoadAndCacheTexLump(gTex_BUTTONS, "BUTTONS", 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -148,7 +148,7 @@ void DRAW_ControlsScreen() noexcept {
 
     for (int32_t y = 0; y < 4; ++y) {
         for (int32_t x = 0; x < 4; ++x) {
-            I_CacheAndDrawSprite(*gTex_MARB01, (int16_t) x * 64, (int16_t) y * 64, gPaletteClutIds[MAINPAL]);
+            I_CacheAndDrawSprite(gTex_MARB01, (int16_t) x * 64, (int16_t) y * 64, gPaletteClutIds[MAINPAL]);
         }
     }
 
@@ -157,7 +157,7 @@ void DRAW_ControlsScreen() noexcept {
 
     // Draw the skull cursor
     I_DrawSprite(
-        gTex_STATUS->texPageId,
+        gTex_STATUS.texPageId,
         gPaletteClutIds[UIPAL],
         12,
         (int16_t) gCursorPos[0] * 20 + 43,
@@ -194,12 +194,12 @@ void DRAW_ControlsScreen() noexcept {
                 constexpr uint8_t BTN_SPRITE_SIZE = 16;
 
                 I_DrawSprite(
-                    gTex_BUTTONS->texPageId,
+                    gTex_BUTTONS.texPageId,
                     gPaletteClutIds[MAINPAL],
                     38,
                     ypos,
-                    gTex_BUTTONS->texPageCoordX + (uint8_t) bindableBtnIdx * BTN_SPRITE_SIZE,
-                    gTex_BUTTONS->texPageCoordY,
+                    gTex_BUTTONS.texPageCoordX + (uint8_t) bindableBtnIdx * BTN_SPRITE_SIZE,
+                    gTex_BUTTONS.texPageCoordY,
                     BTN_SPRITE_SIZE,
                     BTN_SPRITE_SIZE
                 );

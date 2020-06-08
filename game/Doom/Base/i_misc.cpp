@@ -95,7 +95,7 @@ void I_DrawNumber(const int32_t x, const int32_t y, const int32_t value) noexcep
             // Set the draw mode to disable wrapping (zero sized text window) and texture page to the STATUS graphic
             DR_MODE& drawModePrim = *(DR_MODE*) LIBETC_getScratchAddr(128);
             const RECT texWindow = { 0, 0, 0, 0 };
-            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, &texWindow);
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
             I_AddPrim(&drawModePrim);
         }
 
@@ -210,7 +210,7 @@ void I_DrawPausedOverlay() noexcept {
     const player_t& player = gPlayers[gCurPlayerIndex];
 
     if ((player.cheats & CF_NOPAUSEMSG) == 0) {
-        I_CacheAndDrawSprite(*gTex_PAUSE, 107, 108, gPaletteClutIds[MAINPAL]);
+        I_CacheAndDrawSprite(gTex_PAUSE, 107, 108, gPaletteClutIds[MAINPAL]);
     }
 
     if (player.cheats & CF_WARPMENU) {
@@ -354,9 +354,9 @@ void I_DrawString(const int32_t x, const int32_t y, const char* const str) noexc
         // PC-PSX: define the texture window while we are at, rather than relying on the one set externally
         #if PC_PSX_DOOM_MODS
             const RECT texWindow = { 0, 0, 0, 0 };
-            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, &texWindow);
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
-            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, nullptr);
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, nullptr);
         #endif
 
         I_AddPrim(&drawModePrim);

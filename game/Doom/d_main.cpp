@@ -133,8 +133,8 @@ gameaction_t RunTitle() noexcept {
 gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
     // PC-PSX: ensure this required graphic is loaded before starting the demo
     #if PC_PSX_DOOM_MODS
-        if (gTex_LOADING->texPageId == 0) {
-            I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
+        if (gTex_LOADING.texPageId == 0) {
+            I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
         }
     #endif
 
@@ -183,8 +183,8 @@ gameaction_t RunDemo(const CdMapTbl_File file) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 gameaction_t RunDemoAtPath(const char* const filePath) noexcept {
     // Ensure this required graphic is loaded before starting the demo
-    if (gTex_LOADING->texPageId == 0) {
-        I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
+    if (gTex_LOADING.texPageId == 0) {
+        I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
     }
 
     // Read the demo file into memory
@@ -236,9 +236,9 @@ void I_DebugDrawString(const char* const fmtMsg, ...) noexcept {
         // PC-PSX: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that
         #if PC_PSX_DOOM_MODS
             RECT texWindow = { 0, 0, 0, 0 };
-            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, &texWindow);
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
-            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, nullptr);
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, nullptr);
         #endif
     }
 

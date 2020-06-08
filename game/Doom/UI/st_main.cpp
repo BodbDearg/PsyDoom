@@ -111,7 +111,7 @@ void ST_Init() noexcept {
     }
 
     // Load this into the first texture cache page and expect it to be resident there
-    I_LoadAndCacheTexLump(*gTex_STATUS, "STATUS", 0);
+    I_LoadAndCacheTexLump(gTex_STATUS, "STATUS", 0);
 
     if (gTCacheFillPage != 0) {
         I_Error("ST_Init: final texture cache foulup\n");
@@ -293,9 +293,9 @@ void ST_Drawer() noexcept {
 
         #if PC_PSX_DOOM_MODS
             RECT texWindow = { 0, 0, 0, 0 };
-            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, &texWindow);
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
-            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, nullptr);
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, nullptr);
         #endif
 
         I_AddPrim(&drawModePrim);

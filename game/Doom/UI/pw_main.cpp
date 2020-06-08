@@ -177,7 +177,7 @@ void DRAW_PasswordScreen() noexcept {
 
     for (int16_t y = 0; y < 4; ++y) {
         for (int16_t x = 0; x < 4; ++x) {
-            I_CacheAndDrawSprite(*gTex_MARB01, x * 64, y * 64, gPaletteClutIds[MAINPAL]);
+            I_CacheAndDrawSprite(gTex_MARB01, x * 64, y * 64, gPaletteClutIds[MAINPAL]);
         }
     }
 
@@ -188,9 +188,9 @@ void DRAW_PasswordScreen() noexcept {
         // PC-PSX: explicitly clear the texture window here also to disable wrapping - don't rely on previous drawing code to do that
         #if PC_PSX_DOOM_MODS
             RECT texWindow = { 0, 0, 0, 0 };
-            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, &texWindow);
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, &texWindow);
         #else
-            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS->texPageId, nullptr);
+            LIBGPU_SetDrawMode(drawModePrim, false, false, gTex_STATUS.texPageId, nullptr);
         #endif
 
         I_AddPrim(&drawModePrim);

@@ -9,10 +9,10 @@
 #include "Wess/psxcd.h"
 
 // Credits screen resources
-static const VmPtr<texture_t>   gTex_IDCRED1(0x80097B30);
-static const VmPtr<texture_t>   gTex_IDCRED2(0x80097B50);
-static const VmPtr<texture_t>   gTex_WMSCRED1(0x80097B70);
-static const VmPtr<texture_t>   gTex_WMSCRED2(0x80097B90);
+static texture_t gTex_IDCRED1;
+static texture_t gTex_IDCRED2;
+static texture_t gTex_WMSCRED1;
+static texture_t gTex_WMSCRED2;
 
 // Current credits scroll position
 static int32_t  gCreditsScrollYPos;
@@ -26,10 +26,10 @@ static int32_t  gVBlanksUntilCreditScreenUpdate;
 //------------------------------------------------------------------------------------------------------------------------------------------
 void START_Credits() noexcept {
     // Cache required textures and set initial screen state
-    I_LoadAndCacheTexLump(*gTex_IDCRED1, "IDCRED1", 0);
-    I_LoadAndCacheTexLump(*gTex_IDCRED2, "IDCRED2", 0);
-    I_LoadAndCacheTexLump(*gTex_WMSCRED1, "WMSCRED1", 0);
-    I_LoadAndCacheTexLump(*gTex_WMSCRED2, "WMSCRED2", 0);
+    I_LoadAndCacheTexLump(gTex_IDCRED1, "IDCRED1", 0);
+    I_LoadAndCacheTexLump(gTex_IDCRED2, "IDCRED2", 0);
+    I_LoadAndCacheTexLump(gTex_WMSCRED1, "WMSCRED1", 0);
+    I_LoadAndCacheTexLump(gTex_WMSCRED2, "WMSCRED2", 0);
     
     gCreditsScrollYPos = SCREEN_H;
     gCreditsPage = 0;
@@ -100,12 +100,12 @@ void DRAW_Credits() noexcept {
     // Draw the background and scrolling credits text for whatever credits page we are on.
     // There are two pages, ID and Williams credits:
     if (gCreditsPage == 0) {
-        I_CacheAndDrawSprite(*gTex_IDCRED1, 0, 0, gPaletteClutIds[IDCREDITS1PAL]);
-        I_CacheAndDrawSprite(*gTex_IDCRED2, 9, (int16_t) gCreditsScrollYPos, gPaletteClutIds[UIPAL]);
+        I_CacheAndDrawSprite(gTex_IDCRED1, 0, 0, gPaletteClutIds[IDCREDITS1PAL]);
+        I_CacheAndDrawSprite(gTex_IDCRED2, 9, (int16_t) gCreditsScrollYPos, gPaletteClutIds[UIPAL]);
     } 
     else if (gCreditsPage == 1) {
-        I_CacheAndDrawSprite(*gTex_WMSCRED1, 0, 0, gPaletteClutIds[WCREDITS1PAL]);
-        I_CacheAndDrawSprite(*gTex_WMSCRED2, 7, (int16_t) gCreditsScrollYPos, gPaletteClutIds[UIPAL]);
+        I_CacheAndDrawSprite(gTex_WMSCRED1, 0, 0, gPaletteClutIds[WCREDITS1PAL]);
+        I_CacheAndDrawSprite(gTex_WMSCRED2, 7, (int16_t) gCreditsScrollYPos, gPaletteClutIds[UIPAL]);
     }
 
     // Finish up the frame

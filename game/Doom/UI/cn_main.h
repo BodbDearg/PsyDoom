@@ -4,7 +4,7 @@
 
 struct texture_t;
 
-extern const VmPtr<texture_t> gTex_BUTTONS;
+extern texture_t gTex_BUTTONS;
 
 void START_ControlsScreen() noexcept;
 void STOP_ControlsScreen(const gameaction_t exitAction) noexcept;

@@ -15,7 +15,7 @@
 #include "PsyQ/LIBGPU.h"
 #include "Wess/psxcd.h"
 
-const VmPtr<texture_t>              gTex_BACK(0x80097A10);                  // The background texture for the main menu
+texture_t   gTex_BACK;                  // The background texture for the main menu
 int32_t     gCursorPos[MAXPLAYERS];     // Which of the menu options each player's cursor is over (see 'menu_t')
 int32_t     gCursorFrame;               // Current frame that the menu cursor is displaying
 int32_t     gMenuTimeoutStartTicCon;    // Tick that we start checking for menu timeouts from
@@ -54,11 +54,8 @@ static const char gSkillNames[NUMSKILLS][16] = {
 #endif
 };
 
-// The texture for the DOOM logo
-static const VmPtr<texture_t> gTex_DOOM(0x80097A50);
-
-// Restricts what maps or episodes the player can pick
-static int32_t gMaxStartEpisodeOrMap;
+static texture_t    gTex_DOOM;                  // The texture for the DOOM logo
+static int32_t      gMaxStartEpisodeOrMap;      // Restricts what maps or episodes the player can pick
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Starts up the main menu and returns the action to do on exit
@@ -71,8 +68,8 @@ gameaction_t RunMenu() noexcept {
 
         // If we're not timing out draw the background and DOOM logo to prep for a 'loading' or 'connecting' plaque being drawn
         I_IncDrawnFrameCount();
-        I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
-        I_CacheAndDrawSprite(*gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
+        I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+        I_CacheAndDrawSprite(gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
         I_SubmitGpuCmds();
         I_DrawPresent();
 
@@ -81,13 +78,13 @@ gameaction_t RunMenu() noexcept {
         if (gStartGameType == gt_single)
             break;
         
-        I_DrawLoadingPlaque(*gTex_CONNECT, 54, 103, gPaletteClutIds[MAINPAL]);
+        I_DrawLoadingPlaque(gTex_CONNECT, 54, 103, gPaletteClutIds[MAINPAL]);
         I_NetSetup();
 
         // Once the net connection has been established, re-draw the background in prep for a loading or error plaque
         I_IncDrawnFrameCount();
-        I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
-        I_CacheAndDrawSprite(*gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
+        I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+        I_CacheAndDrawSprite(gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
         I_SubmitGpuCmds();
         I_DrawPresent();
         
@@ -122,16 +119,16 @@ void M_Start() noexcept {
     I_PurgeTexCache();
     
     // Show the loading plaque
-    I_LoadAndCacheTexLump(*gTex_LOADING, "LOADING", 0);
-    I_DrawLoadingPlaque(*gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
+    I_LoadAndCacheTexLump(gTex_LOADING, "LOADING", 0);
+    I_DrawLoadingPlaque(gTex_LOADING, 95, 109, gPaletteClutIds[UIPAL]);
     
     // Load sounds for the menu
     S_LoadMapSoundAndMusic(0);
     
     // Load and cache some commonly used UI textures
-    I_LoadAndCacheTexLump(*gTex_BACK, "BACK", 0);
-    I_LoadAndCacheTexLump(*gTex_DOOM, "DOOM", 0);
-    I_LoadAndCacheTexLump(*gTex_CONNECT, "CONNECT", 0);
+    I_LoadAndCacheTexLump(gTex_BACK, "BACK", 0);
+    I_LoadAndCacheTexLump(gTex_DOOM, "DOOM", 0);
+    I_LoadAndCacheTexLump(gTex_CONNECT, "CONNECT", 0);
     
     // Some basic menu setup
     gCursorFrame = 0;
@@ -371,14 +368,14 @@ gameaction_t M_Ticker() noexcept {
 void M_Drawer() noexcept {
     // Draw the menu background and increment frame count for the texture cache
     I_IncDrawnFrameCount();
-    I_CacheAndDrawSprite(*gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
+    I_CacheAndDrawSprite(gTex_BACK, 0, 0, gPaletteClutIds[MAINPAL]);
 
     // Draw the DOOM logo
-    I_CacheAndDrawSprite(*gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
+    I_CacheAndDrawSprite(gTex_DOOM, 75, 20, gPaletteClutIds[TITLEPAL]);
 
     // Draw the skull cursor
     I_DrawSprite(
-        gTex_STATUS->texPageId,
+        gTex_STATUS.texPageId,
         gPaletteClutIds[UIPAL],
         50,
         gMenuYPos[gCursorPos[0]] - 2,

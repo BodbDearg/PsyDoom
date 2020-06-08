@@ -1,7 +1,6 @@
 #pragma once
 
 #include "doomdef.h"
-#include "PsxVm/VmPtr.h"
 
 enum class CdMapTbl_File : int32_t;
 
