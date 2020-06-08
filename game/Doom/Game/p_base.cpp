@@ -15,7 +15,6 @@
 #include "p_mobj.h"
 #include "p_setup.h"
 #include "p_tick.h"
-#include "PsxVm/PsxVm.h"
 
 #include <algorithm>
 
@@ -260,7 +259,7 @@ void P_MobjThinker(mobj_t& mobj) noexcept {
                 mobj.tics = nextState.tics;
                 mobj.sprite = nextState.sprite;
                 mobj.frame = nextState.frame;
-                mobj.latecall = (latecall_t) PsxVm::getVmFuncForAddr(nextState.action);
+                mobj.latecall = nextState.action.mobjFn;
             } else {
                 // No next state: schedule a removal for this map object
                 mobj.latecall = &P_RemoveMobj;

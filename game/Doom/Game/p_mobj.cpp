@@ -19,7 +19,6 @@
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_tick.h"
-#include "PsxVm/PsxVm.h"
 
 #include <algorithm>
 
@@ -150,8 +149,7 @@ bool P_SetMObjState(mobj_t& mobj, const statenum_t stateNum) noexcept {
     mobj.frame = state.frame;
 
     if (state.action) {
-        const statefn_mobj_t func = (statefn_mobj_t) PsxVm::getVmFuncForAddr(state.action);
-        func(mobj);
+        state.action(mobj);
     }
 
     // This request gets cleared on state switch

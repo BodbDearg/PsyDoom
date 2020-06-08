@@ -1054,6 +1054,27 @@ enum mobjtype_t : int32_t {
     NUMMOBJTYPES
 };
 
+// PC-PSX helper: represents a state action function.
+// Can accept one of two different function formats, one for things and another for player sprite (player weapon) states.
+struct statefn_t {
+    union {
+        statefn_mobj_t  mobjFn;
+        statefn_pspr_t  psprFn;
+    };
+
+    inline statefn_t() noexcept : mobjFn(nullptr) {}
+    inline statefn_t(const nullptr_t) noexcept : mobjFn(nullptr) {}
+    inline statefn_t(const statefn_mobj_t mobjFn) noexcept : mobjFn(mobjFn) {}
+    inline statefn_t(const statefn_pspr_t psprFn) noexcept : psprFn(psprFn) {}
+
+    // Tell if the function is defined or not
+    inline operator bool () const noexcept { return (mobjFn != nullptr); }
+
+    // Invoke the function using one of the allowed function formats
+    inline void operator()(mobj_t& mobj) const noexcept { mobjFn(mobj); }
+    inline void operator()(player_t& player, pspdef_t& sprite) const noexcept { psprFn(player, sprite); }
+};
+
 // Sprite frame number flags and masks.
 // The flags are encoded in the frame number itself:
 static constexpr uint32_t FF_FULLBRIGHT = 0x8000;       // If set the sprite is always displayed fullbright, in spite of lighting conditions.
@@ -1064,13 +1085,11 @@ struct state_t {
     spritenum_t     sprite;         // Sprite number to use for the state
     int32_t         frame;          // What frame of the state to display
     int32_t         tics;           // Number of tics to remain in this state, or -1 if infinite
-    VmPtr<void()>   action;         // Action function to call upon entering the state, may have 1 or 2 parameters depending on context (map object vs player sprite).
+    statefn_t       action;         // Action function to call upon entering the state, may have 1 or 2 parameters depending on context (map object vs player sprite).
     statenum_t      nextstate;      // State number to goto after this state
     int32_t         misc1;          // State specific info 1: appears unused in this version of the game
     int32_t         misc2;          // State specific info 2: appears unused in this version of the game
 };
-
-static_assert(sizeof(state_t) == 28);
 
 // Defines properties and behavior for a map object type
 struct mobjinfo_t {
@@ -1101,6 +1120,6 @@ struct mobjinfo_t {
 static_assert(sizeof(mobjinfo_t) == 88);
 
 // The arrays of sprite names, state definitions and map object definitions
-extern const char*      gSprNames[NUMSPRITES];
-extern const VmPtr<state_t[NUMSTATES]>              gStates;
+extern const char*  gSprNames[NUMSPRITES];
+extern state_t      gStates[NUMSTATES];
 extern const VmPtr<mobjinfo_t[NUMMOBJTYPES]>        gMObjInfo;

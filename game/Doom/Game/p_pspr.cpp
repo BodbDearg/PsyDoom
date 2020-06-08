@@ -193,8 +193,7 @@ void P_SetPsprite(player_t& player, const int32_t spriteIdx, const statenum_t st
 
         // Perform the state action
         if (state.action) {
-            const statefn_pspr_t func = (statefn_pspr_t) PsxVm::getVmFuncForAddr(state.action);
-            func(player, sprite);
+            state.action(player, sprite);
 
             // Finish if we no longer have a state
             if (!sprite.state)
