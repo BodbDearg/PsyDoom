@@ -1101,6 +1101,6 @@ struct mobjinfo_t {
 static_assert(sizeof(mobjinfo_t) == 88);
 
 // The arrays of sprite names, state definitions and map object definitions
-extern const VmPtr<VmPtr<const char>[NUMSPRITES]>   gSprNames;
+extern const char*      gSprNames[NUMSPRITES];
 extern const VmPtr<state_t[NUMSTATES]>              gStates;
 extern const VmPtr<mobjinfo_t[NUMMOBJTYPES]>        gMObjInfo;
