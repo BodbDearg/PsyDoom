@@ -21,7 +21,7 @@ extern int32_t          gBlockmapWidth;
 extern int32_t          gBlockmapHeight;
 extern fixed_t          gBlockmapOriginX;
 extern fixed_t          gBlockmapOriginY;
-extern VmPtr<mobj_t>*   gppBlockLinks;
+extern mobj_t**         gppBlockLinks;
 extern int32_t          gNumVertexes;
 extern vertex_t*        gpVertexes;
 extern int32_t          gNumSectors;

@@ -390,8 +390,8 @@ static void PB_SetThingPosition(mobj_t& mobj) noexcept {
         
         if ((bmapX >= 0) && (bmapY >= 0) && (bmapX < gBlockmapWidth) && (bmapY < gBlockmapHeight)) {
             // In range: link the thing into the blockmap list for this blockmap cell
-            VmPtr<mobj_t>& blockmapList = gppBlockLinks[bmapX + bmapY * gBlockmapWidth];
-            mobj_t* const pPrevListHead = blockmapList.get();
+            mobj_t*& blockmapList = gppBlockLinks[bmapX + bmapY * gBlockmapWidth];
+            mobj_t* const pPrevListHead = blockmapList;
             
             mobj.bprev = nullptr;
             mobj.bnext = pPrevListHead;
@@ -677,7 +677,7 @@ static bool PB_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
 // Stops when a collision is detected and returns 'false', otherwise returns 'true' for no collision.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool PB_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
-    mobj_t* pmobj = gppBlockLinks[x + y * gBlockmapWidth].get();
+    mobj_t* pmobj = gppBlockLinks[x + y * gBlockmapWidth];
 
     while (pmobj) {
         if (!PB_CheckThing(*pmobj))

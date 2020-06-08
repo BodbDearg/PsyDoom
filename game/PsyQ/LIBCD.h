@@ -31,16 +31,12 @@ struct CdlLOC {
     }
 };
 
-static_assert(sizeof(CdlLOC) == 4);
-
 // Describes a file on a CD, including filename, location on disc and size
 struct CdlFILE {
     CdlLOC      pos;
     uint32_t    size;
     char        name[16];
 };
-
-static_assert(sizeof(CdlFILE) == 24);
 
 // Enum representing a command code issued to the CDROM
 enum CdlCmd : uint8_t {

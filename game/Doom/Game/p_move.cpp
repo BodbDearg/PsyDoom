@@ -229,9 +229,9 @@ static void PM_SetThingPosition(mobj_t& mobj) noexcept {
 
         // Make sure the thing is bounds for the blockmap: if not then just don't add it to the blockmap
         if ((blockX >= 0) && (blockY >= 0) && (blockX < gBlockmapWidth) && (blockY < gBlockmapHeight)) {
-            VmPtr<mobj_t>& blockList = gppBlockLinks[blockY * gBlockmapWidth + blockX];
+            mobj_t*& blockList = gppBlockLinks[blockY * gBlockmapWidth + blockX];
             mobj.bprev = nullptr;
-            mobj.bnext = blockList.get();
+            mobj.bnext = blockList;
 
             if (blockList) {
                 blockList->bprev = &mobj;
@@ -557,7 +557,7 @@ static bool PM_BlockLinesIterator(const int32_t x, const int32_t y) noexcept {
 // In some cases the thing collided with is saved in 'gpMoveThing' for futher interactions like pickups and damaging.
 //------------------------------------------------------------------------------------------------------------------------------------------
 static bool PM_BlockThingsIterator(const int32_t x, const int32_t y) noexcept {
-    for (mobj_t* pmobj = gppBlockLinks[x + y * gBlockmapWidth].get(); pmobj; pmobj = pmobj->bnext) {
+    for (mobj_t* pmobj = gppBlockLinks[x + y * gBlockmapWidth]; pmobj; pmobj = pmobj->bnext) {
         if (!PIT_CheckThing(*pmobj))
             return false;
     }

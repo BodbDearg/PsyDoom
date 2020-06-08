@@ -203,9 +203,9 @@ void P_SetThingPosition(mobj_t& mobj) noexcept {
 
         // Make sure the thing is bounds for the blockmap: if not then just don't add it to the blockmap
         if ((blockX >= 0) && (blockY >= 0) && (blockX < gBlockmapWidth) && (blockY < gBlockmapHeight)) {
-            VmPtr<mobj_t>& blockList = gppBlockLinks[blockY * gBlockmapWidth + blockX];
+            mobj_t*& blockList = gppBlockLinks[blockY * gBlockmapWidth + blockX];
             mobj.bprev = nullptr;
-            mobj.bnext = blockList.get();
+            mobj.bnext = blockList;
 
             if (blockList) {
                 blockList->bprev = &mobj;
@@ -265,7 +265,7 @@ bool P_BlockThingsIterator(const int32_t x, const int32_t y, bool (*pFunc)(mobj_
         return true;
     
     // Visit all of the things in this blockmap cell unless the callee asks to quit
-    mobj_t* pmobj = gppBlockLinks[x + y * gBlockmapWidth].get();
+    mobj_t* pmobj = gppBlockLinks[x + y * gBlockmapWidth];
     
     while (pmobj) {
         // Call the function and stop if requested

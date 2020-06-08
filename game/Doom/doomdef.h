@@ -1,7 +1,10 @@
 #pragma once
 
 #include "PcPsx/Types.h"
-#include "PsxVm/VmPtr.h"
+#include <cstdint>
+
+// FIXME: don't know why this header is needed here but if I exclude then the MSVC compiler goes ballistic
+#include <type_traits>
 
 struct mobj_t;
 struct mobjinfo_t;
@@ -306,8 +309,6 @@ struct weaponinfo_t {
     statenum_t  flashstate;
 };
 
-static_assert(sizeof(weaponinfo_t) == 24);
-
 // Descriptions for all of the weapons in the game
 extern const weaponinfo_t gWeaponInfo[NUMWEAPONS];
 
@@ -388,4 +389,3 @@ struct player_t {
     uint32_t        automapflags;                   // TODO: COMMENT
     int32_t         turnheld;                       // TODO: COMMENT
 };
-

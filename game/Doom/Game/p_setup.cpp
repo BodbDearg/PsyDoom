@@ -42,7 +42,7 @@ int32_t         gBlockmapWidth;
 int32_t         gBlockmapHeight;
 fixed_t         gBlockmapOriginX;
 fixed_t         gBlockmapOriginY;
-VmPtr<mobj_t>*  gppBlockLinks;
+mobj_t**        gppBlockLinks;
 int32_t         gNumVertexes;
 vertex_t*       gpVertexes;
 int32_t         gNumSectors;
@@ -526,7 +526,7 @@ static void P_LoadBlockMap(const int32_t lumpNum) noexcept {
     
     // Alloc and null initialize the list of map objects for each block
     const int32_t blockLinksSize = (int32_t) blockmapHeader.width * (int32_t) blockmapHeader.height * sizeof(gppBlockLinks[0]);
-    gppBlockLinks = (VmPtr<mobj_t>*) Z_Malloc(*gpMainMemZone, blockLinksSize, PU_LEVEL, nullptr);
+    gppBlockLinks = (mobj_t**) Z_Malloc(*gpMainMemZone, blockLinksSize, PU_LEVEL, nullptr);
     D_memset(gppBlockLinks, std::byte(0), blockLinksSize);
 }
 

@@ -9,6 +9,7 @@
 #include "i_main.h"
 #include "PsyQ/LIBETC.h"
 #include "PsyQ/LIBGPU.h"
+#include <cstdio>
 
 const fontchar_t gBigFontChars[NUM_BIG_FONT_CHARS] = {
     {   0, 195,  11,  16 }, // 0 - 0

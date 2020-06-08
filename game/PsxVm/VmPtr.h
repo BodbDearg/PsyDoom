@@ -3,19 +3,10 @@
 #include "PcPsx/Macros.h"
 
 #include <cstdint>
-#include <type_traits>
 
 namespace PsxVm {
     extern uint8_t* gpRam;
 }
-
-// Sanity check: there could be undefined behavior if std::uint8_t (Avovado's PSX ram unit) is not a 'char' type
-// and and therefore exempt from strict aliasing assumptions...
-static_assert(
-    std::is_same_v<char, std::uint8_t> ||
-    std::is_same_v<unsigned char, std::uint8_t>,
-    "For this class to work without strict aliasing violations, std::uint8_t should be a 'char' type!"
-);
 
 // Forward declare, so we don't have to include the header
 uint32_t ptrToVmAddr(const void* const ptr) noexcept;
