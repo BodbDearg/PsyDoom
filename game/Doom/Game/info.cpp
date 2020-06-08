@@ -42,7 +42,7 @@ state_t gStates[NUMSTATES] = {
     { SPR_PISG, 1, 3, A_FirePistol, S_PISTOL3, 0, 0 },    // S_PISTOL2
     { SPR_PISG, 2, 3, nullptr, S_PISTOL4, 0, 0 },    // S_PISTOL3
     { SPR_PISG, 1, 2, A_ReFire, S_PISTOL, 0, 0 },    // S_PISTOL4
-    { SPR_PISF, 32768, 3, A_Light1, S_LIGHTDONE, 0, 0 },    // S_PISTOLFLASH
+    { SPR_PISF, 0 | FF_FULLBRIGHT, 3, A_Light1, S_LIGHTDONE, 0, 0 },    // S_PISTOLFLASH
     { SPR_SHTG, 0, 1, A_WeaponReady, S_SGUN, 0, 0 },    // S_SGUN
     { SPR_SHTG, 0, 1, A_Lower, S_SGUNDOWN, 0, 0 },    // S_SGUNDOWN
     { SPR_SHTG, 0, 1, A_Raise, S_SGUNUP, 0, 0 },    // S_SGUNUP
@@ -55,8 +55,8 @@ state_t gStates[NUMSTATES] = {
     { SPR_SHTG, 1, 2, nullptr, S_SGUN8, 0, 0 },    // S_SGUN7
     { SPR_SHTG, 0, 2, nullptr, S_SGUN9, 0, 0 },    // S_SGUN8
     { SPR_SHTG, 0, 3, A_ReFire, S_SGUN, 0, 0 },    // S_SGUN9
-    { SPR_SHTF, 32768, 2, A_Light1, S_SGUNFLASH2, 0, 0 },    // S_SGUNFLASH1
-    { SPR_SHTF, 32769, 1, A_Light2, S_LIGHTDONE, 0, 0 },    // S_SGUNFLASH2
+    { SPR_SHTF, 0 | FF_FULLBRIGHT, 2, A_Light1, S_SGUNFLASH2, 0, 0 },    // S_SGUNFLASH1
+    { SPR_SHTF, 1 | FF_FULLBRIGHT, 1, A_Light2, S_LIGHTDONE, 0, 0 },    // S_SGUNFLASH2
     { SPR_SHT2, 0, 1, A_WeaponReady, S_DSGUN, 0, 0 },    // S_DSGUN
     { SPR_SHT2, 0, 1, A_Lower, S_DSGUNDOWN, 0, 0 },    // S_DSGUNDOWN
     { SPR_SHT2, 0, 1, A_Raise, S_DSGUNUP, 0, 0 },    // S_DSGUNUP
@@ -72,26 +72,26 @@ state_t gStates[NUMSTATES] = {
     { SPR_SHT2, 0, 2, A_ReFire, S_DSGUN, 0, 0 },    // S_DSGUN10
     { SPR_SHT2, 1, 3, nullptr, S_DSNR2, 0, 0 },    // S_DSNR1
     { SPR_SHT2, 0, 1, nullptr, S_DSGUNDOWN, 0, 0 },    // S_DSNR2
-    { SPR_SHT2, 32776, 2, A_Light1, S_DSGUNFLASH2, 0, 0 },    // S_DSGUNFLASH1
-    { SPR_SHT2, 32777, 2, A_Light2, S_LIGHTDONE, 0, 0 },    // S_DSGUNFLASH2
+    { SPR_SHT2, 8 | FF_FULLBRIGHT, 2, A_Light1, S_DSGUNFLASH2, 0, 0 },    // S_DSGUNFLASH1
+    { SPR_SHT2, 9 | FF_FULLBRIGHT, 2, A_Light2, S_LIGHTDONE, 0, 0 },    // S_DSGUNFLASH2
     { SPR_CHGG, 0, 1, A_WeaponReady, S_CHAIN, 0, 0 },    // S_CHAIN
     { SPR_CHGG, 0, 1, A_Lower, S_CHAINDOWN, 0, 0 },    // S_CHAINDOWN
     { SPR_CHGG, 0, 1, A_Raise, S_CHAINUP, 0, 0 },    // S_CHAINUP
     { SPR_CHGG, 0, 2, A_FireCGun, S_CHAIN2, 0, 0 },    // S_CHAIN1
     { SPR_CHGG, 1, 2, A_FireCGun, S_CHAIN3, 0, 0 },    // S_CHAIN2
     { SPR_CHGG, 1, 0, A_ReFire, S_CHAIN, 0, 0 },    // S_CHAIN3
-    { SPR_CHGF, 32768, 3, A_Light1, S_LIGHTDONE, 0, 0 },    // S_CHAINFLASH1
-    { SPR_CHGF, 32769, 2, A_Light2, S_LIGHTDONE, 0, 0 },    // S_CHAINFLASH2
+    { SPR_CHGF, 0 | FF_FULLBRIGHT, 3, A_Light1, S_LIGHTDONE, 0, 0 },    // S_CHAINFLASH1
+    { SPR_CHGF, 1 | FF_FULLBRIGHT, 2, A_Light2, S_LIGHTDONE, 0, 0 },    // S_CHAINFLASH2
     { SPR_MISG, 0, 1, A_WeaponReady, S_MISSILE, 0, 0 },    // S_MISSILE
     { SPR_MISG, 0, 1, A_Lower, S_MISSILEDOWN, 0, 0 },    // S_MISSILEDOWN
     { SPR_MISG, 0, 1, A_Raise, S_MISSILEUP, 0, 0 },    // S_MISSILEUP
     { SPR_MISG, 1, 4, A_GunFlash, S_MISSILE2, 0, 0 },    // S_MISSILE1
     { SPR_MISG, 1, 6, A_FireMissile, S_MISSILE3, 0, 0 },    // S_MISSILE2
     { SPR_MISG, 1, 0, A_ReFire, S_MISSILE, 0, 0 },    // S_MISSILE3
-    { SPR_MISF, 32768, 2, A_Light1, S_MISSILEFLASH2, 0, 0 },    // S_MISSILEFLASH1
-    { SPR_MISF, 32769, 2, nullptr, S_MISSILEFLASH3, 0, 0 },    // S_MISSILEFLASH2
-    { SPR_MISF, 32770, 2, A_Light2, S_MISSILEFLASH4, 0, 0 },    // S_MISSILEFLASH3
-    { SPR_MISF, 32771, 2, A_Light2, S_LIGHTDONE, 0, 0 },    // S_MISSILEFLASH4
+    { SPR_MISF, 0 | FF_FULLBRIGHT, 2, A_Light1, S_MISSILEFLASH2, 0, 0 },    // S_MISSILEFLASH1
+    { SPR_MISF, 1 | FF_FULLBRIGHT, 2, nullptr, S_MISSILEFLASH3, 0, 0 },    // S_MISSILEFLASH2
+    { SPR_MISF, 2 | FF_FULLBRIGHT, 2, A_Light2, S_MISSILEFLASH4, 0, 0 },    // S_MISSILEFLASH3
+    { SPR_MISF, 3 | FF_FULLBRIGHT, 2, A_Light2, S_LIGHTDONE, 0, 0 },    // S_MISSILEFLASH4
     { SPR_SAWG, 2, 2, A_WeaponReady, S_SAWB, 0, 0 },    // S_SAW
     { SPR_SAWG, 3, 2, A_WeaponReady, S_SAW, 0, 0 },    // S_SAWB
     { SPR_SAWG, 2, 1, A_Lower, S_SAWDOWN, 0, 0 },    // S_SAWDOWN
@@ -104,8 +104,8 @@ state_t gStates[NUMSTATES] = {
     { SPR_PLSG, 0, 1, A_Raise, S_PLASMAUP, 0, 0 },    // S_PLASMAUP
     { SPR_PLSG, 0, 2, A_FirePlasma, S_PLASMA2, 0, 0 },    // S_PLASMA1
     { SPR_PLSG, 1, 10, A_ReFire, S_PLASMA, 0, 0 },    // S_PLASMA2
-    { SPR_PLSF, 32768, 2, A_Light1, S_LIGHTDONE, 0, 0 },    // S_PLASMAFLASH1
-    { SPR_PLSF, 32769, 2, A_Light1, S_LIGHTDONE, 0, 0 },    // S_PLASMAFLASH2
+    { SPR_PLSF, 0 | FF_FULLBRIGHT, 2, A_Light1, S_LIGHTDONE, 0, 0 },    // S_PLASMAFLASH1
+    { SPR_PLSF, 1 | FF_FULLBRIGHT, 2, A_Light1, S_LIGHTDONE, 0, 0 },    // S_PLASMAFLASH2
     { SPR_BFGG, 0, 1, A_WeaponReady, S_BFG, 0, 0 },    // S_BFG
     { SPR_BFGG, 0, 1, A_Lower, S_BFGDOWN, 0, 0 },    // S_BFGDOWN
     { SPR_BFGG, 0, 1, A_Raise, S_BFGUP, 0, 0 },    // S_BFGUP
@@ -113,79 +113,79 @@ state_t gStates[NUMSTATES] = {
     { SPR_BFGG, 1, 5, A_GunFlash, S_BFG3, 0, 0 },    // S_BFG2
     { SPR_BFGG, 1, 5, A_FireBFG, S_BFG4, 0, 0 },    // S_BFG3
     { SPR_BFGG, 1, 10, A_ReFire, S_BFG, 0, 0 },    // S_BFG4
-    { SPR_BFGF, 32768, 5, A_Light1, S_BFGFLASH2, 0, 0 },    // S_BFGFLASH1
-    { SPR_BFGF, 32769, 3, A_Light2, S_LIGHTDONE, 0, 0 },    // S_BFGFLASH2
+    { SPR_BFGF, 0 | FF_FULLBRIGHT, 5, A_Light1, S_BFGFLASH2, 0, 0 },    // S_BFGFLASH1
+    { SPR_BFGF, 1 | FF_FULLBRIGHT, 3, A_Light2, S_LIGHTDONE, 0, 0 },    // S_BFGFLASH2
     { SPR_BLUD, 2, 4, nullptr, S_BLOOD2, 0, 0 },    // S_BLOOD1
     { SPR_BLUD, 1, 4, nullptr, S_BLOOD3, 0, 0 },    // S_BLOOD2
     { SPR_BLUD, 0, 4, nullptr, S_NULL, 0, 0 },    // S_BLOOD3
-    { SPR_PUFF, 32768, 2, nullptr, S_PUFF2, 0, 0 },    // S_PUFF1
+    { SPR_PUFF, 0 | FF_FULLBRIGHT, 2, nullptr, S_PUFF2, 0, 0 },    // S_PUFF1
     { SPR_PUFF, 1, 2, nullptr, S_PUFF3, 0, 0 },    // S_PUFF2
     { SPR_PUFF, 2, 2, nullptr, S_PUFF4, 0, 0 },    // S_PUFF3
     { SPR_PUFF, 3, 2, nullptr, S_NULL, 0, 0 },    // S_PUFF4
-    { SPR_BAL1, 32768, 2, nullptr, S_TBALL2, 0, 0 },    // S_TBALL1
-    { SPR_BAL1, 32769, 2, nullptr, S_TBALL1, 0, 0 },    // S_TBALL2
-    { SPR_BAL1, 32770, 3, nullptr, S_TBALLX2, 0, 0 },    // S_TBALLX1
-    { SPR_BAL1, 32771, 3, nullptr, S_TBALLX3, 0, 0 },    // S_TBALLX2
-    { SPR_BAL1, 32772, 3, nullptr, S_NULL, 0, 0 },    // S_TBALLX3
-    { SPR_BAL2, 32768, 2, nullptr, S_RBALL2, 0, 0 },    // S_RBALL1
-    { SPR_BAL2, 32769, 2, nullptr, S_RBALL1, 0, 0 },    // S_RBALL2
-    { SPR_BAL2, 32770, 3, nullptr, S_RBALLX2, 0, 0 },    // S_RBALLX1
-    { SPR_BAL2, 32771, 3, nullptr, S_RBALLX3, 0, 0 },    // S_RBALLX2
-    { SPR_BAL2, 32772, 3, nullptr, S_NULL, 0, 0 },    // S_RBALLX3
-    { SPR_BAL7, 32768, 2, nullptr, S_BRBALL2, 0, 0 },    // S_BRBALL1
-    { SPR_BAL7, 32769, 2, nullptr, S_BRBALL1, 0, 0 },    // S_BRBALL2
-    { SPR_BAL7, 32770, 3, nullptr, S_BRBALLX2, 0, 0 },    // S_BRBALLX1
-    { SPR_BAL7, 32771, 3, nullptr, S_BRBALLX3, 0, 0 },    // S_BRBALLX2
-    { SPR_BAL7, 32772, 3, nullptr, S_NULL, 0, 0 },    // S_BRBALLX3
-    { SPR_PLSS, 32768, 3, nullptr, S_PLASBALL2, 0, 0 },    // S_PLASBALL
-    { SPR_PLSS, 32769, 3, nullptr, S_PLASBALL, 0, 0 },    // S_PLASBALL2
-    { SPR_PLSE, 32768, 2, nullptr, S_PLASEXP2, 0, 0 },    // S_PLASEXP
-    { SPR_PLSE, 32769, 2, nullptr, S_PLASEXP3, 0, 0 },    // S_PLASEXP2
-    { SPR_PLSE, 32770, 2, nullptr, S_PLASEXP4, 0, 0 },    // S_PLASEXP3
-    { SPR_PLSE, 32771, 2, nullptr, S_PLASEXP5, 0, 0 },    // S_PLASEXP4
-    { SPR_PLSE, 32772, 2, nullptr, S_NULL, 0, 0 },    // S_PLASEXP5
-    { SPR_MISL, 32768, 1, nullptr, S_ROCKET, 0, 0 },    // S_ROCKET
-    { SPR_BFS1, 32768, 2, nullptr, S_BFGSHOT2, 0, 0 },    // S_BFGSHOT
-    { SPR_BFS1, 32769, 2, nullptr, S_BFGSHOT, 0, 0 },    // S_BFGSHOT2
-    { SPR_BFE1, 32768, 4, nullptr, S_BFGLAND2, 0, 0 },    // S_BFGLAND
-    { SPR_BFE1, 32769, 4, nullptr, S_BFGLAND3, 0, 0 },    // S_BFGLAND2
-    { SPR_BFE1, 32770, 4, A_BFGSpray, S_BFGLAND4, 0, 0 },    // S_BFGLAND3
-    { SPR_BFE1, 32771, 4, nullptr, S_BFGLAND5, 0, 0 },    // S_BFGLAND4
-    { SPR_BFE1, 32772, 4, nullptr, S_BFGLAND6, 0, 0 },    // S_BFGLAND5
-    { SPR_BFE1, 32773, 4, nullptr, S_NULL, 0, 0 },    // S_BFGLAND6
-    { SPR_BFE2, 32768, 4, nullptr, S_BFGEXP2, 0, 0 },    // S_BFGEXP
-    { SPR_BFE2, 32769, 4, nullptr, S_BFGEXP3, 0, 0 },    // S_BFGEXP2
-    { SPR_BFE2, 32770, 4, nullptr, S_BFGEXP4, 0, 0 },    // S_BFGEXP3
-    { SPR_BFE2, 32771, 4, nullptr, S_NULL, 0, 0 },    // S_BFGEXP4
-    { SPR_MISL, 32769, 4, A_Explode, S_EXPLODE2, 0, 0 },    // S_EXPLODE1
-    { SPR_MISL, 32770, 3, nullptr, S_EXPLODE3, 0, 0 },    // S_EXPLODE2
-    { SPR_MISL, 32771, 2, nullptr, S_NULL, 0, 0 },    // S_EXPLODE3
-    { SPR_TFOG, 32768, 3, nullptr, S_TFOG01, 0, 0 },    // S_TFOG
-    { SPR_TFOG, 32769, 3, nullptr, S_TFOG02, 0, 0 },    // S_TFOG01
-    { SPR_TFOG, 32768, 3, nullptr, S_TFOG2, 0, 0 },    // S_TFOG02
-    { SPR_TFOG, 32769, 3, nullptr, S_TFOG3, 0, 0 },    // S_TFOG2
-    { SPR_TFOG, 32770, 3, nullptr, S_TFOG4, 0, 0 },    // S_TFOG3
-    { SPR_TFOG, 32771, 3, nullptr, S_TFOG5, 0, 0 },    // S_TFOG4
-    { SPR_TFOG, 32772, 3, nullptr, S_TFOG6, 0, 0 },    // S_TFOG5
-    { SPR_TFOG, 32773, 3, nullptr, S_TFOG7, 0, 0 },    // S_TFOG6
-    { SPR_TFOG, 32774, 3, nullptr, S_TFOG8, 0, 0 },    // S_TFOG7
-    { SPR_TFOG, 32775, 3, nullptr, S_TFOG9, 0, 0 },    // S_TFOG8
-    { SPR_TFOG, 32776, 3, nullptr, S_TFOG10, 0, 0 },    // S_TFOG9
-    { SPR_TFOG, 32777, 3, nullptr, S_NULL, 0, 0 },    // S_TFOG10
-    { SPR_IFOG, 32768, 3, nullptr, S_IFOG01, 0, 0 },    // S_IFOG
-    { SPR_IFOG, 32769, 3, nullptr, S_IFOG02, 0, 0 },    // S_IFOG01
-    { SPR_IFOG, 32768, 3, nullptr, S_IFOG2, 0, 0 },    // S_IFOG02
-    { SPR_IFOG, 32769, 3, nullptr, S_IFOG3, 0, 0 },    // S_IFOG2
-    { SPR_IFOG, 32770, 3, nullptr, S_IFOG4, 0, 0 },    // S_IFOG3
-    { SPR_IFOG, 32771, 3, nullptr, S_IFOG5, 0, 0 },    // S_IFOG4
-    { SPR_IFOG, 32772, 3, nullptr, S_NULL, 0, 0 },    // S_IFOG5
+    { SPR_BAL1, 0 | FF_FULLBRIGHT, 2, nullptr, S_TBALL2, 0, 0 },    // S_TBALL1
+    { SPR_BAL1, 1 | FF_FULLBRIGHT, 2, nullptr, S_TBALL1, 0, 0 },    // S_TBALL2
+    { SPR_BAL1, 2 | FF_FULLBRIGHT, 3, nullptr, S_TBALLX2, 0, 0 },    // S_TBALLX1
+    { SPR_BAL1, 3 | FF_FULLBRIGHT, 3, nullptr, S_TBALLX3, 0, 0 },    // S_TBALLX2
+    { SPR_BAL1, 4 | FF_FULLBRIGHT, 3, nullptr, S_NULL, 0, 0 },    // S_TBALLX3
+    { SPR_BAL2, 0 | FF_FULLBRIGHT, 2, nullptr, S_RBALL2, 0, 0 },    // S_RBALL1
+    { SPR_BAL2, 1 | FF_FULLBRIGHT, 2, nullptr, S_RBALL1, 0, 0 },    // S_RBALL2
+    { SPR_BAL2, 2 | FF_FULLBRIGHT, 3, nullptr, S_RBALLX2, 0, 0 },    // S_RBALLX1
+    { SPR_BAL2, 3 | FF_FULLBRIGHT, 3, nullptr, S_RBALLX3, 0, 0 },    // S_RBALLX2
+    { SPR_BAL2, 4 | FF_FULLBRIGHT, 3, nullptr, S_NULL, 0, 0 },    // S_RBALLX3
+    { SPR_BAL7, 0 | FF_FULLBRIGHT, 2, nullptr, S_BRBALL2, 0, 0 },    // S_BRBALL1
+    { SPR_BAL7, 1 | FF_FULLBRIGHT, 2, nullptr, S_BRBALL1, 0, 0 },    // S_BRBALL2
+    { SPR_BAL7, 2 | FF_FULLBRIGHT, 3, nullptr, S_BRBALLX2, 0, 0 },    // S_BRBALLX1
+    { SPR_BAL7, 3 | FF_FULLBRIGHT, 3, nullptr, S_BRBALLX3, 0, 0 },    // S_BRBALLX2
+    { SPR_BAL7, 4 | FF_FULLBRIGHT, 3, nullptr, S_NULL, 0, 0 },    // S_BRBALLX3
+    { SPR_PLSS, 0 | FF_FULLBRIGHT, 3, nullptr, S_PLASBALL2, 0, 0 },    // S_PLASBALL
+    { SPR_PLSS, 1 | FF_FULLBRIGHT, 3, nullptr, S_PLASBALL, 0, 0 },    // S_PLASBALL2
+    { SPR_PLSE, 0 | FF_FULLBRIGHT, 2, nullptr, S_PLASEXP2, 0, 0 },    // S_PLASEXP
+    { SPR_PLSE, 1 | FF_FULLBRIGHT, 2, nullptr, S_PLASEXP3, 0, 0 },    // S_PLASEXP2
+    { SPR_PLSE, 2 | FF_FULLBRIGHT, 2, nullptr, S_PLASEXP4, 0, 0 },    // S_PLASEXP3
+    { SPR_PLSE, 3 | FF_FULLBRIGHT, 2, nullptr, S_PLASEXP5, 0, 0 },    // S_PLASEXP4
+    { SPR_PLSE, 4 | FF_FULLBRIGHT, 2, nullptr, S_NULL, 0, 0 },    // S_PLASEXP5
+    { SPR_MISL, 0 | FF_FULLBRIGHT, 1, nullptr, S_ROCKET, 0, 0 },    // S_ROCKET
+    { SPR_BFS1, 0 | FF_FULLBRIGHT, 2, nullptr, S_BFGSHOT2, 0, 0 },    // S_BFGSHOT
+    { SPR_BFS1, 1 | FF_FULLBRIGHT, 2, nullptr, S_BFGSHOT, 0, 0 },    // S_BFGSHOT2
+    { SPR_BFE1, 0 | FF_FULLBRIGHT, 4, nullptr, S_BFGLAND2, 0, 0 },    // S_BFGLAND
+    { SPR_BFE1, 1 | FF_FULLBRIGHT, 4, nullptr, S_BFGLAND3, 0, 0 },    // S_BFGLAND2
+    { SPR_BFE1, 2 | FF_FULLBRIGHT, 4, A_BFGSpray, S_BFGLAND4, 0, 0 },    // S_BFGLAND3
+    { SPR_BFE1, 3 | FF_FULLBRIGHT, 4, nullptr, S_BFGLAND5, 0, 0 },    // S_BFGLAND4
+    { SPR_BFE1, 4 | FF_FULLBRIGHT, 4, nullptr, S_BFGLAND6, 0, 0 },    // S_BFGLAND5
+    { SPR_BFE1, 5 | FF_FULLBRIGHT, 4, nullptr, S_NULL, 0, 0 },    // S_BFGLAND6
+    { SPR_BFE2, 0 | FF_FULLBRIGHT, 4, nullptr, S_BFGEXP2, 0, 0 },    // S_BFGEXP
+    { SPR_BFE2, 1 | FF_FULLBRIGHT, 4, nullptr, S_BFGEXP3, 0, 0 },    // S_BFGEXP2
+    { SPR_BFE2, 2 | FF_FULLBRIGHT, 4, nullptr, S_BFGEXP4, 0, 0 },    // S_BFGEXP3
+    { SPR_BFE2, 3 | FF_FULLBRIGHT, 4, nullptr, S_NULL, 0, 0 },    // S_BFGEXP4
+    { SPR_MISL, 1 | FF_FULLBRIGHT, 4, A_Explode, S_EXPLODE2, 0, 0 },    // S_EXPLODE1
+    { SPR_MISL, 2 | FF_FULLBRIGHT, 3, nullptr, S_EXPLODE3, 0, 0 },    // S_EXPLODE2
+    { SPR_MISL, 3 | FF_FULLBRIGHT, 2, nullptr, S_NULL, 0, 0 },    // S_EXPLODE3
+    { SPR_TFOG, 0 | FF_FULLBRIGHT, 3, nullptr, S_TFOG01, 0, 0 },    // S_TFOG
+    { SPR_TFOG, 1 | FF_FULLBRIGHT, 3, nullptr, S_TFOG02, 0, 0 },    // S_TFOG01
+    { SPR_TFOG, 0 | FF_FULLBRIGHT, 3, nullptr, S_TFOG2, 0, 0 },    // S_TFOG02
+    { SPR_TFOG, 1 | FF_FULLBRIGHT, 3, nullptr, S_TFOG3, 0, 0 },    // S_TFOG2
+    { SPR_TFOG, 2 | FF_FULLBRIGHT, 3, nullptr, S_TFOG4, 0, 0 },    // S_TFOG3
+    { SPR_TFOG, 3 | FF_FULLBRIGHT, 3, nullptr, S_TFOG5, 0, 0 },    // S_TFOG4
+    { SPR_TFOG, 4 | FF_FULLBRIGHT, 3, nullptr, S_TFOG6, 0, 0 },    // S_TFOG5
+    { SPR_TFOG, 5 | FF_FULLBRIGHT, 3, nullptr, S_TFOG7, 0, 0 },    // S_TFOG6
+    { SPR_TFOG, 6 | FF_FULLBRIGHT, 3, nullptr, S_TFOG8, 0, 0 },    // S_TFOG7
+    { SPR_TFOG, 7 | FF_FULLBRIGHT, 3, nullptr, S_TFOG9, 0, 0 },    // S_TFOG8
+    { SPR_TFOG, 8 | FF_FULLBRIGHT, 3, nullptr, S_TFOG10, 0, 0 },    // S_TFOG9
+    { SPR_TFOG, 9 | FF_FULLBRIGHT, 3, nullptr, S_NULL, 0, 0 },    // S_TFOG10
+    { SPR_IFOG, 0 | FF_FULLBRIGHT, 3, nullptr, S_IFOG01, 0, 0 },    // S_IFOG
+    { SPR_IFOG, 1 | FF_FULLBRIGHT, 3, nullptr, S_IFOG02, 0, 0 },    // S_IFOG01
+    { SPR_IFOG, 0 | FF_FULLBRIGHT, 3, nullptr, S_IFOG2, 0, 0 },    // S_IFOG02
+    { SPR_IFOG, 1 | FF_FULLBRIGHT, 3, nullptr, S_IFOG3, 0, 0 },    // S_IFOG2
+    { SPR_IFOG, 2 | FF_FULLBRIGHT, 3, nullptr, S_IFOG4, 0, 0 },    // S_IFOG3
+    { SPR_IFOG, 3 | FF_FULLBRIGHT, 3, nullptr, S_IFOG5, 0, 0 },    // S_IFOG4
+    { SPR_IFOG, 4 | FF_FULLBRIGHT, 3, nullptr, S_NULL, 0, 0 },    // S_IFOG5
     { SPR_PLAY, 0, -1, nullptr, S_NULL, 0, 0 },    // S_PLAY
     { SPR_PLAY, 0, 2, nullptr, S_PLAY_RUN2, 0, 0 },    // S_PLAY_RUN1
     { SPR_PLAY, 1, 2, nullptr, S_PLAY_RUN3, 0, 0 },    // S_PLAY_RUN2
     { SPR_PLAY, 2, 2, nullptr, S_PLAY_RUN4, 0, 0 },    // S_PLAY_RUN3
     { SPR_PLAY, 3, 2, nullptr, S_PLAY_RUN1, 0, 0 },    // S_PLAY_RUN4
     { SPR_PLAY, 4, 2, nullptr, S_PLAY_ATK2, 0, 0 },    // S_PLAY_ATK1
-    { SPR_PLAY, 32773, 4, nullptr, S_PLAY, 0, 0 },    // S_PLAY_ATK2
+    { SPR_PLAY, 5 | FF_FULLBRIGHT, 4, nullptr, S_PLAY, 0, 0 },    // S_PLAY_ATK2
     { SPR_PLAY, 6, 2, nullptr, S_PLAY_PAIN2, 0, 0 },    // S_PLAY_PAIN
     { SPR_PLAY, 6, 2, A_Pain, S_PLAY, 0, 0 },    // S_PLAY_PAIN2
     { SPR_PLAY, 7, 5, nullptr, S_PLAY_DIE2, 0, 0 },    // S_PLAY_DIE1
@@ -244,7 +244,7 @@ state_t gStates[NUMSTATES] = {
     { SPR_SPOS, 3, 1, A_Chase, S_SPOS_RUN8, 0, 0 },    // S_SPOS_RUN7
     { SPR_SPOS, 3, 2, A_Chase, S_SPOS_RUN1, 0, 0 },    // S_SPOS_RUN8
     { SPR_SPOS, 4, 5, A_FaceTarget, S_SPOS_ATK2, 0, 0 },    // S_SPOS_ATK1
-    { SPR_SPOS, 32773, 5, A_SPosAttack, S_SPOS_ATK3, 0, 0 },    // S_SPOS_ATK2
+    { SPR_SPOS, 5 | FF_FULLBRIGHT, 5, A_SPosAttack, S_SPOS_ATK3, 0, 0 },    // S_SPOS_ATK2
     { SPR_SPOS, 4, 5, nullptr, S_SPOS_RUN1, 0, 0 },    // S_SPOS_ATK3
     { SPR_SPOS, 6, 1, nullptr, S_SPOS_PAIN2, 0, 0 },    // S_SPOS_PAIN
     { SPR_SPOS, 6, 2, A_Pain, S_SPOS_RUN1, 0, 0 },    // S_SPOS_PAIN2
@@ -267,11 +267,11 @@ state_t gStates[NUMSTATES] = {
     { SPR_PUFF, 1, 2, nullptr, S_SMOKE4, 0, 0 },    // S_SMOKE3
     { SPR_PUFF, 2, 2, nullptr, S_SMOKE5, 0, 0 },    // S_SMOKE4
     { SPR_PUFF, 3, 2, nullptr, S_NULL, 0, 0 },    // S_SMOKE5
-    { SPR_FATB, 32768, 1, A_Tracer, S_TRACER2, 0, 0 },    // S_TRACER
-    { SPR_FATB, 32769, 1, A_Tracer, S_TRACER, 0, 0 },    // S_TRACER2
-    { SPR_FBXP, 32768, 4, nullptr, S_TRACEEXP2, 0, 0 },    // S_TRACEEXP1
-    { SPR_FBXP, 32769, 3, nullptr, S_TRACEEXP3, 0, 0 },    // S_TRACEEXP2
-    { SPR_FBXP, 32770, 2, nullptr, S_NULL, 0, 0 },    // S_TRACEEXP3
+    { SPR_FATB, 0 | FF_FULLBRIGHT, 1, A_Tracer, S_TRACER2, 0, 0 },    // S_TRACER
+    { SPR_FATB, 1 | FF_FULLBRIGHT, 1, A_Tracer, S_TRACER, 0, 0 },    // S_TRACER2
+    { SPR_FBXP, 0 | FF_FULLBRIGHT, 4, nullptr, S_TRACEEXP2, 0, 0 },    // S_TRACEEXP1
+    { SPR_FBXP, 1 | FF_FULLBRIGHT, 3, nullptr, S_TRACEEXP3, 0, 0 },    // S_TRACEEXP2
+    { SPR_FBXP, 2 | FF_FULLBRIGHT, 2, nullptr, S_NULL, 0, 0 },    // S_TRACEEXP3
     { SPR_SKEL, 0, 5, A_Look, S_SKEL_STND2, 0, 0 },    // S_SKEL_STND
     { SPR_SKEL, 1, 5, A_Look, S_SKEL_STND, 0, 0 },    // S_SKEL_STND2
     { SPR_SKEL, 0, 2, A_Chase, S_SKEL_RUN2, 0, 0 },    // S_SKEL_RUN1
@@ -290,8 +290,8 @@ state_t gStates[NUMSTATES] = {
     { SPR_SKEL, 6, 3, A_SkelWhoosh, S_SKEL_FIST3, 0, 0 },    // S_SKEL_FIST2
     { SPR_SKEL, 7, 3, A_FaceTarget, S_SKEL_FIST4, 0, 0 },    // S_SKEL_FIST3
     { SPR_SKEL, 8, 3, A_SkelFist, S_SKEL_RUN1, 0, 0 },    // S_SKEL_FIST4
-    { SPR_SKEL, 32777, 0, A_FaceTarget, S_SKEL_MISS2, 0, 0 },    // S_SKEL_MISS1
-    { SPR_SKEL, 32777, 5, A_FaceTarget, S_SKEL_MISS3, 0, 0 },    // S_SKEL_MISS2
+    { SPR_SKEL, 9 | FF_FULLBRIGHT, 0, A_FaceTarget, S_SKEL_MISS2, 0, 0 },    // S_SKEL_MISS1
+    { SPR_SKEL, 9 | FF_FULLBRIGHT, 5, A_FaceTarget, S_SKEL_MISS3, 0, 0 },    // S_SKEL_MISS2
     { SPR_SKEL, 10, 5, A_SkelMissile, S_SKEL_MISS4, 0, 0 },    // S_SKEL_MISS3
     { SPR_SKEL, 10, 5, A_FaceTarget, S_SKEL_RUN1, 0, 0 },    // S_SKEL_MISS4
     { SPR_SKEL, 11, 2, nullptr, S_SKEL_PAIN2, 0, 0 },    // S_SKEL_PAIN
@@ -302,11 +302,11 @@ state_t gStates[NUMSTATES] = {
     { SPR_SKEL, 14, 3, A_Fall, S_SKEL_DIE5, 0, 0 },    // S_SKEL_DIE4
     { SPR_SKEL, 15, 3, nullptr, S_SKEL_DIE6, 0, 0 },    // S_SKEL_DIE5
     { SPR_SKEL, 16, -1, nullptr, S_NULL, 0, 0 },    // S_SKEL_DIE6
-    { SPR_MANF, 32768, 2, nullptr, S_FATSHOT2, 0, 0 },    // S_FATSHOT1
-    { SPR_MANF, 32769, 2, nullptr, S_FATSHOT1, 0, 0 },    // S_FATSHOT2
-    { SPR_MISL, 32769, 4, nullptr, S_FATSHOTX2, 0, 0 },    // S_FATSHOTX1
-    { SPR_MISL, 32770, 3, nullptr, S_FATSHOTX3, 0, 0 },    // S_FATSHOTX2
-    { SPR_MISL, 32771, 2, nullptr, S_NULL, 0, 0 },    // S_FATSHOTX3
+    { SPR_MANF, 0 | FF_FULLBRIGHT, 2, nullptr, S_FATSHOT2, 0, 0 },    // S_FATSHOT1
+    { SPR_MANF, 1 | FF_FULLBRIGHT, 2, nullptr, S_FATSHOT1, 0, 0 },    // S_FATSHOT2
+    { SPR_MISL, 1 | FF_FULLBRIGHT, 4, nullptr, S_FATSHOTX2, 0, 0 },    // S_FATSHOTX1
+    { SPR_MISL, 2 | FF_FULLBRIGHT, 3, nullptr, S_FATSHOTX3, 0, 0 },    // S_FATSHOTX2
+    { SPR_MISL, 3 | FF_FULLBRIGHT, 2, nullptr, S_NULL, 0, 0 },    // S_FATSHOTX3
     { SPR_FATT, 0, 7, A_Look, S_FATT_STND2, 0, 0 },    // S_FATT_STND
     { SPR_FATT, 1, 7, A_Look, S_FATT_STND, 0, 0 },    // S_FATT_STND2
     { SPR_FATT, 0, 2, A_Chase, S_FATT_RUN2, 0, 0 },    // S_FATT_RUN1
@@ -322,13 +322,13 @@ state_t gStates[NUMSTATES] = {
     { SPR_FATT, 5, 2, A_Chase, S_FATT_RUN12, 0, 0 },    // S_FATT_RUN11
     { SPR_FATT, 5, 2, A_Chase, S_FATT_RUN1, 0, 0 },    // S_FATT_RUN12
     { SPR_FATT, 6, 10, A_FatRaise, S_FATT_ATK2, 0, 0 },    // S_FATT_ATK1
-    { SPR_FATT, 32775, 5, A_FatAttack1, S_FATT_ATK3, 0, 0 },    // S_FATT_ATK2
+    { SPR_FATT, 7 | FF_FULLBRIGHT, 5, A_FatAttack1, S_FATT_ATK3, 0, 0 },    // S_FATT_ATK2
     { SPR_FATT, 8, 2, A_FaceTarget, S_FATT_ATK4, 0, 0 },    // S_FATT_ATK3
     { SPR_FATT, 6, 2, A_FaceTarget, S_FATT_ATK5, 0, 0 },    // S_FATT_ATK4
-    { SPR_FATT, 32775, 5, A_FatAttack2, S_FATT_ATK6, 0, 0 },    // S_FATT_ATK5
+    { SPR_FATT, 7 | FF_FULLBRIGHT, 5, A_FatAttack2, S_FATT_ATK6, 0, 0 },    // S_FATT_ATK5
     { SPR_FATT, 8, 2, A_FaceTarget, S_FATT_ATK7, 0, 0 },    // S_FATT_ATK6
     { SPR_FATT, 6, 2, A_FaceTarget, S_FATT_ATK8, 0, 0 },    // S_FATT_ATK7
-    { SPR_FATT, 32775, 5, A_FatAttack3, S_FATT_ATK9, 0, 0 },    // S_FATT_ATK8
+    { SPR_FATT, 7 | FF_FULLBRIGHT, 5, A_FatAttack3, S_FATT_ATK9, 0, 0 },    // S_FATT_ATK8
     { SPR_FATT, 8, 2, A_FaceTarget, S_FATT_ATK10, 0, 0 },    // S_FATT_ATK9
     { SPR_FATT, 6, 2, A_FaceTarget, S_FATT_RUN1, 0, 0 },    // S_FATT_ATK10
     { SPR_FATT, 9, 1, nullptr, S_FATT_PAIN2, 0, 0 },    // S_FATT_PAIN
@@ -354,8 +354,8 @@ state_t gStates[NUMSTATES] = {
     { SPR_CPOS, 3, 2, A_Chase, S_CPOS_RUN8, 0, 0 },    // S_CPOS_RUN7
     { SPR_CPOS, 3, 2, A_Chase, S_CPOS_RUN1, 0, 0 },    // S_CPOS_RUN8
     { SPR_CPOS, 4, 5, A_FaceTarget, S_CPOS_ATK2, 0, 0 },    // S_CPOS_ATK1
-    { SPR_CPOS, 32773, 2, A_CPosAttack, S_CPOS_ATK3, 0, 0 },    // S_CPOS_ATK2
-    { SPR_CPOS, 32772, 2, A_CPosAttack, S_CPOS_ATK4, 0, 0 },    // S_CPOS_ATK3
+    { SPR_CPOS, 5 | FF_FULLBRIGHT, 2, A_CPosAttack, S_CPOS_ATK3, 0, 0 },    // S_CPOS_ATK2
+    { SPR_CPOS, 4 | FF_FULLBRIGHT, 2, A_CPosAttack, S_CPOS_ATK4, 0, 0 },    // S_CPOS_ATK3
     { SPR_CPOS, 5, 0, A_CPosRefire, S_CPOS_ATK2, 0, 0 },    // S_CPOS_ATK4
     { SPR_CPOS, 6, 1, nullptr, S_CPOS_PAIN2, 0, 0 },    // S_CPOS_PAIN
     { SPR_CPOS, 6, 1, A_Pain, S_CPOS_RUN1, 0, 0 },    // S_CPOS_PAIN2
@@ -425,7 +425,7 @@ state_t gStates[NUMSTATES] = {
     { SPR_HEAD, 0, 2, A_Chase, S_HEAD_RUN1, 0, 0 },    // S_HEAD_RUN1
     { SPR_HEAD, 1, 3, A_FaceTarget, S_HEAD_ATK2, 0, 0 },    // S_HEAD_ATK1
     { SPR_HEAD, 2, 3, A_FaceTarget, S_HEAD_ATK3, 0, 0 },    // S_HEAD_ATK2
-    { SPR_HEAD, 32771, 3, A_HeadAttack, S_HEAD_RUN1, 0, 0 },    // S_HEAD_ATK3
+    { SPR_HEAD, 3 | FF_FULLBRIGHT, 3, A_HeadAttack, S_HEAD_RUN1, 0, 0 },    // S_HEAD_ATK3
     { SPR_HEAD, 4, 1, nullptr, S_HEAD_PAIN2, 0, 0 },    // S_HEAD_PAIN
     { SPR_HEAD, 4, 2, A_Pain, S_HEAD_PAIN3, 0, 0 },    // S_HEAD_PAIN2
     { SPR_HEAD, 5, 3, nullptr, S_HEAD_RUN1, 0, 0 },    // S_HEAD_PAIN3
@@ -479,20 +479,20 @@ state_t gStates[NUMSTATES] = {
     { SPR_BOS2, 12, 4, nullptr, S_BOS2_DIE6, 0, 0 },    // S_BOS2_DIE5
     { SPR_BOS2, 13, 4, nullptr, S_BOS2_DIE7, 0, 0 },    // S_BOS2_DIE6
     { SPR_BOS2, 14, -1, A_BossDeath, S_NULL, 0, 0 },    // S_BOS2_DIE7
-    { SPR_SKUL, 32768, 5, A_Look, S_SKULL_STND2, 0, 0 },    // S_SKULL_STND
-    { SPR_SKUL, 32769, 5, A_Look, S_SKULL_STND, 0, 0 },    // S_SKULL_STND2
-    { SPR_SKUL, 32768, 3, A_Chase, S_SKULL_RUN2, 0, 0 },    // S_SKULL_RUN1
-    { SPR_SKUL, 32769, 3, A_Chase, S_SKULL_RUN1, 0, 0 },    // S_SKULL_RUN2
-    { SPR_SKUL, 32770, 5, A_FaceTarget, S_SKULL_ATK2, 0, 0 },    // S_SKULL_ATK1
-    { SPR_SKUL, 32771, 2, A_SkullAttack, S_SKULL_ATK3, 0, 0 },    // S_SKULL_ATK2
-    { SPR_SKUL, 32770, 2, nullptr, S_SKULL_ATK4, 0, 0 },    // S_SKULL_ATK3
-    { SPR_SKUL, 32771, 2, nullptr, S_SKULL_ATK3, 0, 0 },    // S_SKULL_ATK4
-    { SPR_SKUL, 32772, 1, nullptr, S_SKULL_PAIN2, 0, 0 },    // S_SKULL_PAIN
-    { SPR_SKUL, 32772, 2, A_Pain, S_SKULL_RUN1, 0, 0 },    // S_SKULL_PAIN2
-    { SPR_SKUL, 32773, 3, nullptr, S_SKULL_DIE2, 0, 0 },    // S_SKULL_DIE1
-    { SPR_SKUL, 32774, 3, A_Scream, S_SKULL_DIE3, 0, 0 },    // S_SKULL_DIE2
-    { SPR_SKUL, 32775, 3, nullptr, S_SKULL_DIE4, 0, 0 },    // S_SKULL_DIE3
-    { SPR_SKUL, 32776, 3, A_Fall, S_SKULL_DIE5, 0, 0 },    // S_SKULL_DIE4
+    { SPR_SKUL, 0 | FF_FULLBRIGHT, 5, A_Look, S_SKULL_STND2, 0, 0 },    // S_SKULL_STND
+    { SPR_SKUL, 1 | FF_FULLBRIGHT, 5, A_Look, S_SKULL_STND, 0, 0 },    // S_SKULL_STND2
+    { SPR_SKUL, 0 | FF_FULLBRIGHT, 3, A_Chase, S_SKULL_RUN2, 0, 0 },    // S_SKULL_RUN1
+    { SPR_SKUL, 1 | FF_FULLBRIGHT, 3, A_Chase, S_SKULL_RUN1, 0, 0 },    // S_SKULL_RUN2
+    { SPR_SKUL, 2 | FF_FULLBRIGHT, 5, A_FaceTarget, S_SKULL_ATK2, 0, 0 },    // S_SKULL_ATK1
+    { SPR_SKUL, 3 | FF_FULLBRIGHT, 2, A_SkullAttack, S_SKULL_ATK3, 0, 0 },    // S_SKULL_ATK2
+    { SPR_SKUL, 2 | FF_FULLBRIGHT, 2, nullptr, S_SKULL_ATK4, 0, 0 },    // S_SKULL_ATK3
+    { SPR_SKUL, 3 | FF_FULLBRIGHT, 2, nullptr, S_SKULL_ATK3, 0, 0 },    // S_SKULL_ATK4
+    { SPR_SKUL, 4 | FF_FULLBRIGHT, 1, nullptr, S_SKULL_PAIN2, 0, 0 },    // S_SKULL_PAIN
+    { SPR_SKUL, 4 | FF_FULLBRIGHT, 2, A_Pain, S_SKULL_RUN1, 0, 0 },    // S_SKULL_PAIN2
+    { SPR_SKUL, 5 | FF_FULLBRIGHT, 3, nullptr, S_SKULL_DIE2, 0, 0 },    // S_SKULL_DIE1
+    { SPR_SKUL, 6 | FF_FULLBRIGHT, 3, A_Scream, S_SKULL_DIE3, 0, 0 },    // S_SKULL_DIE2
+    { SPR_SKUL, 7 | FF_FULLBRIGHT, 3, nullptr, S_SKULL_DIE4, 0, 0 },    // S_SKULL_DIE3
+    { SPR_SKUL, 8 | FF_FULLBRIGHT, 3, A_Fall, S_SKULL_DIE5, 0, 0 },    // S_SKULL_DIE4
     { SPR_SKUL, 9, 3, nullptr, S_SKULL_DIE6, 0, 0 },    // S_SKULL_DIE5
     { SPR_SKUL, 10, 3, nullptr, S_NULL, 0, 0 },    // S_SKULL_DIE6
     { SPR_SPID, 0, 5, A_Look, S_SPID_STND2, 0, 0 },    // S_SPID_STND
@@ -509,10 +509,10 @@ state_t gStates[NUMSTATES] = {
     { SPR_SPID, 4, 2, A_Chase, S_SPID_RUN11, 0, 0 },    // S_SPID_RUN10
     { SPR_SPID, 5, 2, A_Chase, S_SPID_RUN12, 0, 0 },    // S_SPID_RUN11
     { SPR_SPID, 5, 2, A_Chase, S_SPID_RUN1, 0, 0 },    // S_SPID_RUN12
-    { SPR_SPID, 32768, 10, A_FaceTarget, S_SPID_ATK2, 0, 0 },    // S_SPID_ATK1
-    { SPR_SPID, 32774, 2, A_SpidAttack, S_SPID_ATK3, 0, 0 },    // S_SPID_ATK2
-    { SPR_SPID, 32775, 2, A_SpidAttack, S_SPID_ATK4, 0, 0 },    // S_SPID_ATK3
-    { SPR_SPID, 32775, 1, A_SpidRefire, S_SPID_ATK2, 0, 0 },    // S_SPID_ATK4
+    { SPR_SPID, 0 | FF_FULLBRIGHT, 10, A_FaceTarget, S_SPID_ATK2, 0, 0 },    // S_SPID_ATK1
+    { SPR_SPID, 6 | FF_FULLBRIGHT, 2, A_SpidAttack, S_SPID_ATK3, 0, 0 },    // S_SPID_ATK2
+    { SPR_SPID, 7 | FF_FULLBRIGHT, 2, A_SpidAttack, S_SPID_ATK4, 0, 0 },    // S_SPID_ATK3
+    { SPR_SPID, 7 | FF_FULLBRIGHT, 1, A_SpidRefire, S_SPID_ATK2, 0, 0 },    // S_SPID_ATK4
     { SPR_SPID, 8, 2, nullptr, S_SPID_PAIN2, 0, 0 },    // S_SPID_PAIN
     { SPR_SPID, 8, 2, A_Pain, S_SPID_RUN1, 0, 0 },    // S_SPID_PAIN2
     { SPR_SPID, 9, 8, A_Scream, S_SPID_DIE2, 0, 0 },    // S_SPID_DIE1
@@ -541,10 +541,10 @@ state_t gStates[NUMSTATES] = {
     { SPR_BSPI, 4, 2, A_Chase, S_BSPI_RUN11, 0, 0 },    // S_BSPI_RUN10
     { SPR_BSPI, 5, 2, A_Chase, S_BSPI_RUN12, 0, 0 },    // S_BSPI_RUN11
     { SPR_BSPI, 5, 2, A_Chase, S_BSPI_RUN1, 0, 0 },    // S_BSPI_RUN12
-    { SPR_BSPI, 32768, 10, A_FaceTarget, S_BSPI_ATK2, 0, 0 },    // S_BSPI_ATK1
-    { SPR_BSPI, 32774, 2, A_BspiAttack, S_BSPI_ATK3, 0, 0 },    // S_BSPI_ATK2
-    { SPR_BSPI, 32775, 2, nullptr, S_BSPI_ATK4, 0, 0 },    // S_BSPI_ATK3
-    { SPR_BSPI, 32775, 1, A_SpidRefire, S_BSPI_ATK2, 0, 0 },    // S_BSPI_ATK4
+    { SPR_BSPI, 0 | FF_FULLBRIGHT, 10, A_FaceTarget, S_BSPI_ATK2, 0, 0 },    // S_BSPI_ATK1
+    { SPR_BSPI, 6 | FF_FULLBRIGHT, 2, A_BspiAttack, S_BSPI_ATK3, 0, 0 },    // S_BSPI_ATK2
+    { SPR_BSPI, 7 | FF_FULLBRIGHT, 2, nullptr, S_BSPI_ATK4, 0, 0 },    // S_BSPI_ATK3
+    { SPR_BSPI, 7 | FF_FULLBRIGHT, 1, A_SpidRefire, S_BSPI_ATK2, 0, 0 },    // S_BSPI_ATK4
     { SPR_BSPI, 8, 2, nullptr, S_BSPI_PAIN2, 0, 0 },    // S_BSPI_PAIN
     { SPR_BSPI, 8, 2, A_Pain, S_BSPI_RUN1, 0, 0 },    // S_BSPI_PAIN2
     { SPR_BSPI, 9, 10, A_Scream, S_BSPI_DIE2, 0, 0 },    // S_BSPI_DIE1
@@ -554,13 +554,13 @@ state_t gStates[NUMSTATES] = {
     { SPR_BSPI, 13, 3, nullptr, S_BSPI_DIE6, 0, 0 },    // S_BSPI_DIE5
     { SPR_BSPI, 14, 3, nullptr, S_BSPI_DIE7, 0, 0 },    // S_BSPI_DIE6
     { SPR_BSPI, 15, -1, A_BossDeath, S_NULL, 0, 0 },    // S_BSPI_DIE7
-    { SPR_APLS, 32768, 2, nullptr, S_ARACH_PLAZ2, 0, 0 },    // S_ARACH_PLAZ
-    { SPR_APLS, 32769, 2, nullptr, S_ARACH_PLAZ, 0, 0 },    // S_ARACH_PLAZ2
-    { SPR_APBX, 32768, 2, nullptr, S_ARACH_PLEX2, 0, 0 },    // S_ARACH_PLEX
-    { SPR_APBX, 32769, 2, nullptr, S_ARACH_PLEX3, 0, 0 },    // S_ARACH_PLEX2
-    { SPR_APBX, 32770, 2, nullptr, S_ARACH_PLEX4, 0, 0 },    // S_ARACH_PLEX3
-    { SPR_APBX, 32771, 2, nullptr, S_ARACH_PLEX5, 0, 0 },    // S_ARACH_PLEX4
-    { SPR_APBX, 32772, 2, nullptr, S_NULL, 0, 0 },    // S_ARACH_PLEX5
+    { SPR_APLS, 0 | FF_FULLBRIGHT, 2, nullptr, S_ARACH_PLAZ2, 0, 0 },    // S_ARACH_PLAZ
+    { SPR_APLS, 1 | FF_FULLBRIGHT, 2, nullptr, S_ARACH_PLAZ, 0, 0 },    // S_ARACH_PLAZ2
+    { SPR_APBX, 0 | FF_FULLBRIGHT, 2, nullptr, S_ARACH_PLEX2, 0, 0 },    // S_ARACH_PLEX
+    { SPR_APBX, 1 | FF_FULLBRIGHT, 2, nullptr, S_ARACH_PLEX3, 0, 0 },    // S_ARACH_PLEX2
+    { SPR_APBX, 2 | FF_FULLBRIGHT, 2, nullptr, S_ARACH_PLEX4, 0, 0 },    // S_ARACH_PLEX3
+    { SPR_APBX, 3 | FF_FULLBRIGHT, 2, nullptr, S_ARACH_PLEX5, 0, 0 },    // S_ARACH_PLEX4
+    { SPR_APBX, 4 | FF_FULLBRIGHT, 2, nullptr, S_NULL, 0, 0 },    // S_ARACH_PLEX5
     { SPR_CYBR, 0, 5, A_Look, S_CYBER_STND2, 0, 0 },    // S_CYBER_STND
     { SPR_CYBR, 1, 5, A_Look, S_CYBER_STND, 0, 0 },    // S_CYBER_STND2
     { SPR_CYBR, 0, 2, A_Hoof, S_CYBER_RUN2, 0, 0 },    // S_CYBER_RUN1
@@ -597,30 +597,30 @@ state_t gStates[NUMSTATES] = {
     { SPR_PAIN, 2, 2, A_Chase, S_PAIN_RUN1, 0, 0 },    // S_PAIN_RUN6
     { SPR_PAIN, 3, 3, A_FaceTarget, S_PAIN_ATK2, 0, 0 },    // S_PAIN_ATK1
     { SPR_PAIN, 4, 3, A_FaceTarget, S_PAIN_ATK3, 0, 0 },    // S_PAIN_ATK2
-    { SPR_PAIN, 32773, 3, A_FaceTarget, S_PAIN_ATK4, 0, 0 },    // S_PAIN_ATK3
-    { SPR_PAIN, 32773, 0, A_PainAttack, S_PAIN_RUN1, 0, 0 },    // S_PAIN_ATK4
+    { SPR_PAIN, 5 | FF_FULLBRIGHT, 3, A_FaceTarget, S_PAIN_ATK4, 0, 0 },    // S_PAIN_ATK3
+    { SPR_PAIN, 5 | FF_FULLBRIGHT, 0, A_PainAttack, S_PAIN_RUN1, 0, 0 },    // S_PAIN_ATK4
     { SPR_PAIN, 6, 3, nullptr, S_PAIN_PAIN2, 0, 0 },    // S_PAIN_PAIN
     { SPR_PAIN, 6, 3, A_Pain, S_PAIN_RUN1, 0, 0 },    // S_PAIN_PAIN2
-    { SPR_PAIN, 32775, 4, nullptr, S_PAIN_DIE2, 0, 0 },    // S_PAIN_DIE1
-    { SPR_PAIN, 32776, 4, A_Scream, S_PAIN_DIE3, 0, 0 },    // S_PAIN_DIE2
-    { SPR_PAIN, 32777, 4, nullptr, S_PAIN_DIE4, 0, 0 },    // S_PAIN_DIE3
-    { SPR_PAIN, 32778, 4, nullptr, S_PAIN_DIE5, 0, 0 },    // S_PAIN_DIE4
-    { SPR_PAIN, 32779, 4, A_PainDie, S_PAIN_DIE6, 0, 0 },    // S_PAIN_DIE5
-    { SPR_PAIN, 32780, 4, nullptr, S_NULL, 0, 0 },    // S_PAIN_DIE6
+    { SPR_PAIN, 7 | FF_FULLBRIGHT, 4, nullptr, S_PAIN_DIE2, 0, 0 },    // S_PAIN_DIE1
+    { SPR_PAIN, 8 | FF_FULLBRIGHT, 4, A_Scream, S_PAIN_DIE3, 0, 0 },    // S_PAIN_DIE2
+    { SPR_PAIN, 9 | FF_FULLBRIGHT, 4, nullptr, S_PAIN_DIE4, 0, 0 },    // S_PAIN_DIE3
+    { SPR_PAIN, 10 | FF_FULLBRIGHT, 4, nullptr, S_PAIN_DIE5, 0, 0 },    // S_PAIN_DIE4
+    { SPR_PAIN, 11 | FF_FULLBRIGHT, 4, A_PainDie, S_PAIN_DIE6, 0, 0 },    // S_PAIN_DIE5
+    { SPR_PAIN, 12 | FF_FULLBRIGHT, 4, nullptr, S_NULL, 0, 0 },    // S_PAIN_DIE6
     { SPR_ARM1, 0, 3, nullptr, S_ARM1A, 0, 0 },    // S_ARM1
-    { SPR_ARM1, 32769, 3, nullptr, S_ARM1, 0, 0 },    // S_ARM1A
+    { SPR_ARM1, 1 | FF_FULLBRIGHT, 3, nullptr, S_ARM1, 0, 0 },    // S_ARM1A
     { SPR_ARM2, 0, 3, nullptr, S_ARM2A, 0, 0 },    // S_ARM2
-    { SPR_ARM2, 32769, 3, nullptr, S_ARM2, 0, 0 },    // S_ARM2A
+    { SPR_ARM2, 1 | FF_FULLBRIGHT, 3, nullptr, S_ARM2, 0, 0 },    // S_ARM2A
     { SPR_BAR1, 0, 3, nullptr, S_BAR2, 0, 0 },    // S_BAR1
     { SPR_BAR1, 1, 3, nullptr, S_BAR1, 0, 0 },    // S_BAR2
-    { SPR_BEXP, 32768, 2, nullptr, S_BEXP2, 0, 0 },    // S_BEXP
-    { SPR_BEXP, 32769, 3, A_Scream, S_BEXP3, 0, 0 },    // S_BEXP2
-    { SPR_BEXP, 32770, 3, nullptr, S_BEXP4, 0, 0 },    // S_BEXP3
-    { SPR_BEXP, 32771, 5, A_Explode, S_BEXP5, 0, 0 },    // S_BEXP4
-    { SPR_BEXP, 32772, 5, nullptr, S_NULL, 0, 0 },    // S_BEXP5
-    { SPR_FCAN, 32768, 2, nullptr, S_BBAR2, 0, 0 },    // S_BBAR1
-    { SPR_FCAN, 32769, 2, nullptr, S_BBAR3, 0, 0 },    // S_BBAR2
-    { SPR_FCAN, 32770, 2, nullptr, S_BBAR1, 0, 0 },    // S_BBAR3
+    { SPR_BEXP, 0 | FF_FULLBRIGHT, 2, nullptr, S_BEXP2, 0, 0 },    // S_BEXP
+    { SPR_BEXP, 1 | FF_FULLBRIGHT, 3, A_Scream, S_BEXP3, 0, 0 },    // S_BEXP2
+    { SPR_BEXP, 2 | FF_FULLBRIGHT, 3, nullptr, S_BEXP4, 0, 0 },    // S_BEXP3
+    { SPR_BEXP, 3 | FF_FULLBRIGHT, 5, A_Explode, S_BEXP5, 0, 0 },    // S_BEXP4
+    { SPR_BEXP, 4 | FF_FULLBRIGHT, 5, nullptr, S_NULL, 0, 0 },    // S_BEXP5
+    { SPR_FCAN, 0 | FF_FULLBRIGHT, 2, nullptr, S_BBAR2, 0, 0 },    // S_BBAR1
+    { SPR_FCAN, 1 | FF_FULLBRIGHT, 2, nullptr, S_BBAR3, 0, 0 },    // S_BBAR2
+    { SPR_FCAN, 2 | FF_FULLBRIGHT, 2, nullptr, S_BBAR1, 0, 0 },    // S_BBAR3
     { SPR_BON1, 0, 3, nullptr, S_BON1A, 0, 0 },    // S_BON1
     { SPR_BON1, 1, 3, nullptr, S_BON1B, 0, 0 },    // S_BON1A
     { SPR_BON1, 2, 3, nullptr, S_BON1C, 0, 0 },    // S_BON1B
@@ -634,46 +634,46 @@ state_t gStates[NUMSTATES] = {
     { SPR_BON2, 2, 3, nullptr, S_BON2E, 0, 0 },    // S_BON2D
     { SPR_BON2, 1, 3, nullptr, S_BON2, 0, 0 },    // S_BON2E
     { SPR_BKEY, 0, 5, nullptr, S_BKEY2, 0, 0 },    // S_BKEY
-    { SPR_BKEY, 32769, 5, nullptr, S_BKEY, 0, 0 },    // S_BKEY2
+    { SPR_BKEY, 1 | FF_FULLBRIGHT, 5, nullptr, S_BKEY, 0, 0 },    // S_BKEY2
     { SPR_RKEY, 0, 5, nullptr, S_RKEY2, 0, 0 },    // S_RKEY
-    { SPR_RKEY, 32769, 5, nullptr, S_RKEY, 0, 0 },    // S_RKEY2
+    { SPR_RKEY, 1 | FF_FULLBRIGHT, 5, nullptr, S_RKEY, 0, 0 },    // S_RKEY2
     { SPR_YKEY, 0, 5, nullptr, S_YKEY2, 0, 0 },    // S_YKEY
-    { SPR_YKEY, 32769, 5, nullptr, S_YKEY, 0, 0 },    // S_YKEY2
+    { SPR_YKEY, 1 | FF_FULLBRIGHT, 5, nullptr, S_YKEY, 0, 0 },    // S_YKEY2
     { SPR_BSKU, 0, 5, nullptr, S_BSKULL2, 0, 0 },    // S_BSKULL
-    { SPR_BSKU, 32769, 5, nullptr, S_BSKULL, 0, 0 },    // S_BSKULL2
+    { SPR_BSKU, 1 | FF_FULLBRIGHT, 5, nullptr, S_BSKULL, 0, 0 },    // S_BSKULL2
     { SPR_RSKU, 0, 5, nullptr, S_RSKULL2, 0, 0 },    // S_RSKULL
-    { SPR_RSKU, 32769, 5, nullptr, S_RSKULL, 0, 0 },    // S_RSKULL2
+    { SPR_RSKU, 1 | FF_FULLBRIGHT, 5, nullptr, S_RSKULL, 0, 0 },    // S_RSKULL2
     { SPR_YSKU, 0, 5, nullptr, S_YSKULL2, 0, 0 },    // S_YSKULL
-    { SPR_YSKU, 32769, 5, nullptr, S_YSKULL, 0, 0 },    // S_YSKULL2
+    { SPR_YSKU, 1 | FF_FULLBRIGHT, 5, nullptr, S_YSKULL, 0, 0 },    // S_YSKULL2
     { SPR_STIM, 0, -1, nullptr, S_NULL, 0, 0 },    // S_STIM
     { SPR_MEDI, 0, -1, nullptr, S_NULL, 0, 0 },    // S_MEDI
-    { SPR_SOUL, 32768, 3, nullptr, S_SOUL2, 0, 0 },    // S_SOUL
-    { SPR_SOUL, 32769, 3, nullptr, S_SOUL3, 0, 0 },    // S_SOUL2
-    { SPR_SOUL, 32770, 3, nullptr, S_SOUL4, 0, 0 },    // S_SOUL3
-    { SPR_SOUL, 32771, 3, nullptr, S_SOUL5, 0, 0 },    // S_SOUL4
-    { SPR_SOUL, 32770, 3, nullptr, S_SOUL6, 0, 0 },    // S_SOUL5
-    { SPR_SOUL, 32769, 3, nullptr, S_SOUL, 0, 0 },    // S_SOUL6
-    { SPR_PINV, 32768, 3, nullptr, S_PINV2, 0, 0 },    // S_PINV
-    { SPR_PINV, 32769, 3, nullptr, S_PINV3, 0, 0 },    // S_PINV2
-    { SPR_PINV, 32770, 3, nullptr, S_PINV4, 0, 0 },    // S_PINV3
-    { SPR_PINV, 32771, 3, nullptr, S_PINV, 0, 0 },    // S_PINV4
-    { SPR_PSTR, 32768, -1, nullptr, S_NULL, 0, 0 },    // S_PSTR
-    { SPR_PINS, 32768, 3, nullptr, S_PINS2, 0, 0 },    // S_PINS
-    { SPR_PINS, 32769, 3, nullptr, S_PINS3, 0, 0 },    // S_PINS2
-    { SPR_PINS, 32770, 3, nullptr, S_PINS4, 0, 0 },    // S_PINS3
-    { SPR_PINS, 32771, 3, nullptr, S_PINS, 0, 0 },    // S_PINS4
-    { SPR_MEGA, 32768, 6, nullptr, S_MEGA2, 0, 0 },    // S_MEGA
-    { SPR_MEGA, 32769, 6, nullptr, S_MEGA3, 0, 0 },    // S_MEGA2
-    { SPR_MEGA, 32770, 6, nullptr, S_MEGA4, 0, 0 },    // S_MEGA3
-    { SPR_MEGA, 32771, 6, nullptr, S_MEGA, 0, 0 },    // S_MEGA4
-    { SPR_SUIT, 32768, -1, nullptr, S_NULL, 0, 0 },    // S_SUIT
-    { SPR_PMAP, 32768, 3, nullptr, S_PMAP2, 0, 0 },    // S_PMAP
-    { SPR_PMAP, 32769, 3, nullptr, S_PMAP3, 0, 0 },    // S_PMAP2
-    { SPR_PMAP, 32770, 3, nullptr, S_PMAP4, 0, 0 },    // S_PMAP3
-    { SPR_PMAP, 32771, 3, nullptr, S_PMAP5, 0, 0 },    // S_PMAP4
-    { SPR_PMAP, 32770, 3, nullptr, S_PMAP6, 0, 0 },    // S_PMAP5
-    { SPR_PMAP, 32769, 3, nullptr, S_PMAP, 0, 0 },    // S_PMAP6
-    { SPR_PVIS, 32768, 3, nullptr, S_PVIS2, 0, 0 },    // S_PVIS
+    { SPR_SOUL, 0 | FF_FULLBRIGHT, 3, nullptr, S_SOUL2, 0, 0 },    // S_SOUL
+    { SPR_SOUL, 1 | FF_FULLBRIGHT, 3, nullptr, S_SOUL3, 0, 0 },    // S_SOUL2
+    { SPR_SOUL, 2 | FF_FULLBRIGHT, 3, nullptr, S_SOUL4, 0, 0 },    // S_SOUL3
+    { SPR_SOUL, 3 | FF_FULLBRIGHT, 3, nullptr, S_SOUL5, 0, 0 },    // S_SOUL4
+    { SPR_SOUL, 2 | FF_FULLBRIGHT, 3, nullptr, S_SOUL6, 0, 0 },    // S_SOUL5
+    { SPR_SOUL, 1 | FF_FULLBRIGHT, 3, nullptr, S_SOUL, 0, 0 },    // S_SOUL6
+    { SPR_PINV, 0 | FF_FULLBRIGHT, 3, nullptr, S_PINV2, 0, 0 },    // S_PINV
+    { SPR_PINV, 1 | FF_FULLBRIGHT, 3, nullptr, S_PINV3, 0, 0 },    // S_PINV2
+    { SPR_PINV, 2 | FF_FULLBRIGHT, 3, nullptr, S_PINV4, 0, 0 },    // S_PINV3
+    { SPR_PINV, 3 | FF_FULLBRIGHT, 3, nullptr, S_PINV, 0, 0 },    // S_PINV4
+    { SPR_PSTR, 0 | FF_FULLBRIGHT, -1, nullptr, S_NULL, 0, 0 },    // S_PSTR
+    { SPR_PINS, 0 | FF_FULLBRIGHT, 3, nullptr, S_PINS2, 0, 0 },    // S_PINS
+    { SPR_PINS, 1 | FF_FULLBRIGHT, 3, nullptr, S_PINS3, 0, 0 },    // S_PINS2
+    { SPR_PINS, 2 | FF_FULLBRIGHT, 3, nullptr, S_PINS4, 0, 0 },    // S_PINS3
+    { SPR_PINS, 3 | FF_FULLBRIGHT, 3, nullptr, S_PINS, 0, 0 },    // S_PINS4
+    { SPR_MEGA, 0 | FF_FULLBRIGHT, 6, nullptr, S_MEGA2, 0, 0 },    // S_MEGA
+    { SPR_MEGA, 1 | FF_FULLBRIGHT, 6, nullptr, S_MEGA3, 0, 0 },    // S_MEGA2
+    { SPR_MEGA, 2 | FF_FULLBRIGHT, 6, nullptr, S_MEGA4, 0, 0 },    // S_MEGA3
+    { SPR_MEGA, 3 | FF_FULLBRIGHT, 6, nullptr, S_MEGA, 0, 0 },    // S_MEGA4
+    { SPR_SUIT, 0 | FF_FULLBRIGHT, -1, nullptr, S_NULL, 0, 0 },    // S_SUIT
+    { SPR_PMAP, 0 | FF_FULLBRIGHT, 3, nullptr, S_PMAP2, 0, 0 },    // S_PMAP
+    { SPR_PMAP, 1 | FF_FULLBRIGHT, 3, nullptr, S_PMAP3, 0, 0 },    // S_PMAP2
+    { SPR_PMAP, 2 | FF_FULLBRIGHT, 3, nullptr, S_PMAP4, 0, 0 },    // S_PMAP3
+    { SPR_PMAP, 3 | FF_FULLBRIGHT, 3, nullptr, S_PMAP5, 0, 0 },    // S_PMAP4
+    { SPR_PMAP, 2 | FF_FULLBRIGHT, 3, nullptr, S_PMAP6, 0, 0 },    // S_PMAP5
+    { SPR_PMAP, 1 | FF_FULLBRIGHT, 3, nullptr, S_PMAP, 0, 0 },    // S_PMAP6
+    { SPR_PVIS, 0 | FF_FULLBRIGHT, 3, nullptr, S_PVIS2, 0, 0 },    // S_PVIS
     { SPR_PVIS, 1, 3, nullptr, S_PVIS, 0, 0 },    // S_PVIS2
     { SPR_CLIP, 0, -1, nullptr, S_NULL, 0, 0 },    // S_CLIP
     { SPR_AMMO, 0, -1, nullptr, S_NULL, 0, 0 },    // S_AMMO
@@ -691,7 +691,7 @@ state_t gStates[NUMSTATES] = {
     { SPR_PLAS, 0, -1, nullptr, S_NULL, 0, 0 },    // S_PLAS
     { SPR_SHOT, 0, -1, nullptr, S_NULL, 0, 0 },    // S_SHOT
     { SPR_SGN2, 0, -1, nullptr, S_NULL, 0, 0 },    // S_SHOT2
-    { SPR_COLU, 32768, -1, nullptr, S_NULL, 0, 0 },    // S_COLU
+    { SPR_COLU, 0 | FF_FULLBRIGHT, -1, nullptr, S_NULL, 0, 0 },    // S_COLU
     { SPR_SMT2, 0, -1, nullptr, S_NULL, 0, 0 },    // S_STALAG
     { SPR_PLAY, 13, -1, nullptr, S_NULL, 0, 0 },    // S_DEADTORSO
     { SPR_PLAY, 18, -1, nullptr, S_NULL, 0, 0 },    // S_DEADBOTTOM
@@ -709,25 +709,25 @@ state_t gStates[NUMSTATES] = {
     { SPR_COL3, 0, -1, nullptr, S_NULL, 0, 0 },    // S_TALLREDCOL
     { SPR_COL4, 0, -1, nullptr, S_NULL, 0, 0 },    // S_SHRTREDCOL
     { SPR_COL6, 0, -1, nullptr, S_NULL, 0, 0 },    // S_SKULLCOL
-    { SPR_CAND, 32768, -1, nullptr, S_NULL, 0, 0 },    // S_CANDLESTIK
-    { SPR_CBRA, 32768, -1, nullptr, S_NULL, 0, 0 },    // S_CANDELABRA
+    { SPR_CAND, 0 | FF_FULLBRIGHT, -1, nullptr, S_NULL, 0, 0 },    // S_CANDLESTIK
+    { SPR_CBRA, 0 | FF_FULLBRIGHT, -1, nullptr, S_NULL, 0, 0 },    // S_CANDELABRA
     { SPR_TRE1, 0, -1, nullptr, S_NULL, 0, 0 },    // S_TORCHTREE
     { SPR_ELEC, 0, -1, nullptr, S_NULL, 0, 0 },    // S_TECHPILLAR
-    { SPR_FSKU, 32768, 3, nullptr, S_FLOATSKULL2, 0, 0 },    // S_FLOATSKULL
-    { SPR_FSKU, 32769, 3, nullptr, S_FLOATSKULL3, 0, 0 },    // S_FLOATSKULL2
-    { SPR_FSKU, 32770, 3, nullptr, S_FLOATSKULL, 0, 0 },    // S_FLOATSKULL3
-    { SPR_SMBT, 32768, 2, nullptr, S_BTORCHSHRT2, 0, 0 },    // S_BTORCHSHRT
-    { SPR_SMBT, 32769, 2, nullptr, S_BTORCHSHRT3, 0, 0 },    // S_BTORCHSHRT2
-    { SPR_SMBT, 32770, 2, nullptr, S_BTORCHSHRT4, 0, 0 },    // S_BTORCHSHRT3
-    { SPR_SMBT, 32771, 2, nullptr, S_BTORCHSHRT, 0, 0 },    // S_BTORCHSHRT4
-    { SPR_SMGT, 32768, 2, nullptr, S_GTORCHSHRT2, 0, 0 },    // S_GTORCHSHRT
-    { SPR_SMGT, 32769, 2, nullptr, S_GTORCHSHRT3, 0, 0 },    // S_GTORCHSHRT2
-    { SPR_SMGT, 32770, 2, nullptr, S_GTORCHSHRT4, 0, 0 },    // S_GTORCHSHRT3
-    { SPR_SMGT, 32771, 2, nullptr, S_GTORCHSHRT, 0, 0 },    // S_GTORCHSHRT4
-    { SPR_SMRT, 32768, 2, nullptr, S_RTORCHSHRT2, 0, 0 },    // S_RTORCHSHRT
-    { SPR_SMRT, 32769, 2, nullptr, S_RTORCHSHRT3, 0, 0 },    // S_RTORCHSHRT2
-    { SPR_SMRT, 32770, 2, nullptr, S_RTORCHSHRT4, 0, 0 },    // S_RTORCHSHRT3
-    { SPR_SMRT, 32771, 2, nullptr, S_RTORCHSHRT, 0, 0 },    // S_RTORCHSHRT4
+    { SPR_FSKU, 0 | FF_FULLBRIGHT, 3, nullptr, S_FLOATSKULL2, 0, 0 },    // S_FLOATSKULL
+    { SPR_FSKU, 1 | FF_FULLBRIGHT, 3, nullptr, S_FLOATSKULL3, 0, 0 },    // S_FLOATSKULL2
+    { SPR_FSKU, 2 | FF_FULLBRIGHT, 3, nullptr, S_FLOATSKULL, 0, 0 },    // S_FLOATSKULL3
+    { SPR_SMBT, 0 | FF_FULLBRIGHT, 2, nullptr, S_BTORCHSHRT2, 0, 0 },    // S_BTORCHSHRT
+    { SPR_SMBT, 1 | FF_FULLBRIGHT, 2, nullptr, S_BTORCHSHRT3, 0, 0 },    // S_BTORCHSHRT2
+    { SPR_SMBT, 2 | FF_FULLBRIGHT, 2, nullptr, S_BTORCHSHRT4, 0, 0 },    // S_BTORCHSHRT3
+    { SPR_SMBT, 3 | FF_FULLBRIGHT, 2, nullptr, S_BTORCHSHRT, 0, 0 },    // S_BTORCHSHRT4
+    { SPR_SMGT, 0 | FF_FULLBRIGHT, 2, nullptr, S_GTORCHSHRT2, 0, 0 },    // S_GTORCHSHRT
+    { SPR_SMGT, 1 | FF_FULLBRIGHT, 2, nullptr, S_GTORCHSHRT3, 0, 0 },    // S_GTORCHSHRT2
+    { SPR_SMGT, 2 | FF_FULLBRIGHT, 2, nullptr, S_GTORCHSHRT4, 0, 0 },    // S_GTORCHSHRT3
+    { SPR_SMGT, 3 | FF_FULLBRIGHT, 2, nullptr, S_GTORCHSHRT, 0, 0 },    // S_GTORCHSHRT4
+    { SPR_SMRT, 0 | FF_FULLBRIGHT, 2, nullptr, S_RTORCHSHRT2, 0, 0 },    // S_RTORCHSHRT
+    { SPR_SMRT, 1 | FF_FULLBRIGHT, 2, nullptr, S_RTORCHSHRT3, 0, 0 },    // S_RTORCHSHRT2
+    { SPR_SMRT, 2 | FF_FULLBRIGHT, 2, nullptr, S_RTORCHSHRT4, 0, 0 },    // S_RTORCHSHRT3
+    { SPR_SMRT, 3 | FF_FULLBRIGHT, 2, nullptr, S_RTORCHSHRT, 0, 0 },    // S_RTORCHSHRT4
     { SPR_HANC, 0, -1, nullptr, S_NULL, 0, 0 },    // S_HANGCHAIN
     { SPR_BLCH, 0, -1, nullptr, S_NULL, 0, 0 },    // S_BLOODCHAIN
     { SPR_HANL, 0, -1, nullptr, S_NULL, 0, 0 },    // S_HANGLAMP
@@ -737,38 +737,38 @@ state_t gStates[NUMSTATES] = {
     { SPR_DED4, 0, -1, nullptr, S_NULL, 0, 0 },    // S_DEAD4
     { SPR_DED5, 0, -1, nullptr, S_NULL, 0, 0 },    // S_DEAD5
     { SPR_DED6, 0, -1, nullptr, S_NULL, 0, 0 },    // S_DEAD6
-    { SPR_TLMP, 32768, 2, nullptr, S_TECHLAMP2, 0, 0 },    // S_TECHLAMP
-    { SPR_TLMP, 32769, 2, nullptr, S_TECHLAMP3, 0, 0 },    // S_TECHLAMP2
-    { SPR_TLMP, 32770, 2, nullptr, S_TECHLAMP4, 0, 0 },    // S_TECHLAMP3
-    { SPR_TLMP, 32771, 2, nullptr, S_TECHLAMP, 0, 0 },    // S_TECHLAMP4
-    { SPR_TLP2, 32768, 2, nullptr, S_TECH2LAMP2, 0, 0 },    // S_TECH2LAMP
-    { SPR_TLP2, 32769, 2, nullptr, S_TECH2LAMP3, 0, 0 },    // S_TECH2LAMP2
-    { SPR_TLP2, 32770, 2, nullptr, S_TECH2LAMP4, 0, 0 },    // S_TECH2LAMP3
-    { SPR_TLP2, 32771, 2, nullptr, S_TECH2LAMP, 0, 0 },    // S_TECH2LAMP4
+    { SPR_TLMP, 0 | FF_FULLBRIGHT, 2, nullptr, S_TECHLAMP2, 0, 0 },    // S_TECHLAMP
+    { SPR_TLMP, 1 | FF_FULLBRIGHT, 2, nullptr, S_TECHLAMP3, 0, 0 },    // S_TECHLAMP2
+    { SPR_TLMP, 2 | FF_FULLBRIGHT, 2, nullptr, S_TECHLAMP4, 0, 0 },    // S_TECHLAMP3
+    { SPR_TLMP, 3 | FF_FULLBRIGHT, 2, nullptr, S_TECHLAMP, 0, 0 },    // S_TECHLAMP4
+    { SPR_TLP2, 0 | FF_FULLBRIGHT, 2, nullptr, S_TECH2LAMP2, 0, 0 },    // S_TECH2LAMP
+    { SPR_TLP2, 1 | FF_FULLBRIGHT, 2, nullptr, S_TECH2LAMP3, 0, 0 },    // S_TECH2LAMP2
+    { SPR_TLP2, 2 | FF_FULLBRIGHT, 2, nullptr, S_TECH2LAMP4, 0, 0 },    // S_TECH2LAMP3
+    { SPR_TLP2, 3 | FF_FULLBRIGHT, 2, nullptr, S_TECH2LAMP, 0, 0 },    // S_TECH2LAMP4
     { SPR_COL5, 0, 7, nullptr, S_HEARTCOL2, 0, 0 },    // S_HEARTCOL
     { SPR_COL5, 1, 7, nullptr, S_HEARTCOL, 0, 0 },    // S_HEARTCOL2
-    { SPR_CEYE, 32768, 3, nullptr, S_EVILEYE2, 0, 0 },    // S_EVILEYE
-    { SPR_CEYE, 32769, 3, nullptr, S_EVILEYE3, 0, 0 },    // S_EVILEYE2
-    { SPR_CEYE, 32770, 3, nullptr, S_EVILEYE4, 0, 0 },    // S_EVILEYE3
-    { SPR_CEYE, 32769, 3, nullptr, S_EVILEYE, 0, 0 },    // S_EVILEYE4
-    { SPR_TBLU, 32768, 2, nullptr, S_BLUETORCH2, 0, 0 },    // S_BLUETORCH
-    { SPR_TBLU, 32769, 2, nullptr, S_BLUETORCH3, 0, 0 },    // S_BLUETORCH2
-    { SPR_TBLU, 32770, 2, nullptr, S_BLUETORCH4, 0, 0 },    // S_BLUETORCH3
-    { SPR_TBLU, 32771, 2, nullptr, S_BLUETORCH, 0, 0 },    // S_BLUETORCH4
-    { SPR_TGRN, 32768, 2, nullptr, S_GREENTORCH2, 0, 0 },    // S_GREENTORCH
-    { SPR_TGRN, 32769, 2, nullptr, S_GREENTORCH3, 0, 0 },    // S_GREENTORCH2
-    { SPR_TGRN, 32770, 2, nullptr, S_GREENTORCH4, 0, 0 },    // S_GREENTORCH3
-    { SPR_TGRN, 32771, 2, nullptr, S_GREENTORCH, 0, 0 },    // S_GREENTORCH4
-    { SPR_TRED, 32768, 2, nullptr, S_REDTORCH2, 0, 0 },    // S_REDTORCH
-    { SPR_TRED, 32769, 2, nullptr, S_REDTORCH3, 0, 0 },    // S_REDTORCH2
-    { SPR_TRED, 32770, 2, nullptr, S_REDTORCH4, 0, 0 },    // S_REDTORCH3
-    { SPR_TRED, 32771, 2, nullptr, S_REDTORCH, 0, 0 },    // S_REDTORCH4
+    { SPR_CEYE, 0 | FF_FULLBRIGHT, 3, nullptr, S_EVILEYE2, 0, 0 },    // S_EVILEYE
+    { SPR_CEYE, 1 | FF_FULLBRIGHT, 3, nullptr, S_EVILEYE3, 0, 0 },    // S_EVILEYE2
+    { SPR_CEYE, 2 | FF_FULLBRIGHT, 3, nullptr, S_EVILEYE4, 0, 0 },    // S_EVILEYE3
+    { SPR_CEYE, 1 | FF_FULLBRIGHT, 3, nullptr, S_EVILEYE, 0, 0 },    // S_EVILEYE4
+    { SPR_TBLU, 0 | FF_FULLBRIGHT, 2, nullptr, S_BLUETORCH2, 0, 0 },    // S_BLUETORCH
+    { SPR_TBLU, 1 | FF_FULLBRIGHT, 2, nullptr, S_BLUETORCH3, 0, 0 },    // S_BLUETORCH2
+    { SPR_TBLU, 2 | FF_FULLBRIGHT, 2, nullptr, S_BLUETORCH4, 0, 0 },    // S_BLUETORCH3
+    { SPR_TBLU, 3 | FF_FULLBRIGHT, 2, nullptr, S_BLUETORCH, 0, 0 },    // S_BLUETORCH4
+    { SPR_TGRN, 0 | FF_FULLBRIGHT, 2, nullptr, S_GREENTORCH2, 0, 0 },    // S_GREENTORCH
+    { SPR_TGRN, 1 | FF_FULLBRIGHT, 2, nullptr, S_GREENTORCH3, 0, 0 },    // S_GREENTORCH2
+    { SPR_TGRN, 2 | FF_FULLBRIGHT, 2, nullptr, S_GREENTORCH4, 0, 0 },    // S_GREENTORCH3
+    { SPR_TGRN, 3 | FF_FULLBRIGHT, 2, nullptr, S_GREENTORCH, 0, 0 },    // S_GREENTORCH4
+    { SPR_TRED, 0 | FF_FULLBRIGHT, 2, nullptr, S_REDTORCH2, 0, 0 },    // S_REDTORCH
+    { SPR_TRED, 1 | FF_FULLBRIGHT, 2, nullptr, S_REDTORCH3, 0, 0 },    // S_REDTORCH2
+    { SPR_TRED, 2 | FF_FULLBRIGHT, 2, nullptr, S_REDTORCH4, 0, 0 },    // S_REDTORCH3
+    { SPR_TRED, 3 | FF_FULLBRIGHT, 2, nullptr, S_REDTORCH, 0, 0 },    // S_REDTORCH4
     { SPR_GOR1, 0, 5, nullptr, S_BLOODYTWITCH2, 0, 0 },    // S_BLOODYTWITCH
     { SPR_GOR1, 1, 7, nullptr, S_BLOODYTWITCH3, 0, 0 },    // S_BLOODYTWITCH2
     { SPR_GOR1, 2, 4, nullptr, S_BLOODYTWITCH4, 0, 0 },    // S_BLOODYTWITCH3
     { SPR_GOR1, 1, 3, nullptr, S_BLOODYTWITCH, 0, 0 },    // S_BLOODYTWITCH4
-    { SPR_POL3, 32768, 3, nullptr, S_HEADCANDLES2, 0, 0 },    // S_HEADCANDLES
-    { SPR_POL3, 32769, 3, nullptr, S_HEADCANDLES, 0, 0 },    // S_HEADCANDLES2
+    { SPR_POL3, 0 | FF_FULLBRIGHT, 3, nullptr, S_HEADCANDLES2, 0, 0 },    // S_HEADCANDLES
+    { SPR_POL3, 1 | FF_FULLBRIGHT, 3, nullptr, S_HEADCANDLES, 0, 0 },    // S_HEADCANDLES2
     { SPR_POL6, 0, 3, nullptr, S_LIVESTICK2, 0, 0 },    // S_LIVESTICK
     { SPR_POL6, 1, 4, nullptr, S_LIVESTICK, 0, 0 },    // S_LIVESTICK2
     { SPR_TRE2, 0, -1, nullptr, S_NULL, 0, 0 },    // S_BIGTREE
