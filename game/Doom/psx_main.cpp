@@ -21,23 +21,9 @@
 //  (2) Setting the value of the 'global pointer' (gp) register that is used as a base to reference many global variables.
 //  (3) Setting the value of the 'frame pointer' (fp) register.
 //  (4) Setting the value of the 'stack pointer' (sp) register.
+//  (5) Zero initializing the BSS section globals. These are globals with a defaulted (0) value.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void psx_main() noexcept {
-    // Zero initialize the BSS section globals.
-    // These are the globals that aren't explicitly defined with a value in the .EXE image.
-    {
-        // Oddness: I don't know why but for some reason PSX DOOM starts zero initializing the globals at address '80077E30'.
-        // The BSS section starts at '80078000', so this does not really make sense?
-        // This means we are zero initializing 464 bytes of globals that are already defined in the .EXE.
-        // Those globals have a defined value of '0' anyway so it makes no difference in practice but I'm curious as to
-        // why this particular code was generated this way...
-        //
-        uint32_t* const pBegWord = vmAddrToPtr<uint32_t>(0x80077E30);
-        uint32_t* const pEndWord = vmAddrToPtr<uint32_t>(HeapStartAddr);
-        const uint32_t numWords = (uint32_t)(pEndWord - pBegWord);
-        std::memset(pBegWord, 0, numWords * sizeof(uint32_t));
-    }
-    
+void psx_main() noexcept {    
     // Figure out the size and start address to use when initializing the heap
     constexpr uint32_t InitialStackPtrAddr = StackEndAddr - sizeof(uint64_t);
     constexpr uint32_t WrappedHeapStartAddr = ((HeapStartAddr << 3) >> 3);
