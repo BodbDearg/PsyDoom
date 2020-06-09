@@ -13,6 +13,7 @@
 #include "p_plats.h"
 #include "p_setup.h"
 #include "p_spec.h"
+#include "PcPsx/Macros.h"
 
 // Defines the two textures used by a switch
 struct switchlist_t {

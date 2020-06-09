@@ -18,10 +18,6 @@ void stepCdromWithCallbacks() noexcept;
 
 using namespace PsxVm;
 
-namespace PsxVm {
-    uint32_t* gpReg_sp;
-}
-
 void emulate_sound_if_required() noexcept {
     // Do no sound emulation in headless mode
     if (ProgArgs::gbHeadlessMode)
