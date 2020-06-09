@@ -459,6 +459,33 @@ void P_SpawnBlood(const fixed_t x, const fixed_t y, const fixed_t z, const int32
 // Moves a missile a little after spawning to see if it spawned in a wall or something, and explodes it immediately if so
 //------------------------------------------------------------------------------------------------------------------------------------------
 void P_CheckMissileSpawn(mobj_t& mobj) noexcept {
+    // PC-PSX: fix for a bug where sometimes the player does not take damage from rocket blasts.
+    // I am not applying this fix by default however, because it breaks demo compatibility (and automated testing) in some cases.
+    // For more on this bug see: https://doomwiki.org/wiki/Sony_PlayStation#Bugs
+    //
+    // The bug is triggered by snuggling in very close to walls and firing a rocket directly (at 90 degrees) towards the closest wall
+    // in front of the player. In this situation the rocket can go beyond the wall line, and splash damage will not register due to
+    // line of sight checks being 'blocked' from the rocket's new position to the player.
+    //
+    // The easiest way to reproduce the bug is to find a corner with two walls at 90 degrees to each other and to move in as close
+    // as possible to that corner, and then fire a rocket directly at one of the corner's walls. In this situation, due to the way
+    // the collision works, it is possible to get closer to the walls than in most other circumstances.
+    //
+    // The fix is to first check the move of the spawned rocket starting from the original spawn position, to the initial move location.
+    // If the check fails then explode the rocket, otherwise execute the existing logic of moving first and THEN checking the position.
+    //
+    // TODO: Make this fix configurable at runtime.
+    #if PC_PSX_DOOM_MODS && DOOM_ROCKET_BLAST_FIX
+        // Just do this as a collision check: don't actually move yet (that's done below).
+        // If the missile has spawned in a position where it would be blocked then explode it immediately.
+        gbCheckPosOnly = true;
+
+        if (!P_TryMove(mobj, mobj.x + (mobj.momx >> 1), mobj.y + (mobj.momy >> 1))) {
+            P_ExplodeMissile(mobj);
+            return;
+        }
+    #endif
+    
     // Note: using division by '2' here yields a slightly different result in some cases, such as with the number '0x80000001'.
     // Shifts are required for demo accurate behavior!
     mobj.x += mobj.momx >> 1;
