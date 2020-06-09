@@ -24,7 +24,6 @@ System*                 PsxVm::gpSystem;
 gpu::GPU*               PsxVm::gpGpu;
 spu::SPU*               PsxVm::gpSpu;
 device::cdrom::CDROM*   PsxVm::gpCdrom;
-uint8_t*                PsxVm::gpRam;
 uint8_t*                PsxVm::gpScratchpad;
 
 // TODO: this is a temp hack for gamepad support
@@ -91,13 +90,11 @@ static void setupVmPointers() noexcept {
     gpGpu = gpSystem->gpu.get();
     gpSpu = gpSystem->spu.get();
     gpCdrom = gpSystem->cdrom.get();
-    gpRam = gpSystem->ram.data();
     gpScratchpad = gpSystem->scratchpad.data();
 }
 
 static void clearVmPointers() noexcept {
     gpScratchpad = nullptr;
-    gpRam = nullptr;
     gpCdrom = nullptr;
     gpSpu = nullptr;
     gpGpu = nullptr;

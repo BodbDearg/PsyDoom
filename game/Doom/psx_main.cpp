@@ -1,10 +1,6 @@
 #include "psx_main.h"
 
 #include "Base/i_main.h"
-#include "PsxVm/PsxVm.h"
-#include "PsyQ/LIBAPI.h"
-
-#include <cstring>
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 // This was the reverse engineered entrypoint for PSXDOOM.EXE.
@@ -13,28 +9,22 @@
 // value of the 'gp' register, zero initializing the BSS section global variables and so on. Basically all of the setup stuff before the
 // C program proper can run.
 //
-// There used to be a lot more here, but as layers of emulation are removed this function has less and less purpose.
-// It's mainly here just for historical reference now.
+// There used to be other actual code in here, but as layers of emulation were removed this function had less and less purpose.
+// Now it's just a stub for historical reference only.
 //
 // Code which was removed includes:
 //  (1) Save and restore the current return address register (ra) for returning control to operating system after the program is done.
-//  (2) Setting the value of the 'global pointer' (gp) register that is used as a base to reference many global variables.
+//  (2) Setting the value of the 'global pointer' (gp) register which is used as a base to reference many global variables.
+//      For the 'Greatest Hits' edition of PlayStation Doom (US) 'gp' was set to: 0x800775E0
 //  (3) Setting the value of the 'frame pointer' (fp) register.
 //  (4) Setting the value of the 'stack pointer' (sp) register.
 //  (5) Zero initializing the BSS section globals. These are globals with a defaulted (0) value.
+//  (6) Calling 'LIBAPI_InitHeap' to initialize the PsyQ SDK Heap.
+//      Note that since Doom used it's own zone memory management system, that call was effectively useless.
+//      It never once asked for memory from the PsyQ SDK, nor did any of the PsyQ functions used.
+//      Doom's own heap would have been corrupted if LIBAPI's heap was in conflicting use of the same memory.
 //------------------------------------------------------------------------------------------------------------------------------------------
-void psx_main() noexcept {    
-    // Figure out the size and start address to use when initializing the heap
-    constexpr uint32_t InitialStackPtrAddr = StackEndAddr - sizeof(uint64_t);
-    constexpr uint32_t WrappedHeapStartAddr = ((HeapStartAddr << 3) >> 3);
-    constexpr uint32_t StackStartAddr = InitialStackPtrAddr - StackSize;
-    constexpr uint32_t InitHeapSize = StackStartAddr - WrappedHeapStartAddr;
-
-    // Initialize the heap for the PsyQ SDK.
-    // Note that DOOM uses it's own memory management system, so this call is effectively useless.
-    // Note: I don't know why '4' was added here, was that incorrect? Would only be a problem anyway if we reached the end of the stack.
-    LIBAPI_InitHeap(PsxVm::gpRam + WrappedHeapStartAddr + 4, InitHeapSize);
-
-    // Call the application entrypoint, or the real main() function as it would have been written in C
+void psx_main() noexcept {
+    // This is all we do now, call the original PSX Doom 'main()' function...
     I_Main();
 }
