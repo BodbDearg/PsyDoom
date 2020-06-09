@@ -1108,18 +1108,16 @@ struct mobjinfo_t {
     statenum_t      deathstate;
     statenum_t      xdeathstate;
     sfxenum_t       deathsound;
-    fixed_t         speed;
+    int32_t         speed;              // Object movement speed. Note: sometimes a fixed point number, sometimes an normal integer.
     fixed_t         radius;
-    int32_t         height;
+    fixed_t         height;
     int32_t         mass;
     int32_t         damage;
     sfxenum_t       activesound;
     uint32_t        flags;
 };
 
-static_assert(sizeof(mobjinfo_t) == 88);
-
 // The arrays of sprite names, state definitions and map object definitions
 extern const char*  gSprNames[NUMSPRITES];
 extern state_t      gStates[NUMSTATES];
-extern const VmPtr<mobjinfo_t[NUMMOBJTYPES]>        gMObjInfo;
+extern mobjinfo_t   gMObjInfo[NUMMOBJTYPES];
