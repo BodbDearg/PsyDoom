@@ -224,7 +224,7 @@ struct mobj_t {
     int32_t         reactiontime;       // Time left until an attack is allowed
     int32_t         threshold;          // Time left chasing the current target
     player_t*       player;             // Associated player, if any
-    uint32_t        extradata;          // Used for latecall functions
+    uintptr_t       extradata;          // Used for latecall functions
     int16_t         spawnx;             // Used for respawns: original spawn params
     int16_t         spawny;
     uint16_t        spawntype;

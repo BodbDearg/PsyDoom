@@ -1226,7 +1226,7 @@ void A_BabyMetal(mobj_t& actor) noexcept {
 // A late call action set in p_base: explode a missile after it has hit something and damage what it hit
 //------------------------------------------------------------------------------------------------------------------------------------------
 void L_MissileHit(mobj_t& missile) noexcept {
-    mobj_t* const pHitThing = vmAddrToPtr<mobj_t>(missile.extradata);
+    mobj_t* const pHitThing = (mobj_t*) missile.extradata;
 
     if (pHitThing) {
         const int32_t damage = missile.info->damage * ((P_Random() & 7) + 1);   // 1-8x damage
@@ -1242,7 +1242,7 @@ void L_MissileHit(mobj_t& missile) noexcept {
 //------------------------------------------------------------------------------------------------------------------------------------------
 void L_SkullBash(mobj_t& actor) noexcept {
     // Damage the the map object which was bashed (if anything)
-    mobj_t* const pHitThing = vmAddrToPtr<mobj_t>(actor.extradata);
+    mobj_t* const pHitThing = (mobj_t*) actor.extradata;
 
     if (pHitThing) {
         const int32_t damage = actor.info->damage * ((P_Random() & 7) + 1);     // Info damage x1-x8

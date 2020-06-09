@@ -91,7 +91,7 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
             // Move failed: if it's a skull flying then do the skull bash
             if (mobj.flags & MF_SKULLFLY) {
                 mobj.latecall = &L_SkullBash;
-                mobj.extradata = ptrToVmAddr(gpHitThing);
+                mobj.extradata = (uintptr_t) gpHitThing;
             }
 
             // If it's a missile explode or remove, otherwise stop momentum fully
@@ -109,7 +109,7 @@ static void P_XYMovement(mobj_t& mobj) noexcept {
                 } else {
                     // Usual case: exploding on hitting a wall or thing
                     mobj.latecall = &L_MissileHit;
-                    mobj.extradata = ptrToVmAddr(gpHitThing);
+                    mobj.extradata = (uintptr_t) gpHitThing;
                 }
             } else {
                 // Remove all momentum since the thing cannot move

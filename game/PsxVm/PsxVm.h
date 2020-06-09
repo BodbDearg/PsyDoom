@@ -30,7 +30,6 @@ uint32_t ptrToVmAddr(const void* const ptr) noexcept;
 //------------------------------------------------------------------------------------------------------------------------------------------
 struct System;
 
-namespace mips              { struct CPU;   }
 namespace gpu               { class GPU;    }
 namespace spu               { struct SPU;   }
 namespace device::cdrom     { class CDROM;  }
