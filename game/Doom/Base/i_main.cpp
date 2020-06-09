@@ -299,7 +299,7 @@ void I_PSXInit() noexcept {
 
     // Print the required string, then flush to display
     LIBGPU_FntPrint(printStreamId, "\n\n\n %s", msgBuffer);
-    LIBGPU_FntFlush(printStreamId);
+    LIBGPU_FntFlush(printStreamId, gGpuCmdsBuffer);
 
     // Present the resulting message
     I_DrawPresent();
@@ -1250,7 +1250,7 @@ void I_SubmitGpuCmds() noexcept {
         // Note: this marks the end of the primitive list, by setting the 'tag' field of an invalid primitive to 0xFFFFFF.
         // This is similar to LIBGPU_TermPrim, except we don't bother using a valid primitive struct.
         ((uint32_t*) gpGpuPrimsEnd)[0] = 0x00FFFFFF;
-        LIBGPU_DrawOTag(gpGpuPrimsBeg);
+        LIBGPU_DrawOTag(gpGpuPrimsBeg, gGpuCmdsBuffer);
     }
 
     // Clear the primitives list
