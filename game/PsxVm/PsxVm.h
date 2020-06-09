@@ -20,11 +20,6 @@ void emulate_sound_if_required() noexcept;
 // Note: this is implemented in LIBAPI, where timers are handled.
 void generate_timer_events() noexcept;
 
-// Returns the 32-bit address in PSX RAM (in the 0x80000000 space/segment) of the given real pointer.
-// Used to convert real pointers/addresses back to VM ones.
-// May exit the application with an error if an invalid pointer is given.
-uint32_t ptrToVmAddr(const void* const ptr) noexcept;
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 // Avocado types
 //------------------------------------------------------------------------------------------------------------------------------------------

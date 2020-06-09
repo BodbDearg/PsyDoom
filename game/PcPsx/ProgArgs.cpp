@@ -100,7 +100,8 @@ static int parseArg_server([[maybe_unused]] const int argc, const char** const a
         // Is there a port number following?
         if ((argc >= 2) && (argv[1][0] != '-')) {
             try {
-                gServerPort = std::stoi(argv[1]);
+                // TODO: validate port is in range
+                gServerPort = (int16_t) std::stoi(argv[1]);
             } catch (...) {
                 std::printf("Bad server port number '%s'! Arg will be ignored...\n", argv[1]);
             }
@@ -127,7 +128,8 @@ static int parseArg_client([[maybe_unused]] const int argc, const char** const a
             gServerHost = std::string(argv[1], pFirstColon - argv[1]);
 
             try {
-                gServerPort = std::stoi(pFirstColon + 1);
+                // TODO: validate port is in range
+                gServerPort = (int16_t) std::stoi(pFirstColon + 1);
             } catch (...) {
                 std::printf("Bad server port number '%s'! Arg will be ignored...\n", pFirstColon + 1);
             }
